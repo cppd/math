@@ -1,0 +1,83 @@
+/*
+Copyright (C) 2017 Topological Manifold
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+#include "print.h"
+
+#include <algorithm>
+
+std::string to_string(unsigned __int128 t)
+{
+        constexpr unsigned __int128 low_mask = (static_cast<unsigned __int128>(1) << 64) - 1;
+
+        std::array<char, 100> buf;
+        unsigned long long high = t >> 64;
+        unsigned long long low = t & low_mask;
+        if (high != 0)
+        {
+                snprintf(buf.data(), buf.size(), "%llu%llu", high, low);
+        }
+        else
+        {
+                snprintf(buf.data(), buf.size(), "%llu", low);
+        }
+        return buf.data();
+}
+std::string to_string(__int128 t)
+{
+        if (t >= 0)
+        {
+                return to_string(static_cast<unsigned __int128>(t));
+        }
+        else
+        {
+                return '-' + to_string(static_cast<unsigned __int128>(-t));
+        }
+}
+
+std::string source_with_line_numbers(const std::string s)
+{
+        size_t cnt = std::count(s.begin(), s.end(), '\n');
+        if (cnt == 0)
+        {
+                return s;
+        }
+
+        int width = std::floor(std::log10(cnt)) + 1;
+
+        std::ostringstream os;
+
+        os << std::setfill('0');
+
+        int line = 1;
+        os << std::setw(width) << line << ": ";
+
+        for (size_t i = 0; i < s.size(); ++i)
+        {
+                if (s[i] != '\n')
+                {
+                        os << s[i];
+                }
+                else
+                {
+                        os << '\n';
+                        ++line;
+                        os << std::setw(width) << line << ": ";
+                }
+        }
+
+        return os.str();
+}

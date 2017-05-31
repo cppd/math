@@ -1,0 +1,71 @@
+/*
+Copyright (C) 2017 Topological Manifold
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+layout(local_size_variable) in;
+
+layout(binding = 0, rgba32f) uniform image2D img;
+
+uniform int to_rgb;
+
+const ivec2 image_size = imageSize(img);
+
+float RGB_to_sRGB(float c)
+{
+        if (c > 1.0)
+                return 1.0;
+        if (c >= 0.0031308)
+                return 1.055 * pow(c, 1.0 / 2.4) - 0.055;
+        if (c >= 0.0)
+                return c * 12.92;
+        return 0.0;
+}
+float sRGB_to_RGB(float c)
+{
+        if (c > 1.0)
+                return 1.0;
+        if (c >= 0.04045)
+                return pow((c + 0.055) / 1.055, 2.4);
+        if (c >= 0.0)
+                return c / 12.92;
+        return 0.0;
+}
+
+vec4 RGB_to_sRGB(vec4 c)
+{
+        return vec4(RGB_to_sRGB(c.r), RGB_to_sRGB(c.g), RGB_to_sRGB(c.b), RGB_to_sRGB(c.a));
+}
+vec4 sRGB_to_RGB(vec4 c)
+{
+        return vec4(sRGB_to_RGB(c.r), sRGB_to_RGB(c.g), sRGB_to_RGB(c.b), sRGB_to_RGB(c.a));
+}
+
+void main(void)
+{
+        const ivec2 p = ivec2(gl_GlobalInvocationID.xy);
+        if (p.x < image_size.x && p.y < image_size.y)
+        {
+                vec4 s = imageLoad(img, p);
+                if (to_rgb > 0)
+                {
+                        imageStore(img, p, sRGB_to_RGB(s));
+                }
+                else
+                {
+                        imageStore(img, p, RGB_to_sRGB(s));
+                }
+        }
+}

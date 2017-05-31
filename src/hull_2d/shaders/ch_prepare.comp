@@ -1,0 +1,89 @@
+/*
+Copyright (C) 2017 Topological Manifold
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+layout(local_size_variable) in;
+
+layout(bindless_image, r32i) readonly uniform iimage2D objects;
+layout(bindless_image, r32f) writeonly uniform image2D line_min;
+layout(bindless_image, r32f) writeonly uniform image2D line_max;
+
+bool not_background(ivec2 p)
+{
+        ivec4 s = imageLoad(objects, p);
+        return s.r != 0;
+}
+
+// в x пишутся минимумы, в y пишутся максимумы
+shared ivec2 shared_buffer[GROUP_SIZE];
+
+void main(void)
+{
+        // gl_GlobalInvocationID = gl_WorkGroupID * gl_LocalGroupSizeARB + gl_LocalInvocationID;
+
+        // Одна группа обрабатывает одну строку
+        // gl_LocalInvocationID.x координата X по горизонтали
+        // gl_WorkGroupID.x координата Y по вертикали
+
+        const int local_id = int(gl_LocalInvocationID.x);
+        const int y = int(gl_WorkGroupID.x);
+
+        int min_x = 1000000;
+        int max_x = -1000000;
+
+        for (int x = local_id; x < WIDTH; x += GROUP_SIZE)
+        {
+                if (not_background(ivec2(x, y)))
+                {
+                        min_x = min(min_x, x);
+                        max_x = max(max_x, x);
+                }
+        }
+
+        shared_buffer[local_id] = ivec2(min_x, max_x);
+
+        barrier();
+
+        for (int stride = GROUP_SIZE >> 1; stride >= 1; stride >>= 1)
+        {
+                if (local_id < stride)
+                {
+                        ivec2 x1 = shared_buffer[local_id];
+                        ivec2 x2 = shared_buffer[local_id + stride];
+                        shared_buffer[local_id] = ivec2(min(x1.x, x2.x), max(x1.y, x2.y));
+                }
+                barrier();
+        }
+
+        if (local_id == 0)
+        {
+                ivec2 result = shared_buffer[0];
+
+                // objects имеет 0 по вертикали внизу, надо записать с 0 вверху
+                int reverse_y = HEIGHT - y - 1;
+
+                if (result.y >= 0)
+                {
+                        imageStore(line_min, ivec2(reverse_y, 0), vec4(result.x, 0, 0, 0));
+                        imageStore(line_max, ivec2(reverse_y, 0), vec4(result.y, 0, 0, 0));
+                }
+                else
+                {
+                        imageStore(line_min, ivec2(reverse_y, 0), vec4(-1, 0, 0, 0));
+                        imageStore(line_max, ivec2(reverse_y, 0), vec4(-1, 0, 0, 0));
+                }
+        }
+}

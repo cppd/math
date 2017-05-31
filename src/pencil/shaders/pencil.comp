@@ -1,0 +1,100 @@
+/*
+Copyright (C) 2017 Topological Manifold
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+layout(local_size_variable) in;
+
+layout(bindless_image, rgba32f) readonly uniform image2D img_input;
+layout(bindless_image, rgba32f) writeonly uniform image2D img_output;
+layout(bindless_image, r32i) readonly uniform iimage2D img_objects;
+
+const ivec2 image_size = imageSize(img_input);
+
+// clang-format off
+//GaussianMatrix[{4, 3}]
+const int delta = 4;
+const float Gauss[delta * 2 + 1][delta * 2 + 1] =
+{
+        {0.00378449, 0.00564742, 0.00754943, 0.00900273, 0.00955004, 0.00900273, 0.00754943, 0.00564742, 0.00378449},
+        {0.00564742, 0.00842740, 0.01126570, 0.01343440, 0.01425110, 0.01343440, 0.01126570, 0.00842740, 0.00564742},
+        {0.00754943, 0.01126570, 0.01505990, 0.01795900, 0.01905080, 0.01795900, 0.01505990, 0.01126570, 0.00754943},
+        {0.00900273, 0.01343440, 0.01795900, 0.02141610, 0.02271810, 0.02141610, 0.01795900, 0.01343440, 0.00900273},
+        {0.00955004, 0.01425110, 0.01905080, 0.02271810, 0.02409920, 0.02271810, 0.01905080, 0.01425110, 0.00955004},
+        {0.00900273, 0.01343440, 0.01795900, 0.02141610, 0.02271810, 0.02141610, 0.01795900, 0.01343440, 0.00900273},
+        {0.00754943, 0.01126570, 0.01505990, 0.01795900, 0.01905080, 0.01795900, 0.01505990, 0.01126570, 0.00754943},
+        {0.00564742, 0.00842740, 0.01126570, 0.01343440, 0.01425110, 0.01343440, 0.01126570, 0.00842740, 0.00564742},
+        {0.00378449, 0.00564742, 0.00754943, 0.00900273, 0.00955004, 0.00900273, 0.00754943, 0.00564742, 0.00378449}
+};
+// clang-format on
+
+// фоновые пиксели считать 0
+const float background_value = 0;
+
+float gray(vec4 a)
+{
+        return 0.299 * a.r + 0.587 * a.g + 0.114 * a.b;
+}
+
+bool background(ivec2 p)
+{
+        ivec4 s = imageLoad(img_objects, p);
+        return s.r == 0;
+}
+
+void main(void)
+{
+        const ivec2 p = ivec2(gl_GlobalInvocationID.xy);
+
+        if (p.x >= image_size.x || p.y >= image_size.y)
+        {
+                return;
+        }
+
+        vec4 s = imageLoad(img_input, p);
+
+        if (background(p))
+        {
+                imageStore(img_output, p, s);
+                return;
+        }
+
+        float sum = 0;
+        for (int i = -delta; i <= delta; ++i)
+        {
+                for (int j = -delta; j <= delta; ++j)
+                {
+                        const ivec2 p2 = ivec2(p.x + i, p.y + j);
+                        float gr;
+                        if (p2.x >= 0 && p2.x < image_size.x && p2.y >= 0 && p2.y < image_size.y && !background(p2))
+                        {
+                                gr = gray(imageLoad(img_input, p2));
+                        }
+                        else
+                        {
+                                gr = background_value;
+                        }
+
+                        sum += gr * Gauss[i + delta][j + delta];
+                }
+        }
+
+        float res;
+        res = (sum != 0) ? (gray(s) / sum) : 1;
+        // res = clamp ((res - 0.5f) / (1.0f - 0.5f), 0.0f, 1.0f);
+        // res *= res;
+
+        imageStore(img_output, p, vec4(res, res, res, 1));
+}

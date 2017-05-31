@@ -1,0 +1,222 @@
+/*
+Copyright (C) 2017 Topological Manifold
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+// gl_GlobalInvocationID = gl_WorkGroupID * gl_LocalGroupSizeARB + gl_LocalInvocationID
+
+layout(local_size_variable) in;
+
+complex mul(complex a, complex b)
+{
+        return complex(a.x * b.x - a.y * b.y, a.x * b.y + a.y * b.x);
+}
+
+// Функция подстановки переменных, формулы 13.4, 13.27, 13.28, 13.32.
+// Используется в 4 функциях: по строкам в обе стороны и по столбцам в обе 2 стороны
+complex mul_data(complex x, int inv, int l, int N)
+{
+        // float_point theta = (((inv > 0) ? PI : -PI) * l * l) / N;
+
+        // Вместо l * l / N нужно вычислить mod(l * l / N, 2), чтобы в тригонометрические функции
+        // поступало не больше 2 * PI.
+        // Также надо избежать вычисления l * l с плавающей точкой, так как может потеряться точность
+        // при использовании float.
+        // При l до sqrt(2 ^ 31) = 46340 результат умножения не переполнит dividend, а для данной
+        // задачи 46340 достаточно.
+
+        int dividend = l * l;
+        int quotient = dividend / N;
+        int remainder = dividend - quotient * N;
+
+        // factor = (quotient mod 2) + (remainder / N).
+        // float_point factor = (quotient & 1) + float_point(remainder) / N;
+        // precise float_point theta = (((inv > 0) ? PI : -PI)) * factor;
+        // complex k = complex(cos(theta), sin(theta));
+        // return mul(k, x);
+
+        float_point factor = float_point(remainder) / N;
+        precise float_point theta = (((inv > 0) ? PI : -PI)) * factor;
+        if ((quotient & 1) == 0)
+        {
+                complex k = complex(cos(theta), sin(theta));
+                return mul(k, x);
+        }
+        else
+        {
+                complex k = complex(-cos(theta), -sin(theta));
+                return mul(k, x);
+        }
+}
+
+#if defined(function_rows_mul_to_buffer)
+
+layout(location = 0) uniform int inv;
+layout(location = 1) uniform int M1;
+layout(location = 2) uniform int N1;
+layout(location = 3) uniform int N2;
+layout(std430, binding = 0) restrict buffer StorageBuffer0
+{
+        complex data[];
+};
+layout(std430, binding = 1) restrict buffer StorageBuffer1
+{
+        complex buf[];
+};
+
+void main()
+{
+        int i = int(gl_GlobalInvocationID.x);
+        int j = int(gl_GlobalInvocationID.y);
+        if (i >= M1 || j >= N2)
+        {
+                return;
+        }
+        if (i >= N1)
+        {
+                buf[j * M1 + i] = complex(0, 0);
+        }
+        else
+        {
+                complex x = data[j * N1 + i];
+                buf[j * M1 + i] = mul_data(x, inv, i, N1);
+        }
+}
+
+#endif
+
+#if defined(function_rows_mul_fr_buffer)
+
+layout(location = 0) uniform int inv;
+layout(location = 1) uniform int M1;
+layout(location = 2) uniform int N1;
+layout(location = 3) uniform int N2;
+layout(std430, binding = 0) restrict buffer StorageBuffer0
+{
+        complex data[];
+};
+layout(std430, binding = 1) restrict buffer StorageBuffer1
+{
+        complex buf[];
+};
+void main()
+{
+        int i = int(gl_GlobalInvocationID.x);
+        int j = int(gl_GlobalInvocationID.y);
+        if (i >= N1 || j >= N2)
+        {
+                return;
+        }
+        complex x = buf[j * M1 + i];
+        data[j * N1 + i] = mul_data(x, inv, i, N1);
+}
+
+#endif
+
+#if defined(function_cols_mul_to_buffer)
+
+layout(location = 0) uniform int inv;
+layout(location = 1) uniform int M2;
+layout(location = 2) uniform int N1;
+layout(location = 3) uniform int N2;
+layout(std430, binding = 0) restrict buffer StorageBuffer0
+{
+        complex data[];
+};
+layout(std430, binding = 1) restrict buffer StorageBuffer1
+{
+        complex buf[];
+};
+void main()
+{
+        int i = int(gl_GlobalInvocationID.x);
+        int j = int(gl_GlobalInvocationID.y);
+        if (j >= M2 || i >= N1)
+        {
+                return;
+        }
+        if (j >= N2)
+        {
+                // с транспонированием
+                buf[i * M2 + j] = complex(0, 0);
+        }
+        else
+        {
+                complex x = data[j * N1 + i];
+                // с транспонированием
+                buf[i * M2 + j] = mul_data(x, inv, j, N2);
+        }
+}
+
+#endif
+
+#if defined(function_cols_mul_fr_buffer)
+
+layout(location = 0) uniform int inv;
+layout(location = 1) uniform int M2;
+layout(location = 2) uniform int N1;
+layout(location = 3) uniform int N2;
+layout(std430, binding = 0) restrict buffer StorageBuffer0
+{
+        complex data[];
+};
+layout(std430, binding = 1) restrict buffer StorageBuffer1
+{
+        complex buf[];
+};
+void main()
+{
+        int i = int(gl_GlobalInvocationID.x);
+        int j = int(gl_GlobalInvocationID.y);
+        if (j >= N2 || i >= N1)
+        {
+                return;
+        }
+        // с транспонированием
+        complex x = buf[i * M2 + j];
+        data[j * N1 + i] = mul_data(x, inv, j, N2);
+}
+
+#endif
+
+#if defined(function_rows_mul_D)
+
+// Умножение на диагональ, формулы 13.20, 13.30.
+
+layout(location = 0) uniform int columns;
+layout(location = 1) uniform int rows;
+layout(std430, binding = 0) restrict readonly buffer StorageBuffer0
+{
+        complex D[];
+};
+layout(std430, binding = 1) restrict buffer StorageBuffer1
+{
+        complex data[];
+};
+void main()
+{
+        int i = int(gl_GlobalInvocationID.x);
+        int j = int(gl_GlobalInvocationID.y);
+
+        if (i >= columns || j >= rows)
+        {
+                return;
+        }
+        complex d = D[i];
+        complex y = data[j * columns + i];
+        data[j * columns + i] = mul(d, y);
+}
+
+#endif

@@ -1,0 +1,938 @@
+/*
+Copyright (C) 2017 Topological Manifold
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+#include "main_window.h"
+
+#include "qt_support.h"
+
+#include "com/error.h"
+#include "com/log.h"
+#include "com/print.h"
+#include "com/time.h"
+#include "geom/surface_cocone.h"
+#include "geom/vec_glm.h"
+#include "obj/obj_convex_hull.h"
+#include "obj/obj_file.h"
+#include "obj/obj_surface.h"
+#include "progress/progress.h"
+#include "qt_dialog/dialogs.h"
+
+#include <QColorDialog>
+#include <QDateTime>
+#include <QDesktopWidget>
+#include <QFileDialog>
+#include <QMessageBox>
+#include <QObjectList>
+#include <array>
+#include <cmath>
+#include <experimental/filesystem>
+#include <thread>
+
+constexpr const char* APPLICATION_NAME = "OBJ Math Viewer";
+
+constexpr ConvexHullComputationType DEFAULT_CONVEX_TYPE = ConvexHullComputationType::INTEGER;
+
+constexpr double WINDOW_SIZE_COEF = 0.7;
+
+constexpr double DFT_MAX_BRIGHTNESS = 50000;
+constexpr double DFT_GAMMA = 0.5;
+
+constexpr double BOUND_COCONE_DEFAULT_RHO = 0.3;
+constexpr double BOUND_COCONE_DEFAULT_ALPHA = 0.14;
+constexpr int BOUND_COCONE_DISPLAY_DIGITS = 3;
+
+// Таймер отображения хода расчётов. Величина в миллисекундах.
+constexpr int TIMER_PROGRESS_BAR_INTERVAL = 100;
+
+// Идентификаторы объектов для взаимодействия с модулем рисования,
+// куда передаются как числа, а не как enum
+enum ObjectType
+{
+        FACES,
+        FACES_CONVEX_HULL,
+        SURFACE_COCONE,
+        SURFACE_COCONE_CONVEX_HULL,
+        SURFACE_BOUND_COCONE,
+        SURFACE_BOUND_COCONE_CONVEX_HULL
+};
+
+#define CATCH_ALL_SEND_EVENT()                                                                               \
+        catch (std::exception & e)                                                                           \
+        {                                                                                                    \
+                error_fatal(std::string("Critical program error. Send event exception: ") + e.what() + "."); \
+        }                                                                                                    \
+        catch (...)                                                                                          \
+        {                                                                                                    \
+                error_fatal("Critical program error. Send event exception.");                                \
+        }
+
+void MainWindow::on_actionAbout_triggered()
+{
+        QMessageBox::about(this, "About", QString(APPLICATION_NAME) +
+                                                  "\n\n"
+                                                  "C++17\nGLSL 4.50\n"
+                                                  "\n"
+                                                  "Freetype\nGLM\nGMP\nOpenGL\nQt\nSFML\nX11");
+}
+
+void MainWindow::on_actionKeyboard_and_Mouse_triggered()
+{
+        QMessageBox::information(this, "Keyboard and Mouse",
+                                 "Move: left mouse button.\n\n"
+                                 "Rotate: right mouse button.\n\n"
+                                 "Zoom: mouse wheel.\n\n"
+                                 "Toggle fullscreen: F11.");
+}
+
+MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
+{
+        ui.setupUi(this);
+
+        qRegisterMetaType<WindowEvent>("WindowEvent");
+
+        connect(this, SIGNAL(SignalWindowEvent(WindowEvent)), this, SLOT(on_MainWindow_SignalWindowEvent(WindowEvent)),
+                Qt::ConnectionType(Qt::QueuedConnection | Qt::UniqueConnection));
+
+        connect(&m_timer, SIGNAL(timeout()), this, SLOT(timer_slot()));
+
+        m_first_show = true;
+
+        m_file_loading = false;
+        m_bound_cocone_loading = false;
+
+        set_widgets_enabled(this->layout(), true);
+
+        set_dependent_interface_enabled();
+
+        disable_object_buttons();
+
+        ui.widget_under_window->setText("");
+        m_widget_under_window = ui.widget_under_window;
+
+        m_clear_color = ui.widget_clear_color->palette().color(QPalette::Window);
+        m_default_color = ui.widget_default_color->palette().color(QPalette::Window);
+        m_wireframe_color = ui.widget_wireframe_color->palette().color(QPalette::Window);
+
+        QLayout* l = ui.verticalLayoutWidget->layout();
+        l->setContentsMargins(0, 0, 0, 0);
+        l->setSpacing(0);
+        ui.verticalLayoutWidget->setLayout(l);
+
+        this->addAction(ui.actionFullScreen);
+
+        this->setWindowTitle(APPLICATION_NAME);
+
+        m_bound_cocone_rho = BOUND_COCONE_DEFAULT_RHO;
+        m_bound_cocone_alpha = BOUND_COCONE_DEFAULT_ALPHA;
+        set_bound_cocone_label(m_bound_cocone_rho, m_bound_cocone_alpha);
+
+        ui.radioButton_Faces->setChecked(true);
+
+        ui.tabWidget->setCurrentIndex(0);
+
+        // init_convex_hull_type(DEFAULT_CONVEX_TYPE);
+        // ui.statusBar->addPermanentWidget(&m_convex_hull_type_label);
+}
+
+MainWindow::~MainWindow()
+{
+        stop_all_threads();
+}
+
+void MainWindow::thread_faces(std::shared_ptr<IObj> obj, ConvexHullComputationType convex_hull_type) noexcept
+{
+        try
+        {
+                if (obj->get_faces().size() != 0)
+                {
+                        m_show->add_object(obj, FACES);
+
+                        ProgressRatio progress(&m_progress_ratio_list);
+                        progress.set_text("Convex hull 3D: %v of %m");
+
+                        std::shared_ptr<IObj> convex_hull = create_convex_hull_for_obj(convex_hull_type, obj.get(), &progress);
+
+                        if (convex_hull->get_faces().size() != 0)
+                        {
+                                m_show->add_object(convex_hull, FACES_CONVEX_HULL);
+                        }
+                }
+        }
+        catch (TerminateRequestException&)
+        {
+        }
+        catch (std::exception& e)
+        {
+                error_message(std::string("Convex hull 3D:\n") + e.what());
+        }
+        catch (...)
+        {
+                error_message("Unknown error while convex hull creating");
+        }
+}
+
+void MainWindow::thread_cocone(ConvexHullComputationType convex_hull_type) noexcept
+{
+        try
+        {
+                std::shared_ptr<IObj> surface;
+
+                {
+                        ProgressRatio progress(&m_progress_ratio_list);
+
+                        double start_time = get_time_seconds();
+
+                        std::vector<vec<3>> normals;
+                        std::vector<std::array<int, 3>> facets;
+
+                        m_surface_reconstructor->cocone(&normals, &facets, &progress);
+
+                        surface = create_obj_for_facets(to_vector<float>(m_points), normals, facets);
+
+                        LOG("Surface reconstruction second phase, " + to_string(get_time_seconds() - start_time, 5) + " s");
+                }
+
+                if (surface->get_faces().size() != 0)
+                {
+                        m_show->add_object(surface, SURFACE_COCONE);
+
+                        ProgressRatio progress(&m_progress_ratio_list);
+                        progress.set_text("Cocone convex hull 3D: %v of %m");
+
+                        std::shared_ptr<IObj> convex_hull =
+                                create_convex_hull_for_obj(convex_hull_type, surface.get(), &progress);
+
+                        if (convex_hull->get_faces().size() != 0)
+                        {
+                                m_show->add_object(convex_hull, SURFACE_COCONE_CONVEX_HULL);
+                        }
+                }
+        }
+        catch (TerminateRequestException&)
+        {
+        }
+        catch (std::exception& e)
+        {
+                error_message(std::string("COCONE reconstruction:\n") + e.what());
+        }
+        catch (...)
+        {
+                error_message("Unknown error while COCONE reconstruction");
+        }
+}
+
+void MainWindow::thread_bound_cocone(ConvexHullComputationType convex_hull_type, double rho, double alpha) noexcept
+{
+        try
+        {
+                std::shared_ptr<IObj> surface;
+
+                {
+                        ProgressRatio progress(&m_progress_ratio_list);
+
+                        double start_time = get_time_seconds();
+
+                        std::vector<vec<3>> normals;
+                        std::vector<std::array<int, 3>> facets;
+
+                        m_surface_reconstructor->bound_cocone(rho, alpha, &normals, &facets, &progress);
+
+                        surface = create_obj_for_facets(to_vector<float>(m_points), normals, facets);
+
+                        LOG("Surface reconstruction second phase, " + to_string(get_time_seconds() - start_time, 5) + " s");
+                }
+
+                m_show->delete_object(SURFACE_BOUND_COCONE);
+                m_show->delete_object(SURFACE_BOUND_COCONE_CONVEX_HULL);
+
+                bound_cocone_loaded(rho, alpha);
+
+                if (surface->get_faces().size() != 0)
+                {
+                        m_show->add_object(surface, SURFACE_BOUND_COCONE);
+
+                        ProgressRatio progress(&m_progress_ratio_list);
+                        progress.set_text("Bound cocone convex hull 3D: %v of %m");
+
+                        std::shared_ptr<IObj> convex_hull =
+                                create_convex_hull_for_obj(convex_hull_type, surface.get(), &progress);
+
+                        if (convex_hull->get_faces().size() != 0)
+                        {
+                                m_show->add_object(convex_hull, SURFACE_BOUND_COCONE_CONVEX_HULL);
+                        }
+                }
+        }
+        catch (TerminateRequestException&)
+        {
+        }
+        catch (std::exception& e)
+        {
+                error_message(std::string("BOUND COCONE reconstruction:\n") + e.what());
+        }
+        catch (...)
+        {
+                error_message("Unknown error while BOUND COCONE reconstruction");
+        }
+
+        m_bound_cocone_loading = false;
+}
+
+void MainWindow::thread_surface_reconstructor(ConvexHullComputationType convex_hull_type) noexcept
+{
+        try
+        {
+                ProgressRatio progress(&m_progress_ratio_list);
+
+                double start_time = get_time_seconds();
+
+                m_surface_reconstructor = create_surface_reconstructor(convex_hull_type, to_vector<float>(m_points), &progress);
+
+                LOG("Surface reconstruction first phase, " + to_string(get_time_seconds() - start_time, 5) + " s");
+
+                std::vector<std::thread> threads(2);
+                std::vector<std::string> msg(2);
+
+                launch_class_thread(&threads[0], &msg[0], &MainWindow::thread_cocone, this, convex_hull_type);
+                launch_class_thread(&threads[1], &msg[1], &MainWindow::thread_bound_cocone, this, convex_hull_type,
+                                    m_bound_cocone_rho, m_bound_cocone_alpha);
+
+                join_threads(&threads, &msg);
+        }
+        catch (TerminateRequestException&)
+        {
+        }
+        catch (std::exception& e)
+        {
+                error_message(std::string("Surface reconstructing:\n") + e.what());
+        }
+        catch (...)
+        {
+                error_message("Unknown error while surface reconstructing");
+        }
+}
+
+void MainWindow::thread_open_file(const std::string& file_name, ConvexHullComputationType convex_hull_type) noexcept
+{
+        try
+        {
+                std::shared_ptr<IObj> obj;
+
+                {
+                        ProgressRatio progress(&m_progress_ratio_list);
+                        progress.set_text("Load OBJ file: %p%");
+                        obj = load_obj_from_file(file_name, &progress);
+                }
+
+                if (obj->get_vertices().size() == 0)
+                {
+                        error("No vertices found in OBJ");
+                }
+
+                m_show->delete_all_objects();
+                m_surface_reconstructor.reset();
+
+                file_loaded(file_name /*, convex_hull_type*/);
+
+                m_points = obj->get_vertices();
+
+                std::vector<std::thread> threads(2);
+                std::vector<std::string> msg(2);
+
+                launch_class_thread(&threads[0], &msg[0], &MainWindow::thread_faces, this, obj, convex_hull_type);
+                launch_class_thread(&threads[1], &msg[1], &MainWindow::thread_surface_reconstructor, this, convex_hull_type);
+
+                join_threads(&threads, &msg);
+        }
+        catch (TerminateRequestException&)
+        {
+        }
+        catch (std::exception& e)
+        {
+                error_message("loading " + file_name + ":\n" + e.what());
+        }
+        catch (...)
+        {
+                error_message("Unknown error while loading file " + file_name);
+        }
+
+        m_file_loading = false;
+}
+
+void MainWindow::start_thread_open_file(const std::string& file)
+{
+        stop_all_threads();
+
+        m_file_loading = true;
+
+        launch_class_thread(&m_open_file_thread, nullptr, &MainWindow::thread_open_file, this, file, get_ch_type());
+}
+
+void MainWindow::stop_all_threads()
+{
+        m_progress_ratio_list.stop_all();
+
+        if (m_open_file_thread.joinable())
+        {
+                m_open_file_thread.join();
+        }
+        if (m_bound_cocone_thread.joinable())
+        {
+                m_bound_cocone_thread.join();
+        }
+
+        m_progress_ratio_list.enable();
+}
+
+void MainWindow::on_Button_LoadBoundCocone_clicked()
+{
+        if (m_file_loading)
+        {
+                QMessageBox::warning(this, "Warning", "Busy loading file");
+                return;
+        }
+        if (m_bound_cocone_loading)
+        {
+                QMessageBox::warning(this, "Warning", "Busy loading bound cocone");
+                return;
+        }
+        if (!m_surface_reconstructor)
+        {
+                QMessageBox::warning(this, "Warning", "No surface reconstructor");
+                return;
+        }
+
+        double rho = m_bound_cocone_rho;
+        double alpha = m_bound_cocone_alpha;
+
+        if (!edit_bound_cocone_parameters(this, BOUND_COCONE_DISPLAY_DIGITS, &rho, &alpha))
+        {
+                return;
+        }
+
+        if (m_bound_cocone_thread.joinable())
+        {
+                m_bound_cocone_thread.join();
+        }
+
+        m_bound_cocone_loading = true;
+
+        launch_class_thread(&m_bound_cocone_thread, nullptr, &MainWindow::thread_bound_cocone, this, get_ch_type(), rho, alpha);
+}
+
+void MainWindow::timer_slot()
+{
+        std::vector<std::tuple<unsigned, unsigned, std::string>> ratios = m_progress_ratio_list.get_all();
+
+        if (ratios.size() > m_progress_bars.size())
+        {
+                m_progress_bars.resize(ratios.size());
+        }
+
+        std::list<QProgressBar>::iterator bar = m_progress_bars.begin();
+
+        for (unsigned i = 0; i < ratios.size(); ++i, ++bar)
+        {
+                if (!bar->isVisible())
+                {
+                        ui.statusBar->addWidget(&(*bar));
+                        bar->show();
+                }
+
+                bar->setFormat(std::get<2>(ratios[i]).c_str());
+
+                unsigned v = std::get<0>(ratios[i]), m = std::get<1>(ratios[i]);
+
+                if (m > 0)
+                {
+                        bar->setMaximum(m);
+                        bar->setValue(v);
+                }
+                else
+                {
+                        bar->setMaximum(0);
+                        bar->setValue(0);
+                }
+        }
+
+        while (bar != m_progress_bars.end())
+        {
+                ui.statusBar->removeWidget(&(*bar));
+                bar = m_progress_bars.erase(bar);
+        }
+}
+
+void MainWindow::set_bound_cocone_label(double rho, double alpha)
+{
+        std::string bc =
+                "ρ " + to_string(rho, BOUND_COCONE_DISPLAY_DIGITS) + "; α " + to_string(alpha, BOUND_COCONE_DISPLAY_DIGITS);
+        ui.BoundCocone_label->setText(bc.c_str());
+}
+
+void MainWindow::set_dependent_interface_enabled()
+{
+        ui.Label_DFT_Brightness->setEnabled(ui.checkBox_show_dft->isEnabled() && ui.checkBox_show_dft->isChecked());
+        ui.Slider_DFT_Brightness->setEnabled(ui.checkBox_show_dft->isEnabled() && ui.checkBox_show_dft->isChecked());
+
+        // ui.widget_wireframe_color->setEnabled(ui.checkBox_Wireframe->isEnabled() && ui.checkBox_Wireframe->isChecked());
+        // ui.ButtonWireframeColor->setEnabled(ui.checkBox_Wireframe->isEnabled() && ui.checkBox_Wireframe->isChecked());
+        // ui.label_wireframe_color->setEnabled(ui.checkBox_Wireframe->isEnabled() && ui.checkBox_Wireframe->isChecked());
+}
+
+void MainWindow::disable_radio_button(QRadioButton* button)
+{
+        button_strike_out(button, true);
+}
+
+void MainWindow::disable_object_buttons()
+{
+        disable_radio_button(ui.radioButton_Faces);
+        disable_radio_button(ui.radioButton_FacesConvexHull);
+        disable_radio_button(ui.radioButton_Cocone);
+        disable_radio_button(ui.radioButton_CoconeConvexHull);
+        disable_radio_button(ui.radioButton_BoundCocone);
+        disable_radio_button(ui.radioButton_BoundCoconeConvexHull);
+}
+
+void MainWindow::disable_bound_cocone_buttons()
+{
+        disable_radio_button(ui.radioButton_BoundCocone);
+        disable_radio_button(ui.radioButton_BoundCoconeConvexHull);
+}
+
+void MainWindow::enable_radio_button(QRadioButton* button)
+{
+        button_strike_out(button, false);
+
+        if (button->isChecked())
+        {
+                button->click();
+        }
+}
+
+void MainWindow::on_MainWindow_SignalWindowEvent(const WindowEvent& event)
+{
+        switch (event.get_type())
+        {
+        case WindowEvent::EventType::PROGRAM_ENDED:
+        {
+                const WindowEvent::program_ended& d = event.get<WindowEvent::program_ended>();
+
+                const char* m = (d.msg.size() != 0) ? d.msg.c_str() : "Unknown Error. Exit failure.";
+
+                LOG(m);
+
+                QMessageBox::critical(this, "Error", m);
+
+                close();
+
+                break;
+        }
+        case WindowEvent::EventType::ERROR_SRC_MESSAGE:
+        {
+                const WindowEvent::error_src_message& d = event.get<WindowEvent::error_src_message>();
+
+                LOG(d.msg);
+
+                show_source_error(this, d.msg, source_with_line_numbers(d.src));
+
+                close();
+
+                break;
+        }
+        case WindowEvent::EventType::ERROR_MESSAGE:
+        {
+                const WindowEvent::error_message& d = event.get<WindowEvent::error_message>();
+
+                LOG(d.msg);
+
+                QMessageBox::critical(this, "Error", d.msg.c_str());
+
+                break;
+        }
+        case WindowEvent::EventType::WINDOW_READY:
+        {
+                break;
+        }
+        case WindowEvent::EventType::OBJECT_LOADED:
+        {
+                const WindowEvent::object_loaded& d = event.get<WindowEvent::object_loaded>();
+
+                switch (static_cast<ObjectType>(d.id))
+                {
+                case FACES:
+                        enable_radio_button(ui.radioButton_Faces);
+                        break;
+                case FACES_CONVEX_HULL:
+                        enable_radio_button(ui.radioButton_FacesConvexHull);
+                        break;
+                case SURFACE_COCONE:
+                        enable_radio_button(ui.radioButton_Cocone);
+                        break;
+                case SURFACE_COCONE_CONVEX_HULL:
+                        enable_radio_button(ui.radioButton_CoconeConvexHull);
+                        break;
+                case SURFACE_BOUND_COCONE:
+                        enable_radio_button(ui.radioButton_BoundCocone);
+                        break;
+                case SURFACE_BOUND_COCONE_CONVEX_HULL:
+                        enable_radio_button(ui.radioButton_BoundCoconeConvexHull);
+                        break;
+                }
+
+                break;
+        }
+        case WindowEvent::EventType::FILE_LOADED:
+        {
+                const WindowEvent::file_loaded& d = event.get<WindowEvent::file_loaded>();
+
+                std::experimental::filesystem::path p(d.file);
+                QString title = QString(APPLICATION_NAME) + " - " + p.filename().c_str();
+                this->setWindowTitle(title);
+
+                // m_convex_hull_type_label.setText(QString("CH: ") + to_string(event.ct));
+
+                disable_object_buttons();
+
+                break;
+        }
+        case WindowEvent::EventType::BOUND_COCONE_LOADED:
+        {
+                const WindowEvent::bound_cocone_loaded& d = event.get<WindowEvent::bound_cocone_loaded>();
+
+                m_bound_cocone_rho = d.rho;
+                m_bound_cocone_alpha = d.alpha;
+
+                set_bound_cocone_label(m_bound_cocone_rho, m_bound_cocone_alpha);
+
+                disable_bound_cocone_buttons();
+
+                break;
+        }
+        }
+}
+
+void MainWindow::showEvent(QShowEvent* e)
+{
+        QMainWindow::showEvent(e);
+
+        if (!m_first_show)
+        {
+                return;
+        }
+        m_first_show = false;
+
+        // Окно ещё не видно, поэтому небольшая задержка, чтобы окно реально появилось.
+        QTimer::singleShot(50, this, SLOT(window_shown()));
+}
+
+void MainWindow::window_shown()
+{
+        QRect geom = QDesktopWidget().availableGeometry(this);
+        QSize s = geom.size() * WINDOW_SIZE_COEF;
+        int delta_w = this->frameGeometry().width() - this->geometry().width();
+        int delta_h = this->frameGeometry().height() - this->geometry().height();
+
+        // Из документации: the size excluding any window frame
+        this->resize(s.width() - delta_w, s.height() - delta_h);
+
+        // Из документации: the position on the desktop, including frame
+        this->move((geom.width() - s.width()) / 2, (geom.height() - s.height()) / 2);
+
+        try
+        {
+                m_show = create_show(
+                        this, m_widget_under_window->winId(), qcolor_to_vec3(m_clear_color), qcolor_to_vec3(m_default_color),
+                        qcolor_to_vec3(m_wireframe_color), ui.checkBox_Smooth->isChecked(), ui.checkBox_Wireframe->isChecked(),
+                        ui.checkBox_Shadow->isChecked(), ui.checkBox_Materials->isChecked(), ui.checkBox_ShowEffect->isChecked(),
+                        ui.checkBox_show_dft->isChecked(), ui.checkBox_convex_hull_2d->isChecked(), get_ambient(), get_diffuse(),
+                        get_specular(), get_dft_brightness(), get_default_ns());
+        }
+        catch (std::exception& e)
+        {
+                program_ended(e.what());
+                return;
+        }
+        catch (...)
+        {
+                program_ended("");
+                return;
+        }
+
+        if (QCoreApplication::arguments().count() == 2)
+        {
+                start_thread_open_file(QCoreApplication::arguments().at(1).toStdString());
+        }
+
+        m_timer.start(TIMER_PROGRESS_BAR_INTERVAL);
+}
+
+void MainWindow::on_actionLoad_triggered()
+{
+        QString file_name = QFileDialog::getOpenFileName(this, "Select OBJ file", "", "OBJ files (*.obj)", nullptr,
+                                                         QFileDialog::ReadOnly | QFileDialog::DontUseNativeDialog);
+        if (file_name.size() > 0)
+        {
+                start_thread_open_file(file_name.toStdString());
+        }
+}
+
+ConvexHullComputationType MainWindow::get_ch_type() const
+{
+        return DEFAULT_CONVEX_TYPE;
+        // return ConvexHullComputationType::INTEGER;
+        // error_fatal("no convex hull type checked");
+}
+
+void MainWindow::init_convex_hull_type(ConvexHullComputationType /*ct*/)
+{
+}
+
+void MainWindow::resizeEvent(QResizeEvent*)
+{
+        if (m_show)
+        {
+                m_show->parent_resized();
+        }
+}
+
+void MainWindow::error_message(const std::string& msg) noexcept try
+{
+        emit SignalWindowEvent(WindowEvent(in_place<WindowEvent::error_message>, msg));
+}
+CATCH_ALL_SEND_EVENT()
+void MainWindow::window_ready() noexcept try
+{
+        emit SignalWindowEvent(WindowEvent(in_place<WindowEvent::window_ready>));
+}
+CATCH_ALL_SEND_EVENT()
+void MainWindow::program_ended(const std::string& msg) noexcept try
+{
+        emit SignalWindowEvent(WindowEvent(in_place<WindowEvent::program_ended>, msg));
+}
+CATCH_ALL_SEND_EVENT()
+void MainWindow::error_src_message(const std::string& msg, const std::string& src) noexcept try
+{
+        emit SignalWindowEvent(WindowEvent(in_place<WindowEvent::error_src_message>, msg, src));
+}
+CATCH_ALL_SEND_EVENT()
+void MainWindow::object_loaded(int id) noexcept try
+{
+        emit SignalWindowEvent(WindowEvent(in_place<WindowEvent::object_loaded>, id));
+}
+CATCH_ALL_SEND_EVENT()
+void MainWindow::file_loaded(const std::string& msg /*, ConvexHullComputationType convex_hull_type*/) noexcept try
+{
+        emit SignalWindowEvent(WindowEvent(in_place<WindowEvent::file_loaded>, msg));
+}
+CATCH_ALL_SEND_EVENT()
+void MainWindow::bound_cocone_loaded(double rho, double alpha) noexcept try
+{
+        emit SignalWindowEvent(WindowEvent(in_place<WindowEvent::bound_cocone_loaded>, rho, alpha));
+}
+CATCH_ALL_SEND_EVENT()
+
+void MainWindow::on_actionExit_triggered()
+{
+        close();
+}
+
+void MainWindow::on_Button_ResetView_clicked()
+{
+        m_show->reset_view();
+}
+
+double MainWindow::get_ambient() const
+{
+        double value = ui.Slider_Ambient->value() - ui.Slider_Ambient->minimum();
+        double delta = ui.Slider_Ambient->maximum() - ui.Slider_Ambient->minimum();
+        return 2 * value / delta;
+}
+double MainWindow::get_diffuse() const
+{
+        double value = ui.Slider_Diffuse->value() - ui.Slider_Diffuse->minimum();
+        double delta = ui.Slider_Diffuse->maximum() - ui.Slider_Diffuse->minimum();
+        return 2 * value / delta;
+}
+double MainWindow::get_specular() const
+{
+        double value = ui.Slider_Specular->value() - ui.Slider_Specular->minimum();
+        double delta = ui.Slider_Specular->maximum() - ui.Slider_Specular->minimum();
+        return 2 * value / delta;
+}
+double MainWindow::get_dft_brightness() const
+{
+        double value = ui.Slider_DFT_Brightness->value() - ui.Slider_DFT_Brightness->minimum();
+        double delta = ui.Slider_DFT_Brightness->maximum() - ui.Slider_DFT_Brightness->minimum();
+        double value_gamma = std::pow(value / delta, DFT_GAMMA);
+        return std::pow(DFT_MAX_BRIGHTNESS, value_gamma);
+}
+double MainWindow::get_default_ns() const
+{
+        return ui.Slider_Default_Ns->value();
+}
+
+void MainWindow::on_Slider_Ambient_valueChanged(int)
+{
+        m_show->set_ambient(get_ambient());
+}
+
+void MainWindow::on_Slider_Diffuse_valueChanged(int)
+{
+        m_show->set_diffuse(get_diffuse());
+}
+
+void MainWindow::on_Slider_Specular_valueChanged(int)
+{
+        m_show->set_specular(get_specular());
+}
+
+void MainWindow::on_Slider_DFT_Brightness_valueChanged(int)
+{
+        m_show->set_dft_brightness(get_dft_brightness());
+}
+
+void MainWindow::on_Slider_Default_Ns_valueChanged(int)
+{
+        m_show->set_default_ns(get_default_ns());
+}
+
+void MainWindow::on_ButtonBackgroundColor_clicked()
+{
+        QColorDialog dialog(this);
+        dialog.setCurrentColor(m_clear_color);
+        dialog.setWindowTitle("Background color");
+        dialog.setOptions(QColorDialog::NoButtons | QColorDialog::DontUseNativeDialog);
+        connect(&dialog, &QColorDialog::currentColorChanged, [this](const QColor& c) {
+                if (c.isValid())
+                {
+                        m_clear_color = c;
+                        m_show->set_clear_color(qcolor_to_vec3(c));
+
+                        QPalette palette;
+                        palette.setColor(QPalette::Window, m_clear_color);
+                        ui.widget_clear_color->setPalette(palette);
+                }
+        });
+
+        dialog.exec();
+}
+
+void MainWindow::on_ButtonDefaultColor_clicked()
+{
+        QColor c = QColorDialog::getColor(m_default_color, this, "Default color", QColorDialog::DontUseNativeDialog);
+        if (c.isValid())
+        {
+                m_default_color = c;
+                m_show->set_default_color(qcolor_to_vec3(c));
+
+                QPalette palette;
+                palette.setColor(QPalette::Window, m_default_color);
+                ui.widget_default_color->setPalette(palette);
+        }
+}
+
+void MainWindow::on_ButtonWireframeColor_clicked()
+{
+        QColor c = QColorDialog::getColor(m_wireframe_color, this, "Wireframe color", QColorDialog::DontUseNativeDialog);
+        if (c.isValid())
+        {
+                m_wireframe_color = c;
+                m_show->set_wireframe_color(qcolor_to_vec3(c));
+
+                QPalette palette;
+                palette.setColor(QPalette::Window, m_wireframe_color);
+                ui.widget_wireframe_color->setPalette(palette);
+        }
+}
+
+void MainWindow::on_checkBox_Shadow_clicked()
+{
+        m_show->show_shadow(ui.checkBox_Shadow->isChecked());
+}
+
+void MainWindow::on_checkBox_Wireframe_clicked()
+{
+        // ui.widget_wireframe_color->setEnabled(ui.checkBox_Wireframe->isChecked());
+        // ui.ButtonWireframeColor->setEnabled(ui.checkBox_Wireframe->isChecked());
+        // ui.label_wireframe_color->setEnabled(ui.checkBox_Wireframe->isChecked());
+
+        m_show->show_wireframe(ui.checkBox_Wireframe->isChecked());
+}
+
+void MainWindow::on_checkBox_Materials_clicked()
+{
+        m_show->show_materials(ui.checkBox_Materials->isChecked());
+}
+
+void MainWindow::on_checkBox_Smooth_clicked()
+{
+        m_show->show_smooth(ui.checkBox_Smooth->isChecked());
+}
+
+void MainWindow::on_checkBox_ShowEffect_clicked()
+{
+        m_show->show_effect(ui.checkBox_ShowEffect->isChecked());
+}
+
+void MainWindow::on_checkBox_show_dft_clicked()
+{
+        ui.Label_DFT_Brightness->setEnabled(ui.checkBox_show_dft->isChecked());
+        ui.Slider_DFT_Brightness->setEnabled(ui.checkBox_show_dft->isChecked());
+
+        m_show->show_dft(ui.checkBox_show_dft->isChecked());
+}
+
+void MainWindow::on_checkBox_convex_hull_2d_clicked()
+{
+        m_show->show_convex_hull_2d(ui.checkBox_convex_hull_2d->isChecked());
+}
+
+void MainWindow::on_actionFullScreen_triggered()
+{
+        m_show->toggle_fullscreen();
+}
+
+void MainWindow::on_radioButton_Faces_clicked()
+{
+        m_show->show_object(FACES);
+}
+
+void MainWindow::on_radioButton_FacesConvexHull_clicked()
+{
+        m_show->show_object(FACES_CONVEX_HULL);
+}
+
+void MainWindow::on_radioButton_Cocone_clicked()
+{
+        m_show->show_object(SURFACE_COCONE);
+}
+
+void MainWindow::on_radioButton_CoconeConvexHull_clicked()
+{
+        m_show->show_object(SURFACE_COCONE_CONVEX_HULL);
+}
+
+void MainWindow::on_radioButton_BoundCocone_clicked()
+{
+        m_show->show_object(SURFACE_BOUND_COCONE);
+}
+
+void MainWindow::on_radioButton_BoundCoconeConvexHull_clicked()
+{
+        m_show->show_object(SURFACE_BOUND_COCONE_CONVEX_HULL);
+}

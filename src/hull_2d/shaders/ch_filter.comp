@@ -1,0 +1,66 @@
+/*
+Copyright (C) 2017 Topological Manifold
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+// Работает только 1 поток
+
+layout(local_size_variable) in;
+
+// Входные данные 2 линии точек с координатами по X с минимумом и максимумом.
+// Координата Y равна индексу.
+layout(bindless_image, r32f) readonly uniform image2D line_min;
+layout(bindless_image, r32f) readonly uniform image2D line_max;
+
+// Точки с отрицательным значением минимума или максимума надо убрать.
+
+// тут результат
+layout(std430, binding = 0) writeonly buffer StorageBuffer
+{
+        vec2 points[];
+};
+// количество точек результата
+layout(bindless_image, r32i) writeonly uniform iimage2D points_count;
+
+void main(void)
+{
+        int count = 0;
+
+        float y;
+
+        y = 0;
+        for (int i = 0; i < SIZE; ++i, ++y)
+        {
+                vec4 s = imageLoad(line_min, ivec2(i, 0));
+                if (s.x >= 0) // для координаты Y==i имеется минимум по X
+                {
+                        points[count] = vec2(s.x, y);
+                        ++count;
+                }
+        }
+
+        y = SIZE - 1;
+        for (int i = SIZE - 1; i >= 0; --i, --y)
+        {
+                vec4 s = imageLoad(line_max, ivec2(i, 0));
+                if (s.x >= 0) // для координаты Y==i имеется максимум по X
+                {
+                        points[count] = vec2(s.x, y);
+                        ++count;
+                }
+        }
+
+        imageStore(points_count, ivec2(0, 0), ivec4(count, 0, 0, 0));
+}
