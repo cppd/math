@@ -13,9 +13,9 @@
 
 1. Оптический поток по алгоритму Лукаса-Канаде. Параллельно на видеокарте, compute shaders.
 
-1. Построение выпуклой оболочки в пространстве 2D по алгоритму divide et impera. Параллельно на видеокарте, compute shaders.
+1. Выпуклая оболочка в пространстве 2D по алгоритму divide et impera. Параллельно на видеокарте, compute shaders.
 
-1. Построение выпуклой оболочки в пространствах произвольной размерности по инкрементальному алгоритму со списками конфликтов.
+1. Выпуклая оболочка в пространствах произвольной размерности по инкрементальному алгоритму со списками конфликтов.
 Для координат точек используются целые числа. Частично параллельно на центральном процессоре, std::thread.
 
 1. Восстановление поверхностей по алгоритмам COCONE и BOUND COCONE. Программно сделано для любой размерности, но проверялось только для 2D и 3D,
@@ -50,9 +50,9 @@ Algorithms:
 
 1. Optical flow via the pyramidal Lucas-Kanade algorithm. In parallel on the GPU, compute shaders.
 
-1. Computing 2D convex hulls via the divide et impera algorithm. In parallel on the GPU, compute shaders.
+1. Convex hulls in 2D via the divide et impera algorithm. In parallel on the GPU, compute shaders.
 
-1. Computing convex hulls for an arbitrary number of dimensions via the randomized incremental algorithm. Implemented using integer
+1. Convex hulls for an arbitrary number of dimensions via the randomized incremental algorithm. Implemented using integer
 coordinates for the points. Partially in parallel on the CPU, std::thread.
 
 1. Surface reconstruction via COCONE and BOUND COCONE algorithms. Although the program is implemented for an arbitrary number of dimensions,
