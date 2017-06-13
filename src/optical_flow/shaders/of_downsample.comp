@@ -1,0 +1,120 @@
+/*
+Copyright (C) 2017 Topological Manifold
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+layout(local_size_variable) in;
+
+layout(bindless_image, r32f, location = 0) readonly uniform image2D img_big;
+layout(bindless_image, r32f, location = 1) writeonly uniform image2D img_small;
+
+layout(location = 2) uniform int k_x;
+layout(location = 3) uniform int k_y;
+
+const ivec2 IMAGE_SIZE_BIG = imageSize(img_big);
+
+// clang-format off
+// GaussianMatrix[2]
+const int delta = 2;
+const float filter_2d[5][5] =
+{
+        {0.002589,  0.0107788, 0.0241466, 0.0107788, 0.002589},
+        {0.0107788, 0.0448755, 0.10053,   0.0448755, 0.0107788},
+        {0.0241466, 0.10053,   0.225206,  0.10053,   0.0241466},
+        {0.0107788, 0.0448755, 0.10053,   0.0448755, 0.0107788},
+        {0.002589,  0.0107788, 0.0241466, 0.0107788, 0.002589}
+};
+const float filter_1d[5] = {0.05088, 0.21184, 0.47456, 0.21184, 0.05088};
+// clang-format on
+
+bool point_inside_big(ivec2 p)
+{
+        return all(lessThanEqual(ivec2(0), p)) && all(lessThan(p, IMAGE_SIZE_BIG));
+}
+
+float get_big(ivec2 p)
+{
+        return imageLoad(img_big, p).r;
+}
+
+void set_small(ivec2 p, float v)
+{
+        imageStore(img_small, p, vec4(v, v, v, 1));
+}
+
+void main(void)
+{
+        const ivec2 p_small = ivec2(gl_GlobalInvocationID.xy);
+
+        if (any(greaterThanEqual(p_small, imageSize(img_small))))
+        {
+                return;
+        }
+
+        const ivec2 p_big = ivec2(p_small.x * k_x, p_small.y * k_y);
+
+        float sum_image = 0;
+        float sum_filter = 0;
+
+        if (k_x > 1 && k_y > 1)
+        {
+                for (int j = -delta; j <= delta; ++j)
+                {
+                        for (int i = -delta; i <= delta; ++i)
+                        {
+                                ivec2 pd = ivec2(p_big.x + i, p_big.y + j);
+                                if (point_inside_big(pd))
+                                {
+                                        float m = filter_2d[j + delta][i + delta];
+                                        sum_image += get_big(pd) * m;
+                                        sum_filter += m;
+                                }
+                        }
+                }
+        }
+        else if (k_x > 1)
+        {
+                for (int i = -delta; i <= delta; ++i)
+                {
+                        ivec2 pd = ivec2(p_big.x + i, p_big.y);
+                        if (point_inside_big(pd))
+                        {
+                                float m = filter_1d[i + delta];
+                                sum_image += get_big(pd) * m;
+                                sum_filter += m;
+                        }
+                }
+        }
+        else if (k_y > 1)
+        {
+                for (int i = -delta; i <= delta; ++i)
+                {
+                        ivec2 pd = ivec2(p_big.x, p_big.y + i);
+                        if (point_inside_big(pd))
+                        {
+                                float m = filter_1d[i + delta];
+                                sum_image += get_big(pd) * m;
+                                sum_filter += m;
+                        }
+                }
+        }
+        else
+        {
+                sum_image = get_big(p_big);
+                sum_filter = 1;
+        }
+
+        set_small(p_small, sum_image / sum_filter);
+}

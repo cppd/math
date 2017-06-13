@@ -1,0 +1,96 @@
+/*
+Copyright (C) 2017 Topological Manifold
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+layout(local_size_variable) in;
+
+layout(bindless_image, r32f) readonly uniform image2D img_I;
+layout(bindless_image, r32f) writeonly uniform image2D img_dx;
+layout(bindless_image, r32f) writeonly uniform image2D img_dy;
+
+const ivec2 IMAGE_SIZE = imageSize(img_I);
+
+const ivec2 IMAGE_MIN = ivec2(0, 0);
+const ivec2 IMAGE_MAX = ivec2(IMAGE_SIZE.x - 1, IMAGE_SIZE.y - 1);
+
+const int SOBEL_DELTA = 1;
+
+// clang-format off
+const float sobel_dx[3][3] =
+{
+        {-1,  0,  1},
+        {-2,  0,  2},
+        {-1,  0,  1},
+};
+const float sobel_dy[3][3] =
+{
+        {-1, -2, -1},
+        { 0,  0,  0},
+        { 1,  2,  1}
+};
+// clang-format on
+
+float get_sobel_dx(int x, int y)
+{
+        return sobel_dx[y + SOBEL_DELTA][x + SOBEL_DELTA];
+}
+
+float get_sobel_dy(int x, int y)
+{
+        return sobel_dy[y + SOBEL_DELTA][x + SOBEL_DELTA];
+}
+
+float get_pixel(int x, int y)
+{
+        return imageLoad(img_I, clamp(ivec2(x, y), IMAGE_MIN, IMAGE_MAX)).r;
+}
+
+void set_dx(ivec2 p, float v)
+{
+        imageStore(img_dx, p, vec4(v, v, v, 1));
+}
+
+void set_dy(ivec2 p, float v)
+{
+        imageStore(img_dy, p, vec4(v, v, v, 1));
+}
+
+void main(void)
+{
+        const ivec2 p = ivec2(gl_GlobalInvocationID.xy);
+
+        if (any(greaterThanEqual(p, IMAGE_SIZE)))
+        {
+                return;
+        }
+
+        float sum_x = 0;
+        float sum_y = 0;
+
+        for (int y = -SOBEL_DELTA; y <= SOBEL_DELTA; ++y)
+        {
+                for (int x = -SOBEL_DELTA; x <= SOBEL_DELTA; ++x)
+                {
+                        float v = get_pixel(p.x + x, p.y + y);
+
+                        sum_x += v * get_sobel_dx(x, y);
+                        sum_y += v * get_sobel_dy(x, y);
+                }
+        }
+
+        set_dx(p, sum_x);
+        set_dy(p, sum_y);
+}

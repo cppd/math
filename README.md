@@ -11,6 +11,8 @@
 
 1. Двумерное дискретное преобразование Фурье. Для произвольного размера на основе БПФ и алгоритма Блуштейна. Параллельно на видеокарте, compute shaders.
 
+1. Оптический поток по алгоритму Лукаса-Канаде. Параллельно на видеокарте, compute shaders.
+
 1. Построение выпуклой оболочки в пространстве 2D по алгоритму divide et impera. Параллельно на видеокарте, compute shaders.
 
 1. Построение выпуклой оболочки в пространствах произвольной размерности по инкрементальному алгоритму со списками конфликтов.
@@ -34,7 +36,6 @@
 
 1. Широкое применение многопоточности (std::thread).
 
----
 
 This program is written just for fun. It reads OBJ files, shows their objects on the screen, and uses
 them as the input data for some algorithms that are interesting to me.
@@ -46,6 +47,8 @@ Algorithms:
 1. Showing the loaded OBJ file on the screen with shadows, wireframes, rotation, scaling, et cetera. Vertex, geometry, fragment shaders.
 
 1. Two-dimensional discrete Fourier transform for arbitrary sizes. Bluestein's algorithm and FFT. In parallel on the GPU, compute shaders.
+
+1. Optical flow via the pyramidal Lucas-Kanade algorithm. In parallel on the GPU, compute shaders.
 
 1. Computing 2D convex hulls via the divide et impera algorithm. In parallel on the GPU, compute shaders.
 
@@ -69,8 +72,6 @@ Some technical details:
 1. Build system: CMake.
 
 1. Extensive use of multithreading (std::thread).
-
----
 
 ### Screenshot
 

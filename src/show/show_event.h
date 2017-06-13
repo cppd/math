@@ -199,6 +199,13 @@ public:
                 {
                 }
         };
+        struct show_optical_flow final
+        {
+                const bool show;
+                show_optical_flow(bool v) : show(v)
+                {
+                }
+        };
 
         enum class EventType
         {
@@ -223,7 +230,8 @@ public:
                 show_effect,
                 show_dft,
                 set_dft_brightness,
-                show_convex_hull_2d
+                show_convex_hull_2d,
+                show_optical_flow
         };
 
         Event() = default;
@@ -340,13 +348,17 @@ private:
         {
                 return EventType::show_convex_hull_2d;
         }
+        static constexpr EventType event_type(InPlaceT<show_optical_flow>)
+        {
+                return EventType::show_optical_flow;
+        }
 
         EventType m_type;
 
         SimpleVariant<add_object, delete_object, show_object, delete_all_objects, parent_resized, toggle_fullscreen, reset_view,
                       set_ambient, set_diffuse, set_specular, set_clear_color, set_default_color, set_wireframe_color,
                       set_default_ns, show_smooth, show_wireframe, show_shadow, show_materials, show_effect, show_dft,
-                      set_dft_brightness, show_convex_hull_2d>
+                      set_dft_brightness, show_convex_hull_2d, show_optical_flow>
                 m_data;
 };
 

@@ -31,6 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "gl/gl_objects.h"
 #include "hull_2d/hull_2d.h"
 #include "obj/obj.h"
+#include "optical_flow/optical_flow.h"
 #include "pencil/pencil.h"
 #include "text/text.h"
 #include "window/window.h"
@@ -266,6 +267,10 @@ class ShowObject final : public IShow
         {
                 m_event_queue.push(Event(in_place<Event::show_convex_hull_2d>, v));
         }
+        void show_optical_flow(bool v) override
+        {
+                m_event_queue.push(Event(in_place<Event::show_optical_flow>, v));
+        }
         void parent_resized() override
         {
                 m_event_queue.push(Event(in_place<Event::parent_resized>));
@@ -278,7 +283,8 @@ class ShowObject final : public IShow
 public:
         ShowObject(ICallBack* cb, WindowID win_parent, glm::vec3 clear_color, glm::vec3 default_color, glm::vec3 wireframe_color,
                    bool with_smooth, bool with_wireframe, bool with_shadow, bool with_materials, bool with_effect, bool with_dft,
-                   bool with_convex_hull, float ambient, float diffuse, float specular, float dft_brightness, float default_ns)
+                   bool with_convex_hull, bool with_optical_flow, float ambient, float diffuse, float specular,
+                   float dft_brightness, float default_ns)
                 : m_callback(cb), m_win_parent(win_parent)
 
         {
@@ -303,6 +309,7 @@ public:
                 set_dft_brightness(dft_brightness);
                 show_materials(with_materials);
                 show_convex_hull_2d(with_convex_hull);
+                show_optical_flow(with_optical_flow);
 
                 m_thread = std::thread(&ShowObject::loop_thread, this);
         }
@@ -371,6 +378,7 @@ void ShowObject::loop()
         bool shadow_active = false;
         bool effect_active = false;
         bool convex_hull_2d_active = false;
+        bool optical_flow_active = false;
         bool default_view = false;
 
         // Вначале без полноэкранного режима
@@ -379,6 +387,8 @@ void ShowObject::loop()
         std::unordered_map<int, std::unique_ptr<IDrawObject>> objects;
         std::unique_ptr<DFTShow> dft_window;
         std::unique_ptr<PencilEffect> pencil_effect;
+        std::unique_ptr<OpticalFlow> optical_flow;
+        std::unique_ptr<TextureRGBA32F> optical_flow_texture;
         std::unique_ptr<ConvexHull2D> convex_hull_2d;
         std::unique_ptr<ShadowBuffer> shadow_buffer;
         std::unique_ptr<ColorBuffer> color_buffer;
@@ -592,6 +602,17 @@ void ShowObject::loop()
                                 }
                                 break;
                         }
+                        case Event::EventType::show_optical_flow:
+                        {
+                                const Event::show_optical_flow& d = event.get<Event::show_optical_flow>();
+
+                                optical_flow_active = d.show;
+                                if (optical_flow)
+                                {
+                                        optical_flow->reset();
+                                }
+                                break;
+                        }
                         }
                 }
 
@@ -712,6 +733,8 @@ void ShowObject::loop()
                         object_texture = nullptr;
                         dft_window = nullptr;
                         pencil_effect = nullptr;
+                        optical_flow = nullptr;
+                        optical_flow_texture = nullptr;
                         convex_hull_2d = nullptr;
 
                         window_width = new_width;
@@ -731,6 +754,7 @@ void ShowObject::loop()
                         shadow_buffer = std::make_unique<ShadowBuffer>(SHADOW_MUL * width, SHADOW_MUL * height);
                         color_buffer = std::make_unique<ColorBuffer>(width, height);
                         dft_texture = std::make_unique<TextureRGBA32F>(width, height);
+                        optical_flow_texture = std::make_unique<TextureRGBA32F>(width, height);
                         object_texture = std::make_unique<TextureR32I>(width, height);
 
                         // Для реализации ДПФ с CUDA: создавать сразу после текстуры, до других вызовов,
@@ -747,6 +771,7 @@ void ShowObject::loop()
                         }
 
                         pencil_effect = std::make_unique<PencilEffect>(color_buffer->get_texture(), *object_texture);
+                        optical_flow = std::make_unique<OpticalFlow>(optical_flow_texture->get_texture(), mtx);
                         convex_hull_2d = std::make_unique<ConvexHull2D>(*object_texture, mtx);
 
                         program.set_uniform_handle("shadow_tex", shadow_buffer->get_texture().get_texture_resident_handle());
@@ -848,15 +873,26 @@ void ShowObject::loop()
                 if (dft_active)
                 {
                         dft_texture->copy_texture_sub_image();
-                        dft_window->draw();
+                }
+                if (optical_flow_active)
+                {
+                        optical_flow_texture->copy_texture_sub_image();
                 }
 
                 glDisable(GL_DEPTH_TEST);
+                glDisable(GL_BLEND);
 
+                if (optical_flow_active)
+                {
+                        optical_flow->draw();
+                }
                 if (convex_hull_2d_active)
                 {
-                        glDisable(GL_BLEND);
                         convex_hull_2d->draw();
+                }
+                if (dft_active)
+                {
+                        dft_window->draw();
                 }
 
                 glEnable(GL_BLEND);
@@ -893,10 +929,11 @@ void ShowObject::loop_thread()
 
 std::unique_ptr<IShow> create_show(ICallBack* cb, WindowID win_parent, glm::vec3 clear_color, glm::vec3 default_color,
                                    glm::vec3 wireframe_color, bool with_smooth, bool with_wireframe, bool with_shadow,
-                                   bool with_materials, bool with_effect, bool with_dft, bool with_convex_hull, float ambient,
-                                   float diffuse, float specular, float dft_brightness, float default_ns)
+                                   bool with_materials, bool with_effect, bool with_dft, bool with_convex_hull,
+                                   bool with_optical_flow, float ambient, float diffuse, float specular, float dft_brightness,
+                                   float default_ns)
 {
         return std::make_unique<ShowObject>(cb, win_parent, clear_color, default_color, wireframe_color, with_smooth,
                                             with_wireframe, with_shadow, with_materials, with_effect, with_dft, with_convex_hull,
-                                            ambient, diffuse, specular, dft_brightness, default_ns);
+                                            with_optical_flow, ambient, diffuse, specular, dft_brightness, default_ns);
 }

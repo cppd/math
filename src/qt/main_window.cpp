@@ -655,12 +655,13 @@ void MainWindow::window_shown()
 
         try
         {
-                m_show = create_show(
-                        this, m_widget_under_window->winId(), qcolor_to_vec3(m_clear_color), qcolor_to_vec3(m_default_color),
-                        qcolor_to_vec3(m_wireframe_color), ui.checkBox_Smooth->isChecked(), ui.checkBox_Wireframe->isChecked(),
-                        ui.checkBox_Shadow->isChecked(), ui.checkBox_Materials->isChecked(), ui.checkBox_ShowEffect->isChecked(),
-                        ui.checkBox_show_dft->isChecked(), ui.checkBox_convex_hull_2d->isChecked(), get_ambient(), get_diffuse(),
-                        get_specular(), get_dft_brightness(), get_default_ns());
+                m_show = create_show(this, m_widget_under_window->winId(), qcolor_to_vec3(m_clear_color),
+                                     qcolor_to_vec3(m_default_color), qcolor_to_vec3(m_wireframe_color),
+                                     ui.checkBox_Smooth->isChecked(), ui.checkBox_Wireframe->isChecked(),
+                                     ui.checkBox_Shadow->isChecked(), ui.checkBox_Materials->isChecked(),
+                                     ui.checkBox_ShowEffect->isChecked(), ui.checkBox_show_dft->isChecked(),
+                                     ui.checkBox_convex_hull_2d->isChecked(), ui.checkBox_OpticalFlow->isChecked(), get_ambient(),
+                                     get_diffuse(), get_specular(), get_dft_brightness(), get_default_ns());
         }
         catch (std::exception& e)
         {
@@ -900,6 +901,11 @@ void MainWindow::on_checkBox_show_dft_clicked()
 void MainWindow::on_checkBox_convex_hull_2d_clicked()
 {
         m_show->show_convex_hull_2d(ui.checkBox_convex_hull_2d->isChecked());
+}
+
+void MainWindow::on_checkBox_OpticalFlow_clicked()
+{
+        m_show->show_optical_flow(ui.checkBox_OpticalFlow->isChecked());
 }
 
 void MainWindow::on_actionFullScreen_triggered()

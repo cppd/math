@@ -76,6 +76,7 @@ private slots:
         void on_checkBox_ShowEffect_clicked();
         void on_checkBox_show_dft_clicked();
         void on_checkBox_convex_hull_2d_clicked();
+        void on_checkBox_OpticalFlow_clicked();
         void on_actionFullScreen_triggered();
         void on_radioButton_Faces_clicked();
         void on_radioButton_FacesConvexHull_clicked();

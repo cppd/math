@@ -533,6 +533,19 @@ public:
                 return get_image_resident_handle(0, GL_FALSE, 0, GL_RGBA32F, GL_READ_WRITE);
         }
 
+        GLuint64 get_image_resident_handle_read_only_R32F() const noexcept
+        {
+                return get_image_resident_handle(0, GL_FALSE, 0, GL_R32F, GL_READ_ONLY);
+        }
+        GLuint64 get_image_resident_handle_write_only_R32F() const noexcept
+        {
+                return get_image_resident_handle(0, GL_FALSE, 0, GL_R32F, GL_WRITE_ONLY);
+        }
+        GLuint64 get_image_resident_handle_read_write_R32F() const noexcept
+        {
+                return get_image_resident_handle(0, GL_FALSE, 0, GL_R32F, GL_READ_WRITE);
+        }
+
         void clear_tex_image(GLint level, GLenum format, GLenum type, const void* data) const noexcept
         {
                 glClearTexImage(m_texture, level, format, type, data);
@@ -855,6 +868,12 @@ class TextureR32F final
         Texture2D m_texture;
 
 public:
+        enum Wrap
+        {
+                REPEATE,
+                CLAMP_TO_EDGE
+        };
+
         TextureR32F(int w, int h, const unsigned char* buffer)
         {
                 m_texture.texture_storage_2d(1, GL_R32F, w, h);
@@ -913,6 +932,12 @@ class TextureR32I final
         Texture2D m_texture;
 
 public:
+        enum Wrap
+        {
+                REPEATE,
+                CLAMP_TO_EDGE
+        };
+
         TextureR32I(int w, int h)
         {
                 m_texture.texture_storage_2d(1, GL_R32I, w, h);

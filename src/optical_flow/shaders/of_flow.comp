@@ -1,0 +1,193 @@
+/*
+Copyright (C) 2017 Topological Manifold
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+layout(local_size_variable) in;
+
+layout(bindless_image, r32f) readonly uniform image2D img_dx;
+layout(bindless_image, r32f) readonly uniform image2D img_dy;
+layout(bindless_image, r32f) readonly uniform image2D img_I;
+layout(bindless_sampler) uniform sampler2D tex_J;
+
+uniform int point_count_x;
+uniform int point_count_y;
+
+uniform int all_points;
+
+uniform int use_guess;
+uniform int guess_kx, guess_ky, guess_width;
+
+uniform int RADIUS;
+uniform int ITERATION_COUNT;
+uniform float STOP_MOVE_SQUARE;
+uniform float MIN_DETERMINANT;
+
+layout(std430, binding = 0) readonly buffer StorageBufferPoints
+{
+        ivec2 points[];
+};
+layout(std430, binding = 1) writeonly buffer StorageBufferPointsFlow
+{
+        vec2 points_flow[];
+};
+layout(std430, binding = 2) readonly buffer StorageBufferPointsFlowGuess
+{
+        vec2 points_flow_guess[];
+};
+
+const ivec2 IMAGE_SIZE = imageSize(img_dx);
+const vec2 IMAGE_SIZE_FLOAT = vec2(imageSize(img_dx));
+
+const ivec2 IMAGE_MIN = ivec2(0, 0);
+const ivec2 IMAGE_MAX = ivec2(IMAGE_SIZE.x - 1, IMAGE_SIZE.y - 1);
+
+const vec2 IMAGE_MIN_FLOAT = vec2(0, 0);
+const vec2 IMAGE_MAX_FLOAT = vec2(IMAGE_SIZE.x - 1, IMAGE_SIZE.y - 1);
+
+ivec2 screen_to_texture(ivec2 p)
+{
+        return ivec2(p.x, IMAGE_SIZE.y - p.y - 1);
+}
+ivec2 texture_to_screen(ivec2 p)
+{
+        return ivec2(p.x, IMAGE_SIZE.y - p.y - 1);
+}
+
+vec2 pixel_to_texture(ivec2 pixel)
+{
+        return vec2((pixel.x + 0.5) / IMAGE_SIZE_FLOAT.x, (pixel.y + 0.5) / IMAGE_SIZE_FLOAT.y);
+}
+vec2 pixel_to_texture(vec2 pixel)
+{
+        return vec2((pixel.x + 0.5) / IMAGE_SIZE_FLOAT.x, (pixel.y + 0.5) / IMAGE_SIZE_FLOAT.y);
+}
+
+vec2 get_dx_dy(ivec2 p)
+{
+        p = clamp(p, IMAGE_MIN, IMAGE_MAX);
+        return vec2(imageLoad(img_dx, p).r, imageLoad(img_dy, p).r);
+}
+
+float get_I(ivec2 p)
+{
+        p = clamp(p, IMAGE_MIN, IMAGE_MAX);
+        return imageLoad(img_I, p).r;
+}
+float get_J(vec2 p)
+{
+        p = clamp(p, IMAGE_MIN_FLOAT, IMAGE_MAX_FLOAT);
+        return texture(tex_J, pixel_to_texture(p)).r;
+}
+
+bool compute_g_inv(ivec2 p, out mat2 g_inv)
+{
+        float sum_x2 = 0;
+        float sum_y2 = 0;
+        float sum_xy = 0;
+
+        for (int i = -RADIUS; i <= RADIUS; ++i)
+        {
+                for (int j = -RADIUS; j <= RADIUS; ++j)
+                {
+                        ivec2 p = ivec2(p.x + i, p.y + j);
+
+                        vec2 d = get_dx_dy(p);
+
+                        sum_x2 += d.x * d.x;
+                        sum_y2 += d.y * d.y;
+                        sum_xy += d.x * d.y;
+                }
+        }
+
+        // матрица задаётся по столбцам, но в данном случае нет разницы
+        mat2 g = mat2(sum_x2, sum_xy, sum_xy, sum_y2);
+
+        float det = determinant(g);
+        if (abs(det) < MIN_DETERMINANT)
+        {
+                return false;
+        }
+
+        g_inv = inverse(g);
+
+        return true;
+}
+
+vec2 get_guess(ivec2 p_screen)
+{
+        int guess_index = (p_screen.y / guess_ky) * guess_width + p_screen.x / guess_kx;
+        vec2 flow = points_flow_guess[guess_index];
+        return vec2(flow.x * guess_kx, flow.y * guess_ky);
+}
+
+void main(void)
+{
+        if (gl_GlobalInvocationID.x >= point_count_x || gl_GlobalInvocationID.y >= point_count_y)
+        {
+                return;
+        }
+
+        int point_index = int(gl_GlobalInvocationID.y * point_count_x + gl_GlobalInvocationID.x);
+
+        const ivec2 p_screen = (all_points != 0) ? ivec2(gl_GlobalInvocationID.xy) : points[point_index];
+        const ivec2 p = screen_to_texture(p_screen);
+
+        mat2 g_inv;
+
+        if (!compute_g_inv(p, g_inv))
+        {
+                points_flow[point_index] = vec2(0);
+                return;
+        }
+
+        vec2 v = vec2(0, 0);
+
+        vec2 guess = (use_guess != 0) ? get_guess(p_screen) : vec2(0, 0);
+
+        // Пишется с 0 вверху экрана, рассчитывается с 0 внизу экрана, поэтому поменять знак y
+        guess.y = -guess.y;
+
+        for (int i = 0; i < ITERATION_COUNT; ++i)
+        {
+                vec2 b = vec2(0, 0);
+
+                for (int i = -RADIUS; i <= RADIUS; ++i)
+                {
+                        for (int j = -RADIUS; j <= RADIUS; ++j)
+                        {
+                                ivec2 pd = ivec2(p.x + i, p.y + j);
+
+                                vec2 pd_J = vec2(pd) + guess + v;
+
+                                b += (get_I(pd) - get_J(pd_J)) * get_dx_dy(pd);
+                        }
+                }
+
+                vec2 n = g_inv * b;
+
+                if (dot(n, n) < STOP_MOVE_SQUARE)
+                {
+                        break;
+                }
+
+                v += n;
+        }
+
+        vec2 res = v + guess;
+
+        // Пишется с 0 вверху экрана, рассчитывается с 0 внизу экрана, поэтому поменять знак y
+        points_flow[point_index] = vec2(res.x, -res.y);
+}
