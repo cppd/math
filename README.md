@@ -73,7 +73,9 @@ Some technical details:
 
 1. Extensive use of multithreading (std::thread).
 
-### Screenshot
+### Screenshots
 
-![screenshot](screenshots/screenshot.png?raw=true)
+3D model and the surface reconstructed only from the vertices of this 3D-model
+
+![original surface](screenshots/original.jpg?raw=true) ![reconstructed surface](screenshots/cocone.jpg?raw=true)
 

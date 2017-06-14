@@ -46,7 +46,10 @@ constexpr const char* APPLICATION_NAME = "OBJ Math Viewer";
 
 constexpr ConvexHullComputationType DEFAULT_CONVEX_TYPE = ConvexHullComputationType::INTEGER;
 
+// Размер окна по сравнению с экраном
 constexpr double WINDOW_SIZE_COEF = 0.7;
+// Если true, то размер для графики, если false, то размер всего окна
+constexpr bool WINDOW_SIZE_GRAPHICS = true;
 
 constexpr double DFT_MAX_BRIGHTNESS = 50000;
 constexpr double DFT_GAMMA = 0.5;
@@ -640,18 +643,38 @@ void MainWindow::showEvent(QShowEvent* e)
         QTimer::singleShot(50, this, SLOT(window_shown()));
 }
 
+void MainWindow::resize_window()
+{
+        if (WINDOW_SIZE_GRAPHICS)
+        {
+                QRect screen_geometry = QDesktopWidget().screenGeometry(this);
+                QSize graphics_size = screen_geometry.size() * WINDOW_SIZE_COEF;
+
+                // Из документации на resize: the size excluding any window frame
+                this->resize(graphics_size + (this->geometry().size() - m_widget_under_window->size()));
+        }
+        else
+        {
+                QRect desktop_geometry = QDesktopWidget().availableGeometry(this);
+                QSize window_size = desktop_geometry.size() * WINDOW_SIZE_COEF;
+
+                // Из документации на resize: the size excluding any window frame
+                this->resize(window_size - (this->frameGeometry().size() - this->geometry().size()));
+        }
+}
+
+void MainWindow::move_window_to_desktop_center()
+{
+        // Из документации на move: the position on the desktop, including frame
+        this->move((QDesktopWidget().availableGeometry(this).width() - this->frameGeometry().width()) / 2,
+                   (QDesktopWidget().availableGeometry(this).height() - this->frameGeometry().height()) / 2);
+}
+
 void MainWindow::window_shown()
 {
-        QRect geom = QDesktopWidget().availableGeometry(this);
-        QSize s = geom.size() * WINDOW_SIZE_COEF;
-        int delta_w = this->frameGeometry().width() - this->geometry().width();
-        int delta_h = this->frameGeometry().height() - this->geometry().height();
+        resize_window();
 
-        // Из документации: the size excluding any window frame
-        this->resize(s.width() - delta_w, s.height() - delta_h);
-
-        // Из документации: the position on the desktop, including frame
-        this->move((geom.width() - s.width()) / 2, (geom.height() - s.height()) / 2);
+        move_window_to_desktop_center();
 
         try
         {

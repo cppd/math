@@ -882,6 +882,14 @@ void ShowObject::loop()
                 glDisable(GL_DEPTH_TEST);
                 glDisable(GL_BLEND);
 
+                if (dft_active)
+                {
+                        dft_window->draw();
+                }
+
+                glEnable(GL_SCISSOR_TEST);
+                glScissor(0, 0, width, height);
+
                 if (optical_flow_active)
                 {
                         optical_flow->draw();
@@ -890,10 +898,8 @@ void ShowObject::loop()
                 {
                         convex_hull_2d->draw();
                 }
-                if (dft_active)
-                {
-                        dft_window->draw();
-                }
+
+                glDisable(GL_SCISSOR_TEST);
 
                 glEnable(GL_BLEND);
                 text.draw(window_width, window_height, {"FPS: " + std::to_string(get_fps(&start_time))});

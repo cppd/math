@@ -868,12 +868,6 @@ class TextureR32F final
         Texture2D m_texture;
 
 public:
-        enum Wrap
-        {
-                REPEATE,
-                CLAMP_TO_EDGE
-        };
-
         TextureR32F(int w, int h, const unsigned char* buffer)
         {
                 m_texture.texture_storage_2d(1, GL_R32F, w, h);
@@ -932,12 +926,6 @@ class TextureR32I final
         Texture2D m_texture;
 
 public:
-        enum Wrap
-        {
-                REPEATE,
-                CLAMP_TO_EDGE
-        };
-
         TextureR32I(int w, int h)
         {
                 m_texture.texture_storage_2d(1, GL_R32I, w, h);

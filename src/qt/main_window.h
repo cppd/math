@@ -94,6 +94,9 @@ private slots:
 private:
         void set_dependent_interface_enabled();
 
+        void resize_window();
+        void move_window_to_desktop_center();
+
         static void disable_radio_button(QRadioButton* button);
         static void enable_radio_button(QRadioButton* button);
         void disable_object_buttons();
