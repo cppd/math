@@ -59,8 +59,19 @@ void init_os_specific()
 }
 }
 
+#elif defined(_WIN32)
+
+namespace
+{
+void init_os_specific()
+{
+}
+}
+
 #else
+
 #error This operating system is not supported
+
 #endif
 
 void init()

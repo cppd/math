@@ -49,6 +49,7 @@ public:
         virtual void delete_all_objects() = 0;
         virtual void show_object(int id) = 0;
         virtual void parent_resized() = 0;
+        virtual void mouse_wheel(double) = 0;
         virtual void toggle_fullscreen() = 0;
         virtual void reset_view() = 0;
         virtual void set_ambient(float) = 0;

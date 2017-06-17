@@ -875,7 +875,7 @@
        <number>0</number>
       </property>
       <item>
-       <widget class="QLabel" name="widget_under_window">
+       <widget class="WheelLabel" name="widget_under_window">
         <property name="minimumSize">
          <size>
           <width>300</width>
@@ -975,6 +975,13 @@
   </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
+ <customwidgets>
+  <customwidget>
+   <class>WheelLabel</class>
+   <extends>QLabel</extends>
+   <header>qt/wheel_label.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

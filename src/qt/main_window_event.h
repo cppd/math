@@ -63,8 +63,8 @@ public:
         };
         struct file_loaded final
         {
-                const std::string file;
-                file_loaded(const std::string& file_) : file(file_)
+                const std::string file_name;
+                file_loaded(const std::string& file_name_) : file_name(file_name_)
                 {
                 }
         };

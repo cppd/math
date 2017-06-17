@@ -26,6 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/error.h"
 #include "com/file.h"
+#include "com/file_sys.h"
 #include "com/log.h"
 #include "com/print.h"
 #include "com/random.h"
@@ -36,7 +37,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cmath>
 #include <complex>
 #include <cstdio>
-#include <experimental/filesystem>
 #include <random>
 #include <string>
 #include <vector>
@@ -192,7 +192,7 @@ void test_fft_impl(bool big_test)
 // 1 2 -> 3 -1
 
 #else
-        const std::string tmp_dir = std::experimental::filesystem::temp_directory_path();
+        const std::string tmp_dir = temp_directory();
         const std::string input = tmp_dir + "/input.txt";
         const std::string output_gl2d = tmp_dir + "/output_gl2d.txt";
         const std::string output_cuda = tmp_dir + "/output_cuda.txt";

@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "qt_support.h"
 
 #include "com/error.h"
+#include "com/file_sys.h"
 #include "com/log.h"
 #include "com/print.h"
 #include "com/time.h"
@@ -39,8 +40,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QObjectList>
 #include <array>
 #include <cmath>
-#include <experimental/filesystem>
 #include <thread>
+#include <type_traits>
 
 constexpr const char* APPLICATION_NAME = "OBJ Math Viewer";
 
@@ -83,6 +84,24 @@ enum ObjectType
                 error_fatal("Critical program error. Send event exception.");                                \
         }
 
+namespace
+{
+WindowID get_widget_window_id(QWidget* widget)
+{
+        static_assert(sizeof(WindowID) == sizeof(WId));
+        static_assert(std::is_integral<WindowID>::value || std::is_pointer<WindowID>::value);
+        static_assert(std::is_integral<WId>::value || std::is_pointer<WId>::value);
+
+        union {
+                WId w_id;
+                WindowID window_id;
+        };
+
+        w_id = widget->winId();
+        return window_id;
+}
+}
+
 void MainWindow::on_actionAbout_triggered()
 {
         QMessageBox::about(this, "About", QString(APPLICATION_NAME) +
@@ -109,6 +128,8 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
 
         connect(this, SIGNAL(SignalWindowEvent(WindowEvent)), this, SLOT(on_MainWindow_SignalWindowEvent(WindowEvent)),
                 Qt::ConnectionType(Qt::QueuedConnection | Qt::UniqueConnection));
+
+        connect(ui.widget_under_window, SIGNAL(wheel(double)), this, SLOT(widget_under_window_mouse_wheel_slot(double)));
 
         connect(&m_timer, SIGNAL(timeout()), this, SLOT(timer_slot()));
 
@@ -376,13 +397,13 @@ void MainWindow::thread_open_file(const std::string& file_name, ConvexHullComput
         m_file_loading = false;
 }
 
-void MainWindow::start_thread_open_file(const std::string& file)
+void MainWindow::start_thread_open_file(const std::string& file_name)
 {
         stop_all_threads();
 
         m_file_loading = true;
 
-        launch_class_thread(&m_open_file_thread, nullptr, &MainWindow::thread_open_file, this, file, get_ch_type());
+        launch_class_thread(&m_open_file_thread, nullptr, &MainWindow::thread_open_file, this, file_name, get_ch_type());
 }
 
 void MainWindow::stop_all_threads()
@@ -603,9 +624,9 @@ void MainWindow::on_MainWindow_SignalWindowEvent(const WindowEvent& event)
         {
                 const WindowEvent::file_loaded& d = event.get<WindowEvent::file_loaded>();
 
-                std::experimental::filesystem::path p(d.file);
-                QString title = QString(APPLICATION_NAME) + " - " + p.filename().c_str();
-                this->setWindowTitle(title);
+                std::string file_name = get_base_name(d.file_name);
+
+                this->setWindowTitle(QString(APPLICATION_NAME) + " - " + file_name.c_str());
 
                 // m_convex_hull_type_label.setText(QString("CH: ") + to_string(event.ct));
 
@@ -678,7 +699,7 @@ void MainWindow::window_shown()
 
         try
         {
-                m_show = create_show(this, m_widget_under_window->winId(), qcolor_to_vec3(m_clear_color),
+                m_show = create_show(this, get_widget_window_id(m_widget_under_window), qcolor_to_vec3(m_clear_color),
                                      qcolor_to_vec3(m_default_color), qcolor_to_vec3(m_wireframe_color),
                                      ui.checkBox_Smooth->isChecked(), ui.checkBox_Wireframe->isChecked(),
                                      ui.checkBox_Shadow->isChecked(), ui.checkBox_Materials->isChecked(),
@@ -778,6 +799,14 @@ void MainWindow::on_actionExit_triggered()
 void MainWindow::on_Button_ResetView_clicked()
 {
         m_show->reset_view();
+}
+
+void MainWindow::widget_under_window_mouse_wheel_slot(double delta)
+{
+        if (m_show)
+        {
+                m_show->mouse_wheel(delta);
+        }
 }
 
 double MainWindow::get_ambient() const

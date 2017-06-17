@@ -34,7 +34,16 @@ endif()
 
 ###################################################
 
+include(CheckCSourceCompiles)
+include(CheckCXXSourceCompiles)
+
+###################################################
+
 macro (IncludeSourceAndSetCompilerFlags dir_name executable)
+
+        if ("${PROJECT_BINARY_DIR}" STREQUAL "${PROJECT_SOURCE_DIR}")
+                message(FATAL_ERROR "In-source build")
+        endif ()
 
         set(CMAKE_C_FLAGS)
         set(CMAKE_CXX_FLAGS)
@@ -188,6 +197,20 @@ macro(AddShaders dir_name shader_type extensions)
 
 endmacro()
 
+function(Check_C_Has_Int128)
+        check_c_source_compiles("int main(void){__int128 v;}" C_HAS_INT128)
+        if(NOT C_HAS_INT128)
+                message(FATAL_ERROR "C doesn't have __int128")
+        endif()
+endfunction()
+
+function(Check_CXX_Has_Int128)
+        check_cxx_source_compiles("int main(){__int128 v;}" CXX_HAS_INT128)
+        if(NOT CXX_HAS_INT128)
+                message(FATAL_ERROR "C++ doesn't have __int128")
+        endif()
+endfunction()
+
 ###########################################################################
 
 project(create_str C CXX)
@@ -210,6 +233,9 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
+Check_C_Has_Int128()
+Check_CXX_Has_Int128()
+
 IncludeSourceAndSetCompilerFlags(src true)
 
 #target_compile_options(${PROJECT_NAME} PRIVATE -S -masm=intel)
@@ -223,8 +249,7 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE -DGLM_FORCE_NO_CTOR_INIT -DGL
 
 #####################
 
-target_link_libraries(${PROJECT_NAME} stdc++fs)
-
+#target_link_libraries(${PROJECT_NAME} stdc++fs)
 #if(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
 #target_link_libraries(${PROJECT_NAME} quadmath)
 #endif()

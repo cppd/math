@@ -47,8 +47,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <vector>
 
 constexpr float ZOOM_BASE = 1.1;
-constexpr int ZOOM_EXP_MIN = -50;
-constexpr int ZOOM_EXP_MAX = 100;
+constexpr float ZOOM_EXP_MIN = -50;
+constexpr float ZOOM_EXP_MAX = 100;
 
 // увеличение текстуры тени по сравнению с размером окна
 constexpr float SHADOW_MUL = 1.0;
@@ -275,6 +275,10 @@ class ShowObject final : public IShow
         {
                 m_event_queue.push(Event(in_place<Event::parent_resized>));
         }
+        void mouse_wheel(double delta) override
+        {
+                m_event_queue.push(Event(in_place<Event::mouse_wheel>, delta));
+        }
         void toggle_fullscreen() override
         {
                 m_event_queue.push(Event(in_place<Event::toggle_fullscreen>));
@@ -367,8 +371,8 @@ void ShowObject::loop()
         int mouse_x = 0, mouse_y = 0, new_mouse_x = 0, new_mouse_y = 0;
         bool mouse_pressed = false, mouse_pressed_shift = false;
         glm::vec2 window_center(0, 0);
-        int zoom_delta = 0;
-        int wheel_delta = 0;
+        float zoom_delta = 0;
+        float wheel_delta = 0;
 
         // Неважно, какие тут будут значения при инициализации,
         // так как при создании окна начальные параметры помещаются в очередь
@@ -411,6 +415,12 @@ void ShowObject::loop()
         {
                 if (m_stop)
                 {
+#if defined(_WIN32)
+                        // Без этого вызова почему-то зависает деструктор окна SFML на Винде,
+                        // если это окно встроено в родительское окно.
+                        change_window_style_not_child(wnd.getSystemHandle());
+#endif
+
                         return;
                 }
 
@@ -479,6 +489,20 @@ void ShowObject::loop()
                         case Event::EventType::reset_view:
                         {
                                 default_view = true;
+                                break;
+                        }
+                        case Event::EventType::mouse_wheel:
+                        {
+                                // Для полноэкранного режима обрабатывается
+                                // в другом сообщении sf::Event::MouseWheelScrolled
+                                if (!fullscreen_active)
+                                {
+                                        const Event::mouse_wheel& d = event.get<Event::mouse_wheel>();
+                                        if (new_mouse_x < width && new_mouse_y < height)
+                                        {
+                                                wheel_delta = d.delta;
+                                        }
+                                }
                                 break;
                         }
                         case Event::EventType::set_ambient:
@@ -669,11 +693,18 @@ void ShowObject::loop()
                                 new_mouse_y = sf_event.mouseMove.y;
                                 break;
                         case sf::Event::MouseWheelScrolled:
-                                // if (new_mouse_x < width && new_mouse_y < height &&
-                                //    get_object_under_mouse(new_mouse_x, new_mouse_y, window_height, *object_texture) > 0)
-                                if (new_mouse_x < width && new_mouse_y < height)
+                                // Для режима встроенного окна перенесено на обработчик события
+                                // Event::EventType::mouse_wheel, так как на Винде не приходит
+                                // это сообщение для дочернего окна.
+                                if (fullscreen_active)
                                 {
-                                        wheel_delta = sf_event.mouseWheelScroll.delta;
+                                        // if (new_mouse_x < width && new_mouse_y < height &&
+                                        //    get_object_under_mouse(new_mouse_x, new_mouse_y, window_height, *object_texture) >
+                                        //    0)
+                                        if (new_mouse_x < width && new_mouse_y < height)
+                                        {
+                                                wheel_delta = sf_event.mouseWheelScroll.delta;
+                                        }
                                 }
                                 break;
                         case sf::Event::Resized:
@@ -714,9 +745,9 @@ void ShowObject::loop()
                                 glm::vec2 mouse_in_wnd((new_mouse_x - width * 0.5f) * pixel_to_coord,
                                                        (height * 0.5f - new_mouse_y) * pixel_to_coord);
 
-                                window_center += mouse_in_wnd - mouse_in_wnd * std::pow(ZOOM_BASE, float(-wheel_delta));
+                                window_center += mouse_in_wnd - mouse_in_wnd * std::pow(ZOOM_BASE, -wheel_delta);
 
-                                pixel_to_coord = pixel_to_coord_no_zoom * std::pow(ZOOM_BASE, float(-zoom_delta));
+                                pixel_to_coord = pixel_to_coord_no_zoom * std::pow(ZOOM_BASE, -zoom_delta);
 
                                 matrix_change = true;
                         }

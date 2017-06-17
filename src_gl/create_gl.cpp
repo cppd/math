@@ -196,6 +196,11 @@ void write_data(const std::vector<FuncData>& data)
         f_header << "\n";
         f_header << "// clang-format off\n";
         f_header << "\n";
+        f_header << "#if defined(_WIN32)\n";
+        f_header << "#undef near\n";
+        f_header << "#undef far\n";
+        f_header << "#endif\n";
+        f_header << "\n";
         f_header << "namespace " << GL_CPP_NAME << "\n";
         f_header << "{\n";
         f_header << INDENT << "void init();\n";

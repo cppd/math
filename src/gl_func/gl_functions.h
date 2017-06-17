@@ -25,6 +25,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 // clang-format off
 
+#if defined(_WIN32)
+#undef near
+#undef far
+#endif
+
 namespace gl_functions
 {
         void init();

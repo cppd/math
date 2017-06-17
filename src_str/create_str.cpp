@@ -45,7 +45,7 @@ int main(int argc, char* argv[])
 
         std::string type = argv[1];
 
-        std::ifstream ifs(argv[2]);
+        std::ifstream ifs(argv[2], type == "bin" ? (std::ios_base::in | std::ios_base::binary) : std::ios_base::in);
         if (!ifs)
         {
                 error("error open file " + std::string(argv[2]));

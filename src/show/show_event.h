@@ -82,6 +82,13 @@ public:
                 {
                 }
         };
+        struct mouse_wheel final
+        {
+                const double delta;
+                mouse_wheel(double d) : delta(d)
+                {
+                }
+        };
         struct toggle_fullscreen final
         {
                 toggle_fullscreen()
@@ -214,6 +221,7 @@ public:
                 show_object,
                 delete_all_objects,
                 parent_resized,
+                mouse_wheel,
                 toggle_fullscreen,
                 reset_view,
                 set_ambient,
@@ -279,6 +287,10 @@ private:
         static constexpr EventType event_type(InPlaceT<parent_resized>)
         {
                 return EventType::parent_resized;
+        }
+        static constexpr EventType event_type(InPlaceT<mouse_wheel>)
+        {
+                return EventType::mouse_wheel;
         }
         static constexpr EventType event_type(InPlaceT<toggle_fullscreen>)
         {
@@ -355,8 +367,8 @@ private:
 
         EventType m_type;
 
-        SimpleVariant<add_object, delete_object, show_object, delete_all_objects, parent_resized, toggle_fullscreen, reset_view,
-                      set_ambient, set_diffuse, set_specular, set_clear_color, set_default_color, set_wireframe_color,
+        SimpleVariant<add_object, delete_object, show_object, delete_all_objects, parent_resized, mouse_wheel, toggle_fullscreen,
+                      reset_view, set_ambient, set_diffuse, set_specular, set_clear_color, set_default_color, set_wireframe_color,
                       set_default_ns, show_smooth, show_wireframe, show_shadow, show_materials, show_effect, show_dft,
                       set_dft_brightness, show_convex_hull_2d, show_optical_flow>
                 m_data;

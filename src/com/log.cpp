@@ -80,6 +80,7 @@ catch (...)
         catch (...)
         {
         }
-        std::quick_exit(EXIT_FAILURE);
+
+        std::_Exit(EXIT_FAILURE);
 }
 }

@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/error.h"
 #include "com/file.h"
+#include "com/file_sys.h"
 #include "com/log.h"
 #include "com/math.h"
 #include "com/print.h"
@@ -29,7 +30,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <experimental/filesystem>
 #include <fstream>
 #include <glm/geometric.hpp>
 #include <map>
@@ -202,7 +202,7 @@ void get_lines(const std::string& file, std::string* s, std::vector<size_t>* lin
         }
 }
 
-void load_image(const std::experimental::filesystem::path& dir_name, std::string&& name, std::map<std::string, int>* image_index,
+void load_image(const std::string& dir_name, std::string&& name, std::map<std::string, int>* image_index,
                 std::vector<sf::Image>* images, int* index)
 {
         name = trim(name);
@@ -211,12 +211,12 @@ void load_image(const std::experimental::filesystem::path& dir_name, std::string
                 error("no map file name");
         }
 
+#if defined(__linux__)
+        // путь к файлу может быть указан в формате Windows, поэтому надо заменить разделители
         std::replace(name.begin(), name.end(), '\\', '/');
+#endif
 
-        if (std::experimental::filesystem::path(name).is_relative())
-        {
-                name = dir_name / name;
-        }
+        name = dir_name + "/" + name;
 
         auto iter = image_index->find(name);
         if (iter != image_index->end())
@@ -601,10 +601,10 @@ class OBJ final : public IObj
         void read_obj(const std::string& file_name, ProgressRatio* progress, std::map<std::string, int>* material_index,
                       std::vector<std::string>* library_names);
 
-        void read_lib(const std::experimental::filesystem::path& dir_name, const std::string& file_name, ProgressRatio* progress,
+        void read_lib(const std::string& dir_name, const std::string& file_name, ProgressRatio* progress,
                       std::map<std::string, int>* material_index, std::map<std::string, int>* image_index);
-        void read_libs(const std::experimental::filesystem::path& dir_name, ProgressRatio* progress,
-                       std::map<std::string, int>* material_index, const std::vector<std::string>& library_names);
+        void read_libs(const std::string& dir_name, ProgressRatio* progress, std::map<std::string, int>* material_index,
+                       const std::vector<std::string>& library_names);
 
         void read_obj_and_mtl(const std::string& file_name, ProgressRatio* progress);
 
@@ -891,18 +891,17 @@ void OBJ::read_obj_th(const ThreadData* thread_data, std::string* file_ptr, std:
         read_obj_two(thread_data, file_ptr, line_prop, progress, material_index, library_names);
 }
 
-void OBJ::read_lib(const std::experimental::filesystem::path& dir_name, const std::string& file_name, ProgressRatio* progress,
+void OBJ::read_lib(const std::string& dir_name, const std::string& file_name, ProgressRatio* progress,
                    std::map<std::string, int>* material_index, std::map<std::string, int>* image_index)
 {
         std::string file_str;
         std::vector<size_t> line_begin;
 
-        const std::string lib_name =
-                std::experimental::filesystem::path(file_name).is_relative() ? (dir_name / file_name).native() : file_name;
+        const std::string lib_name = dir_name + "/" + file_name;
 
         get_lines(lib_name, &file_str, &line_begin);
 
-        const std::string lib_dir = std::experimental::filesystem::path(lib_name).parent_path();
+        const std::string lib_dir = get_dir_name(lib_name);
 
         OBJ::material* mtl = nullptr;
         std::string mtl_name;
@@ -1029,8 +1028,8 @@ void OBJ::read_lib(const std::experimental::filesystem::path& dir_name, const st
         }
 }
 
-void OBJ::read_libs(const std::experimental::filesystem::path& dir_name, ProgressRatio* progress,
-                    std::map<std::string, int>* material_index, const std::vector<std::string>& library_names)
+void OBJ::read_libs(const std::string& dir_name, ProgressRatio* progress, std::map<std::string, int>* material_index,
+                    const std::vector<std::string>& library_names)
 {
         std::map<std::string, int> image_index;
 
@@ -1102,7 +1101,7 @@ void OBJ::read_obj_and_mtl(const std::string& file_name, ProgressRatio* progress
 
         find_center_and_length(m_vertices, m_faces, &m_center, &m_length);
 
-        read_libs(std::experimental::filesystem::path(file_name).parent_path(), progress, &material_index, library_names);
+        read_libs(get_dir_name(file_name), progress, &material_index, library_names);
 }
 
 OBJ::OBJ(const std::string& file_name, ProgressRatio* progress)

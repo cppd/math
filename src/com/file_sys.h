@@ -15,21 +15,14 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#pragma once
-#ifndef WINDOW_PROP_H
-#define WINDOW_PROP_H
+#ifndef FILE_SYS_H
+#define FILE_SYS_H
 
-#include <SFML/Window/WindowHandle.hpp>
+#include <string>
 
-using WindowID = sf::WindowHandle;
+std::string get_base_name(const std::string& file_name);
+std::string get_dir_name(const std::string& file_name);
 
-void move_window_to_parent(WindowID window, WindowID parent);
-void make_window_fullscreen(WindowID window);
-void set_focus(WindowID window);
-void set_size_to_parent(WindowID window, WindowID parent);
-
-#if defined(_WIN32)
-void change_window_style_not_child(WindowID window);
-#endif
+std::string temp_directory();
 
 #endif

@@ -90,6 +90,7 @@ private slots:
 
         void timer_slot();
         void window_shown();
+        void widget_under_window_mouse_wheel_slot(double delta);
 
 private:
         void set_dependent_interface_enabled();

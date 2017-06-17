@@ -97,6 +97,11 @@ void move_window_to_parent(WindowID window, WindowID parent)
         XMapWindow(display, window);
 }
 
+// Нет необходимости реализовывать на Линуксе
+// void move_window_to_desktop(WindowID)
+//{
+//}
+
 void make_window_fullscreen(WindowID window)
 {
         // https://standards.freedesktop.org/wm-spec/wm-spec-1.5.html
@@ -137,6 +142,54 @@ void set_size_to_parent(WindowID window, WindowID parent)
         XGetWindowAttributes(display, parent, &parent_attr);
         XResizeWindow(display, window, parent_attr.width, parent_attr.height);
 }
+
+#elif defined(_WIN32)
+
+#include <windows.h>
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wold-style-cast"
+
+void move_window_to_parent(WindowID window, WindowID parent)
+{
+        SetWindowLongPtr(window, GWL_STYLE, static_cast<LONG>(WS_CHILD) | static_cast<LONG>(WS_VISIBLE));
+
+        SetParent(window, parent);
+
+        RECT rect;
+        GetClientRect(parent, &rect);
+        SetWindowPos(window, HWND_TOP, 0, 0, rect.right - rect.left, rect.bottom - rect.top, 0);
+
+        SetFocus(parent);
+}
+
+void change_window_style_not_child(WindowID window)
+{
+        SetWindowLongPtr(window, GWL_STYLE, static_cast<LONG>(WS_POPUP));
+}
+
+void make_window_fullscreen(WindowID window)
+{
+        SetWindowLongPtr(window, GWL_STYLE, static_cast<LONG>(WS_POPUP) | static_cast<LONG>(WS_VISIBLE));
+
+        SetParent(window, nullptr);
+
+        SetWindowPos(window, HWND_TOPMOST, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN), 0);
+}
+
+void set_focus(WindowID window)
+{
+        SetFocus(window);
+}
+
+void set_size_to_parent(WindowID window, WindowID parent)
+{
+        RECT rect;
+        GetClientRect(parent, &rect);
+        SetWindowPos(window, HWND_TOP, 0, 0, rect.right - rect.left, rect.bottom - rect.top, 0);
+}
+
+#pragma GCC diagnostic pop
 
 #else
 #error This operating system is not supported

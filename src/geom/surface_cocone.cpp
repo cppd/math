@@ -16,7 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 /*
-Алгоритм восстановления поверхностей COCONE.
+Алгоритмы восстановления поверхностей COCONE и BOUND COCONE.
 
 По книге
 

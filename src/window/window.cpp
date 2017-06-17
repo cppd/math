@@ -22,6 +22,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <SFML/System/Err.hpp>
 
+#if defined(_WIN32)
+namespace
+{
+void init_gl_functions()
+{
+        // Для Винды адреса функций OpenGL зависят от контекста.
+        // Теоретически, каждый контекст может иметь свои адреса,
+        // поэтому не совсем правильно использовать общие адреса.
+        gl_functions::init();
+}
+}
+#endif
+
 void create_gl_window_1x1(int major_gl_version, int minor_gl_version, const std::vector<std::string>& extensions,
                           int antialiasing_level, int depth_bits, int stencil_bits, int red_bits, int green_bits, int blue_bits,
                           int alpha_bits, sf::Window* wnd)
@@ -37,6 +50,10 @@ void create_gl_window_1x1(int major_gl_version, int minor_gl_version, const std:
         cs.attributeFlags = sf::ContextSettings::Attribute::Core;
 
         wnd->create(sf::VideoMode(1, 1), "", sf::Style::None, cs);
+
+#if defined(_WIN32)
+        init_gl_functions();
+#endif
 
         check_context(major_gl_version, minor_gl_version, extensions);
         check_bit_sizes(depth_bits, stencil_bits, antialiasing_level, red_bits, green_bits, blue_bits, alpha_bits);
@@ -55,6 +72,10 @@ void create_gl_context_1x1(int major_gl_version, int minor_gl_version, const std
         cs.attributeFlags = sf::ContextSettings::Attribute::Core;
 
         *context = std::make_unique<sf::Context>(cs, 1, 1);
+
+#if defined(_WIN32)
+        init_gl_functions();
+#endif
 
         check_context(major_gl_version, minor_gl_version, extensions);
         print_settings();

@@ -26,7 +26,7 @@
 
 Некоторые технические подробности:
 
-1. Работает только на Линуксах из-за небольшого использования XLib.
+1. Поддерживаемые операционные системы: Linux, Windows.
 
 1. Языки программирования: C++17, GLSL 4.50.
 
@@ -63,7 +63,7 @@ it has been tested only for 2D and 3D because it's hard to imagine n-manifolds. 
 
 Some technical details:
 
-1. Only for Linux because of a small use of XLib.
+1. Supported operating systems: Linux, Windows.
 
 1. Programming languages: C++17, GLSL 4.50.
 
@@ -75,7 +75,6 @@ Some technical details:
 
 ### Screenshots
 
-3D model and the surface reconstructed only from the vertices of this 3D-model
+3D model and the surface reconstructed only from the vertices of this 3D model
 
 ![original surface](screenshots/original.jpg?raw=true) ![reconstructed surface](screenshots/cocone.jpg?raw=true)
-

@@ -85,7 +85,7 @@ public:
         {
         }
 
-        std::quick_exit(EXIT_FAILURE);
+        std::_Exit(EXIT_FAILURE);
 }
 
 inline std::string get_error_list(const std::vector<std::string>& v)
