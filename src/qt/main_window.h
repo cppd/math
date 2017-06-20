@@ -92,6 +92,8 @@ private slots:
         void window_shown();
         void widget_under_window_mouse_wheel_slot(double delta);
 
+        void on_actionExport_triggered();
+
 private:
         void set_dependent_interface_enabled();
 
@@ -131,6 +133,11 @@ private:
 
         void set_bound_cocone_label(double rho, double alpha);
 
+        void message_about(const std::string& msg);
+        void message_critical(const std::string& msg);
+        void message_information(const std::string& msg);
+        void message_warning(const std::string& msg);
+
         Ui::MainWindow ui;
 
         std::unique_ptr<IShow> m_show;
@@ -161,6 +168,9 @@ private:
 
         double m_bound_cocone_rho;
         double m_bound_cocone_alpha;
+
+        std::shared_ptr<IObj> m_surface_cocone;
+        std::shared_ptr<IObj> m_surface_bound_cocone;
 };
 
 #endif

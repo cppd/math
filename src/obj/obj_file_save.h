@@ -16,14 +16,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
-#ifndef FILE_SYS_H
-#define FILE_SYS_H
+#ifndef OBJ_FILE_SAVE_H
+#define OBJ_FILE_SAVE_H
+
+#include "obj.h"
 
 #include <string>
 
-std::string get_base_name(const std::string& file_name);
-std::string get_dir_name(const std::string& file_name);
-
-std::string temp_directory();
+void save_obj_geometry_to_file(const IObj* obj, const std::string& file_name, const std::string& comment = std::string());
 
 #endif

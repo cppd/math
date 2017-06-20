@@ -57,10 +57,6 @@ struct IObj
         virtual const std::vector<sf::Image>& get_images() const = 0;
         virtual glm::vec3 get_center() const = 0;
         virtual float get_length() const = 0;
-
-protected:
-        static void find_center_and_length(const std::vector<glm::vec3>& vertices, const std::vector<face3> faces,
-                                           glm::vec3* center, float* length);
 };
 
 #endif

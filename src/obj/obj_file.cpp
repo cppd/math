@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "obj_file.h"
 
+#include "obj_alg.h"
+
 #include "com/error.h"
 #include "com/file.h"
 #include "com/file_sys.h"
@@ -268,18 +270,19 @@ void read_face(const std::string& line, size_t begin, size_t end, IObj::vertex* 
 
                 for (int a = 0; a < 3; ++a, ++g)
                 {
+                        if (a > 0) // a > 0 — считывается текстура или нормаль
+                        {
+                                if ((i < size && std::isspace(line[i])) || (i == size && z == 2))
+                                {
+                                        v[g] = -1;
+                                        continue;
+                                }
+                        }
+
                         if (i == size)
                         {
                                 std::string l = &line[begin];
                                 error("Error read face from line:\n\"" + trim(l) + "\"");
-                        }
-
-                        // На первом числе не может быть пробел, так как все пробелы
-                        // пропускаются перед чтением группы чисел
-                        if (std::isspace(line[i]))
-                        {
-                                v[g] = -1;
-                                continue;
                         }
 
                         if (a > 0)

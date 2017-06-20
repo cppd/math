@@ -28,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "geom/vec_glm.h"
 #include "obj/obj_convex_hull.h"
 #include "obj/obj_file.h"
+#include "obj/obj_file_save.h"
 #include "obj/obj_surface.h"
 #include "progress/progress.h"
 #include "qt_dialog/dialogs.h"
@@ -102,22 +103,49 @@ WindowID get_widget_window_id(QWidget* widget)
 }
 }
 
+void MainWindow::message_about(const std::string& msg)
+{
+        QMessageBox::about(this, QString("About ") + APPLICATION_NAME, msg.c_str());
+}
+void MainWindow::message_critical(const std::string& msg)
+{
+        QMessageBox::critical(this, APPLICATION_NAME, msg.c_str());
+}
+void MainWindow::message_information(const std::string& msg)
+{
+        QMessageBox::information(this, APPLICATION_NAME, msg.c_str());
+}
+void MainWindow::message_warning(const std::string& msg)
+{
+        QMessageBox::warning(this, APPLICATION_NAME, msg.c_str());
+}
+
 void MainWindow::on_actionAbout_triggered()
 {
-        QMessageBox::about(this, "About", QString(APPLICATION_NAME) +
-                                                  "\n\n"
-                                                  "C++17\nGLSL 4.50\n"
-                                                  "\n"
-                                                  "Freetype\nGLM\nGMP\nOpenGL\nQt\nSFML\nX11");
+#if defined(__linux__)
+        message_about(
+                "\n\n"
+                "C++17\nGLSL 4.50\n"
+                "\n"
+                "Freetype\nGLM\nGMP\nOpenGL\nQt\nSFML\nX11");
+#elif defined(_WIN32)
+        message_about(
+                "\n\n"
+                "C++17\nGLSL 4.50\n"
+                "\n"
+                "Freetype\nGLM\nGMP\nOpenGL\nQt\nSFML");
+#else
+#error This operating system is not supported
+#endif
 }
 
 void MainWindow::on_actionKeyboard_and_Mouse_triggered()
 {
-        QMessageBox::information(this, "Keyboard and Mouse",
-                                 "Move: left mouse button.\n\n"
-                                 "Rotate: right mouse button.\n\n"
-                                 "Zoom: mouse wheel.\n\n"
-                                 "Toggle fullscreen: F11.");
+        message_information(
+                "Move: left mouse button.\n\n"
+                "Rotate: right mouse button.\n\n"
+                "Zoom: mouse wheel.\n\n"
+                "Toggle fullscreen: F11.");
 }
 
 MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
@@ -213,8 +241,6 @@ void MainWindow::thread_cocone(ConvexHullComputationType convex_hull_type) noexc
 {
         try
         {
-                std::shared_ptr<IObj> surface;
-
                 {
                         ProgressRatio progress(&m_progress_ratio_list);
 
@@ -225,20 +251,20 @@ void MainWindow::thread_cocone(ConvexHullComputationType convex_hull_type) noexc
 
                         m_surface_reconstructor->cocone(&normals, &facets, &progress);
 
-                        surface = create_obj_for_facets(to_vector<float>(m_points), normals, facets);
+                        m_surface_cocone = create_obj_for_facets(to_vector<float>(m_points), normals, facets);
 
                         LOG("Surface reconstruction second phase, " + to_string(get_time_seconds() - start_time, 5) + " s");
                 }
 
-                if (surface->get_faces().size() != 0)
+                if (m_surface_cocone->get_faces().size() != 0)
                 {
-                        m_show->add_object(surface, SURFACE_COCONE);
+                        m_show->add_object(m_surface_cocone, SURFACE_COCONE);
 
                         ProgressRatio progress(&m_progress_ratio_list);
                         progress.set_text("Cocone convex hull 3D: %v of %m");
 
                         std::shared_ptr<IObj> convex_hull =
-                                create_convex_hull_for_obj(convex_hull_type, surface.get(), &progress);
+                                create_convex_hull_for_obj(convex_hull_type, m_surface_cocone.get(), &progress);
 
                         if (convex_hull->get_faces().size() != 0)
                         {
@@ -263,8 +289,6 @@ void MainWindow::thread_bound_cocone(ConvexHullComputationType convex_hull_type,
 {
         try
         {
-                std::shared_ptr<IObj> surface;
-
                 {
                         ProgressRatio progress(&m_progress_ratio_list);
 
@@ -275,7 +299,7 @@ void MainWindow::thread_bound_cocone(ConvexHullComputationType convex_hull_type,
 
                         m_surface_reconstructor->bound_cocone(rho, alpha, &normals, &facets, &progress);
 
-                        surface = create_obj_for_facets(to_vector<float>(m_points), normals, facets);
+                        m_surface_bound_cocone = create_obj_for_facets(to_vector<float>(m_points), normals, facets);
 
                         LOG("Surface reconstruction second phase, " + to_string(get_time_seconds() - start_time, 5) + " s");
                 }
@@ -285,15 +309,15 @@ void MainWindow::thread_bound_cocone(ConvexHullComputationType convex_hull_type,
 
                 bound_cocone_loaded(rho, alpha);
 
-                if (surface->get_faces().size() != 0)
+                if (m_surface_bound_cocone->get_faces().size() != 0)
                 {
-                        m_show->add_object(surface, SURFACE_BOUND_COCONE);
+                        m_show->add_object(m_surface_bound_cocone, SURFACE_BOUND_COCONE);
 
                         ProgressRatio progress(&m_progress_ratio_list);
                         progress.set_text("Bound cocone convex hull 3D: %v of %m");
 
                         std::shared_ptr<IObj> convex_hull =
-                                create_convex_hull_for_obj(convex_hull_type, surface.get(), &progress);
+                                create_convex_hull_for_obj(convex_hull_type, m_surface_bound_cocone.get(), &progress);
 
                         if (convex_hull->get_faces().size() != 0)
                         {
@@ -369,6 +393,8 @@ void MainWindow::thread_open_file(const std::string& file_name, ConvexHullComput
 
                 m_show->delete_all_objects();
                 m_surface_reconstructor.reset();
+                m_surface_cocone.reset();
+                m_surface_bound_cocone.reset();
 
                 file_loaded(file_name /*, convex_hull_type*/);
 
@@ -426,17 +452,17 @@ void MainWindow::on_Button_LoadBoundCocone_clicked()
 {
         if (m_file_loading)
         {
-                QMessageBox::warning(this, "Warning", "Busy loading file");
+                message_warning("Busy loading file");
                 return;
         }
         if (m_bound_cocone_loading)
         {
-                QMessageBox::warning(this, "Warning", "Busy loading bound cocone");
+                message_warning("Busy loading bound cocone");
                 return;
         }
         if (!m_surface_reconstructor)
         {
-                QMessageBox::warning(this, "Warning", "No surface reconstructor");
+                message_warning("No surface reconstructor");
                 return;
         }
 
@@ -556,11 +582,11 @@ void MainWindow::on_MainWindow_SignalWindowEvent(const WindowEvent& event)
         {
                 const WindowEvent::program_ended& d = event.get<WindowEvent::program_ended>();
 
-                const char* m = (d.msg.size() != 0) ? d.msg.c_str() : "Unknown Error. Exit failure.";
+                const char* message = (d.msg.size() != 0) ? d.msg.c_str() : "Unknown Error. Exit failure.";
 
-                LOG(m);
+                LOG(message);
 
-                QMessageBox::critical(this, "Error", m);
+                message_critical(message);
 
                 close();
 
@@ -584,7 +610,7 @@ void MainWindow::on_MainWindow_SignalWindowEvent(const WindowEvent& event)
 
                 LOG(d.msg);
 
-                QMessageBox::critical(this, "Error", d.msg.c_str());
+                message_critical(d.msg);
 
                 break;
         }
@@ -728,12 +754,82 @@ void MainWindow::window_shown()
 
 void MainWindow::on_actionLoad_triggered()
 {
-        QString file_name = QFileDialog::getOpenFileName(this, "Select OBJ file", "", "OBJ files (*.obj)", nullptr,
+        QString file_name = QFileDialog::getOpenFileName(this, "Open OBJ file", "", "OBJ files (*.obj)", nullptr,
                                                          QFileDialog::ReadOnly | QFileDialog::DontUseNativeDialog);
         if (file_name.size() > 0)
         {
                 start_thread_open_file(file_name.toStdString());
         }
+}
+
+void MainWindow::on_actionExport_triggered()
+{
+        if (m_file_loading)
+        {
+                message_warning("Loading file");
+                return;
+        }
+
+        if (!(ui.radioButton_Cocone->isChecked() || ui.radioButton_BoundCocone->isChecked()))
+        {
+                message_warning("Select COCONE or BOUND COCONE");
+                return;
+        }
+
+        if (ui.radioButton_Cocone->isChecked() && (!m_surface_cocone || m_surface_cocone->get_faces().size() == 0))
+        {
+                message_warning("COCONE not created");
+                return;
+        }
+
+        if (ui.radioButton_BoundCocone->isChecked() &&
+            (!m_surface_bound_cocone || m_surface_bound_cocone->get_faces().size() == 0))
+        {
+                message_warning("BOUND COCONE not created");
+                return;
+        }
+
+        std::string name;
+        const IObj* obj;
+
+        if (ui.radioButton_Cocone->isChecked())
+        {
+                name = "COCONE";
+                obj = m_surface_cocone.get();
+        }
+        else if (ui.radioButton_BoundCocone->isChecked())
+        {
+                name = "BOUND COCONE";
+                obj = m_surface_bound_cocone.get();
+        }
+        else
+        {
+                return;
+        }
+
+        QString file_name = QFileDialog::getSaveFileName(this, "Export " + QString(name.c_str()) + " to OBJ file", "",
+                                                         "OBJ files (*.obj)", nullptr, QFileDialog::DontUseNativeDialog);
+        if (file_name.size() == 0)
+        {
+                return;
+        }
+
+        // Здесь запись в файл делается в потоке интерфейса, поэтому во время записи
+        // не может начаться загрузка файла с удалением объекта obj
+        try
+        {
+                save_obj_geometry_to_file(obj, file_name.toStdString(), name);
+        }
+        catch (std::exception& e)
+        {
+                error_message("Export " + name + " to file:\n" + e.what());
+        }
+        catch (...)
+        {
+                error_message("Unknown error while export " + name + " to file");
+        }
+
+        message_information(name + " exported.\n\n" + file_name.toStdString());
 }
 
 ConvexHullComputationType MainWindow::get_ch_type() const

@@ -17,9 +17,35 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "obj_alg.h"
 
+#include "com/error.h"
 #include "com/hash.h"
 
+#include <glm/common.hpp>
+#include <glm/geometric.hpp>
 #include <unordered_set>
+
+std::vector<int> get_unique_face_indices(const std::vector<IObj::face3> faces)
+{
+        std::unordered_set<int> unique_face_vertices;
+
+        for (const IObj::face3& face : faces)
+        {
+                for (int i = 0; i < 3; ++i)
+                {
+                        unique_face_vertices.insert(face.vertices[i].v);
+                }
+        }
+
+        std::vector<int> indices;
+        indices.reserve(unique_face_vertices.size());
+
+        for (int i : unique_face_vertices)
+        {
+                indices.push_back(i);
+        }
+
+        return indices;
+}
 
 std::vector<glm::vec3> get_unique_face_vertices(const IObj* obj)
 {
@@ -50,4 +76,44 @@ std::vector<glm::vec3> get_unique_face_vertices(const IObj* obj)
         }
 
         return vertices;
+}
+
+void find_min_max(const std::vector<glm::vec3>& vertices, const std::vector<int>& indices, glm::vec3* min, glm::vec3* max)
+{
+        *min = glm::vec3(std::numeric_limits<float>::max());
+        *max = glm::vec3(std::numeric_limits<float>::lowest());
+
+        int max_index = static_cast<int>(vertices.size()) - 1;
+
+        for (int i : indices)
+        {
+                if (i < 0 || i > max_index)
+                {
+                        error("vertex index out of bound");
+                }
+
+                *min = glm::min(*min, vertices[i]);
+                *max = glm::max(*max, vertices[i]);
+        }
+}
+
+void find_center_and_length(const std::vector<glm::vec3>& vertices, const std::vector<IObj::face3> faces, glm::vec3* center,
+                            float* length)
+{
+        std::vector<int> indices = get_unique_face_indices(faces);
+
+        if (indices.size() < 3)
+        {
+                *center = glm::vec3(0);
+                *length = 0;
+                return;
+        }
+
+        glm::vec3 min, max;
+
+        find_min_max(vertices, indices, &min, &max);
+
+        *center = 0.5f * (max + min);
+
+        *length = glm::length(max - min);
 }
