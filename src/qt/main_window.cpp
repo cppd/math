@@ -24,8 +24,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/log.h"
 #include "com/print.h"
 #include "com/time.h"
-#include "geom/surface_cocone.h"
-#include "geom/vec_glm.h"
+#include "geometry/surface_cocone.h"
+#include "geometry/vec_glm.h"
 #include "obj/obj_convex_hull.h"
 #include "obj/obj_file.h"
 #include "obj/obj_file_save.h"
@@ -45,8 +45,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <type_traits>
 
 constexpr const char* APPLICATION_NAME = "OBJ Math Viewer";
-
-constexpr ConvexHullComputationType DEFAULT_CONVEX_TYPE = ConvexHullComputationType::INTEGER;
 
 // Размер окна по сравнению с экраном
 constexpr double WINDOW_SIZE_COEF = 0.7;
@@ -195,9 +193,6 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
         ui.radioButton_Faces->setChecked(true);
 
         ui.tabWidget->setCurrentIndex(0);
-
-        // init_convex_hull_type(DEFAULT_CONVEX_TYPE);
-        // ui.statusBar->addPermanentWidget(&m_convex_hull_type_label);
 }
 
 MainWindow::~MainWindow()
@@ -205,7 +200,7 @@ MainWindow::~MainWindow()
         stop_all_threads();
 }
 
-void MainWindow::thread_faces(std::shared_ptr<IObj> obj, ConvexHullComputationType convex_hull_type) noexcept
+void MainWindow::thread_faces(std::shared_ptr<IObj> obj) noexcept
 {
         try
         {
@@ -216,7 +211,7 @@ void MainWindow::thread_faces(std::shared_ptr<IObj> obj, ConvexHullComputationTy
                         ProgressRatio progress(&m_progress_ratio_list);
                         progress.set_text("Convex hull 3D: %v of %m");
 
-                        std::shared_ptr<IObj> convex_hull = create_convex_hull_for_obj(convex_hull_type, obj.get(), &progress);
+                        std::shared_ptr<IObj> convex_hull = create_convex_hull_for_obj(obj.get(), &progress);
 
                         if (convex_hull->get_faces().size() != 0)
                         {
@@ -237,7 +232,7 @@ void MainWindow::thread_faces(std::shared_ptr<IObj> obj, ConvexHullComputationTy
         }
 }
 
-void MainWindow::thread_cocone(ConvexHullComputationType convex_hull_type) noexcept
+void MainWindow::thread_cocone() noexcept
 {
         try
         {
@@ -263,8 +258,7 @@ void MainWindow::thread_cocone(ConvexHullComputationType convex_hull_type) noexc
                         ProgressRatio progress(&m_progress_ratio_list);
                         progress.set_text("Cocone convex hull 3D: %v of %m");
 
-                        std::shared_ptr<IObj> convex_hull =
-                                create_convex_hull_for_obj(convex_hull_type, m_surface_cocone.get(), &progress);
+                        std::shared_ptr<IObj> convex_hull = create_convex_hull_for_obj(m_surface_cocone.get(), &progress);
 
                         if (convex_hull->get_faces().size() != 0)
                         {
@@ -285,7 +279,7 @@ void MainWindow::thread_cocone(ConvexHullComputationType convex_hull_type) noexc
         }
 }
 
-void MainWindow::thread_bound_cocone(ConvexHullComputationType convex_hull_type, double rho, double alpha) noexcept
+void MainWindow::thread_bound_cocone(double rho, double alpha) noexcept
 {
         try
         {
@@ -316,8 +310,7 @@ void MainWindow::thread_bound_cocone(ConvexHullComputationType convex_hull_type,
                         ProgressRatio progress(&m_progress_ratio_list);
                         progress.set_text("Bound cocone convex hull 3D: %v of %m");
 
-                        std::shared_ptr<IObj> convex_hull =
-                                create_convex_hull_for_obj(convex_hull_type, m_surface_bound_cocone.get(), &progress);
+                        std::shared_ptr<IObj> convex_hull = create_convex_hull_for_obj(m_surface_bound_cocone.get(), &progress);
 
                         if (convex_hull->get_faces().size() != 0)
                         {
@@ -340,7 +333,7 @@ void MainWindow::thread_bound_cocone(ConvexHullComputationType convex_hull_type,
         m_bound_cocone_loading = false;
 }
 
-void MainWindow::thread_surface_reconstructor(ConvexHullComputationType convex_hull_type) noexcept
+void MainWindow::thread_surface_reconstructor() noexcept
 {
         try
         {
@@ -348,16 +341,16 @@ void MainWindow::thread_surface_reconstructor(ConvexHullComputationType convex_h
 
                 double start_time = get_time_seconds();
 
-                m_surface_reconstructor = create_surface_reconstructor(convex_hull_type, to_vector<float>(m_points), &progress);
+                m_surface_reconstructor = create_surface_reconstructor(to_vector<float>(m_points), &progress);
 
                 LOG("Surface reconstruction first phase, " + to_string(get_time_seconds() - start_time, 5) + " s");
 
                 std::vector<std::thread> threads(2);
                 std::vector<std::string> msg(2);
 
-                launch_class_thread(&threads[0], &msg[0], &MainWindow::thread_cocone, this, convex_hull_type);
-                launch_class_thread(&threads[1], &msg[1], &MainWindow::thread_bound_cocone, this, convex_hull_type,
-                                    m_bound_cocone_rho, m_bound_cocone_alpha);
+                launch_class_thread(&threads[0], &msg[0], &MainWindow::thread_cocone, this);
+                launch_class_thread(&threads[1], &msg[1], &MainWindow::thread_bound_cocone, this, m_bound_cocone_rho,
+                                    m_bound_cocone_alpha);
 
                 join_threads(&threads, &msg);
         }
@@ -374,7 +367,7 @@ void MainWindow::thread_surface_reconstructor(ConvexHullComputationType convex_h
         }
 }
 
-void MainWindow::thread_open_file(const std::string& file_name, ConvexHullComputationType convex_hull_type) noexcept
+void MainWindow::thread_open_file(const std::string& file_name) noexcept
 {
         try
         {
@@ -396,15 +389,15 @@ void MainWindow::thread_open_file(const std::string& file_name, ConvexHullComput
                 m_surface_cocone.reset();
                 m_surface_bound_cocone.reset();
 
-                file_loaded(file_name /*, convex_hull_type*/);
+                file_loaded(file_name);
 
                 m_points = obj->get_vertices();
 
                 std::vector<std::thread> threads(2);
                 std::vector<std::string> msg(2);
 
-                launch_class_thread(&threads[0], &msg[0], &MainWindow::thread_faces, this, obj, convex_hull_type);
-                launch_class_thread(&threads[1], &msg[1], &MainWindow::thread_surface_reconstructor, this, convex_hull_type);
+                launch_class_thread(&threads[0], &msg[0], &MainWindow::thread_faces, this, obj);
+                launch_class_thread(&threads[1], &msg[1], &MainWindow::thread_surface_reconstructor, this);
 
                 join_threads(&threads, &msg);
         }
@@ -429,7 +422,7 @@ void MainWindow::start_thread_open_file(const std::string& file_name)
 
         m_file_loading = true;
 
-        launch_class_thread(&m_open_file_thread, nullptr, &MainWindow::thread_open_file, this, file_name, get_ch_type());
+        launch_class_thread(&m_open_file_thread, nullptr, &MainWindow::thread_open_file, this, file_name);
 }
 
 void MainWindow::stop_all_threads()
@@ -481,7 +474,7 @@ void MainWindow::on_Button_LoadBoundCocone_clicked()
 
         m_bound_cocone_loading = true;
 
-        launch_class_thread(&m_bound_cocone_thread, nullptr, &MainWindow::thread_bound_cocone, this, get_ch_type(), rho, alpha);
+        launch_class_thread(&m_bound_cocone_thread, nullptr, &MainWindow::thread_bound_cocone, this, rho, alpha);
 }
 
 void MainWindow::timer_slot()
@@ -653,8 +646,6 @@ void MainWindow::on_MainWindow_SignalWindowEvent(const WindowEvent& event)
                 std::string file_name = get_base_name(d.file_name);
 
                 this->setWindowTitle(QString(APPLICATION_NAME) + " - " + file_name.c_str());
-
-                // m_convex_hull_type_label.setText(QString("CH: ") + to_string(event.ct));
 
                 disable_object_buttons();
 
@@ -832,17 +823,6 @@ void MainWindow::on_actionExport_triggered()
         message_information(name + " exported.\n\n" + file_name.toStdString());
 }
 
-ConvexHullComputationType MainWindow::get_ch_type() const
-{
-        return DEFAULT_CONVEX_TYPE;
-        // return ConvexHullComputationType::INTEGER;
-        // error_fatal("no convex hull type checked");
-}
-
-void MainWindow::init_convex_hull_type(ConvexHullComputationType /*ct*/)
-{
-}
-
 void MainWindow::resizeEvent(QResizeEvent*)
 {
         if (m_show)
@@ -876,7 +856,7 @@ void MainWindow::object_loaded(int id) noexcept try
         emit SignalWindowEvent(WindowEvent(in_place<WindowEvent::object_loaded>, id));
 }
 CATCH_ALL_SEND_EVENT()
-void MainWindow::file_loaded(const std::string& msg /*, ConvexHullComputationType convex_hull_type*/) noexcept try
+void MainWindow::file_loaded(const std::string& msg) noexcept try
 {
         emit SignalWindowEvent(WindowEvent(in_place<WindowEvent::file_loaded>, msg));
 }

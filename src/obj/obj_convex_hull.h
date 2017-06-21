@@ -21,11 +21,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "obj.h"
 
-#include "geom/convex_hull_types.h"
 #include "progress/progress.h"
 
 #include <memory>
 
-std::unique_ptr<IObj> create_convex_hull_for_obj(ConvexHullComputationType ct, const IObj* obj, ProgressRatio* progress);
+std::unique_ptr<IObj> create_convex_hull_for_obj(const IObj* obj, ProgressRatio* progress);
 
 #endif

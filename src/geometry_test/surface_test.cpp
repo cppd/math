@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/math.h"
 #include "com/print.h"
 #include "com/random.h"
-#include "geom/surface_cocone.h"
+#include "geometry/surface_cocone.h"
 #include "progress/progress.h"
 
 #include <cmath>
@@ -198,8 +198,7 @@ void surface_test()
 
                 generate_random_data(count, &points);
 
-                std::unique_ptr<ISurfaceReconstructor<3>> sr =
-                        create_surface_reconstructor(ConvexHullComputationType::INTEGER, points, &progress);
+                std::unique_ptr<ISurfaceReconstructor<3>> sr = create_surface_reconstructor(points, &progress);
 
                 sr->cocone(&normals, &facets, &progress);
                 sr->bound_cocone(0.3, 0.14, &normals, &facets, &progress);

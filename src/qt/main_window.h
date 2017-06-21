@@ -24,7 +24,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "main_window_event.h"
 
 #include "com/thread.h"
-#include "geom/convex_hull_types.h"
 #include "progress/progress_list.h"
 #include "show/show.h"
 
@@ -105,11 +104,11 @@ private:
         void disable_object_buttons();
         void disable_bound_cocone_buttons();
 
-        void thread_open_file(const std::string& file_name, ConvexHullComputationType convex_hull_type) noexcept;
-        void thread_faces(std::shared_ptr<IObj> obj, ConvexHullComputationType convex_hull_type) noexcept;
-        void thread_surface_reconstructor(ConvexHullComputationType convex_hull_type) noexcept;
-        void thread_cocone(ConvexHullComputationType convex_hull_type) noexcept;
-        void thread_bound_cocone(ConvexHullComputationType convex_hull_type, double rho, double alpha) noexcept;
+        void thread_open_file(const std::string& file_name) noexcept;
+        void thread_faces(std::shared_ptr<IObj> obj) noexcept;
+        void thread_surface_reconstructor() noexcept;
+        void thread_cocone() noexcept;
+        void thread_bound_cocone(double rho, double alpha) noexcept;
 
         void start_thread_open_file(const std::string& file_name);
         void stop_all_threads();
@@ -119,7 +118,7 @@ private:
         void program_ended(const std::string&) noexcept override;
         void error_src_message(const std::string&, const std::string&) noexcept override;
         void object_loaded(int) noexcept override;
-        void file_loaded(const std::string& msg /*, ConvexHullComputationType convex_hull_type*/) noexcept;
+        void file_loaded(const std::string& msg) noexcept;
         void bound_cocone_loaded(double rho, double alpha) noexcept;
 
         double get_ambient() const;
@@ -127,9 +126,6 @@ private:
         double get_specular() const;
         double get_dft_brightness() const;
         double get_default_ns() const;
-
-        ConvexHullComputationType get_ch_type() const;
-        void init_convex_hull_type(ConvexHullComputationType);
 
         void set_bound_cocone_label(double rho, double alpha);
 
@@ -157,8 +153,6 @@ private:
 
         std::thread m_open_file_thread;
         std::thread m_bound_cocone_thread;
-
-        QLabel m_convex_hull_type_label;
 
         std::vector<glm::vec3> m_points;
         std::unique_ptr<ISurfaceReconstructor<3>> m_surface_reconstructor;

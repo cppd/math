@@ -862,60 +862,52 @@ void convex_hull_integer(const std::vector<Vector<N, float>>& source_points, std
 }
 
 template <size_t N>
-void compute_delaunay(ConvexHullComputationType ct, const std::vector<Vector<N, float>>& source_points,
-                      std::vector<vec<N>>* points, std::vector<DelaunaySimplex<N>>* simplices, ProgressRatio* progress)
+void compute_delaunay(const std::vector<Vector<N, float>>& source_points, std::vector<vec<N>>* points,
+                      std::vector<DelaunaySimplex<N>>* simplices, ProgressRatio* progress)
 {
         if (source_points.size() == 0)
         {
                 error("no points for convex hull");
         }
-        switch (ct)
-        {
-        case ConvexHullComputationType::INTEGER:
-                delaunay_integer(source_points, points, simplices, progress);
-                break;
-        }
+
+        delaunay_integer(source_points, points, simplices, progress);
 }
 
 template <size_t N>
-void compute_convex_hull(ConvexHullComputationType ct, const std::vector<Vector<N, float>>& source_points,
-                         std::vector<ConvexHullFacet<N>>* ch_facets, ProgressRatio* progress)
+void compute_convex_hull(const std::vector<Vector<N, float>>& source_points, std::vector<ConvexHullFacet<N>>* ch_facets,
+                         ProgressRatio* progress)
 {
         if (source_points.size() == 0)
         {
                 error("no points for convex hull");
         }
-        switch (ct)
-        {
-        case ConvexHullComputationType::INTEGER:
-                convex_hull_integer(source_points, ch_facets, progress);
-                break;
-        }
+
+        convex_hull_integer(source_points, ch_facets, progress);
 }
 
 //
 
 // clang-format off
 template
-void compute_delaunay(ConvexHullComputationType ct, const std::vector<Vector<2, float>>& source_points,
-                      std::vector<vec<2>>* points, std::vector<DelaunaySimplex<2>>* simplices, ProgressRatio* progress);
+void compute_delaunay(const std::vector<Vector<2, float>>& source_points, std::vector<vec<2>>* points,
+                      std::vector<DelaunaySimplex<2>>* simplices, ProgressRatio* progress);
 template
-void compute_delaunay(ConvexHullComputationType ct, const std::vector<Vector<3, float>>& source_points,
-                      std::vector<vec<3>>* points, std::vector<DelaunaySimplex<3>>* simplices, ProgressRatio* progress);
+void compute_delaunay(const std::vector<Vector<3, float>>& source_points, std::vector<vec<3>>* points,
+                      std::vector<DelaunaySimplex<3>>* simplices, ProgressRatio* progress);
 template
-void compute_delaunay(ConvexHullComputationType ct, const std::vector<Vector<4, float>>& source_points,
-                      std::vector<vec<4>>* points, std::vector<DelaunaySimplex<4>>* simplices, ProgressRatio* progress);
+void compute_delaunay(const std::vector<Vector<4, float>>& source_points, std::vector<vec<4>>* points,
+                      std::vector<DelaunaySimplex<4>>* simplices, ProgressRatio* progress);
 
 template
-void compute_convex_hull(ConvexHullComputationType ct, const std::vector<Vector<2, float>>& source_points,
-                         std::vector<ConvexHullFacet<2>>* ch_facets, ProgressRatio* progress);
+void compute_convex_hull(const std::vector<Vector<2, float>>& source_points, std::vector<ConvexHullFacet<2>>* ch_facets,
+                         ProgressRatio* progress);
 template
-void compute_convex_hull(ConvexHullComputationType ct, const std::vector<Vector<3, float>>& source_points,
-                         std::vector<ConvexHullFacet<3>>* ch_facets, ProgressRatio* progress);
+void compute_convex_hull(const std::vector<Vector<3, float>>& source_points, std::vector<ConvexHullFacet<3>>* ch_facets,
+                         ProgressRatio* progress);
 template
-void compute_convex_hull(ConvexHullComputationType ct, const std::vector<Vector<4, float>>& source_points,
-                         std::vector<ConvexHullFacet<4>>* ch_facets, ProgressRatio* progress);
+void compute_convex_hull(const std::vector<Vector<4, float>>& source_points, std::vector<ConvexHullFacet<4>>* ch_facets,
+                         ProgressRatio* progress);
 template
-void compute_convex_hull(ConvexHullComputationType ct, const std::vector<Vector<5, float>>& source_points,
-                         std::vector<ConvexHullFacet<5>>* ch_facets, ProgressRatio* progress);
+void compute_convex_hull(const std::vector<Vector<5, float>>& source_points, std::vector<ConvexHullFacet<5>>* ch_facets,
+                         ProgressRatio* progress);
 // clang-format on

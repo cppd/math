@@ -21,13 +21,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "obj.h"
 
-#include "geom/convex_hull_types.h"
-#include "geom/vec.h"
+#include "geometry/vec.h"
 #include "progress/progress.h"
 
 #include <memory>
 
-std::unique_ptr<IObj> create_surface_for_obj(ConvexHullComputationType ct, const IObj* obj, ProgressRatio* progress);
+std::unique_ptr<IObj> create_surface_for_obj(const IObj* obj, ProgressRatio* progress);
 
 std::unique_ptr<IObj> create_obj_for_facets(const std::vector<Vector<3, float>>& points,
                                             const std::vector<Vector<3, double>>& normals,

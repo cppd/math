@@ -55,8 +55,9 @@ Princeton University Press, 2011.
 #ifndef VORONOI_H
 #define VORONOI_H
 
-#include "gauss.h"
 #include "vec.h"
+
+#include "numerical/gauss.h"
 
 #include <array>
 #include <vector>

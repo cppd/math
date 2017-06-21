@@ -22,8 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/log.h"
 #include "com/print.h"
 #include "com/time.h"
-#include "geom/surface_cocone.h"
-#include "geom/vec_glm.h"
+#include "geometry/surface_cocone.h"
+#include "geometry/vec_glm.h"
 
 #include <chrono>
 #include <random>
@@ -164,7 +164,7 @@ class SurfaceObj final : public IObj
 #endif
 
 public:
-        SurfaceObj(ConvexHullComputationType ct, const IObj* obj, ProgressRatio* progress)
+        SurfaceObj(const IObj* obj, ProgressRatio* progress)
         {
                 // std::vector<Vector<3, float>> points = generate_random_data(1000);
                 std::vector<Vector<3, float>> points = to_vector<float>(obj->get_vertices());
@@ -174,7 +174,7 @@ public:
 
                 double start_time = get_time_seconds();
 
-                std::unique_ptr<ISurfaceReconstructor<3>> sr = create_surface_reconstructor(ct, points, progress);
+                std::unique_ptr<ISurfaceReconstructor<3>> sr = create_surface_reconstructor(points, progress);
                 sr->cocone(&normals, &facets, progress);
                 // sr->bound_cocone(0.3, 0.14, &normals, &facets, progress);
 
@@ -193,9 +193,9 @@ public:
 };
 }
 
-std::unique_ptr<IObj> create_surface_for_obj(ConvexHullComputationType ct, const IObj* obj, ProgressRatio* progress)
+std::unique_ptr<IObj> create_surface_for_obj(const IObj* obj, ProgressRatio* progress)
 {
-        return std::make_unique<SurfaceObj>(ct, obj, progress);
+        return std::make_unique<SurfaceObj>(obj, progress);
 }
 
 std::unique_ptr<IObj> create_obj_for_facets(const std::vector<Vector<3, float>>& points,

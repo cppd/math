@@ -19,11 +19,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef COCONE_ALG_H
 #define COCONE_ALG_H
 
-#include "quadratic.h"
 #include "vec.h"
 
 #include "com/math.h"
 #include "com/types.h"
+#include "numerical/quadratic.h"
 
 namespace CoconeAlgImplementation
 {

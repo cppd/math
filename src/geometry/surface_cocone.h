@@ -19,7 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef SURFACE_COCONE_H
 #define SURFACE_COCONE_H
 
-#include "convex_hull_types.h"
 #include "vec.h"
 
 #include "progress/progress.h"
@@ -49,28 +48,25 @@ struct ISurfaceReconstructor
 };
 
 template <size_t N>
-std::unique_ptr<ISurfaceReconstructor<N>> create_surface_reconstructor(ConvexHullComputationType ct,
-                                                                       const std::vector<Vector<N, float>>& source_points,
+std::unique_ptr<ISurfaceReconstructor<N>> create_surface_reconstructor(const std::vector<Vector<N, float>>& source_points,
                                                                        ProgressRatio* progress);
 template <size_t N>
 std::unique_ptr<ISurfaceReconstructorCoconeOnly<N>> create_surface_reconstructor_cocone_only(
-        ConvexHullComputationType ct, const std::vector<Vector<N, float>>& source_points, ProgressRatio* progress);
+        const std::vector<Vector<N, float>>& source_points, ProgressRatio* progress);
 
 // clang-format off
 extern template
-std::unique_ptr<ISurfaceReconstructor<2>> create_surface_reconstructor(ConvexHullComputationType ct,
-                                                                       const std::vector<Vector<2, float>>& source_points,
+std::unique_ptr<ISurfaceReconstructor<2>> create_surface_reconstructor(const std::vector<Vector<2, float>>& source_points,
                                                                        ProgressRatio* progress);
 extern template
-std::unique_ptr<ISurfaceReconstructor<3>> create_surface_reconstructor(ConvexHullComputationType ct,
-                                                                       const std::vector<Vector<3, float>>& source_points,
+std::unique_ptr<ISurfaceReconstructor<3>> create_surface_reconstructor(const std::vector<Vector<3, float>>& source_points,
                                                                        ProgressRatio* progress);
 extern template
 std::unique_ptr<ISurfaceReconstructorCoconeOnly<2>> create_surface_reconstructor_cocone_only(
-        ConvexHullComputationType ct, const std::vector<Vector<2, float>>& source_points, ProgressRatio* progress);
+        const std::vector<Vector<2, float>>& source_points, ProgressRatio* progress);
 extern template
 std::unique_ptr<ISurfaceReconstructorCoconeOnly<3>> create_surface_reconstructor_cocone_only(
-        ConvexHullComputationType ct, const std::vector<Vector<3, float>>& source_points, ProgressRatio* progress);
+        const std::vector<Vector<3, float>>& source_points, ProgressRatio* progress);
 // clang-format on
 
 #endif

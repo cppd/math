@@ -20,8 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "qt/qt_main.h"
 
 #include "dft_test/dft_test.h"
-#include "geom_test/convex_hull_test.h"
-#include "geom_test/surface_test.h"
+#include "geometry_test/convex_hull_test.h"
+#include "geometry_test/surface_test.h"
 
 namespace
 {

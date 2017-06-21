@@ -21,8 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/print.h"
 #include "com/time.h"
-#include "geom/convex_hull.h"
-#include "geom/vec_glm.h"
+#include "geometry/convex_hull.h"
+#include "geometry/vec_glm.h"
 
 #include <chrono>
 #include <unordered_map>
@@ -140,7 +140,7 @@ class ConvexHullObj final : public IObj
         }
 
 public:
-        ConvexHullObj(ConvexHullComputationType ct, const IObj* obj, ProgressRatio* progress)
+        ConvexHullObj(const IObj* obj, ProgressRatio* progress)
         {
                 std::vector<Vector<3, float>> points = to_vector<float>(get_unique_face_vertices(obj));
 
@@ -148,7 +148,7 @@ public:
 
                 double start_time = get_time_seconds();
 
-                compute_convex_hull(ct, points, &facets, progress);
+                compute_convex_hull(points, &facets, progress);
 
                 LOG("Convex hull created, " + to_string(get_time_seconds() - start_time, 5) + " s");
 
@@ -157,7 +157,7 @@ public:
 };
 }
 
-std::unique_ptr<IObj> create_convex_hull_for_obj(ConvexHullComputationType ct, const IObj* obj, ProgressRatio* progress)
+std::unique_ptr<IObj> create_convex_hull_for_obj(const IObj* obj, ProgressRatio* progress)
 {
-        return std::make_unique<ConvexHullObj>(ct, obj, progress);
+        return std::make_unique<ConvexHullObj>(obj, progress);
 }

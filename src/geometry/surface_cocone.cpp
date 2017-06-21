@@ -150,7 +150,7 @@ bool all_empty(const std::vector<T>& v)
         return true;
 }
 
-inline double cross(vec<2> a0, vec<2> a1)
+double cross(vec<2> a0, vec<2> a1)
 {
         return a0[0] * a1[1] - a0[1] * a1[0];
 }
@@ -941,20 +941,20 @@ void create_normals_and_facets(const std::vector<DelaunayFacet<N>>& delaunay_fac
 }
 
 template <size_t N>
-void create_voronoi_delaunay(ConvexHullComputationType ct, const std::vector<Vector<N, float>>& source_points,
-                             std::vector<vec<N>>* points, std::vector<DelaunayObject<N>>* delaunay_objects,
-                             std::vector<DelaunayFacet<N>>* delaunay_facets, ProgressRatio* progress)
+void create_voronoi_delaunay(const std::vector<Vector<N, float>>& source_points, std::vector<vec<N>>* points,
+                             std::vector<DelaunayObject<N>>* delaunay_objects, std::vector<DelaunayFacet<N>>* delaunay_facets,
+                             ProgressRatio* progress)
 {
         std::vector<DelaunaySimplex<N>> delaunay_simplices;
         LOG("compute delaunay...");
-        compute_delaunay(ct, source_points, points, &delaunay_simplices, progress);
+        compute_delaunay(source_points, points, &delaunay_simplices, progress);
 
         LOG("creating delaunay objects and facets and voronoi vertices...");
         create_delaunay_objects_and_facets(*points, delaunay_simplices, delaunay_objects, delaunay_facets);
 }
 
 template <size_t N>
-class SurfaceReconstructor : public ISurfaceReconstructor<N>, ISurfaceReconstructorCoconeOnly<N>
+class SurfaceReconstructor : public ISurfaceReconstructor<N>, public ISurfaceReconstructorCoconeOnly<N>
 {
         const bool m_cocone_only;
 
@@ -1028,8 +1028,7 @@ class SurfaceReconstructor : public ISurfaceReconstructor<N>, ISurfaceReconstruc
         }
 
 public:
-        SurfaceReconstructor(ConvexHullComputationType ct, const std::vector<Vector<N, float>>& source_points, bool cocone_only,
-                             ProgressRatio* progress)
+        SurfaceReconstructor(const std::vector<Vector<N, float>>& source_points, bool cocone_only, ProgressRatio* progress)
                 : m_cocone_only(cocone_only)
         {
                 // Проверить на самый минимум по количеству точек
@@ -1041,7 +1040,7 @@ public:
 
                 progress->set_text("Voronoi-Delaunay: %v of %m");
 
-                create_voronoi_delaunay(ct, source_points, &m_points, &m_delaunay_objects, &m_delaunay_facets, progress);
+                create_voronoi_delaunay(source_points, &m_points, &m_delaunay_objects, &m_delaunay_facets, progress);
 
                 fill_vertex_and_facet_data(!cocone_only, m_points, m_delaunay_objects, m_delaunay_facets, &m_vertex_data,
                                            &m_facet_data);
@@ -1052,32 +1051,30 @@ public:
 }
 
 template <size_t N>
-std::unique_ptr<ISurfaceReconstructor<N>> create_surface_reconstructor(ConvexHullComputationType ct,
-                                                                       const std::vector<Vector<N, float>>& source_points,
+std::unique_ptr<ISurfaceReconstructor<N>> create_surface_reconstructor(const std::vector<Vector<N, float>>& source_points,
                                                                        ProgressRatio* progress)
 {
-        return std::make_unique<SurfaceReconstructor<N>>(ct, source_points, false, progress);
+        return std::make_unique<SurfaceReconstructor<N>>(source_points, false, progress);
 }
+
 template <size_t N>
 std::unique_ptr<ISurfaceReconstructorCoconeOnly<N>> create_surface_reconstructor_cocone_only(
-        ConvexHullComputationType ct, const std::vector<Vector<N, float>>& source_points, ProgressRatio* progress)
+        const std::vector<Vector<N, float>>& source_points, ProgressRatio* progress)
 {
-        return std::make_unique<SurfaceReconstructor<N>>(ct, source_points, true, progress);
+        return std::make_unique<SurfaceReconstructor<N>>(source_points, true, progress);
 }
 
 // clang-format off
 template
-std::unique_ptr<ISurfaceReconstructor<2>> create_surface_reconstructor(ConvexHullComputationType ct,
-                                                                       const std::vector<Vector<2, float>>& source_points,
+std::unique_ptr<ISurfaceReconstructor<2>> create_surface_reconstructor(const std::vector<Vector<2, float>>& source_points,
                                                                        ProgressRatio* progress);
 template
-std::unique_ptr<ISurfaceReconstructor<3>> create_surface_reconstructor(ConvexHullComputationType ct,
-                                                                       const std::vector<Vector<3, float>>& source_points,
+std::unique_ptr<ISurfaceReconstructor<3>> create_surface_reconstructor(const std::vector<Vector<3, float>>& source_points,
                                                                        ProgressRatio* progress);
-extern template
+template
 std::unique_ptr<ISurfaceReconstructorCoconeOnly<2>> create_surface_reconstructor_cocone_only(
-        ConvexHullComputationType ct, const std::vector<Vector<2, float>>& source_points, ProgressRatio* progress);
-extern template
+        const std::vector<Vector<2, float>>& source_points, ProgressRatio* progress);
+template
 std::unique_ptr<ISurfaceReconstructorCoconeOnly<3>> create_surface_reconstructor_cocone_only(
-        ConvexHullComputationType ct, const std::vector<Vector<3, float>>& source_points, ProgressRatio* progress);
+        const std::vector<Vector<3, float>>& source_points, ProgressRatio* progress);
 // clang-format on
