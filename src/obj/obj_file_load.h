@@ -16,8 +16,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
-#ifndef OBJ_FILE_H
-#define OBJ_FILE_H
+#ifndef OBJ_FILE_LOAD_H
+#define OBJ_FILE_LOAD_H
 
 #include "obj.h"
 

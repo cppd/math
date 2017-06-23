@@ -38,6 +38,7 @@ class SurfaceObj final : public IObj
         std::vector<glm::vec2> m_texcoords;
         std::vector<glm::vec3> m_normals;
         std::vector<face3> m_faces;
+        std::vector<int> m_points;
         std::vector<material> m_materials;
         std::vector<sf::Image> m_images;
         glm::vec3 m_center;
@@ -59,6 +60,10 @@ class SurfaceObj final : public IObj
         {
                 return m_faces;
         }
+        const std::vector<int>& get_points() const override
+        {
+                return m_points;
+        }
         const std::vector<material>& get_materials() const override
         {
                 return m_materials;
@@ -79,6 +84,11 @@ class SurfaceObj final : public IObj
         void create_obj(const std::vector<Vector<3, float>>& points, const std::vector<Vector<3, double>>& normals,
                         const std::vector<std::array<int, 3>>& facets)
         {
+                if (facets.size() == 0)
+                {
+                        error("No facets for surface object");
+                }
+
                 std::unordered_set<int> vertex_set;
                 std::unordered_map<int, int> index_map;
 

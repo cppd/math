@@ -948,7 +948,7 @@
   <widget class="QStatusBar" name="statusBar"/>
   <action name="actionLoad">
    <property name="text">
-    <string>Load...</string>
+    <string>Open...</string>
    </property>
   </action>
   <action name="actionExit">

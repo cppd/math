@@ -154,7 +154,7 @@ private:
         std::thread m_open_file_thread;
         std::thread m_bound_cocone_thread;
 
-        std::vector<glm::vec3> m_points;
+        std::vector<glm::vec3> m_surface_points;
         std::unique_ptr<ISurfaceReconstructor<3>> m_surface_reconstructor;
 
         std::atomic_bool m_file_loading;

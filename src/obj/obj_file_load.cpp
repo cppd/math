@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "obj_file.h"
+#include "obj_file_load.h"
 
 #include "obj_alg.h"
 
@@ -28,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/thread.h"
 #include "com/time.h"
 
+#include <cctype>
 #include <chrono>
 #include <cstdio>
 #include <cstdlib>
@@ -35,6 +36,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <fstream>
 #include <glm/geometric.hpp>
 #include <map>
+#include <numeric>
 #include <set>
 #include <string>
 #include <thread>
@@ -109,6 +111,17 @@ std::string trim(const std::string& s)
         }
 
         return s.substr(i, ri - i + 1);
+}
+
+std::string to_upper(const std::string& s)
+{
+        std::string result;
+        result.reserve(s.size());
+        for (char c : s)
+        {
+                result += std::toupper(c);
+        }
+        return result;
 }
 
 void read_text_file(const std::string& file, std::string* s)
@@ -524,12 +537,13 @@ void split_line(std::string* file_str, const std::vector<T>& line_begin, T line_
         (*file_str)[*second_e] = 0; // символ комментария '#' или символ '\n'
 }
 
-class OBJ final : public IObj
+class FileObj final : public IObj
 {
         std::vector<glm::vec3> m_vertices;
         std::vector<glm::vec2> m_texcoords;
         std::vector<glm::vec3> m_normals;
         std::vector<face3> m_faces;
+        std::vector<int> m_points;
         std::vector<material> m_materials;
         std::vector<sf::Image> m_images;
         glm::vec3 m_center;
@@ -627,6 +641,10 @@ class OBJ final : public IObj
         {
                 return m_faces;
         }
+        const std::vector<int>& get_points() const override
+        {
+                return m_points;
+        }
         const std::vector<material>& get_materials() const override
         {
                 return m_materials;
@@ -645,10 +663,10 @@ class OBJ final : public IObj
         }
 
 public:
-        OBJ(const std::string& file_name, ProgressRatio* progress);
+        FileObj(const std::string& file_name, ProgressRatio* progress);
 };
 
-void OBJ::check_faces() const
+void FileObj::check_faces() const
 {
         int vertex_count = m_vertices.size();
         int texcoord_count = m_texcoords.size();
@@ -694,8 +712,8 @@ void OBJ::check_faces() const
         }
 }
 
-void OBJ::read_obj_one(const ThreadData* thread_data, std::string* file_ptr, std::vector<size_t>* line_begin,
-                       std::vector<ObjLine>* line_prop, ProgressRatio* progress) const
+void FileObj::read_obj_one(const ThreadData* thread_data, std::string* file_ptr, std::vector<size_t>* line_begin,
+                           std::vector<ObjLine>* line_prop, ProgressRatio* progress) const
 {
         std::string& file_str = *file_ptr;
         const size_t line_count = line_begin->size();
@@ -778,9 +796,9 @@ void OBJ::read_obj_one(const ThreadData* thread_data, std::string* file_ptr, std
         }
 }
 
-void OBJ::read_obj_two(const ThreadData* thread_data, std::string* file_ptr, std::vector<ObjLine>* line_prop,
-                       ProgressRatio* progress, std::map<std::string, int>* material_index,
-                       std::vector<std::string>* library_names)
+void FileObj::read_obj_two(const ThreadData* thread_data, std::string* file_ptr, std::vector<ObjLine>* line_prop,
+                           ProgressRatio* progress, std::map<std::string, int>* material_index,
+                           std::vector<std::string>* library_names)
 {
         if (ATOMIC_COUNTER_LOCK_FREE)
         {
@@ -859,9 +877,9 @@ void OBJ::read_obj_two(const ThreadData* thread_data, std::string* file_ptr, std
         }
 }
 
-void OBJ::read_obj_th(const ThreadData* thread_data, std::string* file_ptr, std::vector<size_t>* line_begin,
-                      std::vector<ObjLine>* line_prop, ProgressRatio* progress, std::map<std::string, int>* material_index,
-                      std::vector<std::string>* library_names)
+void FileObj::read_obj_th(const ThreadData* thread_data, std::string* file_ptr, std::vector<size_t>* line_begin,
+                          std::vector<ObjLine>* line_prop, ProgressRatio* progress, std::map<std::string, int>* material_index,
+                          std::vector<std::string>* library_names)
 {
         // параллельно
 
@@ -894,8 +912,8 @@ void OBJ::read_obj_th(const ThreadData* thread_data, std::string* file_ptr, std:
         read_obj_two(thread_data, file_ptr, line_prop, progress, material_index, library_names);
 }
 
-void OBJ::read_lib(const std::string& dir_name, const std::string& file_name, ProgressRatio* progress,
-                   std::map<std::string, int>* material_index, std::map<std::string, int>* image_index)
+void FileObj::read_lib(const std::string& dir_name, const std::string& file_name, ProgressRatio* progress,
+                       std::map<std::string, int>* material_index, std::map<std::string, int>* image_index)
 {
         std::string file_str;
         std::vector<size_t> line_begin;
@@ -906,7 +924,7 @@ void OBJ::read_lib(const std::string& dir_name, const std::string& file_name, Pr
 
         const std::string lib_dir = get_dir_name(lib_name);
 
-        OBJ::material* mtl = nullptr;
+        FileObj::material* mtl = nullptr;
         std::string mtl_name;
 
         const size_t line_count = line_begin.size();
@@ -1031,8 +1049,8 @@ void OBJ::read_lib(const std::string& dir_name, const std::string& file_name, Pr
         }
 }
 
-void OBJ::read_libs(const std::string& dir_name, ProgressRatio* progress, std::map<std::string, int>* material_index,
-                    const std::vector<std::string>& library_names)
+void FileObj::read_libs(const std::string& dir_name, ProgressRatio* progress, std::map<std::string, int>* material_index,
+                        const std::vector<std::string>& library_names)
 {
         std::map<std::string, int> image_index;
 
@@ -1050,8 +1068,8 @@ void OBJ::read_libs(const std::string& dir_name, ProgressRatio* progress, std::m
         m_images.shrink_to_fit();
 }
 
-void OBJ::read_obj(const std::string& file_name, ProgressRatio* progress, std::map<std::string, int>* material_index,
-                   std::vector<std::string>* library_names)
+void FileObj::read_obj(const std::string& file_name, ProgressRatio* progress, std::map<std::string, int>* material_index,
+                       std::vector<std::string>* library_names)
 {
         int hardware_concurrency = get_hardware_concurrency();
 
@@ -1084,14 +1102,14 @@ void OBJ::read_obj(const std::string& file_name, ProgressRatio* progress, std::m
 
         for (size_t i = 0; i < threads.size(); ++i)
         {
-                launch_class_thread(&threads[i], &thread_messages[i], &OBJ::read_obj_th, this, &thread_data[i], &file_str,
+                launch_class_thread(&threads[i], &thread_messages[i], &FileObj::read_obj_th, this, &thread_data[i], &file_str,
                                     &line_begin, &line_prop, progress, material_index, library_names);
         }
 
         join_threads(&threads, &thread_messages);
 }
 
-void OBJ::read_obj_and_mtl(const std::string& file_name, ProgressRatio* progress)
+void FileObj::read_obj_and_mtl(const std::string& file_name, ProgressRatio* progress)
 {
         progress->set_undefined();
 
@@ -1100,6 +1118,11 @@ void OBJ::read_obj_and_mtl(const std::string& file_name, ProgressRatio* progress
 
         read_obj(file_name, progress, &material_index, &library_names);
 
+        if (m_faces.size() == 0)
+        {
+                error("No faces found in OBJ file");
+        }
+
         check_faces();
 
         find_center_and_length(m_vertices, m_faces, &m_center, &m_length);
@@ -1107,7 +1130,7 @@ void OBJ::read_obj_and_mtl(const std::string& file_name, ProgressRatio* progress
         read_libs(get_dir_name(file_name), progress, &material_index, library_names);
 }
 
-OBJ::OBJ(const std::string& file_name, ProgressRatio* progress)
+FileObj::FileObj(const std::string& file_name, ProgressRatio* progress)
 {
         double time_point = get_time_seconds();
 
@@ -1115,9 +1138,172 @@ OBJ::OBJ(const std::string& file_name, ProgressRatio* progress)
 
         LOG("OBJ loaded, " + to_string(get_time_seconds() - time_point, 3) + " s");
 }
+
+class FileTxt final : public IObj
+{
+        std::vector<glm::vec3> m_vertices;
+        std::vector<glm::vec2> m_texcoords;
+        std::vector<glm::vec3> m_normals;
+        std::vector<face3> m_faces;
+        std::vector<int> m_points;
+        std::vector<material> m_materials;
+        std::vector<sf::Image> m_images;
+        glm::vec3 m_center;
+        float m_length;
+
+        struct ThreadData
+        {
+                size_t thread_num;
+                size_t thread_count;
+        };
+
+        void read_points_th(const ThreadData* thread_data, std::string* file_ptr, std::vector<size_t>* line_begin,
+                            std::vector<glm::vec3>* lines, ProgressRatio* progress) const;
+        void read_points(const std::string& file_name, ProgressRatio* progress);
+        void read_text(const std::string& file_name, ProgressRatio* progress);
+
+        const std::vector<glm::vec3>& get_vertices() const override
+        {
+                return m_vertices;
+        }
+        const std::vector<glm::vec2>& get_texcoords() const override
+        {
+                return m_texcoords;
+        }
+        const std::vector<glm::vec3>& get_normals() const override
+        {
+                return m_normals;
+        }
+        const std::vector<face3>& get_faces() const override
+        {
+                return m_faces;
+        }
+        const std::vector<int>& get_points() const override
+        {
+                return m_points;
+        }
+        const std::vector<material>& get_materials() const override
+        {
+                return m_materials;
+        }
+        const std::vector<sf::Image>& get_images() const override
+        {
+                return m_images;
+        }
+        glm::vec3 get_center() const override
+        {
+                return m_center;
+        }
+        float get_length() const override
+        {
+                return m_length;
+        }
+
+public:
+        FileTxt(const std::string& file_name, ProgressRatio* progress);
+};
+
+void FileTxt::read_points_th(const ThreadData* thread_data, std::string* file_ptr, std::vector<size_t>* line_begin,
+                             std::vector<glm::vec3>* lines, ProgressRatio* progress) const
+{
+        const size_t line_count = line_begin->size();
+        const double line_count_d = line_begin->size();
+
+        for (size_t line_num = thread_data->thread_num; line_num < line_count; line_num += thread_data->thread_count)
+        {
+                if ((line_num & 0xfff) == 0xfff)
+                {
+                        progress->set(line_num / line_count_d);
+                }
+
+                size_t l_b = (*line_begin)[line_num];
+                size_t l_e = (line_num < line_begin->size() - 1) ? (*line_begin)[line_num + 1] : file_ptr->size();
+
+                // В конце строки находится символ '\n', сместиться на него и записать вместо него 0
+                --l_e;
+                (*file_ptr)[l_e] = 0;
+
+                read_float(*file_ptr, l_b, l_e, &(*lines)[line_num]);
+        }
+}
+
+void FileTxt::read_points(const std::string& file_name, ProgressRatio* progress)
+{
+        int hardware_concurrency = get_hardware_concurrency();
+
+        std::string file_str;
+        std::vector<size_t> line_begin;
+        get_lines(file_name, &file_str, &line_begin);
+        m_vertices.resize(line_begin.size());
+
+        std::vector<std::thread> threads(hardware_concurrency);
+        std::vector<ThreadData> thread_data(threads.size());
+        std::vector<std::string> thread_messages(threads.size());
+
+        for (size_t i = 0; i < thread_data.size(); ++i)
+        {
+                ThreadData t;
+                t.thread_num = i;
+                t.thread_count = threads.size();
+                thread_data[i] = t;
+        }
+
+        for (size_t i = 0; i < threads.size(); ++i)
+        {
+                launch_class_thread(&threads[i], &thread_messages[i], &FileTxt::read_points_th, this, &thread_data[i], &file_str,
+                                    &line_begin, &m_vertices, progress);
+        }
+
+        join_threads(&threads, &thread_messages);
+}
+
+void FileTxt::read_text(const std::string& file_name, ProgressRatio* progress)
+{
+        progress->set_undefined();
+
+        read_points(file_name, progress);
+
+        if (m_vertices.size() == 0)
+        {
+                error("No vertices found in Text file");
+        }
+
+        m_points.resize(m_vertices.size());
+        std::iota(m_points.begin(), m_points.end(), 0);
+
+        find_center_and_length(m_vertices, m_points, &m_center, &m_length);
+}
+
+FileTxt::FileTxt(const std::string& file_name, ProgressRatio* progress)
+{
+        double time_point = get_time_seconds();
+
+        read_text(file_name, progress);
+
+        LOG("TEXT loaded, " + to_string(get_time_seconds() - time_point, 3) + " s");
+}
 }
 
 std::unique_ptr<IObj> load_obj_from_file(const std::string& file_name, ProgressRatio* progress)
 {
-        return std::make_unique<OBJ>(file_name, progress);
+        std::string upper_extension = to_upper(get_extension(file_name));
+
+        if (upper_extension == "OBJ")
+        {
+                return std::make_unique<FileObj>(file_name, progress);
+        }
+        else if (upper_extension == "TXT")
+        {
+                return std::make_unique<FileTxt>(file_name, progress);
+        }
+        else
+        {
+                std::string msg = "Unsupported file format";
+                if (upper_extension.size() > 0)
+                {
+                        msg += " " + get_extension(file_name);
+                }
+
+                error(msg);
+        }
 }

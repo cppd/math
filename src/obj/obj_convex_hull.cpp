@@ -45,6 +45,7 @@ class ConvexHullObj final : public IObj
         std::vector<glm::vec2> m_texcoords;
         std::vector<glm::vec3> m_normals;
         std::vector<face3> m_faces;
+        std::vector<int> m_points;
         std::vector<material> m_materials;
         std::vector<sf::Image> m_images;
         glm::vec3 m_center;
@@ -66,6 +67,10 @@ class ConvexHullObj final : public IObj
         {
                 return m_faces;
         }
+        const std::vector<int>& get_points() const override
+        {
+                return m_points;
+        }
         const std::vector<material>& get_materials() const override
         {
                 return m_materials;
@@ -85,6 +90,11 @@ class ConvexHullObj final : public IObj
 
         void create_obj(const std::vector<Vector<3, float>>& points, const std::vector<ConvexHullFacet<3>>& facets)
         {
+                if (facets.size() == 0)
+                {
+                        error("No facets for convex hull object");
+                }
+
                 std::unordered_map<int, std::vector<vec<3>>> vertex_map;
                 std::unordered_map<int, int> index_map;
 
@@ -142,7 +152,20 @@ class ConvexHullObj final : public IObj
 public:
         ConvexHullObj(const IObj* obj, ProgressRatio* progress)
         {
-                std::vector<Vector<3, float>> points = to_vector<float>(get_unique_face_vertices(obj));
+                std::vector<Vector<3, float>> points;
+
+                if (obj->get_faces().size() > 0)
+                {
+                        points = to_vector<float>(get_unique_face_vertices(obj));
+                }
+                else if (obj->get_points().size() > 0)
+                {
+                        points = to_vector<float>(get_unique_point_vertices(obj));
+                }
+                else
+                {
+                        error("Faces or points not found for convex hull object");
+                }
 
                 std::vector<ConvexHullFacet<3>> facets;
 

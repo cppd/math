@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 
 std::string get_base_name(const std::string& file_name);
+std::string get_extension(const std::string& file_name);
 std::string get_dir_name(const std::string& file_name);
 
 std::string temp_directory();

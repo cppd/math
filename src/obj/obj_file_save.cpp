@@ -57,12 +57,19 @@ void write_comment(const CFile& file, const std::string& comment)
         }
 }
 
-// Запись вершин с приведением координат к интервалу [-1, 1] с сохранением пропорций
+// Запись вершин с приведением координат вершин граней к интервалу [-1, 1] с сохранением пропорций
 void write_vertices(const CFile& file, const IObj* obj)
 {
+        std::vector<int> indices = get_unique_face_indices(obj->get_faces());
+
+        if (indices.size() < 3)
+        {
+                error("face unique indices count < 3 ");
+        }
+
         glm::vec3 min, max;
 
-        find_min_max(obj->get_vertices(), get_unique_face_indices(obj->get_faces()), &min, &max);
+        find_min_max(obj->get_vertices(), indices, &min, &max);
 
         glm::dvec3 delta = glm::dvec3(max - min);
 
@@ -168,9 +175,9 @@ void write_faces(const CFile& file, const IObj* obj)
 
 void save_obj_geometry_to_file(const IObj* obj, const std::string& file_name, const std::string& comment)
 {
-        if (obj->get_vertices().size() == 0)
+        if (obj->get_faces().size() == 0)
         {
-                error("Object doesn't have vertices");
+                error("Object doesn't have faces");
         }
 
         double time_point = get_time_seconds();

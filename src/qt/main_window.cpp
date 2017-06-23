@@ -26,8 +26,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/time.h"
 #include "geometry/surface_cocone.h"
 #include "geometry/vec_glm.h"
+#include "obj/obj_alg.h"
 #include "obj/obj_convex_hull.h"
-#include "obj/obj_file.h"
+#include "obj/obj_file_load.h"
 #include "obj/obj_file_save.h"
 #include "obj/obj_surface.h"
 #include "progress/progress.h"
@@ -207,7 +208,10 @@ void MainWindow::thread_faces(std::shared_ptr<IObj> obj) noexcept
                 if (obj->get_faces().size() != 0)
                 {
                         m_show->add_object(obj, FACES);
+                }
 
+                if (obj->get_faces().size() != 0 || obj->get_points().size() != 0)
+                {
                         ProgressRatio progress(&m_progress_ratio_list);
                         progress.set_text("Convex hull 3D: %v of %m");
 
@@ -246,7 +250,7 @@ void MainWindow::thread_cocone() noexcept
 
                         m_surface_reconstructor->cocone(&normals, &facets, &progress);
 
-                        m_surface_cocone = create_obj_for_facets(to_vector<float>(m_points), normals, facets);
+                        m_surface_cocone = create_obj_for_facets(to_vector<float>(m_surface_points), normals, facets);
 
                         LOG("Surface reconstruction second phase, " + to_string(get_time_seconds() - start_time, 5) + " s");
                 }
@@ -293,7 +297,7 @@ void MainWindow::thread_bound_cocone(double rho, double alpha) noexcept
 
                         m_surface_reconstructor->bound_cocone(rho, alpha, &normals, &facets, &progress);
 
-                        m_surface_bound_cocone = create_obj_for_facets(to_vector<float>(m_points), normals, facets);
+                        m_surface_bound_cocone = create_obj_for_facets(to_vector<float>(m_surface_points), normals, facets);
 
                         LOG("Surface reconstruction second phase, " + to_string(get_time_seconds() - start_time, 5) + " s");
                 }
@@ -341,7 +345,7 @@ void MainWindow::thread_surface_reconstructor() noexcept
 
                 double start_time = get_time_seconds();
 
-                m_surface_reconstructor = create_surface_reconstructor(to_vector<float>(m_points), &progress);
+                m_surface_reconstructor = create_surface_reconstructor(to_vector<float>(m_surface_points), &progress);
 
                 LOG("Surface reconstruction first phase, " + to_string(get_time_seconds() - start_time, 5) + " s");
 
@@ -375,13 +379,17 @@ void MainWindow::thread_open_file(const std::string& file_name) noexcept
 
                 {
                         ProgressRatio progress(&m_progress_ratio_list);
-                        progress.set_text("Load OBJ file: %p%");
+                        progress.set_text("Load file: %p%");
                         obj = load_obj_from_file(file_name, &progress);
                 }
 
-                if (obj->get_vertices().size() == 0)
+                if (obj->get_faces().size() == 0 && obj->get_points().size() == 0)
                 {
-                        error("No vertices found in OBJ");
+                        error("Faces or points not found");
+                }
+                if (obj->get_faces().size() != 0 && obj->get_points().size() != 0)
+                {
+                        error("Faces and points together in one object are not supported");
                 }
 
                 m_show->delete_all_objects();
@@ -391,7 +399,8 @@ void MainWindow::thread_open_file(const std::string& file_name) noexcept
 
                 file_loaded(file_name);
 
-                m_points = obj->get_vertices();
+                m_surface_points = (obj->get_faces().size() > 0) ? get_unique_face_vertices(obj.get()) :
+                                                                   get_unique_point_vertices(obj.get());
 
                 std::vector<std::thread> threads(2);
                 std::vector<std::string> msg(2);
@@ -745,8 +754,8 @@ void MainWindow::window_shown()
 
 void MainWindow::on_actionLoad_triggered()
 {
-        QString file_name = QFileDialog::getOpenFileName(this, "Open OBJ file", "", "OBJ files (*.obj)", nullptr,
-                                                         QFileDialog::ReadOnly | QFileDialog::DontUseNativeDialog);
+        QString file_name = QFileDialog::getOpenFileName(this, "Open OBJ file", "", "OBJ files (*.obj);; Points files(*.txt)",
+                                                         nullptr, QFileDialog::ReadOnly | QFileDialog::DontUseNativeDialog);
         if (file_name.size() > 0)
         {
                 start_thread_open_file(file_name.toStdString());

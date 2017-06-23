@@ -53,6 +53,7 @@ struct IObj
         virtual const std::vector<glm::vec2>& get_texcoords() const = 0;
         virtual const std::vector<glm::vec3>& get_normals() const = 0;
         virtual const std::vector<face3>& get_faces() const = 0;
+        virtual const std::vector<int>& get_points() const = 0;
         virtual const std::vector<material>& get_materials() const = 0;
         virtual const std::vector<sf::Image>& get_images() const = 0;
         virtual glm::vec3 get_center() const = 0;

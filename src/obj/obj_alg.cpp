@@ -24,7 +24,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <glm/geometric.hpp>
 #include <unordered_set>
 
-std::vector<int> get_unique_face_indices(const std::vector<IObj::face3> faces)
+namespace
+{
+struct Hash
+{
+        size_t operator()(glm::vec3 v) const
+        {
+                return array_hash(std::array<float, 3>{{v[0], v[1], v[2]}});
+        }
+};
+}
+
+std::vector<int> get_unique_face_indices(const std::vector<IObj::face3>& faces)
 {
         std::unordered_set<int> unique_face_vertices;
 
@@ -47,16 +58,28 @@ std::vector<int> get_unique_face_indices(const std::vector<IObj::face3> faces)
         return indices;
 }
 
+std::vector<int> get_unique_point_indices(const std::vector<int>& points)
+{
+        std::unordered_set<int> unique_point_vertices;
+
+        for (int point : points)
+        {
+                unique_point_vertices.insert(point);
+        }
+
+        std::vector<int> indices;
+        indices.reserve(unique_point_vertices.size());
+
+        for (int i : unique_point_vertices)
+        {
+                indices.push_back(i);
+        }
+
+        return indices;
+}
+
 std::vector<glm::vec3> get_unique_face_vertices(const IObj* obj)
 {
-        struct Hash
-        {
-                size_t operator()(glm::vec3 v) const
-                {
-                        return array_hash(std::array<float, 3>{{v[0], v[1], v[2]}});
-                }
-        };
-
         std::unordered_set<glm::vec3, Hash> unique_face_vertices(obj->get_vertices().size());
 
         for (const IObj::face3& face : obj->get_faces())
@@ -71,6 +94,26 @@ std::vector<glm::vec3> get_unique_face_vertices(const IObj* obj)
         vertices.reserve(unique_face_vertices.size());
 
         for (glm::vec3 i : unique_face_vertices)
+        {
+                vertices.push_back(i);
+        }
+
+        return vertices;
+}
+
+std::vector<glm::vec3> get_unique_point_vertices(const IObj* obj)
+{
+        std::unordered_set<glm::vec3, Hash> unique_point_vertices(obj->get_points().size());
+
+        for (int point : obj->get_points())
+        {
+                unique_point_vertices.insert(obj->get_vertices()[point]);
+        }
+
+        std::vector<glm::vec3> vertices;
+        vertices.reserve(unique_point_vertices.size());
+
+        for (glm::vec3 i : unique_point_vertices)
         {
                 vertices.push_back(i);
         }
@@ -97,18 +140,10 @@ void find_min_max(const std::vector<glm::vec3>& vertices, const std::vector<int>
         }
 }
 
-void find_center_and_length(const std::vector<glm::vec3>& vertices, const std::vector<IObj::face3> faces, glm::vec3* center,
-                            float* length)
+namespace
 {
-        std::vector<int> indices = get_unique_face_indices(faces);
-
-        if (indices.size() < 3)
-        {
-                *center = glm::vec3(0);
-                *length = 0;
-                return;
-        }
-
+void center_and_length(const std::vector<glm::vec3>& vertices, std::vector<int>& indices, glm::vec3* center, float* length)
+{
         glm::vec3 min, max;
 
         find_min_max(vertices, indices, &min, &max);
@@ -116,4 +151,31 @@ void find_center_and_length(const std::vector<glm::vec3>& vertices, const std::v
         *center = 0.5f * (max + min);
 
         *length = glm::length(max - min);
+}
+}
+
+void find_center_and_length(const std::vector<glm::vec3>& vertices, const std::vector<IObj::face3>& faces, glm::vec3* center,
+                            float* length)
+{
+        std::vector<int> indices = get_unique_face_indices(faces);
+
+        if (indices.size() < 3)
+        {
+                error("face unique indices count < 3");
+        }
+
+        center_and_length(vertices, indices, center, length);
+}
+
+void find_center_and_length(const std::vector<glm::vec3>& vertices, const std::vector<int>& points, glm::vec3* center,
+                            float* length)
+{
+        std::vector<int> indices = get_unique_point_indices(points);
+
+        if (indices.size() == 0)
+        {
+                error("points unique indices count == 0");
+        }
+
+        center_and_length(vertices, indices, center, length);
 }
