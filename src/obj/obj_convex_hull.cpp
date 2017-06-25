@@ -88,7 +88,7 @@ class ConvexHullObj final : public IObj
                 return m_length;
         }
 
-        void create_obj(const std::vector<Vector<3, float>>& points, const std::vector<ConvexHullFacet<3>>& facets)
+        void create_obj(const std::vector<glm::vec3>& points, const std::vector<ConvexHullFacet<3>>& facets)
         {
                 if (facets.size() == 0)
                 {
@@ -115,7 +115,7 @@ class ConvexHullObj final : public IObj
                 {
                         index_map[v.first] = idx;
 
-                        m_vertices[idx] = to_glm(points[v.first]);
+                        m_vertices[idx] = points[v.first];
                         // m_normals[idx] = to_glm(average_normal(v.second));
 
                         ++idx;
@@ -152,15 +152,15 @@ class ConvexHullObj final : public IObj
 public:
         ConvexHullObj(const IObj* obj, ProgressRatio* progress)
         {
-                std::vector<Vector<3, float>> points;
+                std::vector<glm::vec3> points;
 
                 if (obj->get_faces().size() > 0)
                 {
-                        points = to_vector<float>(get_unique_face_vertices(obj));
+                        points = get_unique_face_vertices(obj);
                 }
                 else if (obj->get_points().size() > 0)
                 {
-                        points = to_vector<float>(get_unique_point_vertices(obj));
+                        points = get_unique_point_vertices(obj);
                 }
                 else
                 {
@@ -171,7 +171,7 @@ public:
 
                 double start_time = get_time_seconds();
 
-                compute_convex_hull(points, &facets, progress);
+                compute_convex_hull(to_vector<float>(points), &facets, progress);
 
                 LOG("Convex hull created, " + to_string(get_time_seconds() - start_time, 5) + " s");
 

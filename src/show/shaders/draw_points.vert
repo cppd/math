@@ -15,20 +15,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#pragma once
-#ifndef OBJ_SURFACE_H
-#define OBJ_SURFACE_H
+layout(location = 0) in vec4 position;
 
-#include "obj.h"
+uniform mat4 mvpMatrix;
 
-#include "geometry/vec.h"
-#include "progress/progress.h"
-
-#include <memory>
-
-std::unique_ptr<IObj> create_surface_for_obj(const IObj* obj, ProgressRatio* progress);
-
-std::unique_ptr<IObj> create_obj_for_facets(const std::vector<glm::vec3>& points, const std::vector<Vector<3, double>>& normals,
-                                            const std::vector<std::array<int, 3>>& facets);
-
-#endif
+void main(void)
+{
+        gl_Position = mvpMatrix * position;
+}

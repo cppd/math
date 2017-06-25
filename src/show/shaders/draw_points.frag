@@ -15,20 +15,24 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#pragma once
-#ifndef OBJ_SURFACE_H
-#define OBJ_SURFACE_H
+layout(bindless_image, r32i) writeonly uniform iimage2D object_img;
 
-#include "obj.h"
+uniform vec4 default_color;
+// uniform vec3 light_direction;
+// uniform vec3 camera_direction;
 
-#include "geometry/vec.h"
-#include "progress/progress.h"
+uniform vec4 light_a;
 
-#include <memory>
+layout(location = 0) out vec4 color;
 
-std::unique_ptr<IObj> create_surface_for_obj(const IObj* obj, ProgressRatio* progress);
+void main(void)
+{
+        vec4 color_a = default_color;
 
-std::unique_ptr<IObj> create_obj_for_facets(const std::vector<glm::vec3>& points, const std::vector<Vector<3, double>>& normals,
-                                            const std::vector<std::array<int, 3>>& facets);
+        // vec3 L = light_direction;
+        // vec3 V = camera_direction;
 
-#endif
+        color = color_a * light_a;
+
+        imageStore(object_img, ivec2(gl_FragCoord.xy), ivec4(1));
+}

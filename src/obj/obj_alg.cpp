@@ -140,6 +140,18 @@ void find_min_max(const std::vector<glm::vec3>& vertices, const std::vector<int>
         }
 }
 
+void find_min_max(const std::vector<glm::vec3>& vertices, glm::vec3* min, glm::vec3* max)
+{
+        *min = glm::vec3(std::numeric_limits<float>::max());
+        *max = glm::vec3(std::numeric_limits<float>::lowest());
+
+        for (const glm::vec3& v : vertices)
+        {
+                *min = glm::min(*min, v);
+                *max = glm::max(*max, v);
+        }
+}
+
 namespace
 {
 void center_and_length(const std::vector<glm::vec3>& vertices, std::vector<int>& indices, glm::vec3* center, float* length)
@@ -147,6 +159,17 @@ void center_and_length(const std::vector<glm::vec3>& vertices, std::vector<int>&
         glm::vec3 min, max;
 
         find_min_max(vertices, indices, &min, &max);
+
+        *center = 0.5f * (max + min);
+
+        *length = glm::length(max - min);
+}
+
+void center_and_length(const std::vector<glm::vec3>& vertices, glm::vec3* center, float* length)
+{
+        glm::vec3 min, max;
+
+        find_min_max(vertices, &min, &max);
 
         *center = 0.5f * (max + min);
 
@@ -172,10 +195,20 @@ void find_center_and_length(const std::vector<glm::vec3>& vertices, const std::v
 {
         std::vector<int> indices = get_unique_point_indices(points);
 
-        if (indices.size() == 0)
+        if (indices.size() < 2)
         {
-                error("points unique indices count == 0");
+                error("points unique indices count < 2");
         }
 
         center_and_length(vertices, indices, center, length);
+}
+
+void find_center_and_length(const std::vector<glm::vec3>& vertices, glm::vec3* center, float* length)
+{
+        if (vertices.size() < 2)
+        {
+                error("points count < 2");
+        }
+
+        center_and_length(vertices, center, length);
 }

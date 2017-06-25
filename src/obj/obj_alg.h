@@ -28,10 +28,12 @@ std::vector<glm::vec3> get_unique_face_vertices(const IObj* obj);
 std::vector<glm::vec3> get_unique_point_vertices(const IObj* obj);
 
 void find_min_max(const std::vector<glm::vec3>& vertices, const std::vector<int>& indices, glm::vec3* min, glm::vec3* max);
+void find_min_max(const std::vector<glm::vec3>& vertices, glm::vec3* min, glm::vec3* max);
 
 void find_center_and_length(const std::vector<glm::vec3>& vertices, const std::vector<IObj::face3>& faces, glm::vec3* center,
                             float* length);
 void find_center_and_length(const std::vector<glm::vec3>& vertices, const std::vector<int>& points, glm::vec3* center,
                             float* length);
+void find_center_and_length(const std::vector<glm::vec3>& vertices, glm::vec3* center, float* length);
 
 #endif

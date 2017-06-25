@@ -81,7 +81,7 @@ class SurfaceObj final : public IObj
                 return m_length;
         }
 
-        void create_obj(const std::vector<Vector<3, float>>& points, const std::vector<Vector<3, double>>& normals,
+        void create_obj(const std::vector<glm::vec3>& points, const std::vector<Vector<3, double>>& normals,
                         const std::vector<std::array<int, 3>>& facets)
         {
                 if (facets.size() == 0)
@@ -108,7 +108,7 @@ class SurfaceObj final : public IObj
                 {
                         index_map[v] = idx;
 
-                        m_vertices[idx] = to_glm(points[v]);
+                        m_vertices[idx] = points[v];
                         m_normals[idx] = to_glm(normals[v]);
 
                         ++idx;
@@ -177,14 +177,14 @@ public:
         SurfaceObj(const IObj* obj, ProgressRatio* progress)
         {
                 // std::vector<Vector<3, float>> points = generate_random_data(1000);
-                std::vector<Vector<3, float>> points = to_vector<float>(obj->get_vertices());
+                const std::vector<glm::vec3>& points = obj->get_vertices();
 
                 std::vector<vec<3>> normals;
                 std::vector<std::array<int, 3>> facets;
 
                 double start_time = get_time_seconds();
 
-                std::unique_ptr<ISurfaceReconstructor<3>> sr = create_surface_reconstructor(points, progress);
+                std::unique_ptr<ISurfaceReconstructor<3>> sr = create_surface_reconstructor(to_vector<float>(points), progress);
                 sr->cocone(&normals, &facets, progress);
                 // sr->bound_cocone(0.3, 0.14, &normals, &facets, progress);
 
@@ -193,7 +193,7 @@ public:
                 create_obj(points, normals, facets);
         }
 
-        SurfaceObj(const std::vector<Vector<3, float>>& points, const std::vector<Vector<3, double>>& normals,
+        SurfaceObj(const std::vector<glm::vec3>& points, const std::vector<Vector<3, double>>& normals,
                    const std::vector<std::array<int, 3>>& facets)
         {
                 ASSERT(points.size() == normals.size());
@@ -208,8 +208,7 @@ std::unique_ptr<IObj> create_surface_for_obj(const IObj* obj, ProgressRatio* pro
         return std::make_unique<SurfaceObj>(obj, progress);
 }
 
-std::unique_ptr<IObj> create_obj_for_facets(const std::vector<Vector<3, float>>& points,
-                                            const std::vector<Vector<3, double>>& normals,
+std::unique_ptr<IObj> create_obj_for_facets(const std::vector<glm::vec3>& points, const std::vector<Vector<3, double>>& normals,
                                             const std::vector<std::array<int, 3>>& facets)
 {
         return std::make_unique<SurfaceObj>(points, normals, facets);

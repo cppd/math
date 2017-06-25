@@ -40,7 +40,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <chrono>
 #include <cmath>
 #include <glm/gtc/color_space.hpp>
-#include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/rotate_vector.hpp>
 #include <thread>
 #include <unordered_map>
@@ -50,37 +49,11 @@ constexpr float ZOOM_BASE = 1.1;
 constexpr float ZOOM_EXP_MIN = -50;
 constexpr float ZOOM_EXP_MAX = 100;
 
-// увеличение текстуры тени по сравнению с размером окна
-constexpr float SHADOW_MUL = 1.0;
-
 constexpr float PI_DIV_180 = PI / 180;
 constexpr float to_radians(float angle)
 {
         return angle * PI_DIV_180;
 }
-
-// clang-format off
-constexpr const char obj_vert[]
-{
-#include "obj.vert.str"
-};
-constexpr const char obj_geom[]
-{
-#include "obj.geom.str"
-};
-constexpr const char obj_frag[]
-{
-#include "obj.frag.str"
-};
-constexpr const char shadow_vert[]
-{
-#include "shadow.vert.str"
-};
-constexpr const char shadow_frag[]
-{
-#include "shadow.frag.str"
-};
-// clang-format on
 
 namespace
 {
@@ -356,8 +329,8 @@ void ShowObject::loop()
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glEnable(GL_FRAMEBUFFER_SRGB);
 
-        GraphicsProgram program{VertexShader(obj_vert), GeometryShader(obj_geom), FragmentShader(obj_frag)};
-        GraphicsProgram shadow_program{VertexShader(shadow_vert), FragmentShader(shadow_frag)};
+        std::unique_ptr<IDrawProgram> draw_program = create_draw_program();
+
         ColorSpaceConverter color_converter{true};
 
         int new_width = wnd.getSize().x;
@@ -380,7 +353,7 @@ void ShowObject::loop()
         bool dft_active_old = false;
         float dft_brightness = -1.0f;
         bool shadow_active = false;
-        bool effect_active = false;
+        bool pencil_effect_active = false;
         bool convex_hull_2d_active = false;
         bool optical_flow_active = false;
         bool default_view = false;
@@ -394,16 +367,12 @@ void ShowObject::loop()
         std::unique_ptr<OpticalFlow> optical_flow;
         std::unique_ptr<TextureRGBA32F> optical_flow_texture;
         std::unique_ptr<ConvexHull2D> convex_hull_2d;
-        std::unique_ptr<ShadowBuffer> shadow_buffer;
-        std::unique_ptr<ColorBuffer> color_buffer;
         std::unique_ptr<TextureRGBA32F> dft_texture;
-        std::unique_ptr<TextureR32I> object_texture;
 
         Text text;
         Camera camera;
 
         const IDrawObject* draw_object = nullptr;
-        const IDrawObject* prev_draw_object = nullptr;
 
         std::chrono::steady_clock::time_point start_time = std::chrono::steady_clock::now();
 
@@ -440,7 +409,7 @@ void ShowObject::loop()
                                 {
                                         error("Null object received");
                                 }
-                                objects[d.id] = create_draw_object(d.obj, color_converter);
+                                objects[d.id] = create_draw_object(d.obj.get(), color_converter);
                                 m_callback->object_loaded(d.id);
                                 break;
                         }
@@ -510,7 +479,7 @@ void ShowObject::loop()
                                 const Event::set_ambient& d = event.get<Event::set_ambient>();
 
                                 glm::vec4 light = glm::convertSRGBToLinear(glm::vec4(1.0f) * d.ambient);
-                                program.set_uniform("light_a", light);
+                                draw_program->set_light_a(light);
                                 break;
                         }
                         case Event::EventType::set_diffuse:
@@ -518,7 +487,7 @@ void ShowObject::loop()
                                 const Event::set_diffuse& d = event.get<Event::set_diffuse>();
 
                                 glm::vec4 light = glm::convertSRGBToLinear(glm::vec4(1.0f) * d.diffuse);
-                                program.set_uniform("light_d", light);
+                                draw_program->set_light_d(light);
                                 break;
                         }
                         case Event::EventType::set_specular:
@@ -526,7 +495,7 @@ void ShowObject::loop()
                                 const Event::set_specular& d = event.get<Event::set_specular>();
 
                                 glm::vec4 light = glm::convertSRGBToLinear(glm::vec4(1.0f) * d.specular);
-                                program.set_uniform("light_s", light);
+                                draw_program->set_light_s(light);
                                 break;
                         }
                         case Event::EventType::set_clear_color:
@@ -543,7 +512,7 @@ void ShowObject::loop()
                                 const Event::set_default_color& d = event.get<Event::set_default_color>();
 
                                 glm::vec3 color = glm::convertSRGBToLinear(d.default_color);
-                                program.set_uniform("default_color", glm::vec4(color.r, color.g, color.b, 1));
+                                draw_program->set_default_color(glm::vec4(color.r, color.g, color.b, 1));
                                 break;
                         }
                         case Event::EventType::set_wireframe_color:
@@ -551,35 +520,35 @@ void ShowObject::loop()
                                 const Event::set_wireframe_color& d = event.get<Event::set_wireframe_color>();
 
                                 glm::vec3 color = glm::convertSRGBToLinear(d.wireframe_color);
-                                program.set_uniform("wireframe_color", glm::vec4(color.r, color.g, color.b, 1));
+                                draw_program->set_wireframe_color(glm::vec4(color.r, color.g, color.b, 1));
                                 break;
                         }
                         case Event::EventType::set_default_ns:
                         {
                                 const Event::set_default_ns& d = event.get<Event::set_default_ns>();
 
-                                program.set_uniform("default_ns", d.default_ns);
+                                draw_program->set_default_ns(d.default_ns);
                                 break;
                         }
                         case Event::EventType::show_smooth:
                         {
                                 const Event::show_smooth& d = event.get<Event::show_smooth>();
 
-                                program.set_uniform("show_smooth", d.show ? 1 : 0);
+                                draw_program->set_show_smooth(d.show);
                                 break;
                         }
                         case Event::EventType::show_wireframe:
                         {
                                 const Event::show_wireframe& d = event.get<Event::show_wireframe>();
 
-                                program.set_uniform("show_wireframe", d.show ? 1 : 0);
+                                draw_program->set_show_wireframe(d.show);
                                 break;
                         }
                         case Event::EventType::show_shadow:
                         {
                                 const Event::show_shadow& d = event.get<Event::show_shadow>();
 
-                                program.set_uniform("show_shadow", d.show ? 1 : 0);
+                                draw_program->set_show_shadow(d.show);
                                 shadow_active = d.show;
                                 break;
                         }
@@ -587,14 +556,14 @@ void ShowObject::loop()
                         {
                                 const Event::show_materials& d = event.get<Event::show_materials>();
 
-                                program.set_uniform("show_materials", d.show ? 1 : 0);
+                                draw_program->set_show_materials(d.show);
                                 break;
                         }
                         case Event::EventType::show_effect:
                         {
                                 const Event::show_effect& d = event.get<Event::show_effect>();
 
-                                effect_active = d.show;
+                                pencil_effect_active = d.show;
                                 break;
                         }
                         case Event::EventType::show_dft:
@@ -758,10 +727,8 @@ void ShowObject::loop()
                 {
                         // Чтобы в случае исключений не остались объекты от прошлых размеров окна,
                         // вначале нужно удалить все объекты.
-                        shadow_buffer = nullptr;
-                        color_buffer = nullptr;
+                        draw_program->free_buffers();
                         dft_texture = nullptr;
-                        object_texture = nullptr;
                         dft_window = nullptr;
                         pencil_effect = nullptr;
                         optical_flow = nullptr;
@@ -775,18 +742,18 @@ void ShowObject::loop()
                         height = window_height;
 
                         dft_active_old = dft_active;
+
                         matrix_change = true;
 
                         // матрица для рисования на плоскости, 0 вверху
-                        const glm::mat4 mtx =
+                        const glm::mat4 plane_matrix =
                                 glm::scale(glm::mat4(1), glm::vec3(2.0f / window_width, -2.0f / window_height, 1)) *
                                 glm::translate(glm::mat4(1), glm::vec3(-window_width / 2.0f, -window_height / 2.0f, 0));
 
-                        shadow_buffer = std::make_unique<ShadowBuffer>(SHADOW_MUL * width, SHADOW_MUL * height);
-                        color_buffer = std::make_unique<ColorBuffer>(width, height);
+                        draw_program->set_size(width, height);
+
                         dft_texture = std::make_unique<TextureRGBA32F>(width, height);
                         optical_flow_texture = std::make_unique<TextureRGBA32F>(width, height);
-                        object_texture = std::make_unique<TextureR32I>(width, height);
 
                         // Для реализации ДПФ с CUDA: создавать сразу после текстуры, до других вызовов,
                         // где могут быть вызовы bindless texture для dft_texture.
@@ -796,17 +763,15 @@ void ShowObject::loop()
                                 int dft_pos_x = (window_width & 1) ? (width + 1) : width;
                                 int dft_pos_y = 0;
 
-                                dft_window = std::make_unique<DFTShow>(width, height, dft_pos_x, dft_pos_y, mtx, buffer_sRGB,
-                                                                       *dft_texture);
+                                dft_window = std::make_unique<DFTShow>(width, height, dft_pos_x, dft_pos_y, plane_matrix,
+                                                                       buffer_sRGB, *dft_texture);
                                 dft_window->set_brightness(dft_brightness);
                         }
 
-                        pencil_effect = std::make_unique<PencilEffect>(color_buffer->get_texture(), *object_texture);
-                        optical_flow = std::make_unique<OpticalFlow>(optical_flow_texture->get_texture(), mtx);
-                        convex_hull_2d = std::make_unique<ConvexHull2D>(*object_texture, mtx);
-
-                        program.set_uniform_handle("shadow_tex", shadow_buffer->get_texture().get_texture_resident_handle());
-                        program.set_uniform_handle("object_img", object_texture->get_image_resident_handle_write_only());
+                        pencil_effect = std::make_unique<PencilEffect>(draw_program->get_color_buffer_texture(),
+                                                                       draw_program->get_object_texture());
+                        optical_flow = std::make_unique<OpticalFlow>(optical_flow_texture->get_texture(), plane_matrix);
+                        convex_hull_2d = std::make_unique<ConvexHull2D>(draw_program->get_object_texture(), plane_matrix);
                 }
 
                 if (default_view)
@@ -821,82 +786,39 @@ void ShowObject::loop()
                         matrix_change = true;
                 }
 
-                if (prev_draw_object != draw_object)
-                {
-                        prev_draw_object = draw_object;
-                        matrix_change = true;
-                }
-
                 if (matrix_change)
                 {
-                        glm::mat4 model_matrix = draw_object ? draw_object->get_model_matrix() : glm::mat4(1);
+                        glm::mat4 shadow_matrix = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f) *
+                                                  glm::lookAt(glm::vec3(0, 0, 0), -camera.light_dir(), camera.light_up());
 
-                        glm::mat4 ShadowMVP = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f) *
-                                              glm::lookAt(glm::vec3(0, 0, 0), -camera.light_dir(), camera.light_up()) *
-                                              model_matrix;
+                        glm::mat4 main_matrix =
+                                glm::ortho(-0.5f * width * pixel_to_coord, 0.5f * width * pixel_to_coord,
+                                           -0.5f * height * pixel_to_coord, 0.5f * height * pixel_to_coord) *
+                                glm::translate(glm::mat4(1), glm::vec3(-window_center.x, -window_center.y, 0.0f)) *
+                                glm::lookAt(glm::vec3(0, 0, 0), -camera.dir(), camera.up());
 
-                        glm::mat4 MVP = glm::ortho(-0.5f * width * pixel_to_coord, 0.5f * width * pixel_to_coord,
-                                                   -0.5f * height * pixel_to_coord, 0.5f * height * pixel_to_coord) *
-                                        glm::translate(glm::mat4(1), glm::vec3(-window_center.x, -window_center.y, 0.0f)) *
-                                        glm::lookAt(glm::vec3(0, 0, 0), -camera.dir(), camera.up()) * model_matrix;
+                        draw_program->set_matrices(shadow_matrix, main_matrix);
 
-                        shadow_program.set_uniform("mvpMatrix", ShadowMVP);
-
-                        program.set_uniform("mvpMatrix", MVP);
-                        program.set_uniform("shadowMatrix", SCALE_BIAS_MATRIX * ShadowMVP);
-                        program.set_uniform("light_direction", camera.light_dir());
-                        program.set_uniform("camera_direction", camera.dir());
+                        draw_program->set_light_direction(camera.light_dir());
+                        draw_program->set_camera_direction(camera.dir());
                 }
 
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-                object_texture->clear_tex_image(0);
+                // Трёхмерное рисование
 
-                if (draw_object)
+                glEnable(GL_DEPTH_TEST);
+                glDisable(GL_BLEND);
+
+                // Если pencil_effect_active, то рисование в цветной буфер
+                draw_program->draw(draw_object, shadow_active, pencil_effect_active);
+
+                // Двухмерные рисования на основе полученного изображения
+
+                // Двухмерное рисование из цветного буфера в буфер экрана
+                if (draw_object && pencil_effect_active)
                 {
-                        glEnable(GL_DEPTH_TEST);
-                        glDisable(GL_BLEND);
-
-                        if (shadow_active)
-                        {
-                                shadow_buffer->bind_buffer();
-                                glViewport(0, 0, width * SHADOW_MUL, height * SHADOW_MUL);
-                                glClearDepthf(1.0f);
-                                glClear(GL_DEPTH_BUFFER_BIT);
-                                glEnable(GL_POLYGON_OFFSET_FILL); // depth-fighting
-                                glPolygonOffset(2.0f, 2.0f); // glPolygonOffset(4.0f, 4.0f);
-
-                                draw_object->bind_vertex_array();
-                                shadow_program.draw_arrays(GL_TRIANGLES, 0, draw_object->get_vertices_count());
-
-                                glDisable(GL_POLYGON_OFFSET_FILL);
-                                shadow_buffer->unbind_buffer();
-                                glViewport(0, 0, width, height);
-                        }
-
-                        draw_object->bind_storage_buffer(0);
-
-                        if (!effect_active)
-                        {
-                                glViewport(0, 0, width, height);
-
-                                draw_object->bind_vertex_array();
-                                program.draw_arrays(GL_TRIANGLES, 0, draw_object->get_vertices_count());
-                        }
-                        else
-                        {
-                                color_buffer->bind_buffer();
-                                glViewport(0, 0, width, height);
-                                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-                                draw_object->bind_vertex_array();
-                                program.draw_arrays(GL_TRIANGLES, 0, draw_object->get_vertices_count());
-
-                                color_buffer->unbind_buffer();
-                                glViewport(0, 0, width, height);
-
-                                pencil_effect->draw();
-                        }
+                        pencil_effect->draw();
                 }
 
                 glViewport(0, 0, window_width, window_height);
@@ -933,6 +855,7 @@ void ShowObject::loop()
                 glDisable(GL_SCISSOR_TEST);
 
                 glEnable(GL_BLEND);
+
                 text.draw(window_width, window_height, {"FPS: " + std::to_string(get_fps(&start_time))});
 
                 wnd.display();

@@ -92,7 +92,7 @@
          <item>
           <widget class="QTabWidget" name="tabWidget">
            <property name="currentIndex">
-            <number>0</number>
+            <number>2</number>
            </property>
            <widget class="QWidget" name="tab3D">
             <attribute name="title">
@@ -536,9 +536,9 @@
                       <colorrole role="Window">
                        <brush brushstyle="SolidPattern">
                         <color alpha="255">
-                         <red>0</red>
+                         <red>150</red>
                          <green>170</green>
-                         <blue>0</blue>
+                         <blue>150</blue>
                         </color>
                        </brush>
                       </colorrole>
@@ -556,9 +556,9 @@
                       <colorrole role="Window">
                        <brush brushstyle="SolidPattern">
                         <color alpha="255">
-                         <red>0</red>
+                         <red>150</red>
                          <green>170</green>
-                         <blue>0</blue>
+                         <blue>150</blue>
                         </color>
                        </brush>
                       </colorrole>
@@ -567,18 +567,18 @@
                       <colorrole role="Base">
                        <brush brushstyle="SolidPattern">
                         <color alpha="255">
-                         <red>0</red>
+                         <red>150</red>
                          <green>170</green>
-                         <blue>0</blue>
+                         <blue>150</blue>
                         </color>
                        </brush>
                       </colorrole>
                       <colorrole role="Window">
                        <brush brushstyle="SolidPattern">
                         <color alpha="255">
-                         <red>0</red>
+                         <red>150</red>
                          <green>170</green>
-                         <blue>0</blue>
+                         <blue>150</blue>
                         </color>
                        </brush>
                       </colorrole>

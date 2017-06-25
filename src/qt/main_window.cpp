@@ -205,22 +205,21 @@ void MainWindow::thread_faces(std::shared_ptr<IObj> obj) noexcept
 {
         try
         {
-                if (obj->get_faces().size() != 0)
+                if (obj->get_faces().size() == 0 && obj->get_points().size() == 0)
                 {
-                        m_show->add_object(obj, FACES);
+                        return;
                 }
 
-                if (obj->get_faces().size() != 0 || obj->get_points().size() != 0)
+                m_show->add_object(obj, FACES);
+
+                ProgressRatio progress(&m_progress_ratio_list);
+                progress.set_text("Convex hull 3D: %v of %m");
+
+                std::shared_ptr<IObj> convex_hull = create_convex_hull_for_obj(obj.get(), &progress);
+
+                if (convex_hull->get_faces().size() != 0)
                 {
-                        ProgressRatio progress(&m_progress_ratio_list);
-                        progress.set_text("Convex hull 3D: %v of %m");
-
-                        std::shared_ptr<IObj> convex_hull = create_convex_hull_for_obj(obj.get(), &progress);
-
-                        if (convex_hull->get_faces().size() != 0)
-                        {
-                                m_show->add_object(convex_hull, FACES_CONVEX_HULL);
-                        }
+                        m_show->add_object(convex_hull, FACES_CONVEX_HULL);
                 }
         }
         catch (TerminateRequestException&)
@@ -250,7 +249,7 @@ void MainWindow::thread_cocone() noexcept
 
                         m_surface_reconstructor->cocone(&normals, &facets, &progress);
 
-                        m_surface_cocone = create_obj_for_facets(to_vector<float>(m_surface_points), normals, facets);
+                        m_surface_cocone = create_obj_for_facets(m_surface_points, normals, facets);
 
                         LOG("Surface reconstruction second phase, " + to_string(get_time_seconds() - start_time, 5) + " s");
                 }
@@ -297,7 +296,7 @@ void MainWindow::thread_bound_cocone(double rho, double alpha) noexcept
 
                         m_surface_reconstructor->bound_cocone(rho, alpha, &normals, &facets, &progress);
 
-                        m_surface_bound_cocone = create_obj_for_facets(to_vector<float>(m_surface_points), normals, facets);
+                        m_surface_bound_cocone = create_obj_for_facets(m_surface_points, normals, facets);
 
                         LOG("Surface reconstruction second phase, " + to_string(get_time_seconds() - start_time, 5) + " s");
                 }
