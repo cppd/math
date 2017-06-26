@@ -1,4 +1,4 @@
-### OBJ Math Viewer
+## OBJ Math Viewer
 
 Эта программа написана с развлекательными целями. Чтение файлов OBJ и отображение их объектов на экране.
 Подача этих данных на вход разных интересных для меня алгоритмов.
@@ -36,6 +36,7 @@
 
 1. Широкое применение многопоточности (std::thread).
 
+---
 
 This program is written just for fun. It reads OBJ files, shows their objects on the screen, and uses
 them as the input data for some algorithms that are interesting to me.
@@ -73,8 +74,9 @@ Some technical details:
 
 1. Extensive use of multithreading (std::thread).
 
-### Screenshots
+## Screenshots
 
 3D model and the surface reconstructed only from the vertices of this 3D model
 
-![original surface](screenshots/original.jpg?raw=true) ![reconstructed surface](screenshots/cocone.jpg?raw=true)
+![original surface](screenshots/original.jpg?raw=true)
+![reconstructed surface](screenshots/cocone.jpg?raw=true)
