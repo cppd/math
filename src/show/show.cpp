@@ -362,12 +362,11 @@ void ShowObject::loop()
         bool fullscreen_active = false;
 
         std::unordered_map<int, std::unique_ptr<IDrawObject>> objects;
+
         std::unique_ptr<DFTShow> dft_window;
         std::unique_ptr<PencilEffect> pencil_effect;
         std::unique_ptr<OpticalFlow> optical_flow;
-        std::unique_ptr<TextureRGBA32F> optical_flow_texture;
         std::unique_ptr<ConvexHull2D> convex_hull_2d;
-        std::unique_ptr<TextureRGBA32F> dft_texture;
 
         Text text;
         Camera camera;
@@ -727,12 +726,12 @@ void ShowObject::loop()
                 {
                         // Чтобы в случае исключений не остались объекты от прошлых размеров окна,
                         // вначале нужно удалить все объекты.
+
                         draw_program->free_buffers();
-                        dft_texture = nullptr;
+
                         dft_window = nullptr;
                         pencil_effect = nullptr;
                         optical_flow = nullptr;
-                        optical_flow_texture = nullptr;
                         convex_hull_2d = nullptr;
 
                         window_width = new_width;
@@ -752,25 +751,16 @@ void ShowObject::loop()
 
                         draw_program->set_size(width, height);
 
-                        dft_texture = std::make_unique<TextureRGBA32F>(width, height);
-                        optical_flow_texture = std::make_unique<TextureRGBA32F>(width, height);
-
-                        // Для реализации ДПФ с CUDA: создавать сразу после текстуры, до других вызовов,
-                        // где могут быть вызовы bindless texture для dft_texture.
-                        // Создать, даже если это не нужно, чтобы сразу проверять все возможные ошибки.
-                        // if (dft_active)
-                        {
-                                int dft_pos_x = (window_width & 1) ? (width + 1) : width;
-                                int dft_pos_y = 0;
-
-                                dft_window = std::make_unique<DFTShow>(width, height, dft_pos_x, dft_pos_y, plane_matrix,
-                                                                       buffer_sRGB, *dft_texture);
-                                dft_window->set_brightness(dft_brightness);
-                        }
+                        int dft_pos_x = (window_width & 1) ? (width + 1) : width;
+                        int dft_pos_y = 0;
+                        dft_window = std::make_unique<DFTShow>(width, height, dft_pos_x, dft_pos_y, plane_matrix, buffer_sRGB);
+                        dft_window->set_brightness(dft_brightness);
 
                         pencil_effect = std::make_unique<PencilEffect>(draw_program->get_color_buffer_texture(),
                                                                        draw_program->get_object_texture());
-                        optical_flow = std::make_unique<OpticalFlow>(optical_flow_texture->get_texture(), plane_matrix);
+
+                        optical_flow = std::make_unique<OpticalFlow>(width, height, plane_matrix);
+
                         convex_hull_2d = std::make_unique<ConvexHull2D>(draw_program->get_object_texture(), plane_matrix);
                 }
 
@@ -805,7 +795,7 @@ void ShowObject::loop()
 
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-                // Трёхмерное рисование
+                //
 
                 glEnable(GL_DEPTH_TEST);
                 glDisable(GL_BLEND);
@@ -813,27 +803,27 @@ void ShowObject::loop()
                 // Если pencil_effect_active, то рисование в цветной буфер
                 draw_program->draw(draw_object, shadow_active, pencil_effect_active);
 
-                // Двухмерные рисования на основе полученного изображения
-
-                // Двухмерное рисование из цветного буфера в буфер экрана
+                // Рисование из цветного буфера в буфер экрана
                 if (draw_object && pencil_effect_active)
                 {
                         pencil_effect->draw();
                 }
 
-                glViewport(0, 0, window_width, window_height);
-
                 if (dft_active)
                 {
-                        dft_texture->copy_texture_sub_image();
+                        dft_window->copy_image();
                 }
                 if (optical_flow_active)
                 {
-                        optical_flow_texture->copy_texture_sub_image();
+                        optical_flow->copy_image();
                 }
+
+                //
 
                 glDisable(GL_DEPTH_TEST);
                 glDisable(GL_BLEND);
+
+                glViewport(0, 0, window_width, window_height);
 
                 if (dft_active)
                 {
@@ -842,7 +832,6 @@ void ShowObject::loop()
 
                 glEnable(GL_SCISSOR_TEST);
                 glScissor(0, 0, width, height);
-
                 if (optical_flow_active)
                 {
                         optical_flow->draw();
@@ -851,11 +840,11 @@ void ShowObject::loop()
                 {
                         convex_hull_2d->draw();
                 }
-
                 glDisable(GL_SCISSOR_TEST);
 
-                glEnable(GL_BLEND);
+                //
 
+                glEnable(GL_BLEND);
                 text.draw(window_width, window_height, {"FPS: " + std::to_string(get_fps(&start_time))});
 
                 wnd.display();

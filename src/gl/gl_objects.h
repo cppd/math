@@ -852,6 +852,20 @@ public:
                 m_texture.texture_parameter(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
                 m_texture.texture_parameter(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         }
+
+        GLuint64 get_image_resident_handle_write_only() const noexcept
+        {
+                return m_texture.get_image_resident_handle(0, GL_FALSE, 0, GL_RGBA32F, GL_WRITE_ONLY);
+        }
+        GLuint64 get_image_resident_handle_read_only() const noexcept
+        {
+                return m_texture.get_image_resident_handle(0, GL_FALSE, 0, GL_RGBA32F, GL_READ_ONLY);
+        }
+        GLuint64 get_image_resident_handle_read_write() const noexcept
+        {
+                return m_texture.get_image_resident_handle(0, GL_FALSE, 0, GL_RGBA32F, GL_READ_WRITE);
+        }
+
         void copy_texture_sub_image() const noexcept
         {
                 m_texture.copy_texture_sub_image_2d(0, 0, 0, 0, 0, m_texture.get_width(), m_texture.get_height());

@@ -30,10 +30,12 @@ class DFTShow final
         std::unique_ptr<Impl> m_impl;
 
 public:
-        DFTShow(int width, int height, int pos_x, int pos_y, const glm::mat4& mtx, bool source_sRGB, const TextureRGBA32F& tex);
+        DFTShow(int width, int height, int pos_x, int pos_y, const glm::mat4& mtx, bool source_sRGB);
         ~DFTShow();
 
         void set_brightness(float brightness);
+
+        void copy_image();
 
         void draw();
 };

@@ -30,10 +30,12 @@ class OpticalFlow final
         std::unique_ptr<Impl> m_impl;
 
 public:
-        OpticalFlow(const Texture2D& tex, const glm::mat4& mtx);
+        OpticalFlow(int width, int height, const glm::mat4& mtx);
         ~OpticalFlow();
 
         void reset();
+
+        void copy_image();
 
         void draw();
 };

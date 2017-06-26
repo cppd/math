@@ -178,7 +178,7 @@ class GL2D final : public IFourierGL1, public IFourierGL2
         const glm::ivec2 block, rows_to, rows_fr, rows_D, cols_to, cols_fr, cols_D;
         DeviceMemory<std::complex<FP>> m_D1_fwd, m_D1_inv, m_D2_fwd, m_D2_inv;
         DeviceMemory<std::complex<FP>> m_x_d, m_buffer;
-        GLuint64 m_TextureHandle;
+        GLuint64 m_texture_handle;
         const int m_shared_size_1, m_shared_size_2;
         const int m_group_size_1, m_group_size_2;
         DeviceProg<FP> m_prog;
@@ -296,13 +296,13 @@ class GL2D final : public IFourierGL1, public IFourierGL2
         {
                 glm::ivec2 grid(get_group_count(m_N1, block.x), get_group_count(m_N2, block.y));
 
-                m_prog.move_to_input(grid, block, m_N1, m_N2, srgb, m_TextureHandle, &m_x_d);
+                m_prog.move_to_input(grid, block, m_N1, m_N2, srgb, m_texture_handle, &m_x_d);
                 dft2d(inv);
-                m_prog.move_to_output(grid, block, m_N1, m_N2, 1.0f / (m_N1 * m_N2), m_TextureHandle, m_x_d);
+                m_prog.move_to_output(grid, block, m_N1, m_N2, 1.0f / (m_N1 * m_N2), m_texture_handle, m_x_d);
         }
 
 public:
-        GL2D(int n1, int n2, const TextureRGBA32F* tex)
+        GL2D(int n1, int n2, const TextureRGBA32F* texture)
                 : m_N1(n1),
                   m_N2(n2),
                   m_M1(compute_M(m_N1)),
@@ -335,9 +335,9 @@ public:
                         error("FFT size error: " + std::to_string(m_N1) + "x" + std::to_string(m_N2));
                 }
 
-                if (tex)
+                if (texture)
                 {
-                        m_TextureHandle = tex->get_texture().get_image_resident_handle_read_write_RGBA32F();
+                        m_texture_handle = texture->get_image_resident_handle_read_write();
                 }
 
                 // Для обратного преобразования нужна корректировка данных с умножением на коэффициент,
@@ -368,7 +368,7 @@ std::unique_ptr<IFourierGL1> create_fft_gl2d(int x, int y)
         return std::make_unique<GL2D<float>>(x, y, nullptr);
 }
 
-std::unique_ptr<IFourierGL2> create_fft_gl2d(int x, int y, const TextureRGBA32F& tex)
+std::unique_ptr<IFourierGL2> create_fft_gl2d(int x, int y, const TextureRGBA32F& texture)
 {
-        return std::make_unique<GL2D<float>>(x, y, &tex);
+        return std::make_unique<GL2D<float>>(x, y, &texture);
 }

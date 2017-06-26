@@ -55,6 +55,7 @@ class DFTShow::Impl final
 {
         const int m_groups_x, m_groups_y;
         const bool m_source_sRGB;
+        TextureRGBA32F m_image_texture;
         std::unique_ptr<IFourierGL2> m_gl_fft;
         VertexArray m_vertex_array;
         ArrayBuffer m_vertex_buffer;
@@ -62,18 +63,19 @@ class DFTShow::Impl final
         GraphicsProgram m_draw_prog;
 
 public:
-        Impl(int width, int height, int pos_x, int pos_y, const glm::mat4& mtx, bool source_sRGB, const TextureRGBA32F& tex)
+        Impl(int width, int height, int pos_x, int pos_y, const glm::mat4& mtx, bool source_sRGB)
                 : m_groups_x(get_group_count(width, GROUP_SIZE)),
                   m_groups_y(get_group_count(height, GROUP_SIZE)),
                   m_source_sRGB(source_sRGB),
-                  m_gl_fft(create_fft_gl2d(width, height, tex)),
+                  m_image_texture(width, height),
+                  m_gl_fft(create_fft_gl2d(width, height, m_image_texture)),
                   m_vertices(4),
                   m_draw_prog(VertexShader(dft_show_vertex_shader), FragmentShader(dft_show_fragment_shader))
         {
                 m_vertex_array.attrib_pointer(0, 3, GL_FLOAT, m_vertex_buffer, offsetof(Vertex, v1), sizeof(Vertex), true);
                 m_vertex_array.attrib_pointer(1, 2, GL_FLOAT, m_vertex_buffer, offsetof(Vertex, t1), sizeof(Vertex), true);
 
-                m_draw_prog.set_uniform_handle("tex", tex.get_texture().get_texture_resident_handle());
+                m_draw_prog.set_uniform_handle("tex", m_image_texture.get_texture().get_texture_resident_handle());
                 set_brightness(1);
 
                 int x_start = pos_x;
@@ -103,6 +105,11 @@ public:
                 m_draw_prog.set_uniform("brightness", brightness);
         }
 
+        void copy_image()
+        {
+                m_image_texture.copy_texture_sub_image();
+        }
+
         void draw()
         {
                 m_gl_fft->exec(false, m_source_sRGB);
@@ -112,8 +119,8 @@ public:
         }
 };
 
-DFTShow::DFTShow(int width, int height, int pos_x, int pos_y, const glm::mat4& mtx, bool source_sRGB, const TextureRGBA32F& tex)
-        : m_impl(std::make_unique<Impl>(width, height, pos_x, pos_y, mtx, source_sRGB, tex))
+DFTShow::DFTShow(int width, int height, int pos_x, int pos_y, const glm::mat4& mtx, bool source_sRGB)
+        : m_impl(std::make_unique<Impl>(width, height, pos_x, pos_y, mtx, source_sRGB))
 {
 }
 DFTShow::~DFTShow() = default;
@@ -121,6 +128,11 @@ DFTShow::~DFTShow() = default;
 void DFTShow::set_brightness(float brightness)
 {
         m_impl->set_brightness(brightness);
+}
+
+void DFTShow::copy_image()
+{
+        m_impl->copy_image();
 }
 
 void DFTShow::draw()

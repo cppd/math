@@ -238,6 +238,8 @@ class OpticalFlow::Impl final
         GraphicsProgram m_draw_prog;
         GraphicsProgram m_draw_prog_debug;
 
+        TextureRGBA32F m_texture_J;
+
         ShaderStorageBuffer m_top_points, m_top_points_flow, m_top_points_lines;
         int m_point_count_x, m_point_count_y;
 
@@ -397,9 +399,9 @@ class OpticalFlow::Impl final
         }
 
 public:
-        Impl(const Texture2D& tex_J, const glm::mat4& mtx)
-                : m_width(tex_J.get_width()),
-                  m_height(tex_J.get_height()),
+        Impl(int width, int height, const glm::mat4& mtx)
+                : m_width(width),
+                  m_height(height),
                   m_groups_x(get_group_count(m_width, GROUP_SIZE)),
                   m_groups_y(get_group_count(m_height, GROUP_SIZE)),
                   m_comp_sobel(ComputeShader(sobel_compute_shader)),
@@ -408,7 +410,8 @@ public:
                   m_comp_grayscale(ComputeShader(grayscale_compute_shader)),
                   m_comp_lines(ComputeShader(lines_compute_shader)),
                   m_draw_prog(VertexShader(vertex_shader), FragmentShader(fragment_shader)),
-                  m_draw_prog_debug(VertexShader(vertex_debug_shader), FragmentShader(fragment_debug_shader))
+                  m_draw_prog_debug(VertexShader(vertex_debug_shader), FragmentShader(fragment_debug_shader)),
+                  m_texture_J(m_width, m_height)
         {
                 std::vector<glm::ivec2> level_dimensions;
 
@@ -428,7 +431,7 @@ public:
                 m_top_points_flow.create_dynamic_copy(top_points.size() * sizeof(glm::vec2));
                 m_top_points_lines.create_dynamic_copy(top_points.size() * 2 * sizeof(glm::ivec2));
 
-                m_comp_grayscale.set_uniform_handle("img_src", tex_J.get_image_resident_handle_read_only_RGBA32F());
+                m_comp_grayscale.set_uniform_handle("img_src", m_texture_J.get_image_resident_handle_read_only());
 
                 m_comp_lines.set_uniform("point_count_x", m_point_count_x);
                 m_comp_lines.set_uniform("point_count_y", m_point_count_y);
@@ -446,6 +449,11 @@ public:
                 m_last_time = std::numeric_limits<double>::lowest();
                 m_image_I_exists = false;
                 m_flow_computed = false;
+        }
+
+        void copy_image()
+        {
+                m_texture_J.copy_texture_sub_image();
         }
 
         void draw()
@@ -495,7 +503,7 @@ public:
         }
 };
 
-OpticalFlow::OpticalFlow(const Texture2D& tex, const glm::mat4& mtx) : m_impl(std::make_unique<Impl>(tex, mtx))
+OpticalFlow::OpticalFlow(int width, int height, const glm::mat4& mtx) : m_impl(std::make_unique<Impl>(width, height, mtx))
 {
 }
 
@@ -504,6 +512,11 @@ OpticalFlow::~OpticalFlow() = default;
 void OpticalFlow::reset()
 {
         m_impl->reset();
+}
+
+void OpticalFlow::copy_image()
+{
+        m_impl->copy_image();
 }
 
 void OpticalFlow::draw()

@@ -38,6 +38,6 @@ struct IFourierGL2
 };
 
 std::unique_ptr<IFourierGL1> create_fft_gl2d(int x, int y);
-std::unique_ptr<IFourierGL2> create_fft_gl2d(int x, int y, const TextureRGBA32F& tex);
+std::unique_ptr<IFourierGL2> create_fft_gl2d(int x, int y, const TextureRGBA32F& texture);
 
 #endif
