@@ -27,6 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/print.h"
 #include "com/print_glm.h"
 #include "com/thread.h"
+#include "com/time.h"
 #include "dft_show/dft_show.h"
 #include "gl/gl_objects.h"
 #include "hull_2d/hull_2d.h"
@@ -37,7 +38,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "window/window.h"
 
 #include <SFML/Window/Event.hpp>
-#include <chrono>
 #include <cmath>
 #include <glm/gtc/color_space.hpp>
 #include <glm/gtx/rotate_vector.hpp>
@@ -57,13 +57,12 @@ constexpr float to_radians(float angle)
 
 namespace
 {
-long get_fps(std::chrono::steady_clock::time_point* start)
+long get_fps(double* start)
 {
-        std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
-        std::chrono::duration<double, std::milli> time = now - *start;
+        double now = get_time_seconds();
+        double time_elapsed = now - *start;
         *start = now;
-        double millisec = time.count();
-        return (millisec > 0) ? lround(1000.0 / millisec) : 0;
+        return (time_elapsed > 0) ? lround(1.0 / time_elapsed) : 0;
 }
 
 #if 0
@@ -94,10 +93,14 @@ class Camera final
 {
         glm::vec3 m_camera_right, m_camera_up, m_camera_direction, m_light_up, m_light_direction;
 
-        void set_vectors()
+        void set_vectors(const glm::vec3& right, const glm::vec3& up)
         {
+                m_camera_up = up;
+
                 // от поверхности на камеру
-                m_camera_direction = glm::cross(m_camera_right, m_camera_up);
+                m_camera_direction = glm::cross(right, up);
+
+                m_camera_right = glm::cross(up, m_camera_direction);
 
                 glm::vec3 light_right = glm::rotate(m_camera_right, to_radians(-45), m_camera_up);
                 m_light_up = glm::rotate(m_camera_up, to_radians(-45), light_right);
@@ -110,59 +113,147 @@ public:
         Camera() : m_camera_right(0), m_camera_up(0), m_camera_direction(0), m_light_up(0), m_light_direction(0)
         {
         }
-        void set(glm::vec3 right, glm::vec3 up)
+        void set(const glm::vec3& right, const glm::vec3& up)
         {
-                m_camera_right = right;
-                m_camera_up = up;
-                set_vectors();
+                set_vectors(right, up);
         }
         void rotate(int delta_x, int delta_y)
         {
-                m_camera_right = glm::rotate(m_camera_right, to_radians(-delta_x), m_camera_up);
-                m_camera_up = glm::rotate(m_camera_up, to_radians(-delta_y), m_camera_right);
-                set_vectors();
+                glm::vec3 right = glm::rotate(m_camera_right, to_radians(-delta_x), m_camera_up);
+                glm::vec3 up = glm::rotate(m_camera_up, to_radians(-delta_y), m_camera_right);
+                set_vectors(right, up);
         }
         // glm::vec3 right() const
         //{
         //        return m_camera_right;
         //}
-        glm::vec3 up() const
+        const glm::vec3& up() const
         {
                 return m_camera_up;
         }
-        glm::vec3 dir() const
+        const glm::vec3& dir() const
         {
                 return m_camera_direction;
         }
-        glm::vec3 light_up() const
+        const glm::vec3& light_up() const
         {
                 return m_light_up;
         }
-        glm::vec3 light_dir() const
+        const glm::vec3& light_dir() const
         {
                 return m_light_direction;
         }
 };
 
+class DrawObjects final
+{
+        struct MapEntry
+        {
+                std::unique_ptr<IDrawObject> object;
+                int scale_object_id;
+                MapEntry(std::unique_ptr<IDrawObject>&& obj_, int scale_id_) : object(std::move(obj_)), scale_object_id(scale_id_)
+                {
+                }
+        };
+
+        std::unordered_map<int, MapEntry> m_objects;
+
+        const IDrawObject* m_draw_object = nullptr;
+        const IDrawObject* m_draw_scale_object = nullptr;
+        int m_draw_scale_object_id = 0;
+
+public:
+        void add_object(std::unique_ptr<IDrawObject>&& object, int id, int scale_id)
+        {
+                if (id == m_draw_scale_object_id)
+                {
+                        m_draw_scale_object = object.get();
+                }
+
+                auto iter = m_objects.find(id);
+                if (iter != m_objects.cend())
+                {
+                        iter->second = MapEntry(std::move(object), scale_id);
+                }
+                else
+                {
+                        m_objects.emplace(id, MapEntry(std::move(object), scale_id));
+                }
+        }
+
+        void delete_object(int id)
+        {
+                auto iter = m_objects.find(id);
+                if (iter != m_objects.cend())
+                {
+                        if (iter->second.object.get() == m_draw_object)
+                        {
+                                m_draw_object = nullptr;
+                        }
+                        if (iter->second.object.get() == m_draw_scale_object)
+                        {
+                                m_draw_scale_object = nullptr;
+                        }
+                        m_objects.erase(iter);
+                }
+        }
+
+        void show_object(int id)
+        {
+                auto iter = m_objects.find(id);
+                if (iter != m_objects.cend())
+                {
+                        m_draw_object = iter->second.object.get();
+
+                        m_draw_scale_object_id = iter->second.scale_object_id;
+
+                        auto scale_iter = m_objects.find(m_draw_scale_object_id);
+                        if (scale_iter != m_objects.cend())
+                        {
+                                m_draw_scale_object = scale_iter->second.object.get();
+                        }
+                        else
+                        {
+                                m_draw_scale_object = nullptr;
+                        }
+                }
+                else
+                {
+                        m_draw_object = nullptr;
+                }
+        }
+
+        void delete_all()
+        {
+                m_objects.clear();
+                m_draw_object = nullptr;
+        }
+
+        const IDrawObject* get_object() const
+        {
+                return m_draw_object;
+        }
+
+        const IDrawObject* get_scale_object() const
+        {
+                return m_draw_scale_object;
+        }
+};
+
 class ShowObject final : public IShow
 {
-        const glm::mat4 SB_SCALE = glm::scale(glm::mat4(1), glm::vec3(0.5f, 0.5f, 0.5f));
-        const glm::mat4 SB_TRANSLATE = glm::translate(glm::mat4(1), glm::vec3(1, 1, 1));
-        const glm::mat4 SCALE_BIAS_MATRIX = SB_SCALE * SB_TRANSLATE;
-
         ICallBack* const m_callback;
         const WindowID m_win_parent;
         std::thread m_thread;
         ThreadQueue<Event> m_event_queue;
-
         std::atomic_bool m_stop{false};
 
         void loop();
         void loop_thread();
 
-        void add_object(const std::shared_ptr<IObj>& obj_ptr, int id) override
+        void add_object(const std::shared_ptr<IObj>& obj_ptr, int id, int scale_id) override
         {
-                m_event_queue.push(Event(in_place<Event::add_object>, obj_ptr, id));
+                m_event_queue.push(Event(in_place<Event::add_object>, obj_ptr, id, scale_id));
         }
         void delete_object(int id) override
         {
@@ -258,14 +349,14 @@ class ShowObject final : public IShow
         }
 
 public:
-        ShowObject(ICallBack* cb, WindowID win_parent, glm::vec3 clear_color, glm::vec3 default_color, glm::vec3 wireframe_color,
-                   bool with_smooth, bool with_wireframe, bool with_shadow, bool with_materials, bool with_effect, bool with_dft,
-                   bool with_convex_hull, bool with_optical_flow, float ambient, float diffuse, float specular,
-                   float dft_brightness, float default_ns)
-                : m_callback(cb), m_win_parent(win_parent)
+        ShowObject(ICallBack* callback, WindowID win_parent, glm::vec3 clear_color, glm::vec3 default_color,
+                   glm::vec3 wireframe_color, bool with_smooth, bool with_wireframe, bool with_shadow, bool with_materials,
+                   bool with_effect, bool with_dft, bool with_convex_hull, bool with_optical_flow, float ambient, float diffuse,
+                   float specular, float dft_brightness, float default_ns)
+                : m_callback(callback), m_win_parent(win_parent)
 
         {
-                if (!cb)
+                if (!callback)
                 {
                         error("No callback pointer");
                 }
@@ -311,6 +402,7 @@ void ShowObject::loop()
         {
                 // Без этого создания контекста почему-то не сможет установиться
                 // ANTIALIASING_LEVEL в ненулевое значение далее при создании окна.
+                // В версии SFML 2.4.2 эта проблема исчезла.
                 std::unique_ptr<sf::Context> context;
                 create_gl_context_1x1(MAJOR_GL_VERSION, MINOR_GL_VERSION, required_extensions(), &context);
         }
@@ -328,10 +420,6 @@ void ShowObject::loop()
         glDisable(GL_CULL_FACE);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glEnable(GL_FRAMEBUFFER_SRGB);
-
-        std::unique_ptr<IDrawProgram> draw_program = create_draw_program();
-
-        ColorSpaceConverter color_converter{true};
 
         int new_width = wnd.getSize().x;
         int new_height = wnd.getSize().y;
@@ -361,23 +449,23 @@ void ShowObject::loop()
         // Вначале без полноэкранного режима
         bool fullscreen_active = false;
 
-        std::unordered_map<int, std::unique_ptr<IDrawObject>> objects;
+        std::unique_ptr<IDrawProgram> draw_program = create_draw_program();
 
-        std::unique_ptr<DFTShow> dft_window;
+        std::unique_ptr<DFTShow> dft_show;
         std::unique_ptr<PencilEffect> pencil_effect;
         std::unique_ptr<OpticalFlow> optical_flow;
         std::unique_ptr<ConvexHull2D> convex_hull_2d;
 
+        ColorSpaceConverterToRGB color_converter;
         Text text;
         Camera camera;
+        DrawObjects objects;
 
-        const IDrawObject* draw_object = nullptr;
-
-        std::chrono::steady_clock::time_point start_time = std::chrono::steady_clock::now();
+        Event event;
 
         m_callback->window_ready();
 
-        Event event;
+        double start_time = get_time_seconds();
 
         while (true)
         {
@@ -408,35 +496,33 @@ void ShowObject::loop()
                                 {
                                         error("Null object received");
                                 }
-                                objects[d.id] = create_draw_object(d.obj.get(), color_converter);
+
+                                objects.add_object(create_draw_object(d.obj.get(), color_converter), d.id, d.scale_id);
+
                                 m_callback->object_loaded(d.id);
+
                                 break;
                         }
                         case Event::EventType::delete_object:
                         {
                                 const Event::delete_object& d = event.get<Event::delete_object>();
-                                auto o = objects.find(d.id);
-                                if (o != objects.cend())
-                                {
-                                        if (o->second.get() == draw_object)
-                                        {
-                                                draw_object = nullptr;
-                                        }
-                                        objects.erase(o);
-                                }
+
+                                objects.delete_object(d.id);
+
                                 break;
                         }
                         case Event::EventType::show_object:
                         {
                                 const Event::show_object& d = event.get<Event::show_object>();
-                                auto o = objects.find(d.id);
-                                draw_object = (o != objects.cend()) ? o->second.get() : nullptr;
+
+                                objects.show_object(d.id);
+
                                 break;
                         }
                         case Event::EventType::delete_all_objects:
                         {
-                                objects.clear();
-                                draw_object = nullptr;
+                                objects.delete_all();
+
                                 default_view = true;
                                 break;
                         }
@@ -577,9 +663,9 @@ void ShowObject::loop()
                                 const Event::set_dft_brightness& d = event.get<Event::set_dft_brightness>();
 
                                 dft_brightness = d.dft_brightness;
-                                if (dft_window)
+                                if (dft_show)
                                 {
-                                        dft_window->set_brightness(d.dft_brightness);
+                                        dft_show->set_brightness(d.dft_brightness);
                                 }
                                 break;
                         }
@@ -729,7 +815,7 @@ void ShowObject::loop()
 
                         draw_program->free_buffers();
 
-                        dft_window = nullptr;
+                        dft_show = nullptr;
                         pencil_effect = nullptr;
                         optical_flow = nullptr;
                         convex_hull_2d = nullptr;
@@ -753,8 +839,8 @@ void ShowObject::loop()
 
                         int dft_pos_x = (window_width & 1) ? (width + 1) : width;
                         int dft_pos_y = 0;
-                        dft_window = std::make_unique<DFTShow>(width, height, dft_pos_x, dft_pos_y, plane_matrix, buffer_sRGB);
-                        dft_window->set_brightness(dft_brightness);
+                        dft_show = std::make_unique<DFTShow>(width, height, dft_pos_x, dft_pos_y, plane_matrix, buffer_sRGB);
+                        dft_show->set_brightness(dft_brightness);
 
                         pencil_effect = std::make_unique<PencilEffect>(draw_program->get_color_buffer_texture(),
                                                                        draw_program->get_object_texture());
@@ -801,19 +887,21 @@ void ShowObject::loop()
                 glDisable(GL_BLEND);
 
                 // Если pencil_effect_active, то рисование в цветной буфер
-                draw_program->draw(draw_object, shadow_active, pencil_effect_active);
+                draw_program->draw(objects.get_object(), objects.get_scale_object(), shadow_active, pencil_effect_active);
+
+                //
 
                 // Рисование из цветного буфера в буфер экрана
-                if (draw_object && pencil_effect_active)
+                if (objects.get_object() && pencil_effect_active && pencil_effect)
                 {
                         pencil_effect->draw();
                 }
 
-                if (dft_active)
+                if (dft_active && dft_show)
                 {
-                        dft_window->copy_image();
+                        dft_show->copy_image();
                 }
-                if (optical_flow_active)
+                if (optical_flow_active && optical_flow)
                 {
                         optical_flow->copy_image();
                 }
@@ -825,18 +913,18 @@ void ShowObject::loop()
 
                 glViewport(0, 0, window_width, window_height);
 
-                if (dft_active)
+                if (dft_active && dft_show)
                 {
-                        dft_window->draw();
+                        dft_show->draw();
                 }
 
                 glEnable(GL_SCISSOR_TEST);
                 glScissor(0, 0, width, height);
-                if (optical_flow_active)
+                if (optical_flow_active && optical_flow)
                 {
                         optical_flow->draw();
                 }
-                if (convex_hull_2d_active)
+                if (convex_hull_2d_active && convex_hull_2d)
                 {
                         convex_hull_2d->draw();
                 }
@@ -844,6 +932,7 @@ void ShowObject::loop()
 
                 //
 
+                glDisable(GL_DEPTH_TEST);
                 glEnable(GL_BLEND);
                 text.draw(window_width, window_height, {"FPS: " + std::to_string(get_fps(&start_time))});
 

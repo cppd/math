@@ -66,8 +66,8 @@ constexpr int TIMER_PROGRESS_BAR_INTERVAL = 100;
 // куда передаются как числа, а не как enum
 enum ObjectType
 {
-        FACES,
-        FACES_CONVEX_HULL,
+        MODEL,
+        MODEL_CONVEX_HULL,
         SURFACE_COCONE,
         SURFACE_COCONE_CONVEX_HULL,
         SURFACE_BOUND_COCONE,
@@ -123,13 +123,11 @@ void MainWindow::on_actionAbout_triggered()
 {
 #if defined(__linux__)
         message_about(
-                "\n\n"
                 "C++17\nGLSL 4.50\n"
                 "\n"
                 "Freetype\nGLM\nGMP\nOpenGL\nQt\nSFML\nX11");
 #elif defined(_WIN32)
         message_about(
-                "\n\n"
                 "C++17\nGLSL 4.50\n"
                 "\n"
                 "Freetype\nGLM\nGMP\nOpenGL\nQt\nSFML");
@@ -191,7 +189,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
         m_bound_cocone_alpha = BOUND_COCONE_DEFAULT_ALPHA;
         set_bound_cocone_label(m_bound_cocone_rho, m_bound_cocone_alpha);
 
-        ui.radioButton_Faces->setChecked(true);
+        ui.radioButton_Model->setChecked(true);
 
         ui.tabWidget->setCurrentIndex(0);
 }
@@ -201,7 +199,7 @@ MainWindow::~MainWindow()
         stop_all_threads();
 }
 
-void MainWindow::thread_faces(std::shared_ptr<IObj> obj) noexcept
+void MainWindow::thread_model(std::shared_ptr<IObj> obj) noexcept
 {
         try
         {
@@ -210,7 +208,7 @@ void MainWindow::thread_faces(std::shared_ptr<IObj> obj) noexcept
                         return;
                 }
 
-                m_show->add_object(obj, FACES);
+                m_show->add_object(obj, MODEL, MODEL);
 
                 ProgressRatio progress(&m_progress_ratio_list);
                 progress.set_text("Convex hull 3D: %v of %m");
@@ -219,7 +217,7 @@ void MainWindow::thread_faces(std::shared_ptr<IObj> obj) noexcept
 
                 if (convex_hull->get_faces().size() != 0)
                 {
-                        m_show->add_object(convex_hull, FACES_CONVEX_HULL);
+                        m_show->add_object(convex_hull, MODEL_CONVEX_HULL, MODEL);
                 }
         }
         catch (TerminateRequestException&)
@@ -256,7 +254,7 @@ void MainWindow::thread_cocone() noexcept
 
                 if (m_surface_cocone->get_faces().size() != 0)
                 {
-                        m_show->add_object(m_surface_cocone, SURFACE_COCONE);
+                        m_show->add_object(m_surface_cocone, SURFACE_COCONE, MODEL);
 
                         ProgressRatio progress(&m_progress_ratio_list);
                         progress.set_text("Cocone convex hull 3D: %v of %m");
@@ -265,7 +263,7 @@ void MainWindow::thread_cocone() noexcept
 
                         if (convex_hull->get_faces().size() != 0)
                         {
-                                m_show->add_object(convex_hull, SURFACE_COCONE_CONVEX_HULL);
+                                m_show->add_object(convex_hull, SURFACE_COCONE_CONVEX_HULL, MODEL);
                         }
                 }
         }
@@ -308,7 +306,7 @@ void MainWindow::thread_bound_cocone(double rho, double alpha) noexcept
 
                 if (m_surface_bound_cocone->get_faces().size() != 0)
                 {
-                        m_show->add_object(m_surface_bound_cocone, SURFACE_BOUND_COCONE);
+                        m_show->add_object(m_surface_bound_cocone, SURFACE_BOUND_COCONE, MODEL);
 
                         ProgressRatio progress(&m_progress_ratio_list);
                         progress.set_text("Bound cocone convex hull 3D: %v of %m");
@@ -317,7 +315,7 @@ void MainWindow::thread_bound_cocone(double rho, double alpha) noexcept
 
                         if (convex_hull->get_faces().size() != 0)
                         {
-                                m_show->add_object(convex_hull, SURFACE_BOUND_COCONE_CONVEX_HULL);
+                                m_show->add_object(convex_hull, SURFACE_BOUND_COCONE_CONVEX_HULL, MODEL);
                         }
                 }
         }
@@ -404,7 +402,7 @@ void MainWindow::thread_open_file(const std::string& file_name) noexcept
                 std::vector<std::thread> threads(2);
                 std::vector<std::string> msg(2);
 
-                launch_class_thread(&threads[0], &msg[0], &MainWindow::thread_faces, this, obj);
+                launch_class_thread(&threads[0], &msg[0], &MainWindow::thread_model, this, obj);
                 launch_class_thread(&threads[1], &msg[1], &MainWindow::thread_surface_reconstructor, this);
 
                 join_threads(&threads, &msg);
@@ -551,8 +549,8 @@ void MainWindow::disable_radio_button(QRadioButton* button)
 
 void MainWindow::disable_object_buttons()
 {
-        disable_radio_button(ui.radioButton_Faces);
-        disable_radio_button(ui.radioButton_FacesConvexHull);
+        disable_radio_button(ui.radioButton_Model);
+        disable_radio_button(ui.radioButton_ModelConvexHull);
         disable_radio_button(ui.radioButton_Cocone);
         disable_radio_button(ui.radioButton_CoconeConvexHull);
         disable_radio_button(ui.radioButton_BoundCocone);
@@ -625,11 +623,11 @@ void MainWindow::on_MainWindow_SignalWindowEvent(const WindowEvent& event)
 
                 switch (static_cast<ObjectType>(d.id))
                 {
-                case FACES:
-                        enable_radio_button(ui.radioButton_Faces);
+                case MODEL:
+                        enable_radio_button(ui.radioButton_Model);
                         break;
-                case FACES_CONVEX_HULL:
-                        enable_radio_button(ui.radioButton_FacesConvexHull);
+                case MODEL_CONVEX_HULL:
+                        enable_radio_button(ui.radioButton_ModelConvexHull);
                         break;
                 case SURFACE_COCONE:
                         enable_radio_button(ui.radioButton_Cocone);
@@ -656,6 +654,8 @@ void MainWindow::on_MainWindow_SignalWindowEvent(const WindowEvent& event)
                 this->setWindowTitle(QString(APPLICATION_NAME) + " - " + file_name.c_str());
 
                 disable_object_buttons();
+
+                ui.radioButton_Model->setChecked(true);
 
                 break;
         }
@@ -1049,14 +1049,14 @@ void MainWindow::on_actionFullScreen_triggered()
         m_show->toggle_fullscreen();
 }
 
-void MainWindow::on_radioButton_Faces_clicked()
+void MainWindow::on_radioButton_Model_clicked()
 {
-        m_show->show_object(FACES);
+        m_show->show_object(MODEL);
 }
 
-void MainWindow::on_radioButton_FacesConvexHull_clicked()
+void MainWindow::on_radioButton_ModelConvexHull_clicked()
 {
-        m_show->show_object(FACES_CONVEX_HULL);
+        m_show->show_object(MODEL_CONVEX_HULL);
 }
 
 void MainWindow::on_radioButton_Cocone_clicked()

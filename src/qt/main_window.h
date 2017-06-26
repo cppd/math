@@ -77,8 +77,8 @@ private slots:
         void on_checkBox_convex_hull_2d_clicked();
         void on_checkBox_OpticalFlow_clicked();
         void on_actionFullScreen_triggered();
-        void on_radioButton_Faces_clicked();
-        void on_radioButton_FacesConvexHull_clicked();
+        void on_radioButton_Model_clicked();
+        void on_radioButton_ModelConvexHull_clicked();
         void on_radioButton_Cocone_clicked();
         void on_radioButton_CoconeConvexHull_clicked();
         void on_radioButton_BoundCocone_clicked();
@@ -105,7 +105,7 @@ private:
         void disable_bound_cocone_buttons();
 
         void thread_open_file(const std::string& file_name) noexcept;
-        void thread_faces(std::shared_ptr<IObj> obj) noexcept;
+        void thread_model(std::shared_ptr<IObj> obj) noexcept;
         void thread_surface_reconstructor() noexcept;
         void thread_cocone() noexcept;
         void thread_bound_cocone(double rho, double alpha) noexcept;

@@ -32,6 +32,14 @@ public:
         void convert(const Texture2D& tex) const;
 };
 
+class ColorSpaceConverterToRGB : public ColorSpaceConverter
+{
+public:
+        ColorSpaceConverterToRGB() : ColorSpaceConverter(true)
+        {
+        }
+};
+
 // Вместо luminosity из GLM, так как там используются
 // коэффициенты 0.33, 0.59 и 0.11, что в сумме больше 1.
 constexpr float luminosity(glm::vec3 a)

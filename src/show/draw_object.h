@@ -58,7 +58,8 @@ struct IDrawProgram
         virtual void set_light_direction(glm::vec3 dir) = 0;
         virtual void set_camera_direction(glm::vec3 dir) = 0;
 
-        virtual void draw(const IDrawObject* obj, bool shadow_active, bool draw_to_buffer) = 0;
+        virtual void draw(const IDrawObject* draw_object, const IDrawObject* draw_scale_object, bool shadow_active,
+                          bool draw_to_buffer) = 0;
 
         virtual void free_buffers() = 0;
         virtual void set_size(int width, int height) = 0;

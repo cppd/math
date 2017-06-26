@@ -92,7 +92,7 @@
          <item>
           <widget class="QTabWidget" name="tabWidget">
            <property name="currentIndex">
-            <number>2</number>
+            <number>0</number>
            </property>
            <widget class="QWidget" name="tab3D">
             <attribute name="title">
@@ -282,16 +282,16 @@
                 </widget>
                </item>
                <item>
-                <widget class="QRadioButton" name="radioButton_Faces">
+                <widget class="QRadioButton" name="radioButton_Model">
                  <property name="text">
-                  <string>Faces</string>
+                  <string>Model</string>
                  </property>
                 </widget>
                </item>
                <item>
-                <widget class="QRadioButton" name="radioButton_FacesConvexHull">
+                <widget class="QRadioButton" name="radioButton_ModelConvexHull">
                  <property name="text">
-                  <string>Faces CH</string>
+                  <string>Model CH</string>
                  </property>
                 </widget>
                </item>

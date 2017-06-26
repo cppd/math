@@ -52,7 +52,8 @@ public:
         {
                 const std::shared_ptr<IObj> obj;
                 const int id;
-                add_object(const std::shared_ptr<IObj>& obj_, int id_) : obj(obj_), id(id_)
+                const int scale_id;
+                add_object(const std::shared_ptr<IObj>& obj_, int id_, int scale_id_) : obj(obj_), id(id_), scale_id(scale_id_)
                 {
                 }
         };

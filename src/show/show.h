@@ -44,7 +44,7 @@ class IShow
 public:
         virtual ~IShow() = default;
 
-        virtual void add_object(const std::shared_ptr<IObj>&, int id) = 0;
+        virtual void add_object(const std::shared_ptr<IObj>&, int id, int scale_id) = 0;
         virtual void delete_object(int id) = 0;
         virtual void delete_all_objects() = 0;
         virtual void show_object(int id) = 0;

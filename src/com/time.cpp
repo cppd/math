@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <chrono>
 
 using CLOCK = std::chrono::steady_clock;
-//using CLOCK = std::chrono::high_resolution_clock;
+// using CLOCK = std::chrono::high_resolution_clock;
 
 namespace
 {

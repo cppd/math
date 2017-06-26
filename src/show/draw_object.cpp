@@ -376,7 +376,8 @@ class DrawProgram final : public IDrawProgram
                 main_program.set_uniform("camera_direction", dir);
         }
 
-        void draw(const IDrawObject* draw_object, bool shadow_active, bool draw_to_buffer) override
+        void draw(const IDrawObject* draw_object, const IDrawObject* draw_scale_object, bool shadow_active,
+                  bool draw_to_buffer) override
         {
                 m_object_texture->clear_tex_image(0);
 
@@ -387,7 +388,8 @@ class DrawProgram final : public IDrawProgram
 
                 draw_object->bind();
 
-                const glm::mat4& model_matrix = draw_object->get_model_matrix();
+                const glm::mat4& model_matrix =
+                        draw_scale_object ? draw_scale_object->get_model_matrix() : draw_object->get_model_matrix();
 
                 if (shadow_active && draw_object->has_triangles())
                 {
