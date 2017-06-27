@@ -19,6 +19,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef VARIANT_H
 #define VARIANT_H
 
+#if 0
+// Заменено на std::variant
+
 #include "com/error.h"
 
 #include <algorithm>
@@ -152,5 +155,7 @@ public:
                 return *reinterpret_cast<const V*>(&m_data);
         }
 };
+
+#endif
 
 #endif

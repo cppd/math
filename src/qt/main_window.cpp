@@ -841,37 +841,37 @@ void MainWindow::resizeEvent(QResizeEvent*)
 
 void MainWindow::error_message(const std::string& msg) noexcept try
 {
-        emit SignalWindowEvent(WindowEvent(in_place<WindowEvent::error_message>, msg));
+        emit SignalWindowEvent(WindowEvent(std::in_place_type<WindowEvent::error_message>, msg));
 }
 CATCH_ALL_SEND_EVENT()
 void MainWindow::window_ready() noexcept try
 {
-        emit SignalWindowEvent(WindowEvent(in_place<WindowEvent::window_ready>));
+        emit SignalWindowEvent(WindowEvent(std::in_place_type<WindowEvent::window_ready>));
 }
 CATCH_ALL_SEND_EVENT()
 void MainWindow::program_ended(const std::string& msg) noexcept try
 {
-        emit SignalWindowEvent(WindowEvent(in_place<WindowEvent::program_ended>, msg));
+        emit SignalWindowEvent(WindowEvent(std::in_place_type<WindowEvent::program_ended>, msg));
 }
 CATCH_ALL_SEND_EVENT()
 void MainWindow::error_src_message(const std::string& msg, const std::string& src) noexcept try
 {
-        emit SignalWindowEvent(WindowEvent(in_place<WindowEvent::error_src_message>, msg, src));
+        emit SignalWindowEvent(WindowEvent(std::in_place_type<WindowEvent::error_src_message>, msg, src));
 }
 CATCH_ALL_SEND_EVENT()
 void MainWindow::object_loaded(int id) noexcept try
 {
-        emit SignalWindowEvent(WindowEvent(in_place<WindowEvent::object_loaded>, id));
+        emit SignalWindowEvent(WindowEvent(std::in_place_type<WindowEvent::object_loaded>, id));
 }
 CATCH_ALL_SEND_EVENT()
 void MainWindow::file_loaded(const std::string& msg) noexcept try
 {
-        emit SignalWindowEvent(WindowEvent(in_place<WindowEvent::file_loaded>, msg));
+        emit SignalWindowEvent(WindowEvent(std::in_place_type<WindowEvent::file_loaded>, msg));
 }
 CATCH_ALL_SEND_EVENT()
 void MainWindow::bound_cocone_loaded(double rho, double alpha) noexcept try
 {
-        emit SignalWindowEvent(WindowEvent(in_place<WindowEvent::bound_cocone_loaded>, rho, alpha));
+        emit SignalWindowEvent(WindowEvent(std::in_place_type<WindowEvent::bound_cocone_loaded>, rho, alpha));
 }
 CATCH_ALL_SEND_EVENT()
 

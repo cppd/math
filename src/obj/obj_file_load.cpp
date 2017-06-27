@@ -526,7 +526,7 @@ void split_line(std::string* file_str, const std::vector<T>& line_begin, T line_
                 T* second_e)
 {
         T l_b = line_begin[line_num];
-        T l_e = (line_num < line_begin.size() - 1) ? line_begin[line_num + 1] : file_str->size();
+        T l_e = (line_num + 1 < line_begin.size()) ? line_begin[line_num + 1] : file_str->size();
 
         // В конце строки находится символ '\n', сместиться на него.
         --l_e;
@@ -1139,6 +1139,10 @@ FileObj::FileObj(const std::string& file_name, ProgressRatio* progress)
         LOG("OBJ loaded, " + to_string(get_time_seconds() - time_point, 3) + " s");
 }
 
+
+// Чтение вершин из текстового файла. Одна вершина на строку. Три координаты через пробел.
+// x y z
+// x y z
 class FileTxt final : public IObj
 {
         std::vector<glm::vec3> m_vertices;
@@ -1217,7 +1221,7 @@ void FileTxt::read_points_th(const ThreadData* thread_data, std::string* file_pt
                 }
 
                 size_t l_b = (*line_begin)[line_num];
-                size_t l_e = (line_num < line_begin->size() - 1) ? (*line_begin)[line_num + 1] : file_ptr->size();
+                size_t l_e = (line_num + 1 < line_begin->size()) ? (*line_begin)[line_num + 1] : file_ptr->size();
 
                 // В конце строки находится символ '\n', сместиться на него и записать вместо него 0
                 --l_e;

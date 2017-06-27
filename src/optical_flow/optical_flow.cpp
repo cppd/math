@@ -310,7 +310,9 @@ class OpticalFlow::Impl final
                                   const std::vector<ShaderStorageBuffer>& image_pyramid_flow,
                                   const std::vector<ImageR32F>& image_pyramid_J)
         {
-                for (int i = image_pyramid_I.size() - 1; i >= 0; --i)
+                int image_pyramid_I_size = image_pyramid_I.size();
+
+                for (int i = image_pyramid_I_size - 1; i >= 0; --i)
                 {
                         int points_x, points_y;
                         if (i != 0)
@@ -337,7 +339,7 @@ class OpticalFlow::Impl final
                                 points_y = m_point_count_y;
                         }
 
-                        if (i != int(image_pyramid_I.size()) - 1)
+                        if (i != image_pyramid_I_size - 1)
                         {
                                 // Если не самый нижний уровень, то в качестве приближения использовать поток,
                                 // полученный на меньших изображениях

@@ -66,19 +66,28 @@ public:
         bool pop(T& e)
         {
                 std::lock_guard<SpinLock> lg(m_lock);
-                bool full = !m_queue.empty();
-                if (full)
+                if (m_queue.empty())
+                {
+                        return false;
+                }
+                else
                 {
                         e = std::move(m_queue.front());
                         m_queue.pop();
+                        return true;
                 }
-                return full;
         }
-        template <typename A>
-        void push(A&& e)
+        // template <typename A>
+        // void push(A&& e)
+        //{
+        //        std::lock_guard<SpinLock> lg(m_lock);
+        //        m_queue.push(std::forward<A>(e));
+        //}
+        template <typename... Args>
+        void emplace(Args&&... e)
         {
                 std::lock_guard<SpinLock> lg(m_lock);
-                m_queue.push(std::forward<A>(e));
+                m_queue.emplace(std::forward<Args>(e)...);
         }
         void clear()
         {

@@ -19,9 +19,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef WINDOW_EVENT_H
 #define WINDOW_EVENT_H
 
-#include "com/variant.h"
+//#include "com/variant.h"
 
 #include <string>
+#include <variant>
 
 class WindowEvent final
 {
@@ -98,8 +99,8 @@ public:
 #endif
 
         template <typename T, typename... Args>
-        WindowEvent(InPlaceT<T>, Args&&... args)
-                : m_type(event_type(in_place<T>)), m_data(in_place<T>, std::forward<Args>(args)...)
+        WindowEvent(std::in_place_type_t<T>, Args&&... args)
+                : m_type(event_type(std::in_place_type<T>)), m_data(std::in_place_type<T>, std::forward<Args>(args)...)
         {
         }
 
@@ -111,43 +112,44 @@ public:
         template <typename D>
         const D& get() const
         {
-                return m_data.get<D>();
+                //return m_data.get<D>();
+                return std::get<D>(m_data);
         }
 
 private:
-        static constexpr EventType event_type(InPlaceT<error_message>)
+        static constexpr EventType event_type(std::in_place_type_t<error_message>)
         {
                 return EventType::ERROR_MESSAGE;
         }
-        static constexpr EventType event_type(InPlaceT<window_ready>)
+        static constexpr EventType event_type(std::in_place_type_t<window_ready>)
         {
                 return EventType::WINDOW_READY;
         }
-        static constexpr EventType event_type(InPlaceT<program_ended>)
+        static constexpr EventType event_type(std::in_place_type_t<program_ended>)
         {
                 return EventType::PROGRAM_ENDED;
         }
-        static constexpr EventType event_type(InPlaceT<error_src_message>)
+        static constexpr EventType event_type(std::in_place_type_t<error_src_message>)
         {
                 return EventType::ERROR_SRC_MESSAGE;
         }
-        static constexpr EventType event_type(InPlaceT<object_loaded>)
+        static constexpr EventType event_type(std::in_place_type_t<object_loaded>)
         {
                 return EventType::OBJECT_LOADED;
         }
-        static constexpr EventType event_type(InPlaceT<file_loaded>)
+        static constexpr EventType event_type(std::in_place_type_t<file_loaded>)
         {
                 return EventType::FILE_LOADED;
         }
-        static constexpr EventType event_type(InPlaceT<bound_cocone_loaded>)
+        static constexpr EventType event_type(std::in_place_type_t<bound_cocone_loaded>)
         {
                 return EventType::BOUND_COCONE_LOADED;
         }
 
         EventType m_type;
 
-        SimpleVariant<error_message, window_ready, program_ended, error_src_message, object_loaded, file_loaded,
-                      bound_cocone_loaded>
+        std::variant<std::monostate, error_message, window_ready, program_ended, error_src_message, object_loaded, file_loaded,
+                     bound_cocone_loaded>
                 m_data;
 };
 

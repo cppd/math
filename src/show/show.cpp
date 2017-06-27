@@ -170,15 +170,7 @@ public:
                         m_draw_scale_object = object.get();
                 }
 
-                auto iter = m_objects.find(id);
-                if (iter != m_objects.cend())
-                {
-                        iter->second = MapEntry(std::move(object), scale_id);
-                }
-                else
-                {
-                        m_objects.emplace(id, MapEntry(std::move(object), scale_id));
-                }
+                m_objects.insert_or_assign(id, MapEntry(std::move(object), scale_id));
         }
 
         void delete_object(int id)
@@ -253,99 +245,99 @@ class ShowObject final : public IShow
 
         void add_object(const std::shared_ptr<IObj>& obj_ptr, int id, int scale_id) override
         {
-                m_event_queue.push(Event(in_place<Event::add_object>, obj_ptr, id, scale_id));
+                m_event_queue.emplace(std::in_place_type<Event::add_object>, obj_ptr, id, scale_id);
         }
         void delete_object(int id) override
         {
-                m_event_queue.push(Event(in_place<Event::delete_object>, id));
+                m_event_queue.emplace(std::in_place_type<Event::delete_object>, id);
         }
         void show_object(int id) override
         {
-                m_event_queue.push(Event(in_place<Event::show_object>, id));
+                m_event_queue.emplace(std::in_place_type<Event::show_object>, id);
         }
         virtual void delete_all_objects() override
         {
-                m_event_queue.push(Event(in_place<Event::delete_all_objects>));
+                m_event_queue.emplace(std::in_place_type<Event::delete_all_objects>);
         }
         void reset_view() override
         {
-                m_event_queue.push(Event(in_place<Event::reset_view>));
+                m_event_queue.emplace(std::in_place_type<Event::reset_view>);
         }
         void set_ambient(float v) override
         {
-                m_event_queue.push(Event(in_place<Event::set_ambient>, v));
+                m_event_queue.emplace(std::in_place_type<Event::set_ambient>, v);
         }
         void set_diffuse(float v) override
         {
-                m_event_queue.push(Event(in_place<Event::set_diffuse>, v));
+                m_event_queue.emplace(std::in_place_type<Event::set_diffuse>, v);
         }
         void set_specular(float v) override
         {
-                m_event_queue.push(Event(in_place<Event::set_specular>, v));
+                m_event_queue.emplace(std::in_place_type<Event::set_specular>, v);
         }
         void set_clear_color(const glm::vec3& c) override
         {
-                m_event_queue.push(Event(in_place<Event::set_clear_color>, c));
+                m_event_queue.emplace(std::in_place_type<Event::set_clear_color>, c);
         }
         void set_default_color(const glm::vec3& c) override
         {
-                m_event_queue.push(Event(in_place<Event::set_default_color>, c));
+                m_event_queue.emplace(std::in_place_type<Event::set_default_color>, c);
         }
         void set_wireframe_color(const glm::vec3& c) override
         {
-                m_event_queue.push(Event(in_place<Event::set_wireframe_color>, c));
+                m_event_queue.emplace(std::in_place_type<Event::set_wireframe_color>, c);
         }
         void set_default_ns(float ns) override
         {
-                m_event_queue.push(Event(in_place<Event::set_default_ns>, ns));
+                m_event_queue.emplace(std::in_place_type<Event::set_default_ns>, ns);
         }
         void show_smooth(bool v) override
         {
-                m_event_queue.push(Event(in_place<Event::show_smooth>, v));
+                m_event_queue.emplace(std::in_place_type<Event::show_smooth>, v);
         }
         void show_wireframe(bool v) override
         {
-                m_event_queue.push(Event(in_place<Event::show_wireframe>, v));
+                m_event_queue.emplace(std::in_place_type<Event::show_wireframe>, v);
         }
         void show_shadow(bool v) override
         {
-                m_event_queue.push(Event(in_place<Event::show_shadow>, v));
+                m_event_queue.emplace(std::in_place_type<Event::show_shadow>, v);
         }
         void show_materials(bool v) override
         {
-                m_event_queue.push(Event(in_place<Event::show_materials>, v));
+                m_event_queue.emplace(std::in_place_type<Event::show_materials>, v);
         }
         void show_effect(bool v) override
         {
-                m_event_queue.push(Event(in_place<Event::show_effect>, v));
+                m_event_queue.emplace(std::in_place_type<Event::show_effect>, v);
         }
         void show_dft(bool v) override
         {
-                m_event_queue.push(Event(in_place<Event::show_dft>, v));
+                m_event_queue.emplace(std::in_place_type<Event::show_dft>, v);
         }
         void set_dft_brightness(float v) override
         {
-                m_event_queue.push(Event(in_place<Event::set_dft_brightness>, v));
+                m_event_queue.emplace(std::in_place_type<Event::set_dft_brightness>, v);
         }
         void show_convex_hull_2d(bool v) override
         {
-                m_event_queue.push(Event(in_place<Event::show_convex_hull_2d>, v));
+                m_event_queue.emplace(std::in_place_type<Event::show_convex_hull_2d>, v);
         }
         void show_optical_flow(bool v) override
         {
-                m_event_queue.push(Event(in_place<Event::show_optical_flow>, v));
+                m_event_queue.emplace(std::in_place_type<Event::show_optical_flow>, v);
         }
         void parent_resized() override
         {
-                m_event_queue.push(Event(in_place<Event::parent_resized>));
+                m_event_queue.emplace(std::in_place_type<Event::parent_resized>);
         }
         void mouse_wheel(double delta) override
         {
-                m_event_queue.push(Event(in_place<Event::mouse_wheel>, delta));
+                m_event_queue.emplace(std::in_place_type<Event::mouse_wheel>, delta);
         }
         void toggle_fullscreen() override
         {
-                m_event_queue.push(Event(in_place<Event::toggle_fullscreen>));
+                m_event_queue.emplace(std::in_place_type<Event::toggle_fullscreen>);
         }
 
 public:

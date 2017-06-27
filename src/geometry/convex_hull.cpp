@@ -167,8 +167,9 @@ public:
 #endif
         void erase(const T* f)
         {
+                int size = m_data.size();
                 const T* next = nullptr;
-                for (int_fast32_t i = m_data.size() - 1; i >= 0; --i)
+                for (int_fast32_t i = size - 1; i >= 0; --i)
                 {
                         const T* current = m_data[i];
                         m_data[i] = next;
@@ -178,7 +179,7 @@ public:
                         }
                         else
                         {
-                                m_data.resize(m_data.size() - 1);
+                                m_data.resize(size - 1);
                                 return;
                         }
                 }

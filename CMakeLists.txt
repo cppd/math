@@ -24,16 +24,6 @@ cmake_minimum_required(VERSION 3.7.2)
 
 ###################################################
 
-if(true)
-        set(CMAKE_C_COMPILER   "gcc")
-        set(CMAKE_CXX_COMPILER "g++")
-else()
-        set(CMAKE_C_COMPILER   "clang-3.9")
-        set(CMAKE_CXX_COMPILER "clang++-3.9")
-endif()
-
-###################################################
-
 include(CheckCSourceCompiles)
 include(CheckCXXSourceCompiles)
 
