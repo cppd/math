@@ -30,6 +30,13 @@ ContinuationIndentWidth: 8
 Cpp11BracedListStyle: true
 DerivePointerAlignment: false
 ExperimentalAutoDetectBinPacking: false
+IncludeCategories:
+  - Regex:           '^"\s*([^\/\\\s]+\s*)+"$'
+    Priority:        10
+  - Regex:           '^"\s*(\S+\s*)+"$'
+    Priority:        20
+  - Regex:           '^<\s*(\S+\s*)+>$'
+    Priority:        30
 IndentCaseLabels: false
 IndentWidth: 8
 IndentWrappedFunctionNames: false
