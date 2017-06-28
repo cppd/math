@@ -16,8 +16,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
-#ifndef PROGRESS_LIST_H
-#define PROGRESS_LIST_H
 
 #include "progress_interfaces.h"
 
@@ -44,5 +42,3 @@ public:
         void enable();
         std::vector<std::tuple<unsigned, unsigned, std::string>> get_all() const;
 };
-
-#endif

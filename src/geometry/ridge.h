@@ -16,8 +16,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
-#ifndef RIDGE_H
-#define RIDGE_H
 
 #include "vec.h"
 #include "vec_array.h"
@@ -280,5 +278,3 @@ void add_to_ridges(const Facet& facet, int exclude_point, Set<Ridge<N>>* ridges)
                 }
         }
 }
-
-#endif

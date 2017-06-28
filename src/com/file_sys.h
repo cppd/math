@@ -16,8 +16,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
-#ifndef FILE_SYS_H
-#define FILE_SYS_H
 
 #include <string>
 
@@ -26,5 +24,3 @@ std::string get_extension(const std::string& file_name);
 std::string get_dir_name(const std::string& file_name);
 
 std::string temp_directory();
-
-#endif

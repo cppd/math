@@ -16,8 +16,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
-#ifndef DFT_SHOW_H
-#define DFT_SHOW_H
 
 #include "gl/gl_objects.h"
 
@@ -39,5 +37,3 @@ public:
 
         void draw();
 };
-
-#endif

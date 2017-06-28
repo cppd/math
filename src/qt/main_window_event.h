@@ -16,10 +16,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
-#ifndef WINDOW_EVENT_H
-#define WINDOW_EVENT_H
-
-//#include "com/variant.h"
 
 #include <string>
 #include <variant>
@@ -112,7 +108,7 @@ public:
         template <typename D>
         const D& get() const
         {
-                //return m_data.get<D>();
+                // return m_data.get<D>();
                 return std::get<D>(m_data);
         }
 
@@ -152,5 +148,3 @@ private:
                      bound_cocone_loaded>
                 m_data;
 };
-
-#endif

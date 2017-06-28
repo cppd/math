@@ -16,8 +16,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
-#ifndef OBJ_H
-#define OBJ_H
 
 #include <SFML/Graphics/Image.hpp>
 #include <glm/vec2.hpp>
@@ -59,5 +57,3 @@ struct IObj
         virtual glm::vec3 get_center() const = 0;
         virtual float get_length() const = 0;
 };
-
-#endif

@@ -16,9 +16,5 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
-#ifndef QT_MAIN_H
-#define QT_MAIN_H
 
 int qt_main(int argc, char* argv[]);
-
-#endif

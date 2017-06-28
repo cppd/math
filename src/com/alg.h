@@ -16,8 +16,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
-#ifndef ALG_H
-#define ALG_H
 
 #include <algorithm>
 #include <vector>
@@ -41,5 +39,3 @@ bool all_false(const std::vector<T>& v)
         }
         return true;
 }
-
-#endif

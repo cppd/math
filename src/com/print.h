@@ -16,8 +16,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
-#ifndef PRINT_H
-#define PRINT_H
 
 #include <array>
 #include <cmath>
@@ -116,5 +114,3 @@ std::string to_string(const std::vector<T>& data)
         }
         return o;
 }
-
-#endif

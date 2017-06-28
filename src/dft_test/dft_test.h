@@ -16,9 +16,5 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
-#ifndef DFT_TEST_H
-#define DFT_TEST_H
 
 void dft_test();
-
-#endif

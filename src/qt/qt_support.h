@@ -16,8 +16,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
-#ifndef QT_SUPPORT_H
-#define QT_SUPPORT_H
 
 #include <QColor>
 #include <QLayout>
@@ -31,5 +29,3 @@ glm::vec3 qcolor_to_vec3(const QColor& c);
 void disable_radio_button(QRadioButton* button);
 
 void button_strike_out(QRadioButton* button, bool strike_out);
-
-#endif

@@ -16,8 +16,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
-#ifndef QUADRATIC_H
-#define QUADRATIC_H
 
 #include "com/math.h"
 
@@ -46,5 +44,3 @@ bool quadratic_equation(T a, T b, T c, T* r1, T* r2)
 
         return true;
 }
-
-#endif

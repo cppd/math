@@ -16,8 +16,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
-#ifndef EXTRACT_MANIFOLD_H
-#define EXTRACT_MANIFOLD_H
 
 #include "com/error.h"
 #include "geometry/delaunay.h"
@@ -131,5 +129,3 @@ void extract_manifold(const std::vector<DelaunayObject<N>>& delaunay_objects,
 
         *cocone_facets = std::move(visited_cocone_facets);
 }
-
-#endif

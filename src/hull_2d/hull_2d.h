@@ -16,8 +16,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
-#ifndef HULL_2D_H
-#define HULL_2D_H
 
 #include "gl/gl_objects.h"
 
@@ -36,5 +34,3 @@ public:
         void reset_timer();
         void draw();
 };
-
-#endif

@@ -16,8 +16,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
-#ifndef COMBINATORICS_H
-#define COMBINATORICS_H
 
 #include "error.h"
 
@@ -108,5 +106,3 @@ std::array<std::tuple<std::array<unsigned char, R>, std::array<unsigned char, N 
 
         return res;
 }
-
-#endif

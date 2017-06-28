@@ -16,8 +16,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
-#ifndef TEXT_H
-#define TEXT_H
 
 #include <glm/vec3.hpp>
 #include <memory>
@@ -40,5 +38,3 @@ public:
         void set_color(const glm::vec3& color);
         void draw(int width, int height, const std::vector<std::string>& text);
 };
-
-#endif

@@ -16,8 +16,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
-#ifndef FACET_H
-#define FACET_H
 
 #include "linear_algebra.h"
 #include "vec.h"
@@ -404,5 +402,3 @@ public:
                 return mpz_sgn(m_ortho[N - 1].get_mpz_t()) < 0;
         }
 };
-
-#endif

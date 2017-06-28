@@ -16,8 +16,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
-#ifndef TYPES_H
-#define TYPES_H
 
 #include "error.h"
 
@@ -188,5 +186,3 @@ std::string type_str()
         }
         error("data type string: type not supported");
 }
-
-#endif

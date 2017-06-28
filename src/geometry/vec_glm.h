@@ -16,8 +16,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
-#ifndef VEC_GLM_H
-#define VEC_GLM_H
 
 #include "vec.h"
 
@@ -123,5 +121,3 @@ std::vector<Vector<4, T>> to_vector(const std::vector<glm::vec4>& source_points)
 {
         return to_vector<4, T>(source_points);
 }
-
-#endif

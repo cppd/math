@@ -16,8 +16,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
-#ifndef SORT_H
-#define SORT_H
 
 #include <algorithm>
 #include <array>
@@ -84,5 +82,3 @@ std::array<T, 5>&& sort(std::array<T, 5>&& v)
 
         return std::move(v);
 }
-
-#endif

@@ -16,8 +16,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
-#ifndef COCONE_H
-#define COCONE_H
 
 #include "com/math.h"
 #include "com/types.h"
@@ -154,5 +152,3 @@ bool intersect_cocone(const Vector<N, T>& normalized_cone_axis, const Vector<N, 
 
         return true;
 }
-
-#endif

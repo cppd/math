@@ -16,8 +16,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
-#ifndef SURFACE_H
-#define SURFACE_H
 
 #include "geometry/vec.h"
 #include "progress/progress.h"
@@ -67,5 +65,3 @@ extern template
 std::unique_ptr<ISurfaceReconstructorCoconeOnly<3>> create_surface_reconstructor_cocone_only(
         const std::vector<Vector<3, float>>& source_points, ProgressRatio* progress);
 // clang-format on
-
-#endif

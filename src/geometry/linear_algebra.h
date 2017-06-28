@@ -16,8 +16,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
-#ifndef LINEAR_ALGEBRA_H
-#define LINEAR_ALGEBRA_H
 
 #include "vec.h"
 #include "vec_array.h"
@@ -312,5 +310,3 @@ T cross_2d(const Vector<2, T>& a0, const Vector<2, T>& a1)
 {
         return a0[0] * a1[1] - a0[1] * a1[0];
 }
-
-#endif

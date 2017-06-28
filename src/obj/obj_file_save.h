@@ -16,13 +16,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
-#ifndef OBJ_FILE_SAVE_H
-#define OBJ_FILE_SAVE_H
 
 #include "obj.h"
 
 #include <string>
 
 void save_obj_geometry_to_file(const IObj* obj, const std::string& file_name, const std::string& comment = std::string());
-
-#endif

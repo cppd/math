@@ -16,8 +16,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
-#ifndef DFT_FFTW_H
-#define DFT_FFTW_H
 
 #include <complex>
 #include <memory>
@@ -30,5 +28,3 @@ struct IFourierFFTW
 };
 
 std::unique_ptr<IFourierFFTW> create_dft_fftw(int x, int y);
-
-#endif

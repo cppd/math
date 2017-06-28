@@ -16,8 +16,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
-#ifndef SHOW_H
-#define SHOW_H
 
 #include "obj/obj.h"
 #include "window/window_prop.h"
@@ -75,4 +73,3 @@ std::unique_ptr<IShow> create_show(ICallBack*, WindowID win_parent, glm::vec3 cl
                                    bool with_materials, bool with_effect, bool with_dft, bool with_convex_hull,
                                    bool with_optical_flow, float ambient, float diffuse, float specular, float dft_brightness,
                                    float default_ns);
-#endif

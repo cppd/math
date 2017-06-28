@@ -16,8 +16,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
-#ifndef GL_QUERY_H
-#define GL_QUERY_H
 
 #include <string>
 #include <vector>
@@ -41,5 +39,3 @@ void print_settings();
 void check_context(int major, int minor, const std::vector<std::string>& extensions);
 void check_bit_sizes(int depthBits, int stencilBits, int antialiasing_level, int redBits, int greenBits, int blueBits,
                      int alphaBits);
-
-#endif

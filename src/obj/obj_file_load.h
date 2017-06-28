@@ -16,8 +16,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
-#ifndef OBJ_FILE_LOAD_H
-#define OBJ_FILE_LOAD_H
 
 #include "obj.h"
 
@@ -27,5 +25,3 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 
 std::unique_ptr<IObj> load_obj_from_file(const std::string& file_name, ProgressRatio* progress);
-
-#endif

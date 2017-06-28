@@ -16,9 +16,5 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
-#ifndef CH_TEST_H
-#define CH_TEST_H
 
 void convex_hull_test();
-
-#endif

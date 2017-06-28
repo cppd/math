@@ -16,8 +16,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
-#ifndef PROGRESS_H
-#define PROGRESS_H
 
 #include "progress_interfaces.h"
 
@@ -39,5 +37,3 @@ public:
         void set_undefined();
         void set_text(const std::string& text);
 };
-
-#endif

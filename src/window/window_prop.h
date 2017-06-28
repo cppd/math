@@ -16,8 +16,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
-#ifndef WINDOW_PROP_H
-#define WINDOW_PROP_H
 
 #include <SFML/Window/WindowHandle.hpp>
 
@@ -30,6 +28,4 @@ void set_size_to_parent(WindowID window, WindowID parent);
 
 #if defined(_WIN32)
 void change_window_style_not_child(WindowID window);
-#endif
-
 #endif

@@ -16,8 +16,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
-#ifndef THREAD_POOL_H
-#define THREAD_POOL_H
 
 #include "com/log.h"
 #include "com/print.h"
@@ -228,5 +226,3 @@ public:
                 }
         }
 };
-
-#endif

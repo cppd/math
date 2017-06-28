@@ -16,8 +16,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
-#ifndef DRAW_OBJECT_H
-#define DRAW_OBJECT_H
 
 #include "color/color_space.h"
 #include "gl/gl_objects.h"
@@ -70,5 +68,3 @@ struct IDrawProgram
 
 std::unique_ptr<IDrawObject> create_draw_object(const IObj* obj, const ColorSpaceConverter& color_converter);
 std::unique_ptr<IDrawProgram> create_draw_program();
-
-#endif

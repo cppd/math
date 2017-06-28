@@ -18,8 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // Generated from glcorearb.h
 
 #pragma once
-#ifndef GL_FUNCTIONS_H
-#define GL_FUNCTIONS_H
 
 #include <GL/glcorearb.h>
 
@@ -6213,5 +6211,3 @@ inline void glWindowRectanglesEXT(GLenum mode, GLsizei count, const GLint *box) 
 }
 
 // clang-format on
-
-#endif

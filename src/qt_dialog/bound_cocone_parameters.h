@@ -16,8 +16,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
-#ifndef BOUND_COCONE_PARAMETERS_H
-#define BOUND_COCONE_PARAMETERS_H
 
 #include "ui_bound_cocone_parameters.h"
 
@@ -38,5 +36,3 @@ private:
 
         virtual void done(int r) override;
 };
-
-#endif

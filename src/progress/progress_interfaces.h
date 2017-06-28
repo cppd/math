@@ -16,8 +16,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
-#ifndef PROGRESS_INTERFACES_H
-#define PROGRESS_INTERFACES_H
 
 #include <string>
 
@@ -41,5 +39,3 @@ public:
         virtual void add_progress_ratio(IProgressRatioControl* ratio) = 0;
         virtual void delete_progress_ratio(const IProgressRatioControl* ratio) = 0;
 };
-
-#endif

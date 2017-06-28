@@ -16,8 +16,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
-#ifndef RANDOM_H
-#define RANDOM_H
 
 #include <type_traits>
 
@@ -35,5 +33,3 @@ typename T::result_type get_random_seed()
         read_system_random(&v, sizeof(v));
         return v;
 }
-
-#endif

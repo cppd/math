@@ -16,9 +16,5 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
-#ifndef INIT_H
-#define INIT_H
 
 void init();
-
-#endif

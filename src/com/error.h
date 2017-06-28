@@ -16,8 +16,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
-#ifndef ERROR_H
-#define ERROR_H
 
 #include "log.h"
 
@@ -117,6 +115,4 @@ inline std::string get_error_list(const std::vector<std::string>& v)
 #else
 #undef ASSERT_ENABLED
 #define ASSERT(expr) (static_cast<void>(0))
-#endif
-
 #endif

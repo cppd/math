@@ -16,8 +16,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
-#ifndef OBJ_ALG_H
-#define OBJ_ALG_H
 
 #include "obj.h"
 
@@ -35,5 +33,3 @@ void find_center_and_length(const std::vector<glm::vec3>& vertices, const std::v
 void find_center_and_length(const std::vector<glm::vec3>& vertices, const std::vector<int>& points, glm::vec3* center,
                             float* length);
 void find_center_and_length(const std::vector<glm::vec3>& vertices, glm::vec3* center, float* length);
-
-#endif

@@ -16,8 +16,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
-#ifndef WINDOW_H
-#define WINDOW_H
 
 #include <SFML/Window/Context.hpp>
 #include <SFML/Window/Window.hpp>
@@ -29,5 +27,3 @@ void create_gl_window_1x1(int major_gl_version, int minor_gl_version, const std:
                           int alpha_bits, sf::Window* wnd);
 void create_gl_context_1x1(int major_gl_version, int minor_gl_version, const std::vector<std::string>& extensions,
                            std::unique_ptr<sf::Context>* context);
-
-#endif

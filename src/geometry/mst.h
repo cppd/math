@@ -16,8 +16,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
-#ifndef MST_H
-#define MST_H
 
 #include "delaunay.h"
 
@@ -32,5 +30,3 @@ void minimal_spanning_tree(const std::vector<vec<3>>& points, const std::vector<
 extern template
 void minimal_spanning_tree(const std::vector<vec<4>>& points, const std::vector<DelaunayObject<4>>& delaunay_objects);
 // clang-format on
-
-#endif

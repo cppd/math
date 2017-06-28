@@ -25,8 +25,6 @@ Cambridge University Press.
 */
 
 #pragma once
-#ifndef GAUSS_H
-#define GAUSS_H
 
 #include "com/log.h"
 #include "com/math.h"
@@ -136,5 +134,3 @@ std::enable_if_t<any_floating_point<T>, T> determinant_gauss(const std::array<st
 
         return sign ? -d : d;
 }
-
-#endif

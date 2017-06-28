@@ -16,11 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
-#ifndef TIME_H
-#define TIME_H
 
 void reset_time();
 
 double get_time_seconds();
-
-#endif

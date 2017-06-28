@@ -16,8 +16,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
-#ifndef DELAUNAY_H
-#define DELAUNAY_H
 
 #include "convex_hull.h"
 #include "ridge.h"
@@ -156,5 +154,3 @@ void create_delaunay_objects_and_facets(const std::vector<vec<N>>& points, const
                 }
         }
 }
-
-#endif

@@ -52,8 +52,6 @@ Princeton University Press, 2011.
 */
 
 #pragma once
-#ifndef VORONOI_H
-#define VORONOI_H
 
 #include "vec.h"
 
@@ -167,5 +165,3 @@ Vector<N, T> compute_voronoi_vertex(const std::vector<Vector<N, T>>& points, con
 #endif
 #endif
 }
-
-#endif

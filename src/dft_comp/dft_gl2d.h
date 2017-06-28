@@ -16,8 +16,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
-#ifndef DFT_GL2D_H
-#define DFT_GL2D_H
 
 #include "gl/gl_objects.h"
 
@@ -39,5 +37,3 @@ struct IFourierGL2
 
 std::unique_ptr<IFourierGL1> create_fft_gl2d(int x, int y);
 std::unique_ptr<IFourierGL2> create_fft_gl2d(int x, int y, const TextureRGBA32F& texture);
-
-#endif

@@ -16,8 +16,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
-#ifndef PENCIL_H
-#define PENCIL_H
 
 #include "gl/gl_objects.h"
 
@@ -34,5 +32,3 @@ public:
 
         void draw();
 };
-
-#endif

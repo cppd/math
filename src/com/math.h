@@ -16,8 +16,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
-#ifndef MATH_H
-#define MATH_H
 
 #include "types.h"
 
@@ -92,5 +90,3 @@ constexpr bool is_finite(__float128 v)
         // вместо finiteq и по аналогии с другими типами
         return v >= -any_max<__float128> && v <= any_max<__float128>;
 }
-
-#endif

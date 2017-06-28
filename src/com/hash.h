@@ -16,8 +16,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
-#ifndef HASH_H
-#define HASH_H
 
 #include <array>
 #include <functional>
@@ -62,5 +60,3 @@ size_t array_hash(const std::array<T, N>& v)
         }
         return seed;
 }
-
-#endif

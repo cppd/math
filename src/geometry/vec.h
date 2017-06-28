@@ -16,8 +16,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
-#ifndef VEC_H
-#define VEC_H
 
 #include "com/hash.h"
 #include "com/math.h"
@@ -291,5 +289,3 @@ std::string to_string(const Vector<N, T>& data)
 // Не менять.
 template <std::size_t N>
 using vec = Vector<N, double>;
-
-#endif

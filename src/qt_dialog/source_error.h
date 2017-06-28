@@ -16,8 +16,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
-#ifndef SOURCE_ERROR_H
-#define SOURCE_ERROR_H
 
 #include "ui_source_error.h"
 
@@ -34,5 +32,3 @@ public:
 private:
         Ui::SourceError ui;
 };
-
-#endif

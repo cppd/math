@@ -16,8 +16,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
-#ifndef COLOR_SPACE_H
-#define COLOR_SPACE_H
 
 #include "gl/gl_objects.h"
 #include <glm/vec3.hpp>
@@ -46,5 +44,3 @@ constexpr float luminosity(glm::vec3 a)
 {
         return 0.299f * a.r + 0.587f * a.g + 0.114f * a.b;
 }
-
-#endif

@@ -16,8 +16,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
-#ifndef GL_OBJECTS_H
-#define GL_OBJECTS_H
 
 #include "com/error.h"
 #include "gl_func/gl_functions.h"
@@ -1073,5 +1071,3 @@ public:
                 return m_color;
         }
 };
-
-#endif

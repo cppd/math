@@ -16,8 +16,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
-#ifndef MAIN_WINDOW_H
-#define MAIN_WINDOW_H
 
 #include "ui_main_window.h"
 
@@ -166,5 +164,3 @@ private:
         std::shared_ptr<IObj> m_surface_cocone;
         std::shared_ptr<IObj> m_surface_bound_cocone;
 };
-
-#endif

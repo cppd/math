@@ -18,9 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 #if 0
 
-#ifndef BIT_REVERSE_H
-#define BIT_REVERSE_H
-
 #include "bits.h"
 #include "error.h"
 
@@ -79,7 +76,5 @@ void bit_reverse(std::vector<T>* data)
                 }
         }
 }
-
-#endif
 
 #endif

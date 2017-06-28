@@ -16,8 +16,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
-#ifndef THREAD_H
-#define THREAD_H
 
 #include "error.h"
 
@@ -222,5 +220,3 @@ inline void join_threads(std::vector<std::thread>* threads, const std::vector<st
                 error(e);
         }
 }
-
-#endif

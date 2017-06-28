@@ -16,8 +16,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
-#ifndef CONVEX_HULL_H
-#define CONVEX_HULL_H
 
 #include "vec.h"
 
@@ -102,5 +100,3 @@ extern template
 void compute_convex_hull(const std::vector<Vector<5, float>>& source_points, std::vector<ConvexHullFacet<5>>* ch_facets,
                          ProgressRatio* progress);
 // clang-format on
-
-#endif

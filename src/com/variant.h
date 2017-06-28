@@ -16,8 +16,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
-#ifndef VARIANT_H
-#define VARIANT_H
 
 #if 0
 // Заменено на std::variant
@@ -155,7 +153,5 @@ public:
                 return *reinterpret_cast<const V*>(&m_data);
         }
 };
-
-#endif
 
 #endif

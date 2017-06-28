@@ -16,8 +16,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
-#ifndef LOG_H
-#define LOG_H
 
 #include <string>
 
@@ -41,5 +39,3 @@ inline void LOG_ERROR(const std::string& msg) noexcept
 {
         LogImplementation::write_log_message(msg);
 }
-
-#endif

@@ -16,8 +16,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
-#ifndef VEC_ARRAY_H
-#define VEC_ARRAY_H
 
 #include "com/error.h"
 
@@ -139,5 +137,3 @@ constexpr std::array<T, N> make_array_value(const T& v)
 {
         return make_array_value_impl(std::make_integer_sequence<size_t, N>(), v);
 }
-
-#endif

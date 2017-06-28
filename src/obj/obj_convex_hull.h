@@ -16,8 +16,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
-#ifndef OBJ_CONVEX_HULL_H
-#define OBJ_CONVEX_HULL_H
 
 #include "obj.h"
 
@@ -26,5 +24,3 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <memory>
 
 std::unique_ptr<IObj> create_convex_hull_for_obj(const IObj* obj, ProgressRatio* progress);
-
-#endif

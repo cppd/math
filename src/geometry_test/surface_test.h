@@ -16,9 +16,5 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
-#ifndef SURFACE_TEST_H
-#define SURFACE_TEST_H
 
 void surface_test();
-
-#endif

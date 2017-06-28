@@ -35,10 +35,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //    чтобы функции из пункта 2 имели к доступ к этим данным.
 
 #pragma once
-#ifndef SHOW_EVENT_H
-#define SHOW_EVENT_H
 
-//#include "com/variant.h"
 #include "obj/obj.h"
 
 #include <glm/vec3.hpp>
@@ -377,5 +374,3 @@ private:
                      show_dft, set_dft_brightness, show_convex_hull_2d, show_optical_flow>
                 m_data;
 };
-
-#endif

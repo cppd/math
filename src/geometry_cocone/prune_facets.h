@@ -16,8 +16,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
-#ifndef PRUNE_FACETS_H
-#define PRUNE_FACETS_H
 
 #include "com/error.h"
 #include "geometry/delaunay.h"
@@ -200,5 +198,3 @@ void prune_facets_incident_to_sharp_ridges(const std::vector<vec<N>>& points,
                 suspicious_ridges = std::move(tmp_ridges);
         }
 }
-
-#endif

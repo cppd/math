@@ -16,8 +16,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
-#ifndef DFT_CUFFT_H
-#define DFT_CUFFT_H
 
 #include <complex>
 #include <memory>
@@ -30,5 +28,3 @@ struct IFourierCuda
 };
 
 std::unique_ptr<IFourierCuda> create_fft_cufft(int x, int y);
-
-#endif

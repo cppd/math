@@ -16,8 +16,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
-#ifndef OBJ_SURFACE_H
-#define OBJ_SURFACE_H
 
 #include "obj.h"
 
@@ -30,5 +28,3 @@ std::unique_ptr<IObj> create_surface_for_obj(const IObj* obj, ProgressRatio* pro
 
 std::unique_ptr<IObj> create_obj_for_facets(const std::vector<glm::vec3>& points, const std::vector<Vector<3, double>>& normals,
                                             const std::vector<std::array<int, 3>>& facets);
-
-#endif

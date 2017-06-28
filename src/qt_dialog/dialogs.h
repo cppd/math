@@ -16,8 +16,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
-#ifndef DIALOGS_H
-#define DIALOGS_H
 
 #include <QWidget>
 #include <string>
@@ -25,5 +23,3 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 bool edit_bound_cocone_parameters(QWidget* parent, int digits, double* rho, double* alpha);
 
 void show_source_error(QWidget* parent, const std::string& msg, const std::string& source);
-
-#endif

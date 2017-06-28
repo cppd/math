@@ -16,8 +16,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
-#ifndef FILE_H
-#define FILE_H
 
 #include "error.h"
 
@@ -46,5 +44,3 @@ public:
                 return f;
         }
 };
-
-#endif

@@ -16,8 +16,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
-#ifndef DEVICE_PROG_H
-#define DEVICE_PROG_H
 
 #include "device_mem.h"
 
@@ -175,5 +173,3 @@ extern template class DeviceProg<float>;
 extern template class DeviceProg<double>;
 extern template class DeviceProgFFTRadix2<float>;
 extern template class DeviceProgFFTRadix2<double>;
-
-#endif
