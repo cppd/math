@@ -17,16 +17,11 @@
 
 cmake_minimum_required(VERSION 3.7.2)
 
-#make VERBOSE=1 -j 8
-
-#set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS) # чтобы убрать -rdynamic
-#set(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS) # чтобы убрать -rdynamic
-
-###################################################
+##################################################
 
 enable_language(C CXX)
 
-###################################################
+set(Compilers "GNU;Clang")
 
 if(NOT CMAKE_C_COMPILER_ID)
          message(FATAL_ERROR "Empty C compiler id")
@@ -34,12 +29,17 @@ endif()
 if(NOT CMAKE_CXX_COMPILER_ID)
          message(FATAL_ERROR "Empty C++ compiler id")
 endif()
-set(Compilers "GNU;Clang")
-if(NOT ${CMAKE_C_COMPILER_ID} IN_LIST Compilers)
-        message(FATAL_ERROR "Not supported C compiler ${CMAKE_C_COMPILER_ID}")
+if(NOT (${CMAKE_C_COMPILER_ID} IN_LIST Compilers))
+        message(WARNING "Not supported C compiler ${CMAKE_C_COMPILER_ID}")
 endif()
-if(NOT ${CMAKE_CXX_COMPILER_ID} IN_LIST Compilers)
-        message(FATAL_ERROR "Not supported C++ compiler ${CMAKE_CXX_COMPILER_ID}")
+if(NOT (${CMAKE_CXX_COMPILER_ID} IN_LIST Compilers))
+        message(WARNING "Not supported C++ compiler ${CMAKE_CXX_COMPILER_ID}")
+endif()
+if((${CMAKE_C_COMPILER_ID} STREQUAL "GNU") AND (${CMAKE_C_COMPILER_VERSION} VERSION_LESS 7.1))
+        message(WARNING "Not supported GCC C compiler version ${CMAKE_C_COMPILER_VERSION}")
+endif()
+if((${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU") AND (${CMAKE_CXX_COMPILER_VERSION} VERSION_LESS 7.1))
+        message(WARNING "Not supported GCC C++ compiler version ${CMAKE_C_COMPILER_VERSION}")
 endif()
 
 # При наличии enable_language(C CXX) можно указать стандарт для всех проектов
@@ -55,12 +55,14 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX14_STANDARD_COMPILE_OPTION "-std=c++1z")
 set(CMAKE_CXX14_EXTENSION_COMPILE_OPTION "-std=gnu++1z")
 
-###################################################
+# Чтобы было как "make VERBOSE=1"
+# Добавлять после команды project или enable_language
+set(CMAKE_VERBOSE_MAKEFILE TRUE)
 
 include(CheckCSourceCompiles)
 include(CheckCXXSourceCompiles)
 
-###################################################
+##################################################
 
 macro (IncludeSourceAndSetCompilerFlags dir_name executable)
 
@@ -71,12 +73,8 @@ macro (IncludeSourceAndSetCompilerFlags dir_name executable)
         set(CMAKE_C_FLAGS)
         set(CMAKE_CXX_FLAGS)
 
-        # Чтобы было как "make VERBOSE=1"
-        # Добавлять после команды project
-        set(CMAKE_VERBOSE_MAKEFILE TRUE)
-
         if (true)
-                set(extensions h;c;cpp;ui;comp;frag;geom;vert;tesc;tese)
+                set(extensions "h;c;cpp;ui;comp;frag;geom;vert;tesc;tese")
                 unset(all_globbing_expressions)
                 foreach(ext ${extensions})
                         list(APPEND all_globbing_expressions "${PROJECT_SOURCE_DIR}/${dir_name}/*.${ext}")
@@ -112,25 +110,16 @@ macro (IncludeSourceAndSetCompilerFlags dir_name executable)
 
         target_compile_definitions(${PROJECT_NAME} PRIVATE -DNDEBUG)
 
-        #-pedantic -pedantic-errors -fopt-info-missed -fopt-info-vec-missed -S -masm=intel
-        #-pg -funsafe-loop-optimizations -Wunsafe-loop-optimizations -O3 -ffast-math -march=native
+        #-pedantic -pedantic-errors
+        #-fopt-info-missed -fopt-info-vec-missed -O3 -ffast-math -march=native -pg
 
         target_link_libraries(${PROJECT_NAME} -pthread)
         target_compile_options(${PROJECT_NAME} PRIVATE -pthread)
 
-        target_compile_options(${PROJECT_NAME} PRIVATE
-                -Ofast -mavx -mfma
-                $<$<COMPILE_LANGUAGE:CXX>:
-                        -fno-rtti -fstrict-enums
-                >
-                $<$<CXX_COMPILER_ID:GNU>:
-                        -funsafe-loop-optimizations
-                >
-                $<$<CXX_COMPILER_ID:Clang>:
-                >
-        )
+        target_compile_options(${PROJECT_NAME} PRIVATE -Ofast -mavx -mfma)
+        target_compile_options(${PROJECT_NAME} PRIVATE $<$<COMPILE_LANGUAGE:CXX>: -fno-rtti -fstrict-enums >)
 
-        include ("${CMAKE_SOURCE_DIR}/cmake/cmake_compiler_warnings.cmake")
+        include("${CMAKE_SOURCE_DIR}/cmake/cmake_compiler_warnings.cmake")
 
 endmacro()
 
@@ -177,19 +166,19 @@ function(Check_CXX_Has_Int128)
         endif()
 endfunction()
 
-###########################################################################
+##################################################
 
 project(create_str C CXX)
 
 IncludeSourceAndSetCompilerFlags(src_str true)
 
-###########################################################################
+##################################################
 
 project(create_gl C CXX)
 
 IncludeSourceAndSetCompilerFlags(src_gl true)
 
-###########################################################################
+##################################################
 
 project(math C CXX)
 
@@ -213,15 +202,9 @@ target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC "${CMAKE_SOURCE_DIR}/ex
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE -DGLM_FORCE_NO_CTOR_INIT -DGLM_FORCE_CXX14 -DGLM_FORCE_EXPLICIT_CTOR)
 
-#####################
-
-#target_link_libraries(${PROJECT_NAME} stdc++fs)
-#if(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
-#target_link_libraries(${PROJECT_NAME} quadmath)
-#endif()
+##################################################
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/SFML")
-#set(SFML_ROOT "")
 find_package(SFML 2.4.1 COMPONENTS system window graphics REQUIRED)
 target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${SFML_INCLUDE_DIR})
 target_link_libraries(${PROJECT_NAME} ${SFML_LIBRARIES})
@@ -271,6 +254,10 @@ endif()
 #find_package(GLM REQUIRED)
 #target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${GLM_INCLUDE_DIRS})
 
+#if(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
+#target_link_libraries(${PROJECT_NAME} quadmath)
+#endif()
+
 #set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/Eigen3")
 ##set(EIGEN3_ROOT "")
 ##set(EIGEN3_ROOT_DIR "")
@@ -280,3 +267,6 @@ endif()
 #        target_compile_definitions(${PROJECT_NAME} PRIVATE -DEIGEN_MPL2_ONLY)
 #endif()
 
+# чтобы убрать -rdynamic
+#set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS)
+#set(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS)
