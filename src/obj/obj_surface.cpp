@@ -22,8 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/log.h"
 #include "com/print.h"
 #include "com/time.h"
-#include "geometry/surface_cocone.h"
 #include "geometry/vec_glm.h"
+#include "geometry_cocone/surface.h"
 
 #include <chrono>
 #include <random>

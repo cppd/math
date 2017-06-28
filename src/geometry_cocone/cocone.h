@@ -16,16 +16,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
-#ifndef COCONE_ALG_H
-#define COCONE_ALG_H
-
-#include "vec.h"
+#ifndef COCONE_H
+#define COCONE_H
 
 #include "com/math.h"
 #include "com/types.h"
+#include "geometry/vec.h"
 #include "numerical/quadratic.h"
 
-namespace CoconeAlgImplementation
+namespace CoconeImplementation
 {
 // Константа алгоритмов COCONE, равна cos(3 * PI / 8)
 template <typename T>
@@ -34,15 +33,15 @@ constexpr T COS_OF_AN_OPENING_ANGLE_WITH_THE_AXIS =
 }
 
 // Условия пересечения ребра ячейки Вороного, соответствующего грани, с COCONE вершины.
-// Параметры - угол между осью и конусом, косинусы между перпендикуляром к вершине
-// и двумя вершинами ребра ячейки Вороного.
+// Параметры - косинусы между перпендикуляром к вершине и двумя вершинами ребра ячейки Вороного.
 template <typename T>
 bool voronoi_edge_intersects_cocone(T cos_n_a, T cos_n_b)
 {
         static_assert(native_floating_point<T>);
 
-        if (fabs(cos_n_a) < CoconeAlgImplementation::COS_OF_AN_OPENING_ANGLE_WITH_THE_AXIS<T> ||
-            fabs(cos_n_b) < CoconeAlgImplementation::COS_OF_AN_OPENING_ANGLE_WITH_THE_AXIS<T>)
+        constexpr T cos_cocone = CoconeImplementation::COS_OF_AN_OPENING_ANGLE_WITH_THE_AXIS<T>;
+
+        if (fabs(cos_n_a) < cos_cocone || fabs(cos_n_b) < cos_cocone)
         {
                 return true;
         }
@@ -62,7 +61,7 @@ bool cocone_inside_or_equal(T... cos_n_p)
 {
         static_assert((native_floating_point<T> && ...));
 
-        return ((fabs(cos_n_p) <= CoconeAlgImplementation::COS_OF_AN_OPENING_ANGLE_WITH_THE_AXIS<T>)&&...);
+        return ((fabs(cos_n_p) <= CoconeImplementation::COS_OF_AN_OPENING_ANGLE_WITH_THE_AXIS<T>)&&...);
 }
 
 /*
@@ -104,7 +103,7 @@ bool intersect_cocone(const Vector<N, T>& normalized_cone_axis, const Vector<N, 
         T square_a = dot(vec_a, vec_a);
         T square_ab = dot(vec_ab, vec_ab);
         T a_ab = dot(vec_a, vec_ab);
-        T square_cos = square(CoconeAlgImplementation::COS_OF_AN_OPENING_ANGLE_WITH_THE_AXIS<T>);
+        T square_cos = square(CoconeImplementation::COS_OF_AN_OPENING_ANGLE_WITH_THE_AXIS<T>);
 
         // коэффициенты квадратного уравнения ax² + bx + c = 0
         T a = square(n_ab) - square_cos * square_ab;

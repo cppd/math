@@ -307,69 +307,10 @@ void ortho_e0_e1(const std::vector<Vector<N, T>>& points, const std::array<int, 
         *e2 = normalize(ortho_nn(vectors));
 }
 
-// Максимальное значение определителя с размещением последней координаты на параболоиде по значениям других координат
-template <size_t N, size_t BITS>
-constexpr int max_paraboloid_determinant()
+template <typename T>
+T cross_2d(const Vector<2, T>& a0, const Vector<2, T>& a1)
 {
-        // Например, при N = 4
-        // |x x x x*x+x*x+x*x|
-        // |x x x x*x+x*x+x*x|
-        // |x x x x*x+x*x+x*x|
-        // |x x x x*x+x*x+x*x|
-        // max = x * x * x * (x*x + x*x + x*x) * 4!
-        // max = (x ^ (N + 1)) * (N - 1) * N!
-
-        static_assert(N >= 2 && N <= 33);
-        static_assert(BITS > 0);
-
-        unsigned __int128 f = 1;
-        for (unsigned i = 2; i <= N; ++i)
-        {
-                f *= i;
-        }
-
-        f *= (N - 1);
-
-        return BITS * (N + 1) + get_log_2(f) + 1;
-}
-
-// Максимальное значение исходных данных, размещаемых на параболоиде
-template <size_t N, size_t BITS>
-constexpr int max_paraboloid_source()
-{
-        // Например, при N = 4
-        // |x x x x*x+x*x+x*x|
-        // |x x x x*x+x*x+x*x|
-        // |x x x x*x+x*x+x*x|
-        // |x x x x*x+x*x+x*x|
-        // max = x*x + x*x + x*x
-        // max = (x ^ 2) * (N - 1)
-
-        return BITS * 2 + get_log_2(N - 1) + 1;
-}
-
-// Максимальное значение определителя
-template <size_t N, size_t BITS>
-constexpr int max_determinant()
-{
-        // Например, при N = 4
-        // |x x x x|
-        // |x x x x|
-        // |x x x x|
-        // |x x x x|
-        // max = x * x * x * x * 4!
-        // max = (x ^ N) * N!
-
-        static_assert(N >= 2 && N <= 34);
-        static_assert(BITS > 0);
-
-        unsigned __int128 f = 1;
-        for (unsigned i = 2; i <= N; ++i)
-        {
-                f *= i;
-        }
-
-        return BITS * N + get_log_2(f) + 1;
+        return a0[0] * a1[1] - a0[1] * a1[0];
 }
 
 #endif

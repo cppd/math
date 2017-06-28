@@ -25,35 +25,26 @@ Curve and Surface Reconstruction: Algorithms with Mathematical Analysis.
 Cambridge University Press, 2007.
 */
 
-#include "surface_cocone.h"
+#include "surface.h"
 
-#include "cocone_alg.h"
-#include "convex_hull.h"
-#include "delaunay.h"
-#include "linear_algebra.h"
-#include "ridge.h"
-#include "vec_array.h"
+#include "cocone.h"
+#include "extract_manifold.h"
+#include "prune_facets.h"
 
+#include "com/alg.h"
 #include "com/error.h"
 #include "com/log.h"
 #include "com/print.h"
+#include "geometry/delaunay.h"
+#include "geometry/linear_algebra.h"
+#include "geometry/vec_array.h"
 
 #include <limits>
 #include <list>
-#include <mutex>
-#include <stack>
-#include <unordered_map>
 #include <unordered_set>
 
 namespace
 {
-template <size_t N>
-using RidgeData = RidgeDataN<DelaunayFacet<N>>;
-template <size_t N>
-using RidgeMap = std::unordered_map<Ridge<N>, RidgeData<N>>;
-template <size_t N>
-using RidgeSet = std::unordered_set<Ridge<N>>;
-
 template <size_t N>
 struct VertexData
 {
@@ -80,11 +71,22 @@ struct FacetData
         }
 };
 
+// Соединения вершины с объектами Делоне и гранями объектов Делоне
 struct VertexConnections
 {
         std::vector<int> objects;
-        std::vector<int> facets;
-        std::vector<unsigned char> facets_indices;
+
+        struct Facet
+        {
+                // глобальный индекс грани
+                int facet_index;
+                // локальный индекс вершины грани, являющейся данной вершиной
+                unsigned char vertex_index;
+                Facet(int facet_index_, unsigned char vertex_index_) : facet_index(facet_index_), vertex_index(vertex_index_)
+                {
+                }
+        };
+        std::vector<Facet> facets;
 };
 
 #if 0
@@ -98,7 +100,6 @@ void print_delaunay_facets(const std::vector<DelaunayFacet<N>>& delaunay_facets)
         }
         LOG("--");
 }
-
 template <size_t N>
 void print_cocone_facets(const std::vector<DelaunayFacet<N>>& delaunay_facets, const std::vector<bool>& cocone_facets)
 {
@@ -137,190 +138,6 @@ void print_vertex_data(const std::vector<VertexData<N>>& vertex_data)
 }
 #endif
 
-template <typename T>
-bool all_empty(const std::vector<T>& v)
-{
-        for (unsigned i = 0; i < v.size(); ++i)
-        {
-                if (v[i])
-                {
-                        return false;
-                }
-        }
-        return true;
-}
-
-double cross(vec<2> a0, vec<2> a1)
-{
-        return a0[0] * a1[1] - a0[1] * a1[0];
-}
-
-template <size_t N>
-bool boundary_ridge(const std::vector<bool>& interior_vertices, const Ridge<N>& ridge)
-{
-        for (int v : ridge.get_vertices())
-        {
-                if (!interior_vertices[v])
-                {
-                        return true;
-                }
-        }
-        return false;
-}
-
-template <size_t N>
-bool sharp_ridge(const std::vector<vec<N>>& points, const std::vector<bool>& interior_vertices, const Ridge<N>& ridge,
-                 const RidgeData<N>& ridge_data)
-{
-        ASSERT(ridge_data.size() >= 1);
-
-        if (boundary_ridge(interior_vertices, ridge))
-        {
-                return false;
-        }
-
-        if (ridge_data.size() == 1)
-        {
-                // Грань с одним объектом считается острой
-                return true;
-        }
-
-        // Ортонормированный базис размерности 2 в ортогональном дополнении ребра ridge
-        vec<N> e0, e1;
-        ortho_e0_e1(points, ridge.get_vertices(), ridge_data.cbegin()->get_point(), &e0, &e1);
-
-        // Координаты вектора первой грани при проецировании в пространство базиса e0, e1.
-        vec<N> base_vec = points[ridge_data.cbegin()->get_point()] - points[ridge.get_vertices()[0]];
-        vec<2> base = normalize(vec<2>(dot(e0, base_vec), dot(e1, base_vec)));
-        ASSERT(is_finite(base));
-
-        double cos_plus = 1, cos_minus = 1, sin_plus = 0, sin_minus = 0;
-
-        // Проецирование граней в пространство базиса e0, e1 и вычисление максимальных углов отклонений
-        // граней от первой грани по обе стороны.
-        for (auto ridge_facet = std::next(ridge_data.cbegin()); ridge_facet != ridge_data.cend(); ++ridge_facet)
-        {
-                vec<N> facet_vec = points[ridge_facet->get_point()] - points[ridge.get_vertices()[0]];
-                vec<2> v = normalize(vec<2>(dot(e0, facet_vec), dot(e1, facet_vec)));
-                ASSERT(is_finite(v));
-
-                double sine = cross(base, v);
-                double cosine = dot(base, v);
-
-                if (sine >= 0)
-                {
-                        if (cosine < cos_plus)
-                        {
-                                cos_plus = cosine;
-                                sin_plus = sine;
-                        }
-                }
-                else
-                {
-                        if (cosine < cos_minus)
-                        {
-                                cos_minus = cosine;
-                                sin_minus = sine;
-                        }
-                }
-        }
-
-        // Нужны сравнения с углом 90 градусов, поэтому далее можно обойтись без арккосинусов,
-        // используя вместо них знак косинуса.
-
-        // Если любой из двух углов больше или равен 90 градусов, то грань не острая
-        if (cos_plus <= 0 || cos_minus <= 0)
-        {
-                return false;
-        }
-
-        // Сумма двух углов, меньших 90, меньше 180 градусов, поэтому для определения суммы углов
-        // можно применить формулу косинуса суммы углов
-        // cos(a + b) = cos(a)cos(b) - sin(a)sin(b)
-        // Здесь нужен модуль синуса, так как ранее в программе sin_minus <= 0.
-        double cos_a_plus_b = cos_plus * cos_minus - std::fabs(sin_plus * sin_minus);
-
-        // Если сумма углов меньше 90 градусов, то грань острая
-        return cos_a_plus_b > 0;
-}
-
-// Удаление граней, относящихся к острым рёбрам.
-// Ребро считается острым, если угол между его двумя последовательными гранями больше 3 * PI / 2
-// или, что тоже самое, все грани находятся внутри угла PI / 2. Ребро с одной гранью считается
-// острым. Образующиеся после удаления грани новые острые рёбра тоже должны обрабатываться.
-template <size_t N>
-void prune_triangles_incident_to_sharp_edges(const std::vector<vec<N>>& points,
-                                             const std::vector<DelaunayFacet<N>>& delaunay_facets,
-                                             const std::vector<bool>& interior_vertices, std::vector<bool>* cocone_facets)
-{
-        ASSERT(delaunay_facets.size() > 0 && delaunay_facets.size() == cocone_facets->size());
-        ASSERT(points.size() == interior_vertices.size());
-
-        RidgeMap<N> ridge_map;
-        std::unordered_map<const DelaunayFacet<N>*, int> facets_ptr;
-        for (unsigned i = 0; i < delaunay_facets.size(); ++i)
-        {
-                if ((*cocone_facets)[i])
-                {
-                        add_to_ridges(delaunay_facets[i], &ridge_map);
-                        facets_ptr.emplace(&delaunay_facets[i], i);
-                }
-        }
-
-        RidgeSet<N> suspicious_ridges(ridge_map.size());
-        for (typename RidgeMap<N>::const_iterator i = ridge_map.cbegin(); i != ridge_map.cend(); ++i)
-        {
-                suspicious_ridges.insert(i->first);
-        }
-
-        while (!suspicious_ridges.empty())
-        {
-                RidgeSet<N> tmp_ridges;
-
-                for (typename RidgeSet<N>::const_iterator i = suspicious_ridges.cbegin(); i != suspicious_ridges.cend(); ++i)
-                {
-                        auto ridge = ridge_map.find(*i);
-                        if (ridge == ridge_map.cend())
-                        {
-                                continue;
-                        }
-
-                        if (!sharp_ridge(points, interior_vertices, ridge->first, ridge->second))
-                        {
-                                continue;
-                        }
-
-                        // Поместить в отдельную переменную, чтобы не проходить по граням ребра при
-                        // одновременнном удалении этих граней
-                        std::vector<const DelaunayFacet<N>*> facets_to_remove;
-                        facets_to_remove.reserve(ridge->second.size());
-
-                        for (auto d = ridge->second.cbegin(); d != ridge->second.cend(); ++d)
-                        {
-                                add_to_ridges(*(d->get_facet()), d->get_point(), &tmp_ridges);
-                                facets_to_remove.push_back(d->get_facet());
-
-                                // Пометить грань как удалённую
-                                auto del = facets_ptr.find(d->get_facet());
-                                ASSERT(del != facets_ptr.cend());
-                                (*cocone_facets)[del->second] = false;
-                        }
-
-                        for (unsigned f = 0; f < facets_to_remove.size(); ++f)
-                        {
-                                remove_from_ridges(*(facets_to_remove[f]), &ridge_map);
-                        }
-                }
-
-                suspicious_ridges = std::move(tmp_ridges);
-        }
-
-        if (all_empty(*cocone_facets))
-        {
-                error("Cocone triangles not found after prune. Surface is not reconstructable.");
-        }
-}
-
 //   Если вершина находится на краю объекта, то вектором положительного полюса
 // считается сумма перпендикуляров односторонних граней.
 //   Если вершина не находится на краю объекта, то вектором положительного полюса
@@ -331,9 +148,9 @@ vec<N> voronoi_positive_norm(const vec<N>& vertex, const std::vector<DelaunayObj
                              const std::vector<DelaunayFacet<N>>& delaunay_facets, const VertexConnections& vertex_connections)
 {
         bool unbounded = false;
-        for (int facet_index : vertex_connections.facets)
+        for (const VertexConnections::Facet& vertex_facet : vertex_connections.facets)
         {
-                if (delaunay_facets[facet_index].one_sided())
+                if (delaunay_facets[vertex_facet.facet_index].one_sided())
                 {
                         unbounded = true;
                         break;
@@ -345,11 +162,11 @@ vec<N> voronoi_positive_norm(const vec<N>& vertex, const std::vector<DelaunayObj
         if (unbounded)
         {
                 vec<N> sum(0);
-                for (int facet_index : vertex_connections.facets)
+                for (const VertexConnections::Facet& vertex_facet : vertex_connections.facets)
                 {
-                        if (delaunay_facets[facet_index].one_sided())
+                        if (delaunay_facets[vertex_facet.facet_index].one_sided())
                         {
-                                sum = sum + delaunay_facets[facet_index].get_ortho();
+                                sum = sum + delaunay_facets[vertex_facet.facet_index].get_ortho();
                         }
                 }
 
@@ -477,13 +294,13 @@ void cocone_facets_and_voronoi_radius(const vec<N>& vertex, const std::vector<De
                                       std::vector<FacetData<N>>* facet_data, double* radius)
 {
         ASSERT(delaunay_facets.size() == facet_data->size());
-        ASSERT(vertex_connections.facets.size() == vertex_connections.facets_indices.size());
 
         *radius = 0;
 
-        for (unsigned i = 0; i < vertex_connections.facets.size(); ++i)
+        // for (unsigned i = 0; i < vertex_connections.facets.size(); ++i)
+        for (const VertexConnections::Facet& vertex_facet : vertex_connections.facets)
         {
-                const DelaunayFacet<N>& facet = delaunay_facets[vertex_connections.facets[i]];
+                const DelaunayFacet<N>& facet = delaunay_facets[vertex_facet.facet_index];
 
                 // Вектор от вершины к одной из 2 вершин Вороного грани
                 vec<N> pa = delaunay_objects[facet.get_delaunay(0)].get_voronoi_vertex() - vertex;
@@ -513,7 +330,7 @@ void cocone_facets_and_voronoi_radius(const vec<N>& vertex, const std::vector<De
 
                 // Грань считается COCONE, если соответствующее ей ребро Вороного пересекает COCONE всех N вершин.
                 // Найдено пересечение с COCONE одной из вершин.
-                (*facet_data)[vertex_connections.facets[i]].cocone_vertex[vertex_connections.facets_indices[i]] = true;
+                (*facet_data)[vertex_facet.facet_index].cocone_vertex[vertex_facet.vertex_index] = true;
 
                 if (find_radius && *radius != any_max<double>)
                 {
@@ -527,13 +344,6 @@ void cocone_facets_and_voronoi_radius(const vec<N>& vertex, const std::vector<De
         ASSERT(!find_radius || (*radius > 0 && *radius <= any_max<double>));
 }
 
-template <typename T>
-void sort_and_unique(T* v)
-{
-        std::sort(v->begin(), v->end());
-        v->erase(std::unique(v->begin(), v->end()), v->end());
-}
-
 template <size_t N>
 void cocone_neighbors(const std::vector<DelaunayFacet<N>>& delaunay_facets, const std::vector<FacetData<N>>& facet_data,
                       const std::vector<VertexConnections>& vertex_connections, std::vector<VertexData<N>>* vertex_data)
@@ -541,16 +351,14 @@ void cocone_neighbors(const std::vector<DelaunayFacet<N>>& delaunay_facets, cons
         ASSERT(delaunay_facets.size() == facet_data.size());
         ASSERT(vertex_connections.size() == vertex_data->size());
 
-        const int vertex_count = vertex_connections.size();
+        int vertex_count = vertex_connections.size();
 
         for (int vertex_index = 0; vertex_index < vertex_count; ++vertex_index)
         {
-                ASSERT(vertex_connections[vertex_index].facets.size() == vertex_connections[vertex_index].facets_indices.size());
-
-                for (unsigned f = 0; f < vertex_connections[vertex_index].facets.size(); ++f)
+                for (const VertexConnections::Facet& vertex_facet : vertex_connections[vertex_index].facets)
                 {
-                        int facet_index = vertex_connections[vertex_index].facets[f];
-                        unsigned skip_v = vertex_connections[vertex_index].facets_indices[f];
+                        int facet_index = vertex_facet.facet_index;
+                        unsigned skip_v = vertex_facet.vertex_index;
 
                         for (unsigned v = 0; v < N; ++v)
                         {
@@ -587,16 +395,15 @@ void fill_vertex_and_facet_data(bool find_all_vertex_data, const std::vector<vec
                 const std::array<int, N>& vertices = delaunay_facets[facet_index].get_vertices();
                 for (unsigned i = 0; i < vertices.size(); ++i)
                 {
-                        vertex_connections[vertices[i]].facets_indices.push_back(i);
-                        vertex_connections[vertices[i]].facets.push_back(facet_index);
+                        vertex_connections[vertices[i]].facets.emplace_back(facet_index, i);
                 }
         }
 
         for (unsigned object_index = 0; object_index < delaunay_objects.size(); ++object_index)
         {
-                for (int p : delaunay_objects[object_index].get_vertices())
+                for (int vertex : delaunay_objects[object_index].get_vertices())
                 {
-                        vertex_connections[p].objects.push_back(object_index);
+                        vertex_connections[vertex].objects.push_back(object_index);
                 }
         }
 
@@ -669,7 +476,7 @@ void find_cocone_facets(const std::vector<FacetData<N>>& facet_data, std::vector
                 (*cocone_facets)[f] = cocone;
         }
 
-        if (all_empty(*cocone_facets))
+        if (all_false(*cocone_facets))
         {
                 error("Cocone facets not found. Surface is not reconstructable.");
         }
@@ -794,127 +601,20 @@ void find_cocone_interior_facets(const std::vector<DelaunayFacet<N>>& delaunay_f
                 (*cocone_facets)[f] = interior_found && cocone;
         }
 
-        if (all_empty(*cocone_facets))
+        if (all_false(*cocone_facets))
         {
                 error("Cocone interior facets not found. Surface is not reconstructable.");
         }
 }
 
 template <size_t N>
-void find_delaunay_object_facets(const std::vector<DelaunayObject<N>>& delaunay_objects,
-                                 const std::vector<DelaunayFacet<N>>& delaunay_facets,
-                                 std::vector<std::vector<int>>* delaunay_object_facets)
-{
-        delaunay_object_facets->clear();
-        delaunay_object_facets->resize(delaunay_objects.size());
-
-        for (unsigned i = 0; i < delaunay_facets.size(); ++i)
-        {
-                (*delaunay_object_facets)[delaunay_facets[i].get_delaunay(0)].push_back(i);
-                if (delaunay_facets[i].one_sided())
-                {
-                        continue;
-                }
-                (*delaunay_object_facets)[delaunay_facets[i].get_delaunay(1)].push_back(i);
-        }
-}
-
-// Выборка только внешних граней COCONE.
-// Проход по граням Делоне через объекты Делоне, начиная от самых внешних граней.
-// При встречи грани COCONE она помечается как нужная, и за неё идти не надо.
-template <size_t N>
-void traverse_delaunay(const std::vector<DelaunayFacet<N>>& delaunay_facets,
-                       const std::vector<std::vector<int>>& delaunay_object_facets, const std::vector<bool>& cocone_facets,
-                       std::vector<bool>* visited_delaunay, std::vector<bool>* visited_cocone_facets)
-{
-        std::stack<int> next;
-
-        for (unsigned i = 0; i < delaunay_facets.size(); ++i)
-        {
-                // Надо начинать обход с внешних граней
-                if (!delaunay_facets[i].one_sided())
-                {
-                        continue;
-                }
-                next.push(i);
-        }
-
-        while (!next.empty())
-        {
-                int facet_index = next.top();
-                next.pop();
-
-                if (cocone_facets[facet_index])
-                {
-                        (*visited_cocone_facets)[facet_index] = true;
-                        continue;
-                }
-
-                const DelaunayFacet<N>& facet = delaunay_facets[facet_index];
-
-                int delaunay_index;
-                if (facet.one_sided())
-                {
-                        if ((*visited_delaunay)[facet.get_delaunay(0)])
-                        {
-                                continue;
-                        }
-
-                        delaunay_index = facet.get_delaunay(0);
-                }
-                else
-                {
-                        if ((*visited_delaunay)[facet.get_delaunay(0)] && (*visited_delaunay)[facet.get_delaunay(1)])
-                        {
-                                continue;
-                        }
-
-                        ASSERT((*visited_delaunay)[facet.get_delaunay(0)] || (*visited_delaunay)[facet.get_delaunay(1)]);
-
-                        delaunay_index =
-                                (*visited_delaunay)[facet.get_delaunay(0)] ? facet.get_delaunay(1) : facet.get_delaunay(0);
-                }
-
-                (*visited_delaunay)[delaunay_index] = true;
-
-                for (int f : delaunay_object_facets[delaunay_index])
-                {
-                        if (f != facet_index)
-                        {
-                                next.push(f);
-                        }
-                }
-        }
-}
-
-template <size_t N>
-void extract_manifold(const std::vector<DelaunayObject<N>>& delaunay_objects,
-                      const std::vector<DelaunayFacet<N>>& delaunay_facets, std::vector<bool>* cocone_facets)
-{
-        std::vector<std::vector<int>> delaunay_object_facets;
-        std::vector<bool> visited_delaunay(delaunay_objects.size(), false);
-        std::vector<bool> visited_cocone_facets(cocone_facets->size(), false);
-
-        find_delaunay_object_facets(delaunay_objects, delaunay_facets, &delaunay_object_facets);
-
-        traverse_delaunay(delaunay_facets, delaunay_object_facets, *cocone_facets, &visited_delaunay, &visited_cocone_facets);
-
-        *cocone_facets = std::move(visited_cocone_facets);
-
-        if (all_empty(*cocone_facets))
-        {
-                error("Cocone triangles not found after manifold extraction");
-        }
-}
-
-template <size_t N>
 void create_normals_and_facets(const std::vector<DelaunayFacet<N>>& delaunay_facets, const std::vector<bool>& cocone_facets,
-                               const std::vector<VertexData<N>>& vertex_data, std::vector<vec<N>>* vertex_normals,
-                               std::vector<std::array<int, N>>* triangles)
+                               const std::vector<VertexData<N>>& vertex_data, std::vector<vec<N>>* normals,
+                               std::vector<std::array<int, N>>* facets)
 {
         std::unordered_set<int> used_points;
 
-        triangles->clear();
+        facets->clear();
 
         for (unsigned i = 0; i < delaunay_facets.size(); ++i)
         {
@@ -923,7 +623,7 @@ void create_normals_and_facets(const std::vector<DelaunayFacet<N>>& delaunay_fac
                         continue;
                 }
 
-                triangles->push_back(delaunay_facets[i].get_vertices());
+                facets->push_back(delaunay_facets[i].get_vertices());
 
                 for (int index : delaunay_facets[i].get_vertices())
                 {
@@ -931,12 +631,12 @@ void create_normals_and_facets(const std::vector<DelaunayFacet<N>>& delaunay_fac
                 }
         }
 
-        vertex_normals->clear();
-        vertex_normals->resize(vertex_data.size(), vec<N>(0));
+        normals->clear();
+        normals->resize(vertex_data.size(), vec<N>(0));
 
         for (int p : used_points)
         {
-                (*vertex_normals)[p] = vertex_data[p].positive_norm;
+                (*normals)[p] = vertex_data[p].positive_norm;
         }
 }
 
@@ -965,26 +665,42 @@ class SurfaceReconstructor : public ISurfaceReconstructor<N>, public ISurfaceRec
         std::vector<FacetData<N>> m_facet_data;
 
         void common_computation(const std::vector<bool>& interior_vertices, std::vector<bool>&& cocone_facets,
-                                std::vector<vec<N>>* vertex_normals, std::vector<std::array<int, N>>* cocone_triangles,
+                                std::vector<vec<N>>* normals, std::vector<std::array<int, N>>* facets,
                                 ProgressRatio* progress) const
         {
                 progress->set(1, 4);
-                LOG("prune triangles...");
-                prune_triangles_incident_to_sharp_edges(m_points, m_delaunay_facets, interior_vertices, &cocone_facets);
+                LOG("prune facets...");
+
+                prune_facets_incident_to_sharp_ridges(m_points, m_delaunay_facets, interior_vertices, &cocone_facets);
+
+                if (all_false(cocone_facets))
+                {
+                        error("Cocone facets not found after prune");
+                }
+
+                //
 
                 progress->set(2, 4);
                 LOG("extract manifold...");
+
                 extract_manifold(m_delaunay_objects, m_delaunay_facets, &cocone_facets);
+
+                if (all_false(cocone_facets))
+                {
+                        error("Cocone facets not found after manifold extraction");
+                }
+
+                //
 
                 progress->set(3, 4);
                 LOG("create result...");
-                create_normals_and_facets(m_delaunay_facets, cocone_facets, m_vertex_data, vertex_normals, cocone_triangles);
 
-                ASSERT(vertex_normals->size() == m_points.size());
+                create_normals_and_facets(m_delaunay_facets, cocone_facets, m_vertex_data, normals, facets);
+
+                ASSERT(normals->size() == m_points.size());
         }
 
-        void cocone(std::vector<vec<N>>* vertex_normals, std::vector<std::array<int, N>>* cocone_triangles,
-                    ProgressRatio* progress) const override
+        void cocone(std::vector<vec<N>>* normals, std::vector<std::array<int, N>>* facets, ProgressRatio* progress) const override
         {
                 progress->set_text("COCONE reconstruction: %v of %m");
 
@@ -997,7 +713,7 @@ class SurfaceReconstructor : public ISurfaceReconstructor<N>, public ISurfaceRec
                 find_cocone_facets(m_facet_data, &cocone_facets);
                 interior_vertices.resize(m_vertex_data.size(), true);
 
-                common_computation(interior_vertices, std::move(cocone_facets), vertex_normals, cocone_triangles, progress);
+                common_computation(interior_vertices, std::move(cocone_facets), normals, facets, progress);
         }
 
         // ε-sample EPSILON = 0.1;
@@ -1005,8 +721,8 @@ class SurfaceReconstructor : public ISurfaceReconstructor<N>, public ISurfaceRec
         // RHO = 1.3 * EPSILON;
         // α для углов между векторами к положительным полюсам ячеек Вороного
         // ALPHA = 0.14;
-        void bound_cocone(double RHO, double ALPHA, std::vector<vec<N>>* vertex_normals,
-                          std::vector<std::array<int, N>>* cocone_triangles, ProgressRatio* progress) const override
+        void bound_cocone(double RHO, double ALPHA, std::vector<vec<N>>* normals, std::vector<std::array<int, N>>* facets,
+                          ProgressRatio* progress) const override
         {
                 if (m_cocone_only)
                 {
@@ -1024,7 +740,7 @@ class SurfaceReconstructor : public ISurfaceReconstructor<N>, public ISurfaceRec
                 find_interior_vertices(RHO, ALPHA, m_vertex_data, &interior_vertices);
                 find_cocone_interior_facets(m_delaunay_facets, m_facet_data, interior_vertices, &cocone_facets);
 
-                common_computation(interior_vertices, std::move(cocone_facets), vertex_normals, cocone_triangles, progress);
+                common_computation(interior_vertices, std::move(cocone_facets), normals, facets, progress);
         }
 
 public:

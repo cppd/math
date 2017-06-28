@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/math.h"
 #include "com/print.h"
 #include "com/random.h"
-#include "geometry/surface_cocone.h"
+#include "geometry_cocone/surface.h"
 #include "progress/progress.h"
 
 #include <cmath>

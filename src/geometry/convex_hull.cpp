@@ -56,6 +56,7 @@ Chapman & Hall/CRC, 2004.
 
 #include "facet.h"
 #include "linear_algebra.h"
+#include "max_determinant.h"
 #include "ridge.h"
 #include "vec.h"
 #include "vec_array.h"
@@ -622,14 +623,12 @@ void create_convex_hull(const std::vector<Vector<N, S>>& points, FacetList<Facet
 #endif
 }
 
-template <size_t N, typename T, typename ResultType>
-void find_min_max_scale_factor(const std::vector<Vector<N, T>>& points, ResultType from, ResultType to, Vector<N, T>* min,
-                               Vector<N, T>* max, ResultType* scale_factor)
+template <size_t N>
+void find_min_max(const std::vector<Vector<N, float>>& points, Vector<N, float>* min, Vector<N, float>* max)
 {
-        ASSERT(from < to && points.size() > 0);
+        ASSERT(points.size() > 0);
 
         *min = *max = points[0];
-
         for (unsigned i = 1; i < points.size(); ++i)
         {
                 for (unsigned n = 0; n < N; ++n)
@@ -638,9 +637,6 @@ void find_min_max_scale_factor(const std::vector<Vector<N, T>>& points, ResultTy
                         (*max)[n] = std::max((*max)[n], points[i][n]);
                 }
         }
-
-        ResultType mx = max_element(*max - *min);
-        *scale_factor = (mx != 0) ? ((to - from) / mx) : 0;
 }
 
 // Для алгоритма принципиально не нужны одинаковые точки - разность между ними даст нулевой вектор.
@@ -662,11 +658,15 @@ void shuffle_and_convert_to_unique_integer(const std::vector<Vector<N, float>>& 
         std::iota(random_map.begin(), random_map.end(), 0);
         std::shuffle(random_map.begin(), random_map.end(), std::mt19937_64(get_random_seed<std::mt19937_64>()));
 
-        const double interval_begin = 0;
-        const double interval_end = max_value;
         Vector<N, float> min, max;
-        double scale_factor;
-        find_min_max_scale_factor(source_points, interval_begin, interval_end, &min, &max, &scale_factor);
+        find_min_max(source_points, &min, &max);
+
+        double max_d = max_element(max - min);
+        if (max_d == 0)
+        {
+                error("all points are equal to each other");
+        }
+        double scale_factor = max_value / max_d;
 
         std::unordered_set<Vector<N, long long>> unique_check(source_points.size());
 

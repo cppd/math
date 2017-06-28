@@ -95,12 +95,12 @@ class Camera final
 
         void set_vectors(const glm::vec3& right, const glm::vec3& up)
         {
-                m_camera_up = up;
+                m_camera_up = glm::normalize(up);
 
                 // от поверхности на камеру
-                m_camera_direction = glm::cross(right, up);
+                m_camera_direction = glm::cross(glm::normalize(right), m_camera_up);
 
-                m_camera_right = glm::cross(up, m_camera_direction);
+                m_camera_right = glm::cross(m_camera_up, m_camera_direction);
 
                 glm::vec3 light_right = glm::rotate(m_camera_right, to_radians(-45), m_camera_up);
                 m_light_up = glm::rotate(m_camera_up, to_radians(-45), light_right);

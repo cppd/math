@@ -19,11 +19,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/log.h"
 #include "com/random.h"
+#include "com/time.h"
 #include "geometry/convex_hull.h"
 #include "geometry/ridge.h"
 #include "progress/progress.h"
 
-#include <chrono>
 #include <random>
 #include <unordered_map>
 #include <unordered_set>
@@ -161,12 +161,12 @@ void create_convex_hull(std::vector<Vector<N, float>>& points, bool check)
         ProgressRatio pr(nullptr);
 
         LOG("convex hull...");
-        std::chrono::steady_clock::time_point start_time = std::chrono::steady_clock::now();
+        double start_time = get_time_seconds();
 
         compute_convex_hull(points, &facets, &pr);
 
-        std::chrono::duration<double, std::milli> elapsed = std::chrono::steady_clock::now() - start_time;
-        LOG("convex hull created, " + to_string(elapsed.count() / 1000) + " s");
+        double elapsed = get_time_seconds() - start_time;
+        LOG("convex hull created, " + to_string(elapsed) + " s");
         LOG("point count " + to_string(point_count(facets)));
 
         if (!check)
@@ -226,13 +226,13 @@ void convex_hull_test()
                 int size = std::uniform_int_distribution<int>(150, 300)(engine);
 
                 generate_random_data(false, size, &points, on_sphere);
-                LOG("Integer convex hull");
+                LOG("Integer convex hull, point count " + to_string(points.size()));
                 create_convex_hull(points, true);
 
                 LOG("---");
 
                 generate_random_data(true, size, &points, on_sphere);
-                LOG("Integer convex hull");
+                LOG("Integer convex hull, point count " + to_string(points.size()));
                 create_convex_hull(points, true);
 
                 LOG("");

@@ -16,11 +16,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
-#ifndef SURFACE_COCONE_H
-#define SURFACE_COCONE_H
+#ifndef SURFACE_H
+#define SURFACE_H
 
-#include "vec.h"
-
+#include "geometry/vec.h"
 #include "progress/progress.h"
 
 #include <array>
@@ -41,10 +40,10 @@ struct ISurfaceReconstructor
 {
         virtual ~ISurfaceReconstructor() = default;
 
-        virtual void cocone(std::vector<vec<N>>* vertex_normals, std::vector<std::array<int, N>>* cocone_triangles,
+        virtual void cocone(std::vector<vec<N>>* normals, std::vector<std::array<int, N>>* facets,
                             ProgressRatio* progress) const = 0;
-        virtual void bound_cocone(double RHO, double ALPHA, std::vector<vec<N>>* vertex_normals,
-                                  std::vector<std::array<int, N>>* cocone_triangles, ProgressRatio* progress) const = 0;
+        virtual void bound_cocone(double RHO, double ALPHA, std::vector<vec<N>>* normals, std::vector<std::array<int, N>>* facets,
+                                  ProgressRatio* progress) const = 0;
 };
 
 template <size_t N>
