@@ -24,6 +24,39 @@ cmake_minimum_required(VERSION 3.7.2)
 
 ###################################################
 
+enable_language(C CXX)
+
+###################################################
+
+if(NOT CMAKE_C_COMPILER_ID)
+         message(FATAL_ERROR "Empty C compiler id")
+endif()
+if(NOT CMAKE_CXX_COMPILER_ID)
+         message(FATAL_ERROR "Empty C++ compiler id")
+endif()
+set(Compilers "GNU;Clang")
+if(NOT ${CMAKE_C_COMPILER_ID} IN_LIST Compilers)
+        message(FATAL_ERROR "Not supported C compiler ${CMAKE_C_COMPILER_ID}")
+endif()
+if(NOT ${CMAKE_CXX_COMPILER_ID} IN_LIST Compilers)
+        message(FATAL_ERROR "Not supported C++ compiler ${CMAKE_CXX_COMPILER_ID}")
+endif()
+
+# При наличии enable_language(C CXX) можно указать стандарт для всех проектов
+# -std=c11
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+set(CMAKE_C_EXTENSIONS OFF)
+# Указать стандарт C++14 для cmake с помощью CMAKE_CXX_STANDARD вместо явного -std=c++14
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+# Перевести с++14 на с++17, так как cmake версии 3.7.2 не поддерживает set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX14_STANDARD_COMPILE_OPTION "-std=c++1z")
+set(CMAKE_CXX14_EXTENSION_COMPILE_OPTION "-std=gnu++1z")
+
+###################################################
+
 include(CheckCSourceCompiles)
 include(CheckCXXSourceCompiles)
 
@@ -41,19 +74,6 @@ macro (IncludeSourceAndSetCompilerFlags dir_name executable)
         # Чтобы было как "make VERBOSE=1"
         # Добавлять после команды project
         set(CMAKE_VERBOSE_MAKEFILE TRUE)
-
-        # -std=c11
-        set(CMAKE_C_STANDARD 11)
-        set(CMAKE_C_STANDARD_REQUIRED ON)
-        set(CMAKE_C_EXTENSIONS OFF)
-
-        # Указать стандарт C++14 для cmake с помощью CMAKE_CXX_STANDARD вместо явного -std=c++14
-        set(CMAKE_CXX_STANDARD 14)
-        set(CMAKE_CXX_STANDARD_REQUIRED ON)
-        set(CMAKE_CXX_EXTENSIONS OFF)
-        # Перевести с++14 на с++17, так как cmake версии 3.7.2 не поддерживает set(CMAKE_CXX_STANDARD 17)
-        set(CMAKE_CXX14_STANDARD_COMPILE_OPTION "-std=c++1z")
-        set(CMAKE_CXX14_EXTENSION_COMPILE_OPTION "-std=gnu++1z")
 
         if (true)
                 set(extensions h;c;cpp;ui;comp;frag;geom;vert;tesc;tese)
@@ -92,62 +112,25 @@ macro (IncludeSourceAndSetCompilerFlags dir_name executable)
 
         target_compile_definitions(${PROJECT_NAME} PRIVATE -DNDEBUG)
 
-        #C: -Wtraditional -Wtraditional-conversion -Wdouble-promotion
-        #-pedantic -pedantic-errors
-        #-Winline -Waggregate-return -Weffc++ -Wfloat-equal -Wnon-virtual-dtor
-        #-Wpadded -Wconversion -Wsign-conversion -Wfloat-conversion
-        #-fopt-info-missed -fopt-info-vec-missed -S -masm=intel
-        #-Wuseless-cast -Wswitch-default -Werror -Wfatal-errors
-        #-pthread -march=native -pg -mavx
-        #-funsafe-loop-optimizations -Wunsafe-loop-optimizations
-        #-Wmultiple-inheritance -Wsuggest-attribute=pure -Wsuggest-attribute=const
-        #-O3 -ffast-math
+        #-pedantic -pedantic-errors -fopt-info-missed -fopt-info-vec-missed -S -masm=intel
+        #-pg -funsafe-loop-optimizations -Wunsafe-loop-optimizations -O3 -ffast-math -march=native
 
         target_link_libraries(${PROJECT_NAME} -pthread)
         target_compile_options(${PROJECT_NAME} PRIVATE -pthread)
 
         target_compile_options(${PROJECT_NAME} PRIVATE
-                -Ofast -mavx -mfma #-march=native
+                -Ofast -mavx -mfma
                 $<$<COMPILE_LANGUAGE:CXX>:
                         -fno-rtti -fstrict-enums
                 >
                 $<$<CXX_COMPILER_ID:GNU>:
                         -funsafe-loop-optimizations
-                        -Wall -Wextra
-                        $<$<COMPILE_LANGUAGE:CXX>:
-                                -Wabi -Wcast-align -Wcast-qual -Wdisabled-optimization -Wswitch-enum
-                                -Wformat=2 -Wformat-signedness -Wunused -Wunused-parameter -Wwrite-strings
-                                -Wframe-larger-than=10000 -Winit-self -Wlarger-than=1000000 -Wlogical-op
-                                -Wmissing-include-dirs -Wmissing-noreturn -Wredundant-decls -Wshadow -Wnoexcept
-                                -Wstack-usage=10000 -Wstrict-aliasing=3 -Wstrict-overflow=1 -Wtrampolines
-                                -Wundef -Wunreachable-code -Wenum-compare -Wvla -Wold-style-cast -Wsign-promo
-                                -Woverloaded-virtual -Wzero-as-null-pointer-constant -Wconditionally-supported
-                                -Wduplicated-cond -Wdate-time -Wsuggest-final-types -Wsuggest-final-methods
-                                -Wsuggest-override -Wsuggest-attribute=noreturn -Wsuggest-attribute=format
-                                -Wmissing-format-attribute -Wmissing-declarations -Wpacked -Wdisabled-optimization
-                                -Wvirtual-inheritance -Wctor-dtor-privacy
-                        >
-                        $<$<COMPILE_LANGUAGE:C>:
-                                -Wabi -Wcast-align -Wcast-qual -Wdisabled-optimization -Wswitch-enum
-                                -Wformat=2 -Wformat-signedness -Wunused -Wunused-parameter -Wwrite-strings
-                                -Wframe-larger-than=10000 -Winit-self -Wlarger-than=10000 -Wlogical-op
-                                -Wmissing-include-dirs -Wmissing-noreturn -Wredundant-decls -Wshadow
-                                -Wstack-usage=10000 -Wstrict-aliasing=3 -Wstrict-overflow=1 -Wtrampolines
-                                -Wundef -Wunreachable-code -Wenum-compare -Wvla -Wbad-function-cast
-                                -Wjump-misses-init -Wstrict-prototypes -Wold-style-definition -Wc++-compat
-                                -Wmissing-prototypes -Wmissing-declarations -Wnested-externs -Wdate-time
-                                -Wunsuffixed-float-constants -Wduplicated-cond -Wpacked -Wdisabled-optimization
-                        >
                 >
                 $<$<CXX_COMPILER_ID:Clang>:
-                        -Weverything
-                        $<$<COMPILE_LANGUAGE:CXX>:
-                                -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-padded -Wno-conversion
-                                -Wno-weak-vtables -Wno-float-equal -Wno-double-promotion
-                                -Wno-exit-time-destructors
-                        >
                 >
         )
+
+        include ("${CMAKE_SOURCE_DIR}/cmake/cmake_compiler_warnings.cmake")
 
 endmacro()
 
