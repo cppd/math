@@ -18,7 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <algorithm>
-#include <vector>
 
 template <typename T>
 void sort_and_unique(T* v)
@@ -27,12 +26,28 @@ void sort_and_unique(T* v)
         v->erase(std::unique(v->begin(), v->end()), v->end());
 }
 
+// Можно вместо этого использовать std::all_of или std::find(v.cbegin(), v.cend(), true) == v.cend()
 template <typename T>
-bool all_false(const std::vector<T>& v)
+bool all_false(const T& v)
 {
-        for (unsigned i = 0; i < v.size(); ++i)
+        int size = v.size();
+        for (int i = 0; i < size; ++i)
         {
                 if (v[i])
+                {
+                        return false;
+                }
+        }
+        return true;
+}
+// Можно вместо этого использовать std::all_of или std::find(v.cbegin(), v.cend(), false) == v.cend()
+template <typename T>
+bool all_true(const T& v)
+{
+        int size = v.size();
+        for (int i = 0; i < size; ++i)
+        {
+                if (!v[i])
                 {
                         return false;
                 }
