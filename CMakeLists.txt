@@ -19,9 +19,14 @@ cmake_minimum_required(VERSION 3.7.2)
 
 ##################################################
 
-enable_language(C CXX)
+set(compilers "GNU;Clang")
 
-set(Compilers "GNU;Clang")
+set(extensions_shaders "comp;frag;geom;vert;tesc;tese")
+set(extensions_all "h;c;cpp;ui" ${extensions_shaders})
+
+##################################################
+
+enable_language(C CXX)
 
 if(NOT CMAKE_C_COMPILER_ID)
          message(FATAL_ERROR "Empty C compiler id")
@@ -29,17 +34,17 @@ endif()
 if(NOT CMAKE_CXX_COMPILER_ID)
          message(FATAL_ERROR "Empty C++ compiler id")
 endif()
-if(NOT (${CMAKE_C_COMPILER_ID} IN_LIST Compilers))
+if(NOT (${CMAKE_C_COMPILER_ID} IN_LIST compilers))
         message(WARNING "Not supported C compiler ${CMAKE_C_COMPILER_ID}")
 endif()
-if(NOT (${CMAKE_CXX_COMPILER_ID} IN_LIST Compilers))
+if(NOT (${CMAKE_CXX_COMPILER_ID} IN_LIST compilers))
         message(WARNING "Not supported C++ compiler ${CMAKE_CXX_COMPILER_ID}")
 endif()
 if((${CMAKE_C_COMPILER_ID} STREQUAL "GNU") AND (${CMAKE_C_COMPILER_VERSION} VERSION_LESS 7.1))
-        message(WARNING "Not supported GCC C compiler version ${CMAKE_C_COMPILER_VERSION}")
+        message(FATAL_ERROR "Not supported GCC C compiler version ${CMAKE_C_COMPILER_VERSION}")
 endif()
 if((${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU") AND (${CMAKE_CXX_COMPILER_VERSION} VERSION_LESS 7.1))
-        message(WARNING "Not supported GCC C++ compiler version ${CMAKE_C_COMPILER_VERSION}")
+        message(FATAL_ERROR "Not supported GCC C++ compiler version ${CMAKE_CXX_COMPILER_VERSION}")
 endif()
 
 # При наличии enable_language(C CXX) можно указать стандарт для всех проектов
@@ -64,7 +69,7 @@ include(CheckCXXSourceCompiles)
 
 ##################################################
 
-macro (IncludeSourceAndSetCompilerFlags dir_name executable)
+function(IncludeSourceAndSetCompilerFlags dir_name executable extensions)
 
         if ("${PROJECT_BINARY_DIR}" STREQUAL "${PROJECT_SOURCE_DIR}")
                 message(FATAL_ERROR "In-source build")
@@ -73,21 +78,16 @@ macro (IncludeSourceAndSetCompilerFlags dir_name executable)
         set(CMAKE_C_FLAGS)
         set(CMAKE_CXX_FLAGS)
 
-        if (true)
-                set(extensions "h;c;cpp;ui;comp;frag;geom;vert;tesc;tese")
-                unset(all_globbing_expressions)
-                foreach(ext ${extensions})
-                        list(APPEND all_globbing_expressions "${PROJECT_SOURCE_DIR}/${dir_name}/*.${ext}")
-                endforeach()
-                file(GLOB_RECURSE SRC_FILES LIST_DIRECTORIES false ${all_globbing_expressions})
-        else()
-                file(GLOB_RECURSE SRC_FILES LIST_DIRECTORIES false ${PROJECT_SOURCE_DIR}/${dir_name}/*)
-        endif()
+        foreach(ext ${extensions})
+                list(APPEND all_globbing_expressions "${PROJECT_SOURCE_DIR}/${dir_name}/*.${ext}")
+        endforeach()
+
+        file(GLOB_RECURSE source_files LIST_DIRECTORIES false ${all_globbing_expressions})
 
         if (${executable})
-                add_executable(${PROJECT_NAME} ${SRC_FILES})
+                add_executable(${PROJECT_NAME} ${source_files})
         else()
-                add_library(${PROJECT_NAME} SHARED ${SRC_FILES})
+                add_library(${PROJECT_NAME} SHARED ${source_files})
         endif()
 
         #   CMake при использовании target_include_directories вставляет -I,
@@ -121,17 +121,17 @@ macro (IncludeSourceAndSetCompilerFlags dir_name executable)
 
         include("${CMAKE_SOURCE_DIR}/cmake/cmake_compiler_warnings.cmake")
 
-endmacro()
+endfunction()
 
-macro(AddShaders dir_name shader_type extensions)
+function(AddShaders dir_name shader_type extensions)
 
-        unset(all_globbing_expressions)
         foreach(ext ${extensions})
                 list(APPEND all_globbing_expressions "${PROJECT_SOURCE_DIR}/${dir_name}/*.${ext}")
         endforeach()
-        file(GLOB_RECURSE SHADER_FILES LIST_DIRECTORIES false ${all_globbing_expressions})
 
-        foreach(long_shader_name ${SHADER_FILES})
+        file(GLOB_RECURSE shader_files LIST_DIRECTORIES false ${all_globbing_expressions})
+
+        foreach(long_shader_name ${shader_files})
                 get_filename_component(shader_name ${long_shader_name} NAME)
 
                 add_custom_command(
@@ -142,15 +142,15 @@ macro(AddShaders dir_name shader_type extensions)
                         WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
                         )
 
-                string(CONCAT TARGET_NAME "custom_target_" "${shader_name}")
-                add_custom_target(${TARGET_NAME} DEPENDS "${PROJECT_BINARY_DIR}/${shader_name}.${shader_type}")
-                add_dependencies(${TARGET_NAME} create_str)
-                add_dependencies(${PROJECT_NAME} ${TARGET_NAME})
+                string(CONCAT target_name "custom_target_" "${shader_name}")
+                add_custom_target(${target_name} DEPENDS "${PROJECT_BINARY_DIR}/${shader_name}.${shader_type}")
+                add_dependencies(${target_name} create_str)
+                add_dependencies(${PROJECT_NAME} ${target_name})
         endforeach()
 
         target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_BINARY_DIR})
 
-endmacro()
+endfunction()
 
 function(Check_C_Has_Int128)
         check_c_source_compiles("int main(void){__int128 v;}" C_HAS_INT128)
@@ -170,13 +170,13 @@ endfunction()
 
 project(create_str C CXX)
 
-IncludeSourceAndSetCompilerFlags(src_str true)
+IncludeSourceAndSetCompilerFlags(src_str true "${extensions_all}")
 
 ##################################################
 
 project(create_gl C CXX)
 
-IncludeSourceAndSetCompilerFlags(src_gl true)
+IncludeSourceAndSetCompilerFlags(src_gl true "${extensions_all}")
 
 ##################################################
 
@@ -191,11 +191,11 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 Check_C_Has_Int128()
 Check_CXX_Has_Int128()
 
-IncludeSourceAndSetCompilerFlags(src true)
+IncludeSourceAndSetCompilerFlags(src true "${extensions_all}")
 
 #target_compile_options(${PROJECT_NAME} PRIVATE -S -masm=intel)
 
-AddShaders(src str "comp;frag;geom;vert;tesc;tese")
+AddShaders(src str "${extensions_shaders}")
 AddShaders(extern/resources bin "ttf")
 
 target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC "${CMAKE_SOURCE_DIR}/extern/include")
