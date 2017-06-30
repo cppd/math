@@ -118,7 +118,7 @@ bool sharp_ridge(const std::vector<vec<N>>& points, const std::vector<bool>& int
         // можно применить формулу косинуса суммы углов
         // cos(a + b) = cos(a)cos(b) - sin(a)sin(b)
         // Здесь нужен модуль синуса, так как ранее в программе sin_minus <= 0.
-        double cos_a_plus_b = cos_plus * cos_minus - std::fabs(sin_plus * sin_minus);
+        double cos_a_plus_b = cos_plus * cos_minus - std::abs(sin_plus * sin_minus);
 
         // Если сумма углов меньше 90 градусов, то грань острая
         return cos_a_plus_b > 0;

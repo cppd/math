@@ -39,7 +39,7 @@ bool voronoi_edge_intersects_cocone(T cos_n_a, T cos_n_b)
 
         constexpr T cos_cocone = CoconeImplementation::COS_OF_AN_OPENING_ANGLE_WITH_THE_AXIS<T>;
 
-        if (fabs(cos_n_a) < cos_cocone || fabs(cos_n_b) < cos_cocone)
+        if (any_abs(cos_n_a) < cos_cocone || any_abs(cos_n_b) < cos_cocone)
         {
                 return true;
         }
@@ -59,7 +59,7 @@ bool cocone_inside_or_equal(T... cos_n_p)
 {
         static_assert((native_floating_point<T> && ...));
 
-        return ((fabs(cos_n_p) <= CoconeImplementation::COS_OF_AN_OPENING_ANGLE_WITH_THE_AXIS<T>)&&...);
+        return ((any_abs(cos_n_p) <= CoconeImplementation::COS_OF_AN_OPENING_ANGLE_WITH_THE_AXIS<T>)&&...);
 }
 
 /*
@@ -142,12 +142,12 @@ bool intersect_cocone(const Vector<N, T>& normalized_cone_axis, const Vector<N, 
         if (dot_1 > dot_2)
         {
                 *from_apex_to_intersection_point = pi_1;
-                *distance = sqrt(dot_1);
+                *distance = any_sqrt(dot_1);
         }
         else
         {
                 *from_apex_to_intersection_point = pi_2;
-                *distance = sqrt(dot_2);
+                *distance = any_sqrt(dot_2);
         }
 
         return true;

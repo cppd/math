@@ -63,8 +63,8 @@ double discrepancy(const std::vector<complex>& x1, const std::vector<complex>& x
         double sum2 = 0;
         for (size_t i = 0; i < x1.size(); ++i)
         {
-                sum += std::fabs(x1[i] - x2[i]);
-                sum2 += std::fabs(x1[i]);
+                sum += std::abs(x1[i] - x2[i]);
+                sum2 += std::abs(x1[i]);
         }
         return sum / sum2;
 }

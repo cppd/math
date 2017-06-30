@@ -43,34 +43,34 @@ constexpr T square(const T& v)
 }
 
 template <typename T>
-T fabs(T a)
+T any_abs(T a)
 {
         static_assert(std::is_floating_point<T>::value);
-        return std::fabs(a);
+        return std::abs(a);
 }
 template <typename T>
-T fma(T a, T b, T c)
+T any_fma(T a, T b, T c)
 {
         static_assert(std::is_floating_point<T>::value);
         return std::fma(a, b, c);
 }
 template <typename T>
-T sqrt(T a)
+T any_sqrt(T a)
 {
         static_assert(std::is_floating_point<T>::value);
         return std::sqrt(a);
 }
 
 #if !defined(__clang__)
-inline __float128 fabs(__float128 a)
+inline __float128 any_abs(__float128 a)
 {
         return fabsq(a);
 }
-inline __float128 fma(__float128 a, __float128 b, __float128 c)
+inline __float128 any_fma(__float128 a, __float128 b, __float128 c)
 {
         return fmaq(a, b, c);
 }
-inline __float128 sqrt(__float128 a)
+inline __float128 any_sqrt(__float128 a)
 {
         return sqrtq(a);
 }

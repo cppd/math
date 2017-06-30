@@ -198,7 +198,7 @@ void surface_test()
 
                 generate_random_data(count, &points);
 
-                std::unique_ptr<ISurfaceReconstructor<3>> sr = create_surface_reconstructor(points, &progress);
+                std::unique_ptr<ISurfaceConstructor<3>> sr = create_surface_constructor(points, &progress);
 
                 sr->cocone(&normals, &facets, &progress);
                 sr->bound_cocone(0.3, 0.14, &normals, &facets, &progress);

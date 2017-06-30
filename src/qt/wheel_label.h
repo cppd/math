@@ -35,7 +35,7 @@ public:
         explicit WheelLabel(QWidget* parent = nullptr, Qt::WindowFlags = Qt::WindowFlags()) : QLabel(parent)
         {
         }
-        ~WheelLabel()
+        ~WheelLabel() override
         {
         }
 

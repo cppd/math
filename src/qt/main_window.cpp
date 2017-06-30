@@ -245,7 +245,7 @@ void MainWindow::thread_cocone() noexcept
                         std::vector<vec<3>> normals;
                         std::vector<std::array<int, 3>> facets;
 
-                        m_surface_reconstructor->cocone(&normals, &facets, &progress);
+                        m_surface_constructor->cocone(&normals, &facets, &progress);
 
                         m_surface_cocone = create_obj_for_facets(m_surface_points, normals, facets);
 
@@ -292,7 +292,7 @@ void MainWindow::thread_bound_cocone(double rho, double alpha) noexcept
                         std::vector<vec<3>> normals;
                         std::vector<std::array<int, 3>> facets;
 
-                        m_surface_reconstructor->bound_cocone(rho, alpha, &normals, &facets, &progress);
+                        m_surface_constructor->bound_cocone(rho, alpha, &normals, &facets, &progress);
 
                         m_surface_bound_cocone = create_obj_for_facets(m_surface_points, normals, facets);
 
@@ -334,7 +334,7 @@ void MainWindow::thread_bound_cocone(double rho, double alpha) noexcept
         m_bound_cocone_loading = false;
 }
 
-void MainWindow::thread_surface_reconstructor() noexcept
+void MainWindow::thread_surface_constructor() noexcept
 {
         try
         {
@@ -342,7 +342,7 @@ void MainWindow::thread_surface_reconstructor() noexcept
 
                 double start_time = get_time_seconds();
 
-                m_surface_reconstructor = create_surface_reconstructor(to_vector<float>(m_surface_points), &progress);
+                m_surface_constructor = create_surface_constructor(to_vector<float>(m_surface_points), &progress);
 
                 LOG("Surface reconstruction first phase, " + to_string(get_time_seconds() - start_time, 5) + " s");
 
@@ -390,7 +390,7 @@ void MainWindow::thread_open_file(const std::string& file_name) noexcept
                 }
 
                 m_show->delete_all_objects();
-                m_surface_reconstructor.reset();
+                m_surface_constructor.reset();
                 m_surface_cocone.reset();
                 m_surface_bound_cocone.reset();
 
@@ -403,7 +403,7 @@ void MainWindow::thread_open_file(const std::string& file_name) noexcept
                 std::vector<std::string> msg(2);
 
                 launch_class_thread(&threads[0], &msg[0], &MainWindow::thread_model, this, obj);
-                launch_class_thread(&threads[1], &msg[1], &MainWindow::thread_surface_reconstructor, this);
+                launch_class_thread(&threads[1], &msg[1], &MainWindow::thread_surface_constructor, this);
 
                 join_threads(&threads, &msg);
         }
@@ -459,9 +459,9 @@ void MainWindow::on_Button_LoadBoundCocone_clicked()
                 message_warning("Busy loading bound cocone");
                 return;
         }
-        if (!m_surface_reconstructor)
+        if (!m_surface_constructor)
         {
-                message_warning("No surface reconstructor");
+                message_warning("No surface constructor");
                 return;
         }
 

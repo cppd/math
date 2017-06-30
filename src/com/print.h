@@ -51,8 +51,8 @@ std::enable_if_t<std::is_floating_point<T>::value, std::string> to_string(std::c
         std::ostringstream o;
         o << std::setprecision(std::numeric_limits<T>::max_digits10);
 
-        o << (t.real() >= 0 ? " " : "-") << std::fabs(t.real());
-        o << (t.imag() >= 0 ? " + " : " - ") << std::fabs(t.imag()) << "*I";
+        o << (t.real() >= 0 ? " " : "-") << std::abs(t.real());
+        o << (t.imag() >= 0 ? " + " : " - ") << std::abs(t.imag()) << "*I";
 
         return o.str();
 }

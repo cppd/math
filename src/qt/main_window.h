@@ -34,7 +34,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 
 template <size_t N>
-struct ISurfaceReconstructor;
+struct ISurfaceConstructor;
 
 class MainWindow final : public QMainWindow, public ICallBack
 {
@@ -42,7 +42,7 @@ class MainWindow final : public QMainWindow, public ICallBack
 
 public:
         explicit MainWindow(QWidget* parent = nullptr);
-        ~MainWindow();
+        ~MainWindow() override;
 
 protected:
         void showEvent(QShowEvent* e) override;
@@ -104,7 +104,7 @@ private:
 
         void thread_open_file(const std::string& file_name) noexcept;
         void thread_model(std::shared_ptr<IObj> obj) noexcept;
-        void thread_surface_reconstructor() noexcept;
+        void thread_surface_constructor() noexcept;
         void thread_cocone() noexcept;
         void thread_bound_cocone(double rho, double alpha) noexcept;
 
@@ -153,7 +153,7 @@ private:
         std::thread m_bound_cocone_thread;
 
         std::vector<glm::vec3> m_surface_points;
-        std::unique_ptr<ISurfaceReconstructor<3>> m_surface_reconstructor;
+        std::unique_ptr<ISurfaceConstructor<3>> m_surface_constructor;
 
         std::atomic_bool m_file_loading;
         std::atomic_bool m_bound_cocone_loading;

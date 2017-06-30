@@ -93,7 +93,7 @@ public:
                   m_backward(true, n1, n2, &m_src, &m_res)
         {
         }
-        ~DFT()
+        ~DFT() override
         {
         }
 

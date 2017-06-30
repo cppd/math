@@ -166,7 +166,7 @@ class SurfaceObj final : public IObj
                         points[v_i] = to_vec<float>(normalize(v));
                         points[v_i][0] *= 1.1;
 
-                        // points[v_i][2] = std::fabs(points[v_i][2]);
+                        // points[v_i][2] = std::abs(points[v_i][2]);
                 }
 
                 return points;
@@ -184,7 +184,7 @@ public:
 
                 double start_time = get_time_seconds();
 
-                std::unique_ptr<ISurfaceReconstructor<3>> sr = create_surface_reconstructor(to_vector<float>(points), progress);
+                std::unique_ptr<ISurfaceConstructor<3>> sr = create_surface_constructor(to_vector<float>(points), progress);
                 sr->cocone(&normals, &facets, progress);
                 // sr->bound_cocone(0.3, 0.14, &normals, &facets, progress);
 

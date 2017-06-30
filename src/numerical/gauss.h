@@ -38,11 +38,11 @@ namespace GaussImplementation
 template <size_t N, typename T>
 int find_pivot(const std::array<std::array<T, N>, N>& A, int column, int from_row)
 {
-        T max = fabs(A[from_row][column]);
+        T max = any_abs(A[from_row][column]);
         int pivot = from_row;
         for (int r = from_row + 1; r < int(N); ++r)
         {
-                T v = fabs(A[r][column]);
+                T v = any_abs(A[r][column]);
                 if (v > max)
                 {
                         max = v;
@@ -78,10 +78,10 @@ std::enable_if_t<any_floating_point<T>> linear_solve(std::array<std::array<T, Si
                         for (int j = k; j < N; ++j)
                         {
                                 // A[i][j] = A[i][j] - l_ik * A[k][j];
-                                A[i][j] = fma(-l_ik, A[k][j], A[i][j]);
+                                A[i][j] = any_fma(-l_ik, A[k][j], A[i][j]);
                         }
                         // b[i] = b[i] - l_ik * b[k];
-                        b[i] = fma(-l_ik, b[k], b[i]);
+                        b[i] = any_fma(-l_ik, b[k], b[i]);
                 }
         }
 
@@ -91,7 +91,7 @@ std::enable_if_t<any_floating_point<T>> linear_solve(std::array<std::array<T, Si
                 for (int j = k + 1; j < N; ++j)
                 {
                         // b[k] = b[k] - A[k][j] * b[j];
-                        b[k] = fma(-A[k][j], b[j], b[k]);
+                        b[k] = any_fma(-A[k][j], b[j], b[k]);
                 }
                 b[k] = b[k] / A[k][k];
         }
@@ -121,7 +121,7 @@ std::enable_if_t<any_floating_point<T>, T> determinant_gauss(const std::array<st
                         for (int j = k; j < N; ++j)
                         {
                                 // A[i][j] = A[i][j] - l_ik * A[k][j];
-                                A[i][j] = fma(-l_ik, A[k][j], A[i][j]);
+                                A[i][j] = any_fma(-l_ik, A[k][j], A[i][j]);
                         }
                 }
         }

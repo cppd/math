@@ -40,6 +40,7 @@ bool all_false(const T& v)
         }
         return true;
 }
+
 // Можно вместо этого использовать std::all_of или std::find(v.cbegin(), v.cend(), false) == v.cend()
 template <typename T>
 bool all_true(const T& v)

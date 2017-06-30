@@ -374,7 +374,7 @@ public:
                 m_thread = std::thread(&ShowObject::loop_thread, this);
         }
 
-        ~ShowObject()
+        ~ShowObject() override
         {
                 if (m_thread.joinable())
                 {

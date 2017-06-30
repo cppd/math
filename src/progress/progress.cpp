@@ -49,7 +49,7 @@ public:
                 }
         }
 
-        ~Impl()
+        ~Impl() override
         {
                 if (m_ratios)
                 {

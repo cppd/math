@@ -29,7 +29,7 @@ bool quadratic_equation(T a, T b, T c, T* r1, T* r2)
                 return false;
         }
 
-        T sqrt_d = sqrt(discriminant);
+        T sqrt_d = any_sqrt(discriminant);
 
         if (b >= 0)
         {

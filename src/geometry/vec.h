@@ -185,7 +185,7 @@ T dot(const Vector<N, T>& a, const Vector<N, T>& b)
         T result = a[0] * b[0];
         for (unsigned i = 1; i < N; ++i)
         {
-                result = fma(a[i], b[i], result);
+                result = any_fma(a[i], b[i], result);
         }
         return result;
 }
@@ -193,7 +193,7 @@ T dot(const Vector<N, T>& a, const Vector<N, T>& b)
 template <size_t N, typename T>
 T length(const Vector<N, T>& a)
 {
-        return sqrt(dot(a, a));
+        return any_sqrt(dot(a, a));
 }
 
 template <size_t N, typename T>

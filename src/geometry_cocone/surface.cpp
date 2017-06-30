@@ -39,31 +39,58 @@ Cambridge University Press, 2007.
 
 #include <unordered_set>
 
+constexpr double RHO_MIN = 0, RHO_MAX = 1;
+constexpr double ALPHA_MIN = 0, ALPHA_MAX = 1;
+
 namespace
 {
+template <size_t N>
+bool cocone_facet(const std::vector<SurfaceFacet<N>>& facet_data, int facet)
+{
+        // Грань считается COCONE, если соответствующее ей ребро Вороного пересекает COCONE всех N вершин
+        for (unsigned v = 0; v < N; ++v)
+        {
+                if (!facet_data[facet].cocone_vertex[v])
+                {
+                        return false;
+                }
+        }
+        return true;
+}
+
 template <size_t N>
 void find_cocone_facets(const std::vector<SurfaceFacet<N>>& facet_data, std::vector<bool>* cocone_facets)
 {
         cocone_facets->clear();
         cocone_facets->resize(facet_data.size());
 
-        bool found = false;
         for (unsigned f = 0; f < facet_data.size(); ++f)
         {
-                // Грань считается COCONE, если соответствующее ей ребро Вороного пересекает COCONE всех N вершин
-                bool cocone = all_true(facet_data[f].cocone_vertex);
-                (*cocone_facets)[f] = cocone;
-                found = found || cocone;
-        }
-
-        if (!found)
-        {
-                error("Cocone facets not found. Surface is not reconstructable.");
+                (*cocone_facets)[f] = cocone_facet(facet_data, f);
         }
 }
 
+// В книге это Definition 5.4 (i)
 template <size_t N>
-void find_interior_vertices(double RHO, double ALPHA, const std::vector<SurfaceVertex<N>>& vertex_data,
+bool ratio_condition(const SurfaceVertex<N>& vertex, double rho)
+{
+        return vertex.radius <= rho * vertex.height;
+}
+
+// В книге это Definition 5.4 (ii)
+template <size_t N>
+bool normal_condition(const SurfaceVertex<N>& v1, const SurfaceVertex<N>& v2, double cos_of_alpha)
+{
+        double cos_of_angle = dot(v1.positive_norm, v2.positive_norm);
+
+        // Используется абсолютное значение косинуса, так как положительные полюсы
+        // могут быть в противоположных направлениях у соседних вершин в зависимости
+        // от ситуации с ячейками Вороного.
+        return std::abs(cos_of_angle) >= cos_of_alpha;
+}
+
+template <size_t N>
+void find_interior_vertices(double rho, double cosine_of_alpha, const std::vector<SurfaceVertex<N>>& vertex_data,
                             std::vector<bool>* interior_vertices)
 {
         interior_vertices->clear();
@@ -73,19 +100,18 @@ void find_interior_vertices(double RHO, double ALPHA, const std::vector<SurfaceV
 
         for (unsigned v = 0; v < vertex_data.size(); ++v)
         {
-                const SurfaceVertex<N>& data = vertex_data[v];
+                const SurfaceVertex<N>& vertex = vertex_data[v];
 
-                if (!(data.radius <= RHO * data.height))
+                if (!ratio_condition(vertex, rho))
                 {
                         continue;
                 }
 
                 bool flat = true;
-
                 // Нужно соответствие угла со всеми соседними вершинами
-                for (int n : data.cocone_neighbors)
+                for (int n : vertex.cocone_neighbors)
                 {
-                        if (!(dot(data.positive_norm, vertex_data[n].positive_norm) >= ALPHA))
+                        if (!normal_condition(vertex, vertex_data[n], cosine_of_alpha))
                         {
                                 flat = false;
                                 break;
@@ -99,12 +125,12 @@ void find_interior_vertices(double RHO, double ALPHA, const std::vector<SurfaceV
                 }
         }
 
+        LOG("interior points after initial phase: " + to_string(interior_count) + " (" + to_string(vertex_data.size()) + ")");
+
         if (interior_count == 0)
         {
-                error("interior points not found");
+                return;
         }
-
-        LOG("interior points after initial phase: " + to_string(interior_count) + " (" + to_string(vertex_data.size()) + ")");
 
         bool found;
         do
@@ -118,14 +144,14 @@ void find_interior_vertices(double RHO, double ALPHA, const std::vector<SurfaceV
                                 continue;
                         }
 
-                        const SurfaceVertex<N>& data = vertex_data[v];
+                        const SurfaceVertex<N>& vertex = vertex_data[v];
 
-                        if (!(data.radius <= RHO * data.height))
+                        if (!ratio_condition(vertex, rho))
                         {
                                 continue;
                         }
 
-                        for (int n : data.cocone_neighbors)
+                        for (int n : vertex.cocone_neighbors)
                         {
                                 // Достаточно соответствия угла с одной соседней вершиной, являющейся внутренней
 
@@ -134,7 +160,7 @@ void find_interior_vertices(double RHO, double ALPHA, const std::vector<SurfaceV
                                         continue;
                                 }
 
-                                if (dot(data.positive_norm, vertex_data[n].positive_norm) >= ALPHA)
+                                if (normal_condition(vertex, vertex_data[n], cosine_of_alpha))
                                 {
                                         (*interior_vertices)[v] = true;
                                         found = true;
@@ -150,6 +176,30 @@ void find_interior_vertices(double RHO, double ALPHA, const std::vector<SurfaceV
 }
 
 template <size_t N>
+bool cocone_interior_facet(const std::vector<DelaunayFacet<N>>& delaunay_facets, const std::vector<SurfaceFacet<N>>& facet_data,
+                           const std::vector<bool>& interior_vertices, int facet)
+{
+        // Все вершины грани должны быть interior_cocone или boundary,
+        // при этом требуется хотя бы одна interior_cocone.
+        bool found = false;
+        for (unsigned v = 0; v < N; ++v)
+        {
+                bool interior = interior_vertices[delaunay_facets[facet].get_vertices()[v]];
+
+                bool interior_cocone = interior && facet_data[facet].cocone_vertex[v];
+                bool boundary = !interior;
+
+                if (!(interior_cocone || boundary))
+                {
+                        return false;
+                }
+
+                found = found || interior_cocone;
+        }
+        return found;
+}
+
+template <size_t N>
 void find_cocone_interior_facets(const std::vector<DelaunayFacet<N>>& delaunay_facets,
                                  const std::vector<SurfaceFacet<N>>& facet_data, const std::vector<bool>& interior_vertices,
                                  std::vector<bool>* cocone_facets)
@@ -157,33 +207,11 @@ void find_cocone_interior_facets(const std::vector<DelaunayFacet<N>>& delaunay_f
         ASSERT(delaunay_facets.size() == facet_data.size());
 
         cocone_facets->clear();
-        cocone_facets->resize(delaunay_facets.size());
+        cocone_facets->resize(facet_data.size());
 
         for (unsigned f = 0; f < facet_data.size(); ++f)
         {
-                bool cocone = true;
-                bool interior_found = false;
-                for (unsigned v = 0; v < N; ++v)
-                {
-                        bool interior_cocone =
-                                interior_vertices[delaunay_facets[f].get_vertices()[v]] && facet_data[f].cocone_vertex[v];
-                        bool boundary = !interior_vertices[delaunay_facets[f].get_vertices()[v]];
-                        if (!(interior_cocone || boundary))
-                        {
-                                cocone = false;
-                                break;
-                        }
-                        if (interior_cocone)
-                        {
-                                interior_found = true;
-                        }
-                }
-                (*cocone_facets)[f] = interior_found && cocone;
-        }
-
-        if (all_false(*cocone_facets))
-        {
-                error("Cocone interior facets not found. Surface is not reconstructable.");
+                (*cocone_facets)[f] = cocone_interior_facet(delaunay_facets, facet_data, interior_vertices, f);
         }
 }
 
@@ -233,8 +261,22 @@ void create_voronoi_delaunay(const std::vector<Vector<N, float>>& source_points,
         create_delaunay_objects_and_facets(*points, delaunay_simplices, delaunay_objects, delaunay_facets);
 }
 
+void check_rho_and_aplha(double rho, double alpha)
+{
+        if (!(rho > RHO_MIN && rho < RHO_MAX))
+        {
+                std::string interval = "(" + to_string(RHO_MIN) + ", " + to_string(RHO_MAX) + ")";
+                error("Rho must be in the interval " + interval + ", but rho = " + to_string(rho, 10));
+        }
+        if (!(alpha > ALPHA_MIN && alpha < ALPHA_MAX))
+        {
+                std::string interval = "(" + to_string(ALPHA_MIN) + ", " + to_string(ALPHA_MAX) + ")";
+                error("Alpha must be in the interval " + interval + ", but alpha = " + to_string(alpha, 10));
+        }
+}
+
 template <size_t N>
-class SurfaceReconstructor : public ISurfaceReconstructor<N>, public ISurfaceReconstructorCoconeOnly<N>
+class SurfaceConstructor : public ISurfaceConstructor<N>, public ISurfaceConstructorCoconeOnly<N>
 {
         const bool m_cocone_only;
 
@@ -252,25 +294,19 @@ class SurfaceReconstructor : public ISurfaceReconstructor<N>, public ISurfaceRec
                 LOG("prune facets...");
 
                 prune_facets_incident_to_sharp_ridges(m_points, m_delaunay_facets, interior_vertices, &cocone_facets);
-
                 if (all_false(cocone_facets))
                 {
-                        error("Cocone facets not found after prune");
+                        error("Cocone facets not found after prune. Surface is not reconstructable.");
                 }
-
-                //
 
                 progress->set(2, 4);
                 LOG("extract manifold...");
 
                 extract_manifold(m_delaunay_objects, m_delaunay_facets, &cocone_facets);
-
                 if (all_false(cocone_facets))
                 {
-                        error("Cocone facets not found after manifold extraction");
+                        error("Cocone facets not found after manifold extraction. Surface is not reconstructable.");
                 }
-
-                //
 
                 progress->set(3, 4);
                 LOG("create result...");
@@ -288,43 +324,54 @@ class SurfaceReconstructor : public ISurfaceReconstructor<N>, public ISurfaceRec
                 LOG("vertex data...");
 
                 std::vector<bool> cocone_facets;
-                std::vector<bool> interior_vertices;
-
                 find_cocone_facets(m_facet_data, &cocone_facets);
-                interior_vertices.resize(m_vertex_data.size(), true);
+                if (all_false(cocone_facets))
+                {
+                        error("Cocone facets not found. Surface is not reconstructable.");
+                }
+
+                std::vector<bool> interior_vertices(m_vertex_data.size(), true);
 
                 common_computation(interior_vertices, std::move(cocone_facets), normals, facets, progress);
         }
 
-        // ε-sample EPSILON = 0.1;
-        // ρ для отношения ширины и высоты ячейки Вороного
-        // RHO = 1.3 * EPSILON;
-        // α для углов между векторами к положительным полюсам ячеек Вороного
-        // ALPHA = 0.14;
-        void bound_cocone(double RHO, double ALPHA, std::vector<vec<N>>* normals, std::vector<std::array<int, N>>* facets,
+        // ε-sample EPSILON = 0.1.
+        // ρ для отношения ширины и высоты ячейки Вороного, rho = 1.3 * EPSILON.
+        // α для углов между векторами к положительным полюсам ячеек Вороного, alpha = 0.14.
+        void bound_cocone(double rho, double alpha, std::vector<vec<N>>* normals, std::vector<std::array<int, N>>* facets,
                           ProgressRatio* progress) const override
         {
                 if (m_cocone_only)
                 {
-                        error("Surface reconstructor created for cocone and not for bound cocone");
+                        error("Surface constructor created for COCONE and not for BOUND COCONE");
                 }
+
+                check_rho_and_aplha(rho, alpha);
 
                 progress->set_text("BOUND COCONE reconstruction: %v of %m");
 
                 progress->set(0, 4);
                 LOG("vertex data...");
 
-                std::vector<bool> cocone_facets;
                 std::vector<bool> interior_vertices;
+                find_interior_vertices(rho, std::cos(alpha), m_vertex_data, &interior_vertices);
+                if (all_false(interior_vertices))
+                {
+                        error("Interior vertices not found. Surface is not reconstructable.");
+                }
 
-                find_interior_vertices(RHO, ALPHA, m_vertex_data, &interior_vertices);
+                std::vector<bool> cocone_facets;
                 find_cocone_interior_facets(m_delaunay_facets, m_facet_data, interior_vertices, &cocone_facets);
+                if (all_false(cocone_facets))
+                {
+                        error("Cocone interior facets not found. Surface is not reconstructable.");
+                }
 
                 common_computation(interior_vertices, std::move(cocone_facets), normals, facets, progress);
         }
 
 public:
-        SurfaceReconstructor(const std::vector<Vector<N, float>>& source_points, bool cocone_only, ProgressRatio* progress)
+        SurfaceConstructor(const std::vector<Vector<N, float>>& source_points, bool cocone_only, ProgressRatio* progress)
                 : m_cocone_only(cocone_only)
         {
                 // Проверить на самый минимум по количеству точек
@@ -347,30 +394,30 @@ public:
 }
 
 template <size_t N>
-std::unique_ptr<ISurfaceReconstructor<N>> create_surface_reconstructor(const std::vector<Vector<N, float>>& source_points,
-                                                                       ProgressRatio* progress)
+std::unique_ptr<ISurfaceConstructor<N>> create_surface_constructor(const std::vector<Vector<N, float>>& source_points,
+                                                                   ProgressRatio* progress)
 {
-        return std::make_unique<SurfaceReconstructor<N>>(source_points, false, progress);
+        return std::make_unique<SurfaceConstructor<N>>(source_points, false, progress);
 }
 
 template <size_t N>
-std::unique_ptr<ISurfaceReconstructorCoconeOnly<N>> create_surface_reconstructor_cocone_only(
+std::unique_ptr<ISurfaceConstructorCoconeOnly<N>> create_surface_constructor_cocone_only(
         const std::vector<Vector<N, float>>& source_points, ProgressRatio* progress)
 {
-        return std::make_unique<SurfaceReconstructor<N>>(source_points, true, progress);
+        return std::make_unique<SurfaceConstructor<N>>(source_points, true, progress);
 }
 
 // clang-format off
 template
-std::unique_ptr<ISurfaceReconstructor<2>> create_surface_reconstructor(const std::vector<Vector<2, float>>& source_points,
-                                                                       ProgressRatio* progress);
+std::unique_ptr<ISurfaceConstructor<2>> create_surface_constructor(const std::vector<Vector<2, float>>& source_points,
+                                                                   ProgressRatio* progress);
 template
-std::unique_ptr<ISurfaceReconstructor<3>> create_surface_reconstructor(const std::vector<Vector<3, float>>& source_points,
-                                                                       ProgressRatio* progress);
+std::unique_ptr<ISurfaceConstructor<3>> create_surface_constructor(const std::vector<Vector<3, float>>& source_points,
+                                                                   ProgressRatio* progress);
 template
-std::unique_ptr<ISurfaceReconstructorCoconeOnly<2>> create_surface_reconstructor_cocone_only(
+std::unique_ptr<ISurfaceConstructorCoconeOnly<2>> create_surface_constructor_cocone_only(
         const std::vector<Vector<2, float>>& source_points, ProgressRatio* progress);
 template
-std::unique_ptr<ISurfaceReconstructorCoconeOnly<3>> create_surface_reconstructor_cocone_only(
+std::unique_ptr<ISurfaceConstructorCoconeOnly<3>> create_surface_constructor_cocone_only(
         const std::vector<Vector<3, float>>& source_points, ProgressRatio* progress);
 // clang-format on

@@ -143,7 +143,7 @@ double voronoi_height(const vec<N>& vertex, const std::vector<DelaunayObject<N>>
                 error("Negative pole vector not found");
         }
 
-        double len = sqrt(max_distance);
+        double len = std::sqrt(max_distance);
 
         if (!is_finite(len))
         {
