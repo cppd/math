@@ -45,7 +45,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <thread>
 #include <type_traits>
 
-constexpr const char* APPLICATION_NAME = "OBJ Math Viewer";
+constexpr const char* APPLICATION_NAME = "Math Viewer";
 
 // Размер окна по сравнению с экраном
 constexpr double WINDOW_SIZE_COEF = 0.7;
@@ -184,6 +184,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
         this->addAction(ui.actionFullScreen);
 
         this->setWindowTitle(APPLICATION_NAME);
+        ui.actionAbout->setText("About " + QString(APPLICATION_NAME) + "...");
 
         m_bound_cocone_rho = BOUND_COCONE_DEFAULT_RHO;
         m_bound_cocone_alpha = BOUND_COCONE_DEFAULT_ALPHA;

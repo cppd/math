@@ -958,7 +958,7 @@
   </action>
   <action name="actionAbout">
    <property name="text">
-    <string>About OBJ Viewer</string>
+    <string>About</string>
    </property>
   </action>
   <action name="actionFullScreen">
