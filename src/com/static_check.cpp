@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <numeric>
 
 static_assert(__GNUC__);
-static_assert(__cplusplus >= 201406);
+static_assert(__cplusplus >= 201703L);
 static_assert(__STDC_HOSTED__ == 1);
 
 static_assert(std::numeric_limits<int>::max() > 2e9);
