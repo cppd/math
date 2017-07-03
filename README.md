@@ -18,8 +18,8 @@
 1. Выпуклая оболочка в пространствах произвольной размерности по инкрементальному алгоритму со списками конфликтов.
 Для координат точек используются целые числа. Частично параллельно на центральном процессоре, std::thread.
 
-1. Восстановление поверхностей по алгоритмам COCONE и BOUND COCONE. Программно сделано для любой размерности, но проверялось только для 2D и 3D,
-так как сложно представить многообразия произвольной размерности. Последовательно на центральном процессоре.
+1. Восстановление многообразий по алгоритмам COCONE и BOUND COCONE. Программно сделано для любой размерности, но проверялось только для 2D, 3D и 4D.
+Последовательно на центральном процессоре.
 
 1. Вспомогательные задачи: диаграммы Вороного и Делоне, системы уравнений по методу Гаусса и другие.
 
@@ -56,8 +56,8 @@ Algorithms:
 1. Convex hulls for an arbitrary number of dimensions via the randomized incremental algorithm. Implemented using integer
 coordinates for the points. Partially in parallel on the CPU, std::thread.
 
-1. Surface reconstruction via COCONE and BOUND COCONE algorithms. Although the program is implemented for an arbitrary number of dimensions,
-it has been tested only for 2D and 3D because it's hard to imagine n-manifolds. Sequentially on the CPU.
+1. Manifold reconstruction via COCONE and BOUND COCONE algorithms. Although the program is implemented for an arbitrary number of dimensions,
+it has been tested only in 2D, 3D and 4D. Sequentially on the CPU.
 
 1. Smaller algorithms: Voronoi diagrams, Delaunay triangulation-tetrahedralization-and-so-on, the Gauss elimination method, and others.
 

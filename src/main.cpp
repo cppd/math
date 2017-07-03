@@ -32,7 +32,7 @@ void tests()
 {
         convex_hull_test();
 
-        surface_test();
+        surface_test(false);
 
         dft_test();
 }

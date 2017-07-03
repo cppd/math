@@ -56,6 +56,14 @@ std::tuple<size_t, size_t> facet_count<3>(size_t point_count)
         return std::tuple<size_t, size_t>(cnt, cnt);
 }
 
+template <>
+std::tuple<size_t, size_t> facet_count<4>(size_t point_count)
+{
+        // Опыты с выпуклой оболочкой в 4D дают отношение количества
+        // граней к количеству точек около 6.7
+        return std::tuple<size_t, size_t>(6.55 * point_count, 6.85 * point_count);
+}
+
 template <size_t N>
 void test(double rho, double alpha, const std::vector<Vector<N, float>>& points, size_t expected_facet_count_min,
           size_t expected_facet_count_max, size_t expected_bound_facet_count_min, size_t expected_bound_facet_count_max)
@@ -101,13 +109,41 @@ void test(double rho, double alpha, const std::vector<Vector<N, float>>& points,
                 error("Error bound_facet count: expected " + bound_facet_count_str + ", BOUND_COCONE computed " +
                       to_string(facets.size()));
         }
+}
 
-        LOG("check passed");
+template <size_t N>
+std::vector<Vector<N, float>> clone(size_t new_object_count, double shift, const std::vector<Vector<N, float>>& points)
+{
+        ASSERT(new_object_count > 1 && new_object_count <= (1 << N));
+        unsigned all_object_count = (1 + new_object_count);
+
+        std::vector<Vector<N, float>> clones(points.begin(), points.end());
+
+        clones.reserve(points.size() * all_object_count);
+
+        for (unsigned new_object = 0; new_object < new_object_count; ++new_object)
+        {
+                Vector<N, float> vec_shift;
+                for (unsigned n = 0; n < N; ++n)
+                {
+                        vec_shift[n] = ((1 << n) & new_object) ? shift : -shift;
+                }
+                for (size_t i = 0; i < points.size(); ++i)
+                {
+                        clones.push_back(points[i] + vec_shift);
+                }
+        }
+
+        ASSERT(clones.size() == points.size() * all_object_count);
+
+        return clones;
 }
 
 template <size_t N>
 void all_tests_unbound(size_t size)
 {
+        static_assert(2 <= N && N <= 4);
+
         // BOUND COCONE может давать разные результаты в зависимости от точек и параметров,
         // поэтому надо проверять попадание в интервал, а не равенство
         constexpr double bound_low = 0.9;
@@ -121,44 +157,33 @@ void all_tests_unbound(size_t size)
 
         auto[facet_count_min, facet_count_max] = facet_count<N>(points.size());
 
-        // Вначале один исходный объект
+        //
+        // Один объект
 
         LOG("------- " + to_string(N) + "D, 1 object -------");
 
         test(RHO, ALPHA, points, facet_count_min, facet_count_max, bound_low * facet_count_min, bound_high * facet_count_max);
 
+        //
         // Разместить вокруг объекта другие такие же объекты по каждой координате в обе стороны
 
-        constexpr unsigned CNT = 1 << N;
-        constexpr unsigned all_object_count = (1 + CNT);
-
-        LOG("------- " + to_string(N) + "D, " + to_string(all_object_count) + " objects -------");
-
-        points.reserve(size * all_object_count);
-
-        for (unsigned new_object = 0; new_object < CNT; ++new_object)
-        {
-                Vector<N, float> vec_shift;
-                for (unsigned n = 0; n < N; ++n)
-                {
-                        vec_shift[n] = ((1 << n) & new_object) ? shift : -shift;
-                }
-                for (size_t i = 0; i < size; ++i)
-                {
-                        points.push_back(points[i] + vec_shift);
-                }
-        }
-
-        ASSERT(points.size() == size * all_object_count);
+        // Для 4D только 2 дополнительных объекта, иначе получается много вычислений
+        constexpr unsigned new_object_count = (N < 4) ? (1 << N) : 2;
+        constexpr unsigned all_object_count = (1 + new_object_count);
 
         facet_count_min *= all_object_count;
         facet_count_max *= all_object_count;
 
+        LOG("------- " + to_string(N) + "D, " + to_string(all_object_count) + " objects -------");
+
+        points = clone(new_object_count, shift, points);
+
         test(RHO, ALPHA, points, facet_count_min, facet_count_max, bound_low * facet_count_min, bound_high * facet_count_max);
-}
+
+        LOG("Successful reconstruction in " + to_string(N) + "D");
 }
 
-void surface_test()
+void small_surface_test()
 {
         try
         {
@@ -169,15 +194,45 @@ void surface_test()
                 size = std::uniform_int_distribution<int>(100, 1000)(engine);
                 all_tests_unbound<2>(size);
 
-                size = std::uniform_int_distribution<int>(2000, 5000)(engine);
+                size = std::uniform_int_distribution<int>(2000, 3000)(engine);
                 all_tests_unbound<3>(size);
 
                 LOG("");
-
-                // std::exit(EXIT_SUCCESS);
         }
         catch (std::exception& e)
         {
-                error_fatal(std::string("surface test error: ") + e.what());
+                error_fatal(std::string("manifold reconstruction test error: ") + e.what());
         }
+}
+
+void big_surface_test()
+{
+        try
+        {
+                std::mt19937_64 engine(get_random_seed<std::mt19937_64>());
+
+                int size;
+
+                size = std::uniform_int_distribution<int>(20000, 25000)(engine);
+                all_tests_unbound<4>(size);
+
+                LOG("");
+        }
+        catch (std::exception& e)
+        {
+                error_fatal(std::string("big manifold reconstruction test error: ") + e.what());
+        }
+}
+}
+
+void surface_test(bool all)
+{
+        small_surface_test();
+
+        if (!all)
+        {
+                return;
+        }
+
+        big_surface_test();
 }
