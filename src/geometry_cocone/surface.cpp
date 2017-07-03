@@ -415,9 +415,15 @@ template
 std::unique_ptr<ISurfaceConstructor<3>> create_surface_constructor(const std::vector<Vector<3, float>>& source_points,
                                                                    ProgressRatio* progress);
 template
+std::unique_ptr<ISurfaceConstructor<4>> create_surface_constructor(const std::vector<Vector<4, float>>& source_points,
+                                                                   ProgressRatio* progress);
+template
 std::unique_ptr<ISurfaceConstructorCoconeOnly<2>> create_surface_constructor_cocone_only(
         const std::vector<Vector<2, float>>& source_points, ProgressRatio* progress);
 template
 std::unique_ptr<ISurfaceConstructorCoconeOnly<3>> create_surface_constructor_cocone_only(
         const std::vector<Vector<3, float>>& source_points, ProgressRatio* progress);
+template
+std::unique_ptr<ISurfaceConstructorCoconeOnly<4>> create_surface_constructor_cocone_only(
+        const std::vector<Vector<4, float>>& source_points, ProgressRatio* progress);
 // clang-format on

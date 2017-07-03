@@ -65,4 +65,9 @@ void vertex_and_facet_data(bool find_all_vertex_data, const std::vector<vec<3>>&
                            const std::vector<DelaunayObject<3>>& delaunay_objects,
                            const std::vector<DelaunayFacet<3>>& delaunay_facets, std::vector<SurfaceVertex<3>>* vertex_data,
                            std::vector<SurfaceFacet<3>>* facet_data);
+extern template
+void vertex_and_facet_data(bool find_all_vertex_data, const std::vector<vec<4>>& points,
+                           const std::vector<DelaunayObject<4>>& delaunay_objects,
+                           const std::vector<DelaunayFacet<4>>& delaunay_facets, std::vector<SurfaceVertex<4>>* vertex_data,
+                           std::vector<SurfaceFacet<4>>* facet_data);
 // clang-format on

@@ -656,7 +656,7 @@ void shuffle_and_convert_to_unique_integer(const std::vector<Vector<N, float>>& 
 
         std::vector<int> random_map(source_points.size());
         std::iota(random_map.begin(), random_map.end(), 0);
-        std::shuffle(random_map.begin(), random_map.end(), std::mt19937_64(get_random_seed<std::mt19937_64>()));
+        std::shuffle(random_map.begin(), random_map.end(), std::mt19937_64(source_points.size()));
 
         Vector<N, float> min, max;
         find_min_max(source_points, &min, &max);

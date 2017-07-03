@@ -30,8 +30,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace PointsImplementation
 {
-constexpr int D = 100000;
-
 template <size_t N>
 void check_unique_points(const std::vector<Vector<N, float>>& points)
 {
@@ -42,48 +40,28 @@ void check_unique_points(const std::vector<Vector<N, float>>& points)
                 error("error generate unique points");
         }
 }
-
-template <size_t N>
-size_t facet_count(size_t point_count);
-
-template <>
-size_t facet_count<2>(size_t point_count)
-{
-        return point_count;
 }
 
-template <>
-size_t facet_count<3>(size_t point_count)
+inline std::vector<Vector<2, float>> generate_points_semicircle(int point_count)
 {
-        return 2 * point_count - 4;
-}
-}
-
-inline void generate_points_circle(int point_count, std::vector<Vector<2, float>>* points, size_t* expected_facet_count,
-                                   size_t* expected_bound_facet_count)
-{
-        points->clear();
-        points->resize(point_count);
+        std::vector<Vector<2, float>> points(point_count);
 
         for (double i = 0; i < point_count; ++i)
         {
-                (*points)[i] = {-std::cos(PI * i / (point_count - 1)), std::sin(PI * i / (point_count - 1))};
+                points[i] = {-std::cos(PI * i / (point_count - 1)), std::sin(PI * i / (point_count - 1))};
         }
 
-        PointsImplementation::check_unique_points(*points);
+        PointsImplementation::check_unique_points(points);
 
-        *expected_facet_count = PointsImplementation::facet_count<2>(point_count);
-        *expected_bound_facet_count = *expected_facet_count;
+        return points;
 }
 
-template <size_t N>
-void generate_points_ellipsoid(int point_count, std::vector<Vector<N, float>>* points, size_t* expected_facet_count,
-                               size_t* expected_bound_facet_count)
+template <size_t N, size_t Discretization>
+std::vector<Vector<N, float>> generate_points_ellipsoid(int point_count)
 {
-        points->clear();
-        points->resize(point_count);
+        std::vector<Vector<N, float>> points(point_count);
 
-        constexpr int D = PointsImplementation::D;
+        constexpr int D = Discretization;
 
         std::mt19937_64 gen(point_count);
         std::uniform_int_distribution<int> uid(-D, D);
@@ -103,23 +81,20 @@ void generate_points_ellipsoid(int point_count, std::vector<Vector<N, float>>* p
 
                 v[0] *= 2;
 
-                (*points)[i] = to_vec<float>(v);
+                points[i] = to_vec<float>(v);
         }
 
-        PointsImplementation::check_unique_points(*points);
+        PointsImplementation::check_unique_points(points);
 
-        *expected_facet_count = PointsImplementation::facet_count<N>(point_count);
-        *expected_bound_facet_count = *expected_facet_count;
+        return points;
 }
 
-template <size_t N>
-void generate_points_object_recess(unsigned point_count, std::vector<Vector<N, float>>* points, size_t* expected_facet_count,
-                                   size_t* expected_bound_facet_count)
+template <size_t N, size_t Discretization>
+std::vector<Vector<N, float>> generate_points_object_recess(unsigned point_count)
 {
-        points->clear();
-        points->resize(point_count);
+        std::vector<Vector<N, float>> points(point_count);
 
-        constexpr int D = PointsImplementation::D;
+        constexpr int D = Discretization;
 
         std::mt19937_64 gen(point_count);
         std::uniform_int_distribution<int> uid(-D, D);
@@ -149,11 +124,10 @@ void generate_points_object_recess(unsigned point_count, std::vector<Vector<N, f
                         v[N - 1] *= 1 - std::abs(0.3 * std::pow(dot_z, 10));
                 }
 
-                (*points)[i] = to_vec<float>(v);
+                points[i] = to_vec<float>(v);
         }
 
-        PointsImplementation::check_unique_points(*points);
+        PointsImplementation::check_unique_points(points);
 
-        *expected_facet_count = PointsImplementation::facet_count<N>(point_count);
-        *expected_bound_facet_count = *expected_facet_count;
+        return points;
 }
