@@ -189,8 +189,6 @@ void convex_hull_test()
 
                 // При N=4, параллельно, 100000 точек, внутри сферы, примерное время: 1.7 сек, 0.4 сек.
 
-                LOG("-----------------");
-
                 constexpr size_t N = 4;
 
                 constexpr bool on_sphere = false;
@@ -198,22 +196,20 @@ void convex_hull_test()
                 std::vector<Vector<N, float>> points; // {{1, 1.000001}, {2, 3}, {2, 3}, {20, 3}, {4, 5}};
                 int size = 100000;
 
+                LOG("-----------------");
                 generate_random_data(false, size, &points, on_sphere);
-                LOG("Integer convex hull");
+                LOG("Integer convex hull, point count " + to_string(points.size()));
                 create_convex_hull(points, false);
 
-                LOG("---");
-
+                LOG("-----------------");
                 generate_random_data(true, size, &points, on_sphere);
-                LOG("Integer convex hull");
+                LOG("Integer convex hull, point count " + to_string(points.size()));
                 create_convex_hull(points, false);
 
                 LOG("");
 
                 std::exit(EXIT_SUCCESS);
 #else
-
-                LOG("-----------------");
 
                 std::mt19937_64 engine(get_random_seed<std::mt19937_64>());
 
@@ -225,12 +221,12 @@ void convex_hull_test()
 
                 int size = std::uniform_int_distribution<int>(150, 300)(engine);
 
+                LOG("-----------------");
                 generate_random_data(false, size, &points, on_sphere);
                 LOG("Integer convex hull, point count " + to_string(points.size()));
                 create_convex_hull(points, true);
 
-                LOG("---");
-
+                LOG("-----------------");
                 generate_random_data(true, size, &points, on_sphere);
                 LOG("Integer convex hull, point count " + to_string(points.size()));
                 create_convex_hull(points, true);

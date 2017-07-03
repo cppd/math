@@ -16,6 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #if 1
+
 #include "init/init.h"
 #include "qt/qt_main.h"
 
@@ -23,17 +24,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "geometry_test/convex_hull_test.h"
 #include "geometry_test/surface_test.h"
 
+#include <thread>
+
 namespace
 {
 void tests()
 {
-#if 0
         convex_hull_test();
 
         surface_test();
 
         dft_test();
-#endif
 }
 }
 
@@ -45,6 +46,7 @@ int main(int argc, char* argv[])
 
         return qt_main(argc, argv);
 }
+
 #else
 
 #include "com/log.h"

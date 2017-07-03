@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "surface_test.h"
 
+#include "points.h"
+
 #include "com/log.h"
 #include "com/math.h"
 #include "com/print.h"
@@ -29,182 +31,75 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace
 {
-template <size_t N, typename T>
-void add_noise(std::vector<Vector<N, T>>* points, T delta)
-{
-        static_assert(!std::is_integral<T>::value);
-
-        // std::mt19937_64 engine(points.size());
-        std::mt19937_64 engine(get_random_seed<std::mt19937_64>());
-
-        std::uniform_real_distribution<T> urd(-1.0, 1.0);
-
-        for (size_t i = 0; i < points->size(); ++i)
-        {
-                Vector<N, T> r;
-                do
-                {
-                        for (unsigned n = 0; n < N; ++n)
-                        {
-                                r[n] = urd(engine);
-                        }
-                } while (dot(r, r) > 1);
-
-                (*points)[i] = (*points)[i] + delta * r;
-        }
-}
-
-template <size_t N, typename T>
-void add_discrete_noise(std::vector<Vector<N, T>>* points, T delta, int size)
-{
-        static_assert(!std::is_integral<T>::value);
-
-        if (size < 1)
-        {
-                error("discrete noise size < 1");
-        }
-
-        // std::mt19937_64 engine(points.size());
-        std::mt19937_64 engine(get_random_seed<std::mt19937_64>());
-
-        std::uniform_int_distribution<int> urd(-size, size);
-        double sqr = square(size);
-
-        for (size_t i = 0; i < points->size(); ++i)
-        {
-                Vector<N, T> r;
-                do
-                {
-                        for (unsigned n = 0; n < N; ++n)
-                        {
-                                r[n] = urd(engine);
-                        }
-                } while (dot(r, r) > sqr);
-
-                (*points)[i] = (*points)[i] + delta / size * r;
-        }
-}
-
-#if 0
-void generate_random_data(int cnt, std::vector<Vector<2, float>>* source_points)
-{
-        source_points->clear();
-
-        for (double i = 0; i < cnt; ++i)
-        {
-                Vector<2, float> v;
-                v[0] = 0 + 1.1 * std::cos(2 * PI * i / cnt);
-                v[1] = std::sin(2 * PI * i / cnt);
-                source_points->push_back(v);
-        }
-
-        for (double i = 0; i < cnt; ++i)
-        {
-                Vector<2, float> v;
-                v[0] = 0 + 1.2 * std::cos(2 * PI * i / cnt);
-                v[1] = std::sin(2 * PI * i / cnt);
-                source_points->push_back(v);
-        }
-
-        //
-
-        for (double i = 0; i < cnt; ++i)
-        {
-                Vector<2, float> v;
-                v[0] = 10 + 1.1 * std::cos(2 * PI * i / cnt);
-                v[1] = 0.5 * std::sin(2 * PI * i / cnt);
-                source_points->push_back(v);
-        }
-
-        for (double i = 0; i < cnt; ++i)
-        {
-                Vector<2, float> v;
-                v[0] = 10 + 1.2 * std::cos(2 * PI * i / cnt);
-                v[1] = 0.5 * std::sin(2 * PI * i / cnt);
-                source_points->push_back(v);
-        }
-
-        //
-
-        for (double i = 0; i < cnt; ++i)
-        {
-                Vector<2, float> v;
-                v[0] = 100 + 1.1 * std::cos(2 * PI * i / cnt);
-                v[1] = std::sin(2 * PI * i / cnt);
-                source_points->push_back(v);
-        }
-
-        for (double i = 0; i < cnt; ++i)
-        {
-                Vector<2, float> v;
-                v[0] = 100 + 1.2 * std::cos(2 * PI * i / cnt);
-                v[1] = std::sin(2 * PI * i / cnt);
-                source_points->push_back(v);
-        }
-}
-#else
-#if 1
 template <size_t N>
-void generate_random_data(int count, std::vector<Vector<N, float>>* points)
+void test(const std::vector<Vector<N, float>>& points, size_t expected_facet_count, size_t expected_bound_facet_count)
 {
-        std::mt19937_64 gen(count);
-        std::uniform_real_distribution<double> urd(-1.0, 1.0);
+        ASSERT(points.size() > N);
+        ASSERT(expected_facet_count > 0);
+        ASSERT(expected_bound_facet_count > 0);
 
-        points->resize(count);
+        LOG("Point count: " + to_string(points.size()));
+        LOG("Expected facet count: " + to_string(expected_facet_count));
+        LOG("Expected bound facet count: " + to_string(expected_bound_facet_count));
 
-        for (int v_i = 0; v_i < count; ++v_i)
+        ProgressRatio progress(nullptr);
+
+        std::unique_ptr<ISurfaceConstructor<N>> sr = create_surface_constructor(points, &progress);
+
+        std::vector<Vector<N, double>> normals;
+        std::vector<std::array<int, N>> facets;
+
+        sr->cocone(&normals, &facets, &progress);
+
+        LOG("COCONE facet count: " + to_string(facets.size()));
+        if (facets.size() != expected_facet_count)
         {
-                vec<N> v;
-                do
-                {
-                        for (unsigned i = 0; i < N; ++i)
-                        {
-                                v[i] = urd(gen);
-                        }
-                } while (length(v) > 1);
-
-                (*points)[v_i] = to_vec<float>(normalize(v));
-                (*points)[v_i][0] *= 2;
+                error("Error facet count: expected " + to_string(expected_facet_count) + ", COCONE computed " +
+                      to_string(facets.size()));
         }
+
+        sr->bound_cocone(0.3, 0.14, &normals, &facets, &progress);
+
+        LOG("BOUND COCONE facet count: " + to_string(facets.size()));
+        double ratio = static_cast<double>(facets.size()) / expected_bound_facet_count;
+        if (!(ratio > 0.9 && ratio < 1.1))
+        {
+                error("Error bound facet count: expected " + to_string(expected_bound_facet_count) + ", BOUND COCONE computed " +
+                      to_string(facets.size()));
+        }
+
+        LOG("check passed");
 }
-#else
-void generate_random_data(int count, std::vector<Vector<2, float>>* points)
+
+template <size_t N>
+void all_tests(size_t size)
 {
-        points->resize(count);
+        std::vector<Vector<N, float>> points;
+        size_t expected_facet_count, expected_bound_facet_count;
 
-        for (double v_i = 0; v_i < count; ++v_i)
-        {
-                (*points)[v_i] = {-std::cos(PI * v_i / (count - 1)), std::sin(PI * v_i / (count - 1))};
-        }
+        LOG("-------" + to_string(N) + "D-------");
+        generate_points_ellipsoid<N>(size, &points, &expected_facet_count, &expected_bound_facet_count);
+        test(points, expected_facet_count, expected_bound_facet_count);
+
+        LOG("-------" + to_string(N) + "D-------");
+        generate_points_object_recess<N>(size, &points, &expected_facet_count, &expected_bound_facet_count);
+        test(points, expected_facet_count, expected_bound_facet_count);
 }
-#endif
-#endif
 }
 
 void surface_test()
 {
         try
         {
-                LOG("-----------------");
+                std::mt19937_64 engine(get_random_seed<std::mt19937_64>());
 
-                constexpr int N = 3;
+                int size;
 
-                constexpr int count = 1000;
-                std::vector<Vector<N, float>> points;
-                std::vector<Vector<N, double>> normals;
-                std::vector<std::array<int, N>> facets;
+                size = std::uniform_int_distribution<int>(100, 200)(engine);
+                all_tests<2>(size);
 
-                ProgressRatio progress(nullptr);
-
-                generate_random_data(count, &points);
-
-                std::unique_ptr<ISurfaceConstructor<3>> sr = create_surface_constructor(points, &progress);
-
-                sr->cocone(&normals, &facets, &progress);
-                sr->bound_cocone(0.3, 0.14, &normals, &facets, &progress);
-                // sr->bound_cocone(0.3, 0.14, &normals, &facets, &progress);
-
-                LOG("object count: " + to_string(facets.size()));
+                size = std::uniform_int_distribution<int>(1000, 2000)(engine);
+                all_tests<3>(size);
 
                 LOG("");
 

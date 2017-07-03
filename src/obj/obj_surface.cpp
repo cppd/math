@@ -23,10 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/print.h"
 #include "com/time.h"
 #include "geometry/vec_glm.h"
-#include "geometry_cocone/surface.h"
 
-#include <chrono>
-#include <random>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -142,57 +139,7 @@ class SurfaceObj final : public IObj
                 find_center_and_length(m_vertices, m_faces, &m_center, &m_length);
         }
 
-#if 0
-        std::vector<Vector<3, float>> generate_random_data(int count)
-        {
-                std::vector<Vector<3, float>> points;
-
-                std::mt19937_64 gen(count);
-                std::uniform_real_distribution<double> urd(-1.0, 1.0);
-
-                points.resize(count);
-
-                for (int v_i = 0; v_i < count; ++v_i)
-                {
-                        vec<3> v;
-                        do
-                        {
-                                for (unsigned i = 0; i < 3; ++i)
-                                {
-                                        v[i] = urd(gen);
-                                }
-                        } while (length(v) > 1);
-
-                        points[v_i] = to_vec<float>(normalize(v));
-                        points[v_i][0] *= 1.1;
-
-                        // points[v_i][2] = std::abs(points[v_i][2]);
-                }
-
-                return points;
-        }
-#endif
-
 public:
-        SurfaceObj(const IObj* obj, ProgressRatio* progress)
-        {
-                // std::vector<Vector<3, float>> points = generate_random_data(1000);
-                const std::vector<glm::vec3>& points = obj->get_vertices();
-
-                std::vector<vec<3>> normals;
-                std::vector<std::array<int, 3>> facets;
-
-                double start_time = get_time_seconds();
-
-                std::unique_ptr<ISurfaceConstructor<3>> sr = create_surface_constructor(to_vector<float>(points), progress);
-                sr->cocone(&normals, &facets, progress);
-                // sr->bound_cocone(0.3, 0.14, &normals, &facets, progress);
-
-                LOG("Surface reconstructed, " + to_string(get_time_seconds() - start_time, 5) + " s");
-
-                create_obj(points, normals, facets);
-        }
-
         SurfaceObj(const std::vector<glm::vec3>& points, const std::vector<Vector<3, double>>& normals,
                    const std::vector<std::array<int, 3>>& facets)
         {
@@ -201,11 +148,6 @@ public:
                 create_obj(points, normals, facets);
         }
 };
-}
-
-std::unique_ptr<IObj> create_surface_for_obj(const IObj* obj, ProgressRatio* progress)
-{
-        return std::make_unique<SurfaceObj>(obj, progress);
 }
 
 std::unique_ptr<IObj> create_obj_for_facets(const std::vector<glm::vec3>& points, const std::vector<Vector<3, double>>& normals,
