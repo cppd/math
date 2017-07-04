@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "surface_test.h"
+#include "reconstruction_test.h"
 
 #include "points.h"
 
@@ -34,54 +34,62 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 constexpr double RHO = 0.3;
 constexpr double ALPHA = 0.14;
 
-// Надо располагать точки по целым числам
+// Надо располагать точки по целым числам, так как выпуклая оболочка работает с целыми числами
 constexpr size_t Discretization = 100000;
 
 namespace
 {
 template <size_t N>
-std::tuple<size_t, size_t> facet_count(size_t point_count);
-
-template <>
-std::tuple<size_t, size_t> facet_count<2>(size_t point_count)
+constexpr std::tuple<size_t, size_t> facet_count(size_t point_count)
 {
-        size_t cnt = point_count;
-        return std::tuple<size_t, size_t>(cnt, cnt);
-}
+        static_assert(2 <= N && N <= 4);
 
-template <>
-std::tuple<size_t, size_t> facet_count<3>(size_t point_count)
-{
-        size_t cnt = 2 * point_count - 4;
-        return std::tuple<size_t, size_t>(cnt, cnt);
-}
-
-template <>
-std::tuple<size_t, size_t> facet_count<4>(size_t point_count)
-{
-        // Опыты с выпуклой оболочкой в 4D дают отношение количества
-        // граней к количеству точек около 6.7
-        return std::tuple<size_t, size_t>(6.55 * point_count, 6.85 * point_count);
+        switch (N)
+        {
+        case 2:
+        {
+                size_t cnt = point_count;
+                return std::tuple<size_t, size_t>(cnt, cnt);
+        }
+        case 3:
+        {
+                // Mark de Berg, Otfried Cheong, Marc van Kreveld, Mark Overmars
+                // Computational Geometry. Algorithms and Applications. Third Edition.
+                // Theorem 11.1.
+                size_t cnt = 2 * point_count - 4;
+                return std::tuple<size_t, size_t>(cnt, cnt);
+        }
+        case 4:
+        {
+                // Handbook of Discrete and Computational Geometry edited by Jacob E. Goodman and Joseph O’Rourke.
+                // Second edition.
+                // 22.3 COMPUTING COMBINATORIAL DESCRIPTIONS.
+                // Точно не определить, так как зависит от триангуляции.
+                //
+                // Опыты с выпуклой оболочкой со случайным распределением точек на четырёхмерной сфере
+                // дают отношение количества граней к количеству точек около 6.7
+                return std::tuple<size_t, size_t>(6.55 * point_count, 6.85 * point_count);
+        }
+        }
 }
 
 template <size_t N>
-void test(double rho, double alpha, const std::vector<Vector<N, float>>& points, size_t expected_facet_count_min,
-          size_t expected_facet_count_max, size_t expected_bound_facet_count_min, size_t expected_bound_facet_count_max)
+void test_algorithms(double rho, double alpha, const std::vector<Vector<N, float>>& points, size_t expected_facets_min,
+                     size_t expected_facets_max, size_t expected_bound_facets_min, size_t expected_bound_facets_max)
 {
         ASSERT(points.size() > N);
-        ASSERT(expected_facet_count_min > 0 && expected_facet_count_max > 0 && expected_bound_facet_count_min > 0 &&
-               expected_bound_facet_count_max > 0);
+        ASSERT(expected_facets_min > 0 && expected_facets_max > 0 && expected_bound_facets_min > 0 &&
+               expected_bound_facets_max > 0);
 
         LOG("Point count: " + to_string(points.size()));
 
-        std::string facet_count_str =
-                (expected_facet_count_min == expected_facet_count_max) ?
-                        to_string(expected_facet_count_min) :
-                        "[" + to_string(expected_facet_count_min) + ", " + to_string(expected_facet_count_max) + "]";
+        std::string facet_count_str = (expected_facets_min == expected_facets_max) ?
+                                              to_string(expected_facets_min) :
+                                              "[" + to_string(expected_facets_min) + ", " + to_string(expected_facets_max) + "]";
         std::string bound_facet_count_str =
-                (expected_bound_facet_count_min == expected_bound_facet_count_max) ?
-                        to_string(expected_bound_facet_count_min) :
-                        "[" + to_string(expected_bound_facet_count_min) + ", " + to_string(expected_bound_facet_count_max) + "]";
+                (expected_bound_facets_min == expected_bound_facets_max) ?
+                        to_string(expected_bound_facets_min) :
+                        "[" + to_string(expected_bound_facets_min) + ", " + to_string(expected_bound_facets_max) + "]";
 
         LOG("Expected facet count: " + facet_count_str);
         LOG("Expected bound facet count: " + bound_facet_count_str);
@@ -96,7 +104,7 @@ void test(double rho, double alpha, const std::vector<Vector<N, float>>& points,
         sr->cocone(&normals, &facets, &progress);
 
         LOG("COCONE facet count: " + to_string(facets.size()));
-        if (!(expected_facet_count_min <= facets.size() && facets.size() <= expected_facet_count_max))
+        if (!(expected_facets_min <= facets.size() && facets.size() <= expected_facets_max))
         {
                 error("Error facet count: expected " + facet_count_str + ", COCONE computed " + to_string(facets.size()));
         }
@@ -104,7 +112,7 @@ void test(double rho, double alpha, const std::vector<Vector<N, float>>& points,
         sr->bound_cocone(rho, alpha, &normals, &facets, &progress);
 
         LOG("BOUND COCONE facet count: " + to_string(facets.size()));
-        if (!(expected_bound_facet_count_min <= facets.size() && facets.size() <= expected_bound_facet_count_max))
+        if (!(expected_bound_facets_min <= facets.size() && facets.size() <= expected_bound_facets_max))
         {
                 error("Error bound_facet count: expected " + bound_facet_count_str + ", BOUND_COCONE computed " +
                       to_string(facets.size()));
@@ -112,9 +120,10 @@ void test(double rho, double alpha, const std::vector<Vector<N, float>>& points,
 }
 
 template <size_t N>
-std::vector<Vector<N, float>> clone(size_t new_object_count, double shift, const std::vector<Vector<N, float>>& points)
+std::vector<Vector<N, float>> clone(const std::vector<Vector<N, float>>& points, size_t new_object_count, double shift)
 {
         ASSERT(new_object_count > 1 && new_object_count <= (1 << N));
+
         unsigned all_object_count = (1 + new_object_count);
 
         std::vector<Vector<N, float>> clones(points.begin(), points.end());
@@ -146,8 +155,8 @@ void all_tests_unbound(size_t size)
 
         // BOUND COCONE может давать разные результаты в зависимости от точек и параметров,
         // поэтому надо проверять попадание в интервал, а не равенство
-        constexpr double bound_low = 0.9;
-        constexpr double bound_high = 1.1;
+        constexpr double bound_low_coef = 0.9;
+        constexpr double bound_high_coef = 1.1;
 
         // Объект находится в начале координат и имеет размеры не более 1 по каждой координате
         // в обе стороны, поэтому достаточно смещение на 3 для отсутствия пересечений объектов
@@ -155,84 +164,60 @@ void all_tests_unbound(size_t size)
 
         std::vector<Vector<N, float>> points = generate_points_object_recess<N, Discretization>(size);
 
-        auto[facet_count_min, facet_count_max] = facet_count<N>(points.size());
-
-        //
-        // Один объект
+        auto[facets_min, facets_max] = facet_count<N>(points.size());
+        size_t bound_facets_min = bound_low_coef * facets_min;
+        size_t bound_facets_max = bound_high_coef * facets_max;
 
         LOG("------- " + to_string(N) + "D, 1 object -------");
 
-        test(RHO, ALPHA, points, facet_count_min, facet_count_max, bound_low * facet_count_min, bound_high * facet_count_max);
+        test_algorithms(RHO, ALPHA, points, facets_min, facets_max, bound_facets_min, bound_facets_max);
 
-        //
+        LOG("");
+
         // Разместить вокруг объекта другие такие же объекты по каждой координате в обе стороны
 
         // Для 4D только 2 дополнительных объекта, иначе получается много вычислений
         constexpr unsigned new_object_count = (N < 4) ? (1 << N) : 2;
         constexpr unsigned all_object_count = (1 + new_object_count);
 
-        facet_count_min *= all_object_count;
-        facet_count_max *= all_object_count;
-
         LOG("------- " + to_string(N) + "D, " + to_string(all_object_count) + " objects -------");
 
-        points = clone(new_object_count, shift, points);
+        test_algorithms(RHO, ALPHA, clone(points, new_object_count, shift), facets_min * all_object_count,
+                        facets_max * all_object_count, bound_facets_min * all_object_count, bound_facets_max * all_object_count);
 
-        test(RHO, ALPHA, points, facet_count_min, facet_count_max, bound_low * facet_count_min, bound_high * facet_count_max);
-
-        LOG("Successful reconstruction in " + to_string(N) + "D");
+        LOG("Successful manifold reconstruction in " + to_string(N) + "D");
 }
 
-void small_surface_test()
+template <size_t N>
+void test(int low, int high)
 {
         try
         {
-                std::mt19937_64 engine(get_random_seed<std::mt19937_64>());
+                thread_local std::mt19937_64 engine(get_random_seed<std::mt19937_64>());
 
-                int size;
+                int size = std::uniform_int_distribution<int>(low, high)(engine);
 
-                size = std::uniform_int_distribution<int>(100, 1000)(engine);
-                all_tests_unbound<2>(size);
-
-                size = std::uniform_int_distribution<int>(2000, 3000)(engine);
-                all_tests_unbound<3>(size);
+                all_tests_unbound<N>(size);
 
                 LOG("");
         }
         catch (std::exception& e)
         {
-                error_fatal(std::string("manifold reconstruction test error: ") + e.what());
+                error_fatal(std::string(to_string(N - 1) + "-manifold reconstruction test:\n") + e.what());
         }
 }
+}
 
-void big_surface_test()
+void reconstruction_test(bool all)
 {
-        try
-        {
-                std::mt19937_64 engine(get_random_seed<std::mt19937_64>());
+        test<2>(100, 1000);
 
-                int size;
-
-                size = std::uniform_int_distribution<int>(20000, 25000)(engine);
-                all_tests_unbound<4>(size);
-
-                LOG("");
-        }
-        catch (std::exception& e)
-        {
-                error_fatal(std::string("big manifold reconstruction test error: ") + e.what());
-        }
-}
-}
-
-void surface_test(bool all)
-{
-        small_surface_test();
+        test<3>(2000, 3000);
 
         if (!all)
         {
                 return;
         }
 
-        big_surface_test();
+        test<4>(20000, 25000);
 }

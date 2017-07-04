@@ -22,9 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "dft_test/dft_test.h"
 #include "geometry_test/convex_hull_test.h"
-#include "geometry_test/surface_test.h"
-
-#include <thread>
+#include "geometry_test/reconstruction_test.h"
 
 namespace
 {
@@ -32,7 +30,7 @@ void tests()
 {
         convex_hull_test();
 
-        surface_test(false);
+        reconstruction_test(false);
 
         dft_test();
 }
