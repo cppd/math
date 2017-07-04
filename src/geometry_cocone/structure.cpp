@@ -197,7 +197,7 @@ template <size_t N>
 void cocone_facets_and_voronoi_radius(const vec<N>& vertex, const std::vector<DelaunayObject<N>>& delaunay_objects,
                                       const std::vector<DelaunayFacet<N>>& delaunay_facets, const vec<N>& positive_pole,
                                       const VertexConnections& vertex_connections, bool find_radius,
-                                      std::vector<SurfaceFacet<N>>* facet_data, double* radius)
+                                      std::vector<ManifoldFacet<N>>* facet_data, double* radius)
 {
         ASSERT(delaunay_facets.size() == facet_data->size());
 
@@ -250,8 +250,8 @@ void cocone_facets_and_voronoi_radius(const vec<N>& vertex, const std::vector<De
 }
 
 template <size_t N>
-void cocone_neighbors(const std::vector<DelaunayFacet<N>>& delaunay_facets, const std::vector<SurfaceFacet<N>>& facet_data,
-                      const std::vector<VertexConnections>& vertex_connections, std::vector<SurfaceVertex<N>>* vertex_data)
+void cocone_neighbors(const std::vector<DelaunayFacet<N>>& delaunay_facets, const std::vector<ManifoldFacet<N>>& facet_data,
+                      const std::vector<VertexConnections>& vertex_connections, std::vector<ManifoldVertex<N>>* vertex_data)
 {
         ASSERT(delaunay_facets.size() == facet_data.size());
         ASSERT(vertex_connections.size() == vertex_data->size());
@@ -316,7 +316,7 @@ void vertex_connections(int vertex_count, const std::vector<DelaunayObject<N>>& 
 template <size_t N>
 void vertex_and_facet_data(bool find_all_vertex_data, const std::vector<vec<N>>& points,
                            const std::vector<DelaunayObject<N>>& objects, const std::vector<DelaunayFacet<N>>& facets,
-                           std::vector<SurfaceVertex<N>>* vertex_data, std::vector<SurfaceFacet<N>>* facet_data)
+                           std::vector<ManifoldVertex<N>>* vertex_data, std::vector<ManifoldFacet<N>>* facet_data)
 {
         std::vector<VertexConnections> connections;
 
@@ -374,16 +374,16 @@ void vertex_and_facet_data(bool find_all_vertex_data, const std::vector<vec<N>>&
 template
 void vertex_and_facet_data(bool find_all_vertex_data, const std::vector<vec<2>>& points,
                            const std::vector<DelaunayObject<2>>& delaunay_objects,
-                           const std::vector<DelaunayFacet<2>>& delaunay_facets, std::vector<SurfaceVertex<2>>* vertex_data,
-                           std::vector<SurfaceFacet<2>>* facet_data);
+                           const std::vector<DelaunayFacet<2>>& delaunay_facets, std::vector<ManifoldVertex<2>>* vertex_data,
+                           std::vector<ManifoldFacet<2>>* facet_data);
 template
 void vertex_and_facet_data(bool find_all_vertex_data, const std::vector<vec<3>>& points,
                            const std::vector<DelaunayObject<3>>& delaunay_objects,
-                           const std::vector<DelaunayFacet<3>>& delaunay_facets, std::vector<SurfaceVertex<3>>* vertex_data,
-                           std::vector<SurfaceFacet<3>>* facet_data);
+                           const std::vector<DelaunayFacet<3>>& delaunay_facets, std::vector<ManifoldVertex<3>>* vertex_data,
+                           std::vector<ManifoldFacet<3>>* facet_data);
 template
 void vertex_and_facet_data(bool find_all_vertex_data, const std::vector<vec<4>>& points,
                            const std::vector<DelaunayObject<4>>& delaunay_objects,
-                           const std::vector<DelaunayFacet<4>>& delaunay_facets, std::vector<SurfaceVertex<4>>* vertex_data,
-                           std::vector<SurfaceFacet<4>>* facet_data);
+                           const std::vector<DelaunayFacet<4>>& delaunay_facets, std::vector<ManifoldVertex<4>>* vertex_data,
+                           std::vector<ManifoldFacet<4>>* facet_data);
 // clang-format on

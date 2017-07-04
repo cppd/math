@@ -258,7 +258,7 @@ bool zero_vector(const Vector<N, T>& v)
 }
 
 template <typename NEW_TYPE, size_t N, typename T>
-Vector<N, NEW_TYPE> to_vec(const Vector<N, T>& v)
+Vector<N, NEW_TYPE> to_vector(const Vector<N, T>& v)
 {
         Vector<N, NEW_TYPE> result;
         for (unsigned i = 0; i < N; ++i)

@@ -125,12 +125,20 @@ namespace
 // Количество потоков для обработки горизонта.
 // В одних случаях параллельность ускоряет (точки внутри сферы), в других замедляет (точки на поверхности сферы).
 // При использовании mpz_class параллельность ускоряет.
+template <typename S, typename C>
 unsigned get_thread_count()
 {
-        // unsigned hc = get_hardware_concurrency();
-        // return (hc >= 2) ? (hc / 2) : 1;
-        // return hc;
-        return 1;
+        static_assert(any_integral<S> && any_integral<C>);
+
+        if (native_integral<S> && native_integral<C>)
+        {
+                return 1;
+        }
+        else
+        {
+                int hc = get_hardware_concurrency();
+                return std::max(hc - 1, 1);
+        }
 }
 
 template <typename T>
@@ -588,7 +596,7 @@ void create_convex_hull(const std::vector<Vector<N, S>>& points, FacetList<Facet
 
         create_init_conflict_lists(points, point_enabled, facets, &point_conflicts);
 
-        ThreadPoolCH<N, S, C> thread_pool(get_thread_count());
+        ThreadPoolCH<N, S, C> thread_pool(get_thread_count<S, C>());
         ThreadBarrier thread_barrier(thread_pool.get_thread_count());
 
         // Создаётся здесь, чтобы каждый раз не создавать при расчёте и не выделять каждый раз память,
@@ -641,7 +649,7 @@ void find_min_max(const std::vector<Vector<N, float>>& points, Vector<N, float>*
 
 // Для алгоритма принципиально не нужны одинаковые точки - разность между ними даст нулевой вектор.
 // Для алгоритма со списками конфликтов принципиально нужен случайный порядок обработки точек.
-// Масштабирование и перевод в целые числа с сохранением пропорций
+// Масштабирование и перевод в целые числа с сохранением пропорций.
 template <size_t N>
 void shuffle_and_convert_to_unique_integer(const std::vector<Vector<N, float>>& source_points, long long max_value,
                                            std::vector<Vector<N, long long>>* points, std::vector<int>* points_map)
@@ -674,7 +682,7 @@ void shuffle_and_convert_to_unique_integer(const std::vector<Vector<N, float>>& 
         {
                 int random_i = random_map[i];
 
-                Vector<N, double> float_value = to_vec<double>(source_points[random_i] - min) * scale_factor;
+                Vector<N, double> float_value = to_vector<double>(source_points[random_i] - min) * scale_factor;
 
                 Vector<N, long long> integer_value;
 
@@ -837,7 +845,7 @@ void delaunay_integer(const std::vector<Vector<N, float>>& source_points, std::v
         points->resize(source_points.size(), vec<N>(0));
         for (unsigned i = 0; i < convex_hull_points.size(); ++i)
         {
-                (*points)[points_map[i]] = to_vec<double>(convex_hull_points[i]);
+                (*points)[points_map[i]] = to_vector<double>(convex_hull_points[i]);
         }
 
         LOG("convex hull paraboloid " + to_string(N + 1) + "D integer done");

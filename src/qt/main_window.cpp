@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/print.h"
 #include "com/time.h"
 #include "geometry/vec_glm.h"
-#include "geometry_cocone/surface.h"
+#include "geometry_cocone/reconstruction.h"
 #include "obj/obj_alg.h"
 #include "obj/obj_convex_hull.h"
 #include "obj/obj_file_load.h"
@@ -343,7 +343,7 @@ void MainWindow::thread_surface_constructor() noexcept
 
                 double start_time = get_time_seconds();
 
-                m_surface_constructor = create_surface_constructor(to_vector<float>(m_surface_points), &progress);
+                m_surface_constructor = create_manifold_constructor(to_vector<float>(m_surface_points), &progress);
 
                 LOG("Surface reconstruction first phase, " + to_string(get_time_seconds() - start_time, 5) + " s");
 

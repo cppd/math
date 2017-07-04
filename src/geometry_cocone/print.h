@@ -64,7 +64,7 @@ void print_not_cocone_facets(const std::vector<DelaunayFacet<N>>& delaunay_facet
         LOG("--");
 }
 template <size_t N>
-void print_vertex_data(const std::vector<SurfaceVertex<N>>& vertices)
+void print_vertex_data(const std::vector<ManifoldVertex<N>>& vertices)
 {
         LOG("--vertices--");
         for (size_t i = 0; i < vertices.size(); ++i)

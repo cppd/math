@@ -213,7 +213,7 @@ public:
 
         vec<N> get_double_ortho() const
         {
-                return normalize(to_vec<double>(m_ortho));
+                return normalize(to_vector<double>(m_ortho));
         }
 
         bool last_ortho_coord_is_negative() const

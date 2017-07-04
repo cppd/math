@@ -25,18 +25,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <vector>
 
 template <size_t N>
-struct ISurfaceConstructorCoconeOnly
+struct IManifoldConstructorCocone
 {
-        virtual ~ISurfaceConstructorCoconeOnly() = default;
+        virtual ~IManifoldConstructorCocone() = default;
 
         virtual void cocone(std::vector<vec<N>>* vertex_normals, std::vector<std::array<int, N>>* cocone_triangles,
                             ProgressRatio* progress) const = 0;
 };
 
 template <size_t N>
-struct ISurfaceConstructor
+struct IManifoldConstructor
 {
-        virtual ~ISurfaceConstructor() = default;
+        virtual ~IManifoldConstructor() = default;
 
         virtual void cocone(std::vector<vec<N>>* normals, std::vector<std::array<int, N>>* facets,
                             ProgressRatio* progress) const = 0;
@@ -45,29 +45,30 @@ struct ISurfaceConstructor
 };
 
 template <size_t N>
-std::unique_ptr<ISurfaceConstructor<N>> create_surface_constructor(const std::vector<Vector<N, float>>& source_points,
-                                                                   ProgressRatio* progress);
+std::unique_ptr<IManifoldConstructor<N>> create_manifold_constructor(const std::vector<Vector<N, float>>& source_points,
+                                                                     ProgressRatio* progress);
+
 template <size_t N>
-std::unique_ptr<ISurfaceConstructorCoconeOnly<N>> create_surface_constructor_cocone_only(
+std::unique_ptr<IManifoldConstructorCocone<N>> create_manifold_constructor_cocone(
         const std::vector<Vector<N, float>>& source_points, ProgressRatio* progress);
 
 // clang-format off
 extern template
-std::unique_ptr<ISurfaceConstructor<2>> create_surface_constructor(const std::vector<Vector<2, float>>& source_points,
-                                                                   ProgressRatio* progress);
+std::unique_ptr<IManifoldConstructor<2>> create_manifold_constructor(const std::vector<Vector<2, float>>& source_points,
+                                                                     ProgressRatio* progress);
 extern template
-std::unique_ptr<ISurfaceConstructor<3>> create_surface_constructor(const std::vector<Vector<3, float>>& source_points,
-                                                                   ProgressRatio* progress);
+std::unique_ptr<IManifoldConstructor<3>> create_manifold_constructor(const std::vector<Vector<3, float>>& source_points,
+                                                                     ProgressRatio* progress);
 extern template
-std::unique_ptr<ISurfaceConstructor<4>> create_surface_constructor(const std::vector<Vector<4, float>>& source_points,
-                                                                   ProgressRatio* progress);
+std::unique_ptr<IManifoldConstructor<4>> create_manifold_constructor(const std::vector<Vector<4, float>>& source_points,
+                                                                     ProgressRatio* progress);
 extern template
-std::unique_ptr<ISurfaceConstructorCoconeOnly<2>> create_surface_constructor_cocone_only(
+std::unique_ptr<IManifoldConstructorCocone<2>> create_manifold_constructor_cocone(
         const std::vector<Vector<2, float>>& source_points, ProgressRatio* progress);
 extern template
-std::unique_ptr<ISurfaceConstructorCoconeOnly<3>> create_surface_constructor_cocone_only(
+std::unique_ptr<IManifoldConstructorCocone<3>> create_manifold_constructor_cocone(
         const std::vector<Vector<3, float>>& source_points, ProgressRatio* progress);
 extern template
-std::unique_ptr<ISurfaceConstructorCoconeOnly<4>> create_surface_constructor_cocone_only(
+std::unique_ptr<IManifoldConstructorCocone<4>> create_manifold_constructor_cocone(
         const std::vector<Vector<4, float>>& source_points, ProgressRatio* progress);
 // clang-format on

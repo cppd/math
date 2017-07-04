@@ -23,7 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/math.h"
 #include "com/print.h"
 #include "com/random.h"
-#include "geometry_cocone/surface.h"
+#include "com/time.h"
+#include "geometry_cocone/reconstruction.h"
 #include "progress/progress.h"
 
 #include <cmath>
@@ -81,6 +82,8 @@ void test_algorithms(double rho, double alpha, const std::vector<Vector<N, float
         ASSERT(expected_facets_min > 0 && expected_facets_max > 0 && expected_bound_facets_min > 0 &&
                expected_bound_facets_max > 0);
 
+        double start_time = get_time_seconds();
+
         LOG("Point count: " + to_string(points.size()));
 
         std::string facet_count_str = (expected_facets_min == expected_facets_max) ?
@@ -96,7 +99,7 @@ void test_algorithms(double rho, double alpha, const std::vector<Vector<N, float
 
         ProgressRatio progress(nullptr);
 
-        std::unique_ptr<ISurfaceConstructor<N>> sr = create_surface_constructor(points, &progress);
+        std::unique_ptr<IManifoldConstructor<N>> sr = create_manifold_constructor(points, &progress);
 
         std::vector<Vector<N, double>> normals;
         std::vector<std::array<int, N>> facets;
@@ -117,6 +120,9 @@ void test_algorithms(double rho, double alpha, const std::vector<Vector<N, float
                 error("Error bound_facet count: expected " + bound_facet_count_str + ", BOUND_COCONE computed " +
                       to_string(facets.size()));
         }
+
+        LOG("Time: " + to_string(get_time_seconds() - start_time, 3) + " sec");
+        LOG("Successful manifold reconstruction in " + to_string(N) + "D");
 }
 
 template <size_t N>
@@ -176,16 +182,13 @@ void all_tests_unbound(size_t size)
 
         // Разместить вокруг объекта другие такие же объекты по каждой координате в обе стороны
 
-        // Для 4D только 2 дополнительных объекта, иначе получается много вычислений
-        constexpr unsigned new_object_count = (N < 4) ? (1 << N) : 2;
+        constexpr unsigned new_object_count = 1 << N;
         constexpr unsigned all_object_count = (1 + new_object_count);
 
         LOG("------- " + to_string(N) + "D, " + to_string(all_object_count) + " objects -------");
 
         test_algorithms(RHO, ALPHA, clone(points, new_object_count, shift), facets_min * all_object_count,
                         facets_max * all_object_count, bound_facets_min * all_object_count, bound_facets_max * all_object_count);
-
-        LOG("Successful manifold reconstruction in " + to_string(N) + "D");
 }
 
 template <size_t N>

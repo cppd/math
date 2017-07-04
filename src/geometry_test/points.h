@@ -40,6 +40,34 @@ void check_unique_points(const std::vector<Vector<N, float>>& points)
                 error("error generate unique points");
         }
 }
+
+template <size_t N>
+Vector<N, long> to_integer(const Vector<N, double>& v, long factor)
+{
+        Vector<N, long> r;
+        for (unsigned n = 0; n < N; ++n)
+        {
+                r[n] = std::lround(v[n] * factor);
+        }
+        return r;
+}
+
+template <size_t N>
+vec<N> random_sphere(std::mt19937_64* gen)
+{
+        std::uniform_real_distribution<double> urd(-1.0, 1.0);
+
+        vec<N> v;
+        do
+        {
+                for (unsigned n = 0; n < N; ++n)
+                {
+                        v[n] = urd(*gen);
+                }
+        } while (dot(v, v) > 1);
+
+        return normalize(v);
+}
 }
 
 inline std::vector<Vector<2, float>> generate_points_semicircle(int point_count)
@@ -59,29 +87,29 @@ inline std::vector<Vector<2, float>> generate_points_semicircle(int point_count)
 template <size_t N, size_t Discretization>
 std::vector<Vector<N, float>> generate_points_ellipsoid(int point_count)
 {
-        std::vector<Vector<N, float>> points(point_count);
+        // Для float большое число не надо
+        static_assert(Discretization <= 1000000);
 
-        constexpr int D = Discretization;
+        std::vector<Vector<N, float>> points;
+        points.reserve(point_count);
+
+        std::unordered_set<Vector<N, long>> integer_points;
+        integer_points.reserve(point_count);
 
         std::mt19937_64 gen(point_count);
-        std::uniform_int_distribution<int> uid(-D, D);
 
-        for (int i = 0; i < point_count; ++i)
+        while (integer_points.size() < point_count)
         {
-                vec<N> v;
-                do
-                {
-                        for (unsigned n = 0; n < N; ++n)
-                        {
-                                v[n] = static_cast<double>(uid(gen)) / D;
-                        }
-                } while (dot(v, v) > 1);
-
-                v = normalize(v);
+                vec<N> v = PointsImplementation::random_sphere<N>(&gen);
 
                 v[0] *= 2;
 
-                points[i] = to_vec<float>(v);
+                Vector<N, long> integer_point = PointsImplementation::to_integer(v, Discretization);
+                if (integer_points.count(integer_point) == 0)
+                {
+                        integer_points.insert(integer_point);
+                        points.push_back(to_vector<float>(v));
+                }
         }
 
         PointsImplementation::check_unique_points(points);
@@ -92,31 +120,26 @@ std::vector<Vector<N, float>> generate_points_ellipsoid(int point_count)
 template <size_t N, size_t Discretization>
 std::vector<Vector<N, float>> generate_points_object_recess(unsigned point_count)
 {
-        std::vector<Vector<N, float>> points(point_count);
+        // Для float большое число не надо
+        static_assert(Discretization <= 1000000);
 
-        constexpr int D = Discretization;
+        std::vector<Vector<N, float>> points;
+        points.reserve(point_count);
+
+        std::unordered_set<Vector<N, long>> integer_points;
+        integer_points.reserve(point_count);
 
         std::mt19937_64 gen(point_count);
-        std::uniform_int_distribution<int> uid(-D, D);
 
         Vector<N, double> z_axis(0);
         z_axis[N - 1] = 1;
 
-        for (unsigned i = 0; i < point_count; ++i)
+        while (integer_points.size() < point_count)
         {
                 // точки на сфере с углублением со стороны последней оси
                 // в положительном направлении этой оси
 
-                vec<N> v;
-                do
-                {
-                        for (unsigned n = 0; n < N; ++n)
-                        {
-                                v[n] = static_cast<double>(uid(gen)) / D;
-                        }
-                } while (dot(v, v) > 1);
-
-                v = normalize(v);
+                vec<N> v = PointsImplementation::random_sphere<N>(&gen);
 
                 double dot_z = dot(z_axis, v);
                 if (dot_z > 0)
@@ -124,7 +147,12 @@ std::vector<Vector<N, float>> generate_points_object_recess(unsigned point_count
                         v[N - 1] *= 1 - std::abs(0.3 * std::pow(dot_z, 10));
                 }
 
-                points[i] = to_vec<float>(v);
+                Vector<N, long> integer_point = PointsImplementation::to_integer(v, Discretization);
+                if (integer_points.count(integer_point) == 0)
+                {
+                        integer_points.insert(integer_point);
+                        points.push_back(to_vector<float>(v));
+                }
         }
 
         PointsImplementation::check_unique_points(points);

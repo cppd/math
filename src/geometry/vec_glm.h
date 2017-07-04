@@ -22,102 +22,130 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
-#include <vector>
+#include <type_traits>
+#include <utility>
 
+namespace VectorGLMImplementation
+{
 template <size_t N>
-struct GLM_VEC;
+using glm_vector =
+        std::conditional_t<N == 2, glm::vec2, std::conditional_t<N == 3, glm::vec3, std::conditional_t<N == 4, glm::vec4, void>>>;
 
-template <>
-struct GLM_VEC<2>
+template <typename Dst, typename Src, size_t... I>
+Dst convert_vector(std::integer_sequence<size_t, I...>, const Src& v)
 {
-        typedef glm::vec2 t;
-};
-template <>
-struct GLM_VEC<3>
-{
-        typedef glm::vec3 t;
-};
-template <>
-struct GLM_VEC<4>
-{
-        typedef glm::vec4 t;
-};
-
-template <size_t N>
-using glm_vec = typename GLM_VEC<N>::t;
-
-template <size_t N, typename T>
-glm_vec<N> to_glm(const Vector<N, T>& v)
-{
-        glm_vec<N> result;
-        for (unsigned n = 0; n < N; ++n)
-        {
-                result[n] = v[n];
-        }
-        return result;
+        return {(v[I])...};
 }
 
 template <size_t N, typename T>
-Vector<N, T> to_vector(const glm_vec<N>& v)
+glm_vector<N> to_glm(const Vector<N, T>& v)
 {
-        Vector<N, T> result;
-        for (unsigned n = 0; n < N; ++n)
-        {
-                result[n] = v[n];
-        }
-        return result;
+        return convert_vector<glm_vector<N>, Vector<N, T>>(std::make_integer_sequence<size_t, N>(), v);
 }
+
+template <size_t N, typename T>
+Vector<N, T> to_vector(const glm_vector<N>& v)
+{
+        return convert_vector<Vector<N, T>, glm_vector<N>>(std::make_integer_sequence<size_t, N>(), v);
+}
+
+template <size_t N, typename T>
+std::vector<glm_vector<N>> to_glm(const std::vector<Vector<N, T>>& v)
+{
+        std::vector<glm_vector<N>> points(v.size());
+        for (unsigned i = 0; i < v.size(); ++i)
+        {
+                points[i] = to_glm(v[i]);
+        }
+        return points;
+}
+
+template <size_t N, typename T>
+std::vector<Vector<N, T>> to_vector(const std::vector<glm_vector<N>>& v)
+{
+        std::vector<Vector<N, T>> points(v.size());
+        for (unsigned i = 0; i < v.size(); ++i)
+        {
+                points[i] = to_vector<N, T>(v[i]);
+        }
+        return points;
+}
+}
+
+template <typename T>
+glm::vec2 to_glm(const Vector<2, T>& v)
+{
+        return VectorGLMImplementation::to_glm<2, T>(v);
+}
+
+template <typename T>
+glm::vec3 to_glm(const Vector<3, T>& v)
+{
+        return VectorGLMImplementation::to_glm<3, T>(v);
+}
+
+template <typename T>
+glm::vec4 to_glm(const Vector<4, T>& v)
+{
+        return VectorGLMImplementation::to_glm<4, T>(v);
+}
+
+//
 
 template <typename T>
 Vector<2, T> to_vector(const glm::vec2& v)
 {
-        return to_vec<2, T>(v);
+        return VectorGLMImplementation::to_vector<2, T>(v);
 }
+
 template <typename T>
 Vector<3, T> to_vector(const glm::vec3& v)
 {
-        return to_vec<3, T>(v);
+        return VectorGLMImplementation::to_vector<3, T>(v);
 }
+
 template <typename T>
 Vector<4, T> to_vector(const glm::vec4& v)
 {
-        return to_vec<4, T>(v);
+        return VectorGLMImplementation::to_vector<4, T>(v);
 }
 
-template <size_t N, typename T>
-std::vector<glm_vec<N>> to_glm(const std::vector<Vector<N, T>>& source_points)
-{
-        std::vector<glm_vec<N>> points(source_points.size());
-        for (unsigned i = 0; i < source_points.size(); ++i)
-        {
-                points[i] = to_glm(source_points[i]);
-        }
-        return points;
-}
+//
 
-template <size_t N, typename T>
-std::vector<Vector<N, T>> to_vector(const std::vector<glm_vec<N>>& source_points)
+template <typename T>
+std::vector<glm::vec2> to_glm(const std::vector<Vector<2, T>>& points)
 {
-        std::vector<Vector<N, T>> points(source_points.size());
-        for (unsigned i = 0; i < source_points.size(); ++i)
-        {
-                points[i] = to_vector<N, T>(source_points[i]);
-        }
-        return points;
+        return VectorGLMImplementation::to_glm(points);
 }
 
 template <typename T>
-std::vector<Vector<2, T>> to_vector(const std::vector<glm::vec2>& source_points)
+std::vector<glm::vec3> to_glm(const std::vector<Vector<3, T>>& points)
 {
-        return to_vector<2, T>(source_points);
+        return VectorGLMImplementation::to_glm(points);
 }
+
 template <typename T>
-std::vector<Vector<3, T>> to_vector(const std::vector<glm::vec3>& source_points)
+std::vector<glm::vec4> to_glm(const std::vector<Vector<4, T>>& points)
 {
-        return to_vector<3, T>(source_points);
+        return VectorGLMImplementation::to_glm(points);
 }
+
+//
+
 template <typename T>
-std::vector<Vector<4, T>> to_vector(const std::vector<glm::vec4>& source_points)
+std::vector<Vector<2, T>> to_vector(const std::vector<glm::vec2>& points)
 {
-        return to_vector<4, T>(source_points);
+        return VectorGLMImplementation::to_vector<2, T>(points);
+}
+
+template <typename T>
+std::vector<Vector<3, T>> to_vector(const std::vector<glm::vec3>& points)
+{
+        return VectorGLMImplementation::to_vector<3, T>(points);
+}
+
+template <typename T>
+std::vector<Vector<4, T>> to_vector(const std::vector<glm::vec4>& points)
+{
+        return VectorGLMImplementation::to_vector<4, T>(points);
 }

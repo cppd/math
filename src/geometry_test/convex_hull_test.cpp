@@ -59,11 +59,11 @@ void generate_random_data(bool zero, int count, std::vector<Vector<N, float>>* p
 
                 if (!on_sphere)
                 {
-                        (*points)[v_i] = to_vec<float>(v);
+                        (*points)[v_i] = to_vector<float>(v);
                 }
                 else
                 {
-                        (*points)[v_i] = to_vec<float>(normalize(v));
+                        (*points)[v_i] = to_vector<float>(normalize(v));
                 }
         }
         if (zero)
@@ -80,7 +80,7 @@ void check_visible_from_point(const std::vector<Vector<N, float>>& points, const
                 return;
         }
 
-        vec<N> v = normalize(to_vec<double>(points[point] - points[facet.get_vertices()[0]]));
+        vec<N> v = normalize(to_vector<double>(points[point] - points[facet.get_vertices()[0]]));
 
         if (!is_finite(v))
         {
