@@ -17,8 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "noise.h"
-
 #include "com/error.h"
 #include "com/log.h"
 #include "com/math.h"
@@ -70,8 +68,13 @@ vec<N> random_sphere(std::mt19937_64* gen)
 }
 }
 
-inline std::vector<Vector<2, float>> generate_points_semicircle(int point_count)
+inline std::vector<Vector<2, float>> generate_points_semicircle(unsigned point_count)
 {
+        if (point_count < 3)
+        {
+                error("point count out of range");
+        }
+
         std::vector<Vector<2, float>> points(point_count);
 
         for (double i = 0; i < point_count; ++i)
@@ -84,11 +87,14 @@ inline std::vector<Vector<2, float>> generate_points_semicircle(int point_count)
         return points;
 }
 
-template <size_t N, size_t Discretization>
-std::vector<Vector<N, float>> generate_points_ellipsoid(int point_count)
+template <size_t N>
+std::vector<Vector<N, float>> generate_points_ellipsoid(unsigned point_count, unsigned discretization)
 {
         // Для float большое число не надо
-        static_assert(Discretization <= 1000000);
+        if (discretization > 1000000)
+        {
+                error("discretization out of range");
+        }
 
         std::vector<Vector<N, float>> points;
         points.reserve(point_count);
@@ -104,7 +110,7 @@ std::vector<Vector<N, float>> generate_points_ellipsoid(int point_count)
 
                 v[0] *= 2;
 
-                Vector<N, long> integer_point = PointsImplementation::to_integer(v, Discretization);
+                Vector<N, long> integer_point = PointsImplementation::to_integer(v, discretization);
                 if (integer_points.count(integer_point) == 0)
                 {
                         integer_points.insert(integer_point);
@@ -117,11 +123,14 @@ std::vector<Vector<N, float>> generate_points_ellipsoid(int point_count)
         return points;
 }
 
-template <size_t N, size_t Discretization>
-std::vector<Vector<N, float>> generate_points_object_recess(unsigned point_count)
+template <size_t N>
+std::vector<Vector<N, float>> generate_points_object_recess(unsigned point_count, unsigned discretization)
 {
         // Для float большое число не надо
-        static_assert(Discretization <= 1000000);
+        if (discretization > 1000000)
+        {
+                error("discretization out of range");
+        }
 
         std::vector<Vector<N, float>> points;
         points.reserve(point_count);
@@ -147,7 +156,7 @@ std::vector<Vector<N, float>> generate_points_object_recess(unsigned point_count
                         v[N - 1] *= 1 - std::abs(0.3 * std::pow(dot_z, 10));
                 }
 
-                Vector<N, long> integer_point = PointsImplementation::to_integer(v, Discretization);
+                Vector<N, long> integer_point = PointsImplementation::to_integer(v, discretization);
                 if (integer_points.count(integer_point) == 0)
                 {
                         integer_points.insert(integer_point);

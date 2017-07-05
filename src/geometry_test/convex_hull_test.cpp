@@ -165,8 +165,7 @@ void create_convex_hull(std::vector<Vector<N, float>>& points, bool check)
 
         compute_convex_hull(points, &facets, &pr);
 
-        double elapsed = get_time_seconds() - start_time;
-        LOG("convex hull created, " + to_string(elapsed) + " s");
+        LOG("convex hull created, " + to_string_fixed(get_time_seconds() - start_time, 5) + " s");
         LOG("point count " + to_string(point_count(facets)) + ", facet count " + to_string(facets.size()));
 
         if (!check)

@@ -180,7 +180,7 @@ void save_obj_geometry_to_file(const IObj* obj, const std::string& file_name, co
                 error("Object doesn't have faces");
         }
 
-        double time_point = get_time_seconds();
+        double start_time = get_time_seconds();
 
         CFile file(file_name, "w");
 
@@ -192,5 +192,5 @@ void save_obj_geometry_to_file(const IObj* obj, const std::string& file_name, co
 
         write_faces(file, obj);
 
-        LOG("OBJ saved, " + to_string(get_time_seconds() - time_point, 3) + " s");
+        LOG("OBJ saved, " + to_string_fixed(get_time_seconds() - start_time, 5) + " s");
 }

@@ -26,6 +26,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 constexpr double MIN_DOUBLE = std::numeric_limits<double>::lowest();
 
+// Значения косинусов для частного случая, когда вместе имеется:
+// а) маленький угол между вектором PA от вершины P к вершине A ребра
+//  ячейки Вороного и прямой положительного полюса,
+// б) большой угол (близко к PI) между вектором PA от вершины P к вершине A
+//  ребра ячейки Вороного и вектором этого ребра в направлении от точки A.
+constexpr double LIMIT_COSINE_FOR_INTERSECTION_PA_POLE = 0.99;
+constexpr double LIMIT_COSINE_FOR_INTERSECTION_PA_AB = -0.9999;
+
 namespace
 {
 // Соединения вершины с объектами Делоне и гранями объектов Делоне
@@ -173,21 +181,46 @@ double voronoi_edge_radius(const std::vector<DelaunayObject<N>>& delaunay_object
         // Но могут быть и небольшие разницы на границах COCONE.
         vec<N> a_to_b = facet.one_sided() ? facet.get_ortho() : (delaunay_objects[facet.get_delaunay(1)].get_voronoi_vertex() -
                                                                  delaunay_objects[facet.get_delaunay(0)].get_voronoi_vertex());
-        vec<N> to_intersect;
-        double distance;
 
-        if (!intersect_cocone(positive_pole, pa, a_to_b, &to_intersect, &distance))
+        double max_distance;
+
+        if (!intersect_cocone(positive_pole, pa, a_to_b, &max_distance))
         {
-                error("cocone intersection not found");
+                // Если вектор PA направлен далеко от COCONE и близко к положительному полюсу
+                if (std::abs(cos_n_a) > LIMIT_COSINE_FOR_INTERSECTION_PA_POLE)
+                {
+                        double a_to_b_length = facet.one_sided() ? 1.0 : length(a_to_b);
+                        double cos_pa_ab = dot(pa, a_to_b) / (pa_length * a_to_b_length);
+
+                        // Если PA и AB направлены почти в противоположных направлениях
+                        if (cos_pa_ab < LIMIT_COSINE_FOR_INTERSECTION_PA_AB)
+                        {
+                                // Пересечение близко к вершине, поэтому считать равным 0
+                                max_distance = 0;
+                        }
+                        else
+                        {
+                                error("cocone intersection not found, PA is close to positive pole");
+                        }
+                }
+                else
+                {
+                        error("cocone intersection not found, PA is far from positive pole");
+                }
+        }
+
+        if (!is_finite(max_distance))
+        {
+                error("cocone intersection distance is not finite");
         }
 
         if (cocone_inside_or_equal(cos_n_a))
         {
-                return std::max(pa_length, distance);
+                return std::max(pa_length, max_distance);
         }
         else
         {
-                return distance;
+                return max_distance;
         }
 }
 

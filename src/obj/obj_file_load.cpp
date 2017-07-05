@@ -29,7 +29,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/time.h"
 
 #include <cctype>
-#include <chrono>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -1132,13 +1131,12 @@ void FileObj::read_obj_and_mtl(const std::string& file_name, ProgressRatio* prog
 
 FileObj::FileObj(const std::string& file_name, ProgressRatio* progress)
 {
-        double time_point = get_time_seconds();
+        double start_time = get_time_seconds();
 
         read_obj_and_mtl(file_name, progress);
 
-        LOG("OBJ loaded, " + to_string(get_time_seconds() - time_point, 3) + " s");
+        LOG("OBJ loaded, " + to_string_fixed(get_time_seconds() - start_time, 5) + " s");
 }
-
 
 // Чтение вершин из текстового файла. Одна вершина на строку. Три координаты через пробел.
 // x y z
@@ -1280,11 +1278,11 @@ void FileTxt::read_text(const std::string& file_name, ProgressRatio* progress)
 
 FileTxt::FileTxt(const std::string& file_name, ProgressRatio* progress)
 {
-        double time_point = get_time_seconds();
+        double start_time = get_time_seconds();
 
         read_text(file_name, progress);
 
-        LOG("TEXT loaded, " + to_string(get_time_seconds() - time_point, 3) + " s");
+        LOG("TEXT loaded, " + to_string_fixed(get_time_seconds() - start_time, 5) + " s");
 }
 }
 

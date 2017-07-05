@@ -26,10 +26,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/time.h"
 #include "geometry/vec_glm.h"
 #include "geometry_cocone/reconstruction.h"
+#include "geometry_objects/points.h"
 #include "obj/obj_alg.h"
 #include "obj/obj_convex_hull.h"
 #include "obj/obj_file_load.h"
 #include "obj/obj_file_save.h"
+#include "obj/obj_points_load.h"
 #include "obj/obj_surface.h"
 #include "progress/progress.h"
 #include "qt_dialog/dialogs.h"
@@ -250,7 +252,7 @@ void MainWindow::thread_cocone() noexcept
 
                         m_surface_cocone = create_obj_for_facets(m_surface_points, normals, facets);
 
-                        LOG("Surface reconstruction second phase, " + to_string(get_time_seconds() - start_time, 5) + " s");
+                        LOG("Surface reconstruction second phase, " + to_string_fixed(get_time_seconds() - start_time, 5) + " s");
                 }
 
                 if (m_surface_cocone->get_faces().size() != 0)
@@ -297,7 +299,7 @@ void MainWindow::thread_bound_cocone(double rho, double alpha) noexcept
 
                         m_surface_bound_cocone = create_obj_for_facets(m_surface_points, normals, facets);
 
-                        LOG("Surface reconstruction second phase, " + to_string(get_time_seconds() - start_time, 5) + " s");
+                        LOG("Surface reconstruction second phase, " + to_string_fixed(get_time_seconds() - start_time, 5) + " s");
                 }
 
                 m_show->delete_object(SURFACE_BOUND_COCONE);
@@ -345,7 +347,7 @@ void MainWindow::thread_surface_constructor() noexcept
 
                 m_surface_constructor = create_manifold_constructor(to_vector<float>(m_surface_points), &progress);
 
-                LOG("Surface reconstruction first phase, " + to_string(get_time_seconds() - start_time, 5) + " s");
+                LOG("Surface reconstruction first phase, " + to_string_fixed(get_time_seconds() - start_time, 5) + " s");
 
                 std::vector<std::thread> threads(2);
                 std::vector<std::string> msg(2);

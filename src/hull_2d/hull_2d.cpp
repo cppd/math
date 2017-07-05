@@ -30,10 +30,9 @@ Chapter 2: CONVEX HULLS, 2.6 Divide-and-Conquer.
 #include "com/bits.h"
 #include "com/error.h"
 #include "com/math.h"
+#include "com/time.h"
 #include "gl/gl_query.h"
 
-#include <chrono>
-#include <cmath>
 #include <glm/vec2.hpp>
 
 // clang-format off
@@ -60,7 +59,7 @@ constexpr const char filter_shader[]
 // clang-format on
 
 // rad / ms
-constexpr double ANGULAR_FREQUENCY = TWO_PI * 0.005;
+constexpr double ANGULAR_FREQUENCY = TWO_PI * 5;
 
 namespace
 {
@@ -144,7 +143,7 @@ class ConvexHull2D::Impl final
 
         ShaderStorageBuffer m_points;
         TextureR32I m_point_count;
-        std::chrono::steady_clock::time_point m_start_time;
+        double m_start_time;
 
 public:
         Impl(const TextureR32I& objects, const glm::mat4& mtx)
@@ -159,7 +158,7 @@ public:
                   m_line_min(m_height, 1),
                   m_line_max(m_height, 1),
                   m_point_count(1, 1),
-                  m_start_time(std::chrono::steady_clock::now())
+                  m_start_time(get_time_seconds())
         {
                 m_prepare_prog.set_uniform_handle("objects", objects.get_image_resident_handle_read_only());
                 m_prepare_prog.set_uniform_handle("line_min", m_line_min.get_image_resident_handle_write_only());
@@ -179,7 +178,7 @@ public:
 
         void reset_timer()
         {
-                m_start_time = std::chrono::steady_clock::now();
+                m_start_time = get_time_seconds();
         }
 
         void draw()
@@ -202,8 +201,7 @@ public:
                 GLint point_count;
                 m_point_count.get_texture_sub_image(0, 0, 1, 1, &point_count);
 
-                std::chrono::duration<double, std::milli> time = std::chrono::steady_clock::now() - m_start_time;
-                float d = 0.5 + 0.5 * std::sin(ANGULAR_FREQUENCY * time.count());
+                float d = 0.5 + 0.5 * std::sin(ANGULAR_FREQUENCY * (get_time_seconds() - m_start_time));
                 m_draw_prog.set_uniform("brightness", d);
 
                 glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);

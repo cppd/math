@@ -23,8 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/log.h"
 #include "com/print.h"
 #include "com/thread.h"
+#include "com/time.h"
 
-#include <chrono>
 #include <fftw3.h>
 #include <thread>
 
@@ -101,7 +101,7 @@ public:
         {
                 if (data->size() != m_src.size())
                 {
-                        error("Error size fftw");
+                        error("Error size FFTW");
                 }
 
                 for (size_t i = 0; i < m_res.size(); ++i)
@@ -110,7 +110,7 @@ public:
                         m_src[i][1] = (*data)[i].imag();
                 }
 
-                std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
+                double start_time = get_time_seconds();
 
                 if (inv)
                 {
@@ -132,8 +132,7 @@ public:
                         }
                 }
 
-                std::chrono::duration<double, std::milli> time = std::chrono::steady_clock::now() - start;
-                LOG("calc fftw: " + to_string(time.count()));
+                LOG("calc FFTW: " + to_string_fixed(1000.0 * (get_time_seconds() - start_time), 5) + " ms");
         }
 };
 }

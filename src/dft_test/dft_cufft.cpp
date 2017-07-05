@@ -18,13 +18,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #if defined(CUDA_FOUND)
 
 #include "dft_cufft.h"
-#include "cuda.h"
 
 #include "com/error.h"
 #include "com/log.h"
 #include "com/print.h"
+#include "com/time.h"
 
-#include <chrono>
+//#include <cuda.h>
 #include <cuda_runtime.h>
 #include <cufft.h>
 
@@ -178,7 +178,8 @@ class CuFFT final : public IFourierCuda
                 cuda_memory_copy(m_data, cuda_x);
 
                 cuda_device_sync();
-                std::chrono::time_point<std::chrono::steady_clock> start = std::chrono::steady_clock::now();
+
+                double start_time = get_time_seconds();
 
                 if (inv)
                 {
@@ -196,8 +197,8 @@ class CuFFT final : public IFourierCuda
                 }
 
                 cuda_device_sync();
-                std::chrono::duration<double, std::milli> time = std::chrono::steady_clock::now() - start;
-                LOG("calc CUFFT: " + to_string(time.count()));
+
+                LOG("calc CUFFT: " + to_string_fixed(1000.0 * (get_time_seconds() - start_time), 5) + " ms");
 
                 cuda_memory_copy(&cuda_x, m_data);
 

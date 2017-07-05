@@ -17,14 +17,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "reconstruction_test.h"
 
-#include "points.h"
-
 #include "com/log.h"
 #include "com/math.h"
 #include "com/print.h"
 #include "com/random.h"
 #include "com/time.h"
 #include "geometry_cocone/reconstruction.h"
+#include "geometry_objects/points.h"
 #include "progress/progress.h"
 
 #include <cmath>
@@ -121,7 +120,7 @@ void test_algorithms(double rho, double alpha, const std::vector<Vector<N, float
                       to_string(facets.size()));
         }
 
-        LOG("Time: " + to_string(get_time_seconds() - start_time, 3) + " sec");
+        LOG("Time: " + to_string_fixed(get_time_seconds() - start_time, 5) + " s");
         LOG("Successful manifold reconstruction in " + to_string(N) + "D");
 }
 
@@ -155,9 +154,10 @@ std::vector<Vector<N, float>> clone(const std::vector<Vector<N, float>>& points,
 }
 
 template <size_t N>
-void all_tests_unbound(size_t size)
+void all_tests_unbound(int point_count)
 {
         static_assert(2 <= N && N <= 4);
+        ASSERT(point_count > 0);
 
         // BOUND COCONE может давать разные результаты в зависимости от точек и параметров,
         // поэтому надо проверять попадание в интервал, а не равенство
@@ -168,7 +168,7 @@ void all_tests_unbound(size_t size)
         // в обе стороны, поэтому достаточно смещение на 3 для отсутствия пересечений объектов
         constexpr double shift = 3;
 
-        std::vector<Vector<N, float>> points = generate_points_object_recess<N, Discretization>(size);
+        std::vector<Vector<N, float>> points = generate_points_object_recess<N>(point_count, Discretization);
 
         auto[facets_min, facets_max] = facet_count<N>(points.size());
         size_t bound_facets_min = bound_low_coef * facets_min;
@@ -198,9 +198,9 @@ void test(int low, int high)
         {
                 thread_local std::mt19937_64 engine(get_random_seed<std::mt19937_64>());
 
-                int size = std::uniform_int_distribution<int>(low, high)(engine);
+                int point_count = std::uniform_int_distribution<int>(low, high)(engine);
 
-                all_tests_unbound<N>(size);
+                all_tests_unbound<N>(point_count);
 
                 LOG("");
         }

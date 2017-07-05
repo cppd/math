@@ -53,9 +53,9 @@ Chapter 13: FFTs for Arbitrary N.
 #include "com/log.h"
 #include "com/math.h"
 #include "com/print.h"
+#include "com/time.h"
 #include "gl/gl_query.h"
 
-#include <chrono>
 #include <complex>
 #include <sstream>
 #include <vector>
@@ -277,13 +277,14 @@ class GL2D final : public IFourierGL1, public IFourierGL2
                 m_x_d.load(data);
 
                 glFinish();
-                std::chrono::time_point<std::chrono::steady_clock> start = std::chrono::steady_clock::now();
+
+                double start_time = get_time_seconds();
 
                 dft2d(inv);
 
                 glFinish();
-                std::chrono::duration<double, std::milli> time = std::chrono::steady_clock::now() - start;
-                LOG("calc gl2d: " + to_string(time.count()));
+
+                LOG("calc gl2d: " + to_string_fixed(1000.0 * (get_time_seconds() - start_time), 5) + " ms");
 
                 m_x_d.read(&data);
 

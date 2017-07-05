@@ -24,7 +24,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "geometry/convex_hull.h"
 #include "geometry/vec_glm.h"
 
-#include <chrono>
 #include <unordered_map>
 
 namespace
@@ -173,7 +172,7 @@ public:
 
                 compute_convex_hull(to_vector<float>(points), &facets, progress);
 
-                LOG("Convex hull created, " + to_string(get_time_seconds() - start_time, 5) + " s");
+                LOG("Convex hull created, " + to_string_fixed(get_time_seconds() - start_time, 5) + " s");
 
                 create_obj(points, facets);
         }

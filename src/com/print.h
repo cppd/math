@@ -76,6 +76,34 @@ std::enable_if_t<std::is_floating_point<T>::value, std::string> to_string(T t, u
 }
 
 template <typename T>
+std::enable_if_t<std::is_floating_point<T>::value, std::string> to_string_fixed(T t, unsigned digits)
+{
+        std::ostringstream o;
+        o << std::setprecision(digits);
+        o << std::fixed;
+        o << t;
+
+        std::string r = o.str();
+
+        while (r.size() > 0 && r[r.size() - 1] == '0')
+        {
+                r.resize(r.size() - 1);
+        }
+
+        if (r.size() > 0 && r[r.size() - 1] == '.')
+        {
+                r.resize(r.size() - 1);
+        }
+
+        if (r.size() == 0)
+        {
+                return o.str();
+        }
+
+        return r;
+}
+
+template <typename T>
 std::enable_if_t<std::is_integral<T>::value, std::string> to_string(T t)
 {
         return std::to_string(t);

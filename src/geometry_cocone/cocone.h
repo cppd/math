@@ -88,7 +88,7 @@ bool cocone_inside_or_equal(T... cos_n_p)
 */
 template <size_t N, typename T>
 bool intersect_cocone(const Vector<N, T>& normalized_cone_axis, const Vector<N, T>& from_apex_to_point_a,
-                      const Vector<N, T>& from_point_a_to_point_b, Vector<N, T>* from_apex_to_intersection_point, T* distance)
+                      const Vector<N, T>& from_point_a_to_point_b, T* distance)
 {
         static_assert(native_floating_point<T>);
 
@@ -121,16 +121,19 @@ bool intersect_cocone(const Vector<N, T>& normalized_cone_axis, const Vector<N, 
         {
                 return false;
         }
+
+        Vector<N, T> from_apex_to_intersection_point;
+
         if (t1_ok && !t2_ok)
         {
-                *from_apex_to_intersection_point = vec_a + t1 * vec_ab;
-                *distance = length(*from_apex_to_intersection_point);
+                from_apex_to_intersection_point = vec_a + t1 * vec_ab;
+                *distance = length(from_apex_to_intersection_point);
                 return true;
         }
         if (!t1_ok && t2_ok)
         {
-                *from_apex_to_intersection_point = vec_a + t2 * vec_ab;
-                *distance = length(*from_apex_to_intersection_point);
+                from_apex_to_intersection_point = vec_a + t2 * vec_ab;
+                *distance = length(from_apex_to_intersection_point);
                 return true;
         }
 
@@ -141,12 +144,12 @@ bool intersect_cocone(const Vector<N, T>& normalized_cone_axis, const Vector<N, 
 
         if (dot_1 > dot_2)
         {
-                *from_apex_to_intersection_point = pi_1;
+                from_apex_to_intersection_point = pi_1;
                 *distance = any_sqrt(dot_1);
         }
         else
         {
-                *from_apex_to_intersection_point = pi_2;
+                from_apex_to_intersection_point = pi_2;
                 *distance = any_sqrt(dot_2);
         }
 
