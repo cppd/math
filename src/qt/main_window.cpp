@@ -64,6 +64,9 @@ constexpr int BOUND_COCONE_DISPLAY_DIGITS = 3;
 // Таймер отображения хода расчётов. Величина в миллисекундах.
 constexpr int TIMER_PROGRESS_BAR_INTERVAL = 100;
 
+// Количество точек для готовых объектов.
+constexpr int POINT_COUNT = 10000;
+
 // Идентификаторы объектов для взаимодействия с модулем рисования,
 // куда передаются как числа, а не как enum
 enum ObjectType
@@ -186,7 +189,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
         this->addAction(ui.actionFullScreen);
 
         this->setWindowTitle(APPLICATION_NAME);
-        ui.actionAbout->setText("About " + QString(APPLICATION_NAME) + "...");
+        ui.actionAbout->setText("About " + QString(APPLICATION_NAME));
 
         m_bound_cocone_rho = BOUND_COCONE_DEFAULT_RHO;
         m_bound_cocone_alpha = BOUND_COCONE_DEFAULT_ALPHA;
@@ -195,6 +198,8 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
         ui.radioButton_Model->setChecked(true);
 
         ui.tabWidget->setCurrentIndex(0);
+
+        create_object_repository_and_menu();
 }
 
 MainWindow::~MainWindow()
@@ -371,7 +376,7 @@ void MainWindow::thread_surface_constructor() noexcept
         }
 }
 
-void MainWindow::thread_open_file(const std::string& file_name) noexcept
+void MainWindow::thread_open_object(const std::string& object_name, OpenObjectType object_type) noexcept
 {
         try
         {
@@ -379,8 +384,18 @@ void MainWindow::thread_open_file(const std::string& file_name) noexcept
 
                 {
                         ProgressRatio progress(&m_progress_ratio_list);
-                        progress.set_text("Load file: %p%");
-                        obj = load_obj_from_file(file_name, &progress);
+                        switch (object_type)
+                        {
+                        case OpenObjectType::File:
+                                progress.set_text("Load file: %p%");
+                                obj = load_obj_from_file(object_name, &progress);
+                                break;
+                        case OpenObjectType::Repository:
+                                progress.set_text("Load object: %p%");
+                                obj = load_obj_from_points(
+                                        to_glm(m_object_repository->get_point_object(object_name, POINT_COUNT)));
+                                break;
+                        }
                 }
 
                 if (obj->get_faces().size() == 0 && obj->get_points().size() == 0)
@@ -397,7 +412,7 @@ void MainWindow::thread_open_file(const std::string& file_name) noexcept
                 m_surface_cocone.reset();
                 m_surface_bound_cocone.reset();
 
-                file_loaded(file_name);
+                file_loaded(object_name);
 
                 m_surface_points = (obj->get_faces().size() > 0) ? get_unique_face_vertices(obj.get()) :
                                                                    get_unique_point_vertices(obj.get());
@@ -415,23 +430,23 @@ void MainWindow::thread_open_file(const std::string& file_name) noexcept
         }
         catch (std::exception& e)
         {
-                error_message("loading " + file_name + ":\n" + e.what());
+                error_message("loading " + object_name + ":\n" + e.what());
         }
         catch (...)
         {
-                error_message("Unknown error while loading file " + file_name);
+                error_message("Unknown error while loading " + object_name);
         }
 
         m_file_loading = false;
 }
 
-void MainWindow::start_thread_open_file(const std::string& file_name)
+void MainWindow::start_thread_open_object(const std::string& object_name, OpenObjectType object_type)
 {
         stop_all_threads();
 
         m_file_loading = true;
 
-        launch_class_thread(&m_open_file_thread, nullptr, &MainWindow::thread_open_file, this, file_name);
+        launch_class_thread(&m_open_file_thread, nullptr, &MainWindow::thread_open_object, this, object_name, object_type);
 }
 
 void MainWindow::stop_all_threads()
@@ -525,6 +540,32 @@ void MainWindow::timer_slot()
         {
                 ui.statusBar->removeWidget(&(*bar));
                 bar = m_progress_bars.erase(bar);
+        }
+}
+
+void MainWindow::create_object_repository_and_menu()
+{
+        m_object_repository = create_object_repository<3>();
+        // QMenu* menuCreate = new QMenu("Create", this);
+        // ui.menuBar->insertMenu(ui.menuHelp->menuAction(), menuCreate);
+        for (const std::string& object_name : m_object_repository->get_list_of_point_objects())
+        {
+                QAction* action = ui.menuCreate->addAction(object_name.c_str());
+                m_action_to_object_name_map.emplace(action, object_name);
+                connect(action, SIGNAL(triggered()), this, SLOT(object_repository_slot()));
+        }
+}
+
+void MainWindow::object_repository_slot()
+{
+        auto iter = m_action_to_object_name_map.find(sender());
+        if (iter != m_action_to_object_name_map.cend())
+        {
+                start_thread_open_object(iter->second, OpenObjectType::Repository);
+        }
+        else
+        {
+                error_message("create object sender not found in map");
         }
 }
 
@@ -748,7 +789,7 @@ void MainWindow::window_shown()
 
         if (QCoreApplication::arguments().count() == 2)
         {
-                start_thread_open_file(QCoreApplication::arguments().at(1).toStdString());
+                start_thread_open_object(QCoreApplication::arguments().at(1).toStdString(), OpenObjectType::File);
         }
 
         m_timer.start(TIMER_PROGRESS_BAR_INTERVAL);
@@ -756,11 +797,11 @@ void MainWindow::window_shown()
 
 void MainWindow::on_actionLoad_triggered()
 {
-        QString file_name = QFileDialog::getOpenFileName(this, "Open OBJ file", "", "OBJ files (*.obj);; Points files(*.txt)",
-                                                         nullptr, QFileDialog::ReadOnly | QFileDialog::DontUseNativeDialog);
+        QString file_name = QFileDialog::getOpenFileName(this, "Open", "", "OBJ and Point files (*.obj *.txt)", nullptr,
+                                                         QFileDialog::ReadOnly | QFileDialog::DontUseNativeDialog);
         if (file_name.size() > 0)
         {
-                start_thread_open_file(file_name.toStdString());
+                start_thread_open_object(file_name.toStdString(), OpenObjectType::File);
         }
 }
 
@@ -809,7 +850,7 @@ void MainWindow::on_actionExport_triggered()
                 return;
         }
 
-        QString file_name = QFileDialog::getSaveFileName(this, "Export " + QString(name.c_str()) + " to OBJ file", "",
+        QString file_name = QFileDialog::getSaveFileName(this, "Export " + QString(name.c_str()) + " to OBJ", "",
                                                          "OBJ files (*.obj)", nullptr, QFileDialog::DontUseNativeDialog);
         if (file_name.size() == 0)
         {

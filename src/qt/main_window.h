@@ -32,9 +32,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <memory>
 #include <mutex>
 #include <string>
+#include <unordered_map>
 
 template <size_t N>
 struct IManifoldConstructor;
+
+template <size_t N>
+struct IObjectRepository;
 
 class MainWindow final : public QMainWindow, public ICallBack
 {
@@ -55,6 +59,7 @@ public slots:
 
 private slots:
         void on_actionLoad_triggered();
+        void on_actionExport_triggered();
         void on_actionExit_triggered();
         void on_actionAbout_triggered();
         void on_MainWindow_SignalWindowEvent(const WindowEvent&);
@@ -88,11 +93,18 @@ private slots:
         void timer_slot();
         void window_shown();
         void widget_under_window_mouse_wheel_slot(double delta);
-
-        void on_actionExport_triggered();
+        void object_repository_slot();
 
 private:
+        enum class OpenObjectType
+        {
+                File,
+                Repository
+        };
+
         void set_dependent_interface_enabled();
+
+        void create_object_repository_and_menu();
 
         void resize_window();
         void move_window_to_desktop_center();
@@ -102,13 +114,13 @@ private:
         void disable_object_buttons();
         void disable_bound_cocone_buttons();
 
-        void thread_open_file(const std::string& file_name) noexcept;
+        void thread_open_object(const std::string& object_name, OpenObjectType object_type) noexcept;
         void thread_model(std::shared_ptr<IObj> obj) noexcept;
         void thread_surface_constructor() noexcept;
         void thread_cocone() noexcept;
         void thread_bound_cocone(double rho, double alpha) noexcept;
 
-        void start_thread_open_file(const std::string& file_name);
+        void start_thread_open_object(const std::string& object_name, OpenObjectType object_type);
         void stop_all_threads();
 
         void error_message(const std::string&) noexcept override;
@@ -163,4 +175,7 @@ private:
 
         std::shared_ptr<IObj> m_surface_cocone;
         std::shared_ptr<IObj> m_surface_bound_cocone;
+
+        std::unique_ptr<IObjectRepository<3>> m_object_repository;
+        std::unordered_map<QObject*, std::string> m_action_to_object_name_map;
 };

@@ -34,9 +34,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 constexpr double RHO = 0.3;
 constexpr double ALPHA = 0.14;
 
-// Надо располагать точки по целым числам, так как выпуклая оболочка работает с целыми числами
-constexpr size_t Discretization = 100000;
-
 namespace
 {
 template <size_t N>
@@ -168,7 +165,7 @@ void all_tests_unbound(int point_count)
         // в обе стороны, поэтому достаточно смещение на 3 для отсутствия пересечений объектов
         constexpr double shift = 3;
 
-        std::vector<Vector<N, float>> points = generate_points_object_recess<N>(point_count, Discretization);
+        std::vector<Vector<N, float>> points = create_object_repository<N>()->sphere_with_notch(point_count);
 
         auto[facets_min, facets_max] = facet_count<N>(points.size());
         size_t bound_facets_min = bound_low_coef * facets_min;

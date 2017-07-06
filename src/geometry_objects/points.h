@@ -17,154 +17,29 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "com/error.h"
-#include "com/log.h"
-#include "com/math.h"
 #include "geometry/vec.h"
 
-#include <random>
-#include <unordered_set>
+#include <memory>
+#include <string>
 #include <vector>
 
-namespace PointsImplementation
-{
 template <size_t N>
-void check_unique_points(const std::vector<Vector<N, float>>& points)
+struct IObjectRepository
 {
-        std::unordered_set<Vector<N, float>> check_set(points.cbegin(), points.cend());
+        virtual ~IObjectRepository() = default;
 
-        if (points.size() != check_set.size())
-        {
-                error("error generate unique points");
-        }
-}
+        virtual std::vector<Vector<N, float>> ellipsoid(unsigned point_count) const = 0;
+        virtual std::vector<Vector<N, float>> ellipsoid_bound(unsigned point_count) const = 0;
+        virtual std::vector<Vector<N, float>> sphere_with_notch(unsigned point_count) const = 0;
+        virtual std::vector<Vector<N, float>> sphere_with_notch_bound(unsigned point_count) const = 0;
 
-template <size_t N>
-Vector<N, long> to_integer(const Vector<N, double>& v, long factor)
-{
-        Vector<N, long> r;
-        for (unsigned n = 0; n < N; ++n)
-        {
-                r[n] = std::lround(v[n] * factor);
-        }
-        return r;
-}
+        virtual std::vector<std::string> get_list_of_point_objects() const = 0;
+        virtual std::vector<Vector<N, float>> get_point_object(const std::string& object_name, unsigned point_count) const = 0;
+};
 
 template <size_t N>
-vec<N> random_sphere(std::mt19937_64* gen)
-{
-        std::uniform_real_distribution<double> urd(-1.0, 1.0);
+std::unique_ptr<IObjectRepository<N>> create_object_repository();
 
-        vec<N> v;
-        do
-        {
-                for (unsigned n = 0; n < N; ++n)
-                {
-                        v[n] = urd(*gen);
-                }
-        } while (dot(v, v) > 1);
-
-        return normalize(v);
-}
-}
-
-inline std::vector<Vector<2, float>> generate_points_semicircle(unsigned point_count)
-{
-        if (point_count < 3)
-        {
-                error("point count out of range");
-        }
-
-        std::vector<Vector<2, float>> points(point_count);
-
-        for (double i = 0; i < point_count; ++i)
-        {
-                points[i] = {-std::cos(PI * i / (point_count - 1)), std::sin(PI * i / (point_count - 1))};
-        }
-
-        PointsImplementation::check_unique_points(points);
-
-        return points;
-}
-
-template <size_t N>
-std::vector<Vector<N, float>> generate_points_ellipsoid(unsigned point_count, unsigned discretization)
-{
-        // Для float большое число не надо
-        if (discretization > 1000000)
-        {
-                error("discretization out of range");
-        }
-
-        std::vector<Vector<N, float>> points;
-        points.reserve(point_count);
-
-        std::unordered_set<Vector<N, long>> integer_points;
-        integer_points.reserve(point_count);
-
-        std::mt19937_64 gen(point_count);
-
-        while (integer_points.size() < point_count)
-        {
-                vec<N> v = PointsImplementation::random_sphere<N>(&gen);
-
-                v[0] *= 2;
-
-                Vector<N, long> integer_point = PointsImplementation::to_integer(v, discretization);
-                if (integer_points.count(integer_point) == 0)
-                {
-                        integer_points.insert(integer_point);
-                        points.push_back(to_vector<float>(v));
-                }
-        }
-
-        PointsImplementation::check_unique_points(points);
-
-        return points;
-}
-
-template <size_t N>
-std::vector<Vector<N, float>> generate_points_object_recess(unsigned point_count, unsigned discretization)
-{
-        // Для float большое число не надо
-        if (discretization > 1000000)
-        {
-                error("discretization out of range");
-        }
-
-        std::vector<Vector<N, float>> points;
-        points.reserve(point_count);
-
-        std::unordered_set<Vector<N, long>> integer_points;
-        integer_points.reserve(point_count);
-
-        std::mt19937_64 gen(point_count);
-
-        Vector<N, double> z_axis(0);
-        z_axis[N - 1] = 1;
-
-        while (integer_points.size() < point_count)
-        {
-                // точки на сфере с углублением со стороны последней оси
-                // в положительном направлении этой оси
-
-                vec<N> v = PointsImplementation::random_sphere<N>(&gen);
-
-                double dot_z = dot(z_axis, v);
-                if (dot_z > 0)
-                {
-                        v[N - 1] *= 1 - std::abs(0.3 * std::pow(dot_z, 10));
-                }
-
-                Vector<N, long> integer_point = PointsImplementation::to_integer(v, discretization);
-                if (integer_points.count(integer_point) == 0)
-                {
-                        integer_points.insert(integer_point);
-                        points.push_back(to_vector<float>(v));
-                }
-        }
-
-        PointsImplementation::check_unique_points(points);
-
-        return points;
-}
+extern template std::unique_ptr<IObjectRepository<2>> create_object_repository<2>();
+extern template std::unique_ptr<IObjectRepository<3>> create_object_repository<3>();
+extern template std::unique_ptr<IObjectRepository<4>> create_object_repository<4>();
