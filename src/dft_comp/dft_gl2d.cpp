@@ -62,14 +62,6 @@ Chapter 13: FFTs for Arbitrary N.
 
 namespace
 {
-template <typename T>
-void print(const DeviceMemory<T>& dm)
-{
-        std::vector<T> tmp(dm.size());
-        dm.read(&tmp);
-        print_vector(tmp);
-}
-
 // Или само число степень двух,
 // или минимальная степень двух, равная или больше 2N-2
 int compute_M(int n)

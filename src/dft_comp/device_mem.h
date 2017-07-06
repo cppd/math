@@ -71,6 +71,12 @@ public:
                 }
                 m_buffer.read(data);
         }
+        std::vector<T> read() const
+        {
+                std::vector<T> v(size());
+                read(&v);
+                return v;
+        }
         void bind(int point) const noexcept
         {
                 m_buffer.bind(point);

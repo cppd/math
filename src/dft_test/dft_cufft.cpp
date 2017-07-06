@@ -234,7 +234,7 @@ public:
                         error("CUFFT create FFT plan error");
                 }
         }
-        ~CuFFT()
+        ~CuFFT() override
         {
                 cufftDestroy(m_plan);
         }
