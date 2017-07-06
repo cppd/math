@@ -34,7 +34,7 @@ int get_max_work_group_count_z();
 int get_max_compute_shared_memory();
 int get_max_shader_storage_block_size();
 
-void print_settings();
+std::string graphics_overview();
 
 void check_context(int major, int minor, const std::vector<std::string>& extensions);
 void check_bit_sizes(int depthBits, int stencilBits, int antialiasing_level, int redBits, int greenBits, int blueBits,

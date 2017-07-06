@@ -19,23 +19,5 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <string>
 
-namespace LogImplementation
-{
-void write_log_message(const std::string& msg) noexcept;
-}
-
-#if 1
-// Необязательные сообщения
-inline void LOG(const std::string& msg) noexcept
-{
-        LogImplementation::write_log_message(msg);
-}
-#else
-#define LOG(expr) (static_cast<void>(0))
-#endif
-
-// Обязательно выводимые сообщения
-inline void LOG_ERROR(const std::string& msg) noexcept
-{
-        LogImplementation::write_log_message(msg);
-}
+void LOG(const std::string& msg) noexcept;
+void LOG_ERROR(const std::string& msg) noexcept;

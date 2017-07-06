@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <algorithm>
 #include <cstdio>
 
-namespace LogImplementation
+namespace
 {
 void write_log_message(const std::string& msg) noexcept try
 {
@@ -83,4 +83,14 @@ catch (...)
 
         std::_Exit(EXIT_FAILURE);
 }
+}
+
+void LOG(const std::string& msg) noexcept
+{
+        write_log_message(msg);
+}
+
+void LOG_ERROR(const std::string& msg) noexcept
+{
+        write_log_message(msg);
 }

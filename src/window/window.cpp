@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "window.h"
 
+#include "com/log.h"
+
 #include "gl/gl_query.h"
 #include "gl_func/gl_functions.h"
 
@@ -57,7 +59,8 @@ void create_gl_window_1x1(int major_gl_version, int minor_gl_version, const std:
 
         check_context(major_gl_version, minor_gl_version, extensions);
         check_bit_sizes(depth_bits, stencil_bits, antialiasing_level, red_bits, green_bits, blue_bits, alpha_bits);
-        print_settings();
+
+        LOG("\n-----GL Window-----\n" + graphics_overview());
 }
 
 void create_gl_context_1x1(int major_gl_version, int minor_gl_version, const std::vector<std::string>& extensions,
@@ -78,5 +81,6 @@ void create_gl_context_1x1(int major_gl_version, int minor_gl_version, const std
 #endif
 
         check_context(major_gl_version, minor_gl_version, extensions);
-        print_settings();
+
+        LOG("\n-----GL Context-----\n" + graphics_overview());
 }

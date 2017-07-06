@@ -21,14 +21,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "gl_func/gl_functions.h"
 
 #include <algorithm>
-#include <iostream>
 #include <sstream>
 
-void print_settings()
+std::string graphics_overview()
 {
         std::ostringstream os;
-
-        os << "\n";
 
         os << "GL_VERSION: " << glGetString(GL_VERSION) << "\n";
         os << "GL_VENDOR: " << glGetString(GL_VENDOR) << "\n";
@@ -64,9 +61,7 @@ void print_settings()
         os << "max shader storage block size: " << get_max_shader_storage_block_size() << "\n";
         os << "samples: " << get_framebuffer_samples() << "\n";
 
-        os << "\n";
-
-        std::cout << os.str() << std::flush;
+        return os.str();
 }
 
 void check_context(int major, int minor, const std::vector<std::string>& extensions)

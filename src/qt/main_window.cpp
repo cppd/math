@@ -627,7 +627,7 @@ void MainWindow::on_MainWindow_SignalWindowEvent(const WindowEvent& event)
 
                 const char* message = (d.msg.size() != 0) ? d.msg.c_str() : "Unknown Error. Exit failure.";
 
-                LOG(message);
+                LOG_ERROR(message);
 
                 message_critical(message);
 
@@ -639,7 +639,7 @@ void MainWindow::on_MainWindow_SignalWindowEvent(const WindowEvent& event)
         {
                 const WindowEvent::error_src_message& d = event.get<WindowEvent::error_src_message>();
 
-                LOG(d.msg);
+                LOG_ERROR(d.msg);
 
                 show_source_error(this, d.msg, source_with_line_numbers(d.src));
 
@@ -651,7 +651,7 @@ void MainWindow::on_MainWindow_SignalWindowEvent(const WindowEvent& event)
         {
                 const WindowEvent::error_message& d = event.get<WindowEvent::error_message>();
 
-                LOG(d.msg);
+                LOG_ERROR(d.msg);
 
                 message_critical(d.msg);
 

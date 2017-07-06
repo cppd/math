@@ -16,9 +16,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
+
 #if 0
 
 #include "bits.h"
+
 #include "error.h"
 
 #include <cstdint>
@@ -49,7 +51,7 @@ void bit_reverse(const std::vector<int>& reverse_lookup, std::vector<T>* data)
         int N = data->size();
         if (N != static_cast<int>(reverse_lookup.size()))
         {
-                Error("bit reverse size error");
+                error("bit reverse size error");
         }
         for (int i = 0; i < N; ++i)
         {

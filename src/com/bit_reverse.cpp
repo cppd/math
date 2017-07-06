@@ -19,26 +19,30 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "bit_reverse.h"
 
-//#include <iomanip>
-//#include <iostream>
+#include <iomanip>
+#include <sstream>
 
-// namespace
-//{
-// void print_bit_reverse_255()
-//{
-//        std::cout << std::hex << std::setfill('0');
-//        for (int i = 0; i <= 255; ++i)
-//        {
-//                if (i != 0)
-//                {
-//                        std::cout << ',';
-//                        std::cout << ((i & 0xf) ? ' ' : '\n');
-//                }
-//                std::cout << "0x" << std::setw(2) << get_bit_reverse(8, i);
-//        }
-//        std::cout << std::endl;
-//}
-//}
+namespace
+{
+std::string bit_reverse_255_table()
+{
+        std::ostringstream oss;
+
+        oss << std::hex << std::setfill('0');
+
+        for (int i = 0; i <= 255; ++i)
+        {
+                if (i != 0)
+                {
+                        oss << ',';
+                        oss << ((i & 0xf) ? ' ' : '\n');
+                }
+                oss << "0x" << std::setw(2) << get_bit_reverse(8, i);
+        }
+
+        return oss.str();
+}
+}
 
 // clang-format off
 constexpr uint8_t bit_reverse_lookup_table[256] =
