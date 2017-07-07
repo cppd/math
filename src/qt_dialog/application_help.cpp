@@ -15,17 +15,21 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#pragma once
+#include "application_help.h"
 
-#include "window/window_prop.h"
+#include "application/application_name.h"
 
-#include <QColor>
-#include <QLayout>
-#include <QRadioButton>
-#include <glm/vec3.hpp>
+#include <QMessageBox>
 
-void set_widgets_enabled(QLayout* layout, bool v);
-glm::vec3 qcolor_to_vec3(const QColor& c);
-void disable_radio_button(QRadioButton* button);
-void button_strike_out(QRadioButton* button, bool strike_out);
-WindowID get_widget_window_id(QWidget* widget);
+void application_help(QWidget* parent)
+{
+        static const QString message =
+                "Move: left mouse button.\n\n"
+                "Rotate: right mouse button.\n\n"
+                "Zoom: mouse wheel.\n\n"
+                "Toggle fullscreen: F11.";
+
+        static const QString title = APPLICATION_NAME + QString(" Help");
+
+        QMessageBox::about(parent, title, message);
+}

@@ -31,7 +31,7 @@ void show_source_error(QWidget* parent, const std::string& msg, const std::strin
 bool edit_bound_cocone_parameters(QWidget* parent, int digits, double* rho, double* alpha)
 {
         BoundCoconeParameters dlg(parent);
-        dlg.setWindowTitle("Bound cocone parameters");
+        dlg.setWindowTitle("BOUND COCONE parameters");
         dlg.set_parameters(digits, *rho, *alpha);
         if (!dlg.exec())
         {

@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "qt_support.h"
 
+#include "application/application_name.h"
 #include "com/error.h"
 #include "com/file_sys.h"
 #include "com/log.h"
@@ -34,20 +35,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "obj/obj_points_load.h"
 #include "obj/obj_surface.h"
 #include "progress/progress.h"
+#include "qt_dialog/application_about.h"
+#include "qt_dialog/application_help.h"
 #include "qt_dialog/dialogs.h"
+#include "qt_dialog/message_boxes.h"
 
 #include <QColorDialog>
 #include <QDateTime>
 #include <QDesktopWidget>
 #include <QFileDialog>
-#include <QMessageBox>
 #include <QObjectList>
 #include <array>
 #include <cmath>
-#include <thread>
-#include <type_traits>
-
-constexpr const char* APPLICATION_NAME = "Math Viewer";
 
 // Размер окна по сравнению с экраном
 constexpr double WINDOW_SIZE_COEF = 0.7;
@@ -79,84 +78,13 @@ enum ObjectType
         SURFACE_BOUND_COCONE_CONVEX_HULL
 };
 
-#define CATCH_ALL_SEND_EVENT()                                                                               \
-        catch (std::exception & e)                                                                           \
-        {                                                                                                    \
-                error_fatal(std::string("Critical program error. Send event exception: ") + e.what() + "."); \
-        }                                                                                                    \
-        catch (...)                                                                                          \
-        {                                                                                                    \
-                error_fatal("Critical program error. Send event exception.");                                \
-        }
-
-namespace
-{
-WindowID get_widget_window_id(QWidget* widget)
-{
-        static_assert(sizeof(WindowID) == sizeof(WId));
-        static_assert(std::is_integral<WindowID>::value || std::is_pointer<WindowID>::value);
-        static_assert(std::is_integral<WId>::value || std::is_pointer<WId>::value);
-
-        union {
-                WId w_id;
-                WindowID window_id;
-        };
-
-        w_id = widget->winId();
-        return window_id;
-}
-}
-
-void MainWindow::message_about(const std::string& msg)
-{
-        QMessageBox::about(this, QString("About ") + APPLICATION_NAME, msg.c_str());
-}
-void MainWindow::message_critical(const std::string& msg)
-{
-        QMessageBox::critical(this, APPLICATION_NAME, msg.c_str());
-}
-void MainWindow::message_information(const std::string& msg)
-{
-        QMessageBox::information(this, APPLICATION_NAME, msg.c_str());
-}
-void MainWindow::message_warning(const std::string& msg)
-{
-        QMessageBox::warning(this, APPLICATION_NAME, msg.c_str());
-}
-
-void MainWindow::on_actionAbout_triggered()
-{
-#if defined(__linux__)
-        message_about(
-                "C++17\nGLSL 4.50\n"
-                "\n"
-                "Freetype\nGLM\nGMP\nOpenGL\nQt\nSFML\nX11");
-#elif defined(_WIN32)
-        message_about(
-                "C++17\nGLSL 4.50\n"
-                "\n"
-                "Freetype\nGLM\nGMP\nOpenGL\nQt\nSFML");
-#else
-#error This operating system is not supported
-#endif
-}
-
-void MainWindow::on_actionKeyboard_and_Mouse_triggered()
-{
-        message_information(
-                "Move: left mouse button.\n\n"
-                "Rotate: right mouse button.\n\n"
-                "Zoom: mouse wheel.\n\n"
-                "Toggle fullscreen: F11.");
-}
-
 MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
 {
         ui.setupUi(this);
 
         qRegisterMetaType<WindowEvent>("WindowEvent");
 
-        connect(this, SIGNAL(SignalWindowEvent(WindowEvent)), this, SLOT(on_MainWindow_SignalWindowEvent(WindowEvent)),
+        connect(this, SIGNAL(window_event(WindowEvent)), this, SLOT(window_event_slot(WindowEvent)),
                 Qt::ConnectionType(Qt::QueuedConnection | Qt::UniqueConnection));
 
         connect(ui.widget_under_window, SIGNAL(wheel(double)), this, SLOT(widget_under_window_mouse_wheel_slot(double)));
@@ -189,6 +117,8 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
         this->addAction(ui.actionFullScreen);
 
         this->setWindowTitle(APPLICATION_NAME);
+
+        ui.actionHelp->setText(QString(APPLICATION_NAME) + " Help");
         ui.actionAbout->setText("About " + QString(APPLICATION_NAME));
 
         m_bound_cocone_rho = BOUND_COCONE_DEFAULT_RHO;
@@ -265,7 +195,7 @@ void MainWindow::thread_cocone() noexcept
                         m_show->add_object(m_surface_cocone, SURFACE_COCONE, MODEL);
 
                         ProgressRatio progress(&m_progress_ratio_list);
-                        progress.set_text("Cocone convex hull 3D: %v of %m");
+                        progress.set_text("COCONE convex hull 3D: %v of %m");
 
                         std::shared_ptr<IObj> convex_hull = create_convex_hull_for_obj(m_surface_cocone.get(), &progress);
 
@@ -317,7 +247,7 @@ void MainWindow::thread_bound_cocone(double rho, double alpha) noexcept
                         m_show->add_object(m_surface_bound_cocone, SURFACE_BOUND_COCONE, MODEL);
 
                         ProgressRatio progress(&m_progress_ratio_list);
-                        progress.set_text("Bound cocone convex hull 3D: %v of %m");
+                        progress.set_text("BOUND COCONE convex hull 3D: %v of %m");
 
                         std::shared_ptr<IObj> convex_hull = create_convex_hull_for_obj(m_surface_bound_cocone.get(), &progress);
 
@@ -469,17 +399,17 @@ void MainWindow::on_Button_LoadBoundCocone_clicked()
 {
         if (m_file_loading)
         {
-                message_warning("Busy loading file");
+                message_warning(this, "Busy loading file");
                 return;
         }
         if (m_bound_cocone_loading)
         {
-                message_warning("Busy loading bound cocone");
+                message_warning(this, "Busy loading BOUND COCONE");
                 return;
         }
         if (!m_surface_constructor)
         {
-                message_warning("No surface constructor");
+                message_warning(this, "No surface constructor");
                 return;
         }
 
@@ -571,24 +501,32 @@ void MainWindow::object_repository_slot()
 
 void MainWindow::set_bound_cocone_label(double rho, double alpha)
 {
-        std::string bc =
-                "ρ " + to_string(rho, BOUND_COCONE_DISPLAY_DIGITS) + "; α " + to_string(alpha, BOUND_COCONE_DISPLAY_DIGITS);
-        ui.BoundCocone_label->setText(bc.c_str());
+        QString label;
+        label += u8"ρ " + QString(to_string_fixed(rho, BOUND_COCONE_DISPLAY_DIGITS).c_str());
+        label += "; ";
+        label += u8"α " + QString(to_string_fixed(alpha, BOUND_COCONE_DISPLAY_DIGITS).c_str());
+        ui.BoundCocone_label->setText(label);
 }
 
 void MainWindow::set_dependent_interface_enabled()
 {
         ui.Label_DFT_Brightness->setEnabled(ui.checkBox_show_dft->isEnabled() && ui.checkBox_show_dft->isChecked());
         ui.Slider_DFT_Brightness->setEnabled(ui.checkBox_show_dft->isEnabled() && ui.checkBox_show_dft->isChecked());
-
-        // ui.widget_wireframe_color->setEnabled(ui.checkBox_Wireframe->isEnabled() && ui.checkBox_Wireframe->isChecked());
-        // ui.ButtonWireframeColor->setEnabled(ui.checkBox_Wireframe->isEnabled() && ui.checkBox_Wireframe->isChecked());
-        // ui.label_wireframe_color->setEnabled(ui.checkBox_Wireframe->isEnabled() && ui.checkBox_Wireframe->isChecked());
 }
 
 void MainWindow::disable_radio_button(QRadioButton* button)
 {
         button_strike_out(button, true);
+}
+
+void MainWindow::enable_radio_button(QRadioButton* button)
+{
+        button_strike_out(button, false);
+
+        if (button->isChecked())
+        {
+                button->click();
+        }
 }
 
 void MainWindow::disable_object_buttons()
@@ -607,17 +545,7 @@ void MainWindow::disable_bound_cocone_buttons()
         disable_radio_button(ui.radioButton_BoundCoconeConvexHull);
 }
 
-void MainWindow::enable_radio_button(QRadioButton* button)
-{
-        button_strike_out(button, false);
-
-        if (button->isChecked())
-        {
-                button->click();
-        }
-}
-
-void MainWindow::on_MainWindow_SignalWindowEvent(const WindowEvent& event)
+void MainWindow::window_event_slot(const WindowEvent& event)
 {
         switch (event.get_type())
         {
@@ -629,7 +557,7 @@ void MainWindow::on_MainWindow_SignalWindowEvent(const WindowEvent& event)
 
                 LOG_ERROR(message);
 
-                message_critical(message);
+                message_critical(this, message);
 
                 close();
 
@@ -653,7 +581,7 @@ void MainWindow::on_MainWindow_SignalWindowEvent(const WindowEvent& event)
 
                 LOG_ERROR(d.msg);
 
-                message_critical(d.msg);
+                message_critical(this, d.msg.c_str());
 
                 break;
         }
@@ -730,7 +658,7 @@ void MainWindow::showEvent(QShowEvent* e)
         m_first_show = false;
 
         // Окно ещё не видно, поэтому небольшая задержка, чтобы окно реально появилось.
-        QTimer::singleShot(50, this, SLOT(window_shown()));
+        QTimer::singleShot(50, this, SLOT(window_shown_slot()));
 }
 
 void MainWindow::resize_window()
@@ -760,7 +688,7 @@ void MainWindow::move_window_to_desktop_center()
                    (QDesktopWidget().availableGeometry(this).height() - this->frameGeometry().height()) / 2);
 }
 
-void MainWindow::window_shown()
+void MainWindow::window_shown_slot()
 {
         resize_window();
 
@@ -809,40 +737,45 @@ void MainWindow::on_actionExport_triggered()
 {
         if (m_file_loading)
         {
-                message_warning("Loading file");
+                message_warning(this, "Busy loading file");
+                return;
+        }
+        if (m_bound_cocone_loading)
+        {
+                message_warning(this, "Busy loading BOUND COCONE");
                 return;
         }
 
         if (!(ui.radioButton_Cocone->isChecked() || ui.radioButton_BoundCocone->isChecked()))
         {
-                message_warning("Select COCONE or BOUND COCONE");
+                message_warning(this, "Select COCONE or BOUND COCONE");
                 return;
         }
 
         if (ui.radioButton_Cocone->isChecked() && (!m_surface_cocone || m_surface_cocone->get_faces().size() == 0))
         {
-                message_warning("COCONE not created");
+                message_warning(this, "COCONE not created");
                 return;
         }
 
         if (ui.radioButton_BoundCocone->isChecked() &&
             (!m_surface_bound_cocone || m_surface_bound_cocone->get_faces().size() == 0))
         {
-                message_warning("BOUND COCONE not created");
+                message_warning(this, "BOUND COCONE not created");
                 return;
         }
 
-        std::string name;
+        QString cocone_type;
         const IObj* obj;
 
         if (ui.radioButton_Cocone->isChecked())
         {
-                name = "COCONE";
+                cocone_type = "COCONE";
                 obj = m_surface_cocone.get();
         }
         else if (ui.radioButton_BoundCocone->isChecked())
         {
-                name = "BOUND COCONE";
+                cocone_type = "BOUND COCONE";
                 obj = m_surface_bound_cocone.get();
         }
         else
@@ -850,8 +783,8 @@ void MainWindow::on_actionExport_triggered()
                 return;
         }
 
-        QString file_name = QFileDialog::getSaveFileName(this, "Export " + QString(name.c_str()) + " to OBJ", "",
-                                                         "OBJ files (*.obj)", nullptr, QFileDialog::DontUseNativeDialog);
+        QString file_name = QFileDialog::getSaveFileName(this, "Export " + cocone_type + " to OBJ", "", "OBJ files (*.obj)",
+                                                         nullptr, QFileDialog::DontUseNativeDialog);
         if (file_name.size() == 0)
         {
                 return;
@@ -861,18 +794,33 @@ void MainWindow::on_actionExport_triggered()
         // не может начаться загрузка файла с удалением объекта obj
         try
         {
-                save_obj_geometry_to_file(obj, file_name.toStdString(), name);
+                save_obj_geometry_to_file(obj, file_name.toStdString(), cocone_type.toStdString());
         }
         catch (std::exception& e)
         {
-                error_message("Export " + name + " to file:\n" + e.what());
+                error_message("Export " + cocone_type.toStdString() + " to file:\n" + e.what());
         }
         catch (...)
         {
-                error_message("Unknown error while export " + name + " to file");
+                error_message("Unknown error while export " + cocone_type.toStdString() + " to file");
         }
 
-        message_information(name + " exported.\n\n" + file_name.toStdString());
+        message_information(this, cocone_type + " exported.\n\n" + file_name);
+}
+
+void MainWindow::on_actionExit_triggered()
+{
+        close();
+}
+
+void MainWindow::on_actionHelp_triggered()
+{
+        application_help(this);
+}
+
+void MainWindow::on_actionAbout_triggered()
+{
+        application_about(this);
 }
 
 void MainWindow::resizeEvent(QResizeEvent*)
@@ -883,45 +831,116 @@ void MainWindow::resizeEvent(QResizeEvent*)
         }
 }
 
-void MainWindow::error_message(const std::string& msg) noexcept try
+void MainWindow::error_message(const std::string& msg) noexcept
 {
-        emit SignalWindowEvent(WindowEvent(std::in_place_type<WindowEvent::error_message>, msg));
+        try
+        {
+                emit window_event(WindowEvent(std::in_place_type<WindowEvent::error_message>, msg));
+        }
+        catch (std::exception& e)
+        {
+                error_fatal(std::string("Error message exception: ") + e.what() + ".");
+        }
+        catch (...)
+        {
+                error_fatal("Error message exception.");
+        }
 }
-CATCH_ALL_SEND_EVENT()
-void MainWindow::window_ready() noexcept try
-{
-        emit SignalWindowEvent(WindowEvent(std::in_place_type<WindowEvent::window_ready>));
-}
-CATCH_ALL_SEND_EVENT()
-void MainWindow::program_ended(const std::string& msg) noexcept try
-{
-        emit SignalWindowEvent(WindowEvent(std::in_place_type<WindowEvent::program_ended>, msg));
-}
-CATCH_ALL_SEND_EVENT()
-void MainWindow::error_src_message(const std::string& msg, const std::string& src) noexcept try
-{
-        emit SignalWindowEvent(WindowEvent(std::in_place_type<WindowEvent::error_src_message>, msg, src));
-}
-CATCH_ALL_SEND_EVENT()
-void MainWindow::object_loaded(int id) noexcept try
-{
-        emit SignalWindowEvent(WindowEvent(std::in_place_type<WindowEvent::object_loaded>, id));
-}
-CATCH_ALL_SEND_EVENT()
-void MainWindow::file_loaded(const std::string& msg) noexcept try
-{
-        emit SignalWindowEvent(WindowEvent(std::in_place_type<WindowEvent::file_loaded>, msg));
-}
-CATCH_ALL_SEND_EVENT()
-void MainWindow::bound_cocone_loaded(double rho, double alpha) noexcept try
-{
-        emit SignalWindowEvent(WindowEvent(std::in_place_type<WindowEvent::bound_cocone_loaded>, rho, alpha));
-}
-CATCH_ALL_SEND_EVENT()
 
-void MainWindow::on_actionExit_triggered()
+void MainWindow::window_ready() noexcept
 {
-        close();
+        try
+        {
+                emit window_event(WindowEvent(std::in_place_type<WindowEvent::window_ready>));
+        }
+        catch (std::exception& e)
+        {
+                error_fatal(std::string("Window ready exception: ") + e.what() + ".");
+        }
+        catch (...)
+        {
+                error_fatal("Window ready exception.");
+        }
+}
+
+void MainWindow::program_ended(const std::string& msg) noexcept
+{
+        try
+        {
+                emit window_event(WindowEvent(std::in_place_type<WindowEvent::program_ended>, msg));
+        }
+        catch (std::exception& e)
+        {
+                error_fatal(std::string("Program ended exception: ") + e.what() + ".");
+        }
+        catch (...)
+        {
+                error_fatal("Program ended exception.");
+        }
+}
+
+void MainWindow::error_src_message(const std::string& msg, const std::string& src) noexcept
+{
+        try
+        {
+                emit window_event(WindowEvent(std::in_place_type<WindowEvent::error_src_message>, msg, src));
+        }
+        catch (std::exception& e)
+        {
+                error_fatal(std::string("Error source exception: ") + e.what() + ".");
+        }
+        catch (...)
+        {
+                error_fatal("Error source exception.");
+        }
+}
+
+void MainWindow::object_loaded(int id) noexcept
+{
+        try
+        {
+                emit window_event(WindowEvent(std::in_place_type<WindowEvent::object_loaded>, id));
+        }
+        catch (std::exception& e)
+        {
+                error_fatal(std::string("Object loaded exception: ") + e.what() + ".");
+        }
+        catch (...)
+        {
+                error_fatal("Object loaded exception.");
+        }
+}
+
+void MainWindow::file_loaded(const std::string& msg) noexcept
+{
+        try
+        {
+                emit window_event(WindowEvent(std::in_place_type<WindowEvent::file_loaded>, msg));
+        }
+        catch (std::exception& e)
+        {
+                error_fatal(std::string("File loaded exception: ") + e.what() + ".");
+        }
+        catch (...)
+        {
+                error_fatal("File loaded exception.");
+        }
+}
+
+void MainWindow::bound_cocone_loaded(double rho, double alpha) noexcept
+{
+        try
+        {
+                emit window_event(WindowEvent(std::in_place_type<WindowEvent::bound_cocone_loaded>, rho, alpha));
+        }
+        catch (std::exception& e)
+        {
+                error_fatal(std::string("BOUND COCONE loaded exception: ") + e.what() + ".");
+        }
+        catch (...)
+        {
+                error_fatal("BOUND COCONE loaded exception.");
+        }
 }
 
 void MainWindow::on_Button_ResetView_clicked()

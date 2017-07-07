@@ -113,7 +113,7 @@ void test_algorithms(double rho, double alpha, const std::vector<Vector<N, float
         LOG("BOUND COCONE facet count: " + to_string(facets.size()));
         if (!(expected_bound_facets_min <= facets.size() && facets.size() <= expected_bound_facets_max))
         {
-                error("Error bound_facet count: expected " + bound_facet_count_str + ", BOUND_COCONE computed " +
+                error("Error bound facet count: expected " + bound_facet_count_str + ", BOUND COCONE computed " +
                       to_string(facets.size()));
         }
 

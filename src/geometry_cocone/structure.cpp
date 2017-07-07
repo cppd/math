@@ -200,18 +200,18 @@ double voronoi_edge_radius(const std::vector<DelaunayObject<N>>& delaunay_object
                         }
                         else
                         {
-                                error("cocone intersection not found, PA is close to positive pole");
+                                error("COCONE intersection not found, PA is close to positive pole");
                         }
                 }
                 else
                 {
-                        error("cocone intersection not found, PA is far from positive pole");
+                        error("COCONE intersection not found, PA is far from positive pole");
                 }
         }
 
         if (!is_finite(max_distance))
         {
-                error("cocone intersection distance is not finite");
+                error("COCONE intersection distance is not finite");
         }
 
         if (cocone_inside_or_equal(cos_n_a))

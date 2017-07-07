@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>549</width>
-    <height>624</height>
+    <height>630</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -916,7 +916,7 @@
      <x>0</x>
      <y>0</y>
      <width>549</width>
-     <height>19</height>
+     <height>20</height>
     </rect>
    </property>
    <property name="sizePolicy">
@@ -938,7 +938,7 @@
     <property name="title">
      <string>Help</string>
     </property>
-    <addaction name="actionKeyboard_and_Mouse"/>
+    <addaction name="actionHelp"/>
     <addaction name="separator"/>
     <addaction name="actionAbout"/>
    </widget>
@@ -975,9 +975,9 @@
     <string>F11</string>
    </property>
   </action>
-  <action name="actionKeyboard_and_Mouse">
+  <action name="actionHelp">
    <property name="text">
-    <string>Keyboard and Mouse</string>
+    <string>Help</string>
    </property>
   </action>
   <action name="actionExport">

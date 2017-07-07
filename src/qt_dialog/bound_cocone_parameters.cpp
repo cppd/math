@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "bound_cocone_parameters.h"
 
+#include "message_boxes.h"
+
 #include "com/log.h"
 #include "com/print.h"
 
@@ -39,8 +41,8 @@ BoundCoconeParameters::BoundCoconeParameters(QWidget* parent) : QDialog(parent)
 
 void BoundCoconeParameters::set_parameters(int digits, double rho, double alpha)
 {
-        ui.LineEdit_Rho->setText(to_string(rho, digits).c_str());
-        ui.LineEdit_Alpha->setText(to_string(alpha, digits).c_str());
+        ui.LineEdit_Rho->setText(to_string_fixed(rho, digits).c_str());
+        ui.LineEdit_Alpha->setText(to_string_fixed(alpha, digits).c_str());
 }
 
 void BoundCoconeParameters::get_parameters(double* rho, double* alpha)
@@ -62,28 +64,28 @@ void BoundCoconeParameters::done(int r)
         m_rho = ui.LineEdit_Rho->text().toDouble(&ok);
         if (!ok)
         {
-                QMessageBox::critical(this, "Error", "ρ error");
+                message_critical(this, u8"ρ error");
                 return;
         }
         if (!(m_rho > RHO_MIN && m_rho < RHO_MAX))
         {
-                std::string rho_range =
-                        "(" + to_string(RHO_MIN, RANGE_STR_DIGITS) + ", " + to_string(RHO_MAX, RANGE_STR_DIGITS) + ")";
-                QMessageBox::critical(this, "Error", "ρ range error " + QString(rho_range.c_str()));
+                QString rho_range = "(" + QString(to_string_fixed(RHO_MIN, RANGE_STR_DIGITS).c_str()) + ", " +
+                                    QString(to_string_fixed(RHO_MAX, RANGE_STR_DIGITS).c_str()) + ")";
+                message_critical(this, u8"ρ range error " + rho_range);
                 return;
         }
 
         m_alpha = ui.LineEdit_Alpha->text().toDouble(&ok);
         if (!ok)
         {
-                QMessageBox::critical(this, "Error", "α error");
+                message_critical(this, u8"α error");
                 return;
         }
         if (!(m_alpha > ALPHA_MIN && m_alpha < ALPHA_MAX))
         {
-                std::string alpha_range =
-                        "(" + to_string(ALPHA_MIN, RANGE_STR_DIGITS) + ", " + to_string(ALPHA_MAX, RANGE_STR_DIGITS) + ")";
-                QMessageBox::critical(this, "Error", "α range error " + QString(alpha_range.c_str()));
+                QString alpha_range = "(" + QString(to_string_fixed(ALPHA_MIN, RANGE_STR_DIGITS).c_str()) + ", " +
+                                      QString(to_string_fixed(ALPHA_MAX, RANGE_STR_DIGITS).c_str()) + ")";
+                message_critical(this, u8"α range error " + alpha_range);
                 return;
         }
 

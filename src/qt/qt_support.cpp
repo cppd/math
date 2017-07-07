@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <QButtonGroup>
 #include <QWidget>
+#include <type_traits>
 
 namespace
 {
@@ -87,4 +88,19 @@ void disable_radio_button(QRadioButton* button)
         // button->setAutoExclusive(true);
         button->setEnabled(false);
         button->group()->setExclusive(true);
+}
+
+WindowID get_widget_window_id(QWidget* widget)
+{
+        static_assert(sizeof(WindowID) == sizeof(WId));
+        static_assert(std::is_integral<WindowID>::value || std::is_pointer<WindowID>::value);
+        static_assert(std::is_integral<WId>::value || std::is_pointer<WId>::value);
+
+        union {
+                WId w_id;
+                WindowID window_id;
+        };
+
+        w_id = widget->winId();
+        return window_id;
 }

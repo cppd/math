@@ -15,17 +15,21 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#pragma once
+#include "message_boxes.h"
 
-#include "window/window_prop.h"
+#include "application/application_name.h"
 
-#include <QColor>
-#include <QLayout>
-#include <QRadioButton>
-#include <glm/vec3.hpp>
+#include <QMessageBox>
 
-void set_widgets_enabled(QLayout* layout, bool v);
-glm::vec3 qcolor_to_vec3(const QColor& c);
-void disable_radio_button(QRadioButton* button);
-void button_strike_out(QRadioButton* button, bool strike_out);
-WindowID get_widget_window_id(QWidget* widget);
+void message_critical(QWidget* parent, const QString& message)
+{
+        QMessageBox::critical(parent, APPLICATION_NAME, message);
+}
+void message_information(QWidget* parent, const QString& message)
+{
+        QMessageBox::information(parent, APPLICATION_NAME, message);
+}
+void message_warning(QWidget* parent, const QString& message)
+{
+        QMessageBox::warning(parent, APPLICATION_NAME, message);
+}

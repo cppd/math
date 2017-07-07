@@ -53,7 +53,7 @@ protected:
         void resizeEvent(QResizeEvent*) override;
 
 signals:
-        void SignalWindowEvent(const WindowEvent&) const;
+        void window_event(const WindowEvent&) const;
 
 public slots:
 
@@ -61,37 +61,37 @@ private slots:
         void on_actionLoad_triggered();
         void on_actionExport_triggered();
         void on_actionExit_triggered();
+        void on_actionHelp_triggered();
         void on_actionAbout_triggered();
-        void on_MainWindow_SignalWindowEvent(const WindowEvent&);
-        void on_Button_ResetView_clicked();
+        void on_actionFullScreen_triggered();
         void on_Slider_Ambient_valueChanged(int value);
         void on_Slider_Diffuse_valueChanged(int value);
         void on_Slider_Specular_valueChanged(int value);
         void on_Slider_DFT_Brightness_valueChanged(int value);
+        void on_Slider_Default_Ns_valueChanged(int value);
         void on_ButtonBackgroundColor_clicked();
         void on_ButtonDefaultColor_clicked();
+        void on_ButtonWireframeColor_clicked();
+        void on_Button_LoadBoundCocone_clicked();
+        void on_Button_ResetView_clicked();
         void on_checkBox_Wireframe_clicked();
         void on_checkBox_Materials_clicked();
         void on_checkBox_Shadow_clicked();
         void on_checkBox_Smooth_clicked();
-        void on_ButtonWireframeColor_clicked();
         void on_checkBox_ShowEffect_clicked();
         void on_checkBox_show_dft_clicked();
         void on_checkBox_convex_hull_2d_clicked();
         void on_checkBox_OpticalFlow_clicked();
-        void on_actionFullScreen_triggered();
         void on_radioButton_Model_clicked();
         void on_radioButton_ModelConvexHull_clicked();
         void on_radioButton_Cocone_clicked();
         void on_radioButton_CoconeConvexHull_clicked();
         void on_radioButton_BoundCocone_clicked();
         void on_radioButton_BoundCoconeConvexHull_clicked();
-        void on_Button_LoadBoundCocone_clicked();
-        void on_actionKeyboard_and_Mouse_triggered();
-        void on_Slider_Default_Ns_valueChanged(int value);
 
+        void window_event_slot(const WindowEvent&);
         void timer_slot();
-        void window_shown();
+        void window_shown_slot();
         void widget_under_window_mouse_wheel_slot(double delta);
         void object_repository_slot();
 
@@ -138,11 +138,6 @@ private:
         double get_default_ns() const;
 
         void set_bound_cocone_label(double rho, double alpha);
-
-        void message_about(const std::string& msg);
-        void message_critical(const std::string& msg);
-        void message_information(const std::string& msg);
-        void message_warning(const std::string& msg);
 
         Ui::MainWindow ui;
 

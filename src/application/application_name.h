@@ -17,15 +17,4 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "window/window_prop.h"
-
-#include <QColor>
-#include <QLayout>
-#include <QRadioButton>
-#include <glm/vec3.hpp>
-
-void set_widgets_enabled(QLayout* layout, bool v);
-glm::vec3 qcolor_to_vec3(const QColor& c);
-void disable_radio_button(QRadioButton* button);
-void button_strike_out(QRadioButton* button, bool strike_out);
-WindowID get_widget_window_id(QWidget* widget);
+inline constexpr const char* APPLICATION_NAME = "Math Viewer";
