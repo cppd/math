@@ -18,31 +18,29 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <QLabel>
-#include <QObject>
+#include <QResizeEvent>
 #include <QWheelEvent>
 
-#include "com/log.h"
-#include "com/print.h"
-
-// Это нужно для Винды для перехвата сообщений о вращении колеса мыши над окном с графикой,
-// встроенным дочерним окном. В Линуксе может работать и без этого.
-
-class WheelLabel : public QLabel
+class GraphicsWidget : public QLabel
 {
         Q_OBJECT
 
 public:
-        explicit WheelLabel(QWidget* parent = nullptr, Qt::WindowFlags = Qt::WindowFlags()) : QLabel(parent)
+        explicit GraphicsWidget(QWidget* parent = nullptr, Qt::WindowFlags = Qt::WindowFlags()) : QLabel(parent)
         {
         }
-        ~WheelLabel() override
+        ~GraphicsWidget() override
         {
         }
 
 signals:
         void wheel(double delta);
+        void resize();
 
 protected:
+        // Это нужно для Винды для перехвата сообщений о вращении колеса мыши
+        // над окном с графикой, встроенным дочерним окном.
+        // В Линуксе может работать и без этого.
         void wheelEvent(QWheelEvent* event) override
         {
                 QPoint local_mouse_pos = this->mapFromGlobal(event->globalPos());
@@ -53,5 +51,10 @@ protected:
                 {
                         emit wheel(event->angleDelta().ry() / 120.0);
                 }
+        }
+
+        void resizeEvent(QResizeEvent*) override
+        {
+                emit resize();
         }
 };

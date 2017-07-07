@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "main_window.h"
 
+#include "graphics_widget.h"
 #include "support.h"
 
 #include "application/application_name.h"
@@ -90,6 +91,8 @@ MainWindow::MainWindow(QWidget* parent)
           m_working_bound_cocone(false),
           m_object_repository(create_object_repository<3>())
 {
+        static_assert(std::is_same_v<decltype(ui.graphics_widget), GraphicsWidget*>);
+
         ui.setupUi(this);
 
         QMainWindow::setWindowTitle(APPLICATION_NAME);
@@ -100,8 +103,9 @@ MainWindow::MainWindow(QWidget* parent)
         connect(&m_event_emitter, SIGNAL(window_event(WindowEvent)), this, SLOT(on_window_event(WindowEvent)),
                 Qt::ConnectionType(Qt::QueuedConnection | Qt::UniqueConnection));
 
-        ui.widget_under_window->setText("");
-        connect(ui.widget_under_window, SIGNAL(wheel(double)), this, SLOT(on_widget_under_window_mouse_wheel(double)));
+        ui.graphics_widget->setText("");
+        connect(ui.graphics_widget, SIGNAL(wheel(double)), this, SLOT(on_widget_under_window_mouse_wheel(double)));
+        connect(ui.graphics_widget, SIGNAL(resize()), this, SLOT(on_widget_under_window_resize()));
 
         connect(&m_timer_progress_bar, SIGNAL(timeout()), this, SLOT(on_timer_progress_bar()));
 
@@ -115,8 +119,8 @@ MainWindow::MainWindow(QWidget* parent)
         set_default_color(DEFAULT_COLOR);
         set_wireframe_color(WIREFRAME_COLOR);
 
-        ui.verticalLayoutWidget->layout()->setContentsMargins(0, 0, 0, 0);
-        ui.verticalLayoutWidget->layout()->setSpacing(0);
+        ui.mainWidget->layout()->setContentsMargins(1, 1, 1, 1);
+        ui.mainWidget->layout()->setSpacing(1);
 
         ui.radioButton_Model->setChecked(true);
 
@@ -669,7 +673,7 @@ void MainWindow::on_window_first_shown()
         if (WINDOW_SIZE_GRAPHICS)
         {
                 QSize size = QDesktopWidget().screenGeometry(this).size() * WINDOW_SIZE_COEF;
-                resize_window_widget(this, ui.widget_under_window, size);
+                resize_window_widget(this, ui.graphics_widget, size);
         }
         else
         {
@@ -681,13 +685,13 @@ void MainWindow::on_window_first_shown()
 
         try
         {
-                m_show = create_show(
-                        &m_event_emitter, get_widget_window_id(ui.widget_under_window), qcolor_to_vec3(m_clear_color),
-                        qcolor_to_vec3(m_default_color), qcolor_to_vec3(m_wireframe_color), ui.checkBox_Smooth->isChecked(),
-                        ui.checkBox_Wireframe->isChecked(), ui.checkBox_Shadow->isChecked(), ui.checkBox_Materials->isChecked(),
-                        ui.checkBox_ShowEffect->isChecked(), ui.checkBox_show_dft->isChecked(),
-                        ui.checkBox_convex_hull_2d->isChecked(), ui.checkBox_OpticalFlow->isChecked(), get_ambient(),
-                        get_diffuse(), get_specular(), get_dft_brightness(), get_default_ns());
+                m_show = create_show(&m_event_emitter, get_widget_window_id(ui.graphics_widget), qcolor_to_vec3(m_clear_color),
+                                     qcolor_to_vec3(m_default_color), qcolor_to_vec3(m_wireframe_color),
+                                     ui.checkBox_Smooth->isChecked(), ui.checkBox_Wireframe->isChecked(),
+                                     ui.checkBox_Shadow->isChecked(), ui.checkBox_Materials->isChecked(),
+                                     ui.checkBox_ShowEffect->isChecked(), ui.checkBox_show_dft->isChecked(),
+                                     ui.checkBox_convex_hull_2d->isChecked(), ui.checkBox_OpticalFlow->isChecked(), get_ambient(),
+                                     get_diffuse(), get_specular(), get_dft_brightness(), get_default_ns());
         }
         catch (std::exception& e)
         {
@@ -839,14 +843,6 @@ void MainWindow::on_actionAbout_triggered()
         application_about(this);
 }
 
-void MainWindow::resizeEvent(QResizeEvent*)
-{
-        if (m_show)
-        {
-                m_show->parent_resized();
-        }
-}
-
 void MainWindow::on_Button_ResetView_clicked()
 {
         m_show->reset_view();
@@ -857,6 +853,14 @@ void MainWindow::on_widget_under_window_mouse_wheel(double delta)
         if (m_show)
         {
                 m_show->mouse_wheel(delta);
+        }
+}
+
+void MainWindow::on_widget_under_window_resize()
+{
+        if (m_show)
+        {
+                m_show->parent_resized();
         }
 }
 

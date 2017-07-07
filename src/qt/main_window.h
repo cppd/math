@@ -51,7 +51,6 @@ public:
 
 protected:
         void showEvent(QShowEvent* e) override;
-        void resizeEvent(QResizeEvent*) override;
 
 public slots:
 
@@ -92,6 +91,7 @@ private slots:
         void on_timer_progress_bar();
         void on_window_first_shown();
         void on_widget_under_window_mouse_wheel(double delta);
+        void on_widget_under_window_resize();
 
 private:
         enum class OpenObjectType
