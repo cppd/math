@@ -25,8 +25,8 @@ class BoundCoconeParameters final : public QDialog
 
 public:
         explicit BoundCoconeParameters(QWidget* parent = nullptr);
-        void set_parameters(int digits, double rho, double alpha);
-        void get_parameters(double* rho, double* alpha);
+
+        [[nodiscard]] bool show(int digits, double* rho, double* alpha);
 
 private:
         Ui::BoundCoconeParameters ui;
@@ -34,5 +34,5 @@ private:
         double m_rho;
         double m_alpha;
 
-        virtual void done(int r) override;
+        void done(int r) override;
 };

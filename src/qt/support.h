@@ -19,13 +19,41 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "window/window_prop.h"
 
-#include <QColor>
+#include <QColorDialog>
 #include <QLayout>
+#include <QMainWindow>
 #include <QRadioButton>
+#include <QString>
 #include <glm/vec3.hpp>
 
+template <typename T>
+void color_dialog(QWidget* widget, const QString& title, const QColor& color, const T& f)
+{
+        QColorDialog dialog(widget);
+
+        dialog.setCurrentColor(color);
+        dialog.setWindowTitle(title);
+        dialog.setOptions(QColorDialog::NoButtons | QColorDialog::DontUseNativeDialog);
+
+        widget->connect(&dialog, &QColorDialog::currentColorChanged, [&f](const QColor& c) {
+                if (c.isValid())
+                {
+                        f(c);
+                }
+        });
+
+        dialog.exec();
+}
+
 void set_widgets_enabled(QLayout* layout, bool v);
+
 glm::vec3 qcolor_to_vec3(const QColor& c);
-void disable_radio_button(QRadioButton* button);
+
 void button_strike_out(QRadioButton* button, bool strike_out);
+
 WindowID get_widget_window_id(QWidget* widget);
+
+void move_window_to_desktop_center(QMainWindow* window);
+
+void resize_window_frame(QMainWindow* window, const QSize& frame_size);
+void resize_window_widget(QMainWindow* window, QWidget* widget, const QSize& widget_size);

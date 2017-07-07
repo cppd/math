@@ -27,7 +27,8 @@ class SourceError final : public QDialog
 
 public:
         explicit SourceError(QWidget* parent = nullptr);
-        void set_text(const QString& msg, const QString& src);
+
+        void show(const QString& msg, const QString& src);
 
 private:
         Ui::SourceError ui;

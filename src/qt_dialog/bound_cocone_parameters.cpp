@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "bound_cocone_parameters.h"
 
-#include "message_boxes.h"
+#include "message_box.h"
 
 #include "com/log.h"
 #include "com/print.h"
@@ -37,18 +37,24 @@ BoundCoconeParameters::BoundCoconeParameters(QWidget* parent) : QDialog(parent)
 
         ui.LineEdit_Rho->setValidator(new QDoubleValidator(this));
         ui.LineEdit_Alpha->setValidator(new QDoubleValidator(this));
+
+        setWindowTitle("BOUND COCONE parameters");
 }
 
-void BoundCoconeParameters::set_parameters(int digits, double rho, double alpha)
+bool BoundCoconeParameters::show(int digits, double* rho, double* alpha)
 {
-        ui.LineEdit_Rho->setText(to_string_fixed(rho, digits).c_str());
-        ui.LineEdit_Alpha->setText(to_string_fixed(alpha, digits).c_str());
-}
+        ui.LineEdit_Rho->setText(to_string_fixed(*rho, digits).c_str());
+        ui.LineEdit_Alpha->setText(to_string_fixed(*alpha, digits).c_str());
 
-void BoundCoconeParameters::get_parameters(double* rho, double* alpha)
-{
+        if (!this->exec())
+        {
+                return false;
+        }
+
         *rho = m_rho;
         *alpha = m_alpha;
+
+        return true;
 }
 
 void BoundCoconeParameters::done(int r)

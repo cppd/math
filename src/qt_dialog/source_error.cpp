@@ -23,10 +23,14 @@ SourceError::SourceError(QWidget* parent) : QDialog(parent)
         ui.labelPixmap->setText("");
         ui.labelPixmap->setPixmap(ui.labelPixmap->style()->standardPixmap(QStyle::SP_MessageBoxCritical));
         this->resize(1024, 768);
+
+        setWindowTitle("Source error");
 }
 
-void SourceError::set_text(const QString& msg, const QString& src)
+void SourceError::show(const QString& msg, const QString& src)
 {
         ui.plainTextEdit->setPlainText(msg);
         ui.textEdit->setText(src);
+
+        exec();
 }

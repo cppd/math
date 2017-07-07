@@ -19,20 +19,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "ui_main_window.h"
 
-#include "main_window_event.h"
+#include "event_emitter.h"
 
-#include "com/thread.h"
 #include "progress/progress_list.h"
 #include "show/show.h"
 
 #include <QColor>
 #include <QProgressBar>
 #include <QTimer>
-#include <array>
+#include <atomic>
+#include <list>
 #include <memory>
-#include <mutex>
 #include <string>
+#include <thread>
 #include <unordered_map>
+#include <vector>
 
 template <size_t N>
 struct IManifoldConstructor;
@@ -40,7 +41,7 @@ struct IManifoldConstructor;
 template <size_t N>
 struct IObjectRepository;
 
-class MainWindow final : public QMainWindow, public ICallBack
+class MainWindow final : public QMainWindow
 {
         Q_OBJECT
 
@@ -51,9 +52,6 @@ public:
 protected:
         void showEvent(QShowEvent* e) override;
         void resizeEvent(QResizeEvent*) override;
-
-signals:
-        void window_event(const WindowEvent&) const;
 
 public slots:
 
@@ -89,11 +87,11 @@ private slots:
         void on_radioButton_BoundCocone_clicked();
         void on_radioButton_BoundCoconeConvexHull_clicked();
 
-        void window_event_slot(const WindowEvent&);
-        void timer_slot();
-        void window_shown_slot();
-        void widget_under_window_mouse_wheel_slot(double delta);
-        void object_repository_slot();
+        void on_action_object_repository();
+        void on_window_event(const WindowEvent&);
+        void on_timer_progress_bar();
+        void on_window_first_shown();
+        void on_widget_under_window_mouse_wheel(double delta);
 
 private:
         enum class OpenObjectType
@@ -102,17 +100,12 @@ private:
                 Repository
         };
 
-        void set_dependent_interface_enabled();
+        void set_dependent_interface();
 
-        void create_object_repository_and_menu();
-
-        void resize_window();
-        void move_window_to_desktop_center();
-
-        static void disable_radio_button(QRadioButton* button);
+        static void strike_out_radio_button(QRadioButton* button);
         static void enable_radio_button(QRadioButton* button);
-        void disable_object_buttons();
-        void disable_bound_cocone_buttons();
+        void strike_out_all_objects_buttons();
+        void strike_out_bound_cocone_buttons();
 
         void thread_open_object(const std::string& object_name, OpenObjectType object_type) noexcept;
         void thread_model(std::shared_ptr<IObj> obj) noexcept;
@@ -121,15 +114,10 @@ private:
         void thread_bound_cocone(double rho, double alpha) noexcept;
 
         void start_thread_open_object(const std::string& object_name, OpenObjectType object_type);
+        void start_thread_bound_cocone(double rho, double alpha);
         void stop_all_threads();
 
-        void error_message(const std::string&) noexcept override;
-        void window_ready() noexcept override;
-        void program_ended(const std::string&) noexcept override;
-        void error_src_message(const std::string&, const std::string&) noexcept override;
-        void object_loaded(int) noexcept override;
-        void file_loaded(const std::string& msg) noexcept;
-        void bound_cocone_loaded(double rho, double alpha) noexcept;
+        bool threads_work_with_message();
 
         double get_ambient() const;
         double get_diffuse() const;
@@ -137,9 +125,15 @@ private:
         double get_dft_brightness() const;
         double get_default_ns() const;
 
-        void set_bound_cocone_label(double rho, double alpha);
+        void set_bound_cocone_parameters(double rho, double alpha);
+
+        void set_clear_color(const QColor& c);
+        void set_default_color(const QColor& c);
+        void set_wireframe_color(const QColor& c);
 
         Ui::MainWindow ui;
+
+        WindowEventEmitter m_event_emitter;
 
         std::unique_ptr<IShow> m_show;
 
@@ -147,23 +141,20 @@ private:
         QColor m_default_color;
         QColor m_wireframe_color;
 
-        QTimer m_timer;
+        QTimer m_timer_progress_bar;
 
         ProgressRatioList m_progress_ratio_list;
         std::list<QProgressBar> m_progress_bars;
 
-        QWidget* m_widget_under_window;
-
         bool m_first_show;
 
-        std::thread m_open_file_thread;
-        std::thread m_bound_cocone_thread;
+        std::thread m_thread_open_object;
+        std::thread m_thread_bound_cocone;
+        std::atomic_bool m_working_open_object;
+        std::atomic_bool m_working_bound_cocone;
 
         std::vector<glm::vec3> m_surface_points;
         std::unique_ptr<IManifoldConstructor<3>> m_surface_constructor;
-
-        std::atomic_bool m_file_loading;
-        std::atomic_bool m_bound_cocone_loading;
 
         double m_bound_cocone_rho;
         double m_bound_cocone_alpha;

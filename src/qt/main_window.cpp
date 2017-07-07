@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "main_window.h"
 
-#include "qt_support.h"
+#include "support.h"
 
 #include "application/application_name.h"
 #include "com/error.h"
@@ -37,16 +37,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "progress/progress.h"
 #include "qt_dialog/application_about.h"
 #include "qt_dialog/application_help.h"
-#include "qt_dialog/dialogs.h"
-#include "qt_dialog/message_boxes.h"
+#include "qt_dialog/bound_cocone_parameters.h"
+#include "qt_dialog/message_box.h"
+#include "qt_dialog/source_error.h"
 
-#include <QColorDialog>
-#include <QDateTime>
 #include <QDesktopWidget>
 #include <QFileDialog>
-#include <QObjectList>
-#include <array>
-#include <cmath>
 
 // Размер окна по сравнению с экраном
 constexpr double WINDOW_SIZE_COEF = 0.7;
@@ -66,6 +62,15 @@ constexpr int TIMER_PROGRESS_BAR_INTERVAL = 100;
 // Количество точек для готовых объектов.
 constexpr int POINT_COUNT = 10000;
 
+// Цвета по умолчанию
+constexpr QRgb CLEAR_COLOR = qRgb(20, 50, 80);
+constexpr QRgb DEFAULT_COLOR = qRgb(150, 170, 150);
+constexpr QRgb WIREFRAME_COLOR = qRgb(255, 255, 255);
+
+// Задержка в миллисекундах после showEvent для вызова по таймеру
+// функции обработки появления окна
+constexpr int WINDOW_SHOW_DELAY_MSEC = 50;
+
 // Идентификаторы объектов для взаимодействия с модулем рисования,
 // куда передаются как числа, а не как enum
 enum ObjectType
@@ -78,58 +83,56 @@ enum ObjectType
         SURFACE_BOUND_COCONE_CONVEX_HULL
 };
 
-MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
+MainWindow::MainWindow(QWidget* parent)
+        : QMainWindow(parent),
+          m_first_show(true),
+          m_working_open_object(false),
+          m_working_bound_cocone(false),
+          m_object_repository(create_object_repository<3>())
 {
         ui.setupUi(this);
 
-        qRegisterMetaType<WindowEvent>("WindowEvent");
+        QMainWindow::setWindowTitle(APPLICATION_NAME);
 
-        connect(this, SIGNAL(window_event(WindowEvent)), this, SLOT(window_event_slot(WindowEvent)),
+        QMainWindow::addAction(ui.actionFullScreen);
+
+        qRegisterMetaType<WindowEvent>("WindowEvent");
+        connect(&m_event_emitter, SIGNAL(window_event(WindowEvent)), this, SLOT(on_window_event(WindowEvent)),
                 Qt::ConnectionType(Qt::QueuedConnection | Qt::UniqueConnection));
 
-        connect(ui.widget_under_window, SIGNAL(wheel(double)), this, SLOT(widget_under_window_mouse_wheel_slot(double)));
+        ui.widget_under_window->setText("");
+        connect(ui.widget_under_window, SIGNAL(wheel(double)), this, SLOT(on_widget_under_window_mouse_wheel(double)));
 
-        connect(&m_timer, SIGNAL(timeout()), this, SLOT(timer_slot()));
-
-        m_first_show = true;
-
-        m_file_loading = false;
-        m_bound_cocone_loading = false;
+        connect(&m_timer_progress_bar, SIGNAL(timeout()), this, SLOT(on_timer_progress_bar()));
 
         set_widgets_enabled(this->layout(), true);
+        set_dependent_interface();
+        strike_out_all_objects_buttons();
 
-        set_dependent_interface_enabled();
+        set_bound_cocone_parameters(BOUND_COCONE_DEFAULT_RHO, BOUND_COCONE_DEFAULT_ALPHA);
 
-        disable_object_buttons();
+        set_clear_color(CLEAR_COLOR);
+        set_default_color(DEFAULT_COLOR);
+        set_wireframe_color(WIREFRAME_COLOR);
 
-        ui.widget_under_window->setText("");
-        m_widget_under_window = ui.widget_under_window;
-
-        m_clear_color = ui.widget_clear_color->palette().color(QPalette::Window);
-        m_default_color = ui.widget_default_color->palette().color(QPalette::Window);
-        m_wireframe_color = ui.widget_wireframe_color->palette().color(QPalette::Window);
-
-        QLayout* l = ui.verticalLayoutWidget->layout();
-        l->setContentsMargins(0, 0, 0, 0);
-        l->setSpacing(0);
-        ui.verticalLayoutWidget->setLayout(l);
-
-        this->addAction(ui.actionFullScreen);
-
-        this->setWindowTitle(APPLICATION_NAME);
-
-        ui.actionHelp->setText(QString(APPLICATION_NAME) + " Help");
-        ui.actionAbout->setText("About " + QString(APPLICATION_NAME));
-
-        m_bound_cocone_rho = BOUND_COCONE_DEFAULT_RHO;
-        m_bound_cocone_alpha = BOUND_COCONE_DEFAULT_ALPHA;
-        set_bound_cocone_label(m_bound_cocone_rho, m_bound_cocone_alpha);
+        ui.verticalLayoutWidget->layout()->setContentsMargins(0, 0, 0, 0);
+        ui.verticalLayoutWidget->layout()->setSpacing(0);
 
         ui.radioButton_Model->setChecked(true);
 
         ui.tabWidget->setCurrentIndex(0);
 
-        create_object_repository_and_menu();
+        ui.actionHelp->setText(QString(APPLICATION_NAME) + " Help");
+        ui.actionAbout->setText("About " + QString(APPLICATION_NAME));
+
+        // QMenu* menuCreate = new QMenu("Create", this);
+        // ui.menuBar->insertMenu(ui.menuHelp->menuAction(), menuCreate);
+        for (const std::string& object_name : m_object_repository->get_list_of_point_objects())
+        {
+                QAction* action = ui.menuCreate->addAction(object_name.c_str());
+                m_action_to_object_name_map.emplace(action, object_name);
+                connect(action, SIGNAL(triggered()), this, SLOT(on_action_object_repository()));
+        }
 }
 
 MainWindow::~MainWindow()
@@ -163,11 +166,11 @@ void MainWindow::thread_model(std::shared_ptr<IObj> obj) noexcept
         }
         catch (std::exception& e)
         {
-                error_message(std::string("Convex hull 3D:\n") + e.what());
+                m_event_emitter.error_message(std::string("Convex hull 3D:\n") + e.what());
         }
         catch (...)
         {
-                error_message("Unknown error while convex hull creating");
+                m_event_emitter.error_message("Unknown error while convex hull creating");
         }
 }
 
@@ -210,11 +213,11 @@ void MainWindow::thread_cocone() noexcept
         }
         catch (std::exception& e)
         {
-                error_message(std::string("COCONE reconstruction:\n") + e.what());
+                m_event_emitter.error_message(std::string("COCONE reconstruction:\n") + e.what());
         }
         catch (...)
         {
-                error_message("Unknown error while COCONE reconstruction");
+                m_event_emitter.error_message("Unknown error while COCONE reconstructing");
         }
 }
 
@@ -240,7 +243,7 @@ void MainWindow::thread_bound_cocone(double rho, double alpha) noexcept
                 m_show->delete_object(SURFACE_BOUND_COCONE);
                 m_show->delete_object(SURFACE_BOUND_COCONE_CONVEX_HULL);
 
-                bound_cocone_loaded(rho, alpha);
+                m_event_emitter.bound_cocone_loaded(rho, alpha);
 
                 if (m_surface_bound_cocone->get_faces().size() != 0)
                 {
@@ -262,14 +265,14 @@ void MainWindow::thread_bound_cocone(double rho, double alpha) noexcept
         }
         catch (std::exception& e)
         {
-                error_message(std::string("BOUND COCONE reconstruction:\n") + e.what());
+                m_event_emitter.error_message(std::string("BOUND COCONE reconstruction:\n") + e.what());
         }
         catch (...)
         {
-                error_message("Unknown error while BOUND COCONE reconstruction");
+                m_event_emitter.error_message("Unknown error while BOUND COCONE reconstructing");
         }
 
-        m_bound_cocone_loading = false;
+        m_working_bound_cocone = false;
 }
 
 void MainWindow::thread_surface_constructor() noexcept
@@ -298,11 +301,11 @@ void MainWindow::thread_surface_constructor() noexcept
         }
         catch (std::exception& e)
         {
-                error_message(std::string("Surface reconstructing:\n") + e.what());
+                m_event_emitter.error_message(std::string("Surface reconstructing:\n") + e.what());
         }
         catch (...)
         {
-                error_message("Unknown error while surface reconstructing");
+                m_event_emitter.error_message("Unknown error while surface reconstructing");
         }
 }
 
@@ -342,7 +345,7 @@ void MainWindow::thread_open_object(const std::string& object_name, OpenObjectTy
                 m_surface_cocone.reset();
                 m_surface_bound_cocone.reset();
 
-                file_loaded(object_name);
+                m_event_emitter.file_loaded(object_name);
 
                 m_surface_points = (obj->get_faces().size() > 0) ? get_unique_face_vertices(obj.get()) :
                                                                    get_unique_point_vertices(obj.get());
@@ -360,78 +363,68 @@ void MainWindow::thread_open_object(const std::string& object_name, OpenObjectTy
         }
         catch (std::exception& e)
         {
-                error_message("loading " + object_name + ":\n" + e.what());
+                m_event_emitter.error_message("loading " + object_name + ":\n" + e.what());
         }
         catch (...)
         {
-                error_message("Unknown error while loading " + object_name);
+                m_event_emitter.error_message("Unknown error while loading " + object_name);
         }
 
-        m_file_loading = false;
+        m_working_open_object = false;
 }
 
 void MainWindow::start_thread_open_object(const std::string& object_name, OpenObjectType object_type)
 {
         stop_all_threads();
 
-        m_file_loading = true;
+        m_working_open_object = true;
 
-        launch_class_thread(&m_open_file_thread, nullptr, &MainWindow::thread_open_object, this, object_name, object_type);
+        launch_class_thread(&m_thread_open_object, nullptr, &MainWindow::thread_open_object, this, object_name, object_type);
 }
 
 void MainWindow::stop_all_threads()
 {
         m_progress_ratio_list.stop_all();
 
-        if (m_open_file_thread.joinable())
+        if (m_thread_open_object.joinable())
         {
-                m_open_file_thread.join();
+                m_thread_open_object.join();
         }
-        if (m_bound_cocone_thread.joinable())
+        if (m_thread_bound_cocone.joinable())
         {
-                m_bound_cocone_thread.join();
+                m_thread_bound_cocone.join();
         }
 
         m_progress_ratio_list.enable();
 }
 
-void MainWindow::on_Button_LoadBoundCocone_clicked()
+void MainWindow::start_thread_bound_cocone(double rho, double alpha)
 {
-        if (m_file_loading)
+        if (m_thread_bound_cocone.joinable())
         {
-                message_warning(this, "Busy loading file");
-                return;
-        }
-        if (m_bound_cocone_loading)
-        {
-                message_warning(this, "Busy loading BOUND COCONE");
-                return;
-        }
-        if (!m_surface_constructor)
-        {
-                message_warning(this, "No surface constructor");
-                return;
+                m_thread_bound_cocone.join();
         }
 
-        double rho = m_bound_cocone_rho;
-        double alpha = m_bound_cocone_alpha;
+        m_working_bound_cocone = true;
 
-        if (!edit_bound_cocone_parameters(this, BOUND_COCONE_DISPLAY_DIGITS, &rho, &alpha))
-        {
-                return;
-        }
-
-        if (m_bound_cocone_thread.joinable())
-        {
-                m_bound_cocone_thread.join();
-        }
-
-        m_bound_cocone_loading = true;
-
-        launch_class_thread(&m_bound_cocone_thread, nullptr, &MainWindow::thread_bound_cocone, this, rho, alpha);
+        launch_class_thread(&m_thread_bound_cocone, nullptr, &MainWindow::thread_bound_cocone, this, rho, alpha);
 }
 
-void MainWindow::timer_slot()
+bool MainWindow::threads_work_with_message()
+{
+        if (m_working_open_object)
+        {
+                message_warning(this, "Busy loading object");
+                return true;
+        }
+        if (m_working_bound_cocone)
+        {
+                message_warning(this, "Busy loading BOUND COCONE");
+                return true;
+        }
+        return false;
+}
+void MainWindow::on_timer_progress_bar()
 {
         std::vector<std::tuple<unsigned, unsigned, std::string>> ratios = m_progress_ratio_list.get_all();
 
@@ -473,34 +466,11 @@ void MainWindow::timer_slot()
         }
 }
 
-void MainWindow::create_object_repository_and_menu()
+void MainWindow::set_bound_cocone_parameters(double rho, double alpha)
 {
-        m_object_repository = create_object_repository<3>();
-        // QMenu* menuCreate = new QMenu("Create", this);
-        // ui.menuBar->insertMenu(ui.menuHelp->menuAction(), menuCreate);
-        for (const std::string& object_name : m_object_repository->get_list_of_point_objects())
-        {
-                QAction* action = ui.menuCreate->addAction(object_name.c_str());
-                m_action_to_object_name_map.emplace(action, object_name);
-                connect(action, SIGNAL(triggered()), this, SLOT(object_repository_slot()));
-        }
-}
+        m_bound_cocone_rho = rho;
+        m_bound_cocone_alpha = alpha;
 
-void MainWindow::object_repository_slot()
-{
-        auto iter = m_action_to_object_name_map.find(sender());
-        if (iter != m_action_to_object_name_map.cend())
-        {
-                start_thread_open_object(iter->second, OpenObjectType::Repository);
-        }
-        else
-        {
-                error_message("create object sender not found in map");
-        }
-}
-
-void MainWindow::set_bound_cocone_label(double rho, double alpha)
-{
         QString label;
         label += u8"ρ " + QString(to_string_fixed(rho, BOUND_COCONE_DISPLAY_DIGITS).c_str());
         label += "; ";
@@ -508,13 +478,49 @@ void MainWindow::set_bound_cocone_label(double rho, double alpha)
         ui.BoundCocone_label->setText(label);
 }
 
-void MainWindow::set_dependent_interface_enabled()
+void MainWindow::set_clear_color(const QColor& c)
+{
+        m_clear_color = c;
+        if (m_show)
+        {
+                m_show->set_clear_color(qcolor_to_vec3(c));
+        }
+        QPalette palette;
+        palette.setColor(QPalette::Window, m_clear_color);
+        ui.widget_clear_color->setPalette(palette);
+}
+
+void MainWindow::set_default_color(const QColor& c)
+{
+        m_default_color = c;
+        if (m_show)
+        {
+                m_show->set_default_color(qcolor_to_vec3(c));
+        }
+        QPalette palette;
+        palette.setColor(QPalette::Window, m_default_color);
+        ui.widget_default_color->setPalette(palette);
+}
+
+void MainWindow::set_wireframe_color(const QColor& c)
+{
+        m_wireframe_color = c;
+        if (m_show)
+        {
+                m_show->set_wireframe_color(qcolor_to_vec3(c));
+        }
+        QPalette palette;
+        palette.setColor(QPalette::Window, m_wireframe_color);
+        ui.widget_wireframe_color->setPalette(palette);
+}
+
+void MainWindow::set_dependent_interface()
 {
         ui.Label_DFT_Brightness->setEnabled(ui.checkBox_show_dft->isEnabled() && ui.checkBox_show_dft->isChecked());
         ui.Slider_DFT_Brightness->setEnabled(ui.checkBox_show_dft->isEnabled() && ui.checkBox_show_dft->isChecked());
 }
 
-void MainWindow::disable_radio_button(QRadioButton* button)
+void MainWindow::strike_out_radio_button(QRadioButton* button)
 {
         button_strike_out(button, true);
 }
@@ -529,23 +535,23 @@ void MainWindow::enable_radio_button(QRadioButton* button)
         }
 }
 
-void MainWindow::disable_object_buttons()
+void MainWindow::strike_out_all_objects_buttons()
 {
-        disable_radio_button(ui.radioButton_Model);
-        disable_radio_button(ui.radioButton_ModelConvexHull);
-        disable_radio_button(ui.radioButton_Cocone);
-        disable_radio_button(ui.radioButton_CoconeConvexHull);
-        disable_radio_button(ui.radioButton_BoundCocone);
-        disable_radio_button(ui.radioButton_BoundCoconeConvexHull);
+        strike_out_radio_button(ui.radioButton_Model);
+        strike_out_radio_button(ui.radioButton_ModelConvexHull);
+        strike_out_radio_button(ui.radioButton_Cocone);
+        strike_out_radio_button(ui.radioButton_CoconeConvexHull);
+        strike_out_radio_button(ui.radioButton_BoundCocone);
+        strike_out_radio_button(ui.radioButton_BoundCoconeConvexHull);
 }
 
-void MainWindow::disable_bound_cocone_buttons()
+void MainWindow::strike_out_bound_cocone_buttons()
 {
-        disable_radio_button(ui.radioButton_BoundCocone);
-        disable_radio_button(ui.radioButton_BoundCoconeConvexHull);
+        strike_out_radio_button(ui.radioButton_BoundCocone);
+        strike_out_radio_button(ui.radioButton_BoundCoconeConvexHull);
 }
 
-void MainWindow::window_event_slot(const WindowEvent& event)
+void MainWindow::on_window_event(const WindowEvent& event)
 {
         switch (event.get_type())
         {
@@ -569,7 +575,7 @@ void MainWindow::window_event_slot(const WindowEvent& event)
 
                 LOG_ERROR(d.msg);
 
-                show_source_error(this, d.msg, source_with_line_numbers(d.src));
+                SourceError(this).show(d.msg.c_str(), source_with_line_numbers(d.src).c_str());
 
                 close();
 
@@ -625,7 +631,7 @@ void MainWindow::window_event_slot(const WindowEvent& event)
 
                 this->setWindowTitle(QString(APPLICATION_NAME) + " - " + file_name.c_str());
 
-                disable_object_buttons();
+                strike_out_all_objects_buttons();
 
                 ui.radioButton_Model->setChecked(true);
 
@@ -635,12 +641,9 @@ void MainWindow::window_event_slot(const WindowEvent& event)
         {
                 const WindowEvent::bound_cocone_loaded& d = event.get<WindowEvent::bound_cocone_loaded>();
 
-                m_bound_cocone_rho = d.rho;
-                m_bound_cocone_alpha = d.alpha;
+                set_bound_cocone_parameters(d.rho, d.alpha);
 
-                set_bound_cocone_label(m_bound_cocone_rho, m_bound_cocone_alpha);
-
-                disable_bound_cocone_buttons();
+                strike_out_bound_cocone_buttons();
 
                 break;
         }
@@ -658,60 +661,42 @@ void MainWindow::showEvent(QShowEvent* e)
         m_first_show = false;
 
         // Окно ещё не видно, поэтому небольшая задержка, чтобы окно реально появилось.
-        QTimer::singleShot(50, this, SLOT(window_shown_slot()));
+        QTimer::singleShot(WINDOW_SHOW_DELAY_MSEC, this, SLOT(on_window_first_shown()));
 }
 
-void MainWindow::resize_window()
+void MainWindow::on_window_first_shown()
 {
         if (WINDOW_SIZE_GRAPHICS)
         {
-                QRect screen_geometry = QDesktopWidget().screenGeometry(this);
-                QSize graphics_size = screen_geometry.size() * WINDOW_SIZE_COEF;
-
-                // Из документации на resize: the size excluding any window frame
-                this->resize(graphics_size + (this->geometry().size() - m_widget_under_window->size()));
+                QSize size = QDesktopWidget().screenGeometry(this).size() * WINDOW_SIZE_COEF;
+                resize_window_widget(this, ui.widget_under_window, size);
         }
         else
         {
-                QRect desktop_geometry = QDesktopWidget().availableGeometry(this);
-                QSize window_size = desktop_geometry.size() * WINDOW_SIZE_COEF;
-
-                // Из документации на resize: the size excluding any window frame
-                this->resize(window_size - (this->frameGeometry().size() - this->geometry().size()));
+                QSize size = QDesktopWidget().availableGeometry(this).size() * WINDOW_SIZE_COEF;
+                resize_window_frame(this, size);
         }
-}
 
-void MainWindow::move_window_to_desktop_center()
-{
-        // Из документации на move: the position on the desktop, including frame
-        this->move((QDesktopWidget().availableGeometry(this).width() - this->frameGeometry().width()) / 2,
-                   (QDesktopWidget().availableGeometry(this).height() - this->frameGeometry().height()) / 2);
-}
-
-void MainWindow::window_shown_slot()
-{
-        resize_window();
-
-        move_window_to_desktop_center();
+        move_window_to_desktop_center(this);
 
         try
         {
-                m_show = create_show(this, get_widget_window_id(m_widget_under_window), qcolor_to_vec3(m_clear_color),
-                                     qcolor_to_vec3(m_default_color), qcolor_to_vec3(m_wireframe_color),
-                                     ui.checkBox_Smooth->isChecked(), ui.checkBox_Wireframe->isChecked(),
-                                     ui.checkBox_Shadow->isChecked(), ui.checkBox_Materials->isChecked(),
-                                     ui.checkBox_ShowEffect->isChecked(), ui.checkBox_show_dft->isChecked(),
-                                     ui.checkBox_convex_hull_2d->isChecked(), ui.checkBox_OpticalFlow->isChecked(), get_ambient(),
-                                     get_diffuse(), get_specular(), get_dft_brightness(), get_default_ns());
+                m_show = create_show(
+                        &m_event_emitter, get_widget_window_id(ui.widget_under_window), qcolor_to_vec3(m_clear_color),
+                        qcolor_to_vec3(m_default_color), qcolor_to_vec3(m_wireframe_color), ui.checkBox_Smooth->isChecked(),
+                        ui.checkBox_Wireframe->isChecked(), ui.checkBox_Shadow->isChecked(), ui.checkBox_Materials->isChecked(),
+                        ui.checkBox_ShowEffect->isChecked(), ui.checkBox_show_dft->isChecked(),
+                        ui.checkBox_convex_hull_2d->isChecked(), ui.checkBox_OpticalFlow->isChecked(), get_ambient(),
+                        get_diffuse(), get_specular(), get_dft_brightness(), get_default_ns());
         }
         catch (std::exception& e)
         {
-                program_ended(e.what());
+                m_event_emitter.program_ended(e.what());
                 return;
         }
         catch (...)
         {
-                program_ended("");
+                m_event_emitter.program_ended("");
                 return;
         }
 
@@ -720,7 +705,7 @@ void MainWindow::window_shown_slot()
                 start_thread_open_object(QCoreApplication::arguments().at(1).toStdString(), OpenObjectType::File);
         }
 
-        m_timer.start(TIMER_PROGRESS_BAR_INTERVAL);
+        m_timer_progress_bar.start(TIMER_PROGRESS_BAR_INTERVAL);
 }
 
 void MainWindow::on_actionLoad_triggered()
@@ -733,16 +718,23 @@ void MainWindow::on_actionLoad_triggered()
         }
 }
 
+void MainWindow::on_action_object_repository()
+{
+        auto iter = m_action_to_object_name_map.find(sender());
+        if (iter != m_action_to_object_name_map.cend())
+        {
+                start_thread_open_object(iter->second, OpenObjectType::Repository);
+        }
+        else
+        {
+                m_event_emitter.error_message("open object sender not found in map");
+        }
+}
+
 void MainWindow::on_actionExport_triggered()
 {
-        if (m_file_loading)
+        if (threads_work_with_message())
         {
-                message_warning(this, "Busy loading file");
-                return;
-        }
-        if (m_bound_cocone_loading)
-        {
-                message_warning(this, "Busy loading BOUND COCONE");
                 return;
         }
 
@@ -798,14 +790,38 @@ void MainWindow::on_actionExport_triggered()
         }
         catch (std::exception& e)
         {
-                error_message("Export " + cocone_type.toStdString() + " to file:\n" + e.what());
+                m_event_emitter.error_message("Export " + cocone_type.toStdString() + " to file:\n" + e.what());
         }
         catch (...)
         {
-                error_message("Unknown error while export " + cocone_type.toStdString() + " to file");
+                m_event_emitter.error_message("Unknown error while exporting " + cocone_type.toStdString() + " to file");
         }
 
-        message_information(this, cocone_type + " exported.\n\n" + file_name);
+        message_information(this, cocone_type + " exported to file " + file_name);
+}
+
+void MainWindow::on_Button_LoadBoundCocone_clicked()
+{
+        if (threads_work_with_message())
+        {
+                return;
+        }
+
+        if (!m_surface_constructor)
+        {
+                message_warning(this, "No surface constructor");
+                return;
+        }
+
+        double rho = m_bound_cocone_rho;
+        double alpha = m_bound_cocone_alpha;
+
+        if (!BoundCoconeParameters(this).show(BOUND_COCONE_DISPLAY_DIGITS, &rho, &alpha))
+        {
+                return;
+        }
+
+        start_thread_bound_cocone(rho, alpha);
 }
 
 void MainWindow::on_actionExit_triggered()
@@ -831,124 +847,12 @@ void MainWindow::resizeEvent(QResizeEvent*)
         }
 }
 
-void MainWindow::error_message(const std::string& msg) noexcept
-{
-        try
-        {
-                emit window_event(WindowEvent(std::in_place_type<WindowEvent::error_message>, msg));
-        }
-        catch (std::exception& e)
-        {
-                error_fatal(std::string("Error message exception: ") + e.what() + ".");
-        }
-        catch (...)
-        {
-                error_fatal("Error message exception.");
-        }
-}
-
-void MainWindow::window_ready() noexcept
-{
-        try
-        {
-                emit window_event(WindowEvent(std::in_place_type<WindowEvent::window_ready>));
-        }
-        catch (std::exception& e)
-        {
-                error_fatal(std::string("Window ready exception: ") + e.what() + ".");
-        }
-        catch (...)
-        {
-                error_fatal("Window ready exception.");
-        }
-}
-
-void MainWindow::program_ended(const std::string& msg) noexcept
-{
-        try
-        {
-                emit window_event(WindowEvent(std::in_place_type<WindowEvent::program_ended>, msg));
-        }
-        catch (std::exception& e)
-        {
-                error_fatal(std::string("Program ended exception: ") + e.what() + ".");
-        }
-        catch (...)
-        {
-                error_fatal("Program ended exception.");
-        }
-}
-
-void MainWindow::error_src_message(const std::string& msg, const std::string& src) noexcept
-{
-        try
-        {
-                emit window_event(WindowEvent(std::in_place_type<WindowEvent::error_src_message>, msg, src));
-        }
-        catch (std::exception& e)
-        {
-                error_fatal(std::string("Error source exception: ") + e.what() + ".");
-        }
-        catch (...)
-        {
-                error_fatal("Error source exception.");
-        }
-}
-
-void MainWindow::object_loaded(int id) noexcept
-{
-        try
-        {
-                emit window_event(WindowEvent(std::in_place_type<WindowEvent::object_loaded>, id));
-        }
-        catch (std::exception& e)
-        {
-                error_fatal(std::string("Object loaded exception: ") + e.what() + ".");
-        }
-        catch (...)
-        {
-                error_fatal("Object loaded exception.");
-        }
-}
-
-void MainWindow::file_loaded(const std::string& msg) noexcept
-{
-        try
-        {
-                emit window_event(WindowEvent(std::in_place_type<WindowEvent::file_loaded>, msg));
-        }
-        catch (std::exception& e)
-        {
-                error_fatal(std::string("File loaded exception: ") + e.what() + ".");
-        }
-        catch (...)
-        {
-                error_fatal("File loaded exception.");
-        }
-}
-
-void MainWindow::bound_cocone_loaded(double rho, double alpha) noexcept
-{
-        try
-        {
-                emit window_event(WindowEvent(std::in_place_type<WindowEvent::bound_cocone_loaded>, rho, alpha));
-        }
-        catch (std::exception& e)
-        {
-                error_fatal(std::string("BOUND COCONE loaded exception: ") + e.what() + ".");
-        }
-        catch (...)
-        {
-                error_fatal("BOUND COCONE loaded exception.");
-        }
-}
-
 void MainWindow::on_Button_ResetView_clicked()
 {
         m_show->reset_view();
 }
 
-void MainWindow::widget_under_window_mouse_wheel_slot(double delta)
+void MainWindow::on_widget_under_window_mouse_wheel(double delta)
 {
         if (m_show)
         {
@@ -1013,51 +917,17 @@ void MainWindow::on_Slider_Default_Ns_valueChanged(int)
 
 void MainWindow::on_ButtonBackgroundColor_clicked()
 {
-        QColorDialog dialog(this);
-        dialog.setCurrentColor(m_clear_color);
-        dialog.setWindowTitle("Background color");
-        dialog.setOptions(QColorDialog::NoButtons | QColorDialog::DontUseNativeDialog);
-        connect(&dialog, &QColorDialog::currentColorChanged, [this](const QColor& c) {
-                if (c.isValid())
-                {
-                        m_clear_color = c;
-                        m_show->set_clear_color(qcolor_to_vec3(c));
-
-                        QPalette palette;
-                        palette.setColor(QPalette::Window, m_clear_color);
-                        ui.widget_clear_color->setPalette(palette);
-                }
-        });
-
-        dialog.exec();
+        color_dialog(this, "Background color", m_clear_color, [this](const QColor& c) { set_clear_color(c); });
 }
 
 void MainWindow::on_ButtonDefaultColor_clicked()
 {
-        QColor c = QColorDialog::getColor(m_default_color, this, "Default color", QColorDialog::DontUseNativeDialog);
-        if (c.isValid())
-        {
-                m_default_color = c;
-                m_show->set_default_color(qcolor_to_vec3(c));
-
-                QPalette palette;
-                palette.setColor(QPalette::Window, m_default_color);
-                ui.widget_default_color->setPalette(palette);
-        }
+        color_dialog(this, "Default color", m_default_color, [this](const QColor& c) { set_default_color(c); });
 }
 
 void MainWindow::on_ButtonWireframeColor_clicked()
 {
-        QColor c = QColorDialog::getColor(m_wireframe_color, this, "Wireframe color", QColorDialog::DontUseNativeDialog);
-        if (c.isValid())
-        {
-                m_wireframe_color = c;
-                m_show->set_wireframe_color(qcolor_to_vec3(c));
-
-                QPalette palette;
-                palette.setColor(QPalette::Window, m_wireframe_color);
-                ui.widget_wireframe_color->setPalette(palette);
-        }
+        color_dialog(this, "Wireframe color", m_wireframe_color, [this](const QColor& c) { set_wireframe_color(c); });
 }
 
 void MainWindow::on_checkBox_Shadow_clicked()
@@ -1067,10 +937,6 @@ void MainWindow::on_checkBox_Shadow_clicked()
 
 void MainWindow::on_checkBox_Wireframe_clicked()
 {
-        // ui.widget_wireframe_color->setEnabled(ui.checkBox_Wireframe->isChecked());
-        // ui.ButtonWireframeColor->setEnabled(ui.checkBox_Wireframe->isChecked());
-        // ui.label_wireframe_color->setEnabled(ui.checkBox_Wireframe->isChecked());
-
         m_show->show_wireframe(ui.checkBox_Wireframe->isChecked());
 }
 

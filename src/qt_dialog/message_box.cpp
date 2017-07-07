@@ -15,11 +15,21 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#pragma once
+#include "message_box.h"
 
-#include <QWidget>
-#include <string>
+#include "application/application_name.h"
 
-bool edit_bound_cocone_parameters(QWidget* parent, int digits, double* rho, double* alpha);
+#include <QMessageBox>
 
-void show_source_error(QWidget* parent, const std::string& msg, const std::string& source);
+void message_critical(QWidget* parent, const QString& message)
+{
+        QMessageBox::critical(parent, APPLICATION_NAME, message);
+}
+void message_information(QWidget* parent, const QString& message)
+{
+        QMessageBox::information(parent, APPLICATION_NAME, message);
+}
+void message_warning(QWidget* parent, const QString& message)
+{
+        QMessageBox::warning(parent, APPLICATION_NAME, message);
+}

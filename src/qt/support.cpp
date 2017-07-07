@@ -15,19 +15,19 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "qt_support.h"
+#include "support.h"
 
 #include "com/error.h"
 
 #include <QButtonGroup>
-#include <QWidget>
+#include <QDesktopWidget>
 #include <type_traits>
 
 namespace
 {
 bool is_child_widget_of_any_layout(QLayout* layout, QWidget* widget)
 {
-        if (layout == nullptr or widget == nullptr)
+        if (layout == nullptr || widget == nullptr)
         {
                 return false;
         }
@@ -78,6 +78,7 @@ void button_strike_out(QRadioButton* button, bool strike_out)
         button->setFont(f);
 }
 
+#if 0
 void disable_radio_button(QRadioButton* button)
 {
         ASSERT(button && button->group());
@@ -89,9 +90,12 @@ void disable_radio_button(QRadioButton* button)
         button->setEnabled(false);
         button->group()->setExclusive(true);
 }
+#endif
 
 WindowID get_widget_window_id(QWidget* widget)
 {
+        ASSERT(widget);
+
         static_assert(sizeof(WindowID) == sizeof(WId));
         static_assert(std::is_integral<WindowID>::value || std::is_pointer<WindowID>::value);
         static_assert(std::is_integral<WId>::value || std::is_pointer<WId>::value);
@@ -103,4 +107,31 @@ WindowID get_widget_window_id(QWidget* widget)
 
         w_id = widget->winId();
         return window_id;
+}
+
+void move_window_to_desktop_center(QMainWindow* window)
+{
+        ASSERT(window);
+
+        // Из документации на move: the position on the desktop, including frame
+        window->move((QDesktopWidget().availableGeometry(window).width() - window->frameGeometry().width()) / 2,
+                     (QDesktopWidget().availableGeometry(window).height() - window->frameGeometry().height()) / 2);
+}
+
+// Изменение размеров окна
+void resize_window_frame(QMainWindow* window, const QSize& frame_size)
+{
+        ASSERT(window);
+
+        // Из документации на resize: the size excluding any window frame
+        window->resize(frame_size - (window->frameGeometry().size() - window->geometry().size()));
+}
+
+// Изменение размеров окна для получения заданного размера заданного объекта этого окна
+void resize_window_widget(QMainWindow* window, QWidget* widget, const QSize& widget_size)
+{
+        ASSERT(window && widget);
+
+        // Из документации на resize: the size excluding any window frame
+        window->resize(widget_size + (window->geometry().size() - widget->size()));
 }
