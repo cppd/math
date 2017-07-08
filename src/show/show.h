@@ -30,10 +30,9 @@ protected:
         virtual ~ICallBack() = default;
 
 public:
-        virtual void error_message(const std::string&) noexcept = 0;
-        virtual void error_src_message(const std::string&, const std::string&) noexcept = 0;
+        virtual void error_fatal_message(const std::string&) noexcept = 0;
+        virtual void error_source_message(const std::string&, const std::string&) noexcept = 0;
         virtual void window_ready() noexcept = 0;
-        virtual void program_ended(const std::string&) noexcept = 0;
         virtual void object_loaded(int) noexcept = 0;
 };
 

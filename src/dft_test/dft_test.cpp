@@ -301,14 +301,14 @@ void dft_test()
         }
         catch (ErrorSourceException& e)
         {
-                std::string s;
-                s += "dft test error\n";
-                s += e.get_msg() + "\n";
-                s += source_with_line_numbers(e.get_src()) + "\n";
-                error_fatal(s);
+                error_src("DFT test error\n" + e.get_msg(), e.get_src());
         }
         catch (std::exception& e)
         {
-                error_fatal(std::string("dft test error: ") + e.what());
+                error(std::string("DFT test error\n") + e.what());
+        }
+        catch (...)
+        {
+                error("DFT test unknown error");
         }
 }

@@ -36,10 +36,12 @@ class ProgressRatio::Impl final : public IProgressRatioControl
 
         IProgressRatioList* m_ratios;
 
+        const std::string m_permanent_text;
+
 public:
         static constexpr bool LOCK_FREE = (ATOMIC_LLONG_LOCK_FREE == 2) && (ATOMIC_BOOL_LOCK_FREE == 2);
 
-        Impl(IProgressRatioList* list) : m_ratios(list)
+        Impl(IProgressRatioList* list, const std::string& permanent_text) : m_ratios(list), m_permanent_text(permanent_text)
         {
                 set_undefined();
 
@@ -99,7 +101,20 @@ public:
         std::string get_text() const override
         {
                 std::lock_guard<std::mutex> lg(m_text_mutex);
-                return m_text;
+
+                if (m_permanent_text.size() == 0)
+                {
+                        return m_text;
+                }
+
+                if (m_text.size() != 0)
+                {
+                        return m_permanent_text + ". " + m_text;
+                }
+                else
+                {
+                        return m_permanent_text;
+                }
         }
 
         Impl(const Impl&) = delete;
@@ -108,7 +123,8 @@ public:
         Impl& operator=(Impl&&) = delete;
 };
 
-ProgressRatio::ProgressRatio(IProgressRatioList* list) : m_progress(std::make_unique<Impl>(list))
+ProgressRatio::ProgressRatio(IProgressRatioList* list, const std::string& permanent_text)
+        : m_progress(std::make_unique<Impl>(list, permanent_text))
 {
 }
 ProgressRatio::~ProgressRatio()

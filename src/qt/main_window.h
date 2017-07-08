@@ -112,12 +112,18 @@ private:
         void thread_surface_constructor() noexcept;
         void thread_cocone() noexcept;
         void thread_bound_cocone(double rho, double alpha) noexcept;
+        void thread_test() noexcept;
 
         void start_thread_open_object(const std::string& object_name, OpenObjectType object_type);
         void start_thread_bound_cocone(double rho, double alpha);
-        void stop_all_threads();
+        void start_thread_test();
 
-        bool threads_work_with_message();
+        void stop_main_threads();
+        void stop_test_threads();
+
+        bool main_threads_busy_with_message();
+
+        void progress_bars(bool permanent, ProgressRatioList* progress_ratio_list, std::list<QProgressBar>* progress_bars);
 
         double get_ambient() const;
         double get_diffuse() const;
@@ -146,12 +152,17 @@ private:
         ProgressRatioList m_progress_ratio_list;
         std::list<QProgressBar> m_progress_bars;
 
+        ProgressRatioList m_progress_ratio_list_tests;
+        std::list<QProgressBar> m_progress_bars_tests;
+
         bool m_first_show;
 
         std::thread m_thread_open_object;
         std::thread m_thread_bound_cocone;
+        std::thread m_thread_test;
         std::atomic_bool m_working_open_object;
         std::atomic_bool m_working_bound_cocone;
+        std::atomic_bool m_working_test;
 
         std::vector<glm::vec3> m_surface_points;
         std::unique_ptr<IManifoldConstructor<3>> m_surface_constructor;

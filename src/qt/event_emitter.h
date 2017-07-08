@@ -32,7 +32,7 @@ signals:
         void window_event(const WindowEvent&) const;
 
 public:
-        void error_message(const std::string& msg) noexcept override
+        void error_message(const std::string& msg) noexcept
         {
                 try
                 {
@@ -45,6 +45,38 @@ public:
                 catch (...)
                 {
                         error_fatal("exception in emit error message.");
+                }
+        }
+
+        void error_fatal_message(const std::string& msg) noexcept override
+        {
+                try
+                {
+                        emit window_event(WindowEvent(std::in_place_type<WindowEvent::error_fatal_message>, msg));
+                }
+                catch (std::exception& e)
+                {
+                        error_fatal(std::string("exception in emit error fatal message: ") + e.what() + ".");
+                }
+                catch (...)
+                {
+                        error_fatal("exception in emit error fatal message.");
+                }
+        }
+
+        void error_source_message(const std::string& msg, const std::string& src) noexcept override
+        {
+                try
+                {
+                        emit window_event(WindowEvent(std::in_place_type<WindowEvent::error_source_message>, msg, src));
+                }
+                catch (std::exception& e)
+                {
+                        error_fatal(std::string("exception in emit error source: ") + e.what() + ".");
+                }
+                catch (...)
+                {
+                        error_fatal("exception in emit error source.");
                 }
         }
 
@@ -61,38 +93,6 @@ public:
                 catch (...)
                 {
                         error_fatal("exception in emit window ready.");
-                }
-        }
-
-        void program_ended(const std::string& msg) noexcept override
-        {
-                try
-                {
-                        emit window_event(WindowEvent(std::in_place_type<WindowEvent::program_ended>, msg));
-                }
-                catch (std::exception& e)
-                {
-                        error_fatal(std::string("exception in emit program ended: ") + e.what() + ".");
-                }
-                catch (...)
-                {
-                        error_fatal("exception in emit program ended.");
-                }
-        }
-
-        void error_src_message(const std::string& msg, const std::string& src) noexcept override
-        {
-                try
-                {
-                        emit window_event(WindowEvent(std::in_place_type<WindowEvent::error_src_message>, msg, src));
-                }
-                catch (std::exception& e)
-                {
-                        error_fatal(std::string("exception in emit error source: ") + e.what() + ".");
-                }
-                catch (...)
-                {
-                        error_fatal("exception in emit error source.");
                 }
         }
 

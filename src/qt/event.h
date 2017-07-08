@@ -30,24 +30,24 @@ public:
                 {
                 }
         };
-        struct window_ready final
-        {
-                window_ready()
-                {
-                }
-        };
-        struct program_ended final
+        struct error_fatal_message final
         {
                 const std::string msg;
-                program_ended(const std::string& msg_) : msg(msg_)
+                error_fatal_message(const std::string& msg_) : msg(msg_)
                 {
                 }
         };
-        struct error_src_message final
+        struct error_source_message final
         {
                 const std::string msg;
                 const std::string src;
-                error_src_message(const std::string& msg_, const std::string& src_) : msg(msg_), src(src_)
+                error_source_message(const std::string& msg_, const std::string& src_) : msg(msg_), src(src_)
+                {
+                }
+        };
+        struct window_ready final
+        {
+                window_ready()
                 {
                 }
         };
@@ -77,9 +77,9 @@ public:
         enum class EventType
         {
                 ERROR_MESSAGE,
+                ERROR_FATAL_MESSAGE,
+                ERROR_SOURCE_MESSAGE,
                 WINDOW_READY,
-                PROGRAM_ENDED,
-                ERROR_SRC_MESSAGE,
                 OBJECT_LOADED,
                 FILE_LOADED,
                 BOUND_COCONE_LOADED
@@ -121,13 +121,13 @@ private:
         {
                 return EventType::WINDOW_READY;
         }
-        static constexpr EventType event_type(std::in_place_type_t<program_ended>)
+        static constexpr EventType event_type(std::in_place_type_t<error_fatal_message>)
         {
-                return EventType::PROGRAM_ENDED;
+                return EventType::ERROR_FATAL_MESSAGE;
         }
-        static constexpr EventType event_type(std::in_place_type_t<error_src_message>)
+        static constexpr EventType event_type(std::in_place_type_t<error_source_message>)
         {
-                return EventType::ERROR_SRC_MESSAGE;
+                return EventType::ERROR_SOURCE_MESSAGE;
         }
         static constexpr EventType event_type(std::in_place_type_t<object_loaded>)
         {
@@ -144,7 +144,7 @@ private:
 
         EventType m_type;
 
-        std::variant<std::monostate, error_message, window_ready, program_ended, error_src_message, object_loaded, file_loaded,
-                     bound_cocone_loaded>
+        std::variant<std::monostate, error_message, window_ready, error_fatal_message, error_source_message, object_loaded,
+                     file_loaded, bound_cocone_loaded>
                 m_data;
 };

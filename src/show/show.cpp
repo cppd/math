@@ -939,20 +939,20 @@ void ShowObject::loop_thread()
                 loop();
                 if (!m_stop)
                 {
-                        m_callback->program_ended("Thread ended.");
+                        m_callback->error_fatal_message("Thread ended.");
                 }
         }
         catch (ErrorSourceException& e)
         {
-                m_callback->error_src_message(e.get_msg(), e.get_src());
+                m_callback->error_source_message(e.get_msg(), e.get_src());
         }
         catch (std::exception& e)
         {
-                m_callback->program_ended(e.what());
+                m_callback->error_fatal_message(e.what());
         }
         catch (...)
         {
-                m_callback->program_ended("Unknown Error. Thread ended.");
+                m_callback->error_fatal_message("Unknown Error. Thread ended.");
         }
 }
 }

@@ -30,7 +30,7 @@ class ProgressRatio
 public:
         static constexpr bool LOCK_FREE = (ATOMIC_LLONG_LOCK_FREE == 2) && (ATOMIC_BOOL_LOCK_FREE == 2);
 
-        ProgressRatio(IProgressRatioList* list);
+        ProgressRatio(IProgressRatioList* list, const std::string& permanent_text = "");
         ~ProgressRatio();
         void set(unsigned v, unsigned m);
         void set(double v);

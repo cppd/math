@@ -22,7 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/time.h"
 #include "geometry/convex_hull.h"
 #include "geometry/ridge.h"
-#include "progress/progress.h"
 
 #include <random>
 #include <unordered_map>
@@ -154,16 +153,14 @@ int point_count(const std::vector<ConvexHullFacet<N>>& facets)
 }
 
 template <size_t N>
-void create_convex_hull(std::vector<Vector<N, float>>& points, bool check)
+void create_convex_hull(std::vector<Vector<N, float>>& points, bool check, ProgressRatio* progress)
 {
         std::vector<ConvexHullFacet<N>> facets;
-
-        ProgressRatio pr(nullptr);
 
         LOG("convex hull...");
         double start_time = get_time_seconds();
 
-        compute_convex_hull(points, &facets, &pr);
+        compute_convex_hull(points, &facets, progress);
 
         LOG("convex hull created, " + to_string_fixed(get_time_seconds() - start_time, 5) + " s");
         LOG("point count " + to_string(point_count(facets)) + ", facet count " + to_string(facets.size()));
@@ -178,14 +175,13 @@ void create_convex_hull(std::vector<Vector<N, float>>& points, bool check)
 
         LOG("check passed");
 }
-}
 
-void convex_hull_test()
+void convex_hull(int number_of_dimensions, ProgressRatio* progress)
 {
-        try
+        switch (number_of_dimensions)
         {
-#if 0
-
+        case 4:
+        {
                 // При N=4, параллельно, 100000 точек, внутри сферы, примерное время: 1.7 сек, 0.4 сек.
 
                 constexpr size_t N = 4;
@@ -198,18 +194,19 @@ void convex_hull_test()
                 LOG("-----------------");
                 generate_random_data(false, size, &points, on_sphere);
                 LOG("Integer convex hull, point count " + to_string(points.size()));
-                create_convex_hull(points, false);
+                create_convex_hull(points, false, progress);
 
                 LOG("-----------------");
                 generate_random_data(true, size, &points, on_sphere);
                 LOG("Integer convex hull, point count " + to_string(points.size()));
-                create_convex_hull(points, false);
+                create_convex_hull(points, false, progress);
 
                 LOG("");
 
-                std::exit(EXIT_SUCCESS);
-#else
-
+                break;
+        }
+        case 5:
+        {
                 std::mt19937_64 engine(get_random_seed<std::mt19937_64>());
 
                 constexpr size_t N = 5;
@@ -218,27 +215,40 @@ void convex_hull_test()
 
                 std::vector<Vector<N, float>> points; // {{1, 1.000001}, {2, 3}, {2, 3}, {20, 3}, {4, 5}};
 
-                int size = std::uniform_int_distribution<int>(150, 300)(engine);
+                int size = std::uniform_int_distribution<int>(300, 500)(engine);
 
                 LOG("-----------------");
                 generate_random_data(false, size, &points, on_sphere);
                 LOG("Integer convex hull, point count " + to_string(points.size()));
-                create_convex_hull(points, true);
+                create_convex_hull(points, true, progress);
 
                 LOG("-----------------");
                 generate_random_data(true, size, &points, on_sphere);
                 LOG("Integer convex hull, point count " + to_string(points.size()));
-                create_convex_hull(points, true);
+                create_convex_hull(points, true, progress);
 
                 LOG("");
-#endif
+
+                break;
+        }
+        default:
+                error("Error convex hull test number of dimensions " + to_string(number_of_dimensions));
+        }
+}
+}
+
+void convex_hull_test(int number_of_dimensions, ProgressRatio* progress)
+{
+        try
+        {
+                convex_hull(number_of_dimensions, progress);
         }
         catch (std::exception& e)
         {
-                error_fatal(std::string("convex hull test error: ") + e.what());
+                error(std::string("Convex hull test error\n") + e.what());
         }
         catch (...)
         {
-                error_fatal("convex hull test unknown error");
+                error("Convex hull test unknown error");
         }
 }

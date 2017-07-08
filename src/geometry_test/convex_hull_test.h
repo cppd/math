@@ -17,4 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-void convex_hull_test();
+#include "progress/progress.h"
+
+void convex_hull_test(int number_of_dimensions, ProgressRatio* progress);

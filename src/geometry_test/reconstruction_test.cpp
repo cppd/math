@@ -24,7 +24,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/time.h"
 #include "geometry_cocone/reconstruction.h"
 #include "geometry_objects/points.h"
-#include "progress/progress.h"
 
 #include <cmath>
 #include <random>
@@ -72,7 +71,8 @@ constexpr std::tuple<size_t, size_t> facet_count(size_t point_count)
 
 template <size_t N>
 void test_algorithms(double rho, double alpha, const std::vector<Vector<N, float>>& points, size_t expected_facets_min,
-                     size_t expected_facets_max, size_t expected_bound_facets_min, size_t expected_bound_facets_max)
+                     size_t expected_facets_max, size_t expected_bound_facets_min, size_t expected_bound_facets_max,
+                     ProgressRatio* progress)
 {
         ASSERT(points.size() > N);
         ASSERT(expected_facets_min > 0 && expected_facets_max > 0 && expected_bound_facets_min > 0 &&
@@ -93,14 +93,12 @@ void test_algorithms(double rho, double alpha, const std::vector<Vector<N, float
         LOG("Expected facet count: " + facet_count_str);
         LOG("Expected bound facet count: " + bound_facet_count_str);
 
-        ProgressRatio progress(nullptr);
-
-        std::unique_ptr<IManifoldConstructor<N>> sr = create_manifold_constructor(points, &progress);
+        std::unique_ptr<IManifoldConstructor<N>> sr = create_manifold_constructor(points, progress);
 
         std::vector<Vector<N, double>> normals;
         std::vector<std::array<int, N>> facets;
 
-        sr->cocone(&normals, &facets, &progress);
+        sr->cocone(&normals, &facets, progress);
 
         LOG("COCONE facet count: " + to_string(facets.size()));
         if (!(expected_facets_min <= facets.size() && facets.size() <= expected_facets_max))
@@ -108,7 +106,7 @@ void test_algorithms(double rho, double alpha, const std::vector<Vector<N, float
                 error("Error facet count: expected " + facet_count_str + ", COCONE computed " + to_string(facets.size()));
         }
 
-        sr->bound_cocone(rho, alpha, &normals, &facets, &progress);
+        sr->bound_cocone(rho, alpha, &normals, &facets, progress);
 
         LOG("BOUND COCONE facet count: " + to_string(facets.size()));
         if (!(expected_bound_facets_min <= facets.size() && facets.size() <= expected_bound_facets_max))
@@ -151,7 +149,7 @@ std::vector<Vector<N, float>> clone(const std::vector<Vector<N, float>>& points,
 }
 
 template <size_t N>
-void all_tests_unbound(int point_count)
+void all_tests_unbound(int point_count, ProgressRatio* progress)
 {
         static_assert(2 <= N && N <= 4);
         ASSERT(point_count > 0);
@@ -173,7 +171,7 @@ void all_tests_unbound(int point_count)
 
         LOG("------- " + to_string(N) + "D, 1 object -------");
 
-        test_algorithms(RHO, ALPHA, points, facets_min, facets_max, bound_facets_min, bound_facets_max);
+        test_algorithms(RHO, ALPHA, points, facets_min, facets_max, bound_facets_min, bound_facets_max, progress);
 
         LOG("");
 
@@ -185,11 +183,12 @@ void all_tests_unbound(int point_count)
         LOG("------- " + to_string(N) + "D, " + to_string(all_object_count) + " objects -------");
 
         test_algorithms(RHO, ALPHA, clone(points, new_object_count, shift), facets_min * all_object_count,
-                        facets_max * all_object_count, bound_facets_min * all_object_count, bound_facets_max * all_object_count);
+                        facets_max * all_object_count, bound_facets_min * all_object_count, bound_facets_max * all_object_count,
+                        progress);
 }
 
 template <size_t N>
-void test(int low, int high)
+void test(int low, int high, ProgressRatio* progress)
 {
         try
         {
@@ -197,27 +196,37 @@ void test(int low, int high)
 
                 int point_count = std::uniform_int_distribution<int>(low, high)(engine);
 
-                all_tests_unbound<N>(point_count);
+                all_tests_unbound<N>(point_count, progress);
 
                 LOG("");
         }
         catch (std::exception& e)
         {
-                error_fatal(std::string(to_string(N - 1) + "-manifold reconstruction test:\n") + e.what());
+                error("Reconstruction of " + to_string(N - 1) + "-manifold test error\n" + e.what());
         }
-}
-}
-
-void reconstruction_test(bool all)
-{
-        test<2>(100, 1000);
-
-        test<3>(2000, 3000);
-
-        if (!all)
+        catch (...)
         {
-                return;
+                error("Reconstruction of " + to_string(N - 1) + "-manifold test unknown error");
         }
+}
+}
 
-        test<4>(20000, 25000);
+void reconstruction_test(int number_of_dimensions, ProgressRatio* progress)
+{
+        ASSERT(progress);
+
+        switch (number_of_dimensions)
+        {
+        case 2:
+                test<2>(100, 1000, progress);
+                break;
+        case 3:
+                test<3>(2000, 3000, progress);
+                break;
+        case 4:
+                test<4>(20000, 25000, progress);
+                break;
+        default:
+                error("Error manifold reconstruction test number of dimensions " + to_string(number_of_dimensions));
+        }
 }

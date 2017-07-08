@@ -26,9 +26,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/log.h"
 #include "com/print.h"
 #include "com/time.h"
+#include "dft_test/dft_test.h"
 #include "geometry/vec_glm.h"
 #include "geometry_cocone/reconstruction.h"
 #include "geometry_objects/points.h"
+#include "geometry_test/convex_hull_test.h"
+#include "geometry_test/reconstruction_test.h"
 #include "obj/obj_alg.h"
 #include "obj/obj_convex_hull.h"
 #include "obj/obj_file_load.h"
@@ -141,7 +144,57 @@ MainWindow::MainWindow(QWidget* parent)
 
 MainWindow::~MainWindow()
 {
-        stop_all_threads();
+        stop_main_threads();
+        stop_test_threads();
+}
+
+void MainWindow::thread_test() noexcept
+{
+        try
+        {
+                {
+                        ProgressRatio progress(&m_progress_ratio_list_tests, "Test DFT in 2D");
+                        progress.set(0);
+                        dft_test();
+                }
+                {
+                        ProgressRatio progress(&m_progress_ratio_list_tests, "Test convex hull in 4D");
+                        convex_hull_test(4, &progress);
+                }
+                {
+                        ProgressRatio progress(&m_progress_ratio_list_tests, "Test convex hull in 5D");
+                        convex_hull_test(5, &progress);
+                }
+                {
+                        ProgressRatio progress(&m_progress_ratio_list_tests, "Test 1-manifold reconstruction in 2D");
+                        reconstruction_test(2, &progress);
+                }
+                {
+                        ProgressRatio progress(&m_progress_ratio_list_tests, "Test 2-manifold reconstruction in 3D");
+                        reconstruction_test(3, &progress);
+                }
+                {
+                        ProgressRatio progress(&m_progress_ratio_list_tests, "Test 3-manifold reconstruction in 4D");
+                        reconstruction_test(4, &progress);
+                }
+        }
+        catch (TerminateRequestException&)
+        {
+        }
+        catch (ErrorSourceException& e)
+        {
+                m_event_emitter.error_source_message(e.get_msg(), e.get_src());
+        }
+        catch (std::exception& e)
+        {
+                m_event_emitter.error_message(e.what());
+        }
+        catch (...)
+        {
+                m_event_emitter.error_message("Unknown error while testing");
+        }
+
+        m_working_test = false;
 }
 
 void MainWindow::thread_model(std::shared_ptr<IObj> obj) noexcept
@@ -379,14 +432,35 @@ void MainWindow::thread_open_object(const std::string& object_name, OpenObjectTy
 
 void MainWindow::start_thread_open_object(const std::string& object_name, OpenObjectType object_type)
 {
-        stop_all_threads();
+        stop_main_threads();
 
         m_working_open_object = true;
 
         launch_class_thread(&m_thread_open_object, nullptr, &MainWindow::thread_open_object, this, object_name, object_type);
 }
 
-void MainWindow::stop_all_threads()
+void MainWindow::start_thread_bound_cocone(double rho, double alpha)
+{
+        if (m_thread_bound_cocone.joinable())
+        {
+                m_thread_bound_cocone.join();
+        }
+
+        m_working_bound_cocone = true;
+
+        launch_class_thread(&m_thread_bound_cocone, nullptr, &MainWindow::thread_bound_cocone, this, rho, alpha);
+}
+
+void MainWindow::start_thread_test()
+{
+        stop_test_threads();
+
+        m_working_test = true;
+
+        launch_class_thread(&m_thread_test, nullptr, &MainWindow::thread_test, this);
+}
+
+void MainWindow::stop_main_threads()
 {
         m_progress_ratio_list.stop_all();
 
@@ -402,19 +476,19 @@ void MainWindow::stop_all_threads()
         m_progress_ratio_list.enable();
 }
 
-void MainWindow::start_thread_bound_cocone(double rho, double alpha)
+void MainWindow::stop_test_threads()
 {
-        if (m_thread_bound_cocone.joinable())
+        m_progress_ratio_list_tests.stop_all();
+
+        if (m_thread_test.joinable())
         {
-                m_thread_bound_cocone.join();
+                m_thread_test.join();
         }
 
-        m_working_bound_cocone = true;
-
-        launch_class_thread(&m_thread_bound_cocone, nullptr, &MainWindow::thread_bound_cocone, this, rho, alpha);
+        m_progress_ratio_list_tests.enable();
 }
 
-bool MainWindow::threads_work_with_message()
+bool MainWindow::main_threads_busy_with_message()
 {
         if (m_working_open_object)
         {
@@ -428,22 +502,30 @@ bool MainWindow::threads_work_with_message()
         }
         return false;
 }
-void MainWindow::on_timer_progress_bar()
-{
-        std::vector<std::tuple<unsigned, unsigned, std::string>> ratios = m_progress_ratio_list.get_all();
 
-        if (ratios.size() > m_progress_bars.size())
+void MainWindow::progress_bars(bool permanent, ProgressRatioList* progress_ratio_list, std::list<QProgressBar>* progress_bars)
+{
+        std::vector<std::tuple<unsigned, unsigned, std::string>> ratios = progress_ratio_list->get_all();
+
+        if (ratios.size() > progress_bars->size())
         {
-                m_progress_bars.resize(ratios.size());
+                progress_bars->resize(ratios.size());
         }
 
-        std::list<QProgressBar>::iterator bar = m_progress_bars.begin();
+        std::list<QProgressBar>::iterator bar = progress_bars->begin();
 
         for (unsigned i = 0; i < ratios.size(); ++i, ++bar)
         {
                 if (!bar->isVisible())
                 {
-                        ui.statusBar->addWidget(&(*bar));
+                        if (permanent)
+                        {
+                                ui.statusBar->addPermanentWidget(&(*bar));
+                        }
+                        else
+                        {
+                                ui.statusBar->addWidget(&(*bar));
+                        }
                         bar->show();
                 }
 
@@ -463,11 +545,17 @@ void MainWindow::on_timer_progress_bar()
                 }
         }
 
-        while (bar != m_progress_bars.end())
+        while (bar != progress_bars->end())
         {
                 ui.statusBar->removeWidget(&(*bar));
-                bar = m_progress_bars.erase(bar);
+                bar = progress_bars->erase(bar);
         }
+}
+
+void MainWindow::on_timer_progress_bar()
+{
+        progress_bars(false, &m_progress_ratio_list, &m_progress_bars);
+        progress_bars(true, &m_progress_ratio_list_tests, &m_progress_bars_tests);
 }
 
 void MainWindow::set_bound_cocone_parameters(double rho, double alpha)
@@ -559,9 +647,9 @@ void MainWindow::on_window_event(const WindowEvent& event)
 {
         switch (event.get_type())
         {
-        case WindowEvent::EventType::PROGRAM_ENDED:
+        case WindowEvent::EventType::ERROR_FATAL_MESSAGE:
         {
-                const WindowEvent::program_ended& d = event.get<WindowEvent::program_ended>();
+                const WindowEvent::error_fatal_message& d = event.get<WindowEvent::error_fatal_message>();
 
                 const char* message = (d.msg.size() != 0) ? d.msg.c_str() : "Unknown Error. Exit failure.";
 
@@ -573,13 +661,17 @@ void MainWindow::on_window_event(const WindowEvent& event)
 
                 break;
         }
-        case WindowEvent::EventType::ERROR_SRC_MESSAGE:
+        case WindowEvent::EventType::ERROR_SOURCE_MESSAGE:
         {
-                const WindowEvent::error_src_message& d = event.get<WindowEvent::error_src_message>();
+                const WindowEvent::error_source_message& d = event.get<WindowEvent::error_source_message>();
 
-                LOG_ERROR(d.msg);
+                std::string message = d.msg;
+                std::string source = source_with_line_numbers(d.src);
 
-                SourceError(this).show(d.msg.c_str(), source_with_line_numbers(d.src).c_str());
+                LOG_ERROR(message);
+                LOG_ERROR(source);
+
+                SourceError(this).show(message.c_str(), source.c_str());
 
                 close();
 
@@ -670,6 +762,8 @@ void MainWindow::showEvent(QShowEvent* e)
 
 void MainWindow::on_window_first_shown()
 {
+        m_timer_progress_bar.start(TIMER_PROGRESS_BAR_INTERVAL);
+
         if (WINDOW_SIZE_GRAPHICS)
         {
                 QSize size = QDesktopWidget().screenGeometry(this).size() * WINDOW_SIZE_COEF;
@@ -683,6 +777,8 @@ void MainWindow::on_window_first_shown()
 
         move_window_to_desktop_center(this);
 
+        start_thread_test();
+
         try
         {
                 m_show = create_show(&m_event_emitter, get_widget_window_id(ui.graphics_widget), qcolor_to_vec3(m_clear_color),
@@ -695,12 +791,12 @@ void MainWindow::on_window_first_shown()
         }
         catch (std::exception& e)
         {
-                m_event_emitter.program_ended(e.what());
+                m_event_emitter.error_fatal_message(e.what());
                 return;
         }
         catch (...)
         {
-                m_event_emitter.program_ended("");
+                m_event_emitter.error_fatal_message("");
                 return;
         }
 
@@ -708,8 +804,6 @@ void MainWindow::on_window_first_shown()
         {
                 start_thread_open_object(QCoreApplication::arguments().at(1).toStdString(), OpenObjectType::File);
         }
-
-        m_timer_progress_bar.start(TIMER_PROGRESS_BAR_INTERVAL);
 }
 
 void MainWindow::on_actionLoad_triggered()
@@ -737,7 +831,7 @@ void MainWindow::on_action_object_repository()
 
 void MainWindow::on_actionExport_triggered()
 {
-        if (threads_work_with_message())
+        if (main_threads_busy_with_message())
         {
                 return;
         }
@@ -806,7 +900,7 @@ void MainWindow::on_actionExport_triggered()
 
 void MainWindow::on_Button_LoadBoundCocone_clicked()
 {
-        if (threads_work_with_message())
+        if (main_threads_busy_with_message())
         {
                 return;
         }

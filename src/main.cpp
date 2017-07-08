@@ -20,27 +20,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "init/init.h"
 #include "qt/qt_main.h"
 
-#include "dft_test/dft_test.h"
-#include "geometry_test/convex_hull_test.h"
-#include "geometry_test/reconstruction_test.h"
-
-namespace
-{
-void tests()
-{
-        convex_hull_test();
-
-        reconstruction_test(false);
-
-        dft_test();
-}
-}
-
 int main(int argc, char* argv[])
 {
         init();
-
-        tests();
 
         return qt_main(argc, argv);
 }
