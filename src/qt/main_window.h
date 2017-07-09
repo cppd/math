@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "progress/progress_list.h"
 #include "show/show.h"
+#include "test/self_test.h"
 
 #include <QColor>
 #include <QProgressBar>
@@ -59,6 +60,7 @@ private slots:
         void on_actionExport_triggered();
         void on_actionExit_triggered();
         void on_actionHelp_triggered();
+        void on_actionSelfTest_triggered();
         void on_actionAbout_triggered();
         void on_actionFullScreen_triggered();
         void on_Slider_Ambient_valueChanged(int value);
@@ -86,12 +88,12 @@ private slots:
         void on_radioButton_BoundCocone_clicked();
         void on_radioButton_BoundCoconeConvexHull_clicked();
 
-        void on_action_object_repository();
-        void on_window_event(const WindowEvent&);
-        void on_timer_progress_bar();
-        void on_window_first_shown();
-        void on_widget_under_window_mouse_wheel(double delta);
-        void on_widget_under_window_resize();
+        void slot_object_repository();
+        void slot_window_event(const WindowEvent&);
+        void slot_timer_progress_bar();
+        void slot_window_first_shown();
+        void slot_widget_under_window_mouse_wheel(double delta);
+        void slot_widget_under_window_resize();
 
 private:
         enum class OpenObjectType
@@ -112,14 +114,14 @@ private:
         void thread_surface_constructor() noexcept;
         void thread_cocone() noexcept;
         void thread_bound_cocone(double rho, double alpha) noexcept;
-        void thread_test() noexcept;
+        void thread_self_test(SelfTestType test_type) noexcept;
 
         void start_thread_open_object(const std::string& object_name, OpenObjectType object_type);
         void start_thread_bound_cocone(double rho, double alpha);
-        void start_thread_test();
+        void start_thread_self_test(SelfTestType test_type);
 
         void stop_main_threads();
-        void stop_test_threads();
+        void stop_self_test_threads();
 
         bool main_threads_busy_with_message();
 
@@ -147,22 +149,22 @@ private:
         QColor m_default_color;
         QColor m_wireframe_color;
 
+        bool m_first_show;
+
         QTimer m_timer_progress_bar;
 
         ProgressRatioList m_progress_ratio_list;
         std::list<QProgressBar> m_progress_bars;
-
-        ProgressRatioList m_progress_ratio_list_tests;
-        std::list<QProgressBar> m_progress_bars_tests;
-
-        bool m_first_show;
+        ProgressRatioList m_progress_ratio_list_self_test;
+        std::list<QProgressBar> m_progress_bars_self_test;
 
         std::thread m_thread_open_object;
         std::thread m_thread_bound_cocone;
-        std::thread m_thread_test;
+        std::thread m_thread_self_test;
+
         std::atomic_bool m_working_open_object;
         std::atomic_bool m_working_bound_cocone;
-        std::atomic_bool m_working_test;
+        std::atomic_bool m_working_self_test;
 
         std::vector<glm::vec3> m_surface_points;
         std::unique_ptr<IManifoldConstructor<3>> m_surface_constructor;

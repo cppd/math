@@ -190,24 +190,13 @@ void all_tests_unbound(int point_count, ProgressRatio* progress)
 template <size_t N>
 void test(int low, int high, ProgressRatio* progress)
 {
-        try
-        {
-                thread_local std::mt19937_64 engine(get_random_seed<std::mt19937_64>());
+        thread_local std::mt19937_64 engine(get_random_seed<std::mt19937_64>());
 
-                int point_count = std::uniform_int_distribution<int>(low, high)(engine);
+        int point_count = std::uniform_int_distribution<int>(low, high)(engine);
 
-                all_tests_unbound<N>(point_count, progress);
+        all_tests_unbound<N>(point_count, progress);
 
-                LOG("");
-        }
-        catch (std::exception& e)
-        {
-                error("Reconstruction of " + to_string(N - 1) + "-manifold test error\n" + e.what());
-        }
-        catch (...)
-        {
-                error("Reconstruction of " + to_string(N - 1) + "-manifold test unknown error");
-        }
+        LOG("");
 }
 }
 

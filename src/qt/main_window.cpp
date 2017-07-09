@@ -26,12 +26,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/log.h"
 #include "com/print.h"
 #include "com/time.h"
-#include "dft_test/dft_test.h"
 #include "geometry/vec_glm.h"
 #include "geometry_cocone/reconstruction.h"
 #include "geometry_objects/points.h"
-#include "geometry_test/convex_hull_test.h"
-#include "geometry_test/reconstruction_test.h"
 #include "obj/obj_alg.h"
 #include "obj/obj_convex_hull.h"
 #include "obj/obj_file_load.h"
@@ -103,14 +100,14 @@ MainWindow::MainWindow(QWidget* parent)
         QMainWindow::addAction(ui.actionFullScreen);
 
         qRegisterMetaType<WindowEvent>("WindowEvent");
-        connect(&m_event_emitter, SIGNAL(window_event(WindowEvent)), this, SLOT(on_window_event(WindowEvent)),
+        connect(&m_event_emitter, SIGNAL(window_event(WindowEvent)), this, SLOT(slot_window_event(WindowEvent)),
                 Qt::ConnectionType(Qt::QueuedConnection | Qt::UniqueConnection));
 
         ui.graphics_widget->setText("");
-        connect(ui.graphics_widget, SIGNAL(wheel(double)), this, SLOT(on_widget_under_window_mouse_wheel(double)));
-        connect(ui.graphics_widget, SIGNAL(resize()), this, SLOT(on_widget_under_window_resize()));
+        connect(ui.graphics_widget, SIGNAL(wheel(double)), this, SLOT(slot_widget_under_window_mouse_wheel(double)));
+        connect(ui.graphics_widget, SIGNAL(resize()), this, SLOT(slot_widget_under_window_resize()));
 
-        connect(&m_timer_progress_bar, SIGNAL(timeout()), this, SLOT(on_timer_progress_bar()));
+        connect(&m_timer_progress_bar, SIGNAL(timeout()), this, SLOT(slot_timer_progress_bar()));
 
         set_widgets_enabled(this->layout(), true);
         set_dependent_interface();
@@ -138,63 +135,41 @@ MainWindow::MainWindow(QWidget* parent)
         {
                 QAction* action = ui.menuCreate->addAction(object_name.c_str());
                 m_action_to_object_name_map.emplace(action, object_name);
-                connect(action, SIGNAL(triggered()), this, SLOT(on_action_object_repository()));
+                connect(action, SIGNAL(triggered()), this, SLOT(slot_object_repository()));
         }
 }
 
 MainWindow::~MainWindow()
 {
         stop_main_threads();
-        stop_test_threads();
+        stop_self_test_threads();
 }
 
-void MainWindow::thread_test() noexcept
+void MainWindow::thread_self_test(SelfTestType test_type) noexcept
 {
+        std::string test_name;
+
         try
         {
-                {
-                        ProgressRatio progress(&m_progress_ratio_list_tests, "Test DFT in 2D");
-                        progress.set(0);
-                        dft_test();
-                }
-                {
-                        ProgressRatio progress(&m_progress_ratio_list_tests, "Test convex hull in 4D");
-                        convex_hull_test(4, &progress);
-                }
-                {
-                        ProgressRatio progress(&m_progress_ratio_list_tests, "Test convex hull in 5D");
-                        convex_hull_test(5, &progress);
-                }
-                {
-                        ProgressRatio progress(&m_progress_ratio_list_tests, "Test 1-manifold reconstruction in 2D");
-                        reconstruction_test(2, &progress);
-                }
-                {
-                        ProgressRatio progress(&m_progress_ratio_list_tests, "Test 2-manifold reconstruction in 3D");
-                        reconstruction_test(3, &progress);
-                }
-                {
-                        ProgressRatio progress(&m_progress_ratio_list_tests, "Test 3-manifold reconstruction in 4D");
-                        reconstruction_test(4, &progress);
-                }
+                self_test(test_type, &m_progress_ratio_list_self_test, &test_name);
         }
         catch (TerminateRequestException&)
         {
         }
         catch (ErrorSourceException& e)
         {
-                m_event_emitter.error_source_message(e.get_msg(), e.get_src());
+                m_event_emitter.error_source_message(test_name + "\n" + e.get_msg(), e.get_src());
         }
         catch (std::exception& e)
         {
-                m_event_emitter.error_message(e.what());
+                m_event_emitter.error_message(test_name + "\n" + e.what());
         }
         catch (...)
         {
-                m_event_emitter.error_message("Unknown error while testing");
+                m_event_emitter.error_message(test_name + "\n" + "Unknown error while testing");
         }
 
-        m_working_test = false;
+        m_working_self_test = false;
 }
 
 void MainWindow::thread_model(std::shared_ptr<IObj> obj) noexcept
@@ -451,13 +426,13 @@ void MainWindow::start_thread_bound_cocone(double rho, double alpha)
         launch_class_thread(&m_thread_bound_cocone, nullptr, &MainWindow::thread_bound_cocone, this, rho, alpha);
 }
 
-void MainWindow::start_thread_test()
+void MainWindow::start_thread_self_test(SelfTestType test_type)
 {
-        stop_test_threads();
+        stop_self_test_threads();
 
-        m_working_test = true;
+        m_working_self_test = true;
 
-        launch_class_thread(&m_thread_test, nullptr, &MainWindow::thread_test, this);
+        launch_class_thread(&m_thread_self_test, nullptr, &MainWindow::thread_self_test, this, test_type);
 }
 
 void MainWindow::stop_main_threads()
@@ -476,16 +451,16 @@ void MainWindow::stop_main_threads()
         m_progress_ratio_list.enable();
 }
 
-void MainWindow::stop_test_threads()
+void MainWindow::stop_self_test_threads()
 {
-        m_progress_ratio_list_tests.stop_all();
+        m_progress_ratio_list_self_test.stop_all();
 
-        if (m_thread_test.joinable())
+        if (m_thread_self_test.joinable())
         {
-                m_thread_test.join();
+                m_thread_self_test.join();
         }
 
-        m_progress_ratio_list_tests.enable();
+        m_progress_ratio_list_self_test.enable();
 }
 
 bool MainWindow::main_threads_busy_with_message()
@@ -552,10 +527,10 @@ void MainWindow::progress_bars(bool permanent, ProgressRatioList* progress_ratio
         }
 }
 
-void MainWindow::on_timer_progress_bar()
+void MainWindow::slot_timer_progress_bar()
 {
         progress_bars(false, &m_progress_ratio_list, &m_progress_bars);
-        progress_bars(true, &m_progress_ratio_list_tests, &m_progress_bars_tests);
+        progress_bars(true, &m_progress_ratio_list_self_test, &m_progress_bars_self_test);
 }
 
 void MainWindow::set_bound_cocone_parameters(double rho, double alpha)
@@ -643,7 +618,7 @@ void MainWindow::strike_out_bound_cocone_buttons()
         strike_out_radio_button(ui.radioButton_BoundCoconeConvexHull);
 }
 
-void MainWindow::on_window_event(const WindowEvent& event)
+void MainWindow::slot_window_event(const WindowEvent& event)
 {
         switch (event.get_type())
         {
@@ -757,10 +732,10 @@ void MainWindow::showEvent(QShowEvent* e)
         m_first_show = false;
 
         // Окно ещё не видно, поэтому небольшая задержка, чтобы окно реально появилось.
-        QTimer::singleShot(WINDOW_SHOW_DELAY_MSEC, this, SLOT(on_window_first_shown()));
+        QTimer::singleShot(WINDOW_SHOW_DELAY_MSEC, this, SLOT(slot_window_first_shown()));
 }
 
-void MainWindow::on_window_first_shown()
+void MainWindow::slot_window_first_shown()
 {
         m_timer_progress_bar.start(TIMER_PROGRESS_BAR_INTERVAL);
 
@@ -777,7 +752,7 @@ void MainWindow::on_window_first_shown()
 
         move_window_to_desktop_center(this);
 
-        start_thread_test();
+        start_thread_self_test(SelfTestType::Required);
 
         try
         {
@@ -816,7 +791,7 @@ void MainWindow::on_actionLoad_triggered()
         }
 }
 
-void MainWindow::on_action_object_repository()
+void MainWindow::slot_object_repository()
 {
         auto iter = m_action_to_object_name_map.find(sender());
         if (iter != m_action_to_object_name_map.cend())
@@ -932,6 +907,11 @@ void MainWindow::on_actionHelp_triggered()
         application_help(this);
 }
 
+void MainWindow::on_actionSelfTest_triggered()
+{
+        start_thread_self_test(SelfTestType::Extended);
+}
+
 void MainWindow::on_actionAbout_triggered()
 {
         application_about(this);
@@ -942,7 +922,7 @@ void MainWindow::on_Button_ResetView_clicked()
         m_show->reset_view();
 }
 
-void MainWindow::on_widget_under_window_mouse_wheel(double delta)
+void MainWindow::slot_widget_under_window_mouse_wheel(double delta)
 {
         if (m_show)
         {
@@ -950,7 +930,7 @@ void MainWindow::on_widget_under_window_mouse_wheel(double delta)
         }
 }
 
-void MainWindow::on_widget_under_window_resize()
+void MainWindow::slot_widget_under_window_resize()
 {
         if (m_show)
         {

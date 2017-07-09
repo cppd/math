@@ -294,21 +294,6 @@ void test_fft_impl(bool big_test)
 
 void dft_test()
 {
-        try
-        {
-                test_fft_impl(false);
-                LOG("");
-        }
-        catch (ErrorSourceException& e)
-        {
-                error_src("DFT test error\n" + e.get_msg(), e.get_src());
-        }
-        catch (std::exception& e)
-        {
-                error(std::string("DFT test error\n") + e.what());
-        }
-        catch (...)
-        {
-                error("DFT test unknown error");
-        }
+        test_fft_impl(false);
+        LOG("");
 }

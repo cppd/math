@@ -175,8 +175,9 @@ void create_convex_hull(std::vector<Vector<N, float>>& points, bool check, Progr
 
         LOG("check passed");
 }
+}
 
-void convex_hull(int number_of_dimensions, ProgressRatio* progress)
+void convex_hull_test(int number_of_dimensions, ProgressRatio* progress)
 {
         switch (number_of_dimensions)
         {
@@ -233,22 +234,5 @@ void convex_hull(int number_of_dimensions, ProgressRatio* progress)
         }
         default:
                 error("Error convex hull test number of dimensions " + to_string(number_of_dimensions));
-        }
-}
-}
-
-void convex_hull_test(int number_of_dimensions, ProgressRatio* progress)
-{
-        try
-        {
-                convex_hull(number_of_dimensions, progress);
-        }
-        catch (std::exception& e)
-        {
-                error(std::string("Convex hull test error\n") + e.what());
-        }
-        catch (...)
-        {
-                error("Convex hull test unknown error");
         }
 }
