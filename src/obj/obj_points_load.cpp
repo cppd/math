@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "obj_alg.h"
 
 #include "com/error.h"
+#include "com/log.h"
 #include "com/print.h"
 #include "com/time.h"
 

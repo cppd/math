@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QMainWindow>
 #include <QRadioButton>
 #include <QString>
+#include <QTextEdit>
 #include <glm/vec3.hpp>
 
 template <typename T>
@@ -50,6 +51,8 @@ void set_widgets_enabled(QLayout* layout, bool v);
 glm::vec3 qcolor_to_vec3(const QColor& c);
 
 void button_strike_out(QRadioButton* button, bool strike_out);
+
+void add_to_text_edit(QTextEdit* text_edit, const QString& text);
 
 WindowID get_widget_window_id(QWidget* widget);
 

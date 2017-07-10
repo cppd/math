@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "log.h"
 
+#include "error.h"
 #include "time.h"
 
 #include <algorithm>
@@ -24,73 +25,78 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace
 {
-void write_log_message(const std::string& msg) noexcept try
-{
-        constexpr int BUF_SIZE = 100;
+// Мьютекс для работы с этим указателем не нужен, так как установка указателя
+// должна делаться один раз для одного окна в самом начале программы
+ILogCallback* global_log_callback = nullptr;
 
-        char msg_begin[BUF_SIZE];
-
-        int msg_begin_length = std::snprintf(msg_begin, BUF_SIZE, "[%011.6f]: ", get_time_seconds());
-
-        if (msg_begin_length < 0 || msg_begin_length >= BUF_SIZE)
-        {
-                throw "";
-        }
-
-        int new_line_count = std::count(msg.begin(), msg.end(), '\n');
-        unsigned message_size = msg_begin_length + msg.size() + new_line_count * msg_begin_length;
-
-        std::string message;
-
-        message.reserve(message_size);
-
-        if (new_line_count == 0)
-        {
-                message += msg_begin;
-                message += msg;
-        }
-        else
-        {
-                message += msg_begin;
-                for (char c : msg)
-                {
-                        if (c != '\n')
-                        {
-                                message += c;
-                        }
-                        else
-                        {
-                                message += '\n';
-                                message += msg_begin;
-                        }
-                }
-        }
-
-        // Вывод текста одним вызовом функции для работы при многопоточности
-        std::fprintf(stderr, "%s\n", message.c_str());
-        std::fflush(stderr);
-}
-catch (...)
+void write_log_message(const std::string& msg) noexcept
 {
         try
         {
-                std::fprintf(stderr, "error log write\n");
+                constexpr int BUF_SIZE = 100;
+                char buffer[BUF_SIZE];
+                int char_count = std::snprintf(buffer, BUF_SIZE, "[%011.6f]: ", get_time_seconds());
+                if (char_count < 0 || char_count >= BUF_SIZE)
+                {
+                        error("message begin length out of range");
+                }
+
+                std::string msg_begin = buffer;
+
+                unsigned new_line_count = std::count(msg.begin(), msg.end(), '\n');
+                unsigned message_size = msg_begin.length() + msg.size() + new_line_count * msg_begin.length();
+
+                std::string message;
+                message.reserve(message_size);
+
+                if (new_line_count == 0)
+                {
+                        message += msg_begin;
+                        message += msg;
+                }
+                else
+                {
+                        message += msg_begin;
+                        for (char c : msg)
+                        {
+                                if (c != '\n')
+                                {
+                                        message += c;
+                                }
+                                else
+                                {
+                                        message += '\n';
+                                        message += msg_begin;
+                                }
+                        }
+                }
+
+                // Вывод текста одним вызовом функции для работы при многопоточности
+                std::fprintf(stderr, "%s\n", message.c_str());
                 std::fflush(stderr);
+
+                if (global_log_callback)
+                {
+                        global_log_callback->log(message);
+                }
+        }
+        catch (std::exception& e)
+        {
+                error_fatal(std::string("error log write message: ") + e.what());
         }
         catch (...)
         {
+                error_fatal("error log write message");
         }
-
-        std::_Exit(EXIT_FAILURE);
 }
+}
+
+void set_log_callback(ILogCallback* callback)
+{
+        global_log_callback = callback;
 }
 
 void LOG(const std::string& msg) noexcept
-{
-        write_log_message(msg);
-}
-
-void LOG_ERROR(const std::string& msg) noexcept
 {
         write_log_message(msg);
 }

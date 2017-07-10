@@ -20,11 +20,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "event.h"
 
 #include "com/error.h"
+#include "com/log.h"
 #include "show/show.h"
 
 #include <QObject>
 
-class WindowEventEmitter final : public QObject, public ICallBack
+class WindowEventEmitter final : public QObject, public ICallBack, public ILogCallback
 {
         Q_OBJECT
 
@@ -141,6 +142,22 @@ public:
                 catch (...)
                 {
                         error_fatal("exception in emit BOUND COCONE loaded.");
+                }
+        }
+
+        void log(const std::string& msg) noexcept override
+        {
+                try
+                {
+                        emit window_event(WindowEvent(std::in_place_type<WindowEvent::log>, msg));
+                }
+                catch (std::exception& e)
+                {
+                        error_fatal(std::string("exception in emit log: ") + e.what() + ".");
+                }
+                catch (...)
+                {
+                        error_fatal("exception in emit log.");
                 }
         }
 };

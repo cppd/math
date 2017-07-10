@@ -74,6 +74,14 @@ public:
                 }
         };
 
+        struct log final
+        {
+                const std::string msg;
+                log(const std::string& msg_) : msg(msg_)
+                {
+                }
+        };
+
         enum class EventType
         {
                 ERROR_MESSAGE,
@@ -82,7 +90,8 @@ public:
                 WINDOW_READY,
                 OBJECT_LOADED,
                 FILE_LOADED,
-                BOUND_COCONE_LOADED
+                BOUND_COCONE_LOADED,
+                LOG
         };
 
         WindowEvent() = default;
@@ -141,10 +150,14 @@ private:
         {
                 return EventType::BOUND_COCONE_LOADED;
         }
+        static constexpr EventType event_type(std::in_place_type_t<log>)
+        {
+                return EventType::LOG;
+        }
 
         EventType m_type;
 
         std::variant<std::monostate, error_message, window_ready, error_fatal_message, error_source_message, object_loaded,
-                     file_loaded, bound_cocone_loaded>
+                     file_loaded, bound_cocone_loaded, log>
                 m_data;
 };

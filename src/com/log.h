@@ -19,5 +19,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <string>
 
+class ILogCallback
+{
+protected:
+        ~ILogCallback() = default;
+
+public:
+        virtual void log(const std::string& msg) noexcept = 0;
+};
+
+void set_log_callback(ILogCallback* callback);
+
 void LOG(const std::string& msg) noexcept;
-void LOG_ERROR(const std::string& msg) noexcept;

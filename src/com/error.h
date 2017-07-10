@@ -17,8 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "log.h"
-
 #include <cstdlib>
 #include <exception>
 #include <string>
@@ -75,9 +73,12 @@ public:
 
 [[noreturn]] inline void error_fatal(const std::string& text) noexcept
 {
+        // Без вызовов других функций программы, так как они могут вызвать эту же функцию.
+        // Поэтому только std::fprintf и завершение программы.
         try
         {
-                LOG_ERROR(text);
+                std::fprintf(stderr, "%s\n", text.c_str());
+                std::fflush(stderr);
         }
         catch (...)
         {

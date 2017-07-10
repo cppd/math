@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <QButtonGroup>
 #include <QDesktopWidget>
+#include <QScrollBar>
 #include <type_traits>
 
 namespace
@@ -76,6 +77,31 @@ void button_strike_out(QRadioButton* button, bool strike_out)
         QFont f = button->font();
         f.setStrikeOut(strike_out);
         button->setFont(f);
+}
+
+void add_to_text_edit(QTextEdit* text_edit, const QString& text)
+{
+        if (text_edit->verticalScrollBar()->value() == text_edit->verticalScrollBar()->maximum() ||
+            text_edit->verticalScrollBar()->maximum() == 0)
+        {
+                // text_edit->moveCursor(QTextCursor::End);
+                // text_edit->insertPlainText(text + '\n');
+
+                text_edit->append(text);
+
+                text_edit->verticalScrollBar()->setValue(text_edit->verticalScrollBar()->maximum());
+        }
+        else
+        {
+                int v = text_edit->verticalScrollBar()->value();
+
+                // text_edit->moveCursor(QTextCursor::End);
+                // text_edit->insertPlainText(text + '\n');
+
+                text_edit->append(text);
+
+                text_edit->verticalScrollBar()->setValue(v);
+        }
 }
 
 #if 0

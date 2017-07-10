@@ -95,6 +95,9 @@ MainWindow::MainWindow(QWidget* parent)
 
         ui.setupUi(this);
 
+        // После вызова ui.setupUi(this)
+        set_log_callback(&m_event_emitter);
+
         QMainWindow::setWindowTitle(APPLICATION_NAME);
 
         QMainWindow::addAction(ui.actionFullScreen);
@@ -119,8 +122,8 @@ MainWindow::MainWindow(QWidget* parent)
         set_default_color(DEFAULT_COLOR);
         set_wireframe_color(WIREFRAME_COLOR);
 
-        ui.mainWidget->layout()->setContentsMargins(1, 1, 1, 1);
-        ui.mainWidget->layout()->setSpacing(1);
+        ui.mainWidget->layout()->setContentsMargins(3, 3, 3, 3);
+        ui.mainWidget->layout()->setSpacing(3);
 
         ui.radioButton_Model->setChecked(true);
 
@@ -137,6 +140,9 @@ MainWindow::MainWindow(QWidget* parent)
                 m_action_to_object_name_map.emplace(action, object_name);
                 connect(action, SIGNAL(triggered()), this, SLOT(slot_object_repository()));
         }
+
+        // Чтобы добавление и удаление QProgressBar не меняло высоту ui.statusBar
+        ui.statusBar->setFixedHeight(ui.statusBar->height());
 }
 
 MainWindow::~MainWindow()
@@ -628,7 +634,7 @@ void MainWindow::slot_window_event(const WindowEvent& event)
 
                 const char* message = (d.msg.size() != 0) ? d.msg.c_str() : "Unknown Error. Exit failure.";
 
-                LOG_ERROR(message);
+                LOG(message);
 
                 message_critical(this, message);
 
@@ -643,8 +649,7 @@ void MainWindow::slot_window_event(const WindowEvent& event)
                 std::string message = d.msg;
                 std::string source = source_with_line_numbers(d.src);
 
-                LOG_ERROR(message);
-                LOG_ERROR(source);
+                LOG(message + "\n" + source);
 
                 SourceError(this).show(message.c_str(), source.c_str());
 
@@ -656,7 +661,7 @@ void MainWindow::slot_window_event(const WindowEvent& event)
         {
                 const WindowEvent::error_message& d = event.get<WindowEvent::error_message>();
 
-                LOG_ERROR(d.msg);
+                LOG(d.msg);
 
                 message_critical(this, d.msg.c_str());
 
@@ -715,6 +720,16 @@ void MainWindow::slot_window_event(const WindowEvent& event)
                 set_bound_cocone_parameters(d.rho, d.alpha);
 
                 strike_out_bound_cocone_buttons();
+
+                break;
+        }
+        case WindowEvent::EventType::LOG:
+        {
+                // Здесь без вызовов функции LOG
+
+                const WindowEvent::log& d = event.get<WindowEvent::log>();
+
+                add_to_text_edit(ui.text_log, d.msg.c_str());
 
                 break;
         }
