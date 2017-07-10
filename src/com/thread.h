@@ -142,7 +142,7 @@ public:
 
 class TerminateRequestException final : public std::exception
 {
-        static constexpr const char* m_msg = "thread terminate requested";
+        static constexpr const char m_msg[] = "thread terminate requested";
 
 public:
         TerminateRequestException()

@@ -123,7 +123,7 @@ private:
         void stop_main_threads();
         void stop_self_test_threads();
 
-        bool main_threads_busy_with_message();
+        std::string main_threads_busy() const;
 
         void progress_bars(bool permanent, ProgressRatioList* progress_ratio_list, std::list<QProgressBar>* progress_bars);
 

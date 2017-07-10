@@ -149,6 +149,8 @@ MainWindow::~MainWindow()
 {
         stop_main_threads();
         stop_self_test_threads();
+
+        set_log_callback(nullptr);
 }
 
 void MainWindow::thread_self_test(SelfTestType test_type) noexcept
@@ -164,15 +166,15 @@ void MainWindow::thread_self_test(SelfTestType test_type) noexcept
         }
         catch (ErrorSourceException& e)
         {
-                m_event_emitter.error_source_message(test_name + "\n" + e.get_msg(), e.get_src());
+                m_event_emitter.message_error_source(test_name + "\n" + e.get_msg(), e.get_src());
         }
         catch (std::exception& e)
         {
-                m_event_emitter.error_message(test_name + "\n" + e.what());
+                m_event_emitter.message_error(test_name + "\n" + e.what());
         }
         catch (...)
         {
-                m_event_emitter.error_message(test_name + "\n" + "Unknown error while testing");
+                m_event_emitter.message_error(test_name + "\n" + "Unknown error while testing");
         }
 
         m_working_self_test = false;
@@ -204,11 +206,11 @@ void MainWindow::thread_model(std::shared_ptr<IObj> obj) noexcept
         }
         catch (std::exception& e)
         {
-                m_event_emitter.error_message(std::string("Convex hull 3D:\n") + e.what());
+                m_event_emitter.message_error(std::string("Convex hull 3D:\n") + e.what());
         }
         catch (...)
         {
-                m_event_emitter.error_message("Unknown error while convex hull creating");
+                m_event_emitter.message_error("Unknown error while convex hull creating");
         }
 }
 
@@ -251,11 +253,11 @@ void MainWindow::thread_cocone() noexcept
         }
         catch (std::exception& e)
         {
-                m_event_emitter.error_message(std::string("COCONE reconstruction:\n") + e.what());
+                m_event_emitter.message_error(std::string("COCONE reconstruction:\n") + e.what());
         }
         catch (...)
         {
-                m_event_emitter.error_message("Unknown error while COCONE reconstructing");
+                m_event_emitter.message_error("Unknown error while COCONE reconstructing");
         }
 }
 
@@ -303,11 +305,11 @@ void MainWindow::thread_bound_cocone(double rho, double alpha) noexcept
         }
         catch (std::exception& e)
         {
-                m_event_emitter.error_message(std::string("BOUND COCONE reconstruction:\n") + e.what());
+                m_event_emitter.message_error(std::string("BOUND COCONE reconstruction:\n") + e.what());
         }
         catch (...)
         {
-                m_event_emitter.error_message("Unknown error while BOUND COCONE reconstructing");
+                m_event_emitter.message_error("Unknown error while BOUND COCONE reconstructing");
         }
 
         m_working_bound_cocone = false;
@@ -339,11 +341,11 @@ void MainWindow::thread_surface_constructor() noexcept
         }
         catch (std::exception& e)
         {
-                m_event_emitter.error_message(std::string("Surface reconstructing:\n") + e.what());
+                m_event_emitter.message_error(std::string("Surface reconstructing:\n") + e.what());
         }
         catch (...)
         {
-                m_event_emitter.error_message("Unknown error while surface reconstructing");
+                m_event_emitter.message_error("Unknown error while surface reconstructing");
         }
 }
 
@@ -401,11 +403,11 @@ void MainWindow::thread_open_object(const std::string& object_name, OpenObjectTy
         }
         catch (std::exception& e)
         {
-                m_event_emitter.error_message("loading " + object_name + ":\n" + e.what());
+                m_event_emitter.message_error("loading " + object_name + ":\n" + e.what());
         }
         catch (...)
         {
-                m_event_emitter.error_message("Unknown error while loading " + object_name);
+                m_event_emitter.message_error("Unknown error while loading " + object_name);
         }
 
         m_working_open_object = false;
@@ -469,19 +471,17 @@ void MainWindow::stop_self_test_threads()
         m_progress_ratio_list_self_test.enable();
 }
 
-bool MainWindow::main_threads_busy_with_message()
+std::string MainWindow::main_threads_busy() const
 {
         if (m_working_open_object)
         {
-                message_warning(this, "Busy loading object");
-                return true;
+                return "Busy loading object.";
         }
         if (m_working_bound_cocone)
         {
-                message_warning(this, "Busy loading BOUND COCONE");
-                return true;
+                return "Busy loading BOUND COCONE.";
         }
-        return false;
+        return std::string();
 }
 
 void MainWindow::progress_bars(bool permanent, ProgressRatioList* progress_ratio_list, std::list<QProgressBar>* progress_bars)
@@ -628,47 +628,71 @@ void MainWindow::slot_window_event(const WindowEvent& event)
 {
         switch (event.get_type())
         {
-        case WindowEvent::EventType::ERROR_FATAL_MESSAGE:
+        case WindowEvent::EventType::MESSAGE_ERROR:
         {
-                const WindowEvent::error_fatal_message& d = event.get<WindowEvent::error_fatal_message>();
+                const WindowEvent::message_error& d = event.get<WindowEvent::message_error>();
+                std::string message = d.msg;
 
-                const char* message = (d.msg.size() != 0) ? d.msg.c_str() : "Unknown Error. Exit failure.";
+                add_to_text_edit_and_to_stderr(ui.text_log, format_log_message(message), TextEditMessageType::Error);
+                message_critical(this, message.c_str());
 
-                LOG(message);
+                break;
+        }
+        case WindowEvent::EventType::MESSAGE_ERROR_FATAL:
+        {
+                const WindowEvent::message_error_fatal& d = event.get<WindowEvent::message_error_fatal>();
+                std::string message = (d.msg.size() != 0) ? d.msg : "Unknown Error. Exit failure.";
 
-                message_critical(this, message);
+                add_to_text_edit_and_to_stderr(ui.text_log, format_log_message(message), TextEditMessageType::Error);
+                message_critical(this, message.c_str());
 
                 close();
 
                 break;
         }
-        case WindowEvent::EventType::ERROR_SOURCE_MESSAGE:
+        case WindowEvent::EventType::MESSAGE_ERROR_SOURCE:
         {
-                const WindowEvent::error_source_message& d = event.get<WindowEvent::error_source_message>();
-
+                const WindowEvent::message_error_source& d = event.get<WindowEvent::message_error_source>();
                 std::string message = d.msg;
                 std::string source = source_with_line_numbers(d.src);
 
-                LOG(message + "\n" + source);
-
+                add_to_text_edit_and_to_stderr(ui.text_log, format_log_message(message + "\n" + source),
+                                               TextEditMessageType::Error);
                 SourceError(this).show(message.c_str(), source.c_str());
 
                 close();
 
                 break;
         }
-        case WindowEvent::EventType::ERROR_MESSAGE:
+        case WindowEvent::EventType::MESSAGE_INFORMATION:
         {
-                const WindowEvent::error_message& d = event.get<WindowEvent::error_message>();
+                const WindowEvent::message_information& d = event.get<WindowEvent::message_information>();
+                std::string message = d.msg;
 
-                LOG(d.msg);
-
-                message_critical(this, d.msg.c_str());
+                add_to_text_edit_and_to_stderr(ui.text_log, format_log_message(message), TextEditMessageType::Information);
+                message_information(this, message.c_str());
 
                 break;
         }
-        case WindowEvent::EventType::WINDOW_READY:
+        case WindowEvent::EventType::MESSAGE_WARNING:
         {
+                const WindowEvent::message_warning& d = event.get<WindowEvent::message_warning>();
+                std::string message = d.msg;
+
+                add_to_text_edit_and_to_stderr(ui.text_log, format_log_message(message), TextEditMessageType::Warning);
+                message_warning(this, message.c_str());
+
+                break;
+        }
+        case WindowEvent::EventType::LOG:
+        {
+                // Здесь без вызовов функции LOG, так как начнёт вызывать сама себя
+
+                const WindowEvent::log& d = event.get<WindowEvent::log>();
+                std::string message = d.msg;
+
+                add_to_text_edit_and_to_stderr(ui.text_log, format_log_message(message), TextEditMessageType::Normal);
+
                 break;
         }
         case WindowEvent::EventType::OBJECT_LOADED:
@@ -704,11 +728,8 @@ void MainWindow::slot_window_event(const WindowEvent& event)
                 const WindowEvent::file_loaded& d = event.get<WindowEvent::file_loaded>();
 
                 std::string file_name = get_base_name(d.file_name);
-
                 this->setWindowTitle(QString(APPLICATION_NAME) + " - " + file_name.c_str());
-
                 strike_out_all_objects_buttons();
-
                 ui.radioButton_Model->setChecked(true);
 
                 break;
@@ -718,18 +739,7 @@ void MainWindow::slot_window_event(const WindowEvent& event)
                 const WindowEvent::bound_cocone_loaded& d = event.get<WindowEvent::bound_cocone_loaded>();
 
                 set_bound_cocone_parameters(d.rho, d.alpha);
-
                 strike_out_bound_cocone_buttons();
-
-                break;
-        }
-        case WindowEvent::EventType::LOG:
-        {
-                // Здесь без вызовов функции LOG
-
-                const WindowEvent::log& d = event.get<WindowEvent::log>();
-
-                add_to_text_edit(ui.text_log, d.msg.c_str());
 
                 break;
         }
@@ -781,12 +791,12 @@ void MainWindow::slot_window_first_shown()
         }
         catch (std::exception& e)
         {
-                m_event_emitter.error_fatal_message(e.what());
+                m_event_emitter.message_error_fatal(e.what());
                 return;
         }
         catch (...)
         {
-                m_event_emitter.error_fatal_message("");
+                m_event_emitter.message_error_fatal("");
                 return;
         }
 
@@ -815,33 +825,34 @@ void MainWindow::slot_object_repository()
         }
         else
         {
-                m_event_emitter.error_message("open object sender not found in map");
+                m_event_emitter.message_error("open object sender not found in map");
         }
 }
 
 void MainWindow::on_actionExport_triggered()
 {
-        if (main_threads_busy_with_message())
+        if (std::string msg = main_threads_busy(); msg.size() > 0)
         {
+                m_event_emitter.message_warning("Export to file is not available at this time. " + msg);
                 return;
         }
 
         if (!(ui.radioButton_Cocone->isChecked() || ui.radioButton_BoundCocone->isChecked()))
         {
-                message_warning(this, "Select COCONE or BOUND COCONE");
+                m_event_emitter.message_warning("Select COCONE or BOUND COCONE");
                 return;
         }
 
         if (ui.radioButton_Cocone->isChecked() && (!m_surface_cocone || m_surface_cocone->get_faces().size() == 0))
         {
-                message_warning(this, "COCONE not created");
+                m_event_emitter.message_warning("COCONE not created");
                 return;
         }
 
         if (ui.radioButton_BoundCocone->isChecked() &&
             (!m_surface_bound_cocone || m_surface_bound_cocone->get_faces().size() == 0))
         {
-                message_warning(this, "BOUND COCONE not created");
+                m_event_emitter.message_warning("BOUND COCONE not created");
                 return;
         }
 
@@ -878,26 +889,27 @@ void MainWindow::on_actionExport_triggered()
         }
         catch (std::exception& e)
         {
-                m_event_emitter.error_message("Export " + cocone_type.toStdString() + " to file:\n" + e.what());
+                m_event_emitter.message_error("Export " + cocone_type.toStdString() + " to file:\n" + e.what());
         }
         catch (...)
         {
-                m_event_emitter.error_message("Unknown error while exporting " + cocone_type.toStdString() + " to file");
+                m_event_emitter.message_error("Unknown error while exporting " + cocone_type.toStdString() + " to file");
         }
 
-        message_information(this, cocone_type + " exported to file " + file_name);
+        m_event_emitter.message_information((cocone_type + " exported to file " + file_name).toStdString());
 }
 
 void MainWindow::on_Button_LoadBoundCocone_clicked()
 {
-        if (main_threads_busy_with_message())
+        if (std::string msg = main_threads_busy(); msg.size() > 0)
         {
+                m_event_emitter.message_warning("BOUND COCONE is not available at this time. " + msg);
                 return;
         }
 
         if (!m_surface_constructor)
         {
-                message_warning(this, "No surface constructor");
+                m_event_emitter.message_warning("No surface constructor");
                 return;
         }
 

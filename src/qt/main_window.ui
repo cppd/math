@@ -833,6 +833,11 @@
          <verstretch>1</verstretch>
         </sizepolicy>
        </property>
+       <property name="font">
+        <font>
+         <family>Monospace</family>
+        </font>
+       </property>
        <property name="lineWrapMode">
         <enum>QTextEdit::NoWrap</enum>
        </property>

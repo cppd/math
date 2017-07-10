@@ -23,31 +23,39 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 class WindowEvent final
 {
 public:
-        struct error_message final
+        struct message_error final
         {
                 const std::string msg;
-                error_message(const std::string& msg_) : msg(msg_)
+                message_error(const std::string& msg_) : msg(msg_)
                 {
                 }
         };
-        struct error_fatal_message final
+        struct message_error_fatal final
         {
                 const std::string msg;
-                error_fatal_message(const std::string& msg_) : msg(msg_)
+                message_error_fatal(const std::string& msg_) : msg(msg_)
                 {
                 }
         };
-        struct error_source_message final
+        struct message_error_source final
         {
                 const std::string msg;
                 const std::string src;
-                error_source_message(const std::string& msg_, const std::string& src_) : msg(msg_), src(src_)
+                message_error_source(const std::string& msg_, const std::string& src_) : msg(msg_), src(src_)
                 {
                 }
         };
-        struct window_ready final
+        struct message_information final
         {
-                window_ready()
+                const std::string msg;
+                message_information(const std::string& msg_) : msg(msg_)
+                {
+                }
+        };
+        struct message_warning final
+        {
+                const std::string msg;
+                message_warning(const std::string& msg_) : msg(msg_)
                 {
                 }
         };
@@ -84,10 +92,11 @@ public:
 
         enum class EventType
         {
-                ERROR_MESSAGE,
-                ERROR_FATAL_MESSAGE,
-                ERROR_SOURCE_MESSAGE,
-                WINDOW_READY,
+                MESSAGE_ERROR,
+                MESSAGE_ERROR_FATAL,
+                MESSAGE_ERROR_SOURCE,
+                MESSAGE_INFORMATION,
+                MESSAGE_WARNING,
                 OBJECT_LOADED,
                 FILE_LOADED,
                 BOUND_COCONE_LOADED,
@@ -122,21 +131,25 @@ public:
         }
 
 private:
-        static constexpr EventType event_type(std::in_place_type_t<error_message>)
+        static constexpr EventType event_type(std::in_place_type_t<message_error>)
         {
-                return EventType::ERROR_MESSAGE;
+                return EventType::MESSAGE_ERROR;
         }
-        static constexpr EventType event_type(std::in_place_type_t<window_ready>)
+        static constexpr EventType event_type(std::in_place_type_t<message_error_fatal>)
         {
-                return EventType::WINDOW_READY;
+                return EventType::MESSAGE_ERROR_FATAL;
         }
-        static constexpr EventType event_type(std::in_place_type_t<error_fatal_message>)
+        static constexpr EventType event_type(std::in_place_type_t<message_error_source>)
         {
-                return EventType::ERROR_FATAL_MESSAGE;
+                return EventType::MESSAGE_ERROR_SOURCE;
         }
-        static constexpr EventType event_type(std::in_place_type_t<error_source_message>)
+        static constexpr EventType event_type(std::in_place_type_t<message_information>)
         {
-                return EventType::ERROR_SOURCE_MESSAGE;
+                return EventType::MESSAGE_INFORMATION;
+        }
+        static constexpr EventType event_type(std::in_place_type_t<message_warning>)
+        {
+                return EventType::MESSAGE_WARNING;
         }
         static constexpr EventType event_type(std::in_place_type_t<object_loaded>)
         {
@@ -157,7 +170,7 @@ private:
 
         EventType m_type;
 
-        std::variant<std::monostate, error_message, window_ready, error_fatal_message, error_source_message, object_loaded,
-                     file_loaded, bound_cocone_loaded, log>
+        std::variant<std::monostate, message_error, message_error_fatal, message_error_source, message_information,
+                     message_warning, object_loaded, file_loaded, bound_cocone_loaded, log>
                 m_data;
 };

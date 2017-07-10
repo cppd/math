@@ -34,7 +34,7 @@ std::string source_with_line_numbers(const std::string s);
 #if !defined(__clang__)
 inline std::string to_string(__float128 t)
 {
-        constexpr const char* QUAD_MATH_FORMAT = "%.36Qe"; //"%+-#*.36Qe"
+        constexpr const char QUAD_MATH_FORMAT[] = "%.36Qe"; //"%+-#*.36Qe"
 
         std::array<char, 1000> buf;
         quadmath_snprintf(buf.data(), buf.size(), QUAD_MATH_FORMAT, t);

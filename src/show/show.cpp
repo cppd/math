@@ -234,7 +234,7 @@ public:
 
 class ShowObject final : public IShow
 {
-        ICallBack* const m_callback;
+        IShowCallback* const m_callback;
         const WindowID m_win_parent;
         std::thread m_thread;
         ThreadQueue<Event> m_event_queue;
@@ -341,7 +341,7 @@ class ShowObject final : public IShow
         }
 
 public:
-        ShowObject(ICallBack* callback, WindowID win_parent, glm::vec3 clear_color, glm::vec3 default_color,
+        ShowObject(IShowCallback* callback, WindowID win_parent, glm::vec3 clear_color, glm::vec3 default_color,
                    glm::vec3 wireframe_color, bool with_smooth, bool with_wireframe, bool with_shadow, bool with_materials,
                    bool with_effect, bool with_dft, bool with_convex_hull, bool with_optical_flow, float ambient, float diffuse,
                    float specular, float dft_brightness, float default_ns)
@@ -454,8 +454,6 @@ void ShowObject::loop()
         DrawObjects objects;
 
         Event event;
-
-        m_callback->window_ready();
 
         double start_time = get_time_seconds();
 
@@ -939,25 +937,25 @@ void ShowObject::loop_thread()
                 loop();
                 if (!m_stop)
                 {
-                        m_callback->error_fatal_message("Thread ended.");
+                        m_callback->message_error_fatal("Thread ended.");
                 }
         }
         catch (ErrorSourceException& e)
         {
-                m_callback->error_source_message(e.get_msg(), e.get_src());
+                m_callback->message_error_source(e.get_msg(), e.get_src());
         }
         catch (std::exception& e)
         {
-                m_callback->error_fatal_message(e.what());
+                m_callback->message_error_fatal(e.what());
         }
         catch (...)
         {
-                m_callback->error_fatal_message("Unknown Error. Thread ended.");
+                m_callback->message_error_fatal("Unknown Error. Thread ended.");
         }
 }
 }
 
-std::unique_ptr<IShow> create_show(ICallBack* cb, WindowID win_parent, glm::vec3 clear_color, glm::vec3 default_color,
+std::unique_ptr<IShow> create_show(IShowCallback* cb, WindowID win_parent, glm::vec3 clear_color, glm::vec3 default_color,
                                    glm::vec3 wireframe_color, bool with_smooth, bool with_wireframe, bool with_shadow,
                                    bool with_materials, bool with_effect, bool with_dft, bool with_convex_hull,
                                    bool with_optical_flow, float ambient, float diffuse, float specular, float dft_brightness,

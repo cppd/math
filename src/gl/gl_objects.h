@@ -74,11 +74,11 @@ protected:
                                 {
                                         std::vector<GLchar> buffer(length);
                                         glGetShaderInfoLog(m_shader, length, nullptr, buffer.data());
-                                        error_src(std::string("CompileShader\n\n") + buffer.data(), source);
+                                        error_source(std::string("CompileShader\n\n") + buffer.data(), source);
                                 }
                                 else
                                 {
-                                        error_src("CompileShader\n\nUnknown error", source);
+                                        error_source("CompileShader\n\nUnknown error", source);
                                 }
                         }
                 }

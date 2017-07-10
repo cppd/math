@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "support.h"
 
 #include "com/error.h"
+#include "com/log.h"
 
 #include <QButtonGroup>
 #include <QDesktopWidget>
@@ -44,6 +45,41 @@ bool is_child_widget_of_any_layout(QLayout* layout, QWidget* widget)
                 }
         }
         return false;
+}
+
+void write_to_text_edit(QTextEdit* text_edit, const std::vector<std::string>& lines, TextEditMessageType type)
+{
+        ASSERT(text_edit);
+
+        const char* line_begin;
+        const char* line_end;
+
+        switch (type)
+        {
+        case TextEditMessageType::Normal:
+                line_begin = "";
+                line_end = "<br>";
+                break;
+        case TextEditMessageType::Error:
+                line_begin = "<font color=\"Red\">";
+                line_end = "</font><br>";
+                break;
+        case TextEditMessageType::Warning:
+                line_begin = "<font color=\"#d08000\">";
+                line_end = "</font><br>";
+                break;
+        case TextEditMessageType::Information:
+                line_begin = "<font color=\"Blue\">";
+                line_end = "</font><br>";
+                break;
+        }
+
+        text_edit->moveCursor(QTextCursor::End);
+
+        for (const std::string& s : lines)
+        {
+                text_edit->insertHtml(line_begin + QString(s.c_str()).toHtmlEscaped() + line_end);
+        }
 }
 }
 
@@ -79,28 +115,40 @@ void button_strike_out(QRadioButton* button, bool strike_out)
         button->setFont(f);
 }
 
-void add_to_text_edit(QTextEdit* text_edit, const QString& text)
+void add_to_text_edit_and_to_stderr(QTextEdit* text_edit, const std::vector<std::string>& lines,
+                                    TextEditMessageType type) noexcept
 {
-        if (text_edit->verticalScrollBar()->value() == text_edit->verticalScrollBar()->maximum() ||
-            text_edit->verticalScrollBar()->maximum() == 0)
+        ASSERT(text_edit);
+
+        try
         {
-                // text_edit->moveCursor(QTextCursor::End);
-                // text_edit->insertPlainText(text + '\n');
+                write_formatted_log_messages_to_stderr(lines);
 
-                text_edit->append(text);
+                bool bottom = text_edit->verticalScrollBar()->value() == text_edit->verticalScrollBar()->maximum() ||
+                              text_edit->verticalScrollBar()->maximum() == 0;
 
-                text_edit->verticalScrollBar()->setValue(text_edit->verticalScrollBar()->maximum());
+                if (bottom)
+                {
+                        write_to_text_edit(text_edit, lines, type);
+
+                        text_edit->verticalScrollBar()->setValue(text_edit->verticalScrollBar()->maximum());
+                }
+                else
+                {
+                        int v = text_edit->verticalScrollBar()->value();
+
+                        write_to_text_edit(text_edit, lines, type);
+
+                        text_edit->verticalScrollBar()->setValue(v);
+                }
         }
-        else
+        catch (std::exception& e)
         {
-                int v = text_edit->verticalScrollBar()->value();
-
-                // text_edit->moveCursor(QTextCursor::End);
-                // text_edit->insertPlainText(text + '\n');
-
-                text_edit->append(text);
-
-                text_edit->verticalScrollBar()->setValue(v);
+                error_fatal(std::string("error add message: ") + e.what());
+        }
+        catch (...)
+        {
+                error_fatal("error add message");
         }
 }
 

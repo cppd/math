@@ -26,6 +26,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QString>
 #include <QTextEdit>
 #include <glm/vec3.hpp>
+#include <string>
+#include <vector>
+
+enum class TextEditMessageType
+{
+        Normal,
+        Error,
+        Warning,
+        Information
+};
 
 template <typename T>
 void color_dialog(QWidget* widget, const QString& title, const QColor& color, const T& f)
@@ -52,7 +62,8 @@ glm::vec3 qcolor_to_vec3(const QColor& c);
 
 void button_strike_out(QRadioButton* button, bool strike_out);
 
-void add_to_text_edit(QTextEdit* text_edit, const QString& text);
+void add_to_text_edit_and_to_stderr(QTextEdit* text_edit, const std::vector<std::string>& lines,
+                                    TextEditMessageType type) noexcept;
 
 WindowID get_widget_window_id(QWidget* widget);
 

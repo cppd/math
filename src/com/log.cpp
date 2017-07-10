@@ -28,8 +28,14 @@ namespace
 // Мьютекс для работы с этим указателем не нужен, так как установка указателя
 // должна делаться один раз для одного окна в самом начале программы
 ILogCallback* global_log_callback = nullptr;
+}
 
-void write_log_message(const std::string& msg) noexcept
+void set_log_callback(ILogCallback* callback) noexcept
+{
+        global_log_callback = callback;
+}
+
+std::vector<std::string> format_log_message(const std::string& msg) noexcept
 {
         try
         {
@@ -42,42 +48,66 @@ void write_log_message(const std::string& msg) noexcept
                 }
 
                 std::string msg_begin = buffer;
+                std::vector<std::string> res;
 
-                unsigned new_line_count = std::count(msg.begin(), msg.end(), '\n');
-                unsigned message_size = msg_begin.length() + msg.size() + new_line_count * msg_begin.length();
-
-                std::string message;
-                message.reserve(message_size);
-
-                if (new_line_count == 0)
+                if (std::count(msg.begin(), msg.end(), '\n') == 0)
                 {
-                        message += msg_begin;
-                        message += msg;
+                        res.push_back(msg_begin + msg);
+                        return res;
                 }
-                else
+
+                std::string message = msg_begin;
+
+                for (char c : msg)
                 {
-                        message += msg_begin;
-                        for (char c : msg)
+                        if (c != '\n')
                         {
-                                if (c != '\n')
-                                {
-                                        message += c;
-                                }
-                                else
-                                {
-                                        message += '\n';
-                                        message += msg_begin;
-                                }
+                                message += c;
+                        }
+                        else
+                        {
+                                res.push_back(message);
+                                message = msg_begin;
                         }
                 }
 
-                // Вывод текста одним вызовом функции для работы при многопоточности
-                std::fprintf(stderr, "%s\n", message.c_str());
-                std::fflush(stderr);
+                res.push_back(message);
 
+                return res;
+        }
+        catch (std::exception& e)
+        {
+                error_fatal(std::string("error format log message: ") + e.what());
+        }
+        catch (...)
+        {
+                error_fatal("error format log message");
+        }
+}
+
+void write_formatted_log_messages_to_stderr(const std::vector<std::string>& lines)
+{
+        // Вывод всех строк одним вызовом функции std::fprintf для работы при многопоточности
+        std::string m;
+        for (const std::string& s : lines)
+        {
+                m += s + "\n";
+        }
+        std::fprintf(stderr, "%s", m.c_str());
+        std::fflush(stderr);
+}
+
+void LOG(const std::string& msg) noexcept
+{
+        try
+        {
                 if (global_log_callback)
                 {
-                        global_log_callback->log(message);
+                        global_log_callback->log(msg);
+                }
+                else
+                {
+                        write_formatted_log_messages_to_stderr(format_log_message(msg));
                 }
         }
         catch (std::exception& e)
@@ -88,15 +118,4 @@ void write_log_message(const std::string& msg) noexcept
         {
                 error_fatal("error log write message");
         }
-}
-}
-
-void set_log_callback(ILogCallback* callback)
-{
-        global_log_callback = callback;
-}
-
-void LOG(const std::string& msg) noexcept
-{
-        write_log_message(msg);
 }

@@ -26,10 +26,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <glm/geometric.hpp>
 
-constexpr const char* comment_begin = "# ";
+constexpr const char comment_begin[] = "# ";
 
-constexpr const char* VERTEX_FORMAT = "v %11.8f %11.8f %11.8f\n";
-constexpr const char* NORMAL_FORMAT = "vn %11.8f %11.8f %11.8f\n";
+constexpr const char VERTEX_FORMAT[] = "v %11.8f %11.8f %11.8f\n";
+constexpr const char NORMAL_FORMAT[] = "vn %11.8f %11.8f %11.8f\n";
 
 namespace
 {

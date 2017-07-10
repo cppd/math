@@ -18,25 +18,39 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "application_about.h"
 
 #include "application/application_name.h"
+#include "com/print.h"
 
 #include <QMessageBox>
 
-void application_about(QWidget* parent)
+namespace
 {
-        static const QString message =
-                "Languages:\n"
-                "       C++17, GLSL 4.50.\n"
+QString message()
+{
+        std::string message;
+
+        message += std::string(APPLICATION_NAME) + "\n\n";
+
+        message += "Languages:\n        C++17, GLSL 4.50.\n";
 #if defined(__linux__)
-                "Libraries:\n"
-                "       Freetype, GLM, GMP, OpenGL, Qt, SFML, X11.";
+        message += "Libraries:\n        Freetype, GLM, GMP, OpenGL, Qt, SFML, X11.";
 #elif defined(_WIN32)
-                "Libraries:\n"
-                "       Freetype, GLM, GMP, OpenGL, Qt, SFML.";
+        message += "Libraries:\n        Freetype, GLM, GMP, OpenGL, Qt, SFML.";
 #else
 #error This operating system is not supported
 #endif
 
-        static const QString title = QString("About ") + APPLICATION_NAME;
+        return message.c_str();
+}
 
-        QMessageBox::about(parent, title, message);
+QString title()
+{
+        return QString("About ") + APPLICATION_NAME;
+}
+}
+
+void application_about(QWidget* parent)
+{
+        static const QString m = message();
+        static const QString t = title();
+        QMessageBox::about(parent, t, m);
 }

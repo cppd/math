@@ -25,139 +25,74 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <QObject>
 
-class WindowEventEmitter final : public QObject, public ICallBack, public ILogCallback
+class WindowEventEmitter final : public QObject, public IShowCallback, public ILogCallback
 {
         Q_OBJECT
 
 signals:
         void window_event(const WindowEvent&) const;
 
+private:
+        template <typename T, typename... Args>
+        void emit_message(const char* error_message, Args&&... args)
+        {
+                try
+                {
+                        emit window_event(WindowEvent(std::in_place_type<T>, std::forward<Args>(args)...));
+                }
+                catch (std::exception& e)
+                {
+                        error_fatal(std::string(error_message) + ": " + e.what() + ".");
+                }
+                catch (...)
+                {
+                        error_fatal(std::string(error_message) + ".");
+                }
+        }
+
 public:
-        void error_message(const std::string& msg) noexcept
+        void message_error(const std::string& msg) noexcept
         {
-                try
-                {
-                        emit window_event(WindowEvent(std::in_place_type<WindowEvent::error_message>, msg));
-                }
-                catch (std::exception& e)
-                {
-                        error_fatal(std::string("exception in emit error message: ") + e.what() + ".");
-                }
-                catch (...)
-                {
-                        error_fatal("exception in emit error message.");
-                }
+                emit_message<WindowEvent::message_error>("Exception in emit message error", msg);
         }
 
-        void error_fatal_message(const std::string& msg) noexcept override
+        void message_error_fatal(const std::string& msg) noexcept override
         {
-                try
-                {
-                        emit window_event(WindowEvent(std::in_place_type<WindowEvent::error_fatal_message>, msg));
-                }
-                catch (std::exception& e)
-                {
-                        error_fatal(std::string("exception in emit error fatal message: ") + e.what() + ".");
-                }
-                catch (...)
-                {
-                        error_fatal("exception in emit error fatal message.");
-                }
+                emit_message<WindowEvent::message_error_fatal>("Exception in emit message error fatal", msg);
         }
 
-        void error_source_message(const std::string& msg, const std::string& src) noexcept override
+        void message_error_source(const std::string& msg, const std::string& src) noexcept override
         {
-                try
-                {
-                        emit window_event(WindowEvent(std::in_place_type<WindowEvent::error_source_message>, msg, src));
-                }
-                catch (std::exception& e)
-                {
-                        error_fatal(std::string("exception in emit error source: ") + e.what() + ".");
-                }
-                catch (...)
-                {
-                        error_fatal("exception in emit error source.");
-                }
+                emit_message<WindowEvent::message_error_source>("Exception in emit message error source", msg, src);
         }
 
-        void window_ready() noexcept override
+        void message_information(const std::string& msg) noexcept
         {
-                try
-                {
-                        emit window_event(WindowEvent(std::in_place_type<WindowEvent::window_ready>));
-                }
-                catch (std::exception& e)
-                {
-                        error_fatal(std::string("exception in emit window ready: ") + e.what() + ".");
-                }
-                catch (...)
-                {
-                        error_fatal("exception in emit window ready.");
-                }
+                emit_message<WindowEvent::message_information>("Exception in emit message information", msg);
+        }
+
+        void message_warning(const std::string& msg) noexcept
+        {
+                emit_message<WindowEvent::message_warning>("Exception in emit message warning", msg);
         }
 
         void object_loaded(int id) noexcept override
         {
-                try
-                {
-                        emit window_event(WindowEvent(std::in_place_type<WindowEvent::object_loaded>, id));
-                }
-                catch (std::exception& e)
-                {
-                        error_fatal(std::string("exception in emit object loaded: ") + e.what() + ".");
-                }
-                catch (...)
-                {
-                        error_fatal("exception in emit object loaded.");
-                }
+                emit_message<WindowEvent::object_loaded>("Exception in emit object loaded", id);
         }
 
         void file_loaded(const std::string& msg) noexcept
         {
-                try
-                {
-                        emit window_event(WindowEvent(std::in_place_type<WindowEvent::file_loaded>, msg));
-                }
-                catch (std::exception& e)
-                {
-                        error_fatal(std::string("exception in emit file loaded: ") + e.what() + ".");
-                }
-                catch (...)
-                {
-                        error_fatal("exception in emit file loaded.");
-                }
+                emit_message<WindowEvent::file_loaded>("Exception in emit file loaded", msg);
         }
 
         void bound_cocone_loaded(double rho, double alpha) noexcept
         {
-                try
-                {
-                        emit window_event(WindowEvent(std::in_place_type<WindowEvent::bound_cocone_loaded>, rho, alpha));
-                }
-                catch (std::exception& e)
-                {
-                        error_fatal(std::string("exception in emit BOUND COCONE loaded: ") + e.what() + ".");
-                }
-                catch (...)
-                {
-                        error_fatal("exception in emit BOUND COCONE loaded.");
-                }
+                emit_message<WindowEvent::bound_cocone_loaded>("Exception in emit BOUND COCONE loaded", rho, alpha);
         }
 
         void log(const std::string& msg) noexcept override
         {
-                try
-                {
-                        emit window_event(WindowEvent(std::in_place_type<WindowEvent::log>, msg));
-                }
-                catch (std::exception& e)
-                {
-                        error_fatal(std::string("exception in emit log: ") + e.what() + ".");
-                }
-                catch (...)
-                {
-                        error_fatal("exception in emit log.");
-                }
+                emit_message<WindowEvent::log>("Exception in emit log", msg);
         }
 };

@@ -40,13 +40,13 @@ std::string temp_directory()
 
 #include <cstdio>
 
-constexpr const char* separators = "/";
+constexpr const char separators[] = "/";
 
 #elif defined(_WIN32)
 
 #include <windows.h>
 
-constexpr const char* separators = "\\/";
+constexpr const char separators[] = "\\/";
 
 #else
 #error This operation system is not supported

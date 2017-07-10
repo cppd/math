@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // Взять случайные данные из файла ОС вместо использования std::random_device
 void read_system_random(void* p, unsigned count)
 {
-        constexpr const char* DEV_RANDOM = "/dev/urandom";
+        constexpr const char DEV_RANDOM[] = "/dev/urandom";
 
         std::ifstream rnd(DEV_RANDOM);
         if (!rnd)

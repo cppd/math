@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <string>
+#include <vector>
 
 class ILogCallback
 {
@@ -28,6 +29,9 @@ public:
         virtual void log(const std::string& msg) noexcept = 0;
 };
 
-void set_log_callback(ILogCallback* callback);
+void set_log_callback(ILogCallback* callback) noexcept;
+
+std::vector<std::string> format_log_message(const std::string& msg) noexcept;
+void write_formatted_log_messages_to_stderr(const std::vector<std::string>& message);
 
 void LOG(const std::string& msg) noexcept;

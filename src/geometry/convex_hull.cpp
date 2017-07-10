@@ -623,12 +623,8 @@ void create_convex_hull(const std::vector<Vector<N, S>>& points, FacetList<Facet
                 add_point_to_convex_hull(points, i, facets, &point_conflicts, &thread_pool, &thread_barrier, &unique_points_work);
         }
 
-#if defined(ASSERT_ENABLED)
-        for (const Facet<N, S, C>& facet : *facets)
-        {
-                ASSERT(facet.get_conflict_points().size() == 0);
-        }
-#endif
+        ASSERT(std::all_of(facets->cbegin(), facets->cend(),
+                           [](const Facet<N, S, C>& facet) -> bool { return facet.get_conflict_points().size() == 0; }));
 }
 
 template <size_t N>
