@@ -164,7 +164,7 @@ std::vector<Vector<N, float>> generate_points_sphere_with_notch(unsigned point_c
                 double dot_z = dot(Z_AXIS<N, double>, v);
                 if (dot_z > 0)
                 {
-                        v[N - 1] *= 1 - std::abs(0.3 * std::pow(dot_z, 10));
+                        v[N - 1] *= 1 - std::abs(0.5 * std::pow(dot_z, 5));
                 }
 
                 Vector<N, long> integer_point = to_integer(v, DISCRETIZATION);
