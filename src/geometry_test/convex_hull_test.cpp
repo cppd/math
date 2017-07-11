@@ -153,7 +153,7 @@ int point_count(const std::vector<ConvexHullFacet<N>>& facets)
 }
 
 template <size_t N>
-void create_convex_hull(std::vector<Vector<N, float>>& points, bool check, ProgressRatio* progress)
+void create_convex_hull(std::vector<Vector<N, float>>& points, bool with_check, ProgressRatio* progress)
 {
         std::vector<ConvexHullFacet<N>> facets;
 
@@ -165,73 +165,81 @@ void create_convex_hull(std::vector<Vector<N, float>>& points, bool check, Progr
         LOG("convex hull created, " + to_string_fixed(get_time_seconds() - start_time, 5) + " s");
         LOG("point count " + to_string(point_count(facets)) + ", facet count " + to_string(facets.size()));
 
-        if (!check)
+        if (with_check)
         {
-                return;
+                LOG("checking convex hull... ");
+                check_convex_hull(points, &facets);
+                LOG("check passed");
         }
-
-        LOG("checking convex hull... ");
-        check_convex_hull(points, &facets);
-
-        LOG("check passed");
 }
+
+template <size_t N>
+void test(size_t low, size_t high, ProgressRatio* progress)
+{
+        constexpr bool on_sphere = false;
+
+        std::mt19937_64 engine(get_random_seed<std::mt19937_64>());
+        int size = std::uniform_int_distribution<int>(low, high)(engine);
+
+        {
+                std::vector<Vector<N, float>> points;
+                LOG("-----------------");
+                generate_random_data(false, size, &points, on_sphere);
+                LOG("Convex hull in " + to_string(N) + "D, point count " + to_string(points.size()));
+                create_convex_hull(points, true, progress);
+        }
+        {
+                std::vector<Vector<N, float>> points;
+                LOG("-----------------");
+                generate_random_data(true, size, &points, on_sphere);
+                LOG("Convex hull in " + to_string(N) + "D, point count " + to_string(points.size()));
+                create_convex_hull(points, true, progress);
+        }
+}
+}
+
+void convex_hull_speed_test()
+{
+        // При N=4, параллельно, 100000 точек, внутри сферы, примерное время: 1.7 сек, 0.4 сек.
+
+        constexpr size_t N = 4;
+
+        constexpr bool on_sphere = false;
+
+        std::vector<Vector<N, float>> points; // {{1, 1.000001}, {2, 3}, {2, 3}, {20, 3}, {4, 5}};
+        int size = 100000;
+
+        ProgressRatio progress(nullptr);
+
+        LOG("-----------------");
+        generate_random_data(false, size, &points, on_sphere);
+        LOG("Integer convex hull, point count " + to_string(points.size()));
+        create_convex_hull(points, false, &progress);
+
+        LOG("-----------------");
+        generate_random_data(true, size, &points, on_sphere);
+        LOG("Integer convex hull, point count " + to_string(points.size()));
+        create_convex_hull(points, false, &progress);
 }
 
 void convex_hull_test(int number_of_dimensions, ProgressRatio* progress)
 {
+        ASSERT(progress);
+
         switch (number_of_dimensions)
         {
+        case 2:
+                test<2>(1000, 2000, progress);
+                break;
+        case 3:
+                test<3>(1000, 2000, progress);
+                break;
         case 4:
-        {
-                // При N=4, параллельно, 100000 точек, внутри сферы, примерное время: 1.7 сек, 0.4 сек.
-
-                constexpr size_t N = 4;
-
-                constexpr bool on_sphere = false;
-
-                std::vector<Vector<N, float>> points; // {{1, 1.000001}, {2, 3}, {2, 3}, {20, 3}, {4, 5}};
-                int size = 100000;
-
-                LOG("-----------------");
-                generate_random_data(false, size, &points, on_sphere);
-                LOG("Integer convex hull, point count " + to_string(points.size()));
-                create_convex_hull(points, false, progress);
-
-                LOG("-----------------");
-                generate_random_data(true, size, &points, on_sphere);
-                LOG("Integer convex hull, point count " + to_string(points.size()));
-                create_convex_hull(points, false, progress);
-
-                LOG("");
-
+                test<4>(1000, 2000, progress);
                 break;
-        }
         case 5:
-        {
-                std::mt19937_64 engine(get_random_seed<std::mt19937_64>());
-
-                constexpr size_t N = 5;
-
-                constexpr bool on_sphere = false;
-
-                std::vector<Vector<N, float>> points; // {{1, 1.000001}, {2, 3}, {2, 3}, {20, 3}, {4, 5}};
-
-                int size = std::uniform_int_distribution<int>(300, 500)(engine);
-
-                LOG("-----------------");
-                generate_random_data(false, size, &points, on_sphere);
-                LOG("Integer convex hull, point count " + to_string(points.size()));
-                create_convex_hull(points, true, progress);
-
-                LOG("-----------------");
-                generate_random_data(true, size, &points, on_sphere);
-                LOG("Integer convex hull, point count " + to_string(points.size()));
-                create_convex_hull(points, true, progress);
-
-                LOG("");
-
+                test<5>(1000, 2000, progress);
                 break;
-        }
         default:
                 error("Error convex hull test number of dimensions " + to_string(number_of_dimensions));
         }

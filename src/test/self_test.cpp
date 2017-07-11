@@ -32,6 +32,16 @@ void self_test_required(IProgressRatioList* progress_ratio_list, std::string* te
                 dft_test();
         }
         {
+                *test_name = "Self-Test, Convex Hull in 2D";
+                ProgressRatio progress(progress_ratio_list, *test_name);
+                convex_hull_test(2, &progress);
+        }
+        {
+                *test_name = "Self-Test, Convex Hull in 3D";
+                ProgressRatio progress(progress_ratio_list, *test_name);
+                convex_hull_test(3, &progress);
+        }
+        {
                 *test_name = "Self-Test, Convex Hull in 4D";
                 ProgressRatio progress(progress_ratio_list, *test_name);
                 convex_hull_test(4, &progress);

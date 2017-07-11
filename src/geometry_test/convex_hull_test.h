@@ -20,3 +20,4 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "progress/progress.h"
 
 void convex_hull_test(int number_of_dimensions, ProgressRatio* progress);
+void convex_hull_speed_test();
