@@ -85,11 +85,7 @@ enum ObjectType
 };
 
 MainWindow::MainWindow(QWidget* parent)
-        : QMainWindow(parent),
-          m_first_show(true),
-          m_working_open_object(false),
-          m_working_bound_cocone(false),
-          m_object_repository(create_object_repository<3>())
+        : QMainWindow(parent), m_thread_id(std::this_thread::get_id()), m_object_repository(create_object_repository<3>())
 {
         static_assert(std::is_same_v<decltype(ui.graphics_widget), GraphicsWidget*>);
 
@@ -147,43 +143,68 @@ MainWindow::MainWindow(QWidget* parent)
 
 MainWindow::~MainWindow()
 {
-        stop_main_threads();
-        stop_self_test_threads();
+        ASSERT(std::this_thread::get_id() == m_thread_id);
+
+        stop_thread_open_object();
+        stop_thread_bound_cocone();
+        stop_thread_self_test();
 
         set_log_callback(nullptr);
 }
 
-void MainWindow::thread_self_test(SelfTestType test_type) noexcept
+template <typename T>
+void MainWindow::catch_all(T&& a) noexcept
 {
-        std::string test_name;
-
         try
         {
-                self_test(test_type, &m_progress_ratio_list_self_test, &test_name);
-        }
-        catch (TerminateRequestException&)
-        {
-        }
-        catch (ErrorSourceException& e)
-        {
-                m_event_emitter.message_error_source(test_name + "\n" + e.get_msg(), e.get_src());
-        }
-        catch (std::exception& e)
-        {
-                m_event_emitter.message_error(test_name + "\n" + e.what());
+                std::string error_message = "Error";
+                try
+                {
+                        a(&error_message);
+                }
+                catch (TerminateRequestException&)
+                {
+                }
+                catch (ErrorSourceException& e)
+                {
+                        m_event_emitter.message_error_source(error_message + ":\n" + e.get_msg(), e.get_src());
+                }
+                catch (std::exception& e)
+                {
+                        m_event_emitter.message_error(error_message + ":\n" + e.what());
+                }
+                catch (...)
+                {
+                        m_event_emitter.message_error(error_message + ":\n" + "Unknown error");
+                }
         }
         catch (...)
         {
-                m_event_emitter.message_error(test_name + "\n" + "Unknown error while testing");
+                error_fatal("Exception in thread message string.");
         }
-
-        m_working_self_test = false;
 }
 
-void MainWindow::thread_model(std::shared_ptr<IObj> obj) noexcept
+void MainWindow::thread_self_test(SelfTestType test_type, ProgressRatioList* progress_ratio_list) noexcept
 {
-        try
-        {
+        ASSERT(std::this_thread::get_id() != m_thread_id);
+
+        catch_all([&](std::string* message) {
+
+                *message = "Self-Test";
+
+                self_test(test_type, progress_ratio_list, message);
+
+        });
+}
+
+void MainWindow::thread_model(std::shared_ptr<IObj> obj, ProgressRatioList* progress_ratio_list) noexcept
+{
+        ASSERT(std::this_thread::get_id() != m_thread_id);
+
+        catch_all([&](std::string* message) {
+
+                *message = "Convex hull 3D";
+
                 if (obj->get_faces().size() == 0 && obj->get_points().size() == 0)
                 {
                         return;
@@ -191,7 +212,7 @@ void MainWindow::thread_model(std::shared_ptr<IObj> obj) noexcept
 
                 m_show->add_object(obj, MODEL, MODEL);
 
-                ProgressRatio progress(&m_progress_ratio_list);
+                ProgressRatio progress(progress_ratio_list);
                 progress.set_text("Convex hull 3D: %v of %m");
 
                 std::shared_ptr<IObj> convex_hull = create_convex_hull_for_obj(obj.get(), &progress);
@@ -200,26 +221,20 @@ void MainWindow::thread_model(std::shared_ptr<IObj> obj) noexcept
                 {
                         m_show->add_object(convex_hull, MODEL_CONVEX_HULL, MODEL);
                 }
-        }
-        catch (TerminateRequestException&)
-        {
-        }
-        catch (std::exception& e)
-        {
-                m_event_emitter.message_error(std::string("Convex hull 3D:\n") + e.what());
-        }
-        catch (...)
-        {
-                m_event_emitter.message_error("Unknown error while convex hull creating");
-        }
+
+        });
 }
 
-void MainWindow::thread_cocone() noexcept
+void MainWindow::thread_cocone(ProgressRatioList* progress_ratio_list) noexcept
 {
-        try
-        {
+        ASSERT(std::this_thread::get_id() != m_thread_id);
+
+        catch_all([&](std::string* message) {
+
+                *message = "COCONE reconstruction";
+
                 {
-                        ProgressRatio progress(&m_progress_ratio_list);
+                        ProgressRatio progress(progress_ratio_list);
 
                         double start_time = get_time_seconds();
 
@@ -237,7 +252,7 @@ void MainWindow::thread_cocone() noexcept
                 {
                         m_show->add_object(m_surface_cocone, SURFACE_COCONE, MODEL);
 
-                        ProgressRatio progress(&m_progress_ratio_list);
+                        ProgressRatio progress(progress_ratio_list);
                         progress.set_text("COCONE convex hull 3D: %v of %m");
 
                         std::shared_ptr<IObj> convex_hull = create_convex_hull_for_obj(m_surface_cocone.get(), &progress);
@@ -247,26 +262,20 @@ void MainWindow::thread_cocone() noexcept
                                 m_show->add_object(convex_hull, SURFACE_COCONE_CONVEX_HULL, MODEL);
                         }
                 }
-        }
-        catch (TerminateRequestException&)
-        {
-        }
-        catch (std::exception& e)
-        {
-                m_event_emitter.message_error(std::string("COCONE reconstruction:\n") + e.what());
-        }
-        catch (...)
-        {
-                m_event_emitter.message_error("Unknown error while COCONE reconstructing");
-        }
+
+        });
 }
 
-void MainWindow::thread_bound_cocone(double rho, double alpha) noexcept
+void MainWindow::thread_bound_cocone(double rho, double alpha, ProgressRatioList* progress_ratio_list) noexcept
 {
-        try
-        {
+        ASSERT(std::this_thread::get_id() != m_thread_id);
+
+        catch_all([&](std::string* message) {
+
+                *message = "BOUND COCONE reconstruction";
+
                 {
-                        ProgressRatio progress(&m_progress_ratio_list);
+                        ProgressRatio progress(progress_ratio_list);
 
                         double start_time = get_time_seconds();
 
@@ -289,7 +298,7 @@ void MainWindow::thread_bound_cocone(double rho, double alpha) noexcept
                 {
                         m_show->add_object(m_surface_bound_cocone, SURFACE_BOUND_COCONE, MODEL);
 
-                        ProgressRatio progress(&m_progress_ratio_list);
+                        ProgressRatio progress(progress_ratio_list);
                         progress.set_text("BOUND COCONE convex hull 3D: %v of %m");
 
                         std::shared_ptr<IObj> convex_hull = create_convex_hull_for_obj(m_surface_bound_cocone.get(), &progress);
@@ -299,27 +308,19 @@ void MainWindow::thread_bound_cocone(double rho, double alpha) noexcept
                                 m_show->add_object(convex_hull, SURFACE_BOUND_COCONE_CONVEX_HULL, MODEL);
                         }
                 }
-        }
-        catch (TerminateRequestException&)
-        {
-        }
-        catch (std::exception& e)
-        {
-                m_event_emitter.message_error(std::string("BOUND COCONE reconstruction:\n") + e.what());
-        }
-        catch (...)
-        {
-                m_event_emitter.message_error("Unknown error while BOUND COCONE reconstructing");
-        }
 
-        m_working_bound_cocone = false;
+        });
 }
 
-void MainWindow::thread_surface_constructor() noexcept
+void MainWindow::thread_surface_constructor(ProgressRatioList* progress_ratio_list) noexcept
 {
-        try
-        {
-                ProgressRatio progress(&m_progress_ratio_list);
+        ASSERT(std::this_thread::get_id() != m_thread_id);
+
+        catch_all([&](std::string* message) {
+
+                *message = "Surface constructor";
+
+                ProgressRatio progress(progress_ratio_list);
 
                 double start_time = get_time_seconds();
 
@@ -327,36 +328,30 @@ void MainWindow::thread_surface_constructor() noexcept
 
                 LOG("Surface reconstruction first phase, " + to_string_fixed(get_time_seconds() - start_time, 5) + " s");
 
-                std::vector<std::thread> threads(2);
-                std::vector<std::string> msg(2);
+                std::thread cocone([=]() noexcept { thread_cocone(progress_ratio_list); });
+                std::thread bound_cocone([=]() noexcept {
+                        thread_bound_cocone(m_bound_cocone_rho, m_bound_cocone_alpha, progress_ratio_list);
+                });
 
-                launch_class_thread(&threads[0], &msg[0], &MainWindow::thread_cocone, this);
-                launch_class_thread(&threads[1], &msg[1], &MainWindow::thread_bound_cocone, this, m_bound_cocone_rho,
-                                    m_bound_cocone_alpha);
+                cocone.join();
+                bound_cocone.join();
 
-                join_threads(&threads, &msg);
-        }
-        catch (TerminateRequestException&)
-        {
-        }
-        catch (std::exception& e)
-        {
-                m_event_emitter.message_error(std::string("Surface reconstructing:\n") + e.what());
-        }
-        catch (...)
-        {
-                m_event_emitter.message_error("Unknown error while surface reconstructing");
-        }
+        });
 }
 
-void MainWindow::thread_open_object(const std::string& object_name, OpenObjectType object_type) noexcept
+void MainWindow::thread_open_object(const std::string& object_name, OpenObjectType object_type,
+                                    ProgressRatioList* progress_ratio_list) noexcept
 {
-        try
-        {
+        ASSERT(std::this_thread::get_id() != m_thread_id);
+
+        catch_all([&](std::string* message) {
+
+                *message = "Load " + object_name;
+
                 std::shared_ptr<IObj> obj;
 
                 {
-                        ProgressRatio progress(&m_progress_ratio_list);
+                        ProgressRatio progress(progress_ratio_list);
                         switch (object_type)
                         {
                         case OpenObjectType::File:
@@ -390,88 +385,93 @@ void MainWindow::thread_open_object(const std::string& object_name, OpenObjectTy
                 m_surface_points = (obj->get_faces().size() > 0) ? get_unique_face_vertices(obj.get()) :
                                                                    get_unique_point_vertices(obj.get());
 
-                std::vector<std::thread> threads(2);
-                std::vector<std::string> msg(2);
+                std::thread model([=]() noexcept { thread_model(obj, progress_ratio_list); });
+                std::thread surface([=]() noexcept { thread_surface_constructor(progress_ratio_list); });
 
-                launch_class_thread(&threads[0], &msg[0], &MainWindow::thread_model, this, obj);
-                launch_class_thread(&threads[1], &msg[1], &MainWindow::thread_surface_constructor, this);
+                model.join();
+                surface.join();
 
-                join_threads(&threads, &msg);
-        }
-        catch (TerminateRequestException&)
-        {
-        }
-        catch (std::exception& e)
-        {
-                m_event_emitter.message_error("loading " + object_name + ":\n" + e.what());
-        }
-        catch (...)
-        {
-                m_event_emitter.message_error("Unknown error while loading " + object_name);
-        }
-
-        m_working_open_object = false;
+        });
 }
 
 void MainWindow::start_thread_open_object(const std::string& object_name, OpenObjectType object_type)
 {
-        stop_main_threads();
+        ASSERT(std::this_thread::get_id() == m_thread_id);
+
+        stop_thread_open_object();
+        stop_thread_bound_cocone();
 
         m_working_open_object = true;
-
-        launch_class_thread(&m_thread_open_object, nullptr, &MainWindow::thread_open_object, this, object_name, object_type);
+        m_thread_open_object = std::thread([=]() noexcept {
+                thread_open_object(object_name, object_type, &m_progress_ratio_list_open_object);
+                m_working_open_object = false;
+        });
 }
 
 void MainWindow::start_thread_bound_cocone(double rho, double alpha)
 {
-        if (m_thread_bound_cocone.joinable())
-        {
-                m_thread_bound_cocone.join();
-        }
+        ASSERT(std::this_thread::get_id() == m_thread_id);
+
+        ASSERT(!m_working_open_object);
+        stop_thread_bound_cocone();
 
         m_working_bound_cocone = true;
-
-        launch_class_thread(&m_thread_bound_cocone, nullptr, &MainWindow::thread_bound_cocone, this, rho, alpha);
+        m_thread_bound_cocone = std::thread([=]() noexcept {
+                thread_bound_cocone(rho, alpha, &m_progress_ratio_list_bound_cocone);
+                m_working_bound_cocone = false;
+        });
 }
 
 void MainWindow::start_thread_self_test(SelfTestType test_type)
 {
-        stop_self_test_threads();
+        ASSERT(std::this_thread::get_id() == m_thread_id);
+
+        stop_thread_self_test();
 
         m_working_self_test = true;
-
-        launch_class_thread(&m_thread_self_test, nullptr, &MainWindow::thread_self_test, this, test_type);
+        m_thread_self_test = std::thread([=]() noexcept {
+                thread_self_test(test_type, &m_progress_ratio_list_self_test);
+                m_working_self_test = false;
+        });
 }
 
-void MainWindow::stop_main_threads()
+void MainWindow::stop_thread_open_object()
 {
-        m_progress_ratio_list.stop_all();
+        ASSERT(std::this_thread::get_id() == m_thread_id);
 
+        m_progress_ratio_list_open_object.stop_all();
         if (m_thread_open_object.joinable())
         {
                 m_thread_open_object.join();
         }
+        m_progress_ratio_list_open_object.enable();
+}
+
+void MainWindow::stop_thread_bound_cocone()
+{
+        ASSERT(std::this_thread::get_id() == m_thread_id);
+
+        m_progress_ratio_list_bound_cocone.stop_all();
         if (m_thread_bound_cocone.joinable())
         {
                 m_thread_bound_cocone.join();
         }
-
-        m_progress_ratio_list.enable();
+        m_progress_ratio_list_bound_cocone.enable();
 }
 
-void MainWindow::stop_self_test_threads()
+void MainWindow::stop_thread_self_test()
 {
-        m_progress_ratio_list_self_test.stop_all();
+        ASSERT(std::this_thread::get_id() == m_thread_id);
 
+        m_progress_ratio_list_self_test.stop_all();
         if (m_thread_self_test.joinable())
         {
                 m_thread_self_test.join();
         }
-
         m_progress_ratio_list_self_test.enable();
 }
 
-std::string MainWindow::main_threads_busy() const
+std::string MainWindow::object_threads_busy() const
 {
         if (m_working_open_object)
         {
@@ -535,7 +535,8 @@ void MainWindow::progress_bars(bool permanent, ProgressRatioList* progress_ratio
 
 void MainWindow::slot_timer_progress_bar()
 {
-        progress_bars(false, &m_progress_ratio_list, &m_progress_bars);
+        progress_bars(false, &m_progress_ratio_list_open_object, &m_progress_bars_open_object);
+        progress_bars(false, &m_progress_ratio_list_bound_cocone, &m_progress_bars_bound_cocone);
         progress_bars(true, &m_progress_ratio_list_self_test, &m_progress_bars_self_test);
 }
 
@@ -831,7 +832,7 @@ void MainWindow::slot_object_repository()
 
 void MainWindow::on_actionExport_triggered()
 {
-        if (std::string msg = main_threads_busy(); msg.size() > 0)
+        if (std::string msg = object_threads_busy(); msg.size() > 0)
         {
                 m_event_emitter.message_warning("Export to file is not available at this time. " + msg);
                 return;
@@ -901,7 +902,7 @@ void MainWindow::on_actionExport_triggered()
 
 void MainWindow::on_Button_LoadBoundCocone_clicked()
 {
-        if (std::string msg = main_threads_busy(); msg.size() > 0)
+        if (std::string msg = object_threads_busy(); msg.size() > 0)
         {
                 m_event_emitter.message_warning("BOUND COCONE is not available at this time. " + msg);
                 return;

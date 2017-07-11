@@ -155,58 +155,41 @@ public:
 };
 
 template <typename F, typename C, typename... Args>
-void thread_function(std::string* thread_msg, F&& func, C&& cls, Args&&... args)
+void launch_class_thread(std::thread* t, std::string* thread_msg, F&& func, C&& cls, Args&&... args)
 {
-        try
-        {
-                if (thread_msg)
-                {
-                        thread_msg->clear();
-                }
+        ASSERT(thread_msg);
 
+        *t = std::thread([=]() {
                 try
                 {
-                        (cls->*func)(std::forward<Args>(args)...);
-                }
-                catch (TerminateRequestException&)
-                {
-                }
-                catch (std::exception& e)
-                {
-                        if (thread_msg)
+                        thread_msg->clear();
+                        try
+                        {
+                                (cls->*func)(args...);
+                        }
+                        catch (TerminateRequestException&)
+                        {
+                        }
+                        catch (std::exception& e)
                         {
                                 *thread_msg = e.what();
+                        }
+                        catch (...)
+                        {
+                                *thread_msg = "Unknown error in thread";
                         }
                 }
                 catch (...)
                 {
-                        if (thread_msg)
-                        {
-                                *thread_msg = "Unknown thread error";
-                        }
+                        error_fatal("Exception in thread message string.");
                 }
-        }
-        catch (...)
-        {
-                error_fatal("Critical program error. Exception in thread message string.");
-        }
-}
-
-template <typename F, typename C, typename... Args>
-void launch_class_thread(std::thread* t, std::string* thread_msg, F func, C cls, const Args&... args)
-{
-        *t = std::thread(thread_function<F, C, Args...>, thread_msg, func, cls, args...);
-}
-
-template <typename F, typename C, typename... Args>
-void launch_class_detached_thread(F func, C cls, const Args&... args)
-{
-        std::thread t(thread_function<F, C, Args...>, nullptr, func, cls, args...);
-        t.detach();
+        });
 }
 
 inline void join_threads(std::vector<std::thread>* threads, const std::vector<std::string>* msg)
 {
+        ASSERT(threads);
+        ASSERT(msg);
         ASSERT(threads->size() == msg->size());
 
         for (std::thread& t : *threads)
