@@ -30,6 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QTimer>
 #include <atomic>
 #include <list>
+#include <map>
 #include <memory>
 #include <string>
 #include <thread>
@@ -59,6 +60,7 @@ private slots:
         void on_actionLoad_triggered();
         void on_actionExport_triggered();
         void on_actionExit_triggered();
+        void on_actionBoundCocone_triggered();
         void on_actionHelp_triggered();
         void on_actionSelfTest_triggered();
         void on_actionAbout_triggered();
@@ -71,7 +73,6 @@ private slots:
         void on_ButtonBackgroundColor_clicked();
         void on_ButtonDefaultColor_clicked();
         void on_ButtonWireframeColor_clicked();
-        void on_Button_LoadBoundCocone_clicked();
         void on_Button_ResetView_clicked();
         void on_checkBox_Wireframe_clicked();
         void on_checkBox_Materials_clicked();
@@ -102,33 +103,51 @@ private:
                 Repository
         };
 
+        enum class ThreadAction
+        {
+                OpenObject,
+                ExportCocone,
+                ExportBoundCocone,
+                ReloadBoundCocone,
+                SelfTest
+        };
+
+        struct ThreadPack
+        {
+                ProgressRatioList progress_ratio_list;
+                std::list<QProgressBar> progress_bars;
+                std::thread thread;
+                std::atomic_bool working = false;
+                void stop() noexcept;
+        };
+
+        [[nodiscard]] bool thread_action_allowed(ThreadAction action) const;
+
+        template <ThreadAction thread_action, typename... Args>
+        void start_thread(const Args&... args);
+
+        void thread_open_object(ProgressRatioList* progress_ratio_list, const std::string& object_name,
+                                OpenObjectType object_type) noexcept;
+        void thread_model(ProgressRatioList* progress_ratio_list, std::shared_ptr<IObj> obj) noexcept;
+        void thread_surface_constructor(ProgressRatioList* progress_ratio_list) noexcept;
+        void thread_cocone(ProgressRatioList* progress_ratio_list) noexcept;
+        void thread_bound_cocone(ProgressRatioList* progress_ratio_list, double rho, double alpha) noexcept;
+        void thread_self_test(ProgressRatioList* progress_ratio_list, SelfTestType test_type) noexcept;
+        void thread_export(ProgressRatioList* progress_ratio_list, const IObj* obj, const std::string& file_name,
+                           const std::string& cocone_type) noexcept;
+
+        template <typename T>
+        void catch_all(const T& a) noexcept;
+
         void set_dependent_interface();
+
+        template <ThreadAction thread_action>
+        void export_to_file();
 
         static void strike_out_radio_button(QRadioButton* button);
         static void enable_radio_button(QRadioButton* button);
         void strike_out_all_objects_buttons();
         void strike_out_bound_cocone_buttons();
-
-        void thread_open_object(const std::string& object_name, OpenObjectType object_type,
-                                ProgressRatioList* progress_ratio_list) noexcept;
-        void thread_model(std::shared_ptr<IObj> obj, ProgressRatioList* progress_ratio_list) noexcept;
-        void thread_surface_constructor(ProgressRatioList* progress_ratio_list) noexcept;
-        void thread_cocone(ProgressRatioList* progress_ratio_list) noexcept;
-        void thread_bound_cocone(double rho, double alpha, ProgressRatioList* progress_ratio_list) noexcept;
-        void thread_self_test(SelfTestType test_type, ProgressRatioList* progress_ratio_list) noexcept;
-
-        void start_thread_open_object(const std::string& object_name, OpenObjectType object_type);
-        void start_thread_bound_cocone(double rho, double alpha);
-        void start_thread_self_test(SelfTestType test_type);
-
-        void stop_thread_open_object();
-        void stop_thread_bound_cocone();
-        void stop_thread_self_test();
-
-        template <typename T>
-        void catch_all(T&& a) noexcept;
-
-        std::string object_threads_busy() const;
 
         void progress_bars(bool permanent, ProgressRatioList* progress_ratio_list, std::list<QProgressBar>* progress_bars);
 
@@ -157,23 +176,8 @@ private:
         bool m_first_show = true;
 
         QTimer m_timer_progress_bar;
-
-        const std::thread::id m_thread_id;
-
-        ProgressRatioList m_progress_ratio_list_open_object;
-        std::list<QProgressBar> m_progress_bars_open_object;
-        ProgressRatioList m_progress_ratio_list_bound_cocone;
-        std::list<QProgressBar> m_progress_bars_bound_cocone;
-        ProgressRatioList m_progress_ratio_list_self_test;
-        std::list<QProgressBar> m_progress_bars_self_test;
-
-        std::thread m_thread_open_object;
-        std::thread m_thread_bound_cocone;
-        std::thread m_thread_self_test;
-
-        std::atomic_bool m_working_open_object = false;
-        std::atomic_bool m_working_bound_cocone = false;
-        std::atomic_bool m_working_self_test = false;
+        const std::thread::id m_window_thread_id;
+        std::map<ThreadAction, ThreadPack> m_threads;
 
         std::vector<glm::vec3> m_surface_points;
         std::unique_ptr<IManifoldConstructor<3>> m_surface_constructor;

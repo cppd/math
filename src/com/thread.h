@@ -155,7 +155,7 @@ public:
 };
 
 template <typename F, typename C, typename... Args>
-void launch_class_thread(std::thread* t, std::string* thread_msg, F&& func, C&& cls, Args&&... args)
+void launch_class_thread(std::thread* t, std::string* thread_msg, const F& func, const C& cls, const Args&... args)
 {
         ASSERT(thread_msg);
 

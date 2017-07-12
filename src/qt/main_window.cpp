@@ -85,7 +85,7 @@ enum ObjectType
 };
 
 MainWindow::MainWindow(QWidget* parent)
-        : QMainWindow(parent), m_thread_id(std::this_thread::get_id()), m_object_repository(create_object_repository<3>())
+        : QMainWindow(parent), m_window_thread_id(std::this_thread::get_id()), m_object_repository(create_object_repository<3>())
 {
         static_assert(std::is_same_v<decltype(ui.graphics_widget), GraphicsWidget*>);
 
@@ -139,21 +139,150 @@ MainWindow::MainWindow(QWidget* parent)
 
         // Чтобы добавление и удаление QProgressBar не меняло высоту ui.statusBar
         ui.statusBar->setFixedHeight(ui.statusBar->height());
+
+        m_threads.try_emplace(ThreadAction::OpenObject);
+        m_threads.try_emplace(ThreadAction::ExportCocone);
+        m_threads.try_emplace(ThreadAction::ExportBoundCocone);
+        m_threads.try_emplace(ThreadAction::ReloadBoundCocone);
+        m_threads.try_emplace(ThreadAction::SelfTest);
 }
 
 MainWindow::~MainWindow()
 {
-        ASSERT(std::this_thread::get_id() == m_thread_id);
+        ASSERT(std::this_thread::get_id() == m_window_thread_id);
 
-        stop_thread_open_object();
-        stop_thread_bound_cocone();
-        stop_thread_self_test();
+        for (auto& t : m_threads)
+        {
+                t.second.stop();
+        }
 
         set_log_callback(nullptr);
 }
 
+void MainWindow::ThreadPack::stop() noexcept
+{
+        try
+        {
+                progress_ratio_list.stop_all();
+                if (thread.joinable())
+                {
+                        thread.join();
+                }
+                progress_ratio_list.enable();
+        }
+        catch (...)
+        {
+                error_fatal("thread stop error");
+        }
+}
+
+bool MainWindow::thread_action_allowed(ThreadAction action) const
+{
+        ASSERT(std::this_thread::get_id() == m_window_thread_id);
+
+        ASSERT(m_threads.count(ThreadAction::OpenObject) && m_threads.count(ThreadAction::ExportCocone) &&
+               m_threads.count(ThreadAction::ExportBoundCocone) && m_threads.count(ThreadAction::ReloadBoundCocone) &&
+               m_threads.count(ThreadAction::SelfTest));
+
+        bool allowed = true;
+
+        switch (action)
+        {
+        case ThreadAction::OpenObject:
+                // ThreadAction::OpenObject
+                allowed = allowed && !m_threads.find(ThreadAction::ExportCocone)->second.working;
+                allowed = allowed && !m_threads.find(ThreadAction::ExportBoundCocone)->second.working;
+                // ThreadAction::ReloadBoundCocone
+                // ThreadAction::SelfTest
+                return allowed;
+        case ThreadAction::ExportCocone:
+                allowed = allowed && !m_threads.find(ThreadAction::OpenObject)->second.working;
+                allowed = allowed && !m_threads.find(ThreadAction::ExportCocone)->second.working;
+                // ThreadAction::ExportBoundCocone
+                // ThreadAction::ReloadBoundCocone
+                // ThreadAction::SelfTest
+                return allowed;
+        case ThreadAction::ExportBoundCocone:
+                allowed = allowed && !m_threads.find(ThreadAction::OpenObject)->second.working;
+                // ThreadAction::ExportCocone
+                allowed = allowed && !m_threads.find(ThreadAction::ExportBoundCocone)->second.working;
+                allowed = allowed && !m_threads.find(ThreadAction::ReloadBoundCocone)->second.working;
+                // ThreadAction::SelfTest
+                return allowed;
+        case ThreadAction::ReloadBoundCocone:
+                allowed = allowed && !m_threads.find(ThreadAction::OpenObject)->second.working;
+                // ThreadAction::ExportCocone
+                allowed = allowed && !m_threads.find(ThreadAction::ExportBoundCocone)->second.working;
+                // ThreadAction::ReloadBoundCocone
+                // ThreadAction::SelfTest
+                return allowed;
+        case ThreadAction::SelfTest:
+                return true;
+        }
+
+        error_fatal("Unknown thread action");
+}
+
+template <MainWindow::ThreadAction thread_action, typename... Args>
+void MainWindow::start_thread(const Args&... args)
+{
+        ASSERT(std::this_thread::get_id() == m_window_thread_id);
+        ASSERT(thread_action_allowed(thread_action));
+
+        switch (thread_action)
+        {
+        case ThreadAction::OpenObject:
+                m_threads.find(ThreadAction::ReloadBoundCocone)->second.stop();
+                break;
+        case ThreadAction::ExportCocone:
+                break;
+        case ThreadAction::ExportBoundCocone:
+                break;
+        case ThreadAction::ReloadBoundCocone:
+                break;
+        case ThreadAction::SelfTest:
+                break;
+        }
+
+        ThreadPack& thread = m_threads.find(thread_action)->second;
+
+        thread.stop();
+
+        thread.working = true;
+
+        thread.thread = std::thread([ =, &thread ]() noexcept {
+
+                if
+                        constexpr(thread_action == ThreadAction::OpenObject)
+                        {
+                                thread_open_object(&thread.progress_ratio_list, args...);
+                        }
+                else if
+                        constexpr(thread_action == ThreadAction::ExportCocone || thread_action == ThreadAction::ExportBoundCocone)
+                        {
+                                thread_export(&thread.progress_ratio_list, args...);
+                        }
+                else if
+                        constexpr(thread_action == ThreadAction::ReloadBoundCocone)
+                        {
+                                thread_bound_cocone(&thread.progress_ratio_list, args...);
+                        }
+                else if
+                        constexpr(thread_action == ThreadAction::SelfTest)
+                        {
+                                thread_self_test(&thread.progress_ratio_list, args...);
+                        }
+                else
+                {
+                        error_fatal("Unknown thread action in start thread");
+                }
+
+                thread.working = false;
+        });
+}
+
 template <typename T>
-void MainWindow::catch_all(T&& a) noexcept
+void MainWindow::catch_all(const T& a) noexcept
 {
         try
         {
@@ -184,9 +313,9 @@ void MainWindow::catch_all(T&& a) noexcept
         }
 }
 
-void MainWindow::thread_self_test(SelfTestType test_type, ProgressRatioList* progress_ratio_list) noexcept
+void MainWindow::thread_self_test(ProgressRatioList* progress_ratio_list, SelfTestType test_type) noexcept
 {
-        ASSERT(std::this_thread::get_id() != m_thread_id);
+        ASSERT(std::this_thread::get_id() != m_window_thread_id);
 
         catch_all([&](std::string* message) {
 
@@ -197,9 +326,9 @@ void MainWindow::thread_self_test(SelfTestType test_type, ProgressRatioList* pro
         });
 }
 
-void MainWindow::thread_model(std::shared_ptr<IObj> obj, ProgressRatioList* progress_ratio_list) noexcept
+void MainWindow::thread_model(ProgressRatioList* progress_ratio_list, std::shared_ptr<IObj> obj) noexcept
 {
-        ASSERT(std::this_thread::get_id() != m_thread_id);
+        ASSERT(std::this_thread::get_id() != m_window_thread_id);
 
         catch_all([&](std::string* message) {
 
@@ -227,7 +356,7 @@ void MainWindow::thread_model(std::shared_ptr<IObj> obj, ProgressRatioList* prog
 
 void MainWindow::thread_cocone(ProgressRatioList* progress_ratio_list) noexcept
 {
-        ASSERT(std::this_thread::get_id() != m_thread_id);
+        ASSERT(std::this_thread::get_id() != m_window_thread_id);
 
         catch_all([&](std::string* message) {
 
@@ -266,9 +395,9 @@ void MainWindow::thread_cocone(ProgressRatioList* progress_ratio_list) noexcept
         });
 }
 
-void MainWindow::thread_bound_cocone(double rho, double alpha, ProgressRatioList* progress_ratio_list) noexcept
+void MainWindow::thread_bound_cocone(ProgressRatioList* progress_ratio_list, double rho, double alpha) noexcept
 {
-        ASSERT(std::this_thread::get_id() != m_thread_id);
+        ASSERT(std::this_thread::get_id() != m_window_thread_id);
 
         catch_all([&](std::string* message) {
 
@@ -314,7 +443,7 @@ void MainWindow::thread_bound_cocone(double rho, double alpha, ProgressRatioList
 
 void MainWindow::thread_surface_constructor(ProgressRatioList* progress_ratio_list) noexcept
 {
-        ASSERT(std::this_thread::get_id() != m_thread_id);
+        ASSERT(std::this_thread::get_id() != m_window_thread_id);
 
         catch_all([&](std::string* message) {
 
@@ -330,7 +459,7 @@ void MainWindow::thread_surface_constructor(ProgressRatioList* progress_ratio_li
 
                 std::thread cocone([=]() noexcept { thread_cocone(progress_ratio_list); });
                 std::thread bound_cocone([=]() noexcept {
-                        thread_bound_cocone(m_bound_cocone_rho, m_bound_cocone_alpha, progress_ratio_list);
+                        thread_bound_cocone(progress_ratio_list, m_bound_cocone_rho, m_bound_cocone_alpha);
                 });
 
                 cocone.join();
@@ -339,10 +468,10 @@ void MainWindow::thread_surface_constructor(ProgressRatioList* progress_ratio_li
         });
 }
 
-void MainWindow::thread_open_object(const std::string& object_name, OpenObjectType object_type,
-                                    ProgressRatioList* progress_ratio_list) noexcept
+void MainWindow::thread_open_object(ProgressRatioList* progress_ratio_list, const std::string& object_name,
+                                    OpenObjectType object_type) noexcept
 {
-        ASSERT(std::this_thread::get_id() != m_thread_id);
+        ASSERT(std::this_thread::get_id() != m_window_thread_id);
 
         catch_all([&](std::string* message) {
 
@@ -385,7 +514,7 @@ void MainWindow::thread_open_object(const std::string& object_name, OpenObjectTy
                 m_surface_points = (obj->get_faces().size() > 0) ? get_unique_face_vertices(obj.get()) :
                                                                    get_unique_point_vertices(obj.get());
 
-                std::thread model([=]() noexcept { thread_model(obj, progress_ratio_list); });
+                std::thread model([=]() noexcept { thread_model(progress_ratio_list, obj); });
                 std::thread surface([=]() noexcept { thread_surface_constructor(progress_ratio_list); });
 
                 model.join();
@@ -394,94 +523,20 @@ void MainWindow::thread_open_object(const std::string& object_name, OpenObjectTy
         });
 }
 
-void MainWindow::start_thread_open_object(const std::string& object_name, OpenObjectType object_type)
+void MainWindow::thread_export(ProgressRatioList* /*progress_ratio_list*/, const IObj* obj, const std::string& file_name,
+                               const std::string& cocone_type) noexcept
 {
-        ASSERT(std::this_thread::get_id() == m_thread_id);
+        ASSERT(std::this_thread::get_id() != m_window_thread_id);
 
-        stop_thread_open_object();
-        stop_thread_bound_cocone();
+        catch_all([&](std::string* message) {
 
-        m_working_open_object = true;
-        m_thread_open_object = std::thread([=]() noexcept {
-                thread_open_object(object_name, object_type, &m_progress_ratio_list_open_object);
-                m_working_open_object = false;
+                *message = "Export " + cocone_type + " to " + file_name;
+
+                save_obj_geometry_to_file(obj, file_name, cocone_type);
+
+                m_event_emitter.message_information(cocone_type + " exported to file\n" + file_name);
+
         });
-}
-
-void MainWindow::start_thread_bound_cocone(double rho, double alpha)
-{
-        ASSERT(std::this_thread::get_id() == m_thread_id);
-
-        ASSERT(!m_working_open_object);
-        stop_thread_bound_cocone();
-
-        m_working_bound_cocone = true;
-        m_thread_bound_cocone = std::thread([=]() noexcept {
-                thread_bound_cocone(rho, alpha, &m_progress_ratio_list_bound_cocone);
-                m_working_bound_cocone = false;
-        });
-}
-
-void MainWindow::start_thread_self_test(SelfTestType test_type)
-{
-        ASSERT(std::this_thread::get_id() == m_thread_id);
-
-        stop_thread_self_test();
-
-        m_working_self_test = true;
-        m_thread_self_test = std::thread([=]() noexcept {
-                thread_self_test(test_type, &m_progress_ratio_list_self_test);
-                m_working_self_test = false;
-        });
-}
-
-void MainWindow::stop_thread_open_object()
-{
-        ASSERT(std::this_thread::get_id() == m_thread_id);
-
-        m_progress_ratio_list_open_object.stop_all();
-        if (m_thread_open_object.joinable())
-        {
-                m_thread_open_object.join();
-        }
-        m_progress_ratio_list_open_object.enable();
-}
-
-void MainWindow::stop_thread_bound_cocone()
-{
-        ASSERT(std::this_thread::get_id() == m_thread_id);
-
-        m_progress_ratio_list_bound_cocone.stop_all();
-        if (m_thread_bound_cocone.joinable())
-        {
-                m_thread_bound_cocone.join();
-        }
-        m_progress_ratio_list_bound_cocone.enable();
-}
-
-void MainWindow::stop_thread_self_test()
-{
-        ASSERT(std::this_thread::get_id() == m_thread_id);
-
-        m_progress_ratio_list_self_test.stop_all();
-        if (m_thread_self_test.joinable())
-        {
-                m_thread_self_test.join();
-        }
-        m_progress_ratio_list_self_test.enable();
-}
-
-std::string MainWindow::object_threads_busy() const
-{
-        if (m_working_open_object)
-        {
-                return "Busy loading object.";
-        }
-        if (m_working_bound_cocone)
-        {
-                return "Busy loading BOUND COCONE.";
-        }
-        return std::string();
 }
 
 void MainWindow::progress_bars(bool permanent, ProgressRatioList* progress_ratio_list, std::list<QProgressBar>* progress_bars)
@@ -535,9 +590,10 @@ void MainWindow::progress_bars(bool permanent, ProgressRatioList* progress_ratio
 
 void MainWindow::slot_timer_progress_bar()
 {
-        progress_bars(false, &m_progress_ratio_list_open_object, &m_progress_bars_open_object);
-        progress_bars(false, &m_progress_ratio_list_bound_cocone, &m_progress_bars_bound_cocone);
-        progress_bars(true, &m_progress_ratio_list_self_test, &m_progress_bars_self_test);
+        for (auto& t : m_threads)
+        {
+                progress_bars(t.first == ThreadAction::SelfTest, &t.second.progress_ratio_list, &t.second.progress_bars);
+        }
 }
 
 void MainWindow::set_bound_cocone_parameters(double rho, double alpha)
@@ -778,7 +834,7 @@ void MainWindow::slot_window_first_shown()
 
         move_window_to_desktop_center(this);
 
-        start_thread_self_test(SelfTestType::Required);
+        start_thread<ThreadAction::SelfTest>(SelfTestType::Required);
 
         try
         {
@@ -803,26 +859,44 @@ void MainWindow::slot_window_first_shown()
 
         if (QCoreApplication::arguments().count() == 2)
         {
-                start_thread_open_object(QCoreApplication::arguments().at(1).toStdString(), OpenObjectType::File);
+                if (!thread_action_allowed(ThreadAction::OpenObject))
+                {
+                        m_event_emitter.message_warning("File opening is not available at this time (thread working)");
+                        return;
+                }
+
+                start_thread<ThreadAction::OpenObject>(QCoreApplication::arguments().at(1).toStdString(), OpenObjectType::File);
         }
 }
 
 void MainWindow::on_actionLoad_triggered()
 {
+        if (!thread_action_allowed(ThreadAction::OpenObject))
+        {
+                m_event_emitter.message_warning("File opening is not available at this time (thread working)");
+                return;
+        }
+
         QString file_name = QFileDialog::getOpenFileName(this, "Open", "", "OBJ and Point files (*.obj *.txt)", nullptr,
                                                          QFileDialog::ReadOnly | QFileDialog::DontUseNativeDialog);
         if (file_name.size() > 0)
         {
-                start_thread_open_object(file_name.toStdString(), OpenObjectType::File);
+                start_thread<ThreadAction::OpenObject>(file_name.toStdString(), OpenObjectType::File);
         }
 }
 
 void MainWindow::slot_object_repository()
 {
+        if (!thread_action_allowed(ThreadAction::OpenObject))
+        {
+                m_event_emitter.message_warning("Creation of object is not available at this time (thread working)");
+                return;
+        }
+
         auto iter = m_action_to_object_name_map.find(sender());
         if (iter != m_action_to_object_name_map.cend())
         {
-                start_thread_open_object(iter->second, OpenObjectType::Repository);
+                start_thread<ThreadAction::OpenObject>(iter->second, OpenObjectType::Repository);
         }
         else
         {
@@ -830,50 +904,50 @@ void MainWindow::slot_object_repository()
         }
 }
 
-void MainWindow::on_actionExport_triggered()
+template <MainWindow::ThreadAction thread_action>
+void MainWindow::export_to_file()
 {
-        if (std::string msg = object_threads_busy(); msg.size() > 0)
-        {
-                m_event_emitter.message_warning("Export to file is not available at this time. " + msg);
-                return;
-        }
-
-        if (!(ui.radioButton_Cocone->isChecked() || ui.radioButton_BoundCocone->isChecked()))
-        {
-                m_event_emitter.message_warning("Select COCONE or BOUND COCONE");
-                return;
-        }
-
-        if (ui.radioButton_Cocone->isChecked() && (!m_surface_cocone || m_surface_cocone->get_faces().size() == 0))
-        {
-                m_event_emitter.message_warning("COCONE not created");
-                return;
-        }
-
-        if (ui.radioButton_BoundCocone->isChecked() &&
-            (!m_surface_bound_cocone || m_surface_bound_cocone->get_faces().size() == 0))
-        {
-                m_event_emitter.message_warning("BOUND COCONE not created");
-                return;
-        }
+        static_assert(thread_action == ThreadAction::ExportCocone || thread_action == ThreadAction::ExportBoundCocone);
 
         QString cocone_type;
-        const IObj* obj;
-
-        if (ui.radioButton_Cocone->isChecked())
+        if (thread_action == ThreadAction::ExportCocone)
         {
                 cocone_type = "COCONE";
-                obj = m_surface_cocone.get();
         }
-        else if (ui.radioButton_BoundCocone->isChecked())
+        else if (thread_action == ThreadAction::ExportBoundCocone)
         {
                 cocone_type = "BOUND COCONE";
-                obj = m_surface_bound_cocone.get();
         }
-        else
+
+        if (!thread_action_allowed(thread_action))
         {
+                m_event_emitter.message_warning("Export " + cocone_type.toStdString() +
+                                                " to file is not available at this time (thread working)");
                 return;
         }
+
+        const IObj* obj = nullptr;
+
+        if (thread_action == ThreadAction::ExportCocone)
+        {
+                if (!m_surface_cocone || m_surface_cocone->get_faces().size() == 0)
+                {
+                        m_event_emitter.message_warning("COCONE not created");
+                        return;
+                }
+                obj = m_surface_cocone.get();
+        }
+        else if (thread_action == ThreadAction::ExportBoundCocone)
+        {
+                if (!m_surface_bound_cocone || m_surface_bound_cocone->get_faces().size() == 0)
+                {
+                        m_event_emitter.message_warning("BOUND COCONE not created");
+                        return;
+                }
+                obj = m_surface_bound_cocone.get();
+        }
+
+        ASSERT(obj);
 
         QString file_name = QFileDialog::getSaveFileName(this, "Export " + cocone_type + " to OBJ", "", "OBJ files (*.obj)",
                                                          nullptr, QFileDialog::DontUseNativeDialog);
@@ -882,29 +956,40 @@ void MainWindow::on_actionExport_triggered()
                 return;
         }
 
-        // Здесь запись в файл делается в потоке интерфейса, поэтому во время записи
-        // не может начаться загрузка файла с удалением объекта obj
-        try
-        {
-                save_obj_geometry_to_file(obj, file_name.toStdString(), cocone_type.toStdString());
-        }
-        catch (std::exception& e)
-        {
-                m_event_emitter.message_error("Export " + cocone_type.toStdString() + " to file:\n" + e.what());
-        }
-        catch (...)
-        {
-                m_event_emitter.message_error("Unknown error while exporting " + cocone_type.toStdString() + " to file");
-        }
-
-        m_event_emitter.message_information((cocone_type + " exported to file " + file_name).toStdString());
+        start_thread<thread_action>(obj, file_name.toStdString(), cocone_type.toStdString());
 }
 
-void MainWindow::on_Button_LoadBoundCocone_clicked()
+void MainWindow::on_actionExport_triggered()
 {
-        if (std::string msg = object_threads_busy(); msg.size() > 0)
+        bool cocone = ui.radioButton_Cocone->isChecked();
+        bool bound_cocone = ui.radioButton_BoundCocone->isChecked();
+
+        if (int cnt = ((cocone ? 1 : 0) + (bound_cocone ? 1 : 0)); cnt > 1)
         {
-                m_event_emitter.message_warning("BOUND COCONE is not available at this time. " + msg);
+                m_event_emitter.message_error("COCONE and BOUND COCONE select error");
+                return;
+        }
+        else if (cnt < 1)
+        {
+                m_event_emitter.message_warning("Select COCONE or BOUND COCONE");
+                return;
+        }
+
+        if (cocone)
+        {
+                export_to_file<ThreadAction::ExportCocone>();
+        }
+        else if (bound_cocone)
+        {
+                export_to_file<ThreadAction::ExportBoundCocone>();
+        }
+}
+
+void MainWindow::on_actionBoundCocone_triggered()
+{
+        if (!thread_action_allowed(ThreadAction::ReloadBoundCocone))
+        {
+                m_event_emitter.message_warning("BOUND COCONE is not available at this time (thread working)");
                 return;
         }
 
@@ -922,7 +1007,7 @@ void MainWindow::on_Button_LoadBoundCocone_clicked()
                 return;
         }
 
-        start_thread_bound_cocone(rho, alpha);
+        start_thread<ThreadAction::ReloadBoundCocone>(rho, alpha);
 }
 
 void MainWindow::on_actionExit_triggered()
@@ -937,7 +1022,13 @@ void MainWindow::on_actionHelp_triggered()
 
 void MainWindow::on_actionSelfTest_triggered()
 {
-        start_thread_self_test(SelfTestType::Extended);
+        if (!thread_action_allowed(ThreadAction::SelfTest))
+        {
+                m_event_emitter.message_warning("Self-Test is not available at this time (thread working)");
+                return;
+        }
+
+        start_thread<ThreadAction::SelfTest>(SelfTestType::Extended);
 }
 
 void MainWindow::on_actionAbout_triggered()

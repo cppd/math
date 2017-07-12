@@ -271,33 +271,6 @@
            </widget>
           </item>
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_7">
-            <property name="topMargin">
-             <number>0</number>
-            </property>
-            <item>
-             <widget class="QPushButton" name="Button_LoadBoundCocone">
-              <property name="text">
-               <string>Reload</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <spacer name="horizontalSpacer_5">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>40</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-           </layout>
-          </item>
-          <item>
            <widget class="QLabel" name="BoundCocone_label">
             <property name="text">
              <string>BoundCocone Info</string>
@@ -887,7 +860,14 @@
      <string>Create</string>
     </property>
    </widget>
+   <widget class="QMenu" name="menuEdit">
+    <property name="title">
+     <string>Edit</string>
+    </property>
+    <addaction name="actionBoundCocone"/>
+   </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuEdit"/>
    <addaction name="menuCreate"/>
    <addaction name="menuHelp"/>
   </widget>
@@ -928,6 +908,11 @@
   <action name="actionSelfTest">
    <property name="text">
     <string>Self-Test</string>
+   </property>
+  </action>
+  <action name="actionBoundCocone">
+   <property name="text">
+    <string>BoundCocone...</string>
    </property>
   </action>
  </widget>
