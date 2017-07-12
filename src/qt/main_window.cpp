@@ -449,13 +449,15 @@ void MainWindow::thread_surface_constructor(ProgressRatioList* progress_ratio_li
 
                 *message = "Surface constructor";
 
-                ProgressRatio progress(progress_ratio_list);
+                {
+                        ProgressRatio progress(progress_ratio_list);
 
-                double start_time = get_time_seconds();
+                        double start_time = get_time_seconds();
 
-                m_surface_constructor = create_manifold_constructor(to_vector<float>(m_surface_points), &progress);
+                        m_surface_constructor = create_manifold_constructor(to_vector<float>(m_surface_points), &progress);
 
-                LOG("Surface reconstruction first phase, " + to_string_fixed(get_time_seconds() - start_time, 5) + " s");
+                        LOG("Surface reconstruction first phase, " + to_string_fixed(get_time_seconds() - start_time, 5) + " s");
+                }
 
                 std::thread cocone([=]() noexcept { thread_cocone(progress_ratio_list); });
                 std::thread bound_cocone([=]() noexcept {

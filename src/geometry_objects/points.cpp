@@ -198,8 +198,8 @@ class ObjectRepository final : public IObjectRepository<N>
         const std::map<std::string, std::vector<Vector<N, float>> (ObjectRepository<N>::*)(unsigned) const> m_map = {
                 {"Ellipsoid", &ObjectRepository<N>::ellipsoid},
                 {"Ellipsoid, bound", &ObjectRepository<N>::ellipsoid_bound},
-                {"Sphere with notch", &ObjectRepository<N>::sphere_with_notch},
-                {"Sphere with notch, bound", &ObjectRepository<N>::sphere_with_notch_bound}};
+                {"Sphere with a notch", &ObjectRepository<N>::sphere_with_notch},
+                {"Sphere with a notch, bound", &ObjectRepository<N>::sphere_with_notch_bound}};
 
         std::vector<Vector<N, float>> ellipsoid(unsigned point_count) const override
         {
