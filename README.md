@@ -1,82 +1,43 @@
-## Math Viewer
+# Math Viewer
 
-Эта программа написана с развлекательными целями. Чтение файлов OBJ и отображение их объектов на экране.
-Подача этих данных на вход разных интересных для меня алгоритмов.
+Just for fun with mathematics.
 
-Алгоритмы:
+This program
+* Reads OBJ files that contain vertices, normals, triangles and textures.
+  Reads text files that contain x, y and z coordinates of points, one point per line.
+* Shows 3D models on the screen with shadows, wireframes, rotation, scaling, et cetera.
+* Uses points, 3D models and their 2D images as the input data for a variety of mathematical
+  algorithms (see details below).
+* Writes reconstructed surfaces to OBJ files.
+* Uses multithreading extensively.
 
-1. Чтение файлов OBJ, содержащих только вершины, нормали, треугольники и текстуры. Параллельно на центральном процессоре, std::thread.
+### Algorithms
 
-1. Отображение прочитанных файлов OBJ на экране с тенью, каркасной моделью, вращением, масштабированием и т.д. Vertex, geometry, fragment shaders.
+Subject                                        | Algorithm                                                | Space                          | Implementation     | Language
+-----------------------------------------------|----------------------------------------------------------|--------------------------------|--------------------|---------
+Discrete Fourier transform for arbitrary sizes | Bluestein's algorithm and radix-2 fast Fourier transform | 2 dimensions                   | Parallel           | GLSL
+Optical flow                                   | Pyramidal Lucas-Kanade                                   | 2 dimensions                   | Parallel           | GLSL
+Convex hull                                    | Divide et impera                                         | 2 dimensions                   | Parallel           | GLSL
+Convex hull                                    | Randomized incremental                                   | Arbitrary number of dimensions | Partially parallel | C++
+Delaunay triangulation                         | Convex hull of paraboloid                                | Arbitrary number of dimensions | Sequential         | C++
+Voronoi diagram                                | Convex hull of paraboloid                                | Arbitrary number of dimensions | Sequential         | C++
+Manifold reconstruction                        | Cocone                                                   | Arbitrary number of dimensions | Sequential         | C++
+Manifold reconstruction                        | BoundCocone                                              | Arbitrary number of dimensions | Sequential         | C++
 
-1. Двумерное дискретное преобразование Фурье. Для произвольного размера на основе БПФ и алгоритма Блуштейна. Параллельно на видеокарте, compute shaders.
+Various other algorithms.
 
-1. Оптический поток по алгоритму Лукаса-Канаде. Параллельно на видеокарте, compute shaders.
+### Technical details
 
-1. Выпуклая оболочка в пространстве 2D по алгоритму divide et impera. Параллельно на видеокарте, compute shaders.
+* Supported operating systems: Linux, Windows.
+* Programming languages: C++17, GLSL 4.50.
+* Supported C++ compilers: GCC 7.1.
+* Libraries: FreeType, GLM, GMP, OpenGL 4.5, Qt 5, SFML, XLib.
+* Build system: CMake.
 
-1. Выпуклая оболочка в пространствах произвольной размерности по инкрементальному алгоритму со списками конфликтов.
-Для координат точек используются целые числа. Частично параллельно на центральном процессоре, std::thread.
+### Screenshots
 
-1. Восстановление многообразий по алгоритмам COCONE и BOUND COCONE. Программно сделано для любой размерности, но проверялось только для 2D, 3D и 4D.
-Последовательно на центральном процессоре.
+Points in 3D and the surface reconstructed from the points
 
-1. Вспомогательные задачи: диаграммы Вороного и Делоне, системы уравнений по методу Гаусса и другие.
-
-
-Некоторые технические подробности:
-
-1. Поддерживаемые операционные системы: Linux, Windows.
-
-1. Языки программирования: C++17, GLSL 4.50.
-
-1. Библиотеки: FreeType, GLM, GMP, OpenGL 4.5, Qt 5, SFML, XLib.
-
-1. Система сборки: CMake.
-
-1. Широкое применение многопоточности (std::thread).
-
----
-
-This program is written just for fun. It reads OBJ files, shows their objects on the screen, and uses
-them as the input data for some algorithms that are interesting to me.
-
-Algorithms:
-
-1. Reading OBJ files that contain only vertices, normals, triangles and textures. In parallel on the CPU, std::thread.
-
-1. Showing the loaded OBJ file on the screen with shadows, wireframes, rotation, scaling, et cetera. Vertex, geometry, fragment shaders.
-
-1. Two-dimensional discrete Fourier transform for arbitrary sizes. Bluestein's algorithm and FFT. In parallel on the GPU, compute shaders.
-
-1. Optical flow via the pyramidal Lucas-Kanade algorithm. In parallel on the GPU, compute shaders.
-
-1. Convex hulls in 2D via the divide et impera algorithm. In parallel on the GPU, compute shaders.
-
-1. Convex hulls for an arbitrary number of dimensions via the randomized incremental algorithm. Implemented using integer
-coordinates for the points. Partially in parallel on the CPU, std::thread.
-
-1. Manifold reconstruction via COCONE and BOUND COCONE algorithms. Although the program is implemented for an arbitrary number of dimensions,
-it has been tested only in 2D, 3D and 4D. Sequentially on the CPU.
-
-1. Smaller algorithms: Voronoi diagrams, Delaunay triangulation-tetrahedralization-and-so-on, the Gauss elimination method, and others.
-
-
-Some technical details:
-
-1. Supported operating systems: Linux, Windows.
-
-1. Programming languages: C++17, GLSL 4.50.
-
-1. Libraries: FreeType, GLM, GMP, OpenGL 4.5, Qt 5, SFML, XLib.
-
-1. Build system: CMake.
-
-1. Extensive use of multithreading (std::thread).
-
-## Screenshots
-
-3D model and the surface reconstructed only from the vertices of this 3D model
-
-![original surface](screenshots/original.jpg?raw=true)
-![reconstructed surface](screenshots/cocone.jpg?raw=true)
+![points](https://i.imgur.com/N1orrAy.png)
+![reconstructed surface](https://i.imgur.com/BObsxDF.png)
+![reconstructed surface wireframe](https://i.imgur.com/FQN4I8M.png)
