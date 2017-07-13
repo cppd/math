@@ -70,6 +70,7 @@ private slots:
         void on_Slider_Specular_valueChanged(int value);
         void on_Slider_DFT_Brightness_valueChanged(int value);
         void on_Slider_Default_Ns_valueChanged(int value);
+        void on_Slider_ShadowQuality_valueChanged(int value);
         void on_ButtonBackgroundColor_clicked();
         void on_ButtonDefaultColor_clicked();
         void on_ButtonWireframeColor_clicked();
@@ -88,6 +89,7 @@ private slots:
         void on_radioButton_CoconeConvexHull_clicked();
         void on_radioButton_BoundCocone_clicked();
         void on_radioButton_BoundCoconeConvexHull_clicked();
+        void on_checkBox_VerticalSync_clicked();
 
         void slot_object_repository();
         void slot_window_event(const WindowEvent&);
@@ -156,6 +158,7 @@ private:
         double get_specular() const;
         double get_dft_brightness() const;
         double get_default_ns() const;
+        double get_shadow_zoom() const;
 
         void set_bound_cocone_parameters(double rho, double alpha);
 

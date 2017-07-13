@@ -51,6 +51,8 @@ struct IDrawProgram
         virtual void set_show_shadow(bool show) = 0;
         virtual void set_show_materials(bool show) = 0;
 
+        virtual void set_shadow_zoom(float) = 0;
+
         virtual void set_matrices(const glm::mat4& shadow_matrix, const glm::mat4& main_matrix) = 0;
 
         virtual void set_light_direction(glm::vec3 dir) = 0;

@@ -64,10 +64,12 @@ public:
         virtual void set_dft_brightness(float) = 0;
         virtual void show_convex_hull_2d(bool) = 0;
         virtual void show_optical_flow(bool) = 0;
+        virtual void set_vertical_sync(bool v) = 0;
+        virtual void set_shadow_zoom(float v) = 0;
 };
 
 std::unique_ptr<IShow> create_show(IShowCallback*, WindowID win_parent, glm::vec3 clear_color, glm::vec3 default_color,
                                    glm::vec3 wireframe_color, bool with_smooth, bool with_wireframe, bool with_shadow,
                                    bool with_materials, bool with_effect, bool with_dft, bool with_convex_hull,
                                    bool with_optical_flow, float ambient, float diffuse, float specular, float dft_brightness,
-                                   float default_ns);
+                                   float default_ns, bool vertical_sync, float shadow_zoom);

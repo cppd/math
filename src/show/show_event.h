@@ -212,6 +212,20 @@ public:
                 {
                 }
         };
+        struct vertical_sync final
+        {
+                bool enable;
+                vertical_sync(bool v) : enable(v)
+                {
+                }
+        };
+        struct shadow_zoom final
+        {
+                float zoom;
+                shadow_zoom(float v) : zoom(v)
+                {
+                }
+        };
 
         enum class EventType
         {
@@ -238,7 +252,9 @@ public:
                 show_dft,
                 set_dft_brightness,
                 show_convex_hull_2d,
-                show_optical_flow
+                show_optical_flow,
+                vertical_sync,
+                shadow_zoom
         };
 
         Event() = default;
@@ -365,12 +381,20 @@ private:
         {
                 return EventType::show_optical_flow;
         }
+        static constexpr EventType event_type(std::in_place_type_t<vertical_sync>)
+        {
+                return EventType::vertical_sync;
+        }
+        static constexpr EventType event_type(std::in_place_type_t<shadow_zoom>)
+        {
+                return EventType::shadow_zoom;
+        }
 
         EventType m_type;
 
         std::variant<std::monostate, add_object, delete_object, show_object, delete_all_objects, parent_resized, mouse_wheel,
                      toggle_fullscreen, reset_view, set_ambient, set_diffuse, set_specular, set_clear_color, set_default_color,
                      set_wireframe_color, set_default_ns, show_smooth, show_wireframe, show_shadow, show_materials, show_effect,
-                     show_dft, set_dft_brightness, show_convex_hull_2d, show_optical_flow>
+                     show_dft, set_dft_brightness, show_convex_hull_2d, show_optical_flow, vertical_sync, shadow_zoom>
                 m_data;
 };

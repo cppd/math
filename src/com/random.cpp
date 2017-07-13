@@ -28,7 +28,7 @@ void read_system_random(void* p, unsigned count)
 {
         constexpr const char DEV_RANDOM[] = "/dev/urandom";
 
-        std::ifstream rnd(DEV_RANDOM);
+        std::ifstream rnd(DEV_RANDOM, std::ios_base::binary);
         if (!rnd)
         {
                 error(std::string("error open file ") + DEV_RANDOM);

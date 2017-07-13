@@ -72,6 +72,9 @@ constexpr QRgb WIREFRAME_COLOR = qRgb(255, 255, 255);
 // функции обработки появления окна
 constexpr int WINDOW_SHOW_DELAY_MSEC = 50;
 
+// увеличение текстуры тени по сравнению с размером окна
+constexpr float SHADOW_ZOOM = 2;
+
 // Идентификаторы объектов для взаимодействия с модулем рисования,
 // куда передаются как числа, а не как enum
 enum ObjectType
@@ -127,6 +130,8 @@ MainWindow::MainWindow(QWidget* parent)
 
         ui.actionHelp->setText(QString(APPLICATION_NAME) + " Help");
         ui.actionAbout->setText("About " + QString(APPLICATION_NAME));
+
+        ui.Slider_ShadowQuality->setSliderPosition(SHADOW_ZOOM);
 
         // QMenu* menuCreate = new QMenu("Create", this);
         // ui.menuBar->insertMenu(ui.menuHelp->menuAction(), menuCreate);
@@ -846,7 +851,8 @@ void MainWindow::slot_window_first_shown()
                                      ui.checkBox_Shadow->isChecked(), ui.checkBox_Materials->isChecked(),
                                      ui.checkBox_ShowEffect->isChecked(), ui.checkBox_show_dft->isChecked(),
                                      ui.checkBox_convex_hull_2d->isChecked(), ui.checkBox_OpticalFlow->isChecked(), get_ambient(),
-                                     get_diffuse(), get_specular(), get_dft_brightness(), get_default_ns());
+                                     get_diffuse(), get_specular(), get_dft_brightness(), get_default_ns(),
+                                     ui.checkBox_VerticalSync->isChecked(), get_shadow_zoom());
         }
         catch (std::exception& e)
         {
@@ -1088,6 +1094,10 @@ double MainWindow::get_default_ns() const
 {
         return ui.Slider_Default_Ns->value();
 }
+double MainWindow::get_shadow_zoom() const
+{
+        return ui.Slider_ShadowQuality->value();
+}
 
 void MainWindow::on_Slider_Ambient_valueChanged(int)
 {
@@ -1112,6 +1122,14 @@ void MainWindow::on_Slider_DFT_Brightness_valueChanged(int)
 void MainWindow::on_Slider_Default_Ns_valueChanged(int)
 {
         m_show->set_default_ns(get_default_ns());
+}
+
+void MainWindow::on_Slider_ShadowQuality_valueChanged(int)
+{
+        if (m_show)
+        {
+                m_show->set_shadow_zoom(get_shadow_zoom());
+        }
 }
 
 void MainWindow::on_ButtonBackgroundColor_clicked()
@@ -1170,6 +1188,11 @@ void MainWindow::on_checkBox_convex_hull_2d_clicked()
 void MainWindow::on_checkBox_OpticalFlow_clicked()
 {
         m_show->show_optical_flow(ui.checkBox_OpticalFlow->isChecked());
+}
+
+void MainWindow::on_checkBox_VerticalSync_clicked()
+{
+        m_show->set_vertical_sync(ui.checkBox_VerticalSync->isChecked());
 }
 
 void MainWindow::on_actionFullScreen_triggered()

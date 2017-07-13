@@ -17,12 +17,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "draw_object.h"
 
+#include "com/log.h"
+#include "com/print.h"
+#include "gl/gl_query.h"
+
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/vec2.hpp>
 #include <vector>
-
-// увеличение текстуры тени по сравнению с размером окна
-constexpr float SHADOW_MUL = 1.0;
 
 // clang-format off
 constexpr const char triangles_vert[]
@@ -316,6 +317,12 @@ class DrawProgram final : public IDrawProgram
 
         int m_width = -1;
         int m_height = -1;
+        int m_shadow_width = -1;
+        int m_shadow_height = -1;
+
+        const int m_max_texture_size = get_max_texture_size();
+
+        float m_shadow_zoom = 1;
 
         void set_light_a(glm::vec4 light) override
         {
@@ -396,7 +403,7 @@ class DrawProgram final : public IDrawProgram
                         shadow_program.set_uniform("mvpMatrix", m_shadow_matrix * model_matrix);
 
                         m_shadow_buffer->bind_buffer();
-                        glViewport(0, 0, m_width * SHADOW_MUL, m_height * SHADOW_MUL);
+                        glViewport(0, 0, m_shadow_width, m_shadow_height);
                         glClearDepthf(1.0f);
                         glClear(GL_DEPTH_BUFFER_BIT);
                         glEnable(GL_POLYGON_OFFSET_FILL); // depth-fighting
@@ -443,19 +450,63 @@ class DrawProgram final : public IDrawProgram
                 m_object_texture = nullptr;
                 m_width = m_height = -1;
         }
+
+        void set_shadow_size()
+        {
+                if (m_width < 0 || m_height <= 0)
+                {
+                        return;
+                }
+
+                m_shadow_width = m_shadow_zoom * m_width;
+                m_shadow_height = m_shadow_zoom * m_height;
+
+                if (m_shadow_width > m_max_texture_size)
+                {
+                        LOG("Shadow texture width is too big " + to_string(m_shadow_width) + ", set to max " +
+                            to_string(m_max_texture_size));
+                        m_shadow_width = m_max_texture_size;
+                }
+                if (m_shadow_width <= 0)
+                {
+                        LOG("Shadow texture width is 0 , set to 1");
+                        m_shadow_width = 1;
+                }
+                if (m_shadow_height > m_max_texture_size)
+                {
+                        LOG("Shadow texture height is too big " + to_string(m_shadow_height) + ", set to max " +
+                            to_string(m_max_texture_size));
+                        m_shadow_height = m_max_texture_size;
+                }
+                if (m_shadow_height <= 0)
+                {
+                        LOG("Shadow texture height is 0 , set to 1");
+                        m_shadow_height = 1;
+                }
+
+                m_shadow_buffer = std::make_unique<ShadowBuffer>(m_shadow_width, m_shadow_height);
+                main_program.set_uniform_handle("shadow_tex", m_shadow_buffer->get_texture().get_texture_resident_handle());
+        }
+
+        void set_shadow_zoom(float zoom) override
+        {
+                m_shadow_zoom = zoom;
+
+                set_shadow_size();
+        }
+
         void set_size(int width, int height) override
         {
                 m_width = width;
                 m_height = height;
 
-                m_shadow_buffer = std::make_unique<ShadowBuffer>(SHADOW_MUL * width, SHADOW_MUL * height);
                 m_color_buffer = std::make_unique<ColorBuffer>(width, height);
                 m_object_texture = std::make_unique<TextureR32I>(width, height);
 
-                main_program.set_uniform_handle("shadow_tex", m_shadow_buffer->get_texture().get_texture_resident_handle());
-
                 main_program.set_uniform_handle("object_img", m_object_texture->get_image_resident_handle_write_only());
                 points_program.set_uniform_handle("object_img", m_object_texture->get_image_resident_handle_write_only());
+
+                set_shadow_size();
         }
 
         const Texture2D& get_color_buffer_texture() const override

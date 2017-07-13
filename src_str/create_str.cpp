@@ -40,12 +40,12 @@ int main(int argc, char* argv[])
 {
         if (argc != 4)
         {
-                error("Usage: program \"type\" \"file_in\" \"file_out\"");
+                error("Usage: program bin|str file_in file_out");
         }
 
         std::string type = argv[1];
 
-        std::ifstream ifs(argv[2], type == "bin" ? (std::ios_base::in | std::ios_base::binary) : std::ios_base::in);
+        std::ifstream ifs(type == "bin" ? std::ifstream(argv[2], std::ios_base::binary) : std::ifstream(argv[2]));
         if (!ifs)
         {
                 error("error open file " + std::string(argv[2]));

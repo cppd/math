@@ -339,12 +339,20 @@ class ShowObject final : public IShow
         {
                 m_event_queue.emplace(std::in_place_type<Event::toggle_fullscreen>);
         }
+        void set_vertical_sync(bool v) override
+        {
+                m_event_queue.emplace(std::in_place_type<Event::vertical_sync>, v);
+        }
+        void set_shadow_zoom(float v) override
+        {
+                m_event_queue.emplace(std::in_place_type<Event::shadow_zoom>, v);
+        }
 
 public:
         ShowObject(IShowCallback* callback, WindowID win_parent, glm::vec3 clear_color, glm::vec3 default_color,
                    glm::vec3 wireframe_color, bool with_smooth, bool with_wireframe, bool with_shadow, bool with_materials,
                    bool with_effect, bool with_dft, bool with_convex_hull, bool with_optical_flow, float ambient, float diffuse,
-                   float specular, float dft_brightness, float default_ns)
+                   float specular, float dft_brightness, float default_ns, bool vertical_sync, float shadow_zoom)
                 : m_callback(callback), m_win_parent(win_parent)
 
         {
@@ -370,6 +378,8 @@ public:
                 show_materials(with_materials);
                 show_convex_hull_2d(with_convex_hull);
                 show_optical_flow(with_optical_flow);
+                set_vertical_sync(vertical_sync);
+                set_shadow_zoom(shadow_zoom);
 
                 m_thread = std::thread(&ShowObject::loop_thread, this);
         }
@@ -681,6 +691,20 @@ void ShowObject::loop()
                                 }
                                 break;
                         }
+                        case Event::EventType::vertical_sync:
+                        {
+                                const Event::vertical_sync& d = event.get<Event::vertical_sync>();
+
+                                wnd.setVerticalSyncEnabled(d.enable);
+                                break;
+                        }
+                        case Event::EventType::shadow_zoom:
+                        {
+                                const Event::shadow_zoom& d = event.get<Event::shadow_zoom>();
+
+                                draw_program->set_shadow_zoom(d.zoom);
+                                break;
+                        }
                         }
                 }
 
@@ -854,12 +878,18 @@ void ShowObject::loop()
 
                 if (matrix_change)
                 {
-                        glm::mat4 shadow_matrix = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f) *
+                        glm::mat4 shadow_matrix = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f) *
                                                   glm::lookAt(glm::vec3(0, 0, 0), -camera.light_dir(), camera.light_up());
 
+                        float left = -0.5f * width * pixel_to_coord;
+                        float right = 0.5f * width * pixel_to_coord;
+                        float bottom = -0.5f * height * pixel_to_coord;
+                        float top = 0.5f * height * pixel_to_coord;
+                        float z_near = -1.0f;
+                        float z_far = 1.0f;
+
                         glm::mat4 main_matrix =
-                                glm::ortho(-0.5f * width * pixel_to_coord, 0.5f * width * pixel_to_coord,
-                                           -0.5f * height * pixel_to_coord, 0.5f * height * pixel_to_coord) *
+                                glm::ortho(left, right, bottom, top, z_near, z_far) *
                                 glm::translate(glm::mat4(1), glm::vec3(-window_center.x, -window_center.y, 0.0f)) *
                                 glm::lookAt(glm::vec3(0, 0, 0), -camera.dir(), camera.up());
 
@@ -959,9 +989,10 @@ std::unique_ptr<IShow> create_show(IShowCallback* cb, WindowID win_parent, glm::
                                    glm::vec3 wireframe_color, bool with_smooth, bool with_wireframe, bool with_shadow,
                                    bool with_materials, bool with_effect, bool with_dft, bool with_convex_hull,
                                    bool with_optical_flow, float ambient, float diffuse, float specular, float dft_brightness,
-                                   float default_ns)
+                                   float default_ns, bool vertical_sync, float shadow_zoom)
 {
         return std::make_unique<ShowObject>(cb, win_parent, clear_color, default_color, wireframe_color, with_smooth,
                                             with_wireframe, with_shadow, with_materials, with_effect, with_dft, with_convex_hull,
-                                            with_optical_flow, ambient, diffuse, specular, dft_brightness, default_ns);
+                                            with_optical_flow, ambient, diffuse, specular, dft_brightness, default_ns,
+                                            vertical_sync, shadow_zoom);
 }
