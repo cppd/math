@@ -15,26 +15,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#if 1
+#pragma once
 
-#include "init/init.h"
-#include "ui/main_function.h"
-
-int main(int argc, char* argv[])
-{
-        init();
-
-        return qt_main(argc, argv);
-}
-
-#else
-
-#include "com/log.h"
-#include "com/math.h"
-#include "com/print.h"
-
-int main()
-{
-}
-
-#endif
+void type_benchmark();

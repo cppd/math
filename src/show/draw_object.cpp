@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/log.h"
 #include "com/print.h"
-#include "gl/gl_query.h"
+#include "graphics/query.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/vec2.hpp>

@@ -18,6 +18,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "print.h"
 
 #include <algorithm>
+#if !defined(__clang__)
+#include <quadmath.h>
+#endif
 
 std::string to_string(unsigned __int128 t)
 {
@@ -47,6 +50,17 @@ std::string to_string(__int128 t)
                 return '-' + to_string(static_cast<unsigned __int128>(-t));
         }
 }
+
+#if 0 && !defined(__clang__)
+std::string to_string(__float128 t)
+{
+        constexpr const char QUAD_MATH_FORMAT[] = "%.36Qe"; //"%+-#*.36Qe"
+
+        std::array<char, 1000> buf;
+        quadmath_snprintf(buf.data(), buf.size(), QUAD_MATH_FORMAT, t);
+        return buf.data();
+}
+#endif
 
 std::string source_with_line_numbers(const std::string s)
 {

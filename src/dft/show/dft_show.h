@@ -15,26 +15,25 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#if 1
+#pragma once
 
-#include "init/init.h"
-#include "ui/main_function.h"
+#include "graphics/objects.h"
 
-int main(int argc, char* argv[])
+#include <glm/mat4x4.hpp>
+#include <memory>
+
+class DFTShow final
 {
-        init();
+        class Impl;
+        std::unique_ptr<Impl> m_impl;
 
-        return qt_main(argc, argv);
-}
+public:
+        DFTShow(int width, int height, int pos_x, int pos_y, const glm::mat4& mtx, bool source_sRGB);
+        ~DFTShow();
 
-#else
+        void set_brightness(float brightness);
 
-#include "com/log.h"
-#include "com/math.h"
-#include "com/print.h"
+        void copy_image();
 
-int main()
-{
-}
-
-#endif
+        void draw();
+};

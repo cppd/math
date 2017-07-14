@@ -17,7 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "gl/gl_objects.h"
+#include "graphics/objects.h"
+
 #include <glm/vec3.hpp>
 
 class ColorSpaceConverter

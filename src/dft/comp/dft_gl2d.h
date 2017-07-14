@@ -15,26 +15,25 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#if 1
+#pragma once
 
-#include "init/init.h"
-#include "ui/main_function.h"
+#include "graphics/objects.h"
 
-int main(int argc, char* argv[])
+#include <complex>
+#include <memory>
+#include <vector>
+
+struct IFourierGL1
 {
-        init();
+        virtual ~IFourierGL1() = default;
+        virtual void exec(bool inv, std::vector<std::complex<float>>* src) = 0;
+};
 
-        return qt_main(argc, argv);
-}
-
-#else
-
-#include "com/log.h"
-#include "com/math.h"
-#include "com/print.h"
-
-int main()
+struct IFourierGL2
 {
-}
+        virtual ~IFourierGL2() = default;
+        virtual void exec(bool inv, bool srgb) = 0;
+};
 
-#endif
+std::unique_ptr<IFourierGL1> create_fft_gl2d(int x, int y);
+std::unique_ptr<IFourierGL2> create_fft_gl2d(int x, int y, const TextureRGBA32F& texture);

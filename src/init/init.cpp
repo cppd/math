@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #if defined(__linux__)
 
 #include "com/error.h"
-#include "gl_func/gl_functions.h"
+#include "graphics/opengl/opengl_functions.h"
 
 #include <X11/Xlib.h>
 #include <cstdlib>
@@ -49,7 +49,7 @@ void init_gl()
 {
         // Для Линукса адреса функций OpenGL не зависят от контекста,
         // поэтому их можно определять один раз при запуске программы.
-        gl_functions::init();
+        opengl_functions::init();
 }
 
 void init_os_specific()

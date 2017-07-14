@@ -15,26 +15,16 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#if 1
+#include "main_function.h"
 
-#include "init/init.h"
-#include "ui/main_function.h"
+#include "main_window.h"
 
-int main(int argc, char* argv[])
+#include <QApplication>
+
+int qt_main(int argc, char* argv[])
 {
-        init();
-
-        return qt_main(argc, argv);
+        QApplication a(argc, argv);
+        MainWindow w;
+        w.show();
+        return a.exec();
 }
-
-#else
-
-#include "com/log.h"
-#include "com/math.h"
-#include "com/print.h"
-
-int main()
-{
-}
-
-#endif

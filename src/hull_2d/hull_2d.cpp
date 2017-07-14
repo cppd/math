@@ -31,7 +31,7 @@ Chapter 2: CONVEX HULLS, 2.6 Divide-and-Conquer.
 #include "com/error.h"
 #include "com/math.h"
 #include "com/time.h"
-#include "gl/gl_query.h"
+#include "graphics/query.h"
 
 #include <glm/vec2.hpp>
 

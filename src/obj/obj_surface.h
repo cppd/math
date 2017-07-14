@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "obj.h"
 
-#include "geometry/vec.h"
+#include "geometry/core/vec.h"
 
 #include <memory>
 

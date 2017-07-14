@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "color/color_space.h"
 #include "com/error.h"
-#include "gl/gl_objects.h"
+#include "graphics/objects.h"
 
 #include <SFML/Graphics/Image.hpp>
 #include <ft2build.h>

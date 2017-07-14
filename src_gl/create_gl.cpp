@@ -29,7 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <vector>
 
-constexpr const char GL_CPP_NAME[] = "gl_functions";
+constexpr const char GL_CPP_NAME[] = "opengl_functions";
 constexpr const char POINTER_PREFIX[] = "";
 constexpr const char INDENT[] = "        ";
 

@@ -20,30 +20,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <array>
 #include <cmath>
 #include <complex>
+#include <glm/vec2.hpp>
+#include <glm/vec3.hpp>
+#include <glm/vec4.hpp>
 #include <iomanip>
 #include <limits>
 #include <sstream>
 #include <string>
 #include <vector>
-#if !defined(__clang__)
-#include <quadmath.h>
-#endif
 
 std::string source_with_line_numbers(const std::string s);
 
-#if !defined(__clang__)
-inline std::string to_string(__float128 t)
-{
-        constexpr const char QUAD_MATH_FORMAT[] = "%.36Qe"; //"%+-#*.36Qe"
-
-        std::array<char, 1000> buf;
-        quadmath_snprintf(buf.data(), buf.size(), QUAD_MATH_FORMAT, t);
-        return buf.data();
-}
-#endif
-
 std::string to_string(unsigned __int128 t);
 std::string to_string(__int128 t);
+std::string to_string(__float128 t);
 
 template <typename T>
 std::enable_if_t<std::is_floating_point<T>::value, std::string> to_string(std::complex<T> t)
@@ -141,4 +131,19 @@ std::string to_string(const std::vector<T>& data)
                 }
         }
         return o;
+}
+
+inline std::string to_string(const glm::vec2& data)
+{
+        return to_string(std::array<float, 2>{{data[0], data[1]}});
+}
+
+inline std::string to_string(const glm::vec3& data)
+{
+        return to_string(std::array<float, 3>{{data[0], data[1], data[2]}});
+}
+
+inline std::string to_string(const glm::vec4& data)
+{
+        return to_string(std::array<float, 4>{{data[0], data[1], data[2], data[3]}});
 }
