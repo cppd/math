@@ -479,49 +479,45 @@ void ShowObject::loop()
 
                 while (true)
                 {
-                        std::optional<Event> event_opt(m_event_queue.pop());
-                        if (!event_opt)
+                        std::optional<Event> event(m_event_queue.pop());
+
+                        if (!event)
                         {
                                 break;
                         }
-                        const Event& event = event_opt.value();
 
-                        switch (event.get_type())
+                        switch (event->get_type())
                         {
                         case Event::EventType::add_object:
                         {
-                                const Event::add_object& d = event.get<Event::add_object>();
+                                const Event::add_object& d = event->get<Event::add_object>();
+
                                 if (!d.obj)
                                 {
                                         error("Null object received");
                                 }
 
                                 objects.add_object(create_draw_object(d.obj.get(), color_converter), d.id, d.scale_id);
-
                                 m_callback->object_loaded(d.id);
-
                                 break;
                         }
                         case Event::EventType::delete_object:
                         {
-                                const Event::delete_object& d = event.get<Event::delete_object>();
+                                const Event::delete_object& d = event->get<Event::delete_object>();
 
                                 objects.delete_object(d.id);
-
                                 break;
                         }
                         case Event::EventType::show_object:
                         {
-                                const Event::show_object& d = event.get<Event::show_object>();
+                                const Event::show_object& d = event->get<Event::show_object>();
 
                                 objects.show_object(d.id);
-
                                 break;
                         }
                         case Event::EventType::delete_all_objects:
                         {
                                 objects.delete_all();
-
                                 default_view = true;
                                 break;
                         }
@@ -550,7 +546,7 @@ void ShowObject::loop()
                                 // в другом сообщении sf::Event::MouseWheelScrolled
                                 if (!fullscreen_active)
                                 {
-                                        const Event::mouse_wheel& d = event.get<Event::mouse_wheel>();
+                                        const Event::mouse_wheel& d = event->get<Event::mouse_wheel>();
                                         if (new_mouse_x < width && new_mouse_y < height)
                                         {
                                                 wheel_delta = d.delta;
@@ -560,7 +556,7 @@ void ShowObject::loop()
                         }
                         case Event::EventType::set_ambient:
                         {
-                                const Event::set_ambient& d = event.get<Event::set_ambient>();
+                                const Event::set_ambient& d = event->get<Event::set_ambient>();
 
                                 glm::vec4 light = glm::convertSRGBToLinear(glm::vec4(1.0f) * d.ambient);
                                 draw_program->set_light_a(light);
@@ -568,7 +564,7 @@ void ShowObject::loop()
                         }
                         case Event::EventType::set_diffuse:
                         {
-                                const Event::set_diffuse& d = event.get<Event::set_diffuse>();
+                                const Event::set_diffuse& d = event->get<Event::set_diffuse>();
 
                                 glm::vec4 light = glm::convertSRGBToLinear(glm::vec4(1.0f) * d.diffuse);
                                 draw_program->set_light_d(light);
@@ -576,7 +572,7 @@ void ShowObject::loop()
                         }
                         case Event::EventType::set_specular:
                         {
-                                const Event::set_specular& d = event.get<Event::set_specular>();
+                                const Event::set_specular& d = event->get<Event::set_specular>();
 
                                 glm::vec4 light = glm::convertSRGBToLinear(glm::vec4(1.0f) * d.specular);
                                 draw_program->set_light_s(light);
@@ -584,7 +580,7 @@ void ShowObject::loop()
                         }
                         case Event::EventType::set_clear_color:
                         {
-                                const Event::set_clear_color& d = event.get<Event::set_clear_color>();
+                                const Event::set_clear_color& d = event->get<Event::set_clear_color>();
 
                                 glm::vec3 color = glm::convertSRGBToLinear(d.clear_color);
                                 glClearColor(color.r, color.g, color.b, 1);
@@ -593,7 +589,7 @@ void ShowObject::loop()
                         }
                         case Event::EventType::set_default_color:
                         {
-                                const Event::set_default_color& d = event.get<Event::set_default_color>();
+                                const Event::set_default_color& d = event->get<Event::set_default_color>();
 
                                 glm::vec3 color = glm::convertSRGBToLinear(d.default_color);
                                 draw_program->set_default_color(glm::vec4(color.r, color.g, color.b, 1));
@@ -601,7 +597,7 @@ void ShowObject::loop()
                         }
                         case Event::EventType::set_wireframe_color:
                         {
-                                const Event::set_wireframe_color& d = event.get<Event::set_wireframe_color>();
+                                const Event::set_wireframe_color& d = event->get<Event::set_wireframe_color>();
 
                                 glm::vec3 color = glm::convertSRGBToLinear(d.wireframe_color);
                                 draw_program->set_wireframe_color(glm::vec4(color.r, color.g, color.b, 1));
@@ -609,28 +605,28 @@ void ShowObject::loop()
                         }
                         case Event::EventType::set_default_ns:
                         {
-                                const Event::set_default_ns& d = event.get<Event::set_default_ns>();
+                                const Event::set_default_ns& d = event->get<Event::set_default_ns>();
 
                                 draw_program->set_default_ns(d.default_ns);
                                 break;
                         }
                         case Event::EventType::show_smooth:
                         {
-                                const Event::show_smooth& d = event.get<Event::show_smooth>();
+                                const Event::show_smooth& d = event->get<Event::show_smooth>();
 
                                 draw_program->set_show_smooth(d.show);
                                 break;
                         }
                         case Event::EventType::show_wireframe:
                         {
-                                const Event::show_wireframe& d = event.get<Event::show_wireframe>();
+                                const Event::show_wireframe& d = event->get<Event::show_wireframe>();
 
                                 draw_program->set_show_wireframe(d.show);
                                 break;
                         }
                         case Event::EventType::show_shadow:
                         {
-                                const Event::show_shadow& d = event.get<Event::show_shadow>();
+                                const Event::show_shadow& d = event->get<Event::show_shadow>();
 
                                 draw_program->set_show_shadow(d.show);
                                 shadow_active = d.show;
@@ -638,28 +634,28 @@ void ShowObject::loop()
                         }
                         case Event::EventType::show_materials:
                         {
-                                const Event::show_materials& d = event.get<Event::show_materials>();
+                                const Event::show_materials& d = event->get<Event::show_materials>();
 
                                 draw_program->set_show_materials(d.show);
                                 break;
                         }
                         case Event::EventType::show_effect:
                         {
-                                const Event::show_effect& d = event.get<Event::show_effect>();
+                                const Event::show_effect& d = event->get<Event::show_effect>();
 
                                 pencil_effect_active = d.show;
                                 break;
                         }
                         case Event::EventType::show_dft:
                         {
-                                const Event::show_dft& d = event.get<Event::show_dft>();
+                                const Event::show_dft& d = event->get<Event::show_dft>();
 
                                 dft_active = d.show;
                                 break;
                         }
                         case Event::EventType::set_dft_brightness:
                         {
-                                const Event::set_dft_brightness& d = event.get<Event::set_dft_brightness>();
+                                const Event::set_dft_brightness& d = event->get<Event::set_dft_brightness>();
 
                                 dft_brightness = d.dft_brightness;
                                 if (dft_show)
@@ -670,7 +666,7 @@ void ShowObject::loop()
                         }
                         case Event::EventType::show_convex_hull_2d:
                         {
-                                const Event::show_convex_hull_2d& d = event.get<Event::show_convex_hull_2d>();
+                                const Event::show_convex_hull_2d& d = event->get<Event::show_convex_hull_2d>();
 
                                 convex_hull_2d_active = d.show;
                                 if (convex_hull_2d)
@@ -681,7 +677,7 @@ void ShowObject::loop()
                         }
                         case Event::EventType::show_optical_flow:
                         {
-                                const Event::show_optical_flow& d = event.get<Event::show_optical_flow>();
+                                const Event::show_optical_flow& d = event->get<Event::show_optical_flow>();
 
                                 optical_flow_active = d.show;
                                 if (optical_flow)
@@ -692,14 +688,14 @@ void ShowObject::loop()
                         }
                         case Event::EventType::vertical_sync:
                         {
-                                const Event::vertical_sync& d = event.get<Event::vertical_sync>();
+                                const Event::vertical_sync& d = event->get<Event::vertical_sync>();
 
                                 wnd.setVerticalSyncEnabled(d.enable);
                                 break;
                         }
                         case Event::EventType::shadow_zoom:
                         {
-                                const Event::shadow_zoom& d = event.get<Event::shadow_zoom>();
+                                const Event::shadow_zoom& d = event->get<Event::shadow_zoom>();
 
                                 draw_program->set_shadow_zoom(d.zoom);
                                 break;
@@ -709,21 +705,21 @@ void ShowObject::loop()
 
                 while (true)
                 {
-                        sf::Event sf_event;
+                        sf::Event event;
 
-                        if (!wnd.pollEvent(sf_event))
+                        if (!wnd.pollEvent(event))
                         {
                                 break;
                         }
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wswitch"
-                        switch (sf_event.type)
+                        switch (event.type)
                         {
                         case sf::Event::Closed:
                                 break;
                         case sf::Event::KeyPressed:
-                                switch (sf_event.key.code)
+                                switch (event.key.code)
 #pragma GCC diagnostic pop
                                 {
                                 case sf::Keyboard::F11:
@@ -738,26 +734,24 @@ void ShowObject::loop()
                                 }
                                 break;
                         case sf::Event::MouseButtonPressed:
-                                if (sf_event.mouseButton.x < width && sf_event.mouseButton.y < height &&
-                                    (sf_event.mouseButton.button == sf::Mouse::Left ||
-                                     sf_event.mouseButton.button == sf::Mouse::Right))
+                                if (event.mouseButton.x < width && event.mouseButton.y < height &&
+                                    (event.mouseButton.button == sf::Mouse::Left || event.mouseButton.button == sf::Mouse::Right))
                                 {
                                         mouse_pressed = true;
-                                        mouse_pressed_shift = (sf_event.mouseButton.button == sf::Mouse::Left);
-                                        mouse_x = sf_event.mouseButton.x;
-                                        mouse_y = sf_event.mouseButton.y;
+                                        mouse_pressed_shift = (event.mouseButton.button == sf::Mouse::Left);
+                                        mouse_x = event.mouseButton.x;
+                                        mouse_y = event.mouseButton.y;
                                 }
                                 break;
                         case sf::Event::MouseButtonReleased:
-                                if (sf_event.mouseButton.button == sf::Mouse::Left ||
-                                    sf_event.mouseButton.button == sf::Mouse::Right)
+                                if (event.mouseButton.button == sf::Mouse::Left || event.mouseButton.button == sf::Mouse::Right)
                                 {
                                         mouse_pressed = false;
                                 }
                                 break;
                         case sf::Event::MouseMoved:
-                                new_mouse_x = sf_event.mouseMove.x;
-                                new_mouse_y = sf_event.mouseMove.y;
+                                new_mouse_x = event.mouseMove.x;
+                                new_mouse_y = event.mouseMove.y;
                                 break;
                         case sf::Event::MouseWheelScrolled:
                                 // Для режима встроенного окна перенесено на обработчик события
@@ -770,13 +764,13 @@ void ShowObject::loop()
                                         //    0)
                                         if (new_mouse_x < width && new_mouse_y < height)
                                         {
-                                                wheel_delta = sf_event.mouseWheelScroll.delta;
+                                                wheel_delta = event.mouseWheelScroll.delta;
                                         }
                                 }
                                 break;
                         case sf::Event::Resized:
-                                new_width = sf_event.size.width;
-                                new_height = sf_event.size.height;
+                                new_width = event.size.width;
+                                new_height = event.size.height;
                                 break;
                         }
                 }

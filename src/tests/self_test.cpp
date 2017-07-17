@@ -47,11 +47,6 @@ void self_test_required(IProgressRatioList* progress_ratio_list, std::string* te
                 convex_hull_test(4, &progress);
         }
         {
-                *test_name = "Self-Test, Convex Hull in 5D";
-                ProgressRatio progress(progress_ratio_list, *test_name);
-                convex_hull_test(5, &progress);
-        }
-        {
                 *test_name = "Self-Test, 1-Manifold Reconstruction in 2D";
                 ProgressRatio progress(progress_ratio_list, *test_name);
                 reconstruction_test(2, &progress);
@@ -67,6 +62,11 @@ void self_test_extended(IProgressRatioList* progress_ratio_list, std::string* te
 {
         {
                 self_test_required(progress_ratio_list, test_name);
+        }
+        {
+                *test_name = "Self-Test, Convex Hull in 5D";
+                ProgressRatio progress(progress_ratio_list, *test_name);
+                convex_hull_test(5, &progress);
         }
         {
                 *test_name = "Self-Test, 3-Manifold Reconstruction in 4D";
