@@ -462,8 +462,6 @@ void ShowObject::loop()
         Camera camera;
         DrawObjects objects;
 
-        Event event;
-
         double start_time = get_time_seconds();
 
         while (true)
@@ -481,10 +479,12 @@ void ShowObject::loop()
 
                 while (true)
                 {
-                        if (!m_event_queue.pop(event))
+                        std::optional<Event> event_opt(m_event_queue.pop());
+                        if (!event_opt)
                         {
                                 break;
                         }
+                        const Event& event = event_opt.value();
 
                         switch (event.get_type())
                         {

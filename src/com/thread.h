@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <atomic>
 #include <condition_variable>
 #include <mutex>
+#include <optional>
 #include <queue>
 #include <string>
 #include <thread>
@@ -61,18 +62,18 @@ class ThreadQueue
         std::queue<T> m_queue;
 
 public:
-        bool pop(T& e)
+        std::optional<T> pop()
         {
                 std::lock_guard lg(m_lock);
                 if (m_queue.empty())
                 {
-                        return false;
+                        return std::optional<T>();
                 }
                 else
                 {
-                        e = std::move(m_queue.front());
+                        std::optional value(std::move(m_queue.front()));
                         m_queue.pop();
-                        return true;
+                        return value;
                 }
         }
         // template <typename A>
