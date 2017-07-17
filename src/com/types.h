@@ -77,9 +77,9 @@ constexpr T binary_exponent(int e)
 // template <typename T>
 // constexpr T any_epsilon = binary_epsilon<T>();
 template <typename T>
-constexpr T any_epsilon = std::numeric_limits<T>::epsilon();
+inline constexpr T any_epsilon = std::numeric_limits<T>::epsilon();
 template <>
-constexpr __float128 any_epsilon<__float128> = 1e-34; // strtoflt128("1.92592994438723585305597794258492732e-34", nullptr)
+inline constexpr __float128 any_epsilon<__float128> = 1e-34; // strtoflt128("1.92592994438723585305597794258492732e-34", nullptr)
 
 // Проверка правильности работы функций
 static_assert((1 + any_epsilon<float> != 1) && (1 + any_epsilon<float> / 2 == 1));
@@ -92,55 +92,57 @@ static_assert(std::numeric_limits<float>::max() == max_binary_fraction<float>() 
 static_assert(std::numeric_limits<double>::max() == max_binary_fraction<double>() * binary_exponent<double>(1023));
 
 // strtoflt128("1.18973149535723176508575932662800702e4932", nullptr)
-constexpr __float128 MAX_FLOAT_128 = max_binary_fraction<__float128>() * binary_exponent<__float128>(16383);
+inline constexpr __float128 MAX_FLOAT_128 = max_binary_fraction<__float128>() * binary_exponent<__float128>(16383);
 
 // constexpr unsigned __int128 MAX_UNSIGNED_INT_128 = -1;
-constexpr unsigned __int128 MAX_UNSIGNED_INT_128 =
+inline constexpr unsigned __int128 MAX_UNSIGNED_INT_128 =
         (static_cast<unsigned __int128>(0xffff'ffff'ffff'ffff) << 64) | static_cast<unsigned __int128>(0xffff'ffff'ffff'ffff);
 static_assert(MAX_UNSIGNED_INT_128 + 1 == 0);
 
-constexpr signed __int128 MAX_SIGNED_INT_128 = MAX_UNSIGNED_INT_128 >> 1;
+inline constexpr signed __int128 MAX_SIGNED_INT_128 = MAX_UNSIGNED_INT_128 >> 1;
 static_assert(MAX_SIGNED_INT_128 > 0 && (static_cast<unsigned __int128>(MAX_SIGNED_INT_128) == MAX_UNSIGNED_INT_128 >> 1));
 
 template <typename T>
-constexpr T any_max = std::numeric_limits<T>::max();
+inline constexpr T any_max = std::numeric_limits<T>::max();
 template <>
-constexpr unsigned __int128 any_max<unsigned __int128> = MAX_UNSIGNED_INT_128;
+inline constexpr unsigned __int128 any_max<unsigned __int128> = MAX_UNSIGNED_INT_128;
 template <>
-constexpr signed __int128 any_max<signed __int128> = MAX_SIGNED_INT_128;
+inline constexpr signed __int128 any_max<signed __int128> = MAX_SIGNED_INT_128;
 template <>
-constexpr __float128 any_max<__float128> = MAX_FLOAT_128;
+inline constexpr __float128 any_max<__float128> = MAX_FLOAT_128;
 
 template <typename T>
-constexpr int any_digits = std::numeric_limits<T>::digits;
+inline constexpr int any_digits = std::numeric_limits<T>::digits;
 template <>
-constexpr int any_digits<unsigned __int128> = 128;
+inline constexpr int any_digits<unsigned __int128> = 128;
 template <>
-constexpr int any_digits<signed __int128> = 127;
+inline constexpr int any_digits<signed __int128> = 127;
 template <>
-constexpr int any_digits<__float128> = 113;
+inline constexpr int any_digits<__float128> = 113;
 
 template <typename T>
-constexpr bool native_integral = std::disjunction<std::is_same<std::remove_const_t<T>, __int128>, std::is_integral<T>>::value;
+inline constexpr bool native_integral = std::is_same_v<std::remove_const_t<T>, __int128> || std::is_integral_v<T>;
 
 template <typename T>
-constexpr bool any_integral = std::disjunction<std::is_same<std::remove_const_t<T>, mpz_class>,
-                                               std::is_same<std::remove_const_t<T>, __int128>, std::is_integral<T>>::value;
+inline constexpr bool any_integral = std::is_same_v<std::remove_const_t<T>, mpz_class> ||
+                                     std::is_same_v<std::remove_const_t<T>, __int128> || std::is_integral_v<T>;
+template <typename T>
+inline constexpr bool any_gmp =
+        std::is_same_v<std::remove_const_t<T>, mpz_class> || std::is_same_v<std::remove_const_t<T>, mpf_class> ||
+        std::is_same_v<std::remove_const_t<T>, mpq_class>;
 
 template <typename T>
-constexpr bool native_floating_point =
-        std::disjunction<std::is_same<std::remove_const_t<T>, __float128>, std::is_floating_point<T>>::value;
+inline constexpr bool native_floating_point = std::is_same_v<std::remove_const_t<T>, __float128> || std::is_floating_point_v<T>;
 
 template <typename T>
-constexpr bool any_floating_point =
-        std::disjunction<std::is_same<std::remove_const_t<T>, mpf_class>, std::is_same<std::remove_const_t<T>, __float128>,
-                         std::is_floating_point<T>>::value;
+inline constexpr bool any_floating_point = std::is_same_v<std::remove_const_t<T>, mpf_class> ||
+                                           std::is_same_v<std::remove_const_t<T>, __float128> || std::is_floating_point_v<T>;
 
 template <typename T>
-constexpr bool any_signed =
-        std::disjunction<std::is_same<std::remove_const_t<T>, mpz_class>, std::is_same<std::remove_const_t<T>, mpf_class>,
-                         std::is_same<std::remove_const_t<T>, __int128>, std::is_same<std::remove_const_t<T>, __float128>,
-                         std::is_signed<T>>::value;
+inline constexpr bool any_signed =
+        std::is_same_v<std::remove_const_t<T>, mpz_class> || std::is_same_v<std::remove_const_t<T>, mpf_class> ||
+        std::is_same_v<std::remove_const_t<T>, __int128> || std::is_same_v<std::remove_const_t<T>, __float128> ||
+        std::is_signed_v<T>;
 
 // clang-format off
 template<int BITS>
@@ -162,27 +164,27 @@ using LeastUnsignedInteger =
 // clang-format on
 
 template <typename T>
-std::string type_str()
+std::enable_if_t<std::is_same_v<std::remove_const_t<T>, mpz_class>, std::string> type_str()
 {
-        if (std::is_same<std::remove_const_t<T>, mpz_class>::value)
-        {
-                return "mpz_class";
-        }
-        if (std::is_same<std::remove_const_t<T>, mpf_class>::value)
-        {
-                return "mpf_class";
-        }
-        if (std::is_same<std::remove_const_t<T>, mpq_class>::value)
-        {
-                return "mpq_class";
-        }
-        if (any_integral<T>)
-        {
-                return std::to_string(any_digits<T>) + " bits";
-        }
-        if (any_floating_point<T>)
-        {
-                return "fp " + std::to_string(any_digits<T>) + " bits";
-        }
-        error("data type string: type not supported");
+        return "mpz_class";
+}
+template <typename T>
+std::enable_if_t<std::is_same_v<std::remove_const_t<T>, mpf_class>, std::string> type_str()
+{
+        return "mpf_class";
+}
+template <typename T>
+std::enable_if_t<std::is_same_v<std::remove_const_t<T>, mpq_class>, std::string> type_str()
+{
+        return "mpq_class";
+}
+template <typename T>
+std::enable_if_t<native_integral<T>, std::string> type_str()
+{
+        return std::to_string(any_digits<T>) + " bits";
+}
+template <typename T>
+std::enable_if_t<native_floating_point<T>, std::string> type_str()
+{
+        return "fp " + std::to_string(any_digits<T>) + " bits";
 }

@@ -168,8 +168,8 @@ WindowID get_widget_window_id(QWidget* widget)
         ASSERT(widget);
 
         static_assert(sizeof(WindowID) == sizeof(WId));
-        static_assert(std::is_integral<WindowID>::value || std::is_pointer<WindowID>::value);
-        static_assert(std::is_integral<WId>::value || std::is_pointer<WId>::value);
+        static_assert(std::is_integral_v<WindowID> || std::is_pointer_v<WindowID>);
+        static_assert(std::is_integral_v<WId> || std::is_pointer_v<WId>);
 
         union {
                 WId w_id;

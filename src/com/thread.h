@@ -63,7 +63,7 @@ class ThreadQueue
 public:
         bool pop(T& e)
         {
-                std::lock_guard<SpinLock> lg(m_lock);
+                std::lock_guard lg(m_lock);
                 if (m_queue.empty())
                 {
                         return false;
@@ -78,18 +78,18 @@ public:
         // template <typename A>
         // void push(A&& e)
         //{
-        //        std::lock_guard<SpinLock> lg(m_lock);
+        //        std::lock_guard lg(m_lock);
         //        m_queue.push(std::forward<A>(e));
         //}
         template <typename... Args>
         void emplace(Args&&... e)
         {
-                std::lock_guard<SpinLock> lg(m_lock);
+                std::lock_guard lg(m_lock);
                 m_queue.emplace(std::forward<Args>(e)...);
         }
         void clear()
         {
-                std::lock_guard<SpinLock> lg(m_lock);
+                std::lock_guard lg(m_lock);
                 m_queue = std::queue<T>();
         }
 };
@@ -159,7 +159,7 @@ void launch_class_thread(std::thread* t, std::string* thread_msg, const F& func,
 {
         ASSERT(thread_msg);
 
-        *t = std::thread([=]() {
+        *t = std::thread([=]() noexcept {
                 try
                 {
                         thread_msg->clear();

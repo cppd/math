@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#if 0
+
 #include "com/random.h"
 #include "geometry/vec.h"
 
@@ -26,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 template <size_t N, typename T>
 void add_noise(std::vector<Vector<N, T>>* points, T delta)
 {
-        static_assert(!std::is_integral<T>::value);
+        static_assert(!std::is_integral_v<T>);
 
         // std::mt19937_64 engine(points.size());
         std::mt19937_64 engine(get_random_seed<std::mt19937_64>());
@@ -51,7 +53,7 @@ void add_noise(std::vector<Vector<N, T>>* points, T delta)
 template <size_t N, typename T>
 void add_discrete_noise(std::vector<Vector<N, T>>* points, T delta, int size)
 {
-        static_assert(!std::is_integral<T>::value);
+        static_assert(!std::is_integral_v<T>);
 
         if (size < 1)
         {
@@ -78,3 +80,5 @@ void add_discrete_noise(std::vector<Vector<N, T>>* points, T delta, int size)
                 (*points)[i] = (*points)[i] + delta / size * r;
         }
 }
+
+#endif

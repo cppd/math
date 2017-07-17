@@ -45,19 +45,19 @@ constexpr T square(const T& v)
 template <typename T>
 T any_abs(T a)
 {
-        static_assert(std::is_floating_point<T>::value);
+        static_assert(std::is_floating_point_v<T>);
         return std::abs(a);
 }
 template <typename T>
 T any_fma(T a, T b, T c)
 {
-        static_assert(std::is_floating_point<T>::value);
+        static_assert(std::is_floating_point_v<T>);
         return std::fma(a, b, c);
 }
 template <typename T>
 T any_sqrt(T a)
 {
-        static_assert(std::is_floating_point<T>::value);
+        static_assert(std::is_floating_point_v<T>);
         return std::sqrt(a);
 }
 
@@ -79,7 +79,7 @@ inline __float128 any_sqrt(__float128 a)
 template <typename T>
 constexpr bool is_finite(T v)
 {
-        static_assert(std::is_floating_point<T>::value);
+        static_assert(std::is_floating_point_v<T>);
         // std::isfinite не работает с -Ofast (-ffast-math),
         // поэтому сравнение с std::numeric_limits<T> lowest и max
         return v >= std::numeric_limits<T>::lowest() && v <= std::numeric_limits<T>::max();

@@ -36,7 +36,7 @@ std::string to_string(__int128 t);
 std::string to_string(__float128 t);
 
 template <typename T>
-std::enable_if_t<std::is_floating_point<T>::value, std::string> to_string(std::complex<T> t)
+std::enable_if_t<std::is_floating_point_v<T>, std::string> to_string(std::complex<T> t)
 {
         std::ostringstream o;
         o << std::setprecision(std::numeric_limits<T>::max_digits10);
@@ -48,7 +48,7 @@ std::enable_if_t<std::is_floating_point<T>::value, std::string> to_string(std::c
 }
 
 template <typename T>
-std::enable_if_t<std::is_floating_point<T>::value, std::string> to_string(T t)
+std::enable_if_t<std::is_floating_point_v<T>, std::string> to_string(T t)
 {
         std::ostringstream o;
         o << std::setprecision(std::numeric_limits<T>::max_digits10);
@@ -57,7 +57,7 @@ std::enable_if_t<std::is_floating_point<T>::value, std::string> to_string(T t)
 }
 
 template <typename T>
-std::enable_if_t<std::is_floating_point<T>::value, std::string> to_string(T t, unsigned digits)
+std::enable_if_t<std::is_floating_point_v<T>, std::string> to_string(T t, unsigned digits)
 {
         std::ostringstream o;
         o << std::setprecision(digits);
@@ -66,7 +66,7 @@ std::enable_if_t<std::is_floating_point<T>::value, std::string> to_string(T t, u
 }
 
 template <typename T>
-std::enable_if_t<std::is_floating_point<T>::value, std::string> to_string_fixed(T t, unsigned digits)
+std::enable_if_t<std::is_floating_point_v<T>, std::string> to_string_fixed(T t, unsigned digits)
 {
         std::ostringstream o;
         o << std::setprecision(digits);
@@ -94,7 +94,7 @@ std::enable_if_t<std::is_floating_point<T>::value, std::string> to_string_fixed(
 }
 
 template <typename T>
-std::enable_if_t<std::is_integral<T>::value, std::string> to_string(T t)
+std::enable_if_t<std::is_integral_v<T>, std::string> to_string(T t)
 {
         return std::to_string(t);
 }

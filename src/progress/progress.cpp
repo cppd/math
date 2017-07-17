@@ -82,7 +82,7 @@ public:
 
         void set_text(const std::string& text)
         {
-                std::lock_guard<std::mutex> lg(m_text_mutex);
+                std::lock_guard lg(m_text_mutex);
                 m_text = text;
         }
 
@@ -100,7 +100,7 @@ public:
 
         std::string get_text() const override
         {
-                std::lock_guard<std::mutex> lg(m_text_mutex);
+                std::lock_guard lg(m_text_mutex);
 
                 if (m_permanent_text.size() == 0)
                 {

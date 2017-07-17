@@ -389,10 +389,9 @@ public:
         template <typename... S>
         GraphicsProgram(const S&... s) : Program(s...)
         {
-                static_assert(((std::is_same<VertexShader, S>::value || std::is_same<TessControlShader, S>::value ||
-                                std::is_same<TessEvaluationShader, S>::value || std::is_same<GeometryShader, S>::value ||
-                                std::is_same<FragmentShader, S>::value) &&
-                               ...),
+                static_assert(((std::is_same_v<VertexShader, S> || std::is_same_v<TessControlShader, S> ||
+                                std::is_same_v<TessEvaluationShader, S> || std::is_same_v<GeometryShader, S> ||
+                                std::is_same_v<FragmentShader, S>)&&...),
                               "GraphicsProgram accepts only vertex, tesselation, geometry and fragment shaders");
         }
 
@@ -409,7 +408,7 @@ public:
         template <typename... S>
         ComputeProgram(const S&... s) : Program(s...)
         {
-                static_assert((std::is_same<ComputeShader, S>::value && ...), "ComputeProgram accepts only compute shaders");
+                static_assert((std::is_same_v<ComputeShader, S> && ...), "ComputeProgram accepts only compute shaders");
         }
 
         void dispatch_compute(unsigned num_groups_x, unsigned num_groups_y, unsigned num_groups_z, unsigned group_size_x,

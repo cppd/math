@@ -27,7 +27,7 @@ typename T::result_type get_random_seed()
 {
         using result_type = typename T::result_type;
 
-        static_assert(std::is_integral<result_type>::value && std::is_unsigned<result_type>::value);
+        static_assert(std::is_integral_v<result_type> && std::is_unsigned_v<result_type>);
 
         result_type v;
         read_system_random(&v, sizeof(v));

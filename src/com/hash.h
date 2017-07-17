@@ -40,7 +40,7 @@ constexpr uint32_t jenkins_one_at_a_time_hash(const char* key, int len)
 template <typename T, size_t N>
 size_t hash_as_string(const std::array<T, N>& v)
 {
-        static_assert(std::is_integral<T>::value || std::is_floating_point<T>::value);
+        static_assert(std::is_integral_v<T> || std::is_floating_point_v<T>);
 
         const char* s = reinterpret_cast<const char*>(v.data());
         size_t size = v.size() * sizeof(T);

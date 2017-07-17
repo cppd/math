@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // Для работы в потоках расчётов
 void ProgressRatioList::add_progress_ratio(IProgressRatioControl* ratio)
 {
-        std::lock_guard<std::mutex> lg(m_mutex);
+        std::lock_guard lg(m_mutex);
 
         if (m_stop)
         {
@@ -33,7 +33,7 @@ void ProgressRatioList::add_progress_ratio(IProgressRatioControl* ratio)
 // Для работы в потоках расчётов
 void ProgressRatioList::delete_progress_ratio(const IProgressRatioControl* ratio)
 {
-        std::lock_guard<std::mutex> lg(m_mutex);
+        std::lock_guard lg(m_mutex);
 
         for (auto i = m_ratios.begin(); i != m_ratios.end(); ++i)
         {
@@ -48,7 +48,7 @@ void ProgressRatioList::delete_progress_ratio(const IProgressRatioControl* ratio
 // Для работы в потоке интерфейса
 void ProgressRatioList::stop_all()
 {
-        std::lock_guard<std::mutex> lg(m_mutex);
+        std::lock_guard lg(m_mutex);
 
         m_stop = true;
 
@@ -61,7 +61,7 @@ void ProgressRatioList::stop_all()
 // Для работы в потоке интерфейса
 void ProgressRatioList::enable()
 {
-        std::lock_guard<std::mutex> lg(m_mutex);
+        std::lock_guard lg(m_mutex);
 
         ASSERT(m_ratios.size() == 0);
 
@@ -71,7 +71,7 @@ void ProgressRatioList::enable()
 // Для работы в потоке интерфейса
 std::vector<std::tuple<unsigned, unsigned, std::string>> ProgressRatioList::get_all() const
 {
-        std::lock_guard<std::mutex> lg(m_mutex);
+        std::lock_guard lg(m_mutex);
 
         std::vector<std::tuple<unsigned, unsigned, std::string>> result;
         result.reserve(m_ratios.size());
