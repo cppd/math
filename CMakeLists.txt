@@ -15,7 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-cmake_minimum_required(VERSION 3.7.2)
+cmake_minimum_required(VERSION 3.9)
 
 ##################################################
 
@@ -52,13 +52,10 @@ endif()
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
-# Указать стандарт C++14 для cmake с помощью CMAKE_CXX_STANDARD вместо явного -std=c++14
-set(CMAKE_CXX_STANDARD 14)
+# -std=c++17
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
-# Перевести с++14 на с++17, так как cmake версии 3.7.2 не поддерживает set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX14_STANDARD_COMPILE_OPTION "-std=c++1z")
-set(CMAKE_CXX14_EXTENSION_COMPILE_OPTION "-std=gnu++1z")
 
 # Чтобы было как "make VERBOSE=1"
 # Добавлять после команды project или enable_language
