@@ -18,7 +18,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <string>
+
+#if !defined(STD_VARIANT_NOT_FOUND)
 #include <variant>
+#else
+#include "com/simple_variant.h"
+#endif
 
 class WindowEvent final
 {
@@ -126,8 +131,11 @@ public:
         template <typename D>
         const D& get() const
         {
-                // return m_data.get<D>();
+#if !defined(STD_VARIANT_NOT_FOUND)
                 return std::get<D>(m_data);
+#else
+                return m_data.get<D>();
+#endif
         }
 
 private:
@@ -170,7 +178,12 @@ private:
 
         EventType m_type;
 
-        std::variant<std::monostate, message_error, message_error_fatal, message_error_source, message_information,
-                     message_warning, object_loaded, file_loaded, bound_cocone_loaded, log>
-                m_data;
+#if !defined(STD_VARIANT_NOT_FOUND)
+        std::variant
+#else
+        SimpleVariant
+#endif
+                <std::monostate, message_error, message_error_fatal, message_error_source, message_information, message_warning,
+                 object_loaded, file_loaded, bound_cocone_loaded, log>
+                        m_data;
 };

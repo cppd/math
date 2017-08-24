@@ -163,6 +163,21 @@ function(Check_CXX_Has_Int128)
         endif()
 endfunction()
 
+# Clang 5 не работает с std::variant из libstdc++
+function(Check_CXX_Variant_Works)
+        check_cxx_source_compiles(
+                "
+                #include <utility>
+                #include <variant>
+                int main()
+                {
+                        std::variant<int, double> a(1.0);
+                        std::get<double>(a);
+                }
+                "
+                CXX_VARIANT_WORKS)
+endfunction()
+
 ##################################################
 
 project(create_str C CXX)
@@ -198,6 +213,13 @@ AddShaders(extern/resources bin "ttf")
 target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC "${CMAKE_SOURCE_DIR}/extern/include")
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE -DGLM_FORCE_NO_CTOR_INIT -DGLM_FORCE_CXX14 -DGLM_FORCE_EXPLICIT_CTOR)
+
+##################################################
+
+Check_CXX_Variant_Works()
+if(NOT CXX_VARIANT_WORKS)
+        target_compile_definitions(${PROJECT_NAME} PRIVATE -DSTD_VARIANT_NOT_FOUND)
+endif()
 
 ##################################################
 

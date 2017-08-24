@@ -70,6 +70,11 @@ target_compile_options(${PROJECT_NAME} PRIVATE
                 -Wno-float-equal
                 -Wno-padded
                 -Wno-weak-vtables
+
+                # Clang 5 inline variables
+                -Wno-missing-variable-declarations
+                # Clang 5 class template argument deduction
+                -Wno-undefined-func-template
                 >
         >
 )

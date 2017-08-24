@@ -41,7 +41,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <glm/vec3.hpp>
 #include <memory>
 #include <string>
+
+#if !defined(STD_VARIANT_NOT_FOUND)
 #include <variant>
+#else
+#include "com/simple_variant.h"
+#endif
 
 class Event final
 {
@@ -278,8 +283,11 @@ public:
         template <typename D>
         const D& get() const
         {
-                // return m_data.get<D>();
+#if !defined(STD_VARIANT_NOT_FOUND)
                 return std::get<D>(m_data);
+#else
+                return m_data.get<D>();
+#endif
         }
 
 private:
@@ -390,9 +398,14 @@ private:
 
         EventType m_type;
 
-        std::variant<add_object, delete_object, show_object, delete_all_objects, parent_resized, mouse_wheel, toggle_fullscreen,
-                     reset_view, set_ambient, set_diffuse, set_specular, set_clear_color, set_default_color, set_wireframe_color,
-                     set_default_ns, show_smooth, show_wireframe, show_shadow, show_materials, show_effect, show_dft,
-                     set_dft_brightness, show_convex_hull_2d, show_optical_flow, vertical_sync, shadow_zoom>
-                m_data;
+#if !defined(STD_VARIANT_NOT_FOUND)
+        std::variant
+#else
+        SimpleVariant
+#endif
+                <add_object, delete_object, show_object, delete_all_objects, parent_resized, mouse_wheel, toggle_fullscreen,
+                 reset_view, set_ambient, set_diffuse, set_specular, set_clear_color, set_default_color, set_wireframe_color,
+                 set_default_ns, show_smooth, show_wireframe, show_shadow, show_materials, show_effect, show_dft,
+                 set_dft_brightness, show_convex_hull_2d, show_optical_flow, vertical_sync, shadow_zoom>
+                        m_data;
 };
