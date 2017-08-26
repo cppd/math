@@ -41,18 +41,93 @@ class SimpleVariant
                 static_assert(std::is_same_v<V, A> || (std::is_same_v<V, T> || ...));
                 static_assert((std::is_same_v<V, A> ? 1 : 0) + ((std::is_same_v<V, T> ? 1 : 0) + ...) == 1);
 
-                if
-                        constexpr(std::is_same_v<V, A>)
-                        {
-                                return 0;
-                        }
+                if (std::is_same_v<V, A>)
+                {
+                        return 0;
+                }
+                else
+                {
+                        int id = -1;
+                        int i = 1;
 
-                int id = -1;
-                int i = 1;
+                        ((!std::is_same_v<V, T> ? ++i : (static_cast<void>(id = i), false)) && ...);
 
-                ((!std::is_same<V, T>::value ? ++i : (static_cast<void>(id = i), false)) && ...);
+                        return id;
+                }
+        }
 
-                return id;
+        void constructor_copy(const SimpleVariant& v)
+        {
+                m_id = v.m_id;
+
+                if (m_id == 0)
+                {
+                        new (&m_data) A(*reinterpret_cast<const A*>(&v.m_data));
+                }
+                else
+                {
+                        int i = 1;
+                        bool found =
+                                ((i++ != m_id ? false : (new (&m_data) T(*reinterpret_cast<const T*>(&v.m_data)), true)) || ...);
+                        ASSERT(found);
+                }
+        }
+
+        void constructor_move(SimpleVariant&& v)
+        {
+                m_id = v.m_id;
+
+                if (m_id == 0)
+                {
+                        new (&m_data) A(std::move(*reinterpret_cast<A*>(&v.m_data)));
+                }
+                else
+                {
+                        int i = 1;
+                        bool found =
+                                ((i++ != m_id ? false : (new (&m_data) T(std::move(*reinterpret_cast<T*>(&v.m_data))), true)) ||
+                                 ...);
+                        ASSERT(found);
+                }
+        }
+
+        void assignment_copy(const SimpleVariant& v)
+        {
+                ASSERT(m_id == v.m_id);
+
+                if (m_id == 0)
+                {
+                        *reinterpret_cast<A*>(&m_data) = *reinterpret_cast<const A*>(&v.m_data);
+                }
+                else
+                {
+                        int i = 1;
+                        bool found =
+                                ((i++ != m_id ? false : (*reinterpret_cast<T*>(&m_data) = *reinterpret_cast<const T*>(&v.m_data),
+                                                         true)) ||
+                                 ...);
+                        ASSERT(found);
+                }
+        }
+
+        void assignment_move(SimpleVariant&& v)
+        {
+                ASSERT(m_id == v.m_id);
+
+                if (m_id == 0)
+                {
+                        *reinterpret_cast<A*>(&m_data) = std::move(*reinterpret_cast<A*>(&v.m_data));
+                }
+                else
+                {
+                        int i = 1;
+                        bool found =
+                                ((i++ != m_id ?
+                                          false :
+                                          (*reinterpret_cast<T*>(&m_data) = std::move(*reinterpret_cast<T*>(&v.m_data)), true)) ||
+                                 ...);
+                        ASSERT(found);
+                }
         }
 
 public:
@@ -78,91 +153,56 @@ public:
                 if (m_id == 0)
                 {
                         reinterpret_cast<const A*>(&m_data)->~A();
-                        return;
                 }
-
-                int i = 1;
-                bool found = ((i++ != m_id ? false : (reinterpret_cast<const T*>(&m_data)->~T(), true)) || ...);
-                ASSERT(found);
+                else
+                {
+                        int i = 1;
+                        bool found = ((i++ != m_id ? false : (reinterpret_cast<const T*>(&m_data)->~T(), true)) || ...);
+                        ASSERT(found);
+                }
         }
 
         SimpleVariant(const SimpleVariant& v)
         {
-                m_id = v.m_id;
-
-                if (m_id == 0)
-                {
-                        new (&m_data) A(*reinterpret_cast<const A*>(&v.m_data));
-                        return;
-                }
-
-                int i = 1;
-                bool found = ((i++ != m_id ? false : (new (&m_data) T(*reinterpret_cast<const T*>(&v.m_data)), true)) || ...);
-                ASSERT(found);
+                constructor_copy(v);
         }
 
         SimpleVariant(SimpleVariant&& v)
         {
-                m_id = v.m_id;
-
-                if (m_id == 0)
-                {
-                        new (&m_data) A(std::move(*reinterpret_cast<A*>(&v.m_data)));
-                        return;
-                }
-
-                int i = 1;
-                bool found =
-                        ((i++ != m_id ? false : (new (&m_data) T(std::move(*reinterpret_cast<T*>(&v.m_data))), true)) || ...);
-                ASSERT(found);
+                constructor_move(std::move(v));
         }
 
         SimpleVariant& operator=(const SimpleVariant& v)
         {
-                if (this == &v)
+                if (this != &v)
                 {
-                        return *this;
+                        if (m_id == v.m_id)
+                        {
+                                assignment_copy(v);
+                        }
+                        else
+                        {
+                                this->~SimpleVariant();
+                                constructor_copy(v);
+                        }
                 }
-
-                m_id = v.m_id;
-
-                if (m_id == 0)
-                {
-                        *reinterpret_cast<A*>(&m_data) = *reinterpret_cast<const A*>(&v.m_data);
-                        return *this;
-                }
-
-                int i = 1;
-                bool found = ((i++ != m_id ? false :
-                                             (*reinterpret_cast<T*>(&m_data) = *reinterpret_cast<const T*>(&v.m_data), true)) ||
-                              ...);
-                ASSERT(found);
-
                 return *this;
         }
 
         SimpleVariant& operator=(SimpleVariant&& v)
         {
-                if (this == &v)
+                if (this != &v)
                 {
-                        return *this;
+                        if (m_id == v.m_id)
+                        {
+                                assignment_move(std::move(v));
+                        }
+                        else
+                        {
+                                this->~SimpleVariant();
+                                constructor_move(std::move(v));
+                        }
                 }
-
-                m_id = v.m_id;
-
-                if (m_id == 0)
-                {
-                        *reinterpret_cast<A*>(&m_data) = std::move(*reinterpret_cast<A*>(&v.m_data));
-                        return *this;
-                }
-
-                int i = 1;
-                bool found =
-                        ((i++ != m_id ? false :
-                                        (*reinterpret_cast<T*>(&m_data) = std::move(*reinterpret_cast<T*>(&v.m_data)), true)) ||
-                         ...);
-                ASSERT(found);
-
                 return *this;
         }
 
@@ -173,7 +213,10 @@ public:
 
                 static_assert(id >= 0 && id < sizeof...(T) + 1);
 
-                ASSERT(m_id == id);
+                if (m_id != id)
+                {
+                        error("bad SimpleVariant access");
+                }
 
                 return *reinterpret_cast<const V*>(&m_data);
         }
