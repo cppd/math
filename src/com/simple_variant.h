@@ -130,6 +130,20 @@ class SimpleVariant
                 }
         }
 
+        void destructor()
+        {
+                if (m_id == 0)
+                {
+                        reinterpret_cast<const A*>(&m_data)->~A();
+                }
+                else
+                {
+                        int i = 1;
+                        bool found = ((i++ != m_id ? false : (reinterpret_cast<const T*>(&m_data)->~T(), true)) || ...);
+                        ASSERT(found);
+                }
+        }
+
 public:
         SimpleVariant()
         {
@@ -150,16 +164,7 @@ public:
 
         ~SimpleVariant()
         {
-                if (m_id == 0)
-                {
-                        reinterpret_cast<const A*>(&m_data)->~A();
-                }
-                else
-                {
-                        int i = 1;
-                        bool found = ((i++ != m_id ? false : (reinterpret_cast<const T*>(&m_data)->~T(), true)) || ...);
-                        ASSERT(found);
-                }
+                destructor();
         }
 
         SimpleVariant(const SimpleVariant& v)
@@ -182,7 +187,7 @@ public:
                         }
                         else
                         {
-                                this->~SimpleVariant();
+                                destructor();
                                 constructor_copy(v);
                         }
                 }
@@ -199,7 +204,7 @@ public:
                         }
                         else
                         {
-                                this->~SimpleVariant();
+                                destructor();
                                 constructor_move(std::move(v));
                         }
                 }
