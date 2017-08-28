@@ -32,8 +32,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 template <typename A, typename... T>
 class SimpleVariant
 {
+        static constexpr int EMPTY = -1;
+
         std::aligned_storage_t<std::max({sizeof(A), sizeof(T)...}), std::max({alignof(A), alignof(T)...})> m_data;
-        int m_id;
+
+        int m_id = EMPTY;
 
         template <typename V>
         static constexpr int compute_id()
@@ -58,9 +61,9 @@ class SimpleVariant
 
         void constructor_copy(const SimpleVariant& v)
         {
-                m_id = v.m_id;
+                ASSERT(m_id == EMPTY);
 
-                if (m_id == 0)
+                if (v.m_id == 0)
                 {
                         new (&m_data) A(*reinterpret_cast<const A*>(&v.m_data));
                 }
@@ -68,16 +71,18 @@ class SimpleVariant
                 {
                         int i = 1;
                         bool found =
-                                ((i++ != m_id ? false : (new (&m_data) T(*reinterpret_cast<const T*>(&v.m_data)), true)) || ...);
+                                ((i++ != v.m_id ? false : (new (&m_data) T(*reinterpret_cast<const T*>(&v.m_data)), true)) || ...);
                         ASSERT(found);
                 }
+
+                m_id = v.m_id;
         }
 
         void constructor_move(SimpleVariant&& v)
         {
-                m_id = v.m_id;
+                ASSERT(m_id == EMPTY);
 
-                if (m_id == 0)
+                if (v.m_id == 0)
                 {
                         new (&m_data) A(std::move(*reinterpret_cast<A*>(&v.m_data)));
                 }
@@ -85,10 +90,12 @@ class SimpleVariant
                 {
                         int i = 1;
                         bool found =
-                                ((i++ != m_id ? false : (new (&m_data) T(std::move(*reinterpret_cast<T*>(&v.m_data))), true)) ||
+                                ((i++ != v.m_id ? false : (new (&m_data) T(std::move(*reinterpret_cast<T*>(&v.m_data))), true)) ||
                                  ...);
                         ASSERT(found);
                 }
+
+                m_id = v.m_id;
         }
 
         void assignment_copy(const SimpleVariant& v)
@@ -130,8 +137,13 @@ class SimpleVariant
                 }
         }
 
-        void destructor()
+        void destructor() noexcept
         {
+                if (m_id == EMPTY)
+                {
+                        return;
+                }
+
                 if (m_id == 0)
                 {
                         reinterpret_cast<const A*>(&m_data)->~A();
@@ -142,13 +154,15 @@ class SimpleVariant
                         bool found = ((i++ != m_id ? false : (reinterpret_cast<const T*>(&m_data)->~T(), true)) || ...);
                         ASSERT(found);
                 }
+
+                m_id = EMPTY;
         }
 
 public:
         SimpleVariant()
         {
-                m_id = 0;
                 new (&m_data) A();
+                m_id = 0;
         }
 
         template <typename Type, typename... Args>
@@ -158,8 +172,8 @@ public:
 
                 static_assert(id >= 0 && id < sizeof...(T) + 1);
 
-                m_id = id;
                 new (&m_data) Type(std::forward<Args>(v)...);
+                m_id = id;
         }
 
         ~SimpleVariant()
