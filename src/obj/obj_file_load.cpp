@@ -54,6 +54,23 @@ void read(const std::string& line, size_t size, const T& op, size_t* i)
         }
 }
 
+void read_integer(const std::string& line, size_t size, size_t* i)
+{
+        if (*i < size && line[*i] == '-')
+        {
+                size_t pos = *i + 1;
+                read(line, size, [](char c) { return std::isdigit(c); }, &pos);
+                if (pos > (*i + 1))
+                {
+                        *i = pos;
+                }
+        }
+        else
+        {
+                read(line, size, [](char c) { return std::isdigit(c); }, i);
+        }
+}
+
 template <typename T>
 std::string get_string_list(const std::map<std::string, T>& m)
 {
@@ -249,12 +266,21 @@ void load_image(const std::string& dir_name, std::string&& name, std::map<std::s
         image_index->emplace(name, *index);
 }
 
-int digits_to_int(const std::string& s, long long begin, long long end)
+// Между begin и end находится уже проверенное целое число в формате DDDDD или -DDDDD
+int string_to_integer(const std::string& s, long long begin, long long end)
 {
+        bool neg = false;
+        if (s[begin] == '-')
+        {
+                neg = true;
+                ++begin;
+        }
+
         if (end - begin > 9)
         {
-                error("Error convert to uint (too big): " + s);
+                error("Error convert to int (too big): " + s);
         }
+
         long long sum = 0, mul = 1;
         for (long long i = end - 1; i >= begin; --i)
         {
@@ -262,7 +288,124 @@ int digits_to_int(const std::string& s, long long begin, long long end)
                 sum += v * mul;
                 mul *= 10;
         }
-        return sum;
+
+        return neg ? -sum : sum;
+}
+
+// 0 означает, что нет индекса.
+// Индексы находятся в порядке face, texture, normal.
+template <typename T>
+void check_indices(const T& v, const char* line_begin)
+{
+        for (unsigned idx = 0; idx < v.size(); idx += 3)
+        {
+                if (v[idx] == 0)
+                {
+                        error("Error read face from line:\n\"" + trim(line_begin) + "\"");
+                }
+        }
+
+        for (unsigned idx = 1; idx < v.size() - 3; idx += 3)
+        {
+                if ((v[idx] == 0) != (v[idx + 3] == 0))
+                {
+                        error("Inconsistent face texture indices in the line:\n\"" + trim(line_begin) + "\"");
+                }
+        }
+
+        for (unsigned idx = 2; idx < v.size() - 3; idx += 3)
+        {
+                if ((v[idx] == 0) != (v[idx + 3] == 0))
+                {
+                        error("Inconsistent face normal indices in the line:\n\"" + trim(line_begin) + "\"");
+                }
+        }
+}
+
+template <size_t N>
+void read_vertex_groups(const std::string& line, const char* line_begin, size_t begin, size_t end, std::array<size_t, N>* begins,
+                        std::array<size_t, N>* ends, unsigned* cnt)
+{
+        size_t i = begin;
+        *cnt = 0;
+        for (unsigned z = 0; z < N + 1; ++z)
+        {
+                read(line, end, [](char c) { return std::isspace(c); }, &i);
+                size_t i2 = i;
+                read(line, end, [](char c) { return !std::isspace(c); }, &i2);
+                if (i2 != i)
+                {
+                        if (z < N)
+                        {
+                                (*begins)[z] = i;
+                                (*ends)[z] = i2;
+                                i = i2;
+                        }
+                        else
+                        {
+                                error("Too many vertex groups (max=" + to_string(N) + ") in line:\n\"" + trim(line_begin) + "\"");
+                        }
+                }
+                else
+                {
+                        *cnt = z;
+                        return;
+                }
+        }
+}
+
+void read_v_vt_vn(const std::string& line, const char* line_begin, size_t begin, size_t end, int* v)
+{
+        size_t i = begin;
+        for (int a = 0; a < 3; ++a)
+        {
+                if (i == end)
+                {
+                        if (a > 0) // a > 0 — считывается текстура или нормаль
+                        {
+                                v[a] = 0;
+                                continue;
+                        }
+                        error("Error read face from line:\n\"" + trim(line_begin) + "\"");
+                }
+
+                if (a > 0)
+                {
+                        if (line[i] != '/')
+                        {
+                                error("Error read face from line:\n\"" + trim(line_begin) + "\"");
+                        }
+                        ++i;
+                }
+
+                size_t i2 = i;
+
+                read_integer(line, end, &i2);
+                if (i2 != i)
+                {
+                        v[a] = string_to_integer(line, i, i2);
+                        if (v[a] == 0)
+                        {
+                                error("Zero face index:\n\"" + trim(line_begin) + "\"");
+                        }
+                }
+                else
+                {
+                        if (a == 0) // a == 0 — считывается вершина
+                        {
+                                error("Error read face from line:\n\"" + trim(line_begin) + "\"");
+                        }
+
+                        v[a] = 0;
+                }
+
+                i = i2;
+        }
+
+        if (i != end)
+        {
+                error("Error read face from line:\n\"" + trim(line_begin) + "\"");
+        }
 }
 
 // Разделение строки на 9 чисел
@@ -271,69 +414,32 @@ int digits_to_int(const std::string& s, long long begin, long long end)
 void read_face(const std::string& line, size_t begin, size_t end, IObj::vertex* v1, IObj::vertex* v2, IObj::vertex* v3,
                bool* vt_found, bool* vn_found)
 {
-        const size_t size = end;
-        size_t i = begin;
+        std::array<int, 9> v;
 
-        int v[9];
+        std::array<size_t, 10> begins, ends;
+        unsigned group_count;
 
-        for (int z = 0, g = 0; z < 3; ++z)
+        read_vertex_groups(line, &line[begin], begin, end, &begins, &ends, &group_count);
+
+        if (group_count < 3)
         {
-                read(line, size, [](char c) { return std::isspace(c); }, &i);
-
-                for (int a = 0; a < 3; ++a, ++g)
-                {
-                        if (a > 0) // a > 0 — считывается текстура или нормаль
-                        {
-                                if ((i < size && std::isspace(line[i])) || (i == size && z == 2))
-                                {
-                                        v[g] = -1;
-                                        continue;
-                                }
-                        }
-
-                        if (i == size)
-                        {
-                                std::string l = &line[begin];
-                                error("Error read face from line:\n\"" + trim(l) + "\"");
-                        }
-
-                        if (a > 0)
-                        {
-                                if (line[i] != '/')
-                                {
-                                        std::string l = &line[begin];
-                                        error("Error read face from line:\n\"" + trim(l) + "\"");
-                                }
-                                ++i;
-                        }
-
-                        size_t i2 = i;
-
-                        read(line, size, [](char c) { return std::isdigit(c); }, &i2);
-                        if (i2 != i)
-                        {
-                                v[g] = digits_to_int(line, i, i2) - 1;
-                                if (v[g] == -1)
-                                {
-                                        std::string l = &line[begin];
-                                        error("Zero face index:\n\"" + trim(l) + "\"");
-                                }
-                        }
-                        else
-                        {
-                                v[g] = -1;
-                        }
-
-                        i = i2;
-                }
+                error("Error read at least 3 vertices from line:\n\"" + trim(&line[begin]) + "\"");
+        }
+        else if (group_count > 3)
+        {
+                error("Too many face vertices in line:\n\"" + trim(&line[begin]) + "\"");
         }
 
-        read(line, size, [](char c) { return std::isspace(c); }, &i);
-        if (i != size)
+        for (int z = 0; z < 3; ++z)
         {
-                std::string l = &line[begin];
-                error("Error read face from line:\n\"" + trim(l) + "\"");
+                read_v_vt_vn(line, &line[begin], begins[z], ends[z], &v[z * 3]);
         }
+
+        *vt_found = !(v[1] == 0);
+        *vn_found = !(v[2] == 0);
+
+        // Обязательная проверка индексов
+        check_indices(v, &line[begin]);
 
         v1->v = v[0];
         v1->vt = v[1];
@@ -344,26 +450,6 @@ void read_face(const std::string& line, size_t begin, size_t end, IObj::vertex* 
         v3->v = v[6];
         v3->vt = v[7];
         v3->vn = v[8];
-
-        if (v1->v < 0 || v2->v < 0 || v3->v < 0)
-        {
-                std::string l = &line[begin];
-                error("Error read face from line:\n\"" + trim(l) + "\"");
-        }
-
-        if (((v1->vt < 0) != (v2->vt < 0)) || ((v2->vt < 0) != (v3->vt < 0)))
-        {
-                std::string l = &line[begin];
-                error("Inconsistent face texture indices in the line:\n\"" + trim(l) + "\"");
-        }
-        if (((v1->vn < 0) != (v2->vn < 0)) || ((v2->vn < 0) != (v3->vn < 0)))
-        {
-                std::string l = &line[begin];
-                error("Inconsistent face normal indices in the line:\n\"" + trim(l) + "\"");
-        }
-
-        *vt_found = !(v1->vt < 0);
-        *vn_found = !(v1->vn < 0);
 }
 
 void read_float(const std::string& line, size_t b, size_t, glm::vec3* v)
@@ -795,6 +881,26 @@ void FileObj::read_obj_one(const ThreadData* thread_data, std::string* file_ptr,
         }
 }
 
+// Индексы в OBJ:
+//   начинаются с 1 для абсолютных значений,
+//   начинаются с -1 для относительных значений назад.
+// Преобразование в абсолютные значения с началом от 0.
+void correct_indices(IObj::face3* face, int vertices_size, int texcoords_size, int normals_size)
+{
+        for (int i = 0; i < 3; ++i)
+        {
+                int& v = face->vertices[i].v;
+                int& vt = face->vertices[i].vt;
+                int& vn = face->vertices[i].vn;
+
+                ASSERT(v != 0);
+
+                v = v > 0 ? v - 1 : vertices_size + v;
+                vt = vt > 0 ? vt - 1 : (vt < 0 ? texcoords_size + vt : -1);
+                vn = vn > 0 ? vn - 1 : (vn < 0 ? normals_size + vn : -1);
+        }
+}
+
 void FileObj::read_obj_two(const ThreadData* thread_data, std::string* file_ptr, std::vector<ObjLine>* line_prop,
                            ProgressRatio* progress, std::map<std::string, int>* material_index,
                            std::vector<std::string>* library_names)
@@ -837,6 +943,7 @@ void FileObj::read_obj_two(const ThreadData* thread_data, std::string* file_ptr,
                         break;
                 case ObjLineType::F:
                         lp.face.material = mtl_index;
+                        correct_indices(&lp.face, m_vertices.size(), m_texcoords.size(), m_normals.size());
                         m_faces.push_back(std::move(lp.face));
                         break;
                 case ObjLineType::USEMTL:
