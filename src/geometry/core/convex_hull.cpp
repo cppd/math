@@ -615,7 +615,7 @@ void create_convex_hull(const std::vector<Vector<N, S>>& points, FacetList<Facet
                         continue;
                 }
 
-                if (ProgressRatio::LOCK_FREE)
+                if (ProgressRatio::lock_free())
                 {
                         progress->set(points_done, points.size());
                 }

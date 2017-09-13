@@ -39,7 +39,7 @@ class ProgressRatio::Impl final : public IProgressRatioControl
         const std::string m_permanent_text;
 
 public:
-        static constexpr bool LOCK_FREE = (ATOMIC_LLONG_LOCK_FREE == 2) && (ATOMIC_BOOL_LOCK_FREE == 2);
+        static constexpr bool LOCK_FREE = std::atomic_ullong::is_always_lock_free && std::atomic_bool::is_always_lock_free;
 
         Impl(IProgressRatioList* list, const std::string& permanent_text) : m_ratios(list), m_permanent_text(permanent_text)
         {
@@ -145,4 +145,8 @@ void ProgressRatio::set_undefined()
 void ProgressRatio::set_text(const std::string& text)
 {
         m_progress->set_text(text);
+}
+bool ProgressRatio::lock_free()
+{
+        return Impl::LOCK_FREE;
 }

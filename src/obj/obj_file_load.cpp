@@ -41,7 +41,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <thread>
 
 using atomic_counter = std::atomic_int;
-constexpr bool ATOMIC_COUNTER_LOCK_FREE = (ATOMIC_INT_LOCK_FREE == 2);
+constexpr bool ATOMIC_COUNTER_LOCK_FREE = atomic_counter::is_always_lock_free;
 
 namespace
 {
