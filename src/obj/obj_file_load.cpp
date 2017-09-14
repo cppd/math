@@ -43,6 +43,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using atomic_counter = std::atomic_int;
 constexpr bool ATOMIC_COUNTER_LOCK_FREE = atomic_counter::is_always_lock_free;
 
+constexpr unsigned MAX_FACES_PER_LINE = 5;
+
 namespace
 {
 template <typename T>
@@ -295,9 +297,13 @@ int string_to_integer(const std::string& s, long long begin, long long end)
 // 0 означает, что нет индекса.
 // Индексы находятся в порядке face, texture, normal.
 template <typename T>
-void check_indices(const T& v, const char* line_begin)
+void check_indices(const T& v, unsigned group_count, const char* line_begin)
 {
-        for (unsigned idx = 0; idx < v.size(); idx += 3)
+        int end = group_count * 3;
+
+        ASSERT(end <= static_cast<int>(v.size()));
+
+        for (int idx = 0; idx < end; idx += 3)
         {
                 if (v[idx] == 0)
                 {
@@ -305,7 +311,7 @@ void check_indices(const T& v, const char* line_begin)
                 }
         }
 
-        for (unsigned idx = 1; idx < v.size() - 3; idx += 3)
+        for (int idx = 1; idx < end - 3; idx += 3)
         {
                 if ((v[idx] == 0) != (v[idx + 3] == 0))
                 {
@@ -313,7 +319,7 @@ void check_indices(const T& v, const char* line_begin)
                 }
         }
 
-        for (unsigned idx = 2; idx < v.size() - 3; idx += 3)
+        for (int idx = 2; idx < end - 3; idx += 3)
         {
                 if ((v[idx] == 0) != (v[idx + 3] == 0))
                 {
@@ -411,12 +417,15 @@ void read_v_vt_vn(const std::string& line, const char* line_begin, size_t begin,
 // Разделение строки на 9 чисел
 // " число/возможно_число/возможно_число число/возможно_число/возможно_число число/возможно_число/возможно_число ".
 // Примеры: " 1/2/3 4/5/6 7/8/9", "1//2 3//4 5//6", " 1// 2// 3// ".
-void read_face(const std::string& line, size_t begin, size_t end, IObj::vertex* v1, IObj::vertex* v2, IObj::vertex* v3,
-               bool* vt_found, bool* vn_found)
-{
-        std::array<int, 9> v;
+void read_faces(const std::string& line, size_t begin, size_t end, std::array<IObj::face3, MAX_FACES_PER_LINE>* faces,
+                unsigned* face_count)
 
-        std::array<size_t, 10> begins, ends;
+{
+        constexpr unsigned MAX_GROUP_COUNT = MAX_FACES_PER_LINE + 2;
+
+        std::array<int, MAX_GROUP_COUNT * 3> v;
+        std::array<size_t, MAX_GROUP_COUNT> begins, ends;
+
         unsigned group_count;
 
         read_vertex_groups(line, &line[begin], begin, end, &begins, &ends, &group_count);
@@ -425,31 +434,33 @@ void read_face(const std::string& line, size_t begin, size_t end, IObj::vertex* 
         {
                 error("Error read at least 3 vertices from line:\n\"" + trim(&line[begin]) + "\"");
         }
-        else if (group_count > 3)
-        {
-                error("Too many face vertices in line:\n\"" + trim(&line[begin]) + "\"");
-        }
 
-        for (int z = 0; z < 3; ++z)
+        for (unsigned z = 0; z < group_count; ++z)
         {
                 read_v_vt_vn(line, &line[begin], begins[z], ends[z], &v[z * 3]);
         }
 
-        *vt_found = !(v[1] == 0);
-        *vn_found = !(v[2] == 0);
-
         // Обязательная проверка индексов
-        check_indices(v, &line[begin]);
+        check_indices(v, group_count, &line[begin]);
 
-        v1->v = v[0];
-        v1->vt = v[1];
-        v1->vn = v[2];
-        v2->v = v[3];
-        v2->vt = v[4];
-        v2->vn = v[5];
-        v3->v = v[6];
-        v3->vt = v[7];
-        v3->vn = v[8];
+        *face_count = group_count - 2;
+
+        for (unsigned i = 0, base = 0; i < *face_count; ++i, base += 3)
+        {
+                (*faces)[i].has_vt = !(v[1] == 0);
+                (*faces)[i].has_vn = !(v[2] == 0);
+
+                (*faces)[i].vertices[0].v = v[0];
+                (*faces)[i].vertices[0].vt = v[1];
+                (*faces)[i].vertices[0].vn = v[2];
+
+                (*faces)[i].vertices[1].v = v[base + 3];
+                (*faces)[i].vertices[1].vt = v[base + 4];
+                (*faces)[i].vertices[1].vn = v[base + 5];
+                (*faces)[i].vertices[2].v = v[base + 6];
+                (*faces)[i].vertices[2].vt = v[base + 7];
+                (*faces)[i].vertices[2].vn = v[base + 8];
+        }
 }
 
 void read_float(const std::string& line, size_t b, size_t, glm::vec3* v)
@@ -667,7 +678,8 @@ class FileObj final : public IObj
         {
                 ObjLineType type;
                 size_t second_b, second_e;
-                face3 face;
+                std::array<face3, MAX_FACES_PER_LINE> faces;
+                unsigned face_count;
                 glm::vec3 v;
         };
 
@@ -857,8 +869,7 @@ void FileObj::read_obj_one(const ThreadData* thread_data, std::string* file_ptr,
                 else if (compare(file_str, first_b, first_e, tag_f))
                 {
                         lp.type = ObjLineType::F;
-                        read_face(file_str, lp.second_b, lp.second_e, &lp.face.vertices[0], &lp.face.vertices[1],
-                                  &lp.face.vertices[2], &lp.face.has_vt, &lp.face.has_vn);
+                        read_faces(file_str, lp.second_b, lp.second_e, &lp.faces, &lp.face_count);
                         if (ATOMIC_COUNTER_LOCK_FREE)
                         {
                                 ++(*thread_data->cnt_f);
@@ -942,9 +953,12 @@ void FileObj::read_obj_two(const ThreadData* thread_data, std::string* file_ptr,
                         m_normals.push_back(lp.v);
                         break;
                 case ObjLineType::F:
-                        lp.face.material = mtl_index;
-                        correct_indices(&lp.face, m_vertices.size(), m_texcoords.size(), m_normals.size());
-                        m_faces.push_back(std::move(lp.face));
+                        for (unsigned i = 0; i < lp.face_count; ++i)
+                        {
+                                lp.faces[i].material = mtl_index;
+                                correct_indices(&lp.faces[i], m_vertices.size(), m_texcoords.size(), m_normals.size());
+                                m_faces.push_back(std::move(lp.faces[i]));
+                        }
                         break;
                 case ObjLineType::USEMTL:
                 {
