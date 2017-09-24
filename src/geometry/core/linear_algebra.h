@@ -20,16 +20,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "vec.h"
 #include "vec_array.h"
 
-#include "com/bits.h"
 #include "com/combinatorics.h"
-#include "com/error.h"
 #include "com/math.h"
-#include "com/types.h"
 
 #include <array>
-#include <cmath>
 #include <gmpxx.h>
-#include <numeric>
 #include <vector>
 
 template <size_t N>
@@ -303,10 +298,4 @@ void ortho_e0_e1(const std::vector<Vector<N, T>>& points, const std::array<int, 
         vectors[N - 2] = *e1;
 
         *e2 = normalize(ortho_nn(vectors));
-}
-
-template <typename T>
-T cross_2d(const Vector<2, T>& a0, const Vector<2, T>& a1)
-{
-        return a0[0] * a1[1] - a0[1] * a1[0];
 }

@@ -60,6 +60,18 @@ T any_sqrt(T a)
         static_assert(std::is_floating_point_v<T>);
         return std::sqrt(a);
 }
+template <typename T>
+T any_sin(T a)
+{
+        static_assert(std::is_floating_point_v<T>);
+        return std::sin(a);
+}
+template <typename T>
+T any_cos(T a)
+{
+        static_assert(std::is_floating_point_v<T>);
+        return std::cos(a);
+}
 
 #if !defined(__clang__)
 inline __float128 any_abs(__float128 a)
@@ -73,6 +85,14 @@ inline __float128 any_fma(__float128 a, __float128 b, __float128 c)
 inline __float128 any_sqrt(__float128 a)
 {
         return sqrtq(a);
+}
+inline __float128 any_sin(__float128 a)
+{
+        return sinq(a);
+}
+inline __float128 any_cos(__float128 a)
+{
+        return cosq(a);
 }
 #endif
 

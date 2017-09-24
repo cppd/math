@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "geometry/core/delaunay.h"
 #include "geometry/core/linear_algebra.h"
 #include "geometry/core/ridge.h"
+#include "geometry/core/vec_cross.h"
 
 #include <unordered_map>
 #include <unordered_set>
@@ -84,7 +85,7 @@ bool sharp_ridge(const std::vector<vec<N>>& points, const std::vector<bool>& int
                 vec<2> v = normalize(vec<2>(dot(e0, facet_vec), dot(e1, facet_vec)));
                 ASSERT(is_finite(v));
 
-                double sine = cross_2d(base, v);
+                double sine = cross(base, v);
                 double cosine = dot(base, v);
 
                 if (sine >= 0)
