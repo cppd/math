@@ -44,7 +44,7 @@ public:
         {
         }
 
-        constexpr T operator[](unsigned i) const
+        T operator[](unsigned i) const
         {
                 return m_data[i];
         }
@@ -54,29 +54,34 @@ public:
                 return m_data[i];
         }
 
-        constexpr const Vector<4, T>& vector() const
+        const Vector<4, T>& data() const
         {
                 return m_data;
+        }
+
+        Vector<3, T> imag() const
+        {
+                return Vector<3, T>(m_data[1], m_data[2], m_data[3]);
         }
 };
 
 template <typename T>
 Quaternion<T> operator+(const Quaternion<T>& a, const Quaternion<T>& b)
 {
-        return a.vector() + b.vector();
+        return a.data() + b.data();
 }
 
 template <typename T>
 Quaternion<T> operator-(const Quaternion<T>& a, const Quaternion<T>& b)
 {
-        return a.vector() - b.vector();
+        return a.data() - b.data();
 }
 
 template <typename T>
 Quaternion<T> operator*(const Quaternion<T>& a, const Quaternion<T>& b)
 {
-        Vector<3, T> a_v(a[1], a[2], a[3]);
-        Vector<3, T> b_v(b[1], b[2], b[3]);
+        Vector<3, T> a_v = a.imag();
+        Vector<3, T> b_v = b.imag();
 
         return Quaternion<T>(a[0] * b[0] - dot(a_v, b_v), a[0] * b_v + b[0] * a_v + cross(a_v, b_v));
 }
@@ -84,13 +89,13 @@ Quaternion<T> operator*(const Quaternion<T>& a, const Quaternion<T>& b)
 template <typename T>
 Quaternion<T> operator*(const Quaternion<T>& a, T b)
 {
-        return a.vector() * b;
+        return a.data() * b;
 }
 
 template <typename T>
 Quaternion<T> operator/(const Quaternion<T>& a, T b)
 {
-        return a.vector() / b;
+        return a.data() / b;
 }
 
 template <typename T>
@@ -102,23 +107,24 @@ Quaternion<T> conjugate(const Quaternion<T>& a)
 template <typename T>
 Quaternion<T> inverse(const Quaternion<T>& a)
 {
-        return conjugate(a) / dot(a.vector(), a.vector());
+        return conjugate(a) / dot(a.data(), a.data());
 }
 
 template <typename T>
 std::string to_string(const Quaternion<T>& a)
 {
-        return to_string(a.vector());
+        return to_string(a.data());
 }
 
 template <typename T>
-Quaternion<T> rotation_quaternion(const Vector<3, T>& axis, T angle)
+Quaternion<T> quaternion_for_rotation(const Vector<3, T>& axis, T angle)
 {
         return Quaternion<T>(any_cos(angle / 2), any_sin(angle / 2) * normalize(axis));
 }
 
 template <typename T>
-Quaternion<T> rotation_quaternion_unit_axis(const Vector<3, T>& axis, T angle)
+Vector<3, T> rotate_vector(const Vector<3, T>& axis, T angle, const Vector<3, T>& v)
 {
-        return Quaternion<T>(any_cos(angle / 2), any_sin(angle / 2) * axis);
+        Quaternion q = quaternion_for_rotation(axis, angle);
+        return (q * Quaternion(static_cast<T>(0), v) * conjugate(q)).imag();
 }
