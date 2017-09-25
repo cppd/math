@@ -126,5 +126,5 @@ template <typename T>
 Vector<3, T> rotate_vector(const Vector<3, T>& axis, T angle, const Vector<3, T>& v)
 {
         Quaternion q = quaternion_for_rotation(axis, angle);
-        return (q * Quaternion(static_cast<T>(0), v) * conjugate(q)).imag();
+        return (q * Quaternion<T>(static_cast<T>(0), v) * conjugate(q)).imag();
 }

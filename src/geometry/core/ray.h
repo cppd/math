@@ -17,41 +17,42 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "vec3.h"
+#include "vec.h"
 
+template <size_t N, typename T>
 class Ray
 {
-        vec3 m_org;
-        vec3 m_dir;
+        Vector<N, T> m_org;
+        Vector<N, T> m_dir;
 
 public:
         Ray() = default;
 
-        Ray(const vec3& org, const vec3& dir) : m_org(org), m_dir(normalize(dir))
+        Ray(const Vector<N, T>& org, const Vector<N, T>& dir) : m_org(org), m_dir(normalize(dir))
         {
         }
 
-        void set_org(const vec3& org)
+        void set_org(const Vector<N, T>& org)
         {
                 m_org = org;
         }
 
-        void set_dir(const vec3& dir)
+        void set_dir(const Vector<N, T>& dir)
         {
                 m_dir = normalize(dir);
         }
 
-        const vec3& get_org() const
+        const Vector<N, T>& get_org() const
         {
                 return m_org;
         }
 
-        const vec3& get_dir() const
+        const Vector<N, T>& get_dir() const
         {
                 return m_dir;
         }
 
-        vec3 point(double t) const
+        Vector<N, T> point(T t) const
         {
                 return m_org + m_dir * t;
         }
