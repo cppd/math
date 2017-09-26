@@ -141,9 +141,6 @@ protected:
         virtual ~GenericObject() = 0;
 
 public:
-        // Попадает ли объект в прямоугольный параллелепипед, заданный точкой и 3 векторами от этой точки.
-        virtual bool intersect_box(const vec3& org, const vec3& a, const vec3& b, const vec3& c) const = 0;
-
         // Для случая структуры из объектов это пересечение луча с границей структуры.
         // Для случая геометрического объекта это пересечение луча с самим объектом.
         virtual bool intersect_approximate(const ray3& r, double* t) const = 0;
