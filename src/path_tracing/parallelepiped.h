@@ -18,31 +18,26 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "ray3.h"
-#include "vec2.h"
 #include "vec3.h"
 
-class TableTriangle
+class Parallelepiped
 {
-        const vec3* m_points;
-        const vec3* m_normals;
-        const vec2* m_texcoords;
+        struct
+        {
+                vec3 n;
+                double d1, d2;
 
-        int m_v0, m_v1, m_v2;
-        int m_n0, m_n1, m_n2;
-        int m_t0, m_t1, m_t2;
-        int m_material;
+        } m_planes[3];
 
-        vec3 m_normal;
-        vec3 m_u_beta, m_u_gamma;
+        vec3 m_org, m_e0, m_e1, m_e2;
 
 public:
-        void set_data(const vec3* points, const vec3* normals, const vec2* texcoords, int v1, int v2, int v3, int n1, int n2,
-                      int n3, int t1, int t2, int t3, int material);
+        void set_data(const vec3& org, const vec3& e0, const vec3& e1, const vec3& e2);
         bool intersect(const ray3& r, double* t) const;
-        vec3 normal(const vec3& point) const;
-        vec2 texcoord(const vec3& point) const;
-        int get_material() const;
-        const vec3& v0() const;
-        const vec3& v1() const;
-        const vec3& v2() const;
+        vec3 normal(const vec3& p) const;
+        bool inside(const vec3& p) const;
+        const vec3& org() const;
+        const vec3& e0() const;
+        const vec3& e1() const;
+        const vec3& e2() const;
 };

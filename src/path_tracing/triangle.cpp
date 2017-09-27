@@ -18,8 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // Формулы имеются в книге
 // Samuel R. Buss.
 // 3D Computer Graphics. A Mathematical Introduction with OpenGL.
-// Cambridge University Press.
-// 2003.
+// Cambridge University Press, 2003.
 
 #include "triangle.h"
 
@@ -161,4 +160,19 @@ vec2 TableTriangle::texcoord(const vec3& point) const
 int TableTriangle::get_material() const
 {
         return m_material;
+}
+
+const vec3& TableTriangle::v0() const
+{
+        return m_points[m_v0];
+}
+
+const vec3& TableTriangle::v1() const
+{
+        return m_points[m_v1];
+}
+
+const vec3& TableTriangle::v2() const
+{
+        return m_points[m_v2];
 }

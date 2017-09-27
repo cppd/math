@@ -138,7 +138,7 @@ public:
 class GenericObject
 {
 protected:
-        virtual ~GenericObject() = 0;
+        virtual ~GenericObject() = default;
 
 public:
         // Для случая структуры из объектов это пересечение луча с границей структуры.
