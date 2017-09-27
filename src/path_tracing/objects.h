@@ -120,6 +120,7 @@ protected:
 
 public:
         virtual vec3 normal(const vec3& p) const = 0;
+        virtual bool intersect(const ray3& r, double* t) const = 0;
 };
 
 // Свойства поверхности надо находить только для ближайшей точки персечения, поэтому свойства

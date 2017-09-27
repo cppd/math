@@ -17,11 +17,23 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "objects.h"
 #include "ray3.h"
 #include "vec2.h"
 #include "vec3.h"
 
-class TableTriangle
+class GeometricTriangle : public GeometricObject
+{
+protected:
+        virtual ~GeometricTriangle() = default;
+
+public:
+        virtual const vec3& v0() const = 0;
+        virtual const vec3& v1() const = 0;
+        virtual const vec3& v2() const = 0;
+};
+
+class TableTriangle : public GeometricTriangle
 {
         const vec3* m_points;
         const vec3* m_normals;
@@ -38,11 +50,14 @@ class TableTriangle
 public:
         void set_data(const vec3* points, const vec3* normals, const vec2* texcoords, int v1, int v2, int v3, int n1, int n2,
                       int n3, int t1, int t2, int t3, int material);
-        bool intersect(const ray3& r, double* t) const;
-        vec3 normal(const vec3& point) const;
+
         vec2 texcoord(const vec3& point) const;
         int get_material() const;
-        const vec3& v0() const;
-        const vec3& v1() const;
-        const vec3& v2() const;
+
+        bool intersect(const ray3& r, double* t) const override;
+        vec3 normal(const vec3& point) const override;
+
+        const vec3& v0() const override;
+        const vec3& v1() const override;
+        const vec3& v2() const override;
 };

@@ -17,10 +17,24 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "objects.h"
 #include "ray3.h"
 #include "vec3.h"
 
-class Parallelepiped
+class GeometricParallelepiped : public GeometricObject
+{
+protected:
+        virtual ~GeometricParallelepiped() = default;
+
+public:
+        virtual const vec3& org() const = 0;
+        virtual const vec3& e0() const = 0;
+        virtual const vec3& e1() const = 0;
+        virtual const vec3& e2() const = 0;
+        virtual bool inside(const vec3& p) const = 0;
+};
+
+class Parallelepiped : public GeometricParallelepiped
 {
         struct
         {
@@ -33,11 +47,13 @@ class Parallelepiped
 
 public:
         void set_data(const vec3& org, const vec3& e0, const vec3& e1, const vec3& e2);
-        bool intersect(const ray3& r, double* t) const;
-        vec3 normal(const vec3& p) const;
-        bool inside(const vec3& p) const;
-        const vec3& org() const;
-        const vec3& e0() const;
-        const vec3& e1() const;
-        const vec3& e2() const;
+
+        bool inside(const vec3& p) const override;
+        bool intersect(const ray3& r, double* t) const override;
+        vec3 normal(const vec3& p) const override;
+
+        const vec3& org() const override;
+        const vec3& e0() const override;
+        const vec3& e1() const override;
+        const vec3& e2() const override;
 };
