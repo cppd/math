@@ -32,9 +32,15 @@ public:
         virtual const vec3& e1() const = 0;
         virtual const vec3& e2() const = 0;
         virtual bool inside(const vec3& p) const = 0;
+
+        GeometricParallelepiped() = default;
+        GeometricParallelepiped(const GeometricParallelepiped&) = default;
+        GeometricParallelepiped(GeometricParallelepiped&&) = default;
+        GeometricParallelepiped& operator=(const GeometricParallelepiped&) = default;
+        GeometricParallelepiped& operator=(GeometricParallelepiped&&) = default;
 };
 
-class Parallelepiped : public GeometricParallelepiped
+class Parallelepiped final : public GeometricParallelepiped
 {
         struct
         {
@@ -45,7 +51,13 @@ class Parallelepiped : public GeometricParallelepiped
 
         vec3 m_org, m_e0, m_e1, m_e2;
 
+        void create_planes();
+
 public:
+        Parallelepiped() = default;
+
+        Parallelepiped(const vec3& org, const vec3& e0, const vec3& e1, const vec3& e2);
+
         void set_data(const vec3& org, const vec3& e0, const vec3& e1, const vec3& e2);
 
         bool inside(const vec3& p) const override;

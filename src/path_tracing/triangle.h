@@ -31,9 +31,15 @@ public:
         virtual const vec3& v0() const = 0;
         virtual const vec3& v1() const = 0;
         virtual const vec3& v2() const = 0;
+
+        GeometricTriangle() = default;
+        GeometricTriangle(const GeometricTriangle&) = default;
+        GeometricTriangle(GeometricTriangle&&) = default;
+        GeometricTriangle& operator=(const GeometricTriangle&) = default;
+        GeometricTriangle& operator=(GeometricTriangle&&) = default;
 };
 
-class TableTriangle : public GeometricTriangle
+class TableTriangle final : public GeometricTriangle
 {
         const vec3* m_points;
         const vec3* m_normals;

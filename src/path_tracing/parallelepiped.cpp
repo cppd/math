@@ -29,6 +29,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <algorithm>
 #include <limits>
 
+Parallelepiped::Parallelepiped(const vec3& org, const vec3& e0, const vec3& e1, const vec3& e2)
+        : m_org(org), m_e0(e0), m_e1(e1), m_e2(e2)
+{
+        create_planes();
+}
+
 void Parallelepiped::set_data(const vec3& org, const vec3& e0, const vec3& e1, const vec3& e2)
 {
         m_org = org;
@@ -36,32 +42,37 @@ void Parallelepiped::set_data(const vec3& org, const vec3& e0, const vec3& e1, c
         m_e1 = e1;
         m_e2 = e2;
 
+        create_planes();
+}
+
+void Parallelepiped::create_planes()
+{
         // расстояние от точки до плоскости
         // dot(p - org, normal) = dot(p, normal) - dot(org, normal) = dot(p, normal) - d
         //
         // Вектор n наружу от объекта предназначен для плоскости с параметром d1.
         // Вектор -n наружу от объекта предназначен для плоскости с параметром d2.
 
-        m_planes[0].n = normalize(cross(e0, e1));
-        m_planes[0].d1 = dot(org, m_planes[0].n);
-        m_planes[0].d2 = dot(org + e2, m_planes[0].n);
-        if (dot(m_planes[0].n, e2) > 0)
+        m_planes[0].n = normalize(cross(m_e0, m_e1));
+        m_planes[0].d1 = dot(m_org, m_planes[0].n);
+        m_planes[0].d2 = dot(m_org + m_e2, m_planes[0].n);
+        if (dot(m_planes[0].n, m_e2) > 0)
         {
                 std::swap(m_planes[0].d1, m_planes[0].d2);
         }
 
-        m_planes[1].n = normalize(cross(e1, e2));
-        m_planes[1].d1 = dot(org, m_planes[1].n);
-        m_planes[1].d2 = dot(org + e0, m_planes[1].n);
-        if (dot(m_planes[1].n, e0) > 0)
+        m_planes[1].n = normalize(cross(m_e1, m_e2));
+        m_planes[1].d1 = dot(m_org, m_planes[1].n);
+        m_planes[1].d2 = dot(m_org + m_e0, m_planes[1].n);
+        if (dot(m_planes[1].n, m_e0) > 0)
         {
                 std::swap(m_planes[1].d1, m_planes[1].d2);
         }
 
-        m_planes[2].n = normalize(cross(e2, e0));
-        m_planes[2].d1 = dot(org, m_planes[2].n);
-        m_planes[2].d2 = dot(org + e1, m_planes[2].n);
-        if (dot(m_planes[2].n, e1) > 0)
+        m_planes[2].n = normalize(cross(m_e2, m_e0));
+        m_planes[2].d1 = dot(m_org, m_planes[2].n);
+        m_planes[2].d2 = dot(m_org + m_e1, m_planes[2].n);
+        if (dot(m_planes[2].n, m_e1) > 0)
         {
                 std::swap(m_planes[2].d1, m_planes[2].d2);
         }
@@ -115,7 +126,7 @@ bool Parallelepiped::intersect(const ray3& r, double* t) const
                 }
         }
 
-        *t = (f_max > 0) ? f_max : b_min;
+        *t = (f_max > INTERSECTION_THRESHOLD) ? f_max : b_min;
 
         return *t > INTERSECTION_THRESHOLD;
 }
