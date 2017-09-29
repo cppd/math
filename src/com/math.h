@@ -110,3 +110,9 @@ constexpr bool is_finite(__float128 v)
         // вместо finiteq и по аналогии с другими типами
         return v >= -any_max<__float128> && v <= any_max<__float128>;
 }
+
+template <typename T>
+constexpr std::enable_if_t<native_floating_point<T>, T> interpolation(T v0, T v1, T x)
+{
+        return any_fma(x, v1, any_fma(x, -v0, v0));
+}

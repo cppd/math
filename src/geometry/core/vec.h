@@ -191,6 +191,17 @@ T dot(const Vector<N, T>& a, const Vector<N, T>& b)
 }
 
 template <size_t N, typename T>
+Vector<N, T> interpolation(const Vector<N, T>& a, const Vector<N, T>& b, T x)
+{
+        Vector<N, T> result;
+        for (unsigned i = 0; i < N; ++i)
+        {
+                result[i] = interpolation(a[i], b[i], x);
+        }
+        return result;
+}
+
+template <size_t N, typename T>
 T length(const Vector<N, T>& a)
 {
         return any_sqrt(dot(a, a));
