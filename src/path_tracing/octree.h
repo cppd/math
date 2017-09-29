@@ -141,7 +141,7 @@ class Octree
 
                         for (const OctreeObject* obj : box->get_objects())
                         {
-                                if (obj->intersect_shape(child_box->get_parallelepiped()))
+                                if (shape_intersection(obj, child_box->get_parallelepiped()))
                                 {
                                         child_box->add_object(obj);
                                 }
@@ -187,6 +187,8 @@ class Octree
 
         Parallelepiped root_parallelepiped(const std::vector<const OctreeObject*>& objects)
         {
+                // Прямоугольный параллелепипед, параллельный координатным плоскостям
+
                 constexpr double MAX = std::numeric_limits<double>::max();
                 constexpr double MIN = std::numeric_limits<double>::lowest();
 

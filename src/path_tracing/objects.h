@@ -158,3 +158,19 @@ public:
         virtual bool intersect_precise(const ray3&, double approximate_t, double* t, const Surface** surface,
                                        const GeometricObject** geometric_object) const = 0;
 };
+
+// Источник света, не являющийся видимым объектом.
+class LightSource
+{
+protected:
+        virtual ~LightSource() = default;
+
+public:
+        virtual void properties(const vec3& point, vec3* color, vec3* vector_from_point_to_light) const = 0;
+
+        LightSource() = default;
+        LightSource(const LightSource&) = default;
+        LightSource(LightSource&&) = default;
+        LightSource& operator=(const LightSource&) = default;
+        LightSource& operator=(LightSource&&) = default;
+};
