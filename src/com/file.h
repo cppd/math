@@ -32,15 +32,22 @@ public:
                 f = fopen(file_name.c_str(), flags.c_str());
                 if (!f)
                 {
-                        error("Error open file " + file_name);
+                        error("Error open file " + file_name + " with flags \"" + flags + "\"");
                 }
         }
+
         ~CFile()
         {
                 fclose(f);
         }
+
         operator FILE*() const
         {
                 return f;
         }
+
+        CFile(const CFile&) = delete;
+        CFile& operator=(const CFile&) = delete;
+        CFile(CFile&&) = delete;
+        CFile& operator=(CFile&&) = delete;
 };

@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/log.h"
 #include "com/math.h"
 #include "com/print.h"
+#include "com/str.h"
 #include "com/thread.h"
 #include "com/time.h"
 
@@ -98,48 +99,6 @@ bool check_range(float v, float min, float max)
 bool check_range(const glm::vec3& v, float min, float max)
 {
         return v.x >= min && v.x <= max && v.y >= min && v.y <= max && v.z >= min && v.z <= max;
-}
-
-std::string trim(const std::string& s)
-{
-        if (s.size() == 0)
-        {
-                return s;
-        }
-
-        size_t n = s.size();
-        size_t i = 0;
-        while (i < n && std::isspace(s[i]))
-        {
-                ++i;
-        }
-        if (i == n)
-        {
-                return std::string();
-        }
-
-        size_t ri = s.size() - 1;
-        while (std::isspace(s[ri]))
-        {
-                if (ri == 0)
-                {
-                        error("trim error from string: " + s);
-                }
-                --ri;
-        }
-
-        return s.substr(i, ri - i + 1);
-}
-
-std::string to_upper(const std::string& s)
-{
-        std::string result;
-        result.reserve(s.size());
-        for (char c : s)
-        {
-                result += std::toupper(c);
-        }
-        return result;
 }
 
 void read_text_file(const std::string& file, std::string* s)
