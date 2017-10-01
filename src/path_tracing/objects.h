@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "ray3.h"
+#include "vec2.h"
 #include "vec3.h"
 
 // Свойства поверхности в точке.
@@ -173,4 +174,30 @@ public:
         LightSource(LightSource&&) = default;
         LightSource& operator=(const LightSource&) = default;
         LightSource& operator=(LightSource&&) = default;
+};
+
+// Преобразование точки на экране в луч в трёхмерном пространстве
+class Projector
+{
+protected:
+        virtual ~Projector() = default;
+
+public:
+        // Ширина экрана в пикселях
+        virtual int screen_width() const = 0;
+        // Высота экрана в пикселях
+        virtual int screen_height() const = 0;
+
+        // Деление пикселя на равные по ширине и высоте части
+        // для использования множества лучей на один пиксель
+        virtual int pixel_resolution() const = 0;
+
+        // Для точки на экране луч в трёхмерном пространстве
+        virtual ray3 ray(const vec2& point) const = 0;
+
+        Projector() = default;
+        Projector(const Projector&) = default;
+        Projector(Projector&&) = default;
+        Projector& operator=(const Projector&) = default;
+        Projector& operator=(Projector&&) = default;
 };
