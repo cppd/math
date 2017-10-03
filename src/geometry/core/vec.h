@@ -77,6 +77,24 @@ public:
                 }
                 return true;
         }
+
+        Vector<N, T>& operator+=(const Vector<N, T>& a)
+        {
+                for (unsigned i = 0; i < N; ++i)
+                {
+                        m_data[i] += a[i];
+                }
+                return *this;
+        }
+
+        Vector<N, T>& operator-=(const Vector<N, T>& a)
+        {
+                for (unsigned i = 0; i < N; ++i)
+                {
+                        m_data[i] -= a[i];
+                }
+                return *this;
+        }
 };
 
 namespace std
@@ -131,6 +149,17 @@ Vector<N, T> operator*(T b, const Vector<N, T>& a)
         for (unsigned i = 0; i < N; ++i)
         {
                 res[i] = b * a[i];
+        }
+        return res;
+}
+
+template <size_t N, typename T>
+Vector<N, T> operator*(const Vector<N, T>& a, const Vector<N, T>& b)
+{
+        Vector<N, T> res;
+        for (unsigned i = 0; i < N; ++i)
+        {
+                res[i] = a[i] * b[i];
         }
         return res;
 }

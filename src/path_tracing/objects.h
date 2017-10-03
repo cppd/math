@@ -107,7 +107,7 @@ public:
         {
                 m_light_source = light_source;
         }
-        bool get_light_source() const
+        bool is_light_source() const
         {
                 return m_light_source;
         }
@@ -200,4 +200,13 @@ public:
         Projector(Projector&&) = default;
         Projector& operator=(const Projector&) = default;
         Projector& operator=(Projector&&) = default;
+};
+
+// Последовательность пикселов для рисования.
+struct PixelSequence
+{
+        virtual ~PixelSequence() = default;
+        virtual void get_pixel(int* x, int* y) = 0;
+        virtual void release_pixel(int x, int y) = 0;
+        virtual int get_pass_count() const = 0;
 };
