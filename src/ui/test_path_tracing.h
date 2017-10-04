@@ -17,24 +17,4 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "objects.h"
-#include "vec3.h"
-
-#include <atomic>
-#include <string>
-
-struct IPainterNotifier
-{
-protected:
-        virtual ~IPainterNotifier()
-        {
-        }
-
-public:
-        virtual void painter_pixel_before(int x, int y) noexcept = 0;
-        virtual void painter_pixel_after(int x, int y, unsigned char r, unsigned char g, unsigned char b) noexcept = 0;
-        virtual void painter_error_message(const std::string& msg) noexcept = 0;
-};
-
-void paint(IPainterNotifier* painter_notifier, PaintObjects* paint_objects, unsigned thread_count, std::atomic_bool* stop,
-           std::atomic_ullong* ray_count);
+void test_path_tracing(int width, int height, unsigned thread_count);

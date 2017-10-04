@@ -176,7 +176,7 @@ public:
         LightSource& operator=(LightSource&&) = default;
 };
 
-// Преобразование точки на экране в луч в трёхмерном пространстве
+// Преобразование точки на экране в луч в трёхмерном пространстве.
 class Projector
 {
 protected:
@@ -203,10 +203,33 @@ public:
 };
 
 // Последовательность пикселов для рисования.
-struct PixelSequence
+class PixelSequence
 {
+protected:
         virtual ~PixelSequence() = default;
+
+public:
         virtual void get_pixel(int* x, int* y) = 0;
         virtual void release_pixel(int x, int y) = 0;
         virtual int get_pass_count() const = 0;
+
+        PixelSequence() = default;
+        PixelSequence(const PixelSequence&) = default;
+        PixelSequence(PixelSequence&&) = default;
+        PixelSequence& operator=(const PixelSequence&) = default;
+        PixelSequence& operator=(PixelSequence&&) = default;
+};
+
+// Все нужные объекты для рисования
+class PaintObjects
+{
+protected:
+        virtual ~PaintObjects() = default;
+
+public:
+        virtual const std::vector<const GenericObject*>& get_objects() const = 0;
+        virtual const std::vector<const LightSource*>& get_light_sources() const = 0;
+        virtual const Projector& get_projector() const = 0;
+        virtual PixelSequence& get_pixel_sequence() = 0;
+        virtual const SurfaceProperties& get_default_surface_properties() const = 0;
 };

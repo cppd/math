@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "painter.h"
 
+#include "colors.h"
 #include "constants.h"
 #include "objects.h"
 #include "random_sphere.h"
@@ -27,18 +28,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <atomic>
 #include <thread>
 
-constexpr double MINIMAL_COLOR_LEVEL = 1e-4;
+constexpr double MIN_COLOR_LEVEL = 1e-4;
 constexpr int MAX_RECURSION_LEVEL = 100;
-
-constexpr vec3 DEFAULT_COLOR = vec3(0, 0.5, 1);
-constexpr vec3 DEFAULT_LIGHT_SOURCE_COLOR = vec3(1, 1, 1);
-constexpr bool DEFAULT_IS_LIGHT_SOURCE = false;
 
 namespace
 {
 bool color_is_zero(const vec3& c)
 {
-        return max_element(c) < MINIMAL_COLOR_LEVEL;
+        return max_element(c) < MIN_COLOR_LEVEL;
 }
 
 // все объекты считаются непрозрачными
@@ -122,23 +119,23 @@ vec3 direct_lighting(const std::vector<const GenericObject*>& objects, const std
 
 class PixelOwner
 {
-        PixelSequence* m_ps;
+        PixelSequence& m_ps;
         int m_x, m_y;
 
 public:
-        PixelOwner(PixelSequence* ps, int width, int height) : m_ps(ps)
+        PixelOwner(PixelSequence& ps, int width, int height) : m_ps(ps)
         {
-                m_ps->get_pixel(&m_x, &m_y);
+                m_ps.get_pixel(&m_x, &m_y);
 
                 if (m_x < 0 || m_y < 0 || m_x >= width || m_y >= height)
                 {
-                        m_ps->release_pixel(m_x, m_y);
+                        m_ps.release_pixel(m_x, m_y);
                         error("Pixel sequence x or y coordinates out of range");
                 }
         }
         ~PixelOwner()
         {
-                m_ps->release_pixel(m_x, m_y);
+                m_ps.release_pixel(m_x, m_y);
         }
         int get_x() const
         {
@@ -150,7 +147,7 @@ public:
         }
 };
 
-class Painter : public IPainter
+class Painter
 {
         struct Pixel
         {
@@ -158,91 +155,55 @@ class Painter : public IPainter
                 double ray_count = 0;
         };
 
-        class Pixels
-        {
-                std::vector<Pixel> m_pixels;
-                unsigned m_width;
-
-        public:
-                Pixels(unsigned width, unsigned height) : m_pixels(width * height), m_width(width)
-                {
-                }
-                Pixel* get_pixel(unsigned x, unsigned y)
-                {
-                        return &m_pixels[y * m_width + x];
-                }
-        };
-
         IPainterNotifier* m_painter_notifier;
+
         const std::vector<const GenericObject*>& m_objects;
         const std::vector<const LightSource*>& m_light_sources;
         const Projector& m_projector;
-        PixelSequence* m_pixel_sequence;
+        PixelSequence& m_pixel_sequence;
+        const SurfaceProperties& m_default_surface_properties;
 
         std::vector<std::thread> m_threads;
-        std::atomic_bool m_stop = false;
-        const std::thread::id m_window_thread_id;
+        std::atomic_bool& m_stop;
+        std::atomic_ullong& m_ray_count;
 
-        Pixels m_pixels;
-
-        SurfaceProperties m_default_surface_properties;
-
-        mutable std::atomic_ullong m_ray_count = 0;
+        int m_width, m_height;
+        std::vector<Pixel> m_pixels;
 
 public:
-        Painter(IPainterNotifier* painter_notifier, const std::vector<const GenericObject*>& objects,
-                const std::vector<const LightSource*>& light_sources, const Projector& projector, PixelSequence* pixel_sequence,
-                unsigned thread_count)
+        Painter(IPainterNotifier* painter_notifier, PaintObjects* paint_objects, unsigned thread_count, std::atomic_bool* stop,
+                std::atomic_ullong* ray_count)
                 : m_painter_notifier(painter_notifier),
-                  m_objects(objects),
-                  m_light_sources(light_sources),
-                  m_projector(projector),
-                  m_pixel_sequence(pixel_sequence),
-                  m_window_thread_id(std::this_thread::get_id()),
-                  m_pixels(projector.screen_width(), projector.screen_height())
-
+                  m_objects(paint_objects->get_objects()),
+                  m_light_sources(paint_objects->get_light_sources()),
+                  m_projector(paint_objects->get_projector()),
+                  m_pixel_sequence(paint_objects->get_pixel_sequence()),
+                  m_default_surface_properties(paint_objects->get_default_surface_properties()),
+                  m_threads(thread_count),
+                  m_stop(*stop),
+                  m_ray_count(*ray_count),
+                  m_width(m_projector.screen_width()),
+                  m_height(m_projector.screen_height()),
+                  m_pixels(m_width * m_height)
         {
-                ASSERT(painter_notifier && pixel_sequence);
+                ASSERT(thread_count > 0);
 
-                if (thread_count == 0)
-                {
-                        error("Painter thread count = 0");
-                }
+                ASSERT(m_painter_notifier && stop && ray_count);
 
-                m_default_surface_properties.set_color(DEFAULT_COLOR);
-                m_default_surface_properties.set_diffuse_and_fresnel(1, 0);
-                m_default_surface_properties.set_light_source(DEFAULT_IS_LIGHT_SOURCE);
-                m_default_surface_properties.set_light_source_color(DEFAULT_LIGHT_SOURCE_COLOR);
-
-                for (unsigned i = 0; i < thread_count; ++i)
-                {
-                        m_threads.emplace_back([this]() noexcept { work_thread(); });
-                }
+                m_ray_count = 0;
         }
 
-        ~Painter() override
+        void process()
         {
-                ASSERT(std::this_thread::get_id() == m_window_thread_id);
-
-                stop();
+                for (std::thread& t : m_threads)
+                {
+                        t = std::thread([this]() noexcept { work_thread(); });
+                }
 
                 for (std::thread& t : m_threads)
                 {
-                        if (t.joinable())
-                        {
-                                t.join();
-                        }
+                        t.join();
                 }
-        }
-
-        long long get_rays_count() const noexcept override
-        {
-                return m_ray_count;
-        }
-
-        void stop() noexcept
-        {
-                m_stop = true;
         }
 
         void work_thread() noexcept;
@@ -271,17 +232,12 @@ void Painter::work_thread() noexcept
                 }
                 catch (std::exception& e)
                 {
-                        stop();
-
-                        std::string msg;
-                        msg += "Painter error:\n";
-                        msg += e.what();
-                        m_painter_notifier->painter_error_message(msg);
+                        m_stop = true;
+                        m_painter_notifier->painter_error_message(std::string("Painter error:\n") + e.what());
                 }
                 catch (...)
                 {
-                        stop();
-
+                        m_stop = true;
                         m_painter_notifier->painter_error_message("Unknown painter error");
                 }
         }
@@ -300,7 +256,7 @@ vec3 Painter::diffuse_lighting(std::mt19937_64& random_engine, int recursion_lev
 
                 double cos_ray_and_normal = dot(ray.get_dir(), normal);
 
-                if ((color_level *= cos_ray_and_normal) >= MINIMAL_COLOR_LEVEL)
+                if ((color_level *= cos_ray_and_normal) >= MIN_COLOR_LEVEL)
                 {
                         return cos_ray_and_normal * trace_path(random_engine, recursion_level + 1, color_level, ray, true);
                 }
@@ -349,7 +305,7 @@ vec3 Painter::trace_path(std::mt19937_64& random_engine, int recursion_level, do
 
                 double new_color_level = color_level * max_element(surface_color);
 
-                if (new_color_level >= MINIMAL_COLOR_LEVEL)
+                if (new_color_level >= MIN_COLOR_LEVEL)
                 {
                         vec3 direct = direct_lighting(m_objects, m_light_sources, point, normal);
 
@@ -377,7 +333,7 @@ void Painter::paint_pixels()
 
                 m_painter_notifier->painter_pixel_before(po.get_x(), po.get_y());
 
-                Pixel* pixel = m_pixels.get_pixel(po.get_x(), po.get_y());
+                Pixel* pixel = &m_pixels[po.get_y() * m_width + po.get_x()];
 
                 vec2 point;
                 int i, j;
@@ -397,14 +353,16 @@ void Painter::paint_pixels()
                 pixel->ray_count += pixel_ray_count;
 
                 vec3 color = pixel->color_sum / pixel->ray_count;
-                m_painter_notifier->painter_pixel_after(po.get_x(), po.get_y(), color);
+                unsigned char r = rgb_float_to_srgb_int8(color[0]);
+                unsigned char g = rgb_float_to_srgb_int8(color[1]);
+                unsigned char b = rgb_float_to_srgb_int8(color[2]);
+                m_painter_notifier->painter_pixel_after(po.get_x(), po.get_y(), r, g, b);
         }
 }
 }
 
-std::unique_ptr<IPainter> create_painter(IPainterNotifier* painter_notifier, const std::vector<const GenericObject*>& objects,
-                                         const std::vector<const LightSource*>& light_sources, const Projector& projector,
-                                         PixelSequence* pixel_sequence, unsigned thread_count)
+void paint(IPainterNotifier* painter_notifier, PaintObjects* paint_objects, unsigned thread_count, std::atomic_bool* stop,
+           std::atomic_ullong* ray_count)
 {
-        return std::make_unique<Painter>(painter_notifier, objects, light_sources, projector, pixel_sequence, thread_count);
+        Painter(painter_notifier, paint_objects, thread_count, stop, ray_count).process();
 }

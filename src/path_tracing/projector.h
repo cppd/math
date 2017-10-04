@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/error.h"
 #include "com/math.h"
 
-class PerspectiveProjector : public Projector
+class PerspectiveProjector final : public Projector
 {
         int m_width, m_height, m_pixel_resolution;
         vec2 m_screen_org;
@@ -69,7 +69,7 @@ public:
         }
 };
 
-class ParallelProjector : public Projector
+class ParallelProjector final : public Projector
 {
         int m_width, m_height, m_pixel_resolution;
         vec2 m_screen_org;
@@ -117,7 +117,7 @@ public:
 
 // Параллельное проецирование точек экрана на полусферу и создание лучей
 // из центра полусферы в направлении точек на сфере.
-class SphericalProjector : public Projector
+class SphericalProjector final : public Projector
 {
         int m_width, m_height, m_pixel_resolution;
         vec2 m_screen_org;

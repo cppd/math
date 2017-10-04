@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/thread.h"
 
-class Paintbrush : public PixelSequence
+class Paintbrush final : public PixelSequence
 {
         struct Pixel
         {
