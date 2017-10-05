@@ -42,7 +42,7 @@ public:
 
 class Parallelepiped final : public GeometricParallelepiped
 {
-        struct
+        struct Planes
         {
                 vec3 n;
                 double d1, d2;
@@ -50,6 +50,8 @@ class Parallelepiped final : public GeometricParallelepiped
         } m_planes[3];
 
         vec3 m_org, m_e0, m_e1, m_e2;
+
+        void swap_planes(Planes* p);
 
         void create_planes();
 

@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "objects.h"
 
-class PointLight : public LightSource
+class PointLight final : public LightSource
 {
         vec3 m_location;
         vec3 m_color;
@@ -40,7 +40,7 @@ public:
         }
 };
 
-class ConstantLight : public LightSource
+class ConstantLight final : public LightSource
 {
         vec3 m_location;
         vec3 m_color;

@@ -18,17 +18,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "painter_window.h"
 
 #include "com/error.h"
-#include "com/print.h"
-#include "path_tracing/painter.h"
-
-#include "dialogs/message_box.h"
+#include "ui/dialogs/message_box.h"
 
 #include <QTimer>
 #include <cstring>
 
 constexpr int UPDATE_INTERVAL = 100;
+constexpr int PANTBRUSH_WIDTH = 20;
 
-PainterWindow::PainterWindow(PaintObjects* paint_objects, unsigned thread_count)
+PainterWindow::PainterWindow(const PaintObjects* paint_objects, unsigned thread_count)
         : m_paint_objects(paint_objects),
           m_thread_count(thread_count),
           m_width(paint_objects->get_projector().screen_width()),
@@ -39,7 +37,8 @@ PainterWindow::PainterWindow(PaintObjects* paint_objects, unsigned thread_count)
           m_stop(false),
           m_ray_count(0),
           m_thread_working(false),
-          m_window_thread_id(std::this_thread::get_id())
+          m_window_thread_id(std::this_thread::get_id()),
+          m_paintbrush(m_width, m_height, PANTBRUSH_WIDTH)
 {
         ui.setupUi(this);
 
@@ -165,7 +164,7 @@ void PainterWindow::first_shown()
         m_ray_count = 0;
         m_thread_working = true;
         m_thread = std::thread([this]() {
-                paint(this, m_paint_objects, m_thread_count, &m_stop, &m_ray_count);
+                paint(this, m_paint_objects, &m_paintbrush, m_thread_count, &m_stop, &m_ray_count);
                 m_thread_working = false;
         });
 }
@@ -177,7 +176,7 @@ void PainterWindow::timer_slot()
         update_points();
 }
 
-void create_painter_window(PaintObjects* paint_objects, unsigned thread_count)
+void create_painter_window(const PaintObjects* paint_objects, unsigned thread_count)
 {
         // В окне вызывается setAttribute(Qt::WA_DeleteOnClose),
         // поэтому можно просто new.

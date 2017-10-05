@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "path_tracing/objects.h"
 #include "path_tracing/painter.h"
+#include "path_tracing/pixel_sequence.h"
 
 #include <QTimer>
 #include <thread>
@@ -30,7 +31,7 @@ class PainterWindow final : public QWidget, public IPainterNotifier
         Q_OBJECT
 
 public:
-        PainterWindow(PaintObjects* paint_objects, unsigned thread_count);
+        PainterWindow(const PaintObjects* paint_objects, unsigned thread_count);
         ~PainterWindow() override;
 
 signals:
@@ -52,7 +53,7 @@ private:
         void xor_pixel(int x, int y) noexcept;
         void update_points() noexcept;
 
-        PaintObjects* m_paint_objects;
+        const PaintObjects* m_paint_objects;
         unsigned m_thread_count;
         int m_width, m_height;
         QImage m_image;
@@ -64,8 +65,9 @@ private:
         std::thread m_thread;
         std::atomic_bool m_thread_working;
         const std::thread::id m_window_thread_id;
+        Paintbrush m_paintbrush;
 
         Ui::PainterWindow ui;
 };
 
-void create_painter_window(PaintObjects* paint_objects, unsigned thread_count);
+void create_painter_window(const PaintObjects* paint_objects, unsigned thread_count);

@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "main_window.h"
 
+#include "painter_window.h"
 #include "support.h"
 #include "dialogs/application_about.h"
 #include "dialogs/application_help.h"
@@ -39,6 +40,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "obj/obj_file_save.h"
 #include "obj/obj_points_load.h"
 #include "obj/obj_surface.h"
+#include "path_tracing/test_data.h"
 #include "progress/progress.h"
 
 #include <QDesktopWidget>

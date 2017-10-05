@@ -99,6 +99,31 @@ bool triangle_intersect(const ray3& ray, const vec3& v0, const vec3& normal, con
         return alpha > 0;
 }
 
+// Точка находится в прямоугольнике, если 2 барицентрические координаты больше 0 и меньше 1
+bool rectangle_intersect(const ray3& ray, const vec3& v0, const vec3& normal, const vec3& u_beta, const vec3& u_gamma, double* t)
+{
+        if (!plane_intersect(ray, v0, normal, t))
+        {
+                return false;
+        }
+
+        vec3 r = ray.point(*t) - v0;
+
+        double beta = dot(u_beta, r);
+        if (beta <= 0 || beta >= 1)
+        {
+                return false;
+        }
+
+        double gamma = dot(u_gamma, r);
+        if (gamma <= 0 || gamma >= 1)
+        {
+                return false;
+        }
+
+        return true;
+}
+
 vec3 triangle_normal_at_point(const vec3& point, const vec3& v0, const vec3& u_beta, const vec3& u_gamma, const vec3& n0,
                               const vec3& n1, const vec3& n2)
 {
@@ -113,6 +138,10 @@ vec2 triangle_texcoord_at_point(const vec3& point, const vec3& v0, const vec3& u
         return bc[0] * t0 + bc[1] * t1 + bc[2] * t2;
 }
 }
+
+//
+// TableTriangle
+//
 
 void TableTriangle::set_data(const vec3* points, const vec3* normals, const vec2* texcoords, int v0, int v1, int v2, int n0,
                              int n1, int n2, int t0, int t1, int t2, int material)
@@ -175,4 +204,46 @@ const vec3& TableTriangle::v1() const
 const vec3& TableTriangle::v2() const
 {
         return m_points[m_v2];
+}
+
+//
+// Rectangle
+//
+
+Rectangle::Rectangle(const vec3& org, const vec3& e0, const vec3& e1)
+{
+        set_data(org, e0, e1);
+}
+
+void Rectangle::set_data(const vec3& org, const vec3& e0, const vec3& e1)
+{
+        m_org = org;
+        m_e0 = e0;
+        m_e1 = e1;
+
+        m_normal = normalize(cross(e0, e1));
+
+        triangle_u_beta_and_u_gamma_for_v0(m_org, m_org + m_e0, m_org + m_e1, &m_u_beta, &m_u_gamma);
+}
+
+bool Rectangle::intersect(const ray3& r, double* t) const
+{
+        return rectangle_intersect(r, m_org, m_normal, m_u_beta, m_u_gamma, t);
+}
+vec3 Rectangle::normal(const vec3&) const
+{
+        return m_normal;
+}
+
+const vec3& Rectangle::org() const
+{
+        return m_org;
+}
+const vec3& Rectangle::e0() const
+{
+        return m_e0;
+}
+const vec3& Rectangle::e1() const
+{
+        return m_e1;
 }

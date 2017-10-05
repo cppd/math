@@ -57,3 +57,9 @@ public:
                 return m_org + m_dir * t;
         }
 };
+
+template <size_t N, typename T>
+std::string to_string(const Ray<N, T>& data)
+{
+        return "(org " + to_string(data.get_org()) + ", dir " + to_string(data.get_dir()) + ")";
+}

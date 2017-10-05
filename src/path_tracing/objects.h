@@ -223,13 +223,11 @@ public:
 // Все нужные объекты для рисования
 class PaintObjects
 {
-protected:
+public:
         virtual ~PaintObjects() = default;
 
-public:
         virtual const std::vector<const GenericObject*>& get_objects() const = 0;
         virtual const std::vector<const LightSource*>& get_light_sources() const = 0;
         virtual const Projector& get_projector() const = 0;
-        virtual PixelSequence& get_pixel_sequence() = 0;
         virtual const SurfaceProperties& get_default_surface_properties() const = 0;
 };

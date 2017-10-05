@@ -119,23 +119,24 @@ vec3 direct_lighting(const std::vector<const GenericObject*>& objects, const std
 
 class PixelOwner
 {
-        PixelSequence& m_ps;
+        PixelSequence* m_ps;
         int m_x, m_y;
 
 public:
-        PixelOwner(PixelSequence& ps, int width, int height) : m_ps(ps)
+        PixelOwner(PixelSequence* ps, int width, int height) : m_ps(ps)
         {
-                m_ps.get_pixel(&m_x, &m_y);
+                m_ps->get_pixel(&m_x, &m_y);
 
                 if (m_x < 0 || m_y < 0 || m_x >= width || m_y >= height)
                 {
-                        m_ps.release_pixel(m_x, m_y);
-                        error("Pixel sequence x or y coordinates out of range");
+                        m_ps->release_pixel(m_x, m_y);
+                        error("Pixel sequence x or y coordinates (" + to_string(m_x) + ", " + to_string(m_y) + ") out of range " +
+                              to_string(width) + ", " + to_string(height) + ")");
                 }
         }
         ~PixelOwner()
         {
-                m_ps.release_pixel(m_x, m_y);
+                m_ps->release_pixel(m_x, m_y);
         }
         int get_x() const
         {
@@ -160,8 +161,9 @@ class Painter
         const std::vector<const GenericObject*>& m_objects;
         const std::vector<const LightSource*>& m_light_sources;
         const Projector& m_projector;
-        PixelSequence& m_pixel_sequence;
         const SurfaceProperties& m_default_surface_properties;
+
+        PixelSequence* m_pixel_sequence;
 
         std::vector<std::thread> m_threads;
         std::atomic_bool& m_stop;
@@ -171,14 +173,14 @@ class Painter
         std::vector<Pixel> m_pixels;
 
 public:
-        Painter(IPainterNotifier* painter_notifier, PaintObjects* paint_objects, unsigned thread_count, std::atomic_bool* stop,
-                std::atomic_ullong* ray_count)
+        Painter(IPainterNotifier* painter_notifier, const PaintObjects* paint_objects, PixelSequence* pixel_sequence,
+                unsigned thread_count, std::atomic_bool* stop, std::atomic_ullong* ray_count)
                 : m_painter_notifier(painter_notifier),
                   m_objects(paint_objects->get_objects()),
                   m_light_sources(paint_objects->get_light_sources()),
                   m_projector(paint_objects->get_projector()),
-                  m_pixel_sequence(paint_objects->get_pixel_sequence()),
                   m_default_surface_properties(paint_objects->get_default_surface_properties()),
+                  m_pixel_sequence(pixel_sequence),
                   m_threads(thread_count),
                   m_stop(*stop),
                   m_ray_count(*ray_count),
@@ -188,7 +190,7 @@ public:
         {
                 ASSERT(thread_count > 0);
 
-                ASSERT(m_painter_notifier && stop && ray_count);
+                ASSERT(m_painter_notifier && pixel_sequence && stop && ray_count);
 
                 m_ray_count = 0;
         }
@@ -361,8 +363,8 @@ void Painter::paint_pixels()
 }
 }
 
-void paint(IPainterNotifier* painter_notifier, PaintObjects* paint_objects, unsigned thread_count, std::atomic_bool* stop,
-           std::atomic_ullong* ray_count)
+void paint(IPainterNotifier* painter_notifier, const PaintObjects* paint_objects, PixelSequence* pixel_sequence,
+           unsigned thread_count, std::atomic_bool* stop, std::atomic_ullong* ray_count)
 {
-        Painter(painter_notifier, paint_objects, thread_count, stop, ray_count).process();
+        Painter(painter_notifier, paint_objects, pixel_sequence, thread_count, stop, ray_count).process();
 }

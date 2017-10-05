@@ -39,6 +39,23 @@ public:
         GeometricTriangle& operator=(GeometricTriangle&&) = default;
 };
 
+class GeometricRectangle : public GeometricObject
+{
+protected:
+        virtual ~GeometricRectangle() = default;
+
+public:
+        virtual const vec3& org() const = 0;
+        virtual const vec3& e0() const = 0;
+        virtual const vec3& e1() const = 0;
+
+        GeometricRectangle() = default;
+        GeometricRectangle(const GeometricRectangle&) = default;
+        GeometricRectangle(GeometricRectangle&&) = default;
+        GeometricRectangle& operator=(const GeometricRectangle&) = default;
+        GeometricRectangle& operator=(GeometricRectangle&&) = default;
+};
+
 class TableTriangle final : public GeometricTriangle
 {
         const vec3* m_points;
@@ -66,4 +83,24 @@ public:
         const vec3& v0() const override;
         const vec3& v1() const override;
         const vec3& v2() const override;
+};
+
+class Rectangle final : public GeometricRectangle
+{
+        vec3 m_org, m_e0, m_e1;
+        vec3 m_normal;
+        vec3 m_u_beta, m_u_gamma;
+
+public:
+        Rectangle() = default;
+
+        Rectangle(const vec3& org, const vec3& e0, const vec3& e1);
+        void set_data(const vec3& org, const vec3& e0, const vec3& e1);
+
+        bool intersect(const ray3& r, double* t) const override;
+        vec3 normal(const vec3& point) const override;
+
+        const vec3& org() const override;
+        const vec3& e0() const override;
+        const vec3& e1() const override;
 };

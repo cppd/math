@@ -45,6 +45,24 @@ void Parallelepiped::set_data(const vec3& org, const vec3& e0, const vec3& e1, c
         create_planes();
 }
 
+// Для плоскости с параметром d1 перпендикуляр направлен в сторону объекта, а у d2 наружу.
+// Надо сделать наоборот.
+// Нужно что-нибудь одно из следующего:
+//   а) поменять местами d1 и d2, поменяв затем знак у нового d2,
+//      так как перпендикуляр теперь направлен в другую сторону;
+//   б) умножить на -1 уравнение плоскости с параметром d1.
+void Parallelepiped::swap_planes(Planes* planes)
+{
+#if 1
+        double t = planes->d1;
+        planes->d1 = planes->d2;
+        planes->d2 = -t;
+#else
+        planes->n = -planes->n;
+        planes->d1 = -planes->d1;
+#endif
+}
+
 void Parallelepiped::create_planes()
 {
         // расстояние от точки до плоскости
@@ -58,7 +76,7 @@ void Parallelepiped::create_planes()
         m_planes[0].d2 = dot(m_org + m_e2, m_planes[0].n);
         if (dot(m_planes[0].n, m_e2) > 0)
         {
-                std::swap(m_planes[0].d1, m_planes[0].d2);
+                swap_planes(&m_planes[0]);
         }
 
         m_planes[1].n = normalize(cross(m_e1, m_e2));
@@ -66,7 +84,7 @@ void Parallelepiped::create_planes()
         m_planes[1].d2 = dot(m_org + m_e0, m_planes[1].n);
         if (dot(m_planes[1].n, m_e0) > 0)
         {
-                std::swap(m_planes[1].d1, m_planes[1].d2);
+                swap_planes(&m_planes[1]);
         }
 
         m_planes[2].n = normalize(cross(m_e2, m_e0));
@@ -74,7 +92,7 @@ void Parallelepiped::create_planes()
         m_planes[2].d2 = dot(m_org + m_e1, m_planes[2].n);
         if (dot(m_planes[2].n, m_e1) > 0)
         {
-                std::swap(m_planes[2].d1, m_planes[2].d2);
+                swap_planes(&m_planes[2]);
         }
 }
 
@@ -103,7 +121,8 @@ bool Parallelepiped::intersect(const ray3& r, double* t) const
 
                 double d = dot(r.get_org(), m_planes[i].n);
                 double alpha1 = (m_planes[i].d1 - d) / s;
-                double alpha2 = (m_planes[i].d2 + d) / s;
+                // d и s имеют противоположный знак для другой плоскости
+                double alpha2 = (m_planes[i].d2 + d) / -s;
 
                 if (s < 0)
                 {

@@ -30,16 +30,21 @@ class PerspectiveProjector final : public Projector
 
 public:
         PerspectiveProjector(const vec3& camera_org, const vec3& camera_dir, const vec3& camera_up,
-                             double width_view_angle_degrees, unsigned width, unsigned height, unsigned pixel_resolution)
+                             double width_view_angle_degrees, int width, int height, int pixel_resolution)
                 : m_width(width), m_height(height), m_pixel_resolution(pixel_resolution), m_screen_org(-width * 0.5, height * 0.5)
         {
                 if (!(width_view_angle_degrees > 0 && width_view_angle_degrees < 180))
                 {
-                        error("Error view angle for perspective projection");
+                        error("Perspective projection: error view angle " + to_string(width_view_angle_degrees));
+                }
+                if (width <= 0 || height <= 0 || pixel_resolution <= 0)
+                {
+                        error("Perspective projection: error (width, height, pixel resolution) (" + to_string(width) + ", " +
+                              to_string(height) + ", " + to_string(pixel_resolution) + ")");
                 }
 
                 double half_angle = width_view_angle_degrees * 0.5 / 180.0 * PI;
-                double dir_length = width * 0.5 * std::atan(half_angle);
+                double dir_length = width * 0.5 * std::tan(0.5 * PI - half_angle);
 
                 m_org = camera_org;
                 m_dir = normalize(camera_dir) * dir_length;
@@ -64,7 +69,7 @@ public:
 
         ray3 ray(const vec2& point) const override
         {
-                vec2 p = m_screen_org + point;
+                vec2 p = vec2(m_screen_org[0] + point[0], m_screen_org[1] - point[1]);
                 return ray3(m_org, m_dir + m_x * p[0] + m_y * p[1]);
         }
 };
@@ -76,13 +81,18 @@ class ParallelProjector final : public Projector
         vec3 m_org, m_dir, m_x, m_y;
 
 public:
-        ParallelProjector(const vec3& camera_org, const vec3& camera_dir, const vec3& camera_up, double view_width,
-                          unsigned width, unsigned height, unsigned pixel_resolution)
+        ParallelProjector(const vec3& camera_org, const vec3& camera_dir, const vec3& camera_up, double view_width, int width,
+                          int height, int pixel_resolution)
                 : m_width(width), m_height(height), m_pixel_resolution(pixel_resolution), m_screen_org(-width * 0.5, height * 0.5)
         {
                 if (!(view_width > 0))
                 {
                         error("Error view width for parallel projection");
+                }
+                if (width <= 0 || height <= 0 || pixel_resolution <= 0)
+                {
+                        error("Parallel projection: error (width, height, pixel resolution) (" + to_string(width) + ", " +
+                              to_string(height) + ", " + to_string(pixel_resolution) + ")");
                 }
 
                 m_org = camera_org;
@@ -110,7 +120,7 @@ public:
 
         ray3 ray(const vec2& point) const override
         {
-                vec2 p = m_screen_org + point;
+                vec2 p = vec2(m_screen_org[0] + point[0], m_screen_org[1] - point[1]);
                 return ray3(m_org + m_x * p[0] + m_y * p[1], m_dir);
         }
 };
@@ -126,7 +136,7 @@ class SphericalProjector final : public Projector
 
 public:
         SphericalProjector(const vec3& camera_org, const vec3& camera_dir, const vec3& camera_up, double width_view_angle_degrees,
-                           unsigned width, unsigned height, unsigned pixel_resolution)
+                           int width, int height, int pixel_resolution)
                 : m_width(width), m_height(height), m_pixel_resolution(pixel_resolution), m_screen_org(-width * 0.5, height * 0.5)
         {
                 double half_angle = width_view_angle_degrees * 0.5 / 180.0 * PI;
@@ -136,6 +146,11 @@ public:
                 if (!(width_view_angle_degrees > 0 && (square(sin_alpha) + square(sin_alpha / width * height) < 1)))
                 {
                         error("Error view angle for spherical projection");
+                }
+                if (width <= 0 || height <= 0 || pixel_resolution <= 0)
+                {
+                        error("Spherical projection: error (width, height, pixel resolution) (" + to_string(width) + ", " +
+                              to_string(height) + ", " + to_string(pixel_resolution) + ")");
                 }
 
                 m_square_radius = square(width * 0.5 / sin_alpha);
@@ -163,7 +178,7 @@ public:
 
         ray3 ray(const vec2& point) const override
         {
-                vec2 p = m_screen_org + point;
+                vec2 p = vec2(m_screen_org[0] + point[0], m_screen_org[1] - point[1]);
                 double radicand = m_square_radius - square(p[0]) - square(p[1]);
                 if (radicand <= 0)
                 {

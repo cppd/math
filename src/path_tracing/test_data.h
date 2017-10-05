@@ -14,7 +14,10 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-
 #pragma once
 
-void test_path_tracing(int width, int height, unsigned thread_count);
+#include "objects.h"
+
+#include <memory>
+
+std::unique_ptr<const PaintObjects> cornell_box(int width, int height);
