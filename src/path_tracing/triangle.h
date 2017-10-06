@@ -58,7 +58,7 @@ public:
 
 class TableTriangle final : public GeometricTriangle
 {
-        const vec3* m_points;
+        const vec3* m_vertices;
         const vec3* m_normals;
         const vec2* m_texcoords;
 
@@ -70,12 +70,16 @@ class TableTriangle final : public GeometricTriangle
         vec3 m_normal;
         vec3 m_u_beta, m_u_gamma;
 
-public:
-        void set_data(const vec3* points, const vec3* normals, const vec2* texcoords, int v1, int v2, int v3, int n1, int n2,
-                      int n3, int t1, int t2, int t3, int material);
+        bool m_has_normals, m_has_texcoords;
 
-        vec2 texcoord(const vec3& point) const;
+public:
+        TableTriangle(const vec3* points, const vec3* normals, const vec2* texcoords, int v1, int v2, int v3, bool has_normals,
+                      int n1, int n2, int n3, bool has_texcoords, int t1, int t2, int t3, int material);
+
         int get_material() const;
+
+        bool has_texcoord() const;
+        vec2 texcoord(const vec3& point) const;
 
         bool intersect(const ray3& r, double* t) const override;
         vec3 normal(const vec3& point) const override;

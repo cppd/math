@@ -17,8 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "vec2.h"
 #include "vec3.h"
 
+#include <SFML/Graphics/Image.hpp>
 #include <string>
 #include <vector>
 
@@ -30,10 +32,14 @@ class Image
         double m_max_x, m_max_y;
         int m_max_x0, m_max_y0;
 
+        void read_from_image(const sf::Image& image);
+
 public:
         Image();
 
         Image(int width, int height);
+
+        Image(const sf::Image& image);
 
         void resize(int width, int height);
 
@@ -47,7 +53,7 @@ public:
         void set_pixel(int x, int y, const vec3& color);
         const vec3& get_pixel(int x, int y) const;
 
-        vec3 get_texture(double x, double y) const;
+        vec3 get_texture(const vec2& p) const;
 
         void read_from_file(const std::string& file_name);
         void write_to_file(const std::string& file_name) const;

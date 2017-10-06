@@ -17,8 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "test_data.h"
 
+#include "obj/obj_file_load.h"
 #include "path_tracing/light_source.h"
 #include "path_tracing/projector.h"
+#include "path_tracing/visible_mesh.h"
 #include "path_tracing/visible_shapes.h"
 
 constexpr int PIXEL_RESOLUTION = 3;
@@ -44,11 +46,13 @@ class CornellBox : public PaintObjects
 
         std::unique_ptr<VisibleRectangle> m_lamp;
 
+        std::unique_ptr<VisibleMesh> m_file;
+
         std::unique_ptr<ConstantLight> m_constant_light;
         std::unique_ptr<PointLight> m_point_light;
 
 public:
-        CornellBox(int width, int height)
+        CornellBox(int width, int height, const std::string& obj_file_name)
         {
                 m_perspective_projector = std::make_unique<PerspectiveProjector>(vec3(1, 0, 0), vec3(-1, 0, 0), vec3(0, 0, 1), 60,
                                                                                  width, height, PIXEL_RESOLUTION);
@@ -71,22 +75,22 @@ public:
                 m_rectangle_back->set_diffuse_and_fresnel(1, 0);
                 m_rectangle_back->set_light_source(false);
 
-                m_rectangle_top = std::make_unique<VisibleRectangle>(vec3(1, -0.5, 0.5), vec3(-2, 0, 0), vec3(0, 1, 0));
+                m_rectangle_top = std::make_unique<VisibleRectangle>(vec3(10, -0.5, 0.5), vec3(-11, 0, 0), vec3(0, 1, 0));
                 m_rectangle_top->set_color(vec3(1, 1, 1));
                 m_rectangle_top->set_diffuse_and_fresnel(1, 0);
                 m_rectangle_top->set_light_source(false);
 
-                m_rectangle_bottom = std::make_unique<VisibleRectangle>(vec3(1, -0.5, -0.5), vec3(-2, 0, 0), vec3(0, 1, 0));
+                m_rectangle_bottom = std::make_unique<VisibleRectangle>(vec3(10, -0.5, -0.5), vec3(-11, 0, 0), vec3(0, 1, 0));
                 m_rectangle_bottom->set_color(vec3(1, 1, 1));
                 m_rectangle_bottom->set_diffuse_and_fresnel(1, 0);
                 m_rectangle_bottom->set_light_source(false);
 
-                m_rectangle_left = std::make_unique<VisibleRectangle>(vec3(1, -0.5, 0.5), vec3(-2, 0, 0), vec3(0, 0, -1));
+                m_rectangle_left = std::make_unique<VisibleRectangle>(vec3(10, -0.5, 0.5), vec3(-11, 0, 0), vec3(0, 0, -1));
                 m_rectangle_left->set_color(vec3(1, 0, 0));
                 m_rectangle_left->set_diffuse_and_fresnel(1, 0);
                 m_rectangle_left->set_light_source(false);
 
-                m_rectangle_right = std::make_unique<VisibleRectangle>(vec3(1, 0.5, 0.5), vec3(-2, 0, 0), vec3(0, 0, -1));
+                m_rectangle_right = std::make_unique<VisibleRectangle>(vec3(10, 0.5, 0.5), vec3(-11, 0, 0), vec3(0, 0, -1));
                 m_rectangle_right->set_color(vec3(0, 1, 0));
                 m_rectangle_right->set_diffuse_and_fresnel(1, 0);
                 m_rectangle_right->set_light_source(false);
@@ -124,6 +128,14 @@ public:
 
                 m_objects.push_back(m_box1.get());
                 m_objects.push_back(m_box2.get());
+
+                ProgressRatio progress(nullptr);
+                std::unique_ptr<IObj> obj_file = load_obj_from_file(obj_file_name, &progress);
+                m_file = std::make_unique<VisibleMesh>(obj_file.get(), 0.5, vec3(-0.4, 0, -0.2));
+                m_file->set_color(vec3(1, 0.5, 0));
+                m_file->set_diffuse_and_fresnel(1, 0);
+                m_file->set_light_source(false);
+                m_objects.push_back(m_file.get());
         }
 
         const std::vector<const GenericObject*>& get_objects() const override
@@ -150,7 +162,7 @@ public:
 };
 }
 
-std::unique_ptr<const PaintObjects> cornell_box(int width, int height)
+std::unique_ptr<const PaintObjects> cornell_box(int width, int height, const std::string& obj_file_name)
 {
-        return std::make_unique<CornellBox>(width, height);
+        return std::make_unique<CornellBox>(width, height, obj_file_name);
 }

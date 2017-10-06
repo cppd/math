@@ -20,4 +20,4 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <memory>
 
-std::unique_ptr<const PaintObjects> cornell_box(int width, int height);
+std::unique_ptr<const PaintObjects> cornell_box(int width, int height, const std::string& obj_file_name);

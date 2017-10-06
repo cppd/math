@@ -25,7 +25,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/interpolation.h"
 #include "com/str.h"
 
-#include <SFML/Graphics/Image.hpp>
 #include <algorithm>
 
 namespace
@@ -48,15 +47,20 @@ std::string file_name_with_extension_ppm(const std::string& file_name)
 }
 }
 
+Image::Image()
+{
+        m_width = 0;
+        m_height = 0;
+}
+
 Image::Image(int width, int height)
 {
         resize(width, height);
 }
 
-Image::Image()
+Image::Image(const sf::Image& image)
 {
-        m_width = 0;
-        m_height = 0;
+        read_from_image(image);
 }
 
 void Image::resize(int width, int height)
@@ -113,10 +117,10 @@ const vec3& Image::get_pixel(int x, int y) const
         return m_data[index];
 }
 
-vec3 Image::get_texture(double x, double y) const
+vec3 Image::get_texture(const vec2& p) const
 {
-        double tx = std::clamp(x, 0.0, 1.0) * m_max_x;
-        double ty = std::clamp(y, 0.0, 1.0) * m_max_y;
+        double tx = std::clamp(p[0], 0.0, 1.0) * m_max_x;
+        double ty = std::clamp(p[1], 0.0, 1.0) * m_max_y;
 
         // Интерполяция по 4 пикселям
 
@@ -137,19 +141,12 @@ vec3 Image::get_texture(double x, double y) const
         return interpolation(get_pixel(x0, y0), get_pixel(x1, y0), get_pixel(x0, y1), get_pixel(x1, y1), local_x, local_y);
 }
 
-void Image::read_from_file(const std::string& file_name)
+void Image::read_from_image(const sf::Image& image)
 {
-        sf::Image sf_image;
+        const sf::Uint8* buffer = image.getPixelsPtr();
 
-        if (!sf_image.loadFromFile(file_name))
-        {
-                error("Error read image from file " + file_name);
-        }
-
-        const sf::Uint8* buffer = sf_image.getPixelsPtr();
-
-        int width = sf_image.getSize().x;
-        int height = sf_image.getSize().y;
+        int width = image.getSize().x;
+        int height = image.getSize().y;
 
         resize(width, height);
 
@@ -159,6 +156,18 @@ void Image::read_from_file(const std::string& file_name)
                 m_data[index_image][1] = srgb_int8_to_rgb_float(buffer[index_sf + 1]);
                 m_data[index_image][2] = srgb_int8_to_rgb_float(buffer[index_sf + 2]);
         }
+}
+
+void Image::read_from_file(const std::string& file_name)
+{
+        sf::Image sf_image;
+
+        if (!sf_image.loadFromFile(file_name))
+        {
+                error("Error read image from file " + file_name);
+        }
+
+        read_from_image(sf_image);
 }
 
 // Запись в формат PPM с цветом sRGB

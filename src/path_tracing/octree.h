@@ -35,14 +35,16 @@ class Octree
 {
         class OctreeBox
         {
+                static constexpr int EMPTY = -1;
+
                 Parallelepiped m_parallelepiped;
                 std::vector<const OctreeObject*> m_objects;
-                std::array<OctreeBox*, 8> m_childs;
+                std::array<int, 8> m_childs;
 
         public:
                 OctreeBox(const Parallelepiped& box) : m_parallelepiped(box)
                 {
-                        std::fill(m_childs.begin(), m_childs.end(), nullptr);
+                        std::fill(m_childs.begin(), m_childs.end(), EMPTY);
                 }
 
                 const Parallelepiped& get_parallelepiped() const
@@ -50,42 +52,48 @@ class Octree
                         return m_parallelepiped;
                 }
 
-                void set_child(unsigned index, OctreeBox* box)
+                void set_child(int child_number, int child_box_index)
                 {
-                        ASSERT(index < 8);
-                        m_childs[index] = box;
+                        ASSERT(child_number >= 0 && child_number < 8 && child_box_index >= 0);
+                        m_childs[child_number] = child_box_index;
                 }
-                const std::array<OctreeBox*, 8>& get_childs() const
+
+                const std::array<int, 8>& get_childs() const
                 {
                         return m_childs;
                 }
+
                 bool has_childs() const
                 {
                         // Они или все заполнены, или все не заполнены
-                        return m_childs[0] != nullptr;
+                        return m_childs[0] != EMPTY;
                 }
 
                 void add_object(const OctreeObject* obj)
                 {
                         m_objects.push_back(obj);
                 }
-                template <typename T>
-                void add_objects(const T& obj)
+
+                void set_all_objects(std::vector<const OctreeObject*>&& objects)
                 {
-                        m_objects.insert(m_objects.cbegin(), obj.cbegin(), obj.cend());
+                        m_objects = std::move(objects);
                 }
+
                 void shrink_objects()
                 {
                         m_objects.shrink_to_fit();
                 }
+
                 const std::vector<const OctreeObject*>& get_objects() const
                 {
                         return m_objects;
                 }
-                unsigned get_object_count() const
+
+                int get_object_count() const
                 {
                         return m_objects.size();
                 }
+
                 void delete_all_objects()
                 {
                         m_objects.clear();
@@ -95,64 +103,63 @@ class Octree
 
         static constexpr double DELTA = 10 * INTERSECTION_THRESHOLD;
 
-        const unsigned MAX_DEPTH, MIN_OBJECTS;
+        const int MAX_DEPTH, MIN_OBJECTS;
 
         // Все коробки хранятся в одном векторе
-        std::vector<OctreeBox> m_data;
+        std::vector<OctreeBox> m_boxes;
 
-        OctreeBox* create_box(const Parallelepiped& box)
+        int create_box(const Parallelepiped& box)
         {
-                m_data.push_back(box);
-                return &m_data[m_data.size() - 1];
+                m_boxes.push_back(box);
+                return m_boxes.size() - 1;
         }
 
-        const OctreeBox* root() const
+        template <typename ShapeIntersection>
+        void extend(int depth, int parent_box, const ShapeIntersection& functor_shape_intersection)
         {
-                return &m_data[0];
-        }
+                ASSERT(parent_box >= 0 && parent_box < static_cast<int>(m_boxes.size()));
 
-        void extend(unsigned depth, OctreeBox* box)
-        {
-                if (depth >= MAX_DEPTH || box->get_object_count() <= MIN_OBJECTS)
+                if (depth >= MAX_DEPTH || m_boxes[parent_box].get_object_count() <= MIN_OBJECTS)
                 {
                         return;
                 }
 
-                vec3 half0 = box->get_parallelepiped().e0() / 2.0;
-                vec3 half1 = box->get_parallelepiped().e1() / 2.0;
-                vec3 half2 = box->get_parallelepiped().e2() / 2.0;
+                vec3 half0 = m_boxes[parent_box].get_parallelepiped().e0() / 2.0;
+                vec3 half1 = m_boxes[parent_box].get_parallelepiped().e1() / 2.0;
+                vec3 half2 = m_boxes[parent_box].get_parallelepiped().e2() / 2.0;
 
                 std::array<vec3, 8> orgs;
 
-                orgs[0] = box->get_parallelepiped().org();
+                orgs[0] = m_boxes[parent_box].get_parallelepiped().org();
                 orgs[1] = orgs[0] + half0;
                 orgs[2] = orgs[0] + half1;
                 orgs[3] = orgs[2] + half0;
-                orgs[4] = box->get_parallelepiped().org() + half2;
+                orgs[4] = m_boxes[parent_box].get_parallelepiped().org() + half2;
                 orgs[5] = orgs[4] + half0;
                 orgs[6] = orgs[4] + half1;
                 orgs[7] = orgs[6] + half0;
 
-                for (unsigned index = 0; index < 8; ++index)
+                for (int child_number = 0; child_number < 8; ++child_number)
                 {
-                        OctreeBox* child_box = create_box(Parallelepiped(orgs[index], half0, half1, half2));
+                        int child_box = create_box(Parallelepiped(orgs[child_number], half0, half1, half2));
 
-                        box->set_child(index, child_box);
+                        m_boxes[parent_box].set_child(child_number, child_box);
 
-                        for (const OctreeObject* obj : box->get_objects())
+                        for (const OctreeObject* obj : m_boxes[parent_box].get_objects())
                         {
-                                if (shape_intersection(obj, child_box->get_parallelepiped()))
+                                if (functor_shape_intersection(&m_boxes[child_box].get_parallelepiped(), obj))
                                 {
-                                        child_box->add_object(obj);
+                                        m_boxes[child_box].add_object(obj);
                                 }
                         }
                 }
 
-                box->delete_all_objects();
+                m_boxes[parent_box].delete_all_objects();
 
-                for (OctreeBox* b : box->get_childs())
+                for (int child_number = 0; child_number < 8; ++child_number)
                 {
-                        extend(depth + 1, b);
+                        int child_box = m_boxes[parent_box].get_childs()[child_number];
+                        extend(depth + 1, child_box, functor_shape_intersection);
                 }
         }
 
@@ -169,10 +176,10 @@ class Octree
                         return;
                 }
 
-                for (const OctreeBox* child_box : box->get_childs())
+                for (int child_box : box->get_childs())
                 {
-                        find_point_box_impl(child_box, p, found_box);
-                        if (found_box)
+                        find_point_box_impl(&m_boxes[child_box], p, found_box);
+                        if (*found_box)
                         {
                                 return;
                         }
@@ -182,10 +189,12 @@ class Octree
         void find_point_box(const vec3& p, const OctreeBox** box) const
         {
                 *box = nullptr;
-                find_point_box_impl(root(), p, box);
+                find_point_box_impl(&m_boxes[0], p, box);
         }
 
-        Parallelepiped root_parallelepiped(const std::vector<const OctreeObject*>& objects)
+        template <typename ConvexHullVertices>
+        Parallelepiped root_parallelepiped(const std::vector<const OctreeObject*>& objects,
+                                           const ConvexHullVertices& functor_convex_hull_vertices)
         {
                 // Прямоугольный параллелепипед, параллельный координатным плоскостям
 
@@ -195,12 +204,9 @@ class Octree
                 vec3 min(MAX, MAX, MAX);
                 vec3 max(MIN, MIN, MIN);
 
-                std::vector<vec3> vertices;
-
-                for (const OctreeObject* o : objects)
+                for (const OctreeObject* object : objects)
                 {
-                        o->convex_hull_vertices(&vertices);
-                        for (const vec3& v : vertices)
+                        for (const vec3& v : functor_convex_hull_vertices(object))
                         {
                                 for (int i = 0; i < 3; ++i)
                                 {
@@ -210,26 +216,49 @@ class Octree
                         }
                 }
 
+                if (!(min[0] < max[0] && min[1] < max[1] && min[2] < max[2]))
+                {
+                        error("Objects for octree don't form 3D object");
+                }
+
                 vec3 d = max - min;
 
                 return Parallelepiped(min, vec3(d[0], 0, 0), vec3(0, d[1], 0), vec3(0, 0, d[2]));
         }
 
 public:
-        // Используются указатели на элементы массива вместо индексов элементов в массиве
-        Octree(const Octree&) = delete;
-        Octree& operator=(const Octree&) = delete;
-
-        Octree(int max_depth, int max_objects_per_box, const std::vector<const OctreeObject*>& objects)
-                : MAX_DEPTH(max_depth), MIN_OBJECTS(max_objects_per_box)
+        template <typename ConvexHullVertices, typename ShapeIntersection>
+        Octree(int max_depth, int min_objects_per_box, const std::vector<OctreeObject>& objects,
+               const ConvexHullVertices& functor_convex_hull_vertices, const ShapeIntersection& functor_shape_intersection)
+                : MAX_DEPTH(max_depth), MIN_OBJECTS(min_objects_per_box)
         {
-                OctreeBox* box = create_box(root_parallelepiped(objects));
-                box->add_objects(objects);
-                extend(1, box);
+                ASSERT(MAX_DEPTH >= 0 && MAX_DEPTH <= 20 && MIN_OBJECTS >= 2 && MIN_OBJECTS <= 100);
+
+                std::vector<const OctreeObject*> object_pointers;
+                object_pointers.reserve(objects.size());
+                for (const OctreeObject& object : objects)
+                {
+                        object_pointers.push_back(&object);
+                }
+
+                int root_box = create_box(root_parallelepiped(object_pointers, functor_convex_hull_vertices));
+
+                ASSERT(root_box == 0);
+
+                m_boxes[root_box].set_all_objects(std::move(object_pointers));
+
+                extend(0, root_box, functor_shape_intersection);
         }
 
-        template <typename T>
-        bool trace_ray(ray3 ray, T find_intersection) const
+        bool intersect_root(const ray3& ray, double* t) const
+        {
+                return m_boxes[0].get_parallelepiped().intersect(ray, t);
+        }
+
+        // Вызывается после intersect_root. Если в intersect_root пересечение было найдено,
+        // то сюда передаётся результат пересечения в параметре root_t.
+        template <typename FindIntersection>
+        bool trace_ray(ray3 ray, double root_t, const FindIntersection& functor_find_intersection) const
         {
                 bool first = true;
 
@@ -239,16 +268,26 @@ public:
 
                         find_point_box(ray.get_org(), &box);
 
+                        double t;
+
                         if (box)
                         {
-                                if (find_intersection(box->get_objects()))
+                                if (box->get_objects().size() > 0 && functor_find_intersection(box->get_objects()))
                                 {
                                         return true;
+                                }
+
+                                // Поиск пересечения с границей этого параллелепипеда
+                                // для перехода в соседний параллелепипед.
+                                if (!box->get_parallelepiped().intersect(ray, &t))
+                                {
+                                        return false;
                                 }
                         }
                         else
                         {
                                 // Начало луча не находится в пределах октадерева.
+
                                 if (!first)
                                 {
                                         // Не первый проход — процесс вышел за пределы октадерева.
@@ -257,15 +296,10 @@ public:
                                 else
                                 {
                                         // Первый проход — начало луча находится снаружи и надо искать
-                                        // пересечение с самим октадеревом.
-                                        box = root();
+                                        // пересечение с самим октадеревом. Это пересечение уже должно
+                                        // быть найдено ранее при вызове intersect_root.
+                                        t = root_t;
                                 }
-                        }
-
-                        double t;
-                        if (!box->get_parallelepiped().intersect(ray, &t))
-                        {
-                                return false;
                         }
 
                         ray.set_org(ray.point(t + DELTA));

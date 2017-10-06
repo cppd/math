@@ -143,9 +143,12 @@ vec2 triangle_texcoord_at_point(const vec3& point, const vec3& v0, const vec3& u
 // TableTriangle
 //
 
-void TableTriangle::set_data(const vec3* points, const vec3* normals, const vec2* texcoords, int v0, int v1, int v2, int n0,
-                             int n1, int n2, int t0, int t1, int t2, int material)
+TableTriangle::TableTriangle(const vec3* points, const vec3* normals, const vec2* texcoords, int v0, int v1, int v2,
+                             bool has_normals, int n0, int n1, int n2, bool has_texcoords, int t0, int t1, int t2, int material)
 {
+        ASSERT((has_normals && n0 >= 0 && n1 >= 0 && n2 >= 0) || !has_normals);
+        ASSERT((has_texcoords && t0 >= 0 && t1 >= 0 && t2 >= 0) || !has_texcoords);
+
         m_v0 = v0;
         m_v1 = v1;
         m_v2 = v2;
@@ -153,37 +156,55 @@ void TableTriangle::set_data(const vec3* points, const vec3* normals, const vec2
         m_n0 = n0;
         m_n1 = n1;
         m_n2 = n2;
+        m_has_normals = has_normals;
 
         m_t0 = t0;
         m_t1 = t1;
         m_t2 = t2;
+        m_has_texcoords = has_texcoords;
 
         m_material = material;
 
-        m_points = points;
+        m_vertices = points;
         m_normals = normals;
         m_texcoords = texcoords;
 
-        m_normal = normalize(cross(m_points[m_v1] - m_points[m_v0], m_points[m_v2] - m_points[m_v0]));
+        m_normal = normalize(cross(m_vertices[m_v1] - m_vertices[m_v0], m_vertices[m_v2] - m_vertices[m_v0]));
 
-        triangle_u_beta_and_u_gamma_for_v0(m_points[m_v0], m_points[m_v1], m_points[m_v2], &m_u_beta, &m_u_gamma);
+        triangle_u_beta_and_u_gamma_for_v0(m_vertices[m_v0], m_vertices[m_v1], m_vertices[m_v2], &m_u_beta, &m_u_gamma);
 }
 
 bool TableTriangle::intersect(const ray3& r, double* t) const
 {
-        return triangle_intersect(r, m_points[m_v0], m_normal, m_u_beta, m_u_gamma, t);
+        return triangle_intersect(r, m_vertices[m_v0], m_normal, m_u_beta, m_u_gamma, t);
 }
 
 vec3 TableTriangle::normal(const vec3& point) const
 {
-        return triangle_normal_at_point(point, m_points[m_v0], m_u_beta, m_u_gamma, m_normals[m_n0], m_normals[m_n1],
-                                        m_normals[m_n2]);
+        if (m_has_normals)
+        {
+                return triangle_normal_at_point(point, m_vertices[m_v0], m_u_beta, m_u_gamma, m_normals[m_n0], m_normals[m_n1],
+                                                m_normals[m_n2]);
+        }
+        else
+        {
+                return m_normal;
+        }
+}
+
+bool TableTriangle::has_texcoord() const
+{
+        return m_has_texcoords;
 }
 
 vec2 TableTriangle::texcoord(const vec3& point) const
 {
-        return triangle_texcoord_at_point(point, m_points[m_v0], m_u_beta, m_u_gamma, m_texcoords[m_t0], m_texcoords[m_t1],
-                                          m_texcoords[m_t2]);
+        if (m_has_texcoords)
+        {
+                return triangle_texcoord_at_point(point, m_vertices[m_v0], m_u_beta, m_u_gamma, m_texcoords[m_t0],
+                                                  m_texcoords[m_t1], m_texcoords[m_t2]);
+        }
+        ASSERT(false);
 }
 
 int TableTriangle::get_material() const
@@ -193,17 +214,17 @@ int TableTriangle::get_material() const
 
 const vec3& TableTriangle::v0() const
 {
-        return m_points[m_v0];
+        return m_vertices[m_v0];
 }
 
 const vec3& TableTriangle::v1() const
 {
-        return m_points[m_v1];
+        return m_vertices[m_v1];
 }
 
 const vec3& TableTriangle::v2() const
 {
-        return m_points[m_v2];
+        return m_vertices[m_v2];
 }
 
 //
