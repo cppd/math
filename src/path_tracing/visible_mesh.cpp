@@ -20,12 +20,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "ray_intersection.h"
 #include "shape_intersection.h"
 
+#include "com/log.h"
+#include "com/time.h"
 #include "geometry/core/vec_glm.h"
 
 constexpr int OCTREE_MAX_DEPTH = 10;
-constexpr int OCTREE_MIN_OBJECTS = 5;
+constexpr int OCTREE_MIN_OBJECTS = 10;
 
-VisibleMesh::VisibleMesh(const IObj* obj, double size, const vec3& position)
+void VisibleMesh::create_mesh_object(const IObj* obj, double size, const vec3& position, ProgressRatio* progress)
 {
         if (obj->get_vertices().size() == 0)
         {
@@ -72,12 +74,11 @@ VisibleMesh::VisibleMesh(const IObj* obj, double size, const vec3& position)
                 m_images.emplace_back(i);
         }
 
-        // clang-format off
-        m_octree = std::make_unique<Octree<Parallelepiped, TableTriangle>>
-                (
-                        OCTREE_MAX_DEPTH,
-                        OCTREE_MIN_OBJECTS,
+        progress->set_text("Octree: %v of %m");
 
+        // clang-format off
+        m_octree.decompose
+                (
                         m_triangles,
 
                         // вершины выпуклой оболочки помещаемого в октадерево объекта
@@ -90,25 +91,37 @@ VisibleMesh::VisibleMesh(const IObj* obj, double size, const vec3& position)
                         [](const Parallelepiped* p, const TableTriangle* t) -> bool
                         {
                                 return shape_intersection(*p, *t);
-                        }
+                        },
+
+                        progress
                 );
         // clang-format on
 }
 
+VisibleMesh::VisibleMesh(const IObj* obj, double size, const vec3& position, ProgressRatio* progress)
+        : m_octree(OCTREE_MAX_DEPTH, OCTREE_MIN_OBJECTS)
+{
+        double start_time = get_time_seconds();
+
+        create_mesh_object(obj, size, position, progress);
+
+        LOG("Mesh object created, " + to_string_fixed(get_time_seconds() - start_time, 5) + " s");
+}
+
 bool VisibleMesh::intersect_approximate(const ray3& r, double* t) const
 {
-        return m_octree->intersect_root(r, t);
+        return m_octree.intersect_root(r, t);
 }
 
 bool VisibleMesh::intersect_precise(const ray3& ray, double approximate_t, double* t, const Surface** surface,
-                                   const GeometricObject** geometric_object) const
+                                    const GeometricObject** geometric_object) const
 {
         const TableTriangle* triangle;
 
         // clang-format off
         if
         (
-                !m_octree->trace_ray
+                !m_octree.trace_ray
                 (
                         ray,
                         approximate_t,

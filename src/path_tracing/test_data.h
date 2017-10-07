@@ -17,7 +17,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "objects.h"
+#include "visible_mesh.h"
 
 #include <memory>
 
 std::unique_ptr<const PaintObjects> cornell_box(int width, int height, const std::string& obj_file_name);
+std::unique_ptr<const PaintObjects> cornell_box(int width, int height, const VisibleMesh& obj);
+
+std::unique_ptr<const PaintObjects> one_mesh_package(const vec3& background_color, const vec3& default_color, double ambient,
+                                                     double diffuse, std::unique_ptr<const Projector>&& projector,
+                                                     std::unique_ptr<const LightSource>&& light_source,
+                                                     const std::shared_ptr<const VisibleMesh>& obj);

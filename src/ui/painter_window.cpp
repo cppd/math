@@ -26,11 +26,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 constexpr int UPDATE_INTERVAL = 100;
 constexpr int PANTBRUSH_WIDTH = 20;
 
-PainterWindow::PainterWindow(const PaintObjects* paint_objects, unsigned thread_count)
-        : m_paint_objects(paint_objects),
+PainterWindow::PainterWindow(unsigned thread_count, std::unique_ptr<const PaintObjects>&& paint_objects)
+        : m_paint_objects(std::move(paint_objects)),
           m_thread_count(thread_count),
-          m_width(paint_objects->get_projector().screen_width()),
-          m_height(paint_objects->get_projector().screen_height()),
+          m_width(m_paint_objects->get_projector().screen_width()),
+          m_height(m_paint_objects->get_projector().screen_height()),
           m_image(m_width, m_height, QImage::Format_RGB32),
           m_data(m_width * m_height),
           m_first_show(true),
@@ -164,7 +164,7 @@ void PainterWindow::first_shown()
         m_ray_count = 0;
         m_thread_working = true;
         m_thread = std::thread([this]() {
-                paint(this, m_paint_objects, &m_paintbrush, m_thread_count, &m_stop, &m_ray_count);
+                paint(this, m_paint_objects.get(), &m_paintbrush, m_thread_count, &m_stop, &m_ray_count);
                 m_thread_working = false;
         });
 }
@@ -176,9 +176,9 @@ void PainterWindow::timer_slot()
         update_points();
 }
 
-void create_painter_window(const PaintObjects* paint_objects, unsigned thread_count)
+void create_painter_window(unsigned thread_count, std::unique_ptr<const PaintObjects>&& paint_objects)
 {
         // В окне вызывается setAttribute(Qt::WA_DeleteOnClose),
         // поэтому можно просто new.
-        new PainterWindow(paint_objects, thread_count);
+        new PainterWindow(thread_count, std::move(paint_objects));
 }

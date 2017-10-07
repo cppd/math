@@ -66,6 +66,9 @@ public:
         virtual void show_optical_flow(bool) = 0;
         virtual void set_vertical_sync(bool v) = 0;
         virtual void set_shadow_zoom(float v) = 0;
+
+        virtual void get_camera_and_light(glm::vec3* camera_up, glm::vec3* camera_direction,
+                                          glm::vec3* light_direction) const = 0;
 };
 
 std::unique_ptr<IShow> create_show(IShowCallback*, WindowID win_parent, glm::vec3 clear_color, glm::vec3 default_color,

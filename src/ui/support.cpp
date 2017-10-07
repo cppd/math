@@ -23,6 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QButtonGroup>
 #include <QDesktopWidget>
 #include <QScrollBar>
+#include <glm/glm.hpp>
+#include <glm/gtc/color_space.hpp>
 #include <type_traits>
 
 namespace
@@ -104,6 +106,16 @@ void set_widgets_enabled(QLayout* layout, bool v)
 glm::vec3 qcolor_to_vec3(const QColor& c)
 {
         return glm::vec3(c.redF(), c.greenF(), c.blueF());
+}
+
+glm::vec3 qcolor_to_rgb(const QColor& c)
+{
+        return glm::convertSRGBToLinear(glm::vec3(c.redF(), c.greenF(), c.blueF()));
+}
+
+float float_to_rgb(float c)
+{
+        return glm::convertSRGBToLinear(glm::vec3(c))[0];
 }
 
 void button_strike_out(QRadioButton* button, bool strike_out)

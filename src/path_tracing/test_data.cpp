@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "test_data.h"
 
 #include "obj/obj_file_load.h"
+#include "path_tracing/colors.h"
 #include "path_tracing/light_source.h"
 #include "path_tracing/projector.h"
 #include "path_tracing/visible_mesh.h"
@@ -46,7 +47,7 @@ class CornellBox : public PaintObjects
 
         std::unique_ptr<VisibleRectangle> m_lamp;
 
-        std::unique_ptr<VisibleMesh> m_file;
+        std::unique_ptr<VisibleMesh> m_mesh;
 
         std::unique_ptr<ConstantLight> m_constant_light;
         std::unique_ptr<PointLight> m_point_light;
@@ -54,6 +55,32 @@ class CornellBox : public PaintObjects
 public:
         CornellBox(int width, int height, const std::string& obj_file_name)
         {
+                ProgressRatio progress(nullptr);
+
+                std::unique_ptr<IObj> obj_file = load_obj_from_file(obj_file_name, &progress);
+
+                m_mesh = std::make_unique<VisibleMesh>(obj_file.get(), 0.5, vec3(-0.4, 0, -0.2), &progress);
+
+                make_cornell_box(width, height);
+        }
+
+        CornellBox(int width, int height, const VisibleMesh& obj)
+        {
+                m_mesh = std::make_unique<VisibleMesh>(obj);
+
+                make_cornell_box(width, height);
+        }
+
+        void make_cornell_box(int width, int height)
+        {
+                m_mesh->set_color(vec3(1, 0.5, 0));
+                m_mesh->set_diffuse_and_fresnel(1, 0);
+                m_mesh->set_light_source(false);
+
+                m_objects.push_back(m_mesh.get());
+
+                //
+
                 m_perspective_projector = std::make_unique<PerspectiveProjector>(vec3(1, 0, 0), vec3(-1, 0, 0), vec3(0, 0, 1), 60,
                                                                                  width, height, PIXEL_RESOLUTION);
 
@@ -128,14 +155,6 @@ public:
 
                 m_objects.push_back(m_box1.get());
                 m_objects.push_back(m_box2.get());
-
-                ProgressRatio progress(nullptr);
-                std::unique_ptr<IObj> obj_file = load_obj_from_file(obj_file_name, &progress);
-                m_file = std::make_unique<VisibleMesh>(obj_file.get(), 0.5, vec3(-0.4, 0, -0.2));
-                m_file->set_color(vec3(1, 0.5, 0));
-                m_file->set_diffuse_and_fresnel(1, 0);
-                m_file->set_light_source(false);
-                m_objects.push_back(m_file.get());
         }
 
         const std::vector<const GenericObject*>& get_objects() const override
@@ -160,9 +179,71 @@ public:
                 return m_default_surface_properties;
         }
 };
+
+class OneMeshPackage : public PaintObjects
+{
+        VisibleMesh m_object;
+        std::unique_ptr<const Projector> m_projector;
+        std::unique_ptr<const LightSource> m_light_source;
+        SurfaceProperties m_default_surface_properties;
+
+        std::vector<const GenericObject*> m_objects;
+        std::vector<const LightSource*> m_light_sources;
+
+public:
+        OneMeshPackage(const vec3& background_color, const vec3& default_color, double ambient, double diffuse,
+                       std::unique_ptr<const Projector>&& projector, std::unique_ptr<const LightSource>&& light_source,
+                       const std::shared_ptr<const VisibleMesh>& obj)
+                : m_object(*obj), m_projector(std::move(projector)), m_light_source(std::move(light_source))
+        {
+                m_default_surface_properties.set_color(background_color);
+                m_default_surface_properties.set_diffuse_and_fresnel(1, 0);
+                m_default_surface_properties.set_light_source(true);
+                m_default_surface_properties.set_light_source_color(vec3(luminosity_rgb(background_color) * ambient));
+
+                m_object.set_color(default_color);
+                m_object.set_diffuse_and_fresnel(diffuse, 0);
+                m_object.set_light_source(false);
+
+                m_light_sources.push_back(m_light_source.get());
+
+                m_objects.push_back(&m_object);
+        }
+
+        const std::vector<const GenericObject*>& get_objects() const override
+        {
+                return m_objects;
+        }
+        const std::vector<const LightSource*>& get_light_sources() const override
+        {
+                return m_light_sources;
+        }
+        const Projector& get_projector() const override
+        {
+                return *m_projector;
+        }
+        const SurfaceProperties& get_default_surface_properties() const override
+        {
+                return m_default_surface_properties;
+        }
+};
 }
 
 std::unique_ptr<const PaintObjects> cornell_box(int width, int height, const std::string& obj_file_name)
 {
         return std::make_unique<CornellBox>(width, height, obj_file_name);
+}
+
+std::unique_ptr<const PaintObjects> cornell_box(int width, int height, const VisibleMesh& obj)
+{
+        return std::make_unique<CornellBox>(width, height, obj);
+}
+
+std::unique_ptr<const PaintObjects> one_mesh_package(const vec3& background_color, const vec3& default_color, double ambient,
+                                                     double diffuse, std::unique_ptr<const Projector>&& projector,
+                                                     std::unique_ptr<const LightSource>&& light_source,
+                                                     const std::shared_ptr<const VisibleMesh>& obj)
+{
+        return std::make_unique<OneMeshPackage>(background_color, default_color, ambient, diffuse, std::move(projector),
+                                                std::move(light_source), obj);
 }

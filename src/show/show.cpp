@@ -90,6 +90,8 @@ void make_fullscreen(bool fullscreen, WindowID window, WindowID parent)
 
 class Camera final
 {
+        mutable SpinLock m_lock;
+
         glm::vec3 m_camera_right, m_camera_up, m_camera_direction, m_light_up, m_light_direction;
 
         void set_vectors(const glm::vec3& right, const glm::vec3& up)
@@ -112,35 +114,40 @@ public:
         Camera() : m_camera_right(0), m_camera_up(0), m_camera_direction(0), m_light_up(0), m_light_direction(0)
         {
         }
+
         void set(const glm::vec3& right, const glm::vec3& up)
         {
+                std::lock_guard lg(m_lock);
+
                 set_vectors(right, up);
         }
+
+        void get(glm::vec3* camera_up, glm::vec3* camera_direction, glm::vec3* light_up, glm::vec3* light_direction) const
+        {
+                std::lock_guard lg(m_lock);
+
+                *camera_up = m_camera_up;
+                *camera_direction = -m_camera_direction; // от камеры на объект
+                *light_up = m_light_up;
+                *light_direction = -m_light_direction; // от источника света на объект
+        }
+
+        void get(glm::vec3* camera_up, glm::vec3* camera_direction, glm::vec3* light_direction) const
+        {
+                std::lock_guard lg(m_lock);
+
+                *camera_up = m_camera_up;
+                *camera_direction = -m_camera_direction; // от камеры на объект
+                *light_direction = -m_light_direction; // от источника света на объект
+        }
+
         void rotate(int delta_x, int delta_y)
         {
+                std::lock_guard lg(m_lock);
+
                 glm::vec3 right = glm::rotate(m_camera_right, to_radians(-delta_x), m_camera_up);
                 glm::vec3 up = glm::rotate(m_camera_up, to_radians(-delta_y), m_camera_right);
                 set_vectors(right, up);
-        }
-        // glm::vec3 right() const
-        //{
-        //        return m_camera_right;
-        //}
-        const glm::vec3& up() const
-        {
-                return m_camera_up;
-        }
-        const glm::vec3& dir() const
-        {
-                return m_camera_direction;
-        }
-        const glm::vec3& light_up() const
-        {
-                return m_light_up;
-        }
-        const glm::vec3& light_dir() const
-        {
-                return m_light_direction;
         }
 };
 
@@ -238,6 +245,8 @@ class ShowObject final : public IShow
         std::thread m_thread;
         ThreadQueue<Event> m_event_queue;
         std::atomic_bool m_stop{false};
+
+        Camera m_camera;
 
         void loop();
         void loop_thread();
@@ -345,6 +354,11 @@ class ShowObject final : public IShow
         void set_shadow_zoom(float v) override
         {
                 m_event_queue.emplace(std::in_place_type<Event::shadow_zoom>, v);
+        }
+
+        void get_camera_and_light(glm::vec3* camera_up, glm::vec3* camera_direction, glm::vec3* light_direction) const override
+        {
+                m_camera.get(camera_up, camera_direction, light_direction);
         }
 
 public:
@@ -459,7 +473,6 @@ void ShowObject::loop()
 
         ColorSpaceConverterToRGB color_converter;
         Text text;
-        Camera camera;
         DrawObjects objects;
 
         double start_time = get_time_seconds();
@@ -786,7 +799,7 @@ void ShowObject::loop()
 
                         if (!mouse_pressed_shift)
                         {
-                                camera.rotate(delta_x, delta_y);
+                                m_camera.rotate(delta_x, delta_y);
                         }
                         else
                         {
@@ -864,15 +877,19 @@ void ShowObject::loop()
                         zoom_delta = 0;
                         window_center = glm::vec2(0);
                         pixel_to_coord = pixel_to_coord_no_zoom = 2.0f / std::min(width, height);
-                        camera.set(glm::vec3(1, 0, 0), glm::vec3(0, 1, 0));
+                        m_camera.set(glm::vec3(1, 0, 0), glm::vec3(0, 1, 0));
 
                         matrix_change = true;
                 }
 
                 if (matrix_change)
                 {
+                        glm::vec3 camera_up, camera_direction, light_up, light_direction;
+
+                        m_camera.get(&camera_up, &camera_direction, &light_up, &light_direction);
+
                         glm::mat4 shadow_matrix = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f) *
-                                                  glm::lookAt(glm::vec3(0, 0, 0), -camera.light_dir(), camera.light_up());
+                                                  glm::lookAt(glm::vec3(0, 0, 0), light_direction, light_up);
 
                         float left = -0.5f * width * pixel_to_coord;
                         float right = 0.5f * width * pixel_to_coord;
@@ -884,12 +901,12 @@ void ShowObject::loop()
                         glm::mat4 main_matrix =
                                 glm::ortho(left, right, bottom, top, z_near, z_far) *
                                 glm::translate(glm::mat4(1), glm::vec3(-window_center.x, -window_center.y, 0.0f)) *
-                                glm::lookAt(glm::vec3(0, 0, 0), -camera.dir(), camera.up());
+                                glm::lookAt(glm::vec3(0, 0, 0), camera_direction, camera_up);
 
                         draw_program->set_matrices(shadow_matrix, main_matrix);
 
-                        draw_program->set_light_direction(camera.light_dir());
-                        draw_program->set_camera_direction(camera.dir());
+                        draw_program->set_light_direction(-light_direction);
+                        draw_program->set_camera_direction(-camera_direction);
                 }
 
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

@@ -139,6 +139,12 @@ protected:
 
 public:
         virtual SurfaceProperties properties(const vec3& p, const GeometricObject* geometric_object) const = 0;
+
+        Surface() = default;
+        Surface(const Surface&) = default;
+        Surface(Surface&&) = default;
+        Surface& operator=(const Surface&) = default;
+        Surface& operator=(Surface&&) = default;
 };
 
 // Общий объект вроде геометрического объекта или структуры из объектов (например, октадерева),
@@ -158,15 +164,20 @@ public:
         // уже полученное функцией intersect_approximate.
         virtual bool intersect_precise(const ray3&, double approximate_t, double* t, const Surface** surface,
                                        const GeometricObject** geometric_object) const = 0;
+
+        GenericObject() = default;
+        GenericObject(const GenericObject&) = default;
+        GenericObject(GenericObject&&) = default;
+        GenericObject& operator=(const GenericObject&) = default;
+        GenericObject& operator=(GenericObject&&) = default;
 };
 
 // Источник света, не являющийся видимым объектом.
 class LightSource
 {
-protected:
+public:
         virtual ~LightSource() = default;
 
-public:
         virtual void properties(const vec3& point, vec3* color, vec3* vector_from_point_to_light) const = 0;
 
         LightSource() = default;
@@ -179,10 +190,9 @@ public:
 // Преобразование точки на экране в луч в трёхмерном пространстве.
 class Projector
 {
-protected:
+public:
         virtual ~Projector() = default;
 
-public:
         // Ширина экрана в пикселях
         virtual int screen_width() const = 0;
         // Высота экрана в пикселях

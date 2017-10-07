@@ -43,6 +43,8 @@ struct IManifoldConstructor;
 template <size_t N>
 struct IObjectRepository;
 
+class VisibleMesh;
+
 class MainWindow final : public QMainWindow
 {
         Q_OBJECT
@@ -75,6 +77,7 @@ private slots:
         void on_ButtonDefaultColor_clicked();
         void on_ButtonWireframeColor_clicked();
         void on_Button_ResetView_clicked();
+        void on_pushButton_Painter_clicked();
         void on_checkBox_Wireframe_clicked();
         void on_checkBox_Materials_clicked();
         void on_checkBox_Shadow_clicked();
@@ -112,6 +115,16 @@ private:
                 ExportBoundCocone,
                 ReloadBoundCocone,
                 SelfTest
+        };
+
+        enum class MeshType
+        {
+                Model,
+                ModelCH,
+                Cocone,
+                CoconeCH,
+                BoundCocone,
+                BoundCoconeCH
         };
 
         struct ThreadPack
@@ -190,6 +203,8 @@ private:
 
         std::shared_ptr<IObj> m_surface_cocone;
         std::shared_ptr<IObj> m_surface_bound_cocone;
+
+        std::map<MeshType, std::shared_ptr<const VisibleMesh>> m_meshes;
 
         std::unique_ptr<IObjectRepository<3>> m_object_repository;
         std::unordered_map<QObject*, std::string> m_action_to_object_name_map;

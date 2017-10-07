@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "vec3.h"
 
+#include <algorithm>
 #include <cmath>
 
 inline double rgb_to_srgb(double c)
@@ -57,7 +58,7 @@ inline double srgb_to_rgb(double c)
 
 inline unsigned char rgb_float_to_srgb_int8(double c)
 {
-        return static_cast<unsigned char>(rgb_to_srgb(c) * 255.0 + 0.5);
+        return static_cast<unsigned char>(rgb_to_srgb(std::clamp(c, 0.0, 1.0)) * 255.0 + 0.5);
 }
 
 inline double srgb_int8_to_rgb_float(unsigned char c)
@@ -73,4 +74,9 @@ inline vec3 srgb_to_rgb(double r, double g, double b)
 inline vec3 srgb_to_rgb(const vec3& c)
 {
         return srgb_to_rgb(c[0], c[1], c[2]);
+}
+
+inline double luminosity_rgb(const vec3& v)
+{
+        return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2];
 }

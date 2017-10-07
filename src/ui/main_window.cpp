@@ -40,7 +40,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "obj/obj_file_save.h"
 #include "obj/obj_points_load.h"
 #include "obj/obj_surface.h"
+#include "path_tracing/light_source.h"
+#include "path_tracing/projector.h"
 #include "path_tracing/test_data.h"
+#include "path_tracing/visible_mesh.h"
 #include "progress/progress.h"
 
 #include <QDesktopWidget>
@@ -75,6 +78,10 @@ constexpr int WINDOW_SHOW_DELAY_MSEC = 50;
 
 // увеличение текстуры тени по сравнению с размером окна
 constexpr float SHADOW_ZOOM = 2;
+
+// Размер и положение объектов для трассировки пути, создаваемых из отображаемых моделей
+constexpr double MESH_OBJECT_SIZE = 2;
+constexpr vec3 MESH_OBJECT_POSITION = vec3(0);
 
 // Идентификаторы объектов для взаимодействия с модулем рисования,
 // куда передаются как числа, а не как enum
@@ -151,6 +158,13 @@ MainWindow::MainWindow(QWidget* parent)
         m_threads.try_emplace(ThreadAction::ExportBoundCocone);
         m_threads.try_emplace(ThreadAction::ReloadBoundCocone);
         m_threads.try_emplace(ThreadAction::SelfTest);
+
+        m_meshes.try_emplace(MeshType::Model);
+        m_meshes.try_emplace(MeshType::ModelCH);
+        m_meshes.try_emplace(MeshType::Cocone);
+        m_meshes.try_emplace(MeshType::CoconeCH);
+        m_meshes.try_emplace(MeshType::BoundCocone);
+        m_meshes.try_emplace(MeshType::BoundCoconeCH);
 }
 
 MainWindow::~MainWindow()
@@ -345,16 +359,25 @@ void MainWindow::thread_model(ProgressRatioList* progress_ratio_list, std::share
                         return;
                 }
 
-                m_show->add_object(obj, MODEL, MODEL);
-
-                ProgressRatio progress(progress_ratio_list);
-                progress.set_text("Convex hull 3D: %v of %m");
-
-                std::shared_ptr<IObj> convex_hull = create_convex_hull_for_obj(obj.get(), &progress);
-
-                if (convex_hull->get_faces().size() != 0)
                 {
-                        m_show->add_object(convex_hull, MODEL_CONVEX_HULL, MODEL);
+                        m_show->add_object(obj, MODEL, MODEL);
+
+                        ProgressRatio progress(progress_ratio_list);
+                        progress.set_text("Convex hull 3D: %v of %m");
+
+                        std::shared_ptr<IObj> convex_hull = create_convex_hull_for_obj(obj.get(), &progress);
+
+                        if (convex_hull->get_faces().size() != 0)
+                        {
+                                m_show->add_object(convex_hull, MODEL_CONVEX_HULL, MODEL);
+                        }
+                }
+
+                if (obj->get_faces().size() > 0)
+                {
+                        ProgressRatio progress(progress_ratio_list);
+                        m_meshes[MeshType::Model] =
+                                std::make_unique<VisibleMesh>(obj.get(), MESH_OBJECT_SIZE, MESH_OBJECT_POSITION, &progress);
                 }
 
         });
@@ -398,6 +421,13 @@ void MainWindow::thread_cocone(ProgressRatioList* progress_ratio_list) noexcept
                         }
                 }
 
+                if (m_surface_cocone->get_faces().size() > 0)
+                {
+                        ProgressRatio progress(progress_ratio_list);
+                        m_meshes[MeshType::Cocone] = std::make_unique<VisibleMesh>(m_surface_cocone.get(), MESH_OBJECT_SIZE,
+                                                                                   MESH_OBJECT_POSITION, &progress);
+                }
+
         });
 }
 
@@ -427,6 +457,9 @@ void MainWindow::thread_bound_cocone(ProgressRatioList* progress_ratio_list, dou
                 m_show->delete_object(SURFACE_BOUND_COCONE);
                 m_show->delete_object(SURFACE_BOUND_COCONE_CONVEX_HULL);
 
+                m_meshes[MeshType::BoundCocone].reset();
+                m_meshes[MeshType::BoundCoconeCH].reset();
+
                 m_event_emitter.bound_cocone_loaded(rho, alpha);
 
                 if (m_surface_bound_cocone->get_faces().size() != 0)
@@ -442,6 +475,13 @@ void MainWindow::thread_bound_cocone(ProgressRatioList* progress_ratio_list, dou
                         {
                                 m_show->add_object(convex_hull, SURFACE_BOUND_COCONE_CONVEX_HULL, MODEL);
                         }
+                }
+
+                if (m_surface_bound_cocone->get_faces().size() > 0)
+                {
+                        ProgressRatio progress(progress_ratio_list);
+                        m_meshes[MeshType::BoundCocone] = std::make_unique<VisibleMesh>(
+                                m_surface_bound_cocone.get(), MESH_OBJECT_SIZE, MESH_OBJECT_POSITION, &progress);
                 }
 
         });
@@ -513,9 +553,15 @@ void MainWindow::thread_open_object(ProgressRatioList* progress_ratio_list, cons
                 }
 
                 m_show->delete_all_objects();
+
                 m_surface_constructor.reset();
                 m_surface_cocone.reset();
                 m_surface_bound_cocone.reset();
+
+                for (auto& mesh : m_meshes)
+                {
+                        mesh.second.reset();
+                }
 
                 m_event_emitter.file_loaded(object_name);
 
@@ -1229,4 +1275,62 @@ void MainWindow::on_radioButton_BoundCocone_clicked()
 void MainWindow::on_radioButton_BoundCoconeConvexHull_clicked()
 {
         m_show->show_object(SURFACE_BOUND_COCONE_CONVEX_HULL);
+}
+
+void MainWindow::on_pushButton_Painter_clicked()
+{
+        std::shared_ptr<const VisibleMesh> mesh_pointer;
+
+        if (ui.radioButton_Model->isChecked())
+        {
+                mesh_pointer = m_meshes[MeshType::Model];
+        }
+        else if (ui.radioButton_Cocone->isChecked())
+        {
+                mesh_pointer = m_meshes[MeshType::Cocone];
+        }
+        else if (ui.radioButton_BoundCocone->isChecked())
+        {
+                mesh_pointer = m_meshes[MeshType::BoundCocone];
+        }
+        else
+        {
+                message_warning(this, "No painting support for this model type");
+                return;
+        }
+
+        if (!mesh_pointer)
+        {
+                message_warning(this, "No object to paint");
+                return;
+        }
+
+        int thread_count = std::max(1u, std::thread::hardware_concurrency() - 1);
+
+#if 1
+        vec3 background_color = to_vector<double>(qcolor_to_rgb(m_clear_color));
+        vec3 default_color = to_vector<double>(qcolor_to_rgb(m_default_color));
+        double ambient = float_to_rgb(get_ambient());
+        double diffuse = float_to_rgb(get_diffuse());
+
+        glm::vec3 camera_up, camera_direction, light_direction;
+
+        m_show->get_camera_and_light(&camera_up, &camera_direction, &light_direction);
+
+        double projector_view_width = MESH_OBJECT_SIZE * 1.5;
+        int projector_pixel_resolution = 5;
+
+        std::unique_ptr projector = std::make_unique<const ParallelProjector>(
+                to_vector<double>(-camera_direction) * MESH_OBJECT_SIZE * 2.0, to_vector<double>(camera_direction),
+                to_vector<double>(camera_up), projector_view_width, ui.graphics_widget->width(), ui.graphics_widget->height(),
+                projector_pixel_resolution);
+
+        std::unique_ptr light = std::make_unique<const ConstantLight>(
+                to_vector<double>(-light_direction) * MESH_OBJECT_SIZE * 2.0, vec3(1, 1, 1));
+
+        create_painter_window(thread_count, one_mesh_package(background_color, default_color, ambient, diffuse,
+                                                             std::move(projector), std::move(light), mesh_pointer));
+#else
+        create_painter_window(thread_count, cornell_box(500, 500, *mesh_pointer));
+#endif
 }

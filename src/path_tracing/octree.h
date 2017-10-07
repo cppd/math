@@ -26,8 +26,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "ray3.h"
 #include "vec3.h"
 
+#include "progress/progress.h"
+
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <vector>
 
 template <typename Parallelepiped, typename OctreeObject>
@@ -103,7 +106,13 @@ class Octree
 
         static constexpr double DELTA = 10 * INTERSECTION_THRESHOLD;
 
+        static constexpr int LIMIT_MAX_DEPTH = 10;
+
         const int MAX_DEPTH, MIN_OBJECTS;
+
+        // Максимальное количество коробок — сумма геометрической прогресии со знаменателем 8.
+        // Требуется для того, чтобы что-то отображать как расчёт.
+        const int MAX_BOXES = (std::pow(8, MAX_DEPTH) - 1) / (8 - 1);
 
         // Все коробки хранятся в одном векторе
         std::vector<OctreeBox> m_boxes;
@@ -115,7 +124,7 @@ class Octree
         }
 
         template <typename ShapeIntersection>
-        void extend(int depth, int parent_box, const ShapeIntersection& functor_shape_intersection)
+        void extend(int depth, int parent_box, const ShapeIntersection& functor_shape_intersection, ProgressRatio* progress)
         {
                 ASSERT(parent_box >= 0 && parent_box < static_cast<int>(m_boxes.size()));
 
@@ -145,6 +154,11 @@ class Octree
 
                         m_boxes[parent_box].set_child(child_number, child_box);
 
+                        if (child_box & 0xfff)
+                        {
+                                progress->set(child_box, MAX_BOXES);
+                        }
+
                         for (const OctreeObject* obj : m_boxes[parent_box].get_objects())
                         {
                                 if (functor_shape_intersection(&m_boxes[child_box].get_parallelepiped(), obj))
@@ -159,7 +173,7 @@ class Octree
                 for (int child_number = 0; child_number < 8; ++child_number)
                 {
                         int child_box = m_boxes[parent_box].get_childs()[child_number];
-                        extend(depth + 1, child_box, functor_shape_intersection);
+                        extend(depth + 1, child_box, functor_shape_intersection, progress);
                 }
         }
 
@@ -227,12 +241,28 @@ class Octree
         }
 
 public:
+        Octree(int max_depth, int min_objects_per_box) : MAX_DEPTH(max_depth), MIN_OBJECTS(min_objects_per_box)
+        {
+        }
+
         template <typename ConvexHullVertices, typename ShapeIntersection>
         Octree(int max_depth, int min_objects_per_box, const std::vector<OctreeObject>& objects,
-               const ConvexHullVertices& functor_convex_hull_vertices, const ShapeIntersection& functor_shape_intersection)
+               const ConvexHullVertices& functor_convex_hull_vertices, const ShapeIntersection& functor_shape_intersection,
+               ProgressRatio* progress)
                 : MAX_DEPTH(max_depth), MIN_OBJECTS(min_objects_per_box)
         {
-                ASSERT(MAX_DEPTH >= 0 && MAX_DEPTH <= 20 && MIN_OBJECTS >= 2 && MIN_OBJECTS <= 100);
+                decompose(objects, functor_convex_hull_vertices, functor_shape_intersection, progress);
+        }
+
+        template <typename ConvexHullVertices, typename ShapeIntersection>
+        void decompose(const std::vector<OctreeObject>& objects, const ConvexHullVertices& functor_convex_hull_vertices,
+                       const ShapeIntersection& functor_shape_intersection, ProgressRatio* progress)
+
+        {
+                ASSERT(MAX_DEPTH >= 1 && MAX_DEPTH <= LIMIT_MAX_DEPTH);
+                ASSERT(MIN_OBJECTS >= 2 && MIN_OBJECTS <= 100);
+
+                m_boxes.clear();
 
                 std::vector<const OctreeObject*> object_pointers;
                 object_pointers.reserve(objects.size());
@@ -247,7 +277,9 @@ public:
 
                 m_boxes[root_box].set_all_objects(std::move(object_pointers));
 
-                extend(0, root_box, functor_shape_intersection);
+                extend(1 /*номера уровней начинаются с 1*/, root_box, functor_shape_intersection, progress);
+
+                m_boxes.shrink_to_fit();
         }
 
         bool intersect_root(const ray3& ray, double* t) const

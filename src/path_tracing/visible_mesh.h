@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "triangle.h"
 
 #include "obj/obj.h"
+#include "progress/progress.h"
 
 #include <memory>
 
@@ -48,10 +49,12 @@ class VisibleMesh final : public GenericObject, public Surface, public SurfacePr
 
         std::vector<TableTriangle> m_triangles;
 
-        std::unique_ptr<Octree<Parallelepiped, TableTriangle>> m_octree;
+        Octree<Parallelepiped, TableTriangle> m_octree;
+
+        void create_mesh_object(const IObj* obj, double size, const vec3& position, ProgressRatio* progress);
 
 public:
-        VisibleMesh(const IObj* obj, double size, const vec3& position);
+        VisibleMesh(const IObj* obj, double size, const vec3& position, ProgressRatio* progress);
 
         // Интерфейс GenericObject
         bool intersect_approximate(const ray3& r, double* t) const override;
@@ -59,5 +62,5 @@ public:
                                const GeometricObject** geometric_object) const override;
 
         // Интерфейс Surface
-        SurfaceProperties properties(const vec3& p, const GeometricObject* /*geometric_object*/) const override;
+        SurfaceProperties properties(const vec3& p, const GeometricObject* geometric_object) const override;
 };

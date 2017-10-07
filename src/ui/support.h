@@ -59,6 +59,8 @@ void color_dialog(QWidget* widget, const QString& title, const QColor& color, co
 void set_widgets_enabled(QLayout* layout, bool v);
 
 glm::vec3 qcolor_to_vec3(const QColor& c);
+glm::vec3 qcolor_to_rgb(const QColor& c);
+float float_to_rgb(float c);
 
 void button_strike_out(QRadioButton* button, bool strike_out);
 
