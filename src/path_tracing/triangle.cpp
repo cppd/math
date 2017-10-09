@@ -124,18 +124,12 @@ bool rectangle_intersect(const ray3& ray, const vec3& v0, const vec3& normal, co
         return true;
 }
 
-vec3 triangle_normal_at_point(const vec3& point, const vec3& v0, const vec3& u_beta, const vec3& u_gamma, const vec3& n0,
-                              const vec3& n1, const vec3& n2)
+template <typename T>
+T triangle_interpolation(const vec3& point, const vec3& v0, const vec3& u_beta, const vec3& u_gamma, const T& n0, const T& n1,
+                         const T& n2)
 {
         vec3 bc = triangle_barycentric_coordinates(point, v0, u_beta, u_gamma);
-        return normalize(bc[0] * n0 + bc[1] * n1 + bc[2] * n2);
-}
-
-vec2 triangle_texcoord_at_point(const vec3& point, const vec3& v0, const vec3& u_beta, const vec3& u_gamma, const vec2& t0,
-                                const vec2& t1, const vec2& t2)
-{
-        vec3 bc = triangle_barycentric_coordinates(point, v0, u_beta, u_gamma);
-        return bc[0] * t0 + bc[1] * t1 + bc[2] * t2;
+        return bc[0] * n0 + bc[1] * n1 + bc[2] * n2;
 }
 }
 
@@ -153,15 +147,16 @@ TableTriangle::TableTriangle(const vec3* points, const vec3* normals, const vec2
         m_v1 = v1;
         m_v2 = v2;
 
-        m_n0 = n0;
-        m_n1 = n1;
-        m_n2 = n2;
-        m_has_normals = has_normals;
-
-        m_t0 = t0;
-        m_t1 = t1;
-        m_t2 = t2;
-        m_has_texcoords = has_texcoords;
+        if (has_texcoords)
+        {
+                m_t0 = t0;
+                m_t1 = t1;
+                m_t2 = t2;
+        }
+        else
+        {
+                m_t0 = -1;
+        }
 
         m_material = material;
 
@@ -172,6 +167,57 @@ TableTriangle::TableTriangle(const vec3* points, const vec3* normals, const vec2
         m_normal = normalize(cross(m_vertices[m_v1] - m_vertices[m_v0], m_vertices[m_v2] - m_vertices[m_v0]));
 
         triangle_u_beta_and_u_gamma_for_v0(m_vertices[m_v0], m_vertices[m_v1], m_vertices[m_v2], &m_u_beta, &m_u_gamma);
+
+        if (!has_normals)
+        {
+                m_normal_type = NormalType::NO_NORMALS;
+                return;
+        }
+
+        m_n0 = n0;
+        m_n1 = n1;
+        m_n2 = n2;
+
+        double d0 = dot(m_normals[m_n0], m_normal);
+        double d1 = dot(m_normals[m_n1], m_normal);
+        double d2 = dot(m_normals[m_n2], m_normal);
+
+        constexpr double LIMIT_COSINE = 0.7; // 0.7 немного больше 45 градусов
+
+        if (std::abs(d0) < LIMIT_COSINE || std::abs(d1) < LIMIT_COSINE || std::abs(d2) < LIMIT_COSINE)
+        {
+                // «Перпендикуляры» на вершинах совсем не перпендикуляры,
+                // поэтому треугольник считать плоским.
+                m_normal_type = NormalType::NO_NORMALS;
+                return;
+        }
+
+        if (d0 > 0 && d1 > 0 && d2 > 0)
+        {
+                // Реальный перпендикуляр и «перпендикуляры» вершин имеют
+                // одинаковое направление, поэтому оставить как есть.
+                m_normal_type = NormalType::USE_NORMALS;
+                return;
+        }
+
+        if (d0 < 0 && d1 < 0 && d2 < 0)
+        {
+                // Реальный перпендикуляр и «перпендикуляры» вершин имеют
+                // противоположное направление, поэтому поменять направление
+                // реального перпендикуляра.
+                m_normal_type = NormalType::USE_NORMALS;
+                m_normal = -m_normal;
+                return;
+        }
+
+        // «Перпендикуляры» на вершинах могут быть направлены в разные стороны от грани.
+        // Это происходит, например, при восстановлении поверхностей по алгоритмам
+        // типа COCONE, где соседние объекты Вороного имеют положительные полюсы
+        // в противоположных направлениях.
+        m_normal_type = NormalType::NEGATE_NORMALS;
+        m_negate_normal_0 = d0 < 0;
+        m_negate_normal_1 = d1 < 0;
+        m_negate_normal_2 = d2 < 0;
 }
 
 bool TableTriangle::intersect(const ray3& r, double* t) const
@@ -179,30 +225,41 @@ bool TableTriangle::intersect(const ray3& r, double* t) const
         return triangle_intersect(r, m_vertices[m_v0], m_normal, m_u_beta, m_u_gamma, t);
 }
 
-vec3 TableTriangle::normal(const vec3& point) const
+vec3 TableTriangle::geometric_normal() const
 {
-        if (m_has_normals)
+        return m_normal;
+}
+
+vec3 TableTriangle::shading_normal(const vec3& point) const
+{
+        switch (m_normal_type)
         {
-                return triangle_normal_at_point(point, m_vertices[m_v0], m_u_beta, m_u_gamma, m_normals[m_n0], m_normals[m_n1],
-                                                m_normals[m_n2]);
-        }
-        else
-        {
+        case NormalType::NO_NORMALS:
                 return m_normal;
+        case NormalType::USE_NORMALS:
+                return normalize(triangle_interpolation(point, m_vertices[m_v0], m_u_beta, m_u_gamma, m_normals[m_n0],
+                                                        m_normals[m_n1], m_normals[m_n2]));
+
+        case NormalType::NEGATE_NORMALS:
+                return normalize(triangle_interpolation(point, m_vertices[m_v0], m_u_beta, m_u_gamma,
+                                                        m_negate_normal_0 ? -m_normals[m_n0] : m_normals[m_n0],
+                                                        m_negate_normal_1 ? -m_normals[m_n1] : m_normals[m_n1],
+                                                        m_negate_normal_2 ? -m_normals[m_n2] : m_normals[m_n2]));
         }
+        ASSERT(false);
 }
 
 bool TableTriangle::has_texcoord() const
 {
-        return m_has_texcoords;
+        return m_t0 >= 0;
 }
 
 vec2 TableTriangle::texcoord(const vec3& point) const
 {
-        if (m_has_texcoords)
+        if (m_t0 >= 0)
         {
-                return triangle_texcoord_at_point(point, m_vertices[m_v0], m_u_beta, m_u_gamma, m_texcoords[m_t0],
-                                                  m_texcoords[m_t1], m_texcoords[m_t2]);
+                return triangle_interpolation(point, m_vertices[m_v0], m_u_beta, m_u_gamma, m_texcoords[m_t0], m_texcoords[m_t1],
+                                              m_texcoords[m_t2]);
         }
         ASSERT(false);
 }

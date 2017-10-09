@@ -148,7 +148,9 @@ SurfaceProperties VisibleMesh::properties(const vec3& p, const GeometricObject* 
 
         SurfaceProperties s = *this;
 
-        s.set_normal(triangle->normal(p));
+        s.set_geometric_normal(triangle->geometric_normal());
+        s.set_shading_normal(triangle->shading_normal(p));
+        s.set_triangle_mesh(true);
 
         if (triangle->get_material() >= 0)
         {

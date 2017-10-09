@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "random_sphere.h"
 
+#include "constants.h"
+
 // Для получения равномерных точек на сфере можно ещё использовать std::normal_distribution
 // с последующим делением на длину получаемого вектора, но для трёхмерных пространств это
 // работает медленнее, чем простой метод с выбрасыванием значений.
@@ -32,7 +34,7 @@ vec3 random_hemisphere_any_length(std::mt19937_64& engine, const vec3& normal)
         {
                 vec3 v(urd(engine), urd(engine), urd(engine));
                 double length_square = dot(v, v);
-                if (length_square > 0 && length_square <= 1 && dot(v, normal) > 0)
+                if (length_square > 0 && length_square <= 1 && dot(v, normal) > EPSILON)
                 {
                         return v;
                 }

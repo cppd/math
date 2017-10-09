@@ -211,7 +211,7 @@ public:
         void work_thread() noexcept;
 
         vec3 diffuse_lighting(std::mt19937_64& random_engine, int recursion_level, double color_level, const vec3& point,
-                              const vec3& normal) const;
+                              const vec3& shading_normal, const vec3& geometric_normal, bool triangle_mesh) const;
 
         vec3 trace_path(std::mt19937_64& random_engine, int recursion_level, double color_level, const ray3& ray,
                         bool diffuse_reflection) const;
@@ -250,17 +250,26 @@ void Painter::work_thread() noexcept
 }
 
 vec3 Painter::diffuse_lighting(std::mt19937_64& random_engine, int recursion_level, double color_level, const vec3& point,
-                               const vec3& normal) const
+                               const vec3& shading_normal, const vec3& geometric_normal, bool triangle_mesh) const
 {
         if (recursion_level < MAX_RECURSION_LEVEL)
         {
-                ray3 ray = ray3(point, random_hemisphere_any_length(random_engine, normal));
+                // Случайный вектор диффузного освещения надо определять от видимой нормали
+                ray3 diffuse_ray = ray3(point, random_hemisphere_any_length(random_engine, shading_normal));
 
-                double cos_ray_and_normal = dot(ray.get_dir(), normal);
-
-                if ((color_level *= cos_ray_and_normal) >= MIN_COLOR_LEVEL)
+                if (triangle_mesh && dot(diffuse_ray.get_dir(), geometric_normal) < EPSILON)
                 {
-                        return cos_ray_and_normal * trace_path(random_engine, recursion_level + 1, color_level, ray, true);
+                        // Если получившийся случайный вектор диффузного отражения показывает
+                        // в другую сторону от поверхности, то диффузного освещения нет.
+                        return vec3(0);
+                }
+
+                double cos_ray_and_shading_normal = dot(diffuse_ray.get_dir(), shading_normal);
+
+                if ((color_level *= cos_ray_and_shading_normal) >= MIN_COLOR_LEVEL)
+                {
+                        return cos_ray_and_shading_normal *
+                               trace_path(random_engine, recursion_level + 1, color_level, diffuse_ray, true);
                 }
         }
 
@@ -284,19 +293,31 @@ vec3 Painter::trace_path(std::mt19937_64& random_engine, int recursion_level, do
         }
 
         Vector point = ray.point(t);
+        const SurfaceProperties surface_properties = surface->properties(point, geometric_object);
+        vec3 geometric_normal = surface_properties.get_geometric_normal();
+        double dot_dir_and_geometric_normal = dot(ray.get_dir(), geometric_normal);
+        bool triangle_mesh = surface_properties.is_triangle_mesh();
 
-        SurfaceProperties surface_properties = surface->properties(point, geometric_object);
+        if (std::abs(dot_dir_and_geometric_normal) <= EPSILON)
+        {
+                return vec3(0);
+        }
 
         if (surface_properties.is_light_source())
         {
                 return (diffuse_reflection) ? surface_properties.get_light_source_color() : surface_properties.get_color();
         }
 
-        vec3 normal = surface_properties.get_normal();
+        vec3 shading_normal = triangle_mesh ? surface_properties.get_shading_normal() : geometric_normal;
 
-        if (dot(ray.get_dir(), normal) > 0)
+        ASSERT(dot(geometric_normal, shading_normal) > EPSILON);
+
+        // Определять только по реальной нормали, так как видимая нормаль может
+        // показать, что пересечение находится с другой стороны объекта.
+        if (dot_dir_and_geometric_normal > EPSILON)
         {
-                normal = -normal;
+                geometric_normal = -geometric_normal;
+                shading_normal = -shading_normal;
         }
 
         vec3 color(0);
@@ -309,9 +330,10 @@ vec3 Painter::trace_path(std::mt19937_64& random_engine, int recursion_level, do
 
                 if (new_color_level >= MIN_COLOR_LEVEL)
                 {
-                        vec3 direct = direct_lighting(m_objects, m_light_sources, point, normal);
+                        vec3 direct = direct_lighting(m_objects, m_light_sources, point, shading_normal);
 
-                        vec3 diffuse = diffuse_lighting(random_engine, recursion_level, new_color_level, point, normal);
+                        vec3 diffuse = diffuse_lighting(random_engine, recursion_level, new_color_level, point, shading_normal,
+                                                        geometric_normal, triangle_mesh);
 
                         color += surface_color * (direct + diffuse);
                 }

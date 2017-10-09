@@ -70,7 +70,13 @@ class TableTriangle final : public GeometricTriangle
         vec3 m_normal;
         vec3 m_u_beta, m_u_gamma;
 
-        bool m_has_normals, m_has_texcoords;
+        enum class NormalType : char
+        {
+                NO_NORMALS,
+                USE_NORMALS,
+                NEGATE_NORMALS
+        } m_normal_type;
+        bool m_negate_normal_0, m_negate_normal_1, m_negate_normal_2;
 
 public:
         TableTriangle(const vec3* points, const vec3* normals, const vec2* texcoords, int v1, int v2, int v3, bool has_normals,
@@ -82,7 +88,9 @@ public:
         vec2 texcoord(const vec3& point) const;
 
         bool intersect(const ray3& r, double* t) const override;
-        vec3 normal(const vec3& point) const override;
+
+        vec3 geometric_normal() const;
+        vec3 shading_normal(const vec3& point) const;
 
         const vec3& v0() const override;
         const vec3& v1() const override;
@@ -102,7 +110,8 @@ public:
         void set_data(const vec3& org, const vec3& e0, const vec3& e1);
 
         bool intersect(const ray3& r, double* t) const override;
-        vec3 normal(const vec3& point) const override;
+
+        vec3 normal(const vec3& point) const;
 
         const vec3& org() const override;
         const vec3& e0() const override;

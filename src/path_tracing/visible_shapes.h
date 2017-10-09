@@ -53,7 +53,9 @@ public:
         SurfaceProperties properties(const vec3& p, const GeometricObject* /*geometric_object*/) const override
         {
                 SurfaceProperties s = *this;
-                s.set_normal(m_rectangle.normal(p));
+
+                s.set_geometric_normal(m_rectangle.normal(p));
+
                 return s;
         }
 };
@@ -88,7 +90,9 @@ public:
         SurfaceProperties properties(const vec3& p, const GeometricObject* /*geometric_object*/) const override
         {
                 SurfaceProperties s = *this;
-                s.set_normal(m_parallelepiped.normal(p));
+
+                s.set_geometric_normal(m_parallelepiped.normal(p));
+
                 return s;
         }
 };

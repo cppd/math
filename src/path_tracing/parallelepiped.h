@@ -64,7 +64,8 @@ public:
 
         bool inside(const vec3& p) const override;
         bool intersect(const ray3& r, double* t) const override;
-        vec3 normal(const vec3& p) const override;
+
+        vec3 normal(const vec3& p) const;
 
         const vec3& org() const override;
         const vec3& e0() const override;

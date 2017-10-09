@@ -24,8 +24,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // Свойства поверхности в точке.
 class SurfaceProperties
 {
-        // Перпендикуляр к поверхности.
-        vec3 m_normal;
+        // Реальный перпендикуляр.
+        vec3 m_geometric_normal;
+        // Видимый перпендикуляр к поверхности. Например, при интерполяции
+        // перпендикуляра по перпендикулярам в вершинах треугольников.
+        vec3 m_shading_normal;
         // Цвет поверхности.
         vec3 m_color;
         // Если поверхность является источником света, то цвет этого источника.
@@ -37,6 +40,8 @@ class SurfaceProperties
         double m_refraction;
         // Является ли поверхность источником света.
         bool m_light_source;
+        // Является ли поверхность набором треугольников
+        bool m_triangle_mesh = false;
 
 public:
         SurfaceProperties() = default;
@@ -53,13 +58,22 @@ public:
         {
         }
 
-        void set_normal(const vec3& normal)
+        void set_shading_normal(const vec3& normal)
         {
-                m_normal = normalize(normal);
+                m_shading_normal = normalize(normal);
         }
-        const vec3& get_normal() const
+        const vec3& get_shading_normal() const
         {
-                return m_normal;
+                return m_shading_normal;
+        }
+
+        void set_geometric_normal(const vec3& normal)
+        {
+                m_geometric_normal = normalize(normal);
+        }
+        const vec3& get_geometric_normal() const
+        {
+                return m_geometric_normal;
         }
 
         void set_color(const vec3& color)
@@ -111,6 +125,15 @@ public:
         {
                 return m_light_source;
         }
+
+        void set_triangle_mesh(bool triangle_mesh)
+        {
+                m_triangle_mesh = triangle_mesh;
+        }
+        bool is_triangle_mesh() const
+        {
+                return m_triangle_mesh;
+        }
 };
 
 // Простой геометрический объект типа треугольника, сферы и т.п.
@@ -120,7 +143,6 @@ protected:
         virtual ~GeometricObject() = default;
 
 public:
-        virtual vec3 normal(const vec3& p) const = 0;
         virtual bool intersect(const ray3& r, double* t) const = 0;
 
         GeometricObject() = default;
