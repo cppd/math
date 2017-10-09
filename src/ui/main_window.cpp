@@ -1281,16 +1281,21 @@ void MainWindow::on_pushButton_Painter_clicked()
 {
         std::shared_ptr<const VisibleMesh> mesh_pointer;
 
+        std::string model_name;
+
         if (ui.radioButton_Model->isChecked())
         {
+                model_name = ui.radioButton_Model->text().toStdString();
                 mesh_pointer = m_meshes[MeshType::Model];
         }
         else if (ui.radioButton_Cocone->isChecked())
         {
+                model_name = ui.radioButton_Cocone->text().toStdString();
                 mesh_pointer = m_meshes[MeshType::Cocone];
         }
         else if (ui.radioButton_BoundCocone->isChecked())
         {
+                model_name = ui.radioButton_BoundCocone->text().toStdString();
                 mesh_pointer = m_meshes[MeshType::BoundCocone];
         }
         else
@@ -1308,28 +1313,31 @@ void MainWindow::on_pushButton_Painter_clicked()
         int thread_count = std::max(1u, std::thread::hardware_concurrency() - 1);
 
 #if 1
+
+        constexpr int projector_pixel_resolution = 5;
+
         vec3 background_color = to_vector<double>(qcolor_to_rgb(m_clear_color));
         vec3 default_color = to_vector<double>(qcolor_to_rgb(m_default_color));
         double ambient = float_to_rgb(get_ambient());
         double diffuse = float_to_rgb(get_diffuse());
 
-        glm::vec3 camera_up, camera_direction, light_direction;
+        glm::vec3 camera_up, camera_direction, light_direction, view_center;
+        float view_width;
 
-        m_show->get_camera_and_light(&camera_up, &camera_direction, &light_direction);
+        m_show->get_camera_information(&camera_up, &camera_direction, &light_direction, &view_center, &view_width);
 
-        double projector_view_width = MESH_OBJECT_SIZE * 1.5;
-        int projector_pixel_resolution = 5;
+        glm::vec3 camera_position = view_center - camera_direction * float(2 * MESH_OBJECT_SIZE);
 
         std::unique_ptr projector = std::make_unique<const ParallelProjector>(
-                to_vector<double>(-camera_direction) * MESH_OBJECT_SIZE * 2.0, to_vector<double>(camera_direction),
-                to_vector<double>(camera_up), projector_view_width, ui.graphics_widget->width(), ui.graphics_widget->height(),
-                projector_pixel_resolution);
+                to_vector<double>(camera_position), to_vector<double>(camera_direction), to_vector<double>(camera_up), view_width,
+                ui.graphics_widget->width(), ui.graphics_widget->height(), projector_pixel_resolution);
 
         std::unique_ptr light = std::make_unique<const ConstantLight>(
                 to_vector<double>(-light_direction) * MESH_OBJECT_SIZE * 2.0, vec3(1, 1, 1));
 
-        create_painter_window(thread_count, one_mesh_package(background_color, default_color, ambient, diffuse,
-                                                             std::move(projector), std::move(light), mesh_pointer));
+        create_painter_window(std::string(APPLICATION_NAME) + " - " + model_name, thread_count,
+                              one_mesh_package(background_color, default_color, ambient, diffuse, std::move(projector),
+                                               std::move(light), mesh_pointer));
 #else
         create_painter_window(thread_count, cornell_box(500, 500, *mesh_pointer));
 #endif

@@ -20,19 +20,23 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/error.h"
 #include "ui/dialogs/message_box.h"
 
-#include <QTimer>
+#include <QFileDialog>
 #include <cstring>
 
 constexpr int UPDATE_INTERVAL = 100;
 constexpr int PANTBRUSH_WIDTH = 20;
 
-PainterWindow::PainterWindow(unsigned thread_count, std::unique_ptr<const PaintObjects>&& paint_objects)
+constexpr bool SHOW_THREADS = true;
+
+PainterWindow::PainterWindow(const std::string& title, unsigned thread_count, std::unique_ptr<const PaintObjects>&& paint_objects)
         : m_paint_objects(std::move(paint_objects)),
           m_thread_count(thread_count),
           m_width(m_paint_objects->get_projector().screen_width()),
           m_height(m_paint_objects->get_projector().screen_height()),
           m_image(m_width, m_height, QImage::Format_RGB32),
           m_data(m_width * m_height),
+          m_data_clean(m_width * m_height),
+          m_image_data_size(m_width * m_height * sizeof(quint32)),
           m_first_show(true),
           m_stop(false),
           m_ray_count(0),
@@ -43,6 +47,9 @@ PainterWindow::PainterWindow(unsigned thread_count, std::unique_ptr<const PaintO
         ui.setupUi(this);
 
         setAttribute(Qt::WA_DeleteOnClose);
+
+        ASSERT(m_image_data_size == m_data.size() * sizeof(m_data[0]));
+        ASSERT(m_image_data_size == m_data_clean.size() * sizeof(m_data_clean[0]));
 
         connect(this, SIGNAL(error_message_signal(QString)), this, SLOT(error_message_slot(QString)),
                 Qt::ConnectionType(Qt::QueuedConnection | Qt::UniqueConnection));
@@ -70,7 +77,9 @@ PainterWindow::PainterWindow(unsigned thread_count, std::unique_ptr<const PaintO
         this->layout()->setContentsMargins(5, 5, 5, 5);
         ui.formLayout->setContentsMargins(5, 5, 5, 5);
 
-        this->setWindowTitle("Path Tracing");
+        this->setWindowTitle(title.c_str());
+
+        ui.checkBox_show_threads->setChecked(SHOW_THREADS);
 
         update_points();
 
@@ -91,26 +100,29 @@ PainterWindow::~PainterWindow()
 
 void PainterWindow::set_pixel(int x, int y, unsigned char r, unsigned char g, unsigned char b) noexcept
 {
-        m_data[m_width * y + x] = (r << 16) + (g << 8) + b;
+        quint32 c = (r << 16) + (g << 8) + b;
+        int index = m_width * y + x;
+
+        m_data[index] = c;
+        m_data_clean[index] = c;
 }
 
-void PainterWindow::xor_pixel(int x, int y) noexcept
+void PainterWindow::mark_pixel_busy(int x, int y) noexcept
 {
-        quint32* c = &m_data[m_width * y + x];
-        *c ^= 0xffff'ffff;
-        *c &= 0x00ff'ffff;
+        m_data[m_width * y + x] ^= 0x00ff'ffff;
 }
 
 void PainterWindow::update_points() noexcept
 {
-        std::memcpy(m_image.bits(), m_data.data(), m_data.size() * sizeof(m_data[0]));
+        const quint32* image_data = ui.checkBox_show_threads->isChecked() ? m_data.data() : m_data_clean.data();
+        std::memcpy(m_image.bits(), image_data, m_image_data_size);
         ui.label_points->setPixmap(QPixmap::fromImage(m_image));
         ui.label_points->update();
 }
 
 void PainterWindow::painter_pixel_before(int x, int y) noexcept
 {
-        xor_pixel(x, y);
+        mark_pixel_busy(x, y);
 }
 
 void PainterWindow::painter_pixel_after(int x, int y, unsigned char r, unsigned char g, unsigned char b) noexcept
@@ -176,9 +188,27 @@ void PainterWindow::timer_slot()
         update_points();
 }
 
-void create_painter_window(unsigned thread_count, std::unique_ptr<const PaintObjects>&& paint_objects)
+void create_painter_window(const std::string& title, unsigned thread_count, std::unique_ptr<const PaintObjects>&& paint_objects)
 {
         // В окне вызывается setAttribute(Qt::WA_DeleteOnClose),
         // поэтому можно просто new.
-        new PainterWindow(thread_count, std::move(paint_objects));
+        new PainterWindow(title, thread_count, std::move(paint_objects));
+}
+
+void PainterWindow::on_pushButton_save_to_file_clicked()
+{
+        QString file_name = QFileDialog::getSaveFileName(this, "Export to file", "", "Images (*.png)", nullptr,
+                                                         QFileDialog::DontUseNativeDialog);
+        if (file_name.size() == 0)
+        {
+                return;
+        }
+
+        // Таймер и эта функция работают в одном потоке, поэтому можно пользоваться
+        // переменной m_image без блокировок.
+        std::memcpy(m_image.bits(), m_data_clean.data(), m_image_data_size);
+        if (!m_image.save(file_name, "PNG"))
+        {
+                message_critical(this, "Error saving image to file");
+        }
 }

@@ -29,21 +29,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace
 {
-std::string file_name_with_extension_ppm(const std::string& file_name)
+std::string file_name_with_extension(const std::string& file_name, const std::string& extension)
 {
         std::string ext = to_lower(trim(get_extension(file_name)));
         if (ext.size() > 0)
         {
-                if (ext != "ppm")
+                if (ext != to_lower(trim(extension)))
                 {
                         error("Unsupported image file format");
                 }
                 return file_name;
         }
-        else
-        {
-                return file_name + ".ppm";
-        }
+        return file_name + "." + extension;
 }
 }
 
@@ -178,7 +175,7 @@ void Image::write_to_file(const std::string& file_name) const
                 error("No data to write the image to the file " + file_name);
         }
 
-        CFile fp(file_name_with_extension_ppm(file_name), "wb");
+        CFile fp(file_name_with_extension(file_name, "ppm"), "wb");
 
         if (fprintf(fp, "P6\n%d %d\n255\n", static_cast<int>(m_width), static_cast<int>(m_height)) <= 0)
         {

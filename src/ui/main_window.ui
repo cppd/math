@@ -303,8 +303,7 @@
             <item>
              <widget class="QPushButton" name="pushButton_Painter">
               <property name="text">
-               <string>Painter
-(experimental)</string>
+               <string>Painter</string>
               </property>
              </widget>
             </item>

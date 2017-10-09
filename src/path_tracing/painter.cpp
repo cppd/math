@@ -81,7 +81,8 @@ bool light_source_is_visible(const std::vector<const GenericObject*>& objects, c
 }
 
 vec3 direct_lighting(const std::vector<const GenericObject*>& objects, const std::vector<const LightSource*> light_sources,
-                     const vec3& p, const vec3& normal)
+                     const vec3& p, const vec3& geometric_normal, const vec3& shading_normal, bool triangle_mesh,
+                     std::atomic_ullong* ray_count)
 {
         vec3 color(0);
 
@@ -98,20 +99,55 @@ vec3 direct_lighting(const std::vector<const GenericObject*>& objects, const std
 
                 ray3 ray_to_light = ray3(p, vector_to_light);
 
-                double cosine_light_and_normal = dot(ray_to_light.get_dir(), normal);
+                double cosine_light_and_shading_normal = dot(ray_to_light.get_dir(), shading_normal);
 
-                if (cosine_light_and_normal <= EPSILON)
+                if (cosine_light_and_shading_normal <= EPSILON)
                 {
                         // свет находится по другую сторону поверхности
                         continue;
                 }
 
-                if (!light_source_is_visible(objects, ray_to_light, length(vector_to_light)))
+                ++(*ray_count);
+
+                if (!triangle_mesh || dot(ray_to_light.get_dir(), geometric_normal) >= 0)
                 {
-                        continue;
+                        // Если не объект из треугольников или геометрическая сторона обращена к источнику
+                        // света, то напрямую рассчитать видимость источника света.
+                        if (!light_source_is_visible(objects, ray_to_light, length(vector_to_light)))
+                        {
+                                continue;
+                        }
+                }
+                else
+                {
+                        // Если объект из треугольников и геометрическая сторона направлена от источника света,
+                        // то геометрически она не освещена, но из-за нормалей у вершин, дающих сглаживание,
+                        // она может быть «освещена», и надо определить, находится ли она в тени без учёта
+                        // тени от самой поверхности в окрестности точки. Это можно сделать направлением луча
+                        // к источнику света с игнорированием самого первого пересечения в предположении, что
+                        // оно произошло с этой самой окрестностью точки.
+                        double t;
+                        const Surface* surface;
+                        const GeometricObject* geometric_object;
+                        if (ray_intersection(objects, ray_to_light, &t, &surface, &geometric_object))
+                        {
+                                double distance_to_light_source = length(vector_to_light);
+
+                                if (t < distance_to_light_source)
+                                {
+                                        ++(*ray_count);
+
+                                        ray_to_light.set_org(ray_to_light.point(t));
+
+                                        if (!light_source_is_visible(objects, ray_to_light, distance_to_light_source - t))
+                                        {
+                                                continue;
+                                        }
+                                }
+                        }
                 }
 
-                color += light_source_color * cosine_light_and_normal;
+                color += light_source_color * cosine_light_and_shading_normal;
         }
 
         return color;
@@ -167,6 +203,8 @@ class Painter
 
         std::vector<std::thread> m_threads;
         std::atomic_bool& m_stop;
+
+        static_assert(std::atomic_ullong::is_always_lock_free);
         std::atomic_ullong& m_ray_count;
 
         int m_width, m_height;
@@ -330,7 +368,8 @@ vec3 Painter::trace_path(std::mt19937_64& random_engine, int recursion_level, do
 
                 if (new_color_level >= MIN_COLOR_LEVEL)
                 {
-                        vec3 direct = direct_lighting(m_objects, m_light_sources, point, shading_normal);
+                        vec3 direct = direct_lighting(m_objects, m_light_sources, point, geometric_normal, shading_normal,
+                                                      triangle_mesh, &m_ray_count);
 
                         vec3 diffuse = diffuse_lighting(random_engine, recursion_level, new_color_level, point, shading_normal,
                                                         geometric_normal, triangle_mesh);

@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <QTimer>
 #include <memory>
+#include <string>
 #include <thread>
 
 class PainterWindow final : public QWidget, public IPainterNotifier
@@ -32,7 +33,7 @@ class PainterWindow final : public QWidget, public IPainterNotifier
         Q_OBJECT
 
 public:
-        PainterWindow(unsigned thread_count, std::unique_ptr<const PaintObjects>&& paint_objects);
+        PainterWindow(const std::string& title, unsigned thread_count, std::unique_ptr<const PaintObjects>&& paint_objects);
         ~PainterWindow() override;
 
 signals:
@@ -43,6 +44,8 @@ private slots:
         void first_shown();
         void error_message_slot(QString);
 
+        void on_pushButton_save_to_file_clicked();
+
 private:
         void showEvent(QShowEvent* event) override;
 
@@ -51,14 +54,15 @@ private:
         void painter_error_message(const std::string& msg) noexcept override;
 
         void set_pixel(int x, int y, unsigned char r, unsigned char g, unsigned char b) noexcept;
-        void xor_pixel(int x, int y) noexcept;
+        void mark_pixel_busy(int x, int y) noexcept;
         void update_points() noexcept;
 
         std::unique_ptr<const PaintObjects> m_paint_objects;
         unsigned m_thread_count;
         int m_width, m_height;
         QImage m_image;
-        std::vector<quint32> m_data;
+        std::vector<quint32> m_data, m_data_clean;
+        const unsigned m_image_data_size;
         QTimer m_timer;
         bool m_first_show;
         std::atomic_bool m_stop;
@@ -71,4 +75,4 @@ private:
         Ui::PainterWindow ui;
 };
 
-void create_painter_window(unsigned thread_count, std::unique_ptr<const PaintObjects>&& paint_objects);
+void create_painter_window(const std::string& title, unsigned thread_count, std::unique_ptr<const PaintObjects>&& paint_objects);

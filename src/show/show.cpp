@@ -94,6 +94,9 @@ class Camera final
 
         glm::vec3 m_camera_right, m_camera_up, m_camera_direction, m_light_up, m_light_direction;
 
+        glm::vec3 m_view_center;
+        float m_view_width;
+
         void set_vectors(const glm::vec3& right, const glm::vec3& up)
         {
                 m_camera_up = glm::normalize(up);
@@ -132,13 +135,16 @@ public:
                 *light_direction = -m_light_direction; // от источника света на объект
         }
 
-        void get(glm::vec3* camera_up, glm::vec3* camera_direction, glm::vec3* light_direction) const
+        void get_camera_information(glm::vec3* camera_up, glm::vec3* camera_direction, glm::vec3* light_direction,
+                                    glm::vec3* view_center, float* view_width) const
         {
                 std::lock_guard lg(m_lock);
 
                 *camera_up = m_camera_up;
                 *camera_direction = -m_camera_direction; // от камеры на объект
                 *light_direction = -m_light_direction; // от источника света на объект
+                *view_center = m_view_center;
+                *view_width = m_view_width;
         }
 
         void rotate(int delta_x, int delta_y)
@@ -148,6 +154,14 @@ public:
                 glm::vec3 right = glm::rotate(m_camera_right, to_radians(-delta_x), m_camera_up);
                 glm::vec3 up = glm::rotate(m_camera_up, to_radians(-delta_y), m_camera_right);
                 set_vectors(right, up);
+        }
+
+        void set_view_center_and_width(const glm::vec3& vec, float view_width)
+        {
+                std::lock_guard lg(m_lock);
+
+                m_view_center = vec;
+                m_view_width = view_width;
         }
 };
 
@@ -356,9 +370,10 @@ class ShowObject final : public IShow
                 m_event_queue.emplace(std::in_place_type<Event::shadow_zoom>, v);
         }
 
-        void get_camera_and_light(glm::vec3* camera_up, glm::vec3* camera_direction, glm::vec3* light_direction) const override
+        void get_camera_information(glm::vec3* camera_up, glm::vec3* camera_direction, glm::vec3* light_direction,
+                                    glm::vec3* view_center, float* view_width) const override
         {
-                m_camera.get(camera_up, camera_direction, light_direction);
+                m_camera.get_camera_information(camera_up, camera_direction, light_direction, view_center, view_width);
         }
 
 public:
@@ -803,8 +818,7 @@ void ShowObject::loop()
                         }
                         else
                         {
-                                window_center.x -= delta_x * pixel_to_coord;
-                                window_center.y -= -delta_y * pixel_to_coord;
+                                window_center -= pixel_to_coord * glm::vec2(delta_x, -delta_y);
                         }
 
                         matrix_change = true;
@@ -816,10 +830,10 @@ void ShowObject::loop()
                         {
                                 zoom_delta += wheel_delta;
 
-                                glm::vec2 mouse_in_wnd((new_mouse_x - width * 0.5f) * pixel_to_coord,
-                                                       (height * 0.5f - new_mouse_y) * pixel_to_coord);
+                                glm::vec2 mouse_in_wnd(new_mouse_x - width * 0.5f, height * 0.5f - new_mouse_y);
 
-                                window_center += mouse_in_wnd - mouse_in_wnd * std::pow(ZOOM_BASE, -wheel_delta);
+                                window_center +=
+                                        pixel_to_coord * (mouse_in_wnd - mouse_in_wnd * std::pow(ZOOM_BASE, -wheel_delta));
 
                                 pixel_to_coord = pixel_to_coord_no_zoom * std::pow(ZOOM_BASE, -zoom_delta);
 
@@ -898,15 +912,21 @@ void ShowObject::loop()
                         float z_near = -1.0f;
                         float z_far = 1.0f;
 
-                        glm::mat4 main_matrix =
-                                glm::ortho(left, right, bottom, top, z_near, z_far) *
+                        glm::mat4 projection_matrix = glm::ortho(left, right, bottom, top, z_near, z_far);
+
+                        glm::mat4 view_matrix =
                                 glm::translate(glm::mat4(1), glm::vec3(-window_center.x, -window_center.y, 0.0f)) *
                                 glm::lookAt(glm::vec3(0, 0, 0), camera_direction, camera_up);
 
-                        draw_program->set_matrices(shadow_matrix, main_matrix);
+                        draw_program->set_matrices(shadow_matrix, projection_matrix * view_matrix);
 
                         draw_program->set_light_direction(-light_direction);
                         draw_program->set_camera_direction(-camera_direction);
+
+                        glm::vec4 screen_center((right + left) * 0.5f, (top + bottom) * 0.5f, (z_far + z_near) * 0.5f, 1.0f);
+                        glm::vec4 view_center = glm::inverse(view_matrix) * screen_center;
+                        m_camera.set_view_center_and_width(glm::vec3(view_center[0], view_center[1], view_center[2]),
+                                                           right - left);
                 }
 
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
