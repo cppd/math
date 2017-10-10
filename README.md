@@ -23,6 +23,7 @@ Delaunay triangulation                         | Convex hull of paraboloid      
 Voronoi diagram                                | Convex hull of paraboloid                                | Arbitrary number of dimensions | Sequential         | C++
 Manifold reconstruction                        | Cocone                                                   | Arbitrary number of dimensions | Sequential         | C++
 Manifold reconstruction                        | BoundCocone                                              | Arbitrary number of dimensions | Sequential         | C++
+Realistic visualization                        | Path tracing                                             | 3 dimensions                   | Parallel           | C++
 
 Various other algorithms.
 
@@ -30,7 +31,7 @@ Various other algorithms.
 
 * Supported operating systems: Linux, Windows.
 * Programming languages: C++17, GLSL 4.50.
-* Supported C++ compilers: GCC 7.1, Clang 5.
+* Supported C++ compilers: GCC 7.2, Clang 5.
 * Libraries: FreeType, GLM, GMP, OpenGL 4.5, Qt 5, SFML, XLib.
 * Build system: CMake.
 
@@ -38,6 +39,7 @@ Various other algorithms.
 
 Points in 3D and the surface reconstructed from the points
 
-![points](https://i.imgur.com/OKifv3f.png)
-![reconstructed surface](https://i.imgur.com/yhoFrz4.png)
-![reconstructed surface wireframe](https://i.imgur.com/wcqcTsN.png)
+![points](https://i.imgur.com/VGf1HSj.png)
+![reconstructed surface](https://i.imgur.com/nLyemgL.png)
+![reconstructed surface wireframe](https://i.imgur.com/6DQuKhI.png)
+![reconstructed surface image](https://i.imgur.com/xi1iyEk.png)
