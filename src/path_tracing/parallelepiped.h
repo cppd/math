@@ -21,6 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "ray3.h"
 #include "vec3.h"
 
+#include <array>
+
 class GeometricParallelepiped : public GeometricObject
 {
 protected:
@@ -66,6 +68,8 @@ public:
         bool intersect(const ray3& r, double* t) const override;
 
         vec3 normal(const vec3& p) const;
+
+        void binary_division(std::array<Parallelepiped, 8>* p) const;
 
         const vec3& org() const override;
         const vec3& e0() const override;

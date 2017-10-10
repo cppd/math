@@ -95,3 +95,46 @@ std::string source_with_line_numbers(const std::string s)
 
         return os.str();
 }
+
+std::string to_string_digit_groups(unsigned long long v, char s)
+{
+        std::string r;
+        r.reserve(26);
+
+        int i = 0;
+        do
+        {
+                if ((++i % 3) == 1 && i != 1)
+                {
+                        r += s;
+                }
+                char c = (v % 10) + '0';
+                r += c;
+
+        } while ((v /= 10) > 0);
+
+        std::reverse(r.begin(), r.end());
+
+        return r;
+}
+
+std::string to_string_digit_groups(long long v, char s)
+{
+        if (v >= 0)
+        {
+                return to_string_digit_groups(static_cast<unsigned long long>(v), s);
+        }
+        else
+        {
+                return "-" + to_string_digit_groups(static_cast<unsigned long long>(-v), s);
+        }
+}
+
+std::string to_string_digit_groups(unsigned v, char s)
+{
+        return to_string_digit_groups(static_cast<unsigned long long>(v), s);
+}
+std::string to_string_digit_groups(int v, char s)
+{
+        return to_string_digit_groups(static_cast<long long>(v), s);
+}

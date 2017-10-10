@@ -72,6 +72,9 @@ private:
         const std::thread::id m_window_thread_id;
         Paintbrush m_paintbrush;
 
+        class RPS;
+        std::unique_ptr<RPS> m_rps;
+
         Ui::PainterWindow ui;
 };
 

@@ -18,15 +18,53 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "painter_window.h"
 
 #include "com/error.h"
+#include "com/print.h"
+#include "com/time.h"
 #include "ui/dialogs/message_box.h"
 
 #include <QFileDialog>
 #include <cstring>
+#include <deque>
 
 constexpr int UPDATE_INTERVAL = 100;
 constexpr int PANTBRUSH_WIDTH = 20;
 
 constexpr bool SHOW_THREADS = true;
+
+// Количество лучей в секунду
+class PainterWindow::RPS
+{
+        struct Point
+        {
+                long long count;
+                double time;
+                Point(long long count_, double time_) : count(count_), time(time_)
+                {
+                }
+        };
+        std::deque<Point> m_deque;
+        double m_interval;
+
+public:
+        RPS(double interval) : m_interval(interval)
+        {
+        }
+
+        double freq(long long count)
+        {
+                double time = get_time_seconds();
+
+                m_deque.emplace_back(count, time);
+
+                // Удаление старых элементов
+                while (m_deque.size() >= 2 && m_deque.front().time < time - m_interval)
+                {
+                        m_deque.pop_front();
+                }
+
+                return (m_deque.size() >= 2) ? (count - m_deque.front().count) / (time - m_deque.front().time) : 0;
+        }
+};
 
 PainterWindow::PainterWindow(const std::string& title, unsigned thread_count, std::unique_ptr<const PaintObjects>&& paint_objects)
         : m_paint_objects(std::move(paint_objects)),
@@ -42,7 +80,8 @@ PainterWindow::PainterWindow(const std::string& title, unsigned thread_count, st
           m_ray_count(0),
           m_thread_working(false),
           m_window_thread_id(std::this_thread::get_id()),
-          m_paintbrush(m_width, m_height, PANTBRUSH_WIDTH)
+          m_paintbrush(m_width, m_height, PANTBRUSH_WIDTH),
+          m_rps(std::make_unique<RPS>(1))
 {
         ui.setupUi(this);
 
@@ -70,12 +109,13 @@ PainterWindow::PainterWindow(const std::string& title, unsigned thread_count, st
         ui.label_points->setText("");
         ui.label_points->resize(m_width, m_height);
 
+        ui.label_rps->setText("");
         ui.label_ray_count->setText("");
+        ui.label_pass_count->setText("");
 
         ui.scrollAreaWidgetContents->layout()->setContentsMargins(0, 0, 0, 0);
         ui.scrollAreaWidgetContents->layout()->setSpacing(0);
         this->layout()->setContentsMargins(5, 5, 5, 5);
-        ui.formLayout->setContentsMargins(5, 5, 5, 5);
 
         this->setWindowTitle(title.c_str());
 
@@ -183,16 +223,19 @@ void PainterWindow::first_shown()
 
 void PainterWindow::timer_slot()
 {
-        ui.label_ray_count->setText(to_string(m_ray_count).c_str());
+        long long ray_count = m_ray_count;
+        long long rps = std::round(m_rps->freq(ray_count));
+        long long pass_count = m_paintbrush.get_pass_count();
+
+        ui.label_rps->setText(to_string_digit_groups(rps).c_str());
+        ui.label_ray_count->setText(to_string_digit_groups(ray_count).c_str());
+        ui.label_pass_count->setText(to_string_digit_groups(pass_count).c_str());
+
+        ui.label_rps->setMinimumWidth(ui.label_rps->width());
+        ui.label_ray_count->setMinimumWidth(ui.label_ray_count->width());
+        ui.label_pass_count->setMinimumWidth(ui.label_pass_count->width());
 
         update_points();
-}
-
-void create_painter_window(const std::string& title, unsigned thread_count, std::unique_ptr<const PaintObjects>&& paint_objects)
-{
-        // В окне вызывается setAttribute(Qt::WA_DeleteOnClose),
-        // поэтому можно просто new.
-        new PainterWindow(title, thread_count, std::move(paint_objects));
 }
 
 void PainterWindow::on_pushButton_save_to_file_clicked()
@@ -211,4 +254,11 @@ void PainterWindow::on_pushButton_save_to_file_clicked()
         {
                 message_critical(this, "Error saving image to file");
         }
+}
+
+void create_painter_window(const std::string& title, unsigned thread_count, std::unique_ptr<const PaintObjects>&& paint_objects)
+{
+        // В окне вызывается setAttribute(Qt::WA_DeleteOnClose),
+        // поэтому можно просто new.
+        new PainterWindow(title, thread_count, std::move(paint_objects));
 }

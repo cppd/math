@@ -45,7 +45,7 @@ class Octree
                 std::array<int, 8> m_childs;
 
         public:
-                OctreeBox(const Parallelepiped& box) : m_parallelepiped(box)
+                OctreeBox(Parallelepiped&& box) : m_parallelepiped(std::move(box))
                 {
                         std::fill(m_childs.begin(), m_childs.end(), EMPTY);
                 }
@@ -117,9 +117,9 @@ class Octree
         // Все коробки хранятся в одном векторе
         std::vector<OctreeBox> m_boxes;
 
-        int create_box(const Parallelepiped& box)
+        int create_box(Parallelepiped&& box)
         {
-                m_boxes.push_back(box);
+                m_boxes.push_back(std::move(box));
                 return m_boxes.size() - 1;
         }
 
@@ -133,24 +133,13 @@ class Octree
                         return;
                 }
 
-                vec3 half0 = m_boxes[parent_box].get_parallelepiped().e0() / 2.0;
-                vec3 half1 = m_boxes[parent_box].get_parallelepiped().e1() / 2.0;
-                vec3 half2 = m_boxes[parent_box].get_parallelepiped().e2() / 2.0;
+                std::array<Parallelepiped, 8> child_parallelepipeds;
 
-                std::array<vec3, 8> orgs;
-
-                orgs[0] = m_boxes[parent_box].get_parallelepiped().org();
-                orgs[1] = orgs[0] + half0;
-                orgs[2] = orgs[0] + half1;
-                orgs[3] = orgs[2] + half0;
-                orgs[4] = m_boxes[parent_box].get_parallelepiped().org() + half2;
-                orgs[5] = orgs[4] + half0;
-                orgs[6] = orgs[4] + half1;
-                orgs[7] = orgs[6] + half0;
+                m_boxes[parent_box].get_parallelepiped().binary_division(&child_parallelepipeds);
 
                 for (int child_number = 0; child_number < 8; ++child_number)
                 {
-                        int child_box = create_box(Parallelepiped(orgs[child_number], half0, half1, half2));
+                        int child_box = create_box(std::move(child_parallelepipeds[child_number]));
 
                         m_boxes[parent_box].set_child(child_number, child_box);
 

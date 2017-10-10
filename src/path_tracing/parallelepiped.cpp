@@ -221,3 +221,26 @@ const vec3& Parallelepiped::e2() const
 {
         return m_e2;
 }
+
+void Parallelepiped::binary_division(std::array<Parallelepiped, 8>* p) const
+{
+        vec3 half0 = m_e0 / 2.0;
+        vec3 half1 = m_e1 / 2.0;
+        vec3 half2 = m_e2 / 2.0;
+
+        std::array<vec3, 8> orgs;
+
+        orgs[0] = m_org;
+        orgs[1] = orgs[0] + half0;
+        orgs[2] = orgs[0] + half1;
+        orgs[3] = orgs[2] + half0;
+        orgs[4] = m_org + half2;
+        orgs[5] = orgs[4] + half0;
+        orgs[6] = orgs[4] + half1;
+        orgs[7] = orgs[6] + half0;
+
+        for (int i = 0; i < 8; ++i)
+        {
+                (*p)[i] = Parallelepiped(orgs[i], half0, half1, half2);
+        }
+}

@@ -147,3 +147,8 @@ inline std::string to_string(const glm::vec4& data)
 {
         return to_string(std::array<float, 4>{{data[0], data[1], data[2], data[3]}});
 }
+
+std::string to_string_digit_groups(unsigned long long v, char s = '\x20');
+std::string to_string_digit_groups(long long v, char s = '\x20');
+std::string to_string_digit_groups(unsigned v, char s = '\x20');
+std::string to_string_digit_groups(int v, char s = '\x20');

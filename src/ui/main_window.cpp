@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "dialogs/application_help.h"
 #include "dialogs/bound_cocone_parameters.h"
 #include "dialogs/message_box.h"
+#include "dialogs/path_tracing_parameters.h"
 #include "dialogs/source_error.h"
 
 #include "application/application_name.h"
@@ -1310,9 +1311,18 @@ void MainWindow::on_pushButton_Painter_clicked()
                 return;
         }
 
-        int thread_count = std::max(1u, std::thread::hardware_concurrency() - 1);
-
 #if 1
+        int thread_count;
+        double size_coef;
+
+        if (!PathTracingParameters(this).show(std::thread::hardware_concurrency(), ui.graphics_widget->width(),
+                                              ui.graphics_widget->height(), &thread_count, &size_coef))
+        {
+                return;
+        }
+
+        int paint_width = std::round(ui.graphics_widget->width() * size_coef);
+        int paint_height = std::round(ui.graphics_widget->height() * size_coef);
 
         constexpr int projector_pixel_resolution = 5;
 
@@ -1330,7 +1340,7 @@ void MainWindow::on_pushButton_Painter_clicked()
 
         std::unique_ptr projector = std::make_unique<const ParallelProjector>(
                 to_vector<double>(camera_position), to_vector<double>(camera_direction), to_vector<double>(camera_up), view_width,
-                ui.graphics_widget->width(), ui.graphics_widget->height(), projector_pixel_resolution);
+                paint_width, paint_height, projector_pixel_resolution);
 
         std::unique_ptr light = std::make_unique<const ConstantLight>(
                 to_vector<double>(-light_direction) * MESH_OBJECT_SIZE * 2.0, vec3(1, 1, 1));
@@ -1339,6 +1349,7 @@ void MainWindow::on_pushButton_Painter_clicked()
                               one_mesh_package(background_color, default_color, ambient, diffuse, std::move(projector),
                                                std::move(light), mesh_pointer));
 #else
+        int thread_count = std::max(1u, std::thread::hardware_concurrency() - 1);
         create_painter_window(thread_count, cornell_box(500, 500, *mesh_pointer));
 #endif
 }

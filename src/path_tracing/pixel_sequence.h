@@ -21,6 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/thread.h"
 
+#include <atomic>
+
 class Paintbrush final : public PixelSequence
 {
         struct Pixel
@@ -35,7 +37,10 @@ class Paintbrush final : public PixelSequence
         std::vector<int> m_map;
         std::vector<bool> m_pixels_busy;
         unsigned m_current_pixel = 0;
-        int m_pass_count = 1;
+
+        static_assert(std::atomic_int::is_always_lock_free);
+        std::atomic_int m_pass_count = 1;
+
         unsigned m_width;
 
         mutable SpinLock m_lock;
@@ -105,8 +110,6 @@ public:
 
         int get_pass_count() const override
         {
-                std::lock_guard lg(m_lock);
-
                 return m_pass_count;
         }
 };
