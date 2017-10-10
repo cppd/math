@@ -24,11 +24,27 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/time.h"
 #include "geometry/core/vec_glm.h"
 
+#include <glm/glm.hpp>
 #include <unordered_map>
 #include <unordered_set>
 
 namespace
 {
+glm::vec3 face_normal(const std::vector<glm::vec3>& points, const std::array<int, 3>& face)
+{
+        return glm::normalize(glm::cross(points[face[1]] - points[face[0]], points[face[2]] - points[face[0]]));
+}
+
+glm::vec3 average_normal(const glm::vec3& original_normal, const std::vector<glm::vec3>& normals)
+{
+        glm::vec3 sum(0);
+        for (const glm::vec3& n : normals)
+        {
+                sum += (glm::dot(n, original_normal) >= 0) ? n : -n;
+        }
+        return glm::normalize(sum);
+}
+
 class SurfaceObj final : public IObj
 {
         std::vector<glm::vec3> m_vertices;
@@ -86,27 +102,28 @@ class SurfaceObj final : public IObj
                         error("No facets for surface object");
                 }
 
-                std::unordered_set<int> vertex_set;
+                std::unordered_map<int, std::vector<glm::vec3>> vertices;
                 std::unordered_map<int, int> index_map;
 
                 for (const std::array<int, 3>& facet : facets)
                 {
+                        glm::vec3 normal = face_normal(points, facet);
                         for (int v : facet)
                         {
-                                vertex_set.insert(v);
+                                vertices[v].push_back(normal);
                         }
                 }
 
-                m_vertices.resize(vertex_set.size());
-                m_normals.resize(vertex_set.size());
+                m_vertices.resize(vertices.size());
+                m_normals.resize(vertices.size());
 
                 int idx = 0;
-                for (int v : vertex_set)
+                for (auto v : vertices)
                 {
-                        index_map[v] = idx;
+                        index_map[v.first] = idx;
 
-                        m_vertices[idx] = points[v];
-                        m_normals[idx] = to_glm(normals[v]);
+                        m_vertices[idx] = points[v.first];
+                        m_normals[idx] = average_normal(to_glm(normals[v.first]), v.second);
 
                         ++idx;
                 }
