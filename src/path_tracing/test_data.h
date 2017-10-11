@@ -26,5 +26,4 @@ std::unique_ptr<const PaintObjects> cornell_box(int width, int height, const Vis
 
 std::unique_ptr<const PaintObjects> one_mesh_package(const vec3& background_color, const vec3& default_color, double ambient,
                                                      double diffuse, std::unique_ptr<const Projector>&& projector,
-                                                     std::unique_ptr<const LightSource>&& light_source,
-                                                     const std::shared_ptr<const VisibleMesh>& obj);
+                                                     std::unique_ptr<const LightSource>&& light_source, const VisibleMesh& obj);

@@ -17,8 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "error.h"
-
 #include <gmpxx.h>
 #include <string>
 #include <type_traits>

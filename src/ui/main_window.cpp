@@ -32,8 +32,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/log.h"
 #include "com/print.h"
 #include "com/time.h"
+#include "com/vec.h"
+#include "com/vec_glm.h"
 #include "geometry/cocone/reconstruction.h"
-#include "geometry/core/vec_glm.h"
 #include "geometry/objects/points.h"
 #include "obj/obj_alg.h"
 #include "obj/obj_convex_hull.h"
@@ -69,7 +70,7 @@ constexpr int TIMER_PROGRESS_BAR_INTERVAL = 100;
 constexpr int POINT_COUNT = 10000;
 
 // Цвета по умолчанию
-constexpr QRgb CLEAR_COLOR = qRgb(20, 50, 80);
+constexpr QRgb CLEAR_COLOR = qRgb(50, 100, 150);
 constexpr QRgb DEFAULT_COLOR = qRgb(150, 170, 150);
 constexpr QRgb WIREFRAME_COLOR = qRgb(255, 255, 255);
 
@@ -1347,7 +1348,7 @@ void MainWindow::on_pushButton_Painter_clicked()
 
         create_painter_window(std::string(APPLICATION_NAME) + " - " + model_name, thread_count,
                               one_mesh_package(background_color, default_color, ambient, diffuse, std::move(projector),
-                                               std::move(light), mesh_pointer));
+                                               std::move(light), *mesh_pointer));
 #else
         int thread_count = std::max(1u, std::thread::hardware_concurrency() - 1);
         create_painter_window(thread_count, cornell_box(500, 500, *mesh_pointer));

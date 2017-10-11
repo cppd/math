@@ -15,9 +15,14 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "geometry/core/vec.h"
-#include "geometry/core/vec_cross.h"
+#pragma once
 
-// vec2 - это только Vector<2, double>.
-// Не менять.
-using vec2 = Vector<2, double>;
+#include "com/vec.h"
+
+vec3 reflect(const vec3& v, const vec3& normal);
+
+bool refract(const vec3& v, const vec3& normal, double eta, vec3* t);
+bool refract2(const vec3& v, const vec3& normal, double eta, vec3* t);
+
+bool fresnel_dielectric(const vec3& v, const vec3& normal, double n1, double n2, double* reflected, double* transmitted);
+double fresnel_conductor(const vec3& v, const vec3& normal, double eta, double k);

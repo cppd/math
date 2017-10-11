@@ -19,10 +19,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "convex_hull.h"
 #include "ridge.h"
-#include "vec.h"
 #include "voronoi.h"
 
 #include "com/error.h"
+#include "com/vec.h"
 
 #include <array>
 #include <unordered_map>

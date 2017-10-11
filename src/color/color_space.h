@@ -41,7 +41,7 @@ public:
 
 // Вместо luminosity из GLM, так как там используются
 // коэффициенты 0.33, 0.59 и 0.11, что в сумме больше 1.
-constexpr float luminosity(glm::vec3 a)
-{
-        return 0.299f * a.r + 0.587f * a.g + 0.114f * a.b;
-}
+// constexpr float luminosity(glm::vec3 a)
+//{
+//        return 0.299f * a.r + 0.587f * a.g + 0.114f * a.b;
+//}

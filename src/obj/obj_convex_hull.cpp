@@ -19,11 +19,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "obj_alg.h"
 
+#include "com/error.h"
 #include "com/log.h"
 #include "com/print.h"
 #include "com/time.h"
+#include "com/vec.h"
+#include "com/vec_glm.h"
 #include "geometry/core/convex_hull.h"
-#include "geometry/core/vec_glm.h"
 
 #include <unordered_map>
 

@@ -19,7 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "ui_painter_window.h"
 
-#include "path_tracing/objects.h"
 #include "path_tracing/painter.h"
 #include "path_tracing/pixel_sequence.h"
 

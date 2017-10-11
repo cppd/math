@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/math.h"
 #include "com/types.h"
-#include "geometry/core/vec.h"
+#include "com/vec.h"
 #include "numerical/quadratic.h"
 
 namespace CoconeImplementation

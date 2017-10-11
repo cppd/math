@@ -18,7 +18,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "objects.h"
-#include "vec3.h"
+
+#include "com/vec.h"
 
 #include <atomic>
 #include <string>
@@ -36,5 +37,5 @@ public:
         virtual void painter_error_message(const std::string& msg) noexcept = 0;
 };
 
-void paint(IPainterNotifier* painter_notifier, const PaintObjects* paint_objects, PixelSequence* pixel_sequence, unsigned thread_count,
-           std::atomic_bool* stop, std::atomic_ullong* ray_count);
+void paint(IPainterNotifier* painter_notifier, const PaintObjects* paint_objects, PixelSequence* pixel_sequence,
+           unsigned thread_count, std::atomic_bool* stop, std::atomic_ullong* ray_count);

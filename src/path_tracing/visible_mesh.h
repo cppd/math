@@ -19,10 +19,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "objects.h"
 
-#include "image.h"
 #include "octree.h"
 #include "parallelepiped.h"
 #include "triangle.h"
+#include "image/image.h"
 
 #include "obj/obj.h"
 #include "progress/progress.h"

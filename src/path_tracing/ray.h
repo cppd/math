@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "vec.h"
+#include "com/vec.h"
 
 template <size_t N, typename T>
 class Ray
@@ -63,3 +63,7 @@ std::string to_string(const Ray<N, T>& data)
 {
         return "(org " + to_string(data.get_org()) + ", dir " + to_string(data.get_dir()) + ")";
 }
+
+// ray3 - это только Ray<3, double>.
+// Не менять.
+using ray3 = Ray<3, double>;

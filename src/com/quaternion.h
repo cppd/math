@@ -17,10 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "types.h"
 #include "vec.h"
-#include "vec_cross.h"
-
-#include "com/types.h"
 
 template <typename T>
 class Quaternion

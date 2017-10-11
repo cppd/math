@@ -17,13 +17,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "vec.h"
 #include "vec_array.h"
 
 #include "com/error.h"
 #include "com/hash.h"
 #include "com/print.h"
 #include "com/sort.h"
+#include "com/vec.h"
 
 #include <array>
 #include <list>

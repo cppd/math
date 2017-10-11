@@ -17,9 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "geometry/core/vec.h"
-#include "geometry/core/vec_cross.h"
+#include "com/vec.h"
 
-// vec3 - это только Vector<3, double>.
-// Не менять.
-using vec3 = Vector<3, double>;
+#include <random>
+
+vec3 random_hemisphere_any_length(std::mt19937_64& engine, const vec3& normal);
+vec3 random_sphere_any_length(std::mt19937_64& engine);

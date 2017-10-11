@@ -58,7 +58,6 @@ Chapman & Hall/CRC, 2004.
 #include "linear_algebra.h"
 #include "max_determinant.h"
 #include "ridge.h"
-#include "vec.h"
 #include "vec_array.h"
 
 #include "com/combinatorics.h"
@@ -69,6 +68,7 @@ Chapman & Hall/CRC, 2004.
 #include "com/random.h"
 #include "com/thread_pool.h"
 #include "com/types.h"
+#include "com/vec.h"
 
 #include <algorithm>
 #include <cstdint>

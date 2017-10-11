@@ -53,8 +53,7 @@ Princeton University Press, 2011.
 
 #pragma once
 
-#include "vec.h"
-
+#include "com/vec.h"
 #include "numerical/gauss.h"
 
 #include <array>

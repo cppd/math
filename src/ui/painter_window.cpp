@@ -31,6 +31,15 @@ constexpr int PANTBRUSH_WIDTH = 20;
 
 constexpr bool SHOW_THREADS = true;
 
+namespace
+{
+void set_text_and_minimum_width(QLabel* label, const std::string& text)
+{
+        label->setText(text.c_str());
+        label->setMinimumWidth(std::max(label->width(), label->fontMetrics().width(text.c_str())));
+}
+}
+
 // Количество лучей в секунду
 class PainterWindow::RPS
 {
@@ -227,13 +236,9 @@ void PainterWindow::timer_slot()
         long long rps = std::round(m_rps->freq(ray_count));
         long long pass_count = m_paintbrush.get_pass_count();
 
-        ui.label_rps->setText(to_string_digit_groups(rps).c_str());
-        ui.label_ray_count->setText(to_string_digit_groups(ray_count).c_str());
-        ui.label_pass_count->setText(to_string_digit_groups(pass_count).c_str());
-
-        ui.label_rps->setMinimumWidth(ui.label_rps->width());
-        ui.label_ray_count->setMinimumWidth(ui.label_ray_count->width());
-        ui.label_pass_count->setMinimumWidth(ui.label_pass_count->width());
+        set_text_and_minimum_width(ui.label_rps, to_string_digit_groups(rps));
+        set_text_and_minimum_width(ui.label_ray_count, to_string_digit_groups(ray_count));
+        set_text_and_minimum_width(ui.label_pass_count, to_string_digit_groups(pass_count));
 
         update_points();
 }

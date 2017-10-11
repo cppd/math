@@ -17,19 +17,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "test_data.h"
 
+#include "com/colors.h"
 #include "obj/obj_file_load.h"
-#include "path_tracing/colors.h"
 #include "path_tracing/light_source.h"
 #include "path_tracing/projector.h"
 #include "path_tracing/visible_mesh.h"
 #include "path_tracing/visible_shapes.h"
 
-constexpr int PIXEL_RESOLUTION = 3;
-
 namespace
 {
 class CornellBox : public PaintObjects
 {
+        static constexpr int PIXEL_RESOLUTION = 5;
+
         std::vector<const GenericObject*> m_objects;
         std::vector<const LightSource*> m_light_sources;
         std::unique_ptr<PerspectiveProjector> m_perspective_projector;
@@ -193,8 +193,8 @@ class OneMeshPackage : public PaintObjects
 public:
         OneMeshPackage(const vec3& background_color, const vec3& default_color, double ambient, double diffuse,
                        std::unique_ptr<const Projector>&& projector, std::unique_ptr<const LightSource>&& light_source,
-                       const std::shared_ptr<const VisibleMesh>& obj)
-                : m_object(*obj), m_projector(std::move(projector)), m_light_source(std::move(light_source))
+                       const VisibleMesh& obj)
+                : m_object(obj), m_projector(std::move(projector)), m_light_source(std::move(light_source))
         {
                 m_default_surface_properties.set_color(background_color);
                 m_default_surface_properties.set_diffuse_and_fresnel(1, 0);
@@ -241,8 +241,7 @@ std::unique_ptr<const PaintObjects> cornell_box(int width, int height, const Vis
 
 std::unique_ptr<const PaintObjects> one_mesh_package(const vec3& background_color, const vec3& default_color, double ambient,
                                                      double diffuse, std::unique_ptr<const Projector>&& projector,
-                                                     std::unique_ptr<const LightSource>&& light_source,
-                                                     const std::shared_ptr<const VisibleMesh>& obj)
+                                                     std::unique_ptr<const LightSource>&& light_source, const VisibleMesh& obj)
 {
         return std::make_unique<OneMeshPackage>(background_color, default_color, ambient, diffuse, std::move(projector),
                                                 std::move(light_source), obj);

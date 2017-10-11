@@ -17,12 +17,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "painter.h"
 
-#include "colors.h"
 #include "constants.h"
 #include "objects.h"
-#include "random_sphere.h"
 #include "ray_intersection.h"
+#include "random/random_sphere.h"
 
+#include "com/colors.h"
+#include "com/error.h"
 #include "com/random.h"
 
 #include <atomic>

@@ -18,13 +18,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "linear_algebra.h"
-#include "vec.h"
 
 #include "com/error.h"
 #include "com/mpz.h"
 #include "com/print.h"
 #include "com/sort.h"
 #include "com/types.h"
+#include "com/vec.h"
 
 #include <array>
 #include <vector>

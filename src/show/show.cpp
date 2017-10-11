@@ -21,12 +21,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "show_event.h"
 
 #include "color/color_space.h"
+#include "com/colors.h"
 #include "com/error.h"
 #include "com/log.h"
 #include "com/math.h"
 #include "com/print.h"
 #include "com/thread.h"
 #include "com/time.h"
+#include "com/vec_glm.h"
 #include "dft/show/dft_show.h"
 #include "graphics/objects.h"
 #include "hull_2d/hull_2d.h"
@@ -612,7 +614,8 @@ void ShowObject::loop()
 
                                 glm::vec3 color = glm::convertSRGBToLinear(d.clear_color);
                                 glClearColor(color.r, color.g, color.b, 1);
-                                text.set_color((luminosity(color) <= 0.5f) ? glm::vec3(1) : glm::vec3(0));
+                                bool dark_color = luminosity_rgb(to_vector<double>(color)) <= 0.5;
+                                text.set_color(dark_color ? glm::vec3(1) : glm::vec3(0));
                                 break;
                         }
                         case Event::EventType::set_default_color:

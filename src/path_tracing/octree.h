@@ -23,9 +23,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "constants.h"
-#include "ray3.h"
-#include "vec3.h"
+#include "ray.h"
 
+#include "com/error.h"
+#include "com/vec.h"
 #include "progress/progress.h"
 
 #include <algorithm>

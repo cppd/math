@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "vec3.h"
+#include "com/vec.h"
 
 #include <algorithm>
 #include <cmath>

@@ -17,8 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "vec2.h"
-#include "vec3.h"
+#include "com/vec.h"
 
 #include <SFML/Graphics/Image.hpp>
 #include <string>

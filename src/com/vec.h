@@ -325,7 +325,42 @@ std::string to_string(const Vector<N, T>& data)
         return o;
 }
 
+// Если векторы единичные, то это синус угла между векторами
+// в двухмерном пространстве
+template <typename T>
+T cross(const Vector<2, T>& v0, const Vector<2, T>& v1)
+{
+        return v0[0] * v1[1] - v0[1] * v1[0];
+}
+
+// Дублирование кода из функции ortho_nn, но так удобнее, так как понятие
+// векторное произведение имеется только в трёхмерном пространстве,
+// в отличие от ортогональных дополнений
+template <typename T>
+Vector<3, T> cross(const Vector<3, T>& v0, const Vector<3, T>& v1)
+{
+        Vector<3, T> res;
+
+        // clang-format off
+
+        res[0] = +(v0[1] * v1[2] - v0[2] * v1[1]);
+        res[1] = -(v0[0] * v1[2] - v0[2] * v1[0]);
+        res[2] = +(v0[0] * v1[1] - v0[1] * v1[0]);
+
+        // clang-format on
+
+        return res;
+}
+
 // vec - это только Vector<N, double>.
 // Не менять.
 template <std::size_t N>
 using vec = Vector<N, double>;
+
+// vec2 - это только Vector<2, double>.
+// Не менять.
+using vec2 = Vector<2, double>;
+
+// vec3 - это только Vector<3, double>.
+// Не менять.
+using vec3 = Vector<3, double>;

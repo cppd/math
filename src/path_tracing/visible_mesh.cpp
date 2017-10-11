@@ -22,7 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/log.h"
 #include "com/time.h"
-#include "geometry/core/vec_glm.h"
+#include "com/vec.h"
+#include "com/vec_glm.h"
 
 constexpr int OCTREE_MAX_DEPTH = 10;
 constexpr int OCTREE_MIN_OBJECTS = 10;
