@@ -17,25 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "objects.h"
+#include "base.h"
 
-#include "com/vec.h"
-
-#include <atomic>
-#include <string>
-
-struct IPainterNotifier
-{
-protected:
-        virtual ~IPainterNotifier()
-        {
-        }
-
-public:
-        virtual void painter_pixel_before(int x, int y) noexcept = 0;
-        virtual void painter_pixel_after(int x, int y, unsigned char r, unsigned char g, unsigned char b) noexcept = 0;
-        virtual void painter_error_message(const std::string& msg) noexcept = 0;
-};
-
-void paint(IPainterNotifier* painter_notifier, const PaintObjects* paint_objects, Paintbrush* paintbrush, unsigned thread_count,
-           std::atomic_bool* stop, std::atomic_ullong* ray_count);
+bool shape_intersection(const GeometricTriangle& t1, const GeometricTriangle& t2);
+bool shape_intersection(const GeometricTriangle& triangle, const GeometricParallelepiped& parallelepiped);
+bool shape_intersection(const GeometricParallelepiped& parallelepiped, const GeometricTriangle& triangle);
+bool shape_intersection(const GeometricParallelepiped& p1, const GeometricParallelepiped& p2);

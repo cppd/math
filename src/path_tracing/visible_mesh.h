@@ -20,17 +20,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "objects.h"
 
 #include "octree.h"
-#include "parallelepiped.h"
-#include "triangle.h"
-#include "image/image.h"
 
 #include "obj/obj.h"
+#include "path_tracing/image/image.h"
+#include "path_tracing/shapes/parallelepiped_ortho.h"
+#include "path_tracing/shapes/triangle.h"
 #include "progress/progress.h"
 
 #include <memory>
 
 class VisibleMesh final : public GenericObject, public Surface, public SurfaceProperties
 {
+        using OctreeParallelepiped = ParallelepipedOrtho;
+
         std::vector<vec3> m_vertices;
         std::vector<vec3> m_normals;
         std::vector<vec2> m_texcoords;
@@ -49,7 +51,7 @@ class VisibleMesh final : public GenericObject, public Surface, public SurfacePr
 
         std::vector<TableTriangle> m_triangles;
 
-        Octree<Parallelepiped, TableTriangle> m_octree;
+        Octree<OctreeParallelepiped, TableTriangle> m_octree;
 
         void create_mesh_object(const IObj* obj, double size, const vec3& position, ProgressRatio* progress);
 

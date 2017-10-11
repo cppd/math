@@ -17,11 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "parallelepiped.h"
-#include "triangle.h"
-
 #include "com/log.h"
 #include "com/print.h"
+#include "path_tracing/shapes/parallelepiped.h"
+#include "path_tracing/shapes/rectangle.h"
 
 class VisibleRectangle final : public GenericObject, public Surface, public SurfaceProperties
 {

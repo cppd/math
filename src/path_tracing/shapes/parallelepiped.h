@@ -17,31 +17,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "objects.h"
-#include "ray.h"
+#include "base.h"
 
 #include "com/vec.h"
+#include "path_tracing/objects.h"
+#include "path_tracing/ray.h"
 
 #include <array>
-
-class GeometricParallelepiped : public GeometricObject
-{
-protected:
-        virtual ~GeometricParallelepiped() = default;
-
-public:
-        virtual const vec3& org() const = 0;
-        virtual const vec3& e0() const = 0;
-        virtual const vec3& e1() const = 0;
-        virtual const vec3& e2() const = 0;
-        virtual bool inside(const vec3& p) const = 0;
-
-        GeometricParallelepiped() = default;
-        GeometricParallelepiped(const GeometricParallelepiped&) = default;
-        GeometricParallelepiped(GeometricParallelepiped&&) = default;
-        GeometricParallelepiped& operator=(const GeometricParallelepiped&) = default;
-        GeometricParallelepiped& operator=(GeometricParallelepiped&&) = default;
-};
 
 class Parallelepiped final : public GeometricParallelepiped
 {
@@ -73,7 +55,7 @@ public:
         void binary_division(std::array<Parallelepiped, 8>* p) const;
 
         const vec3& org() const override;
-        const vec3& e0() const override;
-        const vec3& e1() const override;
-        const vec3& e2() const override;
+        vec3 e0() const override;
+        vec3 e1() const override;
+        vec3 e2() const override;
 };

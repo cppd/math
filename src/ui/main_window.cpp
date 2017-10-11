@@ -1344,7 +1344,7 @@ void MainWindow::on_pushButton_Painter_clicked()
                 paint_width, paint_height, projector_pixel_resolution);
 
         std::unique_ptr light = std::make_unique<const ConstantLight>(
-                to_vector<double>(-light_direction) * MESH_OBJECT_SIZE * 2.0, vec3(1, 1, 1));
+                to_vector<double>(-light_direction) * MESH_OBJECT_SIZE * 100.0, vec3(1, 1, 1));
 
         create_painter_window(std::string(APPLICATION_NAME) + " - " + model_name, thread_count,
                               one_mesh_package(background_color, default_color, ambient, diffuse, std::move(projector),

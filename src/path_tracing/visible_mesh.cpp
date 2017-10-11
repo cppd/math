@@ -18,12 +18,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "visible_mesh.h"
 
 #include "ray_intersection.h"
-#include "shape_intersection.h"
 
 #include "com/log.h"
 #include "com/time.h"
 #include "com/vec.h"
 #include "com/vec_glm.h"
+#include "path_tracing/shapes/intersection.h"
 
 constexpr int OCTREE_MAX_DEPTH = 10;
 constexpr int OCTREE_MIN_OBJECTS = 10;
@@ -89,7 +89,7 @@ void VisibleMesh::create_mesh_object(const IObj* obj, double size, const vec3& p
                         },
 
                         // пересечение параллелепипеда октадерева с помещаемым в него объектом
-                        [](const Parallelepiped* p, const TableTriangle* t) -> bool
+                        [](const OctreeParallelepiped* p, const TableTriangle* t) -> bool
                         {
                                 return shape_intersection(*p, *t);
                         },

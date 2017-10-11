@@ -22,9 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "parallelepiped.h"
 
-#include "constants.h"
-
 #include "com/error.h"
+#include "path_tracing/constants.h"
 
 #include <algorithm>
 #include <limits>
@@ -207,17 +206,17 @@ const vec3& Parallelepiped::org() const
         return m_org;
 }
 
-const vec3& Parallelepiped::e0() const
+vec3 Parallelepiped::e0() const
 {
         return m_e0;
 }
 
-const vec3& Parallelepiped::e1() const
+vec3 Parallelepiped::e1() const
 {
         return m_e1;
 }
 
-const vec3& Parallelepiped::e2() const
+vec3 Parallelepiped::e2() const
 {
         return m_e2;
 }

@@ -17,10 +17,29 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "parallelepiped.h"
-#include "triangle.h"
+#include "base.h"
 
-bool shape_intersection(const GeometricTriangle& t1, const GeometricTriangle& t2);
-bool shape_intersection(const GeometricTriangle& triangle, const GeometricParallelepiped& parallelepiped);
-bool shape_intersection(const GeometricParallelepiped& parallelepiped, const GeometricTriangle& triangle);
-bool shape_intersection(const GeometricParallelepiped& p1, const GeometricParallelepiped& p2);
+#include "com/vec.h"
+#include "path_tracing/objects.h"
+#include "path_tracing/ray.h"
+
+class Rectangle final : public GeometricRectangle
+{
+        vec3 m_org, m_e0, m_e1;
+        vec3 m_normal;
+        vec3 m_u_beta, m_u_gamma;
+
+public:
+        Rectangle() = default;
+
+        Rectangle(const vec3& org, const vec3& e0, const vec3& e1);
+        void set_data(const vec3& org, const vec3& e0, const vec3& e1);
+
+        bool intersect(const ray3& r, double* t) const override;
+
+        vec3 normal(const vec3& point) const;
+
+        const vec3& org() const override;
+        const vec3& e0() const override;
+        const vec3& e1() const override;
+};

@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "constants.h"
 #include "objects.h"
 #include "ray_intersection.h"
-#include "random/random_sphere.h"
+#include "path_tracing/random/random_sphere.h"
 
 #include "com/colors.h"
 #include "com/error.h"
@@ -156,24 +156,24 @@ vec3 direct_lighting(const std::vector<const GenericObject*>& objects, const std
 
 class PixelOwner
 {
-        PixelSequence* m_ps;
+        Paintbrush* m_paintbrush;
         int m_x, m_y;
 
 public:
-        PixelOwner(PixelSequence* ps, int width, int height) : m_ps(ps)
+        PixelOwner(Paintbrush* paintbrush, int width, int height) : m_paintbrush(paintbrush)
         {
-                m_ps->get_pixel(&m_x, &m_y);
+                m_paintbrush->get_pixel(&m_x, &m_y);
 
                 if (m_x < 0 || m_y < 0 || m_x >= width || m_y >= height)
                 {
-                        m_ps->release_pixel(m_x, m_y);
-                        error("Pixel sequence x or y coordinates (" + to_string(m_x) + ", " + to_string(m_y) + ") out of range " +
+                        m_paintbrush->release_pixel(m_x, m_y);
+                        error("Paintbrush x or y coordinates (" + to_string(m_x) + ", " + to_string(m_y) + ") out of range " +
                               to_string(width) + ", " + to_string(height) + ")");
                 }
         }
         ~PixelOwner()
         {
-                m_ps->release_pixel(m_x, m_y);
+                m_paintbrush->release_pixel(m_x, m_y);
         }
         int get_x() const
         {
@@ -200,7 +200,7 @@ class Painter
         const Projector& m_projector;
         const SurfaceProperties& m_default_surface_properties;
 
-        PixelSequence* m_pixel_sequence;
+        Paintbrush* m_paintbrush;
 
         std::vector<std::thread> m_threads;
         std::atomic_bool& m_stop;
@@ -212,14 +212,14 @@ class Painter
         std::vector<Pixel> m_pixels;
 
 public:
-        Painter(IPainterNotifier* painter_notifier, const PaintObjects* paint_objects, PixelSequence* pixel_sequence,
+        Painter(IPainterNotifier* painter_notifier, const PaintObjects* paint_objects, Paintbrush* paintbrush,
                 unsigned thread_count, std::atomic_bool* stop, std::atomic_ullong* ray_count)
                 : m_painter_notifier(painter_notifier),
                   m_objects(paint_objects->get_objects()),
                   m_light_sources(paint_objects->get_light_sources()),
                   m_projector(paint_objects->get_projector()),
                   m_default_surface_properties(paint_objects->get_default_surface_properties()),
-                  m_pixel_sequence(pixel_sequence),
+                  m_paintbrush(paintbrush),
                   m_threads(thread_count),
                   m_stop(*stop),
                   m_ray_count(*ray_count),
@@ -229,7 +229,7 @@ public:
         {
                 ASSERT(thread_count > 0);
 
-                ASSERT(m_painter_notifier && pixel_sequence && stop && ray_count);
+                ASSERT(m_painter_notifier && paintbrush && stop && ray_count);
 
                 m_ray_count = 0;
         }
@@ -393,7 +393,7 @@ void Painter::paint_pixels()
 
         while (!m_stop)
         {
-                PixelOwner po(m_pixel_sequence, m_projector.screen_width(), m_projector.screen_height());
+                PixelOwner po(m_paintbrush, m_projector.screen_width(), m_projector.screen_height());
 
                 m_painter_notifier->painter_pixel_before(po.get_x(), po.get_y());
 
@@ -425,8 +425,8 @@ void Painter::paint_pixels()
 }
 }
 
-void paint(IPainterNotifier* painter_notifier, const PaintObjects* paint_objects, PixelSequence* pixel_sequence,
-           unsigned thread_count, std::atomic_bool* stop, std::atomic_ullong* ray_count)
+void paint(IPainterNotifier* painter_notifier, const PaintObjects* paint_objects, Paintbrush* paintbrush, unsigned thread_count,
+           std::atomic_bool* stop, std::atomic_ullong* ray_count)
 {
-        Painter(painter_notifier, paint_objects, pixel_sequence, thread_count, stop, ray_count).process();
+        Painter(painter_notifier, paint_objects, paintbrush, thread_count, stop, ray_count).process();
 }

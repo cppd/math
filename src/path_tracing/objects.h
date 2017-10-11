@@ -235,21 +235,21 @@ public:
 };
 
 // Последовательность пикселов для рисования.
-class PixelSequence
+class Paintbrush
 {
 protected:
-        virtual ~PixelSequence() = default;
+        virtual ~Paintbrush() = default;
 
 public:
         virtual void get_pixel(int* x, int* y) = 0;
         virtual void release_pixel(int x, int y) = 0;
         virtual int get_pass_count() const = 0;
 
-        PixelSequence() = default;
-        PixelSequence(const PixelSequence&) = default;
-        PixelSequence(PixelSequence&&) = default;
-        PixelSequence& operator=(const PixelSequence&) = default;
-        PixelSequence& operator=(PixelSequence&&) = default;
+        Paintbrush() = default;
+        Paintbrush(const Paintbrush&) = default;
+        Paintbrush(Paintbrush&&) = default;
+        Paintbrush& operator=(const Paintbrush&) = default;
+        Paintbrush& operator=(Paintbrush&&) = default;
 };
 
 // Все нужные объекты для рисования

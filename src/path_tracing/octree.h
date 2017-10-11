@@ -32,6 +32,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <stack>
+#include <tuple>
 #include <vector>
 
 template <typename Parallelepiped, typename OctreeObject>
@@ -125,45 +127,56 @@ class Octree
         }
 
         template <typename ShapeIntersection>
-        void extend(int depth, int parent_box, const ShapeIntersection& functor_shape_intersection, ProgressRatio* progress)
+        void extend(int first_depth, int first_box, const ShapeIntersection& functor_shape_intersection, ProgressRatio* progress)
         {
-                ASSERT(parent_box >= 0 && parent_box < static_cast<int>(m_boxes.size()));
+                using Stack = std::stack<std::tuple<int, int>, std::vector<std::tuple<int, int>>>;
 
-                if (depth >= MAX_DEPTH || m_boxes[parent_box].get_object_count() <= MIN_OBJECTS)
+                Stack stack({{first_depth, first_box}});
+
+                while (!stack.empty())
                 {
-                        return;
-                }
+                        int depth = std::get<0>(stack.top());
+                        int box = std::get<1>(stack.top());
 
-                std::array<Parallelepiped, 8> child_parallelepipeds;
+                        stack.pop();
 
-                m_boxes[parent_box].get_parallelepiped().binary_division(&child_parallelepipeds);
+                        ASSERT(box >= 0 && box < static_cast<int>(m_boxes.size()));
 
-                for (int child_number = 0; child_number < 8; ++child_number)
-                {
-                        int child_box = create_box(std::move(child_parallelepipeds[child_number]));
-
-                        m_boxes[parent_box].set_child(child_number, child_box);
-
-                        if (child_box & 0xfff)
+                        if (depth >= MAX_DEPTH || m_boxes[box].get_object_count() <= MIN_OBJECTS)
                         {
-                                progress->set(child_box, MAX_BOXES);
+                                continue;
                         }
 
-                        for (const OctreeObject* obj : m_boxes[parent_box].get_objects())
+                        std::array<Parallelepiped, 8> child_parallelepipeds;
+
+                        m_boxes[box].get_parallelepiped().binary_division(&child_parallelepipeds);
+
+                        for (int child_number = 0; child_number < 8; ++child_number)
                         {
-                                if (functor_shape_intersection(&m_boxes[child_box].get_parallelepiped(), obj))
+                                int child_box = create_box(std::move(child_parallelepipeds[child_number]));
+
+                                m_boxes[box].set_child(child_number, child_box);
+
+                                if (child_box & 0xfff)
                                 {
-                                        m_boxes[child_box].add_object(obj);
+                                        progress->set(child_box, MAX_BOXES);
+                                }
+
+                                for (const OctreeObject* obj : m_boxes[box].get_objects())
+                                {
+                                        if (functor_shape_intersection(&m_boxes[child_box].get_parallelepiped(), obj))
+                                        {
+                                                m_boxes[child_box].add_object(obj);
+                                        }
                                 }
                         }
-                }
 
-                m_boxes[parent_box].delete_all_objects();
+                        m_boxes[box].delete_all_objects();
 
-                for (int child_number = 0; child_number < 8; ++child_number)
-                {
-                        int child_box = m_boxes[parent_box].get_childs()[child_number];
-                        extend(depth + 1, child_box, functor_shape_intersection, progress);
+                        for (int child_box : m_boxes[box].get_childs())
+                        {
+                                stack.emplace(depth + 1, child_box);
+                        }
                 }
         }
 

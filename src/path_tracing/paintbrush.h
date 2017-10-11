@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <atomic>
 
-class Paintbrush final : public PixelSequence
+class BarPaintbrush final : public Paintbrush
 {
         struct Pixel
         {
@@ -46,7 +46,7 @@ class Paintbrush final : public PixelSequence
         mutable SpinLock m_lock;
 
 public:
-        Paintbrush(int nx, int ny, int paint_height)
+        BarPaintbrush(int nx, int ny, int paint_height)
         {
                 m_width = nx;
                 m_map.resize(nx * ny);
