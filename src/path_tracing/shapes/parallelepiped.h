@@ -36,7 +36,7 @@ class Parallelepiped final : public GeometricParallelepiped
 
         vec3 m_org, m_e0, m_e1, m_e2;
 
-        void swap_planes(Planes* p);
+        void reverse_planes(Planes* p);
 
         void create_planes();
 

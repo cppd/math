@@ -307,7 +307,8 @@ public:
 
                         if (box)
                         {
-                                if (box->get_objects().size() > 0 && functor_find_intersection(box->get_objects()))
+                                if (box->get_objects().size() > 0 &&
+                                    functor_find_intersection(box->get_parallelepiped(), box->get_objects()))
                                 {
                                         return true;
                                 }

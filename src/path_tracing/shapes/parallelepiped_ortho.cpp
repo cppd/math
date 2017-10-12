@@ -88,7 +88,7 @@ bool ParallelepipedOrtho::intersect(const ray3& r, double* t) const
                 if (s == 0)
                 {
                         double d = r.get_org()[i]; // dot(r.get_org(), m_planes[i].n);
-                        if (d - m_planes[i].d1 >= 0 || -d - m_planes[i].d2 >= 0)
+                        if (d - m_planes[i].d1 > 0 || -d - m_planes[i].d2 > 0)
                         {
                                 // параллельно плоскостям и снаружи
                                 return false;
@@ -160,8 +160,9 @@ vec3 ParallelepipedOrtho::normal(const vec3& p) const
 
 bool ParallelepipedOrtho::inside(const vec3& p) const
 {
-        return p[0] < m_planes[0].d1 && -p[0] < m_planes[0].d2 && p[1] < m_planes[1].d1 && -p[1] < m_planes[1].d2 &&
-               p[2] < m_planes[2].d1 && -p[2] < m_planes[2].d2;
+        // Надо использовать <=, не <.
+        return p[0] <= m_planes[0].d1 && -p[0] <= m_planes[0].d2 && p[1] <= m_planes[1].d1 && -p[1] <= m_planes[1].d2 &&
+               p[2] <= m_planes[2].d1 && -p[2] <= m_planes[2].d2;
 }
 
 const vec3& ParallelepipedOrtho::org() const

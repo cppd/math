@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "event_emitter.h"
 
+#include "com/vec.h"
 #include "progress/progress_list.h"
 #include "show/show.h"
 #include "tests/self_test.h"
@@ -179,6 +180,8 @@ private:
         void set_default_color(const QColor& c);
         void set_wireframe_color(const QColor& c);
 
+        bool find_visible_mesh(std::shared_ptr<const VisibleMesh>* ptr, std::string* name) const;
+
         Ui::MainWindow ui;
 
         WindowEventEmitter m_event_emitter;
@@ -208,4 +211,7 @@ private:
 
         std::unique_ptr<IObjectRepository<3>> m_object_repository;
         std::unordered_map<QObject*, std::string> m_action_to_object_name_map;
+
+        double m_mesh_object_size;
+        vec3 m_mesh_object_position;
 };

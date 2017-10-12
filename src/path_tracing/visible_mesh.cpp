@@ -119,23 +119,14 @@ bool VisibleMesh::intersect_precise(const ray3& ray, double approximate_t, doubl
 {
         const TableTriangle* triangle;
 
-        // clang-format off
-        if
-        (
-                !m_octree.trace_ray
-                (
-                        ray,
-                        approximate_t,
-                        [&ray, &t, &triangle](const std::vector<const TableTriangle*>& objects) -> bool
-                        {
-                                return ray_intersection(objects, ray, t, &triangle);
-                        }
-                )
-        )
+        if (!m_octree.trace_ray(
+                    ray, approximate_t, [&ray, &t, &triangle](const OctreeParallelepiped& parallelepiped,
+                                                              const std::vector<const TableTriangle*>& objects) -> bool {
+                            return ray_intersection(objects, ray, t, &triangle) && parallelepiped.inside(ray.point(*t));
+                    }))
         {
                 return false;
         }
-        // clang-format on
 
         *geometric_object = triangle;
         *surface = this;

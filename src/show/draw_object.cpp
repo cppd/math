@@ -216,10 +216,10 @@ class DrawObject final : public IDrawObject
         }
 
 public:
-        DrawObject(const IObj* obj, const ColorSpaceConverter& color_converter);
+        DrawObject(const IObj* obj, const ColorSpaceConverter& color_converter, float size, glm::vec3 position);
 };
 
-DrawObject::DrawObject(const IObj* obj, const ColorSpaceConverter& color_converter)
+DrawObject::DrawObject(const IObj* obj, const ColorSpaceConverter& color_converter, float size, glm::vec3 position)
 {
         if (obj->get_faces().size() != 0 && obj->get_points().size() != 0)
         {
@@ -294,9 +294,9 @@ DrawObject::DrawObject(const IObj* obj, const ColorSpaceConverter& color_convert
                                               true);
         }
 
-        glm::mat4 scale = glm::scale(glm::mat4(1), glm::vec3(2.0f / obj->get_length()));
+        glm::mat4 scale = glm::scale(glm::mat4(1), glm::vec3(size / obj->get_length()));
         glm::mat4 translate = glm::translate(glm::mat4(1), -obj->get_center());
-        m_model_matrix = scale * translate;
+        m_model_matrix = glm::translate(glm::mat4(1), position) * scale * translate;
 }
 
 class DrawProgram final : public IDrawProgram
@@ -530,9 +530,10 @@ public:
 };
 }
 
-std::unique_ptr<IDrawObject> create_draw_object(const IObj* obj, const ColorSpaceConverter& color_converter)
+std::unique_ptr<IDrawObject> create_draw_object(const IObj* obj, const ColorSpaceConverter& color_converter, float size,
+                                                glm::vec3 position)
 {
-        return std::make_unique<DrawObject>(obj, color_converter);
+        return std::make_unique<DrawObject>(obj, color_converter, size, position);
 }
 
 std::unique_ptr<IDrawProgram> create_draw_program()

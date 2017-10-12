@@ -32,7 +32,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/log.h"
 #include "com/print.h"
 #include "com/time.h"
-#include "com/vec.h"
 #include "com/vec_glm.h"
 #include "geometry/cocone/reconstruction.h"
 #include "geometry/objects/points.h"
@@ -42,9 +41,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "obj/obj_file_save.h"
 #include "obj/obj_points_load.h"
 #include "obj/obj_surface.h"
-#include "path_tracing/light_source.h"
-#include "path_tracing/projector.h"
-#include "path_tracing/test_data.h"
+#include "path_tracing/lights/light_source.h"
+#include "path_tracing/projectors/projector.h"
+#include "path_tracing/scenes.h"
 #include "path_tracing/visible_mesh.h"
 #include "progress/progress.h"
 
@@ -80,10 +79,6 @@ constexpr int WINDOW_SHOW_DELAY_MSEC = 50;
 
 // увеличение текстуры тени по сравнению с размером окна
 constexpr float SHADOW_ZOOM = 2;
-
-// Размер и положение объектов для трассировки пути, создаваемых из отображаемых моделей
-constexpr double MESH_OBJECT_SIZE = 2;
-constexpr vec3 MESH_OBJECT_POSITION = vec3(0);
 
 // Идентификаторы объектов для взаимодействия с модулем рисования,
 // куда передаются как числа, а не как enum
@@ -379,7 +374,7 @@ void MainWindow::thread_model(ProgressRatioList* progress_ratio_list, std::share
                 {
                         ProgressRatio progress(progress_ratio_list);
                         m_meshes[MeshType::Model] =
-                                std::make_unique<VisibleMesh>(obj.get(), MESH_OBJECT_SIZE, MESH_OBJECT_POSITION, &progress);
+                                std::make_unique<VisibleMesh>(obj.get(), m_mesh_object_size, m_mesh_object_position, &progress);
                 }
 
         });
@@ -426,8 +421,8 @@ void MainWindow::thread_cocone(ProgressRatioList* progress_ratio_list) noexcept
                 if (m_surface_cocone->get_faces().size() > 0)
                 {
                         ProgressRatio progress(progress_ratio_list);
-                        m_meshes[MeshType::Cocone] = std::make_unique<VisibleMesh>(m_surface_cocone.get(), MESH_OBJECT_SIZE,
-                                                                                   MESH_OBJECT_POSITION, &progress);
+                        m_meshes[MeshType::Cocone] = std::make_unique<VisibleMesh>(m_surface_cocone.get(), m_mesh_object_size,
+                                                                                   m_mesh_object_position, &progress);
                 }
 
         });
@@ -483,7 +478,7 @@ void MainWindow::thread_bound_cocone(ProgressRatioList* progress_ratio_list, dou
                 {
                         ProgressRatio progress(progress_ratio_list);
                         m_meshes[MeshType::BoundCocone] = std::make_unique<VisibleMesh>(
-                                m_surface_bound_cocone.get(), MESH_OBJECT_SIZE, MESH_OBJECT_POSITION, &progress);
+                                m_surface_bound_cocone.get(), m_mesh_object_size, m_mesh_object_position, &progress);
                 }
 
         });
@@ -902,6 +897,12 @@ void MainWindow::slot_window_first_shown()
                                      ui.checkBox_convex_hull_2d->isChecked(), ui.checkBox_OpticalFlow->isChecked(), get_ambient(),
                                      get_diffuse(), get_specular(), get_dft_brightness(), get_default_ns(),
                                      ui.checkBox_VerticalSync->isChecked(), get_shadow_zoom());
+
+                float size;
+                glm::vec3 position;
+                m_show->get_object_size_and_position(&size, &position);
+                m_mesh_object_size = size;
+                m_mesh_object_position = to_vector<double>(position);
         }
         catch (std::exception& e)
         {
@@ -1279,33 +1280,48 @@ void MainWindow::on_radioButton_BoundCoconeConvexHull_clicked()
         m_show->show_object(SURFACE_BOUND_COCONE_CONVEX_HULL);
 }
 
+bool MainWindow::find_visible_mesh(std::shared_ptr<const VisibleMesh>* mesh_pointer, std::string* model_name) const
+{
+        if (ui.radioButton_Model->isChecked())
+        {
+                *model_name = ui.radioButton_Model->text().toStdString();
+                auto i = m_meshes.find(MeshType::Model);
+                ASSERT(i != m_meshes.cend());
+                *mesh_pointer = i->second;
+                return true;
+        }
+
+        if (ui.radioButton_Cocone->isChecked())
+        {
+                *model_name = ui.radioButton_Cocone->text().toStdString();
+                auto i = m_meshes.find(MeshType::Cocone);
+                ASSERT(i != m_meshes.cend());
+                *mesh_pointer = i->second;
+                return true;
+        }
+
+        if (ui.radioButton_BoundCocone->isChecked())
+        {
+                *model_name = ui.radioButton_BoundCocone->text().toStdString();
+                auto i = m_meshes.find(MeshType::BoundCocone);
+                ASSERT(i != m_meshes.cend());
+                *mesh_pointer = i->second;
+                return true;
+        }
+
+        return false;
+}
+
 void MainWindow::on_pushButton_Painter_clicked()
 {
         std::shared_ptr<const VisibleMesh> mesh_pointer;
-
         std::string model_name;
 
-        if (ui.radioButton_Model->isChecked())
-        {
-                model_name = ui.radioButton_Model->text().toStdString();
-                mesh_pointer = m_meshes[MeshType::Model];
-        }
-        else if (ui.radioButton_Cocone->isChecked())
-        {
-                model_name = ui.radioButton_Cocone->text().toStdString();
-                mesh_pointer = m_meshes[MeshType::Cocone];
-        }
-        else if (ui.radioButton_BoundCocone->isChecked())
-        {
-                model_name = ui.radioButton_BoundCocone->text().toStdString();
-                mesh_pointer = m_meshes[MeshType::BoundCocone];
-        }
-        else
+        if (!find_visible_mesh(&mesh_pointer, &model_name))
         {
                 message_warning(this, "No painting support for this model type");
                 return;
         }
-
         if (!mesh_pointer)
         {
                 message_warning(this, "No object to paint");
@@ -1322,35 +1338,47 @@ void MainWindow::on_pushButton_Painter_clicked()
                 return;
         }
 
+        constexpr int projector_pixel_resolution = 5;
+
+        std::string window_name = std::string(APPLICATION_NAME) + " - " + model_name;
+
         int paint_width = std::round(ui.graphics_widget->width() * size_coef);
         int paint_height = std::round(ui.graphics_widget->height() * size_coef);
 
-        constexpr int projector_pixel_resolution = 5;
-
         vec3 background_color = to_vector<double>(qcolor_to_rgb(m_clear_color));
         vec3 default_color = to_vector<double>(qcolor_to_rgb(m_default_color));
-        double ambient = float_to_rgb(get_ambient());
+
         double diffuse = float_to_rgb(get_diffuse());
+
+        glm::vec3 camera_up, camera_direction, light_direction, view_center;
+        float view_width;
+        m_show->get_camera_information(&camera_up, &camera_direction, &light_direction, &view_center, &view_width);
+
+        vec3 camera_position = to_vector<double>(view_center) - to_vector<double>(camera_direction) * 2.0 * m_mesh_object_size;
+        vec3 light_position = m_mesh_object_position - to_vector<double>(light_direction) * m_mesh_object_size * 1000.0;
+
+        std::unique_ptr projector = std::make_unique<const ParallelProjector>(
+                camera_position, to_vector<double>(camera_direction), to_vector<double>(camera_up), view_width, paint_width,
+                paint_height, projector_pixel_resolution);
+
+        std::unique_ptr light_source = std::make_unique<const ConstantLight>(light_position, vec3(1, 1, 1));
+
+        std::unique_ptr paint_model = one_object_scene(background_color, default_color, diffuse, std::move(projector),
+                                                       std::move(light_source), *mesh_pointer);
+
+        create_painter_window(window_name, thread_count, std::move(paint_model));
+
+#else
+        int thread_count = std::max(1u, std::thread::hardware_concurrency() - 1);
 
         glm::vec3 camera_up, camera_direction, light_direction, view_center;
         float view_width;
 
         m_show->get_camera_information(&camera_up, &camera_direction, &light_direction, &view_center, &view_width);
 
-        glm::vec3 camera_position = view_center - camera_direction * float(2 * MESH_OBJECT_SIZE);
-
-        std::unique_ptr projector = std::make_unique<const ParallelProjector>(
-                to_vector<double>(camera_position), to_vector<double>(camera_direction), to_vector<double>(camera_up), view_width,
-                paint_width, paint_height, projector_pixel_resolution);
-
-        std::unique_ptr light = std::make_unique<const ConstantLight>(
-                to_vector<double>(-light_direction) * MESH_OBJECT_SIZE * 100.0, vec3(1, 1, 1));
-
-        create_painter_window(std::string(APPLICATION_NAME) + " - " + model_name, thread_count,
-                              one_mesh_package(background_color, default_color, ambient, diffuse, std::move(projector),
-                                               std::move(light), *mesh_pointer));
-#else
-        int thread_count = std::max(1u, std::thread::hardware_concurrency() - 1);
-        create_painter_window(thread_count, cornell_box(500, 500, *mesh_pointer));
+        create_painter_window(std::string(APPLICATION_NAME) + " - Cornell Box", thread_count,
+                              cornell_box(700, 700, *mesh_pointer, MESH_OBJECT_SIZE,
+                                          to_vector<double>(qcolor_to_rgb(m_default_color)), float_to_rgb(get_diffuse()),
+                                          to_vector<double>(camera_direction), to_vector<double>(camera_up)));
 #endif
 }

@@ -264,6 +264,10 @@ class ShowObject final : public IShow
 
         Camera m_camera;
 
+        // Камера и тени рассчитаны на размер объекта 2 и на положение в точке glm::vec3(0).
+        static constexpr float OBJECT_SIZE = 2;
+        static constexpr glm::vec3 OBJECT_POSITION = glm::vec3(0);
+
         void loop();
         void loop_thread();
 
@@ -376,6 +380,12 @@ class ShowObject final : public IShow
                                     glm::vec3* view_center, float* view_width) const override
         {
                 m_camera.get_camera_information(camera_up, camera_direction, light_direction, view_center, view_width);
+        }
+
+        void get_object_size_and_position(float* object_size, glm::vec3* object_position) const override
+        {
+                *object_size = OBJECT_SIZE;
+                *object_position = OBJECT_POSITION;
         }
 
 public:
@@ -527,7 +537,8 @@ void ShowObject::loop()
                                         error("Null object received");
                                 }
 
-                                objects.add_object(create_draw_object(d.obj.get(), color_converter), d.id, d.scale_id);
+                                objects.add_object(create_draw_object(d.obj.get(), color_converter, OBJECT_SIZE, OBJECT_POSITION),
+                                                   d.id, d.scale_id);
                                 m_callback->object_loaded(d.id);
                                 break;
                         }

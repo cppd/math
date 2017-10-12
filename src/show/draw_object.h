@@ -68,5 +68,6 @@ struct IDrawProgram
         virtual const TextureR32I& get_object_texture() const = 0;
 };
 
-std::unique_ptr<IDrawObject> create_draw_object(const IObj* obj, const ColorSpaceConverter& color_converter);
+std::unique_ptr<IDrawObject> create_draw_object(const IObj* obj, const ColorSpaceConverter& color_converter, float size,
+                                                glm::vec3 position);
 std::unique_ptr<IDrawProgram> create_draw_program();
