@@ -130,7 +130,7 @@ vec3 TableTriangle::shading_normal(const vec3& point) const
                                                         m_negate_normal_1 ? -m_normals[m_n1] : m_normals[m_n1],
                                                         m_negate_normal_2 ? -m_normals[m_n2] : m_normals[m_n2]));
         }
-        ASSERT(false);
+        error_fatal("Unknown table triangle normal type");
 }
 
 bool TableTriangle::has_texcoord() const
@@ -140,12 +140,12 @@ bool TableTriangle::has_texcoord() const
 
 vec2 TableTriangle::texcoord(const vec3& point) const
 {
-        if (m_t0 >= 0)
+        if (has_texcoord())
         {
                 return triangle_interpolation(point, m_vertices[m_v0], m_u_beta, m_u_gamma, m_texcoords[m_t0], m_texcoords[m_t1],
                                               m_texcoords[m_t2]);
         }
-        ASSERT(false);
+        error("Table triangle texture coordinates request when there are no texture coordinates");
 }
 
 int TableTriangle::get_material() const

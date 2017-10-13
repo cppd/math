@@ -37,7 +37,7 @@ PathTracingParameters::PathTracingParameters(QWidget* parent) : QDialog(parent)
 
         ui.spinBox_thread_count->setMinimum(1);
         ui.spinBox_thread_count->setMaximum(m_max_thread_count);
-        ui.spinBox_thread_count->setValue(std::max(1, m_max_thread_count - 1));
+        ui.spinBox_thread_count->setValue(m_max_thread_count);
 
         ui.doubleSpinBox_image_size->setMinimum(1);
         ui.doubleSpinBox_image_size->setMaximum(MAX_SIZE_COEFFICIENT);

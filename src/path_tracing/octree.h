@@ -135,8 +135,7 @@ class Octree
 
                 while (!stack.empty())
                 {
-                        int depth = std::get<0>(stack.top());
-                        int box = std::get<1>(stack.top());
+                        auto[depth, box] = stack.top();
 
                         stack.pop();
 

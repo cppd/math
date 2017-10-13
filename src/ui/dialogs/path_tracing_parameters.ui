@@ -21,7 +21,7 @@
        <item row="0" column="0">
         <widget class="QLabel" name="label">
          <property name="text">
-          <string>Thread count:</string>
+          <string>Threads:</string>
          </property>
         </widget>
        </item>

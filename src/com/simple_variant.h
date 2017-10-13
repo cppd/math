@@ -70,9 +70,7 @@ class SimpleVariant
                 else
                 {
                         int i = 1;
-                        bool found =
-                                ((i++ != v.m_id ? false : (new (&m_data) T(*reinterpret_cast<const T*>(&v.m_data)), true)) || ...);
-                        ASSERT(found);
+                        ((i != v.m_id ? ++i : (new (&m_data) T(*reinterpret_cast<const T*>(&v.m_data)), false)) && ...);
                 }
 
                 m_id = v.m_id;
@@ -89,10 +87,7 @@ class SimpleVariant
                 else
                 {
                         int i = 1;
-                        bool found =
-                                ((i++ != v.m_id ? false : (new (&m_data) T(std::move(*reinterpret_cast<T*>(&v.m_data))), true)) ||
-                                 ...);
-                        ASSERT(found);
+                        ((i != v.m_id ? ++i : (new (&m_data) T(std::move(*reinterpret_cast<T*>(&v.m_data))), false)) && ...);
                 }
 
                 m_id = v.m_id;
@@ -109,11 +104,8 @@ class SimpleVariant
                 else
                 {
                         int i = 1;
-                        bool found =
-                                ((i++ != m_id ? false : (*reinterpret_cast<T*>(&m_data) = *reinterpret_cast<const T*>(&v.m_data),
-                                                         true)) ||
-                                 ...);
-                        ASSERT(found);
+                        ((i != m_id ? ++i : (*reinterpret_cast<T*>(&m_data) = *reinterpret_cast<const T*>(&v.m_data), false)) &&
+                         ...);
                 }
         }
 
@@ -128,12 +120,9 @@ class SimpleVariant
                 else
                 {
                         int i = 1;
-                        bool found =
-                                ((i++ != m_id ?
-                                          false :
-                                          (*reinterpret_cast<T*>(&m_data) = std::move(*reinterpret_cast<T*>(&v.m_data)), true)) ||
-                                 ...);
-                        ASSERT(found);
+                        ((i != m_id ? ++i :
+                                      (*reinterpret_cast<T*>(&m_data) = std::move(*reinterpret_cast<T*>(&v.m_data)), false)) &&
+                         ...);
                 }
         }
 
@@ -151,8 +140,7 @@ class SimpleVariant
                 else
                 {
                         int i = 1;
-                        bool found = ((i++ != m_id ? false : (reinterpret_cast<const T*>(&m_data)->~T(), true)) || ...);
-                        ASSERT(found);
+                        ((i != m_id ? ++i : (reinterpret_cast<const T*>(&m_data)->~T(), false)) && ...);
                 }
 
                 m_id = EMPTY;
