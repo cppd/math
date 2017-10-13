@@ -39,7 +39,8 @@ Various other algorithms.
 
 Points in 3D and the surface reconstructed from the points
 
-![points](https://i.imgur.com/VGf1HSj.png)
-![reconstructed surface](https://i.imgur.com/nLyemgL.png)
-![reconstructed surface wireframe](https://i.imgur.com/6DQuKhI.png)
-![reconstructed surface image](https://i.imgur.com/xi1iyEk.png)
+![points](https://i.imgur.com/TS6ct8G.png)
+![reconstructed surface](https://i.imgur.com/4AU5rTu.png)
+![reconstructed surface](https://i.imgur.com/wkpsz8T.png)
+![reconstructed surface wireframe](https://i.imgur.com/CJ0KCcT.png)
+![reconstructed surface image](https://i.imgur.com/Bczgqjw.png)
