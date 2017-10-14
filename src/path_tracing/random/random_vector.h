@@ -23,3 +23,5 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 vec3 random_hemisphere_any_length(std::mt19937_64& engine, const vec3& normal);
 vec3 random_sphere_any_length(std::mt19937_64& engine);
+vec2 random_disk_any_length(std::mt19937_64& engine);
+vec3 random_hemisphere_cosine_any_length(std::mt19937_64& engine, const vec3& normal);

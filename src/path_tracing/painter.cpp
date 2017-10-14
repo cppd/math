@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "constants.h"
 #include "objects.h"
 #include "ray_intersection.h"
-#include "path_tracing/random/random_sphere.h"
+#include "path_tracing/random/random_vector.h"
 
 #include "com/colors.h"
 #include "com/error.h"
@@ -81,9 +81,9 @@ bool light_source_is_visible(const std::vector<const GenericObject*>& objects, c
         return true;
 }
 
-vec3 direct_lighting(const std::vector<const GenericObject*>& objects, const std::vector<const LightSource*> light_sources,
-                     const vec3& p, const vec3& geometric_normal, const vec3& shading_normal, bool triangle_mesh,
-                     std::atomic_ullong* ray_count)
+vec3 direct_diffuse_lighting(const std::vector<const GenericObject*>& objects,
+                             const std::vector<const LightSource*> light_sources, const vec3& p, const vec3& geometric_normal,
+                             const vec3& shading_normal, bool triangle_mesh, std::atomic_ullong* ray_count)
 {
         vec3 color(0);
 
@@ -100,9 +100,9 @@ vec3 direct_lighting(const std::vector<const GenericObject*>& objects, const std
 
                 ray3 ray_to_light = ray3(p, vector_to_light);
 
-                double cosine_light_and_shading_normal = dot(ray_to_light.get_dir(), shading_normal);
+                double light_weight = 2 * dot(ray_to_light.get_dir(), shading_normal);
 
-                if (cosine_light_and_shading_normal <= EPSILON)
+                if (light_weight <= EPSILON)
                 {
                         // свет находится по другую сторону поверхности
                         continue;
@@ -148,7 +148,7 @@ vec3 direct_lighting(const std::vector<const GenericObject*>& objects, const std
                         }
                 }
 
-                color += light_source_color * cosine_light_and_shading_normal;
+                color += light_source_color * light_weight;
         }
 
         return color;
@@ -293,8 +293,10 @@ vec3 Painter::diffuse_lighting(std::mt19937_64& random_engine, int recursion_lev
 {
         if (recursion_level < MAX_RECURSION_LEVEL)
         {
-                // Случайный вектор диффузного освещения надо определять от видимой нормали
-                ray3 diffuse_ray = ray3(point, random_hemisphere_any_length(random_engine, shading_normal));
+                // Распределение случайного луча с вероятностью по косинусу угла между нормалью и случайным вектором.
+
+                // Случайный вектор диффузного освещения надо определять от видимой нормали.
+                ray3 diffuse_ray = ray3(point, random_hemisphere_cosine_any_length(random_engine, shading_normal));
 
                 if (triangle_mesh && dot(diffuse_ray.get_dir(), geometric_normal) < EPSILON)
                 {
@@ -303,13 +305,7 @@ vec3 Painter::diffuse_lighting(std::mt19937_64& random_engine, int recursion_lev
                         return vec3(0);
                 }
 
-                double cos_ray_and_shading_normal = dot(diffuse_ray.get_dir(), shading_normal);
-
-                if ((color_level *= cos_ray_and_shading_normal) >= MIN_COLOR_LEVEL)
-                {
-                        return cos_ray_and_shading_normal *
-                               trace_path(random_engine, recursion_level + 1, color_level, diffuse_ray, true);
-                }
+                return trace_path(random_engine, recursion_level + 1, color_level, diffuse_ray, true);
         }
 
         return vec3(0);
@@ -369,8 +365,8 @@ vec3 Painter::trace_path(std::mt19937_64& random_engine, int recursion_level, do
 
                 if (new_color_level >= MIN_COLOR_LEVEL)
                 {
-                        vec3 direct = direct_lighting(m_objects, m_light_sources, point, geometric_normal, shading_normal,
-                                                      triangle_mesh, &m_ray_count);
+                        vec3 direct = direct_diffuse_lighting(m_objects, m_light_sources, point, geometric_normal, shading_normal,
+                                                              triangle_mesh, &m_ray_count);
 
                         vec3 diffuse = diffuse_lighting(random_engine, recursion_level, new_color_level, point, shading_normal,
                                                         geometric_normal, triangle_mesh);
