@@ -643,6 +643,7 @@ namespace opengl_functions
         extern PFNGLMATRIXTRANSLATEDEXTPROC                            glMatrixTranslatedEXT;
         extern PFNGLMATRIXTRANSLATEFEXTPROC                            glMatrixTranslatefEXT;
         extern PFNGLMAXSHADERCOMPILERTHREADSARBPROC                    glMaxShaderCompilerThreadsARB;
+        extern PFNGLMAXSHADERCOMPILERTHREADSKHRPROC                    glMaxShaderCompilerThreadsKHR;
         extern PFNGLMEMORYBARRIERPROC                                  glMemoryBarrier;
         extern PFNGLMEMORYBARRIERBYREGIONPROC                          glMemoryBarrierByRegion;
         extern PFNGLMINSAMPLESHADINGPROC                               glMinSampleShading;
@@ -651,12 +652,14 @@ namespace opengl_functions
         extern PFNGLMULTIDRAWARRAYSINDIRECTPROC                        glMultiDrawArraysIndirect;
         extern PFNGLMULTIDRAWARRAYSINDIRECTBINDLESSCOUNTNVPROC         glMultiDrawArraysIndirectBindlessCountNV;
         extern PFNGLMULTIDRAWARRAYSINDIRECTBINDLESSNVPROC              glMultiDrawArraysIndirectBindlessNV;
+        extern PFNGLMULTIDRAWARRAYSINDIRECTCOUNTPROC                   glMultiDrawArraysIndirectCount;
         extern PFNGLMULTIDRAWARRAYSINDIRECTCOUNTARBPROC                glMultiDrawArraysIndirectCountARB;
         extern PFNGLMULTIDRAWELEMENTSPROC                              glMultiDrawElements;
         extern PFNGLMULTIDRAWELEMENTSBASEVERTEXPROC                    glMultiDrawElementsBaseVertex;
         extern PFNGLMULTIDRAWELEMENTSINDIRECTPROC                      glMultiDrawElementsIndirect;
         extern PFNGLMULTIDRAWELEMENTSINDIRECTBINDLESSCOUNTNVPROC       glMultiDrawElementsIndirectBindlessCountNV;
         extern PFNGLMULTIDRAWELEMENTSINDIRECTBINDLESSNVPROC            glMultiDrawElementsIndirectBindlessNV;
+        extern PFNGLMULTIDRAWELEMENTSINDIRECTCOUNTPROC                 glMultiDrawElementsIndirectCount;
         extern PFNGLMULTIDRAWELEMENTSINDIRECTCOUNTARBPROC              glMultiDrawElementsIndirectCountARB;
         extern PFNGLMULTITEXBUFFEREXTPROC                              glMultiTexBufferEXT;
         extern PFNGLMULTITEXCOORDPOINTEREXTPROC                        glMultiTexCoordPointerEXT;
@@ -761,6 +764,7 @@ namespace opengl_functions
         extern PFNGLPOINTSIZEPROC                                      glPointSize;
         extern PFNGLPOLYGONMODEPROC                                    glPolygonMode;
         extern PFNGLPOLYGONOFFSETPROC                                  glPolygonOffset;
+        extern PFNGLPOLYGONOFFSETCLAMPPROC                             glPolygonOffsetClamp;
         extern PFNGLPOLYGONOFFSETCLAMPEXTPROC                          glPolygonOffsetClampEXT;
         extern PFNGLPOPDEBUGGROUPPROC                                  glPopDebugGroup;
         extern PFNGLPOPGROUPMARKEREXTPROC                              glPopGroupMarkerEXT;
@@ -943,6 +947,7 @@ namespace opengl_functions
         extern PFNGLSHADERSTORAGEBLOCKBINDINGPROC                      glShaderStorageBlockBinding;
         extern PFNGLSIGNALVKFENCENVPROC                                glSignalVkFenceNV;
         extern PFNGLSIGNALVKSEMAPHORENVPROC                            glSignalVkSemaphoreNV;
+        extern PFNGLSPECIALIZESHADERPROC                               glSpecializeShader;
         extern PFNGLSPECIALIZESHADERARBPROC                            glSpecializeShaderARB;
         extern PFNGLSTATECAPTURENVPROC                                 glStateCaptureNV;
         extern PFNGLSTENCILFILLPATHINSTANCEDNVPROC                     glStencilFillPathInstancedNV;
@@ -3713,6 +3718,10 @@ inline void glMaxShaderCompilerThreadsARB(GLuint count) noexcept
 {
         opengl_functions::glMaxShaderCompilerThreadsARB(count);
 }
+inline void glMaxShaderCompilerThreadsKHR(GLuint count) noexcept
+{
+        opengl_functions::glMaxShaderCompilerThreadsKHR(count);
+}
 inline void glMemoryBarrier(GLbitfield barriers) noexcept
 {
         opengl_functions::glMemoryBarrier(barriers);
@@ -3745,7 +3754,11 @@ inline void glMultiDrawArraysIndirectBindlessNV(GLenum mode, const void *indirec
 {
         opengl_functions::glMultiDrawArraysIndirectBindlessNV(mode, indirect, drawCount, stride, vertexBufferCount);
 }
-inline void glMultiDrawArraysIndirectCountARB(GLenum mode, GLintptr indirect, GLintptr drawcount, GLsizei maxdrawcount, GLsizei stride) noexcept
+inline void glMultiDrawArraysIndirectCount(GLenum mode, const void *indirect, GLintptr drawcount, GLsizei maxdrawcount, GLsizei stride) noexcept
+{
+        opengl_functions::glMultiDrawArraysIndirectCount(mode, indirect, drawcount, maxdrawcount, stride);
+}
+inline void glMultiDrawArraysIndirectCountARB(GLenum mode, const void *indirect, GLintptr drawcount, GLsizei maxdrawcount, GLsizei stride) noexcept
 {
         opengl_functions::glMultiDrawArraysIndirectCountARB(mode, indirect, drawcount, maxdrawcount, stride);
 }
@@ -3769,7 +3782,11 @@ inline void glMultiDrawElementsIndirectBindlessNV(GLenum mode, GLenum type, cons
 {
         opengl_functions::glMultiDrawElementsIndirectBindlessNV(mode, type, indirect, drawCount, stride, vertexBufferCount);
 }
-inline void glMultiDrawElementsIndirectCountARB(GLenum mode, GLenum type, GLintptr indirect, GLintptr drawcount, GLsizei maxdrawcount, GLsizei stride) noexcept
+inline void glMultiDrawElementsIndirectCount(GLenum mode, GLenum type, const void *indirect, GLintptr drawcount, GLsizei maxdrawcount, GLsizei stride) noexcept
+{
+        opengl_functions::glMultiDrawElementsIndirectCount(mode, type, indirect, drawcount, maxdrawcount, stride);
+}
+inline void glMultiDrawElementsIndirectCountARB(GLenum mode, GLenum type, const void *indirect, GLintptr drawcount, GLsizei maxdrawcount, GLsizei stride) noexcept
 {
         opengl_functions::glMultiDrawElementsIndirectCountARB(mode, type, indirect, drawcount, maxdrawcount, stride);
 }
@@ -4184,6 +4201,10 @@ inline void glPolygonMode(GLenum face, GLenum mode) noexcept
 inline void glPolygonOffset(GLfloat factor, GLfloat units) noexcept
 {
         opengl_functions::glPolygonOffset(factor, units);
+}
+inline void glPolygonOffsetClamp(GLfloat factor, GLfloat units, GLfloat clamp) noexcept
+{
+        opengl_functions::glPolygonOffsetClamp(factor, units, clamp);
 }
 inline void glPolygonOffsetClampEXT(GLfloat factor, GLfloat units, GLfloat clamp) noexcept
 {
@@ -4912,6 +4933,10 @@ inline void glSignalVkFenceNV(GLuint64 vkFence) noexcept
 inline void glSignalVkSemaphoreNV(GLuint64 vkSemaphore) noexcept
 {
         opengl_functions::glSignalVkSemaphoreNV(vkSemaphore);
+}
+inline void glSpecializeShader(GLuint shader, const GLchar *pEntryPoint, GLuint numSpecializationConstants, const GLuint *pConstantIndex, const GLuint *pConstantValue) noexcept
+{
+        opengl_functions::glSpecializeShader(shader, pEntryPoint, numSpecializationConstants, pConstantIndex, pConstantValue);
 }
 inline void glSpecializeShaderARB(GLuint shader, const GLchar *pEntryPoint, GLuint numSpecializationConstants, const GLuint *pConstantIndex, const GLuint *pConstantValue) noexcept
 {

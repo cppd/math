@@ -643,6 +643,7 @@ PFNGLMATRIXSCALEFEXTPROC                                opengl_functions::glMatr
 PFNGLMATRIXTRANSLATEDEXTPROC                            opengl_functions::glMatrixTranslatedEXT;
 PFNGLMATRIXTRANSLATEFEXTPROC                            opengl_functions::glMatrixTranslatefEXT;
 PFNGLMAXSHADERCOMPILERTHREADSARBPROC                    opengl_functions::glMaxShaderCompilerThreadsARB;
+PFNGLMAXSHADERCOMPILERTHREADSKHRPROC                    opengl_functions::glMaxShaderCompilerThreadsKHR;
 PFNGLMEMORYBARRIERPROC                                  opengl_functions::glMemoryBarrier;
 PFNGLMEMORYBARRIERBYREGIONPROC                          opengl_functions::glMemoryBarrierByRegion;
 PFNGLMINSAMPLESHADINGPROC                               opengl_functions::glMinSampleShading;
@@ -651,12 +652,14 @@ PFNGLMULTIDRAWARRAYSPROC                                opengl_functions::glMult
 PFNGLMULTIDRAWARRAYSINDIRECTPROC                        opengl_functions::glMultiDrawArraysIndirect;
 PFNGLMULTIDRAWARRAYSINDIRECTBINDLESSCOUNTNVPROC         opengl_functions::glMultiDrawArraysIndirectBindlessCountNV;
 PFNGLMULTIDRAWARRAYSINDIRECTBINDLESSNVPROC              opengl_functions::glMultiDrawArraysIndirectBindlessNV;
+PFNGLMULTIDRAWARRAYSINDIRECTCOUNTPROC                   opengl_functions::glMultiDrawArraysIndirectCount;
 PFNGLMULTIDRAWARRAYSINDIRECTCOUNTARBPROC                opengl_functions::glMultiDrawArraysIndirectCountARB;
 PFNGLMULTIDRAWELEMENTSPROC                              opengl_functions::glMultiDrawElements;
 PFNGLMULTIDRAWELEMENTSBASEVERTEXPROC                    opengl_functions::glMultiDrawElementsBaseVertex;
 PFNGLMULTIDRAWELEMENTSINDIRECTPROC                      opengl_functions::glMultiDrawElementsIndirect;
 PFNGLMULTIDRAWELEMENTSINDIRECTBINDLESSCOUNTNVPROC       opengl_functions::glMultiDrawElementsIndirectBindlessCountNV;
 PFNGLMULTIDRAWELEMENTSINDIRECTBINDLESSNVPROC            opengl_functions::glMultiDrawElementsIndirectBindlessNV;
+PFNGLMULTIDRAWELEMENTSINDIRECTCOUNTPROC                 opengl_functions::glMultiDrawElementsIndirectCount;
 PFNGLMULTIDRAWELEMENTSINDIRECTCOUNTARBPROC              opengl_functions::glMultiDrawElementsIndirectCountARB;
 PFNGLMULTITEXBUFFEREXTPROC                              opengl_functions::glMultiTexBufferEXT;
 PFNGLMULTITEXCOORDPOINTEREXTPROC                        opengl_functions::glMultiTexCoordPointerEXT;
@@ -761,6 +764,7 @@ PFNGLPOINTPARAMETERIVPROC                               opengl_functions::glPoin
 PFNGLPOINTSIZEPROC                                      opengl_functions::glPointSize;
 PFNGLPOLYGONMODEPROC                                    opengl_functions::glPolygonMode;
 PFNGLPOLYGONOFFSETPROC                                  opengl_functions::glPolygonOffset;
+PFNGLPOLYGONOFFSETCLAMPPROC                             opengl_functions::glPolygonOffsetClamp;
 PFNGLPOLYGONOFFSETCLAMPEXTPROC                          opengl_functions::glPolygonOffsetClampEXT;
 PFNGLPOPDEBUGGROUPPROC                                  opengl_functions::glPopDebugGroup;
 PFNGLPOPGROUPMARKEREXTPROC                              opengl_functions::glPopGroupMarkerEXT;
@@ -943,6 +947,7 @@ PFNGLSHADERSOURCEPROC                                   opengl_functions::glShad
 PFNGLSHADERSTORAGEBLOCKBINDINGPROC                      opengl_functions::glShaderStorageBlockBinding;
 PFNGLSIGNALVKFENCENVPROC                                opengl_functions::glSignalVkFenceNV;
 PFNGLSIGNALVKSEMAPHORENVPROC                            opengl_functions::glSignalVkSemaphoreNV;
+PFNGLSPECIALIZESHADERPROC                               opengl_functions::glSpecializeShader;
 PFNGLSPECIALIZESHADERARBPROC                            opengl_functions::glSpecializeShaderARB;
 PFNGLSTATECAPTURENVPROC                                 opengl_functions::glStateCaptureNV;
 PFNGLSTENCILFILLPATHINSTANCEDNVPROC                     opengl_functions::glStencilFillPathInstancedNV;
@@ -1881,6 +1886,7 @@ void opengl_functions::init()
         set(&opengl_functions::glMatrixTranslatedEXT,                            "glMatrixTranslatedEXT");
         set(&opengl_functions::glMatrixTranslatefEXT,                            "glMatrixTranslatefEXT");
         set(&opengl_functions::glMaxShaderCompilerThreadsARB,                    "glMaxShaderCompilerThreadsARB");
+        set(&opengl_functions::glMaxShaderCompilerThreadsKHR,                    "glMaxShaderCompilerThreadsKHR");
         set(&opengl_functions::glMemoryBarrier,                                  "glMemoryBarrier");
         set(&opengl_functions::glMemoryBarrierByRegion,                          "glMemoryBarrierByRegion");
         set(&opengl_functions::glMinSampleShading,                               "glMinSampleShading");
@@ -1889,12 +1895,14 @@ void opengl_functions::init()
         set(&opengl_functions::glMultiDrawArraysIndirect,                        "glMultiDrawArraysIndirect");
         set(&opengl_functions::glMultiDrawArraysIndirectBindlessCountNV,         "glMultiDrawArraysIndirectBindlessCountNV");
         set(&opengl_functions::glMultiDrawArraysIndirectBindlessNV,              "glMultiDrawArraysIndirectBindlessNV");
+        set(&opengl_functions::glMultiDrawArraysIndirectCount,                   "glMultiDrawArraysIndirectCount");
         set(&opengl_functions::glMultiDrawArraysIndirectCountARB,                "glMultiDrawArraysIndirectCountARB");
         set(&opengl_functions::glMultiDrawElements,                              "glMultiDrawElements");
         set(&opengl_functions::glMultiDrawElementsBaseVertex,                    "glMultiDrawElementsBaseVertex");
         set(&opengl_functions::glMultiDrawElementsIndirect,                      "glMultiDrawElementsIndirect");
         set(&opengl_functions::glMultiDrawElementsIndirectBindlessCountNV,       "glMultiDrawElementsIndirectBindlessCountNV");
         set(&opengl_functions::glMultiDrawElementsIndirectBindlessNV,            "glMultiDrawElementsIndirectBindlessNV");
+        set(&opengl_functions::glMultiDrawElementsIndirectCount,                 "glMultiDrawElementsIndirectCount");
         set(&opengl_functions::glMultiDrawElementsIndirectCountARB,              "glMultiDrawElementsIndirectCountARB");
         set(&opengl_functions::glMultiTexBufferEXT,                              "glMultiTexBufferEXT");
         set(&opengl_functions::glMultiTexCoordPointerEXT,                        "glMultiTexCoordPointerEXT");
@@ -1999,6 +2007,7 @@ void opengl_functions::init()
         set(&opengl_functions::glPointSize,                                      "glPointSize");
         set(&opengl_functions::glPolygonMode,                                    "glPolygonMode");
         set(&opengl_functions::glPolygonOffset,                                  "glPolygonOffset");
+        set(&opengl_functions::glPolygonOffsetClamp,                             "glPolygonOffsetClamp");
         set(&opengl_functions::glPolygonOffsetClampEXT,                          "glPolygonOffsetClampEXT");
         set(&opengl_functions::glPopDebugGroup,                                  "glPopDebugGroup");
         set(&opengl_functions::glPopGroupMarkerEXT,                              "glPopGroupMarkerEXT");
@@ -2181,6 +2190,7 @@ void opengl_functions::init()
         set(&opengl_functions::glShaderStorageBlockBinding,                      "glShaderStorageBlockBinding");
         set(&opengl_functions::glSignalVkFenceNV,                                "glSignalVkFenceNV");
         set(&opengl_functions::glSignalVkSemaphoreNV,                            "glSignalVkSemaphoreNV");
+        set(&opengl_functions::glSpecializeShader,                               "glSpecializeShader");
         set(&opengl_functions::glSpecializeShaderARB,                            "glSpecializeShaderARB");
         set(&opengl_functions::glStateCaptureNV,                                 "glStateCaptureNV");
         set(&opengl_functions::glStencilFillPathInstancedNV,                     "glStencilFillPathInstancedNV");
