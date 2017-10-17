@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "ui_painter_window.h"
 
+#include "com/thread.h"
 #include "path_tracing/paintbrushes/paintbrush.h"
 #include "path_tracing/painter.h"
 
@@ -65,7 +66,7 @@ private:
         QTimer m_timer;
         bool m_first_show;
         std::atomic_bool m_stop;
-        std::atomic_ullong m_ray_count;
+        AtomicCounter<unsigned long long> m_ray_count;
         std::thread m_thread;
         std::atomic_bool m_thread_working;
         const std::thread::id m_window_thread_id;

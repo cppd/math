@@ -248,7 +248,7 @@ public:
 std::unique_ptr<IFourierCuda> create_fft_cufft(int x, int y)
 {
         cuda_select_device();
-        return std::unique_ptr<CuFFT>(new CuFFT(x, y));
+        return std::make_unique<CuFFT>(x, y);
 }
 
 #endif

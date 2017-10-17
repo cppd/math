@@ -83,9 +83,9 @@ void VisibleMesh::create_mesh_object(const IObj* obj, double size, const vec3& p
                         m_triangles,
 
                         // вершины выпуклой оболочки помещаемого в октадерево объекта
-                        [](const TableTriangle* t) -> std::vector<vec3>
+                        [](const TableTriangle& t) -> std::vector<vec3>
                         {
-                                return {t->v0(), t->v1(), t->v2()};
+                                return {t.v0(), t.v1(), t.v2()};
                         },
 
                         // пересечение параллелепипеда октадерева с помещаемым в него объектом

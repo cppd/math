@@ -83,7 +83,7 @@ bool light_source_is_visible(const std::vector<const GenericObject*>& objects, c
 
 vec3 direct_diffuse_lighting(const std::vector<const GenericObject*>& objects,
                              const std::vector<const LightSource*> light_sources, const vec3& p, const vec3& geometric_normal,
-                             const vec3& shading_normal, bool triangle_mesh, std::atomic_ullong* ray_count)
+                             const vec3& shading_normal, bool triangle_mesh, AtomicCounter<unsigned long long>* ray_count)
 {
         vec3 color(0);
 
@@ -205,15 +205,15 @@ class Painter
         std::vector<std::thread> m_threads;
         std::atomic_bool& m_stop;
 
-        static_assert(std::atomic_ullong::is_always_lock_free);
-        std::atomic_ullong& m_ray_count;
+        static_assert(AtomicCounter<unsigned long long>::is_always_lock_free);
+        AtomicCounter<unsigned long long>& m_ray_count;
 
         int m_width, m_height;
         std::vector<Pixel> m_pixels;
 
 public:
         Painter(IPainterNotifier* painter_notifier, const PaintObjects* paint_objects, Paintbrush* paintbrush,
-                unsigned thread_count, std::atomic_bool* stop, std::atomic_ullong* ray_count)
+                unsigned thread_count, std::atomic_bool* stop, AtomicCounter<unsigned long long>* ray_count)
                 : m_painter_notifier(painter_notifier),
                   m_objects(paint_objects->get_objects()),
                   m_light_sources(paint_objects->get_light_sources()),
@@ -422,7 +422,7 @@ void Painter::paint_pixels()
 }
 
 void paint(IPainterNotifier* painter_notifier, const PaintObjects* paint_objects, Paintbrush* paintbrush, unsigned thread_count,
-           std::atomic_bool* stop, std::atomic_ullong* ray_count)
+           std::atomic_bool* stop, AtomicCounter<unsigned long long>* ray_count)
 {
         Painter(painter_notifier, paint_objects, paintbrush, thread_count, stop, ray_count).process();
 }

@@ -38,8 +38,8 @@ class BarPaintbrush final : public Paintbrush
         std::vector<bool> m_pixels_busy;
         unsigned m_current_pixel = 0;
 
-        static_assert(std::atomic_int::is_always_lock_free);
-        std::atomic_int m_pass_count = 1;
+        static_assert(AtomicCounter<int>::is_always_lock_free);
+        AtomicCounter<int> m_pass_count = 1;
 
         unsigned m_width;
 

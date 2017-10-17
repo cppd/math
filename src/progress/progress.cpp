@@ -26,7 +26,7 @@ class ProgressRatio::Impl final : public IProgressRatioControl
         static constexpr unsigned MAX = 1ull << (HIGH_SHIFT - 2);
 
         // К этим переменным имеются частые обращения, поэтому атомарные без мьютексов
-        std::atomic_ullong m_counter{0};
+        AtomicCounter<unsigned long long> m_counter{0};
         std::atomic_bool m_terminate_request{false};
 
         // Строка меняется редко в потоках, читается с частотой таймера интерфейса
@@ -39,7 +39,8 @@ class ProgressRatio::Impl final : public IProgressRatioControl
         const std::string m_permanent_text;
 
 public:
-        static constexpr bool LOCK_FREE = std::atomic_ullong::is_always_lock_free && std::atomic_bool::is_always_lock_free;
+        static constexpr bool LOCK_FREE =
+                AtomicCounter<unsigned long long>::is_always_lock_free && std::atomic_bool::is_always_lock_free;
 
         Impl(IProgressRatioList* list, const std::string& permanent_text) : m_ratios(list), m_permanent_text(permanent_text)
         {

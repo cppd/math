@@ -41,7 +41,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <thread>
 
-using atomic_counter = std::atomic_int;
+using atomic_counter = AtomicCounter<int>;
 constexpr bool ATOMIC_COUNTER_LOCK_FREE = atomic_counter::is_always_lock_free;
 
 constexpr unsigned MAX_FACES_PER_LINE = 5;

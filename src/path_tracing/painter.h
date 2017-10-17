@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "objects.h"
 
+#include "com/thread.h"
 #include "com/vec.h"
 
 #include <atomic>
@@ -38,4 +39,4 @@ public:
 };
 
 void paint(IPainterNotifier* painter_notifier, const PaintObjects* paint_objects, Paintbrush* paintbrush, unsigned thread_count,
-           std::atomic_bool* stop, std::atomic_ullong* ray_count);
+           std::atomic_bool* stop, AtomicCounter<unsigned long long>* ray_count);

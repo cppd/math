@@ -204,3 +204,33 @@ inline void join_threads(std::vector<std::thread>* threads, const std::vector<st
                 error(e);
         }
 }
+
+template <typename T>
+class AtomicCounter
+{
+        static_assert(std::atomic<T>::is_always_lock_free);
+
+        std::atomic<T> m_counter;
+
+public:
+        static constexpr bool is_always_lock_free = std::atomic<T>::is_always_lock_free;
+
+        AtomicCounter() : m_counter(0)
+        {
+        }
+        AtomicCounter(T v) : m_counter(v)
+        {
+        }
+        void operator=(T v)
+        {
+                m_counter.store(v, std::memory_order_relaxed);
+        }
+        operator T() const
+        {
+                return m_counter.load(std::memory_order_relaxed);
+        }
+        void operator++()
+        {
+                m_counter.fetch_add(1, std::memory_order_relaxed);
+        }
+};
