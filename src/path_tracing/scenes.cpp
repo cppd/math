@@ -60,7 +60,7 @@ public:
 
                 std::unique_ptr<IObj> obj_file = load_obj_from_file(obj_file_name, &progress);
 
-                m_mesh = std::make_unique<VisibleMesh>(obj_file.get(), size, vec3(0), &progress);
+                m_mesh = std::make_unique<VisibleMesh>(obj_file.get(), size, vec3(0), get_hardware_concurrency(), &progress);
 
                 make_cornell_box(width, height, size, default_color, diffuse, camera_direction, camera_up);
         }

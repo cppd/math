@@ -53,6 +53,7 @@ public:
         vec3 normal(const vec3& p) const;
 
         void binary_division(std::array<Parallelepiped, 8>* p) const;
+        std::array<Parallelepiped, 8> binary_division() const;
 
         const vec3& org() const override;
         vec3 e0() const override;

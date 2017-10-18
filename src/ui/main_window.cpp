@@ -93,7 +93,10 @@ enum ObjectType
 };
 
 MainWindow::MainWindow(QWidget* parent)
-        : QMainWindow(parent), m_window_thread_id(std::this_thread::get_id()), m_object_repository(create_object_repository<3>())
+        : QMainWindow(parent),
+          m_window_thread_id(std::this_thread::get_id()),
+          m_object_repository(create_object_repository<3>()),
+          m_mesh_object_threads(get_hardware_concurrency())
 {
         static_assert(std::is_same_v<decltype(ui.graphics_widget), GraphicsWidget*>);
 
@@ -373,8 +376,8 @@ void MainWindow::thread_model(ProgressRatioList* progress_ratio_list, std::share
                 if (obj->get_faces().size() > 0)
                 {
                         ProgressRatio progress(progress_ratio_list);
-                        m_meshes[MeshType::Model] =
-                                std::make_unique<VisibleMesh>(obj.get(), m_mesh_object_size, m_mesh_object_position, &progress);
+                        m_meshes[MeshType::Model] = std::make_unique<VisibleMesh>(
+                                obj.get(), m_mesh_object_size, m_mesh_object_position, m_mesh_object_threads, &progress);
                 }
 
         });
@@ -421,8 +424,9 @@ void MainWindow::thread_cocone(ProgressRatioList* progress_ratio_list) noexcept
                 if (m_surface_cocone->get_faces().size() > 0)
                 {
                         ProgressRatio progress(progress_ratio_list);
-                        m_meshes[MeshType::Cocone] = std::make_unique<VisibleMesh>(m_surface_cocone.get(), m_mesh_object_size,
-                                                                                   m_mesh_object_position, &progress);
+                        m_meshes[MeshType::Cocone] =
+                                std::make_unique<VisibleMesh>(m_surface_cocone.get(), m_mesh_object_size, m_mesh_object_position,
+                                                              m_mesh_object_threads, &progress);
                 }
 
         });
@@ -477,8 +481,9 @@ void MainWindow::thread_bound_cocone(ProgressRatioList* progress_ratio_list, dou
                 if (m_surface_bound_cocone->get_faces().size() > 0)
                 {
                         ProgressRatio progress(progress_ratio_list);
-                        m_meshes[MeshType::BoundCocone] = std::make_unique<VisibleMesh>(
-                                m_surface_bound_cocone.get(), m_mesh_object_size, m_mesh_object_position, &progress);
+                        m_meshes[MeshType::BoundCocone] =
+                                std::make_unique<VisibleMesh>(m_surface_bound_cocone.get(), m_mesh_object_size,
+                                                              m_mesh_object_position, m_mesh_object_threads, &progress);
                 }
 
         });
@@ -1332,7 +1337,7 @@ void MainWindow::on_pushButton_Painter_clicked()
         int thread_count;
         double size_coef;
 
-        if (!PathTracingParameters(this).show(std::thread::hardware_concurrency(), ui.graphics_widget->width(),
+        if (!PathTracingParameters(this).show(get_hardware_concurrency(), ui.graphics_widget->width(),
                                               ui.graphics_widget->height(), &thread_count, &size_coef))
         {
                 return;
@@ -1369,7 +1374,7 @@ void MainWindow::on_pushButton_Painter_clicked()
         create_painter_window(window_name, thread_count, std::move(paint_model));
 
 #else
-        int thread_count = std::max(1u, std::thread::hardware_concurrency() - 1);
+        int thread_count = std::max(1u, get_hardware_concurrency() - 1);
 
         glm::vec3 camera_up, camera_direction, light_direction, view_center;
         float view_width;
@@ -1377,7 +1382,7 @@ void MainWindow::on_pushButton_Painter_clicked()
         m_show->get_camera_information(&camera_up, &camera_direction, &light_direction, &view_center, &view_width);
 
         create_painter_window(std::string(APPLICATION_NAME) + " - Cornell Box", thread_count,
-                              cornell_box(700, 700, *mesh_pointer, MESH_OBJECT_SIZE,
+                              cornell_box(700, 700, *mesh_pointer, m_mesh_object_size,
                                           to_vector<double>(qcolor_to_rgb(m_default_color)), float_to_rgb(get_diffuse()),
                                           to_vector<double>(camera_direction), to_vector<double>(camera_up)));
 #endif

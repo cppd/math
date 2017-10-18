@@ -237,3 +237,10 @@ void Parallelepiped::binary_division(std::array<Parallelepiped, 8>* p) const
                 (*p)[i] = Parallelepiped(orgs[i], half0, half1, half2);
         }
 }
+
+std::array<Parallelepiped, 8> Parallelepiped::binary_division() const
+{
+        std::array<Parallelepiped, 8> res;
+        binary_division(&res);
+        return res;
+}

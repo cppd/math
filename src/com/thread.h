@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "error.h"
 
+#include <algorithm>
 #include <atomic>
 #include <condition_variable>
 #include <mutex>
@@ -30,8 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 inline unsigned get_hardware_concurrency()
 {
-        unsigned hc = std::thread::hardware_concurrency();
-        return hc > 0 ? hc : 1;
+        return std::max(1u, std::thread::hardware_concurrency());
 }
 
 class SpinLock
@@ -167,6 +167,38 @@ void launch_class_thread(std::thread* t, std::string* thread_msg, const F& func,
                         try
                         {
                                 (cls->*func)(args...);
+                        }
+                        catch (TerminateRequestException&)
+                        {
+                        }
+                        catch (std::exception& e)
+                        {
+                                *thread_msg = e.what();
+                        }
+                        catch (...)
+                        {
+                                *thread_msg = "Unknown error in thread";
+                        }
+                }
+                catch (...)
+                {
+                        error_fatal("Exception in thread message string.");
+                }
+        });
+}
+
+template <typename F>
+void launch_thread(std::thread* t, std::string* thread_msg, const F& f)
+{
+        ASSERT(thread_msg);
+
+        *t = std::thread([=]() noexcept {
+                try
+                {
+                        thread_msg->clear();
+                        try
+                        {
+                                f();
                         }
                         catch (TerminateRequestException&)
                         {

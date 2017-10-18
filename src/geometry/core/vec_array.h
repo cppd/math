@@ -19,9 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/error.h"
 
-#include <algorithm>
 #include <array>
-#include <utility>
 
 // template <typename T, size_t N>
 // std::array<T, N + 1> add_elem(const std::array<T, N>& a, const T& v)
@@ -112,28 +110,4 @@ constexpr std::array<T, 3> del_elem(const std::array<T, 4>& a, unsigned pos)
                 return {{a[0], a[1], a[2]}};
         }
         error("pos >= 4");
-}
-
-template <typename T, T... I>
-constexpr std::array<T, sizeof...(I)> make_array_sequence_impl(std::integer_sequence<T, I...>)
-{
-        return {{I...}};
-}
-
-template <typename T, size_t N>
-constexpr std::array<T, N> make_array_sequence()
-{
-        return make_array_sequence_impl(std::make_integer_sequence<T, N>());
-}
-
-template <typename T, size_t... I>
-constexpr std::array<T, sizeof...(I)> make_array_value_impl(std::integer_sequence<size_t, I...>, const T& v)
-{
-        return {{(static_cast<void>(I), v)...}};
-}
-
-template <typename T, size_t N>
-constexpr std::array<T, N> make_array_value(const T& v)
-{
-        return make_array_value_impl(std::make_integer_sequence<size_t, N>(), v);
 }

@@ -207,3 +207,10 @@ void ParallelepipedOrtho::binary_division(std::array<ParallelepipedOrtho, 8>* p)
         (*p)[6] = ParallelepipedOrtho(vec3(x0, y1, z1), half0, half1, half2);
         (*p)[7] = ParallelepipedOrtho(vec3(x1, y1, z1), half0, half1, half2);
 }
+
+std::array<ParallelepipedOrtho, 8> ParallelepipedOrtho::binary_division() const
+{
+        std::array<ParallelepipedOrtho, 8> res;
+        binary_division(&res);
+        return res;
+}

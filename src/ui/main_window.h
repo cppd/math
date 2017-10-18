@@ -214,4 +214,5 @@ private:
 
         double m_mesh_object_size;
         vec3 m_mesh_object_position;
+        unsigned m_mesh_object_threads;
 };

@@ -28,7 +28,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 constexpr int OCTREE_MAX_DEPTH = 10;
 constexpr int OCTREE_MIN_OBJECTS = 10;
 
-void VisibleMesh::create_mesh_object(const IObj* obj, double size, const vec3& position, ProgressRatio* progress)
+void VisibleMesh::create_mesh_object(const IObj* obj, double size, const vec3& position, unsigned thread_count,
+                                     ProgressRatio* progress)
 {
         if (obj->get_vertices().size() == 0)
         {
@@ -94,17 +95,18 @@ void VisibleMesh::create_mesh_object(const IObj* obj, double size, const vec3& p
                                 return shape_intersection(*p, *t);
                         },
 
+                        thread_count,
                         progress
                 );
         // clang-format on
 }
 
-VisibleMesh::VisibleMesh(const IObj* obj, double size, const vec3& position, ProgressRatio* progress)
+VisibleMesh::VisibleMesh(const IObj* obj, double size, const vec3& position, unsigned thread_count, ProgressRatio* progress)
         : m_octree(OCTREE_MAX_DEPTH, OCTREE_MIN_OBJECTS)
 {
         double start_time = get_time_seconds();
 
-        create_mesh_object(obj, size, position, progress);
+        create_mesh_object(obj, size, position, thread_count, progress);
 
         LOG("Mesh object created, " + to_string_fixed(get_time_seconds() - start_time, 5) + " s");
 }

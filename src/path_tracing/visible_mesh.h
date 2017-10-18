@@ -53,10 +53,11 @@ class VisibleMesh final : public GenericObject, public Surface, public SurfacePr
 
         Octree<OctreeParallelepiped, TableTriangle> m_octree;
 
-        void create_mesh_object(const IObj* obj, double size, const vec3& position, ProgressRatio* progress);
+        void create_mesh_object(const IObj* obj, double size, const vec3& position, unsigned thread_count,
+                                ProgressRatio* progress);
 
 public:
-        VisibleMesh(const IObj* obj, double size, const vec3& position, ProgressRatio* progress);
+        VisibleMesh(const IObj* obj, double size, const vec3& position, unsigned thread_count, ProgressRatio* progress);
 
         // Интерфейс GenericObject
         bool intersect_approximate(const ray3& r, double* t) const override;

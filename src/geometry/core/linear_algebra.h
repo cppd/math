@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "vec_array.h"
 
+#include "com/arrays.h"
 #include "com/combinatorics.h"
 #include "com/math.h"
 #include "com/vec.h"
