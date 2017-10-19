@@ -45,6 +45,8 @@ template <size_t N>
 struct IObjectRepository;
 
 class VisibleMesh;
+class Projector;
+class LightSource;
 
 class MainWindow final : public QMainWindow
 {
@@ -103,6 +105,18 @@ private slots:
         void slot_widget_under_window_resize();
 
 private:
+        // Идентификаторы объектов для взаимодействия с модулем рисования,
+        // куда передаются как числа, а не как enum
+        enum ObjectType
+        {
+                MODEL,
+                MODEL_CONVEX_HULL,
+                SURFACE_COCONE,
+                SURFACE_COCONE_CONVEX_HULL,
+                SURFACE_BOUND_COCONE,
+                SURFACE_BOUND_COCONE_CONVEX_HULL
+        };
+
         enum class OpenObjectType
         {
                 File,
@@ -128,6 +142,13 @@ private:
                 BoundCoconeCH
         };
 
+        enum class AddObjectType
+        {
+                Model,
+                Cocone,
+                BoundCocone
+        };
+
         struct ThreadPack
         {
                 ProgressRatioList progress_ratio_list;
@@ -144,7 +165,8 @@ private:
 
         void thread_open_object(ProgressRatioList* progress_ratio_list, const std::string& object_name,
                                 OpenObjectType object_type) noexcept;
-        void thread_model(ProgressRatioList* progress_ratio_list, std::shared_ptr<IObj> obj) noexcept;
+        void thread_add_object(ProgressRatioList* progress_ratio_list, AddObjectType object_type,
+                               std::shared_ptr<IObj> obj) noexcept;
         void thread_surface_constructor(ProgressRatioList* progress_ratio_list) noexcept;
         void thread_cocone(ProgressRatioList* progress_ratio_list) noexcept;
         void thread_bound_cocone(ProgressRatioList* progress_ratio_list, double rho, double alpha) noexcept;
@@ -181,6 +203,13 @@ private:
         void set_wireframe_color(const QColor& c);
 
         bool find_visible_mesh(std::shared_ptr<const VisibleMesh>* ptr, std::string* name) const;
+
+        std::unique_ptr<const Projector> create_projector(int paint_width, int paint_height) const;
+        std::unique_ptr<const LightSource> create_light_source() const;
+
+        static std::tuple<std::string, MainWindow::ObjectType, MainWindow::ObjectType> parameters_for_add_object(
+                AddObjectType add_object_type);
+        static std::tuple<std::string, MeshType> parameters_for_mesh_object(AddObjectType add_object_type);
 
         Ui::MainWindow ui;
 

@@ -137,16 +137,22 @@ public:
                 *light_direction = -m_light_direction; // от источника света на объект
         }
 
-        void get_camera_information(glm::vec3* camera_up, glm::vec3* camera_direction, glm::vec3* light_direction,
-                                    glm::vec3* view_center, float* view_width) const
+        void get_camera_information(glm::vec3* camera_up, glm::vec3* camera_direction, glm::vec3* view_center,
+                                    float* view_width) const
         {
                 std::lock_guard lg(m_lock);
 
                 *camera_up = m_camera_up;
                 *camera_direction = -m_camera_direction; // от камеры на объект
-                *light_direction = -m_light_direction; // от источника света на объект
                 *view_center = m_view_center;
                 *view_width = m_view_width;
+        }
+
+        void get_light_information(glm::vec3* light_direction) const
+        {
+                std::lock_guard lg(m_lock);
+
+                *light_direction = -m_light_direction; // от источника света на объект
         }
 
         void rotate(int delta_x, int delta_y)
@@ -376,12 +382,15 @@ class ShowObject final : public IShow
                 m_event_queue.emplace(std::in_place_type<Event::shadow_zoom>, v);
         }
 
-        void get_camera_information(glm::vec3* camera_up, glm::vec3* camera_direction, glm::vec3* light_direction,
-                                    glm::vec3* view_center, float* view_width) const override
+        void get_camera_information(glm::vec3* camera_up, glm::vec3* camera_direction, glm::vec3* view_center,
+                                    float* view_width) const override
         {
-                m_camera.get_camera_information(camera_up, camera_direction, light_direction, view_center, view_width);
+                m_camera.get_camera_information(camera_up, camera_direction, view_center, view_width);
         }
-
+        void get_light_information(glm::vec3* light_direction) const override
+        {
+                m_camera.get_light_information(light_direction);
+        }
         void get_object_size_and_position(float* object_size, glm::vec3* object_position) const override
         {
                 *object_size = OBJECT_SIZE;

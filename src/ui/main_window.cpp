@@ -80,23 +80,18 @@ constexpr int WINDOW_SHOW_DELAY_MSEC = 50;
 // увеличение текстуры тени по сравнению с размером окна
 constexpr float SHADOW_ZOOM = 2;
 
-// Идентификаторы объектов для взаимодействия с модулем рисования,
-// куда передаются как числа, а не как enum
-enum ObjectType
-{
-        MODEL,
-        MODEL_CONVEX_HULL,
-        SURFACE_COCONE,
-        SURFACE_COCONE_CONVEX_HULL,
-        SURFACE_BOUND_COCONE,
-        SURFACE_BOUND_COCONE_CONVEX_HULL
-};
+// Разделение пикселя по горизонтали и вертикали для трассировки пути.
+// Количество лучей на один пиксель в одном проходе равно этому числу в квадрате.
+constexpr int PROJECTOR_PIXEL_RESOLUTION = 5;
+
+// Сколько потоков не надо использовать от максимума для создания октадеревьев.
+constexpr unsigned MESH_OBJECT_NOT_USED_THREAD_COUNT = 2;
 
 MainWindow::MainWindow(QWidget* parent)
         : QMainWindow(parent),
           m_window_thread_id(std::this_thread::get_id()),
           m_object_repository(create_object_repository<3>()),
-          m_mesh_object_threads(get_hardware_concurrency())
+          m_mesh_object_threads(std::max(1u, get_hardware_concurrency() - MESH_OBJECT_NOT_USED_THREAD_COUNT))
 {
         static_assert(std::is_same_v<decltype(ui.graphics_widget), GraphicsWidget*>);
 
@@ -272,26 +267,23 @@ void MainWindow::start_thread(const Args&... args)
 
         thread.thread = std::thread([ =, &thread ]() noexcept {
 
-                if
-                        constexpr(thread_action == ThreadAction::OpenObject)
-                        {
-                                thread_open_object(&thread.progress_ratio_list, args...);
-                        }
-                else if
-                        constexpr(thread_action == ThreadAction::ExportCocone || thread_action == ThreadAction::ExportBoundCocone)
-                        {
-                                thread_export(&thread.progress_ratio_list, args...);
-                        }
-                else if
-                        constexpr(thread_action == ThreadAction::ReloadBoundCocone)
-                        {
-                                thread_bound_cocone(&thread.progress_ratio_list, args...);
-                        }
-                else if
-                        constexpr(thread_action == ThreadAction::SelfTest)
-                        {
-                                thread_self_test(&thread.progress_ratio_list, args...);
-                        }
+                if constexpr (thread_action == ThreadAction::OpenObject)
+                {
+                        thread_open_object(&thread.progress_ratio_list, args...);
+                }
+                else if constexpr (thread_action == ThreadAction::ExportCocone ||
+                                   thread_action == ThreadAction::ExportBoundCocone)
+                {
+                        thread_export(&thread.progress_ratio_list, args...);
+                }
+                else if constexpr (thread_action == ThreadAction::ReloadBoundCocone)
+                {
+                        thread_bound_cocone(&thread.progress_ratio_list, args...);
+                }
+                else if constexpr (thread_action == ThreadAction::SelfTest)
+                {
+                        thread_self_test(&thread.progress_ratio_list, args...);
+                }
                 else
                 {
                         error_fatal("Unknown thread action in start thread");
@@ -329,7 +321,7 @@ void MainWindow::catch_all(const T& a) noexcept
         }
         catch (...)
         {
-                error_fatal("Exception in thread message string.");
+                error_fatal("Exception in catch all.");
         }
 }
 
@@ -346,41 +338,84 @@ void MainWindow::thread_self_test(ProgressRatioList* progress_ratio_list, SelfTe
         });
 }
 
-void MainWindow::thread_model(ProgressRatioList* progress_ratio_list, std::shared_ptr<IObj> obj) noexcept
+std::tuple<std::string, MainWindow::ObjectType, MainWindow::ObjectType> MainWindow::parameters_for_add_object(
+        AddObjectType add_object_type)
+{
+        switch (add_object_type)
+        {
+        case AddObjectType::Model:
+                return std::make_tuple("Convex hull 3D", MODEL, MODEL_CONVEX_HULL);
+        case AddObjectType::Cocone:
+                return std::make_tuple("COCONE convex hull 3D", SURFACE_COCONE, SURFACE_COCONE_CONVEX_HULL);
+        case AddObjectType::BoundCocone:
+                return std::make_tuple("BOUND COCONE convex hull 3D", SURFACE_BOUND_COCONE, SURFACE_BOUND_COCONE_CONVEX_HULL);
+        }
+        error_fatal("Unknown object type for add object");
+}
+
+std::tuple<std::string, MainWindow::MeshType> MainWindow::parameters_for_mesh_object(AddObjectType add_object_type)
+{
+        switch (add_object_type)
+        {
+        case AddObjectType::Model:
+                return std::make_tuple("Mesh object", MeshType::Model);
+        case AddObjectType::Cocone:
+                return std::make_tuple("COCONE mesh object", MeshType::Cocone);
+        case AddObjectType::BoundCocone:
+                return std::make_tuple("BOUND COCONE mesh object", MeshType::BoundCocone);
+        }
+        error_fatal("Unknown object type for mesh object");
+}
+
+void MainWindow::thread_add_object(ProgressRatioList* progress_ratio_list, AddObjectType add_object_type,
+                                   std::shared_ptr<IObj> obj) noexcept
 {
         ASSERT(std::this_thread::get_id() != m_window_thread_id);
 
-        catch_all([&](std::string* message) {
+        std::thread t1([&]() noexcept {
+                catch_all([&](std::string* message) {
 
-                *message = "Convex hull 3D";
+                        ObjectType object_type, object_type_convex_hull;
 
-                if (obj->get_faces().size() == 0 && obj->get_points().size() == 0)
-                {
-                        return;
-                }
+                        std::tie(*message, object_type, object_type_convex_hull) = parameters_for_add_object(add_object_type);
 
-                {
-                        m_show->add_object(obj, MODEL, MODEL);
-
-                        ProgressRatio progress(progress_ratio_list);
-                        progress.set_text("Convex hull 3D: %v of %m");
-
-                        std::shared_ptr<IObj> convex_hull = create_convex_hull_for_obj(obj.get(), &progress);
-
-                        if (convex_hull->get_faces().size() != 0)
+                        if (obj->get_faces().size() > 0 ||
+                            (add_object_type == AddObjectType::Model && obj->get_points().size() > 0))
                         {
-                                m_show->add_object(convex_hull, MODEL_CONVEX_HULL, MODEL);
+                                m_show->add_object(obj, object_type, MODEL);
+
+                                ProgressRatio progress(progress_ratio_list);
+                                progress.set_text(*message + ": %v of %m");
+
+                                std::shared_ptr<IObj> convex_hull = create_convex_hull_for_obj(obj.get(), &progress);
+
+                                if (convex_hull->get_faces().size() != 0)
+                                {
+                                        m_show->add_object(convex_hull, object_type_convex_hull, MODEL);
+                                }
                         }
-                }
-
-                if (obj->get_faces().size() > 0)
-                {
-                        ProgressRatio progress(progress_ratio_list);
-                        m_meshes[MeshType::Model] = std::make_unique<VisibleMesh>(
-                                obj.get(), m_mesh_object_size, m_mesh_object_position, m_mesh_object_threads, &progress);
-                }
-
+                });
         });
+
+        std::thread t2([&]() noexcept {
+                catch_all([&](std::string* message) {
+
+                        MeshType mesh_type;
+
+                        std::tie(*message, mesh_type) = parameters_for_mesh_object(add_object_type);
+
+                        if (obj->get_faces().size() > 0)
+                        {
+                                ProgressRatio progress(progress_ratio_list);
+                                m_meshes[mesh_type] = std::make_unique<VisibleMesh>(
+                                        obj.get(), m_mesh_object_size, m_mesh_object_position, m_mesh_object_threads, &progress);
+                        }
+
+                });
+        });
+
+        t1.join();
+        t2.join();
 }
 
 void MainWindow::thread_cocone(ProgressRatioList* progress_ratio_list) noexcept
@@ -406,28 +441,7 @@ void MainWindow::thread_cocone(ProgressRatioList* progress_ratio_list) noexcept
                         LOG("Surface reconstruction second phase, " + to_string_fixed(get_time_seconds() - start_time, 5) + " s");
                 }
 
-                if (m_surface_cocone->get_faces().size() != 0)
-                {
-                        m_show->add_object(m_surface_cocone, SURFACE_COCONE, MODEL);
-
-                        ProgressRatio progress(progress_ratio_list);
-                        progress.set_text("COCONE convex hull 3D: %v of %m");
-
-                        std::shared_ptr<IObj> convex_hull = create_convex_hull_for_obj(m_surface_cocone.get(), &progress);
-
-                        if (convex_hull->get_faces().size() != 0)
-                        {
-                                m_show->add_object(convex_hull, SURFACE_COCONE_CONVEX_HULL, MODEL);
-                        }
-                }
-
-                if (m_surface_cocone->get_faces().size() > 0)
-                {
-                        ProgressRatio progress(progress_ratio_list);
-                        m_meshes[MeshType::Cocone] =
-                                std::make_unique<VisibleMesh>(m_surface_cocone.get(), m_mesh_object_size, m_mesh_object_position,
-                                                              m_mesh_object_threads, &progress);
-                }
+                thread_add_object(progress_ratio_list, AddObjectType::Cocone, m_surface_cocone);
 
         });
 }
@@ -463,28 +477,7 @@ void MainWindow::thread_bound_cocone(ProgressRatioList* progress_ratio_list, dou
 
                 m_event_emitter.bound_cocone_loaded(rho, alpha);
 
-                if (m_surface_bound_cocone->get_faces().size() != 0)
-                {
-                        m_show->add_object(m_surface_bound_cocone, SURFACE_BOUND_COCONE, MODEL);
-
-                        ProgressRatio progress(progress_ratio_list);
-                        progress.set_text("BOUND COCONE convex hull 3D: %v of %m");
-
-                        std::shared_ptr<IObj> convex_hull = create_convex_hull_for_obj(m_surface_bound_cocone.get(), &progress);
-
-                        if (convex_hull->get_faces().size() != 0)
-                        {
-                                m_show->add_object(convex_hull, SURFACE_BOUND_COCONE_CONVEX_HULL, MODEL);
-                        }
-                }
-
-                if (m_surface_bound_cocone->get_faces().size() > 0)
-                {
-                        ProgressRatio progress(progress_ratio_list);
-                        m_meshes[MeshType::BoundCocone] =
-                                std::make_unique<VisibleMesh>(m_surface_bound_cocone.get(), m_mesh_object_size,
-                                                              m_mesh_object_position, m_mesh_object_threads, &progress);
-                }
+                thread_add_object(progress_ratio_list, AddObjectType::BoundCocone, m_surface_bound_cocone);
 
         });
 }
@@ -570,7 +563,7 @@ void MainWindow::thread_open_object(ProgressRatioList* progress_ratio_list, cons
                 m_surface_points = (obj->get_faces().size() > 0) ? get_unique_face_vertices(obj.get()) :
                                                                    get_unique_point_vertices(obj.get());
 
-                std::thread model([=]() noexcept { thread_model(progress_ratio_list, obj); });
+                std::thread model([=]() noexcept { thread_add_object(progress_ratio_list, AddObjectType::Model, obj); });
                 std::thread surface([=]() noexcept { thread_surface_constructor(progress_ratio_list); });
 
                 model.join();
@@ -1317,6 +1310,29 @@ bool MainWindow::find_visible_mesh(std::shared_ptr<const VisibleMesh>* mesh_poin
         return false;
 }
 
+std::unique_ptr<const Projector> MainWindow::create_projector(int paint_width, int paint_height) const
+{
+        glm::vec3 camera_up, camera_direction, view_center;
+        float view_width;
+        m_show->get_camera_information(&camera_up, &camera_direction, &view_center, &view_width);
+
+        vec3 camera_position = to_vector<double>(view_center) - to_vector<double>(camera_direction) * 2.0 * m_mesh_object_size;
+
+        return std::make_unique<const ParallelProjector>(camera_position, to_vector<double>(camera_direction),
+                                                         to_vector<double>(camera_up), view_width, paint_width, paint_height,
+                                                         PROJECTOR_PIXEL_RESOLUTION);
+}
+
+std::unique_ptr<const LightSource> MainWindow::create_light_source() const
+{
+        glm::vec3 light_direction;
+        m_show->get_light_information(&light_direction);
+
+        vec3 light_position = m_mesh_object_position - to_vector<double>(light_direction) * m_mesh_object_size * 1000.0;
+
+        return std::make_unique<const ConstantLight>(light_position, vec3(1, 1, 1));
+}
+
 void MainWindow::on_pushButton_Painter_clicked()
 {
         std::shared_ptr<const VisibleMesh> mesh_pointer;
@@ -1327,13 +1343,13 @@ void MainWindow::on_pushButton_Painter_clicked()
                 message_warning(this, "No painting support for this model type");
                 return;
         }
+
         if (!mesh_pointer)
         {
                 message_warning(this, "No object to paint");
                 return;
         }
 
-#if 1
         int thread_count;
         double size_coef;
 
@@ -1343,47 +1359,36 @@ void MainWindow::on_pushButton_Painter_clicked()
                 return;
         }
 
-        constexpr int projector_pixel_resolution = 5;
+        catch_all([&](std::string* message) {
 
-        std::string window_name = std::string(APPLICATION_NAME) + " - " + model_name;
+                *message = "Painter";
 
-        int paint_width = std::round(ui.graphics_widget->width() * size_coef);
-        int paint_height = std::round(ui.graphics_widget->height() * size_coef);
+                int paint_width = std::round(ui.graphics_widget->width() * size_coef);
+                int paint_height = std::round(ui.graphics_widget->height() * size_coef);
 
-        vec3 background_color = to_vector<double>(qcolor_to_rgb(m_clear_color));
-        vec3 default_color = to_vector<double>(qcolor_to_rgb(m_default_color));
+                std::string window_name = std::string(APPLICATION_NAME) + " - " + model_name;
+                vec3 default_color = to_vector<double>(qcolor_to_rgb(m_default_color));
+                double diffuse = float_to_rgb(get_diffuse());
 
-        double diffuse = float_to_rgb(get_diffuse());
+                if ((true))
+                {
+                        vec3 background_color = to_vector<double>(qcolor_to_rgb(m_clear_color));
 
-        glm::vec3 camera_up, camera_direction, light_direction, view_center;
-        float view_width;
-        m_show->get_camera_information(&camera_up, &camera_direction, &light_direction, &view_center, &view_width);
+                        create_painter_window(window_name, thread_count,
+                                              one_object_scene(background_color, default_color, diffuse,
+                                                               create_projector(paint_width, paint_height), create_light_source(),
+                                                               *mesh_pointer));
+                }
+                else
+                {
+                        glm::vec3 camera_up, camera_direction, view_center;
+                        float view_width;
+                        m_show->get_camera_information(&camera_up, &camera_direction, &view_center, &view_width);
 
-        vec3 camera_position = to_vector<double>(view_center) - to_vector<double>(camera_direction) * 2.0 * m_mesh_object_size;
-        vec3 light_position = m_mesh_object_position - to_vector<double>(light_direction) * m_mesh_object_size * 1000.0;
-
-        std::unique_ptr projector = std::make_unique<const ParallelProjector>(
-                camera_position, to_vector<double>(camera_direction), to_vector<double>(camera_up), view_width, paint_width,
-                paint_height, projector_pixel_resolution);
-
-        std::unique_ptr light_source = std::make_unique<const ConstantLight>(light_position, vec3(1, 1, 1));
-
-        std::unique_ptr paint_model = one_object_scene(background_color, default_color, diffuse, std::move(projector),
-                                                       std::move(light_source), *mesh_pointer);
-
-        create_painter_window(window_name, thread_count, std::move(paint_model));
-
-#else
-        int thread_count = std::max(1u, get_hardware_concurrency() - 1);
-
-        glm::vec3 camera_up, camera_direction, light_direction, view_center;
-        float view_width;
-
-        m_show->get_camera_information(&camera_up, &camera_direction, &light_direction, &view_center, &view_width);
-
-        create_painter_window(std::string(APPLICATION_NAME) + " - Cornell Box", thread_count,
-                              cornell_box(700, 700, *mesh_pointer, m_mesh_object_size,
-                                          to_vector<double>(qcolor_to_rgb(m_default_color)), float_to_rgb(get_diffuse()),
-                                          to_vector<double>(camera_direction), to_vector<double>(camera_up)));
-#endif
+                        create_painter_window(window_name + " (Cornell Box)", thread_count,
+                                              cornell_box(paint_width, paint_height, *mesh_pointer, m_mesh_object_size,
+                                                          default_color, diffuse, to_vector<double>(camera_direction),
+                                                          to_vector<double>(camera_up)));
+                }
+        });
 }

@@ -67,8 +67,9 @@ public:
         virtual void set_vertical_sync(bool v) = 0;
         virtual void set_shadow_zoom(float v) = 0;
 
-        virtual void get_camera_information(glm::vec3* camera_up, glm::vec3* camera_direction, glm::vec3* light_direction,
-                                            glm::vec3* view_center, float* view_width) const = 0;
+        virtual void get_camera_information(glm::vec3* camera_up, glm::vec3* camera_direction, glm::vec3* view_center,
+                                            float* view_width) const = 0;
+        virtual void get_light_information(glm::vec3* light_direction) const = 0;
         virtual void get_object_size_and_position(float* object_size, glm::vec3* object_position) const = 0;
 };
 
