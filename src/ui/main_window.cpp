@@ -44,7 +44,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "path_tracing/lights/light_source.h"
 #include "path_tracing/projectors/projector.h"
 #include "path_tracing/scenes.h"
-#include "path_tracing/visible_mesh.h"
+#include "path_tracing/shapes/mesh.h"
 #include "progress/progress.h"
 
 #include <QDesktopWidget>
@@ -407,8 +407,8 @@ void MainWindow::thread_add_object(ProgressRatioList* progress_ratio_list, AddOb
                         if (obj->get_faces().size() > 0)
                         {
                                 ProgressRatio progress(progress_ratio_list);
-                                m_meshes[mesh_type] = std::make_unique<VisibleMesh>(
-                                        obj.get(), m_mesh_object_size, m_mesh_object_position, m_mesh_object_threads, &progress);
+                                m_meshes[mesh_type] = std::make_shared<Mesh>(obj.get(), m_model_vertex_matrix,
+                                                                             m_mesh_object_threads, &progress);
                         }
 
                 });
@@ -562,6 +562,10 @@ void MainWindow::thread_open_object(ProgressRatioList* progress_ratio_list, cons
 
                 m_surface_points = (obj->get_faces().size() > 0) ? get_unique_face_vertices(obj.get()) :
                                                                    get_unique_point_vertices(obj.get());
+
+                m_model_vertex_matrix = get_model_vertex_matrix(
+                        obj.get(), m_mesh_object_size,
+                        glm::dvec3(m_mesh_object_position[0], m_mesh_object_position[1], m_mesh_object_position[2]));
 
                 std::thread model([=]() noexcept { thread_add_object(progress_ratio_list, AddObjectType::Model, obj); });
                 std::thread surface([=]() noexcept { thread_surface_constructor(progress_ratio_list); });
@@ -1278,7 +1282,7 @@ void MainWindow::on_radioButton_BoundCoconeConvexHull_clicked()
         m_show->show_object(SURFACE_BOUND_COCONE_CONVEX_HULL);
 }
 
-bool MainWindow::find_visible_mesh(std::shared_ptr<const VisibleMesh>* mesh_pointer, std::string* model_name) const
+bool MainWindow::find_visible_mesh(std::shared_ptr<const Mesh>* mesh_pointer, std::string* model_name) const
 {
         if (ui.radioButton_Model->isChecked())
         {
@@ -1335,7 +1339,7 @@ std::unique_ptr<const LightSource> MainWindow::create_light_source() const
 
 void MainWindow::on_pushButton_Painter_clicked()
 {
-        std::shared_ptr<const VisibleMesh> mesh_pointer;
+        std::shared_ptr<const Mesh> mesh_pointer;
         std::string model_name;
 
         if (!find_visible_mesh(&mesh_pointer, &model_name))
@@ -1366,7 +1370,6 @@ void MainWindow::on_pushButton_Painter_clicked()
                 int paint_width = std::round(ui.graphics_widget->width() * size_coef);
                 int paint_height = std::round(ui.graphics_widget->height() * size_coef);
 
-                std::string window_name = std::string(APPLICATION_NAME) + " - " + model_name;
                 vec3 default_color = to_vector<double>(qcolor_to_rgb(m_default_color));
                 double diffuse = float_to_rgb(get_diffuse());
 
@@ -1374,10 +1377,12 @@ void MainWindow::on_pushButton_Painter_clicked()
                 {
                         vec3 background_color = to_vector<double>(qcolor_to_rgb(m_clear_color));
 
-                        create_painter_window(window_name, thread_count,
+                        std::string title = this->windowTitle().toStdString() + " (" + model_name + ")";
+
+                        create_painter_window(title, thread_count,
                                               one_object_scene(background_color, default_color, diffuse,
                                                                create_projector(paint_width, paint_height), create_light_source(),
-                                                               *mesh_pointer));
+                                                               mesh_pointer));
                 }
                 else
                 {
@@ -1385,8 +1390,10 @@ void MainWindow::on_pushButton_Painter_clicked()
                         float view_width;
                         m_show->get_camera_information(&camera_up, &camera_direction, &view_center, &view_width);
 
-                        create_painter_window(window_name + " (Cornell Box)", thread_count,
-                                              cornell_box(paint_width, paint_height, *mesh_pointer, m_mesh_object_size,
+                        std::string title = this->windowTitle().toStdString() + " (" + model_name + " in Cornell Box)";
+
+                        create_painter_window(title, thread_count,
+                                              cornell_box(paint_width, paint_height, mesh_pointer, m_mesh_object_size,
                                                           default_color, diffuse, to_vector<double>(camera_direction),
                                                           to_vector<double>(camera_up)));
                 }

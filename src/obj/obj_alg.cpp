@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <glm/common.hpp>
 #include <glm/geometric.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include <unordered_set>
 
 namespace
@@ -211,4 +212,12 @@ void find_center_and_length(const std::vector<glm::vec3>& vertices, glm::vec3* c
         }
 
         center_and_length(vertices, center, length);
+}
+
+glm::dmat4 get_model_vertex_matrix(const IObj* obj, double size, const glm::dvec3& position)
+{
+        glm::dmat4 to_center = glm::translate(glm::dmat4(1), glm::dvec3(-obj->get_center()));
+        glm::dmat4 scale = glm::scale(glm::dmat4(1), glm::dvec3(size / obj->get_length()));
+        glm::dmat4 to_position = glm::translate(glm::dmat4(1), position);
+        return to_position * scale * to_center;
 }

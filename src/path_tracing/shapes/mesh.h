@@ -17,19 +17,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "objects.h"
-
-#include "octree.h"
+#include "parallelepiped_ortho.h"
+#include "triangle.h"
 
 #include "obj/obj.h"
 #include "path_tracing/image/image.h"
-#include "path_tracing/shapes/parallelepiped_ortho.h"
-#include "path_tracing/shapes/triangle.h"
+#include "path_tracing/objects.h"
+#include "path_tracing/octree.h"
 #include "progress/progress.h"
 
-#include <memory>
+#include <glm/mat4x4.hpp>
+#include <optional>
 
-class VisibleMesh final : public GenericObject, public Surface, public SurfaceProperties
+class Mesh final
 {
         using OctreeParallelepiped = ParallelepipedOrtho;
 
@@ -53,17 +53,25 @@ class VisibleMesh final : public GenericObject, public Surface, public SurfacePr
 
         Octree<OctreeParallelepiped> m_octree;
 
-        void create_mesh_object(const IObj* obj, double size, const vec3& position, unsigned thread_count,
-                                ProgressRatio* progress);
+        void create_mesh_object(const IObj* obj, const glm::dmat4& vertex_matrix, unsigned thread_count, ProgressRatio* progress);
 
 public:
-        VisibleMesh(const IObj* obj, double size, const vec3& position, unsigned thread_count, ProgressRatio* progress);
+        Mesh(const IObj* obj, const glm::dmat4& vertex_matrix, unsigned thread_count, ProgressRatio* progress);
 
-        // Интерфейс GenericObject
-        bool intersect_approximate(const ray3& r, double* t) const override;
-        bool intersect_precise(const ray3&, double approximate_t, double* t, const Surface** surface,
-                               const GeometricObject** geometric_object) const override;
+        ~Mesh() = default;
 
-        // Интерфейс Surface
-        SurfaceProperties properties(const vec3& p, const GeometricObject* geometric_object) const override;
+        // Треугольники имеют адреса первых элементов векторов вершин, нормалей и текстурных координат,
+        // поэтому при копировании объекта надо менять адреса этих векторов в треугольниках.
+        Mesh(const Mesh&) = delete;
+        Mesh(Mesh&&) = delete;
+        Mesh& operator=(const Mesh&) = delete;
+        Mesh& operator=(Mesh&&) = delete;
+
+        bool intersect_approximate(const ray3& r, double* t) const;
+        bool intersect_precise(const ray3&, double approximate_t, double* t, const GeometricObject** geometric_object) const;
+
+        vec3 get_geometric_normal(const GeometricObject* geometric_object) const;
+        vec3 get_shading_normal(const vec3& p, const GeometricObject* geometric_object) const;
+
+        std::optional<vec3> get_color(const vec3& p, const GeometricObject* geometric_object) const;
 };

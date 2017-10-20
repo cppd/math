@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/log.h"
 #include "com/print.h"
 #include "graphics/query.h"
+#include "obj/obj_alg.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/vec2.hpp>
@@ -294,9 +295,7 @@ DrawObject::DrawObject(const IObj* obj, const ColorSpaceConverter& color_convert
                                               true);
         }
 
-        glm::mat4 scale = glm::scale(glm::mat4(1), glm::vec3(size / obj->get_length()));
-        glm::mat4 translate = glm::translate(glm::mat4(1), -obj->get_center());
-        m_model_matrix = glm::translate(glm::mat4(1), position) * scale * translate;
+        m_model_matrix = get_model_vertex_matrix(obj, size, glm::dvec3(position));
 }
 
 class DrawProgram final : public IDrawProgram

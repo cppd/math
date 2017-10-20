@@ -19,8 +19,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/log.h"
 #include "com/print.h"
+#include "path_tracing/shapes/mesh.h"
 #include "path_tracing/shapes/parallelepiped.h"
 #include "path_tracing/shapes/rectangle.h"
+
+#include <memory>
 
 class VisibleRectangle final : public GenericObject, public Surface, public SurfaceProperties
 {
@@ -91,6 +94,52 @@ public:
                 SurfaceProperties s = *this;
 
                 s.set_geometric_normal(m_parallelepiped.normal(p));
+
+                return s;
+        }
+};
+
+class VisibleSharedMesh final : public GenericObject, public Surface, public SurfaceProperties
+{
+        std::shared_ptr<const Mesh> m_mesh;
+
+public:
+        VisibleSharedMesh(const std::shared_ptr<const Mesh>& mesh) : m_mesh(mesh)
+        {
+        }
+
+        // Интерфейс GenericObject
+        bool intersect_approximate(const ray3& r, double* t) const override
+        {
+                return m_mesh->intersect_approximate(r, t);
+        }
+        bool intersect_precise(const ray3& ray, double approximate_t, double* t, const Surface** surface,
+                               const GeometricObject** geometric_object) const override
+        {
+                if (m_mesh->intersect_precise(ray, approximate_t, t, geometric_object))
+                {
+                        *surface = this;
+                        return true;
+                }
+                else
+                {
+                        return false;
+                }
+        }
+
+        // Интерфейс Surface
+        SurfaceProperties properties(const vec3& p, const GeometricObject* geometric_object) const override
+        {
+                SurfaceProperties s = *this;
+
+                s.set_geometric_normal(m_mesh->get_geometric_normal(geometric_object));
+                s.set_shading_normal(m_mesh->get_shading_normal(p, geometric_object));
+                s.set_triangle_mesh(true);
+
+                if (std::optional<vec3> color = m_mesh->get_color(p, geometric_object))
+                {
+                        s.set_color(color.value());
+                }
 
                 return s;
         }

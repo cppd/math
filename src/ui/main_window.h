@@ -30,6 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QProgressBar>
 #include <QTimer>
 #include <atomic>
+#include <glm/mat4x4.hpp>
 #include <list>
 #include <map>
 #include <memory>
@@ -44,7 +45,7 @@ struct IManifoldConstructor;
 template <size_t N>
 struct IObjectRepository;
 
-class VisibleMesh;
+class Mesh;
 class Projector;
 class LightSource;
 
@@ -202,7 +203,7 @@ private:
         void set_default_color(const QColor& c);
         void set_wireframe_color(const QColor& c);
 
-        bool find_visible_mesh(std::shared_ptr<const VisibleMesh>* ptr, std::string* name) const;
+        bool find_visible_mesh(std::shared_ptr<const Mesh>* ptr, std::string* name) const;
 
         std::unique_ptr<const Projector> create_projector(int paint_width, int paint_height) const;
         std::unique_ptr<const LightSource> create_light_source() const;
@@ -236,10 +237,12 @@ private:
         std::shared_ptr<IObj> m_surface_cocone;
         std::shared_ptr<IObj> m_surface_bound_cocone;
 
-        std::map<MeshType, std::shared_ptr<const VisibleMesh>> m_meshes;
+        std::map<MeshType, std::shared_ptr<const Mesh>> m_meshes;
 
         std::unique_ptr<IObjectRepository<3>> m_object_repository;
         std::unordered_map<QObject*, std::string> m_action_to_object_name_map;
+
+        glm::dmat4 m_model_vertex_matrix;
 
         double m_mesh_object_size;
         vec3 m_mesh_object_position;
