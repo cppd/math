@@ -139,3 +139,32 @@ std::enable_if_t<std::is_base_of_v<GeometricObject, Object>, bool> ray_intersect
 
         return false;
 }
+
+template <typename Object>
+std::enable_if_t<std::is_base_of_v<GeometricObject, Object>, bool> ray_intersection(const std::vector<Object>& objects,
+                                                                                    const std::vector<int>& object_indices,
+                                                                                    const ray3& ray, double* t,
+                                                                                    const Object** found_object)
+{
+        double min_distance = std::numeric_limits<double>::max();
+        bool found = false;
+
+        for (int object_index : object_indices)
+        {
+                double distance;
+                if (objects[object_index].intersect(ray, &distance) && distance < min_distance)
+                {
+                        min_distance = distance;
+                        *found_object = &objects[object_index];
+                        found = true;
+                }
+        }
+
+        if (found)
+        {
+                *t = min_distance;
+                return true;
+        }
+
+        return false;
+}

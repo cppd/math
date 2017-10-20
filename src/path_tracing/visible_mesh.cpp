@@ -81,18 +81,19 @@ void VisibleMesh::create_mesh_object(const IObj* obj, double size, const vec3& p
         // clang-format off
         m_octree.decompose
                 (
-                        m_triangles,
+                        m_triangles.size(),
 
                         // вершины выпуклой оболочки помещаемого в октадерево объекта
-                        [](const TableTriangle& t) -> std::vector<vec3>
+                        [this](int triangle_index) -> std::vector<vec3>
                         {
+                                const TableTriangle& t = m_triangles[triangle_index];
                                 return {t.v0(), t.v1(), t.v2()};
                         },
 
                         // пересечение параллелепипеда октадерева с помещаемым в него объектом
-                        [](const OctreeParallelepiped* p, const TableTriangle* t) -> bool
+                        [this](const OctreeParallelepiped& p, int triangle_index) -> bool
                         {
-                                return shape_intersection(*p, *t);
+                                return shape_intersection(p, m_triangles[triangle_index]);
                         },
 
                         thread_count,
@@ -121,11 +122,14 @@ bool VisibleMesh::intersect_precise(const ray3& ray, double approximate_t, doubl
 {
         const TableTriangle* triangle;
 
-        if (!m_octree.trace_ray(
-                    ray, approximate_t, [&ray, &t, &triangle](const OctreeParallelepiped& parallelepiped,
-                                                              const std::vector<const TableTriangle*>& objects) -> bool {
-                            return ray_intersection(objects, ray, t, &triangle) && parallelepiped.inside(ray.point(*t));
-                    }))
+        if (!m_octree.trace_ray(ray, approximate_t, [&](const std::vector<int>& triangle_indices, vec3* point) -> bool {
+                    if (ray_intersection(m_triangles, triangle_indices, ray, t, &triangle))
+                    {
+                            *point = ray.point(*t);
+                            return true;
+                    }
+                    return false;
+            }))
         {
                 return false;
         }

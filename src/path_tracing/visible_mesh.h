@@ -51,7 +51,7 @@ class VisibleMesh final : public GenericObject, public Surface, public SurfacePr
 
         std::vector<TableTriangle> m_triangles;
 
-        Octree<OctreeParallelepiped, TableTriangle> m_octree;
+        Octree<OctreeParallelepiped> m_octree;
 
         void create_mesh_object(const IObj* obj, double size, const vec3& position, unsigned thread_count,
                                 ProgressRatio* progress);
