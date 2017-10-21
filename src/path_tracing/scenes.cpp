@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "scenes.h"
 
 #include "com/colors.h"
+#include "com/mat_glm.h"
 #include "obj/obj_alg.h"
 #include "obj/obj_file_load.h"
 #include "path_tracing/lights/light_source.h"
@@ -60,9 +61,10 @@ public:
 
                 std::unique_ptr<IObj> obj_file = load_obj_from_file(obj_file_name, &progress);
 
+                mat4 vertex_matrix = to_matrix<double>(get_model_vertex_matrix(obj_file.get(), size, glm::dvec3(0)));
+
                 std::shared_ptr mesh =
-                        std::make_shared<Mesh>(obj_file.get(), get_model_vertex_matrix(obj_file.get(), size, glm::dvec3(0)),
-                                               get_hardware_concurrency(), &progress);
+                        std::make_shared<Mesh>(obj_file.get(), vertex_matrix, get_hardware_concurrency(), &progress);
 
                 m_mesh = std::make_unique<VisibleSharedMesh>(mesh);
 

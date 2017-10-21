@@ -33,6 +33,14 @@ constexpr std::array<T, sizeof...(I)> make_array_value_impl(std::integer_sequenc
 {
         return {{(static_cast<void>(I), v)...}};
 }
+
+template <size_t ValueIndex, typename T, size_t... I>
+constexpr std::array<T, sizeof...(I)> make_array_one_value_impl(std::integer_sequence<size_t, I...>, const T& v)
+{
+        static_assert(ValueIndex >= 0 && ValueIndex < sizeof...(I));
+
+        return {{(I == ValueIndex ? v : 0)...}};
+}
 }
 
 template <typename T, size_t N>
@@ -45,4 +53,10 @@ template <typename T, size_t N>
 constexpr std::array<T, N> make_array_value(const T& v)
 {
         return ArraysImplementation::make_array_value_impl(std::make_integer_sequence<size_t, N>(), v);
+}
+
+template <typename T, size_t N, size_t ValueIndex>
+constexpr std::array<T, N> make_array_one_value(const T& v)
+{
+        return ArraysImplementation::make_array_one_value_impl<ValueIndex>(std::make_integer_sequence<size_t, N>(), v);
 }

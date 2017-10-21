@@ -364,3 +364,7 @@ using vec2 = Vector<2, double>;
 // vec3 - это только Vector<3, double>.
 // Не менять.
 using vec3 = Vector<3, double>;
+
+// vec4 - это только Vector<4, double>.
+// Не менять.
+using vec4 = Vector<4, double>;

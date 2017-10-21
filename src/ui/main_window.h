@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "event_emitter.h"
 
+#include "com/mat.h"
 #include "com/vec.h"
 #include "progress/progress_list.h"
 #include "show/show.h"
@@ -30,7 +31,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QProgressBar>
 #include <QTimer>
 #include <atomic>
-#include <glm/mat4x4.hpp>
 #include <list>
 #include <map>
 #include <memory>
@@ -242,7 +242,7 @@ private:
         std::unique_ptr<IObjectRepository<3>> m_object_repository;
         std::unordered_map<QObject*, std::string> m_action_to_object_name_map;
 
-        glm::dmat4 m_model_vertex_matrix;
+        mat4 m_model_vertex_matrix;
 
         double m_mesh_object_size;
         vec3 m_mesh_object_position;

@@ -30,6 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/error.h"
 #include "com/file_sys.h"
 #include "com/log.h"
+#include "com/mat_glm.h"
 #include "com/print.h"
 #include "com/time.h"
 #include "com/vec_glm.h"
@@ -533,7 +534,7 @@ void MainWindow::thread_open_object(ProgressRatioList* progress_ratio_list, cons
                         case OpenObjectType::Repository:
                                 progress.set_text("Load object: %p%");
                                 obj = load_obj_from_points(
-                                        to_glm(m_object_repository->get_point_object(object_name, POINT_COUNT)));
+                                        to_glm<float>(m_object_repository->get_point_object(object_name, POINT_COUNT)));
                                 break;
                         }
                 }
@@ -563,9 +564,9 @@ void MainWindow::thread_open_object(ProgressRatioList* progress_ratio_list, cons
                 m_surface_points = (obj->get_faces().size() > 0) ? get_unique_face_vertices(obj.get()) :
                                                                    get_unique_point_vertices(obj.get());
 
-                m_model_vertex_matrix = get_model_vertex_matrix(
+                m_model_vertex_matrix = to_matrix<double>(get_model_vertex_matrix(
                         obj.get(), m_mesh_object_size,
-                        glm::dvec3(m_mesh_object_position[0], m_mesh_object_position[1], m_mesh_object_position[2]));
+                        glm::dvec3(m_mesh_object_position[0], m_mesh_object_position[1], m_mesh_object_position[2])));
 
                 std::thread model([=]() noexcept { thread_add_object(progress_ratio_list, AddObjectType::Model, obj); });
                 std::thread surface([=]() noexcept { thread_surface_constructor(progress_ratio_list); });

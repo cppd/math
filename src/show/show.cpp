@@ -26,6 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/log.h"
 #include "com/math.h"
 #include "com/print.h"
+#include "com/quaternion.h"
 #include "com/thread.h"
 #include "com/time.h"
 #include "com/vec_glm.h"
@@ -41,7 +42,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <SFML/Window/Event.hpp>
 #include <cmath>
 #include <glm/gtc/color_space.hpp>
-#include <glm/gtx/rotate_vector.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include <thread>
 #include <unordered_map>
 #include <vector>
@@ -64,6 +65,11 @@ long get_fps(double* start)
         double time_elapsed = now - *start;
         *start = now;
         return (time_elapsed > 0) ? lround(1.0 / time_elapsed) : 0;
+}
+
+glm::vec3 rotate_vector_degree(const glm::vec3& axis, float angle_degree, const glm::vec3& v)
+{
+        return to_glm<float>(rotate_vector(to_vector<float>(axis), to_radians(angle_degree), to_vector<float>(v)));
 }
 
 #if 0
@@ -108,8 +114,8 @@ class Camera final
 
                 m_camera_right = glm::cross(m_camera_up, m_camera_direction);
 
-                glm::vec3 light_right = glm::rotate(m_camera_right, to_radians(-45), m_camera_up);
-                m_light_up = glm::rotate(m_camera_up, to_radians(-45), light_right);
+                glm::vec3 light_right = rotate_vector_degree(m_camera_up, -45, m_camera_right);
+                m_light_up = rotate_vector_degree(light_right, -45, m_camera_up);
 
                 // от поверхности на свет
                 m_light_direction = glm::cross(light_right, m_light_up);
@@ -159,8 +165,8 @@ public:
         {
                 std::lock_guard lg(m_lock);
 
-                glm::vec3 right = glm::rotate(m_camera_right, to_radians(-delta_x), m_camera_up);
-                glm::vec3 up = glm::rotate(m_camera_up, to_radians(-delta_y), m_camera_right);
+                glm::vec3 right = rotate_vector_degree(m_camera_up, -delta_x, m_camera_right);
+                glm::vec3 up = rotate_vector_degree(m_camera_right, -delta_y, m_camera_up);
                 set_vectors(right, up);
         }
 

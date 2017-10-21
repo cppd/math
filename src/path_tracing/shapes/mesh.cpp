@@ -20,24 +20,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "intersection.h"
 
 #include "com/log.h"
+#include "com/mat_alg.h"
 #include "com/time.h"
 #include "com/vec.h"
 #include "com/vec_glm.h"
 #include "path_tracing/ray_intersection.h"
 
+#include <algorithm>
+
 constexpr int OCTREE_MAX_DEPTH = 10;
 constexpr int OCTREE_MIN_OBJECTS = 10;
 
-namespace
-{
-vec3 matrix_mul_vector(const glm::dmat4& matrix, const vec3& vector)
-{
-        glm::dvec4 v = matrix * glm::dvec4(vector[0], vector[1], vector[2], 1.0);
-        return vec3(v[0], v[1], v[2]);
-}
-}
-
-void Mesh::create_mesh_object(const IObj* obj, const glm::dmat4& vertex_matrix, unsigned thread_count, ProgressRatio* progress)
+void Mesh::create_mesh_object(const IObj* obj, const mat4& vertex_matrix, unsigned thread_count, ProgressRatio* progress)
 {
         if (obj->get_vertices().size() == 0)
         {
@@ -50,10 +44,7 @@ void Mesh::create_mesh_object(const IObj* obj, const glm::dmat4& vertex_matrix, 
 
         m_vertices = to_vector<double>(obj->get_vertices());
         m_vertices.shrink_to_fit();
-        for (vec3& vertex : m_vertices)
-        {
-                vertex = matrix_mul_vector(vertex_matrix, vertex);
-        }
+        std::transform(m_vertices.begin(), m_vertices.end(), m_vertices.begin(), MatrixMulVector<double>(vertex_matrix));
 
         m_normals = to_vector<double>(obj->get_normals());
         m_normals.shrink_to_fit();
@@ -97,7 +88,7 @@ void Mesh::create_mesh_object(const IObj* obj, const glm::dmat4& vertex_matrix, 
                            thread_count, progress);
 }
 
-Mesh::Mesh(const IObj* obj, const glm::dmat4& vertex_matrix, unsigned thread_count, ProgressRatio* progress)
+Mesh::Mesh(const IObj* obj, const mat4& vertex_matrix, unsigned thread_count, ProgressRatio* progress)
         : m_octree(OCTREE_MAX_DEPTH, OCTREE_MIN_OBJECTS)
 {
         double start_time = get_time_seconds();

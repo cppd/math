@@ -20,13 +20,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "parallelepiped_ortho.h"
 #include "triangle.h"
 
+#include "com/mat.h"
 #include "obj/obj.h"
 #include "path_tracing/image/image.h"
 #include "path_tracing/objects.h"
 #include "path_tracing/octree.h"
 #include "progress/progress.h"
 
-#include <glm/mat4x4.hpp>
 #include <optional>
 
 class Mesh final
@@ -53,10 +53,10 @@ class Mesh final
 
         Octree<OctreeParallelepiped> m_octree;
 
-        void create_mesh_object(const IObj* obj, const glm::dmat4& vertex_matrix, unsigned thread_count, ProgressRatio* progress);
+        void create_mesh_object(const IObj* obj, const mat4& vertex_matrix, unsigned thread_count, ProgressRatio* progress);
 
 public:
-        Mesh(const IObj* obj, const glm::dmat4& vertex_matrix, unsigned thread_count, ProgressRatio* progress);
+        Mesh(const IObj* obj, const mat4& vertex_matrix, unsigned thread_count, ProgressRatio* progress);
 
         ~Mesh() = default;
 

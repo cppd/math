@@ -124,7 +124,7 @@ class SurfaceObj final : public IObj
                         index_map[v.first] = idx;
 
                         m_vertices[idx] = points[v.first];
-                        m_normals[idx] = average_normal(to_glm(normals[v.first]), v.second);
+                        m_normals[idx] = average_normal(to_glm<float>(normals[v.first]), v.second);
 
                         ++idx;
                 }
