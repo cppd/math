@@ -53,8 +53,9 @@ Princeton University Press, 2011.
 
 #pragma once
 
+#include "com/mat.h"
 #include "com/vec.h"
-#include "numerical/gauss.h"
+#include "numerical/linear.h"
 
 #include <array>
 #include <vector>
@@ -70,9 +71,9 @@ Vector<N, T> compute_voronoi_vertex(const std::vector<Vector<N, T>>& points, con
 {
 #if 1
         // Матрица системы уравнений
-        std::array<std::array<T, N>, N> a;
+        Matrix<N, N, T> a;
         // Правая часть системы уравнений
-        std::array<T, N> b;
+        Vector<N, T> b;
 
         Vector<N, T> p0 = points[vertices[0]];
         T dot0 = dot(p0, p0);
@@ -88,13 +89,7 @@ Vector<N, T> compute_voronoi_vertex(const std::vector<Vector<N, T>>& points, con
                 b[row] = dot(pn, pn) - dot0;
         }
 
-        linear_solve(&a, &b);
-
-        Vector<N, T> voronoi_vertex;
-        for (unsigned n = 0; n < N; ++n)
-        {
-                voronoi_vertex[n] = b[n];
-        }
+        Vector<N, T> voronoi_vertex = solve(std::move(a), b);
 
         ASSERT(is_finite(voronoi_vertex));
 

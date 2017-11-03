@@ -26,17 +26,15 @@ Cambridge University Press.
 
 #pragma once
 
-#include "com/log.h"
+#include "com/mat.h"
 #include "com/math.h"
-#include "com/print.h"
 #include "com/types.h"
-
-#include <array>
+#include "com/vec.h"
 
 namespace GaussImplementation
 {
 template <size_t N, typename T>
-int find_pivot(const std::array<std::array<T, N>, N>& A, int column, int from_row)
+int find_pivot(const Matrix<N, N, T>& A, int column, int from_row)
 {
         T max = any_abs(A[from_row][column]);
         int pivot = from_row;
@@ -56,12 +54,12 @@ int find_pivot(const std::array<std::array<T, N>, N>& A, int column, int from_ro
 // input: A * x = b.
 // output: b = x; A = upper triangular.
 template <size_t Size, typename T>
-std::enable_if_t<any_floating_point<T>> linear_solve(std::array<std::array<T, Size>, Size>* A_p, std::array<T, Size>* b_p)
+std::enable_if_t<any_floating_point<T>> solve_gauss(Matrix<Size, Size, T>* A_p, Vector<Size, T>* b_p)
 {
         constexpr int N = Size;
 
-        std::array<std::array<T, N>, N>& A = *A_p;
-        std::array<T, N>& b = *b_p;
+        Matrix<N, N, T>& A = *A_p;
+        Vector<N, T>& b = *b_p;
 
         for (int k = 0; k < N - 1; ++k)
         {
@@ -97,12 +95,70 @@ std::enable_if_t<any_floating_point<T>> linear_solve(std::array<std::array<T, Si
         }
 }
 
+// Тоже самое, что и для одного столбца b, только сразу для SizeB столбцов B.
+// Если B является единичной матрицей, то в B будет обратная к A матрица.
+template <size_t SizeA, size_t SizeB, typename T>
+std::enable_if_t<any_floating_point<T>> solve_gauss(Matrix<SizeA, SizeA, T>* A_p, Matrix<SizeA, SizeB, T>* B_p)
+{
+        constexpr int N = SizeA;
+        constexpr int NB = SizeB;
+
+        Matrix<N, N, T>& A = *A_p;
+        Matrix<N, NB, T>& B = *B_p;
+
+        for (int k = 0; k < N - 1; ++k)
+        {
+                int pivot = GaussImplementation::find_pivot(A, k, k);
+                if (pivot != k)
+                {
+                        std::swap(A[pivot], A[k]);
+                        std::swap(B[pivot], B[k]);
+                }
+
+                for (int i = k + 1; i < N; ++i)
+                {
+                        T l_ik = A[i][k] / A[k][k];
+                        for (int j = k; j < N; ++j)
+                        {
+                                // A[i][j] = A[i][j] - l_ik * A[k][j];
+                                A[i][j] = any_fma(-l_ik, A[k][j], A[i][j]);
+                        }
+                        for (int n = 0; n < NB; ++n)
+                        {
+                                // B[i][n] = B[i][n] - l_ik * B[k][n];
+                                B[i][n] = any_fma(-l_ik, B[k][n], B[i][n]);
+                        }
+                }
+        }
+
+        for (int n = 0; n < NB; ++n)
+        {
+                B[N - 1][n] = B[N - 1][n] / A[N - 1][N - 1];
+        }
+
+        for (int k = N - 2; k >= 0; --k)
+        {
+                for (int j = k + 1; j < N; ++j)
+                {
+                        for (int n = 0; n < NB; ++n)
+                        {
+                                // B[k][n] = B[k][n] - A[k][j] * B[j][n];
+                                B[k][n] = any_fma(-A[k][j], B[j][n], B[k][n]);
+                        }
+                }
+                for (int n = 0; n < NB; ++n)
+                {
+                        B[k][n] = B[k][n] / A[k][k];
+                }
+        }
+}
+
 template <size_t Size, typename T>
-std::enable_if_t<any_floating_point<T>, T> determinant_gauss(const std::array<std::array<T, Size>, Size>& A_p)
+std::enable_if_t<any_floating_point<T>, T> determinant_gauss(Matrix<Size, Size, T>* A_p)
 {
         constexpr int N = Size;
 
-        std::array<std::array<T, N>, N> A(A_p);
+        Matrix<N, N, T>& A = *A_p;
 
         bool sign = false;
 
