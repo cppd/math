@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "com/types.h"
 #include "com/vec.h"
 
 #include <string>
@@ -26,6 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 template <size_t Rows, size_t Columns, typename T>
 class Matrix
 {
+        static_assert(any_floating_point<T>);
         static_assert(Rows > 1 && Columns > 1);
 
         std::array<Vector<Columns, T>, Rows> m_data;

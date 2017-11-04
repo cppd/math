@@ -42,3 +42,63 @@ public:
                             any_fma(m_mtx[2][0], v[0], any_fma(m_mtx[2][1], v[1], any_fma(m_mtx[2][2], v[2], m_mtx[2][3]))));
         }
 };
+
+template <typename T>
+Matrix<4, 4, T> look_at(const Vector<3, T>& eye, const Vector<3, T>& center, const Vector<3, T>& up)
+{
+        Vector<3, T> f = normalize(center - eye);
+        Vector<3, T> s = normalize(cross(f, up));
+        Vector<3, T> u = normalize(cross(s, f));
+
+        Matrix<4, 4, T> m;
+
+        m[0] = Vector<4, T>(s[0], s[1], s[2], -dot(s, eye));
+        m[1] = Vector<4, T>(u[0], u[1], u[2], -dot(u, eye));
+        m[2] = Vector<4, T>(-f[0], -f[1], -f[2], dot(f, eye));
+        m[3] = Vector<4, T>(0, 0, 0, 1);
+
+        return m;
+}
+
+template <typename T, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6>
+Matrix<4, 4, T> ortho(T1 left, T2 right, T3 bottom, T4 top, T5 near, T6 far)
+{
+        T left_t = left;
+        T right_t = right;
+        T bottom_t = bottom;
+        T top_t = top;
+        T near_t = near;
+        T far_t = far;
+
+        Matrix<4, 4, T> m(1);
+
+        m[0][0] = 2 / (right_t - left_t);
+        m[1][1] = 2 / (top_t - bottom_t);
+        m[2][2] = -2 / (far_t - near_t);
+
+        m[0][3] = -(right_t + left_t) / (right_t - left_t);
+        m[1][3] = -(top_t + bottom_t) / (top_t - bottom_t);
+        m[2][3] = -(far_t + near_t) / (far_t - near_t);
+
+        return m;
+}
+
+template <typename T>
+Matrix<4, 4, T> scale(const Vector<3, T>& v)
+{
+        Matrix<4, 4, T> m(1);
+        m[0][0] = v[0];
+        m[1][1] = v[1];
+        m[2][2] = v[2];
+        return m;
+}
+
+template <typename T>
+Matrix<4, 4, T> translate(const Vector<3, T>& v)
+{
+        Matrix<4, 4, T> m(1);
+        m[0][3] = v[0];
+        m[1][3] = v[1];
+        m[2][3] = v[2];
+        return m;
+}
