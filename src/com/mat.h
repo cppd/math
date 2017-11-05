@@ -116,11 +116,22 @@ template <size_t Rows, size_t Inner, size_t Columns, typename T>
 Matrix<Rows, Columns, T> operator*(const Matrix<Rows, Inner, T>& m1, const Matrix<Inner, Columns, T>& m2)
 {
         Matrix<Rows, Columns, T> res;
-        for (size_t row = 0; row < Rows; ++row)
+        for (unsigned row = 0; row < Rows; ++row)
         {
-                for (size_t column = 0; column < Columns; ++column)
+                for (unsigned column = 0; column < Columns; ++column)
                 {
+#if 0
+                        // GCC 7.2 имеет проблемы с этим.
+                        // Clang 5 не имеет проблем с этим.
                         res[row][column] = dot(m1.row(row), m2.column(column));
+#else
+                        // GCC 7.2 и Clang 5 с этим проблем не имеют.
+                        res[row][column] = m1[row][0] * m2[0][column];
+                        for (unsigned i = 1; i < Inner; ++i)
+                        {
+                                res[row][column] = any_fma(m1[row][i], m2[i][column], res[row][column]);
+                        }
+#endif
                 }
         }
         return res;
@@ -130,7 +141,7 @@ template <size_t Rows, size_t Columns, typename T>
 Vector<Rows, T> operator*(const Matrix<Rows, Columns, T>& m, const Vector<Columns, T>& v)
 {
         Vector<Rows, T> res;
-        for (size_t row = 0; row < Rows; ++row)
+        for (unsigned row = 0; row < Rows; ++row)
         {
                 res[row] = dot(m.row(row), v);
         }

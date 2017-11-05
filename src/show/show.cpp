@@ -24,6 +24,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/colors.h"
 #include "com/error.h"
 #include "com/log.h"
+#include "com/mat.h"
+#include "com/mat_alg.h"
+#include "com/mat_glm.h"
 #include "com/math.h"
 #include "com/print.h"
 #include "com/quaternion.h"
@@ -33,6 +36,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "dft/show/dft_show.h"
 #include "graphics/objects.h"
 #include "hull_2d/hull_2d.h"
+#include "numerical/linear.h"
 #include "obj/obj.h"
 #include "optical_flow/optical_flow.h"
 #include "pencil/pencil.h"
@@ -42,7 +46,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <SFML/Window/Event.hpp>
 #include <cmath>
 #include <glm/gtc/color_space.hpp>
-#include <glm/gtc/matrix_transform.hpp>
 #include <thread>
 #include <unordered_map>
 #include <vector>
@@ -894,9 +897,8 @@ void ShowObject::loop()
                         matrix_change = true;
 
                         // матрица для рисования на плоскости, 0 вверху
-                        const glm::mat4 plane_matrix =
-                                glm::scale(glm::mat4(1), glm::vec3(2.0f / window_width, -2.0f / window_height, 1)) *
-                                glm::translate(glm::mat4(1), glm::vec3(-window_width / 2.0f, -window_height / 2.0f, 0));
+                        glm::mat4 plane_matrix = to_glm<float>(scale<double>(2.0 / window_width, -2.0 / window_height, 1) *
+                                                               translate<double>(-window_width / 2.0, -window_height / 2.0, 0));
 
                         draw_program->set_size(width, height);
 
@@ -931,29 +933,30 @@ void ShowObject::loop()
 
                         m_camera.get(&camera_up, &camera_direction, &light_up, &light_direction);
 
-                        glm::mat4 shadow_matrix = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f) *
-                                                  glm::lookAt(glm::vec3(0, 0, 0), light_direction, light_up);
+                        mat4 shadow_matrix =
+                                ortho<double>(-1, 1, -1, 1, -1, 1) *
+                                look_at(vec3(0, 0, 0), to_vector<double>(light_direction), to_vector<double>(light_up));
 
-                        float left = -0.5f * width * pixel_to_coord;
-                        float right = 0.5f * width * pixel_to_coord;
-                        float bottom = -0.5f * height * pixel_to_coord;
-                        float top = 0.5f * height * pixel_to_coord;
-                        float z_near = -1.0f;
-                        float z_far = 1.0f;
+                        double left = -0.5 * width * pixel_to_coord;
+                        double right = 0.5 * width * pixel_to_coord;
+                        double bottom = -0.5 * height * pixel_to_coord;
+                        double top = 0.5 * height * pixel_to_coord;
+                        double z_near = -1.0;
+                        double z_far = 1.0;
 
-                        glm::mat4 projection_matrix = glm::ortho(left, right, bottom, top, z_near, z_far);
+                        mat4 projection_matrix = ortho<double>(left, right, bottom, top, z_near, z_far);
 
-                        glm::mat4 view_matrix =
-                                glm::translate(glm::mat4(1), glm::vec3(-window_center.x, -window_center.y, 0.0f)) *
-                                glm::lookAt(glm::vec3(0, 0, 0), camera_direction, camera_up);
+                        mat4 view_matrix =
+                                translate<double>(-window_center.x, -window_center.y, 0) *
+                                look_at<double>(vec3(0, 0, 0), to_vector<double>(camera_direction), to_vector<double>(camera_up));
 
-                        draw_program->set_matrices(shadow_matrix, projection_matrix * view_matrix);
+                        draw_program->set_matrices(to_glm<float>(shadow_matrix), to_glm<float>(projection_matrix * view_matrix));
 
                         draw_program->set_light_direction(-light_direction);
                         draw_program->set_camera_direction(-camera_direction);
 
-                        glm::vec4 screen_center((right + left) * 0.5f, (top + bottom) * 0.5f, (z_far + z_near) * 0.5f, 1.0f);
-                        glm::vec4 view_center = glm::inverse(view_matrix) * screen_center;
+                        vec4 screen_center((right + left) * 0.5, (top + bottom) * 0.5, (z_far + z_near) * 0.5, 1.0);
+                        vec4 view_center = inverse(view_matrix) * screen_center;
                         m_camera.set_view_center_and_width(glm::vec3(view_center[0], view_center[1], view_center[2]),
                                                            right - left);
                 }

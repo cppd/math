@@ -93,6 +93,12 @@ Matrix<4, 4, T> scale(const Vector<3, T>& v)
         return m;
 }
 
+template <typename T, typename T0, typename T1, typename T2>
+Matrix<4, 4, T> scale(T0 v0, T1 v1, T2 v2)
+{
+        return scale(Vector<3, T>(v0, v1, v2));
+}
+
 template <typename T>
 Matrix<4, 4, T> translate(const Vector<3, T>& v)
 {
@@ -101,4 +107,10 @@ Matrix<4, 4, T> translate(const Vector<3, T>& v)
         m[1][3] = v[1];
         m[2][3] = v[2];
         return m;
+}
+
+template <typename T, typename T0, typename T1, typename T2>
+Matrix<4, 4, T> translate(T0 v0, T1 v1, T2 v2)
+{
+        return translate(Vector<3, T>(v0, v1, v2));
 }

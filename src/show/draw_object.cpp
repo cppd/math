@@ -18,11 +18,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "draw_object.h"
 
 #include "com/log.h"
+#include "com/mat_alg.h"
+#include "com/mat_glm.h"
 #include "com/print.h"
 #include "graphics/query.h"
 #include "obj/obj_alg.h"
 
-#include <glm/gtc/matrix_transform.hpp>
 #include <glm/vec2.hpp>
 #include <vector>
 
@@ -300,9 +301,9 @@ DrawObject::DrawObject(const IObj* obj, const ColorSpaceConverter& color_convert
 
 class DrawProgram final : public IDrawProgram
 {
-        const glm::mat4 SB_SCALE = glm::scale(glm::mat4(1), glm::vec3(0.5f, 0.5f, 0.5f));
-        const glm::mat4 SB_TRANSLATE = glm::translate(glm::mat4(1), glm::vec3(1, 1, 1));
-        const glm::mat4 SCALE_BIAS_MATRIX = SB_SCALE * SB_TRANSLATE;
+        const mat4 SB_SCALE = scale<double>(0.5, 0.5, 0.5);
+        const mat4 SB_TRANSLATE = translate<double>(1, 1, 1);
+        const glm::mat4 SCALE_BIAS_MATRIX = to_glm<float>(SB_SCALE * SB_TRANSLATE);
 
         GraphicsProgram main_program, shadow_program, points_program;
 
