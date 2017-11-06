@@ -279,9 +279,9 @@ class ShowObject final : public IShow
 
         Camera m_camera;
 
-        // Камера и тени рассчитаны на размер объекта 2 и на положение в точке glm::vec3(0).
-        static constexpr float OBJECT_SIZE = 2;
-        static constexpr glm::vec3 OBJECT_POSITION = glm::vec3(0);
+        // Камера и тени рассчитаны на размер объекта 2 и на положение в точке (0, 0, 0).
+        static constexpr double OBJECT_SIZE = 2;
+        static constexpr vec3 OBJECT_POSITION = vec3(0);
 
         void loop();
         void loop_thread();
@@ -400,7 +400,7 @@ class ShowObject final : public IShow
         {
                 m_camera.get_light_information(light_direction);
         }
-        void get_object_size_and_position(float* object_size, glm::vec3* object_position) const override
+        void get_object_size_and_position(double* object_size, vec3* object_position) const override
         {
                 *object_size = OBJECT_SIZE;
                 *object_position = OBJECT_POSITION;
@@ -897,8 +897,8 @@ void ShowObject::loop()
                         matrix_change = true;
 
                         // матрица для рисования на плоскости, 0 вверху
-                        glm::mat4 plane_matrix = to_glm<float>(scale<double>(2.0 / window_width, -2.0 / window_height, 1) *
-                                                               translate<double>(-window_width / 2.0, -window_height / 2.0, 0));
+                        mat4 plane_matrix = scale<double>(2.0 / window_width, -2.0 / window_height, 1) *
+                                            translate<double>(-window_width / 2.0, -window_height / 2.0, 0);
 
                         draw_program->set_size(width, height);
 
@@ -950,7 +950,7 @@ void ShowObject::loop()
                                 translate<double>(-window_center.x, -window_center.y, 0) *
                                 look_at<double>(vec3(0, 0, 0), to_vector<double>(camera_direction), to_vector<double>(camera_up));
 
-                        draw_program->set_matrices(to_glm<float>(shadow_matrix), to_glm<float>(projection_matrix * view_matrix));
+                        draw_program->set_matrices(shadow_matrix, projection_matrix * view_matrix);
 
                         draw_program->set_light_direction(-light_direction);
                         draw_program->set_camera_direction(-camera_direction);

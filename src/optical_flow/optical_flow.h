@@ -17,9 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "com/mat.h"
 #include "graphics/objects.h"
 
-#include <glm/mat4x4.hpp>
 #include <memory>
 
 class OpticalFlow final
@@ -28,7 +28,7 @@ class OpticalFlow final
         std::unique_ptr<Impl> m_impl;
 
 public:
-        OpticalFlow(int width, int height, const glm::mat4& mtx);
+        OpticalFlow(int width, int height, const mat4& mtx);
         ~OpticalFlow();
 
         void reset();

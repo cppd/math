@@ -216,10 +216,10 @@ void find_center_and_length(const std::vector<glm::vec3>& vertices, glm::vec3* c
         center_and_length(vertices, center, length);
 }
 
-glm::dmat4 get_model_vertex_matrix(const IObj* obj, double size, const glm::dvec3& position)
+mat4 get_model_vertex_matrix(const IObj* obj, double size, const vec3& position)
 {
         mat4 m_to_center = translate(to_vector<double>(-obj->get_center()));
         mat4 m_scale = scale(vec3(size / obj->get_length()));
-        mat4 m_to_position = translate(to_vector<double>(position));
-        return to_glm<double>(m_to_position * m_scale * m_to_center);
+        mat4 m_to_position = translate(position);
+        return m_to_position * m_scale * m_to_center;
 }

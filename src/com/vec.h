@@ -56,7 +56,7 @@ public:
                 return m_data[i];
         }
 
-        T& operator[](unsigned i)
+        constexpr T& operator[](unsigned i)
         {
                 return m_data[i];
         }
@@ -94,6 +94,30 @@ public:
                         m_data[i] -= a[i];
                 }
                 return *this;
+        }
+
+        Vector<N, T>& operator*=(const T& v)
+        {
+                for (unsigned i = 0; i < N; ++i)
+                {
+                        m_data[i] *= v;
+                }
+                return *this;
+        }
+
+        Vector<N, T>& operator/=(const T& v)
+        {
+                for (unsigned i = 0; i < N; ++i)
+                {
+                        m_data[i] /= v;
+                }
+                return *this;
+        }
+
+        const T* data() const
+        {
+                static_assert(sizeof(Vector) == N * sizeof(T));
+                return m_data.data();
         }
 };
 
@@ -209,6 +233,28 @@ T min_element(const Vector<N, T>& a)
 }
 
 template <size_t N, typename T>
+Vector<N, T> max_vector(const Vector<N, T>& a, const Vector<N, T>& b)
+{
+        Vector<N, T> res;
+        for (unsigned i = 0; i < N; ++i)
+        {
+                res[i] = std::max(a[i], b[i]);
+        }
+        return res;
+}
+
+template <size_t N, typename T>
+Vector<N, T> min_vector(const Vector<N, T>& a, const Vector<N, T>& b)
+{
+        Vector<N, T> res;
+        for (unsigned i = 0; i < N; ++i)
+        {
+                res[i] = std::min(a[i], b[i]);
+        }
+        return res;
+}
+
+template <size_t N, typename T>
 T dot(const Vector<N, T>& a, const Vector<N, T>& b)
 {
         T result = a[0] * b[0];
@@ -297,15 +343,34 @@ bool zero_vector(const Vector<N, T>& v)
         return true;
 }
 
-template <typename NEW_TYPE, size_t N, typename T>
-Vector<N, NEW_TYPE> to_vector(const Vector<N, T>& v)
+namespace VectorImplementation
 {
-        Vector<N, NEW_TYPE> result;
-        for (unsigned i = 0; i < N; ++i)
+template <typename Dst, size_t N, typename Src, size_t... I>
+Vector<N, Dst> convert_vector(const Vector<N, Src>& v, std::integer_sequence<size_t, I...>)
+{
+        static_assert(sizeof...(I) == N);
+        static_assert(((I < N) && ...));
+        static_assert(!std::is_same_v<std::remove_cv_t<Dst>, std::remove_cv_t<Src>>);
+
+        return {v[I]...};
+}
+}
+
+template <typename Dst, size_t N, typename Src>
+Vector<N, Dst> to_vector(const Vector<N, Src>& v)
+{
+        return VectorImplementation::convert_vector<Dst>(v, std::make_integer_sequence<size_t, N>());
+}
+
+template <typename Dst, size_t N, typename Src>
+std::vector<Vector<N, Dst>> to_vector(const std::vector<Vector<N, Src>>& v)
+{
+        std::vector<Vector<N, Dst>> res(v.size());
+        for (unsigned i = 0; i < v.size(); ++i)
         {
-                result[i] = v[i];
+                res[i] = to_vector<Dst>(v[i]);
         }
-        return result;
+        return res;
 }
 
 template <size_t N, typename T>

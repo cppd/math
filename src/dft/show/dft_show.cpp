@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "dft_show.h"
 
+#include "com/mat_glm.h"
 #include "com/math.h"
 #include "dft/comp/dft_gl2d.h"
 #include "graphics/objects.h"
@@ -63,7 +64,7 @@ class DFTShow::Impl final
         GraphicsProgram m_draw_prog;
 
 public:
-        Impl(int width, int height, int pos_x, int pos_y, const glm::mat4& mtx, bool source_sRGB)
+        Impl(int width, int height, int pos_x, int pos_y, const mat4& mtx, bool source_sRGB)
                 : m_groups_x(get_group_count(width, GROUP_SIZE)),
                   m_groups_y(get_group_count(height, GROUP_SIZE)),
                   m_source_sRGB(source_sRGB),
@@ -83,16 +84,16 @@ public:
                 int y_start = pos_y;
                 int y_end = pos_y + height;
 
-                glm::vec4 pos00 = mtx * glm::vec4(x_start, y_start, 0, 1);
-                glm::vec4 pos10 = mtx * glm::vec4(x_end, y_start, 0, 1);
-                glm::vec4 pos01 = mtx * glm::vec4(x_start, y_end, 0, 1);
-                glm::vec4 pos11 = mtx * glm::vec4(x_end, y_end, 0, 1);
+                vec4 pos00 = mtx * vec4(x_start, y_start, 0, 1);
+                vec4 pos10 = mtx * vec4(x_end, y_start, 0, 1);
+                vec4 pos01 = mtx * vec4(x_start, y_end, 0, 1);
+                vec4 pos11 = mtx * vec4(x_end, y_end, 0, 1);
 
                 // текстурный 0 находится внизу
-                m_vertices[0] = Vertex(pos00.x, pos00.y, 0, 1);
-                m_vertices[1] = Vertex(pos10.x, pos10.y, 1, 1);
-                m_vertices[2] = Vertex(pos01.x, pos01.y, 0, 0);
-                m_vertices[3] = Vertex(pos11.x, pos11.y, 1, 0);
+                m_vertices[0] = Vertex(pos00[0], pos00[1], 0, 1);
+                m_vertices[1] = Vertex(pos10[0], pos10[1], 1, 1);
+                m_vertices[2] = Vertex(pos01[0], pos01[1], 0, 0);
+                m_vertices[3] = Vertex(pos11[0], pos11[1], 1, 0);
 
                 m_vertex_buffer.load_static_draw(m_vertices);
         }
@@ -119,7 +120,7 @@ public:
         }
 };
 
-DFTShow::DFTShow(int width, int height, int pos_x, int pos_y, const glm::mat4& mtx, bool source_sRGB)
+DFTShow::DFTShow(int width, int height, int pos_x, int pos_y, const mat4& mtx, bool source_sRGB)
         : m_impl(std::make_unique<Impl>(width, height, pos_x, pos_y, mtx, source_sRGB))
 {
 }

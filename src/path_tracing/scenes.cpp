@@ -61,7 +61,7 @@ public:
 
                 std::unique_ptr<IObj> obj_file = load_obj_from_file(obj_file_name, &progress);
 
-                mat4 vertex_matrix = to_matrix<double>(get_model_vertex_matrix(obj_file.get(), size, glm::dvec3(0)));
+                mat4 vertex_matrix = get_model_vertex_matrix(obj_file.get(), size, vec3(0));
 
                 std::shared_ptr mesh =
                         std::make_shared<Mesh>(obj_file.get(), vertex_matrix, get_hardware_concurrency(), &progress);

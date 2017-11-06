@@ -36,6 +36,7 @@ static_assert(sizeof(glm::dvec2) == 2 * sizeof(double));
 static_assert(sizeof(glm::dvec3) == 3 * sizeof(double));
 static_assert(sizeof(glm::dvec4) == 4 * sizeof(double));
 
+#if 0
 static_assert(sizeof(glm::mat2) == 4 * sizeof(float));
 static_assert(sizeof(glm::mat3) == 9 * sizeof(float));
 static_assert(sizeof(glm::mat4) == 16 * sizeof(float));
@@ -43,6 +44,7 @@ static_assert(sizeof(glm::mat4) == 16 * sizeof(float));
 static_assert(sizeof(glm::dmat2) == 4 * sizeof(double));
 static_assert(sizeof(glm::dmat3) == 9 * sizeof(double));
 static_assert(sizeof(glm::dmat4) == 16 * sizeof(double));
+#endif
 
 static_assert(sizeof(std::complex<float>) == 2 * sizeof(float));
 static_assert(sizeof(std::complex<double>) == 2 * sizeof(double));

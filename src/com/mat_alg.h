@@ -61,7 +61,7 @@ Matrix<4, 4, T> look_at(const Vector<3, T>& eye, const Vector<3, T>& center, con
 }
 
 template <typename T, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6>
-Matrix<4, 4, T> ortho(T1 left, T2 right, T3 bottom, T4 top, T5 near, T6 far)
+constexpr Matrix<4, 4, T> ortho(T1 left, T2 right, T3 bottom, T4 top, T5 near, T6 far)
 {
         T left_t = left;
         T right_t = right;
@@ -84,7 +84,7 @@ Matrix<4, 4, T> ortho(T1 left, T2 right, T3 bottom, T4 top, T5 near, T6 far)
 }
 
 template <typename T>
-Matrix<4, 4, T> scale(const Vector<3, T>& v)
+constexpr Matrix<4, 4, T> scale(const Vector<3, T>& v)
 {
         Matrix<4, 4, T> m(1);
         m[0][0] = v[0];
@@ -94,13 +94,13 @@ Matrix<4, 4, T> scale(const Vector<3, T>& v)
 }
 
 template <typename T, typename T0, typename T1, typename T2>
-Matrix<4, 4, T> scale(T0 v0, T1 v1, T2 v2)
+constexpr Matrix<4, 4, T> scale(T0 v0, T1 v1, T2 v2)
 {
         return scale(Vector<3, T>(v0, v1, v2));
 }
 
 template <typename T>
-Matrix<4, 4, T> translate(const Vector<3, T>& v)
+constexpr Matrix<4, 4, T> translate(const Vector<3, T>& v)
 {
         Matrix<4, 4, T> m(1);
         m[0][3] = v[0];
@@ -110,7 +110,7 @@ Matrix<4, 4, T> translate(const Vector<3, T>& v)
 }
 
 template <typename T, typename T0, typename T1, typename T2>
-Matrix<4, 4, T> translate(T0 v0, T1 v1, T2 v2)
+constexpr Matrix<4, 4, T> translate(T0 v0, T1 v1, T2 v2)
 {
         return translate(Vector<3, T>(v0, v1, v2));
 }

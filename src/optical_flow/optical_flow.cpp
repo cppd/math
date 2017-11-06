@@ -35,6 +35,7 @@ Chapter 5. Tracking Objects in Videos.
 
 #include "com/error.h"
 #include "com/log.h"
+#include "com/mat_glm.h"
 #include "com/math.h"
 #include "com/print.h"
 #include "com/time.h"
@@ -401,7 +402,7 @@ class OpticalFlow::Impl final
         }
 
 public:
-        Impl(int width, int height, const glm::mat4& mtx)
+        Impl(int width, int height, const mat4& mtx)
                 : m_width(width),
                   m_height(height),
                   m_groups_x(get_group_count(m_width, GROUP_SIZE)),
@@ -443,7 +444,7 @@ public:
                 m_comp_flow.set_uniform("STOP_MOVE_SQUARE", STOP_MOVE_SQUARE);
                 m_comp_flow.set_uniform("MIN_DETERMINANT", MIN_DETERMINANT);
 
-                m_draw_prog.set_uniform("mvpMatrix", mtx);
+                m_draw_prog.set_uniform_float("mvpMatrix", mtx);
         }
 
         void reset()
@@ -505,7 +506,7 @@ public:
         }
 };
 
-OpticalFlow::OpticalFlow(int width, int height, const glm::mat4& mtx) : m_impl(std::make_unique<Impl>(width, height, mtx))
+OpticalFlow::OpticalFlow(int width, int height, const mat4& mtx) : m_impl(std::make_unique<Impl>(width, height, mtx))
 {
 }
 

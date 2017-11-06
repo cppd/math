@@ -29,6 +29,7 @@ Chapter 2: CONVEX HULLS, 2.6 Divide-and-Conquer.
 
 #include "com/bits.h"
 #include "com/error.h"
+#include "com/mat_glm.h"
 #include "com/math.h"
 #include "com/time.h"
 #include "graphics/query.h"
@@ -146,7 +147,7 @@ class ConvexHull2D::Impl final
         double m_start_time;
 
 public:
-        Impl(const TextureR32I& objects, const glm::mat4& mtx)
+        Impl(const TextureR32I& objects, const mat4& mtx)
                 : m_width(objects.get_texture().get_width()),
                   m_height(objects.get_texture().get_height()),
                   m_group_size_prepare(get_group_size_prepare(m_width, 2 * sizeof(GLint))),
@@ -173,7 +174,7 @@ public:
                 m_filter_prog.set_uniform_handle("line_max", m_line_max.get_image_resident_handle_read_only());
                 m_filter_prog.set_uniform_handle("points_count", m_point_count.get_image_resident_handle_write_only());
 
-                m_draw_prog.set_uniform("mvpMatrix", mtx);
+                m_draw_prog.set_uniform_float("mvpMatrix", mtx);
         }
 
         void reset_timer()
@@ -209,7 +210,7 @@ public:
         }
 };
 
-ConvexHull2D::ConvexHull2D(const TextureR32I& objects, const glm::mat4& mtx) : m_impl(std::make_unique<Impl>(objects, mtx))
+ConvexHull2D::ConvexHull2D(const TextureR32I& objects, const mat4& mtx) : m_impl(std::make_unique<Impl>(objects, mtx))
 {
 }
 ConvexHull2D::~ConvexHull2D() = default;

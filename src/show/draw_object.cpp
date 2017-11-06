@@ -196,10 +196,10 @@ class DrawObject final : public IDrawObject
         ShaderStorageBuffer m_storage_buffer;
         std::vector<TextureRGBA32F> m_textures;
         unsigned m_vertices_count;
-        glm::mat4 m_model_matrix;
+        mat4 m_model_matrix;
         bool m_triangles;
 
-        const glm::mat4& get_model_matrix() const override
+        const mat4& get_model_matrix() const override
         {
                 return m_model_matrix;
         }
@@ -218,10 +218,10 @@ class DrawObject final : public IDrawObject
         }
 
 public:
-        DrawObject(const IObj* obj, const ColorSpaceConverter& color_converter, float size, glm::vec3 position);
+        DrawObject(const IObj* obj, const ColorSpaceConverter& color_converter, double size, const vec3& position);
 };
 
-DrawObject::DrawObject(const IObj* obj, const ColorSpaceConverter& color_converter, float size, glm::vec3 position)
+DrawObject::DrawObject(const IObj* obj, const ColorSpaceConverter& color_converter, double size, const vec3& position)
 {
         if (obj->get_faces().size() != 0 && obj->get_points().size() != 0)
         {
@@ -296,14 +296,14 @@ DrawObject::DrawObject(const IObj* obj, const ColorSpaceConverter& color_convert
                                               true);
         }
 
-        m_model_matrix = get_model_vertex_matrix(obj, size, glm::dvec3(position));
+        m_model_matrix = get_model_vertex_matrix(obj, size, position);
 }
 
 class DrawProgram final : public IDrawProgram
 {
-        const mat4 SB_SCALE = scale<double>(0.5, 0.5, 0.5);
-        const mat4 SB_TRANSLATE = translate<double>(1, 1, 1);
-        const glm::mat4 SCALE_BIAS_MATRIX = to_glm<float>(SB_SCALE * SB_TRANSLATE);
+        static constexpr mat4 SCALE = scale<double>(0.5, 0.5, 0.5);
+        static constexpr mat4 TRANSLATE = translate<double>(1, 1, 1);
+        const mat4 SCALE_BIAS_MATRIX = SCALE * TRANSLATE;
 
         GraphicsProgram main_program, shadow_program, points_program;
 
@@ -311,9 +311,9 @@ class DrawProgram final : public IDrawProgram
         std::unique_ptr<ColorBuffer> m_color_buffer;
         std::unique_ptr<TextureR32I> m_object_texture;
 
-        glm::mat4 m_shadow_matrix;
-        glm::mat4 m_scale_bias_shadow_matrix;
-        glm::mat4 m_main_matrix;
+        mat4 m_shadow_matrix;
+        mat4 m_scale_bias_shadow_matrix;
+        mat4 m_main_matrix;
 
         int m_width = -1;
         int m_height = -1;
@@ -367,7 +367,7 @@ class DrawProgram final : public IDrawProgram
                 main_program.set_uniform("show_materials", show ? 1 : 0);
         }
 
-        void set_matrices(const glm::mat4& shadow_matrix, const glm::mat4& main_matrix) override
+        void set_matrices(const mat4& shadow_matrix, const mat4& main_matrix) override
         {
                 m_shadow_matrix = shadow_matrix;
                 m_scale_bias_shadow_matrix = SCALE_BIAS_MATRIX * shadow_matrix;
@@ -395,12 +395,11 @@ class DrawProgram final : public IDrawProgram
 
                 draw_object->bind();
 
-                const glm::mat4& model_matrix =
-                        draw_scale_object ? draw_scale_object->get_model_matrix() : draw_object->get_model_matrix();
+                const IDrawObject* scale_obj = draw_scale_object ? draw_scale_object : draw_object;
 
                 if (shadow_active && draw_object->has_triangles())
                 {
-                        shadow_program.set_uniform("mvpMatrix", m_shadow_matrix * model_matrix);
+                        shadow_program.set_uniform_float("mvpMatrix", m_shadow_matrix * scale_obj->get_model_matrix());
 
                         m_shadow_buffer->bind_buffer();
                         glViewport(0, 0, m_shadow_width, m_shadow_height);
@@ -425,14 +424,15 @@ class DrawProgram final : public IDrawProgram
 
                 if (draw_object->has_triangles())
                 {
-                        main_program.set_uniform("shadowMatrix", m_scale_bias_shadow_matrix * model_matrix);
-                        main_program.set_uniform("mvpMatrix", m_main_matrix * model_matrix);
+                        main_program.set_uniform_float("shadowMatrix",
+                                                       m_scale_bias_shadow_matrix * scale_obj->get_model_matrix());
+                        main_program.set_uniform_float("mvpMatrix", m_main_matrix * scale_obj->get_model_matrix());
 
                         main_program.draw_arrays(GL_TRIANGLES, 0, draw_object->get_vertices_count());
                 }
                 else
                 {
-                        points_program.set_uniform("mvpMatrix", m_main_matrix * model_matrix);
+                        points_program.set_uniform_float("mvpMatrix", m_main_matrix * scale_obj->get_model_matrix());
 
                         points_program.draw_arrays(GL_POINTS, 0, draw_object->get_vertices_count());
                 }
@@ -530,8 +530,8 @@ public:
 };
 }
 
-std::unique_ptr<IDrawObject> create_draw_object(const IObj* obj, const ColorSpaceConverter& color_converter, float size,
-                                                glm::vec3 position)
+std::unique_ptr<IDrawObject> create_draw_object(const IObj* obj, const ColorSpaceConverter& color_converter, double size,
+                                                const vec3& position)
 {
         return std::make_unique<DrawObject>(obj, color_converter, size, position);
 }

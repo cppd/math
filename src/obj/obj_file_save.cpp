@@ -23,8 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/log.h"
 #include "com/print.h"
 #include "com/time.h"
-
-#include <glm/geometric.hpp>
+#include "com/vec_glm.h"
 
 constexpr const char comment_begin[] = "# ";
 
@@ -72,28 +71,27 @@ void write_vertices(const CFile& file, const IObj* obj)
 
         find_min_max(obj->get_vertices(), indices, &min, &max);
 
-        glm::dvec3 delta = glm::dvec3(max - min);
+        vec3 delta = to_vector<double>(max - min);
 
-        double max_delta = std::max({delta[0], delta[1], delta[2]});
+        double max_delta = max_element(delta);
 
         if (max_delta == 0)
         {
                 for (const glm::vec3& v : obj->get_vertices())
                 {
-                        glm::dvec3 vertex = glm::dvec3(v);
-                        fprintf(file, VERTEX_FORMAT, vertex[0], vertex[1], vertex[2]);
+                        fprintf(file, VERTEX_FORMAT, v[0], v[1], v[2]);
                 }
         }
         else
         {
                 double scale_factor = 2.0 / max_delta;
 
-                glm::dvec3 old_min = glm::dvec3(min);
-                glm::dvec3 new_min = 0.5 * delta * scale_factor;
+                vec3 old_min = to_vector<double>(min);
+                vec3 new_min = 0.5 * delta * scale_factor;
 
                 for (const glm::vec3& v : obj->get_vertices())
                 {
-                        glm::dvec3 vertex = (glm::dvec3(v) - old_min) * scale_factor - new_min;
+                        vec3 vertex = (to_vector<double>(v) - old_min) * scale_factor - new_min;
                         fprintf(file, VERTEX_FORMAT, vertex[0], vertex[1], vertex[2]);
                 }
         }
@@ -103,13 +101,11 @@ void write_normals(const CFile& file, const IObj* obj)
 {
         for (const glm::vec3& vn : obj->get_normals())
         {
-                glm::dvec3 normal = glm::dvec3(vn);
-
-                double length = glm::length(normal);
-
-                if (length != 0)
+                vec3 normal = to_vector<double>(vn);
+                double len = length(normal);
+                if (len != 0)
                 {
-                        normal /= length;
+                        normal /= len;
                 }
 
                 fprintf(file, NORMAL_FORMAT, normal[0], normal[1], normal[2]);
@@ -137,12 +133,12 @@ void write_faces(const CFile& file, const IObj* obj)
 
                         // Перпендикуляр к грани при обходе вершин против часовой стрелки
                         // и противоположно направлению взгляда
-                        glm::vec3 n = glm::cross(obj->get_vertices()[v1 - 1] - obj->get_vertices()[v0 - 1],
-                                                 obj->get_vertices()[v2 - 1] - obj->get_vertices()[v0 - 1]);
+                        vec3 n = cross(to_vector<double>(obj->get_vertices()[v1 - 1] - obj->get_vertices()[v0 - 1]),
+                                       to_vector<double>(obj->get_vertices()[v2 - 1] - obj->get_vertices()[v0 - 1]));
 
-                        float sign0 = glm::dot(obj->get_normals()[vn0 - 1], n);
-                        float sign1 = glm::dot(obj->get_normals()[vn1 - 1], n);
-                        float sign2 = glm::dot(obj->get_normals()[vn2 - 1], n);
+                        double sign0 = dot(to_vector<double>(obj->get_normals()[vn0 - 1]), n);
+                        double sign1 = dot(to_vector<double>(obj->get_normals()[vn1 - 1]), n);
+                        double sign2 = dot(to_vector<double>(obj->get_normals()[vn2 - 1]), n);
 
                         if (sign0 > 0 && sign1 > 0 && sign2 > 0)
                         {

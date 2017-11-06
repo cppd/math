@@ -17,9 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "com/mat.h"
 #include "graphics/objects.h"
 
-#include <glm/mat4x4.hpp>
 #include <memory>
 
 class DFTShow final
@@ -28,7 +28,7 @@ class DFTShow final
         std::unique_ptr<Impl> m_impl;
 
 public:
-        DFTShow(int width, int height, int pos_x, int pos_y, const glm::mat4& mtx, bool source_sRGB);
+        DFTShow(int width, int height, int pos_x, int pos_y, const mat4& mtx, bool source_sRGB);
         ~DFTShow();
 
         void set_brightness(float brightness);

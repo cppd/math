@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "com/error.h"
+#include "com/mat.h"
 #include "opengl/opengl_functions.h"
 
 #include <SFML/Graphics/Image.hpp>
@@ -303,6 +304,7 @@ public:
                 glProgramUniformHandleui64vARB(m_program, loc, var.size(), var.data());
         }
 
+#if 0
         void set_uniform(const char* var_name, const glm::mat2x2& var) const
         {
                 glProgramUniformMatrix2fv(m_program, get_uniform_location(var_name), 1, GL_FALSE, glm::value_ptr(var));
@@ -314,6 +316,19 @@ public:
         void set_uniform(const char* var_name, const glm::mat4x4& var) const
         {
                 glProgramUniformMatrix4fv(m_program, get_uniform_location(var_name), 1, GL_FALSE, glm::value_ptr(var));
+        }
+#endif
+
+        void set_uniform_float(const char* var_name, const Matrix<4, 4, double>& var) const
+        {
+                static_assert(sizeof(Matrix<4, 4, float>) == 16 * sizeof(float));
+                static_assert(sizeof(Matrix<4, 4, double>) == 16 * sizeof(double));
+                glProgramUniformMatrix4fv(m_program, get_uniform_location(var_name), 1, GL_TRUE, to_matrix<float>(var).data());
+        }
+        void set_uniform_float(const char* var_name, const Matrix<4, 4, float>& var) const
+        {
+                static_assert(sizeof(Matrix<4, 4, float>) == 16 * sizeof(float));
+                glProgramUniformMatrix4fv(m_program, get_uniform_location(var_name), 1, GL_TRUE, var.data());
         }
 
         void set_uniform(const char* var_name, const std::vector<int>& var) const

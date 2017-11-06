@@ -18,10 +18,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "color/color_space.h"
+#include "com/mat.h"
 #include "graphics/objects.h"
 #include "obj/obj.h"
 
-#include <glm/mat4x4.hpp>
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
 #include <memory>
@@ -30,7 +30,7 @@ struct IDrawObject
 {
         virtual ~IDrawObject() = default;
 
-        virtual const glm::mat4& get_model_matrix() const = 0;
+        virtual const mat4& get_model_matrix() const = 0;
         virtual unsigned get_vertices_count() const = 0;
         virtual void bind() const = 0;
         virtual bool has_triangles() const = 0;
@@ -53,7 +53,7 @@ struct IDrawProgram
 
         virtual void set_shadow_zoom(float) = 0;
 
-        virtual void set_matrices(const glm::mat4& shadow_matrix, const glm::mat4& main_matrix) = 0;
+        virtual void set_matrices(const mat4& shadow_matrix, const mat4& main_matrix) = 0;
 
         virtual void set_light_direction(glm::vec3 dir) = 0;
         virtual void set_camera_direction(glm::vec3 dir) = 0;
@@ -68,6 +68,6 @@ struct IDrawProgram
         virtual const TextureR32I& get_object_texture() const = 0;
 };
 
-std::unique_ptr<IDrawObject> create_draw_object(const IObj* obj, const ColorSpaceConverter& color_converter, float size,
-                                                glm::vec3 position);
+std::unique_ptr<IDrawObject> create_draw_object(const IObj* obj, const ColorSpaceConverter& color_converter, double size,
+                                                const vec3& position);
 std::unique_ptr<IDrawProgram> create_draw_program();

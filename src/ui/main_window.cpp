@@ -564,9 +564,7 @@ void MainWindow::thread_open_object(ProgressRatioList* progress_ratio_list, cons
                 m_surface_points = (obj->get_faces().size() > 0) ? get_unique_face_vertices(obj.get()) :
                                                                    get_unique_point_vertices(obj.get());
 
-                m_model_vertex_matrix = to_matrix<double>(get_model_vertex_matrix(
-                        obj.get(), m_mesh_object_size,
-                        glm::dvec3(m_mesh_object_position[0], m_mesh_object_position[1], m_mesh_object_position[2])));
+                m_model_vertex_matrix = get_model_vertex_matrix(obj.get(), m_mesh_object_size, m_mesh_object_position);
 
                 std::thread model([=]() noexcept { thread_add_object(progress_ratio_list, AddObjectType::Model, obj); });
                 std::thread surface([=]() noexcept { thread_surface_constructor(progress_ratio_list); });
@@ -901,11 +899,7 @@ void MainWindow::slot_window_first_shown()
                                      get_diffuse(), get_specular(), get_dft_brightness(), get_default_ns(),
                                      ui.checkBox_VerticalSync->isChecked(), get_shadow_zoom());
 
-                float size;
-                glm::vec3 position;
-                m_show->get_object_size_and_position(&size, &position);
-                m_mesh_object_size = size;
-                m_mesh_object_position = to_vector<double>(position);
+                m_show->get_object_size_and_position(&m_mesh_object_size, &m_mesh_object_position);
         }
         catch (std::exception& e)
         {

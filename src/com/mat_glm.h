@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#if 0
+
 #include "mat.h"
 #include "vec_glm.h"
 
@@ -98,3 +100,5 @@ Matrix<4, 4, Dst> to_matrix(const glm::dmat4& m)
 {
         return MatrixGLMImplementation::to_matrix<Dst, 4, double>(m);
 }
+
+#endif
