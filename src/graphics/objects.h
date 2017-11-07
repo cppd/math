@@ -19,10 +19,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/error.h"
 #include "com/mat.h"
+#include "com/vec.h"
 #include "opengl/opengl_functions.h"
 
 #include <SFML/Graphics/Image.hpp>
-#include <glm/gtc/type_ptr.hpp>
 #include <string>
 #include <type_traits>
 #include <vector>
@@ -249,19 +249,6 @@ protected:
         }
 
 public:
-        void set_uniform(const char* var_name, const glm::vec2& var) const
-        {
-                glProgramUniform2fv(m_program, get_uniform_location(var_name), 1, glm::value_ptr(var));
-        }
-        void set_uniform(const char* var_name, const glm::vec3& var) const
-        {
-                glProgramUniform3fv(m_program, get_uniform_location(var_name), 1, glm::value_ptr(var));
-        }
-        void set_uniform(const char* var_name, const glm::vec4& var) const
-        {
-                glProgramUniform4fv(m_program, get_uniform_location(var_name), 1, glm::value_ptr(var));
-        }
-
         void set_uniform(const char* var_name, int var) const
         {
                 glProgramUniform1i(m_program, get_uniform_location(var_name), var);
@@ -304,20 +291,21 @@ public:
                 glProgramUniformHandleui64vARB(m_program, loc, var.size(), var.data());
         }
 
-#if 0
-        void set_uniform(const char* var_name, const glm::mat2x2& var) const
+        void set_uniform(const char* var_name, const vec2f& var) const
         {
-                glProgramUniformMatrix2fv(m_program, get_uniform_location(var_name), 1, GL_FALSE, glm::value_ptr(var));
+                static_assert(sizeof(vec2f) == 2 * sizeof(float));
+                glProgramUniform2fv(m_program, get_uniform_location(var_name), 1, var.data());
         }
-        void set_uniform(const char* var_name, const glm::mat3x3& var) const
+        void set_uniform(const char* var_name, const vec3f& var) const
         {
-                glProgramUniformMatrix3fv(m_program, get_uniform_location(var_name), 1, GL_FALSE, glm::value_ptr(var));
+                static_assert(sizeof(vec3f) == 3 * sizeof(float));
+                glProgramUniform3fv(m_program, get_uniform_location(var_name), 1, var.data());
         }
-        void set_uniform(const char* var_name, const glm::mat4x4& var) const
+        void set_uniform(const char* var_name, const vec4f& var) const
         {
-                glProgramUniformMatrix4fv(m_program, get_uniform_location(var_name), 1, GL_FALSE, glm::value_ptr(var));
+                static_assert(sizeof(vec4f) == 4 * sizeof(float));
+                glProgramUniform4fv(m_program, get_uniform_location(var_name), 1, var.data());
         }
-#endif
 
         void set_uniform_float(const char* var_name, const Matrix<4, 4, double>& var) const
         {

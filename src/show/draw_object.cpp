@@ -19,12 +19,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/log.h"
 #include "com/mat_alg.h"
-#include "com/mat_glm.h"
 #include "com/print.h"
 #include "graphics/query.h"
 #include "obj/obj_alg.h"
 
-#include <glm/vec2.hpp>
 #include <vector>
 
 // clang-format off
@@ -58,21 +56,26 @@ constexpr const char points_frag[]
 };
 // clang-format on
 
+// GLSL имеет размер float == 4
+constexpr int STD430_ALIGN_OF_VEC3 = 4 * 4; // для vec3 выравнивание по 4 * N
+static_assert(sizeof(vec2f) == 2 * sizeof(float));
+static_assert(sizeof(vec3f) == 3 * sizeof(float));
+
 namespace
 {
 // Структуры данных для передачи данных в шейдеры
 
 struct FaceVertex final
 {
-        glm::vec3 v; // Координаты вершины в пространстве.
-        glm::vec3 n; // Нормаль вершины.
-        glm::vec2 t; // Координаты вершины в текстуре.
+        vec3f v; // Координаты вершины в пространстве.
+        vec3f n; // Нормаль вершины.
+        vec2f t; // Координаты вершины в текстуре.
         GLint index; // номер материала.
         // Бит 0: Заданы ли текстурные координаты. Если не заданы текстурные координаты, то использовать цвет материала.
         // Бит 1: Задана ли нормаль. Если не задана нормаль, то использовать одинаковую нормаль для всего треугольника.
         GLubyte property;
 
-        FaceVertex(glm::vec3 v_, glm::vec3 n_, glm::vec2 t_, GLint index_, bool has_tex_coord_, bool has_normal_)
+        FaceVertex(vec3f v_, vec3f n_, vec2f t_, GLint index_, bool has_tex_coord_, bool has_normal_)
                 : v(v_), n(n_), t(t_), index(index_)
         {
                 property = 0;
@@ -83,9 +86,9 @@ struct FaceVertex final
 
 struct PointVertex final
 {
-        glm::vec3 v; // Координаты вершины в пространстве.
+        vec3f v; // Координаты вершины в пространстве.
 
-        PointVertex(glm::vec3 v_) : v(v_)
+        PointVertex(vec3f v_) : v(v_)
         {
         }
 };
@@ -93,8 +96,7 @@ struct PointVertex final
 // shader storage
 struct Material final
 {
-        // layout std430: alignof vec3 = 4 * sizeof GLfloat
-        alignas(sizeof(glm::vec4)) glm::vec3 Ka, Kd, Ks;
+        alignas(STD430_ALIGN_OF_VEC3) vec3f Ka, Kd, Ks;
 
         GLuint64 map_Ka_handle, map_Kd_handle, map_Ks_handle;
 
@@ -112,16 +114,16 @@ struct Material final
 void load_face_vertices(const IObj& obj, std::vector<FaceVertex>* vertices)
 {
         const std::vector<IObj::face3>& obj_faces = obj.get_faces();
-        const std::vector<glm::vec3>& obj_vertices = obj.get_vertices();
-        const std::vector<glm::vec2>& obj_texcoords = obj.get_texcoords();
-        const std::vector<glm::vec3>& obj_normals = obj.get_normals();
+        const std::vector<vec3f>& obj_vertices = obj.get_vertices();
+        const std::vector<vec2f>& obj_texcoords = obj.get_texcoords();
+        const std::vector<vec3f>& obj_normals = obj.get_normals();
 
         vertices->clear();
         vertices->shrink_to_fit();
         vertices->reserve(obj_faces.size() * 3);
 
-        glm::vec3 v0, v1, v2, n0, n1, n2;
-        glm::vec2 t0, t1, t2;
+        vec3f v0, v1, v2, n0, n1, n2;
+        vec2f t0, t1, t2;
 
         for (const IObj::face3& f : obj_faces)
         {
@@ -137,9 +139,9 @@ void load_face_vertices(const IObj& obj, std::vector<FaceVertex>* vertices)
                 }
                 else
                 {
-                        n0 = n1 = n2 = glm::vec3(0.0f, 0.0f, 0.0f);
+                        n0 = n1 = n2 = vec3f(0, 0, 0);
                         // можно один раз вычислять здесь, вместо геометрического шейдера
-                        // n0 = n1 = n2 = glm::normalize(glm::cross(v1 - v0, v2 - v0));
+                        // n0 = n1 = n2 = normalize(cross(v1 - v0, v2 - v0));
                 }
 
                 if (f.has_vt)
@@ -150,7 +152,7 @@ void load_face_vertices(const IObj& obj, std::vector<FaceVertex>* vertices)
                 }
                 else
                 {
-                        t0 = t1 = t2 = glm::vec2(0.0f, 0.0f);
+                        t0 = t1 = t2 = vec2f(0, 0);
                 }
 
                 vertices->emplace_back(v0, n0, t0, f.material, f.has_vt, f.has_vn);
@@ -162,13 +164,13 @@ void load_face_vertices(const IObj& obj, std::vector<FaceVertex>* vertices)
 void load_point_vertices(const IObj& obj, std::vector<PointVertex>* vertices)
 {
         const std::vector<int>& obj_points = obj.get_points();
-        const std::vector<glm::vec3>& obj_vertices = obj.get_vertices();
+        const std::vector<vec3f>& obj_vertices = obj.get_vertices();
 
         vertices->clear();
         vertices->shrink_to_fit();
         vertices->reserve(obj_points.size());
 
-        glm::vec3 v;
+        vec3f v;
         for (int p : obj_points)
         {
                 v = obj_vertices[p];
@@ -324,27 +326,32 @@ class DrawProgram final : public IDrawProgram
 
         float m_shadow_zoom = 1;
 
-        void set_light_a(glm::vec4 light) override
+        static vec4f color_to_vec4f(const vec3& c)
         {
-                main_program.set_uniform("light_a", light);
-                points_program.set_uniform("light_a", light);
+                return vec4f(c[0], c[1], c[2], 1);
         }
-        void set_light_d(glm::vec4 light) override
+
+        void set_light_a(const vec3& light) override
         {
-                main_program.set_uniform("light_d", light);
+                main_program.set_uniform("light_a", color_to_vec4f(light));
+                points_program.set_uniform("light_a", color_to_vec4f(light));
         }
-        void set_light_s(glm::vec4 light) override
+        void set_light_d(const vec3& light) override
         {
-                main_program.set_uniform("light_s", light);
+                main_program.set_uniform("light_d", color_to_vec4f(light));
         }
-        void set_default_color(glm::vec4 color) override
+        void set_light_s(const vec3& light) override
         {
-                main_program.set_uniform("default_color", color);
-                points_program.set_uniform("default_color", color);
+                main_program.set_uniform("light_s", color_to_vec4f(light));
         }
-        void set_wireframe_color(glm::vec4 color) override
+        void set_default_color(const vec3& color) override
         {
-                main_program.set_uniform("wireframe_color", color);
+                main_program.set_uniform("default_color", color_to_vec4f(color));
+                points_program.set_uniform("default_color", color_to_vec4f(color));
+        }
+        void set_wireframe_color(const vec3& color) override
+        {
+                main_program.set_uniform("wireframe_color", color_to_vec4f(color));
         }
         void set_default_ns(float default_ns) override
         {
@@ -374,13 +381,13 @@ class DrawProgram final : public IDrawProgram
                 m_main_matrix = main_matrix;
         }
 
-        void set_light_direction(glm::vec3 dir) override
+        void set_light_direction(vec3 dir) override
         {
-                main_program.set_uniform("light_direction", dir);
+                main_program.set_uniform("light_direction", to_vector<float>(dir));
         }
-        void set_camera_direction(glm::vec3 dir) override
+        void set_camera_direction(vec3 dir) override
         {
-                main_program.set_uniform("camera_direction", dir);
+                main_program.set_uniform("camera_direction", to_vector<float>(dir));
         }
 
         void draw(const IDrawObject* draw_object, const IDrawObject* draw_scale_object, bool shadow_active,

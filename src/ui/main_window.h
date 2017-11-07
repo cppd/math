@@ -205,7 +205,7 @@ private:
 
         bool find_visible_mesh(std::shared_ptr<const Mesh>* ptr, std::string* name) const;
 
-        std::unique_ptr<const Projector> create_projector(int paint_width, int paint_height) const;
+        std::unique_ptr<const Projector> create_projector(double size_coef) const;
         std::unique_ptr<const LightSource> create_light_source() const;
 
         static std::tuple<std::string, MainWindow::ObjectType, MainWindow::ObjectType> parameters_for_add_object(
@@ -228,7 +228,7 @@ private:
         const std::thread::id m_window_thread_id;
         std::map<ThreadAction, ThreadPack> m_threads;
 
-        std::vector<glm::vec3> m_surface_points;
+        std::vector<vec3f> m_surface_points;
         std::unique_ptr<IManifoldConstructor<3>> m_surface_constructor;
 
         double m_bound_cocone_rho;

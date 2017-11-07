@@ -29,12 +29,9 @@ Chapter 2: CONVEX HULLS, 2.6 Divide-and-Conquer.
 
 #include "com/bits.h"
 #include "com/error.h"
-#include "com/mat_glm.h"
 #include "com/math.h"
 #include "com/time.h"
 #include "graphics/query.h"
-
-#include <glm/vec2.hpp>
 
 // clang-format off
 constexpr const char vertex_shader[]

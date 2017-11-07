@@ -23,7 +23,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/log.h"
 #include "com/print.h"
 #include "com/time.h"
-#include "com/vec_glm.h"
 
 constexpr const char comment_begin[] = "# ";
 
@@ -67,7 +66,7 @@ void write_vertices(const CFile& file, const IObj* obj)
                 error("face unique indices count < 3 ");
         }
 
-        glm::vec3 min, max;
+        vec3f min, max;
 
         find_min_max(obj->get_vertices(), indices, &min, &max);
 
@@ -77,7 +76,7 @@ void write_vertices(const CFile& file, const IObj* obj)
 
         if (max_delta == 0)
         {
-                for (const glm::vec3& v : obj->get_vertices())
+                for (const vec3f& v : obj->get_vertices())
                 {
                         fprintf(file, VERTEX_FORMAT, v[0], v[1], v[2]);
                 }
@@ -89,7 +88,7 @@ void write_vertices(const CFile& file, const IObj* obj)
                 vec3 old_min = to_vector<double>(min);
                 vec3 new_min = 0.5 * delta * scale_factor;
 
-                for (const glm::vec3& v : obj->get_vertices())
+                for (const vec3f& v : obj->get_vertices())
                 {
                         vec3 vertex = (to_vector<double>(v) - old_min) * scale_factor - new_min;
                         fprintf(file, VERTEX_FORMAT, vertex[0], vertex[1], vertex[2]);
@@ -99,7 +98,7 @@ void write_vertices(const CFile& file, const IObj* obj)
 
 void write_normals(const CFile& file, const IObj* obj)
 {
-        for (const glm::vec3& vn : obj->get_normals())
+        for (const vec3f& vn : obj->get_normals())
         {
                 vec3 normal = to_vector<double>(vn);
                 double len = length(normal);

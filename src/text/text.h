@@ -17,7 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <glm/vec3.hpp>
+#include "com/vec.h"
+
 #include <memory>
 #include <string>
 #include <vector>
@@ -35,6 +36,6 @@ public:
         void render_char(char c, const unsigned char** buffer, int* w, int* h, int* left, int* top, int* advance_x);
         void render_to_file(char c);
 
-        void set_color(const glm::vec3& color);
+        void set_color(const vec3& color);
         void draw(int width, int height, const std::vector<std::string>& text);
 };

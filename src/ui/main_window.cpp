@@ -30,10 +30,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/error.h"
 #include "com/file_sys.h"
 #include "com/log.h"
-#include "com/mat_glm.h"
 #include "com/print.h"
 #include "com/time.h"
-#include "com/vec_glm.h"
 #include "geometry/cocone/reconstruction.h"
 #include "geometry/objects/points.h"
 #include "obj/obj_alg.h"
@@ -79,7 +77,7 @@ constexpr QRgb WIREFRAME_COLOR = qRgb(255, 255, 255);
 constexpr int WINDOW_SHOW_DELAY_MSEC = 50;
 
 // увеличение текстуры тени по сравнению с размером окна
-constexpr float SHADOW_ZOOM = 2;
+constexpr int SHADOW_ZOOM = 2;
 
 // Разделение пикселя по горизонтали и вертикали для трассировки пути.
 // Количество лучей на один пиксель в одном проходе равно этому числу в квадрате.
@@ -496,7 +494,7 @@ void MainWindow::thread_surface_constructor(ProgressRatioList* progress_ratio_li
 
                         double start_time = get_time_seconds();
 
-                        m_surface_constructor = create_manifold_constructor(to_vector<float>(m_surface_points), &progress);
+                        m_surface_constructor = create_manifold_constructor(m_surface_points, &progress);
 
                         LOG("Surface reconstruction first phase, " + to_string_fixed(get_time_seconds() - start_time, 5) + " s");
                 }
@@ -533,8 +531,7 @@ void MainWindow::thread_open_object(ProgressRatioList* progress_ratio_list, cons
                                 break;
                         case OpenObjectType::Repository:
                                 progress.set_text("Load object: %p%");
-                                obj = load_obj_from_points(
-                                        to_glm<float>(m_object_repository->get_point_object(object_name, POINT_COUNT)));
+                                obj = load_obj_from_points(m_object_repository->get_point_object(object_name, POINT_COUNT));
                                 break;
                         }
                 }
@@ -665,7 +662,7 @@ void MainWindow::set_clear_color(const QColor& c)
         m_clear_color = c;
         if (m_show)
         {
-                m_show->set_clear_color(qcolor_to_vec3(c));
+                m_show->set_clear_color_rgb(qcolor_to_rgb(c));
         }
         QPalette palette;
         palette.setColor(QPalette::Window, m_clear_color);
@@ -677,7 +674,7 @@ void MainWindow::set_default_color(const QColor& c)
         m_default_color = c;
         if (m_show)
         {
-                m_show->set_default_color(qcolor_to_vec3(c));
+                m_show->set_default_color_rgb(qcolor_to_rgb(c));
         }
         QPalette palette;
         palette.setColor(QPalette::Window, m_default_color);
@@ -689,7 +686,7 @@ void MainWindow::set_wireframe_color(const QColor& c)
         m_wireframe_color = c;
         if (m_show)
         {
-                m_show->set_wireframe_color(qcolor_to_vec3(c));
+                m_show->set_wireframe_color_rgb(qcolor_to_rgb(c));
         }
         QPalette palette;
         palette.setColor(QPalette::Window, m_wireframe_color);
@@ -890,8 +887,8 @@ void MainWindow::slot_window_first_shown()
 
         try
         {
-                m_show = create_show(&m_event_emitter, get_widget_window_id(ui.graphics_widget), qcolor_to_vec3(m_clear_color),
-                                     qcolor_to_vec3(m_default_color), qcolor_to_vec3(m_wireframe_color),
+                m_show = create_show(&m_event_emitter, get_widget_window_id(ui.graphics_widget), qcolor_to_rgb(m_clear_color),
+                                     qcolor_to_rgb(m_default_color), qcolor_to_rgb(m_wireframe_color),
                                      ui.checkBox_Smooth->isChecked(), ui.checkBox_Wireframe->isChecked(),
                                      ui.checkBox_Shadow->isChecked(), ui.checkBox_Materials->isChecked(),
                                      ui.checkBox_ShowEffect->isChecked(), ui.checkBox_show_dft->isChecked(),
@@ -1309,25 +1306,28 @@ bool MainWindow::find_visible_mesh(std::shared_ptr<const Mesh>* mesh_pointer, st
         return false;
 }
 
-std::unique_ptr<const Projector> MainWindow::create_projector(int paint_width, int paint_height) const
+std::unique_ptr<const Projector> MainWindow::create_projector(double size_coef) const
 {
-        glm::vec3 camera_up, camera_direction, view_center;
-        float view_width;
-        m_show->get_camera_information(&camera_up, &camera_direction, &view_center, &view_width);
+        vec3 camera_up, camera_direction, view_center;
+        double view_width;
+        int paint_width, paint_height;
+        m_show->get_camera_information(&camera_up, &camera_direction, &view_center, &view_width, &paint_width, &paint_height);
 
-        vec3 camera_position = to_vector<double>(view_center) - to_vector<double>(camera_direction) * 2.0 * m_mesh_object_size;
+        paint_width = std::round(paint_width * size_coef);
+        paint_height = std::round(paint_height * size_coef);
 
-        return std::make_unique<const ParallelProjector>(camera_position, to_vector<double>(camera_direction),
-                                                         to_vector<double>(camera_up), view_width, paint_width, paint_height,
-                                                         PROJECTOR_PIXEL_RESOLUTION);
+        vec3 camera_position = view_center - camera_direction * 2.0 * m_mesh_object_size;
+
+        return std::make_unique<const ParallelProjector>(camera_position, camera_direction, camera_up, view_width, paint_width,
+                                                         paint_height, PROJECTOR_PIXEL_RESOLUTION);
 }
 
 std::unique_ptr<const LightSource> MainWindow::create_light_source() const
 {
-        glm::vec3 light_direction;
+        vec3 light_direction;
         m_show->get_light_information(&light_direction);
 
-        vec3 light_position = m_mesh_object_position - to_vector<double>(light_direction) * m_mesh_object_size * 1000.0;
+        vec3 light_position = m_mesh_object_position - light_direction * m_mesh_object_size * 1000.0;
 
         return std::make_unique<const ConstantLight>(light_position, vec3(1, 1, 1));
 }
@@ -1362,35 +1362,35 @@ void MainWindow::on_pushButton_Painter_clicked()
 
                 *message = "Painter";
 
-                int paint_width = std::round(ui.graphics_widget->width() * size_coef);
-                int paint_height = std::round(ui.graphics_widget->height() * size_coef);
-
-                vec3 default_color = to_vector<double>(qcolor_to_rgb(m_default_color));
-                double diffuse = float_to_rgb(get_diffuse());
+                vec3 default_color = qcolor_to_rgb(m_default_color);
+                double diffuse = get_diffuse();
 
                 if ((true))
                 {
-                        vec3 background_color = to_vector<double>(qcolor_to_rgb(m_clear_color));
+                        vec3 background_color = qcolor_to_rgb(m_clear_color);
 
                         std::string title = this->windowTitle().toStdString() + " (" + model_name + ")";
 
                         create_painter_window(title, thread_count,
                                               one_object_scene(background_color, default_color, diffuse,
-                                                               create_projector(paint_width, paint_height), create_light_source(),
-                                                               mesh_pointer));
+                                                               create_projector(size_coef), create_light_source(), mesh_pointer));
                 }
                 else
                 {
-                        glm::vec3 camera_up, camera_direction, view_center;
-                        float view_width;
-                        m_show->get_camera_information(&camera_up, &camera_direction, &view_center, &view_width);
+                        vec3 camera_up, camera_direction, view_center;
+                        double view_width;
+                        int paint_width, paint_height;
+                        m_show->get_camera_information(&camera_up, &camera_direction, &view_center, &view_width, &paint_width,
+                                                       &paint_height);
+
+                        paint_width = std::round(paint_width * size_coef);
+                        paint_height = std::round(paint_height * size_coef);
 
                         std::string title = this->windowTitle().toStdString() + " (" + model_name + " in Cornell Box)";
 
                         create_painter_window(title, thread_count,
                                               cornell_box(paint_width, paint_height, mesh_pointer, m_mesh_object_size,
-                                                          default_color, diffuse, to_vector<double>(camera_direction),
-                                                          to_vector<double>(camera_up)));
+                                                          default_color, diffuse, camera_direction, camera_up));
                 }
         });
 }

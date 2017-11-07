@@ -20,23 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/error.h"
 #include "com/hash.h"
 #include "com/mat_alg.h"
-#include "com/mat_glm.h"
-#include "com/vec_glm.h"
 
-#include <glm/common.hpp>
-#include <glm/geometric.hpp>
 #include <unordered_set>
-
-namespace
-{
-struct Hash
-{
-        size_t operator()(glm::vec3 v) const
-        {
-                return array_hash(std::array<float, 3>{{v[0], v[1], v[2]}});
-        }
-};
-}
 
 std::vector<int> get_unique_face_indices(const std::vector<IObj::face3>& faces)
 {
@@ -81,9 +66,9 @@ std::vector<int> get_unique_point_indices(const std::vector<int>& points)
         return indices;
 }
 
-std::vector<glm::vec3> get_unique_face_vertices(const IObj* obj)
+std::vector<vec3f> get_unique_face_vertices(const IObj* obj)
 {
-        std::unordered_set<glm::vec3, Hash> unique_face_vertices(obj->get_vertices().size());
+        std::unordered_set<vec3f> unique_face_vertices(obj->get_vertices().size());
 
         for (const IObj::face3& face : obj->get_faces())
         {
@@ -93,10 +78,10 @@ std::vector<glm::vec3> get_unique_face_vertices(const IObj* obj)
                 }
         }
 
-        std::vector<glm::vec3> vertices;
+        std::vector<vec3f> vertices;
         vertices.reserve(unique_face_vertices.size());
 
-        for (glm::vec3 i : unique_face_vertices)
+        for (vec3f i : unique_face_vertices)
         {
                 vertices.push_back(i);
         }
@@ -104,19 +89,19 @@ std::vector<glm::vec3> get_unique_face_vertices(const IObj* obj)
         return vertices;
 }
 
-std::vector<glm::vec3> get_unique_point_vertices(const IObj* obj)
+std::vector<vec3f> get_unique_point_vertices(const IObj* obj)
 {
-        std::unordered_set<glm::vec3, Hash> unique_point_vertices(obj->get_points().size());
+        std::unordered_set<vec3f> unique_point_vertices(obj->get_points().size());
 
         for (int point : obj->get_points())
         {
                 unique_point_vertices.insert(obj->get_vertices()[point]);
         }
 
-        std::vector<glm::vec3> vertices;
+        std::vector<vec3f> vertices;
         vertices.reserve(unique_point_vertices.size());
 
-        for (glm::vec3 i : unique_point_vertices)
+        for (vec3f i : unique_point_vertices)
         {
                 vertices.push_back(i);
         }
@@ -124,10 +109,10 @@ std::vector<glm::vec3> get_unique_point_vertices(const IObj* obj)
         return vertices;
 }
 
-void find_min_max(const std::vector<glm::vec3>& vertices, const std::vector<int>& indices, glm::vec3* min, glm::vec3* max)
+void find_min_max(const std::vector<vec3f>& vertices, const std::vector<int>& indices, vec3f* min, vec3f* max)
 {
-        *min = glm::vec3(std::numeric_limits<float>::max());
-        *max = glm::vec3(std::numeric_limits<float>::lowest());
+        *min = vec3f(std::numeric_limits<float>::max());
+        *max = vec3f(std::numeric_limits<float>::lowest());
 
         int max_index = static_cast<int>(vertices.size()) - 1;
 
@@ -138,49 +123,49 @@ void find_min_max(const std::vector<glm::vec3>& vertices, const std::vector<int>
                         error("vertex index out of bound");
                 }
 
-                *min = glm::min(*min, vertices[i]);
-                *max = glm::max(*max, vertices[i]);
+                *min = min_vector(*min, vertices[i]);
+                *max = max_vector(*max, vertices[i]);
         }
 }
 
-void find_min_max(const std::vector<glm::vec3>& vertices, glm::vec3* min, glm::vec3* max)
+void find_min_max(const std::vector<vec3f>& vertices, vec3f* min, vec3f* max)
 {
-        *min = glm::vec3(std::numeric_limits<float>::max());
-        *max = glm::vec3(std::numeric_limits<float>::lowest());
+        *min = vec3f(std::numeric_limits<float>::max());
+        *max = vec3f(std::numeric_limits<float>::lowest());
 
-        for (const glm::vec3& v : vertices)
+        for (const vec3f& v : vertices)
         {
-                *min = glm::min(*min, v);
-                *max = glm::max(*max, v);
+                *min = min_vector(*min, v);
+                *max = max_vector(*max, v);
         }
 }
 
 namespace
 {
-void center_and_length(const std::vector<glm::vec3>& vertices, std::vector<int>& indices, glm::vec3* center, float* length)
+void center_and_length(const std::vector<vec3f>& vertices, std::vector<int>& indices, vec3f* center, float* len)
 {
-        glm::vec3 min, max;
+        vec3f min, max;
 
         find_min_max(vertices, indices, &min, &max);
 
         *center = 0.5f * (max + min);
 
-        *length = glm::length(max - min);
+        *len = length(max - min);
 }
 
-void center_and_length(const std::vector<glm::vec3>& vertices, glm::vec3* center, float* length)
+void center_and_length(const std::vector<vec3f>& vertices, vec3f* center, float* len)
 {
-        glm::vec3 min, max;
+        vec3f min, max;
 
         find_min_max(vertices, &min, &max);
 
         *center = 0.5f * (max + min);
 
-        *length = glm::length(max - min);
+        *len = length(max - min);
 }
 }
 
-void find_center_and_length(const std::vector<glm::vec3>& vertices, const std::vector<IObj::face3>& faces, glm::vec3* center,
+void find_center_and_length(const std::vector<vec3f>& vertices, const std::vector<IObj::face3>& faces, vec3f* center,
                             float* length)
 {
         std::vector<int> indices = get_unique_face_indices(faces);
@@ -193,8 +178,7 @@ void find_center_and_length(const std::vector<glm::vec3>& vertices, const std::v
         center_and_length(vertices, indices, center, length);
 }
 
-void find_center_and_length(const std::vector<glm::vec3>& vertices, const std::vector<int>& points, glm::vec3* center,
-                            float* length)
+void find_center_and_length(const std::vector<vec3f>& vertices, const std::vector<int>& points, vec3f* center, float* length)
 {
         std::vector<int> indices = get_unique_point_indices(points);
 
@@ -206,7 +190,7 @@ void find_center_and_length(const std::vector<glm::vec3>& vertices, const std::v
         center_and_length(vertices, indices, center, length);
 }
 
-void find_center_and_length(const std::vector<glm::vec3>& vertices, glm::vec3* center, float* length)
+void find_center_and_length(const std::vector<vec3f>& vertices, vec3f* center, float* length)
 {
         if (vertices.size() < 2)
         {

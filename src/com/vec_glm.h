@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#if 0
+
 #include "vec.h"
 
 #include <glm/vec2.hpp>
@@ -144,3 +146,5 @@ std::vector<Vector<4, Dst>> to_vector(const std::vector<glm::dvec4>& v)
 {
         return VectorGLMImplementation::to_vector<4, Dst, double>(v);
 }
+
+#endif

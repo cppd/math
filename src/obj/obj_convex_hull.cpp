@@ -24,7 +24,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/print.h"
 #include "com/time.h"
 #include "com/vec.h"
-#include "com/vec_glm.h"
 #include "geometry/core/convex_hull.h"
 
 #include <unordered_map>
@@ -43,25 +42,25 @@ namespace
 
 class ConvexHullObj final : public IObj
 {
-        std::vector<glm::vec3> m_vertices;
-        std::vector<glm::vec2> m_texcoords;
-        std::vector<glm::vec3> m_normals;
+        std::vector<vec3f> m_vertices;
+        std::vector<vec2f> m_texcoords;
+        std::vector<vec3f> m_normals;
         std::vector<face3> m_faces;
         std::vector<int> m_points;
         std::vector<material> m_materials;
         std::vector<sf::Image> m_images;
-        glm::vec3 m_center;
+        vec3f m_center;
         float m_length;
 
-        const std::vector<glm::vec3>& get_vertices() const override
+        const std::vector<vec3f>& get_vertices() const override
         {
                 return m_vertices;
         }
-        const std::vector<glm::vec2>& get_texcoords() const override
+        const std::vector<vec2f>& get_texcoords() const override
         {
                 return m_texcoords;
         }
-        const std::vector<glm::vec3>& get_normals() const override
+        const std::vector<vec3f>& get_normals() const override
         {
                 return m_normals;
         }
@@ -81,7 +80,7 @@ class ConvexHullObj final : public IObj
         {
                 return m_images;
         }
-        glm::vec3 get_center() const override
+        vec3f get_center() const override
         {
                 return m_center;
         }
@@ -90,7 +89,7 @@ class ConvexHullObj final : public IObj
                 return m_length;
         }
 
-        void create_obj(const std::vector<glm::vec3>& points, const std::vector<ConvexHullFacet<3>>& facets)
+        void create_obj(const std::vector<vec3f>& points, const std::vector<ConvexHullFacet<3>>& facets)
         {
                 if (facets.size() == 0)
                 {
@@ -118,7 +117,7 @@ class ConvexHullObj final : public IObj
                         index_map[v.first] = idx;
 
                         m_vertices[idx] = points[v.first];
-                        // m_normals[idx] = to_glm(average_normal(v.second));
+                        // m_normals[idx] = to_vector<float>(average_normal(v.second));
 
                         ++idx;
                 }
@@ -154,7 +153,7 @@ class ConvexHullObj final : public IObj
 public:
         ConvexHullObj(const IObj* obj, ProgressRatio* progress)
         {
-                std::vector<glm::vec3> points;
+                std::vector<vec3f> points;
 
                 if (obj->get_faces().size() > 0)
                 {
@@ -173,7 +172,7 @@ public:
 
                 double start_time = get_time_seconds();
 
-                compute_convex_hull(to_vector<float>(points), &facets, progress);
+                compute_convex_hull(points, &facets, progress);
 
                 LOG("Convex hull created, " + to_string_fixed(get_time_seconds() - start_time, 5) + " s");
 

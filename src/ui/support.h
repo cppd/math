@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "com/vec.h"
 #include "window/window_prop.h"
 
 #include <QColorDialog>
@@ -25,7 +26,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QRadioButton>
 #include <QString>
 #include <QTextEdit>
-#include <glm/vec3.hpp>
 #include <string>
 #include <vector>
 
@@ -58,9 +58,7 @@ void color_dialog(QWidget* widget, const QString& title, const QColor& color, co
 
 void set_widgets_enabled(QLayout* layout, bool v);
 
-glm::vec3 qcolor_to_vec3(const QColor& c);
-glm::vec3 qcolor_to_rgb(const QColor& c);
-float float_to_rgb(float c);
+vec3 qcolor_to_rgb(const QColor& c);
 
 void button_strike_out(QRadioButton* button, bool strike_out);
 

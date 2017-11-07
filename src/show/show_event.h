@@ -36,9 +36,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "com/vec.h"
 #include "obj/obj.h"
 
-#include <glm/vec3.hpp>
 #include <memory>
 #include <string>
 
@@ -128,22 +128,22 @@ public:
         };
         struct set_clear_color final
         {
-                glm::vec3 clear_color;
-                set_clear_color(const glm::vec3& v) : clear_color(v)
+                vec3 clear_color;
+                set_clear_color(const vec3& v) : clear_color(v)
                 {
                 }
         };
         struct set_default_color final
         {
-                glm::vec3 default_color;
-                set_default_color(const glm::vec3& v) : default_color(v)
+                vec3 default_color;
+                set_default_color(const vec3& v) : default_color(v)
                 {
                 }
         };
         struct set_wireframe_color final
         {
-                glm::vec3 wireframe_color;
-                set_wireframe_color(const glm::vec3& v) : wireframe_color(v)
+                vec3 wireframe_color;
+                set_wireframe_color(const vec3& v) : wireframe_color(v)
                 {
                 }
         };

@@ -32,9 +32,9 @@ QString message()
 
         message += "Languages:\n        C++17, GLSL 4.50.\n";
 #if defined(__linux__)
-        message += "Libraries:\n        Freetype, GLM, GMP, OpenGL, Qt, SFML, X11.";
+        message += "Libraries:\n        Freetype, GMP, OpenGL, Qt, SFML, X11.";
 #elif defined(_WIN32)
-        message += "Libraries:\n        Freetype, GLM, GMP, OpenGL, Qt, SFML.";
+        message += "Libraries:\n        Freetype, GMP, OpenGL, Qt, SFML.";
 #else
 #error This operating system is not supported
 #endif

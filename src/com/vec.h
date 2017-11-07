@@ -422,14 +422,13 @@ Vector<3, T> cross(const Vector<3, T>& v0, const Vector<3, T>& v1)
 template <std::size_t N>
 using vec = Vector<N, double>;
 
-// vec2 - это только Vector<2, double>.
-// Не менять.
+// Не менять эти типы.
 using vec2 = Vector<2, double>;
-
-// vec3 - это только Vector<3, double>.
-// Не менять.
 using vec3 = Vector<3, double>;
-
-// vec4 - это только Vector<4, double>.
-// Не менять.
 using vec4 = Vector<4, double>;
+using vec2f = Vector<2, float>;
+using vec3f = Vector<3, float>;
+using vec4f = Vector<4, float>;
+using vec2i = Vector<2, int>;
+using vec3i = Vector<3, int>;
+using vec4i = Vector<4, int>;

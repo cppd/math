@@ -26,13 +26,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/log.h"
 #include "com/mat.h"
 #include "com/mat_alg.h"
-#include "com/mat_glm.h"
 #include "com/math.h"
 #include "com/print.h"
 #include "com/quaternion.h"
 #include "com/thread.h"
 #include "com/time.h"
-#include "com/vec_glm.h"
 #include "dft/show/dft_show.h"
 #include "graphics/objects.h"
 #include "hull_2d/hull_2d.h"
@@ -45,17 +43,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <SFML/Window/Event.hpp>
 #include <cmath>
-#include <glm/gtc/color_space.hpp>
 #include <thread>
 #include <unordered_map>
 #include <vector>
 
-constexpr float ZOOM_BASE = 1.1;
-constexpr float ZOOM_EXP_MIN = -50;
-constexpr float ZOOM_EXP_MAX = 100;
+constexpr double ZOOM_BASE = 1.1;
+constexpr double ZOOM_EXP_MIN = -50;
+constexpr double ZOOM_EXP_MAX = 100;
 
-constexpr float PI_DIV_180 = PI / 180;
-constexpr float to_radians(float angle)
+constexpr double PI_DIV_180 = PI / 180;
+constexpr double to_radians(double angle)
 {
         return angle * PI_DIV_180;
 }
@@ -70,9 +67,9 @@ long get_fps(double* start)
         return (time_elapsed > 0) ? lround(1.0 / time_elapsed) : 0;
 }
 
-glm::vec3 rotate_vector_degree(const glm::vec3& axis, float angle_degree, const glm::vec3& v)
+vec3 rotate_vector_degree(const vec3& axis, double angle_degree, const vec3& v)
 {
-        return to_glm<float>(rotate_vector(to_vector<float>(axis), to_radians(angle_degree), to_vector<float>(v)));
+        return rotate_vector(axis, to_radians(angle_degree), v);
 }
 
 #if 0
@@ -103,25 +100,28 @@ class Camera final
 {
         mutable SpinLock m_lock;
 
-        glm::vec3 m_camera_right, m_camera_up, m_camera_direction, m_light_up, m_light_direction;
+        vec3 m_camera_right, m_camera_up, m_camera_direction, m_light_up, m_light_direction;
 
-        glm::vec3 m_view_center;
-        float m_view_width;
+        vec3 m_view_center;
+        double m_view_width;
 
-        void set_vectors(const glm::vec3& right, const glm::vec3& up)
+        int m_paint_width = -1;
+        int m_paint_height = -1;
+
+        void set_vectors(const vec3& right, const vec3& up)
         {
-                m_camera_up = glm::normalize(up);
+                m_camera_up = normalize(up);
 
                 // от поверхности на камеру
-                m_camera_direction = glm::cross(glm::normalize(right), m_camera_up);
+                m_camera_direction = cross(normalize(right), m_camera_up);
 
-                m_camera_right = glm::cross(m_camera_up, m_camera_direction);
+                m_camera_right = cross(m_camera_up, m_camera_direction);
 
-                glm::vec3 light_right = rotate_vector_degree(m_camera_up, -45, m_camera_right);
+                vec3 light_right = rotate_vector_degree(m_camera_up, -45, m_camera_right);
                 m_light_up = rotate_vector_degree(light_right, -45, m_camera_up);
 
                 // от поверхности на свет
-                m_light_direction = glm::cross(light_right, m_light_up);
+                m_light_direction = cross(light_right, m_light_up);
         }
 
 public:
@@ -129,14 +129,14 @@ public:
         {
         }
 
-        void set(const glm::vec3& right, const glm::vec3& up)
+        void set(const vec3& right, const vec3& up)
         {
                 std::lock_guard lg(m_lock);
 
                 set_vectors(right, up);
         }
 
-        void get(glm::vec3* camera_up, glm::vec3* camera_direction, glm::vec3* light_up, glm::vec3* light_direction) const
+        void get(vec3* camera_up, vec3* camera_direction, vec3* light_up, vec3* light_direction) const
         {
                 std::lock_guard lg(m_lock);
 
@@ -146,8 +146,8 @@ public:
                 *light_direction = -m_light_direction; // от источника света на объект
         }
 
-        void get_camera_information(glm::vec3* camera_up, glm::vec3* camera_direction, glm::vec3* view_center,
-                                    float* view_width) const
+        void get_camera_information(vec3* camera_up, vec3* camera_direction, vec3* view_center, double* view_width,
+                                    int* paint_width, int* paint_height) const
         {
                 std::lock_guard lg(m_lock);
 
@@ -155,9 +155,12 @@ public:
                 *camera_direction = -m_camera_direction; // от камеры на объект
                 *view_center = m_view_center;
                 *view_width = m_view_width;
+
+                *paint_width = m_paint_width;
+                *paint_height = m_paint_height;
         }
 
-        void get_light_information(glm::vec3* light_direction) const
+        void get_light_information(vec3* light_direction) const
         {
                 std::lock_guard lg(m_lock);
 
@@ -168,17 +171,20 @@ public:
         {
                 std::lock_guard lg(m_lock);
 
-                glm::vec3 right = rotate_vector_degree(m_camera_up, -delta_x, m_camera_right);
-                glm::vec3 up = rotate_vector_degree(m_camera_right, -delta_y, m_camera_up);
+                vec3 right = rotate_vector_degree(m_camera_up, -delta_x, m_camera_right);
+                vec3 up = rotate_vector_degree(m_camera_right, -delta_y, m_camera_up);
                 set_vectors(right, up);
         }
 
-        void set_view_center_and_width(const glm::vec3& vec, float view_width)
+        void set_view_center_and_width(const vec3& vec, double view_width, int paint_width, int paint_height)
         {
                 std::lock_guard lg(m_lock);
 
                 m_view_center = vec;
                 m_view_width = view_width;
+
+                m_paint_width = paint_width;
+                m_paint_height = paint_height;
         }
 };
 
@@ -318,15 +324,15 @@ class ShowObject final : public IShow
         {
                 m_event_queue.emplace(std::in_place_type<Event::set_specular>, v);
         }
-        void set_clear_color(const glm::vec3& c) override
+        void set_clear_color_rgb(const vec3& c) override
         {
                 m_event_queue.emplace(std::in_place_type<Event::set_clear_color>, c);
         }
-        void set_default_color(const glm::vec3& c) override
+        void set_default_color_rgb(const vec3& c) override
         {
                 m_event_queue.emplace(std::in_place_type<Event::set_default_color>, c);
         }
-        void set_wireframe_color(const glm::vec3& c) override
+        void set_wireframe_color_rgb(const vec3& c) override
         {
                 m_event_queue.emplace(std::in_place_type<Event::set_wireframe_color>, c);
         }
@@ -391,12 +397,12 @@ class ShowObject final : public IShow
                 m_event_queue.emplace(std::in_place_type<Event::shadow_zoom>, v);
         }
 
-        void get_camera_information(glm::vec3* camera_up, glm::vec3* camera_direction, glm::vec3* view_center,
-                                    float* view_width) const override
+        void get_camera_information(vec3* camera_up, vec3* camera_direction, vec3* view_center, double* view_width,
+                                    int* paint_width, int* paint_height) const override
         {
-                m_camera.get_camera_information(camera_up, camera_direction, view_center, view_width);
+                m_camera.get_camera_information(camera_up, camera_direction, view_center, view_width, paint_width, paint_height);
         }
-        void get_light_information(glm::vec3* light_direction) const override
+        void get_light_information(vec3* light_direction) const override
         {
                 m_camera.get_light_information(light_direction);
         }
@@ -407,8 +413,8 @@ class ShowObject final : public IShow
         }
 
 public:
-        ShowObject(IShowCallback* callback, WindowID win_parent, glm::vec3 clear_color, glm::vec3 default_color,
-                   glm::vec3 wireframe_color, bool with_smooth, bool with_wireframe, bool with_shadow, bool with_materials,
+        ShowObject(IShowCallback* callback, WindowID win_parent, vec3 clear_color_rgb, vec3 default_color_rgb,
+                   vec3 wireframe_color_rgb, bool with_smooth, bool with_wireframe, bool with_shadow, bool with_materials,
                    bool with_effect, bool with_dft, bool with_convex_hull, bool with_optical_flow, float ambient, float diffuse,
                    float specular, float dft_brightness, float default_ns, bool vertical_sync, float shadow_zoom)
                 : m_callback(callback), m_win_parent(win_parent)
@@ -423,9 +429,9 @@ public:
                 set_ambient(ambient);
                 set_diffuse(diffuse);
                 set_specular(specular);
-                set_clear_color(clear_color);
-                set_default_color(default_color);
-                set_wireframe_color(wireframe_color);
+                set_clear_color_rgb(clear_color_rgb);
+                set_default_color_rgb(default_color_rgb);
+                set_wireframe_color_rgb(wireframe_color_rgb);
                 set_default_ns(default_ns);
                 show_smooth(with_smooth);
                 show_wireframe(with_wireframe);
@@ -483,15 +489,15 @@ void ShowObject::loop()
 
         int new_width = wnd.getSize().x;
         int new_height = wnd.getSize().y;
-        float pixel_to_coord_no_zoom = 2.0f / std::min(new_width, new_height);
-        float pixel_to_coord = pixel_to_coord_no_zoom;
+        double pixel_to_coord_no_zoom = 2.0 / std::min(new_width, new_height);
+        double pixel_to_coord = pixel_to_coord_no_zoom;
 
         // обязательно задать начальные значения -1, чтобы отработала функция изменения размеров окна
         int width = -1, height = -1, window_width = -1, window_height = -1;
 
         int mouse_x = 0, mouse_y = 0, new_mouse_x = 0, new_mouse_y = 0;
         bool mouse_pressed = false, mouse_pressed_shift = false;
-        glm::vec2 window_center(0, 0);
+        vec2 window_center(0, 0);
         float zoom_delta = 0;
         float wheel_delta = 0;
 
@@ -617,7 +623,7 @@ void ShowObject::loop()
                         {
                                 const Event::set_ambient& d = event->get<Event::set_ambient>();
 
-                                glm::vec4 light = glm::convertSRGBToLinear(glm::vec4(1.0f) * d.ambient);
+                                vec3 light = vec3(d.ambient);
                                 draw_program->set_light_a(light);
                                 break;
                         }
@@ -625,7 +631,7 @@ void ShowObject::loop()
                         {
                                 const Event::set_diffuse& d = event->get<Event::set_diffuse>();
 
-                                glm::vec4 light = glm::convertSRGBToLinear(glm::vec4(1.0f) * d.diffuse);
+                                vec3 light = vec3(d.diffuse);
                                 draw_program->set_light_d(light);
                                 break;
                         }
@@ -633,7 +639,7 @@ void ShowObject::loop()
                         {
                                 const Event::set_specular& d = event->get<Event::set_specular>();
 
-                                glm::vec4 light = glm::convertSRGBToLinear(glm::vec4(1.0f) * d.specular);
+                                vec3 light = vec3(d.specular);
                                 draw_program->set_light_s(light);
                                 break;
                         }
@@ -641,26 +647,26 @@ void ShowObject::loop()
                         {
                                 const Event::set_clear_color& d = event->get<Event::set_clear_color>();
 
-                                glm::vec3 color = glm::convertSRGBToLinear(d.clear_color);
-                                glClearColor(color.r, color.g, color.b, 1);
-                                bool dark_color = luminosity_rgb(to_vector<double>(color)) <= 0.5;
-                                text.set_color(dark_color ? glm::vec3(1) : glm::vec3(0));
+                                vec3 color = d.clear_color;
+                                glClearColor(color[0], color[1], color[2], 1);
+                                bool dark_color = luminosity_rgb(color) <= 0.5;
+                                text.set_color(dark_color ? vec3(1) : vec3(0));
                                 break;
                         }
                         case Event::EventType::set_default_color:
                         {
                                 const Event::set_default_color& d = event->get<Event::set_default_color>();
 
-                                glm::vec3 color = glm::convertSRGBToLinear(d.default_color);
-                                draw_program->set_default_color(glm::vec4(color.r, color.g, color.b, 1));
+                                vec3 color = d.default_color;
+                                draw_program->set_default_color(color);
                                 break;
                         }
                         case Event::EventType::set_wireframe_color:
                         {
                                 const Event::set_wireframe_color& d = event->get<Event::set_wireframe_color>();
 
-                                glm::vec3 color = glm::convertSRGBToLinear(d.wireframe_color);
-                                draw_program->set_wireframe_color(glm::vec4(color.r, color.g, color.b, 1));
+                                vec3 color = d.wireframe_color;
+                                draw_program->set_wireframe_color(color);
                                 break;
                         }
                         case Event::EventType::set_default_ns:
@@ -850,7 +856,7 @@ void ShowObject::loop()
                         }
                         else
                         {
-                                window_center -= pixel_to_coord * glm::vec2(delta_x, -delta_y);
+                                window_center -= pixel_to_coord * vec2(delta_x, -delta_y);
                         }
 
                         matrix_change = true;
@@ -862,7 +868,7 @@ void ShowObject::loop()
                         {
                                 zoom_delta += wheel_delta;
 
-                                glm::vec2 mouse_in_wnd(new_mouse_x - width * 0.5f, height * 0.5f - new_mouse_y);
+                                vec2 mouse_in_wnd(new_mouse_x - width * 0.5, height * 0.5 - new_mouse_y);
 
                                 window_center +=
                                         pixel_to_coord * (mouse_in_wnd - mouse_in_wnd * std::pow(ZOOM_BASE, -wheel_delta));
@@ -920,22 +926,22 @@ void ShowObject::loop()
                         default_view = false;
 
                         zoom_delta = 0;
-                        window_center = glm::vec2(0);
-                        pixel_to_coord = pixel_to_coord_no_zoom = 2.0f / std::min(width, height);
-                        m_camera.set(glm::vec3(1, 0, 0), glm::vec3(0, 1, 0));
+                        window_center = vec2(0, 0);
+                        pixel_to_coord_no_zoom = 2.0 / std::min(width, height);
+                        pixel_to_coord = pixel_to_coord_no_zoom;
+                        m_camera.set(vec3(1, 0, 0), vec3(0, 1, 0));
 
                         matrix_change = true;
                 }
 
                 if (matrix_change)
                 {
-                        glm::vec3 camera_up, camera_direction, light_up, light_direction;
+                        vec3 camera_up, camera_direction, light_up, light_direction;
 
                         m_camera.get(&camera_up, &camera_direction, &light_up, &light_direction);
 
                         mat4 shadow_matrix =
-                                ortho<double>(-1, 1, -1, 1, -1, 1) *
-                                look_at(vec3(0, 0, 0), to_vector<double>(light_direction), to_vector<double>(light_up));
+                                ortho<double>(-1, 1, -1, 1, -1, 1) * look_at(vec3(0, 0, 0), light_direction, light_up);
 
                         double left = -0.5 * width * pixel_to_coord;
                         double right = 0.5 * width * pixel_to_coord;
@@ -946,9 +952,8 @@ void ShowObject::loop()
 
                         mat4 projection_matrix = ortho<double>(left, right, bottom, top, z_near, z_far);
 
-                        mat4 view_matrix =
-                                translate<double>(-window_center.x, -window_center.y, 0) *
-                                look_at<double>(vec3(0, 0, 0), to_vector<double>(camera_direction), to_vector<double>(camera_up));
+                        mat4 view_matrix = translate<double>(-window_center[0], -window_center[1], 0) *
+                                           look_at<double>(vec3(0, 0, 0), camera_direction, camera_up);
 
                         draw_program->set_matrices(shadow_matrix, projection_matrix * view_matrix);
 
@@ -957,8 +962,8 @@ void ShowObject::loop()
 
                         vec4 screen_center((right + left) * 0.5, (top + bottom) * 0.5, (z_far + z_near) * 0.5, 1.0);
                         vec4 view_center = inverse(view_matrix) * screen_center;
-                        m_camera.set_view_center_and_width(glm::vec3(view_center[0], view_center[1], view_center[2]),
-                                                           right - left);
+                        m_camera.set_view_center_and_width(vec3(view_center[0], view_center[1], view_center[2]), right - left,
+                                                           width, height);
                 }
 
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -1047,13 +1052,13 @@ void ShowObject::loop_thread()
 }
 }
 
-std::unique_ptr<IShow> create_show(IShowCallback* cb, WindowID win_parent, glm::vec3 clear_color, glm::vec3 default_color,
-                                   glm::vec3 wireframe_color, bool with_smooth, bool with_wireframe, bool with_shadow,
+std::unique_ptr<IShow> create_show(IShowCallback* cb, WindowID win_parent, vec3 clear_color_rgb, vec3 default_color_rgb,
+                                   vec3 wireframe_color_rgb, bool with_smooth, bool with_wireframe, bool with_shadow,
                                    bool with_materials, bool with_effect, bool with_dft, bool with_convex_hull,
                                    bool with_optical_flow, float ambient, float diffuse, float specular, float dft_brightness,
                                    float default_ns, bool vertical_sync, float shadow_zoom)
 {
-        return std::make_unique<ShowObject>(cb, win_parent, clear_color, default_color, wireframe_color, with_smooth,
+        return std::make_unique<ShowObject>(cb, win_parent, clear_color_rgb, default_color_rgb, wireframe_color_rgb, with_smooth,
                                             with_wireframe, with_shadow, with_materials, with_effect, with_dft, with_convex_hull,
                                             with_optical_flow, ambient, diffuse, specular, dft_brightness, default_ns,
                                             vertical_sync, shadow_zoom);

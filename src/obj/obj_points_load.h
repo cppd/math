@@ -19,8 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "obj.h"
 
-#include <glm/vec3.hpp>
 #include <memory>
 #include <vector>
 
-std::unique_ptr<IObj> load_obj_from_points(std::vector<glm::vec3>&& points);
+std::unique_ptr<IObj> load_obj_from_points(std::vector<vec3f>&& points);

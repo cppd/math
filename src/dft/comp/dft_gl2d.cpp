@@ -167,7 +167,7 @@ class GL2D final : public IFourierGL1, public IFourierGL2
         const int BLOCK_SIZE = 256;
         const int BLOCK_SQRT = std::lround(std::sqrt(BLOCK_SIZE));
         const int m_N1, m_N2, m_M1, m_M2, m_M1_bin, m_M2_bin;
-        const glm::ivec2 block, rows_to, rows_fr, rows_D, cols_to, cols_fr, cols_D;
+        const vec2i block, rows_to, rows_fr, rows_D, cols_to, cols_fr, cols_D;
         DeviceMemory<std::complex<FP>> m_D1_fwd, m_D1_inv, m_D2_fwd, m_D2_inv;
         DeviceMemory<std::complex<FP>> m_x_d, m_buffer;
         GLuint64 m_texture_handle;
@@ -287,7 +287,7 @@ class GL2D final : public IFourierGL1, public IFourierGL2
         }
         void exec(bool inv, bool srgb) override
         {
-                glm::ivec2 grid(get_group_count(m_N1, block.x), get_group_count(m_N2, block.y));
+                vec2i grid(get_group_count(m_N1, block[0]), get_group_count(m_N2, block[1]));
 
                 m_prog.move_to_input(grid, block, m_N1, m_N2, srgb, m_texture_handle, &m_x_d);
                 dft2d(inv);
@@ -303,12 +303,12 @@ public:
                   m_M1_bin(get_bin_size(m_M1)),
                   m_M2_bin(get_bin_size(m_M2)),
                   block(BLOCK_SQRT, BLOCK_SQRT),
-                  rows_to(get_group_count(m_M1, block.x), get_group_count(m_N2, block.y)),
-                  rows_fr(get_group_count(m_N1, block.x), get_group_count(m_N2, block.y)),
-                  rows_D(get_group_count(m_M1, block.x), get_group_count(m_N2, block.y)),
-                  cols_to(get_group_count(m_N1, block.x), get_group_count(m_M2, block.y)),
-                  cols_fr(get_group_count(m_N1, block.x), get_group_count(m_N2, block.y)),
-                  cols_D(get_group_count(m_M2, block.x), get_group_count(m_N1, block.y)),
+                  rows_to(get_group_count(m_M1, block[0]), get_group_count(m_N2, block[1])),
+                  rows_fr(get_group_count(m_N1, block[0]), get_group_count(m_N2, block[1])),
+                  rows_D(get_group_count(m_M1, block[0]), get_group_count(m_N2, block[1])),
+                  cols_to(get_group_count(m_N1, block[0]), get_group_count(m_M2, block[1])),
+                  cols_fr(get_group_count(m_N1, block[0]), get_group_count(m_N2, block[1])),
+                  cols_D(get_group_count(m_M2, block[0]), get_group_count(m_N1, block[1])),
                   m_D1_fwd(m_M1, MemoryUsage::STATIC_COPY),
                   m_D1_inv(m_M1, MemoryUsage::STATIC_COPY),
                   m_D2_fwd(m_M2, MemoryUsage::STATIC_COPY),

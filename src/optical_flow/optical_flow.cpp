@@ -35,13 +35,11 @@ Chapter 5. Tracking Objects in Videos.
 
 #include "com/error.h"
 #include "com/log.h"
-#include "com/mat_glm.h"
 #include "com/math.h"
 #include "com/print.h"
 #include "com/time.h"
 
 #include <array>
-#include <glm/vec2.hpp>
 #include <limits>
 #include <vector>
 
@@ -105,9 +103,12 @@ constexpr float STOP_MOVE_SQUARE = square(1e-3);
 // Если определитель матрицы G меньше этого значения, то считается, что нет потока
 constexpr float MIN_DETERMINANT = 1;
 
+constexpr int SIZE_OF_VEC2 = 2 * 4; // GLSL vec2
+constexpr int SIZE_OF_IVEC2 = 2 * 4; // GLSL ivec2
+
 namespace
 {
-void create_image_pyramid_sizes(int width, int height, int min, std::vector<glm::ivec2>* level_dimensions)
+void create_image_pyramid_sizes(int width, int height, int min, std::vector<vec2i>* level_dimensions)
 {
         level_dimensions->clear();
         level_dimensions->emplace_back(width, height);
@@ -136,10 +137,12 @@ void create_image_pyramid_sizes(int width, int height, int min, std::vector<glm:
                 height = new_height;
         }
 
-        // for (const glm::ivec2& v : *level_dimensions)
-        //{
-        //        LOG(to_string(v.x) + " x " + to_string(v.y));
-        //}
+#if 0
+        for (const vec2i& v : *level_dimensions)
+        {
+                LOG(to_string(v[0]) + " x " + to_string(v[1]));
+        }
+#endif
 }
 
 class ImageR32F
@@ -183,27 +186,27 @@ public:
         }
 };
 
-void create_textures(const std::vector<glm::ivec2>& level_dimensions, std::vector<ImageR32F>* textures)
+void create_textures(const std::vector<vec2i>& level_dimensions, std::vector<ImageR32F>* textures)
 {
         textures->clear();
-        for (const glm::ivec2& d : level_dimensions)
+        for (const vec2i& d : level_dimensions)
         {
-                textures->emplace_back(d.x, d.y);
+                textures->emplace_back(d[0], d[1]);
         }
 }
 
-void create_flow_buffers(const std::vector<glm::ivec2>& level_dimensions, std::vector<ShaderStorageBuffer>* buffers)
+void create_flow_buffers(const std::vector<vec2i>& level_dimensions, std::vector<ShaderStorageBuffer>* buffers)
 {
         buffers->clear();
         buffers->resize(level_dimensions.size());
         for (unsigned i = 0; i < level_dimensions.size(); ++i)
         {
-                (*buffers)[i].create_dynamic_copy(level_dimensions[i].x * level_dimensions[i].y * sizeof(glm::vec2));
+                (*buffers)[i].create_dynamic_copy(level_dimensions[i][0] * level_dimensions[i][1] * SIZE_OF_VEC2);
         }
 }
 
 void create_points_for_top_level(int width, int height, int distance, int* point_count_x, int* point_count_y,
-                                 std::vector<glm::ivec2>* points)
+                                 std::vector<vec2i>* points)
 {
         int size = distance + 1;
         *point_count_x = (width - 2 * distance + size - 1) / size;
@@ -215,11 +218,11 @@ void create_points_for_top_level(int width, int height, int distance, int* point
         points->resize(point_count);
 
         int index = 0;
-        for (float y = distance; y < height - distance; y += size)
+        for (int y = distance; y < height - distance; y += size)
         {
-                for (float x = distance; x < width - distance; x += size)
+                for (int x = distance; x < width - distance; x += size)
                 {
-                        (*points)[index++] = glm::ivec2(x, y);
+                        (*points)[index++] = vec2i(x, y);
                 }
         }
 
@@ -416,7 +419,7 @@ public:
                   m_draw_prog_debug(VertexShader(vertex_debug_shader), FragmentShader(fragment_debug_shader)),
                   m_texture_J(m_width, m_height)
         {
-                std::vector<glm::ivec2> level_dimensions;
+                std::vector<vec2i> level_dimensions;
 
                 create_image_pyramid_sizes(m_width, m_height, BOTTOM_IMAGE_SIZE, &level_dimensions);
 
@@ -427,12 +430,12 @@ public:
 
                 create_flow_buffers(level_dimensions, &m_image_pyramid_flow);
 
-                std::vector<glm::ivec2> top_points;
+                std::vector<vec2i> top_points;
                 create_points_for_top_level(m_width, m_height, POINT_DISTANCE, &m_point_count_x, &m_point_count_y, &top_points);
 
                 m_top_points.load_dynamic_copy(top_points);
-                m_top_points_flow.create_dynamic_copy(top_points.size() * sizeof(glm::vec2));
-                m_top_points_lines.create_dynamic_copy(top_points.size() * 2 * sizeof(glm::ivec2));
+                m_top_points_flow.create_dynamic_copy(top_points.size() * SIZE_OF_VEC2);
+                m_top_points_lines.create_dynamic_copy(top_points.size() * 2 * SIZE_OF_IVEC2);
 
                 m_comp_grayscale.set_uniform_handle("img_src", m_texture_J.get_image_resident_handle_read_only());
 

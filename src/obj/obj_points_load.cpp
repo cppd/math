@@ -30,27 +30,27 @@ namespace
 {
 class Points final : public IObj
 {
-        std::vector<glm::vec3> m_vertices;
-        std::vector<glm::vec2> m_texcoords;
-        std::vector<glm::vec3> m_normals;
+        std::vector<vec3f> m_vertices;
+        std::vector<vec2f> m_texcoords;
+        std::vector<vec3f> m_normals;
         std::vector<face3> m_faces;
         std::vector<int> m_points;
         std::vector<material> m_materials;
         std::vector<sf::Image> m_images;
-        glm::vec3 m_center;
+        vec3f m_center;
         float m_length;
 
-        void read_points(std::vector<glm::vec3>&& points);
+        void read_points(std::vector<vec3f>&& points);
 
-        const std::vector<glm::vec3>& get_vertices() const override
+        const std::vector<vec3f>& get_vertices() const override
         {
                 return m_vertices;
         }
-        const std::vector<glm::vec2>& get_texcoords() const override
+        const std::vector<vec2f>& get_texcoords() const override
         {
                 return m_texcoords;
         }
-        const std::vector<glm::vec3>& get_normals() const override
+        const std::vector<vec3f>& get_normals() const override
         {
                 return m_normals;
         }
@@ -70,7 +70,7 @@ class Points final : public IObj
         {
                 return m_images;
         }
-        glm::vec3 get_center() const override
+        vec3f get_center() const override
         {
                 return m_center;
         }
@@ -80,10 +80,10 @@ class Points final : public IObj
         }
 
 public:
-        Points(std::vector<glm::vec3>&& points);
+        Points(std::vector<vec3f>&& points);
 };
 
-void Points::read_points(std::vector<glm::vec3>&& points)
+void Points::read_points(std::vector<vec3f>&& points)
 {
         m_vertices = std::move(points);
 
@@ -98,7 +98,7 @@ void Points::read_points(std::vector<glm::vec3>&& points)
         find_center_and_length(m_vertices, m_points, &m_center, &m_length);
 }
 
-Points::Points(std::vector<glm::vec3>&& points)
+Points::Points(std::vector<vec3f>&& points)
 {
         double start_time = get_time_seconds();
 
@@ -108,7 +108,7 @@ Points::Points(std::vector<glm::vec3>&& points)
 }
 }
 
-std::unique_ptr<IObj> load_obj_from_points(std::vector<glm::vec3>&& points)
+std::unique_ptr<IObj> load_obj_from_points(std::vector<vec3f>&& points)
 {
         return std::make_unique<Points>(std::move(points));
 }

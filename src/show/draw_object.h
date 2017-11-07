@@ -19,11 +19,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "color/color_space.h"
 #include "com/mat.h"
+#include "com/vec.h"
 #include "graphics/objects.h"
 #include "obj/obj.h"
 
-#include <glm/vec3.hpp>
-#include <glm/vec4.hpp>
 #include <memory>
 
 struct IDrawObject
@@ -40,11 +39,11 @@ struct IDrawProgram
 {
         virtual ~IDrawProgram() = default;
 
-        virtual void set_light_a(glm::vec4 light) = 0;
-        virtual void set_light_d(glm::vec4 light) = 0;
-        virtual void set_light_s(glm::vec4 light) = 0;
-        virtual void set_default_color(glm::vec4 color) = 0;
-        virtual void set_wireframe_color(glm::vec4 color) = 0;
+        virtual void set_light_a(const vec3& light) = 0;
+        virtual void set_light_d(const vec3& light) = 0;
+        virtual void set_light_s(const vec3& light) = 0;
+        virtual void set_default_color(const vec3& color) = 0;
+        virtual void set_wireframe_color(const vec3& color) = 0;
         virtual void set_default_ns(float default_ns) = 0;
         virtual void set_show_smooth(bool show) = 0;
         virtual void set_show_wireframe(bool show) = 0;
@@ -55,8 +54,8 @@ struct IDrawProgram
 
         virtual void set_matrices(const mat4& shadow_matrix, const mat4& main_matrix) = 0;
 
-        virtual void set_light_direction(glm::vec3 dir) = 0;
-        virtual void set_camera_direction(glm::vec3 dir) = 0;
+        virtual void set_light_direction(vec3 dir) = 0;
+        virtual void set_camera_direction(vec3 dir) = 0;
 
         virtual void draw(const IDrawObject* draw_object, const IDrawObject* draw_scale_object, bool shadow_active,
                           bool draw_to_buffer) = 0;

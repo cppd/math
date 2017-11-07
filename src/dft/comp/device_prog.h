@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "device_mem.h"
 
 #include "com/math.h"
+#include "com/vec.h"
 #include "graphics/objects.h"
 
 #include <complex>
@@ -65,7 +66,7 @@ public:
         }
 
         // Функции подстановки переменных, формулы 13.4, 13.27, 13.28, 13.32.
-        void rows_mul_to_buffer(glm::ivec2 blocks, glm::ivec2 threads, bool inv, int M1, int N1, int N2,
+        void rows_mul_to_buffer(vec2i blocks, vec2i threads, bool inv, int M1, int N1, int N2,
                                 const DeviceMemory<std::complex<FP>>& data, DeviceMemory<std::complex<FP>>* buffer) const
         {
                 m_rows_mul_to_buffer.set_uniform(0, inv ? 1 : 0);
@@ -74,10 +75,10 @@ public:
                 m_rows_mul_to_buffer.set_uniform(3, N2);
                 data.bind(0);
                 buffer->bind(1);
-                m_rows_mul_to_buffer.dispatch_compute(blocks.x, blocks.y, 1, threads.x, threads.y, 1);
+                m_rows_mul_to_buffer.dispatch_compute(blocks[0], blocks[1], 1, threads[0], threads[1], 1);
                 glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
         }
-        void rows_mul_fr_buffer(glm::ivec2 blocks, glm::ivec2 threads, bool inv, int M1, int N1, int N2,
+        void rows_mul_fr_buffer(vec2i blocks, vec2i threads, bool inv, int M1, int N1, int N2,
                                 DeviceMemory<std::complex<FP>>* data, const DeviceMemory<std::complex<FP>>& buffer) const
         {
                 m_rows_mul_fr_buffer.set_uniform(0, inv ? 1 : 0);
@@ -86,10 +87,10 @@ public:
                 m_rows_mul_fr_buffer.set_uniform(3, N2);
                 data->bind(0);
                 buffer.bind(1);
-                m_rows_mul_fr_buffer.dispatch_compute(blocks.x, blocks.y, 1, threads.x, threads.y, 1);
+                m_rows_mul_fr_buffer.dispatch_compute(blocks[0], blocks[1], 1, threads[0], threads[1], 1);
                 glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
         }
-        void cols_mul_to_buffer(glm::ivec2 blocks, glm::ivec2 threads, bool inv, int M2, int N1, int N2,
+        void cols_mul_to_buffer(vec2i blocks, vec2i threads, bool inv, int M2, int N1, int N2,
                                 const DeviceMemory<std::complex<FP>>& data, DeviceMemory<std::complex<FP>>* buffer) const
         {
                 m_cols_mul_to_buffer.set_uniform(0, inv ? 1 : 0);
@@ -98,10 +99,10 @@ public:
                 m_cols_mul_to_buffer.set_uniform(3, N2);
                 data.bind(0);
                 buffer->bind(1);
-                m_cols_mul_to_buffer.dispatch_compute(blocks.x, blocks.y, 1, threads.x, threads.y, 1);
+                m_cols_mul_to_buffer.dispatch_compute(blocks[0], blocks[1], 1, threads[0], threads[1], 1);
                 glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
         }
-        void cols_mul_fr_buffer(glm::ivec2 blocks, glm::ivec2 threads, bool inv, int M2, int N1, int N2,
+        void cols_mul_fr_buffer(vec2i blocks, vec2i threads, bool inv, int M2, int N1, int N2,
                                 DeviceMemory<std::complex<FP>>* data, const DeviceMemory<std::complex<FP>>& buffer) const
         {
                 m_cols_mul_fr_buffer.set_uniform(0, inv ? 1 : 0);
@@ -110,23 +111,23 @@ public:
                 m_cols_mul_fr_buffer.set_uniform(3, N2);
                 data->bind(0);
                 buffer.bind(1);
-                m_cols_mul_fr_buffer.dispatch_compute(blocks.x, blocks.y, 1, threads.x, threads.y, 1);
+                m_cols_mul_fr_buffer.dispatch_compute(blocks[0], blocks[1], 1, threads[0], threads[1], 1);
                 glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
         }
 
         // Умножение на диагональ, формулы 13.20, 13.30.
-        void rows_mul_D(glm::ivec2 blocks, glm::ivec2 threads, int columns, int rows, const DeviceMemory<std::complex<FP>>& D,
+        void rows_mul_D(vec2i blocks, vec2i threads, int columns, int rows, const DeviceMemory<std::complex<FP>>& D,
                         DeviceMemory<std::complex<FP>>* data) const
         {
                 m_rows_mul_D.set_uniform(0, columns);
                 m_rows_mul_D.set_uniform(1, rows);
                 D.bind(0);
                 data->bind(1);
-                m_rows_mul_D.dispatch_compute(blocks.x, blocks.y, 1, threads.x, threads.y, 1);
+                m_rows_mul_D.dispatch_compute(blocks[0], blocks[1], 1, threads[0], threads[1], 1);
                 glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
         }
 
-        void move_to_input(glm::ivec2 blocks, glm::ivec2 threads, int width, int height, bool source_sRGB, const GLuint64 tex,
+        void move_to_input(vec2i blocks, vec2i threads, int width, int height, bool source_sRGB, const GLuint64 tex,
                            DeviceMemory<std::complex<FP>>* data)
         {
                 m_move_to_input.set_uniform(0, width);
@@ -134,10 +135,10 @@ public:
                 m_move_to_input.set_uniform(2, source_sRGB ? 1 : 0);
                 m_move_to_input.set_uniform_handle(3, tex);
                 data->bind(0);
-                m_move_to_input.dispatch_compute(blocks.x, blocks.y, 1, threads.x, threads.y, 1);
+                m_move_to_input.dispatch_compute(blocks[0], blocks[1], 1, threads[0], threads[1], 1);
                 glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
         }
-        void move_to_output(glm::ivec2 blocks, glm::ivec2 threads, int width, int height, float to_mul, const GLuint64 tex,
+        void move_to_output(vec2i blocks, vec2i threads, int width, int height, float to_mul, const GLuint64 tex,
                             const DeviceMemory<std::complex<FP>>& data)
         {
                 m_move_to_output.set_uniform(0, width);
@@ -145,7 +146,7 @@ public:
                 m_move_to_output.set_uniform(2, to_mul);
                 m_move_to_output.set_uniform_handle(3, tex);
                 data.bind(0);
-                m_move_to_output.dispatch_compute(blocks.x, blocks.y, 1, threads.x, threads.y, 1);
+                m_move_to_output.dispatch_compute(blocks[0], blocks[1], 1, threads[0], threads[1], 1);
                 glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
         }
 };

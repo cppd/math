@@ -21,7 +21,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "obj/obj.h"
 #include "window/window_prop.h"
 
-#include <glm/vec3.hpp>
 #include <memory>
 #include <string>
 
@@ -52,9 +51,9 @@ public:
         virtual void set_ambient(float) = 0;
         virtual void set_diffuse(float) = 0;
         virtual void set_specular(float) = 0;
-        virtual void set_clear_color(const glm::vec3&) = 0;
-        virtual void set_default_color(const glm::vec3&) = 0;
-        virtual void set_wireframe_color(const glm::vec3&) = 0;
+        virtual void set_clear_color_rgb(const vec3&) = 0;
+        virtual void set_default_color_rgb(const vec3&) = 0;
+        virtual void set_wireframe_color_rgb(const vec3&) = 0;
         virtual void set_default_ns(float) = 0;
         virtual void show_smooth(bool) = 0;
         virtual void show_wireframe(bool) = 0;
@@ -68,14 +67,14 @@ public:
         virtual void set_vertical_sync(bool v) = 0;
         virtual void set_shadow_zoom(float v) = 0;
 
-        virtual void get_camera_information(glm::vec3* camera_up, glm::vec3* camera_direction, glm::vec3* view_center,
-                                            float* view_width) const = 0;
-        virtual void get_light_information(glm::vec3* light_direction) const = 0;
+        virtual void get_camera_information(vec3* camera_up, vec3* camera_direction, vec3* view_center, double* view_width,
+                                            int* paint_width, int* paint_height) const = 0;
+        virtual void get_light_information(vec3* light_direction) const = 0;
         virtual void get_object_size_and_position(double* object_size, vec3* object_position) const = 0;
 };
 
-std::unique_ptr<IShow> create_show(IShowCallback*, WindowID win_parent, glm::vec3 clear_color, glm::vec3 default_color,
-                                   glm::vec3 wireframe_color, bool with_smooth, bool with_wireframe, bool with_shadow,
+std::unique_ptr<IShow> create_show(IShowCallback*, WindowID win_parent, vec3 clear_color_rgb, vec3 default_color_rgb,
+                                   vec3 wireframe_color_rgb, bool with_smooth, bool with_wireframe, bool with_shadow,
                                    bool with_materials, bool with_effect, bool with_dft, bool with_convex_hull,
                                    bool with_optical_flow, float ambient, float diffuse, float specular, float dft_brightness,
                                    float default_ns, bool vertical_sync, float shadow_zoom);

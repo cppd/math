@@ -23,7 +23,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/mat_alg.h"
 #include "com/time.h"
 #include "com/vec.h"
-#include "com/vec_glm.h"
 #include "path_tracing/ray_intersection.h"
 
 #include <algorithm>

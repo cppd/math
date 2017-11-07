@@ -24,16 +24,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 std::vector<int> get_unique_face_indices(const std::vector<IObj::face3>& faces);
 std::vector<int> get_unique_point_indices(const std::vector<int>& points);
 
-std::vector<glm::vec3> get_unique_face_vertices(const IObj* obj);
-std::vector<glm::vec3> get_unique_point_vertices(const IObj* obj);
+std::vector<vec3f> get_unique_face_vertices(const IObj* obj);
+std::vector<vec3f> get_unique_point_vertices(const IObj* obj);
 
-void find_min_max(const std::vector<glm::vec3>& vertices, const std::vector<int>& indices, glm::vec3* min, glm::vec3* max);
-void find_min_max(const std::vector<glm::vec3>& vertices, glm::vec3* min, glm::vec3* max);
+void find_min_max(const std::vector<vec3f>& vertices, const std::vector<int>& indices, vec3f* min, vec3f* max);
+void find_min_max(const std::vector<vec3f>& vertices, vec3f* min, vec3f* max);
 
-void find_center_and_length(const std::vector<glm::vec3>& vertices, const std::vector<IObj::face3>& faces, glm::vec3* center,
+void find_center_and_length(const std::vector<vec3f>& vertices, const std::vector<IObj::face3>& faces, vec3f* center,
                             float* length);
-void find_center_and_length(const std::vector<glm::vec3>& vertices, const std::vector<int>& points, glm::vec3* center,
-                            float* length);
-void find_center_and_length(const std::vector<glm::vec3>& vertices, glm::vec3* center, float* length);
+void find_center_and_length(const std::vector<vec3f>& vertices, const std::vector<int>& points, vec3f* center, float* length);
+void find_center_and_length(const std::vector<vec3f>& vertices, vec3f* center, float* length);
 
 mat4 get_model_vertex_matrix(const IObj* obj, double size, const vec3& position);

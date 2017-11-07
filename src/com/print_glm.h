@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#if 0
+
 #include "print.h"
 
 #include <glm/vec2.hpp>
@@ -37,3 +39,5 @@ inline std::string to_string(const glm::vec4& data)
 {
         return to_string(std::array<float, 4>{{data[0], data[1], data[2], data[3]}});
 }
+
+#endif

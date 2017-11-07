@@ -23,50 +23,48 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/log.h"
 #include "com/print.h"
 #include "com/time.h"
-#include "com/vec_glm.h"
 
-#include <glm/glm.hpp>
 #include <unordered_map>
 #include <unordered_set>
 
 namespace
 {
-glm::vec3 face_normal(const std::vector<glm::vec3>& points, const std::array<int, 3>& face)
+vec3f face_normal(const std::vector<vec3f>& points, const std::array<int, 3>& face)
 {
-        return glm::normalize(glm::cross(points[face[1]] - points[face[0]], points[face[2]] - points[face[0]]));
+        return normalize(cross(points[face[1]] - points[face[0]], points[face[2]] - points[face[0]]));
 }
 
-glm::vec3 average_normal(const glm::vec3& original_normal, const std::vector<glm::vec3>& normals)
+vec3f average_normal(const vec3f& original_normal, const std::vector<vec3f>& normals)
 {
-        glm::vec3 sum(0);
-        for (const glm::vec3& n : normals)
+        vec3f sum(0);
+        for (const vec3f& n : normals)
         {
-                sum += (glm::dot(n, original_normal) >= 0) ? n : -n;
+                sum += (dot(n, original_normal) >= 0) ? n : -n;
         }
-        return glm::normalize(sum);
+        return normalize(sum);
 }
 
 class SurfaceObj final : public IObj
 {
-        std::vector<glm::vec3> m_vertices;
-        std::vector<glm::vec2> m_texcoords;
-        std::vector<glm::vec3> m_normals;
+        std::vector<vec3f> m_vertices;
+        std::vector<vec2f> m_texcoords;
+        std::vector<vec3f> m_normals;
         std::vector<face3> m_faces;
         std::vector<int> m_points;
         std::vector<material> m_materials;
         std::vector<sf::Image> m_images;
-        glm::vec3 m_center;
+        vec3f m_center;
         float m_length;
 
-        const std::vector<glm::vec3>& get_vertices() const override
+        const std::vector<vec3f>& get_vertices() const override
         {
                 return m_vertices;
         }
-        const std::vector<glm::vec2>& get_texcoords() const override
+        const std::vector<vec2f>& get_texcoords() const override
         {
                 return m_texcoords;
         }
-        const std::vector<glm::vec3>& get_normals() const override
+        const std::vector<vec3f>& get_normals() const override
         {
                 return m_normals;
         }
@@ -86,7 +84,7 @@ class SurfaceObj final : public IObj
         {
                 return m_images;
         }
-        glm::vec3 get_center() const override
+        vec3f get_center() const override
         {
                 return m_center;
         }
@@ -95,7 +93,7 @@ class SurfaceObj final : public IObj
                 return m_length;
         }
 
-        void create_obj(const std::vector<glm::vec3>& points, const std::vector<Vector<3, double>>& normals,
+        void create_obj(const std::vector<vec3f>& points, const std::vector<Vector<3, double>>& normals,
                         const std::vector<std::array<int, 3>>& facets)
         {
                 if (facets.size() == 0)
@@ -103,12 +101,12 @@ class SurfaceObj final : public IObj
                         error("No facets for surface object");
                 }
 
-                std::unordered_map<int, std::vector<glm::vec3>> vertices;
+                std::unordered_map<int, std::vector<vec3f>> vertices;
                 std::unordered_map<int, int> index_map;
 
                 for (const std::array<int, 3>& facet : facets)
                 {
-                        glm::vec3 normal = face_normal(points, facet);
+                        vec3f normal = face_normal(points, facet);
                         for (int v : facet)
                         {
                                 vertices[v].push_back(normal);
@@ -124,7 +122,7 @@ class SurfaceObj final : public IObj
                         index_map[v.first] = idx;
 
                         m_vertices[idx] = points[v.first];
-                        m_normals[idx] = average_normal(to_glm<float>(normals[v.first]), v.second);
+                        m_normals[idx] = average_normal(to_vector<float>(normals[v.first]), v.second);
 
                         ++idx;
                 }
@@ -158,7 +156,7 @@ class SurfaceObj final : public IObj
         }
 
 public:
-        SurfaceObj(const std::vector<glm::vec3>& points, const std::vector<Vector<3, double>>& normals,
+        SurfaceObj(const std::vector<vec3f>& points, const std::vector<Vector<3, double>>& normals,
                    const std::vector<std::array<int, 3>>& facets)
         {
                 ASSERT(points.size() == normals.size());
@@ -168,7 +166,7 @@ public:
 };
 }
 
-std::unique_ptr<IObj> create_obj_for_facets(const std::vector<glm::vec3>& points, const std::vector<Vector<3, double>>& normals,
+std::unique_ptr<IObj> create_obj_for_facets(const std::vector<vec3f>& points, const std::vector<Vector<3, double>>& normals,
                                             const std::vector<std::array<int, 3>>& facets)
 {
         return std::make_unique<SurfaceObj>(points, normals, facets);

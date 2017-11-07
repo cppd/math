@@ -17,9 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "com/vec.h"
+
 #include <SFML/Graphics/Image.hpp>
-#include <glm/vec2.hpp>
-#include <glm/vec3.hpp>
 #include <string>
 #include <vector>
 
@@ -40,20 +40,20 @@ struct IObj
         struct material
         {
                 std::string name;
-                glm::vec3 Ka{0}, Kd{0}, Ks{0};
+                vec3f Ka{0}, Kd{0}, Ks{0};
                 float Ns{1};
                 int map_Ka{-1}, map_Kd{-1}, map_Ks{-1}; // -1 если нет текстуры
         };
 
         virtual ~IObj() = default;
 
-        virtual const std::vector<glm::vec3>& get_vertices() const = 0;
-        virtual const std::vector<glm::vec2>& get_texcoords() const = 0;
-        virtual const std::vector<glm::vec3>& get_normals() const = 0;
+        virtual const std::vector<vec3f>& get_vertices() const = 0;
+        virtual const std::vector<vec2f>& get_texcoords() const = 0;
+        virtual const std::vector<vec3f>& get_normals() const = 0;
         virtual const std::vector<face3>& get_faces() const = 0;
         virtual const std::vector<int>& get_points() const = 0;
         virtual const std::vector<material>& get_materials() const = 0;
         virtual const std::vector<sf::Image>& get_images() const = 0;
-        virtual glm::vec3 get_center() const = 0;
+        virtual vec3f get_center() const = 0;
         virtual float get_length() const = 0;
 };

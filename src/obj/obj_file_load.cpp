@@ -34,7 +34,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cstdlib>
 #include <cstring>
 #include <fstream>
-#include <glm/geometric.hpp>
 #include <map>
 #include <numeric>
 #include <set>
@@ -96,9 +95,9 @@ bool check_range(float v, float min, float max)
 {
         return v >= min && v <= max;
 }
-bool check_range(const glm::vec3& v, float min, float max)
+bool check_range(const vec3f& v, float min, float max)
 {
-        return v.x >= min && v.x <= max && v.y >= min && v.y <= max && v.z >= min && v.z <= max;
+        return v[0] >= min && v[0] <= max && v[1] >= min && v[1] <= max && v[2] >= min && v[2] <= max;
 }
 
 void read_text_file(const std::string& file, std::string* s)
@@ -422,20 +421,20 @@ void read_faces(const std::string& line, size_t begin, size_t end, std::array<IO
         }
 }
 
-void read_float(const std::string& line, size_t b, size_t, glm::vec3* v)
+void read_float(const std::string& line, size_t b, size_t, vec3f* v)
 {
-        if (3 != std::sscanf(&line[b], "%f %f %f", &v->x, &v->y, &v->z))
+        if (3 != std::sscanf(&line[b], "%f %f %f", &(*v)[0], &(*v)[1], &(*v)[2]))
         {
                 std::string l = &line[b];
                 error("error read 3 floating points from line:\n\"" + trim(l) + "\"");
         }
 }
 
-void read_float_texture(const std::string& line, size_t b, size_t, glm::vec2* v)
+void read_float_texture(const std::string& line, size_t b, size_t, vec2f* v)
 {
         float tmp;
 
-        int n = std::sscanf(&line[b], "%f %f %f", &v->x, &v->y, &tmp);
+        int n = std::sscanf(&line[b], "%f %f %f", &(*v)[0], &(*v)[1], &tmp);
         if (n != 2 && n != 3)
         {
                 std::string l = &line[b];
@@ -594,14 +593,14 @@ void split_line(std::string* file_str, const std::vector<T>& line_begin, T line_
 
 class FileObj final : public IObj
 {
-        std::vector<glm::vec3> m_vertices;
-        std::vector<glm::vec2> m_texcoords;
-        std::vector<glm::vec3> m_normals;
+        std::vector<vec3f> m_vertices;
+        std::vector<vec2f> m_texcoords;
+        std::vector<vec3f> m_normals;
         std::vector<face3> m_faces;
         std::vector<int> m_points;
         std::vector<material> m_materials;
         std::vector<sf::Image> m_images;
-        glm::vec3 m_center;
+        vec3f m_center;
         float m_length;
 
         const std::string tag_v{"v"}, tag_vt{"vt"}, tag_vn{"vn"}, tag_f{"f"}, tag_usemtl{"usemtl"}, tag_mtllib{"mtllib"};
@@ -639,14 +638,14 @@ class FileObj final : public IObj
                 size_t second_b, second_e;
                 std::array<face3, MAX_FACES_PER_LINE> faces;
                 unsigned face_count;
-                glm::vec3 v;
+                vec3f v;
         };
 
         struct MtlLine
         {
                 MtlLineType type;
                 size_t second_b, second_e;
-                glm::vec3 v;
+                vec3f v;
         };
 
         struct ThreadData
@@ -681,15 +680,15 @@ class FileObj final : public IObj
 
         void read_obj_and_mtl(const std::string& file_name, ProgressRatio* progress);
 
-        const std::vector<glm::vec3>& get_vertices() const override
+        const std::vector<vec3f>& get_vertices() const override
         {
                 return m_vertices;
         }
-        const std::vector<glm::vec2>& get_texcoords() const override
+        const std::vector<vec2f>& get_texcoords() const override
         {
                 return m_texcoords;
         }
-        const std::vector<glm::vec3>& get_normals() const override
+        const std::vector<vec3f>& get_normals() const override
         {
                 return m_normals;
         }
@@ -709,7 +708,7 @@ class FileObj final : public IObj
         {
                 return m_images;
         }
-        glm::vec3 get_center() const override
+        vec3f get_center() const override
         {
                 return m_center;
         }
@@ -794,7 +793,7 @@ void FileObj::read_obj_one(const ThreadData* thread_data, std::string* file_ptr,
                 else if (compare(file_str, first_b, first_e, tag_v))
                 {
                         lp.type = ObjLineType::V;
-                        glm::vec3 v;
+                        vec3f v;
                         read_float(file_str, lp.second_b, lp.second_e, &v);
                         lp.v = v;
                         if (ATOMIC_COUNTER_LOCK_FREE)
@@ -805,10 +804,10 @@ void FileObj::read_obj_one(const ThreadData* thread_data, std::string* file_ptr,
                 else if (compare(file_str, first_b, first_e, tag_vt))
                 {
                         lp.type = ObjLineType::VT;
-                        glm::vec2 v;
+                        vec2f v;
                         read_float_texture(file_str, lp.second_b, lp.second_e, &v);
-                        lp.v.x = v.x;
-                        lp.v.y = v.y;
+                        lp.v[0] = v[0];
+                        lp.v[1] = v[1];
                         if (ATOMIC_COUNTER_LOCK_FREE)
                         {
                                 ++(*thread_data->cnt_vt);
@@ -817,9 +816,9 @@ void FileObj::read_obj_one(const ThreadData* thread_data, std::string* file_ptr,
                 else if (compare(file_str, first_b, first_e, tag_vn))
                 {
                         lp.type = ObjLineType::VN;
-                        glm::vec3 v;
+                        vec3f v;
                         read_float(file_str, lp.second_b, lp.second_e, &v);
-                        lp.v = glm::normalize(v);
+                        lp.v = normalize(v);
                         if (ATOMIC_COUNTER_LOCK_FREE)
                         {
                                 ++(*thread_data->cnt_vn);
@@ -906,7 +905,7 @@ void FileObj::read_obj_two(const ThreadData* thread_data, std::string* file_ptr,
                         m_vertices.push_back(lp.v);
                         break;
                 case ObjLineType::VT:
-                        m_texcoords.emplace_back(lp.v.x, lp.v.y);
+                        m_texcoords.emplace_back(lp.v[0], lp.v[1]);
                         break;
                 case ObjLineType::VN:
                         m_normals.push_back(lp.v);
@@ -1223,14 +1222,14 @@ FileObj::FileObj(const std::string& file_name, ProgressRatio* progress)
 // x y z
 class FileTxt final : public IObj
 {
-        std::vector<glm::vec3> m_vertices;
-        std::vector<glm::vec2> m_texcoords;
-        std::vector<glm::vec3> m_normals;
+        std::vector<vec3f> m_vertices;
+        std::vector<vec2f> m_texcoords;
+        std::vector<vec3f> m_normals;
         std::vector<face3> m_faces;
         std::vector<int> m_points;
         std::vector<material> m_materials;
         std::vector<sf::Image> m_images;
-        glm::vec3 m_center;
+        vec3f m_center;
         float m_length;
 
         struct ThreadData
@@ -1240,19 +1239,19 @@ class FileTxt final : public IObj
         };
 
         void read_points_th(const ThreadData* thread_data, std::string* file_ptr, std::vector<size_t>* line_begin,
-                            std::vector<glm::vec3>* lines, ProgressRatio* progress) const;
+                            std::vector<vec3f>* lines, ProgressRatio* progress) const;
         void read_points(const std::string& file_name, ProgressRatio* progress);
         void read_text(const std::string& file_name, ProgressRatio* progress);
 
-        const std::vector<glm::vec3>& get_vertices() const override
+        const std::vector<vec3f>& get_vertices() const override
         {
                 return m_vertices;
         }
-        const std::vector<glm::vec2>& get_texcoords() const override
+        const std::vector<vec2f>& get_texcoords() const override
         {
                 return m_texcoords;
         }
-        const std::vector<glm::vec3>& get_normals() const override
+        const std::vector<vec3f>& get_normals() const override
         {
                 return m_normals;
         }
@@ -1272,7 +1271,7 @@ class FileTxt final : public IObj
         {
                 return m_images;
         }
-        glm::vec3 get_center() const override
+        vec3f get_center() const override
         {
                 return m_center;
         }
@@ -1286,7 +1285,7 @@ public:
 };
 
 void FileTxt::read_points_th(const ThreadData* thread_data, std::string* file_ptr, std::vector<size_t>* line_begin,
-                             std::vector<glm::vec3>* lines, ProgressRatio* progress) const
+                             std::vector<vec3f>* lines, ProgressRatio* progress) const
 {
         const size_t line_count = line_begin->size();
         const double line_count_d = line_begin->size();
