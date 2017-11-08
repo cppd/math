@@ -212,8 +212,6 @@ AddShaders(extern/resources bin "ttf")
 
 target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC "${CMAKE_SOURCE_DIR}/extern/include")
 
-target_compile_definitions(${PROJECT_NAME} PRIVATE -DGLM_FORCE_NO_CTOR_INIT -DGLM_FORCE_CXX14 -DGLM_FORCE_EXPLICIT_CTOR)
-
 ##################################################
 
 Check_CXX_Variant_Works()
@@ -267,11 +265,6 @@ endif()
 #target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE "${PROJECT_SOURCE_DIR}/ library header dir")
 #target_link_libraries(${PROJECT_NAME} -L"${CMAKE_BINARY_DIR}" -l library_project)
 #add_dependencies(${PROJECT_NAME} library_project)
-
-# В проект включены исходные тексты этой библиотеки, поэтому подключать не надо
-#set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/GLM")
-#find_package(GLM REQUIRED)
-#target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${GLM_INCLUDE_DIRS})
 
 #if(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
 #target_link_libraries(${PROJECT_NAME} quadmath)
