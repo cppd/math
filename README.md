@@ -32,7 +32,7 @@ Various other algorithms.
 * Supported operating systems: Linux, Windows.
 * Programming languages: C++17, GLSL 4.50.
 * Supported C++ compilers: GCC 7.2, Clang 5.
-* Libraries: FreeType, GLM, GMP, OpenGL 4.5, Qt 5, SFML, XLib.
+* Libraries: FreeType, GMP, OpenGL 4.5, Qt 5, SFML, XLib.
 * Build system: CMake.
 
 ### Screenshots
