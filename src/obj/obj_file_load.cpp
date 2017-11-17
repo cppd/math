@@ -164,7 +164,7 @@ void read_text_file(const std::string& file, std::string* s)
 #endif
 }
 
-void get_lines(const std::string& file, std::string* s, std::vector<size_t>* line_begin)
+void get_file_lines(const std::string& file, std::string* s, std::vector<size_t>* line_begin)
 {
         read_text_file(file, s);
 
@@ -598,6 +598,7 @@ class FileObj final : public IObj
         std::vector<vec3f> m_normals;
         std::vector<face3> m_faces;
         std::vector<int> m_points;
+        std::vector<std::array<int, 2>> m_lines;
         std::vector<material> m_materials;
         std::vector<sf::Image> m_images;
         vec3f m_center;
@@ -699,6 +700,10 @@ class FileObj final : public IObj
         const std::vector<int>& get_points() const override
         {
                 return m_points;
+        }
+        const std::vector<std::array<int, 2>>& get_lines() const override
+        {
+                return m_lines;
         }
         const std::vector<material>& get_materials() const override
         {
@@ -998,7 +1003,7 @@ void FileObj::read_lib(const std::string& dir_name, const std::string& file_name
 
         const std::string lib_name = dir_name + "/" + file_name;
 
-        get_lines(lib_name, &file_str, &line_begin);
+        get_file_lines(lib_name, &file_str, &line_begin);
 
         const std::string lib_dir = get_dir_name(lib_name);
 
@@ -1153,7 +1158,7 @@ void FileObj::read_obj(const std::string& file_name, ProgressRatio* progress, st
 
         std::string file_str;
         std::vector<size_t> line_begin;
-        get_lines(file_name, &file_str, &line_begin);
+        get_file_lines(file_name, &file_str, &line_begin);
         std::vector<ObjLine> line_prop(line_begin.size());
 
         std::vector<std::thread> threads(hardware_concurrency);
@@ -1227,6 +1232,7 @@ class FileTxt final : public IObj
         std::vector<vec3f> m_normals;
         std::vector<face3> m_faces;
         std::vector<int> m_points;
+        std::vector<std::array<int, 2>> m_lines;
         std::vector<material> m_materials;
         std::vector<sf::Image> m_images;
         vec3f m_center;
@@ -1262,6 +1268,10 @@ class FileTxt final : public IObj
         const std::vector<int>& get_points() const override
         {
                 return m_points;
+        }
+        const std::vector<std::array<int, 2>>& get_lines() const override
+        {
+                return m_lines;
         }
         const std::vector<material>& get_materials() const override
         {
@@ -1314,7 +1324,7 @@ void FileTxt::read_points(const std::string& file_name, ProgressRatio* progress)
 
         std::string file_str;
         std::vector<size_t> line_begin;
-        get_lines(file_name, &file_str, &line_begin);
+        get_file_lines(file_name, &file_str, &line_begin);
         m_vertices.resize(line_begin.size());
 
         std::vector<std::thread> threads(hardware_concurrency);

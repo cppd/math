@@ -51,6 +51,7 @@ class SurfaceObj final : public IObj
         std::vector<vec3f> m_normals;
         std::vector<face3> m_faces;
         std::vector<int> m_points;
+        std::vector<std::array<int, 2>> m_lines;
         std::vector<material> m_materials;
         std::vector<sf::Image> m_images;
         vec3f m_center;
@@ -75,6 +76,10 @@ class SurfaceObj final : public IObj
         const std::vector<int>& get_points() const override
         {
                 return m_points;
+        }
+        const std::vector<std::array<int, 2>>& get_lines() const override
+        {
+                return m_lines;
         }
         const std::vector<material>& get_materials() const override
         {

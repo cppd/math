@@ -20,7 +20,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "draw_object.h"
 #include "show_event.h"
 
-#include "color/color_space.h"
 #include "com/colors.h"
 #include "com/error.h"
 #include "com/log.h"
@@ -185,93 +184,6 @@ public:
 
                 m_paint_width = paint_width;
                 m_paint_height = paint_height;
-        }
-};
-
-class DrawObjects final
-{
-        struct MapEntry
-        {
-                std::unique_ptr<IDrawObject> object;
-                int scale_object_id;
-                MapEntry(std::unique_ptr<IDrawObject>&& obj_, int scale_id_) : object(std::move(obj_)), scale_object_id(scale_id_)
-                {
-                }
-        };
-
-        std::unordered_map<int, MapEntry> m_objects;
-
-        const IDrawObject* m_draw_object = nullptr;
-        const IDrawObject* m_draw_scale_object = nullptr;
-        int m_draw_scale_object_id = 0;
-
-public:
-        void add_object(std::unique_ptr<IDrawObject>&& object, int id, int scale_id)
-        {
-                if (id == m_draw_scale_object_id)
-                {
-                        m_draw_scale_object = object.get();
-                }
-
-                m_objects.insert_or_assign(id, MapEntry(std::move(object), scale_id));
-        }
-
-        void delete_object(int id)
-        {
-                auto iter = m_objects.find(id);
-                if (iter != m_objects.cend())
-                {
-                        if (iter->second.object.get() == m_draw_object)
-                        {
-                                m_draw_object = nullptr;
-                        }
-                        if (iter->second.object.get() == m_draw_scale_object)
-                        {
-                                m_draw_scale_object = nullptr;
-                        }
-                        m_objects.erase(iter);
-                }
-        }
-
-        void show_object(int id)
-        {
-                auto iter = m_objects.find(id);
-                if (iter != m_objects.cend())
-                {
-                        m_draw_object = iter->second.object.get();
-
-                        m_draw_scale_object_id = iter->second.scale_object_id;
-
-                        auto scale_iter = m_objects.find(m_draw_scale_object_id);
-                        if (scale_iter != m_objects.cend())
-                        {
-                                m_draw_scale_object = scale_iter->second.object.get();
-                        }
-                        else
-                        {
-                                m_draw_scale_object = nullptr;
-                        }
-                }
-                else
-                {
-                        m_draw_object = nullptr;
-                }
-        }
-
-        void delete_all()
-        {
-                m_objects.clear();
-                m_draw_object = nullptr;
-        }
-
-        const IDrawObject* get_object() const
-        {
-                return m_draw_object;
-        }
-
-        const IDrawObject* get_scale_object() const
-        {
-                return m_draw_scale_object;
         }
 };
 
@@ -506,7 +418,6 @@ void ShowObject::loop()
         bool dft_active = false;
         bool dft_active_old = false;
         float dft_brightness = -1.0f;
-        bool shadow_active = false;
         bool pencil_effect_active = false;
         bool convex_hull_2d_active = false;
         bool optical_flow_active = false;
@@ -522,9 +433,7 @@ void ShowObject::loop()
         std::unique_ptr<OpticalFlow> optical_flow;
         std::unique_ptr<ConvexHull2D> convex_hull_2d;
 
-        ColorSpaceConverterToRGB color_converter;
         Text text;
-        DrawObjects objects;
 
         double start_time = get_time_seconds();
 
@@ -561,8 +470,7 @@ void ShowObject::loop()
                                         error("Null object received");
                                 }
 
-                                objects.add_object(create_draw_object(d.obj.get(), color_converter, OBJECT_SIZE, OBJECT_POSITION),
-                                                   d.id, d.scale_id);
+                                draw_program->add_object(d.obj.get(), OBJECT_SIZE, OBJECT_POSITION, d.id, d.scale_id);
                                 m_callback->object_loaded(d.id);
                                 break;
                         }
@@ -570,19 +478,19 @@ void ShowObject::loop()
                         {
                                 const Event::delete_object& d = event->get<Event::delete_object>();
 
-                                objects.delete_object(d.id);
+                                draw_program->delete_object(d.id);
                                 break;
                         }
                         case Event::EventType::show_object:
                         {
                                 const Event::show_object& d = event->get<Event::show_object>();
 
-                                objects.show_object(d.id);
+                                draw_program->show_object(d.id);
                                 break;
                         }
                         case Event::EventType::delete_all_objects:
                         {
-                                objects.delete_all();
+                                draw_program->delete_all();
                                 default_view = true;
                                 break;
                         }
@@ -695,7 +603,6 @@ void ShowObject::loop()
                                 const Event::show_shadow& d = event->get<Event::show_shadow>();
 
                                 draw_program->set_show_shadow(d.show);
-                                shadow_active = d.show;
                                 break;
                         }
                         case Event::EventType::show_materials:
@@ -974,12 +881,12 @@ void ShowObject::loop()
                 glDisable(GL_BLEND);
 
                 // Если pencil_effect_active, то рисование в цветной буфер
-                draw_program->draw(objects.get_object(), objects.get_scale_object(), shadow_active, pencil_effect_active);
+                draw_program->draw(pencil_effect_active);
 
                 //
 
                 // Рисование из цветного буфера в буфер экрана
-                if (objects.get_object() && pencil_effect_active && pencil_effect)
+                if (pencil_effect_active && pencil_effect)
                 {
                         pencil_effect->draw();
                 }

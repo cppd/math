@@ -17,23 +17,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "color/color_space.h"
 #include "com/mat.h"
 #include "com/vec.h"
 #include "graphics/objects.h"
 #include "obj/obj.h"
 
 #include <memory>
-
-struct IDrawObject
-{
-        virtual ~IDrawObject() = default;
-
-        virtual const mat4& get_model_matrix() const = 0;
-        virtual unsigned get_vertices_count() const = 0;
-        virtual void bind() const = 0;
-        virtual bool has_triangles() const = 0;
-};
 
 struct IDrawProgram
 {
@@ -57,16 +46,18 @@ struct IDrawProgram
         virtual void set_light_direction(vec3 dir) = 0;
         virtual void set_camera_direction(vec3 dir) = 0;
 
-        virtual void draw(const IDrawObject* draw_object, const IDrawObject* draw_scale_object, bool shadow_active,
-                          bool draw_to_buffer) = 0;
+        virtual void draw(bool draw_to_buffer) = 0;
 
         virtual void free_buffers() = 0;
         virtual void set_size(int width, int height) = 0;
 
         virtual const Texture2D& get_color_buffer_texture() const = 0;
         virtual const TextureR32I& get_object_texture() const = 0;
+
+        virtual void add_object(const IObj* obj, double size, const vec3& position, int id, int scale_id) = 0;
+        virtual void delete_object(int id) = 0;
+        virtual void show_object(int id) = 0;
+        virtual void delete_all() = 0;
 };
 
-std::unique_ptr<IDrawObject> create_draw_object(const IObj* obj, const ColorSpaceConverter& color_converter, double size,
-                                                const vec3& position);
 std::unique_ptr<IDrawProgram> create_draw_program();
