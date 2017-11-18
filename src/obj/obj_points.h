@@ -22,4 +22,4 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <memory>
 #include <vector>
 
-std::unique_ptr<IObj> load_obj_from_points(std::vector<vec3f>&& points);
+std::unique_ptr<IObj> create_obj_for_points(std::vector<vec3f>&& points);

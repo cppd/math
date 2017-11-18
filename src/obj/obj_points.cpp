@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "obj_points_load.h"
+#include "obj_points.h"
 
 #include "obj_alg.h"
 
@@ -113,7 +113,7 @@ Points::Points(std::vector<vec3f>&& points)
 }
 }
 
-std::unique_ptr<IObj> load_obj_from_points(std::vector<vec3f>&& points)
+std::unique_ptr<IObj> create_obj_for_points(std::vector<vec3f>&& points)
 {
         return std::make_unique<Points>(std::move(points));
 }

@@ -40,7 +40,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "obj/obj_file_load.h"
 #include "obj/obj_file_save.h"
 #include "obj/obj_lines.h"
-#include "obj/obj_points_load.h"
+#include "obj/obj_points.h"
 #include "obj/obj_surface.h"
 #include "path_tracing/lights/light_source.h"
 #include "path_tracing/projectors/projector.h"
@@ -560,7 +560,7 @@ void MainWindow::thread_open_object(ProgressRatioList* progress_ratio_list, cons
                                 break;
                         case OpenObjectType::Repository:
                                 progress.set_text("Load object: %p%");
-                                obj = load_obj_from_points(m_object_repository->get_point_object(object_name, POINT_COUNT));
+                                obj = create_obj_for_points(m_object_repository->get_point_object(object_name, POINT_COUNT));
                                 break;
                         }
                 }
