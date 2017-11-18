@@ -26,6 +26,13 @@ void sort_and_unique(T* v)
         v->erase(std::unique(v->begin(), v->end()), v->end());
 }
 
+template <typename T, typename Less, typename Equal>
+void sort_and_unique(T* v, Less less, Equal equal)
+{
+        std::sort(v->begin(), v->end(), less);
+        v->erase(std::unique(v->begin(), v->end(), equal), v->end());
+}
+
 // Можно вместо этого использовать std::all_of или std::find(v.cbegin(), v.cend(), true) == v.cend()
 template <typename T>
 bool all_false(const T& v)

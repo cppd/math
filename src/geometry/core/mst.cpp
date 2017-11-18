@@ -31,6 +31,12 @@ Pearson Education, 2011.
 
 #include "ridge.h"
 
+#include "com/alg.h"
+#include "com/log.h"
+#include "com/print.h"
+#include "com/sort.h"
+#include "com/time.h"
+
 #include <numeric>
 #include <unordered_set>
 
@@ -40,12 +46,6 @@ using Edge2 = Ridge<3>;
 
 namespace
 {
-struct WeightedEdge2
-{
-        double w;
-        Edge2 e;
-};
-
 class WeightedQuickUnion
 {
         std::vector<int> m_id; // parent link (site indexed)
@@ -101,13 +101,13 @@ public:
         }
 };
 
-template <size_t N>
-unsigned get_vertex_count(const std::vector<DelaunayObject<N>>& delaunay_objects)
+template <size_t V>
+unsigned get_used_vertex_count(const std::vector<std::array<int, V>>& delaunay_objects)
 {
         std::unordered_set<int> v;
         for (unsigned o = 0; o < delaunay_objects.size(); ++o)
         {
-                for (int p : delaunay_objects[o].get_vertices())
+                for (int p : delaunay_objects[o])
                 {
                         v.insert(p);
                 }
@@ -115,84 +115,158 @@ unsigned get_vertex_count(const std::vector<DelaunayObject<N>>& delaunay_objects
         return v.size();
 }
 
-template <size_t N>
-void create_weighted_and_sorted_edges(const std::vector<vec<N>>& points, const std::vector<DelaunayObject<N>>& delaunay_objects,
-                                      std::vector<WeightedEdge2>* weighted_edges)
+struct WeightedEdge
 {
-        weighted_edges->clear();
+        double m_weight;
+        Edge2 m_edge;
 
-        std::unordered_set<Edge2> edge_set;
-
-        for (unsigned o = 0; o < delaunay_objects.size(); ++o)
+public:
+        template <size_t N>
+        WeightedEdge(const std::vector<Vector<N, float>>& points, const Edge2& edge_) : m_edge(edge_)
         {
-                const std::array<int, N + 1>& indices = delaunay_objects[o].get_vertices();
+                // Вес определяется как расстояние между двумя точками
+                Vector<N, float> line = points[m_edge.get_vertices()[1]] - points[m_edge.get_vertices()[0]];
+                // Достаточно иметь длину в квадрате
+                m_weight = dot(line, line);
+        }
+        double get_weight() const
+        {
+                return m_weight;
+        }
+        int get_vertex(int i) const
+        {
+                return m_edge.get_vertices()[i];
+        }
+};
+
+template <size_t N>
+std::vector<WeightedEdge> create_sorted_edges(const std::vector<Vector<N, float>>& points,
+                                              const std::vector<std::array<int, N + 1>>& delaunay_objects,
+                                              ProgressRatio* progress)
+{
+        // Помещение всего в массив с последующей сортировкой и уникальностью
+        // работает быстрее, чем использование unordered_set.
+
+        progress->set_text("MST: object %v of %m");
+
+        std::vector<Edge2> edges;
+        for (unsigned object = 0; object < delaunay_objects.size(); ++object)
+        {
+                if ((object & 0xfff) == 0xfff)
+                {
+                        progress->set(object, delaunay_objects.size());
+                }
+
+                const std::array<int, N + 1>& indices = delaunay_objects[object];
 
                 // Все сочетания по 2 вершины из всех вершин объекта Делоне
                 for (unsigned p1 = 0; p1 < indices.size() - 1; ++p1)
                 {
                         for (unsigned p2 = p1 + 1; p2 < indices.size(); ++p2)
                         {
-                                Edge2 e(std::array<int, 2>{{indices[p1], indices[p2]}});
-
-                                if (edge_set.count(e) > 0)
+                                // С сортировкой индексов по возрастанию
+                                if (indices[p1] <= indices[p2])
                                 {
-                                        continue;
+                                        edges.emplace_back(std::array<int, 2>{{indices[p1], indices[p2]}});
                                 }
-
-                                edge_set.insert(e);
-
-                                vec<N> v = points[e.get_vertices()[1]] - points[e.get_vertices()[0]];
-                                // Достаточно иметь длину в квадрате
-                                weighted_edges->push_back({dot(v, v), e});
+                                else
+                                {
+                                        edges.emplace_back(std::array<int, 2>{{indices[p2], indices[p1]}});
+                                }
                         }
                 }
         }
 
-        std::sort(weighted_edges->begin(), weighted_edges->end(),
-                  [](const WeightedEdge2& a, const WeightedEdge2& b) -> bool { return a.w < b.w; });
+        progress->set(1, 2);
+
+        progress->set_text("MST: edges");
+        sort_and_unique(&edges);
+
+        progress->set_text("MST: weight");
+        std::vector<WeightedEdge> weighted_edges;
+        weighted_edges.reserve(edges.size());
+        for (const Edge2& edge : edges)
+        {
+                weighted_edges.emplace_back(points, edge);
+        }
+
+        progress->set_text("MST: sort");
+        std::sort(weighted_edges.begin(), weighted_edges.end(),
+                  [](const WeightedEdge& a, const WeightedEdge& b) -> bool { return a.get_weight() < b.get_weight(); });
+
+        return weighted_edges;
 }
 
-// Параметр edges должен быть уже отсортирован в порядке возрастания веса
-void kruskal_mst(unsigned point_count, unsigned vertex_count, const std::vector<WeightedEdge2>& edges, std::vector<int>* mst)
+std::vector<std::array<int, 2>> kruskal_mst(unsigned point_count, unsigned vertex_count,
+                                            const std::vector<WeightedEdge>& sorted_edges, ProgressRatio* progress)
 {
-        mst->clear();
+        std::vector<std::array<int, 2>> mst;
+        mst.reserve(vertex_count - 1);
 
         WeightedQuickUnion wqn(point_count);
 
-        for (unsigned i = 0; i < edges.size() && mst->size() < vertex_count - 1; ++i)
+        progress->set_text("MST: edge %v of %m");
+
+        for (unsigned i = 0; i < sorted_edges.size() && mst.size() < vertex_count - 1; ++i)
         {
-                int v = edges[i].e.get_vertices()[0];
-                int w = edges[i].e.get_vertices()[1];
+                if ((mst.size() & 0xfff) == 0xfff)
+                {
+                        progress->set(mst.size(), vertex_count - 1);
+                }
+
+                int v = sorted_edges[i].get_vertex(0);
+                int w = sorted_edges[i].get_vertex(1);
                 if (wqn.connect(v, w))
                 {
-                        mst->push_back(i);
+                        mst.push_back({{v, w}});
                 }
         }
-        if (mst->size() != vertex_count - 1)
+
+        if (mst.size() != vertex_count - 1)
         {
-                error("Error create minimum spanning tree. The graph is not connected");
+                error("Error create minimum spanning tree. The graph is not connected.");
         }
+
+        return mst;
 }
 }
 
 template <size_t N>
-void minimal_spanning_tree(const std::vector<vec<N>>& points, const std::vector<DelaunayObject<N>>& delaunay_objects)
+std::vector<std::array<int, 2>> minimum_spanning_tree(const std::vector<Vector<N, float>>& points,
+                                                      const std::vector<std::array<int, N + 1>>& delaunay_objects,
+                                                      ProgressRatio* progress)
 {
+        double start_time = get_time_seconds();
+
+        LOG("Weight and sort edges...");
+
+        std::vector<WeightedEdge> sorted_edges;
+        sorted_edges = create_sorted_edges(points, delaunay_objects, progress);
+
+        LOG("Kruskal...");
+
         // В points могут быть неиспользуемые точки, надо найти количество используемых
-        unsigned vertex_count = get_vertex_count(delaunay_objects);
+        unsigned vertex_count = get_used_vertex_count(delaunay_objects);
 
-        std::vector<WeightedEdge2> edges;
-        create_weighted_and_sorted_edges(points, delaunay_objects, &edges);
+        std::vector<std::array<int, 2>> mst;
+        mst = kruskal_mst(points.size(), vertex_count, sorted_edges, progress);
 
-        std::vector<int> mst;
-        kruskal_mst(points.size(), vertex_count, edges, &mst);
+        LOG("MST created, " + to_string_fixed(get_time_seconds() - start_time, 5) + " s");
+
+        return mst;
 }
 
 // clang-format off
 template
-void minimal_spanning_tree(const std::vector<vec<2>>& points, const std::vector<DelaunayObject<2>>& delaunay_objects);
+std::vector<std::array<int, 2>> minimum_spanning_tree(const std::vector<vec2f>& points,
+                                                      const std::vector<std::array<int, 3>>& delaunay_objects,
+                                                      ProgressRatio* progress);
 template
-void minimal_spanning_tree(const std::vector<vec<3>>& points, const std::vector<DelaunayObject<3>>& delaunay_objects);
+std::vector<std::array<int, 2>> minimum_spanning_tree(const std::vector<vec3f>& points,
+                                                      const std::vector<std::array<int, 4>>& delaunay_objects,
+                                                      ProgressRatio* progress);
 template
-void minimal_spanning_tree(const std::vector<vec<4>>& points, const std::vector<DelaunayObject<4>>& delaunay_objects);
+std::vector<std::array<int, 2>> minimum_spanning_tree(const std::vector<vec4f>& points,
+                                                      const std::vector<std::array<int, 5>>& delaunay_objects,
+                                                      ProgressRatio* progress);
 // clang-format on

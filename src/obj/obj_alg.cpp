@@ -66,6 +66,27 @@ std::vector<int> get_unique_point_indices(const std::vector<int>& points)
         return indices;
 }
 
+std::vector<int> get_unique_line_indices(const std::vector<std::array<int, 2>>& lines)
+{
+        std::unordered_set<int> unique_line_vertices;
+
+        for (const std::array<int, 2>& line : lines)
+        {
+                unique_line_vertices.insert(line[0]);
+                unique_line_vertices.insert(line[1]);
+        }
+
+        std::vector<int> indices;
+        indices.reserve(unique_line_vertices.size());
+
+        for (int i : unique_line_vertices)
+        {
+                indices.push_back(i);
+        }
+
+        return indices;
+}
+
 std::vector<vec3f> get_unique_face_vertices(const IObj* obj)
 {
         std::unordered_set<vec3f> unique_face_vertices(obj->get_vertices().size());
@@ -185,6 +206,19 @@ void find_center_and_length(const std::vector<vec3f>& vertices, const std::vecto
         if (indices.size() < 2)
         {
                 error("points unique indices count < 2");
+        }
+
+        center_and_length(vertices, indices, center, length);
+}
+
+void find_center_and_length(const std::vector<vec3f>& vertices, const std::vector<std::array<int, 2>>& lines, vec3f* center,
+                            float* length)
+{
+        std::vector<int> indices = get_unique_line_indices(lines);
+
+        if (indices.size() < 2)
+        {
+                error("lines unique indices count < 2");
         }
 
         center_and_length(vertices, indices, center, length);

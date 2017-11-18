@@ -243,6 +243,13 @@
            </widget>
           </item>
           <item>
+           <widget class="QRadioButton" name="radioButton_ModelMST">
+            <property name="text">
+             <string>Model MST</string>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="Line" name="line_10">
             <property name="orientation">
              <enum>Qt::Horizontal</enum>

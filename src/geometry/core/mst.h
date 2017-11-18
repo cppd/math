@@ -17,16 +17,28 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "delaunay.h"
+#include "com/vec.h"
+#include "progress/progress.h"
+
+#include <array>
+#include <vector>
 
 template <size_t N>
-void minimal_spanning_tree(const std::vector<vec<N>>& points, const std::vector<DelaunayObject<N>>& delaunay_objects);
+std::vector<std::array<int, 2>> minimum_spanning_tree(const std::vector<Vector<N, float>>& points,
+                                                      const std::vector<std::array<int, N + 1>>& delaunay_objects,
+                                                      ProgressRatio* progress);
 
 // clang-format off
 extern template
-void minimal_spanning_tree(const std::vector<vec<2>>& points, const std::vector<DelaunayObject<2>>& delaunay_objects);
+std::vector<std::array<int, 2>> minimum_spanning_tree(const std::vector<vec2f>& points,
+                                                      const std::vector<std::array<int, 3>>& delaunay_objects,
+                                                      ProgressRatio* progress);
 extern template
-void minimal_spanning_tree(const std::vector<vec<3>>& points, const std::vector<DelaunayObject<3>>& delaunay_objects);
+std::vector<std::array<int, 2>> minimum_spanning_tree(const std::vector<vec3f>& points,
+                                                      const std::vector<std::array<int, 4>>& delaunay_objects,
+                                                      ProgressRatio* progress);
 extern template
-void minimal_spanning_tree(const std::vector<vec<4>>& points, const std::vector<DelaunayObject<4>>& delaunay_objects);
+std::vector<std::array<int, 2>> minimum_spanning_tree(const std::vector<vec4f>& points,
+                                                      const std::vector<std::array<int, 5>>& delaunay_objects,
+                                                      ProgressRatio* progress);
 // clang-format on

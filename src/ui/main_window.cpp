@@ -33,11 +33,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/print.h"
 #include "com/time.h"
 #include "geometry/cocone/reconstruction.h"
+#include "geometry/core/mst.h"
 #include "geometry/objects/points.h"
 #include "obj/obj_alg.h"
 #include "obj/obj_convex_hull.h"
 #include "obj/obj_file_load.h"
 #include "obj/obj_file_save.h"
+#include "obj/obj_lines.h"
 #include "obj/obj_points_load.h"
 #include "obj/obj_surface.h"
 #include "path_tracing/lights/light_source.h"
@@ -481,6 +483,31 @@ void MainWindow::thread_bound_cocone(ProgressRatioList* progress_ratio_list, dou
         });
 }
 
+void MainWindow::thread_mst(ProgressRatioList* progress_ratio_list) noexcept
+{
+        ASSERT(std::this_thread::get_id() != m_window_thread_id);
+
+        catch_all([&](std::string* message) {
+
+                *message = "MST 3D";
+
+                std::vector<std::array<int, 2>> mst_lines;
+
+                {
+                        ProgressRatio progress(progress_ratio_list);
+
+                        mst_lines = minimum_spanning_tree(m_surface_points, m_surface_constructor->delaunay_objects(), &progress);
+                }
+
+                std::shared_ptr<IObj> mst_obj = create_obj_for_lines(m_surface_points, mst_lines);
+
+                if (mst_obj->get_lines().size() > 0)
+                {
+                        m_show->add_object(mst_obj, MODEL_MST, MODEL);
+                }
+        });
+}
+
 void MainWindow::thread_surface_constructor(ProgressRatioList* progress_ratio_list) noexcept
 {
         ASSERT(std::this_thread::get_id() != m_window_thread_id);
@@ -503,9 +530,11 @@ void MainWindow::thread_surface_constructor(ProgressRatioList* progress_ratio_li
                 std::thread bound_cocone([=]() noexcept {
                         thread_bound_cocone(progress_ratio_list, m_bound_cocone_rho, m_bound_cocone_alpha);
                 });
+                std::thread mst([=]() noexcept { thread_mst(progress_ratio_list); });
 
                 cocone.join();
                 bound_cocone.join();
+                mst.join();
 
         });
 }
@@ -718,6 +747,7 @@ void MainWindow::strike_out_all_objects_buttons()
 {
         strike_out_radio_button(ui.radioButton_Model);
         strike_out_radio_button(ui.radioButton_ModelConvexHull);
+        strike_out_radio_button(ui.radioButton_ModelMST);
         strike_out_radio_button(ui.radioButton_Cocone);
         strike_out_radio_button(ui.radioButton_CoconeConvexHull);
         strike_out_radio_button(ui.radioButton_BoundCocone);
@@ -812,6 +842,9 @@ void MainWindow::slot_window_event(const WindowEvent& event)
                         break;
                 case MODEL_CONVEX_HULL:
                         enable_radio_button(ui.radioButton_ModelConvexHull);
+                        break;
+                case MODEL_MST:
+                        enable_radio_button(ui.radioButton_ModelMST);
                         break;
                 case SURFACE_COCONE:
                         enable_radio_button(ui.radioButton_Cocone);
@@ -1252,6 +1285,11 @@ void MainWindow::on_radioButton_Model_clicked()
 void MainWindow::on_radioButton_ModelConvexHull_clicked()
 {
         m_show->show_object(MODEL_CONVEX_HULL);
+}
+
+void MainWindow::on_radioButton_ModelMST_clicked()
+{
+        m_show->show_object(MODEL_MST);
 }
 
 void MainWindow::on_radioButton_Cocone_clicked()

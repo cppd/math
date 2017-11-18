@@ -105,12 +105,15 @@ private slots:
         void slot_widget_under_window_mouse_wheel(double delta);
         void slot_widget_under_window_resize();
 
+        void on_radioButton_ModelMST_clicked();
+
 private:
         // Идентификаторы объектов для взаимодействия с модулем рисования,
         // куда передаются как числа, а не как enum
         enum ObjectType
         {
                 MODEL,
+                MODEL_MST,
                 MODEL_CONVEX_HULL,
                 SURFACE_COCONE,
                 SURFACE_COCONE_CONVEX_HULL,
@@ -171,6 +174,7 @@ private:
         void thread_surface_constructor(ProgressRatioList* progress_ratio_list) noexcept;
         void thread_cocone(ProgressRatioList* progress_ratio_list) noexcept;
         void thread_bound_cocone(ProgressRatioList* progress_ratio_list, double rho, double alpha) noexcept;
+        void thread_mst(ProgressRatioList* progress_ratio_list) noexcept;
         void thread_self_test(ProgressRatioList* progress_ratio_list, SelfTestType test_type) noexcept;
         void thread_export(ProgressRatioList* progress_ratio_list, const IObj* obj, const std::string& file_name,
                            const std::string& cocone_type) noexcept;

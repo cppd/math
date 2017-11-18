@@ -29,8 +29,10 @@ std::array<T, N>&& sort(std::array<T, N>&& v)
 
 //Эти функции сортировки работают немного быстрее, чем std:sort
 
+namespace SortImplementation
+{
 template <typename T>
-void swap(T& a, T& b)
+void swap_sort(T& a, T& b)
 {
         if (b < a)
         {
@@ -39,46 +41,56 @@ void swap(T& a, T& b)
                 b = std::move(tmp);
         }
 }
+}
+
 template <typename T>
 std::array<T, 2>&& sort(std::array<T, 2>&& v)
 {
-        swap(v[0], v[1]);
+        using SortImplementation::swap_sort;
+
+        swap_sort(v[0], v[1]);
 
         return std::move(v);
 }
 template <typename T>
 std::array<T, 3>&& sort(std::array<T, 3>&& v)
 {
-        swap(v[0], v[1]);
-        swap(v[0], v[2]);
-        swap(v[1], v[2]);
+        using SortImplementation::swap_sort;
+
+        swap_sort(v[0], v[1]);
+        swap_sort(v[0], v[2]);
+        swap_sort(v[1], v[2]);
 
         return std::move(v);
 }
 template <typename T>
 std::array<T, 4>&& sort(std::array<T, 4>&& v)
 {
-        swap(v[0], v[1]);
-        swap(v[2], v[3]);
-        swap(v[0], v[2]);
-        swap(v[1], v[3]);
-        swap(v[1], v[2]);
+        using SortImplementation::swap_sort;
+
+        swap_sort(v[0], v[1]);
+        swap_sort(v[2], v[3]);
+        swap_sort(v[0], v[2]);
+        swap_sort(v[1], v[3]);
+        swap_sort(v[1], v[2]);
 
         return std::move(v);
 }
 template <typename T>
 std::array<T, 5>&& sort(std::array<T, 5>&& v)
 {
-        swap(v[0], v[1]);
-        swap(v[2], v[3]);
-        swap(v[1], v[3]);
-        swap(v[3], v[4]);
+        using SortImplementation::swap_sort;
 
-        swap(v[0], v[1]);
-        swap(v[2], v[3]);
-        swap(v[0], v[2]);
-        swap(v[1], v[3]);
-        swap(v[1], v[2]);
+        swap_sort(v[0], v[1]);
+        swap_sort(v[2], v[3]);
+        swap_sort(v[1], v[3]);
+        swap_sort(v[3], v[4]);
+
+        swap_sort(v[0], v[1]);
+        swap_sort(v[2], v[3]);
+        swap_sort(v[0], v[2]);
+        swap_sort(v[1], v[3]);
+        swap_sort(v[1], v[2]);
 
         return std::move(v);
 }

@@ -29,6 +29,8 @@ struct IManifoldConstructorCocone
 {
         virtual ~IManifoldConstructorCocone() = default;
 
+        virtual std::vector<std::array<int, N + 1>> delaunay_objects() const = 0;
+
         virtual void cocone(std::vector<vec<N>>* vertex_normals, std::vector<std::array<int, N>>* cocone_triangles,
                             ProgressRatio* progress) const = 0;
 };
@@ -37,6 +39,8 @@ template <size_t N>
 struct IManifoldConstructor
 {
         virtual ~IManifoldConstructor() = default;
+
+        virtual std::vector<std::array<int, N + 1>> delaunay_objects() const = 0;
 
         virtual void cocone(std::vector<vec<N>>* normals, std::vector<std::array<int, N>>* facets,
                             ProgressRatio* progress) const = 0;

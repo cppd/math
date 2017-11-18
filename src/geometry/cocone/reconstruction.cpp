@@ -371,6 +371,17 @@ class ManifoldConstructor : public IManifoldConstructor<N>, public IManifoldCons
                 common_computation(interior_vertices, std::move(cocone_facets), normals, facets, progress);
         }
 
+        std::vector<std::array<int, N + 1>> delaunay_objects() const override
+        {
+                std::vector<std::array<int, N + 1>> objects;
+                objects.reserve(m_delaunay_objects.size());
+                for (const DelaunayObject<N>& d : m_delaunay_objects)
+                {
+                        objects.push_back(d.get_vertices());
+                }
+                return objects;
+        }
+
 public:
         ManifoldConstructor(const std::vector<Vector<N, float>>& source_points, bool cocone_only, ProgressRatio* progress)
                 : m_cocone_only(cocone_only)

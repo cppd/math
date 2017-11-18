@@ -293,7 +293,7 @@ void extend(const int MAX_DEPTH, const int MIN_OBJECTS, const int MAX_BOXES, Spi
 
                         box->set_child(i, child_box_index);
 
-                        if (child_box_index & 0xfff)
+                        if ((child_box_index & 0xfff) == 0xfff)
                         {
                                 progress->set(child_box_index, MAX_BOXES);
                         }
