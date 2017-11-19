@@ -137,7 +137,8 @@ std::vector<OctreeBox<Parallelepiped>> move_boxes_to_vector(Container<OctreeBox<
 }
 
 template <typename Parallelepiped, typename FunctorConvexHullVertices>
-Parallelepiped cuboid_of_objects(int object_index_count, const FunctorConvexHullVertices& functor_convex_hull_vertices)
+Parallelepiped cuboid_of_objects(double guard_region_size, int object_index_count,
+                                 const FunctorConvexHullVertices& functor_convex_hull_vertices)
 {
         // Прямоугольный параллелепипед, параллельный координатным плоскостям
 
@@ -163,6 +164,9 @@ Parallelepiped cuboid_of_objects(int object_index_count, const FunctorConvexHull
         {
                 error("Objects for octree don't form 3D object");
         }
+
+        min -= vec3(guard_region_size);
+        max += vec3(guard_region_size);
 
         vec3 d = max - min;
 
@@ -332,6 +336,10 @@ class Octree
         // Смещение по лучу внутрь коробки от точки персечения с коробкой.
         static constexpr double DELTA = 10 * INTERSECTION_THRESHOLD;
 
+        // Увеличение основной коробки октадерева по всем измерениям,
+        // чтобы все объекты были внутри неё.
+        static constexpr double GUARD_REGION_SIZE = INTERSECTION_THRESHOLD;
+
         // Нижняя и верхняя границы для минимального количества объектов в коробке.
         static constexpr int MIN_OBJECTS_LEFT_BOUND = 2;
         static constexpr int MIN_OBJECTS_RIGHT_BOUND = 100;
@@ -409,8 +417,9 @@ public:
 
                 SpinLock boxes_lock;
 
-                BoxContainer boxes({{cuboid_of_objects<Parallelepiped>(object_index_count, functor_convex_hull_vertices),
-                                     iota_zero_based_indices(object_index_count)}});
+                BoxContainer boxes(
+                        {{cuboid_of_objects<Parallelepiped>(GUARD_REGION_SIZE, object_index_count, functor_convex_hull_vertices),
+                          iota_zero_based_indices(object_index_count)}});
 
                 BoxJobs jobs(&boxes.front(), MAX_DEPTH_LEFT_BOUND);
 
