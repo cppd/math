@@ -54,11 +54,11 @@ Chapman & Hall/CRC, 2004.
 
 #include "convex_hull.h"
 
+#include "array_elements.h"
 #include "facet.h"
 #include "linear_algebra.h"
 #include "max_determinant.h"
 #include "ridge.h"
-#include "vec_array.h"
 
 #include "com/combinatorics.h"
 #include "com/error.h"
@@ -719,10 +719,10 @@ void paraboloid_convex_hull(const std::vector<Vector<N, long long>>& points, con
         using FacetCH = Facet<N + 1, DataTypeParaboloid<N + 1>, ComputeTypeParaboloid<N + 1>>;
         using PointCH = Vector<N + 1, DataTypeParaboloid<N + 1>>;
 
-        LOG("Paraboloid " + to_string(N + 1) + "D. Max: " + to_string(PARABOLOID_BITS) + ". Data: " +
-            type_str<DataTypeParaboloid<N + 1>>() + ". Compute: " + type_str<ComputeTypeParaboloid<N + 1>>() + ". " +
-            to_string(N) + "D. Data: " + type_str<DataTypeAfterParaboloid<N>>() + "; Compute: " +
-            type_str<ComputeTypeAfterParaboloid<N>>());
+        LOG("Paraboloid " + to_string(N + 1) + "D. Max: " + to_string(PARABOLOID_BITS) +
+            ". Data: " + type_str<DataTypeParaboloid<N + 1>>() + ". Compute: " + type_str<ComputeTypeParaboloid<N + 1>>() + ". " +
+            to_string(N) + "D. Data: " + type_str<DataTypeAfterParaboloid<N>>() +
+            "; Compute: " + type_str<ComputeTypeAfterParaboloid<N>>());
 
         // Рассчитать Делоне на основе нижней части выпуклой оболочки параболоида размерности N + 1
 
@@ -793,8 +793,8 @@ void ordinary_convex_hull(const std::vector<Vector<N, long long>>& points, const
         using Facet = Facet<N, DataTypeOrdinary<N>, ComputeTypeOrdinary<N>>;
         using Point = Vector<N, DataTypeOrdinary<N>>;
 
-        LOG(to_string(N) + "D.  Max: " + to_string(ORDINARY_BITS) + ". Data: " + type_str<DataTypeOrdinary<N>>() + ". Compute: " +
-            type_str<ComputeTypeOrdinary<N>>());
+        LOG(to_string(N) + "D.  Max: " + to_string(ORDINARY_BITS) + ". Data: " + type_str<DataTypeOrdinary<N>>() +
+            ". Compute: " + type_str<ComputeTypeOrdinary<N>>());
 
         std::vector<Point> data(points.size());
 

@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "vec_array.h"
+#include "array_elements.h"
 
 #include "com/error.h"
 #include "com/hash.h"
