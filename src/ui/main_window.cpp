@@ -33,7 +33,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/print.h"
 #include "com/time.h"
 #include "geometry/cocone/reconstruction.h"
-#include "geometry/core/mst.h"
+#include "geometry/graph/mst.h"
 #include "geometry/objects/points.h"
 #include "obj/obj_alg.h"
 #include "obj/obj_convex_hull.h"
@@ -489,7 +489,7 @@ void MainWindow::thread_mst(ProgressRatioList* progress_ratio_list) noexcept
 
         catch_all([&](std::string* message) {
 
-                *message = "MST 3D";
+                *message = "Minimum spanning tree 3D";
 
                 std::vector<std::array<int, 2>> mst_lines;
 
