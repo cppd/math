@@ -591,6 +591,32 @@ void split_line(std::string* file_str, const std::vector<T>& line_begin, T line_
         (*file_str)[*second_e] = 0; // символ комментария '#' или символ '\n'
 }
 
+bool face_is_one_dimensional(const vec3f& v0, const vec3f& v1, const vec3f& v2)
+{
+        Vector<3, double> e0 = to_vector<double>(v1 - v0);
+        Vector<3, double> e1 = to_vector<double>(v2 - v0);
+
+        // Перебрать все возможные определители 2x2.
+        // Здесь достаточно просто сравнить с 0.
+
+        if (e0[1] * e1[2] - e0[2] * e1[1] != 0)
+        {
+                return false;
+        }
+
+        if (e0[0] * e1[2] - e0[2] * e1[0] != 0)
+        {
+                return false;
+        }
+
+        if (e0[0] * e1[1] - e0[1] * e1[0] != 0)
+        {
+                return false;
+        }
+
+        return true;
+}
+
 class FileObj final : public IObj
 {
         std::vector<vec3f> m_vertices;
@@ -661,7 +687,9 @@ class FileObj final : public IObj
                 std::atomic_bool* error_found;
         };
 
-        void check_faces() const;
+        void check_face_indices() const;
+
+        bool remove_one_dimensional_faces();
 
         void read_obj_one(const ThreadData* thread_data, std::string* file_ptr, std::vector<size_t>* line_begin,
                           std::vector<ObjLine>* line_prop, ProgressRatio* progress) const;
@@ -726,7 +754,7 @@ public:
         FileObj(const std::string& file_name, ProgressRatio* progress);
 };
 
-void FileObj::check_faces() const
+void FileObj::check_face_indices() const
 {
         int vertex_count = m_vertices.size();
         int texcoord_count = m_texcoords.size();
@@ -752,24 +780,47 @@ void FileObj::check_faces() const
                                       " is zero or out of the normal count " + std::to_string(normal_count));
                         }
                 }
-
-#if 0
-                int v0 = face.vertices[0].v;
-                int v1 = face.vertices[1].v;
-                int v2 = face.vertices[2].v;
-
-                if (v0 == v1 || v0 == v2 || v1 == v2)
-                {
-                        error("OBJ face is not 2D object in indices: " + to_string(v0) + ", " + to_string(v1) + ", " +
-                              to_string(v2));
-                }
-
-                if (m_vertices[v0] == m_vertices[v1] || m_vertices[v0] == m_vertices[v2] || m_vertices[v1] == m_vertices[v2])
-                {
-                        error("OBJ face is not 2D object in vertices");
-                }
-#endif
         }
+}
+
+bool FileObj::remove_one_dimensional_faces()
+{
+        std::vector<bool> one_d_faces(m_faces.size(), false);
+
+        int one_d_face_count = 0;
+
+        for (unsigned i = 0; i < m_faces.size(); ++i)
+        {
+                vec3f v0 = m_vertices[m_faces[i].vertices[0].v];
+                vec3f v1 = m_vertices[m_faces[i].vertices[1].v];
+                vec3f v2 = m_vertices[m_faces[i].vertices[2].v];
+
+                if (face_is_one_dimensional(v0, v1, v2))
+                {
+                        one_d_faces[i] = true;
+                        ++one_d_face_count;
+                }
+        }
+
+        if (one_d_face_count == 0)
+        {
+                return false;
+        }
+
+        std::vector<face3> faces;
+        faces.reserve(m_faces.size() - one_d_face_count);
+
+        for (unsigned i = 0; i < m_faces.size(); ++i)
+        {
+                if (!one_d_faces[i])
+                {
+                        faces.push_back(m_faces[i]);
+                }
+        }
+
+        m_faces = std::move(faces);
+
+        return true;
 }
 
 void FileObj::read_obj_one(const ThreadData* thread_data, std::string* file_ptr, std::vector<size_t>* line_begin,
@@ -1206,9 +1257,18 @@ void FileObj::read_obj_and_mtl(const std::string& file_name, ProgressRatio* prog
                 error("No faces found in OBJ file");
         }
 
-        check_faces();
+        check_face_indices();
 
         find_center_and_length(m_vertices, m_faces, &m_center, &m_length);
+
+        if (remove_one_dimensional_faces())
+        {
+                if (m_faces.size() == 0)
+                {
+                        error("No 2D faces found in OBJ file");
+                }
+                find_center_and_length(m_vertices, m_faces, &m_center, &m_length);
+        }
 
         read_libs(get_dir_name(file_name), progress, &material_index, library_names);
 }

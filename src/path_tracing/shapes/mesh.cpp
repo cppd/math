@@ -36,6 +36,7 @@ void Mesh::create_mesh_object(const IObj* obj, const mat4& vertex_matrix, unsign
         {
                 error("No vertices found in obj");
         }
+
         if (obj->get_faces().size() == 0)
         {
                 error("No faces found in obj");
@@ -54,10 +55,20 @@ void Mesh::create_mesh_object(const IObj* obj, const mat4& vertex_matrix, unsign
         m_triangles.reserve(obj->get_faces().size());
         for (const IObj::face3& face : obj->get_faces())
         {
-                m_triangles.emplace_back(m_vertices.data(), m_normals.data(), m_texcoords.data(), face.vertices[0].v,
-                                         face.vertices[1].v, face.vertices[2].v, face.has_vn, face.vertices[0].vn,
-                                         face.vertices[1].vn, face.vertices[2].vn, face.has_vt, face.vertices[0].vt,
-                                         face.vertices[1].vt, face.vertices[2].vt, face.material);
+                int v0 = face.vertices[0].v;
+                int v1 = face.vertices[1].v;
+                int v2 = face.vertices[2].v;
+
+                int vn0 = face.vertices[0].vn;
+                int vn1 = face.vertices[1].vn;
+                int vn2 = face.vertices[2].vn;
+
+                int vt0 = face.vertices[0].vt;
+                int vt1 = face.vertices[1].vt;
+                int vt2 = face.vertices[2].vt;
+
+                m_triangles.emplace_back(m_vertices.data(), m_normals.data(), m_texcoords.data(), v0, v1, v2, face.has_vn, vn0,
+                                         vn1, vn2, face.has_vt, vt0, vt1, vt2, face.material);
         }
 
         m_materials.reserve(obj->get_materials().size());

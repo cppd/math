@@ -50,6 +50,12 @@ TableTriangle::TableTriangle(const vec3* points, const vec3* normals, const vec2
 
         m_normal = normalize(cross(m_vertices[m_v1] - m_vertices[m_v0], m_vertices[m_v2] - m_vertices[m_v0]));
 
+        if (!is_finite(m_normal))
+        {
+                error("Triangle normal is not finite, vertices\n" + to_string(m_vertices[m_v0]) + "\n" +
+                      to_string(m_vertices[m_v1]) + "\n" + to_string(m_vertices[m_v2]));
+        }
+
         triangle_u_beta_and_u_gamma_for_v0(m_vertices[m_v0], m_vertices[m_v1], m_vertices[m_v2], &m_u_beta, &m_u_gamma);
 
         if (!has_normals)
@@ -121,14 +127,19 @@ vec3 TableTriangle::shading_normal(const vec3& point) const
         case NormalType::NO_NORMALS:
                 return m_normal;
         case NormalType::USE_NORMALS:
-                return normalize(triangle_interpolation(point, m_vertices[m_v0], m_u_beta, m_u_gamma, m_normals[m_n0],
-                                                        m_normals[m_n1], m_normals[m_n2]));
-
+        {
+                vec3 n0 = m_normals[m_n0];
+                vec3 n1 = m_normals[m_n1];
+                vec3 n2 = m_normals[m_n2];
+                return normalize(triangle_interpolation(point, m_vertices[m_v0], m_u_beta, m_u_gamma, n0, n1, n2));
+        }
         case NormalType::NEGATE_NORMALS:
-                return normalize(triangle_interpolation(point, m_vertices[m_v0], m_u_beta, m_u_gamma,
-                                                        m_negate_normal_0 ? -m_normals[m_n0] : m_normals[m_n0],
-                                                        m_negate_normal_1 ? -m_normals[m_n1] : m_normals[m_n1],
-                                                        m_negate_normal_2 ? -m_normals[m_n2] : m_normals[m_n2]));
+        {
+                vec3 n0 = m_negate_normal_0 ? -m_normals[m_n0] : m_normals[m_n0];
+                vec3 n1 = m_negate_normal_1 ? -m_normals[m_n1] : m_normals[m_n1];
+                vec3 n2 = m_negate_normal_2 ? -m_normals[m_n2] : m_normals[m_n2];
+                return normalize(triangle_interpolation(point, m_vertices[m_v0], m_u_beta, m_u_gamma, n0, n1, n2));
+        }
         }
         error_fatal("Unknown table triangle normal type");
 }
