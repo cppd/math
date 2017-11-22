@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/error.h"
 #include "com/log.h"
 #include "com/math.h"
+#include "com/quaternion.h"
 
 #include <map>
 #include <random>
@@ -31,6 +32,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 constexpr unsigned DISCRETIZATION = 100000;
 
 constexpr double COS_FOR_BOUND = -0.3;
+
+constexpr double MOBIUS_STRIP_WIDTH = 1;
 
 template <typename T, size_t... I>
 constexpr Vector<sizeof...(I) + 1, T> make_z_axis(std::integer_sequence<size_t, I...>)
@@ -180,6 +183,54 @@ std::vector<Vector<N, float>> generate_points_sphere_with_notch(unsigned point_c
         return points;
 }
 
+// На входе от 0 до 2 * PI, на выходе от 0 до PI.
+double mobius_curve(double x)
+{
+        x = x / (2 * PI);
+
+        x = 2 * x - 1;
+        x = std::copysign(std::pow(std::abs(x), 5), x);
+        x = (x + 1) / 2;
+
+        return PI * x;
+}
+
+std::vector<Vector<3, float>> generate_points_mobius_strip(unsigned point_count)
+{
+        std::vector<Vector<3, float>> points;
+        points.reserve(point_count);
+
+        std::unordered_set<Vector<3, long>> integer_points;
+        integer_points.reserve(point_count);
+
+        std::mt19937_64 gen(point_count);
+
+        std::uniform_real_distribution<double> urd_line(-MOBIUS_STRIP_WIDTH / 2, MOBIUS_STRIP_WIDTH / 2);
+        std::uniform_real_distribution<double> urd_alpha(0, 2 * PI);
+
+        while (integer_points.size() < point_count)
+        {
+                double alpha = urd_alpha(gen);
+
+                // Случайная точка вдоль Z, вращение вокруг Y, смещение по X и вращение вокруг Z
+                vec<3> v(0, 0, urd_line(gen));
+                v = rotate_vector(vec<3>(0, 1, 0), PI / 2 - mobius_curve(alpha), v);
+                v += vec<3>(1, 0, 0);
+                v = rotate_vector(vec<3>(0, 0, 1), alpha, v);
+
+                Vector<3, long> integer_point = to_integer(v, DISCRETIZATION);
+                if (integer_points.count(integer_point) == 0)
+                {
+                        integer_points.insert(integer_point);
+                        points.push_back(to_vector<float>(v));
+                }
+        }
+
+        check_unique_points(points);
+
+        return points;
+}
+
 template <typename T>
 std::vector<std::string> get_names_of_map(const std::map<std::string, T>& m)
 {
@@ -195,11 +246,7 @@ std::vector<std::string> get_names_of_map(const std::map<std::string, T>& m)
 template <size_t N>
 class ObjectRepository final : public IObjectRepository<N>
 {
-        const std::map<std::string, std::vector<Vector<N, float>> (ObjectRepository<N>::*)(unsigned) const> m_map = {
-                {"Ellipsoid", &ObjectRepository<N>::ellipsoid},
-                {"Ellipsoid, bound", &ObjectRepository<N>::ellipsoid_bound},
-                {"Sphere with a notch", &ObjectRepository<N>::sphere_with_notch},
-                {"Sphere with a notch, bound", &ObjectRepository<N>::sphere_with_notch_bound}};
+        std::map<std::string, std::vector<Vector<N, float>> (ObjectRepository<N>::*)(unsigned) const> m_map;
 
         std::vector<Vector<N, float>> ellipsoid(unsigned point_count) const override
         {
@@ -217,6 +264,10 @@ class ObjectRepository final : public IObjectRepository<N>
         {
                 return generate_points_sphere_with_notch<N>(point_count, true);
         }
+        std::vector<Vector<3, float>> mobius_strip(unsigned point_count) const
+        {
+                return generate_points_mobius_strip(point_count);
+        }
 
         std::vector<std::string> get_list_of_point_objects() const override
         {
@@ -230,6 +281,19 @@ class ObjectRepository final : public IObjectRepository<N>
                         return (this->*(iter->second))(point_count);
                 }
                 error("object not found in repository: " + object_name);
+        }
+
+public:
+        ObjectRepository()
+        {
+                m_map.emplace("Ellipsoid", &ObjectRepository<N>::ellipsoid);
+                m_map.emplace("Ellipsoid, bound", &ObjectRepository<N>::ellipsoid_bound);
+                m_map.emplace("Sphere with a notch", &ObjectRepository<N>::sphere_with_notch);
+                m_map.emplace("Sphere with a notch, bound", &ObjectRepository<N>::sphere_with_notch_bound);
+                if constexpr (N == 3)
+                {
+                        m_map.emplace(u8"Möbius strip", &ObjectRepository<N>::mobius_strip);
+                }
         }
 };
 }
