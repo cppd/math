@@ -154,6 +154,51 @@ vec3 direct_diffuse_lighting(const std::vector<const GenericObject*>& objects,
         return color;
 }
 
+// Matt Pharr, Wenzel Jakob, Greg Humphreys.
+// Physically Based Rendering. From theory to implementation. Third edition.
+// Elsevier, 2017.
+// 7.3 Stratified sampling.
+class StratifiedJitteredPattern
+{
+        const int m_samples_per_pixel;
+        const int m_samples_x;
+        const int m_samples_y;
+        const double m_region_size;
+        std::uniform_real_distribution<double> m_urd;
+
+public:
+        StratifiedJitteredPattern(int samples_per_pixel)
+                : m_samples_per_pixel(samples_per_pixel),
+                  m_samples_x(std::sqrt(m_samples_per_pixel)),
+                  m_samples_y(m_samples_x),
+                  m_region_size(1.0 / m_samples_x),
+                  m_urd(0, m_region_size)
+        {
+                if (!(m_samples_x > 0 && m_samples_y > 0 && m_samples_x * m_samples_y == m_samples_per_pixel))
+                {
+                        error("Stratified jittered pattern sample count (" + to_string(m_samples_per_pixel) +
+                              ") is not the square of a positive integer");
+                }
+        }
+
+        void generate_samples(std::mt19937_64& random_engine, int x, int y, std::vector<vec2>* s)
+        {
+                s->resize(m_samples_per_pixel);
+
+                vec2 point;
+                int i, j;
+                int sample_number = 0;
+
+                for (i = 0, point[0] = x; i < m_samples_x; ++i, point[0] += m_region_size)
+                {
+                        for (j = 0, point[1] = y; j < m_samples_y; ++j, point[1] += m_region_size)
+                        {
+                                (*s)[sample_number++] = point + vec2(m_urd(random_engine), m_urd(random_engine));
+                        }
+                }
+        }
+};
+
 class PixelOwner
 {
         Paintbrush* m_paintbrush;
@@ -211,6 +256,14 @@ class Painter
         int m_width, m_height;
         std::vector<Pixel> m_pixels;
 
+        Pixel& get_pixel_reference(int x, int y);
+        void work_thread() noexcept;
+        vec3 diffuse_lighting(std::mt19937_64& random_engine, int recursion_level, double color_level, const vec3& point,
+                              const vec3& shading_normal, const vec3& geometric_normal, bool triangle_mesh) const;
+        vec3 trace_path(std::mt19937_64& random_engine, int recursion_level, double color_level, const ray3& ray,
+                        bool diffuse_reflection) const;
+        void paint_pixels();
+
 public:
         Painter(IPainterNotifier* painter_notifier, const PaintObjects* paint_objects, Paintbrush* paintbrush,
                 unsigned thread_count, std::atomic_bool* stop, AtomicCounter<unsigned long long>* ray_count)
@@ -227,11 +280,10 @@ public:
                   m_height(m_projector.screen_height()),
                   m_pixels(m_width * m_height)
         {
-                ASSERT(thread_count > 0);
-
-                ASSERT(m_painter_notifier && paintbrush && stop && ray_count);
-
-                m_ray_count = 0;
+                if (thread_count < 1)
+                {
+                        error("Painter thread count must be greater than 0");
+                }
         }
 
         void process()
@@ -246,16 +298,6 @@ public:
                         t.join();
                 }
         }
-
-        void work_thread() noexcept;
-
-        vec3 diffuse_lighting(std::mt19937_64& random_engine, int recursion_level, double color_level, const vec3& point,
-                              const vec3& shading_normal, const vec3& geometric_normal, bool triangle_mesh) const;
-
-        vec3 trace_path(std::mt19937_64& random_engine, int recursion_level, double color_level, const ray3& ray,
-                        bool diffuse_reflection) const;
-
-        void paint_pixels();
 
         Painter(const Painter&) = delete;
         Painter(Painter&&) = delete;
@@ -378,51 +420,74 @@ vec3 Painter::trace_path(std::mt19937_64& random_engine, int recursion_level, do
         return color;
 }
 
+Painter::Pixel& Painter::get_pixel_reference(int x, int y)
+{
+        return m_pixels[y * m_width + x];
+}
+
 void Painter::paint_pixels()
 {
-        const int pixel_resolution = m_projector.pixel_resolution();
-        const double pixel_step = 1.0 / pixel_resolution;
-        const int pixel_ray_count = square(m_projector.pixel_resolution());
-
         std::mt19937_64 random_engine(get_random_seed<std::mt19937_64>());
-        std::uniform_real_distribution<double> urd(0, pixel_step);
+
+        StratifiedJitteredPattern sampler(m_projector.samples_per_pixel());
+        std::vector<vec2> samples;
 
         while (!m_stop)
         {
                 PixelOwner po(m_paintbrush, m_projector.screen_width(), m_projector.screen_height());
 
-                m_painter_notifier->painter_pixel_before(po.get_x(), po.get_y());
+                int x = po.get_x();
+                int y = po.get_y();
 
-                Pixel* pixel = &m_pixels[po.get_y() * m_width + po.get_x()];
+                m_painter_notifier->painter_pixel_before(x, y);
 
-                vec2 point;
-                int i, j;
-                for (i = 0, point[0] = po.get_x(); i < pixel_resolution; ++i, point[0] += pixel_step)
+                Pixel& pixel = get_pixel_reference(x, y);
+
+                sampler.generate_samples(random_engine, x, y, &samples);
+
+                for (const vec2& p : samples)
                 {
-                        for (j = 0, point[1] = po.get_y(); j < pixel_resolution; ++j, point[1] += pixel_step)
-                        {
-                                vec2 screen_point = point + vec2(urd(random_engine), urd(random_engine));
+                        constexpr int recursion_level = 0;
+                        constexpr double color_level = 1;
+                        constexpr bool diffuse_reflection = false;
 
-                                vec3 color = trace_path(random_engine, 0 /*recursion level*/, 1 /*color level*/,
-                                                        m_projector.ray(screen_point), false /*diffuse reflection*/);
+                        vec3 color =
+                                trace_path(random_engine, recursion_level, color_level, m_projector.ray(p), diffuse_reflection);
 
-                                pixel->color_sum += color;
-                        }
+                        pixel.color_sum += color;
                 }
 
-                pixel->ray_count += pixel_ray_count;
+                pixel.ray_count += samples.size();
 
-                vec3 color = pixel->color_sum / pixel->ray_count;
-                unsigned char r = rgb_float_to_srgb_int8(color[0]);
-                unsigned char g = rgb_float_to_srgb_int8(color[1]);
-                unsigned char b = rgb_float_to_srgb_int8(color[2]);
-                m_painter_notifier->painter_pixel_after(po.get_x(), po.get_y(), r, g, b);
+                m_painter_notifier->painter_pixel_after(x, y, rgb_float_to_srgb_int8(pixel.color_sum / pixel.ray_count));
         }
 }
 }
 
+// Без выдачи исключений. Про проблемы сообщать через painter_notifier.
 void paint(IPainterNotifier* painter_notifier, const PaintObjects* paint_objects, Paintbrush* paintbrush, unsigned thread_count,
-           std::atomic_bool* stop, AtomicCounter<unsigned long long>* ray_count)
+           std::atomic_bool* stop, AtomicCounter<unsigned long long>* ray_count) noexcept
 {
-        Painter(painter_notifier, paint_objects, paintbrush, thread_count, stop, ray_count).process();
+        ASSERT(painter_notifier && paint_objects && paintbrush && stop && ray_count);
+
+        try
+        {
+                try
+                {
+                        Painter p(painter_notifier, paint_objects, paintbrush, thread_count, stop, ray_count);
+                        p.process();
+                }
+                catch (std::exception& e)
+                {
+                        painter_notifier->painter_error_message(std::string("Painter class thread error:\n") + e.what());
+                }
+                catch (...)
+                {
+                        painter_notifier->painter_error_message("Unknown painter class thread error");
+                }
+        }
+        catch (...)
+        {
+                error_fatal("Exception in painter class thread message string.");
+        }
 }

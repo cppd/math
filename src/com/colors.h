@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/vec.h"
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 
 inline double rgb_to_srgb(double c)
@@ -59,6 +60,11 @@ inline double srgb_to_rgb(double c)
 inline unsigned char rgb_float_to_srgb_int8(double c)
 {
         return static_cast<unsigned char>(rgb_to_srgb(std::clamp(c, 0.0, 1.0)) * 255.0 + 0.5);
+}
+
+inline std::array<unsigned char, 3> rgb_float_to_srgb_int8(const vec3& c)
+{
+        return {{rgb_float_to_srgb_int8(c[0]), rgb_float_to_srgb_int8(c[1]), rgb_float_to_srgb_int8(c[2])}};
 }
 
 inline double srgb_int8_to_rgb_float(unsigned char c)

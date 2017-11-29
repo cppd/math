@@ -50,7 +50,7 @@ private:
         void showEvent(QShowEvent* event) override;
 
         void painter_pixel_before(int x, int y) noexcept override;
-        void painter_pixel_after(int x, int y, unsigned char r, unsigned char g, unsigned char b) noexcept override;
+        void painter_pixel_after(int x, int y, std::array<unsigned char, 3> rgb) noexcept override;
         void painter_error_message(const std::string& msg) noexcept override;
 
         void set_pixel(int x, int y, unsigned char r, unsigned char g, unsigned char b) noexcept;

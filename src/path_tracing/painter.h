@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/thread.h"
 #include "com/vec.h"
 
-#include <atomic>
+#include <array>
 #include <string>
 
 struct IPainterNotifier
@@ -34,9 +34,9 @@ protected:
 
 public:
         virtual void painter_pixel_before(int x, int y) noexcept = 0;
-        virtual void painter_pixel_after(int x, int y, unsigned char r, unsigned char g, unsigned char b) noexcept = 0;
+        virtual void painter_pixel_after(int x, int y, std::array<unsigned char, 3> rgb) noexcept = 0;
         virtual void painter_error_message(const std::string& msg) noexcept = 0;
 };
 
 void paint(IPainterNotifier* painter_notifier, const PaintObjects* paint_objects, Paintbrush* paintbrush, unsigned thread_count,
-           std::atomic_bool* stop, AtomicCounter<unsigned long long>* ray_count);
+           std::atomic_bool* stop, AtomicCounter<unsigned long long>* ray_count) noexcept;

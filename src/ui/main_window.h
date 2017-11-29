@@ -209,7 +209,7 @@ private:
 
         bool find_visible_mesh(std::shared_ptr<const Mesh>* ptr, std::string* name) const;
 
-        std::unique_ptr<const Projector> create_projector(double size_coef) const;
+        std::unique_ptr<const Projector> create_projector(double size_coef, int samples_per_pixel) const;
         std::unique_ptr<const LightSource> create_light_source() const;
 
         static std::tuple<std::string, MainWindow::ObjectType, MainWindow::ObjectType> parameters_for_add_object(

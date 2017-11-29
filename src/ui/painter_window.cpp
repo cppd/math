@@ -174,9 +174,9 @@ void PainterWindow::painter_pixel_before(int x, int y) noexcept
         mark_pixel_busy(x, y);
 }
 
-void PainterWindow::painter_pixel_after(int x, int y, unsigned char r, unsigned char g, unsigned char b) noexcept
+void PainterWindow::painter_pixel_after(int x, int y, std::array<unsigned char, 3> rgb) noexcept
 {
-        set_pixel(x, y, r, g, b);
+        set_pixel(x, y, rgb[0], rgb[1], rgb[2]);
 }
 
 void PainterWindow::painter_error_message(const std::string& msg) noexcept
@@ -224,7 +224,7 @@ void PainterWindow::first_shown()
         m_stop = false;
         m_ray_count = 0;
         m_thread_working = true;
-        m_thread = std::thread([this]() {
+        m_thread = std::thread([this]() noexcept {
                 paint(this, m_paint_objects.get(), &m_paintbrush, m_thread_count, &m_stop, &m_ray_count);
                 m_thread_working = false;
         });

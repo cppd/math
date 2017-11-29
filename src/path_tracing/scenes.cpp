@@ -28,7 +28,7 @@ namespace
 {
 class CornellBox : public PaintObjects
 {
-        static constexpr int PIXEL_RESOLUTION = 5;
+        const int m_samples_per_pixel;
 
         std::vector<const GenericObject*> m_objects;
         std::vector<const LightSource*> m_light_sources;
@@ -54,7 +54,8 @@ class CornellBox : public PaintObjects
 
 public:
         CornellBox(int width, int height, const std::string& obj_file_name, double size, const vec3& default_color,
-                   double diffuse, const vec3& camera_direction, const vec3& camera_up)
+                   double diffuse, const vec3& camera_direction, const vec3& camera_up, int samples_per_pixel)
+                : m_samples_per_pixel(samples_per_pixel)
         {
                 ProgressRatio progress(nullptr);
 
@@ -71,7 +72,8 @@ public:
         }
 
         CornellBox(int width, int height, const std::shared_ptr<const Mesh>& mesh, double size, const vec3& default_color,
-                   double diffuse, const vec3& camera_direction, const vec3& camera_up)
+                   double diffuse, const vec3& camera_direction, const vec3& camera_up, int samples_per_pixel)
+                : m_samples_per_pixel(samples_per_pixel)
         {
                 m_mesh = std::make_unique<VisibleSharedMesh>(mesh);
 
@@ -130,13 +132,13 @@ public:
                 //
 
                 m_perspective_projector =
-                        std::make_unique<PerspectiveProjector>(view_point, dir, up, 70, width, height, PIXEL_RESOLUTION);
+                        std::make_unique<PerspectiveProjector>(view_point, dir, up, 70, width, height, m_samples_per_pixel);
 
                 m_parallel_projector =
-                        std::make_unique<ParallelProjector>(view_point, dir, up, size, width, height, PIXEL_RESOLUTION);
+                        std::make_unique<ParallelProjector>(view_point, dir, up, size, width, height, m_samples_per_pixel);
 
                 m_spherical_projector =
-                        std::make_unique<SphericalProjector>(view_point, dir, up, 80, width, height, PIXEL_RESOLUTION);
+                        std::make_unique<SphericalProjector>(view_point, dir, up, 80, width, height, m_samples_per_pixel);
 
                 //
 
@@ -252,17 +254,18 @@ public:
 
 std::unique_ptr<const PaintObjects> cornell_box(int width, int height, const std::string& obj_file_name, double size,
                                                 const vec3& default_color, double diffuse, const vec3& camera_direction,
-                                                const vec3& camera_up)
+                                                const vec3& camera_up, int samples_per_pixel)
 {
         return std::make_unique<CornellBox>(width, height, obj_file_name, size, default_color, diffuse, camera_direction,
-                                            camera_up);
+                                            camera_up, samples_per_pixel);
 }
 
 std::unique_ptr<const PaintObjects> cornell_box(int width, int height, const std::shared_ptr<const Mesh>& mesh, double size,
                                                 const vec3& default_color, double diffuse, const vec3& camera_direction,
-                                                const vec3& camera_up)
+                                                const vec3& camera_up, int samples_per_pixel)
 {
-        return std::make_unique<CornellBox>(width, height, mesh, size, default_color, diffuse, camera_direction, camera_up);
+        return std::make_unique<CornellBox>(width, height, mesh, size, default_color, diffuse, camera_direction, camera_up,
+                                            samples_per_pixel);
 }
 
 std::unique_ptr<const PaintObjects> one_object_scene(const vec3& background_color, const vec3& default_color, double diffuse,

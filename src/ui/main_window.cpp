@@ -51,9 +51,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QDesktopWidget>
 #include <QFileDialog>
 
-// Размер окна по сравнению с экраном
+// Размер окна по сравнению с экраном.
 constexpr double WINDOW_SIZE_COEF = 0.7;
-// Если true, то размер для графики, если false, то размер всего окна
+// Если true, то размер для графики, если false, то размер всего окна.
 constexpr bool WINDOW_SIZE_GRAPHICS = true;
 
 constexpr double DFT_MAX_BRIGHTNESS = 50000;
@@ -75,15 +75,14 @@ constexpr QRgb DEFAULT_COLOR = qRgb(150, 170, 150);
 constexpr QRgb WIREFRAME_COLOR = qRgb(255, 255, 255);
 
 // Задержка в миллисекундах после showEvent для вызова по таймеру
-// функции обработки появления окна
+// функции обработки появления окна.
 constexpr int WINDOW_SHOW_DELAY_MSEC = 50;
 
-// увеличение текстуры тени по сравнению с размером окна
+// увеличение текстуры тени по сравнению с размером окна.
 constexpr int SHADOW_ZOOM = 2;
 
-// Разделение пикселя по горизонтали и вертикали для трассировки пути.
-// Количество лучей на один пиксель в одном проходе равно этому числу в квадрате.
-constexpr int PROJECTOR_PIXEL_RESOLUTION = 5;
+// Для трассировки пути. Количество лучей на один пиксель в одном проходе.
+constexpr int PATH_TRACING_SAMPLES_PER_PIXEL = 25;
 
 // Сколько потоков не надо использовать от максимума для создания октадеревьев.
 constexpr unsigned MESH_OBJECT_NOT_USED_THREAD_COUNT = 2;
@@ -1344,7 +1343,7 @@ bool MainWindow::find_visible_mesh(std::shared_ptr<const Mesh>* mesh_pointer, st
         return false;
 }
 
-std::unique_ptr<const Projector> MainWindow::create_projector(double size_coef) const
+std::unique_ptr<const Projector> MainWindow::create_projector(double size_coef, int samples_per_pixel) const
 {
         vec3 camera_up, camera_direction, view_center;
         double view_width;
@@ -1357,7 +1356,7 @@ std::unique_ptr<const Projector> MainWindow::create_projector(double size_coef) 
         vec3 camera_position = view_center - camera_direction * 2.0 * m_mesh_object_size;
 
         return std::make_unique<const ParallelProjector>(camera_position, camera_direction, camera_up, view_width, paint_width,
-                                                         paint_height, PROJECTOR_PIXEL_RESOLUTION);
+                                                         paint_height, samples_per_pixel);
 }
 
 std::unique_ptr<const LightSource> MainWindow::create_light_source() const
@@ -1411,7 +1410,8 @@ void MainWindow::on_pushButton_Painter_clicked()
 
                         create_painter_window(title, thread_count,
                                               one_object_scene(background_color, default_color, diffuse,
-                                                               create_projector(size_coef), create_light_source(), mesh_pointer));
+                                                               create_projector(size_coef, PATH_TRACING_SAMPLES_PER_PIXEL),
+                                                               create_light_source(), mesh_pointer));
                 }
                 else
                 {
@@ -1428,7 +1428,8 @@ void MainWindow::on_pushButton_Painter_clicked()
 
                         create_painter_window(title, thread_count,
                                               cornell_box(paint_width, paint_height, mesh_pointer, m_mesh_object_size,
-                                                          default_color, diffuse, camera_direction, camera_up));
+                                                          default_color, diffuse, camera_direction, camera_up,
+                                                          PATH_TRACING_SAMPLES_PER_PIXEL));
                 }
         });
 }

@@ -220,9 +220,8 @@ public:
         // Высота экрана в пикселях
         virtual int screen_height() const = 0;
 
-        // Деление пикселя на равные по ширине и высоте части
-        // для использования множества лучей на один пиксель
-        virtual int pixel_resolution() const = 0;
+        // Количество лучей на один пиксель
+        virtual int samples_per_pixel() const = 0;
 
         // Для точки на экране луч в трёхмерном пространстве
         virtual ray3 ray(const vec2& point) const = 0;
