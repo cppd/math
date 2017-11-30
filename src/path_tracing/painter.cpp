@@ -154,51 +154,6 @@ vec3 direct_diffuse_lighting(const std::vector<const GenericObject*>& objects,
         return color;
 }
 
-// Matt Pharr, Wenzel Jakob, Greg Humphreys.
-// Physically Based Rendering. From theory to implementation. Third edition.
-// Elsevier, 2017.
-// 7.3 Stratified sampling.
-class StratifiedJitteredPattern
-{
-        const int m_samples_per_pixel;
-        const int m_samples_x;
-        const int m_samples_y;
-        const double m_region_size;
-        std::uniform_real_distribution<double> m_urd;
-
-public:
-        StratifiedJitteredPattern(int samples_per_pixel)
-                : m_samples_per_pixel(samples_per_pixel),
-                  m_samples_x(std::sqrt(m_samples_per_pixel)),
-                  m_samples_y(m_samples_x),
-                  m_region_size(1.0 / m_samples_x),
-                  m_urd(0, m_region_size)
-        {
-                if (!(m_samples_x > 0 && m_samples_y > 0 && m_samples_x * m_samples_y == m_samples_per_pixel))
-                {
-                        error("Stratified jittered pattern sample count (" + to_string(m_samples_per_pixel) +
-                              ") is not the square of a positive integer");
-                }
-        }
-
-        void generate_samples(std::mt19937_64& random_engine, int x, int y, std::vector<vec2>* s)
-        {
-                s->resize(m_samples_per_pixel);
-
-                vec2 point;
-                int i, j;
-                int sample_number = 0;
-
-                for (i = 0, point[0] = x; i < m_samples_x; ++i, point[0] += m_region_size)
-                {
-                        for (j = 0, point[1] = y; j < m_samples_y; ++j, point[1] += m_region_size)
-                        {
-                                (*s)[sample_number++] = point + vec2(m_urd(random_engine), m_urd(random_engine));
-                        }
-                }
-        }
-};
-
 class PixelOwner
 {
         Paintbrush* m_paintbrush;
@@ -230,19 +185,34 @@ public:
         }
 };
 
+class Pixel
+{
+        vec3 m_color_sum = vec3(0);
+        double m_ray_sum = 0;
+
+public:
+        void add_color(const vec3& color)
+        {
+                m_color_sum += color;
+        }
+        void add_rays(double rays)
+        {
+                m_ray_sum += rays;
+        }
+        vec3 color() const
+        {
+                return m_color_sum / m_ray_sum;
+        }
+};
+
 class Painter
 {
-        struct Pixel
-        {
-                vec3 color_sum = vec3(0);
-                double ray_count = 0;
-        };
-
         IPainterNotifier* m_painter_notifier;
 
         const std::vector<const GenericObject*>& m_objects;
         const std::vector<const LightSource*>& m_light_sources;
         const Projector& m_projector;
+        const Sampler& m_sampler;
         const SurfaceProperties& m_default_surface_properties;
 
         Paintbrush* m_paintbrush;
@@ -265,13 +235,14 @@ class Painter
         void paint_pixels();
 
 public:
-        Painter(IPainterNotifier* painter_notifier, const PaintObjects* paint_objects, Paintbrush* paintbrush,
+        Painter(IPainterNotifier* painter_notifier, const PaintObjects& paint_objects, Paintbrush* paintbrush,
                 unsigned thread_count, std::atomic_bool* stop, AtomicCounter<unsigned long long>* ray_count)
                 : m_painter_notifier(painter_notifier),
-                  m_objects(paint_objects->get_objects()),
-                  m_light_sources(paint_objects->get_light_sources()),
-                  m_projector(paint_objects->get_projector()),
-                  m_default_surface_properties(paint_objects->get_default_surface_properties()),
+                  m_objects(paint_objects.objects()),
+                  m_light_sources(paint_objects.light_sources()),
+                  m_projector(paint_objects.projector()),
+                  m_sampler(paint_objects.sampler()),
+                  m_default_surface_properties(paint_objects.default_surface_properties()),
                   m_paintbrush(paintbrush),
                   m_threads(thread_count),
                   m_stop(*stop),
@@ -282,7 +253,7 @@ public:
         {
                 if (thread_count < 1)
                 {
-                        error("Painter thread count must be greater than 0");
+                        error("Painter thread count (" + to_string(thread_count) + ") must be greater than 0");
                 }
         }
 
@@ -420,7 +391,7 @@ vec3 Painter::trace_path(std::mt19937_64& random_engine, int recursion_level, do
         return color;
 }
 
-Painter::Pixel& Painter::get_pixel_reference(int x, int y)
+Pixel& Painter::get_pixel_reference(int x, int y)
 {
         return m_pixels[y * m_width + x];
 }
@@ -429,12 +400,11 @@ void Painter::paint_pixels()
 {
         std::mt19937_64 random_engine(get_random_seed<std::mt19937_64>());
 
-        StratifiedJitteredPattern sampler(m_projector.samples_per_pixel());
         std::vector<vec2> samples;
 
         while (!m_stop)
         {
-                PixelOwner po(m_paintbrush, m_projector.screen_width(), m_projector.screen_height());
+                PixelOwner po(m_paintbrush, m_width, m_height);
 
                 int x = po.get_x();
                 int y = po.get_y();
@@ -442,33 +412,35 @@ void Painter::paint_pixels()
                 m_painter_notifier->painter_pixel_before(x, y);
 
                 Pixel& pixel = get_pixel_reference(x, y);
+                vec2 screen_point(x, y);
 
-                sampler.generate_samples(random_engine, x, y, &samples);
+                m_sampler.generate(random_engine, &samples);
 
-                for (const vec2& p : samples)
+                for (const vec2& sample_point : samples)
                 {
                         constexpr int recursion_level = 0;
                         constexpr double color_level = 1;
                         constexpr bool diffuse_reflection = false;
 
-                        vec3 color =
-                                trace_path(random_engine, recursion_level, color_level, m_projector.ray(p), diffuse_reflection);
+                        ray3 ray = m_projector.ray(screen_point + sample_point);
 
-                        pixel.color_sum += color;
+                        vec3 color = trace_path(random_engine, recursion_level, color_level, ray, diffuse_reflection);
+
+                        pixel.add_color(color);
                 }
 
-                pixel.ray_count += samples.size();
+                pixel.add_rays(samples.size());
 
-                m_painter_notifier->painter_pixel_after(x, y, rgb_float_to_srgb_int8(pixel.color_sum / pixel.ray_count));
+                m_painter_notifier->painter_pixel_after(x, y, rgb_float_to_srgb_int8(pixel.color()));
         }
 }
 }
 
 // Без выдачи исключений. Про проблемы сообщать через painter_notifier.
-void paint(IPainterNotifier* painter_notifier, const PaintObjects* paint_objects, Paintbrush* paintbrush, unsigned thread_count,
+void paint(IPainterNotifier* painter_notifier, const PaintObjects& paint_objects, Paintbrush* paintbrush, unsigned thread_count,
            std::atomic_bool* stop, AtomicCounter<unsigned long long>* ray_count) noexcept
 {
-        ASSERT(painter_notifier && paint_objects && paintbrush && stop && ray_count);
+        ASSERT(painter_notifier && paintbrush && stop && ray_count);
 
         try
         {

@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "obj/obj_file_load.h"
 #include "path_tracing/lights/light_source.h"
 #include "path_tracing/projectors/projector.h"
+#include "path_tracing/samplers/sampler.h"
 #include "path_tracing/visible_shapes.h"
 
 namespace
@@ -35,6 +36,7 @@ class CornellBox : public PaintObjects
         std::unique_ptr<PerspectiveProjector> m_perspective_projector;
         std::unique_ptr<ParallelProjector> m_parallel_projector;
         std::unique_ptr<SphericalProjector> m_spherical_projector;
+        std::unique_ptr<StratifiedJitteredSampler> m_sampler;
         SurfaceProperties m_default_surface_properties;
 
         std::unique_ptr<VisibleRectangle> m_rectangle_back;
@@ -131,14 +133,15 @@ public:
 
                 //
 
-                m_perspective_projector =
-                        std::make_unique<PerspectiveProjector>(view_point, dir, up, 70, width, height, m_samples_per_pixel);
+                m_perspective_projector = std::make_unique<PerspectiveProjector>(view_point, dir, up, 70, width, height);
 
-                m_parallel_projector =
-                        std::make_unique<ParallelProjector>(view_point, dir, up, size, width, height, m_samples_per_pixel);
+                m_parallel_projector = std::make_unique<ParallelProjector>(view_point, dir, up, size, width, height);
 
-                m_spherical_projector =
-                        std::make_unique<SphericalProjector>(view_point, dir, up, 80, width, height, m_samples_per_pixel);
+                m_spherical_projector = std::make_unique<SphericalProjector>(view_point, dir, up, 80, width, height);
+
+                //
+
+                m_sampler = std::make_unique<StratifiedJitteredSampler>(m_samples_per_pixel);
 
                 //
 
@@ -180,24 +183,29 @@ public:
                 m_objects.push_back(m_box.get());
         }
 
-        const std::vector<const GenericObject*>& get_objects() const override
+        const std::vector<const GenericObject*>& objects() const override
         {
                 return m_objects;
         }
 
-        const std::vector<const LightSource*>& get_light_sources() const override
+        const std::vector<const LightSource*>& light_sources() const override
         {
                 return m_light_sources;
         }
 
-        const Projector& get_projector() const override
+        const Projector& projector() const override
         {
                 return *m_perspective_projector;
                 // return *m_parallel_projector;
                 // return *m_spherical_projector;
         }
 
-        const SurfaceProperties& get_default_surface_properties() const override
+        const Sampler& sampler() const override
+        {
+                return *m_sampler;
+        }
+
+        const SurfaceProperties& default_surface_properties() const override
         {
                 return m_default_surface_properties;
         }
@@ -207,6 +215,7 @@ class OneObject final : public PaintObjects
 {
         VisibleSharedMesh m_object;
         std::unique_ptr<const Projector> m_projector;
+        std::unique_ptr<const Sampler> m_sampler;
         std::unique_ptr<const LightSource> m_light_source;
         SurfaceProperties m_default_surface_properties;
 
@@ -215,9 +224,12 @@ class OneObject final : public PaintObjects
 
 public:
         OneObject(const vec3& background_color, const vec3& default_color, double diffuse,
-                  std::unique_ptr<const Projector>&& projector, std::unique_ptr<const LightSource>&& light_source,
-                  const std::shared_ptr<const Mesh>& mesh)
-                : m_object(mesh), m_projector(std::move(projector)), m_light_source(std::move(light_source))
+                  std::unique_ptr<const Projector>&& projector, std::unique_ptr<const Sampler>&& sampler,
+                  std::unique_ptr<const LightSource>&& light_source, const std::shared_ptr<const Mesh>& mesh)
+                : m_object(mesh),
+                  m_projector(std::move(projector)),
+                  m_sampler(std::move(sampler)),
+                  m_light_source(std::move(light_source))
         {
                 m_default_surface_properties.set_color(background_color);
                 m_default_surface_properties.set_diffuse_and_fresnel(1, 0);
@@ -233,19 +245,23 @@ public:
                 m_objects.push_back(&m_object);
         }
 
-        const std::vector<const GenericObject*>& get_objects() const override
+        const std::vector<const GenericObject*>& objects() const override
         {
                 return m_objects;
         }
-        const std::vector<const LightSource*>& get_light_sources() const override
+        const std::vector<const LightSource*>& light_sources() const override
         {
                 return m_light_sources;
         }
-        const Projector& get_projector() const override
+        const Projector& projector() const override
         {
                 return *m_projector;
         }
-        const SurfaceProperties& get_default_surface_properties() const override
+        const Sampler& sampler() const override
+        {
+                return *m_sampler;
+        }
+        const SurfaceProperties& default_surface_properties() const override
         {
                 return m_default_surface_properties;
         }
@@ -270,9 +286,10 @@ std::unique_ptr<const PaintObjects> cornell_box(int width, int height, const std
 
 std::unique_ptr<const PaintObjects> one_object_scene(const vec3& background_color, const vec3& default_color, double diffuse,
                                                      std::unique_ptr<const Projector>&& projector,
+                                                     std::unique_ptr<const Sampler>&& sampler,
                                                      std::unique_ptr<const LightSource>&& light_source,
                                                      const std::shared_ptr<const Mesh>& mesh)
 {
-        return std::make_unique<OneObject>(background_color, default_color, diffuse, std::move(projector),
+        return std::make_unique<OneObject>(background_color, default_color, diffuse, std::move(projector), std::move(sampler),
                                            std::move(light_source), mesh);
 }

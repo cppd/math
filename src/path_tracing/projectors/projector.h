@@ -24,26 +24,23 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 class PerspectiveProjector final : public Projector
 {
-        int m_width, m_height, m_samples_per_pixel;
+        int m_width, m_height;
         vec2 m_screen_org;
         vec3 m_org, m_dir, m_x, m_y;
 
 public:
         PerspectiveProjector(const vec3& camera_org, const vec3& camera_dir, const vec3& camera_up,
-                             double width_view_angle_degrees, int width, int height, int samples_per_pixel)
-                : m_width(width),
-                  m_height(height),
-                  m_samples_per_pixel(samples_per_pixel),
-                  m_screen_org(-width * 0.5, height * 0.5)
+                             double width_view_angle_degrees, int width, int height)
+                : m_width(width), m_height(height), m_screen_org(-width * 0.5, height * 0.5)
         {
                 if (!(width_view_angle_degrees > 0 && width_view_angle_degrees < 180))
                 {
                         error("Perspective projection: error view angle " + to_string(width_view_angle_degrees));
                 }
-                if (width <= 0 || height <= 0 || samples_per_pixel <= 0)
+                if (width < 1 || height < 1)
                 {
-                        error("Perspective projection error (width, height, samples per pixel) (" + to_string(width) + ", " +
-                              to_string(height) + ", " + to_string(samples_per_pixel) + ")");
+                        error("Perspective projection error (width, height) (" + to_string(width) + ", " + to_string(height) +
+                              ")");
                 }
 
                 double half_angle = width_view_angle_degrees * 0.5 / 180.0 * PI;
@@ -65,11 +62,6 @@ public:
                 return m_height;
         }
 
-        int samples_per_pixel() const override
-        {
-                return m_samples_per_pixel;
-        }
-
         ray3 ray(const vec2& point) const override
         {
                 vec2 p = vec2(m_screen_org[0] + point[0], m_screen_org[1] - point[1]);
@@ -79,26 +71,22 @@ public:
 
 class ParallelProjector final : public Projector
 {
-        int m_width, m_height, m_samples_per_pixel;
+        int m_width, m_height;
         vec2 m_screen_org;
         vec3 m_org, m_dir, m_x, m_y;
 
 public:
         ParallelProjector(const vec3& camera_org, const vec3& camera_dir, const vec3& camera_up, double view_width, int width,
-                          int height, int samples_per_pixel)
-                : m_width(width),
-                  m_height(height),
-                  m_samples_per_pixel(samples_per_pixel),
-                  m_screen_org(-width * 0.5, height * 0.5)
+                          int height)
+                : m_width(width), m_height(height), m_screen_org(-width * 0.5, height * 0.5)
         {
                 if (!(view_width > 0))
                 {
                         error("Error view width for parallel projection");
                 }
-                if (width <= 0 || height <= 0 || samples_per_pixel <= 0)
+                if (width < 1 || height < 1)
                 {
-                        error("Parallel projection error (width, height, samples per pixel) (" + to_string(width) + ", " +
-                              to_string(height) + ", " + to_string(samples_per_pixel) + ")");
+                        error("Parallel projection error (width, height) (" + to_string(width) + ", " + to_string(height) + ")");
                 }
 
                 m_org = camera_org;
@@ -119,11 +107,6 @@ public:
                 return m_height;
         }
 
-        int samples_per_pixel() const override
-        {
-                return m_samples_per_pixel;
-        }
-
         ray3 ray(const vec2& point) const override
         {
                 vec2 p = vec2(m_screen_org[0] + point[0], m_screen_org[1] - point[1]);
@@ -135,18 +118,15 @@ public:
 // из центра полусферы в направлении точек на сфере.
 class SphericalProjector final : public Projector
 {
-        int m_width, m_height, m_samples_per_pixel;
+        int m_width, m_height;
         vec2 m_screen_org;
         vec3 m_org, m_dir, m_x, m_y;
         double m_square_radius;
 
 public:
         SphericalProjector(const vec3& camera_org, const vec3& camera_dir, const vec3& camera_up, double width_view_angle_degrees,
-                           int width, int height, int samples_per_pixel)
-                : m_width(width),
-                  m_height(height),
-                  m_samples_per_pixel(samples_per_pixel),
-                  m_screen_org(-width * 0.5, height * 0.5)
+                           int width, int height)
+                : m_width(width), m_height(height), m_screen_org(-width * 0.5, height * 0.5)
         {
                 double half_angle = width_view_angle_degrees * 0.5 / 180.0 * PI;
 
@@ -156,10 +136,9 @@ public:
                 {
                         error("Error view angle for spherical projection");
                 }
-                if (width <= 0 || height <= 0 || samples_per_pixel <= 0)
+                if (width <= 0 || height <= 0)
                 {
-                        error("Spherical projection error (width, height, samples per pixel) (" + to_string(width) + ", " +
-                              to_string(height) + ", " + to_string(samples_per_pixel) + ")");
+                        error("Spherical projection error (width, height) (" + to_string(width) + ", " + to_string(height) + ")");
                 }
 
                 m_square_radius = square(width * 0.5 / sin_alpha);
@@ -178,11 +157,6 @@ public:
         int screen_height() const override
         {
                 return m_height;
-        }
-
-        int samples_per_pixel() const override
-        {
-                return m_samples_per_pixel;
         }
 
         ray3 ray(const vec2& point) const override

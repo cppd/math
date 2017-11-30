@@ -44,6 +44,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "obj/obj_surface.h"
 #include "path_tracing/lights/light_source.h"
 #include "path_tracing/projectors/projector.h"
+#include "path_tracing/samplers/sampler.h"
 #include "path_tracing/scenes.h"
 #include "path_tracing/shapes/mesh.h"
 #include "progress/progress.h"
@@ -1343,7 +1344,7 @@ bool MainWindow::find_visible_mesh(std::shared_ptr<const Mesh>* mesh_pointer, st
         return false;
 }
 
-std::unique_ptr<const Projector> MainWindow::create_projector(double size_coef, int samples_per_pixel) const
+std::unique_ptr<const Projector> MainWindow::create_projector(double size_coef) const
 {
         vec3 camera_up, camera_direction, view_center;
         double view_width;
@@ -1356,7 +1357,7 @@ std::unique_ptr<const Projector> MainWindow::create_projector(double size_coef, 
         vec3 camera_position = view_center - camera_direction * 2.0 * m_mesh_object_size;
 
         return std::make_unique<const ParallelProjector>(camera_position, camera_direction, camera_up, view_width, paint_width,
-                                                         paint_height, samples_per_pixel);
+                                                         paint_height);
 }
 
 std::unique_ptr<const LightSource> MainWindow::create_light_source() const
@@ -1367,6 +1368,11 @@ std::unique_ptr<const LightSource> MainWindow::create_light_source() const
         vec3 light_position = m_mesh_object_position - light_direction * m_mesh_object_size * 1000.0;
 
         return std::make_unique<const ConstantLight>(light_position, vec3(1, 1, 1));
+}
+
+std::unique_ptr<const Sampler> MainWindow::create_sampler(int samples_per_pixel) const
+{
+        return std::make_unique<StratifiedJitteredSampler>(samples_per_pixel);
 }
 
 void MainWindow::on_pushButton_Painter_clicked()
@@ -1410,7 +1416,8 @@ void MainWindow::on_pushButton_Painter_clicked()
 
                         create_painter_window(title, thread_count,
                                               one_object_scene(background_color, default_color, diffuse,
-                                                               create_projector(size_coef, PATH_TRACING_SAMPLES_PER_PIXEL),
+                                                               create_projector(size_coef),
+                                                               create_sampler(PATH_TRACING_SAMPLES_PER_PIXEL),
                                                                create_light_source(), mesh_pointer));
                 }
                 else

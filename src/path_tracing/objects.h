@@ -21,6 +21,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/vec.h"
 
+#include <random>
+#include <vector>
+
 // Свойства поверхности в точке.
 class SurfaceProperties
 {
@@ -220,9 +223,6 @@ public:
         // Высота экрана в пикселях
         virtual int screen_height() const = 0;
 
-        // Количество лучей на один пиксель
-        virtual int samples_per_pixel() const = 0;
-
         // Для точки на экране луч в трёхмерном пространстве
         virtual ray3 ray(const vec2& point) const = 0;
 
@@ -231,6 +231,21 @@ public:
         Projector(Projector&&) = default;
         Projector& operator=(const Projector&) = default;
         Projector& operator=(Projector&&) = default;
+};
+
+// Случайные точки внутри пикселя
+class Sampler
+{
+public:
+        virtual ~Sampler() = default;
+
+        virtual void generate(std::mt19937_64& random_engine, std::vector<vec2>* samples) const = 0;
+
+        Sampler() = default;
+        Sampler(const Sampler&) = default;
+        Sampler(Sampler&&) = default;
+        Sampler& operator=(const Sampler&) = default;
+        Sampler& operator=(Sampler&&) = default;
 };
 
 // Последовательность пикселов для рисования.
@@ -257,8 +272,9 @@ class PaintObjects
 public:
         virtual ~PaintObjects() = default;
 
-        virtual const std::vector<const GenericObject*>& get_objects() const = 0;
-        virtual const std::vector<const LightSource*>& get_light_sources() const = 0;
-        virtual const Projector& get_projector() const = 0;
-        virtual const SurfaceProperties& get_default_surface_properties() const = 0;
+        virtual const std::vector<const GenericObject*>& objects() const = 0;
+        virtual const std::vector<const LightSource*>& light_sources() const = 0;
+        virtual const Projector& projector() const = 0;
+        virtual const Sampler& sampler() const = 0;
+        virtual const SurfaceProperties& default_surface_properties() const = 0;
 };

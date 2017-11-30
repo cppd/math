@@ -31,5 +31,6 @@ std::unique_ptr<const PaintObjects> cornell_box(int width, int height, const std
 
 std::unique_ptr<const PaintObjects> one_object_scene(const vec3& background_color, const vec3& default_color, double diffuse,
                                                      std::unique_ptr<const Projector>&& projector,
+                                                     std::unique_ptr<const Sampler>&& sampler,
                                                      std::unique_ptr<const LightSource>&& light_source,
                                                      const std::shared_ptr<const Mesh>& mesh);
