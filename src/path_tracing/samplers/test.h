@@ -17,24 +17,4 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "path_tracing/objects.h"
-
-class StratifiedJitteredSampler final : public Sampler
-{
-        const int m_samples_one_dimension;
-
-public:
-        StratifiedJitteredSampler(int samples_per_pixel);
-
-        void generate(std::mt19937_64& random_engine, std::vector<vec2>* samples) const override;
-};
-
-class LatinHypercubeSampler final : public Sampler
-{
-        const int m_samples_per_pixel;
-
-public:
-        LatinHypercubeSampler(int samples_per_pixel);
-
-        void generate(std::mt19937_64& random_engine, std::vector<vec2>* samples) const override;
-};
+void test_samplers();

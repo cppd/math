@@ -1372,7 +1372,11 @@ std::unique_ptr<const LightSource> MainWindow::create_light_source() const
 
 std::unique_ptr<const Sampler> MainWindow::create_sampler(int samples_per_pixel) const
 {
+#if 1
         return std::make_unique<StratifiedJitteredSampler>(samples_per_pixel);
+#else
+        return std::make_unique<LatinHypercubeSampler>(samples_per_pixel);
+#endif
 }
 
 void MainWindow::on_pushButton_Painter_clicked()
