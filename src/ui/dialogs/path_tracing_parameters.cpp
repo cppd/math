@@ -26,18 +26,25 @@ constexpr double MAX_SIZE_COEFFICIENT = 10;
 PathTracingParameters::PathTracingParameters(QWidget* parent) : QDialog(parent)
 {
         ui.setupUi(this);
-        setWindowTitle("Path tracing parameters");
+        setWindowTitle("Path Tracing");
 }
 
-[[nodiscard]] bool PathTracingParameters::show(int max_thread_count, int width, int height, int* thread_count, double* size_coef)
+[[nodiscard]] bool PathTracingParameters::show(int max_thread_count, int width, int height, int default_samples_per_pixel,
+                                               int max_samples_per_pixel, int* thread_count, double* size_coef,
+                                               int* samples_per_pixel)
 {
         m_width = width;
         m_height = height;
         m_max_thread_count = std::max(1, max_thread_count);
+        m_max_samples_per_pixel = max_samples_per_pixel;
 
         ui.spinBox_thread_count->setMinimum(1);
         ui.spinBox_thread_count->setMaximum(m_max_thread_count);
         ui.spinBox_thread_count->setValue(m_max_thread_count);
+
+        ui.spinBox_samples_per_pixel->setMinimum(1);
+        ui.spinBox_samples_per_pixel->setMaximum(m_max_samples_per_pixel);
+        ui.spinBox_samples_per_pixel->setValue(default_samples_per_pixel);
 
         ui.doubleSpinBox_image_size->setMinimum(1);
         ui.doubleSpinBox_image_size->setMaximum(MAX_SIZE_COEFFICIENT);
@@ -55,6 +62,7 @@ PathTracingParameters::PathTracingParameters(QWidget* parent) : QDialog(parent)
 
         *thread_count = m_thread_count;
         *size_coef = m_size_coef;
+        *samples_per_pixel = m_samples_per_pixel;
 
         return true;
 }
@@ -80,6 +88,15 @@ void PathTracingParameters::done(int r)
         if (!(m_thread_count >= 1 && m_thread_count <= m_max_thread_count))
         {
                 std::string msg = "Error thread count. Must be in the range [1, " + to_string(m_max_thread_count) + "].";
+                message_critical(this, msg.c_str());
+                return;
+        }
+
+        m_samples_per_pixel = ui.spinBox_samples_per_pixel->value();
+        if (!(m_samples_per_pixel >= 1 && m_samples_per_pixel <= m_max_samples_per_pixel))
+        {
+                std::string msg =
+                        "Error samples per pixel. Must be in the range [1, " + to_string(m_max_samples_per_pixel) + "].";
                 message_critical(this, msg.c_str());
                 return;
         }

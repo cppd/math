@@ -265,4 +265,8 @@ public:
         {
                 m_counter.fetch_add(1, std::memory_order_relaxed);
         }
+        void operator+=(T v)
+        {
+                m_counter.fetch_add(v, std::memory_order_relaxed);
+        }
 };

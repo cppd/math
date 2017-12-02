@@ -132,5 +132,7 @@ std::string to_string(const std::vector<T>& data)
 
 std::string to_string_digit_groups(unsigned long long v, char s = '\x20');
 std::string to_string_digit_groups(long long v, char s = '\x20');
-std::string to_string_digit_groups(unsigned v, char s = '\x20');
+std::string to_string_digit_groups(unsigned int v, char s = '\x20');
+std::string to_string_digit_groups(unsigned long v, char s = '\x20');
 std::string to_string_digit_groups(int v, char s = '\x20');
+std::string to_string_digit_groups(long v, char s = '\x20');

@@ -130,11 +130,19 @@ std::string to_string_digit_groups(long long v, char s)
         }
 }
 
-std::string to_string_digit_groups(unsigned v, char s)
+std::string to_string_digit_groups(unsigned int v, char s)
+{
+        return to_string_digit_groups(static_cast<unsigned long long>(v), s);
+}
+std::string to_string_digit_groups(unsigned long v, char s)
 {
         return to_string_digit_groups(static_cast<unsigned long long>(v), s);
 }
 std::string to_string_digit_groups(int v, char s)
+{
+        return to_string_digit_groups(static_cast<long long>(v), s);
+}
+std::string to_string_digit_groups(long v, char s)
 {
         return to_string_digit_groups(static_cast<long long>(v), s);
 }

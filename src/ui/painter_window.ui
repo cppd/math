@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>731</width>
+    <width>700</width>
     <height>548</height>
    </rect>
   </property>
@@ -24,7 +24,7 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>711</width>
+        <width>680</width>
         <height>497</height>
        </rect>
       </property>
@@ -74,41 +74,41 @@
      </item>
      <item>
       <layout class="QGridLayout" name="gridLayout">
-       <item row="0" column="4">
+       <item row="0" column="7">
         <widget class="QLabel" name="label_2">
          <property name="text">
           <string>rays:</string>
          </property>
         </widget>
        </item>
-       <item row="0" column="7">
+       <item row="0" column="10">
         <widget class="QLabel" name="label_1">
          <property name="text">
           <string>pass:</string>
          </property>
         </widget>
        </item>
-       <item row="0" column="8">
+       <item row="0" column="11">
         <widget class="QLabel" name="label_pass_count">
          <property name="text">
-          <string>TextLabel</string>
+          <string>t</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
          </property>
         </widget>
        </item>
-       <item row="0" column="6">
+       <item row="0" column="9">
         <widget class="Line" name="line">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
          </property>
         </widget>
        </item>
-       <item row="0" column="5">
+       <item row="0" column="8">
         <widget class="QLabel" name="label_ray_count">
          <property name="text">
-          <string>TextLabel</string>
+          <string>t</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -122,25 +122,58 @@
          </property>
         </widget>
        </item>
-       <item row="0" column="2">
-        <widget class="QLabel" name="label_rps">
+       <item row="0" column="5">
+        <widget class="QLabel" name="label_rays_per_second">
+         <property name="toolTip">
+          <string>Rays per Second</string>
+         </property>
          <property name="text">
-          <string>TextLabel</string>
+          <string>t</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
          </property>
         </widget>
        </item>
-       <item row="0" column="1">
+       <item row="0" column="4">
         <widget class="QLabel" name="label">
+         <property name="toolTip">
+          <string>Rays per Second</string>
+         </property>
          <property name="text">
-          <string>rays/s:</string>
+          <string>r/s:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="6">
+        <widget class="Line" name="line_3">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="2">
+        <widget class="QLabel" name="label_samples_per_pixel">
+         <property name="toolTip">
+          <string>Samples per Pixel</string>
+         </property>
+         <property name="text">
+          <string>t</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QLabel" name="label_4">
+         <property name="toolTip">
+          <string>Samples per Pixel</string>
+         </property>
+         <property name="text">
+          <string>s/p:</string>
          </property>
         </widget>
        </item>
        <item row="0" column="3">
-        <widget class="Line" name="line_3">
+        <widget class="Line" name="line_4">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
          </property>

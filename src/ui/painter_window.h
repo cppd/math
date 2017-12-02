@@ -53,9 +53,10 @@ private:
         void painter_pixel_after(int x, int y, std::array<unsigned char, 3> rgb) noexcept override;
         void painter_error_message(const std::string& msg) noexcept override;
 
+        void set_default_pixels();
         void set_pixel(int x, int y, unsigned char r, unsigned char g, unsigned char b) noexcept;
         void mark_pixel_busy(int x, int y) noexcept;
-        void update_points() noexcept;
+        void update_points();
 
         std::unique_ptr<const PaintObjects> m_paint_objects;
         unsigned m_thread_count;
@@ -67,13 +68,14 @@ private:
         bool m_first_show;
         std::atomic_bool m_stop;
         AtomicCounter<unsigned long long> m_ray_count;
+        AtomicCounter<unsigned long long> m_sample_count;
         std::thread m_thread;
         std::atomic_bool m_thread_working;
         const std::thread::id m_window_thread_id;
         BarPaintbrush m_paintbrush;
 
-        class RPS;
-        std::unique_ptr<RPS> m_rps;
+        class Difference;
+        std::unique_ptr<Difference> m_difference;
 
         Ui::PainterWindow ui;
 };

@@ -222,6 +222,7 @@ class Painter
 
         static_assert(AtomicCounter<unsigned long long>::is_always_lock_free);
         AtomicCounter<unsigned long long>& m_ray_count;
+        AtomicCounter<unsigned long long>& m_sample_count;
 
         int m_width, m_height;
         std::vector<Pixel> m_pixels;
@@ -236,7 +237,8 @@ class Painter
 
 public:
         Painter(IPainterNotifier* painter_notifier, const PaintObjects& paint_objects, Paintbrush* paintbrush,
-                unsigned thread_count, std::atomic_bool* stop, AtomicCounter<unsigned long long>* ray_count)
+                unsigned thread_count, std::atomic_bool* stop, AtomicCounter<unsigned long long>* ray_count,
+                AtomicCounter<unsigned long long>* sample_count)
                 : m_painter_notifier(painter_notifier),
                   m_objects(paint_objects.objects()),
                   m_light_sources(paint_objects.light_sources()),
@@ -247,6 +249,7 @@ public:
                   m_threads(thread_count),
                   m_stop(*stop),
                   m_ray_count(*ray_count),
+                  m_sample_count(*sample_count),
                   m_width(m_projector.screen_width()),
                   m_height(m_projector.screen_height()),
                   m_pixels(m_width * m_height)
@@ -432,13 +435,16 @@ void Painter::paint_pixels()
                 pixel.add_rays(samples.size());
 
                 m_painter_notifier->painter_pixel_after(x, y, rgb_float_to_srgb_int8(pixel.color()));
+
+                m_sample_count += samples.size();
         }
 }
 }
 
 // Без выдачи исключений. Про проблемы сообщать через painter_notifier.
 void paint(IPainterNotifier* painter_notifier, const PaintObjects& paint_objects, Paintbrush* paintbrush, unsigned thread_count,
-           std::atomic_bool* stop, AtomicCounter<unsigned long long>* ray_count) noexcept
+           std::atomic_bool* stop, AtomicCounter<unsigned long long>* ray_count,
+           AtomicCounter<unsigned long long>* sample_count) noexcept
 {
         ASSERT(painter_notifier && paintbrush && stop && ray_count);
 
@@ -446,7 +452,7 @@ void paint(IPainterNotifier* painter_notifier, const PaintObjects& paint_objects
         {
                 try
                 {
-                        Painter p(painter_notifier, paint_objects, paintbrush, thread_count, stop, ray_count);
+                        Painter p(painter_notifier, paint_objects, paintbrush, thread_count, stop, ray_count, sample_count);
                         p.process();
                 }
                 catch (std::exception& e)

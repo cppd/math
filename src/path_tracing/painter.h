@@ -39,4 +39,5 @@ public:
 };
 
 void paint(IPainterNotifier* painter_notifier, const PaintObjects& paint_objects, Paintbrush* paintbrush, unsigned thread_count,
-           std::atomic_bool* stop, AtomicCounter<unsigned long long>* ray_count) noexcept;
+           std::atomic_bool* stop, AtomicCounter<unsigned long long>* ray_count,
+           AtomicCounter<unsigned long long>* sample_count) noexcept;

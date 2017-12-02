@@ -258,6 +258,7 @@ public:
         virtual void get_pixel(int* x, int* y) = 0;
         virtual void release_pixel(int x, int y) = 0;
         virtual int get_pass_count() const = 0;
+        virtual long long get_pixel_count() const = 0;
 
         Paintbrush() = default;
         Paintbrush(const Paintbrush&) = default;

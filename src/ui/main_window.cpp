@@ -83,7 +83,8 @@ constexpr int WINDOW_SHOW_DELAY_MSEC = 50;
 constexpr int SHADOW_ZOOM = 2;
 
 // Для трассировки пути. Количество лучей на один пиксель в одном проходе.
-constexpr int PATH_TRACING_SAMPLES_PER_PIXEL = 25;
+constexpr int PATH_TRACING_DEFAULT_SAMPLES_PER_PIXEL = 25;
+constexpr int PATH_TRACING_MAX_SAMPLES_PER_PIXEL = 100;
 
 // Сколько потоков не надо использовать от максимума для создания октадеревьев.
 constexpr unsigned MESH_OBJECT_NOT_USED_THREAD_COUNT = 2;
@@ -1398,9 +1399,11 @@ void MainWindow::on_pushButton_Painter_clicked()
 
         int thread_count;
         double size_coef;
+        int samples_per_pixel;
 
         if (!PathTracingParameters(this).show(get_hardware_concurrency(), ui.graphics_widget->width(),
-                                              ui.graphics_widget->height(), &thread_count, &size_coef))
+                                              ui.graphics_widget->height(), PATH_TRACING_DEFAULT_SAMPLES_PER_PIXEL,
+                                              PATH_TRACING_MAX_SAMPLES_PER_PIXEL, &thread_count, &size_coef, &samples_per_pixel))
         {
                 return;
         }
@@ -1420,8 +1423,7 @@ void MainWindow::on_pushButton_Painter_clicked()
 
                         create_painter_window(title, thread_count,
                                               one_object_scene(background_color, default_color, diffuse,
-                                                               create_projector(size_coef),
-                                                               create_sampler(PATH_TRACING_SAMPLES_PER_PIXEL),
+                                                               create_projector(size_coef), create_sampler(samples_per_pixel),
                                                                create_light_source(), mesh_pointer));
                 }
                 else
@@ -1440,7 +1442,7 @@ void MainWindow::on_pushButton_Painter_clicked()
                         create_painter_window(title, thread_count,
                                               cornell_box(paint_width, paint_height, mesh_pointer, m_mesh_object_size,
                                                           default_color, diffuse, camera_direction, camera_up,
-                                                          PATH_TRACING_SAMPLES_PER_PIXEL));
+                                                          samples_per_pixel));
                 }
         });
 }

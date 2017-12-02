@@ -41,6 +41,9 @@ class BarPaintbrush final : public Paintbrush
         static_assert(AtomicCounter<int>::is_always_lock_free);
         AtomicCounter<int> m_pass_count = 1;
 
+        static_assert(AtomicCounter<long long>::is_always_lock_free);
+        AtomicCounter<long long> m_pixel_count = 0;
+
         unsigned m_width;
 
         mutable SpinLock m_lock;
@@ -106,10 +109,17 @@ public:
                 std::lock_guard lg(m_lock);
 
                 m_pixels_busy[m_map[y * m_width + x]] = false;
+
+                ++m_pixel_count;
         }
 
         int get_pass_count() const override
         {
                 return m_pass_count;
+        }
+
+        long long get_pixel_count() const override
+        {
+                return m_pixel_count;
         }
 };

@@ -26,8 +26,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cstring>
 #include <deque>
 
-constexpr int UPDATE_INTERVAL = 100;
+constexpr int UPDATE_INTERVAL_MILLISECONDS = 100;
 constexpr int PANTBRUSH_WIDTH = 20;
+// Этот интервал должен быть больше интервала UPDATE_INTERVAL_MILLISECONDS
+constexpr int DIFFERENCE_INTERVAL_MILLISECONDS = 10 * UPDATE_INTERVAL_MILLISECONDS;
 
 constexpr bool SHOW_THREADS = true;
 
@@ -40,38 +42,40 @@ void set_text_and_minimum_width(QLabel* label, const std::string& text)
 }
 }
 
-// Количество лучей в секунду
-class PainterWindow::RPS
+class PainterWindow::Difference
 {
         struct Point
         {
-                long long count;
+                std::array<long long, 3> data;
                 double time;
-                Point(long long count_, double time_) : count(count_), time(time_)
+                Point(std::array<long long, 3> data_, double time_) : data(data_), time(time_)
                 {
                 }
         };
+
+        const double m_interval_seconds;
         std::deque<Point> m_deque;
-        double m_interval;
 
 public:
-        RPS(double interval) : m_interval(interval)
+        Difference(int interval_milliseconds) : m_interval_seconds(interval_milliseconds / 1000.0)
         {
         }
 
-        double freq(long long count)
+        std::tuple<long long, long long, long long, double> compute(const std::array<long long, 3>& data)
         {
                 double time = get_time_seconds();
 
-                m_deque.emplace_back(count, time);
-
                 // Удаление старых элементов
-                while (m_deque.size() >= 2 && m_deque.front().time < time - m_interval)
+                while (!m_deque.empty() && m_deque.front().time < time - m_interval_seconds)
                 {
                         m_deque.pop_front();
                 }
 
-                return (m_deque.size() >= 2) ? (count - m_deque.front().count) / (time - m_deque.front().time) : 0;
+                m_deque.emplace_back(data, time);
+
+                return std::make_tuple(
+                        m_deque.back().data[0] - m_deque.front().data[0], m_deque.back().data[1] - m_deque.front().data[1],
+                        m_deque.back().data[2] - m_deque.front().data[2], m_deque.back().time - m_deque.front().time);
         }
 };
 
@@ -87,10 +91,11 @@ PainterWindow::PainterWindow(const std::string& title, unsigned thread_count, st
           m_first_show(true),
           m_stop(false),
           m_ray_count(0),
+          m_sample_count(0),
           m_thread_working(false),
           m_window_thread_id(std::this_thread::get_id()),
           m_paintbrush(m_width, m_height, PANTBRUSH_WIDTH),
-          m_rps(std::make_unique<RPS>(1))
+          m_difference(std::make_unique<Difference>(DIFFERENCE_INTERVAL_MILLISECONDS))
 {
         ui.setupUi(this);
 
@@ -104,23 +109,13 @@ PainterWindow::PainterWindow(const std::string& title, unsigned thread_count, st
 
         connect(&m_timer, SIGNAL(timeout()), this, SLOT(timer_slot()));
 
-        for (int y = 0; y < m_height; ++y)
-        {
-                for (int x = 0; x < m_width; ++x)
-                {
-                        if ((y + x) & 1)
-                        {
-                                set_pixel(x, y, 100, 150, 200);
-                        }
-                }
-        }
-
         ui.label_points->setText("");
         ui.label_points->resize(m_width, m_height);
 
-        ui.label_rps->setText("");
+        ui.label_rays_per_second->setText("");
         ui.label_ray_count->setText("");
         ui.label_pass_count->setText("");
+        ui.label_samples_per_pixel->setText("");
 
         ui.scrollAreaWidgetContents->layout()->setContentsMargins(0, 0, 0, 0);
         ui.scrollAreaWidgetContents->layout()->setSpacing(0);
@@ -129,6 +124,8 @@ PainterWindow::PainterWindow(const std::string& title, unsigned thread_count, st
         this->setWindowTitle(title.c_str());
 
         ui.checkBox_show_threads->setChecked(SHOW_THREADS);
+
+        set_default_pixels();
 
         update_points();
 
@@ -147,6 +144,24 @@ PainterWindow::~PainterWindow()
         }
 }
 
+void PainterWindow::set_default_pixels()
+{
+        for (int y = 0; y < m_height; ++y)
+        {
+                for (int x = 0; x < m_width; ++x)
+                {
+                        if ((y + x) & 1)
+                        {
+                                set_pixel(x, y, 100, 150, 200);
+                        }
+                        else
+                        {
+                                set_pixel(x, y, 0, 0, 0);
+                        }
+                }
+        }
+}
+
 void PainterWindow::set_pixel(int x, int y, unsigned char r, unsigned char g, unsigned char b) noexcept
 {
         quint32 c = (r << 16) + (g << 8) + b;
@@ -161,7 +176,7 @@ void PainterWindow::mark_pixel_busy(int x, int y) noexcept
         m_data[m_width * y + x] ^= 0x00ff'ffff;
 }
 
-void PainterWindow::update_points() noexcept
+void PainterWindow::update_points()
 {
         const quint32* image_data = ui.checkBox_show_threads->isChecked() ? m_data.data() : m_data_clean.data();
         std::memcpy(m_image.bits(), image_data, m_image_data_size);
@@ -187,7 +202,7 @@ void PainterWindow::painter_error_message(const std::string& msg) noexcept
         }
         catch (...)
         {
-                error_fatal("Error painter error message emit signal");
+                error_fatal("Error painter message emit signal");
         }
 }
 
@@ -219,26 +234,33 @@ void PainterWindow::first_shown()
         ui.scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
         ui.scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
 
-        m_timer.start(UPDATE_INTERVAL);
+        m_timer.start(UPDATE_INTERVAL_MILLISECONDS);
 
         m_stop = false;
-        m_ray_count = 0;
         m_thread_working = true;
         m_thread = std::thread([this]() noexcept {
-                paint(this, *m_paint_objects, &m_paintbrush, m_thread_count, &m_stop, &m_ray_count);
+                paint(this, *m_paint_objects, &m_paintbrush, m_thread_count, &m_stop, &m_ray_count, &m_sample_count);
                 m_thread_working = false;
         });
 }
 
 void PainterWindow::timer_slot()
 {
-        long long ray_count = m_ray_count;
-        long long rps = std::round(m_rps->freq(ray_count));
         long long pass_count = m_paintbrush.get_pass_count();
 
-        set_text_and_minimum_width(ui.label_rps, to_string_digit_groups(rps));
+        long long ray_count = m_ray_count;
+        long long sample_count = m_sample_count;
+        long long pixel_count = m_paintbrush.get_pixel_count();
+
+        auto[ray_diff, sample_diff, pixel_diff, time_diff] = m_difference->compute({{ray_count, sample_count, pixel_count}});
+
+        long long rays_per_second = time_diff != 0 ? std::llround(ray_diff / time_diff) : 0;
+        long long samples_per_pixel = pixel_diff != 0 ? std::llround(static_cast<double>(sample_diff) / pixel_diff) : 0;
+
+        set_text_and_minimum_width(ui.label_rays_per_second, to_string_digit_groups(rays_per_second));
         set_text_and_minimum_width(ui.label_ray_count, to_string_digit_groups(ray_count));
         set_text_and_minimum_width(ui.label_pass_count, to_string_digit_groups(pass_count));
+        set_text_and_minimum_width(ui.label_samples_per_pixel, to_string_digit_groups(samples_per_pixel));
 
         update_points();
 }
