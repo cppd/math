@@ -15,50 +15,70 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+/*
+ Формулы имеются в книге
+
+ Samuel R. Buss.
+ 3D Computer Graphics. A Mathematical Introduction with OpenGL.
+ Cambridge University Press, 2003.
+*/
+
 #pragma once
 
 #include "base.h"
-
-#include "com/vec.h"
-#include "path_tracing/objects.h"
-#include "path_tracing/ray.h"
-
-#include <array>
+#include "parallelotope_ortho.h"
+#include "path_tracing/constants.h"
 
 class ParallelepipedOrtho final : public GeometricParallelepiped
 {
-        static constexpr vec3 NORMALS[3] = {vec3(1, 0, 0), vec3(0, 1, 0), vec3(0, 0, 1)};
-        static constexpr vec3 NORMALS_R[3] = {vec3(-1, 0, 0), vec3(0, -1, 0), vec3(0, 0, -1)};
-
-        struct Planes
-        {
-                double d1, d2;
-
-        } m_planes[3];
-
-        vec3 m_org;
-        double m_x, m_y, m_z;
-
-        void create_planes();
+        ParallelotopeOrtho<3, double> m_parallelepiped_ortho;
 
 public:
         ParallelepipedOrtho() = default;
-
-        ParallelepipedOrtho(const vec3& org, double x, double y, double z);
-        ParallelepipedOrtho(const vec3& org, const vec3& x, const vec3& y, const vec3& z);
-
-        void set_data(const vec3& org, double x, double y, double z);
-
-        bool inside(const vec3& p) const override;
-        bool intersect(const ray3& r, double* t) const override;
-
-        vec3 normal(const vec3& p) const;
-
-        void binary_division(std::array<ParallelepipedOrtho, 8>* p) const;
-        std::array<ParallelepipedOrtho, 8> binary_division() const;
-
-        const vec3& org() const override;
-        vec3 e0() const override;
-        vec3 e1() const override;
-        vec3 e2() const override;
+        ParallelepipedOrtho(const vec3& org, const vec3& e0, const vec3& e1, const vec3& e2)
+                : m_parallelepiped_ortho(org, std::array<vec3, 3>{{e0, e1, e2}})
+        {
+        }
+        ParallelepipedOrtho(const vec3& org, double e0, double e1, double e2)
+                : m_parallelepiped_ortho(org, std::array<double, 3>{{e0, e1, e2}})
+        {
+        }
+        ParallelepipedOrtho(const vec3& org, const std::array<double, 3>& sizes) : m_parallelepiped_ortho(org, sizes)
+        {
+        }
+        ParallelepipedOrtho(const vec3& org, const std::array<vec3, 3>& sizes) : m_parallelepiped_ortho(org, sizes)
+        {
+        }
+        bool inside(const vec3& p) const override
+        {
+                return m_parallelepiped_ortho.inside(p);
+        }
+        bool intersect(const ray3& r, double* t) const override
+        {
+                return m_parallelepiped_ortho.intersect(r, INTERSECTION_THRESHOLD, t);
+        }
+        vec3 normal(const vec3& p) const
+        {
+                return m_parallelepiped_ortho.normal(p);
+        }
+        std::array<ParallelepipedOrtho, 8> binary_division() const
+        {
+                return m_parallelepiped_ortho.binary_division<ParallelepipedOrtho>();
+        }
+        const vec3& org() const override
+        {
+                return m_parallelepiped_ortho.org();
+        }
+        vec3 e0() const override
+        {
+                return m_parallelepiped_ortho.e<0>();
+        }
+        vec3 e1() const override
+        {
+                return m_parallelepiped_ortho.e<1>();
+        }
+        vec3 e2() const override
+        {
+                return m_parallelepiped_ortho.e<2>();
+        }
 };

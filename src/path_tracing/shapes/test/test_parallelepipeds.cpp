@@ -192,8 +192,8 @@ void test_parallelepiped(int point_count, const P& d)
                 }
                 if (t >= max_length)
                 {
-                        error("intersection out of parallelepiped.\ndistance = " + to_string(t) + ", " + "max distance = " +
-                              to_string(max_length) + "\n" + to_string(ray));
+                        error("intersection out of parallelepiped.\ndistance = " + to_string(t) + ", " +
+                              "max distance = " + to_string(max_length) + "\n" + to_string(ray));
                 }
 
                 ray = ray3(ray_orig.point(-10 * max_length), direction);
@@ -237,8 +237,8 @@ void verify_intersection(const ray3& ray, const P&... d)
                 }
                 if (intersections[i] && std::abs(ts[i] - ts[0]) > COMPARE_EPSILON)
                 {
-                        error("Error intersection distance.\nDistance = " + to_string(ts[i]) + ", first distance  = " +
-                              to_string(ts[0]) + "\n" + to_string(ray));
+                        error("Error intersection distance.\nDistance = " + to_string(ts[i]) +
+                              ", first distance  = " + to_string(ts[0]) + "\n" + to_string(ray));
                 }
         }
 }
@@ -368,8 +368,8 @@ void test_parallelepipeds()
                 Parallelepiped d(org, vec3(e[0], 0, 0), vec3(0, e[1], 0), vec3(0, 0, e[2]));
                 ParallelepipedOrtho d_ortho(org, e[0], e[1], e[2]);
 
-                LOG("compare parallelepipeds, org = " + to_string(org) + ", e0 = " + to_string(e[0]) + ", e1 = " +
-                    to_string(e[1]) + ", e2 = " + to_string(e[2]));
+                LOG("compare parallelepipeds, org = " + to_string(org) + ", e0 = " + to_string(e[0]) +
+                    ", e1 = " + to_string(e[1]) + ", e2 = " + to_string(e[2]));
 
                 compare_parallelepipeds(point_count, d, d_ortho);
         }

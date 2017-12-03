@@ -115,7 +115,7 @@ bool Mesh::intersect_approximate(const ray3& r, double* t) const
 
 bool Mesh::intersect_precise(const ray3& ray, double approximate_t, double* t, const GeometricObject** geometric_object) const
 {
-        const TableTriangle* triangle;
+        const TableTriangle* triangle = nullptr;
 
         if (m_octree.trace_ray(ray, approximate_t,
                                // Пересечение луча с набором треугольников ячейки октадерева
