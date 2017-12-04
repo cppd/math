@@ -15,14 +15,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-/*
- Формулы имеются в книге
-
- Samuel R. Buss.
- 3D Computer Graphics. A Mathematical Introduction with OpenGL.
- Cambridge University Press, 2003.
-*/
-
 #pragma once
 
 #include "base.h"
@@ -36,17 +28,10 @@ class ParallelepipedOrtho final : public GeometricParallelepiped
 public:
         ParallelepipedOrtho() = default;
         ParallelepipedOrtho(const vec3& org, const vec3& e0, const vec3& e1, const vec3& e2)
-                : m_parallelepiped_ortho(org, std::array<vec3, 3>{{e0, e1, e2}})
+                : m_parallelepiped_ortho(org, e0, e1, e2)
         {
         }
-        ParallelepipedOrtho(const vec3& org, double e0, double e1, double e2)
-                : m_parallelepiped_ortho(org, std::array<double, 3>{{e0, e1, e2}})
-        {
-        }
-        ParallelepipedOrtho(const vec3& org, const std::array<double, 3>& sizes) : m_parallelepiped_ortho(org, sizes)
-        {
-        }
-        ParallelepipedOrtho(const vec3& org, const std::array<vec3, 3>& sizes) : m_parallelepiped_ortho(org, sizes)
+        ParallelepipedOrtho(const vec3& org, double e0, double e1, double e2) : m_parallelepiped_ortho(org, e0, e1, e2)
         {
         }
         bool inside(const vec3& p) const override

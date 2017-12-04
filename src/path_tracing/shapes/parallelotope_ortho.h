@@ -15,6 +15,16 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+/*
+ Формулы имеются в книге
+
+ Samuel R. Buss.
+ 3D Computer Graphics. A Mathematical Introduction with OpenGL.
+ Cambridge University Press, 2003.
+*/
+
+#pragma once
+
 #include "com/error.h"
 #include "com/vec.h"
 #include "path_tracing/ray.h"
@@ -26,6 +36,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ParallelotopeOrthoImplementation
 {
+// Вспомогательная функция для следующей после неё функции
 template <typename T, size_t ValueIndex, size_t... I>
 constexpr Vector<sizeof...(I), T> index_vector_impl(T value, std::integer_sequence<size_t, I...>)
 {
@@ -38,6 +49,9 @@ constexpr Vector<N, T> index_vector(T value)
         return index_vector_impl<T, ValueIndex>(value, std::make_integer_sequence<size_t, N>());
 }
 
+//
+
+// Вспомогательная функция для следующей после неё функции
 template <typename T, size_t... I>
 constexpr std::array<Vector<sizeof...(I), T>, sizeof...(I)> index_vectors_impl(T value, std::integer_sequence<size_t, I...>)
 {
@@ -49,6 +63,23 @@ template <size_t N, typename T>
 constexpr std::array<Vector<N, T>, N> index_vectors(T value)
 {
         return index_vectors_impl<T>(value, std::make_integer_sequence<size_t, N>());
+}
+
+//
+
+// Вспомогательная функция для следующей после неё функции
+template <typename ObjectType, typename T, size_t... I>
+constexpr ObjectType create_object_from_array_impl(const Vector<sizeof...(I), T>& org,
+                                                   const std::array<T, sizeof...(I)>& parameters,
+                                                   std::integer_sequence<size_t, I...>)
+{
+        return ObjectType(org, parameters[I]...);
+}
+// Создать объект, передавая отдельные элементы массива как отдельные параметры конструктора этого объекта
+template <typename ObjectType, size_t N, typename T>
+constexpr ObjectType create_object_from_array(const Vector<N, T>& org, const std::array<T, N>& parameters)
+{
+        return create_object_from_array_impl<ObjectType>(org, parameters, std::make_integer_sequence<size_t, N>());
 }
 }
 
@@ -76,12 +107,14 @@ class ParallelotopeOrtho final
         std::array<T, N> m_sizes;
 
         void create_planes();
+        void set_data(const Vector<N, T>& org, const std::array<Vector<N, T>, N>& vectors);
         void set_data(const Vector<N, T>& org, const std::array<T, N>& sizes);
 
 public:
         ParallelotopeOrtho() = default;
-        ParallelotopeOrtho(const Vector<N, T>& org, const std::array<T, N>& sizes);
-        ParallelotopeOrtho(const Vector<N, T>& org, const std::array<Vector<N, T>, N>& sizes);
+
+        template <typename... P>
+        ParallelotopeOrtho(const Vector<N, T>& org, const P&... vectors);
 
         bool inside(const Vector<N, T>& p) const;
 
@@ -98,14 +131,26 @@ public:
         Vector<N, T> e() const;
 };
 
+// Параметр vectors — это или все только double, или все только Vector<N, T>
 template <size_t N, typename T>
-ParallelotopeOrtho<N, T>::ParallelotopeOrtho(const Vector<N, T>& org, const std::array<T, N>& sizes)
+template <typename... P>
+ParallelotopeOrtho<N, T>::ParallelotopeOrtho(const Vector<N, T>& org, const P&... vectors)
 {
-        set_data(org, sizes);
+        static_assert((std::is_same_v<double, P> && ...) || (std::is_same_v<Vector<N, T>, P> && ...));
+        static_assert(sizeof...(P) == N);
+
+        if constexpr ((std::is_same_v<double, P> && ...))
+        {
+                set_data(org, std::array<double, N>{{vectors...}});
+        }
+        if constexpr ((std::is_same_v<Vector<N, T>, P> && ...))
+        {
+                set_data(org, std::array<Vector<N, T>, N>{{vectors...}});
+        }
 }
 
 template <size_t N, typename T>
-ParallelotopeOrtho<N, T>::ParallelotopeOrtho(const Vector<N, T>& org, const std::array<Vector<N, T>, N>& sizes)
+void ParallelotopeOrtho<N, T>::set_data(const Vector<N, T>& org, const std::array<Vector<N, T>, N>& vectors)
 {
         std::array<T, N> data;
 
@@ -113,13 +158,13 @@ ParallelotopeOrtho<N, T>::ParallelotopeOrtho(const Vector<N, T>& org, const std:
         {
                 for (unsigned i = 0; i < N; ++i)
                 {
-                        if (i != vector_number && sizes[vector_number][i] != 0)
+                        if (i != vector_number && vectors[vector_number][i] != 0)
                         {
                                 error("Error orthogonal parallelotope vectors");
                         }
                 }
 
-                data[vector_number] = sizes[vector_number][vector_number];
+                data[vector_number] = vectors[vector_number][vector_number];
         }
 
         set_data(org, data);
@@ -278,7 +323,7 @@ std::array<ObjectType, ParallelotopeOrtho<N, T>::DIVISIONS> ParallelotopeOrtho<N
                         org[i] = (division & (1u << i)) ? org_plus_half[i] : m_org[i];
                 }
 
-                res[division] = ObjectType(org, half_sizes);
+                res[division] = ParallelotopeOrthoImplementation::create_object_from_array<ObjectType>(org, half_sizes);
         }
 
         return res;
