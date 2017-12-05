@@ -17,8 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "com/ray.h"
 #include "com/vec.h"
-#include "path_tracing/ray.h"
 
 void triangle_u_beta_and_u_gamma_for_v0(const vec3& v0, const vec3& v1, const vec3& v2, vec3* u_beta, vec3* u_gamma);
 

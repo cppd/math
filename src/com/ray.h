@@ -17,7 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "com/vec.h"
+#include "print.h"
+#include "vec.h"
+
+#include <string>
 
 template <size_t N, typename T>
 class Ray

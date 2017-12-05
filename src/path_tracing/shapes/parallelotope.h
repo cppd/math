@@ -26,10 +26,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "com/error.h"
+#include "com/ray.h"
 #include "com/vec.h"
 #include "geometry/core/array_elements.h"
 #include "geometry/core/linear_algebra.h"
-#include "path_tracing/ray.h"
 
 #include <algorithm>
 #include <array>

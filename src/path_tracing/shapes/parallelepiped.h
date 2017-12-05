@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "base.h"
 #include "parallelotope.h"
+
 #include "path_tracing/constants.h"
 
 class Parallelepiped final : public GeometricParallelepiped

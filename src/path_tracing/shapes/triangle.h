@@ -19,9 +19,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "base.h"
 
+#include "com/ray.h"
 #include "com/vec.h"
 #include "path_tracing/objects.h"
-#include "path_tracing/ray.h"
 
 class TableTriangle final : public GeometricTriangle
 {

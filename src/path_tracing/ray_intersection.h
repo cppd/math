@@ -18,7 +18,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "objects.h"
-#include "ray.h"
+
+#include "com/ray.h"
 
 #include <algorithm>
 #include <limits>

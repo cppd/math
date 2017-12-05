@@ -23,10 +23,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "constants.h"
-#include "ray.h"
 
 #include "com/arrays.h"
 #include "com/error.h"
+#include "com/ray.h"
 #include "com/thread.h"
 #include "com/vec.h"
 #include "progress/progress.h"
