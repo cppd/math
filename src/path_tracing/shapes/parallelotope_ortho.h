@@ -25,9 +25,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "intersection.h"
+
 #include "com/error.h"
 #include "com/ray.h"
 #include "com/vec.h"
+#include "path_tracing/constants.h"
 
 #include <algorithm>
 #include <array>
@@ -47,6 +50,21 @@ template <size_t N, typename T, size_t ValueIndex>
 constexpr Vector<N, T> index_vector(T value)
 {
         return index_vector_impl<T, ValueIndex>(value, std::make_integer_sequence<size_t, N>());
+}
+
+//
+
+// Вспомогательная функция для следующей после неё функции
+template <typename T, size_t... I>
+constexpr Vector<sizeof...(I), T> index_vector_impl(unsigned index, T value, std::integer_sequence<size_t, I...>)
+{
+        return Vector<sizeof...(I), T>((I == index ? value : 0)...);
+}
+// Вектор, в котором координата с индексом index равна value, а остальные координаты равны 0
+template <size_t N, typename T>
+constexpr Vector<N, T> index_vector(unsigned index, T value)
+{
+        return index_vector_impl<T>(index, value, std::make_integer_sequence<size_t, N>());
 }
 
 //
@@ -84,7 +102,7 @@ constexpr ObjectType create_object_from_array(const Vector<N, T>& org, const std
 }
 
 template <size_t N, typename T>
-class ParallelotopeOrtho final
+class ParallelotopeOrtho final : public IntersectionParallelotope<N, T>
 {
         static_assert(N >= 2);
         static_assert(std::is_floating_point_v<T>);
@@ -116,19 +134,17 @@ public:
         template <typename... P>
         ParallelotopeOrtho(const Vector<N, T>& org, const P&... vectors);
 
-        bool inside(const Vector<N, T>& p) const;
+        bool inside(const Vector<N, T>& p) const override;
 
-        bool intersect(const Ray<N, T>& r, T intersection_threshold, T* t) const;
+        bool intersect(const Ray<N, T>& r, T* t) const override;
 
         Vector<N, T> normal(const Vector<N, T>& p) const;
 
-        template <typename ObjectType = ParallelotopeOrtho<N, T>>
-        std::array<ObjectType, DIVISIONS> binary_division() const;
+        std::array<ParallelotopeOrtho<N, T>, DIVISIONS> binary_division() const;
 
-        const Vector<N, T>& org() const;
+        const Vector<N, T>& org() const override;
 
-        template <size_t Index>
-        Vector<N, T> e() const;
+        Vector<N, T> e(unsigned n) const override;
 };
 
 // Параметр vectors — это или все только double, или все только Vector<N, T>
@@ -198,7 +214,7 @@ void ParallelotopeOrtho<N, T>::set_data(const Vector<N, T>& org, const std::arra
 }
 
 template <size_t N, typename T>
-bool ParallelotopeOrtho<N, T>::intersect(const Ray<N, T>& r, T intersection_threshold, T* t) const
+bool ParallelotopeOrtho<N, T>::intersect(const Ray<N, T>& r, T* t) const
 {
         T f_max = std::numeric_limits<T>::lowest();
         T b_min = std::numeric_limits<T>::max();
@@ -247,9 +263,9 @@ bool ParallelotopeOrtho<N, T>::intersect(const Ray<N, T>& r, T intersection_thre
                 }
         }
 
-        *t = (f_max > intersection_threshold) ? f_max : b_min;
+        *t = (f_max > INTERSECTION_THRESHOLD) ? f_max : b_min;
 
-        return *t > intersection_threshold;
+        return *t > INTERSECTION_THRESHOLD;
 }
 
 template <size_t N, typename T>
@@ -295,8 +311,7 @@ bool ParallelotopeOrtho<N, T>::inside(const Vector<N, T>& p) const
 }
 
 template <size_t N, typename T>
-template <typename ObjectType>
-std::array<ObjectType, ParallelotopeOrtho<N, T>::DIVISIONS> ParallelotopeOrtho<N, T>::binary_division() const
+std::array<ParallelotopeOrtho<N, T>, ParallelotopeOrtho<N, T>::DIVISIONS> ParallelotopeOrtho<N, T>::binary_division() const
 {
         std::array<T, N> half_sizes;
         for (unsigned i = 0; i < N; ++i)
@@ -310,7 +325,7 @@ std::array<ObjectType, ParallelotopeOrtho<N, T>::DIVISIONS> ParallelotopeOrtho<N
                 org_plus_half[i] = m_org[i] + half_sizes[i];
         }
 
-        std::array<ObjectType, ParallelotopeOrtho<N, T>::DIVISIONS> res;
+        std::array<ParallelotopeOrtho, DIVISIONS> res;
 
         // Если имеется 0 в разряде i номера объекта, то без смещения от начала объекта по измерению i.
         // Если имеется 1 в разряде i номера объекта, то со смещением от начала объекта по измерению i.
@@ -323,7 +338,7 @@ std::array<ObjectType, ParallelotopeOrtho<N, T>::DIVISIONS> ParallelotopeOrtho<N
                         org[i] = (division & (1u << i)) ? org_plus_half[i] : m_org[i];
                 }
 
-                res[division] = ParallelotopeOrthoImplementation::create_object_from_array<ObjectType>(org, half_sizes);
+                res[division] = ParallelotopeOrthoImplementation::create_object_from_array<ParallelotopeOrtho>(org, half_sizes);
         }
 
         return res;
@@ -336,9 +351,8 @@ const Vector<N, T>& ParallelotopeOrtho<N, T>::org() const
 }
 
 template <size_t N, typename T>
-template <size_t Index>
-Vector<N, T> ParallelotopeOrtho<N, T>::e() const
+Vector<N, T> ParallelotopeOrtho<N, T>::e(unsigned n) const
 {
-        static_assert(Index < N);
-        return ParallelotopeOrthoImplementation::index_vector<N, T, Index>(m_sizes[Index]);
+        ASSERT(n < N);
+        return ParallelotopeOrthoImplementation::index_vector<N, T>(n, m_sizes[n]);
 }

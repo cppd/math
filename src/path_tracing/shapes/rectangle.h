@@ -17,13 +17,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "base.h"
+#include "intersection.h"
 
 #include "com/ray.h"
 #include "com/vec.h"
 #include "path_tracing/objects.h"
 
-class Rectangle final : public GeometricRectangle
+class Rectangle final : public IntersectionRectangle, public GeometricObject
 {
         vec3 m_org, m_e0, m_e1;
         vec3 m_normal;

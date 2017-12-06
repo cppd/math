@@ -25,11 +25,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "intersection.h"
+
 #include "com/error.h"
 #include "com/ray.h"
 #include "com/vec.h"
 #include "geometry/core/array_elements.h"
 #include "geometry/core/linear_algebra.h"
+#include "path_tracing/constants.h"
 
 #include <algorithm>
 #include <array>
@@ -55,7 +58,7 @@ constexpr ObjectType create_object_from_array(const Vector<N, T>& org, const std
 }
 
 template <size_t N, typename T>
-class Parallelotope final
+class Parallelotope final : public IntersectionParallelotope<N, T>
 {
         static_assert(N >= 2);
         static_assert(std::is_floating_point_v<T>);
@@ -83,19 +86,17 @@ public:
         template <typename... P>
         Parallelotope(const Vector<N, T>& org, const P&... vectors);
 
-        bool inside(const Vector<N, T>& p) const;
+        bool inside(const Vector<N, T>& p) const override;
 
-        bool intersect(const Ray<N, T>& r, T epsilon, T intersection_threshold, T* t) const;
+        bool intersect(const Ray<N, T>& r, T* t) const override;
 
         Vector<N, T> normal(const Vector<N, T>& p) const;
 
-        template <typename ObjectType = Parallelotope<N, T>>
-        std::array<ObjectType, DIVISIONS> binary_division() const;
+        std::array<Parallelotope<N, T>, DIVISIONS> binary_division() const;
 
-        const Vector<N, T>& org() const;
+        const Vector<N, T>& org() const override;
 
-        template <size_t Index>
-        const Vector<N, T>& e() const;
+        Vector<N, T> e(unsigned n) const override;
 };
 
 // Параметр vectors — это все только Vector<N, T>
@@ -151,7 +152,7 @@ void Parallelotope<N, T>::create_planes()
 }
 
 template <size_t N, typename T>
-bool Parallelotope<N, T>::intersect(const Ray<N, T>& r, T epsilon, T intersection_threshold, T* t) const
+bool Parallelotope<N, T>::intersect(const Ray<N, T>& r, T* t) const
 {
         T f_max = std::numeric_limits<T>::lowest();
         T b_min = std::numeric_limits<T>::max();
@@ -159,7 +160,7 @@ bool Parallelotope<N, T>::intersect(const Ray<N, T>& r, T epsilon, T intersectio
         for (unsigned i = 0; i < N; ++i)
         {
                 T s = dot(r.get_dir(), m_planes[i].n);
-                if (std::abs(s) < epsilon)
+                if (std::abs(s) < EPSILON)
                 {
                         T d = dot(r.get_org(), m_planes[i].n);
                         if (d - m_planes[i].d1 > 0 || -d - m_planes[i].d2 > 0)
@@ -200,9 +201,9 @@ bool Parallelotope<N, T>::intersect(const Ray<N, T>& r, T epsilon, T intersectio
                 }
         }
 
-        *t = (f_max > intersection_threshold) ? f_max : b_min;
+        *t = (f_max > INTERSECTION_THRESHOLD) ? f_max : b_min;
 
-        return *t > intersection_threshold;
+        return *t > INTERSECTION_THRESHOLD;
 }
 
 template <size_t N, typename T>
@@ -261,8 +262,7 @@ bool Parallelotope<N, T>::inside(const Vector<N, T>& p) const
 }
 
 template <size_t N, typename T>
-template <typename ObjectType>
-std::array<ObjectType, Parallelotope<N, T>::DIVISIONS> Parallelotope<N, T>::binary_division() const
+std::array<Parallelotope<N, T>, Parallelotope<N, T>::DIVISIONS> Parallelotope<N, T>::binary_division() const
 {
         std::array<Vector<N, T>, N> half_vectors;
         for (unsigned i = 0; i < N; ++i)
@@ -270,7 +270,7 @@ std::array<ObjectType, Parallelotope<N, T>::DIVISIONS> Parallelotope<N, T>::bina
                 half_vectors[i] = m_vectors[i] / static_cast<T>(2);
         }
 
-        std::array<ObjectType, DIVISIONS> res;
+        std::array<Parallelotope, DIVISIONS> res;
 
         // Если имеется 0 в разряде i номера объекта, то без смещения от начала объекта по измерению i.
         // Если имеется 1 в разряде i номера объекта, то со смещением от начала объекта по измерению i.
@@ -287,7 +287,7 @@ std::array<ObjectType, Parallelotope<N, T>::DIVISIONS> Parallelotope<N, T>::bina
                         }
                 }
 
-                res[division] = ParallelotopeImplementation::create_object_from_array<ObjectType>(org, half_vectors);
+                res[division] = ParallelotopeImplementation::create_object_from_array<Parallelotope>(org, half_vectors);
         }
 
         return res;
@@ -300,9 +300,8 @@ const Vector<N, T>& Parallelotope<N, T>::org() const
 }
 
 template <size_t N, typename T>
-template <size_t Index>
-const Vector<N, T>& Parallelotope<N, T>::e() const
+Vector<N, T> Parallelotope<N, T>::e(unsigned n) const
 {
-        static_assert(Index < N);
-        return m_vectors[Index];
+        ASSERT(n < N);
+        return m_vectors[n];
 }

@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "parallelepiped_ortho.h"
+#include "parallelotope_ortho.h"
 #include "triangle.h"
 
 #include "com/mat.h"
@@ -31,7 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 class Mesh final
 {
-        using OctreeParallelepiped = ParallelepipedOrtho;
+        using OctreeParallelepiped = ParallelotopeOrtho<3, double>;
 
         std::vector<vec3> m_vertices;
         std::vector<vec3> m_normals;

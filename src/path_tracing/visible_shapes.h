@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/log.h"
 #include "com/print.h"
 #include "path_tracing/shapes/mesh.h"
-#include "path_tracing/shapes/parallelepiped.h"
+#include "path_tracing/shapes/parallelotope.h"
 #include "path_tracing/shapes/rectangle.h"
 
 #include <memory>
@@ -64,7 +64,7 @@ public:
 
 class VisibleParallelepiped final : public GenericObject, public Surface, public SurfaceProperties
 {
-        Parallelepiped m_parallelepiped;
+        Parallelotope<3, double> m_parallelepiped;
 
 public:
         VisibleParallelepiped(const vec3& org, const vec3& e0, const vec3& e1, const vec3& e2) : m_parallelepiped(org, e0, e1, e2)

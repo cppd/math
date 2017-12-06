@@ -21,9 +21,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/log.h"
 #include "com/print.h"
 #include "com/random.h"
+#include "com/ray.h"
 #include "com/vec.h"
-#include "path_tracing/shapes/parallelepiped.h"
-#include "path_tracing/shapes/parallelepiped_ortho.h"
+#include "path_tracing/shapes/parallelotope.h"
+#include "path_tracing/shapes/parallelotope_ortho.h"
 
 #include <algorithm>
 #include <random>
@@ -31,15 +32,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 constexpr double POSITION_DELTA = 1e-6;
 constexpr double COMPARE_EPSILON = 1e-10;
 
+using Parallelepiped = Parallelotope<3, double>;
+using ParallelepipedOrtho = ParallelotopeOrtho<3, double>;
+
 namespace
 {
 template <typename P>
 double max_diagonal(const P& d)
 {
-        double diagonal_1 = length(d.e0() + d.e1() + d.e2());
-        double diagonal_2 = length(d.e0() + d.e1() - d.e2());
-        double diagonal_3 = length(d.e0() + d.e2() - d.e1());
-        double diagonal_4 = length(d.e1() + d.e2() - d.e0());
+        double diagonal_1 = length(d.e(0) + d.e(1) + d.e(2));
+        double diagonal_2 = length(d.e(0) + d.e(1) - d.e(2));
+        double diagonal_3 = length(d.e(0) + d.e(2) - d.e(1));
+        double diagonal_4 = length(d.e(1) + d.e(2) - d.e(0));
 
         return std::max({diagonal_1, diagonal_2, diagonal_3, diagonal_4});
 }
@@ -156,7 +160,7 @@ void test_parallelepiped(int point_count, const P& d)
 
         std::mt19937_64 engine(get_random_seed<std::mt19937_64>());
 
-        for (vec3 v : outside_points(engine, point_count, d.org(), d.e0(), d.e1(), d.e2()))
+        for (vec3 v : outside_points(engine, point_count, d.org(), d.e(0), d.e(1), d.e(2)))
         {
                 if (d.inside(v))
                 {
@@ -166,7 +170,7 @@ void test_parallelepiped(int point_count, const P& d)
 
         std::uniform_real_distribution<double> urd_dir(-1, 1);
 
-        for (vec3 origin : inside_points(engine, point_count, d.org(), d.e0(), d.e1(), d.e2()))
+        for (vec3 origin : inside_points(engine, point_count, d.org(), d.e(0), d.e(1), d.e(2)))
         {
                 if (!d.inside(origin))
                 {
@@ -270,13 +274,13 @@ void compare_parallelepipeds(int point_count, const P&... d)
         std::array<vec3, sizeof...(P)> orgs{{d.org()...}};
         verify_vectors<P...>(orgs, "orgs");
 
-        std::array<vec3, sizeof...(P)> e0s{{d.e0()...}};
+        std::array<vec3, sizeof...(P)> e0s{{d.e(0)...}};
         verify_vectors<P...>(e0s, "e0s");
 
-        std::array<vec3, sizeof...(P)> e1s{{d.e1()...}};
+        std::array<vec3, sizeof...(P)> e1s{{d.e(1)...}};
         verify_vectors<P...>(e1s, "e1s");
 
-        std::array<vec3, sizeof...(P)> e2s{{d.e2()...}};
+        std::array<vec3, sizeof...(P)> e2s{{d.e(2)...}};
         verify_vectors<P...>(e2s, "e2s");
 
         std::mt19937_64 engine(get_random_seed<std::mt19937_64>());

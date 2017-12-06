@@ -15,10 +15,13 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-// R. Stuart Ferguson.
-// Practical Algorithms For 3D Computer Graphics, Second Edition.
-// CRC Press, 2014.
-// В частности, раздел 5.3.4 Octree decomposition.
+/*
+ R. Stuart Ferguson.
+ Practical Algorithms For 3D Computer Graphics, Second Edition.
+ CRC Press, 2014.
+
+ В частности, раздел 5.3.4 Octree decomposition.
+*/
 
 #include "intersection.h"
 
@@ -42,7 +45,7 @@ bool shape_intersected_by_edges(const Shape& shape, const vec3& org, const Vecto
 }
 
 template <typename Shape>
-bool triangle_intersects_shape(const GeometricTriangle& t, const Shape& shape)
+bool triangle_intersects_shape(const IntersectionTriangle& t, const Shape& shape)
 {
         return shape_intersected_by_edge(shape, t.v0(), t.v1() - t.v0()) ||
                shape_intersected_by_edge(shape, t.v1(), t.v2() - t.v1()) ||
@@ -50,70 +53,55 @@ bool triangle_intersects_shape(const GeometricTriangle& t, const Shape& shape)
 }
 
 template <typename Shape>
-bool parallelepiped_intersects_shape(const GeometricParallelepiped& par, const Shape& shape)
+bool parallelepiped_intersects_shape(const IntersectionParallelotope<3, double>& p, const Shape& shape)
 {
-        return shape_intersected_by_edges(shape, par.org(), par.e0(), par.e1(), par.e2()) ||
-               shape_intersected_by_edges(shape, par.org() + par.e1() + par.e2(), par.e0(), -par.e1(), -par.e2()) ||
-               shape_intersected_by_edges(shape, par.org() + par.e0() + par.e2(), -par.e0(), par.e1(), -par.e2()) ||
-               shape_intersected_by_edges(shape, par.org() + par.e0() + par.e1(), -par.e0(), -par.e1(), par.e2());
+        return shape_intersected_by_edges(shape, p.org(), p.e(0), p.e(1), p.e(2)) ||
+               shape_intersected_by_edges(shape, p.org() + p.e(1) + p.e(2), p.e(0), -p.e(1), -p.e(2)) ||
+               shape_intersected_by_edges(shape, p.org() + p.e(0) + p.e(2), -p.e(0), p.e(1), -p.e(2)) ||
+               shape_intersected_by_edges(shape, p.org() + p.e(0) + p.e(1), -p.e(0), -p.e(1), p.e(2));
 }
 
 template <typename Shape>
-bool triangle_inside_shape(const GeometricTriangle& t, const Shape& shape)
+bool triangle_inside_shape(const IntersectionTriangle& t, const Shape& shape)
 {
         return shape.inside(t.v0()) || shape.inside(t.v1()) || shape.inside(t.v2());
 }
 
 template <typename Shape>
-bool parallelepiped_inside_shape(const GeometricParallelepiped& p, const Shape& shape)
+bool parallelepiped_inside_shape(const IntersectionParallelotope<3, double>& p, const Shape& shape)
 {
         // clang-format off
         return
                 shape.inside(p.org()) ||
-                shape.inside(p.org() + p.e0()) ||
-                shape.inside(p.org() + p.e1()) ||
-                shape.inside(p.org() + p.e2()) ||
-                shape.inside(p.org() + p.e0() + p.e1()) ||
-                shape.inside(p.org() + p.e0() + p.e2()) ||
-                shape.inside(p.org() + p.e1() + p.e2()) ||
-                shape.inside(p.org() + p.e0() + p.e1() + p.e2());
+                shape.inside(p.org() + p.e(0)) ||
+                shape.inside(p.org() + p.e(1)) ||
+                shape.inside(p.org() + p.e(2)) ||
+                shape.inside(p.org() + p.e(0) + p.e(1)) ||
+                shape.inside(p.org() + p.e(0) + p.e(2)) ||
+                shape.inside(p.org() + p.e(1) + p.e(2)) ||
+                shape.inside(p.org() + p.e(0) + p.e(1) + p.e(2));
         // clang-format on
 }
-}
-
-// Треугольники пересекаются, если выполняется условие:
-//   какое-нибудь одно из 3 ребер какого-нибудь одного треугольника пересекает другой треугольник.
-bool shape_intersection(const GeometricTriangle& t1, const GeometricTriangle& t2)
-{
-        // clang-format off
-        return
-                triangle_intersects_shape(t1, t2) ||
-                triangle_intersects_shape(t2, t1);
-        // clang-format on
 }
 
 // Треугольник и параллелепипед пересекаются, если выполняется любое из условий:
 //   1) какая-нибудь вершина треугольника находится внутри параллелепипеда,
 //   2) какое-нибудь одно из 3 ребер треугольника пересекает параллелепипед,
 //   3) какое-нибудь одно из 12 рёбер параллелепипеда пересекает треугольник.
-bool shape_intersection(const GeometricTriangle& triangle, const GeometricParallelepiped& parallelepiped)
+bool shape_intersection(const IntersectionParallelotope<3, double>& p, const IntersectionTriangle& t)
 {
         // clang-format off
         return
-                triangle_inside_shape(triangle, parallelepiped) ||
-                triangle_intersects_shape(triangle, parallelepiped) ||
-                parallelepiped_intersects_shape(parallelepiped, triangle);
+                triangle_inside_shape(t, p) ||
+                triangle_intersects_shape(t, p) ||
+                parallelepiped_intersects_shape(p, t);
         // clang-format on
-}
-bool shape_intersection(const GeometricParallelepiped& parallelepiped, const GeometricTriangle& triangle)
-{
-        return shape_intersection(triangle, parallelepiped);
 }
 
 // Параллелепипеды пересекаются, если выполняется любое из условий:
 //   1) какая-нибудь вершина какого-нибудь параллелепипеда находится внутри другого параллелепипеда,
 //   2) какое-нибудь одно из 12 ребер какого-нибудь параллелепипеда пересекает другой параллелепипед.
-bool shape_intersection(const GeometricParallelepiped& p1, const GeometricParallelepiped& p2)
+bool shape_intersection(const IntersectionParallelotope<3, double>& p1, const IntersectionParallelotope<3, double>& p2)
 {
         // clang-format off
         return

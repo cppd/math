@@ -17,13 +17,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "base.h"
+#include "intersection.h"
 
 #include "com/ray.h"
 #include "com/vec.h"
 #include "path_tracing/objects.h"
 
-class TableTriangle final : public GeometricTriangle
+class TableTriangle final : public IntersectionTriangle, public GeometricObject
 {
         const vec3* m_vertices;
         const vec3* m_normals;
