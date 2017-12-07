@@ -51,7 +51,7 @@ class Mesh final
 
         std::vector<TableTriangle> m_triangles;
 
-        Octree<OctreeParallelepiped> m_octree;
+        SpatialSubdivisionTree<OctreeParallelepiped> m_octree;
 
         void create_mesh_object(const IObj* obj, const mat4& vertex_matrix, unsigned thread_count, ProgressRatio* progress);
 

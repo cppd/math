@@ -129,6 +129,9 @@ class ParallelotopeOrtho final : public IntersectionParallelotope<N, T>
         void set_data(const Vector<N, T>& org, const std::array<T, N>& sizes);
 
 public:
+        static constexpr size_t DIMENSION = N;
+        using DataType = T;
+
         ParallelotopeOrtho() = default;
 
         template <typename... P>

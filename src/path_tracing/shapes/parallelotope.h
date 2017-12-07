@@ -81,6 +81,9 @@ class Parallelotope final : public IntersectionParallelotope<N, T>
         void set_data(const Vector<N, T>& org, const std::array<Vector<N, T>, N>& vectors);
 
 public:
+        static constexpr size_t DIMENSION = N;
+        using DataType = T;
+
         Parallelotope() = default;
 
         template <typename... P>

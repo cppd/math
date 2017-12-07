@@ -15,10 +15,13 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-// R. Stuart Ferguson.
-// Practical Algorithms For 3D Computer Graphics, Second Edition.
-// CRC Press, 2014.
-// Раздел 5.3.4 Octree decomposition.
+/*
+ R. Stuart Ferguson.
+ Practical Algorithms For 3D Computer Graphics, Second Edition.
+ CRC Press, 2014.
+
+ Раздел 5.3.4 Octree decomposition.
+*/
 
 #pragma once
 
@@ -41,30 +44,35 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tuple>
 #include <vector>
 
-namespace OctreeImplementation
+namespace SpatialSubdivisionTreeImplementation
 {
-template <typename Parallelepiped>
-class OctreeBox
+template <size_t DIMENSION>
+inline constexpr int BOX_COUNT = 1u << DIMENSION;
+
+template <typename Parallelotope>
+class Box
 {
         static constexpr int EMPTY = -1;
 
-        Parallelepiped m_parallelepiped;
+        static constexpr int CHILD_COUNT = BOX_COUNT<Parallelotope::DIMENSION>;
+
+        Parallelotope m_parallelotope;
         std::vector<int> m_object_indices;
-        std::array<int, 8> m_childs = make_array_value<int, 8>(EMPTY);
+        std::array<int, CHILD_COUNT> m_childs = make_array_value<int, CHILD_COUNT>(EMPTY);
 
 public:
-        OctreeBox(Parallelepiped&& box) : m_parallelepiped(std::move(box))
+        Box(Parallelotope&& parallelotope) : m_parallelotope(std::move(parallelotope))
         {
         }
 
-        OctreeBox(Parallelepiped&& box, std::vector<int>&& object_indices)
-                : m_parallelepiped(std::move(box)), m_object_indices(std::move(object_indices))
+        Box(Parallelotope&& parallelotope, std::vector<int>&& object_indices)
+                : m_parallelotope(std::move(parallelotope)), m_object_indices(std::move(object_indices))
         {
         }
 
-        const Parallelepiped& get_parallelepiped() const
+        const Parallelotope& get_parallelotope() const
         {
-                return m_parallelepiped;
+                return m_parallelotope;
         }
 
         void set_child(int child_number, int child_box_index)
@@ -72,7 +80,7 @@ public:
                 m_childs[child_number] = child_box_index;
         }
 
-        const std::array<int, 8>& get_childs() const
+        const std::array<int, CHILD_COUNT>& get_childs() const
         {
                 return m_childs;
         }
@@ -117,18 +125,19 @@ inline std::vector<int> iota_zero_based_indices(int object_index_count)
         return object_indices;
 }
 
-template <template <typename...> typename Container, typename Parallelepiped>
-std::vector<OctreeBox<Parallelepiped>> move_boxes_to_vector(Container<OctreeBox<Parallelepiped>>&& boxes)
+template <template <typename...> typename Container, typename Parallelotope>
+std::vector<Box<Parallelotope>> move_boxes_to_vector(Container<Box<Parallelotope>>&& boxes)
 {
-        std::vector<OctreeBox<Parallelepiped>> vector;
+        std::vector<Box<Parallelotope>> vector;
 
         vector.reserve(boxes.size());
-        for (OctreeBox<Parallelepiped>& v : boxes)
+        for (Box<Parallelotope>& v : boxes)
         {
                 vector.emplace_back(std::move(v));
         }
         vector.shrink_to_fit();
-        for (OctreeBox<Parallelepiped>& box : vector)
+
+        for (Box<Parallelotope>& box : vector)
         {
                 box.shrink_objects();
         }
@@ -136,23 +145,40 @@ std::vector<OctreeBox<Parallelepiped>> move_boxes_to_vector(Container<OctreeBox<
         return vector;
 }
 
-template <typename Parallelepiped, typename FunctorConvexHullVertices>
-Parallelepiped cuboid_of_objects(double guard_region_size, int object_index_count,
+template <typename Parallelotope, size_t... I>
+constexpr Parallelotope create_parallelotope_from_vector(const Vector<sizeof...(I), typename Parallelotope::DataType>& org,
+                                                         const Vector<sizeof...(I), typename Parallelotope::DataType>& d,
+                                                         std::integer_sequence<size_t, I...>)
+{
+        static_assert(Parallelotope::DIMENSION == sizeof...(I));
+
+        using T = typename Parallelotope::DataType;
+        constexpr int N = Parallelotope::DIMENSION;
+
+        // Заполнение диагонали матрицы NxN значениями из d, остальные элементы 0
+        std::array<Vector<N, T>, N> edges{{(static_cast<void>(I), Vector<N, T>(0))...}};
+        ((edges[I][I] = d[I]), ...);
+
+        return Parallelotope(org, edges[I]...);
+}
+
+template <typename Parallelotope, typename T, typename FunctorConvexHullVertices>
+Parallelotope root_parallelotope(T guard_region_size, int object_index_count,
                                  const FunctorConvexHullVertices& functor_convex_hull_vertices)
 {
-        // Прямоугольный параллелепипед, параллельный координатным плоскостям
+        static_assert(std::is_same_v<T, typename Parallelotope::DataType>);
+        static_assert(std::is_floating_point_v<typename Parallelotope::DataType>);
 
-        constexpr double MAX = std::numeric_limits<double>::max();
-        constexpr double MIN = std::numeric_limits<double>::lowest();
+        constexpr int N = Parallelotope::DIMENSION;
 
-        vec3 min(MAX, MAX, MAX);
-        vec3 max(MIN, MIN, MIN);
+        Vector<N, T> min(std::numeric_limits<T>::max());
+        Vector<N, T> max(std::numeric_limits<T>::lowest());
 
         for (int object_index = 0; object_index < object_index_count; ++object_index)
         {
-                for (const vec3& v : functor_convex_hull_vertices(object_index))
+                for (const Vector<N, T>& v : functor_convex_hull_vertices(object_index))
                 {
-                        for (int i = 0; i < 3; ++i)
+                        for (int i = 0; i < N; ++i)
                         {
                                 min[i] = std::min(v[i], min[i]);
                                 max[i] = std::max(v[i], max[i]);
@@ -160,17 +186,20 @@ Parallelepiped cuboid_of_objects(double guard_region_size, int object_index_coun
                 }
         }
 
-        if (!(min[0] < max[0] && min[1] < max[1] && min[2] < max[2]))
+        for (int i = 0; i < N; ++i)
         {
-                error("Objects for octree don't form 3D object");
+                if (!(min[i] < max[i]))
+                {
+                        error("Objects for (2^N)-tree don't form N-dimensional object");
+                }
         }
 
-        min -= vec3(guard_region_size);
-        max += vec3(guard_region_size);
+        min -= Vector<N, T>(guard_region_size);
+        max += Vector<N, T>(guard_region_size);
 
-        vec3 d = max - min;
+        Vector<N, T> d = max - min;
 
-        return Parallelepiped(min, vec3(d[0], 0, 0), vec3(0, d[1], 0), vec3(0, 0, d[2]));
+        return create_parallelotope_from_vector<Parallelotope>(min, d, std::make_integer_sequence<size_t, N>());
 }
 
 template <typename Box>
@@ -243,36 +272,36 @@ public:
         }
 };
 
-template <template <typename...> typename Container, typename Parallelepiped>
-std::array<std::tuple<OctreeBox<Parallelepiped>*, int>, 8> create_child_boxes(SpinLock* boxes_lock,
-                                                                              Container<OctreeBox<Parallelepiped>>* boxes,
-                                                                              const Parallelepiped& parallelepiped)
+template <template <typename...> typename Container, typename Parallelotope, int... I>
+std::array<std::tuple<int, Box<Parallelotope>*, int>, BOX_COUNT<Parallelotope::DIMENSION>> create_child_boxes(
+        SpinLock* boxes_lock, Container<Box<Parallelotope>>* boxes, const Parallelotope& parallelotope,
+        std::integer_sequence<int, I...>)
 {
-        std::array<Parallelepiped, 8> parallelepipeds = parallelepiped.binary_division();
+        static_assert(BOX_COUNT<Parallelotope::DIMENSION> == sizeof...(I));
+        static_assert(((I >= 0 && I < sizeof...(I)) && ...));
 
-        std::array<std::tuple<OctreeBox<Parallelepiped>*, int>, 8> res;
+        std::array<Parallelotope, sizeof...(I)> child_parallelotopes = parallelotope.binary_division();
 
         std::lock_guard lg(*boxes_lock);
 
-        for (int i = 0, index = boxes->size(); i < 8; ++i, ++index)
-        {
-                res[i] = std::make_tuple(&(boxes->emplace_back(std::move(parallelepipeds[i]))), index);
-        }
+        int index = boxes->size();
 
-        return res;
+        return {{std::make_tuple(I, &(boxes->emplace_back(std::move(child_parallelotopes[I]))), index++)...}};
 }
 
-template <template <typename...> typename Container, typename Parallelepiped, typename FunctorShapeIntersection>
+template <template <typename...> typename Container, typename Parallelotope, typename FunctorShapeIntersection>
 void extend(const int MAX_DEPTH, const int MIN_OBJECTS, const int MAX_BOXES, SpinLock* boxes_lock,
-            Container<OctreeBox<Parallelepiped>>* boxes, BoxJobs<OctreeBox<Parallelepiped>>* box_jobs,
+            Container<Box<Parallelotope>>* boxes, BoxJobs<Box<Parallelotope>>* box_jobs,
             const FunctorShapeIntersection& functor_shape_intersection, ProgressRatio* progress) try
 {
         // Адреса имеющихся элементов не должны меняться при вставке
         // новых элементов, поэтому требуется std::deque или std::list.
-        static_assert(std::is_same_v<Container<OctreeBox<Parallelepiped>>, std::deque<OctreeBox<Parallelepiped>>> ||
-                      std::is_same_v<Container<OctreeBox<Parallelepiped>>, std::list<OctreeBox<Parallelepiped>>>);
+        static_assert(std::is_same_v<Container<Box<Parallelotope>>, std::deque<Box<Parallelotope>>> ||
+                      std::is_same_v<Container<Box<Parallelotope>>, std::list<Box<Parallelotope>>>);
 
-        OctreeBox<Parallelepiped>* box = nullptr; // nullptr — предыдущей задачи нет.
+        constexpr auto integer_sequence_n = std::make_integer_sequence<int, BOX_COUNT<Parallelotope::DIMENSION>>();
+
+        Box<Parallelotope>* box = nullptr; // nullptr — предыдущей задачи нет.
         int depth;
 
         while (box_jobs->pop(&box, &depth))
@@ -288,12 +317,11 @@ void extend(const int MAX_DEPTH, const int MIN_OBJECTS, const int MAX_BOXES, Spi
                         continue;
                 }
 
-                std::array<std::tuple<OctreeBox<Parallelepiped>*, int>, 8> child_boxes =
-                        create_child_boxes(boxes_lock, boxes, box->get_parallelepiped());
-
-                for (int i = 0; i < 8; ++i)
+                for (const auto& v : create_child_boxes(boxes_lock, boxes, box->get_parallelotope(), integer_sequence_n))
                 {
-                        auto[child_box, child_box_index] = child_boxes[i];
+                        // Если это использовать прямо в for, то Clang пишет предупреждение
+                        // unused variable '', поэтому используется переменная v
+                        const auto & [ i, child_box, child_box_index ] = v;
 
                         box->set_child(i, child_box_index);
 
@@ -304,7 +332,7 @@ void extend(const int MAX_DEPTH, const int MIN_OBJECTS, const int MAX_BOXES, Spi
 
                         for (int object_index : box->get_object_indices())
                         {
-                                if (functor_shape_intersection(child_box->get_parallelepiped(), object_index))
+                                if (functor_shape_intersection(child_box->get_parallelotope(), object_index))
                                 {
                                         child_box->add_object_index(object_index);
                                 }
@@ -323,22 +351,26 @@ catch (...)
 }
 }
 
-template <typename Parallelepiped>
-class Octree
+template <typename Parallelotope>
+class SpatialSubdivisionTree
 {
-        using OctreeBox = OctreeImplementation::OctreeBox<Parallelepiped>;
-        using BoxJobs = OctreeImplementation::BoxJobs<OctreeBox>;
+        using Box = SpatialSubdivisionTreeImplementation::Box<Parallelotope>;
+        using BoxJobs = SpatialSubdivisionTreeImplementation::BoxJobs<Box>;
+
+        // Размерность задачи и тип данных
+        static constexpr int N = Parallelotope::DIMENSION;
+        using T = typename Parallelotope::DataType;
 
         // Адреса имеющихся элементов не должны меняться при вставке
         // новых элементов, поэтому требуется std::deque или std::list.
-        using BoxContainer = std::deque<OctreeBox>;
+        using BoxContainer = std::deque<Box>;
 
         // Смещение по лучу внутрь коробки от точки персечения с коробкой.
-        static constexpr double DELTA = 10 * INTERSECTION_THRESHOLD;
+        static constexpr T DELTA = 10 * INTERSECTION_THRESHOLD;
 
         // Увеличение основной коробки октадерева по всем измерениям,
         // чтобы все объекты были внутри неё.
-        static constexpr double GUARD_REGION_SIZE = INTERSECTION_THRESHOLD;
+        static constexpr T GUARD_REGION_SIZE = INTERSECTION_THRESHOLD;
 
         // Нижняя и верхняя границы для минимального количества объектов в коробке.
         static constexpr int MIN_OBJECTS_LEFT_BOUND = 2;
@@ -353,16 +385,20 @@ class Octree
 
         // Максимальная глубина и минимальное количество объектов для экземпляра дерева.
         const int MAX_DEPTH, MIN_OBJECTS;
-        // Максимальное количество коробок — сумма геометрической прогресии со знаменателем 8.
-        // Требуется для того, чтобы что-то отображать как расчёт.
-        const int MAX_BOXES = (std::pow(8, MAX_DEPTH) - 1) / (8 - 1);
+
+        // Максимальное количество коробок — это сумма геометрической прогрессии
+        // со знаменателем BOX_COUNT<N>. Sum = (pow(r, n) - 1) / (r - 1).
+        // Требуется для того, чтобы при расчёте это отображать как максимум.
+        const int MAX_BOXES = std::min(static_cast<double>(std::numeric_limits<int>::max()),
+                                       (std::pow(SpatialSubdivisionTreeImplementation::BOX_COUNT<N>, MAX_DEPTH) - 1) /
+                                               (SpatialSubdivisionTreeImplementation::BOX_COUNT<N> - 1));
 
         // Все коробки хранятся в одном векторе
-        std::vector<OctreeBox> m_boxes;
+        std::vector<Box> m_boxes;
 
-        bool find_box_for_point(const OctreeBox& box, const vec3& p, const OctreeBox** found_box) const
+        bool find_box_for_point(const Box& box, const Vector<N, T>& p, const Box** found_box) const
         {
-                if (!box.get_parallelepiped().inside(p))
+                if (!box.get_parallelotope().inside(p))
                 {
                         return false;
                 }
@@ -385,15 +421,15 @@ class Octree
         }
 
 public:
-        Octree(int max_depth, int min_objects_per_box) : MAX_DEPTH(max_depth), MIN_OBJECTS(min_objects_per_box)
+        SpatialSubdivisionTree(int max_depth, int min_objects_per_box) : MAX_DEPTH(max_depth), MIN_OBJECTS(min_objects_per_box)
         {
         }
 
         template <typename FunctorConvexHullVertices, typename FunctorShapeIntersection>
-        Octree(int max_depth, int min_objects_per_box, int object_index_count,
-               const FunctorConvexHullVertices& functor_convex_hull_vertices,
-               const FunctorShapeIntersection& functor_shape_intersection, unsigned decomposition_thread_count,
-               ProgressRatio* progress)
+        SpatialSubdivisionTree(int max_depth, int min_objects_per_box, int object_index_count,
+                               const FunctorConvexHullVertices& functor_convex_hull_vertices,
+                               const FunctorShapeIntersection& functor_shape_intersection, unsigned decomposition_thread_count,
+                               ProgressRatio* progress)
                 : MAX_DEPTH(max_depth), MIN_OBJECTS(min_objects_per_box)
         {
                 decompose(object_index_count, functor_convex_hull_vertices, functor_shape_intersection,
@@ -406,20 +442,20 @@ public:
                        ProgressRatio* progress)
 
         {
+                using SpatialSubdivisionTreeImplementation::iota_zero_based_indices;
+                using SpatialSubdivisionTreeImplementation::root_parallelotope;
+
                 if (!(MAX_DEPTH >= MAX_DEPTH_LEFT_BOUND && MAX_DEPTH <= MAX_DEPTH_RIGHT_BOUND) ||
                     !(MIN_OBJECTS >= MIN_OBJECTS_LEFT_BOUND && MIN_OBJECTS <= MIN_OBJECTS_RIGHT_BOUND))
                 {
                         error("Error limits for octree");
                 }
 
-                using OctreeImplementation::cuboid_of_objects;
-                using OctreeImplementation::iota_zero_based_indices;
-
                 SpinLock boxes_lock;
 
-                BoxContainer boxes(
-                        {{cuboid_of_objects<Parallelepiped>(GUARD_REGION_SIZE, object_index_count, functor_convex_hull_vertices),
-                          iota_zero_based_indices(object_index_count)}});
+                BoxContainer boxes({Box(
+                        root_parallelotope<Parallelotope>(GUARD_REGION_SIZE, object_index_count, functor_convex_hull_vertices),
+                        iota_zero_based_indices(object_index_count))});
 
                 BoxJobs jobs(&boxes.front(), MAX_DEPTH_LEFT_BOUND);
 
@@ -437,53 +473,53 @@ public:
                 m_boxes = move_boxes_to_vector(std::move(boxes));
         }
 
-        bool intersect_root(const ray3& ray, double* t) const
+        bool intersect_root(const Ray<N, T>& ray, T* t) const
         {
-                return m_boxes[ROOT_BOX].get_parallelepiped().intersect(ray, t);
+                return m_boxes[ROOT_BOX].get_parallelotope().intersect(ray, t);
         }
 
         // Вызывается после intersect_root. Если в intersect_root пересечение было найдено,
         // то сюда передаётся результат пересечения в параметре root_t.
         template <typename FunctorFindIntersection>
-        bool trace_ray(ray3 ray, double root_t, const FunctorFindIntersection& functor_find_intersection) const
+        bool trace_ray(Ray<N, T> ray, T root_t, const FunctorFindIntersection& functor_find_intersection) const
         {
                 bool first = true;
 
                 while (true)
                 {
-                        double t;
-                        const OctreeBox* box;
+                        T t;
+                        const Box* box;
 
                         if (find_box_for_point(m_boxes[ROOT_BOX], ray.get_org(), &box))
                         {
-                                vec3 point;
+                                Vector<N, T> point;
                                 if (box->get_object_index_count() > 0 &&
                                     functor_find_intersection(box->get_object_indices(), &point) &&
-                                    box->get_parallelepiped().inside(point))
+                                    box->get_parallelotope().inside(point))
                                 {
                                         return true;
                                 }
 
-                                // Поиск пересечения с границей этого параллелепипеда
-                                // для перехода в соседний параллелепипед.
-                                if (!box->get_parallelepiped().intersect(ray, &t))
+                                // Поиск пересечения с границей текущей коробки
+                                // для перехода в соседнюю коробку.
+                                if (!box->get_parallelotope().intersect(ray, &t))
                                 {
                                         return false;
                                 }
                         }
                         else
                         {
-                                // Начало луча не находится в пределах октадерева.
+                                // Начало луча не находится в пределах дерева.
 
                                 if (!first)
                                 {
-                                        // Не первый проход — процесс вышел за пределы октадерева.
+                                        // Не первый проход — процесс вышел за пределы дерева.
                                         return false;
                                 }
                                 else
                                 {
                                         // Первый проход — начало луча находится снаружи и надо искать
-                                        // пересечение с самим октадеревом. Это пересечение уже должно
+                                        // пересечение с самим деревом. Это пересечение уже должно
                                         // быть найдено ранее при вызове intersect_root.
                                         t = root_t;
                                 }
