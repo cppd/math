@@ -17,14 +17,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "parallelotope_ortho.h"
 #include "triangle.h"
 
 #include "com/mat.h"
 #include "obj/obj.h"
 #include "path_tracing/image/image.h"
 #include "path_tracing/objects.h"
-#include "path_tracing/octree.h"
+#include "path_tracing/space/parallelotope_ortho.h"
+#include "path_tracing/space/tree.h"
 #include "progress/progress.h"
 
 #include <optional>

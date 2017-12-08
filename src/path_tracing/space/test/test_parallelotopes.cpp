@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "test_parallelepipeds.h"
+#include "test_parallelotopes.h"
 
 #include "com/error.h"
 #include "com/log.h"
@@ -23,29 +23,60 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/random.h"
 #include "com/ray.h"
 #include "com/vec.h"
-#include "path_tracing/shapes/parallelotope.h"
-#include "path_tracing/shapes/parallelotope_ortho.h"
+#include "path_tracing/space/parallelotope.h"
+#include "path_tracing/space/parallelotope_ortho.h"
 
 #include <algorithm>
 #include <random>
 
 constexpr double POSITION_DELTA = 1e-6;
 constexpr double COMPARE_EPSILON = 1e-10;
+constexpr double MAX_DOT_PRODUCT_OF_EDGES = 0.9;
 
 using Parallelepiped = Parallelotope<3, double>;
 using ParallelepipedOrtho = ParallelotopeOrtho<3, double>;
 
+template <typename Parallelotope>
+using VectorP = Vector<Parallelotope::DIMENSION, typename Parallelotope::DataType>;
+
 namespace
 {
-template <typename P>
-double max_diagonal(const P& d)
+template <typename Parallelotope, typename F>
+void all_diagonals(const Parallelotope& p, const VectorP<Parallelotope>& edge_sum, int n, const F& f)
 {
-        double diagonal_1 = length(d.e(0) + d.e(1) + d.e(2));
-        double diagonal_2 = length(d.e(0) + d.e(1) - d.e(2));
-        double diagonal_3 = length(d.e(0) + d.e(2) - d.e(1));
-        double diagonal_4 = length(d.e(1) + d.e(2) - d.e(0));
+        if (n >= 0)
+        {
+                all_diagonals(p, edge_sum + p.e(n), n - 1, f);
+                all_diagonals(p, edge_sum - p.e(n), n - 1, f);
+        }
+        else
+        {
+                f(edge_sum);
+        }
+}
+template <typename Parallelotope, typename F>
+void all_diagonals(const Parallelotope& p, const F& f)
+{
+        constexpr int last_index = Parallelotope::DIMENSION - 1;
+        // Одно из измерений не меняется, остальные к нему прибавляются и вычитаются
+        all_diagonals(p, p.e(last_index), last_index - 1, f);
+}
+template <typename Parallelotope>
+typename Parallelotope::DataType max_diagonal(const Parallelotope& parallelotope)
+{
+        using T = typename Parallelotope::DataType;
 
-        return std::max({diagonal_1, diagonal_2, diagonal_3, diagonal_4});
+        // Перебрать все диагонали одной из граней параллелотопа с учётом их направления.
+        // Количество таких диагоналей равно 2 ^ (N - 1). Добавляя к каждой такой
+        // диагонали оставшееся измерение, получаются все диагонали целого параллелотопа.
+        // Надо найти максимум из их длин.
+
+        T max_length = std::numeric_limits<T>::lowest();
+
+        all_diagonals(parallelotope,
+                      [&max_length](const VectorP<Parallelotope>& d) { max_length = std::max(max_length, length(d)); });
+
+        return max_length;
 }
 
 void three_edges(std::mt19937_64& engine, double min, double max, vec3* e0, vec3* e1, vec3* e2)
@@ -56,8 +87,9 @@ void three_edges(std::mt19937_64& engine, double min, double max, vec3* e0, vec3
                 *e0 = vec3(urd_e(engine), urd_e(engine), urd_e(engine));
                 *e1 = vec3(urd_e(engine), urd_e(engine), urd_e(engine));
                 *e2 = vec3(urd_e(engine), urd_e(engine), urd_e(engine));
-        } while (dot(normalize(*e0), normalize(*e1)) > 0.9 && dot(normalize(*e1), normalize(*e2)) > 0.9 &&
-                 dot(normalize(*e0), normalize(*e2)) > 0.9);
+        } while (dot(normalize(*e0), normalize(*e1)) >= MAX_DOT_PRODUCT_OF_EDGES &&
+                 dot(normalize(*e1), normalize(*e2)) >= MAX_DOT_PRODUCT_OF_EDGES &&
+                 dot(normalize(*e0), normalize(*e2)) >= MAX_DOT_PRODUCT_OF_EDGES);
 }
 
 std::vector<vec3> outside_points(std::mt19937_64& engine, int cnt, vec3 org, vec3 e0, vec3 e1, vec3 e2)
@@ -335,7 +367,7 @@ void compare_parallelepipeds(int point_count, const P&... d)
 }
 }
 
-void test_parallelepipeds()
+void test_parallelotopes()
 {
         constexpr int point_count = 1000000;
 

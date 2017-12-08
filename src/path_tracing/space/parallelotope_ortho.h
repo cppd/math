@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "intersection.h"
+#include "shape_intersection.h"
 
 #include "com/error.h"
 #include "com/ray.h"
@@ -113,7 +113,8 @@ class ParallelotopeOrtho final : public IntersectionParallelotope<N, T>
         static constexpr std::array<Vector<N, T>, N> NORMALS_NEGATIVE = ParallelotopeOrthoImplementation::index_vectors<N, T>(-1);
 
         // Количество объектов после деления по каждому измерению
-        static constexpr size_t DIVISIONS = 1 << N;
+        static_assert(N <= 32);
+        static constexpr size_t DIVISIONS = 1ull << N;
 
         struct Planes
         {
@@ -333,7 +334,7 @@ std::array<ParallelotopeOrtho<N, T>, ParallelotopeOrtho<N, T>::DIVISIONS> Parall
         // Если имеется 0 в разряде i номера объекта, то без смещения от начала объекта по измерению i.
         // Если имеется 1 в разряде i номера объекта, то со смещением от начала объекта по измерению i.
         static_assert(N <= 32);
-        for (unsigned division = 0; division < DIVISIONS; ++division)
+        for (size_t division = 0; division < DIVISIONS; ++division)
         {
                 Vector<N, T> org;
                 for (unsigned i = 0; i < N; ++i)

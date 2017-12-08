@@ -15,14 +15,13 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "test.h"
-
-#include "random_vector.h"
+#include "test_random.h"
 
 #include "com/error.h"
 #include "com/log.h"
 #include "com/random.h"
 #include "com/time.h"
+#include "path_tracing/random/random_vector.h"
 
 #include <map>
 

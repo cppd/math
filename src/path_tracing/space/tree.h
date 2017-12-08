@@ -25,13 +25,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "constants.h"
-
 #include "com/arrays.h"
 #include "com/error.h"
 #include "com/ray.h"
 #include "com/thread.h"
 #include "com/vec.h"
+#include "path_tracing/constants.h"
 #include "progress/progress.h"
 
 #include <algorithm>
@@ -389,7 +388,7 @@ class SpatialSubdivisionTree
         // Максимальное количество коробок — это сумма геометрической прогрессии
         // со знаменателем BOX_COUNT<N>. Sum = (pow(r, n) - 1) / (r - 1).
         // Требуется для того, чтобы при расчёте это отображать как максимум.
-        const int MAX_BOXES = std::min(static_cast<double>(std::numeric_limits<int>::max()),
+        const int MAX_BOXES = std::min(static_cast<double>((1u << 31) - 1),
                                        (std::pow(SpatialSubdivisionTreeImplementation::BOX_COUNT<N>, MAX_DEPTH) - 1) /
                                                (SpatialSubdivisionTreeImplementation::BOX_COUNT<N> - 1));
 
@@ -448,7 +447,7 @@ public:
                 if (!(MAX_DEPTH >= MAX_DEPTH_LEFT_BOUND && MAX_DEPTH <= MAX_DEPTH_RIGHT_BOUND) ||
                     !(MIN_OBJECTS >= MIN_OBJECTS_LEFT_BOUND && MIN_OBJECTS <= MIN_OBJECTS_RIGHT_BOUND))
                 {
-                        error("Error limits for octree");
+                        error("Error limits for " + to_string(SpatialSubdivisionTreeImplementation::BOX_COUNT<N>) + "-tree");
                 }
 
                 SpinLock boxes_lock;

@@ -17,11 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "intersection.h"
-
 #include "com/ray.h"
 #include "com/vec.h"
 #include "path_tracing/objects.h"
+#include "path_tracing/space/shape_intersection.h"
 
 class Rectangle final : public IntersectionRectangle, public GeometricObject
 {

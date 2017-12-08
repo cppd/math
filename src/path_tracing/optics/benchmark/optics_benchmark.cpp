@@ -17,11 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "optics_benchmark.h"
 
-#include "optics.h"
-
 #include "com/log.h"
 #include "com/random.h"
 #include "com/time.h"
+#include "path_tracing/optics/optics.h"
 
 #include <random>
 #include <vector>

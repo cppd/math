@@ -20,8 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/log.h"
 #include "com/print.h"
 #include "path_tracing/shapes/mesh.h"
-#include "path_tracing/shapes/parallelotope.h"
 #include "path_tracing/shapes/rectangle.h"
+#include "path_tracing/space/parallelotope.h"
 
 #include <memory>
 

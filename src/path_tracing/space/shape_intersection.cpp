@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
  В частности, раздел 5.3.4 Octree decomposition.
 */
 
-#include "intersection.h"
+#include "shape_intersection.h"
 
 #include <type_traits>
 
