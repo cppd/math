@@ -29,23 +29,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/error.h"
 #include "com/print.h"
+#include "path_tracing/random/random_vector.h"
 
 #include <type_traits>
 #include <utility>
 
 namespace
 {
-template <typename T, typename RandomEngine, typename Distribution, size_t... I>
-Vector<sizeof...(I), T> random_vector(RandomEngine& engine, Distribution& distribution, std::integer_sequence<size_t, I...>)
-{
-        return Vector<sizeof...(I), T>((static_cast<void>(I), distribution(engine))...);
-}
-template <size_t N, typename T, typename RandomEngine, typename Distribution>
-Vector<N, T> random_vector(RandomEngine& engine, Distribution& distribution)
-{
-        return random_vector<T>(engine, distribution, std::make_integer_sequence<size_t, N>());
-}
-
 // Donald Knuth. The Art of Computer Programming. Second edition. Addison-Wesley, 1981.
 // Volume 2. Seminumerical Algorithms. 3.4.2. Random Sampling and Shuffling.
 // Функция std::shuffle не подходит, так как надо по отдельному измерению.

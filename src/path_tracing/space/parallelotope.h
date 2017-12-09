@@ -28,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "shape_intersection.h"
 
 #include "com/error.h"
+#include "com/print.h"
 #include "com/ray.h"
 #include "com/vec.h"
 #include "geometry/core/array_elements.h"
@@ -90,6 +91,8 @@ public:
         template <typename... P>
         Parallelotope(const Vector<N, T>& org, const P&... vectors);
 
+        Parallelotope(const Vector<N, T>& org, const std::array<Vector<N, T>, N>& vectors);
+
         bool inside(const Vector<N, T>& p) const override;
 
         bool intersect(const Ray<N, T>& r, T* t) const override;
@@ -112,6 +115,12 @@ Parallelotope<N, T>::Parallelotope(const Vector<N, T>& org, const P&... vectors)
         static_assert(sizeof...(P) == N);
 
         set_data(org, {{vectors...}});
+}
+
+template <size_t N, typename T>
+Parallelotope<N, T>::Parallelotope(const Vector<N, T>& org, const std::array<Vector<N, T>, N>& vectors)
+{
+        set_data(org, vectors);
 }
 
 template <size_t N, typename T>
@@ -308,4 +317,16 @@ Vector<N, T> Parallelotope<N, T>::e(unsigned n) const
 {
         ASSERT(n < N);
         return m_vectors[n];
+}
+
+template <size_t N, typename T>
+std::string to_string(const Parallelotope<N, T>& p)
+{
+        std::string s;
+        s += "org = " + to_string(p.org()) + "\n";
+        for (unsigned i = 0; i < N; ++i)
+        {
+                s += "edge[" + to_string(i) + "] = " + to_string(p.e(i)) + ((i < N - 1) ? "\n" : "");
+        }
+        return s;
 }

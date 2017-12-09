@@ -28,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "shape_intersection.h"
 
 #include "com/error.h"
+#include "com/print.h"
 #include "com/ray.h"
 #include "com/vec.h"
 #include "path_tracing/constants.h"
@@ -138,6 +139,8 @@ public:
         template <typename... P>
         ParallelotopeOrtho(const Vector<N, T>& org, const P&... vectors);
 
+        ParallelotopeOrtho(const Vector<N, T>& org, const std::array<T, N>& vectors);
+
         bool inside(const Vector<N, T>& p) const override;
 
         bool intersect(const Ray<N, T>& r, T* t) const override;
@@ -167,6 +170,12 @@ ParallelotopeOrtho<N, T>::ParallelotopeOrtho(const Vector<N, T>& org, const P&..
         {
                 set_data(org, std::array<Vector<N, T>, N>{{vectors...}});
         }
+}
+
+template <size_t N, typename T>
+ParallelotopeOrtho<N, T>::ParallelotopeOrtho(const Vector<N, T>& org, const std::array<T, N>& vectors)
+{
+        set_data(org, vectors);
 }
 
 template <size_t N, typename T>
@@ -359,4 +368,16 @@ Vector<N, T> ParallelotopeOrtho<N, T>::e(unsigned n) const
 {
         ASSERT(n < N);
         return ParallelotopeOrthoImplementation::index_vector<N, T>(n, m_sizes[n]);
+}
+
+template <size_t N, typename T>
+std::string to_string(const ParallelotopeOrtho<N, T>& p)
+{
+        std::string s;
+        s += "org = " + to_string(p.org()) + "\n";
+        for (unsigned i = 0; i < N; ++i)
+        {
+                s += "edge[" + to_string(i) + "] = " + to_string(p.e(i)) + ((i < N - 1) ? "\n" : "");
+        }
+        return s;
 }
