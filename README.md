@@ -23,6 +23,7 @@ Delaunay triangulation                         | Convex hull of paraboloid      
 Voronoi diagram                                | Convex hull of paraboloid                                | Arbitrary number of dimensions | Sequential         | C++
 Manifold reconstruction                        | Cocone                                                   | Arbitrary number of dimensions | Sequential         | C++
 Manifold reconstruction                        | BoundCocone                                              | Arbitrary number of dimensions | Sequential         | C++
+Ray intersection acceleration                  | Spatial subdivision and 2<sup>d</sup>-trees              | Arbitrary number of dimensions | Parallel           | C++
 Realistic visualization                        | Path tracing                                             | 3 dimensions                   | Parallel           | C++
 
 Various other algorithms.
