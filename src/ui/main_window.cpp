@@ -168,10 +168,28 @@ MainWindow::~MainWindow()
 {
         ASSERT(std::this_thread::get_id() == m_window_thread_id);
 
+        stop_all_threads();
+}
+
+void MainWindow::closeEvent(QCloseEvent* event)
+{
+        ASSERT(std::this_thread::get_id() == m_window_thread_id);
+
+        stop_all_threads();
+
+        event->accept();
+}
+
+void MainWindow::stop_all_threads()
+{
+        ASSERT(std::this_thread::get_id() == m_window_thread_id);
+
         for (auto& t : m_threads)
         {
                 t.second.stop();
         }
+
+        m_show.reset();
 
         set_log_callback(nullptr);
 }
@@ -886,10 +904,8 @@ void MainWindow::slot_window_event(const WindowEvent& event)
         }
 }
 
-void MainWindow::showEvent(QShowEvent* e)
+void MainWindow::showEvent(QShowEvent* /*event*/)
 {
-        QMainWindow::showEvent(e);
-
         if (!m_first_show)
         {
                 return;

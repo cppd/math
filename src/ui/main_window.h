@@ -58,9 +58,6 @@ public:
         explicit MainWindow(QWidget* parent = nullptr);
         ~MainWindow() override;
 
-protected:
-        void showEvent(QShowEvent* e) override;
-
 public slots:
 
 private slots:
@@ -98,6 +95,7 @@ private slots:
         void on_radioButton_BoundCocone_clicked();
         void on_radioButton_BoundCoconeConvexHull_clicked();
         void on_checkBox_VerticalSync_clicked();
+        void on_radioButton_ModelMST_clicked();
 
         void slot_object_repository();
         void slot_window_event(const WindowEvent&);
@@ -105,8 +103,6 @@ private slots:
         void slot_window_first_shown();
         void slot_widget_under_window_mouse_wheel(double delta);
         void slot_widget_under_window_resize();
-
-        void on_radioButton_ModelMST_clicked();
 
 private:
         // Идентификаторы объектов для взаимодействия с модулем рисования,
@@ -162,6 +158,11 @@ private:
                 std::atomic_bool working = false;
                 void stop() noexcept;
         };
+
+        void showEvent(QShowEvent* event) override;
+        void closeEvent(QCloseEvent* event) override;
+
+        void stop_all_threads();
 
         [[nodiscard]] bool thread_action_allowed(ThreadAction action) const;
 
