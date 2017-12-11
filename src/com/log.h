@@ -20,6 +20,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <vector>
 
+void log_init();
+void log_exit() noexcept;
+
 class ILogCallback
 {
 protected:

@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 int main(int argc, char* argv[])
 {
-        init();
+        Initialization init;
 
         return qt_main(argc, argv);
 }

@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "log.h"
 
 #include "error.h"
+#include "thread.h"
 #include "time.h"
 
 #include <algorithm>
@@ -25,13 +26,37 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace
 {
-// Мьютекс для работы с этим указателем не нужен, так как установка указателя
-// должна делаться один раз для одного окна в самом начале программы
+std::atomic_int global_call_counter = 0;
+
+SpinLock* global_lock = nullptr;
+
+// В момент закрытия главного окна разные потоки могут что-нибудь записывать
+// в лог, поэтому с этой переменной нужна последовательная работа.
+// Использование единственной блокировки означает, что и сообщения будут
+// последовательные, но это не является проблемой.
 ILogCallback* global_log_callback = nullptr;
+}
+
+void log_init()
+{
+        if (++global_call_counter != 1)
+        {
+                error_fatal("Error log init");
+        }
+
+        global_lock = new SpinLock;
+}
+
+void log_exit() noexcept
+{
+        delete global_lock;
+        global_lock = nullptr;
 }
 
 void set_log_callback(ILogCallback* callback) noexcept
 {
+        std::lock_guard lg(*global_lock);
+
         global_log_callback = callback;
 }
 
@@ -101,14 +126,23 @@ void LOG(const std::string& msg) noexcept
 {
         try
         {
-                if (global_log_callback)
                 {
-                        global_log_callback->log(msg);
+                        std::lock_guard lg(*global_lock);
+
+                        if (global_log_callback)
+                        {
+                                global_log_callback->log(msg);
+                                return;
+                        }
                 }
-                else
-                {
-                        write_formatted_log_messages_to_stderr(format_log_message(msg));
-                }
+
+                // Здесь переменная global_log_callback теоретически уже может быть
+                // установлена в не nullptr, но по имеющейся логике программы установка
+                // этой переменной в не nullptr происходит только в начале программы
+                // и только один раз. Зато так будет больше параллельности в сообщениях
+                // с установленной в nullptr переменной global_log_callback.
+
+                write_formatted_log_messages_to_stderr(format_log_message(msg));
         }
         catch (std::exception& e)
         {

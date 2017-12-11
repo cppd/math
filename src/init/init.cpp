@@ -17,11 +17,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "init.h"
 
+#include "com/error.h"
+#include "com/log.h"
 #include "com/time.h"
+
+#include <atomic>
 
 #if defined(__linux__)
 
-#include "com/error.h"
 #include "graphics/opengl/opengl_functions.h"
 
 #include <X11/Xlib.h>
@@ -74,9 +77,25 @@ void init_os_specific()
 
 #endif
 
-void init()
+namespace
 {
+std::atomic_int global_call_counter = 0;
+}
+
+Initialization::Initialization()
+{
+        if (++global_call_counter > 1)
+        {
+                error_fatal("Initialization must be called once");
+        }
+
+        log_init();
+
         reset_time();
 
         init_os_specific();
+}
+Initialization::~Initialization()
+{
+        log_exit();
 }
