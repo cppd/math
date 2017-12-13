@@ -23,48 +23,58 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/time.h"
 #include "path_tracing/samplers/sampler.h"
 
+namespace
+{
+template <typename Sampler, typename RandomEngine>
+void generate_points(RandomEngine& random_engine, int sample_count, int pass_count)
+{
+        std::vector<vec2> data(sample_count);
+
+        std::vector<vec2> all_data;
+        all_data.reserve(sample_count * pass_count);
+
+        LOG("Pass count: " + to_string(pass_count));
+
+        for (int i = 0; i < pass_count; ++i)
+        {
+                Sampler(sample_count).generate(random_engine, &data);
+                all_data.insert(all_data.end(), data.begin(), data.end());
+        }
+
+        for (const vec2& v : all_data)
+        {
+                LOG("  " + to_string(v));
+        }
+}
+
+template <typename Sampler>
+void test_sampler(const std::string& name, int iter_count, int sample_count, int pass_count)
+{
+        std::mt19937_64 random_engine(get_random_seed<std::mt19937_64>());
+        std::vector<vec2> data(sample_count);
+
+        double t = get_time_seconds();
+
+        for (int i = 0; i < iter_count; ++i)
+        {
+                StratifiedJitteredSampler(sample_count).generate(random_engine, &data);
+        }
+
+        LOG(name + ": time = " + to_string_fixed(get_time_seconds() - t, 5) + " seconds, size = " + to_string(data.size()));
+
+        generate_points<Sampler>(random_engine, sample_count, pass_count);
+}
+}
+
 void test_samplers()
 {
         constexpr int iter_count = 1e6;
         constexpr int sample_count = 25;
+        constexpr int pass_count = 10;
 
-        {
-                std::mt19937_64 random_engine(get_random_seed<std::mt19937_64>());
-                std::vector<vec2> data(sample_count);
+        test_sampler<StratifiedJitteredSampler>("Stratified Jittered Sampler", iter_count, sample_count, pass_count);
 
-                double t = get_time_seconds();
+        LOG("");
 
-                for (int i = 0; i < iter_count; ++i)
-                {
-                        StratifiedJitteredSampler(sample_count).generate(random_engine, &data);
-                }
-
-                LOG("Stratified Jittered Sampler: time = " + to_string_fixed(get_time_seconds() - t, 5) +
-                    " seconds, size = " + to_string(data.size()));
-
-                for (unsigned i = 0; i < data.size(); ++i)
-                {
-                        LOG("  " + to_string(data[i]));
-                }
-        }
-
-        {
-                std::mt19937_64 random_engine(get_random_seed<std::mt19937_64>());
-                std::vector<vec2> data(sample_count);
-
-                double t = get_time_seconds();
-
-                for (int i = 0; i < iter_count; ++i)
-                {
-                        LatinHypercubeSampler(sample_count).generate(random_engine, &data);
-                }
-
-                LOG("Latin Hypercube Sampler: time = " + to_string_fixed(get_time_seconds() - t, 5) +
-                    " seconds, size = " + to_string(data.size()));
-
-                for (unsigned i = 0; i < data.size(); ++i)
-                {
-                        LOG("  " + to_string(data[i]));
-                }
-        }
+        test_sampler<LatinHypercubeSampler>("Latin Hypercube Sampler", iter_count, sample_count, pass_count);
 }
