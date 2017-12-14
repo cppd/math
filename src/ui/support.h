@@ -29,6 +29,23 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <vector>
 
+template <typename Window, typename... Args>
+void create_and_show_delete_on_close_window(Args&&... args)
+{
+        Window* window = new Window(std::forward<Args>(args)...);
+
+        try
+        {
+                window->show();
+                window->setAttribute(Qt::WA_DeleteOnClose);
+        }
+        catch (...)
+        {
+                delete window;
+                throw;
+        }
+}
+
 enum class TextEditMessageType
 {
         Normal,

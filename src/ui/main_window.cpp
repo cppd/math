@@ -1437,10 +1437,10 @@ void MainWindow::on_pushButton_Painter_clicked()
 
                         std::string title = this->windowTitle().toStdString() + " (" + model_name + ")";
 
-                        create_painter_window(title, thread_count,
-                                              one_object_scene(background_color, default_color, diffuse,
-                                                               create_projector(size_coef), create_sampler(samples_per_pixel),
-                                                               create_light_source(), mesh_pointer));
+                        create_and_show_delete_on_close_window<PainterWindow>(
+                                title, thread_count,
+                                one_object_scene(background_color, default_color, diffuse, create_projector(size_coef),
+                                                 create_sampler(samples_per_pixel), create_light_source(), mesh_pointer));
                 }
                 else
                 {
@@ -1455,10 +1455,10 @@ void MainWindow::on_pushButton_Painter_clicked()
 
                         std::string title = this->windowTitle().toStdString() + " (" + model_name + " in Cornell Box)";
 
-                        create_painter_window(title, thread_count,
-                                              cornell_box(paint_width, paint_height, mesh_pointer, m_mesh_object_size,
-                                                          default_color, diffuse, camera_direction, camera_up,
-                                                          samples_per_pixel));
+                        create_and_show_delete_on_close_window<PainterWindow>(
+                                title, thread_count,
+                                cornell_box(paint_width, paint_height, mesh_pointer, m_mesh_object_size, default_color, diffuse,
+                                            camera_direction, camera_up, samples_per_pixel));
                 }
         });
 }

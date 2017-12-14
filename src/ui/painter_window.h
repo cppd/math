@@ -79,5 +79,3 @@ private:
 
         Ui::PainterWindow ui;
 };
-
-void create_painter_window(const std::string& title, unsigned thread_count, std::unique_ptr<const PaintObjects>&& paint_objects);

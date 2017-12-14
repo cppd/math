@@ -99,8 +99,6 @@ PainterWindow::PainterWindow(const std::string& title, unsigned thread_count, st
 {
         ui.setupUi(this);
 
-        setAttribute(Qt::WA_DeleteOnClose);
-
         ASSERT(m_image_data_size == m_data.size() * sizeof(m_data[0]));
         ASSERT(m_image_data_size == m_data_clean.size() * sizeof(m_data_clean[0]));
 
@@ -128,8 +126,6 @@ PainterWindow::PainterWindow(const std::string& title, unsigned thread_count, st
         set_default_pixels();
 
         update_points();
-
-        show();
 }
 
 PainterWindow::~PainterWindow()
@@ -281,11 +277,4 @@ void PainterWindow::on_pushButton_save_to_file_clicked()
         {
                 message_critical(this, "Error saving image to file");
         }
-}
-
-void create_painter_window(const std::string& title, unsigned thread_count, std::unique_ptr<const PaintObjects>&& paint_objects)
-{
-        // В окне вызывается setAttribute(Qt::WA_DeleteOnClose),
-        // поэтому можно просто new.
-        new PainterWindow(title, thread_count, std::move(paint_objects));
 }

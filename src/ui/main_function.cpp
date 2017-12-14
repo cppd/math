@@ -18,13 +18,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "main_function.h"
 
 #include "main_window.h"
+#include "support.h"
 
 #include <QApplication>
 
 int qt_main(int argc, char* argv[])
 {
         QApplication a(argc, argv);
-        MainWindow w;
-        w.show();
+
+        create_and_show_delete_on_close_window<MainWindow>();
+
         return a.exec();
 }
