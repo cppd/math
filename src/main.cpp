@@ -17,14 +17,28 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #if 1
 
+#include "com/error.h"
 #include "init/init.h"
 #include "ui/main_function.h"
 
+#include <exception>
+
 int main(int argc, char* argv[])
 {
-        Initialization init;
+        try
+        {
+                Initialization init;
 
-        return qt_main(argc, argv);
+                return main_function(argc, argv);
+        }
+        catch (std::exception& e)
+        {
+                error_fatal(std::string("Error\n") + e.what());
+        }
+        catch (...)
+        {
+                error_fatal("Unknown error");
+        }
 }
 
 #else
@@ -32,9 +46,11 @@ int main(int argc, char* argv[])
 #include "com/log.h"
 #include "com/math.h"
 #include "com/print.h"
+#include "init/init.h"
 
 int main()
 {
+        Initialization init;
 }
 
 #endif

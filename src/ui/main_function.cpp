@@ -17,12 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "main_function.h"
 
-#include "main_window.h"
-#include "support.h"
+#include "ui/main_window/main_window.h"
+#include "ui/support/support.h"
 
-#include <QApplication>
-
-int qt_main(int argc, char* argv[])
+int main_function(int argc, char* argv[])
 {
         QApplication a(argc, argv);
 

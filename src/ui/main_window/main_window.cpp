@@ -17,14 +17,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "main_window.h"
 
-#include "painter_window.h"
-#include "support.h"
-#include "dialogs/application_about.h"
-#include "dialogs/application_help.h"
-#include "dialogs/bound_cocone_parameters.h"
-#include "dialogs/message_box.h"
-#include "dialogs/path_tracing_parameters.h"
-#include "dialogs/source_error.h"
+#include "ui/dialogs/application_about.h"
+#include "ui/dialogs/application_help.h"
+#include "ui/dialogs/bound_cocone_parameters.h"
+#include "ui/dialogs/message_box.h"
+#include "ui/dialogs/path_tracing_parameters.h"
+#include "ui/dialogs/source_error.h"
+#include "ui/painter_window/painter_window.h"
+#include "ui/support/support.h"
 
 #include "application/application_name.h"
 #include "com/error.h"
@@ -99,9 +99,6 @@ MainWindow::MainWindow(QWidget* parent)
 
         ui.setupUi(this);
 
-        // После вызова ui.setupUi(this)
-        set_log_callback(&m_event_emitter);
-
         QMainWindow::setWindowTitle(APPLICATION_NAME);
 
         QMainWindow::addAction(ui.actionFullScreen);
@@ -162,6 +159,8 @@ MainWindow::MainWindow(QWidget* parent)
         m_meshes.try_emplace(MeshType::CoconeCH);
         m_meshes.try_emplace(MeshType::BoundCocone);
         m_meshes.try_emplace(MeshType::BoundCoconeCH);
+
+        set_log_callback(&m_event_emitter);
 }
 
 MainWindow::~MainWindow()
