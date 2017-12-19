@@ -22,7 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/time.h"
 #include "com/vec.h"
 #include "path_tracing/space/ray_intersection.h"
-#include "path_tracing/space/shape_intersection.h"
 
 #include <algorithm>
 
@@ -85,15 +84,10 @@ void Mesh::create_mesh_object(const IObj* obj, const mat4& vertex_matrix, unsign
         progress->set_text("Octree: %v of %m");
 
         m_octree.decompose(m_triangles.size(),
-                           // вершины выпуклой оболочки помещаемого в октадерево объекта
-                           [this](int triangle_index) -> std::vector<vec3> {
-                                   const TableTriangle& t = m_triangles[triangle_index];
-                                   return {t.v0(), t.v1(), t.v2()};
-                           },
-                           // пересечение параллелепипеда октадерева с помещаемым в него объектом
-                           [this](const OctreeParallelepiped& p, int triangle_index) -> bool {
-                                   return shape_intersection(p, m_triangles[triangle_index]);
-                           },
+                           // Вершины выпуклой оболочки помещаемого в октадерево объекта
+                           [this](int triangle_index) { return m_triangles[triangle_index].vertices(); },
+                           // Объект октадерева
+                           [this](int triangle_index) -> const TableTriangle& { return m_triangles[triangle_index]; },
                            thread_count, progress);
 }
 

@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "path_tracing/objects.h"
 #include "path_tracing/space/shape_intersection.h"
 
-class Rectangle final : public IntersectionRectangle, public GeometricObject
+class Rectangle final : public GeometricObject
 {
         vec3 m_org, m_e0, m_e1;
         vec3 m_normal;
@@ -38,7 +38,7 @@ public:
 
         vec3 normal(const vec3& point) const;
 
-        const vec3& org() const override;
-        const vec3& e0() const override;
-        const vec3& e1() const override;
+        const vec3& org() const;
+        const vec3& e0() const;
+        const vec3& e1() const;
 };

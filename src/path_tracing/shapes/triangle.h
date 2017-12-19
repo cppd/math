@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "path_tracing/objects.h"
 #include "path_tracing/space/shape_intersection.h"
 
-class TableTriangle final : public IntersectionTriangle, public GeometricObject
+class TableTriangle final : public IntersectionSimplex<TableTriangle>, public GeometricObject
 {
         const vec3* m_vertices;
         const vec3* m_normals;
@@ -58,7 +58,5 @@ public:
         vec3 geometric_normal() const;
         vec3 shading_normal(const vec3& point) const;
 
-        const vec3& v0() const override;
-        const vec3& v1() const override;
-        const vec3& v2() const override;
+        std::array<vec3, 3> vertices() const;
 };

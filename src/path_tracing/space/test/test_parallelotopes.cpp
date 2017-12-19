@@ -17,6 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "test_parallelotopes.h"
 
+#include "test_type.h"
+
+#include "com/arrays.h"
 #include "com/error.h"
 #include "com/log.h"
 #include "com/print.h"
@@ -25,9 +28,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/vec.h"
 #include "path_tracing/random/random_vector.h"
 #include "path_tracing/space/parallelotope.h"
+#include "path_tracing/space/parallelotope_algorithm.h"
 #include "path_tracing/space/parallelotope_ortho.h"
+#include "path_tracing/space/shape_intersection.h"
 
 #include <algorithm>
+#include <memory>
 #include <random>
 #include <utility>
 
@@ -45,44 +51,6 @@ using VectorP = Vector<Parallelotope::DIMENSION, typename Parallelotope::DataTyp
 
 namespace
 {
-template <typename Parallelotope, typename F>
-void all_diagonals(const Parallelotope& p, const VectorP<Parallelotope>& edge_sum, int n, const F& f)
-{
-        if (n >= 0)
-        {
-                all_diagonals(p, edge_sum + p.e(n), n - 1, f);
-                all_diagonals(p, edge_sum - p.e(n), n - 1, f);
-        }
-        else
-        {
-                f(edge_sum);
-        }
-}
-template <typename Parallelotope, typename F>
-void all_diagonals(const Parallelotope& p, const F& f)
-{
-        constexpr int last_index = Parallelotope::DIMENSION - 1;
-        // Одно из измерений не меняется, остальные к нему прибавляются и вычитаются
-        all_diagonals(p, p.e(last_index), last_index - 1, f);
-}
-template <typename Parallelotope>
-typename Parallelotope::DataType max_diagonal(const Parallelotope& parallelotope)
-{
-        using T = typename Parallelotope::DataType;
-
-        // Перебрать все диагонали одной из граней параллелотопа с учётом их направления.
-        // Количество таких диагоналей равно 2 ^ (N - 1). Добавляя к каждой такой
-        // диагонали оставшееся измерение, получаются все диагонали целого параллелотопа.
-        // Надо найти максимум из их длин.
-
-        T max_length = std::numeric_limits<T>::lowest();
-
-        all_diagonals(parallelotope,
-                      [&max_length](const VectorP<Parallelotope>& d) { max_length = std::max(max_length, length(d)); });
-
-        return max_length;
-}
-
 template <size_t N, typename T>
 bool test_edge_angles(const std::array<Vector<N, T>, N>& unit_edges)
 {
@@ -448,7 +416,7 @@ std::array<Vector<N, T>, N> to_edge_vector(const std::array<T, N>& edges)
 }
 
 template <size_t N, typename T>
-void test_parallelotopes()
+void test_parallelotope_points()
 {
         constexpr int point_count = 100000;
 
@@ -490,7 +458,111 @@ void test_parallelotopes()
                 compare_parallelotopes(engine, point_count, p_ortho, p);
         }
 
-        LOG("---\ntest parallelotope done");
+        LOG("---\ntest parallelotope points done");
+}
+
+template <typename Parallelotope>
+void test_parallelotope_algorithms(const Parallelotope& p)
+{
+        LOG("---\ndiagonals");
+        for (auto d : diagonals(p))
+        {
+                LOG(to_string(d));
+        }
+
+        LOG("---\nvertices");
+        for (auto v : vertices(p))
+        {
+                LOG(to_string(v));
+        }
+
+        LOG("---\nvertex ridges");
+        for (auto vr : vertex_ridges(p))
+        {
+                LOG(to_string(vr));
+        }
+}
+
+template <size_t N, typename T>
+void test_parallelotope_algorithms()
+{
+        constexpr std::array<T, N> edges = make_array_value<T, N>(1);
+        constexpr Vector<N, T> org(0);
+
+        {
+                LOG("---\nparallelotope ortho algorithms");
+                ParallelotopeOrtho<N, T> p(org, edges);
+                test_parallelotope_algorithms(p);
+        }
+
+        {
+                LOG("---\nparallelotope algorithms");
+                Parallelotope<N, T> p(org, to_edge_vector(edges));
+                test_parallelotope_algorithms(p);
+        }
+
+        LOG("---\ntest parallelotope algorithms done");
+}
+
+template <typename Parallelotope>
+void intersection(std::vector<std::tuple<const Parallelotope&, const Parallelotope&, bool>> data)
+{
+        int count = 0;
+        for (const auto& v : data)
+        {
+                const auto & [ p1, p2, with_intersection ] = v; // Clang 5
+
+                std::unique_ptr a1 = std::make_unique<ParallelotopeWithVerticesAndRidges<Parallelotope>>(p1);
+                std::unique_ptr a2 = std::make_unique<ParallelotopeWithVerticesAndRidges<Parallelotope>>(p2);
+
+                if (with_intersection != shape_intersection(*a1, *a2))
+                {
+                        error("Intersection not found");
+                }
+
+                else
+                {
+                        LOG(to_string(count) + " passed");
+                }
+
+                ++count;
+        }
+}
+
+template <size_t N, typename T>
+void test_parallelotope_intersection()
+{
+        constexpr std::array<T, N> edges = make_array_value<T, N>(1);
+        Vector<N, T> org0(0.0);
+        Vector<N, T> org1(0.75);
+        Vector<N, T> org2(1.5);
+
+        {
+                LOG("---\nparallelotope ortho intersection");
+
+                ParallelotopeOrtho p1(org0, edges);
+                ParallelotopeOrtho p2(org1, edges);
+                ParallelotopeOrtho p3(org2, edges);
+
+                intersection<ParallelotopeOrtho<N, T>>({{p1, p2, true}, {p2, p3, true}, {p1, p3, false}});
+        }
+        {
+                LOG("---\nparallelotope intersection");
+
+                Parallelotope p1(org0, to_edge_vector(edges));
+                Parallelotope p2(org1, to_edge_vector(edges));
+                Parallelotope p3(org2, to_edge_vector(edges));
+
+                intersection<Parallelotope<N, T>>({{p1, p2, true}, {p2, p3, true}, {p1, p3, false}});
+        }
+}
+
+template <size_t N, typename T>
+void test_parallelotopes()
+{
+        test_parallelotope_points<N, T>();
+        test_parallelotope_algorithms<N, T>();
+        test_parallelotope_intersection<N, T>();
 }
 }
 
@@ -499,5 +571,4 @@ void test_parallelotopes()
         test_parallelotopes<2, double>();
         test_parallelotopes<3, double>();
         test_parallelotopes<4, double>();
-        test_parallelotopes<5, double>();
 }

@@ -164,17 +164,7 @@ int TableTriangle::get_material() const
         return m_material;
 }
 
-const vec3& TableTriangle::v0() const
+std::array<vec3, 3> TableTriangle::vertices() const
 {
-        return m_vertices[m_v0];
-}
-
-const vec3& TableTriangle::v1() const
-{
-        return m_vertices[m_v1];
-}
-
-const vec3& TableTriangle::v2() const
-{
-        return m_vertices[m_v2];
+        return {{m_vertices[m_v0], m_vertices[m_v1], m_vertices[m_v2]}};
 }

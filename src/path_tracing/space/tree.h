@@ -25,6 +25,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "parallelotope_algorithm.h"
+#include "shape_intersection.h"
+
 #include "com/arrays.h"
 #include "com/error.h"
 #include "com/ray.h"
@@ -47,6 +50,35 @@ namespace SpatialSubdivisionTreeImplementation
 {
 template <size_t DIMENSION>
 inline constexpr int BOX_COUNT = 1u << DIMENSION;
+
+template <typename Parallelotope>
+class ParallelotopeForIntersection : public IntersectionParallelotope<ParallelotopeForIntersection<Parallelotope>>
+{
+        using VertexRidges = typename ParallelotopeTraits<Parallelotope>::VertexRidges;
+
+        const Parallelotope& m_parallelotope;
+        VertexRidges m_vertex_ridges;
+
+public:
+        static constexpr size_t DIMENSION = Parallelotope::DIMENSION;
+        using DataType = typename Parallelotope::DataType;
+
+        ParallelotopeForIntersection(const Parallelotope& p) : m_parallelotope(p), m_vertex_ridges(::vertex_ridges(p))
+        {
+        }
+        bool intersect(const Ray<DIMENSION, DataType>& r, DataType* t) const
+        {
+                return m_parallelotope.intersect(r, t);
+        }
+        bool inside(const Vector<DIMENSION, DataType>& p) const
+        {
+                return m_parallelotope.inside(p);
+        }
+        const VertexRidges& vertex_ridges() const
+        {
+                return m_vertex_ridges;
+        }
+};
 
 template <typename Parallelotope>
 class Box
@@ -288,10 +320,10 @@ std::array<std::tuple<int, Box<Parallelotope>*, int>, BOX_COUNT<Parallelotope::D
         return {{std::make_tuple(I, &(boxes->emplace_back(std::move(child_parallelotopes[I]))), index++)...}};
 }
 
-template <template <typename...> typename Container, typename Parallelotope, typename FunctorShapeIntersection>
+template <template <typename...> typename Container, typename Parallelotope, typename FunctorObjectReference>
 void extend(const int MAX_DEPTH, const int MIN_OBJECTS, const int MAX_BOXES, SpinLock* boxes_lock,
             Container<Box<Parallelotope>>* boxes, BoxJobs<Box<Parallelotope>>* box_jobs,
-            const FunctorShapeIntersection& functor_shape_intersection, ProgressRatio* progress) try
+            const FunctorObjectReference& functor_object_reference, ProgressRatio* progress) try
 {
         // Адреса имеющихся элементов не должны меняться при вставке
         // новых элементов, поэтому требуется std::deque или std::list.
@@ -329,9 +361,11 @@ void extend(const int MAX_DEPTH, const int MIN_OBJECTS, const int MAX_BOXES, Spi
                                 progress->set(child_box_index, MAX_BOXES);
                         }
 
+                        ParallelotopeForIntersection p(child_box->get_parallelotope());
+
                         for (int object_index : box->get_object_indices())
                         {
-                                if (functor_shape_intersection(child_box->get_parallelotope(), object_index))
+                                if (shape_intersection(p, functor_object_reference(object_index)))
                                 {
                                         child_box->add_object_index(object_index);
                                 }
@@ -424,23 +458,26 @@ public:
         {
         }
 
-        template <typename FunctorConvexHullVertices, typename FunctorShapeIntersection>
+        template <typename FunctorConvexHullVertices, typename FunctorObjectReference>
         SpatialSubdivisionTree(int max_depth, int min_objects_per_box, int object_index_count,
                                const FunctorConvexHullVertices& functor_convex_hull_vertices,
-                               const FunctorShapeIntersection& functor_shape_intersection, unsigned decomposition_thread_count,
+                               const FunctorObjectReference& functor_object_reference, unsigned decomposition_thread_count,
                                ProgressRatio* progress)
                 : MAX_DEPTH(max_depth), MIN_OBJECTS(min_objects_per_box)
         {
-                decompose(object_index_count, functor_convex_hull_vertices, functor_shape_intersection,
-                          decomposition_thread_count, progress);
+                decompose(object_index_count, functor_convex_hull_vertices, functor_object_reference, decomposition_thread_count,
+                          progress);
         }
 
-        template <typename FunctorConvexHullVertices, typename FunctorShapeIntersection>
+        template <typename FunctorConvexHullVertices, typename FunctorObjectReference>
         void decompose(int object_index_count, const FunctorConvexHullVertices& functor_convex_hull_vertices,
-                       const FunctorShapeIntersection& functor_shape_intersection, unsigned decomposition_thread_count,
+                       const FunctorObjectReference& functor_object_reference, unsigned decomposition_thread_count,
                        ProgressRatio* progress)
 
         {
+                static_assert(std::is_lvalue_reference_v<decltype(functor_object_reference(0))>);
+                static_assert(std::is_const_v<std::remove_reference_t<decltype(functor_object_reference(0))>>);
+
                 using SpatialSubdivisionTreeImplementation::iota_zero_based_indices;
                 using SpatialSubdivisionTreeImplementation::root_parallelotope;
 
@@ -463,7 +500,7 @@ public:
                 for (unsigned i = 0; i < threads.size(); ++i)
                 {
                         launch_thread(&threads[i], &msg[i], [&]() {
-                                extend(MAX_DEPTH, MIN_OBJECTS, MAX_BOXES, &boxes_lock, &boxes, &jobs, functor_shape_intersection,
+                                extend(MAX_DEPTH, MIN_OBJECTS, MAX_BOXES, &boxes_lock, &boxes, &jobs, functor_object_reference,
                                        progress);
                         });
                 }

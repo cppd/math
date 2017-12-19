@@ -103,7 +103,7 @@ constexpr ObjectType create_object_from_array(const Vector<N, T>& org, const std
 }
 
 template <size_t N, typename T>
-class ParallelotopeOrtho final : public IntersectionParallelotope<N, T>
+class ParallelotopeOrtho final
 {
         static_assert(N >= 2);
         static_assert(std::is_floating_point_v<T>);
@@ -141,17 +141,17 @@ public:
 
         ParallelotopeOrtho(const Vector<N, T>& org, const std::array<T, N>& vectors);
 
-        bool inside(const Vector<N, T>& p) const override;
+        bool inside(const Vector<N, T>& p) const;
 
-        bool intersect(const Ray<N, T>& r, T* t) const override;
+        bool intersect(const Ray<N, T>& r, T* t) const;
 
         Vector<N, T> normal(const Vector<N, T>& p) const;
 
         std::array<ParallelotopeOrtho<N, T>, DIVISIONS> binary_division() const;
 
-        const Vector<N, T>& org() const override;
+        const Vector<N, T>& org() const;
 
-        Vector<N, T> e(unsigned n) const override;
+        Vector<N, T> e(unsigned n) const;
 };
 
 // Параметр vectors — это или все только double, или все только Vector<N, T>
