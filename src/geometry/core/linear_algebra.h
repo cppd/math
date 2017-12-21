@@ -35,63 +35,100 @@ constexpr std::array<unsigned char, N> sequence_array = make_array_sequence<unsi
 // на их алгебраические дополнения.
 //   Используется для целочисленных расчётов. Для плавающей точки и больших размерностей
 // лучше использовать метод Гаусса.
-
-template <size_t N_V, size_t N_H, typename T, size_t DET_SIZE, typename = void>
-struct Determinant
+template <size_t N_V, size_t N_H, typename T, size_t DET_SIZE>
+constexpr T determinant(const std::array<Vector<N_H, T>, N_V>& vectors, const std::array<unsigned char, DET_SIZE>& v_map,
+                        const std::array<unsigned char, DET_SIZE>& h_map)
 {
         static_assert(N_V >= DET_SIZE);
         static_assert(N_H >= DET_SIZE);
         static_assert(DET_SIZE > 0);
 
-        static T f(const std::array<Vector<N_H, T>, N_V>& vectors, const std::array<unsigned char, DET_SIZE>& v_map,
-                   const std::array<unsigned char, DET_SIZE>& h_map)
-        {
-                // Надо выделить v_map.size() == h_map.size() векторов по вертикали и горизонтали,
-                // определяя коэффициенты по v_map и h_map.
-                // Например, строки с номерами v_map 0 и 3, в каждой строке надо взять элементы
-                // h_map с номерами 1 и 4. Получается матрица 2x2.
-                //           h_map
-                //        x ~ x x ~ x
-                //        x x x x x x
-                // v_map  x x x x x x
-                //        x ~ x x ~ x
-                //        x x x x x x
+        // Надо выделить v_map.size() == h_map.size() векторов по вертикали и горизонтали,
+        // определяя коэффициенты по v_map и h_map.
+        // Например, строки с номерами v_map 0 и 3, в каждой строке надо взять элементы
+        // h_map с номерами 1 и 4. Получается матрица 2x2.
+        //           h_map
+        //        x ~ x x ~ x
+        //        x x x x x x
+        // v_map  x x x x x x
+        //        x ~ x x ~ x
+        //        x x x x x x
 
-                int coef = 1;
+        if constexpr (DET_SIZE == 1)
+        {
+                return vectors[v_map[0]][h_map[0]];
+        }
+        else if constexpr (DET_SIZE == 2)
+        {
+                return vectors[v_map[0]][h_map[0]] * vectors[v_map[1]][h_map[1]] -
+                       vectors[v_map[0]][h_map[1]] * vectors[v_map[1]][h_map[0]];
+        }
+        else if constexpr (DET_SIZE == 3)
+        {
+                T v00 = vectors[v_map[0]][h_map[0]];
+                T v01 = vectors[v_map[0]][h_map[1]];
+                T v02 = vectors[v_map[0]][h_map[2]];
+                T v10 = vectors[v_map[1]][h_map[0]];
+                T v11 = vectors[v_map[1]][h_map[1]];
+                T v12 = vectors[v_map[1]][h_map[2]];
+                T v20 = vectors[v_map[2]][h_map[0]];
+                T v21 = vectors[v_map[2]][h_map[1]];
+                T v22 = vectors[v_map[2]][h_map[2]];
+
+                T d0 = v00 * (v11 * v22 - v12 * v21);
+                T d1 = v01 * (v10 * v22 - v12 * v20);
+                T d2 = v02 * (v10 * v21 - v11 * v20);
+
+                return d0 - d1 + d2;
+        }
+        else
+        {
                 T det = 0;
-                for (unsigned i = 0; i < DET_SIZE; ++i, coef = -coef)
+
+                for (unsigned i = 0; i < DET_SIZE; ++i)
                 {
                         T entry = vectors[v_map[0]][h_map[i]];
-                        T minor = Determinant<N_V, N_H, T, DET_SIZE - 1>::f(vectors, del_elem(v_map, 0), del_elem(h_map, i));
-                        T cofactor = coef * minor;
-                        det += entry * cofactor;
+                        T minor = determinant(vectors, del_elem(v_map, 0), del_elem(h_map, i));
+
+                        if (i & 1)
+                        {
+                                det -= entry * minor;
+                        }
+                        else
+                        {
+                                det += entry * minor;
+                        }
                 }
 
                 return det;
         }
-};
-
-// Определитель матрицы 1x1 равен этому единственному элементу.
-template <size_t N_V, size_t N_H, typename T, size_t DET_SIZE>
-struct Determinant<N_V, N_H, T, DET_SIZE, std::enable_if_t<DET_SIZE == 1>>
-{
-        static_assert(N_V >= DET_SIZE);
-        static_assert(N_H >= DET_SIZE);
-
-        static T f(const std::array<Vector<N_H, T>, N_V>& vectors, const std::array<unsigned char, DET_SIZE>& v_map,
-                   const std::array<unsigned char, DET_SIZE>& h_map)
-        {
-                return vectors[v_map[0]][h_map[0]];
-        }
-};
-
-// Просто функция-посредник
-template <size_t N_V, size_t N_H, typename T, size_t DET_SIZE>
-T determinant(const std::array<Vector<N_H, T>, N_V>& vectors, const std::array<unsigned char, DET_SIZE>& v_map,
-              const std::array<unsigned char, DET_SIZE>& h_map)
-{
-        return Determinant<N_V, N_H, T, DET_SIZE>::f(vectors, v_map, h_map);
 }
+
+// GCC 7.2 для функций del_elem выдаёт ошибку
+// "sorry, unimplemented: unexpected AST of kind switch_expr".
+#if defined(__clang__)
+// clang-format off
+static_assert
+(
+        1'868'201'030'776'500
+        ==
+        determinant<7, 7, __int128, 7>
+        (
+        {{
+        {10,  2,   3,   4,   5,   6,   7},
+        { 8, 90,  10,  11,  12,  13,  14},
+        {15, 16, 170,  18,  19,  20,  21},
+        {22, 23,  24, 250,  26,  27,  28},
+        {29, 30,  31,  32, 330,  34,  35},
+        {36, 37,  38,  39,  40, 410,  42},
+        {43, 44,  45,  46,  47,  48, 490}
+        }},
+        sequence_array<7>,
+        sequence_array<7>
+        )
+);
+// clang-format on
+#endif
 
 // Перебор всех вариантов подвекторов размера COUNT, создавая квадратные матрицы размером COUNT на COUNT.
 template <int COUNT, size_t N, typename VectorType>
