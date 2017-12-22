@@ -27,6 +27,8 @@ template <typename T, size_t... I>
 constexpr std::array<T, sizeof...(I)> del_elem_impl(const std::array<T, sizeof...(I) + 1>& a, unsigned pos,
                                                     std::integer_sequence<size_t, I...>)
 {
+        static_assert(((I < sizeof...(I)) && ...));
+
         return std::array<T, sizeof...(I)>{{(I < pos ? a[I] : a[I + 1])...}};
 }
 }

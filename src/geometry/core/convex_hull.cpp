@@ -213,55 +213,52 @@ public:
         }
 };
 
-template <size_t N, typename T, typename Simplex_T, unsigned simplex_i, typename = void>
-struct FindSimplexPoints
+template <unsigned simplex_i, size_t N, typename SourceType, typename ComputeType>
+void find_simplex_points(const std::vector<Vector<N, SourceType>>& points, std::array<int, N + 1>* simplex_points,
+                         std::array<Vector<N, ComputeType>, N>* simplex_vectors, unsigned point_i)
 {
         static_assert(N > 1);
+        static_assert(simplex_i <= N);
 
-        static void f(const std::vector<Vector<N, T>>& points, std::array<int, N + 1>* simplex_points,
-                      std::array<Vector<N, Simplex_T>, N>* simplex_vectors, unsigned point_i)
+        for (; point_i < points.size(); ++point_i)
         {
-                for (; point_i < points.size(); ++point_i)
+                minus(&(*simplex_vectors)[simplex_i - 1], points[point_i], points[(*simplex_points)[0]]);
+
+                if (linearly_independent<simplex_i>(*simplex_vectors))
                 {
-                        minus(&(*simplex_vectors)[simplex_i - 1], points[point_i], points[(*simplex_points)[0]]);
-
-                        if (linear_independent<simplex_i>(*simplex_vectors))
-                        {
-                                break;
-                        }
+                        break;
                 }
-                if (point_i == points.size())
-                {
-                        error("point " + to_string(simplex_i + 1) + " of " + to_string(N) + "-simplex not found");
-                }
-
-                (*simplex_points)[simplex_i] = point_i;
-
-                FindSimplexPoints<N, T, Simplex_T, simplex_i + 1>::f(points, simplex_points, simplex_vectors, point_i + 1);
         }
-};
-// Остановка рекурсии, если simplex_i стал равен N + 1
-template <size_t N, typename T, typename Simplex_T, unsigned simplex_i>
-struct FindSimplexPoints<N, T, Simplex_T, simplex_i, std::enable_if_t<simplex_i == N + 1>>
-{
-        static_assert(N > 1);
 
-        static void f(const std::vector<Vector<N, T>>&, std::array<int, N + 1>*, std::array<Vector<N, Simplex_T>, N>*, unsigned)
+        if (point_i == points.size())
         {
+                error("point " + to_string(simplex_i + 1) + " of " + to_string(N) + "-simplex not found");
+        }
+
+        (*simplex_points)[simplex_i] = point_i;
+
+        // N - максимальный индекс для массива из N + 1 точек
+        if constexpr (simplex_i != N)
+        {
+                find_simplex_points<simplex_i + 1>(points, simplex_points, simplex_vectors, point_i + 1);
         }
 };
 
-template <size_t N, typename S, typename C>
-void find_simplex_points(const std::vector<Vector<N, S>>& points, std::array<int, N + 1>* simplex_points)
+template <size_t N, typename SourceType, typename ComputeType>
+void find_simplex_points(const std::vector<Vector<N, SourceType>>& points, std::array<int, N + 1>* simplex_points)
 {
         static_assert(N > 1);
+
         if (points.size() == 0)
         {
                 error("0-simplex not found");
         }
-        std::array<Vector<N, C>, N> simplex_vectors;
+
+        std::array<Vector<N, ComputeType>, N> simplex_vectors;
+
         (*simplex_points)[0] = 0;
-        FindSimplexPoints<N, S, C, 1>::f(points, simplex_points, &simplex_vectors, 1);
+
+        find_simplex_points<1>(points, simplex_points, &simplex_vectors, 1);
 }
 
 template <size_t N, typename Facet, template <typename...> typename Map>

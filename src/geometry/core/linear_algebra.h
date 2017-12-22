@@ -28,16 +28,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <gmpxx.h>
 #include <vector>
 
+namespace LinearAlgebraImplementation
+{
 template <size_t N>
-constexpr std::array<unsigned char, N> sequence_array = make_array_sequence<unsigned char, N>();
+inline constexpr std::array<unsigned char, N> sequence_array = make_array_sequence<unsigned char, N>();
 
-//   Расчёт определителей по теореме Лапласа. Элементы одной строки умножаются
-// на их алгебраические дополнения.
-//   Используется для целочисленных расчётов. Для плавающей точки и больших размерностей
-// лучше использовать метод Гаусса.
 template <size_t N_V, size_t N_H, typename T, size_t DET_SIZE>
-constexpr T determinant(const std::array<Vector<N_H, T>, N_V>& vectors, const std::array<unsigned char, DET_SIZE>& v_map,
-                        const std::array<unsigned char, DET_SIZE>& h_map)
+constexpr T determinant_by_cofactor_expansion(const std::array<Vector<N_H, T>, N_V>& vectors,
+                                              const std::array<unsigned char, DET_SIZE>& v_map,
+                                              const std::array<unsigned char, DET_SIZE>& h_map)
 {
         static_assert(N_V >= DET_SIZE);
         static_assert(N_H >= DET_SIZE);
@@ -88,7 +87,7 @@ constexpr T determinant(const std::array<Vector<N_H, T>, N_V>& vectors, const st
                 for (unsigned i = 0; i < DET_SIZE; ++i)
                 {
                         T entry = vectors[v_map[0]][h_map[i]];
-                        T minor = determinant(vectors, del_elem(v_map, 0), del_elem(h_map, i));
+                        T minor = determinant_by_cofactor_expansion(vectors, del_elem(v_map, 0), del_elem(h_map, i));
 
                         if (i & 1)
                         {
@@ -102,6 +101,13 @@ constexpr T determinant(const std::array<Vector<N_H, T>, N_V>& vectors, const st
 
                 return det;
         }
+}
+
+template <size_t N_V, size_t N_H, typename T, size_t DET_SIZE>
+constexpr T determinant(const std::array<Vector<N_H, T>, N_V>& vectors, const std::array<unsigned char, DET_SIZE>& v_map,
+                        const std::array<unsigned char, DET_SIZE>& h_map)
+{
+        return determinant_by_cofactor_expansion(vectors, v_map, h_map);
 }
 
 // GCC 7.2 для функций del_elem выдаёт ошибку
@@ -129,19 +135,24 @@ static_assert
 );
 // clang-format on
 #endif
+}
 
-// Перебор всех вариантов подвекторов размера COUNT, создавая квадратные матрицы размером COUNT на COUNT.
-template <int COUNT, size_t N, typename VectorType>
-std::enable_if_t<any_integral<VectorType>, bool> linear_independent(const std::array<Vector<N, VectorType>, N>& vectors)
+// Тип данных передаваемых векторов и диапазон значений рассчитаны только на определители
+// из этих чисел, поэтому нельзя использовать скалярные произведения, матрицы Грама и т.п.
+template <int COUNT, size_t N, typename T>
+std::enable_if_t<any_integral<T>, bool> linearly_independent(const std::array<Vector<N, T>, N>& vectors)
 {
         static_assert(N > 1);
         static_assert(COUNT > 0);
         static_assert(COUNT <= N);
 
+        namespace Impl = LinearAlgebraImplementation;
+
+        // Перебор всех вариантов подвекторов размера COUNT,
+        // создавая квадратные матрицы размером COUNT.
         for (const std::array<unsigned char, COUNT>& h_map : get_combinations<N, COUNT>())
         {
-                // Используются векторы в количестве COUNT и длиной COUNT
-                if (determinant(vectors, sequence_array<COUNT>, h_map) != 0)
+                if (Impl::determinant(vectors, Impl::sequence_array<COUNT>, h_map) != 0)
                 {
                         return true;
                 }
@@ -150,23 +161,23 @@ std::enable_if_t<any_integral<VectorType>, bool> linear_independent(const std::a
         return false;
 }
 
-// Вектор из ортогонального дополнения (n-1)-мерного пространства, определяемого n-1 первыми векторами.
+// Вектор из ортогонального дополнения (n-1)-мерного подпространства
 template <size_t N, typename T>
 Vector<N, T> ortho_nn(const std::array<Vector<N, T>, N - 1>& vectors)
 {
         static_assert(N > 1);
+
+        namespace Impl = LinearAlgebraImplementation;
 
         // Для расчёта используются N - 1 строк и N столбцов.
         // Для отображения элементов в элементы используются sequence_array,
         // которые заполнены последовательными числами, начиная с 0.
 
         Vector<N, T> res;
-        T coef = 1;
-        for (unsigned i = 0; i < N; ++i, coef = -coef)
+        for (unsigned i = 0; i < N; ++i)
         {
-                T minor = determinant(vectors, sequence_array<N - 1>, del_elem(sequence_array<N>, i));
-                T cofactor = coef * minor;
-                res[i] = cofactor;
+                T minor = Impl::determinant(vectors, Impl::sequence_array<N - 1>, del_elem(Impl::sequence_array<N>, i));
+                res[i] = (i & 1) ? -minor : minor;
         }
 
         return res;
