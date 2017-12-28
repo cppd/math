@@ -18,7 +18,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 // Если расстояние до пересечения с объектом меньше этой величины, то нет пересечения
-inline constexpr double INTERSECTION_THRESHOLD = 1e-8;
+
+template <typename T>
+inline constexpr T INTERSECTION_THRESHOLD;
+
+template <>
+inline constexpr double INTERSECTION_THRESHOLD<double> = 1e-8;
 
 // Для скалярных произведений
-inline constexpr double EPSILON = 1e-8;
+
+template <typename T>
+inline constexpr T EPSILON;
+
+template <>
+inline constexpr double EPSILON<double> = 1e-8;

@@ -276,9 +276,9 @@ bool ParallelotopeOrtho<N, T>::intersect(const Ray<N, T>& r, T* t) const
                 }
         }
 
-        *t = (f_max > INTERSECTION_THRESHOLD) ? f_max : b_min;
+        *t = (f_max > INTERSECTION_THRESHOLD<T>) ? f_max : b_min;
 
-        return *t > INTERSECTION_THRESHOLD;
+        return *t > INTERSECTION_THRESHOLD<T>;
 }
 
 template <size_t N, typename T>

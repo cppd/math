@@ -399,11 +399,11 @@ class SpatialSubdivisionTree
         using BoxContainer = std::deque<Box>;
 
         // Смещение по лучу внутрь коробки от точки персечения с коробкой.
-        static constexpr T DELTA = 10 * INTERSECTION_THRESHOLD;
+        static constexpr T DELTA = 10 * INTERSECTION_THRESHOLD<T>;
 
         // Увеличение основной коробки октадерева по всем измерениям,
         // чтобы все объекты были внутри неё.
-        static constexpr T GUARD_REGION_SIZE = INTERSECTION_THRESHOLD;
+        static constexpr T GUARD_REGION_SIZE = INTERSECTION_THRESHOLD<T>;
 
         // Нижняя и верхняя границы для минимального количества объектов в коробке.
         static constexpr int MIN_OBJECTS_LEFT_BOUND = 2;

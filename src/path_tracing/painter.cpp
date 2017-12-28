@@ -32,6 +32,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 constexpr double MIN_COLOR_LEVEL = 1e-4;
 constexpr int MAX_RECURSION_LEVEL = 100;
 
+constexpr double EPSILON_DOUBLE = EPSILON<double>;
+
 namespace
 {
 bool color_is_zero(const vec3& c)
@@ -102,7 +104,7 @@ vec3 direct_diffuse_lighting(const std::vector<const GenericObject*>& objects,
 
                 double light_weight = 2 * dot(ray_to_light.get_dir(), shading_normal);
 
-                if (light_weight <= EPSILON)
+                if (light_weight <= EPSILON_DOUBLE)
                 {
                         // свет находится по другую сторону поверхности
                         continue;
@@ -314,7 +316,7 @@ vec3 Painter::diffuse_lighting(std::mt19937_64& random_engine, int recursion_lev
                 // Случайный вектор диффузного освещения надо определять от видимой нормали.
                 ray3 diffuse_ray = ray3(point, random_hemisphere_cosine_any_length(random_engine, shading_normal));
 
-                if (triangle_mesh && dot(diffuse_ray.get_dir(), geometric_normal) < EPSILON)
+                if (triangle_mesh && dot(diffuse_ray.get_dir(), geometric_normal) < EPSILON_DOUBLE)
                 {
                         // Если получившийся случайный вектор диффузного отражения показывает
                         // в другую сторону от поверхности, то диффузного освещения нет.
@@ -349,7 +351,7 @@ vec3 Painter::trace_path(std::mt19937_64& random_engine, int recursion_level, do
         double dot_dir_and_geometric_normal = dot(ray.get_dir(), geometric_normal);
         bool triangle_mesh = surface_properties.is_triangle_mesh();
 
-        if (std::abs(dot_dir_and_geometric_normal) <= EPSILON)
+        if (std::abs(dot_dir_and_geometric_normal) <= EPSILON_DOUBLE)
         {
                 return vec3(0);
         }
@@ -361,11 +363,11 @@ vec3 Painter::trace_path(std::mt19937_64& random_engine, int recursion_level, do
 
         vec3 shading_normal = triangle_mesh ? surface_properties.get_shading_normal() : geometric_normal;
 
-        ASSERT(dot(geometric_normal, shading_normal) > EPSILON);
+        ASSERT(dot(geometric_normal, shading_normal) > EPSILON_DOUBLE);
 
         // Определять только по реальной нормали, так как видимая нормаль может
         // показать, что пересечение находится с другой стороны объекта.
-        if (dot_dir_and_geometric_normal > EPSILON)
+        if (dot_dir_and_geometric_normal > EPSILON_DOUBLE)
         {
                 geometric_normal = -geometric_normal;
                 shading_normal = -shading_normal;

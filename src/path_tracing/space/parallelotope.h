@@ -173,7 +173,7 @@ bool Parallelotope<N, T>::intersect(const Ray<N, T>& r, T* t) const
         for (unsigned i = 0; i < N; ++i)
         {
                 T s = dot(r.get_dir(), m_planes[i].n);
-                if (std::abs(s) < EPSILON)
+                if (std::abs(s) < EPSILON<T>)
                 {
                         T d = dot(r.get_org(), m_planes[i].n);
                         if (d - m_planes[i].d1 > 0 || -d - m_planes[i].d2 > 0)
@@ -214,9 +214,9 @@ bool Parallelotope<N, T>::intersect(const Ray<N, T>& r, T* t) const
                 }
         }
 
-        *t = (f_max > INTERSECTION_THRESHOLD) ? f_max : b_min;
+        *t = (f_max > INTERSECTION_THRESHOLD<T>) ? f_max : b_min;
 
-        return *t > INTERSECTION_THRESHOLD;
+        return *t > INTERSECTION_THRESHOLD<T>;
 }
 
 template <size_t N, typename T>
