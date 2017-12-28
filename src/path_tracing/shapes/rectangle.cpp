@@ -17,8 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "rectangle.h"
 
-#include "barycentric.h"
-
 Rectangle::Rectangle(const vec3& org, const vec3& e0, const vec3& e1)
 {
         set_data(org, e0, e1);
@@ -32,12 +30,12 @@ void Rectangle::set_data(const vec3& org, const vec3& e0, const vec3& e1)
 
         m_normal = normalize(cross(e0, e1));
 
-        triangle_u_beta_and_u_gamma_for_v0(m_org, m_org + m_e0, m_org + m_e1, &m_u_beta, &m_u_gamma);
+        m_geometry.set_data(m_normal, m_org, {{m_e0, m_e1}});
 }
 
 bool Rectangle::intersect(const ray3& r, double* t) const
 {
-        return rectangle_intersect(r, m_normal, m_org, m_u_beta, m_u_gamma, t);
+        return m_geometry.intersect(r, m_org, m_normal, t);
 }
 vec3 Rectangle::normal(const vec3&) const
 {

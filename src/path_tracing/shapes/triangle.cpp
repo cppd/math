@@ -17,8 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "triangle.h"
 
-#include "barycentric.h"
-
 #include "com/error.h"
 
 TableTriangle::TableTriangle(const vec3* points, const vec3* normals, const vec2* texcoords, int v0, int v1, int v2,
@@ -56,7 +54,7 @@ TableTriangle::TableTriangle(const vec3* points, const vec3* normals, const vec2
                       to_string(m_vertices[m_v1]) + "\n" + to_string(m_vertices[m_v2]));
         }
 
-        triangle_u_beta_and_u_gamma_for_v0(m_vertices[m_v0], m_vertices[m_v1], m_vertices[m_v2], &m_u_beta, &m_u_gamma);
+        m_geometry.set_data(m_normal, {{m_vertices[m_v0], m_vertices[m_v1], m_vertices[m_v2]}});
 
         if (!has_normals)
         {
@@ -112,7 +110,7 @@ TableTriangle::TableTriangle(const vec3* points, const vec3* normals, const vec2
 
 bool TableTriangle::intersect(const ray3& r, double* t) const
 {
-        return triangle_intersect(r, m_normal, m_vertices[m_v0], m_u_beta, m_u_gamma, t);
+        return m_geometry.intersect(r, m_vertices[m_v0], m_normal, t);
 }
 
 vec3 TableTriangle::geometric_normal() const
@@ -128,17 +126,19 @@ vec3 TableTriangle::shading_normal(const vec3& point) const
                 return m_normal;
         case NormalType::USE_NORMALS:
         {
-                vec3 n0 = m_normals[m_n0];
-                vec3 n1 = m_normals[m_n1];
-                vec3 n2 = m_normals[m_n2];
-                return normalize(triangle_interpolation(point, m_vertices[m_v0], m_u_beta, m_u_gamma, n0, n1, n2));
+                std::array<vec3, 3> normals;
+                normals[0] = m_normals[m_n0];
+                normals[1] = m_normals[m_n1];
+                normals[2] = m_normals[m_n2];
+                return normalize(m_geometry.interpolate(point, normals));
         }
         case NormalType::NEGATE_NORMALS:
         {
-                vec3 n0 = m_negate_normal_0 ? -m_normals[m_n0] : m_normals[m_n0];
-                vec3 n1 = m_negate_normal_1 ? -m_normals[m_n1] : m_normals[m_n1];
-                vec3 n2 = m_negate_normal_2 ? -m_normals[m_n2] : m_normals[m_n2];
-                return normalize(triangle_interpolation(point, m_vertices[m_v0], m_u_beta, m_u_gamma, n0, n1, n2));
+                std::array<vec3, 3> normals;
+                normals[0] = m_negate_normal_0 ? -m_normals[m_n0] : m_normals[m_n0];
+                normals[1] = m_negate_normal_1 ? -m_normals[m_n1] : m_normals[m_n1];
+                normals[2] = m_negate_normal_2 ? -m_normals[m_n2] : m_normals[m_n2];
+                return normalize(m_geometry.interpolate(point, normals));
         }
         }
         error_fatal("Unknown table triangle normal type");
@@ -153,8 +153,11 @@ vec2 TableTriangle::texcoord(const vec3& point) const
 {
         if (has_texcoord())
         {
-                return triangle_interpolation(point, m_vertices[m_v0], m_u_beta, m_u_gamma, m_texcoords[m_t0], m_texcoords[m_t1],
-                                              m_texcoords[m_t2]);
+                std::array<vec2, 3> texcoords;
+                texcoords[0] = m_texcoords[m_t0];
+                texcoords[1] = m_texcoords[m_t1];
+                texcoords[2] = m_texcoords[m_t2];
+                return m_geometry.interpolate(point, texcoords);
         }
         error("Table triangle texture coordinates request when there are no texture coordinates");
 }

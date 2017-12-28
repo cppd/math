@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "simplex_geometry.h"
+
 #include "com/ray.h"
 #include "com/vec.h"
 #include "path_tracing/objects.h"
@@ -26,7 +28,7 @@ class Rectangle final : public GeometricObject
 {
         vec3 m_org, m_e0, m_e1;
         vec3 m_normal;
-        vec3 m_u_beta, m_u_gamma;
+        ParallelotopeGeometry<3, double> m_geometry;
 
 public:
         Rectangle() = default;
