@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "dft/test/dft_test.h"
 #include "geometry/test/convex_hull_test.h"
 #include "geometry/test/reconstruction_test.h"
+#include "path_tracing/space/test/parallelotope_test.h"
 
 namespace
 {
@@ -31,6 +32,26 @@ void self_test_required(IProgressRatioList* progress_ratio_list, std::string* te
                 progress.set(0);
                 dft_test();
         }
+
+        {
+                *test_name = "Self-Test, Parallelotopes in 2D";
+                ProgressRatio progress(progress_ratio_list, *test_name);
+                progress.set(0);
+                parallelotope_test(2);
+        }
+        {
+                *test_name = "Self-Test, Parallelotopes in 3D";
+                ProgressRatio progress(progress_ratio_list, *test_name);
+                progress.set(0);
+                parallelotope_test(3);
+        }
+        {
+                *test_name = "Self-Test, Parallelotopes in 4D";
+                ProgressRatio progress(progress_ratio_list, *test_name);
+                progress.set(0);
+                parallelotope_test(4);
+        }
+
         {
                 *test_name = "Self-Test, Convex Hull in 2D";
                 ProgressRatio progress(progress_ratio_list, *test_name);
@@ -46,6 +67,7 @@ void self_test_required(IProgressRatioList* progress_ratio_list, std::string* te
                 ProgressRatio progress(progress_ratio_list, *test_name);
                 convex_hull_test(4, &progress);
         }
+
         {
                 *test_name = "Self-Test, 1-Manifold Reconstruction in 2D";
                 ProgressRatio progress(progress_ratio_list, *test_name);

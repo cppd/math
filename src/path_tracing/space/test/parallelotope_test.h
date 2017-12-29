@@ -17,4 +17,4 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-void test_parallelotopes();
+void parallelotope_test(int number_of_dimensions);
