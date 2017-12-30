@@ -26,6 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "parallelotope_algorithm.h"
+#include "parallelotope_wrapper.h"
 #include "shape_intersection.h"
 
 #include "com/arrays.h"
@@ -50,35 +51,6 @@ namespace SpatialSubdivisionTreeImplementation
 {
 template <size_t DIMENSION>
 inline constexpr int BOX_COUNT = 1u << DIMENSION;
-
-template <typename Parallelotope>
-class ParallelotopeForIntersection : public IntersectionParallelotope<ParallelotopeForIntersection<Parallelotope>>
-{
-        using VertexRidges = typename ParallelotopeTraits<Parallelotope>::VertexRidges;
-
-        const Parallelotope& m_parallelotope;
-        VertexRidges m_vertex_ridges;
-
-public:
-        static constexpr size_t DIMENSION = Parallelotope::DIMENSION;
-        using DataType = typename Parallelotope::DataType;
-
-        ParallelotopeForIntersection(const Parallelotope& p) : m_parallelotope(p), m_vertex_ridges(::vertex_ridges(p))
-        {
-        }
-        bool intersect(const Ray<DIMENSION, DataType>& r, DataType* t) const
-        {
-                return m_parallelotope.intersect(r, t);
-        }
-        bool inside(const Vector<DIMENSION, DataType>& p) const
-        {
-                return m_parallelotope.inside(p);
-        }
-        const VertexRidges& vertex_ridges() const
-        {
-                return m_vertex_ridges;
-        }
-};
 
 template <typename Parallelotope>
 class Box
@@ -361,7 +333,7 @@ void extend(const int MAX_DEPTH, const int MIN_OBJECTS, const int MAX_BOXES, Spi
                                 progress->set(child_box_index, MAX_BOXES);
                         }
 
-                        ParallelotopeForIntersection p(child_box->get_parallelotope());
+                        ParallelotopeWrapperForShapeIntersection p(child_box->get_parallelotope());
 
                         for (int object_index : box->get_object_indices())
                         {

@@ -20,39 +20,51 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "path_tracing/space/parallelotope_algorithm.h"
 #include "path_tracing/space/shape_intersection.h"
 
+// Для функций shape_intersection при построении дерева (октадерево и т.п.)
+// нужен параллелотоп как наследник IntersectionParallelotope, а также нужны
+// функции vertices и vertex_ridges. Это становится не нужно после построения
+// дерева, когда требуется только поиск пересечений с лучом.
+
 template <typename Parallelotope>
-class ParallelotopeWithVerticesAndRidges : public IntersectionParallelotope<ParallelotopeWithVerticesAndRidges<Parallelotope>>
+class ParallelotopeWrapperForShapeIntersection final
+        : public IntersectionParallelotope<ParallelotopeWrapperForShapeIntersection<Parallelotope>>
 {
+        static_assert(!std::is_base_of_v<IntersectionParallelotope<Parallelotope>, Parallelotope>);
+
         using VertexRidges = typename ParallelotopeTraits<Parallelotope>::VertexRidges;
         using Vertices = typename ParallelotopeTraits<Parallelotope>::Vertices;
 
         const Parallelotope& m_parallelotope;
 
-        VertexRidges m_vertex_ridges;
         Vertices m_vertices;
+        VertexRidges m_vertex_ridges;
 
 public:
         static constexpr size_t DIMENSION = Parallelotope::DIMENSION;
         using DataType = typename Parallelotope::DataType;
 
-        ParallelotopeWithVerticesAndRidges(const Parallelotope& p)
-                : m_parallelotope(p), m_vertex_ridges(::vertex_ridges(p)), m_vertices(::vertices(p))
+        ParallelotopeWrapperForShapeIntersection(const Parallelotope& p)
+                : m_parallelotope(p), m_vertices(::vertices(p)), m_vertex_ridges(::vertex_ridges(p))
         {
         }
+
         bool intersect(const Ray<DIMENSION, DataType>& r, DataType* t) const
         {
                 return m_parallelotope.intersect(r, t);
         }
+
         bool inside(const Vector<DIMENSION, DataType>& p) const
         {
                 return m_parallelotope.inside(p);
         }
-        const VertexRidges& vertex_ridges() const
-        {
-                return m_vertex_ridges;
-        }
+
         const Vertices& vertices() const
         {
                 return m_vertices;
+        }
+
+        const VertexRidges& vertex_ridges() const
+        {
+                return m_vertex_ridges;
         }
 };

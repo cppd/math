@@ -17,8 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "parallelotope_test.h"
 
-#include "test_type.h"
-
 #include "com/arrays.h"
 #include "com/error.h"
 #include "com/log.h"
@@ -31,6 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "path_tracing/space/parallelotope.h"
 #include "path_tracing/space/parallelotope_algorithm.h"
 #include "path_tracing/space/parallelotope_ortho.h"
+#include "path_tracing/space/parallelotope_wrapper.h"
 #include "path_tracing/space/shape_intersection.h"
 
 #include <algorithm>
@@ -636,27 +635,16 @@ void test_algorithms()
 }
 
 template <typename Parallelotope>
-void test_intersections(std::vector<std::tuple<const Parallelotope&, const Parallelotope&, bool>> data)
+void test_intersection(const Parallelotope& p1, const Parallelotope& p2, bool with_intersection, const std::string& text)
 {
-        int count = 0;
-        for (const auto& v : data)
+        if (with_intersection != shape_intersection(p1, p2))
         {
-                const auto & [ p1, p2, with_intersection ] = v; // Clang 5
+                error("Error intersection " + text);
+        }
 
-                std::unique_ptr a1 = std::make_unique<ParallelotopeWithVerticesAndRidges<Parallelotope>>(p1);
-                std::unique_ptr a2 = std::make_unique<ParallelotopeWithVerticesAndRidges<Parallelotope>>(p2);
-
-                if (with_intersection != shape_intersection(*a1, *a2))
-                {
-                        error("Error intersection " + to_string(count));
-                }
-
-                if (PRINT_ALL)
-                {
-                        LOG("intersection " + to_string(count));
-                }
-
-                ++count;
+        if (PRINT_ALL)
+        {
+                LOG("intersection " + text);
         }
 }
 
@@ -679,7 +667,13 @@ void test_intersections()
                 ParallelotopeOrtho<N, T> p2(org1, edges);
                 ParallelotopeOrtho<N, T> p3(org2, edges);
 
-                test_intersections<ParallelotopeOrtho<N, T>>({{p1, p2, true}, {p2, p3, true}, {p1, p3, false}});
+                ParallelotopeWrapperForShapeIntersection w1(p1);
+                ParallelotopeWrapperForShapeIntersection w2(p2);
+                ParallelotopeWrapperForShapeIntersection w3(p3);
+
+                test_intersection(w1, w2, true, "1-2");
+                test_intersection(w2, w3, true, "2-3");
+                test_intersection(w1, w3, false, "1-3");
         }
 
         print_separator();
@@ -690,7 +684,13 @@ void test_intersections()
                 Parallelotope<N, T> p2(org1, to_edge_vector(edges));
                 Parallelotope<N, T> p3(org2, to_edge_vector(edges));
 
-                test_intersections<Parallelotope<N, T>>({{p1, p2, true}, {p2, p3, true}, {p1, p3, false}});
+                ParallelotopeWrapperForShapeIntersection w1(p1);
+                ParallelotopeWrapperForShapeIntersection w2(p2);
+                ParallelotopeWrapperForShapeIntersection w3(p3);
+
+                test_intersection(w1, w2, true, "1-2");
+                test_intersection(w2, w3, true, "2-3");
+                test_intersection(w1, w3, false, "1-3");
         }
 
         print_separator();
