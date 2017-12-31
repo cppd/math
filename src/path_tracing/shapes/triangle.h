@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "path_tracing/objects.h"
 #include "path_tracing/space/shape_intersection.h"
 
-class TableTriangle final : public IntersectionSimplex<TableTriangle>, public GeometricObject
+class TableTriangle final : public GeometricObject
 {
         const vec3* m_vertices;
         const vec3* m_normals;
@@ -48,6 +48,9 @@ class TableTriangle final : public IntersectionSimplex<TableTriangle>, public Ge
         bool m_negate_normal_0, m_negate_normal_1, m_negate_normal_2;
 
 public:
+        static constexpr size_t DIMENSION = 3;
+        using DataType = double;
+
         TableTriangle(const vec3* points, const vec3* normals, const vec2* texcoords, int v1, int v2, int v3, bool has_normals,
                       int n1, int n2, int n3, bool has_texcoords, int t1, int t2, int t3, int material);
 

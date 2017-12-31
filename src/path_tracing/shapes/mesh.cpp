@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "mesh.h"
 
+#include "simplex_wrapper.h"
+
 #include "com/log.h"
 #include "com/mat_alg.h"
 #include "com/time.h"
@@ -24,6 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "path_tracing/space/ray_intersection.h"
 
 #include <algorithm>
+#include <utility>
 
 constexpr int OCTREE_MAX_DEPTH = 10;
 constexpr int OCTREE_MIN_OBJECTS = 10;
@@ -83,12 +86,20 @@ void Mesh::create_mesh_object(const IObj* obj, const mat4& vertex_matrix, unsign
 
         progress->set_text("Octree: %v of %m");
 
-        m_octree.decompose(m_triangles.size(),
-                           // Вершины выпуклой оболочки помещаемого в октадерево объекта
-                           [this](int triangle_index) { return m_triangles[triangle_index].vertices(); },
-                           // Объект октадерева
-                           [this](int triangle_index) -> const TableTriangle& { return m_triangles[triangle_index]; },
-                           thread_count, progress);
+        std::vector<SimplexWrapperForShapeIntersection<TableTriangle>> simplex_wrappers;
+        simplex_wrappers.reserve(m_triangles.size());
+        for (const TableTriangle& t : m_triangles)
+        {
+                simplex_wrappers.emplace_back(t);
+        }
+
+        // Указатель на объект октадерева
+        auto lambda_triangle = [w = std::as_const(simplex_wrappers)](int triangle_index)
+        {
+                return &(w[triangle_index]);
+        };
+
+        m_octree.decompose(m_triangles.size(), lambda_triangle, thread_count, progress);
 }
 
 Mesh::Mesh(const IObj* obj, const mat4& vertex_matrix, unsigned thread_count, ProgressRatio* progress)

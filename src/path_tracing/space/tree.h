@@ -165,9 +165,8 @@ constexpr Parallelotope create_parallelotope_from_vector(const Vector<sizeof...(
         return Parallelotope(org, edges[I]...);
 }
 
-template <typename Parallelotope, typename T, typename FunctorConvexHullVertices>
-Parallelotope root_parallelotope(T guard_region_size, int object_index_count,
-                                 const FunctorConvexHullVertices& functor_convex_hull_vertices)
+template <typename Parallelotope, typename T, typename FunctorObjectPointer>
+Parallelotope root_parallelotope(T guard_region_size, int object_index_count, const FunctorObjectPointer& functor_object_pointer)
 {
         static_assert(std::is_same_v<T, typename Parallelotope::DataType>);
         static_assert(std::is_floating_point_v<typename Parallelotope::DataType>);
@@ -179,7 +178,7 @@ Parallelotope root_parallelotope(T guard_region_size, int object_index_count,
 
         for (int object_index = 0; object_index < object_index_count; ++object_index)
         {
-                for (const Vector<N, T>& v : functor_convex_hull_vertices(object_index))
+                for (const Vector<N, T>& v : functor_object_pointer(object_index)->vertices())
                 {
                         for (int i = 0; i < N; ++i)
                         {
@@ -292,10 +291,10 @@ std::array<std::tuple<int, Box<Parallelotope>*, int>, BOX_COUNT<Parallelotope::D
         return {{std::make_tuple(I, &(boxes->emplace_back(std::move(child_parallelotopes[I]))), index++)...}};
 }
 
-template <template <typename...> typename Container, typename Parallelotope, typename FunctorObjectReference>
+template <template <typename...> typename Container, typename Parallelotope, typename FunctorObjectPointer>
 void extend(const int MAX_DEPTH, const int MIN_OBJECTS, const int MAX_BOXES, SpinLock* boxes_lock,
             Container<Box<Parallelotope>>* boxes, BoxJobs<Box<Parallelotope>>* box_jobs,
-            const FunctorObjectReference& functor_object_reference, ProgressRatio* progress) try
+            const FunctorObjectPointer& functor_object_pointer, ProgressRatio* progress) try
 {
         // Адреса имеющихся элементов не должны меняться при вставке
         // новых элементов, поэтому требуется std::deque или std::list.
@@ -337,7 +336,7 @@ void extend(const int MAX_DEPTH, const int MIN_OBJECTS, const int MAX_BOXES, Spi
 
                         for (int object_index : box->get_object_indices())
                         {
-                                if (shape_intersection(p, functor_object_reference(object_index)))
+                                if (shape_intersection(p, *functor_object_pointer(object_index)))
                                 {
                                         child_box->add_object_index(object_index);
                                 }
@@ -430,25 +429,22 @@ public:
         {
         }
 
-        template <typename FunctorConvexHullVertices, typename FunctorObjectReference>
+        template <typename FunctorObjectPointer>
         SpatialSubdivisionTree(int max_depth, int min_objects_per_box, int object_index_count,
-                               const FunctorConvexHullVertices& functor_convex_hull_vertices,
-                               const FunctorObjectReference& functor_object_reference, unsigned decomposition_thread_count,
+                               const FunctorObjectPointer& functor_object_pointer, unsigned decomposition_thread_count,
                                ProgressRatio* progress)
                 : MAX_DEPTH(max_depth), MIN_OBJECTS(min_objects_per_box)
         {
-                decompose(object_index_count, functor_convex_hull_vertices, functor_object_reference, decomposition_thread_count,
-                          progress);
+                decompose(object_index_count, functor_object_pointer, decomposition_thread_count, progress);
         }
 
-        template <typename FunctorConvexHullVertices, typename FunctorObjectReference>
-        void decompose(int object_index_count, const FunctorConvexHullVertices& functor_convex_hull_vertices,
-                       const FunctorObjectReference& functor_object_reference, unsigned decomposition_thread_count,
-                       ProgressRatio* progress)
+        template <typename FunctorObjectPointer>
+        void decompose(int object_index_count, const FunctorObjectPointer& functor_object_pointer,
+                       unsigned decomposition_thread_count, ProgressRatio* progress)
 
         {
-                static_assert(std::is_lvalue_reference_v<decltype(functor_object_reference(0))>);
-                static_assert(std::is_const_v<std::remove_reference_t<decltype(functor_object_reference(0))>>);
+                static_assert(std::is_pointer_v<decltype(functor_object_pointer(0))>);
+                static_assert(std::is_const_v<std::remove_pointer_t<decltype(functor_object_pointer(0))>>);
 
                 using SpatialSubdivisionTreeImplementation::iota_zero_based_indices;
                 using SpatialSubdivisionTreeImplementation::root_parallelotope;
@@ -461,9 +457,9 @@ public:
 
                 SpinLock boxes_lock;
 
-                BoxContainer boxes({Box(
-                        root_parallelotope<Parallelotope>(GUARD_REGION_SIZE, object_index_count, functor_convex_hull_vertices),
-                        iota_zero_based_indices(object_index_count))});
+                BoxContainer boxes(
+                        {Box(root_parallelotope<Parallelotope>(GUARD_REGION_SIZE, object_index_count, functor_object_pointer),
+                             iota_zero_based_indices(object_index_count))});
 
                 BoxJobs jobs(&boxes.front(), MAX_DEPTH_LEFT_BOUND);
 
@@ -472,7 +468,7 @@ public:
                 for (unsigned i = 0; i < threads.size(); ++i)
                 {
                         launch_thread(&threads[i], &msg[i], [&]() {
-                                extend(MAX_DEPTH, MIN_OBJECTS, MAX_BOXES, &boxes_lock, &boxes, &jobs, functor_object_reference,
+                                extend(MAX_DEPTH, MIN_OBJECTS, MAX_BOXES, &boxes_lock, &boxes, &jobs, functor_object_pointer,
                                        progress);
                         });
                 }

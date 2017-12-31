@@ -17,43 +17,59 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "path_tracing/space/parallelotope_algorithm.h"
+#include "com/error.h"
 #include "path_tracing/space/shape_intersection.h"
 
 // Для функций shape_intersection при построении дерева (октадерево и т.п.), а также для самого
 // дерева нужны функции intersect, inside (если объект имеет объём), vertices и vertex_ridges.
 // Функции vertices и vertex_ridges с их массивами становятся ненужными после построения дерева.
 
-template <typename Parallelotope>
-class ParallelotopeWrapperForShapeIntersection final
+// (N-1)-симплекс
+template <typename Simplex>
+class SimplexWrapperForShapeIntersection final
 {
-        using VertexRidges = typename ParallelotopeAlgorithm<Parallelotope>::VertexRidges;
-        using Vertices = typename ParallelotopeAlgorithm<Parallelotope>::Vertices;
+        static constexpr size_t N = Simplex::DIMENSION;
+        using T = typename Simplex::DataType;
 
-        const Parallelotope& m_parallelotope;
+        static constexpr int VERTEX_COUNT = N;
+
+        // Количество сочетаний по 2 из N
+        // N! / ((N - 2)! * 2!) = (N * (N - 1)) / 2
+        static constexpr int VERTEX_RIDGE_COUNT = (N * (N - 1)) / 2;
+
+        using Vertices = std::array<Vector<N, T>, VERTEX_COUNT>;
+
+        // Элементы массива — вершина откуда и вектор к другой вершине
+        using VertexRidges = std::array<std::array<Vector<N, T>, 2>, VERTEX_RIDGE_COUNT>;
+
+        const Simplex& m_simplex;
 
         Vertices m_vertices;
         VertexRidges m_vertex_ridges;
 
 public:
-        static constexpr size_t DIMENSION = Parallelotope::DIMENSION;
-        using DataType = typename Parallelotope::DataType;
+        static constexpr size_t DIMENSION = N;
+        using DataType = T;
 
-        static constexpr size_t SHAPE_DIMENSION = DIMENSION;
+        static constexpr size_t SHAPE_DIMENSION = DIMENSION - 1;
 
-        ParallelotopeWrapperForShapeIntersection(const Parallelotope& p)
-                : m_parallelotope(p), m_vertices(parallelotope_vertices(p)), m_vertex_ridges(parallelotope_vertex_ridges(p))
+        SimplexWrapperForShapeIntersection(const Simplex& s) : m_simplex(s), m_vertices(s.vertices())
         {
+                static_assert(std::remove_reference_t<decltype(s.vertices())>().size() == N);
+
+                unsigned n = 0;
+                for (unsigned i = 0; i < m_vertices.size() - 1; ++i)
+                {
+                        for (unsigned j = i + 1; j < m_vertices.size(); ++j)
+                        {
+                                m_vertex_ridges[n++] = {{m_vertices[i], m_vertices[j] - m_vertices[i]}};
+                        }
+                }
         }
 
         bool intersect(const Ray<DIMENSION, DataType>& r, DataType* t) const
         {
-                return m_parallelotope.intersect(r, t);
-        }
-
-        bool inside(const Vector<DIMENSION, DataType>& p) const
-        {
-                return m_parallelotope.inside(p);
+                return m_simplex.intersect(r, t);
         }
 
         const Vertices& vertices() const

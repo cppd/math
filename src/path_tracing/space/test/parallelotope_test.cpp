@@ -267,7 +267,7 @@ void test_points(RandomEngine& engine, int point_count, const Parallelotope& p)
         constexpr size_t N = Parallelotope::DIMENSION;
         using T = typename Parallelotope::DataType;
 
-        T max_length = max_diagonal(p);
+        T max_length = parallelotope_max_diagonal(p);
 
         for (const Vector<N, T>& point : external_points(engine, point_count, p, std::make_integer_sequence<size_t, N>()))
         {
@@ -419,7 +419,7 @@ void compare_parallelotopes(RandomEngine& engine, int point_count, const Paralle
         static_assert(((N == Parallelotope::DIMENSION) && ...));
         static_assert(((std::is_same_v<T, typename Parallelotope::DataType>)&&...));
 
-        std::array<T, sizeof...(Parallelotope)> max_length{{max_diagonal(p)...}};
+        std::array<T, sizeof...(Parallelotope)> max_length{{parallelotope_max_diagonal(p)...}};
 
         for (unsigned i = 1; i < sizeof...(Parallelotope); ++i)
         {
@@ -568,7 +568,7 @@ void test_algorithms(const Parallelotope& p)
                 LOG("diagonals");
         }
 
-        for (auto d : diagonals(p))
+        for (auto d : parallelotope_diagonals(p))
         {
                 if (PRINT_ALL)
                 {
@@ -582,7 +582,7 @@ void test_algorithms(const Parallelotope& p)
                 LOG("vertices");
         }
 
-        for (auto v : vertices(p))
+        for (auto v : parallelotope_vertices(p))
         {
                 if (PRINT_ALL)
                 {
@@ -596,7 +596,7 @@ void test_algorithms(const Parallelotope& p)
                 LOG("vertex ridges");
         }
 
-        for (auto vr : vertex_ridges(p))
+        for (auto vr : parallelotope_vertex_ridges(p))
         {
                 if (PRINT_ALL)
                 {
@@ -634,8 +634,8 @@ void test_algorithms()
         LOG("check passed");
 }
 
-template <typename Parallelotope>
-void test_intersection(const Parallelotope& p1, const Parallelotope& p2, bool with_intersection, const std::string& text)
+template <typename Parallelotope1, typename Parallelotope2>
+void test_intersection(const Parallelotope1& p1, const Parallelotope2& p2, bool with_intersection, const std::string& text)
 {
         if (with_intersection != shape_intersection(p1, p2))
         {
@@ -648,13 +648,22 @@ void test_intersection(const Parallelotope& p1, const Parallelotope& p2, bool wi
         }
 }
 
+template <typename Parallelotope>
+std::unique_ptr<ParallelotopeWrapperForShapeIntersection<Parallelotope>> make_unique_wrapper(const Parallelotope& p)
+{
+        return std::make_unique<ParallelotopeWrapperForShapeIntersection<Parallelotope>>(p);
+}
+
 template <size_t N, typename T>
 void test_intersections()
 {
-        constexpr std::array<T, N> edges = make_array_value<T, N>(1);
+        std::array<T, N> edges = make_array_value<T, N>(1);
         Vector<N, T> org0(0.0);
         Vector<N, T> org1(0.75);
         Vector<N, T> org2(1.5);
+
+        Vector<N, T> org_big(-5);
+        std::array<T, N> edges_big = make_array_value<T, N>(10);
 
         LOG("------------------------------");
         LOG("Parallelotope intersections in " + to_string(N) + "D");
@@ -666,14 +675,20 @@ void test_intersections()
                 ParallelotopeOrtho<N, T> p1(org0, edges);
                 ParallelotopeOrtho<N, T> p2(org1, edges);
                 ParallelotopeOrtho<N, T> p3(org2, edges);
+                ParallelotopeOrtho<N, T> p_big(org_big, edges_big);
 
-                ParallelotopeWrapperForShapeIntersection w1(p1);
-                ParallelotopeWrapperForShapeIntersection w2(p2);
-                ParallelotopeWrapperForShapeIntersection w3(p3);
+                std::unique_ptr w1 = make_unique_wrapper(p1);
+                std::unique_ptr w2 = make_unique_wrapper(p2);
+                std::unique_ptr w3 = make_unique_wrapper(p3);
+                std::unique_ptr w_big = make_unique_wrapper(p_big);
 
-                test_intersection(w1, w2, true, "1-2");
-                test_intersection(w2, w3, true, "2-3");
-                test_intersection(w1, w3, false, "1-3");
+                test_intersection(*w1, *w2, true, "1-2");
+                test_intersection(*w2, *w3, true, "2-3");
+                test_intersection(*w1, *w3, false, "1-3");
+
+                test_intersection(*w1, *w_big, true, "1-big");
+                test_intersection(*w2, *w_big, true, "2-big");
+                test_intersection(*w3, *w_big, true, "3-big");
         }
 
         print_separator();
@@ -683,14 +698,20 @@ void test_intersections()
                 Parallelotope<N, T> p1(org0, to_edge_vector(edges));
                 Parallelotope<N, T> p2(org1, to_edge_vector(edges));
                 Parallelotope<N, T> p3(org2, to_edge_vector(edges));
+                Parallelotope<N, T> p_big(org_big, to_edge_vector(edges_big));
 
-                ParallelotopeWrapperForShapeIntersection w1(p1);
-                ParallelotopeWrapperForShapeIntersection w2(p2);
-                ParallelotopeWrapperForShapeIntersection w3(p3);
+                std::unique_ptr w1 = make_unique_wrapper(p1);
+                std::unique_ptr w2 = make_unique_wrapper(p2);
+                std::unique_ptr w3 = make_unique_wrapper(p3);
+                std::unique_ptr w_big = make_unique_wrapper(p_big);
 
-                test_intersection(w1, w2, true, "1-2");
-                test_intersection(w2, w3, true, "2-3");
-                test_intersection(w1, w3, false, "1-3");
+                test_intersection(*w1, *w2, true, "1-2");
+                test_intersection(*w2, *w3, true, "2-3");
+                test_intersection(*w1, *w3, false, "1-3");
+
+                test_intersection(*w1, *w_big, true, "1-big");
+                test_intersection(*w2, *w_big, true, "2-big");
+                test_intersection(*w3, *w_big, true, "3-big");
         }
 
         print_separator();

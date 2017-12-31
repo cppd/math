@@ -30,88 +30,62 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/vec.h"
 
 #include <array>
-#include <type_traits>
-
-template <typename DerivedSimplex>
-class IntersectionSimplex
-{
-protected:
-        IntersectionSimplex() = default;
-        IntersectionSimplex(const IntersectionSimplex&) = default;
-        IntersectionSimplex(IntersectionSimplex&&) = default;
-        IntersectionSimplex& operator=(const IntersectionSimplex&) = default;
-        IntersectionSimplex& operator=(IntersectionSimplex&&) = default;
-        ~IntersectionSimplex() = default;
-};
-
-template <typename DerivedParallelotope>
-class IntersectionParallelotope
-{
-protected:
-        IntersectionParallelotope() = default;
-        IntersectionParallelotope(const IntersectionParallelotope&) = default;
-        IntersectionParallelotope(IntersectionParallelotope&&) = default;
-        IntersectionParallelotope& operator=(const IntersectionParallelotope&) = default;
-        IntersectionParallelotope& operator=(IntersectionParallelotope&&) = default;
-        ~IntersectionParallelotope() = default;
-};
+#include <utility>
 
 namespace ShapeIntersectionImplementation
 {
 template <size_t N, typename T, typename Shape>
 bool line_segment_intersects_shape(const Vector<N, T>& org, const Vector<N, T>& direction, const Shape& shape)
 {
+        static_assert(N == Shape::DIMENSION);
+        static_assert(std::is_same_v<T, typename Shape::DataType>);
+
         Ray<N, T> r(org, direction);
         T alpha;
         return shape.intersect(r, &alpha) && (square(alpha) < dot(direction, direction));
 }
 
-template <typename Parallelotope, typename Vertices>
-bool parallelotope_contains_vertices(const Parallelotope& parallelotope, const Vertices& vertices)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wctor-dtor-privacy"
+template <typename Shape>
+class HasInsideFunction
 {
-        constexpr size_t N = Parallelotope::DIMENSION;
-        using T = typename Parallelotope::DataType;
+        using V = Vector<Shape::DIMENSION, typename Shape::DataType>;
+        template <typename T>
+        static decltype(std::declval<T>().inside(V()), std::true_type()) t(int);
+        template <typename>
+        static std::false_type t(...);
 
-        for (const Vector<N, T>& v : vertices)
+public:
+        static constexpr bool value = std::is_same_v<decltype(t<Shape>(0)), std::true_type>;
+};
+#pragma GCC diagnostic pop
+
+template <typename Shape1, typename Shape2>
+bool shapes_intersect_by_vertices(const Shape1& shape_1, const Shape2& shape_2)
+{
+        static_assert(HasInsideFunction<Shape1>::value == (Shape1::DIMENSION == Shape1::SHAPE_DIMENSION));
+        static_assert(HasInsideFunction<Shape2>::value == (Shape2::DIMENSION == Shape2::SHAPE_DIMENSION));
+
+        constexpr size_t N = Shape1::DIMENSION;
+        using T = typename Shape1::DataType;
+
+        if constexpr (HasInsideFunction<Shape2>::value)
         {
-                if (parallelotope.inside(v))
+                for (const Vector<N, T>& v : shape_1.vertices())
                 {
-                        return true;
+                        if (shape_2.inside(v))
+                        {
+                                return true;
+                        }
                 }
         }
 
-        return false;
-}
-
-template <typename Parallelotope, typename Shape>
-bool parallelotope_intersects_shape(const Parallelotope& parallelotope, const Shape& shape)
-{
-        constexpr size_t N = Parallelotope::DIMENSION;
-        using T = typename Parallelotope::DataType;
-
-        static_assert(std::remove_reference_t<decltype(parallelotope.vertex_ridges())>().size() == (1 << (N - 1)) * N);
-
-        for (const std::array<Vector<N, T>, 2>& ridge : parallelotope.vertex_ridges())
+        if constexpr (HasInsideFunction<Shape1>::value)
         {
-                if (line_segment_intersects_shape(ridge[0], ridge[1], shape))
+                for (const Vector<N, T>& v : shape_2.vertices())
                 {
-                        return true;
-                }
-        }
-
-        return false;
-}
-
-template <typename Parallelotope, typename Vertices>
-bool parallelotope_is_intersected_by_simplex(const Parallelotope& parallelotope, const Vertices& vertices)
-{
-        static_assert(Parallelotope::DIMENSION == std::remove_reference_t<decltype(vertices)>().size());
-
-        for (unsigned i = 0; i < vertices.size() - 1; ++i)
-        {
-                for (unsigned j = i + 1; j < vertices.size(); ++j)
-                {
-                        if (line_segment_intersects_shape(vertices[i], vertices[j] - vertices[i], parallelotope))
+                        if (shape_1.inside(v))
                         {
                                 return true;
                         }
@@ -120,43 +94,53 @@ bool parallelotope_is_intersected_by_simplex(const Parallelotope& parallelotope,
 
         return false;
 }
+
+template <typename Shape1, typename Shape2>
+bool shapes_intersect_by_vertex_ridges(const Shape1& shape_1, const Shape2& shape_2)
+{
+        constexpr size_t N = Shape1::DIMENSION;
+        using T = typename Shape1::DataType;
+
+        for (const std::array<Vector<N, T>, 2>& ridge : shape_1.vertex_ridges())
+        {
+                if (line_segment_intersects_shape(ridge[0], ridge[1], shape_2))
+                {
+                        return true;
+                }
+        }
+
+        for (const std::array<Vector<N, T>, 2>& ridge : shape_2.vertex_ridges())
+        {
+                if (line_segment_intersects_shape(ridge[0], ridge[1], shape_1))
+                {
+                        return true;
+                }
+        }
+
+        return false;
+}
 }
 
-// (n-1)-симплекс и n-параллелотоп пересекаются, если выполняется любое из условий:
-//   1) какая-нибудь вершина симплекса находится внутри параллелотопа,
-//   2) какое-нибудь одно из линейных рёбер симплекса пересекает параллелотоп,
-//   3) какое-нибудь одно из линейных рёбер параллелотопа пересекает симплекс.
-template <typename Parallelotope, typename Simplex>
-bool shape_intersection(const IntersectionParallelotope<Parallelotope>& p, const IntersectionSimplex<Simplex>& s)
+// Два объекта пересекаются, если выполняется любое из условий:
+//   1) какая-нибудь вершина одного объекта находится внутри другого объекта,
+//   2) какое-нибудь линейное ребро одного объекта пересекает другой объект.
+template <typename Shape1, typename Shape2>
+bool shape_intersection(const Shape1& shape_1, const Shape2& shape_2)
 {
-        namespace Impl = ShapeIntersectionImplementation;
+        static_assert(Shape1::DIMENSION == Shape2::DIMENSION);
+        static_assert(std::is_same_v<typename Shape1::DataType, typename Shape2::DataType>);
+        static_assert(Shape1::DIMENSION >= Shape1::SHAPE_DIMENSION && Shape1::DIMENSION - Shape1::SHAPE_DIMENSION <= 1);
+        static_assert(Shape2::DIMENSION >= Shape2::SHAPE_DIMENSION && Shape2::DIMENSION - Shape2::SHAPE_DIMENSION <= 1);
 
-        constexpr size_t N = Parallelotope::DIMENSION;
-        using T = typename Parallelotope::DataType;
+        if (ShapeIntersectionImplementation::shapes_intersect_by_vertices(shape_1, shape_2))
+        {
+                return true;
+        }
 
-        const Parallelotope& parallelotope = static_cast<const Parallelotope&>(p);
-        const Simplex& simplex = static_cast<const Simplex&>(s);
+        if (ShapeIntersectionImplementation::shapes_intersect_by_vertex_ridges(shape_1, shape_2))
+        {
+                return true;
+        }
 
-        std::array<Vector<N, T>, N> simplex_vertices = simplex.vertices();
-
-        return Impl::parallelotope_contains_vertices(parallelotope, simplex_vertices) ||
-               Impl::parallelotope_is_intersected_by_simplex(parallelotope, simplex_vertices) ||
-               Impl::parallelotope_intersects_shape(parallelotope, simplex);
-}
-
-// Два n-параллелотопа пересекаются, если выполняется любое из условий:
-//   1) какая-нибудь вершина какого-нибудь одного параллелотопа находится внутри другого параллелотопа,
-//   2) какое-нибудь одно из линейных рёбер одного параллелотопа пересекает другой параллелотоп.
-template <typename Parallelotope1, typename Parallelotope2>
-bool shape_intersection(const IntersectionParallelotope<Parallelotope1>& a, const IntersectionParallelotope<Parallelotope2>& b)
-{
-        namespace Impl = ShapeIntersectionImplementation;
-
-        const Parallelotope1& parallelotope_1 = static_cast<const Parallelotope1&>(a);
-        const Parallelotope2& parallelotope_2 = static_cast<const Parallelotope2&>(b);
-
-        return Impl::parallelotope_contains_vertices(parallelotope_1, parallelotope_2.vertices()) ||
-               Impl::parallelotope_intersects_shape(parallelotope_1, parallelotope_2) ||
-               Impl::parallelotope_contains_vertices(parallelotope_2, parallelotope_1.vertices()) ||
-               Impl::parallelotope_intersects_shape(parallelotope_2, parallelotope_1);
+        return false;
 }
