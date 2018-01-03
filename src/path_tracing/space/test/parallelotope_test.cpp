@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -71,6 +71,13 @@ void print_separator()
         if (PRINT_ALL)
         {
                 LOG("---");
+        }
+}
+void print_message(const std::string& msg)
+{
+        if (PRINT_ALL)
+        {
+                LOG(msg);
         }
 }
 
@@ -511,10 +518,7 @@ void test_points(int point_count)
                 std::array<T, N> edges = random_ortho_edges<N, T>(engine, urd);
                 ParallelotopeOrtho<N, T> p_ortho(org, edges);
 
-                if (PRINT_ALL)
-                {
-                        LOG(to_string(p_ortho));
-                }
+                print_message(to_string(p_ortho));
 
                 test_points(engine, point_count, p_ortho);
         }
@@ -528,10 +532,7 @@ void test_points(int point_count)
                 std::array<Vector<N, T>, N> edges = random_edges<N, T>(engine, urd);
                 Parallelotope<N, T> p(org, edges);
 
-                if (PRINT_ALL)
-                {
-                        LOG(to_string(p));
-                }
+                print_message(to_string(p));
 
                 test_points(engine, point_count, p);
         }
@@ -547,10 +548,7 @@ void test_points(int point_count)
                 ParallelotopeOrtho<N, T> p_ortho(org, edges);
                 Parallelotope<N, T> p(org, to_edge_vector(edges));
 
-                if (PRINT_ALL)
-                {
-                        LOG("#1\n" + to_string(p_ortho) + "\n#2\n" + to_string(p));
-                }
+                print_message("#1\n" + to_string(p_ortho) + "\n#2\n" + to_string(p));
 
                 compare_parallelotopes(engine, point_count, p_ortho, p);
         }
@@ -563,45 +561,24 @@ template <typename Parallelotope>
 void test_algorithms(const Parallelotope& p)
 {
         print_separator();
-        if (PRINT_ALL)
-        {
-                LOG("diagonals");
-        }
-
+        print_message("diagonals");
         for (auto d : parallelotope_diagonals(p))
         {
-                if (PRINT_ALL)
-                {
-                        LOG(to_string(d));
-                }
+                print_message(to_string(d));
         }
 
         print_separator();
-        if (PRINT_ALL)
-        {
-                LOG("vertices");
-        }
-
+        print_message("vertices");
         for (auto v : parallelotope_vertices(p))
         {
-                if (PRINT_ALL)
-                {
-                        LOG(to_string(v));
-                }
+                print_message(to_string(v));
         }
 
         print_separator();
-        if (PRINT_ALL)
-        {
-                LOG("vertex ridges");
-        }
-
+        print_message("vertex ridges");
         for (auto vr : parallelotope_vertex_ridges(p))
         {
-                if (PRINT_ALL)
-                {
-                        LOG(to_string(vr));
-                }
+                print_message(to_string(vr));
         }
 }
 
@@ -642,10 +619,7 @@ void test_intersection(const Parallelotope1& p1, const Parallelotope2& p2, bool 
                 error("Error intersection " + text);
         }
 
-        if (PRINT_ALL)
-        {
-                LOG("intersection " + text);
-        }
+        print_message("intersection " + text);
 }
 
 template <typename Parallelotope>

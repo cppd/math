@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -319,12 +319,9 @@ void extend(const int MAX_DEPTH, const int MIN_OBJECTS, const int MAX_BOXES, Spi
                         continue;
                 }
 
-                for (const auto& v : create_child_boxes(boxes_lock, boxes, box->get_parallelotope(), integer_sequence_n))
+                for (const auto & [ i, child_box, child_box_index ] :
+                     create_child_boxes(boxes_lock, boxes, box->get_parallelotope(), integer_sequence_n))
                 {
-                        // Если это использовать прямо в for, то Clang пишет предупреждение
-                        // unused variable '', поэтому используется переменная v
-                        const auto & [ i, child_box, child_box_index ] = v;
-
                         box->set_child(i, child_box_index);
 
                         if ((child_box_index & 0xfff) == 0xfff)
