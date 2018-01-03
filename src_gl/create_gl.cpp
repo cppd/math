@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -156,8 +156,7 @@ void write_data(const std::vector<FuncData>& data)
         f_proc_impl << "\n";
         f_proc_impl << GL_CPP_NAME << "::PTR " << GL_CPP_NAME << "::get_gl_proc_address(const char* str)\n";
         f_proc_impl << "{\n";
-        f_proc_impl << INDENT << "return reinterpret_cast<" << GL_CPP_NAME
-                    << "::PTR>(glXGetProcAddress(reinterpret_cast<const GLubyte*>(str)));\n";
+        f_proc_impl << INDENT << "return glXGetProcAddress(reinterpret_cast<const GLubyte*>(str));\n";
         f_proc_impl << "}\n";
         f_proc_impl << "\n";
         f_proc_impl << "#elif defined(_WIN32)\n";

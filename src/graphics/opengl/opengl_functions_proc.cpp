@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 opengl_functions::PTR opengl_functions::get_gl_proc_address(const char* str)
 {
-        return reinterpret_cast<opengl_functions::PTR>(glXGetProcAddress(reinterpret_cast<const GLubyte*>(str)));
+        return glXGetProcAddress(reinterpret_cast<const GLubyte*>(str));
 }
 
 #elif defined(_WIN32)
