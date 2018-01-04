@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2017 Topological Manifold
+# Copyright (C) 2017, 2018 Topological Manifold
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,6 +16,10 @@
 #
 
 cmake_minimum_required(VERSION 3.9)
+
+##################################################
+
+include("${CMAKE_SOURCE_DIR}/cmake/cmake_compiler_warnings.cmake")
 
 ##################################################
 
@@ -40,10 +44,10 @@ endif()
 if(NOT (${CMAKE_CXX_COMPILER_ID} IN_LIST compilers))
         message(WARNING "Not supported C++ compiler ${CMAKE_CXX_COMPILER_ID}")
 endif()
-if((${CMAKE_C_COMPILER_ID} STREQUAL "GNU") AND (${CMAKE_C_COMPILER_VERSION} VERSION_LESS 7.1))
+if((${CMAKE_C_COMPILER_ID} STREQUAL "GNU") AND (${CMAKE_C_COMPILER_VERSION} VERSION_LESS 7.2))
         message(FATAL_ERROR "Not supported GCC C compiler version ${CMAKE_C_COMPILER_VERSION}")
 endif()
-if((${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU") AND (${CMAKE_CXX_COMPILER_VERSION} VERSION_LESS 7.1))
+if((${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU") AND (${CMAKE_CXX_COMPILER_VERSION} VERSION_LESS 7.2))
         message(FATAL_ERROR "Not supported GCC C++ compiler version ${CMAKE_CXX_COMPILER_VERSION}")
 endif()
 
@@ -116,7 +120,7 @@ function(IncludeSourceAndSetCompilerFlags dir_name executable extensions)
         target_compile_options(${PROJECT_NAME} PRIVATE -Ofast -mavx -mfma)
         target_compile_options(${PROJECT_NAME} PRIVATE $<$<COMPILE_LANGUAGE:CXX>: -fno-rtti -fstrict-enums >)
 
-        include("${CMAKE_SOURCE_DIR}/cmake/cmake_compiler_warnings.cmake")
+        SetCompilerWarnings("${source_files}")
 
 endfunction()
 
@@ -222,7 +226,7 @@ endif()
 ##################################################
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/SFML")
-find_package(SFML 2.4.1 COMPONENTS system window graphics REQUIRED)
+find_package(SFML 2.4.2 COMPONENTS system window graphics REQUIRED)
 target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${SFML_INCLUDE_DIR})
 target_link_libraries(${PROJECT_NAME} ${SFML_LIBRARIES})
 
