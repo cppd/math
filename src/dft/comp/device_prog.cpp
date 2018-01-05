@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -21,15 +21,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/math.h"
 
 // clang-format off
-constexpr const char dft_fft[]
+constexpr const char dft_fft_shader[]
 {
 #include "dft_fft.comp.str"
 };
-constexpr const char dft_copy[]
+constexpr const char dft_copy_shader[]
 {
 #include "dft_copy.comp.str"
 };
-constexpr const char dft_mul[]
+constexpr const char dft_mul_shader[]
 {
 #include "dft_mul.comp.str"
 };
@@ -38,10 +38,10 @@ constexpr const char dft_mul[]
 namespace
 {
 template <typename FP>
-std::string get_data_types();
+std::string data_types();
 
 template <>
-std::string get_data_types<float>()
+std::string data_types<float>()
 {
         std::string s;
         s += "#define complex vec2\n";
@@ -52,7 +52,7 @@ std::string get_data_types<float>()
 }
 
 template <>
-std::string get_data_types<double>()
+std::string data_types<double>()
 {
         std::string s;
         s += "#define complex dvec2\n";
@@ -62,70 +62,70 @@ std::string get_data_types<double>()
         return s;
 }
 
-std::string get_reverse()
+std::string reverse_shader_source()
 {
         std::string s;
         s += "#define function_reverse\n\n";
-        return s + dft_fft;
+        return s + dft_fft_shader;
 }
 
-std::string get_FFT()
+std::string fft_shader_source()
 {
         std::string s;
         s += "#define function_FFT\n\n";
-        return s + dft_fft;
+        return s + dft_fft_shader;
 }
 
-std::string get_rows_mul_to_buffer()
+std::string rows_mul_to_buffer_shader_source()
 {
         std::string s;
         s += "#define function_rows_mul_to_buffer\n\n";
-        return s + dft_mul;
+        return s + dft_mul_shader;
 }
 
-std::string get_rows_mul_fr_buffer()
+std::string rows_mul_fr_buffer_shader_source()
 {
         std::string s;
         s += "#define function_rows_mul_fr_buffer\n\n";
-        return s + dft_mul;
+        return s + dft_mul_shader;
 }
 
-std::string get_cols_mul_to_buffer()
+std::string cols_mul_to_buffer_shader_source()
 {
         std::string s;
         s += "#define function_cols_mul_to_buffer\n\n";
-        return s + dft_mul;
+        return s + dft_mul_shader;
 }
 
-std::string get_cols_mul_fr_buffer()
+std::string cols_mul_fr_buffer_shader_source()
 {
         std::string s;
         s += "#define function_cols_mul_fr_buffer\n\n";
-        return s + dft_mul;
+        return s + dft_mul_shader;
 }
 
-std::string get_rows_mul_D()
+std::string rows_mul_d_shader_source()
 {
         std::string s;
         s += "#define function_rows_mul_D\n\n";
-        return s + dft_mul;
+        return s + dft_mul_shader;
 }
 
-std::string get_move_to_input()
+std::string move_to_input_shader_source()
 {
         std::string s;
         s += "#define function_move_to_input\n\n";
-        return s + dft_copy;
+        return s + dft_copy_shader;
 }
 
-std::string get_move_to_output()
+std::string move_to_output_shader_source()
 {
         std::string s;
         s += "#define function_move_to_output\n\n";
-        return s + dft_copy;
+        return s + dft_copy_shader;
 }
 
-std::string get_FFT_radix_2(int N, int shared_size, bool reverse_input)
+std::string fft_radix_2_shader_source(int N, int shared_size, bool reverse_input)
 {
         std::string s;
         s += "#define function_FFT_radix_2\n\n";
@@ -134,21 +134,21 @@ std::string get_FFT_radix_2(int N, int shared_size, bool reverse_input)
         s += "const uint N_BITS = " + std::to_string(get_bin_size(N)) + ";\n";
         s += "const uint SHARED_SIZE = " + std::to_string(shared_size) + ";\n";
         s += "const bool REVERSE_INPUT = " + (reverse_input ? std::string("true") : std::string("false")) + ";\n";
-        return s + dft_fft;
+        return s + dft_fft_shader;
 }
 }
 
 template <typename FP>
 DeviceProg<FP>::DeviceProg()
-        : m_reverse(ComputeShader(get_data_types<FP>() + get_reverse())),
-          m_FFT(ComputeShader(get_data_types<FP>() + get_FFT())),
-          m_rows_mul_to_buffer(ComputeShader(get_data_types<FP>() + get_rows_mul_to_buffer())),
-          m_rows_mul_fr_buffer(ComputeShader(get_data_types<FP>() + get_rows_mul_fr_buffer())),
-          m_cols_mul_to_buffer(ComputeShader(get_data_types<FP>() + get_cols_mul_to_buffer())),
-          m_cols_mul_fr_buffer(ComputeShader(get_data_types<FP>() + get_cols_mul_fr_buffer())),
-          m_rows_mul_D(ComputeShader(get_data_types<FP>() + get_rows_mul_D())),
-          m_move_to_input(ComputeShader(get_data_types<FP>() + get_move_to_input())),
-          m_move_to_output(ComputeShader(get_data_types<FP>() + get_move_to_output()))
+        : m_reverse(ComputeShader(data_types<FP>() + reverse_shader_source())),
+          m_FFT(ComputeShader(data_types<FP>() + fft_shader_source())),
+          m_rows_mul_to_buffer(ComputeShader(data_types<FP>() + rows_mul_to_buffer_shader_source())),
+          m_rows_mul_fr_buffer(ComputeShader(data_types<FP>() + rows_mul_fr_buffer_shader_source())),
+          m_cols_mul_to_buffer(ComputeShader(data_types<FP>() + cols_mul_to_buffer_shader_source())),
+          m_cols_mul_fr_buffer(ComputeShader(data_types<FP>() + cols_mul_fr_buffer_shader_source())),
+          m_rows_mul_D(ComputeShader(data_types<FP>() + rows_mul_d_shader_source())),
+          m_move_to_input(ComputeShader(data_types<FP>() + move_to_input_shader_source())),
+          m_move_to_output(ComputeShader(data_types<FP>() + move_to_output_shader_source()))
 {
 }
 
@@ -156,7 +156,7 @@ template <typename FP>
 DeviceProgFFTRadix2<FP>::DeviceProgFFTRadix2(int N, int shared_size, bool reverse_input, int group_size)
         : m_group_size(group_size),
           m_shared_size(shared_size),
-          m_FFT(ComputeShader(get_data_types<FP>() + get_FFT_radix_2(N, shared_size, reverse_input)))
+          m_FFT(ComputeShader(data_types<FP>() + fft_radix_2_shader_source(N, shared_size, reverse_input)))
 {
 }
 

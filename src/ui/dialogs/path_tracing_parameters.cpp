@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -69,8 +69,8 @@ PathTracingParameters::PathTracingParameters(QWidget* parent) : QDialog(parent)
 
 void PathTracingParameters::on_doubleSpinBox_image_size_valueChanged(double)
 {
-        int width = std::round(m_width * ui.doubleSpinBox_image_size->value());
-        int height = std::round(m_height * ui.doubleSpinBox_image_size->value());
+        int width = std::lround(m_width * ui.doubleSpinBox_image_size->value());
+        int height = std::lround(m_height * ui.doubleSpinBox_image_size->value());
 
         ui.label_width->setText(to_string(width).c_str());
         ui.label_height->setText(to_string(height).c_str());

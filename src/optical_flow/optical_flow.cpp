@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -99,7 +99,7 @@ constexpr int RADIUS = 6;
 // Максимальное количество итераций
 constexpr int ITERATION_COUNT = 10;
 // Если на итерации квадрат потока меньше этого значения, то выход из цикла
-constexpr float STOP_MOVE_SQUARE = square(1e-3);
+constexpr float STOP_MOVE_SQUARE = square(1e-3f);
 // Если определитель матрицы G меньше этого значения, то считается, что нет потока
 constexpr float MIN_DETERMINANT = 1;
 

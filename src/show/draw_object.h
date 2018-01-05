@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -33,13 +33,13 @@ struct IDrawProgram
         virtual void set_light_s(const vec3& light) = 0;
         virtual void set_default_color(const vec3& color) = 0;
         virtual void set_wireframe_color(const vec3& color) = 0;
-        virtual void set_default_ns(float default_ns) = 0;
+        virtual void set_default_ns(double default_ns) = 0;
         virtual void set_show_smooth(bool show) = 0;
         virtual void set_show_wireframe(bool show) = 0;
         virtual void set_show_shadow(bool show) = 0;
         virtual void set_show_materials(bool show) = 0;
 
-        virtual void set_shadow_zoom(float) = 0;
+        virtual void set_shadow_zoom(double) = 0;
 
         virtual void set_matrices(const mat4& shadow_matrix, const mat4& main_matrix) = 0;
 

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -637,6 +637,9 @@ void MainWindow::thread_export(ProgressRatioList* /*progress_ratio_list*/, const
 
 void MainWindow::progress_bars(bool permanent, ProgressRatioList* progress_ratio_list, std::list<QProgressBar>* progress_bars)
 {
+        static_assert(std::numeric_limits<unsigned>::max() >= std::numeric_limits<int>::max());
+        constexpr unsigned MAX_INT = std::numeric_limits<int>::max();
+
         std::vector<std::tuple<unsigned, unsigned, std::string>> ratios = progress_ratio_list->get_all();
 
         if (ratios.size() > progress_bars->size())
@@ -663,10 +666,14 @@ void MainWindow::progress_bars(bool permanent, ProgressRatioList* progress_ratio
 
                 bar->setFormat(std::get<2>(ratios[i]).c_str());
 
-                unsigned v = std::get<0>(ratios[i]), m = std::get<1>(ratios[i]);
+                unsigned v = std::get<0>(ratios[i]);
+                unsigned m = std::get<1>(ratios[i]);
 
                 if (m > 0)
                 {
+                        m = std::min(m, MAX_INT);
+                        v = std::min(v, m);
+
                         bar->setMaximum(m);
                         bar->setValue(v);
                 }
@@ -1367,8 +1374,8 @@ std::unique_ptr<const Projector> MainWindow::create_projector(double size_coef) 
         int paint_width, paint_height;
         m_show->get_camera_information(&camera_up, &camera_direction, &view_center, &view_width, &paint_width, &paint_height);
 
-        paint_width = std::round(paint_width * size_coef);
-        paint_height = std::round(paint_height * size_coef);
+        paint_width = std::lround(paint_width * size_coef);
+        paint_height = std::lround(paint_height * size_coef);
 
         vec3 camera_position = view_center - camera_direction * 2.0 * m_mesh_object_size;
 
@@ -1449,8 +1456,8 @@ void MainWindow::on_pushButton_Painter_clicked()
                         m_show->get_camera_information(&camera_up, &camera_direction, &view_center, &view_width, &paint_width,
                                                        &paint_height);
 
-                        paint_width = std::round(paint_width * size_coef);
-                        paint_height = std::round(paint_height * size_coef);
+                        paint_width = std::lround(paint_width * size_coef);
+                        paint_height = std::lround(paint_height * size_coef);
 
                         std::string title = this->windowTitle().toStdString() + " (" + model_name + " in Cornell Box)";
 

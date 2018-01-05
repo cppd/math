@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -473,7 +473,7 @@ class DrawProgram final : public IDrawProgram
 
         const int m_max_texture_size = get_max_texture_size();
 
-        float m_shadow_zoom = 1;
+        double m_shadow_zoom = 1;
 
         DrawObjects m_draw_objects;
         ColorSpaceConverterToRGB m_color_converter;
@@ -505,9 +505,9 @@ class DrawProgram final : public IDrawProgram
         {
                 main_program.set_uniform("wireframe_color", color_to_vec4f(color));
         }
-        void set_default_ns(float default_ns) override
+        void set_default_ns(double default_ns) override
         {
-                main_program.set_uniform("default_ns", default_ns);
+                main_program.set_uniform("default_ns", static_cast<float>(default_ns));
         }
         void set_show_smooth(bool show) override
         {
@@ -629,8 +629,8 @@ class DrawProgram final : public IDrawProgram
                         return;
                 }
 
-                m_shadow_width = m_shadow_zoom * m_width;
-                m_shadow_height = m_shadow_zoom * m_height;
+                m_shadow_width = std::lround(m_shadow_zoom * m_width);
+                m_shadow_height = std::lround(m_shadow_zoom * m_height);
 
                 if (m_shadow_width > m_max_texture_size)
                 {
@@ -659,7 +659,7 @@ class DrawProgram final : public IDrawProgram
                 main_program.set_uniform_handle("shadow_tex", m_shadow_buffer->get_texture().get_texture_resident_handle());
         }
 
-        void set_shadow_zoom(float zoom) override
+        void set_shadow_zoom(double zoom) override
         {
                 m_shadow_zoom = zoom;
 

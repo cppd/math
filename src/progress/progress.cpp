@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -19,11 +19,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/thread.h"
 
+#include <algorithm>
+#include <cmath>
+
 class ProgressRatio::Impl final : public IProgressRatioControl
 {
-        static constexpr unsigned HIGH_SHIFT = 32;
-        static constexpr unsigned long long LOW_MASK = (1ull << HIGH_SHIFT) - 1;
-        static constexpr unsigned MAX = 1ull << (HIGH_SHIFT - 2);
+        static constexpr unsigned SHIFT = 32;
+        static constexpr unsigned MAX = (1u << 31) - 1;
 
         // К этим переменным имеются частые обращения, поэтому атомарные без мьютексов
         AtomicCounter<unsigned long long> m_counter{0};
@@ -67,15 +69,15 @@ public:
                         throw TerminateRequestException();
                 }
 
-                unsigned long long high = static_cast<unsigned long long>(m) << HIGH_SHIFT;
-                unsigned low = v;
-                m_counter = high + low;
+                m_counter = (static_cast<unsigned long long>(m & MAX) << SHIFT) | (v & MAX);
         }
 
         void set(double v)
         {
-                set(v * MAX, MAX);
+                v = std::clamp(v, 0.0, 1.0);
+                set(std::lround(v * MAX), MAX);
         }
+
         void set_undefined()
         {
                 set(0, 0);
@@ -95,8 +97,8 @@ public:
         void get(unsigned* v, unsigned* m) const override
         {
                 unsigned long long c = m_counter;
-                *v = c & LOW_MASK;
-                *m = c >> HIGH_SHIFT;
+                *v = c & MAX;
+                *m = c >> SHIFT;
         }
 
         std::string get_text() const override

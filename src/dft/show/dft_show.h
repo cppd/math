@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@ public:
         DFTShow(int width, int height, int pos_x, int pos_y, const mat4& mtx, bool source_sRGB);
         ~DFTShow();
 
-        void set_brightness(float brightness);
+        void set_brightness(double brightness);
 
         void copy_image();
 

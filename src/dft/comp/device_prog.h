@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -51,7 +51,7 @@ public:
                 glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
         }
 
-        void FFT(int blocks, int threads, bool inv, int max_threads, float Two_PI_Div_M, int N_2_mask, int N_2_bits, int M_2,
+        void FFT(int blocks, int threads, bool inv, int max_threads, FP Two_PI_Div_M, int N_2_mask, int N_2_bits, int M_2,
                  DeviceMemory<std::complex<FP>>* data) const
         {
                 m_FFT.set_uniform_unsigned(0, inv ? 1 : 0);
@@ -138,7 +138,7 @@ public:
                 m_move_to_input.dispatch_compute(blocks[0], blocks[1], 1, threads[0], threads[1], 1);
                 glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
         }
-        void move_to_output(vec2i blocks, vec2i threads, int width, int height, float to_mul, const GLuint64 tex,
+        void move_to_output(vec2i blocks, vec2i threads, int width, int height, FP to_mul, const GLuint64 tex,
                             const DeviceMemory<std::complex<FP>>& data)
         {
                 m_move_to_output.set_uniform(0, width);

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -83,10 +83,10 @@ public:
                 int y_start = pos_y;
                 int y_end = pos_y + height;
 
-                vec4 pos00 = mtx * vec4(x_start, y_start, 0, 1);
-                vec4 pos10 = mtx * vec4(x_end, y_start, 0, 1);
-                vec4 pos01 = mtx * vec4(x_start, y_end, 0, 1);
-                vec4 pos11 = mtx * vec4(x_end, y_end, 0, 1);
+                vec4f pos00 = to_vector<float>(mtx * vec4(x_start, y_start, 0, 1));
+                vec4f pos10 = to_vector<float>(mtx * vec4(x_end, y_start, 0, 1));
+                vec4f pos01 = to_vector<float>(mtx * vec4(x_start, y_end, 0, 1));
+                vec4f pos11 = to_vector<float>(mtx * vec4(x_end, y_end, 0, 1));
 
                 // текстурный 0 находится внизу
                 m_vertices[0] = Vertex(pos00[0], pos00[1], 0, 1);
@@ -100,9 +100,9 @@ public:
         {
         }
 
-        void set_brightness(float brightness)
+        void set_brightness(double brightness)
         {
-                m_draw_prog.set_uniform("brightness", brightness);
+                m_draw_prog.set_uniform("brightness", static_cast<float>(brightness));
         }
 
         void copy_image()
@@ -125,7 +125,7 @@ DFTShow::DFTShow(int width, int height, int pos_x, int pos_y, const mat4& mtx, b
 }
 DFTShow::~DFTShow() = default;
 
-void DFTShow::set_brightness(float brightness)
+void DFTShow::set_brightness(double brightness)
 {
         m_impl->set_brightness(brightness);
 }

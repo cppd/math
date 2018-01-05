@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -14,25 +14,6 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-
-//   Сочетание типа сообщения и набора данных этого сообщения
-// с последующей обработкой с помощью switch предпочтительнее,
-// чем использование виртуальных функций:
-// 1)
-//      При применении switch всё содержится в одном месте,
-//    и поэтому это более читаемое, чем множество мелких
-//    виртуальных функций.
-// 2)
-//      Виртуальные функции находятся в где-то в наследниках,
-//    а данные для работы находятся там, где происходит обработка
-//    сообщений, поэтому виртуальные функции ничего полезного
-//    не могут сделать и просто вызывают функции того класса,
-//    где происходит эта обработка сообщений.
-// 3)
-//      Если обработка сообщений происходит switch, то можно
-//    пользоваться локальными переменными, а в случае виртуальных
-//    функций надо все нужные данные переносить в сам класс,
-//    чтобы функции из пункта 2 имели к доступ к этим данным.
 
 #pragma once
 
@@ -107,22 +88,22 @@ public:
         };
         struct set_ambient final
         {
-                float ambient;
-                set_ambient(float v) : ambient(v)
+                double ambient;
+                set_ambient(double v) : ambient(v)
                 {
                 }
         };
         struct set_diffuse final
         {
-                float diffuse;
-                set_diffuse(float v) : diffuse(v)
+                double diffuse;
+                set_diffuse(double v) : diffuse(v)
                 {
                 }
         };
         struct set_specular final
         {
-                float specular;
-                set_specular(float v) : specular(v)
+                double specular;
+                set_specular(double v) : specular(v)
                 {
                 }
         };
@@ -149,8 +130,8 @@ public:
         };
         struct set_default_ns final
         {
-                float default_ns;
-                set_default_ns(float v) : default_ns(v)
+                double default_ns;
+                set_default_ns(double v) : default_ns(v)
                 {
                 }
         };
@@ -198,8 +179,8 @@ public:
         };
         struct set_dft_brightness final
         {
-                float dft_brightness;
-                set_dft_brightness(float v) : dft_brightness(v)
+                double dft_brightness;
+                set_dft_brightness(double v) : dft_brightness(v)
                 {
                 }
         };
@@ -226,8 +207,8 @@ public:
         };
         struct shadow_zoom final
         {
-                float zoom;
-                shadow_zoom(float v) : zoom(v)
+                double zoom;
+                shadow_zoom(double v) : zoom(v)
                 {
                 }
         };

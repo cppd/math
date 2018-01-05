@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -44,7 +44,7 @@ enum class Algorithms
 namespace
 {
 template <size_t N>
-constexpr std::tuple<size_t, size_t> facet_count(size_t point_count)
+constexpr std::tuple<unsigned, unsigned> facet_count(unsigned point_count)
 {
         static_assert(2 <= N && N <= 4);
 
@@ -52,32 +52,36 @@ constexpr std::tuple<size_t, size_t> facet_count(size_t point_count)
         {
         case 2:
         {
-                size_t cnt = point_count;
-                return std::tuple<size_t, size_t>(cnt, cnt);
+                ASSERT(point_count >= 3);
+                return {point_count, point_count};
         }
         case 3:
         {
+                ASSERT(point_count >= 4);
                 // Mark de Berg, Otfried Cheong, Marc van Kreveld, Mark Overmars
                 // Computational Geometry. Algorithms and Applications. Third Edition.
                 // Theorem 11.1.
-                size_t cnt = 2 * point_count - 4;
-                return std::tuple<size_t, size_t>(cnt, cnt);
+                unsigned count = 2 * point_count - 4;
+                return {count, count};
         }
         case 4:
         {
+                ASSERT(point_count >= 5);
                 // Handbook of Discrete and Computational Geometry edited by Jacob E. Goodman and Joseph O’Rourke.
                 // Second edition.
                 // 22.3 COMPUTING COMBINATORIAL DESCRIPTIONS.
                 // Точно не определить, так как зависит от триангуляции.
                 // Опыты с выпуклой оболочкой со случайным распределением точек на четырёхмерной
                 // сфере дают отношение количества граней к количеству точек около 6.7.
-                return std::tuple<size_t, size_t>(6.55 * point_count, 6.85 * point_count);
+                unsigned min = std::lround(6.55 * point_count);
+                unsigned max = std::lround(6.85 * point_count);
+                return {min, max};
         }
         }
 }
 
 template <size_t N>
-std::vector<Vector<N, float>> clone_object(const std::vector<Vector<N, float>>& points, size_t new_object_count, double shift)
+std::vector<Vector<N, float>> clone_object(const std::vector<Vector<N, float>>& points, unsigned new_object_count, float shift)
 {
         ASSERT(new_object_count > 1 && new_object_count <= (1 << N));
 
@@ -94,7 +98,7 @@ std::vector<Vector<N, float>> clone_object(const std::vector<Vector<N, float>>& 
                 {
                         vec_shift[n] = ((1 << n) & new_object) ? shift : -shift;
                 }
-                for (size_t i = 0; i < points.size(); ++i)
+                for (unsigned i = 0; i < points.size(); ++i)
                 {
                         clones.push_back(points[i] + vec_shift);
                 }
@@ -107,8 +111,8 @@ std::vector<Vector<N, float>> clone_object(const std::vector<Vector<N, float>>& 
 
 template <size_t N>
 void test_algorithms(const std::unordered_set<Algorithms>& algorithms, double rho, double alpha,
-                     const std::vector<Vector<N, float>>& points, size_t expected_facets_min, size_t expected_facets_max,
-                     size_t expected_bound_facets_min, size_t expected_bound_facets_max, ProgressRatio* progress)
+                     const std::vector<Vector<N, float>>& points, unsigned expected_facets_min, unsigned expected_facets_max,
+                     unsigned expected_bound_facets_min, unsigned expected_bound_facets_max, ProgressRatio* progress)
 {
         ASSERT(points.size() > N);
         ASSERT(expected_facets_min > 0 && expected_facets_max > 0 && expected_bound_facets_min > 0 &&
@@ -181,12 +185,11 @@ void all_tests(const std::unordered_set<Algorithms>& algorithms, std::vector<Vec
 
         // Объект находится в начале координат и имеет размеры не более 1 по каждой координате
         // в обе стороны, поэтому достаточно смещение на 3 для отсутствия пересечений объектов
-        constexpr double shift = 3;
+        constexpr float shift = 3;
 
-        size_t facets_min = std::get<0>(facet_count<N>(points.size()));
-        size_t facets_max = std::get<1>(facet_count<N>(points.size()));
-        size_t bound_facets_min = bound_low_coef * facets_min;
-        size_t bound_facets_max = bound_high_coef * facets_max;
+        auto[facets_min, facets_max] = facet_count<N>(points.size());
+        unsigned bound_facets_min = std::lround(bound_low_coef * facets_min);
+        unsigned bound_facets_max = std::lround(bound_high_coef * facets_max);
 
         LOG("------- " + to_string(N) + "D, 1 object -------");
 

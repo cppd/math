@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -224,15 +224,15 @@ class ShowObject final : public IShow
         {
                 m_event_queue.emplace(std::in_place_type<Event::reset_view>);
         }
-        void set_ambient(float v) override
+        void set_ambient(double v) override
         {
                 m_event_queue.emplace(std::in_place_type<Event::set_ambient>, v);
         }
-        void set_diffuse(float v) override
+        void set_diffuse(double v) override
         {
                 m_event_queue.emplace(std::in_place_type<Event::set_diffuse>, v);
         }
-        void set_specular(float v) override
+        void set_specular(double v) override
         {
                 m_event_queue.emplace(std::in_place_type<Event::set_specular>, v);
         }
@@ -248,7 +248,7 @@ class ShowObject final : public IShow
         {
                 m_event_queue.emplace(std::in_place_type<Event::set_wireframe_color>, c);
         }
-        void set_default_ns(float ns) override
+        void set_default_ns(double ns) override
         {
                 m_event_queue.emplace(std::in_place_type<Event::set_default_ns>, ns);
         }
@@ -276,7 +276,7 @@ class ShowObject final : public IShow
         {
                 m_event_queue.emplace(std::in_place_type<Event::show_dft>, v);
         }
-        void set_dft_brightness(float v) override
+        void set_dft_brightness(double v) override
         {
                 m_event_queue.emplace(std::in_place_type<Event::set_dft_brightness>, v);
         }
@@ -304,7 +304,7 @@ class ShowObject final : public IShow
         {
                 m_event_queue.emplace(std::in_place_type<Event::vertical_sync>, v);
         }
-        void set_shadow_zoom(float v) override
+        void set_shadow_zoom(double v) override
         {
                 m_event_queue.emplace(std::in_place_type<Event::shadow_zoom>, v);
         }
@@ -327,8 +327,8 @@ class ShowObject final : public IShow
 public:
         ShowObject(IShowCallback* callback, WindowID win_parent, vec3 clear_color_rgb, vec3 default_color_rgb,
                    vec3 wireframe_color_rgb, bool with_smooth, bool with_wireframe, bool with_shadow, bool with_materials,
-                   bool with_effect, bool with_dft, bool with_convex_hull, bool with_optical_flow, float ambient, float diffuse,
-                   float specular, float dft_brightness, float default_ns, bool vertical_sync, float shadow_zoom)
+                   bool with_effect, bool with_dft, bool with_convex_hull, bool with_optical_flow, double ambient, double diffuse,
+                   double specular, double dft_brightness, double default_ns, bool vertical_sync, double shadow_zoom)
                 : m_callback(callback), m_win_parent(win_parent)
 
         {
@@ -410,14 +410,14 @@ void ShowObject::loop()
         int mouse_x = 0, mouse_y = 0, new_mouse_x = 0, new_mouse_y = 0;
         bool mouse_pressed = false, mouse_pressed_shift = false;
         vec2 window_center(0, 0);
-        float zoom_delta = 0;
-        float wheel_delta = 0;
+        double zoom_delta = 0;
+        double wheel_delta = 0;
 
         // Неважно, какие тут будут значения при инициализации,
         // так как при создании окна начальные параметры помещаются в очередь
         bool dft_active = false;
         bool dft_active_old = false;
-        float dft_brightness = -1.0f;
+        double dft_brightness = -1;
         bool pencil_effect_active = false;
         bool convex_hull_2d_active = false;
         bool optical_flow_active = false;
@@ -962,8 +962,8 @@ void ShowObject::loop_thread()
 std::unique_ptr<IShow> create_show(IShowCallback* cb, WindowID win_parent, vec3 clear_color_rgb, vec3 default_color_rgb,
                                    vec3 wireframe_color_rgb, bool with_smooth, bool with_wireframe, bool with_shadow,
                                    bool with_materials, bool with_effect, bool with_dft, bool with_convex_hull,
-                                   bool with_optical_flow, float ambient, float diffuse, float specular, float dft_brightness,
-                                   float default_ns, bool vertical_sync, float shadow_zoom)
+                                   bool with_optical_flow, double ambient, double diffuse, double specular, double dft_brightness,
+                                   double default_ns, bool vertical_sync, double shadow_zoom)
 {
         return std::make_unique<ShowObject>(cb, win_parent, clear_color_rgb, default_color_rgb, wireframe_color_rgb, with_smooth,
                                             with_wireframe, with_shadow, with_materials, with_effect, with_dft, with_convex_hull,

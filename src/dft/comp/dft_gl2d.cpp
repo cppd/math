@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -58,6 +58,7 @@ Chapter 13: FFTs for Arbitrary N.
 
 #include <complex>
 #include <sstream>
+#include <type_traits>
 #include <vector>
 
 namespace
@@ -132,15 +133,28 @@ std::vector<std::complex<double>> compute_h2(int N, int M, const std::vector<std
         return h2;
 }
 
-template <typename FP>
-std::vector<std::complex<FP>> conv(const std::vector<std::complex<double>>& data)
+template <typename Dst, typename Src>
+std::vector<std::complex<Dst>> conv(const std::vector<std::complex<Src>>& data)
 {
-        std::vector<std::complex<FP>> res(data.size());
-        for (size_t i = 0; i < data.size(); ++i)
+        if constexpr (std::is_same_v<Dst, Src>)
         {
-                res[i] = std::complex<FP>(data[i].real(), data[i].imag());
+                return data;
         }
-        return res;
+        else
+        {
+                std::vector<std::complex<Dst>> res(data.size());
+                for (size_t i = 0; i < data.size(); ++i)
+                {
+                        res[i] = {static_cast<Dst>(data[i].real()), static_cast<Dst>(data[i].imag())};
+                }
+                return res;
+        }
+}
+
+template <typename Dst, typename Src>
+std::enable_if_t<std::is_same_v<Dst, Src>, std::vector<std::complex<Dst>>&&> conv(std::vector<std::complex<Src>>&& data)
+{
+        return std::move(data);
 }
 
 template <typename FP>
@@ -217,9 +231,9 @@ class GL2D final : public IFourierGL1, public IFourierGL2
                         const int block_cnt = get_group_count(thread_cnt, BLOCK_SIZE);
 
                         int M_2 = shared_size;
-                        double Two_PI_Div_M = inv ? (PI / M_2) : -(PI / M_2);
+                        FP Two_PI_Div_M = static_cast<FP>(inv ? (PI / M_2) : -(PI / M_2));
 
-                        for (; M_2 < N; M_2 <<= 1, Two_PI_Div_M *= 0.5)
+                        for (; M_2 < N; M_2 <<= 1, Two_PI_Div_M /= 2)
                         {
                                 // M_2 - половина размера текущих отдельных БПФ.
                                 m_prog.FFT(block_cnt, BLOCK_SIZE, inv, thread_cnt, Two_PI_Div_M, N_2_mask, N_2_bits, M_2, data);
@@ -260,11 +274,7 @@ class GL2D final : public IFourierGL1, public IFourierGL2
                         error("FFT input size error: input " + std::to_string(size) + ", must be " + std::to_string(m_N1 * m_N2));
                 }
 
-                std::vector<std::complex<FP>> data(src->size());
-                for (size_t i = 0; i < src->size(); ++i)
-                {
-                        data[i] = std::complex<FP>(static_cast<FP>((*src)[i].real()), static_cast<FP>((*src)[i].imag()));
-                }
+                std::vector<std::complex<FP>> data = conv<FP>(std::move(*src));
 
                 m_x_d.load(data);
 
@@ -280,10 +290,7 @@ class GL2D final : public IFourierGL1, public IFourierGL2
 
                 m_x_d.read(&data);
 
-                for (size_t i = 0; i < src->size(); ++i)
-                {
-                        (*src)[i] = std::complex<float>(data[i].real(), data[i].imag());
-                }
+                *src = conv<float>(std::move(data));
         }
         void exec(bool inv, bool srgb) override
         {
@@ -291,7 +298,7 @@ class GL2D final : public IFourierGL1, public IFourierGL2
 
                 m_prog.move_to_input(grid, block, m_N1, m_N2, srgb, m_texture_handle, &m_x_d);
                 dft2d(inv);
-                m_prog.move_to_output(grid, block, m_N1, m_N2, 1.0f / (m_N1 * m_N2), m_texture_handle, m_x_d);
+                m_prog.move_to_output(grid, block, m_N1, m_N2, static_cast<FP>(1.0 / (m_N1 * m_N2)), m_texture_handle, m_x_d);
         }
 
 public:

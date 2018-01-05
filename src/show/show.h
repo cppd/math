@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -48,24 +48,24 @@ public:
         virtual void mouse_wheel(double) = 0;
         virtual void toggle_fullscreen() = 0;
         virtual void reset_view() = 0;
-        virtual void set_ambient(float) = 0;
-        virtual void set_diffuse(float) = 0;
-        virtual void set_specular(float) = 0;
+        virtual void set_ambient(double) = 0;
+        virtual void set_diffuse(double) = 0;
+        virtual void set_specular(double) = 0;
         virtual void set_clear_color_rgb(const vec3&) = 0;
         virtual void set_default_color_rgb(const vec3&) = 0;
         virtual void set_wireframe_color_rgb(const vec3&) = 0;
-        virtual void set_default_ns(float) = 0;
+        virtual void set_default_ns(double) = 0;
         virtual void show_smooth(bool) = 0;
         virtual void show_wireframe(bool) = 0;
         virtual void show_shadow(bool) = 0;
         virtual void show_materials(bool) = 0;
         virtual void show_effect(bool) = 0;
         virtual void show_dft(bool) = 0;
-        virtual void set_dft_brightness(float) = 0;
+        virtual void set_dft_brightness(double) = 0;
         virtual void show_convex_hull_2d(bool) = 0;
         virtual void show_optical_flow(bool) = 0;
         virtual void set_vertical_sync(bool v) = 0;
-        virtual void set_shadow_zoom(float v) = 0;
+        virtual void set_shadow_zoom(double v) = 0;
 
         virtual void get_camera_information(vec3* camera_up, vec3* camera_direction, vec3* view_center, double* view_width,
                                             int* paint_width, int* paint_height) const = 0;
@@ -76,5 +76,5 @@ public:
 std::unique_ptr<IShow> create_show(IShowCallback*, WindowID win_parent, vec3 clear_color_rgb, vec3 default_color_rgb,
                                    vec3 wireframe_color_rgb, bool with_smooth, bool with_wireframe, bool with_shadow,
                                    bool with_materials, bool with_effect, bool with_dft, bool with_convex_hull,
-                                   bool with_optical_flow, float ambient, float diffuse, float specular, float dft_brightness,
-                                   float default_ns, bool vertical_sync, float shadow_zoom);
+                                   bool with_optical_flow, double ambient, double diffuse, double specular, double dft_brightness,
+                                   double default_ns, bool vertical_sync, double shadow_zoom);

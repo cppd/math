@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -85,12 +85,11 @@ void write_vertices(const CFile& file, const IObj* obj)
         {
                 double scale_factor = 2.0 / max_delta;
 
-                vec3 old_min = to_vector<double>(min);
-                vec3 new_min = 0.5 * delta * scale_factor;
+                vec3 center = to_vector<double>(min) + 0.5 * delta;
 
                 for (const vec3f& v : obj->get_vertices())
                 {
-                        vec3 vertex = (to_vector<double>(v) - old_min) * scale_factor - new_min;
+                        vec3 vertex = (to_vector<double>(v) - center) * scale_factor;
                         fprintf(file, VERTEX_FORMAT, vertex[0], vertex[1], vertex[2]);
                 }
         }
