@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -140,7 +140,7 @@ static_assert
 // Тип данных передаваемых векторов и диапазон значений рассчитаны только на определители
 // из этих чисел, поэтому нельзя использовать скалярные произведения, матрицы Грама и т.п.
 template <int COUNT, size_t N, typename T>
-std::enable_if_t<any_integral<T>, bool> linearly_independent(const std::array<Vector<N, T>, N>& vectors)
+std::enable_if_t<is_integral<T>, bool> linearly_independent(const std::array<Vector<N, T>, N>& vectors)
 {
         static_assert(N > 1);
         static_assert(COUNT > 0);

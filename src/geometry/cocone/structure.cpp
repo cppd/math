@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -168,7 +168,7 @@ double voronoi_edge_radius(const std::vector<DelaunayObject<N>>& delaunay_object
 {
         if (facet.one_sided() && cocone_inside_or_equal(cos_n_b))
         {
-                return any_max<double>;
+                return std::numeric_limits<double>::max();
         }
 
         if (!facet.one_sided() && cocone_inside_or_equal(cos_n_a, cos_n_b))
@@ -179,8 +179,9 @@ double voronoi_edge_radius(const std::vector<DelaunayObject<N>>& delaunay_object
         // Если вершины Вороного совпадают, то до этого места не дойдёт, так как тогда они внутри COCONE.
         // Поэтому можно брать разницу между вершинами как вектор направления от a к b.
         // Но могут быть и небольшие разницы на границах COCONE.
-        vec<N> a_to_b = facet.one_sided() ? facet.get_ortho() : (delaunay_objects[facet.get_delaunay(1)].get_voronoi_vertex() -
-                                                                 delaunay_objects[facet.get_delaunay(0)].get_voronoi_vertex());
+        vec<N> a_to_b = facet.one_sided() ? facet.get_ortho() :
+                                            (delaunay_objects[facet.get_delaunay(1)].get_voronoi_vertex() -
+                                             delaunay_objects[facet.get_delaunay(0)].get_voronoi_vertex());
 
         double max_distance;
 
@@ -270,7 +271,7 @@ void cocone_facets_and_voronoi_radius(const vec<N>& vertex, const std::vector<De
                 // Найдено пересечение с COCONE одной из вершин.
                 (*facet_data)[vertex_facet.facet_index].cocone_vertex[vertex_facet.vertex_index] = true;
 
-                if (find_radius && *radius != any_max<double>)
+                if (find_radius && *radius != std::numeric_limits<double>::max())
                 {
                         double edge_radius = voronoi_edge_radius(delaunay_objects, facet, positive_pole, pa, pa_length, pb_length,
                                                                  cos_n_a, cos_n_b);
@@ -279,7 +280,7 @@ void cocone_facets_and_voronoi_radius(const vec<N>& vertex, const std::vector<De
                 }
         }
 
-        ASSERT(!find_radius || (*radius > 0 && *radius <= any_max<double>));
+        ASSERT(!find_radius || (*radius > 0 && *radius <= std::numeric_limits<double>::max()));
 }
 
 template <size_t N>

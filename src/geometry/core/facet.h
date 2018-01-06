@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -128,8 +128,8 @@ class FacetInteger final : public FacetBase<N, FacetInteger<N, DataType, Compute
 {
         using Base = FacetBase<N, FacetInteger, FacetIter>;
 
-        static_assert(native_integral<DataType> && native_integral<ComputeType>);
-        static_assert(any_signed<DataType> && any_signed<ComputeType>);
+        static_assert(is_native_integral<DataType> && is_native_integral<ComputeType>);
+        static_assert(is_signed<DataType> && is_signed<ComputeType>);
 
         // Перпендикуляр к грани (вектор из одномерного ортогонального дополнения грани).
         Vector<N, ComputeType> m_ortho;
@@ -226,8 +226,8 @@ template <size_t N, typename DataType, template <typename> typename FacetIter>
 class FacetInteger<N, DataType, mpz_class, FacetIter> final
         : public FacetBase<N, FacetInteger<N, DataType, mpz_class, FacetIter>, FacetIter>
 {
-        static_assert(any_integral<DataType>);
-        static_assert(any_signed<DataType>);
+        static_assert(is_integral<DataType>);
+        static_assert(is_signed<DataType>);
 
         using Base = FacetBase<N, FacetInteger, FacetIter>;
 

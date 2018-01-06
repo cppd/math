@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -104,13 +104,13 @@ template <size_t N>
 using DataTypeAfterParaboloid = LeastSignedInteger<PARABOLOID_BITS>;
 
 // Не надо медленный mpz_class на основных измерениях
-static_assert(native_integral<DataTypeOrdinary<2>> && native_integral<ComputeTypeOrdinary<2>>);
-static_assert(native_integral<DataTypeOrdinary<3>> && native_integral<ComputeTypeOrdinary<3>>);
-static_assert(native_integral<DataTypeOrdinary<4>> && native_integral<ComputeTypeOrdinary<4>>);
-static_assert(native_integral<DataTypeParaboloid<3>> && native_integral<ComputeTypeParaboloid<3>>);
-static_assert(native_integral<DataTypeAfterParaboloid<2>> && native_integral<ComputeTypeAfterParaboloid<2>>);
-static_assert(native_integral<DataTypeParaboloid<4>> && native_integral<ComputeTypeParaboloid<4>>);
-static_assert(native_integral<DataTypeAfterParaboloid<3>> && native_integral<ComputeTypeAfterParaboloid<3>>);
+static_assert(is_native_integral<DataTypeOrdinary<2>> && is_native_integral<ComputeTypeOrdinary<2>>);
+static_assert(is_native_integral<DataTypeOrdinary<3>> && is_native_integral<ComputeTypeOrdinary<3>>);
+static_assert(is_native_integral<DataTypeOrdinary<4>> && is_native_integral<ComputeTypeOrdinary<4>>);
+static_assert(is_native_integral<DataTypeParaboloid<3>> && is_native_integral<ComputeTypeParaboloid<3>>);
+static_assert(is_native_integral<DataTypeAfterParaboloid<2>> && is_native_integral<ComputeTypeAfterParaboloid<2>>);
+static_assert(is_native_integral<DataTypeParaboloid<4>> && is_native_integral<ComputeTypeParaboloid<4>>);
+static_assert(is_native_integral<DataTypeAfterParaboloid<3>> && is_native_integral<ComputeTypeAfterParaboloid<3>>);
 //
 
 template <typename F>
@@ -128,9 +128,9 @@ namespace
 template <typename S, typename C>
 unsigned get_thread_count()
 {
-        static_assert(any_integral<S> && any_integral<C>);
+        static_assert(is_integral<S> && is_integral<C>);
 
-        if (native_integral<S> && native_integral<C>)
+        if (is_native_integral<S> && is_native_integral<C>)
         {
                 return 1;
         }

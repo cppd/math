@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -16,18 +16,27 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include <complex>
-#include <numeric>
+#include <limits>
+#include <type_traits>
 
 static_assert(__GNUC__);
 static_assert(__cplusplus >= 201703L);
 static_assert(__STDC_HOSTED__ == 1);
 
-static_assert(std::numeric_limits<int>::max() > 2e9);
-static_assert(sizeof(int) == 4);
+static_assert(std::numeric_limits<int>::max() >= (1ull << 31) - 1);
+static_assert(std::numeric_limits<unsigned>::max() >= (1ull << 32) - 1);
 
+static_assert(std::is_same_v<__int128, signed __int128>);
 static_assert((static_cast<__int128>(1) << 126) > 0);
+static_assert((static_cast<unsigned __int128>(1) << 127) > 0);
+
+static_assert(std::numeric_limits<float>::is_iec559);
+static_assert(std::numeric_limits<double>::is_iec559);
+static_assert(std::numeric_limits<long double>::is_iec559);
 
 static_assert(sizeof(std::complex<float>) == 2 * sizeof(float));
 static_assert(sizeof(std::complex<double>) == 2 * sizeof(double));
+static_assert(sizeof(std::complex<long double>) == 2 * sizeof(long double));
 static_assert(alignof(std::complex<float>) == alignof(float));
 static_assert(alignof(std::complex<double>) == alignof(double));
+static_assert(alignof(std::complex<long double>) == alignof(long double));

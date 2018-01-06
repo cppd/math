@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -54,7 +54,7 @@ int find_pivot(const Matrix<N, N, T>& A, int column, int from_row)
 // input: A * x = b.
 // output: b = x; A = upper triangular.
 template <size_t Size, typename T>
-std::enable_if_t<any_floating_point<T>> solve_gauss(Matrix<Size, Size, T>* A_p, Vector<Size, T>* b_p)
+std::enable_if_t<is_floating_point<T>> solve_gauss(Matrix<Size, Size, T>* A_p, Vector<Size, T>* b_p)
 {
         constexpr int N = Size;
 
@@ -98,7 +98,7 @@ std::enable_if_t<any_floating_point<T>> solve_gauss(Matrix<Size, Size, T>* A_p, 
 // Тоже самое, что и для одного столбца b, только сразу для SizeB столбцов B.
 // Если B является единичной матрицей, то в B будет обратная к A матрица.
 template <size_t SizeA, size_t SizeB, typename T>
-std::enable_if_t<any_floating_point<T>> solve_gauss(Matrix<SizeA, SizeA, T>* A_p, Matrix<SizeA, SizeB, T>* B_p)
+std::enable_if_t<is_floating_point<T>> solve_gauss(Matrix<SizeA, SizeA, T>* A_p, Matrix<SizeA, SizeB, T>* B_p)
 {
         constexpr int N = SizeA;
         constexpr int NB = SizeB;
@@ -154,7 +154,7 @@ std::enable_if_t<any_floating_point<T>> solve_gauss(Matrix<SizeA, SizeA, T>* A_p
 }
 
 template <size_t Size, typename T>
-std::enable_if_t<any_floating_point<T>, T> determinant_gauss(Matrix<Size, Size, T>* A_p)
+std::enable_if_t<is_floating_point<T>, T> determinant_gauss(Matrix<Size, Size, T>* A_p)
 {
         constexpr int N = Size;
 

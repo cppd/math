@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 template <typename T>
 class Quaternion
 {
-        static_assert(native_floating_point<T>);
+        static_assert(is_native_floating_point<T>);
 
         Vector<4, T> m_data;
 

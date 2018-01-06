@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -18,25 +18,29 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <gmpxx.h>
+#include <limits>
 #include <string>
 #include <type_traits>
 
-// Не работает с GCC и -Ofast, но работает с clang и -Ofast
-// template <typename T>
-// constexpr T binary_epsilon()
-//{
-//        T prev_e = 1, e = 1;
-//        do
-//        {
-//                prev_e = e;
-//                e = e / 2;
-//        } while (1 != 1 + e);
-//        return prev_e;
-//}
-template <typename T>
-constexpr T max_binary_fraction()
+namespace TypesImplementation
 {
-        // = 2 - epsilon
+template <typename T>
+constexpr T binary_epsilon() noexcept
+{
+        T prev_e = 1, e = 1, s = 1;
+        do
+        {
+                prev_e = e;
+                e /= 2;
+                s = 1 + e;
+        } while (s != 1);
+        return prev_e;
+}
+
+template <typename T>
+constexpr T max_binary_fraction() noexcept
+{
+        // max_binary_fraction = 2 - binary_epsilon
         T prev_r = 1, r = 1, a = 1;
         do
         {
@@ -46,8 +50,9 @@ constexpr T max_binary_fraction()
         } while (r != 2);
         return prev_r;
 }
+
 template <typename T>
-constexpr T binary_exponent(int e)
+constexpr T binary_exponent(int e) noexcept
 {
         if (e == 0)
         {
@@ -72,85 +77,169 @@ constexpr T binary_exponent(int e)
         return r;
 }
 
-// template <typename T>
-// constexpr T any_epsilon = binary_epsilon<T>();
-template <typename T>
-inline constexpr T any_epsilon = std::numeric_limits<T>::epsilon();
-template <>
-inline constexpr __float128 any_epsilon<__float128> = 1e-34; // strtoflt128("1.92592994438723585305597794258492732e-34", nullptr)
+static_assert(binary_epsilon<float>() == std::numeric_limits<float>::epsilon());
+static_assert(binary_epsilon<double>() == std::numeric_limits<double>::epsilon());
+static_assert(binary_epsilon<long double>() == std::numeric_limits<long double>::epsilon());
 
-// Проверка правильности работы функций
-static_assert((1 + any_epsilon<float> != 1) && (1 + any_epsilon<float> / 2 == 1));
-static_assert((1 + any_epsilon<double> != 1) && (1 + any_epsilon<double> / 2 == 1));
-static_assert((1 + any_epsilon<__float128> != 1) && (1 + any_epsilon<__float128> / 2 == 1));
-static_assert(2 - any_epsilon<float> == max_binary_fraction<float>());
-static_assert(2 - any_epsilon<double> == max_binary_fraction<double>());
-static_assert(2 - any_epsilon<__float128> == max_binary_fraction<__float128>());
+static_assert((1 + binary_epsilon<float>() != 1) && (1 + binary_epsilon<float>() / 2 == 1));
+static_assert((1 + binary_epsilon<double>() != 1) && (1 + binary_epsilon<double>() / 2 == 1));
+static_assert((1 + binary_epsilon<long double>() != 1) && (1 + binary_epsilon<long double>() / 2 == 1));
+static_assert((1 + binary_epsilon<__float128>() != 1) && (1 + binary_epsilon<__float128>() / 2 == 1));
+
+static_assert(2 - binary_epsilon<float>() == max_binary_fraction<float>());
+static_assert(2 - binary_epsilon<double>() == max_binary_fraction<double>());
+static_assert(2 - binary_epsilon<long double>() == max_binary_fraction<long double>());
+static_assert(2 - binary_epsilon<__float128>() == max_binary_fraction<__float128>());
+
 static_assert(std::numeric_limits<float>::max() == max_binary_fraction<float>() * binary_exponent<float>(127));
 static_assert(std::numeric_limits<double>::max() == max_binary_fraction<double>() * binary_exponent<double>(1023));
 
-// strtoflt128("1.18973149535723176508575932662800702e4932", nullptr)
-inline constexpr __float128 MAX_FLOAT_128 = max_binary_fraction<__float128>() * binary_exponent<__float128>(16383);
+//
 
-// constexpr unsigned __int128 MAX_UNSIGNED_INT_128 = -1;
-inline constexpr unsigned __int128 MAX_UNSIGNED_INT_128 =
-        (static_cast<unsigned __int128>(0xffff'ffff'ffff'ffff) << 64) | static_cast<unsigned __int128>(0xffff'ffff'ffff'ffff);
-static_assert(MAX_UNSIGNED_INT_128 + 1 == 0);
+template <typename T, bool = true>
+class limits
+{
+        static_assert(std::numeric_limits<T>::is_specialized);
 
-inline constexpr signed __int128 MAX_SIGNED_INT_128 = MAX_UNSIGNED_INT_128 >> 1;
-static_assert(MAX_SIGNED_INT_128 > 0 && (static_cast<unsigned __int128>(MAX_SIGNED_INT_128) == MAX_UNSIGNED_INT_128 >> 1));
+public:
+        template <typename A = T>
+        static constexpr std::enable_if_t<std::is_floating_point_v<A>, T> epsilon() noexcept
+        {
+                static_assert(std::is_same_v<A, T>);
+                return std::numeric_limits<T>::epsilon();
+        }
+        static constexpr T max() noexcept
+        {
+                return std::numeric_limits<T>::max();
+        }
+        static constexpr T lowest() noexcept
+        {
+                return std::numeric_limits<T>::lowest();
+        }
+        static constexpr int digits = std::numeric_limits<T>::digits;
+};
 
-template <typename T>
-inline constexpr T any_max = std::numeric_limits<T>::max();
 template <>
-inline constexpr unsigned __int128 any_max<unsigned __int128> = MAX_UNSIGNED_INT_128;
+class limits<unsigned __int128, !std::numeric_limits<unsigned __int128>::is_specialized>
+{
+        using T = unsigned __int128;
+
+public:
+        static constexpr T max() noexcept
+        {
+                return -1;
+        }
+        static constexpr T lowest() noexcept
+        {
+                return 0;
+        }
+        static constexpr int digits = 128;
+};
+
 template <>
-inline constexpr signed __int128 any_max<signed __int128> = MAX_SIGNED_INT_128;
+class limits<signed __int128, !std::numeric_limits<signed __int128>::is_specialized>
+{
+        using T = signed __int128;
+
+public:
+        static constexpr T max() noexcept
+        {
+                return static_cast<unsigned __int128>(-1) >> 1;
+        }
+        static constexpr T lowest() noexcept
+        {
+                return -max() - 1;
+        }
+        static constexpr int digits = 127;
+};
+
 template <>
-inline constexpr __float128 any_max<__float128> = MAX_FLOAT_128;
+class limits<__float128, !std::numeric_limits<__float128>::is_specialized>
+{
+        using T = __float128;
+
+        // epsilon = strtoflt128("1.92592994438723585305597794258492732e-34", nullptr)
+        // max = strtoflt128("1.18973149535723176508575932662800702e4932", nullptr)
+
+public:
+        static constexpr T epsilon() noexcept
+        {
+                return binary_epsilon<T>();
+        }
+        static constexpr T max() noexcept
+        {
+                return max_binary_fraction<T>() * binary_exponent<T>(16383);
+        }
+        static constexpr T lowest() noexcept
+        {
+                return -max();
+        }
+        static constexpr int digits = 113;
+};
+
+static_assert(limits<double>::epsilon() == std::numeric_limits<double>::epsilon());
+static_assert(limits<double>::max() == std::numeric_limits<double>::max());
+static_assert(limits<double>::lowest() == std::numeric_limits<double>::lowest());
+static_assert(limits<double>::digits == std::numeric_limits<double>::digits);
+
+static_assert(limits<unsigned __int128>::max() > 0);
+static_assert(limits<unsigned __int128>::max() == (((static_cast<unsigned __int128>(1) << 127) - 1) << 1) + 1);
+static_assert(limits<unsigned __int128>::max() + 1 == 0);
+static_assert(limits<unsigned __int128>::max() == static_cast<unsigned __int128>(-1));
+static_assert(limits<unsigned __int128>::lowest() == 0);
+
+static_assert(limits<signed __int128>::max() > 0);
+static_assert(limits<signed __int128>::lowest() < 0);
+static_assert(static_cast<unsigned __int128>(limits<signed __int128>::max()) == limits<unsigned __int128>::max() >> 1);
+static_assert((static_cast<unsigned __int128>(1) << 127) == static_cast<unsigned __int128>(limits<signed __int128>::max()) + 1);
+static_assert(limits<signed __int128>::lowest() + 1 + limits<signed __int128>::max() == 0);
+}
+
+//
 
 template <typename T>
-inline constexpr int any_digits = std::numeric_limits<T>::digits;
-template <>
-inline constexpr int any_digits<unsigned __int128> = 128;
-template <>
-inline constexpr int any_digits<signed __int128> = 127;
-template <>
-inline constexpr int any_digits<__float128> = 113;
+class limits : public TypesImplementation::limits<T>
+{
+};
+template <typename T>
+class limits<const T> : public TypesImplementation::limits<T>
+{
+};
+template <typename T>
+class limits<volatile T> : public TypesImplementation::limits<T>
+{
+};
+template <typename T>
+class limits<const volatile T> : public TypesImplementation::limits<T>
+{
+};
 
 template <typename T>
-inline constexpr bool native_integral = std::is_same_v<std::remove_const_t<T>, __int128> || std::is_integral_v<T>;
+inline constexpr bool is_native_integral = std::is_same_v<std::remove_cv_t<T>, unsigned __int128> ||
+                                           std::is_same_v<std::remove_cv_t<T>, signed __int128> || std::is_integral_v<T>;
+template <typename T>
+inline constexpr bool is_integral = is_native_integral<T> || std::is_same_v<std::remove_cv_t<T>, mpz_class>;
 
 template <typename T>
-inline constexpr bool any_integral = std::is_same_v<std::remove_const_t<T>, mpz_class> ||
-                                     std::is_same_v<std::remove_const_t<T>, __int128> || std::is_integral_v<T>;
+inline constexpr bool is_native_floating_point = std::is_same_v<std::remove_cv_t<T>, __float128> || std::is_floating_point_v<T>;
 template <typename T>
-inline constexpr bool any_gmp =
-        std::is_same_v<std::remove_const_t<T>, mpz_class> || std::is_same_v<std::remove_const_t<T>, mpf_class> ||
-        std::is_same_v<std::remove_const_t<T>, mpq_class>;
+inline constexpr bool is_floating_point = is_native_floating_point<T> || std::is_same_v<std::remove_cv_t<T>, mpf_class>;
 
 template <typename T>
-inline constexpr bool native_floating_point = std::is_same_v<std::remove_const_t<T>, __float128> || std::is_floating_point_v<T>;
-
-template <typename T>
-inline constexpr bool any_floating_point = std::is_same_v<std::remove_const_t<T>, mpf_class> ||
-                                           std::is_same_v<std::remove_const_t<T>, __float128> || std::is_floating_point_v<T>;
-
-template <typename T>
-inline constexpr bool any_signed =
-        std::is_same_v<std::remove_const_t<T>, mpz_class> || std::is_same_v<std::remove_const_t<T>, mpf_class> ||
-        std::is_same_v<std::remove_const_t<T>, __int128> || std::is_same_v<std::remove_const_t<T>, __float128> ||
-        std::is_signed_v<T>;
+inline constexpr bool is_signed =
+        std::is_same_v<std::remove_cv_t<T>, mpz_class> || std::is_same_v<std::remove_cv_t<T>, mpf_class> ||
+        std::is_same_v<std::remove_cv_t<T>, __int128> || std::is_same_v<std::remove_cv_t<T>, __float128> || std::is_signed_v<T>;
 
 // clang-format off
 template<int BITS>
 using LeastSignedInteger =
-        std::conditional_t<BITS <=   8, int_least8_t,
-        std::conditional_t<BITS <=  16, int_least16_t,
-        std::conditional_t<BITS <=  32, int_least32_t,
-        std::conditional_t<BITS <=  64, int_least64_t,
-        std::conditional_t<BITS <= 128, signed __int128,
+        std::conditional_t<BITS <=   7, int_least8_t,
+        std::conditional_t<BITS <=  15, int_least16_t,
+        std::conditional_t<BITS <=  31, int_least32_t,
+        std::conditional_t<BITS <=  63, int_least64_t,
+        std::conditional_t<BITS <= 127, signed __int128,
         mpz_class>>>>>;
+
 template<int BITS>
 using LeastUnsignedInteger =
         std::conditional_t<BITS <=   8, uint_least8_t,
@@ -162,27 +251,27 @@ using LeastUnsignedInteger =
 // clang-format on
 
 template <typename T>
-std::enable_if_t<std::is_same_v<std::remove_const_t<T>, mpz_class>, std::string> type_str()
+std::enable_if_t<std::is_same_v<std::remove_cv_t<T>, mpz_class>, std::string> type_str()
 {
         return "mpz_class";
 }
 template <typename T>
-std::enable_if_t<std::is_same_v<std::remove_const_t<T>, mpf_class>, std::string> type_str()
+std::enable_if_t<std::is_same_v<std::remove_cv_t<T>, mpf_class>, std::string> type_str()
 {
         return "mpf_class";
 }
 template <typename T>
-std::enable_if_t<std::is_same_v<std::remove_const_t<T>, mpq_class>, std::string> type_str()
+std::enable_if_t<std::is_same_v<std::remove_cv_t<T>, mpq_class>, std::string> type_str()
 {
         return "mpq_class";
 }
 template <typename T>
-std::enable_if_t<native_integral<T>, std::string> type_str()
+std::enable_if_t<is_native_integral<T>, std::string> type_str()
 {
-        return std::to_string(any_digits<T>) + " bits";
+        return std::to_string(limits<T>::digits) + " bits";
 }
 template <typename T>
-std::enable_if_t<native_floating_point<T>, std::string> type_str()
+std::enable_if_t<is_native_floating_point<T>, std::string> type_str()
 {
-        return "fp " + std::to_string(any_digits<T>) + " bits";
+        return "fp " + std::to_string(limits<T>::digits) + " bits";
 }

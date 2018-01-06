@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 template <size_t Rows, size_t Columns, typename T>
 class Matrix
 {
-        static_assert(any_floating_point<T>);
+        static_assert(is_floating_point<T>);
         static_assert(Rows > 1 && Columns > 1);
 
         std::array<Vector<Columns, T>, Rows> m_data;

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -60,7 +60,7 @@ template <size_t N, typename T>
 class SimplexGeometry
 {
         static_assert(N >= 2);
-        static_assert(any_floating_point<T>);
+        static_assert(is_floating_point<T>);
 
         // (N-1)-мерные плоскости, перпендикулярные (N-1)-симплексу и проходящие через его грани,
         // за исключением одной грани.

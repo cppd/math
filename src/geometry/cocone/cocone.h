@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -35,7 +35,7 @@ constexpr T COS_OF_AN_OPENING_ANGLE_WITH_THE_AXIS =
 template <typename T>
 bool voronoi_edge_intersects_cocone(T cos_n_a, T cos_n_b)
 {
-        static_assert(native_floating_point<T>);
+        static_assert(is_native_floating_point<T>);
 
         constexpr T cos_cocone = CoconeImplementation::COS_OF_AN_OPENING_ANGLE_WITH_THE_AXIS<T>;
 
@@ -57,7 +57,7 @@ bool voronoi_edge_intersects_cocone(T cos_n_a, T cos_n_b)
 template <typename... T>
 bool cocone_inside_or_equal(T... cos_n_p)
 {
-        static_assert((native_floating_point<T> && ...));
+        static_assert((is_native_floating_point<T> && ...));
 
         return ((any_abs(cos_n_p) <= CoconeImplementation::COS_OF_AN_OPENING_ANGLE_WITH_THE_AXIS<T>)&&...);
 }
@@ -90,7 +90,7 @@ template <size_t N, typename T>
 bool intersect_cocone(const Vector<N, T>& normalized_cone_axis, const Vector<N, T>& from_apex_to_point_a,
                       const Vector<N, T>& from_point_a_to_point_b, T* distance)
 {
-        static_assert(native_floating_point<T>);
+        static_assert(is_native_floating_point<T>);
 
         const Vector<N, T>& vec_a = from_apex_to_point_a;
         const Vector<N, T>& vec_ab = from_point_a_to_point_b;
@@ -114,8 +114,8 @@ bool intersect_cocone(const Vector<N, T>& normalized_cone_axis, const Vector<N, 
                 return false;
         }
 
-        bool t1_ok = t1 >= 0 && t1 <= any_max<T>;
-        bool t2_ok = t2 >= 0 && t2 <= any_max<T>;
+        bool t1_ok = t1 >= 0 && t1 <= limits<T>::max();
+        bool t2_ok = t2 >= 0 && t2 <= limits<T>::max();
 
         if (!t1_ok && !t2_ok)
         {
