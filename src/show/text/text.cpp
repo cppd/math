@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -17,9 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "text.h"
 
-#include "color/color_space.h"
 #include "com/error.h"
 #include "graphics/objects.h"
+#include "show/color_space/color_space.h"
 
 #include <SFML/Graphics/Image.hpp>
 #include <ft2build.h>

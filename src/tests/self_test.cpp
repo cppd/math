@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -17,9 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "self_test.h"
 
-#include "dft/test/dft_test.h"
 #include "geometry/test/convex_hull_test.h"
 #include "geometry/test/reconstruction_test.h"
+#include "gpu_2d/dft/test/dft_test.h"
 #include "path_tracing/space/test/parallelotope_test.h"
 
 namespace

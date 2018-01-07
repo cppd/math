@@ -17,8 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "show.h"
 
-#include "draw_object.h"
-#include "show_event.h"
+#include "event.h"
+#include "draw_object/draw_object.h"
 
 #include "com/colors.h"
 #include "com/error.h"
@@ -30,13 +30,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/quaternion.h"
 #include "com/thread.h"
 #include "com/time.h"
-#include "dft/show/dft_show.h"
+#include "gpu_2d/convex_hull/convex_hull_2d.h"
+#include "gpu_2d/dft/show/dft_show.h"
+#include "gpu_2d/optical_flow/optical_flow.h"
+#include "gpu_2d/pencil/pencil.h"
 #include "graphics/objects.h"
-#include "hull_2d/hull_2d.h"
 #include "numerical/linear.h"
 #include "obj/obj.h"
-#include "optical_flow/optical_flow.h"
-#include "pencil/pencil.h"
 #include "text/text.h"
 #include "window/window.h"
 

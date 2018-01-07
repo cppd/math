@@ -17,12 +17,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "draw_object.h"
 
-#include "color/color_space.h"
 #include "com/log.h"
 #include "com/mat_alg.h"
 #include "com/print.h"
 #include "graphics/query.h"
 #include "obj/obj_alg.h"
+#include "show/color_space/color_space.h"
 
 #include <vector>
 

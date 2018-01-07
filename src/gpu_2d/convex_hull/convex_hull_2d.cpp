@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@ Princeton University Press, 2011.
 Chapter 2: CONVEX HULLS, 2.6 Divide-and-Conquer.
 */
 
-#include "hull_2d.h"
+#include "convex_hull_2d.h"
 
 #include "com/bits.h"
 #include "com/error.h"
@@ -36,23 +36,23 @@ Chapter 2: CONVEX HULLS, 2.6 Divide-and-Conquer.
 // clang-format off
 constexpr const char vertex_shader[]
 {
-#include "hull_2d.vert.str"
+#include "convex_hull_2d.vert.str"
 };
 constexpr const char fragment_shader[]
 {
-#include "hull_2d.frag.str"
+#include "convex_hull_2d.frag.str"
 };
 constexpr const char prepare_shader[]
 {
-#include "ch_prepare.comp.str"
+#include "ch_2d_prepare.comp.str"
 };
 constexpr const char merge_shader[]
 {
-#include "ch_merge.comp.str"
+#include "ch_2d_merge.comp.str"
 };
 constexpr const char filter_shader[]
 {
-#include "ch_filter.comp.str"
+#include "ch_2d_filter.comp.str"
 };
 // clang-format on
 
