@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "draw_object.h"
+#include "renderer.h"
 
 #include "com/log.h"
 #include "com/mat_alg.h"
@@ -448,7 +448,7 @@ public:
 
 //
 
-class DrawProgram final : public IDrawProgram
+class Renderer final : public IRenderer
 {
         static constexpr mat4 SCALE = scale<double>(0.5, 0.5, 0.5);
         static constexpr mat4 TRANSLATE = translate<double>(1, 1, 1);
@@ -709,7 +709,7 @@ class DrawProgram final : public IDrawProgram
         }
 
 public:
-        DrawProgram()
+        Renderer()
                 : main_program(VertexShader(triangles_vert), GeometryShader(triangles_geom), FragmentShader(triangles_frag)),
                   shadow_program(VertexShader(shadow_vert), FragmentShader(shadow_frag)),
                   points_program(VertexShader(points_vert), FragmentShader(points_frag))
@@ -718,7 +718,7 @@ public:
 };
 }
 
-std::unique_ptr<IDrawProgram> create_draw_program()
+std::unique_ptr<IRenderer> create_renderer()
 {
-        return std::make_unique<DrawProgram>();
+        return std::make_unique<Renderer>();
 }

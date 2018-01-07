@@ -18,7 +18,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "show.h"
 
 #include "event.h"
-#include "draw_object/draw_object.h"
+#include "renderer/renderer.h"
+#include "text/text.h"
 
 #include "com/colors.h"
 #include "com/error.h"
@@ -37,7 +38,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/objects.h"
 #include "numerical/linear.h"
 #include "obj/obj.h"
-#include "text/text.h"
 #include "window/window.h"
 
 #include <SFML/Window/Event.hpp>
@@ -426,7 +426,7 @@ void ShowObject::loop()
         // Вначале без полноэкранного режима
         bool fullscreen_active = false;
 
-        std::unique_ptr<IDrawProgram> draw_program = create_draw_program();
+        std::unique_ptr<IRenderer> renderer = create_renderer();
 
         std::unique_ptr<DFTShow> dft_show;
         std::unique_ptr<PencilEffect> pencil_effect;
@@ -470,7 +470,7 @@ void ShowObject::loop()
                                         error("Null object received");
                                 }
 
-                                draw_program->add_object(d.obj.get(), OBJECT_SIZE, OBJECT_POSITION, d.id, d.scale_id);
+                                renderer->add_object(d.obj.get(), OBJECT_SIZE, OBJECT_POSITION, d.id, d.scale_id);
                                 m_callback->object_loaded(d.id);
                                 break;
                         }
@@ -478,19 +478,19 @@ void ShowObject::loop()
                         {
                                 const Event::delete_object& d = event->get<Event::delete_object>();
 
-                                draw_program->delete_object(d.id);
+                                renderer->delete_object(d.id);
                                 break;
                         }
                         case Event::EventType::show_object:
                         {
                                 const Event::show_object& d = event->get<Event::show_object>();
 
-                                draw_program->show_object(d.id);
+                                renderer->show_object(d.id);
                                 break;
                         }
                         case Event::EventType::delete_all_objects:
                         {
-                                draw_program->delete_all();
+                                renderer->delete_all();
                                 default_view = true;
                                 break;
                         }
@@ -532,7 +532,7 @@ void ShowObject::loop()
                                 const Event::set_ambient& d = event->get<Event::set_ambient>();
 
                                 vec3 light = vec3(d.ambient);
-                                draw_program->set_light_a(light);
+                                renderer->set_light_a(light);
                                 break;
                         }
                         case Event::EventType::set_diffuse:
@@ -540,7 +540,7 @@ void ShowObject::loop()
                                 const Event::set_diffuse& d = event->get<Event::set_diffuse>();
 
                                 vec3 light = vec3(d.diffuse);
-                                draw_program->set_light_d(light);
+                                renderer->set_light_d(light);
                                 break;
                         }
                         case Event::EventType::set_specular:
@@ -548,7 +548,7 @@ void ShowObject::loop()
                                 const Event::set_specular& d = event->get<Event::set_specular>();
 
                                 vec3 light = vec3(d.specular);
-                                draw_program->set_light_s(light);
+                                renderer->set_light_s(light);
                                 break;
                         }
                         case Event::EventType::set_clear_color:
@@ -566,7 +566,7 @@ void ShowObject::loop()
                                 const Event::set_default_color& d = event->get<Event::set_default_color>();
 
                                 vec3 color = d.default_color;
-                                draw_program->set_default_color(color);
+                                renderer->set_default_color(color);
                                 break;
                         }
                         case Event::EventType::set_wireframe_color:
@@ -574,42 +574,42 @@ void ShowObject::loop()
                                 const Event::set_wireframe_color& d = event->get<Event::set_wireframe_color>();
 
                                 vec3 color = d.wireframe_color;
-                                draw_program->set_wireframe_color(color);
+                                renderer->set_wireframe_color(color);
                                 break;
                         }
                         case Event::EventType::set_default_ns:
                         {
                                 const Event::set_default_ns& d = event->get<Event::set_default_ns>();
 
-                                draw_program->set_default_ns(d.default_ns);
+                                renderer->set_default_ns(d.default_ns);
                                 break;
                         }
                         case Event::EventType::show_smooth:
                         {
                                 const Event::show_smooth& d = event->get<Event::show_smooth>();
 
-                                draw_program->set_show_smooth(d.show);
+                                renderer->set_show_smooth(d.show);
                                 break;
                         }
                         case Event::EventType::show_wireframe:
                         {
                                 const Event::show_wireframe& d = event->get<Event::show_wireframe>();
 
-                                draw_program->set_show_wireframe(d.show);
+                                renderer->set_show_wireframe(d.show);
                                 break;
                         }
                         case Event::EventType::show_shadow:
                         {
                                 const Event::show_shadow& d = event->get<Event::show_shadow>();
 
-                                draw_program->set_show_shadow(d.show);
+                                renderer->set_show_shadow(d.show);
                                 break;
                         }
                         case Event::EventType::show_materials:
                         {
                                 const Event::show_materials& d = event->get<Event::show_materials>();
 
-                                draw_program->set_show_materials(d.show);
+                                renderer->set_show_materials(d.show);
                                 break;
                         }
                         case Event::EventType::show_effect:
@@ -670,7 +670,7 @@ void ShowObject::loop()
                         {
                                 const Event::shadow_zoom& d = event->get<Event::shadow_zoom>();
 
-                                draw_program->set_shadow_zoom(d.zoom);
+                                renderer->set_shadow_zoom(d.zoom);
                                 break;
                         }
                         }
@@ -792,7 +792,7 @@ void ShowObject::loop()
                         // Чтобы в случае исключений не остались объекты от прошлых размеров окна,
                         // вначале нужно удалить все объекты.
 
-                        draw_program->free_buffers();
+                        renderer->free_buffers();
 
                         dft_show = nullptr;
                         pencil_effect = nullptr;
@@ -813,19 +813,19 @@ void ShowObject::loop()
                         mat4 plane_matrix = scale<double>(2.0 / window_width, -2.0 / window_height, 1) *
                                             translate<double>(-window_width / 2.0, -window_height / 2.0, 0);
 
-                        draw_program->set_size(width, height);
+                        renderer->set_size(width, height);
 
                         int dft_pos_x = (window_width & 1) ? (width + 1) : width;
                         int dft_pos_y = 0;
                         dft_show = std::make_unique<DFTShow>(width, height, dft_pos_x, dft_pos_y, plane_matrix, buffer_sRGB);
                         dft_show->set_brightness(dft_brightness);
 
-                        pencil_effect = std::make_unique<PencilEffect>(draw_program->get_color_buffer_texture(),
-                                                                       draw_program->get_object_texture());
+                        pencil_effect = std::make_unique<PencilEffect>(renderer->get_color_buffer_texture(),
+                                                                       renderer->get_object_texture());
 
                         optical_flow = std::make_unique<OpticalFlow>(width, height, plane_matrix);
 
-                        convex_hull_2d = std::make_unique<ConvexHull2D>(draw_program->get_object_texture(), plane_matrix);
+                        convex_hull_2d = std::make_unique<ConvexHull2D>(renderer->get_object_texture(), plane_matrix);
                 }
 
                 if (default_view)
@@ -862,10 +862,10 @@ void ShowObject::loop()
                         mat4 view_matrix = translate<double>(-window_center[0], -window_center[1], 0) *
                                            look_at<double>(vec3(0, 0, 0), camera_direction, camera_up);
 
-                        draw_program->set_matrices(shadow_matrix, projection_matrix * view_matrix);
+                        renderer->set_matrices(shadow_matrix, projection_matrix * view_matrix);
 
-                        draw_program->set_light_direction(-light_direction);
-                        draw_program->set_camera_direction(-camera_direction);
+                        renderer->set_light_direction(-light_direction);
+                        renderer->set_camera_direction(-camera_direction);
 
                         vec4 screen_center((right + left) * 0.5, (top + bottom) * 0.5, (z_far + z_near) * 0.5, 1.0);
                         vec4 view_center = inverse(view_matrix) * screen_center;
@@ -881,7 +881,7 @@ void ShowObject::loop()
                 glDisable(GL_BLEND);
 
                 // Если pencil_effect_active, то рисование в цветной буфер
-                draw_program->draw(pencil_effect_active);
+                renderer->draw(pencil_effect_active);
 
                 //
 

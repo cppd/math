@@ -24,9 +24,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <memory>
 
-struct IDrawProgram
+struct IRenderer
 {
-        virtual ~IDrawProgram() = default;
+        virtual ~IRenderer() = default;
 
         virtual void set_light_a(const vec3& light) = 0;
         virtual void set_light_d(const vec3& light) = 0;
@@ -60,4 +60,4 @@ struct IDrawProgram
         virtual void delete_all() = 0;
 };
 
-std::unique_ptr<IDrawProgram> create_draw_program();
+std::unique_ptr<IRenderer> create_renderer();
