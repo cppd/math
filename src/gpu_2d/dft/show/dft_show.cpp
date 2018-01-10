@@ -59,8 +59,9 @@ class DFTShow::Impl final
         std::unique_ptr<IFourierGL2> m_gl_fft;
         VertexArray m_vertex_array;
         ArrayBuffer m_vertex_buffer;
-        std::vector<Vertex> m_vertices;
         GraphicsProgram m_draw_prog;
+
+        static constexpr int RectangleVertexCount = 4;
 
 public:
         Impl(int width, int height, int pos_x, int pos_y, const mat4& mtx, bool source_sRGB)
@@ -69,7 +70,6 @@ public:
                   m_source_sRGB(source_sRGB),
                   m_image_texture(width, height),
                   m_gl_fft(create_fft_gl2d(width, height, m_image_texture)),
-                  m_vertices(4),
                   m_draw_prog(VertexShader(dft_show_vertex_shader), FragmentShader(dft_show_fragment_shader))
         {
                 m_vertex_array.attrib_pointer(0, 3, GL_FLOAT, m_vertex_buffer, offsetof(Vertex, v1), sizeof(Vertex), true);
@@ -88,13 +88,14 @@ public:
                 vec4f pos01 = to_vector<float>(mtx * vec4(x_start, y_end, 0, 1));
                 vec4f pos11 = to_vector<float>(mtx * vec4(x_end, y_end, 0, 1));
 
+                std::array<Vertex, RectangleVertexCount> vertices;
                 // текстурный 0 находится внизу
-                m_vertices[0] = Vertex(pos00[0], pos00[1], 0, 1);
-                m_vertices[1] = Vertex(pos10[0], pos10[1], 1, 1);
-                m_vertices[2] = Vertex(pos01[0], pos01[1], 0, 0);
-                m_vertices[3] = Vertex(pos11[0], pos11[1], 1, 0);
+                vertices[0] = Vertex(pos00[0], pos00[1], 0, 1);
+                vertices[1] = Vertex(pos10[0], pos10[1], 1, 1);
+                vertices[2] = Vertex(pos01[0], pos01[1], 0, 0);
+                vertices[3] = Vertex(pos11[0], pos11[1], 1, 0);
 
-                m_vertex_buffer.load_static_draw(m_vertices);
+                m_vertex_buffer.load_static_draw(vertices);
         }
         ~Impl()
         {
@@ -115,7 +116,7 @@ public:
                 m_gl_fft->exec(false, m_source_sRGB);
 
                 m_vertex_array.bind();
-                m_draw_prog.draw_arrays(GL_TRIANGLE_STRIP, 0, m_vertices.size());
+                m_draw_prog.draw_arrays(GL_TRIANGLE_STRIP, 0, RectangleVertexCount);
         }
 };
 

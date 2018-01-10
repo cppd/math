@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -19,10 +19,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/error.h"
 #include "com/mat.h"
+#include "com/type_detect.h"
 #include "com/vec.h"
 #include "opengl/opengl_functions.h"
 
-#include <SFML/Graphics/Image.hpp>
+#include <array>
 #include <string>
 #include <type_traits>
 #include <vector>
@@ -467,12 +468,13 @@ class Texture2D final
         int m_width = 0, m_height = 0;
 
 public:
-        void texture_storage_2d(GLsizei levels, GLenum internalformat, GLsizei width, GLsizei height) noexcept
+        Texture2D(GLsizei levels, GLenum internalformat, GLsizei width, GLsizei height) noexcept
         {
                 glTextureStorage2D(m_texture, levels, internalformat, width, height);
                 m_width = width;
                 m_height = height;
         }
+
         void texture_sub_image_2d(GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format,
                                   GLenum type, const void* pixels) const noexcept
         {
@@ -494,6 +496,12 @@ public:
                 glTextureParameterf(m_texture, pname, param);
         }
 
+        void bind_image_texture(GLuint unit, GLint level, GLboolean layered, GLint layer, GLenum access, GLenum format) const
+                noexcept
+        {
+                glBindImageTexture(unit, m_texture, level, layered, layer, access, format);
+        }
+
         GLuint64 get_texture_resident_handle() const noexcept
         {
                 GLuint64 texture_handle = glGetTextureHandleARB(m_texture);
@@ -506,45 +514,6 @@ public:
                 GLuint64 image_handle = glGetImageHandleARB(m_texture, level, layered, layer, format);
                 glMakeImageHandleResidentARB(image_handle, access);
                 return image_handle;
-        }
-
-        void bind_image_texture_read_only_RGBA32F(GLuint unit) const noexcept
-        {
-                glBindImageTexture(unit, m_texture, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
-        }
-        void bind_image_texture_write_only_RGBA32F(GLuint unit) const noexcept
-        {
-                glBindImageTexture(unit, m_texture, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
-        }
-        void bind_image_texture_read_write_RGBA32F(GLuint unit) const noexcept
-        {
-                glBindImageTexture(unit, m_texture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
-        }
-
-        GLuint64 get_image_resident_handle_read_only_RGBA32F() const noexcept
-        {
-                return get_image_resident_handle(0, GL_FALSE, 0, GL_RGBA32F, GL_READ_ONLY);
-        }
-        GLuint64 get_image_resident_handle_write_only_RGBA32F() const noexcept
-        {
-                return get_image_resident_handle(0, GL_FALSE, 0, GL_RGBA32F, GL_WRITE_ONLY);
-        }
-        GLuint64 get_image_resident_handle_read_write_RGBA32F() const noexcept
-        {
-                return get_image_resident_handle(0, GL_FALSE, 0, GL_RGBA32F, GL_READ_WRITE);
-        }
-
-        GLuint64 get_image_resident_handle_read_only_R32F() const noexcept
-        {
-                return get_image_resident_handle(0, GL_FALSE, 0, GL_R32F, GL_READ_ONLY);
-        }
-        GLuint64 get_image_resident_handle_write_only_R32F() const noexcept
-        {
-                return get_image_resident_handle(0, GL_FALSE, 0, GL_R32F, GL_WRITE_ONLY);
-        }
-        GLuint64 get_image_resident_handle_read_write_R32F() const noexcept
-        {
-                return get_image_resident_handle(0, GL_FALSE, 0, GL_R32F, GL_READ_WRITE);
         }
 
         void clear_tex_image(GLint level, GLenum format, GLenum type, const void* data) const noexcept
@@ -673,25 +642,26 @@ public:
         }
 
         template <typename T>
-        void load_static_draw(const std::vector<T>& data) const
+        std::enable_if_t<IsVector<T> || IsArray<T>> load_static_draw(const T& data) const
         {
-                glNamedBufferData(m_buffer, data.size() * sizeof(T), data.data(), GL_STATIC_DRAW);
+                glNamedBufferData(m_buffer, data.size() * sizeof(typename T::value_type), data.data(), GL_STATIC_DRAW);
         }
         template <typename T>
-        void load_static_copy(const std::vector<T>& data) const
+        std::enable_if_t<IsVector<T> || IsArray<T>> load_static_copy(const T& data) const
         {
-                glNamedBufferData(m_buffer, data.size() * sizeof(T), data.data(), GL_STATIC_COPY);
+                glNamedBufferData(m_buffer, data.size() * sizeof(typename T::value_type), data.data(), GL_STATIC_COPY);
         }
         template <typename T>
-        void load_dynamic_draw(const std::vector<T>& data) const
+        std::enable_if_t<IsVector<T> || IsArray<T>> load_dynamic_draw(const T& data) const
         {
-                glNamedBufferData(m_buffer, data.size() * sizeof(T), data.data(), GL_DYNAMIC_DRAW);
+                glNamedBufferData(m_buffer, data.size() * sizeof(typename T::value_type), data.data(), GL_DYNAMIC_DRAW);
         }
         template <typename T>
-        void load_dynamic_copy(const std::vector<T>& data) const
+        std::enable_if_t<IsVector<T> || IsArray<T>> load_dynamic_copy(const T& data) const
         {
-                glNamedBufferData(m_buffer, data.size() * sizeof(T), data.data(), GL_DYNAMIC_COPY);
+                glNamedBufferData(m_buffer, data.size() * sizeof(typename T::value_type), data.data(), GL_DYNAMIC_COPY);
         }
+
         void create_dynamic_copy(size_t size) const noexcept
         {
                 glNamedBufferData(m_buffer, size, nullptr, GL_DYNAMIC_COPY);
@@ -700,6 +670,7 @@ public:
         {
                 glNamedBufferData(m_buffer, size, nullptr, GL_STATIC_COPY);
         }
+
         template <typename T>
         void read(std::vector<T>* data) const
         {
@@ -751,15 +722,14 @@ public:
         }
 
         template <typename T>
-        void load_static_draw(const std::vector<T>& v) const
+        std::enable_if_t<IsVector<T> || IsArray<T>> load_static_draw(const T& v) const
         {
-                glNamedBufferData(m_buffer, v.size() * sizeof(T), v.data(), GL_STATIC_DRAW);
+                glNamedBufferData(m_buffer, v.size() * sizeof(typename T::value_type), v.data(), GL_STATIC_DRAW);
         }
-
         template <typename T>
-        void load_dynamic_draw(const std::vector<T>& v) const
+        std::enable_if_t<IsVector<T> || IsArray<T>> load_dynamic_draw(const T& v) const
         {
-                glNamedBufferData(m_buffer, v.size() * sizeof(T), v.data(), GL_DYNAMIC_DRAW);
+                glNamedBufferData(m_buffer, v.size() * sizeof(typename T::value_type), v.data(), GL_DYNAMIC_DRAW);
         }
 };
 
@@ -834,20 +804,22 @@ class TextureRGBA32F final
         Texture2D m_texture;
 
 public:
-        TextureRGBA32F(const sf::Image& image)
+        TextureRGBA32F(GLsizei width, GLsizei height, const std::vector<GLfloat>& pixels) noexcept
+                : m_texture(1, GL_RGBA32F, width, height)
         {
-                static_assert(sizeof(sf::Uint8) == sizeof(GLubyte));
-                m_texture.texture_storage_2d(1, GL_RGBA32F, image.getSize().x, image.getSize().y);
-                m_texture.texture_sub_image_2d(0, 0, 0, image.getSize().x, image.getSize().y, GL_RGBA, GL_UNSIGNED_BYTE,
-                                               image.getPixelsPtr());
+                ASSERT(width >= 0 && height >= 0 && (4ull * width * height == pixels.size()));
+
+                m_texture.texture_sub_image_2d(0, 0, 0, width, height, GL_RGBA, GL_FLOAT, pixels.data());
                 m_texture.texture_parameter(GL_TEXTURE_WRAP_S, GL_REPEAT);
                 m_texture.texture_parameter(GL_TEXTURE_WRAP_T, GL_REPEAT);
                 m_texture.texture_parameter(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
                 m_texture.texture_parameter(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         }
-        TextureRGBA32F(int width, int height) noexcept
+
+        TextureRGBA32F(GLsizei width, GLsizei height) noexcept : m_texture(1, GL_RGBA32F, width, height)
         {
-                m_texture.texture_storage_2d(1, GL_RGBA32F, width, height);
+                ASSERT(width >= 0 && height >= 0);
+
                 m_texture.texture_parameter(GL_TEXTURE_WRAP_S, GL_REPEAT);
                 m_texture.texture_parameter(GL_TEXTURE_WRAP_T, GL_REPEAT);
                 m_texture.texture_parameter(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -867,6 +839,19 @@ public:
                 return m_texture.get_image_resident_handle(0, GL_FALSE, 0, GL_RGBA32F, GL_READ_WRITE);
         }
 
+        void bind_image_texture_read_only(GLuint unit) const noexcept
+        {
+                m_texture.bind_image_texture(unit, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
+        }
+        void bind_image_texture_write_only(GLuint unit) const noexcept
+        {
+                m_texture.bind_image_texture(unit, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
+        }
+        void bind_image_texture_read_write(GLuint unit) const noexcept
+        {
+                m_texture.bind_image_texture(unit, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
+        }
+
         void copy_texture_sub_image() const noexcept
         {
                 m_texture.copy_texture_sub_image_2d(0, 0, 0, 0, 0, m_texture.get_width(), m_texture.get_height());
@@ -883,19 +868,22 @@ class TextureR32F final
         Texture2D m_texture;
 
 public:
-        TextureR32F(int w, int h, const unsigned char* buffer)
+        TextureR32F(GLsizei width, GLsizei height, const std::vector<GLfloat>& pixels) noexcept
+                : m_texture(1, GL_R32F, width, height)
         {
-                m_texture.texture_storage_2d(1, GL_R32F, w, h);
-                m_texture.texture_sub_image_2d(0, 0, 0, w, h, GL_RED, GL_UNSIGNED_BYTE, buffer);
+                ASSERT(width >= 0 && height >= 0 && static_cast<size_t>(width) * height == pixels.size());
+
+                m_texture.texture_sub_image_2d(0, 0, 0, width, height, GL_RED, GL_FLOAT, pixels.data());
                 m_texture.texture_parameter(GL_TEXTURE_WRAP_S, GL_REPEAT);
                 m_texture.texture_parameter(GL_TEXTURE_WRAP_T, GL_REPEAT);
                 m_texture.texture_parameter(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
                 m_texture.texture_parameter(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         }
 
-        TextureR32F(int w, int h)
+        TextureR32F(GLsizei width, GLsizei height) noexcept : m_texture(1, GL_R32F, width, height)
         {
-                m_texture.texture_storage_2d(1, GL_R32F, w, h);
+                ASSERT(width >= 0 && height >= 0);
+
                 m_texture.texture_parameter(GL_TEXTURE_WRAP_S, GL_REPEAT);
                 m_texture.texture_parameter(GL_TEXTURE_WRAP_T, GL_REPEAT);
                 m_texture.texture_parameter(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -941,9 +929,8 @@ class TextureR32I final
         Texture2D m_texture;
 
 public:
-        TextureR32I(int w, int h)
+        TextureR32I(int w, int h) noexcept : m_texture(1, GL_R32I, w, h)
         {
-                m_texture.texture_storage_2d(1, GL_R32I, w, h);
                 m_texture.texture_parameter(GL_TEXTURE_WRAP_S, GL_REPEAT);
                 m_texture.texture_parameter(GL_TEXTURE_WRAP_T, GL_REPEAT);
                 m_texture.texture_parameter(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -984,23 +971,36 @@ public:
         }
 };
 
+class TextureDepth32 final
+{
+        Texture2D m_texture;
+
+public:
+        TextureDepth32(int width, int height) noexcept : m_texture(1, GL_DEPTH_COMPONENT32, width, height)
+        {
+                m_texture.texture_parameter(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+                m_texture.texture_parameter(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                m_texture.texture_parameter(GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
+                m_texture.texture_parameter(GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+                m_texture.texture_parameter(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+                m_texture.texture_parameter(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        }
+
+        const Texture2D& get_texture() const noexcept
+        {
+                return m_texture;
+        }
+};
+
 class ShadowBuffer final
 {
         FrameBuffer m_fb;
-        Texture2D m_depth;
+        TextureDepth32 m_depth;
 
 public:
-        ShadowBuffer(int width, int height)
+        ShadowBuffer(int width, int height) : m_depth(width, height)
         {
-                m_depth.texture_storage_2d(1, GL_DEPTH_COMPONENT32, width, height);
-                m_depth.texture_parameter(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-                m_depth.texture_parameter(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-                m_depth.texture_parameter(GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
-                m_depth.texture_parameter(GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
-                m_depth.texture_parameter(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-                m_depth.texture_parameter(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-                m_fb.named_framebuffer_texture(GL_DEPTH_ATTACHMENT, m_depth, 0);
+                m_fb.named_framebuffer_texture(GL_DEPTH_ATTACHMENT, m_depth.get_texture(), 0);
 
                 GLenum check = m_fb.check_named_framebuffer_status();
                 if (check != GL_FRAMEBUFFER_COMPLETE)
@@ -1018,7 +1018,7 @@ public:
                 m_fb.unbind_framebuffer();
         }
 
-        const Texture2D& get_texture() const noexcept
+        const TextureDepth32& get_depth_texture() const noexcept
         {
                 return m_depth;
         }
@@ -1027,28 +1027,14 @@ public:
 class ColorBuffer final
 {
         FrameBuffer m_fb;
-        Texture2D m_color;
-        Texture2D m_depth;
+        TextureRGBA32F m_color;
+        TextureDepth32 m_depth;
 
 public:
-        ColorBuffer(int width, int height)
+        ColorBuffer(int width, int height) : m_color(width, height), m_depth(width, height)
         {
-                m_depth.texture_storage_2d(1, GL_DEPTH_COMPONENT32, width, height);
-                m_depth.texture_parameter(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-                m_depth.texture_parameter(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-                m_depth.texture_parameter(GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
-                m_depth.texture_parameter(GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
-                m_depth.texture_parameter(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-                m_depth.texture_parameter(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-                m_color.texture_storage_2d(1, GL_RGBA32F, width, height);
-                m_color.texture_parameter(GL_TEXTURE_WRAP_S, GL_REPEAT);
-                m_color.texture_parameter(GL_TEXTURE_WRAP_T, GL_REPEAT);
-                m_color.texture_parameter(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-                m_color.texture_parameter(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-                m_fb.named_framebuffer_texture(GL_DEPTH_ATTACHMENT, m_depth, 0);
-                m_fb.named_framebuffer_texture(GL_COLOR_ATTACHMENT0, m_color, 0);
+                m_fb.named_framebuffer_texture(GL_COLOR_ATTACHMENT0, m_color.get_texture(), 0);
+                m_fb.named_framebuffer_texture(GL_DEPTH_ATTACHMENT, m_depth.get_texture(), 0);
 
                 GLenum check = m_fb.check_named_framebuffer_status();
                 if (check != GL_FRAMEBUFFER_COMPLETE)
@@ -1069,7 +1055,7 @@ public:
                 m_fb.unbind_framebuffer();
         }
 
-        const Texture2D& get_texture() const noexcept
+        const TextureRGBA32F& get_color_texture() const noexcept
         {
                 return m_color;
         }

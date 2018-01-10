@@ -19,7 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/error.h"
 #include "graphics/objects.h"
-#include "show/color_space/color_space.h"
 
 #include <SFML/Graphics/Image.hpp>
 #include <ft2build.h>
@@ -31,9 +30,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include FT_FREETYPE_H
 
 constexpr int FONT_SIZE = 12;
-constexpr int STEP_Y = 16;
-constexpr int START_X = 10;
-constexpr int START_Y = 20;
+
+constexpr float STEP_Y = 16;
+constexpr float START_X = 10;
+constexpr float START_Y = 20;
 
 // clang-format off
 constexpr const char text_vertex_shader[]
@@ -113,17 +113,47 @@ public:
         }
 };
 
-struct TextVertex final
+struct Vertex final
 {
         float v1, v2; // Координаты вершины в пространстве.
         float t1, t2; // Координаты вершины в текстуре.
-        TextVertex()
+        Vertex()
         {
         }
-        TextVertex(float v1_, float v2_, float t1_, float t2_) : v1(v1_), v2(v2_), t1(t1_), t2(t2_)
+        Vertex(float v1_, float v2_, float t1_, float t2_) : v1(v1_), v2(v2_), t1(t1_), t2(t2_)
         {
         }
 };
+
+class CharData final
+{
+        TextureR32F texture;
+
+public:
+        const int w, h, left, top, advance;
+        const GLuint64 texture_handle;
+
+        CharData(int w_, int h_, int left_, int top_, int advance_, const std::vector<float>& pixels)
+                : texture(w_, h_, pixels),
+                  w(w_),
+                  h(h_),
+                  left(left_),
+                  top(top_),
+                  advance(advance_),
+                  texture_handle(texture.get_texture().get_texture_resident_handle())
+        {
+        }
+};
+
+std::vector<float> char_to_float(int width, int height, const unsigned char* pixels)
+{
+        std::vector<float> buffer(static_cast<unsigned long long>(width) * height);
+        for (size_t i = 0; i < buffer.size(); ++i)
+        {
+                buffer[i] = std::clamp(pixels[i] / 255.0f, 0.0f, 1.0f);
+        }
+        return buffer;
+}
 }
 
 class Text::Impl final
@@ -134,44 +164,38 @@ class Text::Impl final
 
         VertexArray m_vertex_array;
         ArrayBuffer m_vertex_buffer;
-        std::vector<TextVertex> m_vertices;
         GraphicsProgram m_program;
-        ColorSpaceConverter m_color_converter;
 
-        struct CharData final
-        {
-                int w, h, left, top, advance;
-                TextureR32F tex;
-                GLuint64 texture_handle;
-                CharData(int w_, int h_, int left_, int top_, int advance_, const unsigned char* buf)
-                        : w(w_),
-                          h(h_),
-                          left(left_),
-                          top(top_),
-                          advance(advance_),
-                          tex(w, h, buf),
-                          texture_handle(tex.get_texture().get_texture_resident_handle())
-                {
-                }
-        };
         std::unordered_map<char, CharData> m_chars;
+
+        const CharData& get_char_data(char c)
+        {
+                auto iter = m_chars.find(c);
+
+                if (iter == m_chars.end())
+                {
+                        const unsigned char* buffer;
+                        int w, h, left, top, advance;
+
+                        render_char(c, &buffer, &w, &h, &left, &top, &advance);
+
+                        std::vector<float> pixels = char_to_float(w, h, buffer);
+
+                        iter = m_chars.try_emplace(c, w, h, left, top, advance, pixels).first;
+                }
+
+                return iter->second;
+        }
 
 public:
         Impl()
                 : m_face(m_ft.get(), font_bytes, sizeof(font_bytes)),
                   m_size(-1),
-                  m_vertices(4),
-                  m_program(VertexShader(text_vertex_shader), FragmentShader(text_fragment_shader)),
-                  m_color_converter(true)
+                  m_program(VertexShader(text_vertex_shader), FragmentShader(text_fragment_shader))
         {
-                m_vertex_array.attrib_pointer(0, 3, GL_FLOAT, m_vertex_buffer, offsetof(TextVertex, v1), sizeof(TextVertex),
-                                              true);
-                m_vertex_array.attrib_pointer(1, 2, GL_FLOAT, m_vertex_buffer, offsetof(TextVertex, t1), sizeof(TextVertex),
-                                              true);
+                m_vertex_array.attrib_pointer(0, 3, GL_FLOAT, m_vertex_buffer, offsetof(Vertex, v1), sizeof(Vertex), true);
+                m_vertex_array.attrib_pointer(1, 2, GL_FLOAT, m_vertex_buffer, offsetof(Vertex, t1), sizeof(Vertex), true);
                 set_size(FONT_SIZE);
-        }
-        ~Impl()
-        {
         }
 
         void set_color(const vec3& color)
@@ -199,40 +223,24 @@ public:
                 {
                         for (char c : line)
                         {
-                                auto i = m_chars.find(c);
-                                if (i == m_chars.end())
-                                {
-                                        const unsigned char* buf;
-                                        int w, h, left, top, advance;
-                                        render_char(c, &buf, &w, &h, &left, &top, &advance);
-                                        CharData cd(w, h, left, top, advance, buf);
-                                        i = m_chars.emplace(c, std::move(cd)).first;
+                                const CharData& cd = get_char_data(c);
 
-                                        // преобразование sRGB в RGB
-                                        m_color_converter.convert((i->second).tex.get_texture());
-                                }
+                                m_program.set_uniform_handle("tex", cd.texture_handle);
 
-                                m_program.set_uniform_handle("tex", (i->second).texture_handle);
+                                float x2 = -1.0f + (x + cd.left) * sx;
+                                float y2 = 1.0f - (y - cd.top) * sy;
 
-                                int w = (i->second).w;
-                                int h = (i->second).h;
-                                int left = (i->second).left;
-                                int top = (i->second).top;
-                                int advance = (i->second).advance;
+                                std::array<Vertex, 4> vertices;
 
-                                float x2 = -1.0f + (x + left) * sx;
-                                float y2 = 1.0f - (y - top) * sy;
+                                vertices[0] = Vertex(x2, y2, 0, 0);
+                                vertices[1] = Vertex(x2 + cd.w * sx, y2, 1, 0);
+                                vertices[2] = Vertex(x2, y2 - cd.h * sy, 0, 1);
+                                vertices[3] = Vertex(x2 + cd.w * sx, y2 - cd.h * sy, 1, 1);
 
-                                m_vertices[0] = TextVertex(x2, y2, 0, 0);
-                                m_vertices[1] = TextVertex(x2 + w * sx, y2, 1, 0);
-                                m_vertices[2] = TextVertex(x2, y2 - h * sy, 0, 1);
-                                m_vertices[3] = TextVertex(x2 + w * sx, y2 - h * sy, 1, 1);
+                                m_vertex_buffer.load_dynamic_draw(vertices);
+                                m_program.draw_arrays(GL_TRIANGLE_STRIP, 0, vertices.size());
 
-                                m_vertex_buffer.load_dynamic_draw(m_vertices);
-
-                                m_program.draw_arrays(GL_TRIANGLE_STRIP, 0, m_vertices.size());
-
-                                x += advance;
+                                x += cd.advance;
                         }
 
                         y += STEP_Y;
@@ -246,14 +254,17 @@ public:
                 {
                         error("Font size is not set");
                 }
+
                 if (c < 32 || c > 126)
                 {
                         error("Only ASCII printable characters are supported in OpenGL text");
                 }
+
                 if (FT_Load_Char(m_face.get(), c, FT_LOAD_RENDER))
                 {
                         error(std::string("Error load character ") + c);
                 }
+
                 *buffer = m_face.get()->glyph->bitmap.buffer;
                 *w = m_face.get()->glyph->bitmap.width;
                 *h = m_face.get()->glyph->bitmap.rows;
@@ -266,15 +277,18 @@ public:
         {
                 const unsigned char* buffer;
                 int w, h, left, top, advance_x;
+
                 render_char(c, &buffer, &w, &h, &left, &top, &advance_x);
+
                 std::vector<unsigned char> image_buffer(w * h * 4);
-                for (int i = 0; i < w * h; ++i)
+                for (size_t i = 0; i < image_buffer.size(); i += 4)
                 {
-                        image_buffer[i * 4 + 0] = buffer[i]; // red
-                        image_buffer[i * 4 + 1] = buffer[i]; // green
-                        image_buffer[i * 4 + 2] = 255; // blue
-                        image_buffer[i * 4 + 3] = 255; // alpha
+                        image_buffer[i + 0] = buffer[i]; // red
+                        image_buffer[i + 1] = buffer[i]; // green
+                        image_buffer[i + 2] = 255; // blue
+                        image_buffer[i + 3] = 255; // alpha
                 }
+
                 sf::Image image;
                 image.create(w, h, image_buffer.data());
                 std::ostringstream o;
@@ -287,24 +301,29 @@ public:
 Text::Text() : m_impl(std::make_unique<Impl>())
 {
 }
+
 Text::~Text() = default;
 
 void Text::set_size(int size)
 {
         m_impl->set_size(size);
 }
+
 void Text::render_char(char c, const unsigned char** buffer, int* w, int* h, int* left, int* top, int* advance_x)
 {
         m_impl->render_char(c, buffer, w, h, left, top, advance_x);
 }
+
 void Text::render_to_file(char c)
 {
         m_impl->render_to_file(c);
 }
+
 void Text::set_color(const vec3& color)
 {
         m_impl->set_color(color);
 }
+
 void Text::draw(int width, int height, const std::vector<std::string>& text)
 {
         m_impl->draw(width, height, text);

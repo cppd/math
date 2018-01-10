@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@ class ColorSpaceConverter
 
 public:
         ColorSpaceConverter(bool to_rgb);
-        void convert(const Texture2D& tex) const;
+        void convert(const TextureRGBA32F& tex) const;
 };
 
 class ColorSpaceConverterToRGB : public ColorSpaceConverter

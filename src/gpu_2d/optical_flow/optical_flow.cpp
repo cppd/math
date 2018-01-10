@@ -157,8 +157,8 @@ class ImageR32F
 public:
         ImageR32F(int x, int y)
                 : m_texture(x, y),
-                  m_image_write_handle(m_texture.get_texture().get_image_resident_handle_write_only_R32F()),
-                  m_image_read_handle(m_texture.get_texture().get_image_resident_handle_read_only_R32F()),
+                  m_image_write_handle(m_texture.get_image_resident_handle_write_only()),
+                  m_image_read_handle(m_texture.get_image_resident_handle_read_only()),
                   m_texture_handle(m_texture.get_texture().get_texture_resident_handle()),
                   m_width(x),
                   m_height(y)

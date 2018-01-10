@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -40,12 +40,12 @@ ColorSpaceConverter::ColorSpaceConverter(bool to_rgb) : m_prog(ComputeShader(col
         }
 }
 
-void ColorSpaceConverter::convert(const Texture2D& tex) const
+void ColorSpaceConverter::convert(const TextureRGBA32F& tex) const
 {
-        int groups_x = get_group_count(tex.get_width(), GROUP_SIZE);
-        int groups_y = get_group_count(tex.get_height(), GROUP_SIZE);
+        int groups_x = get_group_count(tex.get_texture().get_width(), GROUP_SIZE);
+        int groups_y = get_group_count(tex.get_texture().get_height(), GROUP_SIZE);
 
-        tex.bind_image_texture_read_write_RGBA32F(0);
+        tex.bind_image_texture_read_write(0);
 
         m_prog.dispatch_compute(groups_x, groups_y, 1, GROUP_SIZE, GROUP_SIZE, 1);
 

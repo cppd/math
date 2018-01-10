@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "obj/obj_alg.h"
 #include "show/color_space/color_space.h"
 
+#include <algorithm>
 #include <vector>
 
 // clang-format off
@@ -257,6 +258,8 @@ class DrawObject final
         const mat4 m_model_matrix;
         const DrawType m_draw_type;
 
+        static std::vector<float> image_to_floats(const sf::Image& image);
+
 public:
         DrawObject(const IObj* obj, const ColorSpaceConverter& color_converter, double size, const vec3& position);
 
@@ -266,6 +269,17 @@ public:
         unsigned get_vertices_count() const;
         DrawType get_draw_type() const;
 };
+
+std::vector<float> DrawObject::image_to_floats(const sf::Image& image)
+{
+        const sf::Uint8* pixels = image.getPixelsPtr();
+        std::vector<float> buffer(4ull * image.getSize().x * image.getSize().y);
+        for (size_t i = 0; i < buffer.size(); ++i)
+        {
+                buffer[i] = std::clamp(pixels[i] / 255.0f, 0.0f, 1.0f);
+        }
+        return buffer;
+}
 
 DrawObject::DrawObject(const IObj* obj, const ColorSpaceConverter& color_converter, double size, const vec3& position)
         : m_model_matrix(get_model_vertex_matrix(obj, size, position)), m_draw_type(calculate_draw_type_from_obj(obj))
@@ -288,14 +302,12 @@ DrawObject::DrawObject(const IObj* obj, const ColorSpaceConverter& color_convert
 
                 //
 
-                const std::vector<sf::Image>& images = obj->get_images();
-
-                for (size_t i = 0; i < images.size(); ++i)
+                for (const sf::Image& image : obj->get_images())
                 {
-                        m_textures.emplace_back(images[i]);
+                        m_textures.emplace_back(image.getSize().x, image.getSize().y, image_to_floats(image));
 
                         // преобразование sRGB в RGB
-                        color_converter.convert(m_textures[m_textures.size() - 1].get_texture());
+                        color_converter.convert(m_textures[m_textures.size() - 1]);
                 }
 
                 //
@@ -656,7 +668,8 @@ class Renderer final : public IRenderer
                 }
 
                 m_shadow_buffer = std::make_unique<ShadowBuffer>(m_shadow_width, m_shadow_height);
-                main_program.set_uniform_handle("shadow_tex", m_shadow_buffer->get_texture().get_texture_resident_handle());
+                main_program.set_uniform_handle("shadow_tex",
+                                                m_shadow_buffer->get_depth_texture().get_texture().get_texture_resident_handle());
         }
 
         void set_shadow_zoom(double zoom) override
@@ -680,10 +693,10 @@ class Renderer final : public IRenderer
                 set_shadow_size();
         }
 
-        const Texture2D& get_color_buffer_texture() const override
+        const TextureRGBA32F& get_color_buffer_texture() const override
         {
                 ASSERT(m_color_buffer);
-                return m_color_buffer->get_texture();
+                return m_color_buffer->get_color_texture();
         }
         const TextureR32I& get_object_texture() const override
         {
