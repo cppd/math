@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QDesktopWidget>
 #include <QScrollBar>
 #include <type_traits>
+#include <utility>
 
 namespace
 {
@@ -104,7 +105,10 @@ void set_widgets_enabled(QLayout* layout, bool v)
 
 vec3 qcolor_to_rgb(const QColor& c)
 {
-        return srgb_to_rgb(c.redF(), c.greenF(), c.blueF());
+        unsigned char r = std::clamp(c.red(), 0, 255);
+        unsigned char g = std::clamp(c.green(), 0, 255);
+        unsigned char b = std::clamp(c.blue(), 0, 255);
+        return srgb_integer_to_rgb_float(r, g, b);
 }
 
 void button_strike_out(QRadioButton* button, bool strike_out)

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -146,11 +146,9 @@ void Image::read_from_image(const sf::Image& image)
 
         resize(width, height);
 
-        for (int index_image = 0, index_sf = 0; index_sf < width * height * 4; index_sf += 4, ++index_image)
+        for (int i = 0, sf = 0; i < width * height; sf += 4, ++i)
         {
-                m_data[index_image][0] = srgb_int8_to_rgb_float(buffer[index_sf]);
-                m_data[index_image][1] = srgb_int8_to_rgb_float(buffer[index_sf + 1]);
-                m_data[index_image][2] = srgb_int8_to_rgb_float(buffer[index_sf + 2]);
+                m_data[i] = srgb_integer_to_rgb_float(buffer[sf], buffer[sf + 1], buffer[sf + 2]);
         }
 }
 
@@ -181,16 +179,14 @@ void Image::write_to_file(const std::string& file_name) const
                 error("Error writing image header");
         }
 
-        std::vector<unsigned char> buffer(m_width * m_height * 3);
+        std::vector<std::array<unsigned char, 3>> buffer(m_data.size());
 
-        for (size_t index_image = 0, index_buffer = 0; index_image < m_data.size(); ++index_image, index_buffer += 3)
+        for (size_t i = 0; i < m_data.size(); ++i)
         {
-                buffer[index_buffer] = rgb_float_to_srgb_int8(m_data[index_image][0]);
-                buffer[index_buffer + 1] = rgb_float_to_srgb_int8(m_data[index_image][1]);
-                buffer[index_buffer + 2] = rgb_float_to_srgb_int8(m_data[index_image][2]);
+                buffer[i] = rgb_float_to_srgb_integer(m_data[i]);
         }
 
-        if (fwrite(buffer.data(), 1, buffer.size(), fp) != buffer.size())
+        if (fwrite(buffer.data(), 3, buffer.size(), fp) != buffer.size())
         {
                 error("Error writing image data");
         }

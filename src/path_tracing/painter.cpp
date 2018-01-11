@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -436,7 +436,7 @@ void Painter::paint_pixels()
 
                 pixel.add_rays(samples.size());
 
-                m_painter_notifier->painter_pixel_after(x, y, rgb_float_to_srgb_int8(pixel.color()));
+                m_painter_notifier->painter_pixel_after(x, y, rgb_float_to_srgb_integer(pixel.color()));
 
                 m_sample_count += samples.size();
         }
