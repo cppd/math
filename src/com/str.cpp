@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -21,6 +21,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <cctype>
 
+namespace
+{
+char to_upper(char c)
+{
+        return std::toupper(static_cast<unsigned char>(c));
+}
+char to_lower(char c)
+{
+        return std::tolower(static_cast<unsigned char>(c));
+}
+bool is_space(char c)
+{
+        return std::isspace(static_cast<unsigned char>(c));
+}
+}
+
 std::string trim(const std::string_view& s)
 {
         if (s.size() == 0)
@@ -30,7 +46,7 @@ std::string trim(const std::string_view& s)
 
         size_t n = s.size();
         size_t i = 0;
-        while (i < n && std::isspace(s[i]))
+        while (i < n && is_space(s[i]))
         {
                 ++i;
         }
@@ -40,7 +56,7 @@ std::string trim(const std::string_view& s)
         }
 
         size_t ri = s.size() - 1;
-        while (std::isspace(s[ri]))
+        while (is_space(s[ri]))
         {
                 if (ri == 0)
                 {
@@ -58,7 +74,7 @@ std::string to_upper(const std::string_view& s)
         result.reserve(s.size());
         for (char c : s)
         {
-                result += std::toupper(c);
+                result += to_upper(c);
         }
         return result;
 }
@@ -69,7 +85,7 @@ std::string to_lower(const std::string_view& s)
         result.reserve(s.size());
         for (char c : s)
         {
-                result += std::tolower(c);
+                result += to_lower(c);
         }
         return result;
 }

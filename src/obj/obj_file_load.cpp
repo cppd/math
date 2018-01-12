@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "obj_file_load.h"
 
+#include "ascii.h"
 #include "obj_alg.h"
 
 #include "com/error.h"
@@ -29,7 +30,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/thread.h"
 #include "com/time.h"
 
-#include <cctype>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -45,6 +45,19 @@ constexpr bool ATOMIC_COUNTER_LOCK_FREE = atomic_counter::is_always_lock_free;
 
 constexpr unsigned MAX_FACES_PER_LINE = 5;
 
+constexpr bool is_number_sign(char c)
+{
+        return c == '#';
+}
+constexpr bool is_hyphen_minus(char c)
+{
+        return c == '-';
+}
+constexpr bool is_solidus(char c)
+{
+        return c == '/';
+}
+
 namespace
 {
 template <typename T>
@@ -53,23 +66,6 @@ void read(const std::string& line, size_t size, const T& op, size_t* i)
         while (*i < size && op(line[*i]))
         {
                 ++(*i);
-        }
-}
-
-void read_integer(const std::string& line, size_t size, size_t* i)
-{
-        if (*i < size && line[*i] == '-')
-        {
-                size_t pos = *i + 1;
-                read(line, size, [](char c) { return std::isdigit(c); }, &pos);
-                if (pos > (*i + 1))
-                {
-                        *i = pos;
-                }
-        }
-        else
-        {
-                read(line, size, [](char c) { return std::isdigit(c); }, i);
         }
 }
 
@@ -100,11 +96,10 @@ bool check_range(const vec3f& v, float min, float max)
         return v[0] >= min && v[0] <= max && v[1] >= min && v[1] <= max && v[2] >= min && v[2] <= max;
 }
 
-void read_text_file(const std::string& file, std::string* s)
-{
 #if 0
-
-        CFile f(file, "rb");
+void read_text_file(const std::string& file_name, std::string* s)
+{
+        CFile f(file_name, "rb");
 
         std::fseek(f, 0, SEEK_END);
         size_t length = std::ftell(f);
@@ -130,13 +125,14 @@ void read_text_file(const std::string& file, std::string* s)
 
         std::rewind(f);
         std::fread(&(*s)[0], length, 1, f);
-
+}
 #else
-
-        std::ifstream f(file);
+void read_text_file(const std::string& file_name, std::string* s)
+{
+        std::ifstream f(file_name);
         if (!f)
         {
-                error("error open file " + file);
+                error("error open file " + file_name);
         }
 
         f.seekg(0, f.end);
@@ -160,20 +156,17 @@ void read_text_file(const std::string& file, std::string* s)
 
         f.seekg(0, f.beg);
         f.read(&(*s)[0], length);
-
-#endif
 }
+#endif
 
-void get_file_lines(const std::string& file, std::string* s, std::vector<size_t>* line_begin)
+void find_line_begin(const std::string& s, std::vector<size_t>* line_begin)
 {
-        read_text_file(file, s);
-
-        size_t size = s->size();
+        size_t size = s.size();
 
         size_t cnt = 0;
         for (size_t i = 0; i < size; ++i)
         {
-                if ((*s)[i] == '\n')
+                if (s[i] == '\n')
                 {
                         ++cnt;
                 }
@@ -185,12 +178,19 @@ void get_file_lines(const std::string& file, std::string* s, std::vector<size_t>
         size_t b = 0;
         for (size_t i = 0; i < size; ++i)
         {
-                if ((*s)[i] == '\n')
+                if (s[i] == '\n')
                 {
                         line_begin->push_back(b);
                         b = i + 1;
                 }
         }
+}
+
+void read_file_lines(const std::string& file_name, std::string* file_str, std::vector<size_t>* line_begin)
+{
+        read_text_file(file_name, file_str);
+
+        find_line_begin(*file_str, line_begin);
 }
 
 void load_image(const std::string& dir_name, std::string&& name, std::map<std::string, int>* image_index,
@@ -226,30 +226,45 @@ void load_image(const std::string& dir_name, std::string&& name, std::map<std::s
         image_index->emplace(name, *index);
 }
 
-// Между begin и end находится уже проверенное целое число в формате DDDDD или -DDDDD
-int string_to_integer(const std::string& s, long long begin, long long end)
+// Между begin и end находится уже проверенное целое число в формате DDDDD без знака
+int digits_to_integer(const std::string& s, long long begin, long long end)
 {
-        bool neg = false;
-        if (s[begin] == '-')
+        size_t length = end - begin;
+
+        if (length > std::numeric_limits<int>::digits10)
         {
-                neg = true;
+                error("Error convert to int (too big): " + s.substr(begin, length));
+        }
+
+        --end;
+        int sum = ASCII::char_to_int(s[end]);
+        int mul = 1;
+        while (--end >= begin)
+        {
+                mul *= 10;
+                sum += ASCII::char_to_int(s[end]) * mul;
+        }
+
+        return sum;
+}
+
+void read_integer(const std::string& line, size_t size, size_t* i, int* value)
+{
+        size_t begin = *i;
+        if (*i < size && is_hyphen_minus(line[*i]))
+        {
                 ++begin;
         }
 
-        if (end - begin > 9)
-        {
-                error("Error convert to int (too big): " + s);
-        }
+        size_t end = begin;
 
-        long long sum = 0, mul = 1;
-        for (long long i = end - 1; i >= begin; --i)
-        {
-                long long v = s[i] - '0';
-                sum += v * mul;
-                mul *= 10;
-        }
+        read(line, size, ASCII::is_digit, &end);
 
-        return neg ? -sum : sum;
+        if (end > begin)
+        {
+                *value = (begin == *i) ? digits_to_integer(line, begin, end) : -digits_to_integer(line, begin, end);
+                *i = end;
+        }
 }
 
 // 0 означает, что нет индекса.
@@ -294,9 +309,9 @@ void read_vertex_groups(const std::string& line, const char* line_begin, size_t 
         *cnt = 0;
         for (unsigned z = 0; z < N + 1; ++z)
         {
-                read(line, end, [](char c) { return std::isspace(c); }, &i);
+                read(line, end, ASCII::is_space, &i);
                 size_t i2 = i;
-                read(line, end, [](char c) { return !std::isspace(c); }, &i2);
+                read(line, end, ASCII::is_not_space, &i2);
                 if (i2 != i)
                 {
                         if (z < N)
@@ -335,7 +350,7 @@ void read_v_vt_vn(const std::string& line, const char* line_begin, size_t begin,
 
                 if (a > 0)
                 {
-                        if (line[i] != '/')
+                        if (!is_solidus(line[i]))
                         {
                                 error("Error read face from line:\n\"" + trim(line_begin) + "\"");
                         }
@@ -344,10 +359,9 @@ void read_v_vt_vn(const std::string& line, const char* line_begin, size_t begin,
 
                 size_t i2 = i;
 
-                read_integer(line, end, &i2);
+                read_integer(line, end, &i2, &v[a]);
                 if (i2 != i)
                 {
-                        v[a] = string_to_integer(line, i, i2);
                         if (v[a] == 0)
                         {
                                 error("Zero face index:\n\"" + trim(line_begin) + "\"");
@@ -421,9 +435,61 @@ void read_faces(const std::string& line, size_t begin, size_t end, std::array<IO
         }
 }
 
+template <typename... T>
+int string_to_float(const char* str, T*... floats)
+{
+        constexpr int N = sizeof...(T);
+
+        static_assert(N > 0);
+        static_assert(((std::is_same_v<std::remove_volatile_t<T>, float> || std::is_same_v<std::remove_volatile_t<T>, double> ||
+                        std::is_same_v<std::remove_volatile_t<T>, long double>)&&...));
+
+        auto read_float = [&str](auto* p) -> bool {
+
+                using FP = std::remove_volatile_t<std::remove_pointer_t<decltype(p)>>;
+
+                static_assert(std::is_same_v<FP, float> || std::is_same_v<FP, double> || std::is_same_v<FP, long double>);
+
+                char* end;
+
+                if constexpr (std::is_same_v<FP, float>)
+                {
+                        *p = std::strtof(str, &end);
+                }
+                if constexpr (std::is_same_v<FP, double>)
+                {
+                        *p = std::strtod(str, &end);
+                }
+                if constexpr (std::is_same_v<FP, long double>)
+                {
+                        *p = std::strtold(str, &end);
+                }
+
+                // В соответствии со спецификацией файла OBJ, между числами должны быть пробелы,
+                // а после чисел пробелы, конец строки или комментарий.
+                // Здесь без проверок этого.
+                if (str == end || errno == ERANGE)
+                {
+                        return false;
+                }
+                else
+                {
+                        str = end;
+                        return true;
+                }
+        };
+
+        errno = 0;
+        int cnt = 0;
+
+        ((read_float(floats) ? ++cnt : false) && ...);
+
+        return cnt;
+}
+
 void read_float(const std::string& line, size_t b, size_t, vec3f* v)
 {
-        if (3 != std::sscanf(&line[b], "%f %f %f", &(*v)[0], &(*v)[1], &(*v)[2]))
+        if (3 != string_to_float(&line[b], &(*v)[0], &(*v)[1], &(*v)[2]))
         {
                 std::string l = &line[b];
                 error("error read 3 floating points from line:\n\"" + trim(l) + "\"");
@@ -434,7 +500,7 @@ void read_float_texture(const std::string& line, size_t b, size_t, vec2f* v)
 {
         float tmp;
 
-        int n = std::sscanf(&line[b], "%f %f %f", &(*v)[0], &(*v)[1], &tmp);
+        int n = string_to_float(&line[b], &(*v)[0], &(*v)[1], &tmp);
         if (n != 2 && n != 3)
         {
                 std::string l = &line[b];
@@ -449,7 +515,7 @@ void read_float_texture(const std::string& line, size_t b, size_t, vec2f* v)
 
 void read_float(const std::string& line, size_t b, size_t, float* v)
 {
-        if (1 != std::sscanf(&line[b], "%f", v))
+        if (1 != string_to_float(&line[b], v))
         {
                 std::string l = &line[b];
                 error("error read 1 floating point from line:\n\"" + trim(l) + "\"");
@@ -461,7 +527,7 @@ void read_mtl_name(const std::string& line, size_t b, size_t e, std::string* res
         const size_t size = e;
 
         size_t i = b;
-        read(line, size, [](char c) { return std::isspace(c); }, &i);
+        read(line, size, ASCII::is_space, &i);
         if (i == size)
         {
                 std::string l = &line[b];
@@ -469,11 +535,11 @@ void read_mtl_name(const std::string& line, size_t b, size_t e, std::string* res
         }
 
         size_t i2 = i;
-        read(line, size, [](char c) { return !std::isspace(c); }, &i2);
+        read(line, size, ASCII::is_not_space, &i2);
         *res = line.substr(i, i2 - i);
         i = i2;
 
-        read(line, size, [](char c) { return std::isspace(c); }, &i);
+        read(line, size, ASCII::is_space, &i);
         if (i != size)
         {
                 std::string l = &line[b];
@@ -490,7 +556,7 @@ void read_library_names(const std::string& line, size_t b, size_t e, std::vector
 
         while (true)
         {
-                read(line, size, [](char c) { return std::isspace(c); }, &i);
+                read(line, size, ASCII::is_space, &i);
                 if (i == size)
                 {
                         if (!found)
@@ -502,7 +568,7 @@ void read_library_names(const std::string& line, size_t b, size_t e, std::vector
                 }
 
                 size_t i2 = i;
-                read(line, size, [](char c) { return !std::isspace(c); }, &i2);
+                read(line, size, ASCII::is_not_space, &i2);
                 std::string name{line.substr(i, i2 - i)};
                 i = i2;
                 found = true;
@@ -585,8 +651,8 @@ void split_line(std::string* file_str, const std::vector<T>& line_begin, T line_
         // В конце строки находится символ '\n', сместиться на него.
         --l_e;
 
-        split(*file_str, l_b, l_e, [](char c) { return std::isspace(c); }, [](char c) { return c == '#'; }, first_b, first_e,
-              second_b, second_e);
+        split(*file_str, l_b, l_e, ASCII::is_space, is_number_sign, first_b, first_e, second_b, second_e);
+
         (*file_str)[*first_e] = 0; // пробел, символ комментария '#' или символ '\n'
         (*file_str)[*second_e] = 0; // символ комментария '#' или символ '\n'
 }
@@ -1054,7 +1120,7 @@ void FileObj::read_lib(const std::string& dir_name, const std::string& file_name
 
         const std::string lib_name = dir_name + "/" + file_name;
 
-        get_file_lines(lib_name, &file_str, &line_begin);
+        read_file_lines(lib_name, &file_str, &line_begin);
 
         const std::string lib_dir = get_dir_name(lib_name);
 
@@ -1209,7 +1275,7 @@ void FileObj::read_obj(const std::string& file_name, ProgressRatio* progress, st
 
         std::string file_str;
         std::vector<size_t> line_begin;
-        get_file_lines(file_name, &file_str, &line_begin);
+        read_file_lines(file_name, &file_str, &line_begin);
         std::vector<ObjLine> line_prop(line_begin.size());
 
         std::vector<std::thread> threads(hardware_concurrency);
@@ -1384,7 +1450,7 @@ void FileTxt::read_points(const std::string& file_name, ProgressRatio* progress)
 
         std::string file_str;
         std::vector<size_t> line_begin;
-        get_file_lines(file_name, &file_str, &line_begin);
+        read_file_lines(file_name, &file_str, &line_begin);
         m_vertices.resize(line_begin.size());
 
         std::vector<std::thread> threads(hardware_concurrency);

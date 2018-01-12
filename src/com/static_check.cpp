@@ -40,3 +40,7 @@ static_assert(sizeof(std::complex<long double>) == 2 * sizeof(long double));
 static_assert(alignof(std::complex<float>) == alignof(float));
 static_assert(alignof(std::complex<double>) == alignof(double));
 static_assert(alignof(std::complex<long double>) == alignof(long double));
+
+static_assert(u8'\t' == '\t' && u8'\n' == '\n' && u8'\r' == '\r' && u8' ' == ' ');
+static_assert(u8'*' == '*' && u8'0' == '0' && u8'9' == '9' && u8'=' == '=');
+static_assert(u8'a' == 'a' && u8'z' == 'z' && u8'A' == 'A' && u8'Z' == 'Z');
