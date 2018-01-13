@@ -245,6 +245,18 @@ DrawType calculate_draw_type_from_obj(const IObj* obj)
         }
 }
 
+std::vector<float> integer_pixels_to_float_pixels(const std::vector<unsigned char>& pixels)
+{
+        static_assert(std::numeric_limits<unsigned char>::digits == 8);
+
+        std::vector<float> buffer(pixels.size());
+        for (size_t i = 0; i < buffer.size(); ++i)
+        {
+                buffer[i] = pixels[i] / 255.0f;
+        }
+        return buffer;
+}
+
 //
 
 class DrawObject final
@@ -258,8 +270,6 @@ class DrawObject final
         const mat4 m_model_matrix;
         const DrawType m_draw_type;
 
-        static std::vector<float> image_to_floats(const sf::Image& image);
-
 public:
         DrawObject(const IObj* obj, const ColorSpaceConverter& color_converter, double size, const vec3& position);
 
@@ -269,17 +279,6 @@ public:
         unsigned get_vertices_count() const;
         DrawType get_draw_type() const;
 };
-
-std::vector<float> DrawObject::image_to_floats(const sf::Image& image)
-{
-        const sf::Uint8* pixels = image.getPixelsPtr();
-        std::vector<float> buffer(4ull * image.getSize().x * image.getSize().y);
-        for (size_t i = 0; i < buffer.size(); ++i)
-        {
-                buffer[i] = std::clamp(pixels[i] / 255.0f, 0.0f, 1.0f);
-        }
-        return buffer;
-}
 
 DrawObject::DrawObject(const IObj* obj, const ColorSpaceConverter& color_converter, double size, const vec3& position)
         : m_model_matrix(get_model_vertex_matrix(obj, size, position)), m_draw_type(calculate_draw_type_from_obj(obj))
@@ -302,9 +301,10 @@ DrawObject::DrawObject(const IObj* obj, const ColorSpaceConverter& color_convert
 
                 //
 
-                for (const sf::Image& image : obj->get_images())
+                for (const IObj::image& image : obj->get_images())
                 {
-                        m_textures.emplace_back(image.getSize().x, image.getSize().y, image_to_floats(image));
+                        m_textures.emplace_back(image.dimensions[0], image.dimensions[1],
+                                                integer_pixels_to_float_pixels(image.srgba_pixels));
 
                         // преобразование sRGB в RGB
                         color_converter.convert(m_textures[m_textures.size() - 1]);

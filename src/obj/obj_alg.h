@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -33,9 +33,9 @@ void find_min_max(const std::vector<vec3f>& vertices, vec3f* min, vec3f* max);
 
 void find_center_and_length(const std::vector<vec3f>& vertices, const std::vector<IObj::face3>& faces, vec3f* center,
                             float* length);
-void find_center_and_length(const std::vector<vec3f>& vertices, const std::vector<int>& points, vec3f* center, float* length);
 void find_center_and_length(const std::vector<vec3f>& vertices, const std::vector<std::array<int, 2>>& lines, vec3f* center,
                             float* length);
+void find_center_and_length(const std::vector<vec3f>& vertices, const std::vector<int>& points, vec3f* center, float* length);
 void find_center_and_length(const std::vector<vec3f>& vertices, vec3f* center, float* length);
 
 mat4 get_model_vertex_matrix(const IObj* obj, double size, const vec3& position);

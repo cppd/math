@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -79,9 +79,9 @@ void Mesh::create_mesh_object(const IObj* obj, const mat4& vertex_matrix, unsign
         }
 
         m_images.reserve(obj->get_images().size());
-        for (const sf::Image& i : obj->get_images())
+        for (const IObj::image& image : obj->get_images())
         {
-                m_images.emplace_back(i);
+                m_images.emplace_back(image.dimensions[0], image.dimensions[1], image.srgba_pixels);
         }
 
         progress->set_text("Octree: %v of %m");

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/vec.h"
 
-#include <SFML/Graphics/Image.hpp>
+#include <array>
 #include <string>
 #include <vector>
 
@@ -44,6 +44,11 @@ struct IObj
                 float Ns{1};
                 int map_Ka{-1}, map_Kd{-1}, map_Ks{-1}; // -1 если нет текстуры
         };
+        struct image
+        {
+                int dimensions[2];
+                std::vector<unsigned char> srgba_pixels;
+        };
 
         virtual ~IObj() = default;
 
@@ -54,7 +59,7 @@ struct IObj
         virtual const std::vector<int>& get_points() const = 0;
         virtual const std::vector<std::array<int, 2>>& get_lines() const = 0;
         virtual const std::vector<material>& get_materials() const = 0;
-        virtual const std::vector<sf::Image>& get_images() const = 0;
+        virtual const std::vector<image>& get_images() const = 0;
         virtual vec3f get_center() const = 0;
         virtual float get_length() const = 0;
 };

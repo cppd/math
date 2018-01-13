@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -19,7 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/vec.h"
 
-#include <SFML/Graphics/Image.hpp>
 #include <string>
 #include <vector>
 
@@ -27,18 +26,17 @@ class Image
 {
         std::vector<vec3> m_data;
 
-        int m_width, m_height;
+        // тип long long вместо int нужен для умножений
+        long long m_width, m_height;
         double m_max_x, m_max_y;
         int m_max_x0, m_max_y0;
 
-        void read_from_image(const sf::Image& image);
+        void read_from_srgba_pixels(int width, int height, const unsigned char* srgba_pixels);
 
 public:
-        Image();
-
         Image(int width, int height);
 
-        Image(const sf::Image& image);
+        Image(int width, int height, const std::vector<unsigned char>& srgba_pixels);
 
         void resize(int width, int height);
 

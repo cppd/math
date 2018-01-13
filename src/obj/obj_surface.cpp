@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -53,7 +53,7 @@ class SurfaceObj final : public IObj
         std::vector<int> m_points;
         std::vector<std::array<int, 2>> m_lines;
         std::vector<material> m_materials;
-        std::vector<sf::Image> m_images;
+        std::vector<image> m_images;
         vec3f m_center;
         float m_length;
 
@@ -85,7 +85,7 @@ class SurfaceObj final : public IObj
         {
                 return m_materials;
         }
-        const std::vector<sf::Image>& get_images() const override
+        const std::vector<image>& get_images() const override
         {
                 return m_images;
         }

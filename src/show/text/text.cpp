@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <SFML/Graphics/Image.hpp>
 #include <ft2build.h>
+#include <limits>
 #include <sstream>
 #include <string>
 #include <unordered_map>
@@ -145,12 +146,14 @@ public:
         }
 };
 
-std::vector<float> char_to_float(int width, int height, const unsigned char* pixels)
+std::vector<float> integer_pixels_to_float_pixels(long long width, long long height, const unsigned char* pixels)
 {
-        std::vector<float> buffer(static_cast<unsigned long long>(width) * height);
+        static_assert(std::numeric_limits<unsigned char>::digits == 8);
+
+        std::vector<float> buffer(width * height);
         for (size_t i = 0; i < buffer.size(); ++i)
         {
-                buffer[i] = std::clamp(pixels[i] / 255.0f, 0.0f, 1.0f);
+                buffer[i] = pixels[i] / 255.0f;
         }
         return buffer;
 }
@@ -175,13 +178,13 @@ class Text::Impl final
                 if (iter == m_chars.end())
                 {
                         const unsigned char* buffer;
-                        int w, h, left, top, advance;
+                        int width, height, left, top, advance;
 
-                        render_char(c, &buffer, &w, &h, &left, &top, &advance);
+                        render_char(c, &buffer, &width, &height, &left, &top, &advance);
 
-                        std::vector<float> pixels = char_to_float(w, h, buffer);
-
-                        iter = m_chars.try_emplace(c, w, h, left, top, advance, pixels).first;
+                        iter = m_chars.try_emplace(c, width, height, left, top, advance,
+                                                   integer_pixels_to_float_pixels(width, height, buffer))
+                                       .first;
                 }
 
                 return iter->second;

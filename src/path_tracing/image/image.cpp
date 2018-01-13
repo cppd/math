@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/interpolation.h"
 #include "com/str.h"
 
+#include <SFML/Graphics/Image.hpp>
 #include <algorithm>
 
 namespace
@@ -43,20 +44,16 @@ std::string file_name_with_extension(const std::string& file_name, const std::st
 }
 }
 
-Image::Image()
-{
-        m_width = 0;
-        m_height = 0;
-}
-
 Image::Image(int width, int height)
 {
         resize(width, height);
 }
 
-Image::Image(const sf::Image& image)
+Image::Image(int width, int height, const std::vector<unsigned char>& srgba_pixels)
 {
-        read_from_image(image);
+        ASSERT(4ull * width * height == srgba_pixels.size());
+
+        read_from_srgba_pixels(width, height, srgba_pixels.data());
 }
 
 void Image::resize(int width, int height)
@@ -137,31 +134,26 @@ vec3 Image::get_texture(const vec2& p) const
         return interpolation(get_pixel(x0, y0), get_pixel(x1, y0), get_pixel(x0, y1), get_pixel(x1, y1), local_x, local_y);
 }
 
-void Image::read_from_image(const sf::Image& image)
+void Image::read_from_srgba_pixels(int width, int height, const unsigned char* srgba_pixels)
 {
-        const sf::Uint8* buffer = image.getPixelsPtr();
-
-        int width = image.getSize().x;
-        int height = image.getSize().y;
-
         resize(width, height);
 
-        for (int i = 0, sf = 0; i < width * height; sf += 4, ++i)
+        for (size_t i = 0, p = 0; i < m_data.size(); p += 4, ++i)
         {
-                m_data[i] = srgb_integer_to_rgb_float(buffer[sf], buffer[sf + 1], buffer[sf + 2]);
+                m_data[i] = srgb_integer_to_rgb_float(srgba_pixels[p], srgba_pixels[p + 1], srgba_pixels[p + 2]);
         }
 }
 
 void Image::read_from_file(const std::string& file_name)
 {
-        sf::Image sf_image;
+        sf::Image image;
 
-        if (!sf_image.loadFromFile(file_name))
+        if (!image.loadFromFile(file_name))
         {
                 error("Error read image from file " + file_name);
         }
 
-        read_from_image(sf_image);
+        read_from_srgba_pixels(image.getSize().x, image.getSize().y, image.getPixelsPtr());
 }
 
 // Запись в формат PPM с цветом sRGB
@@ -174,7 +166,8 @@ void Image::write_to_file(const std::string& file_name) const
 
         CFile fp(file_name_with_extension(file_name, "ppm"), "wb");
 
-        if (fprintf(fp, "P6\n%d %d\n255\n", static_cast<int>(m_width), static_cast<int>(m_height)) <= 0)
+        static_assert(std::is_same_v<decltype(m_width), long long> && std::is_same_v<decltype(m_height), long long>);
+        if (fprintf(fp, "P6\n%lld %lld\n255\n", m_width, m_height) <= 0)
         {
                 error("Error writing image header");
         }

@@ -187,6 +187,8 @@ protected:
         template <typename... S>
         Program(const S&... shader)
         {
+                static_assert(sizeof...(S) > 0);
+
                 m_program = glCreateProgram();
                 try
                 {
@@ -250,36 +252,36 @@ protected:
         }
 
 public:
-        void set_uniform(const char* var_name, int var) const
+        void set_uniform(const char* var_name, GLint var) const
         {
                 glProgramUniform1i(m_program, get_uniform_location(var_name), var);
         }
-        void set_uniform_unsigned(const char* var_name, unsigned var) const
+        void set_uniform_unsigned(const char* var_name, GLuint var) const
         {
                 glProgramUniform1ui(m_program, get_uniform_location(var_name), var);
         }
-        void set_uniform(const char* var_name, float var) const
+        void set_uniform(const char* var_name, GLfloat var) const
         {
                 glProgramUniform1f(m_program, get_uniform_location(var_name), var);
         }
-        void set_uniform(const char* var_name, double var) const
+        void set_uniform(const char* var_name, GLdouble var) const
         {
                 glProgramUniform1d(m_program, get_uniform_location(var_name), var);
         }
 
-        void set_uniform(GLint loc, int var) const
+        void set_uniform(GLint loc, GLint var) const
         {
                 glProgramUniform1i(m_program, loc, var);
         }
-        void set_uniform_unsigned(GLint loc, unsigned var) const
+        void set_uniform_unsigned(GLint loc, GLuint var) const
         {
                 glProgramUniform1ui(m_program, loc, var);
         }
-        void set_uniform(GLint loc, float var) const
+        void set_uniform(GLint loc, GLfloat var) const
         {
                 glProgramUniform1f(m_program, loc, var);
         }
-        void set_uniform(GLint loc, double var) const
+        void set_uniform(GLint loc, GLdouble var) const
         {
                 glProgramUniform1d(m_program, loc, var);
         }
@@ -662,11 +664,11 @@ public:
                 glNamedBufferData(m_buffer, data.size() * sizeof(typename T::value_type), data.data(), GL_DYNAMIC_COPY);
         }
 
-        void create_dynamic_copy(size_t size) const noexcept
+        void create_dynamic_copy(GLsizeiptr size) const noexcept
         {
                 glNamedBufferData(m_buffer, size, nullptr, GL_DYNAMIC_COPY);
         }
-        void create_static_copy(size_t size) const noexcept
+        void create_static_copy(GLsizeiptr size) const noexcept
         {
                 glNamedBufferData(m_buffer, size, nullptr, GL_STATIC_COPY);
         }
@@ -803,6 +805,14 @@ class TextureRGBA32F final
 {
         Texture2D m_texture;
 
+        void set_parameters()
+        {
+                m_texture.texture_parameter(GL_TEXTURE_WRAP_S, GL_REPEAT);
+                m_texture.texture_parameter(GL_TEXTURE_WRAP_T, GL_REPEAT);
+                m_texture.texture_parameter(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                m_texture.texture_parameter(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        }
+
 public:
         TextureRGBA32F(GLsizei width, GLsizei height, const std::vector<GLfloat>& pixels) noexcept
                 : m_texture(1, GL_RGBA32F, width, height)
@@ -810,20 +820,14 @@ public:
                 ASSERT(width >= 0 && height >= 0 && (4ull * width * height == pixels.size()));
 
                 m_texture.texture_sub_image_2d(0, 0, 0, width, height, GL_RGBA, GL_FLOAT, pixels.data());
-                m_texture.texture_parameter(GL_TEXTURE_WRAP_S, GL_REPEAT);
-                m_texture.texture_parameter(GL_TEXTURE_WRAP_T, GL_REPEAT);
-                m_texture.texture_parameter(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-                m_texture.texture_parameter(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+                set_parameters();
         }
 
         TextureRGBA32F(GLsizei width, GLsizei height) noexcept : m_texture(1, GL_RGBA32F, width, height)
         {
                 ASSERT(width >= 0 && height >= 0);
 
-                m_texture.texture_parameter(GL_TEXTURE_WRAP_S, GL_REPEAT);
-                m_texture.texture_parameter(GL_TEXTURE_WRAP_T, GL_REPEAT);
-                m_texture.texture_parameter(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-                m_texture.texture_parameter(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+                set_parameters();
         }
 
         GLuint64 get_image_resident_handle_write_only() const noexcept
@@ -867,27 +871,29 @@ class TextureR32F final
 {
         Texture2D m_texture;
 
-public:
-        TextureR32F(GLsizei width, GLsizei height, const std::vector<GLfloat>& pixels) noexcept
-                : m_texture(1, GL_R32F, width, height)
+        void set_parameters()
         {
-                ASSERT(width >= 0 && height >= 0 && static_cast<size_t>(width) * height == pixels.size());
-
-                m_texture.texture_sub_image_2d(0, 0, 0, width, height, GL_RED, GL_FLOAT, pixels.data());
                 m_texture.texture_parameter(GL_TEXTURE_WRAP_S, GL_REPEAT);
                 m_texture.texture_parameter(GL_TEXTURE_WRAP_T, GL_REPEAT);
                 m_texture.texture_parameter(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
                 m_texture.texture_parameter(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         }
 
+public:
+        TextureR32F(GLsizei width, GLsizei height, const std::vector<GLfloat>& pixels) noexcept
+                : m_texture(1, GL_R32F, width, height)
+        {
+                ASSERT(width >= 0 && height >= 0 && static_cast<unsigned long long>(width) * height == pixels.size());
+
+                m_texture.texture_sub_image_2d(0, 0, 0, width, height, GL_RED, GL_FLOAT, pixels.data());
+                set_parameters();
+        }
+
         TextureR32F(GLsizei width, GLsizei height) noexcept : m_texture(1, GL_R32F, width, height)
         {
                 ASSERT(width >= 0 && height >= 0);
 
-                m_texture.texture_parameter(GL_TEXTURE_WRAP_S, GL_REPEAT);
-                m_texture.texture_parameter(GL_TEXTURE_WRAP_T, GL_REPEAT);
-                m_texture.texture_parameter(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-                m_texture.texture_parameter(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+                set_parameters();
         }
 
         GLuint64 get_image_resident_handle_write_only() const noexcept
@@ -929,7 +935,7 @@ class TextureR32I final
         Texture2D m_texture;
 
 public:
-        TextureR32I(int w, int h) noexcept : m_texture(1, GL_R32I, w, h)
+        TextureR32I(GLsizei width, GLsizei height) noexcept : m_texture(1, GL_R32I, width, height)
         {
                 m_texture.texture_parameter(GL_TEXTURE_WRAP_S, GL_REPEAT);
                 m_texture.texture_parameter(GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -976,7 +982,7 @@ class TextureDepth32 final
         Texture2D m_texture;
 
 public:
-        TextureDepth32(int width, int height) noexcept : m_texture(1, GL_DEPTH_COMPONENT32, width, height)
+        TextureDepth32(GLsizei width, GLsizei height) noexcept : m_texture(1, GL_DEPTH_COMPONENT32, width, height)
         {
                 m_texture.texture_parameter(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
                 m_texture.texture_parameter(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -998,7 +1004,7 @@ class ShadowBuffer final
         TextureDepth32 m_depth;
 
 public:
-        ShadowBuffer(int width, int height) : m_depth(width, height)
+        ShadowBuffer(GLsizei width, GLsizei height) : m_depth(width, height)
         {
                 m_fb.named_framebuffer_texture(GL_DEPTH_ATTACHMENT, m_depth.get_texture(), 0);
 
@@ -1031,7 +1037,7 @@ class ColorBuffer final
         TextureDepth32 m_depth;
 
 public:
-        ColorBuffer(int width, int height) : m_color(width, height), m_depth(width, height)
+        ColorBuffer(GLsizei width, GLsizei height) : m_color(width, height), m_depth(width, height)
         {
                 m_fb.named_framebuffer_texture(GL_COLOR_ATTACHMENT0, m_color.get_texture(), 0);
                 m_fb.named_framebuffer_texture(GL_DEPTH_ATTACHMENT, m_depth.get_texture(), 0);

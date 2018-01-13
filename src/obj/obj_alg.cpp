@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -18,10 +18,38 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "obj_alg.h"
 
 #include "com/error.h"
-#include "com/hash.h"
 #include "com/mat_alg.h"
+#include "com/types.h"
 
 #include <unordered_set>
+
+namespace
+{
+template <size_t N, typename T>
+std::tuple<Vector<N, T>, T> center_and_length_for_min_max(const Vector<N, T>& min, const Vector<N, T>& max)
+{
+        static_assert(is_floating_point<T>);
+
+        for (unsigned i = 0; i < N; ++i)
+        {
+                if (min[i] >= max[i])
+                {
+                        error("Object size error");
+                }
+        }
+
+        Vector<N, T> center = (max + min) / static_cast<T>(2);
+
+        T len = length(max - min);
+
+        if (len <= 0)
+        {
+                error("Object length is not positive");
+        }
+
+        return {center, len};
+}
+}
 
 std::vector<int> get_unique_face_indices(const std::vector<IObj::face3>& faces)
 {
@@ -132,20 +160,20 @@ std::vector<vec3f> get_unique_point_vertices(const IObj* obj)
 
 void find_min_max(const std::vector<vec3f>& vertices, const std::vector<int>& indices, vec3f* min, vec3f* max)
 {
+        int max_index = static_cast<int>(vertices.size()) - 1;
+
         *min = vec3f(std::numeric_limits<float>::max());
         *max = vec3f(std::numeric_limits<float>::lowest());
 
-        int max_index = static_cast<int>(vertices.size()) - 1;
-
-        for (int i : indices)
+        for (int index : indices)
         {
-                if (i < 0 || i > max_index)
+                if (index < 0 || index > max_index)
                 {
-                        error("vertex index out of bound");
+                        error("Vertex index out of bound");
                 }
 
-                *min = min_vector(*min, vertices[i]);
-                *max = max_vector(*max, vertices[i]);
+                *min = min_vector(*min, vertices[index]);
+                *max = max_vector(*max, vertices[index]);
         }
 }
 
@@ -161,77 +189,94 @@ void find_min_max(const std::vector<vec3f>& vertices, vec3f* min, vec3f* max)
         }
 }
 
-namespace
-{
-void center_and_length(const std::vector<vec3f>& vertices, std::vector<int>& indices, vec3f* center, float* len)
-{
-        vec3f min, max;
-
-        find_min_max(vertices, indices, &min, &max);
-
-        *center = 0.5f * (max + min);
-
-        *len = length(max - min);
-}
-
-void center_and_length(const std::vector<vec3f>& vertices, vec3f* center, float* len)
-{
-        vec3f min, max;
-
-        find_min_max(vertices, &min, &max);
-
-        *center = 0.5f * (max + min);
-
-        *len = length(max - min);
-}
-}
-
 void find_center_and_length(const std::vector<vec3f>& vertices, const std::vector<IObj::face3>& faces, vec3f* center,
                             float* length)
 {
-        std::vector<int> indices = get_unique_face_indices(faces);
-
-        if (indices.size() < 3)
+        if (faces.size() < 1)
         {
-                error("face unique indices count < 3");
+                error("No faces");
         }
 
-        center_and_length(vertices, indices, center, length);
-}
+        int max_index = static_cast<int>(vertices.size()) - 1;
 
-void find_center_and_length(const std::vector<vec3f>& vertices, const std::vector<int>& points, vec3f* center, float* length)
-{
-        std::vector<int> indices = get_unique_point_indices(points);
+        vec3f min = vec3f(std::numeric_limits<float>::max());
+        vec3f max = vec3f(std::numeric_limits<float>::lowest());
 
-        if (indices.size() < 2)
+        for (const IObj::face3& face : faces)
         {
-                error("points unique indices count < 2");
+                for (const IObj::vertex& vertex : face.vertices)
+                {
+                        int index = vertex.v;
+
+                        if (index < 0 || index > max_index)
+                        {
+                                error("Face vertex index out of bound");
+                        }
+
+                        min = min_vector(min, vertices[index]);
+                        max = max_vector(max, vertices[index]);
+                }
         }
 
-        center_and_length(vertices, indices, center, length);
+        std::tie(*center, *length) = center_and_length_for_min_max(min, max);
 }
 
 void find_center_and_length(const std::vector<vec3f>& vertices, const std::vector<std::array<int, 2>>& lines, vec3f* center,
                             float* length)
 {
-        std::vector<int> indices = get_unique_line_indices(lines);
-
-        if (indices.size() < 2)
+        if (lines.size() < 1)
         {
-                error("lines unique indices count < 2");
+                error("No lines");
         }
 
-        center_and_length(vertices, indices, center, length);
+        int max_index = static_cast<int>(vertices.size()) - 1;
+
+        vec3f min = vec3f(std::numeric_limits<float>::max());
+        vec3f max = vec3f(std::numeric_limits<float>::lowest());
+
+        for (const std::array<int, 2>& line : lines)
+        {
+                for (int index : line)
+                {
+                        if (index < 0 || index > max_index)
+                        {
+                                error("Line vertex index out of bound");
+                        }
+
+                        min = min_vector(min, vertices[index]);
+                        max = max_vector(max, vertices[index]);
+                }
+        }
+
+        std::tie(*center, *length) = center_and_length_for_min_max(min, max);
+}
+
+void find_center_and_length(const std::vector<vec3f>& vertices, const std::vector<int>& points, vec3f* center, float* length)
+{
+        if (points.size() < 1)
+        {
+                error("No points");
+        }
+
+        vec3f min, max;
+
+        find_min_max(vertices, points, &min, &max);
+
+        std::tie(*center, *length) = center_and_length_for_min_max(min, max);
 }
 
 void find_center_and_length(const std::vector<vec3f>& vertices, vec3f* center, float* length)
 {
-        if (vertices.size() < 2)
+        if (vertices.size() < 1)
         {
-                error("points count < 2");
+                error("No vertices");
         }
 
-        center_and_length(vertices, center, length);
+        vec3f min, max;
+
+        find_min_max(vertices, &min, &max);
+
+        std::tie(*center, *length) = center_and_length_for_min_max(min, max);
 }
 
 mat4 get_model_vertex_matrix(const IObj* obj, double size, const vec3& position)

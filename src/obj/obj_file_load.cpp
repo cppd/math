@@ -30,6 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/thread.h"
 #include "com/time.h"
 
+#include <SFML/Graphics/Image.hpp>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -41,9 +42,25 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <thread>
 
 using atomic_counter = AtomicCounter<int>;
-constexpr bool ATOMIC_COUNTER_LOCK_FREE = atomic_counter::is_always_lock_free;
 
+constexpr bool ATOMIC_COUNTER_LOCK_FREE = atomic_counter::is_always_lock_free;
 constexpr unsigned MAX_FACES_PER_LINE = 5;
+
+constexpr const char OBJ_v[] = "v";
+constexpr const char OBJ_vt[] = "vt";
+constexpr const char OBJ_vn[] = "vn";
+constexpr const char OBJ_f[] = "f";
+constexpr const char OBJ_usemtl[] = "usemtl";
+constexpr const char OBJ_mtllib[] = "mtllib";
+
+constexpr const char MTL_newmtl[] = "newmtl";
+constexpr const char MTL_Ka[] = "Ka";
+constexpr const char MTL_Kd[] = "Kd";
+constexpr const char MTL_Ks[] = "Ks";
+constexpr const char MTL_Ns[] = "Ns";
+constexpr const char MTL_map_Ka[] = "map_Ka";
+constexpr const char MTL_map_Kd[] = "map_Kd";
+constexpr const char MTL_map_Ks[] = "map_Ks";
 
 constexpr bool is_number_sign(char c)
 {
@@ -57,6 +74,19 @@ constexpr bool is_solidus(char c)
 {
         return c == '/';
 }
+
+constexpr bool str_equal(const char* s1, const char* s2)
+{
+        while (*s1 == *s2 && *s1)
+        {
+                ++s1;
+                ++s2;
+        }
+        return *s1 == *s2;
+}
+
+static_assert(str_equal("ab", "ab") && str_equal("", "") && !str_equal("", "ab") && !str_equal("ab", "") &&
+              !str_equal("ab", "ac") && !str_equal("ba", "ca") && !str_equal("a", "xyz"));
 
 namespace
 {
@@ -193,37 +223,54 @@ void read_file_lines(const std::string& file_name, std::string* file_str, std::v
         find_line_begin(*file_str, line_begin);
 }
 
-void load_image(const std::string& dir_name, std::string&& name, std::map<std::string, int>* image_index,
-                std::vector<sf::Image>* images, int* index)
+IObj::image read_image_from_file(const std::string& file_name)
 {
-        name = trim(name);
-        if (name.size() == 0)
+        sf::Image image;
+        if (!image.loadFromFile(file_name))
         {
-                error("no map file name");
+                error("Error open image file " + file_name);
+        }
+
+        unsigned long long buffer_size = 4ull * image.getSize().x * image.getSize().y;
+
+        IObj::image obj_image;
+        obj_image.dimensions[0] = image.getSize().x;
+        obj_image.dimensions[1] = image.getSize().y;
+        obj_image.srgba_pixels.resize(buffer_size);
+
+        static_assert(sizeof(decltype(*obj_image.srgba_pixels.data())) == sizeof(decltype(*image.getPixelsPtr())));
+
+        std::memcpy(obj_image.srgba_pixels.data(), image.getPixelsPtr(), buffer_size);
+
+        return obj_image;
+}
+
+void load_image(const std::string& dir_name, const std::string& image_name, std::map<std::string, int>* image_index,
+                std::vector<IObj::image>* images, int* index)
+{
+        std::string file_name = trim(image_name);
+
+        if (file_name.size() == 0)
+        {
+                error("No image file name");
         }
 
 #if defined(__linux__)
         // путь к файлу может быть указан в формате Windows, поэтому надо заменить разделители
-        std::replace(name.begin(), name.end(), '\\', '/');
+        std::replace(file_name.begin(), file_name.end(), '\\', '/');
 #endif
 
-        name = dir_name + "/" + name;
+        file_name = dir_name + "/" + file_name;
 
-        auto iter = image_index->find(name);
-        if (iter != image_index->end())
+        if (auto iter = image_index->find(file_name); iter != image_index->end())
         {
                 *index = iter->second;
                 return;
         };
 
-        images->push_back(sf::Image());
+        images->push_back(read_image_from_file(file_name));
         *index = images->size() - 1;
-        if (!(*images)[*index].loadFromFile(name))
-        {
-                error("error open file " + name);
-        }
-
-        image_index->emplace(name, *index);
+        image_index->emplace(file_name, *index);
 }
 
 // Между begin и end находится уже проверенное целое число в формате DDDDD без знака
@@ -435,6 +482,42 @@ void read_faces(const std::string& line, size_t begin, size_t end, std::array<IO
         }
 }
 
+template <typename T>
+bool read_float(const char** str, T* p)
+{
+        using FP = std::remove_volatile_t<T>;
+
+        static_assert(std::is_same_v<FP, float> || std::is_same_v<FP, double> || std::is_same_v<FP, long double>);
+
+        char* end;
+
+        if constexpr (std::is_same_v<FP, float>)
+        {
+                *p = std::strtof(*str, &end);
+        }
+        if constexpr (std::is_same_v<FP, double>)
+        {
+                *p = std::strtod(*str, &end);
+        }
+        if constexpr (std::is_same_v<FP, long double>)
+        {
+                *p = std::strtold(*str, &end);
+        }
+
+        // В соответствии со спецификацией файла OBJ, между числами должны быть пробелы,
+        // а после чисел пробелы, конец строки или комментарий.
+        // Здесь без проверок этого.
+        if (*str == end || errno == ERANGE || !is_finite(*p))
+        {
+                return false;
+        }
+        else
+        {
+                *str = end;
+                return true;
+        }
+};
+
 template <typename... T>
 int string_to_float(const char* str, T*... floats)
 {
@@ -444,80 +527,45 @@ int string_to_float(const char* str, T*... floats)
         static_assert(((std::is_same_v<std::remove_volatile_t<T>, float> || std::is_same_v<std::remove_volatile_t<T>, double> ||
                         std::is_same_v<std::remove_volatile_t<T>, long double>)&&...));
 
-        auto read_float = [&str](auto* p) -> bool {
-
-                using FP = std::remove_volatile_t<std::remove_pointer_t<decltype(p)>>;
-
-                static_assert(std::is_same_v<FP, float> || std::is_same_v<FP, double> || std::is_same_v<FP, long double>);
-
-                char* end;
-
-                if constexpr (std::is_same_v<FP, float>)
-                {
-                        *p = std::strtof(str, &end);
-                }
-                if constexpr (std::is_same_v<FP, double>)
-                {
-                        *p = std::strtod(str, &end);
-                }
-                if constexpr (std::is_same_v<FP, long double>)
-                {
-                        *p = std::strtold(str, &end);
-                }
-
-                // В соответствии со спецификацией файла OBJ, между числами должны быть пробелы,
-                // а после чисел пробелы, конец строки или комментарий.
-                // Здесь без проверок этого.
-                if (str == end || errno == ERANGE)
-                {
-                        return false;
-                }
-                else
-                {
-                        str = end;
-                        return true;
-                }
-        };
-
         errno = 0;
         int cnt = 0;
 
-        ((read_float(floats) ? ++cnt : false) && ...);
+        ((read_float(&str, floats) ? ++cnt : false) && ...);
 
         return cnt;
 }
 
-void read_float(const std::string& line, size_t b, size_t, vec3f* v)
+void read_float(const char* str, vec3f* v)
 {
-        if (3 != string_to_float(&line[b], &(*v)[0], &(*v)[1], &(*v)[2]))
+        if (3 != string_to_float(str, &(*v)[0], &(*v)[1], &(*v)[2]))
         {
-                std::string l = &line[b];
+                std::string l = str;
                 error("error read 3 floating points from line:\n\"" + trim(l) + "\"");
         }
 }
 
-void read_float_texture(const std::string& line, size_t b, size_t, vec2f* v)
+void read_float_texture(const char* str, vec2f* v)
 {
         float tmp;
 
-        int n = string_to_float(&line[b], &(*v)[0], &(*v)[1], &tmp);
+        int n = string_to_float(str, &(*v)[0], &(*v)[1], &tmp);
         if (n != 2 && n != 3)
         {
-                std::string l = &line[b];
+                std::string l = str;
                 error("error read 2 or 3 floating points from line:\n\"" + trim(l) + "\"");
         }
         if (n == 3 && tmp != 0.0f)
         {
-                std::string l = &line[b];
+                std::string l = str;
                 error("3D textures not supported:\n\"" + trim(l) + "\"");
         }
 }
 
-void read_float(const std::string& line, size_t b, size_t, float* v)
+void read_float(const char* str, float* v)
 {
-        if (1 != string_to_float(&line[b], v))
+        if (1 != string_to_float(str, v))
         {
-                std::string l = &line[b];
+                std::string l = str;
                 error("error read 1 floating point from line:\n\"" + trim(l) + "\"");
         }
 }
@@ -579,15 +627,6 @@ void read_library_names(const std::string& line, size_t b, size_t e, std::vector
                         lib_unique_names->insert(std::move(name));
                 }
         }
-}
-
-bool compare(const std::string& str, size_t b, size_t e, const std::string& tag)
-{
-        if ((e - b) != tag.size())
-        {
-                return false;
-        }
-        return !strcmp(&str[b], tag.c_str());
 }
 
 // Разделение строки на 2 части " не_пробелы | остальной текст до символа комментария или конца строки"
@@ -692,11 +731,10 @@ class FileObj final : public IObj
         std::vector<int> m_points;
         std::vector<std::array<int, 2>> m_lines;
         std::vector<material> m_materials;
-        std::vector<sf::Image> m_images;
+        std::vector<image> m_images;
         vec3f m_center;
         float m_length;
 
-        const std::string tag_v{"v"}, tag_vt{"vt"}, tag_vn{"vn"}, tag_f{"f"}, tag_usemtl{"usemtl"}, tag_mtllib{"mtllib"};
         enum class ObjLineType
         {
                 V,
@@ -709,21 +747,19 @@ class FileObj final : public IObj
                 NOT_SUPPORTED
         };
 
-        const std::string tag_newmtl{"newmtl"}, tag_Ka{"Ka"}, tag_Kd{"Kd"}, tag_Ks{"Ks"}, tag_Ns{"Ns"}, tag_map_Ka{"map_Ka"},
-                tag_map_Kd{"map_Kd"}, tag_map_Ks{"map_Ks"};
-        enum class MtlLineType
-        {
-                NEWMTL,
-                KA,
-                KD,
-                KS,
-                NS,
-                MAP_KA,
-                MAP_KD,
-                MAP_KS,
-                NONE,
-                NOT_SUPPORTED
-        };
+        // enum class MtlLineType
+        //{
+        //        NEWMTL,
+        //        KA,
+        //        KD,
+        //        KS,
+        //        NS,
+        //        MAP_KA,
+        //        MAP_KD,
+        //        MAP_KS,
+        //        NONE,
+        //        NOT_SUPPORTED
+        //};
 
         struct ObjLine
         {
@@ -734,12 +770,12 @@ class FileObj final : public IObj
                 vec3f v;
         };
 
-        struct MtlLine
-        {
-                MtlLineType type;
-                size_t second_b, second_e;
-                vec3f v;
-        };
+        // struct MtlLine
+        //{
+        //        MtlLineType type;
+        //        size_t second_b, second_e;
+        //        vec3f v;
+        //};
 
         struct ThreadData
         {
@@ -757,8 +793,8 @@ class FileObj final : public IObj
 
         bool remove_one_dimensional_faces();
 
-        void read_obj_one(const ThreadData* thread_data, std::string* file_ptr, std::vector<size_t>* line_begin,
-                          std::vector<ObjLine>* line_prop, ProgressRatio* progress) const;
+        static void read_obj_one(const ThreadData* thread_data, std::string* file_ptr, std::vector<size_t>* line_begin,
+                                 std::vector<ObjLine>* line_prop, ProgressRatio* progress);
         void read_obj_two(const ThreadData* thread_data, std::string* file_ptr, std::vector<ObjLine>* line_prop,
                           ProgressRatio* progress, std::map<std::string, int>* material_index,
                           std::vector<std::string>* library_names);
@@ -803,7 +839,7 @@ class FileObj final : public IObj
         {
                 return m_materials;
         }
-        const std::vector<sf::Image>& get_images() const override
+        const std::vector<image>& get_images() const override
         {
                 return m_images;
         }
@@ -890,17 +926,17 @@ bool FileObj::remove_one_dimensional_faces()
 }
 
 void FileObj::read_obj_one(const ThreadData* thread_data, std::string* file_ptr, std::vector<size_t>* line_begin,
-                           std::vector<ObjLine>* line_prop, ProgressRatio* progress) const
+                           std::vector<ObjLine>* line_prop, ProgressRatio* progress)
 {
         std::string& file_str = *file_ptr;
         const size_t line_count = line_begin->size();
-        const double line_count_d = line_begin->size();
+        const double line_count_reciprocal = 1.0 / line_begin->size();
 
         for (size_t line_num = thread_data->thread_num; line_num < line_count; line_num += thread_data->thread_count)
         {
                 if ((line_num & 0xfff) == 0xfff)
                 {
-                        progress->set(line_num / line_count_d);
+                        progress->set(line_num * line_count_reciprocal);
                 }
 
                 ObjLine lp;
@@ -908,26 +944,24 @@ void FileObj::read_obj_one(const ThreadData* thread_data, std::string* file_ptr,
 
                 split_line(&file_str, *line_begin, line_num, &first_b, &first_e, &lp.second_b, &lp.second_e);
 
-                if (first_b == first_e)
-                {
-                        lp.type = ObjLineType::NONE;
-                }
-                else if (compare(file_str, first_b, first_e, tag_v))
+                const char* first = &file_str[first_b];
+
+                if (str_equal(first, OBJ_v))
                 {
                         lp.type = ObjLineType::V;
                         vec3f v;
-                        read_float(file_str, lp.second_b, lp.second_e, &v);
+                        read_float(&file_str[lp.second_b], &v);
                         lp.v = v;
                         if (ATOMIC_COUNTER_LOCK_FREE)
                         {
                                 ++(*thread_data->cnt_v);
                         }
                 }
-                else if (compare(file_str, first_b, first_e, tag_vt))
+                else if (str_equal(first, OBJ_vt))
                 {
                         lp.type = ObjLineType::VT;
                         vec2f v;
-                        read_float_texture(file_str, lp.second_b, lp.second_e, &v);
+                        read_float_texture(&file_str[lp.second_b], &v);
                         lp.v[0] = v[0];
                         lp.v[1] = v[1];
                         if (ATOMIC_COUNTER_LOCK_FREE)
@@ -935,18 +969,18 @@ void FileObj::read_obj_one(const ThreadData* thread_data, std::string* file_ptr,
                                 ++(*thread_data->cnt_vt);
                         }
                 }
-                else if (compare(file_str, first_b, first_e, tag_vn))
+                else if (str_equal(first, OBJ_vn))
                 {
                         lp.type = ObjLineType::VN;
                         vec3f v;
-                        read_float(file_str, lp.second_b, lp.second_e, &v);
+                        read_float(&file_str[lp.second_b], &v);
                         lp.v = normalize(v);
                         if (ATOMIC_COUNTER_LOCK_FREE)
                         {
                                 ++(*thread_data->cnt_vn);
                         }
                 }
-                else if (compare(file_str, first_b, first_e, tag_f))
+                else if (str_equal(first, OBJ_f))
                 {
                         lp.type = ObjLineType::F;
                         read_faces(file_str, lp.second_b, lp.second_e, &lp.faces, &lp.face_count);
@@ -955,13 +989,17 @@ void FileObj::read_obj_one(const ThreadData* thread_data, std::string* file_ptr,
                                 ++(*thread_data->cnt_f);
                         }
                 }
-                else if (compare(file_str, first_b, first_e, tag_usemtl))
+                else if (str_equal(first, OBJ_usemtl))
                 {
                         lp.type = ObjLineType::USEMTL;
                 }
-                else if (compare(file_str, first_b, first_e, tag_mtllib))
+                else if (str_equal(first, OBJ_mtllib))
                 {
                         lp.type = ObjLineType::MTLLIB;
+                }
+                else if (!*first)
+                {
+                        lp.type = ObjLineType::NONE;
                 }
                 else
                 {
@@ -1004,9 +1042,9 @@ void FileObj::read_obj_two(const ThreadData* thread_data, std::string* file_ptr,
                 m_faces.reserve(*thread_data->cnt_f);
         }
 
-        std::string& file_str = *file_ptr;
+        const std::string& file_str = *file_ptr;
         const size_t line_count = line_prop->size();
-        const double line_count_d = line_prop->size();
+        const double line_count_reciprocal = 1.0 / line_prop->size();
 
         int mtl_index = -1;
         std::string mtl_name;
@@ -1016,7 +1054,7 @@ void FileObj::read_obj_two(const ThreadData* thread_data, std::string* file_ptr,
         {
                 if ((line_num & 0xfff) == 0xfff)
                 {
-                        progress->set(line_num / line_count_d);
+                        progress->set(line_num * line_count_reciprocal);
                 }
 
                 ObjLine& lp = (*line_prop)[line_num];
@@ -1128,24 +1166,26 @@ void FileObj::read_lib(const std::string& dir_name, const std::string& file_name
         std::string mtl_name;
 
         const size_t line_count = line_begin.size();
-        const double line_count_d = line_begin.size();
+        const double line_count_reciprocal = 1.0 / line_begin.size();
 
         for (size_t line_num = 0; line_num < line_count; ++line_num)
         {
                 if ((line_num & 0xfff) == 0xfff)
                 {
-                        progress->set(line_num / line_count_d);
+                        progress->set(line_num * line_count_reciprocal);
                 }
 
                 size_t first_b, first_e, second_b, second_e;
 
                 split_line(&file_str, line_begin, line_num, &first_b, &first_e, &second_b, &second_e);
 
-                if (first_b == first_e)
+                const char* first = &file_str[first_b];
+
+                if (!*first)
                 {
                         continue;
                 }
-                else if (compare(file_str, first_b, first_e, tag_newmtl))
+                else if (str_equal(first, MTL_newmtl))
                 {
                         if (material_index->size() == 0)
                         {
@@ -1167,84 +1207,84 @@ void FileObj::read_lib(const std::string& dir_name, const std::string& file_name
                                 mtl = nullptr;
                         }
                 }
-                else if (compare(file_str, first_b, first_e, tag_Ka))
+                else if (str_equal(first, MTL_Ka))
                 {
                         if (!mtl)
                         {
                                 continue;
                         }
-                        read_float(file_str, second_b, second_e, &mtl->Ka);
+                        read_float(&file_str[second_b], &mtl->Ka);
 
                         if (!check_range(mtl->Ka, 0, 1))
                         {
                                 error("Error Ka in material " + mtl->name);
                         }
                 }
-                else if (compare(file_str, first_b, first_e, tag_Kd))
+                else if (str_equal(first, MTL_Kd))
                 {
                         if (!mtl)
                         {
                                 continue;
                         }
-                        read_float(file_str, second_b, second_e, &mtl->Kd);
+                        read_float(&file_str[second_b], &mtl->Kd);
 
                         if (!check_range(mtl->Kd, 0, 1))
                         {
                                 error("Error Kd in material " + mtl->name);
                         }
                 }
-                else if (compare(file_str, first_b, first_e, tag_Ks))
+                else if (str_equal(first, MTL_Ks))
                 {
                         if (!mtl)
                         {
                                 continue;
                         }
-                        read_float(file_str, second_b, second_e, &mtl->Ks);
+                        read_float(&file_str[second_b], &mtl->Ks);
 
                         if (!check_range(mtl->Ks, 0, 1))
                         {
                                 error("Error Ks in material " + mtl->name);
                         }
                 }
-                else if (compare(file_str, first_b, first_e, tag_Ns))
+                else if (str_equal(first, MTL_Ns))
                 {
                         if (!mtl)
                         {
                                 continue;
                         }
-                        read_float(file_str, second_b, second_e, &mtl->Ns);
+                        read_float(&file_str[second_b], &mtl->Ns);
 
                         if (!check_range(mtl->Ns, 0, 1000))
                         {
                                 error("Error Ns in material " + mtl->name);
                         }
                 }
-                else if (compare(file_str, first_b, first_e, tag_map_Ka))
+                else if (str_equal(first, MTL_map_Ka))
                 {
                         if (!mtl)
                         {
                                 continue;
                         }
-                        std::string s = file_str.substr(second_b, second_e - second_b);
-                        load_image(lib_dir, std::move(s), image_index, &m_images, &mtl->map_Ka);
+                        std::string image_name = file_str.substr(second_b, second_e - second_b);
+                        load_image(lib_dir, image_name, image_index, &m_images, &mtl->map_Ka);
                 }
-                else if (compare(file_str, first_b, first_e, tag_map_Kd))
+                else if (str_equal(first, MTL_map_Kd))
                 {
                         if (!mtl)
                         {
                                 continue;
                         }
-                        std::string s = file_str.substr(second_b, second_e - second_b);
-                        load_image(lib_dir, std::move(s), image_index, &m_images, &mtl->map_Kd);
+                        std::string image_name = file_str.substr(second_b, second_e - second_b);
+                        load_image(lib_dir, image_name, image_index, &m_images, &mtl->map_Kd);
                 }
-                else if (compare(file_str, first_b, first_e, tag_map_Ks))
+                else if (str_equal(first, MTL_map_Ks))
                 {
                         if (!mtl)
                         {
                                 continue;
                         }
-                        std::string s = file_str.substr(second_b, second_e - second_b);
-                        load_image(lib_dir, std::move(s), image_index, &m_images, &mtl->map_Ks);
+                        std::string image_name = file_str.substr(second_b, second_e - second_b);
+                        load_image(lib_dir, image_name, image_index, &m_images, &mtl->map_Ks);
                 }
         }
 }
@@ -1360,7 +1400,7 @@ class FileTxt final : public IObj
         std::vector<int> m_points;
         std::vector<std::array<int, 2>> m_lines;
         std::vector<material> m_materials;
-        std::vector<sf::Image> m_images;
+        std::vector<image> m_images;
         vec3f m_center;
         float m_length;
 
@@ -1403,7 +1443,7 @@ class FileTxt final : public IObj
         {
                 return m_materials;
         }
-        const std::vector<sf::Image>& get_images() const override
+        const std::vector<image>& get_images() const override
         {
                 return m_images;
         }
@@ -1440,7 +1480,7 @@ void FileTxt::read_points_th(const ThreadData* thread_data, std::string* file_pt
                 --l_e;
                 (*file_ptr)[l_e] = 0;
 
-                read_float(*file_ptr, l_b, l_e, &(*lines)[line_num]);
+                read_float(&(*file_ptr)[l_b], &(*lines)[line_num]);
         }
 }
 
