@@ -77,29 +77,11 @@ constexpr T binary_exponent(int e) noexcept
         return r;
 }
 
-static_assert(binary_epsilon<float>() == std::numeric_limits<float>::epsilon());
-static_assert(binary_epsilon<double>() == std::numeric_limits<double>::epsilon());
-static_assert(binary_epsilon<long double>() == std::numeric_limits<long double>::epsilon());
-
-static_assert((1 + binary_epsilon<float>() != 1) && (1 + binary_epsilon<float>() / 2 == 1));
-static_assert((1 + binary_epsilon<double>() != 1) && (1 + binary_epsilon<double>() / 2 == 1));
-static_assert((1 + binary_epsilon<long double>() != 1) && (1 + binary_epsilon<long double>() / 2 == 1));
-static_assert((1 + binary_epsilon<__float128>() != 1) && (1 + binary_epsilon<__float128>() / 2 == 1));
-
-static_assert(2 - binary_epsilon<float>() == max_binary_fraction<float>());
-static_assert(2 - binary_epsilon<double>() == max_binary_fraction<double>());
-static_assert(2 - binary_epsilon<long double>() == max_binary_fraction<long double>());
-static_assert(2 - binary_epsilon<__float128>() == max_binary_fraction<__float128>());
-
-static_assert(std::numeric_limits<float>::max() == max_binary_fraction<float>() * binary_exponent<float>(127));
-static_assert(std::numeric_limits<double>::max() == max_binary_fraction<double>() * binary_exponent<double>(1023));
-
-//
-
 template <typename T, bool = true>
 class limits
 {
         static_assert(std::numeric_limits<T>::is_specialized);
+        static_assert(std::is_integral_v<T> || std::is_floating_point_v<T>);
 
 public:
         template <typename A = T>
@@ -176,23 +158,6 @@ public:
         }
         static constexpr int digits = 113;
 };
-
-static_assert(limits<double>::epsilon() == std::numeric_limits<double>::epsilon());
-static_assert(limits<double>::max() == std::numeric_limits<double>::max());
-static_assert(limits<double>::lowest() == std::numeric_limits<double>::lowest());
-static_assert(limits<double>::digits == std::numeric_limits<double>::digits);
-
-static_assert(limits<unsigned __int128>::max() > 0);
-static_assert(limits<unsigned __int128>::max() == (((static_cast<unsigned __int128>(1) << 127) - 1) << 1) + 1);
-static_assert(limits<unsigned __int128>::max() + 1 == 0);
-static_assert(limits<unsigned __int128>::max() == static_cast<unsigned __int128>(-1));
-static_assert(limits<unsigned __int128>::lowest() == 0);
-
-static_assert(limits<signed __int128>::max() > 0);
-static_assert(limits<signed __int128>::lowest() < 0);
-static_assert(static_cast<unsigned __int128>(limits<signed __int128>::max()) == limits<unsigned __int128>::max() >> 1);
-static_assert((static_cast<unsigned __int128>(1) << 127) == static_cast<unsigned __int128>(limits<signed __int128>::max()) + 1);
-static_assert(limits<signed __int128>::lowest() + 1 + limits<signed __int128>::max() == 0);
 }
 
 //
