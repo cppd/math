@@ -49,127 +49,146 @@ std::tuple<Vector<N, T>, T> center_and_length_for_min_max(const Vector<N, T>& mi
 
         return {center, len};
 }
+
+template <typename T>
+std::vector<T> to_vector(const std::unordered_set<T>& set)
+{
+        std::vector<T> vector;
+        vector.reserve(set.size());
+        for (const T& v : set)
+        {
+                vector.push_back(v);
+        }
+        return vector;
 }
 
-std::vector<int> get_unique_face_indices(const std::vector<IObj::face3>& faces)
+template <size_t N, typename T>
+void initial_min_max(Vector<N, T>* min, Vector<N, T>* max)
 {
-        std::unordered_set<int> unique_face_vertices;
+        *min = Vector<N, T>(limits<T>::max());
+        *max = Vector<N, T>(limits<T>::lowest());
+}
+}
+
+std::vector<int> unique_face_indices(const std::vector<IObj::face3>& faces)
+{
+        std::unordered_set<int> indices(faces.size());
 
         for (const IObj::face3& face : faces)
         {
-                for (int i = 0; i < 3; ++i)
+                for (const IObj::vertex& vertex : face.vertices)
                 {
-                        unique_face_vertices.insert(face.vertices[i].v);
+                        int index = vertex.v;
+                        indices.insert(index);
                 }
         }
 
-        std::vector<int> indices;
-        indices.reserve(unique_face_vertices.size());
-
-        for (int i : unique_face_vertices)
-        {
-                indices.push_back(i);
-        }
-
-        return indices;
+        return to_vector(indices);
 }
 
-std::vector<int> get_unique_point_indices(const std::vector<int>& points)
+std::vector<int> unique_line_indices(const std::vector<IObj::line>& lines)
 {
-        std::unordered_set<int> unique_point_vertices;
+        std::unordered_set<int> indices(lines.size());
 
-        for (int point : points)
+        for (const IObj::line& line : lines)
         {
-                unique_point_vertices.insert(point);
+                for (int index : line.vertices)
+                {
+                        indices.insert(index);
+                }
         }
 
-        std::vector<int> indices;
-        indices.reserve(unique_point_vertices.size());
-
-        for (int i : unique_point_vertices)
-        {
-                indices.push_back(i);
-        }
-
-        return indices;
+        return to_vector(indices);
 }
 
-std::vector<int> get_unique_line_indices(const std::vector<std::array<int, 2>>& lines)
+std::vector<int> unique_point_indices(const std::vector<int>& points)
 {
-        std::unordered_set<int> unique_line_vertices;
+        std::unordered_set<int> indices(points.size());
 
-        for (const std::array<int, 2>& line : lines)
+        for (int index : points)
         {
-                unique_line_vertices.insert(line[0]);
-                unique_line_vertices.insert(line[1]);
+                indices.insert(index);
         }
 
-        std::vector<int> indices;
-        indices.reserve(unique_line_vertices.size());
-
-        for (int i : unique_line_vertices)
-        {
-                indices.push_back(i);
-        }
-
-        return indices;
+        return to_vector(indices);
 }
 
-std::vector<vec3f> get_unique_face_vertices(const IObj* obj)
+std::vector<vec3f> unique_face_vertices(const IObj* obj)
 {
-        std::unordered_set<vec3f> unique_face_vertices(obj->get_vertices().size());
+        int vertex_count = obj->get_vertices().size();
+
+        std::unordered_set<vec3f> vertices(obj->get_vertices().size());
 
         for (const IObj::face3& face : obj->get_faces())
         {
-                for (int i = 0; i < 3; ++i)
+                for (const IObj::vertex& vertex : face.vertices)
                 {
-                        unique_face_vertices.insert(obj->get_vertices()[face.vertices[i].v]);
+                        int index = vertex.v;
+
+                        if (index < 0 || index >= vertex_count)
+                        {
+                                error("Face vertex index out of bounds");
+                        }
+
+                        vertices.insert(obj->get_vertices()[index]);
                 }
         }
 
-        std::vector<vec3f> vertices;
-        vertices.reserve(unique_face_vertices.size());
-
-        for (vec3f i : unique_face_vertices)
-        {
-                vertices.push_back(i);
-        }
-
-        return vertices;
+        return to_vector(vertices);
 }
 
-std::vector<vec3f> get_unique_point_vertices(const IObj* obj)
+std::vector<vec3f> unique_line_vertices(const IObj* obj)
 {
-        std::unordered_set<vec3f> unique_point_vertices(obj->get_points().size());
+        int vertex_count = obj->get_vertices().size();
 
-        for (int point : obj->get_points())
+        std::unordered_set<vec3f> vertices(obj->get_lines().size());
+
+        for (const IObj::line& line : obj->get_lines())
         {
-                unique_point_vertices.insert(obj->get_vertices()[point]);
+                for (int index : line.vertices)
+                {
+                        if (index < 0 || index >= vertex_count)
+                        {
+                                error("Line vertex index out of bounds");
+                        }
+
+                        vertices.insert(obj->get_vertices()[index]);
+                }
         }
 
-        std::vector<vec3f> vertices;
-        vertices.reserve(unique_point_vertices.size());
-
-        for (vec3f i : unique_point_vertices)
-        {
-                vertices.push_back(i);
-        }
-
-        return vertices;
+        return to_vector(vertices);
 }
 
-void find_min_max(const std::vector<vec3f>& vertices, const std::vector<int>& indices, vec3f* min, vec3f* max)
+std::vector<vec3f> unique_point_vertices(const IObj* obj)
 {
-        int max_index = static_cast<int>(vertices.size()) - 1;
+        int vertex_count = obj->get_vertices().size();
 
-        *min = vec3f(std::numeric_limits<float>::max());
-        *max = vec3f(std::numeric_limits<float>::lowest());
+        std::unordered_set<vec3f> vertices(obj->get_points().size());
+
+        for (int index : obj->get_points())
+        {
+                if (index < 0 || index >= vertex_count)
+                {
+                        error("Vertex index out of bounds");
+                }
+
+                vertices.insert(obj->get_vertices()[index]);
+        }
+
+        return to_vector(vertices);
+}
+
+void min_max_coordinates(const std::vector<vec3f>& vertices, const std::vector<int>& indices, vec3f* min, vec3f* max)
+{
+        int vertex_count = vertices.size();
+
+        initial_min_max(min, max);
 
         for (int index : indices)
         {
-                if (index < 0 || index > max_index)
+                if (index < 0 || index >= vertex_count)
                 {
-                        error("Vertex index out of bound");
+                        error("Vertex index out of bounds");
                 }
 
                 *min = min_vector(*min, vertices[index]);
@@ -177,10 +196,9 @@ void find_min_max(const std::vector<vec3f>& vertices, const std::vector<int>& in
         }
 }
 
-void find_min_max(const std::vector<vec3f>& vertices, vec3f* min, vec3f* max)
+void min_max_coordinates(const std::vector<vec3f>& vertices, vec3f* min, vec3f* max)
 {
-        *min = vec3f(std::numeric_limits<float>::max());
-        *max = vec3f(std::numeric_limits<float>::lowest());
+        initial_min_max(min, max);
 
         for (const vec3f& v : vertices)
         {
@@ -189,18 +207,18 @@ void find_min_max(const std::vector<vec3f>& vertices, vec3f* min, vec3f* max)
         }
 }
 
-void find_center_and_length(const std::vector<vec3f>& vertices, const std::vector<IObj::face3>& faces, vec3f* center,
-                            float* length)
+void center_and_length(const std::vector<vec3f>& vertices, const std::vector<IObj::face3>& faces, vec3f* center, float* length)
 {
         if (faces.size() < 1)
         {
                 error("No faces");
         }
 
-        int max_index = static_cast<int>(vertices.size()) - 1;
+        int vertex_count = vertices.size();
 
-        vec3f min = vec3f(std::numeric_limits<float>::max());
-        vec3f max = vec3f(std::numeric_limits<float>::lowest());
+        vec3f min, max;
+
+        initial_min_max(&min, &max);
 
         for (const IObj::face3& face : faces)
         {
@@ -208,9 +226,9 @@ void find_center_and_length(const std::vector<vec3f>& vertices, const std::vecto
                 {
                         int index = vertex.v;
 
-                        if (index < 0 || index > max_index)
+                        if (index < 0 || index >= vertex_count)
                         {
-                                error("Face vertex index out of bound");
+                                error("Face vertex index out of bounds");
                         }
 
                         min = min_vector(min, vertices[index]);
@@ -221,26 +239,26 @@ void find_center_and_length(const std::vector<vec3f>& vertices, const std::vecto
         std::tie(*center, *length) = center_and_length_for_min_max(min, max);
 }
 
-void find_center_and_length(const std::vector<vec3f>& vertices, const std::vector<std::array<int, 2>>& lines, vec3f* center,
-                            float* length)
+void center_and_length(const std::vector<vec3f>& vertices, const std::vector<IObj::line>& lines, vec3f* center, float* length)
 {
         if (lines.size() < 1)
         {
                 error("No lines");
         }
 
-        int max_index = static_cast<int>(vertices.size()) - 1;
+        int vertex_count = vertices.size();
 
-        vec3f min = vec3f(std::numeric_limits<float>::max());
-        vec3f max = vec3f(std::numeric_limits<float>::lowest());
+        vec3f min, max;
 
-        for (const std::array<int, 2>& line : lines)
+        initial_min_max(&min, &max);
+
+        for (const IObj::line& line : lines)
         {
-                for (int index : line)
+                for (int index : line.vertices)
                 {
-                        if (index < 0 || index > max_index)
+                        if (index < 0 || index >= vertex_count)
                         {
-                                error("Line vertex index out of bound");
+                                error("Line vertex index out of bounds");
                         }
 
                         min = min_vector(min, vertices[index]);
@@ -251,7 +269,7 @@ void find_center_and_length(const std::vector<vec3f>& vertices, const std::vecto
         std::tie(*center, *length) = center_and_length_for_min_max(min, max);
 }
 
-void find_center_and_length(const std::vector<vec3f>& vertices, const std::vector<int>& points, vec3f* center, float* length)
+void center_and_length(const std::vector<vec3f>& vertices, const std::vector<int>& points, vec3f* center, float* length)
 {
         if (points.size() < 1)
         {
@@ -260,12 +278,12 @@ void find_center_and_length(const std::vector<vec3f>& vertices, const std::vecto
 
         vec3f min, max;
 
-        find_min_max(vertices, points, &min, &max);
+        min_max_coordinates(vertices, points, &min, &max);
 
         std::tie(*center, *length) = center_and_length_for_min_max(min, max);
 }
 
-void find_center_and_length(const std::vector<vec3f>& vertices, vec3f* center, float* length)
+void center_and_length(const std::vector<vec3f>& vertices, vec3f* center, float* length)
 {
         if (vertices.size() < 1)
         {
@@ -274,12 +292,12 @@ void find_center_and_length(const std::vector<vec3f>& vertices, vec3f* center, f
 
         vec3f min, max;
 
-        find_min_max(vertices, &min, &max);
+        min_max_coordinates(vertices, &min, &max);
 
         std::tie(*center, *length) = center_and_length_for_min_max(min, max);
 }
 
-mat4 get_model_vertex_matrix(const IObj* obj, double size, const vec3& position)
+mat4 model_vertex_matrix(const IObj* obj, double size, const vec3& position)
 {
         mat4 m_to_center = translate(to_vector<double>(-obj->get_center()));
         mat4 m_scale = scale(vec3(size / obj->get_length()));

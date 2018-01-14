@@ -47,7 +47,7 @@ class ConvexHullObj final : public IObj
         std::vector<vec3f> m_normals;
         std::vector<face3> m_faces;
         std::vector<int> m_points;
-        std::vector<std::array<int, 2>> m_lines;
+        std::vector<line> m_lines;
         std::vector<material> m_materials;
         std::vector<image> m_images;
         vec3f m_center;
@@ -73,7 +73,7 @@ class ConvexHullObj final : public IObj
         {
                 return m_points;
         }
-        const std::vector<std::array<int, 2>>& get_lines() const override
+        const std::vector<line>& get_lines() const override
         {
                 return m_lines;
         }
@@ -152,7 +152,7 @@ class ConvexHullObj final : public IObj
                         m_faces.push_back(std::move(face));
                 }
 
-                find_center_and_length(m_vertices, m_faces, &m_center, &m_length);
+                center_and_length(m_vertices, m_faces, &m_center, &m_length);
         }
 
 public:
@@ -162,11 +162,11 @@ public:
 
                 if (obj->get_faces().size() > 0)
                 {
-                        points = get_unique_face_vertices(obj);
+                        points = unique_face_vertices(obj);
                 }
                 else if (obj->get_points().size() > 0)
                 {
-                        points = get_unique_point_vertices(obj);
+                        points = unique_point_vertices(obj);
                 }
                 else
                 {

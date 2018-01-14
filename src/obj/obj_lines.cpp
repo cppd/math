@@ -36,7 +36,7 @@ class Lines final : public IObj
         std::vector<vec3f> m_normals;
         std::vector<face3> m_faces;
         std::vector<int> m_points;
-        std::vector<std::array<int, 2>> m_lines;
+        std::vector<line> m_lines;
         std::vector<material> m_materials;
         std::vector<image> m_images;
         vec3f m_center;
@@ -62,7 +62,7 @@ class Lines final : public IObj
         {
                 return m_points;
         }
-        const std::vector<std::array<int, 2>>& get_lines() const override
+        const std::vector<line>& get_lines() const override
         {
                 return m_lines;
         }
@@ -92,10 +92,10 @@ class Lines final : public IObj
 
                 std::unordered_set<int> vertices;
 
-                for (const std::array<int, 2>& line : lines)
+                for (const std::array<int, 2>& line_indices : lines)
                 {
-                        vertices.insert(line[0]);
-                        vertices.insert(line[1]);
+                        vertices.insert(line_indices[0]);
+                        vertices.insert(line_indices[1]);
                 }
 
                 m_vertices.resize(vertices.size());
@@ -114,12 +114,17 @@ class Lines final : public IObj
 
                 m_lines.reserve(lines.size());
 
-                for (const std::array<int, 2>& line : lines)
+                for (const std::array<int, 2>& line_indices : lines)
                 {
-                        m_lines.push_back({{index_map[line[0]], index_map[line[1]]}});
+                        line l;
+
+                        l.vertices[0] = index_map[line_indices[0]];
+                        l.vertices[1] = index_map[line_indices[1]];
+
+                        m_lines.push_back(std::move(l));
                 }
 
-                find_center_and_length(m_vertices, m_lines, &m_center, &m_length);
+                center_and_length(m_vertices, m_lines, &m_center, &m_length);
         }
 
 public:

@@ -59,7 +59,7 @@ void write_comment(const CFile& file, const std::string& comment)
 // Запись вершин с приведением координат вершин граней к интервалу [-1, 1] с сохранением пропорций
 void write_vertices(const CFile& file, const IObj* obj)
 {
-        std::vector<int> indices = get_unique_face_indices(obj->get_faces());
+        std::vector<int> indices = unique_face_indices(obj->get_faces());
 
         if (indices.size() < 3)
         {
@@ -68,7 +68,7 @@ void write_vertices(const CFile& file, const IObj* obj)
 
         vec3f min, max;
 
-        find_min_max(obj->get_vertices(), indices, &min, &max);
+        min_max_coordinates(obj->get_vertices(), indices, &min, &max);
 
         vec3 delta = to_vector<double>(max - min);
 

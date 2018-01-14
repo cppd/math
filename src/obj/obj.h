@@ -44,6 +44,10 @@ struct IObj
                 float Ns{1};
                 int map_Ka{-1}, map_Kd{-1}, map_Ks{-1}; // -1 если нет текстуры
         };
+        struct line
+        {
+                std::array<int, 2> vertices;
+        };
         struct image
         {
                 int dimensions[2];
@@ -57,7 +61,7 @@ struct IObj
         virtual const std::vector<vec3f>& get_normals() const = 0;
         virtual const std::vector<face3>& get_faces() const = 0;
         virtual const std::vector<int>& get_points() const = 0;
-        virtual const std::vector<std::array<int, 2>>& get_lines() const = 0;
+        virtual const std::vector<line>& get_lines() const = 0;
         virtual const std::vector<material>& get_materials() const = 0;
         virtual const std::vector<image>& get_images() const = 0;
         virtual vec3f get_center() const = 0;

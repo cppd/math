@@ -35,7 +35,7 @@ class Points final : public IObj
         std::vector<vec3f> m_normals;
         std::vector<face3> m_faces;
         std::vector<int> m_points;
-        std::vector<std::array<int, 2>> m_lines;
+        std::vector<line> m_lines;
         std::vector<material> m_materials;
         std::vector<image> m_images;
         vec3f m_center;
@@ -63,7 +63,7 @@ class Points final : public IObj
         {
                 return m_points;
         }
-        const std::vector<std::array<int, 2>>& get_lines() const override
+        const std::vector<line>& get_lines() const override
         {
                 return m_lines;
         }
@@ -100,7 +100,7 @@ void Points::read_points(std::vector<vec3f>&& points)
         m_points.resize(m_vertices.size());
         std::iota(m_points.begin(), m_points.end(), 0);
 
-        find_center_and_length(m_vertices, m_points, &m_center, &m_length);
+        center_and_length(m_vertices, m_points, &m_center, &m_length);
 }
 
 Points::Points(std::vector<vec3f>&& points)

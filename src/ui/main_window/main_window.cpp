@@ -605,10 +605,10 @@ void MainWindow::thread_open_object(ProgressRatioList* progress_ratio_list, cons
 
                 m_event_emitter.file_loaded(object_name);
 
-                m_surface_points = (obj->get_faces().size() > 0) ? get_unique_face_vertices(obj.get()) :
-                                                                   get_unique_point_vertices(obj.get());
+                m_surface_points =
+                        (obj->get_faces().size() > 0) ? unique_face_vertices(obj.get()) : unique_point_vertices(obj.get());
 
-                m_model_vertex_matrix = get_model_vertex_matrix(obj.get(), m_mesh_object_size, m_mesh_object_position);
+                m_model_vertex_matrix = model_vertex_matrix(obj.get(), m_mesh_object_size, m_mesh_object_position);
 
                 std::thread model([=]() noexcept { thread_add_object(progress_ratio_list, AddObjectType::Model, obj); });
                 std::thread surface([=]() noexcept { thread_surface_constructor(progress_ratio_list); });

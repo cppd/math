@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -63,7 +63,7 @@ public:
 
                 std::unique_ptr<IObj> obj_file = load_obj_from_file(obj_file_name, &progress);
 
-                mat4 vertex_matrix = get_model_vertex_matrix(obj_file.get(), size, vec3(0));
+                mat4 vertex_matrix = model_vertex_matrix(obj_file.get(), size, vec3(0));
 
                 std::shared_ptr mesh =
                         std::make_shared<Mesh>(obj_file.get(), vertex_matrix, get_hardware_concurrency(), &progress);

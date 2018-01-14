@@ -180,17 +180,19 @@ void load_point_vertices(const IObj& obj, std::vector<PointVertex>* vertices)
 
 void load_line_vertices(const IObj& obj, std::vector<PointVertex>* vertices)
 {
-        const std::vector<std::array<int, 2>>& obj_lines = obj.get_lines();
+        const std::vector<IObj::line>& obj_lines = obj.get_lines();
         const std::vector<vec3f>& obj_vertices = obj.get_vertices();
 
         vertices->clear();
         vertices->shrink_to_fit();
         vertices->reserve(obj_lines.size() * 2);
 
-        for (auto & [ p1, p2 ] : obj_lines)
+        for (const IObj::line& line : obj_lines)
         {
-                vertices->emplace_back(obj_vertices[p1]);
-                vertices->emplace_back(obj_vertices[p2]);
+                for (int index : line.vertices)
+                {
+                        vertices->emplace_back(obj_vertices[index]);
+                }
         }
 }
 
@@ -281,7 +283,7 @@ public:
 };
 
 DrawObject::DrawObject(const IObj* obj, const ColorSpaceConverter& color_converter, double size, const vec3& position)
-        : m_model_matrix(get_model_vertex_matrix(obj, size, position)), m_draw_type(calculate_draw_type_from_obj(obj))
+        : m_model_matrix(model_vertex_matrix(obj, size, position)), m_draw_type(calculate_draw_type_from_obj(obj))
 {
         if (m_draw_type == DrawType::TRIANGLES)
         {

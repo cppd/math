@@ -729,7 +729,7 @@ class FileObj final : public IObj
         std::vector<vec3f> m_normals;
         std::vector<face3> m_faces;
         std::vector<int> m_points;
-        std::vector<std::array<int, 2>> m_lines;
+        std::vector<line> m_lines;
         std::vector<material> m_materials;
         std::vector<image> m_images;
         vec3f m_center;
@@ -831,7 +831,7 @@ class FileObj final : public IObj
         {
                 return m_points;
         }
-        const std::vector<std::array<int, 2>>& get_lines() const override
+        const std::vector<line>& get_lines() const override
         {
                 return m_lines;
         }
@@ -1365,7 +1365,7 @@ void FileObj::read_obj_and_mtl(const std::string& file_name, ProgressRatio* prog
 
         check_face_indices();
 
-        find_center_and_length(m_vertices, m_faces, &m_center, &m_length);
+        center_and_length(m_vertices, m_faces, &m_center, &m_length);
 
         if (remove_one_dimensional_faces())
         {
@@ -1373,7 +1373,7 @@ void FileObj::read_obj_and_mtl(const std::string& file_name, ProgressRatio* prog
                 {
                         error("No 2D faces found in OBJ file");
                 }
-                find_center_and_length(m_vertices, m_faces, &m_center, &m_length);
+                center_and_length(m_vertices, m_faces, &m_center, &m_length);
         }
 
         read_libs(get_dir_name(file_name), progress, &material_index, library_names);
@@ -1398,7 +1398,7 @@ class FileTxt final : public IObj
         std::vector<vec3f> m_normals;
         std::vector<face3> m_faces;
         std::vector<int> m_points;
-        std::vector<std::array<int, 2>> m_lines;
+        std::vector<line> m_lines;
         std::vector<material> m_materials;
         std::vector<image> m_images;
         vec3f m_center;
@@ -1435,7 +1435,7 @@ class FileTxt final : public IObj
         {
                 return m_points;
         }
-        const std::vector<std::array<int, 2>>& get_lines() const override
+        const std::vector<line>& get_lines() const override
         {
                 return m_lines;
         }
@@ -1464,13 +1464,13 @@ void FileTxt::read_points_th(const ThreadData* thread_data, std::string* file_pt
                              std::vector<vec3f>* lines, ProgressRatio* progress) const
 {
         const size_t line_count = line_begin->size();
-        const double line_count_d = line_begin->size();
+        const double line_count_reciprocal = 1.0 / line_begin->size();
 
         for (size_t line_num = thread_data->thread_num; line_num < line_count; line_num += thread_data->thread_count)
         {
                 if ((line_num & 0xfff) == 0xfff)
                 {
-                        progress->set(line_num / line_count_d);
+                        progress->set(line_num * line_count_reciprocal);
                 }
 
                 size_t l_b = (*line_begin)[line_num];
@@ -1528,7 +1528,7 @@ void FileTxt::read_text(const std::string& file_name, ProgressRatio* progress)
         m_points.resize(m_vertices.size());
         std::iota(m_points.begin(), m_points.end(), 0);
 
-        find_center_and_length(m_vertices, m_points, &m_center, &m_length);
+        center_and_length(m_vertices, m_points, &m_center, &m_length);
 }
 
 FileTxt::FileTxt(const std::string& file_name, ProgressRatio* progress)
