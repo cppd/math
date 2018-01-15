@@ -59,7 +59,7 @@ void write_comment(const CFile& file, const std::string& comment)
 // Запись вершин с приведением координат вершин граней к интервалу [-1, 1] с сохранением пропорций
 void write_vertices(const CFile& file, const IObj* obj)
 {
-        std::vector<int> indices = unique_face_indices(obj->get_faces());
+        std::vector<int> indices = unique_face_indices(obj->faces());
 
         if (indices.size() < 3)
         {
@@ -68,7 +68,7 @@ void write_vertices(const CFile& file, const IObj* obj)
 
         vec3f min, max;
 
-        min_max_coordinates(obj->get_vertices(), indices, &min, &max);
+        min_max_coordinates(obj->vertices(), indices, &min, &max);
 
         vec3 delta = to_vector<double>(max - min);
 
@@ -76,7 +76,7 @@ void write_vertices(const CFile& file, const IObj* obj)
 
         if (max_delta == 0)
         {
-                for (const vec3f& v : obj->get_vertices())
+                for (const vec3f& v : obj->vertices())
                 {
                         fprintf(file, VERTEX_FORMAT, v[0], v[1], v[2]);
                 }
@@ -87,7 +87,7 @@ void write_vertices(const CFile& file, const IObj* obj)
 
                 vec3 center = to_vector<double>(min) + 0.5 * delta;
 
-                for (const vec3f& v : obj->get_vertices())
+                for (const vec3f& v : obj->vertices())
                 {
                         vec3 vertex = (to_vector<double>(v) - center) * scale_factor;
                         fprintf(file, VERTEX_FORMAT, vertex[0], vertex[1], vertex[2]);
@@ -97,7 +97,7 @@ void write_vertices(const CFile& file, const IObj* obj)
 
 void write_normals(const CFile& file, const IObj* obj)
 {
-        for (const vec3f& vn : obj->get_normals())
+        for (const vec3f& vn : obj->normals())
         {
                 vec3 normal = to_vector<double>(vn);
                 double len = length(normal);
@@ -117,43 +117,46 @@ void write_faces(const CFile& file, const IObj* obj)
         // В данной модели нет перпендикуляров у граней, есть только у вершин, поэтому нужно попытаться
         // определить правильное направление по векторам вершин, если у вершин они заданы.
 
-        for (const IObj::face3& f : obj->get_faces())
+        for (const IObj::Face& f : obj->faces())
         {
-                if (f.has_vn)
+                if (f.has_normal)
                 {
                         // В файлах OBJ номера начинаются с 1
+
                         long v0 = f.vertices[0].v + 1;
-                        long vn0 = f.vertices[0].vn + 1;
+                        long n0 = f.vertices[0].n + 1;
+
                         long v1 = f.vertices[1].v + 1;
-                        long vn1 = f.vertices[1].vn + 1;
+                        long n1 = f.vertices[1].n + 1;
+
                         long v2 = f.vertices[2].v + 1;
-                        long vn2 = f.vertices[2].vn + 1;
+                        long n2 = f.vertices[2].n + 1;
 
                         // Перпендикуляр к грани при обходе вершин против часовой стрелки
                         // и противоположно направлению взгляда
-                        vec3 n = cross(to_vector<double>(obj->get_vertices()[v1 - 1] - obj->get_vertices()[v0 - 1]),
-                                       to_vector<double>(obj->get_vertices()[v2 - 1] - obj->get_vertices()[v0 - 1]));
+                        vec3 n = cross(to_vector<double>(obj->vertices()[v1 - 1] - obj->vertices()[v0 - 1]),
+                                       to_vector<double>(obj->vertices()[v2 - 1] - obj->vertices()[v0 - 1]));
 
-                        double sign0 = dot(to_vector<double>(obj->get_normals()[vn0 - 1]), n);
-                        double sign1 = dot(to_vector<double>(obj->get_normals()[vn1 - 1]), n);
-                        double sign2 = dot(to_vector<double>(obj->get_normals()[vn2 - 1]), n);
+                        double sign0 = dot(to_vector<double>(obj->normals()[n0 - 1]), n);
+                        double sign1 = dot(to_vector<double>(obj->normals()[n1 - 1]), n);
+                        double sign2 = dot(to_vector<double>(obj->normals()[n2 - 1]), n);
 
                         if (sign0 > 0 && sign1 > 0 && sign2 > 0)
                         {
                                 // Если перпендикуляр в одном направлении со всеми векторами вершин,
                                 // то сохраняется порядок вершин
-                                fprintf(file, "f %ld//%ld %ld//%ld %ld//%ld\n", v0, vn0, v1, vn1, v2, vn2);
+                                fprintf(file, "f %ld//%ld %ld//%ld %ld//%ld\n", v0, n0, v1, n1, v2, n2);
                         }
                         else if (sign0 < 0 && sign1 < 0 && sign2 < 0)
                         {
                                 // Если перпендикуляр в противоположном направлении со всеми векторами вершин,
                                 // то меняется порядок вершин
-                                fprintf(file, "f %ld//%ld %ld//%ld %ld//%ld\n", v0, vn0, v2, vn2, v1, vn1);
+                                fprintf(file, "f %ld//%ld %ld//%ld %ld//%ld\n", v0, n0, v2, n2, v1, n1);
                         }
                         else
                         {
                                 // Не удалось определить, поэтому вершины записываются в произвольном порядке
-                                fprintf(file, "f %ld//%ld %ld//%ld %ld//%ld\n", v0, vn0, v1, vn1, v2, vn2);
+                                fprintf(file, "f %ld//%ld %ld//%ld %ld//%ld\n", v0, n0, v1, n1, v2, n2);
                         }
                 }
                 else
@@ -170,7 +173,7 @@ void write_faces(const CFile& file, const IObj* obj)
 
 void save_obj_geometry_to_file(const IObj* obj, const std::string& file_name, const std::string& comment)
 {
-        if (obj->get_faces().size() == 0)
+        if (obj->faces().size() == 0)
         {
                 error("Object doesn't have faces");
         }

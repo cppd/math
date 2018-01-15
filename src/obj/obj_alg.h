@@ -21,20 +21,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/mat.h"
 
-std::vector<int> unique_face_indices(const std::vector<IObj::face3>& faces);
-std::vector<int> unique_line_indices(const std::vector<IObj::line>& lines);
-std::vector<int> unique_point_indices(const std::vector<int>& points);
+std::vector<int> unique_face_indices(const std::vector<IObj::Face>& faces);
+std::vector<int> unique_line_indices(const std::vector<IObj::Line>& lines);
+std::vector<int> unique_point_indices(const std::vector<IObj::Point>& points);
 
 std::vector<vec3f> unique_face_vertices(const IObj* obj);
 std::vector<vec3f> unique_line_vertices(const IObj* obj);
 std::vector<vec3f> unique_point_vertices(const IObj* obj);
 
-void min_max_coordinates(const std::vector<vec3f>& vertices, const std::vector<int>& indices, vec3f* min, vec3f* max);
-void min_max_coordinates(const std::vector<vec3f>& vertices, vec3f* min, vec3f* max);
+void center_and_length(const std::vector<vec3f>& vertices, const std::vector<IObj::Face>& faces, vec3f* center, float* length);
+void center_and_length(const std::vector<vec3f>& vertices, const std::vector<IObj::Line>& lines, vec3f* center, float* length);
+void center_and_length(const std::vector<vec3f>& vertices, const std::vector<IObj::Point>& points, vec3f* center, float* length);
 
-void center_and_length(const std::vector<vec3f>& vertices, const std::vector<IObj::face3>& faces, vec3f* center, float* length);
-void center_and_length(const std::vector<vec3f>& vertices, const std::vector<IObj::line>& lines, vec3f* center, float* length);
-void center_and_length(const std::vector<vec3f>& vertices, const std::vector<int>& points, vec3f* center, float* length);
-void center_and_length(const std::vector<vec3f>& vertices, vec3f* center, float* length);
+void min_max_coordinates(const std::vector<vec3f>& vertices, const std::vector<int>& indices, vec3f* min, vec3f* max);
 
 mat4 model_vertex_matrix(const IObj* obj, double size, const vec3& position);

@@ -33,53 +33,53 @@ constexpr int OCTREE_MIN_OBJECTS = 10;
 
 void Mesh::create_mesh_object(const IObj* obj, const mat4& vertex_matrix, unsigned thread_count, ProgressRatio* progress)
 {
-        if (obj->get_vertices().size() == 0)
+        if (obj->vertices().size() == 0)
         {
                 error("No vertices found in obj");
         }
 
-        if (obj->get_faces().size() == 0)
+        if (obj->faces().size() == 0)
         {
                 error("No faces found in obj");
         }
 
-        m_vertices = to_vector<double>(obj->get_vertices());
+        m_vertices = to_vector<double>(obj->vertices());
         m_vertices.shrink_to_fit();
         std::transform(m_vertices.begin(), m_vertices.end(), m_vertices.begin(), MatrixMulVector<double>(vertex_matrix));
 
-        m_normals = to_vector<double>(obj->get_normals());
+        m_normals = to_vector<double>(obj->normals());
         m_normals.shrink_to_fit();
 
-        m_texcoords = to_vector<double>(obj->get_texcoords());
+        m_texcoords = to_vector<double>(obj->texcoords());
         m_texcoords.shrink_to_fit();
 
-        m_triangles.reserve(obj->get_faces().size());
-        for (const IObj::face3& face : obj->get_faces())
+        m_triangles.reserve(obj->faces().size());
+        for (const IObj::Face& face : obj->faces())
         {
                 int v0 = face.vertices[0].v;
                 int v1 = face.vertices[1].v;
                 int v2 = face.vertices[2].v;
 
-                int vn0 = face.vertices[0].vn;
-                int vn1 = face.vertices[1].vn;
-                int vn2 = face.vertices[2].vn;
+                int n0 = face.vertices[0].n;
+                int n1 = face.vertices[1].n;
+                int n2 = face.vertices[2].n;
 
-                int vt0 = face.vertices[0].vt;
-                int vt1 = face.vertices[1].vt;
-                int vt2 = face.vertices[2].vt;
+                int t0 = face.vertices[0].t;
+                int t1 = face.vertices[1].t;
+                int t2 = face.vertices[2].t;
 
-                m_triangles.emplace_back(m_vertices.data(), m_normals.data(), m_texcoords.data(), v0, v1, v2, face.has_vn, vn0,
-                                         vn1, vn2, face.has_vt, vt0, vt1, vt2, face.material);
+                m_triangles.emplace_back(m_vertices.data(), m_normals.data(), m_texcoords.data(), v0, v1, v2, face.has_normal, n0,
+                                         n1, n2, face.has_texcoord, t0, t1, t2, face.material);
         }
 
-        m_materials.reserve(obj->get_materials().size());
-        for (const IObj::material& m : obj->get_materials())
+        m_materials.reserve(obj->materials().size());
+        for (const IObj::Material& m : obj->materials())
         {
                 m_materials.emplace_back(to_vector<double>(m.Kd), to_vector<double>(m.Ks), m.Ns, m.map_Kd, m.map_Ks);
         }
 
-        m_images.reserve(obj->get_images().size());
-        for (const IObj::image& image : obj->get_images())
+        m_images.reserve(obj->images().size());
+        for (const IObj::Image& image : obj->images())
         {
                 m_images.emplace_back(image.dimensions[0], image.dimensions[1], image.srgba_pixels);
         }

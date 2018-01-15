@@ -24,8 +24,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/print.h"
 #include "com/time.h"
 
-#include <numeric>
-
 namespace
 {
 class Points final : public IObj
@@ -33,53 +31,53 @@ class Points final : public IObj
         std::vector<vec3f> m_vertices;
         std::vector<vec2f> m_texcoords;
         std::vector<vec3f> m_normals;
-        std::vector<face3> m_faces;
-        std::vector<int> m_points;
-        std::vector<line> m_lines;
-        std::vector<material> m_materials;
-        std::vector<image> m_images;
+        std::vector<Face> m_faces;
+        std::vector<Point> m_points;
+        std::vector<Line> m_lines;
+        std::vector<Material> m_materials;
+        std::vector<Image> m_images;
         vec3f m_center;
         float m_length;
 
         void read_points(std::vector<vec3f>&& points);
 
-        const std::vector<vec3f>& get_vertices() const override
+        const std::vector<vec3f>& vertices() const override
         {
                 return m_vertices;
         }
-        const std::vector<vec2f>& get_texcoords() const override
+        const std::vector<vec2f>& texcoords() const override
         {
                 return m_texcoords;
         }
-        const std::vector<vec3f>& get_normals() const override
+        const std::vector<vec3f>& normals() const override
         {
                 return m_normals;
         }
-        const std::vector<face3>& get_faces() const override
+        const std::vector<Face>& faces() const override
         {
                 return m_faces;
         }
-        const std::vector<int>& get_points() const override
+        const std::vector<Point>& points() const override
         {
                 return m_points;
         }
-        const std::vector<line>& get_lines() const override
+        const std::vector<Line>& lines() const override
         {
                 return m_lines;
         }
-        const std::vector<material>& get_materials() const override
+        const std::vector<Material>& materials() const override
         {
                 return m_materials;
         }
-        const std::vector<image>& get_images() const override
+        const std::vector<Image>& images() const override
         {
                 return m_images;
         }
-        vec3f get_center() const override
+        vec3f center() const override
         {
                 return m_center;
         }
-        float get_length() const override
+        float length() const override
         {
                 return m_length;
         }
@@ -98,7 +96,10 @@ void Points::read_points(std::vector<vec3f>&& points)
         }
 
         m_points.resize(m_vertices.size());
-        std::iota(m_points.begin(), m_points.end(), 0);
+        for (unsigned i = 0; i < m_points.size(); ++i)
+        {
+                m_points[i].vertex = i;
+        }
 
         center_and_length(m_vertices, m_points, &m_center, &m_length);
 }

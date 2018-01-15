@@ -49,51 +49,51 @@ class SurfaceObj final : public IObj
         std::vector<vec3f> m_vertices;
         std::vector<vec2f> m_texcoords;
         std::vector<vec3f> m_normals;
-        std::vector<face3> m_faces;
-        std::vector<int> m_points;
-        std::vector<line> m_lines;
-        std::vector<material> m_materials;
-        std::vector<image> m_images;
+        std::vector<Face> m_faces;
+        std::vector<Point> m_points;
+        std::vector<Line> m_lines;
+        std::vector<Material> m_materials;
+        std::vector<Image> m_images;
         vec3f m_center;
         float m_length;
 
-        const std::vector<vec3f>& get_vertices() const override
+        const std::vector<vec3f>& vertices() const override
         {
                 return m_vertices;
         }
-        const std::vector<vec2f>& get_texcoords() const override
+        const std::vector<vec2f>& texcoords() const override
         {
                 return m_texcoords;
         }
-        const std::vector<vec3f>& get_normals() const override
+        const std::vector<vec3f>& normals() const override
         {
                 return m_normals;
         }
-        const std::vector<face3>& get_faces() const override
+        const std::vector<Face>& faces() const override
         {
                 return m_faces;
         }
-        const std::vector<int>& get_points() const override
+        const std::vector<Point>& points() const override
         {
                 return m_points;
         }
-        const std::vector<line>& get_lines() const override
+        const std::vector<Line>& lines() const override
         {
                 return m_lines;
         }
-        const std::vector<material>& get_materials() const override
+        const std::vector<Material>& materials() const override
         {
                 return m_materials;
         }
-        const std::vector<image>& get_images() const override
+        const std::vector<Image>& images() const override
         {
                 return m_images;
         }
-        vec3f get_center() const override
+        vec3f center() const override
         {
                 return m_center;
         }
-        float get_length() const override
+        float length() const override
         {
                 return m_length;
         }
@@ -136,23 +136,23 @@ class SurfaceObj final : public IObj
 
                 for (const std::array<int, 3>& facet : facets)
                 {
-                        face3 face;
+                        Face face;
 
                         face.material = -1;
-                        face.has_vt = false;
-                        face.has_vn = true;
+                        face.has_texcoord = false;
+                        face.has_normal = true;
 
                         face.vertices[0].v = index_map[facet[0]];
                         face.vertices[1].v = index_map[facet[1]];
                         face.vertices[2].v = index_map[facet[2]];
 
-                        face.vertices[0].vn = face.vertices[0].v;
-                        face.vertices[1].vn = face.vertices[1].v;
-                        face.vertices[2].vn = face.vertices[2].v;
+                        face.vertices[0].n = face.vertices[0].v;
+                        face.vertices[1].n = face.vertices[1].v;
+                        face.vertices[2].n = face.vertices[2].v;
 
-                        face.vertices[0].vt = -1;
-                        face.vertices[1].vt = -1;
-                        face.vertices[2].vt = -1;
+                        face.vertices[0].t = -1;
+                        face.vertices[1].t = -1;
+                        face.vertices[2].t = -1;
 
                         m_faces.push_back(std::move(face));
                 }

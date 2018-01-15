@@ -36,7 +36,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cstring>
 #include <fstream>
 #include <map>
-#include <numeric>
 #include <set>
 #include <string>
 #include <thread>
@@ -223,7 +222,7 @@ void read_file_lines(const std::string& file_name, std::string* file_str, std::v
         find_line_begin(*file_str, line_begin);
 }
 
-IObj::image read_image_from_file(const std::string& file_name)
+IObj::Image read_image_from_file(const std::string& file_name)
 {
         sf::Image image;
         if (!image.loadFromFile(file_name))
@@ -233,7 +232,7 @@ IObj::image read_image_from_file(const std::string& file_name)
 
         unsigned long long buffer_size = 4ull * image.getSize().x * image.getSize().y;
 
-        IObj::image obj_image;
+        IObj::Image obj_image;
         obj_image.dimensions[0] = image.getSize().x;
         obj_image.dimensions[1] = image.getSize().y;
         obj_image.srgba_pixels.resize(buffer_size);
@@ -246,7 +245,7 @@ IObj::image read_image_from_file(const std::string& file_name)
 }
 
 void load_image(const std::string& dir_name, const std::string& image_name, std::map<std::string, int>* image_index,
-                std::vector<IObj::image>* images, int* index)
+                std::vector<IObj::Image>* images, int* index)
 {
         std::string file_name = trim(image_name);
 
@@ -436,7 +435,7 @@ void read_v_vt_vn(const std::string& line, const char* line_begin, size_t begin,
 // Разделение строки на 9 чисел
 // " число/возможно_число/возможно_число число/возможно_число/возможно_число число/возможно_число/возможно_число ".
 // Примеры: " 1/2/3 4/5/6 7/8/9", "1//2 3//4 5//6", " 1// 2// 3// ".
-void read_faces(const std::string& line, size_t begin, size_t end, std::array<IObj::face3, MAX_FACES_PER_LINE>* faces,
+void read_faces(const std::string& line, size_t begin, size_t end, std::array<IObj::Face, MAX_FACES_PER_LINE>* faces,
                 unsigned* face_count)
 
 {
@@ -466,19 +465,20 @@ void read_faces(const std::string& line, size_t begin, size_t end, std::array<IO
 
         for (unsigned i = 0, base = 0; i < *face_count; ++i, base += 3)
         {
-                (*faces)[i].has_vt = !(v[1] == 0);
-                (*faces)[i].has_vn = !(v[2] == 0);
+                (*faces)[i].has_texcoord = !(v[1] == 0);
+                (*faces)[i].has_normal = !(v[2] == 0);
 
                 (*faces)[i].vertices[0].v = v[0];
-                (*faces)[i].vertices[0].vt = v[1];
-                (*faces)[i].vertices[0].vn = v[2];
+                (*faces)[i].vertices[0].t = v[1];
+                (*faces)[i].vertices[0].n = v[2];
 
                 (*faces)[i].vertices[1].v = v[base + 3];
-                (*faces)[i].vertices[1].vt = v[base + 4];
-                (*faces)[i].vertices[1].vn = v[base + 5];
+                (*faces)[i].vertices[1].t = v[base + 4];
+                (*faces)[i].vertices[1].n = v[base + 5];
+
                 (*faces)[i].vertices[2].v = v[base + 6];
-                (*faces)[i].vertices[2].vt = v[base + 7];
-                (*faces)[i].vertices[2].vn = v[base + 8];
+                (*faces)[i].vertices[2].t = v[base + 7];
+                (*faces)[i].vertices[2].n = v[base + 8];
         }
 }
 
@@ -727,11 +727,11 @@ class FileObj final : public IObj
         std::vector<vec3f> m_vertices;
         std::vector<vec2f> m_texcoords;
         std::vector<vec3f> m_normals;
-        std::vector<face3> m_faces;
-        std::vector<int> m_points;
-        std::vector<line> m_lines;
-        std::vector<material> m_materials;
-        std::vector<image> m_images;
+        std::vector<Face> m_faces;
+        std::vector<Point> m_points;
+        std::vector<Line> m_lines;
+        std::vector<Material> m_materials;
+        std::vector<Image> m_images;
         vec3f m_center;
         float m_length;
 
@@ -765,7 +765,7 @@ class FileObj final : public IObj
         {
                 ObjLineType type;
                 size_t second_b, second_e;
-                std::array<face3, MAX_FACES_PER_LINE> faces;
+                std::array<Face, MAX_FACES_PER_LINE> faces;
                 unsigned face_count;
                 vec3f v;
         };
@@ -811,43 +811,43 @@ class FileObj final : public IObj
 
         void read_obj_and_mtl(const std::string& file_name, ProgressRatio* progress);
 
-        const std::vector<vec3f>& get_vertices() const override
+        const std::vector<vec3f>& vertices() const override
         {
                 return m_vertices;
         }
-        const std::vector<vec2f>& get_texcoords() const override
+        const std::vector<vec2f>& texcoords() const override
         {
                 return m_texcoords;
         }
-        const std::vector<vec3f>& get_normals() const override
+        const std::vector<vec3f>& normals() const override
         {
                 return m_normals;
         }
-        const std::vector<face3>& get_faces() const override
+        const std::vector<Face>& faces() const override
         {
                 return m_faces;
         }
-        const std::vector<int>& get_points() const override
+        const std::vector<Point>& points() const override
         {
                 return m_points;
         }
-        const std::vector<line>& get_lines() const override
+        const std::vector<Line>& lines() const override
         {
                 return m_lines;
         }
-        const std::vector<material>& get_materials() const override
+        const std::vector<Material>& materials() const override
         {
                 return m_materials;
         }
-        const std::vector<image>& get_images() const override
+        const std::vector<Image>& images() const override
         {
                 return m_images;
         }
-        vec3f get_center() const override
+        vec3f center() const override
         {
                 return m_center;
         }
-        float get_length() const override
+        float length() const override
         {
                 return m_length;
         }
@@ -862,24 +862,24 @@ void FileObj::check_face_indices() const
         int texcoord_count = m_texcoords.size();
         int normal_count = m_normals.size();
 
-        for (const face3& face : m_faces)
+        for (const Face& face : m_faces)
         {
-                for (int i = 0; i < 3; ++i)
+                for (const Vertex& vertex : face.vertices)
                 {
-                        if (face.vertices[i].v < 0 || face.vertices[i].v >= vertex_count)
+                        if (vertex.v < 0 || vertex.v >= vertex_count)
                         {
-                                error("vertex index " + std::to_string(face.vertices[i].v) +
-                                      " is zero or out of the vertex count " + std::to_string(vertex_count));
+                                error("Vertex index " + std::to_string(vertex.v) + " is out of bounds [0, " +
+                                      std::to_string(vertex_count) + ")");
                         }
-                        if (face.has_vt && (face.vertices[i].vt < 0 || face.vertices[i].vt >= texcoord_count))
+                        if (face.has_texcoord && (vertex.t < 0 || vertex.t >= texcoord_count))
                         {
-                                error("texture coord index " + std::to_string(face.vertices[i].vt) +
-                                      " is zero or out of the texture coord count " + std::to_string(texcoord_count));
+                                error("Texture coord index " + std::to_string(vertex.t) + " is out of bounds [0, " +
+                                      std::to_string(texcoord_count) + ")");
                         }
-                        if (face.has_vn && (face.vertices[i].vn < 0 || face.vertices[i].vn >= normal_count))
+                        if (face.has_normal && (vertex.n < 0 || vertex.n >= normal_count))
                         {
-                                error("normal index " + std::to_string(face.vertices[i].vn) +
-                                      " is zero or out of the normal count " + std::to_string(normal_count));
+                                error("Normal index " + std::to_string(vertex.n) + " is out of bounds [0, " +
+                                      std::to_string(normal_count) + ")");
                         }
                 }
         }
@@ -909,7 +909,7 @@ bool FileObj::remove_one_dimensional_faces()
                 return false;
         }
 
-        std::vector<face3> faces;
+        std::vector<Face> faces;
         faces.reserve(m_faces.size() - one_d_face_count);
 
         for (unsigned i = 0; i < m_faces.size(); ++i)
@@ -1014,19 +1014,19 @@ void FileObj::read_obj_one(const ThreadData* thread_data, std::string* file_ptr,
 //   начинаются с 1 для абсолютных значений,
 //   начинаются с -1 для относительных значений назад.
 // Преобразование в абсолютные значения с началом от 0.
-void correct_indices(IObj::face3* face, int vertices_size, int texcoords_size, int normals_size)
+void correct_indices(IObj::Face* face, int vertices_size, int texcoords_size, int normals_size)
 {
         for (int i = 0; i < 3; ++i)
         {
                 int& v = face->vertices[i].v;
-                int& vt = face->vertices[i].vt;
-                int& vn = face->vertices[i].vn;
+                int& t = face->vertices[i].t;
+                int& n = face->vertices[i].n;
 
                 ASSERT(v != 0);
 
                 v = v > 0 ? v - 1 : vertices_size + v;
-                vt = vt > 0 ? vt - 1 : (vt < 0 ? texcoords_size + vt : -1);
-                vn = vn > 0 ? vn - 1 : (vn < 0 ? normals_size + vn : -1);
+                t = t > 0 ? t - 1 : (t < 0 ? texcoords_size + t : -1);
+                n = n > 0 ? n - 1 : (n < 0 ? normals_size + n : -1);
         }
 }
 
@@ -1088,7 +1088,7 @@ void FileObj::read_obj_two(const ThreadData* thread_data, std::string* file_ptr,
                         }
                         else
                         {
-                                IObj::material mtl;
+                                IObj::Material mtl;
                                 mtl.name = mtl_name;
                                 m_materials.push_back(std::move(mtl));
                                 material_index->emplace(std::move(mtl_name), m_materials.size() - 1);
@@ -1162,7 +1162,7 @@ void FileObj::read_lib(const std::string& dir_name, const std::string& file_name
 
         const std::string lib_dir = get_dir_name(lib_name);
 
-        FileObj::material* mtl = nullptr;
+        FileObj::Material* mtl = nullptr;
         std::string mtl_name;
 
         const size_t line_count = line_begin.size();
@@ -1396,11 +1396,11 @@ class FileTxt final : public IObj
         std::vector<vec3f> m_vertices;
         std::vector<vec2f> m_texcoords;
         std::vector<vec3f> m_normals;
-        std::vector<face3> m_faces;
-        std::vector<int> m_points;
-        std::vector<line> m_lines;
-        std::vector<material> m_materials;
-        std::vector<image> m_images;
+        std::vector<Face> m_faces;
+        std::vector<Point> m_points;
+        std::vector<Line> m_lines;
+        std::vector<Material> m_materials;
+        std::vector<Image> m_images;
         vec3f m_center;
         float m_length;
 
@@ -1415,43 +1415,43 @@ class FileTxt final : public IObj
         void read_points(const std::string& file_name, ProgressRatio* progress);
         void read_text(const std::string& file_name, ProgressRatio* progress);
 
-        const std::vector<vec3f>& get_vertices() const override
+        const std::vector<vec3f>& vertices() const override
         {
                 return m_vertices;
         }
-        const std::vector<vec2f>& get_texcoords() const override
+        const std::vector<vec2f>& texcoords() const override
         {
                 return m_texcoords;
         }
-        const std::vector<vec3f>& get_normals() const override
+        const std::vector<vec3f>& normals() const override
         {
                 return m_normals;
         }
-        const std::vector<face3>& get_faces() const override
+        const std::vector<Face>& faces() const override
         {
                 return m_faces;
         }
-        const std::vector<int>& get_points() const override
+        const std::vector<Point>& points() const override
         {
                 return m_points;
         }
-        const std::vector<line>& get_lines() const override
+        const std::vector<Line>& lines() const override
         {
                 return m_lines;
         }
-        const std::vector<material>& get_materials() const override
+        const std::vector<Material>& materials() const override
         {
                 return m_materials;
         }
-        const std::vector<image>& get_images() const override
+        const std::vector<Image>& images() const override
         {
                 return m_images;
         }
-        vec3f get_center() const override
+        vec3f center() const override
         {
                 return m_center;
         }
-        float get_length() const override
+        float length() const override
         {
                 return m_length;
         }
@@ -1526,7 +1526,10 @@ void FileTxt::read_text(const std::string& file_name, ProgressRatio* progress)
         }
 
         m_points.resize(m_vertices.size());
-        std::iota(m_points.begin(), m_points.end(), 0);
+        for (unsigned i = 0; i < m_points.size(); ++i)
+        {
+                m_points[i].vertex = i;
+        }
 
         center_and_length(m_vertices, m_points, &m_center, &m_length);
 }

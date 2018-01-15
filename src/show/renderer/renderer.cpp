@@ -107,7 +107,7 @@ struct Material final
         // если нет текстуры, то -1
         GLint map_Ka, map_Kd, map_Ks;
 
-        explicit Material(const IObj::material& m)
+        explicit Material(const IObj::Material& m)
                 : Ka(m.Ka), Kd(m.Kd), Ks(m.Ks), Ns(m.Ns), map_Ka(m.map_Ka), map_Kd(m.map_Kd), map_Ks(m.map_Ks)
         {
         }
@@ -115,79 +115,78 @@ struct Material final
 
 void load_face_vertices(const IObj& obj, std::vector<FaceVertex>* vertices)
 {
-        const std::vector<IObj::face3>& obj_faces = obj.get_faces();
-        const std::vector<vec3f>& obj_vertices = obj.get_vertices();
-        const std::vector<vec2f>& obj_texcoords = obj.get_texcoords();
-        const std::vector<vec3f>& obj_normals = obj.get_normals();
+        const std::vector<vec3f>& obj_vertices = obj.vertices();
+        const std::vector<vec2f>& obj_texcoords = obj.texcoords();
+        const std::vector<vec3f>& obj_normals = obj.normals();
 
         vertices->clear();
         vertices->shrink_to_fit();
-        vertices->reserve(obj_faces.size() * 3);
+        vertices->reserve(obj.faces().size() * 3);
 
         vec3f v0, v1, v2, n0, n1, n2;
         vec2f t0, t1, t2;
 
-        for (const IObj::face3& f : obj_faces)
+        for (const IObj::Face& f : obj.faces())
         {
                 v0 = obj_vertices[f.vertices[0].v];
                 v1 = obj_vertices[f.vertices[1].v];
                 v2 = obj_vertices[f.vertices[2].v];
 
-                if (f.has_vn)
+                if (f.has_normal)
                 {
-                        n0 = obj_normals[f.vertices[0].vn];
-                        n1 = obj_normals[f.vertices[1].vn];
-                        n2 = obj_normals[f.vertices[2].vn];
+                        n0 = obj_normals[f.vertices[0].n];
+                        n1 = obj_normals[f.vertices[1].n];
+                        n2 = obj_normals[f.vertices[2].n];
                 }
                 else
                 {
-                        n0 = n1 = n2 = vec3f(0, 0, 0);
+                        n0 = n1 = n2 = vec3f(0);
                         // можно один раз вычислять здесь, вместо геометрического шейдера
                         // n0 = n1 = n2 = normalize(cross(v1 - v0, v2 - v0));
                 }
 
-                if (f.has_vt)
+                if (f.has_texcoord)
                 {
-                        t0 = obj_texcoords[f.vertices[0].vt];
-                        t1 = obj_texcoords[f.vertices[1].vt];
-                        t2 = obj_texcoords[f.vertices[2].vt];
+                        t0 = obj_texcoords[f.vertices[0].t];
+                        t1 = obj_texcoords[f.vertices[1].t];
+                        t2 = obj_texcoords[f.vertices[2].t];
                 }
                 else
                 {
-                        t0 = t1 = t2 = vec2f(0, 0);
+                        t0 = t1 = t2 = vec2f(0);
                 }
 
-                vertices->emplace_back(v0, n0, t0, f.material, f.has_vt, f.has_vn);
-                vertices->emplace_back(v1, n1, t1, f.material, f.has_vt, f.has_vn);
-                vertices->emplace_back(v2, n2, t2, f.material, f.has_vt, f.has_vn);
+                vertices->emplace_back(v0, n0, t0, f.material, f.has_texcoord, f.has_normal);
+                vertices->emplace_back(v1, n1, t1, f.material, f.has_texcoord, f.has_normal);
+                vertices->emplace_back(v2, n2, t2, f.material, f.has_texcoord, f.has_normal);
         }
 }
 
 void load_point_vertices(const IObj& obj, std::vector<PointVertex>* vertices)
 {
-        const std::vector<int>& obj_points = obj.get_points();
-        const std::vector<vec3f>& obj_vertices = obj.get_vertices();
+        const std::vector<IObj::Point>& obj_points = obj.points();
+        const std::vector<vec3f>& obj_vertices = obj.vertices();
 
         vertices->clear();
         vertices->shrink_to_fit();
         vertices->reserve(obj_points.size());
 
-        for (int p : obj_points)
+        for (const IObj::Point& point : obj_points)
         {
-                vertices->emplace_back(obj_vertices[p]);
+                vertices->emplace_back(obj_vertices[point.vertex]);
         }
 }
 
 void load_line_vertices(const IObj& obj, std::vector<PointVertex>* vertices)
 {
-        const std::vector<IObj::line>& obj_lines = obj.get_lines();
-        const std::vector<vec3f>& obj_vertices = obj.get_vertices();
+        const std::vector<IObj::Line>& obj_lines = obj.lines();
+        const std::vector<vec3f>& obj_vertices = obj.vertices();
 
         vertices->clear();
         vertices->shrink_to_fit();
         vertices->reserve(obj_lines.size() * 2);
 
-        for (const IObj::line& line : obj_lines)
+        for (const IObj::Line& line : obj_lines)
         {
                 for (int index : line.vertices)
                 {
@@ -198,12 +197,12 @@ void load_line_vertices(const IObj& obj, std::vector<PointVertex>* vertices)
 
 void load_materials(const IObj& obj, std::vector<Material>* materials)
 {
-        const std::vector<IObj::material>& obj_materials = obj.get_materials();
+        const std::vector<IObj::Material>& obj_materials = obj.materials();
 
         materials->clear();
         materials->shrink_to_fit();
         materials->reserve(obj_materials.size());
-        for (const IObj::material& m : obj_materials)
+        for (const IObj::Material& m : obj_materials)
         {
                 materials->emplace_back(m);
         }
@@ -220,24 +219,24 @@ DrawType calculate_draw_type_from_obj(const IObj* obj)
 {
         int type_count = 0;
 
-        type_count += obj->get_faces().size() > 0 ? 1 : 0;
-        type_count += obj->get_points().size() > 0 ? 1 : 0;
-        type_count += obj->get_lines().size() > 0 ? 1 : 0;
+        type_count += obj->faces().size() > 0 ? 1 : 0;
+        type_count += obj->points().size() > 0 ? 1 : 0;
+        type_count += obj->lines().size() > 0 ? 1 : 0;
 
         if (type_count > 1)
         {
                 error("Supported only faces or points or lines");
         }
 
-        if (obj->get_faces().size() > 0)
+        if (obj->faces().size() > 0)
         {
                 return DrawType::TRIANGLES;
         }
-        else if (obj->get_points().size() > 0)
+        else if (obj->points().size() > 0)
         {
                 return DrawType::POINTS;
         }
-        else if (obj->get_lines().size() > 0)
+        else if (obj->lines().size() > 0)
         {
                 return DrawType::LINES;
         }
@@ -303,7 +302,7 @@ DrawObject::DrawObject(const IObj* obj, const ColorSpaceConverter& color_convert
 
                 //
 
-                for (const IObj::image& image : obj->get_images())
+                for (const IObj::Image& image : obj->images())
                 {
                         m_textures.emplace_back(image.dimensions[0], image.dimensions[1],
                                                 integer_pixels_to_float_pixels(image.srgba_pixels));

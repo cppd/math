@@ -398,8 +398,7 @@ void MainWindow::thread_add_object(ProgressRatioList* progress_ratio_list, AddOb
 
                         std::tie(*message, object_type, object_type_convex_hull) = parameters_for_add_object(add_object_type);
 
-                        if (obj->get_faces().size() > 0 ||
-                            (add_object_type == AddObjectType::Model && obj->get_points().size() > 0))
+                        if (obj->faces().size() > 0 || (add_object_type == AddObjectType::Model && obj->points().size() > 0))
                         {
                                 m_show->add_object(obj, object_type, MODEL);
 
@@ -408,7 +407,7 @@ void MainWindow::thread_add_object(ProgressRatioList* progress_ratio_list, AddOb
 
                                 std::shared_ptr<IObj> convex_hull = create_convex_hull_for_obj(obj.get(), &progress);
 
-                                if (convex_hull->get_faces().size() != 0)
+                                if (convex_hull->faces().size() != 0)
                                 {
                                         m_show->add_object(convex_hull, object_type_convex_hull, MODEL);
                                 }
@@ -423,7 +422,7 @@ void MainWindow::thread_add_object(ProgressRatioList* progress_ratio_list, AddOb
 
                         std::tie(*message, mesh_type) = parameters_for_mesh_object(add_object_type);
 
-                        if (obj->get_faces().size() > 0)
+                        if (obj->faces().size() > 0)
                         {
                                 ProgressRatio progress(progress_ratio_list);
                                 m_meshes[mesh_type] = std::make_shared<Mesh>(obj.get(), m_model_vertex_matrix,
@@ -519,7 +518,7 @@ void MainWindow::thread_mst(ProgressRatioList* progress_ratio_list) noexcept
 
                 std::shared_ptr<IObj> mst_obj = create_obj_for_lines(m_surface_points, mst_lines);
 
-                if (mst_obj->get_lines().size() > 0)
+                if (mst_obj->lines().size() > 0)
                 {
                         m_show->add_object(mst_obj, MODEL_MST, MODEL);
                 }
@@ -583,11 +582,11 @@ void MainWindow::thread_open_object(ProgressRatioList* progress_ratio_list, cons
                         }
                 }
 
-                if (obj->get_faces().size() == 0 && obj->get_points().size() == 0)
+                if (obj->faces().size() == 0 && obj->points().size() == 0)
                 {
                         error("Faces or points not found");
                 }
-                if (obj->get_faces().size() != 0 && obj->get_points().size() != 0)
+                if (obj->faces().size() != 0 && obj->points().size() != 0)
                 {
                         error("Faces and points together in one object are not supported");
                 }
@@ -605,8 +604,7 @@ void MainWindow::thread_open_object(ProgressRatioList* progress_ratio_list, cons
 
                 m_event_emitter.file_loaded(object_name);
 
-                m_surface_points =
-                        (obj->get_faces().size() > 0) ? unique_face_vertices(obj.get()) : unique_point_vertices(obj.get());
+                m_surface_points = (obj->faces().size() > 0) ? unique_face_vertices(obj.get()) : unique_point_vertices(obj.get());
 
                 m_model_vertex_matrix = model_vertex_matrix(obj.get(), m_mesh_object_size, m_mesh_object_position);
 
@@ -1038,7 +1036,7 @@ void MainWindow::export_to_file()
 
         if (thread_action == ThreadAction::ExportCocone)
         {
-                if (!m_surface_cocone || m_surface_cocone->get_faces().size() == 0)
+                if (!m_surface_cocone || m_surface_cocone->faces().size() == 0)
                 {
                         m_event_emitter.message_warning("COCONE not created");
                         return;
@@ -1047,7 +1045,7 @@ void MainWindow::export_to_file()
         }
         else if (thread_action == ThreadAction::ExportBoundCocone)
         {
-                if (!m_surface_bound_cocone || m_surface_bound_cocone->get_faces().size() == 0)
+                if (!m_surface_bound_cocone || m_surface_bound_cocone->faces().size() == 0)
                 {
                         m_event_emitter.message_warning("BOUND COCONE not created");
                         return;
