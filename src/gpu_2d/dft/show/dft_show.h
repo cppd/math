@@ -28,7 +28,7 @@ class DFTShow final
         std::unique_ptr<Impl> m_impl;
 
 public:
-        DFTShow(int width, int height, int pos_x, int pos_y, const mat4& mtx, bool source_sRGB);
+        DFTShow(int width, int height, int pos_x, int pos_y, const mat4& mtx, bool source_srgb);
         ~DFTShow();
 
         void set_brightness(double brightness);

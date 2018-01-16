@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -22,7 +22,6 @@ layout(bindless_image, r32f) writeonly uniform image2D img_dst;
 
 float gray(vec4 a)
 {
-        // return 0.299 * a.r + 0.587 * a.g + 0.114 * a.b;
         return (a.r + a.g + a.b) * 0.33333333333333333333;
 }
 

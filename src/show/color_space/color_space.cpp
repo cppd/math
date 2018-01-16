@@ -28,16 +28,9 @@ constexpr const char color_space_compute_shader[]
 
 constexpr int GROUP_SIZE = 16;
 
-ColorSpaceConverter::ColorSpaceConverter(bool to_rgb) : m_prog(ComputeShader(color_space_compute_shader)), m_to_rgb(to_rgb)
+ColorSpaceConverter::ColorSpaceConverter(bool to_rgb) : m_prog(ComputeShader(color_space_compute_shader))
 {
-        if (m_to_rgb)
-        {
-                m_prog.set_uniform("to_rgb", 1);
-        }
-        else
-        {
-                m_prog.set_uniform("to_rgb", 0);
-        }
+        m_prog.set_uniform("to_rgb", to_rgb ? 1 : 0);
 }
 
 void ColorSpaceConverter::convert(const TextureRGBA32F& tex) const

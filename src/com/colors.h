@@ -25,4 +25,4 @@ vec3 srgb_integer_to_rgb_float(unsigned char r, unsigned char g, unsigned char b
 
 std::array<unsigned char, 3> rgb_float_to_srgb_integer(const vec3& c);
 
-double luminosity_rgb(const vec3& v);
+double luminance_of_rgb(const vec3& v);

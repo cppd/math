@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "show.h"
 
 #include "event.h"
+#include "color_space/buffer_type.h"
 #include "renderer/renderer.h"
 #include "text/text.h"
 
@@ -390,14 +391,15 @@ void ShowObject::loop()
                              STENCIL_BITS, RED_BITS, GREEN_BITS, BLUE_BITS, ALPHA_BITS, &wnd);
         move_window_to_parent(wnd.getSystemHandle(), m_win_parent);
 
-        // get_framebuffer_sRGB() (glGetNamedFramebufferAttachmentParameteriv) возвращает
-        // неправильные значения. Текстура передаётся из экранного буфера
-        // и, вероятно, имеет тип sRGB, поэтому надо преобразовывать обратно в RGB.
-        constexpr bool buffer_sRGB = true; // true вместо get_framebuffer_sRGB()
-
         glDisable(GL_CULL_FACE);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glEnable(GL_FRAMEBUFFER_SRGB);
+
+        const bool framebuffer_srgb = frame_buffer_is_srgb();
+        const bool colorbuffer_srgb = color_buffer_is_srgb();
+
+        LOG(framebuffer_srgb ? "Framebuffer sRGB" : "Framebuffer linear");
+        LOG(colorbuffer_srgb ? "Colorbuffer sRGB" : "Colorbuffer linear");
 
         int new_width = wnd.getSize().x;
         int new_height = wnd.getSize().y;
@@ -557,7 +559,7 @@ void ShowObject::loop()
 
                                 vec3 color = d.clear_color;
                                 glClearColor(color[0], color[1], color[2], 1);
-                                bool dark_color = luminosity_rgb(color) <= 0.5;
+                                bool dark_color = luminance_of_rgb(color) <= 0.5;
                                 text.set_color(dark_color ? vec3(1) : vec3(0));
                                 break;
                         }
@@ -817,11 +819,11 @@ void ShowObject::loop()
 
                         int dft_pos_x = (window_width & 1) ? (width + 1) : width;
                         int dft_pos_y = 0;
-                        dft_show = std::make_unique<DFTShow>(width, height, dft_pos_x, dft_pos_y, plane_matrix, buffer_sRGB);
+                        dft_show = std::make_unique<DFTShow>(width, height, dft_pos_x, dft_pos_y, plane_matrix, framebuffer_srgb);
                         dft_show->set_brightness(dft_brightness);
 
                         pencil_effect = std::make_unique<PencilEffect>(renderer->get_color_buffer_texture(),
-                                                                       renderer->get_object_texture());
+                                                                       renderer->get_object_texture(), colorbuffer_srgb);
 
                         optical_flow = std::make_unique<OpticalFlow>(width, height, plane_matrix);
 

@@ -23,36 +23,6 @@ uniform int to_rgb;
 
 const ivec2 image_size = imageSize(img);
 
-float RGB_to_sRGB(float c)
-{
-        if (c > 1.0)
-                return 1.0;
-        if (c >= 0.0031308)
-                return 1.055 * pow(c, 1.0 / 2.4) - 0.055;
-        if (c >= 0.0)
-                return c * 12.92;
-        return 0.0;
-}
-float sRGB_to_RGB(float c)
-{
-        if (c > 1.0)
-                return 1.0;
-        if (c >= 0.04045)
-                return pow((c + 0.055) / 1.055, 2.4);
-        if (c >= 0.0)
-                return c / 12.92;
-        return 0.0;
-}
-
-vec4 RGB_to_sRGB(vec4 c)
-{
-        return vec4(RGB_to_sRGB(c.r), RGB_to_sRGB(c.g), RGB_to_sRGB(c.b), c.a);
-}
-vec4 sRGB_to_RGB(vec4 c)
-{
-        return vec4(sRGB_to_RGB(c.r), sRGB_to_RGB(c.g), sRGB_to_RGB(c.b), c.a);
-}
-
 void main(void)
 {
         const ivec2 p = ivec2(gl_GlobalInvocationID.xy);
@@ -61,11 +31,11 @@ void main(void)
                 vec4 s = imageLoad(img, p);
                 if (to_rgb > 0)
                 {
-                        imageStore(img, p, sRGB_to_RGB(s));
+                        imageStore(img, p, srgb_to_rgb(s));
                 }
                 else
                 {
-                        imageStore(img, p, RGB_to_sRGB(s));
+                        imageStore(img, p, rgb_to_srgb(s));
                 }
         }
 }

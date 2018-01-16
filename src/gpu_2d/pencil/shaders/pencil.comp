@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -20,6 +20,8 @@ layout(local_size_variable) in;
 layout(bindless_image, rgba32f) readonly uniform image2D img_input;
 layout(bindless_image, rgba32f) writeonly uniform image2D img_output;
 layout(bindless_image, r32i) readonly uniform iimage2D img_objects;
+
+uniform int source_srgb;
 
 const ivec2 image_size = imageSize(img_input);
 
@@ -43,15 +45,15 @@ const float Gauss[delta * 2 + 1][delta * 2 + 1] =
 // фоновые пиксели считать 0
 const float background_value = 0;
 
-float gray(vec4 a)
-{
-        return 0.299 * a.r + 0.587 * a.g + 0.114 * a.b;
-}
-
 bool background(ivec2 p)
 {
         ivec4 s = imageLoad(img_objects, p);
         return s.r == 0;
+}
+
+float gray(vec4 color)
+{
+        return (source_srgb == 0) ? luminance_of_rgb(color) : luminance_of_rgb(srgb_to_rgb(color));
 }
 
 void main(void)

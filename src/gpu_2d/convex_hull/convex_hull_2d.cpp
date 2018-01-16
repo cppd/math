@@ -140,7 +140,10 @@ class ConvexHull2D::Impl final
         TextureR32F m_line_min, m_line_max;
 
         ShaderStorageBuffer m_points;
-        TextureR32I m_point_count;
+
+        TextureR32I m_point_count_texture;
+        std::vector<GLint> m_point_count_vector;
+
         double m_start_time;
 
 public:
@@ -155,7 +158,8 @@ public:
                   m_draw_prog(VertexShader(vertex_shader), FragmentShader(fragment_shader)),
                   m_line_min(m_height, 1),
                   m_line_max(m_height, 1),
-                  m_point_count(1, 1),
+                  m_point_count_texture(1, 1),
+                  m_point_count_vector(1),
                   m_start_time(get_time_seconds())
         {
                 m_prepare_prog.set_uniform_handle("objects", objects.get_image_resident_handle_read_only());
@@ -169,7 +173,7 @@ public:
 
                 m_filter_prog.set_uniform_handle("line_min", m_line_min.get_image_resident_handle_read_only());
                 m_filter_prog.set_uniform_handle("line_max", m_line_max.get_image_resident_handle_read_only());
-                m_filter_prog.set_uniform_handle("points_count", m_point_count.get_image_resident_handle_write_only());
+                m_filter_prog.set_uniform_handle("points_count", m_point_count_texture.get_image_resident_handle_write_only());
 
                 m_draw_prog.set_uniform_float("mvpMatrix", mtx);
         }
@@ -196,14 +200,13 @@ public:
                 m_filter_prog.dispatch_compute(1, 1, 1, 1, 1, 1);
 
                 glMemoryBarrier(GL_TEXTURE_UPDATE_BARRIER_BIT);
-                GLint point_count;
-                m_point_count.get_texture_sub_image(0, 0, 1, 1, &point_count);
+                m_point_count_texture.get_texture_sub_image(0, 0, 1, 1, &m_point_count_vector);
 
                 float d = 0.5 + 0.5 * std::sin(ANGULAR_FREQUENCY * (get_time_seconds() - m_start_time));
                 m_draw_prog.set_uniform("brightness", d);
 
                 glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-                m_draw_prog.draw_arrays(GL_LINE_LOOP, 0, point_count);
+                m_draw_prog.draw_arrays(GL_LINE_LOOP, 0, m_point_count_vector[0]);
         }
 };
 

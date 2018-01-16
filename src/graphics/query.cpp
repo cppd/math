@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -47,7 +47,7 @@ std::string graphics_overview()
                 os << "CONTEXT_FLAG_ROBUST_ACCESS\n";
         }
 
-        os << "framebuffer: " << (get_framebuffer_sRGB() ? "sRGB" : "RGB") << "\n";
+        os << "framebuffer: " << (get_framebuffer_srgb() ? "sRGB" : "RGB") << "\n";
         os << "max work group size x: " << get_max_work_group_size_x() << "\n";
         os << "max work group size y: " << get_max_work_group_size_y() << "\n";
         os << "max work group size z: " << get_max_work_group_size_z() << "\n";
@@ -143,7 +143,7 @@ void check_bit_sizes(int depthBits, int stencilBits, int antialiasing_level, int
         }
 }
 
-bool get_framebuffer_sRGB()
+bool get_framebuffer_srgb()
 {
         GLint t;
 

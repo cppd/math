@@ -234,7 +234,7 @@ public:
                 m_default_surface_properties.set_color(background_color);
                 m_default_surface_properties.set_diffuse_and_fresnel(1, 0);
                 m_default_surface_properties.set_light_source(true);
-                m_default_surface_properties.set_light_source_color(vec3(luminosity_rgb(background_color)));
+                m_default_surface_properties.set_light_source_color(vec3(luminance_of_rgb(background_color)));
 
                 m_object.set_color(default_color);
                 m_object.set_diffuse_and_fresnel(diffuse, 0);

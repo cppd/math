@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "com/colors_glsl.h"
 #include "com/error.h"
 #include "com/mat.h"
 #include "com/type_detect.h"
@@ -60,6 +61,7 @@ protected:
                         {
                                 source += "#extension " + ext + " : require\n";
                         }
+                        source += glsl_color_space_functions();
                         source += "\n";
                         source += shader_text;
                         const char* const source_ptr = source.c_str();
@@ -861,6 +863,28 @@ public:
                 m_texture.copy_texture_sub_image_2d(0, 0, 0, 0, 0, m_texture.get_width(), m_texture.get_height());
         }
 
+        void clear_tex_image(GLfloat r, GLfloat g, GLfloat b, GLfloat a) const noexcept
+        {
+                std::array<GLfloat, 4> v = {{r, g, b, a}};
+                m_texture.clear_tex_image(0, GL_RGBA, GL_FLOAT, v.data());
+        }
+        void get_texture_image(std::vector<GLfloat>* pixels) const noexcept
+        {
+                unsigned long long size = 4ull * m_texture.get_width() * m_texture.get_height();
+                ASSERT(pixels->size() == size);
+                m_texture.get_texture_image(0, GL_RGBA, GL_FLOAT, size * sizeof(GLfloat), pixels->data());
+        }
+        void get_texture_sub_image(GLint xoffset, GLint yoffset, GLsizei width, GLsizei height,
+                                   std::vector<GLfloat>* pixels) const noexcept
+        {
+                unsigned long long size = 4ull * width * height;
+                ASSERT(pixels->size() == size);
+                ASSERT(width > 0 && height > 0);
+                ASSERT(width <= m_texture.get_width() && height <= m_texture.get_height());
+                m_texture.get_texture_sub_image(0, xoffset, yoffset, 0, width, height, 1, GL_RGBA, GL_FLOAT,
+                                                size * sizeof(GLfloat), pixels->data());
+        }
+
         const Texture2D& get_texture() const noexcept
         {
                 return m_texture;
@@ -913,15 +937,21 @@ public:
         {
                 m_texture.clear_tex_image(0, GL_RED, GL_FLOAT, &v);
         }
-        void get_texture_image(std::vector<GLfloat>* d) const noexcept
+        void get_texture_image(std::vector<GLfloat>* pixels) const noexcept
         {
-                m_texture.get_texture_image(0, GL_RED, GL_FLOAT, m_texture.get_width() * m_texture.get_height() * sizeof(GLfloat),
-                                            &(*d)[0]);
+                unsigned long long size = m_texture.get_width() * m_texture.get_height();
+                ASSERT(pixels->size() == size);
+                m_texture.get_texture_image(0, GL_RED, GL_FLOAT, size * sizeof(GLfloat), pixels->data());
         }
-        void get_texture_sub_image(GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLfloat* pixels) const noexcept
+        void get_texture_sub_image(GLint xoffset, GLint yoffset, GLsizei width, GLsizei height,
+                                   std::vector<GLfloat>* pixels) const noexcept
         {
+                unsigned long long size = width * height;
+                ASSERT(pixels->size() == size);
+                ASSERT(width > 0 && height > 0);
+                ASSERT(width <= m_texture.get_width() && height <= m_texture.get_height());
                 m_texture.get_texture_sub_image(0, xoffset, yoffset, 0, width, height, 1, GL_RED, GL_FLOAT,
-                                                width * height * sizeof(GLfloat), pixels);
+                                                size * sizeof(GLfloat), pixels->data());
         }
 
         const Texture2D& get_texture() const noexcept
@@ -960,15 +990,21 @@ public:
         {
                 m_texture.clear_tex_image(0, GL_RED_INTEGER, GL_INT, &v);
         }
-        void get_texture_image(std::vector<GLint>* d) const noexcept
+        void get_texture_image(std::vector<GLint>* pixels) const noexcept
         {
-                m_texture.get_texture_image(0, GL_RED_INTEGER, GL_INT,
-                                            m_texture.get_width() * m_texture.get_height() * sizeof(GLint), &(*d)[0]);
+                unsigned long long size = m_texture.get_width() * m_texture.get_height();
+                ASSERT(pixels->size() == size);
+                m_texture.get_texture_image(0, GL_RED_INTEGER, GL_INT, size * sizeof(GLint), pixels->data());
         }
-        void get_texture_sub_image(GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLint* pixels) const noexcept
+        void get_texture_sub_image(GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, std::vector<GLint>* pixels) const
+                noexcept
         {
+                unsigned long long size = width * height;
+                ASSERT(pixels->size() == size);
+                ASSERT(width > 0 && height > 0);
+                ASSERT(width <= m_texture.get_width() && height <= m_texture.get_height());
                 m_texture.get_texture_sub_image(0, xoffset, yoffset, 0, width, height, 1, GL_RED_INTEGER, GL_INT,
-                                                width * height * sizeof(GLint), pixels);
+                                                size * sizeof(GLint), pixels->data());
         }
 
         const Texture2D& get_texture() const noexcept

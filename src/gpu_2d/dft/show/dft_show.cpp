@@ -54,7 +54,7 @@ struct Vertex
 class DFTShow::Impl final
 {
         const int m_groups_x, m_groups_y;
-        const bool m_source_sRGB;
+        const bool m_source_srgb;
         TextureRGBA32F m_image_texture;
         std::unique_ptr<IFourierGL2> m_gl_fft;
         VertexArray m_vertex_array;
@@ -64,10 +64,10 @@ class DFTShow::Impl final
         static constexpr int RectangleVertexCount = 4;
 
 public:
-        Impl(int width, int height, int pos_x, int pos_y, const mat4& mtx, bool source_sRGB)
+        Impl(int width, int height, int pos_x, int pos_y, const mat4& mtx, bool source_srgb)
                 : m_groups_x(get_group_count(width, GROUP_SIZE)),
                   m_groups_y(get_group_count(height, GROUP_SIZE)),
-                  m_source_sRGB(source_sRGB),
+                  m_source_srgb(source_srgb),
                   m_image_texture(width, height),
                   m_gl_fft(create_fft_gl2d(width, height, m_image_texture)),
                   m_draw_prog(VertexShader(dft_show_vertex_shader), FragmentShader(dft_show_fragment_shader))
@@ -113,15 +113,15 @@ public:
 
         void draw()
         {
-                m_gl_fft->exec(false, m_source_sRGB);
+                m_gl_fft->exec(false, m_source_srgb);
 
                 m_vertex_array.bind();
                 m_draw_prog.draw_arrays(GL_TRIANGLE_STRIP, 0, RectangleVertexCount);
         }
 };
 
-DFTShow::DFTShow(int width, int height, int pos_x, int pos_y, const mat4& mtx, bool source_sRGB)
-        : m_impl(std::make_unique<Impl>(width, height, pos_x, pos_y, mtx, source_sRGB))
+DFTShow::DFTShow(int width, int height, int pos_x, int pos_y, const mat4& mtx, bool source_srgb)
+        : m_impl(std::make_unique<Impl>(width, height, pos_x, pos_y, mtx, source_srgb))
 {
 }
 DFTShow::~DFTShow() = default;

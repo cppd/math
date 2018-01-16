@@ -45,7 +45,7 @@ class PencilEffect::Impl final
         TextureRGBA32F m_texture;
 
 public:
-        Impl(const TextureRGBA32F& tex, const TextureR32I& tex_objects)
+        Impl(const TextureRGBA32F& tex, const TextureR32I& tex_objects, bool source_srgb)
                 : m_width(tex.get_texture().get_width()),
                   m_height(tex.get_texture().get_height()),
                   m_groups_x(get_group_count(m_width, GROUP_SIZE)),
@@ -57,6 +57,7 @@ public:
                 m_comp_prog.set_uniform_handle("img_input", tex.get_image_resident_handle_read_only());
                 m_comp_prog.set_uniform_handle("img_output", m_texture.get_image_resident_handle_write_only());
                 m_comp_prog.set_uniform_handle("img_objects", tex_objects.get_image_resident_handle_read_only());
+                m_comp_prog.set_uniform("source_srgb", source_srgb ? 1 : 0);
 
                 m_draw_prog.set_uniform_handle("tex", m_texture.get_texture().get_texture_resident_handle());
         }
@@ -71,8 +72,8 @@ public:
         }
 };
 
-PencilEffect::PencilEffect(const TextureRGBA32F& tex, const TextureR32I& tex_objects)
-        : m_impl(std::make_unique<Impl>(tex, tex_objects))
+PencilEffect::PencilEffect(const TextureRGBA32F& tex, const TextureR32I& tex_objects, bool source_srgb)
+        : m_impl(std::make_unique<Impl>(tex, tex_objects, source_srgb))
 {
 }
 

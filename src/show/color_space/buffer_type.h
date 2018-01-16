@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017, 2018 Topological Manifold
+Copyright (C) 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -17,18 +17,5 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "graphics/objects.h"
-
-#include <memory>
-
-class PencilEffect final
-{
-        class Impl;
-        std::unique_ptr<Impl> m_impl;
-
-public:
-        PencilEffect(const TextureRGBA32F& tex, const TextureR32I& tex_objects, bool source_srgb);
-        ~PencilEffect();
-
-        void draw();
-};
+bool frame_buffer_is_srgb();
+bool color_buffer_is_srgb();

@@ -127,12 +127,12 @@ public:
                 glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
         }
 
-        void move_to_input(vec2i blocks, vec2i threads, int width, int height, bool source_sRGB, const GLuint64 tex,
+        void move_to_input(vec2i blocks, vec2i threads, int width, int height, bool source_srgb, const GLuint64 tex,
                            DeviceMemory<std::complex<FP>>* data)
         {
                 m_move_to_input.set_uniform(0, width);
                 m_move_to_input.set_uniform(1, height);
-                m_move_to_input.set_uniform(2, source_sRGB ? 1 : 0);
+                m_move_to_input.set_uniform(2, source_srgb ? 1 : 0);
                 m_move_to_input.set_uniform_handle(3, tex);
                 data->bind(0);
                 m_move_to_input.dispatch_compute(blocks[0], blocks[1], 1, threads[0], threads[1], 1);

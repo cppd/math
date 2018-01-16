@@ -22,7 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 class ColorSpaceConverter
 {
         ComputeProgram m_prog;
-        bool m_to_rgb;
 
 public:
         ColorSpaceConverter(bool to_rgb);

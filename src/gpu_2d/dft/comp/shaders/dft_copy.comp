@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -22,57 +22,11 @@ layout(local_size_variable) in;
 // Перенос данных изображения в исходные данные для ДПФ и обратно.
 // Преобразование Фурье делается для яркости пикселов без цвета.
 
-float RGB_to_sRGB(float c)
-{
-        if (c > 1)
-        {
-                return 1;
-        }
-        if (c >= 0.0031308)
-        {
-                return 1.055 * pow(c, 1.0 / 2.4) - 0.055;
-        }
-        if (c >= 0)
-        {
-                return c * 12.92;
-        }
-        return 0;
-}
-
-float sRGB_to_RGB(float c)
-{
-        if (c > 1)
-        {
-                return 1;
-        }
-        if (c >= 0.04045)
-        {
-                return pow((c + 0.055) / 1.055, 2.4);
-        }
-        if (c >= 0)
-        {
-                return c / 12.92;
-        }
-        return 0;
-}
-vec4 RGB_to_sRGB(vec4 c)
-{
-        return vec4(RGB_to_sRGB(c.r), RGB_to_sRGB(c.g), RGB_to_sRGB(c.b), RGB_to_sRGB(c.a));
-}
-vec4 sRGB_to_RGB(vec4 c)
-{
-        return vec4(sRGB_to_RGB(c.r), sRGB_to_RGB(c.g), sRGB_to_RGB(c.b), sRGB_to_RGB(c.a));
-}
-float GrayScale(vec4 a)
-{
-        return 0.299 * a.r + 0.587 * a.g + 0.114 * a.b;
-}
-
 #if defined(function_move_to_input)
 
 layout(location = 0) uniform int width;
 layout(location = 1) uniform int height;
-layout(location = 2) uniform int source_sRGB;
+layout(location = 2) uniform int source_srgb;
 layout(bindless_image, rgba32f, location = 3) uniform readonly restrict image2D img;
 layout(std430, binding = 0) writeonly restrict buffer StorageBuffer
 {
@@ -89,7 +43,7 @@ void main()
         }
 
         vec4 pixel = imageLoad(img, ivec2(x, y));
-        float_point gr = (source_sRGB > 0) ? GrayScale(sRGB_to_RGB(pixel)) : GrayScale(pixel);
+        float_point gr = (source_srgb > 0) ? luminance_of_rgb(srgb_to_rgb(pixel)) : luminance_of_rgb(pixel);
         data[y * width + x] = complex(gr, 0);
 }
 
