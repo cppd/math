@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -17,17 +17,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <cstdlib>
 #include <exception>
 #include <string>
-#include <vector>
+#include <utility>
 
 class ErrorException final : public std::exception
 {
-        const std::string m_text;
+        std::string m_text;
 
 public:
-        ErrorException(const std::string& text) : m_text(text)
+        template <typename T>
+        ErrorException(T&& text) : m_text(std::forward<T>(text))
         {
         }
         const char* what() const noexcept override
@@ -38,77 +38,43 @@ public:
 
 class ErrorSourceException final : public std::exception
 {
-        const std::string m_text, m_source_text;
+        std::string m_text;
+        std::string m_source_text;
 
 public:
-        ErrorSourceException(const std::string& text, const std::string& source_text) : m_text(text), m_source_text(source_text)
+        template <typename T1, typename T2>
+        ErrorSourceException(T1&& text, T2&& source_text)
+                : m_text(std::forward<T1>(text)), m_source_text(std::forward<T2>(source_text))
         {
         }
         const char* what() const noexcept override
         {
                 return m_text.c_str();
         }
-        std::string get_msg() const
+        const std::string& get_msg() const noexcept
         {
                 return m_text;
         }
-        std::string get_src() const
+        const std::string& get_src() const noexcept
         {
                 return m_source_text;
         }
 };
 
-[[noreturn]] inline void error(const std::string& text)
-{
-        throw ErrorException(text);
-}
+[[noreturn]] void error(const std::string& text);
+[[noreturn]] void error(std::string&& text);
+[[noreturn]] void error_source(const std::string& text, const std::string& source_text);
 
-[[noreturn]] inline void error_source(const std::string& text, const std::string& source_text)
-{
-        throw ErrorSourceException(text, source_text);
-}
+[[noreturn]] void error_fatal(const char* text) noexcept;
+[[noreturn]] void error_fatal(const std::string& text) noexcept;
 
-[[noreturn]] inline void error_fatal(const std::string& text) noexcept
+namespace ErrorImplementation
 {
-        // Без вызовов других функций программы, так как они могут вызвать эту же функцию.
-        // Поэтому только std::fprintf и завершение программы.
-        try
-        {
-                std::fprintf(stderr, "%s\n", text.c_str());
-                std::fflush(stderr);
-        }
-        catch (...)
-        {
-        }
-
-        std::_Exit(EXIT_FAILURE);
-}
-
-inline std::string get_error_list(const std::vector<std::string>& v)
-{
-        std::string names;
-        for (const std::string& s : v)
-        {
-                if (s.size() == 0)
-                {
-                        continue;
-                }
-                if (names.size() > 0)
-                {
-                        names += "\n" + s;
-                }
-                else
-                {
-                        names += s;
-                }
-        }
-        return names;
+[[noreturn]] void error_assert(const char* expr, const char* file, int line) noexcept;
 }
 
 #if 1
-#define ASSERT(expr)                     \
-        ((expr) ? static_cast<void>(0) : \
-                  error_fatal("Assert \"" + std::string(#expr) + "\" failed: " + __FILE__ + ":" + std::to_string(__LINE__)))
+#define ASSERT(expr) ((expr) ? static_cast<void>(0) : ErrorImplementation::error_assert(#expr, __FILE__, __LINE__))
 #else
 #define ASSERT(expr) (static_cast<void>(0))
 #endif

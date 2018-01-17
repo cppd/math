@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -155,6 +155,27 @@ public:
         }
 };
 
+inline std::string thread_errors_to_string_lines(const std::vector<std::string>& v)
+{
+        std::string errors;
+        for (const std::string& s : v)
+        {
+                if (s.size() == 0)
+                {
+                        continue;
+                }
+                if (errors.size() > 0)
+                {
+                        errors += "\n" + s;
+                }
+                else
+                {
+                        errors += s;
+                }
+        }
+        return errors;
+}
+
 template <typename F, typename C, typename... Args>
 void launch_class_thread(std::thread* t, std::string* thread_msg, const F& func, const C& cls, const Args&... args)
 {
@@ -230,7 +251,7 @@ inline void join_threads(std::vector<std::thread>* threads, const std::vector<st
                 t.join();
         }
 
-        std::string e = get_error_list(*msg);
+        std::string e = thread_errors_to_string_lines(*msg);
         if (e.size() != 0)
         {
                 error(e);

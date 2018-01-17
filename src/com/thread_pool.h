@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -199,7 +199,7 @@ public:
                 start_and_wait();
 
                 // Список возможных ошибок из потоков
-                std::string e = get_error_list(m_thread_errors);
+                std::string e = thread_errors_to_string_lines(m_thread_errors);
                 if (e.size() != 0)
                 {
                         error(e);
@@ -214,12 +214,12 @@ public:
 
                 m_cv_run.notify_all();
 
-                for (unsigned i = 0; i < m_threads.size(); ++i)
+                for (std::thread& t : m_threads)
                 {
-                        m_threads[i].join();
+                        t.join();
                 }
 
-                std::string e = get_error_list(m_msg);
+                std::string e = thread_errors_to_string_lines(m_msg);
                 if (e.size() != 0)
                 {
                         error_fatal(std::string("Thread pool thread(s) exited with error: ") + e);
