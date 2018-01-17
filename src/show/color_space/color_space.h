@@ -19,19 +19,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "graphics/objects.h"
 
-class ColorSpaceConverter
+class ColorSpaceConverterToRGB
 {
         ComputeProgram m_prog;
 
 public:
-        ColorSpaceConverter(bool to_rgb);
+        ColorSpaceConverterToRGB();
         void convert(const TextureRGBA32F& tex) const;
 };
 
-class ColorSpaceConverterToRGB : public ColorSpaceConverter
+class ColorSpaceConverterToSRGB
 {
+        ComputeProgram m_prog;
+
 public:
-        ColorSpaceConverterToRGB() : ColorSpaceConverter(true)
-        {
-        }
+        ColorSpaceConverterToSRGB();
+        void convert(const TextureRGBA32F& tex) const;
 };

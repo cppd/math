@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <vector>
 
-constexpr float EPSILON = 0.001;
+constexpr float EPSILON = 0.01;
 
 namespace
 {
@@ -39,7 +39,7 @@ float read_color_from_buffer(float color) noexcept
         TextureRGBA32F pixel_texture(1, 1);
         pixel_texture.copy_texture_sub_image();
 
-        std::vector<GLfloat> pixel(4);
+        std::array<GLfloat, 4> pixel;
         pixel_texture.get_texture_sub_image(0, 0, 1, 1, &pixel);
 
         return pixel[0];

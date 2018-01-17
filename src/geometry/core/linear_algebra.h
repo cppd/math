@@ -140,8 +140,9 @@ static_assert
 // Тип данных передаваемых векторов и диапазон значений рассчитаны только на определители
 // из этих чисел, поэтому нельзя использовать скалярные произведения, матрицы Грама и т.п.
 template <int COUNT, size_t N, typename T>
-std::enable_if_t<is_integral<T>, bool> linearly_independent(const std::array<Vector<N, T>, N>& vectors)
+bool linearly_independent(const std::array<Vector<N, T>, N>& vectors)
 {
+        static_assert(is_integral<T>);
         static_assert(N > 1);
         static_assert(COUNT > 0);
         static_assert(COUNT <= N);

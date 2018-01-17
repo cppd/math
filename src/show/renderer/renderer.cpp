@@ -272,7 +272,7 @@ class DrawObject final
         const DrawType m_draw_type;
 
 public:
-        DrawObject(const IObj* obj, const ColorSpaceConverter& color_converter, double size, const vec3& position);
+        DrawObject(const IObj* obj, const ColorSpaceConverterToRGB& color_converter, double size, const vec3& position);
 
         void bind() const;
 
@@ -281,7 +281,7 @@ public:
         DrawType get_draw_type() const;
 };
 
-DrawObject::DrawObject(const IObj* obj, const ColorSpaceConverter& color_converter, double size, const vec3& position)
+DrawObject::DrawObject(const IObj* obj, const ColorSpaceConverterToRGB& color_converter, double size, const vec3& position)
         : m_model_matrix(model_vertex_matrix(obj, size, position)), m_draw_type(calculate_draw_type_from_obj(obj))
 {
         if (m_draw_type == DrawType::TRIANGLES)

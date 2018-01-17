@@ -142,7 +142,6 @@ class ConvexHull2D::Impl final
         ShaderStorageBuffer m_points;
 
         TextureR32I m_point_count_texture;
-        std::vector<GLint> m_point_count_vector;
 
         double m_start_time;
 
@@ -159,7 +158,6 @@ public:
                   m_line_min(m_height, 1),
                   m_line_max(m_height, 1),
                   m_point_count_texture(1, 1),
-                  m_point_count_vector(1),
                   m_start_time(get_time_seconds())
         {
                 m_prepare_prog.set_uniform_handle("objects", objects.get_image_resident_handle_read_only());
@@ -200,13 +198,14 @@ public:
                 m_filter_prog.dispatch_compute(1, 1, 1, 1, 1, 1);
 
                 glMemoryBarrier(GL_TEXTURE_UPDATE_BARRIER_BIT);
-                m_point_count_texture.get_texture_sub_image(0, 0, 1, 1, &m_point_count_vector);
+                std::array<GLint, 1> point_count;
+                m_point_count_texture.get_texture_sub_image(0, 0, 1, 1, &point_count);
 
                 float d = 0.5 + 0.5 * std::sin(ANGULAR_FREQUENCY * (get_time_seconds() - m_start_time));
                 m_draw_prog.set_uniform("brightness", d);
 
                 glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-                m_draw_prog.draw_arrays(GL_LINE_LOOP, 0, m_point_count_vector[0]);
+                m_draw_prog.draw_arrays(GL_LINE_LOOP, 0, point_count[0]);
         }
 };
 

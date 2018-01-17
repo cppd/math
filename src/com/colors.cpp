@@ -159,9 +159,9 @@ std::array<unsigned char, 3> rgb_float_to_srgb_integer(const vec3& c)
         return {{rgb_float_to_srgb_integer(c[0]), rgb_float_to_srgb_integer(c[1]), rgb_float_to_srgb_integer(c[2])}};
 }
 
-double luminance_of_rgb(const vec3& v)
+double luminance_of_rgb(const vec3& c)
 {
-        return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2];
+        return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
 }
 
 #if 0

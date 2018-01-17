@@ -646,23 +646,27 @@ public:
         }
 
         template <typename T>
-        std::enable_if_t<IsVector<T> || IsArray<T>> load_static_draw(const T& data) const
+        void load_static_draw(const T& data) const
         {
+                static_assert(IsVector<T> || IsArray<T>);
                 glNamedBufferData(m_buffer, data.size() * sizeof(typename T::value_type), data.data(), GL_STATIC_DRAW);
         }
         template <typename T>
-        std::enable_if_t<IsVector<T> || IsArray<T>> load_static_copy(const T& data) const
+        void load_static_copy(const T& data) const
         {
+                static_assert(IsVector<T> || IsArray<T>);
                 glNamedBufferData(m_buffer, data.size() * sizeof(typename T::value_type), data.data(), GL_STATIC_COPY);
         }
         template <typename T>
-        std::enable_if_t<IsVector<T> || IsArray<T>> load_dynamic_draw(const T& data) const
+        void load_dynamic_draw(const T& data) const
         {
+                static_assert(IsVector<T> || IsArray<T>);
                 glNamedBufferData(m_buffer, data.size() * sizeof(typename T::value_type), data.data(), GL_DYNAMIC_DRAW);
         }
         template <typename T>
-        std::enable_if_t<IsVector<T> || IsArray<T>> load_dynamic_copy(const T& data) const
+        void load_dynamic_copy(const T& data) const
         {
+                static_assert(IsVector<T> || IsArray<T>);
                 glNamedBufferData(m_buffer, data.size() * sizeof(typename T::value_type), data.data(), GL_DYNAMIC_COPY);
         }
 
@@ -726,13 +730,15 @@ public:
         }
 
         template <typename T>
-        std::enable_if_t<IsVector<T> || IsArray<T>> load_static_draw(const T& v) const
+        void load_static_draw(const T& v) const
         {
+                static_assert(IsVector<T> || IsArray<T>);
                 glNamedBufferData(m_buffer, v.size() * sizeof(typename T::value_type), v.data(), GL_STATIC_DRAW);
         }
         template <typename T>
-        std::enable_if_t<IsVector<T> || IsArray<T>> load_dynamic_draw(const T& v) const
+        void load_dynamic_draw(const T& v) const
         {
+                static_assert(IsVector<T> || IsArray<T>);
                 glNamedBufferData(m_buffer, v.size() * sizeof(typename T::value_type), v.data(), GL_DYNAMIC_DRAW);
         }
 };
@@ -805,6 +811,9 @@ public:
 
 class TextureRGBA32F final
 {
+        template <typename T>
+        static constexpr bool is_float_buffer = (IsVector<T> || IsArray<T>)&&std::is_same_v<typename T::value_type, GLfloat>;
+
         Texture2D m_texture;
 
         void set_parameters()
@@ -868,15 +877,18 @@ public:
                 std::array<GLfloat, 4> v = {{r, g, b, a}};
                 m_texture.clear_tex_image(0, GL_RGBA, GL_FLOAT, v.data());
         }
-        void get_texture_image(std::vector<GLfloat>* pixels) const noexcept
+        template <typename T>
+        void get_texture_image(T* pixels) const noexcept
         {
+                static_assert(is_float_buffer<T>);
                 unsigned long long size = 4ull * m_texture.get_width() * m_texture.get_height();
                 ASSERT(pixels->size() == size);
                 m_texture.get_texture_image(0, GL_RGBA, GL_FLOAT, size * sizeof(GLfloat), pixels->data());
         }
-        void get_texture_sub_image(GLint xoffset, GLint yoffset, GLsizei width, GLsizei height,
-                                   std::vector<GLfloat>* pixels) const noexcept
+        template <typename T>
+        void get_texture_sub_image(GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, T* pixels) const noexcept
         {
+                static_assert(is_float_buffer<T>);
                 unsigned long long size = 4ull * width * height;
                 ASSERT(pixels->size() == size);
                 ASSERT(width > 0 && height > 0);
@@ -893,6 +905,9 @@ public:
 
 class TextureR32F final
 {
+        template <typename T>
+        static constexpr bool is_float_buffer = (IsVector<T> || IsArray<T>)&&std::is_same_v<typename T::value_type, GLfloat>;
+
         Texture2D m_texture;
 
         void set_parameters()
@@ -937,16 +952,19 @@ public:
         {
                 m_texture.clear_tex_image(0, GL_RED, GL_FLOAT, &v);
         }
-        void get_texture_image(std::vector<GLfloat>* pixels) const noexcept
+        template <typename T>
+        void get_texture_image(T* pixels) const noexcept
         {
-                unsigned long long size = m_texture.get_width() * m_texture.get_height();
+                static_assert(is_float_buffer<T>);
+                unsigned long long size = static_cast<unsigned long long>(m_texture.get_width()) * m_texture.get_height();
                 ASSERT(pixels->size() == size);
                 m_texture.get_texture_image(0, GL_RED, GL_FLOAT, size * sizeof(GLfloat), pixels->data());
         }
-        void get_texture_sub_image(GLint xoffset, GLint yoffset, GLsizei width, GLsizei height,
-                                   std::vector<GLfloat>* pixels) const noexcept
+        template <typename T>
+        void get_texture_sub_image(GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, T* pixels) const noexcept
         {
-                unsigned long long size = width * height;
+                static_assert(is_float_buffer<T>);
+                unsigned long long size = static_cast<unsigned long long>(width) * height;
                 ASSERT(pixels->size() == size);
                 ASSERT(width > 0 && height > 0);
                 ASSERT(width <= m_texture.get_width() && height <= m_texture.get_height());
@@ -962,6 +980,9 @@ public:
 
 class TextureR32I final
 {
+        template <typename T>
+        static constexpr bool is_int_buffer = (IsVector<T> || IsArray<T>)&&std::is_same_v<typename T::value_type, GLint>;
+
         Texture2D m_texture;
 
 public:
@@ -990,16 +1011,19 @@ public:
         {
                 m_texture.clear_tex_image(0, GL_RED_INTEGER, GL_INT, &v);
         }
-        void get_texture_image(std::vector<GLint>* pixels) const noexcept
+        template <typename T>
+        void get_texture_image(T* pixels) const noexcept
         {
-                unsigned long long size = m_texture.get_width() * m_texture.get_height();
+                static_assert(is_int_buffer<T>);
+                unsigned long long size = static_cast<unsigned long long>(m_texture.get_width()) * m_texture.get_height();
                 ASSERT(pixels->size() == size);
                 m_texture.get_texture_image(0, GL_RED_INTEGER, GL_INT, size * sizeof(GLint), pixels->data());
         }
-        void get_texture_sub_image(GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, std::vector<GLint>* pixels) const
-                noexcept
+        template <typename T>
+        void get_texture_sub_image(GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, T* pixels) const noexcept
         {
-                unsigned long long size = width * height;
+                static_assert(is_int_buffer<T>);
+                unsigned long long size = static_cast<unsigned long long>(width) * height;
                 ASSERT(pixels->size() == size);
                 ASSERT(width > 0 && height > 0);
                 ASSERT(width <= m_texture.get_width() && height <= m_texture.get_height());

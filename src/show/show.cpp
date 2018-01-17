@@ -77,9 +77,9 @@ int get_object_under_mouse(int mouse_x, int mouse_y, int window_height, const Te
 {
         int x = mouse_x;
         int y = window_height - mouse_y - 1;
-        GLint v;
+        std::array<GLint, 1> v;
         tex.get_texture_sub_image(x, y, 1, 1, &v);
-        return v;
+        return v[0];
 }
 #endif
 

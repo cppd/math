@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -54,10 +54,8 @@ public:
 }
 
 template <typename Object>
-std::enable_if_t<std::is_base_of_v<GenericObject, Object>, bool> ray_intersection(const std::vector<const Object*>& objects,
-                                                                                  const ray3& ray, double* t,
-                                                                                  const Surface** found_surface,
-                                                                                  const GeometricObject** found_object)
+bool ray_intersection(const std::vector<const Object*>& objects, const ray3& ray, double* t, const Surface** found_surface,
+                      const GeometricObject** found_object)
 {
         static_assert(std::is_base_of_v<GenericObject, Object>);
 
@@ -113,10 +111,10 @@ std::enable_if_t<std::is_base_of_v<GenericObject, Object>, bool> ray_intersectio
 }
 
 template <typename Object>
-std::enable_if_t<std::is_base_of_v<GeometricObject, Object>, bool> ray_intersection(const std::vector<const Object*>& objects,
-                                                                                    const ray3& ray, double* t,
-                                                                                    const Object** found_object)
+bool ray_intersection(const std::vector<const Object*>& objects, const ray3& ray, double* t, const Object** found_object)
 {
+        static_assert(std::is_base_of_v<GeometricObject, Object>);
+
         double min_distance = std::numeric_limits<double>::max();
         bool found = false;
 
@@ -141,11 +139,11 @@ std::enable_if_t<std::is_base_of_v<GeometricObject, Object>, bool> ray_intersect
 }
 
 template <typename Object>
-std::enable_if_t<std::is_base_of_v<GeometricObject, Object>, bool> ray_intersection(const std::vector<Object>& objects,
-                                                                                    const std::vector<int>& object_indices,
-                                                                                    const ray3& ray, double* t,
-                                                                                    const Object** found_object)
+bool ray_intersection(const std::vector<Object>& objects, const std::vector<int>& object_indices, const ray3& ray, double* t,
+                      const Object** found_object)
 {
+        static_assert(std::is_base_of_v<GeometricObject, Object>);
+
         double min_distance = std::numeric_limits<double>::max();
         bool found = false;
 

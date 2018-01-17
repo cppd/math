@@ -99,7 +99,7 @@ inline __float128 any_cos(__float128 a)
 template <typename T>
 constexpr bool is_finite(T v)
 {
-        static_assert(std::is_floating_point_v<T>);
+        static_assert(std::is_floating_point_v<T> && std::numeric_limits<T>::is_specialized);
         // std::isfinite не работает с -Ofast (-ffast-math),
         // поэтому сравнение с std::numeric_limits<T> lowest и max
         return v >= std::numeric_limits<T>::lowest() && v <= std::numeric_limits<T>::max();
@@ -112,7 +112,9 @@ constexpr bool is_finite(__float128 v)
 }
 
 template <typename T>
-constexpr std::enable_if_t<is_native_floating_point<T>, T> interpolation(T v0, T v1, T x)
+constexpr T interpolation(T v0, T v1, T x)
 {
+        static_assert(is_native_floating_point<T>);
+
         return any_fma(x, v1, any_fma(x, -v0, v0));
 }

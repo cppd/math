@@ -84,10 +84,9 @@ class limits
         static_assert(std::is_integral_v<T> || std::is_floating_point_v<T>);
 
 public:
-        template <typename A = T>
-        static constexpr std::enable_if_t<std::is_floating_point_v<A>, T> epsilon() noexcept
+        static constexpr T epsilon() noexcept
         {
-                static_assert(std::is_same_v<A, T>);
+                static_assert(std::is_floating_point_v<T>);
                 return std::numeric_limits<T>::epsilon();
         }
         static constexpr T max() noexcept
