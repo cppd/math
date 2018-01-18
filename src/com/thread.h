@@ -155,108 +155,143 @@ public:
         }
 };
 
-inline std::string thread_errors_to_string_lines(const std::vector<std::string>& v)
+class ThreadsWithCatch
 {
-        std::string errors;
-        for (const std::string& s : v)
+        class ThreadData
         {
-                if (s.size() == 0)
-                {
-                        continue;
-                }
-                if (errors.size() > 0)
-                {
-                        errors += "\n" + s;
-                }
-                else
-                {
-                        errors += s;
-                }
-        }
-        return errors;
-}
+                std::thread m_thread;
+                bool m_has_error = false;
+                std::string m_error_message;
 
-template <typename F, typename C, typename... Args>
-void launch_class_thread(std::thread* t, std::string* thread_msg, const F& func, const C& cls, const Args&... args)
-{
-        ASSERT(thread_msg);
+        public:
+                ThreadData(std::thread&& t) : m_thread(std::move(t))
+                {
+                }
+                void join()
+                {
+                        m_thread.join();
+                }
+                void set_error(const char* s)
+                {
+                        m_has_error = true;
+                        m_error_message = s;
+                }
+                bool has_error() const
+                {
+                        return m_has_error;
+                }
+                const std::string& error_message() const
+                {
+                        return m_error_message;
+                }
+        };
 
-        *t = std::thread([=]() noexcept {
+        const std::thread::id m_thread_id = std::this_thread::get_id();
+
+        std::vector<ThreadData> m_threads;
+
+        void join(bool& there_is_error, std::string& error_message) noexcept
+        {
                 try
                 {
-                        thread_msg->clear();
-                        try
+                        there_is_error = false;
+
+                        for (ThreadData& thread_data : m_threads)
                         {
-                                (cls->*func)(args...);
+                                thread_data.join();
+
+                                if (thread_data.has_error())
+                                {
+                                        there_is_error = true;
+                                        if (error_message.size() > 0)
+                                        {
+                                                error_message += '\n';
+                                        }
+                                        error_message += thread_data.error_message();
+                                }
                         }
-                        catch (TerminateRequestException&)
-                        {
-                        }
-                        catch (std::exception& e)
-                        {
-                                *thread_msg = e.what();
-                        }
-                        catch (...)
-                        {
-                                *thread_msg = "Unknown error in thread";
-                        }
+
+                        m_threads.clear();
+                }
+                catch (std::exception& e)
+                {
+                        error_fatal(std::string("Error while joining threads-with-catch: ") + e.what());
                 }
                 catch (...)
                 {
-                        error_fatal("Exception in thread message string.");
+                        error_fatal("Unknown error while joining threads-with-catch");
                 }
-        });
-}
+        }
 
-template <typename F>
-void launch_thread(std::thread* t, std::string* thread_msg, const F& f)
-{
-        ASSERT(thread_msg);
+public:
+        ThreadsWithCatch(unsigned thread_count)
+        {
+                m_threads.reserve(thread_count);
+        }
 
-        *t = std::thread([=]() noexcept {
+        ~ThreadsWithCatch()
+        {
+                ASSERT(m_thread_id == std::this_thread::get_id());
+
+                if (m_threads.size() != 0)
+                {
+                        error_fatal("Thread vector is not empty");
+                }
+        }
+
+        template <typename F>
+        void add(F&& function) noexcept
+        {
+                ASSERT(m_thread_id == std::this_thread::get_id());
+
                 try
                 {
-                        thread_msg->clear();
-                        try
+                        auto lambda = [&, thread_num = m_threads.size(), f = std::forward<F>(function) ]() noexcept
                         {
-                                f();
-                        }
-                        catch (TerminateRequestException&)
-                        {
-                        }
-                        catch (std::exception& e)
-                        {
-                                *thread_msg = e.what();
-                        }
-                        catch (...)
-                        {
-                                *thread_msg = "Unknown error in thread";
-                        }
+                                try
+                                {
+                                        f();
+                                }
+                                catch (TerminateRequestException&)
+                                {
+                                }
+                                catch (std::exception& e)
+                                {
+                                        m_threads[thread_num].set_error(e.what());
+                                }
+                                catch (...)
+                                {
+                                        m_threads[thread_num].set_error("Unknown error in thread");
+                                }
+                        };
+
+                        m_threads.emplace_back(std::thread(lambda));
+                }
+                catch (std::exception& e)
+                {
+                        error_fatal(std::string("Error while adding a thread-with-catch: ") + e.what());
                 }
                 catch (...)
                 {
-                        error_fatal("Exception in thread message string.");
+                        error_fatal("Unknown error while adding a thread-with-catch");
                 }
-        });
-}
-
-inline void join_threads(std::vector<std::thread>* threads, const std::vector<std::string>* msg)
-{
-        ASSERT(threads);
-        ASSERT(msg);
-        ASSERT(threads->size() == msg->size());
-
-        for (std::thread& t : *threads)
-        {
-                t.join();
         }
 
-        std::string e = thread_errors_to_string_lines(*msg);
-        if (e.size() != 0)
+        void join()
         {
-                error(e);
+                ASSERT(m_thread_id == std::this_thread::get_id());
+
+                bool there_is_error;
+                std::string error_message;
+
+                join(there_is_error, error_message);
+
+                if (there_is_error)
+                {
+                        error(error_message);
+                }
         }
-}
+};
 
 template <typename T>
 class AtomicCounter

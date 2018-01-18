@@ -436,8 +436,8 @@ public:
         }
 
         template <typename FunctorObjectPointer>
-        void decompose(int object_index_count, const FunctorObjectPointer& functor_object_pointer,
-                       unsigned decomposition_thread_count, ProgressRatio* progress)
+        void decompose(int object_index_count, const FunctorObjectPointer& functor_object_pointer, unsigned thread_count,
+                       ProgressRatio* progress)
 
         {
                 static_assert(std::is_pointer_v<decltype(functor_object_pointer(0))>);
@@ -460,16 +460,15 @@ public:
 
                 BoxJobs jobs(&boxes.front(), MAX_DEPTH_LEFT_BOUND);
 
-                std::vector<std::thread> threads(decomposition_thread_count);
-                std::vector<std::string> msg(threads.size());
-                for (unsigned i = 0; i < threads.size(); ++i)
+                ThreadsWithCatch threads(thread_count);
+                for (unsigned i = 0; i < thread_count; ++i)
                 {
-                        launch_thread(&threads[i], &msg[i], [&]() {
+                        threads.add([&]() {
                                 extend(MAX_DEPTH, MIN_OBJECTS, MAX_BOXES, &boxes_lock, &boxes, &jobs, functor_object_pointer,
                                        progress);
                         });
                 }
-                join_threads(&threads, &msg);
+                threads.join();
 
                 m_boxes = move_boxes_to_vector(std::move(boxes));
         }

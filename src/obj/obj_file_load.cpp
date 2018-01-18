@@ -680,12 +680,11 @@ void split(const std::string& line, size_t begin, size_t end, const T& space, co
         *second_e = i2;
 }
 
-template <typename T>
-void split_line(std::string* file_str, const std::vector<T>& line_begin, T line_num, T* first_b, T* first_e, T* second_b,
-                T* second_e)
+void split_line(std::string* file_str, const std::vector<size_t>& line_begin, size_t line_num, size_t* first_b, size_t* first_e,
+                size_t* second_b, size_t* second_e)
 {
-        T l_b = line_begin[line_num];
-        T l_e = (line_num + 1 < line_begin.size()) ? line_begin[line_num + 1] : file_str->size();
+        size_t l_b = line_begin[line_num];
+        size_t l_e = (line_num + 1 < line_begin.size()) ? line_begin[line_num + 1] : file_str->size();
 
         // В конце строки находится символ '\n', сместиться на него.
         --l_e;
@@ -777,30 +776,27 @@ class FileObj final : public IObj
         //        vec3f v;
         //};
 
-        struct ThreadData
+        struct Counters
         {
-                size_t thread_num;
-                size_t thread_count;
-                ThreadBarrier* barrier;
-                atomic_counter* cnt_v;
-                atomic_counter* cnt_vt;
-                atomic_counter* cnt_vn;
-                atomic_counter* cnt_f;
-                std::atomic_bool* error_found;
+                atomic_counter v = 0;
+                atomic_counter vt = 0;
+                atomic_counter vn = 0;
+                atomic_counter f = 0;
         };
 
         void check_face_indices() const;
 
         bool remove_one_dimensional_faces();
 
-        static void read_obj_one(const ThreadData* thread_data, std::string* file_ptr, std::vector<size_t>* line_begin,
-                                 std::vector<ObjLine>* line_prop, ProgressRatio* progress);
-        void read_obj_two(const ThreadData* thread_data, std::string* file_ptr, std::vector<ObjLine>* line_prop,
-                          ProgressRatio* progress, std::map<std::string, int>* material_index,
-                          std::vector<std::string>* library_names);
-        void read_obj_th(const ThreadData* thread_data, std::string* file_str, std::vector<size_t>* line_begin,
-                         std::vector<ObjLine>* line_prop, ProgressRatio* progress, std::map<std::string, int>* material_index,
-                         std::vector<std::string>* library_names);
+        static void read_obj_stage_one(unsigned thread_num, unsigned thread_count, Counters* counters, std::string* file_ptr,
+                                       std::vector<size_t>* line_begin, std::vector<ObjLine>* line_prop, ProgressRatio* progress);
+        void read_obj_stage_two(const Counters* counters, std::string* file_ptr, std::vector<ObjLine>* line_prop,
+                                ProgressRatio* progress, std::map<std::string, int>* material_index,
+                                std::vector<std::string>* library_names);
+        void read_obj_thread(unsigned thread_num, unsigned thread_count, Counters* counters, ThreadBarrier* barrier,
+                             std::atomic_bool* error_found, std::string* file_str, std::vector<size_t>* line_begin,
+                             std::vector<ObjLine>* line_prop, ProgressRatio* progress, std::map<std::string, int>* material_index,
+                             std::vector<std::string>* library_names);
         void read_obj(const std::string& file_name, ProgressRatio* progress, std::map<std::string, int>* material_index,
                       std::vector<std::string>* library_names);
 
@@ -925,14 +921,14 @@ bool FileObj::remove_one_dimensional_faces()
         return true;
 }
 
-void FileObj::read_obj_one(const ThreadData* thread_data, std::string* file_ptr, std::vector<size_t>* line_begin,
-                           std::vector<ObjLine>* line_prop, ProgressRatio* progress)
+void FileObj::read_obj_stage_one(unsigned thread_num, unsigned thread_count, Counters* counters, std::string* file_ptr,
+                                 std::vector<size_t>* line_begin, std::vector<ObjLine>* line_prop, ProgressRatio* progress)
 {
         std::string& file_str = *file_ptr;
         const size_t line_count = line_begin->size();
         const double line_count_reciprocal = 1.0 / line_begin->size();
 
-        for (size_t line_num = thread_data->thread_num; line_num < line_count; line_num += thread_data->thread_count)
+        for (unsigned line_num = thread_num; line_num < line_count; line_num += thread_count)
         {
                 if ((line_num & 0xfff) == 0xfff)
                 {
@@ -954,7 +950,7 @@ void FileObj::read_obj_one(const ThreadData* thread_data, std::string* file_ptr,
                         lp.v = v;
                         if (ATOMIC_COUNTER_LOCK_FREE)
                         {
-                                ++(*thread_data->cnt_v);
+                                ++(counters->v);
                         }
                 }
                 else if (str_equal(first, OBJ_vt))
@@ -966,7 +962,7 @@ void FileObj::read_obj_one(const ThreadData* thread_data, std::string* file_ptr,
                         lp.v[1] = v[1];
                         if (ATOMIC_COUNTER_LOCK_FREE)
                         {
-                                ++(*thread_data->cnt_vt);
+                                ++(counters->vt);
                         }
                 }
                 else if (str_equal(first, OBJ_vn))
@@ -977,7 +973,7 @@ void FileObj::read_obj_one(const ThreadData* thread_data, std::string* file_ptr,
                         lp.v = normalize(v);
                         if (ATOMIC_COUNTER_LOCK_FREE)
                         {
-                                ++(*thread_data->cnt_vn);
+                                ++(counters->vn);
                         }
                 }
                 else if (str_equal(first, OBJ_f))
@@ -986,7 +982,7 @@ void FileObj::read_obj_one(const ThreadData* thread_data, std::string* file_ptr,
                         read_faces(file_str, lp.second_b, lp.second_e, &lp.faces, &lp.face_count);
                         if (ATOMIC_COUNTER_LOCK_FREE)
                         {
-                                ++(*thread_data->cnt_f);
+                                ++(counters->f);
                         }
                 }
                 else if (str_equal(first, OBJ_usemtl))
@@ -1030,16 +1026,16 @@ void correct_indices(IObj::Face* face, int vertices_size, int texcoords_size, in
         }
 }
 
-void FileObj::read_obj_two(const ThreadData* thread_data, std::string* file_ptr, std::vector<ObjLine>* line_prop,
-                           ProgressRatio* progress, std::map<std::string, int>* material_index,
-                           std::vector<std::string>* library_names)
+void FileObj::read_obj_stage_two(const Counters* counters, std::string* file_ptr, std::vector<ObjLine>* line_prop,
+                                 ProgressRatio* progress, std::map<std::string, int>* material_index,
+                                 std::vector<std::string>* library_names)
 {
         if (ATOMIC_COUNTER_LOCK_FREE)
         {
-                m_vertices.reserve(*thread_data->cnt_v);
-                m_texcoords.reserve(*thread_data->cnt_vt);
-                m_normals.reserve(*thread_data->cnt_vn);
-                m_faces.reserve(*thread_data->cnt_f);
+                m_vertices.reserve(counters->v);
+                m_texcoords.reserve(counters->vt);
+                m_normals.reserve(counters->vn);
+                m_faces.reserve(counters->f);
         }
 
         const std::string& file_str = *file_ptr;
@@ -1115,29 +1111,30 @@ void FileObj::read_obj_two(const ThreadData* thread_data, std::string* file_ptr,
         }
 }
 
-void FileObj::read_obj_th(const ThreadData* thread_data, std::string* file_ptr, std::vector<size_t>* line_begin,
-                          std::vector<ObjLine>* line_prop, ProgressRatio* progress, std::map<std::string, int>* material_index,
-                          std::vector<std::string>* library_names)
+void FileObj::read_obj_thread(unsigned thread_num, unsigned thread_count, Counters* counters, ThreadBarrier* barrier,
+                              std::atomic_bool* error_found, std::string* file_ptr, std::vector<size_t>* line_begin,
+                              std::vector<ObjLine>* line_prop, ProgressRatio* progress,
+                              std::map<std::string, int>* material_index, std::vector<std::string>* library_names)
 {
         // параллельно
 
         try
         {
-                read_obj_one(thread_data, file_ptr, line_begin, line_prop, progress);
+                read_obj_stage_one(thread_num, thread_count, counters, file_ptr, line_begin, line_prop, progress);
         }
         catch (...)
         {
-                thread_data->error_found->store(true); // нет исключений
-                thread_data->barrier->wait();
+                error_found->store(true); // нет исключений
+                barrier->wait();
                 throw;
         }
-        thread_data->barrier->wait();
-        if (*thread_data->error_found)
+        barrier->wait();
+        if (*error_found)
         {
                 return;
         }
 
-        if (thread_data->thread_num != 0)
+        if (thread_num != 0)
         {
                 return;
         }
@@ -1147,7 +1144,7 @@ void FileObj::read_obj_th(const ThreadData* thread_data, std::string* file_ptr, 
         line_begin->clear();
         line_begin->shrink_to_fit();
 
-        read_obj_two(thread_data, file_ptr, line_prop, progress, material_index, library_names);
+        read_obj_stage_two(counters, file_ptr, line_prop, progress, material_index, library_names);
 }
 
 void FileObj::read_lib(const std::string& dir_name, const std::string& file_name, ProgressRatio* progress,
@@ -1311,42 +1308,27 @@ void FileObj::read_libs(const std::string& dir_name, ProgressRatio* progress, st
 void FileObj::read_obj(const std::string& file_name, ProgressRatio* progress, std::map<std::string, int>* material_index,
                        std::vector<std::string>* library_names)
 {
-        int hardware_concurrency = get_hardware_concurrency();
+        const int hardware_concurrency = get_hardware_concurrency();
 
         std::string file_str;
         std::vector<size_t> line_begin;
+
         read_file_lines(file_name, &file_str, &line_begin);
+
         std::vector<ObjLine> line_prop(line_begin.size());
-
-        std::vector<std::thread> threads(hardware_concurrency);
-        std::vector<ThreadData> thread_data(threads.size());
-        std::vector<std::string> thread_messages(threads.size());
-        ThreadBarrier barrier(threads.size());
-        atomic_counter cnt_v(0), cnt_vt(0), cnt_vn(0), cnt_f(0);
+        ThreadBarrier barrier(hardware_concurrency);
         std::atomic_bool error_found{false};
+        Counters counters;
 
-        for (size_t i = 0; i < thread_data.size(); ++i)
+        ThreadsWithCatch threads(hardware_concurrency);
+        for (int i = 0; i < hardware_concurrency; ++i)
         {
-                ThreadData t;
-                t.thread_num = i;
-                t.thread_count = threads.size();
-                t.barrier = &barrier;
-                t.cnt_v = &cnt_v;
-                t.cnt_vt = &cnt_vt;
-                t.cnt_vn = &cnt_vn;
-                t.cnt_f = &cnt_f;
-                t.error_found = &error_found;
-
-                thread_data[i] = t;
+                threads.add([&, i]() {
+                        read_obj_thread(i, hardware_concurrency, &counters, &barrier, &error_found, &file_str, &line_begin,
+                                        &line_prop, progress, material_index, library_names);
+                });
         }
-
-        for (size_t i = 0; i < threads.size(); ++i)
-        {
-                launch_class_thread(&threads[i], &thread_messages[i], &FileObj::read_obj_th, this, &thread_data[i], &file_str,
-                                    &line_begin, &line_prop, progress, material_index, library_names);
-        }
-
-        join_threads(&threads, &thread_messages);
+        threads.join();
 }
 
 void FileObj::read_obj_and_mtl(const std::string& file_name, ProgressRatio* progress)
@@ -1404,14 +1386,8 @@ class FileTxt final : public IObj
         vec3f m_center;
         float m_length;
 
-        struct ThreadData
-        {
-                size_t thread_num;
-                size_t thread_count;
-        };
-
-        void read_points_th(const ThreadData* thread_data, std::string* file_ptr, std::vector<size_t>* line_begin,
-                            std::vector<vec3f>* lines, ProgressRatio* progress) const;
+        void read_points_thread(unsigned thread_num, unsigned thread_count, std::string* file_ptr,
+                                std::vector<size_t>* line_begin, std::vector<vec3f>* lines, ProgressRatio* progress) const;
         void read_points(const std::string& file_name, ProgressRatio* progress);
         void read_text(const std::string& file_name, ProgressRatio* progress);
 
@@ -1460,13 +1436,13 @@ public:
         FileTxt(const std::string& file_name, ProgressRatio* progress);
 };
 
-void FileTxt::read_points_th(const ThreadData* thread_data, std::string* file_ptr, std::vector<size_t>* line_begin,
-                             std::vector<vec3f>* lines, ProgressRatio* progress) const
+void FileTxt::read_points_thread(unsigned thread_num, unsigned thread_count, std::string* file_ptr,
+                                 std::vector<size_t>* line_begin, std::vector<vec3f>* lines, ProgressRatio* progress) const
 {
         const size_t line_count = line_begin->size();
         const double line_count_reciprocal = 1.0 / line_begin->size();
 
-        for (size_t line_num = thread_data->thread_num; line_num < line_count; line_num += thread_data->thread_count)
+        for (size_t line_num = thread_num; line_num < line_count; line_num += thread_count)
         {
                 if ((line_num & 0xfff) == 0xfff)
                 {
@@ -1486,32 +1462,22 @@ void FileTxt::read_points_th(const ThreadData* thread_data, std::string* file_pt
 
 void FileTxt::read_points(const std::string& file_name, ProgressRatio* progress)
 {
-        int hardware_concurrency = get_hardware_concurrency();
+        const int hardware_concurrency = get_hardware_concurrency();
 
         std::string file_str;
         std::vector<size_t> line_begin;
+
         read_file_lines(file_name, &file_str, &line_begin);
+
         m_vertices.resize(line_begin.size());
 
-        std::vector<std::thread> threads(hardware_concurrency);
-        std::vector<ThreadData> thread_data(threads.size());
-        std::vector<std::string> thread_messages(threads.size());
-
-        for (size_t i = 0; i < thread_data.size(); ++i)
+        ThreadsWithCatch threads(hardware_concurrency);
+        for (int i = 0; i < hardware_concurrency; ++i)
         {
-                ThreadData t;
-                t.thread_num = i;
-                t.thread_count = threads.size();
-                thread_data[i] = t;
+                threads.add(
+                        [&, i]() { read_points_thread(i, hardware_concurrency, &file_str, &line_begin, &m_vertices, progress); });
         }
-
-        for (size_t i = 0; i < threads.size(); ++i)
-        {
-                launch_class_thread(&threads[i], &thread_messages[i], &FileTxt::read_points_th, this, &thread_data[i], &file_str,
-                                    &line_begin, &m_vertices, progress);
-        }
-
-        join_threads(&threads, &thread_messages);
+        threads.join();
 }
 
 void FileTxt::read_text(const std::string& file_name, ProgressRatio* progress)
@@ -1552,18 +1518,19 @@ std::unique_ptr<IObj> load_obj_from_file(const std::string& file_name, ProgressR
         {
                 return std::make_unique<FileObj>(file_name, progress);
         }
-        else if (upper_extension == "TXT")
+
+        if (upper_extension == "TXT")
         {
                 return std::make_unique<FileTxt>(file_name, progress);
         }
+
+        std::string ext = get_extension(file_name);
+        if (ext.size() > 0)
+        {
+                error("Unsupported file format " + ext);
+        }
         else
         {
-                std::string msg = "Unsupported file format";
-                if (upper_extension.size() > 0)
-                {
-                        msg += " " + get_extension(file_name);
-                }
-
-                error(msg);
+                error("File extension not found");
         }
 }

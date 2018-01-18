@@ -36,9 +36,35 @@ class ThreadPool
         std::mutex m_mutex_run, m_mutex_finish;
         std::condition_variable m_cv_run, m_cv_finish;
 
-        std::vector<std::thread> m_threads;
-        std::vector<std::string> m_msg;
-        std::vector<std::string> m_thread_errors;
+        ThreadsWithCatch m_threads;
+
+        class ThreadError
+        {
+                bool m_has_error;
+                std::string m_error_message;
+
+        public:
+                void set(const char* s)
+                {
+                        m_has_error = true;
+                        m_error_message = s;
+                }
+                void clear()
+                {
+                        m_has_error = false;
+                        m_error_message.clear();
+                }
+                bool has_error() const
+                {
+                        return m_has_error;
+                }
+                const std::string& error_message() const
+                {
+                        return m_error_message;
+                }
+        };
+
+        std::vector<ThreadError> m_thread_errors;
 
         bool m_enable;
         int m_count;
@@ -104,13 +130,16 @@ class ThreadPool
                         {
                                 m_bound_function(thread_num, THREAD_COUNT);
                         }
+                        catch (TerminateRequestException&)
+                        {
+                        }
                         catch (std::exception& e)
                         {
-                                m_thread_errors[thread_num] = e.what();
+                                m_thread_errors[thread_num].set(e.what());
                         }
                         catch (...)
                         {
-                                m_thread_errors[thread_num] = "Unknown error in thread of thread pool";
+                                m_thread_errors[thread_num].set("Unknown error in thread of thread pool");
                         }
                 }
                 catch (std::exception& e)
@@ -168,43 +197,68 @@ class ThreadPool
                 }
         }
 
+        void clear_errors()
+        {
+                for (ThreadError& thread_error : m_thread_errors)
+                {
+                        thread_error.clear();
+                }
+        }
+
+        void find_errors() const
+        {
+                bool there_is_error = false;
+                std::string error_message;
+
+                for (const ThreadError& thread_error : m_thread_errors)
+                {
+                        if (thread_error.has_error())
+                        {
+                                there_is_error = true;
+                                if (error_message.size() > 0)
+                                {
+                                        error_message += '\n';
+                                }
+                                error_message += thread_error.error_message();
+                        }
+                }
+
+                if (there_is_error)
+                {
+                        error(error_message);
+                }
+        }
+
 public:
-        ThreadPool(unsigned thread_count)
-                : THREAD_COUNT(thread_count), m_threads(THREAD_COUNT), m_msg(THREAD_COUNT), m_thread_errors(THREAD_COUNT)
+        ThreadPool(unsigned thread_count) : THREAD_COUNT(thread_count), m_threads(THREAD_COUNT), m_thread_errors(THREAD_COUNT)
         {
                 m_enable = false;
                 m_exit = false;
                 m_generation = 0;
                 m_count = THREAD_COUNT;
 
-                for (unsigned i = 0; i < m_threads.size(); ++i)
+                for (unsigned i = 0; i < THREAD_COUNT; ++i)
                 {
-                        launch_class_thread(&m_threads[i], &m_msg[i], &ThreadPool::thread, this, i);
+                        m_threads.add([&, i]() { thread(i); });
                 }
         }
+
         unsigned get_thread_count() const
         {
                 return THREAD_COUNT;
         }
+
         void run(const std::function<void(unsigned, unsigned, T...)>& function, T... args)
         {
                 m_bound_function = std::bind(function, std::placeholders::_1, std::placeholders::_2, args...);
 
-                // Очистка сообщений об ошибках
-                for (std::string& s : m_thread_errors)
-                {
-                        s.clear();
-                }
+                clear_errors();
 
                 start_and_wait();
 
-                // Список возможных ошибок из потоков
-                std::string e = thread_errors_to_string_lines(m_thread_errors);
-                if (e.size() != 0)
-                {
-                        error(e);
-                }
+                find_errors();
         }
+
         ~ThreadPool()
         {
                 {
@@ -214,15 +268,17 @@ public:
 
                 m_cv_run.notify_all();
 
-                for (std::thread& t : m_threads)
+                try
                 {
-                        t.join();
+                        m_threads.join();
                 }
-
-                std::string e = thread_errors_to_string_lines(m_msg);
-                if (e.size() != 0)
+                catch (std::exception& e)
                 {
-                        error_fatal(std::string("Thread pool thread(s) exited with error: ") + e);
+                        error_fatal(std::string("Thread pool thread(s) exited with error(s): ") + e.what());
+                }
+                catch (...)
+                {
+                        error_fatal("Thread pool thread(s) exited with an unknown error");
                 }
         }
 };
