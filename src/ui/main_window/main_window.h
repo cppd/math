@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -20,6 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "ui_main_window.h"
 
 #include "event_emitter.h"
+#include "meshes.h"
+#include "threads.h"
 
 #include "com/mat.h"
 #include "com/vec.h"
@@ -28,9 +30,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "tests/self_test.h"
 
 #include <QColor>
-#include <QProgressBar>
+
 #include <QTimer>
-#include <atomic>
 #include <list>
 #include <map>
 #include <memory>
@@ -45,7 +46,6 @@ struct IManifoldConstructor;
 template <size_t N>
 struct IObjectRepository;
 
-class Mesh;
 class Projector;
 class LightSource;
 class Sampler;
@@ -105,58 +105,17 @@ private slots:
         void slot_widget_under_window_resize();
 
 private:
-        // Идентификаторы объектов для взаимодействия с модулем рисования,
-        // куда передаются как числа, а не как enum
-        enum ObjectType
-        {
-                MODEL,
-                MODEL_MST,
-                MODEL_CONVEX_HULL,
-                SURFACE_COCONE,
-                SURFACE_COCONE_CONVEX_HULL,
-                SURFACE_BOUND_COCONE,
-                SURFACE_BOUND_COCONE_CONVEX_HULL
-        };
-
-        enum class OpenObjectType
+        enum class SourceType
         {
                 File,
                 Repository
         };
 
-        enum class ThreadAction
-        {
-                OpenObject,
-                ExportCocone,
-                ExportBoundCocone,
-                ReloadBoundCocone,
-                SelfTest
-        };
-
-        enum class MeshType
-        {
-                Model,
-                ModelCH,
-                Cocone,
-                CoconeCH,
-                BoundCocone,
-                BoundCoconeCH
-        };
-
-        enum class AddObjectType
+        enum class ObjectType
         {
                 Model,
                 Cocone,
                 BoundCocone
-        };
-
-        struct ThreadPack
-        {
-                ProgressRatioList progress_ratio_list;
-                std::list<QProgressBar> progress_bars;
-                std::thread thread;
-                std::atomic_bool working = false;
-                void stop() noexcept;
         };
 
         void showEvent(QShowEvent* event) override;
@@ -164,37 +123,39 @@ private:
 
         void stop_all_threads();
 
-        [[nodiscard]] bool thread_action_allowed(ThreadAction action) const;
-
-        template <ThreadAction thread_action, typename... Args>
-        void start_thread(const Args&... args);
-
-        void thread_open_object(ProgressRatioList* progress_ratio_list, const std::string& object_name,
-                                OpenObjectType object_type) noexcept;
-        void thread_add_object(ProgressRatioList* progress_ratio_list, AddObjectType object_type,
-                               std::shared_ptr<IObj> obj) noexcept;
-        void thread_surface_constructor(ProgressRatioList* progress_ratio_list) noexcept;
-        void thread_cocone(ProgressRatioList* progress_ratio_list) noexcept;
-        void thread_bound_cocone(ProgressRatioList* progress_ratio_list, double rho, double alpha) noexcept;
-        void thread_mst(ProgressRatioList* progress_ratio_list) noexcept;
-        void thread_self_test(ProgressRatioList* progress_ratio_list, SelfTestType test_type) noexcept;
-        void thread_export(ProgressRatioList* progress_ratio_list, const IObj* obj, const std::string& file_name,
-                           const std::string& cocone_type) noexcept;
-
         template <typename T>
         void catch_all(const T& a) noexcept;
 
-        void set_dependent_interface();
+        static std::string object_process_name(ObjectType object_type);
+        static std::string mesh_process_name(ObjectType object_type);
+        static int object_identifier(ObjectType object_type);
+        static int convex_hull_identifier(ObjectType object_type);
+        static MeshType mesh_type_for_object(ObjectType object_type);
 
-        template <ThreadAction thread_action>
-        void export_to_file();
+        void add_object_and_convex_hull(ProgressRatioList* progress_list, ObjectType object_type,
+                                        const std::shared_ptr<IObj>& obj);
+        void mesh(ProgressRatioList* progress_list, ObjectType object_type, const std::shared_ptr<IObj>& obj);
+        void object_and_mesh(ProgressRatioList* progress_list, ObjectType object_type, const std::shared_ptr<IObj>& obj);
+        void surface_constructor(ProgressRatioList* progress_list);
+        void cocone(ProgressRatioList* progress_list);
+        void bound_cocone(ProgressRatioList* progress_list, double rho, double alpha);
+        void mst(ProgressRatioList* progress_list);
+        void load_object(ProgressRatioList* progress_list, std::string object_name, SourceType source_type);
+
+        void thread_load_object(std::string object_name, SourceType source_type);
+        void thread_self_test(SelfTestType test_type);
+        void thread_export_cocone();
+        void thread_export_bound_cocone();
+        void thread_reload_bound_cocone();
+
+        void set_dependent_interface();
 
         static void strike_out_radio_button(QRadioButton* button);
         static void enable_radio_button(QRadioButton* button);
         void strike_out_all_objects_buttons();
         void strike_out_bound_cocone_buttons();
 
-        void progress_bars(bool permanent, ProgressRatioList* progress_ratio_list, std::list<QProgressBar>* progress_bars);
+        void progress_bars(bool permanent, const ProgressRatioList* progress_list, std::list<QProgressBar>* progress_bars);
 
         double get_ambient() const;
         double get_diffuse() const;
@@ -210,18 +171,19 @@ private:
         void set_wireframe_color(const QColor& c);
 
         bool find_visible_mesh(std::shared_ptr<const Mesh>* ptr, std::string* name) const;
-
         std::unique_ptr<const Projector> create_projector(double size_coef) const;
         std::unique_ptr<const LightSource> create_light_source() const;
         std::unique_ptr<const Sampler> create_sampler(int samples_per_pixel) const;
-
-        static std::tuple<std::string, MainWindow::ObjectType, MainWindow::ObjectType> parameters_for_add_object(
-                AddObjectType add_object_type);
-        static std::tuple<std::string, MeshType> parameters_for_mesh_object(AddObjectType add_object_type);
+        void paint(const std::shared_ptr<const Mesh>& mesh_pointer, const std::string& model_name, int thread_count,
+                   double size_coef, int samples_per_pixel);
 
         Ui::MainWindow ui;
 
         WindowEventEmitter m_event_emitter;
+
+        Threads m_threads;
+
+        Meshes m_meshes;
 
         std::unique_ptr<IShow> m_show;
 
@@ -232,8 +194,8 @@ private:
         bool m_first_show = true;
 
         QTimer m_timer_progress_bar;
+
         const std::thread::id m_window_thread_id;
-        std::map<ThreadAction, ThreadPack> m_threads;
 
         std::vector<vec3f> m_surface_points;
         std::unique_ptr<IManifoldConstructor<3>> m_surface_constructor;
@@ -244,14 +206,10 @@ private:
         std::shared_ptr<IObj> m_surface_cocone;
         std::shared_ptr<IObj> m_surface_bound_cocone;
 
-        std::map<MeshType, std::shared_ptr<const Mesh>> m_meshes;
-
-        std::unique_ptr<IObjectRepository<3>> m_object_repository;
+        const std::unique_ptr<IObjectRepository<3>> m_object_repository;
         std::unordered_map<QObject*, std::string> m_action_to_object_name_map;
 
         mat4 m_model_vertex_matrix;
 
-        double m_mesh_object_size;
-        vec3 m_mesh_object_position;
-        unsigned m_mesh_object_threads;
+        const int m_mesh_object_threads;
 };

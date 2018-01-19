@@ -160,11 +160,11 @@ public:
                 *paint_height = m_paint_height;
         }
 
-        void get_light_information(vec3* light_direction) const
+        vec3 get_light_direction() const
         {
                 std::lock_guard lg(m_lock);
 
-                *light_direction = -m_light_direction; // от источника света на объект
+                return -m_light_direction; // от источника света на объект
         }
 
         void rotate(int delta_x, int delta_y)
@@ -315,14 +315,17 @@ class ShowObject final : public IShow
         {
                 m_camera.get_camera_information(camera_up, camera_direction, view_center, view_width, paint_width, paint_height);
         }
-        void get_light_information(vec3* light_direction) const override
+        vec3 get_light_direction() const override
         {
-                m_camera.get_light_information(light_direction);
+                return m_camera.get_light_direction();
         }
-        void get_object_size_and_position(double* object_size, vec3* object_position) const override
+        double get_object_size() const override
         {
-                *object_size = OBJECT_SIZE;
-                *object_position = OBJECT_POSITION;
+                return OBJECT_SIZE;
+        }
+        vec3 get_object_position() const override
+        {
+                return OBJECT_POSITION;
         }
 
 public:

@@ -30,9 +30,9 @@ protected:
         virtual ~IShowCallback() = default;
 
 public:
-        virtual void message_error_fatal(const std::string&) noexcept = 0;
-        virtual void message_error_source(const std::string&, const std::string&) noexcept = 0;
-        virtual void object_loaded(int) noexcept = 0;
+        virtual void message_error_fatal(const std::string&) const noexcept = 0;
+        virtual void message_error_source(const std::string&, const std::string&) const noexcept = 0;
+        virtual void object_loaded(int) const noexcept = 0;
 };
 
 class IShow
@@ -69,8 +69,9 @@ public:
 
         virtual void get_camera_information(vec3* camera_up, vec3* camera_direction, vec3* view_center, double* view_width,
                                             int* paint_width, int* paint_height) const = 0;
-        virtual void get_light_information(vec3* light_direction) const = 0;
-        virtual void get_object_size_and_position(double* object_size, vec3* object_position) const = 0;
+        virtual vec3 get_light_direction() const = 0;
+        virtual double get_object_size() const = 0;
+        virtual vec3 get_object_position() const = 0;
 };
 
 std::unique_ptr<IShow> create_show(IShowCallback*, WindowID win_parent, vec3 clear_color_rgb, vec3 default_color_rgb,

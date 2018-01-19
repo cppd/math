@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@ protected:
         ~ILogCallback() = default;
 
 public:
-        virtual void log(const std::string& msg) noexcept = 0;
+        virtual void log(const std::string& msg) const noexcept = 0;
 };
 
 void set_log_callback(ILogCallback* callback) noexcept;

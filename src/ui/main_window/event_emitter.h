@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@ signals:
 
 private:
         template <typename T, typename... Args>
-        void emit_message(const char* error_message, Args&&... args)
+        void emit_message(const char* error_message, Args&&... args) const noexcept
         {
                 try
                 {
@@ -51,47 +51,47 @@ private:
         }
 
 public:
-        void message_error(const std::string& msg) noexcept
+        void message_error(const std::string& msg) const noexcept
         {
                 emit_message<WindowEvent::message_error>("Exception in emit message error", msg);
         }
 
-        void message_error_fatal(const std::string& msg) noexcept override
+        void message_error_fatal(const std::string& msg) const noexcept override
         {
                 emit_message<WindowEvent::message_error_fatal>("Exception in emit message error fatal", msg);
         }
 
-        void message_error_source(const std::string& msg, const std::string& src) noexcept override
+        void message_error_source(const std::string& msg, const std::string& src) const noexcept override
         {
                 emit_message<WindowEvent::message_error_source>("Exception in emit message error source", msg, src);
         }
 
-        void message_information(const std::string& msg) noexcept
+        void message_information(const std::string& msg) const noexcept
         {
                 emit_message<WindowEvent::message_information>("Exception in emit message information", msg);
         }
 
-        void message_warning(const std::string& msg) noexcept
+        void message_warning(const std::string& msg) const noexcept
         {
                 emit_message<WindowEvent::message_warning>("Exception in emit message warning", msg);
         }
 
-        void object_loaded(int id) noexcept override
+        void object_loaded(int id) const noexcept override
         {
                 emit_message<WindowEvent::object_loaded>("Exception in emit object loaded", id);
         }
 
-        void file_loaded(const std::string& msg) noexcept
+        void file_loaded(const std::string& msg) const noexcept
         {
                 emit_message<WindowEvent::file_loaded>("Exception in emit file loaded", msg);
         }
 
-        void bound_cocone_loaded(double rho, double alpha) noexcept
+        void bound_cocone_loaded(double rho, double alpha) const noexcept
         {
                 emit_message<WindowEvent::bound_cocone_loaded>("Exception in emit BOUND COCONE loaded", rho, alpha);
         }
 
-        void log(const std::string& msg) noexcept override
+        void log(const std::string& msg) const noexcept override
         {
                 emit_message<WindowEvent::log>("Exception in emit log", msg);
         }
