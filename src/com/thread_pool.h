@@ -28,7 +28,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <vector>
 
-template <typename... T>
 class ThreadPool
 {
         const unsigned THREAD_COUNT;
@@ -243,14 +242,14 @@ public:
                 }
         }
 
-        unsigned get_thread_count() const
+        unsigned thread_count() const
         {
                 return THREAD_COUNT;
         }
 
-        void run(const std::function<void(unsigned, unsigned, T...)>& function, T... args)
+        void run(std::function<void(unsigned, unsigned)>&& function)
         {
-                m_bound_function = std::bind(function, std::placeholders::_1, std::placeholders::_2, args...);
+                m_bound_function = std::move(function);
 
                 clear_errors();
 

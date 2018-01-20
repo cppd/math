@@ -489,10 +489,6 @@ void create_horizon_facets(unsigned thread_id, unsigned thread_count, const std:
         add_new_facets_to_conflict_points(thread_id, thread_count, new_facets_vector, point_conflicts);
 }
 
-template <size_t N, typename S, typename C>
-using ThreadPoolCH = ThreadPool<const std::vector<Vector<N, S>>*, int, std::vector<FacetStore<Facet<N, S, C>>>*,
-                                std::vector<std::vector<signed char>>*, std::vector<FacetList<Facet<N, S, C>>>*, ThreadBarrier*>;
-
 template <typename T>
 unsigned get_facet_count(const std::vector<T>& facets)
 {
@@ -501,7 +497,7 @@ unsigned get_facet_count(const std::vector<T>& facets)
 
 template <size_t N, typename S, typename C>
 void add_point_to_convex_hull(const std::vector<Vector<N, S>>& points, int point, FacetList<Facet<N, S, C>>* facets,
-                              std::vector<FacetStore<Facet<N, S, C>>>* point_conflicts, ThreadPoolCH<N, S, C>* thread_pool,
+                              std::vector<FacetStore<Facet<N, S, C>>>* point_conflicts, ThreadPool* thread_pool,
                               ThreadBarrier* thread_barrier, std::vector<std::vector<signed char>>* unique_points_work)
 {
         if ((*point_conflicts)[point].size() == 0)
@@ -520,13 +516,15 @@ void add_point_to_convex_hull(const std::vector<Vector<N, S>>& points, int point
                 facet->mark_as_visible();
         }
 
-        std::vector<FacetList<Facet<N, S, C>>> new_facets(thread_pool->get_thread_count());
+        std::vector<FacetList<Facet<N, S, C>>> new_facets(thread_pool->thread_count());
 
         // Добавление граней, состоящих из рёбер горизонта и заданной точки.
-        if (thread_pool->get_thread_count() > 1)
+        if (thread_pool->thread_count() > 1)
         {
-                thread_pool->run(create_horizon_facets<N, S, C>, &points, point, point_conflicts, unique_points_work, &new_facets,
-                                 thread_barrier);
+                thread_pool->run([&](unsigned thread_id, unsigned thread_count) {
+                        create_horizon_facets(thread_id, thread_count, &points, point, point_conflicts, unique_points_work,
+                                              &new_facets, thread_barrier);
+                });
         }
         else
         {
@@ -593,12 +591,12 @@ void create_convex_hull(const std::vector<Vector<N, S>>& points, FacetList<Facet
 
         create_init_conflict_lists(points, point_enabled, facets, &point_conflicts);
 
-        ThreadPoolCH<N, S, C> thread_pool(get_thread_count<S, C>());
-        ThreadBarrier thread_barrier(thread_pool.get_thread_count());
+        ThreadPool thread_pool(get_thread_count<S, C>());
+        ThreadBarrier thread_barrier(thread_pool.thread_count());
 
         // Создаётся здесь, чтобы каждый раз не создавать при расчёте и не выделять каждый раз память,
         // а также не использовать thread_local
-        std::vector<std::vector<signed char>> unique_points_work(thread_pool.get_thread_count());
+        std::vector<std::vector<signed char>> unique_points_work(thread_pool.thread_count());
         for (unsigned i = 0; i < unique_points_work.size(); ++i)
         {
                 unique_points_work[i].resize(points.size(), 0);
