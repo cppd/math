@@ -35,6 +35,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <list>
 #include <map>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <thread>
 #include <unordered_map>
@@ -49,6 +50,8 @@ struct IObjectRepository;
 class Projector;
 class LightSource;
 class Sampler;
+
+class Mesh;
 
 class MainWindow final : public QMainWindow
 {
@@ -118,6 +121,11 @@ private:
                 BoundCocone
         };
 
+        void constructor_connect();
+        void constructor_interface();
+        void constructor_repository();
+        void constructor_buttons();
+
         void showEvent(QShowEvent* event) override;
         void closeEvent(QCloseEvent* event) override;
 
@@ -126,15 +134,13 @@ private:
         template <typename T>
         void catch_all(const T& a) noexcept;
 
-        static std::string object_process_name(ObjectType object_type);
-        static std::string mesh_process_name(ObjectType object_type);
+        static std::string object_name(ObjectType object_type);
         static int object_identifier(ObjectType object_type);
         static int convex_hull_identifier(ObjectType object_type);
-        static MeshType mesh_type_for_object(ObjectType object_type);
 
         void add_object_and_convex_hull(ProgressRatioList* progress_list, ObjectType object_type,
                                         const std::shared_ptr<IObj>& obj);
-        void mesh(ProgressRatioList* progress_list, ObjectType object_type, const std::shared_ptr<IObj>& obj);
+        void mesh(ProgressRatioList* progress_list, int mesh_id, const std::shared_ptr<IObj>& obj);
         void object_and_mesh(ProgressRatioList* progress_list, ObjectType object_type, const std::shared_ptr<IObj>& obj);
         void surface_constructor(ProgressRatioList* progress_list);
         void cocone(ProgressRatioList* progress_list);
@@ -170,7 +176,6 @@ private:
         void set_default_color(const QColor& c);
         void set_wireframe_color(const QColor& c);
 
-        bool find_visible_mesh(std::shared_ptr<const Mesh>* ptr, std::string* name) const;
         std::unique_ptr<const Projector> create_projector(double size_coef) const;
         std::unique_ptr<const LightSource> create_light_source() const;
         std::unique_ptr<const Sampler> create_sampler(int samples_per_pixel) const;
@@ -183,7 +188,10 @@ private:
 
         Threads m_threads;
 
-        Meshes m_meshes;
+        Meshes<int, const Mesh> m_meshes;
+        std::mutex m_mesh_sequential_mutex;
+
+        std::vector<std::tuple<const QRadioButton*, int>> m_object_buttons;
 
         std::unique_ptr<IShow> m_show;
 

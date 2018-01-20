@@ -89,8 +89,7 @@ constexpr int PATH_TRACING_MAX_SAMPLES_PER_PIXEL = 100;
 // Сколько потоков не надо использовать от максимума для создания октадеревьев.
 constexpr int MESH_OBJECT_NOT_USED_THREAD_COUNT = 2;
 
-// Идентификаторы объектов для взаимодействия с модулем рисования,
-// куда они передаются как числа, а не как enum
+// Идентификаторы объектов как числа, а не как enum class
 enum ObjectIdentifier
 {
         OBJECT_MODEL,
@@ -112,10 +111,16 @@ MainWindow::MainWindow(QWidget* parent)
 
         ui.setupUi(this);
 
-        QMainWindow::setWindowTitle(APPLICATION_NAME);
+        constructor_connect();
+        constructor_interface();
+        constructor_repository();
+        constructor_buttons();
 
-        QMainWindow::addAction(ui.actionFullScreen);
+        set_log_callback(&m_event_emitter);
+}
 
+void MainWindow::constructor_connect()
+{
         qRegisterMetaType<WindowEvent>("WindowEvent");
         connect(&m_event_emitter, SIGNAL(window_event(WindowEvent)), this, SLOT(slot_window_event(WindowEvent)),
                 Qt::ConnectionType(Qt::QueuedConnection | Qt::UniqueConnection));
@@ -125,8 +130,15 @@ MainWindow::MainWindow(QWidget* parent)
         connect(ui.graphics_widget, SIGNAL(resize()), this, SLOT(slot_widget_under_window_resize()));
 
         connect(&m_timer_progress_bar, SIGNAL(timeout()), this, SLOT(slot_timer_progress_bar()));
+}
 
-        set_widgets_enabled(this->layout(), true);
+void MainWindow::constructor_interface()
+{
+        QMainWindow::setWindowTitle(APPLICATION_NAME);
+
+        QMainWindow::addAction(ui.actionFullScreen);
+
+        set_widgets_enabled(QMainWindow::layout(), true);
         set_dependent_interface();
         strike_out_all_objects_buttons();
 
@@ -148,6 +160,12 @@ MainWindow::MainWindow(QWidget* parent)
 
         ui.Slider_ShadowQuality->setSliderPosition(SHADOW_ZOOM);
 
+        // Чтобы добавление и удаление QProgressBar не меняло высоту ui.statusBar
+        ui.statusBar->setFixedHeight(ui.statusBar->height());
+}
+
+void MainWindow::constructor_repository()
+{
         // QMenu* menuCreate = new QMenu("Create", this);
         // ui.menuBar->insertMenu(ui.menuHelp->menuAction(), menuCreate);
         for (const std::string& object_name : m_object_repository->get_list_of_point_objects())
@@ -156,11 +174,17 @@ MainWindow::MainWindow(QWidget* parent)
                 m_action_to_object_name_map.emplace(action, object_name);
                 connect(action, SIGNAL(triggered()), this, SLOT(slot_object_repository()));
         }
+}
 
-        // Чтобы добавление и удаление QProgressBar не меняло высоту ui.statusBar
-        ui.statusBar->setFixedHeight(ui.statusBar->height());
-
-        set_log_callback(&m_event_emitter);
+void MainWindow::constructor_buttons()
+{
+        m_object_buttons.push_back({ui.radioButton_Model, OBJECT_MODEL});
+        m_object_buttons.push_back({ui.radioButton_ModelMST, OBJECT_MODEL_MST});
+        m_object_buttons.push_back({ui.radioButton_ModelConvexHull, OBJECT_MODEL_CONVEX_HULL});
+        m_object_buttons.push_back({ui.radioButton_Cocone, OBJECT_COCONE});
+        m_object_buttons.push_back({ui.radioButton_CoconeConvexHull, OBJECT_COCONE_CONVEX_HULL});
+        m_object_buttons.push_back({ui.radioButton_BoundCocone, OBJECT_BOUND_COCONE});
+        m_object_buttons.push_back({ui.radioButton_BoundCoconeConvexHull, OBJECT_BOUND_COCONE_CONVEX_HULL});
 }
 
 MainWindow::~MainWindow()
@@ -222,32 +246,18 @@ void MainWindow::catch_all(const T& a) noexcept
         }
 }
 
-std::string MainWindow::object_process_name(ObjectType object_type)
+std::string MainWindow::object_name(ObjectType object_type)
 {
         switch (object_type)
         {
         case ObjectType::Model:
-                return "Convex hull 3D";
+                return "Model";
         case ObjectType::Cocone:
-                return "COCONE convex hull 3D";
+                return "COCONE";
         case ObjectType::BoundCocone:
-                return "BOUND COCONE convex hull 3D";
+                return "BOUND COCONE";
         }
-        error_fatal("Unknown object type for object name");
-}
-
-std::string MainWindow::mesh_process_name(ObjectType object_type)
-{
-        switch (object_type)
-        {
-        case ObjectType::Model:
-                return "Mesh object";
-        case ObjectType::Cocone:
-                return "COCONE mesh object";
-        case ObjectType::BoundCocone:
-                return "BOUND COCONE mesh object";
-        }
-        error_fatal("Unknown object type for mesh name");
+        error_fatal("Unknown object type");
 }
 
 int MainWindow::object_identifier(ObjectType object_type)
@@ -261,7 +271,7 @@ int MainWindow::object_identifier(ObjectType object_type)
         case ObjectType::BoundCocone:
                 return OBJECT_BOUND_COCONE;
         };
-        error_fatal("Unknown object type for identifier");
+        error_fatal("Unknown object type");
 }
 
 int MainWindow::convex_hull_identifier(ObjectType object_type)
@@ -275,21 +285,7 @@ int MainWindow::convex_hull_identifier(ObjectType object_type)
         case ObjectType::BoundCocone:
                 return OBJECT_BOUND_COCONE_CONVEX_HULL;
         };
-        error_fatal("Unknown object type for identifier");
-}
-
-MeshType MainWindow::mesh_type_for_object(ObjectType object_type)
-{
-        switch (object_type)
-        {
-        case ObjectType::Model:
-                return MeshType::Model;
-        case ObjectType::Cocone:
-                return MeshType::Cocone;
-        case ObjectType::BoundCocone:
-                return MeshType::BoundCocone;
-        }
-        error_fatal("Unknown object type for mesh object");
+        error_fatal("Unknown object type");
 }
 
 void MainWindow::add_object_and_convex_hull(ProgressRatioList* progress_list, ObjectType object_type,
@@ -297,38 +293,46 @@ void MainWindow::add_object_and_convex_hull(ProgressRatioList* progress_list, Ob
 {
         ASSERT(std::this_thread::get_id() != m_window_thread_id);
 
-        int object_id = object_identifier(object_type);
-        int convex_hull_id = convex_hull_identifier(object_type);
-
-        if (obj->faces().size() > 0 || (object_type == ObjectType::Model && obj->points().size() > 0))
+        if (!(obj->faces().size() > 0 || (object_type == ObjectType::Model && obj->points().size() > 0)))
         {
-                m_show->add_object(obj, object_id, OBJECT_MODEL);
-
-                ProgressRatio progress(progress_list);
-                std::string name = object_process_name(object_type);
-                progress.set_text(name + ": %v of %m");
-
-                std::shared_ptr<IObj> convex_hull = create_convex_hull_for_obj(obj.get(), &progress);
-
-                if (convex_hull->faces().size() != 0)
-                {
-                        m_show->add_object(convex_hull, convex_hull_id, OBJECT_MODEL);
-                }
+                return;
         }
+
+        int object_id = object_identifier(object_type);
+        m_show->add_object(obj, object_id, OBJECT_MODEL);
+
+        std::shared_ptr<IObj> convex_hull;
+
+        {
+                ProgressRatio progress(progress_list);
+                progress.set_text(object_name(object_type) + " convex hull 3D: %v of %m");
+
+                convex_hull = create_convex_hull_for_obj(obj.get(), &progress);
+        }
+
+        if (convex_hull->faces().size() > 0)
+        {
+                int convex_hull_id = convex_hull_identifier(object_type);
+                m_show->add_object(convex_hull, convex_hull_id, OBJECT_MODEL);
+        }
+
+        mesh(progress_list, convex_hull_identifier(object_type), convex_hull);
 }
 
-void MainWindow::mesh(ProgressRatioList* progress_list, ObjectType object_type, const std::shared_ptr<IObj>& obj)
+void MainWindow::mesh(ProgressRatioList* progress_list, int id, const std::shared_ptr<IObj>& obj)
 {
         ASSERT(std::this_thread::get_id() != m_window_thread_id);
 
-        MeshType mesh_type = mesh_type_for_object(object_type);
-
-        if (obj->faces().size() > 0)
+        if (obj->faces().size() == 0)
         {
-                ProgressRatio progress(progress_list);
-                m_meshes.set(mesh_type,
-                             std::make_shared<Mesh>(obj.get(), m_model_vertex_matrix, m_mesh_object_threads, &progress));
+                return;
         }
+
+        std::lock_guard lg(m_mesh_sequential_mutex);
+
+        ProgressRatio progress(progress_list);
+
+        m_meshes.set(id, std::make_shared<Mesh>(obj.get(), m_model_vertex_matrix, m_mesh_object_threads, &progress));
 }
 
 void MainWindow::object_and_mesh(ProgressRatioList* progress_list, ObjectType object_type, const std::shared_ptr<IObj>& obj)
@@ -337,7 +341,7 @@ void MainWindow::object_and_mesh(ProgressRatioList* progress_list, ObjectType ob
 
         std::thread thread_model([&]() noexcept {
                 catch_all([&](std::string* message) {
-                        *message = object_process_name(object_type);
+                        *message = object_name(object_type) + " object and convex hull";
 
                         add_object_and_convex_hull(progress_list, object_type, obj);
                 });
@@ -345,9 +349,9 @@ void MainWindow::object_and_mesh(ProgressRatioList* progress_list, ObjectType ob
 
         std::thread thread_mesh([&]() noexcept {
                 catch_all([&](std::string* message) {
-                        *message = mesh_process_name(object_type);
+                        *message = object_name(object_type) + " mesh";
 
-                        mesh(progress_list, object_type, obj);
+                        mesh(progress_list, object_identifier(object_type), obj);
                 });
         });
 
@@ -399,8 +403,8 @@ void MainWindow::bound_cocone(ProgressRatioList* progress_list, double rho, doub
         m_show->delete_object(OBJECT_BOUND_COCONE);
         m_show->delete_object(OBJECT_BOUND_COCONE_CONVEX_HULL);
 
-        m_meshes.reset(MeshType::BoundCocone);
-        m_meshes.reset(MeshType::BoundCoconeCH);
+        m_meshes.reset(OBJECT_BOUND_COCONE);
+        m_meshes.reset(OBJECT_BOUND_COCONE_CONVEX_HULL);
 
         m_event_emitter.bound_cocone_loaded(rho, alpha);
 
@@ -495,6 +499,7 @@ void MainWindow::load_object(ProgressRatioList* progress_list, std::string objec
         {
                 error("Faces or points not found");
         }
+
         if (obj->faces().size() != 0 && obj->points().size() != 0)
         {
                 error("Faces and points together in one object are not supported");
@@ -971,7 +976,7 @@ void MainWindow::slot_window_event(const WindowEvent& event)
                 const WindowEvent::file_loaded& d = event.get<WindowEvent::file_loaded>();
 
                 std::string file_name = get_base_name(d.file_name);
-                this->setWindowTitle(QString(APPLICATION_NAME) + " - " + file_name.c_str());
+                QMainWindow::setWindowTitle(QString(APPLICATION_NAME) + " - " + file_name.c_str());
                 strike_out_all_objects_buttons();
                 ui.radioButton_Model->setChecked(true);
 
@@ -1312,32 +1317,6 @@ void MainWindow::on_radioButton_BoundCoconeConvexHull_clicked()
         m_show->show_object(OBJECT_BOUND_COCONE_CONVEX_HULL);
 }
 
-bool MainWindow::find_visible_mesh(std::shared_ptr<const Mesh>* mesh_pointer, std::string* model_name) const
-{
-        if (ui.radioButton_Model->isChecked())
-        {
-                *model_name = ui.radioButton_Model->text().toStdString();
-                *mesh_pointer = m_meshes.get(MeshType::Model);
-                return true;
-        }
-
-        if (ui.radioButton_Cocone->isChecked())
-        {
-                *model_name = ui.radioButton_Cocone->text().toStdString();
-                *mesh_pointer = m_meshes.get(MeshType::Cocone);
-                return true;
-        }
-
-        if (ui.radioButton_BoundCocone->isChecked())
-        {
-                *model_name = ui.radioButton_BoundCocone->text().toStdString();
-                *mesh_pointer = m_meshes.get(MeshType::BoundCocone);
-                return true;
-        }
-
-        return false;
-}
-
 std::unique_ptr<const Projector> MainWindow::create_projector(double size_coef) const
 {
         vec3 camera_up, camera_direction, view_center;
@@ -1380,7 +1359,7 @@ void MainWindow::paint(const std::shared_ptr<const Mesh>& mesh_pointer, const st
         {
                 vec3 background_color = qcolor_to_rgb(m_clear_color);
 
-                std::string title = this->windowTitle().toStdString() + " (" + model_name + ")";
+                std::string title = QMainWindow::windowTitle().toStdString() + " (" + model_name + ")";
 
                 create_and_show_delete_on_close_window<PainterWindow>(
                         title, thread_count,
@@ -1398,7 +1377,7 @@ void MainWindow::paint(const std::shared_ptr<const Mesh>& mesh_pointer, const st
                 paint_width = std::lround(paint_width * size_coef);
                 paint_height = std::lround(paint_height * size_coef);
 
-                std::string title = this->windowTitle().toStdString() + " (" + model_name + " in Cornell Box)";
+                std::string title = QMainWindow::windowTitle().toStdString() + " (" + model_name + " in Cornell Box)";
 
                 create_and_show_delete_on_close_window<PainterWindow>(
                         title, thread_count,
@@ -1409,13 +1388,17 @@ void MainWindow::paint(const std::shared_ptr<const Mesh>& mesh_pointer, const st
 
 void MainWindow::on_pushButton_Painter_clicked()
 {
-        std::shared_ptr<const Mesh> mesh_pointer;
         std::string model_name;
+        std::shared_ptr<const Mesh> mesh_pointer;
 
-        if (!find_visible_mesh(&mesh_pointer, &model_name))
+        for (const auto & [ button, id ] : m_object_buttons)
         {
-                m_event_emitter.message_warning("No painting support for this model type");
-                return;
+                if (button->isChecked())
+                {
+                        model_name = button->text().toStdString();
+                        mesh_pointer = m_meshes.get(id);
+                        break;
+                }
         }
 
         if (!mesh_pointer)
