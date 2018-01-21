@@ -176,12 +176,6 @@ private:
         void set_default_color(const QColor& c);
         void set_wireframe_color(const QColor& c);
 
-        std::unique_ptr<const Projector> create_projector(double size_coef) const;
-        std::unique_ptr<const LightSource> create_light_source() const;
-        std::unique_ptr<const Sampler> create_sampler(int samples_per_pixel) const;
-        void paint(const std::shared_ptr<const Mesh>& mesh_pointer, const std::string& model_name, int thread_count,
-                   double size_coef, int samples_per_pixel);
-
         Ui::MainWindow ui;
 
         WindowEventEmitter m_event_emitter;

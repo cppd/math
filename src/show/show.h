@@ -67,8 +67,9 @@ public:
         virtual void set_vertical_sync(bool v) = 0;
         virtual void set_shadow_zoom(double v) = 0;
 
-        virtual void get_camera_information(vec3* camera_up, vec3* camera_direction, vec3* view_center, double* view_width,
-                                            int* paint_width, int* paint_height) const = 0;
+        virtual void get_camera_information(vec3* camera_up, vec3* camera_direction, vec3* view_center,
+                                            double* view_width) const = 0;
+        virtual void get_paint_width_height(int* width, int* height) const = 0;
         virtual vec3 get_light_direction() const = 0;
         virtual double get_object_size() const = 0;
         virtual vec3 get_object_position() const = 0;

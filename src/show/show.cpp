@@ -146,8 +146,7 @@ public:
                 *light_direction = -m_light_direction; // от источника света на объект
         }
 
-        void get_camera_information(vec3* camera_up, vec3* camera_direction, vec3* view_center, double* view_width,
-                                    int* paint_width, int* paint_height) const
+        void get_camera_information(vec3* camera_up, vec3* camera_direction, vec3* view_center, double* view_width) const
         {
                 std::lock_guard lg(m_lock);
 
@@ -155,9 +154,14 @@ public:
                 *camera_direction = -m_camera_direction; // от камеры на объект
                 *view_center = m_view_center;
                 *view_width = m_view_width;
+        }
 
-                *paint_width = m_paint_width;
-                *paint_height = m_paint_height;
+        void get_paint_width_height(int* width, int* height) const
+        {
+                std::lock_guard lg(m_lock);
+
+                *width = m_paint_width;
+                *height = m_paint_height;
         }
 
         vec3 get_light_direction() const
@@ -310,10 +314,13 @@ class ShowObject final : public IShow
                 m_event_queue.emplace(std::in_place_type<Event::shadow_zoom>, v);
         }
 
-        void get_camera_information(vec3* camera_up, vec3* camera_direction, vec3* view_center, double* view_width,
-                                    int* paint_width, int* paint_height) const override
+        void get_camera_information(vec3* camera_up, vec3* camera_direction, vec3* view_center, double* view_width) const override
         {
-                m_camera.get_camera_information(camera_up, camera_direction, view_center, view_width, paint_width, paint_height);
+                m_camera.get_camera_information(camera_up, camera_direction, view_center, view_width);
+        }
+        void get_paint_width_height(int* width, int* height) const override
+        {
+                m_camera.get_paint_width_height(width, height);
         }
         vec3 get_light_direction() const override
         {

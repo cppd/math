@@ -17,13 +17,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "main_window.h"
 
+#include "paintings.h"
+
 #include "ui/dialogs/application_about.h"
 #include "ui/dialogs/application_help.h"
 #include "ui/dialogs/bound_cocone_parameters.h"
 #include "ui/dialogs/message_box.h"
 #include "ui/dialogs/path_tracing_parameters.h"
 #include "ui/dialogs/source_error.h"
-#include "ui/painter_window/painter_window.h"
 #include "ui/support/support.h"
 
 #include "application/application_name.h"
@@ -42,10 +43,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "obj/obj_lines.h"
 #include "obj/obj_points.h"
 #include "obj/obj_surface.h"
-#include "path_tracing/lights/light_source.h"
-#include "path_tracing/projectors/projector.h"
-#include "path_tracing/samplers/sampler.h"
-#include "path_tracing/scenes.h"
 #include "path_tracing/shapes/mesh.h"
 #include "progress/progress.h"
 
@@ -1317,104 +1314,24 @@ void MainWindow::on_radioButton_BoundCoconeConvexHull_clicked()
         m_show->show_object(OBJECT_BOUND_COCONE_CONVEX_HULL);
 }
 
-std::unique_ptr<const Projector> MainWindow::create_projector(double size_coef) const
-{
-        vec3 camera_up, camera_direction, view_center;
-        double view_width;
-        int paint_width, paint_height;
-        m_show->get_camera_information(&camera_up, &camera_direction, &view_center, &view_width, &paint_width, &paint_height);
-
-        paint_width = std::lround(paint_width * size_coef);
-        paint_height = std::lround(paint_height * size_coef);
-
-        vec3 camera_position = view_center - camera_direction * 2.0 * m_show->get_object_size();
-
-        return std::make_unique<const ParallelProjector>(camera_position, camera_direction, camera_up, view_width, paint_width,
-                                                         paint_height);
-}
-
-std::unique_ptr<const LightSource> MainWindow::create_light_source() const
-{
-        vec3 light_position = m_show->get_object_position() - m_show->get_light_direction() * m_show->get_object_size() * 1000.0;
-
-        return std::make_unique<const ConstantLight>(light_position, vec3(1, 1, 1));
-}
-
-std::unique_ptr<const Sampler> MainWindow::create_sampler(int samples_per_pixel) const
-{
-#if 1
-        return std::make_unique<StratifiedJitteredSampler>(samples_per_pixel);
-#else
-        return std::make_unique<LatinHypercubeSampler>(samples_per_pixel);
-#endif
-}
-
-void MainWindow::paint(const std::shared_ptr<const Mesh>& mesh_pointer, const std::string& model_name, int thread_count,
-                       double size_coef, int samples_per_pixel)
-{
-        vec3 default_color = qcolor_to_rgb(m_default_color);
-        double diffuse = get_diffuse();
-
-        if ((true))
-        {
-                vec3 background_color = qcolor_to_rgb(m_clear_color);
-
-                std::string title = QMainWindow::windowTitle().toStdString() + " (" + model_name + ")";
-
-                create_and_show_delete_on_close_window<PainterWindow>(
-                        title, thread_count,
-                        one_object_scene(background_color, default_color, diffuse, create_projector(size_coef),
-                                         create_sampler(samples_per_pixel), create_light_source(), mesh_pointer));
-        }
-        else
-        {
-                vec3 camera_up, camera_direction, view_center;
-                double view_width;
-                int paint_width, paint_height;
-                m_show->get_camera_information(&camera_up, &camera_direction, &view_center, &view_width, &paint_width,
-                                               &paint_height);
-
-                paint_width = std::lround(paint_width * size_coef);
-                paint_height = std::lround(paint_height * size_coef);
-
-                std::string title = QMainWindow::windowTitle().toStdString() + " (" + model_name + " in Cornell Box)";
-
-                create_and_show_delete_on_close_window<PainterWindow>(
-                        title, thread_count,
-                        cornell_box(paint_width, paint_height, mesh_pointer, m_show->get_object_size(), default_color, diffuse,
-                                    camera_direction, camera_up, samples_per_pixel));
-        }
-}
-
 void MainWindow::on_pushButton_Painter_clicked()
 {
         std::string model_name;
-        std::shared_ptr<const Mesh> mesh_pointer;
+        std::shared_ptr<const Mesh> mesh;
 
         for (const auto & [ button, id ] : m_object_buttons)
         {
                 if (button->isChecked())
                 {
                         model_name = button->text().toStdString();
-                        mesh_pointer = m_meshes.get(id);
+                        mesh = m_meshes.get(id);
                         break;
                 }
         }
 
-        if (!mesh_pointer)
+        if (!mesh)
         {
                 m_event_emitter.message_warning("No object to paint");
-                return;
-        }
-
-        int thread_count;
-        double size_coef;
-        int samples_per_pixel;
-
-        if (!PathTracingParameters(this).show(get_hardware_concurrency(), ui.graphics_widget->width(),
-                                              ui.graphics_widget->height(), PATH_TRACING_DEFAULT_SAMPLES_PER_PIXEL,
-                                              PATH_TRACING_MAX_SAMPLES_PER_PIXEL, &thread_count, &size_coef, &samples_per_pixel))
-        {
                 return;
         }
 
@@ -1422,7 +1339,9 @@ void MainWindow::on_pushButton_Painter_clicked()
 
                 *message = "Painter";
 
-                paint(mesh_pointer, model_name, thread_count, size_coef, samples_per_pixel);
+                painting(PathTracingParameters(this), *m_show, mesh, QMainWindow::windowTitle().toStdString(), model_name,
+                         PATH_TRACING_DEFAULT_SAMPLES_PER_PIXEL, PATH_TRACING_MAX_SAMPLES_PER_PIXEL, qcolor_to_rgb(m_clear_color),
+                         qcolor_to_rgb(m_default_color), get_diffuse());
 
         });
 }
