@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -43,7 +43,7 @@ void optics_benchmark()
         double eta = 1.0 / 1.5;
 
         {
-                double time = get_time_seconds();
+                double time = time_in_seconds();
                 vec3 t;
                 double sum = 0;
                 for (const vec3& v : data)
@@ -53,11 +53,11 @@ void optics_benchmark()
                                 sum += std::abs(t[0]) + std::abs(t[1]) + std::abs(t[2]);
                         }
                 }
-                LOG("refract  : " + to_string(get_time_seconds() - time) + ", sum = " + to_string(sum));
+                LOG("refract  : " + to_string(time_in_seconds() - time) + ", sum = " + to_string(sum));
         }
 
         {
-                double time = get_time_seconds();
+                double time = time_in_seconds();
                 vec3 t;
                 double sum = 0;
                 for (const vec3& v : data)
@@ -67,6 +67,6 @@ void optics_benchmark()
                                 sum += std::abs(t[0]) + std::abs(t[1]) + std::abs(t[2]);
                         }
                 }
-                LOG("refract 2: " + to_string(get_time_seconds() - time) + ", sum = " + to_string(sum));
+                LOG("refract 2: " + to_string(time_in_seconds() - time) + ", sum = " + to_string(sum));
         }
 }

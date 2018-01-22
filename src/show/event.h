@@ -107,10 +107,10 @@ public:
                 {
                 }
         };
-        struct set_clear_color final
+        struct set_background_color final
         {
-                vec3 clear_color;
-                set_clear_color(const vec3& v) : clear_color(v)
+                vec3 background_color;
+                set_background_color(const vec3& v) : background_color(v)
                 {
                 }
         };
@@ -226,7 +226,7 @@ public:
                 set_ambient,
                 set_diffuse,
                 set_specular,
-                set_clear_color,
+                set_background_color,
                 set_default_color,
                 set_wireframe_color,
                 set_default_ns,
@@ -316,9 +316,9 @@ private:
         {
                 return EventType::set_specular;
         }
-        static constexpr EventType event_type(std::in_place_type_t<set_clear_color>)
+        static constexpr EventType event_type(std::in_place_type_t<set_background_color>)
         {
-                return EventType::set_clear_color;
+                return EventType::set_background_color;
         }
         static constexpr EventType event_type(std::in_place_type_t<set_default_color>)
         {
@@ -385,7 +385,7 @@ private:
         SimpleVariant
 #endif
                 <add_object, delete_object, show_object, delete_all_objects, parent_resized, mouse_wheel, toggle_fullscreen,
-                 reset_view, set_ambient, set_diffuse, set_specular, set_clear_color, set_default_color, set_wireframe_color,
+                 reset_view, set_ambient, set_diffuse, set_specular, set_background_color, set_default_color, set_wireframe_color,
                  set_default_ns, show_smooth, show_wireframe, show_shadow, show_materials, show_effect, show_dft,
                  set_dft_brightness, show_convex_hull_2d, show_optical_flow, vertical_sync, shadow_zoom>
                         m_data;

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -53,14 +53,14 @@ void test_sampler(const std::string& name, int iter_count, int sample_count, int
         std::mt19937_64 random_engine(get_random_seed<std::mt19937_64>());
         std::vector<vec2> data(sample_count);
 
-        double t = get_time_seconds();
+        double t = time_in_seconds();
 
         for (int i = 0; i < iter_count; ++i)
         {
                 StratifiedJitteredSampler(sample_count).generate(random_engine, &data);
         }
 
-        LOG(name + ": time = " + to_string_fixed(get_time_seconds() - t, 5) + " seconds, size = " + to_string(data.size()));
+        LOG(name + ": time = " + to_string_fixed(time_in_seconds() - t, 5) + " seconds, size = " + to_string(data.size()));
 
         generate_points<Sampler>(random_engine, sample_count, pass_count);
 }

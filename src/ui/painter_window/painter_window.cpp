@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -63,7 +63,7 @@ public:
 
         std::tuple<long long, long long, long long, double> compute(const std::array<long long, 3>& data)
         {
-                double time = get_time_seconds();
+                double time = time_in_seconds();
 
                 // Удаление старых элементов
                 while (!m_deque.empty() && m_deque.front().time < time - m_interval_seconds)

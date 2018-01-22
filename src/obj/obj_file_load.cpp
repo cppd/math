@@ -17,16 +17,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "obj_file_load.h"
 
-#include "ascii.h"
 #include "obj_alg.h"
 
 #include "com/error.h"
-#include "com/file.h"
-#include "com/file_sys.h"
+#include "com/file/file_read.h"
+#include "com/file/file_sys.h"
 #include "com/log.h"
 #include "com/math.h"
 #include "com/print.h"
-#include "com/str.h"
+#include "com/string/ascii.h"
+#include "com/string/str.h"
 #include "com/thread.h"
 #include "com/time.h"
 
@@ -34,7 +34,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <fstream>
 #include <map>
 #include <set>
 #include <string>
@@ -124,69 +123,6 @@ bool check_range(const vec3f& v, float min, float max)
 {
         return v[0] >= min && v[0] <= max && v[1] >= min && v[1] <= max && v[2] >= min && v[2] <= max;
 }
-
-#if 0
-void read_text_file(const std::string& file_name, std::string* s)
-{
-        CFile f(file_name, "rb");
-
-        std::fseek(f, 0, SEEK_END);
-        size_t length = std::ftell(f);
-
-        if (length == 0)
-        {
-                s->clear();
-                return;
-        }
-
-        std::fseek(f, -1, SEEK_END);
-        char c;
-        std::fscanf(f, "%c", &c);
-        if (c == '\n')
-        {
-                s->resize(length);
-        }
-        else
-        {
-                s->resize(length + 1);
-                (*s)[s->size() - 1] = '\n';
-        }
-
-        std::rewind(f);
-        std::fread(&(*s)[0], length, 1, f);
-}
-#else
-void read_text_file(const std::string& file_name, std::string* s)
-{
-        std::ifstream f(file_name);
-        if (!f)
-        {
-                error("error open file " + file_name);
-        }
-
-        f.seekg(0, f.end);
-        size_t length = f.tellg();
-        if (length == 0)
-        {
-                s->clear();
-                return;
-        }
-
-        f.seekg(-1, f.end);
-        if (f.get() == '\n')
-        {
-                s->resize(length);
-        }
-        else
-        {
-                s->resize(length + 1);
-                (*s)[s->size() - 1] = '\n';
-        }
-
-        f.seekg(0, f.beg);
-        f.read(&(*s)[0], length);
-}
-#endif
 
 void find_line_begin(const std::string& s, std::vector<size_t>* line_begin)
 {
@@ -1363,11 +1299,11 @@ void FileObj::read_obj_and_mtl(const std::string& file_name, ProgressRatio* prog
 
 FileObj::FileObj(const std::string& file_name, ProgressRatio* progress)
 {
-        double start_time = get_time_seconds();
+        double start_time = time_in_seconds();
 
         read_obj_and_mtl(file_name, progress);
 
-        LOG("OBJ loaded, " + to_string_fixed(get_time_seconds() - start_time, 5) + " s");
+        LOG("OBJ loaded, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
 }
 
 // Чтение вершин из текстового файла. Одна вершина на строку. Три координаты через пробел.
@@ -1502,11 +1438,11 @@ void FileTxt::read_text(const std::string& file_name, ProgressRatio* progress)
 
 FileTxt::FileTxt(const std::string& file_name, ProgressRatio* progress)
 {
-        double start_time = get_time_seconds();
+        double start_time = time_in_seconds();
 
         read_text(file_name, progress);
 
-        LOG("TEXT loaded, " + to_string_fixed(get_time_seconds() - start_time, 5) + " s");
+        LOG("TEXT loaded, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
 }
 }
 

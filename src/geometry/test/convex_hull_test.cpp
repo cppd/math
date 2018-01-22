@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -158,11 +158,11 @@ void create_convex_hull(std::vector<Vector<N, float>>& points, bool with_check, 
         std::vector<ConvexHullFacet<N>> facets;
 
         LOG("convex hull...");
-        double start_time = get_time_seconds();
+        double start_time = time_in_seconds();
 
         compute_convex_hull(points, &facets, progress);
 
-        LOG("convex hull created, " + to_string_fixed(get_time_seconds() - start_time, 5) + " s");
+        LOG("convex hull created, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
         LOG("point count " + to_string(point_count(facets)) + ", facet count " + to_string(facets.size()));
 
         if (with_check)

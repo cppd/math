@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -96,7 +96,7 @@ void test_speed()
                 data.push_back(normalize(vec3(urd(random_engine), urd(random_engine), urd(random_engine))));
         }
 
-        double start_time = get_time_seconds();
+        double start_time = time_in_seconds();
 
         // Сумма для того, чтобы избежать оптимизаций компилятора из-за неиспользуемого значения функции.
         vec3 sum(0);
@@ -105,7 +105,7 @@ void test_speed()
                 sum += random_hemisphere_cosine_any_length(random_engine, n);
         }
 
-        LOG("Time = " + to_string_fixed(get_time_seconds() - start_time, 5) + " seconds, sum = " + to_string(sum));
+        LOG("Time = " + to_string_fixed(time_in_seconds() - start_time, 5) + " seconds, sum = " + to_string(sum));
 }
 }
 

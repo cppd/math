@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -32,7 +32,7 @@ void reset_time()
         global_start_time = CLOCK::now();
 }
 
-double get_time_seconds()
+double time_in_seconds()
 {
         CLOCK::time_point now = CLOCK::now();
         std::chrono::duration<double> time = now - global_start_time;

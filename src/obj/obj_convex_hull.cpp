@@ -175,11 +175,11 @@ public:
 
                 std::vector<ConvexHullFacet<3>> facets;
 
-                double start_time = get_time_seconds();
+                double start_time = time_in_seconds();
 
                 compute_convex_hull(points, &facets, progress);
 
-                LOG("Convex hull created, " + to_string_fixed(get_time_seconds() - start_time, 5) + " s");
+                LOG("Convex hull created, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
 
                 create_obj(points, facets);
         }

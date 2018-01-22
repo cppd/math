@@ -17,12 +17,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "image.h"
 
-#include "com/colors.h"
+#include "com/color/colors.h"
 #include "com/error.h"
-#include "com/file.h"
-#include "com/file_sys.h"
+#include "com/file/file.h"
+#include "com/file/file_sys.h"
 #include "com/interpolation.h"
-#include "com/str.h"
+#include "com/string/str.h"
 
 #include <SFML/Graphics/Image.hpp>
 #include <algorithm>

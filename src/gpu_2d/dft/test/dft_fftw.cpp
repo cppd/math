@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -110,7 +110,7 @@ public:
                         m_src[i][1] = (*data)[i].imag();
                 }
 
-                double start_time = get_time_seconds();
+                double start_time = time_in_seconds();
 
                 if (inv)
                 {
@@ -132,7 +132,7 @@ public:
                         }
                 }
 
-                LOG("calc FFTW: " + to_string_fixed(1000.0 * (get_time_seconds() - start_time), 5) + " ms");
+                LOG("calc FFTW: " + to_string_fixed(1000.0 * (time_in_seconds() - start_time), 5) + " ms");
         }
 };
 }

@@ -172,7 +172,7 @@ private:
 
         void set_bound_cocone_parameters(double rho, double alpha);
 
-        void set_clear_color(const QColor& c);
+        void set_background_color(const QColor& c);
         void set_default_color(const QColor& c);
         void set_wireframe_color(const QColor& c);
 
@@ -189,7 +189,7 @@ private:
 
         std::unique_ptr<IShow> m_show;
 
-        QColor m_clear_color;
+        QColor m_background_color;
         QColor m_default_color;
         QColor m_wireframe_color;
 

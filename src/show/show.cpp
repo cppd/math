@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "renderer/renderer.h"
 #include "text/text.h"
 
-#include "com/colors.h"
+#include "com/color/colors.h"
 #include "com/error.h"
 #include "com/log.h"
 #include "com/mat.h"
@@ -61,7 +61,7 @@ namespace
 {
 long get_fps(double* start)
 {
-        double now = get_time_seconds();
+        double now = time_in_seconds();
         double time_elapsed = now - *start;
         *start = now;
         return (time_elapsed > 0) ? lround(1.0 / time_elapsed) : 0;
@@ -241,9 +241,9 @@ class ShowObject final : public IShow
         {
                 m_event_queue.emplace(std::in_place_type<Event::set_specular>, v);
         }
-        void set_clear_color_rgb(const vec3& c) override
+        void set_background_color_rgb(const vec3& c) override
         {
-                m_event_queue.emplace(std::in_place_type<Event::set_clear_color>, c);
+                m_event_queue.emplace(std::in_place_type<Event::set_background_color>, c);
         }
         void set_default_color_rgb(const vec3& c) override
         {
@@ -336,7 +336,7 @@ class ShowObject final : public IShow
         }
 
 public:
-        ShowObject(IShowCallback* callback, WindowID win_parent, vec3 clear_color_rgb, vec3 default_color_rgb,
+        ShowObject(IShowCallback* callback, WindowID win_parent, vec3 background_color_rgb, vec3 default_color_rgb,
                    vec3 wireframe_color_rgb, bool with_smooth, bool with_wireframe, bool with_shadow, bool with_materials,
                    bool with_effect, bool with_dft, bool with_convex_hull, bool with_optical_flow, double ambient, double diffuse,
                    double specular, double dft_brightness, double default_ns, bool vertical_sync, double shadow_zoom)
@@ -352,7 +352,7 @@ public:
                 set_ambient(ambient);
                 set_diffuse(diffuse);
                 set_specular(specular);
-                set_clear_color_rgb(clear_color_rgb);
+                set_background_color_rgb(background_color_rgb);
                 set_default_color_rgb(default_color_rgb);
                 set_wireframe_color_rgb(wireframe_color_rgb);
                 set_default_ns(default_ns);
@@ -447,7 +447,7 @@ void ShowObject::loop()
 
         Text text;
 
-        double start_time = get_time_seconds();
+        double start_time = time_in_seconds();
 
         while (true)
         {
@@ -563,11 +563,11 @@ void ShowObject::loop()
                                 renderer->set_light_s(light);
                                 break;
                         }
-                        case Event::EventType::set_clear_color:
+                        case Event::EventType::set_background_color:
                         {
-                                const Event::set_clear_color& d = event->get<Event::set_clear_color>();
+                                const Event::set_background_color& d = event->get<Event::set_background_color>();
 
-                                vec3 color = d.clear_color;
+                                vec3 color = d.background_color;
                                 glClearColor(color[0], color[1], color[2], 1);
                                 bool dark_color = luminance_of_rgb(color) <= 0.5;
                                 text.set_color(dark_color ? vec3(1) : vec3(0));
@@ -971,14 +971,14 @@ void ShowObject::loop_thread()
 }
 }
 
-std::unique_ptr<IShow> create_show(IShowCallback* cb, WindowID win_parent, vec3 clear_color_rgb, vec3 default_color_rgb,
+std::unique_ptr<IShow> create_show(IShowCallback* cb, WindowID win_parent, vec3 background_color_rgb, vec3 default_color_rgb,
                                    vec3 wireframe_color_rgb, bool with_smooth, bool with_wireframe, bool with_shadow,
                                    bool with_materials, bool with_effect, bool with_dft, bool with_convex_hull,
                                    bool with_optical_flow, double ambient, double diffuse, double specular, double dft_brightness,
                                    double default_ns, bool vertical_sync, double shadow_zoom)
 {
-        return std::make_unique<ShowObject>(cb, win_parent, clear_color_rgb, default_color_rgb, wireframe_color_rgb, with_smooth,
-                                            with_wireframe, with_shadow, with_materials, with_effect, with_dft, with_convex_hull,
-                                            with_optical_flow, ambient, diffuse, specular, dft_brightness, default_ns,
-                                            vertical_sync, shadow_zoom);
+        return std::make_unique<ShowObject>(cb, win_parent, background_color_rgb, default_color_rgb, wireframe_color_rgb,
+                                            with_smooth, with_wireframe, with_shadow, with_materials, with_effect, with_dft,
+                                            with_convex_hull, with_optical_flow, ambient, diffuse, specular, dft_brightness,
+                                            default_ns, vertical_sync, shadow_zoom);
 }

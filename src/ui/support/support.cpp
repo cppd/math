@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "support.h"
 
-#include "com/colors.h"
+#include "com/color/colors.h"
 #include "com/error.h"
 #include "com/log.h"
 

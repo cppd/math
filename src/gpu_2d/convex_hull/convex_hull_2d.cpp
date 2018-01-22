@@ -67,10 +67,10 @@ int get_group_size_prepare(int width, int shared_size_per_thread)
         int max_group_size_memory = get_max_compute_shared_memory() / shared_size_per_thread;
 
         // максимально возможная степень 2
-        int max_group_size = 1 << get_log_2(std::min(max_group_size_limit, max_group_size_memory));
+        int max_group_size = 1 << log_2(std::min(max_group_size_limit, max_group_size_memory));
 
         // один поток обрабатывает 2 и более пикселей, при этом число потоков должно быть степенью 2.
-        int pref_thread_count = (width > 1) ? (1 << get_log_2(width - 1)) : 1;
+        int pref_thread_count = (width > 1) ? (1 << log_2(width - 1)) : 1;
 
         return (pref_thread_count <= max_group_size) ? pref_thread_count : max_group_size;
 }
@@ -97,7 +97,7 @@ int get_iteration_count_merge(int size)
         // На каждой итерации индекс увеличивается в 2 раза.
         // Этот индекс должен быть строго меньше заданного числа size.
         // Поэтому число итераций равно максимальной степени 2, в которой число 2 строго меньше заданного числа size.
-        return (size > 2) ? get_log_2(size - 1) : 0;
+        return (size > 2) ? log_2(size - 1) : 0;
 }
 
 std::string get_prepare_source(int width, int height, int group_size)
@@ -158,7 +158,7 @@ public:
                   m_line_min(m_height, 1),
                   m_line_max(m_height, 1),
                   m_point_count_texture(1, 1),
-                  m_start_time(get_time_seconds())
+                  m_start_time(time_in_seconds())
         {
                 m_prepare_prog.set_uniform_handle("objects", objects.get_image_resident_handle_read_only());
                 m_prepare_prog.set_uniform_handle("line_min", m_line_min.get_image_resident_handle_write_only());
@@ -178,7 +178,7 @@ public:
 
         void reset_timer()
         {
-                m_start_time = get_time_seconds();
+                m_start_time = time_in_seconds();
         }
 
         void draw()
@@ -201,7 +201,7 @@ public:
                 std::array<GLint, 1> point_count;
                 m_point_count_texture.get_texture_sub_image(0, 0, 1, 1, &point_count);
 
-                float d = 0.5 + 0.5 * std::sin(ANGULAR_FREQUENCY * (get_time_seconds() - m_start_time));
+                float d = 0.5 + 0.5 * std::sin(ANGULAR_FREQUENCY * (time_in_seconds() - m_start_time));
                 m_draw_prog.set_uniform("brightness", d);
 
                 glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);

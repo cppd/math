@@ -67,14 +67,14 @@ namespace
 // или минимальная степень двух, равная или больше 2N-2
 int compute_M(int n)
 {
-        int log2_N = get_log_2(n);
+        int log2_N = log_2(n);
         if ((1 << log2_N) == n)
         {
                 return n;
         }
 
         int t = (2 * n - 2);
-        int log2_t = get_log_2(t);
+        int log2_t = log_2(t);
         if ((1 << log2_t) == t)
         {
                 return t;
@@ -164,7 +164,7 @@ int get_shared_size(int dft_size)
         // 1) требуемый размер, но не меньше 128, чтобы в группе было хотя бы 64 потока по потоку на 2 элемента:
         //   NVIDIA работает по 32 потока вместе (warp), AMD по 64 потока вместе (wavefront).
         // 2) максимальная степень 2, которая меньше или равна вместимости разделяемой памяти
-        return std::min(std::max(128, dft_size), 1 << get_log_2(get_max_compute_shared_memory() / sizeof(std::complex<FP>)));
+        return std::min(std::max(128, dft_size), 1 << log_2(get_max_compute_shared_memory() / sizeof(std::complex<FP>)));
 }
 template <typename FP>
 int get_group_size(int dft_size)
@@ -280,13 +280,13 @@ class GL2D final : public IFourierGL1, public IFourierGL2
 
                 glFinish();
 
-                double start_time = get_time_seconds();
+                double start_time = time_in_seconds();
 
                 dft2d(inv);
 
                 glFinish();
 
-                LOG("calc gl2d: " + to_string_fixed(1000.0 * (get_time_seconds() - start_time), 5) + " ms");
+                LOG("calc gl2d: " + to_string_fixed(1000.0 * (time_in_seconds() - start_time), 5) + " ms");
 
                 m_x_d.read(&data);
 
@@ -307,8 +307,8 @@ public:
                   m_N2(n2),
                   m_M1(compute_M(m_N1)),
                   m_M2(compute_M(m_N2)),
-                  m_M1_bin(get_bin_size(m_M1)),
-                  m_M2_bin(get_bin_size(m_M2)),
+                  m_M1_bin(binary_size(m_M1)),
+                  m_M2_bin(binary_size(m_M2)),
                   block(BLOCK_SQRT, BLOCK_SQRT),
                   rows_to(get_group_count(m_M1, block[0]), get_group_count(m_N2, block[1])),
                   rows_fr(get_group_count(m_N1, block[0]), get_group_count(m_N2, block[1])),

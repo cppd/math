@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -42,7 +42,7 @@ constexpr int max_paraboloid_determinant()
 
         f *= (N - 1);
 
-        return BITS * (N + 1) + get_log_2(f) + 1;
+        return BITS * (N + 1) + log_2(f) + 1;
 }
 
 // Максимальное значение исходных данных, размещаемых на параболоиде
@@ -57,7 +57,7 @@ constexpr int max_paraboloid_source()
         // max = x*x + x*x + x*x
         // max = (x ^ 2) * (N - 1)
 
-        return BITS * 2 + get_log_2(N - 1) + 1;
+        return BITS * 2 + log_2(N - 1) + 1;
 }
 
 // Максимальное значение определителя
@@ -81,5 +81,5 @@ constexpr int max_determinant()
                 f *= i;
         }
 
-        return BITS * N + get_log_2(f) + 1;
+        return BITS * N + log_2(f) + 1;
 }

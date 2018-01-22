@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "obj_alg.h"
 
-#include "com/file.h"
+#include "com/file/file.h"
 #include "com/log.h"
 #include "com/print.h"
 #include "com/time.h"
@@ -178,7 +178,7 @@ void save_obj_geometry_to_file(const IObj* obj, const std::string& file_name, co
                 error("Object doesn't have faces");
         }
 
-        double start_time = get_time_seconds();
+        double start_time = time_in_seconds();
 
         CFile file(file_name, "w");
 
@@ -190,5 +190,5 @@ void save_obj_geometry_to_file(const IObj* obj, const std::string& file_name, co
 
         write_faces(file, obj);
 
-        LOG("OBJ saved, " + to_string_fixed(get_time_seconds() - start_time, 5) + " s");
+        LOG("OBJ saved, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
 }

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -179,7 +179,7 @@ class CuFFT final : public IFourierCuda
 
                 cuda_device_sync();
 
-                double start_time = get_time_seconds();
+                double start_time = time_in_seconds();
 
                 if (inv)
                 {
@@ -198,7 +198,7 @@ class CuFFT final : public IFourierCuda
 
                 cuda_device_sync();
 
-                LOG("calc CUFFT: " + to_string_fixed(1000.0 * (get_time_seconds() - start_time), 5) + " ms");
+                LOG("calc CUFFT: " + to_string_fixed(1000.0 * (time_in_seconds() - start_time), 5) + " ms");
 
                 cuda_memory_copy(&cuda_x, m_data);
 

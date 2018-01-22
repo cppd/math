@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "com/colors_glsl.h"
+#include "com/color/colors_glsl.h"
 #include "com/error.h"
 #include "com/mat.h"
 #include "com/type_detect.h"

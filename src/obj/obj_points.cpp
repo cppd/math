@@ -106,11 +106,11 @@ void Points::read_points(std::vector<vec3f>&& points)
 
 Points::Points(std::vector<vec3f>&& points)
 {
-        double start_time = get_time_seconds();
+        double start_time = time_in_seconds();
 
         read_points(std::move(points));
 
-        LOG("Points loaded, " + to_string_fixed(get_time_seconds() - start_time, 5) + " s");
+        LOG("Points loaded, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
 }
 }
 

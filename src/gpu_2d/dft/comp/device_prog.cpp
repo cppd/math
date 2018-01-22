@@ -131,7 +131,7 @@ std::string fft_radix_2_shader_source(int N, int shared_size, bool reverse_input
         s += "#define function_FFT_radix_2\n\n";
         s += "const uint N = " + std::to_string(N) + ";\n";
         s += "const uint N_MASK = " + std::to_string(N - 1) + ";\n";
-        s += "const uint N_BITS = " + std::to_string(get_bin_size(N)) + ";\n";
+        s += "const uint N_BITS = " + std::to_string(binary_size(N)) + ";\n";
         s += "const uint SHARED_SIZE = " + std::to_string(shared_size) + ";\n";
         s += "const bool REVERSE_INPUT = " + (reverse_input ? std::string("true") : std::string("false")) + ";\n";
         return s + dft_fft_shader;

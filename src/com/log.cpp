@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -66,7 +66,7 @@ std::vector<std::string> format_log_message(const std::string& msg) noexcept
         {
                 constexpr int BUF_SIZE = 100;
                 char buffer[BUF_SIZE];
-                int char_count = std::snprintf(buffer, BUF_SIZE, "[%011.6f]: ", get_time_seconds());
+                int char_count = std::snprintf(buffer, BUF_SIZE, "[%011.6f]: ", time_in_seconds());
                 if (char_count < 0 || char_count >= BUF_SIZE)
                 {
                         error("message begin length out of range");

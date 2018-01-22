@@ -29,7 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "application/application_name.h"
 #include "com/error.h"
-#include "com/file_sys.h"
+#include "com/file/file_sys.h"
 #include "com/log.h"
 #include "com/print.h"
 #include "com/time.h"
@@ -68,7 +68,7 @@ constexpr int TIMER_PROGRESS_BAR_INTERVAL = 100;
 constexpr int POINT_COUNT = 10000;
 
 // Цвета по умолчанию
-constexpr QRgb CLEAR_COLOR = qRgb(50, 100, 150);
+constexpr QRgb BACKGROUND_COLOR = qRgb(50, 100, 150);
 constexpr QRgb DEFAULT_COLOR = qRgb(150, 170, 150);
 constexpr QRgb WIREFRAME_COLOR = qRgb(255, 255, 255);
 
@@ -141,7 +141,7 @@ void MainWindow::constructor_interface()
 
         set_bound_cocone_parameters(BOUND_COCONE_DEFAULT_RHO, BOUND_COCONE_DEFAULT_ALPHA);
 
-        set_clear_color(CLEAR_COLOR);
+        set_background_color(BACKGROUND_COLOR);
         set_default_color(DEFAULT_COLOR);
         set_wireframe_color(WIREFRAME_COLOR);
 
@@ -363,7 +363,7 @@ void MainWindow::cocone(ProgressRatioList* progress_list)
         {
                 ProgressRatio progress(progress_list);
 
-                double start_time = get_time_seconds();
+                double start_time = time_in_seconds();
 
                 std::vector<vec<3>> normals;
                 std::vector<std::array<int, 3>> facets;
@@ -372,7 +372,7 @@ void MainWindow::cocone(ProgressRatioList* progress_list)
 
                 m_surface_cocone = create_obj_for_facets(m_surface_points, normals, facets);
 
-                LOG("Surface reconstruction second phase, " + to_string_fixed(get_time_seconds() - start_time, 5) + " s");
+                LOG("Surface reconstruction second phase, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
         }
 
         object_and_mesh(progress_list, ObjectType::Cocone, m_surface_cocone);
@@ -385,7 +385,7 @@ void MainWindow::bound_cocone(ProgressRatioList* progress_list, double rho, doub
         {
                 ProgressRatio progress(progress_list);
 
-                double start_time = get_time_seconds();
+                double start_time = time_in_seconds();
 
                 std::vector<vec<3>> normals;
                 std::vector<std::array<int, 3>> facets;
@@ -394,7 +394,7 @@ void MainWindow::bound_cocone(ProgressRatioList* progress_list, double rho, doub
 
                 m_surface_bound_cocone = create_obj_for_facets(m_surface_points, normals, facets);
 
-                LOG("Surface reconstruction second phase, " + to_string_fixed(get_time_seconds() - start_time, 5) + " s");
+                LOG("Surface reconstruction second phase, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
         }
 
         m_show->delete_object(OBJECT_BOUND_COCONE);
@@ -435,11 +435,11 @@ void MainWindow::surface_constructor(ProgressRatioList* progress_list)
         {
                 ProgressRatio progress(progress_list);
 
-                double start_time = get_time_seconds();
+                double start_time = time_in_seconds();
 
                 m_surface_constructor = create_manifold_constructor(m_surface_points, &progress);
 
-                LOG("Surface reconstruction first phase, " + to_string_fixed(get_time_seconds() - start_time, 5) + " s");
+                LOG("Surface reconstruction first phase, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
         }
 
         std::thread thread_cocone([&]() noexcept {
@@ -792,16 +792,16 @@ void MainWindow::set_bound_cocone_parameters(double rho, double alpha)
         ui.BoundCocone_label->setText(label);
 }
 
-void MainWindow::set_clear_color(const QColor& c)
+void MainWindow::set_background_color(const QColor& c)
 {
-        m_clear_color = c;
+        m_background_color = c;
         if (m_show)
         {
-                m_show->set_clear_color_rgb(qcolor_to_rgb(c));
+                m_show->set_background_color_rgb(qcolor_to_rgb(c));
         }
         QPalette palette;
-        palette.setColor(QPalette::Window, m_clear_color);
-        ui.widget_clear_color->setPalette(palette);
+        palette.setColor(QPalette::Window, m_background_color);
+        ui.widget_background_color->setPalette(palette);
 }
 
 void MainWindow::set_default_color(const QColor& c)
@@ -1024,14 +1024,14 @@ void MainWindow::slot_window_first_shown()
 
         try
         {
-                m_show = create_show(&m_event_emitter, get_widget_window_id(ui.graphics_widget), qcolor_to_rgb(m_clear_color),
-                                     qcolor_to_rgb(m_default_color), qcolor_to_rgb(m_wireframe_color),
-                                     ui.checkBox_Smooth->isChecked(), ui.checkBox_Wireframe->isChecked(),
-                                     ui.checkBox_Shadow->isChecked(), ui.checkBox_Materials->isChecked(),
-                                     ui.checkBox_ShowEffect->isChecked(), ui.checkBox_show_dft->isChecked(),
-                                     ui.checkBox_convex_hull_2d->isChecked(), ui.checkBox_OpticalFlow->isChecked(), get_ambient(),
-                                     get_diffuse(), get_specular(), get_dft_brightness(), get_default_ns(),
-                                     ui.checkBox_VerticalSync->isChecked(), get_shadow_zoom());
+                m_show = create_show(
+                        &m_event_emitter, get_widget_window_id(ui.graphics_widget), qcolor_to_rgb(m_background_color),
+                        qcolor_to_rgb(m_default_color), qcolor_to_rgb(m_wireframe_color), ui.checkBox_Smooth->isChecked(),
+                        ui.checkBox_Wireframe->isChecked(), ui.checkBox_Shadow->isChecked(), ui.checkBox_Materials->isChecked(),
+                        ui.checkBox_ShowEffect->isChecked(), ui.checkBox_show_dft->isChecked(),
+                        ui.checkBox_convex_hull_2d->isChecked(), ui.checkBox_OpticalFlow->isChecked(), get_ambient(),
+                        get_diffuse(), get_specular(), get_dft_brightness(), get_default_ns(),
+                        ui.checkBox_VerticalSync->isChecked(), get_shadow_zoom());
         }
         catch (std::exception& e)
         {
@@ -1213,7 +1213,7 @@ void MainWindow::on_Slider_ShadowQuality_valueChanged(int)
 
 void MainWindow::on_ButtonBackgroundColor_clicked()
 {
-        color_dialog(this, "Background color", m_clear_color, [this](const QColor& c) { set_clear_color(c); });
+        color_dialog(this, "Background color", m_background_color, [this](const QColor& c) { set_background_color(c); });
 }
 
 void MainWindow::on_ButtonDefaultColor_clicked()
@@ -1340,8 +1340,8 @@ void MainWindow::on_pushButton_Painter_clicked()
                 *message = "Painter";
 
                 painting(PathTracingParameters(this), *m_show, mesh, QMainWindow::windowTitle().toStdString(), model_name,
-                         PATH_TRACING_DEFAULT_SAMPLES_PER_PIXEL, PATH_TRACING_MAX_SAMPLES_PER_PIXEL, qcolor_to_rgb(m_clear_color),
-                         qcolor_to_rgb(m_default_color), get_diffuse());
+                         PATH_TRACING_DEFAULT_SAMPLES_PER_PIXEL, PATH_TRACING_MAX_SAMPLES_PER_PIXEL,
+                         qcolor_to_rgb(m_background_color), qcolor_to_rgb(m_default_color), get_diffuse());
 
         });
 }

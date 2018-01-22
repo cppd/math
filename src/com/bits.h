@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -20,10 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "error.h"
 #include "print.h"
 
-#include <string>
-
 template <typename T>
-constexpr T get_log_2(T n)
+constexpr T log_2(T n)
 {
         if (n <= 0)
         {
@@ -39,7 +37,7 @@ constexpr T get_log_2(T n)
 }
 
 template <typename T>
-constexpr T get_log_4(T n)
+constexpr T log_4(T n)
 {
         if (n <= 0)
         {
@@ -55,13 +53,13 @@ constexpr T get_log_4(T n)
 }
 
 template <typename T>
-constexpr T get_bin_size(T n)
+constexpr T binary_size(T n)
 {
-        T b = get_log_2(n);
+        T b = log_2(n);
 
         if ((static_cast<T>(1) << b) != n)
         {
-                error("Bin size error. " + to_string(n) + " is not a power of 2.");
+                error("Binary size error. " + to_string(n) + " is not a power of 2.");
         }
         return b;
 }

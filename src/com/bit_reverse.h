@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -67,7 +67,7 @@ template <typename T>
 void bit_reverse(std::vector<T>* data)
 {
         int N = data->size();
-        int bin_size = get_bin_size(N);
+        int bin_size = binary_size(N);
 
         for (int i = 0; i < N; ++i)
         {

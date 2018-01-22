@@ -105,11 +105,11 @@ void Mesh::create_mesh_object(const IObj* obj, const mat4& vertex_matrix, unsign
 Mesh::Mesh(const IObj* obj, const mat4& vertex_matrix, unsigned thread_count, ProgressRatio* progress)
         : m_octree(OCTREE_MAX_DEPTH, OCTREE_MIN_OBJECTS)
 {
-        double start_time = get_time_seconds();
+        double start_time = time_in_seconds();
 
         create_mesh_object(obj, vertex_matrix, thread_count, progress);
 
-        LOG("Mesh object created, " + to_string_fixed(get_time_seconds() - start_time, 5) + " s");
+        LOG("Mesh object created, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
 }
 
 bool Mesh::intersect_approximate(const ray3& r, double* t) const

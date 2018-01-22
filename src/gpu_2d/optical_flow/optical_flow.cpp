@@ -465,7 +465,7 @@ public:
         void draw()
         {
 #if 0
-                double current_time = get_time_seconds();
+                double current_time = time_in_seconds();
                 if (current_time - m_last_time < COMPUTE_INTERVAL_SECONDS)
                 {
                         if (m_flow_computed)

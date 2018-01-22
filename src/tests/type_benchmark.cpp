@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -36,12 +36,12 @@ __attribute__((noinline)) double computation(std::vector<T>& v)
         constexpr T add = 20;
         constexpr T sub = 30;
 
-        double t = get_time_seconds();
+        double t = time_in_seconds();
         for (int i = 0; i < N; ++i)
         {
                 v[i] = (v[i] + add) * (v[i] - sub) + add;
         }
-        return get_time_seconds() - t;
+        return time_in_seconds() - t;
 }
 __attribute__((noinline)) double computation(std::vector<mpz_class>& v)
 {
@@ -49,7 +49,7 @@ __attribute__((noinline)) double computation(std::vector<mpz_class>& v)
         const mpz_class sub = 30;
         mpz_class tmp1, tmp2;
 
-        double t = get_time_seconds();
+        double t = time_in_seconds();
         for (int i = 0; i < N; ++i)
         {
                 mpz_add(tmp1.get_mpz_t(), v[i].get_mpz_t(), add.get_mpz_t());
@@ -57,7 +57,7 @@ __attribute__((noinline)) double computation(std::vector<mpz_class>& v)
                 mpz_mul(v[i].get_mpz_t(), tmp1.get_mpz_t(), tmp2.get_mpz_t());
                 mpz_add(v[i].get_mpz_t(), v[i].get_mpz_t(), add.get_mpz_t());
         }
-        return get_time_seconds() - t;
+        return time_in_seconds() - t;
 }
 __attribute__((noinline)) double computation(std::vector<mpf_class>& v)
 {
@@ -65,7 +65,7 @@ __attribute__((noinline)) double computation(std::vector<mpf_class>& v)
         const mpf_class sub = 30;
         mpf_class tmp1, tmp2;
 
-        double t = get_time_seconds();
+        double t = time_in_seconds();
         for (int i = 0; i < N; ++i)
         {
                 mpf_add(tmp1.get_mpf_t(), v[i].get_mpf_t(), add.get_mpf_t());
@@ -73,7 +73,7 @@ __attribute__((noinline)) double computation(std::vector<mpf_class>& v)
                 mpf_mul(v[i].get_mpf_t(), tmp1.get_mpf_t(), tmp2.get_mpf_t());
                 mpf_add(v[i].get_mpf_t(), v[i].get_mpf_t(), add.get_mpf_t());
         }
-        return get_time_seconds() - t;
+        return time_in_seconds() - t;
 }
 }
 

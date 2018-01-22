@@ -25,8 +25,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #endif
 
 #include "com/error.h"
-#include "com/file.h"
-#include "com/file_sys.h"
+#include "com/file/file.h"
+#include "com/file/file_sys.h"
 #include "com/log.h"
 #include "com/print.h"
 #include "com/random.h"
@@ -229,13 +229,13 @@ void test_fft_impl(bool big_test)
         std::vector<complex> gl2d_x(source_data);
 
         {
-                double start_time = get_time_seconds();
+                double start_time = time_in_seconds();
 
                 std::unique_ptr<IFourierGL1> gl2d = create_fft_gl2d(n1, n2);
                 gl2d->exec(false, &gl2d_x);
                 // gl2d->exec(true, &gl2d_x);
 
-                LOG("gl2d: " + to_string_fixed(1000.0 * (get_time_seconds() - start_time), 5) + " ms");
+                LOG("gl2d: " + to_string_fixed(1000.0 * (time_in_seconds() - start_time), 5) + " ms");
 
                 save_data(output_gl2d, gl2d_x);
         }
@@ -245,13 +245,13 @@ void test_fft_impl(bool big_test)
                 LOG("----- Cuda -----");
                 std::vector<complex> cufft_x(source_data);
 
-                double start_time = get_time_seconds();
+                double start_time = time_in_seconds();
 
                 std::unique_ptr<IFourierCuda> cufft = create_fft_cufft(n1, n2);
                 cufft->exec(false, &cufft_x);
                 // cufft->exec(true, &cufft_x);
 
-                LOG("CUFFT: " + to_string_fixed(1000.0 * (get_time_seconds() - start_time), 5) + " ms");
+                LOG("CUFFT: " + to_string_fixed(1000.0 * (time_in_seconds() - start_time), 5) + " ms");
 
                 save_data(output_cuda, cufft_x);
 
@@ -268,13 +268,13 @@ void test_fft_impl(bool big_test)
                 LOG("----- FFTW -----");
                 std::vector<complex> fftw_x(source_data);
 
-                double start_time = get_time_seconds();
+                double start_time = time_in_seconds();
 
                 std::unique_ptr<IFourierFFTW> fftw = create_dft_fftw(n1, n2);
                 fftw->exec(false, &fftw_x);
                 // fftw->exec(true, &fftw_x);
 
-                LOG("FFTW: " + to_string_fixed(1000.0 * (get_time_seconds() - start_time), 5) + " ms");
+                LOG("FFTW: " + to_string_fixed(1000.0 * (time_in_seconds() - start_time), 5) + " ms");
 
                 save_data(output_fftw, fftw_x);
 

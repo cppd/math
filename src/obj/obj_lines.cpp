@@ -130,11 +130,11 @@ class Lines final : public IObj
 public:
         Lines(const std::vector<vec3f>& points, const std::vector<std::array<int, 2>>& lines)
         {
-                double start_time = get_time_seconds();
+                double start_time = time_in_seconds();
 
                 create_obj(points, lines);
 
-                LOG("Lines loaded, " + to_string_fixed(get_time_seconds() - start_time, 5) + " s");
+                LOG("Lines loaded, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
         }
 };
 }

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -181,7 +181,7 @@ std::vector<std::array<int, 2>> minimum_spanning_tree(const std::vector<Vector<N
 
         LOG("Minimum spanning tree...");
         progress->set_text("Minimum spanning tree");
-        double start_time = get_time_seconds();
+        double start_time = time_in_seconds();
 
         progress->set(0, 5);
 
@@ -211,7 +211,7 @@ std::vector<std::array<int, 2>> minimum_spanning_tree(const std::vector<Vector<N
         // Само построение минимального остовного дерева.
         std::vector<std::array<int, 2>> mst = kruskal(points.size(), get_unique_vertex_count(delaunay_objects), weighted_edges);
 
-        LOG("Minimum spanning tree created, " + to_string_fixed(get_time_seconds() - start_time, 5) + " s");
+        LOG("Minimum spanning tree created, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
 
         return mst;
 }

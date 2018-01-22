@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "path_tracing/random/random_vector.h"
 #include "path_tracing/space/ray_intersection.h"
 
-#include "com/colors.h"
+#include "com/color/colors.h"
 #include "com/error.h"
 #include "com/random.h"
 
