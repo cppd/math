@@ -81,7 +81,7 @@ class Threads
                 return !m_threads.find(action)->second.working;
         }
 
-        ThreadData& get_thread(ThreadAction action)
+        ThreadData& action_thread(ThreadAction action)
         {
                 auto t = m_threads.find(action);
                 ASSERT(t != m_threads.end());
@@ -116,38 +116,16 @@ public:
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
-                bool allowed = true;
-
                 switch (action)
                 {
                 case ThreadAction::OpenObject:
-                        // ThreadAction::OpenObject
-                        allowed = allowed && thread_free(ThreadAction::ExportCocone);
-                        allowed = allowed && thread_free(ThreadAction::ExportBoundCocone);
-                        // ThreadAction::ReloadBoundCocone
-                        // ThreadAction::SelfTest
-                        return allowed;
+                        return true;
                 case ThreadAction::ExportCocone:
-                        allowed = allowed && thread_free(ThreadAction::OpenObject);
-                        allowed = allowed && thread_free(ThreadAction::ExportCocone);
-                        // ThreadAction::ExportBoundCocone
-                        // ThreadAction::ReloadBoundCocone
-                        // ThreadAction::SelfTest
-                        return allowed;
+                        return true;
                 case ThreadAction::ExportBoundCocone:
-                        allowed = allowed && thread_free(ThreadAction::OpenObject);
-                        // ThreadAction::ExportCocone
-                        allowed = allowed && thread_free(ThreadAction::ExportBoundCocone);
-                        allowed = allowed && thread_free(ThreadAction::ReloadBoundCocone);
-                        // ThreadAction::SelfTest
-                        return allowed;
+                        return true;
                 case ThreadAction::ReloadBoundCocone:
-                        allowed = allowed && thread_free(ThreadAction::OpenObject);
-                        // ThreadAction::ExportCocone
-                        allowed = allowed && thread_free(ThreadAction::ExportBoundCocone);
-                        // ThreadAction::ReloadBoundCocone
-                        // ThreadAction::SelfTest
-                        return allowed;
+                        return thread_free(ThreadAction::OpenObject);
                 case ThreadAction::SelfTest:
                         return true;
                 }
@@ -168,7 +146,7 @@ public:
                 switch (thread_action)
                 {
                 case ThreadAction::OpenObject:
-                        m_threads.find(ThreadAction::ReloadBoundCocone)->second.stop();
+                        action_thread(ThreadAction::ReloadBoundCocone).stop();
                         break;
                 case ThreadAction::ExportCocone:
                         break;
@@ -180,7 +158,7 @@ public:
                         break;
                 }
 
-                ThreadData& thread_pack = get_thread(thread_action);
+                ThreadData& thread_pack = action_thread(thread_action);
                 thread_pack.stop();
                 thread_pack.working = true;
                 thread_pack.thread = std::thread([&thread_pack, func = std::forward<F>(function) ]() noexcept {

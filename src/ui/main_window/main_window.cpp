@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "main_window.h"
 
 #include "paintings.h"
+#include "type.h"
 
 #include "ui/dialogs/application_about.h"
 #include "ui/dialogs/application_help.h"
@@ -32,19 +33,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/file/file_sys.h"
 #include "com/log.h"
 #include "com/print.h"
-#include "com/time.h"
-#include "geometry/cocone/reconstruction.h"
-#include "geometry/graph/mst.h"
-#include "geometry/objects/points.h"
-#include "obj/obj_alg.h"
-#include "obj/obj_convex_hull.h"
-#include "obj/obj_file_load.h"
 #include "obj/obj_file_save.h"
-#include "obj/obj_lines.h"
-#include "obj/obj_points.h"
-#include "obj/obj_surface.h"
 #include "path_tracing/shapes/mesh.h"
-#include "progress/progress.h"
 
 #include <QDesktopWidget>
 #include <QFileDialog>
@@ -86,23 +76,13 @@ constexpr int PATH_TRACING_MAX_SAMPLES_PER_PIXEL = 100;
 // Сколько потоков не надо использовать от максимума для создания октадеревьев.
 constexpr int MESH_OBJECT_NOT_USED_THREAD_COUNT = 2;
 
-// Идентификаторы объектов как числа, а не как enum class
-enum ObjectIdentifier
-{
-        OBJECT_MODEL,
-        OBJECT_MODEL_MST,
-        OBJECT_MODEL_CONVEX_HULL,
-        OBJECT_COCONE,
-        OBJECT_COCONE_CONVEX_HULL,
-        OBJECT_BOUND_COCONE,
-        OBJECT_BOUND_COCONE_CONVEX_HULL
-};
-
 MainWindow::MainWindow(QWidget* parent)
         : QMainWindow(parent),
           m_window_thread_id(std::this_thread::get_id()),
-          m_object_repository(create_object_repository<3>()),
-          m_mesh_object_threads(std::max(1, static_cast<int>(get_hardware_concurrency()) - MESH_OBJECT_NOT_USED_THREAD_COUNT))
+          m_objects(std::max(1, static_cast<int>(get_hardware_concurrency()) - MESH_OBJECT_NOT_USED_THREAD_COUNT),
+                    std::bind(&MainWindow::catch_all<std::function<void(std::string*)>&&>, this, std::placeholders::_1),
+                    &m_event_emitter, POINT_COUNT),
+          m_first_show(true)
 {
         static_assert(std::is_same_v<decltype(ui.graphics_widget), GraphicsWidget*>);
 
@@ -165,7 +145,7 @@ void MainWindow::constructor_repository()
 {
         // QMenu* menuCreate = new QMenu("Create", this);
         // ui.menuBar->insertMenu(ui.menuHelp->menuAction(), menuCreate);
-        for (const std::string& object_name : m_object_repository->get_list_of_point_objects())
+        for (const std::string& object_name : m_objects.list_of_repository_point_objects())
         {
                 QAction* action = ui.menuCreate->addAction(object_name.c_str());
                 m_action_to_object_name_map.emplace(action, object_name);
@@ -212,14 +192,14 @@ void MainWindow::stop_all_threads()
 }
 
 template <typename T>
-void MainWindow::catch_all(const T& a) noexcept
+void MainWindow::catch_all(T&& function) const noexcept
 {
         try
         {
                 std::string error_message = "Error";
                 try
                 {
-                        a(&error_message);
+                        function(&error_message);
                 }
                 catch (TerminateRequestException&)
                 {
@@ -241,299 +221,6 @@ void MainWindow::catch_all(const T& a) noexcept
         {
                 error_fatal("Exception in catch all.");
         }
-}
-
-std::string MainWindow::object_name(ObjectType object_type)
-{
-        switch (object_type)
-        {
-        case ObjectType::Model:
-                return "Model";
-        case ObjectType::Cocone:
-                return "COCONE";
-        case ObjectType::BoundCocone:
-                return "BOUND COCONE";
-        }
-        error_fatal("Unknown object type");
-}
-
-int MainWindow::object_identifier(ObjectType object_type)
-{
-        switch (object_type)
-        {
-        case ObjectType::Model:
-                return OBJECT_MODEL;
-        case ObjectType::Cocone:
-                return OBJECT_COCONE;
-        case ObjectType::BoundCocone:
-                return OBJECT_BOUND_COCONE;
-        };
-        error_fatal("Unknown object type");
-}
-
-int MainWindow::convex_hull_identifier(ObjectType object_type)
-{
-        switch (object_type)
-        {
-        case ObjectType::Model:
-                return OBJECT_MODEL_CONVEX_HULL;
-        case ObjectType::Cocone:
-                return OBJECT_COCONE_CONVEX_HULL;
-        case ObjectType::BoundCocone:
-                return OBJECT_BOUND_COCONE_CONVEX_HULL;
-        };
-        error_fatal("Unknown object type");
-}
-
-void MainWindow::add_object_and_convex_hull(ProgressRatioList* progress_list, ObjectType object_type,
-                                            const std::shared_ptr<IObj>& obj)
-{
-        ASSERT(std::this_thread::get_id() != m_window_thread_id);
-
-        if (!(obj->faces().size() > 0 || (object_type == ObjectType::Model && obj->points().size() > 0)))
-        {
-                return;
-        }
-
-        int object_id = object_identifier(object_type);
-        m_show->add_object(obj, object_id, OBJECT_MODEL);
-
-        std::shared_ptr<IObj> convex_hull;
-
-        {
-                ProgressRatio progress(progress_list);
-                progress.set_text(object_name(object_type) + " convex hull 3D: %v of %m");
-
-                convex_hull = create_convex_hull_for_obj(obj.get(), &progress);
-        }
-
-        if (convex_hull->faces().size() > 0)
-        {
-                int convex_hull_id = convex_hull_identifier(object_type);
-                m_show->add_object(convex_hull, convex_hull_id, OBJECT_MODEL);
-        }
-
-        mesh(progress_list, convex_hull_identifier(object_type), convex_hull);
-}
-
-void MainWindow::mesh(ProgressRatioList* progress_list, int id, const std::shared_ptr<IObj>& obj)
-{
-        ASSERT(std::this_thread::get_id() != m_window_thread_id);
-
-        if (obj->faces().size() == 0)
-        {
-                return;
-        }
-
-        std::lock_guard lg(m_mesh_sequential_mutex);
-
-        ProgressRatio progress(progress_list);
-
-        m_meshes.set(id, std::make_shared<Mesh>(obj.get(), m_model_vertex_matrix, m_mesh_object_threads, &progress));
-}
-
-void MainWindow::object_and_mesh(ProgressRatioList* progress_list, ObjectType object_type, const std::shared_ptr<IObj>& obj)
-{
-        ASSERT(std::this_thread::get_id() != m_window_thread_id);
-
-        std::thread thread_model([&]() noexcept {
-                catch_all([&](std::string* message) {
-                        *message = object_name(object_type) + " object and convex hull";
-
-                        add_object_and_convex_hull(progress_list, object_type, obj);
-                });
-        });
-
-        std::thread thread_mesh([&]() noexcept {
-                catch_all([&](std::string* message) {
-                        *message = object_name(object_type) + " mesh";
-
-                        mesh(progress_list, object_identifier(object_type), obj);
-                });
-        });
-
-        thread_model.join();
-        thread_mesh.join();
-}
-
-void MainWindow::cocone(ProgressRatioList* progress_list)
-{
-        ASSERT(std::this_thread::get_id() != m_window_thread_id);
-
-        {
-                ProgressRatio progress(progress_list);
-
-                double start_time = time_in_seconds();
-
-                std::vector<vec<3>> normals;
-                std::vector<std::array<int, 3>> facets;
-
-                m_surface_constructor->cocone(&normals, &facets, &progress);
-
-                m_surface_cocone = create_obj_for_facets(m_surface_points, normals, facets);
-
-                LOG("Surface reconstruction second phase, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
-        }
-
-        object_and_mesh(progress_list, ObjectType::Cocone, m_surface_cocone);
-}
-
-void MainWindow::bound_cocone(ProgressRatioList* progress_list, double rho, double alpha)
-{
-        ASSERT(std::this_thread::get_id() != m_window_thread_id);
-
-        {
-                ProgressRatio progress(progress_list);
-
-                double start_time = time_in_seconds();
-
-                std::vector<vec<3>> normals;
-                std::vector<std::array<int, 3>> facets;
-
-                m_surface_constructor->bound_cocone(rho, alpha, &normals, &facets, &progress);
-
-                m_surface_bound_cocone = create_obj_for_facets(m_surface_points, normals, facets);
-
-                LOG("Surface reconstruction second phase, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
-        }
-
-        m_show->delete_object(OBJECT_BOUND_COCONE);
-        m_show->delete_object(OBJECT_BOUND_COCONE_CONVEX_HULL);
-
-        m_meshes.reset(OBJECT_BOUND_COCONE);
-        m_meshes.reset(OBJECT_BOUND_COCONE_CONVEX_HULL);
-
-        m_event_emitter.bound_cocone_loaded(rho, alpha);
-
-        object_and_mesh(progress_list, ObjectType::BoundCocone, m_surface_bound_cocone);
-}
-
-void MainWindow::mst(ProgressRatioList* progress_list)
-{
-        ASSERT(std::this_thread::get_id() != m_window_thread_id);
-
-        std::vector<std::array<int, 2>> mst_lines;
-
-        {
-                ProgressRatio progress(progress_list);
-
-                mst_lines = minimum_spanning_tree(m_surface_points, m_surface_constructor->delaunay_objects(), &progress);
-        }
-
-        std::shared_ptr<IObj> mst_obj = create_obj_for_lines(m_surface_points, mst_lines);
-
-        if (mst_obj->lines().size() > 0)
-        {
-                m_show->add_object(mst_obj, OBJECT_MODEL_MST, OBJECT_MODEL);
-        }
-}
-
-void MainWindow::surface_constructor(ProgressRatioList* progress_list)
-{
-        ASSERT(std::this_thread::get_id() != m_window_thread_id);
-
-        {
-                ProgressRatio progress(progress_list);
-
-                double start_time = time_in_seconds();
-
-                m_surface_constructor = create_manifold_constructor(m_surface_points, &progress);
-
-                LOG("Surface reconstruction first phase, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
-        }
-
-        std::thread thread_cocone([&]() noexcept {
-                catch_all([&](std::string* message) {
-                        *message = "COCONE reconstruction";
-
-                        cocone(progress_list);
-                });
-        });
-
-        std::thread thread_bound_cocone([&]() noexcept {
-                catch_all([&](std::string* message) {
-                        *message = "BOUND COCONE reconstruction";
-
-                        bound_cocone(progress_list, m_bound_cocone_rho, m_bound_cocone_alpha);
-                });
-        });
-
-        std::thread thread_mst([&]() noexcept {
-                catch_all([&](std::string* message) {
-                        *message = "Minimum spanning tree 3D";
-
-                        mst(progress_list);
-                });
-        });
-
-        thread_cocone.join();
-        thread_bound_cocone.join();
-        thread_mst.join();
-}
-
-void MainWindow::load_object(ProgressRatioList* progress_list, std::string object_name, SourceType source_type)
-{
-        ASSERT(std::this_thread::get_id() != m_window_thread_id);
-
-        std::shared_ptr<IObj> obj;
-
-        {
-                ProgressRatio progress(progress_list);
-                switch (source_type)
-                {
-                case SourceType::File:
-                        progress.set_text("Load file: %p%");
-                        obj = load_obj_from_file(object_name, &progress);
-                        break;
-                case SourceType::Repository:
-                        progress.set_text("Load object: %p%");
-                        obj = create_obj_for_points(m_object_repository->get_point_object(object_name, POINT_COUNT));
-                        break;
-                }
-        }
-
-        if (obj->faces().size() == 0 && obj->points().size() == 0)
-        {
-                error("Faces or points not found");
-        }
-
-        if (obj->faces().size() != 0 && obj->points().size() != 0)
-        {
-                error("Faces and points together in one object are not supported");
-        }
-
-        m_show->delete_all_objects();
-
-        m_surface_constructor.reset();
-        m_surface_cocone.reset();
-        m_surface_bound_cocone.reset();
-
-        m_meshes.reset_all();
-
-        m_event_emitter.file_loaded(object_name);
-
-        m_surface_points = (obj->faces().size() > 0) ? unique_face_vertices(obj.get()) : unique_point_vertices(obj.get());
-
-        m_model_vertex_matrix = model_vertex_matrix(obj.get(), m_show->get_object_size(), m_show->get_object_position());
-
-        std::thread thread_model([&]() noexcept {
-                catch_all([&](std::string* message) {
-                        *message = "Object and mesh";
-
-                        object_and_mesh(progress_list, ObjectType::Model, obj);
-                });
-        });
-
-        std::thread thread_surface([&]() noexcept {
-                catch_all([&](std::string* message) {
-                        *message = "Surface constructor";
-
-                        surface_constructor(progress_list);
-                });
-        });
-
-        thread_model.join();
-        thread_surface.join();
 }
 
 void MainWindow::thread_load_object(std::string object_name, SourceType source_type)
@@ -572,7 +259,7 @@ void MainWindow::thread_load_object(std::string object_name, SourceType source_t
                 catch_all([&](std::string* message) {
                         *message = "Load " + object_name;
 
-                        load_object(progress_list, object_name, source_type);
+                        m_objects.load_object(progress_list, object_name, source_type, m_bound_cocone_rho, m_bound_cocone_alpha);
                 });
         });
 }
@@ -609,15 +296,13 @@ void MainWindow::thread_export_cocone()
                 return;
         }
 
-        const IObj* obj = nullptr;
+        std::shared_ptr<const IObj> obj = m_objects.get_surface_cocone();
 
-        if (!m_surface_cocone || m_surface_cocone->faces().size() == 0)
+        if (!obj || obj->faces().size() == 0)
         {
                 m_event_emitter.message_warning(cocone_type + " not created");
                 return;
         }
-
-        obj = m_surface_cocone.get();
 
         QString qt_file_name = QFileDialog::getSaveFileName(this, "Export " + QString(cocone_type.c_str()) + " to OBJ", "",
                                                             "OBJ files (*.obj)", nullptr, QFileDialog::DontUseNativeDialog);
@@ -632,7 +317,7 @@ void MainWindow::thread_export_cocone()
                 catch_all([&](std::string* message) {
                         *message = "Export " + cocone_type + " to " + file_name;
 
-                        save_obj_geometry_to_file(obj, file_name, cocone_type);
+                        save_obj_geometry_to_file(obj.get(), file_name, cocone_type);
                         m_event_emitter.message_information(cocone_type + " exported to file\n" + file_name);
 
                 });
@@ -652,15 +337,13 @@ void MainWindow::thread_export_bound_cocone()
                 return;
         }
 
-        const IObj* obj = nullptr;
+        std::shared_ptr<const IObj> obj = m_objects.get_surface_bound_cocone();
 
-        if (!m_surface_bound_cocone || m_surface_bound_cocone->faces().size() == 0)
+        if (!obj || obj->faces().size() == 0)
         {
                 m_event_emitter.message_warning(cocone_type + " not created");
                 return;
         }
-
-        obj = m_surface_bound_cocone.get();
 
         QString qt_file_name = QFileDialog::getSaveFileName(this, "Export " + QString(cocone_type.c_str()) + " to OBJ", "",
                                                             "OBJ files (*.obj)", nullptr, QFileDialog::DontUseNativeDialog);
@@ -675,7 +358,7 @@ void MainWindow::thread_export_bound_cocone()
                 catch_all([&](std::string* message) {
                         *message = "Export " + cocone_type + " to " + file_name;
 
-                        save_obj_geometry_to_file(obj, file_name, cocone_type);
+                        save_obj_geometry_to_file(obj.get(), file_name, cocone_type);
                         m_event_emitter.message_information(cocone_type + " exported to file\n" + file_name);
 
                 });
@@ -692,7 +375,7 @@ void MainWindow::thread_reload_bound_cocone()
                 return;
         }
 
-        if (!m_surface_constructor)
+        if (!m_objects.surface_constructor_exists())
         {
                 m_event_emitter.message_warning("No surface constructor");
                 return;
@@ -710,7 +393,7 @@ void MainWindow::thread_reload_bound_cocone()
                 catch_all([&](std::string* message) {
                         *message = "BOUND COCONE reconstruction";
 
-                        bound_cocone(progress_list, rho, alpha);
+                        m_objects.bound_cocone(progress_list, rho, alpha);
                 });
         });
 }
@@ -1032,6 +715,8 @@ void MainWindow::slot_window_first_shown()
                         ui.checkBox_convex_hull_2d->isChecked(), ui.checkBox_OpticalFlow->isChecked(), get_ambient(),
                         get_diffuse(), get_specular(), get_dft_brightness(), get_default_ns(),
                         ui.checkBox_VerticalSync->isChecked(), get_shadow_zoom());
+
+                m_objects.set_show(m_show.get());
         }
         catch (std::exception& e)
         {
@@ -1324,7 +1009,7 @@ void MainWindow::on_pushButton_Painter_clicked()
                 if (button->isChecked())
                 {
                         model_name = button->text().toStdString();
-                        mesh = m_meshes.get(id);
+                        mesh = m_objects.get_mesh(id);
                         break;
                 }
         }

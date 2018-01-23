@@ -20,38 +20,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "ui_main_window.h"
 
 #include "event_emitter.h"
-#include "meshes.h"
+#include "objects.h"
 #include "threads.h"
 
-#include "com/mat.h"
-#include "com/vec.h"
 #include "progress/progress_list.h"
 #include "show/show.h"
 #include "tests/self_test.h"
 
 #include <QColor>
-
 #include <QTimer>
 #include <list>
-#include <map>
 #include <memory>
-#include <mutex>
 #include <string>
 #include <thread>
+#include <tuple>
 #include <unordered_map>
 #include <vector>
-
-template <size_t N>
-struct IManifoldConstructor;
-
-template <size_t N>
-struct IObjectRepository;
-
-class Projector;
-class LightSource;
-class Sampler;
-
-class Mesh;
 
 class MainWindow final : public QMainWindow
 {
@@ -108,19 +92,6 @@ private slots:
         void slot_widget_under_window_resize();
 
 private:
-        enum class SourceType
-        {
-                File,
-                Repository
-        };
-
-        enum class ObjectType
-        {
-                Model,
-                Cocone,
-                BoundCocone
-        };
-
         void constructor_connect();
         void constructor_interface();
         void constructor_repository();
@@ -132,21 +103,7 @@ private:
         void stop_all_threads();
 
         template <typename T>
-        void catch_all(const T& a) noexcept;
-
-        static std::string object_name(ObjectType object_type);
-        static int object_identifier(ObjectType object_type);
-        static int convex_hull_identifier(ObjectType object_type);
-
-        void add_object_and_convex_hull(ProgressRatioList* progress_list, ObjectType object_type,
-                                        const std::shared_ptr<IObj>& obj);
-        void mesh(ProgressRatioList* progress_list, int mesh_id, const std::shared_ptr<IObj>& obj);
-        void object_and_mesh(ProgressRatioList* progress_list, ObjectType object_type, const std::shared_ptr<IObj>& obj);
-        void surface_constructor(ProgressRatioList* progress_list);
-        void cocone(ProgressRatioList* progress_list);
-        void bound_cocone(ProgressRatioList* progress_list, double rho, double alpha);
-        void mst(ProgressRatioList* progress_list);
-        void load_object(ProgressRatioList* progress_list, std::string object_name, SourceType source_type);
+        void catch_all(T&& function) const noexcept;
 
         void thread_load_object(std::string object_name, SourceType source_type);
         void thread_self_test(SelfTestType test_type);
@@ -178,16 +135,19 @@ private:
 
         Ui::MainWindow ui;
 
+        const std::thread::id m_window_thread_id;
+
         WindowEventEmitter m_event_emitter;
 
         Threads m_threads;
 
-        Meshes<int, const Mesh> m_meshes;
-        std::mutex m_mesh_sequential_mutex;
-
         std::vector<std::tuple<const QRadioButton*, int>> m_object_buttons;
 
+        std::unordered_map<QObject*, std::string> m_action_to_object_name_map;
+
         std::unique_ptr<IShow> m_show;
+
+        MainObjects m_objects;
 
         QColor m_background_color;
         QColor m_default_color;
@@ -197,21 +157,6 @@ private:
 
         QTimer m_timer_progress_bar;
 
-        const std::thread::id m_window_thread_id;
-
-        std::vector<vec3f> m_surface_points;
-        std::unique_ptr<IManifoldConstructor<3>> m_surface_constructor;
-
         double m_bound_cocone_rho;
         double m_bound_cocone_alpha;
-
-        std::shared_ptr<IObj> m_surface_cocone;
-        std::shared_ptr<IObj> m_surface_bound_cocone;
-
-        const std::unique_ptr<IObjectRepository<3>> m_object_repository;
-        std::unordered_map<QObject*, std::string> m_action_to_object_name_map;
-
-        mat4 m_model_vertex_matrix;
-
-        const int m_mesh_object_threads;
 };
