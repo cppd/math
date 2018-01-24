@@ -19,7 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "event_emitter.h"
 #include "meshes.h"
-#include "type.h"
 
 #include "com/mat.h"
 #include "geometry/cocone/reconstruction.h"
@@ -29,7 +28,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "progress/progress_list.h"
 #include "show/show.h"
 
-#include <functional>
 #include <memory>
 #include <mutex>
 #include <thread>
@@ -46,8 +44,7 @@ class MainObjects
         const std::thread::id m_thread_id = std::this_thread::get_id();
         const int m_mesh_object_threads;
         const std::unique_ptr<IObjectRepository<3>> m_object_repository;
-        const std::function<void(std::function<void(std::string*)>&&)> m_catch_all;
-        const WindowEventEmitter* const m_event_emitter;
+        const WindowEventEmitter& m_event_emitter;
         const int m_point_count;
 
         Meshes<int, const Mesh> m_meshes;
@@ -64,8 +61,6 @@ class MainObjects
 
         IShow* m_show;
 
-        void catch_all(std::function<void(std::string*)>&& f) const;
-
         static std::string object_name(ObjectType object_type);
         static int object_identifier(ObjectType object_type);
         static int convex_hull_identifier(ObjectType object_type);
@@ -78,9 +73,14 @@ class MainObjects
         void surface_constructor(ProgressRatioList* progress_list, double rho, double alpha);
         void cocone(ProgressRatioList* progress_list);
 
+        void load_object(ProgressRatioList* progress_list, const std::string& object_name, const std::shared_ptr<const IObj>& obj,
+                         double rho, double alpha);
+
 public:
-        MainObjects(int mesh_object_threads, std::function<void(std::function<void(std::string*)>&&)>&& catch_all,
-                    const WindowEventEmitter* emitter, int point_count);
+        MainObjects(int mesh_object_threads, const WindowEventEmitter& emitter, int point_count);
+
+        template <typename F>
+        void catch_all(const F& function) const noexcept;
 
         std::vector<std::string> list_of_repository_point_objects() const;
 
@@ -93,6 +93,7 @@ public:
         bool surface_constructor_exists() const;
 
         void bound_cocone(ProgressRatioList* progress_list, double rho, double alpha);
-        void load_object(ProgressRatioList* progress_list, std::string object_name, SourceType source_type, double rho,
-                         double alpha);
+
+        void load_from_file(ProgressRatioList* progress_list, const std::string& file_name, double rho, double alpha);
+        void load_from_repository(ProgressRatioList* progress_list, const std::string& object_name, double rho, double alpha);
 };

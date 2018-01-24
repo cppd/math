@@ -102,10 +102,11 @@ private:
 
         void stop_all_threads();
 
-        template <typename T>
-        void catch_all(T&& function) const noexcept;
+        template <typename F>
+        void catch_all(const F& function) const noexcept;
 
-        void thread_load_object(std::string object_name, SourceType source_type);
+        void thread_load_from_file(std::string file_name = "");
+        void thread_load_from_repository(const std::string& object_name);
         void thread_self_test(SelfTestType test_type);
         void thread_export_cocone();
         void thread_export_bound_cocone();

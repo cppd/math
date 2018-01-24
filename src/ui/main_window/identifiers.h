@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-// Идентификаторы объектов как числа, а не как enum class
 enum ObjectIdentifier
 {
         OBJECT_MODEL,
@@ -27,10 +26,4 @@ enum ObjectIdentifier
         OBJECT_COCONE_CONVEX_HULL,
         OBJECT_BOUND_COCONE,
         OBJECT_BOUND_COCONE_CONVEX_HULL
-};
-
-enum class SourceType
-{
-        File,
-        Repository
 };

@@ -17,6 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "catch.h"
+#include "event_emitter.h"
+
 #include "progress/progress_list.h"
 
 #include <QProgressBar>
@@ -71,6 +74,8 @@ class Threads
 
         std::thread::id m_thread_id = std::this_thread::get_id();
 
+        const WindowEventEmitter& m_event_emitter;
+
         std::map<ThreadAction, ThreadData> m_threads;
         std::vector<ThreadProgress> m_progress;
 
@@ -89,7 +94,7 @@ class Threads
         }
 
 public:
-        Threads()
+        Threads(const WindowEventEmitter& emitter) : m_event_emitter(emitter)
         {
                 m_threads.try_emplace(ThreadAction::OpenObject);
                 m_threads.try_emplace(ThreadAction::ExportCocone);
@@ -99,7 +104,7 @@ public:
 
                 for (auto& p : m_threads)
                 {
-                        bool permanent = p.first == ThreadAction::SelfTest;
+                        bool permanent = (p.first == ThreadAction::SelfTest);
                         m_progress.emplace_back(permanent, &p.second.progress_list, &p.second.progress_bars);
                 }
         }
@@ -161,11 +166,14 @@ public:
                 ThreadData& thread_pack = action_thread(thread_action);
                 thread_pack.stop();
                 thread_pack.working = true;
-                thread_pack.thread = std::thread([&thread_pack, func = std::forward<F>(function) ]() noexcept {
+                thread_pack.thread = std::thread([ this, &thread_pack, func = std::forward<F>(function) ]() noexcept {
 
-                        static_assert(noexcept(func(&thread_pack.progress_list)));
+                        catch_all_exceptions(m_event_emitter, [&](std::string* message) {
 
-                        func(&thread_pack.progress_list);
+                                static_assert(!noexcept(func(&thread_pack.progress_list, message)));
+
+                                func(&thread_pack.progress_list, message);
+                        });
 
                         thread_pack.working = false;
                 });

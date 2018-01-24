@@ -17,8 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "main_window.h"
 
+#include "catch.h"
+#include "identifiers.h"
 #include "paintings.h"
-#include "type.h"
 
 #include "ui/dialogs/application_about.h"
 #include "ui/dialogs/application_help.h"
@@ -79,9 +80,9 @@ constexpr int MESH_OBJECT_NOT_USED_THREAD_COUNT = 2;
 MainWindow::MainWindow(QWidget* parent)
         : QMainWindow(parent),
           m_window_thread_id(std::this_thread::get_id()),
+          m_threads(m_event_emitter),
           m_objects(std::max(1, static_cast<int>(get_hardware_concurrency()) - MESH_OBJECT_NOT_USED_THREAD_COUNT),
-                    std::bind(&MainWindow::catch_all<std::function<void(std::string*)>&&>, this, std::placeholders::_1),
-                    &m_event_emitter, POINT_COUNT),
+                    m_event_emitter, POINT_COUNT),
           m_first_show(true)
 {
         static_assert(std::is_same_v<decltype(ui.graphics_widget), GraphicsWidget*>);
@@ -191,76 +192,63 @@ void MainWindow::stop_all_threads()
         set_log_callback(nullptr);
 }
 
-template <typename T>
-void MainWindow::catch_all(T&& function) const noexcept
+template <typename F>
+void MainWindow::catch_all(const F& function) const noexcept
 {
-        try
-        {
-                std::string error_message = "Error";
-                try
-                {
-                        function(&error_message);
-                }
-                catch (TerminateRequestException&)
-                {
-                }
-                catch (ErrorSourceException& e)
-                {
-                        m_event_emitter.message_error_source(error_message + ":\n" + e.get_msg(), e.get_src());
-                }
-                catch (std::exception& e)
-                {
-                        m_event_emitter.message_error(error_message + ":\n" + e.what());
-                }
-                catch (...)
-                {
-                        m_event_emitter.message_error(error_message + ":\n" + "Unknown error");
-                }
-        }
-        catch (...)
-        {
-                error_fatal("Exception in catch all.");
-        }
+        static_assert(noexcept(catch_all_exceptions(m_event_emitter, function)));
+
+        catch_all_exceptions(m_event_emitter, function);
 }
 
-void MainWindow::thread_load_object(std::string object_name, SourceType source_type)
+void MainWindow::thread_load_from_file(std::string file_name)
 {
         ASSERT(std::this_thread::get_id() == m_window_thread_id);
 
         if (!m_threads.action_allowed(ThreadAction::OpenObject))
         {
-                switch (source_type)
+                m_event_emitter.message_warning("File opening is not available at this time (thread working)");
+                return;
+        }
+
+        if (file_name.size() == 0)
+        {
+                QString q_file_name = QFileDialog::getOpenFileName(this, "Open", "", "OBJ and Point files (*.obj *.txt)", nullptr,
+                                                                   QFileDialog::ReadOnly | QFileDialog::DontUseNativeDialog);
+                if (q_file_name.size() == 0)
                 {
-                case SourceType::File:
-                        m_event_emitter.message_warning("File opening is not available at this time (thread working)");
-                        break;
-                case SourceType::Repository:
-                        m_event_emitter.message_warning("Creation of object is not available at this time (thread working)");
-                        break;
+                        return;
                 }
+
+                file_name = q_file_name.toStdString();
+        }
+
+        m_threads.start_thread(ThreadAction::OpenObject, [=](ProgressRatioList* progress_list, std::string* message) {
+                *message = "Load " + file_name;
+
+                m_objects.load_from_file(progress_list, file_name, m_bound_cocone_rho, m_bound_cocone_alpha);
+        });
+}
+
+void MainWindow::thread_load_from_repository(const std::string& object_name)
+{
+        ASSERT(std::this_thread::get_id() == m_window_thread_id);
+
+        if (!m_threads.action_allowed(ThreadAction::OpenObject))
+        {
+                m_event_emitter.message_warning("Creation of object is not available at this time (thread working)");
                 return;
         }
 
         if (object_name.size() == 0)
         {
-                ASSERT(source_type != SourceType::Repository);
-
-                QString file_name = QFileDialog::getOpenFileName(this, "Open", "", "OBJ and Point files (*.obj *.txt)", nullptr,
-                                                                 QFileDialog::ReadOnly | QFileDialog::DontUseNativeDialog);
-                if (file_name.size() == 0)
-                {
-                        return;
-                }
-
-                object_name = file_name.toStdString();
+                m_event_emitter.message_error("Empty repository object name");
+                return;
         }
 
-        m_threads.start_thread(ThreadAction::OpenObject, [=](ProgressRatioList * progress_list) noexcept {
-                catch_all([&](std::string* message) {
-                        *message = "Load " + object_name;
+        m_threads.start_thread(ThreadAction::OpenObject, [=](ProgressRatioList* progress_list, std::string* message) {
+                *message = "Load " + object_name;
 
-                        m_objects.load_object(progress_list, object_name, source_type, m_bound_cocone_rho, m_bound_cocone_alpha);
-                });
+                m_objects.load_from_repository(progress_list, object_name, m_bound_cocone_rho, m_bound_cocone_alpha);
         });
 }
 
@@ -274,12 +262,10 @@ void MainWindow::thread_self_test(SelfTestType test_type)
                 return;
         }
 
-        m_threads.start_thread(ThreadAction::SelfTest, [=](ProgressRatioList * progress_list) noexcept {
-                catch_all([&](std::string* message) {
-                        *message = "Self-Test";
+        m_threads.start_thread(ThreadAction::SelfTest, [=](ProgressRatioList* progress_list, std::string* message) {
+                *message = "Self-Test";
 
-                        self_test(test_type, progress_list, message);
-                });
+                self_test(test_type, progress_list, message);
         });
 }
 
@@ -313,14 +299,11 @@ void MainWindow::thread_export_cocone()
 
         std::string file_name = qt_file_name.toStdString();
 
-        m_threads.start_thread(ThreadAction::ExportCocone, [=](ProgressRatioList*) noexcept {
-                catch_all([&](std::string* message) {
-                        *message = "Export " + cocone_type + " to " + file_name;
+        m_threads.start_thread(ThreadAction::ExportCocone, [=](ProgressRatioList*, std::string* message) {
+                *message = "Export " + cocone_type + " to " + file_name;
 
-                        save_obj_geometry_to_file(obj.get(), file_name, cocone_type);
-                        m_event_emitter.message_information(cocone_type + " exported to file\n" + file_name);
-
-                });
+                save_obj_geometry_to_file(obj.get(), file_name, cocone_type);
+                m_event_emitter.message_information(cocone_type + " exported to file\n" + file_name);
         });
 }
 
@@ -354,14 +337,11 @@ void MainWindow::thread_export_bound_cocone()
 
         std::string file_name = qt_file_name.toStdString();
 
-        m_threads.start_thread(ThreadAction::ExportBoundCocone, [=](ProgressRatioList*) noexcept {
-                catch_all([&](std::string* message) {
-                        *message = "Export " + cocone_type + " to " + file_name;
+        m_threads.start_thread(ThreadAction::ExportBoundCocone, [=](ProgressRatioList*, std::string* message) {
+                *message = "Export " + cocone_type + " to " + file_name;
 
-                        save_obj_geometry_to_file(obj.get(), file_name, cocone_type);
-                        m_event_emitter.message_information(cocone_type + " exported to file\n" + file_name);
-
-                });
+                save_obj_geometry_to_file(obj.get(), file_name, cocone_type);
+                m_event_emitter.message_information(cocone_type + " exported to file\n" + file_name);
         });
 }
 
@@ -389,12 +369,10 @@ void MainWindow::thread_reload_bound_cocone()
                 return;
         }
 
-        m_threads.start_thread(ThreadAction::ReloadBoundCocone, [=](ProgressRatioList * progress_list) noexcept {
-                catch_all([&](std::string* message) {
-                        *message = "BOUND COCONE reconstruction";
+        m_threads.start_thread(ThreadAction::ReloadBoundCocone, [=](ProgressRatioList* progress_list, std::string* message) {
+                *message = "BOUND COCONE reconstruction";
 
-                        m_objects.bound_cocone(progress_list, rho, alpha);
-                });
+                m_objects.bound_cocone(progress_list, rho, alpha);
         });
 }
 
@@ -731,13 +709,13 @@ void MainWindow::slot_window_first_shown()
 
         if (QCoreApplication::arguments().count() == 2)
         {
-                thread_load_object(QCoreApplication::arguments().at(1).toStdString(), SourceType::File);
+                thread_load_from_file(QCoreApplication::arguments().at(1).toStdString());
         }
 }
 
 void MainWindow::on_actionLoad_triggered()
 {
-        thread_load_object("", SourceType::File);
+        thread_load_from_file();
 }
 
 void MainWindow::slot_object_repository()
@@ -754,7 +732,7 @@ void MainWindow::slot_object_repository()
                 return;
         }
 
-        thread_load_object(iter->second, SourceType::Repository);
+        thread_load_from_repository(iter->second);
 }
 
 void MainWindow::on_actionExport_triggered()
@@ -1021,12 +999,10 @@ void MainWindow::on_pushButton_Painter_clicked()
         }
 
         catch_all([&](std::string* message) {
-
                 *message = "Painter";
 
                 painting(PathTracingParameters(this), *m_show, mesh, QMainWindow::windowTitle().toStdString(), model_name,
                          PATH_TRACING_DEFAULT_SAMPLES_PER_PIXEL, PATH_TRACING_MAX_SAMPLES_PER_PIXEL,
                          qcolor_to_rgb(m_background_color), qcolor_to_rgb(m_default_color), get_diffuse());
-
         });
 }

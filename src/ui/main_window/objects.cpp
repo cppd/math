@@ -17,6 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "objects.h"
 
+#include "catch.h"
+#include "identifiers.h"
+
 #include "com/error.h"
 #include "com/log.h"
 #include "com/time.h"
@@ -29,19 +32,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "obj/obj_surface.h"
 #include "progress/progress.h"
 
-MainObjects::MainObjects(int mesh_object_threads, std::function<void(std::function<void(std::string*)>&&)>&& catch_all,
-                         const WindowEventEmitter* emitter, int point_count)
+MainObjects::MainObjects(int mesh_object_threads, const WindowEventEmitter& emitter, int point_count)
         : m_mesh_object_threads(mesh_object_threads),
           m_object_repository(create_object_repository<3>()),
-          m_catch_all(std::move(catch_all)),
           m_event_emitter(emitter),
           m_point_count(point_count)
 {
 }
 
-void MainObjects::catch_all(std::function<void(std::string*)>&& f) const
+template <typename F>
+void MainObjects::catch_all(const F& function) const noexcept
 {
-        m_catch_all(std::move(f));
+        static_assert(noexcept(catch_all_exceptions(m_event_emitter, function)));
+
+        catch_all_exceptions(m_event_emitter, function);
 }
 
 std::vector<std::string> MainObjects::list_of_repository_point_objects() const
@@ -238,7 +242,7 @@ void MainObjects::bound_cocone(ProgressRatioList* progress_list, double rho, dou
         m_meshes.reset(OBJECT_BOUND_COCONE);
         m_meshes.reset(OBJECT_BOUND_COCONE_CONVEX_HULL);
 
-        m_event_emitter->bound_cocone_loaded(rho, alpha);
+        m_event_emitter.bound_cocone_loaded(rho, alpha);
 
         object_and_mesh(progress_list, ObjectType::BoundCocone, m_surface_bound_cocone);
 }
@@ -306,27 +310,10 @@ void MainObjects::surface_constructor(ProgressRatioList* progress_list, double r
         thread_mst.join();
 }
 
-void MainObjects::load_object(ProgressRatioList* progress_list, std::string object_name, SourceType source_type, double rho,
-                              double alpha)
+void MainObjects::load_object(ProgressRatioList* progress_list, const std::string& object_name,
+                              const std::shared_ptr<const IObj>& obj, double rho, double alpha)
 {
         ASSERT(std::this_thread::get_id() != m_thread_id);
-
-        std::shared_ptr<IObj> obj;
-
-        {
-                ProgressRatio progress(progress_list);
-                switch (source_type)
-                {
-                case SourceType::File:
-                        progress.set_text("Load file: %p%");
-                        obj = load_obj_from_file(object_name, &progress);
-                        break;
-                case SourceType::Repository:
-                        progress.set_text("Load object: %p%");
-                        obj = create_obj_for_points(m_object_repository->get_point_object(object_name, m_point_count));
-                        break;
-                }
-        }
 
         if (obj->faces().size() == 0 && obj->points().size() == 0)
         {
@@ -346,7 +333,7 @@ void MainObjects::load_object(ProgressRatioList* progress_list, std::string obje
 
         m_meshes.reset_all();
 
-        m_event_emitter->file_loaded(object_name);
+        m_event_emitter.file_loaded(object_name);
 
         m_surface_points = (obj->faces().size() > 0) ? unique_face_vertices(obj.get()) : unique_point_vertices(obj.get());
 
@@ -370,4 +357,36 @@ void MainObjects::load_object(ProgressRatioList* progress_list, std::string obje
 
         thread_model.join();
         thread_surface.join();
+}
+
+void MainObjects::load_from_file(ProgressRatioList* progress_list, const std::string& file_name, double rho, double alpha)
+{
+        ASSERT(std::this_thread::get_id() != m_thread_id);
+
+        std::shared_ptr<IObj> obj;
+
+        {
+                ProgressRatio progress(progress_list);
+
+                progress.set_text("Load file: %p%");
+                obj = load_obj_from_file(file_name, &progress);
+        }
+
+        load_object(progress_list, file_name, obj, rho, alpha);
+}
+
+void MainObjects::load_from_repository(ProgressRatioList* progress_list, const std::string& object_name, double rho, double alpha)
+{
+        ASSERT(std::this_thread::get_id() != m_thread_id);
+
+        std::shared_ptr<IObj> obj;
+
+        {
+                ProgressRatio progress(progress_list);
+
+                progress.set_text("Load object: %p%");
+                obj = create_obj_for_points(m_object_repository->get_point_object(object_name, m_point_count));
+        }
+
+        load_object(progress_list, object_name, obj, rho, alpha);
 }
