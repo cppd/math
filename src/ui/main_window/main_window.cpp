@@ -112,7 +112,7 @@ void MainWindow::constructor_connect()
 
 void MainWindow::constructor_interface()
 {
-        QMainWindow::setWindowTitle(APPLICATION_NAME);
+        set_window_title_file("");
 
         QMainWindow::addAction(ui.actionFullScreen);
 
@@ -163,6 +163,18 @@ void MainWindow::constructor_buttons()
         m_object_buttons.push_back({ui.radioButton_CoconeConvexHull, OBJECT_COCONE_CONVEX_HULL});
         m_object_buttons.push_back({ui.radioButton_BoundCocone, OBJECT_BOUND_COCONE});
         m_object_buttons.push_back({ui.radioButton_BoundCoconeConvexHull, OBJECT_BOUND_COCONE_CONVEX_HULL});
+}
+
+void MainWindow::set_window_title_file(const std::string& file_name)
+{
+        std::string title = APPLICATION_NAME;
+
+        if (file_name.size() > 0)
+        {
+                title += " - " + file_name;
+        }
+
+        QMainWindow::setWindowTitle(title.c_str());
 }
 
 MainWindow::~MainWindow()
@@ -634,7 +646,7 @@ void MainWindow::slot_window_event(const WindowEvent& event)
                 const WindowEvent::file_loaded& d = event.get<WindowEvent::file_loaded>();
 
                 std::string file_name = get_base_name(d.file_name);
-                QMainWindow::setWindowTitle(QString(APPLICATION_NAME) + " - " + file_name.c_str());
+                set_window_title_file(file_name);
                 strike_out_all_objects_buttons();
                 ui.radioButton_Model->setChecked(true);
 

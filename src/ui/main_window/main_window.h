@@ -97,6 +97,8 @@ private:
         void constructor_repository();
         void constructor_buttons();
 
+        void set_window_title_file(const std::string& file_name);
+
         void showEvent(QShowEvent* event) override;
         void closeEvent(QCloseEvent* event) override;
 

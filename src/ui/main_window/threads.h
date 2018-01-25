@@ -76,14 +76,14 @@ class Threads
 
         const WindowEventEmitter& m_event_emitter;
 
-        std::map<ThreadAction, ThreadData> m_threads;
+        std::unordered_map<ThreadAction, ThreadData> m_threads;
         std::vector<ThreadProgress> m_progress;
 
         bool thread_free(ThreadAction action) const
         {
                 auto t = m_threads.find(action);
                 ASSERT(t != m_threads.end());
-                return !m_threads.find(action)->second.working;
+                return !(t->second.working);
         }
 
         ThreadData& action_thread(ThreadAction action)

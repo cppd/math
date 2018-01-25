@@ -61,6 +61,9 @@ class MainObjects
 
         IShow* m_show;
 
+        template <typename F>
+        void catch_all(const F& function) const noexcept;
+
         static std::string object_name(ObjectType object_type);
         static int object_identifier(ObjectType object_type);
         static int convex_hull_identifier(ObjectType object_type);
@@ -78,9 +81,6 @@ class MainObjects
 
 public:
         MainObjects(int mesh_object_threads, const WindowEventEmitter& emitter, int point_count);
-
-        template <typename F>
-        void catch_all(const F& function) const noexcept;
 
         std::vector<std::string> list_of_repository_point_objects() const;
 
