@@ -46,12 +46,12 @@ std::unique_ptr<const LightSource> create_light_source(const IShow& show)
         return std::make_unique<const ConstantLight>(light_position, vec3(1, 1, 1));
 }
 
-std::unique_ptr<const Sampler> create_sampler(int samples_per_pixel)
+std::unique_ptr<const Sampler2d> create_sampler(int samples_per_pixel)
 {
 #if 1
-        return std::make_unique<StratifiedJitteredSampler>(samples_per_pixel);
+        return std::make_unique<StratifiedJitteredSampler<2, double>>(samples_per_pixel);
 #else
-        return std::make_unique<LatinHypercubeSampler>(samples_per_pixel);
+        return std::make_unique<LatinHypercubeSampler<2, double>>(samples_per_pixel);
 #endif
 }
 

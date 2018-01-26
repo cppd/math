@@ -118,3 +118,74 @@ constexpr T interpolation(T v0, T v1, T x)
 
         return any_fma(x, v1, any_fma(x, -v0, v0));
 }
+
+template <unsigned Exp, typename T>
+constexpr T power(T base)
+{
+        static_assert(static_cast<T>(0) < static_cast<T>(-1));
+
+        if constexpr (Exp == 0)
+        {
+                return 1;
+        }
+        if constexpr (Exp == 1)
+        {
+                return base;
+        }
+        if constexpr (Exp == 2)
+        {
+                return base * base;
+        }
+        if constexpr (Exp == 3)
+        {
+                return base * base * base;
+        }
+        if constexpr (Exp == 4)
+        {
+                T t = base * base;
+                return t * t;
+        }
+        if constexpr (Exp == 5)
+        {
+                T t = base * base;
+                return t * t * base;
+        }
+        if constexpr (Exp == 6)
+        {
+                T t = base * base;
+                return t * t * t;
+        }
+        if constexpr (Exp == 7)
+        {
+                T t = base * base;
+                return t * t * t * base;
+        }
+        if constexpr (Exp == 8)
+        {
+                T t = base * base;
+                T t2 = t * t;
+                return t2 * t2;
+        }
+
+        unsigned exp = Exp - 8;
+        T res = base * base;
+        res *= res;
+        res *= res;
+
+        if (exp & 1)
+        {
+                res *= base;
+        }
+        exp >>= 1;
+        while (exp)
+        {
+                base *= base;
+                if (exp & 1)
+                {
+                        res *= base;
+                }
+                exp >>= 1;
+        }
+
+        return res;
+}

@@ -214,7 +214,7 @@ class Painter
         const std::vector<const GenericObject*>& m_objects;
         const std::vector<const LightSource*>& m_light_sources;
         const Projector& m_projector;
-        const Sampler& m_sampler;
+        const Sampler2d& m_sampler;
         const SurfaceProperties& m_default_surface_properties;
 
         Paintbrush* m_paintbrush;

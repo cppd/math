@@ -25,56 +25,71 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace
 {
-template <typename Sampler, typename RandomEngine>
+template <size_t N, typename T, template <size_t, typename...> typename Sampler, typename RandomEngine>
 void generate_points(RandomEngine& random_engine, int sample_count, int pass_count)
 {
-        std::vector<vec2> data(sample_count);
+        std::vector<Vector<N, T>> data(sample_count);
 
-        std::vector<vec2> all_data;
+        std::vector<Vector<N, T>> all_data;
         all_data.reserve(sample_count * pass_count);
 
         LOG("Pass count: " + to_string(pass_count));
 
+        Sampler<N, T> sampler(sample_count);
+
         for (int i = 0; i < pass_count; ++i)
         {
-                Sampler(sample_count).generate(random_engine, &data);
+                sampler.generate(random_engine, &data);
                 all_data.insert(all_data.end(), data.begin(), data.end());
         }
 
-        for (const vec2& v : all_data)
+        for (const Vector<N, T>& v : all_data)
         {
                 LOG("  " + to_string(v));
         }
 }
 
-template <typename Sampler>
+template <size_t N, typename T, template <size_t, typename...> typename Sampler>
 void test_sampler(const std::string& name, int iter_count, int sample_count, int pass_count)
 {
         std::mt19937_64 random_engine(get_random_seed<std::mt19937_64>());
-        std::vector<vec2> data(sample_count);
+        std::vector<Vector<N, T>> data(sample_count);
 
-        double t = time_in_seconds();
-
-        for (int i = 0; i < iter_count; ++i)
         {
-                StratifiedJitteredSampler(sample_count).generate(random_engine, &data);
+                Sampler<N, T> sampler(sample_count);
+
+                double t = time_in_seconds();
+
+                for (int i = 0; i < iter_count; ++i)
+                {
+                        sampler.generate(random_engine, &data);
+                }
+
+                LOG(name + ": time = " + to_string_fixed(time_in_seconds() - t, 5) +
+                    " seconds, size = " + to_string(data.size()));
         }
 
-        LOG(name + ": time = " + to_string_fixed(time_in_seconds() - t, 5) + " seconds, size = " + to_string(data.size()));
+        generate_points<N, T, Sampler>(random_engine, sample_count, pass_count);
+}
 
-        generate_points<Sampler>(random_engine, sample_count, pass_count);
+template <size_t N>
+void test_samplers()
+{
+        int iter_count = 1e6;
+        int sample_count = std::pow(5, N);
+        int pass_count = 10;
+
+        test_sampler<N, double, StratifiedJitteredSampler>("Stratified Jittered Sampler", iter_count, sample_count, pass_count);
+
+        LOG("");
+
+        test_sampler<N, double, LatinHypercubeSampler>("Latin Hypercube Sampler", iter_count, sample_count, pass_count);
 }
 }
 
 void test_samplers()
 {
-        constexpr int iter_count = 1e6;
-        constexpr int sample_count = 25;
-        constexpr int pass_count = 10;
-
-        test_sampler<StratifiedJitteredSampler>("Stratified Jittered Sampler", iter_count, sample_count, pass_count);
-
+        test_samplers<2>();
         LOG("");
-
-        test_sampler<LatinHypercubeSampler>("Latin Hypercube Sampler", iter_count, sample_count, pass_count);
+        test_samplers<3>();
 }

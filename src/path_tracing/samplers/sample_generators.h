@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -25,17 +25,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
  7.3 Stratified sampling.
 */
 
-#include "sampler.h"
+#pragma once
 
 #include "com/error.h"
-#include "com/print.h"
 #include "path_tracing/random/random_vector.h"
 
+#include <random>
 #include <type_traits>
 #include <utility>
 
-namespace
-{
 // Donald Knuth. The Art of Computer Programming. Second edition. Addison-Wesley, 1981.
 // Volume 2. Seminumerical Algorithms. 3.4.2. Random Sampling and Shuffling.
 // Функция std::shuffle не подходит, так как надо по отдельному измерению.
@@ -54,22 +52,55 @@ void shuffle_one_dimension(RandomEngine& random_engine, size_t dimension, std::v
         }
 }
 
-template <typename T, typename RandomEngine>
-void stratified_jittered_samples(RandomEngine& random_engine, int one_dimension_sample_count, std::vector<Vector<2, T>>* samples)
+template <size_t N, typename T, typename RandomEngine>
+void stratified_jittered_samples(RandomEngine& random_engine, int one_dimension_sample_count, std::vector<Vector<N, T>>* samples)
 {
         static_assert(std::is_floating_point_v<T>);
+        static_assert(N >= 2);
 
-        std::uniform_real_distribution<T> urd(0, static_cast<T>(1) / one_dimension_sample_count);
+        T reciprocal_1d_sample_count = static_cast<T>(1) / one_dimension_sample_count;
 
-        samples->resize(square(one_dimension_sample_count));
+        std::uniform_real_distribution<T> urd(0, reciprocal_1d_sample_count);
 
-        T count_t = one_dimension_sample_count;
+        samples->resize(power<N>(static_cast<unsigned>(one_dimension_sample_count)));
 
-        for (int i = 0, sample = 0; i < one_dimension_sample_count; ++i)
+        Vector<N, int> digits(0);
+        Vector<N, T> sample(0);
+        unsigned sample_num = 0;
+
+        while (true)
         {
-                for (int j = 0; j < one_dimension_sample_count; ++j)
+                for (int i = 0; i < one_dimension_sample_count; ++i)
                 {
-                        (*samples)[sample++] = Vector<2, T>(i / count_t, j / count_t) + random_vector<2, T>(random_engine, urd);
+                        sample[1] = i * reciprocal_1d_sample_count;
+
+                        for (int j = 0; j < one_dimension_sample_count; ++j)
+                        {
+                                sample[0] = j * reciprocal_1d_sample_count;
+
+                                (*samples)[sample_num++] = sample + random_vector<N, T>(random_engine, urd);
+                        }
+                }
+
+                if (N == 2)
+                {
+                        return;
+                }
+
+                for (unsigned i = 2; i < N; ++i)
+                {
+                        if (digits[i] < one_dimension_sample_count - 1)
+                        {
+                                ++digits[i];
+                                sample[i] = digits[i] * reciprocal_1d_sample_count;
+                                break;
+                        }
+                        if (i == N - 1)
+                        {
+                                return;
+                        }
+                        digits[i] = 0;
+                        sample[i] = 0;
                 }
         }
 }
@@ -78,17 +109,18 @@ template <size_t N, typename T, typename RandomEngine>
 void latin_hypercube_samples(RandomEngine& random_engine, int sample_count, std::vector<Vector<N, T>>* samples)
 {
         static_assert(std::is_floating_point_v<T>);
+        static_assert(N >= 2);
 
-        std::uniform_real_distribution<T> urd(0, static_cast<T>(1) / sample_count);
+        T reciprocal_sample_count = static_cast<T>(1) / sample_count;
+
+        std::uniform_real_distribution<T> urd(0, reciprocal_sample_count);
 
         samples->resize(sample_count);
-
-        T count_t = sample_count;
 
         // Случайные числа по диагонали
         for (int i = 0; i < sample_count; ++i)
         {
-                (*samples)[i] = Vector<N, T>(i / count_t) + random_vector<N, T>(random_engine, urd);
+                (*samples)[i] = Vector<N, T>(i * reciprocal_sample_count) + random_vector<N, T>(random_engine, urd);
         }
 
         // Достаточно со второго измерения
@@ -96,34 +128,4 @@ void latin_hypercube_samples(RandomEngine& random_engine, int sample_count, std:
         {
                 shuffle_one_dimension(random_engine, i, samples);
         }
-}
-}
-
-StratifiedJitteredSampler::StratifiedJitteredSampler(int samples_per_pixel)
-        : m_samples_one_dimension(std::ceil(std::sqrt(samples_per_pixel)))
-{
-        if (samples_per_pixel < 1)
-        {
-                error("Stratified jittered sample count (" + to_string(samples_per_pixel) + ") is not a positive integer");
-        }
-
-        ASSERT(m_samples_one_dimension > 0 && square(m_samples_one_dimension) >= samples_per_pixel);
-}
-
-void StratifiedJitteredSampler::generate(std::mt19937_64& random_engine, std::vector<vec2>* samples) const
-{
-        stratified_jittered_samples(random_engine, m_samples_one_dimension, samples);
-}
-
-LatinHypercubeSampler::LatinHypercubeSampler(int samples_per_pixel) : m_samples_per_pixel(samples_per_pixel)
-{
-        if (samples_per_pixel < 1)
-        {
-                error("Latin hypercube sample count (" + to_string(samples_per_pixel) + ") is not a positive integer");
-        }
-}
-
-void LatinHypercubeSampler::generate(std::mt19937_64& random_engine, std::vector<vec2>* samples) const
-{
-        latin_hypercube_samples(random_engine, m_samples_per_pixel, samples);
 }

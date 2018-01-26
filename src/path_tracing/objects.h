@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -233,12 +233,13 @@ public:
 };
 
 // Случайные точки внутри пикселя
+template <size_t N, typename T>
 class Sampler
 {
 public:
         virtual ~Sampler() = default;
 
-        virtual void generate(std::mt19937_64& random_engine, std::vector<vec2>* samples) const = 0;
+        virtual void generate(std::mt19937_64& random_engine, std::vector<Vector<N, T>>* samples) const = 0;
 
         Sampler() = default;
         Sampler(const Sampler&) = default;
@@ -246,6 +247,8 @@ public:
         Sampler& operator=(const Sampler&) = default;
         Sampler& operator=(Sampler&&) = default;
 };
+
+using Sampler2d = Sampler<2, double>;
 
 // Последовательность пикселов для рисования.
 class Paintbrush
@@ -275,6 +278,6 @@ public:
         virtual const std::vector<const GenericObject*>& objects() const = 0;
         virtual const std::vector<const LightSource*>& light_sources() const = 0;
         virtual const Projector& projector() const = 0;
-        virtual const Sampler& sampler() const = 0;
+        virtual const Sampler2d& sampler() const = 0;
         virtual const SurfaceProperties& default_surface_properties() const = 0;
 };

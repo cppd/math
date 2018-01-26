@@ -36,7 +36,7 @@ class CornellBox : public PaintObjects
         std::unique_ptr<PerspectiveProjector> m_perspective_projector;
         std::unique_ptr<ParallelProjector> m_parallel_projector;
         std::unique_ptr<SphericalProjector> m_spherical_projector;
-        std::unique_ptr<StratifiedJitteredSampler> m_sampler;
+        std::unique_ptr<StratifiedJitteredSampler<2, double>> m_sampler;
         SurfaceProperties m_default_surface_properties;
 
         std::unique_ptr<VisibleRectangle> m_rectangle_back;
@@ -141,7 +141,7 @@ public:
 
                 //
 
-                m_sampler = std::make_unique<StratifiedJitteredSampler>(m_samples_per_pixel);
+                m_sampler = std::make_unique<StratifiedJitteredSampler<2, double>>(m_samples_per_pixel);
 
                 //
 
@@ -200,7 +200,7 @@ public:
                 // return *m_spherical_projector;
         }
 
-        const Sampler& sampler() const override
+        const Sampler2d& sampler() const override
         {
                 return *m_sampler;
         }
@@ -215,7 +215,7 @@ class OneObject final : public PaintObjects
 {
         VisibleSharedMesh m_object;
         std::unique_ptr<const Projector> m_projector;
-        std::unique_ptr<const Sampler> m_sampler;
+        std::unique_ptr<const Sampler2d> m_sampler;
         std::unique_ptr<const LightSource> m_light_source;
         SurfaceProperties m_default_surface_properties;
 
@@ -224,7 +224,7 @@ class OneObject final : public PaintObjects
 
 public:
         OneObject(const vec3& background_color, const vec3& default_color, double diffuse,
-                  std::unique_ptr<const Projector>&& projector, std::unique_ptr<const Sampler>&& sampler,
+                  std::unique_ptr<const Projector>&& projector, std::unique_ptr<const Sampler2d>&& sampler,
                   std::unique_ptr<const LightSource>&& light_source, const std::shared_ptr<const Mesh>& mesh)
                 : m_object(mesh),
                   m_projector(std::move(projector)),
@@ -257,7 +257,7 @@ public:
         {
                 return *m_projector;
         }
-        const Sampler& sampler() const override
+        const Sampler2d& sampler() const override
         {
                 return *m_sampler;
         }
@@ -286,7 +286,7 @@ std::unique_ptr<const PaintObjects> cornell_box(int width, int height, const std
 
 std::unique_ptr<const PaintObjects> one_object_scene(const vec3& background_color, const vec3& default_color, double diffuse,
                                                      std::unique_ptr<const Projector>&& projector,
-                                                     std::unique_ptr<const Sampler>&& sampler,
+                                                     std::unique_ptr<const Sampler2d>&& sampler,
                                                      std::unique_ptr<const LightSource>&& light_source,
                                                      const std::shared_ptr<const Mesh>& mesh)
 {

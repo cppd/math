@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -31,6 +31,6 @@ std::unique_ptr<const PaintObjects> cornell_box(int width, int height, const std
 
 std::unique_ptr<const PaintObjects> one_object_scene(const vec3& background_color, const vec3& default_color, double diffuse,
                                                      std::unique_ptr<const Projector>&& projector,
-                                                     std::unique_ptr<const Sampler>&& sampler,
+                                                     std::unique_ptr<const Sampler2d>&& sampler,
                                                      std::unique_ptr<const LightSource>&& light_source,
                                                      const std::shared_ptr<const Mesh>& mesh);
