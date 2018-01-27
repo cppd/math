@@ -38,9 +38,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // Volume 2. Seminumerical Algorithms. 3.4.2. Random Sampling and Shuffling.
 // Функция std::shuffle не подходит, так как надо по отдельному измерению.
 template <size_t N, typename T, typename RandomEngine>
-void shuffle_one_dimension(RandomEngine& random_engine, size_t dimension, std::vector<Vector<N, T>>* v)
+void shuffle_one_dimension(RandomEngine& random_engine, unsigned dimension, std::vector<Vector<N, T>>* v)
 {
         ASSERT(dimension < N);
+        ASSERT(v->size() > 0);
 
         using Distribution = std::uniform_int_distribution<size_t>;
 
@@ -57,6 +58,8 @@ void stratified_jittered_samples(RandomEngine& random_engine, int one_dimension_
 {
         static_assert(std::is_floating_point_v<T>);
         static_assert(N >= 2);
+
+        ASSERT(one_dimension_sample_count > 0);
 
         T reciprocal_1d_sample_count = static_cast<T>(1) / one_dimension_sample_count;
 
@@ -110,6 +113,8 @@ void latin_hypercube_samples(RandomEngine& random_engine, int sample_count, std:
 {
         static_assert(std::is_floating_point_v<T>);
         static_assert(N >= 2);
+
+        ASSERT(sample_count > 0);
 
         T reciprocal_sample_count = static_cast<T>(1) / sample_count;
 

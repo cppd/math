@@ -194,6 +194,9 @@ inline constexpr bool is_signed =
         std::is_same_v<std::remove_cv_t<T>, mpz_class> || std::is_same_v<std::remove_cv_t<T>, mpf_class> ||
         std::is_same_v<std::remove_cv_t<T>, __int128> || std::is_same_v<std::remove_cv_t<T>, __float128> || std::is_signed_v<T>;
 
+template <typename T>
+inline constexpr bool is_unsigned = std::is_same_v<std::remove_cv_t<T>, unsigned __int128> || std::is_unsigned_v<T>;
+
 // clang-format off
 template<int BITS>
 using LeastSignedInteger =

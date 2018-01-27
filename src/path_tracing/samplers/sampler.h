@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "sample_generators.h"
 
 #include "com/error.h"
+#include "com/math.h"
 #include "path_tracing/objects.h"
 
 template <size_t N, typename T>
@@ -27,14 +28,32 @@ class StratifiedJitteredSampler final : public Sampler<N, T>
 {
         const int m_samples_one_dimension;
 
-public:
-        StratifiedJitteredSampler(int sample_count) : m_samples_one_dimension(std::ceil(std::pow(sample_count, 1.0 / N)))
+        static int one_dimension_size(int sample_count)
         {
                 if (sample_count < 1)
                 {
                         error("Stratified jittered sample count (" + to_string(sample_count) + ") is not a positive integer");
                 }
 
+                double v = std::pow(sample_count, 1.0 / N);
+
+                if (unsigned v_floor = std::floor(v); power<N>(v_floor) >= static_cast<unsigned>(sample_count))
+                {
+                        return v_floor;
+                }
+
+                if (unsigned v_ceil = std::ceil(v); power<N>(v_ceil) >= static_cast<unsigned>(sample_count))
+                {
+                        return v_ceil;
+                }
+
+                error("Could not compute one dimension sample count for " + to_string(sample_count) + " samples in " +
+                      to_string(N) + "D");
+        }
+
+public:
+        StratifiedJitteredSampler(int sample_count) : m_samples_one_dimension(one_dimension_size(sample_count))
+        {
                 ASSERT(m_samples_one_dimension > 0);
                 ASSERT(std::pow(m_samples_one_dimension, N) >= sample_count);
         }

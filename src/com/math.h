@@ -26,10 +26,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <quadmath.h>
 #endif
 
-constexpr double PI = 3.141592653589793238462643383279502884197169399375105820974944592307816406286208998628034825342117068L;
-constexpr const char PI_STR[] =
+inline constexpr double PI =
+        3.141592653589793238462643383279502884197169399375105820974944592307816406286208998628034825342117068L;
+inline constexpr const char PI_STR[] =
         "3.141592653589793238462643383279502884197169399375105820974944592307816406286208998628034825342117068";
-constexpr double TWO_PI = 6.283185307179586476925286766559005768394338798750211641949889184615632812572417997256069650684234136L;
+inline constexpr double TWO_PI =
+        6.283185307179586476925286766559005768394338798750211641949889184615632812572417997256069650684234136L;
 
 constexpr int get_group_count(int size, int group_size) noexcept
 {
@@ -120,9 +122,9 @@ constexpr T interpolation(T v0, T v1, T x)
 }
 
 template <unsigned Exp, typename T>
-constexpr T power(T base)
+constexpr T power([[maybe_unused]] T base)
 {
-        static_assert(static_cast<T>(0) < static_cast<T>(-1));
+        static_assert(is_native_integral<T> && is_unsigned<T>);
 
         if constexpr (Exp == 0)
         {
@@ -166,26 +168,22 @@ constexpr T power(T base)
                 T t2 = t * t;
                 return t2 * t2;
         }
-
-        unsigned exp = Exp - 8;
-        T res = base * base;
-        res *= res;
-        res *= res;
-
-        if (exp & 1)
+        if constexpr (Exp >= 9)
         {
-                res *= base;
-        }
-        exp >>= 1;
-        while (exp)
-        {
-                base *= base;
-                if (exp & 1)
-                {
-                        res *= base;
-                }
+                unsigned exp = Exp;
+
+                T res = (exp & 1) ? base : 1;
                 exp >>= 1;
-        }
+                while (exp)
+                {
+                        base *= base;
+                        if (exp & 1)
+                        {
+                                res *= base;
+                        }
+                        exp >>= 1;
+                }
 
-        return res;
+                return res;
+        }
 }

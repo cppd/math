@@ -72,24 +72,24 @@ void test_sampler(const std::string& name, int iter_count, int sample_count, int
         generate_points<N, T, Sampler>(random_engine, sample_count, pass_count);
 }
 
-template <size_t N>
+template <size_t N, typename T>
 void test_samplers()
 {
         int iter_count = 1e6;
         int sample_count = std::pow(5, N);
         int pass_count = 10;
 
-        test_sampler<N, double, StratifiedJitteredSampler>("Stratified Jittered Sampler", iter_count, sample_count, pass_count);
+        test_sampler<N, T, StratifiedJitteredSampler>("Stratified Jittered Sampler", iter_count, sample_count, pass_count);
 
         LOG("");
 
-        test_sampler<N, double, LatinHypercubeSampler>("Latin Hypercube Sampler", iter_count, sample_count, pass_count);
+        test_sampler<N, T, LatinHypercubeSampler>("Latin Hypercube Sampler", iter_count, sample_count, pass_count);
 }
 }
 
 void test_samplers()
 {
-        test_samplers<2>();
+        test_samplers<2, double>();
         LOG("");
-        test_samplers<3>();
+        test_samplers<3, double>();
 }
