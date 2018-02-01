@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -37,7 +37,4 @@ Vector<N, T> random_vector(RandomEngine& engine, Distribution& distribution)
         return RandomVectorImplementation::random_vector<T>(engine, distribution, std::make_integer_sequence<size_t, N>());
 }
 
-vec3 random_hemisphere_any_length(std::mt19937_64& engine, const vec3& normal);
-vec3 random_sphere_any_length(std::mt19937_64& engine);
-vec2 random_disk_any_length(std::mt19937_64& engine);
 vec3 random_hemisphere_cosine_any_length(std::mt19937_64& engine, const vec3& normal);
