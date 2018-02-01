@@ -57,12 +57,12 @@ constexpr T determinant_by_cofactor_expansion(const std::array<Vector<N_H, T>, N
         {
                 return vectors[v_map[0]][h_map[0]];
         }
-        else if constexpr (DET_SIZE == 2)
+        if constexpr (DET_SIZE == 2)
         {
                 return vectors[v_map[0]][h_map[0]] * vectors[v_map[1]][h_map[1]] -
                        vectors[v_map[0]][h_map[1]] * vectors[v_map[1]][h_map[0]];
         }
-        else if constexpr (DET_SIZE == 3)
+        if constexpr (DET_SIZE == 3)
         {
                 T v00 = vectors[v_map[0]][h_map[0]];
                 T v01 = vectors[v_map[0]][h_map[1]];
@@ -80,7 +80,7 @@ constexpr T determinant_by_cofactor_expansion(const std::array<Vector<N_H, T>, N
 
                 return d0 - d1 + d2;
         }
-        else
+        if constexpr (DET_SIZE >= 4)
         {
                 T det = 0;
 
