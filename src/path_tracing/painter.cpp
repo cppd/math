@@ -19,12 +19,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "constants.h"
 #include "objects.h"
-#include "path_tracing/random/random_vector.h"
+#include "path_tracing/random/sphere_vector.h"
 #include "path_tracing/space/ray_intersection.h"
 
 #include "com/color/colors.h"
 #include "com/error.h"
-#include "com/random.h"
+#include "com/random/engine.h"
 
 #include <atomic>
 #include <thread>
@@ -403,7 +403,7 @@ Pixel& Painter::get_pixel_reference(int x, int y)
 
 void Painter::paint_pixels()
 {
-        std::mt19937_64 random_engine(get_random_seed<std::mt19937_64>());
+        RandomEngineWithSeed<std::mt19937_64> random_engine;
 
         std::vector<vec2> samples;
 

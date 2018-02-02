@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "type_benchmark.h"
+#include "benchmark_types.h"
 
 #include "com/log.h"
 #include "com/math.h"
@@ -77,7 +77,7 @@ __attribute__((noinline)) double computation(std::vector<mpf_class>& v)
 }
 }
 
-void type_benchmark()
+void benchmark_types()
 {
         {
                 std::vector<mpz_class> v(N, 1e16);

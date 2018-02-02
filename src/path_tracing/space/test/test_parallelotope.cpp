@@ -15,17 +15,17 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "parallelotope_test.h"
+#include "test_parallelotope.h"
 
 #include "com/arrays.h"
 #include "com/error.h"
 #include "com/log.h"
 #include "com/print.h"
-#include "com/random.h"
+#include "com/random/engine.h"
+#include "com/random/vector.h"
 #include "com/ray.h"
 #include "com/vec.h"
 #include "path_tracing/constants.h"
-#include "path_tracing/random/random_vector.h"
 #include "path_tracing/space/parallelotope.h"
 #include "path_tracing/space/parallelotope_algorithm.h"
 #include "path_tracing/space/parallelotope_ortho.h"
@@ -502,7 +502,7 @@ std::array<Vector<N, T>, N> to_edge_vector(const std::array<T, N>& edges)
 template <size_t N, typename T>
 void test_points(int point_count)
 {
-        std::mt19937_64 engine(get_random_seed<std::mt19937_64>());
+        RandomEngineWithSeed<std::mt19937_64> engine;
 
         std::uniform_real_distribution<T> urd_org(-10, 10);
 
@@ -701,7 +701,7 @@ void all_tests(int point_count)
 }
 }
 
-void parallelotope_test(int number_of_dimensions)
+void test_parallelotope(int number_of_dimensions)
 {
         switch (number_of_dimensions)
         {

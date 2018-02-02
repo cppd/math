@@ -217,6 +217,8 @@ using LeastUnsignedInteger =
         mpz_class>>>>>;
 // clang-format on
 
+//
+
 template <typename T>
 std::enable_if_t<std::is_same_v<std::remove_cv_t<T>, mpz_class>, std::string> type_str()
 {
@@ -241,4 +243,32 @@ template <typename T>
 std::enable_if_t<is_native_floating_point<T>, std::string> type_str()
 {
         return "fp " + std::to_string(limits<T>::digits) + " bits";
+}
+
+//
+
+template <typename T>
+constexpr std::enable_if_t<std::is_same_v<std::remove_cv_t<T>, float>, const char*> type_name()
+{
+        return "float";
+}
+template <typename T>
+constexpr std::enable_if_t<std::is_same_v<std::remove_cv_t<T>, double>, const char*> type_name()
+{
+        return "double";
+}
+template <typename T>
+constexpr std::enable_if_t<std::is_same_v<std::remove_cv_t<T>, long double>, const char*> type_name()
+{
+        return "long double";
+}
+template <typename T>
+constexpr std::enable_if_t<std::is_same_v<std::remove_cv_t<T>, __float128>, const char*> type_name()
+{
+        return "__float128";
+}
+template <typename T>
+constexpr std::enable_if_t<std::is_same_v<std::remove_cv_t<T>, mpf_class>, const char*> type_name()
+{
+        return "mpf_class";
 }

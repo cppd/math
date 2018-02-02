@@ -34,7 +34,7 @@ void check_cuda_errors()
 {
         if (cudaPeekAtLastError() != cudaSuccess)
         {
-                error("Cuda Error: " + std::string(cudaGetErrorString(cudaGetLastError())));
+                error("CUDA Error: " + std::string(cudaGetErrorString(cudaGetLastError())));
         }
 }
 
@@ -71,7 +71,7 @@ void cuda_device_sync()
         check_cuda_errors();
         if (cudaDeviceSynchronize() != cudaSuccess)
         {
-                error("Cuda error: Failed to synchronize");
+                error("CUDA error: Failed to synchronize");
         }
 }
 
@@ -86,7 +86,7 @@ public:
         {
                 if (m_size < 1)
                 {
-                        error("Cuda malloc size < 1");
+                        error("CUDA malloc size < 1");
                 }
 
                 check_cuda_errors();
@@ -94,7 +94,7 @@ public:
                 cudaError_t r = cudaMalloc(&d_mem, m_size * sizeof(T));
                 if (r != cudaSuccess)
                 {
-                        error("Cuda malloc error " + std::to_string(m_size * sizeof(T)) + ": " + cudaGetErrorString(r));
+                        error("CUDA malloc error " + std::to_string(m_size * sizeof(T)) + ": " + cudaGetErrorString(r));
                 }
         }
         ~CudaMemory()
@@ -125,7 +125,7 @@ void cuda_memory_copy(CudaMemory<T>& dst, const std::vector<T>& src)
 {
         if (dst.size() != src.size())
         {
-                error("Cuda copy size error " + std::to_string(dst.size()) + " " + std::to_string(src.size()));
+                error("CUDA copy size error " + std::to_string(dst.size()) + " " + std::to_string(src.size()));
         }
 
         check_cuda_errors();
@@ -133,7 +133,7 @@ void cuda_memory_copy(CudaMemory<T>& dst, const std::vector<T>& src)
         cudaError_t r = cudaMemcpy(dst, src.data(), dst.size() * sizeof(T), cudaMemcpyHostToDevice);
         if (r != cudaSuccess)
         {
-                error("Cuda copy to device error: " + std::string(cudaGetErrorString(r)));
+                error("CUDA copy to device error: " + std::string(cudaGetErrorString(r)));
         }
 }
 
@@ -142,7 +142,7 @@ void cuda_memory_copy(std::vector<T>* dst, const CudaMemory<T>& src)
 {
         if (dst->size() != src.size())
         {
-                error("Cuda copy size error " + std::to_string(dst->size()) + " " + std::to_string(src.size()));
+                error("CUDA copy size error " + std::to_string(dst->size()) + " " + std::to_string(src.size()));
         }
 
         check_cuda_errors();
@@ -150,7 +150,7 @@ void cuda_memory_copy(std::vector<T>* dst, const CudaMemory<T>& src)
         cudaError_t r = cudaMemcpy(dst->data(), src, src.size() * sizeof(T), cudaMemcpyDeviceToHost);
         if (r != cudaSuccess)
         {
-                error("Cuda copy from device error: " + std::string(cudaGetErrorString(r)));
+                error("CUDA copy from device error: " + std::string(cudaGetErrorString(r)));
         }
 }
 
@@ -163,7 +163,7 @@ class CuFFT final : public IFourierCuda
         {
                 if (src->size() != m_data.size())
                 {
-                        error("CuFFT input size error: input " + std::to_string(src->size()) + ", must be " +
+                        error("cuFFT input size error: input " + std::to_string(src->size()) + ", must be " +
                               std::to_string(m_data.size()));
                 }
 
@@ -185,20 +185,20 @@ class CuFFT final : public IFourierCuda
                 {
                         if (cufftExecC2C(m_plan, m_data, m_data, CUFFT_INVERSE) != CUFFT_SUCCESS)
                         {
-                                error("CUFFT Error: Unable to execute plan");
+                                error("cuFFT Error: Unable to execute plan");
                         }
                 }
                 else
                 {
                         if (cufftExecC2C(m_plan, m_data, m_data, CUFFT_FORWARD) != CUFFT_SUCCESS)
                         {
-                                error("CUFFT Error: Unable to execute plan");
+                                error("cuFFT Error: Unable to execute plan");
                         }
                 }
 
                 cuda_device_sync();
 
-                LOG("calc CUFFT: " + to_string_fixed(1000.0 * (time_in_seconds() - start_time), 5) + " ms");
+                LOG("calc cuFFT: " + to_string_fixed(1000.0 * (time_in_seconds() - start_time), 5) + " ms");
 
                 cuda_memory_copy(&cuda_x, m_data);
 
@@ -225,13 +225,13 @@ public:
         {
                 if (m_data.size() < 1)
                 {
-                        error("Error CuFFT sizes " + std::to_string(x) + "x" + std::to_string(y));
+                        error("Error cuFFT sizes " + std::to_string(x) + "x" + std::to_string(y));
                 }
 
                 // Именно так y, x
                 if (cufftPlan2d(&m_plan, y, x, CUFFT_C2C) != CUFFT_SUCCESS)
                 {
-                        error("CUFFT create FFT plan error");
+                        error("cuFFT create FFT plan error");
                 }
         }
         ~CuFFT() override

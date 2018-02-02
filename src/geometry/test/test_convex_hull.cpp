@@ -15,10 +15,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "convex_hull_test.h"
+#include "test_convex_hull.h"
 
 #include "com/log.h"
-#include "com/random.h"
+#include "com/random/engine.h"
 #include "com/time.h"
 #include "geometry/core/convex_hull.h"
 #include "geometry/core/ridge.h"
@@ -178,7 +178,7 @@ void test(size_t low, size_t high, ProgressRatio* progress)
 {
         constexpr bool on_sphere = false;
 
-        std::mt19937_64 engine(get_random_seed<std::mt19937_64>());
+        RandomEngineWithSeed<std::mt19937_64> engine;
         int size = std::uniform_int_distribution<int>(low, high)(engine);
 
         {
@@ -198,7 +198,7 @@ void test(size_t low, size_t high, ProgressRatio* progress)
 }
 }
 
-void convex_hull_speed_test()
+void test_convex_hull_speed()
 {
         // При N=4, параллельно, 100000 точек, внутри сферы, примерное время: 1.7 сек, 0.4 сек.
 
@@ -222,7 +222,7 @@ void convex_hull_speed_test()
         create_convex_hull(points, false, &progress);
 }
 
-void convex_hull_test(int number_of_dimensions, ProgressRatio* progress)
+void test_convex_hull(int number_of_dimensions, ProgressRatio* progress)
 {
         ASSERT(progress);
 

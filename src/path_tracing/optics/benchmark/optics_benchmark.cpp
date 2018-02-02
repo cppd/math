@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "optics_benchmark.h"
 
 #include "com/log.h"
-#include "com/random.h"
+#include "com/random/engine.h"
 #include "com/time.h"
 #include "path_tracing/optics/optics.h"
 
@@ -29,7 +29,7 @@ void optics_benchmark()
 {
         constexpr int COUNT = 10000000;
 
-        std::mt19937_64 engine(get_random_seed<std::mt19937_64>());
+        RandomEngineWithSeed<std::mt19937_64> engine;
         std::uniform_real_distribution<double> urd(-1.0, 1.0);
 
         std::vector<vec3> data;

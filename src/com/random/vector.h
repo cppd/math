@@ -19,7 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/vec.h"
 
-#include <random>
 #include <utility>
 
 namespace RandomVectorImplementation
@@ -36,5 +35,3 @@ Vector<N, T> random_vector(RandomEngine& engine, Distribution& distribution)
 {
         return RandomVectorImplementation::random_vector<T>(engine, distribution, std::make_integer_sequence<size_t, N>());
 }
-
-vec3 random_hemisphere_cosine_any_length(std::mt19937_64& engine, const vec3& normal);

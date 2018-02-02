@@ -28,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "com/error.h"
-#include "path_tracing/random/random_vector.h"
+#include "com/random/vector.h"
 
 #include <random>
 #include <type_traits>

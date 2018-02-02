@@ -15,13 +15,13 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "reconstruction_test.h"
+#include "test_reconstruction.h"
 
 #include "com/error.h"
 #include "com/log.h"
 #include "com/math.h"
 #include "com/print.h"
-#include "com/random.h"
+#include "com/random/engine.h"
 #include "com/time.h"
 #include "geometry/cocone/reconstruction.h"
 #include "geometry/objects/points.h"
@@ -217,7 +217,7 @@ void all_tests(const std::unordered_set<Algorithms>& algorithms, std::vector<Vec
 template <size_t N>
 void test(int low, int high, ProgressRatio* progress)
 {
-        thread_local std::mt19937_64 engine(get_random_seed<std::mt19937_64>());
+        thread_local RandomEngineWithSeed<std::mt19937_64> engine;
 
         int point_count = std::uniform_int_distribution<int>(low, high)(engine);
 
@@ -231,7 +231,7 @@ void test(int low, int high, ProgressRatio* progress)
 }
 }
 
-void reconstruction_test(int number_of_dimensions, ProgressRatio* progress)
+void test_reconstruction(int number_of_dimensions, ProgressRatio* progress)
 {
         ASSERT(progress);
 

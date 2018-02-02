@@ -65,7 +65,6 @@ Chapman & Hall/CRC, 2004.
 #include "com/log.h"
 #include "com/math.h"
 #include "com/print.h"
-#include "com/random.h"
 #include "com/thread_pool.h"
 #include "com/types.h"
 #include "com/vec.h"

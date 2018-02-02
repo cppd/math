@@ -15,9 +15,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "random_vector.h"
+#include "sphere_vector.h"
 
-#include "complement.h"
+#include "com/random/vector.h"
+#include "geometry/core/complement.h"
 
 #include "com/math.h"
 

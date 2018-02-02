@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/log.h"
 #include "com/print.h"
-#include "com/random.h"
+#include "com/random/engine.h"
 #include "com/time.h"
 #include "path_tracing/samplers/sampler.h"
 
@@ -52,7 +52,7 @@ void generate_points(RandomEngine& random_engine, int sample_count, int pass_cou
 template <size_t N, typename T, template <size_t, typename...> typename Sampler>
 void test_sampler(const std::string& name, int iter_count, int sample_count, int pass_count)
 {
-        std::mt19937_64 random_engine(get_random_seed<std::mt19937_64>());
+        RandomEngineWithSeed<std::mt19937_64> random_engine;
         std::vector<Vector<N, T>> data(sample_count);
 
         {

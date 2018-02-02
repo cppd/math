@@ -277,7 +277,13 @@ void MainWindow::thread_self_test(SelfTestType test_type)
         m_threads.start_thread(ThreadAction::SelfTest, [=](ProgressRatioList* progress_list, std::string* message) {
                 *message = "Self-Test";
 
-                self_test(test_type, progress_list, message);
+                self_test(test_type,
+                          progress_list, [&](const char* test_name, const auto& test_function) noexcept {
+                                  catch_all([&](std::string* m) {
+                                          *m = test_name;
+                                          test_function();
+                                  });
+                          });
         });
 }
 
@@ -693,7 +699,7 @@ void MainWindow::slot_window_first_shown()
 
         move_window_to_desktop_center(this);
 
-        thread_self_test(SelfTestType::Required);
+        thread_self_test(SelfTestType::Essential);
 
         try
         {

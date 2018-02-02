@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "dft_test.h"
+#include "test_dft.h"
 
 #if defined(CUDA_FOUND)
 #include "dft_cufft.h"
@@ -29,7 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/file/file_sys.h"
 #include "com/log.h"
 #include "com/print.h"
-#include "com/random.h"
+#include "com/random/engine.h"
 #include "com/time.h"
 #include "gpu_2d/dft/comp/dft_gl2d.h"
 #include "window/window.h"
@@ -43,7 +43,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 using complex = std::complex<float>;
 
+#if defined(CUDA_FOUND) || defined(FFTW_FOUND)
 constexpr double DISCREPANCY_LIMIT = 1e-4;
+#endif
 
 namespace
 {
@@ -202,7 +204,7 @@ void test_fft_impl(bool big_test)
         int n1, n2;
         if (!big_test)
         {
-                std::mt19937_64 engine(get_random_seed<std::mt19937_64>());
+                RandomEngineWithSeed<std::mt19937_64> engine;
                 std::uniform_int_distribution<int> uid(1, 100);
                 n1 = uid(engine);
                 n2 = uid(engine);
@@ -240,9 +242,12 @@ void test_fft_impl(bool big_test)
                 save_data(output_gl2d, gl2d_x);
         }
 
+        std::string error_message;
+
 #if defined(CUDA_FOUND)
+        try
         {
-                LOG("----- Cuda -----");
+                LOG("----- CUDA -----");
                 std::vector<complex> cufft_x(source_data);
 
                 double start_time = time_in_seconds();
@@ -251,19 +256,28 @@ void test_fft_impl(bool big_test)
                 cufft->exec(false, &cufft_x);
                 // cufft->exec(true, &cufft_x);
 
-                LOG("CUFFT: " + to_string_fixed(1000.0 * (time_in_seconds() - start_time), 5) + " ms");
+                LOG("cuFFT: " + to_string_fixed(1000.0 * (time_in_seconds() - start_time), 5) + " ms");
 
                 save_data(output_cuda, cufft_x);
 
                 double d = discrepancy(gl2d_x, cufft_x);
-                LOG("Discrepancy gl2d-cufft: " + to_string(d));
+                LOG("Discrepancy gl2d-cuFFT: " + to_string(d));
                 if (d > DISCREPANCY_LIMIT)
                 {
                         error("HUGE discrepancy");
                 }
         }
+        catch (std::exception& e)
+        {
+                if (error_message.size() != 0)
+                {
+                        error_message += '\n';
+                }
+                error_message += std::string("CUDA\n") + e.what();
+        }
 #endif
 #if defined(FFTW_FOUND)
+        try
         {
                 LOG("----- FFTW -----");
                 std::vector<complex> fftw_x(source_data);
@@ -285,14 +299,28 @@ void test_fft_impl(bool big_test)
                         error("HUGE discrepancy");
                 }
         }
+        catch (std::exception& e)
+        {
+                if (error_message.size() != 0)
+                {
+                        error_message += '\n';
+                }
+                error_message += std::string("FFTW\n") + e.what();
+        }
 #endif
+
+        if (error_message.size() > 0)
+        {
+                error(error_message);
+        }
+
         LOG("check passed");
 
 #endif
 }
 }
 
-void dft_test()
+void test_dft()
 {
         test_fft_impl(false);
         LOG("");

@@ -17,15 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "progress/progress_interfaces.h"
+#include "progress/progress.h"
 
-#include <functional>
-
-enum class SelfTestType
-{
-        Essential,
-        Extended
-};
-
-void self_test(SelfTestType test_type, IProgressRatioList* progress_ratio_list,
-               const std::function<void(const char* test_name, const std::function<void()>& test_function)>& catch_all);
+void test_convex_hull(int number_of_dimensions, ProgressRatio* progress);
+void test_convex_hull_speed();

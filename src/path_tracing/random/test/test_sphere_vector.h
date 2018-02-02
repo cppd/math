@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -17,19 +17,4 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <type_traits>
-
-void read_system_random(void* p, unsigned count);
-
-// T == std::some_random_number_engine
-template <typename T>
-typename T::result_type get_random_seed()
-{
-        using result_type = typename T::result_type;
-
-        static_assert(std::is_integral_v<result_type> && std::is_unsigned_v<result_type>);
-
-        result_type v;
-        read_system_random(&v, sizeof(v));
-        return v;
-}
+void test_sphere_vector();

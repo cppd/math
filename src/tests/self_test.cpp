@@ -17,96 +17,107 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "self_test.h"
 
-#include "geometry/test/convex_hull_test.h"
-#include "geometry/test/reconstruction_test.h"
-#include "gpu_2d/dft/test/dft_test.h"
-#include "path_tracing/space/test/parallelotope_test.h"
+#include "geometry/test/test_convex_hull.h"
+#include "geometry/test/test_reconstruction.h"
+#include "gpu_2d/dft/test/test_dft.h"
+#include "path_tracing/space/test/test_parallelotope.h"
 
 namespace
 {
-void self_test_required(IProgressRatioList* progress_ratio_list, std::string* test_name)
+template <typename T>
+void self_test_essential(IProgressRatioList* progress_ratio_list, const T& catch_all)
 {
-        {
-                *test_name = "Self-Test, DFT in 2D";
-                ProgressRatio progress(progress_ratio_list, *test_name);
-                progress.set(0);
-                dft_test();
-        }
+        const char* test_name;
 
-        {
-                *test_name = "Self-Test, Parallelotopes in 2D";
-                ProgressRatio progress(progress_ratio_list, *test_name);
+        test_name = "Self-Test, DFT in 2D";
+        catch_all(test_name, [&]() {
+                ProgressRatio progress(progress_ratio_list, test_name);
                 progress.set(0);
-                parallelotope_test(2);
-        }
-        {
-                *test_name = "Self-Test, Parallelotopes in 3D";
-                ProgressRatio progress(progress_ratio_list, *test_name);
-                progress.set(0);
-                parallelotope_test(3);
-        }
-        {
-                *test_name = "Self-Test, Parallelotopes in 4D";
-                ProgressRatio progress(progress_ratio_list, *test_name);
-                progress.set(0);
-                parallelotope_test(4);
-        }
+                test_dft();
+        });
 
-        {
-                *test_name = "Self-Test, Convex Hull in 2D";
-                ProgressRatio progress(progress_ratio_list, *test_name);
-                convex_hull_test(2, &progress);
-        }
-        {
-                *test_name = "Self-Test, Convex Hull in 3D";
-                ProgressRatio progress(progress_ratio_list, *test_name);
-                convex_hull_test(3, &progress);
-        }
-        {
-                *test_name = "Self-Test, Convex Hull in 4D";
-                ProgressRatio progress(progress_ratio_list, *test_name);
-                convex_hull_test(4, &progress);
-        }
+        test_name = "Self-Test, Parallelotopes in 2D";
+        catch_all(test_name, [&]() {
+                ProgressRatio progress(progress_ratio_list, test_name);
+                progress.set(0);
+                test_parallelotope(2);
+        });
 
-        {
-                *test_name = "Self-Test, 1-Manifold Reconstruction in 2D";
-                ProgressRatio progress(progress_ratio_list, *test_name);
-                reconstruction_test(2, &progress);
-        }
-        {
-                *test_name = "Self-Test, 2-Manifold Reconstruction in 3D";
-                ProgressRatio progress(progress_ratio_list, *test_name);
-                reconstruction_test(3, &progress);
-        }
+        test_name = "Self-Test, Parallelotopes in 3D";
+        catch_all(test_name, [&]() {
+                ProgressRatio progress(progress_ratio_list, test_name);
+                progress.set(0);
+                test_parallelotope(3);
+        });
+
+        test_name = "Self-Test, Parallelotopes in 4D";
+        catch_all(test_name, [&]() {
+                ProgressRatio progress(progress_ratio_list, test_name);
+                progress.set(0);
+                test_parallelotope(4);
+        });
+
+        test_name = "Self-Test, Convex Hull in 2D";
+        catch_all(test_name, [&]() {
+                ProgressRatio progress(progress_ratio_list, test_name);
+                test_convex_hull(2, &progress);
+        });
+
+        test_name = "Self-Test, Convex Hull in 3D";
+        catch_all(test_name, [&]() {
+                ProgressRatio progress(progress_ratio_list, test_name);
+                test_convex_hull(3, &progress);
+        });
+
+        test_name = "Self-Test, Convex Hull in 4D";
+        catch_all(test_name, [&]() {
+                ProgressRatio progress(progress_ratio_list, test_name);
+                test_convex_hull(4, &progress);
+        });
+
+        test_name = "Self-Test, 1-Manifold Reconstruction in 2D";
+        catch_all(test_name, [&]() {
+                ProgressRatio progress(progress_ratio_list, test_name);
+                test_reconstruction(2, &progress);
+        });
+
+        test_name = "Self-Test, 2-Manifold Reconstruction in 3D";
+        catch_all(test_name, [&]() {
+                ProgressRatio progress(progress_ratio_list, test_name);
+                test_reconstruction(3, &progress);
+        });
 }
 
-void self_test_extended(IProgressRatioList* progress_ratio_list, std::string* test_name)
+template <typename T>
+void self_test_extended(IProgressRatioList* progress_ratio_list, const T& catch_all)
 {
-        {
-                self_test_required(progress_ratio_list, test_name);
-        }
-        {
-                *test_name = "Self-Test, Convex Hull in 5D";
-                ProgressRatio progress(progress_ratio_list, *test_name);
-                convex_hull_test(5, &progress);
-        }
-        {
-                *test_name = "Self-Test, 3-Manifold Reconstruction in 4D";
-                ProgressRatio progress(progress_ratio_list, *test_name);
-                reconstruction_test(4, &progress);
-        }
+        const char* test_name;
+
+        test_name = "Self-Test, Convex Hull in 5D";
+        catch_all(test_name, [&]() {
+                ProgressRatio progress(progress_ratio_list, test_name);
+                test_convex_hull(5, &progress);
+        });
+
+        test_name = "Self-Test, 3-Manifold Reconstruction in 4D";
+        catch_all(test_name, [&]() {
+                ProgressRatio progress(progress_ratio_list, test_name);
+                test_reconstruction(4, &progress);
+        });
 }
 }
 
-void self_test(SelfTestType test_type, IProgressRatioList* progress_ratio_list, std::string* test_name)
+void self_test(SelfTestType test_type, IProgressRatioList* progress_ratio_list,
+               const std::function<void(const char* test_name, const std::function<void()>& test_function)>& catch_all)
 {
         switch (test_type)
         {
-        case SelfTestType::Required:
-                self_test_required(progress_ratio_list, test_name);
+        case SelfTestType::Essential:
+                self_test_essential(progress_ratio_list, catch_all);
                 break;
         case SelfTestType::Extended:
-                self_test_extended(progress_ratio_list, test_name);
+                self_test_essential(progress_ratio_list, catch_all);
+                self_test_extended(progress_ratio_list, catch_all);
                 break;
         }
 }
