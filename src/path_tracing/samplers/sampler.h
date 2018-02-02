@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "sample_generators.h"
+#include "engine.h"
 
 #include "com/error.h"
 #include "com/math.h"
@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 template <size_t N, typename T>
 class StratifiedJitteredSampler final : public Sampler<N, T>
 {
-        const int m_samples_one_dimension;
+        StratifiedJitteredSampleEngine<N, T> m_engine;
 
         static int one_dimension_size(int sample_count)
         {
@@ -52,34 +52,29 @@ class StratifiedJitteredSampler final : public Sampler<N, T>
         }
 
 public:
-        StratifiedJitteredSampler(int sample_count) : m_samples_one_dimension(one_dimension_size(sample_count))
+        StratifiedJitteredSampler(int sample_count) : m_engine(one_dimension_size(sample_count))
         {
-                ASSERT(m_samples_one_dimension > 0);
-                ASSERT(std::pow(m_samples_one_dimension, N) >= sample_count);
+                ASSERT(std::pow(one_dimension_size(sample_count), N) >= sample_count);
         }
 
         void generate(std::mt19937_64& random_engine, std::vector<Vector<N, T>>* samples) const override
         {
-                stratified_jittered_samples(random_engine, m_samples_one_dimension, samples);
+                m_engine.generate(random_engine, samples);
         }
 };
 
 template <size_t N, typename T>
 class LatinHypercubeSampler final : public Sampler<N, T>
 {
-        const int m_sample_count;
+        LatinHypercubeSampleEngine<N, T> m_engine;
 
 public:
-        LatinHypercubeSampler(int sample_count) : m_sample_count(sample_count)
+        LatinHypercubeSampler(int sample_count) : m_engine(sample_count)
         {
-                if (sample_count < 1)
-                {
-                        error("Latin hypercube sample count (" + to_string(sample_count) + ") is not a positive integer");
-                }
         }
 
         void generate(std::mt19937_64& random_engine, std::vector<Vector<N, T>>* samples) const override
         {
-                latin_hypercube_samples(random_engine, m_sample_count, samples);
+                m_engine.generate(random_engine, samples);
         }
 };
