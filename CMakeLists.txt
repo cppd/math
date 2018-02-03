@@ -120,6 +120,8 @@ function(IncludeSourceAndSetCompilerFlags dir_name executable extensions)
         target_compile_options(${PROJECT_NAME} PRIVATE -Ofast -mavx -mfma)
         target_compile_options(${PROJECT_NAME} PRIVATE $<$<COMPILE_LANGUAGE:CXX>: -fno-rtti -fstrict-enums >)
 
+        target_compile_options(${PROJECT_NAME} PRIVATE $<$<CXX_COMPILER_ID:Clang>: -mllvm -inline-threshold=10000 >)
+
         SetCompilerWarnings("${source_files}")
 
 endfunction()
