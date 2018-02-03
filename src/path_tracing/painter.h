@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -38,6 +38,6 @@ public:
         virtual void painter_error_message(const std::string& msg) noexcept = 0;
 };
 
-void paint(IPainterNotifier* painter_notifier, const PaintObjects& paint_objects, Paintbrush* paintbrush, unsigned thread_count,
-           std::atomic_bool* stop, AtomicCounter<unsigned long long>* ray_count,
+void paint(IPainterNotifier* painter_notifier, int samples_per_pixel, const PaintObjects& paint_objects, Paintbrush* paintbrush,
+           unsigned thread_count, std::atomic_bool* stop, AtomicCounter<unsigned long long>* ray_count,
            AtomicCounter<unsigned long long>* sample_count) noexcept;

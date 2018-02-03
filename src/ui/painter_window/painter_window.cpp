@@ -79,8 +79,10 @@ public:
         }
 };
 
-PainterWindow::PainterWindow(const std::string& title, unsigned thread_count, std::unique_ptr<const PaintObjects>&& paint_objects)
-        : m_paint_objects(std::move(paint_objects)),
+PainterWindow::PainterWindow(const std::string& title, unsigned thread_count, int samples_per_pixel,
+                             std::unique_ptr<const PaintObjects>&& paint_objects)
+        : m_samples_per_pixel(samples_per_pixel),
+          m_paint_objects(std::move(paint_objects)),
           m_thread_count(thread_count),
           m_width(m_paint_objects->projector().screen_width()),
           m_height(m_paint_objects->projector().screen_height()),
@@ -235,7 +237,8 @@ void PainterWindow::first_shown()
         m_stop = false;
         m_thread_working = true;
         m_thread = std::thread([this]() noexcept {
-                paint(this, *m_paint_objects, &m_paintbrush, m_thread_count, &m_stop, &m_ray_count, &m_sample_count);
+                paint(this, m_samples_per_pixel, *m_paint_objects, &m_paintbrush, m_thread_count, &m_stop, &m_ray_count,
+                      &m_sample_count);
                 m_thread_working = false;
         });
 }

@@ -29,14 +29,11 @@ namespace
 {
 class CornellBox : public PaintObjects
 {
-        const int m_samples_per_pixel;
-
         std::vector<const GenericObject*> m_objects;
         std::vector<const LightSource*> m_light_sources;
         std::unique_ptr<PerspectiveProjector> m_perspective_projector;
         std::unique_ptr<ParallelProjector> m_parallel_projector;
         std::unique_ptr<SphericalProjector> m_spherical_projector;
-        std::unique_ptr<StratifiedJitteredSampler<2, double>> m_sampler;
         SurfaceProperties m_default_surface_properties;
 
         std::unique_ptr<VisibleRectangle> m_rectangle_back;
@@ -56,8 +53,7 @@ class CornellBox : public PaintObjects
 
 public:
         CornellBox(int width, int height, const std::string& obj_file_name, double size, const vec3& default_color,
-                   double diffuse, const vec3& camera_direction, const vec3& camera_up, int samples_per_pixel)
-                : m_samples_per_pixel(samples_per_pixel)
+                   double diffuse, const vec3& camera_direction, const vec3& camera_up)
         {
                 ProgressRatio progress(nullptr);
 
@@ -74,8 +70,7 @@ public:
         }
 
         CornellBox(int width, int height, const std::shared_ptr<const Mesh>& mesh, double size, const vec3& default_color,
-                   double diffuse, const vec3& camera_direction, const vec3& camera_up, int samples_per_pixel)
-                : m_samples_per_pixel(samples_per_pixel)
+                   double diffuse, const vec3& camera_direction, const vec3& camera_up)
         {
                 m_mesh = std::make_unique<VisibleSharedMesh>(mesh);
 
@@ -139,12 +134,6 @@ public:
 
                 m_spherical_projector = std::make_unique<SphericalProjector>(view_point, dir, up, 80, width, height);
 
-                //
-
-                m_sampler = std::make_unique<StratifiedJitteredSampler<2, double>>(m_samples_per_pixel);
-
-                //
-
                 m_default_surface_properties.set_color(vec3(0.0, 0.0, 0.0));
                 m_default_surface_properties.set_diffuse_and_fresnel(1, 0);
                 m_default_surface_properties.set_light_source(false);
@@ -200,11 +189,6 @@ public:
                 // return *m_spherical_projector;
         }
 
-        const Sampler2d& sampler() const override
-        {
-                return *m_sampler;
-        }
-
         const SurfaceProperties& default_surface_properties() const override
         {
                 return m_default_surface_properties;
@@ -215,7 +199,6 @@ class OneObject final : public PaintObjects
 {
         VisibleSharedMesh m_object;
         std::unique_ptr<const Projector> m_projector;
-        std::unique_ptr<const Sampler2d> m_sampler;
         std::unique_ptr<const LightSource> m_light_source;
         SurfaceProperties m_default_surface_properties;
 
@@ -224,12 +207,9 @@ class OneObject final : public PaintObjects
 
 public:
         OneObject(const vec3& background_color, const vec3& default_color, double diffuse,
-                  std::unique_ptr<const Projector>&& projector, std::unique_ptr<const Sampler2d>&& sampler,
-                  std::unique_ptr<const LightSource>&& light_source, const std::shared_ptr<const Mesh>& mesh)
-                : m_object(mesh),
-                  m_projector(std::move(projector)),
-                  m_sampler(std::move(sampler)),
-                  m_light_source(std::move(light_source))
+                  std::unique_ptr<const Projector>&& projector, std::unique_ptr<const LightSource>&& light_source,
+                  const std::shared_ptr<const Mesh>& mesh)
+                : m_object(mesh), m_projector(std::move(projector)), m_light_source(std::move(light_source))
         {
                 m_default_surface_properties.set_color(background_color);
                 m_default_surface_properties.set_diffuse_and_fresnel(1, 0);
@@ -257,10 +237,6 @@ public:
         {
                 return *m_projector;
         }
-        const Sampler2d& sampler() const override
-        {
-                return *m_sampler;
-        }
         const SurfaceProperties& default_surface_properties() const override
         {
                 return m_default_surface_properties;
@@ -270,26 +246,24 @@ public:
 
 std::unique_ptr<const PaintObjects> cornell_box(int width, int height, const std::string& obj_file_name, double size,
                                                 const vec3& default_color, double diffuse, const vec3& camera_direction,
-                                                const vec3& camera_up, int samples_per_pixel)
+                                                const vec3& camera_up)
 {
         return std::make_unique<CornellBox>(width, height, obj_file_name, size, default_color, diffuse, camera_direction,
-                                            camera_up, samples_per_pixel);
+                                            camera_up);
 }
 
 std::unique_ptr<const PaintObjects> cornell_box(int width, int height, const std::shared_ptr<const Mesh>& mesh, double size,
                                                 const vec3& default_color, double diffuse, const vec3& camera_direction,
-                                                const vec3& camera_up, int samples_per_pixel)
+                                                const vec3& camera_up)
 {
-        return std::make_unique<CornellBox>(width, height, mesh, size, default_color, diffuse, camera_direction, camera_up,
-                                            samples_per_pixel);
+        return std::make_unique<CornellBox>(width, height, mesh, size, default_color, diffuse, camera_direction, camera_up);
 }
 
 std::unique_ptr<const PaintObjects> one_object_scene(const vec3& background_color, const vec3& default_color, double diffuse,
                                                      std::unique_ptr<const Projector>&& projector,
-                                                     std::unique_ptr<const Sampler2d>&& sampler,
                                                      std::unique_ptr<const LightSource>&& light_source,
                                                      const std::shared_ptr<const Mesh>& mesh)
 {
-        return std::make_unique<OneObject>(background_color, default_color, diffuse, std::move(projector), std::move(sampler),
+        return std::make_unique<OneObject>(background_color, default_color, diffuse, std::move(projector),
                                            std::move(light_source), mesh);
 }

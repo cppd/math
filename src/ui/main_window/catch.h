@@ -24,30 +24,33 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 
 template <typename E, typename F>
-void catch_all_exceptions(const E& event_emitter, const F& function) noexcept try
+void catch_all_exceptions(const E& event_emitter, const F& function) noexcept
 {
-        std::string error_message = "Error";
         try
         {
-                function(&error_message);
-        }
-        catch (TerminateRequestException&)
-        {
-        }
-        catch (ErrorSourceException& e)
-        {
-                event_emitter.message_error_source(error_message + ":\n" + e.get_msg(), e.get_src());
-        }
-        catch (std::exception& e)
-        {
-                event_emitter.message_error(error_message + ":\n" + e.what());
+                std::string error_message = "Error";
+                try
+                {
+                        function(&error_message);
+                }
+                catch (TerminateRequestException&)
+                {
+                }
+                catch (ErrorSourceException& e)
+                {
+                        event_emitter.message_error_source(error_message + ":\n" + e.get_msg(), e.get_src());
+                }
+                catch (std::exception& e)
+                {
+                        event_emitter.message_error(error_message + ":\n" + e.what());
+                }
+                catch (...)
+                {
+                        event_emitter.message_error(error_message + ":\n" + "Unknown error");
+                }
         }
         catch (...)
         {
-                event_emitter.message_error(error_message + ":\n" + "Unknown error");
+                error_fatal("Exception in catch all exception handlers");
         }
-}
-catch (...)
-{
-        error_fatal("Exception in catch all.");
 }

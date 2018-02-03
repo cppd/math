@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "constants.h"
 #include "objects.h"
 #include "path_tracing/random/sphere_vector.h"
+#include "path_tracing/samplers/sampler.h"
 #include "path_tracing/space/ray_intersection.h"
 
 #include "com/color/colors.h"
@@ -33,6 +34,10 @@ constexpr double MIN_COLOR_LEVEL = 1e-4;
 constexpr int MAX_RECURSION_LEVEL = 100;
 
 constexpr double EPSILON_DOUBLE = EPSILON<double>;
+
+using PainterRandomEngine = std::mt19937_64;
+using PainterSampler = StratifiedJitteredSampler<2, double>;
+// using PainterSampler = LatinHypercubeSampler<2, double>;
 
 namespace
 {
@@ -214,7 +219,7 @@ class Painter
         const std::vector<const GenericObject*>& m_objects;
         const std::vector<const LightSource*>& m_light_sources;
         const Projector& m_projector;
-        const Sampler2d& m_sampler;
+        const PainterSampler m_sampler;
         const SurfaceProperties& m_default_surface_properties;
 
         Paintbrush* m_paintbrush;
@@ -226,26 +231,26 @@ class Painter
         AtomicCounter<unsigned long long>& m_ray_count;
         AtomicCounter<unsigned long long>& m_sample_count;
 
-        int m_width, m_height;
+        const int m_width, m_height;
         std::vector<Pixel> m_pixels;
 
         Pixel& get_pixel_reference(int x, int y);
         void work_thread() noexcept;
-        vec3 diffuse_lighting(std::mt19937_64& random_engine, int recursion_level, double color_level, const vec3& point,
+        vec3 diffuse_lighting(PainterRandomEngine& random_engine, int recursion_level, double color_level, const vec3& point,
                               const vec3& shading_normal, const vec3& geometric_normal, bool triangle_mesh) const;
-        vec3 trace_path(std::mt19937_64& random_engine, int recursion_level, double color_level, const ray3& ray,
+        vec3 trace_path(PainterRandomEngine& random_engine, int recursion_level, double color_level, const ray3& ray,
                         bool diffuse_reflection) const;
         void paint_pixels();
 
 public:
-        Painter(IPainterNotifier* painter_notifier, const PaintObjects& paint_objects, Paintbrush* paintbrush,
-                unsigned thread_count, std::atomic_bool* stop, AtomicCounter<unsigned long long>* ray_count,
-                AtomicCounter<unsigned long long>* sample_count)
+        Painter(IPainterNotifier* painter_notifier, int samples_per_pixel, const PaintObjects& paint_objects,
+                Paintbrush* paintbrush, unsigned thread_count, std::atomic_bool* stop,
+                AtomicCounter<unsigned long long>* ray_count, AtomicCounter<unsigned long long>* sample_count)
                 : m_painter_notifier(painter_notifier),
                   m_objects(paint_objects.objects()),
                   m_light_sources(paint_objects.light_sources()),
                   m_projector(paint_objects.projector()),
-                  m_sampler(paint_objects.sampler()),
+                  m_sampler(PainterSampler(samples_per_pixel)),
                   m_default_surface_properties(paint_objects.default_surface_properties()),
                   m_paintbrush(paintbrush),
                   m_threads(thread_count),
@@ -302,11 +307,11 @@ void Painter::work_thread() noexcept
         }
         catch (...)
         {
-                error_fatal("Exception in painter thread message string.");
+                error_fatal("Exception in painter exception handlers");
         }
 }
 
-vec3 Painter::diffuse_lighting(std::mt19937_64& random_engine, int recursion_level, double color_level, const vec3& point,
+vec3 Painter::diffuse_lighting(PainterRandomEngine& random_engine, int recursion_level, double color_level, const vec3& point,
                                const vec3& shading_normal, const vec3& geometric_normal, bool triangle_mesh) const
 {
         if (recursion_level < MAX_RECURSION_LEVEL)
@@ -314,7 +319,7 @@ vec3 Painter::diffuse_lighting(std::mt19937_64& random_engine, int recursion_lev
                 // Распределение случайного луча с вероятностью по косинусу угла между нормалью и случайным вектором.
 
                 // Случайный вектор диффузного освещения надо определять от видимой нормали.
-                ray3 diffuse_ray = ray3(point, random_hemisphere_cosine_any_length(random_engine, shading_normal));
+                ray3 diffuse_ray = ray3(point, random_cosine_hemisphere_any_length(random_engine, shading_normal));
 
                 if (triangle_mesh && dot(diffuse_ray.get_dir(), geometric_normal) < EPSILON_DOUBLE)
                 {
@@ -329,7 +334,7 @@ vec3 Painter::diffuse_lighting(std::mt19937_64& random_engine, int recursion_lev
         return vec3(0);
 }
 
-vec3 Painter::trace_path(std::mt19937_64& random_engine, int recursion_level, double color_level, const ray3& ray,
+vec3 Painter::trace_path(PainterRandomEngine& random_engine, int recursion_level, double color_level, const ray3& ray,
                          bool diffuse_reflection) const
 {
         ++m_ray_count;
@@ -403,7 +408,7 @@ Pixel& Painter::get_pixel_reference(int x, int y)
 
 void Painter::paint_pixels()
 {
-        RandomEngineWithSeed<std::mt19937_64> random_engine;
+        RandomEngineWithSeed<PainterRandomEngine> random_engine;
 
         std::vector<vec2> samples;
 
@@ -444,18 +449,20 @@ void Painter::paint_pixels()
 }
 
 // Без выдачи исключений. Про проблемы сообщать через painter_notifier.
-void paint(IPainterNotifier* painter_notifier, const PaintObjects& paint_objects, Paintbrush* paintbrush, unsigned thread_count,
-           std::atomic_bool* stop, AtomicCounter<unsigned long long>* ray_count,
+void paint(IPainterNotifier* painter_notifier, int samples_per_pixel, const PaintObjects& paint_objects, Paintbrush* paintbrush,
+           unsigned thread_count, std::atomic_bool* stop, AtomicCounter<unsigned long long>* ray_count,
            AtomicCounter<unsigned long long>* sample_count) noexcept
 {
-        ASSERT(painter_notifier && paintbrush && stop && ray_count);
-
         try
         {
                 try
                 {
-                        Painter p(painter_notifier, paint_objects, paintbrush, thread_count, stop, ray_count, sample_count);
-                        p.process();
+                        ASSERT(painter_notifier && paintbrush && stop && ray_count && sample_count);
+
+                        Painter painter(painter_notifier, samples_per_pixel, paint_objects, paintbrush, thread_count, stop,
+                                        ray_count, sample_count);
+
+                        painter.process();
                 }
                 catch (std::exception& e)
                 {
@@ -468,6 +475,6 @@ void paint(IPainterNotifier* painter_notifier, const PaintObjects& paint_objects
         }
         catch (...)
         {
-                error_fatal("Exception in painter class thread message string.");
+                error_fatal("Exception in painter exception handlers");
         }
 }

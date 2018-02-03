@@ -46,15 +46,6 @@ std::unique_ptr<const LightSource> create_light_source(const IShow& show)
         return std::make_unique<const ConstantLight>(light_position, vec3(1, 1, 1));
 }
 
-std::unique_ptr<const Sampler2d> create_sampler(int samples_per_pixel)
-{
-#if 1
-        return std::make_unique<StratifiedJitteredSampler<2, double>>(samples_per_pixel);
-#else
-        return std::make_unique<LatinHypercubeSampler<2, double>>(samples_per_pixel);
-#endif
-}
-
 bool parameters(PathTracingParameters& parameters_window, const IShow& show, int default_samples_per_pixel,
                 int max_samples_per_pixel, int* paint_width, int* paint_height, int* thread_count, int* samples_per_pixel)
 {
@@ -94,10 +85,9 @@ void painting(PathTracingParameters&& parameters_window, const IShow& show, cons
                 std::string title = window_title + " (" + model_name + ")";
 
                 create_and_show_delete_on_close_window<PainterWindow>(
-                        title, thread_count,
+                        title, thread_count, samples_per_pixel,
                         one_object_scene(background_color, default_color, diffuse,
-                                         create_projector(show, paint_width, paint_height), create_sampler(samples_per_pixel),
-                                         create_light_source(show), mesh));
+                                         create_projector(show, paint_width, paint_height), create_light_source(show), mesh));
         }
         else
         {
@@ -108,9 +98,9 @@ void painting(PathTracingParameters&& parameters_window, const IShow& show, cons
 
                 std::string title = window_title + " (" + model_name + " in Cornell Box)";
 
-                create_and_show_delete_on_close_window<PainterWindow>(
-                        title, thread_count,
-                        cornell_box(paint_width, paint_height, mesh, show.get_object_size(), default_color, diffuse,
-                                    camera_direction, camera_up, samples_per_pixel));
+                create_and_show_delete_on_close_window<PainterWindow>(title, thread_count, samples_per_pixel,
+                                                                      cornell_box(paint_width, paint_height, mesh,
+                                                                                  show.get_object_size(), default_color, diffuse,
+                                                                                  camera_direction, camera_up));
         }
 }

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -33,7 +33,8 @@ class PainterWindow final : public QWidget, public IPainterNotifier
         Q_OBJECT
 
 public:
-        PainterWindow(const std::string& title, unsigned thread_count, std::unique_ptr<const PaintObjects>&& paint_objects);
+        PainterWindow(const std::string& title, unsigned thread_count, int samples_per_pixel,
+                      std::unique_ptr<const PaintObjects>&& paint_objects);
         ~PainterWindow() override;
 
 signals:
@@ -58,6 +59,7 @@ private:
         void mark_pixel_busy(int x, int y) noexcept;
         void update_points();
 
+        int m_samples_per_pixel;
         std::unique_ptr<const PaintObjects> m_paint_objects;
         unsigned m_thread_count;
         int m_width, m_height;

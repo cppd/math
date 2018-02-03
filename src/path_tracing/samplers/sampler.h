@@ -21,10 +21,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/error.h"
 #include "com/math.h"
-#include "path_tracing/objects.h"
 
 template <size_t N, typename T>
-class StratifiedJitteredSampler final : public Sampler<N, T>
+class StratifiedJitteredSampler
 {
         StratifiedJitteredSampleEngine<N, T> m_engine;
 
@@ -57,14 +56,15 @@ public:
                 ASSERT(std::pow(one_dimension_size(sample_count), N) >= sample_count);
         }
 
-        void generate(std::mt19937_64& random_engine, std::vector<Vector<N, T>>* samples) const override
+        template <typename RandomEngine>
+        void generate(RandomEngine& random_engine, std::vector<Vector<N, T>>* samples) const
         {
                 m_engine.generate(random_engine, samples);
         }
 };
 
 template <size_t N, typename T>
-class LatinHypercubeSampler final : public Sampler<N, T>
+class LatinHypercubeSampler
 {
         LatinHypercubeSampleEngine<N, T> m_engine;
 
@@ -73,7 +73,8 @@ public:
         {
         }
 
-        void generate(std::mt19937_64& random_engine, std::vector<Vector<N, T>>* samples) const override
+        template <typename RandomEngine>
+        void generate(RandomEngine& random_engine, std::vector<Vector<N, T>>* samples) const
         {
                 m_engine.generate(random_engine, samples);
         }
