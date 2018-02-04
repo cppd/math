@@ -29,6 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/string/str.h"
 #include "com/thread.h"
 #include "com/time.h"
+#include "com/types.h"
 
 #include <SFML/Graphics/Image.hpp>
 #include <cstdio>
@@ -39,10 +40,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <thread>
 
-using atomic_counter = AtomicCounter<int>;
-
-constexpr bool ATOMIC_COUNTER_LOCK_FREE = atomic_counter::is_always_lock_free;
-constexpr unsigned MAX_FACES_PER_LINE = 5;
+constexpr int MAX_FACES_PER_LINE = 5;
 
 constexpr const char OBJ_v[] = "v";
 constexpr const char OBJ_vt[] = "vt";
@@ -88,10 +86,10 @@ static_assert(str_equal("ab", "ab") && str_equal("", "") && !str_equal("", "ab")
 
 namespace
 {
-template <typename T>
-void read(const std::string& line, size_t size, const T& op, size_t* i)
+template <typename Data, typename Op>
+void read(const Data& data, long long size, const Op& op, long long* i)
 {
-        while (*i < size && op(line[*i]))
+        while (*i < size && op(data[*i]))
         {
                 ++(*i);
         }
@@ -124,38 +122,50 @@ bool check_range(const vec3f& v, float min, float max)
         return v[0] >= min && v[0] <= max && v[1] >= min && v[1] <= max && v[2] >= min && v[2] <= max;
 }
 
-void find_line_begin(const std::string& s, std::vector<size_t>* line_begin)
+template <typename T>
+void find_line_begin(const T& s, std::vector<long long>* line_begin)
 {
-        size_t size = s.size();
+        static_assert(std::is_same_v<T, std::string> || std::is_same_v<T, std::vector<char>>);
 
-        size_t cnt = 0;
-        for (size_t i = 0; i < size; ++i)
+        long long size = s.size();
+
+        long long new_line_count = 0;
+        for (long long i = 0; i < size; ++i)
         {
                 if (s[i] == '\n')
                 {
-                        ++cnt;
+                        ++new_line_count;
                 }
         }
 
         line_begin->clear();
-        line_begin->reserve(cnt);
+        line_begin->reserve(new_line_count);
+        line_begin->shrink_to_fit();
 
-        size_t b = 0;
-        for (size_t i = 0; i < size; ++i)
+        long long begin = 0;
+        for (long long i = 0; i < size; ++i)
         {
                 if (s[i] == '\n')
                 {
-                        line_begin->push_back(b);
-                        b = i + 1;
+                        line_begin->push_back(begin);
+                        begin = i + 1;
                 }
+        }
+
+        if (begin != size)
+        {
+                error("No new line at the end of file");
         }
 }
 
-void read_file_lines(const std::string& file_name, std::string* file_str, std::vector<size_t>* line_begin)
+template <typename T>
+void read_file_lines(const std::string& file_name, T* file_data, std::vector<long long>* line_begin)
 {
-        read_text_file(file_name, file_str);
+        static_assert(std::is_same_v<T, std::string> || std::is_same_v<T, std::vector<char>>);
 
-        find_line_begin(*file_str, line_begin);
+        read_text_file(file_name, file_data);
+
+        find_line_begin(*file_data, line_begin);
 }
 
 IObj::Image read_image_from_file(const std::string& file_name)
@@ -209,212 +219,202 @@ void load_image(const std::string& dir_name, const std::string& image_name, std:
 }
 
 // Между begin и end находится уже проверенное целое число в формате DDDDD без знака
-int digits_to_integer(const std::string& s, long long begin, long long end)
+template <typename Integer, typename T>
+Integer digits_to_integer(const T& data, long long begin, long long end)
 {
-        size_t length = end - begin;
+        static_assert(std::is_integral_v<Integer>);
 
-        if (length > std::numeric_limits<int>::digits10)
+        long long length = end - begin;
+
+        if (length > std::numeric_limits<Integer>::digits10 || length < 1)
         {
-                error("Error convert to int (too big): " + s.substr(begin, length));
+                error("Error convert " + std::string(&data[begin], length) + " to integral");
         }
 
         --end;
-        int sum = ASCII::char_to_int(s[end]);
-        int mul = 1;
+        Integer sum = ASCII::char_to_int(data[end]);
+        Integer mul = 1;
         while (--end >= begin)
         {
                 mul *= 10;
-                sum += ASCII::char_to_int(s[end]) * mul;
+                sum += ASCII::char_to_int(data[end]) * mul;
         }
 
         return sum;
 }
 
-void read_integer(const std::string& line, size_t size, size_t* i, int* value)
+template <typename T, typename Integer>
+[[nodiscard]] bool read_integer(const T& data, long long size, long long* pos, Integer* value)
 {
-        size_t begin = *i;
-        if (*i < size && is_hyphen_minus(line[*i]))
+        static_assert(is_signed<Integer>);
+
+        long long begin = *pos;
+
+        if (begin < size && is_hyphen_minus(data[begin]))
         {
                 ++begin;
         }
 
-        size_t end = begin;
+        long long end = begin;
 
-        read(line, size, ASCII::is_digit, &end);
+        read(data, size, ASCII::is_digit, &end);
 
         if (end > begin)
         {
-                *value = (begin == *i) ? digits_to_integer(line, begin, end) : -digits_to_integer(line, begin, end);
-                *i = end;
+                *value = (begin == *pos) ? digits_to_integer<Integer>(data, begin, end) :
+                                           -digits_to_integer<Integer>(data, begin, end);
+                *pos = end;
+
+                return true;
+        }
+
+        return false;
+}
+
+// Варианты данных: "x/x/x ...", "x//x ...", "x// ...", "x/x/ ...", "x/x ...", "x ...".
+template <typename T, size_t MaxGroupCount, size_t GroupSize, typename IndexType>
+void read_digit_groups(const T& line, long long begin, long long end,
+                       std::array<std::array<IndexType, GroupSize>, MaxGroupCount>* group_ptr, int* group_count)
+{
+        int group_index = -1;
+
+        long long i = begin;
+
+        while (true)
+        {
+                ++group_index;
+
+                read(line, end, ASCII::is_space, &i);
+
+                if (i == end)
+                {
+                        *group_count = group_index;
+                        return;
+                }
+
+                if (group_index >= static_cast<int>(group_ptr->size()))
+                {
+                        error("Found too many face vertices " + to_string(group_index + 1) +
+                              " (max supported = " + to_string(group_ptr->size()) + ")");
+                }
+
+                std::array<IndexType, GroupSize>& indices = (*group_ptr)[group_index];
+
+                // Считывается номер вершины
+                if (read_integer(line, end, &i, &indices[0]))
+                {
+                        if (indices[0] == 0)
+                        {
+                                error("Zero face index");
+                        }
+                }
+                else
+                {
+                        error("Error read face vertex first number");
+                }
+
+                // Считываются текстура и нормаль
+                for (int a = 1; a < static_cast<int>(indices.size()); ++a)
+                {
+                        if (i == end || ASCII::is_space(line[i]))
+                        {
+                                indices[a] = 0;
+                                continue;
+                        }
+
+                        if (!is_solidus(line[i]))
+                        {
+                                error("Error read face vertex number");
+                        }
+
+                        ++i;
+
+                        if (i == end || ASCII::is_space(line[i]))
+                        {
+                                indices[a] = 0;
+                                continue;
+                        }
+
+                        if (read_integer(line, end, &i, &indices[a]))
+                        {
+                                if (indices[a] == 0)
+                                {
+                                        error("Zero face index");
+                                }
+                        }
+                        else
+                        {
+                                indices[a] = 0;
+                        }
+                }
         }
 }
 
 // 0 означает, что нет индекса.
 // Индексы находятся в порядке face, texture, normal.
-template <typename T>
-void check_indices(const T& v, unsigned group_count, const char* line_begin)
-{
-        int end = group_count * 3;
-
-        ASSERT(end <= static_cast<int>(v.size()));
-
-        for (int idx = 0; idx < end; idx += 3)
-        {
-                if (v[idx] == 0)
-                {
-                        error("Error read face from line:\n\"" + trim(line_begin) + "\"");
-                }
-        }
-
-        for (int idx = 1; idx < end - 3; idx += 3)
-        {
-                if ((v[idx] == 0) != (v[idx + 3] == 0))
-                {
-                        error("Inconsistent face texture indices in the line:\n\"" + trim(line_begin) + "\"");
-                }
-        }
-
-        for (int idx = 2; idx < end - 3; idx += 3)
-        {
-                if ((v[idx] == 0) != (v[idx + 3] == 0))
-                {
-                        error("Inconsistent face normal indices in the line:\n\"" + trim(line_begin) + "\"");
-                }
-        }
-}
-
 template <size_t N>
-void read_vertex_groups(const std::string& line, const char* line_begin, size_t begin, size_t end, std::array<size_t, N>* begins,
-                        std::array<size_t, N>* ends, unsigned* cnt)
+void check_index_consistent(const std::array<std::array<int, 3>, N>& groups, int group_count)
 {
-        size_t i = begin;
-        *cnt = 0;
-        for (unsigned z = 0; z < N + 1; ++z)
+        ASSERT(group_count <= static_cast<int>(groups.size()));
+
+        int texture = 0;
+        int normal = 0;
+
+        for (int i = 0; i < group_count; ++i)
         {
-                read(line, end, ASCII::is_space, &i);
-                size_t i2 = i;
-                read(line, end, ASCII::is_not_space, &i2);
-                if (i2 != i)
-                {
-                        if (z < N)
-                        {
-                                (*begins)[z] = i;
-                                (*ends)[z] = i2;
-                                i = i2;
-                        }
-                        else
-                        {
-                                error("Too many vertex groups (max=" + to_string(N) + ") in line:\n\"" + trim(line_begin) + "\"");
-                        }
-                }
-                else
-                {
-                        *cnt = z;
-                        return;
-                }
+                texture += (groups[i][1] != 0) ? 1 : 0;
+                normal += (groups[i][2] != 0) ? 1 : 0;
+        }
+
+        if (!(texture == 0 || texture == group_count))
+        {
+                error("Inconsistent face texture indices");
+        }
+
+        if (!(normal == 0 || normal == group_count))
+        {
+                error("Inconsistent face normal indices");
         }
 }
 
-void read_v_vt_vn(const std::string& line, const char* line_begin, size_t begin, size_t end, int* v)
-{
-        size_t i = begin;
-        for (int a = 0; a < 3; ++a)
-        {
-                if (i == end)
-                {
-                        if (a > 0) // a > 0 — считывается текстура или нормаль
-                        {
-                                v[a] = 0;
-                                continue;
-                        }
-                        error("Error read face from line:\n\"" + trim(line_begin) + "\"");
-                }
-
-                if (a > 0)
-                {
-                        if (!is_solidus(line[i]))
-                        {
-                                error("Error read face from line:\n\"" + trim(line_begin) + "\"");
-                        }
-                        ++i;
-                }
-
-                size_t i2 = i;
-
-                read_integer(line, end, &i2, &v[a]);
-                if (i2 != i)
-                {
-                        if (v[a] == 0)
-                        {
-                                error("Zero face index:\n\"" + trim(line_begin) + "\"");
-                        }
-                }
-                else
-                {
-                        if (a == 0) // a == 0 — считывается вершина
-                        {
-                                error("Error read face from line:\n\"" + trim(line_begin) + "\"");
-                        }
-
-                        v[a] = 0;
-                }
-
-                i = i2;
-        }
-
-        if (i != end)
-        {
-                error("Error read face from line:\n\"" + trim(line_begin) + "\"");
-        }
-}
-
-// Разделение строки на 9 чисел
-// " число/возможно_число/возможно_число число/возможно_число/возможно_число число/возможно_число/возможно_число ".
-// Примеры: " 1/2/3 4/5/6 7/8/9", "1//2 3//4 5//6", " 1// 2// 3// ".
-void read_faces(const std::string& line, size_t begin, size_t end, std::array<IObj::Face, MAX_FACES_PER_LINE>* faces,
-                unsigned* face_count)
+template <typename T>
+void read_faces(const T& data, long long begin, long long end, std::array<IObj::Face, MAX_FACES_PER_LINE>* faces, int* face_count)
 
 {
-        constexpr unsigned MAX_GROUP_COUNT = MAX_FACES_PER_LINE + 2;
+        constexpr int MAX_GROUP_COUNT = MAX_FACES_PER_LINE + 2;
 
-        std::array<int, MAX_GROUP_COUNT * 3> v;
-        std::array<size_t, MAX_GROUP_COUNT> begins, ends;
+        std::array<std::array<int, 3>, MAX_GROUP_COUNT> groups;
 
-        unsigned group_count;
+        int group_count;
 
-        read_vertex_groups(line, &line[begin], begin, end, &begins, &ends, &group_count);
+        read_digit_groups(data, begin, end, &groups, &group_count);
 
         if (group_count < 3)
         {
-                error("Error read at least 3 vertices from line:\n\"" + trim(&line[begin]) + "\"");
-        }
-
-        for (unsigned z = 0; z < group_count; ++z)
-        {
-                read_v_vt_vn(line, &line[begin], begins[z], ends[z], &v[z * 3]);
+                error("Error face vertex count " + to_string(group_count) + " (min = 3)");
         }
 
         // Обязательная проверка индексов
-        check_indices(v, group_count, &line[begin]);
+        check_index_consistent(groups, group_count);
 
         *face_count = group_count - 2;
 
-        for (unsigned i = 0, base = 0; i < *face_count; ++i, base += 3)
+        for (int i = 0; i < *face_count; ++i)
         {
-                (*faces)[i].has_texcoord = !(v[1] == 0);
-                (*faces)[i].has_normal = !(v[2] == 0);
+                (*faces)[i].has_texcoord = !(groups[0][1] == 0);
+                (*faces)[i].has_normal = !(groups[0][2] == 0);
 
-                (*faces)[i].vertices[0].v = v[0];
-                (*faces)[i].vertices[0].t = v[1];
-                (*faces)[i].vertices[0].n = v[2];
+                (*faces)[i].vertices[0] = groups[0][0];
+                (*faces)[i].texcoords[0] = groups[0][1];
+                (*faces)[i].normals[0] = groups[0][2];
 
-                (*faces)[i].vertices[1].v = v[base + 3];
-                (*faces)[i].vertices[1].t = v[base + 4];
-                (*faces)[i].vertices[1].n = v[base + 5];
+                (*faces)[i].vertices[1] = groups[i + 1][0];
+                (*faces)[i].texcoords[1] = groups[i + 1][1];
+                (*faces)[i].normals[1] = groups[i + 1][2];
 
-                (*faces)[i].vertices[2].v = v[base + 6];
-                (*faces)[i].vertices[2].t = v[base + 7];
-                (*faces)[i].vertices[2].n = v[base + 8];
+                (*faces)[i].vertices[2] = groups[i + 2][0];
+                (*faces)[i].texcoords[2] = groups[i + 2][1];
+                (*faces)[i].normals[2] = groups[i + 2][2];
         }
 }
 
@@ -475,8 +475,7 @@ void read_float(const char* str, vec3f* v)
 {
         if (3 != string_to_float(str, &(*v)[0], &(*v)[1], &(*v)[2]))
         {
-                std::string l = str;
-                error("error read 3 floating points from line:\n\"" + trim(l) + "\"");
+                error("Error read 3 floating points");
         }
 }
 
@@ -487,13 +486,11 @@ void read_float_texture(const char* str, vec2f* v)
         int n = string_to_float(str, &(*v)[0], &(*v)[1], &tmp);
         if (n != 2 && n != 3)
         {
-                std::string l = str;
-                error("error read 2 or 3 floating points from line:\n\"" + trim(l) + "\"");
+                error("Error read 2 or 3 floating points");
         }
         if (n == 3 && tmp != 0.0f)
         {
-                std::string l = str;
-                error("3D textures not supported:\n\"" + trim(l) + "\"");
+                error("3D textures not supported");
         }
 }
 
@@ -501,59 +498,59 @@ void read_float(const char* str, float* v)
 {
         if (1 != string_to_float(str, v))
         {
-                std::string l = str;
-                error("error read 1 floating point from line:\n\"" + trim(l) + "\"");
+                error("Error read 1 floating point");
         }
 }
 
-void read_mtl_name(const std::string& line, size_t b, size_t e, std::string* res)
+template <typename T>
+void read_name(const char* object_name, const T& data, long long begin, long long end, std::string* name)
 {
-        const size_t size = e;
+        const long long size = end;
 
-        size_t i = b;
-        read(line, size, ASCII::is_space, &i);
+        long long i = begin;
+        read(data, size, ASCII::is_space, &i);
         if (i == size)
         {
-                std::string l = &line[b];
-                error("Error read material name from line:\n\"" + trim(l) + "\"");
+                error("Error read " + std::string(object_name) + " name");
         }
 
-        size_t i2 = i;
-        read(line, size, ASCII::is_not_space, &i2);
-        *res = line.substr(i, i2 - i);
+        long long i2 = i;
+        read(data, size, ASCII::is_not_space, &i2);
+
+        *name = std::string(&data[i], i2 - i);
+
         i = i2;
 
-        read(line, size, ASCII::is_space, &i);
+        read(data, size, ASCII::is_space, &i);
         if (i != size)
         {
-                std::string l = &line[b];
-                error("Error read material name from line:\n\"" + trim(l) + "\"");
+                error("Error read " + std::string(object_name) + " name");
         }
 }
 
-void read_library_names(const std::string& line, size_t b, size_t e, std::vector<std::string>* v,
+template <typename T>
+void read_library_names(const T& data, long long begin, long long end, std::vector<std::string>* v,
                         std::set<std::string>* lib_unique_names)
 {
-        const size_t size = e;
+        const long long size = end;
         bool found = false;
-        size_t i = b;
+        long long i = begin;
 
         while (true)
         {
-                read(line, size, ASCII::is_space, &i);
+                read(data, size, ASCII::is_space, &i);
                 if (i == size)
                 {
                         if (!found)
                         {
-                                std::string l = &line[b];
-                                error("Library name not found in line:\n\"" + trim(l) + "\"");
+                                error("Library name not found");
                         }
                         return;
                 }
 
-                size_t i2 = i;
-                read(line, size, ASCII::is_not_space, &i2);
-                std::string name{line.substr(i, i2 - i)};
+                long long i2 = i;
+                read(data, size, ASCII::is_not_space, &i2);
+                std::string name = std::string(&data[i], i2 - i);
                 i = i2;
                 found = true;
 
@@ -566,18 +563,17 @@ void read_library_names(const std::string& line, size_t b, size_t e, std::vector
 }
 
 // Разделение строки на 2 части " не_пробелы | остальной текст до символа комментария или конца строки"
-template <typename T, typename C>
-void split(const std::string& line, size_t begin, size_t end, const T& space, const C& comment, size_t* first_b, size_t* first_e,
-           size_t* second_b, size_t* second_e)
+template <typename T, typename Space, typename Comment>
+void split(const T& data, long long first, long long last, const Space& space, const Comment& comment, long long* first_b,
+           long long* first_e, long long* second_b, long long* second_e)
 {
-        const size_t size = end;
+        long long i = first;
 
-        size_t i = begin;
-        while (i < size && space(line[i]) && !comment(line[i]))
+        while (i < last && space(data[i]))
         {
                 ++i;
         }
-        if (i == size || comment(line[i]))
+        if (i == last || comment(data[i]))
         {
                 *first_b = i;
                 *first_e = i;
@@ -586,8 +582,8 @@ void split(const std::string& line, size_t begin, size_t end, const T& space, co
                 return;
         }
 
-        size_t i2 = i + 1;
-        while (i2 < size && !space(line[i2]) && !comment(line[i2]))
+        long long i2 = i + 1;
+        while (i2 < last && !space(data[i2]) && !comment(data[i2]))
         {
                 ++i2;
         }
@@ -596,7 +592,7 @@ void split(const std::string& line, size_t begin, size_t end, const T& space, co
 
         i = i2;
 
-        if (i == size || comment(line[i]))
+        if (i == last || comment(data[i]))
         {
                 *second_b = i;
                 *second_e = i;
@@ -607,7 +603,7 @@ void split(const std::string& line, size_t begin, size_t end, const T& space, co
         ++i;
 
         i2 = i;
-        while (i2 < size && !comment(line[i2]))
+        while (i2 < last && !comment(data[i2]))
         {
                 ++i2;
         }
@@ -616,19 +612,26 @@ void split(const std::string& line, size_t begin, size_t end, const T& space, co
         *second_e = i2;
 }
 
-void split_line(std::string* file_str, const std::vector<size_t>& line_begin, size_t line_num, size_t* first_b, size_t* first_e,
-                size_t* second_b, size_t* second_e)
+template <typename T>
+void split_line(T* data, const std::vector<long long>& line_begin, long long line_num, const char** first, const char** second,
+                long long* second_b, long long* second_e)
 {
-        size_t l_b = line_begin[line_num];
-        size_t l_e = (line_num + 1 < line_begin.size()) ? line_begin[line_num + 1] : file_str->size();
+        long long line_count = line_begin.size();
 
-        // В конце строки находится символ '\n', сместиться на него.
-        --l_e;
+        long long last = (line_num + 1 < line_count) ? line_begin[line_num + 1] : data->size();
 
-        split(*file_str, l_b, l_e, ASCII::is_space, is_number_sign, first_b, first_e, second_b, second_e);
+        // В конце строки находится символ '\n', сместиться на него
+        --last;
 
-        (*file_str)[*first_e] = 0; // пробел, символ комментария '#' или символ '\n'
-        (*file_str)[*second_e] = 0; // символ комментария '#' или символ '\n'
+        long long first_b, first_e;
+
+        split(*data, line_begin[line_num], last, ASCII::is_space, is_number_sign, &first_b, &first_e, second_b, second_e);
+
+        *first = &(*data)[first_b];
+        (*data)[first_e] = 0; // пробел, символ комментария '#' или символ '\n'
+
+        *second = &(*data)[*second_b];
+        (*data)[*second_e] = 0; // символ комментария '#' или символ '\n'
 }
 
 bool face_is_one_dimensional(const vec3f& v0, const vec3f& v1, const vec3f& v2)
@@ -699,45 +702,61 @@ class FileObj final : public IObj
         struct ObjLine
         {
                 ObjLineType type;
-                size_t second_b, second_e;
+                long long second_b;
+                long long second_e;
                 std::array<Face, MAX_FACES_PER_LINE> faces;
-                unsigned face_count;
+                int face_count;
                 vec3f v;
         };
 
         // struct MtlLine
         //{
         //        MtlLineType type;
-        //        size_t second_b, second_e;
+        //        long long second_b, second_e;
         //        vec3f v;
         //};
 
         struct Counters
         {
-                atomic_counter v = 0;
-                atomic_counter vt = 0;
-                atomic_counter vn = 0;
-                atomic_counter f = 0;
+                int vertex = 0;
+                int texcoord = 0;
+                int normal = 0;
+                int face = 0;
+
+                void operator+=(const Counters& counters)
+                {
+                        vertex += counters.vertex;
+                        texcoord += counters.texcoord;
+                        normal += counters.normal;
+                        face += counters.face;
+                }
         };
 
         void check_face_indices() const;
 
         bool remove_one_dimensional_faces();
 
-        static void read_obj_stage_one(unsigned thread_num, unsigned thread_count, Counters* counters, std::string* file_ptr,
-                                       std::vector<size_t>* line_begin, std::vector<ObjLine>* line_prop, ProgressRatio* progress);
-        void read_obj_stage_two(const Counters* counters, std::string* file_ptr, std::vector<ObjLine>* line_prop,
+        static void read_obj_stage_one(unsigned thread_num, unsigned thread_count, std::vector<Counters>* counters,
+                                       std::vector<char>* data_ptr, std::vector<long long>* line_begin,
+                                       std::vector<ObjLine>* line_prop, ProgressRatio* progress);
+
+        void read_obj_stage_two(const Counters& counters, std::vector<char>* data_ptr, std::vector<ObjLine>* line_prop,
                                 ProgressRatio* progress, std::map<std::string, int>* material_index,
                                 std::vector<std::string>* library_names);
-        void read_obj_thread(unsigned thread_num, unsigned thread_count, Counters* counters, ThreadBarrier* barrier,
-                             std::atomic_bool* error_found, std::string* file_str, std::vector<size_t>* line_begin,
+
+        Counters sum_counters(const std::vector<Counters>& counters);
+
+        void read_obj_thread(unsigned thread_num, unsigned thread_count, std::vector<Counters>* counters, ThreadBarrier* barrier,
+                             std::atomic_bool* error_found, std::vector<char>* data_ptr, std::vector<long long>* line_begin,
                              std::vector<ObjLine>* line_prop, ProgressRatio* progress, std::map<std::string, int>* material_index,
                              std::vector<std::string>* library_names);
+
         void read_obj(const std::string& file_name, ProgressRatio* progress, std::map<std::string, int>* material_index,
                       std::vector<std::string>* library_names);
 
         void read_lib(const std::string& dir_name, const std::string& file_name, ProgressRatio* progress,
                       std::map<std::string, int>* material_index, std::map<std::string, int>* image_index);
+
         void read_libs(const std::string& dir_name, ProgressRatio* progress, std::map<std::string, int>* material_index,
                        const std::vector<std::string>& library_names);
 
@@ -796,22 +815,44 @@ void FileObj::check_face_indices() const
 
         for (const Face& face : m_faces)
         {
-                for (const Vertex& vertex : face.vertices)
+                for (int i = 0; i < 3; ++i)
                 {
-                        if (vertex.v < 0 || vertex.v >= vertex_count)
+                        if (face.vertices[i] < 0 || face.vertices[i] >= vertex_count)
                         {
-                                error("Vertex index " + std::to_string(vertex.v) + " is out of bounds [0, " +
+                                error("Vertex index " + std::to_string(face.vertices[i]) + " is out of bounds [0, " +
                                       std::to_string(vertex_count) + ")");
                         }
-                        if (face.has_texcoord && (vertex.t < 0 || vertex.t >= texcoord_count))
+
+                        if (face.has_texcoord)
                         {
-                                error("Texture coord index " + std::to_string(vertex.t) + " is out of bounds [0, " +
-                                      std::to_string(texcoord_count) + ")");
+                                if (face.texcoords[i] < 0 || face.texcoords[i] >= texcoord_count)
+                                {
+                                        error("Texture coordinate index " + std::to_string(face.texcoords[i]) +
+                                              " is out of bounds [0, " + std::to_string(texcoord_count) + ")");
+                                }
                         }
-                        if (face.has_normal && (vertex.n < 0 || vertex.n >= normal_count))
+                        else
                         {
-                                error("Normal index " + std::to_string(vertex.n) + " is out of bounds [0, " +
-                                      std::to_string(normal_count) + ")");
+                                if (face.texcoords[i] != -1)
+                                {
+                                        error("No texture but texture coordinate index is not set to -1");
+                                }
+                        }
+
+                        if (face.has_normal)
+                        {
+                                if (face.normals[i] < 0 || face.normals[i] >= normal_count)
+                                {
+                                        error("Normal index " + std::to_string(face.normals[i]) + " is out of bounds [0, " +
+                                              std::to_string(normal_count) + ")");
+                                }
+                        }
+                        else
+                        {
+                                if (face.normals[i] != -1)
+                                {
+                                        error("No normals but normal coordinate index is not set to -1");
+                                }
                         }
                 }
         }
@@ -823,11 +864,11 @@ bool FileObj::remove_one_dimensional_faces()
 
         int one_d_face_count = 0;
 
-        for (unsigned i = 0; i < m_faces.size(); ++i)
+        for (size_t i = 0; i < m_faces.size(); ++i)
         {
-                vec3f v0 = m_vertices[m_faces[i].vertices[0].v];
-                vec3f v1 = m_vertices[m_faces[i].vertices[1].v];
-                vec3f v2 = m_vertices[m_faces[i].vertices[2].v];
+                vec3f v0 = m_vertices[m_faces[i].vertices[0]];
+                vec3f v1 = m_vertices[m_faces[i].vertices[1]];
+                vec3f v2 = m_vertices[m_faces[i].vertices[2]];
 
                 if (face_is_one_dimensional(v0, v1, v2))
                 {
@@ -844,7 +885,7 @@ bool FileObj::remove_one_dimensional_faces()
         std::vector<Face> faces;
         faces.reserve(m_faces.size() - one_d_face_count);
 
-        for (unsigned i = 0; i < m_faces.size(); ++i)
+        for (size_t i = 0; i < m_faces.size(); ++i)
         {
                 if (!one_d_faces[i])
                 {
@@ -857,14 +898,17 @@ bool FileObj::remove_one_dimensional_faces()
         return true;
 }
 
-void FileObj::read_obj_stage_one(unsigned thread_num, unsigned thread_count, Counters* counters, std::string* file_ptr,
-                                 std::vector<size_t>* line_begin, std::vector<ObjLine>* line_prop, ProgressRatio* progress)
+void FileObj::read_obj_stage_one(unsigned thread_num, unsigned thread_count, std::vector<Counters>* counters,
+                                 std::vector<char>* data_ptr, std::vector<long long>* line_begin, std::vector<ObjLine>* line_prop,
+                                 ProgressRatio* progress)
 {
-        std::string& file_str = *file_ptr;
-        const size_t line_count = line_begin->size();
+        ASSERT(counters->size() == thread_count);
+
+        std::vector<char>& data = *data_ptr;
+        const long long line_count = line_begin->size();
         const double line_count_reciprocal = 1.0 / line_begin->size();
 
-        for (unsigned line_num = thread_num; line_num < line_count; line_num += thread_count)
+        for (long long line_num = thread_num; line_num < line_count; line_num += thread_count)
         {
                 if ((line_num & 0xfff) == 0xfff)
                 {
@@ -872,70 +916,73 @@ void FileObj::read_obj_stage_one(unsigned thread_num, unsigned thread_count, Cou
                 }
 
                 ObjLine lp;
-                size_t first_b, first_e;
 
-                split_line(&file_str, *line_begin, line_num, &first_b, &first_e, &lp.second_b, &lp.second_e);
+                const char* first;
+                const char* second;
 
-                const char* first = &file_str[first_b];
+                split_line(&data, *line_begin, line_num, &first, &second, &lp.second_b, &lp.second_e);
 
-                if (str_equal(first, OBJ_v))
+                try
                 {
-                        lp.type = ObjLineType::V;
-                        vec3f v;
-                        read_float(&file_str[lp.second_b], &v);
-                        lp.v = v;
-                        if (ATOMIC_COUNTER_LOCK_FREE)
+                        if (str_equal(first, OBJ_v))
                         {
-                                ++(counters->v);
+                                lp.type = ObjLineType::V;
+                                vec3f v;
+                                read_float(&data[lp.second_b], &v);
+                                lp.v = v;
+
+                                ++((*counters)[thread_num].vertex);
+                        }
+                        else if (str_equal(first, OBJ_vt))
+                        {
+                                lp.type = ObjLineType::VT;
+                                vec2f v;
+                                read_float_texture(&data[lp.second_b], &v);
+                                lp.v[0] = v[0];
+                                lp.v[1] = v[1];
+
+                                ++((*counters)[thread_num].texcoord);
+                        }
+                        else if (str_equal(first, OBJ_vn))
+                        {
+                                lp.type = ObjLineType::VN;
+                                vec3f v;
+                                read_float(&data[lp.second_b], &v);
+                                lp.v = normalize(v);
+
+                                ++((*counters)[thread_num].normal);
+                        }
+                        else if (str_equal(first, OBJ_f))
+                        {
+                                lp.type = ObjLineType::F;
+                                read_faces(data, lp.second_b, lp.second_e, &lp.faces, &lp.face_count);
+
+                                ++((*counters)[thread_num].face);
+                        }
+                        else if (str_equal(first, OBJ_usemtl))
+                        {
+                                lp.type = ObjLineType::USEMTL;
+                        }
+                        else if (str_equal(first, OBJ_mtllib))
+                        {
+                                lp.type = ObjLineType::MTLLIB;
+                        }
+                        else if (!*first)
+                        {
+                                lp.type = ObjLineType::NONE;
+                        }
+                        else
+                        {
+                                lp.type = ObjLineType::NOT_SUPPORTED;
                         }
                 }
-                else if (str_equal(first, OBJ_vt))
+                catch (std::exception& e)
                 {
-                        lp.type = ObjLineType::VT;
-                        vec2f v;
-                        read_float_texture(&file_str[lp.second_b], &v);
-                        lp.v[0] = v[0];
-                        lp.v[1] = v[1];
-                        if (ATOMIC_COUNTER_LOCK_FREE)
-                        {
-                                ++(counters->vt);
-                        }
+                        error("Line " + to_string(line_num) + ": " + first + " " + second + "\n" + e.what());
                 }
-                else if (str_equal(first, OBJ_vn))
+                catch (...)
                 {
-                        lp.type = ObjLineType::VN;
-                        vec3f v;
-                        read_float(&file_str[lp.second_b], &v);
-                        lp.v = normalize(v);
-                        if (ATOMIC_COUNTER_LOCK_FREE)
-                        {
-                                ++(counters->vn);
-                        }
-                }
-                else if (str_equal(first, OBJ_f))
-                {
-                        lp.type = ObjLineType::F;
-                        read_faces(file_str, lp.second_b, lp.second_e, &lp.faces, &lp.face_count);
-                        if (ATOMIC_COUNTER_LOCK_FREE)
-                        {
-                                ++(counters->f);
-                        }
-                }
-                else if (str_equal(first, OBJ_usemtl))
-                {
-                        lp.type = ObjLineType::USEMTL;
-                }
-                else if (str_equal(first, OBJ_mtllib))
-                {
-                        lp.type = ObjLineType::MTLLIB;
-                }
-                else if (!*first)
-                {
-                        lp.type = ObjLineType::NONE;
-                }
-                else
-                {
-                        lp.type = ObjLineType::NOT_SUPPORTED;
+                        error("Line " + to_string(line_num) + ": " + first + " " + second + "\n" + "Unknown error");
                 }
 
                 (*line_prop)[line_num] = lp;
@@ -950,11 +997,14 @@ void correct_indices(IObj::Face* face, int vertices_size, int texcoords_size, in
 {
         for (int i = 0; i < 3; ++i)
         {
-                int& v = face->vertices[i].v;
-                int& t = face->vertices[i].t;
-                int& n = face->vertices[i].n;
+                int& v = face->vertices[i];
+                int& t = face->texcoords[i];
+                int& n = face->normals[i];
 
-                ASSERT(v != 0);
+                if (v == 0)
+                {
+                        error("Correct indices vertex index is zero");
+                }
 
                 v = v > 0 ? v - 1 : vertices_size + v;
                 t = t > 0 ? t - 1 : (t < 0 ? texcoords_size + t : -1);
@@ -962,27 +1012,24 @@ void correct_indices(IObj::Face* face, int vertices_size, int texcoords_size, in
         }
 }
 
-void FileObj::read_obj_stage_two(const Counters* counters, std::string* file_ptr, std::vector<ObjLine>* line_prop,
+void FileObj::read_obj_stage_two(const Counters& counters, std::vector<char>* data_ptr, std::vector<ObjLine>* line_prop,
                                  ProgressRatio* progress, std::map<std::string, int>* material_index,
                                  std::vector<std::string>* library_names)
 {
-        if (ATOMIC_COUNTER_LOCK_FREE)
-        {
-                m_vertices.reserve(counters->v);
-                m_texcoords.reserve(counters->vt);
-                m_normals.reserve(counters->vn);
-                m_faces.reserve(counters->f);
-        }
+        m_vertices.reserve(counters.vertex);
+        m_texcoords.reserve(counters.texcoord);
+        m_normals.reserve(counters.normal);
+        m_faces.reserve(counters.face);
 
-        const std::string& file_str = *file_ptr;
-        const size_t line_count = line_prop->size();
+        const std::vector<char>& data = *data_ptr;
+        const long long line_count = line_prop->size();
         const double line_count_reciprocal = 1.0 / line_prop->size();
 
         int mtl_index = -1;
         std::string mtl_name;
         std::set<std::string> unique_library_names;
 
-        for (size_t line_num = 0; line_num < line_count; ++line_num)
+        for (long long line_num = 0; line_num < line_count; ++line_num)
         {
                 if ((line_num & 0xfff) == 0xfff)
                 {
@@ -1003,7 +1050,7 @@ void FileObj::read_obj_stage_two(const Counters* counters, std::string* file_ptr
                         m_normals.push_back(lp.v);
                         break;
                 case ObjLineType::F:
-                        for (unsigned i = 0; i < lp.face_count; ++i)
+                        for (int i = 0; i < lp.face_count; ++i)
                         {
                                 lp.faces[i].material = mtl_index;
                                 correct_indices(&lp.faces[i], m_vertices.size(), m_texcoords.size(), m_normals.size());
@@ -1012,7 +1059,7 @@ void FileObj::read_obj_stage_two(const Counters* counters, std::string* file_ptr
                         break;
                 case ObjLineType::USEMTL:
                 {
-                        read_mtl_name(file_str, lp.second_b, lp.second_e, &mtl_name);
+                        read_name("material", data, lp.second_b, lp.second_e, &mtl_name);
                         auto iter = material_index->find(mtl_name);
                         if (iter != material_index->end())
                         {
@@ -1029,7 +1076,7 @@ void FileObj::read_obj_stage_two(const Counters* counters, std::string* file_ptr
                         break;
                 }
                 case ObjLineType::MTLLIB:
-                        read_library_names(file_str, lp.second_b, lp.second_e, library_names, &unique_library_names);
+                        read_library_names(data, lp.second_b, lp.second_e, library_names, &unique_library_names);
                         break;
                 case ObjLineType::NONE:
                         break;
@@ -1037,18 +1084,20 @@ void FileObj::read_obj_stage_two(const Counters* counters, std::string* file_ptr
                         break;
                 }
         }
-
-        if (!ATOMIC_COUNTER_LOCK_FREE)
-        {
-                m_vertices.shrink_to_fit();
-                m_texcoords.shrink_to_fit();
-                m_normals.shrink_to_fit();
-                m_faces.shrink_to_fit();
-        }
 }
 
-void FileObj::read_obj_thread(unsigned thread_num, unsigned thread_count, Counters* counters, ThreadBarrier* barrier,
-                              std::atomic_bool* error_found, std::string* file_ptr, std::vector<size_t>* line_begin,
+FileObj::Counters FileObj::sum_counters(const std::vector<Counters>& counters)
+{
+        Counters sum;
+        for (const Counters& c : counters)
+        {
+                sum += c;
+        }
+        return sum;
+}
+
+void FileObj::read_obj_thread(unsigned thread_num, unsigned thread_count, std::vector<Counters>* counters, ThreadBarrier* barrier,
+                              std::atomic_bool* error_found, std::vector<char>* data_ptr, std::vector<long long>* line_begin,
                               std::vector<ObjLine>* line_prop, ProgressRatio* progress,
                               std::map<std::string, int>* material_index, std::vector<std::string>* library_names)
 {
@@ -1056,7 +1105,7 @@ void FileObj::read_obj_thread(unsigned thread_num, unsigned thread_count, Counte
 
         try
         {
-                read_obj_stage_one(thread_num, thread_count, counters, file_ptr, line_begin, line_prop, progress);
+                read_obj_stage_one(thread_num, thread_count, counters, data_ptr, line_begin, line_prop, progress);
         }
         catch (...)
         {
@@ -1080,144 +1129,158 @@ void FileObj::read_obj_thread(unsigned thread_num, unsigned thread_count, Counte
         line_begin->clear();
         line_begin->shrink_to_fit();
 
-        read_obj_stage_two(counters, file_ptr, line_prop, progress, material_index, library_names);
+        read_obj_stage_two(sum_counters(*counters), data_ptr, line_prop, progress, material_index, library_names);
 }
 
 void FileObj::read_lib(const std::string& dir_name, const std::string& file_name, ProgressRatio* progress,
                        std::map<std::string, int>* material_index, std::map<std::string, int>* image_index)
 {
-        std::string file_str;
-        std::vector<size_t> line_begin;
+        std::vector<char> data;
+        std::vector<long long> line_begin;
 
         const std::string lib_name = dir_name + "/" + file_name;
 
-        read_file_lines(lib_name, &file_str, &line_begin);
+        read_file_lines(lib_name, &data, &line_begin);
 
         const std::string lib_dir = get_dir_name(lib_name);
 
         FileObj::Material* mtl = nullptr;
-        std::string mtl_name;
+        std::string name;
 
-        const size_t line_count = line_begin.size();
+        const long long line_count = line_begin.size();
         const double line_count_reciprocal = 1.0 / line_begin.size();
 
-        for (size_t line_num = 0; line_num < line_count; ++line_num)
+        for (long long line_num = 0; line_num < line_count; ++line_num)
         {
                 if ((line_num & 0xfff) == 0xfff)
                 {
                         progress->set(line_num * line_count_reciprocal);
                 }
 
-                size_t first_b, first_e, second_b, second_e;
+                const char* first;
+                const char* second;
+                long long second_b;
+                long long second_e;
 
-                split_line(&file_str, line_begin, line_num, &first_b, &first_e, &second_b, &second_e);
+                split_line(&data, line_begin, line_num, &first, &second, &second_b, &second_e);
 
-                const char* first = &file_str[first_b];
-
-                if (!*first)
+                try
                 {
-                        continue;
-                }
-                else if (str_equal(first, MTL_newmtl))
-                {
-                        if (material_index->size() == 0)
-                        {
-                                // все материалы найдены
-                                break;
-                        }
-
-                        read_mtl_name(file_str, second_b, second_e, &mtl_name);
-
-                        auto iter = material_index->find(mtl_name);
-                        if (iter != material_index->end())
-                        {
-                                mtl = &(m_materials[iter->second]);
-                                material_index->erase(mtl_name);
-                        }
-                        else
-                        {
-                                // ненужный материал
-                                mtl = nullptr;
-                        }
-                }
-                else if (str_equal(first, MTL_Ka))
-                {
-                        if (!mtl)
+                        if (!*first)
                         {
                                 continue;
                         }
-                        read_float(&file_str[second_b], &mtl->Ka);
+                        else if (str_equal(first, MTL_newmtl))
+                        {
+                                if (material_index->size() == 0)
+                                {
+                                        // все материалы найдены
+                                        break;
+                                }
 
-                        if (!check_range(mtl->Ka, 0, 1))
-                        {
-                                error("Error Ka in material " + mtl->name);
-                        }
-                }
-                else if (str_equal(first, MTL_Kd))
-                {
-                        if (!mtl)
-                        {
-                                continue;
-                        }
-                        read_float(&file_str[second_b], &mtl->Kd);
+                                read_name("material", data, second_b, second_e, &name);
 
-                        if (!check_range(mtl->Kd, 0, 1))
-                        {
-                                error("Error Kd in material " + mtl->name);
+                                auto iter = material_index->find(name);
+                                if (iter != material_index->end())
+                                {
+                                        mtl = &(m_materials[iter->second]);
+                                        material_index->erase(name);
+                                }
+                                else
+                                {
+                                        // ненужный материал
+                                        mtl = nullptr;
+                                }
                         }
-                }
-                else if (str_equal(first, MTL_Ks))
-                {
-                        if (!mtl)
+                        else if (str_equal(first, MTL_Ka))
                         {
-                                continue;
-                        }
-                        read_float(&file_str[second_b], &mtl->Ks);
+                                if (!mtl)
+                                {
+                                        continue;
+                                }
+                                read_float(&data[second_b], &mtl->Ka);
 
-                        if (!check_range(mtl->Ks, 0, 1))
-                        {
-                                error("Error Ks in material " + mtl->name);
+                                if (!check_range(mtl->Ka, 0, 1))
+                                {
+                                        error("Error Ka in material " + mtl->name);
+                                }
                         }
-                }
-                else if (str_equal(first, MTL_Ns))
-                {
-                        if (!mtl)
+                        else if (str_equal(first, MTL_Kd))
                         {
-                                continue;
-                        }
-                        read_float(&file_str[second_b], &mtl->Ns);
+                                if (!mtl)
+                                {
+                                        continue;
+                                }
+                                read_float(&data[second_b], &mtl->Kd);
 
-                        if (!check_range(mtl->Ns, 0, 1000))
+                                if (!check_range(mtl->Kd, 0, 1))
+                                {
+                                        error("Error Kd in material " + mtl->name);
+                                }
+                        }
+                        else if (str_equal(first, MTL_Ks))
                         {
-                                error("Error Ns in material " + mtl->name);
+                                if (!mtl)
+                                {
+                                        continue;
+                                }
+                                read_float(&data[second_b], &mtl->Ks);
+
+                                if (!check_range(mtl->Ks, 0, 1))
+                                {
+                                        error("Error Ks in material " + mtl->name);
+                                }
+                        }
+                        else if (str_equal(first, MTL_Ns))
+                        {
+                                if (!mtl)
+                                {
+                                        continue;
+                                }
+                                read_float(&data[second_b], &mtl->Ns);
+
+                                if (!check_range(mtl->Ns, 0, 1000))
+                                {
+                                        error("Error Ns in material " + mtl->name);
+                                }
+                        }
+                        else if (str_equal(first, MTL_map_Ka))
+                        {
+                                if (!mtl)
+                                {
+                                        continue;
+                                }
+                                read_name("file", data, second_b, second_e, &name);
+                                load_image(lib_dir, name, image_index, &m_images, &mtl->map_Ka);
+                        }
+                        else if (str_equal(first, MTL_map_Kd))
+                        {
+                                if (!mtl)
+                                {
+                                        continue;
+                                }
+                                read_name("file", data, second_b, second_e, &name);
+                                load_image(lib_dir, name, image_index, &m_images, &mtl->map_Kd);
+                        }
+                        else if (str_equal(first, MTL_map_Ks))
+                        {
+                                if (!mtl)
+                                {
+                                        continue;
+                                }
+                                read_name("file", data, second_b, second_e, &name);
+                                load_image(lib_dir, name, image_index, &m_images, &mtl->map_Ks);
                         }
                 }
-                else if (str_equal(first, MTL_map_Ka))
+                catch (std::exception& e)
                 {
-                        if (!mtl)
-                        {
-                                continue;
-                        }
-                        std::string image_name = file_str.substr(second_b, second_e - second_b);
-                        load_image(lib_dir, image_name, image_index, &m_images, &mtl->map_Ka);
+                        error("Library: " + lib_name + "\n" + "Line " + to_string(line_num) + ": " + first + " " + second + "\n" +
+                              e.what());
                 }
-                else if (str_equal(first, MTL_map_Kd))
+                catch (...)
                 {
-                        if (!mtl)
-                        {
-                                continue;
-                        }
-                        std::string image_name = file_str.substr(second_b, second_e - second_b);
-                        load_image(lib_dir, image_name, image_index, &m_images, &mtl->map_Kd);
-                }
-                else if (str_equal(first, MTL_map_Ks))
-                {
-                        if (!mtl)
-                        {
-                                continue;
-                        }
-                        std::string image_name = file_str.substr(second_b, second_e - second_b);
-                        load_image(lib_dir, image_name, image_index, &m_images, &mtl->map_Ks);
+                        error("Library: " + lib_name + "\n" + "Line " + to_string(line_num) + ": " + first + " " + second + "\n" +
+                              "Unknown error");
                 }
         }
 }
@@ -1246,21 +1309,21 @@ void FileObj::read_obj(const std::string& file_name, ProgressRatio* progress, st
 {
         const int hardware_concurrency = get_hardware_concurrency();
 
-        std::string file_str;
-        std::vector<size_t> line_begin;
+        std::vector<char> data;
+        std::vector<long long> line_begin;
 
-        read_file_lines(file_name, &file_str, &line_begin);
+        read_file_lines(file_name, &data, &line_begin);
 
         std::vector<ObjLine> line_prop(line_begin.size());
         ThreadBarrier barrier(hardware_concurrency);
         std::atomic_bool error_found{false};
-        Counters counters;
+        std::vector<Counters> counters(hardware_concurrency);
 
         ThreadsWithCatch threads(hardware_concurrency);
         for (int i = 0; i < hardware_concurrency; ++i)
         {
                 threads.add([&, i]() {
-                        read_obj_thread(i, hardware_concurrency, &counters, &barrier, &error_found, &file_str, &line_begin,
+                        read_obj_thread(i, hardware_concurrency, &counters, &barrier, &error_found, &data, &line_begin,
                                         &line_prop, progress, material_index, library_names);
                 });
         }
@@ -1322,8 +1385,9 @@ class FileTxt final : public IObj
         vec3f m_center;
         float m_length;
 
-        void read_points_thread(unsigned thread_num, unsigned thread_count, std::string* file_ptr,
-                                std::vector<size_t>* line_begin, std::vector<vec3f>* lines, ProgressRatio* progress) const;
+        void read_points_thread(unsigned thread_num, unsigned thread_count, std::vector<char>* data_ptr,
+                                const std::vector<long long>& line_begin, std::vector<vec3f>* lines,
+                                ProgressRatio* progress) const;
         void read_points(const std::string& file_name, ProgressRatio* progress);
         void read_text(const std::string& file_name, ProgressRatio* progress);
 
@@ -1372,27 +1436,41 @@ public:
         FileTxt(const std::string& file_name, ProgressRatio* progress);
 };
 
-void FileTxt::read_points_thread(unsigned thread_num, unsigned thread_count, std::string* file_ptr,
-                                 std::vector<size_t>* line_begin, std::vector<vec3f>* lines, ProgressRatio* progress) const
+void FileTxt::read_points_thread(unsigned thread_num, unsigned thread_count, std::vector<char>* data_ptr,
+                                 const std::vector<long long>& line_begin, std::vector<vec3f>* lines,
+                                 ProgressRatio* progress) const
 {
-        const size_t line_count = line_begin->size();
-        const double line_count_reciprocal = 1.0 / line_begin->size();
+        const long long line_count = line_begin.size();
+        const double line_count_reciprocal = 1.0 / line_begin.size();
 
-        for (size_t line_num = thread_num; line_num < line_count; line_num += thread_count)
+        for (long long line_num = thread_num; line_num < line_count; line_num += thread_count)
         {
                 if ((line_num & 0xfff) == 0xfff)
                 {
                         progress->set(line_num * line_count_reciprocal);
                 }
 
-                size_t l_b = (*line_begin)[line_num];
-                size_t l_e = (line_num + 1 < line_begin->size()) ? (*line_begin)[line_num + 1] : file_ptr->size();
+                const char* str = &(*data_ptr)[line_begin[line_num]];
+
+                long long last = (line_num < line_count - 1) ? line_begin[line_num + 1] : data_ptr->size();
 
                 // В конце строки находится символ '\n', сместиться на него и записать вместо него 0
-                --l_e;
-                (*file_ptr)[l_e] = 0;
+                --last;
 
-                read_float(&(*file_ptr)[l_b], &(*lines)[line_num]);
+                (*data_ptr)[last] = 0;
+
+                try
+                {
+                        read_float(str, &(*lines)[line_num]);
+                }
+                catch (std::exception& e)
+                {
+                        error("Line " + to_string(line_num) + ": " + str + "\n" + e.what());
+                }
+                catch (...)
+                {
+                        error("Line " + to_string(line_num) + ": " + str + "\n" + "Unknown error");
+                }
         }
 }
 
@@ -1400,10 +1478,10 @@ void FileTxt::read_points(const std::string& file_name, ProgressRatio* progress)
 {
         const int hardware_concurrency = get_hardware_concurrency();
 
-        std::string file_str;
-        std::vector<size_t> line_begin;
+        std::vector<char> file_data;
+        std::vector<long long> line_begin;
 
-        read_file_lines(file_name, &file_str, &line_begin);
+        read_file_lines(file_name, &file_data, &line_begin);
 
         m_vertices.resize(line_begin.size());
 
@@ -1411,7 +1489,7 @@ void FileTxt::read_points(const std::string& file_name, ProgressRatio* progress)
         for (int i = 0; i < hardware_concurrency; ++i)
         {
                 threads.add(
-                        [&, i]() { read_points_thread(i, hardware_concurrency, &file_str, &line_begin, &m_vertices, progress); });
+                        [&, i]() { read_points_thread(i, hardware_concurrency, &file_data, line_begin, &m_vertices, progress); });
         }
         threads.join();
 }

@@ -56,17 +56,17 @@ void Mesh::create_mesh_object(const IObj* obj, const mat4& vertex_matrix, unsign
         m_triangles.reserve(obj->faces().size());
         for (const IObj::Face& face : obj->faces())
         {
-                int v0 = face.vertices[0].v;
-                int v1 = face.vertices[1].v;
-                int v2 = face.vertices[2].v;
+                int v0 = face.vertices[0];
+                int v1 = face.vertices[1];
+                int v2 = face.vertices[2];
 
-                int n0 = face.vertices[0].n;
-                int n1 = face.vertices[1].n;
-                int n2 = face.vertices[2].n;
+                int n0 = face.normals[0];
+                int n1 = face.normals[1];
+                int n2 = face.normals[2];
 
-                int t0 = face.vertices[0].t;
-                int t1 = face.vertices[1].t;
-                int t2 = face.vertices[2].t;
+                int t0 = face.texcoords[0];
+                int t1 = face.texcoords[1];
+                int t2 = face.texcoords[2];
 
                 m_triangles.emplace_back(m_vertices.data(), m_normals.data(), m_texcoords.data(), v0, v1, v2, face.has_normal, n0,
                                          n1, n2, face.has_texcoord, t0, t1, t2, face.material);

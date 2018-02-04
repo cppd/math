@@ -142,17 +142,17 @@ class SurfaceObj final : public IObj
                         face.has_texcoord = false;
                         face.has_normal = true;
 
-                        face.vertices[0].v = index_map[facet[0]];
-                        face.vertices[1].v = index_map[facet[1]];
-                        face.vertices[2].v = index_map[facet[2]];
+                        face.vertices[0] = index_map[facet[0]];
+                        face.vertices[1] = index_map[facet[1]];
+                        face.vertices[2] = index_map[facet[2]];
 
-                        face.vertices[0].n = face.vertices[0].v;
-                        face.vertices[1].n = face.vertices[1].v;
-                        face.vertices[2].n = face.vertices[2].v;
+                        face.normals[0] = face.vertices[0];
+                        face.normals[1] = face.vertices[1];
+                        face.normals[2] = face.vertices[2];
 
-                        face.vertices[0].t = -1;
-                        face.vertices[1].t = -1;
-                        face.vertices[2].t = -1;
+                        face.texcoords[0] = -1;
+                        face.texcoords[1] = -1;
+                        face.texcoords[2] = -1;
 
                         m_faces.push_back(std::move(face));
                 }

@@ -76,9 +76,8 @@ std::vector<int> unique_face_indices(const std::vector<IObj::Face>& faces)
 
         for (const IObj::Face& face : faces)
         {
-                for (const IObj::Vertex& vertex : face.vertices)
+                for (int index : face.vertices)
                 {
-                        int index = vertex.v;
                         indices.insert(index);
                 }
         }
@@ -121,10 +120,8 @@ std::vector<vec3f> unique_face_vertices(const IObj* obj)
 
         for (const IObj::Face& face : obj->faces())
         {
-                for (const IObj::Vertex& vertex : face.vertices)
+                for (int index : face.vertices)
                 {
-                        int index = vertex.v;
-
                         if (index < 0 || index >= vertex_count)
                         {
                                 error("Face vertex index out of bounds");
@@ -195,10 +192,8 @@ void center_and_length(const std::vector<vec3f>& vertices, const std::vector<IOb
 
         for (const IObj::Face& face : faces)
         {
-                for (const IObj::Vertex& vertex : face.vertices)
+                for (int index : face.vertices)
                 {
-                        int index = vertex.v;
-
                         if (index < 0 || index >= vertex_count)
                         {
                                 error("Face vertex index out of bounds");

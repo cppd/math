@@ -116,8 +116,8 @@ struct Material final
 void load_face_vertices(const IObj& obj, std::vector<FaceVertex>* vertices)
 {
         const std::vector<vec3f>& obj_vertices = obj.vertices();
-        const std::vector<vec2f>& obj_texcoords = obj.texcoords();
         const std::vector<vec3f>& obj_normals = obj.normals();
+        const std::vector<vec2f>& obj_texcoords = obj.texcoords();
 
         vertices->clear();
         vertices->shrink_to_fit();
@@ -128,15 +128,15 @@ void load_face_vertices(const IObj& obj, std::vector<FaceVertex>* vertices)
 
         for (const IObj::Face& f : obj.faces())
         {
-                v0 = obj_vertices[f.vertices[0].v];
-                v1 = obj_vertices[f.vertices[1].v];
-                v2 = obj_vertices[f.vertices[2].v];
+                v0 = obj_vertices[f.vertices[0]];
+                v1 = obj_vertices[f.vertices[1]];
+                v2 = obj_vertices[f.vertices[2]];
 
                 if (f.has_normal)
                 {
-                        n0 = obj_normals[f.vertices[0].n];
-                        n1 = obj_normals[f.vertices[1].n];
-                        n2 = obj_normals[f.vertices[2].n];
+                        n0 = obj_normals[f.normals[0]];
+                        n1 = obj_normals[f.normals[1]];
+                        n2 = obj_normals[f.normals[2]];
                 }
                 else
                 {
@@ -147,9 +147,9 @@ void load_face_vertices(const IObj& obj, std::vector<FaceVertex>* vertices)
 
                 if (f.has_texcoord)
                 {
-                        t0 = obj_texcoords[f.vertices[0].t];
-                        t1 = obj_texcoords[f.vertices[1].t];
-                        t2 = obj_texcoords[f.vertices[2].t];
+                        t0 = obj_texcoords[f.texcoords[0]];
+                        t1 = obj_texcoords[f.texcoords[1]];
+                        t2 = obj_texcoords[f.texcoords[2]];
                 }
                 else
                 {

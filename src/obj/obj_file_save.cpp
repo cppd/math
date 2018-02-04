@@ -123,23 +123,22 @@ void write_faces(const CFile& file, const IObj* obj)
                 {
                         // В файлах OBJ номера начинаются с 1
 
-                        long v0 = f.vertices[0].v + 1;
-                        long n0 = f.vertices[0].n + 1;
+                        long v0 = f.vertices[0] + 1;
+                        long v1 = f.vertices[1] + 1;
+                        long v2 = f.vertices[2] + 1;
 
-                        long v1 = f.vertices[1].v + 1;
-                        long n1 = f.vertices[1].n + 1;
-
-                        long v2 = f.vertices[2].v + 1;
-                        long n2 = f.vertices[2].n + 1;
+                        long n0 = f.normals[0] + 1;
+                        long n1 = f.normals[1] + 1;
+                        long n2 = f.normals[2] + 1;
 
                         // Перпендикуляр к грани при обходе вершин против часовой стрелки
                         // и противоположно направлению взгляда
-                        vec3 n = cross(to_vector<double>(obj->vertices()[v1 - 1] - obj->vertices()[v0 - 1]),
-                                       to_vector<double>(obj->vertices()[v2 - 1] - obj->vertices()[v0 - 1]));
+                        vec3f normal = cross(obj->vertices()[v1 - 1] - obj->vertices()[v0 - 1],
+                                             obj->vertices()[v2 - 1] - obj->vertices()[v0 - 1]);
 
-                        double sign0 = dot(to_vector<double>(obj->normals()[n0 - 1]), n);
-                        double sign1 = dot(to_vector<double>(obj->normals()[n1 - 1]), n);
-                        double sign2 = dot(to_vector<double>(obj->normals()[n2 - 1]), n);
+                        float sign0 = dot(obj->normals()[n0 - 1], normal);
+                        float sign1 = dot(obj->normals()[n1 - 1], normal);
+                        float sign2 = dot(obj->normals()[n2 - 1], normal);
 
                         if (sign0 > 0 && sign1 > 0 && sign2 > 0)
                         {
@@ -162,9 +161,11 @@ void write_faces(const CFile& file, const IObj* obj)
                 else
                 {
                         // Нет нормалей у вершин, поэтому вершины грани записываются в произвольном порядке
-                        long v0 = f.vertices[0].v + 1;
-                        long v1 = f.vertices[1].v + 1;
-                        long v2 = f.vertices[2].v + 1;
+
+                        long v0 = f.vertices[0] + 1;
+                        long v1 = f.vertices[1] + 1;
+                        long v2 = f.vertices[2] + 1;
+
                         fprintf(file, "f %ld %ld %ld\n", v0, v1, v2);
                 }
         }

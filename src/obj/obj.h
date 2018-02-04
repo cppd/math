@@ -24,27 +24,26 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 struct IObj
 {
-        struct Vertex
-        {
-                int v;
-                int t; // -1 если нет текстурных координат
-                int n; // -1 если нет нормали
-        };
         struct Face
         {
-                Vertex vertices[3];
+                int vertices[3];
+                int normals[3]; // -1 если нет нормали
+                int texcoords[3]; // -1 если нет текстурных координат
                 int material; // -1 если нет материала
                 bool has_texcoord;
                 bool has_normal;
         };
+
         struct Point
         {
                 int vertex;
         };
+
         struct Line
         {
                 int vertices[2];
         };
+
         struct Material
         {
                 std::string name;
@@ -56,11 +55,12 @@ struct IObj
                 int map_Kd{-1}; // -1 если нет текстуры
                 int map_Ks{-1}; // -1 если нет текстуры
         };
+
         struct Image
         {
                 int dimensions[2];
-                // sRGB
-                // red, green, blue, alpha в интервале [0, 255]
+                // Цветовое пространство sRGB, последовательность red, green, blue, alpha.
+                // Каждый цветовой компонент в интервале [0, 255].
                 std::vector<unsigned char> srgba_pixels;
         };
 
