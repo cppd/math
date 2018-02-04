@@ -69,8 +69,8 @@ private:
         QTimer m_timer;
         bool m_first_show;
         std::atomic_bool m_stop;
-        AtomicCounter<unsigned long long> m_ray_count;
-        AtomicCounter<unsigned long long> m_sample_count;
+        AtomicCounter<long long> m_ray_count;
+        AtomicCounter<long long> m_sample_count;
         std::thread m_thread;
         std::atomic_bool m_thread_working;
         const std::thread::id m_window_thread_id;

@@ -88,9 +88,9 @@ bool light_source_is_visible(const std::vector<const GenericObject*>& objects, c
         return true;
 }
 
-vec3 direct_diffuse_lighting(const std::vector<const GenericObject*>& objects,
+vec3 direct_diffuse_lighting(int* ray_count, const std::vector<const GenericObject*>& objects,
                              const std::vector<const LightSource*> light_sources, const vec3& p, const vec3& geometric_normal,
-                             const vec3& shading_normal, bool triangle_mesh, AtomicCounter<unsigned long long>* ray_count)
+                             const vec3& shading_normal, bool triangle_mesh)
 {
         vec3 color(0);
 
@@ -227,25 +227,26 @@ class Painter
         std::vector<std::thread> m_threads;
         std::atomic_bool& m_stop;
 
-        static_assert(AtomicCounter<unsigned long long>::is_always_lock_free);
-        AtomicCounter<unsigned long long>& m_ray_count;
-        AtomicCounter<unsigned long long>& m_sample_count;
+        static_assert(AtomicCounter<long long>::is_always_lock_free);
+        AtomicCounter<long long>& m_ray_count;
+        AtomicCounter<long long>& m_sample_count;
 
         const int m_width, m_height;
         std::vector<Pixel> m_pixels;
 
         Pixel& get_pixel_reference(int x, int y);
         void work_thread() noexcept;
-        vec3 diffuse_lighting(PainterRandomEngine& random_engine, int recursion_level, double color_level, const vec3& point,
-                              const vec3& shading_normal, const vec3& geometric_normal, bool triangle_mesh) const;
-        vec3 trace_path(PainterRandomEngine& random_engine, int recursion_level, double color_level, const ray3& ray,
-                        bool diffuse_reflection) const;
+        vec3 diffuse_lighting(int* ray_count, PainterRandomEngine& random_engine, int recursion_level, double color_level,
+                              const vec3& point, const vec3& shading_normal, const vec3& geometric_normal,
+                              bool triangle_mesh) const;
+        vec3 trace_path(int* ray_count, PainterRandomEngine& random_engine, int recursion_level, double color_level,
+                        const ray3& ray, bool diffuse_reflection) const;
         void paint_pixels();
 
 public:
         Painter(IPainterNotifier* painter_notifier, int samples_per_pixel, const PaintObjects& paint_objects,
-                Paintbrush* paintbrush, unsigned thread_count, std::atomic_bool* stop,
-                AtomicCounter<unsigned long long>* ray_count, AtomicCounter<unsigned long long>* sample_count)
+                Paintbrush* paintbrush, unsigned thread_count, std::atomic_bool* stop, AtomicCounter<long long>* ray_count,
+                AtomicCounter<long long>* sample_count)
                 : m_painter_notifier(painter_notifier),
                   m_objects(paint_objects.objects()),
                   m_light_sources(paint_objects.light_sources()),
@@ -311,8 +312,9 @@ void Painter::work_thread() noexcept
         }
 }
 
-vec3 Painter::diffuse_lighting(PainterRandomEngine& random_engine, int recursion_level, double color_level, const vec3& point,
-                               const vec3& shading_normal, const vec3& geometric_normal, bool triangle_mesh) const
+vec3 Painter::diffuse_lighting(int* ray_count, PainterRandomEngine& random_engine, int recursion_level, double color_level,
+                               const vec3& point, const vec3& shading_normal, const vec3& geometric_normal,
+                               bool triangle_mesh) const
 {
         if (recursion_level < MAX_RECURSION_LEVEL)
         {
@@ -328,16 +330,16 @@ vec3 Painter::diffuse_lighting(PainterRandomEngine& random_engine, int recursion
                         return vec3(0);
                 }
 
-                return trace_path(random_engine, recursion_level + 1, color_level, diffuse_ray, true);
+                return trace_path(ray_count, random_engine, recursion_level + 1, color_level, diffuse_ray, true);
         }
 
         return vec3(0);
 }
 
-vec3 Painter::trace_path(PainterRandomEngine& random_engine, int recursion_level, double color_level, const ray3& ray,
-                         bool diffuse_reflection) const
+vec3 Painter::trace_path(int* ray_count, PainterRandomEngine& random_engine, int recursion_level, double color_level,
+                         const ray3& ray, bool diffuse_reflection) const
 {
-        ++m_ray_count;
+        ++(*ray_count);
 
         const Surface* surface;
         double t;
@@ -388,11 +390,11 @@ vec3 Painter::trace_path(PainterRandomEngine& random_engine, int recursion_level
 
                 if (new_color_level >= MIN_COLOR_LEVEL)
                 {
-                        vec3 direct = direct_diffuse_lighting(m_objects, m_light_sources, point, geometric_normal, shading_normal,
-                                                              triangle_mesh, &m_ray_count);
+                        vec3 direct = direct_diffuse_lighting(ray_count, m_objects, m_light_sources, point, geometric_normal,
+                                                              shading_normal, triangle_mesh);
 
-                        vec3 diffuse = diffuse_lighting(random_engine, recursion_level, new_color_level, point, shading_normal,
-                                                        geometric_normal, triangle_mesh);
+                        vec3 diffuse = diffuse_lighting(ray_count, random_engine, recursion_level, new_color_level, point,
+                                                        shading_normal, geometric_normal, triangle_mesh);
 
                         color += surface_color * (direct + diffuse);
                 }
@@ -426,6 +428,8 @@ void Painter::paint_pixels()
 
                 m_sampler.generate(random_engine, &samples);
 
+                int ray_count = 0;
+
                 for (const vec2& sample_point : samples)
                 {
                         constexpr int recursion_level = 0;
@@ -434,7 +438,7 @@ void Painter::paint_pixels()
 
                         ray3 ray = m_projector.ray(screen_point + sample_point);
 
-                        vec3 color = trace_path(random_engine, recursion_level, color_level, ray, diffuse_reflection);
+                        vec3 color = trace_path(&ray_count, random_engine, recursion_level, color_level, ray, diffuse_reflection);
 
                         pixel.add_color(color);
                 }
@@ -443,6 +447,7 @@ void Painter::paint_pixels()
 
                 m_painter_notifier->painter_pixel_after(x, y, rgb_float_to_srgb_integer(pixel.color()));
 
+                m_ray_count += ray_count;
                 m_sample_count += samples.size();
         }
 }
@@ -450,8 +455,8 @@ void Painter::paint_pixels()
 
 // Без выдачи исключений. Про проблемы сообщать через painter_notifier.
 void paint(IPainterNotifier* painter_notifier, int samples_per_pixel, const PaintObjects& paint_objects, Paintbrush* paintbrush,
-           unsigned thread_count, std::atomic_bool* stop, AtomicCounter<unsigned long long>* ray_count,
-           AtomicCounter<unsigned long long>* sample_count) noexcept
+           unsigned thread_count, std::atomic_bool* stop, AtomicCounter<long long>* ray_count,
+           AtomicCounter<long long>* sample_count) noexcept
 {
         try
         {

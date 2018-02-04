@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -21,8 +21,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/thread.h"
 
-#include <atomic>
-
 class BarPaintbrush final : public Paintbrush
 {
         struct Pixel
@@ -38,11 +36,8 @@ class BarPaintbrush final : public Paintbrush
         std::vector<bool> m_pixels_busy;
         unsigned m_current_pixel = 0;
 
-        static_assert(AtomicCounter<int>::is_always_lock_free);
-        AtomicCounter<int> m_pass_count = 1;
-
-        static_assert(AtomicCounter<long long>::is_always_lock_free);
-        AtomicCounter<long long> m_pixel_count = 0;
+        int m_pass_count = 1;
+        long long m_pixel_count = 0;
 
         unsigned m_width;
 
@@ -113,13 +108,11 @@ public:
                 ++m_pixel_count;
         }
 
-        int get_pass_count() const override
+        void pass_and_pixel_count(int* pass_count, long long* pixel_count) const override
         {
-                return m_pass_count;
-        }
+                std::lock_guard lg(m_lock);
 
-        long long get_pixel_count() const override
-        {
-                return m_pixel_count;
+                *pass_count = m_pass_count;
+                *pixel_count = m_pixel_count;
         }
 };

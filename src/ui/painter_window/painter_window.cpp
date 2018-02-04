@@ -245,11 +245,13 @@ void PainterWindow::first_shown()
 
 void PainterWindow::timer_slot()
 {
-        long long pass_count = m_paintbrush.get_pass_count();
+        int pass_count;
+        long long pixel_count;
+
+        m_paintbrush.pass_and_pixel_count(&pass_count, &pixel_count);
 
         long long ray_count = m_ray_count;
         long long sample_count = m_sample_count;
-        long long pixel_count = m_paintbrush.get_pixel_count();
 
         auto[ray_diff, sample_diff, pixel_diff, time_diff] = m_difference->compute({{ray_count, sample_count, pixel_count}});
 
