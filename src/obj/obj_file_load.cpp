@@ -222,11 +222,11 @@ void load_image(const std::string& dir_name, const std::string& image_name, std:
 template <typename Integer, typename T>
 Integer digits_to_integer(const T& data, long long begin, long long end)
 {
-        static_assert(std::is_integral_v<Integer>);
+        static_assert(is_native_integral<Integer>);
 
         long long length = end - begin;
 
-        if (length > std::numeric_limits<Integer>::digits10 || length < 1)
+        if (length > limits<Integer>::digits10 || length < 1)
         {
                 error("Error convert " + std::string(&data[begin], length) + " to integral");
         }
@@ -352,8 +352,8 @@ void read_digit_groups(const T& line, long long begin, long long end,
 
 // 0 означает, что нет индекса.
 // Индексы находятся в порядке face, texture, normal.
-template <size_t N>
-void check_index_consistent(const std::array<std::array<int, 3>, N>& groups, int group_count)
+template <typename T, size_t N>
+void check_index_consistent(const std::array<std::array<T, 3>, N>& groups, int group_count)
 {
         ASSERT(group_count <= static_cast<int>(groups.size()));
 

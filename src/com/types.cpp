@@ -41,6 +41,7 @@ static_assert(limits<double>::epsilon() == std::numeric_limits<double>::epsilon(
 static_assert(limits<double>::max() == std::numeric_limits<double>::max());
 static_assert(limits<double>::lowest() == std::numeric_limits<double>::lowest());
 static_assert(limits<double>::digits == std::numeric_limits<double>::digits);
+static_assert(limits<double>::digits10 == std::numeric_limits<double>::digits10);
 
 static_assert(limits<unsigned __int128>::max() > 0);
 static_assert(limits<unsigned __int128>::max() == (((static_cast<unsigned __int128>(1) << 127) - 1) << 1) + 1);
