@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "path_tracing/objects.h"
 
+#include "com/error.h"
 #include "com/thread.h"
 
 class BarPaintbrush final : public Paintbrush
@@ -31,88 +32,92 @@ class BarPaintbrush final : public Paintbrush
                 }
         };
 
+        const int m_width, m_height;
+
         std::vector<Pixel> m_pixels;
-        std::vector<int> m_map;
-        std::vector<bool> m_pixels_busy;
+
         unsigned m_current_pixel = 0;
 
-        int m_pass_count = 1;
+        long long m_pass_count = 1;
         long long m_pixel_count = 0;
-
-        unsigned m_width;
+        long long m_ray_count = 0;
+        long long m_sample_count = 0;
 
         mutable SpinLock m_lock;
 
 public:
-        BarPaintbrush(int nx, int ny, int paint_height)
+        BarPaintbrush(int width, int height, int paint_height) : m_width(width), m_height(height)
         {
-                m_width = nx;
-                m_map.resize(nx * ny);
-                for (int y = 0; y < ny; y += paint_height)
+                for (int y = 0; y < height; y += paint_height)
                 {
-                        for (int x = 0; x < nx; ++x)
+                        for (int x = 0; x < width; ++x)
                         {
-                                int max_sub_y = std::min(paint_height, ny - y);
+                                int max_sub_y = std::min(paint_height, height - y);
                                 for (int sub_y = 0; sub_y < max_sub_y; ++sub_y)
                                 {
-                                        m_pixels.emplace_back(x, y + sub_y);
-                                        m_map[(y + sub_y) * m_width + x] = m_pixels.size() - 1;
-                                        m_pixels_busy.push_back(false);
+                                        int pixel_x = x;
+                                        int pixel_y = y + sub_y;
+
+                                        ASSERT(pixel_x >= 0 && pixel_x < m_width);
+                                        ASSERT(pixel_y >= 0 && pixel_y < m_height);
+
+                                        m_pixels.emplace_back(pixel_x, pixel_y);
                                 }
                         }
                 }
-                ASSERT(m_pixels.size() == static_cast<unsigned>(nx * ny) && m_pixels.size() == m_pixels_busy.size());
+
+                ASSERT(m_pixels.size() == static_cast<unsigned>(width * height));
         }
 
-        void get_pixel(int* x, int* y) override
+        int painting_width() const noexcept override
+        {
+                return m_width;
+        }
+
+        int painting_height() const noexcept override
+        {
+                return m_height;
+        }
+
+        bool next_pixel(int previous_pixel_ray_count, int previous_pixel_sample_count, int* x, int* y) noexcept override
         {
                 std::lock_guard lg(m_lock);
 
-                unsigned start = m_current_pixel;
+                m_ray_count += previous_pixel_ray_count;
+                m_sample_count += previous_pixel_sample_count;
 
-                while (m_current_pixel < m_pixels.size() && m_pixels_busy[m_current_pixel])
+                if (m_current_pixel < m_pixels.size())
                 {
+                        *x = m_pixels[m_current_pixel].x;
+                        *y = m_pixels[m_current_pixel].y;
+
                         ++m_current_pixel;
+                        ++m_pixel_count;
+
+                        return true;
                 }
 
-                if (m_current_pixel == m_pixels.size())
-                {
-                        ++m_pass_count;
-
-                        m_current_pixel = 0;
-                        while (m_current_pixel < start && m_pixels_busy[m_current_pixel])
-                        {
-                                ++m_current_pixel;
-                        }
-
-                        if (m_current_pixel == start)
-                        {
-                                error("all pixels busy");
-                        }
-                }
-
-                m_pixels_busy[m_current_pixel] = true;
-
-                *x = m_pixels[m_current_pixel].x;
-                *y = m_pixels[m_current_pixel].y;
-
-                ++m_current_pixel;
+                return false;
         }
 
-        void release_pixel(int x, int y) override
+        virtual void next_pass() noexcept override
         {
                 std::lock_guard lg(m_lock);
 
-                m_pixels_busy[m_map[y * m_width + x]] = false;
+                ASSERT(m_current_pixel == m_pixels.size());
 
-                ++m_pixel_count;
+                m_current_pixel = 0;
+                ++m_pass_count;
         }
 
-        void pass_and_pixel_count(int* pass_count, long long* pixel_count) const override
+        void statistics(long long* pass_count, long long* pixel_count, long long* ray_count, long long* sample_count) const
+                noexcept override
         {
                 std::lock_guard lg(m_lock);
 
                 *pass_count = m_pass_count;
                 *pixel_count = m_pixel_count;
+                *ray_count = m_ray_count;
+                *sample_count = m_sample_count;
         }
 };

@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/color/colors.h"
 #include "com/error.h"
+#include "com/log.h"
 #include "com/random/engine.h"
 
 #include <atomic>
@@ -41,6 +42,42 @@ using PainterSampler = StratifiedJitteredSampler<2, double>;
 
 namespace
 {
+class Pixel
+{
+        vec3 m_color_sum = vec3(0);
+        double m_ray_sum = 0;
+
+public:
+        void add_color(const vec3& color)
+        {
+                m_color_sum += color;
+        }
+        void add_rays(double rays)
+        {
+                m_ray_sum += rays;
+        }
+        vec3 color() const
+        {
+                return m_color_sum / m_ray_sum;
+        }
+};
+
+class Pixels
+{
+        std::vector<Pixel> m_pixels;
+        const int m_width;
+
+public:
+        Pixels(int width, int height) : m_pixels(width * height), m_width(width)
+        {
+        }
+
+        Pixel& pixel_reference(int x, int y)
+        {
+                return m_pixels[y * m_width + x];
+        }
+};
+
 bool color_is_zero(const vec3& c)
 {
         return max_element(c) < MIN_COLOR_LEVEL;
@@ -161,160 +198,25 @@ vec3 direct_diffuse_lighting(int* ray_count, const std::vector<const GenericObje
         return color;
 }
 
-class PixelOwner
+struct PaintData
 {
-        Paintbrush* m_paintbrush;
-        int m_x, m_y;
+        const std::vector<const GenericObject*>& objects;
+        const std::vector<const LightSource*>& light_sources;
+        const SurfaceProperties& default_surface_properties;
 
-public:
-        PixelOwner(Paintbrush* paintbrush, int width, int height) : m_paintbrush(paintbrush)
+        PaintData(const std::vector<const GenericObject*>& objects_, const std::vector<const LightSource*>& light_sources_,
+                  const SurfaceProperties& default_surface_properties_)
+                : objects(objects_), light_sources(light_sources_), default_surface_properties(default_surface_properties_)
         {
-                m_paintbrush->get_pixel(&m_x, &m_y);
-
-                if (m_x < 0 || m_y < 0 || m_x >= width || m_y >= height)
-                {
-                        m_paintbrush->release_pixel(m_x, m_y);
-                        error("Paintbrush x or y coordinates (" + to_string(m_x) + ", " + to_string(m_y) + ") out of range " +
-                              to_string(width) + ", " + to_string(height) + ")");
-                }
-        }
-        ~PixelOwner()
-        {
-                m_paintbrush->release_pixel(m_x, m_y);
-        }
-        int get_x() const
-        {
-                return m_x;
-        }
-        int get_y() const
-        {
-                return m_y;
         }
 };
 
-class Pixel
-{
-        vec3 m_color_sum = vec3(0);
-        double m_ray_sum = 0;
+vec3 trace_path(const PaintData& paint_data, int* ray_count, PainterRandomEngine& random_engine, int recursion_level,
+                double color_level, const ray3& ray, bool diffuse_reflection);
 
-public:
-        void add_color(const vec3& color)
-        {
-                m_color_sum += color;
-        }
-        void add_rays(double rays)
-        {
-                m_ray_sum += rays;
-        }
-        vec3 color() const
-        {
-                return m_color_sum / m_ray_sum;
-        }
-};
-
-class Painter
-{
-        IPainterNotifier* m_painter_notifier;
-
-        const std::vector<const GenericObject*>& m_objects;
-        const std::vector<const LightSource*>& m_light_sources;
-        const Projector& m_projector;
-        const PainterSampler m_sampler;
-        const SurfaceProperties& m_default_surface_properties;
-
-        Paintbrush* m_paintbrush;
-
-        std::vector<std::thread> m_threads;
-        std::atomic_bool& m_stop;
-
-        static_assert(AtomicCounter<long long>::is_always_lock_free);
-        AtomicCounter<long long>& m_ray_count;
-        AtomicCounter<long long>& m_sample_count;
-
-        const int m_width, m_height;
-        std::vector<Pixel> m_pixels;
-
-        Pixel& get_pixel_reference(int x, int y);
-        void work_thread() noexcept;
-        vec3 diffuse_lighting(int* ray_count, PainterRandomEngine& random_engine, int recursion_level, double color_level,
-                              const vec3& point, const vec3& shading_normal, const vec3& geometric_normal,
-                              bool triangle_mesh) const;
-        vec3 trace_path(int* ray_count, PainterRandomEngine& random_engine, int recursion_level, double color_level,
-                        const ray3& ray, bool diffuse_reflection) const;
-        void paint_pixels();
-
-public:
-        Painter(IPainterNotifier* painter_notifier, int samples_per_pixel, const PaintObjects& paint_objects,
-                Paintbrush* paintbrush, unsigned thread_count, std::atomic_bool* stop, AtomicCounter<long long>* ray_count,
-                AtomicCounter<long long>* sample_count)
-                : m_painter_notifier(painter_notifier),
-                  m_objects(paint_objects.objects()),
-                  m_light_sources(paint_objects.light_sources()),
-                  m_projector(paint_objects.projector()),
-                  m_sampler(PainterSampler(samples_per_pixel)),
-                  m_default_surface_properties(paint_objects.default_surface_properties()),
-                  m_paintbrush(paintbrush),
-                  m_threads(thread_count),
-                  m_stop(*stop),
-                  m_ray_count(*ray_count),
-                  m_sample_count(*sample_count),
-                  m_width(m_projector.screen_width()),
-                  m_height(m_projector.screen_height()),
-                  m_pixels(m_width * m_height)
-        {
-                if (thread_count < 1)
-                {
-                        error("Painter thread count (" + to_string(thread_count) + ") must be greater than 0");
-                }
-        }
-
-        void process()
-        {
-                for (std::thread& t : m_threads)
-                {
-                        t = std::thread([this]() noexcept { work_thread(); });
-                }
-
-                for (std::thread& t : m_threads)
-                {
-                        t.join();
-                }
-        }
-
-        Painter(const Painter&) = delete;
-        Painter(Painter&&) = delete;
-        Painter& operator=(const Painter&) = delete;
-        Painter& operator=(Painter&&) = delete;
-};
-
-void Painter::work_thread() noexcept
-{
-        try
-        {
-                try
-                {
-                        paint_pixels();
-                }
-                catch (std::exception& e)
-                {
-                        m_stop = true;
-                        m_painter_notifier->painter_error_message(std::string("Painter error:\n") + e.what());
-                }
-                catch (...)
-                {
-                        m_stop = true;
-                        m_painter_notifier->painter_error_message("Unknown painter error");
-                }
-        }
-        catch (...)
-        {
-                error_fatal("Exception in painter exception handlers");
-        }
-}
-
-vec3 Painter::diffuse_lighting(int* ray_count, PainterRandomEngine& random_engine, int recursion_level, double color_level,
-                               const vec3& point, const vec3& shading_normal, const vec3& geometric_normal,
-                               bool triangle_mesh) const
+vec3 diffuse_lighting(const PaintData& paint_data, int* ray_count, PainterRandomEngine& random_engine, int recursion_level,
+                      double color_level, const vec3& point, const vec3& shading_normal, const vec3& geometric_normal,
+                      bool triangle_mesh)
 {
         if (recursion_level < MAX_RECURSION_LEVEL)
         {
@@ -330,14 +232,14 @@ vec3 Painter::diffuse_lighting(int* ray_count, PainterRandomEngine& random_engin
                         return vec3(0);
                 }
 
-                return trace_path(ray_count, random_engine, recursion_level + 1, color_level, diffuse_ray, true);
+                return trace_path(paint_data, ray_count, random_engine, recursion_level + 1, color_level, diffuse_ray, true);
         }
 
         return vec3(0);
 }
 
-vec3 Painter::trace_path(int* ray_count, PainterRandomEngine& random_engine, int recursion_level, double color_level,
-                         const ray3& ray, bool diffuse_reflection) const
+vec3 trace_path(const PaintData& paint_data, int* ray_count, PainterRandomEngine& random_engine, int recursion_level,
+                double color_level, const ray3& ray, bool diffuse_reflection)
 {
         ++(*ray_count);
 
@@ -345,17 +247,21 @@ vec3 Painter::trace_path(int* ray_count, PainterRandomEngine& random_engine, int
         double t;
         const GeometricObject* geometric_object;
 
-        if (!ray_intersection(m_objects, ray, &t, &surface, &geometric_object))
+        if (!ray_intersection(paint_data.objects, ray, &t, &surface, &geometric_object))
         {
-                return (m_default_surface_properties.is_light_source() && diffuse_reflection) ?
-                               m_default_surface_properties.get_light_source_color() :
-                               m_default_surface_properties.get_color();
+                return (paint_data.default_surface_properties.is_light_source() && diffuse_reflection) ?
+                               paint_data.default_surface_properties.get_light_source_color() :
+                               paint_data.default_surface_properties.get_color();
         }
 
         Vector point = ray.point(t);
+
         const SurfaceProperties surface_properties = surface->properties(point, geometric_object);
+
         vec3 geometric_normal = surface_properties.get_geometric_normal();
+
         double dot_dir_and_geometric_normal = dot(ray.get_dir(), geometric_normal);
+
         bool triangle_mesh = surface_properties.is_triangle_mesh();
 
         if (std::abs(dot_dir_and_geometric_normal) <= EPSILON_DOUBLE)
@@ -390,11 +296,11 @@ vec3 Painter::trace_path(int* ray_count, PainterRandomEngine& random_engine, int
 
                 if (new_color_level >= MIN_COLOR_LEVEL)
                 {
-                        vec3 direct = direct_diffuse_lighting(ray_count, m_objects, m_light_sources, point, geometric_normal,
-                                                              shading_normal, triangle_mesh);
+                        vec3 direct = direct_diffuse_lighting(ray_count, paint_data.objects, paint_data.light_sources, point,
+                                                              geometric_normal, shading_normal, triangle_mesh);
 
-                        vec3 diffuse = diffuse_lighting(ray_count, random_engine, recursion_level, new_color_level, point,
-                                                        shading_normal, geometric_normal, triangle_mesh);
+                        vec3 diffuse = diffuse_lighting(paint_data, ray_count, random_engine, recursion_level, new_color_level,
+                                                        point, shading_normal, geometric_normal, triangle_mesh);
 
                         color += surface_color * (direct + diffuse);
                 }
@@ -403,79 +309,162 @@ vec3 Painter::trace_path(int* ray_count, PainterRandomEngine& random_engine, int
         return color;
 }
 
-Pixel& Painter::get_pixel_reference(int x, int y)
-{
-        return m_pixels[y * m_width + x];
-}
-
-void Painter::paint_pixels()
+void paint_pixels(unsigned thread_number, ThreadBarrier& barrier, std::atomic_bool& stop, const Projector& projector,
+                  const PaintData& paint_data, IPainterNotifier* painter_notifier, Paintbrush* paintbrush,
+                  const PainterSampler& sampler, Pixels* pixels)
 {
         RandomEngineWithSeed<PainterRandomEngine> random_engine;
 
         std::vector<vec2> samples;
 
-        while (!m_stop)
+        int x, y;
+        int ray_count = 0, sample_count = 0;
+
+        while (true)
         {
-                PixelOwner po(m_paintbrush, m_width, m_height);
-
-                int x = po.get_x();
-                int y = po.get_y();
-
-                m_painter_notifier->painter_pixel_before(x, y);
-
-                Pixel& pixel = get_pixel_reference(x, y);
-                vec2 screen_point(x, y);
-
-                m_sampler.generate(random_engine, &samples);
-
-                int ray_count = 0;
-
-                for (const vec2& sample_point : samples)
+                while (!stop && paintbrush->next_pixel(ray_count, sample_count, &x, &y))
                 {
-                        constexpr int recursion_level = 0;
-                        constexpr double color_level = 1;
-                        constexpr bool diffuse_reflection = false;
+                        painter_notifier->painter_pixel_before(x, y);
 
-                        ray3 ray = m_projector.ray(screen_point + sample_point);
+                        Pixel& pixel = pixels->pixel_reference(x, y);
 
-                        vec3 color = trace_path(&ray_count, random_engine, recursion_level, color_level, ray, diffuse_reflection);
+                        vec2 screen_point(x, y);
 
-                        pixel.add_color(color);
+                        sampler.generate(random_engine, &samples);
+
+                        ray_count = 0;
+                        sample_count = samples.size();
+
+                        for (const vec2& sample_point : samples)
+                        {
+                                constexpr int recursion_level = 0;
+                                constexpr double color_level = 1;
+                                constexpr bool diffuse_reflection = false;
+
+                                ray3 ray = projector.ray(screen_point + sample_point);
+
+                                vec3 color = trace_path(paint_data, &ray_count, random_engine, recursion_level, color_level, ray,
+                                                        diffuse_reflection);
+
+                                pixel.add_color(color);
+                        }
+
+                        pixel.add_rays(samples.size());
+
+                        painter_notifier->painter_pixel_after(x, y, rgb_float_to_srgb_integer(pixel.color()));
                 }
 
-                pixel.add_rays(samples.size());
+                barrier.wait();
+                if (stop)
+                {
+                        return;
+                }
 
-                m_painter_notifier->painter_pixel_after(x, y, rgb_float_to_srgb_integer(pixel.color()));
+                if (thread_number == 0)
+                {
+                        paintbrush->next_pass();
+                }
 
-                m_ray_count += ray_count;
-                m_sample_count += samples.size();
+                barrier.wait();
+                if (stop)
+                {
+                        return;
+                }
+        }
+}
+
+void work_thread(unsigned thread_number, ThreadBarrier& barrier, std::atomic_bool& stop, const Projector& projector,
+                 const PaintData& paint_data, IPainterNotifier* painter_notifier, Paintbrush* paintbrush,
+                 const PainterSampler& sampler, Pixels* pixels) noexcept
+{
+        try
+        {
+                try
+                {
+                        paint_pixels(thread_number, barrier, stop, projector, paint_data, painter_notifier, paintbrush, sampler,
+                                     pixels);
+                }
+                catch (std::exception& e)
+                {
+                        stop = true;
+                        painter_notifier->painter_error_message(std::string("Painter error:\n") + e.what());
+                        barrier.wait();
+                }
+                catch (...)
+                {
+                        stop = true;
+                        painter_notifier->painter_error_message("Unknown painter error");
+                        barrier.wait();
+                }
+        }
+        catch (...)
+        {
+                error_fatal("Exception in painter exception handlers");
+        }
+}
+
+void paint_threads(IPainterNotifier* painter_notifier, int samples_per_pixel, const PaintObjects& paint_objects,
+                   Paintbrush* paintbrush, unsigned thread_count, std::atomic_bool* stop)
+
+{
+        if (thread_count < 1)
+        {
+                error("Painter thread count (" + to_string(thread_count) + ") must be greater than 0");
+        }
+
+        if (paintbrush->painting_width() != paint_objects.projector().screen_width() ||
+            paintbrush->painting_height() != paint_objects.projector().screen_height())
+        {
+                error("The paintbrush width and height (" + to_string(paintbrush->painting_width()) + ", " +
+                      to_string(paintbrush->painting_height()) + ") are not equal to the projector width and height (" +
+                      to_string(paint_objects.projector().screen_width()) + ", " +
+                      to_string(paint_objects.projector().screen_height()) + ")");
+        }
+
+        const PainterSampler sampler(samples_per_pixel);
+
+        const PaintData paint_data(paint_objects.objects(), paint_objects.light_sources(),
+                                   paint_objects.default_surface_properties());
+
+        Pixels pixels(paint_objects.projector().screen_width(), paint_objects.projector().screen_height());
+
+        ThreadBarrier barrier(thread_count);
+        std::vector<std::thread> threads(thread_count);
+
+        for (unsigned i = 0; i < threads.size(); ++i)
+        {
+                threads[i] = std::thread([&, i ]() noexcept {
+                        work_thread(i, barrier, *stop, paint_objects.projector(), paint_data, painter_notifier, paintbrush,
+                                    sampler, &pixels);
+                });
+        }
+
+        for (std::thread& t : threads)
+        {
+                t.join();
         }
 }
 }
 
 // Без выдачи исключений. Про проблемы сообщать через painter_notifier.
 void paint(IPainterNotifier* painter_notifier, int samples_per_pixel, const PaintObjects& paint_objects, Paintbrush* paintbrush,
-           unsigned thread_count, std::atomic_bool* stop, AtomicCounter<long long>* ray_count,
-           AtomicCounter<long long>* sample_count) noexcept
+           unsigned thread_count, std::atomic_bool* stop) noexcept
 {
         try
         {
                 try
                 {
-                        ASSERT(painter_notifier && paintbrush && stop && ray_count && sample_count);
+                        ASSERT(painter_notifier && paintbrush && stop);
 
-                        Painter painter(painter_notifier, samples_per_pixel, paint_objects, paintbrush, thread_count, stop,
-                                        ray_count, sample_count);
-
-                        painter.process();
+                        paint_threads(painter_notifier, samples_per_pixel, paint_objects, paintbrush, thread_count, stop);
                 }
                 catch (std::exception& e)
                 {
-                        painter_notifier->painter_error_message(std::string("Painter class thread error:\n") + e.what());
+                        painter_notifier->painter_error_message(std::string("Painter error:\n") + e.what());
                 }
                 catch (...)
                 {
-                        painter_notifier->painter_error_message("Unknown painter class thread error");
+                        painter_notifier->painter_error_message("Unknown painter error");
                 }
         }
         catch (...)

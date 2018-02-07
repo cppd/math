@@ -239,10 +239,14 @@ protected:
         virtual ~Paintbrush() = default;
 
 public:
-        virtual void get_pixel(int* x, int* y) = 0;
-        virtual void release_pixel(int x, int y) = 0;
+        virtual bool next_pixel(int previous_pixel_ray_count, int previous_pixel_sample_count, int* x, int* y) noexcept = 0;
+        virtual void next_pass() noexcept = 0;
 
-        virtual void pass_and_pixel_count(int*, long long*) const = 0;
+        virtual int painting_width() const noexcept = 0;
+        virtual int painting_height() const noexcept = 0;
+
+        virtual void statistics(long long* pass_count, long long* pixel_count, long long* ray_count,
+                                long long* sample_count) const noexcept = 0;
 
         Paintbrush() = default;
         Paintbrush(const Paintbrush&) = default;

@@ -92,8 +92,6 @@ PainterWindow::PainterWindow(const std::string& title, unsigned thread_count, in
           m_image_data_size(m_width * m_height * sizeof(quint32)),
           m_first_show(true),
           m_stop(false),
-          m_ray_count(0),
-          m_sample_count(0),
           m_thread_working(false),
           m_window_thread_id(std::this_thread::get_id()),
           m_paintbrush(m_width, m_height, PANTBRUSH_WIDTH),
@@ -237,21 +235,16 @@ void PainterWindow::first_shown()
         m_stop = false;
         m_thread_working = true;
         m_thread = std::thread([this]() noexcept {
-                paint(this, m_samples_per_pixel, *m_paint_objects, &m_paintbrush, m_thread_count, &m_stop, &m_ray_count,
-                      &m_sample_count);
+                paint(this, m_samples_per_pixel, *m_paint_objects, &m_paintbrush, m_thread_count, &m_stop);
                 m_thread_working = false;
         });
 }
 
 void PainterWindow::timer_slot()
 {
-        int pass_count;
-        long long pixel_count;
+        long long pass_count, pixel_count, ray_count, sample_count;
 
-        m_paintbrush.pass_and_pixel_count(&pass_count, &pixel_count);
-
-        long long ray_count = m_ray_count;
-        long long sample_count = m_sample_count;
+        m_paintbrush.statistics(&pass_count, &pixel_count, &ray_count, &sample_count);
 
         auto[ray_diff, sample_diff, pixel_diff, time_diff] = m_difference->compute({{ray_count, sample_count, pixel_count}});
 
