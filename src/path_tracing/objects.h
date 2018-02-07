@@ -50,8 +50,7 @@ public:
 
         SurfaceProperties(const vec3& color, const vec3& light_source_color, double diffuse, bool use_fresnel, double refraction,
                           bool light_source)
-                : // без m_normal
-                  m_color(color),
+                : m_color(color),
                   m_light_source_color(light_source_color),
                   m_diffuse(diffuse),
                   m_fresnel(use_fresnel),
@@ -239,14 +238,15 @@ protected:
         virtual ~Paintbrush() = default;
 
 public:
+        virtual void first_pass() noexcept = 0;
         virtual bool next_pixel(int previous_pixel_ray_count, int previous_pixel_sample_count, int* x, int* y) noexcept = 0;
         virtual void next_pass() noexcept = 0;
 
         virtual int painting_width() const noexcept = 0;
         virtual int painting_height() const noexcept = 0;
 
-        virtual void statistics(long long* pass_count, long long* pixel_count, long long* ray_count,
-                                long long* sample_count) const noexcept = 0;
+        virtual void statistics(long long* pass_count, long long* pixel_count, long long* ray_count, long long* sample_count,
+                                double* previous_pass_duration) const noexcept = 0;
 
         Paintbrush() = default;
         Paintbrush(const Paintbrush&) = default;

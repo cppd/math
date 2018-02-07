@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "time.h"
 
+#include "error.h"
+
 #include <chrono>
 
 using CLOCK = std::chrono::steady_clock;
@@ -32,9 +34,16 @@ void reset_time()
         global_start_time = CLOCK::now();
 }
 
-double time_in_seconds()
+double time_in_seconds() noexcept
 {
-        CLOCK::time_point now = CLOCK::now();
-        std::chrono::duration<double> time = now - global_start_time;
-        return time.count();
+        try
+        {
+                CLOCK::time_point now = CLOCK::now();
+                std::chrono::duration<double> time = now - global_start_time;
+                return time.count();
+        }
+        catch (...)
+        {
+                error_fatal("Exception in time function");
+        }
 }

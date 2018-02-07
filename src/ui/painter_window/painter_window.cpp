@@ -243,18 +243,22 @@ void PainterWindow::first_shown()
 void PainterWindow::timer_slot()
 {
         long long pass_count, pixel_count, ray_count, sample_count;
+        double previous_pass_duration;
 
-        m_paintbrush.statistics(&pass_count, &pixel_count, &ray_count, &sample_count);
+        m_paintbrush.statistics(&pass_count, &pixel_count, &ray_count, &sample_count, &previous_pass_duration);
 
         auto[ray_diff, sample_diff, pixel_diff, time_diff] = m_difference->compute({{ray_count, sample_count, pixel_count}});
 
         long long rays_per_second = time_diff != 0 ? std::llround(ray_diff / time_diff) : 0;
         long long samples_per_pixel = pixel_diff != 0 ? std::llround(static_cast<double>(sample_diff) / pixel_diff) : 0;
 
+        long long milliseconds_per_frame = std::llround(1000 * previous_pass_duration);
+
         set_text_and_minimum_width(ui.label_rays_per_second, to_string_digit_groups(rays_per_second));
         set_text_and_minimum_width(ui.label_ray_count, to_string_digit_groups(ray_count));
         set_text_and_minimum_width(ui.label_pass_count, to_string_digit_groups(pass_count));
         set_text_and_minimum_width(ui.label_samples_per_pixel, to_string_digit_groups(samples_per_pixel));
+        set_text_and_minimum_width(ui.label_milliseconds_per_frame, to_string_digit_groups(milliseconds_per_frame));
 
         update_points();
 }

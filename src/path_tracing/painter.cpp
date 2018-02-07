@@ -25,10 +25,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/color/colors.h"
 #include "com/error.h"
-#include "com/log.h"
 #include "com/random/engine.h"
+#include "com/thread.h"
 
-#include <atomic>
 #include <thread>
 
 constexpr double MIN_COLOR_LEVEL = 1e-4;
@@ -42,28 +41,23 @@ using PainterSampler = StratifiedJitteredSampler<2, double>;
 
 namespace
 {
-class Pixel
-{
-        vec3 m_color_sum = vec3(0);
-        double m_ray_sum = 0;
-
-public:
-        void add_color(const vec3& color)
-        {
-                m_color_sum += color;
-        }
-        void add_rays(double rays)
-        {
-                m_ray_sum += rays;
-        }
-        vec3 color() const
-        {
-                return m_color_sum / m_ray_sum;
-        }
-};
-
 class Pixels
 {
+        class Pixel
+        {
+                vec3 m_color_sum = vec3(0);
+                double m_sample_sum = 0;
+
+        public:
+                vec3 add_color_and_samples(const vec3& color, int samples)
+                {
+                        m_color_sum += color;
+                        m_sample_sum += samples;
+
+                        return m_color_sum / m_sample_sum;
+                }
+        };
+
         std::vector<Pixel> m_pixels;
         const int m_width;
 
@@ -72,9 +66,47 @@ public:
         {
         }
 
-        Pixel& pixel_reference(int x, int y)
+        vec3 add_color_and_samples(int x, int y, const vec3& color, double samples)
         {
-                return m_pixels[y * m_width + x];
+                return m_pixels[y * m_width + x].add_color_and_samples(color, samples);
+        }
+};
+
+class Counter
+{
+        int m_counter;
+
+public:
+        Counter(int v) : m_counter(v)
+        {
+        }
+
+        operator int&()
+        {
+                return m_counter;
+        }
+
+        void operator=(int v)
+        {
+                m_counter = v;
+        }
+
+        Counter& operator=(Counter&&) = delete;
+        Counter& operator=(const Counter&) = delete;
+        Counter(const Counter&) = delete;
+        Counter(Counter&&) = delete;
+};
+
+struct PaintData
+{
+        const std::vector<const GenericObject*>& objects;
+        const std::vector<const LightSource*>& light_sources;
+        const SurfaceProperties& default_surface_properties;
+
+        PaintData(const std::vector<const GenericObject*>& objects_, const std::vector<const LightSource*>& light_sources_,
+                  const SurfaceProperties& default_surface_properties_)
+                : objects(objects_), light_sources(light_sources_), default_surface_properties(default_surface_properties_)
+        {
         }
 };
 
@@ -125,7 +157,7 @@ bool light_source_is_visible(const std::vector<const GenericObject*>& objects, c
         return true;
 }
 
-vec3 direct_diffuse_lighting(int* ray_count, const std::vector<const GenericObject*>& objects,
+vec3 direct_diffuse_lighting(Counter& ray_count, const std::vector<const GenericObject*>& objects,
                              const std::vector<const LightSource*> light_sources, const vec3& p, const vec3& geometric_normal,
                              const vec3& shading_normal, bool triangle_mesh)
 {
@@ -152,7 +184,7 @@ vec3 direct_diffuse_lighting(int* ray_count, const std::vector<const GenericObje
                         continue;
                 }
 
-                ++(*ray_count);
+                ++ray_count;
 
                 if (!triangle_mesh || dot(ray_to_light.get_dir(), geometric_normal) >= 0)
                 {
@@ -180,7 +212,7 @@ vec3 direct_diffuse_lighting(int* ray_count, const std::vector<const GenericObje
 
                                 if (t < distance_to_light_source)
                                 {
-                                        ++(*ray_count);
+                                        ++ray_count;
 
                                         ray_to_light.set_org(ray_to_light.point(t));
 
@@ -198,23 +230,10 @@ vec3 direct_diffuse_lighting(int* ray_count, const std::vector<const GenericObje
         return color;
 }
 
-struct PaintData
-{
-        const std::vector<const GenericObject*>& objects;
-        const std::vector<const LightSource*>& light_sources;
-        const SurfaceProperties& default_surface_properties;
-
-        PaintData(const std::vector<const GenericObject*>& objects_, const std::vector<const LightSource*>& light_sources_,
-                  const SurfaceProperties& default_surface_properties_)
-                : objects(objects_), light_sources(light_sources_), default_surface_properties(default_surface_properties_)
-        {
-        }
-};
-
-vec3 trace_path(const PaintData& paint_data, int* ray_count, PainterRandomEngine& random_engine, int recursion_level,
+vec3 trace_path(const PaintData& paint_data, Counter& ray_count, PainterRandomEngine& random_engine, int recursion_level,
                 double color_level, const ray3& ray, bool diffuse_reflection);
 
-vec3 diffuse_lighting(const PaintData& paint_data, int* ray_count, PainterRandomEngine& random_engine, int recursion_level,
+vec3 diffuse_lighting(const PaintData& paint_data, Counter& ray_count, PainterRandomEngine& random_engine, int recursion_level,
                       double color_level, const vec3& point, const vec3& shading_normal, const vec3& geometric_normal,
                       bool triangle_mesh)
 {
@@ -238,10 +257,10 @@ vec3 diffuse_lighting(const PaintData& paint_data, int* ray_count, PainterRandom
         return vec3(0);
 }
 
-vec3 trace_path(const PaintData& paint_data, int* ray_count, PainterRandomEngine& random_engine, int recursion_level,
+vec3 trace_path(const PaintData& paint_data, Counter& ray_count, PainterRandomEngine& random_engine, int recursion_level,
                 double color_level, const ray3& ray, bool diffuse_reflection)
 {
-        ++(*ray_count);
+        ++ray_count;
 
         const Surface* surface;
         double t;
@@ -309,67 +328,42 @@ vec3 trace_path(const PaintData& paint_data, int* ray_count, PainterRandomEngine
         return color;
 }
 
-void paint_pixels(unsigned thread_number, ThreadBarrier& barrier, std::atomic_bool& stop, const Projector& projector,
-                  const PaintData& paint_data, IPainterNotifier* painter_notifier, Paintbrush* paintbrush,
-                  const PainterSampler& sampler, Pixels* pixels)
+void paint_pixels(PainterRandomEngine& random_engine, std::vector<vec2>* samples, std::atomic_bool& stop,
+                  const Projector& projector, const PaintData& paint_data, IPainterNotifier* painter_notifier,
+                  Paintbrush* paintbrush, const PainterSampler& sampler, Pixels* pixels)
 {
-        RandomEngineWithSeed<PainterRandomEngine> random_engine;
-
-        std::vector<vec2> samples;
-
         int x, y;
-        int ray_count = 0, sample_count = 0;
 
-        while (true)
+        Counter ray_count = 0, sample_count = 0;
+
+        while (!stop && paintbrush->next_pixel(ray_count, sample_count, &x, &y))
         {
-                while (!stop && paintbrush->next_pixel(ray_count, sample_count, &x, &y))
+                painter_notifier->painter_pixel_before(x, y);
+
+                vec2 screen_point(x, y);
+
+                sampler.generate(random_engine, samples);
+
+                ray_count = 0;
+                sample_count = samples->size();
+
+                vec3 color(0);
+
+                for (const vec2& sample_point : *samples)
                 {
-                        painter_notifier->painter_pixel_before(x, y);
+                        constexpr int recursion_level = 0;
+                        constexpr double color_level = 1;
+                        constexpr bool diffuse_reflection = false;
 
-                        Pixel& pixel = pixels->pixel_reference(x, y);
+                        ray3 ray = projector.ray(screen_point + sample_point);
 
-                        vec2 screen_point(x, y);
-
-                        sampler.generate(random_engine, &samples);
-
-                        ray_count = 0;
-                        sample_count = samples.size();
-
-                        for (const vec2& sample_point : samples)
-                        {
-                                constexpr int recursion_level = 0;
-                                constexpr double color_level = 1;
-                                constexpr bool diffuse_reflection = false;
-
-                                ray3 ray = projector.ray(screen_point + sample_point);
-
-                                vec3 color = trace_path(paint_data, &ray_count, random_engine, recursion_level, color_level, ray,
-                                                        diffuse_reflection);
-
-                                pixel.add_color(color);
-                        }
-
-                        pixel.add_rays(samples.size());
-
-                        painter_notifier->painter_pixel_after(x, y, rgb_float_to_srgb_integer(pixel.color()));
+                        color += trace_path(paint_data, ray_count, random_engine, recursion_level, color_level, ray,
+                                            diffuse_reflection);
                 }
 
-                barrier.wait();
-                if (stop)
-                {
-                        return;
-                }
+                vec3 pixel_color = pixels->add_color_and_samples(x, y, color, samples->size());
 
-                if (thread_number == 0)
-                {
-                        paintbrush->next_pass();
-                }
-
-                barrier.wait();
-                if (stop)
-                {
-                        return;
-                }
+                painter_notifier->painter_pixel_after(x, y, rgb_float_to_srgb_integer(pixel_color));
         }
 }
 
@@ -381,8 +375,32 @@ void work_thread(unsigned thread_number, ThreadBarrier& barrier, std::atomic_boo
         {
                 try
                 {
-                        paint_pixels(thread_number, barrier, stop, projector, paint_data, painter_notifier, paintbrush, sampler,
-                                     pixels);
+                        RandomEngineWithSeed<PainterRandomEngine> random_engine;
+
+                        std::vector<vec2> samples;
+
+                        while (true)
+                        {
+                                paint_pixels(random_engine, &samples, stop, projector, paint_data, painter_notifier, paintbrush,
+                                             sampler, pixels);
+
+                                barrier.wait();
+                                if (stop)
+                                {
+                                        return;
+                                }
+
+                                if (thread_number == 0)
+                                {
+                                        paintbrush->next_pass();
+                                }
+
+                                barrier.wait();
+                                if (stop)
+                                {
+                                        return;
+                                }
+                        }
                 }
                 catch (std::exception& e)
                 {
@@ -403,23 +421,30 @@ void work_thread(unsigned thread_number, ThreadBarrier& barrier, std::atomic_boo
         }
 }
 
-void paint_threads(IPainterNotifier* painter_notifier, int samples_per_pixel, const PaintObjects& paint_objects,
-                   Paintbrush* paintbrush, unsigned thread_count, std::atomic_bool* stop)
-
+void check_thread_count(int thread_count)
 {
         if (thread_count < 1)
         {
                 error("Painter thread count (" + to_string(thread_count) + ") must be greater than 0");
         }
+}
 
-        if (paintbrush->painting_width() != paint_objects.projector().screen_width() ||
-            paintbrush->painting_height() != paint_objects.projector().screen_height())
+void check_paintbrush_projector(const Paintbrush& paintbrush, const Projector& projector)
+{
+        if (paintbrush.painting_width() != projector.screen_width() || paintbrush.painting_height() != projector.screen_height())
         {
-                error("The paintbrush width and height (" + to_string(paintbrush->painting_width()) + ", " +
-                      to_string(paintbrush->painting_height()) + ") are not equal to the projector width and height (" +
-                      to_string(paint_objects.projector().screen_width()) + ", " +
-                      to_string(paint_objects.projector().screen_height()) + ")");
+                error("The paintbrush width and height (" + to_string(paintbrush.painting_width()) + ", " +
+                      to_string(paintbrush.painting_height()) + ") are not equal to the projector width and height (" +
+                      to_string(projector.screen_width()) + ", " + to_string(projector.screen_height()) + ")");
         }
+}
+
+void paint_threads(IPainterNotifier* painter_notifier, int samples_per_pixel, const PaintObjects& paint_objects,
+                   Paintbrush* paintbrush, int thread_count, std::atomic_bool* stop)
+
+{
+        check_thread_count(thread_count);
+        check_paintbrush_projector(*paintbrush, paint_objects.projector());
 
         const PainterSampler sampler(samples_per_pixel);
 
@@ -430,6 +455,8 @@ void paint_threads(IPainterNotifier* painter_notifier, int samples_per_pixel, co
 
         ThreadBarrier barrier(thread_count);
         std::vector<std::thread> threads(thread_count);
+
+        paintbrush->first_pass();
 
         for (unsigned i = 0; i < threads.size(); ++i)
         {
@@ -448,7 +475,7 @@ void paint_threads(IPainterNotifier* painter_notifier, int samples_per_pixel, co
 
 // Без выдачи исключений. Про проблемы сообщать через painter_notifier.
 void paint(IPainterNotifier* painter_notifier, int samples_per_pixel, const PaintObjects& paint_objects, Paintbrush* paintbrush,
-           unsigned thread_count, std::atomic_bool* stop) noexcept
+           int thread_count, std::atomic_bool* stop) noexcept
 {
         try
         {

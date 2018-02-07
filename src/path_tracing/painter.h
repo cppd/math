@@ -19,10 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "objects.h"
 
-#include "com/thread.h"
-#include "com/vec.h"
-
 #include <array>
+#include <atomic>
 #include <string>
 
 struct IPainterNotifier
@@ -39,4 +37,4 @@ public:
 };
 
 void paint(IPainterNotifier* painter_notifier, int samples_per_pixel, const PaintObjects& paint_objects, Paintbrush* paintbrush,
-           unsigned thread_count, std::atomic_bool* stop) noexcept;
+           int thread_count, std::atomic_bool* stop) noexcept;
