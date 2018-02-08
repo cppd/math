@@ -22,7 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "obj/obj_file_load.h"
 #include "path_tracing/lights/light_source.h"
 #include "path_tracing/projectors/projector.h"
-#include "path_tracing/samplers/sampler.h"
 #include "path_tracing/visible_shapes.h"
 
 namespace

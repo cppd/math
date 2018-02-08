@@ -19,7 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "path_tracing/lights/light_source.h"
 #include "path_tracing/projectors/projector.h"
-#include "path_tracing/samplers/sampler.h"
 #include "path_tracing/scenes.h"
 #include "ui/painter_window/painter_window.h"
 #include "ui/support/support.h"

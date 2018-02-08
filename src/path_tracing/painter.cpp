@@ -19,8 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "constants.h"
 #include "objects.h"
-#include "path_tracing/random/sphere_vector.h"
-#include "path_tracing/samplers/sampler.h"
+#include "path_tracing/sampling/sampler.h"
+#include "path_tracing/sampling/sphere.h"
 #include "path_tracing/space/ray_intersection.h"
 
 #include "com/color/colors.h"

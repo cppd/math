@@ -15,14 +15,14 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "test_sphere_vector.h"
+#include "test_sphere.h"
 
 #include "com/error.h"
 #include "com/log.h"
 #include "com/random/engine.h"
 #include "com/random/vector.h"
 #include "com/time.h"
-#include "path_tracing/random/sphere_vector.h"
+#include "path_tracing/sampling/sphere.h"
 
 #include <map>
 
@@ -147,7 +147,7 @@ void test_speed(int count)
 }
 
 template <size_t N, typename T, typename RandomEngine>
-void test_cosine_hemisphere_vector(int count, T discrepancy_limit)
+void test_cosine_hemisphere(int count, T discrepancy_limit)
 {
         LOG("Test in " + to_string(N) + "D, " + to_string_digit_groups(count) + ", " + type_name<T>());
 
@@ -157,25 +157,25 @@ void test_cosine_hemisphere_vector(int count, T discrepancy_limit)
 }
 
 template <typename T, typename RandomEngine>
-void test_cosine_hemisphere_vector(int count, T discrepancy_limit)
+void test_cosine_hemisphere(int count, T discrepancy_limit)
 {
-        test_cosine_hemisphere_vector<3, T, RandomEngine>(count, discrepancy_limit);
+        test_cosine_hemisphere<3, T, RandomEngine>(count, discrepancy_limit);
         LOG("");
-        test_cosine_hemisphere_vector<4, T, RandomEngine>(count, discrepancy_limit);
+        test_cosine_hemisphere<4, T, RandomEngine>(count, discrepancy_limit);
         LOG("");
-        test_cosine_hemisphere_vector<5, T, RandomEngine>(count, discrepancy_limit);
+        test_cosine_hemisphere<5, T, RandomEngine>(count, discrepancy_limit);
         LOG("");
-        test_cosine_hemisphere_vector<6, T, RandomEngine>(count, discrepancy_limit);
+        test_cosine_hemisphere<6, T, RandomEngine>(count, discrepancy_limit);
         LOG("");
-        test_cosine_hemisphere_vector<7, T, RandomEngine>(count, discrepancy_limit);
+        test_cosine_hemisphere<7, T, RandomEngine>(count, discrepancy_limit);
         LOG("");
-        test_cosine_hemisphere_vector<8, T, RandomEngine>(count, discrepancy_limit);
+        test_cosine_hemisphere<8, T, RandomEngine>(count, discrepancy_limit);
         LOG("");
-        test_cosine_hemisphere_vector<9, T, RandomEngine>(count, discrepancy_limit);
+        test_cosine_hemisphere<9, T, RandomEngine>(count, discrepancy_limit);
 }
 }
 
-void test_sphere_vector()
+void test_cosine_hemisphere()
 {
-        test_cosine_hemisphere_vector<double, std::mt19937_64>(10'000'000, 0.02);
+        test_cosine_hemisphere<double, std::mt19937_64>(10'000'000, 0.02);
 }

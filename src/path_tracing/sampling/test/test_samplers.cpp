@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/print.h"
 #include "com/random/engine.h"
 #include "com/time.h"
-#include "path_tracing/samplers/sampler.h"
+#include "path_tracing/sampling/sampler.h"
 
 #include <fstream>
 
