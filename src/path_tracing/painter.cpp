@@ -242,7 +242,7 @@ vec3 diffuse_lighting(const PaintData& paint_data, Counter& ray_count, PainterRa
                 // Распределение случайного луча с вероятностью по косинусу угла между нормалью и случайным вектором.
 
                 // Случайный вектор диффузного освещения надо определять от видимой нормали.
-                ray3 diffuse_ray = ray3(point, random_cosine_hemisphere_any_length(random_engine, shading_normal));
+                ray3 diffuse_ray = ray3(point, random_cosine_weighted_on_hemisphere(random_engine, shading_normal));
 
                 if (triangle_mesh && dot(diffuse_ray.get_dir(), geometric_normal) < EPSILON_DOUBLE)
                 {

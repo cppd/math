@@ -34,6 +34,17 @@ T cos_to_angle(T cosine)
         return std::acos(cosine) / static_cast<T>(PI) * 180;
 }
 
+template <size_t N, typename T>
+T component_sum(const Vector<N, T>& v)
+{
+        T sum = 0;
+        for (unsigned i = 0; i < N; ++i)
+        {
+                sum += v[i];
+        }
+        return sum;
+}
+
 template <typename Map>
 void normalize(Map* map)
 {
@@ -52,25 +63,23 @@ void normalize(Map* map)
         }
 }
 
-template <typename T, typename RandomEngine>
-void test_distribution()
+template <size_t N, typename T, typename RandomEngine>
+void test_distribution(int count, T discrepancy_limit)
 {
         LOG("Test Distribution...");
 
         constexpr T DISCRETIZATION = 100;
-        constexpr int SAMPLE_COUNT = 10'000'000;
-        constexpr T DISCREPANCY_LIMIT = 0.01;
 
         RandomEngineWithSeed<RandomEngine> random_engine;
 
         std::map<T, T, std::greater<T>> buckets;
 
         std::uniform_real_distribution<T> urd(-1, 1);
-        Vector<3, T> normal = normalize(random_vector<3, T>(random_engine, urd));
+        Vector<N, T> normal = normalize(random_vector<N, T>(random_engine, urd));
 
-        for (int i = 0; i < SAMPLE_COUNT; ++i)
+        for (int i = 0; i < count; ++i)
         {
-                Vector<3, T> random_vector = normalize(random_cosine_hemisphere_any_length(random_engine, normal));
+                Vector<N, T> random_vector = normalize(random_cosine_weighted_on_hemisphere(random_engine, normal));
 
                 T cosine;
 
@@ -100,54 +109,73 @@ void test_distribution()
         {
                 T discrepancy = std::abs(value - cosine);
 
-                if (discrepancy > DISCREPANCY_LIMIT)
+                if (discrepancy > discrepancy_limit)
                 {
                         LOG("angle = " + to_string(cos_to_angle(cosine), 5) + ", cos = " + to_string(cosine, 5) +
-                            ", value = " + to_string(value, 5) + ", " + to_string(discrepancy, 5));
+                            ", value = " + to_string(value, 5) + ", d = " + to_string(discrepancy, 5));
 
                         error("Huge discrepancy");
                 }
         }
 }
 
-template <typename T, typename RandomEngine>
-void test_speed()
+template <size_t N, typename T, typename RandomEngine>
+void test_speed(int count)
 {
         LOG("Test Speed...");
-
-        constexpr int COUNT = 10'000'000;
 
         RandomEngineWithSeed<RandomEngine> random_engine;
 
         std::uniform_real_distribution<T> urd(-1, 1);
 
-        std::vector<Vector<3, T>> data;
-        for (int i = 0; i < COUNT; ++i)
+        std::vector<Vector<N, T>> data;
+        for (int i = 0; i < count; ++i)
         {
-                data.push_back(normalize(random_vector<3, T>(random_engine, urd)));
+                data.push_back(normalize(random_vector<N, T>(random_engine, urd)));
         }
 
         double start_time = time_in_seconds();
 
-        // Сумма для того, чтобы избежать оптимизаций компилятора из-за неиспользуемого значения функции.
-        Vector<3, T> sum(0);
-        for (const Vector<3, T>& n : data)
+        // Сумма для того, чтобы избежать оптимизаций компилятора из-за неиспользуемого значения функции
+        Vector<N, T> sum(0);
+        for (const Vector<N, T>& n : data)
         {
-                sum += random_cosine_hemisphere_any_length(random_engine, n);
+                sum += random_cosine_weighted_on_hemisphere(random_engine, n);
         }
 
-        LOG("Time = " + to_string_fixed(time_in_seconds() - start_time, 5) + " seconds, sum = " + to_string(sum));
+        LOG("Time = " + to_string_fixed(time_in_seconds() - start_time, 5) + " seconds, sum = " + to_string(component_sum(sum)));
+}
+
+template <size_t N, typename T, typename RandomEngine>
+void test_cosine_hemisphere_vector(int count, T discrepancy_limit)
+{
+        LOG("Test in " + to_string(N) + "D, " + to_string_digit_groups(count) + ", " + type_name<T>());
+
+        test_distribution<N, T, RandomEngine>(count, discrepancy_limit);
+
+        test_speed<N, T, RandomEngine>(count);
 }
 
 template <typename T, typename RandomEngine>
-void test_sphere_vector()
+void test_cosine_hemisphere_vector(int count, T discrepancy_limit)
 {
-        test_distribution<T, RandomEngine>();
-        test_speed<T, RandomEngine>();
+        test_cosine_hemisphere_vector<3, T, RandomEngine>(count, discrepancy_limit);
+        LOG("");
+        test_cosine_hemisphere_vector<4, T, RandomEngine>(count, discrepancy_limit);
+        LOG("");
+        test_cosine_hemisphere_vector<5, T, RandomEngine>(count, discrepancy_limit);
+        LOG("");
+        test_cosine_hemisphere_vector<6, T, RandomEngine>(count, discrepancy_limit);
+        LOG("");
+        test_cosine_hemisphere_vector<7, T, RandomEngine>(count, discrepancy_limit);
+        LOG("");
+        test_cosine_hemisphere_vector<8, T, RandomEngine>(count, discrepancy_limit);
+        LOG("");
+        test_cosine_hemisphere_vector<9, T, RandomEngine>(count, discrepancy_limit);
 }
 }
 
 void test_sphere_vector()
 {
-        test_sphere_vector<double, std::mt19937_64>();
+        test_cosine_hemisphere_vector<double, std::mt19937_64>(10'000'000, 0.02);
 }
