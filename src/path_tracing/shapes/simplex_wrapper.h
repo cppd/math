@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -17,8 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "com/error.h"
-#include "path_tracing/space/shape_intersection.h"
+#include "com/ray.h"
+#include "com/vec.h"
+
+#include <array>
+#include <type_traits>
 
 // Для функций shape_intersection при построении дерева (октадерево и т.п.), а также для самого
 // дерева нужны функции intersect, inside (если объект имеет объём), vertices и vertex_ridges.
@@ -26,7 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 // (N-1)-симплекс
 template <typename Simplex>
-class SimplexWrapperForShapeIntersection final
+class SimplexWrapperForShapeIntersection
 {
         static constexpr size_t N = Simplex::DIMENSION;
         using T = typename Simplex::DataType;

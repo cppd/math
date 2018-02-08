@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -21,10 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/ray.h"
 #include "com/vec.h"
-#include "path_tracing/objects.h"
-#include "path_tracing/space/shape_intersection.h"
 
-class TableTriangle final : public GeometricObject
+class MeshTriangle
 {
         const vec3* m_vertices;
         const vec3* m_normals;
@@ -45,21 +43,22 @@ class TableTriangle final : public GeometricObject
                 USE_NORMALS,
                 NEGATE_NORMALS
         } m_normal_type;
+
         bool m_negate_normal_0, m_negate_normal_1, m_negate_normal_2;
 
 public:
         static constexpr size_t DIMENSION = 3;
         using DataType = double;
 
-        TableTriangle(const vec3* points, const vec3* normals, const vec2* texcoords, int v1, int v2, int v3, bool has_normals,
-                      int n1, int n2, int n3, bool has_texcoords, int t1, int t2, int t3, int material);
+        MeshTriangle(const vec3* points, const vec3* normals, const vec2* texcoords, int v1, int v2, int v3, bool has_normals,
+                     int n1, int n2, int n3, bool has_texcoords, int t1, int t2, int t3, int material);
 
-        int get_material() const;
+        int material() const;
 
         bool has_texcoord() const;
         vec2 texcoord(const vec3& point) const;
 
-        bool intersect(const ray3& r, double* t) const override;
+        bool intersect(const ray3& r, double* t) const;
 
         vec3 geometric_normal() const;
         vec3 shading_normal(const vec3& point) const;

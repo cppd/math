@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -22,14 +22,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/mat.h"
 #include "obj/obj.h"
 #include "path_tracing/image/image.h"
-#include "path_tracing/objects.h"
 #include "path_tracing/space/parallelotope_ortho.h"
 #include "path_tracing/space/tree.h"
 #include "progress/progress.h"
 
 #include <optional>
 
-class Mesh final
+class Mesh
 {
         using OctreeParallelepiped = ParallelotopeOrtho<3, double>;
 
@@ -49,7 +48,7 @@ class Mesh final
         std::vector<Material> m_materials;
         std::vector<Image> m_images;
 
-        std::vector<TableTriangle> m_triangles;
+        std::vector<MeshTriangle> m_triangles;
 
         SpatialSubdivisionTree<OctreeParallelepiped> m_octree;
 
@@ -68,10 +67,10 @@ public:
         Mesh& operator=(Mesh&&) = delete;
 
         bool intersect_approximate(const ray3& r, double* t) const;
-        bool intersect_precise(const ray3&, double approximate_t, double* t, const GeometricObject** geometric_object) const;
+        bool intersect_precise(const ray3&, double approximate_t, double* t, const void** intersection_data) const;
 
-        vec3 get_geometric_normal(const GeometricObject* geometric_object) const;
-        vec3 get_shading_normal(const vec3& p, const GeometricObject* geometric_object) const;
+        vec3 get_geometric_normal(const void* intersection_data) const;
+        vec3 get_shading_normal(const vec3& p, const void* intersection_data) const;
 
-        std::optional<vec3> get_color(const vec3& p, const GeometricObject* geometric_object) const;
+        std::optional<vec3> get_color(const vec3& p, const void* intersection_data) const;
 };

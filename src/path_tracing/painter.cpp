@@ -18,7 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "painter.h"
 
 #include "constants.h"
-#include "objects.h"
 #include "path_tracing/sampling/sampler.h"
 #include "path_tracing/sampling/sphere.h"
 #include "path_tracing/space/ray_intersection.h"
@@ -120,7 +119,7 @@ bool object_is_obstacle_to_light(const GenericObject* object, const ray3& ray, d
 {
         double distance_to_object;
         const Surface* surface;
-        const GeometricObject* geometric_object;
+        const void* intersection_data;
 
         if (!object->intersect_approximate(ray, &distance_to_object))
         {
@@ -132,7 +131,7 @@ bool object_is_obstacle_to_light(const GenericObject* object, const ray3& ray, d
                 return false;
         }
 
-        if (!object->intersect_precise(ray, distance_to_object, &distance_to_object, &surface, &geometric_object))
+        if (!object->intersect_precise(ray, distance_to_object, &distance_to_object, &surface, &intersection_data))
         {
                 return false;
         }
@@ -205,8 +204,8 @@ vec3 direct_diffuse_lighting(Counter& ray_count, const std::vector<const Generic
                         // оно произошло с этой самой окрестностью точки.
                         double t;
                         const Surface* surface;
-                        const GeometricObject* geometric_object;
-                        if (ray_intersection(objects, ray_to_light, &t, &surface, &geometric_object))
+                        const void* intersection_data;
+                        if (ray_intersection(objects, ray_to_light, &t, &surface, &intersection_data))
                         {
                                 double distance_to_light_source = length(vector_to_light);
 
@@ -264,9 +263,9 @@ vec3 trace_path(const PaintData& paint_data, Counter& ray_count, PainterRandomEn
 
         const Surface* surface;
         double t;
-        const GeometricObject* geometric_object;
+        const void* intersection_data;
 
-        if (!ray_intersection(paint_data.objects, ray, &t, &surface, &geometric_object))
+        if (!ray_intersection(paint_data.objects, ray, &t, &surface, &intersection_data))
         {
                 return (paint_data.default_surface_properties.is_light_source() && diffuse_reflection) ?
                                paint_data.default_surface_properties.get_light_source_color() :
@@ -275,7 +274,7 @@ vec3 trace_path(const PaintData& paint_data, Counter& ray_count, PainterRandomEn
 
         Vector point = ray.point(t);
 
-        const SurfaceProperties surface_properties = surface->properties(point, geometric_object);
+        const SurfaceProperties surface_properties = surface->properties(point, intersection_data);
 
         vec3 geometric_normal = surface_properties.get_geometric_normal();
 

@@ -86,9 +86,9 @@ void Mesh::create_mesh_object(const IObj* obj, const mat4& vertex_matrix, unsign
 
         progress->set_text("Octree: %v of %m");
 
-        std::vector<SimplexWrapperForShapeIntersection<TableTriangle>> simplex_wrappers;
+        std::vector<SimplexWrapperForShapeIntersection<MeshTriangle>> simplex_wrappers;
         simplex_wrappers.reserve(m_triangles.size());
-        for (const TableTriangle& t : m_triangles)
+        for (const MeshTriangle& t : m_triangles)
         {
                 simplex_wrappers.emplace_back(t);
         }
@@ -117,9 +117,9 @@ bool Mesh::intersect_approximate(const ray3& r, double* t) const
         return m_octree.intersect_root(r, t);
 }
 
-bool Mesh::intersect_precise(const ray3& ray, double approximate_t, double* t, const GeometricObject** geometric_object) const
+bool Mesh::intersect_precise(const ray3& ray, double approximate_t, double* t, const void** intersection_data) const
 {
-        const TableTriangle* triangle = nullptr;
+        const MeshTriangle* triangle = nullptr;
 
         if (m_octree.trace_ray(ray, approximate_t,
                                // Пересечение луча с набором треугольников ячейки октадерева
@@ -132,7 +132,7 @@ bool Mesh::intersect_precise(const ray3& ray, double approximate_t, double* t, c
                                        return false;
                                }))
         {
-                *geometric_object = triangle;
+                *intersection_data = triangle;
                 return true;
         }
         else
@@ -141,23 +141,23 @@ bool Mesh::intersect_precise(const ray3& ray, double approximate_t, double* t, c
         }
 }
 
-vec3 Mesh::get_geometric_normal(const GeometricObject* geometric_object) const
+vec3 Mesh::get_geometric_normal(const void* intersection_data) const
 {
-        return static_cast<const TableTriangle*>(geometric_object)->geometric_normal();
+        return static_cast<const MeshTriangle*>(intersection_data)->geometric_normal();
 }
 
-vec3 Mesh::get_shading_normal(const vec3& p, const GeometricObject* geometric_object) const
+vec3 Mesh::get_shading_normal(const vec3& p, const void* intersection_data) const
 {
-        return static_cast<const TableTriangle*>(geometric_object)->shading_normal(p);
+        return static_cast<const MeshTriangle*>(intersection_data)->shading_normal(p);
 }
 
-std::optional<vec3> Mesh::get_color(const vec3& p, const GeometricObject* geometric_object) const
+std::optional<vec3> Mesh::get_color(const vec3& p, const void* intersection_data) const
 {
-        const TableTriangle* triangle = static_cast<const TableTriangle*>(geometric_object);
+        const MeshTriangle* triangle = static_cast<const MeshTriangle*>(intersection_data);
 
-        if (triangle->get_material() >= 0)
+        if (triangle->material() >= 0)
         {
-                const Material& m = m_materials[triangle->get_material()];
+                const Material& m = m_materials[triangle->material()];
 
                 if (triangle->has_texcoord() && m.map_Kd >= 0)
                 {

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -19,8 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/error.h"
 
-TableTriangle::TableTriangle(const vec3* points, const vec3* normals, const vec2* texcoords, int v0, int v1, int v2,
-                             bool has_normals, int n0, int n1, int n2, bool has_texcoords, int t0, int t1, int t2, int material)
+MeshTriangle::MeshTriangle(const vec3* points, const vec3* normals, const vec2* texcoords, int v0, int v1, int v2,
+                           bool has_normals, int n0, int n1, int n2, bool has_texcoords, int t0, int t1, int t2, int material)
 {
         ASSERT((has_normals && n0 >= 0 && n1 >= 0 && n2 >= 0) || !has_normals);
         ASSERT((has_texcoords && t0 >= 0 && t1 >= 0 && t2 >= 0) || !has_texcoords);
@@ -108,17 +108,17 @@ TableTriangle::TableTriangle(const vec3* points, const vec3* normals, const vec2
         m_negate_normal_2 = d2 < 0;
 }
 
-bool TableTriangle::intersect(const ray3& r, double* t) const
+bool MeshTriangle::intersect(const ray3& r, double* t) const
 {
         return m_geometry.intersect(r, m_vertices[m_v0], m_normal, t);
 }
 
-vec3 TableTriangle::geometric_normal() const
+vec3 MeshTriangle::geometric_normal() const
 {
         return m_normal;
 }
 
-vec3 TableTriangle::shading_normal(const vec3& point) const
+vec3 MeshTriangle::shading_normal(const vec3& point) const
 {
         switch (m_normal_type)
         {
@@ -144,12 +144,12 @@ vec3 TableTriangle::shading_normal(const vec3& point) const
         error_fatal("Unknown table triangle normal type");
 }
 
-bool TableTriangle::has_texcoord() const
+bool MeshTriangle::has_texcoord() const
 {
         return m_t0 >= 0;
 }
 
-vec2 TableTriangle::texcoord(const vec3& point) const
+vec2 MeshTriangle::texcoord(const vec3& point) const
 {
         if (has_texcoord())
         {
@@ -162,12 +162,12 @@ vec2 TableTriangle::texcoord(const vec3& point) const
         error("Table triangle texture coordinates request when there are no texture coordinates");
 }
 
-int TableTriangle::get_material() const
+int MeshTriangle::material() const
 {
         return m_material;
 }
 
-std::array<vec3, 3> TableTriangle::vertices() const
+std::array<vec3, 3> MeshTriangle::vertices() const
 {
         return {{m_vertices[m_v0], m_vertices[m_v1], m_vertices[m_v2]}};
 }

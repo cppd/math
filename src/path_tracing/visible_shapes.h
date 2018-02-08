@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -17,8 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "com/log.h"
-#include "com/print.h"
+#include "objects.h"
+
 #include "path_tracing/shapes/mesh.h"
 #include "path_tracing/shapes/rectangle.h"
 #include "path_tracing/space/parallelotope.h"
@@ -34,25 +34,24 @@ public:
         {
         }
 
-        // Интерфейс GenericObject
         bool intersect_approximate(const ray3& r, double* t) const override
         {
                 return m_rectangle.intersect(r, t);
         }
+
         bool intersect_precise(const ray3&, double approximate_t, double* t, const Surface** surface,
-                               const GeometricObject** /*geometric_object*/) const override
+                               const void** /*intersection_data*/) const override
         {
                 *t = approximate_t;
                 *surface = this;
 
-                // задавать значение для *geometric_object не нужно, так как это один объект
+                // задавать значение для *intersection_data не нужно, так как это один объект
 
                 // всегда есть пересечение, так как прошла проверка intersect_approximate
                 return true;
         }
 
-        // Интерфейс Surface
-        SurfaceProperties properties(const vec3& p, const GeometricObject* /*geometric_object*/) const override
+        SurfaceProperties properties(const vec3& p, const void* /*intersection_data*/) const override
         {
                 SurfaceProperties s = *this;
 
@@ -71,25 +70,24 @@ public:
         {
         }
 
-        // Интерфейс GenericObject
         bool intersect_approximate(const ray3& r, double* t) const override
         {
                 return m_parallelepiped.intersect(r, t);
         }
+
         bool intersect_precise(const ray3&, double approximate_t, double* t, const Surface** surface,
-                               const GeometricObject** /*geometric_object*/) const override
+                               const void** /*intersection_data*/) const override
         {
                 *t = approximate_t;
                 *surface = this;
 
-                // задавать значение для *geometric_object не нужно, так как это один объект
+                // задавать значение для *intersection_data не нужно, так как это один объект
 
                 // всегда есть пересечение, так как прошла проверка intersect_approximate
                 return true;
         }
 
-        // Интерфейс Surface
-        SurfaceProperties properties(const vec3& p, const GeometricObject* /*geometric_object*/) const override
+        SurfaceProperties properties(const vec3& p, const void* /*intersection_data*/) const override
         {
                 SurfaceProperties s = *this;
 
@@ -108,15 +106,15 @@ public:
         {
         }
 
-        // Интерфейс GenericObject
         bool intersect_approximate(const ray3& r, double* t) const override
         {
                 return m_mesh->intersect_approximate(r, t);
         }
+
         bool intersect_precise(const ray3& ray, double approximate_t, double* t, const Surface** surface,
-                               const GeometricObject** geometric_object) const override
+                               const void** intersection_data) const override
         {
-                if (m_mesh->intersect_precise(ray, approximate_t, t, geometric_object))
+                if (m_mesh->intersect_precise(ray, approximate_t, t, intersection_data))
                 {
                         *surface = this;
                         return true;
@@ -127,16 +125,15 @@ public:
                 }
         }
 
-        // Интерфейс Surface
-        SurfaceProperties properties(const vec3& p, const GeometricObject* geometric_object) const override
+        SurfaceProperties properties(const vec3& p, const void* intersection_data) const override
         {
                 SurfaceProperties s = *this;
 
-                s.set_geometric_normal(m_mesh->get_geometric_normal(geometric_object));
-                s.set_shading_normal(m_mesh->get_shading_normal(p, geometric_object));
+                s.set_geometric_normal(m_mesh->get_geometric_normal(intersection_data));
+                s.set_shading_normal(m_mesh->get_shading_normal(p, intersection_data));
                 s.set_triangle_mesh(true);
 
-                if (std::optional<vec3> color = m_mesh->get_color(p, geometric_object))
+                if (std::optional<vec3> color = m_mesh->get_color(p, intersection_data))
                 {
                         s.set_color(color.value());
                 }

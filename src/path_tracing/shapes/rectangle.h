@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -21,10 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/ray.h"
 #include "com/vec.h"
-#include "path_tracing/objects.h"
-#include "path_tracing/space/shape_intersection.h"
 
-class Rectangle final : public GeometricObject
+class Rectangle
 {
         vec3 m_org, m_e0, m_e1;
         vec3 m_normal;
@@ -36,7 +34,7 @@ public:
         Rectangle(const vec3& org, const vec3& e0, const vec3& e1);
         void set_data(const vec3& org, const vec3& e0, const vec3& e1);
 
-        bool intersect(const ray3& r, double* t) const override;
+        bool intersect(const ray3& r, double* t) const;
 
         vec3 normal(const vec3& point) const;
 

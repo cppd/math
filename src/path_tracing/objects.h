@@ -20,7 +20,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/ray.h"
 #include "com/vec.h"
 
-#include <random>
 #include <vector>
 
 // Свойства поверхности в точке.
@@ -137,83 +136,45 @@ public:
         }
 };
 
-// Простой геометрический объект типа треугольника, сферы и т.п.
-class GeometricObject
-{
-protected:
-        virtual ~GeometricObject() = default;
-
-public:
-        virtual bool intersect(const ray3& r, double* t) const = 0;
-
-        GeometricObject() = default;
-        GeometricObject(const GeometricObject&) = default;
-        GeometricObject(GeometricObject&&) = default;
-        GeometricObject& operator=(const GeometricObject&) = default;
-        GeometricObject& operator=(GeometricObject&&) = default;
-};
-
-// Свойства поверхности надо находить только для ближайшей точки персечения, поэтому свойства
-// определяются не сразу, а через этот интерфейс.
+// Свойства поверхности надо находить только для ближайшей точки персечения,
+// поэтому свойства определяются не сразу, а через этот интерфейс.
 class Surface
 {
 protected:
         virtual ~Surface() = default;
 
 public:
-        virtual SurfaceProperties properties(const vec3& p, const GeometricObject* geometric_object) const = 0;
-
-        Surface() = default;
-        Surface(const Surface&) = default;
-        Surface(Surface&&) = default;
-        Surface& operator=(const Surface&) = default;
-        Surface& operator=(Surface&&) = default;
+        virtual SurfaceProperties properties(const vec3& p, const void* intersection_data) const = 0;
 };
 
-// Общий объект вроде геометрического объекта или структуры из объектов (например, октадерева),
-// элементами которой могут быть геометрические объекты или другие структуры из объектов.
-class GenericObject
+// Один объект или структура из объектов, элементами которой
+// могут быть объекты или структуры из объектов и т.д.
+struct GenericObject
 {
-protected:
         virtual ~GenericObject() = default;
 
-public:
         // Для случая структуры из объектов это пересечение луча с границей структуры.
-        // Для случая геометрического объекта это пересечение луча с самим объектом.
+        // Для случая одного объекта это пересечение луча с самим объектом.
         virtual bool intersect_approximate(const ray3& r, double* t) const = 0;
 
-        // Для случая структуры из объектов это пересечение луча с геометрическим объектом.
-        // Для случая геометрического объекта это будет пересечение луча с самим объектом,
+        // Для случая структуры из объектов это пересечение луча с объектом.
+        // Для случая одного объекта это пересечение луча с самим объектом,
         // уже полученное функцией intersect_approximate.
         virtual bool intersect_precise(const ray3&, double approximate_t, double* t, const Surface** surface,
-                                       const GeometricObject** geometric_object) const = 0;
-
-        GenericObject() = default;
-        GenericObject(const GenericObject&) = default;
-        GenericObject(GenericObject&&) = default;
-        GenericObject& operator=(const GenericObject&) = default;
-        GenericObject& operator=(GenericObject&&) = default;
+                                       const void** intersection_data) const = 0;
 };
 
 // Источник света, не являющийся видимым объектом.
-class LightSource
+struct LightSource
 {
-public:
         virtual ~LightSource() = default;
 
         virtual void properties(const vec3& point, vec3* color, vec3* vector_from_point_to_light) const = 0;
-
-        LightSource() = default;
-        LightSource(const LightSource&) = default;
-        LightSource(LightSource&&) = default;
-        LightSource& operator=(const LightSource&) = default;
-        LightSource& operator=(LightSource&&) = default;
 };
 
 // Преобразование точки на экране в луч в трёхмерном пространстве.
-class Projector
+struct Projector
 {
-public:
         virtual ~Projector() = default;
 
         // Ширина экрана в пикселях
@@ -223,21 +184,13 @@ public:
 
         // Для точки на экране луч в трёхмерном пространстве
         virtual ray3 ray(const vec2& point) const = 0;
-
-        Projector() = default;
-        Projector(const Projector&) = default;
-        Projector(Projector&&) = default;
-        Projector& operator=(const Projector&) = default;
-        Projector& operator=(Projector&&) = default;
 };
 
 // Последовательность пикселов для рисования.
-class Paintbrush
+struct Paintbrush
 {
-protected:
         virtual ~Paintbrush() = default;
 
-public:
         virtual void first_pass() noexcept = 0;
         virtual bool next_pixel(int previous_pixel_ray_count, int previous_pixel_sample_count, int* x, int* y) noexcept = 0;
         virtual void next_pass() noexcept = 0;
@@ -247,22 +200,17 @@ public:
 
         virtual void statistics(long long* pass_count, long long* pixel_count, long long* ray_count, long long* sample_count,
                                 double* previous_pass_duration) const noexcept = 0;
-
-        Paintbrush() = default;
-        Paintbrush(const Paintbrush&) = default;
-        Paintbrush(Paintbrush&&) = default;
-        Paintbrush& operator=(const Paintbrush&) = default;
-        Paintbrush& operator=(Paintbrush&&) = default;
 };
 
-// Объекты для рисования
-class PaintObjects
+// Объекты для рисования.
+struct PaintObjects
 {
-public:
         virtual ~PaintObjects() = default;
 
         virtual const std::vector<const GenericObject*>& objects() const = 0;
         virtual const std::vector<const LightSource*>& light_sources() const = 0;
+
         virtual const Projector& projector() const = 0;
+
         virtual const SurfaceProperties& default_surface_properties() const = 0;
 };
