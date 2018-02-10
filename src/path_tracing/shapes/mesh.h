@@ -46,7 +46,7 @@ class Mesh
                 }
         };
         std::vector<Material> m_materials;
-        std::vector<Image> m_images;
+        std::vector<Image<2>> m_images;
 
         std::vector<MeshTriangle> m_triangles;
 

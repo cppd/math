@@ -81,7 +81,7 @@ void Mesh::create_mesh_object(const IObj* obj, const mat4& vertex_matrix, unsign
         m_images.reserve(obj->images().size());
         for (const IObj::Image& image : obj->images())
         {
-                m_images.emplace_back(image.dimensions[0], image.dimensions[1], image.srgba_pixels);
+                m_images.emplace_back(std::array<int, 2>{{image.dimensions[0], image.dimensions[1]}}, image.srgba_pixels);
         }
 
         progress->set_text("Octree: %v of %m");
@@ -161,7 +161,7 @@ std::optional<vec3> Mesh::get_color(const vec3& p, const void* intersection_data
 
                 if (triangle->has_texcoord() && m.map_Kd >= 0)
                 {
-                        return m_images[m.map_Kd].get_texture(triangle->texcoord(p));
+                        return m_images[m.map_Kd].texture(triangle->texcoord(p));
                 }
                 else
                 {

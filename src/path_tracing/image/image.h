@@ -22,38 +22,42 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <vector>
 
+template <size_t N>
 class Image
 {
         std::vector<vec3> m_data;
 
+        std::array<int, N> m_size;
+        std::array<int, N> m_max;
+        std::array<int, N> m_max_0;
         // тип long long вместо int нужен для умножений
-        long long m_width, m_height;
-        double m_max_x, m_max_y;
-        int m_max_x0, m_max_y0;
+        std::array<long long, N> m_strides;
+        std::array<long long, 1 << N> m_pixel_offsets;
 
-        void read_from_srgba_pixels(int width, int height, const unsigned char* srgba_pixels);
+        long long pixel_index(const std::array<int, N>& p) const;
+
+        void read_from_srgba_pixels(const std::array<int, N>& size, const unsigned char* srgba_pixels);
 
 public:
-        Image(int width, int height);
+        Image(const std::array<int, N>& size);
 
-        Image(int width, int height, const std::vector<unsigned char>& srgba_pixels);
+        Image(const std::array<int, N>& size, const std::vector<unsigned char>& srgba_pixels);
 
-        void resize(int width, int height);
-
-        int width() const;
-        int height() const;
+        void resize(const std::array<int, N>& size);
 
         bool empty() const;
 
         void clear(const vec3& color = vec3(0));
 
-        void set_pixel(int x, int y, const vec3& color);
-        const vec3& get_pixel(int x, int y) const;
+        template <typename T>
+        vec3 texture(const Vector<N, T>& p) const;
 
-        vec3 get_texture(const vec2& p) const;
+        template <size_t X = N>
+        std::enable_if_t<X == 2> read_from_file(const std::string& file_name);
 
-        void read_from_file(const std::string& file_name);
-        void write_to_file(const std::string& file_name) const;
+        template <size_t X = N>
+        std::enable_if_t<X == 2> write_to_file(const std::string& file_name) const;
 
-        void flip_vertically();
+        template <size_t X = N>
+        std::enable_if_t<X == 2> flip_vertically();
 };

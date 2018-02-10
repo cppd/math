@@ -114,7 +114,7 @@ constexpr bool is_finite(__float128 v)
 }
 
 template <typename T>
-constexpr T interpolation(T v0, T v1, T x)
+T interpolation(T v0, T v1, T x)
 {
         static_assert(is_native_floating_point<T>);
 

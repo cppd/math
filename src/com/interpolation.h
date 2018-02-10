@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -19,46 +19,97 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "math.h"
 
+#include <array>
+
 template <typename T, typename F>
-constexpr T interpolation(T c00, T c10, T c01, T c11, F x, F y)
+T interpolation(const T& c00, const T& c10, const T& c01, const T& c11, const F& x, const F& y)
 {
-        T y0 = interpolation(c00, c10, x);
-        T y1 = interpolation(c01, c11, x);
-        T r = interpolation(y0, y1, y);
-        return r;
+        T t0 = interpolation(c00, c10, x);
+        T t1 = interpolation(c01, c11, x);
+        return interpolation(t0, t1, y);
 }
 
 template <typename T, typename F>
-constexpr T interpolation(T c000, T c100, T c010, T c110, T c001, T c101, T c011, T c111, F x, F y, F z)
+T interpolation(const T& c000, const T& c100, const T& c010, const T& c110, const T& c001, const T& c101, const T& c011,
+                const T& c111, const F& x, const F& y, const F& z)
 {
-        T y0z0 = interpolation(c000, c100, x);
-        T y1z0 = interpolation(c010, c110, x);
-        T y0z1 = interpolation(c001, c101, x);
-        T y1z1 = interpolation(c011, c111, x);
-        T z0 = interpolation(y0z0, y1z0, y);
-        T z1 = interpolation(y0z1, y1z1, y);
-        T r = interpolation(z0, z1, z);
-        return r;
+        T t0 = interpolation(c000, c100, x);
+        T t1 = interpolation(c010, c110, x);
+        T t2 = interpolation(c001, c101, x);
+        T t3 = interpolation(c011, c111, x);
+        return interpolation(t0, t1, t2, t3, y, z);
 }
 
 template <typename T, typename F>
-constexpr T interpolation(T c0000, T c1000, T c0100, T c1100, T c0010, T c1010, T c0110, T c1110, T c0001, T c1001, T c0101,
-                          T c1101, T c0011, T c1011, T c0111, T c1111, F x, F y, F z, F w)
+T interpolation(const T& c0000, const T& c1000, const T& c0100, const T& c1100, const T& c0010, const T& c1010, const T& c0110,
+                const T& c1110, const T& c0001, const T& c1001, const T& c0101, const T& c1101, const T& c0011, const T& c1011,
+                const T& c0111, const T& c1111, const F& x, const F& y, const F& z, const F& w)
 {
-        T y0z0w0 = interpolation(c0000, c1000, x);
-        T y1z0w0 = interpolation(c0100, c1100, x);
-        T y0z1w0 = interpolation(c0010, c1010, x);
-        T y1z1w0 = interpolation(c0110, c1110, x);
-        T y0z0w1 = interpolation(c0001, c1001, x);
-        T y1z0w1 = interpolation(c0101, c1101, x);
-        T y0z1w1 = interpolation(c0011, c1011, x);
-        T y1z1w1 = interpolation(c0111, c1111, x);
-        T z0w0 = interpolation(y0z0w0, y1z0w0, y);
-        T z1w0 = interpolation(y0z1w0, y1z1w0, y);
-        T z0w1 = interpolation(y0z0w1, y1z0w1, y);
-        T z1w1 = interpolation(y0z1w1, y1z1w1, y);
-        T w0 = interpolation(z0w0, z1w0, z);
-        T w1 = interpolation(z0w1, z1w1, z);
-        T r = interpolation(w0, w1, w);
-        return r;
+        T t0 = interpolation(c0000, c1000, x);
+        T t1 = interpolation(c0100, c1100, x);
+        T t2 = interpolation(c0010, c1010, x);
+        T t3 = interpolation(c0110, c1110, x);
+        T t4 = interpolation(c0001, c1001, x);
+        T t5 = interpolation(c0101, c1101, x);
+        T t6 = interpolation(c0011, c1011, x);
+        T t7 = interpolation(c0111, c1111, x);
+        return interpolation(t0, t1, t2, t3, t4, t5, t6, t7, y, z, w);
+}
+
+template <size_t N, typename T, typename P>
+T interpolation(const std::array<T, (1 << N)>& data, const std::array<P, N>& p)
+{
+        static_assert(N > 0);
+
+        if constexpr (N == 1)
+        {
+                return interpolation(data[0], data[1], p[0]);
+        }
+
+        if constexpr (N == 2)
+        {
+                T t0 = interpolation(data[0], data[1], p[0]);
+                T t1 = interpolation(data[2], data[3], p[0]);
+                return interpolation(t0, t1, p[1]);
+        }
+
+        if constexpr (N == 3)
+        {
+                T t0 = interpolation(data[0], data[1], p[0]);
+                T t1 = interpolation(data[2], data[3], p[0]);
+                T t2 = interpolation(data[4], data[5], p[0]);
+                T t3 = interpolation(data[6], data[7], p[0]);
+                return interpolation(t0, t1, t2, t3, p[1], p[2]);
+        }
+
+        if constexpr (N == 4)
+        {
+                T t0 = interpolation(data[0], data[1], p[0]);
+                T t1 = interpolation(data[2], data[3], p[0]);
+                T t2 = interpolation(data[4], data[5], p[0]);
+                T t3 = interpolation(data[6], data[7], p[0]);
+                T t4 = interpolation(data[8], data[9], p[0]);
+                T t5 = interpolation(data[10], data[11], p[0]);
+                T t6 = interpolation(data[12], data[13], p[0]);
+                T t7 = interpolation(data[14], data[15], p[0]);
+                return interpolation(t0, t1, t2, t3, t4, t5, t6, t7, p[1], p[2], p[3]);
+        }
+
+        if constexpr (N >= 5)
+        {
+                std::array<T, (data.size() >> 1)> tmp_data;
+                std::array<P, p.size() - 1> tmp_p;
+
+                for (size_t i = 0; i < data.size(); i += 2)
+                {
+                        tmp_data[i >> 1] = interpolation(data[i], data[i + 1], p[0]);
+                }
+
+                for (size_t i = 1; i < p.size(); ++i)
+                {
+                        tmp_p[i - 1] = p[i];
+                }
+
+                return interpolation(tmp_data, tmp_p);
+        }
 }
