@@ -113,12 +113,12 @@ constexpr bool is_finite(__float128 v)
         return v >= limits<__float128>::lowest() && v <= limits<__float128>::max();
 }
 
-template <typename T>
-T interpolation(T v0, T v1, T x)
+template <typename T, typename F>
+T interpolation(T v0, T v1, F x)
 {
-        static_assert(is_native_floating_point<T>);
+        static_assert(is_native_floating_point<T> && is_native_floating_point<F>);
 
-        return any_fma(x, v1, any_fma(x, -v0, v0));
+        return any_fma(static_cast<T>(x), v1, any_fma(-static_cast<T>(x), v0, v0));
 }
 
 template <unsigned Exp, typename T>

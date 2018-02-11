@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -265,8 +265,8 @@ T dot(const Vector<N, T>& a, const Vector<N, T>& b)
         return result;
 }
 
-template <size_t N, typename T>
-Vector<N, T> interpolation(const Vector<N, T>& a, const Vector<N, T>& b, T x)
+template <size_t N, typename T, typename F>
+Vector<N, T> interpolation(const Vector<N, T>& a, const Vector<N, T>& b, F x)
 {
         Vector<N, T> result;
         for (unsigned i = 0; i < N; ++i)
