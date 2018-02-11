@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -186,13 +186,13 @@ std::vector<Vector<N, float>> generate_points_sphere_with_notch(unsigned point_c
 // На входе от 0 до 2 * PI, на выходе от 0 до PI.
 double mobius_curve(double x)
 {
-        x = x / (2 * PI);
+        x = x / (2 * PI<double>);
 
         x = 2 * x - 1;
         x = std::copysign(std::pow(std::abs(x), 5), x);
         x = (x + 1) / 2;
 
-        return PI * x;
+        return PI<double> * x;
 }
 
 std::vector<Vector<3, float>> generate_points_mobius_strip(unsigned point_count)
@@ -206,7 +206,7 @@ std::vector<Vector<3, float>> generate_points_mobius_strip(unsigned point_count)
         std::mt19937_64 gen(point_count);
 
         std::uniform_real_distribution<double> urd_line(-MOBIUS_STRIP_WIDTH / 2, MOBIUS_STRIP_WIDTH / 2);
-        std::uniform_real_distribution<double> urd_alpha(0, 2 * PI);
+        std::uniform_real_distribution<double> urd_alpha(0, 2 * PI<double>);
 
         while (integer_points.size() < point_count)
         {
@@ -214,7 +214,7 @@ std::vector<Vector<3, float>> generate_points_mobius_strip(unsigned point_count)
 
                 // Случайная точка вдоль Z, вращение вокруг Y, смещение по X и вращение вокруг Z
                 vec<3> v(0, 0, urd_line(gen));
-                v = rotate_vector(vec<3>(0, 1, 0), PI / 2 - mobius_curve(alpha), v);
+                v = rotate_vector(vec<3>(0, 1, 0), PI<double> / 2 - mobius_curve(alpha), v);
                 v += vec<3>(1, 0, 0);
                 v = rotate_vector(vec<3>(0, 0, 1), alpha, v);
 

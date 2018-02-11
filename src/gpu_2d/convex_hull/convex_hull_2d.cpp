@@ -57,7 +57,7 @@ constexpr const char filter_shader[]
 // clang-format on
 
 // rad / ms
-constexpr double ANGULAR_FREQUENCY = TWO_PI * 5;
+constexpr double ANGULAR_FREQUENCY = TWO_PI<double> * 5;
 
 namespace
 {

@@ -105,7 +105,7 @@ std::vector<std::complex<double>> compute_h(int N, bool inv, double Coef)
                 // factor = (quotient mod 2) + (remainder / N).
                 double factor = (quotient & 1) + static_cast<double>(remainder) / N;
 
-                h[l] = std::polar(Coef, (inv ? -PI : PI) * factor);
+                h[l] = std::polar(Coef, (inv ? -PI<double> : PI<double>)*factor);
         }
 
         return h;
@@ -231,7 +231,7 @@ class GL2D final : public IFourierGL1, public IFourierGL2
                         const int block_cnt = get_group_count(thread_cnt, BLOCK_SIZE);
 
                         int M_2 = shared_size;
-                        FP Two_PI_Div_M = static_cast<FP>(inv ? (PI / M_2) : -(PI / M_2));
+                        FP Two_PI_Div_M = inv ? (PI<FP> / M_2) : -(PI<FP> / M_2);
 
                         for (; M_2 < N; M_2 <<= 1, Two_PI_Div_M /= 2)
                         {

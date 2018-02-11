@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -43,8 +43,8 @@ public:
                               ")");
                 }
 
-                double half_angle = width_view_angle_degrees * 0.5 / 180.0 * PI;
-                double dir_length = width * 0.5 * std::tan(0.5 * PI - half_angle);
+                double half_angle = width_view_angle_degrees * 0.5 / 180.0 * PI<double>;
+                double dir_length = width * 0.5 * std::tan(0.5 * PI<double> - half_angle);
 
                 m_org = camera_org;
                 m_dir = normalize(camera_dir) * dir_length;
@@ -128,7 +128,7 @@ public:
                            int width, int height)
                 : m_width(width), m_height(height), m_screen_org(-width * 0.5, height * 0.5)
         {
-                double half_angle = width_view_angle_degrees * 0.5 / 180.0 * PI;
+                double half_angle = width_view_angle_degrees * 0.5 / 180.0 * PI<double>;
 
                 double sin_alpha = std::sin(half_angle);
 

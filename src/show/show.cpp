@@ -51,7 +51,7 @@ constexpr double ZOOM_BASE = 1.1;
 constexpr double ZOOM_EXP_MIN = -50;
 constexpr double ZOOM_EXP_MAX = 100;
 
-constexpr double PI_DIV_180 = PI / 180;
+constexpr double PI_DIV_180 = PI<double> / 180;
 constexpr double to_radians(double angle)
 {
         return angle * PI_DIV_180;

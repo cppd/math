@@ -31,7 +31,7 @@ namespace
 template <typename T>
 T cos_to_angle(T cosine)
 {
-        return std::acos(cosine) / static_cast<T>(PI) * 180;
+        return std::acos(cosine) / PI<T> * 180;
 }
 
 template <size_t N, typename T>
