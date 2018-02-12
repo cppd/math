@@ -54,6 +54,31 @@ long long mul(const std::array<int, N>& size)
         }
         return res;
 }
+
+#if 0
+// В зависимости от типа данных и настроек компилятора, работает как в разы
+// быстрее варианта value - std::floor(value), так и в разы медленнее.
+template <typename T>
+T wrap_coordinate_repeate(T value)
+{
+        T r = value - static_cast<int>(value);
+        return (r >= 0) ? r : 1 + r;
+}
+#else
+template <typename T>
+T wrap_coordinate_repeate(T value)
+{
+        return value - std::floor(value);
+}
+#endif
+
+#if 0
+template <typename T>
+T wrap_coordinate_clamp_to_edge(T value)
+{
+        return std::clamp(value, static_cast<T>(0), static_cast<T>(1));
+}
+#endif
 }
 
 template <size_t N>
@@ -146,7 +171,7 @@ void Image<N>::clear(const vec3& color)
 template <size_t N>
 long long Image<N>::pixel_index(const std::array<int, N>& p) const
 {
-        long long index = p[0]; // p[0] * m_strides[0] == p[0]
+        long long index = p[0]; // в соответствии с равенством m_strides[0] * p[0] == p[0]
         for (unsigned i = 1; i < N; ++i)
         {
                 index += m_strides[i] * p[i];
@@ -163,18 +188,21 @@ vec3 Image<N>::texture(const Vector<N, T>& p) const
 
         for (unsigned i = 0; i < N; ++i)
         {
-                T x = std::clamp(p[i], static_cast<T>(0), static_cast<T>(1)) * m_max[i];
+                T x = wrap_coordinate_repeate(p[i]) * m_max[i];
+
                 x0[i] = static_cast<int>(x);
+
                 // Если значение x[i] равно максимуму (это целое число), то x0[i] получится
                 // неправильным, поэтому требуется корректировка для этого случая
                 x0[i] = std::min(x0[i], m_max_0[i]);
+
                 local_x[i] = x - x0[i];
         }
 
         long long index = pixel_index(x0);
 
         std::array<vec3, (1 << N)> pixels;
-        pixels[0] = m_data[index]; // index + m_pixel_offsets[0] == index
+        pixels[0] = m_data[index]; // в соответствии с равенством index + m_pixel_offsets[0] == index
         for (unsigned i = 1; i < pixels.size(); ++i)
         {
                 pixels[i] = m_data[index + m_pixel_offsets[i]];
