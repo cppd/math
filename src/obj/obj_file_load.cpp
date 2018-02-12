@@ -171,16 +171,20 @@ void read_file_lines(const std::string& file_name, T* file_data, std::vector<lon
 IObj::Image read_image_from_file(const std::string& file_name)
 {
         sf::Image image;
+
         if (!image.loadFromFile(file_name))
         {
-                error("Error open image file " + file_name);
+                error("Error load image from file " + file_name);
         }
+
+        image.flipVertically();
 
         unsigned long long buffer_size = 4ull * image.getSize().x * image.getSize().y;
 
         IObj::Image obj_image;
-        obj_image.dimensions[0] = image.getSize().x;
-        obj_image.dimensions[1] = image.getSize().y;
+
+        obj_image.size[0] = image.getSize().x;
+        obj_image.size[1] = image.getSize().y;
         obj_image.srgba_pixels.resize(buffer_size);
 
         static_assert(sizeof(decltype(*obj_image.srgba_pixels.data())) == sizeof(decltype(*image.getPixelsPtr())));

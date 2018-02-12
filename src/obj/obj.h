@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/vec.h"
 
+#include <array>
 #include <string>
 #include <vector>
 
@@ -26,9 +27,9 @@ struct IObj
 {
         struct Face
         {
-                int vertices[3];
-                int normals[3]; // -1 если нет нормали
-                int texcoords[3]; // -1 если нет текстурных координат
+                std::array<int, 3> vertices;
+                std::array<int, 3> normals; // -1 если нет нормали
+                std::array<int, 3> texcoords; // -1 если нет текстурных координат
                 int material; // -1 если нет материала
                 bool has_texcoord;
                 bool has_normal;
@@ -41,7 +42,7 @@ struct IObj
 
         struct Line
         {
-                int vertices[2];
+                std::array<int, 2> vertices;
         };
 
         struct Material
@@ -58,7 +59,7 @@ struct IObj
 
         struct Image
         {
-                int dimensions[2];
+                std::array<int, 2> size;
                 // Цветовое пространство sRGB, последовательность red, green, blue, alpha.
                 // Каждый цветовой компонент в интервале [0, 255].
                 std::vector<unsigned char> srgba_pixels;

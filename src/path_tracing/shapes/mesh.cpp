@@ -81,7 +81,7 @@ void Mesh::create_mesh_object(const IObj* obj, const mat4& vertex_matrix, unsign
         m_images.reserve(obj->images().size());
         for (const IObj::Image& image : obj->images())
         {
-                m_images.emplace_back(std::array<int, 2>{{image.dimensions[0], image.dimensions[1]}}, image.srgba_pixels);
+                m_images.emplace_back(image.size, image.srgba_pixels);
         }
 
         progress->set_text("Octree: %v of %m");

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -68,7 +68,7 @@ std::string get_extension(const std::string& file_name)
 std::string get_dir_name(const std::string& file_name)
 {
         size_t n = file_name.find_last_of(separators);
-        return (n != std::string::npos) ? file_name.substr(0, n + 1) : "./";
+        return (n != std::string::npos) ? file_name.substr(0, n) : ".";
 }
 
 std::string temp_directory()

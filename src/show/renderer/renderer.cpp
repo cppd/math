@@ -304,8 +304,7 @@ DrawObject::DrawObject(const IObj* obj, const ColorSpaceConverterToRGB& color_co
 
                 for (const IObj::Image& image : obj->images())
                 {
-                        m_textures.emplace_back(image.dimensions[0], image.dimensions[1],
-                                                integer_pixels_to_float_pixels(image.srgba_pixels));
+                        m_textures.emplace_back(image.size[0], image.size[1], integer_pixels_to_float_pixels(image.srgba_pixels));
 
                         // преобразование sRGB в RGB
                         color_converter.convert(m_textures[m_textures.size() - 1]);
