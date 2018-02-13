@@ -185,9 +185,9 @@ void PainterWindow::painter_pixel_before(int x, int y) noexcept
         mark_pixel_busy(x, y);
 }
 
-void PainterWindow::painter_pixel_after(int x, int y, std::array<unsigned char, 3> rgb) noexcept
+void PainterWindow::painter_pixel_after(int x, int y, const SrgbInteger& c) noexcept
 {
-        set_pixel(x, y, rgb[0], rgb[1], rgb[2]);
+        set_pixel(x, y, c.red, c.green, c.blue);
 }
 
 void PainterWindow::painter_error_message(const std::string& msg) noexcept

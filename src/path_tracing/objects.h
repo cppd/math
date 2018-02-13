@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "com/color/colors.h"
 #include "com/ray.h"
 #include "com/vec.h"
 
@@ -31,9 +32,9 @@ class SurfaceProperties
         // перпендикуляра по перпендикулярам в вершинах треугольников.
         vec3 m_shading_normal;
         // Цвет поверхности.
-        vec3 m_color;
+        Color m_color;
         // Если поверхность является источником света, то цвет этого источника.
-        vec3 m_light_source_color;
+        Color m_light_source_color;
         // Коэффициент для диффузного отражения и коэффициент для отражения и преломления по формулам Френеля.
         double m_diffuse;
         double m_fresnel;
@@ -47,8 +48,8 @@ class SurfaceProperties
 public:
         SurfaceProperties() = default;
 
-        SurfaceProperties(const vec3& color, const vec3& light_source_color, double diffuse, bool use_fresnel, double refraction,
-                          bool light_source)
+        SurfaceProperties(const Color& color, const Color& light_source_color, double diffuse, bool use_fresnel,
+                          double refraction, bool light_source)
                 : m_color(color),
                   m_light_source_color(light_source_color),
                   m_diffuse(diffuse),
@@ -76,20 +77,20 @@ public:
                 return m_geometric_normal;
         }
 
-        void set_color(const vec3& color)
+        void set_color(const Color& color)
         {
                 m_color = color;
         }
-        const vec3& get_color() const
+        const Color& get_color() const
         {
                 return m_color;
         }
 
-        void set_light_source_color(const vec3& light_source_color)
+        void set_light_source_color(const Color& light_source_color)
         {
                 m_light_source_color = light_source_color;
         }
-        const vec3& get_light_source_color() const
+        const Color& get_light_source_color() const
         {
                 return m_light_source_color;
         }
@@ -169,7 +170,7 @@ struct LightSource
 {
         virtual ~LightSource() = default;
 
-        virtual void properties(const vec3& point, vec3* color, vec3* vector_from_point_to_light) const = 0;
+        virtual void properties(const vec3& point, Color* color, vec3* vector_from_point_to_light) const = 0;
 };
 
 // Преобразование точки на экране в луч в трёхмерном пространстве.

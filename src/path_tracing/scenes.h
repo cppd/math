@@ -23,14 +23,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <memory>
 
 std::unique_ptr<const PaintObjects> cornell_box(int width, int height, const std::string& obj_file_name, double size,
-                                                const vec3& default_color, double diffuse, const vec3& camera_direction,
+                                                const Color& default_color, double diffuse, const vec3& camera_direction,
                                                 const vec3& camera_up);
 
 std::unique_ptr<const PaintObjects> cornell_box(int width, int height, const std::shared_ptr<const Mesh>& mesh, double size,
-                                                const vec3& default_color, double diffuse, const vec3& camera_direction,
+                                                const Color& default_color, double diffuse, const vec3& camera_direction,
                                                 const vec3& camera_up);
 
-std::unique_ptr<const PaintObjects> one_object_scene(const vec3& background_color, const vec3& default_color, double diffuse,
+std::unique_ptr<const PaintObjects> one_object_scene(const Color& background_color, const Color& default_color, double diffuse,
                                                      std::unique_ptr<const Projector>&& projector,
                                                      std::unique_ptr<const LightSource>&& light_source,
                                                      const std::shared_ptr<const Mesh>& mesh);

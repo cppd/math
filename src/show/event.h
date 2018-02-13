@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "com/color/colors.h"
 #include "com/vec.h"
 #include "obj/obj.h"
 
@@ -110,22 +111,22 @@ public:
         };
         struct set_background_color final
         {
-                vec3 background_color;
-                set_background_color(const vec3& v) : background_color(v)
+                Color background_color;
+                set_background_color(const Color& v) : background_color(v)
                 {
                 }
         };
         struct set_default_color final
         {
-                vec3 default_color;
-                set_default_color(const vec3& v) : default_color(v)
+                Color default_color;
+                set_default_color(const Color& v) : default_color(v)
                 {
                 }
         };
         struct set_wireframe_color final
         {
-                vec3 wireframe_color;
-                set_wireframe_color(const vec3& v) : wireframe_color(v)
+                Color wireframe_color;
+                set_wireframe_color(const Color& v) : wireframe_color(v)
                 {
                 }
         };

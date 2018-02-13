@@ -44,11 +44,11 @@ class Pixels
 {
         class Pixel
         {
-                vec3 m_color_sum = vec3(0);
-                double m_sample_sum = 0;
+                Color m_color_sum{0};
+                int m_sample_sum = 0;
 
         public:
-                vec3 add_color_and_samples(const vec3& color, int samples)
+                Color add_color_and_samples(const Color& color, int samples)
                 {
                         m_color_sum += color;
                         m_sample_sum += samples;
@@ -65,7 +65,7 @@ public:
         {
         }
 
-        vec3 add_color_and_samples(int x, int y, const vec3& color, double samples)
+        Color add_color_and_samples(int x, int y, const Color& color, double samples)
         {
                 return m_pixels[y * m_width + x].add_color_and_samples(color, samples);
         }
@@ -109,9 +109,9 @@ struct PaintData
         }
 };
 
-bool color_is_zero(const vec3& c)
+bool color_is_zero(const Color& c)
 {
-        return max_element(c) < MIN_COLOR_LEVEL;
+        return c.max_element() < MIN_COLOR_LEVEL;
 }
 
 // все объекты считаются непрозрачными
@@ -156,15 +156,16 @@ bool light_source_is_visible(const std::vector<const GenericObject*>& objects, c
         return true;
 }
 
-vec3 direct_diffuse_lighting(Counter& ray_count, const std::vector<const GenericObject*>& objects,
-                             const std::vector<const LightSource*> light_sources, const vec3& p, const vec3& geometric_normal,
-                             const vec3& shading_normal, bool triangle_mesh)
+Color direct_diffuse_lighting(Counter& ray_count, const std::vector<const GenericObject*>& objects,
+                              const std::vector<const LightSource*> light_sources, const vec3& p, const vec3& geometric_normal,
+                              const vec3& shading_normal, bool triangle_mesh)
 {
-        vec3 color(0);
+        Color color(0);
 
         for (const LightSource* light_source : light_sources)
         {
-                vec3 light_source_color, vector_to_light;
+                Color light_source_color;
+                vec3 vector_to_light;
 
                 light_source->properties(p, &light_source_color, &vector_to_light);
 
@@ -229,12 +230,12 @@ vec3 direct_diffuse_lighting(Counter& ray_count, const std::vector<const Generic
         return color;
 }
 
-vec3 trace_path(const PaintData& paint_data, Counter& ray_count, PainterRandomEngine& random_engine, int recursion_level,
-                double color_level, const ray3& ray, bool diffuse_reflection);
+Color trace_path(const PaintData& paint_data, Counter& ray_count, PainterRandomEngine& random_engine, int recursion_level,
+                 double color_level, const ray3& ray, bool diffuse_reflection);
 
-vec3 diffuse_lighting(const PaintData& paint_data, Counter& ray_count, PainterRandomEngine& random_engine, int recursion_level,
-                      double color_level, const vec3& point, const vec3& shading_normal, const vec3& geometric_normal,
-                      bool triangle_mesh)
+Color diffuse_lighting(const PaintData& paint_data, Counter& ray_count, PainterRandomEngine& random_engine, int recursion_level,
+                       double color_level, const vec3& point, const vec3& shading_normal, const vec3& geometric_normal,
+                       bool triangle_mesh)
 {
         if (recursion_level < MAX_RECURSION_LEVEL)
         {
@@ -247,17 +248,17 @@ vec3 diffuse_lighting(const PaintData& paint_data, Counter& ray_count, PainterRa
                 {
                         // Если получившийся случайный вектор диффузного отражения показывает
                         // в другую сторону от поверхности, то диффузного освещения нет.
-                        return vec3(0);
+                        return Color(0);
                 }
 
                 return trace_path(paint_data, ray_count, random_engine, recursion_level + 1, color_level, diffuse_ray, true);
         }
 
-        return vec3(0);
+        return Color(0);
 }
 
-vec3 trace_path(const PaintData& paint_data, Counter& ray_count, PainterRandomEngine& random_engine, int recursion_level,
-                double color_level, const ray3& ray, bool diffuse_reflection)
+Color trace_path(const PaintData& paint_data, Counter& ray_count, PainterRandomEngine& random_engine, int recursion_level,
+                 double color_level, const ray3& ray, bool diffuse_reflection)
 {
         ++ray_count;
 
@@ -284,7 +285,7 @@ vec3 trace_path(const PaintData& paint_data, Counter& ray_count, PainterRandomEn
 
         if (std::abs(dot_dir_and_geometric_normal) <= EPSILON_DOUBLE)
         {
-                return vec3(0);
+                return Color(0);
         }
 
         if (surface_properties.is_light_source())
@@ -304,21 +305,21 @@ vec3 trace_path(const PaintData& paint_data, Counter& ray_count, PainterRandomEn
                 shading_normal = -shading_normal;
         }
 
-        vec3 color(0);
+        Color color(0);
 
         if (surface_properties.get_diffuse() > 0)
         {
-                vec3 surface_color = surface_properties.get_diffuse() * surface_properties.get_color();
+                Color surface_color = surface_properties.get_diffuse() * surface_properties.get_color();
 
-                double new_color_level = color_level * max_element(surface_color);
+                double new_color_level = color_level * surface_color.max_element();
 
                 if (new_color_level >= MIN_COLOR_LEVEL)
                 {
-                        vec3 direct = direct_diffuse_lighting(ray_count, paint_data.objects, paint_data.light_sources, point,
-                                                              geometric_normal, shading_normal, triangle_mesh);
+                        Color direct = direct_diffuse_lighting(ray_count, paint_data.objects, paint_data.light_sources, point,
+                                                               geometric_normal, shading_normal, triangle_mesh);
 
-                        vec3 diffuse = diffuse_lighting(paint_data, ray_count, random_engine, recursion_level, new_color_level,
-                                                        point, shading_normal, geometric_normal, triangle_mesh);
+                        Color diffuse = diffuse_lighting(paint_data, ray_count, random_engine, recursion_level, new_color_level,
+                                                         point, shading_normal, geometric_normal, triangle_mesh);
 
                         color += surface_color * (direct + diffuse);
                 }
@@ -346,7 +347,7 @@ void paint_pixels(PainterRandomEngine& random_engine, std::vector<vec2>* samples
                 ray_count = 0;
                 sample_count = samples->size();
 
-                vec3 color(0);
+                Color color(0);
 
                 for (const vec2& sample_point : *samples)
                 {
@@ -360,9 +361,9 @@ void paint_pixels(PainterRandomEngine& random_engine, std::vector<vec2>* samples
                                             diffuse_reflection);
                 }
 
-                vec3 pixel_color = pixels->add_color_and_samples(x, y, color, samples->size());
+                Color pixel_color = pixels->add_color_and_samples(x, y, color, samples->size());
 
-                painter_notifier->painter_pixel_after(x, y, rgb_float_to_srgb_integer(pixel_color));
+                painter_notifier->painter_pixel_after(x, y, pixel_color.to_srgb_integer());
         }
 }
 

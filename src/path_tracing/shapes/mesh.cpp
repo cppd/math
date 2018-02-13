@@ -75,7 +75,7 @@ void Mesh::create_mesh_object(const IObj* obj, const mat4& vertex_matrix, unsign
         m_materials.reserve(obj->materials().size());
         for (const IObj::Material& m : obj->materials())
         {
-                m_materials.emplace_back(to_vector<double>(m.Kd), to_vector<double>(m.Ks), m.Ns, m.map_Kd, m.map_Ks);
+                m_materials.emplace_back(m.Kd, m.Ks, m.Ns, m.map_Kd, m.map_Ks);
         }
 
         m_images.reserve(obj->images().size());
@@ -151,7 +151,7 @@ vec3 Mesh::get_shading_normal(const vec3& p, const void* intersection_data) cons
         return static_cast<const MeshTriangle*>(intersection_data)->shading_normal(p);
 }
 
-std::optional<vec3> Mesh::get_color(const vec3& p, const void* intersection_data) const
+std::optional<Color> Mesh::get_color(const vec3& p, const void* intersection_data) const
 {
         const MeshTriangle* triangle = static_cast<const MeshTriangle*>(intersection_data);
 

@@ -103,12 +103,12 @@ void set_widgets_enabled(QLayout* layout, bool v)
         }
 }
 
-vec3 qcolor_to_rgb(const QColor& c)
+Color qcolor_to_rgb(const QColor& c)
 {
         unsigned char r = std::clamp(c.red(), 0, 255);
         unsigned char g = std::clamp(c.green(), 0, 255);
         unsigned char b = std::clamp(c.blue(), 0, 255);
-        return srgb_integer_to_rgb_float(r, g, b);
+        return Color(SrgbInteger(r, g, b));
 }
 
 void button_strike_out(QRadioButton* button, bool strike_out)

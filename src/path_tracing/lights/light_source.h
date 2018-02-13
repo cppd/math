@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -22,17 +22,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 class PointLight final : public LightSource
 {
         vec3 m_location;
-        vec3 m_color;
+        Color m_color;
         double m_unit_intensity_distance_square;
 
 public:
-        PointLight(const vec3& location, const vec3& color, double unit_intensity_distance)
+        PointLight(const vec3& location, const Color& color, double unit_intensity_distance)
                 : m_location(location),
                   m_color(color),
                   m_unit_intensity_distance_square(unit_intensity_distance * unit_intensity_distance)
         {
         }
-        void properties(const vec3& point, vec3* color, vec3* vector_from_point_to_light) const override
+        void properties(const vec3& point, Color* color, vec3* vector_from_point_to_light) const override
         {
                 *vector_from_point_to_light = m_location - point;
                 *color = m_color *
@@ -43,13 +43,13 @@ public:
 class ConstantLight final : public LightSource
 {
         vec3 m_location;
-        vec3 m_color;
+        Color m_color;
 
 public:
-        ConstantLight(const vec3& location, const vec3& color) : m_location(location), m_color(color)
+        ConstantLight(const vec3& location, const Color& color) : m_location(location), m_color(color)
         {
         }
-        void properties(const vec3& point, vec3* color, vec3* vector_from_point_to_light) const override
+        void properties(const vec3& point, Color* color, vec3* vector_from_point_to_light) const override
         {
                 *vector_from_point_to_light = m_location - point;
                 *color = m_color;

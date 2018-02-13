@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "com/color/colors.h"
 #include "com/vec.h"
 
 #include <memory>
@@ -36,6 +37,6 @@ public:
         void render_char(char c, const unsigned char** buffer, int* w, int* h, int* left, int* top, int* advance_x);
         void render_to_file(char c);
 
-        void set_color(const vec3& color);
+        void set_color(const Color& color);
         void draw(int width, int height, const std::vector<std::string>& text);
 };

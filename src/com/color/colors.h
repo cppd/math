@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2018 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -19,10 +19,122 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/vec.h"
 
-#include <array>
+#include <algorithm>
 
-vec3 srgb_integer_to_rgb_float(unsigned char r, unsigned char g, unsigned char b);
+struct SrgbInteger
+{
+        unsigned char red, green, blue;
 
-std::array<unsigned char, 3> rgb_float_to_srgb_integer(const vec3& c);
+        SrgbInteger(unsigned char red_, unsigned char green_, unsigned char blue_) : red(red_), green(green_), blue(blue_)
+        {
+        }
+};
 
-double luminance_of_rgb(const vec3& c);
+class Color
+{
+        using T = float;
+
+        Vector<3, T> m_data;
+
+public:
+        using DataType = T;
+
+        Color() = default;
+
+        explicit Color(T grayscale) : m_data(grayscale)
+        {
+        }
+
+        explicit Color(Vector<3, T>&& rgb) : m_data(std::move(rgb))
+        {
+        }
+
+        Color(const SrgbInteger& c)
+        {
+                set_from_srgb_integer(c.red, c.green, c.blue);
+        }
+
+        void set_from_srgb_integer(unsigned char r, unsigned char g, unsigned char b);
+
+        SrgbInteger to_srgb_integer() const;
+
+        template <typename F>
+        std::enable_if_t<std::is_same_v<F, T>, const Vector<3, F>&> to_rgb_vector() const
+        {
+                return m_data;
+        }
+        template <typename F>
+        std::enable_if_t<!std::is_same_v<F, T>, Vector<3, F>> to_rgb_vector() const
+        {
+                return to_vector<F>(m_data);
+        }
+
+        T luminance() const;
+
+        T max_element() const
+        {
+                return std::max(m_data[2], std::max(m_data[0], m_data[1]));
+        }
+
+        Vector<3, T>& data()
+        {
+                return m_data;
+        }
+
+        const Vector<3, T>& data() const
+        {
+                return m_data;
+        }
+
+        T red() const
+        {
+                return m_data[0];
+        }
+        T green() const
+        {
+                return m_data[1];
+        }
+        T blue() const
+        {
+                return m_data[2];
+        }
+
+        void operator+=(const Color& c)
+        {
+                m_data += c.m_data;
+        }
+};
+
+template <typename F>
+Color interpolation(const Color& a, const Color& b, F x)
+{
+        return Color(interpolation(a.data(), b.data(), x));
+}
+
+template <typename F>
+Color operator*(const Color& a, F b)
+{
+        return Color(a.data() * static_cast<Color::DataType>(b));
+}
+
+template <typename F>
+Color operator*(F b, const Color& a)
+{
+        return Color(static_cast<Color::DataType>(b) * a.data());
+}
+
+template <typename F>
+Color operator/(const Color& a, F b)
+{
+        return Color(a.data() / static_cast<Color::DataType>(b));
+}
+
+inline Color operator+(const Color& a, const Color& b)
+{
+        return Color(a.data() + b.data());
+}
+
+inline Color operator*(const Color& a, const Color& b)
+{
+        return Color(a.data() * b.data());
+}

@@ -51,7 +51,7 @@ class CornellBox : public PaintObjects
         std::unique_ptr<PointLight> m_point_light;
 
 public:
-        CornellBox(int width, int height, const std::string& obj_file_name, double size, const vec3& default_color,
+        CornellBox(int width, int height, const std::string& obj_file_name, double size, const Color& default_color,
                    double diffuse, const vec3& camera_direction, const vec3& camera_up)
         {
                 ProgressRatio progress(nullptr);
@@ -68,7 +68,7 @@ public:
                 make_cornell_box(width, height, size, default_color, diffuse, camera_direction, camera_up);
         }
 
-        CornellBox(int width, int height, const std::shared_ptr<const Mesh>& mesh, double size, const vec3& default_color,
+        CornellBox(int width, int height, const std::shared_ptr<const Mesh>& mesh, double size, const Color& default_color,
                    double diffuse, const vec3& camera_direction, const vec3& camera_up)
         {
                 m_mesh = std::make_unique<VisibleSharedMesh>(mesh);
@@ -76,7 +76,7 @@ public:
                 make_cornell_box(width, height, size, default_color, diffuse, camera_direction, camera_up);
         }
 
-        void make_cornell_box(int width, int height, double size, const vec3& default_color, double diffuse,
+        void make_cornell_box(int width, int height, double size, const Color& default_color, double diffuse,
                               const vec3& camera_direction, const vec3& camera_up)
         {
                 m_mesh->set_color(default_color);
@@ -101,27 +101,27 @@ public:
                 //
 
                 m_rectangle_back = std::make_unique<VisibleRectangle>(lower_left + size * dir, size * right, size * up);
-                m_rectangle_back->set_color(vec3(1, 1, 1));
+                m_rectangle_back->set_color(SrgbInteger(255, 255, 255));
                 m_rectangle_back->set_diffuse_and_fresnel(1, 0);
                 m_rectangle_back->set_light_source(false);
 
                 m_rectangle_top = std::make_unique<VisibleRectangle>(upper_left, size * dir, size * right);
-                m_rectangle_top->set_color(vec3(1, 1, 1));
+                m_rectangle_top->set_color(SrgbInteger(255, 255, 255));
                 m_rectangle_top->set_diffuse_and_fresnel(1, 0);
                 m_rectangle_top->set_light_source(false);
 
                 m_rectangle_bottom = std::make_unique<VisibleRectangle>(lower_left, size * dir, size * right);
-                m_rectangle_bottom->set_color(vec3(1, 1, 1));
+                m_rectangle_bottom->set_color(SrgbInteger(255, 255, 255));
                 m_rectangle_bottom->set_diffuse_and_fresnel(1, 0);
                 m_rectangle_bottom->set_light_source(false);
 
                 m_rectangle_left = std::make_unique<VisibleRectangle>(lower_left, size * dir, size * up);
-                m_rectangle_left->set_color(vec3(1, 0, 0));
+                m_rectangle_left->set_color(SrgbInteger(255, 0, 0));
                 m_rectangle_left->set_diffuse_and_fresnel(1, 0);
                 m_rectangle_left->set_light_source(false);
 
                 m_rectangle_right = std::make_unique<VisibleRectangle>(lower_right, size * dir, size * up);
-                m_rectangle_right->set_color(vec3(0, 1, 0));
+                m_rectangle_right->set_color(SrgbInteger(0, 255, 0));
                 m_rectangle_right->set_diffuse_and_fresnel(1, 0);
                 m_rectangle_right->set_light_source(false);
 
@@ -133,16 +133,16 @@ public:
 
                 m_spherical_projector = std::make_unique<SphericalProjector>(view_point, dir, up, 80, width, height);
 
-                m_default_surface_properties.set_color(vec3(0.0, 0.0, 0.0));
+                m_default_surface_properties.set_color(SrgbInteger(0, 0, 0));
                 m_default_surface_properties.set_diffuse_and_fresnel(1, 0);
                 m_default_surface_properties.set_light_source(false);
-                m_default_surface_properties.set_light_source_color(vec3(0, 0, 0));
+                m_default_surface_properties.set_light_source_color(SrgbInteger(0, 0, 0));
 
                 m_box = std::make_unique<VisibleParallelepiped>(lower_left + 0.7 * size * dir + 0.8 * size * right +
                                                                         0.1 * size * up,
                                                                 0.1 * size * right, 0.8 * size * up, 0.1 * size * dir);
 
-                m_box->set_color(vec3(1, 0, 1));
+                m_box->set_color(SrgbInteger(255, 0, 255));
                 m_box->set_diffuse_and_fresnel(1, 0);
                 m_box->set_light_source(false);
 
@@ -150,13 +150,13 @@ public:
 
                 m_lamp = std::make_unique<VisibleRectangle>(upper_center - 0.1 * size * dir - 0.1 * size * right,
                                                             0.2 * size * right, 0.2 * size * dir);
-                m_lamp->set_color(vec3(1, 1, 1));
+                m_lamp->set_color(Color(1));
                 m_lamp->set_diffuse_and_fresnel(1, 0);
                 m_lamp->set_light_source(true);
-                m_lamp->set_light_source_color(vec3(50, 50, 50));
+                m_lamp->set_light_source_color(Color(50));
 
-                m_constant_light = std::make_unique<ConstantLight>(upper_center, vec3(1, 1, 1));
-                m_point_light = std::make_unique<PointLight>(upper_center, vec3(1, 1, 1), 1);
+                m_constant_light = std::make_unique<ConstantLight>(upper_center, Color(1));
+                m_point_light = std::make_unique<PointLight>(upper_center, Color(1), 1);
 
                 m_objects.push_back(m_lamp.get());
                 // m_light_sources.push_back(m_constant_light.get());
@@ -205,7 +205,7 @@ class OneObject final : public PaintObjects
         std::vector<const LightSource*> m_light_sources;
 
 public:
-        OneObject(const vec3& background_color, const vec3& default_color, double diffuse,
+        OneObject(const Color& background_color, const Color& default_color, double diffuse,
                   std::unique_ptr<const Projector>&& projector, std::unique_ptr<const LightSource>&& light_source,
                   const std::shared_ptr<const Mesh>& mesh)
                 : m_object(mesh), m_projector(std::move(projector)), m_light_source(std::move(light_source))
@@ -213,7 +213,7 @@ public:
                 m_default_surface_properties.set_color(background_color);
                 m_default_surface_properties.set_diffuse_and_fresnel(1, 0);
                 m_default_surface_properties.set_light_source(true);
-                m_default_surface_properties.set_light_source_color(vec3(luminance_of_rgb(background_color)));
+                m_default_surface_properties.set_light_source_color(Color(background_color.luminance()));
 
                 m_object.set_color(default_color);
                 m_object.set_diffuse_and_fresnel(diffuse, 0);
@@ -244,7 +244,7 @@ public:
 }
 
 std::unique_ptr<const PaintObjects> cornell_box(int width, int height, const std::string& obj_file_name, double size,
-                                                const vec3& default_color, double diffuse, const vec3& camera_direction,
+                                                const Color& default_color, double diffuse, const vec3& camera_direction,
                                                 const vec3& camera_up)
 {
         return std::make_unique<CornellBox>(width, height, obj_file_name, size, default_color, diffuse, camera_direction,
@@ -252,13 +252,13 @@ std::unique_ptr<const PaintObjects> cornell_box(int width, int height, const std
 }
 
 std::unique_ptr<const PaintObjects> cornell_box(int width, int height, const std::shared_ptr<const Mesh>& mesh, double size,
-                                                const vec3& default_color, double diffuse, const vec3& camera_direction,
+                                                const Color& default_color, double diffuse, const vec3& camera_direction,
                                                 const vec3& camera_up)
 {
         return std::make_unique<CornellBox>(width, height, mesh, size, default_color, diffuse, camera_direction, camera_up);
 }
 
-std::unique_ptr<const PaintObjects> one_object_scene(const vec3& background_color, const vec3& default_color, double diffuse,
+std::unique_ptr<const PaintObjects> one_object_scene(const Color& background_color, const Color& default_color, double diffuse,
                                                      std::unique_ptr<const Projector>&& projector,
                                                      std::unique_ptr<const LightSource>&& light_source,
                                                      const std::shared_ptr<const Mesh>& mesh)

@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "triangle.h"
 
+#include "com/color/colors.h"
 #include "com/mat.h"
 #include "obj/obj.h"
 #include "path_tracing/image/image.h"
@@ -37,10 +38,10 @@ class Mesh
         std::vector<vec2> m_texcoords;
         struct Material
         {
-                vec3 Kd, Ks;
+                Color Kd, Ks;
                 double Ns;
                 int map_Kd, map_Ks;
-                Material(const vec3& Kd_, const vec3& Ks_, double Ns_, int map_Kd_, int map_Ks_)
+                Material(const Color& Kd_, const Color& Ks_, double Ns_, int map_Kd_, int map_Ks_)
                         : Kd(Kd_), Ks(Ks_), Ns(Ns_), map_Kd(map_Kd_), map_Ks(map_Ks_)
                 {
                 }
@@ -72,5 +73,5 @@ public:
         vec3 get_geometric_normal(const void* intersection_data) const;
         vec3 get_shading_normal(const vec3& p, const void* intersection_data) const;
 
-        std::optional<vec3> get_color(const vec3& p, const void* intersection_data) const;
+        std::optional<Color> get_color(const vec3& p, const void* intersection_data) const;
 };

@@ -51,7 +51,7 @@ private:
         void showEvent(QShowEvent* event) override;
 
         void painter_pixel_before(int x, int y) noexcept override;
-        void painter_pixel_after(int x, int y, std::array<unsigned char, 3> rgb) noexcept override;
+        void painter_pixel_after(int x, int y, const SrgbInteger& c) noexcept override;
         void painter_error_message(const std::string& msg) noexcept override;
 
         void set_default_pixels();

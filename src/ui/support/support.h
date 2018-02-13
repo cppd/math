@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "com/color/colors.h"
 #include "com/vec.h"
 #include "window/window_prop.h"
 
@@ -75,7 +76,7 @@ void color_dialog(QWidget* widget, const QString& title, const QColor& color, co
 
 void set_widgets_enabled(QLayout* layout, bool v);
 
-vec3 qcolor_to_rgb(const QColor& c);
+Color qcolor_to_rgb(const QColor& c);
 
 void button_strike_out(QRadioButton* button, bool strike_out);
 

@@ -21,7 +21,7 @@ constexpr const char color_space_functions[] = R"(
 
 float rgb_to_srgb(float c)
 {
-        if (c > 1.0)
+        if (c >= 1.0)
         {
                 return 1.0;
         }
@@ -29,7 +29,7 @@ float rgb_to_srgb(float c)
         {
                 return 1.055 * pow(c, 1.0 / 2.4) - 0.055;
         }
-        if (c >= 0.0)
+        if (c > 0.0)
         {
                 return c * 12.92;
         }
@@ -38,7 +38,7 @@ float rgb_to_srgb(float c)
 
 float srgb_to_rgb(float c)
 {
-        if (c > 1.0)
+        if (c >= 1.0)
         {
                 return 1.0;
         }
@@ -46,7 +46,7 @@ float srgb_to_rgb(float c)
         {
                 return pow((c + 0.055) / 1.055, 2.4);
         }
-        if (c >= 0.0)
+        if (c > 0.0)
         {
                 return c / 12.92;
         }

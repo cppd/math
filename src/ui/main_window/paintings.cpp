@@ -42,7 +42,7 @@ std::unique_ptr<const LightSource> create_light_source(const IShow& show)
 {
         vec3 light_position = show.get_object_position() - show.get_light_direction() * show.get_object_size() * 1000.0;
 
-        return std::make_unique<const ConstantLight>(light_position, vec3(1, 1, 1));
+        return std::make_unique<const ConstantLight>(light_position, Color(1));
 }
 
 bool parameters(PathTracingParameters& parameters_window, const IShow& show, int default_samples_per_pixel,
@@ -69,7 +69,7 @@ bool parameters(PathTracingParameters& parameters_window, const IShow& show, int
 
 void painting(PathTracingParameters&& parameters_window, const IShow& show, const std::shared_ptr<const Mesh>& mesh,
               const std::string& window_title, const std::string& model_name, int default_samples_per_pixel,
-              int max_samples_per_pixel, const vec3& background_color, const vec3& default_color, double diffuse)
+              int max_samples_per_pixel, const Color& background_color, const Color& default_color, double diffuse)
 {
         int paint_width, paint_height, thread_count, samples_per_pixel;
 

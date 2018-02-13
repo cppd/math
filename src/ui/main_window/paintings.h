@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2018 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -26,4 +26,4 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 void painting(PathTracingParameters&& parameters_window, const IShow& show, const std::shared_ptr<const Mesh>& mesh,
               const std::string& window_title, const std::string& model_name, int default_samples_per_pixel,
-              int max_samples_per_pixel, const vec3& background_color, const vec3& default_color, double diffuse);
+              int max_samples_per_pixel, const Color& background_color, const Color& default_color, double diffuse);

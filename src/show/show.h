@@ -51,9 +51,9 @@ public:
         virtual void set_ambient(double) = 0;
         virtual void set_diffuse(double) = 0;
         virtual void set_specular(double) = 0;
-        virtual void set_background_color_rgb(const vec3&) = 0;
-        virtual void set_default_color_rgb(const vec3&) = 0;
-        virtual void set_wireframe_color_rgb(const vec3&) = 0;
+        virtual void set_background_color_rgb(const Color&) = 0;
+        virtual void set_default_color_rgb(const Color&) = 0;
+        virtual void set_wireframe_color_rgb(const Color&) = 0;
         virtual void set_default_ns(double) = 0;
         virtual void show_smooth(bool) = 0;
         virtual void show_wireframe(bool) = 0;
@@ -75,8 +75,8 @@ public:
         virtual vec3 get_object_position() const = 0;
 };
 
-std::unique_ptr<IShow> create_show(IShowCallback*, WindowID win_parent, vec3 background_color_rgb, vec3 default_color_rgb,
-                                   vec3 wireframe_color_rgb, bool with_smooth, bool with_wireframe, bool with_shadow,
-                                   bool with_materials, bool with_effect, bool with_dft, bool with_convex_hull,
-                                   bool with_optical_flow, double ambient, double diffuse, double specular, double dft_brightness,
-                                   double default_ns, bool vertical_sync, double shadow_zoom);
+std::unique_ptr<IShow> create_show(IShowCallback*, WindowID win_parent, const Color& background_color_rgb,
+                                   const Color& default_color_rgb, const Color& wireframe_color_rgb, bool with_smooth,
+                                   bool with_wireframe, bool with_shadow, bool with_materials, bool with_effect, bool with_dft,
+                                   bool with_convex_hull, bool with_optical_flow, double ambient, double diffuse, double specular,
+                                   double dft_brightness, double default_ns, bool vertical_sync, double shadow_zoom);

@@ -36,7 +36,7 @@ std::string file_name_with_extension(const std::string& file_name, const char* e
         {
                 if (ext != to_lower(trim(extension)))
                 {
-                        error("Unsupported image file format");
+                        error("Unsupported image file format " + ext);
                 }
                 return file_name;
         }
@@ -53,6 +53,11 @@ long long mul(const std::array<int, N>& size)
                 res *= size[i];
         }
         return res;
+}
+
+std::array<unsigned char, 3> srgb_integer_to_unsigned_char_array(const SrgbInteger& c)
+{
+        return {{c.red, c.green, c.blue}};
 }
 
 #if 0
@@ -82,12 +87,6 @@ T wrap_coordinate_clamp_to_edge(T value)
 }
 
 template <size_t N>
-Image<N>::Image(const std::array<int, N>& size)
-{
-        resize(size);
-}
-
-template <size_t N>
 Image<N>::Image(const std::array<int, N>& size, const std::vector<unsigned char>& srgba_pixels)
 {
         if (4ull * mul(size) != srgba_pixels.size())
@@ -96,6 +95,15 @@ Image<N>::Image(const std::array<int, N>& size, const std::vector<unsigned char>
         }
 
         read_from_srgba_pixels(size, srgba_pixels.data());
+}
+
+template <size_t N>
+template <size_t X>
+Image<N>::Image(std::enable_if_t<X == 2, const std::string&> file_name)
+{
+        static_assert(N == X);
+
+        read_from_file(file_name);
 }
 
 template <size_t N>
@@ -163,12 +171,6 @@ bool Image<N>::empty() const
 }
 
 template <size_t N>
-void Image<N>::clear(const vec3& color)
-{
-        std::fill(m_data.begin(), m_data.end(), color);
-}
-
-template <size_t N>
 long long Image<N>::pixel_index(const std::array<int, N>& p) const
 {
         long long index = p[0]; // в соответствии с равенством m_strides[0] * p[0] == p[0]
@@ -181,7 +183,7 @@ long long Image<N>::pixel_index(const std::array<int, N>& p) const
 
 template <size_t N>
 template <typename T>
-vec3 Image<N>::texture(const Vector<N, T>& p) const
+Color Image<N>::texture(const Vector<N, T>& p) const
 {
         std::array<int, N> x0;
         std::array<T, N> local_x;
@@ -201,7 +203,7 @@ vec3 Image<N>::texture(const Vector<N, T>& p) const
 
         long long index = pixel_index(x0);
 
-        std::array<vec3, (1 << N)> pixels;
+        std::array<Color, (1 << N)> pixels;
         pixels[0] = m_data[index]; // в соответствии с равенством index + m_pixel_offsets[0] == index
         for (unsigned i = 1; i < pixels.size(); ++i)
         {
@@ -218,7 +220,7 @@ void Image<N>::read_from_srgba_pixels(const std::array<int, N>& size, const unsi
 
         for (size_t i = 0, p = 0; i < m_data.size(); p += 4, ++i)
         {
-                m_data[i] = srgb_integer_to_rgb_float(srgba_pixels[p], srgba_pixels[p + 1], srgba_pixels[p + 2]);
+                m_data[i].set_from_srgb_integer(srgba_pixels[p], srgba_pixels[p + 1], srgba_pixels[p + 2]);
         }
 }
 
@@ -236,8 +238,10 @@ std::enable_if_t<X == 2> Image<N>::read_from_file(const std::string& file_name)
         }
 
         std::array<int, N> size;
+
         size[0] = image.getSize().x;
         size[1] = image.getSize().y;
+
         read_from_srgba_pixels(size, image.getPixelsPtr());
 }
 
@@ -266,7 +270,7 @@ std::enable_if_t<X == 2> Image<N>::write_to_file(const std::string& file_name) c
 
         for (size_t i = 0; i < m_data.size(); ++i)
         {
-                buffer[i] = rgb_float_to_srgb_integer(m_data[i]);
+                buffer[i] = srgb_integer_to_unsigned_char_array(m_data[i].to_srgb_integer());
         }
 
         if (fwrite(buffer.data(), 3, buffer.size(), fp) != buffer.size())
@@ -282,17 +286,16 @@ std::enable_if_t<X == 2> Image<N>::flip_vertically()
 {
         static_assert(N == X);
 
-        std::vector<vec3> tmp = m_data;
+        int width = m_size[0];
+        int height = m_size[1];
 
-        long long width = m_size[0];
-        long long height = m_size[1];
-        for (int y = 0; y < height; ++y)
+        for (int y1 = 0, y2 = height - 1; y1 < height / 2; ++y1, --y2)
         {
                 for (int x = 0; x < width; ++x)
                 {
-                        int index_from = y * width + x;
-                        int index_to = (height - y - 1) * width + x;
-                        m_data[index_to] = tmp[index_from];
+                        std::array<int, 2> p1{{x, y1}};
+                        std::array<int, 2> p2{{x, y2}};
+                        std::swap(m_data[pixel_index(p1)], m_data[pixel_index(p2)]);
                 }
         }
 }
@@ -301,10 +304,15 @@ template class Image<2>;
 template class Image<3>;
 template class Image<4>;
 
-template vec3 Image<2>::texture(const Vector<2, double>& p) const;
-template vec3 Image<3>::texture(const Vector<3, double>& p) const;
-template vec3 Image<4>::texture(const Vector<4, double>& p) const;
+template Color Image<2>::texture(const Vector<2, float>& p) const;
+template Color Image<3>::texture(const Vector<3, float>& p) const;
+template Color Image<4>::texture(const Vector<4, float>& p) const;
 
-template void Image<2>::flip_vertically();
+template Color Image<2>::texture(const Vector<2, double>& p) const;
+template Color Image<3>::texture(const Vector<3, double>& p) const;
+template Color Image<4>::texture(const Vector<4, double>& p) const;
+
+template Image<2>::Image(const std::string& file_name);
 template void Image<2>::read_from_file(const std::string& file_name);
 template void Image<2>::write_to_file(const std::string& file_name) const;
+template void Image<2>::flip_vertically();

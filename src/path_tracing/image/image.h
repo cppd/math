@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "com/color/colors.h"
 #include "com/vec.h"
 
 #include <string>
@@ -25,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 template <size_t N>
 class Image
 {
-        std::vector<vec3> m_data;
+        std::vector<Color> m_data;
 
         std::array<int, N> m_size;
         std::array<int, N> m_max;
@@ -38,19 +39,18 @@ class Image
 
         void read_from_srgba_pixels(const std::array<int, N>& size, const unsigned char* srgba_pixels);
 
-public:
-        Image(const std::array<int, N>& size);
-
-        Image(const std::array<int, N>& size, const std::vector<unsigned char>& srgba_pixels);
-
         void resize(const std::array<int, N>& size);
 
         bool empty() const;
 
-        void clear(const vec3& color = vec3(0));
+public:
+        Image(const std::array<int, N>& size, const std::vector<unsigned char>& srgba_pixels);
+
+        template <size_t X = N>
+        Image(std::enable_if_t<X == 2, const std::string&> file_name);
 
         template <typename T>
-        vec3 texture(const Vector<N, T>& p) const;
+        Color texture(const Vector<N, T>& p) const;
 
         template <size_t X = N>
         std::enable_if_t<X == 2> read_from_file(const std::string& file_name);

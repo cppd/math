@@ -113,13 +113,15 @@ std::string get_string_list(const std::map<std::string, T>& m)
         return names;
 }
 
-bool check_range(float v, float min, float max)
+template <typename T1, typename T2, typename T3>
+bool check_range(const T1& v, const T2& min, const T3& max)
 {
         return v >= min && v <= max;
 }
-bool check_range(const vec3f& v, float min, float max)
+
+bool check_color(const Color& v)
 {
-        return v[0] >= min && v[0] <= max && v[1] >= min && v[1] <= max && v[2] >= min && v[2] <= max;
+        return v.red() >= 0 && v.red() <= 1 && v.green() >= 0 && v.green() <= 1 && v.blue() >= 0 && v.blue() <= 1;
 }
 
 template <typename T>
@@ -475,34 +477,39 @@ int string_to_float(const char* str, T*... floats)
         return cnt;
 }
 
-void read_float(const char* str, vec3f* v)
+template <typename T>
+void read_float(const char* str, Vector<3, T>* v)
 {
         if (3 != string_to_float(str, &(*v)[0], &(*v)[1], &(*v)[2]))
         {
-                error("Error read 3 floating points");
+                error(std::string("Error read 3 floating points of ") + type_name<T>() + " type");
         }
 }
 
-void read_float_texture(const char* str, vec2f* v)
+template <typename T>
+void read_float_texture(const char* str, Vector<2, T>* v)
 {
-        float tmp;
+        T tmp;
 
         int n = string_to_float(str, &(*v)[0], &(*v)[1], &tmp);
+
         if (n != 2 && n != 3)
         {
-                error("Error read 2 or 3 floating points");
+                error(std::string("Error read 2 or 3 floating points of ") + type_name<T>() + " type");
         }
-        if (n == 3 && tmp != 0.0f)
+
+        if (n == 3 && tmp != 0)
         {
                 error("3D textures not supported");
         }
 }
 
-void read_float(const char* str, float* v)
+template <typename T>
+void read_float(const char* str, T* v)
 {
         if (1 != string_to_float(str, v))
         {
-                error("Error read 1 floating point");
+                error(std::string("Error read 1 floating point of ") + type_name<T>() + " type");
         }
 }
 
@@ -1202,9 +1209,9 @@ void FileObj::read_lib(const std::string& dir_name, const std::string& file_name
                                 {
                                         continue;
                                 }
-                                read_float(&data[second_b], &mtl->Ka);
+                                read_float(&data[second_b], &mtl->Ka.data());
 
-                                if (!check_range(mtl->Ka, 0, 1))
+                                if (!check_color(mtl->Ka))
                                 {
                                         error("Error Ka in material " + mtl->name);
                                 }
@@ -1215,9 +1222,9 @@ void FileObj::read_lib(const std::string& dir_name, const std::string& file_name
                                 {
                                         continue;
                                 }
-                                read_float(&data[second_b], &mtl->Kd);
+                                read_float(&data[second_b], &mtl->Kd.data());
 
-                                if (!check_range(mtl->Kd, 0, 1))
+                                if (!check_color(mtl->Kd))
                                 {
                                         error("Error Kd in material " + mtl->name);
                                 }
@@ -1228,9 +1235,9 @@ void FileObj::read_lib(const std::string& dir_name, const std::string& file_name
                                 {
                                         continue;
                                 }
-                                read_float(&data[second_b], &mtl->Ks);
+                                read_float(&data[second_b], &mtl->Ks.data());
 
-                                if (!check_range(mtl->Ks, 0, 1))
+                                if (!check_color(mtl->Ks))
                                 {
                                         error("Error Ks in material " + mtl->name);
                                 }

@@ -32,7 +32,7 @@ protected:
 
 public:
         virtual void painter_pixel_before(int x, int y) noexcept = 0;
-        virtual void painter_pixel_after(int x, int y, std::array<unsigned char, 3> rgb) noexcept = 0;
+        virtual void painter_pixel_after(int x, int y, const SrgbInteger& c) noexcept = 0;
         virtual void painter_error_message(const std::string& msg) noexcept = 0;
 };
 

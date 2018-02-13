@@ -276,3 +276,19 @@ constexpr std::enable_if_t<std::is_same_v<std::remove_cv_t<T>, mpf_class>, const
 {
         return "mpf_class";
 }
+
+template <typename T>
+constexpr std::enable_if_t<std::is_same_v<std::remove_cv_t<T>, float>, const char*> floating_point_suffix()
+{
+        return "f";
+}
+template <typename T>
+constexpr std::enable_if_t<std::is_same_v<std::remove_cv_t<T>, double>, const char*> floating_point_suffix()
+{
+        return "";
+}
+template <typename T>
+constexpr std::enable_if_t<std::is_same_v<std::remove_cv_t<T>, long double>, const char*> floating_point_suffix()
+{
+        return "l";
+}

@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "com/color/colors.h"
 #include "com/vec.h"
 
 #include <array>
@@ -48,9 +49,9 @@ struct IObj
         struct Material
         {
                 std::string name;
-                vec3f Ka{0};
-                vec3f Kd{0};
-                vec3f Ks{0};
+                Color Ka{0};
+                Color Kd{0};
+                Color Ks{0};
                 float Ns{1};
                 int map_Ka{-1}; // -1 если нет текстуры
                 int map_Kd{-1}; // -1 если нет текстуры

@@ -95,6 +95,11 @@ struct PointVertex final
         }
 };
 
+vec4f color_to_vec4f(const Color& c)
+{
+        return vec4f(c.red(), c.green(), c.blue(), 1);
+}
+
 // shader storage
 struct Material final
 {
@@ -108,7 +113,13 @@ struct Material final
         GLint map_Ka, map_Kd, map_Ks;
 
         explicit Material(const IObj::Material& m)
-                : Ka(m.Ka), Kd(m.Kd), Ks(m.Ks), Ns(m.Ns), map_Ka(m.map_Ka), map_Kd(m.map_Kd), map_Ks(m.map_Ks)
+                : Ka(m.Ka.to_rgb_vector<float>()),
+                  Kd(m.Kd.to_rgb_vector<float>()),
+                  Ks(m.Ks.to_rgb_vector<float>()),
+                  Ns(m.Ns),
+                  map_Ka(m.map_Ka),
+                  map_Kd(m.map_Kd),
+                  map_Ks(m.map_Ks)
         {
         }
 };
@@ -490,30 +501,25 @@ class Renderer final : public IRenderer
         DrawObjects m_draw_objects;
         ColorSpaceConverterToRGB m_color_converter;
 
-        static vec4f color_to_vec4f(const vec3& c)
-        {
-                return vec4f(c[0], c[1], c[2], 1);
-        }
-
-        void set_light_a(const vec3& light) override
+        void set_light_a(const Color& light) override
         {
                 main_program.set_uniform("light_a", color_to_vec4f(light));
                 points_program.set_uniform("light_a", color_to_vec4f(light));
         }
-        void set_light_d(const vec3& light) override
+        void set_light_d(const Color& light) override
         {
                 main_program.set_uniform("light_d", color_to_vec4f(light));
         }
-        void set_light_s(const vec3& light) override
+        void set_light_s(const Color& light) override
         {
                 main_program.set_uniform("light_s", color_to_vec4f(light));
         }
-        void set_default_color(const vec3& color) override
+        void set_default_color(const Color& color) override
         {
                 main_program.set_uniform("default_color", color_to_vec4f(color));
                 points_program.set_uniform("default_color", color_to_vec4f(color));
         }
-        void set_wireframe_color(const vec3& color) override
+        void set_wireframe_color(const Color& color) override
         {
                 main_program.set_uniform("wireframe_color", color_to_vec4f(color));
         }

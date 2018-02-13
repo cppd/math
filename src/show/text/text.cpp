@@ -201,9 +201,9 @@ public:
                 set_size(FONT_SIZE);
         }
 
-        void set_color(const vec3& color)
+        void set_color(const Color& color)
         {
-                m_program.set_uniform("text_color", to_vector<float>(color));
+                m_program.set_uniform("text_color", color.to_rgb_vector<float>());
         }
 
         void set_size(int size)
@@ -322,7 +322,7 @@ void Text::render_to_file(char c)
         m_impl->render_to_file(c);
 }
 
-void Text::set_color(const vec3& color)
+void Text::set_color(const Color& color)
 {
         m_impl->set_color(color);
 }
