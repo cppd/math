@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "triangle.h"
+#include "simplex.h"
 
 #include "com/color/colors.h"
 #include "com/mat.h"
