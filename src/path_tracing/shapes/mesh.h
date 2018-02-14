@@ -32,10 +32,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 class Mesh
 {
         using OctreeParallelepiped = ParallelotopeOrtho<3, double>;
+        using Simplex = MeshSimplex<3, double>;
 
         std::vector<vec3> m_vertices;
         std::vector<vec3> m_normals;
         std::vector<vec2> m_texcoords;
+
         struct Material
         {
                 Color Kd, Ks;
@@ -47,9 +49,10 @@ class Mesh
                 }
         };
         std::vector<Material> m_materials;
+
         std::vector<Image<2>> m_images;
 
-        std::vector<MeshTriangle> m_triangles;
+        std::vector<Simplex> m_triangles;
 
         SpatialSubdivisionTree<OctreeParallelepiped> m_octree;
 

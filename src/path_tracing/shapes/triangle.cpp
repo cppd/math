@@ -18,43 +18,92 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "triangle.h"
 
 #include "com/error.h"
+#include "geometry/core/linear_algebra.h"
 
-MeshTriangle::MeshTriangle(const vec3* points, const vec3* normals, const vec2* texcoords, int v0, int v1, int v2,
-                           bool has_normals, int n0, int n1, int n2, bool has_texcoords, int t0, int t1, int t2, int material)
+// Минимум абсолютного значения косинуса угла между нормалью симплекса и нормалями
+// его вершин, при котором используются эти нормали вершин. При меньших значениях
+// косинуса нормали вершин считаются неправильными и игнорируются.
+template <typename T>
+constexpr T LIMIT_COSINE = 0.7; // 0.7 немного больше 45 градусов
+
+namespace
 {
-        ASSERT((has_normals && n0 >= 0 && n1 >= 0 && n2 >= 0) || !has_normals);
-        ASSERT((has_texcoords && t0 >= 0 && t1 >= 0 && t2 >= 0) || !has_texcoords);
+template <size_t N, typename T>
+bool all_non_negative(const std::array<T, N>& data)
+{
+        return std::all_of(data.cbegin(), data.cend(), [](const T& v) { return v >= 0; });
+}
 
-        m_v0 = v0;
-        m_v1 = v1;
-        m_v2 = v2;
+template <size_t N, typename T>
+bool all_positive(const std::array<T, N>& data)
+{
+        return std::all_of(data.cbegin(), data.cend(), [](const T& v) { return v > 0; });
+}
+
+template <size_t N, typename T>
+bool all_negative(const std::array<T, N>& data)
+{
+        return std::all_of(data.cbegin(), data.cend(), [](const T& v) { return v < 0; });
+}
+
+template <size_t N, typename T>
+std::string vertices_to_string(const std::vector<Vector<N, T>>& vertices, const std::array<int, N>& v)
+{
+        std::string res;
+        for (unsigned i = 0; i < N; ++i)
+        {
+                res += to_string(vertices[v[i]]);
+                if (i != N - 1)
+                {
+                        res += '\n';
+                }
+        }
+        return res;
+}
+
+template <size_t N, typename T>
+std::array<Vector<N, T>, N> vertices_to_array(const std::vector<Vector<N, T>>& vertices, const std::array<int, N>& v)
+{
+        std::array<Vector<N, T>, N> res;
+        for (unsigned i = 0; i < N; ++i)
+        {
+                res[i] = vertices[v[i]];
+        }
+        return res;
+}
+}
+
+template <size_t N, typename T>
+MeshSimplex<N, T>::MeshSimplex(const std::vector<Vector<N, T>>& vertices, const std::vector<Vector<N, T>>& normals,
+                               const std::vector<Vector<N - 1, T>>& texcoords, const std::array<int, N>& vertex_indices,
+                               bool has_normals, const std::array<int, N>& normal_indices, bool has_texcoords,
+                               const std::array<int, N>& texcoord_indices, int material)
+        : m_vertices(vertices), m_normals(normals), m_texcoords(texcoords)
+{
+        ASSERT((has_normals && all_non_negative(normal_indices)) || !has_normals);
+        ASSERT((has_texcoords && all_non_negative(texcoord_indices)) || !has_texcoords);
+
+        m_v = vertex_indices;
 
         if (has_texcoords)
         {
-                m_t0 = t0;
-                m_t1 = t1;
-                m_t2 = t2;
+                m_t = texcoord_indices;
         }
         else
         {
-                m_t0 = -1;
+                m_t[0] = -1;
         }
 
         m_material = material;
 
-        m_vertices = points;
-        m_normals = normals;
-        m_texcoords = texcoords;
-
-        m_normal = normalize(cross(m_vertices[m_v1] - m_vertices[m_v0], m_vertices[m_v2] - m_vertices[m_v0]));
+        m_normal = normalize(ortho_nn(m_vertices, m_v));
 
         if (!is_finite(m_normal))
         {
-                error("Triangle normal is not finite, vertices\n" + to_string(m_vertices[m_v0]) + "\n" +
-                      to_string(m_vertices[m_v1]) + "\n" + to_string(m_vertices[m_v2]));
+                error("Simplex normal is not finite, simplex vertices\n" + vertices_to_string(m_vertices, m_v));
         }
 
-        m_geometry.set_data(m_normal, {{m_vertices[m_v0], m_vertices[m_v1], m_vertices[m_v2]}});
+        m_geometry.set_data(m_normal, vertices_to_array(m_vertices, m_v));
 
         if (!has_normals)
         {
@@ -62,25 +111,24 @@ MeshTriangle::MeshTriangle(const vec3* points, const vec3* normals, const vec2* 
                 return;
         }
 
-        m_n0 = n0;
-        m_n1 = n1;
-        m_n2 = n2;
+        m_n = normal_indices;
 
-        double d0 = dot(m_normals[m_n0], m_normal);
-        double d1 = dot(m_normals[m_n1], m_normal);
-        double d2 = dot(m_normals[m_n2], m_normal);
+        std::array<T, N> dots;
 
-        constexpr double LIMIT_COSINE = 0.7; // 0.7 немного больше 45 градусов
+        for (unsigned i = 0; i < N; ++i)
+        {
+                dots[i] = dot(m_normals[m_n[i]], m_normal);
+        }
 
-        if (std::abs(d0) < LIMIT_COSINE || std::abs(d1) < LIMIT_COSINE || std::abs(d2) < LIMIT_COSINE)
+        if (std::any_of(dots.cbegin(), dots.cend(), [](const T& d) { return std::abs(d) < LIMIT_COSINE<T>; }))
         {
                 // «Перпендикуляры» на вершинах совсем не перпендикуляры,
-                // поэтому треугольник считать плоским.
+                // поэтому симплекс считать плоским.
                 m_normal_type = NormalType::NO_NORMALS;
                 return;
         }
 
-        if (d0 > 0 && d1 > 0 && d2 > 0)
+        if (all_positive(dots))
         {
                 // Реальный перпендикуляр и «перпендикуляры» вершин имеют
                 // одинаковое направление, поэтому оставить как есть.
@@ -88,9 +136,9 @@ MeshTriangle::MeshTriangle(const vec3* points, const vec3* normals, const vec2* 
                 return;
         }
 
-        if (d0 < 0 && d1 < 0 && d2 < 0)
+        if (all_negative(dots))
         {
-                // Реальный перпендикуляр и «перпендикуляры» вершин имеют
+                // Реальный перпендикуляр и все «перпендикуляры» вершин имеют
                 // противоположное направление, поэтому поменять направление
                 // реального перпендикуляра.
                 m_normal_type = NormalType::USE_NORMALS;
@@ -103,71 +151,88 @@ MeshTriangle::MeshTriangle(const vec3* points, const vec3* normals, const vec2* 
         // типа COCONE, где соседние объекты Вороного имеют положительные полюсы
         // в противоположных направлениях.
         m_normal_type = NormalType::NEGATE_NORMALS;
-        m_negate_normal_0 = d0 < 0;
-        m_negate_normal_1 = d1 < 0;
-        m_negate_normal_2 = d2 < 0;
+        for (unsigned i = 0; i < N; ++i)
+        {
+                m_negate_normal[i] = dots[i] < 0;
+        }
 }
 
-bool MeshTriangle::intersect(const ray3& r, double* t) const
+template <size_t N, typename T>
+bool MeshSimplex<N, T>::intersect(const Ray<N, T>& r, T* t) const
 {
-        return m_geometry.intersect(r, m_vertices[m_v0], m_normal, t);
+        return m_geometry.intersect(r, m_vertices[m_v[0]], m_normal, t);
 }
 
-vec3 MeshTriangle::geometric_normal() const
+template <size_t N, typename T>
+Vector<N, T> MeshSimplex<N, T>::geometric_normal() const
 {
         return m_normal;
 }
 
-vec3 MeshTriangle::shading_normal(const vec3& point) const
+template <size_t N, typename T>
+Vector<N, T> MeshSimplex<N, T>::shading_normal(const Vector<N, T>& point) const
 {
         switch (m_normal_type)
         {
         case NormalType::NO_NORMALS:
+        {
                 return m_normal;
+        }
         case NormalType::USE_NORMALS:
         {
-                std::array<vec3, 3> normals;
-                normals[0] = m_normals[m_n0];
-                normals[1] = m_normals[m_n1];
-                normals[2] = m_normals[m_n2];
+                std::array<Vector<N, T>, N> normals;
+                for (unsigned i = 0; i < N; ++i)
+                {
+                        normals[i] = m_normals[m_n[i]];
+                }
                 return normalize(m_geometry.interpolate(point, normals));
         }
         case NormalType::NEGATE_NORMALS:
         {
-                std::array<vec3, 3> normals;
-                normals[0] = m_negate_normal_0 ? -m_normals[m_n0] : m_normals[m_n0];
-                normals[1] = m_negate_normal_1 ? -m_normals[m_n1] : m_normals[m_n1];
-                normals[2] = m_negate_normal_2 ? -m_normals[m_n2] : m_normals[m_n2];
+                std::array<Vector<N, T>, N> normals;
+                for (unsigned i = 0; i < N; ++i)
+                {
+                        normals[i] = m_negate_normal[i] ? -m_normals[m_n[i]] : m_normals[m_n[i]];
+                }
                 return normalize(m_geometry.interpolate(point, normals));
         }
         }
-        error_fatal("Unknown table triangle normal type");
+        error_fatal("Unknown mesh simplex normal type");
 }
 
-bool MeshTriangle::has_texcoord() const
+template <size_t N, typename T>
+bool MeshSimplex<N, T>::has_texcoord() const
 {
-        return m_t0 >= 0;
+        return m_t[0] >= 0;
 }
 
-vec2 MeshTriangle::texcoord(const vec3& point) const
+template <size_t N, typename T>
+Vector<N - 1, T> MeshSimplex<N, T>::texcoord(const Vector<N, T>& point) const
 {
         if (has_texcoord())
         {
-                std::array<vec2, 3> texcoords;
-                texcoords[0] = m_texcoords[m_t0];
-                texcoords[1] = m_texcoords[m_t1];
-                texcoords[2] = m_texcoords[m_t2];
+                std::array<Vector<N - 1, T>, N> texcoords;
+                for (unsigned i = 0; i < N; ++i)
+                {
+                        texcoords[i] = m_texcoords[m_t[i]];
+                }
                 return m_geometry.interpolate(point, texcoords);
         }
-        error("Table triangle texture coordinates request when there are no texture coordinates");
+        error("Mesh simplex texture coordinates request when there are no texture coordinates");
 }
 
-int MeshTriangle::material() const
+template <size_t N, typename T>
+int MeshSimplex<N, T>::material() const
 {
         return m_material;
 }
 
-std::array<vec3, 3> MeshTriangle::vertices() const
+template <size_t N, typename T>
+std::array<Vector<N, T>, N> MeshSimplex<N, T>::vertices() const
 {
-        return {{m_vertices[m_v0], m_vertices[m_v1], m_vertices[m_v2]}};
+        return vertices_to_array(m_vertices, m_v);
 }
+
+template class MeshSimplex<3, double>;
+template class MeshSimplex<4, double>;
+template class MeshSimplex<5, double>;

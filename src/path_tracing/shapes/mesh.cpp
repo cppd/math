@@ -56,20 +56,8 @@ void Mesh::create_mesh_object(const IObj* obj, const mat4& vertex_matrix, unsign
         m_triangles.reserve(obj->faces().size());
         for (const IObj::Face& face : obj->faces())
         {
-                int v0 = face.vertices[0];
-                int v1 = face.vertices[1];
-                int v2 = face.vertices[2];
-
-                int n0 = face.normals[0];
-                int n1 = face.normals[1];
-                int n2 = face.normals[2];
-
-                int t0 = face.texcoords[0];
-                int t1 = face.texcoords[1];
-                int t2 = face.texcoords[2];
-
-                m_triangles.emplace_back(m_vertices.data(), m_normals.data(), m_texcoords.data(), v0, v1, v2, face.has_normal, n0,
-                                         n1, n2, face.has_texcoord, t0, t1, t2, face.material);
+                m_triangles.emplace_back(m_vertices, m_normals, m_texcoords, face.vertices, face.has_normal, face.normals,
+                                         face.has_texcoord, face.texcoords, face.material);
         }
 
         m_materials.reserve(obj->materials().size());
@@ -86,9 +74,9 @@ void Mesh::create_mesh_object(const IObj* obj, const mat4& vertex_matrix, unsign
 
         progress->set_text("Octree: %v of %m");
 
-        std::vector<SimplexWrapperForShapeIntersection<MeshTriangle>> simplex_wrappers;
+        std::vector<SimplexWrapperForShapeIntersection<Simplex>> simplex_wrappers;
         simplex_wrappers.reserve(m_triangles.size());
-        for (const MeshTriangle& t : m_triangles)
+        for (const Simplex& t : m_triangles)
         {
                 simplex_wrappers.emplace_back(t);
         }
@@ -119,7 +107,7 @@ bool Mesh::intersect_approximate(const ray3& r, double* t) const
 
 bool Mesh::intersect_precise(const ray3& ray, double approximate_t, double* t, const void** intersection_data) const
 {
-        const MeshTriangle* triangle = nullptr;
+        const Simplex* triangle = nullptr;
 
         if (m_octree.trace_ray(ray, approximate_t,
                                // Пересечение луча с набором треугольников ячейки октадерева
@@ -143,17 +131,17 @@ bool Mesh::intersect_precise(const ray3& ray, double approximate_t, double* t, c
 
 vec3 Mesh::get_geometric_normal(const void* intersection_data) const
 {
-        return static_cast<const MeshTriangle*>(intersection_data)->geometric_normal();
+        return static_cast<const Simplex*>(intersection_data)->geometric_normal();
 }
 
 vec3 Mesh::get_shading_normal(const vec3& p, const void* intersection_data) const
 {
-        return static_cast<const MeshTriangle*>(intersection_data)->shading_normal(p);
+        return static_cast<const Simplex*>(intersection_data)->shading_normal(p);
 }
 
 std::optional<Color> Mesh::get_color(const vec3& p, const void* intersection_data) const
 {
-        const MeshTriangle* triangle = static_cast<const MeshTriangle*>(intersection_data);
+        const Simplex* triangle = static_cast<const Simplex*>(intersection_data);
 
         if (triangle->material() >= 0)
         {

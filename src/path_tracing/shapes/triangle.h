@@ -22,20 +22,27 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/ray.h"
 #include "com/vec.h"
 
-class MeshTriangle
-{
-        const vec3* m_vertices;
-        const vec3* m_normals;
-        const vec2* m_texcoords;
+#include <array>
+#include <vector>
 
-        int m_v0, m_v1, m_v2;
-        int m_n0, m_n1, m_n2;
-        int m_t0, m_t1, m_t2;
+template <size_t N, typename T>
+class MeshSimplex
+{
+        static_assert(N >= 3);
+
+        const std::vector<Vector<N, T>>& m_vertices;
+        const std::vector<Vector<N, T>>& m_normals;
+        const std::vector<Vector<N - 1, T>>& m_texcoords;
+
+        std::array<int, N> m_v;
+        std::array<int, N> m_n;
+        std::array<int, N> m_t;
+
         int m_material;
 
-        vec3 m_normal;
+        Vector<N, T> m_normal;
 
-        SimplexGeometry<3, double> m_geometry;
+        SimplexGeometry<N, T> m_geometry;
 
         enum class NormalType : char
         {
@@ -44,24 +51,26 @@ class MeshTriangle
                 NEGATE_NORMALS
         } m_normal_type;
 
-        bool m_negate_normal_0, m_negate_normal_1, m_negate_normal_2;
+        std::array<bool, N> m_negate_normal;
 
 public:
-        static constexpr size_t DIMENSION = 3;
-        using DataType = double;
+        static constexpr size_t DIMENSION = N;
+        using DataType = T;
 
-        MeshTriangle(const vec3* points, const vec3* normals, const vec2* texcoords, int v1, int v2, int v3, bool has_normals,
-                     int n1, int n2, int n3, bool has_texcoords, int t1, int t2, int t3, int material);
+        MeshSimplex(const std::vector<Vector<N, T>>& vertices, const std::vector<Vector<N, T>>& normals,
+                    const std::vector<Vector<N - 1, T>>& texcoords, const std::array<int, N>& vertex_indices, bool has_normals,
+                    const std::array<int, N>& normal_indices, bool has_texcoords, const std::array<int, N>& texcoord_indices,
+                    int material);
 
         int material() const;
 
         bool has_texcoord() const;
-        vec2 texcoord(const vec3& point) const;
+        Vector<N - 1, T> texcoord(const Vector<N, T>& point) const;
 
-        bool intersect(const ray3& r, double* t) const;
+        bool intersect(const Ray<N, T>& r, T* t) const;
 
-        vec3 geometric_normal() const;
-        vec3 shading_normal(const vec3& point) const;
+        Vector<N, T> geometric_normal() const;
+        Vector<N, T> shading_normal(const Vector<N, T>& point) const;
 
-        std::array<vec3, 3> vertices() const;
+        std::array<Vector<N, T>, N> vertices() const;
 };
