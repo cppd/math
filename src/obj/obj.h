@@ -24,13 +24,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <vector>
 
-struct IObj
+template <size_t N>
+struct Obj
 {
-        struct Face
+        struct Facet
         {
-                std::array<int, 3> vertices;
-                std::array<int, 3> normals; // -1 если нет нормали
-                std::array<int, 3> texcoords; // -1 если нет текстурных координат
+                std::array<int, N> vertices;
+                std::array<int, N> normals; // -1 если нет нормали
+                std::array<int, N> texcoords; // -1 если нет текстурных координат
                 int material; // -1 если нет материала
                 bool has_texcoord;
                 bool has_normal;
@@ -60,22 +61,22 @@ struct IObj
 
         struct Image
         {
-                std::array<int, 2> size;
+                std::array<int, N - 1> size;
                 // Цветовое пространство sRGB, последовательность red, green, blue, alpha.
                 // Каждый цветовой компонент в интервале [0, 255].
                 std::vector<unsigned char> srgba_pixels;
         };
 
-        virtual ~IObj() = default;
+        virtual ~Obj() = default;
 
-        virtual const std::vector<vec3f>& vertices() const = 0;
-        virtual const std::vector<vec2f>& texcoords() const = 0;
-        virtual const std::vector<vec3f>& normals() const = 0;
-        virtual const std::vector<Face>& faces() const = 0;
+        virtual const std::vector<Vector<N, float>>& vertices() const = 0;
+        virtual const std::vector<Vector<N, float>>& normals() const = 0;
+        virtual const std::vector<Vector<N - 1, float>>& texcoords() const = 0;
+        virtual const std::vector<Facet>& facets() const = 0;
         virtual const std::vector<Point>& points() const = 0;
         virtual const std::vector<Line>& lines() const = 0;
         virtual const std::vector<Material>& materials() const = 0;
         virtual const std::vector<Image>& images() const = 0;
-        virtual vec3f center() const = 0;
+        virtual Vector<N, float> center() const = 0;
         virtual float length() const = 0;
 };

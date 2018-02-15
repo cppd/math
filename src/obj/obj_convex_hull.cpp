@@ -30,44 +30,52 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace
 {
-// vec<3> average_normal(const std::vector<vec<3>>& normals)
+// template <size_t N>
+// vec<N> average_normal(const std::vector<vec<N>>& normals)
 //{
-//        vec<3> v(0, 0, 0);
-//        for (vec<3> n : normals)
+//        vec<N> v(0);
+//        for (const vec<N>& n : normals)
 //        {
 //                v = v + n;
 //        }
 //        return normalize(v);
 //}
 
-class ConvexHullObj final : public IObj
+template <size_t N>
+class ConvexHullObj final : public Obj<N>
 {
-        std::vector<vec3f> m_vertices;
-        std::vector<vec2f> m_texcoords;
-        std::vector<vec3f> m_normals;
-        std::vector<Face> m_faces;
+        using typename Obj<N>::Facet;
+        using typename Obj<N>::Point;
+        using typename Obj<N>::Line;
+        using typename Obj<N>::Material;
+        using typename Obj<N>::Image;
+
+        std::vector<Vector<N, float>> m_vertices;
+        std::vector<Vector<N, float>> m_normals;
+        std::vector<Vector<N - 1, float>> m_texcoords;
+        std::vector<Facet> m_facets;
         std::vector<Point> m_points;
         std::vector<Line> m_lines;
         std::vector<Material> m_materials;
         std::vector<Image> m_images;
-        vec3f m_center;
+        Vector<N, float> m_center;
         float m_length;
 
-        const std::vector<vec3f>& vertices() const override
+        const std::vector<Vector<N, float>>& vertices() const override
         {
                 return m_vertices;
         }
-        const std::vector<vec2f>& texcoords() const override
-        {
-                return m_texcoords;
-        }
-        const std::vector<vec3f>& normals() const override
+        const std::vector<Vector<N, float>>& normals() const override
         {
                 return m_normals;
         }
-        const std::vector<Face>& faces() const override
+        const std::vector<Vector<N - 1, float>>& texcoords() const override
         {
-                return m_faces;
+                return m_texcoords;
+        }
+        const std::vector<Facet>& facets() const override
+        {
+                return m_facets;
         }
         const std::vector<Point>& points() const override
         {
@@ -85,7 +93,7 @@ class ConvexHullObj final : public IObj
         {
                 return m_images;
         }
-        vec3f center() const override
+        Vector<N, float> center() const override
         {
                 return m_center;
         }
@@ -94,19 +102,19 @@ class ConvexHullObj final : public IObj
                 return m_length;
         }
 
-        void create_obj(const std::vector<vec3f>& points, const std::vector<ConvexHullFacet<3>>& facets)
+        void create_obj(const std::vector<Vector<N, float>>& points, const std::vector<ConvexHullFacet<N>>& facets)
         {
                 if (facets.size() == 0)
                 {
                         error("No facets for convex hull object");
                 }
 
-                std::unordered_map<int, std::vector<vec<3>>> vertex_map;
+                std::unordered_map<int, std::vector<vec<N>>> vertex_map;
                 std::unordered_map<int, int> index_map;
 
-                for (const ConvexHullFacet<3>& facet : facets)
+                for (const ConvexHullFacet<N>& facet : facets)
                 {
-                        vec<3> ortho = facet.get_ortho();
+                        vec<N> ortho = facet.get_ortho();
                         for (int v : facet.get_vertices())
                         {
                                 vertex_map[v].push_back(ortho);
@@ -127,42 +135,37 @@ class ConvexHullObj final : public IObj
                         ++idx;
                 }
 
-                m_faces.reserve(facets.size());
+                m_facets.reserve(facets.size());
 
-                for (const ConvexHullFacet<3>& facet : facets)
+                for (const ConvexHullFacet<N>& facet : facets)
                 {
-                        Face face;
+                        Facet obj_facet;
 
-                        face.material = -1;
-                        face.has_texcoord = false;
-                        face.has_normal = false; // true;
+                        obj_facet.material = -1;
+                        obj_facet.has_texcoord = false;
+                        obj_facet.has_normal = false; // true;
 
-                        face.vertices[0] = index_map[facet.get_vertices()[0]];
-                        face.vertices[1] = index_map[facet.get_vertices()[1]];
-                        face.vertices[2] = index_map[facet.get_vertices()[2]];
+                        for (unsigned i = 0; i < N; ++i)
+                        {
+                                obj_facet.vertices[i] = index_map[facet.get_vertices()[i]];
+                                obj_facet.normals[i] = -1; // obj_facet.vertices[i];
+                                obj_facet.texcoords[i] = -1;
+                        }
 
-                        face.normals[0] = -1; // face.vertices[0];
-                        face.normals[1] = -1; // face.vertices[1];
-                        face.normals[2] = -1; // face.vertices[2];
-
-                        face.texcoords[0] = -1;
-                        face.texcoords[1] = -1;
-                        face.texcoords[2] = -1;
-
-                        m_faces.push_back(std::move(face));
+                        m_facets.push_back(std::move(obj_facet));
                 }
 
-                center_and_length(m_vertices, m_faces, &m_center, &m_length);
+                center_and_length(m_vertices, m_facets, &m_center, &m_length);
         }
 
 public:
-        ConvexHullObj(const IObj* obj, ProgressRatio* progress)
+        ConvexHullObj(const Obj<N>* obj, ProgressRatio* progress)
         {
-                std::vector<vec3f> points;
+                std::vector<Vector<N, float>> points;
 
-                if (obj->faces().size() > 0)
+                if (obj->facets().size() > 0)
                 {
-                        points = unique_face_vertices(obj);
+                        points = unique_facet_vertices(obj);
                 }
                 else if (obj->points().size() > 0)
                 {
@@ -173,7 +176,7 @@ public:
                         error("Faces or points not found for convex hull object");
                 }
 
-                std::vector<ConvexHullFacet<3>> facets;
+                std::vector<ConvexHullFacet<N>> facets;
 
                 double start_time = time_in_seconds();
 
@@ -186,7 +189,12 @@ public:
 };
 }
 
-std::unique_ptr<IObj> create_convex_hull_for_obj(const IObj* obj, ProgressRatio* progress)
+template <size_t N>
+std::unique_ptr<Obj<N>> create_convex_hull_for_obj(const Obj<N>* obj, ProgressRatio* progress)
 {
-        return std::make_unique<ConvexHullObj>(obj, progress);
+        return std::make_unique<ConvexHullObj<N>>(obj, progress);
 }
+
+template std::unique_ptr<Obj<3>> create_convex_hull_for_obj(const Obj<3>* obj, ProgressRatio* progress);
+template std::unique_ptr<Obj<4>> create_convex_hull_for_obj(const Obj<4>* obj, ProgressRatio* progress);
+template std::unique_ptr<Obj<5>> create_convex_hull_for_obj(const Obj<5>* obj, ProgressRatio* progress);

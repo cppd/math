@@ -112,7 +112,7 @@ struct Material final
         // если нет текстуры, то -1
         GLint map_Ka, map_Kd, map_Ks;
 
-        explicit Material(const IObj::Material& m)
+        explicit Material(const Obj<3>::Material& m)
                 : Ka(m.Ka.to_rgb_vector<float>()),
                   Kd(m.Kd.to_rgb_vector<float>()),
                   Ks(m.Ks.to_rgb_vector<float>()),
@@ -124,7 +124,7 @@ struct Material final
         }
 };
 
-void load_face_vertices(const IObj& obj, std::vector<FaceVertex>* vertices)
+void load_face_vertices(const Obj<3>& obj, std::vector<FaceVertex>* vertices)
 {
         const std::vector<vec3f>& obj_vertices = obj.vertices();
         const std::vector<vec3f>& obj_normals = obj.normals();
@@ -132,12 +132,12 @@ void load_face_vertices(const IObj& obj, std::vector<FaceVertex>* vertices)
 
         vertices->clear();
         vertices->shrink_to_fit();
-        vertices->reserve(obj.faces().size() * 3);
+        vertices->reserve(obj.facets().size() * 3);
 
         vec3f v0, v1, v2, n0, n1, n2;
         vec2f t0, t1, t2;
 
-        for (const IObj::Face& f : obj.faces())
+        for (const Obj<3>::Facet& f : obj.facets())
         {
                 v0 = obj_vertices[f.vertices[0]];
                 v1 = obj_vertices[f.vertices[1]];
@@ -173,31 +173,31 @@ void load_face_vertices(const IObj& obj, std::vector<FaceVertex>* vertices)
         }
 }
 
-void load_point_vertices(const IObj& obj, std::vector<PointVertex>* vertices)
+void load_point_vertices(const Obj<3>& obj, std::vector<PointVertex>* vertices)
 {
-        const std::vector<IObj::Point>& obj_points = obj.points();
+        const std::vector<Obj<3>::Point>& obj_points = obj.points();
         const std::vector<vec3f>& obj_vertices = obj.vertices();
 
         vertices->clear();
         vertices->shrink_to_fit();
         vertices->reserve(obj_points.size());
 
-        for (const IObj::Point& point : obj_points)
+        for (const Obj<3>::Point& point : obj_points)
         {
                 vertices->emplace_back(obj_vertices[point.vertex]);
         }
 }
 
-void load_line_vertices(const IObj& obj, std::vector<PointVertex>* vertices)
+void load_line_vertices(const Obj<3>& obj, std::vector<PointVertex>* vertices)
 {
-        const std::vector<IObj::Line>& obj_lines = obj.lines();
+        const std::vector<Obj<3>::Line>& obj_lines = obj.lines();
         const std::vector<vec3f>& obj_vertices = obj.vertices();
 
         vertices->clear();
         vertices->shrink_to_fit();
         vertices->reserve(obj_lines.size() * 2);
 
-        for (const IObj::Line& line : obj_lines)
+        for (const Obj<3>::Line& line : obj_lines)
         {
                 for (int index : line.vertices)
                 {
@@ -206,14 +206,14 @@ void load_line_vertices(const IObj& obj, std::vector<PointVertex>* vertices)
         }
 }
 
-void load_materials(const IObj& obj, std::vector<Material>* materials)
+void load_materials(const Obj<3>& obj, std::vector<Material>* materials)
 {
-        const std::vector<IObj::Material>& obj_materials = obj.materials();
+        const std::vector<Obj<3>::Material>& obj_materials = obj.materials();
 
         materials->clear();
         materials->shrink_to_fit();
         materials->reserve(obj_materials.size());
-        for (const IObj::Material& m : obj_materials)
+        for (const Obj<3>::Material& m : obj_materials)
         {
                 materials->emplace_back(m);
         }
@@ -226,11 +226,11 @@ enum class DrawType
         LINES
 };
 
-DrawType calculate_draw_type_from_obj(const IObj* obj)
+DrawType calculate_draw_type_from_obj(const Obj<3>* obj)
 {
         int type_count = 0;
 
-        type_count += obj->faces().size() > 0 ? 1 : 0;
+        type_count += obj->facets().size() > 0 ? 1 : 0;
         type_count += obj->points().size() > 0 ? 1 : 0;
         type_count += obj->lines().size() > 0 ? 1 : 0;
 
@@ -239,7 +239,7 @@ DrawType calculate_draw_type_from_obj(const IObj* obj)
                 error("Supported only faces or points or lines");
         }
 
-        if (obj->faces().size() > 0)
+        if (obj->facets().size() > 0)
         {
                 return DrawType::TRIANGLES;
         }
@@ -283,7 +283,7 @@ class DrawObject final
         const DrawType m_draw_type;
 
 public:
-        DrawObject(const IObj* obj, const ColorSpaceConverterToRGB& color_converter, double size, const vec3& position);
+        DrawObject(const Obj<3>* obj, const ColorSpaceConverterToRGB& color_converter, double size, const vec3& position);
 
         void bind() const;
 
@@ -292,7 +292,7 @@ public:
         DrawType get_draw_type() const;
 };
 
-DrawObject::DrawObject(const IObj* obj, const ColorSpaceConverterToRGB& color_converter, double size, const vec3& position)
+DrawObject::DrawObject(const Obj<3>* obj, const ColorSpaceConverterToRGB& color_converter, double size, const vec3& position)
         : m_model_matrix(model_vertex_matrix(obj, size, position)), m_draw_type(calculate_draw_type_from_obj(obj))
 {
         if (m_draw_type == DrawType::TRIANGLES)
@@ -313,7 +313,7 @@ DrawObject::DrawObject(const IObj* obj, const ColorSpaceConverterToRGB& color_co
 
                 //
 
-                for (const IObj::Image& image : obj->images())
+                for (const Obj<3>::Image& image : obj->images())
                 {
                         m_textures.emplace_back(image.size[0], image.size[1], integer_pixels_to_float_pixels(image.srgba_pixels));
 
@@ -710,7 +710,7 @@ class Renderer final : public IRenderer
                 return *m_object_texture;
         }
 
-        void add_object(const IObj* obj, double size, const vec3& position, int id, int scale_id) override
+        void add_object(const Obj<3>* obj, double size, const vec3& position, int id, int scale_id) override
         {
                 m_draw_objects.add_object(std::make_unique<DrawObject>(obj, m_color_converter, size, position), id, scale_id);
         }

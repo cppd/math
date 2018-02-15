@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -83,34 +83,36 @@ constexpr Matrix<4, 4, T> ortho(T1 left, T2 right, T3 bottom, T4 top, T5 near, T
         return m;
 }
 
-template <typename T>
-constexpr Matrix<4, 4, T> scale(const Vector<3, T>& v)
+template <size_t N, typename T>
+constexpr Matrix<N + 1, N + 1, T> scale(const Vector<N, T>& v)
 {
-        Matrix<4, 4, T> m(1);
-        m[0][0] = v[0];
-        m[1][1] = v[1];
-        m[2][2] = v[2];
+        Matrix<N + 1, N + 1, T> m(1);
+        for (unsigned i = 0; i < N; ++i)
+        {
+                m[i][i] = v[i];
+        }
         return m;
 }
 
-template <typename T, typename T0, typename T1, typename T2>
-constexpr Matrix<4, 4, T> scale(T0 v0, T1 v1, T2 v2)
+template <typename T, typename... V>
+constexpr Matrix<sizeof...(V) + 1, sizeof...(V) + 1, T> scale(V... v)
 {
-        return scale(Vector<3, T>(v0, v1, v2));
+        return scale(Vector<sizeof...(V), T>(v...));
 }
 
-template <typename T>
-constexpr Matrix<4, 4, T> translate(const Vector<3, T>& v)
+template <size_t N, typename T>
+constexpr Matrix<N + 1, N + 1, T> translate(const Vector<N, T>& v)
 {
-        Matrix<4, 4, T> m(1);
-        m[0][3] = v[0];
-        m[1][3] = v[1];
-        m[2][3] = v[2];
+        Matrix<N + 1, N + 1, T> m(1);
+        for (unsigned i = 0; i < N; ++i)
+        {
+                m[i][N] = v[i];
+        }
         return m;
 }
 
-template <typename T, typename T0, typename T1, typename T2>
-constexpr Matrix<4, 4, T> translate(T0 v0, T1 v1, T2 v2)
+template <typename T, typename... V>
+constexpr Matrix<sizeof...(V) + 1, sizeof...(V) + 1, T> translate(V... v)
 {
-        return translate(Vector<3, T>(v0, v1, v2));
+        return translate(Vector<sizeof...(V), T>(v...));
 }

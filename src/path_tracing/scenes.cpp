@@ -56,7 +56,7 @@ public:
         {
                 ProgressRatio progress(nullptr);
 
-                std::unique_ptr<IObj> obj_file = load_obj_from_file(obj_file_name, &progress);
+                std::unique_ptr<Obj<3>> obj_file = load_obj_from_file(obj_file_name, &progress);
 
                 mat4 vertex_matrix = model_vertex_matrix(obj_file.get(), size, vec3(0));
 

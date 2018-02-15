@@ -35,10 +35,10 @@ class Event final
 public:
         struct add_object final
         {
-                std::shared_ptr<const IObj> obj;
+                std::shared_ptr<const Obj<3>> obj;
                 int id;
                 int scale_id;
-                add_object(const std::shared_ptr<const IObj>& obj_, int id_, int scale_id_)
+                add_object(const std::shared_ptr<const Obj<3>>& obj_, int id_, int scale_id_)
                         : obj(obj_), id(id_), scale_id(scale_id_)
                 {
                 }

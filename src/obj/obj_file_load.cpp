@@ -170,7 +170,7 @@ void read_file_lines(const std::string& file_name, T* file_data, std::vector<lon
         find_line_begin(*file_data, line_begin);
 }
 
-IObj::Image read_image_from_file(const std::string& file_name)
+Obj<3>::Image read_image_from_file(const std::string& file_name)
 {
         sf::Image image;
 
@@ -183,7 +183,7 @@ IObj::Image read_image_from_file(const std::string& file_name)
 
         unsigned long long buffer_size = 4ull * image.getSize().x * image.getSize().y;
 
-        IObj::Image obj_image;
+        Obj<3>::Image obj_image;
 
         obj_image.size[0] = image.getSize().x;
         obj_image.size[1] = image.getSize().y;
@@ -197,7 +197,7 @@ IObj::Image read_image_from_file(const std::string& file_name)
 }
 
 void load_image(const std::string& dir_name, const std::string& image_name, std::map<std::string, int>* image_index,
-                std::vector<IObj::Image>* images, int* index)
+                std::vector<Obj<3>::Image>* images, int* index)
 {
         std::string file_name = trim(image_name);
 
@@ -384,7 +384,8 @@ void check_index_consistent(const std::array<std::array<T, 3>, N>& groups, int g
 }
 
 template <typename T>
-void read_faces(const T& data, long long begin, long long end, std::array<IObj::Face, MAX_FACES_PER_LINE>* faces, int* face_count)
+void read_faces(const T& data, long long begin, long long end, std::array<Obj<3>::Facet, MAX_FACES_PER_LINE>* faces,
+                int* face_count)
 
 {
         constexpr int MAX_GROUP_COUNT = MAX_FACES_PER_LINE + 2;
@@ -671,12 +672,12 @@ bool face_is_one_dimensional(const vec3f& v0, const vec3f& v1, const vec3f& v2)
         return true;
 }
 
-class FileObj final : public IObj
+class FileObj final : public Obj<3>
 {
         std::vector<vec3f> m_vertices;
         std::vector<vec2f> m_texcoords;
         std::vector<vec3f> m_normals;
-        std::vector<Face> m_faces;
+        std::vector<Facet> m_facets;
         std::vector<Point> m_points;
         std::vector<Line> m_lines;
         std::vector<Material> m_materials;
@@ -715,7 +716,7 @@ class FileObj final : public IObj
                 ObjLineType type;
                 long long second_b;
                 long long second_e;
-                std::array<Face, MAX_FACES_PER_LINE> faces;
+                std::array<Facet, MAX_FACES_PER_LINE> faces;
                 int face_count;
                 vec3f v;
         };
@@ -785,9 +786,9 @@ class FileObj final : public IObj
         {
                 return m_normals;
         }
-        const std::vector<Face>& faces() const override
+        const std::vector<Facet>& facets() const override
         {
-                return m_faces;
+                return m_facets;
         }
         const std::vector<Point>& points() const override
         {
@@ -824,43 +825,43 @@ void FileObj::check_face_indices() const
         int texcoord_count = m_texcoords.size();
         int normal_count = m_normals.size();
 
-        for (const Face& face : m_faces)
+        for (const Facet& facet : m_facets)
         {
                 for (int i = 0; i < 3; ++i)
                 {
-                        if (face.vertices[i] < 0 || face.vertices[i] >= vertex_count)
+                        if (facet.vertices[i] < 0 || facet.vertices[i] >= vertex_count)
                         {
-                                error("Vertex index " + std::to_string(face.vertices[i]) + " is out of bounds [0, " +
+                                error("Vertex index " + std::to_string(facet.vertices[i]) + " is out of bounds [0, " +
                                       std::to_string(vertex_count) + ")");
                         }
 
-                        if (face.has_texcoord)
+                        if (facet.has_texcoord)
                         {
-                                if (face.texcoords[i] < 0 || face.texcoords[i] >= texcoord_count)
+                                if (facet.texcoords[i] < 0 || facet.texcoords[i] >= texcoord_count)
                                 {
-                                        error("Texture coordinate index " + std::to_string(face.texcoords[i]) +
+                                        error("Texture coordinate index " + std::to_string(facet.texcoords[i]) +
                                               " is out of bounds [0, " + std::to_string(texcoord_count) + ")");
                                 }
                         }
                         else
                         {
-                                if (face.texcoords[i] != -1)
+                                if (facet.texcoords[i] != -1)
                                 {
                                         error("No texture but texture coordinate index is not set to -1");
                                 }
                         }
 
-                        if (face.has_normal)
+                        if (facet.has_normal)
                         {
-                                if (face.normals[i] < 0 || face.normals[i] >= normal_count)
+                                if (facet.normals[i] < 0 || facet.normals[i] >= normal_count)
                                 {
-                                        error("Normal index " + std::to_string(face.normals[i]) + " is out of bounds [0, " +
+                                        error("Normal index " + std::to_string(facet.normals[i]) + " is out of bounds [0, " +
                                               std::to_string(normal_count) + ")");
                                 }
                         }
                         else
                         {
-                                if (face.normals[i] != -1)
+                                if (facet.normals[i] != -1)
                                 {
                                         error("No normals but normal coordinate index is not set to -1");
                                 }
@@ -871,15 +872,15 @@ void FileObj::check_face_indices() const
 
 bool FileObj::remove_one_dimensional_faces()
 {
-        std::vector<bool> one_d_faces(m_faces.size(), false);
+        std::vector<bool> one_d_faces(m_facets.size(), false);
 
         int one_d_face_count = 0;
 
-        for (size_t i = 0; i < m_faces.size(); ++i)
+        for (size_t i = 0; i < m_facets.size(); ++i)
         {
-                vec3f v0 = m_vertices[m_faces[i].vertices[0]];
-                vec3f v1 = m_vertices[m_faces[i].vertices[1]];
-                vec3f v2 = m_vertices[m_faces[i].vertices[2]];
+                vec3f v0 = m_vertices[m_facets[i].vertices[0]];
+                vec3f v1 = m_vertices[m_facets[i].vertices[1]];
+                vec3f v2 = m_vertices[m_facets[i].vertices[2]];
 
                 if (face_is_one_dimensional(v0, v1, v2))
                 {
@@ -893,18 +894,18 @@ bool FileObj::remove_one_dimensional_faces()
                 return false;
         }
 
-        std::vector<Face> faces;
-        faces.reserve(m_faces.size() - one_d_face_count);
+        std::vector<Facet> facets;
+        facets.reserve(m_facets.size() - one_d_face_count);
 
-        for (size_t i = 0; i < m_faces.size(); ++i)
+        for (size_t i = 0; i < m_facets.size(); ++i)
         {
                 if (!one_d_faces[i])
                 {
-                        faces.push_back(m_faces[i]);
+                        facets.push_back(m_facets[i]);
                 }
         }
 
-        m_faces = std::move(faces);
+        m_facets = std::move(facets);
 
         return true;
 }
@@ -1004,13 +1005,13 @@ void FileObj::read_obj_stage_one(unsigned thread_num, unsigned thread_count, std
 //   начинаются с 1 для абсолютных значений,
 //   начинаются с -1 для относительных значений назад.
 // Преобразование в абсолютные значения с началом от 0.
-void correct_indices(IObj::Face* face, int vertices_size, int texcoords_size, int normals_size)
+void correct_indices(Obj<3>::Facet* facet, int vertices_size, int texcoords_size, int normals_size)
 {
         for (int i = 0; i < 3; ++i)
         {
-                int& v = face->vertices[i];
-                int& t = face->texcoords[i];
-                int& n = face->normals[i];
+                int& v = facet->vertices[i];
+                int& t = facet->texcoords[i];
+                int& n = facet->normals[i];
 
                 if (v == 0)
                 {
@@ -1030,7 +1031,7 @@ void FileObj::read_obj_stage_two(const Counters& counters, std::vector<char>* da
         m_vertices.reserve(counters.vertex);
         m_texcoords.reserve(counters.texcoord);
         m_normals.reserve(counters.normal);
-        m_faces.reserve(counters.face);
+        m_facets.reserve(counters.face);
 
         const std::vector<char>& data = *data_ptr;
         const long long line_count = line_prop->size();
@@ -1065,7 +1066,7 @@ void FileObj::read_obj_stage_two(const Counters& counters, std::vector<char>* da
                         {
                                 lp.faces[i].material = mtl_index;
                                 correct_indices(&lp.faces[i], m_vertices.size(), m_texcoords.size(), m_normals.size());
-                                m_faces.push_back(std::move(lp.faces[i]));
+                                m_facets.push_back(std::move(lp.faces[i]));
                         }
                         break;
                 case ObjLineType::USEMTL:
@@ -1078,7 +1079,7 @@ void FileObj::read_obj_stage_two(const Counters& counters, std::vector<char>* da
                         }
                         else
                         {
-                                IObj::Material mtl;
+                                Obj<3>::Material mtl;
                                 mtl.name = mtl_name;
                                 m_materials.push_back(std::move(mtl));
                                 material_index->emplace(std::move(mtl_name), m_materials.size() - 1);
@@ -1350,22 +1351,22 @@ void FileObj::read_obj_and_mtl(const std::string& file_name, ProgressRatio* prog
 
         read_obj(file_name, progress, &material_index, &library_names);
 
-        if (m_faces.size() == 0)
+        if (m_facets.size() == 0)
         {
-                error("No faces found in OBJ file");
+                error("No facets found in OBJ file");
         }
 
         check_face_indices();
 
-        center_and_length(m_vertices, m_faces, &m_center, &m_length);
+        center_and_length(m_vertices, m_facets, &m_center, &m_length);
 
         if (remove_one_dimensional_faces())
         {
-                if (m_faces.size() == 0)
+                if (m_facets.size() == 0)
                 {
-                        error("No 2D faces found in OBJ file");
+                        error("No 2D facets found in OBJ file");
                 }
-                center_and_length(m_vertices, m_faces, &m_center, &m_length);
+                center_and_length(m_vertices, m_facets, &m_center, &m_length);
         }
 
         read_libs(get_dir_name(file_name), progress, &material_index, library_names);
@@ -1383,12 +1384,12 @@ FileObj::FileObj(const std::string& file_name, ProgressRatio* progress)
 // Чтение вершин из текстового файла. Одна вершина на строку. Три координаты через пробел.
 // x y z
 // x y z
-class FileTxt final : public IObj
+class FileTxt final : public Obj<3>
 {
         std::vector<vec3f> m_vertices;
         std::vector<vec2f> m_texcoords;
         std::vector<vec3f> m_normals;
-        std::vector<Face> m_faces;
+        std::vector<Facet> m_facets;
         std::vector<Point> m_points;
         std::vector<Line> m_lines;
         std::vector<Material> m_materials;
@@ -1414,9 +1415,9 @@ class FileTxt final : public IObj
         {
                 return m_normals;
         }
-        const std::vector<Face>& faces() const override
+        const std::vector<Facet>& facets() const override
         {
-                return m_faces;
+                return m_facets;
         }
         const std::vector<Point>& points() const override
         {
@@ -1535,7 +1536,7 @@ FileTxt::FileTxt(const std::string& file_name, ProgressRatio* progress)
 }
 }
 
-std::unique_ptr<IObj> load_obj_from_file(const std::string& file_name, ProgressRatio* progress)
+std::unique_ptr<Obj<3>> load_obj_from_file(const std::string& file_name, ProgressRatio* progress)
 {
         std::string upper_extension = to_upper(get_extension(file_name));
 

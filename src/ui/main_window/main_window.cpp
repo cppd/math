@@ -277,13 +277,12 @@ void MainWindow::thread_self_test(SelfTestType test_type)
         m_threads.start_thread(ThreadAction::SelfTest, [=](ProgressRatioList* progress_list, std::string* message) {
                 *message = "Self-Test";
 
-                self_test(test_type,
-                          progress_list, [&](const char* test_name, const auto& test_function) noexcept {
-                                  catch_all([&](std::string* m) {
-                                          *m = test_name;
-                                          test_function();
-                                  });
-                          });
+                self_test(test_type, progress_list, [&](const char* test_name, const auto& test_function) noexcept {
+                        catch_all([&](std::string* m) {
+                                *m = test_name;
+                                test_function();
+                        });
+                });
         });
 }
 
@@ -300,9 +299,9 @@ void MainWindow::thread_export_cocone()
                 return;
         }
 
-        std::shared_ptr<const IObj> obj = m_objects.get_surface_cocone();
+        std::shared_ptr<const Obj<3>> obj = m_objects.get_surface_cocone();
 
-        if (!obj || obj->faces().size() == 0)
+        if (!obj || obj->facets().size() == 0)
         {
                 m_event_emitter.message_warning(cocone_type + " not created");
                 return;
@@ -338,9 +337,9 @@ void MainWindow::thread_export_bound_cocone()
                 return;
         }
 
-        std::shared_ptr<const IObj> obj = m_objects.get_surface_bound_cocone();
+        std::shared_ptr<const Obj<3>> obj = m_objects.get_surface_bound_cocone();
 
-        if (!obj || obj->faces().size() == 0)
+        if (!obj || obj->facets().size() == 0)
         {
                 m_event_emitter.message_warning(cocone_type + " not created");
                 return;

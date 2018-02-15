@@ -29,34 +29,41 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace
 {
-class Lines final : public IObj
+template <size_t N>
+class Lines final : public Obj<N>
 {
-        std::vector<vec3f> m_vertices;
-        std::vector<vec2f> m_texcoords;
-        std::vector<vec3f> m_normals;
-        std::vector<Face> m_faces;
+        using typename Obj<N>::Facet;
+        using typename Obj<N>::Point;
+        using typename Obj<N>::Line;
+        using typename Obj<N>::Material;
+        using typename Obj<N>::Image;
+
+        std::vector<Vector<N, float>> m_vertices;
+        std::vector<Vector<N, float>> m_normals;
+        std::vector<Vector<N - 1, float>> m_texcoords;
+        std::vector<Facet> m_facets;
         std::vector<Point> m_points;
         std::vector<Line> m_lines;
         std::vector<Material> m_materials;
         std::vector<Image> m_images;
-        vec3f m_center;
+        Vector<N, float> m_center;
         float m_length;
 
-        const std::vector<vec3f>& vertices() const override
+        const std::vector<Vector<N, float>>& vertices() const override
         {
                 return m_vertices;
         }
-        const std::vector<vec2f>& texcoords() const override
-        {
-                return m_texcoords;
-        }
-        const std::vector<vec3f>& normals() const override
+        const std::vector<Vector<N, float>>& normals() const override
         {
                 return m_normals;
         }
-        const std::vector<Face>& faces() const override
+        const std::vector<Vector<N - 1, float>>& texcoords() const override
         {
-                return m_faces;
+                return m_texcoords;
+        }
+        const std::vector<Facet>& facets() const override
+        {
+                return m_facets;
         }
         const std::vector<Point>& points() const override
         {
@@ -74,7 +81,7 @@ class Lines final : public IObj
         {
                 return m_images;
         }
-        vec3f center() const override
+        Vector<N, float> center() const override
         {
                 return m_center;
         }
@@ -83,7 +90,7 @@ class Lines final : public IObj
                 return m_length;
         }
 
-        void create_obj(const std::vector<vec3f>& points, const std::vector<std::array<int, 2>>& lines)
+        void create_obj(const std::vector<Vector<N, float>>& points, const std::vector<std::array<int, 2>>& lines)
         {
                 if (lines.size() == 0)
                 {
@@ -128,7 +135,7 @@ class Lines final : public IObj
         }
 
 public:
-        Lines(const std::vector<vec3f>& points, const std::vector<std::array<int, 2>>& lines)
+        Lines(const std::vector<Vector<N, float>>& points, const std::vector<std::array<int, 2>>& lines)
         {
                 double start_time = time_in_seconds();
 
@@ -139,7 +146,16 @@ public:
 };
 }
 
-std::unique_ptr<IObj> create_obj_for_lines(const std::vector<vec3f>& points, const std::vector<std::array<int, 2>>& lines)
+template <size_t N>
+std::unique_ptr<Obj<N>> create_obj_for_lines(const std::vector<Vector<N, float>>& points,
+                                             const std::vector<std::array<int, 2>>& lines)
 {
-        return std::make_unique<Lines>(points, lines);
+        return std::make_unique<Lines<N>>(points, lines);
 }
+
+template std::unique_ptr<Obj<3>> create_obj_for_lines(const std::vector<Vector<3, float>>& points,
+                                                      const std::vector<std::array<int, 2>>& lines);
+template std::unique_ptr<Obj<4>> create_obj_for_lines(const std::vector<Vector<4, float>>& points,
+                                                      const std::vector<std::array<int, 2>>& lines);
+template std::unique_ptr<Obj<5>> create_obj_for_lines(const std::vector<Vector<5, float>>& points,
+                                                      const std::vector<std::array<int, 2>>& lines);

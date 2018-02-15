@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -22,4 +22,5 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <memory>
 #include <vector>
 
-std::unique_ptr<IObj> create_obj_for_points(std::vector<vec3f>&& points);
+template <size_t N>
+std::unique_ptr<Obj<N>> create_obj_for_points(std::vector<Vector<N, float>>&& points);

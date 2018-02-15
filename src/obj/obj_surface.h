@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -23,5 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <memory>
 
-std::unique_ptr<IObj> create_obj_for_facets(const std::vector<vec3f>& points, const std::vector<Vector<3, double>>& normals,
-                                            const std::vector<std::array<int, 3>>& facets);
+template <size_t N>
+std::unique_ptr<Obj<N>> create_obj_for_facets(const std::vector<Vector<N, float>>& points,
+                                              const std::vector<Vector<N, double>>& normals,
+                                              const std::vector<std::array<int, N>>& facets);

@@ -209,7 +209,7 @@ class ShowObject final : public IShow
         void loop();
         void loop_thread();
 
-        void add_object(const std::shared_ptr<const IObj>& obj_ptr, int id, int scale_id) override
+        void add_object(const std::shared_ptr<const Obj<3>>& obj_ptr, int id, int scale_id) override
         {
                 m_event_queue.emplace(std::in_place_type<Event::add_object>, obj_ptr, id, scale_id);
         }

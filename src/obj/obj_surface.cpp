@@ -23,55 +23,65 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/log.h"
 #include "com/print.h"
 #include "com/time.h"
+#include "geometry/core/linear_algebra.h"
 
 #include <unordered_map>
 #include <unordered_set>
 
 namespace
 {
-vec3f face_normal(const std::vector<vec3f>& points, const std::array<int, 3>& face)
+template <size_t N>
+Vector<N, double> face_normal(const std::vector<Vector<N, float>>& points, const std::array<int, N>& face)
 {
-        return normalize(cross(points[face[1]] - points[face[0]], points[face[2]] - points[face[0]]));
+        return normalize(ortho_nn<N, float, double>(points, face));
 }
 
-vec3f average_normal(const vec3f& original_normal, const std::vector<vec3f>& normals)
+template <size_t N>
+Vector<N, double> average_normal(const Vector<N, double>& original_normal, const std::vector<Vector<N, double>>& normals)
 {
-        vec3f sum(0);
-        for (const vec3f& n : normals)
+        Vector<N, double> sum(0);
+        for (const Vector<N, double>& n : normals)
         {
                 sum += (dot(n, original_normal) >= 0) ? n : -n;
         }
         return normalize(sum);
 }
 
-class SurfaceObj final : public IObj
+template <size_t N>
+class SurfaceObj final : public Obj<N>
 {
-        std::vector<vec3f> m_vertices;
-        std::vector<vec2f> m_texcoords;
-        std::vector<vec3f> m_normals;
-        std::vector<Face> m_faces;
+        using typename Obj<N>::Facet;
+        using typename Obj<N>::Point;
+        using typename Obj<N>::Line;
+        using typename Obj<N>::Material;
+        using typename Obj<N>::Image;
+
+        std::vector<Vector<N, float>> m_vertices;
+        std::vector<Vector<N, float>> m_normals;
+        std::vector<Vector<N - 1, float>> m_texcoords;
+        std::vector<Facet> m_facets;
         std::vector<Point> m_points;
         std::vector<Line> m_lines;
         std::vector<Material> m_materials;
         std::vector<Image> m_images;
-        vec3f m_center;
+        Vector<N, float> m_center;
         float m_length;
 
-        const std::vector<vec3f>& vertices() const override
+        const std::vector<Vector<N, float>>& vertices() const override
         {
                 return m_vertices;
         }
-        const std::vector<vec2f>& texcoords() const override
-        {
-                return m_texcoords;
-        }
-        const std::vector<vec3f>& normals() const override
+        const std::vector<Vector<N, float>>& normals() const override
         {
                 return m_normals;
         }
-        const std::vector<Face>& faces() const override
+        const std::vector<Vector<N - 1, float>>& texcoords() const override
         {
-                return m_faces;
+                return m_texcoords;
+        }
+        const std::vector<Facet>& facets() const override
+        {
+                return m_facets;
         }
         const std::vector<Point>& points() const override
         {
@@ -89,7 +99,7 @@ class SurfaceObj final : public IObj
         {
                 return m_images;
         }
-        vec3f center() const override
+        Vector<N, float> center() const override
         {
                 return m_center;
         }
@@ -98,20 +108,20 @@ class SurfaceObj final : public IObj
                 return m_length;
         }
 
-        void create_obj(const std::vector<vec3f>& points, const std::vector<Vector<3, double>>& normals,
-                        const std::vector<std::array<int, 3>>& facets)
+        void create_obj(const std::vector<Vector<N, float>>& points, const std::vector<Vector<N, double>>& normals,
+                        const std::vector<std::array<int, N>>& facets)
         {
                 if (facets.size() == 0)
                 {
                         error("No facets for surface object");
                 }
 
-                std::unordered_map<int, std::vector<vec3f>> vertices;
+                std::unordered_map<int, std::vector<Vector<N, double>>> vertices;
                 std::unordered_map<int, int> index_map;
 
-                for (const std::array<int, 3>& facet : facets)
+                for (const std::array<int, N>& facet : facets)
                 {
-                        vec3f normal = face_normal(points, facet);
+                        Vector<N, double> normal = face_normal(points, facet);
                         for (int v : facet)
                         {
                                 vertices[v].push_back(normal);
@@ -127,42 +137,37 @@ class SurfaceObj final : public IObj
                         index_map[v.first] = idx;
 
                         m_vertices[idx] = points[v.first];
-                        m_normals[idx] = average_normal(to_vector<float>(normals[v.first]), v.second);
+                        m_normals[idx] = to_vector<float>(average_normal(normals[v.first], v.second));
 
                         ++idx;
                 }
 
-                m_faces.reserve(facets.size());
+                m_facets.reserve(facets.size());
 
-                for (const std::array<int, 3>& facet : facets)
+                for (const std::array<int, N>& facet : facets)
                 {
-                        Face face;
+                        Facet obj_facet;
 
-                        face.material = -1;
-                        face.has_texcoord = false;
-                        face.has_normal = true;
+                        obj_facet.material = -1;
+                        obj_facet.has_texcoord = false;
+                        obj_facet.has_normal = true;
 
-                        face.vertices[0] = index_map[facet[0]];
-                        face.vertices[1] = index_map[facet[1]];
-                        face.vertices[2] = index_map[facet[2]];
+                        for (unsigned i = 0; i < N; ++i)
+                        {
+                                obj_facet.vertices[i] = index_map[facet[i]];
+                                obj_facet.normals[i] = obj_facet.vertices[i];
+                                obj_facet.texcoords[i] = -1;
+                        }
 
-                        face.normals[0] = face.vertices[0];
-                        face.normals[1] = face.vertices[1];
-                        face.normals[2] = face.vertices[2];
-
-                        face.texcoords[0] = -1;
-                        face.texcoords[1] = -1;
-                        face.texcoords[2] = -1;
-
-                        m_faces.push_back(std::move(face));
+                        m_facets.push_back(std::move(obj_facet));
                 }
 
-                center_and_length(m_vertices, m_faces, &m_center, &m_length);
+                center_and_length(m_vertices, m_facets, &m_center, &m_length);
         }
 
 public:
-        SurfaceObj(const std::vector<vec3f>& points, const std::vector<Vector<3, double>>& normals,
-                   const std::vector<std::array<int, 3>>& facets)
+        SurfaceObj(const std::vector<Vector<N, float>>& points, const std::vector<Vector<N, double>>& normals,
+                   const std::vector<std::array<int, N>>& facets)
         {
                 ASSERT(points.size() == normals.size());
 
@@ -171,8 +176,21 @@ public:
 };
 }
 
-std::unique_ptr<IObj> create_obj_for_facets(const std::vector<vec3f>& points, const std::vector<Vector<3, double>>& normals,
-                                            const std::vector<std::array<int, 3>>& facets)
+template <size_t N>
+std::unique_ptr<Obj<N>> create_obj_for_facets(const std::vector<Vector<N, float>>& points,
+                                              const std::vector<Vector<N, double>>& normals,
+                                              const std::vector<std::array<int, N>>& facets)
+
 {
-        return std::make_unique<SurfaceObj>(points, normals, facets);
+        return std::make_unique<SurfaceObj<N>>(points, normals, facets);
 }
+
+template std::unique_ptr<Obj<3>> create_obj_for_facets(const std::vector<Vector<3, float>>& points,
+                                                       const std::vector<Vector<3, double>>& normals,
+                                                       const std::vector<std::array<int, 3>>& facets);
+template std::unique_ptr<Obj<4>> create_obj_for_facets(const std::vector<Vector<4, float>>& points,
+                                                       const std::vector<Vector<4, double>>& normals,
+                                                       const std::vector<std::array<int, 4>>& facets);
+template std::unique_ptr<Obj<5>> create_obj_for_facets(const std::vector<Vector<5, float>>& points,
+                                                       const std::vector<Vector<5, double>>& normals,
+                                                       const std::vector<std::array<int, 5>>& facets);

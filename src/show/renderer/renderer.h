@@ -54,7 +54,7 @@ struct IRenderer
         virtual const TextureRGBA32F& get_color_buffer_texture() const = 0;
         virtual const TextureR32I& get_object_texture() const = 0;
 
-        virtual void add_object(const IObj* obj, double size, const vec3& position, int id, int scale_id) = 0;
+        virtual void add_object(const Obj<3>* obj, double size, const vec3& position, int id, int scale_id) = 0;
         virtual void delete_object(int id) = 0;
         virtual void show_object(int id) = 0;
         virtual void delete_all() = 0;

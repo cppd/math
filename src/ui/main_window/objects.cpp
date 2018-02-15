@@ -63,12 +63,12 @@ std::shared_ptr<const Mesh> MainObjects::get_mesh(int id) const
         return m_meshes.get(id);
 }
 
-std::shared_ptr<const IObj> MainObjects::get_surface_cocone() const
+std::shared_ptr<const Obj<3>> MainObjects::get_surface_cocone() const
 {
         return m_surface_cocone;
 }
 
-std::shared_ptr<const IObj> MainObjects::get_surface_bound_cocone() const
+std::shared_ptr<const Obj<3>> MainObjects::get_surface_bound_cocone() const
 {
         return m_surface_bound_cocone;
 }
@@ -120,11 +120,11 @@ int MainObjects::convex_hull_identifier(ObjectType object_type)
         error_fatal("Unknown object type");
 }
 
-void MainObjects::mesh(ProgressRatioList* progress_list, int id, const std::shared_ptr<const IObj>& obj)
+void MainObjects::mesh(ProgressRatioList* progress_list, int id, const std::shared_ptr<const Obj<3>>& obj)
 {
         ASSERT(std::this_thread::get_id() != m_thread_id);
 
-        if (obj->faces().size() == 0)
+        if (obj->facets().size() == 0)
         {
                 return;
         }
@@ -137,11 +137,11 @@ void MainObjects::mesh(ProgressRatioList* progress_list, int id, const std::shar
 }
 
 void MainObjects::add_object_and_convex_hull(ProgressRatioList* progress_list, ObjectType object_type,
-                                             const std::shared_ptr<const IObj>& obj)
+                                             const std::shared_ptr<const Obj<3>>& obj)
 {
         ASSERT(std::this_thread::get_id() != m_thread_id);
 
-        if (!(obj->faces().size() > 0 || (object_type == ObjectType::Model && obj->points().size() > 0)))
+        if (!(obj->facets().size() > 0 || (object_type == ObjectType::Model && obj->points().size() > 0)))
         {
                 return;
         }
@@ -149,7 +149,7 @@ void MainObjects::add_object_and_convex_hull(ProgressRatioList* progress_list, O
         int object_id = object_identifier(object_type);
         m_show->add_object(obj, object_id, OBJECT_MODEL);
 
-        std::shared_ptr<IObj> convex_hull;
+        std::shared_ptr<Obj<3>> convex_hull;
 
         {
                 ProgressRatio progress(progress_list);
@@ -158,7 +158,7 @@ void MainObjects::add_object_and_convex_hull(ProgressRatioList* progress_list, O
                 convex_hull = create_convex_hull_for_obj(obj.get(), &progress);
         }
 
-        if (convex_hull->faces().size() > 0)
+        if (convex_hull->facets().size() > 0)
         {
                 int convex_hull_id = convex_hull_identifier(object_type);
                 m_show->add_object(convex_hull, convex_hull_id, OBJECT_MODEL);
@@ -168,7 +168,7 @@ void MainObjects::add_object_and_convex_hull(ProgressRatioList* progress_list, O
 }
 
 void MainObjects::object_and_mesh(ProgressRatioList* progress_list, ObjectType object_type,
-                                  const std::shared_ptr<const IObj>& obj)
+                                  const std::shared_ptr<const Obj<3>>& obj)
 {
         ASSERT(std::this_thread::get_id() != m_thread_id);
 
@@ -259,7 +259,7 @@ void MainObjects::mst(ProgressRatioList* progress_list)
                 mst_lines = minimum_spanning_tree(m_surface_points, m_surface_constructor->delaunay_objects(), &progress);
         }
 
-        std::shared_ptr<IObj> mst_obj = create_obj_for_lines(m_surface_points, mst_lines);
+        std::shared_ptr<Obj<3>> mst_obj = create_obj_for_lines(m_surface_points, mst_lines);
 
         if (mst_obj->lines().size() > 0)
         {
@@ -311,18 +311,18 @@ void MainObjects::surface_constructor(ProgressRatioList* progress_list, double r
 }
 
 void MainObjects::load_object(ProgressRatioList* progress_list, const std::string& object_name,
-                              const std::shared_ptr<const IObj>& obj, double rho, double alpha)
+                              const std::shared_ptr<const Obj<3>>& obj, double rho, double alpha)
 {
         ASSERT(std::this_thread::get_id() != m_thread_id);
 
-        if (obj->faces().size() == 0 && obj->points().size() == 0)
+        if (obj->facets().size() == 0 && obj->points().size() == 0)
         {
-                error("Faces or points not found");
+                error("Facets or points not found");
         }
 
-        if (obj->faces().size() != 0 && obj->points().size() != 0)
+        if (obj->facets().size() != 0 && obj->points().size() != 0)
         {
-                error("Faces and points together in one object are not supported");
+                error("Facets and points together in one object are not supported");
         }
 
         m_show->delete_all_objects();
@@ -335,7 +335,7 @@ void MainObjects::load_object(ProgressRatioList* progress_list, const std::strin
 
         m_event_emitter.file_loaded(object_name);
 
-        m_surface_points = (obj->faces().size() > 0) ? unique_face_vertices(obj.get()) : unique_point_vertices(obj.get());
+        m_surface_points = (obj->facets().size() > 0) ? unique_facet_vertices(obj.get()) : unique_point_vertices(obj.get());
 
         m_model_vertex_matrix = model_vertex_matrix(obj.get(), m_show->get_object_size(), m_show->get_object_position());
 
@@ -363,7 +363,7 @@ void MainObjects::load_from_file(ProgressRatioList* progress_list, const std::st
 {
         ASSERT(std::this_thread::get_id() != m_thread_id);
 
-        std::shared_ptr<IObj> obj;
+        std::shared_ptr<Obj<3>> obj;
 
         {
                 ProgressRatio progress(progress_list);
@@ -379,7 +379,7 @@ void MainObjects::load_from_repository(ProgressRatioList* progress_list, const s
 {
         ASSERT(std::this_thread::get_id() != m_thread_id);
 
-        std::shared_ptr<IObj> obj;
+        std::shared_ptr<Obj<3>> obj;
 
         {
                 ProgressRatio progress(progress_list);

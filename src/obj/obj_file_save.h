@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -21,4 +21,4 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <string>
 
-void save_obj_geometry_to_file(const IObj* obj, const std::string& file_name, const std::string& comment = std::string());
+void save_obj_geometry_to_file(const Obj<3>* obj, const std::string& file_name, const std::string& comment = std::string());

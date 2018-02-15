@@ -31,16 +31,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 constexpr int OCTREE_MAX_DEPTH = 10;
 constexpr int OCTREE_MIN_OBJECTS = 10;
 
-void Mesh::create_mesh_object(const IObj* obj, const mat4& vertex_matrix, unsigned thread_count, ProgressRatio* progress)
+void Mesh::create_mesh_object(const Obj<3>* obj, const mat4& vertex_matrix, unsigned thread_count, ProgressRatio* progress)
 {
         if (obj->vertices().size() == 0)
         {
                 error("No vertices found in obj");
         }
 
-        if (obj->faces().size() == 0)
+        if (obj->facets().size() == 0)
         {
-                error("No faces found in obj");
+                error("No facets found in obj");
         }
 
         m_vertices = to_vector<double>(obj->vertices());
@@ -53,21 +53,21 @@ void Mesh::create_mesh_object(const IObj* obj, const mat4& vertex_matrix, unsign
         m_texcoords = to_vector<double>(obj->texcoords());
         m_texcoords.shrink_to_fit();
 
-        m_triangles.reserve(obj->faces().size());
-        for (const IObj::Face& face : obj->faces())
+        m_triangles.reserve(obj->facets().size());
+        for (const Obj<3>::Facet& facet : obj->facets())
         {
-                m_triangles.emplace_back(m_vertices, m_normals, m_texcoords, face.vertices, face.has_normal, face.normals,
-                                         face.has_texcoord, face.texcoords, face.material);
+                m_triangles.emplace_back(m_vertices, m_normals, m_texcoords, facet.vertices, facet.has_normal, facet.normals,
+                                         facet.has_texcoord, facet.texcoords, facet.material);
         }
 
         m_materials.reserve(obj->materials().size());
-        for (const IObj::Material& m : obj->materials())
+        for (const Obj<3>::Material& m : obj->materials())
         {
                 m_materials.emplace_back(m.Kd, m.Ks, m.Ns, m.map_Kd, m.map_Ks);
         }
 
         m_images.reserve(obj->images().size());
-        for (const IObj::Image& image : obj->images())
+        for (const Obj<3>::Image& image : obj->images())
         {
                 m_images.emplace_back(image.size, image.srgba_pixels);
         }
@@ -90,7 +90,7 @@ void Mesh::create_mesh_object(const IObj* obj, const mat4& vertex_matrix, unsign
         m_octree.decompose(m_triangles.size(), lambda_triangle, thread_count, progress);
 }
 
-Mesh::Mesh(const IObj* obj, const mat4& vertex_matrix, unsigned thread_count, ProgressRatio* progress)
+Mesh::Mesh(const Obj<3>* obj, const mat4& vertex_matrix, unsigned thread_count, ProgressRatio* progress)
         : m_octree(OCTREE_MAX_DEPTH, OCTREE_MIN_OBJECTS)
 {
         double start_time = time_in_seconds();

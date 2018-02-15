@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -23,4 +23,5 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <memory>
 
-std::unique_ptr<IObj> create_convex_hull_for_obj(const IObj* obj, ProgressRatio* progress);
+template<size_t N>
+std::unique_ptr<Obj<N>> create_convex_hull_for_obj(const Obj<N>* obj, ProgressRatio* progress);

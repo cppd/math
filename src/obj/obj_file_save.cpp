@@ -57,13 +57,13 @@ void write_comment(const CFile& file, const std::string& comment)
 }
 
 // Запись вершин с приведением координат вершин граней к интервалу [-1, 1] с сохранением пропорций
-void write_vertices(const CFile& file, const IObj* obj)
+void write_vertices(const CFile& file, const Obj<3>* obj)
 {
-        std::vector<int> indices = unique_face_indices(obj->faces());
+        std::vector<int> indices = unique_facet_indices(obj);
 
         if (indices.size() < 3)
         {
-                error("face unique indices count < 3 ");
+                error("facet unique indices count < 3 ");
         }
 
         vec3f min, max;
@@ -95,7 +95,7 @@ void write_vertices(const CFile& file, const IObj* obj)
         }
 }
 
-void write_normals(const CFile& file, const IObj* obj)
+void write_normals(const CFile& file, const Obj<3>* obj)
 {
         for (const vec3f& vn : obj->normals())
         {
@@ -110,14 +110,14 @@ void write_normals(const CFile& file, const IObj* obj)
         }
 }
 
-void write_faces(const CFile& file, const IObj* obj)
+void write_faces(const CFile& file, const Obj<3>* obj)
 {
         // Вершины граней надо записывать в OBJ таким образом, чтобы при обходе против часовой стрелки
         // перпендикуляр к грани был направлен противоположно направлению взгляда.
         // В данной модели нет перпендикуляров у граней, есть только у вершин, поэтому нужно попытаться
         // определить правильное направление по векторам вершин, если у вершин они заданы.
 
-        for (const IObj::Face& f : obj->faces())
+        for (const Obj<3>::Facet& f : obj->facets())
         {
                 if (f.has_normal)
                 {
@@ -172,9 +172,9 @@ void write_faces(const CFile& file, const IObj* obj)
 }
 }
 
-void save_obj_geometry_to_file(const IObj* obj, const std::string& file_name, const std::string& comment)
+void save_obj_geometry_to_file(const Obj<3>* obj, const std::string& file_name, const std::string& comment)
 {
-        if (obj->faces().size() == 0)
+        if (obj->facets().size() == 0)
         {
                 error("Object doesn't have faces");
         }

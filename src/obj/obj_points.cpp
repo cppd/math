@@ -26,36 +26,43 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace
 {
-class Points final : public IObj
+template <size_t N>
+class Points final : public Obj<N>
 {
-        std::vector<vec3f> m_vertices;
-        std::vector<vec2f> m_texcoords;
-        std::vector<vec3f> m_normals;
-        std::vector<Face> m_faces;
+        using typename Obj<N>::Facet;
+        using typename Obj<N>::Point;
+        using typename Obj<N>::Line;
+        using typename Obj<N>::Material;
+        using typename Obj<N>::Image;
+
+        std::vector<Vector<N, float>> m_vertices;
+        std::vector<Vector<N, float>> m_normals;
+        std::vector<Vector<N - 1, float>> m_texcoords;
+        std::vector<Facet> m_facets;
         std::vector<Point> m_points;
         std::vector<Line> m_lines;
         std::vector<Material> m_materials;
         std::vector<Image> m_images;
-        vec3f m_center;
+        Vector<N, float> m_center;
         float m_length;
 
-        void read_points(std::vector<vec3f>&& points);
+        void read_points(std::vector<Vector<N, float>>&& points);
 
-        const std::vector<vec3f>& vertices() const override
+        const std::vector<Vector<N, float>>& vertices() const override
         {
                 return m_vertices;
         }
-        const std::vector<vec2f>& texcoords() const override
-        {
-                return m_texcoords;
-        }
-        const std::vector<vec3f>& normals() const override
+        const std::vector<Vector<N, float>>& normals() const override
         {
                 return m_normals;
         }
-        const std::vector<Face>& faces() const override
+        const std::vector<Vector<N - 1, float>>& texcoords() const override
         {
-                return m_faces;
+                return m_texcoords;
+        }
+        const std::vector<Facet>& facets() const override
+        {
+                return m_facets;
         }
         const std::vector<Point>& points() const override
         {
@@ -73,7 +80,7 @@ class Points final : public IObj
         {
                 return m_images;
         }
-        vec3f center() const override
+        Vector<N, float> center() const override
         {
                 return m_center;
         }
@@ -83,10 +90,11 @@ class Points final : public IObj
         }
 
 public:
-        Points(std::vector<vec3f>&& points);
+        Points(std::vector<Vector<N, float>>&& points);
 };
 
-void Points::read_points(std::vector<vec3f>&& points)
+template <size_t N>
+void Points<N>::read_points(std::vector<Vector<N, float>>&& points)
 {
         m_vertices = std::move(points);
 
@@ -104,7 +112,8 @@ void Points::read_points(std::vector<vec3f>&& points)
         center_and_length(m_vertices, m_points, &m_center, &m_length);
 }
 
-Points::Points(std::vector<vec3f>&& points)
+template <size_t N>
+Points<N>::Points(std::vector<Vector<N, float>>&& points)
 {
         double start_time = time_in_seconds();
 
@@ -114,7 +123,12 @@ Points::Points(std::vector<vec3f>&& points)
 }
 }
 
-std::unique_ptr<IObj> create_obj_for_points(std::vector<vec3f>&& points)
+template <size_t N>
+std::unique_ptr<Obj<N>> create_obj_for_points(std::vector<Vector<N, float>>&& points)
 {
-        return std::make_unique<Points>(std::move(points));
+        return std::make_unique<Points<N>>(std::move(points));
 }
+
+template std::unique_ptr<Obj<3>> create_obj_for_points(std::vector<Vector<3, float>>&& points);
+template std::unique_ptr<Obj<4>> create_obj_for_points(std::vector<Vector<4, float>>&& points);
+template std::unique_ptr<Obj<5>> create_obj_for_points(std::vector<Vector<5, float>>&& points);

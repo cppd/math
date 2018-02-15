@@ -56,10 +56,10 @@ class Mesh
 
         SpatialSubdivisionTree<OctreeParallelepiped> m_octree;
 
-        void create_mesh_object(const IObj* obj, const mat4& vertex_matrix, unsigned thread_count, ProgressRatio* progress);
+        void create_mesh_object(const Obj<3>* obj, const mat4& vertex_matrix, unsigned thread_count, ProgressRatio* progress);
 
 public:
-        Mesh(const IObj* obj, const mat4& vertex_matrix, unsigned thread_count, ProgressRatio* progress);
+        Mesh(const Obj<3>* obj, const mat4& vertex_matrix, unsigned thread_count, ProgressRatio* progress);
 
         ~Mesh() = default;
 
