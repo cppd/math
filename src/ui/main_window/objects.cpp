@@ -26,10 +26,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "geometry/graph/mst.h"
 #include "obj/obj_alg.h"
 #include "obj/obj_convex_hull.h"
+#include "obj/obj_facets.h"
 #include "obj/obj_file_load.h"
 #include "obj/obj_lines.h"
 #include "obj/obj_points.h"
-#include "obj/obj_surface.h"
 #include "progress/progress.h"
 
 MainObjects::MainObjects(int mesh_object_threads, const WindowEventEmitter& emitter, int point_count)
