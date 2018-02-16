@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -55,24 +55,3 @@ std::unique_ptr<IManifoldConstructor<N>> create_manifold_constructor(const std::
 template <size_t N>
 std::unique_ptr<IManifoldConstructorCocone<N>> create_manifold_constructor_cocone(
         const std::vector<Vector<N, float>>& source_points, ProgressRatio* progress);
-
-// clang-format off
-extern template
-std::unique_ptr<IManifoldConstructor<2>> create_manifold_constructor(const std::vector<Vector<2, float>>& source_points,
-                                                                     ProgressRatio* progress);
-extern template
-std::unique_ptr<IManifoldConstructor<3>> create_manifold_constructor(const std::vector<Vector<3, float>>& source_points,
-                                                                     ProgressRatio* progress);
-extern template
-std::unique_ptr<IManifoldConstructor<4>> create_manifold_constructor(const std::vector<Vector<4, float>>& source_points,
-                                                                     ProgressRatio* progress);
-extern template
-std::unique_ptr<IManifoldConstructorCocone<2>> create_manifold_constructor_cocone(
-        const std::vector<Vector<2, float>>& source_points, ProgressRatio* progress);
-extern template
-std::unique_ptr<IManifoldConstructorCocone<3>> create_manifold_constructor_cocone(
-        const std::vector<Vector<3, float>>& source_points, ProgressRatio* progress);
-extern template
-std::unique_ptr<IManifoldConstructorCocone<4>> create_manifold_constructor_cocone(
-        const std::vector<Vector<4, float>>& source_points, ProgressRatio* progress);
-// clang-format on

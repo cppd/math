@@ -169,8 +169,3 @@ public:
                 glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
         }
 };
-
-extern template class DeviceProg<float>;
-extern template class DeviceProg<double>;
-extern template class DeviceProgFFTRadix2<float>;
-extern template class DeviceProgFFTRadix2<double>;

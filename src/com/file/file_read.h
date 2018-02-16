@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2018 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -22,6 +22,3 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 template <typename T>
 void read_text_file(const std::string& file_name, T* s);
-
-extern template void read_text_file(const std::string& file_name, std::string* s);
-extern template void read_text_file(const std::string& file_name, std::vector<char>* s);

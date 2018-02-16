@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -27,18 +27,3 @@ template <size_t N>
 std::vector<std::array<int, 2>> minimum_spanning_tree(const std::vector<Vector<N, float>>& points,
                                                       const std::vector<std::array<int, N + 1>>& delaunay_objects,
                                                       ProgressRatio* progress);
-
-// clang-format off
-extern template
-std::vector<std::array<int, 2>> minimum_spanning_tree(const std::vector<vec2f>& points,
-                                                      const std::vector<std::array<int, 3>>& delaunay_objects,
-                                                      ProgressRatio* progress);
-extern template
-std::vector<std::array<int, 2>> minimum_spanning_tree(const std::vector<vec3f>& points,
-                                                      const std::vector<std::array<int, 4>>& delaunay_objects,
-                                                      ProgressRatio* progress);
-extern template
-std::vector<std::array<int, 2>> minimum_spanning_tree(const std::vector<vec4f>& points,
-                                                      const std::vector<std::array<int, 5>>& delaunay_objects,
-                                                      ProgressRatio* progress);
-// clang-format on

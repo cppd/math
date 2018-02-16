@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -53,21 +53,3 @@ void vertex_and_facet_data(bool find_all_vertex_data, const std::vector<vec<N>>&
                            const std::vector<DelaunayObject<N>>& delaunay_objects,
                            const std::vector<DelaunayFacet<N>>& delaunay_facets, std::vector<ManifoldVertex<N>>* vertex_data,
                            std::vector<ManifoldFacet<N>>* facet_data);
-
-// clang-format off
-extern template
-void vertex_and_facet_data(bool find_all_vertex_data, const std::vector<vec<2>>& points,
-                           const std::vector<DelaunayObject<2>>& delaunay_objects,
-                           const std::vector<DelaunayFacet<2>>& delaunay_facets, std::vector<ManifoldVertex<2>>* vertex_data,
-                           std::vector<ManifoldFacet<2>>* facet_data);
-extern template
-void vertex_and_facet_data(bool find_all_vertex_data, const std::vector<vec<3>>& points,
-                           const std::vector<DelaunayObject<3>>& delaunay_objects,
-                           const std::vector<DelaunayFacet<3>>& delaunay_facets, std::vector<ManifoldVertex<3>>* vertex_data,
-                           std::vector<ManifoldFacet<3>>* facet_data);
-extern template
-void vertex_and_facet_data(bool find_all_vertex_data, const std::vector<vec<4>>& points,
-                           const std::vector<DelaunayObject<4>>& delaunay_objects,
-                           const std::vector<DelaunayFacet<4>>& delaunay_facets, std::vector<ManifoldVertex<4>>* vertex_data,
-                           std::vector<ManifoldFacet<4>>* facet_data);
-// clang-format on

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -39,7 +39,3 @@ struct IObjectRepository
 
 template <size_t N>
 std::unique_ptr<IObjectRepository<N>> create_object_repository();
-
-extern template std::unique_ptr<IObjectRepository<2>> create_object_repository<2>();
-extern template std::unique_ptr<IObjectRepository<3>> create_object_repository<3>();
-extern template std::unique_ptr<IObjectRepository<4>> create_object_repository<4>();

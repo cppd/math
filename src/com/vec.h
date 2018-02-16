@@ -32,7 +32,7 @@ class Vector
         std::array<T, N> m_data;
 
         template <size_t... I>
-        constexpr Vector(std::integer_sequence<size_t, I...>, const T& v) : m_data{{(static_cast<void>(I), v)...}}
+        constexpr Vector(std::integer_sequence<size_t, I...>&&, const T& v) : m_data{{(static_cast<void>(I), v)...}}
         {
                 static_assert(sizeof...(I) == N);
         }
@@ -40,18 +40,19 @@ class Vector
 public:
         Vector() = default;
 
-        template <typename... Args>
-        constexpr Vector(Args... args) : m_data{{static_cast<T>(args)...}}
+        template <typename Arg1, typename Arg2, typename... Args>
+        constexpr Vector(Arg1&& arg1, Arg2&& arg2, Args&&... args)
+                : m_data{{static_cast<T>(std::forward<Arg1>(arg1)), static_cast<T>(std::forward<Arg2>(arg2)),
+                          static_cast<T>(std::forward<Args>(args))...}}
         {
-                static_assert(sizeof...(args) == N);
+                static_assert(sizeof...(args) + 2 == N);
         }
 
-        template <typename Arg>
-        constexpr explicit Vector(Arg v) : Vector(std::make_integer_sequence<size_t, N>(), static_cast<T>(v))
+        constexpr explicit Vector(const T& v) : Vector(std::make_integer_sequence<size_t, N>(), v)
         {
         }
 
-        constexpr T operator[](unsigned i) const
+        constexpr const T& operator[](unsigned i) const
         {
                 return m_data[i];
         }
@@ -61,7 +62,7 @@ public:
                 return m_data[i];
         }
 
-        size_t get_hash() const
+        size_t hash() const
         {
                 return array_hash(m_data);
         }
@@ -128,7 +129,7 @@ struct hash<Vector<N, T>>
 {
         size_t operator()(const Vector<N, T>& v) const
         {
-                return v.get_hash();
+                return v.hash();
         }
 };
 }
@@ -350,20 +351,26 @@ Vector<N, Dst> convert_vector(const Vector<N, Src>& v, std::integer_sequence<siz
 {
         static_assert(sizeof...(I) == N);
         static_assert(((I < N) && ...));
-        static_assert(!std::is_same_v<std::remove_cv_t<Dst>, std::remove_cv_t<Src>>);
+        static_assert(!std::is_same_v<Dst, Src>);
 
         return {v[I]...};
 }
 }
 
 template <typename Dst, size_t N, typename Src>
-Vector<N, Dst> to_vector(const Vector<N, Src>& v)
+std::enable_if_t<!std::is_same_v<Dst, Src>, Vector<N, Dst>> to_vector(const Vector<N, Src>& v)
 {
         return VectorImplementation::convert_vector<Dst>(v, std::make_integer_sequence<size_t, N>());
 }
 
 template <typename Dst, size_t N, typename Src>
-std::vector<Vector<N, Dst>> to_vector(const std::vector<Vector<N, Src>>& v)
+std::enable_if_t<std::is_same_v<Dst, Src>, const Vector<N, Dst>&> to_vector(const Vector<N, Src>& v)
+{
+        return v;
+}
+
+template <typename Dst, size_t N, typename Src>
+std::enable_if_t<!std::is_same_v<Dst, Src>, std::vector<Vector<N, Dst>>> to_vector(const std::vector<Vector<N, Src>>& v)
 {
         std::vector<Vector<N, Dst>> res(v.size());
         for (unsigned i = 0; i < v.size(); ++i)
@@ -371,6 +378,12 @@ std::vector<Vector<N, Dst>> to_vector(const std::vector<Vector<N, Src>>& v)
                 res[i] = to_vector<Dst>(v[i]);
         }
         return res;
+}
+
+template <typename Dst, size_t N, typename Src>
+std::enable_if_t<std::is_same_v<Dst, Src>, const std::vector<Vector<N, Dst>>&> to_vector(const std::vector<Vector<N, Src>>& v)
+{
+        return v;
 }
 
 template <size_t N, typename T>
