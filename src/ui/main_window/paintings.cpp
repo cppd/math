@@ -67,7 +67,7 @@ bool parameters(PathTracingParameters& parameters_window, const IShow& show, int
 }
 }
 
-void painting(PathTracingParameters&& parameters_window, const IShow& show, const std::shared_ptr<const Mesh>& mesh,
+void painting(PathTracingParameters&& parameters_window, const IShow& show, const std::shared_ptr<const Mesh<3, double>>& mesh,
               const std::string& window_title, const std::string& model_name, int default_samples_per_pixel,
               int max_samples_per_pixel, const Color& background_color, const Color& default_color, double diffuse)
 {

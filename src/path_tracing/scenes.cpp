@@ -61,15 +61,15 @@ public:
                 mat4 vertex_matrix = model_vertex_matrix(obj_file.get(), size, vec3(0));
 
                 std::shared_ptr mesh =
-                        std::make_shared<Mesh>(obj_file.get(), vertex_matrix, get_hardware_concurrency(), &progress);
+                        std::make_shared<Mesh<3, double>>(obj_file.get(), vertex_matrix, get_hardware_concurrency(), &progress);
 
                 m_mesh = std::make_unique<VisibleSharedMesh>(mesh);
 
                 make_cornell_box(width, height, size, default_color, diffuse, camera_direction, camera_up);
         }
 
-        CornellBox(int width, int height, const std::shared_ptr<const Mesh>& mesh, double size, const Color& default_color,
-                   double diffuse, const vec3& camera_direction, const vec3& camera_up)
+        CornellBox(int width, int height, const std::shared_ptr<const Mesh<3, double>>& mesh, double size,
+                   const Color& default_color, double diffuse, const vec3& camera_direction, const vec3& camera_up)
         {
                 m_mesh = std::make_unique<VisibleSharedMesh>(mesh);
 
@@ -207,7 +207,7 @@ class OneObject final : public PaintObjects
 public:
         OneObject(const Color& background_color, const Color& default_color, double diffuse,
                   std::unique_ptr<const Projector>&& projector, std::unique_ptr<const LightSource>&& light_source,
-                  const std::shared_ptr<const Mesh>& mesh)
+                  const std::shared_ptr<const Mesh<3, double>>& mesh)
                 : m_object(mesh), m_projector(std::move(projector)), m_light_source(std::move(light_source))
         {
                 m_default_surface_properties.set_color(background_color);
@@ -251,9 +251,9 @@ std::unique_ptr<const PaintObjects> cornell_box(int width, int height, const std
                                             camera_up);
 }
 
-std::unique_ptr<const PaintObjects> cornell_box(int width, int height, const std::shared_ptr<const Mesh>& mesh, double size,
-                                                const Color& default_color, double diffuse, const vec3& camera_direction,
-                                                const vec3& camera_up)
+std::unique_ptr<const PaintObjects> cornell_box(int width, int height, const std::shared_ptr<const Mesh<3, double>>& mesh,
+                                                double size, const Color& default_color, double diffuse,
+                                                const vec3& camera_direction, const vec3& camera_up)
 {
         return std::make_unique<CornellBox>(width, height, mesh, size, default_color, diffuse, camera_direction, camera_up);
 }
@@ -261,7 +261,7 @@ std::unique_ptr<const PaintObjects> cornell_box(int width, int height, const std
 std::unique_ptr<const PaintObjects> one_object_scene(const Color& background_color, const Color& default_color, double diffuse,
                                                      std::unique_ptr<const Projector>&& projector,
                                                      std::unique_ptr<const LightSource>&& light_source,
-                                                     const std::shared_ptr<const Mesh>& mesh)
+                                                     const std::shared_ptr<const Mesh<3, double>>& mesh)
 {
         return std::make_unique<OneObject>(background_color, default_color, diffuse, std::move(projector),
                                            std::move(light_source), mesh);

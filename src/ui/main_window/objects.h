@@ -47,7 +47,7 @@ class MainObjects
         const WindowEventEmitter& m_event_emitter;
         const int m_point_count;
 
-        Meshes<int, const Mesh> m_meshes;
+        Meshes<int, const Mesh<3, double>> m_meshes;
         std::mutex m_mesh_sequential_mutex;
         mat4 m_model_vertex_matrix;
 
@@ -86,7 +86,7 @@ public:
 
         void set_show(IShow* show);
 
-        std::shared_ptr<const Mesh> get_mesh(int id) const;
+        std::shared_ptr<const Mesh<3, double>> get_mesh(int id) const;
 
         std::shared_ptr<const Obj<3>> get_surface_cocone() const;
         std::shared_ptr<const Obj<3>> get_surface_bound_cocone() const;

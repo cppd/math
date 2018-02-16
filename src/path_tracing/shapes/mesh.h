@@ -29,52 +29,55 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <optional>
 
+template <size_t N, typename T>
 class Mesh
 {
-        using OctreeParallelepiped = ParallelotopeOrtho<3, double>;
-        using Simplex = MeshSimplex<3, double>;
+        using TreeParallelotope = ParallelotopeOrtho<N, T>;
+        using Facet = MeshSimplex<N, T>;
 
-        std::vector<vec3> m_vertices;
-        std::vector<vec3> m_normals;
-        std::vector<vec2> m_texcoords;
+        std::vector<Vector<N, T>> m_vertices;
+        std::vector<Vector<N, T>> m_normals;
+        std::vector<Vector<N - 1, T>> m_texcoords;
 
         struct Material
         {
                 Color Kd, Ks;
-                double Ns;
+                Color::DataType Ns;
                 int map_Kd, map_Ks;
-                Material(const Color& Kd_, const Color& Ks_, double Ns_, int map_Kd_, int map_Ks_)
+                Material(const Color& Kd_, const Color& Ks_, Color::DataType Ns_, int map_Kd_, int map_Ks_)
                         : Kd(Kd_), Ks(Ks_), Ns(Ns_), map_Kd(map_Kd_), map_Ks(map_Ks_)
                 {
                 }
         };
         std::vector<Material> m_materials;
 
-        std::vector<Image<2>> m_images;
+        std::vector<Image<N - 1>> m_images;
 
-        std::vector<Simplex> m_triangles;
+        std::vector<Facet> m_facets;
 
-        SpatialSubdivisionTree<OctreeParallelepiped> m_octree;
+        SpatialSubdivisionTree<TreeParallelotope> m_tree;
 
-        void create_mesh_object(const Obj<3>* obj, const mat4& vertex_matrix, unsigned thread_count, ProgressRatio* progress);
+        void create_mesh_object(const Obj<N>* obj, const Matrix<N + 1, N + 1, T>& vertex_matrix, unsigned thread_count,
+                                ProgressRatio* progress);
 
 public:
-        Mesh(const Obj<3>* obj, const mat4& vertex_matrix, unsigned thread_count, ProgressRatio* progress);
+        Mesh(const Obj<N>* obj, const Matrix<N + 1, N + 1, T>& vertex_matrix, unsigned thread_count, ProgressRatio* progress);
 
         ~Mesh() = default;
 
-        // Треугольники имеют адреса первых элементов векторов вершин, нормалей и текстурных координат,
-        // поэтому при копировании объекта надо менять адреса этих векторов в треугольниках.
+        // Грани имеют адреса первых элементов векторов вершин,
+        // нормалей и текстурных координат, поэтому при копировании
+        // объекта надо менять адреса этих векторов в гранях.
         Mesh(const Mesh&) = delete;
         Mesh(Mesh&&) = delete;
         Mesh& operator=(const Mesh&) = delete;
         Mesh& operator=(Mesh&&) = delete;
 
-        bool intersect_approximate(const ray3& r, double* t) const;
-        bool intersect_precise(const ray3&, double approximate_t, double* t, const void** intersection_data) const;
+        bool intersect_approximate(const Ray<N, T>& r, T* t) const;
+        bool intersect_precise(const Ray<N, T>&, T approximate_t, T* t, const void** intersection_data) const;
 
-        vec3 get_geometric_normal(const void* intersection_data) const;
-        vec3 get_shading_normal(const vec3& p, const void* intersection_data) const;
+        Vector<N, T> get_geometric_normal(const void* intersection_data) const;
+        Vector<N, T> get_shading_normal(const Vector<N, T>& p, const void* intersection_data) const;
 
-        std::optional<Color> get_color(const vec3& p, const void* intersection_data) const;
+        std::optional<Color> get_color(const Vector<N, T>& p, const void* intersection_data) const;
 };

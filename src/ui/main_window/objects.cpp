@@ -58,7 +58,7 @@ void MainObjects::set_show(IShow* show)
         m_show = show;
 }
 
-std::shared_ptr<const Mesh> MainObjects::get_mesh(int id) const
+std::shared_ptr<const Mesh<3, double>> MainObjects::get_mesh(int id) const
 {
         return m_meshes.get(id);
 }
@@ -133,7 +133,7 @@ void MainObjects::mesh(ProgressRatioList* progress_list, int id, const std::shar
 
         ProgressRatio progress(progress_list);
 
-        m_meshes.set(id, std::make_shared<Mesh>(obj.get(), m_model_vertex_matrix, m_mesh_object_threads, &progress));
+        m_meshes.set(id, std::make_shared<Mesh<3, double>>(obj.get(), m_model_vertex_matrix, m_mesh_object_threads, &progress));
 }
 
 void MainObjects::add_object_and_convex_hull(ProgressRatioList* progress_list, ObjectType object_type,

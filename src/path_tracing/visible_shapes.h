@@ -99,10 +99,10 @@ public:
 
 class VisibleSharedMesh final : public GenericObject, public Surface, public SurfaceProperties
 {
-        std::shared_ptr<const Mesh> m_mesh;
+        std::shared_ptr<const Mesh<3, double>> m_mesh;
 
 public:
-        VisibleSharedMesh(const std::shared_ptr<const Mesh>& mesh) : m_mesh(mesh)
+        VisibleSharedMesh(const std::shared_ptr<const Mesh<3, double>>& mesh) : m_mesh(mesh)
         {
         }
 

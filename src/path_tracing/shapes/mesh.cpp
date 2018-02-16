@@ -28,10 +28,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <algorithm>
 #include <utility>
 
-constexpr int OCTREE_MAX_DEPTH = 10;
-constexpr int OCTREE_MIN_OBJECTS = 10;
+constexpr int TREE_MAX_DEPTH = 10;
+constexpr int TREE_MIN_OBJECTS = 10;
 
-void Mesh::create_mesh_object(const Obj<3>* obj, const mat4& vertex_matrix, unsigned thread_count, ProgressRatio* progress)
+template <size_t N, typename T>
+void Mesh<N, T>::create_mesh_object(const Obj<N>* obj, const Matrix<N + 1, N + 1, T>& vertex_matrix, unsigned thread_count,
+                                    ProgressRatio* progress)
 {
         if (obj->vertices().size() == 0)
         {
@@ -43,55 +45,56 @@ void Mesh::create_mesh_object(const Obj<3>* obj, const mat4& vertex_matrix, unsi
                 error("No facets found in obj");
         }
 
-        m_vertices = to_vector<double>(obj->vertices());
+        m_vertices = to_vector<T>(obj->vertices());
         m_vertices.shrink_to_fit();
-        std::transform(m_vertices.begin(), m_vertices.end(), m_vertices.begin(), MatrixMulVector<double>(vertex_matrix));
+        std::transform(m_vertices.begin(), m_vertices.end(), m_vertices.begin(), MatrixMulVector(vertex_matrix));
 
-        m_normals = to_vector<double>(obj->normals());
+        m_normals = to_vector<T>(obj->normals());
         m_normals.shrink_to_fit();
 
-        m_texcoords = to_vector<double>(obj->texcoords());
+        m_texcoords = to_vector<T>(obj->texcoords());
         m_texcoords.shrink_to_fit();
 
-        m_triangles.reserve(obj->facets().size());
-        for (const Obj<3>::Facet& facet : obj->facets())
+        m_facets.reserve(obj->facets().size());
+        for (const typename Obj<N>::Facet& facet : obj->facets())
         {
-                m_triangles.emplace_back(m_vertices, m_normals, m_texcoords, facet.vertices, facet.has_normal, facet.normals,
-                                         facet.has_texcoord, facet.texcoords, facet.material);
+                m_facets.emplace_back(m_vertices, m_normals, m_texcoords, facet.vertices, facet.has_normal, facet.normals,
+                                      facet.has_texcoord, facet.texcoords, facet.material);
         }
 
         m_materials.reserve(obj->materials().size());
-        for (const Obj<3>::Material& m : obj->materials())
+        for (const typename Obj<N>::Material& m : obj->materials())
         {
                 m_materials.emplace_back(m.Kd, m.Ks, m.Ns, m.map_Kd, m.map_Ks);
         }
 
         m_images.reserve(obj->images().size());
-        for (const Obj<3>::Image& image : obj->images())
+        for (const typename Obj<N>::Image& image : obj->images())
         {
                 m_images.emplace_back(image.size, image.srgba_pixels);
         }
 
-        progress->set_text("Octree: %v of %m");
+        progress->set_text(to_string(1 << N) + "-tree: %v of %m");
 
-        std::vector<SimplexWrapperForShapeIntersection<Simplex>> simplex_wrappers;
-        simplex_wrappers.reserve(m_triangles.size());
-        for (const Simplex& t : m_triangles)
+        std::vector<SimplexWrapperForShapeIntersection<Facet>> simplex_wrappers;
+        simplex_wrappers.reserve(m_facets.size());
+        for (const Facet& t : m_facets)
         {
                 simplex_wrappers.emplace_back(t);
         }
 
-        // Указатель на объект октадерева
-        auto lambda_triangle = [w = std::as_const(simplex_wrappers)](int triangle_index)
+        // Указатель на объект дерева
+        auto lambda_simplex = [w = std::as_const(simplex_wrappers)](int simplex_index)
         {
-                return &(w[triangle_index]);
+                return &(w[simplex_index]);
         };
 
-        m_octree.decompose(m_triangles.size(), lambda_triangle, thread_count, progress);
+        m_tree.decompose(m_facets.size(), lambda_simplex, thread_count, progress);
 }
 
-Mesh::Mesh(const Obj<3>* obj, const mat4& vertex_matrix, unsigned thread_count, ProgressRatio* progress)
-        : m_octree(OCTREE_MAX_DEPTH, OCTREE_MIN_OBJECTS)
+template <size_t N, typename T>
+Mesh<N, T>::Mesh(const Obj<N>* obj, const Matrix<N + 1, N + 1, T>& vertex_matrix, unsigned thread_count, ProgressRatio* progress)
+        : m_tree(TREE_MAX_DEPTH, TREE_MIN_OBJECTS)
 {
         double start_time = time_in_seconds();
 
@@ -100,27 +103,29 @@ Mesh::Mesh(const Obj<3>* obj, const mat4& vertex_matrix, unsigned thread_count, 
         LOG("Mesh object created, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
 }
 
-bool Mesh::intersect_approximate(const ray3& r, double* t) const
+template <size_t N, typename T>
+bool Mesh<N, T>::intersect_approximate(const Ray<N, T>& r, T* t) const
 {
-        return m_octree.intersect_root(r, t);
+        return m_tree.intersect_root(r, t);
 }
 
-bool Mesh::intersect_precise(const ray3& ray, double approximate_t, double* t, const void** intersection_data) const
+template <size_t N, typename T>
+bool Mesh<N, T>::intersect_precise(const Ray<N, T>& ray, T approximate_t, T* t, const void** intersection_data) const
 {
-        const Simplex* triangle = nullptr;
+        const Facet* facet = nullptr;
 
-        if (m_octree.trace_ray(ray, approximate_t,
-                               // Пересечение луча с набором треугольников ячейки октадерева
-                               [&](const std::vector<int>& triangle_indices, vec3* point) -> bool {
-                                       if (ray_intersection(m_triangles, triangle_indices, ray, t, &triangle))
-                                       {
-                                               *point = ray.point(*t);
-                                               return true;
-                                       }
-                                       return false;
-                               }))
+        if (m_tree.trace_ray(ray, approximate_t,
+                             // Пересечение луча с набором граней ячейки дерева
+                             [&](const std::vector<int>& facet_indices, Vector<N, T>* point) -> bool {
+                                     if (ray_intersection(m_facets, facet_indices, ray, t, &facet))
+                                     {
+                                             *point = ray.point(*t);
+                                             return true;
+                                     }
+                                     return false;
+                             }))
         {
-                *intersection_data = triangle;
+                *intersection_data = facet;
                 return true;
         }
         else
@@ -129,27 +134,30 @@ bool Mesh::intersect_precise(const ray3& ray, double approximate_t, double* t, c
         }
 }
 
-vec3 Mesh::get_geometric_normal(const void* intersection_data) const
+template <size_t N, typename T>
+Vector<N, T> Mesh<N, T>::get_geometric_normal(const void* intersection_data) const
 {
-        return static_cast<const Simplex*>(intersection_data)->geometric_normal();
+        return static_cast<const Facet*>(intersection_data)->geometric_normal();
 }
 
-vec3 Mesh::get_shading_normal(const vec3& p, const void* intersection_data) const
+template <size_t N, typename T>
+Vector<N, T> Mesh<N, T>::get_shading_normal(const Vector<N, T>& p, const void* intersection_data) const
 {
-        return static_cast<const Simplex*>(intersection_data)->shading_normal(p);
+        return static_cast<const Facet*>(intersection_data)->shading_normal(p);
 }
 
-std::optional<Color> Mesh::get_color(const vec3& p, const void* intersection_data) const
+template <size_t N, typename T>
+std::optional<Color> Mesh<N, T>::get_color(const Vector<N, T>& p, const void* intersection_data) const
 {
-        const Simplex* triangle = static_cast<const Simplex*>(intersection_data);
+        const Facet* facet = static_cast<const Facet*>(intersection_data);
 
-        if (triangle->material() >= 0)
+        if (facet->material() >= 0)
         {
-                const Material& m = m_materials[triangle->material()];
+                const Material& m = m_materials[facet->material()];
 
-                if (triangle->has_texcoord() && m.map_Kd >= 0)
+                if (facet->has_texcoord() && m.map_Kd >= 0)
                 {
-                        return m_images[m.map_Kd].texture(triangle->texcoord(p));
+                        return m_images[m.map_Kd].texture(facet->texcoord(p));
                 }
                 else
                 {
@@ -161,3 +169,7 @@ std::optional<Color> Mesh::get_color(const vec3& p, const void* intersection_dat
                 return std::nullopt;
         }
 }
+
+template class Mesh<3, double>;
+template class Mesh<4, double>;
+template class Mesh<5, double>;

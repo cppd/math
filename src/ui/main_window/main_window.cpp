@@ -997,7 +997,7 @@ void MainWindow::on_radioButton_BoundCoconeConvexHull_clicked()
 void MainWindow::on_pushButton_Painter_clicked()
 {
         std::string model_name;
-        std::shared_ptr<const Mesh> mesh;
+        std::shared_ptr<const Mesh<3, double>> mesh;
 
         for (const auto & [ button, id ] : m_object_buttons)
         {
