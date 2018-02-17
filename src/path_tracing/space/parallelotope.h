@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -95,7 +95,7 @@ public:
 
         bool inside(const Vector<N, T>& p) const;
 
-        bool intersect(const Ray<N, T>& r, T* t) const;
+        bool intersect(const Ray<N, T>& r, T* t, T intersection_threshold = INTERSECTION_THRESHOLD<T>) const;
 
         Vector<N, T> normal(const Vector<N, T>& p) const;
 
@@ -165,7 +165,7 @@ void Parallelotope<N, T>::create_planes()
 }
 
 template <size_t N, typename T>
-bool Parallelotope<N, T>::intersect(const Ray<N, T>& r, T* t) const
+bool Parallelotope<N, T>::intersect(const Ray<N, T>& r, T* t, T intersection_threshold) const
 {
         T f_max = std::numeric_limits<T>::lowest();
         T b_min = std::numeric_limits<T>::max();
@@ -214,9 +214,9 @@ bool Parallelotope<N, T>::intersect(const Ray<N, T>& r, T* t) const
                 }
         }
 
-        *t = (f_max > INTERSECTION_THRESHOLD<T>) ? f_max : b_min;
+        *t = (f_max > intersection_threshold) ? f_max : b_min;
 
-        return *t > INTERSECTION_THRESHOLD<T>;
+        return *t > intersection_threshold;
 }
 
 template <size_t N, typename T>

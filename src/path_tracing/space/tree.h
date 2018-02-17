@@ -475,7 +475,7 @@ public:
 
         bool intersect_root(const Ray<N, T>& ray, T* t) const
         {
-                return m_boxes[ROOT_BOX].get_parallelotope().intersect(ray, t);
+                return m_boxes[ROOT_BOX].get_parallelotope().intersect(ray, t, 0);
         }
 
         // Вызывается после intersect_root. Если в intersect_root пересечение было найдено,
@@ -502,7 +502,7 @@ public:
 
                                 // Поиск пересечения с границей текущей коробки
                                 // для перехода в соседнюю коробку.
-                                if (!box->get_parallelotope().intersect(ray, &t))
+                                if (!box->get_parallelotope().intersect(ray, &t, 0))
                                 {
                                         return false;
                                 }
