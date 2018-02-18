@@ -56,11 +56,6 @@ constexpr T MAX_DOT_PRODUCT_OF_EDGES;
 template <>
 constexpr double MAX_DOT_PRODUCT_OF_EDGES<double> = 0.9;
 
-template <typename T>
-constexpr T COMPARISON_DIRECTION_EPSILON;
-template <>
-constexpr double COMPARISON_DIRECTION_EPSILON<double> = 2 * EPSILON<double>;
-
 template <typename Parallelotope>
 using VectorP = Vector<Parallelotope::DIMENSION, typename Parallelotope::DataType>;
 
@@ -73,6 +68,7 @@ void print_separator()
                 LOG("---");
         }
 }
+
 void print_message(const std::string& msg)
 {
         if (PRINT_ALL)
@@ -261,6 +257,31 @@ Vector<N, T> random_direction(RandomEngine& engine)
         while (true)
         {
                 Vector<N, T> direction = random_vector<N, T>(engine, urd_dir);
+
+                if (length(direction) > 0)
+                {
+                        return direction;
+                }
+        }
+}
+
+template <size_t N, typename T, typename RandomEngine>
+Vector<N, T> random_direction_for_parallelotope_comparison(RandomEngine& engine)
+{
+        std::uniform_real_distribution<T> urd_dir(-1, 1);
+        std::uniform_int_distribution<int> uid_dir(-1, 1);
+        std::uniform_int_distribution<int> uid_select(0, 10);
+
+        while (true)
+        {
+                Vector<N, T> direction;
+
+                // Равновероятность всех направлений не нужна
+                for (unsigned i = 0; i < N; ++i)
+                {
+                        direction[i] = uid_select(engine) != 0 ? urd_dir(engine) : uid_dir(engine);
+                }
+
                 if (length(direction) > 0)
                 {
                         return direction;
@@ -368,49 +389,6 @@ void verify_vectors(const std::array<Vector<N, T>, Count>& vectors, const std::s
                 if (!almost_equal(vectors[i], vectors[0]))
                 {
                         error("Error comparison of " + name + ".\n" + to_string(vectors[i]) + " and " + to_string(vectors[0]));
-                }
-        }
-}
-
-template <size_t N, typename T, typename RandomEngine>
-Vector<N, T> random_direction_for_parallelotope_comparison(RandomEngine& engine)
-{
-        std::uniform_real_distribution<T> urd_dir(-1, 1);
-        std::uniform_int_distribution<int> uid_dir(-1, 1);
-        std::uniform_int_distribution<int> uid_select(0, 10);
-
-        while (true)
-        {
-                Vector<N, T> direction;
-                T direction_length;
-
-                // Равновероятность всех направлений не нужна
-                do
-                {
-                        for (unsigned i = 0; i < N; ++i)
-                        {
-                                direction[i] = uid_select(engine) != 0 ? urd_dir(engine) : uid_dir(engine);
-                        }
-
-                        direction_length = length(direction);
-
-                } while (direction_length == 0);
-
-                // Разные типы параллелотопов могут по-разному обрабатывать лучи,
-                // почти параллельные плоскостям, поэтому надо исключить такие лучи.
-                Vector<N, T> unit_direction = direction / direction_length;
-                bool use_direction = true;
-                for (unsigned i = 0; i < N; ++i)
-                {
-                        if (std::abs(unit_direction[i]) > 0 && std::abs(unit_direction[i]) <= COMPARISON_DIRECTION_EPSILON<T>)
-                        {
-                                use_direction = false;
-                                break;
-                        }
-                }
-                if (use_direction)
-                {
-                        return direction;
                 }
         }
 }

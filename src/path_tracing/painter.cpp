@@ -32,7 +32,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 constexpr double MIN_COLOR_LEVEL = 1e-4;
 constexpr int MAX_RECURSION_LEVEL = 100;
 
-constexpr double EPSILON_DOUBLE = EPSILON<double>;
+constexpr double EPSILON = 1e-8;
 
 using PainterRandomEngine = std::mt19937_64;
 using PainterSampler = StratifiedJitteredSampler<2, double>;
@@ -176,13 +176,15 @@ Color direct_diffuse_lighting(Counter& ray_count, const std::vector<const Generi
 
                 ray3 ray_to_light = ray3(p, vector_to_light);
 
-                double light_weight = 2 * dot(ray_to_light.get_dir(), shading_normal);
+                double dot_light_and_normal = dot(ray_to_light.get_dir(), shading_normal);
 
-                if (light_weight <= EPSILON_DOUBLE)
+                if (dot_light_and_normal <= EPSILON)
                 {
                         // свет находится по другую сторону поверхности
                         continue;
                 }
+
+                double light_weight = 2 * dot_light_and_normal;
 
                 ++ray_count;
 
@@ -244,7 +246,7 @@ Color diffuse_lighting(const PaintData& paint_data, Counter& ray_count, PainterR
                 // Случайный вектор диффузного освещения надо определять от видимой нормали.
                 ray3 diffuse_ray = ray3(point, random_cosine_weighted_on_hemisphere(random_engine, shading_normal));
 
-                if (triangle_mesh && dot(diffuse_ray.get_dir(), geometric_normal) < EPSILON_DOUBLE)
+                if (triangle_mesh && dot(diffuse_ray.get_dir(), geometric_normal) <= EPSILON)
                 {
                         // Если получившийся случайный вектор диффузного отражения показывает
                         // в другую сторону от поверхности, то диффузного освещения нет.
@@ -283,7 +285,7 @@ Color trace_path(const PaintData& paint_data, Counter& ray_count, PainterRandomE
 
         bool triangle_mesh = surface_properties.is_triangle_mesh();
 
-        if (std::abs(dot_dir_and_geometric_normal) <= EPSILON_DOUBLE)
+        if (std::abs(dot_dir_and_geometric_normal) <= EPSILON)
         {
                 return Color(0);
         }
@@ -295,11 +297,11 @@ Color trace_path(const PaintData& paint_data, Counter& ray_count, PainterRandomE
 
         vec3 shading_normal = triangle_mesh ? surface_properties.get_shading_normal() : geometric_normal;
 
-        ASSERT(dot(geometric_normal, shading_normal) > EPSILON_DOUBLE);
+        ASSERT(dot(geometric_normal, shading_normal) > EPSILON);
 
         // Определять только по реальной нормали, так как видимая нормаль может
         // показать, что пересечение находится с другой стороны объекта.
-        if (dot_dir_and_geometric_normal > EPSILON_DOUBLE)
+        if (dot_dir_and_geometric_normal > 0)
         {
                 geometric_normal = -geometric_normal;
                 shading_normal = -shading_normal;

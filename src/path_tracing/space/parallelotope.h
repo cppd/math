@@ -173,7 +173,7 @@ bool Parallelotope<N, T>::intersect(const Ray<N, T>& r, T* t, T intersection_thr
         for (unsigned i = 0; i < N; ++i)
         {
                 T s = dot(r.get_dir(), m_planes[i].n);
-                if (std::abs(s) < EPSILON<T>)
+                if (s == 0)
                 {
                         T d = dot(r.get_org(), m_planes[i].n);
                         if (d - m_planes[i].d1 > 0 || -d - m_planes[i].d2 > 0)

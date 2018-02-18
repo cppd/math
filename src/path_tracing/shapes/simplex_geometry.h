@@ -40,13 +40,13 @@ namespace SimplexGeometryImplementation
 template <size_t N, typename T>
 bool plane_intersect(const Ray<N, T>& ray, const Vector<N, T>& plane_point, const Vector<N, T>& plane_normal, T* t)
 {
-        T c = dot(plane_normal, ray.get_dir());
-        if (std::abs(c) < EPSILON<T>)
+        T s = dot(plane_normal, ray.get_dir());
+        if (s == 0)
         {
                 return false;
         }
 
-        *t = dot(plane_point - ray.get_org(), plane_normal) / c;
+        *t = dot(plane_point - ray.get_org(), plane_normal) / s;
         if (*t < INTERSECTION_THRESHOLD<T>)
         {
                 return false;
