@@ -33,6 +33,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/error.h"
 #include "com/ray.h"
 #include "com/thread.h"
+#include "com/types.h"
 #include "com/vec.h"
 #include "path_tracing/constants.h"
 #include "progress/progress.h"
@@ -166,7 +167,8 @@ constexpr Parallelotope create_parallelotope_from_vector(const Vector<sizeof...(
 }
 
 template <typename Parallelotope, typename T, typename FunctorObjectPointer>
-Parallelotope root_parallelotope(T guard_region_size, int object_index_count, const FunctorObjectPointer& functor_object_pointer)
+Parallelotope root_parallelotope(T distance_from_facet_in_epsilons, int object_index_count,
+                                 const FunctorObjectPointer& functor_object_pointer)
 {
         static_assert(std::is_same_v<T, typename Parallelotope::DataType>);
         static_assert(std::is_floating_point_v<typename Parallelotope::DataType>);
@@ -196,8 +198,13 @@ Parallelotope root_parallelotope(T guard_region_size, int object_index_count, co
                 }
         }
 
-        min -= Vector<N, T>(guard_region_size);
-        max += Vector<N, T>(guard_region_size);
+        for (unsigned i = 0; i < N; ++i)
+        {
+                T abs_max = std::max(std::abs(min[i]), std::abs(max[i]));
+                T guard_region_size = abs_max * (distance_from_facet_in_epsilons * limits<T>::epsilon());
+                min[i] -= guard_region_size;
+                max[i] += guard_region_size;
+        }
 
         Vector<N, T> d = max - min;
 
@@ -369,9 +376,8 @@ class SpatialSubdivisionTree
         // Смещение по лучу внутрь коробки от точки пересечения с коробкой.
         static constexpr T DELTA = 10 * INTERSECTION_THRESHOLD<T>;
 
-        // Увеличение основной коробки дерева по всем измерениям, чтобы все
-        // объекты были внутри неё.
-        static constexpr T GUARD_REGION_SIZE = INTERSECTION_THRESHOLD<T>;
+        // Расстояние от грани, при котором точка считается внутри коробки.
+        static constexpr T DISTANCE_FROM_FACET_IN_EPSILONS = 10;
 
         // Нижняя и верхняя границы для минимального количества объектов в коробке.
         static constexpr int MIN_OBJECTS_LEFT_BOUND = 2;
@@ -387,12 +393,13 @@ class SpatialSubdivisionTree
         // Максимальная глубина и минимальное количество объектов для экземпляра дерева.
         const int MAX_DEPTH, MIN_OBJECTS;
 
+        // Количество коробок при одном делении
+        static constexpr int BOX_COUNT = SpatialSubdivisionTreeImplementation::BOX_COUNT<N>;
+
         // Максимальное количество коробок — это сумма геометрической прогрессии
-        // со знаменателем BOX_COUNT<N>. Sum = (pow(r, n) - 1) / (r - 1).
+        // со знаменателем BOX_COUNT. Sum = (pow(r, n) - 1) / (r - 1).
         // Требуется для того, чтобы при расчёте это отображать как максимум.
-        const int MAX_BOXES = std::min(static_cast<double>((1u << 31) - 1),
-                                       (std::pow(SpatialSubdivisionTreeImplementation::BOX_COUNT<N>, MAX_DEPTH) - 1) /
-                                               (SpatialSubdivisionTreeImplementation::BOX_COUNT<N> - 1));
+        const int MAX_BOXES = std::min((1u << 31) - 1.0, (std::pow(BOX_COUNT, MAX_DEPTH) - 1) / (BOX_COUNT - 1));
 
         // Все коробки хранятся в одном векторе
         std::vector<Box> m_boxes;
@@ -443,20 +450,19 @@ public:
                 static_assert(std::is_pointer_v<decltype(functor_object_pointer(0))>);
                 static_assert(std::is_const_v<std::remove_pointer_t<decltype(functor_object_pointer(0))>>);
 
-                using SpatialSubdivisionTreeImplementation::iota_zero_based_indices;
-                using SpatialSubdivisionTreeImplementation::root_parallelotope;
+                namespace Impl = SpatialSubdivisionTreeImplementation;
 
                 if (!(MAX_DEPTH >= MAX_DEPTH_LEFT_BOUND && MAX_DEPTH <= MAX_DEPTH_RIGHT_BOUND) ||
                     !(MIN_OBJECTS >= MIN_OBJECTS_LEFT_BOUND && MIN_OBJECTS <= MIN_OBJECTS_RIGHT_BOUND))
                 {
-                        error("Error limits for " + to_string(SpatialSubdivisionTreeImplementation::BOX_COUNT<N>) + "-tree");
+                        error("Error limits for " + to_string(Impl::BOX_COUNT<N>) + "-tree");
                 }
 
                 SpinLock boxes_lock;
 
-                BoxContainer boxes(
-                        {Box(root_parallelotope<Parallelotope>(GUARD_REGION_SIZE, object_index_count, functor_object_pointer),
-                             iota_zero_based_indices(object_index_count))});
+                BoxContainer boxes({Box(Impl::root_parallelotope<Parallelotope>(DISTANCE_FROM_FACET_IN_EPSILONS,
+                                                                                object_index_count, functor_object_pointer),
+                                        Impl::iota_zero_based_indices(object_index_count))});
 
                 BoxJobs jobs(&boxes.front(), MAX_DEPTH_LEFT_BOUND);
 
