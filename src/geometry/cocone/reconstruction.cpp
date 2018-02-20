@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -184,7 +184,7 @@ bool cocone_interior_facet(const std::vector<DelaunayFacet<N>>& delaunay_facets,
         bool found = false;
         for (unsigned v = 0; v < N; ++v)
         {
-                bool interior = interior_vertices[delaunay_facets[facet].get_vertices()[v]];
+                bool interior = interior_vertices[delaunay_facets[facet].vertices()[v]];
 
                 bool interior_cocone = interior && facet_data[facet].cocone_vertex[v];
                 bool boundary = !interior;
@@ -231,9 +231,9 @@ void create_normals_and_facets(const std::vector<DelaunayFacet<N>>& delaunay_fac
                         continue;
                 }
 
-                facets->push_back(delaunay_facets[i].get_vertices());
+                facets->push_back(delaunay_facets[i].vertices());
 
-                for (int index : delaunay_facets[i].get_vertices())
+                for (int index : delaunay_facets[i].vertices())
                 {
                         used_points.insert(index);
                 }
@@ -377,7 +377,7 @@ class ManifoldConstructor : public IManifoldConstructor<N>, public IManifoldCons
                 objects.reserve(m_delaunay_objects.size());
                 for (const DelaunayObject<N>& d : m_delaunay_objects)
                 {
-                        objects.push_back(d.get_vertices());
+                        objects.push_back(d.vertices());
                 }
                 return objects;
         }

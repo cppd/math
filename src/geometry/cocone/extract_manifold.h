@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -35,12 +35,12 @@ void find_delaunay_object_facets(const std::vector<DelaunayObject<N>>& delaunay_
 
         for (unsigned i = 0; i < delaunay_facets.size(); ++i)
         {
-                (*delaunay_object_facets)[delaunay_facets[i].get_delaunay(0)].push_back(i);
+                (*delaunay_object_facets)[delaunay_facets[i].delaunay(0)].push_back(i);
                 if (delaunay_facets[i].one_sided())
                 {
                         continue;
                 }
-                (*delaunay_object_facets)[delaunay_facets[i].get_delaunay(1)].push_back(i);
+                (*delaunay_object_facets)[delaunay_facets[i].delaunay(1)].push_back(i);
         }
 }
 
@@ -80,24 +80,23 @@ void traverse_delaunay(const std::vector<DelaunayFacet<N>>& delaunay_facets,
                 int delaunay_index;
                 if (facet.one_sided())
                 {
-                        if ((*visited_delaunay)[facet.get_delaunay(0)])
+                        if ((*visited_delaunay)[facet.delaunay(0)])
                         {
                                 continue;
                         }
 
-                        delaunay_index = facet.get_delaunay(0);
+                        delaunay_index = facet.delaunay(0);
                 }
                 else
                 {
-                        if ((*visited_delaunay)[facet.get_delaunay(0)] && (*visited_delaunay)[facet.get_delaunay(1)])
+                        if ((*visited_delaunay)[facet.delaunay(0)] && (*visited_delaunay)[facet.delaunay(1)])
                         {
                                 continue;
                         }
 
-                        ASSERT((*visited_delaunay)[facet.get_delaunay(0)] || (*visited_delaunay)[facet.get_delaunay(1)]);
+                        ASSERT((*visited_delaunay)[facet.delaunay(0)] || (*visited_delaunay)[facet.delaunay(1)]);
 
-                        delaunay_index =
-                                (*visited_delaunay)[facet.get_delaunay(0)] ? facet.get_delaunay(1) : facet.get_delaunay(0);
+                        delaunay_index = (*visited_delaunay)[facet.delaunay(0)] ? facet.delaunay(1) : facet.delaunay(0);
                 }
 
                 (*visited_delaunay)[delaunay_index] = true;

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -39,7 +39,7 @@ using RidgeSet = std::unordered_set<Ridge<N>>;
 template <size_t N>
 bool boundary_ridge(const std::vector<bool>& interior_vertices, const Ridge<N>& ridge)
 {
-        for (int v : ridge.get_vertices())
+        for (int v : ridge.vertices())
         {
                 if (!interior_vertices[v])
                 {
@@ -68,10 +68,10 @@ bool sharp_ridge(const std::vector<vec<N>>& points, const std::vector<bool>& int
 
         // Ортонормированный базис размерности 2 в ортогональном дополнении ребра ridge
         vec<N> e0, e1;
-        ortho_e0_e1(points, ridge.get_vertices(), ridge_data.cbegin()->get_point(), &e0, &e1);
+        ortho_e0_e1(points, ridge.vertices(), ridge_data.cbegin()->point(), &e0, &e1);
 
         // Координаты вектора первой грани при проецировании в пространство базиса e0, e1.
-        vec<N> base_vec = points[ridge_data.cbegin()->get_point()] - points[ridge.get_vertices()[0]];
+        vec<N> base_vec = points[ridge_data.cbegin()->point()] - points[ridge.vertices()[0]];
         vec<2> base = normalize(vec<2>(dot(e0, base_vec), dot(e1, base_vec)));
         ASSERT(is_finite(base));
 
@@ -81,7 +81,7 @@ bool sharp_ridge(const std::vector<vec<N>>& points, const std::vector<bool>& int
         // граней от первой грани по обе стороны.
         for (auto ridge_facet = std::next(ridge_data.cbegin()); ridge_facet != ridge_data.cend(); ++ridge_facet)
         {
-                vec<N> facet_vec = points[ridge_facet->get_point()] - points[ridge.get_vertices()[0]];
+                vec<N> facet_vec = points[ridge_facet->point()] - points[ridge.vertices()[0]];
                 vec<2> v = normalize(vec<2>(dot(e0, facet_vec), dot(e1, facet_vec)));
                 ASSERT(is_finite(v));
 
@@ -181,11 +181,11 @@ void prune_facets_incident_to_sharp_ridges(const std::vector<vec<N>>& points,
 
                         for (auto d = ridge_iter->second.cbegin(); d != ridge_iter->second.cend(); ++d)
                         {
-                                add_to_ridges(*(d->get_facet()), d->get_point(), &tmp_ridges);
-                                facets_to_remove.push_back(d->get_facet());
+                                add_to_ridges(*(d->facet()), d->point(), &tmp_ridges);
+                                facets_to_remove.push_back(d->facet());
 
                                 // Пометить грань как удалённую
-                                auto del = facets_ptr.find(d->get_facet());
+                                auto del = facets_ptr.find(d->facet());
                                 ASSERT(del != facets_ptr.cend());
                                 (*cocone_facets)[del->second] = false;
                         }

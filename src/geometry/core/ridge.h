@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -65,12 +65,12 @@ public:
                 }
                 return false;
         }
-        const std::array<int, N - 1>& get_vertices() const
+        const std::array<int, N - 1>& vertices() const
         {
                 return m_vertices;
         }
 
-        size_t get_hash() const
+        size_t hash() const
         {
                 return array_hash(m_vertices);
         }
@@ -83,7 +83,7 @@ struct hash<Ridge<N>>
 {
         size_t operator()(const Ridge<N>& v) const
         {
-                return v.get_hash();
+                return v.hash();
         }
 };
 }
@@ -91,32 +91,32 @@ struct hash<Ridge<N>>
 template <typename Facet>
 class RidgeDataElement
 {
-        const Facet* facet;
-        int external_vertex_index;
+        const Facet* m_facet;
+        int m_external_vertex_index;
 
 public:
         RidgeDataElement()
         {
                 reset();
         }
-        RidgeDataElement(const Facet* f, int p) : facet(f), external_vertex_index(p)
+        RidgeDataElement(const Facet* f, int p) : m_facet(f), m_external_vertex_index(p)
         {
         }
-        int get_point() const
+        int point() const
         {
-                return facet->get_vertices()[external_vertex_index];
+                return m_facet->vertices()[m_external_vertex_index];
         }
-        int get_vertex_index() const
+        int vertex_index() const
         {
-                return external_vertex_index;
+                return m_external_vertex_index;
         }
-        const Facet* get_facet() const
+        const Facet* facet() const
         {
-                return facet;
+                return m_facet;
         }
         void reset()
         {
-                facet = nullptr;
+                m_facet = nullptr;
         }
 };
 
@@ -137,7 +137,7 @@ public:
         {
                 for (int i = 0; i < MaxSize; ++i)
                 {
-                        if (m_data[i].get_facet() == nullptr)
+                        if (m_data[i].facet() == nullptr)
                         {
                                 m_data[i] = {facet, external_point_index};
                                 ++m_size;
@@ -145,9 +145,9 @@ public:
                         }
                 }
 
-                error("Add to ridge: too many facets exist in the link: facet " + to_string(facet->get_vertices()) + ", index " +
+                error("Add to ridge: too many facets exist in the link: facet " + to_string(facet->vertices()) + ", index " +
                       to_string(external_point_index) + ", not ridge point " +
-                      to_string(facet->get_vertices()[external_point_index]));
+                      to_string(facet->vertices()[external_point_index]));
         }
 
         void remove(const Facet* facet)
@@ -202,13 +202,13 @@ public:
         {
                 for (auto iter = m_data.cbegin(); iter != m_data.cend(); ++iter)
                 {
-                        if (iter->get_facet() == facet)
+                        if (iter->facet() == facet)
                         {
                                 m_data.erase(iter);
                                 return;
                         }
                 }
-                error("Remove ridge facet: facet not found in the link: facet " + to_string(facet->get_vertices()));
+                error("Remove ridge facet: facet not found in the link: facet " + to_string(facet->vertices()));
         }
         auto cbegin() const
         {
@@ -234,7 +234,7 @@ void add_to_ridges(const Facet& facet, Map<Ridge<N>, MapData>* m)
 {
         for (unsigned r = 0; r < N; ++r)
         {
-                Ridge<N> ridge(sort(del_elem(facet.get_vertices(), r)));
+                Ridge<N> ridge(sort(del_elem(facet.vertices(), r)));
 
                 auto f = m->find(ridge);
                 if (f == m->end())
@@ -253,7 +253,7 @@ void remove_from_ridges(const Facet& facet, Map<Ridge<N>, MapData>* m)
 {
         for (unsigned r = 0; r < N; ++r)
         {
-                auto f = m->find(sort(del_elem(facet.get_vertices(), r)));
+                auto f = m->find(sort(del_elem(facet.vertices(), r)));
 
                 ASSERT(f != m->end());
 
@@ -269,7 +269,7 @@ void remove_from_ridges(const Facet& facet, Map<Ridge<N>, MapData>* m)
 template <size_t N, typename Facet, template <typename...> typename Set>
 void add_to_ridges(const Facet& facet, int exclude_point, Set<Ridge<N>>* ridges)
 {
-        const std::array<int, N>& vertices = facet.get_vertices();
+        const std::array<int, N>& vertices = facet.vertices();
         for (unsigned r = 0; r < N; ++r)
         {
                 if (vertices[r] != exclude_point)

@@ -74,24 +74,24 @@ void generate_random_data(bool zero, int count, std::vector<Vector<N, float>>* p
 template <size_t N>
 void check_visible_from_point(const std::vector<Vector<N, float>>& points, const ConvexHullFacet<N>& facet, int point)
 {
-        if (points[point] == points[facet.get_vertices()[0]])
+        if (points[point] == points[facet.vertices()[0]])
         {
                 return;
         }
 
-        vec<N> v = normalize(to_vector<double>(points[point] - points[facet.get_vertices()[0]]));
+        vec<N> v = normalize(to_vector<double>(points[point] - points[facet.vertices()[0]]));
 
         if (!is_finite(v))
         {
                 error("vector point facet not finite");
         }
 
-        if (!is_finite(facet.get_ortho()))
+        if (!is_finite(facet.ortho()))
         {
                 error("facet ortho not finite");
         }
 
-        double d = dot(facet.get_ortho(), v);
+        double d = dot(facet.ortho(), v);
 
         if (!is_finite(d))
         {
@@ -144,7 +144,7 @@ int point_count(const std::vector<ConvexHullFacet<N>>& facets)
         std::unordered_set<int> v;
         for (const ConvexHullFacet<N>& f : facets)
         {
-                for (int p : f.get_vertices())
+                for (int p : f.vertices())
                 {
                         v.insert(p);
                 }

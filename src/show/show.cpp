@@ -833,12 +833,12 @@ void ShowObject::loop()
                         dft_show = std::make_unique<DFTShow>(width, height, dft_pos_x, dft_pos_y, plane_matrix, framebuffer_srgb);
                         dft_show->set_brightness(dft_brightness);
 
-                        pencil_effect = std::make_unique<PencilEffect>(renderer->get_color_buffer_texture(),
-                                                                       renderer->get_object_texture(), colorbuffer_srgb);
+                        pencil_effect = std::make_unique<PencilEffect>(renderer->color_buffer_texture(),
+                                                                       renderer->object_texture(), colorbuffer_srgb);
 
                         optical_flow = std::make_unique<OpticalFlow>(width, height, plane_matrix);
 
-                        convex_hull_2d = std::make_unique<ConvexHull2D>(renderer->get_object_texture(), plane_matrix);
+                        convex_hull_2d = std::make_unique<ConvexHull2D>(renderer->object_texture(), plane_matrix);
                 }
 
                 if (default_view)

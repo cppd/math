@@ -506,14 +506,13 @@ public:
                 glBindImageTexture(unit, m_texture, level, layered, layer, access, format);
         }
 
-        GLuint64 get_texture_resident_handle() const noexcept
+        GLuint64 texture_resident_handle() const noexcept
         {
                 GLuint64 texture_handle = glGetTextureHandleARB(m_texture);
                 glMakeTextureHandleResidentARB(texture_handle);
                 return texture_handle;
         }
-        GLuint64 get_image_resident_handle(GLint level, GLboolean layered, GLint layer, GLenum format, GLenum access) const
-                noexcept
+        GLuint64 image_resident_handle(GLint level, GLboolean layered, GLint layer, GLenum format, GLenum access) const noexcept
         {
                 GLuint64 image_handle = glGetImageHandleARB(m_texture, level, layered, layer, format);
                 glMakeImageHandleResidentARB(image_handle, access);
@@ -540,11 +539,11 @@ public:
                 glNamedFramebufferTexture(framebuffer, attachment, m_texture, level);
         }
 
-        int get_width() const noexcept
+        int width() const noexcept
         {
                 return m_width;
         }
-        int get_height() const noexcept
+        int height() const noexcept
         {
                 return m_height;
         }
@@ -841,17 +840,17 @@ public:
                 set_parameters();
         }
 
-        GLuint64 get_image_resident_handle_write_only() const noexcept
+        GLuint64 image_resident_handle_write_only() const noexcept
         {
-                return m_texture.get_image_resident_handle(0, GL_FALSE, 0, GL_RGBA32F, GL_WRITE_ONLY);
+                return m_texture.image_resident_handle(0, GL_FALSE, 0, GL_RGBA32F, GL_WRITE_ONLY);
         }
-        GLuint64 get_image_resident_handle_read_only() const noexcept
+        GLuint64 image_resident_handle_read_only() const noexcept
         {
-                return m_texture.get_image_resident_handle(0, GL_FALSE, 0, GL_RGBA32F, GL_READ_ONLY);
+                return m_texture.image_resident_handle(0, GL_FALSE, 0, GL_RGBA32F, GL_READ_ONLY);
         }
-        GLuint64 get_image_resident_handle_read_write() const noexcept
+        GLuint64 image_resident_handle_read_write() const noexcept
         {
-                return m_texture.get_image_resident_handle(0, GL_FALSE, 0, GL_RGBA32F, GL_READ_WRITE);
+                return m_texture.image_resident_handle(0, GL_FALSE, 0, GL_RGBA32F, GL_READ_WRITE);
         }
 
         void bind_image_texture_read_only(GLuint unit) const noexcept
@@ -869,7 +868,7 @@ public:
 
         void copy_texture_sub_image() const noexcept
         {
-                m_texture.copy_texture_sub_image_2d(0, 0, 0, 0, 0, m_texture.get_width(), m_texture.get_height());
+                m_texture.copy_texture_sub_image_2d(0, 0, 0, 0, 0, m_texture.width(), m_texture.height());
         }
 
         void clear_tex_image(GLfloat r, GLfloat g, GLfloat b, GLfloat a) const noexcept
@@ -881,7 +880,7 @@ public:
         void get_texture_image(T* pixels) const noexcept
         {
                 static_assert(is_float_buffer<T>);
-                unsigned long long size = 4ull * m_texture.get_width() * m_texture.get_height();
+                unsigned long long size = 4ull * m_texture.width() * m_texture.height();
                 ASSERT(pixels->size() == size);
                 m_texture.get_texture_image(0, GL_RGBA, GL_FLOAT, size * sizeof(GLfloat), pixels->data());
         }
@@ -892,12 +891,12 @@ public:
                 unsigned long long size = 4ull * width * height;
                 ASSERT(pixels->size() == size);
                 ASSERT(width > 0 && height > 0);
-                ASSERT(width <= m_texture.get_width() && height <= m_texture.get_height());
+                ASSERT(width <= m_texture.width() && height <= m_texture.height());
                 m_texture.get_texture_sub_image(0, xoffset, yoffset, 0, width, height, 1, GL_RGBA, GL_FLOAT,
                                                 size * sizeof(GLfloat), pixels->data());
         }
 
-        const Texture2D& get_texture() const noexcept
+        const Texture2D& texture() const noexcept
         {
                 return m_texture;
         }
@@ -935,17 +934,17 @@ public:
                 set_parameters();
         }
 
-        GLuint64 get_image_resident_handle_write_only() const noexcept
+        GLuint64 image_resident_handle_write_only() const noexcept
         {
-                return m_texture.get_image_resident_handle(0, GL_FALSE, 0, GL_R32F, GL_WRITE_ONLY);
+                return m_texture.image_resident_handle(0, GL_FALSE, 0, GL_R32F, GL_WRITE_ONLY);
         }
-        GLuint64 get_image_resident_handle_read_only() const noexcept
+        GLuint64 image_resident_handle_read_only() const noexcept
         {
-                return m_texture.get_image_resident_handle(0, GL_FALSE, 0, GL_R32F, GL_READ_ONLY);
+                return m_texture.image_resident_handle(0, GL_FALSE, 0, GL_R32F, GL_READ_ONLY);
         }
-        GLuint64 get_image_resident_handle_read_write() const noexcept
+        GLuint64 image_resident_handle_read_write() const noexcept
         {
-                return m_texture.get_image_resident_handle(0, GL_FALSE, 0, GL_R32F, GL_READ_WRITE);
+                return m_texture.image_resident_handle(0, GL_FALSE, 0, GL_R32F, GL_READ_WRITE);
         }
 
         void clear_tex_image(GLfloat v) const noexcept
@@ -956,7 +955,7 @@ public:
         void get_texture_image(T* pixels) const noexcept
         {
                 static_assert(is_float_buffer<T>);
-                unsigned long long size = static_cast<unsigned long long>(m_texture.get_width()) * m_texture.get_height();
+                unsigned long long size = static_cast<unsigned long long>(m_texture.width()) * m_texture.height();
                 ASSERT(pixels->size() == size);
                 m_texture.get_texture_image(0, GL_RED, GL_FLOAT, size * sizeof(GLfloat), pixels->data());
         }
@@ -967,12 +966,12 @@ public:
                 unsigned long long size = static_cast<unsigned long long>(width) * height;
                 ASSERT(pixels->size() == size);
                 ASSERT(width > 0 && height > 0);
-                ASSERT(width <= m_texture.get_width() && height <= m_texture.get_height());
+                ASSERT(width <= m_texture.width() && height <= m_texture.height());
                 m_texture.get_texture_sub_image(0, xoffset, yoffset, 0, width, height, 1, GL_RED, GL_FLOAT,
                                                 size * sizeof(GLfloat), pixels->data());
         }
 
-        const Texture2D& get_texture() const noexcept
+        const Texture2D& texture() const noexcept
         {
                 return m_texture;
         }
@@ -994,17 +993,17 @@ public:
                 m_texture.texture_parameter(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         }
 
-        GLuint64 get_image_resident_handle_write_only() const noexcept
+        GLuint64 image_resident_handle_write_only() const noexcept
         {
-                return m_texture.get_image_resident_handle(0, GL_FALSE, 0, GL_R32I, GL_WRITE_ONLY);
+                return m_texture.image_resident_handle(0, GL_FALSE, 0, GL_R32I, GL_WRITE_ONLY);
         }
-        GLuint64 get_image_resident_handle_read_only() const noexcept
+        GLuint64 image_resident_handle_read_only() const noexcept
         {
-                return m_texture.get_image_resident_handle(0, GL_FALSE, 0, GL_R32I, GL_READ_ONLY);
+                return m_texture.image_resident_handle(0, GL_FALSE, 0, GL_R32I, GL_READ_ONLY);
         }
-        GLuint64 get_image_resident_handle_read_write() const noexcept
+        GLuint64 image_resident_handle_read_write() const noexcept
         {
-                return m_texture.get_image_resident_handle(0, GL_FALSE, 0, GL_R32I, GL_READ_WRITE);
+                return m_texture.image_resident_handle(0, GL_FALSE, 0, GL_R32I, GL_READ_WRITE);
         }
 
         void clear_tex_image(GLint v) const noexcept
@@ -1015,7 +1014,7 @@ public:
         void get_texture_image(T* pixels) const noexcept
         {
                 static_assert(is_int_buffer<T>);
-                unsigned long long size = static_cast<unsigned long long>(m_texture.get_width()) * m_texture.get_height();
+                unsigned long long size = static_cast<unsigned long long>(m_texture.width()) * m_texture.height();
                 ASSERT(pixels->size() == size);
                 m_texture.get_texture_image(0, GL_RED_INTEGER, GL_INT, size * sizeof(GLint), pixels->data());
         }
@@ -1026,12 +1025,12 @@ public:
                 unsigned long long size = static_cast<unsigned long long>(width) * height;
                 ASSERT(pixels->size() == size);
                 ASSERT(width > 0 && height > 0);
-                ASSERT(width <= m_texture.get_width() && height <= m_texture.get_height());
+                ASSERT(width <= m_texture.width() && height <= m_texture.height());
                 m_texture.get_texture_sub_image(0, xoffset, yoffset, 0, width, height, 1, GL_RED_INTEGER, GL_INT,
                                                 size * sizeof(GLint), pixels->data());
         }
 
-        const Texture2D& get_texture() const noexcept
+        const Texture2D& texture() const noexcept
         {
                 return m_texture;
         }
@@ -1052,7 +1051,7 @@ public:
                 m_texture.texture_parameter(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         }
 
-        const Texture2D& get_texture() const noexcept
+        const Texture2D& texture() const noexcept
         {
                 return m_texture;
         }
@@ -1066,7 +1065,7 @@ class ShadowBuffer final
 public:
         ShadowBuffer(GLsizei width, GLsizei height) : m_depth(width, height)
         {
-                m_fb.named_framebuffer_texture(GL_DEPTH_ATTACHMENT, m_depth.get_texture(), 0);
+                m_fb.named_framebuffer_texture(GL_DEPTH_ATTACHMENT, m_depth.texture(), 0);
 
                 GLenum check = m_fb.check_named_framebuffer_status();
                 if (check != GL_FRAMEBUFFER_COMPLETE)
@@ -1084,7 +1083,7 @@ public:
                 m_fb.unbind_framebuffer();
         }
 
-        const TextureDepth32& get_depth_texture() const noexcept
+        const TextureDepth32& depth_texture() const noexcept
         {
                 return m_depth;
         }
@@ -1099,8 +1098,8 @@ class ColorBuffer final
 public:
         ColorBuffer(GLsizei width, GLsizei height) : m_color(width, height), m_depth(width, height)
         {
-                m_fb.named_framebuffer_texture(GL_COLOR_ATTACHMENT0, m_color.get_texture(), 0);
-                m_fb.named_framebuffer_texture(GL_DEPTH_ATTACHMENT, m_depth.get_texture(), 0);
+                m_fb.named_framebuffer_texture(GL_COLOR_ATTACHMENT0, m_color.texture(), 0);
+                m_fb.named_framebuffer_texture(GL_DEPTH_ATTACHMENT, m_depth.texture(), 0);
 
                 GLenum check = m_fb.check_named_framebuffer_status();
                 if (check != GL_FRAMEBUFFER_COMPLETE)
@@ -1121,7 +1120,7 @@ public:
                 m_fb.unbind_framebuffer();
         }
 
-        const TextureRGBA32F& get_color_texture() const noexcept
+        const TextureRGBA32F& color_texture() const noexcept
         {
                 return m_color;
         }

@@ -109,7 +109,7 @@ void create_spherical_convex_hull(int point_count, std::vector<Vector<N, float>>
         facets->reserve(ch_facets.size());
         for (const ConvexHullFacet<N>& ch_facet : ch_facets)
         {
-                facets->push_back(ch_facet.get_vertices());
+                facets->push_back(ch_facet.vertices());
         }
 }
 

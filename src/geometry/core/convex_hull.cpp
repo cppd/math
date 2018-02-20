@@ -263,7 +263,7 @@ void find_simplex_points(const std::vector<Vector<N, SourceType>>& points, std::
 template <size_t N, typename Facet, template <typename...> typename Map>
 void connect_facets(Facet* facet, int exclude_point, Map<Ridge<N>, std::tuple<Facet*, unsigned>>* search_map, int* ridge_count)
 {
-        const std::array<int, N>& vertices = facet->get_vertices();
+        const std::array<int, N>& vertices = facet->vertices();
         for (unsigned r = 0; r < N; ++r)
         {
                 if (vertices[r] == exclude_point)
@@ -346,7 +346,7 @@ template <typename Point, typename Facet>
 void add_conflict_points_to_new_facet(const std::vector<Point>* points, int point, std::vector<signed char>* unique_points,
                                       const Facet* facet_0, const Facet* facet_1, Facet* new_facet)
 {
-        for (int p : facet_0->get_conflict_points())
+        for (int p : facet_0->conflict_points())
         {
                 (*unique_points)[p] = 1;
 
@@ -355,7 +355,7 @@ void add_conflict_points_to_new_facet(const std::vector<Point>* points, int poin
                         new_facet->add_conflict_point(p);
                 }
         }
-        for (int p : facet_1->get_conflict_points())
+        for (int p : facet_1->conflict_points())
         {
                 if ((*unique_points)[p] != 0)
                 {
@@ -367,7 +367,7 @@ void add_conflict_points_to_new_facet(const std::vector<Point>* points, int poin
                         new_facet->add_conflict_point(p);
                 }
         }
-        for (int p : facet_0->get_conflict_points())
+        for (int p : facet_0->conflict_points())
         {
                 (*unique_points)[p] = 0;
         }
@@ -379,7 +379,7 @@ void erase_visible_facets_from_conflict_points(unsigned thread_id, unsigned thre
 {
         for (const Facet* facet : (*point_conflicts)[point])
         {
-                for (int p : facet->get_conflict_points())
+                for (int p : facet->conflict_points())
                 {
                         if (p != point && (p % thread_count) == thread_id)
                         {
@@ -398,7 +398,7 @@ void add_new_facets_to_conflict_points(unsigned thread_id, unsigned thread_count
         {
                 for (const Facet& facet : (*new_facets_vector)[i])
                 {
-                        for (int p : facet.get_conflict_points())
+                        for (int p : facet.conflict_points())
                         {
                                 if ((p % thread_count) == thread_id)
                                 {
@@ -427,7 +427,7 @@ void create_facets(unsigned thread_id, unsigned thread_count, const std::vector<
         // Добавление граней, состоящих из рёбер горизонта и заданной точки
         for (const Facet* facet : (*point_conflicts)[point])
         {
-                for (unsigned r = 0; r < facet->get_vertices().size(); ++r)
+                for (unsigned r = 0; r < facet->vertices().size(); ++r)
                 {
                         Facet* link_facet = facet->get_link(r);
 
@@ -447,8 +447,8 @@ void create_facets(unsigned thread_id, unsigned thread_count, const std::vector<
 
                         int link_index = link_facet->find_link_index(facet);
 
-                        new_facets->emplace_back(*points, set_elem(facet->get_vertices(), r, point),
-                                                 link_facet->get_vertices()[link_index], link_facet);
+                        new_facets->emplace_back(*points, set_elem(facet->vertices(), r, point),
+                                                 link_facet->vertices()[link_index], link_facet);
 
                         Facet* new_facet = &(*std::prev(new_facets->end()));
                         new_facet->set_iter(std::prev(new_facets->cend()));
@@ -618,7 +618,7 @@ void create_convex_hull(const std::vector<Vector<N, S>>& points, FacetList<Facet
         }
 
         ASSERT(std::all_of(facets->cbegin(), facets->cend(),
-                           [](const Facet<N, S, C>& facet) -> bool { return facet.get_conflict_points().size() == 0; }));
+                           [](const Facet<N, S, C>& facet) -> bool { return facet.conflict_points().size() == 0; }));
 }
 
 template <size_t N>
@@ -767,13 +767,13 @@ void paraboloid_convex_hull(const std::vector<Vector<N, long long>>& points, con
                         continue;
                 }
 
-                const std::array<int, N + 1>& vertices = facet.get_vertices();
+                const std::array<int, N + 1>& vertices = facet.vertices();
 
                 std::array<vec<N>, N + 1> orthos;
                 for (unsigned r = 0; r < N + 1; ++r)
                 {
                         // Перпендикуляр к грани наружу от симплекса Делоне
-                        orthos[r] = FacetDelaunay(data_d, del_elem(vertices, r), vertices[r], nullptr).get_double_ortho();
+                        orthos[r] = FacetDelaunay(data_d, del_elem(vertices, r), vertices[r], nullptr).double_ortho();
                 }
 
                 simplices->emplace_back(restore_indices(vertices, points_map), orthos);
@@ -808,7 +808,7 @@ void ordinary_convex_hull(const std::vector<Vector<N, long long>>& points, const
         ch_facets->reserve(facets.size());
         for (const Facet& facet : facets)
         {
-                ch_facets->emplace_back(restore_indices(facet.get_vertices(), points_map), facet.get_double_ortho());
+                ch_facets->emplace_back(restore_indices(facet.vertices(), points_map), facet.double_ortho());
         }
 }
 

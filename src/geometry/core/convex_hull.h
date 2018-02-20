@@ -34,11 +34,11 @@ public:
         ConvexHullFacet(const std::array<int, N>& indices, const vec<N>& ortho) : m_indices(indices), m_ortho(ortho)
         {
         }
-        const std::array<int, N>& get_vertices() const
+        const std::array<int, N>& vertices() const
         {
                 return m_indices;
         }
-        const vec<N>& get_ortho() const
+        const vec<N>& ortho() const
         {
                 return m_ortho;
         }
@@ -55,11 +55,11 @@ public:
                 : m_indices(indices), m_orthos(orthos)
         {
         }
-        const std::array<int, N + 1>& get_vertices() const
+        const std::array<int, N + 1>& vertices() const
         {
                 return m_indices;
         }
-        const vec<N>& get_ortho(unsigned i) const
+        const vec<N>& ortho(unsigned i) const
         {
                 ASSERT(i < m_orthos.size());
                 return m_orthos[i];

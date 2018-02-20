@@ -81,7 +81,7 @@ vec<N> voronoi_positive_norm(const vec<N>& vertex, const std::vector<DelaunayObj
                 {
                         if (delaunay_facets[vertex_facet.facet_index].one_sided())
                         {
-                                sum = sum + delaunay_facets[vertex_facet.facet_index].get_ortho();
+                                sum = sum + delaunay_facets[vertex_facet.facet_index].ortho();
                         }
                 }
 
@@ -93,7 +93,7 @@ vec<N> voronoi_positive_norm(const vec<N>& vertex, const std::vector<DelaunayObj
                 vec<N> max_vector(0);
                 for (int object_index : vertex_connections.objects)
                 {
-                        vec<N> voronoi_vertex = delaunay_objects[object_index].get_voronoi_vertex();
+                        vec<N> voronoi_vertex = delaunay_objects[object_index].voronoi_vertex();
                         vec<N> vp = voronoi_vertex - vertex;
                         double distance = dot(vp, vp);
                         if (distance > max_distance)
@@ -129,7 +129,7 @@ double voronoi_height(const vec<N>& vertex, const std::vector<DelaunayObject<N>>
 
         for (int object_index : vertex_objects)
         {
-                vec<N> voronoi_vertex = delaunay_objects[object_index].get_voronoi_vertex();
+                vec<N> voronoi_vertex = delaunay_objects[object_index].voronoi_vertex();
                 vec<N> vp = voronoi_vertex - vertex;
 
                 if (dot(vp, positive_pole_norm) >= 0)
@@ -179,9 +179,9 @@ double voronoi_edge_radius(const std::vector<DelaunayObject<N>>& delaunay_object
         // Если вершины Вороного совпадают, то до этого места не дойдёт, так как тогда они внутри COCONE.
         // Поэтому можно брать разницу между вершинами как вектор направления от a к b.
         // Но могут быть и небольшие разницы на границах COCONE.
-        vec<N> a_to_b = facet.one_sided() ? facet.get_ortho() :
-                                            (delaunay_objects[facet.get_delaunay(1)].get_voronoi_vertex() -
-                                             delaunay_objects[facet.get_delaunay(0)].get_voronoi_vertex());
+        vec<N> a_to_b = facet.one_sided() ? facet.ortho() :
+                                            (delaunay_objects[facet.delaunay(1)].voronoi_vertex() -
+                                             delaunay_objects[facet.delaunay(0)].voronoi_vertex());
 
         double max_distance;
 
@@ -242,7 +242,7 @@ void cocone_facets_and_voronoi_radius(const vec<N>& vertex, const std::vector<De
                 const DelaunayFacet<N>& facet = delaunay_facets[vertex_facet.facet_index];
 
                 // Вектор от вершины к одной из 2 вершин Вороного грани
-                vec<N> pa = delaunay_objects[facet.get_delaunay(0)].get_voronoi_vertex() - vertex;
+                vec<N> pa = delaunay_objects[facet.delaunay(0)].voronoi_vertex() - vertex;
                 double pa_length = length(pa);
                 double cos_n_a = dot(positive_pole, pa) / pa_length;
 
@@ -253,11 +253,11 @@ void cocone_facets_and_voronoi_radius(const vec<N>& vertex, const std::vector<De
                 if (facet.one_sided())
                 {
                         pb_length = 0;
-                        cos_n_b = dot(positive_pole, facet.get_ortho());
+                        cos_n_b = dot(positive_pole, facet.ortho());
                 }
                 else
                 {
-                        vec<N> pb = delaunay_objects[facet.get_delaunay(1)].get_voronoi_vertex() - vertex;
+                        vec<N> pb = delaunay_objects[facet.delaunay(1)].voronoi_vertex() - vertex;
                         pb_length = length(pb);
                         cos_n_b = dot(positive_pole, pb) / pb_length;
                 }
@@ -304,7 +304,7 @@ void cocone_neighbors(const std::vector<DelaunayFacet<N>>& delaunay_facets, cons
                                 if (v == skip_v)
                                 {
                                         // Эта вершина грани совпадает с рассматриваемой вершиной, поэтому пропустить
-                                        ASSERT(delaunay_facets[facet_index].get_vertices()[v] == vertex_index);
+                                        ASSERT(delaunay_facets[facet_index].vertices()[v] == vertex_index);
                                         continue;
                                 }
 
@@ -312,7 +312,7 @@ void cocone_neighbors(const std::vector<DelaunayFacet<N>>& delaunay_facets, cons
                                 if (facet_data[facet_index].cocone_vertex[v])
                                 {
                                         (*vertex_data)[vertex_index].cocone_neighbors.push_back(
-                                                delaunay_facets[facet_index].get_vertices()[v]);
+                                                delaunay_facets[facet_index].vertices()[v]);
                                 }
                         }
                 }
@@ -331,7 +331,7 @@ void vertex_connections(int vertex_count, const std::vector<DelaunayObject<N>>& 
         for (unsigned facet = 0; facet < facets.size(); ++facet)
         {
                 int local_index = -1;
-                for (int vertex : facets[facet].get_vertices())
+                for (int vertex : facets[facet].vertices())
                 {
                         (*conn)[vertex].facets.emplace_back(facet, ++local_index);
                 }
@@ -339,7 +339,7 @@ void vertex_connections(int vertex_count, const std::vector<DelaunayObject<N>>& 
 
         for (unsigned object = 0; object < objects.size(); ++object)
         {
-                for (int vertex : objects[object].get_vertices())
+                for (int vertex : objects[object].vertices())
                 {
                         (*conn)[vertex].objects.emplace_back(object);
                 }

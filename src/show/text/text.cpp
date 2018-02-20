@@ -141,7 +141,7 @@ public:
                   left(left_),
                   top(top_),
                   advance(advance_),
-                  texture_handle(texture.get_texture().get_texture_resident_handle())
+                  texture_handle(texture.texture().texture_resident_handle())
         {
         }
 };

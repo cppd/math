@@ -217,7 +217,7 @@ class GL2D final : public IFourierGL1, public IFourierGL2
                         // m_prog.FFT_1 и m_prog.FFT_2, то вначале надо отдельно выполнить перестановку данных,
                         // а потом запускать функции с отключенной перестановкой, иначе одни запуски будут
                         // вносить изменения в данные других запусков, так как результат пишется в исходные данные.
-                        m_prog.reverse(get_group_count(data_size, BLOCK_SIZE), BLOCK_SIZE, data_size, N - 1, N_bits, data);
+                        m_prog.reverse(group_count(data_size, BLOCK_SIZE), BLOCK_SIZE, data_size, N - 1, N_bits, data);
 
                         (type == 1) ? m_FFT_1.exec(inv, data_size, data) : m_FFT_2.exec(inv, data_size, data);
 
@@ -228,7 +228,7 @@ class GL2D final : public IFourierGL1, public IFourierGL2
                         const int N_2_bits = N_bits - 1;
 
                         const int thread_cnt = data_size / 2;
-                        const int block_cnt = get_group_count(thread_cnt, BLOCK_SIZE);
+                        const int block_cnt = group_count(thread_cnt, BLOCK_SIZE);
 
                         int M_2 = shared_size;
                         FP Two_PI_Div_M = inv ? (PI<FP> / M_2) : -(PI<FP> / M_2);
@@ -294,7 +294,7 @@ class GL2D final : public IFourierGL1, public IFourierGL2
         }
         void exec(bool inv, bool srgb) override
         {
-                vec2i grid(get_group_count(m_N1, block[0]), get_group_count(m_N2, block[1]));
+                vec2i grid(group_count(m_N1, block[0]), group_count(m_N2, block[1]));
 
                 m_prog.move_to_input(grid, block, m_N1, m_N2, srgb, m_texture_handle, &m_x_d);
                 dft2d(inv);
@@ -310,12 +310,12 @@ public:
                   m_M1_bin(binary_size(m_M1)),
                   m_M2_bin(binary_size(m_M2)),
                   block(BLOCK_SQRT, BLOCK_SQRT),
-                  rows_to(get_group_count(m_M1, block[0]), get_group_count(m_N2, block[1])),
-                  rows_fr(get_group_count(m_N1, block[0]), get_group_count(m_N2, block[1])),
-                  rows_D(get_group_count(m_M1, block[0]), get_group_count(m_N2, block[1])),
-                  cols_to(get_group_count(m_N1, block[0]), get_group_count(m_M2, block[1])),
-                  cols_fr(get_group_count(m_N1, block[0]), get_group_count(m_N2, block[1])),
-                  cols_D(get_group_count(m_M2, block[0]), get_group_count(m_N1, block[1])),
+                  rows_to(group_count(m_M1, block[0]), group_count(m_N2, block[1])),
+                  rows_fr(group_count(m_N1, block[0]), group_count(m_N2, block[1])),
+                  rows_D(group_count(m_M1, block[0]), group_count(m_N2, block[1])),
+                  cols_to(group_count(m_N1, block[0]), group_count(m_M2, block[1])),
+                  cols_fr(group_count(m_N1, block[0]), group_count(m_N2, block[1])),
+                  cols_D(group_count(m_M2, block[0]), group_count(m_N1, block[1])),
                   m_D1_fwd(m_M1, MemoryUsage::STATIC_COPY),
                   m_D1_inv(m_M1, MemoryUsage::STATIC_COPY),
                   m_D2_fwd(m_M2, MemoryUsage::STATIC_COPY),
@@ -337,7 +337,7 @@ public:
 
                 if (texture)
                 {
-                        m_texture_handle = texture->get_image_resident_handle_read_write();
+                        m_texture_handle = texture->image_resident_handle_read_write();
                 }
 
                 // Для обратного преобразования нужна корректировка данных с умножением на коэффициент,

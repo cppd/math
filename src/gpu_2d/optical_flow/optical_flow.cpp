@@ -157,30 +157,30 @@ class ImageR32F
 public:
         ImageR32F(int x, int y)
                 : m_texture(x, y),
-                  m_image_write_handle(m_texture.get_image_resident_handle_write_only()),
-                  m_image_read_handle(m_texture.get_image_resident_handle_read_only()),
-                  m_texture_handle(m_texture.get_texture().get_texture_resident_handle()),
+                  m_image_write_handle(m_texture.image_resident_handle_write_only()),
+                  m_image_read_handle(m_texture.image_resident_handle_read_only()),
+                  m_texture_handle(m_texture.texture().texture_resident_handle()),
                   m_width(x),
                   m_height(y)
         {
         }
-        int get_width() const
+        int width() const
         {
                 return m_width;
         }
-        int get_height() const
+        int height() const
         {
                 return m_height;
         }
-        GLuint64 get_image_write_handle() const
+        GLuint64 image_write_handle() const
         {
                 return m_image_write_handle;
         }
-        GLuint64 get_image_read_handle() const
+        GLuint64 image_read_handle() const
         {
                 return m_image_read_handle;
         }
-        GLuint64 get_texture_handle() const
+        GLuint64 texture_handle() const
         {
                 return m_texture_handle;
         }
@@ -261,7 +261,7 @@ class OpticalFlow::Impl final
         void build_image_pyramid(std::vector<ImageR32F>* pyramid)
         {
                 // уровень 0 заполняется по исходному изображению
-                m_comp_grayscale.set_uniform_handle("img_dst", (*pyramid)[0].get_image_write_handle());
+                m_comp_grayscale.set_uniform_handle("img_dst", (*pyramid)[0].image_write_handle());
                 m_comp_grayscale.dispatch_compute(m_groups_x, m_groups_y, 1, GROUP_SIZE, GROUP_SIZE, 1);
                 glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
@@ -271,18 +271,18 @@ class OpticalFlow::Impl final
                         const ImageR32F& img_big = (*pyramid)[i - 1];
                         const ImageR32F& img_small = (*pyramid)[i];
 
-                        int k_x = (img_small.get_width() != img_big.get_width()) ? 2 : 1;
-                        int k_y = (img_small.get_height() != img_big.get_height()) ? 2 : 1;
+                        int k_x = (img_small.width() != img_big.width()) ? 2 : 1;
+                        int k_y = (img_small.height() != img_big.height()) ? 2 : 1;
 
                         ASSERT(k_x > 1 || k_y > 1);
 
-                        m_comp_downsample.set_uniform_handle("img_big", img_big.get_image_read_handle());
-                        m_comp_downsample.set_uniform_handle("img_small", img_small.get_image_write_handle());
+                        m_comp_downsample.set_uniform_handle("img_big", img_big.image_read_handle());
+                        m_comp_downsample.set_uniform_handle("img_small", img_small.image_write_handle());
                         m_comp_downsample.set_uniform("k_x", k_x);
                         m_comp_downsample.set_uniform("k_y", k_y);
 
-                        int groups_x = get_group_count(img_small.get_width(), GROUP_SIZE);
-                        int groups_y = get_group_count(img_small.get_height(), GROUP_SIZE);
+                        int groups_x = group_count(img_small.width(), GROUP_SIZE);
+                        int groups_y = group_count(img_small.height(), GROUP_SIZE);
 
                         m_comp_downsample.dispatch_compute(groups_x, groups_y, 1, GROUP_SIZE, GROUP_SIZE, 1);
                         glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
@@ -296,12 +296,12 @@ class OpticalFlow::Impl final
 
                 for (unsigned i = 0; i < image_pyramid.size(); ++i)
                 {
-                        m_comp_sobel.set_uniform_handle("img_I", image_pyramid[i].get_image_read_handle());
-                        m_comp_sobel.set_uniform_handle("img_dx", image_pyramid_dx[i].get_image_write_handle());
-                        m_comp_sobel.set_uniform_handle("img_dy", image_pyramid_dy[i].get_image_write_handle());
+                        m_comp_sobel.set_uniform_handle("img_I", image_pyramid[i].image_read_handle());
+                        m_comp_sobel.set_uniform_handle("img_dx", image_pyramid_dx[i].image_write_handle());
+                        m_comp_sobel.set_uniform_handle("img_dy", image_pyramid_dy[i].image_write_handle());
 
-                        int groups_x = get_group_count(image_pyramid[i].get_width(), GROUP_SIZE);
-                        int groups_y = get_group_count(image_pyramid[i].get_height(), GROUP_SIZE);
+                        int groups_x = group_count(image_pyramid[i].width(), GROUP_SIZE);
+                        int groups_y = group_count(image_pyramid[i].height(), GROUP_SIZE);
 
                         m_comp_sobel.dispatch_compute(groups_x, groups_y, 1, GROUP_SIZE, GROUP_SIZE, 1);
                 }
@@ -327,8 +327,8 @@ class OpticalFlow::Impl final
 
                                 image_pyramid_flow[i].bind(1);
 
-                                points_x = image_pyramid_I[i].get_width();
-                                points_y = image_pyramid_I[i].get_height();
+                                points_x = image_pyramid_I[i].width();
+                                points_y = image_pyramid_I[i].height();
                         }
                         else
                         {
@@ -350,12 +350,12 @@ class OpticalFlow::Impl final
 
                                 m_comp_flow.set_uniform("use_guess", 1);
 
-                                m_comp_flow.set_uniform("guess_width", image_pyramid_I[i + 1].get_width());
+                                m_comp_flow.set_uniform("guess_width", image_pyramid_I[i + 1].width());
 
                                 image_pyramid_flow[i + 1].bind(2);
 
-                                int kx = (image_pyramid_I[i + 1].get_width() != image_pyramid_I[i].get_width()) ? 2 : 1;
-                                int ky = (image_pyramid_I[i + 1].get_height() != image_pyramid_I[i].get_height()) ? 2 : 1;
+                                int kx = (image_pyramid_I[i + 1].width() != image_pyramid_I[i].width()) ? 2 : 1;
+                                int ky = (image_pyramid_I[i + 1].height() != image_pyramid_I[i].height()) ? 2 : 1;
                                 m_comp_flow.set_uniform("guess_kx", kx);
                                 m_comp_flow.set_uniform("guess_ky", ky);
                         }
@@ -368,13 +368,13 @@ class OpticalFlow::Impl final
                         m_comp_flow.set_uniform("point_count_x", points_x);
                         m_comp_flow.set_uniform("point_count_y", points_y);
 
-                        int groups_x = get_group_count(points_x, GROUP_SIZE);
-                        int groups_y = get_group_count(points_y, GROUP_SIZE);
+                        int groups_x = group_count(points_x, GROUP_SIZE);
+                        int groups_y = group_count(points_y, GROUP_SIZE);
 
-                        m_comp_flow.set_uniform_handle("img_dx", image_pyramid_dx[i].get_image_read_handle());
-                        m_comp_flow.set_uniform_handle("img_dy", image_pyramid_dy[i].get_image_read_handle());
-                        m_comp_flow.set_uniform_handle("img_I", image_pyramid_I[i].get_image_read_handle());
-                        m_comp_flow.set_uniform_handle("tex_J", image_pyramid_J[i].get_texture_handle());
+                        m_comp_flow.set_uniform_handle("img_dx", image_pyramid_dx[i].image_read_handle());
+                        m_comp_flow.set_uniform_handle("img_dy", image_pyramid_dy[i].image_read_handle());
+                        m_comp_flow.set_uniform_handle("img_I", image_pyramid_I[i].image_read_handle());
+                        m_comp_flow.set_uniform_handle("tex_J", image_pyramid_J[i].texture_handle());
 
                         m_comp_flow.dispatch_compute(groups_x, groups_y, 1, GROUP_SIZE, GROUP_SIZE, 1);
 
@@ -388,8 +388,8 @@ class OpticalFlow::Impl final
                 m_top_points_flow.bind(1);
                 m_top_points_lines.bind(2);
 
-                int groups_x = get_group_count(m_point_count_x, GROUP_SIZE);
-                int groups_y = get_group_count(m_point_count_y, GROUP_SIZE);
+                int groups_x = group_count(m_point_count_x, GROUP_SIZE);
+                int groups_y = group_count(m_point_count_y, GROUP_SIZE);
 
                 m_comp_lines.dispatch_compute(groups_x, groups_y, 1, GROUP_SIZE, GROUP_SIZE, 1);
 
@@ -408,8 +408,8 @@ public:
         Impl(int width, int height, const mat4& mtx)
                 : m_width(width),
                   m_height(height),
-                  m_groups_x(get_group_count(m_width, GROUP_SIZE)),
-                  m_groups_y(get_group_count(m_height, GROUP_SIZE)),
+                  m_groups_x(group_count(m_width, GROUP_SIZE)),
+                  m_groups_y(group_count(m_height, GROUP_SIZE)),
                   m_comp_sobel(ComputeShader(sobel_compute_shader)),
                   m_comp_flow(ComputeShader(flow_compute_shader)),
                   m_comp_downsample(ComputeShader(downsample_compute_shader)),
@@ -437,7 +437,7 @@ public:
                 m_top_points_flow.create_dynamic_copy(top_points.size() * SIZE_OF_VEC2);
                 m_top_points_lines.create_dynamic_copy(top_points.size() * 2 * SIZE_OF_IVEC2);
 
-                m_comp_grayscale.set_uniform_handle("img_src", m_texture_J.get_image_resident_handle_read_only());
+                m_comp_grayscale.set_uniform_handle("img_src", m_texture_J.image_resident_handle_read_only());
 
                 m_comp_lines.set_uniform("point_count_x", m_point_count_x);
                 m_comp_lines.set_uniform("point_count_y", m_point_count_y);

@@ -165,7 +165,7 @@ public:
                 m_FFT.set_uniform_unsigned(0, inv ? 1 : 0);
                 m_FFT.set_uniform_unsigned(1, data_size);
                 global_data->bind(0);
-                m_FFT.dispatch_compute(get_group_count(data_size, m_shared_size), 1, 1, m_group_size, 1, 1);
+                m_FFT.dispatch_compute(group_count(data_size, m_shared_size), 1, 1, m_group_size, 1, 1);
                 glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
         }
 };

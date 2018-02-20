@@ -73,7 +73,7 @@ public:
         {
         }
 
-        const Parallelotope& get_parallelotope() const
+        const Parallelotope& parallelotope() const
         {
                 return m_parallelotope;
         }
@@ -83,7 +83,7 @@ public:
                 m_childs[child_number] = child_box_index;
         }
 
-        const std::array<int, CHILD_COUNT>& get_childs() const
+        const std::array<int, CHILD_COUNT>& childs() const
         {
                 return m_childs;
         }
@@ -104,12 +104,12 @@ public:
                 m_object_indices.shrink_to_fit();
         }
 
-        const std::vector<int>& get_object_indices() const
+        const std::vector<int>& object_indices() const
         {
                 return m_object_indices;
         }
 
-        int get_object_index_count() const
+        int object_index_count() const
         {
                 return m_object_indices.size();
         }
@@ -348,13 +348,13 @@ void extend(const int MAX_DEPTH, const int MIN_OBJECTS, const int MAX_BOXES, Spi
                         continue;
                 }
 
-                if (depth >= MAX_DEPTH || box->get_object_index_count() <= MIN_OBJECTS)
+                if (depth >= MAX_DEPTH || box->object_index_count() <= MIN_OBJECTS)
                 {
                         continue;
                 }
 
                 for (const auto & [ i, child_box, child_box_index ] :
-                     create_child_boxes(boxes_lock, boxes, box->get_parallelotope(), integer_sequence_n))
+                     create_child_boxes(boxes_lock, boxes, box->parallelotope(), integer_sequence_n))
                 {
                         box->set_child(i, child_box_index);
 
@@ -363,9 +363,9 @@ void extend(const int MAX_DEPTH, const int MIN_OBJECTS, const int MAX_BOXES, Spi
                                 progress->set(child_box_index, MAX_BOXES);
                         }
 
-                        ParallelotopeWrapperForShapeIntersection p(child_box->get_parallelotope());
+                        ParallelotopeWrapperForShapeIntersection p(child_box->parallelotope());
 
-                        for (int object_index : box->get_object_indices())
+                        for (int object_index : box->object_indices())
                         {
                                 if (shape_intersection(p, *functor_object_pointer(object_index)))
                                 {
@@ -432,7 +432,7 @@ class SpatialSubdivisionTree
 
         bool find_box_for_point(const Box& box, const Vector<N, T>& p, const Box** found_box) const
         {
-                if (!box.get_parallelotope().inside(p))
+                if (!box.parallelotope().inside(p))
                 {
                         return false;
                 }
@@ -443,7 +443,7 @@ class SpatialSubdivisionTree
                         return true;
                 }
 
-                for (int child_box : box.get_childs())
+                for (int child_box : box.childs())
                 {
                         if (find_box_for_point(m_boxes[child_box], p, found_box))
                         {
@@ -514,7 +514,7 @@ public:
 
         bool intersect_root(const Ray<N, T>& ray, T* t) const
         {
-                return m_boxes[ROOT_BOX].get_parallelotope().intersect(ray, t);
+                return m_boxes[ROOT_BOX].parallelotope().intersect(ray, t);
         }
 
         // Вызывается после intersect_root. Если в intersect_root пересечение было найдено,
@@ -534,23 +534,22 @@ public:
                         if (find_box_for_point(m_boxes[ROOT_BOX], interior_point, &box))
                         {
                                 Vector<N, T> point;
-                                if (box->get_object_index_count() > 0 &&
-                                    functor_find_intersection(box->get_object_indices(), &point) &&
-                                    box->get_parallelotope().inside(point))
+                                if (box->object_index_count() > 0 && functor_find_intersection(box->object_indices(), &point) &&
+                                    box->parallelotope().inside(point))
                                 {
                                         return true;
                                 }
 
                                 // Поиск пересечения с дальней границей текущей коробки
                                 // для перехода в соседнюю коробку.
-                                if (!box->get_parallelotope().intersect_farthest(ray, &t))
+                                if (!box->parallelotope().intersect_farthest(ray, &t))
                                 {
                                         return false;
                                 }
 
                                 Vector<N, T> intersection_point = ray.point(t);
                                 ray.set_org(intersection_point);
-                                Vector<N, T> normal = box->get_parallelotope().normal(intersection_point);
+                                Vector<N, T> normal = box->parallelotope().normal(intersection_point);
                                 interior_point = intersection_point + m_distance_from_facet * normal;
                         }
                         else
@@ -569,7 +568,7 @@ public:
                                         // быть найдено ранее при вызове intersect_root.
                                         Vector<N, T> intersection_point = ray.point(root_t);
                                         ray.set_org(intersection_point);
-                                        Vector<N, T> normal = m_boxes[ROOT_BOX].get_parallelotope().normal(intersection_point);
+                                        Vector<N, T> normal = m_boxes[ROOT_BOX].parallelotope().normal(intersection_point);
                                         interior_point = intersection_point - m_distance_from_facet * normal;
                                 }
                         }

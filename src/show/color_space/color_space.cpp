@@ -32,8 +32,8 @@ namespace
 {
 void convert_color_space(const ComputeProgram& program, const TextureRGBA32F& texture)
 {
-        int groups_x = get_group_count(texture.get_texture().get_width(), GROUP_SIZE);
-        int groups_y = get_group_count(texture.get_texture().get_height(), GROUP_SIZE);
+        int groups_x = group_count(texture.texture().width(), GROUP_SIZE);
+        int groups_y = group_count(texture.texture().height(), GROUP_SIZE);
 
         texture.bind_image_texture_read_write(0);
 

@@ -329,15 +329,15 @@ DrawObject::DrawObject(const Obj<3>* obj, const ColorSpaceConverterToRGB& color_
                 {
                         if (m.map_Ka >= 0)
                         {
-                                m.map_Ka_handle = m_textures[m.map_Ka].get_texture().get_texture_resident_handle();
+                                m.map_Ka_handle = m_textures[m.map_Ka].texture().texture_resident_handle();
                         }
                         if (m.map_Kd >= 0)
                         {
-                                m.map_Kd_handle = m_textures[m.map_Kd].get_texture().get_texture_resident_handle();
+                                m.map_Kd_handle = m_textures[m.map_Kd].texture().texture_resident_handle();
                         }
                         if (m.map_Ks >= 0)
                         {
-                                m.map_Ks_handle = m_textures[m.map_Ks].get_texture().get_texture_resident_handle();
+                                m.map_Ks_handle = m_textures[m.map_Ks].texture().texture_resident_handle();
                         }
                 }
 
@@ -675,7 +675,7 @@ class Renderer final : public IRenderer
 
                 m_shadow_buffer = std::make_unique<ShadowBuffer>(m_shadow_width, m_shadow_height);
                 main_program.set_uniform_handle("shadow_tex",
-                                                m_shadow_buffer->get_depth_texture().get_texture().get_texture_resident_handle());
+                                                m_shadow_buffer->depth_texture().texture().texture_resident_handle());
         }
 
         void set_shadow_zoom(double zoom) override
@@ -693,18 +693,18 @@ class Renderer final : public IRenderer
                 m_color_buffer = std::make_unique<ColorBuffer>(width, height);
                 m_object_texture = std::make_unique<TextureR32I>(width, height);
 
-                main_program.set_uniform_handle("object_img", m_object_texture->get_image_resident_handle_write_only());
-                points_program.set_uniform_handle("object_img", m_object_texture->get_image_resident_handle_write_only());
+                main_program.set_uniform_handle("object_img", m_object_texture->image_resident_handle_write_only());
+                points_program.set_uniform_handle("object_img", m_object_texture->image_resident_handle_write_only());
 
                 set_shadow_size();
         }
 
-        const TextureRGBA32F& get_color_buffer_texture() const override
+        const TextureRGBA32F& color_buffer_texture() const override
         {
                 ASSERT(m_color_buffer);
-                return m_color_buffer->get_color_texture();
+                return m_color_buffer->color_texture();
         }
-        const TextureR32I& get_object_texture() const override
+        const TextureR32I& object_texture() const override
         {
                 ASSERT(m_object_texture);
                 return *m_object_texture;

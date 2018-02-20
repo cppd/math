@@ -61,7 +61,7 @@ constexpr double ANGULAR_FREQUENCY = TWO_PI<double> * 5;
 
 namespace
 {
-int get_group_size_prepare(int width, int shared_size_per_thread)
+int group_size_prepare(int width, int shared_size_per_thread)
 {
         int max_group_size_limit = std::min(get_max_work_group_size_x(), get_max_work_group_invocations());
         int max_group_size_memory = get_max_compute_shared_memory() / shared_size_per_thread;
@@ -75,7 +75,7 @@ int get_group_size_prepare(int width, int shared_size_per_thread)
         return (pref_thread_count <= max_group_size) ? pref_thread_count : max_group_size;
 }
 
-int get_group_size_merge(int height, int shared_size_per_item)
+int group_size_merge(int height, int shared_size_per_item)
 {
         if (get_max_compute_shared_memory() < height * shared_size_per_item)
         {
@@ -86,12 +86,12 @@ int get_group_size_merge(int height, int shared_size_per_item)
         int max_group_size = std::min(get_max_work_group_size_x(), get_max_work_group_invocations());
 
         // Один поток первоначально обрабатывает группы до 4 элементов.
-        int pref_thread_count = get_group_count(height, 4);
+        int pref_thread_count = group_count(height, 4);
 
         return (pref_thread_count <= max_group_size) ? pref_thread_count : max_group_size;
 }
 
-int get_iteration_count_merge(int size)
+int iteration_count_merge(int size)
 {
         // Расчёт начинается с 4 элементов, правый средний индекс (начало второй половины) равен 2.
         // На каждой итерации индекс увеличивается в 2 раза.
@@ -100,7 +100,7 @@ int get_iteration_count_merge(int size)
         return (size > 2) ? log_2(size - 1) : 0;
 }
 
-std::string get_prepare_source(int width, int height, int group_size)
+std::string prepare_source(int width, int height, int group_size)
 {
         std::string s;
         s += "const int WIDTH = " + std::to_string(width) + ";\n";
@@ -110,17 +110,17 @@ std::string get_prepare_source(int width, int height, int group_size)
         s += prepare_shader;
         return s;
 }
-std::string get_merge_source(int size, int group_size)
+std::string merge_source(int size, int group_size)
 {
         std::string s;
         s += "const int SIZE = " + std::to_string(size) + ";\n";
         s += "const int GROUP_SIZE = " + std::to_string(group_size) + ";\n";
-        s += "const int ITERATION_COUNT = " + std::to_string(get_iteration_count_merge(size)) + ";\n";
+        s += "const int ITERATION_COUNT = " + std::to_string(iteration_count_merge(size)) + ";\n";
         s += '\n';
         s += merge_shader;
         return s;
 }
-std::string get_filter_source(int size)
+std::string filter_source(int size)
 {
         std::string s;
         s += "const int SIZE = " + std::to_string(size) + ";\n";
@@ -147,31 +147,31 @@ class ConvexHull2D::Impl final
 
 public:
         Impl(const TextureR32I& objects, const mat4& mtx)
-                : m_width(objects.get_texture().get_width()),
-                  m_height(objects.get_texture().get_height()),
-                  m_group_size_prepare(get_group_size_prepare(m_width, 2 * sizeof(GLint))),
-                  m_group_size_merge(get_group_size_merge(m_height, sizeof(GLfloat))),
-                  m_prepare_prog(ComputeShader(get_prepare_source(m_width, m_height, m_group_size_prepare))),
-                  m_merge_prog(ComputeShader(get_merge_source(m_height, m_group_size_merge))),
-                  m_filter_prog(ComputeShader(get_filter_source(m_height))),
+                : m_width(objects.texture().width()),
+                  m_height(objects.texture().height()),
+                  m_group_size_prepare(group_size_prepare(m_width, 2 * sizeof(GLint))),
+                  m_group_size_merge(group_size_merge(m_height, sizeof(GLfloat))),
+                  m_prepare_prog(ComputeShader(prepare_source(m_width, m_height, m_group_size_prepare))),
+                  m_merge_prog(ComputeShader(merge_source(m_height, m_group_size_merge))),
+                  m_filter_prog(ComputeShader(filter_source(m_height))),
                   m_draw_prog(VertexShader(vertex_shader), FragmentShader(fragment_shader)),
                   m_line_min(m_height, 1),
                   m_line_max(m_height, 1),
                   m_point_count_texture(1, 1),
                   m_start_time(time_in_seconds())
         {
-                m_prepare_prog.set_uniform_handle("objects", objects.get_image_resident_handle_read_only());
-                m_prepare_prog.set_uniform_handle("line_min", m_line_min.get_image_resident_handle_write_only());
-                m_prepare_prog.set_uniform_handle("line_max", m_line_max.get_image_resident_handle_write_only());
+                m_prepare_prog.set_uniform_handle("objects", objects.image_resident_handle_read_only());
+                m_prepare_prog.set_uniform_handle("line_min", m_line_min.image_resident_handle_write_only());
+                m_prepare_prog.set_uniform_handle("line_max", m_line_max.image_resident_handle_write_only());
 
-                m_merge_prog.set_uniform_handles("lines", {m_line_min.get_image_resident_handle_read_write(),
-                                                           m_line_max.get_image_resident_handle_read_write()});
+                m_merge_prog.set_uniform_handles(
+                        "lines", {m_line_min.image_resident_handle_read_write(), m_line_max.image_resident_handle_read_write()});
 
                 m_points.create_dynamic_copy((2 * m_height) * (2 * sizeof(GLfloat)));
 
-                m_filter_prog.set_uniform_handle("line_min", m_line_min.get_image_resident_handle_read_only());
-                m_filter_prog.set_uniform_handle("line_max", m_line_max.get_image_resident_handle_read_only());
-                m_filter_prog.set_uniform_handle("points_count", m_point_count_texture.get_image_resident_handle_write_only());
+                m_filter_prog.set_uniform_handle("line_min", m_line_min.image_resident_handle_read_only());
+                m_filter_prog.set_uniform_handle("line_max", m_line_max.image_resident_handle_read_only());
+                m_filter_prog.set_uniform_handle("points_count", m_point_count_texture.image_resident_handle_write_only());
 
                 m_draw_prog.set_uniform_float("mvpMatrix", mtx);
         }

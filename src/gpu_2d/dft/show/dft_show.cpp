@@ -65,8 +65,8 @@ class DFTShow::Impl final
 
 public:
         Impl(int width, int height, int pos_x, int pos_y, const mat4& mtx, bool source_srgb)
-                : m_groups_x(get_group_count(width, GROUP_SIZE)),
-                  m_groups_y(get_group_count(height, GROUP_SIZE)),
+                : m_groups_x(group_count(width, GROUP_SIZE)),
+                  m_groups_y(group_count(height, GROUP_SIZE)),
                   m_source_srgb(source_srgb),
                   m_image_texture(width, height),
                   m_gl_fft(create_fft_gl2d(width, height, m_image_texture)),
@@ -75,7 +75,7 @@ public:
                 m_vertex_array.attrib_pointer(0, 3, GL_FLOAT, m_vertex_buffer, offsetof(Vertex, v1), sizeof(Vertex), true);
                 m_vertex_array.attrib_pointer(1, 2, GL_FLOAT, m_vertex_buffer, offsetof(Vertex, t1), sizeof(Vertex), true);
 
-                m_draw_prog.set_uniform_handle("tex", m_image_texture.get_texture().get_texture_resident_handle());
+                m_draw_prog.set_uniform_handle("tex", m_image_texture.texture().texture_resident_handle());
                 set_brightness(1);
 
                 int x_start = pos_x;

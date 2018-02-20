@@ -54,18 +54,18 @@ public:
         {
                 // Вес определяется как расстояние между двумя точками.
                 // Используется double из-за сумм квадратов.
-                Vector<N, double> line = to_vector<double>(points[m_edge.get_vertices()[1]] - points[m_edge.get_vertices()[0]]);
+                Vector<N, double> line = to_vector<double>(points[m_edge.vertices()[1]] - points[m_edge.vertices()[0]]);
 
                 // Достаточно иметь длину в квадрате
                 m_weight = dot(line, line);
         }
-        double get_weight() const
+        double weight() const
         {
                 return m_weight;
         }
-        int get_vertex(int i) const
+        int vertex(int i) const
         {
-                return m_edge.get_vertices()[i];
+                return m_edge.vertices()[i];
         }
 };
 
@@ -132,8 +132,8 @@ std::vector<std::array<int, 2>> kruskal(int point_count, int vertex_count, const
 
         for (unsigned i = 0; i < sorted_edges.size() && mst.size() < mst_size; ++i)
         {
-                int v = sorted_edges[i].get_vertex(0);
-                int w = sorted_edges[i].get_vertex(1);
+                int v = sorted_edges[i].vertex(0);
+                int w = sorted_edges[i].vertex(1);
 
                 if (wqn.add_connection(v, w))
                 {
@@ -204,7 +204,7 @@ std::vector<std::array<int, 2>> minimum_spanning_tree(const std::vector<Vector<N
 
         // Сортировка рёбер графа по возрастанию веса.
         std::sort(weighted_edges.begin(), weighted_edges.end(),
-                  [](const WeightedEdge& a, const WeightedEdge& b) -> bool { return a.get_weight() < b.get_weight(); });
+                  [](const WeightedEdge& a, const WeightedEdge& b) -> bool { return a.weight() < b.weight(); });
 
         progress->set(4, 5);
 

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -47,15 +47,15 @@ public:
         {
                 return m_delaunay[1] < 0;
         }
-        const std::array<int, N>& get_vertices() const
+        const std::array<int, N>& vertices() const
         {
                 return m_indices;
         }
-        const vec<N>& get_ortho() const
+        const vec<N>& ortho() const
         {
                 return m_ortho;
         }
-        int get_delaunay(unsigned i) const
+        int delaunay(unsigned i) const
         {
                 ASSERT(i == 0 || (i == 1 && m_delaunay[1] >= 0));
                 return m_delaunay[i];
@@ -73,11 +73,11 @@ public:
         DelaunayObject(const std::array<int, N + 1>& i, const vec<N>& v) : m_indices(i), m_voronoi_vertex(v)
         {
         }
-        const std::array<int, N + 1>& get_vertices() const
+        const std::array<int, N + 1>& vertices() const
         {
                 return m_indices;
         }
-        const vec<N>& get_voronoi_vertex() const
+        const vec<N>& voronoi_vertex() const
         {
                 return m_voronoi_vertex;
         }
@@ -98,7 +98,7 @@ void create_delaunay_objects_and_facets(const std::vector<vec<N>>& points, const
         int delaunay_index = 0;
         for (const DelaunaySimplex<N>& simplex : simplices)
         {
-                delaunay_objects->emplace_back(simplex.get_vertices(), compute_voronoi_vertex(points, simplex.get_vertices()));
+                delaunay_objects->emplace_back(simplex.vertices(), compute_voronoi_vertex(points, simplex.vertices()));
                 simplex_map.emplace(&simplex, delaunay_index++);
         }
 
@@ -121,25 +121,25 @@ void create_delaunay_objects_and_facets(const std::vector<vec<N>>& points, const
 
                 if (facet_data.size() == 1)
                 {
-                        int index = facet_data[0].get_facet() ? 0 : 1;
-                        const DelaunaySimplex<N>* simplex = facet_data[index].get_facet();
-                        vec<N> facet_ortho = simplex->get_ortho(facet_data[index].get_vertex_index());
+                        int index = facet_data[0].facet() ? 0 : 1;
+                        const DelaunaySimplex<N>* simplex = facet_data[index].facet();
+                        vec<N> facet_ortho = simplex->ortho(facet_data[index].vertex_index());
 
                         // Индекс объекта Делоне, соответствующий симплексу Делоне
                         auto delaunay_i = simplex_map.find(simplex);
 
                         ASSERT(delaunay_i != simplex_map.cend());
 
-                        delaunay_facets->emplace_back(facet.get_vertices(), facet_ortho, delaunay_i->second, NULL_INDEX);
+                        delaunay_facets->emplace_back(facet.vertices(), facet_ortho, delaunay_i->second, NULL_INDEX);
                 }
                 else
                 {
-                        const DelaunaySimplex<N>* simplex_0 = facet_data[0].get_facet();
-                        const DelaunaySimplex<N>* simplex_1 = facet_data[1].get_facet();
+                        const DelaunaySimplex<N>* simplex_0 = facet_data[0].facet();
+                        const DelaunaySimplex<N>* simplex_1 = facet_data[1].facet();
 
-                        vec<N> facet_ortho = simplex_0->get_ortho(facet_data[0].get_vertex_index());
+                        vec<N> facet_ortho = simplex_0->ortho(facet_data[0].vertex_index());
 
-                        ASSERT(facet_ortho == -simplex_1->get_ortho(facet_data[1].get_vertex_index()));
+                        ASSERT(facet_ortho == -simplex_1->ortho(facet_data[1].vertex_index()));
 
                         // Если грань имеет 2 объекта Делоне, то направление перпендикуляра не важно
 
@@ -149,8 +149,7 @@ void create_delaunay_objects_and_facets(const std::vector<vec<N>>& points, const
 
                         ASSERT(delaunay_i_0 != simplex_map.cend() && delaunay_i_1 != simplex_map.cend());
 
-                        delaunay_facets->emplace_back(facet.get_vertices(), facet_ortho, delaunay_i_0->second,
-                                                      delaunay_i_1->second);
+                        delaunay_facets->emplace_back(facet.vertices(), facet_ortho, delaunay_i_0->second, delaunay_i_1->second);
                 }
         }
 }

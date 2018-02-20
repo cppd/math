@@ -114,8 +114,8 @@ class ConvexHullObj final : public Obj<N>
 
                 for (const ConvexHullFacet<N>& facet : facets)
                 {
-                        vec<N> ortho = facet.get_ortho();
-                        for (int v : facet.get_vertices())
+                        vec<N> ortho = facet.ortho();
+                        for (int v : facet.vertices())
                         {
                                 vertex_map[v].push_back(ortho);
                         }
@@ -147,7 +147,7 @@ class ConvexHullObj final : public Obj<N>
 
                         for (unsigned i = 0; i < N; ++i)
                         {
-                                obj_facet.vertices[i] = index_map[facet.get_vertices()[i]];
+                                obj_facet.vertices[i] = index_map[facet.vertices()[i]];
                                 obj_facet.normals[i] = -1; // obj_facet.vertices[i];
                                 obj_facet.texcoords[i] = -1;
                         }

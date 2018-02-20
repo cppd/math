@@ -56,7 +56,7 @@ public:
         {
         }
 
-        const std::array<int, N>& get_vertices() const
+        const std::array<int, N>& vertices() const
         {
                 return m_indices;
         }
@@ -77,7 +77,7 @@ public:
         {
                 m_conflict_points.push_back(point);
         }
-        const std::vector<int>& get_conflict_points() const
+        const std::vector<int>& conflict_points() const
         {
                 return m_conflict_points;
         }
@@ -161,7 +161,7 @@ class FacetInteger final : public FacetBase<N, FacetInteger<N, DataType, Compute
         // Больше 0 видимая, меньше 0 невидимая, 0 в одной плоскости
         ComputeType visible(const std::vector<Vector<N, DataType>>& points, int p) const
         {
-                const Vector<N, DataType>& facet_point = points[Base::get_vertices()[0]];
+                const Vector<N, DataType>& facet_point = points[Base::vertices()[0]];
                 const Vector<N, DataType>& point = points[p];
 
                 ComputeType d = m_ortho[0] * (point[0] - facet_point[0]);
@@ -178,7 +178,7 @@ public:
                      const FacetInteger* convex_hull_facet)
                 : Base(std::move(vertices))
         {
-                m_ortho = ortho_nn<N, DataType, ComputeType>(points, Base::get_vertices());
+                m_ortho = ortho_nn<N, DataType, ComputeType>(points, Base::vertices());
 
                 ASSERT(!zero_vector(m_ortho));
 
@@ -211,7 +211,7 @@ public:
                 return visible(points, from_point) > 0;
         }
 
-        vec<N> get_double_ortho() const
+        vec<N> double_ortho() const
         {
                 return normalize(to_vector<double>(m_ortho));
         }
@@ -272,7 +272,7 @@ class FacetInteger<N, DataType, mpz_class, FacetIter> final
                 }
         }
 
-        static vec<N> get_normalized_double_vector(const Vector<N, mpz_class>& mpz_vec)
+        static vec<N> normalized_double_vector(const Vector<N, mpz_class>& mpz_vec)
         {
                 static constexpr int FLOAT_BIT_PRECISION = 128;
 
@@ -317,7 +317,7 @@ class FacetInteger<N, DataType, mpz_class, FacetIter> final
                 // thread_local - нужно избежать создания переменных mpz_class при каждом вызове функции
                 thread_local mpz_class d, to_point;
 
-                const Vector<N, DataType>& facet_point = points[Base::get_vertices()[0]];
+                const Vector<N, DataType>& facet_point = points[Base::vertices()[0]];
                 const Vector<N, DataType>& point = points[p];
 
                 mpz_from_any(&to_point, point[0] - facet_point[0]);
@@ -354,7 +354,7 @@ public:
                      const FacetInteger* convex_hull_facet)
                 : Base(std::move(vertices))
         {
-                m_ortho = ortho_nn<N, DataType, mpz_class>(points, Base::get_vertices());
+                m_ortho = ortho_nn<N, DataType, mpz_class>(points, Base::vertices());
 
                 ASSERT(!zero_vector(m_ortho));
 
@@ -392,9 +392,9 @@ public:
                 return visible(points, from_point) > 0;
         }
 
-        vec<N> get_double_ortho() const
+        vec<N> double_ortho() const
         {
-                return get_normalized_double_vector(m_ortho);
+                return normalized_double_vector(m_ortho);
         }
 
         bool last_ortho_coord_is_negative() const
