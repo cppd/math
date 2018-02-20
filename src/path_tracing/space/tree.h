@@ -35,7 +35,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/thread.h"
 #include "com/types.h"
 #include "com/vec.h"
-#include "path_tracing/constants.h"
 #include "progress/progress.h"
 
 #include <algorithm>
@@ -166,23 +165,21 @@ constexpr Parallelotope create_parallelotope_from_vector(const Vector<sizeof...(
         return Parallelotope(org, edges[I]...);
 }
 
-template <typename Parallelotope, typename T, typename FunctorObjectPointer>
-Parallelotope root_parallelotope(T distance_from_facet_in_epsilons, int object_index_count,
-                                 const FunctorObjectPointer& functor_object_pointer)
+template <size_t N, typename T, typename FunctorObjectPointer>
+void min_max_and_distance(int max_divisions, T distance_from_facet_in_epsilons, int object_index_count,
+                          const FunctorObjectPointer& functor_object_pointer, Vector<N, T>* minimum, Vector<N, T>* maximum,
+                          T* distance)
 {
-        static_assert(std::is_same_v<T, typename Parallelotope::DataType>);
-        static_assert(std::is_floating_point_v<typename Parallelotope::DataType>);
+        static_assert(std::is_floating_point_v<T>);
 
-        constexpr int N = Parallelotope::DIMENSION;
-
-        Vector<N, T> min(std::numeric_limits<T>::max());
-        Vector<N, T> max(std::numeric_limits<T>::lowest());
+        Vector<N, T> min(limits<T>::max());
+        Vector<N, T> max(limits<T>::lowest());
 
         for (int object_index = 0; object_index < object_index_count; ++object_index)
         {
                 for (const Vector<N, T>& v : functor_object_pointer(object_index)->vertices())
                 {
-                        for (int i = 0; i < N; ++i)
+                        for (unsigned i = 0; i < N; ++i)
                         {
                                 min[i] = std::min(v[i], min[i]);
                                 max[i] = std::max(v[i], max[i]);
@@ -190,7 +187,7 @@ Parallelotope root_parallelotope(T distance_from_facet_in_epsilons, int object_i
                 }
         }
 
-        for (int i = 0; i < N; ++i)
+        for (unsigned i = 0; i < N; ++i)
         {
                 if (!(min[i] < max[i]))
                 {
@@ -198,17 +195,47 @@ Parallelotope root_parallelotope(T distance_from_facet_in_epsilons, int object_i
                 }
         }
 
+        T all_max = limits<T>::lowest();
+
         for (unsigned i = 0; i < N; ++i)
         {
                 T abs_max = std::max(std::abs(min[i]), std::abs(max[i]));
+
                 T guard_region_size = abs_max * (distance_from_facet_in_epsilons * limits<T>::epsilon());
                 min[i] -= guard_region_size;
                 max[i] += guard_region_size;
+
+                all_max = std::max(abs_max, all_max);
         }
 
-        Vector<N, T> d = max - min;
+        T dist = all_max * (distance_from_facet_in_epsilons * limits<T>::epsilon());
 
-        return create_parallelotope_from_vector<Parallelotope>(min, d, std::make_integer_sequence<size_t, N>());
+        for (unsigned i = 0; i < N; ++i)
+        {
+                T one_half_of_min_box_size = (max[i] - min[i]) / max_divisions / 2;
+                if (dist >= one_half_of_min_box_size)
+                {
+                        error("The minimal distance from facets " + to_string(dist) +
+                              " is greater than one half of the minimum box size " + to_string(one_half_of_min_box_size) +
+                              " (dimension #" + to_string(i) + ")");
+                }
+        }
+
+        *minimum = min;
+        *maximum = max;
+        *distance = dist;
+}
+
+template <typename Parallelotope>
+Parallelotope root_parallelotope(const Vector<Parallelotope::DIMENSION, typename Parallelotope::DataType>& min,
+                                 const Vector<Parallelotope::DIMENSION, typename Parallelotope::DataType>& max)
+{
+        static_assert(std::is_floating_point_v<typename Parallelotope::DataType>);
+
+        const Vector<Parallelotope::DIMENSION, typename Parallelotope::DataType>& diagonal = max - min;
+
+        return create_parallelotope_from_vector<Parallelotope>(min, diagonal,
+                                                               std::make_integer_sequence<size_t, Parallelotope::DIMENSION>());
 }
 
 template <typename Box>
@@ -373,9 +400,6 @@ class SpatialSubdivisionTree
         // новых элементов, поэтому требуется std::deque или std::list.
         using BoxContainer = std::deque<Box>;
 
-        // Смещение по лучу внутрь коробки от точки пересечения с коробкой.
-        static constexpr T DELTA = 10 * INTERSECTION_THRESHOLD<T>;
-
         // Расстояние от грани, при котором точка считается внутри коробки.
         static constexpr T DISTANCE_FROM_FACET_IN_EPSILONS = 10;
 
@@ -403,6 +427,8 @@ class SpatialSubdivisionTree
 
         // Все коробки хранятся в одном векторе
         std::vector<Box> m_boxes;
+
+        T m_distance_from_facet;
 
         bool find_box_for_point(const Box& box, const Vector<N, T>& p, const Box** found_box) const
         {
@@ -455,16 +481,23 @@ public:
                 if (!(MAX_DEPTH >= MAX_DEPTH_LEFT_BOUND && MAX_DEPTH <= MAX_DEPTH_RIGHT_BOUND) ||
                     !(MIN_OBJECTS >= MIN_OBJECTS_LEFT_BOUND && MIN_OBJECTS <= MIN_OBJECTS_RIGHT_BOUND))
                 {
-                        error("Error limits for " + to_string(Impl::BOX_COUNT<N>) + "-tree");
+                        error("Error limits for " + to_string(BOX_COUNT) + "-tree");
                 }
 
-                SpinLock boxes_lock;
+                Vector<N, T> min, max;
 
-                BoxContainer boxes({Box(Impl::root_parallelotope<Parallelotope>(DISTANCE_FROM_FACET_IN_EPSILONS,
-                                                                                object_index_count, functor_object_pointer),
+                // Максимальное разделение по одной координате.
+                const int max_divisions = 1u << (MAX_DEPTH - 1);
+
+                Impl::min_max_and_distance(max_divisions, DISTANCE_FROM_FACET_IN_EPSILONS, object_index_count,
+                                           functor_object_pointer, &min, &max, &m_distance_from_facet);
+
+                BoxContainer boxes({Box(Impl::root_parallelotope<Parallelotope>(min, max),
                                         Impl::iota_zero_based_indices(object_index_count))});
 
                 BoxJobs jobs(&boxes.front(), MAX_DEPTH_LEFT_BOUND);
+
+                SpinLock boxes_lock;
 
                 ThreadsWithCatch threads(thread_count);
                 for (unsigned i = 0; i < thread_count; ++i)
@@ -481,7 +514,7 @@ public:
 
         bool intersect_root(const Ray<N, T>& ray, T* t) const
         {
-                return m_boxes[ROOT_BOX].get_parallelotope().intersect(ray, t, 0);
+                return m_boxes[ROOT_BOX].get_parallelotope().intersect(ray, t);
         }
 
         // Вызывается после intersect_root. Если в intersect_root пересечение было найдено,
@@ -491,12 +524,14 @@ public:
         {
                 bool first = true;
 
+                Vector<N, T> interior_point = ray.get_org();
+
                 while (true)
                 {
                         T t;
                         const Box* box;
 
-                        if (find_box_for_point(m_boxes[ROOT_BOX], ray.get_org(), &box))
+                        if (find_box_for_point(m_boxes[ROOT_BOX], interior_point, &box))
                         {
                                 Vector<N, T> point;
                                 if (box->get_object_index_count() > 0 &&
@@ -506,12 +541,17 @@ public:
                                         return true;
                                 }
 
-                                // Поиск пересечения с границей текущей коробки
+                                // Поиск пересечения с дальней границей текущей коробки
                                 // для перехода в соседнюю коробку.
-                                if (!box->get_parallelotope().intersect(ray, &t, 0))
+                                if (!box->get_parallelotope().intersect_farthest(ray, &t))
                                 {
                                         return false;
                                 }
+
+                                Vector<N, T> intersection_point = ray.point(t);
+                                ray.set_org(intersection_point);
+                                Vector<N, T> normal = box->get_parallelotope().normal(intersection_point);
+                                interior_point = intersection_point + m_distance_from_facet * normal;
                         }
                         else
                         {
@@ -527,11 +567,12 @@ public:
                                         // Первый проход — начало луча находится снаружи и надо искать
                                         // пересечение с самим деревом. Это пересечение уже должно
                                         // быть найдено ранее при вызове intersect_root.
-                                        t = root_t;
+                                        Vector<N, T> intersection_point = ray.point(root_t);
+                                        ray.set_org(intersection_point);
+                                        Vector<N, T> normal = m_boxes[ROOT_BOX].get_parallelotope().normal(intersection_point);
+                                        interior_point = intersection_point - m_distance_from_facet * normal;
                                 }
                         }
-
-                        ray.set_org(ray.point(t + DELTA));
 
                         first = false;
                 }

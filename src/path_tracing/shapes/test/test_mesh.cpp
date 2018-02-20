@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "test_mesh.h"
 
+#include "com/error.h"
 #include "com/log.h"
 #include "com/print.h"
 #include "com/random/engine.h"
@@ -33,12 +34,27 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace
 {
-template <size_t N, typename T>
-void generate_random_points_on_unit_sphere(int count, std::vector<Vector<N, T>>* points)
+template <typename T>
+constexpr T RAY_OFFSET = 1e-4;
+
+template <typename T>
+T random_integer(T low, T high)
 {
+        static_assert(std::is_integral_v<T>);
+        ASSERT(low < high);
+
+        RandomEngineWithSeed<std::mt19937_64> random_engine;
+        return std::uniform_int_distribution<T>(low, high)(random_engine);
+}
+
+template <size_t N, typename T>
+std::vector<Vector<N, T>> generate_random_points_on_unit_sphere(int count)
+{
+        LOG("random points...");
+
         std::mt19937_64 random_engine(count);
 
-        points->resize(count);
+        std::vector<Vector<N, T>> points(count);
 
         Vector<N, T> v;
         T length_square;
@@ -46,15 +62,40 @@ void generate_random_points_on_unit_sphere(int count, std::vector<Vector<N, T>>*
         for (int i = 0; i < count; ++i)
         {
                 random_in_sphere(random_engine, v, length_square);
-                (*points)[i] = v / std::sqrt(length_square);
+                points[i] = v / std::sqrt(length_square);
         }
+
+        return points;
+}
+
+template <size_t N, typename T>
+std::vector<Ray<N, T>> generate_random_rays_for_unit_sphere(int count)
+{
+        LOG("random rays...");
+
+        std::mt19937_64 random_engine(count);
+
+        std::vector<Ray<N, T>> rays(count);
+
+        Vector<N, T> v;
+        T length_square;
+
+        for (int i = 0; i < count; ++i)
+        {
+                random_in_sphere(random_engine, v, length_square);
+                v /= std::sqrt(length_square);
+
+                rays[i] = Ray<N, T>(T(11) * v, -v);
+        }
+
+        return rays;
 }
 
 template <size_t N>
 void create_spherical_convex_hull(int point_count, std::vector<Vector<N, float>>* points, std::vector<std::array<int, N>>* facets,
                                   ProgressRatio* progress)
 {
-        generate_random_points_on_unit_sphere(point_count, points);
+        *points = generate_random_points_on_unit_sphere<N, float>(point_count);
 
         std::vector<ConvexHullFacet<N>> ch_facets;
 
@@ -73,7 +114,7 @@ void create_spherical_convex_hull(int point_count, std::vector<Vector<N, float>>
 }
 
 template <size_t N, typename T>
-std::unique_ptr<const Mesh<N, T>> create_simplex_mesh_of_unit_sphere(int point_count, int thread_count)
+std::unique_ptr<const Mesh<N, T>> simplex_mesh_of_unit_sphere(int point_count, int thread_count)
 {
         ProgressRatio progress(nullptr);
 
@@ -95,41 +136,18 @@ std::unique_ptr<const Mesh<N, T>> create_simplex_mesh_of_unit_sphere(int point_c
         return std::make_unique<const Mesh<N, T>>(obj.get(), matrix, thread_count, &progress);
 }
 
-template <size_t N, typename T, typename RandomEngine>
-std::vector<Ray<N, T>> random_rays_for_unit_sphere(RandomEngine& random_engine, int ray_count)
-{
-        std::vector<Ray<N, T>> rays(ray_count);
-
-        for (int i = 0; i < ray_count; ++i)
-        {
-                Vector<N, T> v;
-                T length_square;
-
-                random_in_sphere(random_engine, v, length_square);
-                v /= std::sqrt(length_square);
-
-                rays[i] = Ray<N, T>(T(11) * v, -v);
-        }
-
-        return rays;
-}
-
-template <size_t N, typename T, typename RandomEngine>
-void test_mesh(RandomEngine random_engine, const Mesh<N, T>* mesh, int ray_count, bool with_ray_log)
+template <size_t N, typename T>
+void test_mesh(const Mesh<N, T>& mesh, const std::vector<Ray<N, T>>& rays, bool with_ray_log, bool with_error_log)
 {
         int error_count = 0;
 
-        LOG("random rays..");
-
-        std::vector<Ray<N, T>> rays = random_rays_for_unit_sphere<N, T>(random_engine, ray_count);
-
-        LOG("intersections..");
+        LOG("intersections...");
 
         double start_time = time_in_seconds();
 
-        for (int i = 1; i <= ray_count; ++i)
+        for (unsigned i = 1; i <= rays.size(); ++i)
         {
-                Ray<N, T>& ray = rays[i - 1];
+                Ray<N, T> ray = rays[i - 1];
 
                 if (with_ray_log)
                 {
@@ -140,9 +158,12 @@ void test_mesh(RandomEngine random_engine, const Mesh<N, T>* mesh, int ray_count
                 T approximate, precise;
                 const void* intersection_data;
 
-                if (!mesh->intersect_approximate(ray, &approximate))
+                if (!mesh.intersect_approximate(ray, &approximate))
                 {
-                        LOG("No the first approximate intersection with ray #" + to_string(i) + "\n" + to_string(ray));
+                        if (with_error_log)
+                        {
+                                LOG("No the first approximate intersection with ray #" + to_string(i) + "\n" + to_string(ray));
+                        }
                         ++error_count;
                         continue;
                 }
@@ -150,10 +171,13 @@ void test_mesh(RandomEngine random_engine, const Mesh<N, T>* mesh, int ray_count
                 {
                         LOG("t1_a == " + to_string(approximate));
                 }
-                if (!mesh->intersect_precise(ray, approximate, &precise, &intersection_data))
+                if (!mesh.intersect_precise(ray, approximate, &precise, &intersection_data))
                 {
-                        LOG("No the first precise intersection with ray #" + to_string(i) + "\n" + "approximate " +
-                            to_string(approximate) + "\n" + to_string(ray));
+                        if (with_error_log)
+                        {
+                                LOG("No the first precise intersection with ray #" + to_string(i) + "\n" + "approximate " +
+                                    to_string(approximate) + "\n" + to_string(ray));
+                        }
                         ++error_count;
                         continue;
                 }
@@ -162,11 +186,14 @@ void test_mesh(RandomEngine random_engine, const Mesh<N, T>* mesh, int ray_count
                         LOG("t1_p == " + to_string(precise));
                 }
 
-                ray.set_org(ray.point(precise));
+                ray.move_along_dir(precise + RAY_OFFSET<T>);
 
-                if (!mesh->intersect_approximate(ray, &approximate))
+                if (!mesh.intersect_approximate(ray, &approximate))
                 {
-                        LOG("No the second approximate intersection with ray #" + to_string(i) + "\n" + to_string(ray));
+                        if (with_error_log)
+                        {
+                                LOG("No the second approximate intersection with ray #" + to_string(i) + "\n" + to_string(ray));
+                        }
                         ++error_count;
                         continue;
                 }
@@ -174,10 +201,13 @@ void test_mesh(RandomEngine random_engine, const Mesh<N, T>* mesh, int ray_count
                 {
                         LOG("t2_a == " + to_string(approximate));
                 }
-                if (!mesh->intersect_precise(ray, approximate, &precise, &intersection_data))
+                if (!mesh.intersect_precise(ray, approximate, &precise, &intersection_data))
                 {
-                        LOG("No the second precise intersection with ray #" + to_string(i) + "\n" + "approximate " +
-                            to_string(approximate) + "\n" + to_string(ray));
+                        if (with_error_log)
+                        {
+                                LOG("No the second precise intersection with ray #" + to_string(i) + "\n" + "approximate " +
+                                    to_string(approximate) + "\n" + to_string(ray));
+                        }
                         ++error_count;
                         continue;
                 }
@@ -186,36 +216,48 @@ void test_mesh(RandomEngine random_engine, const Mesh<N, T>* mesh, int ray_count
                         LOG("t2_p == " + to_string(precise));
                 }
 
-                ray.set_org(ray.point(precise));
+                ray.move_along_dir(precise + RAY_OFFSET<T>);
 
-                if (mesh->intersect_approximate(ray, &approximate) &&
-                    mesh->intersect_precise(ray, approximate, &precise, &intersection_data))
+                if (mesh.intersect_approximate(ray, &approximate) &&
+                    mesh.intersect_precise(ray, approximate, &precise, &intersection_data))
                 {
-                        LOG("The third intersection with ray #" + to_string(i) + "\n" + to_string(ray) + "\n" + "at point " +
-                            to_string(precise));
+                        if (with_error_log)
+                        {
+                                LOG("The third intersection with ray #" + to_string(i) + "\n" + to_string(ray) + "\n" +
+                                    "at point " + to_string(precise));
+                        }
                         ++error_count;
                         continue;
                 }
         }
 
         LOG("intersections " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
-
-        LOG(to_string(error_count) + " errors, " + to_string(ray_count) + " rays, " +
-            to_string_fixed(100.0 * error_count / ray_count, 5) + "%");
+        LOG("");
+        LOG(to_string(error_count) + " errors, " + to_string(rays.size()) + " rays, " +
+            to_string_fixed(100.0 * error_count / rays.size(), 5) + "%");
+        LOG("");
 }
 
 template <size_t N, typename T>
-void test_mesh(int point_low, int point_high, int ray_count, int thread_count, bool with_ray_log)
+void test_mesh(int point_count, int ray_count, int thread_count, bool with_ray_log, bool with_error_log)
 {
-        LOG("----------- " + to_string(N) + "D -----------");
+        LOG("----------- " + to_string(N) + "D, " + type_name<T>() + " -----------");
 
-        RandomEngineWithSeed<std::mt19937_64> random_engine;
+        std::unique_ptr<const Mesh<N, T>> mesh = simplex_mesh_of_unit_sphere<N, T>(point_count, thread_count);
 
-        int point_count = std::uniform_int_distribution<int>(point_low, point_high)(random_engine);
+        std::vector<Ray<N, T>> rays = generate_random_rays_for_unit_sphere<N, T>(ray_count);
 
-        std::unique_ptr<const Mesh<N, T>> mesh = create_simplex_mesh_of_unit_sphere<N, T>(point_count, thread_count);
+        test_mesh(*mesh, rays, with_ray_log, with_error_log);
+}
 
-        test_mesh(random_engine, mesh.get(), ray_count, with_ray_log);
+template <size_t N>
+void test_mesh(int point_low, int point_high, int ray_low, int ray_high, int thread_count, bool with_ray_log, bool with_error_log)
+{
+        int point_count = random_integer(point_low, point_high);
+        int ray_count = random_integer(ray_low, ray_high);
+
+        test_mesh<N, float>(point_count, ray_count, thread_count, with_ray_log, with_error_log);
+        test_mesh<N, double>(point_count, ray_count, thread_count, with_ray_log, with_error_log);
 }
 }
 
@@ -224,7 +266,8 @@ void test_mesh()
         int hardware_concurrency = get_hardware_concurrency();
 
         bool with_ray_log = false;
+        bool with_error_log = false;
 
-        test_mesh<3, double>(1000, 2000, 1e5, hardware_concurrency, with_ray_log);
-        test_mesh<4, double>(1000, 2000, 1e5, hardware_concurrency, with_ray_log);
+        test_mesh<3>(1000, 2000, 90'000, 110'000, hardware_concurrency, with_ray_log, with_error_log);
+        test_mesh<4>(1000, 2000, 90'000, 110'000, hardware_concurrency, with_ray_log, with_error_log);
 }

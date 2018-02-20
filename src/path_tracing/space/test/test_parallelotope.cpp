@@ -25,7 +25,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/random/vector.h"
 #include "com/ray.h"
 #include "com/vec.h"
-#include "path_tracing/constants.h"
 #include "path_tracing/space/parallelotope.h"
 #include "path_tracing/space/parallelotope_algorithm.h"
 #include "path_tracing/space/parallelotope_ortho.h"

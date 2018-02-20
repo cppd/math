@@ -170,6 +170,10 @@ std::optional<Color> Mesh<N, T>::get_color(const Vector<N, T>& p, const void* in
         }
 }
 
+template class Mesh<3, float>;
+template class Mesh<4, float>;
+template class Mesh<5, float>;
+
 template class Mesh<3, double>;
 template class Mesh<4, double>;
 template class Mesh<5, double>;

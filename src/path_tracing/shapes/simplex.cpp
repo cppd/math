@@ -233,6 +233,10 @@ std::array<Vector<N, T>, N> MeshSimplex<N, T>::vertices() const
         return vertices_to_array(m_vertices, m_v);
 }
 
+template class MeshSimplex<3, float>;
+template class MeshSimplex<4, float>;
+template class MeshSimplex<5, float>;
+
 template class MeshSimplex<3, double>;
 template class MeshSimplex<4, double>;
 template class MeshSimplex<5, double>;

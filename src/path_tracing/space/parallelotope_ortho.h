@@ -31,7 +31,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/print.h"
 #include "com/ray.h"
 #include "com/vec.h"
-#include "path_tracing/constants.h"
 
 #include <algorithm>
 #include <array>
@@ -130,6 +129,8 @@ class ParallelotopeOrtho final
         void set_data(const Vector<N, T>& org, const std::array<Vector<N, T>, N>& vectors);
         void set_data(const Vector<N, T>& org, const std::array<T, N>& sizes);
 
+        bool intersect_impl(const Ray<N, T>& r, T* first, T* second) const;
+
 public:
         static constexpr size_t DIMENSION = N;
         using DataType = T;
@@ -143,7 +144,8 @@ public:
 
         bool inside(const Vector<N, T>& p) const;
 
-        bool intersect(const Ray<N, T>& r, T* t, T intersection_threshold = INTERSECTION_THRESHOLD<T>) const;
+        bool intersect(const Ray<N, T>& r, T* t) const;
+        bool intersect_farthest(const Ray<N, T>& r, T* t) const;
 
         Vector<N, T> normal(const Vector<N, T>& p) const;
 
@@ -154,17 +156,17 @@ public:
         Vector<N, T> e(unsigned n) const;
 };
 
-// Параметр vectors — это или все только double, или все только Vector<N, T>
+// Параметр vectors — это или все только T, или все только Vector<N, T>
 template <size_t N, typename T>
 template <typename... P>
 ParallelotopeOrtho<N, T>::ParallelotopeOrtho(const Vector<N, T>& org, const P&... vectors)
 {
-        static_assert((std::is_same_v<double, P> && ...) || (std::is_same_v<Vector<N, T>, P> && ...));
+        static_assert((std::is_same_v<T, P> && ...) || (std::is_same_v<Vector<N, T>, P> && ...));
         static_assert(sizeof...(P) == N);
 
-        if constexpr ((std::is_same_v<double, P> && ...))
+        if constexpr ((std::is_same_v<T, P> && ...))
         {
-                set_data(org, std::array<double, N>{{vectors...}});
+                set_data(org, std::array<T, N>{{vectors...}});
         }
         if constexpr ((std::is_same_v<Vector<N, T>, P> && ...))
         {
@@ -227,7 +229,7 @@ void ParallelotopeOrtho<N, T>::set_data(const Vector<N, T>& org, const std::arra
 }
 
 template <size_t N, typename T>
-bool ParallelotopeOrtho<N, T>::intersect(const Ray<N, T>& r, T* t, T intersection_threshold) const
+bool ParallelotopeOrtho<N, T>::intersect_impl(const Ray<N, T>& r, T* first, T* second) const
 {
         T f_max = std::numeric_limits<T>::lowest();
         T b_min = std::numeric_limits<T>::max();
@@ -270,15 +272,46 @@ bool ParallelotopeOrtho<N, T>::intersect(const Ray<N, T>& r, T* t, T intersectio
                         f_max = std::max(alpha2, f_max);
                 }
 
-                if (b_min < 0 || b_min < f_max)
+                if (b_min <= 0 || b_min < f_max)
                 {
                         return false;
                 }
         }
 
-        *t = (f_max > intersection_threshold) ? f_max : b_min;
+        *first = f_max;
+        *second = b_min;
 
-        return *t > intersection_threshold;
+        return true;
+}
+
+template <size_t N, typename T>
+bool ParallelotopeOrtho<N, T>::intersect(const Ray<N, T>& r, T* t) const
+{
+        T first, second;
+        if (intersect_impl(r, &first, &second))
+        {
+                *t = (first > 0) ? first : second;
+                return true;
+        }
+        else
+        {
+                return false;
+        }
+}
+
+template <size_t N, typename T>
+bool ParallelotopeOrtho<N, T>::intersect_farthest(const Ray<N, T>& r, T* t) const
+{
+        T first, second;
+        if (intersect_impl(r, &first, &second))
+        {
+                *t = second;
+                return true;
+        }
+        else
+        {
+                return false;
+        }
 }
 
 template <size_t N, typename T>

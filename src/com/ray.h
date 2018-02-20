@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -58,6 +58,11 @@ public:
         Vector<N, T> point(T t) const
         {
                 return m_org + m_dir * t;
+        }
+
+        void move_along_dir(T t)
+        {
+                m_org += m_dir * t;
         }
 };
 

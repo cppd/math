@@ -29,7 +29,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/types.h"
 #include "com/vec.h"
 #include "geometry/core/linear_algebra.h"
-#include "path_tracing/constants.h"
 
 #include <algorithm>
 #include <array>
@@ -41,18 +40,14 @@ template <size_t N, typename T>
 bool plane_intersect(const Ray<N, T>& ray, const Vector<N, T>& plane_point, const Vector<N, T>& plane_normal, T* t)
 {
         T s = dot(plane_normal, ray.get_dir());
-        if (s == 0)
+
+        if (s != 0)
         {
-                return false;
+                *t = dot(plane_point - ray.get_org(), plane_normal) / s;
+                return *t > 0;
         }
 
-        *t = dot(plane_point - ray.get_org(), plane_normal) / s;
-        if (*t < INTERSECTION_THRESHOLD<T>)
-        {
-                return false;
-        }
-
-        return true;
+        return false;
 }
 }
 
