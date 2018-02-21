@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -57,10 +57,10 @@ void create_gl_window_1x1(int major_gl_version, int minor_gl_version, const std:
         init_opengl_functions();
 #endif
 
-        check_context(major_gl_version, minor_gl_version, extensions);
-        check_bit_sizes(depth_bits, stencil_bits, antialiasing_level, red_bits, green_bits, blue_bits, alpha_bits);
+        gpu::check_context(major_gl_version, minor_gl_version, extensions);
+        gpu::check_bit_sizes(depth_bits, stencil_bits, antialiasing_level, red_bits, green_bits, blue_bits, alpha_bits);
 
-        LOG("\n-----OpenGL Window-----\n" + graphics_overview());
+        LOG("\n-----OpenGL Window-----\n" + gpu::graphics_overview());
 }
 
 void create_gl_context_1x1(int major_gl_version, int minor_gl_version, const std::vector<std::string>& extensions,
@@ -80,7 +80,7 @@ void create_gl_context_1x1(int major_gl_version, int minor_gl_version, const std
         init_opengl_functions();
 #endif
 
-        check_context(major_gl_version, minor_gl_version, extensions);
+        gpu::check_context(major_gl_version, minor_gl_version, extensions);
 
-        LOG("\n-----OpenGL Context-----\n" + graphics_overview());
+        LOG("\n-----OpenGL Context-----\n" + gpu::graphics_overview());
 }

@@ -164,14 +164,14 @@ int get_shared_size(int dft_size)
         // 1) требуемый размер, но не меньше 128, чтобы в группе было хотя бы 64 потока по потоку на 2 элемента:
         //   NVIDIA работает по 32 потока вместе (warp), AMD по 64 потока вместе (wavefront).
         // 2) максимальная степень 2, которая меньше или равна вместимости разделяемой памяти
-        return std::min(std::max(128, dft_size), 1 << log_2(get_max_compute_shared_memory() / sizeof(std::complex<FP>)));
+        return std::min(std::max(128, dft_size), 1 << log_2(gpu::max_compute_shared_memory() / sizeof(std::complex<FP>)));
 }
 template <typename FP>
 int get_group_size(int dft_size)
 {
         // не больше 1 потока на 2 элемента
         int max_threads_required = get_shared_size<FP>(dft_size) / 2;
-        int max_threads_supported = std::min(get_max_work_group_size_x(), get_max_work_group_invocations());
+        int max_threads_supported = std::min(gpu::max_work_group_size_x(), gpu::max_work_group_invocations());
         return std::min(max_threads_required, max_threads_supported);
 }
 

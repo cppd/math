@@ -76,8 +76,8 @@ public:
         bool intersect_approximate(const Ray<N, T>& r, T* t) const;
         bool intersect_precise(const Ray<N, T>&, T approximate_t, T* t, const void** intersection_data) const;
 
-        Vector<N, T> get_geometric_normal(const void* intersection_data) const;
-        Vector<N, T> get_shading_normal(const Vector<N, T>& p, const void* intersection_data) const;
+        Vector<N, T> geometric_normal(const void* intersection_data) const;
+        Vector<N, T> shading_normal(const Vector<N, T>& p, const void* intersection_data) const;
 
-        std::optional<Color> get_color(const Vector<N, T>& p, const void* intersection_data) const;
+        std::optional<Color> color(const Vector<N, T>& p, const void* intersection_data) const;
 };

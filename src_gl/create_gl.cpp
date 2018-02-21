@@ -139,7 +139,7 @@ void write_data(const std::vector<FuncData>& data)
         f_proc_header << "namespace " << GL_CPP_NAME << "\n";
         f_proc_header << "{\n";
         f_proc_header << INDENT << "using PTR = void (*)(void);\n";
-        f_proc_header << INDENT << "PTR get_gl_proc_address(const char* str);\n";
+        f_proc_header << INDENT << "PTR gl_proc_address(const char* str);\n";
         f_proc_header << "}\n";
         f_proc_header << "\n";
         f_proc_header << "// clang-format on\n";
@@ -154,7 +154,7 @@ void write_data(const std::vector<FuncData>& data)
         f_proc_impl << "\n";
         f_proc_impl << "#include <GL/glx.h>\n";
         f_proc_impl << "\n";
-        f_proc_impl << GL_CPP_NAME << "::PTR " << GL_CPP_NAME << "::get_gl_proc_address(const char* str)\n";
+        f_proc_impl << GL_CPP_NAME << "::PTR " << GL_CPP_NAME << "::gl_proc_address(const char* str)\n";
         f_proc_impl << "{\n";
         f_proc_impl << INDENT << "return glXGetProcAddress(reinterpret_cast<const GLubyte*>(str));\n";
         f_proc_impl << "}\n";
@@ -164,7 +164,7 @@ void write_data(const std::vector<FuncData>& data)
         f_proc_impl << "#define WIN32_LEAN_AND_MEAN 1\n";
         f_proc_impl << "#include <windows.h>\n";
         f_proc_impl << "\n";
-        f_proc_impl << GL_CPP_NAME << "::PTR " << GL_CPP_NAME << "::get_gl_proc_address(const char* str)\n";
+        f_proc_impl << GL_CPP_NAME << "::PTR " << GL_CPP_NAME << "::gl_proc_address(const char* str)\n";
         f_proc_impl << "{\n";
         f_proc_impl << INDENT << GL_CPP_NAME << "::PTR ptr;\n";
         f_proc_impl << INDENT << "ptr = reinterpret_cast<" << GL_CPP_NAME << "::PTR>(wglGetProcAddress(str));\n";
@@ -237,7 +237,7 @@ void write_data(const std::vector<FuncData>& data)
         f_impl << "template<typename T>\n";
         f_impl << "void set(T* p, const char* s)\n";
         f_impl << "{\n";
-        f_impl << "        *p = reinterpret_cast<T>(" << GL_CPP_NAME << "::get_gl_proc_address(s));\n";
+        f_impl << "        *p = reinterpret_cast<T>(" << GL_CPP_NAME << "::gl_proc_address(s));\n";
         f_impl << "}\n";
         f_impl << "}\n";
         f_impl << "\n";

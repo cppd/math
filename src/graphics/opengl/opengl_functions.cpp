@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@ namespace
 template<typename T>
 void set(T* p, const char* s)
 {
-        *p = reinterpret_cast<T>(opengl_functions::get_gl_proc_address(s));
+        *p = reinterpret_cast<T>(opengl_functions::gl_proc_address(s));
 }
 }
 

@@ -23,17 +23,118 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <algorithm>
 #include <sstream>
 
+namespace
+{
+GLint get_integer(GLenum pname)
+{
+        glGetError();
+
+        GLint data;
+
+        glGetIntegerv(pname, &data);
+
+        GLenum e = glGetError();
+        if (e != GL_NO_ERROR)
+        {
+                error("GetIntegerv error " + std::to_string(e));
+        }
+
+        return data;
+}
+
+GLint get_integer_i(GLenum target, GLuint index)
+{
+        glGetError();
+
+        GLint data;
+
+        glGetIntegeri_v(target, index, &data);
+
+        GLenum e = glGetError();
+        if (e != GL_NO_ERROR)
+        {
+                error("glGetIntegeri_v error " + std::to_string(e));
+        }
+
+        return data;
+}
+
+const GLubyte* get_string(GLenum name)
+{
+        glGetError();
+
+        const GLubyte* data = glGetString(name);
+
+        GLenum e = glGetError();
+        if (e != GL_NO_ERROR)
+        {
+                error("glGetString error " + std::to_string(e));
+        }
+
+        return data;
+}
+
+const GLubyte* get_string_i(GLenum name, GLuint index)
+{
+        glGetError();
+
+        const GLubyte* data = glGetStringi(name, index);
+
+        GLenum e = glGetError();
+        if (e != GL_NO_ERROR)
+        {
+                error("glGetStringi error " + std::to_string(e));
+        }
+
+        return data;
+}
+
+GLint get_named_framebuffer_attachment_parameter(GLuint framebuffer, GLenum attachment, GLenum pname)
+{
+        glGetError();
+
+        GLint params;
+
+        glGetNamedFramebufferAttachmentParameteriv(framebuffer, attachment, pname, &params);
+
+        GLenum e = glGetError();
+        if (e != GL_NO_ERROR)
+        {
+                error("glGetNamedFramebufferAttachmentParameteriv error " + std::to_string(e));
+        }
+
+        return params;
+}
+
+GLint get_named_framebuffer_parameter(GLuint framebuffer, GLenum pname)
+{
+        glGetError();
+
+        GLint param;
+
+        glGetNamedFramebufferParameteriv(framebuffer, pname, &param);
+
+        GLenum e = glGetError();
+        if (e != GL_NO_ERROR)
+        {
+                error("glGetNamedFramebufferParameteriv error " + std::to_string(e));
+        }
+
+        return param;
+}
+}
+
+namespace gpu
+{
 std::string graphics_overview()
 {
         std::ostringstream os;
 
-        os << "GL_VERSION: " << glGetString(GL_VERSION) << "\n";
-        os << "GL_VENDOR: " << glGetString(GL_VENDOR) << "\n";
-        os << "GL_RENDERER: " << glGetString(GL_RENDERER) << "\n";
+        os << "GL_VERSION: " << get_string(GL_VERSION) << "\n";
+        os << "GL_VENDOR: " << get_string(GL_VENDOR) << "\n";
+        os << "GL_RENDERER: " << get_string(GL_RENDERER) << "\n";
 
-        int flags;
-
-        glGetIntegerv(GL_CONTEXT_FLAGS, &flags);
+        GLint flags = get_integer(GL_CONTEXT_FLAGS);
         if (flags & GL_CONTEXT_FLAG_FORWARD_COMPATIBLE_BIT)
         {
                 os << "CONTEXT_FLAG_FORWARD_COMPATIBLE\n";
@@ -47,47 +148,44 @@ std::string graphics_overview()
                 os << "CONTEXT_FLAG_ROBUST_ACCESS\n";
         }
 
-        os << "framebuffer: " << (get_framebuffer_srgb() ? "sRGB" : "RGB") << "\n";
-        os << "max work group size x: " << get_max_work_group_size_x() << "\n";
-        os << "max work group size y: " << get_max_work_group_size_y() << "\n";
-        os << "max work group size z: " << get_max_work_group_size_z() << "\n";
-        os << "max work group invocations: " << get_max_work_group_invocations() << "\n";
-        os << "max work group count x: " << get_max_work_group_count_x() << "\n";
-        os << "max work group count y: " << get_max_work_group_count_y() << "\n";
-        os << "max work group count z: " << get_max_work_group_count_z() << "\n";
-        os << "max compute shared memory: " << get_max_compute_shared_memory() << "\n";
-        os << "max texture size: " << get_max_texture_size() << "\n";
-        // os << "max texture buffer size: " << get_max_texture_buffer_size() << "\n";
-        os << "max shader storage block size: " << get_max_shader_storage_block_size() << "\n";
-        os << "samples: " << get_framebuffer_samples() << "\n";
+        os << "framebuffer: " << (framebuffer_srgb() ? "sRGB" : "RGB") << "\n";
+        os << "max work group size x: " << max_work_group_size_x() << "\n";
+        os << "max work group size y: " << max_work_group_size_y() << "\n";
+        os << "max work group size z: " << max_work_group_size_z() << "\n";
+        os << "max work group invocations: " << max_work_group_invocations() << "\n";
+        os << "max work group count x: " << max_work_group_count_x() << "\n";
+        os << "max work group count y: " << max_work_group_count_y() << "\n";
+        os << "max work group count z: " << max_work_group_count_z() << "\n";
+        os << "max compute shared memory: " << max_compute_shared_memory() << "\n";
+        os << "max texture size: " << max_texture_size() << "\n";
+        // os << "max texture buffer size: " << max_texture_buffer_size() << "\n";
+        os << "max shader storage block size: " << max_shader_storage_block_size() << "\n";
+        os << "samples: " << framebuffer_samples() << "\n";
 
         return os.str();
 }
 
 void check_context(int major, int minor, const std::vector<std::string>& extensions)
 {
-        GLint mj, mn;
-        glGetIntegerv(GL_MAJOR_VERSION, &mj);
-        glGetIntegerv(GL_MINOR_VERSION, &mn);
+        GLint mj = get_integer(GL_MAJOR_VERSION);
+        GLint mn = get_integer(GL_MINOR_VERSION);
         if (mj < major || (mj == major && mn < minor))
         {
                 error("OpenGL " + std::to_string(major) + "." + std::to_string(minor) + " is not supported. " + "Supported " +
                       std::to_string(mj) + "." + std::to_string(mn) + ".");
         }
 
-        GLint m;
-        glGetIntegerv(GL_CONTEXT_PROFILE_MASK, &m);
+        GLint m = get_integer(GL_CONTEXT_PROFILE_MASK);
         if (!(m & GL_CONTEXT_CORE_PROFILE_BIT) || (m & GL_CONTEXT_COMPATIBILITY_PROFILE_BIT))
         {
                 error("Not OpenGL Core Profile");
         }
 
-        GLint num_ext;
-        glGetIntegerv(GL_NUM_EXTENSIONS, &num_ext);
+        GLint num_ext = get_integer(GL_NUM_EXTENSIONS);
         std::vector<std::string> supported_extensions(num_ext);
         for (int i = 0; i < num_ext; ++i)
         {
-                supported_extensions[i] = reinterpret_cast<const char*>(glGetStringi(GL_EXTENSIONS, i));
+                supported_extensions[i] = reinterpret_cast<const char*>(get_string_i(GL_EXTENSIONS, i));
         }
         std::sort(supported_extensions.begin(), supported_extensions.end());
 
@@ -105,51 +203,56 @@ void check_bit_sizes(int depthBits, int stencilBits, int antialiasing_level, int
 {
         GLint p;
 
-        p = get_framebuffer_samples();
+        p = framebuffer_samples();
         if (p < antialiasing_level)
         {
                 error("Context framebuffer samples " + std::to_string(p) + ". Required " + std::to_string(antialiasing_level) +
                       ".");
         }
-        glGetNamedFramebufferAttachmentParameteriv(0, GL_BACK, GL_FRAMEBUFFER_ATTACHMENT_RED_SIZE, &p);
+
+        p = get_named_framebuffer_attachment_parameter(0, GL_BACK, GL_FRAMEBUFFER_ATTACHMENT_RED_SIZE);
         if (p < redBits)
         {
                 error("Context red bits " + std::to_string(p) + ". Required " + std::to_string(redBits) + ".");
         }
-        glGetNamedFramebufferAttachmentParameteriv(0, GL_BACK, GL_FRAMEBUFFER_ATTACHMENT_GREEN_SIZE, &p);
+
+        p = get_named_framebuffer_attachment_parameter(0, GL_BACK, GL_FRAMEBUFFER_ATTACHMENT_GREEN_SIZE);
         if (p < greenBits)
         {
                 error("Context green bits " + std::to_string(p) + ". Required " + std::to_string(greenBits) + ".");
         }
-        glGetNamedFramebufferAttachmentParameteriv(0, GL_BACK, GL_FRAMEBUFFER_ATTACHMENT_BLUE_SIZE, &p);
+
+        p = get_named_framebuffer_attachment_parameter(0, GL_BACK, GL_FRAMEBUFFER_ATTACHMENT_BLUE_SIZE);
         if (p < blueBits)
         {
                 error("Context blue bits " + std::to_string(p) + ". Required " + std::to_string(blueBits) + ".");
         }
-        glGetNamedFramebufferAttachmentParameteriv(0, GL_BACK, GL_FRAMEBUFFER_ATTACHMENT_ALPHA_SIZE, &p);
+
+        p = get_named_framebuffer_attachment_parameter(0, GL_BACK, GL_FRAMEBUFFER_ATTACHMENT_ALPHA_SIZE);
         if (p < alphaBits)
         {
                 error("Context alpha bits " + std::to_string(p) + ". Required " + std::to_string(alphaBits) + ".");
         }
-        glGetNamedFramebufferAttachmentParameteriv(0, GL_DEPTH, GL_FRAMEBUFFER_ATTACHMENT_DEPTH_SIZE, &p);
+
+        p = get_named_framebuffer_attachment_parameter(0, GL_DEPTH, GL_FRAMEBUFFER_ATTACHMENT_DEPTH_SIZE);
         if (p < depthBits)
         {
                 error("Context depth bits " + std::to_string(p) + ". Required " + std::to_string(depthBits) + ".");
         }
-        glGetNamedFramebufferAttachmentParameteriv(0, GL_STENCIL, GL_FRAMEBUFFER_ATTACHMENT_STENCIL_SIZE, &p);
+
+        p = get_named_framebuffer_attachment_parameter(0, GL_STENCIL, GL_FRAMEBUFFER_ATTACHMENT_STENCIL_SIZE);
         if (p < stencilBits)
         {
                 error("Context stencil bits " + std::to_string(p) + ". Required " + std::to_string(stencilBits) + ".");
         }
 }
 
-bool get_framebuffer_srgb()
+bool framebuffer_srgb()
 {
-        GLint t;
+        // GLint t = get_named_framebuffer_attachment_parameter(GL_DRAW_FRAMEBUFFER, GL_FRONT,
+        // GL_FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING);
+        GLint t = get_named_framebuffer_attachment_parameter(0, GL_BACK, GL_FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING);
 
-        // glGetFramebufferAttachmentParameteriv(GL_DRAW_FRAMEBUFFER, GL_FRONT,
-        // GL_FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING, &t);
-        glGetNamedFramebufferAttachmentParameteriv(0, GL_BACK, GL_FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING, &t);
         if (t == GL_SRGB)
         {
                 return true;
@@ -163,75 +266,64 @@ bool get_framebuffer_srgb()
                 error("Error find FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING");
         }
 }
-int get_framebuffer_samples()
+
+int framebuffer_samples()
 {
-        GLint p;
-        glGetNamedFramebufferParameteriv(0, GL_SAMPLES, &p);
-        return p;
+        return get_named_framebuffer_parameter(0, GL_SAMPLES);
 }
-int get_max_work_group_size_x()
+
+int max_work_group_size_x()
 {
-        GLint max_size;
-        glGetIntegeri_v(GL_MAX_COMPUTE_VARIABLE_GROUP_SIZE_ARB, 0, &max_size);
-        return max_size;
+        return get_integer_i(GL_MAX_COMPUTE_VARIABLE_GROUP_SIZE_ARB, 0);
 }
-int get_max_work_group_size_y()
+
+int max_work_group_size_y()
 {
-        GLint max_size;
-        glGetIntegeri_v(GL_MAX_COMPUTE_VARIABLE_GROUP_SIZE_ARB, 1, &max_size);
-        return max_size;
+        return get_integer_i(GL_MAX_COMPUTE_VARIABLE_GROUP_SIZE_ARB, 1);
 }
-int get_max_work_group_size_z()
+
+int max_work_group_size_z()
 {
-        GLint max_size;
-        glGetIntegeri_v(GL_MAX_COMPUTE_VARIABLE_GROUP_SIZE_ARB, 2, &max_size);
-        return max_size;
+        return get_integer_i(GL_MAX_COMPUTE_VARIABLE_GROUP_SIZE_ARB, 2);
 }
-int get_max_work_group_invocations()
+
+int max_work_group_invocations()
 {
-        GLint max_size;
-        glGetIntegerv(GL_MAX_COMPUTE_VARIABLE_GROUP_INVOCATIONS_ARB, &max_size);
-        return max_size;
+        return get_integer(GL_MAX_COMPUTE_VARIABLE_GROUP_INVOCATIONS_ARB);
 }
-int get_max_work_group_count_x()
+
+int max_work_group_count_x()
 {
-        GLint max_size;
-        glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0, &max_size);
-        return max_size;
+        return get_integer_i(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0);
 }
-int get_max_work_group_count_y()
+
+int max_work_group_count_y()
 {
-        GLint max_size;
-        glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1, &max_size);
-        return max_size;
+        return get_integer_i(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1);
 }
-int get_max_work_group_count_z()
+
+int max_work_group_count_z()
 {
-        GLint max_size;
-        glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2, &max_size);
-        return max_size;
+        return get_integer_i(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2);
 }
-int get_max_compute_shared_memory()
+
+int max_compute_shared_memory()
 {
-        GLint max_size;
-        glGetIntegerv(GL_MAX_COMPUTE_SHARED_MEMORY_SIZE, &max_size);
-        return max_size;
+        return get_integer(GL_MAX_COMPUTE_SHARED_MEMORY_SIZE);
 }
-int get_max_texture_size()
+
+int max_texture_size()
 {
-        GLint max_size;
-        glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_size);
-        return max_size;
+        return get_integer(GL_MAX_TEXTURE_SIZE);
 }
-int get_max_texture_buffer_size()
+
+int max_texture_buffer_size()
 {
-        GLint max_size;
-        glGetIntegerv(GL_MAX_TEXTURE_BUFFER_SIZE, &max_size);
-        return max_size;
+        return get_integer(GL_MAX_TEXTURE_BUFFER_SIZE);
 }
-int get_max_shader_storage_block_size()
+
+int max_shader_storage_block_size()
 {
-        GLint max_size;
-        glGetIntegerv(GL_MAX_SHADER_STORAGE_BLOCK_SIZE, &max_size);
-        return max_size;
+        return get_integer(GL_MAX_SHADER_STORAGE_BLOCK_SIZE);
+}
 }

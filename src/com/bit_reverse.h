@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cstdint>
 #include <vector>
 
-constexpr int get_bit_reverse(int bin_size, int v)
+constexpr int bit_reverse(int bin_size, int v)
 {
         int r = 0;
         for (int b = 0; b < bin_size; ++b)
@@ -71,7 +71,7 @@ void bit_reverse(std::vector<T>* data)
 
         for (int i = 0; i < N; ++i)
         {
-                int r = get_bit_reverse(bin_size, i);
+                int r = bit_reverse(bin_size, i);
                 if (i < r) // для исключения одинаковых обменов и уже сделанных обменов
                 {
                         std::swap((*data)[i], (*data)[r]);

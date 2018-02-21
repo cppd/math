@@ -31,7 +31,7 @@ namespace
 {
 std::string file_name_with_extension(const std::string& file_name, const char* extension)
 {
-        std::string ext = to_lower(trim(get_extension(file_name)));
+        std::string ext = to_lower(trim(file_extension(file_name)));
         if (ext.size() > 0)
         {
                 if (ext != to_lower(trim(extension)))

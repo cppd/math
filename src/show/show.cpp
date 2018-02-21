@@ -146,7 +146,7 @@ public:
                 *light_direction = -m_light_direction; // от источника света на объект
         }
 
-        void get_camera_information(vec3* camera_up, vec3* camera_direction, vec3* view_center, double* view_width) const
+        void camera_information(vec3* camera_up, vec3* camera_direction, vec3* view_center, double* view_width) const
         {
                 std::lock_guard lg(m_lock);
 
@@ -156,7 +156,7 @@ public:
                 *view_width = m_view_width;
         }
 
-        void get_paint_width_height(int* width, int* height) const
+        void paint_width_height(int* width, int* height) const
         {
                 std::lock_guard lg(m_lock);
 
@@ -164,7 +164,7 @@ public:
                 *height = m_paint_height;
         }
 
-        vec3 get_light_direction() const
+        vec3 light_direction() const
         {
                 std::lock_guard lg(m_lock);
 
@@ -316,15 +316,15 @@ class ShowObject final : public IShow
 
         void camera_information(vec3* camera_up, vec3* camera_direction, vec3* view_center, double* view_width) const override
         {
-                m_camera.get_camera_information(camera_up, camera_direction, view_center, view_width);
+                m_camera.camera_information(camera_up, camera_direction, view_center, view_width);
         }
         void paint_width_height(int* width, int* height) const override
         {
-                m_camera.get_paint_width_height(width, height);
+                m_camera.paint_width_height(width, height);
         }
         vec3 light_direction() const override
         {
-                return m_camera.get_light_direction();
+                return m_camera.light_direction();
         }
         double object_size() const override
         {
@@ -472,7 +472,7 @@ void ShowObject::loop()
                                 break;
                         }
 
-                        switch (event->get_type())
+                        switch (event->type())
                         {
                         case Event::EventType::add_object:
                         {

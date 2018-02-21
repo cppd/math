@@ -129,11 +129,11 @@ public:
         {
                 SurfaceProperties s = *this;
 
-                s.set_geometric_normal(m_mesh->get_geometric_normal(intersection_data));
-                s.set_shading_normal(m_mesh->get_shading_normal(p, intersection_data));
+                s.set_geometric_normal(m_mesh->geometric_normal(intersection_data));
+                s.set_shading_normal(m_mesh->shading_normal(p, intersection_data));
                 s.set_triangle_mesh(true);
 
-                if (std::optional<Color> color = m_mesh->get_color(p, intersection_data))
+                if (std::optional<Color> color = m_mesh->color(p, intersection_data))
                 {
                         s.set_color(color.value());
                 }

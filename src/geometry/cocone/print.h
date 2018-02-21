@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -33,10 +33,11 @@ void print_delaunay_facets(const std::vector<DelaunayFacet<N>>& delaunay_facets)
         LOG("--delaunay facets--");
         for (unsigned i = 0; i < delaunay_facets.size(); ++i)
         {
-                LOG(to_string(delaunay_facets[i].get_vertices()));
+                LOG(to_string(delaunay_facets[i].vertices()));
         }
         LOG("--");
 }
+
 template <size_t N>
 void print_cocone_facets(const std::vector<DelaunayFacet<N>>& delaunay_facets, const std::vector<bool>& cocone_facets)
 {
@@ -45,11 +46,12 @@ void print_cocone_facets(const std::vector<DelaunayFacet<N>>& delaunay_facets, c
         {
                 if (cocone_facets[i])
                 {
-                        LOG(to_string(delaunay_facets[i].get_vertices()));
+                        LOG(to_string(delaunay_facets[i].vertices()));
                 }
         }
         LOG("--");
 }
+
 template <size_t N>
 void print_not_cocone_facets(const std::vector<DelaunayFacet<N>>& delaunay_facets, const std::vector<bool>& cocone_facets)
 {
@@ -58,11 +60,12 @@ void print_not_cocone_facets(const std::vector<DelaunayFacet<N>>& delaunay_facet
         {
                 if (!cocone_facets[i])
                 {
-                        LOG(to_string(delaunay_facets[i].get_vertices()));
+                        LOG(to_string(delaunay_facets[i].vertices()));
                 }
         }
         LOG("--");
 }
+
 template <size_t N>
 void print_vertex_data(const std::vector<ManifoldVertex<N>>& vertices)
 {

@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "bit_reverse.h"
 
+#if 0
 #include <iomanip>
 #include <sstream>
 
@@ -37,12 +38,13 @@ std::string bit_reverse_255_table()
                         oss << ',';
                         oss << ((i & 0xf) ? ' ' : '\n');
                 }
-                oss << "0x" << std::setw(2) << get_bit_reverse(8, i);
+                oss << "0x" << std::setw(2) << bit_reverse(8, i);
         }
 
         return oss.str();
 }
 }
+#endif
 
 // clang-format off
 constexpr uint8_t bit_reverse_lookup_table[256] =
@@ -103,7 +105,7 @@ void create_bit_reverse_lookup_table(int N, std::vector<int>* data)
 
         for (int i = 0; i < N; ++i)
         {
-                (*data)[i] = get_bit_reverse(bin_size, i);
+                (*data)[i] = bit_reverse(bin_size, i);
         }
 }
 

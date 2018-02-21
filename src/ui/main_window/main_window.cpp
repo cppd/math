@@ -545,7 +545,7 @@ void MainWindow::strike_out_bound_cocone_buttons()
 
 void MainWindow::slot_window_event(const WindowEvent& event)
 {
-        switch (event.get_type())
+        switch (event.type())
         {
         case WindowEvent::EventType::MESSAGE_ERROR:
         {
@@ -649,7 +649,7 @@ void MainWindow::slot_window_event(const WindowEvent& event)
         {
                 const WindowEvent::file_loaded& d = event.get<WindowEvent::file_loaded>();
 
-                std::string file_name = get_base_name(d.file_name);
+                std::string file_name = file_base_name(d.file_name);
                 set_window_title_file(file_name);
                 strike_out_all_objects_buttons();
                 ui.radioButton_Model->setChecked(true);

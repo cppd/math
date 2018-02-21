@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <GL/glx.h>
 
-opengl_functions::PTR opengl_functions::get_gl_proc_address(const char* str)
+opengl_functions::PTR opengl_functions::gl_proc_address(const char* str)
 {
         return glXGetProcAddress(reinterpret_cast<const GLubyte*>(str));
 }
@@ -33,7 +33,7 @@ opengl_functions::PTR opengl_functions::get_gl_proc_address(const char* str)
 #define WIN32_LEAN_AND_MEAN 1
 #include <windows.h>
 
-opengl_functions::PTR opengl_functions::get_gl_proc_address(const char* str)
+opengl_functions::PTR opengl_functions::gl_proc_address(const char* str)
 {
         opengl_functions::PTR ptr;
         ptr = reinterpret_cast<opengl_functions::PTR>(wglGetProcAddress(str));

@@ -150,7 +150,7 @@ std::vector<std::array<int, 2>> kruskal(int point_count, int vertex_count, const
 }
 
 template <size_t N>
-unsigned get_unique_vertex_count(const std::vector<std::array<int, N>>& delaunay_objects)
+unsigned unique_vertex_count(const std::vector<std::array<int, N>>& delaunay_objects)
 {
         static_assert(N >= 3);
 
@@ -209,7 +209,7 @@ std::vector<std::array<int, 2>> minimum_spanning_tree(const std::vector<Vector<N
         progress->set(4, 5);
 
         // Само построение минимального остовного дерева.
-        std::vector<std::array<int, 2>> mst = kruskal(points.size(), get_unique_vertex_count(delaunay_objects), weighted_edges);
+        std::vector<std::array<int, 2>> mst = kruskal(points.size(), unique_vertex_count(delaunay_objects), weighted_edges);
 
         LOG("Minimum spanning tree created, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
 

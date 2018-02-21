@@ -135,19 +135,19 @@ bool Mesh<N, T>::intersect_precise(const Ray<N, T>& ray, T approximate_t, T* t, 
 }
 
 template <size_t N, typename T>
-Vector<N, T> Mesh<N, T>::get_geometric_normal(const void* intersection_data) const
+Vector<N, T> Mesh<N, T>::geometric_normal(const void* intersection_data) const
 {
         return static_cast<const Facet*>(intersection_data)->geometric_normal();
 }
 
 template <size_t N, typename T>
-Vector<N, T> Mesh<N, T>::get_shading_normal(const Vector<N, T>& p, const void* intersection_data) const
+Vector<N, T> Mesh<N, T>::shading_normal(const Vector<N, T>& p, const void* intersection_data) const
 {
         return static_cast<const Facet*>(intersection_data)->shading_normal(p);
 }
 
 template <size_t N, typename T>
-std::optional<Color> Mesh<N, T>::get_color(const Vector<N, T>& p, const void* intersection_data) const
+std::optional<Color> Mesh<N, T>::color(const Vector<N, T>& p, const void* intersection_data) const
 {
         const Facet* facet = static_cast<const Facet*>(intersection_data);
 

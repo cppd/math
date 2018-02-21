@@ -258,7 +258,7 @@ public:
         {
         }
 
-        EventType get_type() const
+        EventType type() const
         {
                 return m_type;
         }

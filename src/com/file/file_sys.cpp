@@ -19,12 +19,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #if 0
 
-std::string get_base_name(const std::string& file_name)
+std::string file_base_name(const std::string& file_name)
 {
         return std::experimental::filesystem::u8path(file_name).filename().u8string();
 }
 
-std::string get_dir_name(const std::string& file_name)
+std::string file_parent_path(const std::string& file_name)
 {
         return std::experimental::filesystem::u8path(file_name).parent_path().u8string();
 }
@@ -52,20 +52,20 @@ constexpr const char separators[] = "\\/";
 #error This operation system is not supported
 #endif
 
-std::string get_base_name(const std::string& file_name)
+std::string file_base_name(const std::string& file_name)
 {
         size_t n = file_name.find_last_of(separators);
         return (n != std::string::npos) ? file_name.substr(n + 1) : file_name;
 }
 
-std::string get_extension(const std::string& file_name)
+std::string file_extension(const std::string& file_name)
 {
-        std::string base_name = get_base_name(file_name);
+        std::string base_name = file_base_name(file_name);
         size_t n = base_name.find_last_of('.');
         return (n != std::string::npos) ? base_name.substr(n + 1) : "";
 }
 
-std::string get_dir_name(const std::string& file_name)
+std::string file_parent_path(const std::string& file_name)
 {
         size_t n = file_name.find_last_of(separators);
         return (n != std::string::npos) ? file_name.substr(0, n) : ".";

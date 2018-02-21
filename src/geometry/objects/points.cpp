@@ -232,7 +232,7 @@ std::vector<Vector<3, float>> generate_points_mobius_strip(unsigned point_count)
 }
 
 template <typename T>
-std::vector<std::string> get_names_of_map(const std::map<std::string, T>& m)
+std::vector<std::string> names_of_map(const std::map<std::string, T>& m)
 {
         std::vector<std::string> name_list;
         name_list.reserve(m.size());
@@ -271,7 +271,7 @@ class ObjectRepository final : public IObjectRepository<N>
 
         std::vector<std::string> list_of_point_objects() const override
         {
-                return get_names_of_map(m_map);
+                return names_of_map(m_map);
         }
         std::vector<Vector<N, float>> point_object(const std::string& object_name, unsigned point_count) const override
         {

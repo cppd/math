@@ -63,8 +63,8 @@ namespace
 {
 int group_size_prepare(int width, int shared_size_per_thread)
 {
-        int max_group_size_limit = std::min(get_max_work_group_size_x(), get_max_work_group_invocations());
-        int max_group_size_memory = get_max_compute_shared_memory() / shared_size_per_thread;
+        int max_group_size_limit = std::min(gpu::max_work_group_size_x(), gpu::max_work_group_invocations());
+        int max_group_size_memory = gpu::max_compute_shared_memory() / shared_size_per_thread;
 
         // максимально возможная степень 2
         int max_group_size = 1 << log_2(std::min(max_group_size_limit, max_group_size_memory));
@@ -77,13 +77,13 @@ int group_size_prepare(int width, int shared_size_per_thread)
 
 int group_size_merge(int height, int shared_size_per_item)
 {
-        if (get_max_compute_shared_memory() < height * shared_size_per_item)
+        if (gpu::max_compute_shared_memory() < height * shared_size_per_item)
         {
                 error("Shared memory problem: needs " + std::to_string(height * shared_size_per_item) + ", exists " +
-                      std::to_string(get_max_compute_shared_memory()));
+                      std::to_string(gpu::max_compute_shared_memory()));
         }
 
-        int max_group_size = std::min(get_max_work_group_size_x(), get_max_work_group_invocations());
+        int max_group_size = std::min(gpu::max_work_group_size_x(), gpu::max_work_group_invocations());
 
         // Один поток первоначально обрабатывает группы до 4 элементов.
         int pref_thread_count = group_count(height, 4);

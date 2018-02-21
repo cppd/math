@@ -96,7 +96,7 @@ void read(const Data& data, long long size, const Op& op, long long* i)
 }
 
 template <typename T>
-std::string get_string_list(const std::map<std::string, T>& m)
+std::string map_keys_to_string(const std::map<std::string, T>& m)
 {
         std::string names;
         for (const auto& s : m)
@@ -1154,7 +1154,7 @@ void FileObj::read_lib(const std::string& dir_name, const std::string& file_name
 
         read_file_lines(lib_name, &data, &line_begin);
 
-        const std::string lib_dir = get_dir_name(lib_name);
+        const std::string lib_dir = file_parent_path(lib_name);
 
         FileObj::Material* mtl = nullptr;
         std::string name;
@@ -1309,7 +1309,7 @@ void FileObj::read_libs(const std::string& dir_name, ProgressRatio* progress, st
 
         if (material_index->size() != 0)
         {
-                error("Materials not found in libraries: " + get_string_list(*material_index));
+                error("Materials not found in libraries: " + map_keys_to_string(*material_index));
         }
 
         m_materials.shrink_to_fit();
@@ -1369,7 +1369,7 @@ void FileObj::read_obj_and_mtl(const std::string& file_name, ProgressRatio* prog
                 center_and_length(m_vertices, m_facets, &m_center, &m_length);
         }
 
-        read_libs(get_dir_name(file_name), progress, &material_index, library_names);
+        read_libs(file_parent_path(file_name), progress, &material_index, library_names);
 }
 
 FileObj::FileObj(const std::string& file_name, ProgressRatio* progress)
@@ -1537,7 +1537,7 @@ FileTxt::FileTxt(const std::string& file_name, ProgressRatio* progress)
 
 std::unique_ptr<Obj<3>> load_obj_from_file(const std::string& file_name, ProgressRatio* progress)
 {
-        std::string upper_extension = to_upper(get_extension(file_name));
+        std::string upper_extension = to_upper(file_extension(file_name));
 
         if (upper_extension == "OBJ")
         {
@@ -1549,7 +1549,7 @@ std::unique_ptr<Obj<3>> load_obj_from_file(const std::string& file_name, Progres
                 return std::make_unique<FileTxt>(file_name, progress);
         }
 
-        std::string ext = get_extension(file_name);
+        std::string ext = file_extension(file_name);
         if (ext.size() > 0)
         {
                 error("Unsupported file format " + ext);

@@ -287,9 +287,9 @@ public:
 
         void bind() const;
 
-        const mat4& get_model_matrix() const;
-        unsigned get_vertices_count() const;
-        DrawType get_draw_type() const;
+        const mat4& model_matrix() const;
+        unsigned vertices_count() const;
+        DrawType draw_type() const;
 };
 
 DrawObject::DrawObject(const Obj<3>* obj, const ColorSpaceConverterToRGB& color_converter, double size, const vec3& position)
@@ -367,15 +367,15 @@ void DrawObject::bind() const
         m_vertex_array.bind();
         m_storage_buffer.bind(0);
 }
-const mat4& DrawObject::get_model_matrix() const
+const mat4& DrawObject::model_matrix() const
 {
         return m_model_matrix;
 }
-unsigned DrawObject::get_vertices_count() const
+unsigned DrawObject::vertices_count() const
 {
         return m_vertices_count;
 }
-DrawType DrawObject::get_draw_type() const
+DrawType DrawObject::draw_type() const
 {
         return m_draw_type;
 }
@@ -458,12 +458,12 @@ public:
                 m_draw_object = nullptr;
         }
 
-        const DrawObject* get_object() const
+        const DrawObject* object() const
         {
                 return m_draw_object;
         }
 
-        const DrawObject* get_scale_object() const
+        const DrawObject* scale_object() const
         {
                 return m_draw_scale_object;
         }
@@ -494,7 +494,7 @@ class Renderer final : public IRenderer
         int m_shadow_width = -1;
         int m_shadow_height = -1;
 
-        const int m_max_texture_size = get_max_texture_size();
+        const int m_max_texture_size = gpu::max_texture_size();
 
         double m_shadow_zoom = 1;
 
@@ -563,8 +563,8 @@ class Renderer final : public IRenderer
 
         void draw(bool draw_to_buffer) override
         {
-                const DrawObject* draw_object = m_draw_objects.get_object();
-                const DrawObject* draw_scale_object = m_draw_objects.get_scale_object();
+                const DrawObject* draw_object = m_draw_objects.object();
+                const DrawObject* draw_scale_object = m_draw_objects.scale_object();
 
                 m_object_texture->clear_tex_image(0);
 
@@ -583,11 +583,11 @@ class Renderer final : public IRenderer
 
                 const DrawObject* scale = draw_scale_object ? draw_scale_object : draw_object;
 
-                if (m_show_shadow && draw_object->get_draw_type() == DrawType::TRIANGLES)
+                if (m_show_shadow && draw_object->draw_type() == DrawType::TRIANGLES)
                 {
-                        main_program.set_uniform_float("shadowMatrix", m_scale_bias_shadow_matrix * scale->get_model_matrix());
+                        main_program.set_uniform_float("shadowMatrix", m_scale_bias_shadow_matrix * scale->model_matrix());
 
-                        shadow_program.set_uniform_float("mvpMatrix", m_shadow_matrix * scale->get_model_matrix());
+                        shadow_program.set_uniform_float("mvpMatrix", m_shadow_matrix * scale->model_matrix());
 
                         m_shadow_buffer->bind_buffer();
                         glViewport(0, 0, m_shadow_width, m_shadow_height);
@@ -596,7 +596,7 @@ class Renderer final : public IRenderer
                         glEnable(GL_POLYGON_OFFSET_FILL); // depth-fighting
                         glPolygonOffset(2.0f, 2.0f); // glPolygonOffset(4.0f, 4.0f);
 
-                        shadow_program.draw_arrays(GL_TRIANGLES, 0, draw_object->get_vertices_count());
+                        shadow_program.draw_arrays(GL_TRIANGLES, 0, draw_object->vertices_count());
 
                         glDisable(GL_POLYGON_OFFSET_FILL);
                         m_shadow_buffer->unbind_buffer();
@@ -610,19 +610,19 @@ class Renderer final : public IRenderer
                         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
                 }
 
-                switch (draw_object->get_draw_type())
+                switch (draw_object->draw_type())
                 {
                 case DrawType::TRIANGLES:
-                        main_program.set_uniform_float("mvpMatrix", m_main_matrix * scale->get_model_matrix());
-                        main_program.draw_arrays(GL_TRIANGLES, 0, draw_object->get_vertices_count());
+                        main_program.set_uniform_float("mvpMatrix", m_main_matrix * scale->model_matrix());
+                        main_program.draw_arrays(GL_TRIANGLES, 0, draw_object->vertices_count());
                         break;
                 case DrawType::POINTS:
-                        points_program.set_uniform_float("mvpMatrix", m_main_matrix * scale->get_model_matrix());
-                        points_program.draw_arrays(GL_POINTS, 0, draw_object->get_vertices_count());
+                        points_program.set_uniform_float("mvpMatrix", m_main_matrix * scale->model_matrix());
+                        points_program.draw_arrays(GL_POINTS, 0, draw_object->vertices_count());
                         break;
                 case DrawType::LINES:
-                        points_program.set_uniform_float("mvpMatrix", m_main_matrix * scale->get_model_matrix());
-                        points_program.draw_arrays(GL_LINES, 0, draw_object->get_vertices_count());
+                        points_program.set_uniform_float("mvpMatrix", m_main_matrix * scale->model_matrix());
+                        points_program.draw_arrays(GL_LINES, 0, draw_object->vertices_count());
                         break;
                 }
 
