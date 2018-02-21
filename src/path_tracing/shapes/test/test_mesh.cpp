@@ -34,21 +34,26 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace
 {
-template <typename T>
-constexpr T RAY_OFFSET = 1e-4;
-
-template <typename T>
-T random_integer(T low, T high)
+template <typename T, typename RandomEngine>
+T random_integer(RandomEngine& random_engine, T low, T high)
 {
         static_assert(std::is_integral_v<T>);
-        ASSERT(low < high);
+        ASSERT(low <= high);
 
-        RandomEngineWithSeed<std::mt19937_64> random_engine;
         return std::uniform_int_distribution<T>(low, high)(random_engine);
 }
 
+template <typename T, typename RandomEngine, typename T1, typename T2>
+T random_exponent_float(RandomEngine& random_engine, T1 exponent_low, T2 exponent_high)
+{
+        static_assert(std::is_floating_point_v<T>);
+        ASSERT(exponent_low <= exponent_high);
+
+        return std::pow(10, std::uniform_real_distribution<T>(exponent_low, exponent_high)(random_engine));
+}
+
 template <size_t N, typename T>
-std::vector<Vector<N, T>> generate_random_points_on_unit_sphere(int count)
+std::vector<Vector<N, T>> generate_random_points_on_sphere(const Vector<N, T>& center, T radius, int count)
 {
         LOG("random points...");
 
@@ -62,14 +67,15 @@ std::vector<Vector<N, T>> generate_random_points_on_unit_sphere(int count)
         for (int i = 0; i < count; ++i)
         {
                 random_in_sphere(random_engine, v, length_square);
-                points[i] = v / std::sqrt(length_square);
+                v /= std::sqrt(length_square);
+                points[i] = v * radius + center;
         }
 
         return points;
 }
 
-template <size_t N, typename T>
-std::vector<Ray<N, T>> generate_random_rays_for_unit_sphere(int count)
+template <size_t N, typename T, typename TS>
+std::vector<Ray<N, T>> generate_random_rays_for_sphere(const Vector<N, TS>& center, TS radius, int count)
 {
         LOG("random rays...");
 
@@ -85,17 +91,18 @@ std::vector<Ray<N, T>> generate_random_rays_for_unit_sphere(int count)
                 random_in_sphere(random_engine, v, length_square);
                 v /= std::sqrt(length_square);
 
-                rays[i] = Ray<N, T>(T(11) * v, -v);
+                rays[i] = Ray<N, T>(T(2 * radius) * v + to_vector<T>(center), -v);
         }
 
         return rays;
 }
 
 template <size_t N>
-void create_spherical_convex_hull(int point_count, std::vector<Vector<N, float>>* points, std::vector<std::array<int, N>>* facets,
+void create_spherical_convex_hull(const Vector<N, float>& center, float radius, int point_count,
+                                  std::vector<Vector<N, float>>* points, std::vector<std::array<int, N>>* facets,
                                   ProgressRatio* progress)
 {
-        *points = generate_random_points_on_unit_sphere<N, float>(point_count);
+        *points = generate_random_points_on_sphere<N, float>(center, radius, point_count);
 
         std::vector<ConvexHullFacet<N>> ch_facets;
 
@@ -114,7 +121,8 @@ void create_spherical_convex_hull(int point_count, std::vector<Vector<N, float>>
 }
 
 template <size_t N, typename T>
-std::unique_ptr<const Mesh<N, T>> simplex_mesh_of_unit_sphere(int point_count, int thread_count)
+std::unique_ptr<const Mesh<N, T>> simplex_mesh_of_sphere(const Vector<N, float>& center, float radius, int point_count,
+                                                         int thread_count)
 {
         ProgressRatio progress(nullptr);
 
@@ -123,7 +131,7 @@ std::unique_ptr<const Mesh<N, T>> simplex_mesh_of_unit_sphere(int point_count, i
 
         LOG("convex hull in " + to_string(N) + "D, point count " + to_string(point_count));
 
-        create_spherical_convex_hull(point_count, &points, &facets, &progress);
+        create_spherical_convex_hull(center, radius, point_count, &points, &facets, &progress);
 
         LOG("obj...");
 
@@ -137,7 +145,7 @@ std::unique_ptr<const Mesh<N, T>> simplex_mesh_of_unit_sphere(int point_count, i
 }
 
 template <size_t N, typename T>
-void test_mesh(const Mesh<N, T>& mesh, const std::vector<Ray<N, T>>& rays, bool with_ray_log, bool with_error_log)
+void test_mesh(T ray_offset, const Mesh<N, T>& mesh, const std::vector<Ray<N, T>>& rays, bool with_ray_log, bool with_error_log)
 {
         int error_count = 0;
 
@@ -186,7 +194,7 @@ void test_mesh(const Mesh<N, T>& mesh, const std::vector<Ray<N, T>>& rays, bool 
                         LOG("t1_p == " + to_string(precise));
                 }
 
-                ray.move_along_dir(precise + RAY_OFFSET<T>);
+                ray.move_along_dir(precise + ray_offset);
 
                 if (!mesh.intersect_approximate(ray, &approximate))
                 {
@@ -216,7 +224,7 @@ void test_mesh(const Mesh<N, T>& mesh, const std::vector<Ray<N, T>>& rays, bool 
                         LOG("t2_p == " + to_string(precise));
                 }
 
-                ray.move_along_dir(precise + RAY_OFFSET<T>);
+                ray.move_along_dir(precise + ray_offset);
 
                 if (mesh.intersect_approximate(ray, &approximate) &&
                     mesh.intersect_precise(ray, approximate, &precise, &intersection_data))
@@ -231,43 +239,78 @@ void test_mesh(const Mesh<N, T>& mesh, const std::vector<Ray<N, T>>& rays, bool 
                 }
         }
 
+        double error_percent = 100.0 * error_count / rays.size();
+
         LOG("intersections " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
         LOG("");
-        LOG(to_string(error_count) + " errors, " + to_string(rays.size()) + " rays, " +
-            to_string_fixed(100.0 * error_count / rays.size(), 5) + "%");
+        LOG(to_string(error_count) + " errors, " + to_string(rays.size()) + " rays, " + to_string_fixed(error_percent, 5) + "%");
         LOG("");
+
+        if (error_percent > 3)
+        {
+                error("Too many errors");
+        }
 }
 
 template <size_t N, typename T>
-void test_mesh(int point_count, int ray_count, int thread_count, bool with_ray_log, bool with_error_log)
+void center_and_offset(float radius, Vector<N, float>* center, T* ray_offset)
+{
+        float center_float = -radius / 2;
+        *center = Vector<N, float>(center_float);
+        *ray_offset = (std::abs(center_float) + radius) * (100 * limits<T>::epsilon());
+}
+
+template <size_t N, typename T>
+void test_mesh(float radius, int point_count, int ray_count, int thread_count, bool with_ray_log, bool with_error_log)
 {
         LOG("----------- " + to_string(N) + "D, " + type_name<T>() + " -----------");
 
-        std::unique_ptr<const Mesh<N, T>> mesh = simplex_mesh_of_unit_sphere<N, T>(point_count, thread_count);
+        Vector<N, float> center;
+        T ray_offset;
 
-        std::vector<Ray<N, T>> rays = generate_random_rays_for_unit_sphere<N, T>(ray_count);
+        center_and_offset(radius, &center, &ray_offset);
 
-        test_mesh(*mesh, rays, with_ray_log, with_error_log);
+        LOG("radius = " + to_string(radius));
+        LOG("center = " + to_string(center));
+        LOG("offset = " + to_string(ray_offset));
+
+        std::unique_ptr<const Mesh<N, T>> mesh = simplex_mesh_of_sphere<N, T>(center, radius, point_count, thread_count);
+
+        std::vector<Ray<N, T>> rays = generate_random_rays_for_sphere<N, T>(center, radius, ray_count);
+
+        test_mesh(ray_offset, *mesh, rays, with_ray_log, with_error_log);
 }
 
-template <size_t N>
-void test_mesh(int point_low, int point_high, int ray_low, int ray_high, int thread_count, bool with_ray_log, bool with_error_log)
+template <size_t N, typename T>
+void test_mesh(int exponent_low, int exponent_high, int point_low, int point_high, int ray_low, int ray_high, int thread_count,
+               bool with_ray_log, bool with_error_log)
 {
-        int point_count = random_integer(point_low, point_high);
-        int ray_count = random_integer(ray_low, ray_high);
+        float radius;
+        int point_count;
+        int ray_count;
 
-        test_mesh<N, float>(point_count, ray_count, thread_count, with_ray_log, with_error_log);
-        test_mesh<N, double>(point_count, ray_count, thread_count, with_ray_log, with_error_log);
+        {
+                RandomEngineWithSeed<std::mt19937_64> random_engine;
+
+                radius = random_exponent_float<float>(random_engine, exponent_low, exponent_high);
+                point_count = random_integer(random_engine, point_low, point_high);
+                ray_count = random_integer(random_engine, ray_low, ray_high);
+        }
+
+        test_mesh<N, T>(radius, point_count, ray_count, thread_count, with_ray_log, with_error_log);
 }
 }
 
 void test_mesh()
 {
-        int hardware_concurrency = get_hardware_concurrency();
+        int thread_count = get_hardware_concurrency();
 
         bool with_ray_log = false;
         bool with_error_log = false;
 
-        test_mesh<3>(1000, 2000, 90'000, 110'000, hardware_concurrency, with_ray_log, with_error_log);
-        test_mesh<4>(1000, 2000, 90'000, 110'000, hardware_concurrency, with_ray_log, with_error_log);
+        test_mesh<3, float>(-7, 10, 1000, 2000, 90'000, 110'000, thread_count, with_ray_log, with_error_log);
+        test_mesh<3, double>(-22, 37, 1000, 2000, 90'000, 110'000, thread_count, with_ray_log, with_error_log);
+
+        test_mesh<4, float>(-4, 6, 1000, 2000, 90'000, 110'000, thread_count, with_ray_log, with_error_log);
+        test_mesh<4, double>(-22, 37, 1000, 2000, 90'000, 110'000, thread_count, with_ray_log, with_error_log);
 }
