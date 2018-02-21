@@ -123,12 +123,12 @@ private:
 
         void progress_bars(bool permanent, const ProgressRatioList* progress_list, std::list<QProgressBar>* progress_bars);
 
-        double get_ambient() const;
-        double get_diffuse() const;
-        double get_specular() const;
-        double get_dft_brightness() const;
-        double get_default_ns() const;
-        double get_shadow_zoom() const;
+        double ambient_light() const;
+        double diffuse_light() const;
+        double specular_light() const;
+        double dft_brightness() const;
+        double default_ns() const;
+        double shadow_zoom() const;
 
         void set_bound_cocone_parameters(double rho, double alpha);
 

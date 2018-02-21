@@ -168,7 +168,7 @@ void disable_radio_button(QRadioButton* button)
 }
 #endif
 
-WindowID get_widget_window_id(QWidget* widget)
+WindowID widget_window_id(QWidget* widget)
 {
         ASSERT(widget);
 

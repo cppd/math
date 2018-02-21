@@ -269,11 +269,11 @@ class ObjectRepository final : public IObjectRepository<N>
                 return generate_points_mobius_strip(point_count);
         }
 
-        std::vector<std::string> get_list_of_point_objects() const override
+        std::vector<std::string> list_of_point_objects() const override
         {
                 return get_names_of_map(m_map);
         }
-        std::vector<Vector<N, float>> get_point_object(const std::string& object_name, unsigned point_count) const override
+        std::vector<Vector<N, float>> point_object(const std::string& object_name, unsigned point_count) const override
         {
                 auto iter = m_map.find(object_name);
                 if (iter != m_map.cend())

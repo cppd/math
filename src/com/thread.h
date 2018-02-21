@@ -29,7 +29,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <thread>
 #include <vector>
 
-inline unsigned get_hardware_concurrency()
+// Нужно целое число со знаком, больше или равное 1
+inline int hardware_concurrency() noexcept
 {
         return std::max(1u, std::thread::hardware_concurrency());
 }

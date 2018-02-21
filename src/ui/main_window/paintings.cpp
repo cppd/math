@@ -30,9 +30,9 @@ std::unique_ptr<const Projector> create_projector(const IShow& show, int paint_w
         vec3 camera_up, camera_direction, view_center;
         double view_width;
 
-        show.get_camera_information(&camera_up, &camera_direction, &view_center, &view_width);
+        show.camera_information(&camera_up, &camera_direction, &view_center, &view_width);
 
-        vec3 camera_position = view_center - camera_direction * 2.0 * show.get_object_size();
+        vec3 camera_position = view_center - camera_direction * 2.0 * show.object_size();
 
         return std::make_unique<const ParallelProjector>(camera_position, camera_direction, camera_up, view_width, paint_width,
                                                          paint_height);
@@ -40,7 +40,7 @@ std::unique_ptr<const Projector> create_projector(const IShow& show, int paint_w
 
 std::unique_ptr<const LightSource> create_light_source(const IShow& show)
 {
-        vec3 light_position = show.get_object_position() - show.get_light_direction() * show.get_object_size() * 1000.0;
+        vec3 light_position = show.object_position() - show.light_direction() * show.object_size() * 1000.0;
 
         return std::make_unique<const ConstantLight>(light_position, Color(1));
 }
@@ -48,11 +48,11 @@ std::unique_ptr<const LightSource> create_light_source(const IShow& show)
 bool parameters(PathTracingParameters& parameters_window, const IShow& show, int default_samples_per_pixel,
                 int max_samples_per_pixel, int* paint_width, int* paint_height, int* thread_count, int* samples_per_pixel)
 {
-        show.get_paint_width_height(paint_width, paint_height);
+        show.paint_width_height(paint_width, paint_height);
 
         double size_coef;
 
-        if (parameters_window.show(get_hardware_concurrency(), *paint_width, *paint_height, default_samples_per_pixel,
+        if (parameters_window.show(hardware_concurrency(), *paint_width, *paint_height, default_samples_per_pixel,
                                    max_samples_per_pixel, thread_count, &size_coef, samples_per_pixel))
         {
                 *paint_width = std::lround(*paint_width * size_coef);
@@ -93,13 +93,13 @@ void painting(PathTracingParameters&& parameters_window, const IShow& show, cons
                 vec3 camera_up, camera_direction, view_center;
                 double view_width;
 
-                show.get_camera_information(&camera_up, &camera_direction, &view_center, &view_width);
+                show.camera_information(&camera_up, &camera_direction, &view_center, &view_width);
 
                 std::string title = window_title + " (" + model_name + " in Cornell Box)";
 
                 create_and_show_delete_on_close_window<PainterWindow>(title, thread_count, samples_per_pixel,
                                                                       cornell_box(paint_width, paint_height, mesh,
-                                                                                  show.get_object_size(), default_color, diffuse,
+                                                                                  show.object_size(), default_color, diffuse,
                                                                                   camera_direction, camera_up));
         }
 }

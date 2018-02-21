@@ -50,7 +50,7 @@ void MainObjects::catch_all(const F& function) const noexcept
 
 std::vector<std::string> MainObjects::list_of_repository_point_objects() const
 {
-        return m_object_repository->get_list_of_point_objects();
+        return m_object_repository->list_of_point_objects();
 }
 
 void MainObjects::set_show(IShow* show)
@@ -63,12 +63,12 @@ std::shared_ptr<const Mesh<3, double>> MainObjects::get_mesh(int id) const
         return m_meshes.get(id);
 }
 
-std::shared_ptr<const Obj<3>> MainObjects::get_surface_cocone() const
+std::shared_ptr<const Obj<3>> MainObjects::surface_cocone() const
 {
         return m_surface_cocone;
 }
 
-std::shared_ptr<const Obj<3>> MainObjects::get_surface_bound_cocone() const
+std::shared_ptr<const Obj<3>> MainObjects::surface_bound_cocone() const
 {
         return m_surface_bound_cocone;
 }
@@ -337,7 +337,7 @@ void MainObjects::load_object(ProgressRatioList* progress_list, const std::strin
 
         m_surface_points = (obj->facets().size() > 0) ? unique_facet_vertices(obj.get()) : unique_point_vertices(obj.get());
 
-        m_model_vertex_matrix = model_vertex_matrix(obj.get(), m_show->get_object_size(), m_show->get_object_position());
+        m_model_vertex_matrix = model_vertex_matrix(obj.get(), m_show->object_size(), m_show->object_position());
 
         std::thread thread_model([&]() noexcept {
                 catch_all([&](std::string* message) {
@@ -385,7 +385,7 @@ void MainObjects::load_from_repository(ProgressRatioList* progress_list, const s
                 ProgressRatio progress(progress_list);
 
                 progress.set_text("Load object: %p%");
-                obj = create_obj_for_points(m_object_repository->get_point_object(object_name, m_point_count));
+                obj = create_obj_for_points(m_object_repository->point_object(object_name, m_point_count));
         }
 
         load_object(progress_list, object_name, obj, rho, alpha);

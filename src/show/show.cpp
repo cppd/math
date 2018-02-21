@@ -314,23 +314,23 @@ class ShowObject final : public IShow
                 m_event_queue.emplace(std::in_place_type<Event::shadow_zoom>, v);
         }
 
-        void get_camera_information(vec3* camera_up, vec3* camera_direction, vec3* view_center, double* view_width) const override
+        void camera_information(vec3* camera_up, vec3* camera_direction, vec3* view_center, double* view_width) const override
         {
                 m_camera.get_camera_information(camera_up, camera_direction, view_center, view_width);
         }
-        void get_paint_width_height(int* width, int* height) const override
+        void paint_width_height(int* width, int* height) const override
         {
                 m_camera.get_paint_width_height(width, height);
         }
-        vec3 get_light_direction() const override
+        vec3 light_direction() const override
         {
                 return m_camera.get_light_direction();
         }
-        double get_object_size() const override
+        double object_size() const override
         {
                 return OBJECT_SIZE;
         }
-        vec3 get_object_position() const override
+        vec3 object_position() const override
         {
                 return OBJECT_POSITION;
         }
@@ -959,7 +959,7 @@ void ShowObject::loop_thread()
         }
         catch (ErrorSourceException& e)
         {
-                m_callback->message_error_source(e.get_msg(), e.get_src());
+                m_callback->message_error_source(e.msg(), e.src());
         }
         catch (std::exception& e)
         {

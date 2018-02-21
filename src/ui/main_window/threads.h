@@ -179,7 +179,7 @@ public:
                 });
         }
 
-        const std::vector<ThreadProgress>& get_progress()
+        const std::vector<ThreadProgress>& thread_progress()
         {
                 return m_progress;
         }

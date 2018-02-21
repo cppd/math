@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@ protected:
 public:
         virtual void set_terminate() noexcept = 0;
         virtual void get(unsigned* v, unsigned* m) const = 0;
-        virtual std::string get_text() const = 0;
+        virtual std::string text() const = 0;
 };
 
 class IProgressRatioList

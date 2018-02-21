@@ -61,7 +61,7 @@ public:
                 mat4 vertex_matrix = model_vertex_matrix(obj_file.get(), size, vec3(0));
 
                 std::shared_ptr mesh =
-                        std::make_shared<Mesh<3, double>>(obj_file.get(), vertex_matrix, get_hardware_concurrency(), &progress);
+                        std::make_shared<Mesh<3, double>>(obj_file.get(), vertex_matrix, hardware_concurrency(), &progress);
 
                 m_mesh = std::make_unique<VisibleSharedMesh>(mesh);
 

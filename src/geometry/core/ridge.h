@@ -154,7 +154,7 @@ public:
         {
                 for (int i = 0; i < MaxSize; ++i)
                 {
-                        if (m_data[i].get_facet() == facet)
+                        if (m_data[i].facet() == facet)
                         {
                                 m_data[i].reset();
                                 --m_size;
@@ -162,7 +162,7 @@ public:
                         }
                 }
 
-                error("Remove ridge facet: facet not found in the link: facet " + to_string(facet->get_vertices()));
+                error("Remove ridge facet: facet not found in the link: facet " + to_string(facet->vertices()));
         }
 
         bool empty() const

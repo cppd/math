@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -53,7 +53,7 @@ constexpr int binomial(int n, int r)
 
 // Список сочетаний по R из последовательности чисел от 0 <= x < N
 template <int N, int R>
-std::array<std::array<unsigned char, R>, binomial(N, R)> get_combinations()
+std::array<std::array<unsigned char, R>, binomial(N, R)> combinations()
 {
         std::array<signed char, N> v;
 
@@ -78,7 +78,7 @@ std::array<std::array<unsigned char, R>, binomial(N, R)> get_combinations()
 }
 
 template <int N, int R>
-std::array<std::tuple<std::array<unsigned char, R>, std::array<unsigned char, N - R>>, binomial(N, R)> get_combinations_tuple()
+std::array<std::tuple<std::array<unsigned char, R>, std::array<unsigned char, N - R>>, binomial(N, R)> combinations_tuple()
 {
         std::array<signed char, N> v;
 

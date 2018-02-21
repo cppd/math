@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -80,7 +80,7 @@ std::vector<std::tuple<unsigned, unsigned, std::string>> ProgressRatioList::get_
         {
                 unsigned v, m;
                 (*i)->get(&v, &m);
-                result.emplace_back(v, m, (*i)->get_text());
+                result.emplace_back(v, m, (*i)->text());
         }
         return result;
 }

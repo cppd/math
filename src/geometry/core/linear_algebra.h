@@ -151,7 +151,7 @@ bool linearly_independent(const std::array<Vector<N, T>, N>& vectors)
 
         // Перебор всех вариантов подвекторов размера COUNT,
         // создавая квадратные матрицы размером COUNT.
-        for (const std::array<unsigned char, COUNT>& h_map : get_combinations<N, COUNT>())
+        for (const std::array<unsigned char, COUNT>& h_map : combinations<N, COUNT>())
         {
                 if (Impl::determinant(vectors, Impl::sequence_array<COUNT>, h_map) != 0)
                 {

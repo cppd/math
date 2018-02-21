@@ -101,7 +101,7 @@ public:
                 *m = c >> SHIFT;
         }
 
-        std::string get_text() const override
+        std::string text() const override
         {
                 std::lock_guard lg(m_text_mutex);
 

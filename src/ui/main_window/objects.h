@@ -88,8 +88,8 @@ public:
 
         std::shared_ptr<const Mesh<3, double>> get_mesh(int id) const;
 
-        std::shared_ptr<const Obj<3>> get_surface_cocone() const;
-        std::shared_ptr<const Obj<3>> get_surface_bound_cocone() const;
+        std::shared_ptr<const Obj<3>> surface_cocone() const;
+        std::shared_ptr<const Obj<3>> surface_bound_cocone() const;
         bool surface_constructor_exists() const;
 
         void bound_cocone(ProgressRatioList* progress_list, double rho, double alpha);

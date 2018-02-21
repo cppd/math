@@ -303,7 +303,7 @@ void test_mesh(int exponent_low, int exponent_high, int point_low, int point_hig
 
 void test_mesh()
 {
-        int thread_count = get_hardware_concurrency();
+        int thread_count = hardware_concurrency();
 
         bool with_ray_log = false;
         bool with_error_log = false;

@@ -81,8 +81,7 @@ MainWindow::MainWindow(QWidget* parent)
         : QMainWindow(parent),
           m_window_thread_id(std::this_thread::get_id()),
           m_threads(m_event_emitter),
-          m_objects(std::max(1, static_cast<int>(get_hardware_concurrency()) - MESH_OBJECT_NOT_USED_THREAD_COUNT),
-                    m_event_emitter, POINT_COUNT),
+          m_objects(std::max(1, hardware_concurrency() - MESH_OBJECT_NOT_USED_THREAD_COUNT), m_event_emitter, POINT_COUNT),
           m_first_show(true)
 {
         static_assert(std::is_same_v<decltype(ui.graphics_widget), GraphicsWidget*>);
@@ -299,7 +298,7 @@ void MainWindow::thread_export_cocone()
                 return;
         }
 
-        std::shared_ptr<const Obj<3>> obj = m_objects.get_surface_cocone();
+        std::shared_ptr<const Obj<3>> obj = m_objects.surface_cocone();
 
         if (!obj || obj->facets().size() == 0)
         {
@@ -337,7 +336,7 @@ void MainWindow::thread_export_bound_cocone()
                 return;
         }
 
-        std::shared_ptr<const Obj<3>> obj = m_objects.get_surface_bound_cocone();
+        std::shared_ptr<const Obj<3>> obj = m_objects.surface_bound_cocone();
 
         if (!obj || obj->facets().size() == 0)
         {
@@ -452,7 +451,7 @@ void MainWindow::progress_bars(bool permanent, const ProgressRatioList* progress
 
 void MainWindow::slot_timer_progress_bar()
 {
-        for (const ThreadProgress& t : m_threads.get_progress())
+        for (const ThreadProgress& t : m_threads.thread_progress())
         {
                 progress_bars(t.permanent, t.progress_list, t.progress_bars);
         }
@@ -702,14 +701,14 @@ void MainWindow::slot_window_first_shown()
 
         try
         {
-                m_show = create_show(
-                        &m_event_emitter, get_widget_window_id(ui.graphics_widget), qcolor_to_rgb(m_background_color),
-                        qcolor_to_rgb(m_default_color), qcolor_to_rgb(m_wireframe_color), ui.checkBox_Smooth->isChecked(),
-                        ui.checkBox_Wireframe->isChecked(), ui.checkBox_Shadow->isChecked(), ui.checkBox_Materials->isChecked(),
-                        ui.checkBox_ShowEffect->isChecked(), ui.checkBox_show_dft->isChecked(),
-                        ui.checkBox_convex_hull_2d->isChecked(), ui.checkBox_OpticalFlow->isChecked(), get_ambient(),
-                        get_diffuse(), get_specular(), get_dft_brightness(), get_default_ns(),
-                        ui.checkBox_VerticalSync->isChecked(), get_shadow_zoom());
+                m_show = create_show(&m_event_emitter, widget_window_id(ui.graphics_widget), qcolor_to_rgb(m_background_color),
+                                     qcolor_to_rgb(m_default_color), qcolor_to_rgb(m_wireframe_color),
+                                     ui.checkBox_Smooth->isChecked(), ui.checkBox_Wireframe->isChecked(),
+                                     ui.checkBox_Shadow->isChecked(), ui.checkBox_Materials->isChecked(),
+                                     ui.checkBox_ShowEffect->isChecked(), ui.checkBox_show_dft->isChecked(),
+                                     ui.checkBox_convex_hull_2d->isChecked(), ui.checkBox_OpticalFlow->isChecked(),
+                                     ambient_light(), diffuse_light(), specular_light(), dft_brightness(), default_ns(),
+                                     ui.checkBox_VerticalSync->isChecked(), shadow_zoom());
 
                 m_objects.set_show(m_show.get());
         }
@@ -824,70 +823,70 @@ void MainWindow::slot_widget_under_window_resize()
         }
 }
 
-double MainWindow::get_ambient() const
+double MainWindow::ambient_light() const
 {
         double value = ui.Slider_Ambient->value() - ui.Slider_Ambient->minimum();
         double delta = ui.Slider_Ambient->maximum() - ui.Slider_Ambient->minimum();
         return 2 * value / delta;
 }
-double MainWindow::get_diffuse() const
+double MainWindow::diffuse_light() const
 {
         double value = ui.Slider_Diffuse->value() - ui.Slider_Diffuse->minimum();
         double delta = ui.Slider_Diffuse->maximum() - ui.Slider_Diffuse->minimum();
         return 2 * value / delta;
 }
-double MainWindow::get_specular() const
+double MainWindow::specular_light() const
 {
         double value = ui.Slider_Specular->value() - ui.Slider_Specular->minimum();
         double delta = ui.Slider_Specular->maximum() - ui.Slider_Specular->minimum();
         return 2 * value / delta;
 }
-double MainWindow::get_dft_brightness() const
+double MainWindow::dft_brightness() const
 {
         double value = ui.Slider_DFT_Brightness->value() - ui.Slider_DFT_Brightness->minimum();
         double delta = ui.Slider_DFT_Brightness->maximum() - ui.Slider_DFT_Brightness->minimum();
         double value_gamma = std::pow(value / delta, DFT_GAMMA);
         return std::pow(DFT_MAX_BRIGHTNESS, value_gamma);
 }
-double MainWindow::get_default_ns() const
+double MainWindow::default_ns() const
 {
         return ui.Slider_Default_Ns->value();
 }
-double MainWindow::get_shadow_zoom() const
+double MainWindow::shadow_zoom() const
 {
         return ui.Slider_ShadowQuality->value();
 }
 
 void MainWindow::on_Slider_Ambient_valueChanged(int)
 {
-        m_show->set_ambient(get_ambient());
+        m_show->set_ambient(ambient_light());
 }
 
 void MainWindow::on_Slider_Diffuse_valueChanged(int)
 {
-        m_show->set_diffuse(get_diffuse());
+        m_show->set_diffuse(diffuse_light());
 }
 
 void MainWindow::on_Slider_Specular_valueChanged(int)
 {
-        m_show->set_specular(get_specular());
+        m_show->set_specular(specular_light());
 }
 
 void MainWindow::on_Slider_DFT_Brightness_valueChanged(int)
 {
-        m_show->set_dft_brightness(get_dft_brightness());
+        m_show->set_dft_brightness(dft_brightness());
 }
 
 void MainWindow::on_Slider_Default_Ns_valueChanged(int)
 {
-        m_show->set_default_ns(get_default_ns());
+        m_show->set_default_ns(default_ns());
 }
 
 void MainWindow::on_Slider_ShadowQuality_valueChanged(int)
 {
         if (m_show)
         {
-                m_show->set_shadow_zoom(get_shadow_zoom());
+                m_show->set_shadow_zoom(shadow_zoom());
         }
 }
 
@@ -1020,6 +1019,6 @@ void MainWindow::on_pushButton_Painter_clicked()
 
                 painting(PathTracingParameters(this), *m_show, mesh, QMainWindow::windowTitle().toStdString(), model_name,
                          PATH_TRACING_DEFAULT_SAMPLES_PER_PIXEL, PATH_TRACING_MAX_SAMPLES_PER_PIXEL,
-                         qcolor_to_rgb(m_background_color), qcolor_to_rgb(m_default_color), get_diffuse());
+                         qcolor_to_rgb(m_background_color), qcolor_to_rgb(m_default_color), diffuse_light());
         });
 }

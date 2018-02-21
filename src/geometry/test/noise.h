@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -19,8 +19,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #if 0
 
-#include "com/random.h"
-#include "geometry/vec.h"
+#include "com/error.h"
+#include "com/random/engine.h"
+#include "com/vec.h"
 
 #include <random>
 #include <vector>
@@ -31,7 +32,7 @@ void add_noise(std::vector<Vector<N, T>>* points, T delta)
         static_assert(!std::is_integral_v<T>);
 
         // std::mt19937_64 engine(points.size());
-        std::mt19937_64 engine(get_random_seed<std::mt19937_64>());
+        RandomEngineWithSeed<std::mt19937_64> engine;
 
         std::uniform_real_distribution<T> urd(-1.0, 1.0);
 
@@ -61,7 +62,7 @@ void add_discrete_noise(std::vector<Vector<N, T>>* points, T delta, int size)
         }
 
         // std::mt19937_64 engine(points.size());
-        std::mt19937_64 engine(get_random_seed<std::mt19937_64>());
+        RandomEngineWithSeed<std::mt19937_64> engine;
 
         std::uniform_int_distribution<int> urd(-size, size);
         double sqr = square(size);

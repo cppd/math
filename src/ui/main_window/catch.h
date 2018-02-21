@@ -38,7 +38,7 @@ void catch_all_exceptions(const E& event_emitter, const F& function) noexcept
                 }
                 catch (ErrorSourceException& e)
                 {
-                        event_emitter.message_error_source(error_message + ":\n" + e.get_msg(), e.get_src());
+                        event_emitter.message_error_source(error_message + ":\n" + e.msg(), e.src());
                 }
                 catch (std::exception& e)
                 {

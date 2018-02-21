@@ -83,7 +83,7 @@ void button_strike_out(QRadioButton* button, bool strike_out);
 void add_to_text_edit_and_to_stderr(QTextEdit* text_edit, const std::vector<std::string>& lines,
                                     TextEditMessageType type) noexcept;
 
-WindowID get_widget_window_id(QWidget* widget);
+WindowID widget_window_id(QWidget* widget);
 
 void move_window_to_desktop_center(QMainWindow* window);
 

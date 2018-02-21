@@ -37,7 +37,7 @@ class FFTPlan final
 public:
         FFTPlan(bool inv, int n1, int n2, std::vector<fftwf_complex>* i, std::vector<fftwf_complex>* o)
         {
-                fftwf_plan_with_nthreads(get_hardware_concurrency());
+                fftwf_plan_with_nthreads(hardware_concurrency());
 
                 if (inv)
                 {

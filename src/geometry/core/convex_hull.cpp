@@ -125,7 +125,7 @@ namespace
 // В одних случаях параллельность ускоряет (точки внутри сферы), в других замедляет (точки на поверхности сферы).
 // При использовании mpz_class параллельность ускоряет.
 template <typename S, typename C>
-unsigned get_thread_count()
+int thread_count() noexcept
 {
         static_assert(is_integral<S> && is_integral<C>);
 
@@ -135,7 +135,7 @@ unsigned get_thread_count()
         }
         else
         {
-                int hc = get_hardware_concurrency();
+                int hc = hardware_concurrency();
                 return std::max(hc - 1, 1);
         }
 }
@@ -590,7 +590,7 @@ void create_convex_hull(const std::vector<Vector<N, S>>& points, FacetList<Facet
 
         create_init_conflict_lists(points, point_enabled, facets, &point_conflicts);
 
-        ThreadPool thread_pool(get_thread_count<S, C>());
+        ThreadPool thread_pool(thread_count<S, C>());
         ThreadBarrier thread_barrier(thread_pool.thread_count());
 
         // Создаётся здесь, чтобы каждый раз не создавать при расчёте и не выделять каждый раз память,

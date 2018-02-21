@@ -51,11 +51,11 @@ public:
         {
                 return m_text.c_str();
         }
-        const std::string& get_msg() const noexcept
+        const std::string& msg() const noexcept
         {
                 return m_text;
         }
-        const std::string& get_src() const noexcept
+        const std::string& src() const noexcept
         {
                 return m_source_text;
         }

@@ -1319,7 +1319,7 @@ void FileObj::read_libs(const std::string& dir_name, ProgressRatio* progress, st
 void FileObj::read_obj(const std::string& file_name, ProgressRatio* progress, std::map<std::string, int>* material_index,
                        std::vector<std::string>* library_names)
 {
-        const int hardware_concurrency = get_hardware_concurrency();
+        const int thread_count = hardware_concurrency();
 
         std::vector<char> data;
         std::vector<long long> line_begin;
@@ -1327,16 +1327,16 @@ void FileObj::read_obj(const std::string& file_name, ProgressRatio* progress, st
         read_file_lines(file_name, &data, &line_begin);
 
         std::vector<ObjLine> line_prop(line_begin.size());
-        ThreadBarrier barrier(hardware_concurrency);
+        ThreadBarrier barrier(thread_count);
         std::atomic_bool error_found{false};
-        std::vector<Counters> counters(hardware_concurrency);
+        std::vector<Counters> counters(thread_count);
 
-        ThreadsWithCatch threads(hardware_concurrency);
-        for (int i = 0; i < hardware_concurrency; ++i)
+        ThreadsWithCatch threads(thread_count);
+        for (int i = 0; i < thread_count; ++i)
         {
                 threads.add([&, i]() {
-                        read_obj_thread(i, hardware_concurrency, &counters, &barrier, &error_found, &data, &line_begin,
-                                        &line_prop, progress, material_index, library_names);
+                        read_obj_thread(i, thread_count, &counters, &barrier, &error_found, &data, &line_begin, &line_prop,
+                                        progress, material_index, library_names);
                 });
         }
         threads.join();
@@ -1488,7 +1488,7 @@ void FileTxt::read_points_thread(unsigned thread_num, unsigned thread_count, std
 
 void FileTxt::read_points(const std::string& file_name, ProgressRatio* progress)
 {
-        const int hardware_concurrency = get_hardware_concurrency();
+        const int thread_count = hardware_concurrency();
 
         std::vector<char> file_data;
         std::vector<long long> line_begin;
@@ -1497,11 +1497,10 @@ void FileTxt::read_points(const std::string& file_name, ProgressRatio* progress)
 
         m_vertices.resize(line_begin.size());
 
-        ThreadsWithCatch threads(hardware_concurrency);
-        for (int i = 0; i < hardware_concurrency; ++i)
+        ThreadsWithCatch threads(thread_count);
+        for (int i = 0; i < thread_count; ++i)
         {
-                threads.add(
-                        [&, i]() { read_points_thread(i, hardware_concurrency, &file_data, line_begin, &m_vertices, progress); });
+                threads.add([&, i]() { read_points_thread(i, thread_count, &file_data, line_begin, &m_vertices, progress); });
         }
         threads.join();
 }
