@@ -236,10 +236,10 @@ bool ParallelotopeOrtho<N, T>::intersect_impl(const Ray<N, T>& r, T* first, T* s
 
         for (unsigned i = 0; i < N; ++i)
         {
-                T s = r.get_dir()[i]; // dot(r.get_dir(), m_planes[i].n);
+                T s = r.dir()[i]; // dot(r.dir(), m_planes[i].n);
                 if (s == 0)
                 {
-                        T d = r.get_org()[i]; // dot(r.get_org(), m_planes[i].n);
+                        T d = r.org()[i]; // dot(r.org(), m_planes[i].n);
                         if (d - m_planes[i].d1 > 0 || -d - m_planes[i].d2 > 0)
                         {
                                 // параллельно плоскостям и снаружи
@@ -252,7 +252,7 @@ bool ParallelotopeOrtho<N, T>::intersect_impl(const Ray<N, T>& r, T* first, T* s
                         }
                 }
 
-                T d = r.get_org()[i]; // dot(r.get_org(), m_planes[i].n);
+                T d = r.org()[i]; // dot(r.org(), m_planes[i].n);
                 T alpha1 = (m_planes[i].d1 - d) / s;
                 // d и s имеют противоположный знак для другой плоскости
                 T alpha2 = (m_planes[i].d2 + d) / -s;

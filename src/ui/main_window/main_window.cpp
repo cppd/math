@@ -398,7 +398,7 @@ void MainWindow::progress_bars(bool permanent, const ProgressRatioList* progress
 
         constexpr unsigned MAX_INT = std::numeric_limits<int>::max();
 
-        std::vector<std::tuple<unsigned, unsigned, std::string>> ratios = progress_list->get_all();
+        std::vector<std::tuple<unsigned, unsigned, std::string>> ratios = progress_list->ratios();
 
         if (ratios.size() > progress_bars->size())
         {
@@ -1003,7 +1003,7 @@ void MainWindow::on_pushButton_Painter_clicked()
                 if (button->isChecked())
                 {
                         model_name = button->text().toStdString();
-                        mesh = m_objects.get_mesh(id);
+                        mesh = m_objects.mesh(id);
                         break;
                 }
         }

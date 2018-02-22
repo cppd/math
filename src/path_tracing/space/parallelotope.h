@@ -174,10 +174,10 @@ bool Parallelotope<N, T>::intersect_impl(const Ray<N, T>& r, T* first, T* second
 
         for (unsigned i = 0; i < N; ++i)
         {
-                T s = dot(r.get_dir(), m_planes[i].n);
+                T s = dot(r.dir(), m_planes[i].n);
                 if (s == 0)
                 {
-                        T d = dot(r.get_org(), m_planes[i].n);
+                        T d = dot(r.org(), m_planes[i].n);
                         if (d - m_planes[i].d1 > 0 || -d - m_planes[i].d2 > 0)
                         {
                                 // параллельно плоскостям и снаружи
@@ -190,7 +190,7 @@ bool Parallelotope<N, T>::intersect_impl(const Ray<N, T>& r, T* first, T* second
                         }
                 }
 
-                T d = dot(r.get_org(), m_planes[i].n);
+                T d = dot(r.org(), m_planes[i].n);
                 T alpha1 = (m_planes[i].d1 - d) / s;
                 // d и s имеют противоположный знак для другой плоскости
                 T alpha2 = (m_planes[i].d2 + d) / -s;

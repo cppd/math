@@ -489,7 +489,7 @@ void create_horizon_facets(unsigned thread_id, unsigned thread_count, const std:
 }
 
 template <typename T>
-unsigned get_facet_count(const std::vector<T>& facets)
+unsigned calculate_facet_count(const std::vector<T>& facets)
 {
         return std::accumulate(facets.cbegin(), facets.cend(), 0, [](unsigned a, const T& b) { return a + b.size(); });
 }
@@ -540,7 +540,7 @@ void add_point_to_convex_hull(const std::vector<Vector<N, S>>& points, int point
         // Для этой точки больше не нужен список видимых граней
         (*point_conflicts)[point].clear();
 
-        int facet_count = get_facet_count(new_facets);
+        int facet_count = calculate_facet_count(new_facets);
         int ridge_count = (N - 1) * facet_count / 2;
 
         // Соединить новые грани между собой, кроме граней горизонта

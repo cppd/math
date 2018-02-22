@@ -171,7 +171,7 @@ class Text::Impl final
 
         std::unordered_map<char, CharData> m_chars;
 
-        const CharData& get_char_data(char c)
+        const CharData& char_data(char c)
         {
                 auto iter = m_chars.find(c);
 
@@ -226,7 +226,7 @@ public:
                 {
                         for (char c : line)
                         {
-                                const CharData& cd = get_char_data(c);
+                                const CharData& cd = char_data(c);
 
                                 m_program.set_uniform_handle("tex", cd.texture_handle);
 

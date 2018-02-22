@@ -35,7 +35,7 @@ class Matrix
         //
 
         template <size_t... I>
-        constexpr Vector<Rows, T> get_column_impl(int column, std::integer_sequence<size_t, I...>) const
+        constexpr Vector<Rows, T> column_impl(int column, std::integer_sequence<size_t, I...>) const
         {
                 static_assert(sizeof...(I) == Rows);
                 static_assert(((I >= 0 && I < Rows) && ...));
@@ -43,9 +43,9 @@ class Matrix
                 return Vector<Rows, T>{m_data[I][column]...};
         }
 
-        constexpr Vector<Rows, T> get_column(int column) const
+        constexpr Vector<Rows, T> column_impl(int column) const
         {
-                return get_column_impl(column, std::make_integer_sequence<size_t, Rows>());
+                return column_impl(column, std::make_integer_sequence<size_t, Rows>());
         }
 
         //
@@ -98,7 +98,7 @@ public:
 
         constexpr Vector<Rows, T> column(int c) const
         {
-                return get_column(c);
+                return column_impl(c);
         }
 
         constexpr const Vector<Columns, T>& operator[](int r) const

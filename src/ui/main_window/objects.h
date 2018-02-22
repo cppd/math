@@ -86,7 +86,7 @@ public:
 
         void set_show(IShow* show);
 
-        std::shared_ptr<const Mesh<3, double>> get_mesh(int id) const;
+        std::shared_ptr<const Mesh<3, double>> mesh(int id) const;
 
         std::shared_ptr<const Obj<3>> surface_cocone() const;
         std::shared_ptr<const Obj<3>> surface_bound_cocone() const;

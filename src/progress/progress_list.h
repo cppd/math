@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -40,5 +40,5 @@ public:
         // Для работы в потоке интерфейса
         void stop_all();
         void enable();
-        std::vector<std::tuple<unsigned, unsigned, std::string>> get_all() const;
+        std::vector<std::tuple<unsigned, unsigned, std::string>> ratios() const;
 };

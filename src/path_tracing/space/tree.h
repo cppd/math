@@ -524,7 +524,7 @@ public:
         {
                 bool first = true;
 
-                Vector<N, T> interior_point = ray.get_org();
+                Vector<N, T> interior_point = ray.org();
 
                 while (true)
                 {

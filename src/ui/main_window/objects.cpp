@@ -58,7 +58,7 @@ void MainObjects::set_show(IShow* show)
         m_show = show;
 }
 
-std::shared_ptr<const Mesh<3, double>> MainObjects::get_mesh(int id) const
+std::shared_ptr<const Mesh<3, double>> MainObjects::mesh(int id) const
 {
         return m_meshes.get(id);
 }

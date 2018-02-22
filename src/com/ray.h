@@ -45,12 +45,12 @@ public:
                 m_dir = normalize(dir);
         }
 
-        const Vector<N, T>& get_org() const
+        const Vector<N, T>& org() const
         {
                 return m_org;
         }
 
-        const Vector<N, T>& get_dir() const
+        const Vector<N, T>& dir() const
         {
                 return m_dir;
         }
@@ -69,7 +69,7 @@ public:
 template <size_t N, typename T>
 std::string to_string(const Ray<N, T>& data)
 {
-        return "(org " + to_string(data.get_org()) + ", dir " + to_string(data.get_dir()) + ")";
+        return "(org " + to_string(data.org()) + ", dir " + to_string(data.dir()) + ")";
 }
 
 // ray3 - это только Ray<3, double>.

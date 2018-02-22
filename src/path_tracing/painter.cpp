@@ -176,7 +176,7 @@ Color direct_diffuse_lighting(Counter& ray_count, const std::vector<const Generi
 
                 ray3 ray_to_light = ray3(p, vector_to_light);
 
-                double dot_light_and_normal = dot(ray_to_light.get_dir(), shading_normal);
+                double dot_light_and_normal = dot(ray_to_light.dir(), shading_normal);
 
                 if (dot_light_and_normal <= DOT_PRODUCT_EPSILON)
                 {
@@ -190,7 +190,7 @@ Color direct_diffuse_lighting(Counter& ray_count, const std::vector<const Generi
 
                 ray_to_light.move_along_dir(RAY_OFFSET);
 
-                if (!triangle_mesh || dot(ray_to_light.get_dir(), geometric_normal) >= 0)
+                if (!triangle_mesh || dot(ray_to_light.dir(), geometric_normal) >= 0)
                 {
                         // Если не объект из треугольников или геометрическая сторона обращена к источнику
                         // света, то напрямую рассчитать видимость источника света.
@@ -248,7 +248,7 @@ Color diffuse_lighting(const PaintData& paint_data, Counter& ray_count, PainterR
                 // Случайный вектор диффузного освещения надо определять от видимой нормали.
                 ray3 diffuse_ray = ray3(point, random_cosine_weighted_on_hemisphere(random_engine, shading_normal));
 
-                if (triangle_mesh && dot(diffuse_ray.get_dir(), geometric_normal) <= DOT_PRODUCT_EPSILON)
+                if (triangle_mesh && dot(diffuse_ray.dir(), geometric_normal) <= DOT_PRODUCT_EPSILON)
                 {
                         // Если получившийся случайный вектор диффузного отражения показывает
                         // в другую сторону от поверхности, то диффузного освещения нет.
@@ -285,7 +285,7 @@ Color trace_path(const PaintData& paint_data, Counter& ray_count, PainterRandomE
 
         vec3 geometric_normal = surface_properties.get_geometric_normal();
 
-        double dot_dir_and_geometric_normal = dot(ray.get_dir(), geometric_normal);
+        double dot_dir_and_geometric_normal = dot(ray.dir(), geometric_normal);
 
         bool triangle_mesh = surface_properties.is_triangle_mesh();
 

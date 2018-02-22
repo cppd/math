@@ -39,11 +39,11 @@ namespace SimplexGeometryImplementation
 template <size_t N, typename T>
 bool plane_intersect(const Ray<N, T>& ray, const Vector<N, T>& plane_point, const Vector<N, T>& plane_normal, T* t)
 {
-        T s = dot(plane_normal, ray.get_dir());
+        T s = dot(plane_normal, ray.dir());
 
         if (s != 0)
         {
-                *t = dot(plane_point - ray.get_org(), plane_normal) / s;
+                *t = dot(plane_point - ray.org(), plane_normal) / s;
                 return *t > 0;
         }
 

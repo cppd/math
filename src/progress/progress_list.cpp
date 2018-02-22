@@ -69,7 +69,7 @@ void ProgressRatioList::enable()
 }
 
 // Для работы в потоке интерфейса
-std::vector<std::tuple<unsigned, unsigned, std::string>> ProgressRatioList::get_all() const
+std::vector<std::tuple<unsigned, unsigned, std::string>> ProgressRatioList::ratios() const
 {
         std::lock_guard lg(m_mutex);
 

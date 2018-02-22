@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -45,13 +45,13 @@ public:
         {
                 XCloseDisplay(m_display);
         }
-        Display* get_display() noexcept
+        Display* display_ptr() noexcept
         {
                 return m_display;
         }
 };
 
-constexpr Atom get_xa_atom()
+constexpr Atom xa_atom()
 {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wold-style-cast"
@@ -65,7 +65,7 @@ void move_window_to_parent(WindowID window, WindowID parent)
         // https://standards.freedesktop.org/wm-spec/wm-spec-1.5.html
 
         CDisplay d;
-        Display* display = d.get_display();
+        Display* display = d.display_ptr();
 
         // В SFML окно уже показано, но свойства изменяются только перед mapping,
         // поэтому убрать окно, изменить свойства, показать окно.
@@ -75,15 +75,15 @@ void move_window_to_parent(WindowID window, WindowID parent)
         Atom wm_window_type = XInternAtom(display, "_NET_WM_WINDOW_TYPE", False);
         Atom wm_window_type_toolbar = XInternAtom(display, "_NET_WM_WINDOW_TYPE_TOOLBAR", False);
         const unsigned char* toolbar = reinterpret_cast<const unsigned char*>(&wm_window_type_toolbar);
-        XChangeProperty(display, window, wm_window_type, get_xa_atom(), 32, PropModeAppend, toolbar, 1);
+        XChangeProperty(display, window, wm_window_type, xa_atom(), 32, PropModeAppend, toolbar, 1);
 #else
         Atom wm_state = XInternAtom(display, "_NET_WM_STATE", False);
         Atom wm_state_skip_taskbar = XInternAtom(display, "_NET_WM_STATE_SKIP_TASKBAR", False);
         Atom wm_state_skip_pager = XInternAtom(display, "_NET_WM_STATE_SKIP_PAGER", False);
         const unsigned char* skip_taskbar = reinterpret_cast<const unsigned char*>(&wm_state_skip_taskbar);
         const unsigned char* skip_pager = reinterpret_cast<const unsigned char*>(&wm_state_skip_pager);
-        XChangeProperty(display, window, wm_state, get_xa_atom(), 32, PropModeAppend, skip_taskbar, 1);
-        XChangeProperty(display, window, wm_state, get_xa_atom(), 32, PropModeAppend, skip_pager, 1);
+        XChangeProperty(display, window, wm_state, xa_atom(), 32, PropModeAppend, skip_taskbar, 1);
+        XChangeProperty(display, window, wm_state, xa_atom(), 32, PropModeAppend, skip_pager, 1);
 #endif
 
         // после изменения, но до отображения, сменить родительское окно
@@ -107,7 +107,7 @@ void make_window_fullscreen(WindowID window)
         // https://standards.freedesktop.org/wm-spec/wm-spec-1.5.html
 
         CDisplay d;
-        Display* display = d.get_display();
+        Display* display = d.display_ptr();
 
         // В SFML окно уже показано, но свойства изменяются только перед mapping,
         // поэтому убрать окно, изменить свойства, показать окно.
@@ -116,7 +116,7 @@ void make_window_fullscreen(WindowID window)
         Atom wm_state = XInternAtom(display, "_NET_WM_STATE", False);
         Atom wm_state_fullscreen = XInternAtom(display, "_NET_WM_STATE_FULLSCREEN", False);
         const unsigned char* fullscreen = reinterpret_cast<const unsigned char*>(&wm_state_fullscreen);
-        XChangeProperty(display, window, wm_state, get_xa_atom(), 32, PropModeAppend, fullscreen, 1);
+        XChangeProperty(display, window, wm_state, xa_atom(), 32, PropModeAppend, fullscreen, 1);
 
         // после изменения, но до отображения, сменить родительское окно
         XReparentWindow(display, window, XDefaultRootWindow(display), 0, 0);
@@ -128,7 +128,7 @@ void make_window_fullscreen(WindowID window)
 void set_focus(WindowID window)
 {
         CDisplay d;
-        Display* display = d.get_display();
+        Display* display = d.display_ptr();
 
         XSetInputFocus(display, window, RevertToParent, CurrentTime);
 }
@@ -136,7 +136,7 @@ void set_focus(WindowID window)
 void set_size_to_parent(WindowID window, WindowID parent)
 {
         CDisplay d;
-        Display* display = d.get_display();
+        Display* display = d.display_ptr();
 
         XWindowAttributes parent_attr;
         XGetWindowAttributes(display, parent, &parent_attr);

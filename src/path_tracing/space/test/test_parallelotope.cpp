@@ -440,7 +440,7 @@ void compare_parallelotopes(RandomEngine& engine, int point_count, const Paralle
 
                 Ray<N, T> ray;
 
-                ray = Ray<N, T>(ray_orig.get_org(), direction);
+                ray = Ray<N, T>(ray_orig.org(), direction);
 
                 verify_intersection(ray, p...);
 

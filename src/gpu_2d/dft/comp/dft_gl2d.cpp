@@ -158,7 +158,7 @@ std::enable_if_t<std::is_same_v<Dst, Src>, std::vector<std::complex<Dst>>&&> con
 }
 
 template <typename FP>
-int get_shared_size(int dft_size)
+int shared_size(int dft_size)
 {
         // минимум из
         // 1) требуемый размер, но не меньше 128, чтобы в группе было хотя бы 64 потока по потоку на 2 элемента:
@@ -167,10 +167,10 @@ int get_shared_size(int dft_size)
         return std::min(std::max(128, dft_size), 1 << log_2(gpu::max_compute_shared_memory() / sizeof(std::complex<FP>)));
 }
 template <typename FP>
-int get_group_size(int dft_size)
+int group_size(int dft_size)
 {
         // не больше 1 потока на 2 элемента
-        int max_threads_required = get_shared_size<FP>(dft_size) / 2;
+        int max_threads_required = shared_size<FP>(dft_size) / 2;
         int max_threads_supported = std::min(gpu::max_work_group_size_x(), gpu::max_work_group_invocations());
         return std::min(max_threads_required, max_threads_supported);
 }
@@ -322,10 +322,10 @@ public:
                   m_D2_inv(m_M2, MemoryUsage::STATIC_COPY),
                   m_x_d(m_N1 * m_N2, MemoryUsage::DYNAMIC_COPY),
                   m_buffer(std::max(m_M1 * m_N2, m_M2 * m_N1), MemoryUsage::DYNAMIC_COPY),
-                  m_shared_size_1(get_shared_size<FP>(m_M1)),
-                  m_shared_size_2(get_shared_size<FP>(m_M2)),
-                  m_group_size_1(get_group_size<FP>(m_M1)),
-                  m_group_size_2(get_group_size<FP>(m_M2)),
+                  m_shared_size_1(shared_size<FP>(m_M1)),
+                  m_shared_size_2(shared_size<FP>(m_M2)),
+                  m_group_size_1(group_size<FP>(m_M1)),
+                  m_group_size_2(group_size<FP>(m_M2)),
                   m_FFT_1(m_M1, m_shared_size_1, m_M1 <= m_shared_size_1, m_group_size_1),
                   m_FFT_2(m_M2, m_shared_size_2, m_M2 <= m_shared_size_2, m_group_size_2)
 

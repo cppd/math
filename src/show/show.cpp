@@ -59,7 +59,7 @@ constexpr double to_radians(double angle)
 
 namespace
 {
-long get_fps(double* start)
+long calculate_fps(double* start)
 {
         double now = time_in_seconds();
         double time_elapsed = now - *start;
@@ -73,7 +73,7 @@ vec3 rotate_vector_degree(const vec3& axis, double angle_degree, const vec3& v)
 }
 
 #if 0
-int get_object_under_mouse(int mouse_x, int mouse_y, int window_height, const TextureR32I& tex)
+int object_under_mouse(int mouse_x, int mouse_y, int window_height, const TextureR32I& tex)
 {
         int x = mouse_x;
         int y = window_height - mouse_y - 1;
@@ -746,7 +746,7 @@ void ShowObject::loop()
                                 if (fullscreen_active)
                                 {
                                         // if (new_mouse_x < width && new_mouse_y < height &&
-                                        //    get_object_under_mouse(new_mouse_x, new_mouse_y, window_height, *object_texture) >
+                                        //    object_under_mouse(new_mouse_x, new_mouse_y, window_height, *object_texture) >
                                         //    0)
                                         if (new_mouse_x < width && new_mouse_y < height)
                                         {
@@ -941,7 +941,7 @@ void ShowObject::loop()
 
                 glDisable(GL_DEPTH_TEST);
                 glEnable(GL_BLEND);
-                text.draw(window_width, window_height, {"FPS: " + std::to_string(get_fps(&start_time))});
+                text.draw(window_width, window_height, {"FPS: " + std::to_string(calculate_fps(&start_time))});
 
                 wnd.display();
         }
