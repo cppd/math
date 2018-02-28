@@ -233,6 +233,12 @@ std::array<Vector<N, T>, N> MeshSimplex<N, T>::vertices() const
         return vertices_to_array(m_vertices, m_v);
 }
 
+template <size_t N, typename T>
+void MeshSimplex<N, T>::constraints(std::array<Vector<N, T>, N>* a, std::array<T, N>* b, Vector<N, T>* a_eq, T* b_eq) const
+{
+        m_geometry.constraints(m_normal, vertices_to_array(m_vertices, m_v), a, b, a_eq, b_eq);
+}
+
 template class MeshSimplex<3, float>;
 template class MeshSimplex<4, float>;
 template class MeshSimplex<5, float>;

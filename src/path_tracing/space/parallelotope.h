@@ -94,6 +94,8 @@ public:
 
         Parallelotope(const Vector<N, T>& org, const std::array<Vector<N, T>, N>& vectors);
 
+        void constraints(std::array<Vector<N, T>, 2 * N>* a, std::array<T, 2 * N>* b) const;
+
         bool inside(const Vector<N, T>& p) const;
 
         bool intersect(const Ray<N, T>& r, T* t) const;
@@ -163,6 +165,24 @@ void Parallelotope<N, T>::create_planes()
                 {
                         reverse_planes(&m_planes[i]);
                 }
+        }
+}
+
+// Неравенства в виде b + a * x >= 0, задающие множество точек параллелотопа.
+template <size_t N, typename T>
+void Parallelotope<N, T>::constraints(std::array<Vector<N, T>, 2 * N>* a, std::array<T, 2 * N>* b) const
+{
+        // Плоскости n * x - d имеют перпендикуляр с направлением наружу.
+        // Направление внутрь -n * x + d или d + -(n * x), тогда условие
+        // для точек параллелотопа d + -(n * x) >= 0.
+
+        for (unsigned i = 0, c_i = 0; i < N; ++i, c_i += 2)
+        {
+                (*a)[c_i] = -m_planes[i].n;
+                (*b)[c_i] = m_planes[i].d1;
+
+                (*a)[c_i + 1] = m_planes[i].n;
+                (*b)[c_i + 1] = m_planes[i].d2;
         }
 }
 

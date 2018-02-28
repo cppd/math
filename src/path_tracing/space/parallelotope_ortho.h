@@ -142,6 +142,8 @@ public:
 
         ParallelotopeOrtho(const Vector<N, T>& org, const std::array<T, N>& vectors);
 
+        void constraints(std::array<Vector<N, T>, 2 * N>* a, std::array<T, 2 * N>* b) const;
+
         bool inside(const Vector<N, T>& p) const;
 
         bool intersect(const Ray<N, T>& r, T* t) const;
@@ -215,8 +217,8 @@ void ParallelotopeOrtho<N, T>::set_data(const Vector<N, T>& org, const std::arra
         m_org = org;
         m_sizes = sizes;
 
-        // d1 для нормалей с положительной координатой NORMALS
-        // d2 для нормалей с отрицательной координатой NORMALS_R
+        // d1 для нормалей с положительной координатой NORMALS_POSITIVE
+        // d2 для нормалей с отрицательной координатой NORMALS_NEGATIVE
         // Уравнения плоскостей, перпендикулярных измерению 0
         // x - (org[0] + x) = 0
         // -x - (-org[0]) = 0
@@ -225,6 +227,24 @@ void ParallelotopeOrtho<N, T>::set_data(const Vector<N, T>& org, const std::arra
         {
                 m_planes[i].d1 = m_org[i] + m_sizes[i];
                 m_planes[i].d2 = -m_org[i];
+        }
+}
+
+// Неравенства в виде b + a * x >= 0, задающие множество точек параллелотопа.
+template <size_t N, typename T>
+void ParallelotopeOrtho<N, T>::constraints(std::array<Vector<N, T>, 2 * N>* a, std::array<T, 2 * N>* b) const
+{
+        // Плоскости n * x - d имеют перпендикуляр с направлением наружу.
+        // Направление внутрь -n * x + d или d + -(n * x), тогда условие
+        // для точек параллелотопа d + -(n * x) >= 0.
+
+        for (unsigned i = 0, c_i = 0; i < N; ++i, c_i += 2)
+        {
+                (*a)[c_i] = NORMALS_NEGATIVE[i];
+                (*b)[c_i] = m_planes[i].d1;
+
+                (*a)[c_i + 1] = NORMALS_POSITIVE[i];
+                (*b)[c_i + 1] = m_planes[i].d2;
         }
 }
 

@@ -288,6 +288,29 @@ Vector<N, T> random_direction_for_parallelotope_comparison(RandomEngine& engine)
         }
 }
 
+template <size_t N, size_t Count, typename T>
+bool point_is_in_feasible_region(const Vector<N, T>& point, const std::array<Vector<N, T>, Count>& a,
+                                 const std::array<T, Count>& b)
+{
+        for (unsigned i = 0; i < Count; ++i)
+        {
+                T r = dot(a[i], point) + b[i];
+
+                if (!is_finite(r))
+                {
+                        error("Not finite point " + to_string(point) + " and constraint a = " + to_string(a[i]) +
+                              ", b = " + to_string(b[i]));
+                }
+
+                if (r < 0)
+                {
+                        return false;
+                }
+        }
+
+        return true;
+}
+
 template <typename RandomEngine, typename Parallelotope>
 void test_points(RandomEngine& engine, int point_count, const Parallelotope& p)
 {
@@ -296,11 +319,21 @@ void test_points(RandomEngine& engine, int point_count, const Parallelotope& p)
 
         T max_length = parallelotope_max_diagonal(p);
 
+        std::array<Vector<N, T>, 2 * N> a;
+        std::array<T, 2 * N> b;
+
+        p.constraints(&a, &b);
+
         for (const Vector<N, T>& point : external_points(engine, point_count, p, std::make_integer_sequence<size_t, N>()))
         {
                 if (p.inside(point))
                 {
-                        error("Point must be outside\n" + to_string(point));
+                        error("Inside. Point must be outside\n" + to_string(point));
+                }
+
+                if (point_is_in_feasible_region(point, a, b))
+                {
+                        error("Constraints. Point must be outside\n" + to_string(point));
                 }
         }
 
@@ -308,7 +341,12 @@ void test_points(RandomEngine& engine, int point_count, const Parallelotope& p)
         {
                 if (!p.inside(origin))
                 {
-                        error("Point must be inside\n" + to_string(origin));
+                        error("Inside. Point must be inside\n" + to_string(origin));
+                }
+
+                if (!point_is_in_feasible_region(origin, a, b))
+                {
+                        error("Constraints. Point must be inside\n" + to_string(origin));
                 }
 
                 Vector<N, T> direction = random_direction<N, T>(engine);

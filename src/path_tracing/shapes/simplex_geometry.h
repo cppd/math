@@ -113,6 +113,51 @@ public:
                 }
         }
 
+        // N неравенств в виде b + a * x >= 0 и одно равенство в виде b + a * x = 0,
+        // задающие множество точек симплекса.
+        // Параметры simplex_normal и vertices точно такие же, как при вызове set_data.
+        void constraints(Vector<N, T> simplex_normal, const std::array<Vector<N, T>, N>& vertices, std::array<Vector<N, T>, N>* a,
+                         std::array<T, N>* b, Vector<N, T>* a_eq, T* b_eq) const
+        {
+                // На основе уравнений плоскостей n * x - d = 0, перпендикуляры которых направлены
+                // внутрь симплекса, а значит получается условие n * x - d >= 0 или условие -d + n * x >= 0.
+
+                // N - 1 плоскость уже есть, и все они проходят через вершину N - 1
+                for (unsigned i = 0; i < N - 1; ++i)
+                {
+                        T len = length(m_planes[i].n);
+                        (*a)[i] = m_planes[i].n / len;
+                        (*b)[i] = -m_planes[i].d / len;
+                }
+
+                //
+
+                // Построение плоскости, не проходящей через вершину N - 1.
+                // На основе функции set_data.
+
+                std::array<Vector<N, T>, N - 1> vectors;
+                for (unsigned i = 0; i < N - 2; ++i)
+                {
+                        minus(&vectors[i], vertices[i + 1], vertices[0]);
+                }
+
+                vectors[N - 2] = simplex_normal;
+                Vector<N, T> n = normalize(ortho_nn(vectors));
+                T d = dot(vertices[0], n);
+
+                // Нормаль нужна в направлении вершины N - 1
+                bool to_vertex = dot(vertices[N - 1], n) - d >= 0;
+                (*a)[N - 1] = to_vertex ? n : -n;
+                (*b)[N - 1] = to_vertex ? -d : d;
+
+                //
+
+                // На основе уравнения плоскости симплекса n * x - d = 0
+                d = dot(vertices[0], simplex_normal);
+                *a_eq = simplex_normal;
+                *b_eq = -d;
+        }
+
         T barycentric_coordinate(const Vector<N, T>& point, unsigned i) const
         {
                 ASSERT(i < N - 1);

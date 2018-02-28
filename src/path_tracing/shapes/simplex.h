@@ -73,4 +73,6 @@ public:
         Vector<N, T> shading_normal(const Vector<N, T>& point) const;
 
         std::array<Vector<N, T>, N> vertices() const;
+
+        void constraints(std::array<Vector<N, T>, N>* a, std::array<T, N>* b, Vector<N, T>* a_eq, T* b_eq) const;
 };
