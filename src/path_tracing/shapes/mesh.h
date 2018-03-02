@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "simplex.h"
+#include "mesh_simplex.h"
 
 #include "com/color/colors.h"
 #include "com/mat.h"
