@@ -29,6 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/types.h"
 #include "com/vec.h"
 #include "geometry/core/linear_algebra.h"
+#include "path_tracing/space/constraint.h"
 
 #include <algorithm>
 #include <array>
@@ -116,8 +117,8 @@ public:
         // N неравенств в виде b + a * x >= 0 и одно равенство в виде b + a * x = 0,
         // задающие множество точек симплекса.
         // Параметры simplex_normal и vertices точно такие же, как при вызове set_data.
-        void constraints(Vector<N, T> simplex_normal, const std::array<Vector<N, T>, N>& vertices, std::array<Vector<N, T>, N>* a,
-                         std::array<T, N>* b, Vector<N, T>* a_eq, T* b_eq) const
+        void constraints(Vector<N, T> simplex_normal, const std::array<Vector<N, T>, N>& vertices,
+                         std::array<Constraint<N, T>, N>* c, Constraint<N, T>* c_eq) const
         {
                 // На основе уравнений плоскостей n * x - d = 0, перпендикуляры которых направлены
                 // внутрь симплекса, а значит получается условие n * x - d >= 0 или условие -d + n * x >= 0.
@@ -126,8 +127,8 @@ public:
                 for (unsigned i = 0; i < N - 1; ++i)
                 {
                         T len = length(m_planes[i].n);
-                        (*a)[i] = m_planes[i].n / len;
-                        (*b)[i] = -m_planes[i].d / len;
+                        (*c)[i].a = m_planes[i].n / len;
+                        (*c)[i].b = -m_planes[i].d / len;
                 }
 
                 //
@@ -147,15 +148,15 @@ public:
 
                 // Нормаль нужна в направлении вершины N - 1
                 bool to_vertex = dot(vertices[N - 1], n) - d >= 0;
-                (*a)[N - 1] = to_vertex ? n : -n;
-                (*b)[N - 1] = to_vertex ? -d : d;
+                (*c)[N - 1].a = to_vertex ? n : -n;
+                (*c)[N - 1].b = to_vertex ? -d : d;
 
                 //
 
                 // На основе уравнения плоскости симплекса n * x - d = 0
                 d = dot(vertices[0], simplex_normal);
-                *a_eq = simplex_normal;
-                *b_eq = -d;
+                c_eq->a = simplex_normal;
+                c_eq->b = -d;
         }
 
         T barycentric_coordinate(const Vector<N, T>& point, unsigned i) const

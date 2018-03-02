@@ -30,6 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/log.h"
 #include "com/print.h"
 #include "com/types.h"
+#include "com/vec.h"
 
 #include <array>
 #include <sstream>
@@ -59,7 +60,8 @@ inline const char* ConstraintSolutionName(const ConstraintSolution& cs) noexcept
 }
 
 template <size_t N, size_t M, typename T>
-void print_simplex_algorithm_data(std::array<T, M>& b, std::array<std::array<T, N>, M>& a, T& v, std::array<T, N>& c) noexcept
+void print_simplex_algorithm_data(const std::array<T, M>& b, const std::array<Vector<N, T>, M>& a, const T& v,
+                                  const Vector<N, T>& c) noexcept
 {
         try
         {
@@ -78,8 +80,9 @@ void print_simplex_algorithm_data(std::array<T, M>& b, std::array<std::array<T, 
 }
 
 template <size_t N, size_t M, typename T>
-void print_simplex_algorithm_data(std::array<T, M>& b, std::array<std::array<T, N>, M>& a, T& v, std::array<T, N>& c,
-                                  const std::array<unsigned, N>& map_n, const std::array<unsigned, M>& map_m) noexcept
+void print_simplex_algorithm_data(const std::array<T, M>& b, const std::array<Vector<N, T>, M>& a, const T& v,
+                                  const Vector<N, T>& c, const std::array<unsigned, N>& map_n,
+                                  const std::array<unsigned, M>& map_m) noexcept
 {
         static_assert(std::is_floating_point_v<T>);
         try
@@ -134,7 +137,7 @@ void print_simplex_algorithm_data(std::array<T, M>& b, std::array<std::array<T, 
 // 29.3 The simplex algorithm.
 // Pivoting.
 template <size_t N, size_t M, typename T>
-void pivot(std::array<T, M>& b, std::array<std::array<T, N>, M>& a, T& v, std::array<T, N>& c, unsigned l, unsigned e) noexcept
+void pivot(std::array<T, M>& b, std::array<Vector<N, T>, M>& a, T& v, Vector<N, T>& c, unsigned l, unsigned e) noexcept
 {
         static_assert(is_native_floating_point<T>);
 
@@ -190,14 +193,14 @@ void pivot(std::array<T, M>& b, std::array<std::array<T, N>, M>& a, T& v, std::a
 namespace SimplexAlgorithmImplementation
 {
 template <size_t N_Source, size_t M, typename T>
-void make_aux_and_maps(const std::array<std::array<T, N_Source>, M>& a_input, std::array<T, M>* b,
-                       std::array<std::array<T, N_Source + 1>, M>* a, T* v, std::array<T, N_Source + 1>* c,
+void make_aux_and_maps(const std::array<Vector<N_Source, T>, M>& a_input, std::array<T, M>* b,
+                       std::array<Vector<N_Source + 1, T>, M>* a, T* v, Vector<N_Source + 1, T>* c,
                        std::array<unsigned, N_Source + 1>* map_n, std::array<unsigned, M>* map_m) noexcept
 {
         for (unsigned m = 0; m < M; ++m)
         {
-                T max = std::abs((*b)[m]);
-                for (unsigned n = 0; n < N_Source; ++n)
+                T max = std::abs(a_input[m][0]);
+                for (unsigned n = 1; n < N_Source; ++n)
                 {
                         max = std::max(max, std::abs(a_input[m][n]));
                 }
@@ -265,10 +268,10 @@ bool variable_x0_is_zero(const std::array<T, M>& b, const std::array<unsigned, N
 }
 
 template <size_t N, typename T>
-bool find_positive_index(const std::array<T, N>& c, unsigned* e) noexcept
+bool find_positive_index(const Vector<N, T>& c, unsigned* e) noexcept
 {
         T max_abs_c = std::abs(c[0]);
-        for (unsigned i = 1; i < c.size(); ++i)
+        for (unsigned i = 1; i < N; ++i)
         {
                 max_abs_c = std::max(max_abs_c, std::abs(c[i]));
         }
@@ -291,7 +294,7 @@ bool find_positive_index(const std::array<T, N>& c, unsigned* e) noexcept
 // Упрощённый вариант INITIALIZE-SIMPLEX для определения
 // наличия решения системы неравенств.
 template <bool with_print, size_t N_Source, size_t M, typename T>
-ConstraintSolution solve_constraints(std::array<T, M> b, const std::array<std::array<T, N_Source>, M>& a_input) noexcept
+ConstraintSolution solve_constraints(std::array<T, M> b, const std::array<Vector<N_Source, T>, M>& a_input) noexcept
 {
         static_assert(std::is_floating_point_v<T> || (!with_print && is_native_floating_point<T>));
         static_assert(N_Source > 0 && M > 0);
@@ -315,8 +318,8 @@ ConstraintSolution solve_constraints(std::array<T, M> b, const std::array<std::a
         //
 
         T v;
-        std::array<T, N> c;
-        std::array<std::array<T, N>, M> a;
+        Vector<N, T> c;
+        std::array<Vector<N, T>, M> a;
 
         std::array<unsigned, N> map_n;
         std::array<unsigned, M> map_m;
@@ -421,15 +424,14 @@ ConstraintSolution solve_constraints(std::array<T, M> b, const std::array<std::a
 }
 }
 
-template <size_t N_Source, size_t M, typename T>
-ConstraintSolution solve_constraints(const std::array<T, M>& b, const std::array<std::array<T, N_Source>, M>& a_input) noexcept
+template <size_t N, size_t M, typename T>
+ConstraintSolution solve_constraints(const std::array<Vector<N, T>, M>& a, const std::array<T, M>& b) noexcept
 {
-        return SimplexAlgorithmImplementation::solve_constraints<false>(b, a_input);
+        return SimplexAlgorithmImplementation::solve_constraints<false>(b, a);
 }
 
-template <size_t N_Source, size_t M, typename T>
-ConstraintSolution solve_constraints_with_print(const std::array<T, M>& b,
-                                                const std::array<std::array<T, N_Source>, M>& a_input) noexcept
+template <size_t N, size_t M, typename T>
+ConstraintSolution solve_constraints_with_print(const std::array<Vector<N, T>, M>& a, const std::array<T, M>& b) noexcept
 {
-        return SimplexAlgorithmImplementation::solve_constraints<true>(b, a_input);
+        return SimplexAlgorithmImplementation::solve_constraints<true>(b, a);
 }

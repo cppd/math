@@ -289,17 +289,16 @@ Vector<N, T> random_direction_for_parallelotope_comparison(RandomEngine& engine)
 }
 
 template <size_t N, size_t Count, typename T>
-bool point_is_in_feasible_region(const Vector<N, T>& point, const std::array<Vector<N, T>, Count>& a,
-                                 const std::array<T, Count>& b)
+bool point_is_in_feasible_region(const Vector<N, T>& point, const std::array<Constraint<N, T>, Count>& c)
 {
         for (unsigned i = 0; i < Count; ++i)
         {
-                T r = dot(a[i], point) + b[i];
+                T r = dot(c[i].a, point) + c[i].b;
 
                 if (!is_finite(r))
                 {
-                        error("Not finite point " + to_string(point) + " and constraint a = " + to_string(a[i]) +
-                              ", b = " + to_string(b[i]));
+                        error("Not finite point " + to_string(point) + " and constraint a = " + to_string(c[i].a) +
+                              ", b = " + to_string(c[i].b));
                 }
 
                 if (r < 0)
@@ -319,10 +318,9 @@ void test_points(RandomEngine& engine, int point_count, const Parallelotope& p)
 
         T max_length = parallelotope_max_diagonal(p);
 
-        std::array<Vector<N, T>, 2 * N> a;
-        std::array<T, 2 * N> b;
+        std::array<Constraint<N, T>, 2 * N> c;
 
-        p.constraints(&a, &b);
+        p.constraints(&c);
 
         for (const Vector<N, T>& point : external_points(engine, point_count, p, std::make_integer_sequence<size_t, N>()))
         {
@@ -331,7 +329,7 @@ void test_points(RandomEngine& engine, int point_count, const Parallelotope& p)
                         error("Inside. Point must be outside\n" + to_string(point));
                 }
 
-                if (point_is_in_feasible_region(point, a, b))
+                if (point_is_in_feasible_region(point, c))
                 {
                         error("Constraints. Point must be outside\n" + to_string(point));
                 }
@@ -344,7 +342,7 @@ void test_points(RandomEngine& engine, int point_count, const Parallelotope& p)
                         error("Inside. Point must be inside\n" + to_string(origin));
                 }
 
-                if (!point_is_in_feasible_region(origin, a, b))
+                if (!point_is_in_feasible_region(origin, c))
                 {
                         error("Constraints. Point must be inside\n" + to_string(origin));
                 }

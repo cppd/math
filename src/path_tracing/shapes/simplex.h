@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/ray.h"
 #include "com/vec.h"
+#include "path_tracing/space/constraint.h"
 
 #include <array>
 #include <vector>
@@ -74,5 +75,5 @@ public:
 
         std::array<Vector<N, T>, N> vertices() const;
 
-        void constraints(std::array<Vector<N, T>, N>* a, std::array<T, N>* b, Vector<N, T>* a_eq, T* b_eq) const;
+        void constraints(std::array<Constraint<N, T>, N>* c, Constraint<N, T>* c_eq) const;
 };

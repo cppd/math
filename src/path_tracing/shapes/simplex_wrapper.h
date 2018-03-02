@@ -19,17 +19,90 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/ray.h"
 #include "com/vec.h"
+#include "path_tracing/space/constraint.h"
 
+#include <algorithm>
 #include <array>
 #include <type_traits>
 
-// Для функций shape_intersection при построении дерева (октадерево и т.п.), а также для самого
-// дерева нужны функции intersect, inside (если объект имеет объём), vertices и vertex_ridges.
-// Функции vertices и vertex_ridges с их массивами становятся ненужными после построения дерева.
+template <typename Simplex, typename = void>
+class SimplexWrapperForShapeIntersection
+{
+        static constexpr size_t N = Simplex::DIMENSION;
+        using T = typename Simplex::DataType;
+
+        static constexpr int VERTEX_COUNT = N;
+
+        using Vertices = std::array<Vector<N, T>, VERTEX_COUNT>;
+
+        using Constraints = std::array<Constraint<N, T>, N>;
+        using ConstraintsEq = std::array<Constraint<N, T>, 1>;
+
+        const Simplex& m_simplex;
+
+        Vertices m_vertices;
+        Constraints m_constraints;
+        ConstraintsEq m_constraints_eq;
+        Vector<N, T> m_min, m_max;
+
+public:
+        static constexpr size_t DIMENSION = N;
+        using DataType = T;
+
+        static constexpr size_t SHAPE_DIMENSION = DIMENSION - 1;
+
+        SimplexWrapperForShapeIntersection(const Simplex& s) : m_simplex(s), m_vertices(s.vertices())
+        {
+                static_assert(std::remove_reference_t<decltype(s.vertices())>().size() == N);
+
+                m_simplex.constraints(&m_constraints, &m_constraints_eq[0]);
+
+                m_min = m_vertices[0];
+                m_max = m_vertices[0];
+                for (unsigned v = 1; v < m_vertices.size(); ++v)
+                {
+                        for (unsigned i = 0; i < N; ++i)
+                        {
+                                m_min[i] = std::min(m_vertices[v][i], m_min[i]);
+                                m_max[i] = std::max(m_vertices[v][i], m_max[i]);
+                        }
+                }
+        }
+
+        bool intersect(const Ray<DIMENSION, DataType>& r, DataType* t) const
+        {
+                return m_simplex.intersect(r, t);
+        }
+
+        const Vertices& vertices() const
+        {
+                return m_vertices;
+        }
+
+        const Constraints& constraints() const
+        {
+                return m_constraints;
+        }
+
+        const ConstraintsEq& constraints_eq() const
+        {
+                return m_constraints_eq;
+        }
+
+        const Vector<N, T>& min() const
+        {
+                return m_min;
+        }
+
+        const Vector<N, T>& max() const
+        {
+                return m_max;
+        }
+};
 
 // (N-1)-симплекс
 template <typename Simplex>
-class SimplexWrapperForShapeIntersection
+class SimplexWrapperForShapeIntersection<Simplex, std::enable_if_t<Simplex::DIMENSION == 3>>
 {
         static constexpr size_t N = Simplex::DIMENSION;
         using T = typename Simplex::DataType;

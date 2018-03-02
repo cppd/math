@@ -33,6 +33,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/vec.h"
 #include "geometry/core/array_elements.h"
 #include "geometry/core/linear_algebra.h"
+#include "path_tracing/space/constraint.h"
 
 #include <algorithm>
 #include <array>
@@ -94,7 +95,7 @@ public:
 
         Parallelotope(const Vector<N, T>& org, const std::array<Vector<N, T>, N>& vectors);
 
-        void constraints(std::array<Vector<N, T>, 2 * N>* a, std::array<T, 2 * N>* b) const;
+        void constraints(std::array<Constraint<N, T>, 2 * N>* c) const;
 
         bool inside(const Vector<N, T>& p) const;
 
@@ -170,7 +171,7 @@ void Parallelotope<N, T>::create_planes()
 
 // Неравенства в виде b + a * x >= 0, задающие множество точек параллелотопа.
 template <size_t N, typename T>
-void Parallelotope<N, T>::constraints(std::array<Vector<N, T>, 2 * N>* a, std::array<T, 2 * N>* b) const
+void Parallelotope<N, T>::constraints(std::array<Constraint<N, T>, 2 * N>* c) const
 {
         // Плоскости n * x - d имеют перпендикуляр с направлением наружу.
         // Направление внутрь -n * x + d или d + -(n * x), тогда условие
@@ -178,11 +179,11 @@ void Parallelotope<N, T>::constraints(std::array<Vector<N, T>, 2 * N>* a, std::a
 
         for (unsigned i = 0, c_i = 0; i < N; ++i, c_i += 2)
         {
-                (*a)[c_i] = -m_planes[i].n;
-                (*b)[c_i] = m_planes[i].d1;
+                (*c)[c_i].a = -m_planes[i].n;
+                (*c)[c_i].b = m_planes[i].d1;
 
-                (*a)[c_i + 1] = m_planes[i].n;
-                (*b)[c_i + 1] = m_planes[i].d2;
+                (*c)[c_i + 1].a = m_planes[i].n;
+                (*c)[c_i + 1].b = m_planes[i].d2;
         }
 }
 

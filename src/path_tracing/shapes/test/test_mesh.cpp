@@ -246,7 +246,7 @@ void test_mesh(T ray_offset, const Mesh<N, T>& mesh, const std::vector<Ray<N, T>
         LOG(to_string(error_count) + " errors, " + to_string(rays.size()) + " rays, " + to_string_fixed(error_percent, 5) + "%");
         LOG("");
 
-        if (error_percent > 3)
+        if (error_percent > 0.05)
         {
                 error("Too many errors");
         }

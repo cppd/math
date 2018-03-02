@@ -30,9 +30,9 @@ void test_pivot()
         LOG(std::string("PIVOT, ") + type_name<T>());
 
         std::array<T, 3> b{{30, 24, 36}};
-        std::array<std::array<T, 3>, 3> a{{{{-1, -1, -3}}, {{-2, -2, -5}}, {{-4, -1, -2}}}};
+        std::array<Vector<3, T>, 3> a{{Vector<3, T>(-1, -1, -3), Vector<3, T>(-2, -2, -5), Vector<3, T>(-4, -1, -2)}};
         T v = 5;
-        std::array<T, 3> c{{3, 1, 2}};
+        Vector<3, T> c(3, 1, 2);
 
         pivot(b, a, v, c, 2, 0);
 
@@ -42,7 +42,8 @@ void test_pivot()
                 error("b error");
         }
 
-        if (!(a == std::array<std::array<T, 3>, 3>{{{{0.25, -0.75, -2.5}}, {{0.5, -1.5, -4}}, {{-0.25, -0.25, -0.5}}}}))
+        if (!(a == std::array<Vector<3, T>, 3>{
+                           {Vector<3, T>(0.25, -0.75, -2.5), Vector<3, T>(0.5, -1.5, -4), Vector<3, T>(-0.25, -0.25, -0.5)}}))
         {
                 print_simplex_algorithm_data(b, a, v, c);
                 error("a error");
@@ -54,7 +55,7 @@ void test_pivot()
                 error("v error");
         }
 
-        if (!(c == std::array<T, 3>{{-0.75, 0.25, 0.5}}))
+        if (!(c == Vector<3, T>(-0.75, 0.25, 0.5)))
         {
                 print_simplex_algorithm_data(b, a, v, c);
                 error("c error");
@@ -70,12 +71,12 @@ void test_feasible()
 
         {
                 std::array<T, 2> b{{2, -4}};
-                std::array<std::array<T, 2>, 2> a{{{{-2, 1}}, {{-1, 5}}}};
+                std::array<Vector<2, T>, 2> a{{Vector<2, T>(-2, 1), Vector<2, T>(-1, 5)}};
 
-                ConstraintSolution cs = solve_constraints(b, a);
+                ConstraintSolution cs = solve_constraints(a, b);
                 if (cs != ConstraintSolution::Feasible)
                 {
-                        solve_constraints_with_print(b, a);
+                        solve_constraints_with_print(a, b);
                         LOG(ConstraintSolutionName(cs));
                         error("Not Feasible");
                 }
@@ -83,12 +84,13 @@ void test_feasible()
         }
         {
                 std::array<T, 5> b{{-1.23456, 3.12321, -1.14321, 3.32123, -4.3214e10}};
-                std::array<std::array<T, 2>, 5> a{{{{1, 0}}, {{-1, 0}}, {{0, 1}}, {{0, -1}}, {{1.01e10, 1.00132e10}}}};
+                std::array<Vector<2, T>, 5> a{{Vector<2, T>(1, 0), Vector<2, T>(-1, 0), Vector<2, T>(0, 1), Vector<2, T>(0, -1),
+                                               Vector<2, T>(1.01e10, 1.00132e10)}};
 
-                ConstraintSolution cs = solve_constraints(b, a);
+                ConstraintSolution cs = solve_constraints(a, b);
                 if (cs != ConstraintSolution::Feasible)
                 {
-                        solve_constraints_with_print(b, a);
+                        solve_constraints_with_print(a, b);
                         LOG(ConstraintSolutionName(cs));
                         error("Not Feasible");
                 }
@@ -96,12 +98,13 @@ void test_feasible()
         }
         {
                 std::array<T, 5> b{{-1.23456, -3.12321, -1.14321, 3.32123, -4.3214}};
-                std::array<std::array<T, 2>, 5> a{{{{1, 0}}, {{-1, 0}}, {{0, 1}}, {{0, -1}}, {{1.01, 1.00132}}}};
+                std::array<Vector<2, T>, 5> a{{Vector<2, T>(1, 0), Vector<2, T>(-1, 0), Vector<2, T>(0, 1), Vector<2, T>(0, -1),
+                                               Vector<2, T>(1.01, 1.00132)}};
 
-                ConstraintSolution cs = solve_constraints(b, a);
+                ConstraintSolution cs = solve_constraints(a, b);
                 if (cs != ConstraintSolution::Infeasible)
                 {
-                        solve_constraints_with_print(b, a);
+                        solve_constraints_with_print(a, b);
                         LOG(ConstraintSolutionName(cs));
                         error("Not Infeasible");
                 }
