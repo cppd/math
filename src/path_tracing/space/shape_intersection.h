@@ -29,15 +29,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ShapeIntersectionImplementation
 {
-template <typename T>
-T DISTANCE_FROM_SHAPE_IN_EPSILONS = 100;
-
+#if 0
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wctor-dtor-privacy"
 template <typename Shape>
 class HasInsideFunction
 {
-        using V = Vector<Shape::DIMENSION, typename Shape::DataType>;
+        using V = Vector<Shape::SPACE_DIMENSION, typename Shape::DataType>;
+
         template <typename T>
         static decltype(std::declval<T>().inside(V()), std::true_type()) t(int);
         template <typename>
@@ -47,14 +46,15 @@ public:
         static constexpr bool value = std::is_same_v<decltype(t<Shape>(0)), std::true_type>;
 };
 #pragma GCC diagnostic pop
+#endif
 
 template <typename Shape1, typename Shape2>
 bool shapes_intersect_by_vertices(const Shape1& shape_1, const Shape2& shape_2)
 {
-        constexpr size_t N = Shape1::DIMENSION;
+        constexpr size_t N = Shape1::SPACE_DIMENSION;
         using T = typename Shape1::DataType;
 
-        if constexpr (HasInsideFunction<Shape2>::value)
+        if constexpr (Shape2::SPACE_DIMENSION == Shape2::SHAPE_DIMENSION)
         {
                 for (const Vector<N, T>& v : shape_1.vertices())
                 {
@@ -65,7 +65,7 @@ bool shapes_intersect_by_vertices(const Shape1& shape_1, const Shape2& shape_2)
                 }
         }
 
-        if constexpr (HasInsideFunction<Shape1>::value)
+        if constexpr (Shape1::SPACE_DIMENSION == Shape1::SHAPE_DIMENSION)
         {
                 for (const Vector<N, T>& v : shape_2.vertices())
                 {
@@ -82,7 +82,7 @@ bool shapes_intersect_by_vertices(const Shape1& shape_1, const Shape2& shape_2)
 template <size_t N, typename T, typename Shape>
 bool line_segment_intersects_shape(const Vector<N, T>& org, const Vector<N, T>& direction, const Shape& shape)
 {
-        static_assert(N == Shape::DIMENSION);
+        static_assert(N == Shape::SPACE_DIMENSION);
         static_assert(std::is_same_v<T, typename Shape::DataType>);
 
         Ray<N, T> r(org, direction);
@@ -93,7 +93,7 @@ bool line_segment_intersects_shape(const Vector<N, T>& org, const Vector<N, T>& 
 template <typename Shape1, typename Shape2>
 bool shapes_intersect_by_vertex_ridges(const Shape1& shape_1, const Shape2& shape_2)
 {
-        constexpr size_t N = Shape1::DIMENSION;
+        constexpr size_t N = Shape1::SPACE_DIMENSION;
         using T = typename Shape1::DataType;
 
         for (const std::array<Vector<N, T>, 2>& ridge : shape_1.vertex_ridges())
@@ -149,7 +149,7 @@ bool all_vertices_are_on_the_same_side(const std::array<Vector<N, T>, V>& vertic
 template <typename Shape1, typename Shape2>
 bool shapes_not_intersect_by_planes(const Shape1& shape_1, const Shape2& shape_2)
 {
-        constexpr size_t N = Shape1::DIMENSION;
+        constexpr size_t N = Shape1::SPACE_DIMENSION;
         using T = typename Shape1::DataType;
 
         for (const Constraint<N, T>& constraint : shape_1.constraints())
@@ -191,7 +191,7 @@ template <typename Shape1, typename Shape2>
 bool shapes_intersect_by_spaces(const Shape1& shape_1, const Shape2& shape_2,
                                 const typename Shape1::DataType& distance_from_shape_in_epsilons)
 {
-        constexpr size_t N = Shape1::DIMENSION;
+        constexpr size_t N = Shape1::SPACE_DIMENSION;
         using T = typename Shape1::DataType;
 
         constexpr size_t CONSTRAINT_COUNT = std::remove_reference_t<decltype(shape_1.constraints())>().size() +
@@ -277,26 +277,26 @@ bool shapes_intersect_by_spaces(const Shape1& shape_1, const Shape2& shape_2,
 }
 
 template <typename Shape1, typename Shape2>
-void static_check(const Shape1& shape_1, const Shape2& shape_2)
+void static_checks(const Shape1& shape_1, const Shape2& shape_2)
 {
-        static_assert(Shape1::DIMENSION == Shape2::DIMENSION);
+        static_assert(Shape1::SPACE_DIMENSION == Shape2::SPACE_DIMENSION);
         static_assert(std::is_same_v<typename Shape1::DataType, typename Shape2::DataType>);
-        static_assert(Shape1::DIMENSION >= Shape1::SHAPE_DIMENSION && Shape1::DIMENSION - Shape1::SHAPE_DIMENSION <= 1);
-        static_assert(Shape2::DIMENSION >= Shape2::SHAPE_DIMENSION && Shape2::DIMENSION - Shape2::SHAPE_DIMENSION <= 1);
 
-        static_assert(HasInsideFunction<Shape1>::value == (Shape1::DIMENSION == Shape1::SHAPE_DIMENSION));
-        static_assert(HasInsideFunction<Shape2>::value == (Shape2::DIMENSION == Shape2::SHAPE_DIMENSION));
+        constexpr size_t N = Shape1::SPACE_DIMENSION;
+
+        static_assert(N >= Shape1::SHAPE_DIMENSION && N <= 1 + Shape1::SHAPE_DIMENSION);
+        static_assert(N >= Shape2::SHAPE_DIMENSION && N <= 1 + Shape2::SHAPE_DIMENSION);
 
         static_assert(std::is_reference_v<decltype(shape_1.vertices())>);
         static_assert(std::is_reference_v<decltype(shape_2.vertices())>);
 
-        if constexpr (Shape1::DIMENSION <= 3)
+        if constexpr (N <= 3)
         {
                 static_assert(std::is_reference_v<decltype(shape_1.vertex_ridges())>);
                 static_assert(std::is_reference_v<decltype(shape_2.vertex_ridges())>);
         }
 
-        if constexpr (Shape1::DIMENSION >= 4)
+        if constexpr (N >= 4)
         {
                 static_assert(std::is_reference_v<decltype(shape_1.constraints())>);
                 static_assert(std::is_reference_v<decltype(shape_2.constraints())>);
@@ -309,6 +309,16 @@ void static_check(const Shape1& shape_1, const Shape2& shape_2)
 
                 static_assert(std::is_reference_v<decltype(shape_1.max())>);
                 static_assert(std::is_reference_v<decltype(shape_2.max())>);
+
+                constexpr size_t shape_1_c_size = std::remove_reference_t<decltype(shape_1.constraints())>().size();
+                constexpr size_t shape_2_c_size = std::remove_reference_t<decltype(shape_2.constraints())>().size();
+                static_assert(shape_1_c_size >= Shape1::SHAPE_DIMENSION + 1);
+                static_assert(shape_2_c_size >= Shape2::SHAPE_DIMENSION + 1);
+
+                constexpr size_t shape_1_c_eq_size = std::remove_reference_t<decltype(shape_1.constraints_eq())>().size();
+                constexpr size_t shape_2_c_eq_size = std::remove_reference_t<decltype(shape_2.constraints_eq())>().size();
+                static_assert(shape_1_c_eq_size + Shape1::SHAPE_DIMENSION == N);
+                static_assert(shape_2_c_eq_size + Shape2::SHAPE_DIMENSION == N);
         }
 }
 }
@@ -330,18 +340,24 @@ void static_check(const Shape1& shape_1, const Shape2& shape_2)
 // пересекает другой объект. За исключением частных случаев, когда, например,
 // объекты совпадают, но здесь эти случаи не учитываются.
 template <typename Shape1, typename Shape2>
-bool shape_intersection(const Shape1& shape_1, const Shape2& shape_2)
+bool shape_intersection(const Shape1& shape_1, const Shape2& shape_2,
+                        const typename Shape1::DataType& distance_from_flat_shapes_in_epsilons)
 {
         namespace Impl = ShapeIntersectionImplementation;
 
-        Impl::static_check(shape_1, shape_2);
+        Impl::static_checks(shape_1, shape_2);
+
+        constexpr size_t N = Shape1::SPACE_DIMENSION;
+
+        ASSERT(((N > Shape1::SHAPE_DIMENSION || N > Shape2::SHAPE_DIMENSION) && distance_from_flat_shapes_in_epsilons > 0) ||
+               (N == Shape1::SHAPE_DIMENSION && N == Shape2::SHAPE_DIMENSION));
 
         if (Impl::shapes_intersect_by_vertices(shape_1, shape_2))
         {
                 return true;
         }
 
-        if constexpr (Shape1::DIMENSION <= 3)
+        if constexpr (N <= 3)
         {
                 if (Impl::shapes_intersect_by_vertex_ridges(shape_1, shape_2))
                 {
@@ -351,15 +367,14 @@ bool shape_intersection(const Shape1& shape_1, const Shape2& shape_2)
                 return false;
         }
 
-        if constexpr (Shape1::DIMENSION >= 4)
+        if constexpr (N >= 4)
         {
                 if (Impl::shapes_not_intersect_by_planes(shape_1, shape_2))
                 {
                         return false;
                 }
 
-                if (Impl::shapes_intersect_by_spaces(shape_1, shape_2,
-                                                     Impl::DISTANCE_FROM_SHAPE_IN_EPSILONS<typename Shape1::DataType>))
+                if (Impl::shapes_intersect_by_spaces(shape_1, shape_2, distance_from_flat_shapes_in_epsilons))
                 {
                         return true;
                 }

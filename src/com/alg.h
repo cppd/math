@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -61,4 +61,22 @@ bool all_true(const T& v)
                 }
         }
         return true;
+}
+
+template <typename T>
+bool all_non_negative(const T& data)
+{
+        return std::all_of(data.cbegin(), data.cend(), [](const auto& v) { return v >= 0; });
+}
+
+template <typename T>
+bool all_positive(const T& data)
+{
+        return std::all_of(data.cbegin(), data.cend(), [](const auto& v) { return v > 0; });
+}
+
+template <typename T>
+bool all_negative(const T& data)
+{
+        return std::all_of(data.cbegin(), data.cend(), [](const auto& v) { return v < 0; });
 }

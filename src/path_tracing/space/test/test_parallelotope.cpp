@@ -627,7 +627,10 @@ void test_algorithms()
 template <typename Parallelotope1, typename Parallelotope2>
 void test_intersection(const Parallelotope1& p1, const Parallelotope2& p2, bool with_intersection, const std::string& text)
 {
-        if (with_intersection != shape_intersection(p1, p2))
+        // Параллелотопы имеют объём, поэтому им не нужно задавать это число
+        constexpr int distance_from_flat_shapes_in_epsilons = 0;
+
+        if (with_intersection != shape_intersection(p1, p2, distance_from_flat_shapes_in_epsilons))
         {
                 error("Error intersection " + text);
         }

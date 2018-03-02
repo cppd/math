@@ -28,7 +28,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 template <typename Simplex, typename = void>
 class SimplexWrapperForShapeIntersection
 {
-        static constexpr size_t N = Simplex::DIMENSION;
+        static_assert(Simplex::SPACE_DIMENSION == Simplex::SHAPE_DIMENSION + 1);
+        // Для меньшего количества измерений есть второй класс
+        static_assert(Simplex::SPACE_DIMENSION >= 4);
+
+        static constexpr size_t N = Simplex::SPACE_DIMENSION;
         using T = typename Simplex::DataType;
 
         static constexpr int VERTEX_COUNT = N;
@@ -46,10 +50,9 @@ class SimplexWrapperForShapeIntersection
         Vector<N, T> m_min, m_max;
 
 public:
-        static constexpr size_t DIMENSION = N;
+        static constexpr size_t SPACE_DIMENSION = N;
+        static constexpr size_t SHAPE_DIMENSION = N - 1;
         using DataType = T;
-
-        static constexpr size_t SHAPE_DIMENSION = DIMENSION - 1;
 
         SimplexWrapperForShapeIntersection(const Simplex& s) : m_simplex(s), m_vertices(s.vertices())
         {
@@ -59,17 +62,14 @@ public:
 
                 m_min = m_vertices[0];
                 m_max = m_vertices[0];
-                for (unsigned v = 1; v < m_vertices.size(); ++v)
+                for (unsigned i = 1; i < m_vertices.size(); ++i)
                 {
-                        for (unsigned i = 0; i < N; ++i)
-                        {
-                                m_min[i] = std::min(m_vertices[v][i], m_min[i]);
-                                m_max[i] = std::max(m_vertices[v][i], m_max[i]);
-                        }
+                        m_min = min_vector(m_vertices[i], m_min);
+                        m_max = max_vector(m_vertices[i], m_max);
                 }
         }
 
-        bool intersect(const Ray<DIMENSION, DataType>& r, DataType* t) const
+        bool intersect(const Ray<N, T>& r, T* t) const
         {
                 return m_simplex.intersect(r, t);
         }
@@ -100,11 +100,13 @@ public:
         }
 };
 
-// (N-1)-симплекс
 template <typename Simplex>
-class SimplexWrapperForShapeIntersection<Simplex, std::enable_if_t<Simplex::DIMENSION == 3>>
+class SimplexWrapperForShapeIntersection<Simplex, std::enable_if_t<Simplex::SPACE_DIMENSION == 3>>
 {
-        static constexpr size_t N = Simplex::DIMENSION;
+        static_assert(Simplex::SPACE_DIMENSION == Simplex::SHAPE_DIMENSION + 1);
+        static_assert(Simplex::SPACE_DIMENSION == 3);
+
+        static constexpr size_t N = Simplex::SPACE_DIMENSION;
         using T = typename Simplex::DataType;
 
         static constexpr int VERTEX_COUNT = N;
@@ -124,10 +126,9 @@ class SimplexWrapperForShapeIntersection<Simplex, std::enable_if_t<Simplex::DIME
         VertexRidges m_vertex_ridges;
 
 public:
-        static constexpr size_t DIMENSION = N;
+        static constexpr size_t SPACE_DIMENSION = N;
+        static constexpr size_t SHAPE_DIMENSION = N - 1;
         using DataType = T;
-
-        static constexpr size_t SHAPE_DIMENSION = DIMENSION - 1;
 
         SimplexWrapperForShapeIntersection(const Simplex& s) : m_simplex(s), m_vertices(s.vertices())
         {
@@ -143,7 +144,7 @@ public:
                 }
         }
 
-        bool intersect(const Ray<DIMENSION, DataType>& r, DataType* t) const
+        bool intersect(const Ray<N, T>& r, T* t) const
         {
                 return m_simplex.intersect(r, t);
         }

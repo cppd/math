@@ -45,10 +45,9 @@ class ParallelotopeWrapperForShapeIntersection
         Vector<N, T> m_min, m_max;
 
 public:
-        static constexpr size_t DIMENSION = Parallelotope::DIMENSION;
-        using DataType = typename Parallelotope::DataType;
-
-        static constexpr size_t SHAPE_DIMENSION = DIMENSION;
+        static constexpr size_t SPACE_DIMENSION = N;
+        static constexpr size_t SHAPE_DIMENSION = N;
+        using DataType = T;
 
         ParallelotopeWrapperForShapeIntersection(const Parallelotope& p)
                 : m_parallelotope(p), m_vertices(parallelotope_vertices(p))
@@ -57,22 +56,19 @@ public:
 
                 m_min = m_vertices[0];
                 m_max = m_vertices[0];
-                for (unsigned v = 1; v < m_vertices.size(); ++v)
+                for (unsigned i = 1; i < m_vertices.size(); ++i)
                 {
-                        for (unsigned i = 0; i < N; ++i)
-                        {
-                                m_min[i] = std::min(m_vertices[v][i], m_min[i]);
-                                m_max[i] = std::max(m_vertices[v][i], m_max[i]);
-                        }
+                        m_min = min_vector(m_vertices[i], m_min);
+                        m_max = max_vector(m_vertices[i], m_max);
                 }
         }
 
-        bool intersect(const Ray<DIMENSION, DataType>& r, DataType* t) const
+        bool intersect(const Ray<N, T>& r, T* t) const
         {
                 return m_parallelotope.intersect(r, t);
         }
 
-        bool inside(const Vector<DIMENSION, DataType>& p) const
+        bool inside(const Vector<N, T>& p) const
         {
                 return m_parallelotope.inside(p);
         }
@@ -107,6 +103,9 @@ template <typename Parallelotope>
 class ParallelotopeWrapperForShapeIntersection<Parallelotope,
                                                std::enable_if_t<Parallelotope::DIMENSION == 2 || Parallelotope::DIMENSION == 3>>
 {
+        static constexpr size_t N = Parallelotope::DIMENSION;
+        using T = typename Parallelotope::DataType;
+
         using VertexRidges = typename ParallelotopeAlgorithm<Parallelotope>::VertexRidges;
         using Vertices = typename ParallelotopeAlgorithm<Parallelotope>::Vertices;
 
@@ -116,22 +115,21 @@ class ParallelotopeWrapperForShapeIntersection<Parallelotope,
         VertexRidges m_vertex_ridges;
 
 public:
-        static constexpr size_t DIMENSION = Parallelotope::DIMENSION;
-        using DataType = typename Parallelotope::DataType;
-
-        static constexpr size_t SHAPE_DIMENSION = DIMENSION;
+        static constexpr size_t SPACE_DIMENSION = N;
+        static constexpr size_t SHAPE_DIMENSION = N;
+        using DataType = T;
 
         ParallelotopeWrapperForShapeIntersection(const Parallelotope& p)
                 : m_parallelotope(p), m_vertices(parallelotope_vertices(p)), m_vertex_ridges(parallelotope_vertex_ridges(p))
         {
         }
 
-        bool intersect(const Ray<DIMENSION, DataType>& r, DataType* t) const
+        bool intersect(const Ray<N, T>& r, DataType* t) const
         {
                 return m_parallelotope.intersect(r, t);
         }
 
-        bool inside(const Vector<DIMENSION, DataType>& p) const
+        bool inside(const Vector<N, T>& p) const
         {
                 return m_parallelotope.inside(p);
         }

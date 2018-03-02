@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "mesh_simplex.h"
 
+#include "com/alg.h"
 #include "com/error.h"
 #include "geometry/core/linear_algebra.h"
 
@@ -28,24 +29,6 @@ constexpr T LIMIT_COSINE = 0.7; // 0.7 немного больше 45 граду
 
 namespace
 {
-template <size_t N, typename T>
-bool all_non_negative(const std::array<T, N>& data)
-{
-        return std::all_of(data.cbegin(), data.cend(), [](const T& v) { return v >= 0; });
-}
-
-template <size_t N, typename T>
-bool all_positive(const std::array<T, N>& data)
-{
-        return std::all_of(data.cbegin(), data.cend(), [](const T& v) { return v > 0; });
-}
-
-template <size_t N, typename T>
-bool all_negative(const std::array<T, N>& data)
-{
-        return std::all_of(data.cbegin(), data.cend(), [](const T& v) { return v < 0; });
-}
-
 template <size_t N, typename T>
 std::string vertices_to_string(const std::vector<Vector<N, T>>& vertices, const std::array<int, N>& v)
 {

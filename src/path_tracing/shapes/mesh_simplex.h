@@ -54,7 +54,8 @@ class MeshSimplex
         std::array<bool, N> m_negate_normal;
 
 public:
-        static constexpr size_t DIMENSION = N;
+        static constexpr size_t SPACE_DIMENSION = N;
+        static constexpr size_t SHAPE_DIMENSION = N - 1;
         using DataType = T;
 
         MeshSimplex(const std::vector<Vector<N, T>>& vertices, const std::vector<Vector<N, T>>& normals,

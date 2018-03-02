@@ -166,7 +166,7 @@ constexpr Parallelotope create_parallelotope_from_vector(const Vector<sizeof...(
 }
 
 template <size_t N, typename T, typename FunctorObjectPointer>
-void min_max_and_distance(int max_divisions, T distance_from_facet_in_epsilons, int object_index_count,
+void min_max_and_distance(int max_divisions, int distance_from_facet_in_epsilons, int object_index_count,
                           const FunctorObjectPointer& functor_object_pointer, Vector<N, T>* minimum, Vector<N, T>* maximum,
                           T* distance)
 {
@@ -326,7 +326,8 @@ std::array<std::tuple<int, Box<Parallelotope>*, int>, BOX_COUNT<Parallelotope::D
 }
 
 template <template <typename...> typename Container, typename Parallelotope, typename FunctorObjectPointer>
-void extend(const int MAX_DEPTH, const int MIN_OBJECTS, const int MAX_BOXES, SpinLock* boxes_lock,
+void extend(const int MAX_DEPTH, const int MIN_OBJECTS, const int MAX_BOXES,
+            const typename Parallelotope::DataType& DISTANCE_FROM_FLAT_SHAPES_IN_EPSILONS, SpinLock* boxes_lock,
             Container<Box<Parallelotope>>* boxes, BoxJobs<Box<Parallelotope>>* box_jobs,
             const FunctorObjectPointer& functor_object_pointer, ProgressRatio* progress) try
 {
@@ -367,7 +368,8 @@ void extend(const int MAX_DEPTH, const int MIN_OBJECTS, const int MAX_BOXES, Spi
 
                         for (int object_index : box->object_indices())
                         {
-                                if (shape_intersection(p, *functor_object_pointer(object_index)))
+                                if (shape_intersection(p, *functor_object_pointer(object_index),
+                                                       DISTANCE_FROM_FLAT_SHAPES_IN_EPSILONS))
                                 {
                                         child_box->add_object_index(object_index);
                                 }
@@ -401,7 +403,10 @@ class SpatialSubdivisionTree
         using BoxContainer = std::deque<Box>;
 
         // Расстояние от грани, при котором точка считается внутри коробки.
-        static constexpr T DISTANCE_FROM_FACET_IN_EPSILONS = 10;
+        static constexpr int DISTANCE_FROM_FACET_IN_EPSILONS = 10;
+        // Расстояние от плоских граней в каждую сторону для получения
+        // дополнительного измерения при определении пересечения объектов.
+        static constexpr int DISTANCE_FROM_FLAT_SHAPES_IN_EPSILONS = 10;
 
         // Нижняя и верхняя границы для минимального количества объектов в коробке.
         static constexpr int MIN_OBJECTS_LEFT_BOUND = 2;
@@ -503,8 +508,8 @@ public:
                 for (unsigned i = 0; i < thread_count; ++i)
                 {
                         threads.add([&]() {
-                                extend(MAX_DEPTH, MIN_OBJECTS, MAX_BOXES, &boxes_lock, &boxes, &jobs, functor_object_pointer,
-                                       progress);
+                                extend(MAX_DEPTH, MIN_OBJECTS, MAX_BOXES, DISTANCE_FROM_FLAT_SHAPES_IN_EPSILONS, &boxes_lock,
+                                       &boxes, &jobs, functor_object_pointer, progress);
                         });
                 }
                 threads.join();
