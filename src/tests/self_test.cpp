@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "geometry/test/test_convex_hull.h"
 #include "geometry/test/test_reconstruction.h"
 #include "gpu_2d/dft/test/test_dft.h"
+#include "path_tracing/shapes/test/test_mesh.h"
 #include "path_tracing/space/test/test_parallelotope.h"
 
 namespace
@@ -36,25 +37,37 @@ void self_test_essential(IProgressRatioList* progress_ratio_list, const T& catch
                 test_dft();
         });
 
-        test_name = "Self-Test, Parallelotopes in 2D";
+        test_name = "Self-Test, Parallelotope in 2D";
         catch_all(test_name, [&]() {
                 ProgressRatio progress(progress_ratio_list, test_name);
                 progress.set(0);
                 test_parallelotope(2);
         });
 
-        test_name = "Self-Test, Parallelotopes in 3D";
+        test_name = "Self-Test, Parallelotope in 3D";
         catch_all(test_name, [&]() {
                 ProgressRatio progress(progress_ratio_list, test_name);
                 progress.set(0);
                 test_parallelotope(3);
         });
 
-        test_name = "Self-Test, Parallelotopes in 4D";
+        test_name = "Self-Test, Parallelotope in 4D";
         catch_all(test_name, [&]() {
                 ProgressRatio progress(progress_ratio_list, test_name);
                 progress.set(0);
                 test_parallelotope(4);
+        });
+
+        test_name = "Self-Test, Mesh in 3D";
+        catch_all(test_name, [&]() {
+                ProgressRatio progress(progress_ratio_list, test_name);
+                test_mesh(3, &progress);
+        });
+
+        test_name = "Self-Test, Mesh in 4D";
+        catch_all(test_name, [&]() {
+                ProgressRatio progress(progress_ratio_list, test_name);
+                test_mesh(4, &progress);
         });
 
         test_name = "Self-Test, Convex Hull in 2D";
@@ -97,6 +110,12 @@ void self_test_extended(IProgressRatioList* progress_ratio_list, const T& catch_
         catch_all(test_name, [&]() {
                 ProgressRatio progress(progress_ratio_list, test_name);
                 test_convex_hull(5, &progress);
+        });
+
+        test_name = "Self-Test, Mesh in 5D";
+        catch_all(test_name, [&]() {
+                ProgressRatio progress(progress_ratio_list, test_name);
+                test_mesh(5, &progress);
         });
 
         test_name = "Self-Test, 3-Manifold Reconstruction in 4D";

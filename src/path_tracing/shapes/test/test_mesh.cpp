@@ -122,16 +122,16 @@ void create_spherical_convex_hull(const Vector<N, float>& center, float radius, 
 
 template <size_t N, typename T>
 std::unique_ptr<const Mesh<N, T>> simplex_mesh_of_sphere(const Vector<N, float>& center, float radius, int point_count,
-                                                         int thread_count)
+                                                         int thread_count, ProgressRatio* progress)
 {
-        ProgressRatio progress(nullptr);
-
         std::vector<Vector<N, float>> points;
         std::vector<std::array<int, N>> facets;
 
         LOG("convex hull in " + to_string(N) + "D, point count " + to_string(point_count));
 
-        create_spherical_convex_hull(center, radius, point_count, &points, &facets, &progress);
+        progress->set_text("Data: %v of %m");
+
+        create_spherical_convex_hull(center, radius, point_count, &points, &facets, progress);
 
         LOG("obj...");
 
@@ -141,20 +141,27 @@ std::unique_ptr<const Mesh<N, T>> simplex_mesh_of_sphere(const Vector<N, float>&
 
         constexpr Matrix<N + 1, N + 1, T> matrix(1);
 
-        return std::make_unique<const Mesh<N, T>>(obj.get(), matrix, thread_count, &progress);
+        return std::make_unique<const Mesh<N, T>>(obj.get(), matrix, thread_count, progress);
 }
 
 template <size_t N, typename T>
-void test_mesh(T ray_offset, const Mesh<N, T>& mesh, const std::vector<Ray<N, T>>& rays, bool with_ray_log, bool with_error_log)
+void test_mesh(T ray_offset, const Mesh<N, T>& mesh, const std::vector<Ray<N, T>>& rays, bool with_ray_log, bool with_error_log,
+               ProgressRatio* progress)
 {
         int error_count = 0;
 
         LOG("intersections...");
+        progress->set_text("Rays: %v of %m");
 
         double start_time = time_in_seconds();
 
         for (unsigned i = 1; i <= rays.size(); ++i)
         {
+                if ((i & 0xfff) == 0xfff)
+                {
+                        progress->set(i, rays.size());
+                }
+
                 Ray<N, T> ray = rays[i - 1];
 
                 if (with_ray_log)
@@ -261,7 +268,8 @@ void center_and_offset(float radius, Vector<N, float>* center, T* ray_offset)
 }
 
 template <size_t N, typename T>
-void test_mesh(float radius, int point_count, int ray_count, int thread_count, bool with_ray_log, bool with_error_log)
+void test_mesh(float radius, int point_count, int ray_count, int thread_count, bool with_ray_log, bool with_error_log,
+               ProgressRatio* progress)
 {
         LOG("----------- " + to_string(N) + "D, " + type_name<T>() + " -----------");
 
@@ -274,16 +282,17 @@ void test_mesh(float radius, int point_count, int ray_count, int thread_count, b
         LOG("center = " + to_string(center));
         LOG("offset = " + to_string(ray_offset));
 
-        std::unique_ptr<const Mesh<N, T>> mesh = simplex_mesh_of_sphere<N, T>(center, radius, point_count, thread_count);
+        std::unique_ptr<const Mesh<N, T>> mesh =
+                simplex_mesh_of_sphere<N, T>(center, radius, point_count, thread_count, progress);
 
         std::vector<Ray<N, T>> rays = generate_random_rays_for_sphere<N, T>(center, radius, ray_count);
 
-        test_mesh(ray_offset, *mesh, rays, with_ray_log, with_error_log);
+        test_mesh(ray_offset, *mesh, rays, with_ray_log, with_error_log, progress);
 }
 
 template <size_t N, typename T>
 void test_mesh(int exponent_low, int exponent_high, int point_low, int point_high, int ray_low, int ray_high, int thread_count,
-               bool with_ray_log, bool with_error_log)
+               bool with_ray_log, bool with_error_log, ProgressRatio* progress)
 {
         float radius;
         int point_count;
@@ -297,20 +306,34 @@ void test_mesh(int exponent_low, int exponent_high, int point_low, int point_hig
                 ray_count = random_integer(random_engine, ray_low, ray_high);
         }
 
-        test_mesh<N, T>(radius, point_count, ray_count, thread_count, with_ray_log, with_error_log);
+        test_mesh<N, T>(radius, point_count, ray_count, thread_count, with_ray_log, with_error_log, progress);
 }
 }
 
-void test_mesh()
+void test_mesh(int number_of_dimensions, ProgressRatio* progress)
 {
+        ASSERT(progress);
+
         int thread_count = hardware_concurrency();
 
         bool with_ray_log = false;
         bool with_error_log = false;
 
-        test_mesh<3, float>(-7, 10, 1000, 2000, 90'000, 110'000, thread_count, with_ray_log, with_error_log);
-        test_mesh<3, double>(-22, 37, 1000, 2000, 90'000, 110'000, thread_count, with_ray_log, with_error_log);
-
-        test_mesh<4, float>(-4, 6, 1000, 2000, 90'000, 110'000, thread_count, with_ray_log, with_error_log);
-        test_mesh<4, double>(-22, 37, 1000, 2000, 90'000, 110'000, thread_count, with_ray_log, with_error_log);
+        switch (number_of_dimensions)
+        {
+        case 3:
+                test_mesh<3, float>(-7, 10, 500, 1000, 90'000, 110'000, thread_count, with_ray_log, with_error_log, progress);
+                test_mesh<3, double>(-22, 37, 500, 1000, 90'000, 110'000, thread_count, with_ray_log, with_error_log, progress);
+                break;
+        case 4:
+                test_mesh<4, float>(-4, 6, 500, 1000, 90'000, 110'000, thread_count, with_ray_log, with_error_log, progress);
+                test_mesh<4, double>(-22, 37, 500, 1000, 90'000, 110'000, thread_count, with_ray_log, with_error_log, progress);
+                break;
+        case 5:
+                test_mesh<5, float>(-3, 5, 1000, 2000, 90'000, 110'000, thread_count, with_ray_log, with_error_log, progress);
+                test_mesh<5, double>(-22, 37, 1000, 2000, 90'000, 110'000, thread_count, with_ray_log, with_error_log, progress);
+                break;
+        default:
+                error("Error mesh test number of dimensions " + to_string(number_of_dimensions));
+        }
 }

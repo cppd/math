@@ -27,8 +27,33 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <algorithm>
 #include <utility>
 
-constexpr int TREE_MAX_DEPTH = 10;
+namespace
+{
 constexpr int TREE_MIN_OBJECTS = 10;
+
+template <size_t N>
+int tree_max_depth()
+{
+        static_assert(N >= 3);
+
+        switch (N)
+        {
+        case 3:
+                return 10;
+        case 4:
+                return 8;
+        case 5:
+                return 7;
+        default:
+                // Сумма геометрической прогрессии s = (pow(r, n) - 1) / (r - 1).
+                // Для s и r найти n = log(s * (r - 1) + 1) / log(r).
+                double s = 1e9;
+                double r = std::pow(2, N);
+                double n = std::log(s * (r - 1) + 1) / std::log(r);
+                return std::max(2.0, std::floor(n));
+        }
+}
+}
 
 template <size_t N, typename T>
 void Mesh<N, T>::create_mesh_object(const Obj<N>* obj, const Matrix<N + 1, N + 1, T>& vertex_matrix, unsigned thread_count,
@@ -93,7 +118,7 @@ void Mesh<N, T>::create_mesh_object(const Obj<N>* obj, const Matrix<N + 1, N + 1
 
 template <size_t N, typename T>
 Mesh<N, T>::Mesh(const Obj<N>* obj, const Matrix<N + 1, N + 1, T>& vertex_matrix, unsigned thread_count, ProgressRatio* progress)
-        : m_tree(TREE_MAX_DEPTH, TREE_MIN_OBJECTS)
+        : m_tree(tree_max_depth<N>(), TREE_MIN_OBJECTS)
 {
         double start_time = time_in_seconds();
 
