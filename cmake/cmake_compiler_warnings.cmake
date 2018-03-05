@@ -14,7 +14,7 @@ function(SetCompilerWarnings source_files)
                         -Wenum-compare
                         -Wformat=2
                         -Wformat-signedness
-                        -Wframe-larger-than=10000
+                        -Wframe-larger-than=15000
                         -Wimplicit-fallthrough=5
                         -Winit-self
                         -Wlarger-than=1000000
@@ -25,7 +25,7 @@ function(SetCompilerWarnings source_files)
                         -Wpacked
                         -Wredundant-decls
                         -Wshadow
-                        -Wstack-usage=10000
+                        -Wstack-usage=15000
                         -Wstrict-aliasing=3
                         -Wstrict-overflow=1
                         -Wsuggest-attribute=format

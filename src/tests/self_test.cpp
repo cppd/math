@@ -118,6 +118,12 @@ void self_test_extended(IProgressRatioList* progress_ratio_list, const T& catch_
                 test_mesh(5, &progress);
         });
 
+        test_name = "Self-Test, Mesh in 6D";
+        catch_all(test_name, [&]() {
+                ProgressRatio progress(progress_ratio_list, test_name);
+                test_mesh(6, &progress);
+        });
+
         test_name = "Self-Test, 3-Manifold Reconstruction in 4D";
         catch_all(test_name, [&]() {
                 ProgressRatio progress(progress_ratio_list, test_name);

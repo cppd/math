@@ -257,6 +257,9 @@ template std::unique_ptr<Obj<4>> create_obj_for_facets(const std::vector<Vector<
 template std::unique_ptr<Obj<5>> create_obj_for_facets(const std::vector<Vector<5, float>>& points,
                                                        const std::vector<Vector<5, double>>& point_normals,
                                                        const std::vector<std::array<int, 5>>& facets);
+template std::unique_ptr<Obj<6>> create_obj_for_facets(const std::vector<Vector<6, float>>& points,
+                                                       const std::vector<Vector<6, double>>& point_normals,
+                                                       const std::vector<std::array<int, 6>>& facets);
 
 template std::unique_ptr<Obj<3>> create_obj_for_facets(const std::vector<Vector<3, float>>& points,
                                                        const std::vector<std::array<int, 3>>& facets);
@@ -264,3 +267,5 @@ template std::unique_ptr<Obj<4>> create_obj_for_facets(const std::vector<Vector<
                                                        const std::vector<std::array<int, 4>>& facets);
 template std::unique_ptr<Obj<5>> create_obj_for_facets(const std::vector<Vector<5, float>>& points,
                                                        const std::vector<std::array<int, 5>>& facets);
+template std::unique_ptr<Obj<6>> create_obj_for_facets(const std::vector<Vector<6, float>>& points,
+                                                       const std::vector<std::array<int, 6>>& facets);

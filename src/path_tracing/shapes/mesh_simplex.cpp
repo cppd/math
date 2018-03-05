@@ -225,7 +225,9 @@ void MeshSimplex<N, T>::constraints(std::array<Constraint<N, T>, N>* c, Constrai
 template class MeshSimplex<3, float>;
 template class MeshSimplex<4, float>;
 template class MeshSimplex<5, float>;
+template class MeshSimplex<6, float>;
 
 template class MeshSimplex<3, double>;
 template class MeshSimplex<4, double>;
 template class MeshSimplex<5, double>;
+template class MeshSimplex<6, double>;

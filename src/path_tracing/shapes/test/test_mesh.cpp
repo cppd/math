@@ -333,6 +333,10 @@ void test_mesh(int number_of_dimensions, ProgressRatio* progress)
                 test_mesh<5, float>(-3, 5, 1000, 2000, 90'000, 110'000, thread_count, with_ray_log, with_error_log, progress);
                 test_mesh<5, double>(-22, 37, 1000, 2000, 90'000, 110'000, thread_count, with_ray_log, with_error_log, progress);
                 break;
+        case 6:
+                test_mesh<6, float>(-2, 3, 1000, 2000, 90'000, 110'000, thread_count, with_ray_log, with_error_log, progress);
+                test_mesh<6, double>(-22, 30, 1000, 2000, 90'000, 110'000, thread_count, with_ray_log, with_error_log, progress);
+                break;
         default:
                 error("Error mesh test number of dimensions " + to_string(number_of_dimensions));
         }

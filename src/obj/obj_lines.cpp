@@ -159,3 +159,5 @@ template std::unique_ptr<Obj<4>> create_obj_for_lines(const std::vector<Vector<4
                                                       const std::vector<std::array<int, 2>>& lines);
 template std::unique_ptr<Obj<5>> create_obj_for_lines(const std::vector<Vector<5, float>>& points,
                                                       const std::vector<std::array<int, 2>>& lines);
+template std::unique_ptr<Obj<6>> create_obj_for_lines(const std::vector<Vector<6, float>>& points,
+                                                      const std::vector<std::array<int, 2>>& lines);

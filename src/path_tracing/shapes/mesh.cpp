@@ -44,6 +44,8 @@ int tree_max_depth()
                 return 8;
         case 5:
                 return 7;
+        case 6:
+                return 5;
         default:
                 // Сумма геометрической прогрессии s = (pow(r, n) - 1) / (r - 1).
                 // Для s и r найти n = log(s * (r - 1) + 1) / log(r).
@@ -197,7 +199,9 @@ std::optional<Color> Mesh<N, T>::color(const Vector<N, T>& p, const void* inters
 template class Mesh<3, float>;
 template class Mesh<4, float>;
 template class Mesh<5, float>;
+template class Mesh<6, float>;
 
 template class Mesh<3, double>;
 template class Mesh<4, double>;
 template class Mesh<5, double>;
+template class Mesh<6, double>;

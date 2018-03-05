@@ -97,8 +97,9 @@ T interpolation(const std::array<T, (1 << N)>& data, const std::array<F, N>& p)
 
         if constexpr (N >= 5)
         {
-                std::array<T, (data.size() >> 1)> tmp_data;
-                std::array<F, p.size() - 1> tmp_p;
+                constexpr size_t next_n = N - 1;
+                std::array<T, (1 << next_n)> tmp_data;
+                std::array<F, next_n> tmp_p;
 
                 for (size_t i = 0; i < data.size(); i += 2)
                 {

@@ -132,3 +132,4 @@ std::unique_ptr<Obj<N>> create_obj_for_points(std::vector<Vector<N, float>>&& po
 template std::unique_ptr<Obj<3>> create_obj_for_points(std::vector<Vector<3, float>>&& points);
 template std::unique_ptr<Obj<4>> create_obj_for_points(std::vector<Vector<4, float>>&& points);
 template std::unique_ptr<Obj<5>> create_obj_for_points(std::vector<Vector<5, float>>&& points);
+template std::unique_ptr<Obj<6>> create_obj_for_points(std::vector<Vector<6, float>>&& points);

@@ -198,3 +198,4 @@ std::unique_ptr<Obj<N>> create_convex_hull_for_obj(const Obj<N>* obj, ProgressRa
 template std::unique_ptr<Obj<3>> create_convex_hull_for_obj(const Obj<3>* obj, ProgressRatio* progress);
 template std::unique_ptr<Obj<4>> create_convex_hull_for_obj(const Obj<4>* obj, ProgressRatio* progress);
 template std::unique_ptr<Obj<5>> create_convex_hull_for_obj(const Obj<5>* obj, ProgressRatio* progress);
+template std::unique_ptr<Obj<6>> create_convex_hull_for_obj(const Obj<6>* obj, ProgressRatio* progress);

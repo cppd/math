@@ -303,14 +303,17 @@ std::enable_if_t<X == 2> Image<N>::flip_vertically()
 template class Image<2>;
 template class Image<3>;
 template class Image<4>;
+template class Image<5>;
 
 template Color Image<2>::texture(const Vector<2, float>& p) const;
 template Color Image<3>::texture(const Vector<3, float>& p) const;
 template Color Image<4>::texture(const Vector<4, float>& p) const;
+template Color Image<5>::texture(const Vector<5, float>& p) const;
 
 template Color Image<2>::texture(const Vector<2, double>& p) const;
 template Color Image<3>::texture(const Vector<3, double>& p) const;
 template Color Image<4>::texture(const Vector<4, double>& p) const;
+template Color Image<5>::texture(const Vector<5, double>& p) const;
 
 template Image<2>::Image(const std::string& file_name);
 template void Image<2>::read_from_file(const std::string& file_name);
