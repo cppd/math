@@ -37,15 +37,15 @@ class BarPaintbrush final : public Paintbrush
         {
                 std::vector<Pixel> pixels;
 
-                for (int y = 0; y < height; y += paint_height)
+                for (int y = height - 1; y >= 0; y -= paint_height)
                 {
                         for (int x = 0; x < width; ++x)
                         {
-                                int max_sub_y = std::min(paint_height, height - y);
+                                int max_sub_y = std::min(paint_height, y + 1);
                                 for (int sub_y = 0; sub_y < max_sub_y; ++sub_y)
                                 {
                                         int pixel_x = x;
-                                        int pixel_y = y + sub_y;
+                                        int pixel_y = y - sub_y;
 
                                         ASSERT(pixel_x >= 0 && pixel_x < width);
                                         ASSERT(pixel_y >= 0 && pixel_y < height);

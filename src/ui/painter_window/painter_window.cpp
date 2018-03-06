@@ -182,12 +182,12 @@ void PainterWindow::update_points()
 
 void PainterWindow::painter_pixel_before(int x, int y) noexcept
 {
-        mark_pixel_busy(x, y);
+        mark_pixel_busy(x, m_height - 1 - y);
 }
 
 void PainterWindow::painter_pixel_after(int x, int y, const SrgbInteger& c) noexcept
 {
-        set_pixel(x, y, c.red, c.green, c.blue);
+        set_pixel(x, m_height - 1 - y, c.red, c.green, c.blue);
 }
 
 void PainterWindow::painter_error_message(const std::string& msg) noexcept

@@ -127,11 +127,11 @@ public:
 
                 //
 
-                m_perspective_projector = std::make_unique<PerspectiveProjector>(view_point, dir, up, 70, width, height);
-
-                m_parallel_projector = std::make_unique<ParallelProjector>(view_point, dir, up, size, width, height);
-
-                m_spherical_projector = std::make_unique<SphericalProjector>(view_point, dir, up, 80, width, height);
+                const std::array<int, 2> screen_sizes{{width, height}};
+                const std::array<vec3, 2> screen_axes{{right, up}};
+                m_perspective_projector = std::make_unique<PerspectiveProjector>(view_point, dir, screen_axes, 70, screen_sizes);
+                m_parallel_projector = std::make_unique<ParallelProjector>(view_point, dir, screen_axes, size, screen_sizes);
+                m_spherical_projector = std::make_unique<SphericalProjector>(view_point, dir, screen_axes, 80, screen_sizes);
 
                 m_default_surface_properties.set_color(SrgbInteger(0, 0, 0));
                 m_default_surface_properties.set_diffuse_and_fresnel(1, 0);

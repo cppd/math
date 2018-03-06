@@ -33,9 +33,11 @@ std::unique_ptr<const Projector> create_projector(const IShow& show, int paint_w
         show.camera_information(&camera_up, &camera_direction, &view_center, &view_width);
 
         vec3 camera_position = view_center - camera_direction * 2.0 * show.object_size();
+        vec3 camera_right = cross(camera_direction, camera_up);
 
-        return std::make_unique<const ParallelProjector>(camera_position, camera_direction, camera_up, view_width, paint_width,
-                                                         paint_height);
+        return std::make_unique<const ParallelProjector>(camera_position, camera_direction,
+                                                         std::array<vec3, 2>{{camera_right, camera_up}}, view_width,
+                                                         std::array<int, 2>{{paint_width, paint_height}});
 }
 
 std::unique_ptr<const LightSource> create_light_source(const IShow& show)
