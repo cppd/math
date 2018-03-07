@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "obj/obj_alg.h"
 #include "obj/obj_file_load.h"
 #include "path_tracing/lights/light_source.h"
-#include "path_tracing/projectors/projector.h"
+#include "path_tracing/visible_projectors.h"
 #include "path_tracing/visible_shapes.h"
 
 namespace
@@ -30,9 +30,9 @@ class CornellBox : public PaintObjects
 {
         std::vector<const GenericObject*> m_objects;
         std::vector<const LightSource*> m_light_sources;
-        std::unique_ptr<PerspectiveProjector> m_perspective_projector;
-        std::unique_ptr<ParallelProjector> m_parallel_projector;
-        std::unique_ptr<SphericalProjector> m_spherical_projector;
+        std::unique_ptr<VisiblePerspectiveProjector> m_perspective_projector;
+        std::unique_ptr<VisibleParallelProjector> m_parallel_projector;
+        std::unique_ptr<VisibleSphericalProjector> m_spherical_projector;
         SurfaceProperties m_default_surface_properties;
 
         std::unique_ptr<VisibleRectangle> m_rectangle_back;
@@ -129,9 +129,12 @@ public:
 
                 const std::array<int, 2> screen_sizes{{width, height}};
                 const std::array<vec3, 2> screen_axes{{right, up}};
-                m_perspective_projector = std::make_unique<PerspectiveProjector>(view_point, dir, screen_axes, 70, screen_sizes);
-                m_parallel_projector = std::make_unique<ParallelProjector>(view_point, dir, screen_axes, size, screen_sizes);
-                m_spherical_projector = std::make_unique<SphericalProjector>(view_point, dir, screen_axes, 80, screen_sizes);
+                m_perspective_projector =
+                        std::make_unique<VisiblePerspectiveProjector>(view_point, dir, screen_axes, 70, screen_sizes);
+                m_parallel_projector =
+                        std::make_unique<VisibleParallelProjector>(view_point, dir, screen_axes, size, screen_sizes);
+                m_spherical_projector =
+                        std::make_unique<VisibleSphericalProjector>(view_point, dir, screen_axes, 80, screen_sizes);
 
                 m_default_surface_properties.set_color(SrgbInteger(0, 0, 0));
                 m_default_surface_properties.set_diffuse_and_fresnel(1, 0);
