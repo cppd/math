@@ -54,6 +54,7 @@ template <typename T, size_t N>
 Vector<N, T> screen_org(const std::array<int, N>& sizes)
 {
         Vector<N, T> org;
+
         for (unsigned i = 0; i < N; ++i)
         {
                 if (sizes[i] < 1)
@@ -62,6 +63,7 @@ Vector<N, T> screen_org(const std::array<int, N>& sizes)
                 }
                 org[i] = -sizes[i] * (static_cast<T>(1) / 2);
         }
+
         return org;
 }
 
@@ -72,123 +74,129 @@ std::tuple<Vector<N, T>, std::array<Vector<N, T>, N - 1>> unit_dir_and_axes(cons
         std::tuple<Vector<N, T>, std::array<Vector<N, T>, N - 1>> res;
 
         std::get<0>(res) = normalize(camera_dir);
+
         for (unsigned i = 0; i < N - 1; ++i)
         {
                 std::get<1>(res)[i] = normalize(screen_axes[i]);
         }
+
         check_vectors_orthogonal(std::get<0>(res), std::get<1>(res));
 
         return res;
+}
+
+template <size_t N, typename T>
+Vector<N, T> compute_screen_dir(const std::array<Vector<N, T>, N - 1>& screen_axes, const Vector<N - 1, T>& screen_point)
+{
+        Vector<N, T> screen_dir;
+
+        screen_dir = screen_axes[0] * screen_point[0];
+        for (unsigned i = 1; i < N - 1; ++i)
+        {
+                screen_dir += screen_axes[i] * screen_point[i];
+        }
+
+        return screen_dir;
 }
 }
 
 class PerspectiveProjector final : public Projector
 {
-        std::array<int, 2> m_screen_sizes;
+        std::array<int, 2> m_screen_size;
         std::array<vec3, 2> m_screen_axes;
         vec2 m_screen_org;
         vec3 m_camera_org, m_camera_dir;
 
 public:
         PerspectiveProjector(const vec3& camera_org, const vec3& camera_dir, const std::array<vec3, 2>& screen_axes,
-                             double width_view_angle_degrees, const std::array<int, 2>& sizes)
+                             double width_view_angle_degrees, const std::array<int, 2>& screen_size)
         {
                 namespace Impl = ProjectorImplementation;
 
-                m_screen_sizes = sizes;
-                m_screen_org = Impl::screen_org<double>(sizes);
+                m_screen_size = screen_size;
+                m_screen_org = Impl::screen_org<double>(screen_size);
+                m_camera_org = camera_org;
+                std::tie(m_camera_dir, m_screen_axes) = Impl::unit_dir_and_axes(camera_dir, screen_axes);
+
+                //
 
                 if (!(width_view_angle_degrees > 0 && width_view_angle_degrees < 180))
                 {
                         error("Perspective projection: error view angle " + to_string(width_view_angle_degrees));
                 }
 
-                m_camera_org = camera_org;
-                std::tie(m_camera_dir, m_screen_axes) = Impl::unit_dir_and_axes(camera_dir, screen_axes);
-
-                //
-
                 double half_angle = width_view_angle_degrees * 0.5 / 180.0 * PI<double>;
-                double dir_length = sizes[0] * 0.5 * std::tan(0.5 * PI<double> - half_angle);
+                double dir_length = screen_size[0] * 0.5 * std::tan(0.5 * PI<double> - half_angle);
 
                 m_camera_dir *= dir_length;
         }
 
         int screen_width() const override
         {
-                return m_screen_sizes[0];
+                return m_screen_size[0];
         }
 
         int screen_height() const override
         {
-                return m_screen_sizes[1];
+                return m_screen_size[1];
         }
 
         ray3 ray(const vec2& point) const override
         {
+                namespace Impl = ProjectorImplementation;
+
                 vec2 screen_point = m_screen_org + point;
-
-                vec3 screen_dir = m_screen_axes[0] * screen_point[0];
-                for (unsigned i = 1; i < 2; ++i)
-                {
-                        screen_dir += m_screen_axes[i] * screen_point[i];
-                }
-
+                vec3 screen_dir = Impl::compute_screen_dir(m_screen_axes, screen_point);
                 return ray3(m_camera_org, m_camera_dir + screen_dir);
         }
 };
 
 class ParallelProjector final : public Projector
 {
-        std::array<int, 2> m_screen_sizes;
+        std::array<int, 2> m_screen_size;
         std::array<vec3, 2> m_screen_axes;
         vec2 m_screen_org;
         vec3 m_camera_org, m_camera_dir;
 
 public:
         ParallelProjector(const vec3& camera_org, const vec3& camera_dir, const std::array<vec3, 2>& screen_axes,
-                          double view_width, const std::array<int, 2>& sizes)
+                          double view_width, const std::array<int, 2>& screen_size)
         {
                 namespace Impl = ProjectorImplementation;
 
-                m_screen_sizes = sizes;
-                m_screen_org = Impl::screen_org<double>(sizes);
+                m_screen_size = screen_size;
+                m_screen_org = Impl::screen_org<double>(screen_size);
+                m_camera_org = camera_org;
+                std::tie(m_camera_dir, m_screen_axes) = Impl::unit_dir_and_axes(camera_dir, screen_axes);
+
+                //
 
                 if (!(view_width > 0))
                 {
                         error("Error view width for parallel projection");
                 }
 
-                m_camera_org = camera_org;
-                std::tie(m_camera_dir, m_screen_axes) = Impl::unit_dir_and_axes(camera_dir, screen_axes);
-
-                //
-
-                double coef = view_width / sizes[0];
+                double coef = view_width / screen_size[0];
                 m_screen_axes[0] *= coef;
                 m_screen_axes[1] *= coef;
         }
 
         int screen_width() const override
         {
-                return m_screen_sizes[0];
+                return m_screen_size[0];
         }
 
         int screen_height() const override
         {
-                return m_screen_sizes[1];
+                return m_screen_size[1];
         }
 
         ray3 ray(const vec2& point) const override
         {
+                namespace Impl = ProjectorImplementation;
+
                 vec2 screen_point = m_screen_org + point;
-
-                vec3 screen_dir = m_screen_axes[0] * screen_point[0];
-                for (unsigned i = 1; i < 2; ++i)
-                {
-                        screen_dir += m_screen_axes[i] * screen_point[i];
-                }
-
+                vec3 screen_dir = Impl::compute_screen_dir(m_screen_axes, screen_point);
                 return ray3(m_camera_org + screen_dir, m_camera_dir);
         }
 };
@@ -197,7 +205,7 @@ public:
 // из центра полусферы в направлении точек на сфере.
 class SphericalProjector final : public Projector
 {
-        std::array<int, 2> m_screen_sizes;
+        std::array<int, 2> m_screen_size;
         std::array<vec3, 2> m_screen_axes;
         vec2 m_screen_org;
         vec3 m_camera_org, m_camera_dir;
@@ -206,56 +214,62 @@ class SphericalProjector final : public Projector
 
 public:
         SphericalProjector(const vec3& camera_org, const vec3& camera_dir, const std::array<vec3, 2>& screen_axes,
-                           double width_view_angle_degrees, const std::array<int, 2>& sizes)
+                           double width_view_angle_degrees, const std::array<int, 2>& screen_size)
         {
                 namespace Impl = ProjectorImplementation;
 
-                m_screen_sizes = sizes;
-                m_screen_org = Impl::screen_org<double>(sizes);
-
-                double half_angle = width_view_angle_degrees * 0.5 / 180.0 * PI<double>;
-
-                double sin_alpha = std::sin(half_angle);
-
-                if (!(width_view_angle_degrees > 0 && (square(sin_alpha) + square((sin_alpha / sizes[0]) * sizes[1]) < 1)))
-                {
-                        error("Error view angle for spherical projection");
-                }
-
-                m_square_radius = square(sizes[0] * 0.5 / sin_alpha);
-
+                m_screen_size = screen_size;
+                m_screen_org = Impl::screen_org<double>(screen_size);
                 m_camera_org = camera_org;
                 std::tie(m_camera_dir, m_screen_axes) = Impl::unit_dir_and_axes(camera_dir, screen_axes);
+
+                //
+
+                double half_angle = width_view_angle_degrees * 0.5 / 180.0 * PI<double>;
+                double sin_alpha = std::sin(half_angle);
+
+                if (!(width_view_angle_degrees > 0))
+                {
+                        error("Spherical projection view angle " + to_string(width_view_angle_degrees) + " is not positive");
+                }
+                double k = sin_alpha / screen_size[0];
+                double r = square(sin_alpha);
+                for (unsigned i = 1; i < 2; ++i)
+                {
+                        r += square(k * screen_size[i]);
+                }
+                if (!(r < 1))
+                {
+                        error("Spherical projection view angle " + to_string(width_view_angle_degrees) + " is too big");
+                }
+
+                m_square_radius = square(screen_size[0] * 0.5 / sin_alpha);
         }
 
         int screen_width() const override
         {
-                return m_screen_sizes[0];
+                return m_screen_size[0];
         }
 
         int screen_height() const override
         {
-                return m_screen_sizes[1];
+                return m_screen_size[1];
         }
 
         ray3 ray(const vec2& point) const override
         {
+                namespace Impl = ProjectorImplementation;
+
                 vec2 screen_point = m_screen_org + point;
 
-                double radicand = m_square_radius - square(screen_point[0]) - square(screen_point[1]);
+                double radicand = m_square_radius - dot(screen_point, screen_point);
                 if (!(radicand > 0))
                 {
                         error("Error spherical projection radicand");
                 }
-
                 double z = std::sqrt(radicand);
 
-                vec3 screen_dir = m_screen_axes[0] * screen_point[0];
-                for (unsigned i = 1; i < 2; ++i)
-                {
-                        screen_dir += m_screen_axes[i] * screen_point[i];
-                }
-
+                vec3 screen_dir = Impl::compute_screen_dir(m_screen_axes, screen_point);
                 return ray3(m_camera_org, m_camera_dir * z + screen_dir);
         }
 };
