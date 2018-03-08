@@ -17,39 +17,60 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "path_tracing/objects.h"
+#include "com/color/colors.h"
+#include "com/vec.h"
 
-class PointLight final : public LightSource
+#include <cmath>
+#include <type_traits>
+
+template <size_t N, typename T>
+class PointLight
 {
-        vec3 m_location;
+        static_assert(N >= 2);
+        static_assert(std::is_floating_point_v<T>);
+
+        Vector<N, T> m_location;
         Color m_color;
-        double m_unit_intensity_distance_square;
+        T m_coef;
 
 public:
-        PointLight(const vec3& location, const Color& color, double unit_intensity_distance)
-                : m_location(location),
-                  m_color(color),
-                  m_unit_intensity_distance_square(unit_intensity_distance * unit_intensity_distance)
+        PointLight(const Vector<N, T>& location, const Color& color, T unit_intensity_distance)
+                : m_location(location), m_color(color), m_coef(std::pow(unit_intensity_distance, N - 1))
         {
         }
-        void properties(const vec3& point, Color* color, vec3* vector_from_point_to_light) const override
+
+        void properties(const Vector<N, T>& point, Color* color, Vector<N, T>* vector_from_point_to_light) const
         {
                 *vector_from_point_to_light = m_location - point;
-                *color = m_color *
-                         (m_unit_intensity_distance_square / dot(*vector_from_point_to_light, *vector_from_point_to_light));
+
+                T square_distance = dot(*vector_from_point_to_light, *vector_from_point_to_light);
+
+                if constexpr (N == 3)
+                {
+                        *color = m_color * (m_coef / square_distance);
+                }
+                else
+                {
+                        *color = m_color * (m_coef / std::pow(square_distance, T(N - 1) / 2));
+                }
         }
 };
 
-class ConstantLight final : public LightSource
+template <size_t N, typename T>
+class ConstantLight
 {
-        vec3 m_location;
+        static_assert(N >= 2);
+        static_assert(std::is_floating_point_v<T>);
+
+        Vector<N, T> m_location;
         Color m_color;
 
 public:
-        ConstantLight(const vec3& location, const Color& color) : m_location(location), m_color(color)
+        ConstantLight(const Vector<N, T>& location, const Color& color) : m_location(location), m_color(color)
         {
         }
-        void properties(const vec3& point, Color* color, vec3* vector_from_point_to_light) const override
+
+        void properties(const Vector<N, T>& point, Color* color, Vector<N, T>* vector_from_point_to_light) const
         {
                 *vector_from_point_to_light = m_location - point;
                 *color = m_color;

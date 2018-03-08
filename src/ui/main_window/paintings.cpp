@@ -17,8 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "paintings.h"
 
-#include "path_tracing/lights/light_source.h"
 #include "path_tracing/scenes.h"
+#include "path_tracing/visible_lights.h"
 #include "path_tracing/visible_projectors.h"
 #include "ui/painter_window/painter_window.h"
 #include "ui/support/support.h"
@@ -44,7 +44,7 @@ std::unique_ptr<const LightSource> create_light_source(const IShow& show)
 {
         vec3 light_position = show.object_position() - show.light_direction() * show.object_size() * 1000.0;
 
-        return std::make_unique<const ConstantLight>(light_position, Color(1));
+        return std::make_unique<const VisibleConstantLight>(light_position, Color(1));
 }
 
 bool parameters(PathTracingParameters& parameters_window, const IShow& show, int default_samples_per_pixel,

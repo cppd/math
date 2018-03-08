@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/color/colors.h"
 #include "obj/obj_alg.h"
 #include "obj/obj_file_load.h"
-#include "path_tracing/lights/light_source.h"
+#include "path_tracing/visible_lights.h"
 #include "path_tracing/visible_projectors.h"
 #include "path_tracing/visible_shapes.h"
 
@@ -47,8 +47,8 @@ class CornellBox : public PaintObjects
 
         std::unique_ptr<VisibleSharedMesh> m_mesh;
 
-        std::unique_ptr<ConstantLight> m_constant_light;
-        std::unique_ptr<PointLight> m_point_light;
+        std::unique_ptr<VisibleConstantLight> m_constant_light;
+        std::unique_ptr<VisiblePointLight> m_point_light;
 
 public:
         CornellBox(int width, int height, const std::string& obj_file_name, double size, const Color& default_color,
@@ -158,8 +158,8 @@ public:
                 m_lamp->set_light_source(true);
                 m_lamp->set_light_source_color(Color(50));
 
-                m_constant_light = std::make_unique<ConstantLight>(upper_center, Color(1));
-                m_point_light = std::make_unique<PointLight>(upper_center, Color(1), 1);
+                m_constant_light = std::make_unique<VisibleConstantLight>(upper_center, Color(1));
+                m_point_light = std::make_unique<VisiblePointLight>(upper_center, Color(1), 1);
 
                 m_objects.push_back(m_lamp.get());
                 // m_light_sources.push_back(m_constant_light.get());
