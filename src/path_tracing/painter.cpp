@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "painter.h"
 
+#include "path_tracing/coefficient/cosine_sphere.h"
 #include "path_tracing/sampling/sampler.h"
 #include "path_tracing/sampling/sphere.h"
 #include "path_tracing/space/ray_intersection.h"
@@ -27,6 +28,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/thread.h"
 
 #include <thread>
+
+template <unsigned N>
+constexpr double DIFFUSE_LIGHT_COEFFICIENT = cosine_sphere_coefficient(N);
 
 constexpr double MIN_COLOR_LEVEL = 1e-4;
 constexpr int MAX_RECURSION_LEVEL = 100;
@@ -184,7 +188,7 @@ Color direct_diffuse_lighting(Counter& ray_count, const std::vector<const Generi
                         continue;
                 }
 
-                double light_weight = 2 * dot_light_and_normal;
+                double light_weight = DIFFUSE_LIGHT_COEFFICIENT<3> * dot_light_and_normal;
 
                 ++ray_count;
 
