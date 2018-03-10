@@ -17,51 +17,101 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "path_tracing/objects.h"
-
 #include "com/error.h"
 #include "com/thread.h"
 #include "com/time.h"
 
-class BarPaintbrush final : public Paintbrush
+#include <functional>
+#include <numeric>
+
+template <size_t N>
+class BarPaintbrush
 {
-        struct Pixel
-        {
-                int_least16_t x, y;
-                Pixel(int_least16_t px, int_least16_t py) : x(px), y(py)
-                {
-                }
-        };
+        static_assert(N >= 2);
 
-        static std::vector<Pixel> generate_pixels(int width, int height, int paint_height)
-        {
-                std::vector<Pixel> pixels;
+        using Pixel = std::array<int_least16_t, N>;
 
-                for (int y = height - 1; y >= 0; y -= paint_height)
+        // Две следующих функции проходят циклы по измерениям, кроме последнего,
+        // с интервалом paint_height. По последнему измерению с интервалом 1.
+        // Далее цикл по измерениям, кроме последнего, с интервалом 1 от текущего
+        // значения измерения и paint_height итераций или до максимума.
+        // Пример для 3 измерений
+        // for(int x = 0; x < max_x; x += paint_height)
+        // {
+        //         for(int y = 0; y < max_y; y += paint_height)
+        //         {
+        //                 for(int z = 0; z < max_z; ++z)
+        //                 {
+        //                         for(int sub_x = x; sub_x < std::min(max_x, x + paint_height); ++sub_x)
+        //                         {
+        //                                 for(int sub_y = y; sub_y < std::min(max_y, y + paint_height); ++sub_y)
+        //                                 {
+        //                                         // pixel(sub_x, sub_y, z);
+        //                                 }
+        //                         }
+        //                 }
+        //         }
+        // }
+        template <int level>
+        static void generate_pixels(Pixel& pixel, std::array<int, N + N - 1>& min, std::array<int, N + N - 1>& max,
+                                    const std::array<int, N - 1>& inc, std::vector<Pixel>* pixels) noexcept
+        {
+                static_assert(level < N + N - 1);
+
+                for (int i = min[level]; i < max[level]; (level < N - 1) ? (i += inc[level]) : ++i)
                 {
-                        for (int x = 0; x < width; ++x)
+                        if constexpr (level < N - 1)
                         {
-                                int max_sub_y = std::min(paint_height, y + 1);
-                                for (int sub_y = 0; sub_y < max_sub_y; ++sub_y)
-                                {
-                                        int pixel_x = x;
-                                        int pixel_y = y - sub_y;
+                                min[level + N] = i;
+                                max[level + N] = std::min(max[level], i + inc[level]);
+                        }
+                        if constexpr (level == N - 1)
+                        {
+                                pixel[level] = i;
+                        }
+                        if constexpr (level > N - 1)
+                        {
+                                pixel[level - N] = i;
+                                ASSERT(pixel[level - N] >= min[level - N] && pixel[level - N] < max[level - N]);
+                        }
 
-                                        ASSERT(pixel_x >= 0 && pixel_x < width);
-                                        ASSERT(pixel_y >= 0 && pixel_y < height);
-
-                                        pixels.emplace_back(pixel_x, pixel_y);
-                                }
+                        if constexpr (level < N + N - 2)
+                        {
+                                generate_pixels<level + 1>(pixel, min, max, inc, pixels);
+                        }
+                        else
+                        {
+                                pixels->emplace_back(pixel);
                         }
                 }
+        }
+        static void generate_pixels(const std::array<int, N>& sizes, int paint_height, std::vector<Pixel>* pixels) noexcept
+        {
+                std::array<int, N + N - 1> min;
+                std::array<int, N + N - 1> max;
+                std::array<int, N - 1> inc;
+                Pixel pixel;
 
-                ASSERT(pixels.size() == static_cast<unsigned>(width * height));
+                for (unsigned i = 0; i < N; ++i)
+                {
+                        min[i] = 0;
+                        max[i] = sizes[i];
+                }
 
-                return pixels;
+                for (unsigned i = 0; i < N - 1; ++i)
+                {
+                        inc[i] = paint_height;
+                }
+
+                pixels->clear();
+
+                generate_pixels<0>(pixel, min, max, inc, pixels);
+
+                ASSERT(pixels->size() ==
+                       std::accumulate(sizes.cbegin(), sizes.cend(), 1ull, std::multiplies<unsigned long long>()));
         }
 
-        const int m_width, m_height;
-
+        std::array<int, N> m_screen_size;
         std::vector<Pixel> m_pixels;
 
         unsigned m_current_pixel = 0;
@@ -77,29 +127,37 @@ class BarPaintbrush final : public Paintbrush
         mutable SpinLock m_lock;
 
 public:
-        BarPaintbrush(int width, int height, int paint_height)
-                : m_width(width), m_height(height), m_pixels(generate_pixels(width, height, paint_height))
+        BarPaintbrush(const std::array<int, N>& screen_size, int paint_height)
+
         {
+                m_screen_size = screen_size;
+
+                std::reverse(m_screen_size.begin(), m_screen_size.end());
+
+                generate_pixels(m_screen_size, paint_height, &m_pixels);
+
+                std::reverse(m_screen_size.begin(), m_screen_size.end());
+
+                for (Pixel& pixel : m_pixels)
+                {
+                        std::reverse(pixel.begin(), pixel.end());
+                        pixel[N - 1] = m_screen_size[N - 1] - 1 - pixel[N - 1];
+                }
         }
 
-        int painting_width() const noexcept override
+        const std::array<int, N>& screen_size() const noexcept
         {
-                return m_width;
+                return m_screen_size;
         }
 
-        int painting_height() const noexcept override
-        {
-                return m_height;
-        }
-
-        void first_pass() noexcept override
+        void first_pass() noexcept
         {
                 std::lock_guard lg(m_lock);
 
                 m_pass_start_time = time_in_seconds();
         }
 
-        bool next_pixel(int previous_pixel_ray_count, int previous_pixel_sample_count, int* x, int* y) noexcept override
+        bool next_pixel(int previous_pixel_ray_count, int previous_pixel_sample_count, Pixel* pixel) noexcept
         {
                 std::lock_guard lg(m_lock);
 
@@ -108,8 +166,7 @@ public:
 
                 if (m_current_pixel < m_pixels.size())
                 {
-                        *x = m_pixels[m_current_pixel].x;
-                        *y = m_pixels[m_current_pixel].y;
+                        *pixel = m_pixels[m_current_pixel];
 
                         ++m_current_pixel;
                         ++m_pixel_count;
@@ -120,7 +177,7 @@ public:
                 return false;
         }
 
-        virtual void next_pass() noexcept override
+        void next_pass() noexcept
         {
                 std::lock_guard lg(m_lock);
 
@@ -136,7 +193,7 @@ public:
         }
 
         void statistics(long long* pass_count, long long* pixel_count, long long* ray_count, long long* sample_count,
-                        double* previous_pass_duration) const noexcept override
+                        double* previous_pass_duration) const noexcept
         {
                 std::lock_guard lg(m_lock);
 

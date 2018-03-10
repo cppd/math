@@ -193,7 +193,8 @@ struct Paintbrush
         virtual ~Paintbrush() = default;
 
         virtual void first_pass() noexcept = 0;
-        virtual bool next_pixel(int previous_pixel_ray_count, int previous_pixel_sample_count, int* x, int* y) noexcept = 0;
+        virtual bool next_pixel(int previous_pixel_ray_count, int previous_pixel_sample_count,
+                                std::array<int_least16_t, 2>* pixel) noexcept = 0;
         virtual void next_pass() noexcept = 0;
 
         virtual int painting_width() const noexcept = 0;

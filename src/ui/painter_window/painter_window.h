@@ -20,8 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "ui_painter_window.h"
 
 #include "com/thread.h"
-#include "path_tracing/paintbrushes/paintbrush.h"
 #include "path_tracing/painter.h"
+#include "path_tracing/visible_paintbrush.h"
 
 #include <QTimer>
 #include <memory>
@@ -72,7 +72,7 @@ private:
         std::thread m_thread;
         std::atomic_bool m_thread_working;
         const std::thread::id m_window_thread_id;
-        BarPaintbrush m_paintbrush;
+        VisibleBarPaintbrush m_paintbrush;
 
         class Difference;
         std::unique_ptr<Difference> m_difference;

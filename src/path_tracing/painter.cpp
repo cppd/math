@@ -342,12 +342,15 @@ void paint_pixels(PainterRandomEngine& random_engine, std::vector<vec2>* samples
                   const Projector& projector, const PaintData& paint_data, IPainterNotifier* painter_notifier,
                   Paintbrush* paintbrush, const PainterSampler& sampler, Pixels* pixels)
 {
-        int x, y;
+        std::array<int_least16_t, 2> pixel;
 
         Counter ray_count = 0, sample_count = 0;
 
-        while (!stop && paintbrush->next_pixel(ray_count, sample_count, &x, &y))
+        while (!stop && paintbrush->next_pixel(ray_count, sample_count, &pixel))
         {
+                int x = pixel[0];
+                int y = pixel[1];
+
                 painter_notifier->painter_pixel_before(x, y);
 
                 vec2 screen_point(x, y);

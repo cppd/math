@@ -1,0 +1,64 @@
+/*
+Copyright (C) 2017, 2018 Topological Manifold
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+#pragma once
+
+#include "objects.h"
+
+#include "path_tracing/paintbrushes/paintbrush.h"
+
+class VisibleBarPaintbrush final : public Paintbrush
+{
+        BarPaintbrush<2> m_paintbrush;
+
+public:
+        VisibleBarPaintbrush(const std::array<int, 2>& screen_size, int paint_height) : m_paintbrush(screen_size, paint_height)
+        {
+        }
+
+        int painting_width() const noexcept override
+        {
+                return m_paintbrush.screen_size()[0];
+        }
+
+        int painting_height() const noexcept override
+        {
+                return m_paintbrush.screen_size()[1];
+        }
+
+        void first_pass() noexcept override
+        {
+                m_paintbrush.first_pass();
+        }
+
+        bool next_pixel(int previous_pixel_ray_count, int previous_pixel_sample_count,
+                        std::array<int_least16_t, 2>* pixel) noexcept override
+        {
+                return m_paintbrush.next_pixel(previous_pixel_ray_count, previous_pixel_sample_count, pixel);
+        }
+
+        void next_pass() noexcept override
+        {
+                m_paintbrush.next_pass();
+        }
+
+        void statistics(long long* pass_count, long long* pixel_count, long long* ray_count, long long* sample_count,
+                        double* previous_pass_duration) const noexcept override
+        {
+                m_paintbrush.statistics(pass_count, pixel_count, ray_count, sample_count, previous_pass_duration);
+        }
+};

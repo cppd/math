@@ -94,7 +94,7 @@ PainterWindow::PainterWindow(const std::string& title, unsigned thread_count, in
           m_stop(false),
           m_thread_working(false),
           m_window_thread_id(std::this_thread::get_id()),
-          m_paintbrush(m_width, m_height, PANTBRUSH_WIDTH),
+          m_paintbrush({{m_width, m_height}}, PANTBRUSH_WIDTH),
           m_difference(std::make_unique<Difference>(DIFFERENCE_INTERVAL_MILLISECONDS))
 {
         ui.setupUi(this);
