@@ -37,11 +37,22 @@ static_assert(std::numeric_limits<float>::max() == max_binary_fraction<float>() 
 static_assert(std::numeric_limits<double>::max() == max_binary_fraction<double>() * binary_exponent<double>(1023));
 }
 
-static_assert(limits<double>::epsilon() == std::numeric_limits<double>::epsilon());
-static_assert(limits<double>::max() == std::numeric_limits<double>::max());
-static_assert(limits<double>::lowest() == std::numeric_limits<double>::lowest());
-static_assert(limits<double>::digits == std::numeric_limits<double>::digits);
-static_assert(limits<double>::digits10 == std::numeric_limits<double>::digits10);
+namespace
+{
+template <typename T>
+class compare_with_numeric_limits
+{
+        static_assert(limits<T>::epsilon() == std::numeric_limits<T>::epsilon());
+        static_assert(limits<T>::max() == std::numeric_limits<T>::max());
+        static_assert(limits<T>::lowest() == std::numeric_limits<T>::lowest());
+        static_assert(limits<T>::digits == std::numeric_limits<T>::digits);
+        static_assert(limits<T>::digits10 == std::numeric_limits<T>::digits10);
+        static_assert(limits<T>::radix == std::numeric_limits<T>::radix);
+};
+template class compare_with_numeric_limits<float>;
+template class compare_with_numeric_limits<double>;
+template class compare_with_numeric_limits<long double>;
+}
 
 static_assert(limits<unsigned __int128>::max() > 0);
 static_assert(limits<unsigned __int128>::max() == (((static_cast<unsigned __int128>(1) << 127) - 1) << 1) + 1);

@@ -99,6 +99,7 @@ public:
         }
         static constexpr int digits = std::numeric_limits<T>::digits;
         static constexpr int digits10 = std::numeric_limits<T>::digits10;
+        static constexpr int radix = std::numeric_limits<T>::radix;
 };
 
 template <>
@@ -117,6 +118,7 @@ public:
         }
         static constexpr int digits = 128;
         static constexpr int digits10 = 38;
+        static constexpr int radix = 2;
 };
 
 template <>
@@ -135,6 +137,7 @@ public:
         }
         static constexpr int digits = 127;
         static constexpr int digits10 = 38;
+        static constexpr int radix = 2;
 };
 
 template <>
@@ -160,6 +163,7 @@ public:
         }
         static constexpr int digits = 113;
         static constexpr int digits10 = 33;
+        static constexpr int radix = 2;
 };
 }
 
