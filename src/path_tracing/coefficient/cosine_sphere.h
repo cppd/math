@@ -92,6 +92,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // ----------------------------------
 //  (n-2) (n-4) ...   (int(n)/2 раз, включая умножение на единицу)
 //
+// Функция предназначена для использования только в константах constexpr,
+// поэтому не нужно быстродействие вроде таблиц готовых значений и прочего.
 constexpr long double cosine_sphere_coefficient(const unsigned N)
 {
         ASSERT(N >= 2);

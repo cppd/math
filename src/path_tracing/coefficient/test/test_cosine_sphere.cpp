@@ -28,30 +28,40 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace
 {
+void test_compare_with_beta(unsigned n)
+{
+        long double beta = std::betal(0.5l, (n - 1) / 2.0l) / std::betal(1.0l, (n - 1) / 2.0l);
+        long double function = cosine_sphere_coefficient(n);
+        long double discrepancy_percent = std::abs(beta - function) / function * 100;
+
+        if (discrepancy_percent > 1e-10)
+        {
+                std::ostringstream oss;
+                oss << std::fixed;
+                oss << std::setprecision(std::numeric_limits<long double>::max_digits10);
+                oss << "N = " << n << ": beta = " << beta << ", function = " << function;
+                oss << std::scientific;
+                oss << std::setprecision(5);
+                oss << ", discrepancy = " << discrepancy_percent << "%";
+
+                LOG(oss.str());
+
+                error("Huge discrepancy between beta and function: " + to_string(discrepancy_percent) + "%");
+        }
+}
+
 void test_compare_with_beta()
 {
         LOG("Compare with beta");
 
-        for (unsigned n = 2; n <= 10000; ++n)
+        for (unsigned n = 2; n < 10000; ++n)
         {
-                long double beta = std::betal(0.5l, (n - 1) / 2.0l) / std::betal(1.0l, (n - 1) / 2.0l);
-                long double func = cosine_sphere_coefficient(n);
-                long double discrepancy_percent = std::abs(beta - func) / func * 100;
+                test_compare_with_beta(n);
+        }
 
-                if (discrepancy_percent > 1e-10)
-                {
-                        std::ostringstream oss;
-                        oss << std::fixed;
-                        oss << std::setprecision(std::numeric_limits<long double>::max_digits10);
-                        oss << "N = " << n << ": beta = " << beta << ", func = " << func;
-                        oss << std::scientific;
-                        oss << std::setprecision(5);
-                        oss << ", discrepancy = " << discrepancy_percent << "%";
-
-                        LOG(oss.str());
-
-                        error("Huge discrepancy between beta and function: " + to_string(discrepancy_percent) + "%");
-                }
+        for (unsigned n = 10000; n <= 1'000'000; (n & 1) == 0 ? ++n : n += 999)
+        {
+                test_compare_with_beta(n);
         }
 
         LOG("Check passed");
@@ -80,14 +90,14 @@ void test()
                 sum += std::abs(c);
         }
 
-        long double computed = static_cast<long double>(count) / sum;
-        long double formula = cosine_sphere_coefficient(N);
-        long double discrepancy_percent = std::abs(computed - formula) / formula * 100;
+        long double data = static_cast<long double>(count) / sum;
+        long double function = cosine_sphere_coefficient(N);
+        long double discrepancy_percent = std::abs(data - function) / function * 100;
 
         std::ostringstream oss;
         oss << std::fixed;
-        oss << std::setprecision(std::numeric_limits<T>::max_digits10);
-        oss << std::setw(2) << N << ": computed = " << computed << ", formula = " << formula;
+        oss << std::setprecision(std::numeric_limits<long double>::max_digits10);
+        oss << std::setw(2) << N << ": data = " << data << ", function = " << function;
         oss << std::setprecision(5);
         oss << ", discrepancy = " << discrepancy_percent << "%";
 
@@ -99,25 +109,18 @@ void test()
         }
 }
 
+template <typename T, size_t... I>
+void test(std::integer_sequence<size_t, I...>)
+{
+        (test<I + 2, T>(), ...);
+}
+
 template <typename T>
 void test()
 {
         LOG(std::string("Compare with data, ") + type_name<T>());
 
-        test<2, T>();
-        test<3, T>();
-        test<4, T>();
-        test<5, T>();
-        test<6, T>();
-        test<7, T>();
-        test<8, T>();
-        test<9, T>();
-        test<10, T>();
-        test<11, T>();
-        test<12, T>();
-        test<13, T>();
-        test<14, T>();
-        test<15, T>();
+        test<T>(std::make_integer_sequence<size_t, 19>());
 
         LOG("Check passed");
 }
