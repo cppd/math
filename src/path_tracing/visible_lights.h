@@ -21,32 +21,34 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "path_tracing/lights/light_source.h"
 
-class VisiblePointLight final : public LightSource
+template <size_t N, typename T>
+class VisiblePointLight final : public LightSource<N, T>
 {
-        PointLight<3, double> m_light;
+        PointLight<N, T> m_light;
 
 public:
-        VisiblePointLight(const vec3& location, const Color& color, double unit_intensity_distance)
+        VisiblePointLight(const Vector<N, T>& location, const Color& color, T unit_intensity_distance)
                 : m_light(location, color, unit_intensity_distance)
         {
         }
 
-        void properties(const vec3& point, Color* color, vec3* vector_from_point_to_light) const override
+        void properties(const Vector<N, T>& point, Color* color, Vector<N, T>* vector_from_point_to_light) const override
         {
                 m_light.properties(point, color, vector_from_point_to_light);
         }
 };
 
-class VisibleConstantLight final : public LightSource
+template <size_t N, typename T>
+class VisibleConstantLight final : public LightSource<N, T>
 {
-        ConstantLight<3, double> m_light;
+        ConstantLight<N, T> m_light;
 
 public:
-        VisibleConstantLight(const vec3& location, const Color& color) : m_light(location, color)
+        VisibleConstantLight(const Vector<N, T>& location, const Color& color) : m_light(location, color)
         {
         }
 
-        void properties(const vec3& point, Color* color, vec3* vector_from_point_to_light) const override
+        void properties(const Vector<N, T>& point, Color* color, Vector<N, T>* vector_from_point_to_light) const override
         {
                 m_light.properties(point, color, vector_from_point_to_light);
         }

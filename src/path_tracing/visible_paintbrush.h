@@ -21,23 +21,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "path_tracing/paintbrushes/paintbrush.h"
 
-class VisibleBarPaintbrush final : public Paintbrush
+template <size_t N>
+class VisibleBarPaintbrush final : public Paintbrush<N>
 {
-        BarPaintbrush<2> m_paintbrush;
+        BarPaintbrush<N> m_paintbrush;
 
 public:
-        VisibleBarPaintbrush(const std::array<int, 2>& screen_size, int paint_height) : m_paintbrush(screen_size, paint_height)
+        VisibleBarPaintbrush(const std::array<int, N>& screen_size, int paint_height) : m_paintbrush(screen_size, paint_height)
         {
         }
 
-        int painting_width() const noexcept override
+        const std::array<int, N>& screen_size() const noexcept override
         {
-                return m_paintbrush.screen_size()[0];
-        }
-
-        int painting_height() const noexcept override
-        {
-                return m_paintbrush.screen_size()[1];
+                return m_paintbrush.screen_size();
         }
 
         void first_pass() noexcept override
@@ -46,7 +42,7 @@ public:
         }
 
         bool next_pixel(int previous_pixel_ray_count, int previous_pixel_sample_count,
-                        std::array<int_least16_t, 2>* pixel) noexcept override
+                        std::array<int_least16_t, N>* pixel) noexcept override
         {
                 return m_paintbrush.next_pixel(previous_pixel_ray_count, previous_pixel_sample_count, pixel);
         }

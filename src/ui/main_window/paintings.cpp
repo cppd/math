@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace
 {
-std::unique_ptr<const Projector> create_projector(const IShow& show, int paint_width, int paint_height)
+std::unique_ptr<const Projector<3, double>> create_projector(const IShow& show, int paint_width, int paint_height)
 {
         vec3 camera_up, camera_direction, view_center;
         double view_width;
@@ -35,16 +35,16 @@ std::unique_ptr<const Projector> create_projector(const IShow& show, int paint_w
         vec3 camera_position = view_center - camera_direction * 2.0 * show.object_size();
         vec3 camera_right = cross(camera_direction, camera_up);
 
-        return std::make_unique<const VisibleParallelProjector>(camera_position, camera_direction,
-                                                                std::array<vec3, 2>{{camera_right, camera_up}}, view_width,
-                                                                std::array<int, 2>{{paint_width, paint_height}});
+        return std::make_unique<const VisibleParallelProjector<3, double>>(
+                camera_position, camera_direction, std::array<vec3, 2>{{camera_right, camera_up}}, view_width,
+                std::array<int, 2>{{paint_width, paint_height}});
 }
 
-std::unique_ptr<const LightSource> create_light_source(const IShow& show)
+std::unique_ptr<const LightSource<3, double>> create_light_source(const IShow& show)
 {
         vec3 light_position = show.object_position() - show.light_direction() * show.object_size() * 1000.0;
 
-        return std::make_unique<const VisibleConstantLight>(light_position, Color(1));
+        return std::make_unique<const VisibleConstantLight<3, double>>(light_position, Color(1));
 }
 
 bool parameters(PathTracingParameters& parameters_window, const IShow& show, int default_samples_per_pixel,

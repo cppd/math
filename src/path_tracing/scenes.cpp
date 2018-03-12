@@ -22,18 +22,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "obj/obj_file_load.h"
 #include "path_tracing/visible_lights.h"
 #include "path_tracing/visible_projectors.h"
-#include "path_tracing/visible_shapes.h"
 
 namespace
 {
-class CornellBox : public PaintObjects
+class CornellBox : public PaintObjects<3, double>
 {
-        std::vector<const GenericObject*> m_objects;
-        std::vector<const LightSource*> m_light_sources;
-        std::unique_ptr<VisiblePerspectiveProjector> m_perspective_projector;
-        std::unique_ptr<VisibleParallelProjector> m_parallel_projector;
-        std::unique_ptr<VisibleSphericalProjector> m_spherical_projector;
-        SurfaceProperties m_default_surface_properties;
+        std::vector<const GenericObject<3, double>*> m_objects;
+        std::vector<const LightSource<3, double>*> m_light_sources;
+        std::unique_ptr<VisiblePerspectiveProjector<3, double>> m_perspective_projector;
+        std::unique_ptr<VisibleParallelProjector<3, double>> m_parallel_projector;
+        std::unique_ptr<VisibleSphericalProjector<3, double>> m_spherical_projector;
+        SurfaceProperties<3, double> m_default_surface_properties;
 
         std::unique_ptr<VisibleRectangle> m_rectangle_back;
         std::unique_ptr<VisibleRectangle> m_rectangle_top;
@@ -41,14 +40,14 @@ class CornellBox : public PaintObjects
         std::unique_ptr<VisibleRectangle> m_rectangle_left;
         std::unique_ptr<VisibleRectangle> m_rectangle_right;
 
-        std::unique_ptr<VisibleParallelepiped> m_box;
+        std::unique_ptr<VisibleParallelepiped<3, double>> m_box;
 
         std::unique_ptr<VisibleRectangle> m_lamp;
 
-        std::unique_ptr<VisibleSharedMesh> m_mesh;
+        std::unique_ptr<VisibleSharedMesh<3, double>> m_mesh;
 
-        std::unique_ptr<VisibleConstantLight> m_constant_light;
-        std::unique_ptr<VisiblePointLight> m_point_light;
+        std::unique_ptr<VisibleConstantLight<3, double>> m_constant_light;
+        std::unique_ptr<VisiblePointLight<3, double>> m_point_light;
 
 public:
         CornellBox(int width, int height, const std::string& obj_file_name, double size, const Color& default_color,
@@ -63,7 +62,7 @@ public:
                 std::shared_ptr mesh =
                         std::make_shared<Mesh<3, double>>(obj_file.get(), vertex_matrix, hardware_concurrency(), &progress);
 
-                m_mesh = std::make_unique<VisibleSharedMesh>(mesh);
+                m_mesh = std::make_unique<VisibleSharedMesh<3, double>>(mesh);
 
                 make_cornell_box(width, height, size, default_color, diffuse, camera_direction, camera_up);
         }
@@ -71,7 +70,7 @@ public:
         CornellBox(int width, int height, const std::shared_ptr<const Mesh<3, double>>& mesh, double size,
                    const Color& default_color, double diffuse, const vec3& camera_direction, const vec3& camera_up)
         {
-                m_mesh = std::make_unique<VisibleSharedMesh>(mesh);
+                m_mesh = std::make_unique<VisibleSharedMesh<3, double>>(mesh);
 
                 make_cornell_box(width, height, size, default_color, diffuse, camera_direction, camera_up);
         }
@@ -130,20 +129,20 @@ public:
                 const std::array<int, 2> screen_sizes{{width, height}};
                 const std::array<vec3, 2> screen_axes{{right, up}};
                 m_perspective_projector =
-                        std::make_unique<VisiblePerspectiveProjector>(view_point, dir, screen_axes, 70, screen_sizes);
+                        std::make_unique<VisiblePerspectiveProjector<3, double>>(view_point, dir, screen_axes, 70, screen_sizes);
                 m_parallel_projector =
-                        std::make_unique<VisibleParallelProjector>(view_point, dir, screen_axes, size, screen_sizes);
+                        std::make_unique<VisibleParallelProjector<3, double>>(view_point, dir, screen_axes, size, screen_sizes);
                 m_spherical_projector =
-                        std::make_unique<VisibleSphericalProjector>(view_point, dir, screen_axes, 80, screen_sizes);
+                        std::make_unique<VisibleSphericalProjector<3, double>>(view_point, dir, screen_axes, 80, screen_sizes);
 
                 m_default_surface_properties.set_color(SrgbInteger(0, 0, 0));
                 m_default_surface_properties.set_diffuse_and_fresnel(1, 0);
                 m_default_surface_properties.set_light_source(false);
                 m_default_surface_properties.set_light_source_color(SrgbInteger(0, 0, 0));
 
-                m_box = std::make_unique<VisibleParallelepiped>(lower_left + 0.7 * size * dir + 0.8 * size * right +
-                                                                        0.1 * size * up,
-                                                                0.1 * size * right, 0.8 * size * up, 0.1 * size * dir);
+                m_box = std::make_unique<VisibleParallelepiped<3, double>>(lower_left + 0.7 * size * dir + 0.8 * size * right +
+                                                                                   0.1 * size * up,
+                                                                           0.1 * size * right, 0.8 * size * up, 0.1 * size * dir);
 
                 m_box->set_color(SrgbInteger(255, 0, 255));
                 m_box->set_diffuse_and_fresnel(1, 0);
@@ -158,8 +157,8 @@ public:
                 m_lamp->set_light_source(true);
                 m_lamp->set_light_source_color(Color(50));
 
-                m_constant_light = std::make_unique<VisibleConstantLight>(upper_center, Color(1));
-                m_point_light = std::make_unique<VisiblePointLight>(upper_center, Color(1), 1);
+                m_constant_light = std::make_unique<VisibleConstantLight<3, double>>(upper_center, Color(1));
+                m_point_light = std::make_unique<VisiblePointLight<3, double>>(upper_center, Color(1), 1);
 
                 m_objects.push_back(m_lamp.get());
                 // m_light_sources.push_back(m_constant_light.get());
@@ -174,98 +173,42 @@ public:
                 m_objects.push_back(m_box.get());
         }
 
-        const std::vector<const GenericObject*>& objects() const override
+        const std::vector<const GenericObject<3, double>*>& objects() const override
         {
                 return m_objects;
         }
 
-        const std::vector<const LightSource*>& light_sources() const override
+        const std::vector<const LightSource<3, double>*>& light_sources() const override
         {
                 return m_light_sources;
         }
 
-        const Projector& projector() const override
+        const Projector<3, double>& projector() const override
         {
                 return *m_perspective_projector;
                 // return *m_parallel_projector;
                 // return *m_spherical_projector;
         }
 
-        const SurfaceProperties& default_surface_properties() const override
-        {
-                return m_default_surface_properties;
-        }
-};
-
-class OneObject final : public PaintObjects
-{
-        VisibleSharedMesh m_object;
-        std::unique_ptr<const Projector> m_projector;
-        std::unique_ptr<const LightSource> m_light_source;
-        SurfaceProperties m_default_surface_properties;
-
-        std::vector<const GenericObject*> m_objects;
-        std::vector<const LightSource*> m_light_sources;
-
-public:
-        OneObject(const Color& background_color, const Color& default_color, double diffuse,
-                  std::unique_ptr<const Projector>&& projector, std::unique_ptr<const LightSource>&& light_source,
-                  const std::shared_ptr<const Mesh<3, double>>& mesh)
-                : m_object(mesh), m_projector(std::move(projector)), m_light_source(std::move(light_source))
-        {
-                m_default_surface_properties.set_color(background_color);
-                m_default_surface_properties.set_diffuse_and_fresnel(1, 0);
-                m_default_surface_properties.set_light_source(true);
-                m_default_surface_properties.set_light_source_color(Color(background_color.luminance()));
-
-                m_object.set_color(default_color);
-                m_object.set_diffuse_and_fresnel(diffuse, 0);
-                m_object.set_light_source(false);
-
-                m_light_sources.push_back(m_light_source.get());
-
-                m_objects.push_back(&m_object);
-        }
-
-        const std::vector<const GenericObject*>& objects() const override
-        {
-                return m_objects;
-        }
-        const std::vector<const LightSource*>& light_sources() const override
-        {
-                return m_light_sources;
-        }
-        const Projector& projector() const override
-        {
-                return *m_projector;
-        }
-        const SurfaceProperties& default_surface_properties() const override
+        const SurfaceProperties<3, double>& default_surface_properties() const override
         {
                 return m_default_surface_properties;
         }
 };
 }
 
-std::unique_ptr<const PaintObjects> cornell_box(int width, int height, const std::string& obj_file_name, double size,
-                                                const Color& default_color, double diffuse, const vec3& camera_direction,
-                                                const vec3& camera_up)
+std::unique_ptr<const PaintObjects<3, double>> cornell_box(int width, int height, const std::string& obj_file_name, double size,
+                                                           const Color& default_color, double diffuse,
+                                                           const vec3& camera_direction, const vec3& camera_up)
 {
         return std::make_unique<CornellBox>(width, height, obj_file_name, size, default_color, diffuse, camera_direction,
                                             camera_up);
 }
 
-std::unique_ptr<const PaintObjects> cornell_box(int width, int height, const std::shared_ptr<const Mesh<3, double>>& mesh,
-                                                double size, const Color& default_color, double diffuse,
-                                                const vec3& camera_direction, const vec3& camera_up)
+std::unique_ptr<const PaintObjects<3, double>> cornell_box(int width, int height,
+                                                           const std::shared_ptr<const Mesh<3, double>>& mesh, double size,
+                                                           const Color& default_color, double diffuse,
+                                                           const vec3& camera_direction, const vec3& camera_up)
 {
         return std::make_unique<CornellBox>(width, height, mesh, size, default_color, diffuse, camera_direction, camera_up);
-}
-
-std::unique_ptr<const PaintObjects> one_object_scene(const Color& background_color, const Color& default_color, double diffuse,
-                                                     std::unique_ptr<const Projector>&& projector,
-                                                     std::unique_ptr<const LightSource>&& light_source,
-                                                     const std::shared_ptr<const Mesh<3, double>>& mesh)
-{
-        return std::make_unique<OneObject>(background_color, default_color, diffuse, std::move(projector),
-                                           std::move(light_source), mesh);
 }

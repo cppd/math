@@ -21,82 +21,73 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "path_tracing/projectors/projector.h"
 
-class VisiblePerspectiveProjector final : public Projector
+template <size_t N, typename T>
+class VisiblePerspectiveProjector final : public Projector<N, T>
 {
-        PerspectiveProjector<3, double> m_projector;
+        PerspectiveProjector<N, T> m_projector;
 
 public:
-        VisiblePerspectiveProjector(const vec3& camera_org, const vec3& camera_dir, const std::array<vec3, 2>& screen_axes,
-                                    double width_view_angle_degrees, const std::array<int, 2>& screen_size)
+        VisiblePerspectiveProjector(const Vector<N, T>& camera_org, const Vector<N, T>& camera_dir,
+                                    const std::array<Vector<N, T>, N - 1>& screen_axes, T width_view_angle_degrees,
+                                    const std::array<int, N - 1>& screen_size)
                 : m_projector(camera_org, camera_dir, screen_axes, width_view_angle_degrees, screen_size)
         {
         }
 
-        int screen_width() const override
+        const std::array<int, N - 1>& screen_size() const override
         {
-                return m_projector.screen_size()[0];
+                return m_projector.screen_size();
         }
 
-        int screen_height() const override
-        {
-                return m_projector.screen_size()[1];
-        }
-
-        ray3 ray(const vec2& point) const override
+        Ray<N, T> ray(const Vector<N - 1, T>& point) const override
         {
                 return m_projector.ray(point);
         }
 };
 
-class VisibleParallelProjector final : public Projector
+template <size_t N, typename T>
+class VisibleParallelProjector final : public Projector<N, T>
 {
-        ParallelProjector<3, double> m_projector;
+        ParallelProjector<N, T> m_projector;
 
 public:
-        VisibleParallelProjector(const vec3& camera_org, const vec3& camera_dir, const std::array<vec3, 2>& screen_axes,
-                                 double view_width, const std::array<int, 2>& screen_size)
+        VisibleParallelProjector(const Vector<N, T>& camera_org, const Vector<N, T>& camera_dir,
+                                 const std::array<Vector<N, T>, N - 1>& screen_axes, T view_width,
+                                 const std::array<int, N - 1>& screen_size)
                 : m_projector(camera_org, camera_dir, screen_axes, view_width, screen_size)
         {
         }
 
-        int screen_width() const override
+        const std::array<int, N - 1>& screen_size() const override
         {
-                return m_projector.screen_size()[0];
+                return m_projector.screen_size();
         }
 
-        int screen_height() const override
-        {
-                return m_projector.screen_size()[1];
-        }
-
-        ray3 ray(const vec2& point) const override
+        Ray<N, T> ray(const Vector<N - 1, T>& point) const override
         {
                 return m_projector.ray(point);
         }
 };
 
-class VisibleSphericalProjector final : public Projector
+template <size_t N, typename T>
+class VisibleSphericalProjector final : public Projector<N, T>
 {
-        SphericalProjector<3, double> m_projector;
+        SphericalProjector<N, T> m_projector;
 
 public:
-        VisibleSphericalProjector(const vec3& camera_org, const vec3& camera_dir, const std::array<vec3, 2>& screen_axes,
-                                  double width_view_angle_degrees, const std::array<int, 2>& screen_size)
+        VisibleSphericalProjector(const Vector<N, T>& camera_org, const Vector<N, T>& camera_dir,
+                                  const std::array<Vector<N, T>, N - 1>& screen_axes, T width_view_angle_degrees,
+                                  const std::array<int, N - 1>& screen_size)
                 : m_projector(camera_org, camera_dir, screen_axes, width_view_angle_degrees, screen_size)
         {
         }
 
-        int screen_width() const override
+        const std::array<int, N - 1>& screen_size() const override
         {
-                return m_projector.screen_size()[0];
+                return m_projector.screen_size();
         }
 
-        int screen_height() const override
-        {
-                return m_projector.screen_size()[1];
-        }
-
-        ray3 ray(const vec2& point) const override
+        Ray<N, T> ray(const Vector<N - 1, T>& point) const override
         {
                 return m_projector.ray(point);
         }

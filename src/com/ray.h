@@ -71,7 +71,3 @@ std::string to_string(const Ray<N, T>& data)
 {
         return "(org " + to_string(data.org()) + ", dir " + to_string(data.dir()) + ")";
 }
-
-// ray3 - это только Ray<3, double>.
-// Не менять.
-using ray3 = Ray<3, double>;

@@ -80,12 +80,12 @@ public:
 };
 
 PainterWindow::PainterWindow(const std::string& title, unsigned thread_count, int samples_per_pixel,
-                             std::unique_ptr<const PaintObjects>&& paint_objects)
+                             std::unique_ptr<const PaintObjects<3, double>>&& paint_objects)
         : m_samples_per_pixel(samples_per_pixel),
           m_paint_objects(std::move(paint_objects)),
           m_thread_count(thread_count),
-          m_width(m_paint_objects->projector().screen_width()),
-          m_height(m_paint_objects->projector().screen_height()),
+          m_width(m_paint_objects->projector().screen_size()[0]),
+          m_height(m_paint_objects->projector().screen_size()[1]),
           m_image(m_width, m_height, QImage::Format_RGB32),
           m_data(m_width * m_height),
           m_data_clean(m_width * m_height),
@@ -180,14 +180,14 @@ void PainterWindow::update_points()
         ui.label_points->update();
 }
 
-void PainterWindow::painter_pixel_before(int x, int y) noexcept
+void PainterWindow::painter_pixel_before(const std::array<int_least16_t, 2>& pixel) noexcept
 {
-        mark_pixel_busy(x, m_height - 1 - y);
+        mark_pixel_busy(pixel[0], m_height - 1 - pixel[1]);
 }
 
-void PainterWindow::painter_pixel_after(int x, int y, const SrgbInteger& c) noexcept
+void PainterWindow::painter_pixel_after(const std::array<int_least16_t, 2>& pixel, const SrgbInteger& c) noexcept
 {
-        set_pixel(x, m_height - 1 - y, c.red, c.green, c.blue);
+        set_pixel(pixel[0], m_height - 1 - pixel[1], c.red, c.green, c.blue);
 }
 
 void PainterWindow::painter_error_message(const std::string& msg) noexcept

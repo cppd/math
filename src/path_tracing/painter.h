@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <atomic>
 #include <string>
 
+template <size_t N>
 struct IPainterNotifier
 {
 protected:
@@ -31,10 +32,11 @@ protected:
         }
 
 public:
-        virtual void painter_pixel_before(int x, int y) noexcept = 0;
-        virtual void painter_pixel_after(int x, int y, const SrgbInteger& c) noexcept = 0;
+        virtual void painter_pixel_before(const std::array<int_least16_t, N>& pixel) noexcept = 0;
+        virtual void painter_pixel_after(const std::array<int_least16_t, N>& pixel, const SrgbInteger& c) noexcept = 0;
         virtual void painter_error_message(const std::string& msg) noexcept = 0;
 };
 
-void paint(IPainterNotifier* painter_notifier, int samples_per_pixel, const PaintObjects& paint_objects, Paintbrush* paintbrush,
-           int thread_count, std::atomic_bool* stop) noexcept;
+template <size_t N, typename T>
+void paint(IPainterNotifier<N - 1>* painter_notifier, int samples_per_pixel, const PaintObjects<N, T>& paint_objects,
+           Paintbrush<N - 1>* paintbrush, int thread_count, std::atomic_bool* stop) noexcept;

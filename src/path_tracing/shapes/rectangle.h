@@ -31,9 +31,10 @@ public:
         Rectangle() = default;
 
         Rectangle(const vec3& org, const vec3& e0, const vec3& e1);
+
         void set_data(const vec3& org, const vec3& e0, const vec3& e1);
 
-        bool intersect(const ray3& r, double* t) const;
+        bool intersect(const Ray<3, double>& r, double* t) const;
 
         vec3 normal(const vec3& point) const;
 

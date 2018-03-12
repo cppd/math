@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -33,10 +33,11 @@ void Rectangle::set_data(const vec3& org, const vec3& e0, const vec3& e1)
         m_geometry.set_data(m_normal, m_org, {{m_e0, m_e1}});
 }
 
-bool Rectangle::intersect(const ray3& r, double* t) const
+bool Rectangle::intersect(const Ray<3, double>& r, double* t) const
 {
         return m_geometry.intersect(r, m_org, m_normal, t);
 }
+
 vec3 Rectangle::normal(const vec3&) const
 {
         return m_normal;
@@ -46,10 +47,12 @@ const vec3& Rectangle::org() const
 {
         return m_org;
 }
+
 const vec3& Rectangle::e0() const
 {
         return m_e0;
 }
+
 const vec3& Rectangle::e1() const
 {
         return m_e1;

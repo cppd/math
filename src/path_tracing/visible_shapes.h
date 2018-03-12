@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <memory>
 
-class VisibleRectangle final : public GenericObject, public Surface, public SurfaceProperties
+class VisibleRectangle final : public GenericObject<3, double>, public Surface<3, double>, public SurfaceProperties<3, double>
 {
         Rectangle m_rectangle;
 
@@ -34,12 +34,12 @@ public:
         {
         }
 
-        bool intersect_approximate(const ray3& r, double* t) const override
+        bool intersect_approximate(const Ray<3, double>& r, double* t) const override
         {
                 return m_rectangle.intersect(r, t);
         }
 
-        bool intersect_precise(const ray3&, double approximate_t, double* t, const Surface** surface,
+        bool intersect_precise(const Ray<3, double>&, double approximate_t, double* t, const Surface** surface,
                                const void** /*intersection_data*/) const override
         {
                 *t = approximate_t;
@@ -51,9 +51,9 @@ public:
                 return true;
         }
 
-        SurfaceProperties properties(const vec3& p, const void* /*intersection_data*/) const override
+        SurfaceProperties<3, double> properties(const vec3& p, const void* /*intersection_data*/) const override
         {
-                SurfaceProperties s = *this;
+                SurfaceProperties<3, double> s = *this;
 
                 s.set_geometric_normal(m_rectangle.normal(p));
 
@@ -61,21 +61,24 @@ public:
         }
 };
 
-class VisibleParallelepiped final : public GenericObject, public Surface, public SurfaceProperties
+template <size_t N, typename T>
+class VisibleParallelepiped final : public GenericObject<N, T>, public Surface<N, T>, public SurfaceProperties<N, T>
 {
-        Parallelotope<3, double> m_parallelepiped;
+        Parallelotope<N, T> m_parallelepiped;
 
 public:
-        VisibleParallelepiped(const vec3& org, const vec3& e0, const vec3& e1, const vec3& e2) : m_parallelepiped(org, e0, e1, e2)
+        template <typename... V>
+        VisibleParallelepiped(const Vector<N, T>& org, const V&... e) : m_parallelepiped(org, e...)
         {
+                static_assert((std::is_same_v<V, Vector<N, T>> && ...));
         }
 
-        bool intersect_approximate(const ray3& r, double* t) const override
+        bool intersect_approximate(const Ray<N, T>& r, T* t) const override
         {
                 return m_parallelepiped.intersect(r, t);
         }
 
-        bool intersect_precise(const ray3&, double approximate_t, double* t, const Surface** surface,
+        bool intersect_precise(const Ray<N, T>&, T approximate_t, T* t, const Surface<N, T>** surface,
                                const void** /*intersection_data*/) const override
         {
                 *t = approximate_t;
@@ -87,9 +90,9 @@ public:
                 return true;
         }
 
-        SurfaceProperties properties(const vec3& p, const void* /*intersection_data*/) const override
+        SurfaceProperties<N, T> properties(const Vector<N, T>& p, const void* /*intersection_data*/) const override
         {
-                SurfaceProperties s = *this;
+                SurfaceProperties<N, T> s = *this;
 
                 s.set_geometric_normal(m_parallelepiped.normal(p));
 
@@ -97,21 +100,22 @@ public:
         }
 };
 
-class VisibleSharedMesh final : public GenericObject, public Surface, public SurfaceProperties
+template <size_t N, typename T>
+class VisibleSharedMesh final : public GenericObject<N, T>, public Surface<N, T>, public SurfaceProperties<N, T>
 {
-        std::shared_ptr<const Mesh<3, double>> m_mesh;
+        std::shared_ptr<const Mesh<N, T>> m_mesh;
 
 public:
-        VisibleSharedMesh(const std::shared_ptr<const Mesh<3, double>>& mesh) : m_mesh(mesh)
+        VisibleSharedMesh(const std::shared_ptr<const Mesh<N, T>>& mesh) : m_mesh(mesh)
         {
         }
 
-        bool intersect_approximate(const ray3& r, double* t) const override
+        bool intersect_approximate(const Ray<N, T>& r, T* t) const override
         {
                 return m_mesh->intersect_approximate(r, t);
         }
 
-        bool intersect_precise(const ray3& ray, double approximate_t, double* t, const Surface** surface,
+        bool intersect_precise(const Ray<N, T>& ray, T approximate_t, T* t, const Surface<N, T>** surface,
                                const void** intersection_data) const override
         {
                 if (m_mesh->intersect_precise(ray, approximate_t, t, intersection_data))
@@ -125,9 +129,9 @@ public:
                 }
         }
 
-        SurfaceProperties properties(const vec3& p, const void* intersection_data) const override
+        SurfaceProperties<N, T> properties(const Vector<N, T>& p, const void* intersection_data) const override
         {
-                SurfaceProperties s = *this;
+                SurfaceProperties<N, T> s = *this;
 
                 s.set_geometric_normal(m_mesh->geometric_normal(intersection_data));
                 s.set_shading_normal(m_mesh->shading_normal(p, intersection_data));
