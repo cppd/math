@@ -57,6 +57,8 @@ class Mesh
 
         SpatialSubdivisionTree<TreeParallelotope> m_tree;
 
+        Vector<N, T> m_min, m_max;
+
         void create_mesh_object(const Obj<N>* obj, const Matrix<N + 1, N + 1, T>& vertex_matrix, unsigned thread_count,
                                 ProgressRatio* progress);
 
@@ -80,4 +82,6 @@ public:
         Vector<N, T> shading_normal(const Vector<N, T>& p, const void* intersection_data) const;
 
         std::optional<Color> color(const Vector<N, T>& p, const void* intersection_data) const;
+
+        void min_max(Vector<N, T>* min, Vector<N, T>* max) const;
 };

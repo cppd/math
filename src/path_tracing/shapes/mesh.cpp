@@ -81,11 +81,19 @@ void Mesh<N, T>::create_mesh_object(const Obj<N>* obj, const Matrix<N + 1, N + 1
         m_texcoords = to_vector<T>(obj->texcoords());
         m_texcoords.shrink_to_fit();
 
+        m_min = Vector<N, T>(limits<T>::max());
+        m_max = Vector<N, T>(limits<T>::lowest());
         m_facets.reserve(obj->facets().size());
         for (const typename Obj<N>::Facet& facet : obj->facets())
         {
                 m_facets.emplace_back(m_vertices, m_normals, m_texcoords, facet.vertices, facet.has_normal, facet.normals,
                                       facet.has_texcoord, facet.texcoords, facet.material);
+
+                for (int index : facet.vertices)
+                {
+                        m_min = min_vector(m_min, m_vertices[index]);
+                        m_max = max_vector(m_max, m_vertices[index]);
+                }
         }
 
         m_materials.reserve(obj->materials().size());
@@ -194,6 +202,13 @@ std::optional<Color> Mesh<N, T>::color(const Vector<N, T>& p, const void* inters
         {
                 return std::nullopt;
         }
+}
+
+template <size_t N, typename T>
+void Mesh<N, T>::min_max(Vector<N, T>* min, Vector<N, T>* max) const
+{
+        *min = m_min;
+        *max = m_max;
 }
 
 template class Mesh<3, float>;

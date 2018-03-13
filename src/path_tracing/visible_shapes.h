@@ -59,6 +59,21 @@ public:
 
                 return s;
         }
+
+        void min_max(vec3* min, vec3* max) const override
+        {
+                std::array<vec3, 4> vertices{{m_rectangle.org(), m_rectangle.org() + m_rectangle.e0(),
+                                              m_rectangle.org() + m_rectangle.e1(),
+                                              m_rectangle.org() + m_rectangle.e0() + m_rectangle.e1()}};
+
+                *min = vertices[0];
+                *max = vertices[0];
+                for (unsigned i = 1; i < vertices.size(); ++i)
+                {
+                        *min = min_vector(*min, vertices[i]);
+                        *max = max_vector(*max, vertices[i]);
+                }
+        }
 };
 
 template <size_t N, typename T>
@@ -97,6 +112,20 @@ public:
                 s.set_geometric_normal(m_parallelepiped.normal(p));
 
                 return s;
+        }
+
+        void min_max(Vector<N, T>* min, Vector<N, T>* max) const override
+        {
+                typename ParallelotopeAlgorithm<Parallelotope<N, T>>::Vertices vertices =
+                        parallelotope_vertices(m_parallelepiped);
+
+                *min = vertices[0];
+                *max = vertices[0];
+                for (unsigned i = 1; i < vertices.size(); ++i)
+                {
+                        *min = min_vector(*min, vertices[i]);
+                        *max = max_vector(*max, vertices[i]);
+                }
         }
 };
 
@@ -143,5 +172,10 @@ public:
                 }
 
                 return s;
+        }
+
+        void min_max(Vector<N, T>* min, Vector<N, T>* max) const override
+        {
+                m_mesh->min_max(min, max);
         }
 };

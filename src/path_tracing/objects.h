@@ -166,6 +166,8 @@ struct GenericObject
         // уже полученное функцией intersect_approximate.
         virtual bool intersect_precise(const Ray<N, T>&, T approximate_t, T* t, const Surface<N, T>** surface,
                                        const void** intersection_data) const = 0;
+
+        virtual void min_max(Vector<N, T>* min, Vector<N, T>* max) const = 0;
 };
 
 // Источник света, не являющийся видимым объектом.
