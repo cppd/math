@@ -299,6 +299,7 @@ void test_sphere_mesh(const Mesh<N, T>& mesh, int ray_count, bool with_ray_log, 
                 error("Too many errors");
         }
 }
+}
 
 template <size_t N, typename T>
 std::unique_ptr<const Mesh<N, T>> simplex_mesh_of_random_sphere(int point_count, int thread_count, ProgressRatio* progress)
@@ -332,6 +333,8 @@ std::unique_ptr<const Mesh<N, T>> simplex_mesh_of_random_sphere(int point_count,
         return simplex_mesh_of_sphere<N, T>(center, radius, point_count, thread_count, progress);
 }
 
+namespace
+{
 template <size_t N, typename T>
 void test_mesh(int point_low, int point_high, int ray_low, int ray_high, int thread_count, bool with_ray_log, bool with_error_log,
                ProgressRatio* progress)
@@ -384,3 +387,21 @@ void test_mesh(int number_of_dimensions, ProgressRatio* progress)
                 error("Error mesh test number of dimensions " + to_string(number_of_dimensions));
         }
 }
+
+template std::unique_ptr<const Mesh<3, float>> simplex_mesh_of_random_sphere(int point_count, int thread_count,
+                                                                             ProgressRatio* progress);
+template std::unique_ptr<const Mesh<4, float>> simplex_mesh_of_random_sphere(int point_count, int thread_count,
+                                                                             ProgressRatio* progress);
+template std::unique_ptr<const Mesh<5, float>> simplex_mesh_of_random_sphere(int point_count, int thread_count,
+                                                                             ProgressRatio* progress);
+template std::unique_ptr<const Mesh<6, float>> simplex_mesh_of_random_sphere(int point_count, int thread_count,
+                                                                             ProgressRatio* progress);
+
+template std::unique_ptr<const Mesh<3, double>> simplex_mesh_of_random_sphere(int point_count, int thread_count,
+                                                                              ProgressRatio* progress);
+template std::unique_ptr<const Mesh<4, double>> simplex_mesh_of_random_sphere(int point_count, int thread_count,
+                                                                              ProgressRatio* progress);
+template std::unique_ptr<const Mesh<5, double>> simplex_mesh_of_random_sphere(int point_count, int thread_count,
+                                                                              ProgressRatio* progress);
+template std::unique_ptr<const Mesh<6, double>> simplex_mesh_of_random_sphere(int point_count, int thread_count,
+                                                                              ProgressRatio* progress);

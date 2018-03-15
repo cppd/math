@@ -200,7 +200,7 @@ struct Paintbrush
         virtual void first_pass() noexcept = 0;
         virtual bool next_pixel(int previous_pixel_ray_count, int previous_pixel_sample_count,
                                 std::array<int_least16_t, N>* pixel) noexcept = 0;
-        virtual void next_pass() noexcept = 0;
+        virtual bool next_pass() noexcept = 0;
 
         virtual const std::array<int, N>& screen_size() const noexcept = 0;
 

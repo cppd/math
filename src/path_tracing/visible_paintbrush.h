@@ -27,7 +27,8 @@ class VisibleBarPaintbrush final : public Paintbrush<N>
         BarPaintbrush<N> m_paintbrush;
 
 public:
-        VisibleBarPaintbrush(const std::array<int, N>& screen_size, int paint_height) : m_paintbrush(screen_size, paint_height)
+        VisibleBarPaintbrush(const std::array<int, N>& screen_size, int paint_height, int max_pass_count)
+                : m_paintbrush(screen_size, paint_height, max_pass_count)
         {
         }
 
@@ -47,9 +48,9 @@ public:
                 return m_paintbrush.next_pixel(previous_pixel_ray_count, previous_pixel_sample_count, pixel);
         }
 
-        void next_pass() noexcept override
+        bool next_pass() noexcept override
         {
-                m_paintbrush.next_pass();
+                return m_paintbrush.next_pass();
         }
 
         void statistics(long long* pass_count, long long* pixel_count, long long* ray_count, long long* sample_count,

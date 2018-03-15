@@ -433,8 +433,9 @@ void paint_pixels(PainterRandomEngine<T>& random_engine, std::vector<Vector<N - 
 }
 
 template <size_t N, typename T>
-void work_thread(unsigned thread_number, ThreadBarrier& barrier, std::atomic_bool& stop, const Projector<N, T>& projector,
-                 const PaintData<N, T>& paint_data, IPainterNotifier<N - 1>* painter_notifier, Paintbrush<N - 1>* paintbrush,
+void work_thread(unsigned thread_number, ThreadBarrier& barrier, std::atomic_bool& stop, std::atomic_bool& error_caught,
+                 std::atomic_bool& stop_painting, const Projector<N, T>& projector, const PaintData<N, T>& paint_data,
+                 IPainterNotifier<N - 1>* painter_notifier, Paintbrush<N - 1>* paintbrush,
                  const PainterSampler<N - 1, T>& sampler, Pixels<N - 1>* pixels) noexcept
 {
         try
@@ -451,18 +452,31 @@ void work_thread(unsigned thread_number, ThreadBarrier& barrier, std::atomic_boo
                                              sampler, pixels);
 
                                 barrier.wait();
-                                if (stop)
+
+                                // Здесь может пройти только часть потоков из-за исключений в других
+                                // потоках. Переменная error_caught поменяться не может в других потоках,
+                                // так как она в них может меняться только до барьера.
+                                if (error_caught)
                                 {
                                         return;
                                 }
 
+                                // Здесь проходят все потоки
+
                                 if (thread_number == 0)
                                 {
-                                        paintbrush->next_pass();
+                                        if (stop || !paintbrush->next_pass())
+                                        {
+                                                stop_painting = true;
+                                        }
                                 }
 
                                 barrier.wait();
-                                if (stop)
+
+                                // Здесь проходят все потоки, а переменная stop_painting поменяться не может
+                                // в других потоках, так как она в них может меняться только до барьера.
+
+                                if (stop_painting)
                                 {
                                         return;
                                 }
@@ -471,12 +485,14 @@ void work_thread(unsigned thread_number, ThreadBarrier& barrier, std::atomic_boo
                 catch (std::exception& e)
                 {
                         stop = true;
+                        error_caught = true;
                         painter_notifier->painter_error_message(std::string("Painter error:\n") + e.what());
                         barrier.wait();
                 }
                 catch (...)
                 {
                         stop = true;
+                        error_caught = true;
                         painter_notifier->painter_error_message("Unknown painter error");
                         barrier.wait();
                 }
@@ -543,14 +559,16 @@ void paint_threads(IPainterNotifier<N - 1>* painter_notifier, int samples_per_pi
 
         ThreadBarrier barrier(thread_count);
         std::vector<std::thread> threads(thread_count);
+        std::atomic_bool error_caught = false;
+        std::atomic_bool stop_painting = false;
 
         paintbrush->first_pass();
 
         for (unsigned i = 0; i < threads.size(); ++i)
         {
                 threads[i] = std::thread([&, i ]() noexcept {
-                        work_thread(i, barrier, *stop, paint_objects.projector(), paint_data, painter_notifier, paintbrush,
-                                    sampler, &pixels);
+                        work_thread(i, barrier, *stop, error_caught, stop_painting, paint_objects.projector(), paint_data,
+                                    painter_notifier, paintbrush, sampler, &pixels);
                 });
         }
 

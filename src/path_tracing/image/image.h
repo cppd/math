@@ -44,6 +44,8 @@ class Image
         bool empty() const;
 
 public:
+        Image(const std::array<int, N>& size);
+
         Image(const std::array<int, N>& size, const std::vector<unsigned char>& srgba_pixels);
 
         template <size_t X = N>
@@ -51,6 +53,8 @@ public:
 
         template <typename T>
         Color texture(const Vector<N, T>& p) const;
+
+        void set_pixel(const std::array<int, N>& p, const SrgbInteger& color);
 
         template <size_t X = N>
         std::enable_if_t<X == 2> read_from_file(const std::string& file_name);

@@ -87,6 +87,12 @@ T wrap_coordinate_clamp_to_edge(T value)
 }
 
 template <size_t N>
+Image<N>::Image(const std::array<int, N>& size)
+{
+        resize(size);
+}
+
+template <size_t N>
 Image<N>::Image(const std::array<int, N>& size, const std::vector<unsigned char>& srgba_pixels)
 {
         if (4ull * mul(size) != srgba_pixels.size())
@@ -222,6 +228,12 @@ void Image<N>::read_from_srgba_pixels(const std::array<int, N>& size, const unsi
         {
                 m_data[i].set_from_srgb_integer(srgba_pixels[p], srgba_pixels[p + 1], srgba_pixels[p + 2]);
         }
+}
+
+template <size_t N>
+void Image<N>::set_pixel(const std::array<int, N>& p, const SrgbInteger& color)
+{
+        m_data[pixel_index(p)] = Color(color);
 }
 
 template <size_t N>

@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "com/error.h"
+#include "com/print.h"
 #include "com/thread.h"
 #include "com/time.h"
 
@@ -113,6 +114,7 @@ class BarPaintbrush
 
         std::array<int, N> m_screen_size;
         std::vector<Pixel> m_pixels;
+        int m_max_pass_count;
 
         unsigned m_current_pixel = 0;
 
@@ -127,10 +129,26 @@ class BarPaintbrush
         mutable SpinLock m_lock;
 
 public:
-        BarPaintbrush(const std::array<int, N>& screen_size, int paint_height)
-
+        BarPaintbrush(const std::array<int, N>& screen_size, int paint_height, int max_pass_count)
         {
+                for (unsigned i = 0; i < screen_size.size(); ++i)
+                {
+                        if (screen_size[i] < 1)
+                        {
+                                error("Paintbrush size " + to_string(i) + " is not positive (" + to_string(screen_size[i]) + ")");
+                        }
+                }
+                if (paint_height < 1)
+                {
+                        error("Error paintbrush paint height " + to_string(paint_height));
+                }
+                if (!(max_pass_count == -1 || max_pass_count > 0))
+                {
+                        error("Error paintbrush max pass count " + to_string(max_pass_count));
+                }
+
                 m_screen_size = screen_size;
+                m_max_pass_count = max_pass_count;
 
                 std::reverse(m_screen_size.begin(), m_screen_size.end());
 
@@ -177,7 +195,7 @@ public:
                 return false;
         }
 
-        void next_pass() noexcept
+        bool next_pass() noexcept
         {
                 std::lock_guard lg(m_lock);
 
@@ -189,7 +207,15 @@ public:
                 m_pass_start_time = time;
 
                 m_current_pixel = 0;
+
+                if (m_pass_count == m_max_pass_count)
+                {
+                        return false;
+                }
+
                 ++m_pass_count;
+
+                return true;
         }
 
         void statistics(long long* pass_count, long long* pixel_count, long long* ray_count, long long* sample_count,
