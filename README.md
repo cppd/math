@@ -24,7 +24,7 @@ Voronoi diagram                                | Convex hull of paraboloid      
 Manifold reconstruction                        | Cocone                                                   | Arbitrary number of dimensions | Sequential         | C++
 Manifold reconstruction                        | BoundCocone                                              | Arbitrary number of dimensions | Sequential         | C++
 Ray intersection acceleration                  | Spatial subdivision and 2<sup>d</sup>-trees              | Arbitrary number of dimensions | Parallel           | C++
-Realistic visualization                        | Path tracing                                             | 3 dimensions                   | Parallel           | C++
+Realistic visualization                        | Path tracing                                             | Arbitrary number of dimensions | Parallel           | C++
 
 Various other algorithms.
 
@@ -32,7 +32,7 @@ Various other algorithms.
 
 * Supported operating systems: Linux, Windows.
 * Programming languages: C++17, GLSL 4.50.
-* Supported C++ compilers: GCC 7.2, Clang 5.
+* Supported C++ compilers: GCC 7, Clang 5.
 * Libraries: FreeType, GMP, OpenGL 4.5, Qt 5, SFML, XLib.
 * Build system: CMake.
 
