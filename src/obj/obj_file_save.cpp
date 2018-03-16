@@ -20,176 +20,260 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "obj_alg.h"
 
 #include "com/file/file.h"
+#include "com/file/file_sys.h"
 #include "com/log.h"
 #include "com/print.h"
+#include "com/string/str.h"
 #include "com/time.h"
 
-constexpr const char comment_begin[] = "# ";
-
-constexpr const char VERTEX_FORMAT[] = "v %11.8f %11.8f %11.8f\n";
-constexpr const char NORMAL_FORMAT[] = "vn %11.8f %11.8f %11.8f\n";
+constexpr const char OBJ_comment_and_space[] = "# ";
+constexpr const char OBJ_v[] = "v";
+constexpr const char OBJ_vn[] = "vn";
+constexpr const char OBJ_f[] = "f";
 
 namespace
 {
-void write_comment(const CFile& file, const std::string& comment)
+void write_comment(const CFile& file, const std::string_view& comment)
 {
-        if (comment.size() > 0)
+        if (comment.empty())
         {
-                std::string comment_edited;
-
-                comment_edited += comment_begin;
-                for (char c : comment)
-                {
-                        if (c != '\n')
-                        {
-                                comment_edited += c;
-                        }
-                        else
-                        {
-                                comment_edited += '\n';
-                                comment_edited += comment_begin;
-                        }
-                }
-                comment_edited += '\n';
-
-                fprintf(file, "%s", comment_edited.c_str());
-        }
-}
-
-// Запись вершин с приведением координат вершин граней к интервалу [-1, 1] с сохранением пропорций
-void write_vertices(const CFile& file, const Obj<3>* obj)
-{
-        std::vector<int> indices = unique_facet_indices(obj);
-
-        if (indices.size() < 3)
-        {
-                error("facet unique indices count < 3 ");
+                return;
         }
 
-        vec3f min, max;
+        std::string str;
 
-        min_max_coordinates(obj->vertices(), indices, &min, &max);
-
-        vec3 delta = to_vector<double>(max - min);
-
-        double max_delta = max_element(delta);
-
-        if (max_delta == 0)
+        str += OBJ_comment_and_space;
+        for (char c : comment)
         {
-                for (const vec3f& v : obj->vertices())
+                if (c != '\n')
                 {
-                        fprintf(file, VERTEX_FORMAT, v[0], v[1], v[2]);
-                }
-        }
-        else
-        {
-                double scale_factor = 2.0 / max_delta;
-
-                vec3 center = to_vector<double>(min) + 0.5 * delta;
-
-                for (const vec3f& v : obj->vertices())
-                {
-                        vec3 vertex = (to_vector<double>(v) - center) * scale_factor;
-                        fprintf(file, VERTEX_FORMAT, vertex[0], vertex[1], vertex[2]);
-                }
-        }
-}
-
-void write_normals(const CFile& file, const Obj<3>* obj)
-{
-        for (const vec3f& vn : obj->normals())
-        {
-                vec3 normal = to_vector<double>(vn);
-                double len = length(normal);
-                if (len != 0)
-                {
-                        normal /= len;
-                }
-
-                fprintf(file, NORMAL_FORMAT, normal[0], normal[1], normal[2]);
-        }
-}
-
-void write_faces(const CFile& file, const Obj<3>* obj)
-{
-        // Вершины граней надо записывать в OBJ таким образом, чтобы при обходе против часовой стрелки
-        // перпендикуляр к грани был направлен противоположно направлению взгляда.
-        // В данной модели нет перпендикуляров у граней, есть только у вершин, поэтому нужно попытаться
-        // определить правильное направление по векторам вершин, если у вершин они заданы.
-
-        for (const Obj<3>::Facet& f : obj->facets())
-        {
-                if (f.has_normal)
-                {
-                        // В файлах OBJ номера начинаются с 1
-
-                        long v0 = f.vertices[0] + 1;
-                        long v1 = f.vertices[1] + 1;
-                        long v2 = f.vertices[2] + 1;
-
-                        long n0 = f.normals[0] + 1;
-                        long n1 = f.normals[1] + 1;
-                        long n2 = f.normals[2] + 1;
-
-                        // Перпендикуляр к грани при обходе вершин против часовой стрелки
-                        // и противоположно направлению взгляда
-                        vec3f normal = cross(obj->vertices()[v1 - 1] - obj->vertices()[v0 - 1],
-                                             obj->vertices()[v2 - 1] - obj->vertices()[v0 - 1]);
-
-                        float sign0 = dot(obj->normals()[n0 - 1], normal);
-                        float sign1 = dot(obj->normals()[n1 - 1], normal);
-                        float sign2 = dot(obj->normals()[n2 - 1], normal);
-
-                        if (sign0 > 0 && sign1 > 0 && sign2 > 0)
-                        {
-                                // Если перпендикуляр в одном направлении со всеми векторами вершин,
-                                // то сохраняется порядок вершин
-                                fprintf(file, "f %ld//%ld %ld//%ld %ld//%ld\n", v0, n0, v1, n1, v2, n2);
-                        }
-                        else if (sign0 < 0 && sign1 < 0 && sign2 < 0)
-                        {
-                                // Если перпендикуляр в противоположном направлении со всеми векторами вершин,
-                                // то меняется порядок вершин
-                                fprintf(file, "f %ld//%ld %ld//%ld %ld//%ld\n", v0, n0, v2, n2, v1, n1);
-                        }
-                        else
-                        {
-                                // Не удалось определить, поэтому вершины записываются в произвольном порядке
-                                fprintf(file, "f %ld//%ld %ld//%ld %ld//%ld\n", v0, n0, v1, n1, v2, n2);
-                        }
+                        str += c;
                 }
                 else
                 {
-                        // Нет нормалей у вершин, поэтому вершины грани записываются в произвольном порядке
+                        str += '\n';
+                        str += OBJ_comment_and_space;
+                }
+        }
+        str += '\n';
 
-                        long v0 = f.vertices[0] + 1;
-                        long v1 = f.vertices[1] + 1;
-                        long v2 = f.vertices[2] + 1;
+        fprintf(file, "%s", str.c_str());
+}
 
-                        fprintf(file, "f %ld %ld %ld\n", v0, v1, v2);
+template <size_t N, typename T>
+void write_vector(const CFile& file, const Vector<N, T>& vector)
+{
+        static_assert(std::numeric_limits<float>::max_digits10 <= 9);
+        static_assert(std::numeric_limits<double>::max_digits10 <= 17);
+        static_assert(std::is_same_v<T, float> || std::is_same_v<T, double>);
+
+        constexpr const char* format = (std::is_same_v<T, float>) ? " %12.9f" : " %20.17f";
+
+        for (unsigned i = 0; i < N; ++i)
+        {
+                fprintf(file, format, vector[i]);
+        }
+}
+
+template <size_t N>
+void write_vertex(const CFile& file, const Vector<N, float>& vertex)
+{
+        fprintf(file, "%s", OBJ_v);
+        write_vector(file, vertex);
+        fprintf(file, "\n");
+}
+
+template <size_t N>
+void write_normal(const CFile& file, const Vector<N, float>& normal)
+{
+        fprintf(file, "%s", OBJ_vn);
+        write_vector(file, normal);
+        fprintf(file, "\n");
+}
+
+template <size_t N>
+void write_face(const CFile& file, const std::array<int, N>& vertices)
+{
+        fprintf(file, "%s", OBJ_f);
+        for (unsigned i = 0; i < N; ++i)
+        {
+                // В файлах OBJ номера начинаются с 1
+                long v = vertices[i] + 1;
+                fprintf(file, " %ld", v);
+        }
+        fprintf(file, "\n");
+}
+
+template <size_t N>
+void write_face(const CFile& file, const std::array<int, N>& vertices, const std::array<int, N>& normals)
+{
+        fprintf(file, "%s", OBJ_f);
+        for (unsigned i = 0; i < N; ++i)
+        {
+                // В файлах OBJ номера начинаются с 1
+                long v = vertices[i] + 1;
+                long n = normals[i] + 1;
+                fprintf(file, " %ld//%ld", v, n);
+        }
+        fprintf(file, "\n");
+}
+
+// Запись вершин с приведением координат вершин граней к интервалу [-1, 1] с сохранением пропорций
+template <size_t N>
+void write_vertices(const CFile& file, const Obj<N>* obj)
+{
+        std::vector<int> indices = unique_facet_indices(obj);
+
+        if (indices.size() < N)
+        {
+                error("Facet unique indices count " + to_string(indices.size()) + " is less than " + to_string(N));
+        }
+
+        Vector<N, float> min, max;
+
+        min_max_coordinates(obj->vertices(), indices, &min, &max);
+
+        Vector<N, float> delta = max - min;
+
+        float max_delta = max_element(delta);
+
+        if (max_delta == 0)
+        {
+                error("Object vertices are equal to each other");
+        }
+
+        float scale_factor = 2 / max_delta;
+        Vector<N, float> center = min + 0.5f * delta;
+
+        for (const Vector<N, float>& v : obj->vertices())
+        {
+                Vector<N, float> vertex = (v - center) * scale_factor;
+
+                write_vertex(file, vertex);
+        }
+}
+
+template <size_t N>
+void write_normals(const CFile& file, const Obj<N>* obj)
+{
+        for (const Vector<N, float>& vn : obj->normals())
+        {
+                Vector<N, double> normal = to_vector<double>(vn);
+                double len = length(normal);
+
+                if (len == 0)
+                {
+                        error("Object zero length normal");
+                }
+
+                normal /= len;
+
+                write_normal(file, to_vector<float>(normal));
+        }
+}
+
+template <size_t N>
+void write_faces(const CFile& file, const Obj<N>* obj)
+{
+        // Вершины граней надо записывать в трёхмерный OBJ таким образом,
+        // чтобы при обходе против часовой стрелки перпендикуляр к грани
+        // был направлен противоположно направлению взгляда. В данной модели
+        // нет перпендикуляров у граней, есть только у вершин, поэтому нужно
+        // попытаться определить правильное направление по векторам вершин,
+        // если у вершин они заданы.
+
+        for (const typename Obj<N>::Facet& f : obj->facets())
+        {
+                if (!f.has_normal)
+                {
+                        write_face(file, f.vertices);
+                }
+                else if constexpr (N != 3)
+                {
+                        write_face(file, f.vertices, f.normals);
+                }
+                else
+                {
+                        std::array<int, 3> v = f.vertices;
+                        std::array<int, 3> n = f.normals;
+
+                        Vector<3, double> v0 = to_vector<double>(obj->vertices()[v[0]]);
+                        Vector<3, double> v1 = to_vector<double>(obj->vertices()[v[1]]);
+                        Vector<3, double> v2 = to_vector<double>(obj->vertices()[v[2]]);
+
+                        // Перпендикуляр к грани при обходе вершин против часовой
+                        // стрелки и противоположно направлению взгляда
+                        Vector<3, double> normal = cross(v1 - v0, v2 - v0);
+
+                        // Если перпендикуляр в противоположном направлении со всеми
+                        // векторами вершин, то меняется порядок вершин.
+                        if (dot(to_vector<double>(obj->normals()[n[0]]), normal) < 0 &&
+                            dot(to_vector<double>(obj->normals()[n[1]]), normal) < 0 &&
+                            dot(to_vector<double>(obj->normals()[n[2]]), normal) < 0)
+                        {
+                                std::swap(v[1], v[2]);
+                                std::swap(n[1], n[2]);
+                        }
+
+                        write_face(file, v, n);
                 }
         }
 }
+
+template <size_t N>
+std::string obj_extension()
+{
+        return (N == 3) ? "obj" : "obj" + to_string(N);
 }
 
-void save_obj_geometry_to_file(const Obj<3>* obj, const std::string& file_name, const std::string& comment)
+template <size_t N>
+std::string obj_type()
 {
-        if (obj->facets().size() == 0)
+        return (N == 3) ? "OBJ" : "OBJ-" + to_string(N);
+}
+
+template <size_t N>
+std::string obj_file_name_with_extension(const std::string& file_name)
+{
+        std::string e = to_lower(file_extension(file_name));
+
+        if (e.size() > 0)
         {
-                error("Object doesn't have faces");
+                if (e != obj_extension<N>())
+                {
+                        error("Wrong " + obj_type<N>() + " file name extension: " + e);
+                }
+
+                return file_name;
         }
+
+        return file_name + "." + obj_extension<N>();
+}
+}
+
+template <size_t N>
+void save_obj_geometry_to_file(const Obj<N>* obj, const std::string& file_name, const std::string_view& comment)
+{
+        static_assert(N >= 3);
+
+        if (obj->facets().empty())
+        {
+                error("Object doesn't have facets");
+        }
+
+        CFile file(obj_file_name_with_extension<N>(file_name), "w");
 
         double start_time = time_in_seconds();
 
-        CFile file(file_name, "w");
-
         write_comment(file, comment);
-
         write_vertices(file, obj);
-
         write_normals(file, obj);
-
         write_faces(file, obj);
 
-        LOG("OBJ saved, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
+        LOG(obj_type<N>() + " saved, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
 }
+
+template void save_obj_geometry_to_file(const Obj<3>* obj, const std::string& file_name, const std::string_view& comment);
+template void save_obj_geometry_to_file(const Obj<4>* obj, const std::string& file_name, const std::string_view& comment);
+template void save_obj_geometry_to_file(const Obj<5>* obj, const std::string& file_name, const std::string_view& comment);
+template void save_obj_geometry_to_file(const Obj<6>* obj, const std::string& file_name, const std::string_view& comment);

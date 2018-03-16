@@ -20,5 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "obj.h"
 
 #include <string>
+#include <string_view>
 
-void save_obj_geometry_to_file(const Obj<3>* obj, const std::string& file_name, const std::string& comment = std::string());
+template <size_t N>
+void save_obj_geometry_to_file(const Obj<N>* obj, const std::string& file_name, const std::string_view& comment);
