@@ -17,12 +17,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "obj.h"
-
-#include "progress/progress.h"
-
-#include <memory>
 #include <string>
+#include <tuple>
 
-template <size_t N>
-std::unique_ptr<Obj<N>> load_obj_from_file(const std::string& file_name, ProgressRatio* progress);
+enum class ObjFileType
+{
+        OBJ,
+        TXT
+};
+
+std::tuple<int, ObjFileType> obj_file_dimension_and_type(const std::string& file_name);
+
+std::string obj_file_name_extension(size_t N);
+bool obj_file_name_extension_is_correct(size_t N, const std::string& e);

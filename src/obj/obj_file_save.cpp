@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "obj_file_save.h"
 
 #include "obj_alg.h"
+#include "obj_file.h"
 
 #include "com/file/file.h"
 #include "com/file/file_sys.h"
@@ -220,34 +221,28 @@ void write_faces(const CFile& file, const Obj<N>* obj)
         }
 }
 
-template <size_t N>
-std::string obj_extension()
+std::string obj_type_name(size_t N)
 {
-        return (N == 3) ? "obj" : "obj" + to_string(N);
+        return "OBJ-" + to_string(N);
 }
 
 template <size_t N>
-std::string obj_type()
+std::string file_name_with_extension(const std::string& file_name)
 {
-        return (N == 3) ? "OBJ" : "OBJ-" + to_string(N);
-}
-
-template <size_t N>
-std::string obj_file_name_with_extension(const std::string& file_name)
-{
-        std::string e = to_lower(file_extension(file_name));
+        std::string e = file_extension(file_name);
 
         if (e.size() > 0)
         {
-                if (e != obj_extension<N>())
+                if (!obj_file_name_extension_is_correct(N, e))
                 {
-                        error("Wrong " + obj_type<N>() + " file name extension: " + e);
+                        error("Wrong " + obj_type_name(N) + " file name extension: " + e);
                 }
 
                 return file_name;
         }
 
-        return file_name + "." + obj_extension<N>();
+        // Если имя заканчивается на точку, то пусть будет 2 точки подряд
+        return file_name + "." + obj_file_name_extension(N);
 }
 }
 
@@ -261,7 +256,7 @@ void save_obj_geometry_to_file(const Obj<N>* obj, const std::string& file_name, 
                 error("Object doesn't have facets");
         }
 
-        CFile file(obj_file_name_with_extension<N>(file_name), "w");
+        CFile file(file_name_with_extension<N>(file_name), "w");
 
         double start_time = time_in_seconds();
 
@@ -270,7 +265,7 @@ void save_obj_geometry_to_file(const Obj<N>* obj, const std::string& file_name, 
         write_normals(file, obj);
         write_faces(file, obj);
 
-        LOG(obj_type<N>() + " saved, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
+        LOG(obj_type_name(N) + " saved, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
 }
 
 template void save_obj_geometry_to_file(const Obj<3>* obj, const std::string& file_name, const std::string_view& comment);

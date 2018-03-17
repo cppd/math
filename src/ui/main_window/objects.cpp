@@ -369,7 +369,7 @@ void MainObjects::load_from_file(ProgressRatioList* progress_list, const std::st
                 ProgressRatio progress(progress_list);
 
                 progress.set_text("Load file: %p%");
-                obj = load_obj_from_file(file_name, &progress);
+                obj = load_obj_from_file<3>(file_name, &progress);
         }
 
         load_object(progress_list, file_name, obj, rho, alpha);

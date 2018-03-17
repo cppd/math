@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "obj_file_load.h"
 
 #include "obj_alg.h"
+#include "obj_file.h"
 
 #include "com/error.h"
 #include "com/file/file_read.h"
@@ -40,7 +41,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <thread>
 
-constexpr int MAX_FACES_PER_LINE = 5;
+template <size_t N>
+constexpr int MAX_FACETS_PER_LINE = 1;
+template <>
+constexpr int MAX_FACETS_PER_LINE<3> = 5;
 
 constexpr const char OBJ_v[] = "v";
 constexpr const char OBJ_vt[] = "vt";
@@ -86,6 +90,11 @@ static_assert(str_equal("ab", "ab") && str_equal("", "") && !str_equal("", "ab")
 
 namespace
 {
+std::string obj_type_name(size_t N)
+{
+        return "OBJ-" + to_string(N);
+}
+
 template <typename Data, typename Op>
 void read(const Data& data, long long size, const Op& op, long long* i)
 {
@@ -170,34 +179,43 @@ void read_file_lines(const std::string& file_name, T* file_data, std::vector<lon
         find_line_begin(*file_data, line_begin);
 }
 
-Obj<3>::Image read_image_from_file(const std::string& file_name)
+template <size_t N>
+typename Obj<N>::Image read_image_from_file(const std::string& file_name)
 {
-        sf::Image image;
-
-        if (!image.loadFromFile(file_name))
+        if constexpr (N != 3)
         {
-                error("Error load image from file " + file_name);
+                error("Reading " + to_string(N - 1) + "-dimensional images for " + obj_type_name(N) + " is not supported");
         }
+        else
+        {
+                sf::Image image;
 
-        image.flipVertically();
+                if (!image.loadFromFile(file_name))
+                {
+                        error("Error load image from file " + file_name);
+                }
 
-        unsigned long long buffer_size = 4ull * image.getSize().x * image.getSize().y;
+                image.flipVertically();
 
-        Obj<3>::Image obj_image;
+                unsigned long long buffer_size = 4ull * image.getSize().x * image.getSize().y;
 
-        obj_image.size[0] = image.getSize().x;
-        obj_image.size[1] = image.getSize().y;
-        obj_image.srgba_pixels.resize(buffer_size);
+                Obj<3>::Image obj_image;
 
-        static_assert(sizeof(decltype(*obj_image.srgba_pixels.data())) == sizeof(decltype(*image.getPixelsPtr())));
+                obj_image.size[0] = image.getSize().x;
+                obj_image.size[1] = image.getSize().y;
+                obj_image.srgba_pixels.resize(buffer_size);
 
-        std::memcpy(obj_image.srgba_pixels.data(), image.getPixelsPtr(), buffer_size);
+                static_assert(sizeof(decltype(*obj_image.srgba_pixels.data())) == sizeof(decltype(*image.getPixelsPtr())));
 
-        return obj_image;
+                std::memcpy(obj_image.srgba_pixels.data(), image.getPixelsPtr(), buffer_size);
+
+                return obj_image;
+        }
 }
 
+template <size_t N>
 void load_image(const std::string& dir_name, const std::string& image_name, std::map<std::string, int>* image_index,
-                std::vector<Obj<3>::Image>* images, int* index)
+                std::vector<typename Obj<N>::Image>* images, int* index)
 {
         std::string file_name = trim(image_name);
 
@@ -219,7 +237,7 @@ void load_image(const std::string& dir_name, const std::string& image_name, std:
                 return;
         };
 
-        images->push_back(read_image_from_file(file_name));
+        images->push_back(read_image_from_file<N>(file_name));
         *index = images->size() - 1;
         image_index->emplace(file_name, *index);
 }
@@ -300,7 +318,7 @@ void read_digit_groups(const T& line, long long begin, long long end,
 
                 if (group_index >= static_cast<int>(group_ptr->size()))
                 {
-                        error("Found too many face vertices " + to_string(group_index + 1) +
+                        error("Found too many facet vertices " + to_string(group_index + 1) +
                               " (max supported = " + to_string(group_ptr->size()) + ")");
                 }
 
@@ -311,12 +329,12 @@ void read_digit_groups(const T& line, long long begin, long long end,
                 {
                         if (indices[0] == 0)
                         {
-                                error("Zero face index");
+                                error("Zero facet index");
                         }
                 }
                 else
                 {
-                        error("Error read face vertex first number");
+                        error("Error read facet vertex first number");
                 }
 
                 // Считываются текстура и нормаль
@@ -330,7 +348,7 @@ void read_digit_groups(const T& line, long long begin, long long end,
 
                         if (!is_solidus(line[i]))
                         {
-                                error("Error read face vertex number");
+                                error("Error read facet vertex number");
                         }
 
                         ++i;
@@ -345,7 +363,7 @@ void read_digit_groups(const T& line, long long begin, long long end,
                         {
                                 if (indices[a] == 0)
                                 {
-                                        error("Zero face index");
+                                        error("Zero facet index");
                                 }
                         }
                         else
@@ -357,9 +375,9 @@ void read_digit_groups(const T& line, long long begin, long long end,
 }
 
 // 0 означает, что нет индекса.
-// Индексы находятся в порядке face, texture, normal.
-template <typename T, size_t N>
-void check_index_consistent(const std::array<std::array<T, 3>, N>& groups, int group_count)
+// Индексы находятся в порядке facet, texture, normal.
+template <typename T, size_t MaxGroupCount>
+void check_index_consistent(const std::array<std::array<T, 3>, MaxGroupCount>& groups, int group_count)
 {
         ASSERT(group_count <= static_cast<int>(groups.size()));
 
@@ -374,21 +392,22 @@ void check_index_consistent(const std::array<std::array<T, 3>, N>& groups, int g
 
         if (!(texture == 0 || texture == group_count))
         {
-                error("Inconsistent face texture indices");
+                error("Inconsistent facet texture indices");
         }
 
         if (!(normal == 0 || normal == group_count))
         {
-                error("Inconsistent face normal indices");
+                error("Inconsistent facet normal indices");
         }
 }
 
-template <typename T>
-void read_faces(const T& data, long long begin, long long end, std::array<Obj<3>::Facet, MAX_FACES_PER_LINE>* faces,
-                int* face_count)
-
+template <size_t N, typename T>
+void read_facets(const T& data, long long begin, long long end,
+                 std::array<typename Obj<N>::Facet, MAX_FACETS_PER_LINE<N>>* facets, int* facet_count)
 {
-        constexpr int MAX_GROUP_COUNT = MAX_FACES_PER_LINE + 2;
+        static_assert(N >= 3);
+
+        constexpr int MAX_GROUP_COUNT = MAX_FACETS_PER_LINE<N> + N - 1;
 
         std::array<std::array<int, 3>, MAX_GROUP_COUNT> groups;
 
@@ -396,37 +415,36 @@ void read_faces(const T& data, long long begin, long long end, std::array<Obj<3>
 
         read_digit_groups(data, begin, end, &groups, &group_count);
 
-        if (group_count < 3)
+        if (group_count < static_cast<int>(N))
         {
-                error("Error face vertex count " + to_string(group_count) + " (min = 3)");
+                error("Error facet vertex count " + to_string(group_count) + " (min = " + to_string(N) + ")");
         }
 
         // Обязательная проверка индексов
         check_index_consistent(groups, group_count);
 
-        *face_count = group_count - 2;
+        *facet_count = group_count - (N - 1);
 
-        for (int i = 0; i < *face_count; ++i)
+        for (int i = 0; i < *facet_count; ++i)
         {
-                (*faces)[i].has_texcoord = !(groups[0][1] == 0);
-                (*faces)[i].has_normal = !(groups[0][2] == 0);
+                (*facets)[i].has_texcoord = !(groups[0][1] == 0);
+                (*facets)[i].has_normal = !(groups[0][2] == 0);
 
-                (*faces)[i].vertices[0] = groups[0][0];
-                (*faces)[i].texcoords[0] = groups[0][1];
-                (*faces)[i].normals[0] = groups[0][2];
+                (*facets)[i].vertices[0] = groups[0][0];
+                (*facets)[i].texcoords[0] = groups[0][1];
+                (*facets)[i].normals[0] = groups[0][2];
 
-                (*faces)[i].vertices[1] = groups[i + 1][0];
-                (*faces)[i].texcoords[1] = groups[i + 1][1];
-                (*faces)[i].normals[1] = groups[i + 1][2];
-
-                (*faces)[i].vertices[2] = groups[i + 2][0];
-                (*faces)[i].texcoords[2] = groups[i + 2][1];
-                (*faces)[i].normals[2] = groups[i + 2][2];
+                for (unsigned n = 1; n < N; ++n)
+                {
+                        (*facets)[i].vertices[n] = groups[i + n][0];
+                        (*facets)[i].texcoords[n] = groups[i + n][1];
+                        (*facets)[i].normals[n] = groups[i + n][2];
+                }
         }
 }
 
 template <typename T>
-bool read_float(const char** str, T* p)
+bool read_one_float_from_string(const char** str, T* p)
 {
         using FP = std::remove_volatile_t<T>;
 
@@ -462,7 +480,7 @@ bool read_float(const char** str, T* p)
 };
 
 template <typename... T>
-int string_to_float(const char* str, T*... floats)
+int string_to_floats(const char* str, T*... floats)
 {
         constexpr int N = sizeof...(T);
 
@@ -473,42 +491,61 @@ int string_to_float(const char* str, T*... floats)
         errno = 0;
         int cnt = 0;
 
-        ((read_float(&str, floats) ? ++cnt : false) && ...);
+        ((read_one_float_from_string(&str, floats) ? ++cnt : false) && ...);
 
         return cnt;
 }
 
-template <typename T>
-void read_float(const char* str, Vector<3, T>* v)
+template <size_t N, typename T, unsigned... I>
+int read_vector(const char* str, Vector<N, T>* v, std::integer_sequence<unsigned, I...>&&)
 {
-        if (3 != string_to_float(str, &(*v)[0], &(*v)[1], &(*v)[2]))
+        static_assert(N == sizeof...(I));
+
+        return string_to_floats(str, &(*v)[I]...);
+}
+
+template <size_t N, typename T, unsigned... I>
+int read_vector(const char* str, Vector<N, T>* v, T* n, std::integer_sequence<unsigned, I...>&&)
+{
+        static_assert(N == sizeof...(I));
+
+        return string_to_floats(str, &(*v)[I]..., n);
+}
+
+template <size_t N, typename T>
+void read_float(const char* str, Vector<N, T>* v)
+{
+        if (N != read_vector(str, v, std::make_integer_sequence<unsigned, N>()))
         {
-                error(std::string("Error read 3 floating points of ") + type_name<T>() + " type");
+                error(std::string("Error read " + to_string(N) + " floating points of ") + type_name<T>() + " type");
         }
 }
 
-template <typename T>
-void read_float_texture(const char* str, Vector<2, T>* v)
+template <size_t N, typename T>
+void read_float_texture(const char* str, Vector<N, T>* v)
 {
         T tmp;
 
-        int n = string_to_float(str, &(*v)[0], &(*v)[1], &tmp);
+        int n = read_vector(str, v, &tmp, std::make_integer_sequence<unsigned, N>());
 
-        if (n != 2 && n != 3)
+        if (n != N && n != N + 1)
         {
-                error(std::string("Error read 2 or 3 floating points of ") + type_name<T>() + " type");
+                error(std::string("Error read " + to_string(N) + " or " + to_string(N + 1) + " floating points of ") +
+                      type_name<T>() + " type");
         }
 
-        if (n == 3 && tmp != 0)
+        if (n == N + 1 && tmp != 0)
         {
-                error("3D textures not supported");
+                error(to_string(N + 1) + "-dimensional textures are not supported");
         }
 }
 
 template <typename T>
 void read_float(const char* str, T* v)
 {
-        if (1 != string_to_float(str, v))
+        static_assert(std::is_floating_point_v<T>);
+
+        if (1 != string_to_floats(str, v))
         {
                 error(std::string("Error read 1 floating point of ") + type_name<T>() + " type");
         }
@@ -646,43 +683,53 @@ void split_line(T* data, const std::vector<long long>& line_begin, long long lin
         (*data)[*second_e] = 0; // символ комментария '#' или символ '\n'
 }
 
-bool face_is_one_dimensional(const vec3f& v0, const vec3f& v1, const vec3f& v2)
+template <size_t N>
+bool facet_dimension_is_correct(const std::vector<Vector<N, float>>& vertices, const std::array<int, N>& indices)
 {
-        Vector<3, double> e0 = to_vector<double>(v1 - v0);
-        Vector<3, double> e1 = to_vector<double>(v2 - v0);
+        static_assert(N == 3);
+
+        Vector<3, double> e0 = to_vector<double>(vertices[indices[1]] - vertices[indices[0]]);
+        Vector<3, double> e1 = to_vector<double>(vertices[indices[2]] - vertices[indices[0]]);
 
         // Перебрать все возможные определители 2x2.
         // Здесь достаточно просто сравнить с 0.
 
         if (e0[1] * e1[2] - e0[2] * e1[1] != 0)
         {
-                return false;
+                return true;
         }
 
         if (e0[0] * e1[2] - e0[2] * e1[0] != 0)
         {
-                return false;
+                return true;
         }
 
         if (e0[0] * e1[1] - e0[1] * e1[0] != 0)
         {
-                return false;
+                return true;
         }
 
-        return true;
+        return false;
 }
 
-class FileObj final : public Obj<3>
+template <size_t N>
+class FileObj final : public Obj<N>
 {
-        std::vector<vec3f> m_vertices;
-        std::vector<vec2f> m_texcoords;
-        std::vector<vec3f> m_normals;
+        using typename Obj<N>::Facet;
+        using typename Obj<N>::Point;
+        using typename Obj<N>::Line;
+        using typename Obj<N>::Material;
+        using typename Obj<N>::Image;
+
+        std::vector<Vector<N, float>> m_vertices;
+        std::vector<Vector<N, float>> m_normals;
+        std::vector<Vector<N - 1, float>> m_texcoords;
         std::vector<Facet> m_facets;
         std::vector<Point> m_points;
         std::vector<Line> m_lines;
         std::vector<Material> m_materials;
         std::vector<Image> m_images;
-        vec3f m_center;
+        Vector<N, float> m_center;
         float m_length;
 
         enum class ObjLineType
@@ -716,16 +763,16 @@ class FileObj final : public Obj<3>
                 ObjLineType type;
                 long long second_b;
                 long long second_e;
-                std::array<Facet, MAX_FACES_PER_LINE> faces;
-                int face_count;
-                vec3f v;
+                std::array<Facet, MAX_FACETS_PER_LINE<N>> facets;
+                int facet_count;
+                Vector<N, float> v;
         };
 
         // struct MtlLine
         //{
         //        MtlLineType type;
         //        long long second_b, second_e;
-        //        vec3f v;
+        //        Vector<N, float> v;
         //};
 
         struct Counters
@@ -733,20 +780,20 @@ class FileObj final : public Obj<3>
                 int vertex = 0;
                 int texcoord = 0;
                 int normal = 0;
-                int face = 0;
+                int facet = 0;
 
                 void operator+=(const Counters& counters)
                 {
                         vertex += counters.vertex;
                         texcoord += counters.texcoord;
                         normal += counters.normal;
-                        face += counters.face;
+                        facet += counters.facet;
                 }
         };
 
-        void check_face_indices() const;
+        void check_facet_indices() const;
 
-        bool remove_one_dimensional_faces();
+        bool remove_facets_with_incorrect_dimension();
 
         static void read_obj_stage_one(unsigned thread_num, unsigned thread_count, std::vector<Counters>* counters,
                                        std::vector<char>* data_ptr, std::vector<long long>* line_begin,
@@ -774,17 +821,17 @@ class FileObj final : public Obj<3>
 
         void read_obj_and_mtl(const std::string& file_name, ProgressRatio* progress);
 
-        const std::vector<vec3f>& vertices() const override
+        const std::vector<Vector<N, float>>& vertices() const override
         {
                 return m_vertices;
         }
-        const std::vector<vec2f>& texcoords() const override
-        {
-                return m_texcoords;
-        }
-        const std::vector<vec3f>& normals() const override
+        const std::vector<Vector<N, float>>& normals() const override
         {
                 return m_normals;
+        }
+        const std::vector<Vector<N - 1, float>>& texcoords() const override
+        {
+                return m_texcoords;
         }
         const std::vector<Facet>& facets() const override
         {
@@ -806,7 +853,7 @@ class FileObj final : public Obj<3>
         {
                 return m_images;
         }
-        vec3f center() const override
+        Vector<N, float> center() const override
         {
                 return m_center;
         }
@@ -819,7 +866,8 @@ public:
         FileObj(const std::string& file_name, ProgressRatio* progress);
 };
 
-void FileObj::check_face_indices() const
+template <size_t N>
+void FileObj<N>::check_facet_indices() const
 {
         int vertex_count = m_vertices.size();
         int texcoord_count = m_texcoords.size();
@@ -827,7 +875,7 @@ void FileObj::check_face_indices() const
 
         for (const Facet& facet : m_facets)
         {
-                for (int i = 0; i < 3; ++i)
+                for (unsigned i = 0; i < N; ++i)
                 {
                         if (facet.vertices[i] < 0 || facet.vertices[i] >= vertex_count)
                         {
@@ -870,49 +918,54 @@ void FileObj::check_face_indices() const
         }
 }
 
-bool FileObj::remove_one_dimensional_faces()
+template <size_t N>
+bool FileObj<N>::remove_facets_with_incorrect_dimension()
 {
-        std::vector<bool> one_d_faces(m_facets.size(), false);
-
-        int one_d_face_count = 0;
-
-        for (size_t i = 0; i < m_facets.size(); ++i)
-        {
-                vec3f v0 = m_vertices[m_facets[i].vertices[0]];
-                vec3f v1 = m_vertices[m_facets[i].vertices[1]];
-                vec3f v2 = m_vertices[m_facets[i].vertices[2]];
-
-                if (face_is_one_dimensional(v0, v1, v2))
-                {
-                        one_d_faces[i] = true;
-                        ++one_d_face_count;
-                }
-        }
-
-        if (one_d_face_count == 0)
+        if constexpr (N != 3)
         {
                 return false;
         }
-
-        std::vector<Facet> facets;
-        facets.reserve(m_facets.size() - one_d_face_count);
-
-        for (size_t i = 0; i < m_facets.size(); ++i)
+        else
         {
-                if (!one_d_faces[i])
+                std::vector<bool> wrong_facets(m_facets.size(), false);
+
+                int wrong_facet_count = 0;
+
+                for (size_t i = 0; i < m_facets.size(); ++i)
                 {
-                        facets.push_back(m_facets[i]);
+                        if (!facet_dimension_is_correct(m_vertices, m_facets[i].vertices))
+                        {
+                                wrong_facets[i] = true;
+                                ++wrong_facet_count;
+                        }
                 }
+
+                if (wrong_facet_count == 0)
+                {
+                        return false;
+                }
+
+                std::vector<Facet> facets;
+                facets.reserve(m_facets.size() - wrong_facet_count);
+
+                for (size_t i = 0; i < m_facets.size(); ++i)
+                {
+                        if (!wrong_facets[i])
+                        {
+                                facets.push_back(m_facets[i]);
+                        }
+                }
+
+                m_facets = std::move(facets);
+
+                return true;
         }
-
-        m_facets = std::move(facets);
-
-        return true;
 }
 
-void FileObj::read_obj_stage_one(unsigned thread_num, unsigned thread_count, std::vector<Counters>* counters,
-                                 std::vector<char>* data_ptr, std::vector<long long>* line_begin, std::vector<ObjLine>* line_prop,
-                                 ProgressRatio* progress)
+template <size_t N>
+void FileObj<N>::read_obj_stage_one(unsigned thread_num, unsigned thread_count, std::vector<Counters>* counters,
+                                    std::vector<char>* data_ptr, std::vector<long long>* line_begin,
+                                    std::vector<ObjLine>* line_prop, ProgressRatio* progress)
 {
         ASSERT(counters->size() == thread_count);
 
@@ -939,7 +992,7 @@ void FileObj::read_obj_stage_one(unsigned thread_num, unsigned thread_count, std
                         if (str_equal(first, OBJ_v))
                         {
                                 lp.type = ObjLineType::V;
-                                vec3f v;
+                                Vector<N, float> v;
                                 read_float(&data[lp.second_b], &v);
                                 lp.v = v;
 
@@ -948,17 +1001,19 @@ void FileObj::read_obj_stage_one(unsigned thread_num, unsigned thread_count, std
                         else if (str_equal(first, OBJ_vt))
                         {
                                 lp.type = ObjLineType::VT;
-                                vec2f v;
+                                Vector<N - 1, float> v;
                                 read_float_texture(&data[lp.second_b], &v);
-                                lp.v[0] = v[0];
-                                lp.v[1] = v[1];
+                                for (unsigned i = 0; i < N - 1; ++i)
+                                {
+                                        lp.v[i] = v[i];
+                                }
 
                                 ++((*counters)[thread_num].texcoord);
                         }
                         else if (str_equal(first, OBJ_vn))
                         {
                                 lp.type = ObjLineType::VN;
-                                vec3f v;
+                                Vector<N, float> v;
                                 read_float(&data[lp.second_b], &v);
                                 lp.v = normalize(v);
 
@@ -967,9 +1022,9 @@ void FileObj::read_obj_stage_one(unsigned thread_num, unsigned thread_count, std
                         else if (str_equal(first, OBJ_f))
                         {
                                 lp.type = ObjLineType::F;
-                                read_faces(data, lp.second_b, lp.second_e, &lp.faces, &lp.face_count);
+                                read_facets<N>(data, lp.second_b, lp.second_e, &lp.facets, &lp.facet_count);
 
-                                ++((*counters)[thread_num].face);
+                                ++((*counters)[thread_num].facet);
                         }
                         else if (str_equal(first, OBJ_usemtl))
                         {
@@ -1005,9 +1060,10 @@ void FileObj::read_obj_stage_one(unsigned thread_num, unsigned thread_count, std
 //   начинаются с 1 для абсолютных значений,
 //   начинаются с -1 для относительных значений назад.
 // Преобразование в абсолютные значения с началом от 0.
-void correct_indices(Obj<3>::Facet* facet, int vertices_size, int texcoords_size, int normals_size)
+template <size_t N>
+void correct_indices(typename Obj<N>::Facet* facet, int vertices_size, int texcoords_size, int normals_size)
 {
-        for (int i = 0; i < 3; ++i)
+        for (unsigned i = 0; i < N; ++i)
         {
                 int& v = facet->vertices[i];
                 int& t = facet->texcoords[i];
@@ -1024,14 +1080,15 @@ void correct_indices(Obj<3>::Facet* facet, int vertices_size, int texcoords_size
         }
 }
 
-void FileObj::read_obj_stage_two(const Counters& counters, std::vector<char>* data_ptr, std::vector<ObjLine>* line_prop,
-                                 ProgressRatio* progress, std::map<std::string, int>* material_index,
-                                 std::vector<std::string>* library_names)
+template <size_t N>
+void FileObj<N>::read_obj_stage_two(const Counters& counters, std::vector<char>* data_ptr, std::vector<ObjLine>* line_prop,
+                                    ProgressRatio* progress, std::map<std::string, int>* material_index,
+                                    std::vector<std::string>* library_names)
 {
         m_vertices.reserve(counters.vertex);
         m_texcoords.reserve(counters.texcoord);
         m_normals.reserve(counters.normal);
-        m_facets.reserve(counters.face);
+        m_facets.reserve(counters.facet);
 
         const std::vector<char>& data = *data_ptr;
         const long long line_count = line_prop->size();
@@ -1056,17 +1113,24 @@ void FileObj::read_obj_stage_two(const Counters& counters, std::vector<char>* da
                         m_vertices.push_back(lp.v);
                         break;
                 case ObjLineType::VT:
-                        m_texcoords.emplace_back(lp.v[0], lp.v[1]);
+                {
+                        m_texcoords.resize(m_texcoords.size() + 1);
+                        Vector<N - 1, float>& new_vector = m_texcoords[m_texcoords.size() - 1];
+                        for (unsigned i = 0; i < N - 1; ++i)
+                        {
+                                new_vector[i] = lp.v[i];
+                        }
                         break;
+                }
                 case ObjLineType::VN:
                         m_normals.push_back(lp.v);
                         break;
                 case ObjLineType::F:
-                        for (int i = 0; i < lp.face_count; ++i)
+                        for (int i = 0; i < lp.facet_count; ++i)
                         {
-                                lp.faces[i].material = mtl_index;
-                                correct_indices(&lp.faces[i], m_vertices.size(), m_texcoords.size(), m_normals.size());
-                                m_facets.push_back(std::move(lp.faces[i]));
+                                lp.facets[i].material = mtl_index;
+                                correct_indices<N>(&lp.facets[i], m_vertices.size(), m_texcoords.size(), m_normals.size());
+                                m_facets.push_back(std::move(lp.facets[i]));
                         }
                         break;
                 case ObjLineType::USEMTL:
@@ -1079,7 +1143,7 @@ void FileObj::read_obj_stage_two(const Counters& counters, std::vector<char>* da
                         }
                         else
                         {
-                                Obj<3>::Material mtl;
+                                typename Obj<N>::Material mtl;
                                 mtl.name = mtl_name;
                                 m_materials.push_back(std::move(mtl));
                                 material_index->emplace(std::move(mtl_name), m_materials.size() - 1);
@@ -1098,7 +1162,8 @@ void FileObj::read_obj_stage_two(const Counters& counters, std::vector<char>* da
         }
 }
 
-FileObj::Counters FileObj::sum_counters(const std::vector<Counters>& counters)
+template <size_t N>
+typename FileObj<N>::Counters FileObj<N>::sum_counters(const std::vector<Counters>& counters)
 {
         Counters sum;
         for (const Counters& c : counters)
@@ -1108,10 +1173,11 @@ FileObj::Counters FileObj::sum_counters(const std::vector<Counters>& counters)
         return sum;
 }
 
-void FileObj::read_obj_thread(unsigned thread_num, unsigned thread_count, std::vector<Counters>* counters, ThreadBarrier* barrier,
-                              std::atomic_bool* error_found, std::vector<char>* data_ptr, std::vector<long long>* line_begin,
-                              std::vector<ObjLine>* line_prop, ProgressRatio* progress,
-                              std::map<std::string, int>* material_index, std::vector<std::string>* library_names)
+template <size_t N>
+void FileObj<N>::read_obj_thread(unsigned thread_num, unsigned thread_count, std::vector<Counters>* counters,
+                                 ThreadBarrier* barrier, std::atomic_bool* error_found, std::vector<char>* data_ptr,
+                                 std::vector<long long>* line_begin, std::vector<ObjLine>* line_prop, ProgressRatio* progress,
+                                 std::map<std::string, int>* material_index, std::vector<std::string>* library_names)
 {
         // параллельно
 
@@ -1144,8 +1210,9 @@ void FileObj::read_obj_thread(unsigned thread_num, unsigned thread_count, std::v
         read_obj_stage_two(sum_counters(*counters), data_ptr, line_prop, progress, material_index, library_names);
 }
 
-void FileObj::read_lib(const std::string& dir_name, const std::string& file_name, ProgressRatio* progress,
-                       std::map<std::string, int>* material_index, std::map<std::string, int>* image_index)
+template <size_t N>
+void FileObj<N>::read_lib(const std::string& dir_name, const std::string& file_name, ProgressRatio* progress,
+                          std::map<std::string, int>* material_index, [[maybe_unused]] std::map<std::string, int>* image_index)
 {
         std::vector<char> data;
         std::vector<long long> line_begin;
@@ -1210,6 +1277,7 @@ void FileObj::read_lib(const std::string& dir_name, const std::string& file_name
                                 {
                                         continue;
                                 }
+
                                 read_float(&data[second_b], &mtl->Ka.data());
 
                                 if (!check_color(mtl->Ka))
@@ -1223,6 +1291,7 @@ void FileObj::read_lib(const std::string& dir_name, const std::string& file_name
                                 {
                                         continue;
                                 }
+
                                 read_float(&data[second_b], &mtl->Kd.data());
 
                                 if (!check_color(mtl->Kd))
@@ -1236,6 +1305,7 @@ void FileObj::read_lib(const std::string& dir_name, const std::string& file_name
                                 {
                                         continue;
                                 }
+
                                 read_float(&data[second_b], &mtl->Ks.data());
 
                                 if (!check_color(mtl->Ks))
@@ -1249,6 +1319,7 @@ void FileObj::read_lib(const std::string& dir_name, const std::string& file_name
                                 {
                                         continue;
                                 }
+
                                 read_float(&data[second_b], &mtl->Ns);
 
                                 if (!check_range(mtl->Ns, 0, 1000))
@@ -1262,8 +1333,9 @@ void FileObj::read_lib(const std::string& dir_name, const std::string& file_name
                                 {
                                         continue;
                                 }
+
                                 read_name("file", data, second_b, second_e, &name);
-                                load_image(lib_dir, name, image_index, &m_images, &mtl->map_Ka);
+                                load_image<N>(lib_dir, name, image_index, &m_images, &mtl->map_Ka);
                         }
                         else if (str_equal(first, MTL_map_Kd))
                         {
@@ -1271,8 +1343,9 @@ void FileObj::read_lib(const std::string& dir_name, const std::string& file_name
                                 {
                                         continue;
                                 }
+
                                 read_name("file", data, second_b, second_e, &name);
-                                load_image(lib_dir, name, image_index, &m_images, &mtl->map_Kd);
+                                load_image<N>(lib_dir, name, image_index, &m_images, &mtl->map_Kd);
                         }
                         else if (str_equal(first, MTL_map_Ks))
                         {
@@ -1280,8 +1353,9 @@ void FileObj::read_lib(const std::string& dir_name, const std::string& file_name
                                 {
                                         continue;
                                 }
+
                                 read_name("file", data, second_b, second_e, &name);
-                                load_image(lib_dir, name, image_index, &m_images, &mtl->map_Ks);
+                                load_image<N>(lib_dir, name, image_index, &m_images, &mtl->map_Ks);
                         }
                 }
                 catch (std::exception& e)
@@ -1297,8 +1371,9 @@ void FileObj::read_lib(const std::string& dir_name, const std::string& file_name
         }
 }
 
-void FileObj::read_libs(const std::string& dir_name, ProgressRatio* progress, std::map<std::string, int>* material_index,
-                        const std::vector<std::string>& library_names)
+template <size_t N>
+void FileObj<N>::read_libs(const std::string& dir_name, ProgressRatio* progress, std::map<std::string, int>* material_index,
+                           const std::vector<std::string>& library_names)
 {
         std::map<std::string, int> image_index;
 
@@ -1316,8 +1391,9 @@ void FileObj::read_libs(const std::string& dir_name, ProgressRatio* progress, st
         m_images.shrink_to_fit();
 }
 
-void FileObj::read_obj(const std::string& file_name, ProgressRatio* progress, std::map<std::string, int>* material_index,
-                       std::vector<std::string>* library_names)
+template <size_t N>
+void FileObj<N>::read_obj(const std::string& file_name, ProgressRatio* progress, std::map<std::string, int>* material_index,
+                          std::vector<std::string>* library_names)
 {
         const int thread_count = hardware_concurrency();
 
@@ -1342,7 +1418,8 @@ void FileObj::read_obj(const std::string& file_name, ProgressRatio* progress, st
         threads.join();
 }
 
-void FileObj::read_obj_and_mtl(const std::string& file_name, ProgressRatio* progress)
+template <size_t N>
+void FileObj<N>::read_obj_and_mtl(const std::string& file_name, ProgressRatio* progress)
 {
         progress->set_undefined();
 
@@ -1356,15 +1433,15 @@ void FileObj::read_obj_and_mtl(const std::string& file_name, ProgressRatio* prog
                 error("No facets found in OBJ file");
         }
 
-        check_face_indices();
+        check_facet_indices();
 
         center_and_length(m_vertices, m_facets, &m_center, &m_length);
 
-        if (remove_one_dimensional_faces())
+        if (remove_facets_with_incorrect_dimension())
         {
                 if (m_facets.size() == 0)
                 {
-                        error("No 2D facets found in OBJ file");
+                        error("No " + to_string(N - 1) + "-facets found in " + obj_type_name(N) + " file");
                 }
                 center_and_length(m_vertices, m_facets, &m_center, &m_length);
         }
@@ -1372,48 +1449,56 @@ void FileObj::read_obj_and_mtl(const std::string& file_name, ProgressRatio* prog
         read_libs(file_parent_path(file_name), progress, &material_index, library_names);
 }
 
-FileObj::FileObj(const std::string& file_name, ProgressRatio* progress)
+template <size_t N>
+FileObj<N>::FileObj(const std::string& file_name, ProgressRatio* progress)
 {
         double start_time = time_in_seconds();
 
         read_obj_and_mtl(file_name, progress);
 
-        LOG("OBJ loaded, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
+        LOG(obj_type_name(N) + " loaded, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
 }
 
-// Чтение вершин из текстового файла. Одна вершина на строку. Три координаты через пробел.
-// x y z
-// x y z
-class FileTxt final : public Obj<3>
+// Чтение вершин из текстового файла. Одна вершина на строку. Координаты через пробел.
+// x0 x1 x2 x3 ...
+// x0 x1 x2 x3 ...
+template <size_t N>
+class FileTxt final : public Obj<N>
 {
-        std::vector<vec3f> m_vertices;
-        std::vector<vec2f> m_texcoords;
-        std::vector<vec3f> m_normals;
+        using typename Obj<N>::Facet;
+        using typename Obj<N>::Point;
+        using typename Obj<N>::Line;
+        using typename Obj<N>::Material;
+        using typename Obj<N>::Image;
+
+        std::vector<Vector<N, float>> m_vertices;
+        std::vector<Vector<N, float>> m_normals;
+        std::vector<Vector<N - 1, float>> m_texcoords;
         std::vector<Facet> m_facets;
         std::vector<Point> m_points;
         std::vector<Line> m_lines;
         std::vector<Material> m_materials;
         std::vector<Image> m_images;
-        vec3f m_center;
+        Vector<N, float> m_center;
         float m_length;
 
         void read_points_thread(unsigned thread_num, unsigned thread_count, std::vector<char>* data_ptr,
-                                const std::vector<long long>& line_begin, std::vector<vec3f>* lines,
+                                const std::vector<long long>& line_begin, std::vector<Vector<N, float>>* lines,
                                 ProgressRatio* progress) const;
         void read_points(const std::string& file_name, ProgressRatio* progress);
         void read_text(const std::string& file_name, ProgressRatio* progress);
 
-        const std::vector<vec3f>& vertices() const override
+        const std::vector<Vector<N, float>>& vertices() const override
         {
                 return m_vertices;
         }
-        const std::vector<vec2f>& texcoords() const override
-        {
-                return m_texcoords;
-        }
-        const std::vector<vec3f>& normals() const override
+        const std::vector<Vector<N, float>>& normals() const override
         {
                 return m_normals;
+        }
+        const std::vector<Vector<N - 1, float>>& texcoords() const override
+        {
+                return m_texcoords;
         }
         const std::vector<Facet>& facets() const override
         {
@@ -1435,7 +1520,7 @@ class FileTxt final : public Obj<3>
         {
                 return m_images;
         }
-        vec3f center() const override
+        Vector<N, float> center() const override
         {
                 return m_center;
         }
@@ -1448,9 +1533,10 @@ public:
         FileTxt(const std::string& file_name, ProgressRatio* progress);
 };
 
-void FileTxt::read_points_thread(unsigned thread_num, unsigned thread_count, std::vector<char>* data_ptr,
-                                 const std::vector<long long>& line_begin, std::vector<vec3f>* lines,
-                                 ProgressRatio* progress) const
+template <size_t N>
+void FileTxt<N>::read_points_thread(unsigned thread_num, unsigned thread_count, std::vector<char>* data_ptr,
+                                    const std::vector<long long>& line_begin, std::vector<Vector<N, float>>* lines,
+                                    ProgressRatio* progress) const
 {
         const long long line_count = line_begin.size();
         const double line_count_reciprocal = 1.0 / line_begin.size();
@@ -1486,7 +1572,8 @@ void FileTxt::read_points_thread(unsigned thread_num, unsigned thread_count, std
         }
 }
 
-void FileTxt::read_points(const std::string& file_name, ProgressRatio* progress)
+template <size_t N>
+void FileTxt<N>::read_points(const std::string& file_name, ProgressRatio* progress)
 {
         const int thread_count = hardware_concurrency();
 
@@ -1505,7 +1592,8 @@ void FileTxt::read_points(const std::string& file_name, ProgressRatio* progress)
         threads.join();
 }
 
-void FileTxt::read_text(const std::string& file_name, ProgressRatio* progress)
+template <size_t N>
+void FileTxt<N>::read_text(const std::string& file_name, ProgressRatio* progress)
 {
         progress->set_undefined();
 
@@ -1513,7 +1601,7 @@ void FileTxt::read_text(const std::string& file_name, ProgressRatio* progress)
 
         if (m_vertices.size() == 0)
         {
-                error("No vertices found in Text file");
+                error("No vertices found in TXT file");
         }
 
         m_points.resize(m_vertices.size());
@@ -1525,7 +1613,8 @@ void FileTxt::read_text(const std::string& file_name, ProgressRatio* progress)
         center_and_length(m_vertices, m_points, &m_center, &m_length);
 }
 
-FileTxt::FileTxt(const std::string& file_name, ProgressRatio* progress)
+template <size_t N>
+FileTxt<N>::FileTxt(const std::string& file_name, ProgressRatio* progress)
 {
         double start_time = time_in_seconds();
 
@@ -1535,27 +1624,29 @@ FileTxt::FileTxt(const std::string& file_name, ProgressRatio* progress)
 }
 }
 
-std::unique_ptr<Obj<3>> load_obj_from_file(const std::string& file_name, ProgressRatio* progress)
+template <size_t N>
+std::unique_ptr<Obj<N>> load_obj_from_file(const std::string& file_name, ProgressRatio* progress)
 {
-        std::string upper_extension = to_upper(file_extension(file_name));
+        auto[obj_dimension, obj_file_type] = obj_file_dimension_and_type(file_name);
 
-        if (upper_extension == "OBJ")
+        if (obj_dimension != static_cast<int>(N))
         {
-                return std::make_unique<FileObj>(file_name, progress);
-        }
-
-        if (upper_extension == "TXT")
-        {
-                return std::make_unique<FileTxt>(file_name, progress);
+                error("Requested OBJ file dimension " + to_string(N) + ", detected OBJ file dimension " +
+                      to_string(obj_dimension) + ", file " + file_name);
         }
 
-        std::string ext = file_extension(file_name);
-        if (ext.size() > 0)
+        switch (obj_file_type)
         {
-                error("Unsupported file format " + ext);
+        case ObjFileType::OBJ:
+                return std::make_unique<FileObj<N>>(file_name, progress);
+        case ObjFileType::TXT:
+                return std::make_unique<FileTxt<N>>(file_name, progress);
         }
-        else
-        {
-                error("File extension not found");
-        }
+
+        error_fatal("Unknown obj file type");
 }
+
+template std::unique_ptr<Obj<3>> load_obj_from_file(const std::string& file_name, ProgressRatio* progress);
+template std::unique_ptr<Obj<4>> load_obj_from_file(const std::string& file_name, ProgressRatio* progress);
+template std::unique_ptr<Obj<5>> load_obj_from_file(const std::string& file_name, ProgressRatio* progress);
+template std::unique_ptr<Obj<6>> load_obj_from_file(const std::string& file_name, ProgressRatio* progress);
