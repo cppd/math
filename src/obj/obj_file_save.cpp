@@ -247,7 +247,7 @@ std::string file_name_with_extension(const std::string& file_name)
 }
 
 template <size_t N>
-void save_obj_geometry_to_file(const Obj<N>* obj, const std::string& file_name, const std::string_view& comment)
+std::string save_obj_geometry_to_file(const Obj<N>* obj, const std::string& file_name, const std::string_view& comment)
 {
         static_assert(N >= 3);
 
@@ -256,7 +256,9 @@ void save_obj_geometry_to_file(const Obj<N>* obj, const std::string& file_name, 
                 error("Object doesn't have facets");
         }
 
-        CFile file(file_name_with_extension<N>(file_name), "w");
+        std::string full_name = file_name_with_extension<N>(file_name);
+
+        CFile file(full_name, "w");
 
         double start_time = time_in_seconds();
 
@@ -266,9 +268,11 @@ void save_obj_geometry_to_file(const Obj<N>* obj, const std::string& file_name, 
         write_faces(file, obj);
 
         LOG(obj_type_name(N) + " saved, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
+
+        return full_name;
 }
 
-template void save_obj_geometry_to_file(const Obj<3>* obj, const std::string& file_name, const std::string_view& comment);
-template void save_obj_geometry_to_file(const Obj<4>* obj, const std::string& file_name, const std::string_view& comment);
-template void save_obj_geometry_to_file(const Obj<5>* obj, const std::string& file_name, const std::string_view& comment);
-template void save_obj_geometry_to_file(const Obj<6>* obj, const std::string& file_name, const std::string_view& comment);
+template std::string save_obj_geometry_to_file(const Obj<3>* obj, const std::string& file_name, const std::string_view& comment);
+template std::string save_obj_geometry_to_file(const Obj<4>* obj, const std::string& file_name, const std::string_view& comment);
+template std::string save_obj_geometry_to_file(const Obj<5>* obj, const std::string& file_name, const std::string_view& comment);
+template std::string save_obj_geometry_to_file(const Obj<6>* obj, const std::string& file_name, const std::string_view& comment);

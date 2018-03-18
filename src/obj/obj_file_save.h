@@ -23,4 +23,4 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string_view>
 
 template <size_t N>
-void save_obj_geometry_to_file(const Obj<N>* obj, const std::string& file_name, const std::string_view& comment);
+std::string save_obj_geometry_to_file(const Obj<N>* obj, const std::string& file_name, const std::string_view& comment);
