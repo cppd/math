@@ -191,10 +191,10 @@ void test_fft_impl(bool big_test)
 
 #else
         const std::string tmp_dir = temp_directory();
-        const std::string input = tmp_dir + "/input.txt";
-        const std::string output_gl2d = tmp_dir + "/output_gl2d.txt";
-        const std::string output_cuda = tmp_dir + "/output_cuda.txt";
-        const std::string output_fftw = tmp_dir + "/output_fftw.txt";
+        const std::string input = tmp_dir + "/dft_input.txt";
+        const std::string output_gl2d = tmp_dir + "/dft_output_gl2d.txt";
+        const std::string output_cuda = tmp_dir + "/dft_output_cuda.txt";
+        const std::string output_fftw = tmp_dir + "/dft_output_fftw.txt";
 
         std::unique_ptr<sf::Context> context;
         create_gl_context_1x1(MAJOR_GL_VERSION, MINOR_GL_VERSION, required_extensions(), &context);

@@ -31,6 +31,8 @@ namespace
 {
 class Images : public IPainterNotifier<3>
 {
+        static constexpr const char beginning_of_file_name[] = "path_tracing_";
+
         std::vector<Image<2>> m_images;
         std::array<int, 3> m_size;
 
@@ -80,7 +82,7 @@ public:
                 for (unsigned i = 0; i < m_images.size(); ++i)
                 {
                         oss.str("");
-                        oss << std::setw(w) << i + 1;
+                        oss << beginning_of_file_name << std::setw(w) << i + 1;
                         m_images[i].write_to_file(dir + "/" + oss.str());
                 }
         }
