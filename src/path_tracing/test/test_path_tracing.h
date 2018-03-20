@@ -17,4 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <string>
+
 void test_path_tracing();
+
+void test_path_tracing(const std::string& file_name);

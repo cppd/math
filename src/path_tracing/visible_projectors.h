@@ -52,9 +52,9 @@ class VisibleParallelProjector final : public Projector<N, T>
 
 public:
         VisibleParallelProjector(const Vector<N, T>& camera_org, const Vector<N, T>& camera_dir,
-                                 const std::array<Vector<N, T>, N - 1>& screen_axes, T view_width,
+                                 const std::array<Vector<N, T>, N - 1>& screen_axes, T units_per_pixel,
                                  const std::array<int, N - 1>& screen_size)
-                : m_projector(camera_org, camera_dir, screen_axes, view_width, screen_size)
+                : m_projector(camera_org, camera_dir, screen_axes, units_per_pixel, screen_size)
         {
         }
 

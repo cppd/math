@@ -163,7 +163,7 @@ class ParallelProjector
 
 public:
         ParallelProjector(const Vector<N, T>& camera_org, const Vector<N, T>& camera_dir,
-                          const std::array<Vector<N, T>, N - 1>& screen_axes, T view_width,
+                          const std::array<Vector<N, T>, N - 1>& screen_axes, T units_per_pixel,
                           const std::array<int, N - 1>& screen_size)
         {
                 namespace Impl = ProjectorImplementation;
@@ -175,15 +175,14 @@ public:
 
                 //
 
-                if (!(view_width > 0))
+                if (!(units_per_pixel > 0))
                 {
-                        error("Error view width for parallel projection");
+                        error("Error units per pixel for parallel projection");
                 }
 
-                T coef = view_width / screen_size[0];
                 for (unsigned i = 0; i < N - 1; ++i)
                 {
-                        m_screen_axes[i] *= coef;
+                        m_screen_axes[i] *= units_per_pixel;
                 }
         }
 
