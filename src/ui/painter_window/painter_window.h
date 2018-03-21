@@ -19,23 +19,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "ui_painter_window.h"
 
-#include "com/thread.h"
 #include "path_tracing/painter.h"
 #include "path_tracing/visible_paintbrush.h"
 
+#include <QImage>
+#include <QLabel>
+#include <QSlider>
 #include <QTimer>
+#include <deque>
 #include <memory>
 #include <string>
 #include <thread>
 
-class PainterWindow final : public QWidget, public IPainterNotifier<2>
+class PainterWindowUI : public QWidget
 {
         Q_OBJECT
-
-public:
-        PainterWindow(const std::string& title, unsigned thread_count, int samples_per_pixel,
-                      std::unique_ptr<const PaintObjects<3, double>>&& paint_objects);
-        ~PainterWindow() override;
 
 signals:
         void error_message_signal(QString) const;
@@ -44,38 +42,93 @@ private slots:
         void timer_slot();
         void first_shown();
         void error_message_slot(QString);
+        void slider_changed_slot(int);
 
         void on_pushButton_save_to_file_clicked();
+
+public:
+        PainterWindowUI(const std::string& title, std::vector<int>&& m_screen_size);
+        ~PainterWindowUI() override;
+
+protected:
+        void init_window();
+        void set_pixel(long long index, unsigned char r, unsigned char g, unsigned char b) noexcept;
+        void mark_pixel_busy(long long index) noexcept;
+        void error_message(const std::string& msg) const noexcept;
 
 private:
         void showEvent(QShowEvent* event) override;
 
-        void painter_pixel_before(const std::array<int_least16_t, 2>&) noexcept override;
-        void painter_pixel_after(const std::array<int_least16_t, 2>&, const SrgbInteger& c) noexcept override;
-        void painter_error_message(const std::string& msg) noexcept override;
-
-        void set_default_pixels();
-        void set_pixel(int x, int y, unsigned char r, unsigned char g, unsigned char b) noexcept;
-        void mark_pixel_busy(int x, int y) noexcept;
         void update_points();
 
-        int m_samples_per_pixel;
-        std::unique_ptr<const PaintObjects<3, double>> m_paint_objects;
-        unsigned m_thread_count;
-        int m_width, m_height;
+        void set_default_pixels();
+        void set_interface();
+        void set_data_vectors();
+        void set_slice_offset();
+
+        virtual void painter_statistics(long long* pass_count, long long* pixel_count, long long* ray_count,
+                                        long long* sample_count, double* previous_pass_duration) const noexcept = 0;
+        virtual long long slice_offset(const std::vector<int>& slider_positions) const = 0;
+
+        const std::vector<int> m_screen_size;
+        const int m_width, m_height;
         QImage m_image;
         std::vector<quint32> m_data, m_data_clean;
-        const unsigned m_image_data_size;
+        const int m_image_byte_count;
         QTimer m_timer;
         bool m_first_show;
-        std::atomic_bool m_stop;
-        std::thread m_thread;
-        std::atomic_bool m_thread_working;
-        const std::thread::id m_window_thread_id;
-        VisibleBarPaintbrush<2> m_paintbrush;
 
         class Difference;
         std::unique_ptr<Difference> m_difference;
 
+        struct DimensionSlider
+        {
+                QLabel label;
+                QSlider slider;
+        };
+        std::deque<DimensionSlider> m_dimension_sliders;
+
+        long long m_slice_offset;
+
         Ui::PainterWindow ui;
+};
+
+template <size_t N, typename T>
+class PainterWindow final : public PainterWindowUI, public IPainterNotifier<N - 1>
+{
+        static_assert(N >= 3);
+        static constexpr size_t N_IMAGE = N - 1;
+
+        const std::unique_ptr<const PaintObjects<N, T>> m_paint_objects;
+        const std::array<long long, N_IMAGE> m_strides;
+        const int m_height;
+        const int m_samples_per_pixel;
+        const unsigned m_thread_count;
+        const std::thread::id m_window_thread_id;
+
+        VisibleBarPaintbrush<N_IMAGE> m_paintbrush;
+        std::atomic_bool m_stop;
+        std::atomic_bool m_thread_working;
+
+        std::thread m_thread;
+
+        static std::array<long long, N_IMAGE> strides_for_sizes(const std::array<int, N_IMAGE>& screen_size);
+
+        long long pixel_index(const std::array<int_least16_t, N_IMAGE>& pixel) const noexcept;
+
+        // PainterWindowUI
+        void painter_statistics(long long* pass_count, long long* pixel_count, long long* ray_count, long long* sample_count,
+                                double* previous_pass_duration) const noexcept override;
+        long long slice_offset(const std::vector<int>& slider_positions) const override;
+
+        // IPainterNotifier
+        void painter_pixel_before(const std::array<int_least16_t, N_IMAGE>& pixel) noexcept override;
+        void painter_pixel_after(const std::array<int_least16_t, N_IMAGE>& pixel, const SrgbInteger& c) noexcept override;
+        void painter_error_message(const std::string& msg) noexcept override;
+
+public:
+        PainterWindow(const std::string& title, unsigned thread_count, int samples_per_pixel,
+                      std::unique_ptr<const PaintObjects<N, T>>&& paint_objects);
+
+        ~PainterWindow() override;
 };

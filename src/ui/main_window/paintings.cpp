@@ -89,7 +89,7 @@ void painting(PathTracingParameters&& parameters_window, const IShow& show, cons
         {
                 std::string title = window_title + " (" + model_name + ")";
 
-                create_and_show_delete_on_close_window<PainterWindow>(
+                create_and_show_delete_on_close_window<PainterWindow<3, double>>(
                         title, thread_count, samples_per_pixel,
                         one_object_scene(background_color, default_color, diffuse,
                                          create_projector(show, paint_width, paint_height), create_light_source(show), mesh));
@@ -103,9 +103,9 @@ void painting(PathTracingParameters&& parameters_window, const IShow& show, cons
 
                 std::string title = window_title + " (" + model_name + " in Cornell Box)";
 
-                create_and_show_delete_on_close_window<PainterWindow>(title, thread_count, samples_per_pixel,
-                                                                      cornell_box(paint_width, paint_height, mesh,
-                                                                                  show.object_size(), default_color, diffuse,
-                                                                                  camera_direction, camera_up));
+                create_and_show_delete_on_close_window<PainterWindow<3, double>>(
+                        title, thread_count, samples_per_pixel,
+                        cornell_box(paint_width, paint_height, mesh, show.object_size(), default_color, diffuse, camera_direction,
+                                    camera_up));
         }
 }
