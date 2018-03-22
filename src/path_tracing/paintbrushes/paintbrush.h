@@ -159,7 +159,11 @@ public:
                 for (Pixel& pixel : m_pixels)
                 {
                         std::reverse(pixel.begin(), pixel.end());
-                        pixel[N - 1] = m_screen_size[N - 1] - 1 - pixel[N - 1];
+
+                        if (N == 2)
+                        {
+                                pixel[1] = m_screen_size[1] - 1 - pixel[1];
+                        }
                 }
         }
 
