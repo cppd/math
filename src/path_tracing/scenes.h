@@ -20,6 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "objects.h"
 
 #include "path_tracing/shapes/mesh.h"
+#include "path_tracing/visible_lights.h"
+#include "path_tracing/visible_projectors.h"
 #include "path_tracing/visible_shapes.h"
 
 #include <memory>
@@ -79,6 +81,81 @@ std::unique_ptr<const PaintObjects<N, T>> one_object_scene(const Color& backgrou
                                                            std::unique_ptr<const LightSource<N, T>>&& light_source,
                                                            const std::shared_ptr<const Mesh<N, T>>& mesh)
 {
+        return std::make_unique<OneObject<N, T>>(background_color, default_color, diffuse, std::move(projector),
+                                                 std::move(light_source), mesh);
+}
+
+template <size_t N, typename T>
+std::unique_ptr<const PaintObjects<N, T>> one_object_scene(const Color& background_color, const Color& default_color, T diffuse,
+                                                           int min_screen_size, int max_screen_size,
+                                                           const std::shared_ptr<const Mesh<N, T>>& mesh)
+{
+        LOG("Creating simple scene...");
+
+        if (min_screen_size < 3)
+        {
+                error("Min screen size (" + to_string(min_screen_size) + ") is too small");
+        }
+
+        if (min_screen_size > max_screen_size)
+        {
+                error("Wrong min and max screen sizes: min = " + to_string(min_screen_size) +
+                      ", max = " + to_string(max_screen_size));
+        }
+
+        Vector<N, T> min, max;
+        mesh->min_max(&min, &max);
+        Vector<N, T> object_size = max - min;
+        Vector<N, T> center = min + object_size / T(2);
+
+        //
+
+        T max_projected_object_size = limits<T>::lowest();
+        for (unsigned i = 0; i < N - 1; ++i) // кроме последнего измерения, по которому находится камера
+        {
+                max_projected_object_size = std::max(object_size[i], max_projected_object_size);
+        }
+        if (max_projected_object_size == 0)
+        {
+                error("Object is a point on the screen");
+        }
+
+        std::array<int, N - 1> screen_size;
+        for (unsigned i = 0; i < N - 1; ++i)
+        {
+                int size_in_pixels = std::lround((object_size[i] / max_projected_object_size) * max_screen_size);
+                screen_size[i] = std::clamp(size_in_pixels, min_screen_size, max_screen_size);
+        }
+
+        Vector<N, T> camera_position(center);
+        camera_position[N - 1] = max[N - 1] + length(object_size);
+
+        Vector<N, T> camera_direction(0);
+        camera_direction[N - 1] = -1;
+
+        std::array<Vector<N, T>, N - 1> screen_axes;
+        for (unsigned i = 0; i < N - 1; ++i)
+        {
+                for (unsigned n = 0; n < N; ++n)
+                {
+                        screen_axes[i][n] = (i != n) ? 0 : 1;
+                }
+        }
+
+        T units_per_pixel = max_projected_object_size / max_screen_size;
+
+        std::unique_ptr<const Projector<N, T>> projector = std::make_unique<const VisibleParallelProjector<N, T>>(
+                camera_position, camera_direction, screen_axes, units_per_pixel, screen_size);
+
+        //
+
+        Vector<N, T> light_position(max + (max - center));
+
+        std::unique_ptr<const LightSource<N, T>> light_source =
+                std::make_unique<const VisibleConstantLight<N, T>>(light_position, Color(1));
+
+        //
+
         return std::make_unique<OneObject<N, T>>(background_color, default_color, diffuse, std::move(projector),
                                                  std::move(light_source), mesh);
 }

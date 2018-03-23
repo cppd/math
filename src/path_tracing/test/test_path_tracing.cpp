@@ -28,6 +28,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "path_tracing/visible_lights.h"
 #include "path_tracing/visible_paintbrush.h"
 #include "path_tracing/visible_projectors.h"
+#include "ui/painter_window/painter_window.h"
+#include "ui/support/support.h"
 
 namespace
 {
@@ -114,87 +116,21 @@ std::shared_ptr<const Mesh<N, T>> file_mesh(const std::string& file_name, int th
 }
 
 template <size_t N, typename T>
-std::unique_ptr<const PaintObjects<N, T>> create_paint_objects(const std::shared_ptr<const Mesh<N, T>>& mesh, int min_screen_size,
-                                                               int max_screen_size)
+std::unique_ptr<const PaintObjects<N, T>> scene(const std::shared_ptr<const Mesh<N, T>>& mesh, int min_screen_size,
+                                                int max_screen_size)
 {
         Color background_color = Color(SrgbInteger(50, 100, 150));
         Color default_color = Color(SrgbInteger(150, 170, 150));
         T diffuse = 1;
 
-        LOG("Creating paint objects...");
-
-        if (min_screen_size < 3)
-        {
-                error("Min screen size (" + to_string(min_screen_size) + ") is too small");
-        }
-
-        if (min_screen_size > max_screen_size)
-        {
-                error("Wrong min and max screen sizes: min = " + to_string(min_screen_size) +
-                      ", max = " + to_string(max_screen_size));
-        }
-
-        Vector<N, T> min, max;
-        mesh->min_max(&min, &max);
-        Vector<N, T> object_size = max - min;
-        Vector<N, T> center = min + object_size / T(2);
-
-        T max_projected_object_size = limits<T>::lowest();
-        for (unsigned i = 0; i < N - 1; ++i) // кроме последнего измерения, по которому находится камера
-        {
-                max_projected_object_size = std::max(object_size[i], max_projected_object_size);
-        }
-        if (max_projected_object_size == 0)
-        {
-                error("Object is a point on the screen");
-        }
-
-        std::array<int, N - 1> screen_size;
-        for (unsigned i = 0; i < N - 1; ++i)
-        {
-                int size_in_pixels = std::lround((object_size[i] / max_projected_object_size) * max_screen_size);
-                screen_size[i] = std::clamp(size_in_pixels, min_screen_size, max_screen_size);
-        }
-
-        Vector<N, T> camera_position(center);
-        camera_position[N - 1] = max[N - 1] + length(object_size);
-
-        Vector<N, T> camera_direction(0);
-        camera_direction[N - 1] = -1;
-
-        std::array<Vector<N, T>, N - 1> screen_axes;
-        for (unsigned i = 0; i < N - 1; ++i)
-        {
-                for (unsigned n = 0; n < N; ++n)
-                {
-                        screen_axes[i][n] = (i != n) ? 0 : 1;
-                }
-        }
-
-        Vector<N, T> light_position(max + (max - center));
-
-        T units_per_pixel = max_projected_object_size / max_screen_size;
-
-        std::unique_ptr<const Projector<N, T>> projector = std::make_unique<const VisibleParallelProjector<N, T>>(
-                camera_position, camera_direction, screen_axes, units_per_pixel, screen_size);
-
-        std::unique_ptr<const LightSource<N, T>> light_source =
-                std::make_unique<const VisibleConstantLight<N, T>>(light_position, Color(1));
-
-        std::unique_ptr<const PaintObjects<N, T>> paint_objects =
-                one_object_scene(background_color, default_color, diffuse, std::move(projector), std::move(light_source), mesh);
-
-        return std::move(paint_objects);
+        return one_object_scene(background_color, default_color, diffuse, min_screen_size, max_screen_size, mesh);
 }
 
 template <size_t N, typename T>
-void test_path_tracing(const std::shared_ptr<const Mesh<N, T>>& mesh, int thread_count, int min_screen_size, int max_screen_size)
+void test_path_tracing_file(int samples_per_pixel, int thread_count, std::unique_ptr<const PaintObjects<N, T>>&& paint_objects)
 {
-        int samples_per_pixel = 25;
         int paint_height = 2;
         int max_pass_count = 1;
-
-        std::unique_ptr<const PaintObjects<N, T>> paint_objects = create_paint_objects(mesh, min_screen_size, max_screen_size);
 
         Images images(paint_objects->projector().screen_size());
 
@@ -214,34 +150,99 @@ void test_path_tracing(const std::shared_ptr<const Mesh<N, T>>& mesh, int thread
 }
 
 template <size_t N, typename T>
-void test_path_tracing(int point_count, int min_screen_size, int max_screen_size)
+void test_path_tracing_window(int samples_per_pixel, int thread_count, std::unique_ptr<const PaintObjects<N, T>>&& paint_objects)
+{
+        LOG("Window painting...");
+
+        if (!QApplication::instance())
+        {
+                error("No application object for path tracing tests.\n"
+                      "#include <QApplication>\n"
+                      "int main(int argc, char* argv[])\n"
+                      "{\n"
+                      "    QApplication a(argc, argv);\n"
+                      "    //\n"
+                      "    return a.exec();\n"
+                      "}\n");
+        }
+
+        std::string window_title = "Path Tracing In " + to_string(N) + "D Space";
+
+        create_and_show_delete_on_close_window<PainterWindow<N, T>>(window_title, thread_count, samples_per_pixel,
+                                                                    std::move(paint_objects));
+}
+
+enum class PathTracingTestOutputType
+{
+        File,
+        Window
+};
+
+template <PathTracingTestOutputType type, size_t N, typename T>
+void test_path_tracing(int samples_per_pixel, int thread_count, std::unique_ptr<const PaintObjects<N, T>>&& paint_objects)
+{
+        static_assert(type == PathTracingTestOutputType::File || type == PathTracingTestOutputType::Window);
+
+        if constexpr (type == PathTracingTestOutputType::File)
+        {
+                test_path_tracing_file(samples_per_pixel, thread_count, std::move(paint_objects));
+        }
+
+        if constexpr (type == PathTracingTestOutputType::Window)
+        {
+                test_path_tracing_window(samples_per_pixel, thread_count, std::move(paint_objects));
+        }
+}
+
+template <size_t N, typename T, PathTracingTestOutputType type>
+void test_path_tracing(int samples_per_pixel, int point_count, int min_screen_size, int max_screen_size)
 {
         const int thread_count = hardware_concurrency();
         ProgressRatio progress(nullptr);
 
         std::shared_ptr<const Mesh<N, T>> mesh = sphere_mesh<N, T>(point_count, thread_count, &progress);
+        std::unique_ptr<const PaintObjects<N, T>> paint_objects = scene(mesh, min_screen_size, max_screen_size);
 
-        test_path_tracing(mesh, thread_count, min_screen_size, max_screen_size);
+        test_path_tracing<type>(samples_per_pixel, thread_count, std::move(paint_objects));
 }
 
-template <size_t N, typename T>
-void test_path_tracing(const std::string& file_name, int min_screen_size, int max_screen_size)
+template <size_t N, typename T, PathTracingTestOutputType type>
+void test_path_tracing(int samples_per_pixel, const std::string& file_name, int min_screen_size, int max_screen_size)
 {
         const int thread_count = hardware_concurrency();
         ProgressRatio progress(nullptr);
 
         std::shared_ptr<const Mesh<N, T>> mesh = file_mesh<N, T>(file_name, thread_count, &progress);
+        std::unique_ptr<const PaintObjects<N, T>> paint_objects = scene(mesh, min_screen_size, max_screen_size);
 
-        test_path_tracing(mesh, thread_count, min_screen_size, max_screen_size);
+        test_path_tracing<type>(samples_per_pixel, thread_count, std::move(paint_objects));
 }
 }
 
-void test_path_tracing()
+void test_path_tracing_file()
 {
-        test_path_tracing<4, double>(1000, 10, 100);
+        constexpr unsigned N = 4;
+        int samples_per_pixel = 25;
+        test_path_tracing<N, double, PathTracingTestOutputType::File>(samples_per_pixel, 1000, 10, 100);
 }
 
-void test_path_tracing(const std::string& file_name)
+void test_path_tracing_file(const std::string& file_name)
 {
-        test_path_tracing<4, double>(file_name, 10, 100);
+        constexpr unsigned N = 4;
+        int samples_per_pixel = 25;
+        test_path_tracing<N, double, PathTracingTestOutputType::File>(samples_per_pixel, file_name, 10, 100);
+}
+
+void test_path_tracing_window()
+{
+        constexpr unsigned N = 4;
+        int samples_per_pixel = 25;
+        test_path_tracing<N, double, PathTracingTestOutputType::Window>(samples_per_pixel, 1000, 50, 500);
+}
+
+void test_path_tracing_window(const std::string& file_name)
+{
+        constexpr unsigned N = 4;
+        int samples_per_pixel = 25;
+        test_path_tracing<N, double, PathTracingTestOutputType::Window>(samples_per_pixel, file_name, 50, 500);
 }

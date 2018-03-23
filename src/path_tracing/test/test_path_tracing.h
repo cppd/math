@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <string>
 
-void test_path_tracing();
+void test_path_tracing_file();
+void test_path_tracing_file(const std::string& file_name);
 
-void test_path_tracing(const std::string& file_name);
+void test_path_tracing_window();
+void test_path_tracing_window(const std::string& file_name);
