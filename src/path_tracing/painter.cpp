@@ -17,15 +17,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "painter.h"
 
-#include "path_tracing/coefficient/cosine_sphere.h"
-#include "path_tracing/sampling/sampler.h"
-#include "path_tracing/sampling/sphere.h"
-#include "path_tracing/space/ray_intersection.h"
-
+#include "com/alg.h"
 #include "com/color/colors.h"
 #include "com/error.h"
 #include "com/random/engine.h"
 #include "com/thread.h"
+#include "path_tracing/coefficient/cosine_sphere.h"
+#include "path_tracing/sampling/sampler.h"
+#include "path_tracing/sampling/sphere.h"
+#include "path_tracing/space/ray_intersection.h"
 
 #include <thread>
 
@@ -84,7 +84,7 @@ public:
 
                 const long long pixel_count = screen_size[N - 1] * m_strides[N - 1];
 
-                ASSERT(pixel_count == std::accumulate(screen_size.cbegin(), screen_size.cend(), 1, std::multiplies<long long>()));
+                ASSERT(pixel_count == multiply_all<long long>(screen_size));
 
                 m_pixels.resize(pixel_count);
         }

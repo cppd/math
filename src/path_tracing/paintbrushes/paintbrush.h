@@ -17,13 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "com/alg.h"
 #include "com/error.h"
 #include "com/print.h"
 #include "com/thread.h"
 #include "com/time.h"
-
-#include <functional>
-#include <numeric>
 
 template <size_t N>
 class BarPaintbrush
@@ -108,8 +106,7 @@ class BarPaintbrush
 
                 generate_pixels<0>(pixel, min, max, inc, pixels);
 
-                ASSERT(pixels->size() ==
-                       std::accumulate(sizes.cbegin(), sizes.cend(), 1ull, std::multiplies<unsigned long long>()));
+                ASSERT(static_cast<long long>(pixels->size()) == multiply_all<long long>(sizes));
         }
 
         std::array<int, N> m_screen_size;

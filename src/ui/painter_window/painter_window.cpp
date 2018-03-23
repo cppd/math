@@ -187,7 +187,7 @@ void PainterWindowUI::set_interface()
 
 void PainterWindowUI::set_data_vectors()
 {
-        long long pixel_count = std::accumulate(m_screen_size.cbegin(), m_screen_size.cend(), 1, std::multiplies<long long>());
+        long long pixel_count = multiply_all<long long>(m_screen_size);
 
         m_data.resize(pixel_count);
         m_data_clean.resize(pixel_count);
@@ -374,7 +374,7 @@ std::array<long long, PainterWindow<N, T>::N_IMAGE> PainterWindow<N, T>::strides
 
         const long long pixel_count = screen_size[N_IMAGE - 1] * strides[N_IMAGE - 1];
 
-        ASSERT(pixel_count == std::accumulate(screen_size.cbegin(), screen_size.cend(), 1, std::multiplies<long long>()));
+        ASSERT(pixel_count == multiply_all<long long>(screen_size));
 
         return strides;
 }

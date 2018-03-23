@@ -17,6 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "error.h"
+#include "types.h"
+
 #include <algorithm>
 
 template <typename T>
@@ -79,4 +82,49 @@ template <typename T>
 bool all_negative(const T& data)
 {
         return std::all_of(data.cbegin(), data.cend(), [](const auto& v) { return v < 0; });
+}
+
+// Вместо std::accumulate(v.cbegin(), v.cend(), static_cast<T>(1), std::multiplies<void>())
+template <typename T, typename V>
+constexpr T multiply_all(const V& v)
+{
+        static_assert((is_native_integral<typename V::value_type> && is_native_integral<T>) ||
+                      (is_native_floating_point<typename V::value_type> && is_native_floating_point<T>));
+        static_assert(is_signed<typename V::value_type> == is_signed<T>);
+        static_assert(limits<typename V::value_type>::digits <= limits<T>::digits);
+
+        if (v.empty())
+        {
+                error("Empty container for multiply all");
+        }
+
+        T value = v[0];
+        for (size_t i = 1; i < v.size(); ++i)
+        {
+                value *= v[i];
+        }
+
+        return value;
+}
+
+template <typename T, typename V>
+constexpr T add_all(const V& v)
+{
+        static_assert((is_native_integral<typename V::value_type> && is_native_integral<T>) ||
+                      (is_native_floating_point<typename V::value_type> && is_native_floating_point<T>));
+        static_assert(is_signed<typename V::value_type> == is_signed<T>);
+        static_assert(limits<typename V::value_type>::digits <= limits<T>::digits);
+
+        if (v.empty())
+        {
+                error("Empty container for add all");
+        }
+
+        T value = v[0];
+        for (size_t i = 1; i < v.size(); ++i)
+        {
+                value += v[i];
+        }
+
+        return value;
 }
