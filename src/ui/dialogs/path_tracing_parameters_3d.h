@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -17,14 +17,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "ui_path_tracing_parameters.h"
+#include "ui_path_tracing_parameters_3d.h"
 
-class PathTracingParameters final : public QDialog
+class PathTracingParametersFor3d final : public QDialog
 {
         Q_OBJECT
 
 public:
-        explicit PathTracingParameters(QWidget* parent = nullptr);
+        explicit PathTracingParametersFor3d(QWidget* parent = nullptr);
+
         [[nodiscard]] bool show(int max_thread_count, int width, int height, int default_samples_per_pixel,
                                 int max_samples_per_pixel, int* thread_count, double* size_coef, int* samples_per_pixel);
 
@@ -41,7 +42,7 @@ private:
         double m_size_coef;
         int m_samples_per_pixel;
 
-        Ui::PathTracingParameters ui;
+        Ui::PathTracingParametersFor3d ui;
 
         void done(int r) override;
 };

@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "path_tracing_parameters.h"
+#include "path_tracing_parameters_3d.h"
 
 #include "message_box.h"
 
@@ -23,15 +23,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 constexpr double MAX_SIZE_COEFFICIENT = 10;
 
-PathTracingParameters::PathTracingParameters(QWidget* parent) : QDialog(parent)
+PathTracingParametersFor3d::PathTracingParametersFor3d(QWidget* parent) : QDialog(parent)
 {
         ui.setupUi(this);
         setWindowTitle("Path Tracing");
 }
 
-[[nodiscard]] bool PathTracingParameters::show(int max_thread_count, int width, int height, int default_samples_per_pixel,
-                                               int max_samples_per_pixel, int* thread_count, double* size_coef,
-                                               int* samples_per_pixel)
+bool PathTracingParametersFor3d::show(int max_thread_count, int width, int height, int default_samples_per_pixel,
+                                      int max_samples_per_pixel, int* thread_count, double* size_coef, int* samples_per_pixel)
 {
         m_width = width;
         m_height = height;
@@ -67,7 +66,7 @@ PathTracingParameters::PathTracingParameters(QWidget* parent) : QDialog(parent)
         return true;
 }
 
-void PathTracingParameters::on_doubleSpinBox_image_size_valueChanged(double)
+void PathTracingParametersFor3d::on_doubleSpinBox_image_size_valueChanged(double)
 {
         int width = std::lround(m_width * ui.doubleSpinBox_image_size->value());
         int height = std::lround(m_height * ui.doubleSpinBox_image_size->value());
@@ -76,7 +75,7 @@ void PathTracingParameters::on_doubleSpinBox_image_size_valueChanged(double)
         ui.label_height->setText(to_string(height).c_str());
 }
 
-void PathTracingParameters::done(int r)
+void PathTracingParametersFor3d::done(int r)
 {
         if (r != QDialog::Accepted)
         {

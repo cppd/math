@@ -26,9 +26,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 enum class ThreadAction
 {
-        OpenObject,
-        ExportCocone,
-        ExportBoundCocone,
+        LoadObject,
+        ExportObject,
         ReloadBoundCocone,
         SelfTest
 };
@@ -79,7 +78,7 @@ class Threads
         std::unordered_map<ThreadAction, ThreadData> m_threads;
         std::vector<ThreadProgress> m_progress;
 
-        bool thread_free(ThreadAction action) const
+        bool thread_is_free(ThreadAction action) const
         {
                 auto t = m_threads.find(action);
                 ASSERT(t != m_threads.end());
@@ -96,9 +95,8 @@ class Threads
 public:
         Threads(const WindowEventEmitter& emitter) : m_event_emitter(emitter)
         {
-                m_threads.try_emplace(ThreadAction::OpenObject);
-                m_threads.try_emplace(ThreadAction::ExportCocone);
-                m_threads.try_emplace(ThreadAction::ExportBoundCocone);
+                m_threads.try_emplace(ThreadAction::LoadObject);
+                m_threads.try_emplace(ThreadAction::ExportObject);
                 m_threads.try_emplace(ThreadAction::ReloadBoundCocone);
                 m_threads.try_emplace(ThreadAction::SelfTest);
 
@@ -123,14 +121,12 @@ public:
 
                 switch (action)
                 {
-                case ThreadAction::OpenObject:
+                case ThreadAction::LoadObject:
                         return true;
-                case ThreadAction::ExportCocone:
-                        return true;
-                case ThreadAction::ExportBoundCocone:
-                        return true;
+                case ThreadAction::ExportObject:
+                        return thread_is_free(ThreadAction::ExportObject);
                 case ThreadAction::ReloadBoundCocone:
-                        return thread_free(ThreadAction::OpenObject);
+                        return thread_is_free(ThreadAction::LoadObject);
                 case ThreadAction::SelfTest:
                         return true;
                 }
@@ -150,12 +146,10 @@ public:
 
                 switch (thread_action)
                 {
-                case ThreadAction::OpenObject:
+                case ThreadAction::LoadObject:
                         action_thread(ThreadAction::ReloadBoundCocone).stop();
                         break;
-                case ThreadAction::ExportCocone:
-                        break;
-                case ThreadAction::ExportBoundCocone:
+                case ThreadAction::ExportObject:
                         break;
                 case ThreadAction::ReloadBoundCocone:
                         break;

@@ -48,6 +48,7 @@ class MainObjects
         const int m_point_count;
 
         Meshes<int, const Mesh<3, double>> m_meshes;
+        Meshes<int, const Obj<3>> m_objects;
         std::mutex m_mesh_sequential_mutex;
         mat4 m_model_vertex_matrix;
 
@@ -56,8 +57,6 @@ class MainObjects
 
         std::vector<vec3f> m_surface_points;
         std::unique_ptr<IManifoldConstructor<3>> m_surface_constructor;
-        std::shared_ptr<const Obj<3>> m_surface_cocone;
-        std::shared_ptr<const Obj<3>> m_surface_bound_cocone;
 
         IShow* m_show;
 
@@ -69,7 +68,7 @@ class MainObjects
         static int convex_hull_identifier(ObjectType object_type);
 
         void mst(ProgressRatioList* progress_list);
-        void mesh(ProgressRatioList* progress_list, int id, const std::shared_ptr<const Obj<3>>& obj);
+        void mesh(ProgressRatioList* progress_list, int id, const Obj<3>& obj);
         void add_object_and_convex_hull(ProgressRatioList* progress_list, ObjectType object_type,
                                         const std::shared_ptr<const Obj<3>>& obj);
         void object_and_mesh(ProgressRatioList* progress_list, ObjectType object_type, const std::shared_ptr<const Obj<3>>& obj);
@@ -87,9 +86,8 @@ public:
         void set_show(IShow* show);
 
         std::shared_ptr<const Mesh<3, double>> mesh(int id) const;
+        std::shared_ptr<const Obj<3>> object(int id) const;
 
-        std::shared_ptr<const Obj<3>> surface_cocone() const;
-        std::shared_ptr<const Obj<3>> surface_bound_cocone() const;
         bool surface_constructor_exists() const;
 
         void bound_cocone(ProgressRatioList* progress_list, double rho, double alpha);

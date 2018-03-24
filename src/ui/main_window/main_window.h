@@ -110,8 +110,7 @@ private:
         void thread_load_from_file(std::string file_name = "");
         void thread_load_from_repository(const std::string& object_name);
         void thread_self_test(SelfTestType test_type);
-        void thread_export_cocone();
-        void thread_export_bound_cocone();
+        void thread_export(const std::string& name, int id);
         void thread_reload_bound_cocone();
 
         void set_dependent_interface();

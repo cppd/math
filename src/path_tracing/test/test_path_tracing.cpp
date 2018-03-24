@@ -92,6 +92,21 @@ public:
         }
 };
 
+void check_application_instance()
+{
+        if (!QApplication::instance())
+        {
+                error("No application object for path tracing tests.\n"
+                      "#include <QApplication>\n"
+                      "int main(int argc, char* argv[])\n"
+                      "{\n"
+                      "    QApplication a(argc, argv);\n"
+                      "    //\n"
+                      "    return a.exec();\n"
+                      "}\n");
+        }
+}
+
 template <size_t N, typename T>
 std::shared_ptr<const Mesh<N, T>> sphere_mesh(int point_count, int thread_count, ProgressRatio* progress)
 {
@@ -113,17 +128,6 @@ std::shared_ptr<const Mesh<N, T>> file_mesh(const std::string& file_name, int th
         std::shared_ptr<const Mesh<N, T>> mesh = std::make_shared<const Mesh<N, T>>(obj.get(), matrix, thread_count, progress);
 
         return mesh;
-}
-
-template <size_t N, typename T>
-std::unique_ptr<const PaintObjects<N, T>> scene(const std::shared_ptr<const Mesh<N, T>>& mesh, int min_screen_size,
-                                                int max_screen_size)
-{
-        Color background_color = Color(SrgbInteger(50, 100, 150));
-        Color default_color = Color(SrgbInteger(150, 170, 150));
-        T diffuse = 1;
-
-        return one_object_scene(background_color, default_color, diffuse, min_screen_size, max_screen_size, mesh);
 }
 
 template <size_t N, typename T>
@@ -154,17 +158,7 @@ void test_path_tracing_window(int samples_per_pixel, int thread_count, std::uniq
 {
         LOG("Window painting...");
 
-        if (!QApplication::instance())
-        {
-                error("No application object for path tracing tests.\n"
-                      "#include <QApplication>\n"
-                      "int main(int argc, char* argv[])\n"
-                      "{\n"
-                      "    QApplication a(argc, argv);\n"
-                      "    //\n"
-                      "    return a.exec();\n"
-                      "}\n");
-        }
+        check_application_instance();
 
         std::string window_title = "Path Tracing In " + to_string(N) + "D Space";
 
@@ -179,8 +173,16 @@ enum class PathTracingTestOutputType
 };
 
 template <PathTracingTestOutputType type, size_t N, typename T>
-void test_path_tracing(int samples_per_pixel, int thread_count, std::unique_ptr<const PaintObjects<N, T>>&& paint_objects)
+void test_path_tracing(const std::shared_ptr<const Mesh<N, T>>& mesh, int min_screen_size, int max_screen_size,
+                       int samples_per_pixel, int thread_count)
 {
+        Color background_color = Color(SrgbInteger(50, 100, 150));
+        Color default_color = Color(SrgbInteger(150, 170, 150));
+        T diffuse = 1;
+
+        std::unique_ptr<const PaintObjects<N, T>> paint_objects =
+                one_object_scene(background_color, default_color, diffuse, min_screen_size, max_screen_size, mesh);
+
         static_assert(type == PathTracingTestOutputType::File || type == PathTracingTestOutputType::Window);
 
         if constexpr (type == PathTracingTestOutputType::File)
@@ -201,9 +203,8 @@ void test_path_tracing(int samples_per_pixel, int point_count, int min_screen_si
         ProgressRatio progress(nullptr);
 
         std::shared_ptr<const Mesh<N, T>> mesh = sphere_mesh<N, T>(point_count, thread_count, &progress);
-        std::unique_ptr<const PaintObjects<N, T>> paint_objects = scene(mesh, min_screen_size, max_screen_size);
 
-        test_path_tracing<type>(samples_per_pixel, thread_count, std::move(paint_objects));
+        test_path_tracing<type>(mesh, min_screen_size, max_screen_size, samples_per_pixel, thread_count);
 }
 
 template <size_t N, typename T, PathTracingTestOutputType type>
@@ -213,9 +214,8 @@ void test_path_tracing(int samples_per_pixel, const std::string& file_name, int 
         ProgressRatio progress(nullptr);
 
         std::shared_ptr<const Mesh<N, T>> mesh = file_mesh<N, T>(file_name, thread_count, &progress);
-        std::unique_ptr<const PaintObjects<N, T>> paint_objects = scene(mesh, min_screen_size, max_screen_size);
 
-        test_path_tracing<type>(samples_per_pixel, thread_count, std::move(paint_objects));
+        test_path_tracing<type>(mesh, min_screen_size, max_screen_size, samples_per_pixel, thread_count);
 }
 }
 

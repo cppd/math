@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "painter_window.h"
 
+#include "com/alg.h"
 #include "com/error.h"
 #include "com/log.h"
 #include "com/print.h"

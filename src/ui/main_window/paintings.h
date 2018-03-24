@@ -17,13 +17,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "com/color/colors.h"
 #include "path_tracing/shapes/mesh.h"
 #include "show/show.h"
-#include "ui/dialogs/path_tracing_parameters.h"
 
+#include <QWidget>
 #include <memory>
 #include <string>
 
-void painting(PathTracingParameters&& parameters_window, const IShow& show, const std::shared_ptr<const Mesh<3, double>>& mesh,
+void painting(QWidget* parent_window, const IShow& show, const std::shared_ptr<const Mesh<3, double>>& mesh,
               const std::string& window_title, const std::string& model_name, int default_samples_per_pixel,
               int max_samples_per_pixel, const Color& background_color, const Color& default_color, double diffuse);
+
+template <size_t N, typename T>
+void painting(QWidget* parent_window, const std::shared_ptr<const Mesh<N, T>>& mesh, const std::string& window_title,
+              const std::string& model_name, int default_screen_size, int min_screen_size, int max_screen_size,
+              int default_samples_per_pixel, int max_samples_per_pixel, const Color& background_color, const Color& default_color,
+              T diffuse);

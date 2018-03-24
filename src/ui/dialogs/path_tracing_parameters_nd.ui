@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>PathTracingParameters</class>
- <widget class="QDialog" name="PathTracingParameters">
+ <class>PathTracingParametersForNd</class>
+ <widget class="QDialog" name="PathTracingParametersForNd">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>191</width>
-    <height>168</height>
+    <width>184</width>
+    <height>224</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -15,20 +15,33 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
+    <widget class="QLabel" name="label_description">
+     <property name="text">
+      <string>TextLabel</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="Line" name="line_3">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
-      <layout class="QFormLayout" name="formLayout_2">
-       <item row="0" column="0">
-        <widget class="QLabel" name="label">
-         <property name="text">
-          <string>Threads:</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="1">
-        <widget class="QSpinBox" name="spinBox_thread_count"/>
-       </item>
-      </layout>
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>Threads:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QSpinBox" name="spinBox_threads"/>
      </item>
      <item>
       <spacer name="horizontalSpacer">
@@ -59,39 +72,24 @@
        <item row="0" column="0">
         <widget class="QLabel" name="label_2">
          <property name="text">
-          <string>Width:</string>
+          <string>Max Size:</string>
          </property>
         </widget>
        </item>
        <item row="0" column="1">
-        <widget class="QLabel" name="label_width">
-         <property name="text">
-          <string>width</string>
-         </property>
-        </widget>
+        <widget class="QSpinBox" name="spinBox_max_size"/>
        </item>
        <item row="1" column="0">
         <widget class="QLabel" name="label_3">
          <property name="text">
-          <string>Height:</string>
+          <string>Min Size:</string>
          </property>
         </widget>
        </item>
        <item row="1" column="1">
-        <widget class="QLabel" name="label_height">
-         <property name="text">
-          <string>height</string>
-         </property>
-        </widget>
+        <widget class="QSpinBox" name="spinBox_min_size"/>
        </item>
       </layout>
-     </item>
-     <item>
-      <widget class="QDoubleSpinBox" name="doubleSpinBox_image_size">
-       <property name="decimals">
-        <number>1</number>
-       </property>
-      </widget>
      </item>
      <item>
       <spacer name="horizontalSpacer_2">
@@ -116,7 +114,7 @@
     </widget>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_3">
+    <layout class="QHBoxLayout" name="horizontalLayout_4">
      <item>
       <widget class="QLabel" name="label_4">
        <property name="text">
@@ -128,7 +126,7 @@
       <widget class="QSpinBox" name="spinBox_samples_per_pixel"/>
      </item>
      <item>
-      <spacer name="horizontalSpacer_3">
+      <spacer name="horizontalSpacer_4">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
        </property>
@@ -175,7 +173,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>accepted()</signal>
-   <receiver>PathTracingParameters</receiver>
+   <receiver>PathTracingParametersForNd</receiver>
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -191,7 +189,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>rejected()</signal>
-   <receiver>PathTracingParameters</receiver>
+   <receiver>PathTracingParametersForNd</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">

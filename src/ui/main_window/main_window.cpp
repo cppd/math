@@ -25,7 +25,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "ui/dialogs/application_help.h"
 #include "ui/dialogs/bound_cocone_parameters.h"
 #include "ui/dialogs/message_box.h"
-#include "ui/dialogs/path_tracing_parameters.h"
 #include "ui/dialogs/source_error.h"
 #include "ui/support/support.h"
 
@@ -73,6 +72,11 @@ constexpr int SHADOW_ZOOM = 2;
 // Для трассировки пути. Количество лучей на один пиксель в одном проходе.
 constexpr int PATH_TRACING_DEFAULT_SAMPLES_PER_PIXEL = 25;
 constexpr int PATH_TRACING_MAX_SAMPLES_PER_PIXEL = 100;
+
+// Для трассировки пути для 4 и более измерений. Размеры экрана в пикселях.
+constexpr int PATH_TRACING_DEFAULT_SCREEN_SIZE = 500;
+constexpr int PATH_TRACING_MINIMUM_SCREEN_SIZE = 50;
+constexpr int PATH_TRACING_MAXIMUM_SCREEN_SIZE = 5000;
 
 // Сколько потоков не надо использовать от максимума для создания октадеревьев.
 constexpr int MESH_OBJECT_NOT_USED_THREAD_COUNT = 2;
@@ -215,9 +219,9 @@ void MainWindow::thread_load_from_file(std::string file_name)
 {
         ASSERT(std::this_thread::get_id() == m_window_thread_id);
 
-        if (!m_threads.action_allowed(ThreadAction::OpenObject))
+        if (!m_threads.action_allowed(ThreadAction::LoadObject))
         {
-                m_event_emitter.message_warning("File opening is not available at this time (thread working)");
+                m_event_emitter.message_warning("File loading is not available at this time (thread working)");
                 return;
         }
 
@@ -233,7 +237,7 @@ void MainWindow::thread_load_from_file(std::string file_name)
                 file_name = q_file_name.toStdString();
         }
 
-        m_threads.start_thread(ThreadAction::OpenObject, [=](ProgressRatioList* progress_list, std::string* message) {
+        m_threads.start_thread(ThreadAction::LoadObject, [=](ProgressRatioList* progress_list, std::string* message) {
                 *message = "Load " + file_name;
 
                 m_objects.load_from_file(progress_list, file_name, m_bound_cocone_rho, m_bound_cocone_alpha);
@@ -244,7 +248,7 @@ void MainWindow::thread_load_from_repository(const std::string& object_name)
 {
         ASSERT(std::this_thread::get_id() == m_window_thread_id);
 
-        if (!m_threads.action_allowed(ThreadAction::OpenObject))
+        if (!m_threads.action_allowed(ThreadAction::LoadObject))
         {
                 m_event_emitter.message_warning("Creation of object is not available at this time (thread working)");
                 return;
@@ -256,7 +260,7 @@ void MainWindow::thread_load_from_repository(const std::string& object_name)
                 return;
         }
 
-        m_threads.start_thread(ThreadAction::OpenObject, [=](ProgressRatioList* progress_list, std::string* message) {
+        m_threads.start_thread(ThreadAction::LoadObject, [=](ProgressRatioList* progress_list, std::string* message) {
                 *message = "Load " + object_name;
 
                 m_objects.load_from_repository(progress_list, object_name, m_bound_cocone_rho, m_bound_cocone_alpha);
@@ -285,28 +289,31 @@ void MainWindow::thread_self_test(SelfTestType test_type)
         });
 }
 
-void MainWindow::thread_export_cocone()
+void MainWindow::thread_export(const std::string& name, int id)
 {
         ASSERT(std::this_thread::get_id() == m_window_thread_id);
 
-        std::string cocone_type = "COCONE";
-
-        if (!m_threads.action_allowed(ThreadAction::ExportCocone))
+        if (!m_threads.action_allowed(ThreadAction::ExportObject))
         {
-                m_event_emitter.message_warning("Export " + cocone_type +
-                                                " to file is not available at this time (thread working)");
+                m_event_emitter.message_warning("Export " + name + " to file is not available at this time (thread working)");
                 return;
         }
 
-        std::shared_ptr<const Obj<3>> obj = m_objects.surface_cocone();
+        std::shared_ptr<const Obj<3>> obj = m_objects.object(id);
 
         if (!obj || obj->facets().size() == 0)
         {
-                m_event_emitter.message_warning(cocone_type + " not created");
+                m_event_emitter.message_warning("No object to export");
                 return;
         }
 
-        QString qt_file_name = QFileDialog::getSaveFileName(this, "Export " + QString(cocone_type.c_str()) + " to OBJ", "",
+        if (id == OBJECT_MODEL &&
+            !message_question_default_no(this, "Only export of geometry is supported.\nDo you want to continue?"))
+        {
+                return;
+        }
+
+        QString qt_file_name = QFileDialog::getSaveFileName(this, "Export " + QString(name.c_str()) + " to OBJ", "",
                                                             "OBJ files (*.obj)", nullptr, QFileDialog::DontUseNativeDialog);
         if (qt_file_name.size() == 0)
         {
@@ -315,49 +322,11 @@ void MainWindow::thread_export_cocone()
 
         std::string file_name = qt_file_name.toStdString();
 
-        m_threads.start_thread(ThreadAction::ExportCocone, [=](ProgressRatioList*, std::string* message) {
-                *message = "Export " + cocone_type + " to " + file_name;
+        m_threads.start_thread(ThreadAction::ExportObject, [=](ProgressRatioList*, std::string* message) {
+                *message = "Export " + name + " to " + file_name;
 
-                save_obj_geometry_to_file(obj.get(), file_name, cocone_type);
-                m_event_emitter.message_information(cocone_type + " exported to file\n" + file_name);
-        });
-}
-
-void MainWindow::thread_export_bound_cocone()
-{
-        ASSERT(std::this_thread::get_id() == m_window_thread_id);
-
-        std::string cocone_type = "BOUND COCONE";
-
-        if (!m_threads.action_allowed(ThreadAction::ExportBoundCocone))
-        {
-                m_event_emitter.message_warning("Export " + cocone_type +
-                                                " to file is not available at this time (thread working)");
-                return;
-        }
-
-        std::shared_ptr<const Obj<3>> obj = m_objects.surface_bound_cocone();
-
-        if (!obj || obj->facets().size() == 0)
-        {
-                m_event_emitter.message_warning(cocone_type + " not created");
-                return;
-        }
-
-        QString qt_file_name = QFileDialog::getSaveFileName(this, "Export " + QString(cocone_type.c_str()) + " to OBJ", "",
-                                                            "OBJ files (*.obj)", nullptr, QFileDialog::DontUseNativeDialog);
-        if (qt_file_name.size() == 0)
-        {
-                return;
-        }
-
-        std::string file_name = qt_file_name.toStdString();
-
-        m_threads.start_thread(ThreadAction::ExportBoundCocone, [=](ProgressRatioList*, std::string* message) {
-                *message = "Export " + cocone_type + " to " + file_name;
-
-                save_obj_geometry_to_file(obj.get(), file_name, cocone_type);
-                m_event_emitter.message_information(cocone_type + " exported to file\n" + file_name);
+                save_obj_geometry_to_file(obj.get(), file_name, name);
+                m_event_emitter.message_information(name + " exported to file\n" + file_name);
         });
 }
 
@@ -753,28 +722,28 @@ void MainWindow::slot_object_repository()
 
 void MainWindow::on_actionExport_triggered()
 {
-        bool cocone = ui.radioButton_Cocone->isChecked();
-        bool bound_cocone = ui.radioButton_BoundCocone->isChecked();
+        std::string object_name;
+        int object_id = 0;
 
-        if (int cnt = ((cocone ? 1 : 0) + (bound_cocone ? 1 : 0)); cnt > 1)
+        bool found = false;
+        for (const auto & [ button, id ] : m_object_buttons)
         {
-                m_event_emitter.message_error("COCONE and BOUND COCONE select error");
+                if (button->isChecked())
+                {
+                        object_name = button->text().toStdString();
+                        object_id = id;
+                        found = true;
+                        break;
+                }
+        }
+
+        if (!found)
+        {
+                m_event_emitter.message_warning("Select object button to export");
                 return;
         }
-        else if (cnt < 1)
-        {
-                m_event_emitter.message_warning("Select COCONE or BOUND COCONE");
-                return;
-        }
 
-        if (cocone)
-        {
-                thread_export_cocone();
-        }
-        else if (bound_cocone)
-        {
-                thread_export_bound_cocone();
-        }
+        thread_export(object_name, object_id);
 }
 
 void MainWindow::on_actionBoundCocone_triggered()
@@ -1017,8 +986,22 @@ void MainWindow::on_pushButton_Painter_clicked()
         catch_all([&](std::string* message) {
                 *message = "Painter";
 
-                painting(PathTracingParameters(this), *m_show, mesh, QMainWindow::windowTitle().toStdString(), model_name,
-                         PATH_TRACING_DEFAULT_SAMPLES_PER_PIXEL, PATH_TRACING_MAX_SAMPLES_PER_PIXEL,
-                         qcolor_to_rgb(m_background_color), qcolor_to_rgb(m_default_color), diffuse_light());
+                std::string window_title = QMainWindow::windowTitle().toStdString();
+                Color background_color = qcolor_to_rgb(m_background_color);
+                Color default_color = qcolor_to_rgb(m_default_color);
+                double diffuse = diffuse_light();
+
+                if constexpr ((true))
+                {
+                        painting(this, *m_show, mesh, window_title, model_name, PATH_TRACING_DEFAULT_SAMPLES_PER_PIXEL,
+                                 PATH_TRACING_MAX_SAMPLES_PER_PIXEL, background_color, default_color, diffuse);
+                }
+                else
+                {
+                        painting(this, mesh, window_title, model_name, PATH_TRACING_DEFAULT_SCREEN_SIZE,
+                                 PATH_TRACING_MINIMUM_SCREEN_SIZE, PATH_TRACING_MAXIMUM_SCREEN_SIZE,
+                                 PATH_TRACING_DEFAULT_SAMPLES_PER_PIXEL, PATH_TRACING_MAX_SAMPLES_PER_PIXEL, background_color,
+                                 default_color, diffuse);
+                }
         });
 }

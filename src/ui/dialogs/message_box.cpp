@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -25,11 +25,27 @@ void message_critical(QWidget* parent, const QString& message)
 {
         QMessageBox::critical(parent, APPLICATION_NAME, message);
 }
+
 void message_information(QWidget* parent, const QString& message)
 {
         QMessageBox::information(parent, APPLICATION_NAME, message);
 }
+
 void message_warning(QWidget* parent, const QString& message)
 {
         QMessageBox::warning(parent, APPLICATION_NAME, message);
+}
+
+bool message_question_default_yes(QWidget* parent, const QString& message)
+{
+        int res = QMessageBox::question(parent, APPLICATION_NAME, message, QMessageBox::Yes | QMessageBox::Default,
+                                        QMessageBox::No);
+        return res == QMessageBox::Yes;
+}
+
+bool message_question_default_no(QWidget* parent, const QString& message)
+{
+        int res = QMessageBox::question(parent, APPLICATION_NAME, message, QMessageBox::Yes,
+                                        QMessageBox::No | QMessageBox::Default);
+        return res == QMessageBox::Yes;
 }

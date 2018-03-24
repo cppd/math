@@ -40,8 +40,8 @@ class OneObject final : public PaintObjects<N, T>
 public:
         OneObject(const Color& background_color, const Color& default_color, T diffuse,
                   std::unique_ptr<const Projector<N, T>>&& projector, std::unique_ptr<const LightSource<N, T>>&& light_source,
-                  const std::shared_ptr<const Mesh<N, T>>& mesh)
-                : m_object(mesh), m_projector(std::move(projector)), m_light_source(std::move(light_source))
+                  std::shared_ptr<const Mesh<N, T>>&& mesh)
+                : m_object(std::move(mesh)), m_projector(std::move(projector)), m_light_source(std::move(light_source))
         {
                 m_default_surface_properties.set_color(background_color);
                 m_default_surface_properties.set_diffuse_and_fresnel(1, 0);
@@ -79,18 +79,22 @@ template <size_t N, typename T>
 std::unique_ptr<const PaintObjects<N, T>> one_object_scene(const Color& background_color, const Color& default_color, T diffuse,
                                                            std::unique_ptr<const Projector<N, T>>&& projector,
                                                            std::unique_ptr<const LightSource<N, T>>&& light_source,
-                                                           const std::shared_ptr<const Mesh<N, T>>& mesh)
+                                                           std::shared_ptr<const Mesh<N, T>> mesh)
 {
+        ASSERT(projector && light_source && mesh);
+
         return std::make_unique<OneObject<N, T>>(background_color, default_color, diffuse, std::move(projector),
-                                                 std::move(light_source), mesh);
+                                                 std::move(light_source), std::move(mesh));
 }
 
 template <size_t N, typename T>
 std::unique_ptr<const PaintObjects<N, T>> one_object_scene(const Color& background_color, const Color& default_color, T diffuse,
                                                            int min_screen_size, int max_screen_size,
-                                                           const std::shared_ptr<const Mesh<N, T>>& mesh)
+                                                           std::shared_ptr<const Mesh<N, T>> mesh)
 {
         LOG("Creating simple scene...");
+
+        ASSERT(mesh);
 
         if (min_screen_size < 3)
         {
@@ -157,7 +161,7 @@ std::unique_ptr<const PaintObjects<N, T>> one_object_scene(const Color& backgrou
         //
 
         return std::make_unique<OneObject<N, T>>(background_color, default_color, diffuse, std::move(projector),
-                                                 std::move(light_source), mesh);
+                                                 std::move(light_source), std::move(mesh));
 }
 
 std::unique_ptr<const PaintObjects<3, double>> cornell_box(int width, int height, const std::string& obj_file_name, double size,

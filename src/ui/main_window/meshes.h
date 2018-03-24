@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2018 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -33,8 +33,11 @@ public:
         // Деструкторы могут работать долго, поэтому чтобы не было работы
         // деструкторов при блокировке, помещать во временный объект
 
-        void set(const Index& id, std::shared_ptr<Mesh>&& mesh)
+        template <typename T>
+        void set(const Index& id, T&& mesh)
         {
+                static_assert(std::is_same_v<std::remove_const_t<std::remove_reference_t<T>>, std::shared_ptr<Mesh>>);
+
                 std::shared_ptr<Mesh> tmp;
 
                 {
@@ -44,11 +47,11 @@ public:
                         if (iter != m_meshes.cend())
                         {
                                 tmp = std::move(iter->second);
-                                iter->second = std::move(mesh);
+                                iter->second = std::forward<T>(mesh);
                         }
                         else
                         {
-                                m_meshes.emplace(id, std::move(mesh));
+                                m_meshes.emplace(id, std::forward<T>(mesh));
                         }
                 }
         }

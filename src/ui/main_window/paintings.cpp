@@ -20,6 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "path_tracing/scenes.h"
 #include "path_tracing/visible_lights.h"
 #include "path_tracing/visible_projectors.h"
+#include "ui/dialogs/path_tracing_parameters_3d.h"
+#include "ui/dialogs/path_tracing_parameters_nd.h"
 #include "ui/painter_window/painter_window.h"
 #include "ui/support/support.h"
 
@@ -51,15 +53,16 @@ std::unique_ptr<const LightSource<3, double>> create_light_source(const IShow& s
         return std::make_unique<const VisibleConstantLight<3, double>>(light_position, Color(1));
 }
 
-bool parameters(PathTracingParameters& parameters_window, const IShow& show, int default_samples_per_pixel,
-                int max_samples_per_pixel, int* paint_width, int* paint_height, int* thread_count, int* samples_per_pixel)
+bool parameters(QWidget* parent_window, const IShow& show, int default_samples_per_pixel, int max_samples_per_pixel,
+                int* paint_width, int* paint_height, int* thread_count, int* samples_per_pixel)
 {
         show.paint_width_height(paint_width, paint_height);
 
         double size_coef;
 
-        if (parameters_window.show(hardware_concurrency(), *paint_width, *paint_height, default_samples_per_pixel,
-                                   max_samples_per_pixel, thread_count, &size_coef, samples_per_pixel))
+        if (PathTracingParametersFor3d(parent_window)
+                    .show(hardware_concurrency(), *paint_width, *paint_height, default_samples_per_pixel, max_samples_per_pixel,
+                          thread_count, &size_coef, samples_per_pixel))
         {
                 *paint_width = std::lround(*paint_width * size_coef);
                 *paint_height = std::lround(*paint_height * size_coef);
@@ -73,13 +76,13 @@ bool parameters(PathTracingParameters& parameters_window, const IShow& show, int
 }
 }
 
-void painting(PathTracingParameters&& parameters_window, const IShow& show, const std::shared_ptr<const Mesh<3, double>>& mesh,
+void painting(QWidget* parent_window, const IShow& show, const std::shared_ptr<const Mesh<3, double>>& mesh,
               const std::string& window_title, const std::string& model_name, int default_samples_per_pixel,
               int max_samples_per_pixel, const Color& background_color, const Color& default_color, double diffuse)
 {
         int paint_width, paint_height, thread_count, samples_per_pixel;
 
-        if (!parameters(parameters_window, show, default_samples_per_pixel, max_samples_per_pixel, &paint_width, &paint_height,
+        if (!parameters(parent_window, show, default_samples_per_pixel, max_samples_per_pixel, &paint_width, &paint_height,
                         &thread_count, &samples_per_pixel))
         {
                 return;
@@ -109,3 +112,53 @@ void painting(PathTracingParameters&& parameters_window, const IShow& show, cons
                                     camera_up));
         }
 }
+
+template <size_t N, typename T>
+void painting(QWidget* parent_window, const std::shared_ptr<const Mesh<N, T>>& mesh, const std::string& window_title,
+              const std::string& model_name, int default_screen_size, int min_screen_size, int max_screen_size,
+              int default_samples_per_pixel, int max_samples_per_pixel, const Color& background_color, const Color& default_color,
+              T diffuse)
+{
+        static_assert(N >= 4);
+
+        int thread_count, min_size, max_size, samples_per_pixel;
+
+        if (!PathTracingParametersForNd(parent_window)
+                     .show(to_string(N) + "-space", hardware_concurrency(), default_screen_size, min_screen_size, max_screen_size,
+                           default_samples_per_pixel, max_samples_per_pixel, &thread_count, &min_size, &max_size,
+                           &samples_per_pixel))
+        {
+                return;
+        }
+
+        std::string title = window_title + " (" + model_name + ")";
+
+        create_and_show_delete_on_close_window<PainterWindow<N, T>>(
+                window_title, thread_count, samples_per_pixel,
+                one_object_scene(background_color, default_color, diffuse, min_size, max_size, mesh));
+}
+
+template void painting(QWidget* parent_window, const std::shared_ptr<const Mesh<4, double>>& mesh,
+                       const std::string& window_title, const std::string& model_name, int default_screen_size,
+                       int min_screen_size, int max_screen_size, int default_samples_per_pixel, int max_samples_per_pixel,
+                       const Color& background_color, const Color& default_color, double diffuse);
+template void painting(QWidget* parent_window, const std::shared_ptr<const Mesh<5, double>>& mesh,
+                       const std::string& window_title, const std::string& model_name, int default_screen_size,
+                       int min_screen_size, int max_screen_size, int default_samples_per_pixel, int max_samples_per_pixel,
+                       const Color& background_color, const Color& default_color, double diffuse);
+template void painting(QWidget* parent_window, const std::shared_ptr<const Mesh<6, double>>& mesh,
+                       const std::string& window_title, const std::string& model_name, int default_screen_size,
+                       int min_screen_size, int max_screen_size, int default_samples_per_pixel, int max_samples_per_pixel,
+                       const Color& background_color, const Color& default_color, double diffuse);
+template void painting(QWidget* parent_window, const std::shared_ptr<const Mesh<4, float>>& mesh, const std::string& window_title,
+                       const std::string& model_name, int default_screen_size, int min_screen_size, int max_screen_size,
+                       int default_samples_per_pixel, int max_samples_per_pixel, const Color& background_color,
+                       const Color& default_color, float diffuse);
+template void painting(QWidget* parent_window, const std::shared_ptr<const Mesh<5, float>>& mesh, const std::string& window_title,
+                       const std::string& model_name, int default_screen_size, int min_screen_size, int max_screen_size,
+                       int default_samples_per_pixel, int max_samples_per_pixel, const Color& background_color,
+                       const Color& default_color, float diffuse);
+template void painting(QWidget* parent_window, const std::shared_ptr<const Mesh<6, float>>& mesh, const std::string& window_title,
+                       const std::string& model_name, int default_screen_size, int min_screen_size, int max_screen_size,
+                       int default_samples_per_pixel, int max_samples_per_pixel, const Color& background_color,
+                       const Color& default_color, float diffuse);

@@ -63,14 +63,9 @@ std::shared_ptr<const Mesh<3, double>> MainObjects::mesh(int id) const
         return m_meshes.get(id);
 }
 
-std::shared_ptr<const Obj<3>> MainObjects::surface_cocone() const
+std::shared_ptr<const Obj<3>> MainObjects::object(int id) const
 {
-        return m_surface_cocone;
-}
-
-std::shared_ptr<const Obj<3>> MainObjects::surface_bound_cocone() const
-{
-        return m_surface_bound_cocone;
+        return m_objects.get(id);
 }
 
 bool MainObjects::surface_constructor_exists() const
@@ -120,11 +115,11 @@ int MainObjects::convex_hull_identifier(ObjectType object_type)
         error_fatal("Unknown object type");
 }
 
-void MainObjects::mesh(ProgressRatioList* progress_list, int id, const std::shared_ptr<const Obj<3>>& obj)
+void MainObjects::mesh(ProgressRatioList* progress_list, int id, const Obj<3>& obj)
 {
         ASSERT(std::this_thread::get_id() != m_thread_id);
 
-        if (obj->facets().size() == 0)
+        if (obj.facets().size() == 0)
         {
                 return;
         }
@@ -133,7 +128,7 @@ void MainObjects::mesh(ProgressRatioList* progress_list, int id, const std::shar
 
         ProgressRatio progress(progress_list);
 
-        m_meshes.set(id, std::make_shared<Mesh<3, double>>(obj.get(), m_model_vertex_matrix, m_mesh_object_threads, &progress));
+        m_meshes.set(id, std::make_shared<const Mesh<3, double>>(&obj, m_model_vertex_matrix, m_mesh_object_threads, &progress));
 }
 
 void MainObjects::add_object_and_convex_hull(ProgressRatioList* progress_list, ObjectType object_type,
@@ -148,8 +143,9 @@ void MainObjects::add_object_and_convex_hull(ProgressRatioList* progress_list, O
 
         int object_id = object_identifier(object_type);
         m_show->add_object(obj, object_id, OBJECT_MODEL);
+        m_objects.set(object_id, obj);
 
-        std::shared_ptr<Obj<3>> convex_hull;
+        std::shared_ptr<const Obj<3>> convex_hull;
 
         {
                 ProgressRatio progress(progress_list);
@@ -162,9 +158,10 @@ void MainObjects::add_object_and_convex_hull(ProgressRatioList* progress_list, O
         {
                 int convex_hull_id = convex_hull_identifier(object_type);
                 m_show->add_object(convex_hull, convex_hull_id, OBJECT_MODEL);
+                m_objects.set(convex_hull_id, convex_hull);
         }
 
-        mesh(progress_list, convex_hull_identifier(object_type), convex_hull);
+        mesh(progress_list, convex_hull_identifier(object_type), *convex_hull);
 }
 
 void MainObjects::object_and_mesh(ProgressRatioList* progress_list, ObjectType object_type,
@@ -184,7 +181,7 @@ void MainObjects::object_and_mesh(ProgressRatioList* progress_list, ObjectType o
                 catch_all([&](std::string* message) {
                         *message = object_name(object_type) + " mesh";
 
-                        mesh(progress_list, object_identifier(object_type), obj);
+                        mesh(progress_list, object_identifier(object_type), *obj);
                 });
         });
 
@@ -196,6 +193,8 @@ void MainObjects::cocone(ProgressRatioList* progress_list)
 {
         ASSERT(std::this_thread::get_id() != m_thread_id);
 
+        std::shared_ptr<const Obj<3>> obj_cocone;
+
         {
                 ProgressRatio progress(progress_list);
 
@@ -206,17 +205,19 @@ void MainObjects::cocone(ProgressRatioList* progress_list)
 
                 m_surface_constructor->cocone(&normals, &facets, &progress);
 
-                m_surface_cocone = create_obj_for_facets(m_surface_points, normals, facets);
+                obj_cocone = create_obj_for_facets(m_surface_points, normals, facets);
 
                 LOG("Surface reconstruction second phase, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
         }
 
-        object_and_mesh(progress_list, ObjectType::Cocone, m_surface_cocone);
+        object_and_mesh(progress_list, ObjectType::Cocone, obj_cocone);
 }
 
 void MainObjects::bound_cocone(ProgressRatioList* progress_list, double rho, double alpha)
 {
         ASSERT(std::this_thread::get_id() != m_thread_id);
+
+        std::shared_ptr<const Obj<3>> obj_bound_cocone;
 
         {
                 ProgressRatio progress(progress_list);
@@ -228,7 +229,7 @@ void MainObjects::bound_cocone(ProgressRatioList* progress_list, double rho, dou
 
                 m_surface_constructor->bound_cocone(rho, alpha, &normals, &facets, &progress);
 
-                m_surface_bound_cocone = create_obj_for_facets(m_surface_points, normals, facets);
+                obj_bound_cocone = create_obj_for_facets(m_surface_points, normals, facets);
 
                 m_bound_cocone_rho = rho;
                 m_bound_cocone_alpha = alpha;
@@ -241,10 +242,12 @@ void MainObjects::bound_cocone(ProgressRatioList* progress_list, double rho, dou
 
         m_meshes.reset(OBJECT_BOUND_COCONE);
         m_meshes.reset(OBJECT_BOUND_COCONE_CONVEX_HULL);
+        m_objects.reset(OBJECT_BOUND_COCONE);
+        m_objects.reset(OBJECT_BOUND_COCONE_CONVEX_HULL);
 
         m_event_emitter.bound_cocone_loaded(rho, alpha);
 
-        object_and_mesh(progress_list, ObjectType::BoundCocone, m_surface_bound_cocone);
+        object_and_mesh(progress_list, ObjectType::BoundCocone, obj_bound_cocone);
 }
 
 void MainObjects::mst(ProgressRatioList* progress_list)
@@ -328,10 +331,8 @@ void MainObjects::load_object(ProgressRatioList* progress_list, const std::strin
         m_show->delete_all_objects();
 
         m_surface_constructor.reset();
-        m_surface_cocone.reset();
-        m_surface_bound_cocone.reset();
-
         m_meshes.reset_all();
+        m_objects.reset_all();
 
         m_event_emitter.file_loaded(object_name);
 
