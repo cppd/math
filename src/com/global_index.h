@@ -81,7 +81,7 @@ class GlobalIndex
                 std::array<IndexType, N> strides{{(I == 0 ? 1 : previous = sizes[I - 1] * previous)...}};
 
                 using CheckType = std::conditional_t<is_signed<typename T::value_type>, __int128, unsigned __int128>;
-                if (!(static_cast<CheckType>(previous * sizes[N - 1]) == multiply_all<CheckType>(sizes)))
+                if (!(static_cast<CheckType>(strides[N - 1] * sizes[N - 1]) == multiply_all<CheckType>(sizes)))
                 {
                         error("Error computing global index strides");
                 }
@@ -103,21 +103,29 @@ class GlobalIndex
         }
 
         std::array<IndexType, N> m_strides;
+        IndexType m_count;
 
 public:
+        GlobalIndex() = default;
+
         template <typename T>
-        constexpr GlobalIndex(const T& sizes) : m_strides(compute_strides(sizes))
+        constexpr GlobalIndex(const T& sizes) : m_strides(compute_strides(sizes)), m_count(m_strides[N - 1] * sizes[N - 1])
         {
         }
 
-        template <typename T>
-        void set(const T& sizes)
+        constexpr IndexType count() const noexcept
         {
-                m_strides = compute_strides(sizes);
+                return m_count;
+        }
+
+        constexpr IndexType stride(unsigned n) const noexcept
+        {
+                ASSERT(n < N);
+                return m_strides[n];
         }
 
         template <typename T>
-        constexpr IndexType index(const T& p) const noexcept
+        constexpr IndexType compute(const T& p) const noexcept
         {
                 static_check_input_type<T>();
 

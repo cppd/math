@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "com/color/colors.h"
+#include "com/global_index.h"
 #include "com/vec.h"
 
 #include <string>
@@ -31,8 +32,8 @@ class Image
         std::array<int, N> m_size;
         std::array<int, N> m_max;
         std::array<int, N> m_max_0;
-        // тип long long вместо int нужен для умножений
-        std::array<long long, N> m_strides;
+
+        GlobalIndex<N, long long> m_global_index;
         std::array<long long, 1 << N> m_pixel_offsets;
 
         long long pixel_index(const std::array<int, N>& p) const;

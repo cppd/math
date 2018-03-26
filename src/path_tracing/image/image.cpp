@@ -142,13 +142,7 @@ void Image<N>::resize(const std::array<int, N>& size)
                 m_max_0[i] = m_size[i] - 2;
         }
 
-        // Смещения для каждого измерения для перехода к следующей координате по этому измерению.
-        // Для x == 1, для y == width, для z == height * width и т.д.
-        m_strides[0] = 1;
-        for (unsigned i = 1; i < N; ++i)
-        {
-                m_strides[i] = m_size[i - 1] * m_strides[i - 1];
-        }
+        m_global_index = decltype(m_global_index)(m_size);
 
         // Смещения для следующих элементов от заданного с сортировкой по возрастанию
         // от измерения с максимальным номером к измерению с минимальным номером.
@@ -164,13 +158,13 @@ void Image<N>::resize(const std::array<int, N>& size)
                 {
                         if ((1 << n) & i)
                         {
-                                offset_index += m_strides[n];
+                                offset_index += m_global_index.stride(n);
                         }
                 }
                 m_pixel_offsets[i] = offset_index;
         }
 
-        m_data.resize(m_strides[N - 1] * m_size[N - 1]);
+        m_data.resize(m_global_index.count());
 }
 
 template <size_t N>
@@ -182,12 +176,7 @@ bool Image<N>::empty() const
 template <size_t N>
 long long Image<N>::pixel_index(const std::array<int, N>& p) const
 {
-        long long index = p[0]; // в соответствии с равенством m_strides[0] * p[0] == p[0]
-        for (unsigned i = 1; i < N; ++i)
-        {
-                index += m_strides[i] * p[i];
-        }
-        return index;
+        return m_global_index.compute(p);
 }
 
 template <size_t N>

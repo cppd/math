@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/alg.h"
 #include "com/color/colors.h"
 #include "com/error.h"
+#include "com/global_index.h"
 #include "com/random/engine.h"
 #include "com/thread.h"
 #include "path_tracing/coefficient/cosine_sphere.h"
@@ -70,36 +71,18 @@ class Pixels
                 }
         };
 
+        const GlobalIndex<N, long long> m_global_index;
         std::vector<Pixel> m_pixels;
-        std::array<long long, N> m_strides;
 
 public:
-        Pixels(const std::array<int, N>& screen_size)
+        Pixels(const std::array<int, N>& screen_size) : m_global_index(screen_size)
         {
-                m_strides[0] = 1;
-                for (unsigned i = 1; i < N; ++i)
-                {
-                        m_strides[i] = screen_size[i - 1] * m_strides[i - 1];
-                }
-
-                const long long pixel_count = screen_size[N - 1] * m_strides[N - 1];
-
-                ASSERT(pixel_count == multiply_all<long long>(screen_size));
-
-                m_pixels.resize(pixel_count);
+                m_pixels.resize(m_global_index.count());
         }
 
         Color add_color_and_samples(const std::array<int_least16_t, N>& pixel, const Color& color, int samples)
         {
-                long long index = pixel[0];
-                for (unsigned i = 1; i < N; ++i)
-                {
-                        index += m_strides[i] * pixel[i];
-                }
-
-                ASSERT(index < static_cast<long long>(m_pixels.size()));
-
-                return m_pixels[index].add_color_and_samples(color, samples);
+                return m_pixels[m_global_index.compute(pixel)].add_color_and_samples(color, samples);
         }
 };
 

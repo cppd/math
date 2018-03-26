@@ -362,33 +362,9 @@ void PainterWindowUI::slider_changed_slot(int)
 //
 
 template <size_t N, typename T>
-std::array<long long, PainterWindow<N, T>::N_IMAGE> PainterWindow<N, T>::strides_for_sizes(
-        const std::array<int, N_IMAGE>& screen_size)
-{
-        std::array<long long, N_IMAGE> strides;
-
-        strides[0] = 1;
-        for (unsigned i = 1; i < N_IMAGE; ++i)
-        {
-                strides[i] = screen_size[i - 1] * strides[i - 1];
-        }
-
-        const long long pixel_count = screen_size[N_IMAGE - 1] * strides[N_IMAGE - 1];
-
-        ASSERT(pixel_count == multiply_all<long long>(screen_size));
-
-        return strides;
-}
-
-template <size_t N, typename T>
 long long PainterWindow<N, T>::pixel_index(const std::array<int_least16_t, N_IMAGE>& pixel) const noexcept
 {
-        long long index = pixel[0];
-        for (unsigned i = 1; i < N_IMAGE; ++i)
-        {
-                index += m_strides[i] * pixel[i];
-        }
-        return index;
+        return m_global_index.compute(pixel);
 }
 
 template <size_t N, typename T>
@@ -448,7 +424,7 @@ PainterWindow<N, T>::PainterWindow(const std::string& title, unsigned thread_cou
                                    std::unique_ptr<const PaintObjects<N, T>>&& paint_objects)
         : PainterWindowUI(title, array_to_vector(paint_objects->projector().screen_size())),
           m_paint_objects(std::move(paint_objects)),
-          m_strides(strides_for_sizes(m_paint_objects->projector().screen_size())),
+          m_global_index(m_paint_objects->projector().screen_size()),
           m_height(m_paint_objects->projector().screen_size()[1]),
           m_samples_per_pixel(samples_per_pixel),
           m_thread_count(thread_count),

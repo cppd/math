@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "ui_painter_window.h"
 
+#include "com/global_index.h"
 #include "path_tracing/painter.h"
 #include "path_tracing/visible_paintbrush.h"
 
@@ -100,7 +101,7 @@ class PainterWindow final : public PainterWindowUI, public IPainterNotifier<N - 
         static constexpr size_t N_IMAGE = N - 1;
 
         const std::unique_ptr<const PaintObjects<N, T>> m_paint_objects;
-        const std::array<long long, N_IMAGE> m_strides;
+        const GlobalIndex<N_IMAGE, long long> m_global_index;
         const int m_height;
         const int m_samples_per_pixel;
         const unsigned m_thread_count;
@@ -111,8 +112,6 @@ class PainterWindow final : public PainterWindowUI, public IPainterNotifier<N - 
         std::atomic_bool m_thread_working;
 
         std::thread m_thread;
-
-        static std::array<long long, N_IMAGE> strides_for_sizes(const std::array<int, N_IMAGE>& screen_size);
 
         long long pixel_index(const std::array<int_least16_t, N_IMAGE>& pixel) const noexcept;
 
