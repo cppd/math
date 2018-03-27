@@ -48,33 +48,35 @@ private slots:
         void on_pushButton_save_to_file_clicked();
 
 public:
-        PainterWindowUI(const std::string& title, std::vector<int>&& m_screen_size);
+        PainterWindowUI(const std::string& title, std::vector<int>&& m_screen_size,
+                        const std::vector<int>& initial_slider_positions);
         ~PainterWindowUI() override;
 
 protected:
-        void init_window();
-        void set_pixel(long long index, unsigned char r, unsigned char g, unsigned char b) noexcept;
-        void mark_pixel_busy(long long index) noexcept;
         void error_message(const std::string& msg) const noexcept;
 
 private:
+        struct DimensionSlider
+        {
+                QLabel label;
+                QSlider slider;
+        };
+
         void showEvent(QShowEvent* event) override;
 
+        void init_interface(const std::vector<int>& initial_slider_positions);
+        std::vector<int> slider_positions() const;
         void update_points();
-
-        void set_default_pixels();
-        void set_interface();
-        void set_data_vectors();
-        void set_slice_offset();
+        void update_statistics();
 
         virtual void painter_statistics(long long* pass_count, long long* pixel_count, long long* ray_count,
                                         long long* sample_count, double* previous_pass_duration) const noexcept = 0;
-        virtual long long slice_offset(const std::vector<int>& slider_positions) const = 0;
+        virtual void slider_positions_change_event(const std::vector<int>& slider_positions) = 0;
+        virtual const quint32* pixel_pointer(bool show_threads) const noexcept = 0;
 
         const std::vector<int> m_screen_size;
         const int m_width, m_height;
         QImage m_image;
-        std::vector<quint32> m_data, m_data_clean;
         const int m_image_byte_count;
         QTimer m_timer;
         bool m_first_show;
@@ -82,14 +84,7 @@ private:
         class Difference;
         std::unique_ptr<Difference> m_difference;
 
-        struct DimensionSlider
-        {
-                QLabel label;
-                QSlider slider;
-        };
         std::deque<DimensionSlider> m_dimension_sliders;
-
-        long long m_slice_offset;
 
         Ui::PainterWindow ui;
 };
@@ -107,18 +102,27 @@ class PainterWindow final : public PainterWindowUI, public IPainterNotifier<N - 
         const unsigned m_thread_count;
         const std::thread::id m_window_thread_id;
 
+        long long m_slice_offset;
+        std::vector<quint32> m_data, m_data_clean;
+
         VisibleBarPaintbrush<N_IMAGE> m_paintbrush;
         std::atomic_bool m_stop;
         std::atomic_bool m_thread_working;
 
         std::thread m_thread;
 
+        static std::vector<int> initial_slider_positions();
+
         long long pixel_index(const std::array<int_least16_t, N_IMAGE>& pixel) const noexcept;
+        long long offset_for_slider_positions(const std::vector<int>& slider_positions) const;
+        void set_pixel(long long index, unsigned char r, unsigned char g, unsigned char b) noexcept;
+        void mark_pixel_busy(long long index) noexcept;
 
         // PainterWindowUI
         void painter_statistics(long long* pass_count, long long* pixel_count, long long* ray_count, long long* sample_count,
                                 double* previous_pass_duration) const noexcept override;
-        long long slice_offset(const std::vector<int>& slider_positions) const override;
+        void slider_positions_change_event(const std::vector<int>& slider_positions) override;
+        const quint32* pixel_pointer(bool show_threads) const noexcept override;
 
         // IPainterNotifier
         void painter_pixel_before(const std::array<int_least16_t, N_IMAGE>& pixel) noexcept override;

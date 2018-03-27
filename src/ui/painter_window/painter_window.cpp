@@ -34,8 +34,38 @@ constexpr int DIFFERENCE_INTERVAL_MILLISECONDS = 10 * UPDATE_INTERVAL_MILLISECON
 
 constexpr bool SHOW_THREADS = true;
 
+constexpr QRgb DEFAULT_COLOR_LIGHT = qRgb(100, 150, 200);
+constexpr QRgb DEFAULT_COLOR_DARK = qRgb(0, 0, 0);
+
 namespace
 {
+void initial_picture(int width, int height, std::vector<quint32>* data)
+{
+        static_assert(sizeof(QRgb) == sizeof(quint32));
+
+        unsigned slice_size = width * height;
+
+        ASSERT(data->size() >= slice_size);
+        ASSERT(data->size() % slice_size == 0);
+
+        long long slice_count = data->size() / slice_size;
+        long long index = 0;
+        for (long long slice = 0; slice < slice_count; ++slice)
+        {
+                for (int y = 0; y < height; ++y)
+                {
+                        for (int x = 0; x < width; ++x)
+                        {
+                                quint32 v = ((x + y) & 1) ? DEFAULT_COLOR_LIGHT : DEFAULT_COLOR_DARK;
+                                (*data)[index] = v;
+                                ++index;
+                        }
+                }
+        }
+
+        ASSERT(index == static_cast<long long>(data->size()));
+}
+
 void set_label_minimum_width_for_text(QLabel* label, const std::string& text)
 {
         label->setMinimumWidth(label->fontMetrics().width(text.c_str()));
@@ -93,7 +123,8 @@ public:
         }
 };
 
-PainterWindowUI::PainterWindowUI(const std::string& title, std::vector<int>&& screen_size)
+PainterWindowUI::PainterWindowUI(const std::string& title, std::vector<int>&& screen_size,
+                                 const std::vector<int>& initial_slider_positions)
         : m_screen_size(std::move(screen_size)),
           m_width(m_screen_size[0]),
           m_height(m_screen_size[1]),
@@ -112,23 +143,13 @@ PainterWindowUI::PainterWindowUI(const std::string& title, std::vector<int>&& sc
         connect(&m_timer, SIGNAL(timeout()), this, SLOT(timer_slot()));
 
         ASSERT(m_image.byteCount() == m_image_byte_count);
+
+        init_interface(initial_slider_positions);
 }
 
 PainterWindowUI::~PainterWindowUI() = default;
 
-void PainterWindowUI::init_window()
-{
-        set_data_vectors();
-        set_interface();
-
-        set_slice_offset();
-
-        update_points();
-
-        m_timer.start(UPDATE_INTERVAL_MILLISECONDS);
-}
-
-void PainterWindowUI::set_interface()
+void PainterWindowUI::init_interface(const std::vector<int>& initial_slider_positions)
 {
         ui.label_points->setText("");
         ui.label_points->resize(m_width, m_height);
@@ -146,6 +167,8 @@ void PainterWindowUI::set_interface()
 
         const int slider_count = static_cast<int>(m_screen_size.size()) - 2;
 
+        ASSERT(static_cast<int>(initial_slider_positions.size()) == slider_count);
+
         if (slider_count <= 0)
         {
                 return;
@@ -162,19 +185,20 @@ void PainterWindowUI::set_interface()
 
         for (int i = 0; i < slider_count; ++i)
         {
-                constexpr int init_value = 0;
-
                 int dimension = i + 2;
                 int dimension_max_value = m_screen_size[dimension] - 1;
 
                 m_dimension_sliders[i].slider.setOrientation(Qt::Horizontal);
                 m_dimension_sliders[i].slider.setMinimum(0);
                 m_dimension_sliders[i].slider.setMaximum(dimension_max_value);
-                m_dimension_sliders[i].slider.setValue(init_value);
-                set_label_minimum_width_for_text(&m_dimension_sliders[i].label, to_string_digit_groups(dimension_max_value));
-                m_dimension_sliders[i].label.setText(to_string(init_value).c_str());
 
-                QLabel* label_d = new QLabel(QString("d[") + to_string(dimension).c_str() + "]", layout_widget);
+                ASSERT(initial_slider_positions[i] >= 0 && initial_slider_positions[i] <= dimension_max_value);
+                m_dimension_sliders[i].slider.setValue(initial_slider_positions[i]);
+
+                set_label_minimum_width_for_text(&m_dimension_sliders[i].label, to_string_digit_groups(dimension_max_value));
+                m_dimension_sliders[i].label.setText(to_string_digit_groups(initial_slider_positions[i]).c_str());
+
+                QLabel* label_d = new QLabel(QString("d[") + to_string(dimension + 1).c_str() + "]", layout_widget);
                 QLabel* label_e = new QLabel("=", layout_widget);
 
                 layout->addWidget(label_d, i, 0);
@@ -186,76 +210,16 @@ void PainterWindowUI::set_interface()
         }
 }
 
-void PainterWindowUI::set_data_vectors()
+std::vector<int> PainterWindowUI::slider_positions() const
 {
-        long long pixel_count = multiply_all<long long>(m_screen_size);
-
-        m_data.resize(pixel_count);
-        m_data_clean.resize(pixel_count);
-
-        set_default_pixels();
-}
-
-void PainterWindowUI::set_default_pixels()
-{
-        static_assert(sizeof(QRgb) == sizeof(quint32));
-        ASSERT(m_data.size() == m_data_clean.size());
-
-        unsigned slice_size = m_width * m_height;
-
-        ASSERT(m_data.size() >= slice_size);
-        ASSERT(m_data.size() % slice_size == 0);
-
-        long long slice_count = m_data.size() / slice_size;
-        long long index = 0;
-        for (long long slice = 0; slice < slice_count; ++slice)
-        {
-                for (int y = 0; y < m_height; ++y)
-                {
-                        for (int x = 0; x < m_width; ++x)
-                        {
-                                quint32 v = ((x + y) & 1) ? qRgba(100, 150, 200, 0) : 0;
-                                m_data[index] = v;
-                                m_data_clean[index] = v;
-                                ++index;
-                        }
-                }
-        }
-
-        ASSERT(index == static_cast<long long>(m_data.size()));
-}
-
-void PainterWindowUI::set_slice_offset()
-{
-        std::vector<int> slider_positions(m_dimension_sliders.size());
+        std::vector<int> positions(m_dimension_sliders.size());
 
         for (unsigned i = 0; i < m_dimension_sliders.size(); ++i)
         {
-                slider_positions[i] = m_dimension_sliders[i].slider.value();
+                positions[i] = m_dimension_sliders[i].slider.value();
         }
 
-        m_slice_offset = slice_offset(slider_positions);
-}
-
-void PainterWindowUI::set_pixel(long long index, unsigned char r, unsigned char g, unsigned char b) noexcept
-{
-        quint32 c = (r << 16) + (g << 8) + b;
-
-        m_data[index] = c;
-        m_data_clean[index] = c;
-}
-
-void PainterWindowUI::mark_pixel_busy(long long index) noexcept
-{
-        m_data[index] ^= 0x00ff'ffff;
-}
-
-void PainterWindowUI::update_points()
-{
-        const quint32* image_data = ui.checkBox_show_threads->isChecked() ? m_data.data() : m_data_clean.data();
-        std::memcpy(m_image.bits(), image_data + m_slice_offset, m_image_byte_count);
-        ui.label_points->setPixmap(QPixmap::fromImage(m_image));
-        ui.label_points->update();
+        return positions;
 }
 
 void PainterWindowUI::error_message(const std::string& msg) const noexcept
@@ -299,9 +263,11 @@ void PainterWindowUI::first_shown()
 
         ui.scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
         ui.scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+
+        m_timer.start(UPDATE_INTERVAL_MILLISECONDS);
 }
 
-void PainterWindowUI::timer_slot()
+void PainterWindowUI::update_statistics()
 {
         long long pass_count, pixel_count, ray_count, sample_count;
         double previous_pass_duration;
@@ -320,7 +286,18 @@ void PainterWindowUI::timer_slot()
         set_text_and_minimum_width(ui.label_pass_count, to_string_digit_groups(pass_count));
         set_text_and_minimum_width(ui.label_samples_per_pixel, to_string_digit_groups(samples_per_pixel));
         set_text_and_minimum_width(ui.label_milliseconds_per_frame, to_string_digit_groups(milliseconds_per_frame));
+}
 
+void PainterWindowUI::update_points()
+{
+        std::memcpy(m_image.bits(), pixel_pointer(ui.checkBox_show_threads->isChecked()), m_image_byte_count);
+        ui.label_points->setPixmap(QPixmap::fromImage(m_image));
+        ui.label_points->update();
+}
+
+void PainterWindowUI::timer_slot()
+{
+        update_statistics();
         update_points();
 }
 
@@ -335,7 +312,7 @@ void PainterWindowUI::on_pushButton_save_to_file_clicked()
 
         // Таймер и эта функция работают в одном потоке, поэтому можно пользоваться
         // переменной m_image без блокировок.
-        std::memcpy(m_image.bits(), m_data_clean.data() + m_slice_offset, m_image_byte_count);
+        std::memcpy(m_image.bits(), pixel_pointer(false), m_image_byte_count);
         if (!m_image.save(file_name, "PNG"))
         {
                 error_message("Error saving image to file");
@@ -350,7 +327,7 @@ void PainterWindowUI::slider_changed_slot(int)
                 if (&dm.slider == s)
                 {
                         set_text_and_minimum_width(&dm.label, to_string_digit_groups(dm.slider.value()));
-                        set_slice_offset();
+                        slider_positions_change_event(slider_positions());
                         return;
                 }
         }
@@ -368,14 +345,7 @@ long long PainterWindow<N, T>::pixel_index(const std::array<int_least16_t, N_IMA
 }
 
 template <size_t N, typename T>
-void PainterWindow<N, T>::painter_statistics(long long* pass_count, long long* pixel_count, long long* ray_count,
-                                             long long* sample_count, double* previous_pass_duration) const noexcept
-{
-        m_paintbrush.statistics(pass_count, pixel_count, ray_count, sample_count, previous_pass_duration);
-}
-
-template <size_t N, typename T>
-long long PainterWindow<N, T>::slice_offset(const std::vector<int>& slider_positions) const
+long long PainterWindow<N, T>::offset_for_slider_positions(const std::vector<int>& slider_positions) const
 {
         ASSERT(slider_positions.size() + 2 == N_IMAGE);
 
@@ -396,12 +366,31 @@ long long PainterWindow<N, T>::slice_offset(const std::vector<int>& slider_posit
 }
 
 template <size_t N, typename T>
+void PainterWindow<N, T>::painter_statistics(long long* pass_count, long long* pixel_count, long long* ray_count,
+                                             long long* sample_count, double* previous_pass_duration) const noexcept
+{
+        m_paintbrush.statistics(pass_count, pixel_count, ray_count, sample_count, previous_pass_duration);
+}
+
+template <size_t N, typename T>
+void PainterWindow<N, T>::slider_positions_change_event(const std::vector<int>& slider_positions)
+{
+        m_slice_offset = offset_for_slider_positions(slider_positions);
+}
+
+template <size_t N, typename T>
+const quint32* PainterWindow<N, T>::pixel_pointer(bool show_threads) const noexcept
+{
+        return (show_threads ? m_data.data() : m_data_clean.data()) + m_slice_offset;
+}
+
+template <size_t N, typename T>
 void PainterWindow<N, T>::painter_pixel_before(const std::array<int_least16_t, N_IMAGE>& pixel) noexcept
 {
         std::array<int_least16_t, N_IMAGE> p = pixel;
         p[1] = m_height - 1 - pixel[1];
 
-        PainterWindowUI::mark_pixel_busy(pixel_index(p));
+        mark_pixel_busy(pixel_index(p));
 }
 
 template <size_t N, typename T>
@@ -410,7 +399,7 @@ void PainterWindow<N, T>::painter_pixel_after(const std::array<int_least16_t, N_
         std::array<int_least16_t, N_IMAGE> p = pixel;
         p[1] = m_height - 1 - pixel[1];
 
-        PainterWindowUI::set_pixel(pixel_index(p), c.red, c.green, c.blue);
+        set_pixel(pixel_index(p), c.red, c.green, c.blue);
 }
 
 template <size_t N, typename T>
@@ -420,9 +409,32 @@ void PainterWindow<N, T>::painter_error_message(const std::string& msg) noexcept
 }
 
 template <size_t N, typename T>
+void PainterWindow<N, T>::mark_pixel_busy(long long index) noexcept
+{
+        m_data[index] ^= 0x00ff'ffffu;
+}
+
+template <size_t N, typename T>
+void PainterWindow<N, T>::set_pixel(long long index, unsigned char r, unsigned char g, unsigned char b) noexcept
+{
+        static_assert(std::numeric_limits<unsigned char>::digits == 8);
+
+        quint32 c = (r << 16u) | (g << 8u) | b;
+
+        m_data[index] = c;
+        m_data_clean[index] = c;
+}
+
+template <size_t N, typename T>
+std::vector<int> PainterWindow<N, T>::initial_slider_positions()
+{
+        return std::vector<int>(N_IMAGE - 2, 0);
+}
+
+template <size_t N, typename T>
 PainterWindow<N, T>::PainterWindow(const std::string& title, unsigned thread_count, int samples_per_pixel,
                                    std::unique_ptr<const PaintObjects<N, T>>&& paint_objects)
-        : PainterWindowUI(title, array_to_vector(paint_objects->projector().screen_size())),
+        : PainterWindowUI(title, array_to_vector(paint_objects->projector().screen_size()), initial_slider_positions()),
           m_paint_objects(std::move(paint_objects)),
           m_global_index(m_paint_objects->projector().screen_size()),
           m_height(m_paint_objects->projector().screen_size()[1]),
@@ -433,12 +445,12 @@ PainterWindow<N, T>::PainterWindow(const std::string& title, unsigned thread_cou
           m_stop(false),
           m_thread_working(false)
 {
-        // Здесь могут быть вызовы виртуальных функций из класса UI,
-        // поэтому всё должно быть готово для их вызовов
-        PainterWindowUI::init_window();
+        m_slice_offset = offset_for_slider_positions(initial_slider_positions());
 
-        // Запуск потоков только после инициализации класса UI,
-        // так как потоки вызывают функции класса UI
+        m_data.resize(multiply_all<long long>(m_paint_objects->projector().screen_size()));
+        initial_picture(m_paint_objects->projector().screen_size()[0], m_paint_objects->projector().screen_size()[1], &m_data);
+        m_data_clean = m_data;
+
         m_stop = false;
         m_thread_working = true;
         m_thread = std::thread([this]() noexcept {
