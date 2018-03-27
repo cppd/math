@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2018 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -14,6 +14,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+
+#pragma once
 
 #include <array>
 #include <type_traits>
@@ -48,6 +50,23 @@ struct IsVector
                 static constexpr bool value = true;
         };
 };
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wctor-dtor-privacy"
+template <typename Container>
+class HasBeginEnd
+{
+        template <typename T>
+        static decltype(std::begin(std::declval<T>()), std::end(std::declval<T>()), std::cbegin(std::declval<T>()),
+                        std::cend(std::declval<T>()), std::true_type())
+        f(int);
+        template <typename>
+        static std::false_type f(...);
+
+public:
+        static constexpr bool value = std::is_same_v<decltype(f<Container>(0)), std::true_type>;
+};
+#pragma GCC diagnostic pop
 }
 
 template <typename T>
@@ -55,8 +74,16 @@ inline constexpr bool IsArray = TypeDetectionImplementation::IsArray::S<std::rem
 template <typename T>
 inline constexpr bool IsVector = TypeDetectionImplementation::IsVector::S<std::remove_cv_t<T>>::value;
 
+template <typename T>
+inline constexpr bool HasBeginEnd = TypeDetectionImplementation::HasBeginEnd<T>::value;
+
 static_assert(IsArray<const std::array<int, 1>>);
 static_assert(IsVector<const std::vector<int>>);
 
 static_assert(!IsArray<const std::vector<int>>);
 static_assert(!IsVector<const std::array<int, 1>>);
+
+static_assert(HasBeginEnd<const std::array<int, 1>>);
+static_assert(HasBeginEnd<std::vector<double>&>);
+static_assert(!HasBeginEnd<int>);
+static_assert(!HasBeginEnd<double*>);
