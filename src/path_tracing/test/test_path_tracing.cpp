@@ -178,7 +178,7 @@ void test_path_tracing(const std::shared_ptr<const Mesh<N, T>>& mesh, int min_sc
 {
         Color background_color = Color(SrgbInteger(50, 100, 150));
         Color default_color = Color(SrgbInteger(150, 170, 150));
-        T diffuse = 1;
+        Color::DataType diffuse = 1;
 
         std::unique_ptr<const PaintObjects<N, T>> paint_objects =
                 one_object_scene(background_color, default_color, diffuse, min_screen_size, max_screen_size, mesh);

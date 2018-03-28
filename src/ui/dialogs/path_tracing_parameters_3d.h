@@ -27,7 +27,8 @@ public:
         explicit PathTracingParametersFor3d(QWidget* parent = nullptr);
 
         [[nodiscard]] bool show(int max_thread_count, int width, int height, int default_samples_per_pixel,
-                                int max_samples_per_pixel, int* thread_count, double* size_coef, int* samples_per_pixel);
+                                int max_samples_per_pixel, int* thread_count, int* paint_width, int* paint_height,
+                                int* samples_per_pixel);
 
 private slots:
         void on_doubleSpinBox_image_size_valueChanged(double);

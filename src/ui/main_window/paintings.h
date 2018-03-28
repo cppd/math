@@ -18,19 +18,48 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "com/color/colors.h"
+#include "com/vec.h"
 #include "path_tracing/shapes/mesh.h"
-#include "show/show.h"
 
 #include <QWidget>
 #include <memory>
 #include <string>
 
-void painting(QWidget* parent_window, const IShow& show, const std::shared_ptr<const Mesh<3, double>>& mesh,
-              const std::string& window_title, const std::string& model_name, int default_samples_per_pixel,
-              int max_samples_per_pixel, const Color& background_color, const Color& default_color, double diffuse);
+struct PaintingInformation3d
+{
+        vec3 camera_up;
+        vec3 camera_direction;
+        vec3 light_direction;
+        vec3 object_position;
+        double object_size;
+        vec3 view_center;
+        double view_width;
+        int paint_width;
+        int paint_height;
+};
+
+struct PaintingInformationNd
+{
+        int default_screen_size;
+        int minimum_screen_size;
+        int maximum_screen_size;
+};
+
+struct PaintingInformationAll
+{
+        QWidget* parent_window;
+        std::string window_title;
+        std::string model_name;
+        int default_samples_per_pixel;
+        int max_samples_per_pixel;
+        Color background_color;
+        Color default_color;
+        Color::DataType diffuse;
+};
+
+void painting(const std::shared_ptr<const Mesh<3, double>>& mesh, const PaintingInformation3d& info_3d,
+              const PaintingInformationAll& info_all);
 
 template <size_t N, typename T>
-void painting(QWidget* parent_window, const std::shared_ptr<const Mesh<N, T>>& mesh, const std::string& window_title,
-              const std::string& model_name, int default_screen_size, int min_screen_size, int max_screen_size,
-              int default_samples_per_pixel, int max_samples_per_pixel, const Color& background_color, const Color& default_color,
-              T diffuse);
+void painting(const std::shared_ptr<const Mesh<N, T>>& mesh, const PaintingInformationNd& info_nd,
+              const PaintingInformationAll& info_all);

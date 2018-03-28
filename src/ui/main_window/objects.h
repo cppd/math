@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "event_emitter.h"
 #include "meshes.h"
+#include "paintings.h"
 
 #include "com/mat.h"
 #include "geometry/cocone/reconstruction.h"
@@ -85,13 +86,17 @@ public:
 
         void set_show(IShow* show);
 
-        std::shared_ptr<const Mesh<3, double>> mesh(int id) const;
-        std::shared_ptr<const Obj<3>> object(int id) const;
-
         bool surface_constructor_exists() const;
+        bool object_exists(int id) const;
+        bool mesh_exists(int id) const;
 
         void bound_cocone(ProgressRatioList* progress_list, double rho, double alpha);
 
         void load_from_file(ProgressRatioList* progress_list, const std::string& file_name, double rho, double alpha);
         void load_from_repository(ProgressRatioList* progress_list, const std::string& object_name, double rho, double alpha);
+
+        void save_to_file(int id, const std::string& file_name, const std::string& name);
+
+        void paint(int id, const PaintingInformation3d& info_3d, const PaintingInformationNd& info_nd,
+                   const PaintingInformationAll& info_all);
 };

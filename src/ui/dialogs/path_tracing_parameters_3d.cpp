@@ -30,7 +30,8 @@ PathTracingParametersFor3d::PathTracingParametersFor3d(QWidget* parent) : QDialo
 }
 
 bool PathTracingParametersFor3d::show(int max_thread_count, int width, int height, int default_samples_per_pixel,
-                                      int max_samples_per_pixel, int* thread_count, double* size_coef, int* samples_per_pixel)
+                                      int max_samples_per_pixel, int* thread_count, int* paint_width, int* paint_height,
+                                      int* samples_per_pixel)
 {
         m_width = width;
         m_height = height;
@@ -60,7 +61,8 @@ bool PathTracingParametersFor3d::show(int max_thread_count, int width, int heigh
         }
 
         *thread_count = m_thread_count;
-        *size_coef = m_size_coef;
+        *paint_width = std::lround(width * m_size_coef);
+        *paint_height = std::lround(height * m_size_coef);
         *samples_per_pixel = m_samples_per_pixel;
 
         return true;

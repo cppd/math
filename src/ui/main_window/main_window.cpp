@@ -19,7 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "catch.h"
 #include "identifiers.h"
-#include "paintings.h"
 
 #include "ui/dialogs/application_about.h"
 #include "ui/dialogs/application_help.h"
@@ -299,9 +298,7 @@ void MainWindow::thread_export(const std::string& name, int id)
                 return;
         }
 
-        std::shared_ptr<const Obj<3>> obj = m_objects.object(id);
-
-        if (!obj || obj->facets().size() == 0)
+        if (!m_objects.object_exists(id))
         {
                 m_event_emitter.message_warning("No object to export");
                 return;
@@ -325,8 +322,8 @@ void MainWindow::thread_export(const std::string& name, int id)
         m_threads.start_thread(ThreadAction::ExportObject, [=](ProgressRatioList*, std::string* message) {
                 *message = "Export " + name + " to " + file_name;
 
-                save_obj_geometry_to_file(obj.get(), file_name, name);
-                m_event_emitter.message_information(name + " exported to file\n" + file_name);
+                m_objects.save_to_file(id, file_name, name);
+                m_event_emitter.message_information(name + " exported to file " + file_name);
         });
 }
 
@@ -965,19 +962,26 @@ void MainWindow::on_radioButton_BoundCoconeConvexHull_clicked()
 void MainWindow::on_pushButton_Painter_clicked()
 {
         std::string model_name;
-        std::shared_ptr<const Mesh<3, double>> mesh;
+        int id = -1;
 
-        for (const auto & [ button, id ] : m_object_buttons)
+        bool found = false;
+        for (const auto & [ button, button_model_id ] : m_object_buttons)
         {
                 if (button->isChecked())
                 {
                         model_name = button->text().toStdString();
-                        mesh = m_objects.mesh(id);
+                        id = button_model_id;
+                        found = true;
                         break;
                 }
         }
+        if (!found)
+        {
+                m_event_emitter.message_warning("No object button is checked");
+                return;
+        }
 
-        if (!mesh)
+        if (!m_objects.mesh_exists(id))
         {
                 m_event_emitter.message_warning("No object to paint");
                 return;
@@ -986,22 +990,30 @@ void MainWindow::on_pushButton_Painter_clicked()
         catch_all([&](std::string* message) {
                 *message = "Painter";
 
-                std::string window_title = QMainWindow::windowTitle().toStdString();
-                Color background_color = qcolor_to_rgb(m_background_color);
-                Color default_color = qcolor_to_rgb(m_default_color);
-                double diffuse = diffuse_light();
+                PaintingInformation3d info_3d;
+                m_show->camera_information(&info_3d.camera_up, &info_3d.camera_direction, &info_3d.view_center,
+                                           &info_3d.view_width);
+                info_3d.object_position = m_show->object_position();
+                info_3d.light_direction = m_show->light_direction();
+                info_3d.object_size = m_show->object_size();
+                m_show->paint_width_height(&info_3d.paint_width, &info_3d.paint_height);
 
-                if constexpr ((true))
-                {
-                        painting(this, *m_show, mesh, window_title, model_name, PATH_TRACING_DEFAULT_SAMPLES_PER_PIXEL,
-                                 PATH_TRACING_MAX_SAMPLES_PER_PIXEL, background_color, default_color, diffuse);
-                }
-                else
-                {
-                        painting(this, mesh, window_title, model_name, PATH_TRACING_DEFAULT_SCREEN_SIZE,
-                                 PATH_TRACING_MINIMUM_SCREEN_SIZE, PATH_TRACING_MAXIMUM_SCREEN_SIZE,
-                                 PATH_TRACING_DEFAULT_SAMPLES_PER_PIXEL, PATH_TRACING_MAX_SAMPLES_PER_PIXEL, background_color,
-                                 default_color, diffuse);
-                }
+                PaintingInformationNd info_nd;
+                info_nd.default_screen_size = PATH_TRACING_DEFAULT_SCREEN_SIZE;
+                info_nd.minimum_screen_size = PATH_TRACING_MINIMUM_SCREEN_SIZE;
+                info_nd.maximum_screen_size = PATH_TRACING_MAXIMUM_SCREEN_SIZE;
+
+                PaintingInformationAll info_all;
+                info_all.parent_window = this;
+                info_all.window_title = QMainWindow::windowTitle().toStdString();
+                info_all.model_name = model_name;
+                info_all.default_samples_per_pixel = PATH_TRACING_DEFAULT_SAMPLES_PER_PIXEL;
+                info_all.max_samples_per_pixel = PATH_TRACING_MAX_SAMPLES_PER_PIXEL;
+                info_all.background_color = qcolor_to_rgb(m_background_color);
+                info_all.default_color = qcolor_to_rgb(m_default_color);
+                info_all.diffuse = diffuse_light();
+
+                m_objects.paint(id, info_3d, info_nd, info_all);
+
         });
 }

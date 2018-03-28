@@ -38,7 +38,7 @@ class OneObject final : public PaintObjects<N, T>
         std::vector<const LightSource<N, T>*> m_light_sources;
 
 public:
-        OneObject(const Color& background_color, const Color& default_color, T diffuse,
+        OneObject(const Color& background_color, const Color& default_color, Color::DataType diffuse,
                   std::unique_ptr<const Projector<N, T>>&& projector, std::unique_ptr<const LightSource<N, T>>&& light_source,
                   std::shared_ptr<const Mesh<N, T>>&& mesh)
                 : m_object(std::move(mesh)), m_projector(std::move(projector)), m_light_source(std::move(light_source))
@@ -76,7 +76,8 @@ public:
 };
 
 template <size_t N, typename T>
-std::unique_ptr<const PaintObjects<N, T>> one_object_scene(const Color& background_color, const Color& default_color, T diffuse,
+std::unique_ptr<const PaintObjects<N, T>> one_object_scene(const Color& background_color, const Color& default_color,
+                                                           Color::DataType diffuse,
                                                            std::unique_ptr<const Projector<N, T>>&& projector,
                                                            std::unique_ptr<const LightSource<N, T>>&& light_source,
                                                            std::shared_ptr<const Mesh<N, T>> mesh)
@@ -88,8 +89,8 @@ std::unique_ptr<const PaintObjects<N, T>> one_object_scene(const Color& backgrou
 }
 
 template <size_t N, typename T>
-std::unique_ptr<const PaintObjects<N, T>> one_object_scene(const Color& background_color, const Color& default_color, T diffuse,
-                                                           int min_screen_size, int max_screen_size,
+std::unique_ptr<const PaintObjects<N, T>> one_object_scene(const Color& background_color, const Color& default_color,
+                                                           Color::DataType diffuse, int min_screen_size, int max_screen_size,
                                                            std::shared_ptr<const Mesh<N, T>> mesh)
 {
         LOG("Creating simple scene...");

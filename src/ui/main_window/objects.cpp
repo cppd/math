@@ -28,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "obj/obj_convex_hull.h"
 #include "obj/obj_facets.h"
 #include "obj/obj_file_load.h"
+#include "obj/obj_file_save.h"
 #include "obj/obj_lines.h"
 #include "obj/obj_points.h"
 #include "progress/progress.h"
@@ -58,14 +59,14 @@ void MainObjects::set_show(IShow* show)
         m_show = show;
 }
 
-std::shared_ptr<const Mesh<3, double>> MainObjects::mesh(int id) const
+bool MainObjects::object_exists(int id) const
 {
-        return m_meshes.get(id);
+        return m_objects.get(id) != nullptr;
 }
 
-std::shared_ptr<const Obj<3>> MainObjects::object(int id) const
+bool MainObjects::mesh_exists(int id) const
 {
-        return m_objects.get(id);
+        return m_meshes.get(id) != nullptr;
 }
 
 bool MainObjects::surface_constructor_exists() const
@@ -262,11 +263,12 @@ void MainObjects::mst(ProgressRatioList* progress_list)
                 mst_lines = minimum_spanning_tree(m_surface_points, m_surface_constructor->delaunay_objects(), &progress);
         }
 
-        std::shared_ptr<Obj<3>> mst_obj = create_obj_for_lines(m_surface_points, mst_lines);
+        std::shared_ptr<const Obj<3>> mst_obj = create_obj_for_lines(m_surface_points, mst_lines);
 
         if (mst_obj->lines().size() > 0)
         {
                 m_show->add_object(mst_obj, OBJECT_MODEL_MST, OBJECT_MODEL);
+                m_objects.set(OBJECT_MODEL_MST, mst_obj);
         }
 }
 
@@ -390,4 +392,42 @@ void MainObjects::load_from_repository(ProgressRatioList* progress_list, const s
         }
 
         load_object(progress_list, object_name, obj, rho, alpha);
+}
+
+void MainObjects::save_to_file(int id, const std::string& file_name, const std::string& name)
+{
+        ASSERT(std::this_thread::get_id() != m_thread_id);
+
+        std::shared_ptr<const Obj<3>> obj = m_objects.get(id);
+
+        if (!obj)
+        {
+                m_event_emitter.message_warning("No object to export");
+                return;
+        }
+
+        save_obj_geometry_to_file(obj.get(), file_name, name);
+}
+
+void MainObjects::paint(int id, const PaintingInformation3d& info_3d, const PaintingInformationNd& info_nd,
+                        const PaintingInformationAll& info_all)
+{
+        ASSERT(std::this_thread::get_id() == m_thread_id);
+
+        std::shared_ptr<const Mesh<3, double>> mesh = m_meshes.get(id);
+
+        if (!mesh)
+        {
+                m_event_emitter.message_warning("No object to paint");
+                return;
+        }
+
+        if constexpr ((true))
+        {
+                painting(mesh, info_3d, info_all);
+        }
+        else
+        {
+                painting(mesh, info_nd, info_all);
+        }
 }
