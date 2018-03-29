@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -15,18 +15,17 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-// Clang 5 не работает с std::variant из библиотеки libstdc++,
-// поэтому для работы с сообщениями предназначена эта простая замена.
+// Clang 5 не работает с std::variant из библиотеки libstdc++
 
 #pragma once
 
-#if __clang__
+#if defined(__clang__)
 
 #include "com/error.h"
-#include "com/log.h"
 
 #include <algorithm>
 #include <type_traits>
+#include <utility>
 #include <variant>
 
 template <typename A, typename... T>
@@ -146,6 +145,29 @@ class SimpleVariant
                 m_id = EMPTY;
         }
 
+        static void error_bad_variant_access()
+        {
+                error("bad SimpleVariant access");
+        }
+
+        template <typename Src, typename Dst>
+        using SameConstSrcDst = std::conditional_t<std::is_const_v<Src>, const Dst, Dst>;
+
+        template <typename F, typename Data, typename ID>
+        static void visit_impl(const F& function, Data* data, ID id)
+        {
+                if (id == 0)
+                {
+                        function(*reinterpret_cast<SameConstSrcDst<Data, A>*>(data));
+                }
+                else
+                {
+                        int i = 1;
+                        ((i != id ? ++i : (function(*reinterpret_cast<SameConstSrcDst<Data, T>*>(data)), false)) && ...) &&
+                                (static_cast<void>(error_bad_variant_access()), false);
+                }
+        }
+
 public:
         SimpleVariant()
         {
@@ -161,6 +183,17 @@ public:
                 static_assert(id >= 0 && id < sizeof...(T) + 1);
 
                 new (&m_data) Type(std::forward<Args>(v)...);
+                m_id = id;
+        }
+
+        template <typename Type>
+        SimpleVariant(Type&& v)
+        {
+                constexpr int id = compute_id<Type>();
+
+                static_assert(id >= 0 && id < sizeof...(T) + 1);
+
+                new (&m_data) Type(std::forward<Type>(v));
                 m_id = id;
         }
 
@@ -222,11 +255,29 @@ public:
 
                 if (m_id != id)
                 {
-                        error("bad SimpleVariant access");
+                        error_bad_variant_access();
                 }
 
                 return *reinterpret_cast<const V*>(&m_data);
         }
+
+        template <typename F>
+        void visit(const F& f) const
+        {
+                visit_impl(f, &m_data, m_id);
+        }
+
+        template <typename F>
+        void visit(const F& f)
+        {
+                visit_impl(f, &m_data, m_id);
+        }
 };
+
+template <typename Visitor, typename SimpleVariant>
+void simple_visit(const Visitor& visitor, SimpleVariant&& simple_variant)
+{
+        simple_variant.visit(visitor);
+}
 
 #endif
