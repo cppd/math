@@ -430,6 +430,9 @@ template
 std::unique_ptr<IManifoldConstructor<4>> create_manifold_constructor(const std::vector<Vector<4, float>>& source_points,
                                                                      ProgressRatio* progress);
 template
+std::unique_ptr<IManifoldConstructor<5>> create_manifold_constructor(const std::vector<Vector<5, float>>& source_points,
+                                                                     ProgressRatio* progress);
+template
 std::unique_ptr<IManifoldConstructorCocone<2>> create_manifold_constructor_cocone(
         const std::vector<Vector<2, float>>& source_points, ProgressRatio* progress);
 template
@@ -438,4 +441,7 @@ std::unique_ptr<IManifoldConstructorCocone<3>> create_manifold_constructor_cocon
 template
 std::unique_ptr<IManifoldConstructorCocone<4>> create_manifold_constructor_cocone(
         const std::vector<Vector<4, float>>& source_points, ProgressRatio* progress);
+template
+std::unique_ptr<IManifoldConstructorCocone<5>> create_manifold_constructor_cocone(
+        const std::vector<Vector<5, float>>& source_points, ProgressRatio* progress);
 // clang-format on

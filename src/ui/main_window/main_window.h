@@ -108,7 +108,7 @@ private:
         void catch_all(const F& function) const noexcept;
 
         void thread_load_from_file(std::string file_name = "");
-        void thread_load_from_repository(const std::string& object_name);
+        void thread_load_from_repository(const std::tuple<int, std::string>& object);
         void thread_self_test(SelfTestType test_type);
         void thread_export(const std::string& name, int id);
         void thread_reload_bound_cocone();
@@ -145,11 +145,11 @@ private:
 
         std::vector<std::tuple<const QRadioButton*, int>> m_object_buttons;
 
-        std::unordered_map<QObject*, std::string> m_action_to_object_name_map;
+        std::unordered_map<QObject*, std::tuple<int, std::string>> m_action_to_object_name_map;
 
         std::unique_ptr<IShow> m_show;
 
-        MainObjects m_objects;
+        std::unique_ptr<MainObjects> m_objects;
 
         QColor m_background_color;
         QColor m_default_color;

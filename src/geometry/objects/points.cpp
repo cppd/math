@@ -307,3 +307,4 @@ std::unique_ptr<IObjectRepository<N>> create_object_repository()
 template std::unique_ptr<IObjectRepository<2>> create_object_repository<2>();
 template std::unique_ptr<IObjectRepository<3>> create_object_repository<3>();
 template std::unique_ptr<IObjectRepository<4>> create_object_repository<4>();
+template std::unique_ptr<IObjectRepository<5>> create_object_repository<5>();

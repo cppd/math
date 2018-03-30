@@ -218,15 +218,19 @@ std::vector<std::array<int, 2>> minimum_spanning_tree(const std::vector<Vector<N
 
 // clang-format off
 template
-std::vector<std::array<int, 2>> minimum_spanning_tree(const std::vector<vec2f>& points,
+std::vector<std::array<int, 2>> minimum_spanning_tree(const std::vector<Vector<2, float>>& points,
                                                       const std::vector<std::array<int, 3>>& delaunay_objects,
                                                       ProgressRatio* progress);
 template
-std::vector<std::array<int, 2>> minimum_spanning_tree(const std::vector<vec3f>& points,
+std::vector<std::array<int, 2>> minimum_spanning_tree(const std::vector<Vector<3, float>>& points,
                                                       const std::vector<std::array<int, 4>>& delaunay_objects,
                                                       ProgressRatio* progress);
 template
-std::vector<std::array<int, 2>> minimum_spanning_tree(const std::vector<vec4f>& points,
+std::vector<std::array<int, 2>> minimum_spanning_tree(const std::vector<Vector<4, float>>& points,
                                                       const std::vector<std::array<int, 5>>& delaunay_objects,
+                                                      ProgressRatio* progress);
+template
+std::vector<std::array<int, 2>> minimum_spanning_tree(const std::vector<Vector<5, float>>& points,
+                                                      const std::vector<std::array<int, 6>>& delaunay_objects,
                                                       ProgressRatio* progress);
 // clang-format on

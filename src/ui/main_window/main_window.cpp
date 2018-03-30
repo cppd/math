@@ -84,7 +84,8 @@ MainWindow::MainWindow(QWidget* parent)
         : QMainWindow(parent),
           m_window_thread_id(std::this_thread::get_id()),
           m_threads(m_event_emitter),
-          m_objects(std::max(1, hardware_concurrency() - MESH_OBJECT_NOT_USED_THREAD_COUNT), m_event_emitter, POINT_COUNT),
+          m_objects(create_main_objects(std::max(1, hardware_concurrency() - MESH_OBJECT_NOT_USED_THREAD_COUNT), m_event_emitter,
+                                        POINT_COUNT)),
           m_first_show(true)
 {
         static_assert(std::is_same_v<decltype(ui.graphics_widget), GraphicsWidget*>);
@@ -148,11 +149,15 @@ void MainWindow::constructor_repository()
 {
         // QMenu* menuCreate = new QMenu("Create", this);
         // ui.menuBar->insertMenu(ui.menuHelp->menuAction(), menuCreate);
-        for (const std::string& object_name : m_objects.list_of_repository_point_objects())
+        for (const auto & [ dimension, object_names ] : m_objects->list_of_repository_point_objects())
         {
-                QAction* action = ui.menuCreate->addAction(object_name.c_str());
-                m_action_to_object_name_map.emplace(action, object_name);
-                connect(action, SIGNAL(triggered()), this, SLOT(slot_object_repository()));
+                QMenu* sub_menu = ui.menuCreate->addMenu((to_string(dimension) + "-space").c_str());
+                for (const std::string& object_name : object_names)
+                {
+                        QAction* action = sub_menu->addAction(object_name.c_str());
+                        m_action_to_object_name_map.try_emplace(action, dimension, object_name);
+                        connect(action, SIGNAL(triggered()), this, SLOT(slot_object_repository()));
+                }
         }
 }
 
@@ -239,11 +244,11 @@ void MainWindow::thread_load_from_file(std::string file_name)
         m_threads.start_thread(ThreadAction::LoadObject, [=](ProgressRatioList* progress_list, std::string* message) {
                 *message = "Load " + file_name;
 
-                m_objects.load_from_file(progress_list, file_name, m_bound_cocone_rho, m_bound_cocone_alpha);
+                m_objects->load_from_file(progress_list, file_name, m_bound_cocone_rho, m_bound_cocone_alpha);
         });
 }
 
-void MainWindow::thread_load_from_repository(const std::string& object_name)
+void MainWindow::thread_load_from_repository(const std::tuple<int, std::string>& object)
 {
         ASSERT(std::this_thread::get_id() == m_window_thread_id);
 
@@ -253,16 +258,16 @@ void MainWindow::thread_load_from_repository(const std::string& object_name)
                 return;
         }
 
-        if (object_name.size() == 0)
+        if (std::get<1>(object).size() == 0)
         {
                 m_event_emitter.message_error("Empty repository object name");
                 return;
         }
 
         m_threads.start_thread(ThreadAction::LoadObject, [=](ProgressRatioList* progress_list, std::string* message) {
-                *message = "Load " + object_name;
+                *message = "Load " + to_string(std::get<0>(object)) + "-space " + std::get<1>(object);
 
-                m_objects.load_from_repository(progress_list, object_name, m_bound_cocone_rho, m_bound_cocone_alpha);
+                m_objects->load_from_repository(progress_list, object, m_bound_cocone_rho, m_bound_cocone_alpha);
         });
 }
 
@@ -298,7 +303,7 @@ void MainWindow::thread_export(const std::string& name, int id)
                 return;
         }
 
-        if (!m_objects.object_exists(id))
+        if (!m_objects->object_exists(id))
         {
                 m_event_emitter.message_warning("No object to export");
                 return;
@@ -322,7 +327,7 @@ void MainWindow::thread_export(const std::string& name, int id)
         m_threads.start_thread(ThreadAction::ExportObject, [=](ProgressRatioList*, std::string* message) {
                 *message = "Export " + name + " to " + file_name;
 
-                m_objects.save_to_file(id, file_name, name);
+                m_objects->save_to_file(id, file_name, name);
                 m_event_emitter.message_information(name + " exported to file " + file_name);
         });
 }
@@ -337,9 +342,9 @@ void MainWindow::thread_reload_bound_cocone()
                 return;
         }
 
-        if (!m_objects.surface_constructor_exists())
+        if (!m_objects->manifold_constructor_exists())
         {
-                m_event_emitter.message_warning("No surface constructor");
+                m_event_emitter.message_warning("No manifold constructor");
                 return;
         }
 
@@ -354,7 +359,7 @@ void MainWindow::thread_reload_bound_cocone()
         m_threads.start_thread(ThreadAction::ReloadBoundCocone, [=](ProgressRatioList* progress_list, std::string* message) {
                 *message = "BOUND COCONE reconstruction";
 
-                m_objects.bound_cocone(progress_list, rho, alpha);
+                m_objects->compute_bound_cocone(progress_list, rho, alpha);
         });
 }
 
@@ -676,7 +681,7 @@ void MainWindow::slot_window_first_shown()
                                      ambient_light(), diffuse_light(), specular_light(), dft_brightness(), default_ns(),
                                      ui.checkBox_VerticalSync->isChecked(), shadow_zoom());
 
-                m_objects.set_show(m_show.get());
+                m_objects->set_show(m_show.get());
         }
         catch (std::exception& e)
         {
@@ -708,7 +713,7 @@ void MainWindow::slot_object_repository()
                 m_event_emitter.message_error("Open object sender not found in map");
                 return;
         }
-        if (iter->second.size() == 0)
+        if (std::get<1>(iter->second).size() == 0)
         {
                 m_event_emitter.message_error("Empty repository object name");
                 return;
@@ -981,7 +986,7 @@ void MainWindow::on_pushButton_Painter_clicked()
                 return;
         }
 
-        if (!m_objects.mesh_exists(id))
+        if (!m_objects->mesh_exists(id))
         {
                 m_event_emitter.message_warning("No object to paint");
                 return;
@@ -1013,7 +1018,7 @@ void MainWindow::on_pushButton_Painter_clicked()
                 info_all.default_color = qcolor_to_rgb(m_default_color);
                 info_all.diffuse = diffuse_light();
 
-                m_objects.paint(id, info_3d, info_nd, info_all);
+                m_objects->paint(id, info_3d, info_nd, info_all);
 
         });
 }

@@ -18,85 +18,34 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "event_emitter.h"
-#include "meshes.h"
 #include "paintings.h"
 
-#include "com/mat.h"
-#include "geometry/cocone/reconstruction.h"
-#include "geometry/objects/points.h"
-#include "obj/obj.h"
-#include "path_tracing/shapes/mesh.h"
 #include "progress/progress_list.h"
 #include "show/show.h"
 
 #include <memory>
-#include <mutex>
-#include <thread>
+#include <string>
+#include <vector>
 
-class MainObjects
+struct MainObjects
 {
-        enum class ObjectType
-        {
-                Model,
-                Cocone,
-                BoundCocone
-        };
+        virtual ~MainObjects() = default;
 
-        const std::thread::id m_thread_id = std::this_thread::get_id();
-        const int m_mesh_object_threads;
-        const std::unique_ptr<IObjectRepository<3>> m_object_repository;
-        const WindowEventEmitter& m_event_emitter;
-        const int m_point_count;
+        virtual std::vector<std::tuple<int, std::vector<std::string>>> list_of_repository_point_objects() const = 0;
 
-        Meshes<int, const Mesh<3, double>> m_meshes;
-        Meshes<int, const Obj<3>> m_objects;
-        std::mutex m_mesh_sequential_mutex;
-        mat4 m_model_vertex_matrix;
+        virtual void set_show(IShow* show) = 0;
 
-        double m_bound_cocone_rho;
-        double m_bound_cocone_alpha;
+        virtual bool manifold_constructor_exists() const = 0;
+        virtual bool object_exists(int id) const = 0;
+        virtual bool mesh_exists(int id) const = 0;
 
-        std::vector<vec3f> m_surface_points;
-        std::unique_ptr<IManifoldConstructor<3>> m_surface_constructor;
-
-        IShow* m_show;
-
-        template <typename F>
-        void catch_all(const F& function) const noexcept;
-
-        static std::string object_name(ObjectType object_type);
-        static int object_identifier(ObjectType object_type);
-        static int convex_hull_identifier(ObjectType object_type);
-
-        void mst(ProgressRatioList* progress_list);
-        void mesh(ProgressRatioList* progress_list, int id, const Obj<3>& obj);
-        void add_object_and_convex_hull(ProgressRatioList* progress_list, ObjectType object_type,
-                                        const std::shared_ptr<const Obj<3>>& obj);
-        void object_and_mesh(ProgressRatioList* progress_list, ObjectType object_type, const std::shared_ptr<const Obj<3>>& obj);
-        void surface_constructor(ProgressRatioList* progress_list, double rho, double alpha);
-        void cocone(ProgressRatioList* progress_list);
-
-        void load_object(ProgressRatioList* progress_list, const std::string& object_name,
-                         const std::shared_ptr<const Obj<3>>& obj, double rho, double alpha);
-
-public:
-        MainObjects(int mesh_object_threads, const WindowEventEmitter& emitter, int point_count);
-
-        std::vector<std::string> list_of_repository_point_objects() const;
-
-        void set_show(IShow* show);
-
-        bool surface_constructor_exists() const;
-        bool object_exists(int id) const;
-        bool mesh_exists(int id) const;
-
-        void bound_cocone(ProgressRatioList* progress_list, double rho, double alpha);
-
-        void load_from_file(ProgressRatioList* progress_list, const std::string& file_name, double rho, double alpha);
-        void load_from_repository(ProgressRatioList* progress_list, const std::string& object_name, double rho, double alpha);
-
-        void save_to_file(int id, const std::string& file_name, const std::string& name);
-
-        void paint(int id, const PaintingInformation3d& info_3d, const PaintingInformationNd& info_nd,
-                   const PaintingInformationAll& info_all);
+        virtual void compute_bound_cocone(ProgressRatioList* progress_list, double rho, double alpha) = 0;
+        virtual void load_from_file(ProgressRatioList* progress_list, const std::string& file_name, double rho, double alpha) = 0;
+        virtual void load_from_repository(ProgressRatioList* progress_list, const std::tuple<int, std::string>& object,
+                                          double rho, double alpha) = 0;
+        virtual void save_to_file(int id, const std::string& file_name, const std::string& name) const = 0;
+        virtual void paint(int id, const PaintingInformation3d& info_3d, const PaintingInformationNd& info_nd,
+                           const PaintingInformationAll& info_all) const = 0;
 };
+
+std::unique_ptr<MainObjects> create_main_objects(int mesh_object_threads, const WindowEventEmitter& emitter, int point_count);

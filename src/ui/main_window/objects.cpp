@@ -19,62 +19,170 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "catch.h"
 #include "identifiers.h"
+#include "meshes.h"
 
 #include "com/error.h"
 #include "com/log.h"
+#include "com/mat.h"
 #include "com/time.h"
+#include "com/variant.h"
+#include "geometry/cocone/reconstruction.h"
 #include "geometry/graph/mst.h"
+#include "geometry/objects/points.h"
+#include "obj/obj.h"
 #include "obj/obj_alg.h"
 #include "obj/obj_convex_hull.h"
 #include "obj/obj_facets.h"
+#include "obj/obj_file.h"
 #include "obj/obj_file_load.h"
 #include "obj/obj_file_save.h"
 #include "obj/obj_lines.h"
 #include "obj/obj_points.h"
+#include "path_tracing/shapes/mesh.h"
 #include "progress/progress.h"
 
-MainObjects::MainObjects(int mesh_object_threads, const WindowEventEmitter& emitter, int point_count)
+#include <mutex>
+#include <thread>
+#include <unordered_map>
+
+constexpr int MinDimension = 3;
+constexpr int MaxDimension = 5;
+
+template <size_t N>
+class MainObjectsImpl
+{
+        static_assert(N >= 3);
+
+        enum class ObjectType
+        {
+                Model,
+                Cocone,
+                BoundCocone
+        };
+
+        const std::thread::id m_thread_id = std::this_thread::get_id();
+        const int m_mesh_object_threads;
+
+        const WindowEventEmitter& m_event_emitter;
+        const int m_point_count;
+
+        //
+
+        const std::unique_ptr<IObjectRepository<N>> m_object_repository;
+        Meshes<int, const Mesh<N, double>> m_meshes;
+        Meshes<int, const Obj<N>> m_objects;
+        std::vector<Vector<N, float>> m_manifold_points;
+        std::unique_ptr<IManifoldConstructor<N>> m_manifold_constructor;
+        Matrix<N + 1, N + 1, double> m_model_vertex_matrix;
+
+        //
+
+        std::mutex m_mesh_sequential_mutex;
+
+        double m_bound_cocone_rho;
+        double m_bound_cocone_alpha;
+
+        IShow* m_show;
+
+        template <typename F>
+        void catch_all(const F& function) const noexcept;
+
+        static std::string object_name(ObjectType object_type);
+        static int object_identifier(ObjectType object_type);
+        static int convex_hull_identifier(ObjectType object_type);
+
+        void build_mst(ProgressRatioList* progress_list);
+        void build_mesh(ProgressRatioList* progress_list, int id, const Obj<N>& obj);
+        void add_object_and_convex_hull(ProgressRatioList* progress_list, ObjectType object_type,
+                                        const std::shared_ptr<const Obj<N>>& obj);
+        void object_and_mesh(ProgressRatioList* progress_list, ObjectType object_type, const std::shared_ptr<const Obj<N>>& obj);
+        void manifold_constructor(ProgressRatioList* progress_list, double rho, double alpha);
+        void cocone(ProgressRatioList* progress_list);
+        void bound_cocone(ProgressRatioList* progress_list, double rho, double alpha);
+
+        template <typename ObjectLoaded>
+        void load_object(ProgressRatioList* progress_list, const std::string& object_name,
+                         const std::shared_ptr<const Obj<N>>& obj, double rho, double alpha, const ObjectLoaded& object_loaded);
+
+public:
+        MainObjectsImpl(int mesh_object_threads, const WindowEventEmitter& emitter, int point_count);
+
+        void clear_all_data() noexcept;
+
+        std::vector<std::string> list_of_repository_point_objects() const;
+
+        void set_show(IShow* show);
+
+        bool manifold_constructor_exists() const;
+        bool object_exists(int id) const;
+        bool mesh_exists(int id) const;
+
+        void compute_bound_cocone(ProgressRatioList* progress_list, double rho, double alpha);
+
+        template <typename ObjectLoaded>
+        void load_from_file(ProgressRatioList* progress_list, const std::string& file_name, double rho, double alpha,
+                            const ObjectLoaded& object_loaded);
+
+        template <typename ObjectLoaded>
+        void load_from_repository(ProgressRatioList* progress_list, const std::string& object_name, double rho, double alpha,
+                                  const ObjectLoaded& object_loaded);
+
+        void save_to_file(int id, const std::string& file_name, const std::string& name) const;
+        void paint(int id, const PaintingInformation3d& info_3d, const PaintingInformationNd& info_nd,
+                   const PaintingInformationAll& info_all) const;
+};
+
+template <size_t N>
+MainObjectsImpl<N>::MainObjectsImpl(int mesh_object_threads, const WindowEventEmitter& emitter, int point_count)
         : m_mesh_object_threads(mesh_object_threads),
-          m_object_repository(create_object_repository<3>()),
           m_event_emitter(emitter),
-          m_point_count(point_count)
+          m_point_count(point_count),
+          m_object_repository(create_object_repository<N>()),
+          m_show(nullptr)
 {
 }
 
+template <size_t N>
 template <typename F>
-void MainObjects::catch_all(const F& function) const noexcept
+void MainObjectsImpl<N>::catch_all(const F& function) const noexcept
 {
         static_assert(noexcept(catch_all_exceptions(m_event_emitter, function)));
 
         catch_all_exceptions(m_event_emitter, function);
 }
 
-std::vector<std::string> MainObjects::list_of_repository_point_objects() const
+template <size_t N>
+std::vector<std::string> MainObjectsImpl<N>::list_of_repository_point_objects() const
 {
         return m_object_repository->list_of_point_objects();
 }
 
-void MainObjects::set_show(IShow* show)
+template <size_t N>
+void MainObjectsImpl<N>::set_show(IShow* show)
 {
         m_show = show;
 }
 
-bool MainObjects::object_exists(int id) const
+template <size_t N>
+bool MainObjectsImpl<N>::object_exists(int id) const
 {
         return m_objects.get(id) != nullptr;
 }
 
-bool MainObjects::mesh_exists(int id) const
+template <size_t N>
+bool MainObjectsImpl<N>::mesh_exists(int id) const
 {
         return m_meshes.get(id) != nullptr;
 }
 
-bool MainObjects::surface_constructor_exists() const
+template <size_t N>
+bool MainObjectsImpl<N>::manifold_constructor_exists() const
 {
-        return m_surface_constructor.get() != nullptr;
+        return m_manifold_constructor.get() != nullptr;
 }
 
-std::string MainObjects::object_name(ObjectType object_type)
+template <size_t N>
+std::string MainObjectsImpl<N>::object_name(ObjectType object_type)
 {
         switch (object_type)
         {
@@ -88,7 +196,8 @@ std::string MainObjects::object_name(ObjectType object_type)
         error_fatal("Unknown object type");
 }
 
-int MainObjects::object_identifier(ObjectType object_type)
+template <size_t N>
+int MainObjectsImpl<N>::object_identifier(ObjectType object_type)
 {
         switch (object_type)
         {
@@ -102,7 +211,8 @@ int MainObjects::object_identifier(ObjectType object_type)
         error_fatal("Unknown object type");
 }
 
-int MainObjects::convex_hull_identifier(ObjectType object_type)
+template <size_t N>
+int MainObjectsImpl<N>::convex_hull_identifier(ObjectType object_type)
 {
         switch (object_type)
         {
@@ -116,7 +226,8 @@ int MainObjects::convex_hull_identifier(ObjectType object_type)
         error_fatal("Unknown object type");
 }
 
-void MainObjects::mesh(ProgressRatioList* progress_list, int id, const Obj<3>& obj)
+template <size_t N>
+void MainObjectsImpl<N>::build_mesh(ProgressRatioList* progress_list, int id, const Obj<N>& obj)
 {
         ASSERT(std::this_thread::get_id() != m_thread_id);
 
@@ -129,11 +240,12 @@ void MainObjects::mesh(ProgressRatioList* progress_list, int id, const Obj<3>& o
 
         ProgressRatio progress(progress_list);
 
-        m_meshes.set(id, std::make_shared<const Mesh<3, double>>(&obj, m_model_vertex_matrix, m_mesh_object_threads, &progress));
+        m_meshes.set(id, std::make_shared<const Mesh<N, double>>(&obj, m_model_vertex_matrix, m_mesh_object_threads, &progress));
 }
 
-void MainObjects::add_object_and_convex_hull(ProgressRatioList* progress_list, ObjectType object_type,
-                                             const std::shared_ptr<const Obj<3>>& obj)
+template <size_t N>
+void MainObjectsImpl<N>::add_object_and_convex_hull(ProgressRatioList* progress_list, ObjectType object_type,
+                                                    const std::shared_ptr<const Obj<N>>& obj)
 {
         ASSERT(std::this_thread::get_id() != m_thread_id);
 
@@ -143,14 +255,17 @@ void MainObjects::add_object_and_convex_hull(ProgressRatioList* progress_list, O
         }
 
         int object_id = object_identifier(object_type);
-        m_show->add_object(obj, object_id, OBJECT_MODEL);
+        if constexpr (N == 3)
+        {
+                m_show->add_object(obj, object_id, OBJECT_MODEL);
+        }
         m_objects.set(object_id, obj);
 
-        std::shared_ptr<const Obj<3>> convex_hull;
+        std::shared_ptr<const Obj<N>> convex_hull;
 
         {
                 ProgressRatio progress(progress_list);
-                progress.set_text(object_name(object_type) + " convex hull 3D: %v of %m");
+                progress.set_text(object_name(object_type) + " convex hull " + to_string(N) + "D: %v of %m");
 
                 convex_hull = create_convex_hull_for_obj(obj.get(), &progress);
         }
@@ -158,15 +273,19 @@ void MainObjects::add_object_and_convex_hull(ProgressRatioList* progress_list, O
         if (convex_hull->facets().size() > 0)
         {
                 int convex_hull_id = convex_hull_identifier(object_type);
-                m_show->add_object(convex_hull, convex_hull_id, OBJECT_MODEL);
+                if constexpr (N == 3)
+                {
+                        m_show->add_object(convex_hull, convex_hull_id, OBJECT_MODEL);
+                }
                 m_objects.set(convex_hull_id, convex_hull);
         }
 
-        mesh(progress_list, convex_hull_identifier(object_type), *convex_hull);
+        build_mesh(progress_list, convex_hull_identifier(object_type), *convex_hull);
 }
 
-void MainObjects::object_and_mesh(ProgressRatioList* progress_list, ObjectType object_type,
-                                  const std::shared_ptr<const Obj<3>>& obj)
+template <size_t N>
+void MainObjectsImpl<N>::object_and_mesh(ProgressRatioList* progress_list, ObjectType object_type,
+                                         const std::shared_ptr<const Obj<N>>& obj)
 {
         ASSERT(std::this_thread::get_id() != m_thread_id);
 
@@ -182,7 +301,7 @@ void MainObjects::object_and_mesh(ProgressRatioList* progress_list, ObjectType o
                 catch_all([&](std::string* message) {
                         *message = object_name(object_type) + " mesh";
 
-                        mesh(progress_list, object_identifier(object_type), *obj);
+                        build_mesh(progress_list, object_identifier(object_type), *obj);
                 });
         });
 
@@ -190,56 +309,66 @@ void MainObjects::object_and_mesh(ProgressRatioList* progress_list, ObjectType o
         thread_mesh.join();
 }
 
-void MainObjects::cocone(ProgressRatioList* progress_list)
+template <size_t N>
+void MainObjectsImpl<N>::cocone(ProgressRatioList* progress_list)
 {
         ASSERT(std::this_thread::get_id() != m_thread_id);
 
-        std::shared_ptr<const Obj<3>> obj_cocone;
+        std::shared_ptr<const Obj<N>> obj_cocone;
 
         {
                 ProgressRatio progress(progress_list);
 
                 double start_time = time_in_seconds();
 
-                std::vector<vec<3>> normals;
-                std::vector<std::array<int, 3>> facets;
+                std::vector<vec<N>> normals;
+                std::vector<std::array<int, N>> facets;
 
-                m_surface_constructor->cocone(&normals, &facets, &progress);
+                m_manifold_constructor->cocone(&normals, &facets, &progress);
 
-                obj_cocone = create_obj_for_facets(m_surface_points, normals, facets);
+                obj_cocone = create_obj_for_facets(m_manifold_points, normals, facets);
 
-                LOG("Surface reconstruction second phase, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
+                LOG("Manifold reconstruction second phase, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
         }
 
         object_and_mesh(progress_list, ObjectType::Cocone, obj_cocone);
 }
 
-void MainObjects::bound_cocone(ProgressRatioList* progress_list, double rho, double alpha)
+template <size_t N>
+void MainObjectsImpl<N>::bound_cocone(ProgressRatioList* progress_list, double rho, double alpha)
 {
         ASSERT(std::this_thread::get_id() != m_thread_id);
 
-        std::shared_ptr<const Obj<3>> obj_bound_cocone;
+        if (!m_manifold_constructor)
+        {
+                error("No manifold constructor");
+        }
+
+        std::shared_ptr<const Obj<N>> obj_bound_cocone;
 
         {
                 ProgressRatio progress(progress_list);
 
                 double start_time = time_in_seconds();
 
-                std::vector<vec<3>> normals;
-                std::vector<std::array<int, 3>> facets;
+                std::vector<vec<N>> normals;
+                std::vector<std::array<int, N>> facets;
 
-                m_surface_constructor->bound_cocone(rho, alpha, &normals, &facets, &progress);
+                m_manifold_constructor->bound_cocone(rho, alpha, &normals, &facets, &progress);
 
-                obj_bound_cocone = create_obj_for_facets(m_surface_points, normals, facets);
+                obj_bound_cocone = create_obj_for_facets(m_manifold_points, normals, facets);
 
                 m_bound_cocone_rho = rho;
                 m_bound_cocone_alpha = alpha;
 
-                LOG("Surface reconstruction second phase, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
+                LOG("Manifold reconstruction second phase, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
         }
 
-        m_show->delete_object(OBJECT_BOUND_COCONE);
-        m_show->delete_object(OBJECT_BOUND_COCONE_CONVEX_HULL);
+        if constexpr (N == 3)
+        {
+                m_show->delete_object(OBJECT_BOUND_COCONE);
+                m_show->delete_object(OBJECT_BOUND_COCONE_CONVEX_HULL);
+        }
 
         m_meshes.reset(OBJECT_BOUND_COCONE);
         m_meshes.reset(OBJECT_BOUND_COCONE_CONVEX_HULL);
@@ -251,7 +380,8 @@ void MainObjects::bound_cocone(ProgressRatioList* progress_list, double rho, dou
         object_and_mesh(progress_list, ObjectType::BoundCocone, obj_bound_cocone);
 }
 
-void MainObjects::mst(ProgressRatioList* progress_list)
+template <size_t N>
+void MainObjectsImpl<N>::build_mst(ProgressRatioList* progress_list)
 {
         ASSERT(std::this_thread::get_id() != m_thread_id);
 
@@ -260,19 +390,23 @@ void MainObjects::mst(ProgressRatioList* progress_list)
         {
                 ProgressRatio progress(progress_list);
 
-                mst_lines = minimum_spanning_tree(m_surface_points, m_surface_constructor->delaunay_objects(), &progress);
+                mst_lines = minimum_spanning_tree(m_manifold_points, m_manifold_constructor->delaunay_objects(), &progress);
         }
 
-        std::shared_ptr<const Obj<3>> mst_obj = create_obj_for_lines(m_surface_points, mst_lines);
+        std::shared_ptr<const Obj<N>> mst_obj = create_obj_for_lines(m_manifold_points, mst_lines);
 
         if (mst_obj->lines().size() > 0)
         {
-                m_show->add_object(mst_obj, OBJECT_MODEL_MST, OBJECT_MODEL);
+                if constexpr (N == 3)
+                {
+                        m_show->add_object(mst_obj, OBJECT_MODEL_MST, OBJECT_MODEL);
+                }
                 m_objects.set(OBJECT_MODEL_MST, mst_obj);
         }
 }
 
-void MainObjects::surface_constructor(ProgressRatioList* progress_list, double rho, double alpha)
+template <size_t N>
+void MainObjectsImpl<N>::manifold_constructor(ProgressRatioList* progress_list, double rho, double alpha)
 {
         ASSERT(std::this_thread::get_id() != m_thread_id);
 
@@ -281,9 +415,9 @@ void MainObjects::surface_constructor(ProgressRatioList* progress_list, double r
 
                 double start_time = time_in_seconds();
 
-                m_surface_constructor = create_manifold_constructor(m_surface_points, &progress);
+                m_manifold_constructor = create_manifold_constructor(m_manifold_points, &progress);
 
-                LOG("Surface reconstruction first phase, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
+                LOG("Manifold reconstruction first phase, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
         }
 
         std::thread thread_cocone([&]() noexcept {
@@ -304,9 +438,9 @@ void MainObjects::surface_constructor(ProgressRatioList* progress_list, double r
 
         std::thread thread_mst([&]() noexcept {
                 catch_all([&](std::string* message) {
-                        *message = "Minimum spanning tree 3D";
+                        *message = "Minimum spanning tree " + to_string(N) + "D";
 
-                        mst(progress_list);
+                        build_mst(progress_list);
                 });
         });
 
@@ -315,8 +449,27 @@ void MainObjects::surface_constructor(ProgressRatioList* progress_list, double r
         thread_mst.join();
 }
 
-void MainObjects::load_object(ProgressRatioList* progress_list, const std::string& object_name,
-                              const std::shared_ptr<const Obj<3>>& obj, double rho, double alpha)
+template <size_t N>
+void MainObjectsImpl<N>::clear_all_data() noexcept
+{
+        ASSERT(std::this_thread::get_id() != m_thread_id);
+
+        if constexpr (N == 3)
+        {
+                m_show->delete_all_objects();
+        }
+        m_manifold_constructor.reset();
+        m_meshes.reset_all();
+        m_objects.reset_all();
+        m_manifold_points.clear();
+        m_manifold_points.shrink_to_fit();
+}
+
+template <size_t N>
+template <typename ObjectLoaded>
+void MainObjectsImpl<N>::load_object(ProgressRatioList* progress_list, const std::string& object_name,
+                                     const std::shared_ptr<const Obj<N>>& obj, double rho, double alpha,
+                                     const ObjectLoaded& object_loaded)
 {
         ASSERT(std::this_thread::get_id() != m_thread_id);
 
@@ -330,17 +483,22 @@ void MainObjects::load_object(ProgressRatioList* progress_list, const std::strin
                 error("Facets and points together in one object are not supported");
         }
 
-        m_show->delete_all_objects();
-
-        m_surface_constructor.reset();
-        m_meshes.reset_all();
-        m_objects.reset_all();
+        // Вызов object_loaded() предназначен для вызовов
+        // clear_all_data() для всех объектов всех измерений
+        object_loaded();
 
         m_event_emitter.file_loaded(object_name);
 
-        m_surface_points = (obj->facets().size() > 0) ? unique_facet_vertices(obj.get()) : unique_point_vertices(obj.get());
+        m_manifold_points = (obj->facets().size() > 0) ? unique_facet_vertices(obj.get()) : unique_point_vertices(obj.get());
 
-        m_model_vertex_matrix = model_vertex_matrix(obj.get(), m_show->object_size(), m_show->object_position());
+        if constexpr (N == 3)
+        {
+                m_model_vertex_matrix = model_vertex_matrix(obj.get(), m_show->object_size(), m_show->object_position());
+        }
+        else
+        {
+                m_model_vertex_matrix = Matrix<N + 1, N + 1, double>(1);
+        }
 
         std::thread thread_model([&]() noexcept {
                 catch_all([&](std::string* message) {
@@ -350,39 +508,51 @@ void MainObjects::load_object(ProgressRatioList* progress_list, const std::strin
                 });
         });
 
-        std::thread thread_surface([&]() noexcept {
+        std::thread thread_manifold([&]() noexcept {
                 catch_all([&](std::string* message) {
-                        *message = "Surface constructor";
+                        *message = "Manifold constructor";
 
-                        surface_constructor(progress_list, rho, alpha);
+                        manifold_constructor(progress_list, rho, alpha);
                 });
         });
 
         thread_model.join();
-        thread_surface.join();
+        thread_manifold.join();
 }
 
-void MainObjects::load_from_file(ProgressRatioList* progress_list, const std::string& file_name, double rho, double alpha)
+template <size_t N>
+void MainObjectsImpl<N>::compute_bound_cocone(ProgressRatioList* progress_list, double rho, double alpha)
+{
+        bound_cocone(progress_list, rho, alpha);
+}
+
+template <size_t N>
+template <typename ObjectLoaded>
+void MainObjectsImpl<N>::load_from_file(ProgressRatioList* progress_list, const std::string& file_name, double rho, double alpha,
+                                        const ObjectLoaded& object_loaded)
 {
         ASSERT(std::this_thread::get_id() != m_thread_id);
 
-        std::shared_ptr<Obj<3>> obj;
+        std::shared_ptr<const Obj<N>> obj;
 
         {
                 ProgressRatio progress(progress_list);
 
                 progress.set_text("Load file: %p%");
-                obj = load_obj_from_file<3>(file_name, &progress);
+                obj = load_obj_from_file<N>(file_name, &progress);
         }
 
-        load_object(progress_list, file_name, obj, rho, alpha);
+        load_object(progress_list, file_name, obj, rho, alpha, object_loaded);
 }
 
-void MainObjects::load_from_repository(ProgressRatioList* progress_list, const std::string& object_name, double rho, double alpha)
+template <size_t N>
+template <typename ObjectLoaded>
+void MainObjectsImpl<N>::load_from_repository(ProgressRatioList* progress_list, const std::string& object_name, double rho,
+                                              double alpha, const ObjectLoaded& object_loaded)
 {
         ASSERT(std::this_thread::get_id() != m_thread_id);
 
-        std::shared_ptr<Obj<3>> obj;
+        std::shared_ptr<const Obj<N>> obj;
 
         {
                 ProgressRatio progress(progress_list);
@@ -391,14 +561,15 @@ void MainObjects::load_from_repository(ProgressRatioList* progress_list, const s
                 obj = create_obj_for_points(m_object_repository->point_object(object_name, m_point_count));
         }
 
-        load_object(progress_list, object_name, obj, rho, alpha);
+        load_object(progress_list, object_name, obj, rho, alpha, object_loaded);
 }
 
-void MainObjects::save_to_file(int id, const std::string& file_name, const std::string& name)
+template <size_t N>
+void MainObjectsImpl<N>::save_to_file(int id, const std::string& file_name, const std::string& name) const
 {
         ASSERT(std::this_thread::get_id() != m_thread_id);
 
-        std::shared_ptr<const Obj<3>> obj = m_objects.get(id);
+        std::shared_ptr<const Obj<N>> obj = m_objects.get(id);
 
         if (!obj)
         {
@@ -409,12 +580,13 @@ void MainObjects::save_to_file(int id, const std::string& file_name, const std::
         save_obj_geometry_to_file(obj.get(), file_name, name);
 }
 
-void MainObjects::paint(int id, const PaintingInformation3d& info_3d, const PaintingInformationNd& info_nd,
-                        const PaintingInformationAll& info_all)
+template <size_t N>
+void MainObjectsImpl<N>::paint(int id, const PaintingInformation3d& info_3d, const PaintingInformationNd& info_nd,
+                               const PaintingInformationAll& info_all) const
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
-        std::shared_ptr<const Mesh<3, double>> mesh = m_meshes.get(id);
+        std::shared_ptr<const Mesh<N, double>> mesh = m_meshes.get(id);
 
         if (!mesh)
         {
@@ -422,7 +594,7 @@ void MainObjects::paint(int id, const PaintingInformation3d& info_3d, const Pain
                 return;
         }
 
-        if constexpr ((true))
+        if constexpr (N == 3)
         {
                 painting(mesh, info_3d, info_all);
         }
@@ -430,4 +602,261 @@ void MainObjects::paint(int id, const PaintingInformation3d& info_3d, const Pain
         {
                 painting(mesh, info_nd, info_all);
         }
+}
+
+//
+
+template <int Min, int Max>
+class MainObjectStorage final : public MainObjects
+{
+        static_assert(Min >= 3 && Min <= Max);
+
+        static constexpr size_t Count = Max - Min + 1;
+
+        //
+        // Каждый элемент контейнера это variant с типами <T<Min, T2...>, T<Min + 1, T2...>, ...>.
+        // По каждому номеру I от Min до Max хранится map[I] = T<I, T2...>.
+        // Например, имеется тип Type и числа Min = 3, Max = 5.
+        // Тип данных контейнера
+        //      variant<Type<3>, Type<4>, Type<5>>
+        // Элементы контейнера
+        //      map[3] = Type<3>
+        //      map[4] = Type<4>
+        //      map[5] = Type<5>
+        //
+
+        // Объекты поддерживаются только у одного измерения. При загрузке
+        // объекта одного измерения все объекты других измерений удаляются.
+
+        template <template <size_t, typename...> typename T, typename... T2>
+        using Map = std::unordered_map<int, SequenceVariant<Min, Max, T, T2...>>;
+
+        Map<MainObjectsImpl> m_objects;
+
+        void clear_all_data() noexcept
+        {
+                for (auto& p : m_objects)
+                {
+                        visit([&](auto& v) noexcept { v.clear_all_data(); }, p.second);
+                }
+        }
+
+        void check_dimension(int dimension)
+        {
+                if (dimension < Min || dimension > Max)
+                {
+                        error("Error repository object dimension " + to_string(dimension) + ", min = " + to_string(Min) +
+                              ", max = " + to_string(Max));
+                }
+        }
+
+        std::vector<std::tuple<int, std::vector<std::string>>> list_of_repository_point_objects() const override
+        {
+                // Количество измерений, названия объектов
+                std::vector<std::tuple<int, std::vector<std::string>>> list;
+
+                for (const auto& p : m_objects)
+                {
+                        visit([&](const auto& v) { list.push_back({p.first, v.list_of_repository_point_objects()}); }, p.second);
+                }
+
+                std::sort(list.begin(), list.end(),
+                          [](const std::tuple<int, std::vector<std::string>>& a,
+                             const std::tuple<int, std::vector<std::string>>& b) { return std::get<0>(a) < std::get<0>(b); });
+
+                return list;
+        }
+
+        void set_show(IShow* show) override
+        {
+                for (auto& p : m_objects)
+                {
+                        visit([&](auto& v) { v.set_show(show); }, p.second);
+                }
+        }
+
+        bool manifold_constructor_exists() const override
+        {
+                int count = 0;
+                for (const auto& p : m_objects)
+                {
+                        visit([&](const auto& v) { count += v.manifold_constructor_exists() ? 1 : 0; }, p.second);
+                }
+                if (count > 1)
+                {
+                        error("Too many manifold constructors " + to_string(count));
+                }
+                return count > 0;
+        }
+
+        bool object_exists(int id) const override
+        {
+                int count = 0;
+                for (const auto& p : m_objects)
+                {
+                        visit([&](const auto& v) { count += v.object_exists(id) ? 1 : 0; }, p.second);
+                }
+                if (count > 1)
+                {
+                        error("Too many objects " + to_string(count));
+                }
+                return count > 0;
+        }
+
+        bool mesh_exists(int id) const override
+        {
+                int count = 0;
+                for (const auto& p : m_objects)
+                {
+                        visit([&](const auto& v) { count += v.mesh_exists(id) ? 1 : 0; }, p.second);
+                }
+                if (count > 1)
+                {
+                        error("Too many meshes " + to_string(count));
+                }
+                return count > 0;
+        }
+
+        void compute_bound_cocone(ProgressRatioList* progress_list, double rho, double alpha) override
+        {
+                if (!manifold_constructor_exists())
+                {
+                        error("No manifold constructor");
+                }
+                int count = 0;
+                for (auto& p : m_objects)
+                {
+                        visit(
+                                [&](auto& v) {
+                                        if (v.manifold_constructor_exists())
+                                        {
+                                                if (count == 0)
+                                                {
+                                                        v.compute_bound_cocone(progress_list, rho, alpha);
+                                                }
+                                                ++count;
+                                        }
+                                },
+                                p.second);
+                }
+                if (count != 1)
+                {
+                        error("Error manifold constructor count " + to_string(count));
+                }
+        }
+
+        void load_from_file(ProgressRatioList* progress_list, const std::string& file_name, double rho, double alpha) override
+        {
+                int dimension = std::get<0>(obj_file_dimension_and_type(file_name));
+
+                check_dimension(dimension);
+
+                auto& repository = m_objects.at(dimension);
+
+                auto clear_f = [&]() noexcept
+                {
+                        clear_all_data();
+                };
+                visit([&](auto& v) { v.load_from_file(progress_list, file_name, rho, alpha, clear_f); }, repository);
+        }
+
+        void load_from_repository(ProgressRatioList* progress_list, const std::tuple<int, std::string>& object, double rho,
+                                  double alpha) override
+        {
+                size_t dimension = std::get<0>(object);
+
+                check_dimension(dimension);
+
+                auto& repository = m_objects.at(dimension);
+
+                auto clear_f = [&]() noexcept
+                {
+                        clear_all_data();
+                };
+                visit([&](auto& v) { v.load_from_repository(progress_list, std::get<1>(object), rho, alpha, clear_f); },
+                      repository);
+        }
+
+        void save_to_file(int id, const std::string& file_name, const std::string& name) const override
+        {
+                if (!object_exists(id))
+                {
+                        error("No object");
+                }
+                int count = 0;
+                for (const auto& p : m_objects)
+                {
+                        visit(
+                                [&](const auto& v) {
+                                        if (v.object_exists(id))
+                                        {
+                                                if (count == 0)
+                                                {
+                                                        v.save_to_file(id, file_name, name);
+                                                }
+                                                ++count;
+                                        }
+                                },
+                                p.second);
+                }
+                if (count != 1)
+                {
+                        error("Error object count " + to_string(count));
+                }
+        }
+
+        void paint(int id, const PaintingInformation3d& info_3d, const PaintingInformationNd& info_nd,
+                   const PaintingInformationAll& info_all) const override
+        {
+                if (!mesh_exists(id))
+                {
+                        error("No mesh");
+                }
+                int count = 0;
+                for (const auto& p : m_objects)
+                {
+                        visit(
+                                [&](const auto& v) {
+                                        if (v.mesh_exists(id))
+                                        {
+                                                if (count == 0)
+                                                {
+                                                        v.paint(id, info_3d, info_nd, info_all);
+                                                }
+                                                ++count;
+                                        }
+                                },
+                                p.second);
+                }
+                if (count != 1)
+                {
+                        error("Error mesh count " + to_string(count));
+                }
+        }
+
+        template <size_t... I>
+        void init_map(int mesh_object_threads, const WindowEventEmitter& emitter, int point_count,
+                      std::integer_sequence<size_t, I...>&&)
+        {
+                static_assert(((I >= 0 && I < sizeof...(I)) && ...));
+                static_assert(Min + sizeof...(I) == Max + 1);
+
+                (m_objects.try_emplace(Min + I, std::in_place_type_t<MainObjectsImpl<Min + I>>(), mesh_object_threads, emitter,
+                                       point_count),
+                 ...);
+
+                ASSERT((m_objects.count(Min + I) == 1) && ...);
+                ASSERT(m_objects.size() == Count);
+        }
+
+public:
+        MainObjectStorage(int mesh_object_threads, const WindowEventEmitter& emitter, int point_count)
+        {
+                init_map(mesh_object_threads, emitter, point_count, std::make_integer_sequence<size_t, Count>());
+        }
+};
+
+std::unique_ptr<MainObjects> create_main_objects(int mesh_object_threads, const WindowEventEmitter& emitter, int point_count)
+{
+        return std::make_unique<MainObjectStorage<MinDimension, MaxDimension>>(mesh_object_threads, emitter, point_count);
 }
