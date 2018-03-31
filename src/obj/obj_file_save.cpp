@@ -31,6 +31,7 @@ constexpr const char OBJ_comment_and_space[] = "# ";
 constexpr const char OBJ_v[] = "v";
 constexpr const char OBJ_vn[] = "vn";
 constexpr const char OBJ_f[] = "f";
+constexpr const char OBJ_l[] = "l";
 
 namespace
 {
@@ -119,20 +120,41 @@ void write_face(const CFile& file, const std::array<int, N>& vertices, const std
         fprintf(file, "\n");
 }
 
-// Запись вершин с приведением координат вершин граней к интервалу [-1, 1] с сохранением пропорций
+void write_line(const CFile& file, const std::array<int, 2>& vertices)
+{
+        fprintf(file, "%s", OBJ_l);
+        for (unsigned i = 0; i < 2; ++i)
+        {
+                // В файлах OBJ номера начинаются с 1
+                long v = vertices[i] + 1;
+                fprintf(file, " %ld", v);
+        }
+        fprintf(file, "\n");
+}
+
+// Запись вершин с приведением координат вершин к интервалу [-1, 1] с сохранением пропорций
 template <size_t N>
 void write_vertices(const CFile& file, const Obj<N>* obj)
 {
-        std::vector<int> indices = unique_facet_indices(obj);
+        std::vector<int> facet_indices = unique_facet_indices(obj);
+        std::vector<int> line_indices = unique_line_indices(obj);
 
-        if (indices.size() < N)
+        if (facet_indices.empty() && line_indices.empty())
         {
-                error("Facet unique indices count " + to_string(indices.size()) + " is less than " + to_string(N));
+                error("Facet and line unique indices are not found");
+        }
+        if (facet_indices.size() > 0 && facet_indices.size() < N)
+        {
+                error("Facet unique indices count " + to_string(facet_indices.size()) + " is less than " + to_string(N));
+        }
+        if (line_indices.size() > 0 && line_indices.size() < 2)
+        {
+                error("Line unique indices count " + to_string(line_indices.size()) + " is less than " + to_string(2));
         }
 
         Vector<N, float> min, max;
 
-        min_max_coordinates(obj->vertices(), indices, &min, &max);
+        std::tie(min, max) = min_max_coordinates(obj->vertices(), facet_indices, line_indices);
 
         Vector<N, float> delta = max - min;
 
@@ -174,7 +196,7 @@ void write_normals(const CFile& file, const Obj<N>* obj)
 }
 
 template <size_t N>
-void write_faces(const CFile& file, const Obj<N>* obj)
+void write_facets(const CFile& file, const Obj<N>* obj)
 {
         // Вершины граней надо записывать в трёхмерный OBJ таким образом,
         // чтобы при обходе против часовой стрелки перпендикуляр к грани
@@ -221,6 +243,15 @@ void write_faces(const CFile& file, const Obj<N>* obj)
         }
 }
 
+template <size_t N>
+void write_lines(const CFile& file, const Obj<N>* obj)
+{
+        for (const typename Obj<N>::Line& l : obj->lines())
+        {
+                write_line(file, l.vertices);
+        }
+}
+
 std::string obj_type_name(size_t N)
 {
         return "OBJ-" + to_string(N);
@@ -251,9 +282,9 @@ std::string save_obj_geometry_to_file(const Obj<N>* obj, const std::string& file
 {
         static_assert(N >= 3);
 
-        if (obj->facets().empty())
+        if (obj->facets().empty() && obj->lines().empty())
         {
-                error("Object doesn't have facets");
+                error("Object has neither facets nor lines");
         }
 
         std::string full_name = file_name_with_extension<N>(file_name);
@@ -265,7 +296,8 @@ std::string save_obj_geometry_to_file(const Obj<N>* obj, const std::string& file
         write_comment(file, comment);
         write_vertices(file, obj);
         write_normals(file, obj);
-        write_faces(file, obj);
+        write_facets(file, obj);
+        write_lines(file, obj);
 
         LOG(obj_type_name(N) + " saved, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
 

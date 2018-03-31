@@ -318,24 +318,40 @@ void center_and_length(const std::vector<Vector<N, T>>& vertices, const std::vec
         std::tie(*center, *length) = ObjAlgImplementation::center_and_length_for_min_max(min, max);
 }
 
-template <size_t N, typename T>
-void min_max_coordinates(const std::vector<Vector<N, T>>& vertices, const std::vector<int>& indices, Vector<N, T>* min,
-                         Vector<N, T>* max)
+template <size_t N, typename T, typename... Indices>
+std::tuple<Vector<N, T>, Vector<N, T>> min_max_coordinates(const std::vector<Vector<N, T>>& vertices, const Indices&... indices)
 {
+        static_assert((std::is_same_v<Indices, std::vector<int>> && ...));
+        static_assert(sizeof...(Indices) > 0);
+
+        if ((indices.empty() && ...))
+        {
+                error("No indices");
+        }
+
+        std::array<const std::vector<int>*, sizeof...(Indices)> pointers{{&indices...}};
+
         int vertex_count = vertices.size();
 
-        ObjAlgImplementation::initial_min_max(min, max);
+        Vector<N, T> min, max;
 
-        for (int index : indices)
+        ObjAlgImplementation::initial_min_max(&min, &max);
+
+        for (const std::vector<int>* ptr : pointers)
         {
-                if (index < 0 || index >= vertex_count)
+                for (int index : *ptr)
                 {
-                        error("Vertex index out of bounds");
-                }
+                        if (index < 0 || index >= vertex_count)
+                        {
+                                error("Vertex index out of bounds");
+                        }
 
-                *min = min_vector(*min, vertices[index]);
-                *max = max_vector(*max, vertices[index]);
+                        min = min_vector(min, vertices[index]);
+                        max = max_vector(max, vertices[index]);
+                }
         }
+
+        return {min, max};
 }
 
 template <size_t N>
