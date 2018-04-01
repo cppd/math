@@ -74,7 +74,8 @@ public:
         struct file_loaded final
         {
                 const std::string file_name;
-                file_loaded(const std::string& file_name_) : file_name(file_name_)
+                const unsigned dimension;
+                file_loaded(const std::string& file_name_, unsigned dimension_) : file_name(file_name_), dimension(dimension_)
                 {
                 }
         };

@@ -18,6 +18,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "com/color/colors.h"
+#include "com/error.h"
+#include "com/type_detect.h"
 #include "com/vec.h"
 #include "window/window_prop.h"
 
@@ -45,6 +47,61 @@ void create_and_show_delete_on_close_window(Args&&... args)
                 delete window;
                 throw;
         }
+}
+
+template <typename... T>
+QString file_filter(const std::string& name, const T&... extensions)
+{
+        static_assert(sizeof...(T) > 0);
+
+        if (name.empty())
+        {
+                error("No filter file name");
+        }
+
+        std::string filter;
+
+        filter += name + " (";
+
+        bool first = true;
+
+        auto add_string = [&](const std::string& ext) {
+                if (std::count(ext.cbegin(), ext.cend(), '*') > 0)
+                {
+                        error("Character * in file filter extension " + ext);
+                }
+                if (!first)
+                {
+                        filter += " ";
+                }
+                first = false;
+                filter += "*." + ext;
+        };
+        auto add = [&](const auto& ext) {
+                if constexpr (HasBeginEnd<decltype(ext)> &&
+                              !std::is_same_v<char, std::remove_cv_t<std::remove_reference_t<decltype(*std::cbegin(ext))>>>)
+                {
+                        for (const std::string& e : ext)
+                        {
+                                add_string(e);
+                        }
+                }
+                else
+                {
+                        add_string(ext);
+                }
+        };
+
+        (add(extensions), ...);
+
+        if (first)
+        {
+                error("No file filter extensions");
+        }
+
+        filter += ")";
+
+        return filter.c_str();
 }
 
 enum class TextEditMessageType

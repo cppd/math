@@ -39,6 +39,10 @@ struct MainObjects
         virtual bool object_exists(int id) const = 0;
         virtual bool mesh_exists(int id) const = 0;
 
+        virtual std::string obj_extension(unsigned dimension) const = 0;
+        virtual std::vector<std::string> obj_extensions() const = 0;
+        virtual std::vector<std::string> txt_extensions() const = 0;
+
         virtual void compute_bound_cocone(ProgressRatioList* progress_list, double rho, double alpha) = 0;
         virtual void load_from_file(ProgressRatioList* progress_list, const std::string& file_name, double rho, double alpha) = 0;
         virtual void load_from_repository(ProgressRatioList* progress_list, const std::tuple<int, std::string>& object,

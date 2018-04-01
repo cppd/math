@@ -81,9 +81,9 @@ public:
                 emit_message<WindowEvent::object_loaded>("Exception in emit object loaded", id);
         }
 
-        void file_loaded(const std::string& msg) const noexcept
+        void file_loaded(const std::string& msg, unsigned dimension) const noexcept
         {
-                emit_message<WindowEvent::file_loaded>("Exception in emit file loaded", msg);
+                emit_message<WindowEvent::file_loaded>("Exception in emit file loaded", msg, dimension);
         }
 
         void bound_cocone_loaded(double rho, double alpha) const noexcept

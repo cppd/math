@@ -17,8 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <set>
 #include <string>
 #include <tuple>
+#include <vector>
 
 enum class ObjFileType
 {
@@ -28,5 +30,8 @@ enum class ObjFileType
 
 std::tuple<int, ObjFileType> obj_file_dimension_and_type(const std::string& file_name);
 
-std::string obj_file_name_extension(size_t N);
-bool obj_file_name_extension_is_correct(size_t N, const std::string& e);
+std::string obj_file_extension(size_t N);
+bool obj_file_extension_is_correct(size_t N, const std::string& e);
+
+std::vector<std::string> obj_file_supported_extensions(const std::set<unsigned>& dimensions);
+std::vector<std::string> txt_file_supported_extensions(const std::set<unsigned>& dimensions);

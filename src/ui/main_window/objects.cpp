@@ -487,7 +487,7 @@ void MainObjectsImpl<N>::load_object(ProgressRatioList* progress_list, const std
         // clear_all_data() для всех объектов всех измерений
         object_loaded();
 
-        m_event_emitter.file_loaded(object_name);
+        m_event_emitter.file_loaded(object_name, N);
 
         m_manifold_points = (obj->facets().size() > 0) ? unique_facet_vertices(obj.get()) : unique_point_vertices(obj.get());
 
@@ -832,6 +832,31 @@ class MainObjectStorage final : public MainObjects
                 {
                         error("Error mesh count " + to_string(count));
                 }
+        }
+
+        std::string obj_extension(unsigned dimension) const override
+        {
+                return obj_file_extension(dimension);
+        }
+
+        std::vector<std::string> obj_extensions() const override
+        {
+                std::set<unsigned> dimensions;
+                for (unsigned n = Min; n <= Max; ++n)
+                {
+                        dimensions.insert(n);
+                }
+                return obj_file_supported_extensions(dimensions);
+        }
+
+        std::vector<std::string> txt_extensions() const override
+        {
+                std::set<unsigned> dimensions;
+                for (unsigned n = Min; n <= Max; ++n)
+                {
+                        dimensions.insert(n);
+                }
+                return txt_file_supported_extensions(dimensions);
         }
 
         template <size_t... I>

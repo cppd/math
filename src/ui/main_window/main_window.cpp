@@ -32,8 +32,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/file/file_sys.h"
 #include "com/log.h"
 #include "com/print.h"
-#include "obj/obj_file_save.h"
-#include "path_tracing/shapes/mesh.h"
 
 #include <QDesktopWidget>
 #include <QFileDialog>
@@ -86,7 +84,8 @@ MainWindow::MainWindow(QWidget* parent)
           m_threads(m_event_emitter),
           m_objects(create_main_objects(std::max(1, hardware_concurrency() - MESH_OBJECT_NOT_USED_THREAD_COUNT), m_event_emitter,
                                         POINT_COUNT)),
-          m_first_show(true)
+          m_first_show(true),
+          m_dimension(0)
 {
         static_assert(std::is_same_v<decltype(ui.graphics_widget), GraphicsWidget*>);
 
@@ -229,22 +228,30 @@ void MainWindow::thread_load_from_file(std::string file_name)
                 return;
         }
 
-        if (file_name.size() == 0)
-        {
-                QString q_file_name = QFileDialog::getOpenFileName(this, "Open", "", "OBJ and Point files (*.obj *.txt)", nullptr,
-                                                                   QFileDialog::ReadOnly | QFileDialog::DontUseNativeDialog);
-                if (q_file_name.size() == 0)
+        catch_all([&](std::string* msg) {
+                *msg = "Open file";
+
+                if (file_name.size() == 0)
                 {
-                        return;
+                        QString caption = "Open";
+                        QString filter =
+                                file_filter("OBJ and Point files", m_objects->obj_extensions(), m_objects->txt_extensions());
+                        QFileDialog::Options options = QFileDialog::ReadOnly | QFileDialog::DontUseNativeDialog;
+
+                        QString q_file_name = QFileDialog::getOpenFileName(this, caption, "", filter, nullptr, options);
+                        if (q_file_name.size() == 0)
+                        {
+                                return;
+                        }
+
+                        file_name = q_file_name.toStdString();
                 }
 
-                file_name = q_file_name.toStdString();
-        }
+                m_threads.start_thread(ThreadAction::LoadObject, [=](ProgressRatioList* progress_list, std::string* message) {
+                        *message = "Load " + file_name;
 
-        m_threads.start_thread(ThreadAction::LoadObject, [=](ProgressRatioList* progress_list, std::string* message) {
-                *message = "Load " + file_name;
-
-                m_objects->load_from_file(progress_list, file_name, m_bound_cocone_rho, m_bound_cocone_alpha);
+                        m_objects->load_from_file(progress_list, file_name, m_bound_cocone_rho, m_bound_cocone_alpha);
+                });
         });
 }
 
@@ -315,20 +322,33 @@ void MainWindow::thread_export(const std::string& name, int id)
                 return;
         }
 
-        QString qt_file_name = QFileDialog::getSaveFileName(this, "Export " + QString(name.c_str()) + " to OBJ", "",
-                                                            "OBJ files (*.obj)", nullptr, QFileDialog::DontUseNativeDialog);
-        if (qt_file_name.size() == 0)
+        if (m_dimension < 3)
         {
+                m_event_emitter.message_error("No dimension information");
                 return;
         }
 
-        std::string file_name = qt_file_name.toStdString();
+        catch_all([&](std::string* msg) {
+                *msg = "Export to file";
 
-        m_threads.start_thread(ThreadAction::ExportObject, [=](ProgressRatioList*, std::string* message) {
-                *message = "Export " + name + " to " + file_name;
+                QString caption = "Export " + QString(name.c_str()) + " to OBJ";
+                QString filter = file_filter("OBJ files", m_objects->obj_extension(m_dimension));
+                QFileDialog::Options options = QFileDialog::DontUseNativeDialog;
 
-                m_objects->save_to_file(id, file_name, name);
-                m_event_emitter.message_information(name + " exported to file " + file_name);
+                QString qt_file_name = QFileDialog::getSaveFileName(this, caption, "", filter, nullptr, options);
+                if (qt_file_name.size() == 0)
+                {
+                        return;
+                }
+
+                std::string file_name = qt_file_name.toStdString();
+
+                m_threads.start_thread(ThreadAction::ExportObject, [=](ProgressRatioList*, std::string* message) {
+                        *message = "Export " + name + " to " + file_name;
+
+                        m_objects->save_to_file(id, file_name, name);
+                        m_event_emitter.message_information(name + " exported to file " + file_name);
+                });
         });
 }
 
@@ -621,9 +641,10 @@ void MainWindow::slot_window_event(const WindowEvent& event)
                 const WindowEvent::file_loaded& d = event.get<WindowEvent::file_loaded>();
 
                 std::string file_name = file_base_name(d.file_name);
-                set_window_title_file(file_name);
+                set_window_title_file(file_name + " [" + to_string(d.dimension) + "-space]");
                 strike_out_all_objects_buttons();
                 ui.radioButton_Model->setChecked(true);
+                m_dimension = d.dimension;
 
                 break;
         }

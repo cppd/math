@@ -100,7 +100,7 @@ void painting(const std::shared_ptr<const Mesh<N, T>>& mesh, const PaintingInfor
         std::string title = info_all.window_title + " (" + info_all.model_name + ")";
 
         create_and_show_delete_on_close_window<PainterWindow<N, T>>(
-                info_all.window_title, thread_count, samples_per_pixel,
+                title, thread_count, samples_per_pixel,
                 one_object_scene(info_all.background_color, info_all.default_color, info_all.diffuse, min_size, max_size, mesh));
 }
 

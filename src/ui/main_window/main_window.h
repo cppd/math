@@ -161,4 +161,6 @@ private:
 
         double m_bound_cocone_rho;
         double m_bound_cocone_alpha;
+
+        unsigned m_dimension;
 };

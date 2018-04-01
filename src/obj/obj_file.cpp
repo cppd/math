@@ -198,12 +198,43 @@ std::tuple<int, ObjFileType> obj_file_dimension_and_type(const std::string& file
         return {dimension, obj_file_type};
 }
 
-std::string obj_file_name_extension(size_t N)
+std::string obj_file_extension(size_t N)
 {
         return (N == 3) ? "obj" : "obj" + to_string(N);
 }
 
-bool obj_file_name_extension_is_correct(size_t N, const std::string& extension)
+std::vector<std::string> obj_file_supported_extensions(const std::set<unsigned>& dimensions)
 {
-        return (extension == obj_file_name_extension(N)) || (extension == "obj" + to_string(N));
+        std::vector<std::string> result;
+        for (unsigned d : dimensions)
+        {
+                ASSERT(d >= 3);
+                if (d == 3)
+                {
+                        result.emplace_back("obj");
+                        result.emplace_back("obj3");
+                }
+                else
+                {
+                        result.push_back("obj" + to_string(d));
+                };
+        }
+        return result;
+}
+
+std::vector<std::string> txt_file_supported_extensions(const std::set<unsigned>& dimensions)
+{
+        std::vector<std::string> result;
+        result.emplace_back("txt");
+        for (unsigned d : dimensions)
+        {
+                ASSERT(d >= 3);
+                result.push_back("txt" + to_string(d));
+        }
+        return result;
+}
+
+bool obj_file_extension_is_correct(size_t N, const std::string& extension)
+{
+        return (extension == obj_file_extension(N)) || (extension == "obj" + to_string(N));
 }

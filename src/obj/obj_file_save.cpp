@@ -264,7 +264,7 @@ std::string file_name_with_extension(const std::string& file_name)
 
         if (e.size() > 0)
         {
-                if (!obj_file_name_extension_is_correct(N, e))
+                if (!obj_file_extension_is_correct(N, e))
                 {
                         error("Wrong " + obj_type_name(N) + " file name extension: " + e);
                 }
@@ -273,7 +273,7 @@ std::string file_name_with_extension(const std::string& file_name)
         }
 
         // Если имя заканчивается на точку, то пусть будет 2 точки подряд
-        return file_name + "." + obj_file_name_extension(N);
+        return file_name + "." + obj_file_extension(N);
 }
 }
 
