@@ -25,7 +25,8 @@ struct SrgbInteger
 {
         unsigned char red, green, blue;
 
-        SrgbInteger(unsigned char red_, unsigned char green_, unsigned char blue_) : red(red_), green(green_), blue(blue_)
+        constexpr SrgbInteger(unsigned char red_, unsigned char green_, unsigned char blue_)
+                : red(red_), green(green_), blue(blue_)
         {
         }
 };
