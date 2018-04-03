@@ -139,3 +139,15 @@ inline Color operator*(const Color& a, const Color& b)
 {
         return Color(a.data() * b.data());
 }
+
+namespace srgb
+{
+inline constexpr SrgbInteger BLACK(0, 0, 0);
+inline constexpr SrgbInteger BLUE(0, 0, 255);
+inline constexpr SrgbInteger CYAN(0, 255, 255);
+inline constexpr SrgbInteger GREEN(0, 255, 0);
+inline constexpr SrgbInteger MAGENTA(255, 0, 255);
+inline constexpr SrgbInteger RED(255, 0, 0);
+inline constexpr SrgbInteger WHITE(255, 255, 255);
+inline constexpr SrgbInteger YELLOW(255, 255, 0);
+}

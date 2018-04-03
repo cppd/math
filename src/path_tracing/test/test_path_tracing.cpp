@@ -31,6 +31,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "ui/painter_window/painter_window.h"
 #include "ui/support/support.h"
 
+constexpr SrgbInteger BACKGROUND_COLOR(50, 100, 150);
+constexpr SrgbInteger DEFAULT_COLOR(150, 170, 150);
+
 namespace
 {
 class Images : public IPainterNotifier<3>
@@ -176,12 +179,10 @@ template <PathTracingTestOutputType type, size_t N, typename T>
 void test_path_tracing(const std::shared_ptr<const Mesh<N, T>>& mesh, int min_screen_size, int max_screen_size,
                        int samples_per_pixel, int thread_count)
 {
-        Color background_color = Color(SrgbInteger(50, 100, 150));
-        Color default_color = Color(SrgbInteger(150, 170, 150));
         Color::DataType diffuse = 1;
 
         std::unique_ptr<const PaintObjects<N, T>> paint_objects =
-                one_object_scene(background_color, default_color, diffuse, min_screen_size, max_screen_size, mesh);
+                one_object_scene(BACKGROUND_COLOR, DEFAULT_COLOR, diffuse, min_screen_size, max_screen_size, mesh);
 
         static_assert(type == PathTracingTestOutputType::File || type == PathTracingTestOutputType::Window);
 
