@@ -43,7 +43,7 @@ int tree_max_depth()
         case 4:
                 return 8;
         case 5:
-                return 7;
+                return 6;
         case 6:
                 return 5;
         default:
