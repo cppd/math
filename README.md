@@ -11,7 +11,7 @@ This program
 * Writes reconstructed surfaces to OBJ files.
 * Uses multithreading extensively.
 
-### Algorithms
+## Algorithms
 
 Subject                                        | Algorithm                                                | Space                          | Implementation     | Language
 -----------------------------------------------|----------------------------------------------------------|--------------------------------|--------------------|---------
@@ -28,7 +28,7 @@ Realistic visualization                        | Path tracing                   
 
 Various other algorithms.
 
-### Technical details
+## Technical details
 
 * Supported operating systems: Linux, Windows.
 * Programming languages: C++17, GLSL 4.50.
@@ -36,9 +36,27 @@ Various other algorithms.
 * Libraries: FreeType, GMP, OpenGL 4.5, Qt 5, SFML, XLib.
 * Build system: CMake.
 
-### Screenshots
+## Screenshots
 
-Points in 3D and the surface reconstructed from the points
+### 4-manifold reconstruction and path tracing in 5-space
+
+2D slices of a 4D image of the 4-manifold reconstructed from the points on the 4-sphere with a hollow.
+
+* 5-space.
+* 4-simplex mesh without boundary.
+* 32-tree.
+* 5-parallelotopes.
+* Point light source.
+* Parallel projection onto 4D screen.
+
+![manifold](https://i.imgur.com/j1kUkGQ.png)
+![manifold](https://i.imgur.com/A8hpwM7.png)
+![manifold](https://i.imgur.com/rRXVL80.png)
+![manifold](https://i.imgur.com/bimmCBL.png)
+![manifold](https://i.imgur.com/7fEn0iy.png)
+![manifold](https://i.imgur.com/m5FVGza.png)
+
+### Points in 3D and the surface reconstructed from the points
 
 ![points](https://i.imgur.com/TS6ct8G.png)
 ![reconstructed surface](https://i.imgur.com/4AU5rTu.png)
