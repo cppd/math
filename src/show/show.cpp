@@ -42,6 +42,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "window/window.h"
 
 #include <SFML/Window/Event.hpp>
+#include <chrono>
 #include <cmath>
 #include <thread>
 #include <unordered_map>
@@ -50,6 +51,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 constexpr double ZOOM_BASE = 1.1;
 constexpr double ZOOM_EXP_MIN = -50;
 constexpr double ZOOM_EXP_MAX = 100;
+
+constexpr std::chrono::milliseconds IDLE_MODE_FRAME_DURATION(100);
 
 constexpr double PI_DIV_180 = PI<double> / 180;
 constexpr double to_radians(double angle)
@@ -449,6 +452,8 @@ void ShowObject::loop()
         Text text;
 
         double start_time = time_in_seconds();
+
+        std::chrono::steady_clock::time_point last_frame_time = std::chrono::steady_clock::now();
 
         while (true)
         {
@@ -893,8 +898,14 @@ void ShowObject::loop()
                 glEnable(GL_DEPTH_TEST);
                 glDisable(GL_BLEND);
 
-                // Если pencil_effect_active, то рисование в цветной буфер
-                renderer->draw(pencil_effect_active);
+                // Параметр true означает рисование в цветной буфер,
+                // параметр false означает рисование в буфер экрана.
+                // Если возвращает false, то нет объекта для рисования.
+                if (!renderer->draw(pencil_effect_active))
+                {
+                        std::this_thread::sleep_until(last_frame_time + IDLE_MODE_FRAME_DURATION);
+                        last_frame_time = std::chrono::steady_clock::now();
+                }
 
                 //
 

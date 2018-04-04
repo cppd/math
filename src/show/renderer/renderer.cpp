@@ -561,7 +561,7 @@ class Renderer final : public IRenderer
                 main_program.set_uniform("camera_direction", to_vector<float>(dir));
         }
 
-        void draw(bool draw_to_buffer) override
+        bool draw(bool draw_to_buffer) override
         {
                 const DrawObject* draw_object = m_draw_objects.object();
                 const DrawObject* draw_scale_object = m_draw_objects.scale_object();
@@ -576,7 +576,7 @@ class Renderer final : public IRenderer
                                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
                                 m_color_buffer->unbind_buffer();
                         }
-                        return;
+                        return false;
                 }
 
                 draw_object->bind();
@@ -630,6 +630,8 @@ class Renderer final : public IRenderer
                 {
                         m_color_buffer->unbind_buffer();
                 }
+
+                return true;
         }
 
         void free_buffers() override

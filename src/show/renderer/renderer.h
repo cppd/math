@@ -46,7 +46,7 @@ struct IRenderer
         virtual void set_light_direction(vec3 dir) = 0;
         virtual void set_camera_direction(vec3 dir) = 0;
 
-        virtual void draw(bool draw_to_buffer) = 0;
+        virtual bool draw(bool draw_to_buffer) = 0;
 
         virtual void free_buffers() = 0;
         virtual void set_size(int width, int height) = 0;
