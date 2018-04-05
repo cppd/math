@@ -14,7 +14,7 @@ Internal Input
 * Rendered 2D images.
 
 Algorithms
-* A variety of mathematical algorithms (see details below).
+* A variety of mathematical algorithms (section [“Algorithms”](#algorithms)).
 
 Output
 * 2D images with the output of
@@ -26,28 +26,40 @@ Output
 
 ## Algorithms
 
-Subject                                        | Algorithm                                                | Space                          | Implementation     | Language
------------------------------------------------|----------------------------------------------------------|--------------------------------|--------------------|---------
-Discrete Fourier transform for arbitrary sizes | Bluestein's algorithm and radix-2 fast Fourier transform | 2 dimensions                   | Parallel           | GLSL
-Optical flow                                   | Pyramidal Lucas-Kanade                                   | 2 dimensions                   | Parallel           | GLSL
-Convex hull                                    | Divide et impera                                         | 2 dimensions                   | Parallel           | GLSL
-Convex hull                                    | Randomized incremental                                   | Arbitrary number of dimensions | Partially parallel | C++
-Delaunay triangulation                         | Convex hull of paraboloid                                | Arbitrary number of dimensions | Sequential         | C++
-Voronoi diagram                                | Convex hull of paraboloid                                | Arbitrary number of dimensions | Sequential         | C++
-Manifold reconstruction                        | Cocone                                                   | Arbitrary number of dimensions | Sequential         | C++
-Manifold reconstruction                        | BoundCocone                                              | Arbitrary number of dimensions | Sequential         | C++
-Ray intersection acceleration                  | Spatial subdivision and 2<sup>d</sup>-trees              | Arbitrary number of dimensions | Parallel           | C++
-Realistic visualization                        | Path tracing                                             | Arbitrary number of dimensions | Parallel           | C++
+These are some of the implemented algorithms. There are various other algorithms.
 
-Various other algorithms.
+### Algorithms in 2-space
+
+Subject                                         | Algorithm                                                | Implementation | Language
+------------------------------------------------|----------------------------------------------------------|----------------|---------
+Discrete Fourier transform for arbitrary sizes  | Bluestein's algorithm and radix-2 fast Fourier transform | Parallel       | GLSL
+Optical flow                                    | Pyramidal Lucas-Kanade                                   | Parallel       | GLSL
+Convex hull                                     | Divide et impera                                         | Parallel       | GLSL
+
+### Algorithms in spaces with arbitrary number of dimensions
+
+Subject                                         | Algorithm                                          | Implementation     | Language
+------------------------------------------------|----------------------------------------------------|--------------------|---------
+Convex hull                                     | Randomized incremental                             | Partially parallel | C++
+Delaunay triangulation                          | Convex hull of paraboloid                          | Sequential         | C++
+Voronoi diagram                                 | The Delaunay triangulation                         | Sequential         | C++
+Manifold reconstruction                         | Cocone                                             | Sequential         | C++
+Manifold reconstruction with boundary detection | BoundCocone                                        | Sequential         | C++
+Euclidean minimum spanning tree                 | Kruskal’s algorithm and the Delaunay triangulation | Sequential         | C++
+Solution to a system of linear equations        | Gaussian elimination                               | Sequential         | C++
+Intersection of convex polytopes                | The simplex algorithm                              | Sequential         | C++
+Ray intersection acceleration                   | Spatial subdivision and 2<sup>d</sup>-trees        | Parallel           | C++
+Realistic visualization                         | Path tracing                                       | Parallel           | C++
 
 ## Technical details
 
-* Supported operating systems: Linux, Windows.
-* Programming languages: C++17, GLSL 4.50.
-* Supported C++ compilers: GCC 7, Clang 5.
-* Libraries: FreeType, GMP, OpenGL 4.5, Qt 5, SFML, XLib.
-* Build system: CMake.
+Property                    | Value
+----------------------------|---------------------------------------------
+Supported operating systems | Linux, Windows
+Programming languages       | C++17, GLSL 4.50
+Supported C++ compilers     | GCC 7, Clang 5
+Libraries                   | FreeType, GMP, OpenGL 4.5, Qt 5, SFML, XLib
+Build system                | CMake
 
 ## Screenshots
 
@@ -69,7 +81,7 @@ Various other algorithms.
 ![manifold](https://i.imgur.com/7fEn0iy.png)
 ![manifold](https://i.imgur.com/m5FVGza.png)
 
-### Points in 3D and the surface reconstructed from the points
+### Points in 3-space and the surface reconstructed from the points
 
 ![points](https://i.imgur.com/TS6ct8G.png)
 ![reconstructed surface](https://i.imgur.com/4AU5rTu.png)
