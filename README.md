@@ -2,14 +2,27 @@
 
 Just for fun with mathematics.
 
-This program
-* Reads OBJ files that contain vertices, normals, triangles and textures.
-  Reads text files that contain x, y and z coordinates of points, one point per line.
-* Shows 3D models on the screen with shadows, wireframes, rotation, scaling, et cetera.
-* Uses points, 3D models and their 2D images as the input data for a variety of mathematical
-  algorithms (see details below).
-* Writes reconstructed surfaces to OBJ files.
-* Uses multithreading extensively.
+## Description
+
+External Input
+* OBJ files (.obj) with vertices, normals, triangles and textures.
+* Extended OBJ files (.objn) with vertices, normals and (n-1)-simplices in n-space.
+* Text files with the coordinates of points in n-space, one point per line.
+
+Internal Input
+* Built-in objects.
+* Rendered 2D images.
+
+Algorithms
+* A variety of mathematical algorithms (see details below).
+
+Output
+* 2D images with the output of
+  * real-time rendering of 3-space objects,
+  * non-real-time rendering of n-space objects on the internal (n-1)-dimensional screen,
+  * algorithms in 2-space.
+* OBJ files with the output of algorithms in 3-space.
+* Extended OBJ files with the output of algorithms in n-space.
 
 ## Algorithms
 
