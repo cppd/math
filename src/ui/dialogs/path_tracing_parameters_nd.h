@@ -28,10 +28,9 @@ class PathTracingParametersForNd final : public QDialog
 public:
         explicit PathTracingParametersForNd(QWidget* parent = nullptr);
 
-        [[nodiscard]] bool show(const std::string& description, int max_thread_count, int default_screen_size,
-                                int min_screen_size, int max_screen_size, int default_samples_per_pixel,
-                                int max_samples_per_pixel, int* thread_count, int* min_size, int* max_size,
-                                int* samples_per_pixel);
+        [[nodiscard]] bool show(int dimension, int max_thread_count, int default_screen_size, int min_screen_size,
+                                int max_screen_size, int default_samples_per_pixel, int max_samples_per_pixel, int* thread_count,
+                                int* min_size, int* max_size, int* samples_per_pixel);
 
 private slots:
         void on_spinBox_min_size_valueChanged(int);

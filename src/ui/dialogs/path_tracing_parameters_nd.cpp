@@ -17,8 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "path_tracing_parameters_nd.h"
 
+#include "message_box.h"
+
+#include "com/error.h"
+#include "com/names.h"
 #include "com/print.h"
-#include "ui/dialogs/message_box.h"
 
 PathTracingParametersForNd::PathTracingParametersForNd(QWidget* parent) : QDialog(parent)
 {
@@ -26,17 +29,35 @@ PathTracingParametersForNd::PathTracingParametersForNd(QWidget* parent) : QDialo
         setWindowTitle("Path Tracing");
 }
 
-bool PathTracingParametersForNd::show(const std::string& description, int max_thread_count, int default_screen_size,
-                                      int min_screen_size, int max_screen_size, int default_samples_per_pixel,
-                                      int max_samples_per_pixel, int* thread_count, int* min_size, int* max_size,
-                                      int* samples_per_pixel)
+bool PathTracingParametersForNd::show(int dimension, int max_thread_count, int default_screen_size, int min_screen_size,
+                                      int max_screen_size, int default_samples_per_pixel, int max_samples_per_pixel,
+                                      int* thread_count, int* min_size, int* max_size, int* samples_per_pixel)
 {
+        if (!(dimension >= 4))
+        {
+                error("Error dimension parameter: " + to_string(dimension));
+        }
+        if (!(max_thread_count >= 1))
+        {
+                error("Error max thread count parameter: " + to_string(max_thread_count));
+        }
+        if (!(1 <= min_screen_size && min_screen_size <= default_screen_size && default_screen_size <= max_screen_size))
+        {
+                error("Error screen size parameters: min = " + to_string(min_screen_size) +
+                      ", max = " + to_string(max_screen_size) + ", default = " + to_string(default_screen_size));
+        }
+        if (!(1 <= default_samples_per_pixel && default_samples_per_pixel <= max_samples_per_pixel))
+        {
+                error("Error samples per pixel parameters: max = " + to_string(max_samples_per_pixel) +
+                      ", default = " + to_string(default_samples_per_pixel));
+        }
+
         m_max_thread_count = max_thread_count;
         m_min_screen_size = min_screen_size;
         m_max_screen_size = max_screen_size;
         m_max_samples_per_pixel = max_samples_per_pixel;
 
-        ui.label_description->setText(description.c_str());
+        ui.label_space->setText(space_name(dimension).c_str());
 
         ui.spinBox_threads->setMinimum(1);
         ui.spinBox_threads->setMaximum(max_thread_count);

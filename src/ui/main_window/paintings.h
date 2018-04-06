@@ -36,6 +36,7 @@ struct PaintingInformation3d
         double view_width;
         int paint_width;
         int paint_height;
+        int max_screen_size;
 };
 
 struct PaintingInformationNd

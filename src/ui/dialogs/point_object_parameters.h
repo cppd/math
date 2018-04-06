@@ -17,26 +17,26 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "ui_bound_cocone_parameters.h"
+#include "ui_point_object_parameters.h"
 
-class BoundCoconeParameters final : public QDialog
+#include <string>
+
+class PointObjectParameters final : public QDialog
 {
         Q_OBJECT
 
 public:
-        explicit BoundCoconeParameters(QWidget* parent = nullptr);
+        explicit PointObjectParameters(QWidget* parent = nullptr);
 
-        [[nodiscard]] bool show(int minimum_rho_exponent, int minimum_alpha_exponent, double* rho, double* alpha);
+        [[nodiscard]] bool show(int dimension, const std::string& point_object_name, int default_point_count, int min_point_count,
+                                int max_point_count, int* point_count);
 
 private:
-        Ui::BoundCoconeParameters ui;
+        int m_min_point_count;
+        int m_max_point_count;
+        int m_point_count;
 
-        double m_min_rho;
-        double m_max_rho;
-        double m_min_alpha;
-        double m_max_alpha;
-        double m_rho;
-        double m_alpha;
+        Ui::PointObjectParameters ui;
 
         void done(int r) override;
 };

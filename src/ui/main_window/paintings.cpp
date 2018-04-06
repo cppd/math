@@ -55,8 +55,9 @@ void painting(const std::shared_ptr<const Mesh<3, double>>& mesh, const Painting
         int width, height, thread_count, samples_per_pixel;
 
         if (!PathTracingParametersFor3d(info_all.parent_window)
-                     .show(hardware_concurrency(), info_3d.paint_width, info_3d.paint_height, info_all.default_samples_per_pixel,
-                           info_all.max_samples_per_pixel, &thread_count, &width, &height, &samples_per_pixel))
+                     .show(hardware_concurrency(), info_3d.paint_width, info_3d.paint_height, info_3d.max_screen_size,
+                           info_all.default_samples_per_pixel, info_all.max_samples_per_pixel, &thread_count, &width, &height,
+                           &samples_per_pixel))
         {
                 return;
         }
@@ -90,9 +91,9 @@ void painting(const std::shared_ptr<const Mesh<N, T>>& mesh, const PaintingInfor
         int min_size, max_size, thread_count, samples_per_pixel;
 
         if (!PathTracingParametersForNd(info_all.parent_window)
-                     .show(to_string(N) + "-space", hardware_concurrency(), info_nd.default_screen_size,
-                           info_nd.minimum_screen_size, info_nd.maximum_screen_size, info_all.default_samples_per_pixel,
-                           info_all.max_samples_per_pixel, &thread_count, &min_size, &max_size, &samples_per_pixel))
+                     .show(N, hardware_concurrency(), info_nd.default_screen_size, info_nd.minimum_screen_size,
+                           info_nd.maximum_screen_size, info_all.default_samples_per_pixel, info_all.max_samples_per_pixel,
+                           &thread_count, &min_size, &max_size, &samples_per_pixel))
         {
                 return;
         }

@@ -26,16 +26,23 @@ class PathTracingParametersFor3d final : public QDialog
 public:
         explicit PathTracingParametersFor3d(QWidget* parent = nullptr);
 
-        [[nodiscard]] bool show(int max_thread_count, int width, int height, int default_samples_per_pixel,
+        [[nodiscard]] bool show(int max_thread_count, int width, int height, int max_screen_size, int default_samples_per_pixel,
                                 int max_samples_per_pixel, int* thread_count, int* paint_width, int* paint_height,
                                 int* samples_per_pixel);
 
 private slots:
-        void on_doubleSpinBox_image_size_valueChanged(double);
+
+        void width_value_changed(int);
+        void height_value_changed(int);
 
 private:
         int m_width;
         int m_height;
+        int m_min_width;
+        int m_max_width;
+        int m_min_height;
+        int m_max_height;
+        double m_aspect_ratio;
         int m_max_thread_count;
         int m_max_samples_per_pixel;
 

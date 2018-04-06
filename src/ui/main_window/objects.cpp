@@ -61,10 +61,9 @@ class MainObjectsImpl
         };
 
         const std::thread::id m_thread_id = std::this_thread::get_id();
-        const int m_mesh_object_threads;
+        const int m_mesh_threads;
 
         const WindowEventEmitter& m_event_emitter;
-        const int m_point_count;
 
         //
 
@@ -105,7 +104,7 @@ class MainObjectsImpl
                          const std::shared_ptr<const Obj<N>>& obj, double rho, double alpha, const ObjectLoaded& object_loaded);
 
 public:
-        MainObjectsImpl(int mesh_object_threads, const WindowEventEmitter& emitter, int point_count);
+        MainObjectsImpl(int mesh_threads, const WindowEventEmitter& emitter);
 
         void clear_all_data() noexcept;
 
@@ -125,7 +124,7 @@ public:
 
         template <typename ObjectLoaded>
         void load_from_repository(ProgressRatioList* progress_list, const std::string& object_name, double rho, double alpha,
-                                  const ObjectLoaded& object_loaded);
+                                  int point_count, const ObjectLoaded& object_loaded);
 
         void save_to_file(int id, const std::string& file_name, const std::string& name) const;
         void paint(int id, const PaintingInformation3d& info_3d, const PaintingInformationNd& info_nd,
@@ -133,10 +132,9 @@ public:
 };
 
 template <size_t N>
-MainObjectsImpl<N>::MainObjectsImpl(int mesh_object_threads, const WindowEventEmitter& emitter, int point_count)
-        : m_mesh_object_threads(mesh_object_threads),
+MainObjectsImpl<N>::MainObjectsImpl(int mesh_threads, const WindowEventEmitter& emitter)
+        : m_mesh_threads(mesh_threads),
           m_event_emitter(emitter),
-          m_point_count(point_count),
           m_object_repository(create_object_repository<N>()),
           m_show(nullptr)
 {
@@ -240,7 +238,7 @@ void MainObjectsImpl<N>::build_mesh(ProgressRatioList* progress_list, int id, co
 
         ProgressRatio progress(progress_list);
 
-        m_meshes.set(id, std::make_shared<const Mesh<N, double>>(&obj, m_model_vertex_matrix, m_mesh_object_threads, &progress));
+        m_meshes.set(id, std::make_shared<const Mesh<N, double>>(&obj, m_model_vertex_matrix, m_mesh_threads, &progress));
 }
 
 template <size_t N>
@@ -548,7 +546,7 @@ void MainObjectsImpl<N>::load_from_file(ProgressRatioList* progress_list, const 
 template <size_t N>
 template <typename ObjectLoaded>
 void MainObjectsImpl<N>::load_from_repository(ProgressRatioList* progress_list, const std::string& object_name, double rho,
-                                              double alpha, const ObjectLoaded& object_loaded)
+                                              double alpha, int point_count, const ObjectLoaded& object_loaded)
 {
         ASSERT(std::this_thread::get_id() != m_thread_id);
 
@@ -558,7 +556,7 @@ void MainObjectsImpl<N>::load_from_repository(ProgressRatioList* progress_list, 
                 ProgressRatio progress(progress_list);
 
                 progress.set_text("Load object: %p%");
-                obj = create_obj_for_points(m_object_repository->point_object(object_name, m_point_count));
+                obj = create_obj_for_points(m_object_repository->point_object(object_name, point_count));
         }
 
         load_object(progress_list, object_name, obj, rho, alpha, object_loaded);
@@ -753,15 +751,15 @@ class MainObjectStorage final : public MainObjects
 
                 auto& repository = m_objects.at(dimension);
 
-                auto clear_f = [&]() noexcept
+                auto clear_function = [&]() noexcept
                 {
                         clear_all_data();
                 };
-                visit([&](auto& v) { v.load_from_file(progress_list, file_name, rho, alpha, clear_f); }, repository);
+                visit([&](auto& v) { v.load_from_file(progress_list, file_name, rho, alpha, clear_function); }, repository);
         }
 
         void load_from_repository(ProgressRatioList* progress_list, const std::tuple<int, std::string>& object, double rho,
-                                  double alpha) override
+                                  double alpha, int point_count) override
         {
                 size_t dimension = std::get<0>(object);
 
@@ -769,12 +767,16 @@ class MainObjectStorage final : public MainObjects
 
                 auto& repository = m_objects.at(dimension);
 
-                auto clear_f = [&]() noexcept
+                auto clear_function = [&]() noexcept
                 {
                         clear_all_data();
                 };
-                visit([&](auto& v) { v.load_from_repository(progress_list, std::get<1>(object), rho, alpha, clear_f); },
-                      repository);
+                visit(
+                        [&](auto& v) {
+                                v.load_from_repository(progress_list, std::get<1>(object), rho, alpha, point_count,
+                                                       clear_function);
+                        },
+                        repository);
         }
 
         void save_to_file(int id, const std::string& file_name, const std::string& name) const override
@@ -860,28 +862,25 @@ class MainObjectStorage final : public MainObjects
         }
 
         template <size_t... I>
-        void init_map(int mesh_object_threads, const WindowEventEmitter& emitter, int point_count,
-                      std::integer_sequence<size_t, I...>&&)
+        void init_map(int mesh_threads, const WindowEventEmitter& emitter, std::integer_sequence<size_t, I...>&&)
         {
                 static_assert(((I >= 0 && I < sizeof...(I)) && ...));
                 static_assert(Min + sizeof...(I) == Max + 1);
 
-                (m_objects.try_emplace(Min + I, std::in_place_type_t<MainObjectsImpl<Min + I>>(), mesh_object_threads, emitter,
-                                       point_count),
-                 ...);
+                (m_objects.try_emplace(Min + I, std::in_place_type_t<MainObjectsImpl<Min + I>>(), mesh_threads, emitter), ...);
 
                 ASSERT((m_objects.count(Min + I) == 1) && ...);
                 ASSERT(m_objects.size() == Count);
         }
 
 public:
-        MainObjectStorage(int mesh_object_threads, const WindowEventEmitter& emitter, int point_count)
+        MainObjectStorage(int mesh_threads, const WindowEventEmitter& emitter)
         {
-                init_map(mesh_object_threads, emitter, point_count, std::make_integer_sequence<size_t, Count>());
+                init_map(mesh_threads, emitter, std::make_integer_sequence<size_t, Count>());
         }
 };
 
-std::unique_ptr<MainObjects> create_main_objects(int mesh_object_threads, const WindowEventEmitter& emitter, int point_count)
+std::unique_ptr<MainObjects> create_main_objects(int mesh_threads, const WindowEventEmitter& emitter)
 {
-        return std::make_unique<MainObjectStorage<MinDimension, MaxDimension>>(mesh_object_threads, emitter, point_count);
+        return std::make_unique<MainObjectStorage<MinDimension, MaxDimension>>(mesh_threads, emitter);
 }

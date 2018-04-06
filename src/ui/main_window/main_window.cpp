@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "ui/dialogs/application_help.h"
 #include "ui/dialogs/bound_cocone_parameters.h"
 #include "ui/dialogs/message_box.h"
+#include "ui/dialogs/point_object_parameters.h"
 #include "ui/dialogs/source_error.h"
 #include "ui/support/support.h"
 
@@ -31,6 +32,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/error.h"
 #include "com/file/file_sys.h"
 #include "com/log.h"
+#include "com/names.h"
 #include "com/print.h"
 
 #include <QDesktopWidget>
@@ -44,15 +46,18 @@ constexpr bool WINDOW_SIZE_GRAPHICS = true;
 constexpr double DFT_MAX_BRIGHTNESS = 50000;
 constexpr double DFT_GAMMA = 0.5;
 
+constexpr int BOUND_COCONE_MINIMUM_RHO_EXPONENT = -3;
+constexpr int BOUND_COCONE_MINIMUM_ALPHA_EXPONENT = -3;
 constexpr double BOUND_COCONE_DEFAULT_RHO = 0.3;
 constexpr double BOUND_COCONE_DEFAULT_ALPHA = 0.14;
-constexpr int BOUND_COCONE_DISPLAY_DIGITS = 3;
 
 // Таймер отображения хода расчётов. Величина в миллисекундах.
 constexpr int TIMER_PROGRESS_BAR_INTERVAL = 100;
 
 // Количество точек для готовых объектов.
-constexpr int POINT_COUNT = 10000;
+constexpr int POINT_COUNT_MINIMUM = 100;
+constexpr int POINT_COUNT_DEFAULT = 10000;
+constexpr int POINT_COUNT_MAXIMUM = 1000000;
 
 // Цвета по умолчанию
 constexpr QRgb BACKGROUND_COLOR = qRgb(50, 100, 150);
@@ -70,6 +75,9 @@ constexpr int SHADOW_ZOOM = 2;
 constexpr int PATH_TRACING_DEFAULT_SAMPLES_PER_PIXEL = 25;
 constexpr int PATH_TRACING_MAX_SAMPLES_PER_PIXEL = 100;
 
+// Для трассировки пути для 3 измерений. Максимальный размер экрана в пикселях.
+constexpr int PATH_TRACING_3D_MAX_SCREEN_SIZE = 10000;
+
 // Для трассировки пути для 4 и более измерений. Размеры экрана в пикселях.
 constexpr int PATH_TRACING_DEFAULT_SCREEN_SIZE = 500;
 constexpr int PATH_TRACING_MINIMUM_SCREEN_SIZE = 50;
@@ -82,8 +90,8 @@ MainWindow::MainWindow(QWidget* parent)
         : QMainWindow(parent),
           m_window_thread_id(std::this_thread::get_id()),
           m_threads(m_event_emitter),
-          m_objects(create_main_objects(std::max(1, hardware_concurrency() - MESH_OBJECT_NOT_USED_THREAD_COUNT), m_event_emitter,
-                                        POINT_COUNT)),
+          m_objects(
+                  create_main_objects(std::max(1, hardware_concurrency() - MESH_OBJECT_NOT_USED_THREAD_COUNT), m_event_emitter)),
           m_first_show(true),
           m_dimension(0)
 {
@@ -150,10 +158,11 @@ void MainWindow::constructor_repository()
         // ui.menuBar->insertMenu(ui.menuHelp->menuAction(), menuCreate);
         for (const auto & [ dimension, object_names ] : m_objects->list_of_repository_point_objects())
         {
-                QMenu* sub_menu = ui.menuCreate->addMenu((to_string(dimension) + "-space").c_str());
+                QMenu* sub_menu = ui.menuCreate->addMenu(space_name(dimension).c_str());
                 for (const std::string& object_name : object_names)
                 {
-                        QAction* action = sub_menu->addAction(object_name.c_str());
+                        std::string text = object_name + "...";
+                        QAction* action = sub_menu->addAction(text.c_str());
                         m_action_to_object_name_map.try_emplace(action, dimension, object_name);
                         connect(action, SIGNAL(triggered()), this, SLOT(slot_object_repository()));
                 }
@@ -271,10 +280,23 @@ void MainWindow::thread_load_from_repository(const std::tuple<int, std::string>&
                 return;
         }
 
-        m_threads.start_thread(ThreadAction::LoadObject, [=](ProgressRatioList* progress_list, std::string* message) {
-                *message = "Load " + to_string(std::get<0>(object)) + "-space " + std::get<1>(object);
+        catch_all([&](std::string* msg) {
+                *msg = "Load from repository";
 
-                m_objects->load_from_repository(progress_list, object, m_bound_cocone_rho, m_bound_cocone_alpha);
+                int point_count;
+
+                if (!PointObjectParameters(this).show(std::get<0>(object), std::get<1>(object), POINT_COUNT_DEFAULT,
+                                                      POINT_COUNT_MINIMUM, POINT_COUNT_MAXIMUM, &point_count))
+                {
+                        return;
+                }
+
+                m_threads.start_thread(ThreadAction::LoadObject, [=](ProgressRatioList* progress_list, std::string* message) {
+                        *message = "Load " + space_name(std::get<0>(object)) + " " + std::get<1>(object);
+
+                        m_objects->load_from_repository(progress_list, object, m_bound_cocone_rho, m_bound_cocone_alpha,
+                                                        point_count);
+                });
         });
 }
 
@@ -371,15 +393,21 @@ void MainWindow::thread_reload_bound_cocone()
         double rho = m_bound_cocone_rho;
         double alpha = m_bound_cocone_alpha;
 
-        if (!BoundCoconeParameters(this).show(BOUND_COCONE_DISPLAY_DIGITS, &rho, &alpha))
-        {
-                return;
-        }
+        catch_all([&](std::string* msg) {
+                *msg = "Reload BoundCocone";
 
-        m_threads.start_thread(ThreadAction::ReloadBoundCocone, [=](ProgressRatioList* progress_list, std::string* message) {
-                *message = "BOUND COCONE reconstruction";
+                if (!BoundCoconeParameters(this).show(BOUND_COCONE_MINIMUM_RHO_EXPONENT, BOUND_COCONE_MINIMUM_ALPHA_EXPONENT,
+                                                      &rho, &alpha))
+                {
+                        return;
+                }
 
-                m_objects->compute_bound_cocone(progress_list, rho, alpha);
+                m_threads.start_thread(ThreadAction::ReloadBoundCocone,
+                                       [=](ProgressRatioList* progress_list, std::string* message) {
+                                               *message = "BOUND COCONE reconstruction";
+
+                                               m_objects->compute_bound_cocone(progress_list, rho, alpha);
+                                       });
         });
 }
 
@@ -450,14 +478,17 @@ void MainWindow::slot_timer_progress_bar()
 
 void MainWindow::set_bound_cocone_parameters(double rho, double alpha)
 {
+        static_assert(BOUND_COCONE_MINIMUM_RHO_EXPONENT < 0);
+        static_assert(BOUND_COCONE_MINIMUM_ALPHA_EXPONENT < 0);
+
         m_bound_cocone_rho = rho;
         m_bound_cocone_alpha = alpha;
 
-        QString label;
-        label += u8"ρ " + QString(to_string_fixed(rho, BOUND_COCONE_DISPLAY_DIGITS).c_str());
+        std::string label;
+        label += u8"ρ " + to_string_fixed(rho, -BOUND_COCONE_MINIMUM_RHO_EXPONENT);
         label += "; ";
-        label += u8"α " + QString(to_string_fixed(alpha, BOUND_COCONE_DISPLAY_DIGITS).c_str());
-        ui.BoundCocone_label->setText(label);
+        label += u8"α " + to_string_fixed(alpha, -BOUND_COCONE_MINIMUM_ALPHA_EXPONENT);
+        ui.BoundCocone_label->setText(label.c_str());
 }
 
 void MainWindow::set_background_color(const QColor& c)
@@ -641,7 +672,7 @@ void MainWindow::slot_window_event(const WindowEvent& event)
                 const WindowEvent::file_loaded& d = event.get<WindowEvent::file_loaded>();
 
                 std::string file_name = file_base_name(d.file_name);
-                set_window_title_file(file_name + " [" + to_string(d.dimension) + "-space]");
+                set_window_title_file(file_name + " [" + space_name(d.dimension) + "]");
                 strike_out_all_objects_buttons();
                 ui.radioButton_Model->setChecked(true);
                 m_dimension = d.dimension;
@@ -1022,6 +1053,7 @@ void MainWindow::on_pushButton_Painter_clicked()
                 info_3d.object_position = m_show->object_position();
                 info_3d.light_direction = m_show->light_direction();
                 info_3d.object_size = m_show->object_size();
+                info_3d.max_screen_size = PATH_TRACING_3D_MAX_SCREEN_SIZE;
                 m_show->paint_width_height(&info_3d.paint_width, &info_3d.paint_height);
 
                 PaintingInformationNd info_nd;

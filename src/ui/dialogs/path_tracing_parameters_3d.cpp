@@ -19,9 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "message_box.h"
 
+#include "com/error.h"
 #include "com/print.h"
-
-constexpr double MAX_SIZE_COEFFICIENT = 10;
 
 PathTracingParametersFor3d::PathTracingParametersFor3d(QWidget* parent) : QDialog(parent)
 {
@@ -29,31 +28,57 @@ PathTracingParametersFor3d::PathTracingParametersFor3d(QWidget* parent) : QDialo
         setWindowTitle("Path Tracing");
 }
 
-bool PathTracingParametersFor3d::show(int max_thread_count, int width, int height, int default_samples_per_pixel,
-                                      int max_samples_per_pixel, int* thread_count, int* paint_width, int* paint_height,
-                                      int* samples_per_pixel)
+bool PathTracingParametersFor3d::show(int max_thread_count, int width, int height, int max_screen_size,
+                                      int default_samples_per_pixel, int max_samples_per_pixel, int* thread_count,
+                                      int* paint_width, int* paint_height, int* samples_per_pixel)
 {
-        m_width = width;
-        m_height = height;
-        m_max_thread_count = std::max(1, max_thread_count);
+        if (!(max_thread_count >= 1))
+        {
+                error("Error max thread count parameter: " + to_string(max_thread_count));
+        }
+        if (!(width >= 1 && height >= 1))
+        {
+                error("Error width and height parameters: width = " + to_string(width) + ", height = " + to_string(height));
+        }
+        if (!(max_screen_size >= 1))
+        {
+                error("Error max screen size parameter:  " + to_string(max_screen_size));
+        }
+        if (!(1 <= default_samples_per_pixel && default_samples_per_pixel <= max_samples_per_pixel))
+        {
+                error("Error samples per pixel parameters: max = " + to_string(max_samples_per_pixel) +
+                      ", default = " + to_string(default_samples_per_pixel));
+        }
+
+        m_aspect_ratio = static_cast<double>(width) / height;
+        m_max_width = m_aspect_ratio >= 1 ? max_screen_size : std::lround(max_screen_size * m_aspect_ratio);
+        m_max_height = m_aspect_ratio >= 1 ? std::lround(max_screen_size / m_aspect_ratio) : max_screen_size;
+        m_min_width = std::min(m_max_width, width);
+        m_min_height = std::min(m_max_height, height);
+
+        m_max_thread_count = max_thread_count;
         m_max_samples_per_pixel = max_samples_per_pixel;
 
         ui.spinBox_thread_count->setMinimum(1);
-        ui.spinBox_thread_count->setMaximum(m_max_thread_count);
-        ui.spinBox_thread_count->setValue(m_max_thread_count);
+        ui.spinBox_thread_count->setMaximum(max_thread_count);
+        ui.spinBox_thread_count->setValue(max_thread_count);
+
+        ui.spinBox_width->setMinimum(m_min_width);
+        ui.spinBox_width->setMaximum(m_max_width);
+        ui.spinBox_width->setValue(m_min_width);
+        ui.spinBox_width->setSingleStep(std::max(1, m_min_width / 10));
+
+        ui.spinBox_height->setMinimum(m_min_height);
+        ui.spinBox_height->setMaximum(m_max_height);
+        ui.spinBox_height->setValue(m_min_height);
+        ui.spinBox_height->setSingleStep(std::max(1, m_min_height / 10));
 
         ui.spinBox_samples_per_pixel->setMinimum(1);
-        ui.spinBox_samples_per_pixel->setMaximum(m_max_samples_per_pixel);
+        ui.spinBox_samples_per_pixel->setMaximum(max_samples_per_pixel);
         ui.spinBox_samples_per_pixel->setValue(default_samples_per_pixel);
 
-        ui.doubleSpinBox_image_size->setMinimum(1);
-        ui.doubleSpinBox_image_size->setMaximum(MAX_SIZE_COEFFICIENT);
-        ui.doubleSpinBox_image_size->setValue(1);
-        ui.doubleSpinBox_image_size->setSingleStep(0.1);
-        ui.doubleSpinBox_image_size->setDecimals(1);
-
-        ui.label_width->setText(to_string(m_width).c_str());
-        ui.label_height->setText(to_string(m_height).c_str());
+        connect(ui.spinBox_width, SIGNAL(valueChanged(int)), this, SLOT(width_value_changed(int)));
+        connect(ui.spinBox_height, SIGNAL(valueChanged(int)), this, SLOT(height_value_changed(int)));
 
         if (!this->exec())
         {
@@ -61,20 +86,11 @@ bool PathTracingParametersFor3d::show(int max_thread_count, int width, int heigh
         }
 
         *thread_count = m_thread_count;
-        *paint_width = std::lround(width * m_size_coef);
-        *paint_height = std::lround(height * m_size_coef);
+        *paint_width = m_width;
+        *paint_height = m_height;
         *samples_per_pixel = m_samples_per_pixel;
 
         return true;
-}
-
-void PathTracingParametersFor3d::on_doubleSpinBox_image_size_valueChanged(double)
-{
-        int width = std::lround(m_width * ui.doubleSpinBox_image_size->value());
-        int height = std::lround(m_height * ui.doubleSpinBox_image_size->value());
-
-        ui.label_width->setText(to_string(width).c_str());
-        ui.label_height->setText(to_string(height).c_str());
 }
 
 void PathTracingParametersFor3d::done(int r)
@@ -102,12 +118,43 @@ void PathTracingParametersFor3d::done(int r)
                 return;
         }
 
-        m_size_coef = ui.doubleSpinBox_image_size->value();
-        if (!(m_size_coef >= 1))
+        m_width = ui.spinBox_width->value();
+        if (!(m_min_width <= m_width && m_width <= m_max_width))
         {
-                message_critical(this, "Error size coefficient. Must be equal or greater than 1.");
+                std::string msg = "Error width " + to_string(m_width) + ", min = " + to_string(m_min_width) +
+                                  ", max = " + to_string(m_max_width);
+                message_critical(this, msg.c_str());
+                return;
+        }
+
+        m_height = ui.spinBox_height->value();
+        if (!(m_min_height <= m_height && m_height <= m_max_height))
+        {
+                std::string msg = "Error height " + to_string(m_height) + ", min = " + to_string(m_min_height) +
+                                  ", max = " + to_string(m_max_height);
+                message_critical(this, msg.c_str());
                 return;
         }
 
         QDialog::done(r);
+}
+
+void PathTracingParametersFor3d::width_value_changed(int)
+{
+        disconnect(ui.spinBox_height, SIGNAL(valueChanged(int)), this, SLOT(height_value_changed(int)));
+
+        int height = std::lround(ui.spinBox_width->value() / m_aspect_ratio);
+        ui.spinBox_height->setValue(std::clamp(height, m_min_height, m_max_height));
+
+        connect(ui.spinBox_height, SIGNAL(valueChanged(int)), this, SLOT(height_value_changed(int)));
+}
+
+void PathTracingParametersFor3d::height_value_changed(int)
+{
+        disconnect(ui.spinBox_width, SIGNAL(valueChanged(int)), this, SLOT(width_value_changed(int)));
+
+        int width = std::lround(ui.spinBox_height->value() * m_aspect_ratio);
+        ui.spinBox_width->setValue(std::clamp(width, m_min_width, m_max_width));
+
+        connect(ui.spinBox_width, SIGNAL(valueChanged(int)), this, SLOT(width_value_changed(int)));
 }

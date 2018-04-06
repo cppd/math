@@ -17,26 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "ui_bound_cocone_parameters.h"
+#include <string>
 
-class BoundCoconeParameters final : public QDialog
+inline std::string space_name(int dimension)
 {
-        Q_OBJECT
-
-public:
-        explicit BoundCoconeParameters(QWidget* parent = nullptr);
-
-        [[nodiscard]] bool show(int minimum_rho_exponent, int minimum_alpha_exponent, double* rho, double* alpha);
-
-private:
-        Ui::BoundCoconeParameters ui;
-
-        double m_min_rho;
-        double m_max_rho;
-        double m_min_alpha;
-        double m_max_alpha;
-        double m_rho;
-        double m_alpha;
-
-        void done(int r) override;
-};
+        return std::to_string(dimension) + "-space";
+}

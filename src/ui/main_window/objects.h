@@ -46,10 +46,10 @@ struct MainObjects
         virtual void compute_bound_cocone(ProgressRatioList* progress_list, double rho, double alpha) = 0;
         virtual void load_from_file(ProgressRatioList* progress_list, const std::string& file_name, double rho, double alpha) = 0;
         virtual void load_from_repository(ProgressRatioList* progress_list, const std::tuple<int, std::string>& object,
-                                          double rho, double alpha) = 0;
+                                          double rho, double alpha, int point_count) = 0;
         virtual void save_to_file(int id, const std::string& file_name, const std::string& name) const = 0;
         virtual void paint(int id, const PaintingInformation3d& info_3d, const PaintingInformationNd& info_nd,
                            const PaintingInformationAll& info_all) const = 0;
 };
 
-std::unique_ptr<MainObjects> create_main_objects(int mesh_object_threads, const WindowEventEmitter& emitter, int point_count);
+std::unique_ptr<MainObjects> create_main_objects(int mesh_threads, const WindowEventEmitter& emitter);
