@@ -2,6 +2,17 @@
 
 Just for fun with mathematics.
 
+## Contents
+
+* [Description](#description)
+* [Algorithms](#algorithms)
+  * [Algorithms in 2-space](#algorithms-in-2-space)
+  * [Algorithms in spaces with arbitrary number of dimensions](#algorithms-in-spaces-with-arbitrary-number-of-dimensions)
+* [Technical details](#technical-details)
+* [Screenshots](#screenshots)
+  * [4-manifold reconstruction and path tracing in 5-space](#4-manifold-reconstruction-and-path-tracing-in-5-space)
+  * [Points in 3-space and the surface reconstructed from the points](#points-in-3-space-and-the-surface-reconstructed-from-the-points)
+
 ## Description
 
 External Input
