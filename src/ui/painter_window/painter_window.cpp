@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/time.h"
 #include "ui/dialogs/message_box.h"
 
+#include <QCloseEvent>
 #include <QFileDialog>
 #include <cstring>
 
@@ -148,6 +149,17 @@ PainterWindowUI::PainterWindowUI(const std::string& title, std::vector<int>&& sc
 }
 
 PainterWindowUI::~PainterWindowUI() = default;
+
+void PainterWindowUI::closeEvent(QCloseEvent* event)
+{
+        if (!message_question_default_no(this, "Do you want to close the painter window?"))
+        {
+                event->ignore();
+                return;
+        }
+
+        event->accept();
+}
 
 void PainterWindowUI::init_interface(const std::vector<int>& initial_slider_positions)
 {

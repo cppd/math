@@ -63,6 +63,7 @@ private:
         };
 
         void showEvent(QShowEvent* event) override;
+        void closeEvent(QCloseEvent* event) override;
 
         void init_interface(const std::vector<int>& initial_slider_positions);
         std::vector<int> slider_positions() const;

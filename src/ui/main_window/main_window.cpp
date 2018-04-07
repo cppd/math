@@ -35,6 +35,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/names.h"
 #include "com/print.h"
 
+#include <QCloseEvent>
 #include <QDesktopWidget>
 #include <QFileDialog>
 
@@ -202,6 +203,12 @@ MainWindow::~MainWindow()
 void MainWindow::closeEvent(QCloseEvent* event)
 {
         ASSERT(std::this_thread::get_id() == m_window_thread_id);
+
+        if (!message_question_default_no(this, "Do you want to close the main window?"))
+        {
+                event->ignore();
+                return;
+        }
 
         stop_all_threads();
 
