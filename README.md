@@ -57,7 +57,7 @@ Voronoi diagram                                 | The Delaunay triangulation    
 Manifold reconstruction                         | Cocone                                             | Sequential         | C++
 Manifold reconstruction with boundary detection | BoundCocone                                        | Sequential         | C++
 Euclidean minimum spanning tree                 | Kruskal’s algorithm and the Delaunay triangulation | Sequential         | C++
-Solution to a system of linear equations        | Gaussian elimination                               | Sequential         | C++
+Intersection of hyperplanes                     | Gaussian elimination                               | Sequential         | C++
 Intersection of convex polytopes                | The simplex algorithm                              | Sequential         | C++
 Ray intersection acceleration                   | Spatial subdivision and 2<sup>d</sup>-trees        | Parallel           | C++
 Realistic visualization                         | Path tracing                                       | Parallel           | C++
