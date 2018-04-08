@@ -32,15 +32,19 @@ ContinuationIndentWidth: 8
 Cpp11BracedListStyle: true
 DerivePointerAlignment: false
 ExperimentalAutoDetectBinPacking: false
-FixNamespaceComments: true
+FixNamespaceComments: false
+IncludeBlocks: Regroup
 IncludeCategories:
-  - Regex:           '^"\s*([^\/\\\s]+\s*)+"$'
-    Priority:        10
-  - Regex:           '^"\s*(\S+\s*)+"$'
-    Priority:        20
-  - Regex:           '^<\s*(\S+\s*)+>$'
+  - Regex:           '^"ui_.+\.h"$'
     Priority:        30
+  - Regex:           '^"[^\/\\]*"$'
+    Priority:        10
+  - Regex:           '^".*"$'
+    Priority:        20
+  - Regex:           '^<.*>$'
+    Priority:        40
 IndentCaseLabels: false
+IndentPPDirectives: None
 IndentWidth: 8
 IndentWrappedFunctionNames: false
 KeepEmptyLinesAtTheStartOfBlocks: false
