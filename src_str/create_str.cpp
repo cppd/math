@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -24,7 +24,8 @@ constexpr int LINE_LENGTH = 12;
 
 namespace
 {
-[[noreturn]] void error(const std::string& msg)
+// clang-format 6 неправильно форматирует, если [[noreturn]] поставить перед функцией
+void error[[noreturn]](const std::string& msg)
 {
         std::cerr << msg << std::endl;
         std::exit(EXIT_FAILURE);

@@ -118,10 +118,7 @@ void Mesh<N, T>::create_mesh_object(const Obj<N>* obj, const Matrix<N + 1, N + 1
         }
 
         // Указатель на объект дерева
-        auto lambda_simplex = [w = std::as_const(simplex_wrappers)](int simplex_index)
-        {
-                return &(w[simplex_index]);
-        };
+        auto lambda_simplex = [w = std::as_const(simplex_wrappers)](int simplex_index) { return &(w[simplex_index]); };
 
         m_tree.decompose(m_facets.size(), lambda_simplex, thread_count, progress);
 }

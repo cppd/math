@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -20,16 +20,32 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "application/application_name.h"
 
 #include <QMessageBox>
+#include <string>
 
-void application_help(QWidget* parent)
+namespace
 {
-        static const QString message =
+std::string message()
+{
+        std::string message;
+
+        message +=
                 "Move: left mouse button.\n\n"
                 "Rotate: right mouse button.\n\n"
                 "Zoom: mouse wheel.\n\n"
                 "Toggle fullscreen: F11.";
 
-        static const QString title = APPLICATION_NAME + QString(" Help");
+        return message;
+}
 
-        QMessageBox::about(parent, title, message);
+std::string title()
+{
+        return std::string(APPLICATION_NAME) + " Help";
+}
+}
+
+void application_help(QWidget* parent)
+{
+        static const QString m = message().c_str();
+        static const QString t = title().c_str();
+        QMessageBox::about(parent, t, m);
 }

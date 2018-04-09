@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -18,13 +18,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "application_about.h"
 
 #include "application/application_name.h"
-#include "com/print.h"
 
 #include <QMessageBox>
+#include <string>
 
 namespace
 {
-QString message()
+std::string message()
 {
         std::string message;
 
@@ -39,18 +39,18 @@ QString message()
 #error This operating system is not supported
 #endif
 
-        return message.c_str();
+        return message;
 }
 
-QString title()
+std::string title()
 {
-        return QString("About ") + APPLICATION_NAME;
+        return std::string("About ") + APPLICATION_NAME;
 }
 }
 
 void application_about(QWidget* parent)
 {
-        static const QString m = message();
-        static const QString t = title();
+        static const QString m = message().c_str();
+        static const QString t = title().c_str();
         QMessageBox::about(parent, t, m);
 }

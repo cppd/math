@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2018 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -51,4 +51,4 @@ constexpr int char_to_int(char c)
 {
         return c - '0';
 }
-};
+}

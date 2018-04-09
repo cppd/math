@@ -17,8 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "ui_main_window.h"
-
 #include "event_emitter.h"
 #include "objects.h"
 #include "threads.h"
@@ -26,6 +24,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "progress/progress_list.h"
 #include "show/show.h"
 #include "tests/self_test.h"
+
+#include "ui_main_window.h"
 
 #include <QColor>
 #include <QTimer>
@@ -102,6 +102,8 @@ private:
         void showEvent(QShowEvent* event) override;
         void closeEvent(QCloseEvent* event) override;
 
+        void close_without_confirmation();
+
         void stop_all_threads();
 
         template <typename F>
@@ -109,7 +111,7 @@ private:
 
         void thread_load_from_file(std::string file_name = "");
         void thread_load_from_repository(const std::tuple<int, std::string>& object);
-        void thread_self_test(SelfTestType test_type);
+        void thread_self_test(SelfTestType test_type, bool with_confirmation);
         void thread_export(const std::string& name, int id);
         void thread_reload_bound_cocone();
 
@@ -162,5 +164,7 @@ private:
         double m_bound_cocone_rho;
         double m_bound_cocone_alpha;
 
-        unsigned m_dimension;
+        unsigned m_dimension = 0;
+
+        bool m_close_without_confirmation = false;
 };

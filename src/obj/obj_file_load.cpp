@@ -268,7 +268,7 @@ Integer digits_to_integer(const T& data, long long begin, long long end)
 }
 
 template <typename T, typename Integer>
-[[nodiscard]] bool read_integer(const T& data, long long size, long long* pos, Integer* value)
+bool read_integer(const T& data, long long size, long long* pos, Integer* value)
 {
         static_assert(is_signed<Integer>);
 
@@ -1627,7 +1627,7 @@ FileTxt<N>::FileTxt(const std::string& file_name, ProgressRatio* progress)
 template <size_t N>
 std::unique_ptr<Obj<N>> load_obj_from_file(const std::string& file_name, ProgressRatio* progress)
 {
-        auto[obj_dimension, obj_file_type] = obj_file_dimension_and_type(file_name);
+        auto [obj_dimension, obj_file_type] = obj_file_dimension_and_type(file_name);
 
         if (obj_dimension != static_cast<int>(N))
         {

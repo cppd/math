@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@ class SourceError final : public QDialog
 public:
         explicit SourceError(QWidget* parent = nullptr);
 
-        void show(const QString& msg, const QString& src);
+        void show(const std::string& msg, const std::string& src);
 
 private:
         Ui::SourceError ui;

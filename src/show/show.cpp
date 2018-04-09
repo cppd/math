@@ -18,10 +18,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "show.h"
 
 #include "event.h"
-#include "color_space/buffer_type.h"
-#include "renderer/renderer.h"
-#include "text/text.h"
 
+#include "color_space/buffer_type.h"
 #include "com/color/colors.h"
 #include "com/error.h"
 #include "com/log.h"
@@ -39,6 +37,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/objects.h"
 #include "numerical/linear.h"
 #include "obj/obj.h"
+#include "renderer/renderer.h"
+#include "text/text.h"
 #include "window/window.h"
 
 #include <SFML/Window/Event.hpp>

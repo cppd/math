@@ -354,7 +354,7 @@ void extend(const int MAX_DEPTH, const int MIN_OBJECTS, const int MAX_BOXES,
                         continue;
                 }
 
-                for (const auto & [ i, child_box, child_box_index ] :
+                for (const auto& [i, child_box, child_box_index] :
                      create_child_boxes(boxes_lock, boxes, box->parallelotope(), integer_sequence_n))
                 {
                         box->set_child(i, child_box_index);

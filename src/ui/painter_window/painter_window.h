@@ -17,11 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "ui_painter_window.h"
-
 #include "com/global_index.h"
 #include "path_tracing/painter.h"
 #include "path_tracing/visible_paintbrush.h"
+
+#include "ui_painter_window.h"
 
 #include <QImage>
 #include <QLabel>

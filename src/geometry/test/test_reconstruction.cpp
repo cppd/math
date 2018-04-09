@@ -238,7 +238,7 @@ void all_tests(const std::string& name, const std::unordered_set<Algorithms>& al
         // в обе стороны, поэтому достаточно смещение на 3 для отсутствия пересечений объектов
         constexpr float shift = 3;
 
-        auto[facets_min, facets_max] = facet_count<N>(points.size());
+        auto [facets_min, facets_max] = facet_count<N>(points.size());
         unsigned bound_facets_min = std::lround(bound_low_coef * facets_min);
         unsigned bound_facets_max = std::lround(bound_high_coef * facets_max);
 

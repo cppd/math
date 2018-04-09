@@ -105,7 +105,7 @@ void test_distribution(int count, T discrepancy_limit)
 
         normalize(&buckets);
 
-        for (const auto & [ cosine, value ] : buckets)
+        for (const auto& [cosine, value] : buckets)
         {
                 T discrepancy = std::abs(value - cosine);
 

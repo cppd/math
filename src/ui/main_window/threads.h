@@ -161,14 +161,11 @@ public:
                 thread_pack.stop();
                 thread_pack.working = true;
                 thread_pack.thread = std::thread([ this, &thread_pack, func = std::forward<F>(function) ]() noexcept {
-
                         catch_all_exceptions(m_event_emitter, [&](std::string* message) {
-
                                 static_assert(!noexcept(func(&thread_pack.progress_list, message)));
 
                                 func(&thread_pack.progress_list, message);
                         });
-
                         thread_pack.working = false;
                 });
         }

@@ -75,7 +75,7 @@ bool ray_intersection(const std::vector<const Object*>& objects, const Ray<N, T>
         T min_distance = limits<T>::max();
         bool found = false;
 
-        for (const auto & [ approximate_distance, object ] : approximate_intersections)
+        for (const auto& [approximate_distance, object] : approximate_intersections)
         {
                 if (min_distance < approximate_distance)
                 {

@@ -17,11 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 // Generated from glcorearb.h
 
+// clang-format off
+
 #pragma once
 
 #include <GL/glcorearb.h>
-
-// clang-format off
 
 #if defined(_WIN32)
 #undef near

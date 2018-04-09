@@ -20,6 +20,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "catch.h"
 #include "identifiers.h"
 
+#include "application/application_name.h"
+#include "com/error.h"
+#include "com/file/file_sys.h"
+#include "com/log.h"
+#include "com/names.h"
+#include "com/print.h"
 #include "ui/dialogs/application_about.h"
 #include "ui/dialogs/application_help.h"
 #include "ui/dialogs/bound_cocone_parameters.h"
@@ -27,13 +33,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "ui/dialogs/point_object_parameters.h"
 #include "ui/dialogs/source_error.h"
 #include "ui/support/support.h"
-
-#include "application/application_name.h"
-#include "com/error.h"
-#include "com/file/file_sys.h"
-#include "com/log.h"
-#include "com/names.h"
-#include "com/print.h"
 
 #include <QCloseEvent>
 #include <QDesktopWidget>
@@ -94,7 +93,8 @@ MainWindow::MainWindow(QWidget* parent)
           m_objects(
                   create_main_objects(std::max(1, hardware_concurrency() - MESH_OBJECT_NOT_USED_THREAD_COUNT), m_event_emitter)),
           m_first_show(true),
-          m_dimension(0)
+          m_dimension(0),
+          m_close_without_confirmation(false)
 {
         static_assert(std::is_same_v<decltype(ui.graphics_widget), GraphicsWidget*>);
 
@@ -157,7 +157,7 @@ void MainWindow::constructor_repository()
 {
         // QMenu* menuCreate = new QMenu("Create", this);
         // ui.menuBar->insertMenu(ui.menuHelp->menuAction(), menuCreate);
-        for (const auto & [ dimension, object_names ] : m_objects->list_of_repository_point_objects())
+        for (const auto& [dimension, object_names] : m_objects->list_of_repository_point_objects())
         {
                 QMenu* sub_menu = ui.menuCreate->addMenu(space_name(dimension).c_str());
                 for (const std::string& object_name : object_names)
@@ -204,7 +204,7 @@ void MainWindow::closeEvent(QCloseEvent* event)
 {
         ASSERT(std::this_thread::get_id() == m_window_thread_id);
 
-        if (!message_question_default_no(this, "Do you want to close the main window?"))
+        if (!m_close_without_confirmation && !message_question_default_no(this, "Do you want to close the main window?"))
         {
                 event->ignore();
                 return;
@@ -213,6 +213,15 @@ void MainWindow::closeEvent(QCloseEvent* event)
         stop_all_threads();
 
         event->accept();
+}
+
+void MainWindow::close_without_confirmation()
+{
+        ASSERT(std::this_thread::get_id() == m_window_thread_id);
+
+        m_close_without_confirmation = true;
+
+        close();
 }
 
 void MainWindow::stop_all_threads()
@@ -307,13 +316,18 @@ void MainWindow::thread_load_from_repository(const std::tuple<int, std::string>&
         });
 }
 
-void MainWindow::thread_self_test(SelfTestType test_type)
+void MainWindow::thread_self_test(SelfTestType test_type, bool with_confirmation)
 {
         ASSERT(std::this_thread::get_id() == m_window_thread_id);
 
         if (!m_threads.action_allowed(ThreadAction::SelfTest))
         {
                 m_event_emitter.message_warning("Self-Test is not available at this time (thread working)");
+                return;
+        }
+
+        if (with_confirmation && !message_question_default_yes(this, "Run the Self-Test?"))
+        {
                 return;
         }
 
@@ -594,7 +608,7 @@ void MainWindow::slot_window_event(const WindowEvent& event)
                 add_to_text_edit_and_to_stderr(ui.text_log, format_log_message(message), TextEditMessageType::Error);
                 message_critical(this, message.c_str());
 
-                close();
+                close_without_confirmation();
 
                 break;
         }
@@ -606,9 +620,9 @@ void MainWindow::slot_window_event(const WindowEvent& event)
 
                 add_to_text_edit_and_to_stderr(ui.text_log, format_log_message(message + "\n" + source),
                                                TextEditMessageType::Error);
-                SourceError(this).show(message.c_str(), source.c_str());
+                SourceError(this).show(message, source);
 
-                close();
+                close_without_confirmation();
 
                 break;
         }
@@ -727,7 +741,7 @@ void MainWindow::slot_window_first_shown()
 
         move_window_to_desktop_center(this);
 
-        thread_self_test(SelfTestType::Essential);
+        thread_self_test(SelfTestType::Essential, false);
 
         try
         {
@@ -787,7 +801,7 @@ void MainWindow::on_actionExport_triggered()
         int object_id = 0;
 
         bool found = false;
-        for (const auto & [ button, id ] : m_object_buttons)
+        for (const auto& [button, id] : m_object_buttons)
         {
                 if (button->isChecked())
                 {
@@ -824,7 +838,7 @@ void MainWindow::on_actionHelp_triggered()
 
 void MainWindow::on_actionSelfTest_triggered()
 {
-        thread_self_test(SelfTestType::Extended);
+        thread_self_test(SelfTestType::Extended, true);
 }
 
 void MainWindow::on_actionAbout_triggered()
@@ -1029,7 +1043,7 @@ void MainWindow::on_pushButton_Painter_clicked()
         int id = -1;
 
         bool found = false;
-        for (const auto & [ button, button_model_id ] : m_object_buttons)
+        for (const auto& [button, button_model_id] : m_object_buttons)
         {
                 if (button->isChecked())
                 {
@@ -1079,6 +1093,5 @@ void MainWindow::on_pushButton_Painter_clicked()
                 info_all.diffuse = diffuse_light();
 
                 m_objects->paint(id, info_3d, info_nd, info_all);
-
         });
 }

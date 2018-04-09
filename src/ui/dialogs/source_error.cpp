@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -22,15 +22,14 @@ SourceError::SourceError(QWidget* parent) : QDialog(parent)
         ui.setupUi(this);
         ui.labelPixmap->setText("");
         ui.labelPixmap->setPixmap(ui.labelPixmap->style()->standardPixmap(QStyle::SP_MessageBoxCritical));
-        this->resize(1024, 768);
 
-        setWindowTitle("Source error");
+        setWindowTitle("Source Error");
 }
 
-void SourceError::show(const QString& msg, const QString& src)
+void SourceError::show(const std::string& msg, const std::string& src)
 {
-        ui.plainTextEdit->setPlainText(msg);
-        ui.textEdit->setText(src);
+        ui.plainTextEdit->setPlainText(msg.c_str());
+        ui.textEdit->setText(src.c_str());
 
         exec();
 }

@@ -18,7 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "window.h"
 
 #include "com/log.h"
-
 #include "graphics/opengl/opengl_functions.h"
 #include "graphics/query.h"
 

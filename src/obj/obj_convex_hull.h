@@ -23,5 +23,5 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <memory>
 
-template<size_t N>
+template <size_t N>
 std::unique_ptr<Obj<N>> create_convex_hull_for_obj(const Obj<N>* obj, ProgressRatio* progress);

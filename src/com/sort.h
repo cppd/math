@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -52,6 +52,7 @@ std::array<T, 2>&& sort(std::array<T, 2>&& v)
 
         return std::move(v);
 }
+
 template <typename T>
 std::array<T, 3>&& sort(std::array<T, 3>&& v)
 {
@@ -63,6 +64,7 @@ std::array<T, 3>&& sort(std::array<T, 3>&& v)
 
         return std::move(v);
 }
+
 template <typename T>
 std::array<T, 4>&& sort(std::array<T, 4>&& v)
 {
@@ -76,6 +78,7 @@ std::array<T, 4>&& sort(std::array<T, 4>&& v)
 
         return std::move(v);
 }
+
 template <typename T>
 std::array<T, 5>&& sort(std::array<T, 5>&& v)
 {

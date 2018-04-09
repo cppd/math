@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -47,6 +47,7 @@ public:
                         break;
                 }
         }
+
         void load(const std::vector<T>& data) const
         {
                 if (data.size() != m_size)
@@ -63,6 +64,7 @@ public:
                         break;
                 }
         }
+
         void read(std::vector<T>* data) const
         {
                 if (data->size() != m_size)
@@ -71,16 +73,19 @@ public:
                 }
                 m_buffer.read(data);
         }
+
         std::vector<T> read() const
         {
                 std::vector<T> v(size());
                 read(&v);
                 return v;
         }
+
         void bind(int point) const noexcept
         {
                 m_buffer.bind(point);
         }
+
         int size() const noexcept
         {
                 return m_size;

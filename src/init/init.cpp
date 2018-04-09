@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -32,13 +32,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace
 {
-[[noreturn]] int X_error_handler(Display*, XErrorEvent* e)
+int X_error_handler(Display*, XErrorEvent* e)
 {
         constexpr int BUF_SIZE = 1000;
         char buf[BUF_SIZE];
         XGetErrorText(e->display, e->error_code, buf, BUF_SIZE);
         error_fatal("X error handler: " + std::string(buf));
 }
+
 void init_XLib()
 {
         if (!XInitThreads())
