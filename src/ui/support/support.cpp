@@ -176,7 +176,8 @@ WindowID widget_window_id(QWidget* widget)
         static_assert(std::is_integral_v<WindowID> || std::is_pointer_v<WindowID>);
         static_assert(std::is_integral_v<WId> || std::is_pointer_v<WId>);
 
-        union {
+        union
+        {
                 WId w_id;
                 WindowID window_id;
         };
