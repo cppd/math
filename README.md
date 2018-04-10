@@ -66,9 +66,9 @@ Realistic visualization                         | Path tracing                  
 
 Property                    | Value
 ----------------------------|---------------------------------------------
-Supported operating systems | Linux, Windows
 Programming languages       | C++17, GLSL 4.50
-Supported C++ compilers     | GCC 7, Clang 5
+Supported C++ compilers     | GCC 7, Clang 6
+Supported operating systems | Linux, Windows
 Libraries                   | FreeType, GMP, OpenGL 4.5, Qt 5, SFML, XLib
 Build system                | CMake
 
