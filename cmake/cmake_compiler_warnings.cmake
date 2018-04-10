@@ -77,33 +77,37 @@ function(SetCompilerWarnings source_files)
                         -Wno-padded
                         -Wno-weak-vtables
 
-                        # Clang 5 inline variables
                         -Wno-missing-variable-declarations
-                        # Clang 5 class template argument deduction
                         -Wno-undefined-func-template
 
                         # Из-за файлов Qt отключить для всех файлов
                         # с последующим включением для файлов проекта
                         -Wno-undefined-reinterpret-cast
+                        -Wno-redundant-parens
                         >
                 >
         )
 
         # Предупреждения для файлов проекта и не для файлов Qt.
         foreach(f ${source_files})
+
                 if (${f} MATCHES "^.+\.cpp$")
 
                         if (${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
-                                set_source_files_properties(${f} PROPERTIES COMPILE_FLAGS
-                                       "-Wuseless-cast"
+                                string(CONCAT flags
+                                        "-Wuseless-cast"
                                 )
+                                set_source_files_properties(${f} PROPERTIES COMPILE_FLAGS ${flags})
                         elseif (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
-                                set_source_files_properties(${f} PROPERTIES COMPILE_FLAGS
+                                string(CONCAT flags
                                         "-Wundefined-reinterpret-cast"
+                                        " -Wredundant-parens"
                                 )
+                                set_source_files_properties(${f} PROPERTIES COMPILE_FLAGS ${flags})
                         endif()
 
                 endif()
+
         endforeach()
 
 endfunction()
