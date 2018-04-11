@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/alg.h"
 #include "com/error.h"
+#include "com/file/file_sys.h"
 #include "com/log.h"
 #include "com/print.h"
 #include "com/time.h"
@@ -315,19 +316,39 @@ void PainterWindowUI::timer_slot()
 
 void PainterWindowUI::on_pushButton_save_to_file_clicked()
 {
-        QString file_name = QFileDialog::getSaveFileName(this, "Export to file", "", "Images (*.png)", nullptr,
-                                                         QFileDialog::DontUseNativeDialog);
+        constexpr const char* image_file_format = "png";
+
+        QImage image(m_image.width(), m_image.height(), m_image.format());
+        std::memcpy(image.bits(), pixel_pointer(false), m_image_byte_count);
+
+        QString caption = "Save";
+        QString filter = "Images (*." + QString(image_file_format) + ")";
+        QFileDialog::Options options = QFileDialog::DontUseNativeDialog;
+
+        std::string file_name = QFileDialog::getSaveFileName(this, caption, "", filter, nullptr, options).toStdString();
         if (file_name.size() == 0)
         {
                 return;
         }
 
-        // Таймер и эта функция работают в одном потоке, поэтому можно пользоваться
-        // переменной m_image без блокировок.
-        std::memcpy(m_image.bits(), pixel_pointer(false), m_image_byte_count);
-        if (!m_image.save(file_name, "PNG"))
+        std::string ext = file_extension(file_name);
+        if (ext.size() > 0)
         {
-                error_message("Error saving image to file");
+                if (ext != image_file_format)
+                {
+                        error_message("Unsupported image file format " + ext);
+                        return;
+                }
+        }
+        else
+        {
+                file_name += "."; // может оказаться 2 точки подряд
+                file_name += image_file_format;
+        }
+
+        if (!image.save(file_name.c_str()))
+        {
+                error_message("Error saving image to file " + file_name);
         }
 }
 
@@ -343,7 +364,7 @@ void PainterWindowUI::slider_changed_slot(int)
                         return;
                 }
         }
-        error_message("Failed to find sender in sliders");
+        error_fatal("Failed to find sender in sliders");
 }
 
 //
