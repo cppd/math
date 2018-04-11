@@ -18,80 +18,147 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "points.h"
 
 #include "com/error.h"
-#include "com/log.h"
 #include "com/math.h"
 #include "com/quaternion.h"
 
 #include <map>
 #include <random>
+#include <type_traits>
 #include <unordered_set>
 #include <utility>
 
-// Надо располагать точки по целым числам, так как выпуклая оболочка работает с целыми числами
-// Для float большое число не надо
+// Надо располагать точки по целым числам, так как выпуклая оболочка работает с целыми числами.
+// Для float большое число не надо.
 constexpr unsigned DISCRETIZATION = 100000;
 
 constexpr double COS_FOR_BOUND = -0.3;
-
 constexpr double MOBIUS_STRIP_WIDTH = 1;
+constexpr double TORUS_RADIUS_OF_TUBE = 0.5;
 
-template <typename T, size_t... I>
-constexpr Vector<sizeof...(I) + 1, T> make_z_axis(std::integer_sequence<size_t, I...>)
+template <typename T, size_t... I, typename V>
+constexpr Vector<sizeof...(I) + 1, T> make_last_axis(V&& value, std::integer_sequence<size_t, I...>&&)
 {
-        return {(static_cast<void>(I), 0)..., 1};
+        return {(static_cast<void>(I), 0)..., std::forward<V>(value)};
 }
+
+template <typename T, size_t... I, typename V>
+constexpr Vector<sizeof...(I) + 1, T> add_axis(const Vector<sizeof...(I), T>& vector, V&& value,
+                                               std::integer_sequence<size_t, I...>&&)
+{
+        return {vector[I]..., std::forward<V>(value)};
+}
+
 template <size_t N, typename T>
-constexpr Vector<N, T> Z_AXIS = make_z_axis<T>(std::make_integer_sequence<size_t, N - 1>());
+constexpr Vector<N, T> LAST_AXIS = make_last_axis<T>(1, std::make_integer_sequence<size_t, N - 1>());
+
+template <size_t N, typename T>
+constexpr Vector<N + 1, T> add_dimension_with_zero(const Vector<N, T>& v)
+{
+        return add_axis(v, 0, std::make_integer_sequence<size_t, N>());
+}
+
+template <size_t N, typename T, typename V>
+constexpr Vector<N, T> vector_with_last_dimension(V&& v)
+{
+        static_assert(N >= 2);
+
+        return make_last_axis<T>(std::forward<V>(v), std::make_integer_sequence<size_t, N - 1>());
+}
 
 namespace
 {
 template <size_t N>
-void check_unique_points(const std::vector<Vector<N, float>>& points)
+class DiscretePoints
 {
-        std::unordered_set<Vector<N, float>> check_set(points.cbegin(), points.cend());
+        std::vector<Vector<N, float>> m_points;
+        std::unordered_set<Vector<N, long>> m_integer_points;
 
-        if (points.size() != check_set.size())
+        template <typename T>
+        static Vector<N, long> to_integer(const Vector<N, T>& v, long factor)
         {
-                error("error generate unique points");
-        }
-}
+                static_assert(std::is_floating_point_v<T>);
 
-template <size_t N>
-Vector<N, long> to_integer(const Vector<N, double>& v, long factor)
-{
-        Vector<N, long> r;
-        for (unsigned n = 0; n < N; ++n)
+                Vector<N, long> r;
+                for (unsigned n = 0; n < N; ++n)
+                {
+                        r[n] = std::lround(v[n] * factor);
+                }
+                return r;
+        }
+
+        template <typename T>
+        static bool points_are_unique(const std::vector<T>& points)
         {
-                r[n] = std::lround(v[n] * factor);
+                std::unordered_set<T> check_set(points.cbegin(), points.cend());
+                return points.size() == check_set.size();
         }
-        return r;
-}
 
-template <size_t N>
-vec<N> random_sphere(std::mt19937_64* gen)
+public:
+        DiscretePoints(unsigned point_count)
+        {
+                m_points.reserve(point_count);
+                m_integer_points.reserve(point_count);
+        }
+
+        template <typename T>
+        void add(const Vector<N, T>& p)
+        {
+                Vector<N, long> integer_point = to_integer(p, DISCRETIZATION);
+                if (m_integer_points.count(integer_point) == 0)
+                {
+                        m_integer_points.insert(integer_point);
+                        m_points.push_back(to_vector<float>(p));
+                }
+        }
+
+        unsigned size() const
+        {
+                return m_points.size();
+        }
+
+        std::vector<Vector<N, float>> release()
+        {
+                ASSERT(m_integer_points.size() == m_points.size());
+                ASSERT(points_are_unique(m_points));
+
+                m_integer_points.clear();
+
+                std::vector<Vector<N, float>> points = std::move(m_points);
+
+                return points;
+        }
+};
+
+template <size_t N, typename T, typename RandomEngine>
+Vector<N, T> random_sphere(RandomEngine& engine)
 {
-        std::uniform_real_distribution<double> urd(-1.0, 1.0);
+        static_assert(std::is_floating_point_v<T>);
 
-        vec<N> v;
+        std::uniform_real_distribution<T> urd(-1.0, 1.0);
+
+        Vector<N, T> v;
+
         do
         {
                 for (unsigned n = 0; n < N; ++n)
                 {
-                        v[n] = urd(*gen);
+                        v[n] = urd(engine);
                 }
         } while (dot(v, v) > 1);
 
         return normalize(v);
 }
 
-template <size_t N>
-vec<N> random_sphere_bound(std::mt19937_64* gen, double cos_alpha)
+template <size_t N, typename T, typename V, typename RandomEngine>
+Vector<N, T> random_sphere_bound(RandomEngine& engine, V cos_alpha)
 {
-        vec<N> v;
+        Vector<N, T> v;
+
         do
         {
-                v = random_sphere<N>(gen);
-        } while (dot(v, Z_AXIS<N, double>) < cos_alpha);
+                v = random_sphere<N, T>(engine);
+        } while (dot(v, LAST_AXIS<N, T>) < cos_alpha);
+
         return v;
 }
 
@@ -103,87 +170,72 @@ std::vector<Vector<2, float>> generate_points_semicircle(unsigned point_count)
                 error("point count out of range");
         }
 
-        std::vector<Vector<2, float>> points(point_count);
+        DiscretePoints<2> points(point_count);
 
-        for (double i = 0; i < point_count; ++i)
+        for (unsigned i = 0; i < point_count; ++i)
         {
-                points[i] = {-std::cos(PI * i / (point_count - 1)), std::sin(PI * i / (point_count - 1))};
+                points.add(Vector<2, double>(-std::cos(PI<double> * i / (point_count - 1)),
+                                             std::sin(PI<double> * i / (point_count - 1))));
         }
 
-        check_unique_points(points);
+        if (points.size() != point_count)
+        {
+                error("Error semicircle point count: requested " + to_string(point_count) + ", generated " +
+                      to_string(points.size()));
+        }
 
-        return points;
+        return points.release();
 }
 #endif
 
 template <size_t N>
 std::vector<Vector<N, float>> generate_points_ellipsoid(unsigned point_count, bool bound)
 {
-        std::vector<Vector<N, float>> points;
-        points.reserve(point_count);
+        DiscretePoints<N> points(point_count);
 
-        std::unordered_set<Vector<N, long>> integer_points;
-        integer_points.reserve(point_count);
+        std::mt19937_64 engine(point_count);
 
-        std::mt19937_64 gen(point_count);
-
-        while (integer_points.size() < point_count)
+        while (points.size() < point_count)
         {
-                vec<N> v = (!bound) ? random_sphere<N>(&gen) : random_sphere_bound<N>(&gen, COS_FOR_BOUND);
+                Vector<N, double> v =
+                        (!bound) ? random_sphere<N, double>(engine) : random_sphere_bound<N, double>(engine, COS_FOR_BOUND);
 
                 v[0] *= 2;
 
-                Vector<N, long> integer_point = to_integer(v, DISCRETIZATION);
-                if (integer_points.count(integer_point) == 0)
-                {
-                        integer_points.insert(integer_point);
-                        points.push_back(to_vector<float>(v));
-                }
+                points.add(v);
         }
 
-        check_unique_points(points);
-
-        return points;
+        return points.release();
 }
 
 template <size_t N>
 std::vector<Vector<N, float>> generate_points_sphere_with_notch(unsigned point_count, bool bound)
 {
-        std::vector<Vector<N, float>> points;
-        points.reserve(point_count);
+        DiscretePoints<N> points(point_count);
 
-        std::unordered_set<Vector<N, long>> integer_points;
-        integer_points.reserve(point_count);
+        std::mt19937_64 engine(point_count);
 
-        std::mt19937_64 gen(point_count);
-
-        while (integer_points.size() < point_count)
+        while (points.size() < point_count)
         {
-                // точки на сфере с углублением со стороны последней оси
+                // Точки на сфере с углублением со стороны последней оси
                 // в положительном направлении этой оси
 
-                vec<N> v = (!bound) ? random_sphere<N>(&gen) : random_sphere_bound<N>(&gen, COS_FOR_BOUND);
+                Vector<N, double> v =
+                        (!bound) ? random_sphere<N, double>(engine) : random_sphere_bound<N, double>(engine, COS_FOR_BOUND);
 
-                double dot_z = dot(Z_AXIS<N, double>, v);
+                double dot_z = dot(LAST_AXIS<N, double>, v);
                 if (dot_z > 0)
                 {
                         v[N - 1] *= 1 - std::abs(0.5 * std::pow(dot_z, 5));
                 }
 
-                Vector<N, long> integer_point = to_integer(v, DISCRETIZATION);
-                if (integer_points.count(integer_point) == 0)
-                {
-                        integer_points.insert(integer_point);
-                        points.push_back(to_vector<float>(v));
-                }
+                points.add(v);
         }
 
-        check_unique_points(points);
-
-        return points;
+        return points.release();
 }
 
-// На входе от 0 до 2 * PI, на выходе от 0 до PI.
+// На входе от 0 до 2 * PI, на выходе от 0 до PI
 double mobius_curve(double x)
 {
         x = x / (2 * PI<double>);
@@ -197,50 +249,70 @@ double mobius_curve(double x)
 
 std::vector<Vector<3, float>> generate_points_mobius_strip(unsigned point_count)
 {
-        std::vector<Vector<3, float>> points;
-        points.reserve(point_count);
+        DiscretePoints<3> points(point_count);
 
-        std::unordered_set<Vector<3, long>> integer_points;
-        integer_points.reserve(point_count);
-
-        std::mt19937_64 gen(point_count);
+        std::mt19937_64 engine(point_count);
 
         std::uniform_real_distribution<double> urd_line(-MOBIUS_STRIP_WIDTH / 2, MOBIUS_STRIP_WIDTH / 2);
         std::uniform_real_distribution<double> urd_alpha(0, 2 * PI<double>);
 
-        while (integer_points.size() < point_count)
+        while (points.size() < point_count)
         {
-                double alpha = urd_alpha(gen);
+                double alpha = urd_alpha(engine);
 
                 // Случайная точка вдоль Z, вращение вокруг Y, смещение по X и вращение вокруг Z
-                vec<3> v(0, 0, urd_line(gen));
-                v = rotate_vector(vec<3>(0, 1, 0), PI<double> / 2 - mobius_curve(alpha), v);
-                v += vec<3>(1, 0, 0);
-                v = rotate_vector(vec<3>(0, 0, 1), alpha, v);
+                Vector<3, double> v(0, 0, urd_line(engine));
+                v = rotate_vector(Vector<3, double>(0, 1, 0), PI<double> / 2 - mobius_curve(alpha), v);
+                v += Vector<3, double>(1, 0, 0);
+                v = rotate_vector(Vector<3, double>(0, 0, 1), alpha, v);
 
-                Vector<3, long> integer_point = to_integer(v, DISCRETIZATION);
-                if (integer_points.count(integer_point) == 0)
-                {
-                        integer_points.insert(integer_point);
-                        points.push_back(to_vector<float>(v));
-                }
+                points.add(v);
         }
 
-        check_unique_points(points);
+        return points.release();
+}
 
-        return points;
+// Точки на торе без равномерного распределения по его поверхности
+template <size_t N>
+std::vector<Vector<N, float>> generate_points_torus(unsigned point_count, bool bound)
+{
+        static_assert(N >= 3);
+        static_assert(TORUS_RADIUS_OF_TUBE > 0 && TORUS_RADIUS_OF_TUBE < 1);
+
+        DiscretePoints<N> points(point_count);
+
+        std::mt19937_64 engine(point_count);
+
+        while (points.size() < point_count)
+        {
+                Vector<N - 1, double> p_n1 = random_sphere<N - 1, double>(engine);
+
+                Vector<2, double> s = TORUS_RADIUS_OF_TUBE * random_sphere<2, double>(engine);
+                Vector<N, double> v = add_dimension_with_zero(p_n1 * (1 + s[0])) + vector_with_last_dimension<N, double>(s[1]);
+
+                if (bound && dot(v, LAST_AXIS<N, double>) < COS_FOR_BOUND)
+                {
+                        continue;
+                }
+
+                points.add(v);
+        }
+
+        return points.release();
 }
 
 template <typename T>
-std::vector<std::string> names_of_map(const std::map<std::string, T>& m)
+std::vector<std::string> names_of_map(const std::map<std::string, T>& map)
 {
-        std::vector<std::string> name_list;
-        name_list.reserve(m.size());
-        for (auto e : m)
+        std::vector<std::string> names;
+        names.reserve(map.size());
+
+        for (auto e : map)
         {
-                name_list.push_back(e.first);
+                names.push_back(e.first);
         }
-        return name_list;
+
+        return names;
 }
 
 template <size_t N>
@@ -256,6 +328,7 @@ class ObjectRepository final : public IObjectRepository<N>
         {
                 return generate_points_ellipsoid<N>(point_count, true);
         }
+
         std::vector<Vector<N, float>> sphere_with_notch(unsigned point_count) const override
         {
                 return generate_points_sphere_with_notch<N>(point_count, false);
@@ -264,15 +337,26 @@ class ObjectRepository final : public IObjectRepository<N>
         {
                 return generate_points_sphere_with_notch<N>(point_count, true);
         }
+
         std::vector<Vector<3, float>> mobius_strip(unsigned point_count) const
         {
                 return generate_points_mobius_strip(point_count);
         }
 
-        std::vector<std::string> list_of_point_objects() const override
+        std::vector<Vector<N, float>> torus(unsigned point_count) const
+        {
+                return generate_points_torus<N>(point_count, false);
+        }
+        std::vector<Vector<N, float>> torus_bound(unsigned point_count) const
+        {
+                return generate_points_torus<N>(point_count, true);
+        }
+
+        std::vector<std::string> point_object_names() const override
         {
                 return names_of_map(m_map);
         }
+
         std::vector<Vector<N, float>> point_object(const std::string& object_name, unsigned point_count) const override
         {
                 auto iter = m_map.find(object_name);
@@ -280,7 +364,7 @@ class ObjectRepository final : public IObjectRepository<N>
                 {
                         return (this->*(iter->second))(point_count);
                 }
-                error("object not found in repository: " + object_name);
+                error("Object not found in repository: " + object_name);
         }
 
 public:
@@ -288,11 +372,19 @@ public:
         {
                 m_map.emplace("Ellipsoid", &ObjectRepository<N>::ellipsoid);
                 m_map.emplace("Ellipsoid, bound", &ObjectRepository<N>::ellipsoid_bound);
+
                 m_map.emplace("Sphere with a notch", &ObjectRepository<N>::sphere_with_notch);
                 m_map.emplace("Sphere with a notch, bound", &ObjectRepository<N>::sphere_with_notch_bound);
+
                 if constexpr (N == 3)
                 {
                         m_map.emplace(u8"Möbius strip", &ObjectRepository<N>::mobius_strip);
+                }
+
+                if constexpr (N >= 3)
+                {
+                        m_map.emplace("Torus", &ObjectRepository<N>::torus);
+                        m_map.emplace("Torus, bound", &ObjectRepository<N>::torus_bound);
                 }
         }
 };

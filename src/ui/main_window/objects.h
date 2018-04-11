@@ -31,7 +31,7 @@ struct MainObjects
 {
         virtual ~MainObjects() = default;
 
-        virtual std::vector<std::tuple<int, std::vector<std::string>>> list_of_repository_point_objects() const = 0;
+        virtual std::vector<std::tuple<int, std::vector<std::string>>> repository_point_object_names() const = 0;
 
         virtual void set_show(IShow* show) = 0;
 

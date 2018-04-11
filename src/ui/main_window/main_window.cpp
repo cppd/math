@@ -157,7 +157,7 @@ void MainWindow::constructor_repository()
 {
         // QMenu* menuCreate = new QMenu("Create", this);
         // ui.menuBar->insertMenu(ui.menuHelp->menuAction(), menuCreate);
-        for (const auto& [dimension, object_names] : m_objects->list_of_repository_point_objects())
+        for (const auto& [dimension, object_names] : m_objects->repository_point_object_names())
         {
                 QMenu* sub_menu = ui.menuCreate->addMenu(space_name(dimension).c_str());
                 for (const std::string& object_name : object_names)

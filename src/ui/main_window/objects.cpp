@@ -108,7 +108,7 @@ public:
 
         void clear_all_data() noexcept;
 
-        std::vector<std::string> list_of_repository_point_objects() const;
+        std::vector<std::string> repository_point_object_names() const;
 
         void set_show(IShow* show);
 
@@ -150,9 +150,9 @@ void MainObjectsImpl<N>::catch_all(const F& function) const noexcept
 }
 
 template <size_t N>
-std::vector<std::string> MainObjectsImpl<N>::list_of_repository_point_objects() const
+std::vector<std::string> MainObjectsImpl<N>::repository_point_object_names() const
 {
-        return m_object_repository->list_of_point_objects();
+        return m_object_repository->point_object_names();
 }
 
 template <size_t N>
@@ -648,14 +648,14 @@ class MainObjectStorage final : public MainObjects
                 }
         }
 
-        std::vector<std::tuple<int, std::vector<std::string>>> list_of_repository_point_objects() const override
+        std::vector<std::tuple<int, std::vector<std::string>>> repository_point_object_names() const override
         {
                 // Количество измерений, названия объектов
                 std::vector<std::tuple<int, std::vector<std::string>>> list;
 
                 for (const auto& p : m_objects)
                 {
-                        visit([&](const auto& v) { list.push_back({p.first, v.list_of_repository_point_objects()}); }, p.second);
+                        visit([&](const auto& v) { list.push_back({p.first, v.repository_point_object_names()}); }, p.second);
                 }
 
                 std::sort(list.begin(), list.end(),
