@@ -193,7 +193,7 @@ std::string to_string_digit_groups(char32_t v, char s = '\x20') = delete;
 //
 
 template <typename T>
-std::enable_if_t<HasBeginEnd<T>, std::string> to_string(const T& data)
+std::enable_if_t<has_begin_end<T>, std::string> to_string(const T& data)
 {
         std::string res;
 

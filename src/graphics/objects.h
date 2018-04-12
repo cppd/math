@@ -647,25 +647,25 @@ public:
         template <typename T>
         void load_static_draw(const T& data) const
         {
-                static_assert(IsVector<T> || IsArray<T>);
+                static_assert(is_vector<T> || is_array<T>);
                 glNamedBufferData(m_buffer, data.size() * sizeof(typename T::value_type), data.data(), GL_STATIC_DRAW);
         }
         template <typename T>
         void load_static_copy(const T& data) const
         {
-                static_assert(IsVector<T> || IsArray<T>);
+                static_assert(is_vector<T> || is_array<T>);
                 glNamedBufferData(m_buffer, data.size() * sizeof(typename T::value_type), data.data(), GL_STATIC_COPY);
         }
         template <typename T>
         void load_dynamic_draw(const T& data) const
         {
-                static_assert(IsVector<T> || IsArray<T>);
+                static_assert(is_vector<T> || is_array<T>);
                 glNamedBufferData(m_buffer, data.size() * sizeof(typename T::value_type), data.data(), GL_DYNAMIC_DRAW);
         }
         template <typename T>
         void load_dynamic_copy(const T& data) const
         {
-                static_assert(IsVector<T> || IsArray<T>);
+                static_assert(is_vector<T> || is_array<T>);
                 glNamedBufferData(m_buffer, data.size() * sizeof(typename T::value_type), data.data(), GL_DYNAMIC_COPY);
         }
 
@@ -731,13 +731,13 @@ public:
         template <typename T>
         void load_static_draw(const T& v) const
         {
-                static_assert(IsVector<T> || IsArray<T>);
+                static_assert(is_vector<T> || is_array<T>);
                 glNamedBufferData(m_buffer, v.size() * sizeof(typename T::value_type), v.data(), GL_STATIC_DRAW);
         }
         template <typename T>
         void load_dynamic_draw(const T& v) const
         {
-                static_assert(IsVector<T> || IsArray<T>);
+                static_assert(is_vector<T> || is_array<T>);
                 glNamedBufferData(m_buffer, v.size() * sizeof(typename T::value_type), v.data(), GL_DYNAMIC_DRAW);
         }
 };
@@ -811,7 +811,7 @@ public:
 class TextureRGBA32F final
 {
         template <typename T>
-        static constexpr bool is_float_buffer = (IsVector<T> || IsArray<T>)&&std::is_same_v<typename T::value_type, GLfloat>;
+        static constexpr bool is_float_buffer = (is_vector<T> || is_array<T>)&&std::is_same_v<typename T::value_type, GLfloat>;
 
         Texture2D m_texture;
 
@@ -905,7 +905,7 @@ public:
 class TextureR32F final
 {
         template <typename T>
-        static constexpr bool is_float_buffer = (IsVector<T> || IsArray<T>)&&std::is_same_v<typename T::value_type, GLfloat>;
+        static constexpr bool is_float_buffer = (is_vector<T> || is_array<T>)&&std::is_same_v<typename T::value_type, GLfloat>;
 
         Texture2D m_texture;
 
@@ -980,7 +980,7 @@ public:
 class TextureR32I final
 {
         template <typename T>
-        static constexpr bool is_int_buffer = (IsVector<T> || IsArray<T>)&&std::is_same_v<typename T::value_type, GLint>;
+        static constexpr bool is_int_buffer = (is_vector<T> || is_array<T>)&&std::is_same_v<typename T::value_type, GLint>;
 
         Texture2D m_texture;
 

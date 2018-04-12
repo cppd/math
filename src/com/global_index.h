@@ -52,7 +52,7 @@ class GlobalIndex
                 // Все размеры должны быть положительными, все координаты неотрицательными,
                 // поэтому не требуется, чтобы типы были или оба знаковые, или оба беззнаковые.
 
-                static_assert((IsArray<T> && T().size() == N) || IsVector<T>);
+                static_assert((is_array<T> && T().size() == N) || is_vector<T>);
                 static_assert(is_native_integral<typename T::value_type>);
                 static_assert(limits<IndexType>::digits >= limits<typename T::value_type>::digits ||
                               (limits<IndexType>::digits >= limits<std::ptrdiff_t>::digits &&
@@ -66,7 +66,7 @@ class GlobalIndex
 
                 static_check_input_type<T>();
 
-                if constexpr (IsVector<T>)
+                if constexpr (is_vector<T>)
                 {
                         ASSERT(sizes.size() == N);
                 }
@@ -129,7 +129,7 @@ public:
         {
                 static_check_input_type<T>();
 
-                if constexpr (IsVector<T>)
+                if constexpr (is_vector<T>)
                 {
                         ASSERT(p.size() == N);
                 }

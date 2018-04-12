@@ -70,20 +70,20 @@ public:
 }
 
 template <typename T>
-inline constexpr bool IsArray = TypeDetectionImplementation::IsArray::S<std::remove_cv_t<T>>::value;
+inline constexpr bool is_array = TypeDetectionImplementation::IsArray::S<std::remove_cv_t<T>>::value;
 template <typename T>
-inline constexpr bool IsVector = TypeDetectionImplementation::IsVector::S<std::remove_cv_t<T>>::value;
+inline constexpr bool is_vector = TypeDetectionImplementation::IsVector::S<std::remove_cv_t<T>>::value;
 
 template <typename T>
-inline constexpr bool HasBeginEnd = TypeDetectionImplementation::HasBeginEnd<T>::value;
+inline constexpr bool has_begin_end = TypeDetectionImplementation::HasBeginEnd<T>::value;
 
-static_assert(IsArray<const std::array<int, 1>>);
-static_assert(IsVector<const std::vector<int>>);
+static_assert(is_array<const std::array<int, 1>>);
+static_assert(is_vector<const std::vector<int>>);
 
-static_assert(!IsArray<const std::vector<int>>);
-static_assert(!IsVector<const std::array<int, 1>>);
+static_assert(!is_array<const std::vector<int>>);
+static_assert(!is_vector<const std::array<int, 1>>);
 
-static_assert(HasBeginEnd<const std::array<int, 1>>);
-static_assert(HasBeginEnd<std::vector<double>&>);
-static_assert(!HasBeginEnd<int>);
-static_assert(!HasBeginEnd<double*>);
+static_assert(has_begin_end<const std::array<int, 1>>);
+static_assert(has_begin_end<std::vector<double>&>);
+static_assert(!has_begin_end<int>);
+static_assert(!has_begin_end<double*>);
