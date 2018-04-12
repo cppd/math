@@ -26,12 +26,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/log.h"
 #include "com/names.h"
 #include "com/print.h"
-#include "ui/dialogs/application_about.h"
-#include "ui/dialogs/application_help.h"
-#include "ui/dialogs/bound_cocone_parameters.h"
-#include "ui/dialogs/message_box.h"
-#include "ui/dialogs/point_object_parameters.h"
-#include "ui/dialogs/source_error.h"
+#include "ui/dialogs/messages/application_about.h"
+#include "ui/dialogs/messages/application_help.h"
+#include "ui/dialogs/messages/message_box.h"
+#include "ui/dialogs/messages/source_error.h"
+#include "ui/dialogs/parameters/bound_cocone.h"
+#include "ui/dialogs/parameters/point_object.h"
 #include "ui/support/support.h"
 
 #include <QCloseEvent>

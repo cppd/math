@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "main_function.h"
 
-#include "ui/dialogs/message_box.h"
+#include "ui/dialogs/messages/message_box.h"
 #include "ui/main_window/main_window.h"
 #include "ui/support/support.h"
 

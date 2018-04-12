@@ -20,8 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "path_tracing/scenes.h"
 #include "path_tracing/visible_lights.h"
 #include "path_tracing/visible_projectors.h"
-#include "ui/dialogs/path_tracing_parameters_3d.h"
-#include "ui/dialogs/path_tracing_parameters_nd.h"
+#include "ui/dialogs/parameters/path_tracing_3d.h"
+#include "ui/dialogs/parameters/path_tracing_nd.h"
 #include "ui/painter_window/painter_window.h"
 #include "ui/support/support.h"
 

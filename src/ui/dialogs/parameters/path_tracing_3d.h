@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "ui_path_tracing_parameters_3d.h"
+#include "ui_path_tracing_3d.h"
 
 class PathTracingParametersFor3d final : public QDialog
 {

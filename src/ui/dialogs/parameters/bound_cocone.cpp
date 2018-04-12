@@ -15,12 +15,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "bound_cocone_parameters.h"
-
-#include "message_box.h"
+#include "bound_cocone.h"
 
 #include "com/error.h"
 #include "com/print.h"
+#include "ui/dialogs/messages/message_box.h"
 
 #include <cmath>
 

@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/log.h"
 #include "com/print.h"
 #include "com/time.h"
-#include "ui/dialogs/message_box.h"
+#include "ui/dialogs/messages/message_box.h"
 
 #include <QCloseEvent>
 #include <QFileDialog>

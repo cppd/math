@@ -15,12 +15,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "path_tracing_parameters_3d.h"
-
-#include "message_box.h"
+#include "path_tracing_3d.h"
 
 #include "com/error.h"
 #include "com/print.h"
+#include "ui/dialogs/messages/message_box.h"
 
 PathTracingParametersFor3d::PathTracingParametersFor3d(QWidget* parent) : QDialog(parent)
 {

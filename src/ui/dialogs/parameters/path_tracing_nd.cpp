@@ -15,13 +15,12 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "path_tracing_parameters_nd.h"
-
-#include "message_box.h"
+#include "path_tracing_nd.h"
 
 #include "com/error.h"
 #include "com/names.h"
 #include "com/print.h"
+#include "ui/dialogs/messages/message_box.h"
 
 PathTracingParametersForNd::PathTracingParametersForNd(QWidget* parent) : QDialog(parent)
 {
