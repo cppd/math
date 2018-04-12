@@ -17,81 +17,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "painter_window_2d.h"
+
 #include "com/global_index.h"
 #include "path_tracing/painter.h"
 #include "path_tracing/visible_paintbrush.h"
 
-#include "ui_painter_window.h"
-
-#include <QImage>
-#include <QLabel>
-#include <QSlider>
-#include <QTimer>
-#include <deque>
+#include <array>
+#include <atomic>
 #include <memory>
 #include <string>
 #include <thread>
-
-class PainterWindowUI : public QWidget
-{
-        Q_OBJECT
-
-signals:
-        void error_message_signal(QString) const;
-
-private slots:
-        void timer_slot();
-        void first_shown();
-        void error_message_slot(QString);
-        void slider_changed_slot(int);
-
-        void on_pushButton_save_to_file_clicked();
-
-public:
-        PainterWindowUI(const std::string& title, std::vector<int>&& m_screen_size,
-                        const std::vector<int>& initial_slider_positions);
-        ~PainterWindowUI() override;
-
-protected:
-        void error_message(const std::string& msg) const noexcept;
-
-private:
-        struct DimensionSlider
-        {
-                QLabel label;
-                QSlider slider;
-        };
-
-        void showEvent(QShowEvent* event) override;
-        void closeEvent(QCloseEvent* event) override;
-
-        void init_interface(const std::vector<int>& initial_slider_positions);
-        std::vector<int> slider_positions() const;
-        void update_points();
-        void update_statistics();
-
-        virtual void painter_statistics(long long* pass_count, long long* pixel_count, long long* ray_count,
-                                        long long* sample_count, double* previous_pass_duration) const noexcept = 0;
-        virtual void slider_positions_change_event(const std::vector<int>& slider_positions) = 0;
-        virtual const quint32* pixel_pointer(bool show_threads) const noexcept = 0;
-
-        const std::vector<int> m_screen_size;
-        const int m_width, m_height;
-        QImage m_image;
-        const int m_image_byte_count;
-        QTimer m_timer;
-        bool m_first_show;
-
-        class Difference;
-        std::unique_ptr<Difference> m_difference;
-
-        std::deque<DimensionSlider> m_dimension_sliders;
-
-        Ui::PainterWindow ui;
-};
+#include <vector>
 
 template <size_t N, typename T>
-class PainterWindow final : public PainterWindowUI, public IPainterNotifier<N - 1>
+class PainterWindow final : public PainterWindow2d, public IPainterNotifier<N - 1>
 {
         static_assert(N >= 3);
         static constexpr size_t N_IMAGE = N - 1;
@@ -119,7 +59,7 @@ class PainterWindow final : public PainterWindowUI, public IPainterNotifier<N - 
         void set_pixel(long long index, unsigned char r, unsigned char g, unsigned char b) noexcept;
         void mark_pixel_busy(long long index) noexcept;
 
-        // PainterWindowUI
+        // PainterWindow2d
         void painter_statistics(long long* pass_count, long long* pixel_count, long long* ray_count, long long* sample_count,
                                 double* previous_pass_duration) const noexcept override;
         void slider_positions_change_event(const std::vector<int>& slider_positions) override;
@@ -135,4 +75,9 @@ public:
                       std::unique_ptr<const PaintObjects<N, T>>&& paint_objects);
 
         ~PainterWindow() override;
+
+        PainterWindow(const PainterWindow&) = delete;
+        PainterWindow(PainterWindow&&) = delete;
+        PainterWindow& operator=(const PainterWindow&) = delete;
+        PainterWindow& operator=(PainterWindow&&) = delete;
 };
