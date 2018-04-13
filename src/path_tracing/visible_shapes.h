@@ -164,7 +164,7 @@ public:
 
                 s.set_geometric_normal(m_mesh->geometric_normal(intersection_data));
                 s.set_shading_normal(m_mesh->shading_normal(p, intersection_data));
-                s.set_triangle_mesh(true);
+                s.set_mesh(true);
 
                 if (std::optional<Color> color = m_mesh->color(p, intersection_data))
                 {

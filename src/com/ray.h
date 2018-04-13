@@ -64,6 +64,14 @@ public:
         {
                 m_org += m_dir * t;
         }
+
+        Ray<N, T> reverse_ray() const
+        {
+                Ray<N, T> r;
+                r.m_org = m_org;
+                r.m_dir = -m_dir;
+                return r;
+        }
 };
 
 template <size_t N, typename T>

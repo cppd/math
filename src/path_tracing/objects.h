@@ -30,7 +30,7 @@ class SurfaceProperties
         // Реальный перпендикуляр.
         Vector<N, T> m_geometric_normal;
         // Видимый перпендикуляр к поверхности. Например, при интерполяции
-        // перпендикуляра по перпендикулярам в вершинах треугольников.
+        // перпендикуляра по перпендикулярам в вершинах симплексов.
         Vector<N, T> m_shading_normal;
         // Цвет поверхности.
         Color m_color;
@@ -43,8 +43,8 @@ class SurfaceProperties
         T m_refraction;
         // Является ли поверхность источником света.
         bool m_light_source;
-        // Является ли поверхность набором треугольников
-        bool m_triangle_mesh = false;
+        // Является ли поверхность набором симплексов
+        bool m_mesh = false;
 
 public:
         SurfaceProperties() = default;
@@ -128,13 +128,13 @@ public:
                 return m_light_source;
         }
 
-        void set_triangle_mesh(bool triangle_mesh)
+        void set_mesh(bool mesh)
         {
-                m_triangle_mesh = triangle_mesh;
+                m_mesh = mesh;
         }
-        bool is_triangle_mesh() const
+        bool is_mesh() const
         {
-                return m_triangle_mesh;
+                return m_mesh;
         }
 };
 

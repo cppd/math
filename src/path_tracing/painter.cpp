@@ -167,11 +167,13 @@ bool object_is_obstacle_to_light(const GenericObject<N, T>* object, const Ray<N,
 }
 
 template <size_t N, typename T>
-bool light_source_is_visible(const std::vector<const GenericObject<N, T>*>& objects, const Ray<N, T>& ray,
+bool light_source_is_visible(Counter& ray_count, const std::vector<const GenericObject<N, T>*>& objects, const Ray<N, T>& ray,
                              T distance_to_light_source)
 {
         for (const GenericObject<N, T>* object : objects)
         {
+                ++ray_count;
+
                 if (object_is_obstacle_to_light(object, ray, distance_to_light_source))
                 {
                         return false;
@@ -180,10 +182,19 @@ bool light_source_is_visible(const std::vector<const GenericObject<N, T>*>& obje
         return true;
 }
 
+template <size_t N, typename T, typename Object>
+bool ray_intersection_distance(const std::vector<const Object*>& objects, const Ray<N, T>& ray, T* intersection_distance)
+{
+        const Surface<N, T>* intersection_surface;
+        const void* intersection_data;
+
+        return ray_intersection(objects, ray, intersection_distance, &intersection_surface, &intersection_data);
+}
+
 template <size_t N, typename T>
 Color direct_diffuse_lighting(Counter& ray_count, const std::vector<const GenericObject<N, T>*>& objects,
                               const std::vector<const LightSource<N, T>*> light_sources, const Vector<N, T>& p,
-                              const Vector<N, T>& geometric_normal, const Vector<N, T>& shading_normal, bool triangle_mesh,
+                              const Vector<N, T>& geometric_normal, const Vector<N, T>& shading_normal, bool mesh,
                               const T& ray_offset)
 {
         Color color(0);
@@ -202,57 +213,74 @@ Color direct_diffuse_lighting(Counter& ray_count, const std::vector<const Generi
 
                 Ray<N, T> ray_to_light = Ray<N, T>(p, vector_to_light);
 
-                T dot_light_and_normal = dot(ray_to_light.dir(), shading_normal);
+                const T dot_light_and_normal = dot(ray_to_light.dir(), shading_normal);
 
                 if (dot_light_and_normal <= DOT_PRODUCT_EPSILON<T>)
                 {
-                        // свет находится по другую сторону поверхности
+                        // Свет находится по другую сторону поверхности
                         continue;
                 }
 
-                T light_weight = DIFFUSE_LIGHT_COEFFICIENT<N, T> * dot_light_and_normal;
-
-                ++ray_count;
-
-                ray_to_light.move_along_dir(ray_offset);
-
-                if (!triangle_mesh || dot(ray_to_light.dir(), geometric_normal) >= 0)
+                if (!mesh || dot(ray_to_light.dir(), geometric_normal) >= 0)
                 {
-                        // Если не объект из треугольников или геометрическая сторона обращена к источнику
-                        // света, то напрямую рассчитать видимость источника света.
-                        if (!light_source_is_visible(objects, ray_to_light, length(vector_to_light)))
+                        // Если объект не состоит из симплексов или геометрическая сторона обращена
+                        // к источнику света, то напрямую рассчитать видимость источника света.
+
+                        ray_to_light.move_along_dir(ray_offset);
+                        if (!light_source_is_visible(ray_count, objects, ray_to_light, length(vector_to_light)))
                         {
                                 continue;
                         }
                 }
                 else
                 {
-                        // Если объект из треугольников и геометрическая сторона направлена от источника света,
-                        // то геометрически она не освещена, но из-за нормалей у вершин, дающих сглаживание,
-                        // она может быть «освещена», и надо определить, находится ли она в тени без учёта
-                        // тени от самой поверхности в окрестности точки. Это можно сделать направлением луча
-                        // к источнику света с игнорированием самого первого пересечения в предположении, что
-                        // оно произошло с этой самой окрестностью точки.
+                        // Если объект состоит из симплексов и геометрическая сторона направлена
+                        // от источника  света, то геометрически она не освещена, но из-за нормалей
+                        // у вершин, дающих сглаживание, она может быть «освещена», и надо определить,
+                        // находится ли она в тени без учёта тени от самой поверхности в окрестности
+                        // точки. Это можно сделать направлением луча к источнику света с игнорированием
+                        // самого первого пересечения в предположении, что оно произошло с этой самой
+                        // окрестностью точки.
+
+                        ++ray_count;
+                        ray_to_light.move_along_dir(ray_offset);
                         T t;
-                        const Surface<N, T>* surface;
-                        const void* intersection_data;
-                        if (ray_intersection(objects, ray_to_light, &t, &surface, &intersection_data))
+                        if (!ray_intersection_distance(objects, ray_to_light, &t))
                         {
-                                T distance_to_light_source = length(vector_to_light);
+                                // Если луч к источнику света направлен внутрь поверхности, и нет повторного
+                                // пересечения с поверхностью, то нет освещения в точке.
+                                continue;
+                        }
 
-                                if (t < distance_to_light_source)
-                                {
-                                        ++ray_count;
+                        T distance_to_light_source = length(vector_to_light);
 
-                                        ray_to_light.move_along_dir(t + ray_offset);
+                        if (t >= distance_to_light_source)
+                        {
+                                // Источник света находится внутри поверхности
+                                continue;
+                        }
 
-                                        if (!light_source_is_visible(objects, ray_to_light, distance_to_light_source - t))
-                                        {
-                                                continue;
-                                        }
-                                }
+                        ++ray_count;
+                        Ray<N, T> ray_from_light = ray_to_light.reverse_ray();
+                        ray_from_light.move_along_dir(2 * ray_offset);
+                        T t_reverse;
+                        if (ray_intersection_distance(objects, ray_from_light, &t_reverse) && (t_reverse < t))
+                        {
+                                // Если для луча, направленного от поверхности и от источника света,
+                                // имеется пересечение с поверхностью на расстоянии меньше, чем расстояние
+                                // до пересечения внутрь поверхности к источнику света, то предполагается,
+                                // что точка находится по другую сторону от источника света.
+                                continue;
+                        }
+
+                        ray_to_light.move_along_dir(t + ray_offset);
+                        if (!light_source_is_visible(ray_count, objects, ray_to_light, distance_to_light_source - t))
+                        {
+                                continue;
                         }
                 }
+
+                T light_weight = DIFFUSE_LIGHT_COEFFICIENT<N, T> * dot_light_and_normal;
 
                 color += light_source_color * light_weight;
         }
@@ -267,7 +295,7 @@ Color trace_path(const PaintData<N, T>& paint_data, Counter& ray_count, PainterR
 template <size_t N, typename T>
 Color diffuse_lighting(const PaintData<N, T>& paint_data, Counter& ray_count, PainterRandomEngine<T>& random_engine,
                        int recursion_level, Color::DataType color_level, const Vector<N, T>& point,
-                       const Vector<N, T>& shading_normal, const Vector<N, T>& geometric_normal, bool triangle_mesh)
+                       const Vector<N, T>& shading_normal, const Vector<N, T>& geometric_normal, bool mesh)
 {
         if (recursion_level < MAX_RECURSION_LEVEL)
         {
@@ -276,7 +304,7 @@ Color diffuse_lighting(const PaintData<N, T>& paint_data, Counter& ray_count, Pa
                 // Случайный вектор диффузного освещения надо определять от видимой нормали.
                 Ray<N, T> diffuse_ray = Ray<N, T>(point, random_cosine_weighted_on_hemisphere(random_engine, shading_normal));
 
-                if (triangle_mesh && dot(diffuse_ray.dir(), geometric_normal) <= DOT_PRODUCT_EPSILON<T>)
+                if (mesh && dot(diffuse_ray.dir(), geometric_normal) <= DOT_PRODUCT_EPSILON<T>)
                 {
                         // Если получившийся случайный вектор диффузного отражения показывает
                         // в другую сторону от поверхности, то диффузного освещения нет.
@@ -316,7 +344,7 @@ Color trace_path(const PaintData<N, T>& paint_data, Counter& ray_count, PainterR
 
         T dot_dir_and_geometric_normal = dot(ray.dir(), geometric_normal);
 
-        bool triangle_mesh = surface_properties.is_triangle_mesh();
+        bool mesh = surface_properties.is_mesh();
 
         if (std::abs(dot_dir_and_geometric_normal) <= DOT_PRODUCT_EPSILON<T>)
         {
@@ -328,7 +356,7 @@ Color trace_path(const PaintData<N, T>& paint_data, Counter& ray_count, PainterR
                 return (diffuse_reflection) ? surface_properties.get_light_source_color() : surface_properties.get_color();
         }
 
-        Vector<N, T> shading_normal = triangle_mesh ? surface_properties.get_shading_normal() : geometric_normal;
+        Vector<N, T> shading_normal = mesh ? surface_properties.get_shading_normal() : geometric_normal;
 
         ASSERT(dot(geometric_normal, shading_normal) > DOT_PRODUCT_EPSILON<T>);
 
@@ -350,12 +378,11 @@ Color trace_path(const PaintData<N, T>& paint_data, Counter& ray_count, PainterR
 
                 if (new_color_level >= MIN_COLOR_LEVEL)
                 {
-                        Color direct =
-                                direct_diffuse_lighting(ray_count, paint_data.objects, paint_data.light_sources, point,
-                                                        geometric_normal, shading_normal, triangle_mesh, paint_data.ray_offset);
+                        Color direct = direct_diffuse_lighting(ray_count, paint_data.objects, paint_data.light_sources, point,
+                                                               geometric_normal, shading_normal, mesh, paint_data.ray_offset);
 
                         Color diffuse = diffuse_lighting(paint_data, ray_count, random_engine, recursion_level, new_color_level,
-                                                         point, shading_normal, geometric_normal, triangle_mesh);
+                                                         point, shading_normal, geometric_normal, mesh);
 
                         color += surface_color * (direct + diffuse);
                 }
