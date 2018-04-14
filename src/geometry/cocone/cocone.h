@@ -24,13 +24,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace CoconeImplementation
 {
-// Константа алгоритмов COCONE, равна cos(3 * PI / 8)
+// Константа алгоритмов Cocone, равна cos(3 * PI / 8)
 template <typename T>
 constexpr T COS_OF_AN_OPENING_ANGLE_WITH_THE_AXIS =
         0.3826834323650897717284599840303988667613445624856270414338006356275460339600896922370137853422835471L;
 }
 
-// Условия пересечения ребра ячейки Вороного, соответствующего грани, с COCONE вершины.
+// Условия пересечения ребра ячейки Вороного, соответствующего грани, с cocone вершины.
 // Параметры - косинусы между перпендикуляром к вершине и двумя вершинами ребра ячейки Вороного.
 template <typename T>
 bool voronoi_edge_intersects_cocone(T cos_n_a, T cos_n_b)

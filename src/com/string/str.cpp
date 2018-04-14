@@ -35,6 +35,10 @@ bool is_space(char c)
 {
         return std::isspace(static_cast<unsigned char>(c));
 }
+bool is_alpha(char c)
+{
+        return std::isalpha(static_cast<unsigned char>(c));
+}
 }
 
 std::string trim(const std::string_view& s)
@@ -86,6 +90,34 @@ std::string to_lower(const std::string_view& s)
         for (char c : s)
         {
                 result += to_lower(c);
+        }
+        return result;
+}
+
+std::string to_upper_first_letters(const std::string_view& s)
+{
+        bool first_letter = true;
+        std::string result;
+        result.reserve(s.size());
+        for (char c : s)
+        {
+                if (is_alpha(c))
+                {
+                        if (first_letter)
+                        {
+                                result += to_upper(c);
+                                first_letter = false;
+                        }
+                        else
+                        {
+                                result += to_lower(c);
+                        }
+                }
+                else
+                {
+                        result += c;
+                        first_letter = true;
+                }
         }
         return result;
 }

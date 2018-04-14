@@ -64,6 +64,7 @@ Chapman & Hall/CRC, 2004.
 #include "com/error.h"
 #include "com/log.h"
 #include "com/math.h"
+#include "com/names.h"
 #include "com/print.h"
 #include "com/thread_pool.h"
 #include "com/types.h"
@@ -571,7 +572,7 @@ void create_convex_hull(const std::vector<Vector<N, S>>& points, FacetList<Facet
         // Проверить на минимум по количеству точек
         if (points.size() < N + 1)
         {
-                error("Error point count " + std::to_string(points.size()) + " for convex hull " + std::to_string(N) + "D");
+                error("Error point count " + std::to_string(points.size()) + " for convex hull in " + space_name(N));
         }
 
         facets->clear();
@@ -713,9 +714,9 @@ void paraboloid_convex_hull(const std::vector<Vector<N, long long>>& points, con
         using FacetCH = Facet<N + 1, DataTypeParaboloid<N + 1>, ComputeTypeParaboloid<N + 1>>;
         using PointCH = Vector<N + 1, DataTypeParaboloid<N + 1>>;
 
-        LOG("Paraboloid " + to_string(N + 1) + "D. Max: " + to_string(PARABOLOID_BITS) +
+        LOG("Paraboloid " + space_name(N + 1) + ". Max: " + to_string(PARABOLOID_BITS) +
             ". Data: " + type_str<DataTypeParaboloid<N + 1>>() + ". Compute: " + type_str<ComputeTypeParaboloid<N + 1>>() + ". " +
-            to_string(N) + "D. Data: " + type_str<DataTypeAfterParaboloid<N>>() +
+            space_name(N) + ". Data: " + type_str<DataTypeAfterParaboloid<N>>() +
             "; Compute: " + type_str<ComputeTypeAfterParaboloid<N>>());
 
         // Рассчитать Делоне на основе нижней части выпуклой оболочки параболоида размерности N + 1
@@ -787,7 +788,7 @@ void ordinary_convex_hull(const std::vector<Vector<N, long long>>& points, const
         using Facet = Facet<N, DataTypeOrdinary<N>, ComputeTypeOrdinary<N>>;
         using Point = Vector<N, DataTypeOrdinary<N>>;
 
-        LOG(to_string(N) + "D.  Max: " + to_string(ORDINARY_BITS) + ". Data: " + type_str<DataTypeOrdinary<N>>() +
+        LOG(space_name(N) + ".  Max: " + to_string(ORDINARY_BITS) + ". Data: " + type_str<DataTypeOrdinary<N>>() +
             ". Compute: " + type_str<ComputeTypeOrdinary<N>>());
 
         std::vector<Point> data(points.size());
@@ -820,7 +821,7 @@ template <size_t N>
 void delaunay_integer(const std::vector<Vector<N, float>>& source_points, std::vector<vec<N>>* points,
                       std::vector<DelaunaySimplex<N>>* simplices, ProgressRatio* progress)
 {
-        LOG("convex hull paraboloid " + to_string(N + 1) + "D integer");
+        LOG("convex hull paraboloid in " + space_name(N + 1) + " integer");
 
         std::vector<Vector<N, long long>> convex_hull_points;
         std::vector<int> points_map;
@@ -838,14 +839,14 @@ void delaunay_integer(const std::vector<Vector<N, float>>& source_points, std::v
                 (*points)[points_map[i]] = to_vector<double>(convex_hull_points[i]);
         }
 
-        LOG("convex hull paraboloid " + to_string(N + 1) + "D integer done");
+        LOG("convex hull paraboloid in " + space_name(N + 1) + " integer done");
 }
 
 template <size_t N>
 void convex_hull_integer(const std::vector<Vector<N, float>>& source_points, std::vector<ConvexHullFacet<N>>* facets,
                          ProgressRatio* progress)
 {
-        LOG("convex hull " + to_string(N) + "D integer");
+        LOG("convex hull in " + space_name(N) + " integer");
 
         std::vector<int> points_map;
         std::vector<Vector<N, long long>> convex_hull_points;
@@ -856,7 +857,7 @@ void convex_hull_integer(const std::vector<Vector<N, float>>& source_points, std
 
         ordinary_convex_hull(convex_hull_points, points_map, facets, progress);
 
-        LOG("convex hull " + to_string(N) + "D integer done");
+        LOG("convex hull in " + space_name(N) + " integer done");
 }
 }
 

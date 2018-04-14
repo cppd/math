@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/error.h"
 #include "com/log.h"
 #include "com/mat.h"
+#include "com/names.h"
 #include "com/time.h"
 #include "com/variant.h"
 #include "geometry/cocone/reconstruction.h"
@@ -187,9 +188,9 @@ std::string MainObjectsImpl<N>::object_name(ObjectType object_type)
         case ObjectType::Model:
                 return "Model";
         case ObjectType::Cocone:
-                return "COCONE";
+                return "Cocone";
         case ObjectType::BoundCocone:
-                return "BOUND COCONE";
+                return "BoundCocone";
         }
         error_fatal("Unknown object type");
 }
@@ -263,7 +264,7 @@ void MainObjectsImpl<N>::add_object_and_convex_hull(ProgressRatioList* progress_
 
         {
                 ProgressRatio progress(progress_list);
-                progress.set_text(object_name(object_type) + " convex hull " + to_string(N) + "D: %v of %m");
+                progress.set_text(object_name(object_type) + " convex hull in " + space_name(N) + ": %v of %m");
 
                 convex_hull = create_convex_hull_for_obj(obj.get(), &progress);
         }
@@ -420,7 +421,7 @@ void MainObjectsImpl<N>::manifold_constructor(ProgressRatioList* progress_list, 
 
         std::thread thread_cocone([&]() noexcept {
                 catch_all([&](std::string* message) {
-                        *message = "COCONE reconstruction";
+                        *message = "Cocone reconstruction in " + space_name(N);
 
                         cocone(progress_list);
                 });
@@ -428,7 +429,7 @@ void MainObjectsImpl<N>::manifold_constructor(ProgressRatioList* progress_list, 
 
         std::thread thread_bound_cocone([&]() noexcept {
                 catch_all([&](std::string* message) {
-                        *message = "BOUND COCONE reconstruction";
+                        *message = "BoundCocone reconstruction in " + space_name(N);
 
                         bound_cocone(progress_list, rho, alpha);
                 });
@@ -436,7 +437,7 @@ void MainObjectsImpl<N>::manifold_constructor(ProgressRatioList* progress_list, 
 
         std::thread thread_mst([&]() noexcept {
                 catch_all([&](std::string* message) {
-                        *message = "Minimum spanning tree " + to_string(N) + "D";
+                        *message = "Minimum spanning tree in " + space_name(N);
 
                         build_mst(progress_list);
                 });

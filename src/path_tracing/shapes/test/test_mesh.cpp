@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/error.h"
 #include "com/log.h"
+#include "com/names.h"
 #include "com/print.h"
 #include "com/random/engine.h"
 #include "com/time.h"
@@ -127,7 +128,7 @@ std::unique_ptr<const Mesh<N, T>> simplex_mesh_of_sphere(const Vector<N, float>&
         std::vector<Vector<N, float>> points;
         std::vector<std::array<int, N>> facets;
 
-        LOG("convex hull in " + to_string(N) + "D, point count " + to_string(point_count));
+        LOG("convex hull in " + space_name(N) + ", point count " + to_string(point_count));
 
         progress->set_text("Data: %v of %m");
 
@@ -208,7 +209,7 @@ void test_sphere_mesh(const Mesh<N, T>& mesh, int ray_count, bool with_ray_log, 
                 if (with_ray_log)
                 {
                         LOG("");
-                        LOG("ray #" + to_string(i) + " in " + to_string(N) + "D");
+                        LOG("ray #" + to_string(i) + " in " + space_name(N));
                 }
 
                 T approximate, precise;
@@ -339,7 +340,7 @@ template <size_t N, typename T>
 void test_mesh(int point_low, int point_high, int ray_low, int ray_high, int thread_count, bool with_ray_log, bool with_error_log,
                ProgressRatio* progress)
 {
-        LOG("----------- " + to_string(N) + "D, " + type_name<T>() + " -----------");
+        LOG("----------- " + space_name(N) + ", " + type_name<T>() + " -----------");
 
         int point_count;
         int ray_count;

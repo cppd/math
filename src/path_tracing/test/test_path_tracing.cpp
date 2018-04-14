@@ -18,6 +18,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "test_path_tracing.h"
 
 #include "com/file/file_sys.h"
+#include "com/names.h"
+#include "com/string/str.h"
 #include "com/time.h"
 #include "obj/obj_file_load.h"
 #include "path_tracing/image/image.h"
@@ -163,7 +165,7 @@ void test_path_tracing_window(int samples_per_pixel, int thread_count, std::uniq
 
         check_application_instance();
 
-        std::string window_title = "Path Tracing In " + to_string(N) + "D Space";
+        std::string window_title = "Path Tracing In " + to_upper_first_letters(space_name(N));
 
         create_and_show_delete_on_close_window<PainterWindow<N, T>>(window_title, thread_count, samples_per_pixel,
                                                                     std::move(paint_objects));

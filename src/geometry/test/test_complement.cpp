@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/log.h"
 #include "com/math.h"
+#include "com/names.h"
 #include "com/random/engine.h"
 #include "com/random/vector.h"
 #include "com/time.h"
@@ -111,7 +112,7 @@ void test_complement(int count)
 {
         ASSERT(count > 0);
 
-        LOG("Test complement in " + to_string(N) + "D, " + to_string_digit_groups(count) + " " + type_name<T>() + ": " +
+        LOG("Test complement in " + space_name(N) + ", " + to_string_digit_groups(count) + " " + type_name<T>() + ": " +
             (GramSchmidt ? "Gram-Schmidt" : "Subspace"));
 
         std::vector<Vector<N, T>> vectors = random_vectors<N, T>(count);

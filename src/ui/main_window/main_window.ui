@@ -287,14 +287,14 @@
           <item>
            <widget class="QRadioButton" name="radioButton_BoundCocone">
             <property name="text">
-             <string>Bound cocone</string>
+             <string>BoundCocone</string>
             </property>
            </widget>
           </item>
           <item>
            <widget class="QRadioButton" name="radioButton_BoundCoconeConvexHull">
             <property name="text">
-             <string>Bound cocone CH</string>
+             <string>BoundCocone CH</string>
             </property>
            </widget>
           </item>

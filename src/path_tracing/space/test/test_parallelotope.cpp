@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/arrays.h"
 #include "com/error.h"
 #include "com/log.h"
+#include "com/names.h"
 #include "com/print.h"
 #include "com/random/engine.h"
 #include "com/random/vector.h"
@@ -520,7 +521,7 @@ void test_points(int point_count)
         std::uniform_real_distribution<T> urd_org(-10, 10);
 
         LOG("------------------------------");
-        LOG("Parallelotope points in " + to_string(N) + "D");
+        LOG("Parallelotope points in " + space_name(N));
 
         print_separator();
         LOG("parallelotope ortho");
@@ -602,7 +603,7 @@ void test_algorithms()
         constexpr Vector<N, T> org(0);
 
         LOG("------------------------------");
-        LOG("Parallelotope algorithms in " + to_string(N) + "D");
+        LOG("Parallelotope algorithms in " + space_name(N));
 
         print_separator();
         LOG("parallelotope ortho");
@@ -656,7 +657,7 @@ void test_intersections()
         std::array<T, N> edges_big = make_array_value<T, N>(10);
 
         LOG("------------------------------");
-        LOG("Parallelotope intersections in " + to_string(N) + "D");
+        LOG("Parallelotope intersections in " + space_name(N));
 
         print_separator();
         LOG("parallelotope ortho");

@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/error.h"
 #include "com/log.h"
+#include "com/names.h"
 #include "com/random/engine.h"
 #include "com/random/vector.h"
 #include "com/time.h"
@@ -149,7 +150,7 @@ void test_speed(int count)
 template <size_t N, typename T, typename RandomEngine>
 void test_cosine_hemisphere(int count, T discrepancy_limit)
 {
-        LOG("Test in " + to_string(N) + "D, " + to_string_digit_groups(count) + ", " + type_name<T>());
+        LOG("Test in " + space_name(N) + ", " + to_string_digit_groups(count) + ", " + type_name<T>());
 
         test_distribution<N, T, RandomEngine>(count, discrepancy_limit);
 

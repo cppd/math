@@ -44,9 +44,9 @@ void find_delaunay_object_facets(const std::vector<DelaunayObject<N>>& delaunay_
         }
 }
 
-// Выборка только внешних граней COCONE.
+// Выборка только внешних граней cocone.
 // Проход по граням Делоне через объекты Делоне, начиная от самых внешних граней.
-// При встречи грани COCONE она помечается как нужная, и за неё идти не надо.
+// При встречи грани cocone она помечается как нужная, и за неё идти не надо.
 template <size_t N>
 void traverse_delaunay(const std::vector<DelaunayFacet<N>>& delaunay_facets,
                        const std::vector<std::vector<int>>& delaunay_object_facets, const std::vector<bool>& cocone_facets,

@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "test_convex_hull.h"
 
 #include "com/log.h"
+#include "com/names.h"
 #include "com/random/engine.h"
 #include "com/time.h"
 #include "geometry/core/convex_hull.h"
@@ -185,14 +186,14 @@ void test(size_t low, size_t high, ProgressRatio* progress)
                 std::vector<Vector<N, float>> points;
                 LOG("-----------------");
                 generate_random_data(false, size, &points, on_sphere);
-                LOG("Convex hull in " + to_string(N) + "D, point count " + to_string(points.size()));
+                LOG("Convex hull in " + space_name(N) + ", point count " + to_string(points.size()));
                 create_convex_hull(points, true, progress);
         }
         {
                 std::vector<Vector<N, float>> points;
                 LOG("-----------------");
                 generate_random_data(true, size, &points, on_sphere);
-                LOG("Convex hull in " + to_string(N) + "D, point count " + to_string(points.size()));
+                LOG("Convex hull in " + space_name(N) + ", point count " + to_string(points.size()));
                 create_convex_hull(points, true, progress);
         }
 }

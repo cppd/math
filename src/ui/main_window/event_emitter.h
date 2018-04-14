@@ -88,7 +88,7 @@ public:
 
         void bound_cocone_loaded(double rho, double alpha) const noexcept
         {
-                emit_message<WindowEvent::bound_cocone_loaded>("Exception in emit BOUND COCONE loaded", rho, alpha);
+                emit_message<WindowEvent::bound_cocone_loaded>("Exception in emit BoundCocone loaded", rho, alpha);
         }
 
         void log(const std::string& msg) const noexcept override

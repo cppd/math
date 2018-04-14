@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/error.h"
 #include "com/math.h"
+#include "com/names.h"
 
 template <size_t N, typename T>
 class StratifiedJitteredSampler
@@ -47,7 +48,7 @@ class StratifiedJitteredSampler
                 }
 
                 error("Could not compute one dimension sample count for " + to_string(sample_count) + " samples in " +
-                      to_string(N) + "D");
+                      space_name(N));
         }
 
 public:

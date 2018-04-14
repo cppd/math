@@ -401,7 +401,7 @@ void MainWindow::thread_reload_bound_cocone()
 
         if (!m_threads.action_allowed(ThreadAction::ReloadBoundCocone))
         {
-                m_event_emitter.message_warning("BOUND COCONE is not available at this time (thread working)");
+                m_event_emitter.message_warning("BoundCocone is not available at this time (thread working)");
                 return;
         }
 
@@ -425,7 +425,7 @@ void MainWindow::thread_reload_bound_cocone()
 
                 m_threads.start_thread(ThreadAction::ReloadBoundCocone,
                                        [=](ProgressRatioList* progress_list, std::string* message) {
-                                               *message = "BOUND COCONE reconstruction";
+                                               *message = "BoundCocone reconstruction";
 
                                                m_objects->compute_bound_cocone(progress_list, rho, alpha);
                                        });

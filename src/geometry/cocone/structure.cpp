@@ -176,9 +176,9 @@ double voronoi_edge_radius(const std::vector<DelaunayObject<N>>& delaunay_object
                 return std::max(pa_length, pb_length);
         }
 
-        // Если вершины Вороного совпадают, то до этого места не дойдёт, так как тогда они внутри COCONE.
+        // Если вершины Вороного совпадают, то до этого места не дойдёт, так как тогда они внутри cocone.
         // Поэтому можно брать разницу между вершинами как вектор направления от a к b.
-        // Но могут быть и небольшие разницы на границах COCONE.
+        // Но могут быть и небольшие разницы на границах cocone.
         vec<N> a_to_b = facet.one_sided() ? facet.ortho() :
                                             (delaunay_objects[facet.delaunay(1)].voronoi_vertex() -
                                              delaunay_objects[facet.delaunay(0)].voronoi_vertex());
@@ -187,7 +187,7 @@ double voronoi_edge_radius(const std::vector<DelaunayObject<N>>& delaunay_object
 
         if (!intersect_cocone(positive_pole, pa, a_to_b, &max_distance))
         {
-                // Если вектор PA направлен далеко от COCONE и близко к положительному полюсу
+                // Если вектор PA направлен далеко от cocone и близко к положительному полюсу
                 if (std::abs(cos_n_a) > LIMIT_COSINE_FOR_INTERSECTION_PA_POLE)
                 {
                         double a_to_b_length = facet.one_sided() ? 1.0 : length(a_to_b);
@@ -201,18 +201,18 @@ double voronoi_edge_radius(const std::vector<DelaunayObject<N>>& delaunay_object
                         }
                         else
                         {
-                                error("COCONE intersection not found, PA is close to positive pole");
+                                error("Cocone intersection not found, PA is close to positive pole");
                         }
                 }
                 else
                 {
-                        error("COCONE intersection not found, PA is far from positive pole");
+                        error("Cocone intersection not found, PA is far from positive pole");
                 }
         }
 
         if (!is_finite(max_distance))
         {
-                error("COCONE intersection distance is not finite");
+                error("Cocone intersection distance is not finite");
         }
 
         if (cocone_inside_or_equal(cos_n_a))
@@ -225,7 +225,7 @@ double voronoi_edge_radius(const std::vector<DelaunayObject<N>>& delaunay_object
         }
 }
 
-// Радиус ячейки Вороного равен максимальному расстоянию от вершины то границ ячейки Вороного в границах COCONE.
+// Радиус ячейки Вороного равен максимальному расстоянию от вершины то границ ячейки Вороного в границах cocone.
 // В книге это Definition 5.3.
 template <size_t N>
 void cocone_facets_and_voronoi_radius(const vec<N>& vertex, const std::vector<DelaunayObject<N>>& delaunay_objects,
@@ -267,8 +267,8 @@ void cocone_facets_and_voronoi_radius(const vec<N>& vertex, const std::vector<De
                         continue;
                 }
 
-                // Грань считается COCONE, если соответствующее ей ребро Вороного пересекает COCONE всех N вершин.
-                // Найдено пересечение с COCONE одной из вершин.
+                // Грань считается cocone, если соответствующее ей ребро Вороного пересекает cocone всех N вершин.
+                // Найдено пересечение с cocone одной из вершин.
                 (*facet_data)[vertex_facet.facet_index].cocone_vertex[vertex_facet.vertex_index] = true;
 
                 if (find_radius && *radius != std::numeric_limits<double>::max())
@@ -308,7 +308,7 @@ void cocone_neighbors(const std::vector<DelaunayFacet<N>>& delaunay_facets, cons
                                         continue;
                                 }
 
-                                // Если грань попадает в COCONE вершины, то включить эту вершину в список соседей COCONE
+                                // Если грань попадает в cocone вершины, то включить эту вершину в список соседей cocone
                                 if (facet_data[facet_index].cocone_vertex[v])
                                 {
                                         (*vertex_data)[vertex_index].cocone_neighbors.push_back(

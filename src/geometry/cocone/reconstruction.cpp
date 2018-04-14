@@ -16,7 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 /*
-Алгоритмы восстановления поверхностей COCONE и BOUND COCONE.
+Алгоритмы восстановления поверхностей Cocone и BoundCocone.
 
 По книге
 
@@ -35,6 +35,7 @@ Cambridge University Press, 2007.
 #include "com/alg.h"
 #include "com/error.h"
 #include "com/log.h"
+#include "com/names.h"
 #include "com/print.h"
 
 #include <unordered_set>
@@ -47,7 +48,7 @@ namespace
 template <size_t N>
 bool cocone_facet(const std::vector<ManifoldFacet<N>>& facet_data, int facet)
 {
-        // Грань считается COCONE, если соответствующее ей ребро Вороного пересекает COCONE всех N вершин
+        // Грань считается cocone, если соответствующее ей ребро Вороного пересекает cocone всех N вершин
         for (unsigned v = 0; v < N; ++v)
         {
                 if (!facet_data[facet].cocone_vertex[v])
@@ -319,7 +320,7 @@ class ManifoldConstructor : public IManifoldConstructor<N>, public IManifoldCons
 
         void cocone(std::vector<vec<N>>* normals, std::vector<std::array<int, N>>* facets, ProgressRatio* progress) const override
         {
-                progress->set_text("COCONE reconstruction: %v of %m");
+                progress->set_text("Cocone reconstruction: %v of %m");
 
                 progress->set(0, 4);
                 LOG("vertex data...");
@@ -344,12 +345,12 @@ class ManifoldConstructor : public IManifoldConstructor<N>, public IManifoldCons
         {
                 if (m_cocone_only)
                 {
-                        error("Manifold constructor created for COCONE and not for BOUND COCONE");
+                        error("Manifold constructor created for Cocone and not for BoundCocone");
                 }
 
                 check_rho_and_aplha(rho, alpha);
 
-                progress->set_text("BOUND COCONE reconstruction: %v of %m");
+                progress->set_text("BoundCocone reconstruction: %v of %m");
 
                 progress->set(0, 4);
                 LOG("vertex data...");
@@ -390,7 +391,7 @@ public:
                 if (source_points.size() < N + 2)
                 {
                         error("Error point count " + std::to_string(source_points.size()) +
-                              " for cocone manifold reconstruction " + std::to_string(N) + "D");
+                              " for cocone manifold reconstruction in " + space_name(N));
                 }
 
                 progress->set_text("Voronoi-Delaunay: %v of %m");
