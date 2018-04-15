@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <memory>
 
 template <size_t N, typename T>
-class OneObject final : public PaintObjects<N, T>
+class SingleObjectScene final : public PaintObjects<N, T>
 {
         VisibleSharedMesh<N, T> m_object;
         std::unique_ptr<const Projector<N, T>> m_projector;
@@ -38,9 +38,9 @@ class OneObject final : public PaintObjects<N, T>
         std::vector<const LightSource<N, T>*> m_light_sources;
 
 public:
-        OneObject(const Color& background_color, const Color& default_color, Color::DataType diffuse,
-                  std::unique_ptr<const Projector<N, T>>&& projector, std::unique_ptr<const LightSource<N, T>>&& light_source,
-                  std::shared_ptr<const Mesh<N, T>>&& mesh)
+        SingleObjectScene(const Color& background_color, const Color& default_color, Color::DataType diffuse,
+                          std::unique_ptr<const Projector<N, T>>&& projector,
+                          std::unique_ptr<const LightSource<N, T>>&& light_source, std::shared_ptr<const Mesh<N, T>>&& mesh)
                 : m_object(std::move(mesh)), m_projector(std::move(projector)), m_light_source(std::move(light_source))
         {
                 m_default_surface_properties.set_color(background_color);
@@ -76,24 +76,24 @@ public:
 };
 
 template <size_t N, typename T>
-std::unique_ptr<const PaintObjects<N, T>> one_object_scene(const Color& background_color, const Color& default_color,
-                                                           Color::DataType diffuse,
-                                                           std::unique_ptr<const Projector<N, T>>&& projector,
-                                                           std::unique_ptr<const LightSource<N, T>>&& light_source,
-                                                           std::shared_ptr<const Mesh<N, T>> mesh)
+std::unique_ptr<const PaintObjects<N, T>> single_object_scene(const Color& background_color, const Color& default_color,
+                                                              Color::DataType diffuse,
+                                                              std::unique_ptr<const Projector<N, T>>&& projector,
+                                                              std::unique_ptr<const LightSource<N, T>>&& light_source,
+                                                              std::shared_ptr<const Mesh<N, T>> mesh)
 {
         ASSERT(projector && light_source && mesh);
 
-        return std::make_unique<OneObject<N, T>>(background_color, default_color, diffuse, std::move(projector),
-                                                 std::move(light_source), std::move(mesh));
+        return std::make_unique<SingleObjectScene<N, T>>(background_color, default_color, diffuse, std::move(projector),
+                                                         std::move(light_source), std::move(mesh));
 }
 
 template <size_t N, typename T>
-std::unique_ptr<const PaintObjects<N, T>> one_object_scene(const Color& background_color, const Color& default_color,
-                                                           Color::DataType diffuse, int min_screen_size, int max_screen_size,
-                                                           std::shared_ptr<const Mesh<N, T>> mesh)
+std::unique_ptr<const PaintObjects<N, T>> single_object_scene(const Color& background_color, const Color& default_color,
+                                                              Color::DataType diffuse, int min_screen_size, int max_screen_size,
+                                                              std::shared_ptr<const Mesh<N, T>> mesh)
 {
-        LOG("Creating simple scene...");
+        LOG("Creating single object scene...");
 
         ASSERT(mesh);
 
@@ -154,15 +154,15 @@ std::unique_ptr<const PaintObjects<N, T>> one_object_scene(const Color& backgrou
 
         //
 
-        Vector<N, T> light_position(max + (max - center));
+        Vector<N, T> light_position(max + T(100) * (max - center));
 
         std::unique_ptr<const LightSource<N, T>> light_source =
                 std::make_unique<const VisibleConstantLight<N, T>>(light_position, Color(1));
 
         //
 
-        return std::make_unique<OneObject<N, T>>(background_color, default_color, diffuse, std::move(projector),
-                                                 std::move(light_source), std::move(mesh));
+        return std::make_unique<SingleObjectScene<N, T>>(background_color, default_color, diffuse, std::move(projector),
+                                                         std::move(light_source), std::move(mesh));
 }
 
 std::unique_ptr<const PaintObjects<3, double>> cornell_box(int width, int height, const std::string& obj_file_name, double size,

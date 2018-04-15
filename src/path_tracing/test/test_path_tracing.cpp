@@ -184,7 +184,7 @@ void test_path_tracing(const std::shared_ptr<const Mesh<N, T>>& mesh, int min_sc
         Color::DataType diffuse = 1;
 
         std::unique_ptr<const PaintObjects<N, T>> paint_objects =
-                one_object_scene(BACKGROUND_COLOR, DEFAULT_COLOR, diffuse, min_screen_size, max_screen_size, mesh);
+                single_object_scene(BACKGROUND_COLOR, DEFAULT_COLOR, diffuse, min_screen_size, max_screen_size, mesh);
 
         static_assert(type == PathTracingTestOutputType::File || type == PathTracingTestOutputType::Window);
 
