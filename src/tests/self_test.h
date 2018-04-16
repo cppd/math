@@ -28,4 +28,4 @@ enum class SelfTestType
 };
 
 void self_test(SelfTestType test_type, IProgressRatioList* progress_ratio_list,
-               const std::function<void(const char* test_name, const std::function<void()>& test_function)>& catch_all);
+               const std::function<void(const std::string& test_name, const std::function<void()>& test_function)>& catch_all);

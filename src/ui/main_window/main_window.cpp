@@ -334,7 +334,7 @@ void MainWindow::thread_self_test(SelfTestType test_type, bool with_confirmation
         m_threads.start_thread(ThreadAction::SelfTest, [=](ProgressRatioList* progress_list, std::string* message) {
                 *message = "Self-Test";
 
-                self_test(test_type, progress_list, [&](const char* test_name, const auto& test_function) noexcept {
+                self_test(test_type, progress_list, [&](const std::string& test_name, const auto& test_function) noexcept {
                         catch_all([&](std::string* m) {
                                 *m = test_name;
                                 test_function();
