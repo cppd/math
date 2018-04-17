@@ -160,14 +160,12 @@ std::vector<int> PainterWindow<N, T>::initial_slider_positions()
 }
 
 template <size_t N, typename T>
-PainterWindow<N, T>::PainterWindow(const std::string& title, unsigned thread_count, int samples_per_pixel,
+PainterWindow<N, T>::PainterWindow(const std::string& title, unsigned thread_count, int samples_per_pixel, bool smooth_normal,
                                    std::unique_ptr<const PaintObjects<N, T>>&& paint_objects)
         : PainterWindow2d(title, array_to_vector(paint_objects->projector().screen_size()), initial_slider_positions()),
           m_paint_objects(std::move(paint_objects)),
           m_global_index(m_paint_objects->projector().screen_size()),
           m_height(m_paint_objects->projector().screen_size()[1]),
-          m_samples_per_pixel(samples_per_pixel),
-          m_thread_count(thread_count),
           m_window_thread_id(std::this_thread::get_id()),
           m_paintbrush(m_paint_objects->projector().screen_size(), PANTBRUSH_WIDTH, -1),
           m_stop(false),
@@ -181,8 +179,8 @@ PainterWindow<N, T>::PainterWindow(const std::string& title, unsigned thread_cou
 
         m_stop = false;
         m_thread_working = true;
-        m_thread = std::thread([this]() noexcept {
-                paint(this, m_samples_per_pixel, *m_paint_objects, &m_paintbrush, m_thread_count, &m_stop);
+        m_thread = std::thread([=]() noexcept {
+                paint(this, samples_per_pixel, *m_paint_objects, &m_paintbrush, thread_count, &m_stop, smooth_normal);
                 m_thread_working = false;
         });
 }
@@ -201,19 +199,27 @@ PainterWindow<N, T>::~PainterWindow()
 }
 
 template PainterWindow<3, float>::PainterWindow(const std::string& title, unsigned thread_count, int samples_per_pixel,
+                                                bool smooth_normal,
                                                 std::unique_ptr<const PaintObjects<3, float>>&& paint_objects);
 template PainterWindow<4, float>::PainterWindow(const std::string& title, unsigned thread_count, int samples_per_pixel,
+                                                bool smooth_normal,
                                                 std::unique_ptr<const PaintObjects<4, float>>&& paint_objects);
 template PainterWindow<5, float>::PainterWindow(const std::string& title, unsigned thread_count, int samples_per_pixel,
+                                                bool smooth_normal,
                                                 std::unique_ptr<const PaintObjects<5, float>>&& paint_objects);
 template PainterWindow<6, float>::PainterWindow(const std::string& title, unsigned thread_count, int samples_per_pixel,
+                                                bool smooth_normal,
                                                 std::unique_ptr<const PaintObjects<6, float>>&& paint_objects);
 
 template PainterWindow<3, double>::PainterWindow(const std::string& title, unsigned thread_count, int samples_per_pixel,
+                                                 bool smooth_normal,
                                                  std::unique_ptr<const PaintObjects<3, double>>&& paint_objects);
 template PainterWindow<4, double>::PainterWindow(const std::string& title, unsigned thread_count, int samples_per_pixel,
+                                                 bool smooth_normal,
                                                  std::unique_ptr<const PaintObjects<4, double>>&& paint_objects);
 template PainterWindow<5, double>::PainterWindow(const std::string& title, unsigned thread_count, int samples_per_pixel,
+                                                 bool smooth_normal,
                                                  std::unique_ptr<const PaintObjects<5, double>>&& paint_objects);
 template PainterWindow<6, double>::PainterWindow(const std::string& title, unsigned thread_count, int samples_per_pixel,
+                                                 bool smooth_normal,
                                                  std::unique_ptr<const PaintObjects<6, double>>&& paint_objects);

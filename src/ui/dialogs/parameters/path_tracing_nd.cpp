@@ -30,7 +30,7 @@ PathTracingParametersForNd::PathTracingParametersForNd(QWidget* parent) : QDialo
 
 bool PathTracingParametersForNd::show(int dimension, int max_thread_count, int default_screen_size, int min_screen_size,
                                       int max_screen_size, int default_samples_per_pixel, int max_samples_per_pixel,
-                                      int* thread_count, int* min_size, int* max_size, int* samples_per_pixel)
+                                      int* thread_count, int* min_size, int* max_size, int* samples_per_pixel, bool* flat_facets)
 {
         if (!(dimension >= 4))
         {
@@ -74,6 +74,8 @@ bool PathTracingParametersForNd::show(int dimension, int max_thread_count, int d
         ui.spinBox_samples_per_pixel->setMaximum(max_samples_per_pixel);
         ui.spinBox_samples_per_pixel->setValue(default_samples_per_pixel);
 
+        ui.checkBox_flat_facets->setChecked(false);
+
         if (!this->exec())
         {
                 return false;
@@ -83,6 +85,7 @@ bool PathTracingParametersForNd::show(int dimension, int max_thread_count, int d
         *min_size = m_min_size;
         *max_size = m_max_size;
         *samples_per_pixel = m_samples_per_pixel;
+        *flat_facets = m_flat_facets;
 
         return true;
 }
@@ -154,6 +157,8 @@ void PathTracingParametersForNd::done(int r)
                 message_critical(this, msg.c_str());
                 return;
         }
+
+        m_flat_facets = ui.checkBox_flat_facets->isChecked();
 
         QDialog::done(r);
 }

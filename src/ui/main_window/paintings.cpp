@@ -53,11 +53,12 @@ void painting(const std::shared_ptr<const Mesh<3, double>>& mesh, const Painting
               const PaintingInformationAll& info_all)
 {
         int width, height, thread_count, samples_per_pixel;
+        bool flat_facets;
 
         if (!PathTracingParametersFor3d(info_all.parent_window)
                      .show(hardware_concurrency(), info_3d.paint_width, info_3d.paint_height, info_3d.max_screen_size,
                            info_all.default_samples_per_pixel, info_all.max_samples_per_pixel, &thread_count, &width, &height,
-                           &samples_per_pixel))
+                           &samples_per_pixel, &flat_facets))
         {
                 return;
         }
@@ -80,7 +81,7 @@ void painting(const std::shared_ptr<const Mesh<3, double>>& mesh, const Painting
                                     info_3d.camera_direction, info_3d.camera_up);
         }
 
-        create_and_show_delete_on_close_window<PainterWindow<3, double>>(title, thread_count, samples_per_pixel,
+        create_and_show_delete_on_close_window<PainterWindow<3, double>>(title, thread_count, samples_per_pixel, !flat_facets,
                                                                          std::move(scene));
 }
 
@@ -91,11 +92,12 @@ void painting(const std::shared_ptr<const Mesh<N, T>>& mesh, const PaintingInfor
         static_assert(N >= 4);
 
         int min_size, max_size, thread_count, samples_per_pixel;
+        bool flat_facets;
 
         if (!PathTracingParametersForNd(info_all.parent_window)
                      .show(N, hardware_concurrency(), info_nd.default_screen_size, info_nd.minimum_screen_size,
                            info_nd.maximum_screen_size, info_all.default_samples_per_pixel, info_all.max_samples_per_pixel,
-                           &thread_count, &min_size, &max_size, &samples_per_pixel))
+                           &thread_count, &min_size, &max_size, &samples_per_pixel, &flat_facets))
         {
                 return;
         }
@@ -105,7 +107,8 @@ void painting(const std::shared_ptr<const Mesh<N, T>>& mesh, const PaintingInfor
         std::unique_ptr<const PaintObjects<N, T>> scene = single_object_scene(info_all.background_color, info_all.default_color,
                                                                               info_all.diffuse, min_size, max_size, mesh);
 
-        create_and_show_delete_on_close_window<PainterWindow<N, T>>(title, thread_count, samples_per_pixel, std::move(scene));
+        create_and_show_delete_on_close_window<PainterWindow<N, T>>(title, thread_count, samples_per_pixel, !flat_facets,
+                                                                    std::move(scene));
 }
 
 template void painting(const std::shared_ptr<const Mesh<4, float>>& mesh, const PaintingInformationNd& info_nd,

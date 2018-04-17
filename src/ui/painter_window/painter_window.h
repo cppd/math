@@ -39,8 +39,6 @@ class PainterWindow final : public PainterWindow2d, public IPainterNotifier<N - 
         const std::unique_ptr<const PaintObjects<N, T>> m_paint_objects;
         const GlobalIndex<N_IMAGE, long long> m_global_index;
         const int m_height;
-        const int m_samples_per_pixel;
-        const unsigned m_thread_count;
         const std::thread::id m_window_thread_id;
 
         long long m_slice_offset;
@@ -71,7 +69,7 @@ class PainterWindow final : public PainterWindow2d, public IPainterNotifier<N - 
         void painter_error_message(const std::string& msg) noexcept override;
 
 public:
-        PainterWindow(const std::string& title, unsigned thread_count, int samples_per_pixel,
+        PainterWindow(const std::string& title, unsigned thread_count, int samples_per_pixel, bool smooth_normal,
                       std::unique_ptr<const PaintObjects<N, T>>&& paint_objects);
 
         ~PainterWindow() override;

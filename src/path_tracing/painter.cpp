@@ -118,14 +118,16 @@ struct PaintData
         const std::vector<const LightSource<N, T>*>& light_sources;
         const SurfaceProperties<N, T>& default_surface_properties;
         const T ray_offset;
+        const bool smooth_normal;
 
         PaintData(const std::vector<const GenericObject<N, T>*>& objects_,
                   const std::vector<const LightSource<N, T>*>& light_sources_,
-                  const SurfaceProperties<N, T>& default_surface_properties_, const T& ray_offset_)
+                  const SurfaceProperties<N, T>& default_surface_properties_, const T& ray_offset_, const bool smooth_normal_)
                 : objects(objects_),
                   light_sources(light_sources_),
                   default_surface_properties(default_surface_properties_),
-                  ray_offset(ray_offset_)
+                  ray_offset(ray_offset_),
+                  smooth_normal(smooth_normal_)
         {
         }
 };
@@ -195,7 +197,7 @@ template <size_t N, typename T>
 Color direct_diffuse_lighting(Counter& ray_count, const std::vector<const GenericObject<N, T>*>& objects,
                               const std::vector<const LightSource<N, T>*> light_sources, const Vector<N, T>& p,
                               const Vector<N, T>& geometric_normal, const Vector<N, T>& shading_normal, bool mesh,
-                              const T& ray_offset)
+                              const T& ray_offset, bool smooth_normal)
 {
         Color color(0);
 
@@ -221,7 +223,7 @@ Color direct_diffuse_lighting(Counter& ray_count, const std::vector<const Generi
                         continue;
                 }
 
-                if (!mesh || dot(ray_to_light.dir(), geometric_normal) >= 0)
+                if (!mesh || !smooth_normal || dot(ray_to_light.dir(), geometric_normal) >= 0)
                 {
                         // Если объект не состоит из симплексов или геометрическая сторона обращена
                         // к источнику света, то напрямую рассчитать видимость источника света.
@@ -356,7 +358,8 @@ Color trace_path(const PaintData<N, T>& paint_data, Counter& ray_count, PainterR
                 return (diffuse_reflection) ? surface_properties.get_light_source_color() : surface_properties.get_color();
         }
 
-        Vector<N, T> shading_normal = mesh ? surface_properties.get_shading_normal() : geometric_normal;
+        Vector<N, T> shading_normal =
+                (mesh && paint_data.smooth_normal) ? surface_properties.get_shading_normal() : geometric_normal;
 
         ASSERT(dot(geometric_normal, shading_normal) > DOT_PRODUCT_EPSILON<T>);
 
@@ -379,7 +382,8 @@ Color trace_path(const PaintData<N, T>& paint_data, Counter& ray_count, PainterR
                 if (new_color_level >= MIN_COLOR_LEVEL)
                 {
                         Color direct = direct_diffuse_lighting(ray_count, paint_data.objects, paint_data.light_sources, point,
-                                                               geometric_normal, shading_normal, mesh, paint_data.ray_offset);
+                                                               geometric_normal, shading_normal, mesh, paint_data.ray_offset,
+                                                               paint_data.smooth_normal);
 
                         Color diffuse = diffuse_lighting(paint_data, ray_count, random_engine, recursion_level, new_color_level,
                                                          point, shading_normal, geometric_normal, mesh);
@@ -554,7 +558,7 @@ T compute_ray_offset(const std::vector<const GenericObject<N, T>*>& objects)
 
 template <size_t N, typename T>
 void paint_threads(IPainterNotifier<N - 1>* painter_notifier, int samples_per_pixel, const PaintObjects<N, T>& paint_objects,
-                   Paintbrush<N - 1>* paintbrush, int thread_count, std::atomic_bool* stop)
+                   Paintbrush<N - 1>* paintbrush, int thread_count, std::atomic_bool* stop, bool smooth_normal)
 
 {
         check_thread_count(thread_count);
@@ -563,7 +567,8 @@ void paint_threads(IPainterNotifier<N - 1>* painter_notifier, int samples_per_pi
         const PainterSampler<N - 1, T> sampler(samples_per_pixel);
 
         const PaintData paint_data(paint_objects.objects(), paint_objects.light_sources(),
-                                   paint_objects.default_surface_properties(), compute_ray_offset(paint_objects.objects()));
+                                   paint_objects.default_surface_properties(), compute_ray_offset(paint_objects.objects()),
+                                   smooth_normal);
 
         Pixels pixels(paint_objects.projector().screen_size());
 
@@ -592,7 +597,7 @@ void paint_threads(IPainterNotifier<N - 1>* painter_notifier, int samples_per_pi
 // Без выдачи исключений. Про проблемы сообщать через painter_notifier.
 template <size_t N, typename T>
 void paint(IPainterNotifier<N - 1>* painter_notifier, int samples_per_pixel, const PaintObjects<N, T>& paint_objects,
-           Paintbrush<N - 1>* paintbrush, int thread_count, std::atomic_bool* stop) noexcept
+           Paintbrush<N - 1>* paintbrush, int thread_count, std::atomic_bool* stop, bool smooth_normal) noexcept
 {
         try
         {
@@ -600,7 +605,8 @@ void paint(IPainterNotifier<N - 1>* painter_notifier, int samples_per_pixel, con
                 {
                         ASSERT(painter_notifier && paintbrush && stop);
 
-                        paint_threads(painter_notifier, samples_per_pixel, paint_objects, paintbrush, thread_count, stop);
+                        paint_threads(painter_notifier, samples_per_pixel, paint_objects, paintbrush, thread_count, stop,
+                                      smooth_normal);
                 }
                 catch (std::exception& e)
                 {
@@ -618,19 +624,19 @@ void paint(IPainterNotifier<N - 1>* painter_notifier, int samples_per_pixel, con
 }
 
 template void paint(IPainterNotifier<2>* painter_notifier, int samples_per_pixel, const PaintObjects<3, float>& paint_objects,
-                    Paintbrush<2>* paintbrush, int thread_count, std::atomic_bool* stop) noexcept;
+                    Paintbrush<2>* paintbrush, int thread_count, std::atomic_bool* stop, bool smooth_normal) noexcept;
 template void paint(IPainterNotifier<3>* painter_notifier, int samples_per_pixel, const PaintObjects<4, float>& paint_objects,
-                    Paintbrush<3>* paintbrush, int thread_count, std::atomic_bool* stop) noexcept;
+                    Paintbrush<3>* paintbrush, int thread_count, std::atomic_bool* stop, bool smooth_normal) noexcept;
 template void paint(IPainterNotifier<4>* painter_notifier, int samples_per_pixel, const PaintObjects<5, float>& paint_objects,
-                    Paintbrush<4>* paintbrush, int thread_count, std::atomic_bool* stop) noexcept;
+                    Paintbrush<4>* paintbrush, int thread_count, std::atomic_bool* stop, bool smooth_normal) noexcept;
 template void paint(IPainterNotifier<5>* painter_notifier, int samples_per_pixel, const PaintObjects<6, float>& paint_objects,
-                    Paintbrush<5>* paintbrush, int thread_count, std::atomic_bool* stop) noexcept;
+                    Paintbrush<5>* paintbrush, int thread_count, std::atomic_bool* stop, bool smooth_normal) noexcept;
 
 template void paint(IPainterNotifier<2>* painter_notifier, int samples_per_pixel, const PaintObjects<3, double>& paint_objects,
-                    Paintbrush<2>* paintbrush, int thread_count, std::atomic_bool* stop) noexcept;
+                    Paintbrush<2>* paintbrush, int thread_count, std::atomic_bool* stop, bool smooth_normal) noexcept;
 template void paint(IPainterNotifier<3>* painter_notifier, int samples_per_pixel, const PaintObjects<4, double>& paint_objects,
-                    Paintbrush<3>* paintbrush, int thread_count, std::atomic_bool* stop) noexcept;
+                    Paintbrush<3>* paintbrush, int thread_count, std::atomic_bool* stop, bool smooth_normal) noexcept;
 template void paint(IPainterNotifier<4>* painter_notifier, int samples_per_pixel, const PaintObjects<5, double>& paint_objects,
-                    Paintbrush<4>* paintbrush, int thread_count, std::atomic_bool* stop) noexcept;
+                    Paintbrush<4>* paintbrush, int thread_count, std::atomic_bool* stop, bool smooth_normal) noexcept;
 template void paint(IPainterNotifier<5>* painter_notifier, int samples_per_pixel, const PaintObjects<6, double>& paint_objects,
-                    Paintbrush<5>* paintbrush, int thread_count, std::atomic_bool* stop) noexcept;
+                    Paintbrush<5>* paintbrush, int thread_count, std::atomic_bool* stop, bool smooth_normal) noexcept;

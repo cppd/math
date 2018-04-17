@@ -18,8 +18,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "path_tracing_3d.h"
 
 #include "com/error.h"
+#include "com/names.h"
 #include "com/print.h"
 #include "ui/dialogs/messages/message_box.h"
+
+// Это диалоговое окно предназначено только для 3 измерений
+constexpr int DIMENSION = 3;
 
 PathTracingParametersFor3d::PathTracingParametersFor3d(QWidget* parent) : QDialog(parent)
 {
@@ -29,7 +33,7 @@ PathTracingParametersFor3d::PathTracingParametersFor3d(QWidget* parent) : QDialo
 
 bool PathTracingParametersFor3d::show(int max_thread_count, int width, int height, int max_screen_size,
                                       int default_samples_per_pixel, int max_samples_per_pixel, int* thread_count,
-                                      int* paint_width, int* paint_height, int* samples_per_pixel)
+                                      int* paint_width, int* paint_height, int* samples_per_pixel, bool* flat_facets)
 {
         if (!(max_thread_count >= 1))
         {
@@ -58,6 +62,8 @@ bool PathTracingParametersFor3d::show(int max_thread_count, int width, int heigh
         m_max_thread_count = max_thread_count;
         m_max_samples_per_pixel = max_samples_per_pixel;
 
+        ui.label_space->setText(space_name(DIMENSION).c_str());
+
         ui.spinBox_thread_count->setMinimum(1);
         ui.spinBox_thread_count->setMaximum(max_thread_count);
         ui.spinBox_thread_count->setValue(max_thread_count);
@@ -79,6 +85,8 @@ bool PathTracingParametersFor3d::show(int max_thread_count, int width, int heigh
         connect(ui.spinBox_width, SIGNAL(valueChanged(int)), this, SLOT(width_value_changed(int)));
         connect(ui.spinBox_height, SIGNAL(valueChanged(int)), this, SLOT(height_value_changed(int)));
 
+        ui.checkBox_flat_facets->setChecked(false);
+
         if (!this->exec())
         {
                 return false;
@@ -88,6 +96,7 @@ bool PathTracingParametersFor3d::show(int max_thread_count, int width, int heigh
         *paint_width = m_width;
         *paint_height = m_height;
         *samples_per_pixel = m_samples_per_pixel;
+        *flat_facets = m_flat_facets;
 
         return true;
 }
@@ -134,6 +143,8 @@ void PathTracingParametersFor3d::done(int r)
                 message_critical(this, msg.c_str());
                 return;
         }
+
+        m_flat_facets = ui.checkBox_flat_facets->isChecked();
 
         QDialog::done(r);
 }

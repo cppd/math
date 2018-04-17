@@ -28,7 +28,7 @@ public:
 
         [[nodiscard]] bool show(int max_thread_count, int width, int height, int max_screen_size, int default_samples_per_pixel,
                                 int max_samples_per_pixel, int* thread_count, int* paint_width, int* paint_height,
-                                int* samples_per_pixel);
+                                int* samples_per_pixel, bool* flat_facets);
 
 private slots:
 
@@ -49,6 +49,7 @@ private:
         int m_thread_count;
         double m_size_coef;
         int m_samples_per_pixel;
+        bool m_flat_facets;
 
         Ui::PathTracingParametersFor3d ui;
 

@@ -138,8 +138,9 @@ std::shared_ptr<const Mesh<N, T>> file_mesh(const std::string& file_name, int th
 template <size_t N, typename T>
 void test_path_tracing_file(int samples_per_pixel, int thread_count, std::unique_ptr<const PaintObjects<N, T>>&& paint_objects)
 {
-        int paint_height = 2;
-        int max_pass_count = 1;
+        constexpr int paint_height = 2;
+        constexpr int max_pass_count = 1;
+        constexpr bool smooth_normal = true;
 
         Images images(paint_objects->projector().screen_size());
 
@@ -149,7 +150,7 @@ void test_path_tracing_file(int samples_per_pixel, int thread_count, std::unique
 
         LOG("Painting...");
         double start_time = time_in_seconds();
-        paint(&images, samples_per_pixel, *paint_objects, &paintbrush, thread_count, &stop);
+        paint(&images, samples_per_pixel, *paint_objects, &paintbrush, thread_count, &stop, smooth_normal);
         LOG("Painted, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
 
         LOG("Writing screen images to files...");
@@ -161,13 +162,15 @@ void test_path_tracing_file(int samples_per_pixel, int thread_count, std::unique
 template <size_t N, typename T>
 void test_path_tracing_window(int samples_per_pixel, int thread_count, std::unique_ptr<const PaintObjects<N, T>>&& paint_objects)
 {
+        constexpr bool smooth_normal = true;
+
         LOG("Window painting...");
 
         check_application_instance();
 
         std::string window_title = "Path Tracing In " + to_upper_first_letters(space_name(N));
 
-        create_and_show_delete_on_close_window<PainterWindow<N, T>>(window_title, thread_count, samples_per_pixel,
+        create_and_show_delete_on_close_window<PainterWindow<N, T>>(window_title, thread_count, samples_per_pixel, smooth_normal,
                                                                     std::move(paint_objects));
 }
 
