@@ -53,12 +53,12 @@ void painting(const std::shared_ptr<const Mesh<3, double>>& mesh, const Painting
               const PaintingInformationAll& info_all)
 {
         int width, height, thread_count, samples_per_pixel;
-        bool flat_facets;
+        bool flat_facets, cornell_box;
 
         if (!PathTracingParametersFor3d(info_all.parent_window)
                      .show(hardware_concurrency(), info_3d.paint_width, info_3d.paint_height, info_3d.max_screen_size,
                            info_all.default_samples_per_pixel, info_all.max_samples_per_pixel, &thread_count, &width, &height,
-                           &samples_per_pixel, &flat_facets))
+                           &samples_per_pixel, &flat_facets, &cornell_box))
         {
                 return;
         }
@@ -66,7 +66,7 @@ void painting(const std::shared_ptr<const Mesh<3, double>>& mesh, const Painting
         std::string title;
         std::unique_ptr<const PaintObjects<3, double>> scene;
 
-        if ((true))
+        if (!cornell_box)
         {
                 title = info_all.window_title + " (" + info_all.model_name + ")";
 
@@ -77,8 +77,8 @@ void painting(const std::shared_ptr<const Mesh<3, double>>& mesh, const Painting
         {
                 title = info_all.window_title + " (" + info_all.model_name + " in Cornell Box)";
 
-                scene = cornell_box(width, height, mesh, info_3d.object_size, info_all.default_color, info_all.diffuse,
-                                    info_3d.camera_direction, info_3d.camera_up);
+                scene = cornell_box_scene(width, height, mesh, info_3d.object_size, info_all.default_color, info_all.diffuse,
+                                          info_3d.camera_direction, info_3d.camera_up);
         }
 
         create_and_show_delete_on_close_window<PainterWindow<3, double>>(title, thread_count, samples_per_pixel, !flat_facets,

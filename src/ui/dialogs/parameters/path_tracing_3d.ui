@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>184</width>
-    <height>244</height>
+    <height>271</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -147,6 +147,13 @@
     <widget class="QCheckBox" name="checkBox_flat_facets">
      <property name="text">
       <string>Flat Facets</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QCheckBox" name="checkBox_cornell_box">
+     <property name="text">
+      <string>Cornell Box</string>
      </property>
     </widget>
    </item>

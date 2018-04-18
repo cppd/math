@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace
 {
-class CornellBox : public PaintObjects<3, double>
+class CornellBoxScene : public PaintObjects<3, double>
 {
         std::vector<const GenericObject<3, double>*> m_objects;
         std::vector<const LightSource<3, double>*> m_light_sources;
@@ -50,8 +50,8 @@ class CornellBox : public PaintObjects<3, double>
         std::unique_ptr<VisiblePointLight<3, double>> m_point_light;
 
 public:
-        CornellBox(int width, int height, const std::string& obj_file_name, double size, const Color& default_color,
-                   double diffuse, const vec3& camera_direction, const vec3& camera_up)
+        CornellBoxScene(int width, int height, const std::string& obj_file_name, double size, const Color& default_color,
+                        double diffuse, const vec3& camera_direction, const vec3& camera_up)
         {
                 ProgressRatio progress(nullptr);
 
@@ -67,8 +67,8 @@ public:
                 make_cornell_box(width, height, size, default_color, diffuse, camera_direction, camera_up);
         }
 
-        CornellBox(int width, int height, const std::shared_ptr<const Mesh<3, double>>& mesh, double size,
-                   const Color& default_color, double diffuse, const vec3& camera_direction, const vec3& camera_up)
+        CornellBoxScene(int width, int height, const std::shared_ptr<const Mesh<3, double>>& mesh, double size,
+                        const Color& default_color, double diffuse, const vec3& camera_direction, const vec3& camera_up)
         {
                 m_mesh = std::make_unique<VisibleSharedMesh<3, double>>(mesh);
 
@@ -197,18 +197,18 @@ public:
 };
 }
 
-std::unique_ptr<const PaintObjects<3, double>> cornell_box(int width, int height, const std::string& obj_file_name, double size,
-                                                           const Color& default_color, double diffuse,
-                                                           const vec3& camera_direction, const vec3& camera_up)
+std::unique_ptr<const PaintObjects<3, double>> cornell_box_scene(int width, int height, const std::string& obj_file_name,
+                                                                 double size, const Color& default_color, double diffuse,
+                                                                 const vec3& camera_direction, const vec3& camera_up)
 {
-        return std::make_unique<CornellBox>(width, height, obj_file_name, size, default_color, diffuse, camera_direction,
-                                            camera_up);
+        return std::make_unique<CornellBoxScene>(width, height, obj_file_name, size, default_color, diffuse, camera_direction,
+                                                 camera_up);
 }
 
-std::unique_ptr<const PaintObjects<3, double>> cornell_box(int width, int height,
-                                                           const std::shared_ptr<const Mesh<3, double>>& mesh, double size,
-                                                           const Color& default_color, double diffuse,
-                                                           const vec3& camera_direction, const vec3& camera_up)
+std::unique_ptr<const PaintObjects<3, double>> cornell_box_scene(int width, int height,
+                                                                 const std::shared_ptr<const Mesh<3, double>>& mesh, double size,
+                                                                 const Color& default_color, double diffuse,
+                                                                 const vec3& camera_direction, const vec3& camera_up)
 {
-        return std::make_unique<CornellBox>(width, height, mesh, size, default_color, diffuse, camera_direction, camera_up);
+        return std::make_unique<CornellBoxScene>(width, height, mesh, size, default_color, diffuse, camera_direction, camera_up);
 }

@@ -33,7 +33,8 @@ PathTracingParametersFor3d::PathTracingParametersFor3d(QWidget* parent) : QDialo
 
 bool PathTracingParametersFor3d::show(int max_thread_count, int width, int height, int max_screen_size,
                                       int default_samples_per_pixel, int max_samples_per_pixel, int* thread_count,
-                                      int* paint_width, int* paint_height, int* samples_per_pixel, bool* flat_facets)
+                                      int* paint_width, int* paint_height, int* samples_per_pixel, bool* flat_facets,
+                                      bool* cornell_box)
 {
         if (!(max_thread_count >= 1))
         {
@@ -86,6 +87,7 @@ bool PathTracingParametersFor3d::show(int max_thread_count, int width, int heigh
         connect(ui.spinBox_height, SIGNAL(valueChanged(int)), this, SLOT(height_value_changed(int)));
 
         ui.checkBox_flat_facets->setChecked(false);
+        ui.checkBox_cornell_box->setChecked(false);
 
         if (!this->exec())
         {
@@ -97,6 +99,7 @@ bool PathTracingParametersFor3d::show(int max_thread_count, int width, int heigh
         *paint_height = m_height;
         *samples_per_pixel = m_samples_per_pixel;
         *flat_facets = m_flat_facets;
+        *cornell_box = m_cornell_box;
 
         return true;
 }
@@ -145,6 +148,7 @@ void PathTracingParametersFor3d::done(int r)
         }
 
         m_flat_facets = ui.checkBox_flat_facets->isChecked();
+        m_cornell_box = ui.checkBox_cornell_box->isChecked();
 
         QDialog::done(r);
 }

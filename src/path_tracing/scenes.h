@@ -165,11 +165,11 @@ std::unique_ptr<const PaintObjects<N, T>> single_object_scene(const Color& backg
                                                          std::move(light_source), std::move(mesh));
 }
 
-std::unique_ptr<const PaintObjects<3, double>> cornell_box(int width, int height, const std::string& obj_file_name, double size,
-                                                           const Color& default_color, double diffuse,
-                                                           const vec3& camera_direction, const vec3& camera_up);
+std::unique_ptr<const PaintObjects<3, double>> cornell_box_scene(int width, int height, const std::string& obj_file_name,
+                                                                 double size, const Color& default_color, double diffuse,
+                                                                 const vec3& camera_direction, const vec3& camera_up);
 
-std::unique_ptr<const PaintObjects<3, double>> cornell_box(int width, int height,
-                                                           const std::shared_ptr<const Mesh<3, double>>& mesh, double size,
-                                                           const Color& default_color, double diffuse,
-                                                           const vec3& camera_direction, const vec3& camera_up);
+std::unique_ptr<const PaintObjects<3, double>> cornell_box_scene(int width, int height,
+                                                                 const std::shared_ptr<const Mesh<3, double>>& mesh, double size,
+                                                                 const Color& default_color, double diffuse,
+                                                                 const vec3& camera_direction, const vec3& camera_up);
