@@ -137,6 +137,8 @@ private:
         void set_default_color(const QColor& c);
         void set_wireframe_color(const QColor& c);
 
+        void exception_handler(const std::exception_ptr& ptr, const std::string& msg) const noexcept;
+
         Ui::MainWindow ui;
 
         const std::thread::id m_window_thread_id;

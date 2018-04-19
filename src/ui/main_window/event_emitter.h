@@ -22,10 +22,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/error.h"
 #include "com/log.h"
 #include "show/show.h"
+#include "ui/main_window/objects.h"
 
 #include <QObject>
 
-class WindowEventEmitter final : public QObject, public IShowCallback, public ILogCallback
+class WindowEventEmitter final : public QObject, public ILogCallback, public IObjectsCallback, public IShowCallback
 {
         Q_OBJECT
 
@@ -71,7 +72,7 @@ public:
                 emit_message<WindowEvent::message_information>("Exception in emit message information", msg);
         }
 
-        void message_warning(const std::string& msg) const noexcept
+        void message_warning(const std::string& msg) const noexcept override
         {
                 emit_message<WindowEvent::message_warning>("Exception in emit message warning", msg);
         }
@@ -81,12 +82,12 @@ public:
                 emit_message<WindowEvent::object_loaded>("Exception in emit object loaded", id);
         }
 
-        void file_loaded(const std::string& msg, unsigned dimension) const noexcept
+        void file_loaded(const std::string& msg, unsigned dimension) const noexcept override
         {
                 emit_message<WindowEvent::file_loaded>("Exception in emit file loaded", msg, dimension);
         }
 
-        void bound_cocone_loaded(double rho, double alpha) const noexcept
+        void bound_cocone_loaded(double rho, double alpha) const noexcept override
         {
                 emit_message<WindowEvent::bound_cocone_loaded>("Exception in emit BoundCocone loaded", rho, alpha);
         }

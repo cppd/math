@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "main_window.h"
 
-#include "catch.h"
 #include "identifiers.h"
 
 #include "application/application_name.h"
@@ -89,9 +88,10 @@ constexpr int MESH_OBJECT_NOT_USED_THREAD_COUNT = 2;
 MainWindow::MainWindow(QWidget* parent)
         : QMainWindow(parent),
           m_window_thread_id(std::this_thread::get_id()),
-          m_threads(m_event_emitter),
-          m_objects(
-                  create_main_objects(std::max(1, hardware_concurrency() - MESH_OBJECT_NOT_USED_THREAD_COUNT), m_event_emitter)),
+          m_threads([this](const std::exception_ptr& ptr, const std::string& msg) noexcept { exception_handler(ptr, msg); }),
+          m_objects(create_main_objects(
+                  std::max(1, hardware_concurrency() - MESH_OBJECT_NOT_USED_THREAD_COUNT), m_event_emitter,
+                  [this](const std::exception_ptr& ptr, const std::string& msg) noexcept { exception_handler(ptr, msg); })),
           m_first_show(true),
           m_dimension(0),
           m_close_without_confirmation(false)
@@ -235,12 +235,51 @@ void MainWindow::stop_all_threads()
         set_log_callback(nullptr);
 }
 
+void MainWindow::exception_handler(const std::exception_ptr& ptr, const std::string& msg) const noexcept
+{
+        try
+        {
+                try
+                {
+                        std::rethrow_exception(ptr);
+                }
+                catch (TerminateRequestException&)
+                {
+                }
+                catch (ErrorSourceException& e)
+                {
+                        std::string s = !msg.empty() ? (msg + ":\n") : std::string();
+                        m_event_emitter.message_error_source(s + e.msg(), e.src());
+                }
+                catch (std::exception& e)
+                {
+                        std::string s = !msg.empty() ? (msg + ":\n") : std::string();
+                        m_event_emitter.message_error(s + e.what());
+                }
+                catch (...)
+                {
+                        std::string s = !msg.empty() ? (msg + ":\n") : std::string();
+                        m_event_emitter.message_error(s + "Unknown error");
+                }
+        }
+        catch (...)
+        {
+                error_fatal("Exception in catch all exception handlers");
+        }
+}
+
 template <typename F>
 void MainWindow::catch_all(const F& function) const noexcept
 {
-        static_assert(noexcept(catch_all_exceptions(m_event_emitter, function)));
-
-        catch_all_exceptions(m_event_emitter, function);
+        std::string message;
+        try
+        {
+                function(&message);
+        }
+        catch (...)
+        {
+                exception_handler(std::current_exception(), message);
+        }
 }
 
 void MainWindow::thread_load_from_file(std::string file_name)

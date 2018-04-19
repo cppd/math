@@ -17,15 +17,27 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "event_emitter.h"
 #include "paintings.h"
 
 #include "progress/progress_list.h"
 #include "show/show.h"
 
+#include <exception>
+#include <functional>
 #include <memory>
 #include <string>
 #include <vector>
+
+class IObjectsCallback
+{
+protected:
+        virtual ~IObjectsCallback() = default;
+
+public:
+        virtual void file_loaded(const std::string& msg, unsigned dimension) const noexcept = 0;
+        virtual void bound_cocone_loaded(double rho, double alpha) const noexcept = 0;
+        virtual void message_warning(const std::string& msg) const noexcept = 0;
+};
 
 struct MainObjects
 {
@@ -52,4 +64,6 @@ struct MainObjects
                            const PaintingInformationAll& info_all) const = 0;
 };
 
-std::unique_ptr<MainObjects> create_main_objects(int mesh_threads, const WindowEventEmitter& emitter);
+std::unique_ptr<MainObjects> create_main_objects(
+        int mesh_threads, const IObjectsCallback& event_emitter,
+        std::function<void(const std::exception_ptr& ptr, const std::string& msg)> exception_handler);

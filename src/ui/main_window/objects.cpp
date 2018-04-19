@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "objects.h"
 
-#include "catch.h"
 #include "identifiers.h"
 #include "meshes.h"
 
@@ -64,7 +63,8 @@ class MainObjectsImpl
         const std::thread::id m_thread_id = std::this_thread::get_id();
         const int m_mesh_threads;
 
-        const WindowEventEmitter& m_event_emitter;
+        const IObjectsCallback& m_event_emitter;
+        std::function<void(const std::exception_ptr& ptr, const std::string& msg)> m_exception_handler;
 
         //
 
@@ -105,7 +105,8 @@ class MainObjectsImpl
                          const std::shared_ptr<const Obj<N>>& obj, double rho, double alpha, const ObjectLoaded& object_loaded);
 
 public:
-        MainObjectsImpl(int mesh_threads, const WindowEventEmitter& emitter);
+        MainObjectsImpl(int mesh_threads, const IObjectsCallback& event_emitter,
+                        std::function<void(const std::exception_ptr& ptr, const std::string& msg)> exception_handler);
 
         void clear_all_data() noexcept;
 
@@ -133,9 +134,11 @@ public:
 };
 
 template <size_t N>
-MainObjectsImpl<N>::MainObjectsImpl(int mesh_threads, const WindowEventEmitter& emitter)
+MainObjectsImpl<N>::MainObjectsImpl(int mesh_threads, const IObjectsCallback& event_emitter,
+                                    std::function<void(const std::exception_ptr& ptr, const std::string& msg)> exception_handler)
         : m_mesh_threads(mesh_threads),
-          m_event_emitter(emitter),
+          m_event_emitter(event_emitter),
+          m_exception_handler(exception_handler),
           m_object_repository(create_object_repository<N>()),
           m_show(nullptr)
 {
@@ -145,9 +148,15 @@ template <size_t N>
 template <typename F>
 void MainObjectsImpl<N>::catch_all(const F& function) const noexcept
 {
-        static_assert(noexcept(catch_all_exceptions(m_event_emitter, function)));
-
-        catch_all_exceptions(m_event_emitter, function);
+        std::string message;
+        try
+        {
+                function(&message);
+        }
+        catch (...)
+        {
+                m_exception_handler(std::current_exception(), message);
+        }
 }
 
 template <size_t N>
@@ -863,25 +872,32 @@ class MainObjectStorage final : public MainObjects
         }
 
         template <size_t... I>
-        void init_map(int mesh_threads, const WindowEventEmitter& emitter, std::integer_sequence<size_t, I...>&&)
+        void init_map(int mesh_threads, const IObjectsCallback& event_emitter,
+                      std::function<void(const std::exception_ptr& ptr, const std::string& msg)> exception_handler,
+                      std::integer_sequence<size_t, I...>&&)
         {
                 static_assert(((I >= 0 && I < sizeof...(I)) && ...));
                 static_assert(Min + sizeof...(I) == Max + 1);
 
-                (m_objects.try_emplace(Min + I, std::in_place_type_t<MainObjectsImpl<Min + I>>(), mesh_threads, emitter), ...);
+                (m_objects.try_emplace(Min + I, std::in_place_type_t<MainObjectsImpl<Min + I>>(), mesh_threads, event_emitter,
+                                       exception_handler),
+                 ...);
 
                 ASSERT((m_objects.count(Min + I) == 1) && ...);
                 ASSERT(m_objects.size() == Count);
         }
 
 public:
-        MainObjectStorage(int mesh_threads, const WindowEventEmitter& emitter)
+        MainObjectStorage(int mesh_threads, const IObjectsCallback& event_emitter,
+                          std::function<void(const std::exception_ptr& ptr, const std::string& msg)> exception_handler)
         {
-                init_map(mesh_threads, emitter, std::make_integer_sequence<size_t, Count>());
+                init_map(mesh_threads, event_emitter, exception_handler, std::make_integer_sequence<size_t, Count>());
         }
 };
 
-std::unique_ptr<MainObjects> create_main_objects(int mesh_threads, const WindowEventEmitter& emitter)
+std::unique_ptr<MainObjects> create_main_objects(
+        int mesh_threads, const IObjectsCallback& event_emitter,
+        std::function<void(const std::exception_ptr& ptr, const std::string& msg)> exception_handler)
 {
-        return std::make_unique<MainObjectStorage<MinDimension, MaxDimension>>(mesh_threads, emitter);
+        return std::make_unique<MainObjectStorage<MinDimension, MaxDimension>>(mesh_threads, event_emitter, exception_handler);
 }

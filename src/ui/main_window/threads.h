@@ -17,12 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "catch.h"
-#include "event_emitter.h"
-
 #include "progress/progress_list.h"
 
 #include <QProgressBar>
+#include <exception>
+#include <functional>
 
 enum class ThreadAction
 {
@@ -73,7 +72,7 @@ class Threads
 
         std::thread::id m_thread_id = std::this_thread::get_id();
 
-        const WindowEventEmitter& m_event_emitter;
+        std::function<void(const std::exception_ptr& ptr, const std::string& msg)> m_exception_handler;
 
         std::unordered_map<ThreadAction, ThreadData> m_threads;
         std::vector<ThreadProgress> m_progress;
@@ -93,7 +92,8 @@ class Threads
         }
 
 public:
-        Threads(const WindowEventEmitter& emitter) : m_event_emitter(emitter)
+        Threads(std::function<void(const std::exception_ptr& ptr, const std::string& msg)> exception_handler)
+                : m_exception_handler(exception_handler)
         {
                 m_threads.try_emplace(ThreadAction::LoadObject);
                 m_threads.try_emplace(ThreadAction::ExportObject);
@@ -161,11 +161,17 @@ public:
                 thread_pack.stop();
                 thread_pack.working = true;
                 thread_pack.thread = std::thread([ this, &thread_pack, func = std::forward<F>(function) ]() noexcept {
-                        catch_all_exceptions(m_event_emitter, [&](std::string* message) {
-                                static_assert(!noexcept(func(&thread_pack.progress_list, message)));
+                        std::string message;
+                        try
+                        {
+                                static_assert(!noexcept(func(&thread_pack.progress_list, &message)));
 
-                                func(&thread_pack.progress_list, message);
-                        });
+                                func(&thread_pack.progress_list, &message);
+                        }
+                        catch (...)
+                        {
+                                m_exception_handler(std::current_exception(), message);
+                        }
                         thread_pack.working = false;
                 });
         }
