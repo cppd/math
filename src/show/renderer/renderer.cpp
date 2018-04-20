@@ -514,6 +514,10 @@ class Renderer final : public IRenderer
         {
                 main_program.set_uniform("light_s", color_to_vec4f(light));
         }
+        void set_background_color(const Color& color) override
+        {
+                points_program.set_uniform("background_color", color_to_vec4f(color));
+        }
         void set_default_color(const Color& color) override
         {
                 main_program.set_uniform("default_color", color_to_vec4f(color));

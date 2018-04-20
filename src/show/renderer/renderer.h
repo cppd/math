@@ -31,6 +31,7 @@ struct IRenderer
         virtual void set_light_a(const Color& light) = 0;
         virtual void set_light_d(const Color& light) = 0;
         virtual void set_light_s(const Color& light) = 0;
+        virtual void set_background_color(const Color& color) = 0;
         virtual void set_default_color(const Color& color) = 0;
         virtual void set_wireframe_color(const Color& color) = 0;
         virtual void set_default_ns(double default_ns) = 0;

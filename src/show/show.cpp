@@ -574,9 +574,14 @@ void ShowObject::loop()
                                 const Event::set_background_color& d = event->get<Event::set_background_color>();
 
                                 Color color = d.background_color;
+
                                 glClearColor(color.red(), color.green(), color.blue(), 1);
+
+                                renderer->set_background_color(color);
+
                                 bool background_is_dark = color.luminance() <= 0.5;
                                 text.set_color(background_is_dark ? Color(1) : Color(0));
+
                                 break;
                         }
                         case Event::EventType::set_default_color:
