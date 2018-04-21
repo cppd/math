@@ -22,6 +22,8 @@ uniform vec4 background_color;
 
 uniform vec4 light_a;
 
+uniform int show_fog;
+
 layout(location = 0) out vec4 color;
 
 vec4 fog(vec4 fog_color, vec4 fragment_color)
@@ -39,7 +41,14 @@ vec4 fog(vec4 fog_color, vec4 fragment_color)
 
 void main(void)
 {
-        color = fog(background_color, default_color * light_a);
+        if (show_fog != 0)
+        {
+                color = fog(background_color, default_color * light_a);
+        }
+        else
+        {
+                color = default_color * light_a;
+        }
 
         imageStore(object_img, ivec2(gl_FragCoord.xy), ivec4(1));
 }

@@ -91,6 +91,8 @@ private slots:
         void slot_widget_under_window_mouse_wheel(double delta);
         void slot_widget_under_window_resize();
 
+        void on_checkBox_Fog_clicked();
+
 private:
         void constructor_connect();
         void constructor_interface();

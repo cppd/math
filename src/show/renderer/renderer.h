@@ -38,6 +38,7 @@ struct IRenderer
         virtual void set_show_smooth(bool show) = 0;
         virtual void set_show_wireframe(bool show) = 0;
         virtual void set_show_shadow(bool show) = 0;
+        virtual void set_show_fog(bool show) = 0;
         virtual void set_show_materials(bool show) = 0;
 
         virtual void set_shadow_zoom(double) = 0;

@@ -158,6 +158,13 @@ public:
                 {
                 }
         };
+        struct show_fog final
+        {
+                bool show;
+                show_fog(bool v) : show(v)
+                {
+                }
+        };
         struct show_materials final
         {
                 bool show;
@@ -235,6 +242,7 @@ public:
                 show_smooth,
                 show_wireframe,
                 show_shadow,
+                show_fog,
                 show_materials,
                 show_effect,
                 show_dft,
@@ -346,6 +354,10 @@ private:
         {
                 return EventType::show_shadow;
         }
+        static constexpr EventType event_type(std::in_place_type_t<show_fog>)
+        {
+                return EventType::show_fog;
+        }
         static constexpr EventType event_type(std::in_place_type_t<show_materials>)
         {
                 return EventType::show_materials;
@@ -388,7 +400,7 @@ private:
 #endif
                 <add_object, delete_object, show_object, delete_all_objects, parent_resized, mouse_wheel, toggle_fullscreen,
                  reset_view, set_ambient, set_diffuse, set_specular, set_background_color, set_default_color, set_wireframe_color,
-                 set_default_ns, show_smooth, show_wireframe, show_shadow, show_materials, show_effect, show_dft,
+                 set_default_ns, show_smooth, show_wireframe, show_shadow, show_fog, show_materials, show_effect, show_dft,
                  set_dft_brightness, show_convex_hull_2d, show_optical_flow, vertical_sync, shadow_zoom>
                         m_data;
 };

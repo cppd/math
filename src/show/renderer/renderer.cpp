@@ -544,6 +544,10 @@ class Renderer final : public IRenderer
                 m_show_shadow = show;
                 main_program.set_uniform("show_shadow", show ? 1 : 0);
         }
+        void set_show_fog(bool show) override
+        {
+                points_program.set_uniform("show_fog", show ? 1 : 0);
+        }
         void set_show_materials(bool show) override
         {
                 main_program.set_uniform("show_materials", show ? 1 : 0);

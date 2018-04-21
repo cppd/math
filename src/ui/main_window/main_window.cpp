@@ -787,11 +787,11 @@ void MainWindow::slot_window_first_shown()
                 m_show = create_show(&m_event_emitter, widget_window_id(ui.graphics_widget), qcolor_to_rgb(m_background_color),
                                      qcolor_to_rgb(m_default_color), qcolor_to_rgb(m_wireframe_color),
                                      ui.checkBox_Smooth->isChecked(), ui.checkBox_Wireframe->isChecked(),
-                                     ui.checkBox_Shadow->isChecked(), ui.checkBox_Materials->isChecked(),
-                                     ui.checkBox_ShowEffect->isChecked(), ui.checkBox_show_dft->isChecked(),
-                                     ui.checkBox_convex_hull_2d->isChecked(), ui.checkBox_OpticalFlow->isChecked(),
-                                     ambient_light(), diffuse_light(), specular_light(), dft_brightness(), default_ns(),
-                                     ui.checkBox_VerticalSync->isChecked(), shadow_zoom());
+                                     ui.checkBox_Shadow->isChecked(), ui.checkBox_Fog->isChecked(),
+                                     ui.checkBox_Materials->isChecked(), ui.checkBox_ShowEffect->isChecked(),
+                                     ui.checkBox_show_dft->isChecked(), ui.checkBox_convex_hull_2d->isChecked(),
+                                     ui.checkBox_OpticalFlow->isChecked(), ambient_light(), diffuse_light(), specular_light(),
+                                     dft_brightness(), default_ns(), ui.checkBox_VerticalSync->isChecked(), shadow_zoom());
 
                 m_objects->set_show(m_show.get());
         }
@@ -991,6 +991,11 @@ void MainWindow::on_ButtonWireframeColor_clicked()
 void MainWindow::on_checkBox_Shadow_clicked()
 {
         m_show->show_shadow(ui.checkBox_Shadow->isChecked());
+}
+
+void MainWindow::on_checkBox_Fog_clicked()
+{
+        m_show->show_fog(ui.checkBox_Fog->isChecked());
 }
 
 void MainWindow::on_checkBox_Wireframe_clicked()
