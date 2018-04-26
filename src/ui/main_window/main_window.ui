@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>591</width>
-    <height>644</height>
+    <height>575</height>
    </rect>
   </property>
   <widget class="QWidget" name="mainWidget">
@@ -49,111 +49,11 @@
         <property name="currentIndex">
          <number>0</number>
         </property>
-        <widget class="QWidget" name="tab3D">
+        <widget class="QWidget" name="tabObject">
          <attribute name="title">
-          <string>3D</string>
+          <string>Object</string>
          </attribute>
-         <layout class="QVBoxLayout" name="verticalLayout_3">
-          <item>
-           <layout class="QHBoxLayout" name="horizontalLayout">
-            <item>
-             <widget class="QPushButton" name="Button_ResetView">
-              <property name="maximumSize">
-               <size>
-                <width>16777215</width>
-                <height>16777215</height>
-               </size>
-              </property>
-              <property name="text">
-               <string>Reset view</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <spacer name="horizontalSpacer">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeType">
-               <enum>QSizePolicy::Expanding</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>1</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-           </layout>
-          </item>
-          <item>
-           <widget class="Line" name="line_3">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="checkBox_Materials">
-            <property name="text">
-             <string>Materials</string>
-            </property>
-            <property name="checked">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="checkBox_Shadow">
-            <property name="text">
-             <string>Shadow</string>
-            </property>
-            <property name="checked">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="checkBox_Smooth">
-            <property name="text">
-             <string>Smooth</string>
-            </property>
-            <property name="checked">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="checkBox_Fog">
-            <property name="toolTip">
-             <string>Point and Line Models</string>
-            </property>
-            <property name="text">
-             <string>Fog</string>
-            </property>
-            <property name="checked">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="checkBox_Wireframe">
-            <property name="text">
-             <string>Wireframe</string>
-            </property>
-            <property name="checked">
-             <bool>false</bool>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="Line" name="line_7">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-           </widget>
-          </item>
+         <layout class="QVBoxLayout" name="verticalLayout_4">
           <item>
            <widget class="QRadioButton" name="radioButton_Model">
             <property name="text">
@@ -225,44 +125,6 @@
            </widget>
           </item>
           <item>
-           <widget class="Line" name="line">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_4">
-            <item>
-             <widget class="QPushButton" name="pushButton_Painter">
-              <property name="text">
-               <string>Painter</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <spacer name="horizontalSpacer_2">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>40</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-           </layout>
-          </item>
-          <item>
-           <widget class="Line" name="line_16">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-           </widget>
-          </item>
-          <item>
            <spacer name="spacer">
             <property name="orientation">
              <enum>Qt::Vertical</enum>
@@ -277,15 +139,160 @@
           </item>
          </layout>
         </widget>
-        <widget class="QWidget" name="tab2D">
+        <widget class="QWidget" name="tabView">
          <attribute name="title">
-          <string>2D</string>
+          <string>View</string>
          </attribute>
-         <layout class="QVBoxLayout" name="verticalLayout_5">
+         <layout class="QVBoxLayout" name="verticalLayout_2">
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout">
+            <item>
+             <widget class="QPushButton" name="pushButton_ResetView">
+              <property name="maximumSize">
+               <size>
+                <width>16777215</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Reset View</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeType">
+               <enum>QSizePolicy::Expanding</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>1</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="Line" name="line_3">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="checkBox_Materials">
+            <property name="text">
+             <string>Materials</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="checkBox_Smooth">
+            <property name="text">
+             <string>Smooth</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="checkBox_Fog">
+            <property name="text">
+             <string>Fog</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="checkBox_Wireframe">
+            <property name="text">
+             <string>Wireframe</string>
+            </property>
+            <property name="checked">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="Line" name="line_6">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="checkBox_Shadow">
+            <property name="text">
+             <string>Shadow</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_3">
+            <item>
+             <widget class="QLabel" name="label_ShadowQuality">
+              <property name="text">
+               <string>Quality:</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSlider" name="slider_ShadowQuality">
+              <property name="minimum">
+               <number>1</number>
+              </property>
+              <property name="maximum">
+               <number>10</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="Line" name="line_2">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
           <item>
            <widget class="QCheckBox" name="checkBox_ShowEffect">
             <property name="text">
              <string>Pencil</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="checkBox_convex_hull_2d">
+            <property name="text">
+             <string>Convex Hull</string>
+            </property>
+            <property name="checked">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="checkBox_OpticalFlow">
+            <property name="text">
+             <string>Optical Flow</string>
             </property>
            </widget>
           </item>
@@ -306,14 +313,14 @@
           <item>
            <layout class="QFormLayout" name="formLayout_2">
             <item row="0" column="0">
-             <widget class="QLabel" name="Label_DFT_Brightness">
+             <widget class="QLabel" name="label_DFT_Brightness">
               <property name="text">
                <string>Brightness:</string>
               </property>
              </widget>
             </item>
             <item row="0" column="1">
-             <widget class="QSlider" name="Slider_DFT_Brightness">
+             <widget class="QSlider" name="slider_DFT_Brightness">
               <property name="maximum">
                <number>1000</number>
               </property>
@@ -335,33 +342,9 @@
            </widget>
           </item>
           <item>
-           <widget class="QCheckBox" name="checkBox_convex_hull_2d">
+           <widget class="QCheckBox" name="checkBox_VerticalSync">
             <property name="text">
-             <string>Convex hull</string>
-            </property>
-            <property name="checked">
-             <bool>false</bool>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="Line" name="line_13">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="checkBox_OpticalFlow">
-            <property name="text">
-             <string>Optical flow</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="Line" name="line_9">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
+             <string>V-Sync</string>
             </property>
            </widget>
           </item>
@@ -380,11 +363,11 @@
           </item>
          </layout>
         </widget>
-        <widget class="QWidget" name="tabSettings">
+        <widget class="QWidget" name="tabColor">
          <attribute name="title">
-          <string>Settings</string>
+          <string>Color</string>
          </attribute>
-         <layout class="QVBoxLayout" name="verticalLayout_2">
+         <layout class="QVBoxLayout" name="verticalLayout_3">
           <item>
            <layout class="QFormLayout" name="formLayout_4">
             <item row="0" column="0">
@@ -395,7 +378,7 @@
              </widget>
             </item>
             <item row="0" column="1">
-             <widget class="QSlider" name="Slider_Ambient">
+             <widget class="QSlider" name="slider_Ambient">
               <property name="maximum">
                <number>2000</number>
               </property>
@@ -415,7 +398,7 @@
              </widget>
             </item>
             <item row="1" column="1">
-             <widget class="QSlider" name="Slider_Diffuse">
+             <widget class="QSlider" name="slider_Diffuse">
               <property name="maximum">
                <number>2000</number>
               </property>
@@ -435,7 +418,7 @@
              </widget>
             </item>
             <item row="2" column="1">
-             <widget class="QSlider" name="Slider_Specular">
+             <widget class="QSlider" name="slider_Specular">
               <property name="maximum">
                <number>2000</number>
               </property>
@@ -455,7 +438,7 @@
              </widget>
             </item>
             <item row="3" column="1">
-             <widget class="QSlider" name="Slider_Default_Ns">
+             <widget class="QSlider" name="slider_Default_Ns">
               <property name="minimum">
                <number>1</number>
               </property>
@@ -561,7 +544,7 @@
                </widget>
               </item>
               <item row="4" column="2">
-               <widget class="QToolButton" name="ButtonDefaultColor">
+               <widget class="QToolButton" name="toolButton_DefaultColor">
                 <property name="text">
                  <string>...</string>
                 </property>
@@ -645,7 +628,7 @@
                </widget>
               </item>
               <item row="2" column="2">
-               <widget class="QToolButton" name="ButtonBackgroundColor">
+               <widget class="QToolButton" name="toolButton_BackgroundColor">
                 <property name="text">
                  <string>...</string>
                 </property>
@@ -666,7 +649,7 @@
                </widget>
               </item>
               <item row="3" column="0">
-               <widget class="QLabel" name="label_wireframe_color">
+               <widget class="QLabel" name="label_4">
                 <property name="text">
                  <string>Wireframe:</string>
                 </property>
@@ -750,7 +733,7 @@
                </widget>
               </item>
               <item row="3" column="2">
-               <widget class="QToolButton" name="ButtonWireframeColor">
+               <widget class="QToolButton" name="toolButton_WireframeColor">
                 <property name="enabled">
                  <bool>true</bool>
                 </property>
@@ -775,58 +758,6 @@
              </spacer>
             </item>
            </layout>
-          </item>
-          <item>
-           <widget class="Line" name="line_8">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="checkBox_VerticalSync">
-            <property name="text">
-             <string>V-Sync</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="Line" name="line_15">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_3">
-            <item>
-             <widget class="QLabel" name="label_ShadowQuality">
-              <property name="text">
-               <string>Shadow Quality:</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QSlider" name="Slider_ShadowQuality">
-              <property name="minimum">
-               <number>1</number>
-              </property>
-              <property name="maximum">
-               <number>10</number>
-              </property>
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-          <item>
-           <widget class="Line" name="line_12">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-           </widget>
           </item>
           <item>
            <spacer name="verticalSpacer_2">
@@ -935,9 +866,16 @@
     </property>
     <addaction name="actionBoundCocone"/>
    </widget>
+   <widget class="QMenu" name="menuRendering">
+    <property name="title">
+     <string>Rendering</string>
+    </property>
+    <addaction name="actionPainter"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
    <addaction name="menuCreate"/>
+   <addaction name="menuRendering"/>
    <addaction name="menuHelp"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
@@ -982,6 +920,11 @@
   <action name="actionBoundCocone">
    <property name="text">
     <string>BoundCocone...</string>
+   </property>
+  </action>
+  <action name="actionPainter">
+   <property name="text">
+    <string>Painter...</string>
    </property>
   </action>
  </widget>

@@ -50,7 +50,7 @@ struct PaintingInformationAll
 {
         QWidget* parent_window;
         std::string window_title;
-        std::string model_name;
+        std::string object_name;
         int default_samples_per_pixel;
         int max_samples_per_pixel;
         Color background_color;

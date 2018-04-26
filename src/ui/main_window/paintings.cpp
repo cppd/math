@@ -68,14 +68,14 @@ void painting(const std::shared_ptr<const Mesh<3, double>>& mesh, const Painting
 
         if (!cornell_box)
         {
-                title = info_all.window_title + " (" + info_all.model_name + ")";
+                title = info_all.window_title + " (" + info_all.object_name + ")";
 
                 scene = single_object_scene(info_all.background_color, info_all.default_color, info_all.diffuse,
                                             create_projector(info_3d, width, height), create_light_source(info_3d), mesh);
         }
         else
         {
-                title = info_all.window_title + " (" + info_all.model_name + " in Cornell Box)";
+                title = info_all.window_title + " (" + info_all.object_name + " in Cornell Box)";
 
                 scene = cornell_box_scene(width, height, mesh, info_3d.object_size, info_all.default_color, info_all.diffuse,
                                           info_3d.camera_direction, info_3d.camera_up);
@@ -102,7 +102,7 @@ void painting(const std::shared_ptr<const Mesh<N, T>>& mesh, const PaintingInfor
                 return;
         }
 
-        std::string title = info_all.window_title + " (" + info_all.model_name + ")";
+        std::string title = info_all.window_title + " (" + info_all.object_name + ")";
 
         std::unique_ptr<const PaintObjects<N, T>> scene = single_object_scene(info_all.background_color, info_all.default_color,
                                                                               info_all.diffuse, min_size, max_size, mesh);

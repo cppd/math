@@ -52,37 +52,38 @@ private slots:
         void on_actionExport_triggered();
         void on_actionExit_triggered();
         void on_actionBoundCocone_triggered();
+        void on_actionPainter_triggered();
         void on_actionHelp_triggered();
         void on_actionSelfTest_triggered();
         void on_actionAbout_triggered();
         void on_actionFullScreen_triggered();
-        void on_Slider_Ambient_valueChanged(int value);
-        void on_Slider_Diffuse_valueChanged(int value);
-        void on_Slider_Specular_valueChanged(int value);
-        void on_Slider_DFT_Brightness_valueChanged(int value);
-        void on_Slider_Default_Ns_valueChanged(int value);
-        void on_Slider_ShadowQuality_valueChanged(int value);
-        void on_ButtonBackgroundColor_clicked();
-        void on_ButtonDefaultColor_clicked();
-        void on_ButtonWireframeColor_clicked();
-        void on_Button_ResetView_clicked();
-        void on_pushButton_Painter_clicked();
+        void on_slider_Ambient_valueChanged(int value);
+        void on_slider_Diffuse_valueChanged(int value);
+        void on_slider_Specular_valueChanged(int value);
+        void on_slider_DFT_Brightness_valueChanged(int value);
+        void on_slider_Default_Ns_valueChanged(int value);
+        void on_slider_ShadowQuality_valueChanged(int value);
+        void on_toolButton_BackgroundColor_clicked();
+        void on_toolButton_DefaultColor_clicked();
+        void on_toolButton_WireframeColor_clicked();
+        void on_pushButton_ResetView_clicked();
         void on_checkBox_Wireframe_clicked();
         void on_checkBox_Materials_clicked();
         void on_checkBox_Shadow_clicked();
+        void on_checkBox_Fog_clicked();
         void on_checkBox_Smooth_clicked();
         void on_checkBox_ShowEffect_clicked();
         void on_checkBox_show_dft_clicked();
         void on_checkBox_convex_hull_2d_clicked();
         void on_checkBox_OpticalFlow_clicked();
+        void on_checkBox_VerticalSync_clicked();
         void on_radioButton_Model_clicked();
         void on_radioButton_ModelConvexHull_clicked();
+        void on_radioButton_ModelMST_clicked();
         void on_radioButton_Cocone_clicked();
         void on_radioButton_CoconeConvexHull_clicked();
         void on_radioButton_BoundCocone_clicked();
         void on_radioButton_BoundCoconeConvexHull_clicked();
-        void on_checkBox_VerticalSync_clicked();
-        void on_radioButton_ModelMST_clicked();
 
         void slot_object_repository();
         void slot_window_event(const WindowEvent&);
@@ -90,8 +91,6 @@ private slots:
         void slot_window_first_shown();
         void slot_widget_under_window_mouse_wheel(double delta);
         void slot_widget_under_window_resize();
-
-        void on_checkBox_Fog_clicked();
 
 private:
         void constructor_connect();
@@ -110,6 +109,8 @@ private:
 
         template <typename F>
         void catch_all(const F& function) const noexcept;
+
+        bool find_object(std::string* object_name, int* object_id);
 
         void thread_load_from_file(std::string file_name = "");
         void thread_load_from_repository(const std::tuple<int, std::string>& object);

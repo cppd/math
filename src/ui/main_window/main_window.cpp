@@ -147,7 +147,7 @@ void MainWindow::constructor_interface()
         ui.actionHelp->setText(QString(APPLICATION_NAME) + " Help");
         ui.actionAbout->setText("About " + QString(APPLICATION_NAME));
 
-        ui.Slider_ShadowQuality->setSliderPosition(SHADOW_ZOOM);
+        ui.slider_ShadowQuality->setSliderPosition(SHADOW_ZOOM);
 
         // Чтобы добавление и удаление QProgressBar не меняло высоту ui.statusBar
         ui.statusBar->setFixedHeight(ui.statusBar->height());
@@ -280,6 +280,30 @@ void MainWindow::catch_all(const F& function) const noexcept
         {
                 exception_handler(std::current_exception(), message);
         }
+}
+
+bool MainWindow::find_object(std::string* object_name, int* object_id)
+{
+        bool found = false;
+
+        for (const auto& [button, id] : m_object_buttons)
+        {
+                if (button->isChecked())
+                {
+                        *object_name = button->text().toStdString();
+                        *object_id = id;
+                        found = true;
+                        break;
+                }
+        }
+
+        if (!found)
+        {
+                m_event_emitter.message_warning("No object button is checked");
+                return false;
+        }
+
+        return true;
 }
 
 void MainWindow::thread_load_from_file(std::string file_name)
@@ -589,8 +613,19 @@ void MainWindow::set_wireframe_color(const QColor& c)
 
 void MainWindow::set_dependent_interface()
 {
-        ui.Label_DFT_Brightness->setEnabled(ui.checkBox_show_dft->isEnabled() && ui.checkBox_show_dft->isChecked());
-        ui.Slider_DFT_Brightness->setEnabled(ui.checkBox_show_dft->isEnabled() && ui.checkBox_show_dft->isChecked());
+        {
+                bool enabled_and_checked = ui.checkBox_Shadow->isEnabled() && ui.checkBox_Shadow->isChecked();
+
+                ui.label_ShadowQuality->setEnabled(enabled_and_checked);
+                ui.slider_ShadowQuality->setEnabled(enabled_and_checked);
+        }
+
+        {
+                bool enabled_and_checked = ui.checkBox_show_dft->isEnabled() && ui.checkBox_show_dft->isChecked();
+
+                ui.label_DFT_Brightness->setEnabled(enabled_and_checked);
+                ui.slider_DFT_Brightness->setEnabled(enabled_and_checked);
+        }
 }
 
 void MainWindow::strike_out_radio_button(QRadioButton* button)
@@ -837,23 +872,10 @@ void MainWindow::slot_object_repository()
 void MainWindow::on_actionExport_triggered()
 {
         std::string object_name;
-        int object_id = 0;
+        int object_id;
 
-        bool found = false;
-        for (const auto& [button, id] : m_object_buttons)
+        if (!find_object(&object_name, &object_id))
         {
-                if (button->isChecked())
-                {
-                        object_name = button->text().toStdString();
-                        object_id = id;
-                        found = true;
-                        break;
-                }
-        }
-
-        if (!found)
-        {
-                m_event_emitter.message_warning("Select object button to export");
                 return;
         }
 
@@ -885,7 +907,7 @@ void MainWindow::on_actionAbout_triggered()
         application_about(this);
 }
 
-void MainWindow::on_Button_ResetView_clicked()
+void MainWindow::on_pushButton_ResetView_clicked()
 {
         m_show->reset_view();
 }
@@ -908,64 +930,64 @@ void MainWindow::slot_widget_under_window_resize()
 
 double MainWindow::ambient_light() const
 {
-        double value = ui.Slider_Ambient->value() - ui.Slider_Ambient->minimum();
-        double delta = ui.Slider_Ambient->maximum() - ui.Slider_Ambient->minimum();
+        double value = ui.slider_Ambient->value() - ui.slider_Ambient->minimum();
+        double delta = ui.slider_Ambient->maximum() - ui.slider_Ambient->minimum();
         return 2 * value / delta;
 }
 double MainWindow::diffuse_light() const
 {
-        double value = ui.Slider_Diffuse->value() - ui.Slider_Diffuse->minimum();
-        double delta = ui.Slider_Diffuse->maximum() - ui.Slider_Diffuse->minimum();
+        double value = ui.slider_Diffuse->value() - ui.slider_Diffuse->minimum();
+        double delta = ui.slider_Diffuse->maximum() - ui.slider_Diffuse->minimum();
         return 2 * value / delta;
 }
 double MainWindow::specular_light() const
 {
-        double value = ui.Slider_Specular->value() - ui.Slider_Specular->minimum();
-        double delta = ui.Slider_Specular->maximum() - ui.Slider_Specular->minimum();
+        double value = ui.slider_Specular->value() - ui.slider_Specular->minimum();
+        double delta = ui.slider_Specular->maximum() - ui.slider_Specular->minimum();
         return 2 * value / delta;
 }
 double MainWindow::dft_brightness() const
 {
-        double value = ui.Slider_DFT_Brightness->value() - ui.Slider_DFT_Brightness->minimum();
-        double delta = ui.Slider_DFT_Brightness->maximum() - ui.Slider_DFT_Brightness->minimum();
+        double value = ui.slider_DFT_Brightness->value() - ui.slider_DFT_Brightness->minimum();
+        double delta = ui.slider_DFT_Brightness->maximum() - ui.slider_DFT_Brightness->minimum();
         double value_gamma = std::pow(value / delta, DFT_GAMMA);
         return std::pow(DFT_MAX_BRIGHTNESS, value_gamma);
 }
 double MainWindow::default_ns() const
 {
-        return ui.Slider_Default_Ns->value();
+        return ui.slider_Default_Ns->value();
 }
 double MainWindow::shadow_zoom() const
 {
-        return ui.Slider_ShadowQuality->value();
+        return ui.slider_ShadowQuality->value();
 }
 
-void MainWindow::on_Slider_Ambient_valueChanged(int)
+void MainWindow::on_slider_Ambient_valueChanged(int)
 {
         m_show->set_ambient(ambient_light());
 }
 
-void MainWindow::on_Slider_Diffuse_valueChanged(int)
+void MainWindow::on_slider_Diffuse_valueChanged(int)
 {
         m_show->set_diffuse(diffuse_light());
 }
 
-void MainWindow::on_Slider_Specular_valueChanged(int)
+void MainWindow::on_slider_Specular_valueChanged(int)
 {
         m_show->set_specular(specular_light());
 }
 
-void MainWindow::on_Slider_DFT_Brightness_valueChanged(int)
+void MainWindow::on_slider_DFT_Brightness_valueChanged(int)
 {
         m_show->set_dft_brightness(dft_brightness());
 }
 
-void MainWindow::on_Slider_Default_Ns_valueChanged(int)
+void MainWindow::on_slider_Default_Ns_valueChanged(int)
 {
         m_show->set_default_ns(default_ns());
 }
 
-void MainWindow::on_Slider_ShadowQuality_valueChanged(int)
+void MainWindow::on_slider_ShadowQuality_valueChanged(int)
 {
         if (m_show)
         {
@@ -973,24 +995,29 @@ void MainWindow::on_Slider_ShadowQuality_valueChanged(int)
         }
 }
 
-void MainWindow::on_ButtonBackgroundColor_clicked()
+void MainWindow::on_toolButton_BackgroundColor_clicked()
 {
-        color_dialog(this, "Background color", m_background_color, [this](const QColor& c) { set_background_color(c); });
+        color_dialog(this, "Background Color", m_background_color, [this](const QColor& c) { set_background_color(c); });
 }
 
-void MainWindow::on_ButtonDefaultColor_clicked()
+void MainWindow::on_toolButton_DefaultColor_clicked()
 {
-        color_dialog(this, "Default color", m_default_color, [this](const QColor& c) { set_default_color(c); });
+        color_dialog(this, "Default Color", m_default_color, [this](const QColor& c) { set_default_color(c); });
 }
 
-void MainWindow::on_ButtonWireframeColor_clicked()
+void MainWindow::on_toolButton_WireframeColor_clicked()
 {
-        color_dialog(this, "Wireframe color", m_wireframe_color, [this](const QColor& c) { set_wireframe_color(c); });
+        color_dialog(this, "Wireframe Color", m_wireframe_color, [this](const QColor& c) { set_wireframe_color(c); });
 }
 
 void MainWindow::on_checkBox_Shadow_clicked()
 {
-        m_show->show_shadow(ui.checkBox_Shadow->isChecked());
+        bool checked = ui.checkBox_Shadow->isChecked();
+
+        ui.label_ShadowQuality->setEnabled(checked);
+        ui.slider_ShadowQuality->setEnabled(checked);
+
+        m_show->show_shadow(checked);
 }
 
 void MainWindow::on_checkBox_Fog_clicked()
@@ -1020,10 +1047,12 @@ void MainWindow::on_checkBox_ShowEffect_clicked()
 
 void MainWindow::on_checkBox_show_dft_clicked()
 {
-        ui.Label_DFT_Brightness->setEnabled(ui.checkBox_show_dft->isChecked());
-        ui.Slider_DFT_Brightness->setEnabled(ui.checkBox_show_dft->isChecked());
+        bool checked = ui.checkBox_show_dft->isChecked();
 
-        m_show->show_dft(ui.checkBox_show_dft->isChecked());
+        ui.label_DFT_Brightness->setEnabled(checked);
+        ui.slider_DFT_Brightness->setEnabled(checked);
+
+        m_show->show_dft(checked);
 }
 
 void MainWindow::on_checkBox_convex_hull_2d_clicked()
@@ -1081,31 +1110,19 @@ void MainWindow::on_radioButton_BoundCoconeConvexHull_clicked()
         m_show->show_object(OBJECT_BOUND_COCONE_CONVEX_HULL);
 }
 
-void MainWindow::on_pushButton_Painter_clicked()
+void MainWindow::on_actionPainter_triggered()
 {
-        std::string model_name;
-        int id = -1;
+        std::string object_name;
+        int object_id;
 
-        bool found = false;
-        for (const auto& [button, button_model_id] : m_object_buttons)
+        if (!find_object(&object_name, &object_id))
         {
-                if (button->isChecked())
-                {
-                        model_name = button->text().toStdString();
-                        id = button_model_id;
-                        found = true;
-                        break;
-                }
-        }
-        if (!found)
-        {
-                m_event_emitter.message_warning("No object button is checked");
                 return;
         }
 
-        if (!m_objects->mesh_exists(id))
+        if (!m_objects->mesh_exists(object_id))
         {
-                m_event_emitter.message_warning("No object to paint");
+                m_event_emitter.message_warning("No object to paint " + object_name);
                 return;
         }
 
@@ -1129,13 +1146,13 @@ void MainWindow::on_pushButton_Painter_clicked()
                 PaintingInformationAll info_all;
                 info_all.parent_window = this;
                 info_all.window_title = QMainWindow::windowTitle().toStdString();
-                info_all.model_name = model_name;
+                info_all.object_name = object_name;
                 info_all.default_samples_per_pixel = PATH_TRACING_DEFAULT_SAMPLES_PER_PIXEL;
                 info_all.max_samples_per_pixel = PATH_TRACING_MAX_SAMPLES_PER_PIXEL;
                 info_all.background_color = qcolor_to_rgb(m_background_color);
                 info_all.default_color = qcolor_to_rgb(m_default_color);
                 info_all.diffuse = diffuse_light();
 
-                m_objects->paint(id, info_3d, info_nd, info_all);
+                m_objects->paint(object_id, info_3d, info_nd, info_all);
         });
 }
