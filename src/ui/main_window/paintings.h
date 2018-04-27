@@ -51,8 +51,8 @@ struct PaintingInformationAll
         QWidget* parent_window;
         std::string window_title;
         std::string object_name;
-        int default_samples_per_pixel;
-        int max_samples_per_pixel;
+        int default_samples_per_dimension;
+        int max_samples_per_dimension;
         Color background_color;
         Color default_color;
         Color::DataType diffuse;

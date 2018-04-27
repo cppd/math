@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "paintings.h"
 
+#include "com/math.h"
 #include "path_tracing/scenes.h"
 #include "path_tracing/visible_lights.h"
 #include "path_tracing/visible_projectors.h"
@@ -52,13 +53,19 @@ std::unique_ptr<const LightSource<3, double>> create_light_source(const Painting
 void painting(const std::shared_ptr<const Mesh<3, double>>& mesh, const PaintingInformation3d& info_3d,
               const PaintingInformationAll& info_all)
 {
+        ASSERT(info_all.default_samples_per_dimension > 0);
+        ASSERT(info_all.max_samples_per_dimension > 0);
+
+        const int default_sample_count = square(info_all.default_samples_per_dimension);
+        const int max_sample_count = square(info_all.max_samples_per_dimension);
+
         int width, height, thread_count, samples_per_pixel;
         bool flat_facets, cornell_box;
 
         if (!PathTracingParametersFor3d(info_all.parent_window)
                      .show(hardware_concurrency(), info_3d.paint_width, info_3d.paint_height, info_3d.max_screen_size,
-                           info_all.default_samples_per_pixel, info_all.max_samples_per_pixel, &thread_count, &width, &height,
-                           &samples_per_pixel, &flat_facets, &cornell_box))
+                           default_sample_count, max_sample_count, &thread_count, &width, &height, &samples_per_pixel,
+                           &flat_facets, &cornell_box))
         {
                 return;
         }
@@ -91,13 +98,20 @@ void painting(const std::shared_ptr<const Mesh<N, T>>& mesh, const PaintingInfor
 {
         static_assert(N >= 4);
 
+        ASSERT(info_all.default_samples_per_dimension > 0);
+        ASSERT(info_all.max_samples_per_dimension > 0);
+
+        constexpr int screen_dimension = N - 1;
+        const int default_sample_count = power<screen_dimension>(static_cast<unsigned>(info_all.default_samples_per_dimension));
+        const int max_sample_count = power<screen_dimension>(static_cast<unsigned>(info_all.max_samples_per_dimension));
+
         int min_size, max_size, thread_count, samples_per_pixel;
         bool flat_facets;
 
         if (!PathTracingParametersForNd(info_all.parent_window)
                      .show(N, hardware_concurrency(), info_nd.default_screen_size, info_nd.minimum_screen_size,
-                           info_nd.maximum_screen_size, info_all.default_samples_per_pixel, info_all.max_samples_per_pixel,
-                           &thread_count, &min_size, &max_size, &samples_per_pixel, &flat_facets))
+                           info_nd.maximum_screen_size, default_sample_count, max_sample_count, &thread_count, &min_size,
+                           &max_size, &samples_per_pixel, &flat_facets))
         {
                 return;
         }
