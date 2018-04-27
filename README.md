@@ -11,6 +11,7 @@ Just for fun with mathematics.
 * [Technical details](#technical-details)
 * [Screenshots](#screenshots)
   * [4-manifold reconstruction and path tracing in 5-space](#4-manifold-reconstruction-and-path-tracing-in-5-space)
+  * [3-manifold reconstruction and path tracing in 4-space](#3-manifold-reconstruction-and-path-tracing-in-4-space)
   * [Points in 3-space and the surface reconstructed from the points](#points-in-3-space-and-the-surface-reconstructed-from-the-points)
 
 ## Description
@@ -91,6 +92,27 @@ Build system                | CMake
 ![manifold](https://i.imgur.com/bimmCBL.png)
 ![manifold](https://i.imgur.com/7fEn0iy.png)
 ![manifold](https://i.imgur.com/m5FVGza.png)
+
+### 3-manifold reconstruction and path tracing in 4-space
+
+2D slices of a 3D image of the 3-manifold reconstructed from the points on the 3-torus.
+
+* 4-space.
+* 3-simplex mesh without boundary.
+* 16-tree.
+* 4-parallelotopes.
+* Point light source.
+* Parallel projection onto 3D screen.
+
+![manifold](https://i.imgur.com/uSEFijB.png)
+![manifold](https://i.imgur.com/Qj2oO5h.png)
+![manifold](https://i.imgur.com/eK5l7Qa.png)
+![manifold](https://i.imgur.com/DWhJwPm.png)
+![manifold](https://i.imgur.com/LkIAodR.png)
+![manifold](https://i.imgur.com/YDXMNPr.png)
+![manifold](https://i.imgur.com/SLLgASK.png)
+![manifold](https://i.imgur.com/GE9iwbu.png)
+![manifold](https://i.imgur.com/NllTlT4.png)
 
 ### Points in 3-space and the surface reconstructed from the points
 
