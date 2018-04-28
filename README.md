@@ -12,7 +12,7 @@ Just for fun with mathematics.
 * [Screenshots](#screenshots)
   * [4-manifold reconstruction and path tracing in 5-space](#4-manifold-reconstruction-and-path-tracing-in-5-space)
   * [3-manifold reconstruction and path tracing in 4-space](#3-manifold-reconstruction-and-path-tracing-in-4-space)
-  * [Points in 3-space and the surface reconstructed from the points](#points-in-3-space-and-the-surface-reconstructed-from-the-points)
+  * [2-manifold reconstruction and path tracing in 3-space](#2-manifold-reconstruction-and-path-tracing-in-3-space)
 
 ## Description
 
@@ -114,10 +114,20 @@ Build system                | CMake
 ![manifold](https://i.imgur.com/GE9iwbu.png)
 ![manifold](https://i.imgur.com/NllTlT4.png)
 
-### Points in 3-space and the surface reconstructed from the points
+### 2-manifold reconstruction and path tracing in 3-space
 
-![points](https://i.imgur.com/TS6ct8G.png)
-![reconstructed surface](https://i.imgur.com/4AU5rTu.png)
-![reconstructed surface](https://i.imgur.com/wkpsz8T.png)
-![reconstructed surface wireframe](https://i.imgur.com/CJ0KCcT.png)
-![reconstructed surface image](https://i.imgur.com/Bczgqjw.png)
+Points on the (2,3)-torus knot, the Euclidean minimum spanning tree of the points, and the 2-manifold reconstructed from the points.
+
+* 3-space.
+* 2-simplex mesh without boundary.
+* 8-tree.
+* 3-parallelotopes.
+* Point light source.
+* Parallel projection onto 2D screen.
+
+![points](https://i.imgur.com/h3yaTRd.png)
+![tree](https://i.imgur.com/oC4wcfw.png)
+![manifold](https://i.imgur.com/KfOxuOu.png)
+![manifold](https://i.imgur.com/kFCwTJM.png)
+![manifold](https://i.imgur.com/Vh5Lrcv.png)
+![manifold](https://i.imgur.com/8oyND91.png)
