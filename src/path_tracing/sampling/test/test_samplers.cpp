@@ -80,9 +80,9 @@ void test_samplers()
 {
         RandomEngineWithSeed<RandomEngine> random_engine;
 
-        int iter_count = 1e6;
-        int sample_count = std::pow(5, N);
-        int pass_count = 10;
+        constexpr int iter_count = 1e6;
+        constexpr int sample_count = power<N>(5u);
+        constexpr int pass_count = 10;
 
         std::string tmp_dir = temp_directory() + "/";
         const std::string dimension_str = to_string(N) + "d";

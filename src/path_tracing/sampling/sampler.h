@@ -54,7 +54,6 @@ class StratifiedJitteredSampler
 public:
         StratifiedJitteredSampler(int sample_count) : m_engine(one_dimension_size(sample_count))
         {
-                ASSERT(std::pow(one_dimension_size(sample_count), N) >= sample_count);
         }
 
         template <typename RandomEngine>

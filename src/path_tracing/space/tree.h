@@ -391,6 +391,15 @@ catch (...)
 template <typename Parallelotope>
 class SpatialSubdivisionTree
 {
+        static double maximum_box_count(int box_count, int max_depth)
+        {
+                // Максимальное количество коробок — это сумма геометрической прогрессии
+                // со знаменателем box_count.
+                // Sum = (pow(r, n) - 1) / (r - 1).
+
+                return (std::pow(box_count, max_depth) - 1) / (box_count - 1);
+        }
+
         using Box = SpatialSubdivisionTreeImplementation::Box<Parallelotope>;
         using BoxJobs = SpatialSubdivisionTreeImplementation::BoxJobs<Box>;
 
@@ -419,18 +428,13 @@ class SpatialSubdivisionTree
         // Первым элементом массива является только 0.
         static constexpr int ROOT_BOX = 0;
 
-        // Максимальная глубина и минимальное количество объектов для экземпляра дерева.
-        const int MAX_DEPTH, MIN_OBJECTS;
+        // Максимально допустимое количество коробок.
+        static constexpr int MAX_BOX_COUNT_LIMIT = (1u << 31) - 1;
 
-        // Количество коробок при одном делении
+        // Количество коробок при одном делении.
         static constexpr int BOX_COUNT = SpatialSubdivisionTreeImplementation::BOX_COUNT<N>;
 
-        // Максимальное количество коробок — это сумма геометрической прогрессии
-        // со знаменателем BOX_COUNT. Sum = (pow(r, n) - 1) / (r - 1).
-        // Требуется для того, чтобы при расчёте это отображать как максимум.
-        const int MAX_BOXES = std::min((1u << 31) - 1.0, (std::pow(BOX_COUNT, MAX_DEPTH) - 1) / (BOX_COUNT - 1));
-
-        // Все коробки хранятся в одном векторе
+        // Все коробки хранятся в одном векторе.
         std::vector<Box> m_boxes;
 
         T m_distance_from_facet;
@@ -460,42 +464,45 @@ class SpatialSubdivisionTree
         }
 
 public:
-        SpatialSubdivisionTree(int max_depth, int min_objects_per_box) : MAX_DEPTH(max_depth), MIN_OBJECTS(min_objects_per_box)
-        {
-        }
-
         template <typename FunctorObjectPointer>
-        SpatialSubdivisionTree(int max_depth, int min_objects_per_box, int object_index_count,
-                               const FunctorObjectPointer& functor_object_pointer, unsigned decomposition_thread_count,
-                               ProgressRatio* progress)
-                : MAX_DEPTH(max_depth), MIN_OBJECTS(min_objects_per_box)
-        {
-                decompose(object_index_count, functor_object_pointer, decomposition_thread_count, progress);
-        }
-
-        template <typename FunctorObjectPointer>
-        void decompose(int object_index_count, const FunctorObjectPointer& functor_object_pointer, unsigned thread_count,
-                       ProgressRatio* progress)
+        void decompose(int max_depth, int min_objects_per_box, int object_index_count,
+                       const FunctorObjectPointer& functor_object_pointer, unsigned thread_count, ProgressRatio* progress)
 
         {
                 static_assert(std::is_pointer_v<decltype(functor_object_pointer(0))>);
                 static_assert(std::is_const_v<std::remove_pointer_t<decltype(functor_object_pointer(0))>>);
+                static_assert(MAX_BOX_COUNT_LIMIT <= (1ll << 31) - 1);
 
                 namespace Impl = SpatialSubdivisionTreeImplementation;
 
-                if (!(MAX_DEPTH >= MAX_DEPTH_LEFT_BOUND && MAX_DEPTH <= MAX_DEPTH_RIGHT_BOUND) ||
-                    !(MIN_OBJECTS >= MIN_OBJECTS_LEFT_BOUND && MIN_OBJECTS <= MIN_OBJECTS_RIGHT_BOUND))
+                if (!(max_depth >= MAX_DEPTH_LEFT_BOUND && max_depth <= MAX_DEPTH_RIGHT_BOUND) ||
+                    !(min_objects_per_box >= MIN_OBJECTS_LEFT_BOUND && min_objects_per_box <= MIN_OBJECTS_RIGHT_BOUND))
                 {
-                        error("Error limits for " + to_string(BOX_COUNT) + "-tree");
+                        error("Error limits for spatial subdivision " + to_string(BOX_COUNT) + "-tree. Maximum depth (" +
+                              to_string(max_depth) + ") must be in the interval [" + to_string(MAX_DEPTH_LEFT_BOUND) + ", " +
+                              to_string(MAX_DEPTH_RIGHT_BOUND) + "] and minimum objects per box (" +
+                              to_string(min_objects_per_box) + ") must be in the interval [" + to_string(MIN_OBJECTS_LEFT_BOUND) +
+                              ", " + to_string(MIN_OBJECTS_RIGHT_BOUND) + "].");
                 }
 
-                Vector<N, T> min, max;
+                // Немного прибавить к максимуму для учёта ошибок плавающей точки
+                if (maximum_box_count(BOX_COUNT, max_depth) > MAX_BOX_COUNT_LIMIT + 0.1)
+                {
+                        error("Spatial subdivision " + to_string(BOX_COUNT) + "-tree is too deep. Depth " + to_string(max_depth) +
+                              ", maximum box count " + to_string(maximum_box_count(BOX_COUNT, max_depth)) +
+                              ", maximum box count limit " + to_string(MAX_BOX_COUNT_LIMIT));
+                }
 
-                // Максимальное разделение по одной координате.
-                const int max_divisions = 1u << (MAX_DEPTH - 1);
+                const int max_box_count = std::lround(maximum_box_count(BOX_COUNT, max_depth));
+
+                // Максимальное разделение по одной координате
+                const int max_divisions = 1u << (max_depth - 1);
+
+                Vector<N, T> min, max;
+                T distance_from_facet;
 
                 Impl::min_max_and_distance(max_divisions, DISTANCE_FROM_FACET_IN_EPSILONS, object_index_count,
-                                           functor_object_pointer, &min, &max, &m_distance_from_facet);
+                                           functor_object_pointer, &min, &max, &distance_from_facet);
 
                 BoxContainer boxes({Box(Impl::root_parallelotope<Parallelotope>(min, max),
                                         Impl::iota_zero_based_indices(object_index_count))});
@@ -508,13 +515,14 @@ public:
                 for (unsigned i = 0; i < thread_count; ++i)
                 {
                         threads.add([&]() {
-                                extend(MAX_DEPTH, MIN_OBJECTS, MAX_BOXES, DISTANCE_FROM_FLAT_SHAPES_IN_EPSILONS, &boxes_lock,
-                                       &boxes, &jobs, functor_object_pointer, progress);
+                                extend(max_depth, min_objects_per_box, max_box_count, DISTANCE_FROM_FLAT_SHAPES_IN_EPSILONS,
+                                       &boxes_lock, &boxes, &jobs, functor_object_pointer, progress);
                         });
                 }
                 threads.join();
 
                 m_boxes = move_boxes_to_vector(std::move(boxes));
+                m_distance_from_facet = distance_from_facet;
         }
 
         bool intersect_root(const Ray<N, T>& ray, T* t) const

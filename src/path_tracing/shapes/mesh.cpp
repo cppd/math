@@ -29,7 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace
 {
-constexpr int TREE_MIN_OBJECTS = 10;
+constexpr int TREE_MIN_OBJECTS_PER_BOX = 10;
 
 template <size_t N>
 int tree_max_depth()
@@ -120,12 +120,11 @@ void Mesh<N, T>::create_mesh_object(const Obj<N>* obj, const Matrix<N + 1, N + 1
         // Указатель на объект дерева
         auto lambda_simplex = [w = std::as_const(simplex_wrappers)](int simplex_index) { return &(w[simplex_index]); };
 
-        m_tree.decompose(m_facets.size(), lambda_simplex, thread_count, progress);
+        m_tree.decompose(tree_max_depth<N>(), TREE_MIN_OBJECTS_PER_BOX, m_facets.size(), lambda_simplex, thread_count, progress);
 }
 
 template <size_t N, typename T>
 Mesh<N, T>::Mesh(const Obj<N>* obj, const Matrix<N + 1, N + 1, T>& vertex_matrix, unsigned thread_count, ProgressRatio* progress)
-        : m_tree(tree_max_depth<N>(), TREE_MIN_OBJECTS)
 {
         double start_time = time_in_seconds();
 
