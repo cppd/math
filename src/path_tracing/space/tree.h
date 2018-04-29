@@ -412,7 +412,7 @@ class SpatialSubdivisionTree
         using BoxContainer = std::deque<Box>;
 
         // Расстояние от грани, при котором точка считается внутри коробки.
-        static constexpr int DISTANCE_FROM_FACET_IN_EPSILONS = 10;
+        static constexpr int DISTANCE_FROM_FACET_IN_EPSILONS = 20;
         // Расстояние от плоских граней в каждую сторону для получения
         // дополнительного измерения при определении пересечения объектов.
         static constexpr int DISTANCE_FROM_FLAT_SHAPES_IN_EPSILONS = 10;
