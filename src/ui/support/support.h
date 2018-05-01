@@ -27,6 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QLayout>
 #include <QMainWindow>
 #include <QRadioButton>
+#include <QSlider>
 #include <QString>
 #include <QTextEdit>
 #include <string>
@@ -137,6 +138,8 @@ void set_widgets_enabled(QLayout* layout, bool v);
 Color qcolor_to_rgb(const QColor& c);
 
 void button_strike_out(QRadioButton* button, bool strike_out);
+
+void set_slider_to_middle(QSlider* slider);
 
 void add_to_text_edit_and_to_stderr(QTextEdit* text_edit, const std::vector<std::string>& lines,
                                     TextEditMessageType type) noexcept;

@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/error.h"
 #include "com/file/file_sys.h"
 #include "com/log.h"
+#include "com/math.h"
 #include "com/names.h"
 #include "com/print.h"
 #include "ui/dialogs/messages/application_about.h"
@@ -86,6 +87,9 @@ constexpr int PATH_TRACING_MAXIMUM_SCREEN_SIZE = 5000;
 
 // Сколько потоков не надо использовать от максимума для создания октадеревьев.
 constexpr int MESH_OBJECT_NOT_USED_THREAD_COUNT = 2;
+
+// Максимальное увеличение для освещений ambient, diffuse, specular.
+constexpr double MAXIMUM_COLOR_AMPLIFICATION = 3;
 
 MainWindow::MainWindow(QWidget* parent)
         : QMainWindow(parent),
@@ -153,6 +157,11 @@ void MainWindow::constructor_interface()
 
         // Чтобы добавление и удаление QProgressBar не меняло высоту ui.statusBar
         ui.statusBar->setFixedHeight(ui.statusBar->height());
+
+        // Должно быть точное среднее положение
+        ASSERT(((ui.slider_Ambient->maximum() - ui.slider_Ambient->minimum()) & 1) == 0);
+        ASSERT(((ui.slider_Diffuse->maximum() - ui.slider_Diffuse->minimum()) & 1) == 0);
+        ASSERT(((ui.slider_Specular->maximum() - ui.slider_Specular->minimum()) & 1) == 0);
 }
 
 void MainWindow::constructor_repository()
@@ -930,24 +939,46 @@ void MainWindow::slot_widget_under_window_resize()
         }
 }
 
+double MainWindow::lighting_slider_value(const QSlider* slider)
+{
+        double value = slider->value() - slider->minimum();
+        double delta = slider->maximum() - slider->minimum();
+        double ratio = 2.0 * value / delta;
+        return (ratio <= 1) ? ratio : interpolation(1.0, MAXIMUM_COLOR_AMPLIFICATION, ratio - 1);
+}
+
 double MainWindow::ambient_light() const
 {
-        double value = ui.slider_Ambient->value() - ui.slider_Ambient->minimum();
-        double delta = ui.slider_Ambient->maximum() - ui.slider_Ambient->minimum();
-        return 2 * value / delta;
+        return lighting_slider_value(ui.slider_Ambient);
 }
 double MainWindow::diffuse_light() const
 {
-        double value = ui.slider_Diffuse->value() - ui.slider_Diffuse->minimum();
-        double delta = ui.slider_Diffuse->maximum() - ui.slider_Diffuse->minimum();
-        return 2 * value / delta;
+        return lighting_slider_value(ui.slider_Diffuse);
 }
+
 double MainWindow::specular_light() const
 {
-        double value = ui.slider_Specular->value() - ui.slider_Specular->minimum();
-        double delta = ui.slider_Specular->maximum() - ui.slider_Specular->minimum();
-        return 2 * value / delta;
+        return lighting_slider_value(ui.slider_Specular);
 }
+
+double MainWindow::default_ns() const
+{
+        return ui.slider_Default_Ns->value();
+}
+
+void MainWindow::on_pushButton_ResetLighting_clicked()
+{
+        if (!message_question_default_yes(this, "Reset lighting?"))
+        {
+                return;
+        }
+
+        set_slider_to_middle(ui.slider_Ambient);
+        set_slider_to_middle(ui.slider_Diffuse);
+        set_slider_to_middle(ui.slider_Specular);
+        set_slider_to_middle(ui.slider_Default_Ns);
+}
+
 double MainWindow::dft_brightness() const
 {
         double value = ui.slider_DFT_Brightness->value() - ui.slider_DFT_Brightness->minimum();
@@ -955,10 +986,7 @@ double MainWindow::dft_brightness() const
         double value_gamma = std::pow(value / delta, DFT_GAMMA);
         return std::pow(DFT_MAX_BRIGHTNESS, value_gamma);
 }
-double MainWindow::default_ns() const
-{
-        return ui.slider_Default_Ns->value();
-}
+
 double MainWindow::shadow_zoom() const
 {
         return ui.slider_ShadowQuality->value();

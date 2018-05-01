@@ -120,6 +120,11 @@ void button_strike_out(QRadioButton* button, bool strike_out)
         button->setFont(f);
 }
 
+void set_slider_to_middle(QSlider* slider)
+{
+        slider->setValue(slider->minimum() + (slider->maximum() - slider->minimum()) / 2);
+}
+
 void add_to_text_edit_and_to_stderr(QTextEdit* text_edit, const std::vector<std::string>& lines,
                                     TextEditMessageType type) noexcept
 {

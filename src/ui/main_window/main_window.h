@@ -66,6 +66,7 @@ private slots:
         void on_toolButton_BackgroundColor_clicked();
         void on_toolButton_DefaultColor_clicked();
         void on_toolButton_WireframeColor_clicked();
+        void on_pushButton_ResetLighting_clicked();
         void on_pushButton_ResetView_clicked();
         void on_checkBox_Wireframe_clicked();
         void on_checkBox_Materials_clicked();
@@ -130,9 +131,11 @@ private:
         double ambient_light() const;
         double diffuse_light() const;
         double specular_light() const;
-        double dft_brightness() const;
         double default_ns() const;
+        double dft_brightness() const;
         double shadow_zoom() const;
+
+        static double lighting_slider_value(const QSlider* slider);
 
         void set_bound_cocone_parameters(double rho, double alpha);
 
