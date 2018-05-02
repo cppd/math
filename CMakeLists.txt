@@ -15,7 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-cmake_minimum_required(VERSION 3.9)
+cmake_minimum_required(VERSION 3.11)
 
 ##################################################
 
@@ -24,6 +24,9 @@ include("${CMAKE_SOURCE_DIR}/cmake/cmake_compiler_warnings.cmake")
 ##################################################
 
 set(compilers "GNU;Clang")
+set(gcc_minimal_version "7.3")
+set(clang_minimal_version "6")
+set(sfml_minimal_version "2.4.2")
 
 set(extensions_shaders "comp;frag;geom;vert;tesc;tese")
 set(extensions_all "h;c;cpp;ui" ${extensions_shaders})
@@ -38,17 +41,26 @@ endif()
 if(NOT CMAKE_CXX_COMPILER_ID)
          message(FATAL_ERROR "Empty C++ compiler id")
 endif()
+
 if(NOT (${CMAKE_C_COMPILER_ID} IN_LIST compilers))
-        message(WARNING "Not supported C compiler ${CMAKE_C_COMPILER_ID}")
+        message(FATAL_ERROR "Not supported C compiler ${CMAKE_C_COMPILER_ID}")
 endif()
 if(NOT (${CMAKE_CXX_COMPILER_ID} IN_LIST compilers))
-        message(WARNING "Not supported C++ compiler ${CMAKE_CXX_COMPILER_ID}")
+        message(FATAL_ERROR "Not supported C++ compiler ${CMAKE_CXX_COMPILER_ID}")
 endif()
-if((${CMAKE_C_COMPILER_ID} STREQUAL "GNU") AND (${CMAKE_C_COMPILER_VERSION} VERSION_LESS 7.2))
+
+if((${CMAKE_C_COMPILER_ID} STREQUAL "GNU") AND (${CMAKE_C_COMPILER_VERSION} VERSION_LESS ${gcc_minimal_version}))
         message(FATAL_ERROR "Not supported GCC C compiler version ${CMAKE_C_COMPILER_VERSION}")
 endif()
-if((${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU") AND (${CMAKE_CXX_COMPILER_VERSION} VERSION_LESS 7.2))
+if((${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU") AND (${CMAKE_CXX_COMPILER_VERSION} VERSION_LESS ${gcc_minimal_version}))
         message(FATAL_ERROR "Not supported GCC C++ compiler version ${CMAKE_CXX_COMPILER_VERSION}")
+endif()
+
+if((${CMAKE_C_COMPILER_ID} STREQUAL "Clang") AND (${CMAKE_C_COMPILER_VERSION} VERSION_LESS ${clang_minimal_version}))
+        message(FATAL_ERROR "Not supported Clang C compiler version ${CMAKE_C_COMPILER_VERSION}")
+endif()
+if((${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang") AND (${CMAKE_CXX_COMPILER_VERSION} VERSION_LESS ${clang_minimal_version}))
+        message(FATAL_ERROR "Not supported Clang C++ compiler version ${CMAKE_CXX_COMPILER_VERSION}")
 endif()
 
 # При наличии enable_language(C CXX) можно указать стандарт для всех проектов
@@ -228,7 +240,7 @@ endif()
 ##################################################
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/SFML")
-find_package(SFML 2.4.2 COMPONENTS system window graphics REQUIRED)
+find_package(SFML ${sfml_minimal_version} REQUIRED COMPONENTS system window graphics)
 target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${SFML_INCLUDE_DIR})
 target_link_libraries(${PROJECT_NAME} ${SFML_LIBRARIES})
 
@@ -237,9 +249,10 @@ find_package(GMP REQUIRED)
 target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${GMP_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} ${GMP_C_LIBRARIES} ${GMP_CXX_LIBRARIES})
 
+set(OpenGL_GL_PREFERENCE "GLVND")
 find_package(OpenGL REQUIRED)
 target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${OPENGL_INCLUDE_DIR})
-target_link_libraries(${PROJECT_NAME} ${OPENGL_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} OpenGL::GL)
 
 find_package(Qt5Widgets REQUIRED)
 target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${Qt5Widgets_INCLUDE_DIRS})
