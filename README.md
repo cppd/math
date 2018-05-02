@@ -1,6 +1,8 @@
 # Math Viewer
 
-Just for fun with mathematics.
+Just for fun with mathematics
+
+![image](https://i.imgur.com/HjDmj4C.png)
 
 ## Contents
 
@@ -70,7 +72,8 @@ Property                    | Value
 Programming languages       | C++17, GLSL 4.50
 Supported C++ compilers     | GCC 7, Clang 6
 Supported operating systems | Linux, Windows
-Libraries                   | FreeType, GMP, OpenGL 4.5, Qt 5, SFML, XLib
+Required libraries          | FreeType, GMP, OpenGL 4.5, Qt 5, SFML, XLib
+Optional libraries          | cuFFT (for DFT tests), FFTW (for DFT tests)
 Build system                | CMake
 
 ## Screenshots
