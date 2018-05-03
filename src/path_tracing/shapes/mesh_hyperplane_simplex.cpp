@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "mesh_simplex.h"
+#include "mesh_hyperplane_simplex.h"
 
 #include "com/alg.h"
 #include "com/error.h"
@@ -57,10 +57,12 @@ std::array<Vector<N, T>, N> vertices_to_array(const std::vector<Vector<N, T>>& v
 }
 
 template <size_t N, typename T>
-MeshSimplex<N, T>::MeshSimplex(const std::vector<Vector<N, T>>& vertices, const std::vector<Vector<N, T>>& normals,
-                               const std::vector<Vector<N - 1, T>>& texcoords, const std::array<int, N>& vertex_indices,
-                               bool has_normals, const std::array<int, N>& normal_indices, bool has_texcoords,
-                               const std::array<int, N>& texcoord_indices, int material)
+MeshHyperplaneSimplex<N, T>::MeshHyperplaneSimplex(const std::vector<Vector<N, T>>& vertices,
+                                                   const std::vector<Vector<N, T>>& normals,
+                                                   const std::vector<Vector<N - 1, T>>& texcoords,
+                                                   const std::array<int, N>& vertex_indices, bool has_normals,
+                                                   const std::array<int, N>& normal_indices, bool has_texcoords,
+                                                   const std::array<int, N>& texcoord_indices, int material)
         : m_vertices(vertices), m_normals(normals), m_texcoords(texcoords)
 {
         ASSERT((has_normals && all_non_negative(normal_indices)) || !has_normals);
@@ -141,19 +143,19 @@ MeshSimplex<N, T>::MeshSimplex(const std::vector<Vector<N, T>>& vertices, const 
 }
 
 template <size_t N, typename T>
-bool MeshSimplex<N, T>::intersect(const Ray<N, T>& r, T* t) const
+bool MeshHyperplaneSimplex<N, T>::intersect(const Ray<N, T>& r, T* t) const
 {
         return m_geometry.intersect(r, m_vertices[m_v[0]], m_normal, t);
 }
 
 template <size_t N, typename T>
-Vector<N, T> MeshSimplex<N, T>::geometric_normal() const
+Vector<N, T> MeshHyperplaneSimplex<N, T>::geometric_normal() const
 {
         return m_normal;
 }
 
 template <size_t N, typename T>
-Vector<N, T> MeshSimplex<N, T>::shading_normal(const Vector<N, T>& point) const
+Vector<N, T> MeshHyperplaneSimplex<N, T>::shading_normal(const Vector<N, T>& point) const
 {
         switch (m_normal_type)
         {
@@ -184,13 +186,13 @@ Vector<N, T> MeshSimplex<N, T>::shading_normal(const Vector<N, T>& point) const
 }
 
 template <size_t N, typename T>
-bool MeshSimplex<N, T>::has_texcoord() const
+bool MeshHyperplaneSimplex<N, T>::has_texcoord() const
 {
         return m_t[0] >= 0;
 }
 
 template <size_t N, typename T>
-Vector<N - 1, T> MeshSimplex<N, T>::texcoord(const Vector<N, T>& point) const
+Vector<N - 1, T> MeshHyperplaneSimplex<N, T>::texcoord(const Vector<N, T>& point) const
 {
         if (has_texcoord())
         {
@@ -205,29 +207,29 @@ Vector<N - 1, T> MeshSimplex<N, T>::texcoord(const Vector<N, T>& point) const
 }
 
 template <size_t N, typename T>
-int MeshSimplex<N, T>::material() const
+int MeshHyperplaneSimplex<N, T>::material() const
 {
         return m_material;
 }
 
 template <size_t N, typename T>
-std::array<Vector<N, T>, N> MeshSimplex<N, T>::vertices() const
+std::array<Vector<N, T>, N> MeshHyperplaneSimplex<N, T>::vertices() const
 {
         return vertices_to_array(m_vertices, m_v);
 }
 
 template <size_t N, typename T>
-void MeshSimplex<N, T>::constraints(std::array<Constraint<N, T>, N>* c, Constraint<N, T>* c_eq) const
+void MeshHyperplaneSimplex<N, T>::constraints(std::array<Constraint<N, T>, N>* c, Constraint<N, T>* c_eq) const
 {
         m_geometry.constraints(m_normal, vertices_to_array(m_vertices, m_v), c, c_eq);
 }
 
-template class MeshSimplex<3, float>;
-template class MeshSimplex<4, float>;
-template class MeshSimplex<5, float>;
-template class MeshSimplex<6, float>;
+template class MeshHyperplaneSimplex<3, float>;
+template class MeshHyperplaneSimplex<4, float>;
+template class MeshHyperplaneSimplex<5, float>;
+template class MeshHyperplaneSimplex<6, float>;
 
-template class MeshSimplex<3, double>;
-template class MeshSimplex<4, double>;
-template class MeshSimplex<5, double>;
-template class MeshSimplex<6, double>;
+template class MeshHyperplaneSimplex<3, double>;
+template class MeshHyperplaneSimplex<4, double>;
+template class MeshHyperplaneSimplex<5, double>;
+template class MeshHyperplaneSimplex<6, double>;

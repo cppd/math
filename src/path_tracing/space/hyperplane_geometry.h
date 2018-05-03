@@ -35,7 +35,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <array>
 #include <cmath>
 
-namespace SimplexGeometryImplementation
+namespace HyperplaneGeometryImplementation
 {
 template <size_t N, typename T>
 bool plane_intersect(const Ray<N, T>& ray, const Vector<N, T>& plane_point, const Vector<N, T>& plane_normal, T* t)
@@ -53,7 +53,7 @@ bool plane_intersect(const Ray<N, T>& ray, const Vector<N, T>& plane_point, cons
 }
 
 template <size_t N, typename T>
-class SimplexGeometry
+class HyperplaneSimplexGeometry
 {
         static_assert(N >= 2);
         static_assert(is_floating_point<T>);
@@ -180,7 +180,7 @@ public:
 
         bool intersect(const Ray<N, T>& ray, const Vector<N, T>& any_vertex, const Vector<N, T>& normal, T* t) const
         {
-                namespace Impl = SimplexGeometryImplementation;
+                namespace Impl = HyperplaneGeometryImplementation;
 
                 if (!Impl::plane_intersect(ray, any_vertex, normal, t))
                 {
@@ -220,9 +220,9 @@ public:
 };
 
 template <size_t N, typename T>
-class ParallelotopeGeometry
+class HyperplaneParallelotopeGeometry
 {
-        SimplexGeometry<N, T> m_simplex_geometry;
+        HyperplaneSimplexGeometry<N, T> m_simplex_geometry;
 
 public:
         void set_data(const Vector<N, T>& normal, const Vector<N, T>& org, const std::array<Vector<N, T>, N - 1>& edges)
@@ -239,7 +239,7 @@ public:
 
         bool intersect(const Ray<N, T>& ray, const Vector<N, T>& any_vertex, const Vector<N, T>& normal, T* t) const
         {
-                namespace Impl = SimplexGeometryImplementation;
+                namespace Impl = HyperplaneGeometryImplementation;
 
                 if (!Impl::plane_intersect(ray, any_vertex, normal, t))
                 {

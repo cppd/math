@@ -108,7 +108,7 @@ public:
 
         const Vector<N, T>& org() const;
 
-        Vector<N, T> e(unsigned n) const;
+        const Vector<N, T>& e(unsigned n) const;
 };
 
 // Параметр vectors — это все только Vector<N, T>
@@ -367,7 +367,7 @@ const Vector<N, T>& Parallelotope<N, T>::org() const
 }
 
 template <size_t N, typename T>
-Vector<N, T> Parallelotope<N, T>::e(unsigned n) const
+const Vector<N, T>& Parallelotope<N, T>::e(unsigned n) const
 {
         ASSERT(n < N);
         return m_vectors[n];

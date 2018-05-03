@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "mesh_simplex.h"
+#include "mesh_hyperplane_simplex.h"
 
 #include "com/color/colors.h"
 #include "com/mat.h"
@@ -33,7 +33,7 @@ template <size_t N, typename T>
 class Mesh
 {
         using TreeParallelotope = ParallelotopeOrtho<N, T>;
-        using Facet = MeshSimplex<N, T>;
+        using Facet = MeshHyperplaneSimplex<N, T>;
 
         std::vector<Vector<N, T>> m_vertices;
         std::vector<Vector<N, T>> m_normals;

@@ -21,8 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/mat_alg.h"
 #include "com/time.h"
 #include "com/vec.h"
+#include "path_tracing/space/hyperplane_simplex_wrapper.h"
 #include "path_tracing/space/ray_intersection.h"
-#include "path_tracing/space/simplex_wrapper.h"
 
 #include <algorithm>
 #include <utility>
@@ -110,7 +110,7 @@ void Mesh<N, T>::create_mesh_object(const Obj<N>* obj, const Matrix<N + 1, N + 1
 
         progress->set_text(to_string(1 << N) + "-tree: %v of %m");
 
-        std::vector<SimplexWrapperForShapeIntersection<Facet>> simplex_wrappers;
+        std::vector<HyperplaneSimplexWrapperForShapeIntersection<Facet>> simplex_wrappers;
         simplex_wrappers.reserve(m_facets.size());
         for (const Facet& t : m_facets)
         {

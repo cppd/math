@@ -20,13 +20,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/ray.h"
 #include "com/vec.h"
 #include "path_tracing/space/constraint.h"
-#include "path_tracing/space/simplex_geometry.h"
+#include "path_tracing/space/hyperplane_geometry.h"
 
 #include <array>
 #include <vector>
 
 template <size_t N, typename T>
-class MeshSimplex
+class MeshHyperplaneSimplex
 {
         static_assert(N >= 3);
 
@@ -42,7 +42,7 @@ class MeshSimplex
 
         Vector<N, T> m_normal;
 
-        SimplexGeometry<N, T> m_geometry;
+        HyperplaneSimplexGeometry<N, T> m_geometry;
 
         enum class NormalType : char
         {
@@ -58,10 +58,10 @@ public:
         static constexpr size_t SHAPE_DIMENSION = N - 1;
         using DataType = T;
 
-        MeshSimplex(const std::vector<Vector<N, T>>& vertices, const std::vector<Vector<N, T>>& normals,
-                    const std::vector<Vector<N - 1, T>>& texcoords, const std::array<int, N>& vertex_indices, bool has_normals,
-                    const std::array<int, N>& normal_indices, bool has_texcoords, const std::array<int, N>& texcoord_indices,
-                    int material);
+        MeshHyperplaneSimplex(const std::vector<Vector<N, T>>& vertices, const std::vector<Vector<N, T>>& normals,
+                              const std::vector<Vector<N - 1, T>>& texcoords, const std::array<int, N>& vertex_indices,
+                              bool has_normals, const std::array<int, N>& normal_indices, bool has_texcoords,
+                              const std::array<int, N>& texcoord_indices, int material);
 
         int material() const;
 

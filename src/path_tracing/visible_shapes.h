@@ -19,27 +19,30 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "objects.h"
 
+#include "path_tracing/algorithm/algorithm.h"
 #include "path_tracing/shapes/mesh.h"
-#include "path_tracing/shapes/rectangle.h"
+#include "path_tracing/space/hyperplane_parallelotope.h"
+#include "path_tracing/space/hyperplane_parallelotope_algorithm.h"
 #include "path_tracing/space/parallelotope.h"
+#include "path_tracing/space/parallelotope_algorithm.h"
 
 #include <memory>
 
 template <size_t N, typename T>
-class VisibleRectangle final : public GenericObject<N, T>, public Surface<N, T>, public SurfaceProperties<N, T>
+class VisibleHyperplaneParallelotope final : public GenericObject<N, T>, public Surface<N, T>, public SurfaceProperties<N, T>
 {
-        Rectangle<N, T> m_rectangle;
+        HyperplaneParallelotope<N, T> m_hyperplane_parallelotope;
 
 public:
         template <typename... V>
-        VisibleRectangle(const Vector<N, T>& org, const V&... e) : m_rectangle(org, e...)
+        VisibleHyperplaneParallelotope(const Vector<N, T>& org, const V&... e) : m_hyperplane_parallelotope(org, e...)
         {
                 static_assert((std::is_same_v<V, Vector<N, T>> && ...));
         }
 
         bool intersect_approximate(const Ray<N, T>& r, T* t) const override
         {
-                return m_rectangle.intersect(r, t);
+                return m_hyperplane_parallelotope.intersect(r, t);
         }
 
         bool intersect_precise(const Ray<N, T>&, T approximate_t, T* t, const Surface<N, T>** surface,
@@ -58,40 +61,32 @@ public:
         {
                 SurfaceProperties<N, T> s = *this;
 
-                s.set_geometric_normal(m_rectangle.normal(p));
+                s.set_geometric_normal(m_hyperplane_parallelotope.normal(p));
 
                 return s;
         }
 
         void min_max(Vector<N, T>* min, Vector<N, T>* max) const override
         {
-                typename RectangleAlgorithm<Rectangle<N, T>>::Vertices vertices = rectangle_vertices(m_rectangle);
-
-                *min = vertices[0];
-                *max = vertices[0];
-                for (unsigned i = 1; i < vertices.size(); ++i)
-                {
-                        *min = min_vector(*min, vertices[i]);
-                        *max = max_vector(*max, vertices[i]);
-                }
+                vertex_min_max(hyperplane_parallelotope_vertices(m_hyperplane_parallelotope), min, max);
         }
 };
 
 template <size_t N, typename T>
-class VisibleParallelepiped final : public GenericObject<N, T>, public Surface<N, T>, public SurfaceProperties<N, T>
+class VisibleParallelotope final : public GenericObject<N, T>, public Surface<N, T>, public SurfaceProperties<N, T>
 {
-        Parallelotope<N, T> m_parallelepiped;
+        Parallelotope<N, T> m_parallelotope;
 
 public:
         template <typename... V>
-        VisibleParallelepiped(const Vector<N, T>& org, const V&... e) : m_parallelepiped(org, e...)
+        VisibleParallelotope(const Vector<N, T>& org, const V&... e) : m_parallelotope(org, e...)
         {
                 static_assert((std::is_same_v<V, Vector<N, T>> && ...));
         }
 
         bool intersect_approximate(const Ray<N, T>& r, T* t) const override
         {
-                return m_parallelepiped.intersect(r, t);
+                return m_parallelotope.intersect(r, t);
         }
 
         bool intersect_precise(const Ray<N, T>&, T approximate_t, T* t, const Surface<N, T>** surface,
@@ -110,23 +105,14 @@ public:
         {
                 SurfaceProperties<N, T> s = *this;
 
-                s.set_geometric_normal(m_parallelepiped.normal(p));
+                s.set_geometric_normal(m_parallelotope.normal(p));
 
                 return s;
         }
 
         void min_max(Vector<N, T>* min, Vector<N, T>* max) const override
         {
-                typename ParallelotopeAlgorithm<Parallelotope<N, T>>::Vertices vertices =
-                        parallelotope_vertices(m_parallelepiped);
-
-                *min = vertices[0];
-                *max = vertices[0];
-                for (unsigned i = 1; i < vertices.size(); ++i)
-                {
-                        *min = min_vector(*min, vertices[i]);
-                        *max = max_vector(*max, vertices[i]);
-                }
+                vertex_min_max(parallelotope_vertices(m_parallelotope), min, max);
         }
 };
 

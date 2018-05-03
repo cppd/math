@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/ray.h"
 #include "com/vec.h"
+#include "path_tracing/algorithm/algorithm.h"
 #include "path_tracing/space/constraint.h"
 
 #include <algorithm>
@@ -26,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <type_traits>
 
 template <typename Simplex, typename = void>
-class SimplexWrapperForShapeIntersection
+class HyperplaneSimplexWrapperForShapeIntersection
 {
         static_assert(Simplex::SPACE_DIMENSION == Simplex::SHAPE_DIMENSION + 1);
         // Для меньшего количества измерений есть второй класс
@@ -54,19 +55,13 @@ public:
         static constexpr size_t SHAPE_DIMENSION = N - 1;
         using DataType = T;
 
-        SimplexWrapperForShapeIntersection(const Simplex& s) : m_simplex(s), m_vertices(s.vertices())
+        HyperplaneSimplexWrapperForShapeIntersection(const Simplex& s) : m_simplex(s), m_vertices(s.vertices())
         {
                 static_assert(std::remove_reference_t<decltype(s.vertices())>().size() == N);
 
                 m_simplex.constraints(&m_constraints, &m_constraints_eq[0]);
 
-                m_min = m_vertices[0];
-                m_max = m_vertices[0];
-                for (unsigned i = 1; i < m_vertices.size(); ++i)
-                {
-                        m_min = min_vector(m_vertices[i], m_min);
-                        m_max = max_vector(m_vertices[i], m_max);
-                }
+                vertex_min_max(m_vertices, &m_min, &m_max);
         }
 
         bool intersect(const Ray<N, T>& r, T* t) const
@@ -101,7 +96,7 @@ public:
 };
 
 template <typename Simplex>
-class SimplexWrapperForShapeIntersection<Simplex, std::enable_if_t<Simplex::SPACE_DIMENSION == 3>>
+class HyperplaneSimplexWrapperForShapeIntersection<Simplex, std::enable_if_t<Simplex::SPACE_DIMENSION == 3>>
 {
         static_assert(Simplex::SPACE_DIMENSION == Simplex::SHAPE_DIMENSION + 1);
         static_assert(Simplex::SPACE_DIMENSION == 3);
@@ -130,7 +125,7 @@ public:
         static constexpr size_t SHAPE_DIMENSION = N - 1;
         using DataType = T;
 
-        SimplexWrapperForShapeIntersection(const Simplex& s) : m_simplex(s), m_vertices(s.vertices())
+        HyperplaneSimplexWrapperForShapeIntersection(const Simplex& s) : m_simplex(s), m_vertices(s.vertices())
         {
                 static_assert(std::remove_reference_t<decltype(s.vertices())>().size() == N);
 

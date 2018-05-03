@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/ray.h"
 #include "com/vec.h"
+#include "path_tracing/algorithm/algorithm.h"
 #include "path_tracing/space/constraint.h"
 #include "path_tracing/space/parallelotope_algorithm.h"
 
@@ -54,13 +55,7 @@ public:
         {
                 m_parallelotope.constraints(&m_constraints);
 
-                m_min = m_vertices[0];
-                m_max = m_vertices[0];
-                for (unsigned i = 1; i < m_vertices.size(); ++i)
-                {
-                        m_min = min_vector(m_vertices[i], m_min);
-                        m_max = max_vector(m_vertices[i], m_max);
-                }
+                vertex_min_max(m_vertices, &m_min, &m_max);
         }
 
         bool intersect(const Ray<N, T>& r, T* t) const

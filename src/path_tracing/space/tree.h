@@ -25,7 +25,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "parallelotope_algorithm.h"
 #include "parallelotope_wrapper.h"
 #include "shape_intersection.h"
 
