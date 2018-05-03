@@ -34,15 +34,15 @@ class CornellBoxScene : public PaintObjects<3, double>
         std::unique_ptr<VisibleSphericalProjector<3, double>> m_spherical_projector;
         SurfaceProperties<3, double> m_default_surface_properties;
 
-        std::unique_ptr<VisibleRectangle> m_rectangle_back;
-        std::unique_ptr<VisibleRectangle> m_rectangle_top;
-        std::unique_ptr<VisibleRectangle> m_rectangle_bottom;
-        std::unique_ptr<VisibleRectangle> m_rectangle_left;
-        std::unique_ptr<VisibleRectangle> m_rectangle_right;
+        std::unique_ptr<VisibleRectangle<3, double>> m_rectangle_back;
+        std::unique_ptr<VisibleRectangle<3, double>> m_rectangle_top;
+        std::unique_ptr<VisibleRectangle<3, double>> m_rectangle_bottom;
+        std::unique_ptr<VisibleRectangle<3, double>> m_rectangle_left;
+        std::unique_ptr<VisibleRectangle<3, double>> m_rectangle_right;
 
         std::unique_ptr<VisibleParallelepiped<3, double>> m_box;
 
-        std::unique_ptr<VisibleRectangle> m_lamp;
+        std::unique_ptr<VisibleRectangle<3, double>> m_lamp;
 
         std::unique_ptr<VisibleSharedMesh<3, double>> m_mesh;
 
@@ -99,27 +99,28 @@ public:
 
                 //
 
-                m_rectangle_back = std::make_unique<VisibleRectangle>(lower_left + size * dir, size * right, size * up);
+                m_rectangle_back =
+                        std::make_unique<VisibleRectangle<3, double>>(lower_left + size * dir, size * right, size * up);
                 m_rectangle_back->set_color(srgb::WHITE);
                 m_rectangle_back->set_diffuse_and_fresnel(1, 0);
                 m_rectangle_back->set_light_source(false);
 
-                m_rectangle_top = std::make_unique<VisibleRectangle>(upper_left, size * dir, size * right);
+                m_rectangle_top = std::make_unique<VisibleRectangle<3, double>>(upper_left, size * dir, size * right);
                 m_rectangle_top->set_color(srgb::WHITE);
                 m_rectangle_top->set_diffuse_and_fresnel(1, 0);
                 m_rectangle_top->set_light_source(false);
 
-                m_rectangle_bottom = std::make_unique<VisibleRectangle>(lower_left, size * dir, size * right);
+                m_rectangle_bottom = std::make_unique<VisibleRectangle<3, double>>(lower_left, size * dir, size * right);
                 m_rectangle_bottom->set_color(srgb::WHITE);
                 m_rectangle_bottom->set_diffuse_and_fresnel(1, 0);
                 m_rectangle_bottom->set_light_source(false);
 
-                m_rectangle_left = std::make_unique<VisibleRectangle>(lower_left, size * dir, size * up);
+                m_rectangle_left = std::make_unique<VisibleRectangle<3, double>>(lower_left, size * dir, size * up);
                 m_rectangle_left->set_color(srgb::RED);
                 m_rectangle_left->set_diffuse_and_fresnel(1, 0);
                 m_rectangle_left->set_light_source(false);
 
-                m_rectangle_right = std::make_unique<VisibleRectangle>(lower_right, size * dir, size * up);
+                m_rectangle_right = std::make_unique<VisibleRectangle<3, double>>(lower_right, size * dir, size * up);
                 m_rectangle_right->set_color(srgb::GREEN);
                 m_rectangle_right->set_diffuse_and_fresnel(1, 0);
                 m_rectangle_right->set_light_source(false);
@@ -150,8 +151,8 @@ public:
 
                 vec3 upper_center = upper_left - 0.001 * size * up + 0.5 * size * right + 0.5 * size * dir;
 
-                m_lamp = std::make_unique<VisibleRectangle>(upper_center - 0.1 * size * dir - 0.1 * size * right,
-                                                            0.2 * size * right, 0.2 * size * dir);
+                m_lamp = std::make_unique<VisibleRectangle<3, double>>(upper_center - 0.1 * size * dir - 0.1 * size * right,
+                                                                       0.2 * size * right, 0.2 * size * dir);
                 m_lamp->set_color(srgb::WHITE);
                 m_lamp->set_diffuse_and_fresnel(1, 0);
                 m_lamp->set_light_source(true);

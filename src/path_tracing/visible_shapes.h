@@ -25,21 +25,24 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <memory>
 
-class VisibleRectangle final : public GenericObject<3, double>, public Surface<3, double>, public SurfaceProperties<3, double>
+template <size_t N, typename T>
+class VisibleRectangle final : public GenericObject<N, T>, public Surface<N, T>, public SurfaceProperties<N, T>
 {
-        Rectangle m_rectangle;
+        Rectangle<N, T> m_rectangle;
 
 public:
-        VisibleRectangle(const vec3& org, const vec3& e0, const vec3& e1) : m_rectangle(org, e0, e1)
+        template <typename... V>
+        VisibleRectangle(const Vector<N, T>& org, const V&... e) : m_rectangle(org, e...)
         {
+                static_assert((std::is_same_v<V, Vector<N, T>> && ...));
         }
 
-        bool intersect_approximate(const Ray<3, double>& r, double* t) const override
+        bool intersect_approximate(const Ray<N, T>& r, T* t) const override
         {
                 return m_rectangle.intersect(r, t);
         }
 
-        bool intersect_precise(const Ray<3, double>&, double approximate_t, double* t, const Surface** surface,
+        bool intersect_precise(const Ray<N, T>&, T approximate_t, T* t, const Surface<N, T>** surface,
                                const void** /*intersection_data*/) const override
         {
                 *t = approximate_t;
@@ -51,20 +54,18 @@ public:
                 return true;
         }
 
-        SurfaceProperties<3, double> properties(const vec3& p, const void* /*intersection_data*/) const override
+        SurfaceProperties<N, T> properties(const Vector<N, T>& p, const void* /*intersection_data*/) const override
         {
-                SurfaceProperties<3, double> s = *this;
+                SurfaceProperties<N, T> s = *this;
 
                 s.set_geometric_normal(m_rectangle.normal(p));
 
                 return s;
         }
 
-        void min_max(vec3* min, vec3* max) const override
+        void min_max(Vector<N, T>* min, Vector<N, T>* max) const override
         {
-                std::array<vec3, 4> vertices{{m_rectangle.org(), m_rectangle.org() + m_rectangle.e0(),
-                                              m_rectangle.org() + m_rectangle.e1(),
-                                              m_rectangle.org() + m_rectangle.e0() + m_rectangle.e1()}};
+                typename RectangleAlgorithm<Rectangle<N, T>>::Vertices vertices = rectangle_vertices(m_rectangle);
 
                 *min = vertices[0];
                 *max = vertices[0];
