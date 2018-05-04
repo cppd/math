@@ -11,10 +11,11 @@ Just for fun with mathematics
   * [Algorithms in 2-space](#algorithms-in-2-space)
   * [Algorithms in spaces with arbitrary number of dimensions](#algorithms-in-spaces-with-arbitrary-number-of-dimensions)
 * [Technical details](#technical-details)
-* [Screenshots](#screenshots)
+* [Images](#images)
   * [4-manifold reconstruction and path tracing in 5-space](#4-manifold-reconstruction-and-path-tracing-in-5-space)
   * [3-manifold reconstruction and path tracing in 4-space](#3-manifold-reconstruction-and-path-tracing-in-4-space)
   * [2-manifold reconstruction and path tracing in 3-space](#2-manifold-reconstruction-and-path-tracing-in-3-space)
+  * [3D model](#3d-model)
 
 ## Description
 
@@ -76,7 +77,7 @@ Required libraries          | FreeType, GMP, OpenGL 4.5, Qt 5, SFML, XLib
 Optional libraries          | cuFFT (for DFT tests), FFTW (for DFT tests)
 Build system                | CMake
 
-## Screenshots
+## Images
 
 ### 4-manifold reconstruction and path tracing in 5-space
 
@@ -134,3 +135,14 @@ Points on the (2,3)-torus knot, the Euclidean minimum spanning tree of the point
 ![manifold](https://i.imgur.com/kFCwTJM.png)
 ![manifold](https://i.imgur.com/Vh5Lrcv.png)
 ![manifold](https://i.imgur.com/8oyND91.png)
+
+### 3D model
+
+Real-time rendering
+
+![image](https://i.imgur.com/eqxSJpD.png)
+
+Path tracing
+
+![image](https://i.imgur.com/kumiuEr.png)
+![image](https://i.imgur.com/y9jdovk.png)
