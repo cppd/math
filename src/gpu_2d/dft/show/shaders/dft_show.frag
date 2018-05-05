@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -22,12 +22,16 @@ in vec2 vs_tex_coord;
 
 uniform float brightness;
 
-out vec4 color;
+uniform vec4 background_color;
+uniform vec4 color;
+
+out vec4 out_color;
+
 void main(void)
 {
         // color = texture(tex, vs_tex_coord);
 
         float v = texture(tex, vs_tex_coord).r;
         v = clamp(v * brightness, 0, 1);
-        color = vec4(mix(vec3(0), vec3(0, 1, 0), v).xyz, 1);
+        out_color = mix(background_color, color, v);
 }

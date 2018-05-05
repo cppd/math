@@ -63,6 +63,8 @@ constexpr int POINT_COUNT_MAXIMUM = 1000000;
 constexpr QRgb BACKGROUND_COLOR = qRgb(50, 100, 150);
 constexpr QRgb DEFAULT_COLOR = qRgb(150, 170, 150);
 constexpr QRgb WIREFRAME_COLOR = qRgb(255, 255, 255);
+constexpr QRgb DFT_BACKGROUND_COLOR = qRgb(0, 0, 50);
+constexpr QRgb DFT_COLOR = qRgb(150, 200, 250);
 
 // Задержка в миллисекундах после showEvent для вызова по таймеру
 // функции обработки появления окна.
@@ -142,6 +144,9 @@ void MainWindow::constructor_interface()
         set_background_color(BACKGROUND_COLOR);
         set_default_color(DEFAULT_COLOR);
         set_wireframe_color(WIREFRAME_COLOR);
+
+        set_dft_background_color(DFT_BACKGROUND_COLOR);
+        set_dft_color(DFT_COLOR);
 
         ui.mainWidget->layout()->setContentsMargins(3, 3, 3, 3);
         ui.mainWidget->layout()->setSpacing(3);
@@ -622,6 +627,30 @@ void MainWindow::set_wireframe_color(const QColor& c)
         ui.widget_wireframe_color->setPalette(palette);
 }
 
+void MainWindow::set_dft_background_color(const QColor& c)
+{
+        m_dft_background_color = c;
+        if (m_show)
+        {
+                m_show->set_dft_background_color(qcolor_to_rgb(c));
+        }
+        QPalette palette;
+        palette.setColor(QPalette::Window, m_dft_background_color);
+        ui.widget_dft_background_color->setPalette(palette);
+}
+
+void MainWindow::set_dft_color(const QColor& c)
+{
+        m_dft_color = c;
+        if (m_show)
+        {
+                m_show->set_dft_color(qcolor_to_rgb(c));
+        }
+        QPalette palette;
+        palette.setColor(QPalette::Window, m_dft_color);
+        ui.widget_dft_color->setPalette(palette);
+}
+
 void MainWindow::set_dependent_interface()
 {
         {
@@ -837,7 +866,8 @@ void MainWindow::slot_window_first_shown()
                                      ui.checkBox_Materials->isChecked(), ui.checkBox_ShowEffect->isChecked(),
                                      ui.checkBox_show_dft->isChecked(), ui.checkBox_convex_hull_2d->isChecked(),
                                      ui.checkBox_OpticalFlow->isChecked(), ambient_light(), diffuse_light(), specular_light(),
-                                     dft_brightness(), default_ns(), ui.checkBox_VerticalSync->isChecked(), shadow_zoom());
+                                     dft_brightness(), qcolor_to_rgb(m_dft_background_color), qcolor_to_rgb(m_dft_color),
+                                     default_ns(), ui.checkBox_VerticalSync->isChecked(), shadow_zoom());
 
                 m_objects->set_show(m_show.get());
         }
@@ -1038,6 +1068,17 @@ void MainWindow::on_toolButton_DefaultColor_clicked()
 void MainWindow::on_toolButton_WireframeColor_clicked()
 {
         color_dialog(this, "Wireframe Color", m_wireframe_color, [this](const QColor& c) { set_wireframe_color(c); });
+}
+
+void MainWindow::on_toolButton_dft_background_color_clicked()
+{
+        color_dialog(this, "DFT Background Color", m_dft_background_color,
+                     [this](const QColor& c) { set_dft_background_color(c); });
+}
+
+void MainWindow::on_toolButton_dft_color_clicked()
+{
+        color_dialog(this, "DFT Color", m_dft_color, [this](const QColor& c) { set_dft_color(c); });
 }
 
 void MainWindow::on_checkBox_Shadow_clicked()

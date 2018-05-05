@@ -63,6 +63,8 @@ public:
         virtual void show_effect(bool) = 0;
         virtual void show_dft(bool) = 0;
         virtual void set_dft_brightness(double) = 0;
+        virtual void set_dft_background_color(const Color&) = 0;
+        virtual void set_dft_color(const Color&) = 0;
         virtual void show_convex_hull_2d(bool) = 0;
         virtual void show_optical_flow(bool) = 0;
         virtual void set_vertical_sync(bool v) = 0;
@@ -79,5 +81,5 @@ std::unique_ptr<IShow> create_show(IShowCallback*, WindowID win_parent, const Co
                                    const Color& default_color_rgb, const Color& wireframe_color_rgb, bool with_smooth,
                                    bool with_wireframe, bool with_shadow, bool with_fog, bool with_materials, bool with_effect,
                                    bool with_dft, bool with_convex_hull, bool with_optical_flow, double ambient, double diffuse,
-                                   double specular, double dft_brightness, double default_ns, bool vertical_sync,
-                                   double shadow_zoom);
+                                   double specular, double dft_brightness, const Color& dft_color,
+                                   const Color& dft_background_color, double default_ns, bool vertical_sync, double shadow_zoom);

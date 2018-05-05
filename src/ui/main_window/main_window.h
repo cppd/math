@@ -66,6 +66,8 @@ private slots:
         void on_toolButton_BackgroundColor_clicked();
         void on_toolButton_DefaultColor_clicked();
         void on_toolButton_WireframeColor_clicked();
+        void on_toolButton_dft_background_color_clicked();
+        void on_toolButton_dft_color_clicked();
         void on_pushButton_ResetLighting_clicked();
         void on_pushButton_ResetView_clicked();
         void on_checkBox_Wireframe_clicked();
@@ -143,6 +145,9 @@ private:
         void set_default_color(const QColor& c);
         void set_wireframe_color(const QColor& c);
 
+        void set_dft_background_color(const QColor& c);
+        void set_dft_color(const QColor& c);
+
         void exception_handler(const std::exception_ptr& ptr, const std::string& msg) const noexcept;
 
         Ui::MainWindow ui;
@@ -164,6 +169,9 @@ private:
         QColor m_background_color;
         QColor m_default_color;
         QColor m_wireframe_color;
+
+        QColor m_dft_background_color;
+        QColor m_dft_color;
 
         bool m_first_show = true;
 

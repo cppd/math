@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "com/color/colors.h"
 #include "com/mat.h"
 #include "graphics/objects.h"
 
@@ -28,10 +29,13 @@ class DFTShow final
         std::unique_ptr<Impl> m_impl;
 
 public:
-        DFTShow(int width, int height, int pos_x, int pos_y, const mat4& mtx, bool source_srgb);
+        DFTShow(int width, int height, int pos_x, int pos_y, const mat4& mtx, bool source_srgb, double brightness,
+                const Color& background_color, const Color& color);
         ~DFTShow();
 
         void set_brightness(double brightness);
+        void set_background_color(const Color& color);
+        void set_color(const Color& color);
 
         void copy_image();
 

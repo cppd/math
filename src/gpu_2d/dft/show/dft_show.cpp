@@ -49,6 +49,11 @@ struct Vertex
         {
         }
 };
+
+vec4f color_to_vec4f(const Color& c)
+{
+        return vec4f(c.red(), c.green(), c.blue(), 1);
+}
 }
 
 class DFTShow::Impl final
@@ -64,7 +69,8 @@ class DFTShow::Impl final
         static constexpr int RectangleVertexCount = 4;
 
 public:
-        Impl(int width, int height, int pos_x, int pos_y, const mat4& mtx, bool source_srgb)
+        Impl(int width, int height, int pos_x, int pos_y, const mat4& mtx, bool source_srgb, double brightness,
+             const Color& background_color, const Color& color)
                 : m_groups_x(group_count(width, GROUP_SIZE)),
                   m_groups_y(group_count(height, GROUP_SIZE)),
                   m_source_srgb(source_srgb),
@@ -76,7 +82,11 @@ public:
                 m_vertex_array.attrib_pointer(1, 2, GL_FLOAT, m_vertex_buffer, offsetof(Vertex, t1), sizeof(Vertex), true);
 
                 m_draw_prog.set_uniform_handle("tex", m_image_texture.texture().texture_resident_handle());
-                set_brightness(1);
+
+                set_brightness(brightness);
+
+                set_background_color(background_color);
+                set_color(color);
 
                 int x_start = pos_x;
                 int x_end = pos_x + width;
@@ -106,6 +116,16 @@ public:
                 m_draw_prog.set_uniform("brightness", static_cast<float>(brightness));
         }
 
+        void set_background_color(const Color& color)
+        {
+                m_draw_prog.set_uniform("background_color", color_to_vec4f(color));
+        }
+
+        void set_color(const Color& color)
+        {
+                m_draw_prog.set_uniform("color", color_to_vec4f(color));
+        }
+
         void copy_image()
         {
                 m_image_texture.copy_texture_sub_image();
@@ -120,8 +140,9 @@ public:
         }
 };
 
-DFTShow::DFTShow(int width, int height, int pos_x, int pos_y, const mat4& mtx, bool source_srgb)
-        : m_impl(std::make_unique<Impl>(width, height, pos_x, pos_y, mtx, source_srgb))
+DFTShow::DFTShow(int width, int height, int pos_x, int pos_y, const mat4& mtx, bool source_srgb, double brightness,
+                 const Color& background_color, const Color& color)
+        : m_impl(std::make_unique<Impl>(width, height, pos_x, pos_y, mtx, source_srgb, brightness, background_color, color))
 {
 }
 DFTShow::~DFTShow() = default;
@@ -129,6 +150,16 @@ DFTShow::~DFTShow() = default;
 void DFTShow::set_brightness(double brightness)
 {
         m_impl->set_brightness(brightness);
+}
+
+void DFTShow::set_background_color(const Color& color)
+{
+        m_impl->set_background_color(color);
+}
+
+void DFTShow::set_color(const Color& color)
+{
+        m_impl->set_color(color);
 }
 
 void DFTShow::copy_image()

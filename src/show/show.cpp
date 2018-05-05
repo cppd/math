@@ -292,6 +292,14 @@ class ShowObject final : public IShow
         {
                 m_event_queue.emplace(std::in_place_type<Event::set_dft_brightness>, v);
         }
+        void set_dft_background_color(const Color& c) override
+        {
+                m_event_queue.emplace(std::in_place_type<Event::set_dft_background_color>, c);
+        }
+        void set_dft_color(const Color& c) override
+        {
+                m_event_queue.emplace(std::in_place_type<Event::set_dft_color>, c);
+        }
         void show_convex_hull_2d(bool v) override
         {
                 m_event_queue.emplace(std::in_place_type<Event::show_convex_hull_2d>, v);
@@ -347,7 +355,8 @@ public:
                    const Color& default_color_rgb, const Color& wireframe_color_rgb, bool with_smooth, bool with_wireframe,
                    bool with_shadow, bool with_fog, bool with_materials, bool with_effect, bool with_dft, bool with_convex_hull,
                    bool with_optical_flow, double ambient, double diffuse, double specular, double dft_brightness,
-                   double default_ns, bool vertical_sync, double shadow_zoom)
+                   const Color& dft_background_color, const Color& dft_color, double default_ns, bool vertical_sync,
+                   double shadow_zoom)
                 : m_callback(callback), m_win_parent(win_parent)
 
         {
@@ -371,6 +380,8 @@ public:
                 show_effect(with_effect);
                 show_dft(with_dft);
                 set_dft_brightness(dft_brightness);
+                set_dft_background_color(dft_background_color);
+                set_dft_color(dft_color);
                 show_materials(with_materials);
                 show_convex_hull_2d(with_convex_hull);
                 show_optical_flow(with_optical_flow);
@@ -439,6 +450,8 @@ void ShowObject::loop()
         bool dft_active = false;
         bool dft_active_old = false;
         double dft_brightness = -1;
+        Color dft_background_color;
+        Color dft_color;
         bool pencil_effect_active = false;
         bool convex_hull_2d_active = false;
         bool optical_flow_active = false;
@@ -672,6 +685,28 @@ void ShowObject::loop()
                                 }
                                 break;
                         }
+                        case Event::EventType::set_dft_background_color:
+                        {
+                                const Event::set_dft_background_color& d = event->get<Event::set_dft_background_color>();
+
+                                dft_background_color = d.color;
+                                if (dft_show)
+                                {
+                                        dft_show->set_background_color(d.color);
+                                }
+                                break;
+                        }
+                        case Event::EventType::set_dft_color:
+                        {
+                                const Event::set_dft_color& d = event->get<Event::set_dft_color>();
+
+                                dft_color = d.color;
+                                if (dft_show)
+                                {
+                                        dft_show->set_color(d.color);
+                                }
+                                break;
+                        }
                         case Event::EventType::show_convex_hull_2d:
                         {
                                 const Event::show_convex_hull_2d& d = event->get<Event::show_convex_hull_2d>();
@@ -852,8 +887,8 @@ void ShowObject::loop()
 
                         int dft_pos_x = (window_width & 1) ? (width + 1) : width;
                         int dft_pos_y = 0;
-                        dft_show = std::make_unique<DFTShow>(width, height, dft_pos_x, dft_pos_y, plane_matrix, framebuffer_srgb);
-                        dft_show->set_brightness(dft_brightness);
+                        dft_show = std::make_unique<DFTShow>(width, height, dft_pos_x, dft_pos_y, plane_matrix, framebuffer_srgb,
+                                                             dft_brightness, dft_background_color, dft_color);
 
                         pencil_effect = std::make_unique<PencilEffect>(renderer->color_buffer_texture(),
                                                                        renderer->object_texture(), colorbuffer_srgb);
@@ -1004,11 +1039,11 @@ std::unique_ptr<IShow> create_show(IShowCallback* cb, WindowID win_parent, const
                                    const Color& default_color_rgb, const Color& wireframe_color_rgb, bool with_smooth,
                                    bool with_wireframe, bool with_shadow, bool with_fog, bool with_materials, bool with_effect,
                                    bool with_dft, bool with_convex_hull, bool with_optical_flow, double ambient, double diffuse,
-                                   double specular, double dft_brightness, double default_ns, bool vertical_sync,
-                                   double shadow_zoom)
+                                   double specular, double dft_brightness, const Color& dft_background_color,
+                                   const Color& dft_color, double default_ns, bool vertical_sync, double shadow_zoom)
 {
-        return std::make_unique<ShowObject>(cb, win_parent, background_color_rgb, default_color_rgb, wireframe_color_rgb,
-                                            with_smooth, with_wireframe, with_shadow, with_fog, with_materials, with_effect,
-                                            with_dft, with_convex_hull, with_optical_flow, ambient, diffuse, specular,
-                                            dft_brightness, default_ns, vertical_sync, shadow_zoom);
+        return std::make_unique<ShowObject>(
+                cb, win_parent, background_color_rgb, default_color_rgb, wireframe_color_rgb, with_smooth, with_wireframe,
+                with_shadow, with_fog, with_materials, with_effect, with_dft, with_convex_hull, with_optical_flow, ambient,
+                diffuse, specular, dft_brightness, dft_background_color, dft_color, default_ns, vertical_sync, shadow_zoom);
 }

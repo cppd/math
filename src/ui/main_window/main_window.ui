@@ -513,9 +513,9 @@
                    <colorrole role="Window">
                     <brush brushstyle="SolidPattern">
                      <color alpha="255">
-                      <red>150</red>
-                      <green>170</green>
-                      <blue>150</blue>
+                      <red>255</red>
+                      <green>255</green>
+                      <blue>255</blue>
                      </color>
                     </brush>
                    </colorrole>
@@ -533,9 +533,9 @@
                    <colorrole role="Window">
                     <brush brushstyle="SolidPattern">
                      <color alpha="255">
-                      <red>150</red>
-                      <green>170</green>
-                      <blue>150</blue>
+                      <red>255</red>
+                      <green>255</green>
+                      <blue>255</blue>
                      </color>
                     </brush>
                    </colorrole>
@@ -544,18 +544,18 @@
                    <colorrole role="Base">
                     <brush brushstyle="SolidPattern">
                      <color alpha="255">
-                      <red>150</red>
-                      <green>170</green>
-                      <blue>150</blue>
+                      <red>255</red>
+                      <green>255</green>
+                      <blue>255</blue>
                      </color>
                     </brush>
                    </colorrole>
                    <colorrole role="Window">
                     <brush brushstyle="SolidPattern">
                      <color alpha="255">
-                      <red>150</red>
-                      <green>170</green>
-                      <blue>150</blue>
+                      <red>255</red>
+                      <green>255</green>
+                      <blue>255</blue>
                      </color>
                     </brush>
                    </colorrole>
@@ -597,9 +597,9 @@
                    <colorrole role="Window">
                     <brush brushstyle="SolidPattern">
                      <color alpha="255">
-                      <red>20</red>
-                      <green>50</green>
-                      <blue>80</blue>
+                      <red>255</red>
+                      <green>255</green>
+                      <blue>255</blue>
                      </color>
                     </brush>
                    </colorrole>
@@ -617,9 +617,9 @@
                    <colorrole role="Window">
                     <brush brushstyle="SolidPattern">
                      <color alpha="255">
-                      <red>20</red>
-                      <green>50</green>
-                      <blue>80</blue>
+                      <red>255</red>
+                      <green>255</green>
+                      <blue>255</blue>
                      </color>
                     </brush>
                    </colorrole>
@@ -628,18 +628,18 @@
                    <colorrole role="Base">
                     <brush brushstyle="SolidPattern">
                      <color alpha="255">
-                      <red>20</red>
-                      <green>50</green>
-                      <blue>80</blue>
+                      <red>255</red>
+                      <green>255</green>
+                      <blue>255</blue>
                      </color>
                     </brush>
                    </colorrole>
                    <colorrole role="Window">
                     <brush brushstyle="SolidPattern">
                      <color alpha="255">
-                      <red>20</red>
-                      <green>50</green>
-                      <blue>80</blue>
+                      <red>255</red>
+                      <green>255</green>
+                      <blue>255</blue>
                      </color>
                     </brush>
                    </colorrole>
@@ -770,6 +770,216 @@
             </item>
             <item>
              <spacer name="horizontalSpacer_3">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="Line" name="line">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_5">
+            <item>
+             <layout class="QGridLayout" name="gridLayout_2">
+              <item row="1" column="1">
+               <widget class="QWidget" name="widget_dft_background_color" native="true">
+                <property name="minimumSize">
+                 <size>
+                  <width>20</width>
+                  <height>10</height>
+                 </size>
+                </property>
+                <property name="palette">
+                 <palette>
+                  <active>
+                   <colorrole role="Base">
+                    <brush brushstyle="SolidPattern">
+                     <color alpha="255">
+                      <red>255</red>
+                      <green>255</green>
+                      <blue>255</blue>
+                     </color>
+                    </brush>
+                   </colorrole>
+                   <colorrole role="Window">
+                    <brush brushstyle="SolidPattern">
+                     <color alpha="255">
+                      <red>255</red>
+                      <green>255</green>
+                      <blue>255</blue>
+                     </color>
+                    </brush>
+                   </colorrole>
+                  </active>
+                  <inactive>
+                   <colorrole role="Base">
+                    <brush brushstyle="SolidPattern">
+                     <color alpha="255">
+                      <red>255</red>
+                      <green>255</green>
+                      <blue>255</blue>
+                     </color>
+                    </brush>
+                   </colorrole>
+                   <colorrole role="Window">
+                    <brush brushstyle="SolidPattern">
+                     <color alpha="255">
+                      <red>255</red>
+                      <green>255</green>
+                      <blue>255</blue>
+                     </color>
+                    </brush>
+                   </colorrole>
+                  </inactive>
+                  <disabled>
+                   <colorrole role="Base">
+                    <brush brushstyle="SolidPattern">
+                     <color alpha="255">
+                      <red>255</red>
+                      <green>255</green>
+                      <blue>255</blue>
+                     </color>
+                    </brush>
+                   </colorrole>
+                   <colorrole role="Window">
+                    <brush brushstyle="SolidPattern">
+                     <color alpha="255">
+                      <red>255</red>
+                      <green>255</green>
+                      <blue>255</blue>
+                     </color>
+                    </brush>
+                   </colorrole>
+                  </disabled>
+                 </palette>
+                </property>
+                <property name="autoFillBackground">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="0">
+               <widget class="QLabel" name="label">
+                <property name="text">
+                 <string>DFT bg:</string>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="1">
+               <widget class="QWidget" name="widget_dft_color" native="true">
+                <property name="minimumSize">
+                 <size>
+                  <width>20</width>
+                  <height>10</height>
+                 </size>
+                </property>
+                <property name="palette">
+                 <palette>
+                  <active>
+                   <colorrole role="Base">
+                    <brush brushstyle="SolidPattern">
+                     <color alpha="255">
+                      <red>255</red>
+                      <green>255</green>
+                      <blue>255</blue>
+                     </color>
+                    </brush>
+                   </colorrole>
+                   <colorrole role="Window">
+                    <brush brushstyle="SolidPattern">
+                     <color alpha="255">
+                      <red>255</red>
+                      <green>255</green>
+                      <blue>255</blue>
+                     </color>
+                    </brush>
+                   </colorrole>
+                  </active>
+                  <inactive>
+                   <colorrole role="Base">
+                    <brush brushstyle="SolidPattern">
+                     <color alpha="255">
+                      <red>255</red>
+                      <green>255</green>
+                      <blue>255</blue>
+                     </color>
+                    </brush>
+                   </colorrole>
+                   <colorrole role="Window">
+                    <brush brushstyle="SolidPattern">
+                     <color alpha="255">
+                      <red>255</red>
+                      <green>255</green>
+                      <blue>255</blue>
+                     </color>
+                    </brush>
+                   </colorrole>
+                  </inactive>
+                  <disabled>
+                   <colorrole role="Base">
+                    <brush brushstyle="SolidPattern">
+                     <color alpha="255">
+                      <red>255</red>
+                      <green>255</green>
+                      <blue>255</blue>
+                     </color>
+                    </brush>
+                   </colorrole>
+                   <colorrole role="Window">
+                    <brush brushstyle="SolidPattern">
+                     <color alpha="255">
+                      <red>255</red>
+                      <green>255</green>
+                      <blue>255</blue>
+                     </color>
+                    </brush>
+                   </colorrole>
+                  </disabled>
+                 </palette>
+                </property>
+                <property name="autoFillBackground">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="0">
+               <widget class="QLabel" name="label_5">
+                <property name="text">
+                 <string>DFT:</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="2">
+               <widget class="QToolButton" name="toolButton_dft_background_color">
+                <property name="text">
+                 <string>...</string>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="2">
+               <widget class="QToolButton" name="toolButton_dft_color">
+                <property name="text">
+                 <string>...</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer_4">
               <property name="orientation">
                <enum>Qt::Horizontal</enum>
               </property>
