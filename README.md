@@ -15,6 +15,7 @@ Just for fun with mathematics
   * [4-manifold reconstruction and path tracing in 5-space](#4-manifold-reconstruction-and-path-tracing-in-5-space)
   * [3-manifold reconstruction and path tracing in 4-space](#3-manifold-reconstruction-and-path-tracing-in-4-space)
   * [2-manifold reconstruction and path tracing in 3-space](#2-manifold-reconstruction-and-path-tracing-in-3-space)
+  * [2D discrete Fourier transform](#2d-discrete-fourier-transform)
   * [3D model](#3d-model)
 
 ## Description
@@ -135,6 +136,12 @@ Points on the (2,3)-torus knot, the Euclidean minimum spanning tree of the point
 ![manifold](https://i.imgur.com/kFCwTJM.png)
 ![manifold](https://i.imgur.com/Vh5Lrcv.png)
 ![manifold](https://i.imgur.com/8oyND91.png)
+
+### 2D discrete Fourier transform
+
+![dft](https://i.imgur.com/YnyQWd4.png)
+![dft](https://i.imgur.com/uvHQZmg.png)
+![dft](https://i.imgur.com/5dGkQR9.png)
 
 ### 3D model
 
