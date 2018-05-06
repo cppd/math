@@ -17,6 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "path_tracing/shapes/mesh.h"
 #include "progress/progress.h"
 
-void test_mesh(int number_of_dimensions, ProgressRatio* progress);
+#include <memory>
+
+template <size_t N, typename T>
+std::unique_ptr<const Mesh<N, T>> simplex_mesh_of_random_sphere(int point_count, int thread_count, ProgressRatio* progress);

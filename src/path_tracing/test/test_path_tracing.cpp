@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "path_tracing/painter.h"
 #include "path_tracing/scenes.h"
 #include "path_tracing/shapes/mesh.h"
-#include "path_tracing/shapes/test/test_mesh.h"
+#include "path_tracing/shapes/test/sphere_mesh.h"
 #include "path_tracing/visible_lights.h"
 #include "path_tracing/visible_paintbrush.h"
 #include "path_tracing/visible_projectors.h"
