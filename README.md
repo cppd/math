@@ -1,6 +1,6 @@
 # Math Viewer
 
-Just for fun with mathematics
+Just for fun with mathematics and stuff
 
 ![image](https://i.imgur.com/HjDmj4C.png)
 
