@@ -43,7 +43,7 @@ public:
                 }
         }
 
-        Vector<N - 1, T> operator()(const Vector<N - 1, T>& v)
+        Vector<N - 1, T> operator()(const Vector<N - 1, T>& v) const
         {
                 Vector<N - 1, T> res;
 
@@ -52,7 +52,12 @@ public:
                         res[row] = m_mtx[row][N - 1];
                         for (unsigned col = 0; col < N - 1; ++col)
                         {
+#if !defined(__clang__) && defined(__GNUC__) && __GNUC__ == 8
+                                // При использовании GCC 8.1 функция fma работает неправильно
+                                res[row] += m_mtx[row][col] * v[col];
+#else
                                 res[row] = any_fma(m_mtx[row][col], v[col], res[row]);
+#endif
                         }
                 }
 
