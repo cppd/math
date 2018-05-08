@@ -26,15 +26,10 @@ namespace
 {
 std::string message()
 {
-        std::string message;
-
-        message +=
-                "Move: left mouse button.\n\n"
-                "Rotate: right mouse button.\n\n"
-                "Zoom: mouse wheel.\n\n"
-                "Toggle fullscreen: F11.";
-
-        return message;
+        return "Move: left mouse button.\n\n"
+               "Rotate: right mouse button.\n\n"
+               "Zoom: mouse wheel.\n\n"
+               "Toggle fullscreen: F11.";
 }
 
 std::string title()
