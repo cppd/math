@@ -20,26 +20,37 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "application/application_name.h"
 
 #include <QMessageBox>
+#include <sstream>
 #include <string>
 
 namespace
 {
 std::string message()
 {
-        std::string message;
+        std::ostringstream oss;
 
-        message += std::string(APPLICATION_NAME) + "\n\n";
+        oss << APPLICATION_NAME << "\n\n";
 
-        message += "Languages:\n        C++17, GLSL 4.50.\n";
+        oss << "Compiled by ";
+#if defined(__clang__)
+        oss << "Clang " << __clang_major__ << "." << __clang_minor__ << "." << __clang_patchlevel__;
+#elif defined(__GNUC__)
+        oss << "GCC " << __GNUC__ << "." << __GNUC_MINOR__ << "." << __GNUC_PATCHLEVEL__;
+#else
+#error Unknown Compiler
+#endif
+        oss << "\n\n";
+
+        oss << "Languages:\n        C++17, GLSL 4.50.\n";
 #if defined(__linux__)
-        message += "Libraries:\n        Freetype, GMP, OpenGL, Qt, SFML, X11.";
+        oss << "Libraries:\n        Freetype, GMP, OpenGL, Qt, SFML, X11.";
 #elif defined(_WIN32)
-        message += "Libraries:\n        Freetype, GMP, OpenGL, Qt, SFML.";
+        oss << "Libraries:\n        Freetype, GMP, OpenGL, Qt, SFML.";
 #else
 #error This operating system is not supported
 #endif
 
-        return message;
+        return oss.str();
 }
 
 std::string title()
