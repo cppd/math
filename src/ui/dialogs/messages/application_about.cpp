@@ -20,16 +20,53 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "application/application_name.h"
 
 #include <QMessageBox>
+#include <algorithm>
+#include <iterator>
 #include <sstream>
 #include <string>
+#include <vector>
+
+constexpr const char* LANGUAGES[] = {"C++17", "GLSL 4.50"};
+
+constexpr const char* LIBRARIES[] = {"FreeType",
+                                     "GMP",
+                                     "OpenGL",
+                                     "Qt",
+                                     "SFML"
+#if defined(__linux__)
+                                     ,
+                                     "Xlib"
+#endif
+};
 
 namespace
 {
+template <typename Iterator>
+void sorted_comma_separated_list(std::ostringstream& oss, Iterator first, Iterator last)
+{
+        std::vector<std::string> v(first, last);
+
+        if (v.size() == 0)
+        {
+                return;
+        }
+
+        std::sort(v.begin(), v.end());
+
+        oss << v[0];
+        for (unsigned i = 1; i < v.size(); ++i)
+        {
+                oss << ", " << v[i];
+        }
+}
+
 std::string message()
 {
         std::ostringstream oss;
 
-        oss << APPLICATION_NAME << "\n\n";
+        oss << APPLICATION_NAME;
+
+        oss << "\n\n";
 
         oss << "Compiled by ";
 #if defined(__clang__)
@@ -39,16 +76,22 @@ std::string message()
 #else
 #error Unknown Compiler
 #endif
+
         oss << "\n\n";
 
-        oss << "Languages:\n        C++17, GLSL 4.50.\n";
-#if defined(__linux__)
-        oss << "Libraries:\n        Freetype, GMP, OpenGL, Qt, SFML, X11.";
-#elif defined(_WIN32)
-        oss << "Libraries:\n        Freetype, GMP, OpenGL, Qt, SFML.";
-#else
-#error This operating system is not supported
-#endif
+        const std::string indent(8, ' ');
+
+        oss << "Languages:\n";
+        oss << indent;
+        sorted_comma_separated_list(oss, std::cbegin(LANGUAGES), std::cend(LANGUAGES));
+        oss << ".";
+
+        oss << "\n";
+
+        oss << "Libraries:\n";
+        oss << indent;
+        sorted_comma_separated_list(oss, std::cbegin(LIBRARIES), std::cend(LIBRARIES));
+        oss << ".";
 
         return oss.str();
 }
