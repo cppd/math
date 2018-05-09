@@ -112,6 +112,7 @@ MainWindow::MainWindow(QWidget* parent)
         constructor_interface();
         constructor_repository();
         constructor_buttons();
+        constructor_objects();
 
         set_log_callback(&m_event_emitter);
 }
@@ -195,6 +196,13 @@ void MainWindow::constructor_buttons()
         m_object_buttons.push_back({ui.radioButton_CoconeConvexHull, OBJECT_COCONE_CONVEX_HULL});
         m_object_buttons.push_back({ui.radioButton_BoundCocone, OBJECT_BOUND_COCONE});
         m_object_buttons.push_back({ui.radioButton_BoundCoconeConvexHull, OBJECT_BOUND_COCONE_CONVEX_HULL});
+}
+
+void MainWindow::constructor_objects()
+{
+        // OBJECT_MODEL добавлять не нужно, так как загружается обязательно
+        m_objects_to_load.insert({OBJECT_MODEL_MST, OBJECT_MODEL_CONVEX_HULL, OBJECT_COCONE, OBJECT_COCONE_CONVEX_HULL,
+                                  OBJECT_BOUND_COCONE, OBJECT_BOUND_COCONE_CONVEX_HULL});
 }
 
 void MainWindow::set_window_title_file(const std::string& file_name)
@@ -351,11 +359,13 @@ void MainWindow::thread_load_from_file(std::string file_name)
                         file_name = q_file_name.toStdString();
                 }
 
-                m_threads.start_thread(ThreadAction::LoadObject, [=](ProgressRatioList* progress_list, std::string* message) {
-                        *message = "Load " + file_name;
+                m_threads.start_thread(ThreadAction::LoadObject,
+                                       [=, objects_to_load = m_objects_to_load, rho = m_bound_cocone_rho,
+                                        alpha = m_bound_cocone_alpha](ProgressRatioList* progress_list, std::string* message) {
+                                               *message = "Load " + file_name;
 
-                        m_objects->load_from_file(progress_list, file_name, m_bound_cocone_rho, m_bound_cocone_alpha);
-                });
+                                               m_objects->load_from_file(objects_to_load, progress_list, file_name, rho, alpha);
+                                       });
         });
 }
 
@@ -386,11 +396,12 @@ void MainWindow::thread_load_from_repository(const std::tuple<int, std::string>&
                         return;
                 }
 
-                m_threads.start_thread(ThreadAction::LoadObject, [=](ProgressRatioList* progress_list, std::string* message) {
+                m_threads.start_thread(ThreadAction::LoadObject, [=, objects_to_load = m_objects_to_load,
+                                                                  rho = m_bound_cocone_rho, alpha = m_bound_cocone_alpha](
+                                                                         ProgressRatioList* progress_list, std::string* message) {
                         *message = "Load " + space_name(std::get<0>(object)) + " " + std::get<1>(object);
 
-                        m_objects->load_from_repository(progress_list, object, m_bound_cocone_rho, m_bound_cocone_alpha,
-                                                        point_count);
+                        m_objects->load_from_repository(objects_to_load, progress_list, object, rho, alpha, point_count);
                 });
         });
 }
@@ -490,11 +501,11 @@ void MainWindow::thread_reload_bound_cocone()
                 return;
         }
 
-        double rho = m_bound_cocone_rho;
-        double alpha = m_bound_cocone_alpha;
-
         catch_all([&](std::string* msg) {
                 *msg = "Reload BoundCocone";
+
+                double rho = m_bound_cocone_rho;
+                double alpha = m_bound_cocone_alpha;
 
                 if (!BoundCoconeParameters(this).show(BOUND_COCONE_MINIMUM_RHO_EXPONENT, BOUND_COCONE_MINIMUM_ALPHA_EXPONENT,
                                                       &rho, &alpha))
@@ -502,12 +513,13 @@ void MainWindow::thread_reload_bound_cocone()
                         return;
                 }
 
-                m_threads.start_thread(ThreadAction::ReloadBoundCocone,
-                                       [=](ProgressRatioList* progress_list, std::string* message) {
-                                               *message = "BoundCocone reconstruction";
+                m_threads.start_thread(
+                        ThreadAction::ReloadBoundCocone,
+                        [=, objects_to_load = m_objects_to_load](ProgressRatioList* progress_list, std::string* message) {
+                                *message = "BoundCocone reconstruction";
 
-                                               m_objects->compute_bound_cocone(progress_list, rho, alpha);
-                                       });
+                                m_objects->compute_bound_cocone(objects_to_load, progress_list, rho, alpha);
+                        });
         });
 }
 

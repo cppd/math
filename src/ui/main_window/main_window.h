@@ -35,6 +35,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <thread>
 #include <tuple>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 class MainWindow final : public QMainWindow
@@ -100,6 +101,7 @@ private:
         void constructor_interface();
         void constructor_repository();
         void constructor_buttons();
+        void constructor_objects();
 
         void set_window_title_file(const std::string& file_name);
 
@@ -183,4 +185,6 @@ private:
         unsigned m_dimension = 0;
 
         bool m_close_without_confirmation = false;
+
+        std::unordered_set<int> m_objects_to_load;
 };
