@@ -72,7 +72,7 @@ Realistic visualization                         | Path tracing                  
 Property                    | Value
 ----------------------------|---------------------------------------------
 Programming languages       | C++17, GLSL 4.50
-Supported C++ compilers     | GCC 7, Clang 6
+Supported C++ compilers     | GCC 7, GCC 8, Clang 6
 Supported operating systems | Linux, Windows
 Required libraries          | FreeType, GMP, OpenGL 4.5, Qt 5, SFML, XLib
 Optional libraries          | cuFFT (for DFT tests), FFTW (for DFT tests)
