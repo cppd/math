@@ -20,17 +20,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "identifiers.h"
 
 #include "application/application_name.h"
+#include "com/alg.h"
 #include "com/error.h"
 #include "com/file/file_sys.h"
 #include "com/log.h"
 #include "com/math.h"
 #include "com/names.h"
 #include "com/print.h"
+#include "ui/command_line/command_line.h"
 #include "ui/dialogs/messages/application_about.h"
 #include "ui/dialogs/messages/application_help.h"
 #include "ui/dialogs/messages/message_box.h"
 #include "ui/dialogs/messages/source_error.h"
 #include "ui/dialogs/parameters/bound_cocone.h"
+#include "ui/dialogs/parameters/object_selection.h"
 #include "ui/dialogs/parameters/point_object.h"
 #include "ui/support/support.h"
 
@@ -105,6 +108,8 @@ MainWindow::MainWindow(QWidget* parent)
           m_close_without_confirmation(false)
 {
         static_assert(std::is_same_v<decltype(ui.graphics_widget), GraphicsWidget*>);
+
+        LOG(command_line_description() + "\n");
 
         ui.setupUi(this);
 
@@ -330,7 +335,34 @@ bool MainWindow::find_object(std::string* object_name, int* object_id)
         return true;
 }
 
-void MainWindow::thread_load_from_file(std::string file_name)
+bool MainWindow::object_selection(QWidget* parent, std::unordered_set<int>* objects_to_load)
+{
+        ASSERT(objects_to_load);
+
+        bool model_convex_hull = objects_to_load->count(OBJECT_MODEL_CONVEX_HULL);
+        bool model_minumum_spanning_tree = objects_to_load->count(OBJECT_MODEL_MST);
+        bool cocone = objects_to_load->count(OBJECT_COCONE);
+        bool cocone_convex_hull = objects_to_load->count(OBJECT_COCONE_CONVEX_HULL);
+        bool bound_cocone = objects_to_load->count(OBJECT_BOUND_COCONE);
+        bool bound_cocone_convex_hull = objects_to_load->count(OBJECT_BOUND_COCONE_CONVEX_HULL);
+
+        if (!ObjectSelection(parent).show(&model_convex_hull, &model_minumum_spanning_tree, &cocone, &cocone_convex_hull,
+                                          &bound_cocone, &bound_cocone_convex_hull))
+        {
+                return false;
+        }
+
+        insert_or_erase(model_convex_hull, OBJECT_MODEL_CONVEX_HULL, objects_to_load);
+        insert_or_erase(model_minumum_spanning_tree, OBJECT_MODEL_MST, objects_to_load);
+        insert_or_erase(cocone, OBJECT_COCONE, objects_to_load);
+        insert_or_erase(cocone_convex_hull, OBJECT_COCONE_CONVEX_HULL, objects_to_load);
+        insert_or_erase(bound_cocone, OBJECT_BOUND_COCONE, objects_to_load);
+        insert_or_erase(bound_cocone_convex_hull, OBJECT_BOUND_COCONE_CONVEX_HULL, objects_to_load);
+
+        return true;
+}
+
+void MainWindow::thread_load_from_file(std::string file_name, bool use_object_selection_dialog)
 {
         ASSERT(std::this_thread::get_id() == m_window_thread_id);
 
@@ -345,6 +377,8 @@ void MainWindow::thread_load_from_file(std::string file_name)
 
                 if (file_name.size() == 0)
                 {
+                        ASSERT(use_object_selection_dialog);
+
                         QString caption = "Open";
                         QString filter =
                                 file_filter("OBJ and Point files", m_objects->obj_extensions(), m_objects->txt_extensions());
@@ -357,6 +391,11 @@ void MainWindow::thread_load_from_file(std::string file_name)
                         }
 
                         file_name = q_file_name.toStdString();
+                }
+
+                if (use_object_selection_dialog && !object_selection(this, &m_objects_to_load))
+                {
+                        return;
                 }
 
                 m_threads.start_thread(ThreadAction::LoadObject,
@@ -392,6 +431,11 @@ void MainWindow::thread_load_from_repository(const std::tuple<int, std::string>&
 
                 if (!PointObjectParameters(this).show(std::get<0>(object), std::get<1>(object), POINT_COUNT_DEFAULT,
                                                       POINT_COUNT_MINIMUM, POINT_COUNT_MAXIMUM, &point_count))
+                {
+                        return;
+                }
+
+                if (!object_selection(this, &m_objects_to_load))
                 {
                         return;
                 }
@@ -488,6 +532,12 @@ void MainWindow::thread_export(const std::string& name, int id)
 void MainWindow::thread_reload_bound_cocone()
 {
         ASSERT(std::this_thread::get_id() == m_window_thread_id);
+
+        if (m_objects_to_load.count(OBJECT_BOUND_COCONE) == 0 && m_objects_to_load.count(OBJECT_BOUND_COCONE_CONVEX_HULL) == 0)
+        {
+                m_event_emitter.message_warning("Neither BoundCocone nor BoundCocone Convex Hull was selected for loading");
+                return;
+        }
 
         if (!m_threads.action_allowed(ThreadAction::ReloadBoundCocone))
         {
@@ -894,15 +944,19 @@ void MainWindow::slot_window_first_shown()
                 return;
         }
 
-        if (QCoreApplication::arguments().count() == 2)
+        std::string file_to_load;
+        bool use_object_selection_dialog;
+
+        if (parse_command_line([this](const std::string& message) { m_event_emitter.message_error(message); }, &file_to_load,
+                               &use_object_selection_dialog))
         {
-                thread_load_from_file(QCoreApplication::arguments().at(1).toStdString());
+                thread_load_from_file(file_to_load, use_object_selection_dialog);
         }
 }
 
 void MainWindow::on_actionLoad_triggered()
 {
-        thread_load_from_file();
+        thread_load_from_file("", true);
 }
 
 void MainWindow::slot_object_repository()

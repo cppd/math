@@ -128,3 +128,16 @@ constexpr T add_all(const V& v)
 
         return value;
 }
+
+template <template <typename...> typename Container, typename... T>
+void insert_or_erase(bool insert, const typename Container<T...>::value_type& value, Container<T...>* container)
+{
+        if (insert)
+        {
+                container->insert(value);
+        }
+        else
+        {
+                container->erase(value);
+        }
+}

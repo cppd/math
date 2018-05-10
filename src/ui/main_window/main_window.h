@@ -117,7 +117,7 @@ private:
 
         bool find_object(std::string* object_name, int* object_id);
 
-        void thread_load_from_file(std::string file_name = "");
+        void thread_load_from_file(std::string file_name, bool use_object_selection_dialog);
         void thread_load_from_repository(const std::tuple<int, std::string>& object);
         void thread_self_test(SelfTestType test_type, bool with_confirmation);
         void thread_export(const std::string& name, int id);
@@ -151,6 +151,8 @@ private:
         void set_dft_color(const QColor& c);
 
         void exception_handler(const std::exception_ptr& ptr, const std::string& msg) const noexcept;
+
+        static bool object_selection(QWidget* parent, std::unordered_set<int>* objects_to_load);
 
         Ui::MainWindow ui;
 
