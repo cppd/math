@@ -46,12 +46,12 @@ class MeshHyperplaneSimplex
 
         enum class NormalType : char
         {
-                NO_NORMALS,
-                USE_NORMALS,
-                NEGATE_NORMALS
+                None,
+                Use,
+                Reverse
         } m_normal_type;
 
-        std::array<bool, N> m_negate_normal;
+        std::array<bool, N> m_reverse_normal;
 
 public:
         static constexpr size_t SPACE_DIMENSION = N;

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <array>
 #include <utility>
 
-namespace ArraysImplementation
+namespace arrays_implementation
 {
 template <typename T, T... I>
 constexpr std::array<T, sizeof...(I)> make_array_sequence_impl(std::integer_sequence<T, I...>)
@@ -46,17 +46,17 @@ constexpr std::array<T, sizeof...(I)> make_array_one_value_impl(std::integer_seq
 template <typename T, size_t N>
 constexpr std::array<T, N> make_array_sequence()
 {
-        return ArraysImplementation::make_array_sequence_impl(std::make_integer_sequence<T, N>());
+        return arrays_implementation::make_array_sequence_impl(std::make_integer_sequence<T, N>());
 }
 
 template <typename T, size_t N>
 constexpr std::array<T, N> make_array_value(const T& v)
 {
-        return ArraysImplementation::make_array_value_impl(std::make_integer_sequence<size_t, N>(), v);
+        return arrays_implementation::make_array_value_impl(std::make_integer_sequence<size_t, N>(), v);
 }
 
 template <typename T, size_t N, size_t ValueIndex>
 constexpr std::array<T, N> make_array_one_value(const T& v)
 {
-        return ArraysImplementation::make_array_one_value_impl<ValueIndex>(std::make_integer_sequence<size_t, N>(), v);
+        return arrays_implementation::make_array_one_value_impl<ValueIndex>(std::make_integer_sequence<size_t, N>(), v);
 }

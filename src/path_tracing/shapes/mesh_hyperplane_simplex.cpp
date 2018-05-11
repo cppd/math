@@ -92,7 +92,7 @@ MeshHyperplaneSimplex<N, T>::MeshHyperplaneSimplex(const std::vector<Vector<N, T
 
         if (!has_normals)
         {
-                m_normal_type = NormalType::NO_NORMALS;
+                m_normal_type = NormalType::None;
                 return;
         }
 
@@ -109,7 +109,7 @@ MeshHyperplaneSimplex<N, T>::MeshHyperplaneSimplex(const std::vector<Vector<N, T
         {
                 // «Перпендикуляры» на вершинах совсем не перпендикуляры,
                 // поэтому симплекс считать плоским.
-                m_normal_type = NormalType::NO_NORMALS;
+                m_normal_type = NormalType::None;
                 return;
         }
 
@@ -117,7 +117,7 @@ MeshHyperplaneSimplex<N, T>::MeshHyperplaneSimplex(const std::vector<Vector<N, T
         {
                 // Реальный перпендикуляр и «перпендикуляры» вершин имеют
                 // одинаковое направление, поэтому оставить как есть.
-                m_normal_type = NormalType::USE_NORMALS;
+                m_normal_type = NormalType::Use;
                 return;
         }
 
@@ -126,7 +126,7 @@ MeshHyperplaneSimplex<N, T>::MeshHyperplaneSimplex(const std::vector<Vector<N, T
                 // Реальный перпендикуляр и все «перпендикуляры» вершин имеют
                 // противоположное направление, поэтому поменять направление
                 // реального перпендикуляра.
-                m_normal_type = NormalType::USE_NORMALS;
+                m_normal_type = NormalType::Use;
                 m_normal = -m_normal;
                 return;
         }
@@ -135,10 +135,10 @@ MeshHyperplaneSimplex<N, T>::MeshHyperplaneSimplex(const std::vector<Vector<N, T
         // Это происходит, например, при восстановлении поверхностей по алгоритмам
         // типа Cocone, где соседние объекты Вороного имеют положительные полюсы
         // в противоположных направлениях.
-        m_normal_type = NormalType::NEGATE_NORMALS;
+        m_normal_type = NormalType::Reverse;
         for (unsigned i = 0; i < N; ++i)
         {
-                m_negate_normal[i] = dots[i] < 0;
+                m_reverse_normal[i] = dots[i] < 0;
         }
 }
 
@@ -159,11 +159,11 @@ Vector<N, T> MeshHyperplaneSimplex<N, T>::shading_normal(const Vector<N, T>& poi
 {
         switch (m_normal_type)
         {
-        case NormalType::NO_NORMALS:
+        case NormalType::None:
         {
                 return m_normal;
         }
-        case NormalType::USE_NORMALS:
+        case NormalType::Use:
         {
                 std::array<Vector<N, T>, N> normals;
                 for (unsigned i = 0; i < N; ++i)
@@ -172,12 +172,12 @@ Vector<N, T> MeshHyperplaneSimplex<N, T>::shading_normal(const Vector<N, T>& poi
                 }
                 return normalize(m_geometry.interpolate(point, normals));
         }
-        case NormalType::NEGATE_NORMALS:
+        case NormalType::Reverse:
         {
                 std::array<Vector<N, T>, N> normals;
                 for (unsigned i = 0; i < N; ++i)
                 {
-                        normals[i] = m_negate_normal[i] ? -m_normals[m_n[i]] : m_normals[m_n[i]];
+                        normals[i] = m_reverse_normal[i] ? -m_normals[m_n[i]] : m_normals[m_n[i]];
                 }
                 return normalize(m_geometry.interpolate(point, normals));
         }

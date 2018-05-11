@@ -38,7 +38,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <limits>
 #include <utility>
 
-namespace ParallelotopeOrthoImplementation
+namespace parallelotope_ortho_implementation
 {
 // Вспомогательная функция для следующей после неё функции
 template <typename T, size_t ValueIndex, size_t... I>
@@ -109,9 +109,11 @@ class ParallelotopeOrtho final
         static_assert(std::is_floating_point_v<T>);
 
         // Пример массива: {( 1, 0, 0), (0,  1, 0), (0, 0,  1)}
-        static constexpr std::array<Vector<N, T>, N> NORMALS_POSITIVE = ParallelotopeOrthoImplementation::index_vectors<N, T>(1);
+        static constexpr std::array<Vector<N, T>, N> NORMALS_POSITIVE =
+                parallelotope_ortho_implementation::index_vectors<N, T>(1);
         // Пример массива: {(-1, 0, 0), (0, -1, 0), (0, 0, -1)}
-        static constexpr std::array<Vector<N, T>, N> NORMALS_NEGATIVE = ParallelotopeOrthoImplementation::index_vectors<N, T>(-1);
+        static constexpr std::array<Vector<N, T>, N> NORMALS_NEGATIVE =
+                parallelotope_ortho_implementation::index_vectors<N, T>(-1);
 
         // Количество объектов после деления по каждому измерению
         static_assert(N <= 32);
@@ -405,7 +407,7 @@ std::array<ParallelotopeOrtho<N, T>, ParallelotopeOrtho<N, T>::DIVISIONS> Parall
                         org[i] = (division & (1u << i)) ? org_plus_half[i] : m_org[i];
                 }
 
-                res[division] = ParallelotopeOrthoImplementation::create_object_from_array<ParallelotopeOrtho>(org, half_sizes);
+                res[division] = parallelotope_ortho_implementation::create_object_from_array<ParallelotopeOrtho>(org, half_sizes);
         }
 
         return res;
@@ -421,7 +423,7 @@ template <size_t N, typename T>
 Vector<N, T> ParallelotopeOrtho<N, T>::e(unsigned n) const
 {
         ASSERT(n < N);
-        return ParallelotopeOrthoImplementation::index_vector<N, T>(n, m_sizes[n]);
+        return parallelotope_ortho_implementation::index_vector<N, T>(n, m_sizes[n]);
 }
 
 template <size_t N, typename T>

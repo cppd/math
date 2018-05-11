@@ -64,49 +64,48 @@ public:
                 {
                 }
         };
-        struct object_loaded final
+        struct loaded_object final
         {
                 const int id;
-                object_loaded(int id_) : id(id_)
+                loaded_object(int id_) : id(id_)
                 {
                 }
         };
-        struct file_loaded final
+        struct loaded_file final
         {
                 const std::string file_name;
                 const unsigned dimension;
-                file_loaded(const std::string& file_name_, unsigned dimension_) : file_name(file_name_), dimension(dimension_)
+                loaded_file(const std::string& file_name_, unsigned dimension_) : file_name(file_name_), dimension(dimension_)
                 {
                 }
         };
-        struct bound_cocone_loaded final
+        struct loaded_bound_cocone final
         {
                 const double rho;
                 const double alpha;
-                bound_cocone_loaded(double rho_, double alpha_) : rho(rho_), alpha(alpha_)
+                loaded_bound_cocone(double rho_, double alpha_) : rho(rho_), alpha(alpha_)
                 {
                 }
         };
-
-        struct log final
+        struct write_to_log final
         {
                 const std::string msg;
-                log(const std::string& msg_) : msg(msg_)
+                write_to_log(const std::string& msg_) : msg(msg_)
                 {
                 }
         };
 
-        enum class EventType
+        enum class Type
         {
-                MESSAGE_ERROR,
-                MESSAGE_ERROR_FATAL,
-                MESSAGE_ERROR_SOURCE,
-                MESSAGE_INFORMATION,
-                MESSAGE_WARNING,
-                OBJECT_LOADED,
-                FILE_LOADED,
-                BOUND_COCONE_LOADED,
-                LOG
+                LoadedBoundCocone,
+                LoadedFile,
+                LoadedObject,
+                MessageError,
+                MessageErrorFatal,
+                MessageErrorSource,
+                MessageInformation,
+                MessageWarning,
+                WriteToLog
         };
 
         WindowEvent() = default;
@@ -124,7 +123,7 @@ public:
         {
         }
 
-        EventType type() const
+        Type type() const
         {
                 return m_type;
         }
@@ -140,51 +139,51 @@ public:
         }
 
 private:
-        static constexpr EventType event_type(std::in_place_type_t<message_error>)
+        static constexpr Type event_type(std::in_place_type_t<message_error>)
         {
-                return EventType::MESSAGE_ERROR;
+                return Type::MessageError;
         }
-        static constexpr EventType event_type(std::in_place_type_t<message_error_fatal>)
+        static constexpr Type event_type(std::in_place_type_t<message_error_fatal>)
         {
-                return EventType::MESSAGE_ERROR_FATAL;
+                return Type::MessageErrorFatal;
         }
-        static constexpr EventType event_type(std::in_place_type_t<message_error_source>)
+        static constexpr Type event_type(std::in_place_type_t<message_error_source>)
         {
-                return EventType::MESSAGE_ERROR_SOURCE;
+                return Type::MessageErrorSource;
         }
-        static constexpr EventType event_type(std::in_place_type_t<message_information>)
+        static constexpr Type event_type(std::in_place_type_t<message_information>)
         {
-                return EventType::MESSAGE_INFORMATION;
+                return Type::MessageInformation;
         }
-        static constexpr EventType event_type(std::in_place_type_t<message_warning>)
+        static constexpr Type event_type(std::in_place_type_t<message_warning>)
         {
-                return EventType::MESSAGE_WARNING;
+                return Type::MessageWarning;
         }
-        static constexpr EventType event_type(std::in_place_type_t<object_loaded>)
+        static constexpr Type event_type(std::in_place_type_t<loaded_object>)
         {
-                return EventType::OBJECT_LOADED;
+                return Type::LoadedObject;
         }
-        static constexpr EventType event_type(std::in_place_type_t<file_loaded>)
+        static constexpr Type event_type(std::in_place_type_t<loaded_file>)
         {
-                return EventType::FILE_LOADED;
+                return Type::LoadedFile;
         }
-        static constexpr EventType event_type(std::in_place_type_t<bound_cocone_loaded>)
+        static constexpr Type event_type(std::in_place_type_t<loaded_bound_cocone>)
         {
-                return EventType::BOUND_COCONE_LOADED;
+                return Type::LoadedBoundCocone;
         }
-        static constexpr EventType event_type(std::in_place_type_t<log>)
+        static constexpr Type event_type(std::in_place_type_t<write_to_log>)
         {
-                return EventType::LOG;
+                return Type::WriteToLog;
         }
 
-        EventType m_type;
+        Type m_type;
 
 #if !defined(STD_VARIANT_NOT_FOUND)
         std::variant
 #else
         SimpleVariant
 #endif
-                <std::monostate, message_error, message_error_fatal, message_error_source, message_information, message_warning,
-                 object_loaded, file_loaded, bound_cocone_loaded, log>
+                <std::monostate, loaded_object, loaded_bound_cocone, loaded_file, message_error, message_error_fatal,
+                 message_error_source, message_information, message_warning, write_to_log>
                         m_data;
 };

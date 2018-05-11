@@ -46,7 +46,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tuple>
 #include <vector>
 
-namespace SpatialSubdivisionTreeImplementation
+namespace spatial_subdivision_tree_implementation
 {
 template <size_t DIMENSION>
 inline constexpr int BOX_COUNT = 1u << DIMENSION;
@@ -399,8 +399,8 @@ class SpatialSubdivisionTree
                 return (std::pow(box_count, max_depth) - 1) / (box_count - 1);
         }
 
-        using Box = SpatialSubdivisionTreeImplementation::Box<Parallelotope>;
-        using BoxJobs = SpatialSubdivisionTreeImplementation::BoxJobs<Box>;
+        using Box = spatial_subdivision_tree_implementation::Box<Parallelotope>;
+        using BoxJobs = spatial_subdivision_tree_implementation::BoxJobs<Box>;
 
         // Размерность задачи и тип данных
         static constexpr int N = Parallelotope::DIMENSION;
@@ -431,7 +431,7 @@ class SpatialSubdivisionTree
         static constexpr int MAX_BOX_COUNT_LIMIT = (1u << 31) - 1;
 
         // Количество коробок при одном делении.
-        static constexpr int BOX_COUNT = SpatialSubdivisionTreeImplementation::BOX_COUNT<N>;
+        static constexpr int BOX_COUNT = spatial_subdivision_tree_implementation::BOX_COUNT<N>;
 
         // Все коробки хранятся в одном векторе.
         std::vector<Box> m_boxes;
@@ -472,7 +472,7 @@ public:
                 static_assert(std::is_const_v<std::remove_pointer_t<decltype(functor_object_pointer(0))>>);
                 static_assert(MAX_BOX_COUNT_LIMIT <= (1ll << 31) - 1);
 
-                namespace Impl = SpatialSubdivisionTreeImplementation;
+                namespace impl = spatial_subdivision_tree_implementation;
 
                 if (!(max_depth >= MAX_DEPTH_LEFT_BOUND && max_depth <= MAX_DEPTH_RIGHT_BOUND) ||
                     !(min_objects_per_box >= MIN_OBJECTS_LEFT_BOUND && min_objects_per_box <= MIN_OBJECTS_RIGHT_BOUND))
@@ -500,11 +500,11 @@ public:
                 Vector<N, T> min, max;
                 T distance_from_facet;
 
-                Impl::min_max_and_distance(max_divisions, DISTANCE_FROM_FACET_IN_EPSILONS, object_index_count,
+                impl::min_max_and_distance(max_divisions, DISTANCE_FROM_FACET_IN_EPSILONS, object_index_count,
                                            functor_object_pointer, &min, &max, &distance_from_facet);
 
-                BoxContainer boxes({Box(Impl::root_parallelotope<Parallelotope>(min, max),
-                                        Impl::iota_zero_based_indices(object_index_count))});
+                BoxContainer boxes({Box(impl::root_parallelotope<Parallelotope>(min, max),
+                                        impl::iota_zero_based_indices(object_index_count))});
 
                 BoxJobs jobs(&boxes.front(), MAX_DEPTH_LEFT_BOUND);
 

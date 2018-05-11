@@ -143,7 +143,7 @@ Matrix<Rows, Columns, T> operator*(const Matrix<Rows, Inner, T>& m1, const Matri
         return res;
 }
 
-namespace MatrixImplementation
+namespace matrix_implementation
 {
 template <size_t Rows, size_t Columns, typename T, size_t... I>
 Vector<Rows, T> mul_impl(const Matrix<Rows, Columns, T>& m, const Vector<Columns, T>& v, std::integer_sequence<size_t, I...>)
@@ -158,10 +158,10 @@ Vector<Rows, T> mul_impl(const Matrix<Rows, Columns, T>& m, const Vector<Columns
 template <size_t Rows, size_t Columns, typename T>
 Vector<Rows, T> operator*(const Matrix<Rows, Columns, T>& m, const Vector<Columns, T>& v)
 {
-        return MatrixImplementation::mul_impl(m, v, std::make_integer_sequence<size_t, Rows>());
+        return matrix_implementation::mul_impl(m, v, std::make_integer_sequence<size_t, Rows>());
 }
 
-namespace MatrixImplementation
+namespace matrix_implementation
 {
 template <size_t Rows, size_t Columns, typename T, size_t... I>
 constexpr Matrix<Columns, Rows, T> transpose_impl(const Matrix<Rows, Columns, T>& m, std::integer_sequence<size_t, I...>)
@@ -176,10 +176,10 @@ constexpr Matrix<Columns, Rows, T> transpose_impl(const Matrix<Rows, Columns, T>
 template <size_t Rows, size_t Columns, typename T>
 constexpr Matrix<Columns, Rows, T> transpose(const Matrix<Rows, Columns, T>& m)
 {
-        return MatrixImplementation::transpose_impl(m, std::make_integer_sequence<size_t, Columns>());
+        return matrix_implementation::transpose_impl(m, std::make_integer_sequence<size_t, Columns>());
 }
 
-namespace MatrixImplementation
+namespace matrix_implementation
 {
 template <size_t Rows, size_t Columns, typename Dst, typename Src, size_t... I>
 Matrix<Rows, Columns, Dst> to_matrix(const Matrix<Rows, Columns, Src>& m, std::integer_sequence<size_t, I...>)
@@ -195,7 +195,7 @@ Matrix<Rows, Columns, Dst> to_matrix(const Matrix<Rows, Columns, Src>& m, std::i
 template <typename Dst, size_t Rows, size_t Columns, typename Src, size_t... I>
 Matrix<Rows, Columns, Dst> to_matrix(const Matrix<Rows, Columns, Src>& m)
 {
-        return MatrixImplementation::to_matrix<Rows, Columns, Dst, Src>(m, std::make_integer_sequence<size_t, Rows>());
+        return matrix_implementation::to_matrix<Rows, Columns, Dst, Src>(m, std::make_integer_sequence<size_t, Rows>());
 }
 
 template <size_t Rows, size_t Columns, typename T>

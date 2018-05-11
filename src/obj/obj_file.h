@@ -24,8 +24,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 enum class ObjFileType
 {
-        OBJ,
-        TXT
+        Obj,
+        Txt
 };
 
 std::tuple<int, ObjFileType> obj_file_dimension_and_type(const std::string& file_name);

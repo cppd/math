@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "types.h"
 
-namespace TypesImplementation
+namespace types_implementation
 {
 static_assert(binary_epsilon<float>() == std::numeric_limits<float>::epsilon());
 static_assert(binary_epsilon<double>() == std::numeric_limits<double>::epsilon());

@@ -68,13 +68,13 @@ public:
 [[noreturn]] void error_fatal(const char* text) noexcept;
 [[noreturn]] void error_fatal(const std::string& text) noexcept;
 
-namespace ErrorImplementation
+namespace error_implementation
 {
 [[noreturn]] void error_assert(const char* expr, const char* file, int line) noexcept;
 }
 
 #if 1
-#define ASSERT(expr) ((expr) ? static_cast<void>(0) : ErrorImplementation::error_assert(#expr, __FILE__, __LINE__))
+#define ASSERT(expr) ((expr) ? static_cast<void>(0) : error_implementation::error_assert(#expr, __FILE__, __LINE__))
 #else
 #define ASSERT(expr) (static_cast<void>(0))
 #endif

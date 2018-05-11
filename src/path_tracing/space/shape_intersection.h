@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <array>
 #include <utility>
 
-namespace ShapeIntersectionImplementation
+namespace shape_intersection_implementation
 {
 #if 0
 #pragma GCC diagnostic push
@@ -343,23 +343,23 @@ template <typename Shape1, typename Shape2>
 bool shape_intersection(const Shape1& shape_1, const Shape2& shape_2,
                         const typename Shape1::DataType& distance_from_flat_shapes_in_epsilons)
 {
-        namespace Impl = ShapeIntersectionImplementation;
+        namespace impl = shape_intersection_implementation;
 
-        Impl::static_checks(shape_1, shape_2);
+        impl::static_checks(shape_1, shape_2);
 
         constexpr size_t N = Shape1::SPACE_DIMENSION;
 
         ASSERT(((N > Shape1::SHAPE_DIMENSION || N > Shape2::SHAPE_DIMENSION) && distance_from_flat_shapes_in_epsilons > 0) ||
                (N == Shape1::SHAPE_DIMENSION && N == Shape2::SHAPE_DIMENSION));
 
-        if (Impl::shapes_intersect_by_vertices(shape_1, shape_2))
+        if (impl::shapes_intersect_by_vertices(shape_1, shape_2))
         {
                 return true;
         }
 
         if constexpr (N <= 3)
         {
-                if (Impl::shapes_intersect_by_vertex_ridges(shape_1, shape_2))
+                if (impl::shapes_intersect_by_vertex_ridges(shape_1, shape_2))
                 {
                         return true;
                 }
@@ -369,12 +369,12 @@ bool shape_intersection(const Shape1& shape_1, const Shape2& shape_2,
 
         if constexpr (N >= 4)
         {
-                if (Impl::shapes_not_intersect_by_planes(shape_1, shape_2))
+                if (impl::shapes_not_intersect_by_planes(shape_1, shape_2))
                 {
                         return false;
                 }
 
-                if (Impl::shapes_intersect_by_spaces(shape_1, shape_2, distance_from_flat_shapes_in_epsilons))
+                if (impl::shapes_intersect_by_spaces(shape_1, shape_2, distance_from_flat_shapes_in_epsilons))
                 {
                         return true;
                 }

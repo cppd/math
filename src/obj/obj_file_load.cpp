@@ -256,12 +256,12 @@ Integer digits_to_integer(const T& data, long long begin, long long end)
         }
 
         --end;
-        Integer sum = ASCII::char_to_int(data[end]);
+        Integer sum = ascii::char_to_int(data[end]);
         Integer mul = 1;
         while (--end >= begin)
         {
                 mul *= 10;
-                sum += ASCII::char_to_int(data[end]) * mul;
+                sum += ascii::char_to_int(data[end]) * mul;
         }
 
         return sum;
@@ -281,7 +281,7 @@ bool read_integer(const T& data, long long size, long long* pos, Integer* value)
 
         long long end = begin;
 
-        read(data, size, ASCII::is_digit, &end);
+        read(data, size, ascii::is_digit, &end);
 
         if (end > begin)
         {
@@ -308,7 +308,7 @@ void read_digit_groups(const T& line, long long begin, long long end,
         {
                 ++group_index;
 
-                read(line, end, ASCII::is_space, &i);
+                read(line, end, ascii::is_space, &i);
 
                 if (i == end)
                 {
@@ -340,7 +340,7 @@ void read_digit_groups(const T& line, long long begin, long long end,
                 // Считываются текстура и нормаль
                 for (int a = 1; a < static_cast<int>(indices.size()); ++a)
                 {
-                        if (i == end || ASCII::is_space(line[i]))
+                        if (i == end || ascii::is_space(line[i]))
                         {
                                 indices[a] = 0;
                                 continue;
@@ -353,7 +353,7 @@ void read_digit_groups(const T& line, long long begin, long long end,
 
                         ++i;
 
-                        if (i == end || ASCII::is_space(line[i]))
+                        if (i == end || ascii::is_space(line[i]))
                         {
                                 indices[a] = 0;
                                 continue;
@@ -557,20 +557,20 @@ void read_name(const char* object_name, const T& data, long long begin, long lon
         const long long size = end;
 
         long long i = begin;
-        read(data, size, ASCII::is_space, &i);
+        read(data, size, ascii::is_space, &i);
         if (i == size)
         {
                 error("Error read " + std::string(object_name) + " name");
         }
 
         long long i2 = i;
-        read(data, size, ASCII::is_not_space, &i2);
+        read(data, size, ascii::is_not_space, &i2);
 
         *name = std::string(&data[i], i2 - i);
 
         i = i2;
 
-        read(data, size, ASCII::is_space, &i);
+        read(data, size, ascii::is_space, &i);
         if (i != size)
         {
                 error("Error read " + std::string(object_name) + " name");
@@ -587,7 +587,7 @@ void read_library_names(const T& data, long long begin, long long end, std::vect
 
         while (true)
         {
-                read(data, size, ASCII::is_space, &i);
+                read(data, size, ascii::is_space, &i);
                 if (i == size)
                 {
                         if (!found)
@@ -598,7 +598,7 @@ void read_library_names(const T& data, long long begin, long long end, std::vect
                 }
 
                 long long i2 = i;
-                read(data, size, ASCII::is_not_space, &i2);
+                read(data, size, ascii::is_not_space, &i2);
                 std::string name = std::string(&data[i], i2 - i);
                 i = i2;
                 found = true;
@@ -674,7 +674,7 @@ void split_line(T* data, const std::vector<long long>& line_begin, long long lin
 
         long long first_b, first_e;
 
-        split(*data, line_begin[line_num], last, ASCII::is_space, is_number_sign, &first_b, &first_e, second_b, second_e);
+        split(*data, line_begin[line_num], last, ascii::is_space, is_number_sign, &first_b, &first_e, second_b, second_e);
 
         *first = &(*data)[first_b];
         (*data)[first_e] = 0; // пробел, символ комментария '#' или символ '\n'
@@ -734,29 +734,15 @@ class FileObj final : public Obj<N>
 
         enum class ObjLineType
         {
-                V,
-                VT,
-                VN,
-                F,
-                USEMTL,
-                MTLLIB,
-                NONE,
-                NOT_SUPPORTED
+                v,
+                vt,
+                vn,
+                f,
+                usemtl,
+                mtllib,
+                None,
+                NotSupported
         };
-
-        // enum class MtlLineType
-        //{
-        //        NEWMTL,
-        //        KA,
-        //        KD,
-        //        KS,
-        //        NS,
-        //        MAP_KA,
-        //        MAP_KD,
-        //        MAP_KS,
-        //        NONE,
-        //        NOT_SUPPORTED
-        //};
 
         struct ObjLine
         {
@@ -767,13 +753,6 @@ class FileObj final : public Obj<N>
                 int facet_count;
                 Vector<N, float> v;
         };
-
-        // struct MtlLine
-        //{
-        //        MtlLineType type;
-        //        long long second_b, second_e;
-        //        Vector<N, float> v;
-        //};
 
         struct Counters
         {
@@ -991,7 +970,7 @@ void FileObj<N>::read_obj_stage_one(unsigned thread_num, unsigned thread_count, 
                 {
                         if (str_equal(first, OBJ_v))
                         {
-                                lp.type = ObjLineType::V;
+                                lp.type = ObjLineType::v;
                                 Vector<N, float> v;
                                 read_float(&data[lp.second_b], &v);
                                 lp.v = v;
@@ -1000,7 +979,7 @@ void FileObj<N>::read_obj_stage_one(unsigned thread_num, unsigned thread_count, 
                         }
                         else if (str_equal(first, OBJ_vt))
                         {
-                                lp.type = ObjLineType::VT;
+                                lp.type = ObjLineType::vt;
                                 Vector<N - 1, float> v;
                                 read_float_texture(&data[lp.second_b], &v);
                                 for (unsigned i = 0; i < N - 1; ++i)
@@ -1012,7 +991,7 @@ void FileObj<N>::read_obj_stage_one(unsigned thread_num, unsigned thread_count, 
                         }
                         else if (str_equal(first, OBJ_vn))
                         {
-                                lp.type = ObjLineType::VN;
+                                lp.type = ObjLineType::vn;
                                 Vector<N, float> v;
                                 read_float(&data[lp.second_b], &v);
                                 lp.v = normalize(v);
@@ -1021,26 +1000,26 @@ void FileObj<N>::read_obj_stage_one(unsigned thread_num, unsigned thread_count, 
                         }
                         else if (str_equal(first, OBJ_f))
                         {
-                                lp.type = ObjLineType::F;
+                                lp.type = ObjLineType::f;
                                 read_facets<N>(data, lp.second_b, lp.second_e, &lp.facets, &lp.facet_count);
 
                                 ++((*counters)[thread_num].facet);
                         }
                         else if (str_equal(first, OBJ_usemtl))
                         {
-                                lp.type = ObjLineType::USEMTL;
+                                lp.type = ObjLineType::usemtl;
                         }
                         else if (str_equal(first, OBJ_mtllib))
                         {
-                                lp.type = ObjLineType::MTLLIB;
+                                lp.type = ObjLineType::mtllib;
                         }
                         else if (!*first)
                         {
-                                lp.type = ObjLineType::NONE;
+                                lp.type = ObjLineType::None;
                         }
                         else
                         {
-                                lp.type = ObjLineType::NOT_SUPPORTED;
+                                lp.type = ObjLineType::NotSupported;
                         }
                 }
                 catch (std::exception& e)
@@ -1109,10 +1088,10 @@ void FileObj<N>::read_obj_stage_two(const Counters& counters, std::vector<char>*
 
                 switch (lp.type)
                 {
-                case ObjLineType::V:
+                case ObjLineType::v:
                         m_vertices.push_back(lp.v);
                         break;
-                case ObjLineType::VT:
+                case ObjLineType::vt:
                 {
                         m_texcoords.resize(m_texcoords.size() + 1);
                         Vector<N - 1, float>& new_vector = m_texcoords[m_texcoords.size() - 1];
@@ -1122,10 +1101,10 @@ void FileObj<N>::read_obj_stage_two(const Counters& counters, std::vector<char>*
                         }
                         break;
                 }
-                case ObjLineType::VN:
+                case ObjLineType::vn:
                         m_normals.push_back(lp.v);
                         break;
-                case ObjLineType::F:
+                case ObjLineType::f:
                         for (int i = 0; i < lp.facet_count; ++i)
                         {
                                 lp.facets[i].material = mtl_index;
@@ -1133,7 +1112,7 @@ void FileObj<N>::read_obj_stage_two(const Counters& counters, std::vector<char>*
                                 m_facets.push_back(std::move(lp.facets[i]));
                         }
                         break;
-                case ObjLineType::USEMTL:
+                case ObjLineType::usemtl:
                 {
                         read_name("material", data, lp.second_b, lp.second_e, &mtl_name);
                         auto iter = material_index->find(mtl_name);
@@ -1151,12 +1130,12 @@ void FileObj<N>::read_obj_stage_two(const Counters& counters, std::vector<char>*
                         }
                         break;
                 }
-                case ObjLineType::MTLLIB:
+                case ObjLineType::mtllib:
                         read_library_names(data, lp.second_b, lp.second_e, library_names, &unique_library_names);
                         break;
-                case ObjLineType::NONE:
+                case ObjLineType::None:
                         break;
-                case ObjLineType::NOT_SUPPORTED:
+                case ObjLineType::NotSupported:
                         break;
                 }
         }
@@ -1637,9 +1616,9 @@ std::unique_ptr<Obj<N>> load_obj_from_file(const std::string& file_name, Progres
 
         switch (obj_file_type)
         {
-        case ObjFileType::OBJ:
+        case ObjFileType::Obj:
                 return std::make_unique<FileObj<N>>(file_name, progress);
-        case ObjFileType::TXT:
+        case ObjFileType::Txt:
                 return std::make_unique<FileTxt<N>>(file_name, progress);
         }
 

@@ -116,7 +116,7 @@ int count_numbers_in_file(const std::string& file_name)
 // Чтение числа из строки с проверкой, что строка содержит только целое число без других символов
 int read_dimension_number(const std::string& s)
 {
-        if (!std::all_of(s.cbegin(), s.cend(), [](char c) { return ASCII::is_digit(c); }))
+        if (!std::all_of(s.cbegin(), s.cend(), [](char c) { return ascii::is_digit(c); }))
         {
                 error("Wrong dimension number string \"" + s + "\"");
         }
@@ -162,17 +162,17 @@ std::tuple<int, ObjFileType> obj_file_dimension_and_type(const std::string& file
         if (e == TXT)
         {
                 dimension = count_numbers_in_file(file_name);
-                obj_file_type = ObjFileType::TXT;
+                obj_file_type = ObjFileType::Txt;
         }
         else if (e == OBJ)
         {
                 dimension = 3;
-                obj_file_type = ObjFileType::OBJ;
+                obj_file_type = ObjFileType::Obj;
         }
         else if (e.find(OBJ) == 0)
         {
                 dimension = read_dimension_number(e.substr(OBJ.size()));
-                obj_file_type = ObjFileType::OBJ;
+                obj_file_type = ObjFileType::Obj;
         }
         else if (e.find(TXT) == 0)
         {
@@ -183,7 +183,7 @@ std::tuple<int, ObjFileType> obj_file_dimension_and_type(const std::string& file
                         error("Conflicting dimensions in file extension " + to_string(dimension) + " and in file data " +
                               to_string(dimension_numbers));
                 }
-                obj_file_type = ObjFileType::TXT;
+                obj_file_type = ObjFileType::Txt;
         }
         else
         {

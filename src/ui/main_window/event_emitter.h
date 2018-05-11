@@ -79,21 +79,21 @@ public:
 
         void object_loaded(int id) const noexcept override
         {
-                emit_message<WindowEvent::object_loaded>("Exception in emit object loaded", id);
+                emit_message<WindowEvent::loaded_object>("Exception in emit object loaded", id);
         }
 
         void file_loaded(const std::string& msg, unsigned dimension) const noexcept override
         {
-                emit_message<WindowEvent::file_loaded>("Exception in emit file loaded", msg, dimension);
+                emit_message<WindowEvent::loaded_file>("Exception in emit file loaded", msg, dimension);
         }
 
         void bound_cocone_loaded(double rho, double alpha) const noexcept override
         {
-                emit_message<WindowEvent::bound_cocone_loaded>("Exception in emit BoundCocone loaded", rho, alpha);
+                emit_message<WindowEvent::loaded_bound_cocone>("Exception in emit BoundCocone loaded", rho, alpha);
         }
 
         void log(const std::string& msg) const noexcept override
         {
-                emit_message<WindowEvent::log>("Exception in emit log", msg);
+                emit_message<WindowEvent::write_to_log>("Exception in emit log", msg);
         }
 };

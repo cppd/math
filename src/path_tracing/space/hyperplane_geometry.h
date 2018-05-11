@@ -35,7 +35,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <array>
 #include <cmath>
 
-namespace HyperplaneGeometryImplementation
+namespace hyperplane_geometry_implementation
 {
 template <size_t N, typename T>
 bool plane_intersect(const Ray<N, T>& ray, const Vector<N, T>& plane_point, const Vector<N, T>& plane_normal, T* t)
@@ -180,9 +180,9 @@ public:
 
         bool intersect(const Ray<N, T>& ray, const Vector<N, T>& any_vertex, const Vector<N, T>& normal, T* t) const
         {
-                namespace Impl = HyperplaneGeometryImplementation;
+                namespace impl = hyperplane_geometry_implementation;
 
-                if (!Impl::plane_intersect(ray, any_vertex, normal, t))
+                if (!impl::plane_intersect(ray, any_vertex, normal, t))
                 {
                         return false;
                 }
@@ -239,9 +239,9 @@ public:
 
         bool intersect(const Ray<N, T>& ray, const Vector<N, T>& any_vertex, const Vector<N, T>& normal, T* t) const
         {
-                namespace Impl = HyperplaneGeometryImplementation;
+                namespace impl = hyperplane_geometry_implementation;
 
-                if (!Impl::plane_intersect(ray, any_vertex, normal, t))
+                if (!impl::plane_intersect(ray, any_vertex, normal, t))
                 {
                         return false;
                 }

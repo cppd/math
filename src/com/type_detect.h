@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <type_traits>
 #include <vector>
 
-namespace TypeDetectionImplementation
+namespace type_detect_implementation
 {
 struct IsArray
 {
@@ -70,12 +70,12 @@ public:
 }
 
 template <typename T>
-inline constexpr bool is_array = TypeDetectionImplementation::IsArray::S<std::remove_cv_t<T>>::value;
+inline constexpr bool is_array = type_detect_implementation::IsArray::S<std::remove_cv_t<T>>::value;
 template <typename T>
-inline constexpr bool is_vector = TypeDetectionImplementation::IsVector::S<std::remove_cv_t<T>>::value;
+inline constexpr bool is_vector = type_detect_implementation::IsVector::S<std::remove_cv_t<T>>::value;
 
 template <typename T>
-inline constexpr bool has_begin_end = TypeDetectionImplementation::HasBeginEnd<T>::value;
+inline constexpr bool has_begin_end = type_detect_implementation::HasBeginEnd<T>::value;
 
 static_assert(is_array<const std::array<int, 1>>);
 static_assert(is_vector<const std::vector<int>>);

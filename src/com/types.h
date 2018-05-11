@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <type_traits>
 
-namespace TypesImplementation
+namespace types_implementation
 {
 template <typename T>
 constexpr T binary_epsilon() noexcept
@@ -170,19 +170,19 @@ public:
 //
 
 template <typename T>
-class limits : public TypesImplementation::limits<T>
+class limits : public types_implementation::limits<T>
 {
 };
 template <typename T>
-class limits<const T> : public TypesImplementation::limits<T>
+class limits<const T> : public types_implementation::limits<T>
 {
 };
 template <typename T>
-class limits<volatile T> : public TypesImplementation::limits<T>
+class limits<volatile T> : public types_implementation::limits<T>
 {
 };
 template <typename T>
-class limits<const volatile T> : public TypesImplementation::limits<T>
+class limits<const volatile T> : public types_implementation::limits<T>
 {
 };
 

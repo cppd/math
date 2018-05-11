@@ -236,37 +236,37 @@ public:
                 }
         };
 
-        enum class EventType
+        enum class Type
         {
-                add_object,
-                delete_object,
-                show_object,
-                delete_all_objects,
-                parent_resized,
-                mouse_wheel,
-                toggle_fullscreen,
-                reset_view,
-                set_ambient,
-                set_diffuse,
-                set_specular,
-                set_background_color,
-                set_default_color,
-                set_wireframe_color,
-                set_default_ns,
-                show_smooth,
-                show_wireframe,
-                show_shadow,
-                show_fog,
-                show_materials,
-                show_effect,
-                show_dft,
-                set_dft_brightness,
-                set_dft_background_color,
-                set_dft_color,
-                show_convex_hull_2d,
-                show_optical_flow,
-                vertical_sync,
-                shadow_zoom
+                AddObject,
+                DeleteAllObjects,
+                DeleteObject,
+                MouseWheel,
+                ParentResized,
+                ResetView,
+                SetAmbient,
+                SetBackgroundColor,
+                SetDefaultColor,
+                SetDefaultNs,
+                SetDftBackgroundColor,
+                SetDftBrightness,
+                SetDftColor,
+                SetDiffuse,
+                SetSpecular,
+                SetWireframeColor,
+                ShadowZoom,
+                ShowConvexHull2d,
+                ShowDft,
+                ShowEffect,
+                ShowFog,
+                ShowMaterials,
+                ShowObject,
+                ShowOpticalFlow,
+                ShowShadow,
+                ShowSmooth,
+                ShowWireframe,
+                ToggleFullscreen,
+                VerticalSync
         };
 
 #if 0
@@ -282,7 +282,7 @@ public:
         {
         }
 
-        EventType type() const
+        Type type() const
         {
                 return m_type;
         }
@@ -298,124 +298,124 @@ public:
         }
 
 private:
-        static constexpr EventType event_type(std::in_place_type_t<add_object>)
+        static constexpr Type event_type(std::in_place_type_t<add_object>)
         {
-                return EventType::add_object;
+                return Type::AddObject;
         }
-        static constexpr EventType event_type(std::in_place_type_t<delete_object>)
+        static constexpr Type event_type(std::in_place_type_t<delete_object>)
         {
-                return EventType::delete_object;
+                return Type::DeleteObject;
         }
-        static constexpr EventType event_type(std::in_place_type_t<show_object>)
+        static constexpr Type event_type(std::in_place_type_t<show_object>)
         {
-                return EventType::show_object;
+                return Type::ShowObject;
         }
-        static constexpr EventType event_type(std::in_place_type_t<delete_all_objects>)
+        static constexpr Type event_type(std::in_place_type_t<delete_all_objects>)
         {
-                return EventType::delete_all_objects;
+                return Type::DeleteAllObjects;
         }
-        static constexpr EventType event_type(std::in_place_type_t<parent_resized>)
+        static constexpr Type event_type(std::in_place_type_t<parent_resized>)
         {
-                return EventType::parent_resized;
+                return Type::ParentResized;
         }
-        static constexpr EventType event_type(std::in_place_type_t<mouse_wheel>)
+        static constexpr Type event_type(std::in_place_type_t<mouse_wheel>)
         {
-                return EventType::mouse_wheel;
+                return Type::MouseWheel;
         }
-        static constexpr EventType event_type(std::in_place_type_t<toggle_fullscreen>)
+        static constexpr Type event_type(std::in_place_type_t<toggle_fullscreen>)
         {
-                return EventType::toggle_fullscreen;
+                return Type::ToggleFullscreen;
         }
-        static constexpr EventType event_type(std::in_place_type_t<reset_view>)
+        static constexpr Type event_type(std::in_place_type_t<reset_view>)
         {
-                return EventType::reset_view;
+                return Type::ResetView;
         }
-        static constexpr EventType event_type(std::in_place_type_t<set_ambient>)
+        static constexpr Type event_type(std::in_place_type_t<set_ambient>)
         {
-                return EventType::set_ambient;
+                return Type::SetAmbient;
         }
-        static constexpr EventType event_type(std::in_place_type_t<set_diffuse>)
+        static constexpr Type event_type(std::in_place_type_t<set_diffuse>)
         {
-                return EventType::set_diffuse;
+                return Type::SetDiffuse;
         }
-        static constexpr EventType event_type(std::in_place_type_t<set_specular>)
+        static constexpr Type event_type(std::in_place_type_t<set_specular>)
         {
-                return EventType::set_specular;
+                return Type::SetSpecular;
         }
-        static constexpr EventType event_type(std::in_place_type_t<set_background_color>)
+        static constexpr Type event_type(std::in_place_type_t<set_background_color>)
         {
-                return EventType::set_background_color;
+                return Type::SetBackgroundColor;
         }
-        static constexpr EventType event_type(std::in_place_type_t<set_default_color>)
+        static constexpr Type event_type(std::in_place_type_t<set_default_color>)
         {
-                return EventType::set_default_color;
+                return Type::SetDefaultColor;
         }
-        static constexpr EventType event_type(std::in_place_type_t<set_wireframe_color>)
+        static constexpr Type event_type(std::in_place_type_t<set_wireframe_color>)
         {
-                return EventType::set_wireframe_color;
+                return Type::SetWireframeColor;
         }
-        static constexpr EventType event_type(std::in_place_type_t<set_default_ns>)
+        static constexpr Type event_type(std::in_place_type_t<set_default_ns>)
         {
-                return EventType::set_default_ns;
+                return Type::SetDefaultNs;
         }
-        static constexpr EventType event_type(std::in_place_type_t<show_smooth>)
+        static constexpr Type event_type(std::in_place_type_t<show_smooth>)
         {
-                return EventType::show_smooth;
+                return Type::ShowSmooth;
         }
-        static constexpr EventType event_type(std::in_place_type_t<show_wireframe>)
+        static constexpr Type event_type(std::in_place_type_t<show_wireframe>)
         {
-                return EventType::show_wireframe;
+                return Type::ShowWireframe;
         }
-        static constexpr EventType event_type(std::in_place_type_t<show_shadow>)
+        static constexpr Type event_type(std::in_place_type_t<show_shadow>)
         {
-                return EventType::show_shadow;
+                return Type::ShowShadow;
         }
-        static constexpr EventType event_type(std::in_place_type_t<show_fog>)
+        static constexpr Type event_type(std::in_place_type_t<show_fog>)
         {
-                return EventType::show_fog;
+                return Type::ShowFog;
         }
-        static constexpr EventType event_type(std::in_place_type_t<show_materials>)
+        static constexpr Type event_type(std::in_place_type_t<show_materials>)
         {
-                return EventType::show_materials;
+                return Type::ShowMaterials;
         }
-        static constexpr EventType event_type(std::in_place_type_t<show_effect>)
+        static constexpr Type event_type(std::in_place_type_t<show_effect>)
         {
-                return EventType::show_effect;
+                return Type::ShowEffect;
         }
-        static constexpr EventType event_type(std::in_place_type_t<show_dft>)
+        static constexpr Type event_type(std::in_place_type_t<show_dft>)
         {
-                return EventType::show_dft;
+                return Type::ShowDft;
         }
-        static constexpr EventType event_type(std::in_place_type_t<set_dft_brightness>)
+        static constexpr Type event_type(std::in_place_type_t<set_dft_brightness>)
         {
-                return EventType::set_dft_brightness;
+                return Type::SetDftBrightness;
         }
-        static constexpr EventType event_type(std::in_place_type_t<set_dft_background_color>)
+        static constexpr Type event_type(std::in_place_type_t<set_dft_background_color>)
         {
-                return EventType::set_dft_background_color;
+                return Type::SetDftBackgroundColor;
         }
-        static constexpr EventType event_type(std::in_place_type_t<set_dft_color>)
+        static constexpr Type event_type(std::in_place_type_t<set_dft_color>)
         {
-                return EventType::set_dft_color;
+                return Type::SetDftColor;
         }
-        static constexpr EventType event_type(std::in_place_type_t<show_convex_hull_2d>)
+        static constexpr Type event_type(std::in_place_type_t<show_convex_hull_2d>)
         {
-                return EventType::show_convex_hull_2d;
+                return Type::ShowConvexHull2d;
         }
-        static constexpr EventType event_type(std::in_place_type_t<show_optical_flow>)
+        static constexpr Type event_type(std::in_place_type_t<show_optical_flow>)
         {
-                return EventType::show_optical_flow;
+                return Type::ShowOpticalFlow;
         }
-        static constexpr EventType event_type(std::in_place_type_t<vertical_sync>)
+        static constexpr Type event_type(std::in_place_type_t<vertical_sync>)
         {
-                return EventType::vertical_sync;
+                return Type::VerticalSync;
         }
-        static constexpr EventType event_type(std::in_place_type_t<shadow_zoom>)
+        static constexpr Type event_type(std::in_place_type_t<shadow_zoom>)
         {
-                return EventType::shadow_zoom;
+                return Type::ShadowZoom;
         }
 
-        EventType m_type;
+        Type m_type;
 
 #if !defined(STD_VARIANT_NOT_FOUND)
         std::variant

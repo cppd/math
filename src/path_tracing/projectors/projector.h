@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/types.h"
 #include "com/vec.h"
 
-namespace ProjectorImplementation
+namespace projector_implementation
 {
 template <size_t N, typename T>
 void check_vectors_orthogonal(const Vector<N, T>& camera_dir, const std::array<Vector<N, T>, N - 1>& screen_axes)
@@ -115,12 +115,12 @@ public:
                              const std::array<Vector<N, T>, N - 1>& screen_axes, T width_view_angle_degrees,
                              const std::array<int, N - 1>& screen_size)
         {
-                namespace Impl = ProjectorImplementation;
+                namespace impl = projector_implementation;
 
                 m_screen_size = screen_size;
-                m_screen_org = Impl::screen_org<T>(screen_size);
+                m_screen_org = impl::screen_org<T>(screen_size);
                 m_camera_org = camera_org;
-                std::tie(m_camera_dir, m_screen_axes) = Impl::unit_dir_and_axes(camera_dir, screen_axes);
+                std::tie(m_camera_dir, m_screen_axes) = impl::unit_dir_and_axes(camera_dir, screen_axes);
 
                 //
 
@@ -142,10 +142,10 @@ public:
 
         Ray<N, T> ray(const Vector<N - 1, T>& point) const
         {
-                namespace Impl = ProjectorImplementation;
+                namespace impl = projector_implementation;
 
                 Vector<N - 1, T> screen_point = m_screen_org + point;
-                Vector<N, T> screen_dir = Impl::compute_screen_dir(m_screen_axes, screen_point);
+                Vector<N, T> screen_dir = impl::compute_screen_dir(m_screen_axes, screen_point);
                 return Ray<N, T>(m_camera_org, m_camera_dir + screen_dir);
         }
 };
@@ -166,12 +166,12 @@ public:
                           const std::array<Vector<N, T>, N - 1>& screen_axes, T units_per_pixel,
                           const std::array<int, N - 1>& screen_size)
         {
-                namespace Impl = ProjectorImplementation;
+                namespace impl = projector_implementation;
 
                 m_screen_size = screen_size;
-                m_screen_org = Impl::screen_org<T>(screen_size);
+                m_screen_org = impl::screen_org<T>(screen_size);
                 m_camera_org = camera_org;
-                std::tie(m_camera_dir, m_screen_axes) = Impl::unit_dir_and_axes(camera_dir, screen_axes);
+                std::tie(m_camera_dir, m_screen_axes) = impl::unit_dir_and_axes(camera_dir, screen_axes);
 
                 //
 
@@ -193,10 +193,10 @@ public:
 
         Ray<N, T> ray(const Vector<N - 1, T>& point) const
         {
-                namespace Impl = ProjectorImplementation;
+                namespace impl = projector_implementation;
 
                 Vector<N - 1, T> screen_point = m_screen_org + point;
-                Vector<N, T> screen_dir = Impl::compute_screen_dir(m_screen_axes, screen_point);
+                Vector<N, T> screen_dir = impl::compute_screen_dir(m_screen_axes, screen_point);
                 return Ray<N, T>(m_camera_org + screen_dir, m_camera_dir);
         }
 };
@@ -221,12 +221,12 @@ public:
                            const std::array<Vector<N, T>, N - 1>& screen_axes, T width_view_angle_degrees,
                            const std::array<int, N - 1>& screen_size)
         {
-                namespace Impl = ProjectorImplementation;
+                namespace impl = projector_implementation;
 
                 m_screen_size = screen_size;
-                m_screen_org = Impl::screen_org<T>(screen_size);
+                m_screen_org = impl::screen_org<T>(screen_size);
                 m_camera_org = camera_org;
-                std::tie(m_camera_dir, m_screen_axes) = Impl::unit_dir_and_axes(camera_dir, screen_axes);
+                std::tie(m_camera_dir, m_screen_axes) = impl::unit_dir_and_axes(camera_dir, screen_axes);
 
                 //
 
@@ -258,7 +258,7 @@ public:
 
         Ray<N, T> ray(const Vector<N - 1, T>& point) const
         {
-                namespace Impl = ProjectorImplementation;
+                namespace impl = projector_implementation;
 
                 Vector<N - 1, T> screen_point = m_screen_org + point;
 
@@ -269,7 +269,7 @@ public:
                 }
                 T z = std::sqrt(radicand);
 
-                Vector<N, T> screen_dir = Impl::compute_screen_dir(m_screen_axes, screen_point);
+                Vector<N, T> screen_dir = impl::compute_screen_dir(m_screen_axes, screen_point);
                 return Ray<N, T>(m_camera_org, m_camera_dir * z + screen_dir);
         }
 };

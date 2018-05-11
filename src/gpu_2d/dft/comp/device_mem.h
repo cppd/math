@@ -23,8 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 enum class MemoryUsage
 {
-        STATIC_COPY,
-        DYNAMIC_COPY
+        StaticCopy,
+        DynamicCopy
 };
 
 template <typename T>
@@ -39,10 +39,10 @@ public:
         {
                 switch (m_usage)
                 {
-                case MemoryUsage::STATIC_COPY:
+                case MemoryUsage::StaticCopy:
                         m_buffer.create_static_copy(size * sizeof(T));
                         break;
-                case MemoryUsage::DYNAMIC_COPY:
+                case MemoryUsage::DynamicCopy:
                         m_buffer.create_dynamic_copy(size * sizeof(T));
                         break;
                 }
@@ -56,10 +56,10 @@ public:
                 }
                 switch (m_usage)
                 {
-                case MemoryUsage::STATIC_COPY:
+                case MemoryUsage::StaticCopy:
                         m_buffer.load_static_copy(data);
                         break;
-                case MemoryUsage::DYNAMIC_COPY:
+                case MemoryUsage::DynamicCopy:
                         m_buffer.load_dynamic_copy(data);
                         break;
                 }

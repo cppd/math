@@ -497,7 +497,7 @@ void ShowObject::loop()
 
                         switch (event->type())
                         {
-                        case Event::EventType::add_object:
+                        case Event::Type::AddObject:
                         {
                                 const Event::add_object& d = event->get<Event::add_object>();
 
@@ -510,27 +510,27 @@ void ShowObject::loop()
                                 m_callback->object_loaded(d.id);
                                 break;
                         }
-                        case Event::EventType::delete_object:
+                        case Event::Type::DeleteObject:
                         {
                                 const Event::delete_object& d = event->get<Event::delete_object>();
 
                                 renderer->delete_object(d.id);
                                 break;
                         }
-                        case Event::EventType::show_object:
+                        case Event::Type::ShowObject:
                         {
                                 const Event::show_object& d = event->get<Event::show_object>();
 
                                 renderer->show_object(d.id);
                                 break;
                         }
-                        case Event::EventType::delete_all_objects:
+                        case Event::Type::DeleteAllObjects:
                         {
                                 renderer->delete_all();
                                 default_view = true;
                                 break;
                         }
-                        case Event::EventType::parent_resized:
+                        case Event::Type::ParentResized:
                         {
                                 if (!fullscreen_active)
                                 {
@@ -538,18 +538,18 @@ void ShowObject::loop()
                                 }
                                 break;
                         }
-                        case Event::EventType::toggle_fullscreen:
+                        case Event::Type::ToggleFullscreen:
                         {
                                 fullscreen_active = !fullscreen_active;
                                 make_fullscreen(fullscreen_active, wnd.getSystemHandle(), m_win_parent);
                                 break;
                         }
-                        case Event::EventType::reset_view:
+                        case Event::Type::ResetView:
                         {
                                 default_view = true;
                                 break;
                         }
-                        case Event::EventType::mouse_wheel:
+                        case Event::Type::MouseWheel:
                         {
                                 // Для полноэкранного режима обрабатывается
                                 // в другом сообщении sf::Event::MouseWheelScrolled
@@ -563,7 +563,7 @@ void ShowObject::loop()
                                 }
                                 break;
                         }
-                        case Event::EventType::set_ambient:
+                        case Event::Type::SetAmbient:
                         {
                                 const Event::set_ambient& d = event->get<Event::set_ambient>();
 
@@ -571,7 +571,7 @@ void ShowObject::loop()
                                 renderer->set_light_a(light);
                                 break;
                         }
-                        case Event::EventType::set_diffuse:
+                        case Event::Type::SetDiffuse:
                         {
                                 const Event::set_diffuse& d = event->get<Event::set_diffuse>();
 
@@ -579,7 +579,7 @@ void ShowObject::loop()
                                 renderer->set_light_d(light);
                                 break;
                         }
-                        case Event::EventType::set_specular:
+                        case Event::Type::SetSpecular:
                         {
                                 const Event::set_specular& d = event->get<Event::set_specular>();
 
@@ -587,7 +587,7 @@ void ShowObject::loop()
                                 renderer->set_light_s(light);
                                 break;
                         }
-                        case Event::EventType::set_background_color:
+                        case Event::Type::SetBackgroundColor:
                         {
                                 const Event::set_background_color& d = event->get<Event::set_background_color>();
 
@@ -602,7 +602,7 @@ void ShowObject::loop()
 
                                 break;
                         }
-                        case Event::EventType::set_default_color:
+                        case Event::Type::SetDefaultColor:
                         {
                                 const Event::set_default_color& d = event->get<Event::set_default_color>();
 
@@ -610,7 +610,7 @@ void ShowObject::loop()
                                 renderer->set_default_color(color);
                                 break;
                         }
-                        case Event::EventType::set_wireframe_color:
+                        case Event::Type::SetWireframeColor:
                         {
                                 const Event::set_wireframe_color& d = event->get<Event::set_wireframe_color>();
 
@@ -618,63 +618,63 @@ void ShowObject::loop()
                                 renderer->set_wireframe_color(color);
                                 break;
                         }
-                        case Event::EventType::set_default_ns:
+                        case Event::Type::SetDefaultNs:
                         {
                                 const Event::set_default_ns& d = event->get<Event::set_default_ns>();
 
                                 renderer->set_default_ns(d.default_ns);
                                 break;
                         }
-                        case Event::EventType::show_smooth:
+                        case Event::Type::ShowSmooth:
                         {
                                 const Event::show_smooth& d = event->get<Event::show_smooth>();
 
                                 renderer->set_show_smooth(d.show);
                                 break;
                         }
-                        case Event::EventType::show_wireframe:
+                        case Event::Type::ShowWireframe:
                         {
                                 const Event::show_wireframe& d = event->get<Event::show_wireframe>();
 
                                 renderer->set_show_wireframe(d.show);
                                 break;
                         }
-                        case Event::EventType::show_shadow:
+                        case Event::Type::ShowShadow:
                         {
                                 const Event::show_shadow& d = event->get<Event::show_shadow>();
 
                                 renderer->set_show_shadow(d.show);
                                 break;
                         }
-                        case Event::EventType::show_fog:
+                        case Event::Type::ShowFog:
                         {
                                 const Event::show_fog& d = event->get<Event::show_fog>();
 
                                 renderer->set_show_fog(d.show);
                                 break;
                         }
-                        case Event::EventType::show_materials:
+                        case Event::Type::ShowMaterials:
                         {
                                 const Event::show_materials& d = event->get<Event::show_materials>();
 
                                 renderer->set_show_materials(d.show);
                                 break;
                         }
-                        case Event::EventType::show_effect:
+                        case Event::Type::ShowEffect:
                         {
                                 const Event::show_effect& d = event->get<Event::show_effect>();
 
                                 pencil_effect_active = d.show;
                                 break;
                         }
-                        case Event::EventType::show_dft:
+                        case Event::Type::ShowDft:
                         {
                                 const Event::show_dft& d = event->get<Event::show_dft>();
 
                                 dft_active = d.show;
                                 break;
                         }
-                        case Event::EventType::set_dft_brightness:
+                        case Event::Type::SetDftBrightness:
                         {
                                 const Event::set_dft_brightness& d = event->get<Event::set_dft_brightness>();
 
@@ -685,7 +685,7 @@ void ShowObject::loop()
                                 }
                                 break;
                         }
-                        case Event::EventType::set_dft_background_color:
+                        case Event::Type::SetDftBackgroundColor:
                         {
                                 const Event::set_dft_background_color& d = event->get<Event::set_dft_background_color>();
 
@@ -696,7 +696,7 @@ void ShowObject::loop()
                                 }
                                 break;
                         }
-                        case Event::EventType::set_dft_color:
+                        case Event::Type::SetDftColor:
                         {
                                 const Event::set_dft_color& d = event->get<Event::set_dft_color>();
 
@@ -707,7 +707,7 @@ void ShowObject::loop()
                                 }
                                 break;
                         }
-                        case Event::EventType::show_convex_hull_2d:
+                        case Event::Type::ShowConvexHull2d:
                         {
                                 const Event::show_convex_hull_2d& d = event->get<Event::show_convex_hull_2d>();
 
@@ -718,7 +718,7 @@ void ShowObject::loop()
                                 }
                                 break;
                         }
-                        case Event::EventType::show_optical_flow:
+                        case Event::Type::ShowOpticalFlow:
                         {
                                 const Event::show_optical_flow& d = event->get<Event::show_optical_flow>();
 
@@ -729,14 +729,14 @@ void ShowObject::loop()
                                 }
                                 break;
                         }
-                        case Event::EventType::vertical_sync:
+                        case Event::Type::VerticalSync:
                         {
                                 const Event::vertical_sync& d = event->get<Event::vertical_sync>();
 
                                 wnd.setVerticalSyncEnabled(d.enable);
                                 break;
                         }
-                        case Event::EventType::shadow_zoom:
+                        case Event::Type::ShadowZoom:
                         {
                                 const Event::shadow_zoom& d = event->get<Event::shadow_zoom>();
 

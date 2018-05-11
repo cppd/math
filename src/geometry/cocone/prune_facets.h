@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <unordered_set>
 #include <vector>
 
-namespace PruneFacetsImplementation
+namespace prune_facets_implementation
 {
 template <size_t N>
 using RidgeData = RidgeDataN<DelaunayFacet<N>>;
@@ -135,12 +135,12 @@ void prune_facets_incident_to_sharp_ridges(const std::vector<vec<N>>& points,
                                            const std::vector<DelaunayFacet<N>>& delaunay_facets,
                                            const std::vector<bool>& interior_vertices, std::vector<bool>* cocone_facets)
 {
-        using namespace PruneFacetsImplementation;
+        namespace impl = prune_facets_implementation;
 
         ASSERT(delaunay_facets.size() > 0 && delaunay_facets.size() == cocone_facets->size());
         ASSERT(points.size() == interior_vertices.size());
 
-        RidgeMap<N> ridge_map;
+        impl::RidgeMap<N> ridge_map;
         std::unordered_map<const DelaunayFacet<N>*, int> facets_ptr;
         for (unsigned i = 0; i < delaunay_facets.size(); ++i)
         {
@@ -151,7 +151,7 @@ void prune_facets_incident_to_sharp_ridges(const std::vector<vec<N>>& points,
                 }
         }
 
-        RidgeSet<N> suspicious_ridges(ridge_map.size());
+        impl::RidgeSet<N> suspicious_ridges(ridge_map.size());
         for (const auto& e : ridge_map)
         {
                 suspicious_ridges.insert(e.first);
@@ -159,7 +159,7 @@ void prune_facets_incident_to_sharp_ridges(const std::vector<vec<N>>& points,
 
         while (!suspicious_ridges.empty())
         {
-                RidgeSet<N> tmp_ridges;
+                impl::RidgeSet<N> tmp_ridges;
 
                 for (const Ridge<N>& r : suspicious_ridges)
                 {
@@ -169,7 +169,7 @@ void prune_facets_incident_to_sharp_ridges(const std::vector<vec<N>>& points,
                                 continue;
                         }
 
-                        if (!sharp_ridge(points, interior_vertices, ridge_iter->first, ridge_iter->second))
+                        if (!impl::sharp_ridge(points, interior_vertices, ridge_iter->first, ridge_iter->second))
                         {
                                 continue;
                         }

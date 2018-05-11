@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <array>
 
-namespace ArrayElementsImplementation
+namespace array_elements_implementation
 {
 template <typename T, size_t... I>
 constexpr std::array<T, sizeof...(I)> del_elem_impl(const std::array<T, sizeof...(I) + 1>& a, unsigned pos,
@@ -51,9 +51,9 @@ constexpr std::array<T, N - 1> del_elem(const std::array<T, N>& a, unsigned pos)
         static_assert(N > 1);
         ASSERT(pos < N);
 
-        namespace Impl = ArrayElementsImplementation;
+        namespace impl = array_elements_implementation;
 
-        return Impl::del_elem_impl<T>(a, pos, std::make_integer_sequence<size_t, N - 1>());
+        return impl::del_elem_impl<T>(a, pos, std::make_integer_sequence<size_t, N - 1>());
 }
 
 template <typename T>

@@ -190,7 +190,7 @@ void pivot(std::array<T, M>& b, std::array<Vector<N, T>, M>& a, T& v, Vector<N, 
         c[e] = c[e] * a[l][e];
 }
 
-namespace SimplexAlgorithmImplementation
+namespace simplex_algorithm_implementation
 {
 template <size_t N_Source, size_t M, typename T>
 void make_aux_and_maps(const std::array<Vector<N_Source, T>, M>& a_input, std::array<T, M>* b,
@@ -427,11 +427,11 @@ ConstraintSolution solve_constraints(std::array<T, M> b, const std::array<Vector
 template <size_t N, size_t M, typename T>
 ConstraintSolution solve_constraints(const std::array<Vector<N, T>, M>& a, const std::array<T, M>& b) noexcept
 {
-        return SimplexAlgorithmImplementation::solve_constraints<false>(b, a);
+        return simplex_algorithm_implementation::solve_constraints<false>(b, a);
 }
 
 template <size_t N, size_t M, typename T>
 ConstraintSolution solve_constraints_with_print(const std::array<Vector<N, T>, M>& a, const std::array<T, M>& b) noexcept
 {
-        return SimplexAlgorithmImplementation::solve_constraints<true>(b, a);
+        return simplex_algorithm_implementation::solve_constraints<true>(b, a);
 }

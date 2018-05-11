@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <stack>
 #include <vector>
 
-namespace ExtractManifoldImplementation
+namespace extract_manifold_implementation
 {
 template <size_t N>
 void find_delaunay_object_facets(const std::vector<DelaunayObject<N>>& delaunay_objects,
@@ -116,15 +116,16 @@ template <size_t N>
 void extract_manifold(const std::vector<DelaunayObject<N>>& delaunay_objects,
                       const std::vector<DelaunayFacet<N>>& delaunay_facets, std::vector<bool>* cocone_facets)
 {
-        using namespace ExtractManifoldImplementation;
+        namespace impl = extract_manifold_implementation;
 
         std::vector<std::vector<int>> delaunay_object_facets;
         std::vector<bool> visited_delaunay(delaunay_objects.size(), false);
         std::vector<bool> visited_cocone_facets(cocone_facets->size(), false);
 
-        find_delaunay_object_facets(delaunay_objects, delaunay_facets, &delaunay_object_facets);
+        impl::find_delaunay_object_facets(delaunay_objects, delaunay_facets, &delaunay_object_facets);
 
-        traverse_delaunay(delaunay_facets, delaunay_object_facets, *cocone_facets, &visited_delaunay, &visited_cocone_facets);
+        impl::traverse_delaunay(delaunay_facets, delaunay_object_facets, *cocone_facets, &visited_delaunay,
+                                &visited_cocone_facets);
 
         *cocone_facets = std::move(visited_cocone_facets);
 }

@@ -42,8 +42,8 @@ constexpr double ALPHA = 0.14;
 
 enum class Algorithms
 {
-        COCONE,
-        BOUND_COCONE
+        Cocone,
+        BoundCocone
 };
 
 namespace
@@ -171,7 +171,7 @@ void test_algorithms(const std::string& name, const std::unordered_set<Algorithm
 
         std::unique_ptr<IManifoldConstructor<N>> sr = create_manifold_constructor(points, progress);
 
-        if (algorithms.count(Algorithms::COCONE))
+        if (algorithms.count(Algorithms::Cocone))
         {
                 // Задать размер для проверки очистки массивов
                 std::vector<Vector<N, double>> normals(10000);
@@ -195,7 +195,7 @@ void test_algorithms(const std::string& name, const std::unordered_set<Algorithm
                 test_obj_files(name + ", Cocone", points, normals, facets, progress);
         }
 
-        if (algorithms.count(Algorithms::BOUND_COCONE))
+        if (algorithms.count(Algorithms::BoundCocone))
         {
                 // Задать размер для проверки очистки массивов
                 std::vector<Vector<N, double>> normals(10000);
@@ -277,12 +277,12 @@ void test(int low, int high, ProgressRatio* progress)
 
         LOG("\n--- Unbound " + to_string(N - 1) + "-manifold reconstructions in " + space_name(N) + " ---\n");
         all_tests<N>(space_name(N) + ", unbounded " + to_string(N - 1) + "-manifold",
-                     std::unordered_set<Algorithms>{Algorithms::COCONE, Algorithms::BOUND_COCONE},
+                     std::unordered_set<Algorithms>{Algorithms::Cocone, Algorithms::BoundCocone},
                      create_object_repository<N>()->sphere_with_notch(point_count), progress);
 
         LOG("\n--- Bound " + to_string(N - 1) + "-manifold reconstructions in " + space_name(N) + " ---\n");
         all_tests<N>(space_name(N) + ", bounded " + to_string(N - 1) + "-manifold",
-                     std::unordered_set<Algorithms>{Algorithms::BOUND_COCONE},
+                     std::unordered_set<Algorithms>{Algorithms::BoundCocone},
                      create_object_repository<N>()->sphere_with_notch_bound(point_count), progress);
 }
 }

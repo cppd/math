@@ -17,8 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "main_window.h"
 
-#include "identifiers.h"
-
 #include "application/application_name.h"
 #include "com/alg.h"
 #include "com/error.h"
@@ -194,20 +192,24 @@ void MainWindow::constructor_repository()
 
 void MainWindow::constructor_buttons()
 {
-        m_object_buttons.push_back({ui.radioButton_Model, OBJECT_MODEL});
-        m_object_buttons.push_back({ui.radioButton_ModelMST, OBJECT_MODEL_MST});
-        m_object_buttons.push_back({ui.radioButton_ModelConvexHull, OBJECT_MODEL_CONVEX_HULL});
-        m_object_buttons.push_back({ui.radioButton_Cocone, OBJECT_COCONE});
-        m_object_buttons.push_back({ui.radioButton_CoconeConvexHull, OBJECT_COCONE_CONVEX_HULL});
-        m_object_buttons.push_back({ui.radioButton_BoundCocone, OBJECT_BOUND_COCONE});
-        m_object_buttons.push_back({ui.radioButton_BoundCoconeConvexHull, OBJECT_BOUND_COCONE_CONVEX_HULL});
+        m_object_buttons.push_back({ui.radioButton_Model, ObjectId::Model});
+        m_object_buttons.push_back({ui.radioButton_ModelMST, ObjectId::ModelMst});
+        m_object_buttons.push_back({ui.radioButton_ModelConvexHull, ObjectId::ModelConvexHull});
+        m_object_buttons.push_back({ui.radioButton_Cocone, ObjectId::Cocone});
+        m_object_buttons.push_back({ui.radioButton_CoconeConvexHull, ObjectId::CoconeConvexHull});
+        m_object_buttons.push_back({ui.radioButton_BoundCocone, ObjectId::BoundCocone});
+        m_object_buttons.push_back({ui.radioButton_BoundCoconeConvexHull, ObjectId::BoundCoconeConvexHull});
 }
 
 void MainWindow::constructor_objects()
 {
-        // OBJECT_MODEL добавлять не нужно, так как загружается обязательно
-        m_objects_to_load.insert({OBJECT_MODEL_MST, OBJECT_MODEL_CONVEX_HULL, OBJECT_COCONE, OBJECT_COCONE_CONVEX_HULL,
-                                  OBJECT_BOUND_COCONE, OBJECT_BOUND_COCONE_CONVEX_HULL});
+        // ObjectId::Model добавлять не нужно, так как загружается обязательно
+        m_objects_to_load.insert(ObjectId::ModelMst);
+        m_objects_to_load.insert(ObjectId::ModelConvexHull);
+        m_objects_to_load.insert(ObjectId::Cocone);
+        m_objects_to_load.insert(ObjectId::CoconeConvexHull);
+        m_objects_to_load.insert(ObjectId::BoundCocone);
+        m_objects_to_load.insert(ObjectId::BoundCoconeConvexHull);
 }
 
 void MainWindow::set_window_title_file(const std::string& file_name)
@@ -311,7 +313,7 @@ void MainWindow::catch_all(const F& function) const noexcept
         }
 }
 
-bool MainWindow::find_object(std::string* object_name, int* object_id)
+bool MainWindow::find_object(std::string* object_name, ObjectId* object_id)
 {
         bool found = false;
 
@@ -335,16 +337,16 @@ bool MainWindow::find_object(std::string* object_name, int* object_id)
         return true;
 }
 
-bool MainWindow::object_selection(QWidget* parent, std::unordered_set<int>* objects_to_load)
+bool MainWindow::object_selection(QWidget* parent, std::unordered_set<ObjectId>* objects_to_load)
 {
         ASSERT(objects_to_load);
 
-        bool model_convex_hull = objects_to_load->count(OBJECT_MODEL_CONVEX_HULL);
-        bool model_minumum_spanning_tree = objects_to_load->count(OBJECT_MODEL_MST);
-        bool cocone = objects_to_load->count(OBJECT_COCONE);
-        bool cocone_convex_hull = objects_to_load->count(OBJECT_COCONE_CONVEX_HULL);
-        bool bound_cocone = objects_to_load->count(OBJECT_BOUND_COCONE);
-        bool bound_cocone_convex_hull = objects_to_load->count(OBJECT_BOUND_COCONE_CONVEX_HULL);
+        bool model_convex_hull = objects_to_load->count(ObjectId::ModelConvexHull);
+        bool model_minumum_spanning_tree = objects_to_load->count(ObjectId::ModelMst);
+        bool cocone = objects_to_load->count(ObjectId::Cocone);
+        bool cocone_convex_hull = objects_to_load->count(ObjectId::CoconeConvexHull);
+        bool bound_cocone = objects_to_load->count(ObjectId::BoundCocone);
+        bool bound_cocone_convex_hull = objects_to_load->count(ObjectId::BoundCoconeConvexHull);
 
         if (!ObjectSelection(parent).show(&model_convex_hull, &model_minumum_spanning_tree, &cocone, &cocone_convex_hull,
                                           &bound_cocone, &bound_cocone_convex_hull))
@@ -352,12 +354,12 @@ bool MainWindow::object_selection(QWidget* parent, std::unordered_set<int>* obje
                 return false;
         }
 
-        insert_or_erase(model_convex_hull, OBJECT_MODEL_CONVEX_HULL, objects_to_load);
-        insert_or_erase(model_minumum_spanning_tree, OBJECT_MODEL_MST, objects_to_load);
-        insert_or_erase(cocone, OBJECT_COCONE, objects_to_load);
-        insert_or_erase(cocone_convex_hull, OBJECT_COCONE_CONVEX_HULL, objects_to_load);
-        insert_or_erase(bound_cocone, OBJECT_BOUND_COCONE, objects_to_load);
-        insert_or_erase(bound_cocone_convex_hull, OBJECT_BOUND_COCONE_CONVEX_HULL, objects_to_load);
+        insert_or_erase(model_convex_hull, ObjectId::ModelConvexHull, objects_to_load);
+        insert_or_erase(model_minumum_spanning_tree, ObjectId::ModelMst, objects_to_load);
+        insert_or_erase(cocone, ObjectId::Cocone, objects_to_load);
+        insert_or_erase(cocone_convex_hull, ObjectId::CoconeConvexHull, objects_to_load);
+        insert_or_erase(bound_cocone, ObjectId::BoundCocone, objects_to_load);
+        insert_or_erase(bound_cocone_convex_hull, ObjectId::BoundCoconeConvexHull, objects_to_load);
 
         return true;
 }
@@ -477,7 +479,7 @@ void MainWindow::thread_self_test(SelfTestType test_type, bool with_confirmation
         });
 }
 
-void MainWindow::thread_export(const std::string& name, int id)
+void MainWindow::thread_export(const std::string& name, ObjectId id)
 {
         ASSERT(std::this_thread::get_id() == m_window_thread_id);
 
@@ -493,7 +495,7 @@ void MainWindow::thread_export(const std::string& name, int id)
                 return;
         }
 
-        if (id == OBJECT_MODEL &&
+        if (id == ObjectId::Model &&
             !message_question_default_no(this, "Only export of geometry is supported.\nDo you want to continue?"))
         {
                 return;
@@ -533,7 +535,7 @@ void MainWindow::thread_reload_bound_cocone()
 {
         ASSERT(std::this_thread::get_id() == m_window_thread_id);
 
-        if (m_objects_to_load.count(OBJECT_BOUND_COCONE) == 0 && m_objects_to_load.count(OBJECT_BOUND_COCONE_CONVEX_HULL) == 0)
+        if (m_objects_to_load.count(ObjectId::BoundCocone) == 0 && m_objects_to_load.count(ObjectId::BoundCoconeConvexHull) == 0)
         {
                 m_event_emitter.message_warning("Neither BoundCocone nor BoundCocone Convex Hull was selected for loading");
                 return;
@@ -766,7 +768,7 @@ void MainWindow::slot_window_event(const WindowEvent& event)
 {
         switch (event.type())
         {
-        case WindowEvent::EventType::MESSAGE_ERROR:
+        case WindowEvent::Type::MessageError:
         {
                 const WindowEvent::message_error& d = event.get<WindowEvent::message_error>();
                 std::string message = d.msg;
@@ -776,7 +778,7 @@ void MainWindow::slot_window_event(const WindowEvent& event)
 
                 break;
         }
-        case WindowEvent::EventType::MESSAGE_ERROR_FATAL:
+        case WindowEvent::Type::MessageErrorFatal:
         {
                 const WindowEvent::message_error_fatal& d = event.get<WindowEvent::message_error_fatal>();
                 std::string message = (d.msg.size() != 0) ? d.msg : "Unknown Error. Exit failure.";
@@ -788,7 +790,7 @@ void MainWindow::slot_window_event(const WindowEvent& event)
 
                 break;
         }
-        case WindowEvent::EventType::MESSAGE_ERROR_SOURCE:
+        case WindowEvent::Type::MessageErrorSource:
         {
                 const WindowEvent::message_error_source& d = event.get<WindowEvent::message_error_source>();
                 std::string message = d.msg;
@@ -802,7 +804,7 @@ void MainWindow::slot_window_event(const WindowEvent& event)
 
                 break;
         }
-        case WindowEvent::EventType::MESSAGE_INFORMATION:
+        case WindowEvent::Type::MessageInformation:
         {
                 const WindowEvent::message_information& d = event.get<WindowEvent::message_information>();
                 std::string message = d.msg;
@@ -812,7 +814,7 @@ void MainWindow::slot_window_event(const WindowEvent& event)
 
                 break;
         }
-        case WindowEvent::EventType::MESSAGE_WARNING:
+        case WindowEvent::Type::MessageWarning:
         {
                 const WindowEvent::message_warning& d = event.get<WindowEvent::message_warning>();
                 std::string message = d.msg;
@@ -822,51 +824,51 @@ void MainWindow::slot_window_event(const WindowEvent& event)
 
                 break;
         }
-        case WindowEvent::EventType::LOG:
+        case WindowEvent::Type::WriteToLog:
         {
                 // Здесь без вызовов функции LOG, так как начнёт вызывать сама себя
 
-                const WindowEvent::log& d = event.get<WindowEvent::log>();
+                const WindowEvent::write_to_log& d = event.get<WindowEvent::write_to_log>();
                 std::string message = d.msg;
 
                 add_to_text_edit_and_to_stderr(ui.text_log, format_log_message(message), TextEditMessageType::Normal);
 
                 break;
         }
-        case WindowEvent::EventType::OBJECT_LOADED:
+        case WindowEvent::Type::LoadedObject:
         {
-                const WindowEvent::object_loaded& d = event.get<WindowEvent::object_loaded>();
+                const WindowEvent::loaded_object& d = event.get<WindowEvent::loaded_object>();
 
-                switch (static_cast<ObjectIdentifier>(d.id))
+                switch (int_to_object_id(d.id))
                 {
-                case OBJECT_MODEL:
+                case ObjectId::Model:
                         enable_radio_button(ui.radioButton_Model);
                         break;
-                case OBJECT_MODEL_CONVEX_HULL:
+                case ObjectId::ModelConvexHull:
                         enable_radio_button(ui.radioButton_ModelConvexHull);
                         break;
-                case OBJECT_MODEL_MST:
+                case ObjectId::ModelMst:
                         enable_radio_button(ui.radioButton_ModelMST);
                         break;
-                case OBJECT_COCONE:
+                case ObjectId::Cocone:
                         enable_radio_button(ui.radioButton_Cocone);
                         break;
-                case OBJECT_COCONE_CONVEX_HULL:
+                case ObjectId::CoconeConvexHull:
                         enable_radio_button(ui.radioButton_CoconeConvexHull);
                         break;
-                case OBJECT_BOUND_COCONE:
+                case ObjectId::BoundCocone:
                         enable_radio_button(ui.radioButton_BoundCocone);
                         break;
-                case OBJECT_BOUND_COCONE_CONVEX_HULL:
+                case ObjectId::BoundCoconeConvexHull:
                         enable_radio_button(ui.radioButton_BoundCoconeConvexHull);
                         break;
                 }
 
                 break;
         }
-        case WindowEvent::EventType::FILE_LOADED:
+        case WindowEvent::Type::LoadedFile:
         {
-                const WindowEvent::file_loaded& d = event.get<WindowEvent::file_loaded>();
+                const WindowEvent::loaded_file& d = event.get<WindowEvent::loaded_file>();
 
                 std::string file_name = file_base_name(d.file_name);
                 set_window_title_file(file_name + " [" + space_name(d.dimension) + "]");
@@ -876,9 +878,9 @@ void MainWindow::slot_window_event(const WindowEvent& event)
 
                 break;
         }
-        case WindowEvent::EventType::BOUND_COCONE_LOADED:
+        case WindowEvent::Type::LoadedBoundCocone:
         {
-                const WindowEvent::bound_cocone_loaded& d = event.get<WindowEvent::bound_cocone_loaded>();
+                const WindowEvent::loaded_bound_cocone& d = event.get<WindowEvent::loaded_bound_cocone>();
 
                 set_bound_cocone_parameters(d.rho, d.alpha);
                 strike_out_bound_cocone_buttons();
@@ -979,7 +981,7 @@ void MainWindow::slot_object_repository()
 void MainWindow::on_actionExport_triggered()
 {
         std::string object_name;
-        int object_id;
+        ObjectId object_id;
 
         if (!find_object(&object_name, &object_id))
         {
@@ -1214,43 +1216,43 @@ void MainWindow::on_actionFullScreen_triggered()
 
 void MainWindow::on_radioButton_Model_clicked()
 {
-        m_show->show_object(OBJECT_MODEL);
+        m_show->show_object(object_id_to_int(ObjectId::Model));
 }
 
 void MainWindow::on_radioButton_ModelConvexHull_clicked()
 {
-        m_show->show_object(OBJECT_MODEL_CONVEX_HULL);
+        m_show->show_object(object_id_to_int(ObjectId::ModelConvexHull));
 }
 
 void MainWindow::on_radioButton_ModelMST_clicked()
 {
-        m_show->show_object(OBJECT_MODEL_MST);
+        m_show->show_object(object_id_to_int(ObjectId::ModelMst));
 }
 
 void MainWindow::on_radioButton_Cocone_clicked()
 {
-        m_show->show_object(OBJECT_COCONE);
+        m_show->show_object(object_id_to_int(ObjectId::Cocone));
 }
 
 void MainWindow::on_radioButton_CoconeConvexHull_clicked()
 {
-        m_show->show_object(OBJECT_COCONE_CONVEX_HULL);
+        m_show->show_object(object_id_to_int(ObjectId::CoconeConvexHull));
 }
 
 void MainWindow::on_radioButton_BoundCocone_clicked()
 {
-        m_show->show_object(OBJECT_BOUND_COCONE);
+        m_show->show_object(object_id_to_int(ObjectId::BoundCocone));
 }
 
 void MainWindow::on_radioButton_BoundCoconeConvexHull_clicked()
 {
-        m_show->show_object(OBJECT_BOUND_COCONE_CONVEX_HULL);
+        m_show->show_object(object_id_to_int(ObjectId::BoundCoconeConvexHull));
 }
 
 void MainWindow::on_actionPainter_triggered()
 {
         std::string object_name;
-        int object_id;
+        ObjectId object_id;
 
         if (!find_object(&object_name, &object_id))
         {

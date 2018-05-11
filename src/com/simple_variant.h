@@ -15,11 +15,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-// Clang 5 не работает с std::variant из библиотеки libstdc++
+// Clang может не работать с std::variant из библиотеки libstdc++
 
 #pragma once
 
-#if defined(__clang__)
+#if defined(__clang__) && defined(STD_VARIANT_NOT_FOUND)
 
 #include "com/error.h"
 

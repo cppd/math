@@ -29,6 +29,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <unordered_set>
 #include <vector>
 
+enum class ObjectId
+{
+        Model,
+        ModelMst,
+        ModelConvexHull,
+        Cocone,
+        CoconeConvexHull,
+        BoundCocone,
+        BoundCoconeConvexHull
+};
+
+int object_id_to_int(ObjectId id);
+ObjectId int_to_object_id(int id);
+
 class IObjectsCallback
 {
 protected:
@@ -49,25 +63,25 @@ struct MainObjects
         virtual void set_show(IShow* show) = 0;
 
         virtual bool manifold_constructor_exists() const = 0;
-        virtual bool object_exists(int id) const = 0;
-        virtual bool mesh_exists(int id) const = 0;
+        virtual bool object_exists(ObjectId id) const = 0;
+        virtual bool mesh_exists(ObjectId id) const = 0;
 
         virtual std::string obj_extension(unsigned dimension) const = 0;
         virtual std::vector<std::string> obj_extensions() const = 0;
         virtual std::vector<std::string> txt_extensions() const = 0;
 
-        virtual void compute_bound_cocone(const std::unordered_set<int>& objects, ProgressRatioList* progress_list, double rho,
-                                          double alpha) = 0;
+        virtual void compute_bound_cocone(const std::unordered_set<ObjectId>& objects, ProgressRatioList* progress_list,
+                                          double rho, double alpha) = 0;
 
-        virtual void load_from_file(const std::unordered_set<int>& objects, ProgressRatioList* progress_list,
+        virtual void load_from_file(const std::unordered_set<ObjectId>& objects, ProgressRatioList* progress_list,
                                     const std::string& file_name, double rho, double alpha) = 0;
-        virtual void load_from_repository(const std::unordered_set<int>& objects, ProgressRatioList* progress_list,
+        virtual void load_from_repository(const std::unordered_set<ObjectId>& objects, ProgressRatioList* progress_list,
                                           const std::tuple<int, std::string>& object, double rho, double alpha,
                                           int point_count) = 0;
 
-        virtual void save_to_file(int id, const std::string& file_name, const std::string& name) const = 0;
+        virtual void save_to_file(ObjectId id, const std::string& file_name, const std::string& name) const = 0;
 
-        virtual void paint(int id, const PaintingInformation3d& info_3d, const PaintingInformationNd& info_nd,
+        virtual void paint(ObjectId id, const PaintingInformation3d& info_3d, const PaintingInformationNd& info_nd,
                            const PaintingInformationAll& info_all) const = 0;
 };
 

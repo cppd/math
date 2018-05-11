@@ -28,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <gmpxx.h>
 #include <vector>
 
-namespace LinearAlgebraImplementation
+namespace linear_algebra_implementation
 {
 template <size_t N>
 inline constexpr std::array<unsigned char, N> sequence_array = make_array_sequence<unsigned char, N>();
@@ -147,13 +147,13 @@ bool linearly_independent(const std::array<Vector<N, T>, N>& vectors)
         static_assert(COUNT > 0);
         static_assert(COUNT <= N);
 
-        namespace Impl = LinearAlgebraImplementation;
+        namespace impl = linear_algebra_implementation;
 
         // Перебор всех вариантов подвекторов размера COUNT,
         // создавая квадратные матрицы размером COUNT.
         for (const std::array<unsigned char, COUNT>& h_map : combinations<N, COUNT>())
         {
-                if (Impl::determinant(vectors, Impl::sequence_array<COUNT>, h_map) != 0)
+                if (impl::determinant(vectors, impl::sequence_array<COUNT>, h_map) != 0)
                 {
                         return true;
                 }
@@ -168,7 +168,7 @@ Vector<N, T> ortho_nn(const std::array<Vector<N, T>, N - 1>& vectors)
 {
         static_assert(N > 1);
 
-        namespace Impl = LinearAlgebraImplementation;
+        namespace impl = linear_algebra_implementation;
 
         // Для расчёта используются N - 1 строк и N столбцов.
         // Для отображения элементов в элементы используются sequence_array,
@@ -177,7 +177,7 @@ Vector<N, T> ortho_nn(const std::array<Vector<N, T>, N - 1>& vectors)
         Vector<N, T> res;
         for (unsigned i = 0; i < N; ++i)
         {
-                T minor = Impl::determinant(vectors, Impl::sequence_array<N - 1>, del_elem(Impl::sequence_array<N>, i));
+                T minor = impl::determinant(vectors, impl::sequence_array<N - 1>, del_elem(impl::sequence_array<N>, i));
                 res[i] = (i & 1) ? -minor : minor;
         }
 

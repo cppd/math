@@ -29,7 +29,7 @@ std::array<T, N>&& sort(std::array<T, N>&& v)
 
 //Эти функции сортировки работают немного быстрее, чем std:sort
 
-namespace SortImplementation
+namespace sort_implementation
 {
 template <typename T>
 void swap_sort(T& a, T& b)
@@ -46,7 +46,7 @@ void swap_sort(T& a, T& b)
 template <typename T>
 std::array<T, 2>&& sort(std::array<T, 2>&& v)
 {
-        using SortImplementation::swap_sort;
+        using sort_implementation::swap_sort;
 
         swap_sort(v[0], v[1]);
 
@@ -56,7 +56,7 @@ std::array<T, 2>&& sort(std::array<T, 2>&& v)
 template <typename T>
 std::array<T, 3>&& sort(std::array<T, 3>&& v)
 {
-        using SortImplementation::swap_sort;
+        using sort_implementation::swap_sort;
 
         swap_sort(v[0], v[1]);
         swap_sort(v[0], v[2]);
@@ -68,7 +68,7 @@ std::array<T, 3>&& sort(std::array<T, 3>&& v)
 template <typename T>
 std::array<T, 4>&& sort(std::array<T, 4>&& v)
 {
-        using SortImplementation::swap_sort;
+        using sort_implementation::swap_sort;
 
         swap_sort(v[0], v[1]);
         swap_sort(v[2], v[3]);
@@ -82,7 +82,7 @@ std::array<T, 4>&& sort(std::array<T, 4>&& v)
 template <typename T>
 std::array<T, 5>&& sort(std::array<T, 5>&& v)
 {
-        using SortImplementation::swap_sort;
+        using sort_implementation::swap_sort;
 
         swap_sort(v[0], v[1]);
         swap_sort(v[2], v[3]);

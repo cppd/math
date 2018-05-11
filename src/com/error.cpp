@@ -56,7 +56,7 @@ void error_fatal(const std::string& text) noexcept
         error_fatal(text.c_str());
 }
 
-namespace ErrorImplementation
+namespace error_implementation
 {
 void error_assert(const char* expr, const char* file, int line) noexcept
 {

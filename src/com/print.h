@@ -96,7 +96,7 @@ std::enable_if_t<std::is_floating_point_v<T>, std::string> to_string_fixed(T t, 
 
 //
 
-namespace IntegralToStringImplementation
+namespace integral_to_string_implementation
 {
 template <unsigned digit_group_size, typename T>
 void f(T v, int i, std::string& r, [[maybe_unused]] char s)
@@ -172,13 +172,13 @@ std::enable_if_t<is_native_integral<T>, std::string> to_string_digit_groups(T v,
 template <typename T>
 std::enable_if_t<is_native_integral<T>, std::string> to_string(T v)
 {
-        return IntegralToStringImplementation::to_string_digit_groups<0, T>(v, '\x20');
+        return integral_to_string_implementation::to_string_digit_groups<0, T>(v, '\x20');
 }
 
 template <typename T>
 std::enable_if_t<is_native_integral<T>, std::string> to_string_digit_groups(T v, char s = '\x20')
 {
-        return IntegralToStringImplementation::to_string_digit_groups<3, T>(v, s);
+        return integral_to_string_implementation::to_string_digit_groups<3, T>(v, s);
 }
 
 std::string to_string(char) = delete;

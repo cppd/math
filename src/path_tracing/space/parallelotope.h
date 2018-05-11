@@ -40,7 +40,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <limits>
 #include <utility>
 
-namespace ParallelotopeImplementation
+namespace parallelotope_implementation
 {
 // Вспомогательная функция для следующей после неё функции
 template <typename ObjectType, typename T, size_t... I>
@@ -354,7 +354,7 @@ std::array<Parallelotope<N, T>, Parallelotope<N, T>::DIVISIONS> Parallelotope<N,
                         }
                 }
 
-                res[division] = ParallelotopeImplementation::create_object_from_array<Parallelotope>(org, half_vectors);
+                res[division] = parallelotope_implementation::create_object_from_array<Parallelotope>(org, half_vectors);
         }
 
         return res;

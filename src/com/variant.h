@@ -47,7 +47,7 @@ void visit(const Visitor& visitor, SimpleVariant&& simple_variant)
 
 #endif
 
-namespace SequenceVariantImplementation
+namespace sequence_variant_implementation
 {
 template <template <size_t, typename...> typename Type, typename... T>
 struct SequenceVariant
@@ -69,4 +69,4 @@ struct SequenceVariant
 
 // Тип variant<Type<from>, Type<From + 1>, Type<From + 2>, ...>
 template <int from, int to, template <size_t, typename...> typename Type, typename... T>
-using SequenceVariant = typename SequenceVariantImplementation::SequenceVariant<Type, T...>::template S<from, to - from + 1>::V;
+using SequenceVariant = typename sequence_variant_implementation::SequenceVariant<Type, T...>::template S<from, to - from + 1>::V;

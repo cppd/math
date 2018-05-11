@@ -32,7 +32,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <array>
 #include <utility>
 
-namespace ComplementImplementation
+namespace complement_implementation
 {
 template <size_t ValueIndex, typename T, int... I>
 constexpr Vector<sizeof...(I), T> make_vector_one_value(std::integer_sequence<int, I...>, const T& v)
@@ -73,7 +73,7 @@ std::array<Vector<N, T>, N - 1> orthogonal_complement_of_unit_vector_by_subspace
 {
         static_assert(N > 1);
 
-        namespace Impl = ComplementImplementation;
+        namespace impl = complement_implementation;
 
         if constexpr (N == 2)
         {
@@ -83,7 +83,7 @@ std::array<Vector<N, T>, N - 1> orthogonal_complement_of_unit_vector_by_subspace
         if constexpr (N == 3)
         {
                 Vector<3, T> non_collinear_vector =
-                        std::abs(unit_vector[0]) > Impl::LIMIT<T> ? Vector<3, T>(0, 1, 0) : Vector<3, T>(1, 0, 0);
+                        std::abs(unit_vector[0]) > impl::LIMIT<T> ? Vector<3, T>(0, 1, 0) : Vector<3, T>(1, 0, 0);
                 Vector<3, T> e0 = normalize(cross(unit_vector, non_collinear_vector));
                 Vector<3, T> e1 = cross(unit_vector, e0);
                 return {{e0, e1}};
@@ -95,7 +95,7 @@ std::array<Vector<N, T>, N - 1> orthogonal_complement_of_unit_vector_by_subspace
         unsigned exclude_axis = 0;
         for (; exclude_axis < N - 2; ++exclude_axis)
         {
-                if (std::abs(unit_vector[exclude_axis]) > Impl::LIMIT<T>)
+                if (std::abs(unit_vector[exclude_axis]) > impl::LIMIT<T>)
                 {
                         break;
                 }
@@ -110,7 +110,7 @@ std::array<Vector<N, T>, N - 1> orthogonal_complement_of_unit_vector_by_subspace
         {
                 if (i != exclude_axis)
                 {
-                        subspace_basis[num++] = Impl::orthonormal_set<N, T>[i];
+                        subspace_basis[num++] = impl::orthonormal_set<N, T>[i];
                 }
         }
 
@@ -130,7 +130,7 @@ std::array<Vector<N, T>, N - 1> orthogonal_complement_of_unit_vector_by_gram_sch
 {
         static_assert(N > 1);
 
-        namespace Impl = ComplementImplementation;
+        namespace impl = complement_implementation;
 
         if constexpr (N == 2)
         {
@@ -143,7 +143,7 @@ std::array<Vector<N, T>, N - 1> orthogonal_complement_of_unit_vector_by_gram_sch
         unsigned exclude_axis = 0;
         for (; exclude_axis < N - 1; ++exclude_axis)
         {
-                if (std::abs(unit_vector[exclude_axis]) > Impl::LIMIT<T>)
+                if (std::abs(unit_vector[exclude_axis]) > impl::LIMIT<T>)
                 {
                         break;
                 }
@@ -157,7 +157,7 @@ std::array<Vector<N, T>, N - 1> orthogonal_complement_of_unit_vector_by_gram_sch
         {
                 if (i != exclude_axis)
                 {
-                        basis[num++] = Impl::orthonormal_set<N, T>[i];
+                        basis[num++] = impl::orthonormal_set<N, T>[i];
                 }
         }
 

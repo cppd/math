@@ -221,9 +221,9 @@ void load_materials(const Obj<3>& obj, std::vector<Material>* materials)
 
 enum class DrawType
 {
-        TRIANGLES,
-        POINTS,
-        LINES
+        Points,
+        Lines,
+        Triangles
 };
 
 DrawType calculate_draw_type_from_obj(const Obj<3>* obj)
@@ -241,15 +241,15 @@ DrawType calculate_draw_type_from_obj(const Obj<3>* obj)
 
         if (obj->facets().size() > 0)
         {
-                return DrawType::TRIANGLES;
+                return DrawType::Triangles;
         }
         else if (obj->points().size() > 0)
         {
-                return DrawType::POINTS;
+                return DrawType::Points;
         }
         else if (obj->lines().size() > 0)
         {
-                return DrawType::LINES;
+                return DrawType::Lines;
         }
         else
         {
@@ -295,7 +295,7 @@ public:
 DrawObject::DrawObject(const Obj<3>* obj, const ColorSpaceConverterToRGB& color_converter, double size, const vec3& position)
         : m_model_matrix(model_vertex_matrix(obj, size, position)), m_draw_type(calculate_draw_type_from_obj(obj))
 {
-        if (m_draw_type == DrawType::TRIANGLES)
+        if (m_draw_type == DrawType::Triangles)
         {
                 std::vector<FaceVertex> vertices;
                 load_face_vertices(*obj, &vertices);
@@ -347,7 +347,7 @@ DrawObject::DrawObject(const Obj<3>* obj, const ColorSpaceConverterToRGB& color_
         {
                 std::vector<PointVertex> vertices;
 
-                if (m_draw_type == DrawType::POINTS)
+                if (m_draw_type == DrawType::Points)
                 {
                         load_point_vertices(*obj, &vertices);
                 }
@@ -591,7 +591,7 @@ class Renderer final : public IRenderer
 
                 const DrawObject* scale = draw_scale_object ? draw_scale_object : draw_object;
 
-                if (m_show_shadow && draw_object->draw_type() == DrawType::TRIANGLES)
+                if (m_show_shadow && draw_object->draw_type() == DrawType::Triangles)
                 {
                         main_program.set_uniform_float("shadowMatrix", m_scale_bias_shadow_matrix * scale->model_matrix());
 
@@ -620,15 +620,15 @@ class Renderer final : public IRenderer
 
                 switch (draw_object->draw_type())
                 {
-                case DrawType::TRIANGLES:
+                case DrawType::Triangles:
                         main_program.set_uniform_float("mvpMatrix", m_main_matrix * scale->model_matrix());
                         main_program.draw_arrays(GL_TRIANGLES, 0, draw_object->vertices_count());
                         break;
-                case DrawType::POINTS:
+                case DrawType::Points:
                         points_program.set_uniform_float("mvpMatrix", m_main_matrix * scale->model_matrix());
                         points_program.draw_arrays(GL_POINTS, 0, draw_object->vertices_count());
                         break;
-                case DrawType::LINES:
+                case DrawType::Lines:
                         points_program.set_uniform_float("mvpMatrix", m_main_matrix * scale->model_matrix());
                         points_program.draw_arrays(GL_LINES, 0, draw_object->vertices_count());
                         break;

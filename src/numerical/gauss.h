@@ -31,7 +31,7 @@ Cambridge University Press.
 #include "com/types.h"
 #include "com/vec.h"
 
-namespace GaussImplementation
+namespace gauss_implementation
 {
 template <size_t N, typename T>
 int find_pivot(const Matrix<N, N, T>& A, int column, int from_row)
@@ -65,7 +65,7 @@ void solve_gauss(Matrix<Size, Size, T>* A_p, Vector<Size, T>* b_p)
 
         for (int k = 0; k < N - 1; ++k)
         {
-                int pivot = GaussImplementation::find_pivot(A, k, k);
+                int pivot = gauss_implementation::find_pivot(A, k, k);
                 if (pivot != k)
                 {
                         std::swap(A[pivot], A[k]);
@@ -112,7 +112,7 @@ void solve_gauss(Matrix<SizeA, SizeA, T>* A_p, Matrix<SizeA, SizeB, T>* B_p)
 
         for (int k = 0; k < N - 1; ++k)
         {
-                int pivot = GaussImplementation::find_pivot(A, k, k);
+                int pivot = gauss_implementation::find_pivot(A, k, k);
                 if (pivot != k)
                 {
                         std::swap(A[pivot], A[k]);
@@ -170,7 +170,7 @@ T determinant_gauss(Matrix<Size, Size, T>* A_p)
 
         for (int k = 0; k < N - 1; ++k)
         {
-                int pivot = GaussImplementation::find_pivot(A, k, k);
+                int pivot = gauss_implementation::find_pivot(A, k, k);
                 if (pivot != k)
                 {
                         std::swap(A[pivot], A[k]);

@@ -344,7 +344,7 @@ bool zero_vector(const Vector<N, T>& v)
         return true;
 }
 
-namespace VectorImplementation
+namespace vector_implementation
 {
 template <typename Dst, size_t N, typename Src, size_t... I>
 Vector<N, Dst> convert_vector(const Vector<N, Src>& v, std::integer_sequence<size_t, I...>)
@@ -360,7 +360,7 @@ Vector<N, Dst> convert_vector(const Vector<N, Src>& v, std::integer_sequence<siz
 template <typename Dst, size_t N, typename Src>
 std::enable_if_t<!std::is_same_v<Dst, Src>, Vector<N, Dst>> to_vector(const Vector<N, Src>& v)
 {
-        return VectorImplementation::convert_vector<Dst>(v, std::make_integer_sequence<size_t, N>());
+        return vector_implementation::convert_vector<Dst>(v, std::make_integer_sequence<size_t, N>());
 }
 
 template <typename Dst, size_t N, typename Src>

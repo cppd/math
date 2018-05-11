@@ -115,12 +115,12 @@ private:
         template <typename F>
         void catch_all(const F& function) const noexcept;
 
-        bool find_object(std::string* object_name, int* object_id);
+        bool find_object(std::string* object_name, ObjectId* object_id);
 
         void thread_load_from_file(std::string file_name, bool use_object_selection_dialog);
         void thread_load_from_repository(const std::tuple<int, std::string>& object);
         void thread_self_test(SelfTestType test_type, bool with_confirmation);
-        void thread_export(const std::string& name, int id);
+        void thread_export(const std::string& name, ObjectId id);
         void thread_reload_bound_cocone();
 
         void set_dependent_interface();
@@ -152,7 +152,7 @@ private:
 
         void exception_handler(const std::exception_ptr& ptr, const std::string& msg) const noexcept;
 
-        static bool object_selection(QWidget* parent, std::unordered_set<int>* objects_to_load);
+        static bool object_selection(QWidget* parent, std::unordered_set<ObjectId>* objects_to_load);
 
         Ui::MainWindow ui;
 
@@ -162,7 +162,7 @@ private:
 
         Threads m_threads;
 
-        std::vector<std::tuple<const QRadioButton*, int>> m_object_buttons;
+        std::vector<std::tuple<const QRadioButton*, ObjectId>> m_object_buttons;
 
         std::unordered_map<QObject*, std::tuple<int, std::string>> m_action_to_object_name_map;
 
@@ -188,5 +188,5 @@ private:
 
         bool m_close_without_confirmation = false;
 
-        std::unordered_set<int> m_objects_to_load;
+        std::unordered_set<ObjectId> m_objects_to_load;
 };
