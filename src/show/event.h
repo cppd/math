@@ -18,17 +18,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "com/color/colors.h"
+#include "com/variant.h"
 #include "com/vec.h"
 #include "obj/obj.h"
 
 #include <memory>
 #include <string>
-
-#if !defined(STD_VARIANT_NOT_FOUND)
-#include <variant>
-#else
-#include "com/simple_variant.h"
-#endif
 
 class Event final
 {
@@ -290,11 +285,7 @@ public:
         template <typename D>
         const D& get() const
         {
-#if !defined(STD_VARIANT_NOT_FOUND)
-                return std::get<D>(m_data);
-#else
-                return m_data.get<D>();
-#endif
+                return ::get<D>(m_data);
         }
 
 private:
@@ -417,15 +408,10 @@ private:
 
         Type m_type;
 
-#if !defined(STD_VARIANT_NOT_FOUND)
-        std::variant
-#else
-        SimpleVariant
-#endif
-                <add_object, delete_object, show_object, delete_all_objects, parent_resized, mouse_wheel, toggle_fullscreen,
-                 reset_view, set_ambient, set_diffuse, set_specular, set_background_color, set_default_color, set_wireframe_color,
-                 set_default_ns, show_smooth, show_wireframe, show_shadow, show_fog, show_materials, show_effect, show_dft,
-                 set_dft_brightness, set_dft_background_color, set_dft_color, show_convex_hull_2d, show_optical_flow,
-                 vertical_sync, shadow_zoom>
-                        m_data;
+        Variant<add_object, delete_object, show_object, delete_all_objects, parent_resized, mouse_wheel, toggle_fullscreen,
+                reset_view, set_ambient, set_diffuse, set_specular, set_background_color, set_default_color, set_wireframe_color,
+                set_default_ns, show_smooth, show_wireframe, show_shadow, show_fog, show_materials, show_effect, show_dft,
+                set_dft_brightness, set_dft_background_color, set_dft_color, show_convex_hull_2d, show_optical_flow,
+                vertical_sync, shadow_zoom>
+                m_data;
 };

@@ -280,4 +280,12 @@ void simple_visit(const Visitor& visitor, SimpleVariant&& simple_variant)
         simple_variant.visit(visitor);
 }
 
+template <typename T, typename... Types>
+const T& simple_get(const SimpleVariant<Types...>& simple_variant)
+{
+        static_assert((std::is_same_v<T, Types> || ...));
+
+        return simple_variant.template get<T>();
+}
+
 #endif

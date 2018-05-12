@@ -17,13 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#if !defined(STD_VARIANT_NOT_FOUND)
-#include <variant>
-#else
-#include "com/simple_variant.h"
-#endif
+#if !defined(__clang__) || !defined(STD_VARIANT_NOT_FOUND)
 
-#if !defined(STD_VARIANT_NOT_FOUND)
+#include <variant>
 
 template <typename... T>
 using Variant = std::variant<T...>;
@@ -34,7 +30,15 @@ void visit(const Visitor& visitor, Variant&& variant)
         std::visit(visitor, std::forward<Variant>(variant));
 }
 
+template <typename T, typename... Types>
+const T& get(const std::variant<Types...>& variant)
+{
+        return std::get<T>(variant);
+}
+
 #else
+
+#include "com/simple_variant.h"
 
 template <typename... T>
 using Variant = SimpleVariant<T...>;
@@ -43,6 +47,12 @@ template <typename Visitor, typename SimpleVariant>
 void visit(const Visitor& visitor, SimpleVariant&& simple_variant)
 {
         simple_visit(visitor, std::forward<SimpleVariant>(simple_variant));
+}
+
+template <typename T, typename... Types>
+const T& get(const SimpleVariant<Types...>& variant)
+{
+        return simple_get<T>(variant);
 }
 
 #endif
