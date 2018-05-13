@@ -59,20 +59,20 @@ void write_to_text_edit(QTextEdit* text_edit, const std::vector<std::string>& li
         switch (type)
         {
         case TextEditMessageType::Normal:
-                line_begin = "";
-                line_end = "<br>";
+                line_begin = "<pre>";
+                line_end = "<br></pre>";
                 break;
         case TextEditMessageType::Error:
-                line_begin = "<font color=\"Red\">";
-                line_end = "</font><br>";
+                line_begin = "<pre><font color=\"Red\">";
+                line_end = "</font><br></pre>";
                 break;
         case TextEditMessageType::Warning:
-                line_begin = "<font color=\"#d08000\">";
-                line_end = "</font><br>";
+                line_begin = "<pre><font color=\"#d08000\">";
+                line_end = "</font><br></pre>";
                 break;
         case TextEditMessageType::Information:
-                line_begin = "<font color=\"Blue\">";
-                line_end = "</font><br>";
+                line_begin = "<pre><font color=\"Blue\">";
+                line_end = "</font><br></pre>";
                 break;
         }
 
