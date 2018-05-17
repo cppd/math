@@ -152,7 +152,7 @@ void set_size_to_parent(WindowID window, WindowID parent)
 
 void move_window_to_parent(WindowID window, WindowID parent)
 {
-        SetWindowLongPtr(window, GWL_STYLE, static_cast<LONG>(WS_CHILD) | static_cast<LONG>(WS_VISIBLE));
+        SetWindowLongPtr(window, GWL_STYLE, WS_CHILD | WS_VISIBLE);
 
         SetParent(window, parent);
 
@@ -165,12 +165,12 @@ void move_window_to_parent(WindowID window, WindowID parent)
 
 void change_window_style_not_child(WindowID window)
 {
-        SetWindowLongPtr(window, GWL_STYLE, static_cast<LONG>(WS_POPUP));
+        SetWindowLongPtr(window, GWL_STYLE, WS_POPUP);
 }
 
 void make_window_fullscreen(WindowID window)
 {
-        SetWindowLongPtr(window, GWL_STYLE, static_cast<LONG>(WS_POPUP) | static_cast<LONG>(WS_VISIBLE));
+        SetWindowLongPtr(window, GWL_STYLE, WS_POPUP | WS_VISIBLE);
 
         SetParent(window, nullptr);
 
