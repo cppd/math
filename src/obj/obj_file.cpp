@@ -37,7 +37,7 @@ namespace
 // Чтение первой строки файла с ограничением на максимальное количество символов
 std::string read_first_line_from_file(const std::string& file_name, int max_char_count)
 {
-        std::ifstream f(file_name);
+        std::ifstream f(file_name, std::ios_base::binary);
 
         if (!f)
         {

@@ -64,10 +64,11 @@ void read_text_file(const std::string& file_name, T* s)
 {
         static_assert(std::is_same_v<T, std::string> || std::is_same_v<T, std::vector<char>>);
 
-        std::ifstream f(file_name);
+        std::ifstream f(file_name, std::ios_base::binary);
+
         if (!f)
         {
-                error("Error open file " + file_name);
+                error("Failed to open file " + file_name);
         }
 
         f.seekg(0, f.end);
