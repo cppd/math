@@ -26,6 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <QCloseEvent>
 #include <QFileDialog>
+#include <QPointer>
 #include <array>
 #include <cmath>
 #include <cstring>
@@ -115,9 +116,19 @@ PainterWindow2d::~PainterWindow2d() = default;
 
 void PainterWindow2d::closeEvent(QCloseEvent* event)
 {
+        QPointer ptr(this);
+
         if (!message_question_default_no(this, "Do you want to close the painter window?"))
         {
-                event->ignore();
+                if (!ptr.isNull())
+                {
+                        event->ignore();
+                }
+                return;
+        }
+
+        if (ptr.isNull())
+        {
                 return;
         }
 

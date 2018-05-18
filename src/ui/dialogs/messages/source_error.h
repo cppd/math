@@ -21,15 +21,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <string>
 
+namespace message_source_error_implementation
+{
 class SourceError final : public QDialog
 {
         Q_OBJECT
 
 public:
-        explicit SourceError(QWidget* parent = nullptr);
-
-        void show(const std::string& msg, const std::string& src);
+        SourceError(QWidget* parent, const std::string& message, const std::string& source);
 
 private:
         Ui::SourceError ui;
 };
+}
+
+void message_source_error(QWidget* parent, const std::string& message, const std::string& source);

@@ -18,34 +18,40 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "message_box.h"
 
 #include "application/application_name.h"
+#include "ui/support/support.h"
 
 #include <QMessageBox>
 
 void message_critical(QWidget* parent, const QString& message)
 {
-        QMessageBox::critical(parent, APPLICATION_NAME, message);
+        QtObjectInDynamicMemory<QMessageBox> w(QMessageBox::Critical, APPLICATION_NAME, message, QMessageBox::Ok, parent);
+        w->exec();
 }
 
 void message_information(QWidget* parent, const QString& message)
 {
-        QMessageBox::information(parent, APPLICATION_NAME, message);
+        QtObjectInDynamicMemory<QMessageBox> w(QMessageBox::Information, APPLICATION_NAME, message, QMessageBox::Ok, parent);
+        w->exec();
 }
 
 void message_warning(QWidget* parent, const QString& message)
 {
-        QMessageBox::warning(parent, APPLICATION_NAME, message);
+        QtObjectInDynamicMemory<QMessageBox> w(QMessageBox::Warning, APPLICATION_NAME, message, QMessageBox::Ok, parent);
+        w->exec();
 }
 
 bool message_question_default_yes(QWidget* parent, const QString& message)
 {
-        int res = QMessageBox::question(parent, APPLICATION_NAME, message, QMessageBox::Yes | QMessageBox::Default,
-                                        QMessageBox::No);
-        return res == QMessageBox::Yes;
+        QtObjectInDynamicMemory<QMessageBox> w(QMessageBox::Question, APPLICATION_NAME, message,
+                                               QMessageBox::Yes | QMessageBox::No, parent);
+        w->setDefaultButton(QMessageBox::Yes);
+        return w->exec() == QMessageBox::Yes;
 }
 
 bool message_question_default_no(QWidget* parent, const QString& message)
 {
-        int res = QMessageBox::question(parent, APPLICATION_NAME, message, QMessageBox::Yes,
-                                        QMessageBox::No | QMessageBox::Default);
-        return res == QMessageBox::Yes;
+        QtObjectInDynamicMemory<QMessageBox> w(QMessageBox::Question, APPLICATION_NAME, message,
+                                               QMessageBox::Yes | QMessageBox::No, parent);
+        w->setDefaultButton(QMessageBox::No);
+        return w->exec() == QMessageBox::Yes;
 }

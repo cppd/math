@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "application_help.h"
 
 #include "application/application_name.h"
+#include "ui/support/support.h"
 
 #include <QMessageBox>
 #include <string>
@@ -40,7 +41,9 @@ std::string title()
 
 void application_help(QWidget* parent)
 {
-        static const QString m = message().c_str();
         static const QString t = title().c_str();
-        QMessageBox::about(parent, t, m);
+        static const QString m = message().c_str();
+
+        QtObjectInDynamicMemory<QMessageBox> w(QMessageBox::NoIcon, t, m, QMessageBox::Ok, parent);
+        w->exec();
 }

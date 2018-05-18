@@ -17,19 +17,26 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "source_error.h"
 
-SourceError::SourceError(QWidget* parent) : QDialog(parent)
+#include "ui/support/support.h"
+
+namespace message_source_error_implementation
+{
+SourceError::SourceError(QWidget* parent, const std::string& message, const std::string& source) : QDialog(parent)
 {
         ui.setupUi(this);
+
         ui.labelPixmap->setText("");
         ui.labelPixmap->setPixmap(ui.labelPixmap->style()->standardPixmap(QStyle::SP_MessageBoxCritical));
 
+        ui.plainTextEdit->setPlainText(message.c_str());
+        ui.textEdit->setText(source.c_str());
+
         setWindowTitle("Source Error");
 }
+}
 
-void SourceError::show(const std::string& msg, const std::string& src)
+void message_source_error(QWidget* parent, const std::string& message, const std::string& source)
 {
-        ui.plainTextEdit->setPlainText(msg.c_str());
-        ui.textEdit->setText(src.c_str());
-
-        exec();
+        QtObjectInDynamicMemory<message_source_error_implementation::SourceError> w(parent, message, source);
+        w->exec();
 }

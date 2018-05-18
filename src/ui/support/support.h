@@ -26,6 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QColorDialog>
 #include <QLayout>
 #include <QMainWindow>
+#include <QPointer>
 #include <QRadioButton>
 #include <QSlider>
 #include <QString>
@@ -49,6 +50,26 @@ void create_and_show_delete_on_close_window(Args&&... args)
                 throw;
         }
 }
+
+// Чтобы объект Qt, имеющий родителя, не удалялся два и более раз, нужно использовать
+// динамическую память и класс QPointer.
+// Такие возможные многократные удаления могут происходить, например, когда родительское
+// окно диалогового окна удаляется во время выполнения функции exec диалогового окна,
+// и тогда после функции exec уже нельзя удалять диалоговое окно.
+template <typename T>
+class QtObjectInDynamicMemory final : public QPointer<T>
+{
+public:
+        template <typename... Args>
+        QtObjectInDynamicMemory(Args&&... args) : QPointer<T>(new T(std::forward<Args>(args)...))
+        {
+        }
+
+        ~QtObjectInDynamicMemory()
+        {
+                delete *static_cast<QPointer<T>*>(this);
+        }
+};
 
 template <typename... T>
 QString file_filter(const std::string& name, const T&... extensions)

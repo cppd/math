@@ -38,6 +38,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QCloseEvent>
 #include <QDesktopWidget>
 #include <QFileDialog>
+#include <QPointer>
 
 // Размер окна по сравнению с экраном.
 constexpr double WINDOW_SIZE_COEF = 0.7;
@@ -235,10 +236,23 @@ void MainWindow::closeEvent(QCloseEvent* event)
 {
         ASSERT(std::this_thread::get_id() == m_window_thread_id);
 
-        if (!m_close_without_confirmation && !message_question_default_no(this, "Do you want to close the main window?"))
+        if (!m_close_without_confirmation)
         {
-                event->ignore();
-                return;
+                QPointer ptr(this);
+
+                if (!message_question_default_no(this, "Do you want to close the main window?"))
+                {
+                        if (!ptr.isNull())
+                        {
+                                event->ignore();
+                        }
+                        return;
+                }
+
+                if (ptr.isNull())
+                {
+                        return;
+                }
         }
 
         stop_all_threads();
@@ -462,9 +476,19 @@ void MainWindow::thread_self_test(SelfTestType test_type, bool with_confirmation
                 return;
         }
 
-        if (with_confirmation && !message_question_default_yes(this, "Run the Self-Test?"))
+        if (with_confirmation)
         {
-                return;
+                QPointer ptr(this);
+
+                if (!message_question_default_yes(this, "Run the Self-Test?"))
+                {
+                        return;
+                }
+
+                if (ptr.isNull())
+                {
+                        return;
+                }
         }
 
         m_threads.start_thread(ThreadAction::SelfTest, [=](ProgressRatioList* progress_list, std::string* message) {
@@ -495,10 +519,19 @@ void MainWindow::thread_export(const std::string& name, ObjectId id)
                 return;
         }
 
-        if (id == ObjectId::Model &&
-            !message_question_default_no(this, "Only export of geometry is supported.\nDo you want to continue?"))
+        if (id == ObjectId::Model)
         {
-                return;
+                QPointer ptr(this);
+
+                if (!message_question_default_no(this, "Only export of geometry is supported.\nDo you want to continue?"))
+                {
+                        return;
+                }
+
+                if (ptr.isNull())
+                {
+                        return;
+                }
         }
 
         if (m_dimension < 3)
@@ -774,6 +807,7 @@ void MainWindow::slot_window_event(const WindowEvent& event)
                 std::string message = d.msg;
 
                 add_to_text_edit_and_to_stderr(ui.text_log, format_log_message(message), TextEditMessageType::Error);
+
                 message_critical(this, message.c_str());
 
                 break;
@@ -784,7 +818,15 @@ void MainWindow::slot_window_event(const WindowEvent& event)
                 std::string message = (d.msg.size() != 0) ? d.msg : "Unknown Error. Exit failure.";
 
                 add_to_text_edit_and_to_stderr(ui.text_log, format_log_message(message), TextEditMessageType::Error);
+
+                QPointer ptr(this);
+
                 message_critical(this, message.c_str());
+
+                if (ptr.isNull())
+                {
+                        return;
+                }
 
                 close_without_confirmation();
 
@@ -798,7 +840,15 @@ void MainWindow::slot_window_event(const WindowEvent& event)
 
                 add_to_text_edit_and_to_stderr(ui.text_log, format_log_message(message + "\n" + source),
                                                TextEditMessageType::Error);
-                SourceError(this).show(message, source);
+
+                QPointer ptr(this);
+
+                message_source_error(this, message, source);
+
+                if (ptr.isNull())
+                {
+                        return;
+                }
 
                 close_without_confirmation();
 
@@ -810,6 +860,7 @@ void MainWindow::slot_window_event(const WindowEvent& event)
                 std::string message = d.msg;
 
                 add_to_text_edit_and_to_stderr(ui.text_log, format_log_message(message), TextEditMessageType::Information);
+
                 message_information(this, message.c_str());
 
                 break;
@@ -820,6 +871,7 @@ void MainWindow::slot_window_event(const WindowEvent& event)
                 std::string message = d.msg;
 
                 add_to_text_edit_and_to_stderr(ui.text_log, format_log_message(message), TextEditMessageType::Warning);
+
                 message_warning(this, message.c_str());
 
                 break;
@@ -1066,7 +1118,14 @@ double MainWindow::default_ns() const
 
 void MainWindow::on_pushButton_ResetLighting_clicked()
 {
+        QPointer ptr(this);
+
         if (!message_question_default_yes(this, "Reset lighting?"))
+        {
+                return;
+        }
+
+        if (ptr.isNull())
         {
                 return;
         }
