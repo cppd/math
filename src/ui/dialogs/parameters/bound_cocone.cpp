@@ -20,9 +20,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/error.h"
 #include "com/print.h"
 #include "ui/dialogs/messages/message_box.h"
+#include "ui/support/support.h"
 
+#include <QPointer>
 #include <cmath>
 
+namespace bound_cocone_parameters_implementation
+{
 BoundCoconeParameters::BoundCoconeParameters(QWidget* parent) : QDialog(parent)
 {
         ui.setupUi(this);
@@ -73,7 +77,7 @@ bool BoundCoconeParameters::show(int minimum_rho_exponent, int minimum_alpha_exp
         ui.doubleSpinBox_alpha->setSingleStep(min_alpha);
         ui.doubleSpinBox_alpha->setValue(*alpha);
 
-        if (!this->exec())
+        if (QPointer ptr(this); !this->exec() || ptr.isNull())
         {
                 return false;
         }
@@ -109,4 +113,11 @@ void BoundCoconeParameters::done(int r)
         }
 
         QDialog::done(r);
+}
+}
+
+bool bound_cocone_parameters(QWidget* parent, int minimum_rho_exponent, int minimum_alpha_exponent, double* rho, double* alpha)
+{
+        QtObjectInDynamicMemory<bound_cocone_parameters_implementation::BoundCoconeParameters> w(parent);
+        return w->show(minimum_rho_exponent, minimum_alpha_exponent, rho, alpha);
 }

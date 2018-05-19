@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "progress/progress_interfaces.h"
 
+#include <exception>
 #include <functional>
 
 enum class SelfTestType
@@ -28,4 +29,4 @@ enum class SelfTestType
 };
 
 void self_test(SelfTestType test_type, IProgressRatioList* progress_ratio_list,
-               const std::function<void(const std::string& test_name, const std::function<void()>& test_function)>& catch_all);
+               std::function<void(const std::exception_ptr& ptr, const std::string& msg)> exception_handler);

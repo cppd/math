@@ -62,10 +62,9 @@ void painting(const std::shared_ptr<const Mesh<3, double>>& mesh, const Painting
         int width, height, thread_count, samples_per_pixel;
         bool flat_facets, cornell_box;
 
-        if (!PathTracingParametersFor3d(info_all.parent_window)
-                     .show(hardware_concurrency(), info_3d.paint_width, info_3d.paint_height, info_3d.max_screen_size,
-                           default_sample_count, max_sample_count, &thread_count, &width, &height, &samples_per_pixel,
-                           &flat_facets, &cornell_box))
+        if (!path_tracing_parameters_for_3d(info_all.parent_window, hardware_concurrency(), info_3d.paint_width,
+                                            info_3d.paint_height, info_3d.max_screen_size, default_sample_count, max_sample_count,
+                                            &thread_count, &width, &height, &samples_per_pixel, &flat_facets, &cornell_box))
         {
                 return;
         }
@@ -108,10 +107,10 @@ void painting(const std::shared_ptr<const Mesh<N, T>>& mesh, const PaintingInfor
         int min_size, max_size, thread_count, samples_per_pixel;
         bool flat_facets;
 
-        if (!PathTracingParametersForNd(info_all.parent_window)
-                     .show(N, hardware_concurrency(), info_nd.default_screen_size, info_nd.minimum_screen_size,
-                           info_nd.maximum_screen_size, default_sample_count, max_sample_count, &thread_count, &min_size,
-                           &max_size, &samples_per_pixel, &flat_facets))
+        if (!path_tracing_parameters_for_nd(info_all.parent_window, N, hardware_concurrency(), info_nd.default_screen_size,
+                                            info_nd.minimum_screen_size, info_nd.maximum_screen_size, default_sample_count,
+                                            max_sample_count, &thread_count, &min_size, &max_size, &samples_per_pixel,
+                                            &flat_facets))
         {
                 return;
         }

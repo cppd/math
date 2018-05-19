@@ -21,10 +21,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/names.h"
 #include "com/print.h"
 #include "ui/dialogs/messages/message_box.h"
+#include "ui/support/support.h"
+
+#include <QPointer>
 
 // Это диалоговое окно предназначено только для 3 измерений
 constexpr int DIMENSION = 3;
 
+namespace path_tracing_parameters_for_3d_implementation
+{
 PathTracingParametersFor3d::PathTracingParametersFor3d(QWidget* parent) : QDialog(parent)
 {
         ui.setupUi(this);
@@ -89,7 +94,7 @@ bool PathTracingParametersFor3d::show(int max_thread_count, int width, int heigh
         ui.checkBox_flat_facets->setChecked(false);
         ui.checkBox_cornell_box->setChecked(false);
 
-        if (!this->exec())
+        if (QPointer ptr(this); !this->exec() || ptr.isNull())
         {
                 return false;
         }
@@ -171,4 +176,14 @@ void PathTracingParametersFor3d::height_value_changed(int)
         ui.spinBox_width->setValue(std::clamp(width, m_min_width, m_max_width));
 
         connect(ui.spinBox_width, SIGNAL(valueChanged(int)), this, SLOT(width_value_changed(int)));
+}
+}
+
+bool path_tracing_parameters_for_3d(QWidget* parent, int max_thread_count, int width, int height, int max_screen_size,
+                                    int default_samples_per_pixel, int max_samples_per_pixel, int* thread_count, int* paint_width,
+                                    int* paint_height, int* samples_per_pixel, bool* flat_facets, bool* cornell_box)
+{
+        QtObjectInDynamicMemory<path_tracing_parameters_for_3d_implementation::PathTracingParametersFor3d> w(parent);
+        return w->show(max_thread_count, width, height, max_screen_size, default_samples_per_pixel, max_samples_per_pixel,
+                       thread_count, paint_width, paint_height, samples_per_pixel, flat_facets, cornell_box);
 }

@@ -98,10 +98,12 @@ constexpr double MAXIMUM_COLOR_AMPLIFICATION = 3;
 MainWindow::MainWindow(QWidget* parent)
         : QMainWindow(parent),
           m_window_thread_id(std::this_thread::get_id()),
-          m_threads([this](const std::exception_ptr& ptr, const std::string& msg) noexcept { exception_handler(ptr, msg); }),
+          m_threads([this](const std::exception_ptr& ptr, const std::string& msg) noexcept {
+                  exception_handler(ptr, msg, true);
+          }),
           m_objects(create_main_objects(
                   std::max(1, hardware_concurrency() - MESH_OBJECT_NOT_USED_THREAD_COUNT), m_event_emitter,
-                  [this](const std::exception_ptr& ptr, const std::string& msg) noexcept { exception_handler(ptr, msg); })),
+                  [this](const std::exception_ptr& ptr, const std::string& msg) noexcept { exception_handler(ptr, msg, true); })),
           m_first_show(true),
           m_dimension(0),
           m_close_without_confirmation(false)
@@ -280,10 +282,12 @@ void MainWindow::stop_all_threads()
         set_log_callback(nullptr);
 }
 
-void MainWindow::exception_handler(const std::exception_ptr& ptr, const std::string& msg) const noexcept
+void MainWindow::exception_handler(const std::exception_ptr& ptr, const std::string& msg, bool window_exists) const noexcept
 {
         try
         {
+                ASSERT(window_exists || std::this_thread::get_id() == m_window_thread_id);
+
                 try
                 {
                         std::rethrow_exception(ptr);
@@ -294,36 +298,70 @@ void MainWindow::exception_handler(const std::exception_ptr& ptr, const std::str
                 catch (ErrorSourceException& e)
                 {
                         std::string s = !msg.empty() ? (msg + ":\n") : std::string();
-                        m_event_emitter.message_error_source(s + e.msg(), e.src());
+
+                        if (window_exists)
+                        {
+                                m_event_emitter.message_error_source(s + e.msg(), e.src());
+                        }
+                        else
+                        {
+                                error_fatal("Exception caught.\n" + s + e.msg() + "\n" + e.src());
+                        }
                 }
                 catch (std::exception& e)
                 {
                         std::string s = !msg.empty() ? (msg + ":\n") : std::string();
-                        m_event_emitter.message_error(s + e.what());
+
+                        if (window_exists)
+                        {
+                                m_event_emitter.message_error(s + e.what());
+                        }
+                        else
+                        {
+                                LOG("Exception caught.\n" + s + e.what());
+                        }
                 }
                 catch (...)
                 {
                         std::string s = !msg.empty() ? (msg + ":\n") : std::string();
-                        m_event_emitter.message_error(s + "Unknown error");
+
+                        if (window_exists)
+                        {
+                                m_event_emitter.message_error(s + "Unknown error");
+                        }
+                        else
+                        {
+                                LOG("Exception caught.\n" + s + "Unknown error");
+                        }
                 }
         }
         catch (...)
         {
-                error_fatal("Exception in catch all exception handlers");
+                error_fatal("Exception in the main window exception handler");
         }
 }
 
 template <typename F>
 void MainWindow::catch_all(const F& function) const noexcept
 {
-        std::string message;
         try
         {
-                function(&message);
+                ASSERT(std::this_thread::get_id() == m_window_thread_id);
+
+                std::string message;
+                QPointer ptr(this);
+                try
+                {
+                        function(&message);
+                }
+                catch (...)
+                {
+                        exception_handler(std::current_exception(), message, !ptr.isNull());
+                }
         }
         catch (...)
         {
-                exception_handler(std::current_exception(), message);
+                error_fatal("Exception in the main window catch all");
         }
 }
 
@@ -351,7 +389,7 @@ bool MainWindow::find_object(std::string* object_name, ObjectId* object_id)
         return true;
 }
 
-bool MainWindow::object_selection(QWidget* parent, std::unordered_set<ObjectId>* objects_to_load)
+bool MainWindow::dialog_object_selection(QWidget* parent, std::unordered_set<ObjectId>* objects_to_load)
 {
         ASSERT(objects_to_load);
 
@@ -362,8 +400,8 @@ bool MainWindow::object_selection(QWidget* parent, std::unordered_set<ObjectId>*
         bool bound_cocone = objects_to_load->count(ObjectId::BoundCocone);
         bool bound_cocone_convex_hull = objects_to_load->count(ObjectId::BoundCoconeConvexHull);
 
-        if (!ObjectSelection(parent).show(&model_convex_hull, &model_minumum_spanning_tree, &cocone, &cocone_convex_hull,
-                                          &bound_cocone, &bound_cocone_convex_hull))
+        if (!object_selection(parent, &model_convex_hull, &model_minumum_spanning_tree, &cocone, &cocone_convex_hull,
+                              &bound_cocone, &bound_cocone_convex_hull))
         {
                 return false;
         }
@@ -409,10 +447,22 @@ void MainWindow::thread_load_from_file(std::string file_name, bool use_object_se
                         file_name = q_file_name.toStdString();
                 }
 
-                if (use_object_selection_dialog && !object_selection(this, &m_objects_to_load))
+                std::unordered_set<ObjectId> objects_to_load = m_objects_to_load;
+
+                if (use_object_selection_dialog)
                 {
-                        return;
+                        QPointer ptr(this);
+                        if (!dialog_object_selection(this, &objects_to_load))
+                        {
+                                return;
+                        }
+                        if (ptr.isNull())
+                        {
+                                return;
+                        }
                 }
+
+                m_objects_to_load = objects_to_load;
 
                 m_threads.start_thread(ThreadAction::LoadObject,
                                        [=, objects_to_load = m_objects_to_load, rho = m_bound_cocone_rho,
@@ -445,16 +495,34 @@ void MainWindow::thread_load_from_repository(const std::tuple<int, std::string>&
 
                 int point_count;
 
-                if (!PointObjectParameters(this).show(std::get<0>(object), std::get<1>(object), POINT_COUNT_DEFAULT,
-                                                      POINT_COUNT_MINIMUM, POINT_COUNT_MAXIMUM, &point_count))
                 {
-                        return;
+                        QPointer ptr(this);
+                        if (!point_object_parameters(this, std::get<0>(object), std::get<1>(object), POINT_COUNT_DEFAULT,
+                                                     POINT_COUNT_MINIMUM, POINT_COUNT_MAXIMUM, &point_count))
+                        {
+                                return;
+                        }
+                        if (ptr.isNull())
+                        {
+                                return;
+                        }
                 }
 
-                if (!object_selection(this, &m_objects_to_load))
+                std::unordered_set<ObjectId> objects_to_load = m_objects_to_load;
+
                 {
-                        return;
+                        QPointer ptr(this);
+                        if (!dialog_object_selection(this, &objects_to_load))
+                        {
+                                return;
+                        }
+                        if (ptr.isNull())
+                        {
+                                return;
+                        }
                 }
+
+                m_objects_to_load = objects_to_load;
 
                 m_threads.start_thread(ThreadAction::LoadObject, [=, objects_to_load = m_objects_to_load,
                                                                   rho = m_bound_cocone_rho, alpha = m_bound_cocone_alpha](
@@ -479,12 +547,10 @@ void MainWindow::thread_self_test(SelfTestType test_type, bool with_confirmation
         if (with_confirmation)
         {
                 QPointer ptr(this);
-
                 if (!message_question_default_yes(this, "Run the Self-Test?"))
                 {
                         return;
                 }
-
                 if (ptr.isNull())
                 {
                         return;
@@ -494,11 +560,8 @@ void MainWindow::thread_self_test(SelfTestType test_type, bool with_confirmation
         m_threads.start_thread(ThreadAction::SelfTest, [=](ProgressRatioList* progress_list, std::string* message) {
                 *message = "Self-Test";
 
-                self_test(test_type, progress_list, [&](const std::string& test_name, const auto& test_function) noexcept {
-                        catch_all([&](std::string* m) {
-                                *m = test_name;
-                                test_function();
-                        });
+                self_test(test_type, progress_list, [&](const std::exception_ptr& ptr, const std::string& msg) noexcept {
+                        exception_handler(ptr, msg, true);
                 });
         });
 }
@@ -522,12 +585,10 @@ void MainWindow::thread_export(const std::string& name, ObjectId id)
         if (id == ObjectId::Model)
         {
                 QPointer ptr(this);
-
                 if (!message_question_default_no(this, "Only export of geometry is supported.\nDo you want to continue?"))
                 {
                         return;
                 }
-
                 if (ptr.isNull())
                 {
                         return;
@@ -592,8 +653,13 @@ void MainWindow::thread_reload_bound_cocone()
                 double rho = m_bound_cocone_rho;
                 double alpha = m_bound_cocone_alpha;
 
-                if (!BoundCoconeParameters(this).show(BOUND_COCONE_MINIMUM_RHO_EXPONENT, BOUND_COCONE_MINIMUM_ALPHA_EXPONENT,
-                                                      &rho, &alpha))
+                QPointer ptr(this);
+                if (!bound_cocone_parameters(this, BOUND_COCONE_MINIMUM_RHO_EXPONENT, BOUND_COCONE_MINIMUM_ALPHA_EXPONENT, &rho,
+                                             &alpha))
+                {
+                        return;
+                }
+                if (ptr.isNull())
                 {
                         return;
                 }

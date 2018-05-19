@@ -21,6 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <string>
 
+namespace path_tracing_parameters_for_nd_implementation
+{
 class PathTracingParametersForNd final : public QDialog
 {
         Q_OBJECT
@@ -52,3 +54,9 @@ private:
 
         void done(int r) override;
 };
+}
+
+[[nodiscard]] bool path_tracing_parameters_for_nd(QWidget* parent, int dimension, int max_thread_count, int default_screen_size,
+                                                  int min_screen_size, int max_screen_size, int default_samples_per_pixel,
+                                                  int max_samples_per_pixel, int* thread_count, int* min_size, int* max_size,
+                                                  int* samples_per_pixel, bool* flat_facets);

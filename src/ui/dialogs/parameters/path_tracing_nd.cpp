@@ -21,7 +21,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/names.h"
 #include "com/print.h"
 #include "ui/dialogs/messages/message_box.h"
+#include "ui/support/support.h"
 
+#include <QPointer>
+
+namespace path_tracing_parameters_for_nd_implementation
+{
 PathTracingParametersForNd::PathTracingParametersForNd(QWidget* parent) : QDialog(parent)
 {
         ui.setupUi(this);
@@ -76,7 +81,7 @@ bool PathTracingParametersForNd::show(int dimension, int max_thread_count, int d
 
         ui.checkBox_flat_facets->setChecked(false);
 
-        if (!this->exec())
+        if (QPointer ptr(this); !this->exec() || ptr.isNull())
         {
                 return false;
         }
@@ -161,4 +166,16 @@ void PathTracingParametersForNd::done(int r)
         m_flat_facets = ui.checkBox_flat_facets->isChecked();
 
         QDialog::done(r);
+}
+}
+
+bool path_tracing_parameters_for_nd(QWidget* parent, int dimension, int max_thread_count, int default_screen_size,
+                                    int min_screen_size, int max_screen_size, int default_samples_per_pixel,
+                                    int max_samples_per_pixel, int* thread_count, int* min_size, int* max_size,
+                                    int* samples_per_pixel, bool* flat_facets)
+{
+        QtObjectInDynamicMemory<path_tracing_parameters_for_nd_implementation::PathTracingParametersForNd> w(parent);
+        return w->show(dimension, max_thread_count, default_screen_size, min_screen_size, max_screen_size,
+                       default_samples_per_pixel, max_samples_per_pixel, thread_count, min_size, max_size, samples_per_pixel,
+                       flat_facets);
 }

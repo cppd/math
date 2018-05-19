@@ -17,6 +17,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "object_selection.h"
 
+#include "ui/support/support.h"
+
+#include <QPointer>
+
+namespace object_selection_implementation
+{
 ObjectSelection::ObjectSelection(QWidget* parent) : QDialog(parent)
 {
         ui.setupUi(this);
@@ -40,7 +46,7 @@ bool ObjectSelection::show(bool* model_convex_hull, bool* model_minumum_spanning
         ui.checkBox_bound_cocone->setChecked(*bound_cocone);
         ui.checkBox_bound_cocone_convex_hull->setChecked(*bound_cocone_convex_hull);
 
-        if (!this->exec())
+        if (QPointer ptr(this); !this->exec() || ptr.isNull())
         {
                 return false;
         }
@@ -69,4 +75,13 @@ void ObjectSelection::on_pushButton_clear_all_clicked()
         {
                 c->setChecked(false);
         }
+}
+}
+
+bool object_selection(QWidget* parent, bool* model_convex_hull, bool* model_minumum_spanning_tree, bool* cocone,
+                      bool* cocone_convex_hull, bool* bound_cocone, bool* bound_cocone_convex_hull)
+{
+        QtObjectInDynamicMemory<object_selection_implementation::ObjectSelection> w(parent);
+        return w->show(model_convex_hull, model_minumum_spanning_tree, cocone, cocone_convex_hull, bound_cocone,
+                       bound_cocone_convex_hull);
 }

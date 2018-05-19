@@ -21,6 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <vector>
 
+namespace object_selection_implementation
+{
 class ObjectSelection final : public QDialog
 {
         Q_OBJECT
@@ -41,3 +43,7 @@ private:
 
         std::vector<QCheckBox*> m_boxes;
 };
+}
+
+[[nodiscard]] bool object_selection(QWidget* parent, bool* model_convex_hull, bool* model_minumum_spanning_tree, bool* cocone,
+                                    bool* cocone_convex_hull, bool* bound_cocone, bool* bound_cocone_convex_hull);

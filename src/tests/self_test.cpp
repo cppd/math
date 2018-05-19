@@ -35,75 +35,84 @@ std::string space_name_upper(int d)
 template <typename T>
 void self_test_essential(IProgressRatioList* progress_ratio_list, const T& catch_all)
 {
-        std::string test_name;
+        catch_all([&](std::string* test_name) {
+                *test_name = "Self-Test, DFT in " + space_name_upper(2);
 
-        test_name = "Self-Test, DFT in " + space_name_upper(2);
-        catch_all(test_name, [&]() {
-                ProgressRatio progress(progress_ratio_list, test_name);
+                ProgressRatio progress(progress_ratio_list, *test_name);
                 progress.set(0);
                 test_dft();
         });
 
-        test_name = "Self-Test, Parallelotope in " + space_name_upper(2);
-        catch_all(test_name, [&]() {
-                ProgressRatio progress(progress_ratio_list, test_name);
+        catch_all([&](std::string* test_name) {
+                *test_name = "Self-Test, Parallelotope in " + space_name_upper(2);
+
+                ProgressRatio progress(progress_ratio_list, *test_name);
                 progress.set(0);
                 test_parallelotope(2);
         });
 
-        test_name = "Self-Test, Parallelotope in " + space_name_upper(3);
-        catch_all(test_name, [&]() {
-                ProgressRatio progress(progress_ratio_list, test_name);
+        catch_all([&](std::string* test_name) {
+                *test_name = "Self-Test, Parallelotope in " + space_name_upper(3);
+
+                ProgressRatio progress(progress_ratio_list, *test_name);
                 progress.set(0);
                 test_parallelotope(3);
         });
 
-        test_name = "Self-Test, Parallelotope in " + space_name_upper(4);
-        catch_all(test_name, [&]() {
-                ProgressRatio progress(progress_ratio_list, test_name);
+        catch_all([&](std::string* test_name) {
+                *test_name = "Self-Test, Parallelotope in " + space_name_upper(4);
+
+                ProgressRatio progress(progress_ratio_list, *test_name);
                 progress.set(0);
                 test_parallelotope(4);
         });
 
-        test_name = "Self-Test, Mesh in " + space_name_upper(3);
-        catch_all(test_name, [&]() {
-                ProgressRatio progress(progress_ratio_list, test_name);
+        catch_all([&](std::string* test_name) {
+                *test_name = "Self-Test, Mesh in " + space_name_upper(3);
+
+                ProgressRatio progress(progress_ratio_list, *test_name);
                 test_mesh(3, &progress);
         });
 
-        test_name = "Self-Test, Mesh in " + space_name_upper(4);
-        catch_all(test_name, [&]() {
-                ProgressRatio progress(progress_ratio_list, test_name);
+        catch_all([&](std::string* test_name) {
+                *test_name = "Self-Test, Mesh in " + space_name_upper(4);
+
+                ProgressRatio progress(progress_ratio_list, *test_name);
                 test_mesh(4, &progress);
         });
 
-        test_name = "Self-Test, Convex Hull in " + space_name_upper(2);
-        catch_all(test_name, [&]() {
-                ProgressRatio progress(progress_ratio_list, test_name);
+        catch_all([&](std::string* test_name) {
+                *test_name = "Self-Test, Convex Hull in " + space_name_upper(2);
+
+                ProgressRatio progress(progress_ratio_list, *test_name);
                 test_convex_hull(2, &progress);
         });
 
-        test_name = "Self-Test, Convex Hull in " + space_name_upper(3);
-        catch_all(test_name, [&]() {
-                ProgressRatio progress(progress_ratio_list, test_name);
+        catch_all([&](std::string* test_name) {
+                *test_name = "Self-Test, Convex Hull in " + space_name_upper(3);
+
+                ProgressRatio progress(progress_ratio_list, *test_name);
                 test_convex_hull(3, &progress);
         });
 
-        test_name = "Self-Test, Convex Hull in " + space_name_upper(4);
-        catch_all(test_name, [&]() {
-                ProgressRatio progress(progress_ratio_list, test_name);
+        catch_all([&](std::string* test_name) {
+                *test_name = "Self-Test, Convex Hull in " + space_name_upper(4);
+
+                ProgressRatio progress(progress_ratio_list, *test_name);
                 test_convex_hull(4, &progress);
         });
 
-        test_name = "Self-Test, 1-Manifold Reconstruction in " + space_name_upper(2);
-        catch_all(test_name, [&]() {
-                ProgressRatio progress(progress_ratio_list, test_name);
+        catch_all([&](std::string* test_name) {
+                *test_name = "Self-Test, 1-Manifold Reconstruction in " + space_name_upper(2);
+
+                ProgressRatio progress(progress_ratio_list, *test_name);
                 test_reconstruction(2, &progress);
         });
 
-        test_name = "Self-Test, 2-Manifold Reconstruction in " + space_name_upper(3);
-        catch_all(test_name, [&]() {
-                ProgressRatio progress(progress_ratio_list, test_name);
+        catch_all([&](std::string* test_name) {
+                *test_name = "Self-Test, 2-Manifold Reconstruction in " + space_name_upper(3);
+
+                ProgressRatio progress(progress_ratio_list, *test_name);
                 test_reconstruction(3, &progress);
         });
 }
@@ -111,37 +120,52 @@ void self_test_essential(IProgressRatioList* progress_ratio_list, const T& catch
 template <typename T>
 void self_test_extended(IProgressRatioList* progress_ratio_list, const T& catch_all)
 {
-        std::string test_name;
+        catch_all([&](std::string* test_name) {
+                *test_name = "Self-Test, Convex Hull in " + space_name_upper(5);
 
-        test_name = "Self-Test, Convex Hull in " + space_name_upper(5);
-        catch_all(test_name, [&]() {
-                ProgressRatio progress(progress_ratio_list, test_name);
+                ProgressRatio progress(progress_ratio_list, *test_name);
                 test_convex_hull(5, &progress);
         });
 
-        test_name = "Self-Test, Mesh in " + space_name_upper(5);
-        catch_all(test_name, [&]() {
-                ProgressRatio progress(progress_ratio_list, test_name);
+        catch_all([&](std::string* test_name) {
+                *test_name = "Self-Test, Mesh in " + space_name_upper(5);
+
+                ProgressRatio progress(progress_ratio_list, *test_name);
                 test_mesh(5, &progress);
         });
 
-        test_name = "Self-Test, Mesh in " + space_name_upper(6);
-        catch_all(test_name, [&]() {
-                ProgressRatio progress(progress_ratio_list, test_name);
+        catch_all([&](std::string* test_name) {
+                *test_name = "Self-Test, Mesh in " + space_name_upper(6);
+
+                ProgressRatio progress(progress_ratio_list, *test_name);
                 test_mesh(6, &progress);
         });
 
-        test_name = "Self-Test, 3-Manifold Reconstruction in " + space_name_upper(4);
-        catch_all(test_name, [&]() {
-                ProgressRatio progress(progress_ratio_list, test_name);
+        catch_all([&](std::string* test_name) {
+                *test_name = "Self-Test, 3-Manifold Reconstruction in " + space_name_upper(4);
+
+                ProgressRatio progress(progress_ratio_list, *test_name);
                 test_reconstruction(4, &progress);
         });
 }
 }
 
 void self_test(SelfTestType test_type, IProgressRatioList* progress_ratio_list,
-               const std::function<void(const std::string& test_name, const std::function<void()>& test_function)>& catch_all)
+               std::function<void(const std::exception_ptr& ptr, const std::string& msg)> exception_handler)
 {
+        auto catch_all = [&](const auto& function) noexcept
+        {
+                std::string message = "Self-Test";
+                try
+                {
+                        function(&message);
+                }
+                catch (...)
+                {
+                        exception_handler(std::current_exception(), message);
+                }
+        };
+
         switch (test_type)
         {
         case SelfTestType::Essential:

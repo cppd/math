@@ -21,7 +21,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/names.h"
 #include "com/print.h"
 #include "ui/dialogs/messages/message_box.h"
+#include "ui/support/support.h"
 
+#include <QPointer>
+
+namespace point_object_parameters_implementation
+{
 PointObjectParameters::PointObjectParameters(QWidget* parent) : QDialog(parent)
 {
         ui.setupUi(this);
@@ -56,7 +61,7 @@ bool PointObjectParameters::show(int dimension, const std::string& point_object_
         ui.spinBox_point_count->setValue(default_point_count);
         ui.spinBox_point_count->setSingleStep(std::max(1, max_point_count / 1000));
 
-        if (!this->exec())
+        if (QPointer ptr(this); !this->exec() || ptr.isNull())
         {
                 return false;
         }
@@ -83,4 +88,12 @@ void PointObjectParameters::done(int r)
         }
 
         QDialog::done(r);
+}
+}
+
+bool point_object_parameters(QWidget* parent, int dimension, const std::string& point_object_name, int default_point_count,
+                             int min_point_count, int max_point_count, int* point_count)
+{
+        QtObjectInDynamicMemory<point_object_parameters_implementation::PointObjectParameters> w(parent);
+        return w->show(dimension, point_object_name, default_point_count, min_point_count, max_point_count, point_count);
 }
