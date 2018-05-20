@@ -22,10 +22,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/log.h"
 #include "com/print.h"
 #include "com/time.h"
+#include "ui/dialogs/messages/file_dialog.h"
 #include "ui/dialogs/messages/message_box.h"
+#include "ui/support/support.h"
 
 #include <QCloseEvent>
-#include <QFileDialog>
 #include <QPointer>
 #include <array>
 #include <cmath>
@@ -36,6 +37,8 @@ constexpr int UPDATE_INTERVAL_MILLISECONDS = 100;
 constexpr int DIFFERENCE_INTERVAL_MILLISECONDS = 10 * UPDATE_INTERVAL_MILLISECONDS;
 
 constexpr bool SHOW_THREADS = true;
+
+constexpr const char IMAGE_FILE_FORMAT[] = "png";
 
 namespace
 {
@@ -90,7 +93,8 @@ public:
 
 PainterWindow2d::PainterWindow2d(const std::string& title, std::vector<int>&& screen_size,
                                  const std::vector<int>& initial_slider_positions)
-        : m_screen_size(std::move(screen_size)),
+        : m_window_thread_id(std::this_thread::get_id()),
+          m_screen_size(std::move(screen_size)),
           m_width(m_screen_size[0]),
           m_height(m_screen_size[1]),
           m_image(m_width, m_height, QImage::Format_RGB32),
@@ -113,6 +117,50 @@ PainterWindow2d::PainterWindow2d(const std::string& title, std::vector<int>&& sc
 }
 
 PainterWindow2d::~PainterWindow2d() = default;
+
+template <typename F>
+void PainterWindow2d::catch_all(const F& function) const noexcept
+{
+        try
+        {
+                ASSERT(std::this_thread::get_id() == m_window_thread_id);
+
+                std::string msg;
+                QPointer ptr(this);
+                try
+                {
+                        function(&msg);
+                }
+                catch (std::exception& e)
+                {
+                        std::string s = !msg.empty() ? (msg + ":\n") : std::string();
+                        if (!ptr.isNull())
+                        {
+                                error_message(s + e.what());
+                        }
+                        else
+                        {
+                                LOG("Exception caught.\n" + s + e.what());
+                        }
+                }
+                catch (...)
+                {
+                        std::string s = !msg.empty() ? (msg + ":\n") : std::string();
+                        if (!ptr.isNull())
+                        {
+                                error_message(s + "Unknown error");
+                        }
+                        else
+                        {
+                                LOG("Exception caught.\n" + s + "Unknow Error");
+                        }
+                }
+        }
+        catch (...)
+        {
+                error_fatal("Exception in the painter window 2d catch all");
+        }
+}
 
 void PainterWindow2d::closeEvent(QCloseEvent* event)
 {
@@ -289,40 +337,47 @@ void PainterWindow2d::timer_slot()
 
 void PainterWindow2d::on_pushButton_save_to_file_clicked()
 {
-        constexpr const char* image_file_format = "png";
+        catch_all([&](std::string* msg) {
+                *msg = "Save to file";
 
-        QImage image(m_image.width(), m_image.height(), m_image.format());
-        std::memcpy(image.bits(), pixel_pointer(false), m_image_byte_count);
+                QImage image(m_image.width(), m_image.height(), m_image.format());
+                std::memcpy(image.bits(), pixel_pointer(false), m_image_byte_count);
 
-        QString caption = "Save";
-        QString filter = "Images (*." + QString(image_file_format) + ")";
-        QFileDialog::Options options = QFileDialog::DontUseNativeDialog;
+                std::string file_name;
 
-        std::string file_name = QFileDialog::getSaveFileName(this, caption, "", filter, nullptr, options).toStdString();
-        if (file_name.size() == 0)
-        {
-                return;
-        }
+                std::string caption = "Save";
+                std::string filter = file_filter("Images", IMAGE_FILE_FORMAT);
+                bool read_only = true;
 
-        std::string ext = file_extension(file_name);
-        if (ext.size() > 0)
-        {
-                if (ext != image_file_format)
+                QPointer ptr(this);
+                if (!save_file_name(this, caption, filter, read_only, &file_name))
                 {
-                        error_message("Unsupported image file format " + ext);
                         return;
                 }
-        }
-        else
-        {
-                file_name += "."; // может оказаться 2 точки подряд
-                file_name += image_file_format;
-        }
+                if (ptr.isNull())
+                {
+                        return;
+                }
 
-        if (!image.save(file_name.c_str()))
-        {
-                error_message("Error saving image to file " + file_name);
-        }
+                std::string ext = file_extension(file_name);
+                if (ext.size() > 0)
+                {
+                        if (ext != IMAGE_FILE_FORMAT)
+                        {
+                                error("Unsupported image file format " + ext);
+                        }
+                }
+                else
+                {
+                        file_name += "."; // может оказаться 2 точки подряд
+                        file_name += IMAGE_FILE_FORMAT;
+                }
+
+                if (!image.save(file_name.c_str()))
+                {
+                        error("Error saving image to file " + file_name);
+                }
+        });
 }
 
 void PainterWindow2d::slider_changed_slot(int)

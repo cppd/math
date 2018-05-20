@@ -28,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "ui/command_line/command_line.h"
 #include "ui/dialogs/messages/application_about.h"
 #include "ui/dialogs/messages/application_help.h"
+#include "ui/dialogs/messages/file_dialog.h"
 #include "ui/dialogs/messages/message_box.h"
 #include "ui/dialogs/messages/source_error.h"
 #include "ui/dialogs/parameters/bound_cocone.h"
@@ -37,7 +38,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <QCloseEvent>
 #include <QDesktopWidget>
-#include <QFileDialog>
 #include <QPointer>
 
 // Размер окна по сравнению с экраном.
@@ -433,18 +433,20 @@ void MainWindow::thread_load_from_file(std::string file_name, bool use_object_se
                 {
                         ASSERT(use_object_selection_dialog);
 
-                        QString caption = "Open";
-                        QString filter =
+                        std::string caption = "Open";
+                        std::string filter =
                                 file_filter("OBJ and Point files", m_objects->obj_extensions(), m_objects->txt_extensions());
-                        QFileDialog::Options options = QFileDialog::ReadOnly | QFileDialog::DontUseNativeDialog;
+                        bool read_only = true;
 
-                        QString q_file_name = QFileDialog::getOpenFileName(this, caption, "", filter, nullptr, options);
-                        if (q_file_name.size() == 0)
+                        QPointer ptr(this);
+                        if (!open_file_name(this, caption, filter, read_only, &file_name))
                         {
                                 return;
                         }
-
-                        file_name = q_file_name.toStdString();
+                        if (ptr.isNull())
+                        {
+                                return;
+                        }
                 }
 
                 std::unordered_set<ObjectId> objects_to_load = m_objects_to_load;
@@ -604,17 +606,21 @@ void MainWindow::thread_export(const std::string& name, ObjectId id)
         catch_all([&](std::string* msg) {
                 *msg = "Export to file";
 
-                QString caption = "Export " + QString(name.c_str()) + " to OBJ";
-                QString filter = file_filter("OBJ files", m_objects->obj_extension(m_dimension));
-                QFileDialog::Options options = QFileDialog::DontUseNativeDialog;
+                std::string file_name;
 
-                QString qt_file_name = QFileDialog::getSaveFileName(this, caption, "", filter, nullptr, options);
-                if (qt_file_name.size() == 0)
+                std::string caption = "Export " + name + " to OBJ";
+                std::string filter = file_filter("OBJ files", m_objects->obj_extension(m_dimension));
+                bool read_only = true;
+
+                QPointer ptr(this);
+                if (!save_file_name(this, caption, filter, read_only, &file_name))
                 {
                         return;
                 }
-
-                std::string file_name = qt_file_name.toStdString();
+                if (ptr.isNull())
+                {
+                        return;
+                }
 
                 m_threads.start_thread(ThreadAction::ExportObject, [=](ProgressRatioList*, std::string* message) {
                         *message = "Export " + name + " to " + file_name;

@@ -26,6 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <deque>
 #include <memory>
 #include <string>
+#include <thread>
 #include <vector>
 
 class PainterWindow2d : public QWidget
@@ -58,6 +59,9 @@ private:
                 QSlider slider;
         };
 
+        template <typename F>
+        void catch_all(const F& function) const noexcept;
+
         void showEvent(QShowEvent* event) override;
         void closeEvent(QCloseEvent* event) override;
 
@@ -71,6 +75,7 @@ private:
         virtual void slider_positions_change_event(const std::vector<int>& slider_positions) = 0;
         virtual const quint32* pixel_pointer(bool show_threads) const noexcept = 0;
 
+        const std::thread::id m_window_thread_id;
         const std::vector<int> m_screen_size;
         const int m_width, m_height;
         QImage m_image;

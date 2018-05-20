@@ -31,7 +31,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QSlider>
 #include <QString>
 #include <QTextEdit>
+#include <iterator>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 template <typename Window, typename... Args>
@@ -72,7 +74,7 @@ public:
 };
 
 template <typename... T>
-QString file_filter(const std::string& name, const T&... extensions)
+std::string file_filter(const std::string& name, const T&... extensions)
 {
         static_assert(sizeof...(T) > 0);
 
@@ -101,12 +103,19 @@ QString file_filter(const std::string& name, const T&... extensions)
         };
 
         auto add = [&](const auto& ext) {
-                if constexpr (has_begin_end<decltype(ext)> &&
-                              !std::is_same_v<char, std::remove_cv_t<std::remove_reference_t<decltype(*std::cbegin(ext))>>>)
+                if constexpr (has_begin_end<decltype(ext)>)
                 {
-                        for (const std::string& e : ext)
+                        if constexpr (!std::is_same_v<char,
+                                                      std::remove_cv_t<std::remove_reference_t<decltype(*std::cbegin(ext))>>>)
                         {
-                                add_string(e);
+                                for (const std::string& e : ext)
+                                {
+                                        add_string(e);
+                                }
+                        }
+                        else
+                        {
+                                add_string(ext);
                         }
                 }
                 else
@@ -124,7 +133,7 @@ QString file_filter(const std::string& name, const T&... extensions)
 
         filter += ")";
 
-        return filter.c_str();
+        return filter;
 }
 
 enum class TextEditMessageType
