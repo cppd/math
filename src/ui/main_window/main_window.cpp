@@ -881,7 +881,7 @@ void MainWindow::slot_window_event(const WindowEvent& event)
 
                 add_to_text_edit_and_to_stderr(ui.text_log, format_log_message(message), TextEditMessageType::Error);
 
-                dialog::message_critical(this, message.c_str());
+                dialog::message_critical(this, message);
 
                 break;
         }
@@ -893,7 +893,7 @@ void MainWindow::slot_window_event(const WindowEvent& event)
                 add_to_text_edit_and_to_stderr(ui.text_log, format_log_message(message), TextEditMessageType::Error);
 
                 QPointer ptr(this);
-                dialog::message_critical(this, message.c_str());
+                dialog::message_critical(this, message);
                 if (ptr.isNull())
                 {
                         return;
@@ -930,7 +930,7 @@ void MainWindow::slot_window_event(const WindowEvent& event)
 
                 add_to_text_edit_and_to_stderr(ui.text_log, format_log_message(message), TextEditMessageType::Information);
 
-                dialog::message_information(this, message.c_str());
+                dialog::message_information(this, message);
 
                 break;
         }
@@ -941,7 +941,7 @@ void MainWindow::slot_window_event(const WindowEvent& event)
 
                 add_to_text_edit_and_to_stderr(ui.text_log, format_log_message(message), TextEditMessageType::Warning);
 
-                dialog::message_warning(this, message.c_str());
+                dialog::message_warning(this, message);
 
                 break;
         }

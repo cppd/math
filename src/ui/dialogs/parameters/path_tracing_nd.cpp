@@ -125,7 +125,7 @@ void PathTracingParametersForNd::done(int r)
         if (!(m_thread_count >= 1 && m_thread_count <= m_max_thread_count))
         {
                 std::string msg = "Error thread count. Must be in the range [1, " + to_string(m_max_thread_count) + "].";
-                dialog::message_critical(this, msg.c_str());
+                dialog::message_critical(this, msg);
                 return;
         }
 
@@ -134,7 +134,7 @@ void PathTracingParametersForNd::done(int r)
         {
                 std::string msg =
                         "Error samples per pixel. Must be in the range [1, " + to_string(m_max_samples_per_pixel) + "].";
-                dialog::message_critical(this, msg.c_str());
+                dialog::message_critical(this, msg);
                 return;
         }
 
@@ -143,7 +143,7 @@ void PathTracingParametersForNd::done(int r)
         {
                 std::string msg = "Error min size. Must be in the range [" + to_string(m_min_screen_size) + ", " +
                                   to_string(m_max_screen_size) + "].";
-                dialog::message_critical(this, msg.c_str());
+                dialog::message_critical(this, msg);
                 return;
         }
 
@@ -152,14 +152,14 @@ void PathTracingParametersForNd::done(int r)
         {
                 std::string msg = "Error max size. Must be in the range [" + to_string(m_min_screen_size) + ", " +
                                   to_string(m_max_screen_size) + "].";
-                dialog::message_critical(this, msg.c_str());
+                dialog::message_critical(this, msg);
                 return;
         }
 
         if (!(m_min_size <= m_max_size))
         {
                 std::string msg = "Error min and max sizes. The min size must be less than the max size or equal to the max size";
-                dialog::message_critical(this, msg.c_str());
+                dialog::message_critical(this, msg);
                 return;
         }
 

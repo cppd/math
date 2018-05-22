@@ -83,7 +83,7 @@ void PointObjectParameters::done(int r)
         if (!(m_point_count >= 1 && m_point_count <= m_max_point_count))
         {
                 std::string msg = "Error point count. It must be in the range [1, " + to_string(m_max_point_count) + "].";
-                dialog::message_critical(this, msg.c_str());
+                dialog::message_critical(this, msg);
                 return;
         }
 

@@ -270,7 +270,7 @@ void PainterWindow2d::error_message_slot(QString msg)
 {
         LOG("Painter error\n" + msg.toStdString());
 
-        dialog::message_critical(this, msg);
+        dialog::message_critical(this, msg.toStdString());
 }
 
 void PainterWindow2d::showEvent(QShowEvent* e)

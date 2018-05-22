@@ -100,7 +100,7 @@ void BoundCoconeParameters::done(int r)
         if (!(m_min_rho <= m_rho && m_rho <= m_max_rho))
         {
                 std::string msg = u8"ρ range error (" + to_string(m_min_rho) + ", " + to_string(m_max_rho) + ")";
-                dialog::message_critical(this, msg.c_str());
+                dialog::message_critical(this, msg);
                 return;
         }
 
@@ -108,7 +108,7 @@ void BoundCoconeParameters::done(int r)
         if (!(m_min_alpha <= m_alpha && m_alpha <= m_max_alpha))
         {
                 std::string msg = u8"α range error (" + to_string(m_min_alpha) + ", " + to_string(m_max_alpha) + ")";
-                dialog::message_critical(this, msg.c_str());
+                dialog::message_critical(this, msg);
                 return;
         }
 

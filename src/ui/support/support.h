@@ -28,7 +28,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QPointer>
 #include <QRadioButton>
 #include <QSlider>
-#include <QString>
 #include <QTextEdit>
 #include <iterator>
 #include <string>
