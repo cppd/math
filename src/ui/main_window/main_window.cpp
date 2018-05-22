@@ -242,7 +242,7 @@ void MainWindow::closeEvent(QCloseEvent* event)
         {
                 QPointer ptr(this);
 
-                if (!message_question_default_no(this, "Do you want to close the main window?"))
+                if (!dialog::message_question_default_no(this, "Do you want to close the main window?"))
                 {
                         if (!ptr.isNull())
                         {
@@ -400,8 +400,8 @@ bool MainWindow::dialog_object_selection(QWidget* parent, std::unordered_set<Obj
         bool bound_cocone = objects_to_load->count(ObjectId::BoundCocone);
         bool bound_cocone_convex_hull = objects_to_load->count(ObjectId::BoundCoconeConvexHull);
 
-        if (!object_selection(parent, &model_convex_hull, &model_minumum_spanning_tree, &cocone, &cocone_convex_hull,
-                              &bound_cocone, &bound_cocone_convex_hull))
+        if (!dialog::object_selection(parent, &model_convex_hull, &model_minumum_spanning_tree, &cocone, &cocone_convex_hull,
+                                      &bound_cocone, &bound_cocone_convex_hull))
         {
                 return false;
         }
@@ -439,7 +439,7 @@ void MainWindow::thread_load_from_file(std::string file_name, bool use_object_se
                         bool read_only = true;
 
                         QPointer ptr(this);
-                        if (!open_file_name(this, caption, filter, read_only, &file_name))
+                        if (!dialog::open_file(this, caption, filter, read_only, &file_name))
                         {
                                 return;
                         }
@@ -499,8 +499,8 @@ void MainWindow::thread_load_from_repository(const std::tuple<int, std::string>&
 
                 {
                         QPointer ptr(this);
-                        if (!point_object_parameters(this, std::get<0>(object), std::get<1>(object), POINT_COUNT_DEFAULT,
-                                                     POINT_COUNT_MINIMUM, POINT_COUNT_MAXIMUM, &point_count))
+                        if (!dialog::point_object_parameters(this, std::get<0>(object), std::get<1>(object), POINT_COUNT_DEFAULT,
+                                                             POINT_COUNT_MINIMUM, POINT_COUNT_MAXIMUM, &point_count))
                         {
                                 return;
                         }
@@ -549,7 +549,7 @@ void MainWindow::thread_self_test(SelfTestType test_type, bool with_confirmation
         if (with_confirmation)
         {
                 QPointer ptr(this);
-                if (!message_question_default_yes(this, "Run the Self-Test?"))
+                if (!dialog::message_question_default_yes(this, "Run the Self-Test?"))
                 {
                         return;
                 }
@@ -587,7 +587,7 @@ void MainWindow::thread_export(const std::string& name, ObjectId id)
         if (id == ObjectId::Model)
         {
                 QPointer ptr(this);
-                if (!message_question_default_no(this, "Only export of geometry is supported.\nDo you want to continue?"))
+                if (!dialog::message_question_default_no(this, "Only export of geometry is supported.\nDo you want to continue?"))
                 {
                         return;
                 }
@@ -613,7 +613,7 @@ void MainWindow::thread_export(const std::string& name, ObjectId id)
                 bool read_only = true;
 
                 QPointer ptr(this);
-                if (!save_file_name(this, caption, filter, read_only, &file_name))
+                if (!dialog::save_file(this, caption, filter, read_only, &file_name))
                 {
                         return;
                 }
@@ -660,8 +660,8 @@ void MainWindow::thread_reload_bound_cocone()
                 double alpha = m_bound_cocone_alpha;
 
                 QPointer ptr(this);
-                if (!bound_cocone_parameters(this, BOUND_COCONE_MINIMUM_RHO_EXPONENT, BOUND_COCONE_MINIMUM_ALPHA_EXPONENT, &rho,
-                                             &alpha))
+                if (!dialog::bound_cocone_parameters(this, BOUND_COCONE_MINIMUM_RHO_EXPONENT, BOUND_COCONE_MINIMUM_ALPHA_EXPONENT,
+                                                     &rho, &alpha))
                 {
                         return;
                 }
@@ -880,7 +880,7 @@ void MainWindow::slot_window_event(const WindowEvent& event)
 
                 add_to_text_edit_and_to_stderr(ui.text_log, format_log_message(message), TextEditMessageType::Error);
 
-                message_critical(this, message.c_str());
+                dialog::message_critical(this, message.c_str());
 
                 break;
         }
@@ -892,9 +892,7 @@ void MainWindow::slot_window_event(const WindowEvent& event)
                 add_to_text_edit_and_to_stderr(ui.text_log, format_log_message(message), TextEditMessageType::Error);
 
                 QPointer ptr(this);
-
-                message_critical(this, message.c_str());
-
+                dialog::message_critical(this, message.c_str());
                 if (ptr.isNull())
                 {
                         return;
@@ -914,9 +912,7 @@ void MainWindow::slot_window_event(const WindowEvent& event)
                                                TextEditMessageType::Error);
 
                 QPointer ptr(this);
-
-                message_source_error(this, message, source);
-
+                dialog::message_source_error(this, message, source);
                 if (ptr.isNull())
                 {
                         return;
@@ -933,7 +929,7 @@ void MainWindow::slot_window_event(const WindowEvent& event)
 
                 add_to_text_edit_and_to_stderr(ui.text_log, format_log_message(message), TextEditMessageType::Information);
 
-                message_information(this, message.c_str());
+                dialog::message_information(this, message.c_str());
 
                 break;
         }
@@ -944,7 +940,7 @@ void MainWindow::slot_window_event(const WindowEvent& event)
 
                 add_to_text_edit_and_to_stderr(ui.text_log, format_log_message(message), TextEditMessageType::Warning);
 
-                message_warning(this, message.c_str());
+                dialog::message_warning(this, message.c_str());
 
                 break;
         }
@@ -1127,7 +1123,7 @@ void MainWindow::on_actionExit_triggered()
 
 void MainWindow::on_actionHelp_triggered()
 {
-        application_help(this);
+        dialog::application_help(this);
 }
 
 void MainWindow::on_actionSelfTest_triggered()
@@ -1137,7 +1133,7 @@ void MainWindow::on_actionSelfTest_triggered()
 
 void MainWindow::on_actionAbout_triggered()
 {
-        application_about(this);
+        dialog::application_about(this);
 }
 
 void MainWindow::on_pushButton_ResetView_clicked()
@@ -1191,12 +1187,10 @@ double MainWindow::default_ns() const
 void MainWindow::on_pushButton_ResetLighting_clicked()
 {
         QPointer ptr(this);
-
-        if (!message_question_default_yes(this, "Reset lighting?"))
+        if (!dialog::message_question_default_yes(this, "Reset lighting?"))
         {
                 return;
         }
-
         if (ptr.isNull())
         {
                 return;

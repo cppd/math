@@ -39,6 +39,8 @@ std::string title()
 }
 }
 
+namespace dialog
+{
 void application_help(QWidget* parent)
 {
         static const QString t = title().c_str();
@@ -46,4 +48,5 @@ void application_help(QWidget* parent)
 
         QtObjectInDynamicMemory<QMessageBox> w(QMessageBox::NoIcon, t, m, QMessageBox::Ok, parent);
         w->exec();
+}
 }

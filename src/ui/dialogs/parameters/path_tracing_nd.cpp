@@ -125,7 +125,7 @@ void PathTracingParametersForNd::done(int r)
         if (!(m_thread_count >= 1 && m_thread_count <= m_max_thread_count))
         {
                 std::string msg = "Error thread count. Must be in the range [1, " + to_string(m_max_thread_count) + "].";
-                message_critical(this, msg.c_str());
+                dialog::message_critical(this, msg.c_str());
                 return;
         }
 
@@ -134,7 +134,7 @@ void PathTracingParametersForNd::done(int r)
         {
                 std::string msg =
                         "Error samples per pixel. Must be in the range [1, " + to_string(m_max_samples_per_pixel) + "].";
-                message_critical(this, msg.c_str());
+                dialog::message_critical(this, msg.c_str());
                 return;
         }
 
@@ -143,7 +143,7 @@ void PathTracingParametersForNd::done(int r)
         {
                 std::string msg = "Error min size. Must be in the range [" + to_string(m_min_screen_size) + ", " +
                                   to_string(m_max_screen_size) + "].";
-                message_critical(this, msg.c_str());
+                dialog::message_critical(this, msg.c_str());
                 return;
         }
 
@@ -152,14 +152,14 @@ void PathTracingParametersForNd::done(int r)
         {
                 std::string msg = "Error max size. Must be in the range [" + to_string(m_min_screen_size) + ", " +
                                   to_string(m_max_screen_size) + "].";
-                message_critical(this, msg.c_str());
+                dialog::message_critical(this, msg.c_str());
                 return;
         }
 
         if (!(m_min_size <= m_max_size))
         {
                 std::string msg = "Error min and max sizes. The min size must be less than the max size or equal to the max size";
-                message_critical(this, msg.c_str());
+                dialog::message_critical(this, msg.c_str());
                 return;
         }
 
@@ -169,6 +169,8 @@ void PathTracingParametersForNd::done(int r)
 }
 }
 
+namespace dialog
+{
 bool path_tracing_parameters_for_nd(QWidget* parent, int dimension, int max_thread_count, int default_screen_size,
                                     int min_screen_size, int max_screen_size, int default_samples_per_pixel,
                                     int max_samples_per_pixel, int* thread_count, int* min_size, int* max_size,
@@ -178,4 +180,5 @@ bool path_tracing_parameters_for_nd(QWidget* parent, int dimension, int max_thre
         return w->show(dimension, max_thread_count, default_screen_size, min_screen_size, max_screen_size,
                        default_samples_per_pixel, max_samples_per_pixel, thread_count, min_size, max_size, samples_per_pixel,
                        flat_facets);
+}
 }

@@ -18,9 +18,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <QWidget>
+#include <string>
 
-[[nodiscard]] bool save_file_name(QWidget* parent, const std::string& caption, const std::string& filter, bool read_only,
-                                  std::string* name);
+namespace dialog
+{
+[[nodiscard]] bool save_file(QWidget* parent, const std::string& caption, const std::string& filter, bool read_only,
+                             std::string* name);
 
-[[nodiscard]] bool open_file_name(QWidget* parent, const std::string& caption, const std::string& filter, bool read_only,
-                                  std::string* name);
+[[nodiscard]] bool open_file(QWidget* parent, const std::string& caption, const std::string& filter, bool read_only,
+                             std::string* name);
+}

@@ -35,4 +35,7 @@ private:
 };
 }
 
+namespace dialog
+{
 void message_source_error(QWidget* parent, const std::string& message, const std::string& source);
+}

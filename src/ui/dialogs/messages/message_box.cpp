@@ -22,6 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <QMessageBox>
 
+namespace dialog
+{
 void message_critical(QWidget* parent, const QString& message)
 {
         QtObjectInDynamicMemory<QMessageBox> w(QMessageBox::Critical, APPLICATION_NAME, message, QMessageBox::Ok, parent);
@@ -54,4 +56,5 @@ bool message_question_default_no(QWidget* parent, const QString& message)
                                                QMessageBox::Yes | QMessageBox::No, parent);
         w->setDefaultButton(QMessageBox::No);
         return w->exec() == QMessageBox::Yes;
+}
 }

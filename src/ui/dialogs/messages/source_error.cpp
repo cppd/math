@@ -35,8 +35,11 @@ SourceError::SourceError(QWidget* parent, const std::string& message, const std:
 }
 }
 
+namespace dialog
+{
 void message_source_error(QWidget* parent, const std::string& message, const std::string& source)
 {
         QtObjectInDynamicMemory<message_source_error_implementation::SourceError> w(parent, message, source);
         w->exec();
+}
 }

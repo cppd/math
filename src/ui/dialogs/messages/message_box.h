@@ -20,8 +20,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QString>
 #include <QWidget>
 
+namespace dialog
+{
 void message_critical(QWidget* parent, const QString& message);
 void message_information(QWidget* parent, const QString& message);
 void message_warning(QWidget* parent, const QString& message);
 [[nodiscard]] bool message_question_default_yes(QWidget* parent, const QString& message);
 [[nodiscard]] bool message_question_default_no(QWidget* parent, const QString& message);
+}

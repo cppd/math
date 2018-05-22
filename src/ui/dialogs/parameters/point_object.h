@@ -44,5 +44,8 @@ private:
 };
 }
 
+namespace dialog
+{
 [[nodiscard]] bool point_object_parameters(QWidget* parent, int dimension, const std::string& point_object_name,
                                            int default_point_count, int min_point_count, int max_point_count, int* point_count);
+}

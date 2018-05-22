@@ -121,7 +121,7 @@ void PathTracingParametersFor3d::done(int r)
         if (!(m_thread_count >= 1 && m_thread_count <= m_max_thread_count))
         {
                 std::string msg = "Error thread count. Must be in the range [1, " + to_string(m_max_thread_count) + "].";
-                message_critical(this, msg.c_str());
+                dialog::message_critical(this, msg.c_str());
                 return;
         }
 
@@ -130,7 +130,7 @@ void PathTracingParametersFor3d::done(int r)
         {
                 std::string msg =
                         "Error samples per pixel. Must be in the range [1, " + to_string(m_max_samples_per_pixel) + "].";
-                message_critical(this, msg.c_str());
+                dialog::message_critical(this, msg.c_str());
                 return;
         }
 
@@ -139,7 +139,7 @@ void PathTracingParametersFor3d::done(int r)
         {
                 std::string msg = "Error width " + to_string(m_width) + ", min = " + to_string(m_min_width) +
                                   ", max = " + to_string(m_max_width);
-                message_critical(this, msg.c_str());
+                dialog::message_critical(this, msg.c_str());
                 return;
         }
 
@@ -148,7 +148,7 @@ void PathTracingParametersFor3d::done(int r)
         {
                 std::string msg = "Error height " + to_string(m_height) + ", min = " + to_string(m_min_height) +
                                   ", max = " + to_string(m_max_height);
-                message_critical(this, msg.c_str());
+                dialog::message_critical(this, msg.c_str());
                 return;
         }
 
@@ -179,6 +179,8 @@ void PathTracingParametersFor3d::height_value_changed(int)
 }
 }
 
+namespace dialog
+{
 bool path_tracing_parameters_for_3d(QWidget* parent, int max_thread_count, int width, int height, int max_screen_size,
                                     int default_samples_per_pixel, int max_samples_per_pixel, int* thread_count, int* paint_width,
                                     int* paint_height, int* samples_per_pixel, bool* flat_facets, bool* cornell_box)
@@ -186,4 +188,5 @@ bool path_tracing_parameters_for_3d(QWidget* parent, int max_thread_count, int w
         QtObjectInDynamicMemory<path_tracing_parameters_for_3d_implementation::PathTracingParametersFor3d> w(parent);
         return w->show(max_thread_count, width, height, max_screen_size, default_samples_per_pixel, max_samples_per_pixel,
                        thread_count, paint_width, paint_height, samples_per_pixel, flat_facets, cornell_box);
+}
 }

@@ -36,13 +36,13 @@ class Application final : public QApplication
                                 std::string msg;
                                 msg += "Error in an event receiver:\n";
                                 msg += e.what();
-                                message_critical(nullptr, msg.c_str());
+                                dialog::message_critical(nullptr, msg.c_str());
                                 error_fatal(msg);
                         }
                         catch (...)
                         {
                                 const char* msg = "Error in an event receiver";
-                                message_critical(nullptr, msg);
+                                dialog::message_critical(nullptr, msg);
                                 error_fatal(msg);
                         }
                 }
