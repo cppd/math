@@ -23,7 +23,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/vec.h"
 #include "window/window_prop.h"
 
-#include <QColorDialog>
 #include <QLayout>
 #include <QMainWindow>
 #include <QPointer>
@@ -143,25 +142,6 @@ enum class TextEditMessageType
         Warning,
         Information
 };
-
-template <typename T>
-void color_dialog(QWidget* widget, const QString& title, const QColor& color, const T& f)
-{
-        QColorDialog dialog(widget);
-
-        dialog.setCurrentColor(color);
-        dialog.setWindowTitle(title);
-        dialog.setOptions(QColorDialog::NoButtons | QColorDialog::DontUseNativeDialog);
-
-        widget->connect(&dialog, &QColorDialog::currentColorChanged, [&f](const QColor& c) {
-                if (c.isValid())
-                {
-                        f(c);
-                }
-        });
-
-        dialog.exec();
-}
 
 void set_widgets_enabled(QLayout* layout, bool v);
 

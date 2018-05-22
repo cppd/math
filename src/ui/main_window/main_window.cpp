@@ -28,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "ui/command_line/command_line.h"
 #include "ui/dialogs/messages/application_about.h"
 #include "ui/dialogs/messages/application_help.h"
+#include "ui/dialogs/messages/color_dialog.h"
 #include "ui/dialogs/messages/file_dialog.h"
 #include "ui/dialogs/messages/message_box.h"
 #include "ui/dialogs/messages/source_error.h"
@@ -1250,28 +1251,28 @@ void MainWindow::on_slider_ShadowQuality_valueChanged(int)
 
 void MainWindow::on_toolButton_BackgroundColor_clicked()
 {
-        color_dialog(this, "Background Color", m_background_color, [this](const QColor& c) { set_background_color(c); });
+        dialog::color_dialog(this, "Background Color", m_background_color, [this](const QColor& c) { set_background_color(c); });
 }
 
 void MainWindow::on_toolButton_DefaultColor_clicked()
 {
-        color_dialog(this, "Default Color", m_default_color, [this](const QColor& c) { set_default_color(c); });
+        dialog::color_dialog(this, "Default Color", m_default_color, [this](const QColor& c) { set_default_color(c); });
 }
 
 void MainWindow::on_toolButton_WireframeColor_clicked()
 {
-        color_dialog(this, "Wireframe Color", m_wireframe_color, [this](const QColor& c) { set_wireframe_color(c); });
+        dialog::color_dialog(this, "Wireframe Color", m_wireframe_color, [this](const QColor& c) { set_wireframe_color(c); });
 }
 
 void MainWindow::on_toolButton_dft_background_color_clicked()
 {
-        color_dialog(this, "DFT Background Color", m_dft_background_color,
-                     [this](const QColor& c) { set_dft_background_color(c); });
+        dialog::color_dialog(this, "DFT Background Color", m_dft_background_color,
+                             [this](const QColor& c) { set_dft_background_color(c); });
 }
 
 void MainWindow::on_toolButton_dft_color_clicked()
 {
-        color_dialog(this, "DFT Color", m_dft_color, [this](const QColor& c) { set_dft_color(c); });
+        dialog::color_dialog(this, "DFT Color", m_dft_color, [this](const QColor& c) { set_dft_color(c); });
 }
 
 void MainWindow::on_checkBox_Shadow_clicked()
