@@ -101,7 +101,8 @@ private:
         void constructor_interface();
         void constructor_repository();
         void constructor_buttons();
-        void constructor_objects();
+
+        static std::unordered_set<ObjectId> default_objects_to_load();
 
         void set_window_title_file(const std::string& file_name);
 
@@ -125,10 +126,10 @@ private:
 
         void set_dependent_interface();
 
-        static void strike_out_radio_button(QRadioButton* button);
-        static void enable_radio_button(QRadioButton* button);
-        void strike_out_all_objects_buttons();
-        void strike_out_bound_cocone_buttons();
+        static void reset_object_button(QRadioButton* button, bool object_to_load);
+        static void show_object_button(QRadioButton* button);
+        void reset_all_object_buttons(const std::unordered_set<ObjectId>& objects_to_load);
+        void reset_bound_cocone_buttons(const std::unordered_set<ObjectId>& objects_to_load);
 
         void progress_bars(bool permanent, const ProgressRatioList* progress_list, std::list<QProgressBar>* progress_bars);
 

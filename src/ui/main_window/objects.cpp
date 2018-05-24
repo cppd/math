@@ -594,7 +594,7 @@ void MainObjectsImpl<N>::load_object(const std::unordered_set<ObjectId>& objects
         // clear_all_data() для всех объектов всех измерений
         object_loaded();
 
-        m_event_emitter.file_loaded(object_name, N);
+        m_event_emitter.file_loaded(object_name, N, objects);
 
         m_manifold_points = (obj->facets().size() > 0) ? unique_facet_vertices(obj.get()) : unique_point_vertices(obj.get());
 

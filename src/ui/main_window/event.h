@@ -17,9 +17,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "objects.h"
+
 #include "com/variant.h"
 
 #include <string>
+#include <unordered_set>
 
 class WindowEvent final
 {
@@ -71,7 +74,9 @@ public:
         {
                 const std::string file_name;
                 const unsigned dimension;
-                loaded_file(const std::string& file_name_, unsigned dimension_) : file_name(file_name_), dimension(dimension_)
+                const std::unordered_set<ObjectId> objects;
+                loaded_file(const std::string& file_name_, unsigned dimension_, const std::unordered_set<ObjectId>& objects_)
+                        : file_name(file_name_), dimension(dimension_), objects(objects_)
                 {
                 }
         };
