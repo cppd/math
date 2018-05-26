@@ -52,6 +52,7 @@ public:
         virtual void file_loaded(const std::string& msg, unsigned dimension, const std::unordered_set<ObjectId>& objects) const
                 noexcept = 0;
         virtual void bound_cocone_loaded(double rho, double alpha) const noexcept = 0;
+        virtual void mesh_loaded(ObjectId id) const noexcept = 0;
         virtual void message_warning(const std::string& msg) const noexcept = 0;
 };
 

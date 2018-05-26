@@ -969,10 +969,25 @@ void MainWindow::slot_window_event(const WindowEvent& event)
                 break;
         }
         case WindowEvent::Type::LoadedObject:
+        case WindowEvent::Type::LoadedMesh:
         {
-                const WindowEvent::loaded_object& d = event.get<WindowEvent::loaded_object>();
+                ObjectId id;
 
-                switch (int_to_object_id(d.id))
+                if (event.type() == WindowEvent::Type::LoadedObject)
+                {
+                        ASSERT(m_dimension == 3);
+                        id = int_to_object_id(event.get<WindowEvent::loaded_object>().id);
+                }
+                else
+                {
+                        if (m_dimension == 3)
+                        {
+                                break;
+                        }
+                        id = event.get<WindowEvent::loaded_mesh>().id;
+                }
+
+                switch (id)
                 {
                 case ObjectId::Model:
                         show_object_button(ui.radioButton_Model);

@@ -82,6 +82,11 @@ public:
                 emit_message<WindowEvent::loaded_object>("Exception in emit object loaded", id);
         }
 
+        void mesh_loaded(ObjectId id) const noexcept override
+        {
+                emit_message<WindowEvent::loaded_mesh>("Exception in emit mesh loaded", id);
+        }
+
         void file_loaded(const std::string& msg, unsigned dimension, const std::unordered_set<ObjectId>& objects) const
                 noexcept override
         {

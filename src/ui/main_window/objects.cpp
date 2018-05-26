@@ -280,6 +280,8 @@ void MainObjectsImpl<N>::build_mesh(ProgressRatioList* progress_list, ObjectId i
         ProgressRatio progress(progress_list);
 
         m_meshes.set(id, std::make_shared<const Mesh<N, double>>(&obj, m_model_vertex_matrix, m_mesh_threads, &progress));
+
+        m_event_emitter.mesh_loaded(id);
 }
 
 template <size_t N>

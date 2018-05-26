@@ -70,6 +70,13 @@ public:
                 {
                 }
         };
+        struct loaded_mesh final
+        {
+                const ObjectId id;
+                loaded_mesh(ObjectId id_) : id(id_)
+                {
+                }
+        };
         struct loaded_file final
         {
                 const std::string file_name;
@@ -100,6 +107,7 @@ public:
         {
                 LoadedBoundCocone,
                 LoadedFile,
+                LoadedMesh,
                 LoadedObject,
                 MessageError,
                 MessageErrorFatal,
@@ -160,6 +168,10 @@ private:
         {
                 return Type::LoadedObject;
         }
+        static constexpr Type event_type(std::in_place_type_t<loaded_mesh>)
+        {
+                return Type::LoadedMesh;
+        }
         static constexpr Type event_type(std::in_place_type_t<loaded_file>)
         {
                 return Type::LoadedFile;
@@ -175,7 +187,7 @@ private:
 
         Type m_type;
 
-        Variant<std::monostate, loaded_object, loaded_bound_cocone, loaded_file, message_error, message_error_fatal,
+        Variant<std::monostate, loaded_object, loaded_mesh, loaded_bound_cocone, loaded_file, message_error, message_error_fatal,
                 message_error_source, message_information, message_warning, write_to_log>
                 m_data;
 };
