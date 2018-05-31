@@ -17,14 +17,23 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "progress_list.h"
 
+#include "com/error.h"
+
 // Для работы в потоках расчётов
 void ProgressRatioList::add_progress_ratio(IProgressRatioControl* ratio)
 {
+        ASSERT(std::this_thread::get_id() != m_thread_id);
+
         std::lock_guard lg(m_mutex);
 
-        if (m_stop)
+        if (m_terminate)
         {
-                throw TerminateRequestException();
+                throw_terminate_request_exception();
+        }
+
+        if (m_terminate_with_message)
+        {
+                throw_terminate_with_message_request_exception();
         }
 
         m_ratios.emplace_back(ratio);
@@ -33,6 +42,8 @@ void ProgressRatioList::add_progress_ratio(IProgressRatioControl* ratio)
 // Для работы в потоках расчётов
 void ProgressRatioList::delete_progress_ratio(const IProgressRatioControl* ratio)
 {
+        ASSERT(std::this_thread::get_id() != m_thread_id);
+
         std::lock_guard lg(m_mutex);
 
         for (auto i = m_ratios.begin(); i != m_ratios.end(); ++i)
@@ -48,10 +59,11 @@ void ProgressRatioList::delete_progress_ratio(const IProgressRatioControl* ratio
 // Для работы в потоке интерфейса
 void ProgressRatioList::stop_all()
 {
+        ASSERT(std::this_thread::get_id() == m_thread_id);
+
         std::lock_guard lg(m_mutex);
 
-        m_stop = true;
-
+        m_terminate = true;
         for (auto i = m_ratios.begin(); i != m_ratios.end(); ++i)
         {
                 (*i)->set_terminate();
@@ -59,18 +71,37 @@ void ProgressRatioList::stop_all()
 }
 
 // Для работы в потоке интерфейса
+void ProgressRatioList::stop_all_with_message()
+{
+        ASSERT(std::this_thread::get_id() == m_thread_id);
+
+        std::lock_guard lg(m_mutex);
+
+        m_terminate_with_message = true;
+        for (auto i = m_ratios.begin(); i != m_ratios.end(); ++i)
+        {
+                (*i)->set_terminate_with_message();
+        }
+}
+
+// Для работы в потоке интерфейса
 void ProgressRatioList::enable()
 {
+        ASSERT(std::this_thread::get_id() == m_thread_id);
+
         std::lock_guard lg(m_mutex);
 
         ASSERT(m_ratios.size() == 0);
 
-        m_stop = false;
+        m_terminate = false;
+        m_terminate_with_message = false;
 }
 
 // Для работы в потоке интерфейса
 std::vector<std::tuple<unsigned, unsigned, std::string>> ProgressRatioList::ratios() const
 {
+        ASSERT(std::this_thread::get_id() == m_thread_id);
+
         std::lock_guard lg(m_mutex);
 
         std::vector<std::tuple<unsigned, unsigned, std::string>> result;

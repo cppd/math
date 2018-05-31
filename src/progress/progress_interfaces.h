@@ -26,6 +26,7 @@ protected:
 
 public:
         virtual void set_terminate() noexcept = 0;
+        virtual void set_terminate_with_message() noexcept = 0;
         virtual void get(unsigned* v, unsigned* m) const = 0;
         virtual std::string text() const = 0;
 };

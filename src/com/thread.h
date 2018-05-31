@@ -144,7 +144,7 @@ public:
 
 class TerminateRequestException final : public std::exception
 {
-        static constexpr const char m_msg[] = "thread terminate requested";
+        static constexpr const char m_msg[] = "Thread termination requested";
 
 public:
         TerminateRequestException()
@@ -155,6 +155,30 @@ public:
                 return m_msg;
         }
 };
+
+class TerminateWithMessageRequestException final : public std::exception
+{
+        static constexpr const char m_msg[] = "Terminated by user";
+
+public:
+        TerminateWithMessageRequestException()
+        {
+        }
+        const char* what() const noexcept override
+        {
+                return m_msg;
+        }
+};
+
+[[noreturn]] inline void throw_terminate_request_exception()
+{
+        throw TerminateRequestException();
+}
+
+[[noreturn]] inline void throw_terminate_with_message_request_exception()
+{
+        throw TerminateWithMessageRequestException();
+}
 
 class ThreadsWithCatch
 {

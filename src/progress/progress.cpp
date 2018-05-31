@@ -22,6 +22,47 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <algorithm>
 #include <cmath>
 
+class AtomicTerminate
+{
+        // Для одного обращения к атомарным данным вместо двух обращений к std::atomic_bool
+        // используется хранение двух bool в одном std::atomic<int>.
+        using DataType = int;
+
+        static constexpr DataType TERMINATE = 0b1;
+        static constexpr DataType TERMINATE_WITH_MESSAGE = 0b10;
+
+        std::atomic<DataType> m_terminate = 0;
+
+public:
+        static constexpr bool is_always_lock_free = std::atomic<DataType>::is_always_lock_free;
+
+        void set_terminate()
+        {
+                m_terminate |= TERMINATE;
+        }
+
+        void set_terminate_with_message()
+        {
+                m_terminate |= TERMINATE_WITH_MESSAGE;
+        }
+
+        void check_terminate() const
+        {
+                // Только одно обращение к атомарным данным и далее работа с копией этих данных
+                DataType terminate = m_terminate;
+
+                if (terminate & TERMINATE)
+                {
+                        throw_terminate_request_exception();
+                }
+
+                if (terminate & TERMINATE_WITH_MESSAGE)
+                {
+                        throw_terminate_with_message_request_exception();
+                }
+        }
+};
+
 class ProgressRatio::Impl final : public IProgressRatioControl
 {
         static constexpr unsigned SHIFT = 32;
@@ -29,7 +70,7 @@ class ProgressRatio::Impl final : public IProgressRatioControl
 
         // К этим переменным имеются частые обращения, поэтому атомарные без мьютексов
         AtomicCounter<unsigned long long> m_counter{0};
-        std::atomic_bool m_terminate_request{false};
+        AtomicTerminate m_terminate;
 
         // Строка меняется редко в потоках, читается с частотой таймера интерфейса
         // в потоке интерфейса. Работа со строкой с её защитой мьютексом.
@@ -42,7 +83,9 @@ class ProgressRatio::Impl final : public IProgressRatioControl
 
 public:
         static constexpr bool LOCK_FREE =
-                AtomicCounter<unsigned long long>::is_always_lock_free && std::atomic_bool::is_always_lock_free;
+                AtomicCounter<unsigned long long>::is_always_lock_free && AtomicTerminate::is_always_lock_free;
+
+        static_assert(LOCK_FREE);
 
         Impl(IProgressRatioList* list, const std::string& permanent_text) : m_ratios(list), m_permanent_text(permanent_text)
         {
@@ -64,10 +107,7 @@ public:
 
         void set(unsigned v, unsigned m)
         {
-                if (m_terminate_request)
-                {
-                        throw TerminateRequestException();
-                }
+                m_terminate.check_terminate();
 
                 m_counter = (static_cast<unsigned long long>(m & MAX) << SHIFT) | (v & MAX);
         }
@@ -91,7 +131,12 @@ public:
 
         void set_terminate() noexcept override
         {
-                m_terminate_request = true;
+                m_terminate.set_terminate();
+        }
+
+        void set_terminate_with_message() noexcept override
+        {
+                m_terminate.set_terminate_with_message();
         }
 
         void get(unsigned* v, unsigned* m) const override

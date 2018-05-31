@@ -28,8 +28,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 class ProgressRatioList final : public IProgressRatioList
 {
+        const std::thread::id m_thread_id = std::this_thread::get_id();
         std::list<IProgressRatioControl*> m_ratios;
-        bool m_stop = false;
+        bool m_terminate = false;
+        bool m_terminate_with_message = false;
         mutable std::mutex m_mutex;
 
 public:
@@ -39,6 +41,7 @@ public:
 
         // Для работы в потоке интерфейса
         void stop_all();
+        void stop_all_with_message();
         void enable();
         std::vector<std::tuple<unsigned, unsigned, std::string>> ratios() const;
 };

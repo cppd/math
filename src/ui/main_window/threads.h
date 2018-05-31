@@ -33,44 +33,82 @@ enum class ThreadAction
 
 struct ThreadProgress
 {
+        ThreadAction thread_action;
         bool permanent;
         const ProgressRatioList* progress_list;
         std::list<QProgressBar>* progress_bars;
 
-        ThreadProgress(bool permanent_, const ProgressRatioList* progress_list_, std::list<QProgressBar>* progress_bars_)
-                : permanent(permanent_), progress_list(progress_list_), progress_bars(progress_bars_)
+        ThreadProgress(ThreadAction thread_action_, bool permanent_, const ProgressRatioList* progress_list_,
+                       std::list<QProgressBar>* progress_bars_)
+                : thread_action(thread_action_),
+                  permanent(permanent_),
+                  progress_list(progress_list_),
+                  progress_bars(progress_bars_)
         {
         }
 };
 
 class Threads
 {
-        struct ThreadData
+        class ThreadData
         {
+                enum class StopType
+                {
+                        WithMessage,
+                        Silent
+                };
+
+                void stop(StopType stop_type) noexcept
+                {
+                        try
+                        {
+                                switch (stop_type)
+                                {
+                                case StopType::WithMessage:
+                                        progress_list.stop_all_with_message();
+                                        break;
+                                case StopType::Silent:
+                                        progress_list.stop_all();
+                                        break;
+                                }
+
+                                if (thread.joinable())
+                                {
+                                        thread.join();
+                                }
+
+                                progress_list.enable();
+                        }
+                        catch (...)
+                        {
+                                switch (stop_type)
+                                {
+                                case StopType::WithMessage:
+                                        error_fatal("Thread stop with message error");
+                                case StopType::Silent:
+                                        error_fatal("Thread stop error");
+                                };
+                        }
+                }
+
+        public:
                 ProgressRatioList progress_list;
                 std::list<QProgressBar> progress_bars;
                 std::thread thread;
                 std::atomic_bool working = false;
 
-                void stop() noexcept
+                void stop_with_message() noexcept
                 {
-                        try
-                        {
-                                progress_list.stop_all();
-                                if (thread.joinable())
-                                {
-                                        thread.join();
-                                }
-                                progress_list.enable();
-                        }
-                        catch (...)
-                        {
-                                error_fatal("Thread stop error");
-                        }
+                        stop(StopType::WithMessage);
+                }
+
+                void stop_silent() noexcept
+                {
+                        stop(StopType::Silent);
                 }
         };
 
-        std::thread::id m_thread_id = std::this_thread::get_id();
+        const std::thread::id m_thread_id = std::this_thread::get_id();
 
         std::function<void(const std::exception_ptr& ptr, const std::string& msg)> m_exception_handler;
 
@@ -103,15 +141,24 @@ public:
                 for (auto& p : m_threads)
                 {
                         bool permanent = (p.first == ThreadAction::SelfTest);
-                        m_progress.emplace_back(permanent, &p.second.progress_list, &p.second.progress_bars);
+                        m_progress.emplace_back(p.first, permanent, &p.second.progress_list, &p.second.progress_bars);
                 }
+        }
+
+        void stop_thread_with_message(ThreadAction action) noexcept
+        {
+                ASSERT(std::this_thread::get_id() == m_thread_id);
+
+                action_thread(action).stop_with_message();
         }
 
         void stop_all_threads() noexcept
         {
+                ASSERT(std::this_thread::get_id() == m_thread_id);
+
                 for (auto& t : m_threads)
                 {
-                        t.second.stop();
+                        t.second.stop_silent();
                 }
         }
 
@@ -147,7 +194,7 @@ public:
                 switch (thread_action)
                 {
                 case ThreadAction::LoadObject:
-                        action_thread(ThreadAction::ReloadBoundCocone).stop();
+                        action_thread(ThreadAction::ReloadBoundCocone).stop_silent();
                         break;
                 case ThreadAction::ExportObject:
                         break;
@@ -158,7 +205,7 @@ public:
                 }
 
                 ThreadData& thread_pack = action_thread(thread_action);
-                thread_pack.stop();
+                thread_pack.stop_silent();
                 thread_pack.working = true;
                 thread_pack.thread = std::thread([ this, &thread_pack, func = std::forward<F>(function) ]() noexcept {
                         std::string message;

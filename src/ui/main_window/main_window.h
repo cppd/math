@@ -131,7 +131,8 @@ private:
         void reset_all_object_buttons(const std::unordered_set<ObjectId>& objects_to_load);
         void reset_bound_cocone_buttons(const std::unordered_set<ObjectId>& objects_to_load);
 
-        void progress_bars(bool permanent, const ProgressRatioList* progress_list, std::list<QProgressBar>* progress_bars);
+        void progress_bars(const ThreadAction& thread_action, bool permanent, const ProgressRatioList* progress_list,
+                           std::list<QProgressBar>* progress_bars);
 
         double ambient_light() const;
         double diffuse_light() const;

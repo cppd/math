@@ -679,7 +679,8 @@ void MainWindow::thread_reload_bound_cocone()
         });
 }
 
-void MainWindow::progress_bars(bool permanent, const ProgressRatioList* progress_list, std::list<QProgressBar>* progress_bars)
+void MainWindow::progress_bars(const ThreadAction& thread_action, bool permanent, const ProgressRatioList* progress_list,
+                               std::list<QProgressBar>* progress_bars)
 {
         static_assert(std::numeric_limits<unsigned>::max() >= std::numeric_limits<int>::max());
 
@@ -687,9 +688,29 @@ void MainWindow::progress_bars(bool permanent, const ProgressRatioList* progress
 
         std::vector<std::tuple<unsigned, unsigned, std::string>> ratios = progress_list->ratios();
 
-        if (ratios.size() > progress_bars->size())
+        while (ratios.size() > progress_bars->size())
         {
-                progress_bars->resize(ratios.size());
+                QProgressBar& bar = progress_bars->emplace_back();
+
+                bar.setContextMenuPolicy(Qt::CustomContextMenu);
+
+                connect(&bar, &QProgressBar::customContextMenuRequested,
+                        [thread_action, &bar, ptr_this = QPointer(this)](const QPoint&) {
+                                QtObjectInDynamicMemory<QMenu> menu(&bar);
+                                menu->addAction("Terminate");
+
+                                if (!menu->exec(QCursor::pos()) || menu.isNull())
+                                {
+                                        return;
+                                }
+
+                                if (ptr_this.isNull())
+                                {
+                                        return;
+                                }
+
+                                ptr_this->m_threads.stop_thread_with_message(thread_action);
+                        });
         }
 
         std::list<QProgressBar>::iterator bar = progress_bars->begin();
@@ -740,7 +761,7 @@ void MainWindow::slot_timer_progress_bar()
 {
         for (const ThreadProgress& t : m_threads.thread_progress())
         {
-                progress_bars(t.permanent, t.progress_list, t.progress_bars);
+                progress_bars(t.thread_action, t.permanent, t.progress_list, t.progress_bars);
         }
 }
 
