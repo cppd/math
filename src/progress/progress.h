@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "progress_interfaces.h"
 
 #include <memory>
+#include <string>
 
 // Для работы в потоках расчётов
 class ProgressRatio
@@ -30,9 +31,11 @@ class ProgressRatio
 public:
         ProgressRatio(IProgressRatioList* list, const std::string& permanent_text = "");
         ~ProgressRatio();
+
         void set(unsigned v, unsigned m);
         void set(double v);
         void set_undefined();
         void set_text(const std::string& text);
+
         static bool lock_free();
 };

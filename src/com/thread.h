@@ -170,12 +170,12 @@ public:
         }
 };
 
-[[noreturn]] inline void throw_terminate_request_exception()
+[[noreturn]] inline void throw_terminate_quietly_exception()
 {
         throw TerminateRequestException();
 }
 
-[[noreturn]] inline void throw_terminate_with_message_request_exception()
+[[noreturn]] inline void throw_terminate_with_message_exception()
 {
         throw TerminateWithMessageRequestException();
 }

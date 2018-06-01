@@ -236,7 +236,7 @@ MainWindow::~MainWindow()
 {
         ASSERT(std::this_thread::get_id() == m_window_thread_id);
 
-        stop_all_threads();
+        terminate_all_threads();
 }
 
 void MainWindow::closeEvent(QCloseEvent* event)
@@ -262,7 +262,7 @@ void MainWindow::closeEvent(QCloseEvent* event)
                 }
         }
 
-        stop_all_threads();
+        terminate_all_threads();
 
         event->accept();
 }
@@ -276,11 +276,11 @@ void MainWindow::close_without_confirmation()
         close();
 }
 
-void MainWindow::stop_all_threads()
+void MainWindow::terminate_all_threads()
 {
         ASSERT(std::this_thread::get_id() == m_window_thread_id);
 
-        m_threads.stop_all_threads();
+        m_threads.terminate_all_threads();
 
         m_show.reset();
 
@@ -709,7 +709,7 @@ void MainWindow::progress_bars(const ThreadAction& thread_action, bool permanent
                                         return;
                                 }
 
-                                ptr_this->m_threads.stop_thread_with_message(thread_action);
+                                ptr_this->m_threads.terminate_thread_with_message(thread_action);
                         });
         }
 

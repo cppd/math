@@ -52,23 +52,23 @@ class Threads
 {
         class ThreadData
         {
-                enum class StopType
+                enum class TerminateType
                 {
-                        WithMessage,
-                        Silent
+                        Quietly,
+                        WithMessage
                 };
 
-                void stop(StopType stop_type) noexcept
+                void terminate(TerminateType terminate_type) noexcept
                 {
                         try
                         {
-                                switch (stop_type)
+                                switch (terminate_type)
                                 {
-                                case StopType::WithMessage:
-                                        progress_list.stop_all_with_message();
+                                case TerminateType::Quietly:
+                                        progress_list.terminate_all_quietly();
                                         break;
-                                case StopType::Silent:
-                                        progress_list.stop_all();
+                                case TerminateType::WithMessage:
+                                        progress_list.terminate_all_with_message();
                                         break;
                                 }
 
@@ -81,12 +81,12 @@ class Threads
                         }
                         catch (...)
                         {
-                                switch (stop_type)
+                                switch (terminate_type)
                                 {
-                                case StopType::WithMessage:
-                                        error_fatal("Thread stop with message error");
-                                case StopType::Silent:
-                                        error_fatal("Thread stop error");
+                                case TerminateType::Quietly:
+                                        error_fatal("Error terminating thread quietly error");
+                                case TerminateType::WithMessage:
+                                        error_fatal("Error terminating thread with message error");
                                 };
                         }
                 }
@@ -97,14 +97,14 @@ class Threads
                 std::thread thread;
                 std::atomic_bool working = false;
 
-                void stop_with_message() noexcept
+                void terminate_quietly() noexcept
                 {
-                        stop(StopType::WithMessage);
+                        terminate(TerminateType::Quietly);
                 }
 
-                void stop_silent() noexcept
+                void terminate_with_message() noexcept
                 {
-                        stop(StopType::Silent);
+                        terminate(TerminateType::WithMessage);
                 }
         };
 
@@ -145,20 +145,20 @@ public:
                 }
         }
 
-        void stop_thread_with_message(ThreadAction action) noexcept
+        void terminate_thread_with_message(ThreadAction action) noexcept
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
-                action_thread(action).stop_with_message();
+                action_thread(action).terminate_with_message();
         }
 
-        void stop_all_threads() noexcept
+        void terminate_all_threads() noexcept
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 for (auto& t : m_threads)
                 {
-                        t.second.stop_silent();
+                        t.second.terminate_quietly();
                 }
         }
 
@@ -194,7 +194,7 @@ public:
                 switch (thread_action)
                 {
                 case ThreadAction::LoadObject:
-                        action_thread(ThreadAction::ReloadBoundCocone).stop_silent();
+                        action_thread(ThreadAction::ReloadBoundCocone).terminate_quietly();
                         break;
                 case ThreadAction::ExportObject:
                         break;
@@ -205,7 +205,7 @@ public:
                 }
 
                 ThreadData& thread_pack = action_thread(thread_action);
-                thread_pack.stop_silent();
+                thread_pack.terminate_quietly();
                 thread_pack.working = true;
                 thread_pack.thread = std::thread([ this, &thread_pack, func = std::forward<F>(function) ]() noexcept {
                         std::string message;

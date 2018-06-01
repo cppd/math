@@ -30,18 +30,18 @@ class ProgressRatioList final : public IProgressRatioList
 {
         const std::thread::id m_thread_id = std::this_thread::get_id();
         std::list<IProgressRatioControl*> m_ratios;
-        bool m_terminate = false;
+        bool m_terminate_quietly = false;
         bool m_terminate_with_message = false;
         mutable std::mutex m_mutex;
 
 public:
         // Для работы в потоках расчётов
         void add_progress_ratio(IProgressRatioControl* ratio) override;
-        void delete_progress_ratio(const IProgressRatioControl* ratio) override;
+        void delete_progress_ratio(const IProgressRatioControl* ratio) noexcept override;
 
         // Для работы в потоке интерфейса
-        void stop_all();
-        void stop_all_with_message();
+        void terminate_all_quietly();
+        void terminate_all_with_message();
         void enable();
         std::vector<std::tuple<unsigned, unsigned, std::string>> ratios() const;
 };

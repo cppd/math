@@ -111,7 +111,7 @@ private:
 
         void close_without_confirmation();
 
-        void stop_all_threads();
+        void terminate_all_threads();
 
         template <typename F>
         void catch_all(const F& function) const noexcept;

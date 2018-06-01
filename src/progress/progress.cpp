@@ -28,7 +28,7 @@ class AtomicTerminate
         // используется хранение двух bool в одном std::atomic<int>.
         using DataType = int;
 
-        static constexpr DataType TERMINATE = 0b1;
+        static constexpr DataType TERMINATE_QUIETLY = 0b1;
         static constexpr DataType TERMINATE_WITH_MESSAGE = 0b10;
 
         std::atomic<DataType> m_terminate = 0;
@@ -36,12 +36,12 @@ class AtomicTerminate
 public:
         static constexpr bool is_always_lock_free = std::atomic<DataType>::is_always_lock_free;
 
-        void set_terminate()
+        void set_terminate_quietly() noexcept
         {
-                m_terminate |= TERMINATE;
+                m_terminate |= TERMINATE_QUIETLY;
         }
 
-        void set_terminate_with_message()
+        void set_terminate_with_message() noexcept
         {
                 m_terminate |= TERMINATE_WITH_MESSAGE;
         }
@@ -51,14 +51,14 @@ public:
                 // Только одно обращение к атомарным данным и далее работа с копией этих данных
                 DataType terminate = m_terminate;
 
-                if (terminate & TERMINATE)
+                if (terminate & TERMINATE_QUIETLY)
                 {
-                        throw_terminate_request_exception();
+                        throw_terminate_quietly_exception();
                 }
 
                 if (terminate & TERMINATE_WITH_MESSAGE)
                 {
-                        throw_terminate_with_message_request_exception();
+                        throw_terminate_with_message_exception();
                 }
         }
 };
@@ -129,12 +129,12 @@ public:
                 m_text = text;
         }
 
-        void set_terminate() noexcept override
+        void terminate_quietly() noexcept override
         {
-                m_terminate.set_terminate();
+                m_terminate.set_terminate_quietly();
         }
 
-        void set_terminate_with_message() noexcept override
+        void terminate_with_message() noexcept override
         {
                 m_terminate.set_terminate_with_message();
         }

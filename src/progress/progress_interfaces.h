@@ -25,8 +25,8 @@ protected:
         virtual ~IProgressRatioControl() = default;
 
 public:
-        virtual void set_terminate() noexcept = 0;
-        virtual void set_terminate_with_message() noexcept = 0;
+        virtual void terminate_quietly() noexcept = 0;
+        virtual void terminate_with_message() noexcept = 0;
         virtual void get(unsigned* v, unsigned* m) const = 0;
         virtual std::string text() const = 0;
 };
@@ -38,5 +38,5 @@ protected:
 
 public:
         virtual void add_progress_ratio(IProgressRatioControl* ratio) = 0;
-        virtual void delete_progress_ratio(const IProgressRatioControl* ratio) = 0;
+        virtual void delete_progress_ratio(const IProgressRatioControl* ratio) noexcept = 0;
 };

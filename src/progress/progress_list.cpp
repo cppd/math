@@ -26,52 +26,59 @@ void ProgressRatioList::add_progress_ratio(IProgressRatioControl* ratio)
 
         std::lock_guard lg(m_mutex);
 
-        if (m_terminate)
+        if (m_terminate_quietly)
         {
-                throw_terminate_request_exception();
+                throw_terminate_quietly_exception();
         }
 
         if (m_terminate_with_message)
         {
-                throw_terminate_with_message_request_exception();
+                throw_terminate_with_message_exception();
         }
 
         m_ratios.emplace_back(ratio);
 }
 
 // Для работы в потоках расчётов
-void ProgressRatioList::delete_progress_ratio(const IProgressRatioControl* ratio)
+void ProgressRatioList::delete_progress_ratio(const IProgressRatioControl* ratio) noexcept
 {
         ASSERT(std::this_thread::get_id() != m_thread_id);
 
-        std::lock_guard lg(m_mutex);
-
-        for (auto i = m_ratios.begin(); i != m_ratios.end(); ++i)
+        try
         {
-                if (*i == ratio)
+                std::lock_guard lg(m_mutex);
+
+                for (auto i = m_ratios.begin(); i != m_ratios.end(); ++i)
                 {
-                        m_ratios.erase(i);
-                        return;
+                        if (*i == ratio)
+                        {
+                                m_ratios.erase(i);
+                                return;
+                        }
                 }
+        }
+        catch (...)
+        {
+                error_fatal("Exception in delete progress ratio");
         }
 }
 
 // Для работы в потоке интерфейса
-void ProgressRatioList::stop_all()
+void ProgressRatioList::terminate_all_quietly()
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
         std::lock_guard lg(m_mutex);
 
-        m_terminate = true;
+        m_terminate_quietly = true;
         for (auto i = m_ratios.begin(); i != m_ratios.end(); ++i)
         {
-                (*i)->set_terminate();
+                (*i)->terminate_quietly();
         }
 }
 
 // Для работы в потоке интерфейса
-void ProgressRatioList::stop_all_with_message()
+void ProgressRatioList::terminate_all_with_message()
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
@@ -80,7 +87,7 @@ void ProgressRatioList::stop_all_with_message()
         m_terminate_with_message = true;
         for (auto i = m_ratios.begin(); i != m_ratios.end(); ++i)
         {
-                (*i)->set_terminate_with_message();
+                (*i)->terminate_with_message();
         }
 }
 
@@ -93,7 +100,7 @@ void ProgressRatioList::enable()
 
         ASSERT(m_ratios.size() == 0);
 
-        m_terminate = false;
+        m_terminate_quietly = false;
         m_terminate_with_message = false;
 }
 
