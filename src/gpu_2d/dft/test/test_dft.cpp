@@ -34,6 +34,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "gpu_2d/dft/comp/dft_gl2d.h"
 #include "window/window.h"
 
+#include <array>
 #include <cmath>
 #include <complex>
 #include <cstdio>
@@ -64,36 +65,54 @@ double discrepancy(const std::vector<complex>& x1, const std::vector<complex>& x
                 sum += std::abs(x1[i] - x2[i]);
                 sum2 += std::abs(x1[i]);
         }
+
         return sum / sum2;
+}
+
+void check_discrepancy(const std::vector<complex>& d1, const std::vector<complex>& d2)
+{
+        double d = discrepancy(d1, d2);
+        LOG("Discrepancy: " + to_string(d));
+
+        if (d > DISCREPANCY_LIMIT)
+        {
+                error("HUGE discrepancy");
+        }
 }
 #endif
 
-std::vector<complex> load_data(const std::string& file_name, int* n1, int* n2)
+void load_data(const std::string& file_name, int* n1, int* n2, std::vector<complex>* data)
 {
+        constexpr int MAX_DIMENSION_SIZE = 1e9;
+
         CFile f(file_name, "r");
 
         int v1, v2;
 
-        if (!fscanf(f, "%d%d", &v1, &v2))
+        if (2 != fscanf(f, "%d%d", &v1, &v2))
         {
                 error("Data dimensions read error");
         }
 
-        if (v1 <= 0 || v2 <= 0)
+        if (v1 < 1 || v2 < 1)
         {
                 error("Dimensions must be positive numbers");
         }
+        if (v1 > MAX_DIMENSION_SIZE || v2 > MAX_DIMENSION_SIZE)
+        {
+                error("Dimensions are too big");
+        }
 
-        const size_t count = v1 * v2;
+        const long long count = v1 * v2;
 
         LOG("Loading " + to_string(v1) + "x" + to_string(v2) + ", total number count " + to_string(count));
 
         std::vector<complex> x(count);
 
-        for (size_t i = 0; i < count; ++i)
+        for (long long i = 0; i < count; ++i)
         {
                 double real, imag;
-                if (!fscanf(f, "%lf%lf", &real, &imag))
+                if (2 != fscanf(f, "%lf%lf", &real, &imag))
                 {
                         error("Error read number № " + std::to_string(i));
                 }
@@ -102,15 +121,18 @@ std::vector<complex> load_data(const std::string& file_name, int* n1, int* n2)
 
         *n1 = v1;
         *n2 = v2;
-
-        return x;
+        *data = std::move(x);
 }
 
 void save_data(const std::string& file_name, const std::vector<complex>& x)
 {
-        CFile f(file_name, "w");
+        if (file_name.empty())
+        {
+                LOG("Data: " + to_string(x));
+                return;
+        }
 
-        // fprintf(f, "%ld\n", static_cast<long>(x.size()));
+        CFile f(file_name, "w");
 
         for (const complex& c : x)
         {
@@ -122,6 +144,13 @@ void save_data(const std::string& file_name, const std::vector<complex>& x)
 
 void generate_random_data(const std::string& file_name, int n1, int n2)
 {
+        if (n1 < 1 || n2 < 1)
+        {
+                error("Wrong size " + to_string(n1) + " " + to_string(n2));
+        }
+
+        LOG("Generating " + to_string(n1) + "x" + to_string(n2) + ", total number count " + to_string(n1 * n2));
+
         std::mt19937_64 gen((static_cast<long long>(n1) << 32) + n2);
         std::uniform_real_distribution<double> urd(-1.0, 1.0);
 
@@ -137,191 +166,229 @@ void generate_random_data(const std::string& file_name, int n1, int n2)
         }
 }
 
-void test_fft_impl(bool big_test)
+std::string time_string(double start_time)
 {
-#if 0
+        return to_string_fixed(1000.0 * (time_in_seconds() - start_time), 5) + " ms";
+}
 
-        std::unique_ptr<sf::Context> context;
-        create_gl_context_1x1(MAJOR_GL_VERSION, MINOR_GL_VERSION, required_extensions(), &context);
+void compute_gl2d(bool dft_and_inverse_dft, int n1, int n2, std::vector<complex>* data)
+{
+        LOG("----- GL2D -----");
+        double start_time = time_in_seconds();
 
-        // const std::vector<complex> data(
-        //        {{1, 0}, {2, 0}, {30, 0}, {4, 0}}); //, {-20, 0}, {3, 0}}); //, {-5, 0}});//, {-1, 0}});
-        const std::vector<complex> data({{1, 0}, {2, 0}, {3, 0}, {4, 0}, {5, 0}, {6, 0}});
-        int N = data.size() / 3;
-        int K = data.size() / N;
-
-        LOG(to_string(data));
-
+        std::unique_ptr<IFourierGL1> gl2d = create_fft_gl2d(n1, n2);
+        gl2d->exec(false, data);
+        if (dft_and_inverse_dft)
         {
-                LOG("-------GL----------");
-                std::unique_ptr<IFourierGL1> gl2d = create_fft_gl2d(N, K);
-                std::vector<complex> data1(data);
-                gl2d->exec(false, &data1);
-                // gl2d->exec(true, &data1);
-
-                LOG("-----------------");
-                LOG(to_string(data1));
+                gl2d->exec(true, data);
         }
+
+        LOG("GL2D time: " + time_string(start_time));
+}
+
 #if defined(CUDA_FOUND)
+void compute_cuda(bool dft_and_inverse_dft, int n1, int n2, std::vector<complex>* data)
+{
+        LOG("----- cuFFT -----");
+        double start_time = time_in_seconds();
+
+        std::unique_ptr<IFourierCuda> cufft = create_fft_cufft(n1, n2);
+        cufft->exec(false, data);
+        if (dft_and_inverse_dft)
         {
-                LOG("-------CUDA--------");
-                std::unique_ptr<IFourierCuda> cufft = create_fft_cufft(N, K);
-                std::vector<complex> data1(data);
-                cufft->exec(false, &data1);
-                // cufft->exec(true, &data1);
-                LOG("-----------------");
-                LOG(to_string(data1));
+                cufft->exec(true, data);
         }
+
+        LOG("cuFFT time: " + time_string(start_time));
+}
 #endif
+
 #if defined(FFTW_FOUND)
+void compute_fftw(bool dft_and_inverse_dft, int n1, int n2, std::vector<complex>* data)
+{
+        LOG("----- FFTW -----");
+        double start_time = time_in_seconds();
+
+        std::unique_ptr<IFourierFFTW> fftw = create_dft_fftw(n1, n2);
+        fftw->exec(false, data);
+        if (dft_and_inverse_dft)
         {
-                LOG("-------FFTW--------");
-                std::unique_ptr<IFourierFFTW> fftw = create_dft_fftw(N, K);
-                std::vector<complex> data1(data);
-                fftw->exec(false, &data1);
-                // cufft->exec(true, &data1);
-                LOG("-----------------");
-                LOG(to_string(data1));
+                fftw->exec(true, data);
+        }
+
+        LOG("FFTW time: " + time_string(start_time));
+}
+#endif
+
+void check_errors(const std::vector<std::string>& messages)
+{
+        if (messages.size() < 1)
+        {
+                return;
+        }
+
+        std::string s = messages[0];
+        for (size_t i = 1; i < messages.size(); ++i)
+        {
+                s += "\n";
+                s += messages[i];
+        }
+
+        error(s);
+}
+
+void dft_test(bool dft_and_inverse_dft, int n1, int n2, const std::vector<complex>& source_data,
+              const std::string& output_gl2d_file_name = "", [[maybe_unused]] const std::string& output_cuda_file_name = "",
+              [[maybe_unused]] const std::string& output_fftw_file_name = "")
+{
+        std::vector<complex> data_gl2d(source_data);
+        compute_gl2d(dft_and_inverse_dft, n1, n2, &data_gl2d);
+        save_data(output_gl2d_file_name, data_gl2d);
+
+        std::vector<std::string> messages;
+
+#if defined(CUDA_FOUND)
+        try
+        {
+                std::vector<complex> data(source_data);
+                compute_cuda(dft_and_inverse_dft, n1, n2, &data);
+                save_data(output_cuda_file_name, data);
+                check_discrepancy(data_gl2d, data);
+        }
+        catch (std::exception& e)
+        {
+                messages.push_back(std::string("cuFFT\n") + e.what());
         }
 #endif
 
-// Fourier[{1, 2, 30}, FourierParameters -> {1, -1}]
-// 1 2 30 -> 33. + 0. I, -15. + 24.2487 I, -15. - 24.2487 I
-// 1 2 -> 3 -1
+#if defined(FFTW_FOUND)
+        try
+        {
+                std::vector<complex> data(source_data);
+                compute_fftw(dft_and_inverse_dft, n1, n2, &data);
+                save_data(output_fftw_file_name, data);
+                check_discrepancy(data_gl2d, data);
+        }
+        catch (std::exception& e)
+        {
+                messages.push_back(std::string("FFTW\n") + e.what());
+        }
+#endif
 
-#else
-        const std::string tmp_dir = temp_directory();
-        const std::string input = tmp_dir + "/dft_input.txt";
-        const std::string output_gl2d = tmp_dir + "/dft_output_gl2d.txt";
-        const std::string output_cuda = tmp_dir + "/dft_output_cuda.txt";
-        const std::string output_fftw = tmp_dir + "/dft_output_fftw.txt";
+        check_errors(messages);
+}
+
+std::string dft_name(bool dft_and_inverse_dft)
+{
+        if (dft_and_inverse_dft)
+        {
+                return "DFT And Inverse DFT";
+        }
+        else
+        {
+                return "DFT";
+        }
+}
+
+void constant_data_test(bool dft_and_inverse_dft)
+{
+        // Fourier[{1, 2, 30}, FourierParameters -> {1, -1}]
+        // 1 2 30 -> 33. + 0. I, -15. + 24.2487 I, -15. - 24.2487 I
+        // 1 2 -> 3 -1
+
+        LOG("\n----- Context For Simple " + dft_name(dft_and_inverse_dft) + " Testing -----");
 
         std::unique_ptr<sf::Context> context;
         create_gl_context_1x1(MAJOR_GL_VERSION, MINOR_GL_VERSION, required_extensions(), &context);
 
-        LOG("-----------------");
+        LOG("\n----- Simple " + dft_name(dft_and_inverse_dft) + " Testing -----");
+
+        // const std::vector<complex> source_data(
+        //        {{1, 0}, {2, 0}, {30, 0}, {4, 0}}); //, {-20, 0}, {3, 0}}); //, {-5, 0}});//, {-1, 0}});
+        const std::vector<complex> source_data({{1, 0}, {2, 0}, {3, 0}, {4, 0}, {5, 0}, {6, 0}});
+        const int N = source_data.size() / 3;
+        const int K = source_data.size() / N;
+
+        LOG("--- Source Data ---\n" + to_string(source_data));
+
+        dft_test(dft_and_inverse_dft, N, K, source_data);
+
+        LOG("---\nDFT check passed");
+}
+
+void random_data_test(bool dft_and_inverse_dft, const std::array<int, 2>& dimensions)
+{
+        LOG("\n----- Context For Random " + dft_name(dft_and_inverse_dft) + " Testing -----");
+
+        std::unique_ptr<sf::Context> context;
+        create_gl_context_1x1(MAJOR_GL_VERSION, MINOR_GL_VERSION, required_extensions(), &context);
+
+        LOG("\n----- Random " + dft_name(dft_and_inverse_dft) + " Testing -----");
+
+        const std::string tmp_dir = temp_directory();
+        const std::string input_file_name = tmp_dir + "/dft_input.txt";
+        const std::string gl2d_file_name = tmp_dir + "/dft_output_gl2d.txt";
+        const std::string cuda_file_name = tmp_dir + "/dft_output_cuda.txt";
+        const std::string fftw_file_name = tmp_dir + "/dft_output_fftw.txt";
+
+        generate_random_data(input_file_name, dimensions[0], dimensions[1]);
 
         int n1, n2;
-        if (!big_test)
+        std::vector<complex> source_data;
+        load_data(input_file_name, &n1, &n2, &source_data);
+
+        if (dimensions[0] != n1 || dimensions[1] != n2)
+        {
+                error("Error test data dimensions: saved to file (" + to_string(dimensions[0]) + ", " + to_string(dimensions[1]) +
+                      "), loaded from file (" + to_string(n1) + ", " + to_string(n2) + ")");
+        }
+
+        dft_test(dft_and_inverse_dft, n1, n2, source_data, gl2d_file_name, cuda_file_name, fftw_file_name);
+
+        LOG("---\nDFT check passed");
+}
+
+enum class TestSize
+{
+        Small,
+        Big
+};
+
+TestSize find_test_size()
+{
+        RandomEngineWithSeed<std::mt19937_64> engine;
+        std::uniform_int_distribution<int> uid(1, 20);
+        return (uid(engine) != 1) ? TestSize::Small : TestSize::Big;
+}
+
+std::array<int, 2> find_dimensions(TestSize test_size)
+{
+        switch (test_size)
+        {
+        case TestSize::Small:
         {
                 RandomEngineWithSeed<std::mt19937_64> engine;
                 std::uniform_int_distribution<int> uid(1, 100);
-                n1 = uid(engine);
-                n2 = uid(engine);
+                return {uid(engine), uid(engine)};
         }
-        else
+        case TestSize::Big:
         {
-                n1 = 3001; // 3001; // 61;//1001; 1009
-                n2 = 997; // 61;//997;
+                int n1 = 3001; // 3001; // 61;//1001; 1009
+                int n2 = 997; // 61;//997;
+                return {n1, n2};
         }
-
-        if (n1 >= 1 && n2 >= 1)
-        {
-                LOG("Generating " + to_string(n1) + "x" + to_string(n2) + ", total number count " + to_string(n1 * n2));
-                generate_random_data(input, n1, n2);
-                LOG("Data done");
         }
-        else
-        {
-                error("Wrong size " + std::to_string(n1) + " " + std::to_string(n2));
-        }
-
-        const std::vector<complex> source_data(load_data(input, &n1, &n2));
-
-        std::vector<complex> gl2d_x(source_data);
-
-        {
-                double start_time = time_in_seconds();
-
-                std::unique_ptr<IFourierGL1> gl2d = create_fft_gl2d(n1, n2);
-                gl2d->exec(false, &gl2d_x);
-                // gl2d->exec(true, &gl2d_x);
-
-                LOG("gl2d: " + to_string_fixed(1000.0 * (time_in_seconds() - start_time), 5) + " ms");
-
-                save_data(output_gl2d, gl2d_x);
-        }
-
-        std::string error_message;
-
-#if defined(CUDA_FOUND)
-        try
-        {
-                LOG("----- CUDA -----");
-                std::vector<complex> cufft_x(source_data);
-
-                double start_time = time_in_seconds();
-
-                std::unique_ptr<IFourierCuda> cufft = create_fft_cufft(n1, n2);
-                cufft->exec(false, &cufft_x);
-                // cufft->exec(true, &cufft_x);
-
-                LOG("cuFFT: " + to_string_fixed(1000.0 * (time_in_seconds() - start_time), 5) + " ms");
-
-                save_data(output_cuda, cufft_x);
-
-                double d = discrepancy(gl2d_x, cufft_x);
-                LOG("Discrepancy gl2d-cuFFT: " + to_string(d));
-                if (d > DISCREPANCY_LIMIT)
-                {
-                        error("HUGE discrepancy");
-                }
-        }
-        catch (std::exception& e)
-        {
-                if (error_message.size() != 0)
-                {
-                        error_message += '\n';
-                }
-                error_message += std::string("CUDA\n") + e.what();
-        }
-#endif
-#if defined(FFTW_FOUND)
-        try
-        {
-                LOG("----- FFTW -----");
-                std::vector<complex> fftw_x(source_data);
-
-                double start_time = time_in_seconds();
-
-                std::unique_ptr<IFourierFFTW> fftw = create_dft_fftw(n1, n2);
-                fftw->exec(false, &fftw_x);
-                // fftw->exec(true, &fftw_x);
-
-                LOG("FFTW: " + to_string_fixed(1000.0 * (time_in_seconds() - start_time), 5) + " ms");
-
-                save_data(output_fftw, fftw_x);
-
-                double d = discrepancy(gl2d_x, fftw_x);
-                LOG("Discrepancy gl2d-FFTW: " + to_string(d));
-                if (d > DISCREPANCY_LIMIT)
-                {
-                        error("HUGE discrepancy");
-                }
-        }
-        catch (std::exception& e)
-        {
-                if (error_message.size() != 0)
-                {
-                        error_message += '\n';
-                }
-                error_message += std::string("FFTW\n") + e.what();
-        }
-#endif
-
-        if (error_message.size() > 0)
-        {
-                error(error_message);
-        }
-
-        LOG("check passed");
-
-#endif
+        error_fatal("Unknown DFT test size");
 }
 }
 
 void test_dft()
 {
-        test_fft_impl(false);
-        LOG("");
+        constant_data_test(true);
+        constant_data_test(false);
+
+        const TestSize test_size = find_test_size();
+        const std::array<int, 2> dimensions = find_dimensions(test_size);
+        random_data_test(true, dimensions);
+        random_data_test(false, dimensions);
 }
