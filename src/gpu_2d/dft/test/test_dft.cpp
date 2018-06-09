@@ -69,14 +69,14 @@ double discrepancy(const std::vector<complex>& x1, const std::vector<complex>& x
         return sum / sum2;
 }
 
-void check_discrepancy(const std::vector<complex>& d1, const std::vector<complex>& d2)
+void check_discrepancy(const std::string& name, const std::vector<complex>& d1, const std::vector<complex>& d2)
 {
         double d = discrepancy(d1, d2);
         LOG("Discrepancy: " + to_string(d));
 
         if (d > DISCREPANCY_LIMIT)
         {
-                error("HUGE discrepancy");
+                error("Huge discrepancy (" + name + ")");
         }
 }
 #endif
@@ -171,137 +171,123 @@ std::string time_string(double start_time)
         return to_string_fixed(1000.0 * (time_in_seconds() - start_time), 5) + " ms";
 }
 
-void compute_gl2d(bool dft_and_inverse_dft, int n1, int n2, std::vector<complex>* data)
+void compute_gl2d(bool inverse, int n1, int n2, std::vector<complex>* data)
 {
         LOG("----- GL2D -----");
         double start_time = time_in_seconds();
 
         std::unique_ptr<IFourierGL1> gl2d = create_fft_gl2d(n1, n2);
-        gl2d->exec(false, data);
-        if (dft_and_inverse_dft)
-        {
-                gl2d->exec(true, data);
-        }
+        gl2d->exec(inverse, data);
 
         LOG("GL2D time: " + time_string(start_time));
 }
 
 #if defined(CUDA_FOUND)
-void compute_cuda(bool dft_and_inverse_dft, int n1, int n2, std::vector<complex>* data)
+void compute_cuda(bool inverse, int n1, int n2, std::vector<complex>* data)
 {
         LOG("----- cuFFT -----");
         double start_time = time_in_seconds();
 
         std::unique_ptr<IFourierCuda> cufft = create_fft_cufft(n1, n2);
-        cufft->exec(false, data);
-        if (dft_and_inverse_dft)
-        {
-                cufft->exec(true, data);
-        }
+        cufft->exec(inverse, data);
 
         LOG("cuFFT time: " + time_string(start_time));
 }
 #endif
 
 #if defined(FFTW_FOUND)
-void compute_fftw(bool dft_and_inverse_dft, int n1, int n2, std::vector<complex>* data)
+void compute_fftw(bool inverse, int n1, int n2, std::vector<complex>* data)
 {
         LOG("----- FFTW -----");
         double start_time = time_in_seconds();
 
         std::unique_ptr<IFourierFFTW> fftw = create_dft_fftw(n1, n2);
-        fftw->exec(false, data);
-        if (dft_and_inverse_dft)
-        {
-                fftw->exec(true, data);
-        }
+        fftw->exec(inverse, data);
 
         LOG("FFTW time: " + time_string(start_time));
 }
 #endif
 
-void check_errors(const std::vector<std::string>& messages)
+void dft_test(const int n1, const int n2, const std::vector<complex>& source_data, ProgressRatio* progress,
+              const std::string& output_gl2d_file_name, const std::string& output_inverse_gl2d_file_name,
+              [[maybe_unused]] const std::string& output_cuda_file_name,
+              [[maybe_unused]] const std::string& output_inverse_cuda_file_name,
+              [[maybe_unused]] const std::string& output_fftw_file_name,
+              [[maybe_unused]] const std::string& output_inverse_fftw_file_name)
 {
-        if (messages.size() < 1)
-        {
-                return;
-        }
-
-        std::string s = messages[0];
-        for (size_t i = 1; i < messages.size(); ++i)
-        {
-                s += "\n";
-                s += messages[i];
-        }
-
-        error(s);
-}
-
-void dft_test(bool dft_and_inverse_dft, int n1, int n2, const std::vector<complex>& source_data,
-              const std::string& output_gl2d_file_name = "", [[maybe_unused]] const std::string& output_cuda_file_name = "",
-              [[maybe_unused]] const std::string& output_fftw_file_name = "")
-{
-        std::vector<complex> data_gl2d(source_data);
-        compute_gl2d(dft_and_inverse_dft, n1, n2, &data_gl2d);
-        save_data(output_gl2d_file_name, data_gl2d);
-
-        std::vector<std::string> messages;
+        int computation_count = 2;
 
 #if defined(CUDA_FOUND)
-        try
+        computation_count += 2;
+#endif
+#if defined(FFTW_FOUND)
+        computation_count += 2;
+#endif
+
+        int computation = 0;
+        progress->set(0, computation_count);
+
+        std::vector<complex> data_gl2d(source_data);
+        compute_gl2d(false, n1, n2, &data_gl2d);
+        save_data(output_gl2d_file_name, data_gl2d);
+
+        progress->set(++computation, computation_count);
+
+        std::vector<complex> data_gl2d_inverse(data_gl2d);
+        compute_gl2d(true, n1, n2, &data_gl2d_inverse);
+        save_data(output_inverse_gl2d_file_name, data_gl2d_inverse);
+
+        progress->set(++computation, computation_count);
+
+#if defined(CUDA_FOUND)
         {
                 std::vector<complex> data(source_data);
-                compute_cuda(dft_and_inverse_dft, n1, n2, &data);
+
+                compute_cuda(false, n1, n2, &data);
                 save_data(output_cuda_file_name, data);
-                check_discrepancy(data_gl2d, data);
-        }
-        catch (std::exception& e)
-        {
-                messages.push_back(std::string("cuFFT\n") + e.what());
+                check_discrepancy("cuFFT", data_gl2d, data);
+
+                progress->set(++computation, computation_count);
+
+                compute_cuda(true, n1, n2, &data);
+                save_data(output_inverse_cuda_file_name, data);
+                check_discrepancy("Inverse cuFFT", data_gl2d_inverse, data);
+
+                progress->set(++computation, computation_count);
         }
 #endif
 
 #if defined(FFTW_FOUND)
-        try
         {
                 std::vector<complex> data(source_data);
-                compute_fftw(dft_and_inverse_dft, n1, n2, &data);
+
+                compute_fftw(false, n1, n2, &data);
                 save_data(output_fftw_file_name, data);
-                check_discrepancy(data_gl2d, data);
-        }
-        catch (std::exception& e)
-        {
-                messages.push_back(std::string("FFTW\n") + e.what());
+                check_discrepancy("FFTW", data_gl2d, data);
+
+                progress->set(++computation, computation_count);
+
+                compute_fftw(true, n1, n2, &data);
+                save_data(output_inverse_fftw_file_name, data);
+                check_discrepancy("Inverse FFTW", data_gl2d_inverse, data);
+
+                progress->set(++computation, computation_count);
         }
 #endif
-
-        check_errors(messages);
 }
 
-std::string dft_name(bool dft_and_inverse_dft)
-{
-        if (dft_and_inverse_dft)
-        {
-                return "DFT And Inverse DFT";
-        }
-        else
-        {
-                return "DFT";
-        }
-}
-
-void constant_data_test(bool dft_and_inverse_dft)
+void constant_data_test(ProgressRatio* progress)
 {
         // Fourier[{1, 2, 30}, FourierParameters -> {1, -1}]
         // 1 2 30 -> 33. + 0. I, -15. + 24.2487 I, -15. - 24.2487 I
         // 1 2 -> 3 -1
 
-        LOG("\n----- Context For Simple " + dft_name(dft_and_inverse_dft) + " Testing -----");
+        LOG("\n----- Context For Constant Data DFT Tests -----");
 
         std::unique_ptr<sf::Context> context;
         create_gl_context_1x1(MAJOR_GL_VERSION, MINOR_GL_VERSION, required_extensions(), &context);
 
-        LOG("\n----- Simple " + dft_name(dft_and_inverse_dft) + " Testing -----");
+        LOG("\n----- Constant Data DFT Tests -----");
 
         // const std::vector<complex> source_data(
         //        {{1, 0}, {2, 0}, {30, 0}, {4, 0}}); //, {-20, 0}, {3, 0}}); //, {-5, 0}});//, {-1, 0}});
@@ -311,25 +297,28 @@ void constant_data_test(bool dft_and_inverse_dft)
 
         LOG("--- Source Data ---\n" + to_string(source_data));
 
-        dft_test(dft_and_inverse_dft, N, K, source_data);
+        dft_test(N, K, source_data, progress, "", "", "", "", "", "");
 
         LOG("---\nDFT check passed");
 }
 
-void random_data_test(bool dft_and_inverse_dft, const std::array<int, 2>& dimensions)
+void random_data_test(const std::array<int, 2>& dimensions, ProgressRatio* progress)
 {
-        LOG("\n----- Context For Random " + dft_name(dft_and_inverse_dft) + " Testing -----");
+        LOG("\n----- Context For Random Data DFT Tests -----");
 
         std::unique_ptr<sf::Context> context;
         create_gl_context_1x1(MAJOR_GL_VERSION, MINOR_GL_VERSION, required_extensions(), &context);
 
-        LOG("\n----- Random " + dft_name(dft_and_inverse_dft) + " Testing -----");
+        LOG("\n----- Random Data DFT Tests -----");
 
         const std::string tmp_dir = temp_directory();
         const std::string input_file_name = tmp_dir + "/dft_input.txt";
         const std::string gl2d_file_name = tmp_dir + "/dft_output_gl2d.txt";
         const std::string cuda_file_name = tmp_dir + "/dft_output_cuda.txt";
         const std::string fftw_file_name = tmp_dir + "/dft_output_fftw.txt";
+        const std::string inverse_gl2d_file_name = tmp_dir + "/dft_output_inverse_gl2d.txt";
+        const std::string inverse_cuda_file_name = tmp_dir + "/dft_output_inverse_cuda.txt";
+        const std::string inverse_fftw_file_name = tmp_dir + "/dft_output_inverse_fftw.txt";
 
         generate_random_data(input_file_name, dimensions[0], dimensions[1]);
 
@@ -343,7 +332,8 @@ void random_data_test(bool dft_and_inverse_dft, const std::array<int, 2>& dimens
                       "), loaded from file (" + to_string(n1) + ", " + to_string(n2) + ")");
         }
 
-        dft_test(dft_and_inverse_dft, n1, n2, source_data, gl2d_file_name, cuda_file_name, fftw_file_name);
+        dft_test(n1, n2, source_data, progress, gl2d_file_name, inverse_gl2d_file_name, cuda_file_name, inverse_cuda_file_name,
+                 fftw_file_name, inverse_fftw_file_name);
 
         LOG("---\nDFT check passed");
 }
@@ -382,13 +372,15 @@ std::array<int, 2> find_dimensions(TestSize test_size)
 }
 }
 
-void test_dft()
+void test_dft(ProgressRatio* progress)
 {
-        constant_data_test(true);
-        constant_data_test(false);
+        ASSERT(progress);
+
+        // progress два раза проходит от начала до конца для двух типов данных
+
+        constant_data_test(progress);
 
         const TestSize test_size = find_test_size();
         const std::array<int, 2> dimensions = find_dimensions(test_size);
-        random_data_test(true, dimensions);
-        random_data_test(false, dimensions);
+        random_data_test(dimensions, progress);
 }

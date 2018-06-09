@@ -39,8 +39,7 @@ void self_test_essential(IProgressRatioList* progress_ratio_list, const T& catch
                 *test_name = "Self-Test, DFT in " + space_name_upper(2);
 
                 ProgressRatio progress(progress_ratio_list, *test_name);
-                progress.set(0);
-                test_dft();
+                test_dft(&progress);
         });
 
         catch_all([&](std::string* test_name) {

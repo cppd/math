@@ -17,4 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-void test_dft();
+#include "progress/progress.h"
+
+void test_dft(ProgressRatio* progress);
