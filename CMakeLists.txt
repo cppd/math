@@ -266,6 +266,13 @@ find_package(X11 REQUIRED)
 target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${X11_X11_INCLUDE_PATH})
 target_link_libraries(${PROJECT_NAME} ${X11_X11_LIB})
 
+find_package(Vulkan)
+if(Vulkan_FOUND)
+        target_compile_definitions(${PROJECT_NAME} PRIVATE -DVULKAN_FOUND)
+        target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${Vulkan_INCLUDE_DIRS})
+        target_link_libraries(${PROJECT_NAME} ${Vulkan_LIBRARIES})
+endif()
+
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/FFTW")
 find_package(FFTW)
 if(FFTW_FOUND)
