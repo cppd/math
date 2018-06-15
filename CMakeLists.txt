@@ -84,9 +84,9 @@ include(CheckCXXSourceCompiles)
 
 function(IncludeSourceAndSetCompilerFlags dir_name executable extensions)
 
-        if ("${PROJECT_BINARY_DIR}" STREQUAL "${PROJECT_SOURCE_DIR}")
+        if("${PROJECT_BINARY_DIR}" STREQUAL "${PROJECT_SOURCE_DIR}")
                 message(FATAL_ERROR "In-source build")
-        endif ()
+        endif()
 
         set(CMAKE_C_FLAGS)
         set(CMAKE_CXX_FLAGS)
@@ -97,7 +97,7 @@ function(IncludeSourceAndSetCompilerFlags dir_name executable extensions)
 
         file(GLOB_RECURSE source_files LIST_DIRECTORIES false ${all_globbing_expressions})
 
-        if (${executable})
+        if(${executable})
                 add_executable(${PROJECT_NAME} ${source_files})
         else()
                 add_library(${PROJECT_NAME} SHARED ${source_files})
@@ -268,7 +268,7 @@ target_link_libraries(${PROJECT_NAME} ${X11_X11_LIB})
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/FFTW")
 find_package(FFTW)
-if (FFTW_FOUND)
+if(FFTW_FOUND)
         target_compile_definitions(${PROJECT_NAME} PRIVATE -DFFTW_FOUND)
         target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${FFTW_INCLUDE_DIRS})
         target_link_libraries(${PROJECT_NAME} ${FFTW_LIBRARIES} ${FFTW_THREAD_LIBRARIES})
