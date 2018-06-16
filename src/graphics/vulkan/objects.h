@@ -32,7 +32,8 @@ class Instance
         VkInstance m_instance;
 
 public:
-        Instance(int api_version_major, int api_version_minor, const std::vector<const char*>& required_extensions);
+        Instance(int api_version_major, int api_version_minor, const std::vector<const char*>& required_extensions,
+                 const std::vector<const char*>& required_validation_layers);
         ~Instance();
 };
 }

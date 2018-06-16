@@ -164,6 +164,11 @@ std::unordered_set<std::string> supported_extensions()
                 vulkan_function_error("vkEnumerateInstanceExtensionProperties", result);
         }
 
+        if (extension_count < 1)
+        {
+                return {};
+        }
+
         std::vector<VkExtensionProperties> extensions(extension_count);
 
         result = vkEnumerateInstanceExtensionProperties(nullptr, &extension_count, extensions.data());
@@ -180,6 +185,40 @@ std::unordered_set<std::string> supported_extensions()
         }
 
         return extension_set;
+}
+
+std::unordered_set<std::string> supported_validation_layers()
+{
+        uint32_t layer_count;
+        VkResult result;
+
+        result = vkEnumerateInstanceLayerProperties(&layer_count, nullptr);
+        if (result != VK_SUCCESS)
+        {
+                vulkan_function_error("vkEnumerateInstanceLayerProperties", result);
+        }
+
+        if (layer_count < 1)
+        {
+                return {};
+        }
+
+        std::vector<VkLayerProperties> layers(layer_count);
+
+        result = vkEnumerateInstanceLayerProperties(&layer_count, layers.data());
+        if (result != VK_SUCCESS)
+        {
+                vulkan_function_error("vkEnumerateInstanceLayerProperties", result);
+        }
+
+        std::unordered_set<std::string> layer_set;
+
+        for (const VkLayerProperties& l : layers)
+        {
+                layer_set.emplace(l.layerName);
+        }
+
+        return layer_set;
 }
 
 uint32_t supported_api_version()
@@ -212,6 +251,19 @@ void check_extension_support(const std::vector<const char*>& required_extensions
         }
 }
 
+void check_validation_layer_support(const std::vector<const char*>& required_layers)
+{
+        const std::unordered_set<std::string> layer_set = supported_validation_layers();
+
+        for (const std::string& l : required_layers)
+        {
+                if (layer_set.count(l) < 1)
+                {
+                        error("Vulkan validation layer " + l + " is not supported");
+                }
+        }
+}
+
 void check_api_version(uint32_t required_api_version)
 {
         uint32_t api_version = supported_api_version();
@@ -228,18 +280,26 @@ namespace vulkan
 {
 std::string overview()
 {
+        static constexpr const char* INDENT = "  ";
+
         std::string s;
 
-        s += "API version ";
+        s += "API Version";
         try
         {
+                s += "\n";
+                s += INDENT;
                 s += api_version_to_string(supported_api_version());
         }
         catch (std::exception& e)
         {
+                s += "\n";
+                s += INDENT;
                 s += e.what();
         }
 
+        s += "\n";
+        s += "Extensions";
         try
         {
                 std::unordered_set<std::string> extensions(supported_extensions());
@@ -248,41 +308,73 @@ std::string overview()
                 for (const std::string& extension : extension_vector)
                 {
                         s += "\n";
+                        s += INDENT;
                         s += extension;
                 }
         }
         catch (std::exception& e)
         {
                 s += "\n";
+                s += INDENT;
+                s += e.what();
+        }
+
+        s += "\n";
+        s += "Validation Layers";
+        try
+        {
+                std::unordered_set<std::string> layers(supported_validation_layers());
+                std::vector<std::string> layer_vector(layers.begin(), layers.end());
+                std::sort(layer_vector.begin(), layer_vector.end());
+                for (const std::string& layer : layer_vector)
+                {
+                        s += "\n";
+                        s += INDENT;
+                        s += layer;
+                }
+        }
+        catch (std::exception& e)
+        {
+                s += "\n";
+                s += INDENT;
                 s += e.what();
         }
 
         return s;
 }
 
-Instance::Instance(int api_version_major, int api_version_minor, const std::vector<const char*>& required_extensions)
+Instance::Instance(int api_version_major, int api_version_minor, const std::vector<const char*>& required_extensions,
+                   const std::vector<const char*>& required_validation_layers)
 {
-        const uint32_t api_version = VK_MAKE_VERSION(api_version_major, api_version_minor, 0);
+        const uint32_t required_api_version = VK_MAKE_VERSION(api_version_major, api_version_minor, 0);
 
-        check_api_version(api_version);
+        check_api_version(required_api_version);
         check_extension_support(required_extensions);
+        check_validation_layer_support(required_validation_layers);
 
-        VkApplicationInfo appInfo = {};
-        appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-        appInfo.pApplicationName = APPLICATION_NAME;
-        appInfo.applicationVersion = 1;
-        appInfo.pEngineName = nullptr;
-        appInfo.engineVersion = 0;
-        appInfo.apiVersion = api_version;
+        VkApplicationInfo app_info = {};
+        app_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+        app_info.pApplicationName = APPLICATION_NAME;
+        app_info.applicationVersion = 1;
+        app_info.pEngineName = nullptr;
+        app_info.engineVersion = 0;
+        app_info.apiVersion = required_api_version;
 
-        VkInstanceCreateInfo createInfo = {};
-        createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-        createInfo.pApplicationInfo = &appInfo;
-        createInfo.enabledExtensionCount = required_extensions.size();
-        createInfo.ppEnabledExtensionNames = required_extensions.data();
-        createInfo.enabledLayerCount = 0;
+        VkInstanceCreateInfo create_info = {};
+        create_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+        create_info.pApplicationInfo = &app_info;
+        if (required_extensions.size() > 0)
+        {
+                create_info.enabledExtensionCount = required_extensions.size();
+                create_info.ppEnabledExtensionNames = required_extensions.data();
+        }
+        if (required_validation_layers.size() > 0)
+        {
+                create_info.enabledLayerCount = required_validation_layers.size();
+                create_info.ppEnabledLayerNames = required_validation_layers.data();
+        }
 
-        VkResult result = vkCreateInstance(&createInfo, nullptr, &m_instance);
+        VkResult result = vkCreateInstance(&create_info, nullptr, &m_instance);
         if (result != VK_SUCCESS)
         {
                 vulkan_function_error("vkCreateInstance", result);
