@@ -158,7 +158,7 @@ constexpr Parallelotope create_parallelotope_from_vector(const Vector<sizeof...(
         constexpr int N = Parallelotope::DIMENSION;
 
         // Заполнение диагонали матрицы NxN значениями из d, остальные элементы 0
-        std::array<Vector<N, T>, N> edges{{(static_cast<void>(I), Vector<N, T>(0))...}};
+        std::array<Vector<N, T>, N> edges{(static_cast<void>(I), Vector<N, T>(0))...};
         ((edges[I][I] = d[I]), ...);
 
         return Parallelotope(org, edges[I]...);
@@ -321,7 +321,7 @@ std::array<std::tuple<int, Box<Parallelotope>*, int>, BOX_COUNT<Parallelotope::D
 
         int index = boxes->size();
 
-        return {{std::make_tuple(I, &(boxes->emplace_back(std::move(child_parallelotopes[I]))), index++)...}};
+        return {std::make_tuple(I, &(boxes->emplace_back(std::move(child_parallelotopes[I]))), index++)...};
 }
 
 template <template <typename...> typename Container, typename Parallelotope, typename FunctorObjectPointer>

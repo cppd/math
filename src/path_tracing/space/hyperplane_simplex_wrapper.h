@@ -134,7 +134,7 @@ public:
                 {
                         for (unsigned j = i + 1; j < m_vertices.size(); ++j)
                         {
-                                m_vertex_ridges[n++] = {{m_vertices[i], m_vertices[j] - m_vertices[i]}};
+                                m_vertex_ridges[n++] = {m_vertices[i], m_vertices[j] - m_vertices[i]};
                         }
                 }
         }

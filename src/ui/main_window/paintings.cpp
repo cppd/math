@@ -33,8 +33,8 @@ std::unique_ptr<const Projector<3, double>> create_projector(const PaintingInfor
         vec3 camera_position = info.view_center - info.camera_direction * 2.0 * info.object_size;
         vec3 camera_right = cross(info.camera_direction, info.camera_up);
 
-        std::array<Vector<3, double>, 2> screen_axes{{camera_right, info.camera_up}};
-        std::array<int, 2> screen_size{{paint_width, paint_height}};
+        std::array<Vector<3, double>, 2> screen_axes{camera_right, info.camera_up};
+        std::array<int, 2> screen_size{paint_width, paint_height};
 
         double units_per_pixel = info.view_width / paint_width;
 

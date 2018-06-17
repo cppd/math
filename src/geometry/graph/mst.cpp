@@ -86,11 +86,11 @@ std::vector<Edge2> all_edges_from_delaunay_objects(const std::vector<std::array<
                                 // С индексами по возрастанию
                                 if (indices[p1] < indices[p2])
                                 {
-                                        edges.emplace_back(std::array<int, 2>{{indices[p1], indices[p2]}});
+                                        edges.emplace_back(std::array<int, 2>{indices[p1], indices[p2]});
                                 }
                                 else if (indices[p1] > indices[p2])
                                 {
-                                        edges.emplace_back(std::array<int, 2>{{indices[p2], indices[p1]}});
+                                        edges.emplace_back(std::array<int, 2>{indices[p2], indices[p1]});
                                 }
                                 else
                                 {
@@ -137,7 +137,7 @@ std::vector<std::array<int, 2>> kruskal(int point_count, int vertex_count, const
 
                 if (wqn.add_connection(v, w))
                 {
-                        mst.push_back({{v, w}});
+                        mst.push_back({v, w});
                 }
         }
 

@@ -329,7 +329,7 @@ std::tuple<Vector<N, T>, Vector<N, T>> min_max_coordinates(const std::vector<Vec
                 error("No indices");
         }
 
-        std::array<const std::vector<int>*, sizeof...(Indices)> pointers{{&indices...}};
+        std::array<const std::vector<int>*, sizeof...(Indices)> pointers{&indices...};
 
         int vertex_count = vertices.size();
 

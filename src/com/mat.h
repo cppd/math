@@ -67,7 +67,7 @@ class Matrix
                 static_assert(sizeof...(I) == Rows);
                 static_assert(((I >= 0 && I < Rows) && ...));
 
-                return {{make_vector_one_value_impl<I>(v, std::make_integer_sequence<size_t, Columns>())...}};
+                return {make_vector_one_value_impl<I>(v, std::make_integer_sequence<size_t, Columns>())...};
         }
 
         constexpr std::array<Vector<Columns, T>, Rows> make_diagonal_matrix(const T& v) const
@@ -79,7 +79,7 @@ public:
         Matrix() = default;
 
         template <typename... Args>
-        constexpr Matrix(Args... args) : m_data{{args...}}
+        constexpr Matrix(Args... args) : m_data{args...}
         {
                 static_assert((std::is_same_v<Args, Vector<Columns, T>> && ...));
                 static_assert(sizeof...(args) == Rows);

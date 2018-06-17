@@ -25,13 +25,13 @@ namespace arrays_implementation
 template <typename T, T... I>
 constexpr std::array<T, sizeof...(I)> make_array_sequence_impl(std::integer_sequence<T, I...>)
 {
-        return {{I...}};
+        return {I...};
 }
 
 template <typename T, size_t... I>
 constexpr std::array<T, sizeof...(I)> make_array_value_impl(std::integer_sequence<size_t, I...>, const T& v)
 {
-        return {{(static_cast<void>(I), v)...}};
+        return {(static_cast<void>(I), v)...};
 }
 
 template <size_t ValueIndex, typename T, size_t... I>
@@ -39,7 +39,7 @@ constexpr std::array<T, sizeof...(I)> make_array_one_value_impl(std::integer_seq
 {
         static_assert(ValueIndex >= 0 && ValueIndex < sizeof...(I));
 
-        return {{(I == ValueIndex ? v : 0)...}};
+        return {(I == ValueIndex ? v : 0)...};
 }
 }
 

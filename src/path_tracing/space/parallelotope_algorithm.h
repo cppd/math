@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -193,7 +193,7 @@ public:
 
                 vertex_ridges(p, [&ridge_count, &result](const Vector<N, T>& org, const Vector<N, T>& ridge) {
                         ASSERT(ridge_count < result.size());
-                        result[ridge_count++] = {{org, ridge}};
+                        result[ridge_count++] = {org, ridge};
                 });
 
                 ASSERT(ridge_count == result.size());

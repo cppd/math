@@ -74,7 +74,7 @@ constexpr Vector<N, T> index_vector(unsigned index, T value)
 template <typename T, size_t... I>
 constexpr std::array<Vector<sizeof...(I), T>, sizeof...(I)> index_vectors_impl(T value, std::integer_sequence<size_t, I...>)
 {
-        return {{index_vector<sizeof...(I), T, I>(value)...}};
+        return {index_vector<sizeof...(I), T, I>(value)...};
 }
 // Массив векторов, в котором вектор с индексом i имеет координату с индексом i, равную value.
 // Пример: {( value, 0, 0), (0,  value, 0), (0, 0,  value)},
@@ -171,11 +171,11 @@ ParallelotopeOrtho<N, T>::ParallelotopeOrtho(const Vector<N, T>& org, const P&..
 
         if constexpr ((std::is_same_v<T, P> && ...))
         {
-                set_data(org, std::array<T, N>{{vectors...}});
+                set_data(org, std::array<T, N>{vectors...});
         }
         if constexpr ((std::is_same_v<Vector<N, T>, P> && ...))
         {
-                set_data(org, std::array<Vector<N, T>, N>{{vectors...}});
+                set_data(org, std::array<Vector<N, T>, N>{vectors...});
         }
 }
 

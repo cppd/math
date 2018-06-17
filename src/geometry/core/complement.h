@@ -50,7 +50,7 @@ template <typename T, int... I>
 constexpr std::array<Vector<sizeof...(I), T>, sizeof...(I)> make_array_of_vectors_one_value(std::integer_sequence<int, I...>,
                                                                                             const T& v)
 {
-        return {{make_vector_one_value<sizeof...(I), T, I>(v)...}};
+        return {make_vector_one_value<sizeof...(I), T, I>(v)...};
 }
 
 template <size_t N, typename T>
@@ -77,7 +77,7 @@ std::array<Vector<N, T>, N - 1> orthogonal_complement_of_unit_vector_by_subspace
 
         if constexpr (N == 2)
         {
-                return {{Vector<2, T>{unit_vector[1], -unit_vector[0]}}};
+                return {Vector<2, T>{unit_vector[1], -unit_vector[0]}};
         }
 
         if constexpr (N == 3)
@@ -86,7 +86,7 @@ std::array<Vector<N, T>, N - 1> orthogonal_complement_of_unit_vector_by_subspace
                         std::abs(unit_vector[0]) > impl::LIMIT<T> ? Vector<3, T>(0, 1, 0) : Vector<3, T>(1, 0, 0);
                 Vector<3, T> e0 = normalize(cross(unit_vector, non_collinear_vector));
                 Vector<3, T> e1 = cross(unit_vector, e0);
-                return {{e0, e1}};
+                return {e0, e1};
         }
 
         // Найти координатную ось, к которой приближается unit_vector, тогда неколлинеарными
@@ -134,7 +134,7 @@ std::array<Vector<N, T>, N - 1> orthogonal_complement_of_unit_vector_by_gram_sch
 
         if constexpr (N == 2)
         {
-                return {{Vector<2, T>(unit_vector[1], -unit_vector[0])}};
+                return {Vector<2, T>(unit_vector[1], -unit_vector[0])};
         }
 
         // Найти координатную ось, к которой приближается unit_vector, тогда неколлинеарными

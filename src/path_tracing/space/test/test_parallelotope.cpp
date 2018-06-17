@@ -142,16 +142,16 @@ std::vector<VectorP<Parallelotope>> external_points(RandomEngine& engine, int co
 
         static_assert(sizeof...(I) == N);
 
-        std::array<T, N> len = {{length(p.e(I))...}};
+        std::array<T, N> len = {length(p.e(I))...};
 
         std::array<std::uniform_real_distribution<T>, N> low = {
-                {std::uniform_real_distribution<T>{-len[I] * 10, -POSITION_DELTA<T> * len[I]}...}};
+                std::uniform_real_distribution<T>{-len[I] * 10, -POSITION_DELTA<T> * len[I]}...};
         std::array<std::uniform_real_distribution<T>, N> high = {
-                {std::uniform_real_distribution<T>{len[I] * (1 + POSITION_DELTA<T>), len[I] * 10}...}};
+                std::uniform_real_distribution<T>{len[I] * (1 + POSITION_DELTA<T>), len[I] * 10}...};
 
         std::uniform_int_distribution<int> rnd(0, 1);
 
-        std::array<Vector<N, T>, N> unit = {{(p.e(I) / len[I])...}};
+        std::array<Vector<N, T>, N> unit = {(p.e(I) / len[I])...};
 
         std::vector<Vector<N, T>> points;
 
@@ -174,12 +174,12 @@ std::vector<VectorP<Parallelotope>> internal_points(RandomEngine& engine, int co
 
         static_assert(sizeof...(I) == N);
 
-        std::array<T, N> len = {{length(p.e(I))...}};
+        std::array<T, N> len = {length(p.e(I))...};
 
         std::array<std::uniform_real_distribution<T>, N> internal = {
-                {std::uniform_real_distribution<T>{len[I] * POSITION_DELTA<T>, len[I] * (1 - POSITION_DELTA<T>)}...}};
+                std::uniform_real_distribution<T>{len[I] * POSITION_DELTA<T>, len[I] * (1 - POSITION_DELTA<T>)}...};
 
-        std::array<Vector<N, T>, N> unit = {{(p.e(I) / len[I])...}};
+        std::array<Vector<N, T>, N> unit = {(p.e(I) / len[I])...};
 
         std::vector<Vector<N, T>> points;
 
@@ -202,14 +202,14 @@ std::vector<VectorP<Parallelotope>> cover_points(RandomEngine& engine, int count
 
         static_assert(sizeof...(I) == N);
 
-        std::array<T, N> len = {{length(p.e(I))...}};
+        std::array<T, N> len = {length(p.e(I))...};
 
         std::array<std::uniform_real_distribution<T>, N> cover = {
-                {std::uniform_real_distribution<T>{static_cast<T>(-0.2) * len[I], len[I] * static_cast<T>(1.2)}...}};
+                std::uniform_real_distribution<T>{static_cast<T>(-0.2) * len[I], len[I] * static_cast<T>(1.2)}...};
 
-        std::array<std::uniform_real_distribution<T>, N> len_random = {{std::uniform_real_distribution<T>{0, len[I]}...}};
+        std::array<std::uniform_real_distribution<T>, N> len_random = {std::uniform_real_distribution<T>{0, len[I]}...};
 
-        std::array<Vector<N, T>, N> unit = {{(p.e(I) / len[I])...}};
+        std::array<Vector<N, T>, N> unit = {(p.e(I) / len[I])...};
 
         std::vector<Vector<N, T>> points;
 
@@ -401,7 +401,7 @@ void verify_intersection(const Ray<N, T>& ray, const Parallelotope&... p)
 
         std::array<T, sizeof...(Parallelotope)> distances;
         unsigned i = 0;
-        std::array<bool, sizeof...(Parallelotope)> intersections{{p.intersect(ray, &distances[i++])...}};
+        std::array<bool, sizeof...(Parallelotope)> intersections{p.intersect(ray, &distances[i++])...};
 
         for (i = 1; i < sizeof...(Parallelotope); ++i)
         {
@@ -440,7 +440,7 @@ void compare_parallelotopes(RandomEngine& engine, int point_count, const Paralle
         static_assert(((N == Parallelotope::DIMENSION) && ...));
         static_assert(((std::is_same_v<T, typename Parallelotope::DataType>)&&...));
 
-        std::array<T, sizeof...(Parallelotope)> max_length{{parallelotope_max_diagonal(p)...}};
+        std::array<T, sizeof...(Parallelotope)> max_length{parallelotope_max_diagonal(p)...};
 
         for (unsigned i = 1; i < sizeof...(Parallelotope); ++i)
         {
@@ -450,19 +450,19 @@ void compare_parallelotopes(RandomEngine& engine, int point_count, const Paralle
                 }
         }
 
-        std::array<Vector<N, T>, sizeof...(Parallelotope)> orgs{{p.org()...}};
+        std::array<Vector<N, T>, sizeof...(Parallelotope)> orgs{p.org()...};
         verify_vectors(orgs, "orgs");
 
         for (unsigned i = 0; i < N; ++i)
         {
-                std::array<Vector<N, T>, sizeof...(Parallelotope)> e{{p.e(i)...}};
+                std::array<Vector<N, T>, sizeof...(Parallelotope)> e{p.e(i)...};
                 verify_vectors(e, "e" + to_string(i));
         }
 
         for (Vector<N, T> origin :
              cover_points(engine, point_count, std::get<0>(std::make_tuple(p...)), std::make_integer_sequence<size_t, N>()))
         {
-                std::array<bool, sizeof...(Parallelotope)> inside{{p.inside(origin)...}};
+                std::array<bool, sizeof...(Parallelotope)> inside{p.inside(origin)...};
                 for (unsigned i = 1; i < sizeof...(Parallelotope); ++i)
                 {
                         if (inside[i] != inside[0])

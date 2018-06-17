@@ -55,7 +55,7 @@ public:
 
                 for (int i = 0; i < size[2]; ++i)
                 {
-                        m_images.emplace_back(std::array<int, 2>{{size[0], size[1]}});
+                        m_images.emplace_back(std::array<int, 2>{size[0], size[1]});
                 }
         }
 
@@ -67,7 +67,7 @@ public:
         {
                 try
                 {
-                        m_images[pixel[2]].set_pixel(std::array<int, 2>{{pixel[0], m_size[1] - 1 - pixel[1]}}, c);
+                        m_images[pixel[2]].set_pixel(std::array<int, 2>{pixel[0], m_size[1] - 1 - pixel[1]}, c);
                 }
                 catch (...)
                 {

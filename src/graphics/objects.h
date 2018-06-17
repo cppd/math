@@ -873,7 +873,7 @@ public:
 
         void clear_tex_image(GLfloat r, GLfloat g, GLfloat b, GLfloat a) const noexcept
         {
-                std::array<GLfloat, 4> v = {{r, g, b, a}};
+                std::array<GLfloat, 4> v = {r, g, b, a};
                 m_texture.clear_tex_image(0, GL_RGBA, GL_FLOAT, v.data());
         }
         template <typename T>

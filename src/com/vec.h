@@ -32,7 +32,7 @@ class Vector
         std::array<T, N> m_data;
 
         template <size_t... I>
-        constexpr Vector(std::integer_sequence<size_t, I...>&&, const T& v) : m_data{{(static_cast<void>(I), v)...}}
+        constexpr Vector(std::integer_sequence<size_t, I...>&&, const T& v) : m_data{(static_cast<void>(I), v)...}
         {
                 static_assert(sizeof...(I) == N);
         }
@@ -42,8 +42,8 @@ public:
 
         template <typename Arg1, typename Arg2, typename... Args>
         constexpr Vector(Arg1&& arg1, Arg2&& arg2, Args&&... args)
-                : m_data{{static_cast<T>(std::forward<Arg1>(arg1)), static_cast<T>(std::forward<Arg2>(arg2)),
-                          static_cast<T>(std::forward<Args>(args))...}}
+                : m_data{static_cast<T>(std::forward<Arg1>(arg1)), static_cast<T>(std::forward<Arg2>(arg2)),
+                         static_cast<T>(std::forward<Args>(args))...}
         {
                 static_assert(sizeof...(args) + 2 == N);
         }

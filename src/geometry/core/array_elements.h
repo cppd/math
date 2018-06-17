@@ -29,7 +29,7 @@ constexpr std::array<T, sizeof...(I)> del_elem_impl(const std::array<T, sizeof..
 {
         static_assert(((I < sizeof...(I)) && ...));
 
-        return std::array<T, sizeof...(I)>{{(I < pos ? a[I] : a[I + 1])...}};
+        return std::array<T, sizeof...(I)>{(I < pos ? a[I] : a[I + 1])...};
 }
 }
 
@@ -62,9 +62,9 @@ constexpr std::array<T, 1> del_elem(const std::array<T, 2>& a, unsigned pos)
         switch (pos)
         {
         case 0:
-                return {{a[1]}};
+                return {a[1]};
         case 1:
-                return {{a[0]}};
+                return {a[0]};
         }
         error("pos > 1");
 }
@@ -75,11 +75,11 @@ constexpr std::array<T, 2> del_elem(const std::array<T, 3>& a, unsigned pos)
         switch (pos)
         {
         case 0:
-                return {{a[1], a[2]}};
+                return {a[1], a[2]};
         case 1:
-                return {{a[0], a[2]}};
+                return {a[0], a[2]};
         case 2:
-                return {{a[0], a[1]}};
+                return {a[0], a[1]};
         }
         error("pos > 2");
 }
@@ -90,13 +90,13 @@ constexpr std::array<T, 3> del_elem(const std::array<T, 4>& a, unsigned pos)
         switch (pos)
         {
         case 0:
-                return {{a[1], a[2], a[3]}};
+                return {a[1], a[2], a[3]};
         case 1:
-                return {{a[0], a[2], a[3]}};
+                return {a[0], a[2], a[3]};
         case 2:
-                return {{a[0], a[1], a[3]}};
+                return {a[0], a[1], a[3]};
         case 3:
-                return {{a[0], a[1], a[2]}};
+                return {a[0], a[1], a[2]};
         }
         error("pos > 3");
 }
@@ -107,15 +107,15 @@ constexpr std::array<T, 4> del_elem(const std::array<T, 5>& a, unsigned pos)
         switch (pos)
         {
         case 0:
-                return {{a[1], a[2], a[3], a[4]}};
+                return {a[1], a[2], a[3], a[4]};
         case 1:
-                return {{a[0], a[2], a[3], a[4]}};
+                return {a[0], a[2], a[3], a[4]};
         case 2:
-                return {{a[0], a[1], a[3], a[4]}};
+                return {a[0], a[1], a[3], a[4]};
         case 3:
-                return {{a[0], a[1], a[2], a[4]}};
+                return {a[0], a[1], a[2], a[4]};
         case 4:
-                return {{a[0], a[1], a[2], a[3]}};
+                return {a[0], a[1], a[2], a[3]};
         }
         error("pos > 4");
 }

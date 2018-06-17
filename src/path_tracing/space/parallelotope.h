@@ -119,7 +119,7 @@ Parallelotope<N, T>::Parallelotope(const Vector<N, T>& org, const P&... vectors)
         static_assert((std::is_same_v<Vector<N, T>, P> && ...));
         static_assert(sizeof...(P) == N);
 
-        set_data(org, {{vectors...}});
+        set_data(org, {vectors...});
 }
 
 template <size_t N, typename T>

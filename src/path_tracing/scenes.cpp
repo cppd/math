@@ -130,8 +130,8 @@ public:
 
                 //
 
-                const std::array<int, 2> screen_sizes{{width, height}};
-                const std::array<vec3, 2> screen_axes{{right, up}};
+                const std::array<int, 2> screen_sizes{width, height};
+                const std::array<vec3, 2> screen_axes{right, up};
                 m_perspective_projector =
                         std::make_unique<VisiblePerspectiveProjector<3, double>>(view_point, dir, screen_axes, 70, screen_sizes);
                 m_parallel_projector = std::make_unique<VisibleParallelProjector<3, double>>(view_point, dir, screen_axes,

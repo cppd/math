@@ -60,7 +60,7 @@ long long mul(const std::array<int, N>& size)
 
 std::array<unsigned char, 3> srgb_integer_to_unsigned_char_array(const SrgbInteger& c)
 {
-        return {{c.red, c.green, c.blue}};
+        return {c.red, c.green, c.blue};
 }
 
 #if 0
@@ -297,8 +297,8 @@ std::enable_if_t<X == 2> Image<N>::flip_vertically()
         {
                 for (int x = 0; x < width; ++x)
                 {
-                        std::array<int, 2> p1{{x, y1}};
-                        std::array<int, 2> p2{{x, y2}};
+                        std::array<int, 2> p1{x, y1};
+                        std::array<int, 2> p2{x, y2};
                         std::swap(m_data[pixel_index(p1)], m_data[pixel_index(p2)]);
                 }
         }

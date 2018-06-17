@@ -78,7 +78,7 @@ class GlobalIndex
 
                 // Для x[0] это 1, для x[1] это size[0], для x[2] == size[1] * size[0] и т.д.
                 IndexType previous = 1;
-                std::array<IndexType, N> strides{{(I == 0 ? 1 : previous = sizes[I - 1] * previous)...}};
+                std::array<IndexType, N> strides{(I == 0 ? 1 : previous = sizes[I - 1] * previous)...};
 
                 using CheckType = std::conditional_t<is_signed<typename T::value_type>, __int128, unsigned __int128>;
                 if (!(static_cast<CheckType>(strides[N - 1] * sizes[N - 1]) == multiply_all<CheckType>(sizes)))

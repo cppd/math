@@ -306,7 +306,7 @@ void PainterWindow2d::update_statistics()
 
         painter_statistics(&pass_count, &pixel_count, &ray_count, &sample_count, &previous_pass_duration);
 
-        auto [ray_diff, sample_diff, pixel_diff, time_diff] = m_difference->compute({{ray_count, sample_count, pixel_count}});
+        auto [ray_diff, sample_diff, pixel_diff, time_diff] = m_difference->compute({ray_count, sample_count, pixel_count});
 
         long long rays_per_second = time_diff != 0 ? std::llround(ray_diff / time_diff) : 0;
         long long samples_per_pixel = pixel_diff != 0 ? std::llround(static_cast<double>(sample_diff) / pixel_diff) : 0;
