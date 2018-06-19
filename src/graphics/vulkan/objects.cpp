@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "application/application_name.h"
 #include "com/error.h"
+#include "com/log.h"
 #include "com/print.h"
 
 #include <algorithm>
@@ -240,9 +241,14 @@ uint32_t supported_api_version()
 
 void check_extension_support(const std::vector<const char*>& required_extensions)
 {
+        if (required_extensions.empty())
+        {
+                return;
+        }
+
         const std::unordered_set<std::string> extension_set = supported_extensions();
 
-        for (const std::string& e : required_extensions)
+        for (std::string e : required_extensions)
         {
                 if (extension_set.count(e) < 1)
                 {
@@ -253,9 +259,14 @@ void check_extension_support(const std::vector<const char*>& required_extensions
 
 void check_validation_layer_support(const std::vector<const char*>& required_layers)
 {
+        if (required_layers.empty())
+        {
+                return;
+        }
+
         const std::unordered_set<std::string> layer_set = supported_validation_layers();
 
-        for (const std::string& l : required_layers)
+        for (std::string l : required_layers)
         {
                 if (layer_set.count(l) < 1)
                 {
@@ -273,6 +284,53 @@ void check_api_version(uint32_t required_api_version)
                 error("Vulkan API version " + api_version_to_string(required_api_version) + " is not supported. Supported " +
                       api_version_to_string(api_version) + ".");
         }
+}
+
+VKAPI_ATTR VkBool32 VKAPI_CALL debug_callback(VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT /*objectType*/,
+                                              uint64_t /*object*/, size_t /*location*/, int32_t /*messageCode*/,
+                                              const char* /*pLayerPrefix*/, const char* pMessage, void* /*pUserData*/)
+{
+        const auto add_to_debug_message = [](std::string* str, const char* text) {
+                if (!str->empty())
+                {
+                        *str += ", ";
+                }
+                *str += text;
+        };
+
+        std::string s;
+
+        if (flags & VK_DEBUG_REPORT_INFORMATION_BIT_EXT)
+        {
+                add_to_debug_message(&s, "information");
+        }
+        if (flags & VK_DEBUG_REPORT_WARNING_BIT_EXT)
+        {
+                add_to_debug_message(&s, "warning");
+        }
+        if (flags & VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT)
+        {
+                add_to_debug_message(&s, "performance warning");
+        }
+        if (flags & VK_DEBUG_REPORT_ERROR_BIT_EXT)
+        {
+                add_to_debug_message(&s, "error");
+        }
+        if (flags & VK_DEBUG_REPORT_DEBUG_BIT_EXT)
+        {
+                add_to_debug_message(&s, "debug");
+        }
+
+        if (s.size() > 0)
+        {
+                LOG("Validation layer message (" + s + "): " + std::string(pMessage));
+        }
+        else
+        {
+                LOG("Validation layer message: " + std::string(pMessage));
+        }
+
+        return VK_FALSE;
 }
 }
 
@@ -343,10 +401,15 @@ std::string overview()
         return s;
 }
 
-Instance::Instance(int api_version_major, int api_version_minor, const std::vector<const char*>& required_extensions,
-                   const std::vector<const char*>& required_validation_layers)
+void Instance::create(int api_version_major, int api_version_minor, std::vector<const char*> required_extensions,
+                      const std::vector<const char*>& required_validation_layers)
 {
         const uint32_t required_api_version = VK_MAKE_VERSION(api_version_major, api_version_minor, 0);
+
+        if (required_validation_layers.size() > 0)
+        {
+                required_extensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
+        }
 
         check_api_version(required_api_version);
         check_extension_support(required_extensions);
@@ -379,11 +442,135 @@ Instance::Instance(int api_version_major, int api_version_minor, const std::vect
         {
                 vulkan_function_error("vkCreateInstance", result);
         }
+
+        ASSERT(m_instance != VK_NULL_HANDLE);
+}
+
+void Instance::destroy() noexcept
+{
+        if (m_instance != VK_NULL_HANDLE)
+        {
+                vkDestroyInstance(m_instance, nullptr);
+        }
+}
+
+void Instance::move(Instance* from) noexcept
+{
+        m_instance = from->m_instance;
+        from->m_instance = VK_NULL_HANDLE;
+}
+
+Instance::Instance(int api_version_major, int api_version_minor, const std::vector<const char*>& required_extensions,
+                   const std::vector<const char*>& required_validation_layers)
+{
+        create(api_version_major, api_version_minor, required_extensions, required_validation_layers);
 }
 
 Instance::~Instance()
 {
-        vkDestroyInstance(m_instance, nullptr);
+        destroy();
+}
+
+Instance::Instance(Instance&& from) noexcept
+{
+        move(&from);
+}
+
+Instance& Instance::operator=(Instance&& from) noexcept
+{
+        if (this != &from)
+        {
+                destroy();
+                move(&from);
+        }
+        return *this;
+}
+
+Instance::operator VkInstance() const
+{
+        return m_instance;
+}
+
+//
+
+void DebugReportCallback::create(VkInstance instance)
+{
+        if (instance == VK_NULL_HANDLE)
+        {
+                error("No VkInstance for DebugReportCallback");
+        }
+
+        m_instance = instance;
+
+        VkDebugReportCallbackCreateInfoEXT create_info = {};
+
+        create_info.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
+
+        create_info.flags |= VK_DEBUG_REPORT_ERROR_BIT_EXT;
+        create_info.flags |= VK_DEBUG_REPORT_WARNING_BIT_EXT;
+        create_info.flags |= VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT;
+#if 0
+        create_info.flags |= VK_DEBUG_REPORT_DEBUG_BIT_EXT;
+        create_info.flags |= VK_DEBUG_REPORT_INFORMATION_BIT_EXT;
+#endif
+
+        create_info.pfnCallback = debug_callback;
+
+        VkResult result = vkCreateDebugReportCallbackEXT(m_instance, &create_info, nullptr, &m_callback);
+        if (result != VK_SUCCESS)
+        {
+                vulkan_function_error("vkCreateDebugReportCallbackEXT", result);
+        }
+
+        ASSERT(m_callback != VK_NULL_HANDLE);
+}
+
+void DebugReportCallback::destroy() noexcept
+{
+        if (m_callback != VK_NULL_HANDLE)
+        {
+                ASSERT(m_instance != VK_NULL_HANDLE);
+
+                vkDestroyDebugReportCallbackEXT(m_instance, m_callback, nullptr);
+        }
+}
+
+void DebugReportCallback::move(DebugReportCallback* from) noexcept
+{
+        m_instance = from->m_instance;
+        m_callback = from->m_callback;
+        from->m_instance = VK_NULL_HANDLE;
+        from->m_callback = VK_NULL_HANDLE;
+}
+
+DebugReportCallback::DebugReportCallback(VkInstance instance)
+{
+        create(instance);
+}
+
+DebugReportCallback::~DebugReportCallback()
+{
+        destroy();
+}
+
+DebugReportCallback::DebugReportCallback(DebugReportCallback&& from) noexcept
+{
+        move(&from);
+}
+
+DebugReportCallback& DebugReportCallback::operator=(DebugReportCallback&& from) noexcept
+{
+        if (this != &from)
+        {
+                destroy();
+                move(&from);
+        }
+        return *this;
+}
+
+DebugReportCallback::operator VkDebugReportCallbackEXT() const
+{
+        return m_callback;
 }
 }
 

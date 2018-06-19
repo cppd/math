@@ -29,12 +29,47 @@ std::string overview();
 
 class Instance
 {
-        VkInstance m_instance;
+        VkInstance m_instance = VK_NULL_HANDLE;
+
+        void create(int api_version_major, int api_version_minor, std::vector<const char*> required_extensions,
+                    const std::vector<const char*>& required_validation_layers);
+        void destroy() noexcept;
+        void move(Instance* from) noexcept;
 
 public:
         Instance(int api_version_major, int api_version_minor, const std::vector<const char*>& required_extensions,
                  const std::vector<const char*>& required_validation_layers);
         ~Instance();
+
+        Instance(const Instance&) = delete;
+        Instance& operator=(const Instance&) = delete;
+
+        Instance(Instance&&) noexcept;
+        Instance& operator=(Instance&&) noexcept;
+
+        operator VkInstance() const;
+};
+
+class DebugReportCallback
+{
+        VkInstance m_instance = VK_NULL_HANDLE;
+        VkDebugReportCallbackEXT m_callback = VK_NULL_HANDLE;
+
+        void create(VkInstance instance);
+        void destroy() noexcept;
+        void move(DebugReportCallback* from) noexcept;
+
+public:
+        DebugReportCallback(VkInstance instance);
+        ~DebugReportCallback();
+
+        DebugReportCallback(const DebugReportCallback&) = delete;
+        DebugReportCallback& operator=(const DebugReportCallback&) = delete;
+
+        DebugReportCallback(DebugReportCallback&&) noexcept;
+        DebugReportCallback& operator=(DebugReportCallback&&) noexcept;
+
+        operator VkDebugReportCallbackEXT() const;
 };
 }
 
