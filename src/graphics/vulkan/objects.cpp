@@ -239,6 +239,51 @@ uint32_t supported_api_version()
         return api_version;
 }
 
+std::vector<VkPhysicalDevice> physical_devices(VkInstance instance)
+{
+        uint32_t device_count;
+        VkResult result;
+
+        result = vkEnumeratePhysicalDevices(instance, &device_count, nullptr);
+        if (result != VK_SUCCESS)
+        {
+                vulkan_function_error("vkEnumeratePhysicalDevices", result);
+        }
+
+        if (device_count < 1)
+        {
+                error("No Vulkan device found");
+        }
+
+        std::vector<VkPhysicalDevice> devices(device_count);
+
+        result = vkEnumeratePhysicalDevices(instance, &device_count, devices.data());
+        if (result != VK_SUCCESS)
+        {
+                vulkan_function_error("vkEnumeratePhysicalDevices", result);
+        }
+
+        return devices;
+}
+
+std::vector<VkQueueFamilyProperties> queue_families(VkPhysicalDevice device)
+{
+        uint32_t queue_family_count;
+
+        vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, nullptr);
+
+        if (queue_family_count < 1)
+        {
+                return {};
+        }
+
+        std::vector<VkQueueFamilyProperties> queue_families(queue_family_count);
+
+        vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, queue_families.data());
+
+        return queue_families;
+}
+
 void check_extension_support(const std::vector<const char*>& required_extensions)
 {
         if (required_extensions.empty())
@@ -284,6 +329,60 @@ void check_api_version(uint32_t required_api_version)
                 error("Vulkan API version " + api_version_to_string(required_api_version) + " is not supported. Supported " +
                       api_version_to_string(api_version) + ".");
         }
+}
+
+VkPhysicalDevice find_physical_device(VkInstance instance, int api_version_major, int api_version_minor)
+{
+        const uint32_t required_api_version = VK_MAKE_VERSION(api_version_major, api_version_minor, 0);
+
+        for (const VkPhysicalDevice& device : physical_devices(instance))
+        {
+                VkPhysicalDeviceProperties properties;
+                VkPhysicalDeviceFeatures features;
+                vkGetPhysicalDeviceProperties(device, &properties);
+                vkGetPhysicalDeviceFeatures(device, &features);
+
+                if (properties.deviceType != VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU &&
+                    properties.deviceType != VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU &&
+                    properties.deviceType != VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU &&
+                    properties.deviceType != VK_PHYSICAL_DEVICE_TYPE_CPU)
+                {
+                        continue;
+                }
+
+                if (!features.geometryShader)
+                {
+                        continue;
+                }
+
+                if (!features.tessellationShader)
+                {
+                        continue;
+                }
+
+                if (required_api_version > properties.apiVersion)
+                {
+                        continue;
+                }
+
+                bool found = false;
+                for (const VkQueueFamilyProperties& p : queue_families(device))
+                {
+                        if (p.queueCount > 0 && (p.queueFlags & VK_QUEUE_GRAPHICS_BIT) && (p.queueFlags & VK_QUEUE_COMPUTE_BIT))
+                        {
+                                found = true;
+                                break;
+                        }
+                }
+                if (!found)
+                {
+                        continue;
+                }
+
+                return device;
+        }
+
+        error("Failed to find a suitable Vulkan physical device");
 }
 
 VKAPI_ATTR VkBool32 VKAPI_CALL debug_callback(VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT /*objectType*/,
@@ -396,6 +495,98 @@ std::string overview()
                 s += "\n";
                 s += INDENT;
                 s += e.what();
+        }
+
+        return s;
+}
+
+std::string overview_physical_devices(VkInstance instance)
+{
+        const std::string INDENT = "  ";
+
+        std::string indent;
+
+        std::string s;
+
+        s += "Physical Devices";
+
+        for (const VkPhysicalDevice& device : physical_devices(instance))
+        {
+                VkPhysicalDeviceProperties properties;
+                VkPhysicalDeviceFeatures features;
+                vkGetPhysicalDeviceProperties(device, &properties);
+                vkGetPhysicalDeviceFeatures(device, &features);
+
+                indent = "\n" + INDENT;
+
+                s += indent + properties.deviceName;
+
+                indent = "\n" + INDENT + INDENT;
+
+                if (properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
+                {
+                        s += indent + "Discrete GPU";
+                }
+                else if (properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU)
+                {
+                        s += indent + "Integrated GPU";
+                }
+                else if (properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU)
+                {
+                        s += indent + "Virtual GPU";
+                }
+                else if (properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_CPU)
+                {
+                        s += indent + "CPU";
+                }
+                else
+                {
+                        s += indent + "Unknown Device Type";
+                }
+
+                s += indent;
+                s += "API Version " + api_version_to_string(properties.apiVersion);
+
+                s += indent;
+                s += "QueueFamilies";
+
+                for (const VkQueueFamilyProperties& p : queue_families(device))
+                {
+                        indent = "\n" + INDENT + INDENT + INDENT;
+
+                        s += indent + "Family";
+
+                        indent = "\n" + INDENT + INDENT + INDENT + INDENT;
+
+                        s += indent;
+                        s += "queue count: " + to_string(p.queueCount);
+
+                        if (p.queueCount < 1)
+                        {
+                                continue;
+                        }
+
+                        if (p.queueFlags & VK_QUEUE_GRAPHICS_BIT)
+                        {
+                                s += indent + "graphics";
+                        }
+                        if (p.queueFlags & VK_QUEUE_COMPUTE_BIT)
+                        {
+                                s += indent + "compute";
+                        }
+                        if (p.queueFlags & VK_QUEUE_TRANSFER_BIT)
+                        {
+                                s += indent + "transfer";
+                        }
+                        if (p.queueFlags & VK_QUEUE_SPARSE_BINDING_BIT)
+                        {
+                                s += indent + "sparse_binding";
+                        }
+                        if (p.queueFlags & VK_QUEUE_PROTECTED_BIT)
+                        {
+                                s += indent + "protected";
+                        }
+                }
         }
 
         return s;
@@ -571,6 +762,21 @@ DebugReportCallback& DebugReportCallback::operator=(DebugReportCallback&& from) 
 DebugReportCallback::operator VkDebugReportCallbackEXT() const
 {
         return m_callback;
+}
+
+//
+
+VulkanInstance::VulkanInstance(int api_version_major, int api_version_minor, const std::vector<const char*>& required_extensions,
+                               const std::vector<const char*>& required_validation_layers)
+        : m_instance(api_version_major, api_version_minor, required_extensions, required_validation_layers),
+          m_callback(!required_validation_layers.empty() ? std::make_optional<DebugReportCallback>(m_instance) : std::nullopt),
+          m_physical_device(find_physical_device(m_instance, api_version_major, api_version_minor))
+{
+}
+
+VulkanInstance::operator VkInstance() const
+{
+        return m_instance;
 }
 }
 

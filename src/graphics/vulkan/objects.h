@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #if defined(VULKAN_FOUND)
 
+#include <optional>
 #include <string>
 #include <vector>
 #include <vulkan/vulkan.h>
@@ -26,6 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace vulkan
 {
 std::string overview();
+std::string overview_physical_devices(VkInstance instance);
 
 class Instance
 {
@@ -70,6 +72,18 @@ public:
         DebugReportCallback& operator=(DebugReportCallback&&) noexcept;
 
         operator VkDebugReportCallbackEXT() const;
+};
+
+class VulkanInstance
+{
+        Instance m_instance;
+        std::optional<DebugReportCallback> m_callback;
+        VkPhysicalDevice m_physical_device = VK_NULL_HANDLE;
+
+public:
+        VulkanInstance(int api_version_major, int api_version_minor, const std::vector<const char*>& required_extensions,
+                       const std::vector<const char*>& required_validation_layers);
+        operator VkInstance() const;
 };
 }
 
