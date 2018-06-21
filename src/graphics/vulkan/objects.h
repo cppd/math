@@ -74,11 +74,39 @@ public:
         operator VkDebugReportCallbackEXT() const;
 };
 
+class Device
+{
+        VkDevice m_device = VK_NULL_HANDLE;
+
+        void create(VkPhysicalDevice physical_device, const std::vector<unsigned>& family_indices,
+                    const std::vector<const char*>& required_extensions,
+                    const std::vector<const char*>& required_validation_layers);
+        void destroy() noexcept;
+        void move(Device* from) noexcept;
+
+public:
+        Device();
+        Device(VkPhysicalDevice physical_device, const std::vector<unsigned>& family_indices,
+               const std::vector<const char*>& required_extensions, const std::vector<const char*>& required_validation_layers);
+        ~Device();
+
+        Device(const Device&) = delete;
+        Device& operator=(const Device&) = delete;
+
+        Device(Device&&) noexcept;
+        Device& operator=(Device&&) noexcept;
+
+        operator VkDevice() const;
+};
+
 class VulkanInstance
 {
         Instance m_instance;
         std::optional<DebugReportCallback> m_callback;
         VkPhysicalDevice m_physical_device = VK_NULL_HANDLE;
+        Device m_device;
+        VkQueue m_graphics_queue = VK_NULL_HANDLE;
+        VkQueue m_compute_queue = VK_NULL_HANDLE;
 
 public:
         VulkanInstance(int api_version_major, int api_version_minor, const std::vector<const char*>& required_extensions,

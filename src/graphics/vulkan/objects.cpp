@@ -331,7 +331,14 @@ void check_api_version(uint32_t required_api_version)
         }
 }
 
-VkPhysicalDevice find_physical_device(VkInstance instance, int api_version_major, int api_version_minor)
+struct FoundPhysicalDevice
+{
+        const VkPhysicalDevice physical_device;
+        const unsigned graphics_family_index;
+        const unsigned compute_family_index;
+};
+
+FoundPhysicalDevice find_physical_device(VkInstance instance, int api_version_major, int api_version_minor)
 {
         const uint32_t required_api_version = VK_MAKE_VERSION(api_version_major, api_version_minor, 0);
 
@@ -365,21 +372,44 @@ VkPhysicalDevice find_physical_device(VkInstance instance, int api_version_major
                         continue;
                 }
 
-                bool found = false;
+                unsigned index = 0;
+                unsigned graphics_family_index = 0;
+                unsigned compute_family_index = 0;
+                bool graphics_found = false;
+                bool compute_found = false;
                 for (const VkQueueFamilyProperties& p : queue_families(device))
                 {
-                        if (p.queueCount > 0 && (p.queueFlags & VK_QUEUE_GRAPHICS_BIT) && (p.queueFlags & VK_QUEUE_COMPUTE_BIT))
+                        if (p.queueCount < 1)
                         {
-                                found = true;
+                                continue;
+                        }
+
+                        if (!graphics_found && (p.queueFlags & VK_QUEUE_GRAPHICS_BIT))
+                        {
+                                graphics_found = true;
+                                graphics_family_index = index;
+                        }
+
+                        if (!compute_found && (p.queueFlags & VK_QUEUE_COMPUTE_BIT))
+                        {
+                                compute_found = true;
+                                compute_family_index = index;
+                        }
+
+                        if (graphics_found && compute_found)
+                        {
                                 break;
                         }
+
+                        ++index;
                 }
-                if (!found)
+
+                if (!graphics_found || !compute_found)
                 {
                         continue;
                 }
 
-                return device;
+                return {device, graphics_family_index, compute_family_index};
         }
 
         error("Failed to find a suitable Vulkan physical device");
@@ -766,12 +796,122 @@ DebugReportCallback::operator VkDebugReportCallbackEXT() const
 
 //
 
+void Device::create(VkPhysicalDevice physical_device, const std::vector<unsigned>& family_indices,
+                    const std::vector<const char*>& required_extensions,
+                    const std::vector<const char*>& required_validation_layers)
+{
+        if (family_indices.empty())
+        {
+                error("No family indices for device creation");
+        }
+
+        constexpr float queue_priority = 1;
+        std::vector<VkDeviceQueueCreateInfo> queue_create_infos;
+        for (unsigned unique_queue_family_index : std::unordered_set<unsigned>(family_indices.cbegin(), family_indices.cend()))
+        {
+                VkDeviceQueueCreateInfo queue_create_info = {};
+                queue_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+                queue_create_info.queueFamilyIndex = unique_queue_family_index;
+                queue_create_info.queueCount = 1;
+                queue_create_info.pQueuePriorities = &queue_priority;
+
+                queue_create_infos.push_back(queue_create_info);
+        }
+
+        VkPhysicalDeviceFeatures device_features = {};
+
+        VkDeviceCreateInfo create_info = {};
+        create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+        create_info.queueCreateInfoCount = queue_create_infos.size();
+        create_info.pQueueCreateInfos = queue_create_infos.data();
+        create_info.pEnabledFeatures = &device_features;
+        if (required_extensions.size() > 0)
+        {
+                create_info.enabledExtensionCount = required_extensions.size();
+                create_info.ppEnabledExtensionNames = required_extensions.data();
+        }
+        if (required_validation_layers.size() > 0)
+        {
+                create_info.enabledLayerCount = required_validation_layers.size();
+                create_info.ppEnabledLayerNames = required_validation_layers.data();
+        }
+
+        VkResult result = vkCreateDevice(physical_device, &create_info, nullptr, &m_device);
+        if (result != VK_SUCCESS)
+        {
+                vulkan_function_error("vkCreateDevice", result);
+        }
+
+        ASSERT(m_device != VK_NULL_HANDLE);
+}
+
+void Device::destroy() noexcept
+{
+        if (m_device != VK_NULL_HANDLE)
+        {
+                vkDestroyDevice(m_device, nullptr);
+        }
+}
+
+void Device::move(Device* from) noexcept
+{
+        m_device = from->m_device;
+        from->m_device = VK_NULL_HANDLE;
+}
+
+Device::Device() = default;
+
+Device::Device(VkPhysicalDevice physical_device, const std::vector<unsigned>& family_indices,
+               const std::vector<const char*>& required_extensions, const std::vector<const char*>& required_validation_layers)
+{
+        create(physical_device, family_indices, required_extensions, required_validation_layers);
+}
+
+Device::~Device()
+{
+        destroy();
+}
+
+Device::Device(Device&& from) noexcept
+{
+        move(&from);
+}
+
+Device& Device::operator=(Device&& from) noexcept
+{
+        if (this != &from)
+        {
+                destroy();
+                move(&from);
+        }
+        return *this;
+}
+
+Device::operator VkDevice() const
+{
+        return m_device;
+}
+
+//
+
 VulkanInstance::VulkanInstance(int api_version_major, int api_version_minor, const std::vector<const char*>& required_extensions,
                                const std::vector<const char*>& required_validation_layers)
         : m_instance(api_version_major, api_version_minor, required_extensions, required_validation_layers),
-          m_callback(!required_validation_layers.empty() ? std::make_optional<DebugReportCallback>(m_instance) : std::nullopt),
-          m_physical_device(find_physical_device(m_instance, api_version_major, api_version_minor))
+          m_callback(!required_validation_layers.empty() ? std::make_optional<DebugReportCallback>(m_instance) : std::nullopt)
 {
+        FoundPhysicalDevice device = find_physical_device(m_instance, api_version_major, api_version_minor);
+
+        m_physical_device = device.physical_device;
+        m_device = Device(device.physical_device, {device.graphics_family_index, device.compute_family_index}, {},
+                          required_validation_layers);
+
+        constexpr uint32_t queue_index = 0;
+        vkGetDeviceQueue(m_device, device.graphics_family_index, queue_index, &m_graphics_queue);
+        vkGetDeviceQueue(m_device, device.compute_family_index, queue_index, &m_compute_queue);
+
+        ASSERT(m_physical_device != VK_NULL_HANDLE);
+        ASSERT(m_graphics_queue != VK_NULL_HANDLE);
+        ASSERT(m_compute_queue != VK_NULL_HANDLE);
 }
 
 VulkanInstance::operator VkInstance() const
