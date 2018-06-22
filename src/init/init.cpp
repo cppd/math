@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "init.h"
 
+#include "glfw.h"
+
 #include "com/error.h"
 #include "com/log.h"
 #include "com/time.h"
@@ -95,8 +97,12 @@ Initialization::Initialization()
         reset_time();
 
         init_os_specific();
+
+        glfw_init();
 }
 Initialization::~Initialization()
 {
+        glfw_terminate();
+
         log_exit();
 }
