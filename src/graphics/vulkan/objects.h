@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #if defined(VULKAN_FOUND)
 
+#include <functional>
 #include <optional>
 #include <string>
 #include <vector>
@@ -99,18 +100,43 @@ public:
         operator VkDevice() const;
 };
 
+class SurfaceKHR
+{
+        VkInstance m_instance = VK_NULL_HANDLE;
+        VkSurfaceKHR m_surface = VK_NULL_HANDLE;
+
+        void create(VkInstance instance, const std::function<VkSurfaceKHR(VkInstance)>& create_surface);
+        void destroy() noexcept;
+        void move(SurfaceKHR* from) noexcept;
+
+public:
+        SurfaceKHR(VkInstance instance, const std::function<VkSurfaceKHR(VkInstance)>& create_surface);
+        ~SurfaceKHR();
+
+        SurfaceKHR(const SurfaceKHR&) = delete;
+        SurfaceKHR& operator=(const SurfaceKHR&) = delete;
+
+        SurfaceKHR(SurfaceKHR&&) noexcept;
+        SurfaceKHR& operator=(SurfaceKHR&&) noexcept;
+
+        operator VkSurfaceKHR() const;
+};
+
 class VulkanInstance
 {
         Instance m_instance;
         std::optional<DebugReportCallback> m_callback;
+        SurfaceKHR m_surface;
         VkPhysicalDevice m_physical_device = VK_NULL_HANDLE;
         Device m_device;
         VkQueue m_graphics_queue = VK_NULL_HANDLE;
         VkQueue m_compute_queue = VK_NULL_HANDLE;
+        VkQueue m_presentation_queue = VK_NULL_HANDLE;
 
 public:
         VulkanInstance(int api_version_major, int api_version_minor, const std::vector<const char*>& required_extensions,
-                       const std::vector<const char*>& required_validation_layers);
+                       const std::vector<const char*>& required_validation_layers,
+                       const std::function<VkSurfaceKHR(VkInstance)>& create_surface);
         operator VkInstance() const;
 };
 }

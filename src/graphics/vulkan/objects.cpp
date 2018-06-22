@@ -336,9 +336,10 @@ struct FoundPhysicalDevice
         const VkPhysicalDevice physical_device;
         const unsigned graphics_family_index;
         const unsigned compute_family_index;
+        const unsigned presentation_family_index;
 };
 
-FoundPhysicalDevice find_physical_device(VkInstance instance, int api_version_major, int api_version_minor)
+FoundPhysicalDevice find_physical_device(VkInstance instance, VkSurfaceKHR surface, int api_version_major, int api_version_minor)
 {
         const uint32_t required_api_version = VK_MAKE_VERSION(api_version_major, api_version_minor, 0);
 
@@ -375,8 +376,10 @@ FoundPhysicalDevice find_physical_device(VkInstance instance, int api_version_ma
                 unsigned index = 0;
                 unsigned graphics_family_index = 0;
                 unsigned compute_family_index = 0;
+                unsigned presentation_family_index = 0;
                 bool graphics_found = false;
                 bool compute_found = false;
+                bool presentation_found = false;
                 for (const VkQueueFamilyProperties& p : queue_families(device))
                 {
                         if (p.queueCount < 1)
@@ -396,7 +399,25 @@ FoundPhysicalDevice find_physical_device(VkInstance instance, int api_version_ma
                                 compute_family_index = index;
                         }
 
-                        if (graphics_found && compute_found)
+                        if (!presentation_found)
+                        {
+                                VkBool32 presentation_support;
+
+                                VkResult result =
+                                        vkGetPhysicalDeviceSurfaceSupportKHR(device, index, surface, &presentation_support);
+                                if (result != VK_SUCCESS)
+                                {
+                                        vulkan_function_error("vkGetPhysicalDeviceSurfaceSupportKHR", result);
+                                }
+
+                                if (presentation_support == VK_TRUE)
+                                {
+                                        presentation_found = true;
+                                        presentation_family_index = index;
+                                }
+                        }
+
+                        if (graphics_found && compute_found && presentation_found)
                         {
                                 break;
                         }
@@ -404,12 +425,12 @@ FoundPhysicalDevice find_physical_device(VkInstance instance, int api_version_ma
                         ++index;
                 }
 
-                if (!graphics_found || !compute_found)
+                if (!graphics_found || !compute_found || !presentation_found)
                 {
                         continue;
                 }
 
-                return {device, graphics_family_index, compute_family_index};
+                return {device, graphics_family_index, compute_family_index, presentation_family_index};
         }
 
         error("Failed to find a suitable Vulkan physical device");
@@ -721,8 +742,6 @@ void DebugReportCallback::create(VkInstance instance)
                 error("No VkInstance for DebugReportCallback");
         }
 
-        m_instance = instance;
-
         VkDebugReportCallbackCreateInfoEXT create_info = {};
 
         create_info.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
@@ -737,11 +756,13 @@ void DebugReportCallback::create(VkInstance instance)
 
         create_info.pfnCallback = debug_callback;
 
-        VkResult result = vkCreateDebugReportCallbackEXT(m_instance, &create_info, nullptr, &m_callback);
+        VkResult result = vkCreateDebugReportCallbackEXT(instance, &create_info, nullptr, &m_callback);
         if (result != VK_SUCCESS)
         {
                 vulkan_function_error("vkCreateDebugReportCallbackEXT", result);
         }
+
+        m_instance = instance;
 
         ASSERT(m_callback != VK_NULL_HANDLE);
 }
@@ -894,24 +915,95 @@ Device::operator VkDevice() const
 
 //
 
-VulkanInstance::VulkanInstance(int api_version_major, int api_version_minor, const std::vector<const char*>& required_extensions,
-                               const std::vector<const char*>& required_validation_layers)
-        : m_instance(api_version_major, api_version_minor, required_extensions, required_validation_layers),
-          m_callback(!required_validation_layers.empty() ? std::make_optional<DebugReportCallback>(m_instance) : std::nullopt)
+void SurfaceKHR::create(VkInstance instance, const std::function<VkSurfaceKHR(VkInstance)>& create_surface)
 {
-        FoundPhysicalDevice device = find_physical_device(m_instance, api_version_major, api_version_minor);
+        if (instance == VK_NULL_HANDLE)
+        {
+                error("No VkInstance for VkSurfaceKHR creation");
+        }
+
+        m_surface = create_surface(instance);
+
+        ASSERT(m_surface != VK_NULL_HANDLE);
+
+        m_instance = instance;
+}
+
+void SurfaceKHR::destroy() noexcept
+{
+        if (m_surface != VK_NULL_HANDLE)
+        {
+                ASSERT(m_instance != VK_NULL_HANDLE);
+
+                vkDestroySurfaceKHR(m_instance, m_surface, nullptr);
+        }
+}
+
+void SurfaceKHR::move(SurfaceKHR* from) noexcept
+{
+        m_instance = from->m_instance;
+        m_surface = from->m_surface;
+        from->m_instance = VK_NULL_HANDLE;
+        from->m_surface = VK_NULL_HANDLE;
+}
+
+SurfaceKHR::SurfaceKHR(VkInstance instance, const std::function<VkSurfaceKHR(VkInstance)>& create_surface)
+{
+        create(instance, create_surface);
+}
+
+SurfaceKHR::~SurfaceKHR()
+{
+        destroy();
+}
+
+SurfaceKHR::SurfaceKHR(SurfaceKHR&& from) noexcept
+{
+        move(&from);
+}
+
+SurfaceKHR& SurfaceKHR::operator=(SurfaceKHR&& from) noexcept
+{
+        if (this != &from)
+        {
+                destroy();
+                move(&from);
+        }
+        return *this;
+}
+
+SurfaceKHR::operator VkSurfaceKHR() const
+{
+        return m_surface;
+}
+
+//
+
+VulkanInstance::VulkanInstance(int api_version_major, int api_version_minor, const std::vector<const char*>& required_extensions,
+                               const std::vector<const char*>& required_validation_layers,
+                               const std::function<VkSurfaceKHR(VkInstance)>& create_surface)
+        : m_instance(api_version_major, api_version_minor, required_extensions, required_validation_layers),
+          m_callback(!required_validation_layers.empty() ? std::make_optional<DebugReportCallback>(m_instance) : std::nullopt),
+          m_surface(m_instance, create_surface)
+{
+        FoundPhysicalDevice device = find_physical_device(m_instance, m_surface, api_version_major, api_version_minor);
 
         m_physical_device = device.physical_device;
-        m_device = Device(device.physical_device, {device.graphics_family_index, device.compute_family_index}, {},
+
+        ASSERT(m_physical_device != VK_NULL_HANDLE);
+
+        m_device = Device(device.physical_device,
+                          {device.graphics_family_index, device.compute_family_index, device.presentation_family_index}, {},
                           required_validation_layers);
 
         constexpr uint32_t queue_index = 0;
         vkGetDeviceQueue(m_device, device.graphics_family_index, queue_index, &m_graphics_queue);
         vkGetDeviceQueue(m_device, device.compute_family_index, queue_index, &m_compute_queue);
+        vkGetDeviceQueue(m_device, device.presentation_family_index, queue_index, &m_presentation_queue);
 
-        ASSERT(m_physical_device != VK_NULL_HANDLE);
         ASSERT(m_graphics_queue != VK_NULL_HANDLE);
         ASSERT(m_compute_queue != VK_NULL_HANDLE);
+        ASSERT(m_presentation_queue != VK_NULL_HANDLE);
 }
 
 VulkanInstance::operator VkInstance() const

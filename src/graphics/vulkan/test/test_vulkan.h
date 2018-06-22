@@ -17,8 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#if defined(VULKAN_FOUND)
+#if defined(VULKAN_FOUND) && defined(GLFW_FOUND)
 
-void test_vulkan();
+void test_vulkan_window();
 
 #endif
