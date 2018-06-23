@@ -4,7 +4,6 @@ function(SetCompilerWarnings source_files)
                 $<$<CXX_COMPILER_ID:GNU>:
                         -Wall
                         -Wextra
-                        -Wabi
                         -Wcast-align
                         -Wcast-qual
                         -Wdate-time
