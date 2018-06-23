@@ -39,7 +39,9 @@ public:
         operator GLFWwindow*() const;
 
         VkSurfaceKHR create_surface(VkInstance instance);
-        static std::vector<const char*> vulkan_extensions();
+
+        static std::vector<const char*> instance_extensions();
+        static std::vector<const char*> device_extensions();
 
         VulkanWindow(const VulkanWindow&) = delete;
         VulkanWindow& operator=(const VulkanWindow&) = delete;

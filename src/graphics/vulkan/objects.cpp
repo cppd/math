@@ -120,6 +120,30 @@ std::array<std::string, 2> return_code_strings(const VkResult& code)
         return {"Unknown Vulkan return code " + to_string(static_cast<long long>(code)), ""};
 }
 
+std::string physical_device_type_to_string(VkPhysicalDeviceType type)
+{
+        if (type == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
+        {
+                return "Discrete GPU";
+        }
+        else if (type == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU)
+        {
+                return "Integrated GPU";
+        }
+        else if (type == VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU)
+        {
+                return "Virtual GPU";
+        }
+        else if (type == VK_PHYSICAL_DEVICE_TYPE_CPU)
+        {
+                return "CPU";
+        }
+        else
+        {
+                return "Unknown Device Type";
+        }
+}
+
 std::string return_code_string(const std::string& function_name, const VkResult& code)
 {
         std::array<std::string, 2> strings = return_code_strings(code);
@@ -154,7 +178,7 @@ void vulkan_function_error[[noreturn]](const std::string& function_name, const V
         error("Vulkan Error. " + return_code_string(function_name, code));
 }
 
-std::unordered_set<std::string> supported_extensions()
+std::unordered_set<std::string> supported_instance_extensions()
 {
         uint32_t extension_count;
         VkResult result;
@@ -176,6 +200,40 @@ std::unordered_set<std::string> supported_extensions()
         if (result != VK_SUCCESS)
         {
                 vulkan_function_error("vkEnumerateInstanceExtensionProperties", result);
+        }
+
+        std::unordered_set<std::string> extension_set;
+
+        for (const VkExtensionProperties& e : extensions)
+        {
+                extension_set.emplace(e.extensionName);
+        }
+
+        return extension_set;
+}
+
+std::unordered_set<std::string> supported_physical_device_extensions(VkPhysicalDevice physical_device)
+{
+        uint32_t extension_count;
+        VkResult result;
+
+        result = vkEnumerateDeviceExtensionProperties(physical_device, nullptr, &extension_count, nullptr);
+        if (result != VK_SUCCESS)
+        {
+                vulkan_function_error("vkEnumerateDeviceExtensionProperties", result);
+        }
+
+        if (extension_count < 1)
+        {
+                return {};
+        }
+
+        std::vector<VkExtensionProperties> extensions(extension_count);
+
+        result = vkEnumerateDeviceExtensionProperties(physical_device, nullptr, &extension_count, extensions.data());
+        if (result != VK_SUCCESS)
+        {
+                vulkan_function_error("vkEnumerateDeviceExtensionProperties", result);
         }
 
         std::unordered_set<std::string> extension_set;
@@ -284,20 +342,20 @@ std::vector<VkQueueFamilyProperties> queue_families(VkPhysicalDevice device)
         return queue_families;
 }
 
-void check_extension_support(const std::vector<const char*>& required_extensions)
+void check_instance_extension_support(const std::vector<const char*>& required_extensions)
 {
         if (required_extensions.empty())
         {
                 return;
         }
 
-        const std::unordered_set<std::string> extension_set = supported_extensions();
+        const std::unordered_set<std::string> extension_set = supported_instance_extensions();
 
         for (std::string e : required_extensions)
         {
                 if (extension_set.count(e) < 1)
                 {
-                        error("Vulkan extension " + e + " is not supported");
+                        error("Vulkan instance extension " + e + " is not supported");
                 }
         }
 }
@@ -331,6 +389,26 @@ void check_api_version(uint32_t required_api_version)
         }
 }
 
+bool device_supports_extensions(VkPhysicalDevice physical_device, const std::vector<const char*>& required_extensions)
+{
+        if (required_extensions.empty())
+        {
+                return true;
+        }
+
+        const std::unordered_set<std::string> extension_set = supported_physical_device_extensions(physical_device);
+
+        for (std::string e : required_extensions)
+        {
+                if (extension_set.count(e) < 1)
+                {
+                        return false;
+                }
+        }
+
+        return true;
+}
+
 struct FoundPhysicalDevice
 {
         const VkPhysicalDevice physical_device;
@@ -339,7 +417,8 @@ struct FoundPhysicalDevice
         const unsigned presentation_family_index;
 };
 
-FoundPhysicalDevice find_physical_device(VkInstance instance, VkSurfaceKHR surface, int api_version_major, int api_version_minor)
+FoundPhysicalDevice find_physical_device(VkInstance instance, VkSurfaceKHR surface, int api_version_major, int api_version_minor,
+                                         const std::vector<const char*>& required_extensions)
 {
         const uint32_t required_api_version = VK_MAKE_VERSION(api_version_major, api_version_minor, 0);
 
@@ -369,6 +448,11 @@ FoundPhysicalDevice find_physical_device(VkInstance instance, VkSurfaceKHR surfa
                 }
 
                 if (required_api_version > properties.apiVersion)
+                {
+                        continue;
+                }
+
+                if (!device_supports_extensions(device, required_extensions))
                 {
                         continue;
                 }
@@ -482,6 +566,12 @@ VKAPI_ATTR VkBool32 VKAPI_CALL debug_callback(VkDebugReportFlagsEXT flags, VkDeb
 
         return VK_FALSE;
 }
+std::vector<std::string> sorted(const std::unordered_set<std::string>& s)
+{
+        std::vector<std::string> res(s.cbegin(), s.cend());
+        std::sort(res.begin(), res.end());
+        return res;
+}
 }
 
 namespace vulkan
@@ -510,10 +600,7 @@ std::string overview()
         s += "Extensions";
         try
         {
-                std::unordered_set<std::string> extensions(supported_extensions());
-                std::vector<std::string> extension_vector(extensions.begin(), extensions.end());
-                std::sort(extension_vector.begin(), extension_vector.end());
-                for (const std::string& extension : extension_vector)
+                for (const std::string& extension : sorted(supported_instance_extensions()))
                 {
                         s += "\n";
                         s += INDENT;
@@ -531,10 +618,7 @@ std::string overview()
         s += "Validation Layers";
         try
         {
-                std::unordered_set<std::string> layers(supported_validation_layers());
-                std::vector<std::string> layer_vector(layers.begin(), layers.end());
-                std::sort(layer_vector.begin(), layer_vector.end());
-                for (const std::string& layer : layer_vector)
+                for (const std::string& layer : sorted(supported_validation_layers()))
                 {
                         s += "\n";
                         s += INDENT;
@@ -569,74 +653,84 @@ std::string overview_physical_devices(VkInstance instance)
                 vkGetPhysicalDeviceFeatures(device, &features);
 
                 indent = "\n" + INDENT;
-
-                s += indent + properties.deviceName;
+                s += indent;
+                s += properties.deviceName;
 
                 indent = "\n" + INDENT + INDENT;
+                s += indent;
+                s += physical_device_type_to_string(properties.deviceType);
 
-                if (properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
-                {
-                        s += indent + "Discrete GPU";
-                }
-                else if (properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU)
-                {
-                        s += indent + "Integrated GPU";
-                }
-                else if (properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU)
-                {
-                        s += indent + "Virtual GPU";
-                }
-                else if (properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_CPU)
-                {
-                        s += indent + "CPU";
-                }
-                else
-                {
-                        s += indent + "Unknown Device Type";
-                }
-
+                indent = "\n" + INDENT + INDENT;
                 s += indent;
                 s += "API Version " + api_version_to_string(properties.apiVersion);
 
+                indent = "\n" + INDENT + INDENT;
                 s += indent;
-                s += "QueueFamilies";
-
-                for (const VkQueueFamilyProperties& p : queue_families(device))
+                s += "Extensions";
+                indent = "\n" + INDENT + INDENT + INDENT;
+                try
+                {
+                        for (const std::string& e : sorted(supported_physical_device_extensions(device)))
+                        {
+                                s += indent;
+                                s += e;
+                        }
+                }
+                catch (std::exception& e)
                 {
                         indent = "\n" + INDENT + INDENT + INDENT;
-
-                        s += indent + "Family";
-
-                        indent = "\n" + INDENT + INDENT + INDENT + INDENT;
-
                         s += indent;
-                        s += "queue count: " + to_string(p.queueCount);
+                        s += e.what();
+                }
 
-                        if (p.queueCount < 1)
+                indent = "\n" + INDENT + INDENT;
+                s += indent;
+                s += "QueueFamilies";
+                try
+                {
+                        for (const VkQueueFamilyProperties& p : queue_families(device))
                         {
-                                continue;
-                        }
+                                indent = "\n" + INDENT + INDENT + INDENT;
 
-                        if (p.queueFlags & VK_QUEUE_GRAPHICS_BIT)
-                        {
-                                s += indent + "graphics";
+                                s += indent + "Family";
+
+                                indent = "\n" + INDENT + INDENT + INDENT + INDENT;
+
+                                s += indent;
+                                s += "queue count: " + to_string(p.queueCount);
+
+                                if (p.queueCount < 1)
+                                {
+                                        continue;
+                                }
+
+                                if (p.queueFlags & VK_QUEUE_GRAPHICS_BIT)
+                                {
+                                        s += indent + "graphics";
+                                }
+                                if (p.queueFlags & VK_QUEUE_COMPUTE_BIT)
+                                {
+                                        s += indent + "compute";
+                                }
+                                if (p.queueFlags & VK_QUEUE_TRANSFER_BIT)
+                                {
+                                        s += indent + "transfer";
+                                }
+                                if (p.queueFlags & VK_QUEUE_SPARSE_BINDING_BIT)
+                                {
+                                        s += indent + "sparse_binding";
+                                }
+                                if (p.queueFlags & VK_QUEUE_PROTECTED_BIT)
+                                {
+                                        s += indent + "protected";
+                                }
                         }
-                        if (p.queueFlags & VK_QUEUE_COMPUTE_BIT)
-                        {
-                                s += indent + "compute";
-                        }
-                        if (p.queueFlags & VK_QUEUE_TRANSFER_BIT)
-                        {
-                                s += indent + "transfer";
-                        }
-                        if (p.queueFlags & VK_QUEUE_SPARSE_BINDING_BIT)
-                        {
-                                s += indent + "sparse_binding";
-                        }
-                        if (p.queueFlags & VK_QUEUE_PROTECTED_BIT)
-                        {
-                                s += indent + "protected";
-                        }
+                }
+                catch (std::exception& e)
+                {
+                        indent = "\n" + INDENT + INDENT + INDENT;
+                        s += indent;
+                        s += e.what();
                 }
         }
 
@@ -654,7 +748,7 @@ void Instance::create(int api_version_major, int api_version_minor, std::vector<
         }
 
         check_api_version(required_api_version);
-        check_extension_support(required_extensions);
+        check_instance_extension_support(required_extensions);
         check_validation_layer_support(required_validation_layers);
 
         VkApplicationInfo app_info = {};
@@ -979,14 +1073,17 @@ SurfaceKHR::operator VkSurfaceKHR() const
 
 //
 
-VulkanInstance::VulkanInstance(int api_version_major, int api_version_minor, const std::vector<const char*>& required_extensions,
+VulkanInstance::VulkanInstance(int api_version_major, int api_version_minor,
+                               const std::vector<const char*>& required_instance_extensions,
+                               const std::vector<const char*>& required_device_extensions,
                                const std::vector<const char*>& required_validation_layers,
                                const std::function<VkSurfaceKHR(VkInstance)>& create_surface)
-        : m_instance(api_version_major, api_version_minor, required_extensions, required_validation_layers),
+        : m_instance(api_version_major, api_version_minor, required_instance_extensions, required_validation_layers),
           m_callback(!required_validation_layers.empty() ? std::make_optional<DebugReportCallback>(m_instance) : std::nullopt),
           m_surface(m_instance, create_surface)
 {
-        FoundPhysicalDevice device = find_physical_device(m_instance, m_surface, api_version_major, api_version_minor);
+        FoundPhysicalDevice device =
+                find_physical_device(m_instance, m_surface, api_version_major, api_version_minor, required_device_extensions);
 
         m_physical_device = device.physical_device;
 

@@ -51,15 +51,27 @@ void test_vulkan_thread()
 {
         try
         {
-                const std::vector<const char*> extensions({});
-                const std::vector<const char*> vulkan_extensions(VulkanWindow::vulkan_extensions());
+                const std::vector<const char*> instance_extensions({});
+                const std::vector<const char*> device_extensions({});
 
-                const std::vector<const char*> layers({"VK_LAYER_LUNARG_standard_validation"});
+                const std::vector<const char*> window_instance_extensions(VulkanWindow::instance_extensions());
+                const std::vector<const char*> window_device_extensions(VulkanWindow::device_extensions());
 
-                if (vulkan_extensions.size() > 0)
+                const std::vector<const char*> validation_layers({"VK_LAYER_LUNARG_standard_validation"});
+
+                if (window_instance_extensions.size() > 0)
                 {
-                        LOG("GLFW Vulkan extensions");
-                        for (const char* s : vulkan_extensions)
+                        LOG("Window instance extensions");
+                        for (const char* s : window_instance_extensions)
+                        {
+                                LOG(std::string("  ") + s);
+                        }
+                }
+
+                if (window_device_extensions.size() > 0)
+                {
+                        LOG("Window device extensions");
+                        for (const char* s : window_device_extensions)
                         {
                                 LOG(std::string("  ") + s);
                         }
@@ -70,8 +82,8 @@ void test_vulkan_thread()
                 VulkanWindow window(WINDOW_WIDTH, WINDOW_HEIGHT, "Vulkan Window");
 
                 vulkan::VulkanInstance vulkan_instance(
-                        1, 0, extensions + vulkan_extensions, layers,
-                        [&window](VkInstance instance) { return window.create_surface(instance); });
+                        1, 0, instance_extensions + window_instance_extensions, device_extensions + window_device_extensions,
+                        validation_layers, [&window](VkInstance instance) { return window.create_surface(instance); });
 
                 LOG(vulkan::overview_physical_devices(vulkan_instance));
 

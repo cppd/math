@@ -134,7 +134,8 @@ class VulkanInstance
         VkQueue m_presentation_queue = VK_NULL_HANDLE;
 
 public:
-        VulkanInstance(int api_version_major, int api_version_minor, const std::vector<const char*>& required_extensions,
+        VulkanInstance(int api_version_major, int api_version_minor, const std::vector<const char*>& required_instance_extensions,
+                       const std::vector<const char*>& required_device_extensions,
                        const std::vector<const char*>& required_validation_layers,
                        const std::function<VkSurfaceKHR(VkInstance)>& create_surface);
         operator VkInstance() const;

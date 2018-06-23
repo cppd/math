@@ -61,7 +61,7 @@ VkSurfaceKHR VulkanWindow::create_surface(VkInstance instance)
         return surface;
 }
 
-std::vector<const char*> VulkanWindow::vulkan_extensions()
+std::vector<const char*> VulkanWindow::instance_extensions()
 {
         uint32_t count;
         const char** extensions;
@@ -77,6 +77,11 @@ std::vector<const char*> VulkanWindow::vulkan_extensions()
         }
 
         return std::vector<const char*>(extensions, extensions + count);
+}
+
+std::vector<const char*> VulkanWindow::device_extensions()
+{
+        return {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
 }
 
 #endif
