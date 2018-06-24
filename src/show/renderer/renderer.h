@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/mat.h"
 #include "com/vec.h"
-#include "graphics/objects.h"
+#include "graphics/opengl/objects.h"
 #include "obj/obj.h"
 
 #include <memory>

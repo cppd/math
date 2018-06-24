@@ -34,12 +34,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "gpu_2d/dft/show/dft_show.h"
 #include "gpu_2d/optical_flow/optical_flow.h"
 #include "gpu_2d/pencil/pencil.h"
-#include "graphics/objects.h"
+#include "graphics/opengl/objects.h"
+#include "graphics/opengl/window.h"
 #include "numerical/linear.h"
 #include "obj/obj.h"
 #include "renderer/renderer.h"
 #include "text/text.h"
-#include "window/window.h"
 
 #include <SFML/Window/Event.hpp>
 #include <chrono>

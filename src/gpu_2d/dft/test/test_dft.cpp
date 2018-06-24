@@ -32,7 +32,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/random/engine.h"
 #include "com/time.h"
 #include "gpu_2d/dft/comp/dft_gl2d.h"
-#include "window/window.h"
+#include "graphics/opengl/window.h"
 
 #include <array>
 #include <cmath>

@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/math.h"
 #include "gpu_2d/dft/comp/dft_gl2d.h"
-#include "graphics/objects.h"
+#include "graphics/opengl/objects.h"
 
 #include <vector>
 

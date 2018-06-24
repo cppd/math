@@ -18,12 +18,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "window.h"
 
 #include "com/log.h"
-#include "graphics/opengl/opengl_functions.h"
-#include "graphics/query.h"
+#include "graphics/opengl/query.h"
 
 #include <SFML/System/Err.hpp>
 
 #if defined(_WIN32)
+
+#include "graphics/opengl/functions/opengl_functions.h"
+
 namespace
 {
 void init_opengl_functions()
@@ -34,6 +36,7 @@ void init_opengl_functions()
         opengl_functions::init();
 }
 }
+
 #endif
 
 void create_gl_window_1x1(int major_gl_version, int minor_gl_version, const std::vector<std::string>& extensions,

@@ -54,7 +54,7 @@ Chapter 13: FFTs for Arbitrary N.
 #include "com/math.h"
 #include "com/print.h"
 #include "com/time.h"
-#include "graphics/query.h"
+#include "graphics/opengl/query.h"
 
 #include <complex>
 #include <sstream>

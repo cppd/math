@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "graphics/objects.h"
+#include "graphics/opengl/objects.h"
 
 class ColorSpaceConverterToRGB
 {
