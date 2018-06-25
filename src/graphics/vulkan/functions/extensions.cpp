@@ -17,21 +17,27 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #if defined(VULKAN_FOUND)
 
-#include "extensions.h"
-
 #include "com/error.h"
+
+#include <vulkan/vulkan.h>
+
+#if defined(VK_NO_PROTOTYPES)
+#error VK_NO_PROTOTYPES defined
+#endif
 
 VKAPI_ATTR VkResult VKAPI_CALL vkCreateDebugReportCallbackEXT(VkInstance instance,
                                                               const VkDebugReportCallbackCreateInfoEXT* pCreateInfo,
                                                               const VkAllocationCallbacks* pAllocator,
                                                               VkDebugReportCallbackEXT* pCallback)
 {
+        ASSERT(instance != VK_NULL_HANDLE);
+
         PFN_vkCreateDebugReportCallbackEXT f = reinterpret_cast<PFN_vkCreateDebugReportCallbackEXT>(
                 vkGetInstanceProcAddr(instance, "vkCreateDebugReportCallbackEXT"));
 
         if (!f)
         {
-                return VK_ERROR_EXTENSION_NOT_PRESENT;
+                error_fatal("vkCreateDebugReportCallbackEXT address not found");
         }
 
         return f(instance, pCreateInfo, pAllocator, pCallback);
@@ -40,6 +46,8 @@ VKAPI_ATTR VkResult VKAPI_CALL vkCreateDebugReportCallbackEXT(VkInstance instanc
 VKAPI_ATTR void VKAPI_CALL vkDestroyDebugReportCallbackEXT(VkInstance instance, VkDebugReportCallbackEXT callback,
                                                            const VkAllocationCallbacks* pAllocator)
 {
+        ASSERT(instance != VK_NULL_HANDLE);
+
         PFN_vkDestroyDebugReportCallbackEXT f = reinterpret_cast<PFN_vkDestroyDebugReportCallbackEXT>(
                 vkGetInstanceProcAddr(instance, "vkDestroyDebugReportCallbackEXT"));
 

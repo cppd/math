@@ -19,10 +19,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #if defined(VULKAN_FOUND)
 
+#include <string>
 #include <vulkan/vulkan.h>
 
-#if defined(VK_NO_PROTOTYPES)
-#error VK_NO_PROTOTYPES defined
-#endif
+namespace vulkan
+{
+std::string api_version_to_string(uint32_t api_version);
+std::string physical_device_type_to_string(VkPhysicalDeviceType type);
+
+void vulkan_function_error[[noreturn]](const std::string& function_name, const VkResult& code);
+}
 
 #endif

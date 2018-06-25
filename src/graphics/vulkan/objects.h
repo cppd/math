@@ -27,9 +27,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace vulkan
 {
-std::string overview();
-std::string overview_physical_devices(VkInstance instance);
-
 class Instance
 {
         VkInstance m_instance = VK_NULL_HANDLE;
