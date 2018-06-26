@@ -272,6 +272,87 @@ bool device_supports_extensions(VkPhysicalDevice physical_device, const std::vec
         return true;
 }
 
+std::vector<VkSurfaceFormatKHR> surface_formats(VkPhysicalDevice physical_device, VkSurfaceKHR surface)
+{
+        uint32_t format_count;
+        VkResult result;
+
+        result = vkGetPhysicalDeviceSurfaceFormatsKHR(physical_device, surface, &format_count, nullptr);
+        if (result != VK_SUCCESS)
+        {
+                vulkan_function_error("vkGetPhysicalDeviceSurfaceFormatsKHR", result);
+        }
+
+        if (format_count < 1)
+        {
+                return {};
+        }
+
+        std::vector<VkSurfaceFormatKHR> formats(format_count);
+
+        result = vkGetPhysicalDeviceSurfaceFormatsKHR(physical_device, surface, &format_count, formats.data());
+        if (result != VK_SUCCESS)
+        {
+                vulkan_function_error("vkGetPhysicalDeviceSurfaceFormatsKHR", result);
+        }
+
+        return formats;
+}
+
+std::vector<VkPresentModeKHR> present_modes(VkPhysicalDevice physical_device, VkSurfaceKHR surface)
+{
+        uint32_t mode_count;
+        VkResult result;
+
+        result = vkGetPhysicalDeviceSurfacePresentModesKHR(physical_device, surface, &mode_count, nullptr);
+        if (result != VK_SUCCESS)
+        {
+                vulkan_function_error("vkGetPhysicalDeviceSurfacePresentModesKHR", result);
+        }
+
+        if (mode_count < 1)
+        {
+                return {};
+        }
+
+        std::vector<VkPresentModeKHR> modes(mode_count);
+
+        result = vkGetPhysicalDeviceSurfacePresentModesKHR(physical_device, surface, &mode_count, modes.data());
+        if (result != VK_SUCCESS)
+        {
+                vulkan_function_error("vkGetPhysicalDeviceSurfacePresentModesKHR", result);
+        }
+
+        return modes;
+}
+
+std::vector<VkImage> swap_chain_images(VkDevice device, VkSwapchainKHR swap_chain)
+{
+        uint32_t image_count;
+        VkResult result;
+
+        result = vkGetSwapchainImagesKHR(device, swap_chain, &image_count, nullptr);
+        if (result != VK_SUCCESS)
+        {
+                vulkan_function_error("vkGetSwapchainImagesKHR", result);
+        }
+
+        if (image_count < 1)
+        {
+                return {};
+        }
+
+        std::vector<VkImage> images(image_count);
+
+        result = vkGetSwapchainImagesKHR(device, swap_chain, &image_count, images.data());
+        if (result != VK_SUCCESS)
+        {
+                vulkan_function_error("vkGetSwapchainImagesKHR", result);
+        }
+
+        return images;
+}
+
 std::string overview()
 {
         static constexpr const char* INDENT = "  ";

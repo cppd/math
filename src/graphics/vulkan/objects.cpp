@@ -28,12 +28,118 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace
 {
+VkSurfaceFormatKHR choose_surface_format(const std::vector<VkSurfaceFormatKHR>& surface_formats)
+{
+        ASSERT(surface_formats.size() > 0);
+
+        if (surface_formats.size() == 1 && surface_formats[0].format == VK_FORMAT_UNDEFINED)
+        {
+                return {VK_FORMAT_B8G8R8A8_UNORM, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR};
+        }
+
+        for (const VkSurfaceFormatKHR& format : surface_formats)
+        {
+                if (format.format == VK_FORMAT_B8G8R8A8_UNORM && format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
+                {
+                        return format;
+                }
+        }
+
+        return surface_formats[0];
+}
+
+VkPresentModeKHR choose_present_mode(const std::vector<VkPresentModeKHR>& present_modes)
+{
+        for (const VkPresentModeKHR& present_mode : present_modes)
+        {
+                if (present_mode == VK_PRESENT_MODE_MAILBOX_KHR)
+                {
+                        return present_mode;
+                }
+        }
+
+        for (const VkPresentModeKHR& present_mode : present_modes)
+        {
+                if (present_mode == VK_PRESENT_MODE_IMMEDIATE_KHR)
+                {
+                        return present_mode;
+                }
+        }
+
+        return VK_PRESENT_MODE_FIFO_KHR;
+}
+
+VkExtent2D choose_extent(const VkSurfaceCapabilitiesKHR& capabilities)
+{
+        if (!(capabilities.currentExtent.width == 0xffff'ffff && capabilities.currentExtent.height == 0xffff'ffff))
+        {
+                return capabilities.currentExtent;
+        }
+
+        error("Current width and height of the surface arer not defined");
+
+#if 0
+        VkExtent2D extent;
+        extent.width = std::clamp(1u, capabilities.minImageExtent.width, capabilities.maxImageExtent.width);
+        extent.height = std::clamp(1u, capabilities.minImageExtent.height, capabilities.maxImageExtent.height);
+        return extent;
+#endif
+}
+
+uint32_t choose_image_count(const VkSurfaceCapabilitiesKHR& capabilities)
+{
+        uint32_t image_count = capabilities.minImageCount + 1;
+        if (capabilities.maxImageCount > 0)
+        {
+                image_count = std::min(image_count, capabilities.maxImageCount);
+        }
+        return image_count;
+}
+
+struct SwapChainDetails
+{
+        VkSurfaceCapabilitiesKHR capabilities;
+        std::vector<VkSurfaceFormatKHR> surface_formats;
+        std::vector<VkPresentModeKHR> present_modes;
+};
+
+bool find_swap_chain_details(VkPhysicalDevice device, VkSurfaceKHR surface, SwapChainDetails* swap_chain_details)
+{
+        VkSurfaceCapabilitiesKHR capabilities;
+
+        VkResult result;
+        result = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, &capabilities);
+        if (result != VK_SUCCESS)
+        {
+                vulkan::vulkan_function_error("vkGetPhysicalDeviceSurfaceCapabilitiesKHR", result);
+        }
+
+        std::vector<VkSurfaceFormatKHR> surface_formats = vulkan::surface_formats(device, surface);
+        if (surface_formats.empty())
+        {
+                return false;
+        }
+
+        std::vector<VkPresentModeKHR> present_modes = vulkan::present_modes(device, surface);
+        if (present_modes.empty())
+        {
+                return false;
+        }
+
+        swap_chain_details->capabilities = capabilities;
+        swap_chain_details->surface_formats = surface_formats;
+        swap_chain_details->present_modes = present_modes;
+
+        return true;
+}
+
 struct FoundPhysicalDevice
 {
         const VkPhysicalDevice physical_device;
         const unsigned graphics_family_index;
         const unsigned compute_family_index;
         const unsigned presentation_family_index;
+        SwapChainDetails swap_chain_details;
 };
 
 FoundPhysicalDevice find_physical_device(VkInstance instance, VkSurfaceKHR surface, int api_version_major, int api_version_minor,
@@ -133,7 +239,13 @@ FoundPhysicalDevice find_physical_device(VkInstance instance, VkSurfaceKHR surfa
                         continue;
                 }
 
-                return {device, graphics_family_index, compute_family_index, presentation_family_index};
+                SwapChainDetails swap_chain_details;
+                if (!find_swap_chain_details(device, surface, &swap_chain_details))
+                {
+                        continue;
+                }
+
+                return {device, graphics_family_index, compute_family_index, presentation_family_index, swap_chain_details};
         }
 
         error("Failed to find a suitable Vulkan physical device");
@@ -525,6 +637,109 @@ SurfaceKHR::operator VkSurfaceKHR() const
 
 //
 
+void SwapChainKHR::create(VkDevice device, VkSurfaceKHR surface, VkSurfaceFormatKHR surface_format, VkPresentModeKHR present_mode,
+                          VkExtent2D extent, uint32_t image_count, VkSurfaceTransformFlagBitsKHR transform,
+                          unsigned graphics_family_index, unsigned presentation_family_index)
+{
+        VkSwapchainCreateInfoKHR create_info = {};
+        create_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+        create_info.surface = surface;
+
+        create_info.minImageCount = image_count;
+        create_info.imageFormat = surface_format.format;
+        create_info.imageColorSpace = surface_format.colorSpace;
+        create_info.imageExtent = extent;
+        create_info.imageArrayLayers = 1;
+        create_info.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+
+        std::vector<uint32_t> family_indices;
+        if (graphics_family_index != presentation_family_index)
+        {
+                family_indices = {graphics_family_index, presentation_family_index};
+                create_info.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
+                create_info.queueFamilyIndexCount = family_indices.size();
+                create_info.pQueueFamilyIndices = family_indices.data();
+        }
+        else
+        {
+                create_info.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+        }
+
+        create_info.preTransform = transform;
+        create_info.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+
+        create_info.presentMode = present_mode;
+        create_info.clipped = VK_TRUE;
+
+        create_info.oldSwapchain = VK_NULL_HANDLE;
+
+        VkResult result = vkCreateSwapchainKHR(device, &create_info, nullptr, &m_swap_chain);
+        if (result != VK_SUCCESS)
+        {
+                vulkan::vulkan_function_error("vkCreateSwapchainKHR", result);
+        }
+
+        ASSERT(m_swap_chain != VK_NULL_HANDLE);
+
+        m_device = device;
+}
+
+void SwapChainKHR::destroy() noexcept
+{
+        if (m_swap_chain != VK_NULL_HANDLE)
+        {
+                ASSERT(m_device != VK_NULL_HANDLE);
+
+                vkDestroySwapchainKHR(m_device, m_swap_chain, nullptr);
+        }
+}
+
+void SwapChainKHR::move(SwapChainKHR* from) noexcept
+{
+        m_device = from->m_device;
+        m_swap_chain = from->m_swap_chain;
+        from->m_device = VK_NULL_HANDLE;
+        from->m_swap_chain = VK_NULL_HANDLE;
+}
+
+SwapChainKHR::SwapChainKHR() = default;
+
+SwapChainKHR::SwapChainKHR(VkDevice device, VkSurfaceKHR surface, VkSurfaceFormatKHR surface_format,
+                           VkPresentModeKHR present_mode, VkExtent2D extent, uint32_t image_count,
+                           VkSurfaceTransformFlagBitsKHR transform, unsigned graphics_family_index,
+                           unsigned presentation_family_index)
+{
+        create(device, surface, surface_format, present_mode, extent, image_count, transform, graphics_family_index,
+               presentation_family_index);
+}
+
+SwapChainKHR::~SwapChainKHR()
+{
+        destroy();
+}
+
+SwapChainKHR::SwapChainKHR(SwapChainKHR&& from) noexcept
+{
+        move(&from);
+}
+
+SwapChainKHR& SwapChainKHR::operator=(SwapChainKHR&& from) noexcept
+{
+        if (this != &from)
+        {
+                destroy();
+                move(&from);
+        }
+        return *this;
+}
+
+SwapChainKHR::operator VkSwapchainKHR() const
+{
+        return m_swap_chain;
+}
+
+//
+
 VulkanInstance::VulkanInstance(int api_version_major, int api_version_minor,
                                const std::vector<const char*>& required_instance_extensions,
                                const std::vector<const char*>& required_device_extensions,
@@ -534,16 +749,18 @@ VulkanInstance::VulkanInstance(int api_version_major, int api_version_minor,
           m_callback(!required_validation_layers.empty() ? std::make_optional<DebugReportCallback>(m_instance) : std::nullopt),
           m_surface(m_instance, create_surface)
 {
+        const std::vector<const char*> all_device_extensions = required_device_extensions + VK_KHR_SWAPCHAIN_EXTENSION_NAME;
+
         FoundPhysicalDevice device =
-                find_physical_device(m_instance, m_surface, api_version_major, api_version_minor, required_device_extensions);
+                find_physical_device(m_instance, m_surface, api_version_major, api_version_minor, all_device_extensions);
 
         m_physical_device = device.physical_device;
 
         ASSERT(m_physical_device != VK_NULL_HANDLE);
 
         m_device = Device(device.physical_device,
-                          {device.graphics_family_index, device.compute_family_index, device.presentation_family_index}, {},
-                          required_validation_layers);
+                          {device.graphics_family_index, device.compute_family_index, device.presentation_family_index},
+                          all_device_extensions, required_validation_layers);
 
         constexpr uint32_t queue_index = 0;
         vkGetDeviceQueue(m_device, device.graphics_family_index, queue_index, &m_graphics_queue);
@@ -553,9 +770,25 @@ VulkanInstance::VulkanInstance(int api_version_major, int api_version_minor,
         ASSERT(m_graphics_queue != VK_NULL_HANDLE);
         ASSERT(m_compute_queue != VK_NULL_HANDLE);
         ASSERT(m_presentation_queue != VK_NULL_HANDLE);
+
+        VkSurfaceFormatKHR surface_format = choose_surface_format(device.swap_chain_details.surface_formats);
+        m_swap_chain_extent = choose_extent(device.swap_chain_details.capabilities);
+        m_swap_chain_image_format = surface_format.format;
+
+        m_swap_chain =
+                SwapChainKHR(m_device, m_surface, surface_format, choose_present_mode(device.swap_chain_details.present_modes),
+                             m_swap_chain_extent, choose_image_count(device.swap_chain_details.capabilities),
+                             device.swap_chain_details.capabilities.currentTransform, device.graphics_family_index,
+                             device.presentation_family_index);
+
+        m_swap_chain_images = swap_chain_images(m_device, m_swap_chain);
+        if (m_swap_chain_images.empty())
+        {
+                error("Failed to find swap chain images");
+        }
 }
 
-VulkanInstance::operator VkInstance() const
+VkInstance VulkanInstance::instance() const
 {
         return m_instance;
 }

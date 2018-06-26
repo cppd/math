@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 VulkanWindow::VulkanWindow(int width, int height, const std::string& title)
 {
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-        // glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+        glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
         GLFWwindow* window = glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);
         if (!window)
@@ -77,11 +77,6 @@ std::vector<const char*> VulkanWindow::instance_extensions()
         }
 
         return std::vector<const char*>(extensions, extensions + count);
-}
-
-std::vector<const char*> VulkanWindow::device_extensions()
-{
-        return {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
 }
 
 #endif

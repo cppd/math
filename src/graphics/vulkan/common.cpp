@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "common.h"
 
+#include "com/alg.h"
 #include "com/error.h"
 #include "com/print.h"
 
@@ -176,6 +177,32 @@ void vulkan_function_error[[noreturn]](const std::string& function_name, const V
 {
         error("Vulkan Error. " + return_code_string(function_name, code));
 }
+}
+
+std::vector<const char*> operator+(const std::vector<const char*>& v1, const std::vector<const char*>& v2)
+{
+        std::vector<const char*> res;
+        res.reserve(v1.size() + v2.size());
+        for (const char* s : v1)
+        {
+                res.push_back(s);
+        }
+        for (const char* s : v2)
+        {
+                res.push_back(s);
+        }
+        sort_and_unique(&res);
+        return res;
+}
+
+std::vector<const char*> operator+(const std::vector<const char*>& v, const char* s)
+{
+        return v + std::vector<const char*>({s});
+}
+
+std::vector<const char*> operator+(const char* s, const std::vector<const char*>& v)
+{
+        return std::vector<const char*>({s}) + v;
 }
 
 #endif

@@ -41,6 +41,10 @@ void check_api_version(uint32_t required_api_version);
 
 bool device_supports_extensions(VkPhysicalDevice physical_device, const std::vector<const char*>& required_extensions);
 
+std::vector<VkSurfaceFormatKHR> surface_formats(VkPhysicalDevice physical_device, VkSurfaceKHR surface);
+std::vector<VkPresentModeKHR> present_modes(VkPhysicalDevice physical_device, VkSurfaceKHR surface);
+std::vector<VkImage> swap_chain_images(VkDevice device, VkSwapchainKHR swap_chain);
+
 std::string overview();
 std::string overview_physical_devices(VkInstance instance);
 }

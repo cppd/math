@@ -119,23 +119,60 @@ public:
         operator VkSurfaceKHR() const;
 };
 
+class SwapChainKHR
+{
+        VkDevice m_device = VK_NULL_HANDLE;
+        VkSwapchainKHR m_swap_chain = VK_NULL_HANDLE;
+
+        void create(VkDevice device, VkSurfaceKHR surface, VkSurfaceFormatKHR surface_format, VkPresentModeKHR present_mode,
+                    VkExtent2D extent, uint32_t image_count, VkSurfaceTransformFlagBitsKHR transform,
+                    unsigned graphics_family_index, unsigned presentation_family_index);
+        void destroy() noexcept;
+        void move(SwapChainKHR* from) noexcept;
+
+public:
+        SwapChainKHR();
+        SwapChainKHR(VkDevice device, VkSurfaceKHR surface, VkSurfaceFormatKHR surface_format, VkPresentModeKHR present_mode,
+                     VkExtent2D extent, uint32_t image_count, VkSurfaceTransformFlagBitsKHR transform,
+                     unsigned graphics_family_index, unsigned presentation_family_index);
+        ~SwapChainKHR();
+
+        SwapChainKHR(const SwapChainKHR&) = delete;
+        SwapChainKHR& operator=(const SwapChainKHR&) = delete;
+
+        SwapChainKHR(SwapChainKHR&&) noexcept;
+        SwapChainKHR& operator=(SwapChainKHR&&) noexcept;
+
+        operator VkSwapchainKHR() const;
+};
+
 class VulkanInstance
 {
         Instance m_instance;
         std::optional<DebugReportCallback> m_callback;
+
         SurfaceKHR m_surface;
+
         VkPhysicalDevice m_physical_device = VK_NULL_HANDLE;
+
         Device m_device;
+
         VkQueue m_graphics_queue = VK_NULL_HANDLE;
         VkQueue m_compute_queue = VK_NULL_HANDLE;
         VkQueue m_presentation_queue = VK_NULL_HANDLE;
+
+        SwapChainKHR m_swap_chain;
+        std::vector<VkImage> m_swap_chain_images;
+        VkFormat m_swap_chain_image_format;
+        VkExtent2D m_swap_chain_extent;
 
 public:
         VulkanInstance(int api_version_major, int api_version_minor, const std::vector<const char*>& required_instance_extensions,
                        const std::vector<const char*>& required_device_extensions,
                        const std::vector<const char*>& required_validation_layers,
                        const std::function<VkSurfaceKHR(VkInstance)>& create_surface);
-        operator VkInstance() const;
+
+        VkInstance instance() const;
 };
 }
 
