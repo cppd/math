@@ -740,6 +740,87 @@ SwapChainKHR::operator VkSwapchainKHR() const
 
 //
 
+void ImageView::create(VkDevice device, VkImage image, VkFormat format)
+{
+        VkImageViewCreateInfo createInfo = {};
+        createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        createInfo.image = image;
+
+        createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+        createInfo.format = format;
+
+        createInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+        createInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+        createInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+        createInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+
+        createInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        createInfo.subresourceRange.baseMipLevel = 0;
+        createInfo.subresourceRange.levelCount = 1;
+        createInfo.subresourceRange.baseArrayLayer = 0;
+        createInfo.subresourceRange.layerCount = 1;
+
+        VkResult result = vkCreateImageView(device, &createInfo, nullptr, &m_image_view);
+        if (result != VK_SUCCESS)
+        {
+                vulkan::vulkan_function_error("vkCreateImageView", result);
+        }
+
+        ASSERT(m_image_view != VK_NULL_HANDLE);
+
+        m_device = device;
+}
+
+void ImageView::destroy() noexcept
+{
+        if (m_image_view != VK_NULL_HANDLE)
+        {
+                ASSERT(m_device != VK_NULL_HANDLE);
+
+                vkDestroyImageView(m_device, m_image_view, nullptr);
+        }
+}
+
+void ImageView::move(ImageView* from) noexcept
+{
+        m_device = from->m_device;
+        m_image_view = from->m_image_view;
+        from->m_device = VK_NULL_HANDLE;
+        from->m_image_view = VK_NULL_HANDLE;
+}
+
+ImageView::ImageView(VkDevice device, VkImage image, VkFormat format)
+{
+        create(device, image, format);
+}
+
+ImageView::~ImageView()
+{
+        destroy();
+}
+
+ImageView::ImageView(ImageView&& from) noexcept
+{
+        move(&from);
+}
+
+ImageView& ImageView::operator=(ImageView&& from) noexcept
+{
+        if (this != &from)
+        {
+                destroy();
+                move(&from);
+        }
+        return *this;
+}
+
+ImageView::operator VkImageView() const
+{
+        return m_image_view;
+}
+
+//
+
 VulkanInstance::VulkanInstance(int api_version_major, int api_version_minor,
                                const std::vector<const char*>& required_instance_extensions,
                                const std::vector<const char*>& required_device_extensions,
@@ -785,6 +866,11 @@ VulkanInstance::VulkanInstance(int api_version_major, int api_version_minor,
         if (m_swap_chain_images.empty())
         {
                 error("Failed to find swap chain images");
+        }
+
+        for (const VkImage& image : m_swap_chain_images)
+        {
+                m_image_views.emplace_back(m_device, image, m_swap_chain_image_format);
         }
 }
 

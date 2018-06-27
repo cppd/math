@@ -146,6 +146,28 @@ public:
         operator VkSwapchainKHR() const;
 };
 
+class ImageView
+{
+        VkDevice m_device = VK_NULL_HANDLE;
+        VkImageView m_image_view = VK_NULL_HANDLE;
+
+        void create(VkDevice device, VkImage image, VkFormat format);
+        void destroy() noexcept;
+        void move(ImageView* from) noexcept;
+
+public:
+        ImageView(VkDevice device, VkImage image, VkFormat format);
+        ~ImageView();
+
+        ImageView(const ImageView&) = delete;
+        ImageView& operator=(const ImageView&) = delete;
+
+        ImageView(ImageView&&) noexcept;
+        ImageView& operator=(ImageView&&) noexcept;
+
+        operator VkImageView() const;
+};
+
 class VulkanInstance
 {
         Instance m_instance;
@@ -165,6 +187,8 @@ class VulkanInstance
         std::vector<VkImage> m_swap_chain_images;
         VkFormat m_swap_chain_image_format;
         VkExtent2D m_swap_chain_extent;
+
+        std::vector<ImageView> m_image_views;
 
 public:
         VulkanInstance(int api_version_major, int api_version_minor, const std::vector<const char*>& required_instance_extensions,
