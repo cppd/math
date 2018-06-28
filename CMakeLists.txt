@@ -167,6 +167,48 @@ function(AddShaders dir_name shader_type extensions)
 
 endfunction()
 
+function(AddVulkanShaders dir_name extensions)
+
+        foreach(ext ${extensions})
+                list(APPEND all_globbing_expressions "${PROJECT_SOURCE_DIR}/${dir_name}/*.${ext}")
+        endforeach()
+
+        file(GLOB_RECURSE shader_files LIST_DIRECTORIES false ${all_globbing_expressions})
+
+        foreach(long_shader_name ${shader_files})
+
+                get_filename_component(shader_name ${long_shader_name} NAME)
+
+                set(shader_spv "${PROJECT_BINARY_DIR}/${shader_name}.spv")
+                set(shader_bin "${PROJECT_BINARY_DIR}/${shader_name}.bin")
+
+                add_custom_command(
+                        OUTPUT  "${shader_spv}"
+                        COMMAND "glslangValidator" "-V" "${long_shader_name}" "-o" "${shader_spv}"
+                        DEPENDS "${long_shader_name}"
+                        WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
+                        VERBATIM
+                        )
+
+                add_custom_command(
+                        OUTPUT  "${shader_bin}"
+                        COMMAND "${PROJECT_BINARY_DIR}/create_str" "bin" "${shader_spv}" "${shader_bin}"
+                        DEPENDS "${shader_spv}" "${PROJECT_BINARY_DIR}/create_str"
+                        WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
+                        VERBATIM
+                        )
+
+                set(target_name "custom_target_spv_${shader_name}")
+                add_custom_target(${target_name} DEPENDS "${shader_bin}")
+                add_dependencies(${target_name} create_str)
+                add_dependencies(${PROJECT_NAME} ${target_name})
+
+        endforeach()
+
+        target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_BINARY_DIR})
+
+endfunction()
+
 function(Check_C_Has_Int128)
         check_c_source_compiles("int main(void){__int128 v;}" C_HAS_INT128)
         if(NOT C_HAS_INT128)
@@ -271,6 +313,7 @@ if(Vulkan_FOUND)
         target_compile_definitions(${PROJECT_NAME} PRIVATE -DVULKAN_FOUND)
         target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${Vulkan_INCLUDE_DIRS})
         target_link_libraries(${PROJECT_NAME} ${Vulkan_LIBRARIES})
+        AddVulkanShaders(src/graphics/test_vulkan "${extensions_shaders}")
 endif()
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/GLFW")
