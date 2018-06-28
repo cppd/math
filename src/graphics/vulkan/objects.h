@@ -168,6 +168,77 @@ public:
         operator VkImageView() const;
 };
 
+class ShaderModule
+{
+        VkDevice m_device = VK_NULL_HANDLE;
+        VkShaderModule m_shader_module = VK_NULL_HANDLE;
+
+        void create(VkDevice device, const std::vector<uint8_t>& code);
+        void destroy() noexcept;
+        void move(ShaderModule* from) noexcept;
+
+public:
+        ShaderModule(VkDevice device, const std::vector<uint8_t>& code);
+        ~ShaderModule();
+
+        ShaderModule(const ShaderModule&) = delete;
+        ShaderModule& operator=(const ShaderModule&) = delete;
+
+        ShaderModule(ShaderModule&&) noexcept;
+        ShaderModule& operator=(ShaderModule&&) noexcept;
+
+        operator VkShaderModule() const;
+};
+
+class Shader
+{
+        ShaderModule m_module;
+        VkShaderStageFlagBits m_stage;
+
+protected:
+        Shader(VkDevice device, const std::vector<uint8_t>& code, VkShaderStageFlagBits stage);
+
+public:
+        const ShaderModule& module() const;
+        const VkShaderStageFlagBits& stage() const;
+};
+
+class VertexShader final : public Shader
+{
+public:
+        VertexShader(VkDevice device, const std::vector<uint8_t>& code);
+};
+
+class TesselationControlShader final : public Shader
+{
+public:
+        TesselationControlShader(VkDevice device, const std::vector<uint8_t>& code);
+};
+
+class TesselationEvaluationShader final : public Shader
+{
+public:
+        TesselationEvaluationShader(VkDevice device, const std::vector<uint8_t>& code);
+};
+
+class GeometryShader final : public Shader
+{
+public:
+        GeometryShader(VkDevice device, const std::vector<uint8_t>& code);
+};
+
+class FragmentShader final : public Shader
+{
+public:
+        FragmentShader(VkDevice device, const std::vector<uint8_t>& code);
+};
+
+class ComputeShader final : public Shader
+{
+public:
+        ComputeShader(VkDevice device, const std::vector<uint8_t>& code);
+};
+
 class VulkanInstance
 {
         Instance m_instance;
@@ -194,7 +265,8 @@ public:
         VulkanInstance(int api_version_major, int api_version_minor, const std::vector<const char*>& required_instance_extensions,
                        const std::vector<const char*>& required_device_extensions,
                        const std::vector<const char*>& required_validation_layers,
-                       const std::function<VkSurfaceKHR(VkInstance)>& create_surface);
+                       const std::function<VkSurfaceKHR(VkInstance)>& create_surface,
+                       const std::vector<uint8_t>& vertex_shader_code, const std::vector<uint8_t>& fragment_shader_code);
 
         VkInstance instance() const;
 };

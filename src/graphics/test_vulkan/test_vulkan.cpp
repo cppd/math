@@ -32,6 +32,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 constexpr int WINDOW_WIDTH = 1024;
 constexpr int WINDOW_HEIGHT = 576;
 
+// clang-format off
+constexpr const uint8_t vertex_shader[]
+{
+#include "test_vulkan.vert.bin"
+};
+constexpr const uint8_t fragment_shader[]
+{
+#include "test_vulkan.frag.bin"
+};
+// clang-format on
+
 namespace
 {
 void test_vulkan_thread()
@@ -60,7 +71,9 @@ void test_vulkan_thread()
 
                 vulkan::VulkanInstance vulkan_instance(
                         1, 0, instance_extensions + window_instance_extensions, device_extensions, validation_layers,
-                        [&window](VkInstance instance) { return window.create_surface(instance); });
+                        [&window](VkInstance instance) { return window.create_surface(instance); },
+                        std::vector<uint8_t>(std::begin(vertex_shader), std::end(vertex_shader)),
+                        std::vector<uint8_t>(std::begin(fragment_shader), std::end(fragment_shader)));
 
                 LOG(vulkan::overview_physical_devices(vulkan_instance.instance()));
 
