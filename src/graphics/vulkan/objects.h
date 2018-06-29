@@ -239,6 +239,75 @@ public:
         ComputeShader(VkDevice device, const std::vector<uint8_t>& code);
 };
 
+class RenderPass
+{
+        VkDevice m_device = VK_NULL_HANDLE;
+        VkRenderPass m_render_pass = VK_NULL_HANDLE;
+
+        void create(VkDevice device, VkFormat swap_chain_image_format);
+        void destroy() noexcept;
+        void move(RenderPass* from) noexcept;
+
+public:
+        RenderPass();
+        RenderPass(VkDevice device, VkFormat swap_chain_image_format);
+        ~RenderPass();
+
+        RenderPass(const RenderPass&) = delete;
+        RenderPass& operator=(const RenderPass&) = delete;
+
+        RenderPass(RenderPass&&) noexcept;
+        RenderPass& operator=(RenderPass&&) noexcept;
+
+        operator VkRenderPass() const;
+};
+
+class PipelineLayout
+{
+        VkDevice m_device = VK_NULL_HANDLE;
+        VkPipelineLayout m_pipeline_layout = VK_NULL_HANDLE;
+
+        void create(VkDevice device);
+        void destroy() noexcept;
+        void move(PipelineLayout* from) noexcept;
+
+public:
+        PipelineLayout();
+        PipelineLayout(VkDevice device);
+        ~PipelineLayout();
+
+        PipelineLayout(const PipelineLayout&) = delete;
+        PipelineLayout& operator=(const PipelineLayout&) = delete;
+
+        PipelineLayout(PipelineLayout&&) noexcept;
+        PipelineLayout& operator=(PipelineLayout&&) noexcept;
+
+        operator VkPipelineLayout() const;
+};
+
+class Pipeline
+{
+        VkDevice m_device = VK_NULL_HANDLE;
+        VkPipeline m_pipeline = VK_NULL_HANDLE;
+
+        void create(VkDevice device, const VkGraphicsPipelineCreateInfo& graphics_pipeline_info);
+        void destroy() noexcept;
+        void move(Pipeline* from) noexcept;
+
+public:
+        Pipeline();
+        Pipeline(VkDevice device, const VkGraphicsPipelineCreateInfo& graphics_pipeline_info);
+        ~Pipeline();
+
+        Pipeline(const Pipeline&) = delete;
+        Pipeline& operator=(const Pipeline&) = delete;
+
+        Pipeline(Pipeline&&) noexcept;
+        Pipeline& operator=(Pipeline&&) noexcept;
+
+        operator VkPipeline() const;
+};
+
 class VulkanInstance
 {
         Instance m_instance;
@@ -260,6 +329,10 @@ class VulkanInstance
         VkExtent2D m_swap_chain_extent;
 
         std::vector<ImageView> m_image_views;
+
+        RenderPass m_render_pass;
+        PipelineLayout m_pipeline_layout;
+        Pipeline m_pipeline;
 
 public:
         VulkanInstance(int api_version_major, int api_version_minor, const std::vector<const char*>& required_instance_extensions,
