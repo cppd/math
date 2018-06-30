@@ -1327,6 +1327,76 @@ Pipeline::operator VkPipeline() const
 
 //
 
+void Framebuffer::create(VkDevice device, VkRenderPass render_pass, VkImageView attachment, VkExtent2D extent)
+{
+        VkFramebufferCreateInfo framebuffer_info = {};
+        framebuffer_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+        framebuffer_info.renderPass = render_pass;
+        framebuffer_info.attachmentCount = 1;
+        framebuffer_info.pAttachments = &attachment;
+        framebuffer_info.width = extent.width;
+        framebuffer_info.height = extent.height;
+        framebuffer_info.layers = 1;
+
+        VkResult result = vkCreateFramebuffer(device, &framebuffer_info, nullptr, &m_framebuffer);
+        if (result != VK_SUCCESS)
+        {
+                vulkan::vulkan_function_error("vkCreateFramebuffer", result);
+        }
+
+        ASSERT(m_framebuffer != VK_NULL_HANDLE);
+
+        m_device = device;
+}
+
+void Framebuffer::destroy() noexcept
+{
+        if (m_framebuffer != VK_NULL_HANDLE)
+        {
+                ASSERT(m_device != VK_NULL_HANDLE);
+
+                vkDestroyFramebuffer(m_device, m_framebuffer, nullptr);
+        }
+}
+
+void Framebuffer::move(Framebuffer* from) noexcept
+{
+        m_device = from->m_device;
+        m_framebuffer = from->m_framebuffer;
+        from->m_device = VK_NULL_HANDLE;
+        from->m_framebuffer = VK_NULL_HANDLE;
+}
+
+Framebuffer::Framebuffer(VkDevice device, VkRenderPass render_pass, VkImageView attachment, VkExtent2D extent)
+{
+        create(device, render_pass, attachment, extent);
+}
+
+Framebuffer::~Framebuffer()
+{
+        destroy();
+}
+
+Framebuffer::Framebuffer(Framebuffer&& from) noexcept
+{
+        move(&from);
+}
+
+Framebuffer& Framebuffer::operator=(Framebuffer&& from) noexcept
+{
+        if (this != &from)
+        {
+                destroy();
+                move(&from);
+        }
+        return *this;
+}
+
+Framebuffer::operator VkFramebuffer() const
+{
+        return m_framebuffer;
+}
+
 VulkanInstance::VulkanInstance(int api_version_major, int api_version_minor,
                                const std::vector<const char*>& required_instance_extensions,
                                const std::vector<const char*>& required_device_extensions,
@@ -1384,6 +1454,11 @@ VulkanInstance::VulkanInstance(int api_version_major, int api_version_minor,
         m_pipeline_layout = PipelineLayout(m_device);
         m_pipeline = create_graphics_pipeline(m_device, m_render_pass, m_pipeline_layout, m_swap_chain_extent, vertex_shader_code,
                                               fragment_shader_code);
+
+        for (const ImageView& image_view : m_image_views)
+        {
+                m_framebuffers.emplace_back(m_device, m_render_pass, image_view, m_swap_chain_extent);
+        }
 }
 
 VkInstance VulkanInstance::instance() const

@@ -308,6 +308,28 @@ public:
         operator VkPipeline() const;
 };
 
+class Framebuffer
+{
+        VkDevice m_device = VK_NULL_HANDLE;
+        VkFramebuffer m_framebuffer = VK_NULL_HANDLE;
+
+        void create(VkDevice device, VkRenderPass render_pass, VkImageView attachment, VkExtent2D extent);
+        void destroy() noexcept;
+        void move(Framebuffer* from) noexcept;
+
+public:
+        Framebuffer(VkDevice device, VkRenderPass render_pass, VkImageView attachment, VkExtent2D extent);
+        ~Framebuffer();
+
+        Framebuffer(const Framebuffer&) = delete;
+        Framebuffer& operator=(const Framebuffer&) = delete;
+
+        Framebuffer(Framebuffer&&) noexcept;
+        Framebuffer& operator=(Framebuffer&&) noexcept;
+
+        operator VkFramebuffer() const;
+};
+
 class VulkanInstance
 {
         Instance m_instance;
@@ -333,6 +355,8 @@ class VulkanInstance
         RenderPass m_render_pass;
         PipelineLayout m_pipeline_layout;
         Pipeline m_pipeline;
+
+        std::vector<Framebuffer> m_framebuffers;
 
 public:
         VulkanInstance(int api_version_major, int api_version_minor, const std::vector<const char*>& required_instance_extensions,
