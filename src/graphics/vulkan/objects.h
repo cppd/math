@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #if defined(VULKAN_FOUND)
 
+#include "com/span.h"
+
 #include <functional>
 #include <optional>
 #include <string>
@@ -173,12 +175,12 @@ class ShaderModule
         VkDevice m_device = VK_NULL_HANDLE;
         VkShaderModule m_shader_module = VK_NULL_HANDLE;
 
-        void create(VkDevice device, const std::vector<uint32_t>& code);
+        void create(VkDevice device, const Span<const uint32_t>& code);
         void destroy() noexcept;
         void move(ShaderModule* from) noexcept;
 
 public:
-        ShaderModule(VkDevice device, const std::vector<uint32_t>& code);
+        ShaderModule(VkDevice device, const Span<const uint32_t>& code);
         ~ShaderModule();
 
         ShaderModule(const ShaderModule&) = delete;
@@ -196,7 +198,7 @@ class Shader
         VkShaderStageFlagBits m_stage;
 
 protected:
-        Shader(VkDevice device, const std::vector<uint32_t>& code, VkShaderStageFlagBits stage);
+        Shader(VkDevice device, const Span<const uint32_t>& code, VkShaderStageFlagBits stage);
 
 public:
         const ShaderModule& module() const;
@@ -206,37 +208,37 @@ public:
 class VertexShader final : public Shader
 {
 public:
-        VertexShader(VkDevice device, const std::vector<uint32_t>& code);
+        VertexShader(VkDevice device, const Span<const uint32_t>& code);
 };
 
 class TesselationControlShader final : public Shader
 {
 public:
-        TesselationControlShader(VkDevice device, const std::vector<uint32_t>& code);
+        TesselationControlShader(VkDevice device, const Span<const uint32_t>& code);
 };
 
 class TesselationEvaluationShader final : public Shader
 {
 public:
-        TesselationEvaluationShader(VkDevice device, const std::vector<uint32_t>& code);
+        TesselationEvaluationShader(VkDevice device, const Span<const uint32_t>& code);
 };
 
 class GeometryShader final : public Shader
 {
 public:
-        GeometryShader(VkDevice device, const std::vector<uint32_t>& code);
+        GeometryShader(VkDevice device, const Span<const uint32_t>& code);
 };
 
 class FragmentShader final : public Shader
 {
 public:
-        FragmentShader(VkDevice device, const std::vector<uint32_t>& code);
+        FragmentShader(VkDevice device, const Span<const uint32_t>& code);
 };
 
 class ComputeShader final : public Shader
 {
 public:
-        ComputeShader(VkDevice device, const std::vector<uint32_t>& code);
+        ComputeShader(VkDevice device, const Span<const uint32_t>& code);
 };
 
 class RenderPass
@@ -363,7 +365,7 @@ public:
                        const std::vector<const char*>& required_device_extensions,
                        const std::vector<const char*>& required_validation_layers,
                        const std::function<VkSurfaceKHR(VkInstance)>& create_surface,
-                       const std::vector<uint32_t>& vertex_shader_code, const std::vector<uint32_t>& fragment_shader_code);
+                       const Span<const uint32_t>& vertex_shader_code, const Span<const uint32_t>& fragment_shader_code);
 
         VkInstance instance() const;
 };

@@ -33,11 +33,11 @@ constexpr int WINDOW_WIDTH = 1024;
 constexpr int WINDOW_HEIGHT = 576;
 
 // clang-format off
-constexpr const uint32_t vertex_shader[]
+constexpr uint32_t vertex_shader[]
 {
 #include "test_vulkan.vert.spr"
 };
-constexpr const uint32_t fragment_shader[]
+constexpr uint32_t fragment_shader[]
 {
 #include "test_vulkan.frag.spr"
 };
@@ -69,11 +69,10 @@ void test_vulkan_thread()
 
                 VulkanWindow window(WINDOW_WIDTH, WINDOW_HEIGHT, "Vulkan Window");
 
-                vulkan::VulkanInstance vulkan_instance(
-                        1, 0, instance_extensions + window_instance_extensions, device_extensions, validation_layers,
-                        [&window](VkInstance instance) { return window.create_surface(instance); },
-                        std::vector<uint32_t>(std::begin(vertex_shader), std::end(vertex_shader)),
-                        std::vector<uint32_t>(std::begin(fragment_shader), std::end(fragment_shader)));
+                vulkan::VulkanInstance vulkan_instance(1, 0, instance_extensions + window_instance_extensions, device_extensions,
+                                                       validation_layers,
+                                                       [&window](VkInstance instance) { return window.create_surface(instance); },
+                                                       vertex_shader, fragment_shader);
 
                 LOG(vulkan::overview_physical_devices(vulkan_instance.instance()));
 
