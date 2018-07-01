@@ -271,8 +271,8 @@ std::vector<VkPipelineShaderStageCreateInfo> pipeline_shader_stage_create_info(c
 }
 
 vulkan::Pipeline create_graphics_pipeline(VkDevice device, VkRenderPass render_pass, VkPipelineLayout pipeline_layout,
-                                          VkExtent2D swap_chain_extent, const std::vector<uint8_t>& vertex_shader_code,
-                                          const std::vector<uint8_t>& fragment_shader_code)
+                                          VkExtent2D swap_chain_extent, const std::vector<uint32_t>& vertex_shader_code,
+                                          const std::vector<uint32_t>& fragment_shader_code)
 {
         vulkan::VertexShader vertex_shader(device, vertex_shader_code);
         vulkan::FragmentShader fragment_shader(device, fragment_shader_code);
@@ -974,18 +974,19 @@ ImageView::operator VkImageView() const
 
 //
 
-void ShaderModule::create(VkDevice device, const std::vector<uint8_t>& code)
+void ShaderModule::create(VkDevice device, const std::vector<uint32_t>& code)
 {
-        if (code.size() <= 0 || (code.size() % 4) != 0)
+        static_assert(sizeof(code[0]) == 4);
+
+        if (code.size() <= 0)
         {
-                error("Shader code size must be greater than 0 and must be a multiple of 4. Shader code size = " +
-                      to_string(code.size()) + ".");
+                error("Shader code size must be greater than 0");
         }
 
         VkShaderModuleCreateInfo create_info = {};
         create_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-        create_info.codeSize = code.size();
-        create_info.pCode = reinterpret_cast<const uint32_t*>(code.data());
+        create_info.codeSize = 4 * code.size();
+        create_info.pCode = code.data();
 
         VkResult result = vkCreateShaderModule(device, &create_info, nullptr, &m_shader_module);
         if (result != VK_SUCCESS)
@@ -1016,7 +1017,7 @@ void ShaderModule::move(ShaderModule* from) noexcept
         from->m_shader_module = VK_NULL_HANDLE;
 }
 
-ShaderModule::ShaderModule(VkDevice device, const std::vector<uint8_t>& code)
+ShaderModule::ShaderModule(VkDevice device, const std::vector<uint32_t>& code)
 {
         create(device, code);
 }
@@ -1048,7 +1049,7 @@ ShaderModule::operator VkShaderModule() const
 
 //
 
-Shader::Shader(VkDevice device, const std::vector<uint8_t>& code, VkShaderStageFlagBits type)
+Shader::Shader(VkDevice device, const std::vector<uint32_t>& code, VkShaderStageFlagBits type)
         : m_module(device, code), m_stage(type)
 {
 }
@@ -1063,31 +1064,31 @@ const VkShaderStageFlagBits& Shader::stage() const
         return m_stage;
 }
 
-VertexShader::VertexShader(VkDevice device, const std::vector<uint8_t>& code) : Shader(device, code, VK_SHADER_STAGE_VERTEX_BIT)
+VertexShader::VertexShader(VkDevice device, const std::vector<uint32_t>& code) : Shader(device, code, VK_SHADER_STAGE_VERTEX_BIT)
 {
 }
 
-TesselationControlShader::TesselationControlShader(VkDevice device, const std::vector<uint8_t>& code)
+TesselationControlShader::TesselationControlShader(VkDevice device, const std::vector<uint32_t>& code)
         : Shader(device, code, VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT)
 {
 }
 
-TesselationEvaluationShader ::TesselationEvaluationShader(VkDevice device, const std::vector<uint8_t>& code)
+TesselationEvaluationShader ::TesselationEvaluationShader(VkDevice device, const std::vector<uint32_t>& code)
         : Shader(device, code, VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT)
 {
 }
 
-GeometryShader::GeometryShader(VkDevice device, const std::vector<uint8_t>& code)
+GeometryShader::GeometryShader(VkDevice device, const std::vector<uint32_t>& code)
         : Shader(device, code, VK_SHADER_STAGE_GEOMETRY_BIT)
 {
 }
 
-FragmentShader::FragmentShader(VkDevice device, const std::vector<uint8_t>& code)
+FragmentShader::FragmentShader(VkDevice device, const std::vector<uint32_t>& code)
         : Shader(device, code, VK_SHADER_STAGE_FRAGMENT_BIT)
 {
 }
 
-ComputeShader::ComputeShader(VkDevice device, const std::vector<uint8_t>& code)
+ComputeShader::ComputeShader(VkDevice device, const std::vector<uint32_t>& code)
         : Shader(device, code, VK_SHADER_STAGE_COMPUTE_BIT)
 {
 }
@@ -1402,7 +1403,7 @@ VulkanInstance::VulkanInstance(int api_version_major, int api_version_minor,
                                const std::vector<const char*>& required_device_extensions,
                                const std::vector<const char*>& required_validation_layers,
                                const std::function<VkSurfaceKHR(VkInstance)>& create_surface,
-                               const std::vector<uint8_t>& vertex_shader_code, const std::vector<uint8_t>& fragment_shader_code)
+                               const std::vector<uint32_t>& vertex_shader_code, const std::vector<uint32_t>& fragment_shader_code)
         : m_instance(api_version_major, api_version_minor, required_instance_extensions, required_validation_layers),
           m_callback(!required_validation_layers.empty() ? std::make_optional<DebugReportCallback>(m_instance) : std::nullopt),
           m_surface(m_instance, create_surface)

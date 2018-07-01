@@ -179,27 +179,27 @@ function(AddVulkanShaders dir_name extensions)
 
                 get_filename_component(shader_name ${long_shader_name} NAME)
 
-                set(shader_spv "${PROJECT_BINARY_DIR}/${shader_name}.spv")
+                set(shader_spr "${PROJECT_BINARY_DIR}/${shader_name}.spr")
                 set(shader_bin "${PROJECT_BINARY_DIR}/${shader_name}.bin")
 
                 add_custom_command(
-                        OUTPUT  "${shader_spv}"
-                        COMMAND "glslangValidator" "-V" "${long_shader_name}" "-o" "${shader_spv}"
+                        OUTPUT  "${shader_bin}"
+                        COMMAND "glslangValidator" "-V" "${long_shader_name}" "-o" "${shader_bin}"
                         DEPENDS "${long_shader_name}"
                         WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
                         VERBATIM
                         )
 
                 add_custom_command(
-                        OUTPUT  "${shader_bin}"
-                        COMMAND "${PROJECT_BINARY_DIR}/create_str" "bin" "${shader_spv}" "${shader_bin}"
-                        DEPENDS "${shader_spv}" "${PROJECT_BINARY_DIR}/create_str"
+                        OUTPUT  "${shader_spr}"
+                        COMMAND "${PROJECT_BINARY_DIR}/create_str" "spr" "${shader_bin}" "${shader_spr}"
+                        DEPENDS "${shader_bin}" "${PROJECT_BINARY_DIR}/create_str"
                         WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
                         VERBATIM
                         )
 
-                set(target_name "custom_target_spv_${shader_name}")
-                add_custom_target(${target_name} DEPENDS "${shader_bin}")
+                set(target_name "custom_target_spr_${shader_name}")
+                add_custom_target(${target_name} DEPENDS "${shader_spr}")
                 add_dependencies(${target_name} create_str)
                 add_dependencies(${PROJECT_NAME} ${target_name})
 
