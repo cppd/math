@@ -31,8 +31,10 @@ std::string physical_device_type_to_string(VkPhysicalDeviceType type);
 void vulkan_function_error[[noreturn]](const std::string& function_name, const VkResult& code);
 }
 
-std::vector<const char*> operator+(const std::vector<const char*>& v1, const std::vector<const char*>& v2);
-std::vector<const char*> operator+(const std::vector<const char*>& v, const char* s);
-std::vector<const char*> operator+(const char* s, const std::vector<const char*>& v);
+std::vector<std::string> operator+(const std::vector<std::string>& v1, const std::vector<std::string>& v2);
+std::vector<std::string> operator+(const std::vector<std::string>& v, const std::string& s);
+std::vector<std::string> operator+(const std::string& s, const std::vector<std::string>& v);
+
+std::vector<const char*> to_char_pointer_vector(const std::vector<std::string>& c);
 
 #endif

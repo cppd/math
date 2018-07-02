@@ -49,17 +49,17 @@ void test_vulkan_thread()
 {
         try
         {
-                const std::vector<const char*> instance_extensions({});
-                const std::vector<const char*> device_extensions({});
+                const std::vector<std::string> instance_extensions({});
+                const std::vector<std::string> device_extensions({});
 
-                const std::vector<const char*> window_instance_extensions(VulkanWindow::instance_extensions());
+                const std::vector<std::string> window_instance_extensions(VulkanWindow::instance_extensions());
 
-                const std::vector<const char*> validation_layers({"VK_LAYER_LUNARG_standard_validation"});
+                const std::vector<std::string> validation_layers({"VK_LAYER_LUNARG_standard_validation"});
 
                 if (window_instance_extensions.size() > 0)
                 {
                         LOG("Window instance extensions");
-                        for (const char* s : window_instance_extensions)
+                        for (const std::string& s : window_instance_extensions)
                         {
                                 LOG(std::string("  ") + s);
                         }

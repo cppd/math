@@ -33,14 +33,14 @@ class Instance
 {
         VkInstance m_instance = VK_NULL_HANDLE;
 
-        void create(int api_version_major, int api_version_minor, std::vector<const char*> required_extensions,
-                    const std::vector<const char*>& required_validation_layers);
+        void create(int api_version_major, int api_version_minor, std::vector<std::string> required_extensions,
+                    const std::vector<std::string>& required_validation_layers);
         void destroy() noexcept;
         void move(Instance* from) noexcept;
 
 public:
-        Instance(int api_version_major, int api_version_minor, const std::vector<const char*>& required_extensions,
-                 const std::vector<const char*>& required_validation_layers);
+        Instance(int api_version_major, int api_version_minor, const std::vector<std::string>& required_extensions,
+                 const std::vector<std::string>& required_validation_layers);
         ~Instance();
 
         Instance(const Instance&) = delete;
@@ -79,15 +79,15 @@ class Device
         VkDevice m_device = VK_NULL_HANDLE;
 
         void create(VkPhysicalDevice physical_device, const std::vector<unsigned>& family_indices,
-                    const std::vector<const char*>& required_extensions,
-                    const std::vector<const char*>& required_validation_layers);
+                    const std::vector<std::string>& required_extensions,
+                    const std::vector<std::string>& required_validation_layers);
         void destroy() noexcept;
         void move(Device* from) noexcept;
 
 public:
         Device();
         Device(VkPhysicalDevice physical_device, const std::vector<unsigned>& family_indices,
-               const std::vector<const char*>& required_extensions, const std::vector<const char*>& required_validation_layers);
+               const std::vector<std::string>& required_extensions, const std::vector<std::string>& required_validation_layers);
         ~Device();
 
         Device(const Device&) = delete;
@@ -361,9 +361,9 @@ class VulkanInstance
         std::vector<Framebuffer> m_framebuffers;
 
 public:
-        VulkanInstance(int api_version_major, int api_version_minor, const std::vector<const char*>& required_instance_extensions,
-                       const std::vector<const char*>& required_device_extensions,
-                       const std::vector<const char*>& required_validation_layers,
+        VulkanInstance(int api_version_major, int api_version_minor, const std::vector<std::string>& required_instance_extensions,
+                       const std::vector<std::string>& required_device_extensions,
+                       const std::vector<std::string>& required_validation_layers,
                        const std::function<VkSurfaceKHR(VkInstance)>& create_surface,
                        const Span<const uint32_t>& vertex_shader_code, const Span<const uint32_t>& fragment_shader_code);
 

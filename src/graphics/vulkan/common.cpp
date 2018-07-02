@@ -19,7 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "common.h"
 
-#include "com/alg.h"
 #include "com/error.h"
 #include "com/print.h"
 
@@ -179,30 +178,45 @@ void vulkan_function_error[[noreturn]](const std::string& function_name, const V
 }
 }
 
-std::vector<const char*> operator+(const std::vector<const char*>& v1, const std::vector<const char*>& v2)
+std::vector<std::string> operator+(const std::vector<std::string>& v1, const std::vector<std::string>& v2)
 {
-        std::vector<const char*> res;
+        std::vector<std::string> res;
         res.reserve(v1.size() + v2.size());
-        for (const char* s : v1)
+
+        for (const std::string& s : v1)
         {
                 res.push_back(s);
         }
-        for (const char* s : v2)
+
+        for (const std::string& s : v2)
         {
                 res.push_back(s);
         }
-        sort_and_unique(&res);
+
         return res;
 }
 
-std::vector<const char*> operator+(const std::vector<const char*>& v, const char* s)
+std::vector<std::string> operator+(const std::vector<std::string>& v, const std::string& s)
 {
-        return v + std::vector<const char*>({s});
+        return v + std::vector<std::string>({s});
 }
 
-std::vector<const char*> operator+(const char* s, const std::vector<const char*>& v)
+std::vector<std::string> operator+(const std::string& s, const std::vector<std::string>& v)
 {
-        return std::vector<const char*>({s}) + v;
+        return std::vector<std::string>({s}) + v;
+}
+
+std::vector<const char*> to_char_pointer_vector(const std::vector<std::string>& c)
+{
+        std::vector<const char*> res;
+        res.reserve(c.size());
+
+        for (const std::string& s : c)
+        {
+                res.push_back(s.c_str());
+        }
+
+        return res;
 }
 
 #endif

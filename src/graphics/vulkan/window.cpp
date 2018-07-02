@@ -61,7 +61,7 @@ VkSurfaceKHR VulkanWindow::create_surface(VkInstance instance)
         return surface;
 }
 
-std::vector<const char*> VulkanWindow::instance_extensions()
+std::vector<std::string> VulkanWindow::instance_extensions()
 {
         uint32_t count;
         const char** extensions;
@@ -76,7 +76,7 @@ std::vector<const char*> VulkanWindow::instance_extensions()
                 error("No GLFW required Vulkan instance extensions");
         }
 
-        return std::vector<const char*>(extensions, extensions + count);
+        return std::vector<std::string>(extensions, extensions + count);
 }
 
 #endif

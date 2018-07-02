@@ -35,11 +35,11 @@ uint32_t supported_instance_api_version();
 std::vector<VkPhysicalDevice> physical_devices(VkInstance instance);
 std::vector<VkQueueFamilyProperties> queue_families(VkPhysicalDevice device);
 
-void check_instance_extension_support(const std::vector<const char*>& required_extensions);
-void check_validation_layer_support(const std::vector<const char*>& required_layers);
+void check_instance_extension_support(const std::vector<std::string>& required_extensions);
+void check_validation_layer_support(const std::vector<std::string>& required_layers);
 void check_api_version(uint32_t required_api_version);
 
-bool device_supports_extensions(VkPhysicalDevice physical_device, const std::vector<const char*>& required_extensions);
+bool device_supports_extensions(VkPhysicalDevice physical_device, const std::vector<std::string>& extensions);
 
 std::vector<VkSurfaceFormatKHR> surface_formats(VkPhysicalDevice physical_device, VkSurfaceKHR surface);
 std::vector<VkPresentModeKHR> present_modes(VkPhysicalDevice physical_device, VkSurfaceKHR surface);

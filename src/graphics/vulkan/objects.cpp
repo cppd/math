@@ -144,7 +144,7 @@ struct FoundPhysicalDevice
 };
 
 FoundPhysicalDevice find_physical_device(VkInstance instance, VkSurfaceKHR surface, int api_version_major, int api_version_minor,
-                                         const std::vector<const char*>& required_extensions)
+                                         const std::vector<std::string>& required_extensions)
 {
         const uint32_t required_api_version = VK_MAKE_VERSION(api_version_major, api_version_minor, 0);
 
@@ -454,8 +454,8 @@ VKAPI_ATTR VkBool32 VKAPI_CALL debug_callback(VkDebugReportFlagsEXT flags, VkDeb
 
 namespace vulkan
 {
-void Instance::create(int api_version_major, int api_version_minor, std::vector<const char*> required_extensions,
-                      const std::vector<const char*>& required_validation_layers)
+void Instance::create(int api_version_major, int api_version_minor, std::vector<std::string> required_extensions,
+                      const std::vector<std::string>& required_validation_layers)
 {
         const uint32_t required_api_version = VK_MAKE_VERSION(api_version_major, api_version_minor, 0);
 
@@ -479,15 +479,19 @@ void Instance::create(int api_version_major, int api_version_minor, std::vector<
         VkInstanceCreateInfo create_info = {};
         create_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
         create_info.pApplicationInfo = &app_info;
-        if (required_extensions.size() > 0)
+
+        const std::vector<const char*> extensions = to_char_pointer_vector(required_extensions);
+        if (extensions.size() > 0)
         {
-                create_info.enabledExtensionCount = required_extensions.size();
-                create_info.ppEnabledExtensionNames = required_extensions.data();
+                create_info.enabledExtensionCount = extensions.size();
+                create_info.ppEnabledExtensionNames = extensions.data();
         }
-        if (required_validation_layers.size() > 0)
+
+        const std::vector<const char*> validation_layers = to_char_pointer_vector(required_validation_layers);
+        if (validation_layers.size() > 0)
         {
-                create_info.enabledLayerCount = required_validation_layers.size();
-                create_info.ppEnabledLayerNames = required_validation_layers.data();
+                create_info.enabledLayerCount = validation_layers.size();
+                create_info.ppEnabledLayerNames = validation_layers.data();
         }
 
         VkResult result = vkCreateInstance(&create_info, nullptr, &m_instance);
@@ -513,8 +517,8 @@ void Instance::move(Instance* from) noexcept
         from->m_instance = VK_NULL_HANDLE;
 }
 
-Instance::Instance(int api_version_major, int api_version_minor, const std::vector<const char*>& required_extensions,
-                   const std::vector<const char*>& required_validation_layers)
+Instance::Instance(int api_version_major, int api_version_minor, const std::vector<std::string>& required_extensions,
+                   const std::vector<std::string>& required_validation_layers)
 {
         create(api_version_major, api_version_minor, required_extensions, required_validation_layers);
 }
@@ -629,8 +633,8 @@ DebugReportCallback::operator VkDebugReportCallbackEXT() const
 //
 
 void Device::create(VkPhysicalDevice physical_device, const std::vector<unsigned>& family_indices,
-                    const std::vector<const char*>& required_extensions,
-                    const std::vector<const char*>& required_validation_layers)
+                    const std::vector<std::string>& required_extensions,
+                    const std::vector<std::string>& required_validation_layers)
 {
         if (family_indices.empty())
         {
@@ -657,15 +661,19 @@ void Device::create(VkPhysicalDevice physical_device, const std::vector<unsigned
         create_info.queueCreateInfoCount = queue_create_infos.size();
         create_info.pQueueCreateInfos = queue_create_infos.data();
         create_info.pEnabledFeatures = &device_features;
-        if (required_extensions.size() > 0)
+
+        const std::vector<const char*> extensions = to_char_pointer_vector(required_extensions);
+        if (extensions.size() > 0)
         {
-                create_info.enabledExtensionCount = required_extensions.size();
-                create_info.ppEnabledExtensionNames = required_extensions.data();
+                create_info.enabledExtensionCount = extensions.size();
+                create_info.ppEnabledExtensionNames = extensions.data();
         }
-        if (required_validation_layers.size() > 0)
+
+        const std::vector<const char*> validation_layers = to_char_pointer_vector(required_validation_layers);
+        if (validation_layers.size() > 0)
         {
-                create_info.enabledLayerCount = required_validation_layers.size();
-                create_info.ppEnabledLayerNames = required_validation_layers.data();
+                create_info.enabledLayerCount = validation_layers.size();
+                create_info.ppEnabledLayerNames = validation_layers.data();
         }
 
         VkResult result = vkCreateDevice(physical_device, &create_info, nullptr, &m_device);
@@ -694,7 +702,7 @@ void Device::move(Device* from) noexcept
 Device::Device() = default;
 
 Device::Device(VkPhysicalDevice physical_device, const std::vector<unsigned>& family_indices,
-               const std::vector<const char*>& required_extensions, const std::vector<const char*>& required_validation_layers)
+               const std::vector<std::string>& required_extensions, const std::vector<std::string>& required_validation_layers)
 {
         create(physical_device, family_indices, required_extensions, required_validation_layers);
 }
@@ -1399,16 +1407,16 @@ Framebuffer::operator VkFramebuffer() const
 }
 
 VulkanInstance::VulkanInstance(int api_version_major, int api_version_minor,
-                               const std::vector<const char*>& required_instance_extensions,
-                               const std::vector<const char*>& required_device_extensions,
-                               const std::vector<const char*>& required_validation_layers,
+                               const std::vector<std::string>& required_instance_extensions,
+                               const std::vector<std::string>& required_device_extensions,
+                               const std::vector<std::string>& required_validation_layers,
                                const std::function<VkSurfaceKHR(VkInstance)>& create_surface,
                                const Span<const uint32_t>& vertex_shader_code, const Span<const uint32_t>& fragment_shader_code)
         : m_instance(api_version_major, api_version_minor, required_instance_extensions, required_validation_layers),
           m_callback(!required_validation_layers.empty() ? std::make_optional<DebugReportCallback>(m_instance) : std::nullopt),
           m_surface(m_instance, create_surface)
 {
-        const std::vector<const char*> all_device_extensions = required_device_extensions + VK_KHR_SWAPCHAIN_EXTENSION_NAME;
+        const std::vector<std::string> all_device_extensions = required_device_extensions + VK_KHR_SWAPCHAIN_EXTENSION_NAME;
 
         FoundPhysicalDevice device =
                 find_physical_device(m_instance, m_surface, api_version_major, api_version_minor, all_device_extensions);

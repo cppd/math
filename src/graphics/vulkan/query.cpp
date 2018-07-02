@@ -205,7 +205,7 @@ std::vector<VkQueueFamilyProperties> queue_families(VkPhysicalDevice device)
         return queue_families;
 }
 
-void check_instance_extension_support(const std::vector<const char*>& required_extensions)
+void check_instance_extension_support(const std::vector<std::string>& required_extensions)
 {
         if (required_extensions.empty())
         {
@@ -214,7 +214,7 @@ void check_instance_extension_support(const std::vector<const char*>& required_e
 
         const std::unordered_set<std::string> extension_set = supported_instance_extensions();
 
-        for (std::string e : required_extensions)
+        for (const std::string& e : required_extensions)
         {
                 if (extension_set.count(e) < 1)
                 {
@@ -223,7 +223,7 @@ void check_instance_extension_support(const std::vector<const char*>& required_e
         }
 }
 
-void check_validation_layer_support(const std::vector<const char*>& required_layers)
+void check_validation_layer_support(const std::vector<std::string>& required_layers)
 {
         if (required_layers.empty())
         {
@@ -232,7 +232,7 @@ void check_validation_layer_support(const std::vector<const char*>& required_lay
 
         const std::unordered_set<std::string> layer_set = supported_validation_layers();
 
-        for (std::string l : required_layers)
+        for (const std::string& l : required_layers)
         {
                 if (layer_set.count(l) < 1)
                 {
@@ -252,16 +252,16 @@ void check_api_version(uint32_t required_api_version)
         }
 }
 
-bool device_supports_extensions(VkPhysicalDevice physical_device, const std::vector<const char*>& required_extensions)
+bool device_supports_extensions(VkPhysicalDevice physical_device, const std::vector<std::string>& extensions)
 {
-        if (required_extensions.empty())
+        if (extensions.empty())
         {
                 return true;
         }
 
         const std::unordered_set<std::string> extension_set = supported_physical_device_extensions(physical_device);
 
-        for (std::string e : required_extensions)
+        for (const std::string& e : extensions)
         {
                 if (extension_set.count(e) < 1)
                 {
@@ -355,7 +355,7 @@ std::vector<VkImage> swap_chain_images(VkDevice device, VkSwapchainKHR swap_chai
 
 std::string overview()
 {
-        static constexpr const char* INDENT = "  ";
+        constexpr const char* INDENT = "  ";
 
         std::string s;
 
