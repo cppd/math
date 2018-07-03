@@ -22,9 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/span.h"
 
 #include <functional>
-#include <optional>
-#include <string>
-#include <vector>
 #include <vulkan/vulkan.h>
 
 namespace vulkan
@@ -310,44 +307,6 @@ public:
         Framebuffer& operator=(Framebuffer&&) noexcept;
 
         operator VkFramebuffer() const;
-};
-
-class VulkanInstance
-{
-        Instance m_instance;
-        std::optional<DebugReportCallback> m_callback;
-
-        SurfaceKHR m_surface;
-
-        VkPhysicalDevice m_physical_device = VK_NULL_HANDLE;
-
-        Device m_device;
-
-        VkQueue m_graphics_queue = VK_NULL_HANDLE;
-        VkQueue m_compute_queue = VK_NULL_HANDLE;
-        VkQueue m_presentation_queue = VK_NULL_HANDLE;
-
-        SwapChainKHR m_swap_chain;
-        std::vector<VkImage> m_swap_chain_images;
-        VkFormat m_swap_chain_image_format;
-        VkExtent2D m_swap_chain_extent;
-
-        std::vector<ImageView> m_image_views;
-
-        RenderPass m_render_pass;
-        PipelineLayout m_pipeline_layout;
-        Pipeline m_pipeline;
-
-        std::vector<Framebuffer> m_framebuffers;
-
-public:
-        VulkanInstance(int api_version_major, int api_version_minor, const std::vector<std::string>& required_instance_extensions,
-                       const std::vector<std::string>& required_device_extensions,
-                       const std::vector<std::string>& required_validation_layers,
-                       const std::function<VkSurfaceKHR(VkInstance)>& create_surface,
-                       const Span<const uint32_t>& vertex_shader_code, const Span<const uint32_t>& fragment_shader_code);
-
-        VkInstance instance() const;
 };
 }
 

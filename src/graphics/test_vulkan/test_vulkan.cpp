@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/error.h"
 #include "com/log.h"
 #include "graphics/vulkan/common.h"
-#include "graphics/vulkan/objects.h"
+#include "graphics/vulkan/instance.h"
 #include "graphics/vulkan/query.h"
 #include "graphics/vulkan/window.h"
 
