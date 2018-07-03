@@ -270,6 +270,276 @@ std::vector<VkPipelineShaderStageCreateInfo> pipeline_shader_stage_create_info(c
         return res;
 }
 
+VKAPI_ATTR VkBool32 VKAPI_CALL debug_callback(VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT /*objectType*/,
+                                              uint64_t /*object*/, size_t /*location*/, int32_t /*messageCode*/,
+                                              const char* /*pLayerPrefix*/, const char* pMessage, void* /*pUserData*/)
+{
+        const auto add_to_debug_message = [](std::string* str, const char* text) {
+                if (!str->empty())
+                {
+                        *str += ", ";
+                }
+                *str += text;
+        };
+
+        std::string s;
+
+        if (flags & VK_DEBUG_REPORT_INFORMATION_BIT_EXT)
+        {
+                add_to_debug_message(&s, "information");
+        }
+        if (flags & VK_DEBUG_REPORT_WARNING_BIT_EXT)
+        {
+                add_to_debug_message(&s, "warning");
+        }
+        if (flags & VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT)
+        {
+                add_to_debug_message(&s, "performance warning");
+        }
+        if (flags & VK_DEBUG_REPORT_ERROR_BIT_EXT)
+        {
+                add_to_debug_message(&s, "error");
+        }
+        if (flags & VK_DEBUG_REPORT_DEBUG_BIT_EXT)
+        {
+                add_to_debug_message(&s, "debug");
+        }
+
+        if (s.size() > 0)
+        {
+                LOG("Validation layer message (" + s + "): " + std::string(pMessage));
+        }
+        else
+        {
+                LOG("Validation layer message: " + std::string(pMessage));
+        }
+
+        return VK_FALSE;
+}
+
+vulkan::Instance create_instance(int api_version_major, int api_version_minor, std::vector<std::string> required_extensions,
+                                 const std::vector<std::string>& required_validation_layers)
+{
+        const uint32_t required_api_version = VK_MAKE_VERSION(api_version_major, api_version_minor, 0);
+
+        if (required_validation_layers.size() > 0)
+        {
+                required_extensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
+        }
+
+        vulkan::check_api_version(required_api_version);
+        vulkan::check_instance_extension_support(required_extensions);
+        vulkan::check_validation_layer_support(required_validation_layers);
+
+        VkApplicationInfo app_info = {};
+        app_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+        app_info.pApplicationName = APPLICATION_NAME;
+        app_info.applicationVersion = 1;
+        app_info.pEngineName = nullptr;
+        app_info.engineVersion = 0;
+        app_info.apiVersion = required_api_version;
+
+        VkInstanceCreateInfo create_info = {};
+        create_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+        create_info.pApplicationInfo = &app_info;
+
+        const std::vector<const char*> extensions = to_char_pointer_vector(required_extensions);
+        if (extensions.size() > 0)
+        {
+                create_info.enabledExtensionCount = extensions.size();
+                create_info.ppEnabledExtensionNames = extensions.data();
+        }
+
+        const std::vector<const char*> validation_layers = to_char_pointer_vector(required_validation_layers);
+        if (validation_layers.size() > 0)
+        {
+                create_info.enabledLayerCount = validation_layers.size();
+                create_info.ppEnabledLayerNames = validation_layers.data();
+        }
+
+        return vulkan::Instance(create_info);
+}
+
+vulkan::DebugReportCallback create_debug_report_callback(VkInstance instance)
+{
+        if (instance == VK_NULL_HANDLE)
+        {
+                error("No VkInstance for DebugReportCallback");
+        }
+
+        VkDebugReportCallbackCreateInfoEXT create_info = {};
+
+        create_info.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
+
+        create_info.flags |= VK_DEBUG_REPORT_ERROR_BIT_EXT;
+        create_info.flags |= VK_DEBUG_REPORT_WARNING_BIT_EXT;
+        create_info.flags |= VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT;
+#if 0
+        create_info.flags |= VK_DEBUG_REPORT_DEBUG_BIT_EXT;
+        create_info.flags |= VK_DEBUG_REPORT_INFORMATION_BIT_EXT;
+#endif
+
+        create_info.pfnCallback = debug_callback;
+
+        return vulkan::DebugReportCallback(instance, create_info);
+}
+
+vulkan::Device create_device(VkPhysicalDevice physical_device, const std::vector<unsigned>& family_indices,
+                             const std::vector<std::string>& required_extensions,
+                             const std::vector<std::string>& required_validation_layers)
+{
+        if (family_indices.empty())
+        {
+                error("No family indices for device creation");
+        }
+
+        constexpr float queue_priority = 1;
+        std::vector<VkDeviceQueueCreateInfo> queue_create_infos;
+        for (unsigned unique_queue_family_index : std::unordered_set<unsigned>(family_indices.cbegin(), family_indices.cend()))
+        {
+                VkDeviceQueueCreateInfo queue_create_info = {};
+                queue_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+                queue_create_info.queueFamilyIndex = unique_queue_family_index;
+                queue_create_info.queueCount = 1;
+                queue_create_info.pQueuePriorities = &queue_priority;
+
+                queue_create_infos.push_back(queue_create_info);
+        }
+
+        VkPhysicalDeviceFeatures device_features = {};
+
+        VkDeviceCreateInfo create_info = {};
+        create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+        create_info.queueCreateInfoCount = queue_create_infos.size();
+        create_info.pQueueCreateInfos = queue_create_infos.data();
+        create_info.pEnabledFeatures = &device_features;
+
+        const std::vector<const char*> extensions = to_char_pointer_vector(required_extensions);
+        if (extensions.size() > 0)
+        {
+                create_info.enabledExtensionCount = extensions.size();
+                create_info.ppEnabledExtensionNames = extensions.data();
+        }
+
+        const std::vector<const char*> validation_layers = to_char_pointer_vector(required_validation_layers);
+        if (validation_layers.size() > 0)
+        {
+                create_info.enabledLayerCount = validation_layers.size();
+                create_info.ppEnabledLayerNames = validation_layers.data();
+        }
+
+        return vulkan::Device(physical_device, create_info);
+}
+
+vulkan::SwapChainKHR create_swap_chain_khr(VkDevice device, VkSurfaceKHR surface, VkSurfaceFormatKHR surface_format,
+                                           VkPresentModeKHR present_mode, VkExtent2D extent, uint32_t image_count,
+                                           VkSurfaceTransformFlagBitsKHR transform, unsigned graphics_family_index,
+                                           unsigned presentation_family_index)
+{
+        VkSwapchainCreateInfoKHR create_info = {};
+        create_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+        create_info.surface = surface;
+
+        create_info.minImageCount = image_count;
+        create_info.imageFormat = surface_format.format;
+        create_info.imageColorSpace = surface_format.colorSpace;
+        create_info.imageExtent = extent;
+        create_info.imageArrayLayers = 1;
+        create_info.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+
+        std::vector<uint32_t> family_indices;
+        if (graphics_family_index != presentation_family_index)
+        {
+                family_indices = {graphics_family_index, presentation_family_index};
+                create_info.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
+                create_info.queueFamilyIndexCount = family_indices.size();
+                create_info.pQueueFamilyIndices = family_indices.data();
+        }
+        else
+        {
+                create_info.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+        }
+
+        create_info.preTransform = transform;
+        create_info.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+
+        create_info.presentMode = present_mode;
+        create_info.clipped = VK_TRUE;
+
+        create_info.oldSwapchain = VK_NULL_HANDLE;
+
+        return vulkan::SwapChainKHR(device, create_info);
+}
+
+vulkan::ImageView create_image_view(VkDevice device, VkImage image, VkFormat format)
+{
+        VkImageViewCreateInfo create_info = {};
+        create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        create_info.image = image;
+
+        create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+        create_info.format = format;
+
+        create_info.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+        create_info.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+        create_info.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+        create_info.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+
+        create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        create_info.subresourceRange.baseMipLevel = 0;
+        create_info.subresourceRange.levelCount = 1;
+        create_info.subresourceRange.baseArrayLayer = 0;
+        create_info.subresourceRange.layerCount = 1;
+
+        return vulkan::ImageView(device, create_info);
+}
+
+vulkan::RenderPass create_render_pass(VkDevice device, VkFormat swap_chain_image_format)
+{
+        VkAttachmentDescription attachment_description = {};
+        attachment_description.format = swap_chain_image_format;
+        attachment_description.samples = VK_SAMPLE_COUNT_1_BIT;
+
+        attachment_description.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        attachment_description.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+
+        attachment_description.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        attachment_description.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+
+        attachment_description.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        attachment_description.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+
+        VkAttachmentReference attachment_reference = {};
+        attachment_reference.attachment = 0;
+        attachment_reference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+        VkSubpassDescription subpass_description = {};
+        subpass_description.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+        subpass_description.colorAttachmentCount = 1;
+        subpass_description.pColorAttachments = &attachment_reference;
+
+        VkRenderPassCreateInfo create_info = {};
+        create_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+        create_info.attachmentCount = 1;
+        create_info.pAttachments = &attachment_description;
+        create_info.subpassCount = 1;
+        create_info.pSubpasses = &subpass_description;
+
+        return vulkan::RenderPass(device, create_info);
+}
+
+vulkan::PipelineLayout create_pipeline_layout(VkDevice device)
+{
+        VkPipelineLayoutCreateInfo create_info = {};
+        create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+        // create_info.setLayoutCount = 0;
+        // create_info.pSetLayouts = nullptr;
+        // create_info.pushConstantRangeCount = 0;
+        // create_info.pPushConstantRanges = nullptr;
+
+        return vulkan::PipelineLayout(device, create_info);
+}
+
 vulkan::Pipeline create_graphics_pipeline(VkDevice device, VkRenderPass render_pass, VkPipelineLayout pipeline_layout,
                                           VkExtent2D swap_chain_extent, const Span<const uint32_t>& vertex_shader_code,
                                           const Span<const uint32_t>& fragment_shader_code)
@@ -379,130 +649,48 @@ vulkan::Pipeline create_graphics_pipeline(VkDevice device, VkRenderPass render_p
         // dynamic_state_info.dynamicStateCount = dynamic_states.size();
         // dynamic_state_info.pDynamicStates = dynamic_states.data();
 
-        VkGraphicsPipelineCreateInfo graphics_pipeline_info = {};
-        graphics_pipeline_info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-        graphics_pipeline_info.stageCount = pipeline_shader_stages.size();
-        graphics_pipeline_info.pStages = pipeline_shader_stages.data();
+        VkGraphicsPipelineCreateInfo create_info = {};
+        create_info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+        create_info.stageCount = pipeline_shader_stages.size();
+        create_info.pStages = pipeline_shader_stages.data();
 
-        graphics_pipeline_info.pVertexInputState = &vertex_input_state_info;
-        graphics_pipeline_info.pInputAssemblyState = &input_assembly_state_info;
-        graphics_pipeline_info.pViewportState = &viewport_state_info;
-        graphics_pipeline_info.pRasterizationState = &rasterization_state_info;
-        graphics_pipeline_info.pMultisampleState = &multisampling_state_info;
-        // graphics_pipeline_info.pDepthStencilState = nullptr;
-        graphics_pipeline_info.pColorBlendState = &color_blending_state_info;
-        // graphics_pipeline_info.pDynamicState = nullptr;
+        create_info.pVertexInputState = &vertex_input_state_info;
+        create_info.pInputAssemblyState = &input_assembly_state_info;
+        create_info.pViewportState = &viewport_state_info;
+        create_info.pRasterizationState = &rasterization_state_info;
+        create_info.pMultisampleState = &multisampling_state_info;
+        // create_info.pDepthStencilState = nullptr;
+        create_info.pColorBlendState = &color_blending_state_info;
+        // create_info.pDynamicState = nullptr;
 
-        graphics_pipeline_info.layout = pipeline_layout;
+        create_info.layout = pipeline_layout;
 
-        graphics_pipeline_info.renderPass = render_pass;
-        graphics_pipeline_info.subpass = 0;
+        create_info.renderPass = render_pass;
+        create_info.subpass = 0;
 
-        // graphics_pipeline_info.basePipelineHandle = VK_NULL_HANDLE;
-        // graphics_pipeline_info.basePipelineIndex = -1;
+        // create_info.basePipelineHandle = VK_NULL_HANDLE;
+        // create_info.basePipelineIndex = -1;
 
-        return vulkan::Pipeline(device, graphics_pipeline_info);
+        return vulkan::Pipeline(device, create_info);
 }
 
-VKAPI_ATTR VkBool32 VKAPI_CALL debug_callback(VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT /*objectType*/,
-                                              uint64_t /*object*/, size_t /*location*/, int32_t /*messageCode*/,
-                                              const char* /*pLayerPrefix*/, const char* pMessage, void* /*pUserData*/)
+vulkan::Framebuffer create_framebuffer(VkDevice device, VkRenderPass render_pass, VkImageView attachment, VkExtent2D extent)
 {
-        const auto add_to_debug_message = [](std::string* str, const char* text) {
-                if (!str->empty())
-                {
-                        *str += ", ";
-                }
-                *str += text;
-        };
+        VkFramebufferCreateInfo create_info = {};
+        create_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+        create_info.renderPass = render_pass;
+        create_info.attachmentCount = 1;
+        create_info.pAttachments = &attachment;
+        create_info.width = extent.width;
+        create_info.height = extent.height;
+        create_info.layers = 1;
 
-        std::string s;
-
-        if (flags & VK_DEBUG_REPORT_INFORMATION_BIT_EXT)
-        {
-                add_to_debug_message(&s, "information");
-        }
-        if (flags & VK_DEBUG_REPORT_WARNING_BIT_EXT)
-        {
-                add_to_debug_message(&s, "warning");
-        }
-        if (flags & VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT)
-        {
-                add_to_debug_message(&s, "performance warning");
-        }
-        if (flags & VK_DEBUG_REPORT_ERROR_BIT_EXT)
-        {
-                add_to_debug_message(&s, "error");
-        }
-        if (flags & VK_DEBUG_REPORT_DEBUG_BIT_EXT)
-        {
-                add_to_debug_message(&s, "debug");
-        }
-
-        if (s.size() > 0)
-        {
-                LOG("Validation layer message (" + s + "): " + std::string(pMessage));
-        }
-        else
-        {
-                LOG("Validation layer message: " + std::string(pMessage));
-        }
-
-        return VK_FALSE;
+        return vulkan::Framebuffer(device, create_info);
 }
 }
 
 namespace vulkan
 {
-void Instance::create(int api_version_major, int api_version_minor, std::vector<std::string> required_extensions,
-                      const std::vector<std::string>& required_validation_layers)
-{
-        const uint32_t required_api_version = VK_MAKE_VERSION(api_version_major, api_version_minor, 0);
-
-        if (required_validation_layers.size() > 0)
-        {
-                required_extensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
-        }
-
-        check_api_version(required_api_version);
-        check_instance_extension_support(required_extensions);
-        check_validation_layer_support(required_validation_layers);
-
-        VkApplicationInfo app_info = {};
-        app_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-        app_info.pApplicationName = APPLICATION_NAME;
-        app_info.applicationVersion = 1;
-        app_info.pEngineName = nullptr;
-        app_info.engineVersion = 0;
-        app_info.apiVersion = required_api_version;
-
-        VkInstanceCreateInfo create_info = {};
-        create_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-        create_info.pApplicationInfo = &app_info;
-
-        const std::vector<const char*> extensions = to_char_pointer_vector(required_extensions);
-        if (extensions.size() > 0)
-        {
-                create_info.enabledExtensionCount = extensions.size();
-                create_info.ppEnabledExtensionNames = extensions.data();
-        }
-
-        const std::vector<const char*> validation_layers = to_char_pointer_vector(required_validation_layers);
-        if (validation_layers.size() > 0)
-        {
-                create_info.enabledLayerCount = validation_layers.size();
-                create_info.ppEnabledLayerNames = validation_layers.data();
-        }
-
-        VkResult result = vkCreateInstance(&create_info, nullptr, &m_instance);
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkCreateInstance", result);
-        }
-
-        ASSERT(m_instance != VK_NULL_HANDLE);
-}
-
 void Instance::destroy() noexcept
 {
         if (m_instance != VK_NULL_HANDLE)
@@ -517,10 +705,15 @@ void Instance::move(Instance* from) noexcept
         from->m_instance = VK_NULL_HANDLE;
 }
 
-Instance::Instance(int api_version_major, int api_version_minor, const std::vector<std::string>& required_extensions,
-                   const std::vector<std::string>& required_validation_layers)
+Instance::Instance(const VkInstanceCreateInfo& create_info)
 {
-        create(api_version_major, api_version_minor, required_extensions, required_validation_layers);
+        VkResult result = vkCreateInstance(&create_info, nullptr, &m_instance);
+        if (result != VK_SUCCESS)
+        {
+                vulkan_function_error("vkCreateInstance", result);
+        }
+
+        ASSERT(m_instance != VK_NULL_HANDLE);
 }
 
 Instance::~Instance()
@@ -550,38 +743,6 @@ Instance::operator VkInstance() const
 
 //
 
-void DebugReportCallback::create(VkInstance instance)
-{
-        if (instance == VK_NULL_HANDLE)
-        {
-                error("No VkInstance for DebugReportCallback");
-        }
-
-        VkDebugReportCallbackCreateInfoEXT create_info = {};
-
-        create_info.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
-
-        create_info.flags |= VK_DEBUG_REPORT_ERROR_BIT_EXT;
-        create_info.flags |= VK_DEBUG_REPORT_WARNING_BIT_EXT;
-        create_info.flags |= VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT;
-#if 0
-        create_info.flags |= VK_DEBUG_REPORT_DEBUG_BIT_EXT;
-        create_info.flags |= VK_DEBUG_REPORT_INFORMATION_BIT_EXT;
-#endif
-
-        create_info.pfnCallback = debug_callback;
-
-        VkResult result = vkCreateDebugReportCallbackEXT(instance, &create_info, nullptr, &m_callback);
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkCreateDebugReportCallbackEXT", result);
-        }
-
-        m_instance = instance;
-
-        ASSERT(m_callback != VK_NULL_HANDLE);
-}
-
 void DebugReportCallback::destroy() noexcept
 {
         if (m_callback != VK_NULL_HANDLE)
@@ -600,9 +761,17 @@ void DebugReportCallback::move(DebugReportCallback* from) noexcept
         from->m_callback = VK_NULL_HANDLE;
 }
 
-DebugReportCallback::DebugReportCallback(VkInstance instance)
+DebugReportCallback::DebugReportCallback(VkInstance instance, const VkDebugReportCallbackCreateInfoEXT& create_info)
 {
-        create(instance);
+        VkResult result = vkCreateDebugReportCallbackEXT(instance, &create_info, nullptr, &m_callback);
+        if (result != VK_SUCCESS)
+        {
+                vulkan_function_error("vkCreateDebugReportCallbackEXT", result);
+        }
+
+        m_instance = instance;
+
+        ASSERT(m_callback != VK_NULL_HANDLE);
 }
 
 DebugReportCallback::~DebugReportCallback()
@@ -632,59 +801,6 @@ DebugReportCallback::operator VkDebugReportCallbackEXT() const
 
 //
 
-void Device::create(VkPhysicalDevice physical_device, const std::vector<unsigned>& family_indices,
-                    const std::vector<std::string>& required_extensions,
-                    const std::vector<std::string>& required_validation_layers)
-{
-        if (family_indices.empty())
-        {
-                error("No family indices for device creation");
-        }
-
-        constexpr float queue_priority = 1;
-        std::vector<VkDeviceQueueCreateInfo> queue_create_infos;
-        for (unsigned unique_queue_family_index : std::unordered_set<unsigned>(family_indices.cbegin(), family_indices.cend()))
-        {
-                VkDeviceQueueCreateInfo queue_create_info = {};
-                queue_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-                queue_create_info.queueFamilyIndex = unique_queue_family_index;
-                queue_create_info.queueCount = 1;
-                queue_create_info.pQueuePriorities = &queue_priority;
-
-                queue_create_infos.push_back(queue_create_info);
-        }
-
-        VkPhysicalDeviceFeatures device_features = {};
-
-        VkDeviceCreateInfo create_info = {};
-        create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-        create_info.queueCreateInfoCount = queue_create_infos.size();
-        create_info.pQueueCreateInfos = queue_create_infos.data();
-        create_info.pEnabledFeatures = &device_features;
-
-        const std::vector<const char*> extensions = to_char_pointer_vector(required_extensions);
-        if (extensions.size() > 0)
-        {
-                create_info.enabledExtensionCount = extensions.size();
-                create_info.ppEnabledExtensionNames = extensions.data();
-        }
-
-        const std::vector<const char*> validation_layers = to_char_pointer_vector(required_validation_layers);
-        if (validation_layers.size() > 0)
-        {
-                create_info.enabledLayerCount = validation_layers.size();
-                create_info.ppEnabledLayerNames = validation_layers.data();
-        }
-
-        VkResult result = vkCreateDevice(physical_device, &create_info, nullptr, &m_device);
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkCreateDevice", result);
-        }
-
-        ASSERT(m_device != VK_NULL_HANDLE);
-}
-
 void Device::destroy() noexcept
 {
         if (m_device != VK_NULL_HANDLE)
@@ -701,10 +817,15 @@ void Device::move(Device* from) noexcept
 
 Device::Device() = default;
 
-Device::Device(VkPhysicalDevice physical_device, const std::vector<unsigned>& family_indices,
-               const std::vector<std::string>& required_extensions, const std::vector<std::string>& required_validation_layers)
+Device::Device(VkPhysicalDevice physical_device, const VkDeviceCreateInfo& create_info)
 {
-        create(physical_device, family_indices, required_extensions, required_validation_layers);
+        VkResult result = vkCreateDevice(physical_device, &create_info, nullptr, &m_device);
+        if (result != VK_SUCCESS)
+        {
+                vulkan_function_error("vkCreateDevice", result);
+        }
+
+        ASSERT(m_device != VK_NULL_HANDLE);
 }
 
 Device::~Device()
@@ -734,20 +855,6 @@ Device::operator VkDevice() const
 
 //
 
-void SurfaceKHR::create(VkInstance instance, const std::function<VkSurfaceKHR(VkInstance)>& create_surface)
-{
-        if (instance == VK_NULL_HANDLE)
-        {
-                error("No VkInstance for VkSurfaceKHR creation");
-        }
-
-        m_surface = create_surface(instance);
-
-        ASSERT(m_surface != VK_NULL_HANDLE);
-
-        m_instance = instance;
-}
-
 void SurfaceKHR::destroy() noexcept
 {
         if (m_surface != VK_NULL_HANDLE)
@@ -768,7 +875,16 @@ void SurfaceKHR::move(SurfaceKHR* from) noexcept
 
 SurfaceKHR::SurfaceKHR(VkInstance instance, const std::function<VkSurfaceKHR(VkInstance)>& create_surface)
 {
-        create(instance, create_surface);
+        if (instance == VK_NULL_HANDLE)
+        {
+                error("No VkInstance for VkSurfaceKHR creation");
+        }
+
+        m_surface = create_surface(instance);
+
+        ASSERT(m_surface != VK_NULL_HANDLE);
+
+        m_instance = instance;
 }
 
 SurfaceKHR::~SurfaceKHR()
@@ -798,53 +914,6 @@ SurfaceKHR::operator VkSurfaceKHR() const
 
 //
 
-void SwapChainKHR::create(VkDevice device, VkSurfaceKHR surface, VkSurfaceFormatKHR surface_format, VkPresentModeKHR present_mode,
-                          VkExtent2D extent, uint32_t image_count, VkSurfaceTransformFlagBitsKHR transform,
-                          unsigned graphics_family_index, unsigned presentation_family_index)
-{
-        VkSwapchainCreateInfoKHR create_info = {};
-        create_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-        create_info.surface = surface;
-
-        create_info.minImageCount = image_count;
-        create_info.imageFormat = surface_format.format;
-        create_info.imageColorSpace = surface_format.colorSpace;
-        create_info.imageExtent = extent;
-        create_info.imageArrayLayers = 1;
-        create_info.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-
-        std::vector<uint32_t> family_indices;
-        if (graphics_family_index != presentation_family_index)
-        {
-                family_indices = {graphics_family_index, presentation_family_index};
-                create_info.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
-                create_info.queueFamilyIndexCount = family_indices.size();
-                create_info.pQueueFamilyIndices = family_indices.data();
-        }
-        else
-        {
-                create_info.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
-        }
-
-        create_info.preTransform = transform;
-        create_info.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-
-        create_info.presentMode = present_mode;
-        create_info.clipped = VK_TRUE;
-
-        create_info.oldSwapchain = VK_NULL_HANDLE;
-
-        VkResult result = vkCreateSwapchainKHR(device, &create_info, nullptr, &m_swap_chain);
-        if (result != VK_SUCCESS)
-        {
-                vulkan::vulkan_function_error("vkCreateSwapchainKHR", result);
-        }
-
-        ASSERT(m_swap_chain != VK_NULL_HANDLE);
-
-        m_device = device;
-}
-
 void SwapChainKHR::destroy() noexcept
 {
         if (m_swap_chain != VK_NULL_HANDLE)
@@ -865,13 +934,17 @@ void SwapChainKHR::move(SwapChainKHR* from) noexcept
 
 SwapChainKHR::SwapChainKHR() = default;
 
-SwapChainKHR::SwapChainKHR(VkDevice device, VkSurfaceKHR surface, VkSurfaceFormatKHR surface_format,
-                           VkPresentModeKHR present_mode, VkExtent2D extent, uint32_t image_count,
-                           VkSurfaceTransformFlagBitsKHR transform, unsigned graphics_family_index,
-                           unsigned presentation_family_index)
+SwapChainKHR::SwapChainKHR(VkDevice device, const VkSwapchainCreateInfoKHR& create_info)
 {
-        create(device, surface, surface_format, present_mode, extent, image_count, transform, graphics_family_index,
-               presentation_family_index);
+        VkResult result = vkCreateSwapchainKHR(device, &create_info, nullptr, &m_swap_chain);
+        if (result != VK_SUCCESS)
+        {
+                vulkan::vulkan_function_error("vkCreateSwapchainKHR", result);
+        }
+
+        ASSERT(m_swap_chain != VK_NULL_HANDLE);
+
+        m_device = device;
 }
 
 SwapChainKHR::~SwapChainKHR()
@@ -901,37 +974,6 @@ SwapChainKHR::operator VkSwapchainKHR() const
 
 //
 
-void ImageView::create(VkDevice device, VkImage image, VkFormat format)
-{
-        VkImageViewCreateInfo createInfo = {};
-        createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-        createInfo.image = image;
-
-        createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-        createInfo.format = format;
-
-        createInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
-        createInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
-        createInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
-        createInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
-
-        createInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        createInfo.subresourceRange.baseMipLevel = 0;
-        createInfo.subresourceRange.levelCount = 1;
-        createInfo.subresourceRange.baseArrayLayer = 0;
-        createInfo.subresourceRange.layerCount = 1;
-
-        VkResult result = vkCreateImageView(device, &createInfo, nullptr, &m_image_view);
-        if (result != VK_SUCCESS)
-        {
-                vulkan::vulkan_function_error("vkCreateImageView", result);
-        }
-
-        ASSERT(m_image_view != VK_NULL_HANDLE);
-
-        m_device = device;
-}
-
 void ImageView::destroy() noexcept
 {
         if (m_image_view != VK_NULL_HANDLE)
@@ -950,9 +992,17 @@ void ImageView::move(ImageView* from) noexcept
         from->m_image_view = VK_NULL_HANDLE;
 }
 
-ImageView::ImageView(VkDevice device, VkImage image, VkFormat format)
+ImageView::ImageView(VkDevice device, const VkImageViewCreateInfo& create_info)
 {
-        create(device, image, format);
+        VkResult result = vkCreateImageView(device, &create_info, nullptr, &m_image_view);
+        if (result != VK_SUCCESS)
+        {
+                vulkan::vulkan_function_error("vkCreateImageView", result);
+        }
+
+        ASSERT(m_image_view != VK_NULL_HANDLE);
+
+        m_device = device;
 }
 
 ImageView::~ImageView()
@@ -982,31 +1032,6 @@ ImageView::operator VkImageView() const
 
 //
 
-void ShaderModule::create(VkDevice device, const Span<const uint32_t>& code)
-{
-        static_assert(sizeof(uint32_t) == 4);
-
-        if (code.empty())
-        {
-                error("Shader code size must be greater than 0");
-        }
-
-        VkShaderModuleCreateInfo create_info = {};
-        create_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-        create_info.codeSize = 4 * code.size();
-        create_info.pCode = code.data();
-
-        VkResult result = vkCreateShaderModule(device, &create_info, nullptr, &m_shader_module);
-        if (result != VK_SUCCESS)
-        {
-                vulkan::vulkan_function_error("vkCreateShaderModule", result);
-        }
-
-        ASSERT(m_shader_module != VK_NULL_HANDLE);
-
-        m_device = device;
-}
-
 void ShaderModule::destroy() noexcept
 {
         if (m_shader_module != VK_NULL_HANDLE)
@@ -1027,7 +1052,29 @@ void ShaderModule::move(ShaderModule* from) noexcept
 
 ShaderModule::ShaderModule(VkDevice device, const Span<const uint32_t>& code)
 {
-        create(device, code);
+        static_assert(sizeof(uint32_t) == 4);
+
+        if (code.empty())
+        {
+                error("Shader code size must be greater than 0");
+        }
+
+        VkShaderModuleCreateInfo create_info = {};
+        create_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+        create_info.codeSize = 4 * code.size();
+        create_info.pCode = code.data();
+
+        //
+
+        VkResult result = vkCreateShaderModule(device, &create_info, nullptr, &m_shader_module);
+        if (result != VK_SUCCESS)
+        {
+                vulkan::vulkan_function_error("vkCreateShaderModule", result);
+        }
+
+        ASSERT(m_shader_module != VK_NULL_HANDLE);
+
+        m_device = device;
 }
 
 ShaderModule::~ShaderModule()
@@ -1072,6 +1119,8 @@ const VkShaderStageFlagBits& Shader::stage() const
         return m_stage;
 }
 
+//
+
 VertexShader::VertexShader(VkDevice device, const Span<const uint32_t>& code) : Shader(device, code, VK_SHADER_STAGE_VERTEX_BIT)
 {
 }
@@ -1103,48 +1152,6 @@ ComputeShader::ComputeShader(VkDevice device, const Span<const uint32_t>& code)
 
 //
 
-void RenderPass::create(VkDevice device, VkFormat swap_chain_image_format)
-{
-        VkAttachmentDescription attachment_description = {};
-        attachment_description.format = swap_chain_image_format;
-        attachment_description.samples = VK_SAMPLE_COUNT_1_BIT;
-
-        attachment_description.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        attachment_description.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-
-        attachment_description.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        attachment_description.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-
-        attachment_description.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        attachment_description.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-
-        VkAttachmentReference attachment_reference = {};
-        attachment_reference.attachment = 0;
-        attachment_reference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
-        VkSubpassDescription subpass_description = {};
-        subpass_description.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-        subpass_description.colorAttachmentCount = 1;
-        subpass_description.pColorAttachments = &attachment_reference;
-
-        VkRenderPassCreateInfo render_pass_info = {};
-        render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-        render_pass_info.attachmentCount = 1;
-        render_pass_info.pAttachments = &attachment_description;
-        render_pass_info.subpassCount = 1;
-        render_pass_info.pSubpasses = &subpass_description;
-
-        VkResult result = vkCreateRenderPass(device, &render_pass_info, nullptr, &m_render_pass);
-        if (result != VK_SUCCESS)
-        {
-                vulkan::vulkan_function_error("vkCreateRenderPass", result);
-        }
-
-        ASSERT(m_render_pass != VK_NULL_HANDLE);
-
-        m_device = device;
-}
-
 void RenderPass::destroy() noexcept
 {
         if (m_render_pass != VK_NULL_HANDLE)
@@ -1165,9 +1172,17 @@ void RenderPass::move(RenderPass* from) noexcept
 
 RenderPass::RenderPass() = default;
 
-RenderPass::RenderPass(VkDevice device, VkFormat swap_chain_image_format)
+RenderPass::RenderPass(VkDevice device, const VkRenderPassCreateInfo& create_info)
 {
-        create(device, swap_chain_image_format);
+        VkResult result = vkCreateRenderPass(device, &create_info, nullptr, &m_render_pass);
+        if (result != VK_SUCCESS)
+        {
+                vulkan::vulkan_function_error("vkCreateRenderPass", result);
+        }
+
+        ASSERT(m_render_pass != VK_NULL_HANDLE);
+
+        m_device = device;
 }
 
 RenderPass::~RenderPass()
@@ -1197,26 +1212,6 @@ RenderPass::operator VkRenderPass() const
 
 //
 
-void PipelineLayout::create(VkDevice device)
-{
-        VkPipelineLayoutCreateInfo pipeline_layout_info = {};
-        pipeline_layout_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-        // pipeline_layout_info.setLayoutCount = 0;
-        // pipeline_layout_info.pSetLayouts = nullptr;
-        // pipeline_layout_info.pushConstantRangeCount = 0;
-        // pipeline_layout_info.pPushConstantRanges = nullptr;
-
-        VkResult result = vkCreatePipelineLayout(device, &pipeline_layout_info, nullptr, &m_pipeline_layout);
-        if (result != VK_SUCCESS)
-        {
-                vulkan::vulkan_function_error("vkCreatePipelineLayout", result);
-        }
-
-        ASSERT(m_pipeline_layout != VK_NULL_HANDLE);
-
-        m_device = device;
-}
-
 void PipelineLayout::destroy() noexcept
 {
         if (m_pipeline_layout != VK_NULL_HANDLE)
@@ -1237,9 +1232,17 @@ void PipelineLayout::move(PipelineLayout* from) noexcept
 
 PipelineLayout::PipelineLayout() = default;
 
-PipelineLayout::PipelineLayout(VkDevice device)
+PipelineLayout::PipelineLayout(VkDevice device, const VkPipelineLayoutCreateInfo& create_info)
 {
-        create(device);
+        VkResult result = vkCreatePipelineLayout(device, &create_info, nullptr, &m_pipeline_layout);
+        if (result != VK_SUCCESS)
+        {
+                vulkan::vulkan_function_error("vkCreatePipelineLayout", result);
+        }
+
+        ASSERT(m_pipeline_layout != VK_NULL_HANDLE);
+
+        m_device = device;
 }
 
 PipelineLayout::~PipelineLayout()
@@ -1269,21 +1272,6 @@ PipelineLayout::operator VkPipelineLayout() const
 
 //
 
-void Pipeline::create(VkDevice device, const VkGraphicsPipelineCreateInfo& graphics_pipeline_info)
-{
-        VkPipelineCache pipeline_cache = VK_NULL_HANDLE;
-
-        VkResult result = vkCreateGraphicsPipelines(device, pipeline_cache, 1, &graphics_pipeline_info, nullptr, &m_pipeline);
-        if (result != VK_SUCCESS)
-        {
-                vulkan::vulkan_function_error("vkCreateGraphicsPipelines", result);
-        }
-
-        ASSERT(m_pipeline != VK_NULL_HANDLE);
-
-        m_device = device;
-}
-
 void Pipeline::destroy() noexcept
 {
         if (m_pipeline != VK_NULL_HANDLE)
@@ -1304,9 +1292,19 @@ void Pipeline::move(Pipeline* from) noexcept
 
 Pipeline::Pipeline() = default;
 
-Pipeline::Pipeline(VkDevice device, const VkGraphicsPipelineCreateInfo& graphics_pipeline_info)
+Pipeline::Pipeline(VkDevice device, const VkGraphicsPipelineCreateInfo& create_info)
 {
-        create(device, graphics_pipeline_info);
+        VkPipelineCache pipeline_cache = VK_NULL_HANDLE;
+
+        VkResult result = vkCreateGraphicsPipelines(device, pipeline_cache, 1, &create_info, nullptr, &m_pipeline);
+        if (result != VK_SUCCESS)
+        {
+                vulkan::vulkan_function_error("vkCreateGraphicsPipelines", result);
+        }
+
+        ASSERT(m_pipeline != VK_NULL_HANDLE);
+
+        m_device = device;
 }
 
 Pipeline::~Pipeline()
@@ -1336,28 +1334,6 @@ Pipeline::operator VkPipeline() const
 
 //
 
-void Framebuffer::create(VkDevice device, VkRenderPass render_pass, VkImageView attachment, VkExtent2D extent)
-{
-        VkFramebufferCreateInfo framebuffer_info = {};
-        framebuffer_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-        framebuffer_info.renderPass = render_pass;
-        framebuffer_info.attachmentCount = 1;
-        framebuffer_info.pAttachments = &attachment;
-        framebuffer_info.width = extent.width;
-        framebuffer_info.height = extent.height;
-        framebuffer_info.layers = 1;
-
-        VkResult result = vkCreateFramebuffer(device, &framebuffer_info, nullptr, &m_framebuffer);
-        if (result != VK_SUCCESS)
-        {
-                vulkan::vulkan_function_error("vkCreateFramebuffer", result);
-        }
-
-        ASSERT(m_framebuffer != VK_NULL_HANDLE);
-
-        m_device = device;
-}
-
 void Framebuffer::destroy() noexcept
 {
         if (m_framebuffer != VK_NULL_HANDLE)
@@ -1376,9 +1352,17 @@ void Framebuffer::move(Framebuffer* from) noexcept
         from->m_framebuffer = VK_NULL_HANDLE;
 }
 
-Framebuffer::Framebuffer(VkDevice device, VkRenderPass render_pass, VkImageView attachment, VkExtent2D extent)
+Framebuffer::Framebuffer(VkDevice device, const VkFramebufferCreateInfo& create_info)
 {
-        create(device, render_pass, attachment, extent);
+        VkResult result = vkCreateFramebuffer(device, &create_info, nullptr, &m_framebuffer);
+        if (result != VK_SUCCESS)
+        {
+                vulkan::vulkan_function_error("vkCreateFramebuffer", result);
+        }
+
+        ASSERT(m_framebuffer != VK_NULL_HANDLE);
+
+        m_device = device;
 }
 
 Framebuffer::~Framebuffer()
@@ -1406,14 +1390,18 @@ Framebuffer::operator VkFramebuffer() const
         return m_framebuffer;
 }
 
+//
+
 VulkanInstance::VulkanInstance(int api_version_major, int api_version_minor,
                                const std::vector<std::string>& required_instance_extensions,
                                const std::vector<std::string>& required_device_extensions,
                                const std::vector<std::string>& required_validation_layers,
                                const std::function<VkSurfaceKHR(VkInstance)>& create_surface,
                                const Span<const uint32_t>& vertex_shader_code, const Span<const uint32_t>& fragment_shader_code)
-        : m_instance(api_version_major, api_version_minor, required_instance_extensions, required_validation_layers),
-          m_callback(!required_validation_layers.empty() ? std::make_optional<DebugReportCallback>(m_instance) : std::nullopt),
+        : m_instance(create_instance(api_version_major, api_version_minor, required_instance_extensions,
+                                     required_validation_layers)),
+          m_callback(!required_validation_layers.empty() ? std::make_optional(create_debug_report_callback(m_instance)) :
+                                                           std::nullopt),
           m_surface(m_instance, create_surface)
 {
         const std::vector<std::string> all_device_extensions = required_device_extensions + VK_KHR_SWAPCHAIN_EXTENSION_NAME;
@@ -1425,9 +1413,9 @@ VulkanInstance::VulkanInstance(int api_version_major, int api_version_minor,
 
         ASSERT(m_physical_device != VK_NULL_HANDLE);
 
-        m_device = Device(device.physical_device,
-                          {device.graphics_family_index, device.compute_family_index, device.presentation_family_index},
-                          all_device_extensions, required_validation_layers);
+        m_device = create_device(device.physical_device,
+                                 {device.graphics_family_index, device.compute_family_index, device.presentation_family_index},
+                                 all_device_extensions, required_validation_layers);
 
         constexpr uint32_t queue_index = 0;
         vkGetDeviceQueue(m_device, device.graphics_family_index, queue_index, &m_graphics_queue);
@@ -1442,11 +1430,11 @@ VulkanInstance::VulkanInstance(int api_version_major, int api_version_minor,
         m_swap_chain_extent = choose_extent(device.swap_chain_details.capabilities);
         m_swap_chain_image_format = surface_format.format;
 
-        m_swap_chain =
-                SwapChainKHR(m_device, m_surface, surface_format, choose_present_mode(device.swap_chain_details.present_modes),
-                             m_swap_chain_extent, choose_image_count(device.swap_chain_details.capabilities),
-                             device.swap_chain_details.capabilities.currentTransform, device.graphics_family_index,
-                             device.presentation_family_index);
+        m_swap_chain = create_swap_chain_khr(m_device, m_surface, surface_format,
+                                             choose_present_mode(device.swap_chain_details.present_modes), m_swap_chain_extent,
+                                             choose_image_count(device.swap_chain_details.capabilities),
+                                             device.swap_chain_details.capabilities.currentTransform,
+                                             device.graphics_family_index, device.presentation_family_index);
 
         m_swap_chain_images = swap_chain_images(m_device, m_swap_chain);
         if (m_swap_chain_images.empty())
@@ -1456,17 +1444,17 @@ VulkanInstance::VulkanInstance(int api_version_major, int api_version_minor,
 
         for (const VkImage& image : m_swap_chain_images)
         {
-                m_image_views.emplace_back(m_device, image, m_swap_chain_image_format);
+                m_image_views.push_back(create_image_view(m_device, image, m_swap_chain_image_format));
         }
 
-        m_render_pass = RenderPass(m_device, m_swap_chain_image_format);
-        m_pipeline_layout = PipelineLayout(m_device);
+        m_render_pass = create_render_pass(m_device, m_swap_chain_image_format);
+        m_pipeline_layout = create_pipeline_layout(m_device);
         m_pipeline = create_graphics_pipeline(m_device, m_render_pass, m_pipeline_layout, m_swap_chain_extent, vertex_shader_code,
                                               fragment_shader_code);
 
         for (const ImageView& image_view : m_image_views)
         {
-                m_framebuffers.emplace_back(m_device, m_render_pass, image_view, m_swap_chain_extent);
+                m_framebuffers.push_back(create_framebuffer(m_device, m_render_pass, image_view, m_swap_chain_extent));
         }
 }
 

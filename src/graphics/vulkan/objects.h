@@ -33,14 +33,11 @@ class Instance
 {
         VkInstance m_instance = VK_NULL_HANDLE;
 
-        void create(int api_version_major, int api_version_minor, std::vector<std::string> required_extensions,
-                    const std::vector<std::string>& required_validation_layers);
         void destroy() noexcept;
         void move(Instance* from) noexcept;
 
 public:
-        Instance(int api_version_major, int api_version_minor, const std::vector<std::string>& required_extensions,
-                 const std::vector<std::string>& required_validation_layers);
+        Instance(const VkInstanceCreateInfo& create_info);
         ~Instance();
 
         Instance(const Instance&) = delete;
@@ -57,12 +54,11 @@ class DebugReportCallback
         VkInstance m_instance = VK_NULL_HANDLE;
         VkDebugReportCallbackEXT m_callback = VK_NULL_HANDLE;
 
-        void create(VkInstance instance);
         void destroy() noexcept;
         void move(DebugReportCallback* from) noexcept;
 
 public:
-        DebugReportCallback(VkInstance instance);
+        DebugReportCallback(VkInstance instance, const VkDebugReportCallbackCreateInfoEXT& create_info);
         ~DebugReportCallback();
 
         DebugReportCallback(const DebugReportCallback&) = delete;
@@ -78,16 +74,12 @@ class Device
 {
         VkDevice m_device = VK_NULL_HANDLE;
 
-        void create(VkPhysicalDevice physical_device, const std::vector<unsigned>& family_indices,
-                    const std::vector<std::string>& required_extensions,
-                    const std::vector<std::string>& required_validation_layers);
         void destroy() noexcept;
         void move(Device* from) noexcept;
 
 public:
         Device();
-        Device(VkPhysicalDevice physical_device, const std::vector<unsigned>& family_indices,
-               const std::vector<std::string>& required_extensions, const std::vector<std::string>& required_validation_layers);
+        Device(VkPhysicalDevice physical_device, const VkDeviceCreateInfo& create_info);
         ~Device();
 
         Device(const Device&) = delete;
@@ -104,7 +96,6 @@ class SurfaceKHR
         VkInstance m_instance = VK_NULL_HANDLE;
         VkSurfaceKHR m_surface = VK_NULL_HANDLE;
 
-        void create(VkInstance instance, const std::function<VkSurfaceKHR(VkInstance)>& create_surface);
         void destroy() noexcept;
         void move(SurfaceKHR* from) noexcept;
 
@@ -126,17 +117,12 @@ class SwapChainKHR
         VkDevice m_device = VK_NULL_HANDLE;
         VkSwapchainKHR m_swap_chain = VK_NULL_HANDLE;
 
-        void create(VkDevice device, VkSurfaceKHR surface, VkSurfaceFormatKHR surface_format, VkPresentModeKHR present_mode,
-                    VkExtent2D extent, uint32_t image_count, VkSurfaceTransformFlagBitsKHR transform,
-                    unsigned graphics_family_index, unsigned presentation_family_index);
         void destroy() noexcept;
         void move(SwapChainKHR* from) noexcept;
 
 public:
         SwapChainKHR();
-        SwapChainKHR(VkDevice device, VkSurfaceKHR surface, VkSurfaceFormatKHR surface_format, VkPresentModeKHR present_mode,
-                     VkExtent2D extent, uint32_t image_count, VkSurfaceTransformFlagBitsKHR transform,
-                     unsigned graphics_family_index, unsigned presentation_family_index);
+        SwapChainKHR(VkDevice device, const VkSwapchainCreateInfoKHR& create_info);
         ~SwapChainKHR();
 
         SwapChainKHR(const SwapChainKHR&) = delete;
@@ -153,12 +139,11 @@ class ImageView
         VkDevice m_device = VK_NULL_HANDLE;
         VkImageView m_image_view = VK_NULL_HANDLE;
 
-        void create(VkDevice device, VkImage image, VkFormat format);
         void destroy() noexcept;
         void move(ImageView* from) noexcept;
 
 public:
-        ImageView(VkDevice device, VkImage image, VkFormat format);
+        ImageView(VkDevice device, const VkImageViewCreateInfo& create_info);
         ~ImageView();
 
         ImageView(const ImageView&) = delete;
@@ -175,7 +160,6 @@ class ShaderModule
         VkDevice m_device = VK_NULL_HANDLE;
         VkShaderModule m_shader_module = VK_NULL_HANDLE;
 
-        void create(VkDevice device, const Span<const uint32_t>& code);
         void destroy() noexcept;
         void move(ShaderModule* from) noexcept;
 
@@ -246,13 +230,12 @@ class RenderPass
         VkDevice m_device = VK_NULL_HANDLE;
         VkRenderPass m_render_pass = VK_NULL_HANDLE;
 
-        void create(VkDevice device, VkFormat swap_chain_image_format);
         void destroy() noexcept;
         void move(RenderPass* from) noexcept;
 
 public:
         RenderPass();
-        RenderPass(VkDevice device, VkFormat swap_chain_image_format);
+        RenderPass(VkDevice device, const VkRenderPassCreateInfo& create_info);
         ~RenderPass();
 
         RenderPass(const RenderPass&) = delete;
@@ -269,13 +252,12 @@ class PipelineLayout
         VkDevice m_device = VK_NULL_HANDLE;
         VkPipelineLayout m_pipeline_layout = VK_NULL_HANDLE;
 
-        void create(VkDevice device);
         void destroy() noexcept;
         void move(PipelineLayout* from) noexcept;
 
 public:
         PipelineLayout();
-        PipelineLayout(VkDevice device);
+        PipelineLayout(VkDevice device, const VkPipelineLayoutCreateInfo& create_info);
         ~PipelineLayout();
 
         PipelineLayout(const PipelineLayout&) = delete;
@@ -292,13 +274,12 @@ class Pipeline
         VkDevice m_device = VK_NULL_HANDLE;
         VkPipeline m_pipeline = VK_NULL_HANDLE;
 
-        void create(VkDevice device, const VkGraphicsPipelineCreateInfo& graphics_pipeline_info);
         void destroy() noexcept;
         void move(Pipeline* from) noexcept;
 
 public:
         Pipeline();
-        Pipeline(VkDevice device, const VkGraphicsPipelineCreateInfo& graphics_pipeline_info);
+        Pipeline(VkDevice device, const VkGraphicsPipelineCreateInfo& create_info);
         ~Pipeline();
 
         Pipeline(const Pipeline&) = delete;
@@ -315,12 +296,11 @@ class Framebuffer
         VkDevice m_device = VK_NULL_HANDLE;
         VkFramebuffer m_framebuffer = VK_NULL_HANDLE;
 
-        void create(VkDevice device, VkRenderPass render_pass, VkImageView attachment, VkExtent2D extent);
         void destroy() noexcept;
         void move(Framebuffer* from) noexcept;
 
 public:
-        Framebuffer(VkDevice device, VkRenderPass render_pass, VkImageView attachment, VkExtent2D extent);
+        Framebuffer(VkDevice device, const VkFramebufferCreateInfo& create_info);
         ~Framebuffer();
 
         Framebuffer(const Framebuffer&) = delete;
