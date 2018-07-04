@@ -723,6 +723,66 @@ Framebuffer::operator VkFramebuffer() const
 {
         return m_framebuffer;
 }
+
+//
+
+void CommandPool::destroy() noexcept
+{
+        if (m_command_pool != VK_NULL_HANDLE)
+        {
+                ASSERT(m_device != VK_NULL_HANDLE);
+
+                vkDestroyCommandPool(m_device, m_command_pool, nullptr);
+        }
+}
+
+void CommandPool::move(CommandPool* from) noexcept
+{
+        m_device = from->m_device;
+        m_command_pool = from->m_command_pool;
+        from->m_device = VK_NULL_HANDLE;
+        from->m_command_pool = VK_NULL_HANDLE;
+}
+
+CommandPool::CommandPool() = default;
+
+CommandPool::CommandPool(VkDevice device, const VkCommandPoolCreateInfo& create_info)
+{
+        VkResult result = vkCreateCommandPool(device, &create_info, nullptr, &m_command_pool);
+        if (result != VK_SUCCESS)
+        {
+                vulkan::vulkan_function_error("vkCreateCommandPool", result);
+        }
+
+        ASSERT(m_command_pool != VK_NULL_HANDLE);
+
+        m_device = device;
+}
+
+CommandPool::~CommandPool()
+{
+        destroy();
+}
+
+CommandPool::CommandPool(CommandPool&& from) noexcept
+{
+        move(&from);
+}
+
+CommandPool& CommandPool::operator=(CommandPool&& from) noexcept
+{
+        if (this != &from)
+        {
+                destroy();
+                move(&from);
+        }
+        return *this;
+}
+
+CommandPool::operator VkCommandPool() const
+{
+        return m_command_pool;
+}
 }
 
 #endif

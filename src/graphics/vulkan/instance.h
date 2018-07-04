@@ -57,6 +57,10 @@ class VulkanInstance
 
         std::vector<Framebuffer> m_framebuffers;
 
+        CommandPool m_command_pool;
+
+        std::vector<VkCommandBuffer> m_command_buffers;
+
 public:
         VulkanInstance(int api_version_major, int api_version_minor, const std::vector<std::string>& required_instance_extensions,
                        const std::vector<std::string>& required_device_extensions,

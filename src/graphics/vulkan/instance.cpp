@@ -615,6 +615,90 @@ vulkan::Framebuffer create_framebuffer(VkDevice device, VkRenderPass render_pass
 
         return vulkan::Framebuffer(device, create_info);
 }
+
+vulkan::CommandPool create_command_pool(VkDevice device, unsigned graphics_family_index)
+{
+        VkCommandPoolCreateInfo create_info = {};
+        create_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+        create_info.queueFamilyIndex = graphics_family_index;
+        // create_info.flags = 0;
+
+        return vulkan::CommandPool(device, create_info);
+}
+
+std::vector<VkCommandBuffer> create_command_buffers(VkDevice device, const VkExtent2D& swap_chain_extent,
+                                                    VkRenderPass render_pass, VkPipeline pipeline,
+                                                    const std::vector<vulkan::Framebuffer>& framebuffers,
+                                                    VkCommandPool command_pool)
+{
+        VkResult result;
+
+        std::vector<VkCommandBuffer> command_buffers(framebuffers.size());
+
+        VkCommandBufferAllocateInfo allocate_info = {};
+        allocate_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        allocate_info.commandPool = command_pool;
+        allocate_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        allocate_info.commandBufferCount = command_buffers.size();
+
+        result = vkAllocateCommandBuffers(device, &allocate_info, command_buffers.data());
+        if (result != VK_SUCCESS)
+        {
+                vulkan::vulkan_function_error("vkAllocateCommandBuffers", result);
+        }
+
+        try
+        {
+                VkClearValue clearColor = {};
+                clearColor.color = {{0.0f, 0.0f, 0.0f, 1.0f}};
+                clearColor.depthStencil.depth = 0;
+                clearColor.depthStencil.stencil = 0;
+
+                for (size_t i = 0; i < command_buffers.size(); ++i)
+                {
+                        VkCommandBufferBeginInfo command_buffer_info = {};
+                        command_buffer_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+                        command_buffer_info.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+                        // command_buffer_info.pInheritanceInfo = nullptr;
+
+                        result = vkBeginCommandBuffer(command_buffers[i], &command_buffer_info);
+                        if (result != VK_SUCCESS)
+                        {
+                                vulkan::vulkan_function_error("vkBeginCommandBuffer", result);
+                        }
+
+                        VkRenderPassBeginInfo render_pass_info = {};
+                        render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+                        render_pass_info.renderPass = render_pass;
+                        render_pass_info.framebuffer = framebuffers[i];
+                        render_pass_info.renderArea.offset = {0, 0};
+                        render_pass_info.renderArea.extent = swap_chain_extent;
+                        render_pass_info.clearValueCount = 1;
+                        render_pass_info.pClearValues = &clearColor;
+
+                        vkCmdBeginRenderPass(command_buffers[i], &render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
+
+                        vkCmdBindPipeline(command_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+
+                        vkCmdDraw(command_buffers[i], 3, 1, 0, 0);
+
+                        vkCmdEndRenderPass(command_buffers[i]);
+
+                        result = vkEndCommandBuffer(command_buffers[i]);
+                        if (result != VK_SUCCESS)
+                        {
+                                vulkan::vulkan_function_error("vkEndCommandBuffer", result);
+                        }
+                }
+        }
+        catch (...)
+        {
+                vkFreeCommandBuffers(device, command_pool, command_buffers.size(), command_buffers.data());
+                throw;
+        }
+
+        return command_buffers;
+}
 }
 
 namespace vulkan
@@ -683,6 +767,11 @@ VulkanInstance::VulkanInstance(int api_version_major, int api_version_minor,
         {
                 m_framebuffers.push_back(create_framebuffer(m_device, m_render_pass, image_view, m_swap_chain_extent));
         }
+
+        m_command_pool = create_command_pool(m_device, device.graphics_family_index);
+
+        m_command_buffers =
+                create_command_buffers(m_device, m_swap_chain_extent, m_render_pass, m_pipeline, m_framebuffers, m_command_pool);
 }
 
 VkInstance VulkanInstance::instance() const

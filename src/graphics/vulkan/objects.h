@@ -308,6 +308,28 @@ public:
 
         operator VkFramebuffer() const;
 };
+
+class CommandPool
+{
+        VkDevice m_device = VK_NULL_HANDLE;
+        VkCommandPool m_command_pool = VK_NULL_HANDLE;
+
+        void destroy() noexcept;
+        void move(CommandPool* from) noexcept;
+
+public:
+        CommandPool();
+        CommandPool(VkDevice device, const VkCommandPoolCreateInfo& create_info);
+        ~CommandPool();
+
+        CommandPool(const CommandPool&) = delete;
+        CommandPool& operator=(const CommandPool&) = delete;
+
+        CommandPool(CommandPool&&) noexcept;
+        CommandPool& operator=(CommandPool&&) noexcept;
+
+        operator VkCommandPool() const;
+};
 }
 
 #endif
