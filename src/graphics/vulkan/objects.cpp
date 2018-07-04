@@ -783,6 +783,71 @@ CommandPool::operator VkCommandPool() const
 {
         return m_command_pool;
 }
+
+//
+
+void Semaphore::destroy() noexcept
+{
+        if (m_semaphore != VK_NULL_HANDLE)
+        {
+                ASSERT(m_device != VK_NULL_HANDLE);
+
+                vkDestroySemaphore(m_device, m_semaphore, nullptr);
+        }
+}
+
+void Semaphore::move(Semaphore* from) noexcept
+{
+        m_device = from->m_device;
+        m_semaphore = from->m_semaphore;
+        from->m_device = VK_NULL_HANDLE;
+        from->m_semaphore = VK_NULL_HANDLE;
+}
+
+Semaphore::Semaphore() = default;
+
+Semaphore::Semaphore(VkDevice device)
+{
+        VkSemaphoreCreateInfo create_info = {};
+        create_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+
+        //
+
+        VkResult result = vkCreateSemaphore(device, &create_info, nullptr, &m_semaphore);
+        if (result != VK_SUCCESS)
+        {
+                vulkan::vulkan_function_error("vkCreateSemaphore", result);
+        }
+
+        ASSERT(m_semaphore != VK_NULL_HANDLE);
+
+        m_device = device;
+}
+
+Semaphore::~Semaphore()
+{
+        destroy();
+}
+
+Semaphore::Semaphore(Semaphore&& from) noexcept
+{
+        move(&from);
+}
+
+Semaphore& Semaphore::operator=(Semaphore&& from) noexcept
+{
+        if (this != &from)
+        {
+                destroy();
+                move(&from);
+        }
+        return *this;
+}
+
+Semaphore::operator VkSemaphore() const
+{
+        return m_semaphore;
+}
 }
 
 #endif

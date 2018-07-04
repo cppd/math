@@ -330,6 +330,28 @@ public:
 
         operator VkCommandPool() const;
 };
+
+class Semaphore
+{
+        VkDevice m_device = VK_NULL_HANDLE;
+        VkSemaphore m_semaphore = VK_NULL_HANDLE;
+
+        void destroy() noexcept;
+        void move(Semaphore* from) noexcept;
+
+public:
+        Semaphore();
+        Semaphore(VkDevice device);
+        ~Semaphore();
+
+        Semaphore(const Semaphore&) = delete;
+        Semaphore& operator=(const Semaphore&) = delete;
+
+        Semaphore(Semaphore&&) noexcept;
+        Semaphore& operator=(Semaphore&&) noexcept;
+
+        operator VkSemaphore() const;
+};
 }
 
 #endif
