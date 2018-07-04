@@ -352,6 +352,28 @@ public:
 
         operator VkSemaphore() const;
 };
+
+class Fence
+{
+        VkDevice m_device = VK_NULL_HANDLE;
+        VkFence m_fence = VK_NULL_HANDLE;
+
+        void destroy() noexcept;
+        void move(Fence* from) noexcept;
+
+public:
+        Fence();
+        Fence(VkDevice device, bool signaled);
+        ~Fence();
+
+        Fence(const Fence&) = delete;
+        Fence& operator=(const Fence&) = delete;
+
+        Fence(Fence&&) noexcept;
+        Fence& operator=(Fence&&) noexcept;
+
+        operator VkFence() const;
+};
 }
 
 #endif

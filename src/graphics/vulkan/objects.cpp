@@ -848,6 +848,75 @@ Semaphore::operator VkSemaphore() const
 {
         return m_semaphore;
 }
+
+//
+
+void Fence::destroy() noexcept
+{
+        if (m_fence != VK_NULL_HANDLE)
+        {
+                ASSERT(m_device != VK_NULL_HANDLE);
+
+                vkDestroyFence(m_device, m_fence, nullptr);
+        }
+}
+
+void Fence::move(Fence* from) noexcept
+{
+        m_device = from->m_device;
+        m_fence = from->m_fence;
+        from->m_device = VK_NULL_HANDLE;
+        from->m_fence = VK_NULL_HANDLE;
+}
+
+Fence::Fence() = default;
+
+Fence::Fence(VkDevice device, bool signaled)
+{
+        VkFenceCreateInfo fence_info = {};
+        fence_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+        if (signaled)
+        {
+                fence_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+        }
+
+        //
+
+        VkResult result = vkCreateFence(device, &fence_info, nullptr, &m_fence);
+        if (result != VK_SUCCESS)
+        {
+                vulkan::vulkan_function_error("vkCreateFence", result);
+        }
+
+        ASSERT(m_fence != VK_NULL_HANDLE);
+
+        m_device = device;
+}
+
+Fence::~Fence()
+{
+        destroy();
+}
+
+Fence::Fence(Fence&& from) noexcept
+{
+        move(&from);
+}
+
+Fence& Fence::operator=(Fence&& from) noexcept
+{
+        if (this != &from)
+        {
+                destroy();
+                move(&from);
+        }
+        return *this;
+}
+
+Fence::operator VkFence() const
+{
+        return m_fence;
+}
 }
 
 #endif
