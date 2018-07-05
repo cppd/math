@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #version 450
 #extension GL_ARB_separate_shader_objects : enable
 
-const vec2 vertices[3] = vec2[](vec2(0, 1), vec2(1, -1), vec2(-1, -1));
+const vec2 vertices[3] = vec2[](vec2(0, 0.9), vec2(0.9, -0.9), vec2(-0.9, -0.9));
 
 out gl_PerVertex
 {

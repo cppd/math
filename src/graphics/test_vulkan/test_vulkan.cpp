@@ -79,7 +79,11 @@ void test_vulkan_thread()
                 while (!glfwWindowShouldClose(window))
                 {
                         glfwPollEvents();
+
+                        vulkan_instance.draw_frame();
                 }
+
+                vulkan_instance.device_wait_idle();
         }
         catch (std::exception& e)
         {

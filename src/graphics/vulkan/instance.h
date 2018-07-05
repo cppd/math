@@ -31,6 +31,8 @@ namespace vulkan
 {
 class VulkanInstance
 {
+        static constexpr int MAX_FRAMES_IN_FLIGHT = 2;
+
         Instance m_instance;
         std::optional<DebugReportCallback> m_callback;
 
@@ -61,6 +63,12 @@ class VulkanInstance
 
         std::vector<VkCommandBuffer> m_command_buffers;
 
+        std::vector<Semaphore> m_image_available_semaphores;
+        std::vector<Semaphore> m_render_finished_semaphores;
+        std::vector<Fence> m_in_flight_fences;
+
+        unsigned m_current_frame = 0;
+
 public:
         VulkanInstance(int api_version_major, int api_version_minor, const std::vector<std::string>& required_instance_extensions,
                        const std::vector<std::string>& required_device_extensions,
@@ -69,6 +77,10 @@ public:
                        const Span<const uint32_t>& vertex_shader_code, const Span<const uint32_t>& fragment_shader_code);
 
         VkInstance instance() const;
+
+        void draw_frame();
+
+        void device_wait_idle() const;
 };
 }
 
