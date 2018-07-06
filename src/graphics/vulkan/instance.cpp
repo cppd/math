@@ -133,22 +133,15 @@ bool find_swap_chain_details(VkPhysicalDevice device, VkSurfaceKHR surface, Swap
         return true;
 }
 
-struct FoundPhysicalDevice
-{
-        const VkPhysicalDevice physical_device;
-        const unsigned graphics_family_index;
-        const unsigned compute_family_index;
-        const unsigned presentation_family_index;
-        SwapChainDetails swap_chain_details;
-};
-
-FoundPhysicalDevice find_physical_device(VkInstance instance, VkSurfaceKHR surface, int api_version_major, int api_version_minor,
-                                         const std::vector<std::string>& required_extensions)
+vulkan::PhysicalDevice find_physical_device(VkInstance instance, VkSurfaceKHR surface, int api_version_major,
+                                            int api_version_minor, const std::vector<std::string>& required_extensions)
 {
         const uint32_t required_api_version = VK_MAKE_VERSION(api_version_major, api_version_minor, 0);
 
         for (const VkPhysicalDevice& device : vulkan::physical_devices(instance))
         {
+                ASSERT(device != VK_NULL_HANDLE);
+
                 VkPhysicalDeviceProperties properties;
                 VkPhysicalDeviceFeatures features;
                 vkGetPhysicalDeviceProperties(device, &properties);
@@ -245,7 +238,13 @@ FoundPhysicalDevice find_physical_device(VkInstance instance, VkSurfaceKHR surfa
                         continue;
                 }
 
-                return {device, graphics_family_index, compute_family_index, presentation_family_index, swap_chain_details};
+                return {device,
+                        graphics_family_index,
+                        compute_family_index,
+                        presentation_family_index,
+                        swap_chain_details.capabilities,
+                        swap_chain_details.surface_formats,
+                        swap_chain_details.present_modes};
         }
 
         error("Failed to find a suitable Vulkan physical device");
@@ -482,14 +481,9 @@ vulkan::PipelineLayout create_pipeline_layout(VkDevice device)
 }
 
 vulkan::Pipeline create_graphics_pipeline(VkDevice device, VkRenderPass render_pass, VkPipelineLayout pipeline_layout,
-                                          VkExtent2D swap_chain_extent, const Span<const uint32_t>& vertex_shader_code,
-                                          const Span<const uint32_t>& fragment_shader_code)
+                                          VkExtent2D swap_chain_extent, const std::vector<const vulkan::Shader*>& shaders)
 {
-        vulkan::VertexShader vertex_shader(device, vertex_shader_code);
-        vulkan::FragmentShader fragment_shader(device, fragment_shader_code);
-
-        std::vector<VkPipelineShaderStageCreateInfo> pipeline_shader_stages =
-                pipeline_shader_stage_create_info({&vertex_shader, &fragment_shader});
+        std::vector<VkPipelineShaderStageCreateInfo> pipeline_shader_stages = pipeline_shader_stage_create_info(shaders);
 
         VkPipelineVertexInputStateCreateInfo vertex_input_state_info = {};
         vertex_input_state_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
@@ -736,6 +730,56 @@ void create_semaphores_and_fences_in_signaled_state(VkDevice device, int count,
 
 namespace vulkan
 {
+SwapChain::SwapChain(VkDevice device, VkSurfaceKHR surface, const std::vector<VkSurfaceFormatKHR>& surface_formats,
+                     const std::vector<VkPresentModeKHR>& present_modes, const VkSurfaceCapabilitiesKHR& surface_capabilities,
+                     unsigned graphics_family_index, unsigned presentation_family_index,
+                     const std::vector<const vulkan::Shader*>& shaders)
+{
+        VkSurfaceFormatKHR surface_format = choose_surface_format(surface_formats);
+        VkExtent2D swap_chain_extent = choose_extent(surface_capabilities);
+        VkFormat swap_chain_image_format = surface_format.format;
+
+        m_swap_chain =
+                create_swap_chain_khr(device, surface, surface_format, choose_present_mode(present_modes), swap_chain_extent,
+                                      choose_image_count(surface_capabilities), surface_capabilities.currentTransform,
+                                      graphics_family_index, presentation_family_index);
+
+        m_swap_chain_images = swap_chain_images(device, m_swap_chain);
+        if (m_swap_chain_images.empty())
+        {
+                error("Failed to find swap chain images");
+        }
+
+        for (const VkImage& image : m_swap_chain_images)
+        {
+                m_image_views.push_back(create_image_view(device, image, swap_chain_image_format));
+        }
+
+        m_render_pass = create_render_pass(device, swap_chain_image_format);
+        m_pipeline_layout = create_pipeline_layout(device);
+        m_pipeline = create_graphics_pipeline(device, m_render_pass, m_pipeline_layout, swap_chain_extent, shaders);
+
+        for (const ImageView& image_view : m_image_views)
+        {
+                m_framebuffers.push_back(create_framebuffer(device, m_render_pass, image_view, swap_chain_extent));
+        }
+
+        m_command_pool = create_command_pool(device, graphics_family_index);
+
+        m_command_buffers =
+                create_command_buffers(device, swap_chain_extent, m_render_pass, m_pipeline, m_framebuffers, m_command_pool);
+}
+
+VkSwapchainKHR SwapChain::swap_chain() const noexcept
+{
+        return m_swap_chain;
+}
+
+const std::vector<VkCommandBuffer>& SwapChain::command_buffers() const noexcept
+{
+        return m_command_buffers;
+}
+
 VulkanInstance::VulkanInstance(int api_version_major, int api_version_minor,
                                const std::vector<std::string>& required_instance_extensions,
                                const std::vector<std::string>& required_device_extensions,
@@ -746,68 +790,48 @@ VulkanInstance::VulkanInstance(int api_version_major, int api_version_minor,
                                      required_validation_layers)),
           m_callback(!required_validation_layers.empty() ? std::make_optional(create_debug_report_callback(m_instance)) :
                                                            std::nullopt),
-          m_surface(m_instance, create_surface)
+          m_surface(m_instance, create_surface),
+          m_physical_device(find_physical_device(m_instance, m_surface, api_version_major, api_version_minor,
+                                                 required_device_extensions + VK_KHR_SWAPCHAIN_EXTENSION_NAME)),
+          m_device(create_device(m_physical_device.physical_device,
+                                 {m_physical_device.graphics_family_index, m_physical_device.compute_family_index,
+                                  m_physical_device.presentation_family_index},
+                                 required_device_extensions + VK_KHR_SWAPCHAIN_EXTENSION_NAME, required_validation_layers)),
+          m_vertex_shader(m_device, vertex_shader_code),
+          m_fragment_shader(m_device, fragment_shader_code),
+          m_swapchain(m_device, m_surface, m_physical_device.surface_formats, m_physical_device.present_modes,
+                      m_physical_device.surface_capabilities, m_physical_device.graphics_family_index,
+                      m_physical_device.presentation_family_index, {&m_vertex_shader, &m_fragment_shader})
 {
-        const std::vector<std::string> all_device_extensions = required_device_extensions + VK_KHR_SWAPCHAIN_EXTENSION_NAME;
-
-        FoundPhysicalDevice device =
-                find_physical_device(m_instance, m_surface, api_version_major, api_version_minor, all_device_extensions);
-
-        m_physical_device = device.physical_device;
-
-        ASSERT(m_physical_device != VK_NULL_HANDLE);
-
-        m_device = create_device(device.physical_device,
-                                 {device.graphics_family_index, device.compute_family_index, device.presentation_family_index},
-                                 all_device_extensions, required_validation_layers);
-
         constexpr uint32_t queue_index = 0;
-        vkGetDeviceQueue(m_device, device.graphics_family_index, queue_index, &m_graphics_queue);
-        vkGetDeviceQueue(m_device, device.compute_family_index, queue_index, &m_compute_queue);
-        vkGetDeviceQueue(m_device, device.presentation_family_index, queue_index, &m_presentation_queue);
+        vkGetDeviceQueue(m_device, m_physical_device.graphics_family_index, queue_index, &m_graphics_queue);
+        vkGetDeviceQueue(m_device, m_physical_device.compute_family_index, queue_index, &m_compute_queue);
+        vkGetDeviceQueue(m_device, m_physical_device.presentation_family_index, queue_index, &m_presentation_queue);
 
         ASSERT(m_graphics_queue != VK_NULL_HANDLE);
         ASSERT(m_compute_queue != VK_NULL_HANDLE);
         ASSERT(m_presentation_queue != VK_NULL_HANDLE);
 
-        VkSurfaceFormatKHR surface_format = choose_surface_format(device.swap_chain_details.surface_formats);
-        m_swap_chain_extent = choose_extent(device.swap_chain_details.capabilities);
-        m_swap_chain_image_format = surface_format.format;
-
-        m_swap_chain = create_swap_chain_khr(m_device, m_surface, surface_format,
-                                             choose_present_mode(device.swap_chain_details.present_modes), m_swap_chain_extent,
-                                             choose_image_count(device.swap_chain_details.capabilities),
-                                             device.swap_chain_details.capabilities.currentTransform,
-                                             device.graphics_family_index, device.presentation_family_index);
-
-        m_swap_chain_images = swap_chain_images(m_device, m_swap_chain);
-        if (m_swap_chain_images.empty())
-        {
-                error("Failed to find swap chain images");
-        }
-
-        for (const VkImage& image : m_swap_chain_images)
-        {
-                m_image_views.push_back(create_image_view(m_device, image, m_swap_chain_image_format));
-        }
-
-        m_render_pass = create_render_pass(m_device, m_swap_chain_image_format);
-        m_pipeline_layout = create_pipeline_layout(m_device);
-        m_pipeline = create_graphics_pipeline(m_device, m_render_pass, m_pipeline_layout, m_swap_chain_extent, vertex_shader_code,
-                                              fragment_shader_code);
-
-        for (const ImageView& image_view : m_image_views)
-        {
-                m_framebuffers.push_back(create_framebuffer(m_device, m_render_pass, image_view, m_swap_chain_extent));
-        }
-
-        m_command_pool = create_command_pool(m_device, device.graphics_family_index);
-
-        m_command_buffers =
-                create_command_buffers(m_device, m_swap_chain_extent, m_render_pass, m_pipeline, m_framebuffers, m_command_pool);
-
         create_semaphores_and_fences_in_signaled_state(m_device, MAX_FRAMES_IN_FLIGHT, &m_image_available_semaphores,
                                                        &m_render_finished_semaphores, &m_in_flight_fences);
+}
+
+VulkanInstance::~VulkanInstance()
+{
+        ASSERT(m_device != VK_NULL_HANDLE);
+
+        try
+        {
+                VkResult result = vkDeviceWaitIdle(m_device);
+                if (result != VK_SUCCESS)
+                {
+                        vulkan_function_error("vkDeviceWaitIdle", result);
+                }
+        }
+        catch (std::exception& e)
+        {
+                error_fatal(e.what());
+        }
 }
 
 VkInstance VulkanInstance::instance() const
@@ -835,7 +859,7 @@ void VulkanInstance::draw_frame()
         }
 
         uint32_t image_index;
-        result = vkAcquireNextImageKHR(m_device, m_swap_chain, std::numeric_limits<uint64_t>::max(),
+        result = vkAcquireNextImageKHR(m_device, m_swapchain.swap_chain(), std::numeric_limits<uint64_t>::max(),
                                        m_image_available_semaphores[m_current_frame], NO_FENCE, &image_index);
         if (result != VK_SUCCESS)
         {
@@ -851,9 +875,9 @@ void VulkanInstance::draw_frame()
         submit_info.pWaitSemaphores = wait_semaphores;
         submit_info.pWaitDstStageMask = wait_stages;
 
-        ASSERT(image_index < m_command_buffers.size());
+        ASSERT(image_index < m_swapchain.command_buffers().size());
         submit_info.commandBufferCount = 1;
-        submit_info.pCommandBuffers = &m_command_buffers[image_index];
+        submit_info.pCommandBuffers = &m_swapchain.command_buffers()[image_index];
 
         VkSemaphore signal_semaphores[] = {m_render_finished_semaphores[m_current_frame]};
         submit_info.signalSemaphoreCount = 1;
@@ -871,7 +895,7 @@ void VulkanInstance::draw_frame()
         present_info.waitSemaphoreCount = 1;
         present_info.pWaitSemaphores = signal_semaphores;
 
-        VkSwapchainKHR swap_chains[] = {m_swap_chain};
+        VkSwapchainKHR swap_chains[] = {m_swapchain.swap_chain()};
         present_info.swapchainCount = 1;
         present_info.pSwapchains = swap_chains;
         present_info.pImageIndices = &image_index;
