@@ -43,7 +43,7 @@ public:
         Instance(Instance&&) noexcept;
         Instance& operator=(Instance&&) noexcept;
 
-        operator VkInstance() const;
+        operator VkInstance() const noexcept;
 };
 
 class DebugReportCallback
@@ -64,7 +64,7 @@ public:
         DebugReportCallback(DebugReportCallback&&) noexcept;
         DebugReportCallback& operator=(DebugReportCallback&&) noexcept;
 
-        operator VkDebugReportCallbackEXT() const;
+        operator VkDebugReportCallbackEXT() const noexcept;
 };
 
 class Device
@@ -85,7 +85,7 @@ public:
         Device(Device&&) noexcept;
         Device& operator=(Device&&) noexcept;
 
-        operator VkDevice() const;
+        operator VkDevice() const noexcept;
 };
 
 class SurfaceKHR
@@ -106,7 +106,7 @@ public:
         SurfaceKHR(SurfaceKHR&&) noexcept;
         SurfaceKHR& operator=(SurfaceKHR&&) noexcept;
 
-        operator VkSurfaceKHR() const;
+        operator VkSurfaceKHR() const noexcept;
 };
 
 class SwapChainKHR
@@ -128,7 +128,7 @@ public:
         SwapChainKHR(SwapChainKHR&&) noexcept;
         SwapChainKHR& operator=(SwapChainKHR&&) noexcept;
 
-        operator VkSwapchainKHR() const;
+        operator VkSwapchainKHR() const noexcept;
 };
 
 class ImageView
@@ -149,7 +149,7 @@ public:
         ImageView(ImageView&&) noexcept;
         ImageView& operator=(ImageView&&) noexcept;
 
-        operator VkImageView() const;
+        operator VkImageView() const noexcept;
 };
 
 class ShaderModule
@@ -170,7 +170,7 @@ public:
         ShaderModule(ShaderModule&&) noexcept;
         ShaderModule& operator=(ShaderModule&&) noexcept;
 
-        operator VkShaderModule() const;
+        operator VkShaderModule() const noexcept;
 };
 
 class Shader
@@ -182,8 +182,8 @@ protected:
         Shader(VkDevice device, const Span<const uint32_t>& code, VkShaderStageFlagBits stage);
 
 public:
-        const ShaderModule& module() const;
-        const VkShaderStageFlagBits& stage() const;
+        VkShaderModule module() const noexcept;
+        VkShaderStageFlagBits stage() const noexcept;
 };
 
 class VertexShader final : public Shader
@@ -241,7 +241,7 @@ public:
         RenderPass(RenderPass&&) noexcept;
         RenderPass& operator=(RenderPass&&) noexcept;
 
-        operator VkRenderPass() const;
+        operator VkRenderPass() const noexcept;
 };
 
 class PipelineLayout
@@ -263,7 +263,7 @@ public:
         PipelineLayout(PipelineLayout&&) noexcept;
         PipelineLayout& operator=(PipelineLayout&&) noexcept;
 
-        operator VkPipelineLayout() const;
+        operator VkPipelineLayout() const noexcept;
 };
 
 class Pipeline
@@ -285,7 +285,7 @@ public:
         Pipeline(Pipeline&&) noexcept;
         Pipeline& operator=(Pipeline&&) noexcept;
 
-        operator VkPipeline() const;
+        operator VkPipeline() const noexcept;
 };
 
 class Framebuffer
@@ -306,7 +306,7 @@ public:
         Framebuffer(Framebuffer&&) noexcept;
         Framebuffer& operator=(Framebuffer&&) noexcept;
 
-        operator VkFramebuffer() const;
+        operator VkFramebuffer() const noexcept;
 };
 
 class CommandPool
@@ -328,7 +328,7 @@ public:
         CommandPool(CommandPool&&) noexcept;
         CommandPool& operator=(CommandPool&&) noexcept;
 
-        operator VkCommandPool() const;
+        operator VkCommandPool() const noexcept;
 };
 
 class Semaphore
@@ -350,7 +350,7 @@ public:
         Semaphore(Semaphore&&) noexcept;
         Semaphore& operator=(Semaphore&&) noexcept;
 
-        operator VkSemaphore() const;
+        operator VkSemaphore() const noexcept;
 };
 
 class Fence
@@ -372,7 +372,7 @@ public:
         Fence(Fence&&) noexcept;
         Fence& operator=(Fence&&) noexcept;
 
-        operator VkFence() const;
+        operator VkFence() const noexcept;
 };
 }
 

@@ -863,7 +863,7 @@ void VulkanInstance::recreate_swap_chain()
         create_swap_chain();
 }
 
-VkInstance VulkanInstance::instance() const
+VkInstance VulkanInstance::instance() const noexcept
 {
         return m_instance;
 }

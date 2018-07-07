@@ -70,7 +70,7 @@ Instance& Instance::operator=(Instance&& from) noexcept
         return *this;
 }
 
-Instance::operator VkInstance() const
+Instance::operator VkInstance() const noexcept
 {
         return m_instance;
 }
@@ -128,7 +128,7 @@ DebugReportCallback& DebugReportCallback::operator=(DebugReportCallback&& from) 
         return *this;
 }
 
-DebugReportCallback::operator VkDebugReportCallbackEXT() const
+DebugReportCallback::operator VkDebugReportCallbackEXT() const noexcept
 {
         return m_callback;
 }
@@ -182,7 +182,7 @@ Device& Device::operator=(Device&& from) noexcept
         return *this;
 }
 
-Device::operator VkDevice() const
+Device::operator VkDevice() const noexcept
 {
         return m_device;
 }
@@ -241,7 +241,7 @@ SurfaceKHR& SurfaceKHR::operator=(SurfaceKHR&& from) noexcept
         return *this;
 }
 
-SurfaceKHR::operator VkSurfaceKHR() const
+SurfaceKHR::operator VkSurfaceKHR() const noexcept
 {
         return m_surface;
 }
@@ -301,7 +301,7 @@ SwapChainKHR& SwapChainKHR::operator=(SwapChainKHR&& from) noexcept
         return *this;
 }
 
-SwapChainKHR::operator VkSwapchainKHR() const
+SwapChainKHR::operator VkSwapchainKHR() const noexcept
 {
         return m_swap_chain;
 }
@@ -359,7 +359,7 @@ ImageView& ImageView::operator=(ImageView&& from) noexcept
         return *this;
 }
 
-ImageView::operator VkImageView() const
+ImageView::operator VkImageView() const noexcept
 {
         return m_image_view;
 }
@@ -431,7 +431,7 @@ ShaderModule& ShaderModule::operator=(ShaderModule&& from) noexcept
         return *this;
 }
 
-ShaderModule::operator VkShaderModule() const
+ShaderModule::operator VkShaderModule() const noexcept
 {
         return m_shader_module;
 }
@@ -443,12 +443,12 @@ Shader::Shader(VkDevice device, const Span<const uint32_t>& code, VkShaderStageF
 {
 }
 
-const ShaderModule& Shader::module() const
+VkShaderModule Shader::module() const noexcept
 {
         return m_module;
 }
 
-const VkShaderStageFlagBits& Shader::stage() const
+VkShaderStageFlagBits Shader::stage() const noexcept
 {
         return m_stage;
 }
@@ -539,7 +539,7 @@ RenderPass& RenderPass::operator=(RenderPass&& from) noexcept
         return *this;
 }
 
-RenderPass::operator VkRenderPass() const
+RenderPass::operator VkRenderPass() const noexcept
 {
         return m_render_pass;
 }
@@ -599,7 +599,7 @@ PipelineLayout& PipelineLayout::operator=(PipelineLayout&& from) noexcept
         return *this;
 }
 
-PipelineLayout::operator VkPipelineLayout() const
+PipelineLayout::operator VkPipelineLayout() const noexcept
 {
         return m_pipeline_layout;
 }
@@ -661,7 +661,7 @@ Pipeline& Pipeline::operator=(Pipeline&& from) noexcept
         return *this;
 }
 
-Pipeline::operator VkPipeline() const
+Pipeline::operator VkPipeline() const noexcept
 {
         return m_pipeline;
 }
@@ -719,7 +719,7 @@ Framebuffer& Framebuffer::operator=(Framebuffer&& from) noexcept
         return *this;
 }
 
-Framebuffer::operator VkFramebuffer() const
+Framebuffer::operator VkFramebuffer() const noexcept
 {
         return m_framebuffer;
 }
@@ -779,7 +779,7 @@ CommandPool& CommandPool::operator=(CommandPool&& from) noexcept
         return *this;
 }
 
-CommandPool::operator VkCommandPool() const
+CommandPool::operator VkCommandPool() const noexcept
 {
         return m_command_pool;
 }
@@ -844,7 +844,7 @@ Semaphore& Semaphore::operator=(Semaphore&& from) noexcept
         return *this;
 }
 
-Semaphore::operator VkSemaphore() const
+Semaphore::operator VkSemaphore() const noexcept
 {
         return m_semaphore;
 }
@@ -913,7 +913,7 @@ Fence& Fence::operator=(Fence&& from) noexcept
         return *this;
 }
 
-Fence::operator VkFence() const
+Fence::operator VkFence() const noexcept
 {
         return m_fence;
 }

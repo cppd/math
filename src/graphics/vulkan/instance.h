@@ -112,7 +112,7 @@ public:
         VulkanInstance& operator=(const VulkanInstance&) = delete;
         VulkanInstance& operator=(VulkanInstance&&) = delete;
 
-        VkInstance instance() const;
+        VkInstance instance() const noexcept;
 
         void draw_frame();
 
