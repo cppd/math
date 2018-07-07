@@ -23,7 +23,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/vulkan/objects.h"
 
 #include <functional>
-#include <memory>
 #include <optional>
 #include <string>
 #include <vector>
@@ -33,12 +32,9 @@ namespace vulkan
 struct PhysicalDevice
 {
         const VkPhysicalDevice physical_device;
-        const unsigned graphics_family_index;
-        const unsigned compute_family_index;
-        const unsigned presentation_family_index;
-        const VkSurfaceCapabilitiesKHR surface_capabilities;
-        const std::vector<VkSurfaceFormatKHR> surface_formats;
-        const std::vector<VkPresentModeKHR> present_modes;
+        const uint32_t graphics_family_index;
+        const uint32_t compute_family_index;
+        const uint32_t presentation_family_index;
 };
 
 class SwapChain
@@ -59,9 +55,7 @@ class SwapChain
         std::vector<VkCommandBuffer> m_command_buffers;
 
 public:
-        SwapChain(VkDevice device, VkSurfaceKHR surface, const std::vector<VkSurfaceFormatKHR>& surface_formats,
-                  const std::vector<VkPresentModeKHR>& present_modes, const VkSurfaceCapabilitiesKHR& surface_capabilities,
-                  unsigned graphics_family_index, unsigned presentation_family_index,
+        SwapChain(VkSurfaceKHR surface, PhysicalDevice physical_device, VkDevice device,
                   const std::vector<const vulkan::Shader*>& shaders);
 
         SwapChain(const SwapChain&) = delete;
@@ -75,7 +69,7 @@ public:
 
 class VulkanInstance
 {
-        static constexpr int MAX_FRAMES_IN_FLIGHT = 2;
+        static constexpr unsigned MAX_FRAMES_IN_FLIGHT = 2;
 
         Instance m_instance;
         std::optional<DebugReportCallback> m_callback;
@@ -89,17 +83,20 @@ class VulkanInstance
         vulkan::VertexShader m_vertex_shader;
         vulkan::FragmentShader m_fragment_shader;
 
-        SwapChain m_swapchain;
+        std::vector<Semaphore> m_image_available_semaphores;
+        std::vector<Semaphore> m_render_finished_semaphores;
+        std::vector<Fence> m_in_flight_fences;
 
         VkQueue m_graphics_queue = VK_NULL_HANDLE;
         VkQueue m_compute_queue = VK_NULL_HANDLE;
         VkQueue m_presentation_queue = VK_NULL_HANDLE;
 
-        std::vector<Semaphore> m_image_available_semaphores;
-        std::vector<Semaphore> m_render_finished_semaphores;
-        std::vector<Fence> m_in_flight_fences;
+        std::optional<SwapChain> m_swapchain;
 
         unsigned m_current_frame = 0;
+
+        void create_swap_chain();
+        void recreate_swap_chain();
 
 public:
         VulkanInstance(int api_version_major, int api_version_minor, const std::vector<std::string>& required_instance_extensions,
@@ -109,6 +106,11 @@ public:
                        const Span<const uint32_t>& vertex_shader_code, const Span<const uint32_t>& fragment_shader_code);
 
         ~VulkanInstance();
+
+        VulkanInstance(const VulkanInstance&) = delete;
+        VulkanInstance(VulkanInstance&&) = delete;
+        VulkanInstance& operator=(const VulkanInstance&) = delete;
+        VulkanInstance& operator=(VulkanInstance&&) = delete;
 
         VkInstance instance() const;
 
