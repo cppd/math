@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace vulkan
 {
-class Instance
+class Instance final
 {
         VkInstance m_instance = VK_NULL_HANDLE;
 
@@ -46,7 +46,7 @@ public:
         operator VkInstance() const noexcept;
 };
 
-class DebugReportCallback
+class DebugReportCallback final
 {
         VkInstance m_instance = VK_NULL_HANDLE;
         VkDebugReportCallbackEXT m_callback = VK_NULL_HANDLE;
@@ -67,7 +67,7 @@ public:
         operator VkDebugReportCallbackEXT() const noexcept;
 };
 
-class Device
+class Device final
 {
         VkDevice m_device = VK_NULL_HANDLE;
 
@@ -88,7 +88,7 @@ public:
         operator VkDevice() const noexcept;
 };
 
-class SurfaceKHR
+class SurfaceKHR final
 {
         VkInstance m_instance = VK_NULL_HANDLE;
         VkSurfaceKHR m_surface = VK_NULL_HANDLE;
@@ -109,7 +109,7 @@ public:
         operator VkSurfaceKHR() const noexcept;
 };
 
-class SwapChainKHR
+class SwapChainKHR final
 {
         VkDevice m_device = VK_NULL_HANDLE;
         VkSwapchainKHR m_swap_chain = VK_NULL_HANDLE;
@@ -131,7 +131,7 @@ public:
         operator VkSwapchainKHR() const noexcept;
 };
 
-class ImageView
+class ImageView final
 {
         VkDevice m_device = VK_NULL_HANDLE;
         VkImageView m_image_view = VK_NULL_HANDLE;
@@ -152,7 +152,7 @@ public:
         operator VkImageView() const noexcept;
 };
 
-class ShaderModule
+class ShaderModule final
 {
         VkDevice m_device = VK_NULL_HANDLE;
         VkShaderModule m_shader_module = VK_NULL_HANDLE;
@@ -173,7 +173,7 @@ public:
         operator VkShaderModule() const noexcept;
 };
 
-class RenderPass
+class RenderPass final
 {
         VkDevice m_device = VK_NULL_HANDLE;
         VkRenderPass m_render_pass = VK_NULL_HANDLE;
@@ -195,7 +195,7 @@ public:
         operator VkRenderPass() const noexcept;
 };
 
-class PipelineLayout
+class PipelineLayout final
 {
         VkDevice m_device = VK_NULL_HANDLE;
         VkPipelineLayout m_pipeline_layout = VK_NULL_HANDLE;
@@ -217,7 +217,7 @@ public:
         operator VkPipelineLayout() const noexcept;
 };
 
-class Pipeline
+class Pipeline final
 {
         VkDevice m_device = VK_NULL_HANDLE;
         VkPipeline m_pipeline = VK_NULL_HANDLE;
@@ -239,7 +239,7 @@ public:
         operator VkPipeline() const noexcept;
 };
 
-class Framebuffer
+class Framebuffer final
 {
         VkDevice m_device = VK_NULL_HANDLE;
         VkFramebuffer m_framebuffer = VK_NULL_HANDLE;
@@ -260,7 +260,7 @@ public:
         operator VkFramebuffer() const noexcept;
 };
 
-class CommandPool
+class CommandPool final
 {
         VkDevice m_device = VK_NULL_HANDLE;
         VkCommandPool m_command_pool = VK_NULL_HANDLE;
@@ -282,7 +282,7 @@ public:
         operator VkCommandPool() const noexcept;
 };
 
-class Semaphore
+class Semaphore final
 {
         VkDevice m_device = VK_NULL_HANDLE;
         VkSemaphore m_semaphore = VK_NULL_HANDLE;
@@ -304,7 +304,7 @@ public:
         operator VkSemaphore() const noexcept;
 };
 
-class Fence
+class Fence final
 {
         VkDevice m_device = VK_NULL_HANDLE;
         VkFence m_fence = VK_NULL_HANDLE;
