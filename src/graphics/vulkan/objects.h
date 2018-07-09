@@ -173,55 +173,6 @@ public:
         operator VkShaderModule() const noexcept;
 };
 
-class Shader
-{
-        ShaderModule m_module;
-        VkShaderStageFlagBits m_stage;
-
-protected:
-        Shader(VkDevice device, const Span<const uint32_t>& code, VkShaderStageFlagBits stage);
-
-public:
-        VkShaderModule module() const noexcept;
-        VkShaderStageFlagBits stage() const noexcept;
-};
-
-class VertexShader final : public Shader
-{
-public:
-        VertexShader(VkDevice device, const Span<const uint32_t>& code);
-};
-
-class TesselationControlShader final : public Shader
-{
-public:
-        TesselationControlShader(VkDevice device, const Span<const uint32_t>& code);
-};
-
-class TesselationEvaluationShader final : public Shader
-{
-public:
-        TesselationEvaluationShader(VkDevice device, const Span<const uint32_t>& code);
-};
-
-class GeometryShader final : public Shader
-{
-public:
-        GeometryShader(VkDevice device, const Span<const uint32_t>& code);
-};
-
-class FragmentShader final : public Shader
-{
-public:
-        FragmentShader(VkDevice device, const Span<const uint32_t>& code);
-};
-
-class ComputeShader final : public Shader
-{
-public:
-        ComputeShader(VkDevice device, const Span<const uint32_t>& code);
-};
-
 class RenderPass
 {
         VkDevice m_device = VK_NULL_HANDLE;

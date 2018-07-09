@@ -96,172 +96,6 @@ uint32_t choose_image_count(const VkSurfaceCapabilitiesKHR& capabilities)
         return image_count;
 }
 
-bool find_family_indices(VkSurfaceKHR surface, VkPhysicalDevice device, uint32_t* graphics_family_index,
-                         uint32_t* compute_family_index, uint32_t* presentation_family_index)
-{
-        uint32_t index = 0;
-
-        uint32_t graphics = 0;
-        uint32_t compute = 0;
-        uint32_t presentation = 0;
-
-        bool graphics_found = false;
-        bool compute_found = false;
-        bool presentation_found = false;
-
-        for (const VkQueueFamilyProperties& p : vulkan::queue_families(device))
-        {
-                if (p.queueCount < 1)
-                {
-                        continue;
-                }
-
-                if (!graphics_found && (p.queueFlags & VK_QUEUE_GRAPHICS_BIT))
-                {
-                        graphics_found = true;
-                        graphics = index;
-                }
-
-                if (!compute_found && (p.queueFlags & VK_QUEUE_COMPUTE_BIT))
-                {
-                        compute_found = true;
-                        compute = index;
-                }
-
-                if (!presentation_found)
-                {
-                        VkBool32 presentation_support;
-
-                        VkResult result = vkGetPhysicalDeviceSurfaceSupportKHR(device, index, surface, &presentation_support);
-                        if (result != VK_SUCCESS)
-                        {
-                                vulkan::vulkan_function_error("vkGetPhysicalDeviceSurfaceSupportKHR", result);
-                        }
-
-                        if (presentation_support == VK_TRUE)
-                        {
-                                presentation_found = true;
-                                presentation = index;
-                        }
-                }
-
-                if (graphics_found && compute_found && presentation_found)
-                {
-                        *graphics_family_index = graphics;
-                        *compute_family_index = compute;
-                        *presentation_family_index = presentation;
-
-                        return true;
-                }
-
-                ++index;
-        }
-
-        return false;
-}
-
-struct SwapChainDetails
-{
-        VkSurfaceCapabilitiesKHR surface_capabilities;
-        std::vector<VkSurfaceFormatKHR> surface_formats;
-        std::vector<VkPresentModeKHR> present_modes;
-};
-
-bool find_swap_chain_details(VkSurfaceKHR surface, VkPhysicalDevice device, SwapChainDetails* swap_chain_details)
-{
-        VkSurfaceCapabilitiesKHR surface_capabilities;
-
-        VkResult result;
-        result = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, &surface_capabilities);
-        if (result != VK_SUCCESS)
-        {
-                vulkan::vulkan_function_error("vkGetPhysicalDeviceSurfaceCapabilitiesKHR", result);
-        }
-
-        std::vector<VkSurfaceFormatKHR> surface_formats = vulkan::surface_formats(device, surface);
-        if (surface_formats.empty())
-        {
-                return false;
-        }
-
-        std::vector<VkPresentModeKHR> present_modes = vulkan::present_modes(device, surface);
-        if (present_modes.empty())
-        {
-                return false;
-        }
-
-        if (swap_chain_details)
-        {
-                swap_chain_details->surface_capabilities = surface_capabilities;
-                swap_chain_details->surface_formats = surface_formats;
-                swap_chain_details->present_modes = present_modes;
-        }
-
-        return true;
-}
-
-vulkan::PhysicalDevice find_physical_device(VkInstance instance, VkSurfaceKHR surface, int api_version_major,
-                                            int api_version_minor, const std::vector<std::string>& required_extensions)
-{
-        const uint32_t required_api_version = VK_MAKE_VERSION(api_version_major, api_version_minor, 0);
-
-        for (const VkPhysicalDevice& device : vulkan::physical_devices(instance))
-        {
-                ASSERT(device != VK_NULL_HANDLE);
-
-                VkPhysicalDeviceProperties properties;
-                VkPhysicalDeviceFeatures features;
-                vkGetPhysicalDeviceProperties(device, &properties);
-                vkGetPhysicalDeviceFeatures(device, &features);
-
-                if (properties.deviceType != VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU &&
-                    properties.deviceType != VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU &&
-                    properties.deviceType != VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU &&
-                    properties.deviceType != VK_PHYSICAL_DEVICE_TYPE_CPU)
-                {
-                        continue;
-                }
-
-                if (!features.geometryShader)
-                {
-                        continue;
-                }
-
-                if (!features.tessellationShader)
-                {
-                        continue;
-                }
-
-                if (required_api_version > properties.apiVersion)
-                {
-                        continue;
-                }
-
-                if (!vulkan::device_supports_extensions(device, required_extensions))
-                {
-                        continue;
-                }
-
-                uint32_t graphics_family_index;
-                uint32_t compute_family_index;
-                uint32_t presentation_family_index;
-                if (!find_family_indices(surface, device, &graphics_family_index, &compute_family_index,
-                                         &presentation_family_index))
-                {
-                        continue;
-                }
-
-                if (!find_swap_chain_details(surface, device, nullptr))
-                {
-                        continue;
-                }
-
-                return {device, graphics_family_index, compute_family_index, presentation_family_index};
-        }
-
-        error("Failed to find a suitable Vulkan physical device");
-}
-
 std::vector<VkPipelineShaderStageCreateInfo> pipeline_shader_stage_create_info(const std::vector<const vulkan::Shader*>& shaders)
 {
         std::vector<VkPipelineShaderStageCreateInfo> res;
@@ -272,7 +106,7 @@ std::vector<VkPipelineShaderStageCreateInfo> pipeline_shader_stage_create_info(c
                 stage_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
                 stage_info.stage = s->stage();
                 stage_info.module = s->module();
-                stage_info.pName = "main";
+                stage_info.pName = s->entry_point_name();
 
                 res.push_back(stage_info);
         }
@@ -824,8 +658,8 @@ VulkanInstance::VulkanInstance(int api_version_major, int api_version_minor,
                                   m_physical_device.presentation_family_index},
                                  required_device_extensions + VK_KHR_SWAPCHAIN_EXTENSION_NAME, required_validation_layers)),
           //
-          m_vertex_shader(m_device, vertex_shader_code),
-          m_fragment_shader(m_device, fragment_shader_code),
+          m_vertex_shader(m_device, vertex_shader_code, "main"),
+          m_fragment_shader(m_device, fragment_shader_code, "main"),
           //
           m_image_available_semaphores(create_semaphores(m_device, MAX_FRAMES_IN_FLIGHT)),
           m_render_finished_semaphores(create_semaphores(m_device, MAX_FRAMES_IN_FLIGHT)),

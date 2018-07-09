@@ -438,54 +438,6 @@ ShaderModule::operator VkShaderModule() const noexcept
 
 //
 
-Shader::Shader(VkDevice device, const Span<const uint32_t>& code, VkShaderStageFlagBits type)
-        : m_module(device, code), m_stage(type)
-{
-}
-
-VkShaderModule Shader::module() const noexcept
-{
-        return m_module;
-}
-
-VkShaderStageFlagBits Shader::stage() const noexcept
-{
-        return m_stage;
-}
-
-//
-
-VertexShader::VertexShader(VkDevice device, const Span<const uint32_t>& code) : Shader(device, code, VK_SHADER_STAGE_VERTEX_BIT)
-{
-}
-
-TesselationControlShader::TesselationControlShader(VkDevice device, const Span<const uint32_t>& code)
-        : Shader(device, code, VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT)
-{
-}
-
-TesselationEvaluationShader ::TesselationEvaluationShader(VkDevice device, const Span<const uint32_t>& code)
-        : Shader(device, code, VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT)
-{
-}
-
-GeometryShader::GeometryShader(VkDevice device, const Span<const uint32_t>& code)
-        : Shader(device, code, VK_SHADER_STAGE_GEOMETRY_BIT)
-{
-}
-
-FragmentShader::FragmentShader(VkDevice device, const Span<const uint32_t>& code)
-        : Shader(device, code, VK_SHADER_STAGE_FRAGMENT_BIT)
-{
-}
-
-ComputeShader::ComputeShader(VkDevice device, const Span<const uint32_t>& code)
-        : Shader(device, code, VK_SHADER_STAGE_COMPUTE_BIT)
-{
-}
-
-//
-
 void RenderPass::destroy() noexcept
 {
         if (m_render_pass != VK_NULL_HANDLE)

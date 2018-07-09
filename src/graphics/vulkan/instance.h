@@ -19,6 +19,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #if defined(VULKAN_FOUND)
 
+#include "physical_device.h"
+#include "shader.h"
+
 #include "com/span.h"
 #include "graphics/vulkan/objects.h"
 
@@ -29,14 +32,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace vulkan
 {
-struct PhysicalDevice
-{
-        const VkPhysicalDevice physical_device;
-        const uint32_t graphics_family_index;
-        const uint32_t compute_family_index;
-        const uint32_t presentation_family_index;
-};
-
 class SwapChain
 {
         SwapChainKHR m_swap_chain;
