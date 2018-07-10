@@ -19,14 +19,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "test_vulkan.h"
 
-#include "com/error.h"
 #include "com/log.h"
+#include "com/vec.h"
 #include "graphics/vulkan/common.h"
 #include "graphics/vulkan/instance.h"
 #include "graphics/vulkan/query.h"
 #include "graphics/vulkan/window.h"
 
-#include <memory>
+#include <array>
 #include <thread>
 
 constexpr int WINDOW_WIDTH = 1024;
@@ -45,6 +45,48 @@ constexpr uint32_t fragment_shader[]
 
 namespace
 {
+struct Vertex
+{
+        vec2f position;
+        vec3f color;
+
+        static std::vector<VkVertexInputBindingDescription> binding_descriptions()
+        {
+                VkVertexInputBindingDescription binding_description = {};
+                binding_description.binding = 0;
+                binding_description.stride = sizeof(Vertex);
+                binding_description.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+                return {binding_description};
+        }
+
+        static std::vector<VkVertexInputAttributeDescription> attribute_descriptions()
+        {
+                VkVertexInputAttributeDescription position_description = {};
+                position_description.binding = 0;
+                position_description.location = 0;
+                position_description.format = VK_FORMAT_R32G32_SFLOAT;
+                position_description.offset = offsetof(Vertex, position);
+
+                VkVertexInputAttributeDescription color_description = {};
+                color_description.binding = 0;
+                color_description.location = 1;
+                color_description.format = VK_FORMAT_R32G32B32_SFLOAT;
+                color_description.offset = offsetof(Vertex, color);
+
+                return {position_description, color_description};
+        }
+};
+
+// clang-format off
+constexpr std::array<Vertex, 3> vertices =
+{
+        Vertex{vec2f( 0.0,  0.9), vec3f(1, 0, 0)},
+        Vertex{vec2f( 0.9, -0.9), vec3f(0, 1, 0)},
+        Vertex{vec2f(-0.9, -0.9), vec3f(0, 0, 1)}
+};
+// clang-format on
+
 void test_vulkan_thread()
 {
         try
@@ -69,10 +111,11 @@ void test_vulkan_thread()
 
                 VulkanWindow window(WINDOW_WIDTH, WINDOW_HEIGHT, "Vulkan Window");
 
-                vulkan::VulkanInstance vulkan_instance(1, 0, instance_extensions + window_instance_extensions, device_extensions,
-                                                       validation_layers,
-                                                       [&window](VkInstance instance) { return window.create_surface(instance); },
-                                                       vertex_shader, fragment_shader);
+                vulkan::VulkanInstance vulkan_instance(
+                        1, 0, instance_extensions + window_instance_extensions, device_extensions, validation_layers,
+                        [&window](VkInstance instance) { return window.create_surface(instance); }, vertex_shader,
+                        fragment_shader, vertices.size() * sizeof(Vertex), vertices.data(), vertices.size(),
+                        Vertex::binding_descriptions(), Vertex::attribute_descriptions());
 
                 LOG(vulkan::overview_physical_devices(vulkan_instance.instance()));
 

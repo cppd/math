@@ -139,13 +139,17 @@ void Device::destroy() noexcept
 {
         if (m_device != VK_NULL_HANDLE)
         {
+                ASSERT(m_physical_device != VK_NULL_HANDLE);
+
                 vkDestroyDevice(m_device, nullptr);
         }
 }
 
 void Device::move(Device* from) noexcept
 {
+        m_physical_device = from->m_physical_device;
         m_device = from->m_device;
+        from->m_physical_device = VK_NULL_HANDLE;
         from->m_device = VK_NULL_HANDLE;
 }
 
@@ -160,6 +164,8 @@ Device::Device(VkPhysicalDevice physical_device, const VkDeviceCreateInfo& creat
         }
 
         ASSERT(m_device != VK_NULL_HANDLE);
+
+        m_physical_device = physical_device;
 }
 
 Device::~Device()
@@ -185,6 +191,33 @@ Device& Device::operator=(Device&& from) noexcept
 Device::operator VkDevice() const noexcept
 {
         return m_device;
+}
+
+uint32_t Device::physical_device_memory_type_index(uint32_t memory_type_bits, VkMemoryPropertyFlags memory_property_flags) const
+{
+        if (m_physical_device == VK_NULL_HANDLE)
+        {
+                error("No physical device in device");
+        }
+
+        VkPhysicalDeviceMemoryProperties memory_properties;
+        vkGetPhysicalDeviceMemoryProperties(m_physical_device, &memory_properties);
+
+        if (memory_properties.memoryTypeCount >= std::numeric_limits<uint32_t>::digits)
+        {
+                error("memoryTypeCount >= memory_type_bits bit count");
+        }
+
+        for (uint32_t i = 0; i < memory_properties.memoryTypeCount; ++i)
+        {
+                if ((memory_type_bits & (static_cast<uint32_t>(1) << i)) &&
+                    (memory_properties.memoryTypes[i].propertyFlags & memory_property_flags) == memory_property_flags)
+                {
+                        return i;
+                }
+        }
+
+        error("Failed to find suitable memory type");
 }
 
 //
@@ -825,16 +858,16 @@ Fence::Fence() = default;
 
 Fence::Fence(VkDevice device, bool signaled)
 {
-        VkFenceCreateInfo fence_info = {};
-        fence_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+        VkFenceCreateInfo create_info = {};
+        create_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
         if (signaled)
         {
-                fence_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+                create_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
         }
 
         //
 
-        VkResult result = vkCreateFence(device, &fence_info, nullptr, &m_fence);
+        VkResult result = vkCreateFence(device, &create_info, nullptr, &m_fence);
         if (result != VK_SUCCESS)
         {
                 vulkan::vulkan_function_error("vkCreateFence", result);
@@ -868,6 +901,134 @@ Fence& Fence::operator=(Fence&& from) noexcept
 Fence::operator VkFence() const noexcept
 {
         return m_fence;
+}
+
+//
+
+void Buffer::destroy() noexcept
+{
+        if (m_buffer != VK_NULL_HANDLE)
+        {
+                ASSERT(m_device != VK_NULL_HANDLE);
+
+                vkDestroyBuffer(m_device, m_buffer, nullptr);
+        }
+}
+
+void Buffer::move(Buffer* from) noexcept
+{
+        m_device = from->m_device;
+        m_buffer = from->m_buffer;
+        m_size = from->m_size;
+        from->m_device = VK_NULL_HANDLE;
+        from->m_buffer = VK_NULL_HANDLE;
+        from->m_size = 0;
+}
+
+Buffer::Buffer() = default;
+
+Buffer::Buffer(VkDevice device, const VkBufferCreateInfo& create_info)
+{
+        VkResult result = vkCreateBuffer(device, &create_info, nullptr, &m_buffer);
+        if (result != VK_SUCCESS)
+        {
+                vulkan::vulkan_function_error("vkCreateBuffer", result);
+        }
+
+        ASSERT(m_buffer != VK_NULL_HANDLE);
+
+        m_device = device;
+        m_size = create_info.size;
+}
+
+Buffer::~Buffer()
+{
+        destroy();
+}
+
+Buffer::Buffer(Buffer&& from) noexcept
+{
+        move(&from);
+}
+
+Buffer& Buffer::operator=(Buffer&& from) noexcept
+{
+        if (this != &from)
+        {
+                destroy();
+                move(&from);
+        }
+        return *this;
+}
+
+Buffer::operator VkBuffer() const noexcept
+{
+        return m_buffer;
+}
+
+VkDeviceSize Buffer::size() const noexcept
+{
+        return m_size;
+}
+
+//
+
+void DeviceMemory::destroy() noexcept
+{
+        if (m_device_memory != VK_NULL_HANDLE)
+        {
+                ASSERT(m_device != VK_NULL_HANDLE);
+
+                vkFreeMemory(m_device, m_device_memory, nullptr);
+        }
+}
+
+void DeviceMemory::move(DeviceMemory* from) noexcept
+{
+        m_device = from->m_device;
+        m_device_memory = from->m_device_memory;
+        from->m_device = VK_NULL_HANDLE;
+        from->m_device_memory = VK_NULL_HANDLE;
+}
+
+DeviceMemory::DeviceMemory() = default;
+
+DeviceMemory::DeviceMemory(VkDevice device, const VkMemoryAllocateInfo& allocate_info)
+{
+        VkResult result = vkAllocateMemory(device, &allocate_info, nullptr, &m_device_memory);
+        if (result != VK_SUCCESS)
+        {
+                vulkan::vulkan_function_error("vkAllocateMemory", result);
+        }
+
+        ASSERT(m_device_memory != VK_NULL_HANDLE);
+
+        m_device = device;
+}
+
+DeviceMemory::~DeviceMemory()
+{
+        destroy();
+}
+
+DeviceMemory::DeviceMemory(DeviceMemory&& from) noexcept
+{
+        move(&from);
+}
+
+DeviceMemory& DeviceMemory::operator=(DeviceMemory&& from) noexcept
+{
+        if (this != &from)
+        {
+                destroy();
+                move(&from);
+        }
+        return *this;
+}
+
+DeviceMemory::operator VkDeviceMemory() const noexcept
+{
+        return m_device_memory;
 }
 }
 

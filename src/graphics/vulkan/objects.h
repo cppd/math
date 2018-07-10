@@ -69,6 +69,7 @@ public:
 
 class Device final
 {
+        VkPhysicalDevice m_physical_device = VK_NULL_HANDLE;
         VkDevice m_device = VK_NULL_HANDLE;
 
         void destroy() noexcept;
@@ -86,6 +87,8 @@ public:
         Device& operator=(Device&&) noexcept;
 
         operator VkDevice() const noexcept;
+
+        uint32_t physical_device_memory_type_index(uint32_t memory_type_bits, VkMemoryPropertyFlags memory_property_flags) const;
 };
 
 class SurfaceKHR final
@@ -324,6 +327,53 @@ public:
         Fence& operator=(Fence&&) noexcept;
 
         operator VkFence() const noexcept;
+};
+
+class Buffer final
+{
+        VkDevice m_device = VK_NULL_HANDLE;
+        VkBuffer m_buffer = VK_NULL_HANDLE;
+        VkDeviceSize m_size = 0;
+
+        void destroy() noexcept;
+        void move(Buffer* from) noexcept;
+
+public:
+        Buffer();
+        Buffer(VkDevice device, const VkBufferCreateInfo& create_info);
+        ~Buffer();
+
+        Buffer(const Buffer&) = delete;
+        Buffer& operator=(const Buffer&) = delete;
+
+        Buffer(Buffer&&) noexcept;
+        Buffer& operator=(Buffer&&) noexcept;
+
+        operator VkBuffer() const noexcept;
+
+        VkDeviceSize size() const noexcept;
+};
+
+class DeviceMemory final
+{
+        VkDevice m_device = VK_NULL_HANDLE;
+        VkDeviceMemory m_device_memory = VK_NULL_HANDLE;
+
+        void destroy() noexcept;
+        void move(DeviceMemory* from) noexcept;
+
+public:
+        DeviceMemory();
+        DeviceMemory(VkDevice device, const VkMemoryAllocateInfo& allocate_info);
+        ~DeviceMemory();
+
+        DeviceMemory(const DeviceMemory&) = delete;
+        DeviceMemory& operator=(const DeviceMemory&) = delete;
+
+        DeviceMemory(DeviceMemory&&) noexcept;
+        DeviceMemory& operator=(DeviceMemory&&) noexcept;
+
+        operator VkDeviceMemory() const noexcept;
 };
 }
 

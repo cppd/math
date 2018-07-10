@@ -18,7 +18,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #version 450
 #extension GL_ARB_separate_shader_objects : enable
 
-const vec2 vertices[3] = vec2[](vec2(0, 0.9), vec2(0.9, -0.9), vec2(-0.9, -0.9));
+layout(location = 0) in vec2 position;
+layout(location = 1) in vec3 color;
+
+layout(location = 0) out vec3 fragment_color;
 
 out gl_PerVertex
 {
@@ -27,5 +30,6 @@ out gl_PerVertex
 
 void main()
 {
-        gl_Position = vec4(vertices[gl_VertexIndex], 0.0, 1.0);
+        gl_Position = vec4(position, 0.0, 1.0);
+        fragment_color = color;
 }

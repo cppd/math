@@ -51,7 +51,9 @@ class SwapChain
 
 public:
         SwapChain(VkSurfaceKHR surface, PhysicalDevice physical_device, VkDevice device,
-                  const std::vector<const vulkan::Shader*>& shaders);
+                  const std::vector<const vulkan::Shader*>& shaders, VkBuffer buffer, uint32_t vertex_count,
+                  const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
+                  const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions);
 
         SwapChain(const SwapChain&) = delete;
         SwapChain(SwapChain&&) = delete;
@@ -86,6 +88,13 @@ class VulkanInstance
         VkQueue m_compute_queue = VK_NULL_HANDLE;
         VkQueue m_presentation_queue = VK_NULL_HANDLE;
 
+        Buffer m_vertex_buffer;
+        DeviceMemory m_vertex_device_memory;
+
+        uint32_t m_vertex_count;
+        std::vector<VkVertexInputBindingDescription> m_vertex_binding_descriptions;
+        std::vector<VkVertexInputAttributeDescription> m_vertex_attribute_descriptions;
+
         std::optional<SwapChain> m_swapchain;
 
         unsigned m_current_frame = 0;
@@ -98,7 +107,10 @@ public:
                        const std::vector<std::string>& required_device_extensions,
                        const std::vector<std::string>& required_validation_layers,
                        const std::function<VkSurfaceKHR(VkInstance)>& create_surface,
-                       const Span<const uint32_t>& vertex_shader_code, const Span<const uint32_t>& fragment_shader_code);
+                       const Span<const uint32_t>& vertex_shader_code, const Span<const uint32_t>& fragment_shader_code,
+                       size_t vertex_data_size, const void* vertex_data, uint32_t vertex_count,
+                       const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
+                       const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions);
 
         ~VulkanInstance();
 

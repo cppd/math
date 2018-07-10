@@ -25,6 +25,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "application/application_name.h"
 #include "com/error.h"
+#include "com/print.h"
+
+#include <cstring>
 
 namespace
 {
@@ -327,16 +330,18 @@ vulkan::PipelineLayout create_pipeline_layout(VkDevice device)
 }
 
 vulkan::Pipeline create_graphics_pipeline(VkDevice device, VkRenderPass render_pass, VkPipelineLayout pipeline_layout,
-                                          VkExtent2D swap_chain_extent, const std::vector<const vulkan::Shader*>& shaders)
+                                          VkExtent2D swap_chain_extent, const std::vector<const vulkan::Shader*>& shaders,
+                                          const std::vector<VkVertexInputBindingDescription>& binding_descriptions,
+                                          const std::vector<VkVertexInputAttributeDescription>& attribute_descriptions)
 {
         std::vector<VkPipelineShaderStageCreateInfo> pipeline_shader_stages = pipeline_shader_stage_create_info(shaders);
 
         VkPipelineVertexInputStateCreateInfo vertex_input_state_info = {};
         vertex_input_state_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-        vertex_input_state_info.vertexBindingDescriptionCount = 0;
-        vertex_input_state_info.pVertexBindingDescriptions = nullptr;
-        vertex_input_state_info.vertexAttributeDescriptionCount = 0;
-        vertex_input_state_info.pVertexAttributeDescriptions = nullptr;
+        vertex_input_state_info.vertexBindingDescriptionCount = binding_descriptions.size();
+        vertex_input_state_info.pVertexBindingDescriptions = binding_descriptions.data();
+        vertex_input_state_info.vertexAttributeDescriptionCount = attribute_descriptions.size();
+        vertex_input_state_info.pVertexAttributeDescriptions = attribute_descriptions.data();
 
         VkPipelineInputAssemblyStateCreateInfo input_assembly_state_info = {};
         input_assembly_state_info.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -482,7 +487,7 @@ vulkan::CommandPool create_command_pool(VkDevice device, uint32_t graphics_famil
 std::vector<VkCommandBuffer> create_command_buffers(VkDevice device, const VkExtent2D& swap_chain_extent,
                                                     VkRenderPass render_pass, VkPipeline pipeline,
                                                     const std::vector<vulkan::Framebuffer>& framebuffers,
-                                                    VkCommandPool command_pool)
+                                                    VkCommandPool command_pool, VkBuffer buffer, uint32_t vertex_count)
 {
         VkResult result;
 
@@ -502,10 +507,10 @@ std::vector<VkCommandBuffer> create_command_buffers(VkDevice device, const VkExt
 
         try
         {
-                VkClearValue clearColor = {};
-                clearColor.color = {{0.0f, 0.0f, 0.0f, 1.0f}};
-                clearColor.depthStencil.depth = 0;
-                clearColor.depthStencil.stencil = 0;
+                VkClearValue clear_color = {};
+                clear_color.color = {{0.0f, 0.0f, 0.0f, 1.0f}};
+                clear_color.depthStencil.depth = 0;
+                clear_color.depthStencil.stencil = 0;
 
                 for (size_t i = 0; i < command_buffers.size(); ++i)
                 {
@@ -527,13 +532,17 @@ std::vector<VkCommandBuffer> create_command_buffers(VkDevice device, const VkExt
                         render_pass_info.renderArea.offset = {0, 0};
                         render_pass_info.renderArea.extent = swap_chain_extent;
                         render_pass_info.clearValueCount = 1;
-                        render_pass_info.pClearValues = &clearColor;
+                        render_pass_info.pClearValues = &clear_color;
 
                         vkCmdBeginRenderPass(command_buffers[i], &render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
 
                         vkCmdBindPipeline(command_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 
-                        vkCmdDraw(command_buffers[i], 3, 1, 0, 0);
+                        VkBuffer vertex_buffers[] = {buffer};
+                        VkDeviceSize offsets[] = {0};
+                        vkCmdBindVertexBuffers(command_buffers[i], 0, 1, vertex_buffers, offsets);
+
+                        vkCmdDraw(command_buffers[i], vertex_count, 1, 0, 0);
 
                         vkCmdEndRenderPass(command_buffers[i]);
 
@@ -580,13 +589,60 @@ VkQueue device_queue(VkDevice device, uint32_t queue_family_index, uint32_t queu
         ASSERT(queue != VK_NULL_HANDLE);
         return queue;
 }
+
+vulkan::Buffer create_vertex_buffer(VkDevice device, VkDeviceSize size)
+{
+        VkBufferCreateInfo create_info = {};
+        create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+        create_info.size = size;
+        create_info.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+        create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+        return vulkan::Buffer(device, create_info);
+}
+
+vulkan::DeviceMemory create_device_memory(const vulkan::Device& device, const vulkan::Buffer& buffer, const void* data)
+{
+        VkMemoryRequirements memory_requirements;
+        vkGetBufferMemoryRequirements(device, buffer, &memory_requirements);
+
+        VkMemoryAllocateInfo allocate_info = {};
+        allocate_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+        allocate_info.allocationSize = memory_requirements.size;
+        allocate_info.memoryTypeIndex = device.physical_device_memory_type_index(
+                memory_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+
+        vulkan::DeviceMemory device_memory(device, allocate_info);
+
+        VkResult result = vkBindBufferMemory(device, buffer, device_memory, 0);
+        if (result != VK_SUCCESS)
+        {
+                vulkan::vulkan_function_error("vkBindBufferMemory", result);
+        }
+
+        void* map_memory_data;
+        vkMapMemory(device, device_memory, 0, buffer.size(), 0, &map_memory_data);
+        std::memcpy(map_memory_data, data, buffer.size());
+        vkUnmapMemory(device, device_memory);
+
+        // vkFlushMappedMemoryRanges, vkInvalidateMappedMemoryRanges
+
+        return device_memory;
+}
 }
 
 namespace vulkan
 {
 SwapChain::SwapChain(VkSurfaceKHR surface, PhysicalDevice physical_device, VkDevice device,
-                     const std::vector<const vulkan::Shader*>& shaders)
+                     const std::vector<const vulkan::Shader*>& shaders, VkBuffer buffer, uint32_t vertex_count,
+                     const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
+                     const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions)
 {
+        if (vertex_count <= 0 || (vertex_count % 3 != 0))
+        {
+                error("Error vertex count (" + to_string(vertex_count) + ") for triangle list primitive topology");
+        }
+
         SwapChainDetails swap_chain_details;
         if (!find_swap_chain_details(surface, physical_device.physical_device, &swap_chain_details))
         {
@@ -617,7 +673,8 @@ SwapChain::SwapChain(VkSurfaceKHR surface, PhysicalDevice physical_device, VkDev
 
         m_render_pass = create_render_pass(device, image_format);
         m_pipeline_layout = create_pipeline_layout(device);
-        m_pipeline = create_graphics_pipeline(device, m_render_pass, m_pipeline_layout, extent, shaders);
+        m_pipeline = create_graphics_pipeline(device, m_render_pass, m_pipeline_layout, extent, shaders,
+                                              vertex_binding_descriptions, vertex_attribute_descriptions);
 
         for (const ImageView& image_view : m_image_views)
         {
@@ -626,7 +683,8 @@ SwapChain::SwapChain(VkSurfaceKHR surface, PhysicalDevice physical_device, VkDev
 
         m_command_pool = create_command_pool(device, physical_device.graphics_family_index);
 
-        m_command_buffers = create_command_buffers(device, extent, m_render_pass, m_pipeline, m_framebuffers, m_command_pool);
+        m_command_buffers = create_command_buffers(device, extent, m_render_pass, m_pipeline, m_framebuffers, m_command_pool,
+                                                   buffer, vertex_count);
 }
 
 VkSwapchainKHR SwapChain::swap_chain() const noexcept
@@ -644,7 +702,10 @@ VulkanInstance::VulkanInstance(int api_version_major, int api_version_minor,
                                const std::vector<std::string>& required_device_extensions,
                                const std::vector<std::string>& required_validation_layers,
                                const std::function<VkSurfaceKHR(VkInstance)>& create_surface,
-                               const Span<const uint32_t>& vertex_shader_code, const Span<const uint32_t>& fragment_shader_code)
+                               const Span<const uint32_t>& vertex_shader_code, const Span<const uint32_t>& fragment_shader_code,
+                               size_t vertex_data_size, const void* vertex_data, uint32_t vertex_count,
+                               const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
+                               const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions)
         : m_instance(create_instance(api_version_major, api_version_minor, required_instance_extensions,
                                      required_validation_layers)),
           m_callback(!required_validation_layers.empty() ? std::make_optional(create_debug_report_callback(m_instance)) :
@@ -667,8 +728,18 @@ VulkanInstance::VulkanInstance(int api_version_major, int api_version_minor,
           //
           m_graphics_queue(device_queue(m_device, m_physical_device.graphics_family_index, 0 /*queue_index*/)),
           m_compute_queue(device_queue(m_device, m_physical_device.compute_family_index, 0 /*queue_index*/)),
-          m_presentation_queue(device_queue(m_device, m_physical_device.presentation_family_index, 0 /*queue_index*/))
+          m_presentation_queue(device_queue(m_device, m_physical_device.presentation_family_index, 0 /*queue_index*/)),
+          //
+          m_vertex_buffer(create_vertex_buffer(m_device, vertex_data_size)),
+          m_vertex_device_memory(create_device_memory(m_device, m_vertex_buffer, vertex_data)),
+          //
+          m_vertex_count(vertex_count),
+          m_vertex_binding_descriptions(vertex_binding_descriptions),
+          m_vertex_attribute_descriptions(vertex_attribute_descriptions)
 {
+        ASSERT(vertex_data_size >= vertex_count);
+        ASSERT((vertex_data_size % vertex_count) == 0);
+
         create_swap_chain();
 }
 
@@ -686,8 +757,10 @@ VulkanInstance::~VulkanInstance()
 
 void VulkanInstance::create_swap_chain()
 {
-        m_swapchain.emplace(m_surface, m_physical_device, m_device,
-                            std::vector<const vulkan::Shader*>({&m_vertex_shader, &m_fragment_shader}));
+        std::vector<const vulkan::Shader*> shaders({&m_vertex_shader, &m_fragment_shader});
+
+        m_swapchain.emplace(m_surface, m_physical_device, m_device, shaders, m_vertex_buffer, m_vertex_count,
+                            m_vertex_binding_descriptions, m_vertex_attribute_descriptions);
 }
 
 void VulkanInstance::recreate_swap_chain()
