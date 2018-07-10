@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #if defined(VULKAN_FOUND) && defined(GLFW_FOUND)
 
+#include <array>
 #include <string>
 #include <vector>
 
@@ -33,7 +34,7 @@ class VulkanWindow
         GLFWwindow* m_window = nullptr;
 
 public:
-        VulkanWindow(int width, int height, const std::string& title);
+        VulkanWindow(const std::array<int, 2>& size, const std::string& title);
         ~VulkanWindow();
 
         operator GLFWwindow*() const;
@@ -41,6 +42,8 @@ public:
         VkSurfaceKHR create_surface(VkInstance instance);
 
         static std::vector<std::string> instance_extensions();
+
+        static std::array<int, 2> screen_size();
 
         VulkanWindow(const VulkanWindow&) = delete;
         VulkanWindow& operator=(const VulkanWindow&) = delete;

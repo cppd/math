@@ -21,12 +21,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/error.h"
 
-VulkanWindow::VulkanWindow(int width, int height, const std::string& title)
+VulkanWindow::VulkanWindow(const std::array<int, 2>& size, const std::string& title)
 {
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
         // glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
-        GLFWwindow* window = glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);
+        GLFWwindow* window = glfwCreateWindow(size[0], size[1], title.c_str(), nullptr, nullptr);
         if (!window)
         {
                 error("Failed to create GLFW window");
@@ -77,6 +77,23 @@ std::vector<std::string> VulkanWindow::instance_extensions()
         }
 
         return std::vector<std::string>(extensions, extensions + count);
+}
+
+std::array<int, 2> VulkanWindow::screen_size()
+{
+        GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+        if (!monitor)
+        {
+                error("Failed to find GLFW monitor");
+        }
+
+        const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+        if (!mode)
+        {
+                error("Failed to find GLFW monitor video mode");
+        }
+
+        return {mode->width, mode->height};
 }
 
 #endif

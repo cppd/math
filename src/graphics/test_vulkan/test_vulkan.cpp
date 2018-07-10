@@ -27,10 +27,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/vulkan/window.h"
 
 #include <array>
+#include <cmath>
 #include <thread>
 
-constexpr int WINDOW_WIDTH = 1024;
-constexpr int WINDOW_HEIGHT = 576;
+constexpr double WINDOW_SIZE_COEF = 0.5;
 
 // clang-format off
 constexpr uint32_t vertex_shader[]
@@ -45,6 +45,16 @@ constexpr uint32_t fragment_shader[]
 
 namespace
 {
+std::array<int, 2> window_size()
+{
+        std::array<int, 2> size = VulkanWindow::screen_size();
+
+        size[0] = std::round(size[0] * WINDOW_SIZE_COEF);
+        size[1] = std::round(size[1] * WINDOW_SIZE_COEF);
+
+        return size;
+}
+
 struct Vertex
 {
         vec2f position;
@@ -109,7 +119,7 @@ void test_vulkan_thread()
 
                 LOG(vulkan::overview());
 
-                VulkanWindow window(WINDOW_WIDTH, WINDOW_HEIGHT, "Vulkan Window");
+                VulkanWindow window(window_size(), "Vulkan Window");
 
                 vulkan::VulkanInstance vulkan_instance(
                         1, 0, instance_extensions + window_instance_extensions, device_extensions, validation_layers,
