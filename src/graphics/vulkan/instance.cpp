@@ -493,79 +493,58 @@ vulkan::CommandPool create_transient_command_pool(VkDevice device, uint32_t queu
         return vulkan::CommandPool(device, create_info);
 }
 
-std::vector<VkCommandBuffer> create_command_buffers(VkDevice device, const VkExtent2D& swap_chain_extent,
-                                                    VkRenderPass render_pass, VkPipeline pipeline,
-                                                    const std::vector<vulkan::Framebuffer>& framebuffers,
-                                                    VkCommandPool command_pool, VkBuffer buffer, uint32_t vertex_count)
+vulkan::CommandBuffers create_command_buffers(VkDevice device, const VkExtent2D& swap_chain_extent, VkRenderPass render_pass,
+                                              VkPipeline pipeline, const std::vector<vulkan::Framebuffer>& framebuffers,
+                                              VkCommandPool command_pool, VkBuffer buffer, uint32_t vertex_count)
 {
         VkResult result;
 
-        std::vector<VkCommandBuffer> command_buffers(framebuffers.size());
+        vulkan::CommandBuffers command_buffers(device, command_pool, framebuffers.size());
 
-        VkCommandBufferAllocateInfo allocate_info = {};
-        allocate_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-        allocate_info.commandPool = command_pool;
-        allocate_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-        allocate_info.commandBufferCount = command_buffers.size();
+        VkClearValue clear_color = {};
+        clear_color.color = {{0.0f, 0.0f, 0.0f, 1.0f}};
+        clear_color.depthStencil.depth = 0;
+        clear_color.depthStencil.stencil = 0;
 
-        result = vkAllocateCommandBuffers(device, &allocate_info, command_buffers.data());
-        if (result != VK_SUCCESS)
+        for (uint32_t i = 0; i < command_buffers.count(); ++i)
         {
-                vulkan::vulkan_function_error("vkAllocateCommandBuffers", result);
-        }
+                VkCommandBufferBeginInfo command_buffer_info = {};
+                command_buffer_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+                command_buffer_info.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+                // command_buffer_info.pInheritanceInfo = nullptr;
 
-        try
-        {
-                VkClearValue clear_color = {};
-                clear_color.color = {{0.0f, 0.0f, 0.0f, 1.0f}};
-                clear_color.depthStencil.depth = 0;
-                clear_color.depthStencil.stencil = 0;
-
-                for (size_t i = 0; i < command_buffers.size(); ++i)
+                result = vkBeginCommandBuffer(command_buffers[i], &command_buffer_info);
+                if (result != VK_SUCCESS)
                 {
-                        VkCommandBufferBeginInfo command_buffer_info = {};
-                        command_buffer_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-                        command_buffer_info.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
-                        // command_buffer_info.pInheritanceInfo = nullptr;
-
-                        result = vkBeginCommandBuffer(command_buffers[i], &command_buffer_info);
-                        if (result != VK_SUCCESS)
-                        {
-                                vulkan::vulkan_function_error("vkBeginCommandBuffer", result);
-                        }
-
-                        VkRenderPassBeginInfo render_pass_info = {};
-                        render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-                        render_pass_info.renderPass = render_pass;
-                        render_pass_info.framebuffer = framebuffers[i];
-                        render_pass_info.renderArea.offset = {0, 0};
-                        render_pass_info.renderArea.extent = swap_chain_extent;
-                        render_pass_info.clearValueCount = 1;
-                        render_pass_info.pClearValues = &clear_color;
-
-                        vkCmdBeginRenderPass(command_buffers[i], &render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
-
-                        vkCmdBindPipeline(command_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
-
-                        VkBuffer vertex_buffers[] = {buffer};
-                        VkDeviceSize offsets[] = {0};
-                        vkCmdBindVertexBuffers(command_buffers[i], 0, 1, vertex_buffers, offsets);
-
-                        vkCmdDraw(command_buffers[i], vertex_count, 1, 0, 0);
-
-                        vkCmdEndRenderPass(command_buffers[i]);
-
-                        result = vkEndCommandBuffer(command_buffers[i]);
-                        if (result != VK_SUCCESS)
-                        {
-                                vulkan::vulkan_function_error("vkEndCommandBuffer", result);
-                        }
+                        vulkan::vulkan_function_error("vkBeginCommandBuffer", result);
                 }
-        }
-        catch (...)
-        {
-                vkFreeCommandBuffers(device, command_pool, command_buffers.size(), command_buffers.data());
-                throw;
+
+                VkRenderPassBeginInfo render_pass_info = {};
+                render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+                render_pass_info.renderPass = render_pass;
+                render_pass_info.framebuffer = framebuffers[i];
+                render_pass_info.renderArea.offset = {0, 0};
+                render_pass_info.renderArea.extent = swap_chain_extent;
+                render_pass_info.clearValueCount = 1;
+                render_pass_info.pClearValues = &clear_color;
+
+                vkCmdBeginRenderPass(command_buffers[i], &render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
+
+                vkCmdBindPipeline(command_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+
+                VkBuffer vertex_buffers[] = {buffer};
+                VkDeviceSize offsets[] = {0};
+                vkCmdBindVertexBuffers(command_buffers[i], 0, 1, vertex_buffers, offsets);
+
+                vkCmdDraw(command_buffers[i], vertex_count, 1, 0, 0);
+
+                vkCmdEndRenderPass(command_buffers[i]);
+
+                result = vkEndCommandBuffer(command_buffers[i]);
+                if (result != VK_SUCCESS)
+                {
+                        vulkan::vulkan_function_error("vkEndCommandBuffer", result);
+                }
         }
 
         return command_buffers;
@@ -602,7 +581,7 @@ VkQueue device_queue(VkDevice device, uint32_t queue_family_index, uint32_t queu
 
 namespace vulkan
 {
-SwapChain::SwapChain(VkSurfaceKHR surface, PhysicalDevice physical_device, VkDevice device,
+SwapChain::SwapChain(VkSurfaceKHR surface, PhysicalDevice physical_device, VkDevice device, VkCommandPool command_pool,
                      const std::vector<const vulkan::Shader*>& shaders, VkBuffer buffer, uint32_t vertex_count,
                      const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
                      const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions)
@@ -650,9 +629,7 @@ SwapChain::SwapChain(VkSurfaceKHR surface, PhysicalDevice physical_device, VkDev
                 m_framebuffers.push_back(create_framebuffer(device, m_render_pass, image_view, extent));
         }
 
-        m_command_pool = create_command_pool(device, physical_device.graphics_family_index);
-
-        m_command_buffers = create_command_buffers(device, extent, m_render_pass, m_pipeline, m_framebuffers, m_command_pool,
+        m_command_buffers = create_command_buffers(device, extent, m_render_pass, m_pipeline, m_framebuffers, command_pool,
                                                    buffer, vertex_count);
 }
 
@@ -661,9 +638,9 @@ VkSwapchainKHR SwapChain::swap_chain() const noexcept
         return m_swap_chain;
 }
 
-const std::vector<VkCommandBuffer>& SwapChain::command_buffers() const noexcept
+const VkCommandBuffer& SwapChain::command_buffer(uint32_t index) const noexcept
 {
-        return m_command_buffers;
+        return m_command_buffers[index];
 }
 
 VulkanInstance::VulkanInstance(int api_version_major, int api_version_minor,
@@ -695,16 +672,18 @@ VulkanInstance::VulkanInstance(int api_version_major, int api_version_minor,
           m_render_finished_semaphores(create_semaphores(m_device, MAX_FRAMES_IN_FLIGHT)),
           m_in_flight_fences(create_fences(m_device, MAX_FRAMES_IN_FLIGHT, true /*signaled_state*/)),
           //
+          m_graphics_command_pool(create_command_pool(m_device, m_physical_device.graphics_family_index)),
           m_graphics_queue(device_queue(m_device, m_physical_device.graphics_family_index, 0 /*queue_index*/)),
+          //
           m_compute_queue(device_queue(m_device, m_physical_device.compute_family_index, 0 /*queue_index*/)),
           m_presentation_queue(device_queue(m_device, m_physical_device.presentation_family_index, 0 /*queue_index*/)),
           //
           m_transient_command_pool(create_transient_command_pool(m_device, m_physical_device.graphics_family_index)),
-          m_transient_queue(device_queue(m_device, m_physical_device.graphics_family_index, 0 /*queue_index*/)),
+          m_transfer_queue(device_queue(m_device, m_physical_device.graphics_family_index, 0 /*queue_index*/)),
           m_vertex_count(vertex_count),
           m_vertex_binding_descriptions(vertex_binding_descriptions),
           m_vertex_attribute_descriptions(vertex_attribute_descriptions),
-          m_vertex_buffer(m_device, m_transient_command_pool, m_transient_queue, vertex_data_size, vertex_data)
+          m_vertex_buffer(m_device, m_transient_command_pool, m_transfer_queue, vertex_data_size, vertex_data)
 {
         ASSERT(vertex_data_size >= vertex_count);
         ASSERT((vertex_data_size % vertex_count) == 0);
@@ -730,8 +709,8 @@ void VulkanInstance::create_swap_chain()
 
         std::vector<const vulkan::Shader*> shaders({&m_vertex_shader, &m_fragment_shader});
 
-        m_swapchain.emplace(m_surface, m_physical_device, m_device, shaders, m_vertex_buffer, m_vertex_count,
-                            m_vertex_binding_descriptions, m_vertex_attribute_descriptions);
+        m_swapchain.emplace(m_surface, m_physical_device, m_device, m_graphics_command_pool, shaders, m_vertex_buffer,
+                            m_vertex_count, m_vertex_binding_descriptions, m_vertex_attribute_descriptions);
 }
 
 void VulkanInstance::recreate_swap_chain()
@@ -792,9 +771,8 @@ void VulkanInstance::draw_frame()
         submit_info.pWaitSemaphores = wait_semaphores;
         submit_info.pWaitDstStageMask = wait_stages;
 
-        ASSERT(image_index < m_swapchain->command_buffers().size());
         submit_info.commandBufferCount = 1;
-        submit_info.pCommandBuffers = &m_swapchain->command_buffers()[image_index];
+        submit_info.pCommandBuffers = &m_swapchain->command_buffer(image_index);
 
         VkSemaphore signal_semaphores[] = {m_render_finished_semaphores[m_current_frame]};
         submit_info.signalSemaphoreCount = 1;

@@ -46,12 +46,10 @@ class SwapChain
 
         std::vector<Framebuffer> m_framebuffers;
 
-        CommandPool m_command_pool;
-
-        std::vector<VkCommandBuffer> m_command_buffers;
+        CommandBuffers m_command_buffers;
 
 public:
-        SwapChain(VkSurfaceKHR surface, PhysicalDevice physical_device, VkDevice device,
+        SwapChain(VkSurfaceKHR surface, PhysicalDevice physical_device, VkDevice device, VkCommandPool command_pool,
                   const std::vector<const vulkan::Shader*>& shaders, VkBuffer buffer, uint32_t vertex_count,
                   const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
                   const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions);
@@ -62,7 +60,7 @@ public:
         SwapChain& operator=(SwapChain&&) = delete;
 
         VkSwapchainKHR swap_chain() const noexcept;
-        const std::vector<VkCommandBuffer>& command_buffers() const noexcept;
+        const VkCommandBuffer& command_buffer(uint32_t index) const noexcept;
 };
 
 class VulkanInstance
@@ -85,12 +83,14 @@ class VulkanInstance
         std::vector<Semaphore> m_render_finished_semaphores;
         std::vector<Fence> m_in_flight_fences;
 
+        CommandPool m_graphics_command_pool;
         VkQueue m_graphics_queue = VK_NULL_HANDLE;
+
         VkQueue m_compute_queue = VK_NULL_HANDLE;
         VkQueue m_presentation_queue = VK_NULL_HANDLE;
 
         CommandPool m_transient_command_pool;
-        VkQueue m_transient_queue = VK_NULL_HANDLE;
+        VkQueue m_transfer_queue = VK_NULL_HANDLE;
         uint32_t m_vertex_count;
         std::vector<VkVertexInputBindingDescription> m_vertex_binding_descriptions;
         std::vector<VkVertexInputAttributeDescription> m_vertex_attribute_descriptions;

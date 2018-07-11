@@ -23,6 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/error.h"
 
+#include <algorithm>
+
 namespace vulkan
 {
 void Instance::destroy() noexcept
@@ -1021,6 +1023,166 @@ DeviceMemory& DeviceMemory::operator=(DeviceMemory&& from) noexcept
 DeviceMemory::operator VkDeviceMemory() const noexcept
 {
         return m_device_memory;
+}
+
+//
+
+void CommandBuffer::destroy() noexcept
+{
+        if (m_command_buffer != VK_NULL_HANDLE)
+        {
+                ASSERT(m_device != VK_NULL_HANDLE);
+                ASSERT(m_command_pool != VK_NULL_HANDLE);
+
+                vkFreeCommandBuffers(m_device, m_command_pool, 1, &m_command_buffer);
+        }
+}
+
+void CommandBuffer::move(CommandBuffer* from) noexcept
+{
+        m_device = from->m_device;
+        m_command_pool = from->m_command_pool;
+        m_command_buffer = from->m_command_buffer;
+        from->m_device = VK_NULL_HANDLE;
+        from->m_command_pool = VK_NULL_HANDLE;
+        from->m_command_buffer = VK_NULL_HANDLE;
+}
+
+CommandBuffer::CommandBuffer(VkDevice device, VkCommandPool command_pool)
+{
+        VkCommandBufferAllocateInfo allocate_info = {};
+        allocate_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        allocate_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        allocate_info.commandPool = command_pool;
+        allocate_info.commandBufferCount = 1;
+
+        //
+
+        VkResult result = vkAllocateCommandBuffers(device, &allocate_info, &m_command_buffer);
+        if (result != VK_SUCCESS)
+        {
+                vulkan::vulkan_function_error("vkAllocateCommandBuffers", result);
+        }
+
+        ASSERT(m_command_buffer != VK_NULL_HANDLE);
+
+        m_device = device;
+        m_command_pool = command_pool;
+}
+
+CommandBuffer::~CommandBuffer()
+{
+        destroy();
+}
+
+CommandBuffer::CommandBuffer(CommandBuffer&& from) noexcept
+{
+        move(&from);
+}
+
+CommandBuffer& CommandBuffer::operator=(CommandBuffer&& from) noexcept
+{
+        if (this != &from)
+        {
+                destroy();
+                move(&from);
+        }
+        return *this;
+}
+
+CommandBuffer::operator VkCommandBuffer() const noexcept
+{
+        return m_command_buffer;
+}
+
+const VkCommandBuffer* CommandBuffer::data() const noexcept
+{
+        return &m_command_buffer;
+}
+
+//
+
+void CommandBuffers::destroy() noexcept
+{
+        if (m_command_buffers.size() > 0)
+        {
+                ASSERT(m_device != VK_NULL_HANDLE);
+                ASSERT(m_command_pool != VK_NULL_HANDLE);
+
+                vkFreeCommandBuffers(m_device, m_command_pool, m_command_buffers.size(), m_command_buffers.data());
+        }
+}
+
+void CommandBuffers::move(CommandBuffers* from) noexcept
+{
+        m_device = from->m_device;
+        m_command_pool = from->m_command_pool;
+        m_command_buffers = std::move(from->m_command_buffers);
+        from->m_device = VK_NULL_HANDLE;
+        from->m_command_pool = VK_NULL_HANDLE;
+        from->m_command_buffers = std::vector<VkCommandBuffer>();
+}
+
+CommandBuffers::CommandBuffers() = default;
+
+CommandBuffers::CommandBuffers(VkDevice device, VkCommandPool command_pool, uint32_t count) : m_command_buffers(count)
+{
+        VkCommandBufferAllocateInfo allocate_info = {};
+        allocate_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        allocate_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        allocate_info.commandPool = command_pool;
+        allocate_info.commandBufferCount = count;
+
+        //
+
+        VkResult result = vkAllocateCommandBuffers(device, &allocate_info, m_command_buffers.data());
+        if (result != VK_SUCCESS)
+        {
+                vulkan::vulkan_function_error("vkAllocateCommandBuffers", result);
+        }
+
+        ASSERT(std::all_of(m_command_buffers.cbegin(), m_command_buffers.cend(),
+                           [](const VkCommandBuffer& command_buffer) { return command_buffer != VK_NULL_HANDLE; }));
+
+        m_device = device;
+        m_command_pool = command_pool;
+}
+
+CommandBuffers::~CommandBuffers()
+{
+        destroy();
+}
+
+CommandBuffers::CommandBuffers(CommandBuffers&& from) noexcept
+{
+        move(&from);
+}
+
+CommandBuffers& CommandBuffers::operator=(CommandBuffers&& from) noexcept
+{
+        if (this != &from)
+        {
+                destroy();
+                move(&from);
+        }
+        return *this;
+}
+
+const VkCommandBuffer& CommandBuffers::operator[](uint32_t index) const noexcept
+{
+        ASSERT(index < m_command_buffers.size());
+
+        return m_command_buffers[index];
+}
+
+uint32_t CommandBuffers::count() const noexcept
+{
+        return m_command_buffers.size();
+}
+
+const VkCommandBuffer* CommandBuffers::data() const noexcept
+{
+        return m_command_buffers.data();
 }
 }
 

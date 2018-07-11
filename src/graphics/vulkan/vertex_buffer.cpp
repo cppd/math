@@ -81,67 +81,46 @@ void buffer_copy(VkDevice device, VkCommandPool command_pool, VkQueue queue, VkB
 
         VkResult result;
 
-        VkCommandBufferAllocateInfo allocate_info = {};
-        allocate_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-        allocate_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-        allocate_info.commandPool = command_pool;
-        allocate_info.commandBufferCount = 1;
+        vulkan::CommandBuffer command_buffer(device, command_pool);
 
-        VkCommandBuffer command_buffer;
-        result = vkAllocateCommandBuffers(device, &allocate_info, &command_buffer);
+        VkCommandBufferBeginInfo command_buffer_info = {};
+        command_buffer_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        command_buffer_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+        result = vkBeginCommandBuffer(command_buffer, &command_buffer_info);
         if (result != VK_SUCCESS)
         {
-                vulkan::vulkan_function_error("vkAllocateCommandBuffers", result);
+                vulkan::vulkan_function_error("vkBeginCommandBuffer", result);
         }
 
-        try
+        VkBufferCopy copy = {};
+        // copy.srcOffset = 0;
+        // copy.dstOffset = 0;
+        copy.size = size;
+        vkCmdCopyBuffer(command_buffer, src_buffer, dst_buffer, 1, &copy);
+
+        result = vkEndCommandBuffer(command_buffer);
+        if (result != VK_SUCCESS)
         {
-                VkCommandBufferBeginInfo command_buffer_info = {};
-                command_buffer_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-                command_buffer_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-
-                result = vkBeginCommandBuffer(command_buffer, &command_buffer_info);
-                if (result != VK_SUCCESS)
-                {
-                        vulkan::vulkan_function_error("vkBeginCommandBuffer", result);
-                }
-
-                VkBufferCopy copy = {};
-                // copy.srcOffset = 0;
-                // copy.dstOffset = 0;
-                copy.size = size;
-                vkCmdCopyBuffer(command_buffer, src_buffer, dst_buffer, 1, &copy);
-
-                result = vkEndCommandBuffer(command_buffer);
-                if (result != VK_SUCCESS)
-                {
-                        vulkan::vulkan_function_error("vkEndCommandBuffer", result);
-                }
-
-                VkSubmitInfo submit_info = {};
-                submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-                submit_info.commandBufferCount = 1;
-                submit_info.pCommandBuffers = &command_buffer;
-
-                result = vkQueueSubmit(queue, 1, &submit_info, NO_FENCE);
-                if (result != VK_SUCCESS)
-                {
-                        vulkan::vulkan_function_error("vkQueueSubmit", result);
-                }
-
-                result = vkQueueWaitIdle(queue);
-                if (result != VK_SUCCESS)
-                {
-                        vulkan::vulkan_function_error("vkQueueWaitIdle", result);
-                }
+                vulkan::vulkan_function_error("vkEndCommandBuffer", result);
         }
-        catch (...)
+
+        VkSubmitInfo submit_info = {};
+        submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        submit_info.commandBufferCount = 1;
+        submit_info.pCommandBuffers = command_buffer.data();
+
+        result = vkQueueSubmit(queue, 1, &submit_info, NO_FENCE);
+        if (result != VK_SUCCESS)
         {
-                vkFreeCommandBuffers(device, command_pool, 1, &command_buffer);
-                throw;
+                vulkan::vulkan_function_error("vkQueueSubmit", result);
         }
 
-        vkFreeCommandBuffers(device, command_pool, 1, &command_buffer);
+        result = vkQueueWaitIdle(queue);
+        if (result != VK_SUCCESS)
+        {
+                vulkan::vulkan_function_error("vkQueueWaitIdle", result);
+        }
 }
 }
 

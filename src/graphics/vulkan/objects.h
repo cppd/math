@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/span.h"
 
 #include <functional>
+#include <vector>
 #include <vulkan/vulkan.h>
 
 namespace vulkan
@@ -371,6 +372,56 @@ public:
         DeviceMemory& operator=(DeviceMemory&&) noexcept;
 
         operator VkDeviceMemory() const noexcept;
+};
+
+class CommandBuffer
+{
+        VkDevice m_device = VK_NULL_HANDLE;
+        VkCommandPool m_command_pool = VK_NULL_HANDLE;
+        VkCommandBuffer m_command_buffer = VK_NULL_HANDLE;
+
+        void destroy() noexcept;
+        void move(CommandBuffer* from) noexcept;
+
+public:
+        CommandBuffer(VkDevice device, VkCommandPool command_pool);
+        ~CommandBuffer();
+
+        CommandBuffer(const CommandBuffer&) = delete;
+        CommandBuffer& operator=(const CommandBuffer&) = delete;
+
+        CommandBuffer(CommandBuffer&&) noexcept;
+        CommandBuffer& operator=(CommandBuffer&&) noexcept;
+
+        operator VkCommandBuffer() const noexcept;
+
+        const VkCommandBuffer* data() const noexcept;
+};
+
+class CommandBuffers
+{
+        VkDevice m_device = VK_NULL_HANDLE;
+        VkCommandPool m_command_pool = VK_NULL_HANDLE;
+        std::vector<VkCommandBuffer> m_command_buffers;
+
+        void destroy() noexcept;
+        void move(CommandBuffers* from) noexcept;
+
+public:
+        CommandBuffers();
+        CommandBuffers(VkDevice device, VkCommandPool command_pool, uint32_t count);
+        ~CommandBuffers();
+
+        CommandBuffers(const CommandBuffers&) = delete;
+        CommandBuffers& operator=(const CommandBuffers&) = delete;
+
+        CommandBuffers(CommandBuffers&&) noexcept;
+        CommandBuffers& operator=(CommandBuffers&&) noexcept;
+
+        const VkCommandBuffer& operator[](uint32_t index) const noexcept;
+
+        uint32_t count() const noexcept;
+        const VkCommandBuffer* data() const noexcept;
 };
 }
 
