@@ -919,10 +919,8 @@ void Buffer::move(Buffer* from) noexcept
 {
         m_device = from->m_device;
         m_buffer = from->m_buffer;
-        m_size = from->m_size;
         from->m_device = VK_NULL_HANDLE;
         from->m_buffer = VK_NULL_HANDLE;
-        from->m_size = 0;
 }
 
 Buffer::Buffer() = default;
@@ -938,7 +936,6 @@ Buffer::Buffer(VkDevice device, const VkBufferCreateInfo& create_info)
         ASSERT(m_buffer != VK_NULL_HANDLE);
 
         m_device = device;
-        m_size = create_info.size;
 }
 
 Buffer::~Buffer()
@@ -964,11 +961,6 @@ Buffer& Buffer::operator=(Buffer&& from) noexcept
 Buffer::operator VkBuffer() const noexcept
 {
         return m_buffer;
-}
-
-VkDeviceSize Buffer::size() const noexcept
-{
-        return m_size;
 }
 
 //

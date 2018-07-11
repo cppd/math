@@ -474,12 +474,21 @@ vulkan::Framebuffer create_framebuffer(VkDevice device, VkRenderPass render_pass
         return vulkan::Framebuffer(device, create_info);
 }
 
-vulkan::CommandPool create_command_pool(VkDevice device, uint32_t graphics_family_index)
+vulkan::CommandPool create_command_pool(VkDevice device, uint32_t queue_family_index)
 {
         VkCommandPoolCreateInfo create_info = {};
         create_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-        create_info.queueFamilyIndex = graphics_family_index;
-        // create_info.flags = 0;
+        create_info.queueFamilyIndex = queue_family_index;
+
+        return vulkan::CommandPool(device, create_info);
+}
+
+vulkan::CommandPool create_transient_command_pool(VkDevice device, uint32_t queue_family_index)
+{
+        VkCommandPoolCreateInfo create_info = {};
+        create_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+        create_info.queueFamilyIndex = queue_family_index;
+        create_info.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT;
 
         return vulkan::CommandPool(device, create_info);
 }
@@ -589,46 +598,6 @@ VkQueue device_queue(VkDevice device, uint32_t queue_family_index, uint32_t queu
         ASSERT(queue != VK_NULL_HANDLE);
         return queue;
 }
-
-vulkan::Buffer create_vertex_buffer(VkDevice device, VkDeviceSize size)
-{
-        VkBufferCreateInfo create_info = {};
-        create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-        create_info.size = size;
-        create_info.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-        create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-
-        return vulkan::Buffer(device, create_info);
-}
-
-vulkan::DeviceMemory create_device_memory(const vulkan::Device& device, const vulkan::Buffer& buffer, const void* data)
-{
-        VkMemoryRequirements memory_requirements;
-        vkGetBufferMemoryRequirements(device, buffer, &memory_requirements);
-
-        VkMemoryAllocateInfo allocate_info = {};
-        allocate_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-        allocate_info.allocationSize = memory_requirements.size;
-        allocate_info.memoryTypeIndex = device.physical_device_memory_type_index(
-                memory_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-
-        vulkan::DeviceMemory device_memory(device, allocate_info);
-
-        VkResult result = vkBindBufferMemory(device, buffer, device_memory, 0);
-        if (result != VK_SUCCESS)
-        {
-                vulkan::vulkan_function_error("vkBindBufferMemory", result);
-        }
-
-        void* map_memory_data;
-        vkMapMemory(device, device_memory, 0, buffer.size(), 0, &map_memory_data);
-        std::memcpy(map_memory_data, data, buffer.size());
-        vkUnmapMemory(device, device_memory);
-
-        // vkFlushMappedMemoryRanges, vkInvalidateMappedMemoryRanges
-
-        return device_memory;
-}
 }
 
 namespace vulkan
@@ -730,12 +699,12 @@ VulkanInstance::VulkanInstance(int api_version_major, int api_version_minor,
           m_compute_queue(device_queue(m_device, m_physical_device.compute_family_index, 0 /*queue_index*/)),
           m_presentation_queue(device_queue(m_device, m_physical_device.presentation_family_index, 0 /*queue_index*/)),
           //
-          m_vertex_buffer(create_vertex_buffer(m_device, vertex_data_size)),
-          m_vertex_device_memory(create_device_memory(m_device, m_vertex_buffer, vertex_data)),
-          //
+          m_transient_command_pool(create_transient_command_pool(m_device, m_physical_device.graphics_family_index)),
+          m_transient_queue(device_queue(m_device, m_physical_device.graphics_family_index, 0 /*queue_index*/)),
           m_vertex_count(vertex_count),
           m_vertex_binding_descriptions(vertex_binding_descriptions),
-          m_vertex_attribute_descriptions(vertex_attribute_descriptions)
+          m_vertex_attribute_descriptions(vertex_attribute_descriptions),
+          m_vertex_buffer(m_device, m_transient_command_pool, m_transient_queue, vertex_data_size, vertex_data)
 {
         ASSERT(vertex_data_size >= vertex_count);
         ASSERT((vertex_data_size % vertex_count) == 0);
@@ -757,6 +726,8 @@ VulkanInstance::~VulkanInstance()
 
 void VulkanInstance::create_swap_chain()
 {
+        ASSERT(m_vertex_buffer != VK_NULL_HANDLE);
+
         std::vector<const vulkan::Shader*> shaders({&m_vertex_shader, &m_fragment_shader});
 
         m_swapchain.emplace(m_surface, m_physical_device, m_device, shaders, m_vertex_buffer, m_vertex_count,

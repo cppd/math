@@ -333,7 +333,6 @@ class Buffer final
 {
         VkDevice m_device = VK_NULL_HANDLE;
         VkBuffer m_buffer = VK_NULL_HANDLE;
-        VkDeviceSize m_size = 0;
 
         void destroy() noexcept;
         void move(Buffer* from) noexcept;
@@ -350,8 +349,6 @@ public:
         Buffer& operator=(Buffer&&) noexcept;
 
         operator VkBuffer() const noexcept;
-
-        VkDeviceSize size() const noexcept;
 };
 
 class DeviceMemory final

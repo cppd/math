@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "physical_device.h"
 #include "shader.h"
+#include "vertex_buffer.h"
 
 #include "com/span.h"
 #include "graphics/vulkan/objects.h"
@@ -88,12 +89,12 @@ class VulkanInstance
         VkQueue m_compute_queue = VK_NULL_HANDLE;
         VkQueue m_presentation_queue = VK_NULL_HANDLE;
 
-        Buffer m_vertex_buffer;
-        DeviceMemory m_vertex_device_memory;
-
+        CommandPool m_transient_command_pool;
+        VkQueue m_transient_queue = VK_NULL_HANDLE;
         uint32_t m_vertex_count;
         std::vector<VkVertexInputBindingDescription> m_vertex_binding_descriptions;
         std::vector<VkVertexInputAttributeDescription> m_vertex_attribute_descriptions;
+        VertexBufferWithDeviceLocalMemory m_vertex_buffer;
 
         std::optional<SwapChain> m_swapchain;
 
