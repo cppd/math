@@ -26,43 +26,64 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace
 {
-bool find_family_indices(VkSurfaceKHR surface, VkPhysicalDevice device, uint32_t* graphics_family_index,
-                         uint32_t* compute_family_index, uint32_t* presentation_family_index)
+bool find_graphics_family(const std::vector<VkQueueFamilyProperties>& queue_families, uint32_t* family_index)
 {
-        uint32_t index = 0;
-
-        uint32_t graphics = 0;
-        uint32_t compute = 0;
-        uint32_t presentation = 0;
-
-        bool graphics_found = false;
-        bool compute_found = false;
-        bool presentation_found = false;
-
-        for (const VkQueueFamilyProperties& p : vulkan::queue_families(device))
+        for (uint32_t i = 0; i < queue_families.size(); ++i)
         {
-                if (p.queueCount < 1)
-                {
-                        continue;
-                }
+                const VkQueueFamilyProperties& p = queue_families[i];
 
-                if (!graphics_found && (p.queueFlags & VK_QUEUE_GRAPHICS_BIT))
+                if (p.queueCount >= 1 && (p.queueFlags & VK_QUEUE_GRAPHICS_BIT))
                 {
-                        graphics_found = true;
-                        graphics = index;
+                        *family_index = i;
+                        return true;
                 }
+        }
+        return false;
+}
 
-                if (!compute_found && (p.queueFlags & VK_QUEUE_COMPUTE_BIT))
+bool find_compute_family(const std::vector<VkQueueFamilyProperties>& queue_families, uint32_t* family_index)
+{
+        for (uint32_t i = 0; i < queue_families.size(); ++i)
+        {
+                const VkQueueFamilyProperties& p = queue_families[i];
+
+                if (p.queueCount >= 1 && (p.queueFlags & VK_QUEUE_COMPUTE_BIT))
                 {
-                        compute_found = true;
-                        compute = index;
+                        *family_index = i;
+                        return true;
                 }
+        }
+        return false;
+}
 
-                if (!presentation_found)
+bool find_transfer_family(const std::vector<VkQueueFamilyProperties>& queue_families, uint32_t* family_index)
+{
+        for (uint32_t i = 0; i < queue_families.size(); ++i)
+        {
+                const VkQueueFamilyProperties& p = queue_families[i];
+
+                if (p.queueCount >= 1 && (p.queueFlags & VK_QUEUE_TRANSFER_BIT))
+                {
+                        if (!(p.queueFlags & VK_QUEUE_GRAPHICS_BIT) && !(p.queueFlags & VK_QUEUE_COMPUTE_BIT))
+                        {
+                                *family_index = i;
+                                return true;
+                        }
+                }
+        }
+        return false;
+}
+
+bool find_presentation_family(VkSurfaceKHR surface, VkPhysicalDevice device,
+                              const std::vector<VkQueueFamilyProperties>& queue_families, uint32_t* family_index)
+{
+        for (uint32_t i = 0; i < queue_families.size(); ++i)
+        {
+                if (queue_families[i].queueCount >= 1)
                 {
                         VkBool32 presentation_support;
 
-                        VkResult result = vkGetPhysicalDeviceSurfaceSupportKHR(device, index, surface, &presentation_support);
+                        VkResult result = vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &presentation_support);
                         if (result != VK_SUCCESS)
                         {
                                 vulkan::vulkan_function_error("vkGetPhysicalDeviceSurfaceSupportKHR", result);
@@ -70,23 +91,11 @@ bool find_family_indices(VkSurfaceKHR surface, VkPhysicalDevice device, uint32_t
 
                         if (presentation_support == VK_TRUE)
                         {
-                                presentation_found = true;
-                                presentation = index;
+                                *family_index = i;
+                                return true;
                         }
                 }
-
-                if (graphics_found && compute_found && presentation_found)
-                {
-                        *graphics_family_index = graphics;
-                        *compute_family_index = compute;
-                        *presentation_family_index = presentation;
-
-                        return true;
-                }
-
-                ++index;
         }
-
         return false;
 }
 }
@@ -137,6 +146,7 @@ vulkan::PhysicalDevice find_physical_device(VkInstance instance, VkSurfaceKHR su
 
                 VkPhysicalDeviceProperties properties;
                 VkPhysicalDeviceFeatures features;
+
                 vkGetPhysicalDeviceProperties(device, &properties);
                 vkGetPhysicalDeviceFeatures(device, &features);
 
@@ -168,21 +178,32 @@ vulkan::PhysicalDevice find_physical_device(VkInstance instance, VkSurfaceKHR su
                         continue;
                 }
 
-                uint32_t graphics_family_index;
-                uint32_t compute_family_index;
-                uint32_t presentation_family_index;
-                if (!find_family_indices(surface, device, &graphics_family_index, &compute_family_index,
-                                         &presentation_family_index))
-                {
-                        continue;
-                }
-
                 if (!find_swap_chain_details(surface, device, nullptr))
                 {
                         continue;
                 }
 
-                return {device, graphics_family_index, compute_family_index, presentation_family_index};
+                const std::vector<VkQueueFamilyProperties> families = vulkan::queue_families(device);
+                PhysicalDevice r;
+                if (!find_graphics_family(families, &r.graphics))
+                {
+                        continue;
+                }
+                if (!find_compute_family(families, &r.compute))
+                {
+                        continue;
+                }
+                if (!find_presentation_family(surface, device, families, &r.presentation))
+                {
+                        continue;
+                }
+                if (!find_transfer_family(families, &r.transfer))
+                {
+                        continue;
+                }
+                r.device = device;
+
+                return r;
         }
 
         error("Failed to find a suitable Vulkan physical device");

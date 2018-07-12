@@ -34,10 +34,10 @@ struct SwapChainDetails
 
 struct PhysicalDevice
 {
-        const VkPhysicalDevice physical_device;
-        const uint32_t graphics_family_index;
-        const uint32_t compute_family_index;
-        const uint32_t presentation_family_index;
+        VkPhysicalDevice device;
+
+        // family_indices
+        uint32_t graphics, compute, transfer, presentation;
 };
 
 bool find_swap_chain_details(VkSurfaceKHR surface, VkPhysicalDevice device, SwapChainDetails* swap_chain_details);

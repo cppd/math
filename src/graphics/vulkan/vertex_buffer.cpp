@@ -21,17 +21,33 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "common.h"
 
+#include "com/error.h"
+
 #include <cstring>
+#include <unordered_set>
 
 namespace
 {
-vulkan::Buffer create_vertex_buffer(VkDevice device, VkDeviceSize size, VkBufferUsageFlags usage)
+vulkan::Buffer create_vertex_buffer(VkDevice device, VkDeviceSize size, VkBufferUsageFlags usage,
+                                    const std::vector<uint32_t>& family_indices)
 {
         VkBufferCreateInfo create_info = {};
         create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
         create_info.size = size;
         create_info.usage = usage;
-        create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+        ASSERT(family_indices.size() == std::unordered_set<uint32_t>(family_indices.cbegin(), family_indices.cend()).size());
+
+        if (family_indices.size() > 1)
+        {
+                create_info.sharingMode = VK_SHARING_MODE_CONCURRENT;
+                create_info.queueFamilyIndexCount = family_indices.size();
+                create_info.pQueueFamilyIndices = family_indices.data();
+        }
+        else
+        {
+                create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+        }
 
         return vulkan::Buffer(device, create_info);
 }
@@ -129,7 +145,7 @@ namespace vulkan
 #if 0
 VertexBufferWithHostVisibleMemory::VertexBufferWithHostVisibleMemory(const Device& device, VkDeviceSize data_size,
                                                                      const void* data)
-        : m_vertex_buffer(create_vertex_buffer(device, data_size, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT)),
+        : m_vertex_buffer(create_vertex_buffer(device, data_size, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, {})),
           m_vertex_device_memory(create_device_memory(device, m_vertex_buffer,
                                                       VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT))
 {
@@ -145,12 +161,15 @@ VertexBufferWithHostVisibleMemory::operator VkBuffer() const noexcept
 //
 
 VertexBufferWithDeviceLocalMemory::VertexBufferWithDeviceLocalMemory(const Device& device, VkCommandPool command_pool,
-                                                                     VkQueue queue, VkDeviceSize data_size, const void* data)
-        : m_vertex_buffer(
-                  create_vertex_buffer(device, data_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT)),
+                                                                     VkQueue queue, const std::vector<uint32_t>& family_indices,
+                                                                     VkDeviceSize data_size, const void* data)
+        : m_vertex_buffer(create_vertex_buffer(
+                  device, data_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, family_indices)),
           m_vertex_device_memory(create_device_memory(device, m_vertex_buffer, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
 {
-        Buffer staging_buffer(create_vertex_buffer(device, data_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT));
+        ASSERT(family_indices.size() > 0);
+
+        Buffer staging_buffer(create_vertex_buffer(device, data_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, {}));
         DeviceMemory staging_device_memory(create_device_memory(
                 device, staging_buffer, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT));
 

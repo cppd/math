@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "query.h"
 
 #include "application/application_name.h"
+#include "com/alg.h"
 #include "com/error.h"
 #include "com/print.h"
 
@@ -31,6 +32,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace
 {
+std::vector<uint32_t> unique_family_indices(const std::vector<uint32_t>& indices)
+{
+        std::vector<uint32_t> res = indices;
+        sort_and_unique(&res);
+        return res;
+}
+
 VkSurfaceFormatKHR choose_surface_format(const std::vector<VkSurfaceFormatKHR>& surface_formats)
 {
         ASSERT(surface_formats.size() > 0);
@@ -209,8 +217,7 @@ vulkan::Device create_device(VkPhysicalDevice physical_device, const std::vector
 
 vulkan::SwapChainKHR create_swap_chain_khr(VkDevice device, VkSurfaceKHR surface, VkSurfaceFormatKHR surface_format,
                                            VkPresentModeKHR present_mode, VkExtent2D extent, uint32_t image_count,
-                                           VkSurfaceTransformFlagBitsKHR transform, uint32_t graphics_family_index,
-                                           uint32_t presentation_family_index)
+                                           VkSurfaceTransformFlagBitsKHR transform, const std::vector<uint32_t>& family_indices)
 {
         VkSwapchainCreateInfoKHR create_info = {};
         create_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
@@ -223,10 +230,11 @@ vulkan::SwapChainKHR create_swap_chain_khr(VkDevice device, VkSurfaceKHR surface
         create_info.imageArrayLayers = 1;
         create_info.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-        std::vector<uint32_t> family_indices;
-        if (graphics_family_index != presentation_family_index)
+        ASSERT(family_indices.size() > 0);
+        ASSERT(family_indices.size() == std::unordered_set<uint32_t>(family_indices.cbegin(), family_indices.cend()).size());
+
+        if (family_indices.size() > 1)
         {
-                family_indices = {graphics_family_index, presentation_family_index};
                 create_info.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
                 create_info.queueFamilyIndexCount = family_indices.size();
                 create_info.pQueueFamilyIndices = family_indices.data();
@@ -581,18 +589,27 @@ VkQueue device_queue(VkDevice device, uint32_t queue_family_index, uint32_t queu
 
 namespace vulkan
 {
-SwapChain::SwapChain(VkSurfaceKHR surface, PhysicalDevice physical_device, VkDevice device, VkCommandPool command_pool,
-                     const std::vector<const vulkan::Shader*>& shaders, VkBuffer buffer, uint32_t vertex_count,
+SwapChain::SwapChain(VkSurfaceKHR surface, VkPhysicalDevice physical_device, const std::vector<uint32_t> family_indices,
+                     VkDevice device, VkCommandPool command_pool, const std::vector<const vulkan::Shader*>& shaders,
+                     VkBuffer buffer, uint32_t vertex_count,
                      const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
                      const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions)
 {
+        ASSERT(surface != VK_NULL_HANDLE);
+        ASSERT(physical_device != VK_NULL_HANDLE);
+        ASSERT(device != VK_NULL_HANDLE);
+        ASSERT(command_pool != VK_NULL_HANDLE);
+        ASSERT(buffer != VK_NULL_HANDLE);
+
+        ASSERT(family_indices.size() > 0);
+
         if (vertex_count <= 0 || (vertex_count % 3 != 0))
         {
                 error("Error vertex count (" + to_string(vertex_count) + ") for triangle list primitive topology");
         }
 
         SwapChainDetails swap_chain_details;
-        if (!find_swap_chain_details(surface, physical_device.physical_device, &swap_chain_details))
+        if (!find_swap_chain_details(surface, physical_device, &swap_chain_details))
         {
                 error("Failed to find swap chain details");
         }
@@ -605,8 +622,7 @@ SwapChain::SwapChain(VkSurfaceKHR surface, PhysicalDevice physical_device, VkDev
         const VkFormat image_format = surface_format.format;
 
         m_swap_chain = create_swap_chain_khr(device, surface, surface_format, present_mode, extent, image_count,
-                                             swap_chain_details.surface_capabilities.currentTransform,
-                                             physical_device.graphics_family_index, physical_device.presentation_family_index);
+                                             swap_chain_details.surface_capabilities.currentTransform, family_indices);
 
         m_swap_chain_images = swap_chain_images(device, m_swap_chain);
         if (m_swap_chain_images.empty())
@@ -660,9 +676,9 @@ VulkanInstance::VulkanInstance(int api_version_major, int api_version_minor,
           //
           m_physical_device(find_physical_device(m_instance, m_surface, api_version_major, api_version_minor,
                                                  required_device_extensions + VK_KHR_SWAPCHAIN_EXTENSION_NAME)),
-          m_device(create_device(m_physical_device.physical_device,
-                                 {m_physical_device.graphics_family_index, m_physical_device.compute_family_index,
-                                  m_physical_device.presentation_family_index},
+          m_device(create_device(m_physical_device.device,
+                                 {m_physical_device.graphics, m_physical_device.compute, m_physical_device.transfer,
+                                  m_physical_device.presentation},
                                  required_device_extensions + VK_KHR_SWAPCHAIN_EXTENSION_NAME, required_validation_layers)),
           //
           m_vertex_shader(m_device, vertex_shader_code, "main"),
@@ -672,18 +688,24 @@ VulkanInstance::VulkanInstance(int api_version_major, int api_version_minor,
           m_render_finished_semaphores(create_semaphores(m_device, MAX_FRAMES_IN_FLIGHT)),
           m_in_flight_fences(create_fences(m_device, MAX_FRAMES_IN_FLIGHT, true /*signaled_state*/)),
           //
-          m_graphics_command_pool(create_command_pool(m_device, m_physical_device.graphics_family_index)),
-          m_graphics_queue(device_queue(m_device, m_physical_device.graphics_family_index, 0 /*queue_index*/)),
+          m_graphics_command_pool(create_command_pool(m_device, m_physical_device.graphics)),
+          m_graphics_queue(device_queue(m_device, m_physical_device.graphics, 0 /*queue_index*/)),
           //
-          m_compute_queue(device_queue(m_device, m_physical_device.compute_family_index, 0 /*queue_index*/)),
-          m_presentation_queue(device_queue(m_device, m_physical_device.presentation_family_index, 0 /*queue_index*/)),
+          m_transient_command_pool(create_transient_command_pool(m_device, m_physical_device.transfer)),
+          m_transfer_queue(device_queue(m_device, m_physical_device.transfer, 0 /*queue_index*/)),
           //
-          m_transient_command_pool(create_transient_command_pool(m_device, m_physical_device.graphics_family_index)),
-          m_transfer_queue(device_queue(m_device, m_physical_device.graphics_family_index, 0 /*queue_index*/)),
+          m_compute_queue(device_queue(m_device, m_physical_device.compute, 0 /*queue_index*/)),
+          m_presentation_queue(device_queue(m_device, m_physical_device.presentation, 0 /*queue_index*/)),
+          //
+          m_vertex_buffer_family_indices(unique_family_indices({{m_physical_device.graphics, m_physical_device.transfer}})),
+          m_vertex_buffer(m_device, m_transient_command_pool, m_transfer_queue, m_vertex_buffer_family_indices, vertex_data_size,
+                          vertex_data),
           m_vertex_count(vertex_count),
           m_vertex_binding_descriptions(vertex_binding_descriptions),
           m_vertex_attribute_descriptions(vertex_attribute_descriptions),
-          m_vertex_buffer(m_device, m_transient_command_pool, m_transfer_queue, vertex_data_size, vertex_data)
+          //
+          m_image_family_indices(unique_family_indices({{m_physical_device.graphics, m_physical_device.presentation}}))
+
 {
         ASSERT(vertex_data_size >= vertex_count);
         ASSERT((vertex_data_size % vertex_count) == 0);
@@ -705,12 +727,11 @@ VulkanInstance::~VulkanInstance()
 
 void VulkanInstance::create_swap_chain()
 {
-        ASSERT(m_vertex_buffer != VK_NULL_HANDLE);
-
         std::vector<const vulkan::Shader*> shaders({&m_vertex_shader, &m_fragment_shader});
 
-        m_swapchain.emplace(m_surface, m_physical_device, m_device, m_graphics_command_pool, shaders, m_vertex_buffer,
-                            m_vertex_count, m_vertex_binding_descriptions, m_vertex_attribute_descriptions);
+        m_swapchain.emplace(m_surface, m_physical_device.device, m_image_family_indices, m_device, m_graphics_command_pool,
+                            shaders, m_vertex_buffer, m_vertex_count, m_vertex_binding_descriptions,
+                            m_vertex_attribute_descriptions);
 }
 
 void VulkanInstance::recreate_swap_chain()

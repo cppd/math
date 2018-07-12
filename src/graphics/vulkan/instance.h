@@ -49,9 +49,9 @@ class SwapChain
         CommandBuffers m_command_buffers;
 
 public:
-        SwapChain(VkSurfaceKHR surface, PhysicalDevice physical_device, VkDevice device, VkCommandPool command_pool,
-                  const std::vector<const vulkan::Shader*>& shaders, VkBuffer buffer, uint32_t vertex_count,
-                  const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
+        SwapChain(VkSurfaceKHR surface, VkPhysicalDevice physical_device, const std::vector<uint32_t> family_indices,
+                  VkDevice device, VkCommandPool command_pool, const std::vector<const vulkan::Shader*>& shaders, VkBuffer buffer,
+                  uint32_t vertex_count, const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
                   const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions);
 
         SwapChain(const SwapChain&) = delete;
@@ -86,16 +86,19 @@ class VulkanInstance
         CommandPool m_graphics_command_pool;
         VkQueue m_graphics_queue = VK_NULL_HANDLE;
 
+        CommandPool m_transient_command_pool;
+        VkQueue m_transfer_queue = VK_NULL_HANDLE;
+
         VkQueue m_compute_queue = VK_NULL_HANDLE;
         VkQueue m_presentation_queue = VK_NULL_HANDLE;
 
-        CommandPool m_transient_command_pool;
-        VkQueue m_transfer_queue = VK_NULL_HANDLE;
+        std::vector<uint32_t> m_vertex_buffer_family_indices;
+        VertexBufferWithDeviceLocalMemory m_vertex_buffer;
         uint32_t m_vertex_count;
         std::vector<VkVertexInputBindingDescription> m_vertex_binding_descriptions;
         std::vector<VkVertexInputAttributeDescription> m_vertex_attribute_descriptions;
-        VertexBufferWithDeviceLocalMemory m_vertex_buffer;
 
+        std::vector<uint32_t> m_image_family_indices;
         std::optional<SwapChain> m_swapchain;
 
         unsigned m_current_frame = 0;
