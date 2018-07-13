@@ -50,8 +50,9 @@ class SwapChain
 
 public:
         SwapChain(VkSurfaceKHR surface, VkPhysicalDevice physical_device, const std::vector<uint32_t> family_indices,
-                  VkDevice device, VkCommandPool command_pool, const std::vector<const vulkan::Shader*>& shaders, VkBuffer buffer,
-                  uint32_t vertex_count, const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
+                  VkDevice device, VkCommandPool command_pool, const std::vector<const vulkan::Shader*>& shaders,
+                  VkBuffer vertex_buffer, VkBuffer vertex_index_buffer, VkIndexType vertex_index_type, uint32_t vertex_count,
+                  const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
                   const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions);
 
         SwapChain(const SwapChain&) = delete;
@@ -92,11 +93,13 @@ class VulkanInstance
         VkQueue m_compute_queue = VK_NULL_HANDLE;
         VkQueue m_presentation_queue = VK_NULL_HANDLE;
 
+        uint32_t m_vertex_count;
         std::vector<uint32_t> m_vertex_buffer_family_indices;
         VertexBufferWithDeviceLocalMemory m_vertex_buffer;
-        uint32_t m_vertex_count;
+        VertexBufferWithDeviceLocalMemory m_vertex_index_buffer;
         std::vector<VkVertexInputBindingDescription> m_vertex_binding_descriptions;
         std::vector<VkVertexInputAttributeDescription> m_vertex_attribute_descriptions;
+        VkIndexType m_vertex_index_type;
 
         std::vector<uint32_t> m_image_family_indices;
         std::optional<SwapChain> m_swapchain;
@@ -114,7 +117,8 @@ public:
                        const Span<const uint32_t>& vertex_shader_code, const Span<const uint32_t>& fragment_shader_code,
                        size_t vertex_data_size, const void* vertex_data, uint32_t vertex_count,
                        const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
-                       const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions);
+                       const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions,
+                       const void* vertex_index_data, VkIndexType vertex_index_type);
 
         ~VulkanInstance();
 

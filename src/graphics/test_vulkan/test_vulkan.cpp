@@ -89,11 +89,16 @@ struct Vertex
 };
 
 // clang-format off
-constexpr std::array<Vertex, 3> vertices =
+constexpr std::array<Vertex, 4> vertices =
 {
-        Vertex{vec2f( 0.0,  0.9), vec3f(1, 0, 0)},
+        Vertex{vec2f( 0.9,  0.9), vec3f(1, 0, 0)},
         Vertex{vec2f( 0.9, -0.9), vec3f(0, 1, 0)},
-        Vertex{vec2f(-0.9, -0.9), vec3f(0, 0, 1)}
+        Vertex{vec2f(-0.9, -0.9), vec3f(0, 0, 1)},
+        Vertex{vec2f(-0.9,  0.9), vec3f(1, 1, 1)}
+};
+constexpr std::array<uint16_t, 6> indices =
+{
+        0, 1, 2, 2, 3, 0
 };
 // clang-format on
 
@@ -121,11 +126,12 @@ void test_vulkan_thread()
 
                 VulkanWindow window(window_size(), "Vulkan Window");
 
+                constexpr unsigned vertex_count = indices.size();
                 vulkan::VulkanInstance vulkan_instance(
                         1, 0, instance_extensions + window_instance_extensions, device_extensions, validation_layers,
                         [&window](VkInstance instance) { return window.create_surface(instance); }, vertex_shader,
-                        fragment_shader, vertices.size() * sizeof(Vertex), vertices.data(), vertices.size(),
-                        Vertex::binding_descriptions(), Vertex::attribute_descriptions());
+                        fragment_shader, vertices.size() * sizeof(Vertex), vertices.data(), vertex_count,
+                        Vertex::binding_descriptions(), Vertex::attribute_descriptions(), indices.data(), VK_INDEX_TYPE_UINT16);
 
                 LOG(vulkan::overview_physical_devices(vulkan_instance.instance()));
 

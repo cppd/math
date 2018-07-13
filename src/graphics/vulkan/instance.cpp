@@ -503,7 +503,8 @@ vulkan::CommandPool create_transient_command_pool(VkDevice device, uint32_t queu
 
 vulkan::CommandBuffers create_command_buffers(VkDevice device, const VkExtent2D& swap_chain_extent, VkRenderPass render_pass,
                                               VkPipeline pipeline, const std::vector<vulkan::Framebuffer>& framebuffers,
-                                              VkCommandPool command_pool, VkBuffer buffer, uint32_t vertex_count)
+                                              VkCommandPool command_pool, VkBuffer vertex_buffer, VkBuffer index_buffer,
+                                              VkIndexType index_type, uint32_t vertex_count)
 {
         VkResult result;
 
@@ -540,11 +541,16 @@ vulkan::CommandBuffers create_command_buffers(VkDevice device, const VkExtent2D&
 
                 vkCmdBindPipeline(command_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 
-                VkBuffer vertex_buffers[] = {buffer};
+                VkBuffer vertex_buffers[] = {vertex_buffer};
                 VkDeviceSize offsets[] = {0};
                 vkCmdBindVertexBuffers(command_buffers[i], 0, 1, vertex_buffers, offsets);
 
+#if 0
                 vkCmdDraw(command_buffers[i], vertex_count, 1, 0, 0);
+#else
+                vkCmdBindIndexBuffer(command_buffers[i], index_buffer, 0, index_type);
+                vkCmdDrawIndexed(command_buffers[i], vertex_count, 1, 0, 0, 0);
+#endif
 
                 vkCmdEndRenderPass(command_buffers[i]);
 
@@ -591,7 +597,7 @@ namespace vulkan
 {
 SwapChain::SwapChain(VkSurfaceKHR surface, VkPhysicalDevice physical_device, const std::vector<uint32_t> family_indices,
                      VkDevice device, VkCommandPool command_pool, const std::vector<const vulkan::Shader*>& shaders,
-                     VkBuffer buffer, uint32_t vertex_count,
+                     VkBuffer vertex_buffer, VkBuffer vertex_index_buffer, VkIndexType vertex_index_type, uint32_t vertex_count,
                      const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
                      const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions)
 {
@@ -599,7 +605,8 @@ SwapChain::SwapChain(VkSurfaceKHR surface, VkPhysicalDevice physical_device, con
         ASSERT(physical_device != VK_NULL_HANDLE);
         ASSERT(device != VK_NULL_HANDLE);
         ASSERT(command_pool != VK_NULL_HANDLE);
-        ASSERT(buffer != VK_NULL_HANDLE);
+        ASSERT(vertex_buffer != VK_NULL_HANDLE);
+        ASSERT(vertex_index_buffer != VK_NULL_HANDLE);
 
         ASSERT(family_indices.size() > 0);
 
@@ -646,7 +653,7 @@ SwapChain::SwapChain(VkSurfaceKHR surface, VkPhysicalDevice physical_device, con
         }
 
         m_command_buffers = create_command_buffers(device, extent, m_render_pass, m_pipeline, m_framebuffers, command_pool,
-                                                   buffer, vertex_count);
+                                                   vertex_buffer, vertex_index_buffer, vertex_index_type, vertex_count);
 }
 
 VkSwapchainKHR SwapChain::swap_chain() const noexcept
@@ -667,7 +674,8 @@ VulkanInstance::VulkanInstance(int api_version_major, int api_version_minor,
                                const Span<const uint32_t>& vertex_shader_code, const Span<const uint32_t>& fragment_shader_code,
                                size_t vertex_data_size, const void* vertex_data, uint32_t vertex_count,
                                const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
-                               const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions)
+                               const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions,
+                               const void* vertex_index_data, VkIndexType vertex_index_type)
         : m_instance(create_instance(api_version_major, api_version_minor, required_instance_extensions,
                                      required_validation_layers)),
           m_callback(!required_validation_layers.empty() ? std::make_optional(create_debug_report_callback(m_instance)) :
@@ -697,18 +705,21 @@ VulkanInstance::VulkanInstance(int api_version_major, int api_version_minor,
           m_compute_queue(device_queue(m_device, m_physical_device.compute, 0 /*queue_index*/)),
           m_presentation_queue(device_queue(m_device, m_physical_device.presentation, 0 /*queue_index*/)),
           //
-          m_vertex_buffer_family_indices(unique_family_indices({{m_physical_device.graphics, m_physical_device.transfer}})),
-          m_vertex_buffer(m_device, m_transient_command_pool, m_transfer_queue, m_vertex_buffer_family_indices, vertex_data_size,
-                          vertex_data),
           m_vertex_count(vertex_count),
+          m_vertex_buffer_family_indices(unique_family_indices({{m_physical_device.graphics, m_physical_device.transfer}})),
+          m_vertex_buffer(VertexBufferWithDeviceLocalMemory::Usage::Vertex, m_device, m_transient_command_pool, m_transfer_queue,
+                          m_vertex_buffer_family_indices, vertex_data_size, vertex_data),
+          m_vertex_index_buffer(VertexBufferWithDeviceLocalMemory::Usage::Index, m_device, m_transient_command_pool,
+                                m_transfer_queue, m_vertex_buffer_family_indices,
+                                m_vertex_count * (vertex_index_type == VK_INDEX_TYPE_UINT16 ? 2 : 4), vertex_index_data),
           m_vertex_binding_descriptions(vertex_binding_descriptions),
           m_vertex_attribute_descriptions(vertex_attribute_descriptions),
+          m_vertex_index_type(vertex_index_type),
           //
           m_image_family_indices(unique_family_indices({{m_physical_device.graphics, m_physical_device.presentation}}))
 
 {
-        ASSERT(vertex_data_size >= vertex_count);
-        ASSERT((vertex_data_size % vertex_count) == 0);
+        ASSERT(m_vertex_index_type == VK_INDEX_TYPE_UINT16 || m_vertex_index_type == VK_INDEX_TYPE_UINT32);
 
         create_swap_chain();
 }
@@ -730,8 +741,8 @@ void VulkanInstance::create_swap_chain()
         std::vector<const vulkan::Shader*> shaders({&m_vertex_shader, &m_fragment_shader});
 
         m_swapchain.emplace(m_surface, m_physical_device.device, m_image_family_indices, m_device, m_graphics_command_pool,
-                            shaders, m_vertex_buffer, m_vertex_count, m_vertex_binding_descriptions,
-                            m_vertex_attribute_descriptions);
+                            shaders, m_vertex_buffer, m_vertex_index_buffer, m_vertex_index_type, m_vertex_count,
+                            m_vertex_binding_descriptions, m_vertex_attribute_descriptions);
 }
 
 void VulkanInstance::recreate_swap_chain()

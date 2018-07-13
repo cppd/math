@@ -160,11 +160,15 @@ VertexBufferWithHostVisibleMemory::operator VkBuffer() const noexcept
 
 //
 
-VertexBufferWithDeviceLocalMemory::VertexBufferWithDeviceLocalMemory(const Device& device, VkCommandPool command_pool,
-                                                                     VkQueue queue, const std::vector<uint32_t>& family_indices,
+VertexBufferWithDeviceLocalMemory::VertexBufferWithDeviceLocalMemory(Usage usage, const Device& device,
+                                                                     VkCommandPool command_pool, VkQueue queue,
+                                                                     const std::vector<uint32_t>& family_indices,
                                                                      VkDeviceSize data_size, const void* data)
         : m_vertex_buffer(create_vertex_buffer(
-                  device, data_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, family_indices)),
+                  device, data_size,
+                  VK_BUFFER_USAGE_TRANSFER_DST_BIT |
+                          (usage == Usage::Vertex ? VK_BUFFER_USAGE_VERTEX_BUFFER_BIT : VK_BUFFER_USAGE_INDEX_BUFFER_BIT),
+                  family_indices)),
           m_vertex_device_memory(create_device_memory(device, m_vertex_buffer, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
 {
         ASSERT(family_indices.size() > 0);

@@ -42,7 +42,13 @@ class VertexBufferWithDeviceLocalMemory
         DeviceMemory m_vertex_device_memory;
 
 public:
-        VertexBufferWithDeviceLocalMemory(const Device& device, VkCommandPool command_pool, VkQueue queue,
+        enum class Usage
+        {
+                Vertex,
+                Index
+        };
+
+        VertexBufferWithDeviceLocalMemory(Usage usage, const Device& device, VkCommandPool command_pool, VkQueue queue,
                                           const std::vector<uint32_t>& family_indices, VkDeviceSize data_size, const void* data);
 
         operator VkBuffer() const noexcept;
