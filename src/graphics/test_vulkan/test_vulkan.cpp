@@ -127,11 +127,13 @@ void test_vulkan_thread()
                 VulkanWindow window(window_size(), "Vulkan Window");
 
                 constexpr unsigned vertex_count = indices.size();
+
                 vulkan::VulkanInstance vulkan_instance(
                         1, 0, instance_extensions + window_instance_extensions, device_extensions, validation_layers,
                         [&window](VkInstance instance) { return window.create_surface(instance); }, vertex_shader,
-                        fragment_shader, vertices.size() * sizeof(Vertex), vertices.data(), vertex_count,
-                        Vertex::binding_descriptions(), Vertex::attribute_descriptions(), indices.data(), VK_INDEX_TYPE_UINT16);
+                        fragment_shader, Vertex::binding_descriptions(), Vertex::attribute_descriptions(), vertex_count,
+                        vertices.size() * sizeof(vertices[0]), vertices.data(), indices.size() * sizeof(indices[0]),
+                        indices.data());
 
                 LOG(vulkan::overview_physical_devices(vulkan_instance.instance()));
 

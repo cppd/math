@@ -35,6 +35,10 @@ namespace vulkan
 {
 class SwapChain
 {
+        VkDevice m_device;
+        VkCommandPool m_command_pool;
+        VkExtent2D m_extent;
+
         SwapChainKHR m_swap_chain;
         std::vector<VkImage> m_swap_chain_images;
 
@@ -51,7 +55,6 @@ class SwapChain
 public:
         SwapChain(VkSurfaceKHR surface, VkPhysicalDevice physical_device, const std::vector<uint32_t> family_indices,
                   VkDevice device, VkCommandPool command_pool, const std::vector<const vulkan::Shader*>& shaders,
-                  VkBuffer vertex_buffer, VkBuffer vertex_index_buffer, VkIndexType vertex_index_type, uint32_t vertex_count,
                   const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
                   const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions);
 
@@ -60,6 +63,10 @@ public:
         SwapChain& operator=(const SwapChain&) = delete;
         SwapChain& operator=(SwapChain&&) = delete;
 
+        void create_command_buffers(VkBuffer vertex_buffer, VkBuffer vertex_index_buffer, VkIndexType vertex_index_type,
+                                    uint32_t vertex_count);
+        bool command_buffers_created() const;
+
         VkSwapchainKHR swap_chain() const noexcept;
         const VkCommandBuffer& command_buffer(uint32_t index) const noexcept;
 };
@@ -67,6 +74,8 @@ public:
 class VulkanInstance
 {
         static constexpr unsigned MAX_FRAMES_IN_FLIGHT = 2;
+
+        unsigned m_current_frame = 0;
 
         Instance m_instance;
         std::optional<DebugReportCallback> m_callback;
@@ -77,9 +86,6 @@ class VulkanInstance
 
         Device m_device;
 
-        vulkan::VertexShader m_vertex_shader;
-        vulkan::FragmentShader m_fragment_shader;
-
         std::vector<Semaphore> m_image_available_semaphores;
         std::vector<Semaphore> m_render_finished_semaphores;
         std::vector<Fence> m_in_flight_fences;
@@ -87,24 +93,26 @@ class VulkanInstance
         CommandPool m_graphics_command_pool;
         VkQueue m_graphics_queue = VK_NULL_HANDLE;
 
-        CommandPool m_transient_command_pool;
+        CommandPool m_transfer_command_pool;
         VkQueue m_transfer_queue = VK_NULL_HANDLE;
 
         VkQueue m_compute_queue = VK_NULL_HANDLE;
         VkQueue m_presentation_queue = VK_NULL_HANDLE;
 
-        uint32_t m_vertex_count;
         std::vector<uint32_t> m_vertex_buffer_family_indices;
-        VertexBufferWithDeviceLocalMemory m_vertex_buffer;
-        VertexBufferWithDeviceLocalMemory m_vertex_index_buffer;
+        std::vector<uint32_t> m_image_family_indices;
+
+        vulkan::VertexShader m_vertex_shader;
+        vulkan::FragmentShader m_fragment_shader;
         std::vector<VkVertexInputBindingDescription> m_vertex_binding_descriptions;
         std::vector<VkVertexInputAttributeDescription> m_vertex_attribute_descriptions;
+        //
+        uint32_t m_vertex_count;
+        VertexBufferWithDeviceLocalMemory m_vertex_buffer;
+        VertexBufferWithDeviceLocalMemory m_vertex_index_buffer;
         VkIndexType m_vertex_index_type;
 
-        std::vector<uint32_t> m_image_family_indices;
         std::optional<SwapChain> m_swapchain;
-
-        unsigned m_current_frame = 0;
 
         void create_swap_chain();
         void recreate_swap_chain();
@@ -115,10 +123,10 @@ public:
                        const std::vector<std::string>& required_validation_layers,
                        const std::function<VkSurfaceKHR(VkInstance)>& create_surface,
                        const Span<const uint32_t>& vertex_shader_code, const Span<const uint32_t>& fragment_shader_code,
-                       size_t vertex_data_size, const void* vertex_data, uint32_t vertex_count,
                        const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
-                       const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions,
-                       const void* vertex_index_data, VkIndexType vertex_index_type);
+                       const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions, uint32_t vertex_count,
+                       size_t vertex_data_size, const void* vertex_data, size_t vertex_index_data_size,
+                       const void* vertex_index_data);
 
         ~VulkanInstance();
 
