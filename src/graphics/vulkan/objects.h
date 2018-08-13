@@ -423,6 +423,28 @@ public:
         uint32_t count() const noexcept;
         const VkCommandBuffer* data() const noexcept;
 };
+
+class DescriptorSetLayout final
+{
+        VkDevice m_device = VK_NULL_HANDLE;
+        VkDescriptorSetLayout m_descriptor_set_layout = VK_NULL_HANDLE;
+
+        void destroy() noexcept;
+        void move(DescriptorSetLayout* from) noexcept;
+
+public:
+        DescriptorSetLayout();
+        DescriptorSetLayout(VkDevice device, const VkDescriptorSetLayoutCreateInfo& create_info);
+        ~DescriptorSetLayout();
+
+        DescriptorSetLayout(const DescriptorSetLayout&) = delete;
+        DescriptorSetLayout& operator=(const DescriptorSetLayout&) = delete;
+
+        DescriptorSetLayout(DescriptorSetLayout&&) noexcept;
+        DescriptorSetLayout& operator=(DescriptorSetLayout&&) noexcept;
+
+        operator VkDescriptorSetLayout() const noexcept;
+};
 }
 
 #endif

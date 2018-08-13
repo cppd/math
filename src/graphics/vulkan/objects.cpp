@@ -1184,6 +1184,66 @@ const VkCommandBuffer* CommandBuffers::data() const noexcept
 {
         return m_command_buffers.data();
 }
+
+//
+
+void DescriptorSetLayout::destroy() noexcept
+{
+        if (m_descriptor_set_layout != VK_NULL_HANDLE)
+        {
+                ASSERT(m_device != VK_NULL_HANDLE);
+
+                vkDestroyDescriptorSetLayout(m_device, m_descriptor_set_layout, nullptr);
+        }
+}
+
+void DescriptorSetLayout::move(DescriptorSetLayout* from) noexcept
+{
+        m_device = from->m_device;
+        m_descriptor_set_layout = from->m_descriptor_set_layout;
+        from->m_device = VK_NULL_HANDLE;
+        from->m_descriptor_set_layout = VK_NULL_HANDLE;
+}
+
+DescriptorSetLayout::DescriptorSetLayout() = default;
+
+DescriptorSetLayout::DescriptorSetLayout(VkDevice device, const VkDescriptorSetLayoutCreateInfo& create_info)
+{
+        VkResult result = vkCreateDescriptorSetLayout(device, &create_info, nullptr, &m_descriptor_set_layout);
+        if (result != VK_SUCCESS)
+        {
+                vulkan::vulkan_function_error("vkCreateDescriptorSetLayout", result);
+        }
+
+        ASSERT(m_descriptor_set_layout != VK_NULL_HANDLE);
+
+        m_device = device;
+}
+
+DescriptorSetLayout::~DescriptorSetLayout()
+{
+        destroy();
+}
+
+DescriptorSetLayout::DescriptorSetLayout(DescriptorSetLayout&& from) noexcept
+{
+        move(&from);
+}
+
+DescriptorSetLayout& DescriptorSetLayout::operator=(DescriptorSetLayout&& from) noexcept
+{
+        if (this != &from)
+        {
+                destroy();
+                move(&from);
+        }
+        return *this;
+}
+
+DescriptorSetLayout::operator VkDescriptorSetLayout() const noexcept
+{
+        return m_descriptor_set_layout;
+}
 }
 
 #endif
