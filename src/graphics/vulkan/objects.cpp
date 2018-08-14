@@ -1244,6 +1244,66 @@ DescriptorSetLayout::operator VkDescriptorSetLayout() const noexcept
 {
         return m_descriptor_set_layout;
 }
+
+//
+
+void DescriptorPool::destroy() noexcept
+{
+        if (m_descriptor_pool != VK_NULL_HANDLE)
+        {
+                ASSERT(m_device != VK_NULL_HANDLE);
+
+                vkDestroyDescriptorPool(m_device, m_descriptor_pool, nullptr);
+        }
+}
+
+void DescriptorPool::move(DescriptorPool* from) noexcept
+{
+        m_device = from->m_device;
+        m_descriptor_pool = from->m_descriptor_pool;
+        from->m_device = VK_NULL_HANDLE;
+        from->m_descriptor_pool = VK_NULL_HANDLE;
+}
+
+DescriptorPool::DescriptorPool() = default;
+
+DescriptorPool::DescriptorPool(VkDevice device, const VkDescriptorPoolCreateInfo& create_info)
+{
+        VkResult result = vkCreateDescriptorPool(device, &create_info, nullptr, &m_descriptor_pool);
+        if (result != VK_SUCCESS)
+        {
+                vulkan::vulkan_function_error("vkCreateDescriptorPool", result);
+        }
+
+        ASSERT(m_descriptor_pool != VK_NULL_HANDLE);
+
+        m_device = device;
+}
+
+DescriptorPool::~DescriptorPool()
+{
+        destroy();
+}
+
+DescriptorPool::DescriptorPool(DescriptorPool&& from) noexcept
+{
+        move(&from);
+}
+
+DescriptorPool& DescriptorPool::operator=(DescriptorPool&& from) noexcept
+{
+        if (this != &from)
+        {
+                destroy();
+                move(&from);
+        }
+        return *this;
+}
+
+DescriptorPool::operator VkDescriptorPool() const noexcept
+{
+        return m_descriptor_pool;
+}
 }
 
 #endif

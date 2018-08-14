@@ -445,6 +445,28 @@ public:
 
         operator VkDescriptorSetLayout() const noexcept;
 };
+
+class DescriptorPool final
+{
+        VkDevice m_device = VK_NULL_HANDLE;
+        VkDescriptorPool m_descriptor_pool = VK_NULL_HANDLE;
+
+        void destroy() noexcept;
+        void move(DescriptorPool* from) noexcept;
+
+public:
+        DescriptorPool();
+        DescriptorPool(VkDevice device, const VkDescriptorPoolCreateInfo& create_info);
+        ~DescriptorPool();
+
+        DescriptorPool(const DescriptorPool&) = delete;
+        DescriptorPool& operator=(const DescriptorPool&) = delete;
+
+        DescriptorPool(DescriptorPool&&) noexcept;
+        DescriptorPool& operator=(DescriptorPool&&) noexcept;
+
+        operator VkDescriptorPool() const noexcept;
+};
 }
 
 #endif
