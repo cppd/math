@@ -1304,6 +1304,80 @@ DescriptorPool::operator VkDescriptorPool() const noexcept
 {
         return m_descriptor_pool;
 }
+
+//
+
+void DescriptorSet::destroy() noexcept
+{
+        if (m_descriptor_set != VK_NULL_HANDLE)
+        {
+                ASSERT(m_device != VK_NULL_HANDLE);
+                ASSERT(m_descriptor_pool != VK_NULL_HANDLE);
+
+                VkResult result = vkFreeDescriptorSets(m_device, m_descriptor_pool, 1, &m_descriptor_set);
+                if (result != VK_SUCCESS)
+                {
+                        vulkan::vulkan_function_error("vkFreeDescriptorSets", result);
+                }
+        }
+}
+
+void DescriptorSet::move(DescriptorSet* from) noexcept
+{
+        m_device = from->m_device;
+        m_descriptor_pool = from->m_descriptor_pool;
+        m_descriptor_set = from->m_descriptor_set;
+        from->m_device = VK_NULL_HANDLE;
+        from->m_descriptor_pool = VK_NULL_HANDLE;
+        from->m_descriptor_set = VK_NULL_HANDLE;
+}
+
+DescriptorSet::DescriptorSet() = default;
+
+DescriptorSet::DescriptorSet(VkDevice device, VkDescriptorPool descriptor_pool, VkDescriptorSetLayout descriptor_set_layout)
+{
+        VkDescriptorSetAllocateInfo allocate_info = {};
+        allocate_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        allocate_info.descriptorPool = descriptor_pool;
+        allocate_info.descriptorSetCount = 1;
+        allocate_info.pSetLayouts = &descriptor_set_layout;
+
+        VkResult result = vkAllocateDescriptorSets(device, &allocate_info, &m_descriptor_set);
+        if (result != VK_SUCCESS)
+        {
+                vulkan::vulkan_function_error("vkAllocateDescriptorSets", result);
+        }
+
+        ASSERT(m_descriptor_set != VK_NULL_HANDLE);
+
+        m_device = device;
+        m_descriptor_pool = descriptor_pool;
+}
+
+DescriptorSet::~DescriptorSet()
+{
+        destroy();
+}
+
+DescriptorSet::DescriptorSet(DescriptorSet&& from) noexcept
+{
+        move(&from);
+}
+
+DescriptorSet& DescriptorSet::operator=(DescriptorSet&& from) noexcept
+{
+        if (this != &from)
+        {
+                destroy();
+                move(&from);
+        }
+        return *this;
+}
+
+DescriptorSet::operator VkDescriptorSet() const noexcept
+{
+        return m_descriptor_set;
+}
 }
 
 #endif
