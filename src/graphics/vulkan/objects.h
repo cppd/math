@@ -490,6 +490,33 @@ public:
 
         operator VkDescriptorSet() const noexcept;
 };
+
+class DescriptorSets final
+{
+        VkDevice m_device = VK_NULL_HANDLE;
+        VkDescriptorPool m_descriptor_pool = VK_NULL_HANDLE;
+        std::vector<VkDescriptorSet> m_descriptor_sets;
+
+        void destroy() noexcept;
+        void move(DescriptorSets* from) noexcept;
+
+public:
+        DescriptorSets();
+        DescriptorSets(VkDevice device, VkDescriptorPool descriptor_pool,
+                       const std::vector<VkDescriptorSetLayout>& descriptor_set_layouts);
+        ~DescriptorSets();
+
+        DescriptorSets(const DescriptorSets&) = delete;
+        DescriptorSets& operator=(const DescriptorSets&) = delete;
+
+        DescriptorSets(DescriptorSets&&) noexcept;
+        DescriptorSets& operator=(DescriptorSets&&) noexcept;
+
+        const VkDescriptorSet& operator[](uint32_t index) const noexcept;
+
+        uint32_t count() const noexcept;
+        const VkDescriptorSet* data() const noexcept;
+};
 }
 
 #endif

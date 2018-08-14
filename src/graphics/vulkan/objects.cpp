@@ -1378,6 +1378,101 @@ DescriptorSet::operator VkDescriptorSet() const noexcept
 {
         return m_descriptor_set;
 }
+
+//
+
+void DescriptorSets::destroy() noexcept
+{
+        if (m_descriptor_sets.size() > 0)
+        {
+                ASSERT(m_device != VK_NULL_HANDLE);
+                ASSERT(m_descriptor_pool != VK_NULL_HANDLE);
+
+                VkResult result =
+                        vkFreeDescriptorSets(m_device, m_descriptor_pool, m_descriptor_sets.size(), m_descriptor_sets.data());
+                if (result != VK_SUCCESS)
+                {
+                        vulkan::vulkan_function_error("vkFreeDescriptorSets", result);
+                }
+        }
+}
+
+void DescriptorSets::move(DescriptorSets* from) noexcept
+{
+        m_device = from->m_device;
+        m_descriptor_pool = from->m_descriptor_pool;
+        m_descriptor_sets = std::move(from->m_descriptor_sets);
+        from->m_device = VK_NULL_HANDLE;
+        from->m_descriptor_pool = VK_NULL_HANDLE;
+        from->m_descriptor_sets = std::vector<VkDescriptorSet>();
+}
+
+DescriptorSets::DescriptorSets() = default;
+
+DescriptorSets::DescriptorSets(VkDevice device, VkDescriptorPool descriptor_pool,
+                               const std::vector<VkDescriptorSetLayout>& descriptor_set_layouts)
+        : m_descriptor_sets(descriptor_set_layouts.size())
+{
+        ASSERT(descriptor_set_layouts.size() > 0);
+        ASSERT(std::all_of(
+                descriptor_set_layouts.cbegin(), descriptor_set_layouts.cend(),
+                [](const VkDescriptorSetLayout& descriptor_set_layout) { return descriptor_set_layout != VK_NULL_HANDLE; }));
+
+        VkDescriptorSetAllocateInfo allocate_info = {};
+        allocate_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        allocate_info.descriptorPool = descriptor_pool;
+        allocate_info.descriptorSetCount = descriptor_set_layouts.size();
+        allocate_info.pSetLayouts = descriptor_set_layouts.data();
+
+        VkResult result = vkAllocateDescriptorSets(device, &allocate_info, m_descriptor_sets.data());
+        if (result != VK_SUCCESS)
+        {
+                vulkan::vulkan_function_error("vkAllocateDescriptorSets", result);
+        }
+
+        ASSERT(std::all_of(m_descriptor_sets.cbegin(), m_descriptor_sets.cend(),
+                           [](const VkDescriptorSet& descriptor_set) { return descriptor_set != VK_NULL_HANDLE; }));
+
+        m_device = device;
+        m_descriptor_pool = descriptor_pool;
+}
+
+DescriptorSets::~DescriptorSets()
+{
+        destroy();
+}
+
+DescriptorSets::DescriptorSets(DescriptorSets&& from) noexcept
+{
+        move(&from);
+}
+
+DescriptorSets& DescriptorSets::operator=(DescriptorSets&& from) noexcept
+{
+        if (this != &from)
+        {
+                destroy();
+                move(&from);
+        }
+        return *this;
+}
+
+const VkDescriptorSet& DescriptorSets::operator[](uint32_t index) const noexcept
+{
+        ASSERT(index < m_descriptor_sets.size());
+
+        return m_descriptor_sets[index];
+}
+
+uint32_t DescriptorSets::count() const noexcept
+{
+        return m_descriptor_sets.size();
+}
+
+const VkDescriptorSet* DescriptorSets::data() const noexcept
+{
+        return m_descriptor_sets.data();
+}
 }
 
 #endif
