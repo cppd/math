@@ -109,7 +109,7 @@ class VulkanInstance
         //
         uint32_t m_vertex_count;
         VertexBufferWithDeviceLocalMemory m_vertex_buffer;
-        VertexBufferWithDeviceLocalMemory m_vertex_index_buffer;
+        IndexBufferWithDeviceLocalMemory m_vertex_index_buffer;
         VkIndexType m_vertex_index_type;
 
         std::optional<SwapChain> m_swapchain;

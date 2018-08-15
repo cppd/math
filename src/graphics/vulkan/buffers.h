@@ -24,10 +24,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace vulkan
 {
 #if 0
-class VertexBufferWithHostVisibleMemory
+class VertexBufferWithHostVisibleMemory final
 {
-        Buffer m_vertex_buffer;
-        DeviceMemory m_vertex_device_memory;
+        Buffer m_buffer;
+        DeviceMemory m_device_memory;
 
 public:
         VertexBufferWithHostVisibleMemory(const Device& device, VkDeviceSize data_size, const void* data);
@@ -36,20 +36,26 @@ public:
 };
 #endif
 
-class VertexBufferWithDeviceLocalMemory
+class VertexBufferWithDeviceLocalMemory final
 {
-        Buffer m_vertex_buffer;
-        DeviceMemory m_vertex_device_memory;
+        Buffer m_buffer;
+        DeviceMemory m_device_memory;
 
 public:
-        enum class Usage
-        {
-                Vertex,
-                Index
-        };
-
-        VertexBufferWithDeviceLocalMemory(Usage usage, const Device& device, VkCommandPool command_pool, VkQueue queue,
+        VertexBufferWithDeviceLocalMemory(const Device& device, VkCommandPool command_pool, VkQueue queue,
                                           const std::vector<uint32_t>& family_indices, VkDeviceSize data_size, const void* data);
+
+        operator VkBuffer() const noexcept;
+};
+
+class IndexBufferWithDeviceLocalMemory final
+{
+        Buffer m_buffer;
+        DeviceMemory m_device_memory;
+
+public:
+        IndexBufferWithDeviceLocalMemory(const Device& device, VkCommandPool command_pool, VkQueue queue,
+                                         const std::vector<uint32_t>& family_indices, VkDeviceSize data_size, const void* data);
 
         operator VkBuffer() const noexcept;
 };

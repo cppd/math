@@ -738,10 +738,10 @@ VulkanInstance::VulkanInstance(int api_version_major, int api_version_minor,
           m_vertex_attribute_descriptions(vertex_attribute_descriptions),
           //
           m_vertex_count(vertex_count),
-          m_vertex_buffer(VertexBufferWithDeviceLocalMemory::Usage::Vertex, m_device, m_transfer_command_pool, m_transfer_queue,
-                          m_vertex_buffer_family_indices, vertex_data_size, vertex_data),
-          m_vertex_index_buffer(VertexBufferWithDeviceLocalMemory::Usage::Index, m_device, m_transfer_command_pool,
-                                m_transfer_queue, m_vertex_buffer_family_indices, vertex_index_data_size, vertex_index_data),
+          m_vertex_buffer(m_device, m_transfer_command_pool, m_transfer_queue, m_vertex_buffer_family_indices, vertex_data_size,
+                          vertex_data),
+          m_vertex_index_buffer(m_device, m_transfer_command_pool, m_transfer_queue, m_vertex_buffer_family_indices,
+                                vertex_index_data_size, vertex_index_data),
           m_vertex_index_type(vertex_index_type(vertex_index_data_size, vertex_count))
 {
         create_swap_chain();
