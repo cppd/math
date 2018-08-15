@@ -53,6 +53,22 @@ public:
 
         operator VkBuffer() const noexcept;
 };
+
+class UniformBufferWithHostVisibleMemory
+{
+        VkDevice m_device;
+        VkDeviceSize m_data_size;
+
+        Buffer m_buffer;
+        DeviceMemory m_device_memory;
+
+public:
+        UniformBufferWithHostVisibleMemory(const Device& device, VkDeviceSize data_size);
+
+        operator VkBuffer() const noexcept;
+
+        void copy(const void* data) const;
+};
 }
 
 #endif
