@@ -19,9 +19,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #if defined(VULKAN_FOUND)
 
+#include "buffers.h"
 #include "physical_device.h"
 #include "shader.h"
-#include "vertex_buffer.h"
 
 #include "com/span.h"
 #include "graphics/vulkan/objects.h"

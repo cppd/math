@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #if defined(VULKAN_FOUND)
 
-#include "vertex_buffer.h"
+#include "buffers.h"
 
 #include "common.h"
 
