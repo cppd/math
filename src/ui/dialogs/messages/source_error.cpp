@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "ui/support/support.h"
 
+#include <QStyle>
+
 namespace message_source_error_implementation
 {
 SourceError::SourceError(QWidget* parent, const std::string& message, const std::string& source) : QDialog(parent)
