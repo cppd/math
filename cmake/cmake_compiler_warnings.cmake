@@ -76,7 +76,6 @@ function(SetCompilerWarnings source_files)
                         -Wno-padded
                         -Wno-weak-vtables
 
-                        -Wno-missing-variable-declarations
                         -Wno-undefined-func-template
 
                         # Из-за файлов Qt отключить для всех файлов
