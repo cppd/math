@@ -227,6 +227,11 @@ UniformBufferWithHostVisibleMemory::operator VkBuffer() const noexcept
         return m_buffer;
 }
 
+VkDeviceSize UniformBufferWithHostVisibleMemory::size() const noexcept
+{
+        return m_data_size;
+}
+
 void UniformBufferWithHostVisibleMemory::copy(const void* data) const
 {
         memory_copy(m_device, m_device_memory, data, m_data_size);

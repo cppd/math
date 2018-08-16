@@ -73,6 +73,8 @@ public:
 
         operator VkBuffer() const noexcept;
 
+        VkDeviceSize size() const noexcept;
+
         void copy(const void* data) const;
 };
 }

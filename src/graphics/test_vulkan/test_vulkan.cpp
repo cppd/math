@@ -20,6 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "test_vulkan.h"
 
 #include "com/log.h"
+#include "com/math.h"
+#include "com/time.h"
 #include "com/vec.h"
 #include "graphics/vulkan/common.h"
 #include "graphics/vulkan/instance.h"
@@ -45,16 +47,6 @@ constexpr uint32_t fragment_shader[]
 
 namespace
 {
-std::array<int, 2> window_size()
-{
-        std::array<int, 2> size = VulkanWindow::screen_size();
-
-        size[0] = std::round(size[0] * WINDOW_SIZE_COEF);
-        size[1] = std::round(size[1] * WINDOW_SIZE_COEF);
-
-        return size;
-}
-
 struct Vertex
 {
         vec2f position;
@@ -88,6 +80,68 @@ struct Vertex
         }
 };
 
+//
+
+struct FragmentShaderUniformBufferObject0
+{
+        float value_r;
+        float value_g;
+};
+
+struct FragmentShaderUniformBufferObject1
+{
+        float value_b;
+};
+
+std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings()
+{
+        std::vector<VkDescriptorSetLayoutBinding> bindings;
+
+        {
+                VkDescriptorSetLayoutBinding layout_binding = {};
+                layout_binding.binding = 0;
+                layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+                layout_binding.descriptorCount = 1;
+                layout_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+                // layout_binding.pImmutableSamplers = nullptr;
+
+                bindings.push_back(layout_binding);
+        }
+
+        {
+                VkDescriptorSetLayoutBinding layout_binding = {};
+                layout_binding.binding = 1;
+                layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+                layout_binding.descriptorCount = 1;
+                layout_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+                // layout_binding.pImmutableSamplers = nullptr;
+
+                bindings.push_back(layout_binding);
+        }
+
+        return bindings;
+}
+
+std::vector<VkDeviceSize> descriptor_set_layout_bindings_sizes()
+{
+        std::vector<VkDeviceSize> sizes;
+        sizes.push_back(sizeof(FragmentShaderUniformBufferObject0));
+        sizes.push_back(sizeof(FragmentShaderUniformBufferObject1));
+        return sizes;
+}
+
+void set_fragment_uniform_0(const vulkan::VulkanInstance& instance, FragmentShaderUniformBufferObject0 ubo0)
+{
+        instance.copy_to_buffer(0, ubo0);
+}
+
+void set_fragment_uniform_1(const vulkan::VulkanInstance& instance, FragmentShaderUniformBufferObject1 ubo1)
+{
+        instance.copy_to_buffer(1, ubo1);
+}
+
+//
+
 // clang-format off
 constexpr std::array<Vertex, 4> vertices =
 {
@@ -101,6 +155,30 @@ constexpr std::array<uint16_t, 6> indices =
         0, 1, 2, 2, 3, 0
 };
 // clang-format on
+
+void update_uniforms(const vulkan::VulkanInstance& instance)
+{
+        const double radians = time_in_seconds() * 2 * PI<double>;
+
+        FragmentShaderUniformBufferObject0 ubo0;
+        ubo0.value_r = 0.5 * (1 + std::sin(radians));
+        ubo0.value_g = 0.5 * (1 + std::sin(radians * 2));
+        set_fragment_uniform_0(instance, ubo0);
+
+        FragmentShaderUniformBufferObject1 ubo1;
+        ubo1.value_b = 0.5 * (1 + std::sin(radians * 4));
+        set_fragment_uniform_1(instance, ubo1);
+}
+
+std::array<int, 2> window_size()
+{
+        std::array<int, 2> size = VulkanWindow::screen_size();
+
+        size[0] = std::round(size[0] * WINDOW_SIZE_COEF);
+        size[1] = std::round(size[1] * WINDOW_SIZE_COEF);
+
+        return size;
+}
 
 void test_vulkan_thread()
 {
@@ -133,13 +211,15 @@ void test_vulkan_thread()
                         [&window](VkInstance instance) { return window.create_surface(instance); }, vertex_shader,
                         fragment_shader, Vertex::binding_descriptions(), Vertex::attribute_descriptions(), vertex_count,
                         vertices.size() * sizeof(vertices[0]), vertices.data(), indices.size() * sizeof(indices[0]),
-                        indices.data());
+                        indices.data(), descriptor_set_layout_bindings(), descriptor_set_layout_bindings_sizes());
 
                 LOG(vulkan::overview_physical_devices(vulkan_instance.instance()));
 
                 while (!glfwWindowShouldClose(window))
                 {
                         glfwPollEvents();
+
+                        update_uniforms(vulkan_instance);
 
                         vulkan_instance.draw_frame();
                 }

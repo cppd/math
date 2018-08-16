@@ -325,12 +325,12 @@ vulkan::RenderPass create_render_pass(VkDevice device, VkFormat swap_chain_image
         return vulkan::RenderPass(device, create_info);
 }
 
-vulkan::PipelineLayout create_pipeline_layout(VkDevice device)
+vulkan::PipelineLayout create_pipeline_layout(VkDevice device, VkDescriptorSetLayout descriptor_set_layout)
 {
         VkPipelineLayoutCreateInfo create_info = {};
         create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-        // create_info.setLayoutCount = 0;
-        // create_info.pSetLayouts = nullptr;
+        create_info.setLayoutCount = 1;
+        create_info.pSetLayouts = &descriptor_set_layout;
         // create_info.pushConstantRangeCount = 0;
         // create_info.pPushConstantRanges = nullptr;
 
@@ -502,8 +502,9 @@ vulkan::CommandPool create_transient_command_pool(VkDevice device, uint32_t queu
 }
 
 vulkan::CommandBuffers create_command_buffers(VkDevice device, const VkExtent2D& swap_chain_extent, VkRenderPass render_pass,
-                                              VkPipeline pipeline, const std::vector<vulkan::Framebuffer>& framebuffers,
-                                              VkCommandPool command_pool, VkBuffer vertex_buffer, VkBuffer index_buffer,
+                                              VkPipelineLayout pipeline_layout, VkPipeline pipeline,
+                                              const std::vector<vulkan::Framebuffer>& framebuffers, VkCommandPool command_pool,
+                                              VkDescriptorSet descriptor_set, VkBuffer vertex_buffer, VkBuffer index_buffer,
                                               VkIndexType index_type, uint32_t vertex_count)
 {
         VkResult result;
@@ -540,6 +541,9 @@ vulkan::CommandBuffers create_command_buffers(VkDevice device, const VkExtent2D&
                 vkCmdBeginRenderPass(command_buffers[i], &render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
 
                 vkCmdBindPipeline(command_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+
+                vkCmdBindDescriptorSets(command_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline_layout, 0, 1,
+                                        &descriptor_set, 0, nullptr);
 
                 VkBuffer vertex_buffers[] = {vertex_buffer};
                 VkDeviceSize offsets[] = {0};
@@ -605,6 +609,103 @@ VkIndexType vertex_index_type(size_t vertex_index_data_size, size_t vertex_count
         error("Vertex index data size error: data size = " + to_string(vertex_index_data_size) +
               ", vertex count = " + to_string(vertex_count));
 }
+
+vulkan::DescriptorSetLayout create_descriptor_set_layout(
+        VkDevice device, const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings)
+{
+        VkDescriptorSetLayoutCreateInfo create_info = {};
+        create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        create_info.bindingCount = descriptor_set_layout_bindings.size();
+        create_info.pBindings = descriptor_set_layout_bindings.data();
+
+        return vulkan::DescriptorSetLayout(device, create_info);
+}
+
+std::vector<vulkan::UniformBufferWithHostVisibleMemory> create_uniform_buffers(
+        const vulkan::Device& device, const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings,
+        const std::vector<VkDeviceSize>& descriptor_set_layout_bindings_sizes)
+{
+        ASSERT(descriptor_set_layout_bindings.size() == descriptor_set_layout_bindings_sizes.size());
+
+        std::vector<vulkan::UniformBufferWithHostVisibleMemory> uniform_buffers;
+
+        for (size_t i = 0; i < descriptor_set_layout_bindings.size(); ++i)
+        {
+                ASSERT(descriptor_set_layout_bindings[i].descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+
+                uniform_buffers.emplace_back(device, descriptor_set_layout_bindings_sizes[i]);
+        }
+
+        return uniform_buffers;
+}
+
+vulkan::DescriptorPool create_descriptor_pool(VkDevice device,
+                                              const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings,
+                                              uint32_t max_sets, VkDescriptorPoolCreateFlags flags)
+{
+        std::vector<VkDescriptorPoolSize> pool_sizes;
+        pool_sizes.reserve(descriptor_set_layout_bindings.size());
+
+        for (const VkDescriptorSetLayoutBinding& binding : descriptor_set_layout_bindings)
+        {
+                VkDescriptorPoolSize pool_size = {};
+                pool_size.type = binding.descriptorType;
+                pool_size.descriptorCount = binding.descriptorCount;
+                pool_sizes.push_back(pool_size);
+        }
+
+        VkDescriptorPoolCreateInfo create_info = {};
+        create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+        create_info.poolSizeCount = pool_sizes.size();
+        create_info.pPoolSizes = pool_sizes.data();
+        create_info.maxSets = max_sets;
+        create_info.flags = flags;
+
+        return vulkan::DescriptorPool(device, create_info);
+}
+
+vulkan::DescriptorSet create_descriptor_set(
+        VkDevice device, VkDescriptorPool descriptor_pool, VkDescriptorSetLayout descriptor_set_layout,
+        const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings,
+        const std::vector<VkDeviceSize>& descriptor_set_layout_bindings_sizes,
+        const std::vector<vulkan::UniformBufferWithHostVisibleMemory>& descriptor_set_layout_uniform_buffers)
+{
+        ASSERT(descriptor_set_layout_bindings.size() == descriptor_set_layout_bindings_sizes.size());
+        ASSERT(descriptor_set_layout_bindings_sizes.size() == descriptor_set_layout_uniform_buffers.size());
+
+        vulkan::DescriptorSet descriptor_set(device, descriptor_pool, descriptor_set_layout);
+
+        const uint32_t size = descriptor_set_layout_bindings.size();
+
+        std::vector<VkDescriptorBufferInfo> descriptor_buffer_info(size);
+        std::vector<VkWriteDescriptorSet> write_descriptor_set(size);
+
+        for (uint32_t i = 0; i < size; ++i)
+        {
+                descriptor_buffer_info[i] = {};
+                descriptor_buffer_info[i].buffer = descriptor_set_layout_uniform_buffers[i];
+                descriptor_buffer_info[i].offset = 0;
+                descriptor_buffer_info[i].range = descriptor_set_layout_bindings_sizes[i];
+
+                write_descriptor_set[i] = {};
+                write_descriptor_set[i].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+                write_descriptor_set[i].dstSet = descriptor_set;
+                write_descriptor_set[i].dstBinding = descriptor_set_layout_bindings[i].binding;
+                write_descriptor_set[i].dstArrayElement = 0;
+
+                write_descriptor_set[i].descriptorType = descriptor_set_layout_bindings[i].descriptorType;
+                write_descriptor_set[i].descriptorCount = descriptor_set_layout_bindings[i].descriptorCount;
+
+                ASSERT(descriptor_set_layout_bindings[i].descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+                write_descriptor_set[i].pBufferInfo = &descriptor_buffer_info[i];
+                // write_descriptor_set[i].pImageInfo = nullptr;
+                // write_descriptor_set[i].pTexelBufferView = nullptr;
+        }
+
+        vkUpdateDescriptorSets(device, write_descriptor_set.size(), write_descriptor_set.data(), 0, nullptr);
+
+        return descriptor_set;
+}
 }
 
 namespace vulkan
@@ -612,13 +713,16 @@ namespace vulkan
 SwapChain::SwapChain(VkSurfaceKHR surface, VkPhysicalDevice physical_device, const std::vector<uint32_t> family_indices,
                      VkDevice device, VkCommandPool command_pool, const std::vector<const vulkan::Shader*>& shaders,
                      const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
-                     const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions)
-        : m_device(device), m_command_pool(command_pool)
+                     const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions,
+                     VkDescriptorSetLayout descriptor_set_layout, VkDescriptorSet descriptor_set)
+        : m_device(device), m_command_pool(command_pool), m_descriptor_set(descriptor_set)
 {
         ASSERT(surface != VK_NULL_HANDLE);
         ASSERT(physical_device != VK_NULL_HANDLE);
         ASSERT(device != VK_NULL_HANDLE);
         ASSERT(command_pool != VK_NULL_HANDLE);
+        ASSERT(descriptor_set != VK_NULL_HANDLE);
+        ASSERT(descriptor_set_layout != VK_NULL_HANDLE);
 
         ASSERT(family_indices.size() > 0);
 
@@ -650,7 +754,7 @@ SwapChain::SwapChain(VkSurfaceKHR surface, VkPhysicalDevice physical_device, con
         }
 
         m_render_pass = create_render_pass(device, image_format);
-        m_pipeline_layout = create_pipeline_layout(device);
+        m_pipeline_layout = create_pipeline_layout(device, descriptor_set_layout);
         m_pipeline = create_graphics_pipeline(device, m_render_pass, m_pipeline_layout, m_extent, shaders,
                                               vertex_binding_descriptions, vertex_attribute_descriptions);
 
@@ -671,9 +775,9 @@ void SwapChain::create_command_buffers(VkBuffer vertex_buffer, VkBuffer vertex_i
                 error("Error vertex count (" + to_string(vertex_count) + ") for triangle list primitive topology");
         }
 
-        m_command_buffers =
-                ::create_command_buffers(m_device, m_extent, m_render_pass, m_pipeline, m_framebuffers, m_command_pool,
-                                         vertex_buffer, vertex_index_buffer, vertex_index_type, vertex_count);
+        m_command_buffers = ::create_command_buffers(m_device, m_extent, m_render_pass, m_pipeline_layout, m_pipeline,
+                                                     m_framebuffers, m_command_pool, m_descriptor_set, vertex_buffer,
+                                                     vertex_index_buffer, vertex_index_type, vertex_count);
 }
 
 bool SwapChain::command_buffers_created() const
@@ -702,7 +806,9 @@ VulkanInstance::VulkanInstance(int api_version_major, int api_version_minor,
                                const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
                                const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions,
                                uint32_t vertex_count, size_t vertex_data_size, const void* vertex_data,
-                               size_t vertex_index_data_size, const void* vertex_index_data)
+                               size_t vertex_index_data_size, const void* vertex_index_data,
+                               const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings,
+                               const std::vector<VkDeviceSize>& descriptor_set_layout_bindings_sizes)
         : m_instance(create_instance(api_version_major, api_version_minor, required_instance_extensions,
                                      required_validation_layers)),
           m_callback(!required_validation_layers.empty() ? std::make_optional(create_debug_report_callback(m_instance)) :
@@ -742,7 +848,17 @@ VulkanInstance::VulkanInstance(int api_version_major, int api_version_minor,
                           vertex_data),
           m_vertex_index_buffer(m_device, m_transfer_command_pool, m_transfer_queue, m_vertex_buffer_family_indices,
                                 vertex_index_data_size, vertex_index_data),
-          m_vertex_index_type(vertex_index_type(vertex_index_data_size, vertex_count))
+          m_vertex_index_type(vertex_index_type(vertex_index_data_size, vertex_count)),
+          //
+          m_descriptor_set_layout(create_descriptor_set_layout(m_device, descriptor_set_layout_bindings)),
+          m_descriptor_set_layout_uniform_buffers(
+                  create_uniform_buffers(m_device, descriptor_set_layout_bindings, descriptor_set_layout_bindings_sizes)),
+          m_descriptor_pool(create_descriptor_pool(m_device, descriptor_set_layout_bindings, 1 /*max_sets*/,
+                                                   VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT)),
+          m_descriptor_set(create_descriptor_set(m_device, m_descriptor_pool, m_descriptor_set_layout,
+                                                 descriptor_set_layout_bindings, descriptor_set_layout_bindings_sizes,
+                                                 m_descriptor_set_layout_uniform_buffers))
+
 {
         create_swap_chain();
 }
@@ -764,7 +880,8 @@ void VulkanInstance::create_swap_chain()
         std::vector<const vulkan::Shader*> shaders({&m_vertex_shader, &m_fragment_shader});
 
         m_swapchain.emplace(m_surface, m_physical_device.device, m_image_family_indices, m_device, m_graphics_command_pool,
-                            shaders, m_vertex_binding_descriptions, m_vertex_attribute_descriptions);
+                            shaders, m_vertex_binding_descriptions, m_vertex_attribute_descriptions, m_descriptor_set_layout,
+                            m_descriptor_set);
 
         m_swapchain->create_command_buffers(m_vertex_buffer, m_vertex_index_buffer, m_vertex_index_type, m_vertex_count);
 }

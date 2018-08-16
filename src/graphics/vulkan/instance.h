@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "physical_device.h"
 #include "shader.h"
 
+#include "com/error.h"
 #include "com/span.h"
 #include "graphics/vulkan/objects.h"
 
@@ -37,6 +38,7 @@ class SwapChain
 {
         VkDevice m_device;
         VkCommandPool m_command_pool;
+        VkDescriptorSet m_descriptor_set;
         VkExtent2D m_extent;
 
         SwapChainKHR m_swap_chain;
@@ -56,7 +58,8 @@ public:
         SwapChain(VkSurfaceKHR surface, VkPhysicalDevice physical_device, const std::vector<uint32_t> family_indices,
                   VkDevice device, VkCommandPool command_pool, const std::vector<const vulkan::Shader*>& shaders,
                   const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
-                  const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions);
+                  const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions,
+                  VkDescriptorSetLayout descriptor_set_layout, VkDescriptorSet descriptor_set);
 
         SwapChain(const SwapChain&) = delete;
         SwapChain(SwapChain&&) = delete;
@@ -112,6 +115,11 @@ class VulkanInstance
         IndexBufferWithDeviceLocalMemory m_vertex_index_buffer;
         VkIndexType m_vertex_index_type;
 
+        DescriptorSetLayout m_descriptor_set_layout;
+        std::vector<UniformBufferWithHostVisibleMemory> m_descriptor_set_layout_uniform_buffers;
+        DescriptorPool m_descriptor_pool;
+        DescriptorSet m_descriptor_set;
+
         std::optional<SwapChain> m_swapchain;
 
         void create_swap_chain();
@@ -126,7 +134,9 @@ public:
                        const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
                        const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions, uint32_t vertex_count,
                        size_t vertex_data_size, const void* vertex_data, size_t vertex_index_data_size,
-                       const void* vertex_index_data);
+                       const void* vertex_index_data,
+                       const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings,
+                       const std::vector<VkDeviceSize>& descriptor_set_layout_bindings_sizes);
 
         ~VulkanInstance();
 
@@ -140,6 +150,15 @@ public:
         void draw_frame();
 
         void device_wait_idle() const;
+
+        template <typename T>
+        void copy_to_buffer(uint32_t index, const T& data) const
+        {
+                ASSERT(index < m_descriptor_set_layout_uniform_buffers.size());
+                ASSERT(sizeof(data) == m_descriptor_set_layout_uniform_buffers[index].size());
+
+                m_descriptor_set_layout_uniform_buffers[index].copy(&data);
+        }
 };
 }
 
