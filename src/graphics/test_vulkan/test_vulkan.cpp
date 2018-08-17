@@ -132,12 +132,12 @@ std::vector<VkDeviceSize> descriptor_set_layout_bindings_sizes()
 
 void set_fragment_uniform_0(const vulkan::VulkanInstance& instance, FragmentShaderUniformBufferObject0 ubo0)
 {
-        instance.copy_to_buffer(0, ubo0);
+        instance.copy_to_buffer(0, Span(&ubo0, sizeof(ubo0)));
 }
 
 void set_fragment_uniform_1(const vulkan::VulkanInstance& instance, FragmentShaderUniformBufferObject1 ubo1)
 {
-        instance.copy_to_buffer(1, ubo1);
+        instance.copy_to_buffer(1, Span(&ubo1, sizeof(ubo1)));
 }
 
 //

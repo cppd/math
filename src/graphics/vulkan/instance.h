@@ -20,12 +20,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #if defined(VULKAN_FOUND)
 
 #include "buffers.h"
+#include "descriptor.h"
+#include "objects.h"
 #include "physical_device.h"
 #include "shader.h"
 
 #include "com/error.h"
 #include "com/span.h"
-#include "graphics/vulkan/objects.h"
 
 #include <functional>
 #include <optional>
@@ -115,10 +116,7 @@ class VulkanInstance
         IndexBufferWithDeviceLocalMemory m_vertex_index_buffer;
         VkIndexType m_vertex_index_type;
 
-        DescriptorSetLayout m_descriptor_set_layout;
-        std::vector<UniformBufferWithHostVisibleMemory> m_descriptor_set_layout_uniform_buffers;
-        DescriptorPool m_descriptor_pool;
-        DescriptorSet m_descriptor_set;
+        DescriptorWithBuffers m_descriptor_with_buffers;
 
         std::optional<SwapChain> m_swapchain;
 
@@ -151,14 +149,7 @@ public:
 
         void device_wait_idle() const;
 
-        template <typename T>
-        void copy_to_buffer(uint32_t index, const T& data) const
-        {
-                ASSERT(index < m_descriptor_set_layout_uniform_buffers.size());
-                ASSERT(sizeof(data) == m_descriptor_set_layout_uniform_buffers[index].size());
-
-                m_descriptor_set_layout_uniform_buffers[index].copy(&data);
-        }
+        void copy_to_buffer(uint32_t index, const Span<const void>& data) const;
 };
 }
 
