@@ -32,13 +32,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace
 {
-std::vector<uint32_t> unique_family_indices(const std::vector<uint32_t>& indices)
-{
-        std::vector<uint32_t> res = indices;
-        sort_and_unique(&res);
-        return res;
-}
-
 VkSurfaceFormatKHR choose_surface_format(const std::vector<VkSurfaceFormatKHR>& surface_formats)
 {
         ASSERT(surface_formats.size() > 0);
@@ -738,8 +731,8 @@ VulkanInstance::VulkanInstance(int api_version_major, int api_version_minor,
           m_compute_queue(device_queue(m_device, m_physical_device.compute, 0 /*queue_index*/)),
           m_presentation_queue(device_queue(m_device, m_physical_device.presentation, 0 /*queue_index*/)),
           //
-          m_vertex_buffer_family_indices(unique_family_indices({{m_physical_device.graphics, m_physical_device.transfer}})),
-          m_image_family_indices(unique_family_indices({{m_physical_device.graphics, m_physical_device.presentation}})),
+          m_vertex_buffer_family_indices(unique_elements(std::vector({m_physical_device.graphics, m_physical_device.transfer}))),
+          m_image_family_indices(unique_elements(std::vector({m_physical_device.graphics, m_physical_device.presentation}))),
           //
           m_vertex_shader(m_device, vertex_shader_code, "main"),
           m_fragment_shader(m_device, fragment_shader_code, "main"),
