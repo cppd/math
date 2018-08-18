@@ -138,7 +138,40 @@ function(IncludeSourceAndSetCompilerFlags dir_name executable extensions)
 
 endfunction()
 
-function(AddShaders dir_name shader_type extensions)
+function(AddBinaryFiles dir_name extensions)
+
+        foreach(ext ${extensions})
+                list(APPEND all_globbing_expressions "${PROJECT_SOURCE_DIR}/${dir_name}/*.${ext}")
+        endforeach()
+
+        file(GLOB_RECURSE binary_files LIST_DIRECTORIES false ${all_globbing_expressions})
+
+        foreach(long_file_name ${binary_files})
+
+                get_filename_component(file_name ${long_file_name} NAME)
+
+                set(file_bin "${PROJECT_BINARY_DIR}/${file_name}.bin")
+
+                add_custom_command(
+                        OUTPUT  "${file_bin}"
+                        COMMAND "${PROJECT_BINARY_DIR}/create_str" "bin" "${long_file_name}" "${file_bin}"
+                        DEPENDS "${long_file_name}" "${PROJECT_BINARY_DIR}/create_str"
+                        WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
+                        VERBATIM
+                        )
+
+                set(target_name "custom_target_bin_${file_name}")
+                add_custom_target(${target_name} DEPENDS "${file_bin}")
+                add_dependencies(${target_name} create_str)
+                add_dependencies(${PROJECT_NAME} ${target_name})
+
+        endforeach()
+
+        target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_BINARY_DIR})
+
+endfunction()
+
+function(AddOpenGLShaders dir_name extensions)
 
         foreach(ext ${extensions})
                 list(APPEND all_globbing_expressions "${PROJECT_SOURCE_DIR}/${dir_name}/*.${ext}")
@@ -147,20 +180,24 @@ function(AddShaders dir_name shader_type extensions)
         file(GLOB_RECURSE shader_files LIST_DIRECTORIES false ${all_globbing_expressions})
 
         foreach(long_shader_name ${shader_files})
+
                 get_filename_component(shader_name ${long_shader_name} NAME)
 
+                set(shader_str "${PROJECT_BINARY_DIR}/${shader_name}.str")
+
                 add_custom_command(
-                        OUTPUT  "${PROJECT_BINARY_DIR}/${shader_name}.${shader_type}"
-                        COMMAND "${PROJECT_BINARY_DIR}/create_str" "${shader_type}" "${long_shader_name}"
-                                                        "${PROJECT_BINARY_DIR}/${shader_name}.${shader_type}"
+                        OUTPUT  "${shader_str}"
+                        COMMAND "${PROJECT_BINARY_DIR}/create_str" "str" "${long_shader_name}" "${shader_str}"
                         DEPENDS "${long_shader_name}" "${PROJECT_BINARY_DIR}/create_str"
                         WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
+                        VERBATIM
                         )
 
-                string(CONCAT target_name "custom_target_" "${shader_name}")
-                add_custom_target(${target_name} DEPENDS "${PROJECT_BINARY_DIR}/${shader_name}.${shader_type}")
+                set(target_name "custom_target_str_${shader_name}")
+                add_custom_target(${target_name} DEPENDS "${shader_str}")
                 add_dependencies(${target_name} create_str)
                 add_dependencies(${PROJECT_NAME} ${target_name})
+
         endforeach()
 
         target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_BINARY_DIR})
@@ -267,8 +304,8 @@ IncludeSourceAndSetCompilerFlags(src true "${extensions_all}")
 
 #target_compile_options(${PROJECT_NAME} PRIVATE -S -masm=intel)
 
-AddShaders(src str "${extensions_shaders}")
-AddShaders(extern/resources bin "ttf")
+AddOpenGLShaders(src "${extensions_shaders}")
+AddBinaryFiles(extern/resources "ttf")
 
 target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC "${CMAKE_SOURCE_DIR}/extern/include")
 
