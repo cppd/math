@@ -30,6 +30,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 class Shader
 {
+        // clang-format off
+        static constexpr const char COMMON_SHADER_TEXT[] =
+        {
+#include "common_opengl.glsl.str"
+        };
+        // clang-format on
+
+        static constexpr const char EMPTY_LINE[] = "\n";
+
         GLuint m_shader = 0;
 
 protected:
@@ -38,34 +47,32 @@ protected:
                 m_shader = glCreateShader(type);
                 try
                 {
-                        // clang-format off
-                        std::string source
-                        (
-#include "common_opengl.glsl.str"
-                        );
-                        // clang-format on
-                        source += "\n";
-                        source += shader_text;
-                        const char* const source_ptr = source.c_str();
+                        const std::array<const GLchar*, 3> source = {COMMON_SHADER_TEXT, EMPTY_LINE, shader_text.c_str()};
 
-                        glShaderSource(m_shader, 1, &source_ptr, nullptr);
+                        glShaderSource(m_shader, source.size(), source.data(), nullptr);
                         glCompileShader(m_shader);
 
                         GLint status;
                         glGetShaderiv(m_shader, GL_COMPILE_STATUS, &status);
                         if (status != GL_TRUE)
                         {
+                                std::string str;
+                                for (const char* c : source)
+                                {
+                                        str += c;
+                                }
+
                                 GLint length;
                                 glGetShaderiv(m_shader, GL_INFO_LOG_LENGTH, &length);
                                 if (length > 1)
                                 {
                                         std::vector<GLchar> buffer(length);
                                         glGetShaderInfoLog(m_shader, length, nullptr, buffer.data());
-                                        error_source(std::string("CompileShader\n\n") + buffer.data(), source);
+                                        error_source(std::string("CompileShader\n\n") + buffer.data(), str);
                                 }
                                 else
                                 {
-                                        error_source("CompileShader\n\nUnknown error", source);
+                                        error_source("CompileShader\n\nUnknown error", str);
                                 }
                         }
                 }
