@@ -15,9 +15,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "colors_glsl.h"
+#version 450 core
 
-constexpr const char color_space_functions[] = R"(
+#extension GL_ARB_bindless_texture : require
+#extension GL_ARB_compute_variable_group_size : require
 
 float rgb_to_srgb(float c)
 {
@@ -81,11 +82,4 @@ float luminance_of_rgb(vec3 c)
 float luminance_of_rgb(vec4 c)
 {
         return luminance_of_rgb(c.rgb);
-}
-
-)";
-
-const char* glsl_color_space_functions()
-{
-        return color_space_functions;
 }

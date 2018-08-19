@@ -17,32 +17,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "com/color/colors_glsl.h"
 #include "com/error.h"
 #include "com/mat.h"
 #include "com/type_detect.h"
 #include "com/vec.h"
+#include "graphics/common_opengl.h"
 #include "graphics/opengl/functions/opengl_functions.h"
 
 #include <array>
 #include <string>
 #include <type_traits>
 #include <vector>
-
-constexpr int MAJOR_GL_VERSION = 4;
-constexpr int MINOR_GL_VERSION = 5;
-constexpr int ANTIALIASING_LEVEL = 4;
-constexpr int DEPTH_BITS = 24;
-constexpr int STENCIL_BITS = 8;
-constexpr int RED_BITS = 8;
-constexpr int GREEN_BITS = 8;
-constexpr int BLUE_BITS = 8;
-constexpr int ALPHA_BITS = 8;
-
-inline std::vector<std::string> required_extensions()
-{
-        return std::vector<std::string>({"GL_ARB_bindless_texture", "GL_ARB_compute_variable_group_size"});
-}
 
 class Shader
 {
@@ -54,14 +39,12 @@ protected:
                 m_shader = glCreateShader(type);
                 try
                 {
-                        std::string source;
-                        source = "#version " + std::to_string(MAJOR_GL_VERSION) + std::to_string(MINOR_GL_VERSION) +
-                                 (MINOR_GL_VERSION < 10 ? "0" : "") + " core\n";
-                        for (const std::string& ext : required_extensions())
-                        {
-                                source += "#extension " + ext + " : require\n";
-                        }
-                        source += glsl_color_space_functions();
+                        // clang-format off
+                        std::string source
+                        (
+#include "common_opengl.glsl.str"
+                        );
+                        // clang-format on
                         source += "\n";
                         source += shader_text;
                         const char* const source_ptr = source.c_str();

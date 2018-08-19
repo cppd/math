@@ -17,4 +17,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-const char* glsl_color_space_functions();
+#include <string>
+#include <vector>
+
+constexpr int MAJOR_GL_VERSION = 4;
+constexpr int MINOR_GL_VERSION = 5;
+
+inline std::vector<std::string> required_extensions()
+{
+        return {"GL_ARB_bindless_texture", "GL_ARB_compute_variable_group_size"};
+}
+
+constexpr int ANTIALIASING_LEVEL = 4;
+constexpr int DEPTH_BITS = 24;
+constexpr int STENCIL_BITS = 8;
+constexpr int RED_BITS = 8;
+constexpr int GREEN_BITS = 8;
+constexpr int BLUE_BITS = 8;
+constexpr int ALPHA_BITS = 8;
