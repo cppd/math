@@ -28,7 +28,7 @@ set(gcc_minimal_version "7.3")
 set(clang_minimal_version "6")
 set(sfml_minimal_version "2.4.2")
 
-set(extensions_shaders "comp;frag;geom;vert;tesc;tese")
+set(extensions_shaders "comp;frag;geom;vert;tesc;tese;glsl")
 set(extensions_all "h;c;cpp;ui" ${extensions_shaders})
 
 ##################################################
