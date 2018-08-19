@@ -18,16 +18,26 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "window.h"
 
 #include "com/log.h"
+#include "graphics/common_opengl.h"
 #include "graphics/opengl/query.h"
 
 #include <SFML/System/Err.hpp>
 
 #if defined(_WIN32)
-
 #include "graphics/opengl/functions/opengl_functions.h"
+#endif
+
+constexpr int ANTIALIASING_LEVEL = 4;
+constexpr int DEPTH_BITS = 24;
+constexpr int STENCIL_BITS = 8;
+constexpr int RED_BITS = 8;
+constexpr int GREEN_BITS = 8;
+constexpr int BLUE_BITS = 8;
+constexpr int ALPHA_BITS = 8;
 
 namespace
 {
+#if defined(_WIN32)
 void init_opengl_functions()
 {
         // Для Винды адреса функций OpenGL зависят от контекста.
@@ -35,8 +45,6 @@ void init_opengl_functions()
         // поэтому не совсем правильно использовать общие адреса.
         opengl_functions::init();
 }
-}
-
 #endif
 
 void create_gl_window_1x1(int major_gl_version, int minor_gl_version, const std::vector<std::string>& extensions,
@@ -65,8 +73,8 @@ void create_gl_window_1x1(int major_gl_version, int minor_gl_version, const std:
         LOG("\n-----OpenGL Window-----\n" + gpu::graphics_overview());
 }
 
-void create_gl_context_1x1(int major_gl_version, int minor_gl_version, const std::vector<std::string>& extensions,
-                           std::unique_ptr<sf::Context>* context)
+std::unique_ptr<sf::Context> create_gl_context_1x1(int major_gl_version, int minor_gl_version,
+                                                   const std::vector<std::string>& extensions)
 {
         sf::err().rdbuf(nullptr);
 
@@ -76,7 +84,7 @@ void create_gl_context_1x1(int major_gl_version, int minor_gl_version, const std
         cs.antialiasingLevel = 0;
         cs.attributeFlags = sf::ContextSettings::Attribute::Core;
 
-        *context = std::make_unique<sf::Context>(cs, 1, 1);
+        std::unique_ptr<sf::Context> context = std::make_unique<sf::Context>(cs, 1, 1);
 
 #if defined(_WIN32)
         init_opengl_functions();
@@ -85,4 +93,18 @@ void create_gl_context_1x1(int major_gl_version, int minor_gl_version, const std
         gpu::check_context(major_gl_version, minor_gl_version, extensions);
 
         LOG("\n-----OpenGL Context-----\n" + gpu::graphics_overview());
+
+        return context;
+}
+}
+
+void create_gl_window_1x1(sf::Window* wnd)
+{
+        create_gl_window_1x1(MAJOR_GL_VERSION, MINOR_GL_VERSION, required_extensions(), ANTIALIASING_LEVEL, DEPTH_BITS,
+                             STENCIL_BITS, RED_BITS, GREEN_BITS, BLUE_BITS, ALPHA_BITS, wnd);
+}
+
+std::unique_ptr<sf::Context> create_gl_context_1x1()
+{
+        return create_gl_context_1x1(MAJOR_GL_VERSION, MINOR_GL_VERSION, required_extensions());
 }

@@ -20,12 +20,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <SFML/Window/Context.hpp>
 #include <SFML/Window/Window.hpp>
 #include <memory>
-#include <string>
-#include <vector>
 
-void create_gl_window_1x1(int major_gl_version, int minor_gl_version, const std::vector<std::string>& extensions,
-                          int antialiasing_level, int depth_bits, int stencil_bits, int red_bits, int green_bits, int blue_bits,
-                          int alpha_bits, sf::Window* wnd);
-
-void create_gl_context_1x1(int major_gl_version, int minor_gl_version, const std::vector<std::string>& extensions,
-                           std::unique_ptr<sf::Context>* context);
+void create_gl_window_1x1(sf::Window* wnd);
+std::unique_ptr<sf::Context> create_gl_context_1x1();

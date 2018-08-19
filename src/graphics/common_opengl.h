@@ -27,11 +27,3 @@ inline std::vector<std::string> required_extensions()
 {
         return {"GL_ARB_bindless_texture", "GL_ARB_compute_variable_group_size"};
 }
-
-constexpr int ANTIALIASING_LEVEL = 4;
-constexpr int DEPTH_BITS = 24;
-constexpr int STENCIL_BITS = 8;
-constexpr int RED_BITS = 8;
-constexpr int GREEN_BITS = 8;
-constexpr int BLUE_BITS = 8;
-constexpr int ALPHA_BITS = 8;

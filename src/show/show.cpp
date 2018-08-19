@@ -412,13 +412,11 @@ void ShowObject::loop()
                 // Без этого создания контекста почему-то не сможет установиться
                 // ANTIALIASING_LEVEL в ненулевое значение далее при создании окна.
                 // В версии SFML 2.4.2 эта проблема исчезла.
-                std::unique_ptr<sf::Context> context;
-                create_gl_context_1x1(MAJOR_GL_VERSION, MINOR_GL_VERSION, required_extensions(), &context);
+                std::unique_ptr<sf::Context> context = create_gl_context_1x1();
         }
 
         sf::Window wnd;
-        create_gl_window_1x1(MAJOR_GL_VERSION, MINOR_GL_VERSION, required_extensions(), ANTIALIASING_LEVEL, DEPTH_BITS,
-                             STENCIL_BITS, RED_BITS, GREEN_BITS, BLUE_BITS, ALPHA_BITS, &wnd);
+        create_gl_window_1x1(&wnd);
         move_window_to_parent(wnd.getSystemHandle(), m_win_parent);
 
         glDisable(GL_CULL_FACE);
