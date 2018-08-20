@@ -30,9 +30,9 @@ void error(std::string&& text)
         throw ErrorException(std::move(text));
 }
 
-void error_source(const std::string& text, const std::string& source_text)
+void error_source(std::string&& text, std::string&& source_text)
 {
-        throw ErrorSourceException(text, source_text);
+        throw ErrorSourceException(std::move(text), std::move(source_text));
 }
 
 void error_fatal(const char* text) noexcept

@@ -63,7 +63,7 @@ public:
 
 [[noreturn]] void error(const std::string& text);
 [[noreturn]] void error(std::string&& text);
-[[noreturn]] void error_source(const std::string& text, const std::string& source_text);
+[[noreturn]] void error_source(std::string&& text, std::string&& source_text);
 
 [[noreturn]] void error_fatal(const char* text) noexcept;
 [[noreturn]] void error_fatal(const std::string& text) noexcept;
