@@ -25,42 +25,77 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <array>
 #include <string>
+#include <string_view>
 #include <type_traits>
 #include <vector>
 
 class Shader
 {
         // clang-format off
-        static constexpr const char COMMON_SHADER_TEXT[] =
+        static constexpr std::string_view COMMON_SHADER_TEXT
         {
 #include "common_opengl.glsl.str"
         };
         // clang-format on
 
-        static constexpr const char EMPTY_LINE[] = "\n";
+        static constexpr std::string_view EMPTY_LINE = "\n";
 
         GLuint m_shader = 0;
 
+        template <typename Type, size_t size>
+        static constexpr Type to_type()
+        {
+                constexpr bool is_same = std::is_same_v<size_t, std::remove_cv_t<Type>>;
+                static_assert(is_same || std::numeric_limits<Type>::is_specialized);
+                static_assert(is_same || size <= std::numeric_limits<Type>::max());
+                return size;
+        }
+
+        template <typename Type>
+        static constexpr Type to_type(size_t size)
+        {
+                constexpr bool is_same = std::is_same_v<size_t, std::remove_cv_t<Type>>;
+                static_assert(is_same || std::numeric_limits<Type>::is_specialized);
+                if constexpr (!is_same)
+                {
+                        ASSERT(size <= std::numeric_limits<Type>::max());
+                }
+                return size;
+        }
+
+        template <typename Data, typename Size, size_t N>
+        static std::string string_source(const std::array<const Data*, N>& pointers, const std::array<Size, N>& sizes)
+        {
+                std::string s;
+                for (size_t i = 0; i < N; ++i)
+                {
+                        s += std::string_view(pointers[i], sizes[i]);
+                }
+                return s;
+        }
+
 protected:
-        Shader(GLenum type, const std::string& shader_text)
+        Shader(GLenum type, const std::string_view& shader_text)
         {
                 m_shader = glCreateShader(type);
                 try
                 {
-                        const std::array<const GLchar*, 3> source = {COMMON_SHADER_TEXT, EMPTY_LINE, shader_text.c_str()};
+                        const std::array<const GLchar*, 3> source_pointers = {COMMON_SHADER_TEXT.data(), EMPTY_LINE.data(),
+                                                                              shader_text.data()};
 
-                        glShaderSource(m_shader, source.size(), source.data(), nullptr);
+                        const std::array<GLint, 3> source_sizes = {to_type<GLint, COMMON_SHADER_TEXT.size()>(),
+                                                                   to_type<GLint, EMPTY_LINE.size()>(),
+                                                                   to_type<GLint>(shader_text.size())};
+
+                        glShaderSource(m_shader, source_pointers.size(), source_pointers.data(), source_sizes.data());
+
                         glCompileShader(m_shader);
 
                         GLint status;
                         glGetShaderiv(m_shader, GL_COMPILE_STATUS, &status);
                         if (status != GL_TRUE)
                         {
-                                std::string str;
-                                for (const char* c : source)
-                                {
-                                        str += c;
-                                }
+                                std::string error_message = "CompileShader\n\n";
 
                                 GLint length;
                                 glGetShaderiv(m_shader, GL_INFO_LOG_LENGTH, &length);
@@ -68,12 +103,14 @@ protected:
                                 {
                                         std::vector<GLchar> buffer(length);
                                         glGetShaderInfoLog(m_shader, length, nullptr, buffer.data());
-                                        error_source(std::string("CompileShader\n\n") + buffer.data(), str);
+                                        error_message += buffer.data();
                                 }
                                 else
                                 {
-                                        error_source("CompileShader\n\nUnknown error", str);
+                                        error_message += "Unknown error";
                                 }
+
+                                error_source(std::move(error_message), string_source(source_pointers, source_sizes));
                         }
                 }
                 catch (...)
@@ -335,7 +372,7 @@ public:
 class VertexShader final : public Shader
 {
 public:
-        VertexShader(const std::string& shader_text) : Shader(GL_VERTEX_SHADER, shader_text)
+        VertexShader(const std::string_view& shader_text) : Shader(GL_VERTEX_SHADER, shader_text)
         {
         }
 };
@@ -343,7 +380,7 @@ public:
 class TessControlShader final : public Shader
 {
 public:
-        TessControlShader(const std::string& shader_text) : Shader(GL_TESS_CONTROL_SHADER, shader_text)
+        TessControlShader(const std::string_view& shader_text) : Shader(GL_TESS_CONTROL_SHADER, shader_text)
         {
         }
 };
@@ -351,7 +388,7 @@ public:
 class TessEvaluationShader final : public Shader
 {
 public:
-        TessEvaluationShader(const std::string& shader_text) : Shader(GL_TESS_EVALUATION_SHADER, shader_text)
+        TessEvaluationShader(const std::string_view& shader_text) : Shader(GL_TESS_EVALUATION_SHADER, shader_text)
         {
         }
 };
@@ -359,7 +396,7 @@ public:
 class GeometryShader final : public Shader
 {
 public:
-        GeometryShader(const std::string& shader_text) : Shader(GL_GEOMETRY_SHADER, shader_text)
+        GeometryShader(const std::string_view& shader_text) : Shader(GL_GEOMETRY_SHADER, shader_text)
         {
         }
 };
@@ -367,7 +404,7 @@ public:
 class FragmentShader final : public Shader
 {
 public:
-        FragmentShader(const std::string& shader_text) : Shader(GL_FRAGMENT_SHADER, shader_text)
+        FragmentShader(const std::string_view& shader_text) : Shader(GL_FRAGMENT_SHADER, shader_text)
         {
         }
 };
@@ -375,7 +412,7 @@ public:
 class ComputeShader final : public Shader
 {
 public:
-        ComputeShader(const std::string& shader_text) : Shader(GL_COMPUTE_SHADER, shader_text)
+        ComputeShader(const std::string_view& shader_text) : Shader(GL_COMPUTE_SHADER, shader_text)
         {
         }
 };
