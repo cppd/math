@@ -415,9 +415,8 @@ void ShowObject::loop()
                 std::unique_ptr<sf::Context> context = create_gl_context_1x1();
         }
 
-        sf::Window wnd;
-        create_gl_window_1x1(&wnd);
-        move_window_to_parent(wnd.getSystemHandle(), m_win_parent);
+        std::unique_ptr<sf::Window> wnd = create_gl_window_1x1();
+        move_window_to_parent(wnd->getSystemHandle(), m_win_parent);
 
         glDisable(GL_CULL_FACE);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -429,8 +428,8 @@ void ShowObject::loop()
         LOG(framebuffer_srgb ? "Framebuffer sRGB" : "Framebuffer linear");
         LOG(colorbuffer_srgb ? "Colorbuffer sRGB" : "Colorbuffer linear");
 
-        int new_width = wnd.getSize().x;
-        int new_height = wnd.getSize().y;
+        int new_width = wnd->getSize().x;
+        int new_height = wnd->getSize().y;
         double pixel_to_coord_no_zoom = 2.0 / std::min(new_width, new_height);
         double pixel_to_coord = pixel_to_coord_no_zoom;
 
@@ -478,7 +477,7 @@ void ShowObject::loop()
 #if defined(_WIN32)
                         // Без этого вызова почему-то зависает деструктор окна SFML на Винде,
                         // если это окно встроено в родительское окно.
-                        change_window_style_not_child(wnd.getSystemHandle());
+                        change_window_style_not_child(wnd->getSystemHandle());
 #endif
 
                         return;
@@ -532,14 +531,14 @@ void ShowObject::loop()
                         {
                                 if (!fullscreen_active)
                                 {
-                                        set_size_to_parent(wnd.getSystemHandle(), m_win_parent);
+                                        set_size_to_parent(wnd->getSystemHandle(), m_win_parent);
                                 }
                                 break;
                         }
                         case Event::Type::ToggleFullscreen:
                         {
                                 fullscreen_active = !fullscreen_active;
-                                make_fullscreen(fullscreen_active, wnd.getSystemHandle(), m_win_parent);
+                                make_fullscreen(fullscreen_active, wnd->getSystemHandle(), m_win_parent);
                                 break;
                         }
                         case Event::Type::ResetView:
@@ -731,7 +730,7 @@ void ShowObject::loop()
                         {
                                 const Event::vertical_sync& d = event->get<Event::vertical_sync>();
 
-                                wnd.setVerticalSyncEnabled(d.enable);
+                                wnd->setVerticalSyncEnabled(d.enable);
                                 break;
                         }
                         case Event::Type::ShadowZoom:
@@ -748,7 +747,7 @@ void ShowObject::loop()
                 {
                         sf::Event event;
 
-                        if (!wnd.pollEvent(event))
+                        if (!wnd->pollEvent(event))
                         {
                                 break;
                         }
@@ -1004,7 +1003,7 @@ void ShowObject::loop()
                 glEnable(GL_BLEND);
                 text.draw(window_width, window_height, {"FPS: " + std::to_string(calculate_fps(&start_time))});
 
-                wnd.display();
+                wnd->display();
         }
 }
 

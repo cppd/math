@@ -21,5 +21,5 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <SFML/Window/Window.hpp>
 #include <memory>
 
-void create_gl_window_1x1(sf::Window* wnd);
+std::unique_ptr<sf::Window> create_gl_window_1x1();
 std::unique_ptr<sf::Context> create_gl_context_1x1();

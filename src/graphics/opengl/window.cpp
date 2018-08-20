@@ -47,9 +47,10 @@ void init_opengl_functions()
 }
 #endif
 
-void create_gl_window_1x1(int major_gl_version, int minor_gl_version, const std::vector<std::string>& extensions,
-                          int antialiasing_level, int depth_bits, int stencil_bits, int red_bits, int green_bits, int blue_bits,
-                          int alpha_bits, sf::Window* wnd)
+std::unique_ptr<sf::Window> create_gl_window_1x1(int major_gl_version, int minor_gl_version,
+                                                 const std::vector<std::string>& extensions, int antialiasing_level,
+                                                 int depth_bits, int stencil_bits, int red_bits, int green_bits, int blue_bits,
+                                                 int alpha_bits)
 {
         sf::err().rdbuf(nullptr);
 
@@ -61,7 +62,7 @@ void create_gl_window_1x1(int major_gl_version, int minor_gl_version, const std:
         cs.stencilBits = stencil_bits;
         cs.attributeFlags = sf::ContextSettings::Attribute::Core;
 
-        wnd->create(sf::VideoMode(1, 1), "", sf::Style::None, cs);
+        std::unique_ptr<sf::Window> window = std::make_unique<sf::Window>(sf::VideoMode(1, 1), "", sf::Style::None, cs);
 
 #if defined(_WIN32)
         init_opengl_functions();
@@ -71,6 +72,8 @@ void create_gl_window_1x1(int major_gl_version, int minor_gl_version, const std:
         gpu::check_bit_sizes(depth_bits, stencil_bits, antialiasing_level, red_bits, green_bits, blue_bits, alpha_bits);
 
         LOG("\n-----OpenGL Window-----\n" + gpu::graphics_overview());
+
+        return window;
 }
 
 std::unique_ptr<sf::Context> create_gl_context_1x1(int major_gl_version, int minor_gl_version,
@@ -98,10 +101,10 @@ std::unique_ptr<sf::Context> create_gl_context_1x1(int major_gl_version, int min
 }
 }
 
-void create_gl_window_1x1(sf::Window* wnd)
+std::unique_ptr<sf::Window> create_gl_window_1x1()
 {
-        create_gl_window_1x1(MAJOR_GL_VERSION, MINOR_GL_VERSION, required_extensions(), ANTIALIASING_LEVEL, DEPTH_BITS,
-                             STENCIL_BITS, RED_BITS, GREEN_BITS, BLUE_BITS, ALPHA_BITS, wnd);
+        return create_gl_window_1x1(MAJOR_GL_VERSION, MINOR_GL_VERSION, required_extensions(), ANTIALIASING_LEVEL, DEPTH_BITS,
+                                    STENCIL_BITS, RED_BITS, GREEN_BITS, BLUE_BITS, ALPHA_BITS);
 }
 
 std::unique_ptr<sf::Context> create_gl_context_1x1()
