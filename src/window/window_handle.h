@@ -17,6 +17,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <SFML/Window/WindowHandle.hpp>
+#if defined(__linux__)
 
-using WindowID = sf::WindowHandle;
+using WindowID = unsigned long;
+
+#elif defined(_WIN32)
+
+struct HWND__;
+using WindowID = HWND__*;
+
+#else
+#error This operating system is not supported
+#endif
