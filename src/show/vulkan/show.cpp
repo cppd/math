@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #if defined(VULKAN_FOUND) && defined(GLFW_FOUND)
 
-#include "test_vulkan.h"
+#include "show.h"
 
 #include "com/log.h"
 #include "com/math.h"
@@ -38,11 +38,11 @@ constexpr double WINDOW_SIZE_COEF = 0.5;
 // clang-format off
 constexpr uint32_t vertex_shader[]
 {
-#include "test_vulkan.vert.spr"
+#include "draw_vulkan.vert.spr"
 };
 constexpr uint32_t fragment_shader[]
 {
-#include "test_vulkan.frag.spr"
+#include "draw_vulkan.frag.spr"
 };
 // clang-format on
 

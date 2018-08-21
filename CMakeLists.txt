@@ -350,7 +350,7 @@ if(Vulkan_FOUND)
         target_compile_definitions(${PROJECT_NAME} PRIVATE -DVULKAN_FOUND)
         target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${Vulkan_INCLUDE_DIRS})
         target_link_libraries(${PROJECT_NAME} ${Vulkan_LIBRARIES})
-        AddVulkanShaders(src/graphics/test_vulkan "${extensions_shaders}")
+        AddVulkanShaders(src/show/vulkan "${extensions_shaders}")
 endif()
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/GLFW")

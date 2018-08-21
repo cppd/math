@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/print.h"
 #include "graphics/opengl/query.h"
 #include "obj/obj_alg.h"
-#include "show/color_space/color_space.h"
+#include "show/opengl/color_space/color_space.h"
 
 #include <algorithm>
 #include <vector>

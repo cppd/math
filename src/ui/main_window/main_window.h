@@ -21,9 +21,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "objects.h"
 #include "threads.h"
 
-#include "graphics/test_vulkan/test_vulkan.h"
 #include "progress/progress_list.h"
-#include "show/show.h"
+#include "show/opengl/show.h"
+#include "show/vulkan/show.h"
 #include "tests/self_test.h"
 
 #include "ui_main_window.h"
