@@ -40,6 +40,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "show/opengl/color_space/buffer_type.h"
 #include "show/opengl/renderer/renderer.h"
 #include "show/opengl/text/text.h"
+#include "window/window_prop.h"
 
 #include <SFML/Window/Event.hpp>
 #include <chrono>

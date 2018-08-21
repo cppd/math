@@ -27,6 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/vulkan/instance.h"
 #include "graphics/vulkan/query.h"
 #include "graphics/vulkan/window.h"
+#include "window/window_prop.h"
 
 #include <array>
 #include <atomic>

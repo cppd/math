@@ -17,13 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "window_handle.h"
+#include <SFML/Window/WindowHandle.hpp>
 
-void move_window_to_parent(WindowID window, WindowID parent);
-void make_window_fullscreen(WindowID window);
-void set_focus(WindowID window);
-void set_size_to_parent(WindowID window, WindowID parent);
-
-#if defined(_WIN32)
-void change_window_style_not_child(WindowID window);
-#endif
+using WindowID = sf::WindowHandle;

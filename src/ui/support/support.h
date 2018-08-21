@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/error.h"
 #include "com/type_detect.h"
 #include "com/vec.h"
-#include "window/window_prop.h"
+#include "window/window_handle.h"
 
 #include <QLayout>
 #include <QMainWindow>
