@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #if defined(VULKAN_FOUND) && defined(GLFW_FOUND)
 
+#include "window/window_prop.h"
+
 #include <array>
 #include <string>
 #include <vector>
@@ -38,6 +40,8 @@ public:
         ~VulkanWindow();
 
         operator GLFWwindow*() const;
+
+        WindowID get_system_handle();
 
         VkSurfaceKHR create_surface(VkInstance instance);
 

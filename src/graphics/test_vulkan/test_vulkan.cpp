@@ -29,6 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/vulkan/window.h"
 
 #include <array>
+#include <atomic>
 #include <cmath>
 #include <thread>
 
@@ -180,67 +181,115 @@ std::array<int, 2> window_size()
         return size;
 }
 
-void test_vulkan_thread()
+class VulkanObject final : public IShowVulkan
+{
+        WindowID m_win_parent;
+        std::thread m_thread;
+        std::atomic_bool m_stop{false};
+
+        void loop();
+        void loop_thread();
+
+        void parent_resized() override
+        {
+                LOG("parent resized");
+        }
+
+        void mouse_wheel(double) override
+        {
+                LOG("mouse wheel");
+        }
+
+public:
+        VulkanObject(WindowID win_parent) : m_win_parent(win_parent)
+        {
+                m_thread = std::thread(&VulkanObject::loop_thread, this);
+        }
+
+        ~VulkanObject() override
+        {
+                if (m_thread.joinable())
+                {
+                        m_stop = true;
+                        m_thread.join();
+                }
+        }
+};
+
+void VulkanObject::loop()
+{
+        const std::vector<std::string> instance_extensions({});
+        const std::vector<std::string> device_extensions({});
+
+        const std::vector<std::string> window_instance_extensions(VulkanWindow::instance_extensions());
+
+        const std::vector<std::string> validation_layers({"VK_LAYER_LUNARG_standard_validation"});
+
+        if (window_instance_extensions.size() > 0)
+        {
+                LOG("Window instance extensions");
+                for (const std::string& s : window_instance_extensions)
+                {
+                        LOG(std::string("  ") + s);
+                }
+        }
+
+        LOG(vulkan::overview());
+
+        VulkanWindow window(window_size(), "Vulkan Window");
+        move_window_to_parent(window.get_system_handle(), m_win_parent);
+
+        constexpr unsigned vertex_count = indices.size();
+
+        vulkan::VulkanInstance vulkan_instance(
+                1, 0, instance_extensions + window_instance_extensions, device_extensions, validation_layers,
+                [&window](VkInstance instance) { return window.create_surface(instance); }, vertex_shader, fragment_shader,
+                Vertex::binding_descriptions(), Vertex::attribute_descriptions(), vertex_count,
+                vertices.size() * sizeof(vertices[0]), vertices.data(), indices.size() * sizeof(indices[0]), indices.data(),
+                descriptor_set_layout_bindings(), descriptor_set_layout_bindings_sizes());
+
+        LOG(vulkan::overview_physical_devices(vulkan_instance.instance()));
+
+        while (true)
+        {
+                if (m_stop)
+                {
+                        return;
+                }
+
+                // if (glfwWindowShouldClose(window))
+                // {
+                //        return;
+                //}
+
+                glfwPollEvents();
+
+                update_uniforms(vulkan_instance);
+
+                vulkan_instance.draw_frame();
+        }
+}
+
+void VulkanObject::loop_thread()
 {
         try
         {
-                const std::vector<std::string> instance_extensions({});
-                const std::vector<std::string> device_extensions({});
-
-                const std::vector<std::string> window_instance_extensions(VulkanWindow::instance_extensions());
-
-                const std::vector<std::string> validation_layers({"VK_LAYER_LUNARG_standard_validation"});
-
-                if (window_instance_extensions.size() > 0)
-                {
-                        LOG("Window instance extensions");
-                        for (const std::string& s : window_instance_extensions)
-                        {
-                                LOG(std::string("  ") + s);
-                        }
-                }
-
-                LOG(vulkan::overview());
-
-                VulkanWindow window(window_size(), "Vulkan Window");
-
-                constexpr unsigned vertex_count = indices.size();
-
-                vulkan::VulkanInstance vulkan_instance(
-                        1, 0, instance_extensions + window_instance_extensions, device_extensions, validation_layers,
-                        [&window](VkInstance instance) { return window.create_surface(instance); }, vertex_shader,
-                        fragment_shader, Vertex::binding_descriptions(), Vertex::attribute_descriptions(), vertex_count,
-                        vertices.size() * sizeof(vertices[0]), vertices.data(), indices.size() * sizeof(indices[0]),
-                        indices.data(), descriptor_set_layout_bindings(), descriptor_set_layout_bindings_sizes());
-
-                LOG(vulkan::overview_physical_devices(vulkan_instance.instance()));
-
-                while (!glfwWindowShouldClose(window))
-                {
-                        glfwPollEvents();
-
-                        update_uniforms(vulkan_instance);
-
-                        vulkan_instance.draw_frame();
-                }
-
-                vulkan_instance.device_wait_idle();
+                loop();
         }
         catch (std::exception& e)
         {
-                LOG(std::string("Vulkan window test error: ") + e.what());
+                error_fatal(e.what());
         }
         catch (...)
         {
-                LOG("Vulkan window test unknown error");
+                error_fatal("Unknown Error. Thread ended.");
         }
 }
 }
 
-void test_vulkan_window()
+std::unique_ptr<IShowVulkan> create_show_vulkan(WindowID win_parent)
 {
-        std::thread thread([]() noexcept { test_vulkan_thread(); });
-        thread.join();
+        return std::make_unique<VulkanObject>(win_parent);
 }
 
 #endif

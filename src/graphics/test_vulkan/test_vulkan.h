@@ -19,6 +19,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #if defined(VULKAN_FOUND) && defined(GLFW_FOUND)
 
-void test_vulkan_window();
+#include "window/window_prop.h"
+
+#include <memory>
+
+class IShowVulkan
+{
+public:
+        virtual ~IShowVulkan() = default;
+
+        virtual void parent_resized() = 0;
+        virtual void mouse_wheel(double) = 0;
+};
+
+std::unique_ptr<IShowVulkan> create_show_vulkan(WindowID win_parent);
 
 #endif

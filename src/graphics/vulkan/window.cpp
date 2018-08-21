@@ -21,10 +21,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/error.h"
 
+#if defined(__linux__)
+#define GLFW_EXPOSE_NATIVE_X11
+#elif defined(_WIN32)
+#define GLFW_EXPOSE_NATIVE_WIN32
+#else
+#error This operating system is not supported
+#endif
+#include <GLFW/glfw3native.h>
+
 VulkanWindow::VulkanWindow(const std::array<int, 2>& size, const std::string& title)
 {
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
         // glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+        glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
 
         GLFWwindow* window = glfwCreateWindow(size[0], size[1], title.c_str(), nullptr, nullptr);
         if (!window)
@@ -46,6 +56,17 @@ VulkanWindow::~VulkanWindow()
 VulkanWindow::operator GLFWwindow*() const
 {
         return m_window;
+}
+
+WindowID VulkanWindow::get_system_handle()
+{
+#if defined(__linux__)
+        return glfwGetX11Window(m_window);
+#elif defined(_WIN32)
+        return glfwGetWin32Window(m_window);
+#else
+#error This operating system is not supported
+#endif
 }
 
 VkSurfaceKHR VulkanWindow::create_surface(VkInstance instance)

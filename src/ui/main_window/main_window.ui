@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>591</width>
-    <height>575</height>
+    <width>1096</width>
+    <height>874</height>
    </rect>
   </property>
   <widget class="QWidget" name="mainWidget">
@@ -1009,7 +1009,7 @@
          </layout>
         </widget>
        </widget>
-       <widget class="GraphicsWidget" name="graphics_widget">
+       <widget class="GraphicsWidget" name="graphics_widget_opengl">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
           <horstretch>3</horstretch>
@@ -1024,6 +1024,29 @@
         </property>
         <property name="text">
          <string>widget under the OpenGL window</string>
+        </property>
+        <property name="textFormat">
+         <enum>Qt::PlainText</enum>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+       </widget>
+       <widget class="GraphicsWidget" name="graphics_widget_vulkan">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+          <horstretch>3</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>400</width>
+          <height>400</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>widget under the Vulkan window</string>
         </property>
         <property name="textFormat">
          <enum>Qt::PlainText</enum>
@@ -1061,8 +1084,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>591</width>
-     <height>20</height>
+     <width>1096</width>
+     <height>29</height>
     </rect>
    </property>
    <property name="sizePolicy">
