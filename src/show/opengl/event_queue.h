@@ -180,189 +180,148 @@ protected:
         virtual void direct_set_vertical_sync(bool v) = 0;
         virtual void direct_set_shadow_zoom(double v) = 0;
 
+private:
+        class Visitor
+        {
+                EventQueue& m_event_queue;
+
+        public:
+                Visitor(EventQueue& event_queue) : m_event_queue(event_queue)
+                {
+                }
+
+                void operator()(const Event::add_object& d)
+                {
+                        m_event_queue.direct_add_object(d.obj, d.id, d.scale_id);
+                }
+                void operator()(const Event::delete_object& d)
+                {
+                        m_event_queue.direct_delete_object(d.id);
+                }
+                void operator()(const Event::show_object& d)
+                {
+                        m_event_queue.direct_show_object(d.id);
+                }
+                void operator()(const Event::delete_all_objects&)
+                {
+                        m_event_queue.direct_delete_all_objects();
+                }
+                void operator()(const Event::parent_resized&)
+                {
+                        m_event_queue.direct_parent_resized();
+                }
+                void operator()(const Event::toggle_fullscreen&)
+                {
+                        m_event_queue.direct_toggle_fullscreen();
+                }
+                void operator()(const Event::reset_view)
+                {
+                        m_event_queue.direct_reset_view();
+                }
+                void operator()(const Event::mouse_wheel& d)
+                {
+                        m_event_queue.direct_mouse_wheel(d.delta);
+                }
+                void operator()(const Event::set_ambient& d)
+                {
+                        m_event_queue.direct_set_ambient(d.ambient);
+                }
+                void operator()(const Event::set_diffuse& d)
+                {
+                        m_event_queue.direct_set_diffuse(d.diffuse);
+                }
+                void operator()(const Event::set_specular& d)
+                {
+                        m_event_queue.direct_set_specular(d.specular);
+                }
+                void operator()(const Event::set_background_color_rgb& d)
+                {
+                        m_event_queue.direct_set_background_color_rgb(d.background_color);
+                }
+                void operator()(const Event::set_default_color_rgb& d)
+                {
+                        m_event_queue.direct_set_default_color_rgb(d.default_color);
+                }
+                void operator()(const Event::set_wireframe_color_rgb& d)
+                {
+                        m_event_queue.direct_set_wireframe_color_rgb(d.wireframe_color);
+                }
+                void operator()(const Event::set_default_ns& d)
+                {
+                        m_event_queue.direct_set_default_ns(d.default_ns);
+                }
+                void operator()(const Event::show_smooth& d)
+                {
+                        m_event_queue.direct_show_smooth(d.show);
+                }
+                void operator()(const Event::show_wireframe& d)
+                {
+                        m_event_queue.direct_show_wireframe(d.show);
+                }
+                void operator()(const Event::show_shadow& d)
+                {
+                        m_event_queue.direct_show_shadow(d.show);
+                }
+                void operator()(const Event::show_fog& d)
+                {
+                        m_event_queue.direct_show_fog(d.show);
+                }
+                void operator()(const Event::show_materials& d)
+                {
+                        m_event_queue.direct_show_materials(d.show);
+                }
+                void operator()(const Event::show_effect& d)
+                {
+                        m_event_queue.direct_show_effect(d.show);
+                }
+                void operator()(const Event::show_dft& d)
+                {
+                        m_event_queue.direct_show_dft(d.show);
+                }
+                void operator()(const Event::set_dft_brightness& d)
+                {
+                        m_event_queue.direct_set_dft_brightness(d.dft_brightness);
+                }
+                void operator()(const Event::set_dft_background_color& d)
+                {
+                        m_event_queue.direct_set_dft_background_color(d.color);
+                }
+                void operator()(const Event::set_dft_color& d)
+                {
+                        m_event_queue.direct_set_dft_color(d.color);
+                }
+                void operator()(const Event::show_convex_hull_2d& d)
+                {
+                        m_event_queue.direct_show_convex_hull_2d(d.show);
+                }
+                void operator()(const Event::show_optical_flow& d)
+                {
+                        m_event_queue.direct_show_optical_flow(d.show);
+                }
+                void operator()(const Event::set_vertical_sync& d)
+                {
+                        m_event_queue.direct_set_vertical_sync(d.enable);
+                }
+                void operator()(const Event::set_shadow_zoom& d)
+                {
+                        m_event_queue.direct_set_shadow_zoom(d.zoom);
+                }
+        };
+
+protected:
         bool pull_and_dispatch_event()
         {
-                std::optional<Event> event(m_event_queue.pop());
+                const std::optional<Event> event(m_event_queue.pop());
 
                 if (!event)
                 {
                         return false;
                 }
+                else
+                {
+                        visit(Visitor(*this), event->event);
 
-                switch (event->type())
-                {
-                case Event::Type::AddObject:
-                {
-                        const Event::add_object& d = event->get<Event::add_object>();
-                        direct_add_object(d.obj, d.id, d.scale_id);
                         return true;
                 }
-                case Event::Type::DeleteObject:
-                {
-                        const Event::delete_object& d = event->get<Event::delete_object>();
-                        direct_delete_object(d.id);
-                        return true;
-                }
-                case Event::Type::ShowObject:
-                {
-                        const Event::show_object& d = event->get<Event::show_object>();
-                        direct_show_object(d.id);
-                        return true;
-                }
-                case Event::Type::DeleteAllObjects:
-                {
-                        direct_delete_all_objects();
-                        return true;
-                }
-                case Event::Type::ParentResized:
-                {
-                        direct_parent_resized();
-                        return true;
-                }
-                case Event::Type::ToggleFullscreen:
-                {
-                        direct_toggle_fullscreen();
-                        return true;
-                }
-                case Event::Type::ResetView:
-                {
-                        direct_reset_view();
-                        return true;
-                }
-                case Event::Type::MouseWheel:
-                {
-                        const Event::mouse_wheel& d = event->get<Event::mouse_wheel>();
-                        direct_mouse_wheel(d.delta);
-                        return true;
-                }
-                case Event::Type::SetAmbient:
-                {
-                        const Event::set_ambient& d = event->get<Event::set_ambient>();
-                        direct_set_ambient(d.ambient);
-                        return true;
-                }
-                case Event::Type::SetDiffuse:
-                {
-                        const Event::set_diffuse& d = event->get<Event::set_diffuse>();
-                        direct_set_diffuse(d.diffuse);
-                        return true;
-                }
-                case Event::Type::SetSpecular:
-                {
-                        const Event::set_specular& d = event->get<Event::set_specular>();
-                        direct_set_specular(d.specular);
-                        return true;
-                }
-                case Event::Type::SetBackgroundColorRGB:
-                {
-                        const Event::set_background_color_rgb& d = event->get<Event::set_background_color_rgb>();
-                        direct_set_background_color_rgb(d.background_color);
-                        return true;
-                }
-                case Event::Type::SetDefaultColorRGB:
-                {
-                        const Event::set_default_color_rgb& d = event->get<Event::set_default_color_rgb>();
-                        direct_set_default_color_rgb(d.default_color);
-                        return true;
-                }
-                case Event::Type::SetWireframeColorRGB:
-                {
-                        const Event::set_wireframe_color_rgb& d = event->get<Event::set_wireframe_color_rgb>();
-                        direct_set_wireframe_color_rgb(d.wireframe_color);
-                        return true;
-                }
-                case Event::Type::SetDefaultNs:
-                {
-                        const Event::set_default_ns& d = event->get<Event::set_default_ns>();
-                        direct_set_default_ns(d.default_ns);
-                        return true;
-                }
-                case Event::Type::ShowSmooth:
-                {
-                        const Event::show_smooth& d = event->get<Event::show_smooth>();
-                        direct_show_smooth(d.show);
-                        return true;
-                }
-                case Event::Type::ShowWireframe:
-                {
-                        const Event::show_wireframe& d = event->get<Event::show_wireframe>();
-                        direct_show_wireframe(d.show);
-                        return true;
-                }
-                case Event::Type::ShowShadow:
-                {
-                        const Event::show_shadow& d = event->get<Event::show_shadow>();
-                        direct_show_shadow(d.show);
-                        return true;
-                }
-                case Event::Type::ShowFog:
-                {
-                        const Event::show_fog& d = event->get<Event::show_fog>();
-                        direct_show_fog(d.show);
-                        return true;
-                }
-                case Event::Type::ShowMaterials:
-                {
-                        const Event::show_materials& d = event->get<Event::show_materials>();
-                        direct_show_materials(d.show);
-                        return true;
-                }
-                case Event::Type::ShowEffect:
-                {
-                        const Event::show_effect& d = event->get<Event::show_effect>();
-                        direct_show_effect(d.show);
-                        return true;
-                }
-                case Event::Type::ShowDft:
-                {
-                        const Event::show_dft& d = event->get<Event::show_dft>();
-                        direct_show_dft(d.show);
-                        return true;
-                }
-                case Event::Type::SetDftBrightness:
-                {
-                        const Event::set_dft_brightness& d = event->get<Event::set_dft_brightness>();
-                        direct_set_dft_brightness(d.dft_brightness);
-                        return true;
-                }
-                case Event::Type::SetDftBackgroundColor:
-                {
-                        const Event::set_dft_background_color& d = event->get<Event::set_dft_background_color>();
-                        direct_set_dft_background_color(d.color);
-                        return true;
-                }
-                case Event::Type::SetDftColor:
-                {
-                        const Event::set_dft_color& d = event->get<Event::set_dft_color>();
-                        direct_set_dft_color(d.color);
-                        return true;
-                }
-                case Event::Type::ShowConvexHull2d:
-                {
-                        const Event::show_convex_hull_2d& d = event->get<Event::show_convex_hull_2d>();
-                        direct_show_convex_hull_2d(d.show);
-                        return true;
-                }
-                case Event::Type::ShowOpticalFlow:
-                {
-                        const Event::show_optical_flow& d = event->get<Event::show_optical_flow>();
-                        direct_show_optical_flow(d.show);
-                        return true;
-                }
-                case Event::Type::SetVerticalSync:
-                {
-                        const Event::set_vertical_sync& d = event->get<Event::set_vertical_sync>();
-                        direct_set_vertical_sync(d.enable);
-                        return true;
-                }
-                case Event::Type::SetShadowZoom:
-                {
-                        const Event::set_shadow_zoom& d = event->get<Event::set_shadow_zoom>();
-                        direct_set_shadow_zoom(d.zoom);
-                        return true;
-                }
-                }
-
-                error_fatal("Unknown show event type");
         }
 };
