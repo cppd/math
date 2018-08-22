@@ -25,6 +25,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <memory>
 #include <string>
 
+namespace show_event_queue_implementation
+{
 class Event final
 {
 public:
@@ -104,24 +106,24 @@ public:
                 {
                 }
         };
-        struct set_background_color final
+        struct set_background_color_rgb final
         {
                 Color background_color;
-                set_background_color(const Color& v) : background_color(v)
+                set_background_color_rgb(const Color& v) : background_color(v)
                 {
                 }
         };
-        struct set_default_color final
+        struct set_default_color_rgb final
         {
                 Color default_color;
-                set_default_color(const Color& v) : default_color(v)
+                set_default_color_rgb(const Color& v) : default_color(v)
                 {
                 }
         };
-        struct set_wireframe_color final
+        struct set_wireframe_color_rgb final
         {
                 Color wireframe_color;
-                set_wireframe_color(const Color& v) : wireframe_color(v)
+                set_wireframe_color_rgb(const Color& v) : wireframe_color(v)
                 {
                 }
         };
@@ -216,17 +218,17 @@ public:
                 {
                 }
         };
-        struct vertical_sync final
+        struct set_vertical_sync final
         {
                 bool enable;
-                vertical_sync(bool v) : enable(v)
+                set_vertical_sync(bool v) : enable(v)
                 {
                 }
         };
-        struct shadow_zoom final
+        struct set_shadow_zoom final
         {
                 double zoom;
-                shadow_zoom(double v) : zoom(v)
+                set_shadow_zoom(double v) : zoom(v)
                 {
                 }
         };
@@ -240,16 +242,17 @@ public:
                 ParentResized,
                 ResetView,
                 SetAmbient,
-                SetBackgroundColor,
-                SetDefaultColor,
+                SetBackgroundColorRGB,
+                SetDefaultColorRGB,
                 SetDefaultNs,
                 SetDftBackgroundColor,
                 SetDftBrightness,
                 SetDftColor,
                 SetDiffuse,
+                SetShadowZoom,
                 SetSpecular,
-                SetWireframeColor,
-                ShadowZoom,
+                SetVerticalSync,
+                SetWireframeColorRGB,
                 ShowConvexHull2d,
                 ShowDft,
                 ShowEffect,
@@ -260,8 +263,7 @@ public:
                 ShowShadow,
                 ShowSmooth,
                 ShowWireframe,
-                ToggleFullscreen,
-                VerticalSync
+                ToggleFullscreen
         };
 
 #if 0
@@ -333,17 +335,17 @@ private:
         {
                 return Type::SetSpecular;
         }
-        static constexpr Type event_type(std::in_place_type_t<set_background_color>)
+        static constexpr Type event_type(std::in_place_type_t<set_background_color_rgb>)
         {
-                return Type::SetBackgroundColor;
+                return Type::SetBackgroundColorRGB;
         }
-        static constexpr Type event_type(std::in_place_type_t<set_default_color>)
+        static constexpr Type event_type(std::in_place_type_t<set_default_color_rgb>)
         {
-                return Type::SetDefaultColor;
+                return Type::SetDefaultColorRGB;
         }
-        static constexpr Type event_type(std::in_place_type_t<set_wireframe_color>)
+        static constexpr Type event_type(std::in_place_type_t<set_wireframe_color_rgb>)
         {
-                return Type::SetWireframeColor;
+                return Type::SetWireframeColorRGB;
         }
         static constexpr Type event_type(std::in_place_type_t<set_default_ns>)
         {
@@ -397,21 +399,22 @@ private:
         {
                 return Type::ShowOpticalFlow;
         }
-        static constexpr Type event_type(std::in_place_type_t<vertical_sync>)
+        static constexpr Type event_type(std::in_place_type_t<set_vertical_sync>)
         {
-                return Type::VerticalSync;
+                return Type::SetVerticalSync;
         }
-        static constexpr Type event_type(std::in_place_type_t<shadow_zoom>)
+        static constexpr Type event_type(std::in_place_type_t<set_shadow_zoom>)
         {
-                return Type::ShadowZoom;
+                return Type::SetShadowZoom;
         }
 
         Type m_type;
 
-        Variant<add_object, delete_object, show_object, delete_all_objects, parent_resized, mouse_wheel, toggle_fullscreen,
-                reset_view, set_ambient, set_diffuse, set_specular, set_background_color, set_default_color, set_wireframe_color,
-                set_default_ns, show_smooth, show_wireframe, show_shadow, show_fog, show_materials, show_effect, show_dft,
-                set_dft_brightness, set_dft_background_color, set_dft_color, show_convex_hull_2d, show_optical_flow,
-                vertical_sync, shadow_zoom>
+        Variant<add_object, delete_all_objects, delete_object, mouse_wheel, parent_resized, reset_view, set_ambient,
+                set_background_color_rgb, set_default_color_rgb, set_default_ns, set_dft_background_color, set_dft_brightness,
+                set_dft_color, set_diffuse, set_shadow_zoom, set_specular, set_vertical_sync, set_wireframe_color_rgb,
+                show_convex_hull_2d, show_dft, show_effect, show_fog, show_materials, show_object, show_optical_flow, show_shadow,
+                show_smooth, show_wireframe, toggle_fullscreen>
                 m_data;
 };
+}

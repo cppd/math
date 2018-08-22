@@ -1113,7 +1113,7 @@ void MainWindow::slot_window_first_shown()
 
         try
         {
-                m_show = create_show(
+                m_show = create_show_opengl(
                         &m_event_emitter, widget_window_id(ui.graphics_widget_opengl), qcolor_to_rgb(m_background_color),
                         qcolor_to_rgb(m_default_color), qcolor_to_rgb(m_wireframe_color), ui.checkBox_Smooth->isChecked(),
                         ui.checkBox_Wireframe->isChecked(), ui.checkBox_Shadow->isChecked(), ui.checkBox_Fog->isChecked(),
@@ -1490,12 +1490,11 @@ void MainWindow::on_actionPainter_triggered()
 
                 PaintingInformation3d info_3d;
                 m_show->camera_information(&info_3d.camera_up, &info_3d.camera_direction, &info_3d.view_center,
-                                           &info_3d.view_width);
+                                           &info_3d.view_width, &info_3d.paint_width, &info_3d.paint_height);
                 info_3d.object_position = m_show->object_position();
                 info_3d.light_direction = m_show->light_direction();
                 info_3d.object_size = m_show->object_size();
                 info_3d.max_screen_size = PATH_TRACING_3D_MAX_SCREEN_SIZE;
-                m_show->paint_width_height(&info_3d.paint_width, &info_3d.paint_height);
 
                 PaintingInformationNd info_nd;
                 info_nd.default_screen_size = PATH_TRACING_DEFAULT_SCREEN_SIZE;

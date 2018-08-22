@@ -17,8 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "show.h"
 
-#include "event.h"
-
 #include "com/color/colors.h"
 #include "com/error.h"
 #include "com/log.h"
@@ -38,6 +36,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "numerical/linear.h"
 #include "obj/obj.h"
 #include "show/opengl/color_space/buffer_type.h"
+#include "show/opengl/event_queue.h"
 #include "show/opengl/renderer/renderer.h"
 #include "show/opengl/text/text.h"
 #include "window/window_prop.h"
@@ -150,7 +149,8 @@ public:
                 *light_direction = -m_light_direction; // от источника света на объект
         }
 
-        void camera_information(vec3* camera_up, vec3* camera_direction, vec3* view_center, double* view_width) const
+        void camera_information(vec3* camera_up, vec3* camera_direction, vec3* view_center, double* view_width, int* paint_width,
+                                int* paint_height) const
         {
                 std::lock_guard lg(m_lock);
 
@@ -158,14 +158,8 @@ public:
                 *camera_direction = -m_camera_direction; // от камеры на объект
                 *view_center = m_view_center;
                 *view_width = m_view_width;
-        }
-
-        void paint_width_height(int* width, int* height) const
-        {
-                std::lock_guard lg(m_lock);
-
-                *width = m_paint_width;
-                *height = m_paint_height;
+                *paint_width = m_paint_width;
+                *paint_height = m_paint_height;
         }
 
         vec3 light_direction() const
@@ -196,160 +190,333 @@ public:
         }
 };
 
-class ShowObject final : public IShow
+class ShowObject final : public EventQueue
 {
-        IShowCallback* const m_callback;
-        const WindowID m_win_parent;
-        std::thread m_thread;
-        ThreadQueue<Event> m_event_queue;
-        std::atomic_bool m_stop{false};
-
-        Camera m_camera;
-
         // Камера и тени рассчитаны на размер объекта 2 и на положение в точке (0, 0, 0).
         static constexpr double OBJECT_SIZE = 2;
         static constexpr vec3 OBJECT_POSITION = vec3(0);
 
-        void loop();
-        void loop_thread();
+        //
 
-        void add_object(const std::shared_ptr<const Obj<3>>& obj_ptr, int id, int scale_id) override
+        IShowCallback* const m_callback;
+        const WindowID m_win_parent;
+        std::thread m_thread;
+        std::atomic_bool m_stop{false};
+
+        //
+
+        std::unique_ptr<sf::Window> m_wnd;
+        std::unique_ptr<IRenderer> m_renderer;
+        std::unique_ptr<Camera> m_camera;
+        std::unique_ptr<Text> m_text;
+
+        std::unique_ptr<DFTShow> m_dft_show;
+        std::unique_ptr<ConvexHull2D> m_convex_hull_2d;
+        std::unique_ptr<OpticalFlow> m_optical_flow;
+        std::unique_ptr<PencilEffect> m_pencil_effect;
+
+        int m_width = -1;
+        int m_height = -1;
+        int m_new_mouse_x = 0;
+        int m_new_mouse_y = 0;
+        double m_wheel_delta = 0;
+        bool m_default_view = false;
+        bool m_fullscreen_active = false;
+
+        // Неважно, какие тут будут значения при инициализации,
+        // так как при создании окна задаются начальные параметры
+        bool m_pencil_effect_active;
+        bool m_dft_active;
+        double m_dft_brightness;
+        Color m_dft_background_color;
+        Color m_dft_color;
+        bool m_convex_hull_2d_active;
+        bool m_optical_flow_active;
+
+        //
+
+        void direct_add_object(const std::shared_ptr<const Obj<3>>& obj_ptr, int id, int scale_id) override
         {
-                m_event_queue.emplace(std::in_place_type<Event::add_object>, obj_ptr, id, scale_id);
-        }
-        void delete_object(int id) override
-        {
-                m_event_queue.emplace(std::in_place_type<Event::delete_object>, id);
-        }
-        void show_object(int id) override
-        {
-                m_event_queue.emplace(std::in_place_type<Event::show_object>, id);
-        }
-        virtual void delete_all_objects() override
-        {
-                m_event_queue.emplace(std::in_place_type<Event::delete_all_objects>);
-        }
-        void reset_view() override
-        {
-                m_event_queue.emplace(std::in_place_type<Event::reset_view>);
-        }
-        void set_ambient(double v) override
-        {
-                m_event_queue.emplace(std::in_place_type<Event::set_ambient>, v);
-        }
-        void set_diffuse(double v) override
-        {
-                m_event_queue.emplace(std::in_place_type<Event::set_diffuse>, v);
-        }
-        void set_specular(double v) override
-        {
-                m_event_queue.emplace(std::in_place_type<Event::set_specular>, v);
-        }
-        void set_background_color_rgb(const Color& c) override
-        {
-                m_event_queue.emplace(std::in_place_type<Event::set_background_color>, c);
-        }
-        void set_default_color_rgb(const Color& c) override
-        {
-                m_event_queue.emplace(std::in_place_type<Event::set_default_color>, c);
-        }
-        void set_wireframe_color_rgb(const Color& c) override
-        {
-                m_event_queue.emplace(std::in_place_type<Event::set_wireframe_color>, c);
-        }
-        void set_default_ns(double ns) override
-        {
-                m_event_queue.emplace(std::in_place_type<Event::set_default_ns>, ns);
-        }
-        void show_smooth(bool v) override
-        {
-                m_event_queue.emplace(std::in_place_type<Event::show_smooth>, v);
-        }
-        void show_wireframe(bool v) override
-        {
-                m_event_queue.emplace(std::in_place_type<Event::show_wireframe>, v);
-        }
-        void show_shadow(bool v) override
-        {
-                m_event_queue.emplace(std::in_place_type<Event::show_shadow>, v);
-        }
-        void show_fog(bool v) override
-        {
-                m_event_queue.emplace(std::in_place_type<Event::show_fog>, v);
-        }
-        void show_materials(bool v) override
-        {
-                m_event_queue.emplace(std::in_place_type<Event::show_materials>, v);
-        }
-        void show_effect(bool v) override
-        {
-                m_event_queue.emplace(std::in_place_type<Event::show_effect>, v);
-        }
-        void show_dft(bool v) override
-        {
-                m_event_queue.emplace(std::in_place_type<Event::show_dft>, v);
-        }
-        void set_dft_brightness(double v) override
-        {
-                m_event_queue.emplace(std::in_place_type<Event::set_dft_brightness>, v);
-        }
-        void set_dft_background_color(const Color& c) override
-        {
-                m_event_queue.emplace(std::in_place_type<Event::set_dft_background_color>, c);
-        }
-        void set_dft_color(const Color& c) override
-        {
-                m_event_queue.emplace(std::in_place_type<Event::set_dft_color>, c);
-        }
-        void show_convex_hull_2d(bool v) override
-        {
-                m_event_queue.emplace(std::in_place_type<Event::show_convex_hull_2d>, v);
-        }
-        void show_optical_flow(bool v) override
-        {
-                m_event_queue.emplace(std::in_place_type<Event::show_optical_flow>, v);
-        }
-        void parent_resized() override
-        {
-                m_event_queue.emplace(std::in_place_type<Event::parent_resized>);
-        }
-        void mouse_wheel(double delta) override
-        {
-                m_event_queue.emplace(std::in_place_type<Event::mouse_wheel>, delta);
-        }
-        void toggle_fullscreen() override
-        {
-                m_event_queue.emplace(std::in_place_type<Event::toggle_fullscreen>);
-        }
-        void set_vertical_sync(bool v) override
-        {
-                m_event_queue.emplace(std::in_place_type<Event::vertical_sync>, v);
-        }
-        void set_shadow_zoom(double v) override
-        {
-                m_event_queue.emplace(std::in_place_type<Event::shadow_zoom>, v);
+                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+
+                if (!obj_ptr)
+                {
+                        error("Null object received");
+                }
+                m_renderer->add_object(obj_ptr.get(), OBJECT_SIZE, OBJECT_POSITION, id, scale_id);
+                m_callback->object_loaded(id);
         }
 
-        void camera_information(vec3* camera_up, vec3* camera_direction, vec3* view_center, double* view_width) const override
+        void direct_delete_object(int id) override
         {
-                m_camera.camera_information(camera_up, camera_direction, view_center, view_width);
+                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+
+                m_renderer->delete_object(id);
         }
-        void paint_width_height(int* width, int* height) const override
+
+        void direct_show_object(int id) override
         {
-                m_camera.paint_width_height(width, height);
+                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+
+                m_renderer->show_object(id);
         }
+
+        void direct_delete_all_objects() override
+        {
+                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+
+                m_renderer->delete_all();
+                m_default_view = true;
+        }
+
+        void direct_reset_view() override
+        {
+                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+
+                m_default_view = true;
+        }
+
+        void direct_set_ambient(double v) override
+        {
+                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+
+                Color light = Color(v);
+                m_renderer->set_light_a(light);
+        }
+
+        void direct_set_diffuse(double v) override
+        {
+                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+
+                Color light = Color(v);
+                m_renderer->set_light_d(light);
+        }
+
+        void direct_set_specular(double v) override
+        {
+                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+
+                Color light = Color(v);
+                m_renderer->set_light_s(light);
+        }
+
+        void direct_set_background_color_rgb(const Color& c) override
+        {
+                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+
+                glClearColor(c.red(), c.green(), c.blue(), 1);
+                m_renderer->set_background_color(c);
+                bool background_is_dark = c.luminance() <= 0.5;
+                m_text->set_color(background_is_dark ? Color(1) : Color(0));
+        }
+
+        void direct_set_default_color_rgb(const Color& c) override
+        {
+                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+
+                m_renderer->set_default_color(c);
+        }
+
+        void direct_set_wireframe_color_rgb(const Color& c) override
+        {
+                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+
+                m_renderer->set_wireframe_color(c);
+        }
+
+        void direct_set_default_ns(double ns) override
+        {
+                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+
+                m_renderer->set_default_ns(ns);
+        }
+
+        void direct_show_smooth(bool v) override
+        {
+                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+
+                m_renderer->set_show_smooth(v);
+        }
+
+        void direct_show_wireframe(bool v) override
+        {
+                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+
+                m_renderer->set_show_wireframe(v);
+        }
+
+        void direct_show_shadow(bool v) override
+        {
+                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+
+                m_renderer->set_show_shadow(v);
+        }
+
+        void direct_show_fog(bool v) override
+        {
+                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+
+                m_renderer->set_show_fog(v);
+        }
+
+        void direct_show_materials(bool v) override
+        {
+                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+
+                m_renderer->set_show_materials(v);
+        }
+
+        void direct_show_effect(bool v) override
+        {
+                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+
+                m_pencil_effect_active = v;
+        }
+
+        void direct_show_dft(bool v) override
+        {
+                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+
+                m_dft_active = v;
+        }
+
+        void direct_set_dft_brightness(double v) override
+        {
+                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+
+                m_dft_brightness = v;
+                if (m_dft_show)
+                {
+                        m_dft_show->set_brightness(v);
+                }
+        }
+
+        void direct_set_dft_background_color(const Color& c) override
+        {
+                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+
+                m_dft_background_color = c;
+                if (m_dft_show)
+                {
+                        m_dft_show->set_background_color(c);
+                }
+        }
+
+        void direct_set_dft_color(const Color& c) override
+        {
+                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+
+                m_dft_color = c;
+                if (m_dft_show)
+                {
+                        m_dft_show->set_color(c);
+                }
+        }
+
+        void direct_show_convex_hull_2d(bool v) override
+        {
+                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+
+                m_convex_hull_2d_active = v;
+                if (m_convex_hull_2d)
+                {
+                        m_convex_hull_2d->reset_timer();
+                }
+        }
+
+        void direct_show_optical_flow(bool v) override
+        {
+                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+
+                m_optical_flow_active = v;
+                if (m_optical_flow)
+                {
+                        m_optical_flow->reset();
+                }
+        }
+
+        void direct_parent_resized() override
+        {
+                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+
+                if (!m_fullscreen_active)
+                {
+                        set_size_to_parent(m_wnd->getSystemHandle(), m_win_parent);
+                }
+        }
+
+        void direct_mouse_wheel(double delta) override
+        {
+                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+
+                // Для полноэкранного режима обрабатывается
+                // в сообщении sf::Event::MouseWheelScrolled
+                if (!m_fullscreen_active)
+                {
+                        if (m_new_mouse_x < m_width && m_new_mouse_y < m_height)
+                        {
+                                m_wheel_delta = delta;
+                        }
+                }
+        }
+
+        void direct_toggle_fullscreen() override
+        {
+                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+
+                m_fullscreen_active = !m_fullscreen_active;
+                make_fullscreen(m_fullscreen_active, m_wnd->getSystemHandle(), m_win_parent);
+        }
+
+        void direct_set_vertical_sync(bool v) override
+        {
+                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+
+                m_wnd->setVerticalSyncEnabled(v);
+        }
+
+        void direct_set_shadow_zoom(double v) override
+        {
+                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+
+                m_renderer->set_shadow_zoom(v);
+        }
+
+        //
+
+        void camera_information(vec3* camera_up, vec3* camera_direction, vec3* view_center, double* view_width, int* paint_width,
+                                int* paint_height) const override
+        {
+                ASSERT(std::this_thread::get_id() != m_thread.get_id());
+
+                m_camera->camera_information(camera_up, camera_direction, view_center, view_width, paint_width, paint_height);
+        }
+
         vec3 light_direction() const override
         {
-                return m_camera.light_direction();
+                ASSERT(std::this_thread::get_id() != m_thread.get_id());
+
+                return m_camera->light_direction();
         }
+
         double object_size() const override
         {
+                ASSERT(std::this_thread::get_id() != m_thread.get_id());
+
                 return OBJECT_SIZE;
         }
+
         vec3 object_position() const override
         {
+                ASSERT(std::this_thread::get_id() != m_thread.get_id());
+
                 return OBJECT_POSITION;
         }
+
+        //
+
+        void loop();
+        void loop_thread();
 
 public:
         ShowObject(IShowCallback* callback, WindowID win_parent, const Color& background_color_rgb,
@@ -409,6 +576,8 @@ public:
 
 void ShowObject::loop()
 {
+        ASSERT(std::this_thread::get_id() == m_thread.get_id());
+
         {
                 // Без этого создания контекста почему-то не сможет установиться
                 // ANTIALIASING_LEVEL в ненулевое значение далее при создании окна.
@@ -416,8 +585,12 @@ void ShowObject::loop()
                 std::unique_ptr<sf::Context> context = create_gl_context_1x1();
         }
 
-        std::unique_ptr<sf::Window> wnd = create_gl_window_1x1();
-        move_window_to_parent(wnd->getSystemHandle(), m_win_parent);
+        m_wnd = create_gl_window_1x1();
+        move_window_to_parent(m_wnd->getSystemHandle(), m_win_parent);
+
+        m_renderer = create_renderer();
+        m_camera = std::make_unique<Camera>();
+        m_text = std::make_unique<Text>();
 
         glDisable(GL_CULL_FACE);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -429,43 +602,26 @@ void ShowObject::loop()
         LOG(framebuffer_srgb ? "Framebuffer sRGB" : "Framebuffer linear");
         LOG(colorbuffer_srgb ? "Colorbuffer sRGB" : "Colorbuffer linear");
 
-        int new_width = wnd->getSize().x;
-        int new_height = wnd->getSize().y;
+        int new_width = m_wnd->getSize().x;
+        int new_height = m_wnd->getSize().y;
         double pixel_to_coord_no_zoom = 2.0 / std::min(new_width, new_height);
         double pixel_to_coord = pixel_to_coord_no_zoom;
 
-        // обязательно задать начальные значения -1, чтобы отработала функция изменения размеров окна
-        int width = -1, height = -1, window_width = -1, window_height = -1;
+        // Обязательно задать начальные значения -1, чтобы отработала функция изменения размеров окна
+        ASSERT(new_width > 0 && new_height > 0);
+        int window_width = -1;
+        int window_height = -1;
+        bool dft_active_old = !m_dft_active;
 
-        int mouse_x = 0, mouse_y = 0, new_mouse_x = 0, new_mouse_y = 0;
-        bool mouse_pressed = false, mouse_pressed_shift = false;
+        int mouse_x = 0;
+        int mouse_y = 0;
+
+        bool mouse_pressed = false;
+        bool mouse_pressed_shift = false;
         vec2 window_center(0, 0);
         double zoom_delta = 0;
-        double wheel_delta = 0;
 
-        // Неважно, какие тут будут значения при инициализации,
-        // так как при создании окна начальные параметры помещаются в очередь
-        bool dft_active = false;
-        bool dft_active_old = false;
-        double dft_brightness = -1;
-        Color dft_background_color;
-        Color dft_color;
-        bool pencil_effect_active = false;
-        bool convex_hull_2d_active = false;
-        bool optical_flow_active = false;
-        bool default_view = false;
-
-        // Вначале без полноэкранного режима
-        bool fullscreen_active = false;
-
-        std::unique_ptr<IRenderer> renderer = create_renderer();
-
-        std::unique_ptr<DFTShow> dft_show;
-        std::unique_ptr<PencilEffect> pencil_effect;
-        std::unique_ptr<OpticalFlow> optical_flow;
-        std::unique_ptr<ConvexHull2D> convex_hull_2d;
-
-        Text text;
+        sf::Event event;
 
         double start_time = time_in_seconds();
 
@@ -484,275 +640,12 @@ void ShowObject::loop()
                         return;
                 }
 
-                while (true)
+                while (pull_and_dispatch_event())
                 {
-                        std::optional<Event> event(m_event_queue.pop());
-
-                        if (!event)
-                        {
-                                break;
-                        }
-
-                        switch (event->type())
-                        {
-                        case Event::Type::AddObject:
-                        {
-                                const Event::add_object& d = event->get<Event::add_object>();
-
-                                if (!d.obj)
-                                {
-                                        error("Null object received");
-                                }
-
-                                renderer->add_object(d.obj.get(), OBJECT_SIZE, OBJECT_POSITION, d.id, d.scale_id);
-                                m_callback->object_loaded(d.id);
-                                break;
-                        }
-                        case Event::Type::DeleteObject:
-                        {
-                                const Event::delete_object& d = event->get<Event::delete_object>();
-
-                                renderer->delete_object(d.id);
-                                break;
-                        }
-                        case Event::Type::ShowObject:
-                        {
-                                const Event::show_object& d = event->get<Event::show_object>();
-
-                                renderer->show_object(d.id);
-                                break;
-                        }
-                        case Event::Type::DeleteAllObjects:
-                        {
-                                renderer->delete_all();
-                                default_view = true;
-                                break;
-                        }
-                        case Event::Type::ParentResized:
-                        {
-                                if (!fullscreen_active)
-                                {
-                                        set_size_to_parent(wnd->getSystemHandle(), m_win_parent);
-                                }
-                                break;
-                        }
-                        case Event::Type::ToggleFullscreen:
-                        {
-                                fullscreen_active = !fullscreen_active;
-                                make_fullscreen(fullscreen_active, wnd->getSystemHandle(), m_win_parent);
-                                break;
-                        }
-                        case Event::Type::ResetView:
-                        {
-                                default_view = true;
-                                break;
-                        }
-                        case Event::Type::MouseWheel:
-                        {
-                                // Для полноэкранного режима обрабатывается
-                                // в другом сообщении sf::Event::MouseWheelScrolled
-                                if (!fullscreen_active)
-                                {
-                                        const Event::mouse_wheel& d = event->get<Event::mouse_wheel>();
-                                        if (new_mouse_x < width && new_mouse_y < height)
-                                        {
-                                                wheel_delta = d.delta;
-                                        }
-                                }
-                                break;
-                        }
-                        case Event::Type::SetAmbient:
-                        {
-                                const Event::set_ambient& d = event->get<Event::set_ambient>();
-
-                                Color light = Color(d.ambient);
-                                renderer->set_light_a(light);
-                                break;
-                        }
-                        case Event::Type::SetDiffuse:
-                        {
-                                const Event::set_diffuse& d = event->get<Event::set_diffuse>();
-
-                                Color light = Color(d.diffuse);
-                                renderer->set_light_d(light);
-                                break;
-                        }
-                        case Event::Type::SetSpecular:
-                        {
-                                const Event::set_specular& d = event->get<Event::set_specular>();
-
-                                Color light = Color(d.specular);
-                                renderer->set_light_s(light);
-                                break;
-                        }
-                        case Event::Type::SetBackgroundColor:
-                        {
-                                const Event::set_background_color& d = event->get<Event::set_background_color>();
-
-                                Color color = d.background_color;
-
-                                glClearColor(color.red(), color.green(), color.blue(), 1);
-
-                                renderer->set_background_color(color);
-
-                                bool background_is_dark = color.luminance() <= 0.5;
-                                text.set_color(background_is_dark ? Color(1) : Color(0));
-
-                                break;
-                        }
-                        case Event::Type::SetDefaultColor:
-                        {
-                                const Event::set_default_color& d = event->get<Event::set_default_color>();
-
-                                Color color = d.default_color;
-                                renderer->set_default_color(color);
-                                break;
-                        }
-                        case Event::Type::SetWireframeColor:
-                        {
-                                const Event::set_wireframe_color& d = event->get<Event::set_wireframe_color>();
-
-                                Color color = d.wireframe_color;
-                                renderer->set_wireframe_color(color);
-                                break;
-                        }
-                        case Event::Type::SetDefaultNs:
-                        {
-                                const Event::set_default_ns& d = event->get<Event::set_default_ns>();
-
-                                renderer->set_default_ns(d.default_ns);
-                                break;
-                        }
-                        case Event::Type::ShowSmooth:
-                        {
-                                const Event::show_smooth& d = event->get<Event::show_smooth>();
-
-                                renderer->set_show_smooth(d.show);
-                                break;
-                        }
-                        case Event::Type::ShowWireframe:
-                        {
-                                const Event::show_wireframe& d = event->get<Event::show_wireframe>();
-
-                                renderer->set_show_wireframe(d.show);
-                                break;
-                        }
-                        case Event::Type::ShowShadow:
-                        {
-                                const Event::show_shadow& d = event->get<Event::show_shadow>();
-
-                                renderer->set_show_shadow(d.show);
-                                break;
-                        }
-                        case Event::Type::ShowFog:
-                        {
-                                const Event::show_fog& d = event->get<Event::show_fog>();
-
-                                renderer->set_show_fog(d.show);
-                                break;
-                        }
-                        case Event::Type::ShowMaterials:
-                        {
-                                const Event::show_materials& d = event->get<Event::show_materials>();
-
-                                renderer->set_show_materials(d.show);
-                                break;
-                        }
-                        case Event::Type::ShowEffect:
-                        {
-                                const Event::show_effect& d = event->get<Event::show_effect>();
-
-                                pencil_effect_active = d.show;
-                                break;
-                        }
-                        case Event::Type::ShowDft:
-                        {
-                                const Event::show_dft& d = event->get<Event::show_dft>();
-
-                                dft_active = d.show;
-                                break;
-                        }
-                        case Event::Type::SetDftBrightness:
-                        {
-                                const Event::set_dft_brightness& d = event->get<Event::set_dft_brightness>();
-
-                                dft_brightness = d.dft_brightness;
-                                if (dft_show)
-                                {
-                                        dft_show->set_brightness(d.dft_brightness);
-                                }
-                                break;
-                        }
-                        case Event::Type::SetDftBackgroundColor:
-                        {
-                                const Event::set_dft_background_color& d = event->get<Event::set_dft_background_color>();
-
-                                dft_background_color = d.color;
-                                if (dft_show)
-                                {
-                                        dft_show->set_background_color(d.color);
-                                }
-                                break;
-                        }
-                        case Event::Type::SetDftColor:
-                        {
-                                const Event::set_dft_color& d = event->get<Event::set_dft_color>();
-
-                                dft_color = d.color;
-                                if (dft_show)
-                                {
-                                        dft_show->set_color(d.color);
-                                }
-                                break;
-                        }
-                        case Event::Type::ShowConvexHull2d:
-                        {
-                                const Event::show_convex_hull_2d& d = event->get<Event::show_convex_hull_2d>();
-
-                                convex_hull_2d_active = d.show;
-                                if (convex_hull_2d)
-                                {
-                                        convex_hull_2d->reset_timer();
-                                }
-                                break;
-                        }
-                        case Event::Type::ShowOpticalFlow:
-                        {
-                                const Event::show_optical_flow& d = event->get<Event::show_optical_flow>();
-
-                                optical_flow_active = d.show;
-                                if (optical_flow)
-                                {
-                                        optical_flow->reset();
-                                }
-                                break;
-                        }
-                        case Event::Type::VerticalSync:
-                        {
-                                const Event::vertical_sync& d = event->get<Event::vertical_sync>();
-
-                                wnd->setVerticalSyncEnabled(d.enable);
-                                break;
-                        }
-                        case Event::Type::ShadowZoom:
-                        {
-                                const Event::shadow_zoom& d = event->get<Event::shadow_zoom>();
-
-                                renderer->set_shadow_zoom(d.zoom);
-                                break;
-                        }
-                        }
                 }
 
-                while (true)
+                while (m_wnd->pollEvent(event))
                 {
-                        sf::Event event;
-
-                        if (!wnd->pollEvent(event))
-                        {
-                                break;
-                        }
-
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wswitch"
                         switch (event.type)
@@ -767,7 +660,7 @@ void ShowObject::loop()
                                         toggle_fullscreen();
                                         break;
                                 case sf::Keyboard::Escape:
-                                        if (fullscreen_active)
+                                        if (m_fullscreen_active)
                                         {
                                                 toggle_fullscreen();
                                         }
@@ -775,7 +668,7 @@ void ShowObject::loop()
                                 }
                                 break;
                         case sf::Event::MouseButtonPressed:
-                                if (event.mouseButton.x < width && event.mouseButton.y < height &&
+                                if (event.mouseButton.x < m_width && event.mouseButton.y < m_height &&
                                     (event.mouseButton.button == sf::Mouse::Left || event.mouseButton.button == sf::Mouse::Right))
                                 {
                                         mouse_pressed = true;
@@ -791,21 +684,21 @@ void ShowObject::loop()
                                 }
                                 break;
                         case sf::Event::MouseMoved:
-                                new_mouse_x = event.mouseMove.x;
-                                new_mouse_y = event.mouseMove.y;
+                                m_new_mouse_x = event.mouseMove.x;
+                                m_new_mouse_y = event.mouseMove.y;
                                 break;
                         case sf::Event::MouseWheelScrolled:
                                 // Для режима встроенного окна перенесено на обработчик события
                                 // Event::EventType::mouse_wheel, так как на Винде не приходит
                                 // это сообщение для дочернего окна.
-                                if (fullscreen_active)
+                                if (m_fullscreen_active)
                                 {
-                                        // if (new_mouse_x < width && new_mouse_y < height &&
-                                        //    object_under_mouse(new_mouse_x, new_mouse_y, window_height, *object_texture) >
-                                        //    0)
-                                        if (new_mouse_x < width && new_mouse_y < height)
+                                        // if (m_new_mouse_x < m_width && m_new_mouse_y < m_height &&
+                                        //    object_under_mouse(m_new_mouse_x, m_new_mouse_y, window_height,
+                                        //                       m_renderer->object_texture()) > 0)
+                                        if (m_new_mouse_x < m_width && m_new_mouse_y < m_height)
                                         {
-                                                wheel_delta = event.mouseWheelScroll.delta;
+                                                m_wheel_delta = event.mouseWheelScroll.delta;
                                         }
                                 }
                                 break;
@@ -818,16 +711,16 @@ void ShowObject::loop()
 
                 bool matrix_change = false;
 
-                if (mouse_pressed && (new_mouse_x != mouse_x || new_mouse_y != mouse_y))
+                if (mouse_pressed && (m_new_mouse_x != mouse_x || m_new_mouse_y != mouse_y))
                 {
-                        int delta_x = new_mouse_x - mouse_x;
-                        int delta_y = new_mouse_y - mouse_y;
-                        mouse_x = new_mouse_x;
-                        mouse_y = new_mouse_y;
+                        int delta_x = m_new_mouse_x - mouse_x;
+                        int delta_y = m_new_mouse_y - mouse_y;
+                        mouse_x = m_new_mouse_x;
+                        mouse_y = m_new_mouse_y;
 
                         if (!mouse_pressed_shift)
                         {
-                                m_camera.rotate(delta_x, delta_y);
+                                m_camera->rotate(delta_x, delta_y);
                         }
                         else
                         {
@@ -837,43 +730,43 @@ void ShowObject::loop()
                         matrix_change = true;
                 }
 
-                if (wheel_delta != 0)
+                if (m_wheel_delta != 0)
                 {
-                        if ((wheel_delta < 0 && zoom_delta > ZOOM_EXP_MIN) || (wheel_delta > 0 && zoom_delta < ZOOM_EXP_MAX))
+                        if ((m_wheel_delta < 0 && zoom_delta > ZOOM_EXP_MIN) || (m_wheel_delta > 0 && zoom_delta < ZOOM_EXP_MAX))
                         {
-                                zoom_delta += wheel_delta;
+                                zoom_delta += m_wheel_delta;
 
-                                vec2 mouse_in_wnd(new_mouse_x - width * 0.5, height * 0.5 - new_mouse_y);
+                                vec2 mouse_in_wnd(m_new_mouse_x - m_width * 0.5, m_height * 0.5 - m_new_mouse_y);
 
                                 window_center +=
-                                        pixel_to_coord * (mouse_in_wnd - mouse_in_wnd * std::pow(ZOOM_BASE, -wheel_delta));
+                                        pixel_to_coord * (mouse_in_wnd - mouse_in_wnd * std::pow(ZOOM_BASE, -m_wheel_delta));
 
                                 pixel_to_coord = pixel_to_coord_no_zoom * std::pow(ZOOM_BASE, -zoom_delta);
 
                                 matrix_change = true;
                         }
-                        wheel_delta = 0;
+                        m_wheel_delta = 0;
                 }
 
-                if (window_width != new_width || window_height != new_height || dft_active_old != dft_active)
+                if (window_width != new_width || window_height != new_height || dft_active_old != m_dft_active)
                 {
                         // Чтобы в случае исключений не остались объекты от прошлых размеров окна,
                         // вначале нужно удалить все объекты.
 
-                        renderer->free_buffers();
+                        m_renderer->free_buffers();
 
-                        dft_show = nullptr;
-                        pencil_effect = nullptr;
-                        optical_flow = nullptr;
-                        convex_hull_2d = nullptr;
+                        m_dft_show = nullptr;
+                        m_pencil_effect = nullptr;
+                        m_optical_flow = nullptr;
+                        m_convex_hull_2d = nullptr;
 
                         window_width = new_width;
                         window_height = new_height;
 
-                        width = dft_active ? window_width / 2 : window_width;
-                        height = window_height;
+                        m_width = m_dft_active ? window_width / 2 : window_width;
+                        m_height = window_height;
 
-                        dft_active_old = dft_active;
+                        dft_active_old = m_dft_active;
 
                         matrix_change = true;
 
@@ -881,30 +774,31 @@ void ShowObject::loop()
                         mat4 plane_matrix = scale<double>(2.0 / window_width, -2.0 / window_height, 1) *
                                             translate<double>(-window_width / 2.0, -window_height / 2.0, 0);
 
-                        renderer->set_size(width, height);
+                        m_renderer->set_size(m_width, m_height);
 
-                        int dft_pos_x = (window_width & 1) ? (width + 1) : width;
+                        int dft_pos_x = (window_width & 1) ? (m_width + 1) : m_width;
                         int dft_pos_y = 0;
-                        dft_show = std::make_unique<DFTShow>(width, height, dft_pos_x, dft_pos_y, plane_matrix, framebuffer_srgb,
-                                                             dft_brightness, dft_background_color, dft_color);
+                        m_dft_show =
+                                std::make_unique<DFTShow>(m_width, m_height, dft_pos_x, dft_pos_y, plane_matrix, framebuffer_srgb,
+                                                          m_dft_brightness, m_dft_background_color, m_dft_color);
 
-                        pencil_effect = std::make_unique<PencilEffect>(renderer->color_buffer_texture(),
-                                                                       renderer->object_texture(), colorbuffer_srgb);
+                        m_pencil_effect = std::make_unique<PencilEffect>(m_renderer->color_buffer_texture(),
+                                                                         m_renderer->object_texture(), colorbuffer_srgb);
 
-                        optical_flow = std::make_unique<OpticalFlow>(width, height, plane_matrix);
+                        m_optical_flow = std::make_unique<OpticalFlow>(m_width, m_height, plane_matrix);
 
-                        convex_hull_2d = std::make_unique<ConvexHull2D>(renderer->object_texture(), plane_matrix);
+                        m_convex_hull_2d = std::make_unique<ConvexHull2D>(m_renderer->object_texture(), plane_matrix);
                 }
 
-                if (default_view)
+                if (m_default_view)
                 {
-                        default_view = false;
+                        m_default_view = false;
 
                         zoom_delta = 0;
                         window_center = vec2(0, 0);
-                        pixel_to_coord_no_zoom = 2.0 / std::min(width, height);
+                        pixel_to_coord_no_zoom = 2.0 / std::min(m_width, m_height);
                         pixel_to_coord = pixel_to_coord_no_zoom;
-                        m_camera.set(vec3(1, 0, 0), vec3(0, 1, 0));
+                        m_camera->set(vec3(1, 0, 0), vec3(0, 1, 0));
 
                         matrix_change = true;
                 }
@@ -913,15 +807,15 @@ void ShowObject::loop()
                 {
                         vec3 camera_up, camera_direction, light_up, light_direction;
 
-                        m_camera.get(&camera_up, &camera_direction, &light_up, &light_direction);
+                        m_camera->get(&camera_up, &camera_direction, &light_up, &light_direction);
 
                         mat4 shadow_matrix =
                                 ortho<double>(-1, 1, -1, 1, -1, 1) * look_at(vec3(0, 0, 0), light_direction, light_up);
 
-                        double left = -0.5 * width * pixel_to_coord;
-                        double right = 0.5 * width * pixel_to_coord;
-                        double bottom = -0.5 * height * pixel_to_coord;
-                        double top = 0.5 * height * pixel_to_coord;
+                        double left = -0.5 * m_width * pixel_to_coord;
+                        double right = 0.5 * m_width * pixel_to_coord;
+                        double bottom = -0.5 * m_height * pixel_to_coord;
+                        double top = 0.5 * m_height * pixel_to_coord;
                         double z_near = -1.0;
                         double z_far = 1.0;
 
@@ -930,15 +824,15 @@ void ShowObject::loop()
                         mat4 view_matrix = translate<double>(-window_center[0], -window_center[1], 0) *
                                            look_at<double>(vec3(0, 0, 0), camera_direction, camera_up);
 
-                        renderer->set_matrices(shadow_matrix, projection_matrix * view_matrix);
+                        m_renderer->set_matrices(shadow_matrix, projection_matrix * view_matrix);
 
-                        renderer->set_light_direction(-light_direction);
-                        renderer->set_camera_direction(-camera_direction);
+                        m_renderer->set_light_direction(-light_direction);
+                        m_renderer->set_camera_direction(-camera_direction);
 
                         vec4 screen_center((right + left) * 0.5, (top + bottom) * 0.5, (z_far + z_near) * 0.5, 1.0);
                         vec4 view_center = inverse(view_matrix) * screen_center;
-                        m_camera.set_view_center_and_width(vec3(view_center[0], view_center[1], view_center[2]), right - left,
-                                                           width, height);
+                        m_camera->set_view_center_and_width(vec3(view_center[0], view_center[1], view_center[2]), right - left,
+                                                            m_width, m_height);
                 }
 
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -951,7 +845,7 @@ void ShowObject::loop()
                 // Параметр true означает рисование в цветной буфер,
                 // параметр false означает рисование в буфер экрана.
                 // Если возвращает false, то нет объекта для рисования.
-                if (!renderer->draw(pencil_effect_active))
+                if (!m_renderer->draw(m_pencil_effect_active))
                 {
                         std::this_thread::sleep_until(last_frame_time + IDLE_MODE_FRAME_DURATION);
                         last_frame_time = std::chrono::steady_clock::now();
@@ -960,18 +854,18 @@ void ShowObject::loop()
                 //
 
                 // Рисование из цветного буфера в буфер экрана
-                if (pencil_effect_active && pencil_effect)
+                if (m_pencil_effect_active && m_pencil_effect)
                 {
-                        pencil_effect->draw();
+                        m_pencil_effect->draw();
                 }
 
-                if (dft_active && dft_show)
+                if (m_dft_active && m_dft_show)
                 {
-                        dft_show->copy_image();
+                        m_dft_show->copy_image();
                 }
-                if (optical_flow_active && optical_flow)
+                if (m_optical_flow_active && m_optical_flow)
                 {
-                        optical_flow->copy_image();
+                        m_optical_flow->copy_image();
                 }
 
                 //
@@ -981,20 +875,20 @@ void ShowObject::loop()
 
                 glViewport(0, 0, window_width, window_height);
 
-                if (dft_active && dft_show)
+                if (m_dft_active && m_dft_show)
                 {
-                        dft_show->draw();
+                        m_dft_show->draw();
                 }
 
                 glEnable(GL_SCISSOR_TEST);
-                glScissor(0, 0, width, height);
-                if (optical_flow_active && optical_flow)
+                glScissor(0, 0, m_width, m_height);
+                if (m_optical_flow_active && m_optical_flow)
                 {
-                        optical_flow->draw();
+                        m_optical_flow->draw();
                 }
-                if (convex_hull_2d_active && convex_hull_2d)
+                if (m_convex_hull_2d_active && m_convex_hull_2d)
                 {
-                        convex_hull_2d->draw();
+                        m_convex_hull_2d->draw();
                 }
                 glDisable(GL_SCISSOR_TEST);
 
@@ -1002,14 +896,16 @@ void ShowObject::loop()
 
                 glDisable(GL_DEPTH_TEST);
                 glEnable(GL_BLEND);
-                text.draw(window_width, window_height, {"FPS: " + std::to_string(calculate_fps(&start_time))});
+                m_text->draw(window_width, window_height, {"FPS: " + std::to_string(calculate_fps(&start_time))});
 
-                wnd->display();
+                m_wnd->display();
         }
 }
 
 void ShowObject::loop_thread()
 {
+        ASSERT(std::this_thread::get_id() == m_thread.get_id());
+
         try
         {
                 loop();
@@ -1033,15 +929,16 @@ void ShowObject::loop_thread()
 }
 }
 
-std::unique_ptr<IShow> create_show(IShowCallback* cb, WindowID win_parent, const Color& background_color_rgb,
-                                   const Color& default_color_rgb, const Color& wireframe_color_rgb, bool with_smooth,
-                                   bool with_wireframe, bool with_shadow, bool with_fog, bool with_materials, bool with_effect,
-                                   bool with_dft, bool with_convex_hull, bool with_optical_flow, double ambient, double diffuse,
-                                   double specular, double dft_brightness, const Color& dft_background_color,
-                                   const Color& dft_color, double default_ns, bool vertical_sync, double shadow_zoom)
+std::unique_ptr<IShow> create_show_opengl(IShowCallback* callback, WindowID win_parent, const Color& background_color_rgb,
+                                          const Color& default_color_rgb, const Color& wireframe_color_rgb, bool with_smooth,
+                                          bool with_wireframe, bool with_shadow, bool with_fog, bool with_materials,
+                                          bool with_effect, bool with_dft, bool with_convex_hull, bool with_optical_flow,
+                                          double ambient, double diffuse, double specular, double dft_brightness,
+                                          const Color& dft_background_color, const Color& dft_color, double default_ns,
+                                          bool vertical_sync, double shadow_zoom)
 {
         return std::make_unique<ShowObject>(
-                cb, win_parent, background_color_rgb, default_color_rgb, wireframe_color_rgb, with_smooth, with_wireframe,
+                callback, win_parent, background_color_rgb, default_color_rgb, wireframe_color_rgb, with_smooth, with_wireframe,
                 with_shadow, with_fog, with_materials, with_effect, with_dft, with_convex_hull, with_optical_flow, ambient,
                 diffuse, specular, dft_brightness, dft_background_color, dft_color, default_ns, vertical_sync, shadow_zoom);
 }
