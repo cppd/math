@@ -153,7 +153,8 @@ void set_slider_to_middle(QSlider* slider);
 void add_to_text_edit_and_to_stderr(QTextEdit* text_edit, const std::vector<std::string>& lines,
                                     TextEditMessageType type) noexcept;
 
-WindowID widget_window_id(QWidget* widget);
+WindowID widget_window_id(const QWidget* widget);
+double widget_dpi(const QWidget* widget);
 
 void move_window_to_desktop_center(QMainWindow* window);
 

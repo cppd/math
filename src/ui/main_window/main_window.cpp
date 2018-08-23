@@ -1114,10 +1114,10 @@ void MainWindow::slot_window_first_shown()
         try
         {
                 m_show = create_show_opengl(
-                        &m_event_emitter, widget_window_id(ui.graphics_widget_opengl), qcolor_to_rgb(m_background_color),
-                        qcolor_to_rgb(m_default_color), qcolor_to_rgb(m_wireframe_color), ui.checkBox_Smooth->isChecked(),
-                        ui.checkBox_Wireframe->isChecked(), ui.checkBox_Shadow->isChecked(), ui.checkBox_Fog->isChecked(),
-                        ui.checkBox_Materials->isChecked(), ui.checkBox_ShowEffect->isChecked(),
+                        &m_event_emitter, widget_window_id(ui.graphics_widget_opengl), widget_dpi(ui.graphics_widget_opengl),
+                        qcolor_to_rgb(m_background_color), qcolor_to_rgb(m_default_color), qcolor_to_rgb(m_wireframe_color),
+                        ui.checkBox_Smooth->isChecked(), ui.checkBox_Wireframe->isChecked(), ui.checkBox_Shadow->isChecked(),
+                        ui.checkBox_Fog->isChecked(), ui.checkBox_Materials->isChecked(), ui.checkBox_ShowEffect->isChecked(),
                         ui.checkBox_show_dft->isChecked(), ui.checkBox_convex_hull_2d->isChecked(),
                         ui.checkBox_OpticalFlow->isChecked(), ambient_light(), diffuse_light(), specular_light(),
                         dft_brightness(), qcolor_to_rgb(m_dft_background_color), qcolor_to_rgb(m_dft_color), default_ns(),

@@ -30,12 +30,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include FT_FREETYPE_H
 
-constexpr int FONT_SIZE = 12;
-
-constexpr float STEP_Y = 16;
-constexpr float START_X = 10;
-constexpr float START_Y = 20;
-
 // clang-format off
 constexpr const char text_vertex_shader[]
 {
@@ -163,7 +157,11 @@ class Text::Impl final
 {
         Library m_ft;
         Face m_face;
+
         int m_size;
+        int m_step_y;
+        int m_start_x;
+        int m_start_y;
 
         VertexArray m_vertex_array;
         ArrayBuffer m_vertex_buffer;
@@ -191,14 +189,14 @@ class Text::Impl final
         }
 
 public:
-        Impl()
+        Impl(int size, int step_y, int start_x, int start_y)
                 : m_face(m_ft.get(), font_bytes, sizeof(font_bytes)),
-                  m_size(-1),
                   m_program(VertexShader(text_vertex_shader), FragmentShader(text_fragment_shader))
         {
                 m_vertex_array.attrib_pointer(0, 3, GL_FLOAT, m_vertex_buffer, offsetof(Vertex, v1), sizeof(Vertex), true);
                 m_vertex_array.attrib_pointer(1, 2, GL_FLOAT, m_vertex_buffer, offsetof(Vertex, t1), sizeof(Vertex), true);
-                set_size(FONT_SIZE);
+
+                set_size(size, step_y, start_x, start_y);
         }
 
         void set_color(const Color& color)
@@ -206,9 +204,15 @@ public:
                 m_program.set_uniform("text_color", color.to_rgb_vector<float>());
         }
 
-        void set_size(int size)
+        void set_size(int size, int step_y, int start_x, int start_y)
         {
-                FT_Set_Pixel_Sizes(m_face.get(), 0, m_size = size);
+                m_size = size;
+
+                m_step_y = step_y;
+                m_start_x = start_x;
+                m_start_y = start_y;
+
+                FT_Set_Pixel_Sizes(m_face.get(), 0, size);
                 m_chars.clear();
         }
 
@@ -219,8 +223,8 @@ public:
                 float sx = 2.0f / width;
                 float sy = 2.0f / height;
 
-                float x = START_X;
-                float y = START_Y;
+                float x = m_start_x;
+                float y = m_start_y;
 
                 for (const std::string& line : text)
                 {
@@ -246,18 +250,13 @@ public:
                                 x += cd.advance;
                         }
 
-                        y += STEP_Y;
-                        x = START_X;
+                        y += m_step_y;
+                        x = m_start_x;
                 }
         }
 
         void render_char(char c, const unsigned char** buffer, int* w, int* h, int* left, int* top, int* advance_x)
         {
-                if (m_size <= 0)
-                {
-                        error("Font size is not set");
-                }
-
                 if (c < 32 || c > 126)
                 {
                         error("Only ASCII printable characters are supported in OpenGL text");
@@ -301,15 +300,15 @@ public:
         }
 };
 
-Text::Text() : m_impl(std::make_unique<Impl>())
+Text::Text(int size, int step_y, int start_x, int start_y) : m_impl(std::make_unique<Impl>(size, step_y, start_x, start_y))
 {
 }
 
 Text::~Text() = default;
 
-void Text::set_size(int size)
+void Text::set_size(int size, int step_y, int start_x, int start_y)
 {
-        m_impl->set_size(size);
+        m_impl->set_size(size, step_y, start_x, start_y);
 }
 
 void Text::render_char(char c, const unsigned char** buffer, int* w, int* h, int* left, int* top, int* advance_x)

@@ -30,10 +30,10 @@ class Text final
         std::unique_ptr<Impl> m_impl;
 
 public:
-        Text();
+        Text(int size, int step_y, int start_x, int start_y);
         ~Text();
 
-        void set_size(int size);
+        void set_size(int size, int step_y, int start_x, int start_y);
         void render_char(char c, const unsigned char** buffer, int* w, int* h, int* left, int* top, int* advance_x);
         void render_to_file(char c);
 

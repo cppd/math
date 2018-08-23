@@ -173,7 +173,7 @@ void disable_radio_button(QRadioButton* button)
 }
 #endif
 
-WindowID widget_window_id(QWidget* widget)
+WindowID widget_window_id(const QWidget* widget)
 {
         ASSERT(widget);
 
@@ -189,6 +189,21 @@ WindowID widget_window_id(QWidget* widget)
 
         w_id = widget->winId();
         return window_id;
+}
+
+double widget_dpi(const QWidget* widget)
+{
+#if 0
+        int n = QApplication::desktop()->screenNumber(widget);
+        QScreen* s = QApplication::screens().at(n);
+        return s->logicalDotsPerInch();
+#else
+        double dpi_x = widget->logicalDpiX();
+        double dpi_y = widget->logicalDpiY();
+        double dpi = 0.5 * (dpi_x + dpi_y);
+        ASSERT(dpi > 0);
+        return dpi;
+#endif
 }
 
 void move_window_to_desktop_center(QMainWindow* window)

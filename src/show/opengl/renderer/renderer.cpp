@@ -642,17 +642,9 @@ class Renderer final : public IRenderer
                 return true;
         }
 
-        void free_buffers() override
-        {
-                m_shadow_buffer = nullptr;
-                m_color_buffer = nullptr;
-                m_object_texture = nullptr;
-                m_width = m_height = -1;
-        }
-
         void set_shadow_size()
         {
-                if (m_width < 0 || m_height <= 0)
+                if (m_width <= 0 || m_height <= 0)
                 {
                         return;
                 }

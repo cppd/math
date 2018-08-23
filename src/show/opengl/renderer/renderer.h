@@ -40,18 +40,13 @@ struct IRenderer
         virtual void set_show_shadow(bool show) = 0;
         virtual void set_show_fog(bool show) = 0;
         virtual void set_show_materials(bool show) = 0;
-
         virtual void set_shadow_zoom(double) = 0;
-
         virtual void set_matrices(const mat4& shadow_matrix, const mat4& main_matrix) = 0;
-
         virtual void set_light_direction(vec3 dir) = 0;
         virtual void set_camera_direction(vec3 dir) = 0;
+        virtual void set_size(int width, int height) = 0;
 
         virtual bool draw(bool draw_to_buffer) = 0;
-
-        virtual void free_buffers() = 0;
-        virtual void set_size(int width, int height) = 0;
 
         virtual const TextureRGBA32F& color_buffer_texture() const = 0;
         virtual const TextureR32I& object_texture() const = 0;

@@ -52,6 +52,12 @@ constexpr double ZOOM_BASE = 1.1;
 constexpr double ZOOM_EXP_MIN = -50;
 constexpr double ZOOM_EXP_MAX = 100;
 
+constexpr const char FPS_STRING[] = "FPS: ";
+constexpr double FPS_TEXT_SIZE_IN_POINTS = 9.0;
+constexpr double FPS_TEXT_STEP_Y_IN_POINTS = 1.3 * FPS_TEXT_SIZE_IN_POINTS;
+constexpr double FPS_TEXT_START_X_IN_POINTS = 5;
+constexpr double FPS_TEXT_START_Y_IN_POINTS = FPS_TEXT_STEP_Y_IN_POINTS;
+
 constexpr std::chrono::milliseconds IDLE_MODE_FRAME_DURATION(100);
 
 constexpr double PI_DIV_180 = PI<double> / 180;
@@ -62,13 +68,90 @@ constexpr double to_radians(double angle)
 
 namespace
 {
-long calculate_fps(double* start)
+int points_to_pixels(double points, double dpi)
 {
-        double now = time_in_seconds();
-        double time_elapsed = now - *start;
-        *start = now;
-        return (time_elapsed > 0) ? lround(1.0 / time_elapsed) : 0;
+        return std::round(points / 72.0 * dpi);
 }
+
+class FPS
+{
+        // Интервал в секундах
+        static constexpr double INTERVAL_LENGTH = 1;
+
+        // Сколько отсчётов на интервале, не считая текущего
+        static constexpr int INTERVAL_SAMPLE_COUNT = 10;
+
+        struct Frames
+        {
+                int time;
+                double fps = 0;
+                Frames(int time_) : time(time_)
+                {
+                }
+        };
+
+        static std::array<double, INTERVAL_SAMPLE_COUNT> window_function()
+        {
+                // Richard G. Lyons.
+                // Understanding Digital Signal Processing. Third Edition.
+                // Pearson Education, Inc. 2011.
+                //
+                // 5.3.2 Windows Used in FIR Filter Design.
+                // Blackman window function.
+
+                std::array<double, INTERVAL_SAMPLE_COUNT> array;
+
+                double sum = 0;
+                for (size_t i = 1; i < INTERVAL_SAMPLE_COUNT + 1; ++i)
+                {
+                        double x = static_cast<double>(i) / (INTERVAL_SAMPLE_COUNT + 1);
+                        double v = 0.42 - 0.5 * std::cos(2 * PI<double> * x) + 0.08 * std::cos(4 * PI<double> * x);
+                        array[i - 1] = v;
+                        sum += v;
+                }
+
+                for (auto& v : array)
+                {
+                        v /= sum;
+                }
+
+                return array;
+        }
+
+        const std::array<double, INTERVAL_SAMPLE_COUNT> m_filter_window;
+
+        std::deque<Frames> m_deque;
+
+public:
+        FPS() : m_filter_window(window_function())
+        {
+        }
+
+        long calculate()
+        {
+                const int time = time_in_seconds() * (INTERVAL_SAMPLE_COUNT / INTERVAL_LENGTH);
+
+                while (!m_deque.empty() && (m_deque.front().time < time - INTERVAL_SAMPLE_COUNT))
+                {
+                        m_deque.pop_front();
+                }
+
+                for (int i = INTERVAL_SAMPLE_COUNT - m_deque.size(); i >= 0; --i)
+                {
+                        m_deque.emplace_back(time - i);
+                }
+
+                m_deque.back().fps += INTERVAL_SAMPLE_COUNT / INTERVAL_LENGTH;
+
+                double sum = 0;
+                for (int i = 0; i < INTERVAL_SAMPLE_COUNT; ++i)
+                {
+                        sum += m_filter_window[i] * m_deque[i].fps;
+                }
+
+                return std::lround(sum);
+        }
+};
 
 vec3 rotate_vector_degree(const vec3& axis, double angle_degree, const vec3& v)
 {
@@ -103,7 +186,12 @@ class Camera final
 {
         mutable SpinLock m_lock;
 
-        vec3 m_camera_right, m_camera_up, m_camera_direction, m_light_up, m_light_direction;
+        vec3 m_camera_right;
+        vec3 m_camera_up;
+        vec3 m_camera_direction; // от камеры на объект
+
+        vec3 m_light_up;
+        vec3 m_light_direction; // от источника света на объект
 
         vec3 m_view_center;
         double m_view_width;
@@ -115,16 +203,14 @@ class Camera final
         {
                 m_camera_up = normalize(up);
 
-                // от поверхности на камеру
-                m_camera_direction = cross(normalize(right), m_camera_up);
+                m_camera_direction = cross(m_camera_up, normalize(right));
 
-                m_camera_right = cross(m_camera_up, m_camera_direction);
+                m_camera_right = cross(m_camera_direction, m_camera_up);
 
                 vec3 light_right = rotate_vector_degree(m_camera_up, -45, m_camera_right);
                 m_light_up = rotate_vector_degree(light_right, -45, m_camera_up);
 
-                // от поверхности на свет
-                m_light_direction = cross(light_right, m_light_up);
+                m_light_direction = cross(m_light_up, light_right);
         }
 
 public:
@@ -144,9 +230,9 @@ public:
                 std::lock_guard lg(m_lock);
 
                 *camera_up = m_camera_up;
-                *camera_direction = -m_camera_direction; // от камеры на объект
+                *camera_direction = m_camera_direction;
                 *light_up = m_light_up;
-                *light_direction = -m_light_direction; // от источника света на объект
+                *light_direction = m_light_direction;
         }
 
         void camera_information(vec3* camera_up, vec3* camera_direction, vec3* view_center, double* view_width, int* paint_width,
@@ -155,7 +241,7 @@ public:
                 std::lock_guard lg(m_lock);
 
                 *camera_up = m_camera_up;
-                *camera_direction = -m_camera_direction; // от камеры на объект
+                *camera_direction = m_camera_direction;
                 *view_center = m_view_center;
                 *view_width = m_view_width;
                 *paint_width = m_paint_width;
@@ -166,7 +252,7 @@ public:
         {
                 std::lock_guard lg(m_lock);
 
-                return -m_light_direction; // от источника света на объект
+                return m_light_direction;
         }
 
         void rotate(int delta_x, int delta_y)
@@ -199,7 +285,8 @@ class ShowObject final : public EventQueue
         //
 
         IShowCallback* const m_callback;
-        const WindowID m_win_parent;
+        const WindowID m_parent_window;
+        const double m_parent_window_dpi;
         std::thread m_thread;
         std::atomic_bool m_stop{false};
 
@@ -441,7 +528,7 @@ class ShowObject final : public EventQueue
 
                 if (!m_fullscreen_active)
                 {
-                        set_size_to_parent(m_wnd->getSystemHandle(), m_win_parent);
+                        set_size_to_parent(m_wnd->getSystemHandle(), m_parent_window);
                 }
         }
 
@@ -465,7 +552,7 @@ class ShowObject final : public EventQueue
                 ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
                 m_fullscreen_active = !m_fullscreen_active;
-                make_fullscreen(m_fullscreen_active, m_wnd->getSystemHandle(), m_win_parent);
+                make_fullscreen(m_fullscreen_active, m_wnd->getSystemHandle(), m_parent_window);
         }
 
         void direct_set_vertical_sync(bool v) override
@@ -519,13 +606,13 @@ class ShowObject final : public EventQueue
         void loop_thread();
 
 public:
-        ShowObject(IShowCallback* callback, WindowID win_parent, const Color& background_color_rgb,
+        ShowObject(IShowCallback* callback, WindowID parent_window, double parent_window_dpi, const Color& background_color_rgb,
                    const Color& default_color_rgb, const Color& wireframe_color_rgb, bool with_smooth, bool with_wireframe,
                    bool with_shadow, bool with_fog, bool with_materials, bool with_effect, bool with_dft, bool with_convex_hull,
                    bool with_optical_flow, double ambient, double diffuse, double specular, double dft_brightness,
                    const Color& dft_background_color, const Color& dft_color, double default_ns, bool vertical_sync,
                    double shadow_zoom)
-                : m_callback(callback), m_win_parent(win_parent)
+                : m_callback(callback), m_parent_window(parent_window), m_parent_window_dpi(parent_window_dpi)
 
         {
                 if (!callback)
@@ -586,11 +673,15 @@ void ShowObject::loop()
         }
 
         m_wnd = create_gl_window_1x1();
-        move_window_to_parent(m_wnd->getSystemHandle(), m_win_parent);
+        move_window_to_parent(m_wnd->getSystemHandle(), m_parent_window);
 
         m_renderer = create_renderer();
         m_camera = std::make_unique<Camera>();
-        m_text = std::make_unique<Text>();
+
+        m_text = std::make_unique<Text>(points_to_pixels(FPS_TEXT_SIZE_IN_POINTS, m_parent_window_dpi),
+                                        points_to_pixels(FPS_TEXT_STEP_Y_IN_POINTS, m_parent_window_dpi),
+                                        points_to_pixels(FPS_TEXT_START_X_IN_POINTS, m_parent_window_dpi),
+                                        points_to_pixels(FPS_TEXT_START_Y_IN_POINTS, m_parent_window_dpi));
 
         glDisable(GL_CULL_FACE);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -623,7 +714,8 @@ void ShowObject::loop()
 
         sf::Event event;
 
-        double start_time = time_in_seconds();
+        std::vector<std::string> fps_text({FPS_STRING});
+        FPS fps;
 
         std::chrono::steady_clock::time_point last_frame_time = std::chrono::steady_clock::now();
 
@@ -688,8 +780,8 @@ void ShowObject::loop()
                                 m_new_mouse_y = event.mouseMove.y;
                                 break;
                         case sf::Event::MouseWheelScrolled:
-                                // Для режима встроенного окна перенесено на обработчик события
-                                // Event::EventType::mouse_wheel, так как на Винде не приходит
+                                // Для режима встроенного окна обработка колеса мыши происходит
+                                // в функции direct_mouse_wheel, так как на Винде не приходит
                                 // это сообщение для дочернего окна.
                                 if (m_fullscreen_active)
                                 {
@@ -750,16 +842,6 @@ void ShowObject::loop()
 
                 if (window_width != new_width || window_height != new_height || dft_active_old != m_dft_active)
                 {
-                        // Чтобы в случае исключений не остались объекты от прошлых размеров окна,
-                        // вначале нужно удалить все объекты.
-
-                        m_renderer->free_buffers();
-
-                        m_dft_show = nullptr;
-                        m_pencil_effect = nullptr;
-                        m_optical_flow = nullptr;
-                        m_convex_hull_2d = nullptr;
-
                         window_width = new_width;
                         window_height = new_height;
 
@@ -896,7 +978,12 @@ void ShowObject::loop()
 
                 glDisable(GL_DEPTH_TEST);
                 glEnable(GL_BLEND);
-                m_text->draw(window_width, window_height, {"FPS: " + std::to_string(calculate_fps(&start_time))});
+
+                fps_text[0].resize(sizeof(FPS_STRING) - 1);
+                fps_text[0] += to_string(fps.calculate());
+                m_text->draw(window_width, window_height, fps_text);
+
+                //
 
                 m_wnd->display();
         }
@@ -929,16 +1016,17 @@ void ShowObject::loop_thread()
 }
 }
 
-std::unique_ptr<IShow> create_show_opengl(IShowCallback* callback, WindowID win_parent, const Color& background_color_rgb,
-                                          const Color& default_color_rgb, const Color& wireframe_color_rgb, bool with_smooth,
-                                          bool with_wireframe, bool with_shadow, bool with_fog, bool with_materials,
-                                          bool with_effect, bool with_dft, bool with_convex_hull, bool with_optical_flow,
-                                          double ambient, double diffuse, double specular, double dft_brightness,
-                                          const Color& dft_background_color, const Color& dft_color, double default_ns,
-                                          bool vertical_sync, double shadow_zoom)
+std::unique_ptr<IShow> create_show_opengl(IShowCallback* callback, WindowID parent_window, double parent_window_dpi,
+                                          const Color& background_color_rgb, const Color& default_color_rgb,
+                                          const Color& wireframe_color_rgb, bool with_smooth, bool with_wireframe,
+                                          bool with_shadow, bool with_fog, bool with_materials, bool with_effect, bool with_dft,
+                                          bool with_convex_hull, bool with_optical_flow, double ambient, double diffuse,
+                                          double specular, double dft_brightness, const Color& dft_background_color,
+                                          const Color& dft_color, double default_ns, bool vertical_sync, double shadow_zoom)
 {
-        return std::make_unique<ShowObject>(
-                callback, win_parent, background_color_rgb, default_color_rgb, wireframe_color_rgb, with_smooth, with_wireframe,
-                with_shadow, with_fog, with_materials, with_effect, with_dft, with_convex_hull, with_optical_flow, ambient,
-                diffuse, specular, dft_brightness, dft_background_color, dft_color, default_ns, vertical_sync, shadow_zoom);
+        return std::make_unique<ShowObject>(callback, parent_window, parent_window_dpi, background_color_rgb, default_color_rgb,
+                                            wireframe_color_rgb, with_smooth, with_wireframe, with_shadow, with_fog,
+                                            with_materials, with_effect, with_dft, with_convex_hull, with_optical_flow, ambient,
+                                            diffuse, specular, dft_brightness, dft_background_color, dft_color, default_ns,
+                                            vertical_sync, shadow_zoom);
 }
