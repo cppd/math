@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "show_opengl.h"
 
+#include "camera.h"
 #include "fps.h"
 
 #include "com/color/colors.h"
@@ -26,7 +27,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/mat_alg.h"
 #include "com/math.h"
 #include "com/print.h"
-#include "com/quaternion.h"
 #include "com/thread.h"
 #include "com/time.h"
 #include "gpu_2d/convex_hull/convex_hull_2d.h"
@@ -62,22 +62,11 @@ constexpr double FPS_TEXT_START_Y_IN_POINTS = FPS_TEXT_STEP_Y_IN_POINTS;
 
 constexpr std::chrono::milliseconds IDLE_MODE_FRAME_DURATION(100);
 
-constexpr double PI_DIV_180 = PI<double> / 180;
-constexpr double to_radians(double angle)
-{
-        return angle * PI_DIV_180;
-}
-
 namespace
 {
 int points_to_pixels(double points, double dpi)
 {
         return std::round(points / 72.0 * dpi);
-}
-
-vec3 rotate_vector_degree(const vec3& axis, double angle_degree, const vec3& v)
-{
-        return rotate_vector(axis, to_radians(angle_degree), v);
 }
 
 #if 0
@@ -103,100 +92,6 @@ void make_fullscreen(bool fullscreen, WindowID window, WindowID parent)
         }
         set_focus(window);
 }
-
-class Camera final
-{
-        mutable SpinLock m_lock;
-
-        vec3 m_camera_right;
-        vec3 m_camera_up;
-        vec3 m_camera_direction; // от камеры на объект
-
-        vec3 m_light_up;
-        vec3 m_light_direction; // от источника света на объект
-
-        vec3 m_view_center;
-        double m_view_width;
-
-        int m_paint_width = -1;
-        int m_paint_height = -1;
-
-        void set_vectors(const vec3& right, const vec3& up)
-        {
-                m_camera_up = normalize(up);
-
-                m_camera_direction = cross(m_camera_up, normalize(right));
-
-                m_camera_right = cross(m_camera_direction, m_camera_up);
-
-                vec3 light_right = rotate_vector_degree(m_camera_up, -45, m_camera_right);
-                m_light_up = rotate_vector_degree(light_right, -45, m_camera_up);
-
-                m_light_direction = cross(m_light_up, light_right);
-        }
-
-public:
-        Camera() : m_camera_right(0), m_camera_up(0), m_camera_direction(0), m_light_up(0), m_light_direction(0)
-        {
-        }
-
-        void set(const vec3& right, const vec3& up)
-        {
-                std::lock_guard lg(m_lock);
-
-                set_vectors(right, up);
-        }
-
-        void get(vec3* camera_up, vec3* camera_direction, vec3* light_up, vec3* light_direction) const
-        {
-                std::lock_guard lg(m_lock);
-
-                *camera_up = m_camera_up;
-                *camera_direction = m_camera_direction;
-                *light_up = m_light_up;
-                *light_direction = m_light_direction;
-        }
-
-        void camera_information(vec3* camera_up, vec3* camera_direction, vec3* view_center, double* view_width, int* paint_width,
-                                int* paint_height) const
-        {
-                std::lock_guard lg(m_lock);
-
-                *camera_up = m_camera_up;
-                *camera_direction = m_camera_direction;
-                *view_center = m_view_center;
-                *view_width = m_view_width;
-                *paint_width = m_paint_width;
-                *paint_height = m_paint_height;
-        }
-
-        vec3 light_direction() const
-        {
-                std::lock_guard lg(m_lock);
-
-                return m_light_direction;
-        }
-
-        void rotate(int delta_x, int delta_y)
-        {
-                std::lock_guard lg(m_lock);
-
-                vec3 right = rotate_vector_degree(m_camera_up, -delta_x, m_camera_right);
-                vec3 up = rotate_vector_degree(m_camera_right, -delta_y, m_camera_up);
-                set_vectors(right, up);
-        }
-
-        void set_view_center_and_width(const vec3& vec, double view_width, int paint_width, int paint_height)
-        {
-                std::lock_guard lg(m_lock);
-
-                m_view_center = vec;
-                m_view_width = view_width;
-
-                m_paint_width = paint_width;
-                m_paint_height = paint_height;
-        }
-};
 
 class ShowObject final : public EventQueue
 {
