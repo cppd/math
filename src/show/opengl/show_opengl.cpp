@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "show.h"
+#include "show_opengl.h"
 
 #include "com/color/colors.h"
 #include "com/error.h"

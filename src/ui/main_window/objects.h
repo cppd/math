@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "paintings.h"
 
 #include "progress/progress_list.h"
-#include "show/opengl/show.h"
+#include "show/show.h"
 
 #include <exception>
 #include <functional>

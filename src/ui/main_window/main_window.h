@@ -22,8 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "threads.h"
 
 #include "progress/progress_list.h"
-#include "show/opengl/show.h"
-#include "show/vulkan/show.h"
+#include "show/show.h"
+#include "show/vulkan/show_vulkan.h"
 #include "tests/self_test.h"
 
 #include "ui_main_window.h"

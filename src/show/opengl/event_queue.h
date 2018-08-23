@@ -17,10 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "show.h"
-
 #include "com/thread.h"
 #include "com/variant.h"
+#include "show/show.h"
 
 // Класс для вызова функций не напрямую, а через очередь.
 // Это нужно для работы функций в другом потоке.

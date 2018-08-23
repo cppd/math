@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #if defined(VULKAN_FOUND) && defined(GLFW_FOUND)
 
-#include "show.h"
+#include "show_vulkan.h"
 
 #include "com/log.h"
 #include "com/math.h"
