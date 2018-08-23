@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "show_opengl.h"
 
+#include "fps.h"
+
 #include "com/color/colors.h"
 #include "com/error.h"
 #include "com/log.h"
@@ -72,86 +74,6 @@ int points_to_pixels(double points, double dpi)
 {
         return std::round(points / 72.0 * dpi);
 }
-
-class FPS
-{
-        // Интервал в секундах
-        static constexpr double INTERVAL_LENGTH = 1;
-
-        // Сколько отсчётов на интервале, не считая текущего
-        static constexpr int INTERVAL_SAMPLE_COUNT = 10;
-
-        struct Frames
-        {
-                int time;
-                double fps = 0;
-                Frames(int time_) : time(time_)
-                {
-                }
-        };
-
-        static std::array<double, INTERVAL_SAMPLE_COUNT> window_function()
-        {
-                // Richard G. Lyons.
-                // Understanding Digital Signal Processing. Third Edition.
-                // Pearson Education, Inc. 2011.
-                //
-                // 5.3.2 Windows Used in FIR Filter Design.
-                // Blackman window function.
-
-                std::array<double, INTERVAL_SAMPLE_COUNT> array;
-
-                double sum = 0;
-                for (size_t i = 1; i < INTERVAL_SAMPLE_COUNT + 1; ++i)
-                {
-                        double x = static_cast<double>(i) / (INTERVAL_SAMPLE_COUNT + 1);
-                        double v = 0.42 - 0.5 * std::cos(2 * PI<double> * x) + 0.08 * std::cos(4 * PI<double> * x);
-                        array[i - 1] = v;
-                        sum += v;
-                }
-
-                for (auto& v : array)
-                {
-                        v /= sum;
-                }
-
-                return array;
-        }
-
-        const std::array<double, INTERVAL_SAMPLE_COUNT> m_filter_window;
-
-        std::deque<Frames> m_deque;
-
-public:
-        FPS() : m_filter_window(window_function())
-        {
-        }
-
-        long calculate()
-        {
-                const int time = time_in_seconds() * (INTERVAL_SAMPLE_COUNT / INTERVAL_LENGTH);
-
-                while (!m_deque.empty() && (m_deque.front().time < time - INTERVAL_SAMPLE_COUNT))
-                {
-                        m_deque.pop_front();
-                }
-
-                for (int i = INTERVAL_SAMPLE_COUNT - m_deque.size(); i >= 0; --i)
-                {
-                        m_deque.emplace_back(time - i);
-                }
-
-                m_deque.back().fps += INTERVAL_SAMPLE_COUNT / INTERVAL_LENGTH;
-
-                double sum = 0;
-                for (int i = 0; i < INTERVAL_SAMPLE_COUNT; ++i)
-                {
-                        sum += m_filter_window[i] * m_deque[i].fps;
-                }
-
-                return std::lround(sum);
-        }
-};
 
 vec3 rotate_vector_degree(const vec3& axis, double angle_degree, const vec3& v)
 {
