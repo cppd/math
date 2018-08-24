@@ -284,7 +284,7 @@ void constant_data_test(ProgressRatio* progress)
 
         LOG("\n----- Context For Constant Data DFT Tests -----");
 
-        std::unique_ptr<sf::Context> context = create_gl_context_1x1();
+        OpenGLContext opengl_context;
 
         LOG("\n----- Constant Data DFT Tests -----");
 
@@ -305,7 +305,7 @@ void random_data_test(const std::array<int, 2>& dimensions, ProgressRatio* progr
 {
         LOG("\n----- Context For Random Data DFT Tests -----");
 
-        std::unique_ptr<sf::Context> context = create_gl_context_1x1();
+        OpenGLContext opengl_context;
 
         LOG("\n----- Random Data DFT Tests -----");
 

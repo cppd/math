@@ -34,8 +34,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cmath>
 #include <thread>
 
-constexpr double WINDOW_SIZE_COEF = 0.5;
-
 // clang-format off
 constexpr uint32_t vertex_shader[]
 {
@@ -172,34 +170,48 @@ void update_uniforms(const vulkan::VulkanInstance& instance)
         set_fragment_uniform_1(instance, ubo1);
 }
 
-std::array<int, 2> window_size()
-{
-        std::array<int, 2> size = VulkanWindow::screen_size();
-
-        size[0] = std::round(size[0] * WINDOW_SIZE_COEF);
-        size[1] = std::round(size[1] * WINDOW_SIZE_COEF);
-
-        return size;
-}
-
-class VulkanObject final : public IShowVulkan
+class VulkanObject final : public IShowVulkan, public WindowEvent
 {
         WindowID m_win_parent;
         std::thread m_thread;
         std::atomic_bool m_stop{false};
 
-        void loop();
-        void loop_thread();
-
         void parent_resized() override
         {
                 LOG("parent resized");
         }
-
         void mouse_wheel(double) override
         {
                 LOG("mouse wheel");
         }
+
+        void window_keyboard_pressed(KeyboardButton /*button*/) override
+        {
+                LOG("window keyboard pressed");
+        }
+        void window_mouse_pressed(MouseButton /*button*/) override
+        {
+                LOG("window mouse pressed");
+        }
+        void window_mouse_released(MouseButton /*button*/) override
+        {
+                LOG("window mouse released");
+        }
+        void window_mouse_moved(int /*x*/, int /*y*/) override
+        {
+                LOG("window mouse moved");
+        }
+        void window_mouse_wheel(int /*delta*/) override
+        {
+                LOG("window mouse wheel");
+        }
+        void window_resized(int /*width*/, int /*height*/) override
+        {
+                LOG("window resized");
+        }
+
+        void loop();
+        void loop_thread();
 
 public:
         VulkanObject(WindowID win_parent) : m_win_parent(win_parent)
@@ -237,14 +249,14 @@ void VulkanObject::loop()
 
         LOG(vulkan::overview());
 
-        VulkanWindow window(window_size(), "Vulkan Window");
-        move_window_to_parent(window.get_system_handle(), m_win_parent);
+        std::unique_ptr<VulkanWindow> window = create_vulkan_window(this);
+        move_window_to_parent(window->get_system_handle(), m_win_parent);
 
         constexpr unsigned vertex_count = indices.size();
 
         vulkan::VulkanInstance vulkan_instance(
                 1, 0, instance_extensions + window_instance_extensions, device_extensions, validation_layers,
-                [&window](VkInstance instance) { return window.create_surface(instance); }, vertex_shader, fragment_shader,
+                [&window](VkInstance instance) { return window->create_surface(instance); }, vertex_shader, fragment_shader,
                 Vertex::binding_descriptions(), Vertex::attribute_descriptions(), vertex_count,
                 vertices.size() * sizeof(vertices[0]), vertices.data(), indices.size() * sizeof(indices[0]), indices.data(),
                 descriptor_set_layout_bindings(), descriptor_set_layout_bindings_sizes());
@@ -258,12 +270,7 @@ void VulkanObject::loop()
                         return;
                 }
 
-                // if (glfwWindowShouldClose(window))
-                // {
-                //        return;
-                //}
-
-                glfwPollEvents();
+                window->pull_and_dispath_events();
 
                 update_uniforms(vulkan_instance);
 

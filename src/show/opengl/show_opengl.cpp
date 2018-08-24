@@ -43,7 +43,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "show/opengl/text/text.h"
 #include "window/window_prop.h"
 
-#include <SFML/Window/Event.hpp>
 #include <chrono>
 #include <cmath>
 #include <thread>
@@ -93,7 +92,7 @@ void make_fullscreen(bool fullscreen, WindowID window, WindowID parent)
         set_focus(window);
 }
 
-class ShowObject final : public EventQueue
+class ShowObject final : public EventQueue, public WindowEvent
 {
         // Камера и тени рассчитаны на размер объекта 2 и на положение в точке (0, 0, 0).
         static constexpr double OBJECT_SIZE = 2;
@@ -109,8 +108,9 @@ class ShowObject final : public EventQueue
 
         //
 
-        std::unique_ptr<sf::Window> m_wnd;
+        std::unique_ptr<OpenGLWindow> m_window;
         std::unique_ptr<IRenderer> m_renderer;
+
         std::unique_ptr<Camera> m_camera;
         std::unique_ptr<Text> m_text;
 
@@ -126,6 +126,13 @@ class ShowObject final : public EventQueue
         double m_wheel_delta = 0;
         bool m_default_view = false;
         bool m_fullscreen_active = false;
+        int m_mouse_x = 0;
+        int m_mouse_y = 0;
+        bool m_mouse_pressed = false;
+        bool m_mouse_pressed_shift = false;
+
+        int m_new_width;
+        int m_new_height;
 
         // Неважно, какие тут будут значения при инициализации,
         // так как при создании окна задаются начальные параметры
@@ -345,7 +352,7 @@ class ShowObject final : public EventQueue
 
                 if (!m_fullscreen_active)
                 {
-                        set_size_to_parent(m_wnd->getSystemHandle(), m_parent_window);
+                        set_size_to_parent(m_window->get_system_handle(), m_parent_window);
                 }
         }
 
@@ -353,8 +360,7 @@ class ShowObject final : public EventQueue
         {
                 ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
-                // Для полноэкранного режима обрабатывается
-                // в сообщении sf::Event::MouseWheelScrolled
+                // Для полноэкранного режима обрабатывается в функции window_mouse_wheel
                 if (!m_fullscreen_active)
                 {
                         if (m_new_mouse_x < m_width && m_new_mouse_y < m_height)
@@ -369,14 +375,14 @@ class ShowObject final : public EventQueue
                 ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
                 m_fullscreen_active = !m_fullscreen_active;
-                make_fullscreen(m_fullscreen_active, m_wnd->getSystemHandle(), m_parent_window);
+                make_fullscreen(m_fullscreen_active, m_window->get_system_handle(), m_parent_window);
         }
 
         void direct_set_vertical_sync(bool v) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
-                m_wnd->setVerticalSyncEnabled(v);
+                m_window->set_vertical_sync_enabled(v);
         }
 
         void direct_set_shadow_zoom(double v) override
@@ -415,6 +421,73 @@ class ShowObject final : public EventQueue
                 ASSERT(std::this_thread::get_id() != m_thread.get_id());
 
                 return OBJECT_POSITION;
+        }
+
+        //
+
+        void window_keyboard_pressed(KeyboardButton button) override
+        {
+                switch (button)
+                {
+                case KeyboardButton::F11:
+                        toggle_fullscreen();
+                        break;
+                case KeyboardButton::Escape:
+                        if (m_fullscreen_active)
+                        {
+                                toggle_fullscreen();
+                        }
+                        break;
+                }
+        }
+
+        void window_mouse_pressed(MouseButton button) override
+        {
+                if (m_new_mouse_x < m_width && m_new_mouse_y < m_height &&
+                    (button == MouseButton::Left || button == MouseButton::Right))
+                {
+                        m_mouse_pressed = true;
+                        m_mouse_pressed_shift = (button == MouseButton::Left);
+                        m_mouse_x = m_new_mouse_x;
+                        m_mouse_y = m_new_mouse_y;
+                }
+        }
+
+        void window_mouse_released(MouseButton button) override
+        {
+                if (button == MouseButton::Left || button == MouseButton::Right)
+                {
+                        m_mouse_pressed = false;
+                }
+        }
+
+        void window_mouse_moved(int x, int y) override
+        {
+                m_new_mouse_x = x;
+                m_new_mouse_y = y;
+        }
+
+        void window_mouse_wheel(int delta) override
+        {
+                // Для режима встроенного окна обработка колеса мыши происходит
+                // в функции direct_mouse_wheel, так как на Винде не приходит
+                // это сообщение для дочернего окна.
+                if (m_fullscreen_active)
+                {
+                        // if (m_new_mouse_x < m_width && m_new_mouse_y < m_height &&
+                        //    object_under_mouse(m_new_mouse_x, m_new_mouse_y, window_height,
+                        //                       m_renderer->object_texture()) > 0)
+                        if (m_new_mouse_x < m_width && m_new_mouse_y < m_height)
+                        {
+                                m_wheel_delta = delta;
+                        }
+                }
+        }
+
+        void window_resized(int width, int height) override
+        {
+                m_new_width = width;
+                m_new_height = height;
         }
 
         //
@@ -482,17 +555,11 @@ void ShowObject::loop()
 {
         ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
-        {
-                // Без этого создания контекста почему-то не сможет установиться
-                // ANTIALIASING_LEVEL в ненулевое значение далее при создании окна.
-                // В версии SFML 2.4.2 эта проблема исчезла.
-                std::unique_ptr<sf::Context> context = create_gl_context_1x1();
-        }
-
-        m_wnd = create_gl_window_1x1();
-        move_window_to_parent(m_wnd->getSystemHandle(), m_parent_window);
+        m_window = create_opengl_window(this);
+        move_window_to_parent(m_window->get_system_handle(), m_parent_window);
 
         m_renderer = create_renderer();
+
         m_camera = std::make_unique<Camera>();
 
         m_text = std::make_unique<Text>(points_to_pixels(FPS_TEXT_SIZE_IN_POINTS, m_parent_window_dpi),
@@ -510,26 +577,19 @@ void ShowObject::loop()
         LOG(framebuffer_srgb ? "Framebuffer sRGB" : "Framebuffer linear");
         LOG(colorbuffer_srgb ? "Colorbuffer sRGB" : "Colorbuffer linear");
 
-        int new_width = m_wnd->getSize().x;
-        int new_height = m_wnd->getSize().y;
-        double pixel_to_coord_no_zoom = 2.0 / std::min(new_width, new_height);
+        m_new_width = m_window->get_width();
+        m_new_height = m_window->get_height();
+        double pixel_to_coord_no_zoom = 2.0 / std::min(m_new_width, m_new_height);
         double pixel_to_coord = pixel_to_coord_no_zoom;
 
         // Обязательно задать начальные значения -1, чтобы отработала функция изменения размеров окна
-        ASSERT(new_width > 0 && new_height > 0);
+        ASSERT(m_new_width > 0 && m_new_height > 0);
         int window_width = -1;
         int window_height = -1;
         bool dft_active_old = !m_dft_active;
 
-        int mouse_x = 0;
-        int mouse_y = 0;
-
-        bool mouse_pressed = false;
-        bool mouse_pressed_shift = false;
         vec2 window_center(0, 0);
         double zoom_delta = 0;
-
-        sf::Event event;
 
         std::vector<std::string> fps_text({FPS_STRING});
         FPS fps;
@@ -543,91 +603,26 @@ void ShowObject::loop()
 #if defined(_WIN32)
                         // Без этого вызова почему-то зависает деструктор окна SFML на Винде,
                         // если это окно встроено в родительское окно.
-                        change_window_style_not_child(wnd->getSystemHandle());
+                        change_window_style_not_child(m_window->get_system_handle());
 #endif
 
                         return;
                 }
 
-                while (pull_and_dispatch_event())
-                {
-                }
-
-                while (m_wnd->pollEvent(event))
-                {
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wswitch"
-                        switch (event.type)
-                        {
-                        case sf::Event::Closed:
-                                break;
-                        case sf::Event::KeyPressed:
-                                switch (event.key.code)
-#pragma GCC diagnostic pop
-                                {
-                                case sf::Keyboard::F11:
-                                        toggle_fullscreen();
-                                        break;
-                                case sf::Keyboard::Escape:
-                                        if (m_fullscreen_active)
-                                        {
-                                                toggle_fullscreen();
-                                        }
-                                        break;
-                                }
-                                break;
-                        case sf::Event::MouseButtonPressed:
-                                if (event.mouseButton.x < m_width && event.mouseButton.y < m_height &&
-                                    (event.mouseButton.button == sf::Mouse::Left || event.mouseButton.button == sf::Mouse::Right))
-                                {
-                                        mouse_pressed = true;
-                                        mouse_pressed_shift = (event.mouseButton.button == sf::Mouse::Left);
-                                        mouse_x = event.mouseButton.x;
-                                        mouse_y = event.mouseButton.y;
-                                }
-                                break;
-                        case sf::Event::MouseButtonReleased:
-                                if (event.mouseButton.button == sf::Mouse::Left || event.mouseButton.button == sf::Mouse::Right)
-                                {
-                                        mouse_pressed = false;
-                                }
-                                break;
-                        case sf::Event::MouseMoved:
-                                m_new_mouse_x = event.mouseMove.x;
-                                m_new_mouse_y = event.mouseMove.y;
-                                break;
-                        case sf::Event::MouseWheelScrolled:
-                                // Для режима встроенного окна обработка колеса мыши происходит
-                                // в функции direct_mouse_wheel, так как на Винде не приходит
-                                // это сообщение для дочернего окна.
-                                if (m_fullscreen_active)
-                                {
-                                        // if (m_new_mouse_x < m_width && m_new_mouse_y < m_height &&
-                                        //    object_under_mouse(m_new_mouse_x, m_new_mouse_y, window_height,
-                                        //                       m_renderer->object_texture()) > 0)
-                                        if (m_new_mouse_x < m_width && m_new_mouse_y < m_height)
-                                        {
-                                                m_wheel_delta = event.mouseWheelScroll.delta;
-                                        }
-                                }
-                                break;
-                        case sf::Event::Resized:
-                                new_width = event.size.width;
-                                new_height = event.size.height;
-                                break;
-                        }
-                }
+                // Вначале команды, потом сообщения окна
+                this->pull_and_dispatch_events();
+                m_window->pull_and_dispath_events();
 
                 bool matrix_change = false;
 
-                if (mouse_pressed && (m_new_mouse_x != mouse_x || m_new_mouse_y != mouse_y))
+                if (m_mouse_pressed && (m_new_mouse_x != m_mouse_x || m_new_mouse_y != m_mouse_y))
                 {
-                        int delta_x = m_new_mouse_x - mouse_x;
-                        int delta_y = m_new_mouse_y - mouse_y;
-                        mouse_x = m_new_mouse_x;
-                        mouse_y = m_new_mouse_y;
+                        int delta_x = m_new_mouse_x - m_mouse_x;
+                        int delta_y = m_new_mouse_y - m_mouse_y;
+                        m_mouse_x = m_new_mouse_x;
+                        m_mouse_y = m_new_mouse_y;
 
-                        if (!mouse_pressed_shift)
+                        if (!m_mouse_pressed_shift)
                         {
                                 m_camera->rotate(delta_x, delta_y);
                         }
@@ -657,17 +652,15 @@ void ShowObject::loop()
                         m_wheel_delta = 0;
                 }
 
-                if (window_width != new_width || window_height != new_height || dft_active_old != m_dft_active)
+                if (window_width != m_new_width || window_height != m_new_height || dft_active_old != m_dft_active)
                 {
-                        window_width = new_width;
-                        window_height = new_height;
+                        window_width = m_new_width;
+                        window_height = m_new_height;
 
                         m_width = m_dft_active ? window_width / 2 : window_width;
                         m_height = window_height;
 
                         dft_active_old = m_dft_active;
-
-                        matrix_change = true;
 
                         // матрица для рисования на плоскости, 0 вверху
                         mat4 plane_matrix = scale<double>(2.0 / window_width, -2.0 / window_height, 1) *
@@ -687,6 +680,8 @@ void ShowObject::loop()
                         m_optical_flow = std::make_unique<OpticalFlow>(m_width, m_height, plane_matrix);
 
                         m_convex_hull_2d = std::make_unique<ConvexHull2D>(m_renderer->object_texture(), plane_matrix);
+
+                        matrix_change = true;
                 }
 
                 if (m_default_view)
@@ -802,7 +797,7 @@ void ShowObject::loop()
 
                 //
 
-                m_wnd->display();
+                m_window->display();
         }
 }
 

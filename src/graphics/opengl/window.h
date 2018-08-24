@@ -17,9 +17,33 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <SFML/Window/Context.hpp>
-#include <SFML/Window/Window.hpp>
+#include "graphics/window_event.h"
+#include "window/window_handle.h"
+
 #include <memory>
 
-std::unique_ptr<sf::Window> create_gl_window_1x1();
-std::unique_ptr<sf::Context> create_gl_context_1x1();
+class OpenGLContext
+{
+        class Impl;
+        std::unique_ptr<Impl> m_impl;
+
+public:
+        OpenGLContext();
+        ~OpenGLContext();
+};
+
+class OpenGLWindow
+{
+public:
+        virtual ~OpenGLWindow() = default;
+
+        virtual WindowID get_system_handle() const = 0;
+        virtual int get_width() const = 0;
+        virtual int get_height() const = 0;
+        virtual void pull_and_dispath_events() = 0;
+
+        virtual void set_vertical_sync_enabled(bool v) = 0;
+        virtual void display() = 0;
+};
+
+std::unique_ptr<OpenGLWindow> create_opengl_window(WindowEvent* event_interface);

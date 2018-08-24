@@ -19,40 +19,36 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #if defined(VULKAN_FOUND) && defined(GLFW_FOUND)
 
+#include "graphics/window_event.h"
 #include "window/window_handle.h"
 
 #include <array>
+#include <memory>
 #include <string>
 #include <vector>
-
-// clang-format off
-// Перед включением GLFW/glfw3.h надо включить vulkan/vulkan.h
 #include <vulkan/vulkan.h>
-#include <GLFW/glfw3.h>
-// clang-format on
 
 class VulkanWindow
 {
-        GLFWwindow* m_window = nullptr;
-
 public:
-        VulkanWindow(const std::array<int, 2>& size, const std::string& title);
-        ~VulkanWindow();
-
-        operator GLFWwindow*() const;
-
-        WindowID get_system_handle();
-
-        VkSurfaceKHR create_surface(VkInstance instance);
+        static void init();
+        static void terminate() noexcept;
 
         static std::vector<std::string> instance_extensions();
-
         static std::array<int, 2> screen_size();
 
-        VulkanWindow(const VulkanWindow&) = delete;
-        VulkanWindow& operator=(const VulkanWindow&) = delete;
-        VulkanWindow(VulkanWindow&&) = delete;
-        VulkanWindow& operator=(VulkanWindow&&) = delete;
+        //
+
+        virtual ~VulkanWindow() = default;
+
+        virtual WindowID get_system_handle() = 0;
+        virtual int get_width() const = 0;
+        virtual int get_height() const = 0;
+        virtual void pull_and_dispath_events() = 0;
+
+        virtual VkSurfaceKHR create_surface(VkInstance instance) = 0;
 };
+
+std::unique_ptr<VulkanWindow> create_vulkan_window(WindowEvent* event_interface);
 
 #endif

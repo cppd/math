@@ -15,47 +15,30 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "glfw.h"
+#pragma once
 
-#if defined(GLFW_FOUND)
-
-#include "com/error.h"
-#include "com/log.h"
-
-#include <GLFW/glfw3.h>
-#include <string>
-
-namespace
+class WindowEvent
 {
-void glfw_error_callback(int /*error*/, const char* description)
-{
-        LOG(std::string("GLFW Error: ") + description);
-}
-}
+protected:
+        virtual ~WindowEvent() = default;
 
-void glfw_init()
-{
-        glfwSetErrorCallback(glfw_error_callback);
-
-        if (glfwInit() != GLFW_TRUE)
+public:
+        enum class KeyboardButton
         {
-                error("Failed to initialize GLFW");
-        }
-}
+                F11,
+                Escape
+        };
 
-void glfw_terminate() noexcept
-{
-        glfwTerminate();
-}
+        enum class MouseButton
+        {
+                Left,
+                Right
+        };
 
-#else
-
-void glfw_init()
-{
-}
-
-void glfw_terminate() noexcept
-{
-}
-
-#endif
+        virtual void window_keyboard_pressed(KeyboardButton button) = 0;
+        virtual void window_mouse_pressed(MouseButton button) = 0;
+        virtual void window_mouse_released(MouseButton button) = 0;
+        virtual void window_mouse_moved(int x, int y) = 0;
+        virtual void window_mouse_wheel(int delta) = 0;
+        virtual void window_resized(int width, int height) = 0;
+};

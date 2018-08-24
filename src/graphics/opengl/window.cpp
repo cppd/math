@@ -17,11 +17,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "window.h"
 
+#include "com/error.h"
 #include "com/log.h"
 #include "graphics/common_opengl.h"
 #include "graphics/opengl/query.h"
 
 #include <SFML/System/Err.hpp>
+#include <SFML/Window/Context.hpp>
+#include <SFML/Window/Event.hpp>
+#include <SFML/Window/Window.hpp>
 
 #if defined(_WIN32)
 #include "graphics/opengl/functions/opengl_functions.h"
@@ -47,10 +51,9 @@ void init_opengl_functions()
 }
 #endif
 
-std::unique_ptr<sf::Window> create_gl_window_1x1(int major_gl_version, int minor_gl_version,
-                                                 const std::vector<std::string>& extensions, int antialiasing_level,
-                                                 int depth_bits, int stencil_bits, int red_bits, int green_bits, int blue_bits,
-                                                 int alpha_bits)
+void create_gl_window_1x1(int major_gl_version, int minor_gl_version, const std::vector<std::string>& extensions,
+                          int antialiasing_level, int depth_bits, int stencil_bits, int red_bits, int green_bits, int blue_bits,
+                          int alpha_bits, sf::Window* window)
 {
         sf::err().rdbuf(nullptr);
 
@@ -62,7 +65,7 @@ std::unique_ptr<sf::Window> create_gl_window_1x1(int major_gl_version, int minor
         cs.stencilBits = stencil_bits;
         cs.attributeFlags = sf::ContextSettings::Attribute::Core;
 
-        std::unique_ptr<sf::Window> window = std::make_unique<sf::Window>(sf::VideoMode(1, 1), "", sf::Style::None, cs);
+        window->create(sf::VideoMode(1, 1), "", sf::Style::None, cs);
 
 #if defined(_WIN32)
         init_opengl_functions();
@@ -72,8 +75,6 @@ std::unique_ptr<sf::Window> create_gl_window_1x1(int major_gl_version, int minor
         gpu::check_bit_sizes(depth_bits, stencil_bits, antialiasing_level, red_bits, green_bits, blue_bits, alpha_bits);
 
         LOG("\n-----OpenGL Window-----\n" + gpu::graphics_overview());
-
-        return window;
 }
 
 std::unique_ptr<sf::Context> create_gl_context_1x1(int major_gl_version, int minor_gl_version,
@@ -99,15 +100,135 @@ std::unique_ptr<sf::Context> create_gl_context_1x1(int major_gl_version, int min
 
         return context;
 }
+
+//
+
+class OpenGLWindowImplementation final : public OpenGLWindow
+{
+        sf::Window m_window;
+        WindowEvent* m_event_interface;
+
+        WindowID get_system_handle() const override
+        {
+                return m_window.getSystemHandle();
+        }
+
+        void set_vertical_sync_enabled(bool v) override
+        {
+                m_window.setVerticalSyncEnabled(v);
+        }
+
+        int get_width() const override
+        {
+                return m_window.getSize().x;
+        }
+        int get_height() const override
+        {
+                return m_window.getSize().y;
+        }
+
+        void display() override
+        {
+                m_window.display();
+        }
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wswitch"
+        void pull_and_dispath_events() override
+        {
+                sf::Event event;
+
+                while (m_window.pollEvent(event))
+                {
+                        switch (event.type)
+                        {
+                        // case sf::Event::Closed:
+                        //        break;
+                        case sf::Event::KeyPressed:
+                                switch (event.key.code)
+                                {
+                                case sf::Keyboard::F11:
+                                        m_event_interface->window_keyboard_pressed(WindowEvent::KeyboardButton::F11);
+                                        break;
+                                case sf::Keyboard::Escape:
+                                        m_event_interface->window_keyboard_pressed(WindowEvent::KeyboardButton::Escape);
+                                        break;
+                                }
+                                break;
+                        case sf::Event::MouseButtonPressed:
+                                switch (event.mouseButton.button)
+                                {
+                                case sf::Mouse::Left:
+                                        m_event_interface->window_mouse_pressed(WindowEvent::MouseButton::Left);
+                                        break;
+                                case sf::Mouse::Right:
+                                        m_event_interface->window_mouse_pressed(WindowEvent::MouseButton::Right);
+                                        break;
+                                }
+                                break;
+                        case sf::Event::MouseButtonReleased:
+                                switch (event.mouseButton.button)
+                                {
+                                case sf::Mouse::Left:
+                                        m_event_interface->window_mouse_released(WindowEvent::MouseButton::Left);
+                                        break;
+                                case sf::Mouse::Right:
+                                        m_event_interface->window_mouse_released(WindowEvent::MouseButton::Right);
+                                        break;
+                                }
+                                break;
+                        case sf::Event::MouseMoved:
+                                m_event_interface->window_mouse_moved(event.mouseMove.x, event.mouseMove.y);
+                                break;
+                        case sf::Event::MouseWheelScrolled:
+                                m_event_interface->window_mouse_wheel(event.mouseWheelScroll.delta);
+                                break;
+                        case sf::Event::Resized:
+                                m_event_interface->window_resized(event.size.width, event.size.height);
+                                break;
+                        }
+                }
+        }
+#pragma GCC diagnostic pop
+
+public:
+        OpenGLWindowImplementation(WindowEvent* event_interface) : m_event_interface(event_interface)
+        {
+                ASSERT(event_interface);
+
+                {
+                        // Без этого создания контекста почему-то не сможет установиться
+                        // ANTIALIASING_LEVEL в ненулевое значение далее при создании окна.
+                        // В версии SFML 2.4.2 эта проблема исчезла.
+                        OpenGLContext opengl_context;
+                }
+
+                create_gl_window_1x1(MAJOR_GL_VERSION, MINOR_GL_VERSION, required_extensions(), ANTIALIASING_LEVEL, DEPTH_BITS,
+                                     STENCIL_BITS, RED_BITS, GREEN_BITS, BLUE_BITS, ALPHA_BITS, &m_window);
+        }
+};
 }
 
-std::unique_ptr<sf::Window> create_gl_window_1x1()
-{
-        return create_gl_window_1x1(MAJOR_GL_VERSION, MINOR_GL_VERSION, required_extensions(), ANTIALIASING_LEVEL, DEPTH_BITS,
-                                    STENCIL_BITS, RED_BITS, GREEN_BITS, BLUE_BITS, ALPHA_BITS);
-}
+//
 
-std::unique_ptr<sf::Context> create_gl_context_1x1()
+class OpenGLContext::Impl
 {
-        return create_gl_context_1x1(MAJOR_GL_VERSION, MINOR_GL_VERSION, required_extensions());
+        std::unique_ptr<sf::Context> m_context;
+
+public:
+        Impl() : m_context(create_gl_context_1x1(MAJOR_GL_VERSION, MINOR_GL_VERSION, required_extensions()))
+        {
+        }
+};
+OpenGLContext::OpenGLContext()
+{
+        m_impl = std::make_unique<OpenGLContext::Impl>();
+}
+OpenGLContext::~OpenGLContext() = default;
+
+//
+
+std::unique_ptr<OpenGLWindow> create_opengl_window(WindowEvent* event_interface)
+{
+        return std::make_unique<OpenGLWindowImplementation>(event_interface);
 }

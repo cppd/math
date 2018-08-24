@@ -17,7 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "init.h"
 
-#include "glfw.h"
+#if defined(VULKAN_FOUND) && defined(GLFW_FOUND)
+#include "graphics/vulkan/window.h"
+#endif
 
 #include "com/error.h"
 #include "com/log.h"
@@ -98,11 +100,16 @@ Initialization::Initialization()
 
         init_os_specific();
 
-        glfw_init();
+#if defined(VULKAN_FOUND) && defined(GLFW_FOUND)
+        VulkanWindow::init();
+#endif
 }
+
 Initialization::~Initialization()
 {
-        glfw_terminate();
+#if defined(VULKAN_FOUND) && defined(GLFW_FOUND)
+        VulkanWindow::terminate();
+#endif
 
         log_exit();
 }

@@ -523,19 +523,18 @@ private:
         };
 
 protected:
-        bool pull_and_dispatch_event()
+        void pull_and_dispatch_events()
         {
-                const std::optional<Event> event(m_event_queue.pop());
+                while (true)
+                {
+                        std::optional<Event> event(m_event_queue.pop());
 
-                if (!event)
-                {
-                        return false;
-                }
-                else
-                {
+                        if (!event)
+                        {
+                                return;
+                        }
+
                         visit(Visitor(*this), event->event);
-
-                        return true;
                 }
         }
 };
