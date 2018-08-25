@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/error.h"
 #include "com/log.h"
-#include "graphics/common_opengl.h"
+#include "graphics/opengl/common_opengl.h"
 #include "graphics/opengl/query.h"
 
 #include <SFML/System/Err.hpp>
