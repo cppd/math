@@ -23,7 +23,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "progress/progress_list.h"
 #include "show/show.h"
-#include "show/vulkan/show_vulkan.h"
 #include "tests/self_test.h"
 
 #include "ui_main_window.h"
@@ -175,7 +174,7 @@ private:
 
         std::unique_ptr<IShow> m_show;
 #if defined(VULKAN_FOUND) && defined(GLFW_FOUND)
-        std::unique_ptr<IShowVulkan> m_show_vulkan;
+        std::unique_ptr<IShow> m_show_vulkan;
 #endif
 
         std::unique_ptr<MainObjects> m_objects;

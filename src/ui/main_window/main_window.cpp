@@ -25,7 +25,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/math.h"
 #include "com/names.h"
 #include "com/print.h"
-#include "show/opengl/show_opengl.h"
 #include "ui/command_line/command_line.h"
 #include "ui/dialogs/messages/application_about.h"
 #include "ui/dialogs/messages/application_help.h"
@@ -1114,22 +1113,31 @@ void MainWindow::slot_window_first_shown()
 
         try
         {
-                m_show = create_show_opengl(
-                        &m_event_emitter, widget_window_id(ui.graphics_widget_opengl), widget_dpi(ui.graphics_widget_opengl),
-                        qcolor_to_rgb(m_background_color), qcolor_to_rgb(m_default_color), qcolor_to_rgb(m_wireframe_color),
-                        ui.checkBox_Smooth->isChecked(), ui.checkBox_Wireframe->isChecked(), ui.checkBox_Shadow->isChecked(),
-                        ui.checkBox_Fog->isChecked(), ui.checkBox_Materials->isChecked(), ui.checkBox_ShowEffect->isChecked(),
-                        ui.checkBox_show_dft->isChecked(), ui.checkBox_convex_hull_2d->isChecked(),
-                        ui.checkBox_OpticalFlow->isChecked(), ambient_light(), diffuse_light(), specular_light(),
-                        dft_brightness(), qcolor_to_rgb(m_dft_background_color), qcolor_to_rgb(m_dft_color), default_ns(),
-                        ui.checkBox_VerticalSync->isChecked(), shadow_zoom());
+                m_show = create_show(
+                        ShowType::OpenGL, &m_event_emitter, widget_window_id(ui.graphics_widget_opengl),
+                        widget_dpi(ui.graphics_widget_opengl), qcolor_to_rgb(m_background_color), qcolor_to_rgb(m_default_color),
+                        qcolor_to_rgb(m_wireframe_color), ui.checkBox_Smooth->isChecked(), ui.checkBox_Wireframe->isChecked(),
+                        ui.checkBox_Shadow->isChecked(), ui.checkBox_Fog->isChecked(), ui.checkBox_Materials->isChecked(),
+                        ui.checkBox_ShowEffect->isChecked(), ui.checkBox_show_dft->isChecked(),
+                        ui.checkBox_convex_hull_2d->isChecked(), ui.checkBox_OpticalFlow->isChecked(), ambient_light(),
+                        diffuse_light(), specular_light(), dft_brightness(), qcolor_to_rgb(m_dft_background_color),
+                        qcolor_to_rgb(m_dft_color), default_ns(), ui.checkBox_VerticalSync->isChecked(), shadow_zoom());
 
                 m_objects->set_show(m_show.get());
 
 #if defined(VULKAN_FOUND) && defined(GLFW_FOUND)
                 if (SHOW_VULKAN_WINDOW)
                 {
-                        m_show_vulkan = create_show_vulkan(widget_window_id(ui.graphics_widget_vulkan));
+                        m_show_vulkan = create_show(
+                                ShowType::Vulkan, &m_event_emitter, widget_window_id(ui.graphics_widget_vulkan),
+                                widget_dpi(ui.graphics_widget_vulkan), qcolor_to_rgb(m_background_color),
+                                qcolor_to_rgb(m_default_color), qcolor_to_rgb(m_wireframe_color), ui.checkBox_Smooth->isChecked(),
+                                ui.checkBox_Wireframe->isChecked(), ui.checkBox_Shadow->isChecked(), ui.checkBox_Fog->isChecked(),
+                                ui.checkBox_Materials->isChecked(), ui.checkBox_ShowEffect->isChecked(),
+                                ui.checkBox_show_dft->isChecked(), ui.checkBox_convex_hull_2d->isChecked(),
+                                ui.checkBox_OpticalFlow->isChecked(), ambient_light(), diffuse_light(), specular_light(),
+                                dft_brightness(), qcolor_to_rgb(m_dft_background_color), qcolor_to_rgb(m_dft_color), default_ns(),
+                                ui.checkBox_VerticalSync->isChecked(), shadow_zoom());
                 }
 #endif
         }

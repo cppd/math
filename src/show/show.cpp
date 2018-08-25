@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "show_opengl.h"
+#include "show.h"
 
 #include "camera.h"
 #include "fps.h"
@@ -35,12 +35,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "gpu_2d/pencil/pencil.h"
 #include "graphics/opengl/objects.h"
 #include "graphics/opengl/window.h"
+#include "graphics/vulkan/window.h"
 #include "numerical/linear.h"
 #include "obj/obj.h"
-#include "show/com/event_queue.h"
-#include "show/opengl/color_space/buffer_type.h"
-#include "show/opengl/renderer/renderer.h"
-#include "show/opengl/text/text.h"
+#include "show/color_space/buffer_type.h"
+#include "show/event_queue.h"
+#include "show/renderer_opengl/renderer.h"
+#include "show/renderer_vulkan/renderer.h"
+#include "show/text/text.h"
 #include "window/window_prop.h"
 
 #include <chrono>
@@ -92,6 +94,7 @@ void make_fullscreen(bool fullscreen, WindowID window, WindowID parent)
         set_focus(window);
 }
 
+template <ShowType show_type>
 class ShowObject final : public EventQueue, public WindowEvent
 {
         // Камера и тени рассчитаны на размер объекта 2 и на положение в точке (0, 0, 0).
@@ -107,9 +110,15 @@ class ShowObject final : public EventQueue, public WindowEvent
         std::atomic_bool m_stop{false};
 
         //
-
+#if defined(VULKAN_FOUND) && defined(GLFW_FOUND)
+        static_assert(show_type == ShowType::Vulkan || show_type == ShowType::OpenGL);
+        std::unique_ptr<std::conditional_t<show_type == ShowType::Vulkan, VulkanWindow, OpenGLWindow>> m_window;
+        std::unique_ptr<std::conditional_t<show_type == ShowType::Vulkan, VulkanRenderer, OpenGLRenderer>> m_renderer;
+#else
+        static_assert(show_type == ShowType::OpenGL);
         std::unique_ptr<OpenGLWindow> m_window;
-        std::unique_ptr<IRenderer> m_renderer;
+        std::unique_ptr<OpenGLRenderer> m_renderer;
+#endif
 
         std::unique_ptr<Camera> m_camera;
         std::unique_ptr<Text> m_text;
@@ -154,7 +163,7 @@ class ShowObject final : public EventQueue, public WindowEvent
                 {
                         error("Null object received");
                 }
-                m_renderer->add_object(obj_ptr.get(), OBJECT_SIZE, OBJECT_POSITION, id, scale_id);
+                m_renderer->object_add(obj_ptr.get(), OBJECT_SIZE, OBJECT_POSITION, id, scale_id);
                 m_callback->object_loaded(id);
         }
 
@@ -162,21 +171,21 @@ class ShowObject final : public EventQueue, public WindowEvent
         {
                 ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
-                m_renderer->delete_object(id);
+                m_renderer->object_delete(id);
         }
 
         void direct_show_object(int id) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
-                m_renderer->show_object(id);
+                m_renderer->object_show(id);
         }
 
         void direct_delete_all_objects() override
         {
                 ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
-                m_renderer->delete_all();
+                m_renderer->object_delete_all();
                 m_default_view = true;
         }
 
@@ -217,8 +226,12 @@ class ShowObject final : public EventQueue, public WindowEvent
 
                 glClearColor(c.red(), c.green(), c.blue(), 1);
                 m_renderer->set_background_color(c);
-                bool background_is_dark = c.luminance() <= 0.5;
-                m_text->set_color(background_is_dark ? Color(1) : Color(0));
+
+                if (m_text)
+                {
+                        bool background_is_dark = c.luminance() <= 0.5;
+                        m_text->set_color(background_is_dark ? Color(1) : Color(0));
+                }
         }
 
         void direct_set_default_color_rgb(const Color& c) override
@@ -378,11 +391,14 @@ class ShowObject final : public EventQueue, public WindowEvent
                 make_fullscreen(m_fullscreen_active, m_window->get_system_handle(), m_parent_window);
         }
 
-        void direct_set_vertical_sync(bool v) override
+        void direct_set_vertical_sync([[maybe_unused]] bool v) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
-                m_window->set_vertical_sync_enabled(v);
+                if constexpr (show_type == ShowType::OpenGL)
+                {
+                        m_window->set_vertical_sync_enabled(v);
+                }
         }
 
         void direct_set_shadow_zoom(double v) override
@@ -427,6 +443,8 @@ class ShowObject final : public EventQueue, public WindowEvent
 
         void window_keyboard_pressed(KeyboardButton button) override
         {
+                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+
                 switch (button)
                 {
                 case KeyboardButton::F11:
@@ -443,6 +461,8 @@ class ShowObject final : public EventQueue, public WindowEvent
 
         void window_mouse_pressed(MouseButton button) override
         {
+                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+
                 if (m_new_mouse_x < m_width && m_new_mouse_y < m_height &&
                     (button == MouseButton::Left || button == MouseButton::Right))
                 {
@@ -455,6 +475,8 @@ class ShowObject final : public EventQueue, public WindowEvent
 
         void window_mouse_released(MouseButton button) override
         {
+                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+
                 if (button == MouseButton::Left || button == MouseButton::Right)
                 {
                         m_mouse_pressed = false;
@@ -463,12 +485,16 @@ class ShowObject final : public EventQueue, public WindowEvent
 
         void window_mouse_moved(int x, int y) override
         {
+                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+
                 m_new_mouse_x = x;
                 m_new_mouse_y = y;
         }
 
         void window_mouse_wheel(int delta) override
         {
+                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+
                 // Для режима встроенного окна обработка колеса мыши происходит
                 // в функции direct_mouse_wheel, так как на Винде не приходит
                 // это сообщение для дочернего окна.
@@ -486,6 +512,8 @@ class ShowObject final : public EventQueue, public WindowEvent
 
         void window_resized(int width, int height) override
         {
+                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+
                 m_new_width = width;
                 m_new_height = height;
         }
@@ -551,14 +579,45 @@ public:
         ShowObject& operator=(ShowObject&&) = delete;
 };
 
-void ShowObject::loop()
+#if defined(VULKAN_FOUND) && defined(GLFW_FOUND)
+template <>
+void ShowObject<ShowType::Vulkan>::loop()
+{
+        ASSERT(std::this_thread::get_id() == m_thread.get_id());
+
+        m_window = create_vulkan_window(this);
+        move_window_to_parent(m_window->get_system_handle(), m_parent_window);
+
+        m_renderer = create_vulkan_renderer(VulkanWindow::instance_extensions(),
+                                            [this](VkInstance instance) { return m_window->create_surface(instance); });
+
+        m_camera = std::make_unique<Camera>();
+
+        while (true)
+        {
+                if (m_stop)
+                {
+                        return;
+                }
+
+                // Вначале команды, потом сообщения окна
+                this->pull_and_dispatch_events();
+                m_window->pull_and_dispath_events();
+
+                m_renderer->draw();
+        }
+}
+#endif
+
+template <>
+void ShowObject<ShowType::OpenGL>::loop()
 {
         ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
         m_window = create_opengl_window(this);
         move_window_to_parent(m_window->get_system_handle(), m_parent_window);
 
-        m_renderer = create_renderer();
+        m_renderer = create_opengl_renderer();
 
         m_camera = std::make_unique<Camera>();
 
@@ -801,7 +860,8 @@ void ShowObject::loop()
         }
 }
 
-void ShowObject::loop_thread()
+template <ShowType show_type>
+void ShowObject<show_type>::loop_thread()
 {
         ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
@@ -828,17 +888,32 @@ void ShowObject::loop_thread()
 }
 }
 
-std::unique_ptr<IShow> create_show_opengl(IShowCallback* callback, WindowID parent_window, double parent_window_dpi,
-                                          const Color& background_color_rgb, const Color& default_color_rgb,
-                                          const Color& wireframe_color_rgb, bool with_smooth, bool with_wireframe,
-                                          bool with_shadow, bool with_fog, bool with_materials, bool with_effect, bool with_dft,
-                                          bool with_convex_hull, bool with_optical_flow, double ambient, double diffuse,
-                                          double specular, double dft_brightness, const Color& dft_background_color,
-                                          const Color& dft_color, double default_ns, bool vertical_sync, double shadow_zoom)
+std::unique_ptr<IShow> create_show(ShowType show_type, IShowCallback* callback, WindowID parent_window, double parent_window_dpi,
+                                   const Color& background_color_rgb, const Color& default_color_rgb,
+                                   const Color& wireframe_color_rgb, bool with_smooth, bool with_wireframe, bool with_shadow,
+                                   bool with_fog, bool with_materials, bool with_effect, bool with_dft, bool with_convex_hull,
+                                   bool with_optical_flow, double ambient, double diffuse, double specular, double dft_brightness,
+                                   const Color& dft_background_color, const Color& dft_color, double default_ns,
+                                   bool vertical_sync, double shadow_zoom)
 {
-        return std::make_unique<ShowObject>(callback, parent_window, parent_window_dpi, background_color_rgb, default_color_rgb,
-                                            wireframe_color_rgb, with_smooth, with_wireframe, with_shadow, with_fog,
-                                            with_materials, with_effect, with_dft, with_convex_hull, with_optical_flow, ambient,
-                                            diffuse, specular, dft_brightness, dft_background_color, dft_color, default_ns,
-                                            vertical_sync, shadow_zoom);
+        switch (show_type)
+        {
+        case ShowType::Vulkan:
+#if defined(VULKAN_FOUND) && defined(GLFW_FOUND)
+                return std::make_unique<ShowObject<ShowType::Vulkan>>(
+                        callback, parent_window, parent_window_dpi, background_color_rgb, default_color_rgb, wireframe_color_rgb,
+                        with_smooth, with_wireframe, with_shadow, with_fog, with_materials, with_effect, with_dft,
+                        with_convex_hull, with_optical_flow, ambient, diffuse, specular, dft_brightness, dft_background_color,
+                        dft_color, default_ns, vertical_sync, shadow_zoom);
+#else
+                error_fatal("Show Vulkan when Vulkan not found");
+#endif
+        case ShowType::OpenGL:
+                return std::make_unique<ShowObject<ShowType::OpenGL>>(
+                        callback, parent_window, parent_window_dpi, background_color_rgb, default_color_rgb, wireframe_color_rgb,
+                        with_smooth, with_wireframe, with_shadow, with_fog, with_materials, with_effect, with_dft,
+                        with_convex_hull, with_optical_flow, ambient, diffuse, specular, dft_brightness, dft_background_color,
+                        dft_color, default_ns, vertical_sync, shadow_zoom);
+        }
+        error_fatal("Unknown show type");
 }

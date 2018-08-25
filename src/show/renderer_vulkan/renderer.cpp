@@ -29,6 +29,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <array>
 
+constexpr int API_VERSION_MAJOR = 1;
+constexpr int API_VERSION_MINOR = 0;
+
+constexpr std::array<const char*, 0> INSTANCE_EXTENSIONS = {};
+constexpr std::array<const char*, 0> DEVICE_EXTENSIONS = {};
+constexpr std::array<const char*, 1> VALIDATION_LAYERS = {"VK_LAYER_LUNARG_standard_validation"};
+
 // clang-format off
 constexpr uint32_t vertex_shader[]
 {
@@ -195,38 +202,98 @@ class VulkanRendererImplementation final : public VulkanRenderer
 {
         std::unique_ptr<vulkan::VulkanInstance> m_instance;
 
-        void draw() override;
+        void set_light_a(const Color& /*light*/) override
+        {
+        }
+        void set_light_d(const Color& /*light*/) override
+        {
+        }
+        void set_light_s(const Color& /*light*/) override
+        {
+        }
+        void set_background_color(const Color& /*color*/) override
+        {
+        }
+        void set_default_color(const Color& /*color*/) override
+        {
+        }
+        void set_wireframe_color(const Color& /*color*/) override
+        {
+        }
+        void set_default_ns(double /*default_ns*/) override
+        {
+        }
+        void set_show_smooth(bool /*show*/) override
+        {
+        }
+        void set_show_wireframe(bool /*show*/) override
+        {
+        }
+        void set_show_shadow(bool /*show*/) override
+        {
+        }
+        void set_show_fog(bool /*show*/) override
+        {
+        }
+        void set_show_materials(bool /*show*/) override
+        {
+        }
+        void set_shadow_zoom(double /*zoom*/) override
+        {
+        }
+        void set_matrices(const mat4& /*shadow_matrix*/, const mat4& /*main_matrix*/) override
+        {
+        }
+        void set_light_direction(vec3 /*dir*/) override
+        {
+        }
+        void set_camera_direction(vec3 /*dir*/) override
+        {
+        }
+        void set_size(int /*width*/, int /*height*/) override
+        {
+        }
+
+        void object_add(const Obj<3>* /*obj*/, double /*size*/, const vec3& /*position*/, int /*id*/, int /*scale_id*/) override
+        {
+        }
+        void object_delete(int /*id*/) override
+        {
+        }
+        void object_show(int /*id*/) override
+        {
+        }
+        void object_delete_all() override
+        {
+        }
+
+        void draw() override
+        {
+                update_uniforms(*m_instance);
+
+                m_instance->draw_frame();
+        }
 
 public:
         VulkanRendererImplementation(const std::vector<std::string>& window_instance_extensions,
-                                     const std::function<VkSurfaceKHR(VkInstance)>& create_surface);
+                                     const std::function<VkSurfaceKHR(VkInstance)>& create_surface)
+        {
+                LOG(vulkan_overview_for_log(window_instance_extensions));
+
+                std::vector<std::string> instance_extensions(std::cbegin(INSTANCE_EXTENSIONS), std::cend(INSTANCE_EXTENSIONS));
+                std::vector<std::string> device_extensions(std::cbegin(DEVICE_EXTENSIONS), std::cend(DEVICE_EXTENSIONS));
+                std::vector<std::string> validation_layers(std::cbegin(VALIDATION_LAYERS), std::cend(VALIDATION_LAYERS));
+
+                m_instance = std::make_unique<vulkan::VulkanInstance>(
+                        API_VERSION_MAJOR, API_VERSION_MINOR, instance_extensions + window_instance_extensions, device_extensions,
+                        validation_layers, create_surface, vertex_shader, fragment_shader, Vertex::binding_descriptions(),
+                        Vertex::attribute_descriptions(), vertex_indices.size(), vertices.size() * sizeof(vertices[0]),
+                        vertices.data(), vertex_indices.size() * sizeof(vertex_indices[0]), vertex_indices.data(),
+                        descriptor_set_layout_bindings(), descriptor_set_layout_bindings_sizes());
+
+                LOG(vulkan_overview_physical_devices_for_log(m_instance->instance()));
+        }
 };
-
-VulkanRendererImplementation::VulkanRendererImplementation(const std::vector<std::string>& window_instance_extensions,
-                                                           const std::function<VkSurfaceKHR(VkInstance)>& create_surface)
-{
-        const std::vector<std::string> instance_extensions({});
-        const std::vector<std::string> device_extensions({});
-        const std::vector<std::string> validation_layers({"VK_LAYER_LUNARG_standard_validation"});
-
-        LOG(vulkan_overview_for_log(window_instance_extensions));
-
-        m_instance = std::make_unique<vulkan::VulkanInstance>(
-                1, 0, instance_extensions + window_instance_extensions, device_extensions, validation_layers, create_surface,
-                vertex_shader, fragment_shader, Vertex::binding_descriptions(), Vertex::attribute_descriptions(),
-                vertex_indices.size(), vertices.size() * sizeof(vertices[0]), vertices.data(),
-                vertex_indices.size() * sizeof(vertex_indices[0]), vertex_indices.data(), descriptor_set_layout_bindings(),
-                descriptor_set_layout_bindings_sizes());
-
-        LOG(vulkan_overview_physical_devices_for_log(m_instance->instance()));
-}
-
-void VulkanRendererImplementation::draw()
-{
-        update_uniforms(*m_instance);
-
-        m_instance->draw_frame();
-}
 }
 
 std::unique_ptr<VulkanRenderer> create_vulkan_renderer(const std::vector<std::string>& window_instance_extensions,

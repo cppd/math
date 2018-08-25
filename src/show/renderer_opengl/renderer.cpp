@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/print.h"
 #include "graphics/opengl/query.h"
 #include "obj/obj_alg.h"
-#include "show/opengl/color_space/color_space.h"
+#include "show/color_space/color_space.h"
 
 #include <algorithm>
 #include <vector>
@@ -471,7 +471,7 @@ public:
 
 //
 
-class Renderer final : public IRenderer
+class Renderer final : public OpenGLRenderer
 {
         static constexpr mat4 SCALE = scale<double>(0.5, 0.5, 0.5);
         static constexpr mat4 TRANSLATE = translate<double>(1, 1, 1);
@@ -712,19 +712,19 @@ class Renderer final : public IRenderer
                 return *m_object_texture;
         }
 
-        void add_object(const Obj<3>* obj, double size, const vec3& position, int id, int scale_id) override
+        void object_add(const Obj<3>* obj, double size, const vec3& position, int id, int scale_id) override
         {
                 m_draw_objects.add_object(std::make_unique<DrawObject>(obj, m_color_converter, size, position), id, scale_id);
         }
-        void delete_object(int id) override
+        void object_delete(int id) override
         {
                 m_draw_objects.delete_object(id);
         }
-        void show_object(int id) override
+        void object_show(int id) override
         {
                 m_draw_objects.show_object(id);
         }
-        void delete_all() override
+        void object_delete_all() override
         {
                 m_draw_objects.delete_all();
         }
@@ -739,7 +739,7 @@ public:
 };
 }
 
-std::unique_ptr<IRenderer> create_renderer()
+std::unique_ptr<OpenGLRenderer> create_opengl_renderer()
 {
         return std::make_unique<Renderer>();
 }
