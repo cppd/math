@@ -95,10 +95,8 @@ private slots:
         void slot_window_first_shown();
         void slot_widget_opengl_mouse_wheel(double delta);
         void slot_widget_opengl_resize();
-#if defined(VULKAN_FOUND) && defined(GLFW_FOUND)
         void slot_widget_vulkan_mouse_wheel(double delta);
         void slot_widget_vulkan_resize();
-#endif
 
 private:
         void constructor_connect();
@@ -173,9 +171,7 @@ private:
         std::unordered_map<QObject*, std::tuple<int, std::string>> m_action_to_object_name_map;
 
         std::unique_ptr<IShow> m_show;
-#if defined(VULKAN_FOUND) && defined(GLFW_FOUND)
         std::unique_ptr<IShow> m_show_vulkan;
-#endif
 
         std::unique_ptr<MainObjects> m_objects;
 

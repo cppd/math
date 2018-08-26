@@ -110,15 +110,10 @@ class ShowObject final : public EventQueue, public WindowEvent
         std::atomic_bool m_stop{false};
 
         //
-#if defined(VULKAN_FOUND) && defined(GLFW_FOUND)
+
         static_assert(show_type == ShowType::Vulkan || show_type == ShowType::OpenGL);
         std::unique_ptr<std::conditional_t<show_type == ShowType::Vulkan, VulkanWindow, OpenGLWindow>> m_window;
         std::unique_ptr<std::conditional_t<show_type == ShowType::Vulkan, VulkanRenderer, OpenGLRenderer>> m_renderer;
-#else
-        static_assert(show_type == ShowType::OpenGL);
-        std::unique_ptr<OpenGLWindow> m_window;
-        std::unique_ptr<OpenGLRenderer> m_renderer;
-#endif
 
         std::unique_ptr<Camera> m_camera;
         std::unique_ptr<Text> m_text;
@@ -579,7 +574,6 @@ public:
         ShowObject& operator=(ShowObject&&) = delete;
 };
 
-#if defined(VULKAN_FOUND) && defined(GLFW_FOUND)
 template <>
 void ShowObject<ShowType::Vulkan>::loop()
 {
@@ -607,7 +601,6 @@ void ShowObject<ShowType::Vulkan>::loop()
                 m_renderer->draw();
         }
 }
-#endif
 
 template <>
 void ShowObject<ShowType::OpenGL>::loop()
@@ -899,15 +892,11 @@ std::unique_ptr<IShow> create_show(ShowType show_type, IShowCallback* callback, 
         switch (show_type)
         {
         case ShowType::Vulkan:
-#if defined(VULKAN_FOUND) && defined(GLFW_FOUND)
                 return std::make_unique<ShowObject<ShowType::Vulkan>>(
                         callback, parent_window, parent_window_dpi, background_color_rgb, default_color_rgb, wireframe_color_rgb,
                         with_smooth, with_wireframe, with_shadow, with_fog, with_materials, with_effect, with_dft,
                         with_convex_hull, with_optical_flow, ambient, diffuse, specular, dft_brightness, dft_background_color,
                         dft_color, default_ns, vertical_sync, shadow_zoom);
-#else
-                error_fatal("Show Vulkan when Vulkan not found");
-#endif
         case ShowType::OpenGL:
                 return std::make_unique<ShowObject<ShowType::OpenGL>>(
                         callback, parent_window, parent_window_dpi, background_color_rgb, default_color_rgb, wireframe_color_rgb,

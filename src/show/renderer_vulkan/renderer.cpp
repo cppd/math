@@ -15,8 +15,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#if defined(VULKAN_FOUND) && defined(GLFW_FOUND)
-
 #include "renderer.h"
 
 #include "com/log.h"
@@ -301,5 +299,3 @@ std::unique_ptr<VulkanRenderer> create_vulkan_renderer(const std::vector<std::st
 {
         return std::make_unique<VulkanRendererImplementation>(window_instance_extensions, create_surface);
 }
-
-#endif

@@ -15,8 +15,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#if defined(VULKAN_FOUND)
-
 #include "common.h"
 
 #include "com/error.h"
@@ -218,5 +216,3 @@ std::vector<const char*> to_char_pointer_vector(const std::vector<std::string>& 
 
         return res;
 }
-
-#endif

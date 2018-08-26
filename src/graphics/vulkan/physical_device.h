@@ -17,8 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#if defined(VULKAN_FOUND)
-
 #include <string>
 #include <vector>
 #include <vulkan/vulkan.h>
@@ -45,5 +43,3 @@ bool find_swap_chain_details(VkSurfaceKHR surface, VkPhysicalDevice device, Swap
 vulkan::PhysicalDevice find_physical_device(VkInstance instance, VkSurfaceKHR surface, int api_version_major,
                                             int api_version_minor, const std::vector<std::string>& required_extensions);
 }
-
-#endif

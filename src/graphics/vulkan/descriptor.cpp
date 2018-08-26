@@ -15,8 +15,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#if defined(VULKAN_FOUND)
-
 #include "descriptor.h"
 
 namespace
@@ -150,5 +148,3 @@ void DescriptorWithBuffers::copy_to_buffer(uint32_t index, const Span<const void
         m_descriptor_set_layout_uniform_buffers[index].copy(data.data());
 }
 }
-
-#endif

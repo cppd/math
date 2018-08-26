@@ -17,8 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#if defined(VULKAN_FOUND) && defined(GLFW_FOUND)
-
 #include "com/color/colors.h"
 #include "com/mat.h"
 #include "com/vec.h"
@@ -62,5 +60,3 @@ struct VulkanRenderer
 
 std::unique_ptr<VulkanRenderer> create_vulkan_renderer(const std::vector<std::string>& window_instance_extensions,
                                                        const std::function<VkSurfaceKHR(VkInstance)>& create_surface);
-
-#endif

@@ -15,8 +15,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#if defined(VULKAN_FOUND)
-
 #include "instance.h"
 
 #include "common.h"
@@ -889,5 +887,3 @@ void VulkanInstance::copy_to_buffer(uint32_t index, const Span<const void>& data
         m_descriptor_with_buffers.copy_to_buffer(index, data);
 }
 }
-
-#endif

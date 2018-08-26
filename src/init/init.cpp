@@ -17,13 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "init.h"
 
-#if defined(VULKAN_FOUND) && defined(GLFW_FOUND)
-#include "graphics/vulkan/window.h"
-#endif
-
 #include "com/error.h"
 #include "com/log.h"
 #include "com/time.h"
+#include "graphics/vulkan/window.h"
 
 #include <atomic>
 
@@ -100,16 +97,12 @@ Initialization::Initialization()
 
         init_os_specific();
 
-#if defined(VULKAN_FOUND) && defined(GLFW_FOUND)
         VulkanWindow::init();
-#endif
 }
 
 Initialization::~Initialization()
 {
-#if defined(VULKAN_FOUND) && defined(GLFW_FOUND)
         VulkanWindow::terminate();
-#endif
 
         log_exit();
 }

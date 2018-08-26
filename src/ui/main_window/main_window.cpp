@@ -41,9 +41,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QDesktopWidget>
 #include <QPointer>
 
-#if defined(VULKAN_FOUND) && defined(GLFW_FOUND)
 constexpr bool SHOW_VULKAN_WINDOW = false;
-#endif
 
 // Размер окна по сравнению с экраном.
 constexpr double WINDOW_SIZE_COEF = 0.7;
@@ -139,7 +137,6 @@ void MainWindow::constructor_connect()
         connect(ui.graphics_widget_opengl, SIGNAL(wheel(double)), this, SLOT(slot_widget_opengl_mouse_wheel(double)));
         connect(ui.graphics_widget_opengl, SIGNAL(resize()), this, SLOT(slot_widget_opengl_resize()));
 
-#if defined(VULKAN_FOUND) && defined(GLFW_FOUND)
         ui.graphics_widget_vulkan->setText("");
         connect(ui.graphics_widget_vulkan, SIGNAL(wheel(double)), this, SLOT(slot_widget_vulkan_mouse_wheel(double)));
         connect(ui.graphics_widget_vulkan, SIGNAL(resize()), this, SLOT(slot_widget_vulkan_resize()));
@@ -147,9 +144,6 @@ void MainWindow::constructor_connect()
         {
                 ui.graphics_widget_vulkan->setVisible(false);
         }
-#else
-        ui.graphics_widget_vulkan->setVisible(false);
-#endif
 
         connect(&m_timer_progress_bar, SIGNAL(timeout()), this, SLOT(slot_timer_progress_bar()));
 }
@@ -299,9 +293,7 @@ void MainWindow::terminate_all_threads()
 
         m_threads.terminate_all_threads();
 
-#if defined(VULKAN_FOUND) && defined(GLFW_FOUND)
         m_show_vulkan.reset();
-#endif
         m_show.reset();
 
         set_log_callback(nullptr);
@@ -1125,7 +1117,6 @@ void MainWindow::slot_window_first_shown()
 
                 m_objects->set_show(m_show.get());
 
-#if defined(VULKAN_FOUND) && defined(GLFW_FOUND)
                 if (SHOW_VULKAN_WINDOW)
                 {
                         m_show_vulkan = create_show(
@@ -1139,7 +1130,6 @@ void MainWindow::slot_window_first_shown()
                                 dft_brightness(), qcolor_to_rgb(m_dft_background_color), qcolor_to_rgb(m_dft_color), default_ns(),
                                 ui.checkBox_VerticalSync->isChecked(), shadow_zoom());
                 }
-#endif
         }
         catch (std::exception& e)
         {
@@ -1243,7 +1233,6 @@ void MainWindow::slot_widget_opengl_resize()
         }
 }
 
-#if defined(VULKAN_FOUND) && defined(GLFW_FOUND)
 void MainWindow::slot_widget_vulkan_mouse_wheel(double delta)
 {
         if (m_show_vulkan)
@@ -1259,7 +1248,6 @@ void MainWindow::slot_widget_vulkan_resize()
                 m_show_vulkan->parent_resized();
         }
 }
-#endif
 
 double MainWindow::lighting_slider_value(const QSlider* slider)
 {

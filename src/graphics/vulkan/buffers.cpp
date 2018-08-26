@@ -15,8 +15,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#if defined(VULKAN_FOUND)
-
 #include "buffers.h"
 
 #include "common.h"
@@ -237,5 +235,3 @@ void UniformBufferWithHostVisibleMemory::copy(const void* data) const
         memory_copy(m_device, m_device_memory, data, m_data_size);
 }
 }
-
-#endif

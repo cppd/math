@@ -17,8 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#if defined(VULKAN_FOUND)
-
 #include "objects.h"
 
 namespace vulkan
@@ -78,5 +76,3 @@ public:
         void copy(const void* data) const;
 };
 }
-
-#endif

@@ -30,10 +30,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 constexpr const char* LANGUAGES[] = {"C++17", "GLSL 4.50"};
 
 constexpr const char* LIBRARIES[] = {"FreeType",
+                                     "GLFW",
                                      "GMP",
                                      "OpenGL",
                                      "Qt",
-                                     "SFML"
+                                     "SFML",
+                                     "Vulkan"
 #if defined(__linux__)
                                      ,
                                      "Xlib"

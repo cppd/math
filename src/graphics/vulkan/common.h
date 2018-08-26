@@ -17,8 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#if defined(VULKAN_FOUND)
-
 #include <string>
 #include <vector>
 #include <vulkan/vulkan.h>
@@ -36,5 +34,3 @@ std::vector<std::string> operator+(const std::vector<std::string>& v, const std:
 std::vector<std::string> operator+(const std::string& s, const std::vector<std::string>& v);
 
 std::vector<const char*> to_char_pointer_vector(const std::vector<std::string>& c);
-
-#endif

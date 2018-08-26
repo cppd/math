@@ -17,8 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#if defined(VULKAN_FOUND) && defined(GLFW_FOUND)
-
 #include "graphics/window_event.h"
 #include "window/window_handle.h"
 
@@ -50,5 +48,3 @@ public:
 };
 
 std::unique_ptr<VulkanWindow> create_vulkan_window(WindowEvent* event_interface);
-
-#endif

@@ -17,8 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#if defined(VULKAN_FOUND)
-
 #include <string>
 #include <unordered_set>
 #include <vector>
@@ -48,5 +46,3 @@ std::vector<VkImage> swap_chain_images(VkDevice device, VkSwapchainKHR swap_chai
 std::string overview();
 std::string overview_physical_devices(VkInstance instance);
 }
-
-#endif

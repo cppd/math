@@ -17,8 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#if defined(VULKAN_FOUND)
-
 #include "buffers.h"
 #include "objects.h"
 
@@ -47,5 +45,3 @@ public:
         void copy_to_buffer(uint32_t index, const Span<const void>& data) const;
 };
 }
-
-#endif

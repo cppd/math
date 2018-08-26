@@ -15,8 +15,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#if defined(VULKAN_FOUND) && defined(GLFW_FOUND)
-
 #include "window.h"
 
 #include "com/error.h"
@@ -278,5 +276,3 @@ std::unique_ptr<VulkanWindow> create_vulkan_window(WindowEvent* event_interface)
 {
         return std::make_unique<VulkanWindowImplementation>(event_interface);
 }
-
-#endif

@@ -17,8 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#if defined(VULKAN_FOUND)
-
 #include "objects.h"
 
 #include <string>
@@ -79,5 +77,3 @@ public:
         ComputeShader(VkDevice device, const Span<const uint32_t>& code, const std::string_view& entry_point_name);
 };
 }
-
-#endif

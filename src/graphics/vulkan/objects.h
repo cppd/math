@@ -17,8 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#if defined(VULKAN_FOUND)
-
 #include "com/span.h"
 
 #include <functional>
@@ -518,5 +516,3 @@ public:
         const VkDescriptorSet* data() const noexcept;
 };
 }
-
-#endif

@@ -15,8 +15,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#if defined(VULKAN_FOUND)
-
 #include "query.h"
 
 #include "common.h"
@@ -514,5 +512,3 @@ std::string overview_physical_devices(VkInstance instance)
         return s;
 }
 }
-
-#endif

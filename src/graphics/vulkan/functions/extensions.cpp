@@ -15,8 +15,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#if defined(VULKAN_FOUND)
-
 #include "com/error.h"
 
 #include <vulkan/vulkan.h>
@@ -58,5 +56,3 @@ VKAPI_ATTR void VKAPI_CALL vkDestroyDebugReportCallbackEXT(VkInstance instance, 
 
         f(instance, callback, pAllocator);
 }
-
-#endif

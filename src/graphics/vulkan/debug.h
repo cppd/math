@@ -17,13 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#if defined(VULKAN_FOUND)
-
 #include "graphics/vulkan/objects.h"
 
 namespace vulkan
 {
 DebugReportCallback create_debug_report_callback(VkInstance instance);
 }
-
-#endif

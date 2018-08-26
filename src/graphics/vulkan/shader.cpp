@@ -15,8 +15,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#if defined(VULKAN_FOUND)
-
 #include "shader.h"
 
 #include "com/error.h"
@@ -84,5 +82,3 @@ ComputeShader::ComputeShader(VkDevice device, const Span<const uint32_t>& code, 
 {
 }
 }
-
-#endif
