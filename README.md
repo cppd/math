@@ -74,11 +74,11 @@ Realistic visualization                         | Path tracing                  
 ## Technical details
 
 Property                    | Value
-----------------------------|---------------------------------------------
+----------------------------|----------------------------------------------------------
 Programming languages       | C++17, GLSL 4.50
 Supported C++ compilers     | GCC 7, GCC 8, Clang 6
 Supported operating systems | Linux, Windows
-Required libraries          | FreeType, GMP, OpenGL 4.5, Qt 5, SFML, Xlib
+Required libraries          | FreeType, GLFW, GMP, OpenGL 4.5, Qt 5, SFML, Vulkan, Xlib
 Optional libraries          | cuFFT (for DFT tests), FFTW (for DFT tests)
 Build system                | CMake
 
