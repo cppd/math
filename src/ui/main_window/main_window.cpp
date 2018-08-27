@@ -191,11 +191,6 @@ void MainWindow::constructor_buttons()
         m_object_id_to_button.try_emplace(ObjectId::CoconeConvexHull, ui.radioButton_CoconeConvexHull);
         m_object_id_to_button.try_emplace(ObjectId::BoundCocone, ui.radioButton_BoundCocone);
         m_object_id_to_button.try_emplace(ObjectId::BoundCoconeConvexHull, ui.radioButton_BoundCoconeConvexHull);
-
-        for (const auto& [id, button] : m_object_id_to_button)
-        {
-                m_object_buttons.push_back({button, id});
-        }
 }
 
 void MainWindow::constructor_objects_and_repository()
@@ -390,7 +385,7 @@ bool MainWindow::find_object(std::string* object_name, ObjectId* object_id)
 {
         bool found = false;
 
-        for (const auto& [button, id] : m_object_buttons)
+        for (const auto& [id, button] : m_object_id_to_button)
         {
                 if (button->isChecked())
                 {

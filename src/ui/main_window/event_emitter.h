@@ -44,7 +44,7 @@ public:
         virtual void direct_log(const std::string& msg) = 0;
 };
 
-class WindowEventEmitter : public QObject, public ILogCallback, public IObjectsCallback, public IShowCallback
+class WindowEventEmitter final : public QObject, public ILogCallback, public IObjectsCallback, public IShowCallback
 {
         Q_OBJECT
 
@@ -237,12 +237,12 @@ public:
                 emit_message<WindowEvent::message_error>("Exception in emit message error", msg);
         }
 
-        void message_error_fatal(const std::string& msg) const noexcept override final
+        void message_error_fatal(const std::string& msg) const noexcept override
         {
                 emit_message<WindowEvent::message_error_fatal>("Exception in emit message error fatal", msg);
         }
 
-        void message_error_source(const std::string& msg, const std::string& src) const noexcept override final
+        void message_error_source(const std::string& msg, const std::string& src) const noexcept override
         {
                 emit_message<WindowEvent::message_error_source>("Exception in emit message error source", msg, src);
         }
@@ -252,33 +252,33 @@ public:
                 emit_message<WindowEvent::message_information>("Exception in emit message information", msg);
         }
 
-        void message_warning(const std::string& msg) const noexcept override final
+        void message_warning(const std::string& msg) const noexcept override
         {
                 emit_message<WindowEvent::message_warning>("Exception in emit message warning", msg);
         }
 
-        void object_loaded(int id) const noexcept override final
+        void object_loaded(int id) const noexcept override
         {
                 emit_message<WindowEvent::object_loaded>("Exception in emit object loaded", id);
         }
 
-        void mesh_loaded(ObjectId id) const noexcept override final
+        void mesh_loaded(ObjectId id) const noexcept override
         {
                 emit_message<WindowEvent::mesh_loaded>("Exception in emit mesh loaded", id);
         }
 
         void file_loaded(const std::string& file_name, unsigned dimension, const std::unordered_set<ObjectId>& objects) const
-                noexcept override final
+                noexcept override
         {
                 emit_message<WindowEvent::file_loaded>("Exception in emit file loaded", file_name, dimension, objects);
         }
 
-        void bound_cocone_loaded(double rho, double alpha) const noexcept override final
+        void bound_cocone_loaded(double rho, double alpha) const noexcept override
         {
                 emit_message<WindowEvent::bound_cocone_loaded>("Exception in emit BoundCocone loaded", rho, alpha);
         }
 
-        void log(const std::string& msg) const noexcept override final
+        void log(const std::string& msg) const noexcept override
         {
                 emit_message<WindowEvent::log>("Exception in emit log", msg);
         }

@@ -70,8 +70,6 @@ std::string message()
         oss << APPLICATION_NAME;
 
         oss << "\n\n";
-
-        oss << "Compiled by ";
 #if defined(__clang__)
         oss << "Clang " << __clang_major__ << "." << __clang_minor__ << "." << __clang_patchlevel__;
 #elif defined(__GNUC__)
@@ -81,18 +79,10 @@ std::string message()
 #endif
 
         oss << "\n\n";
-
-        const std::string indent(8, ' ');
-
-        oss << "Languages:\n";
-        oss << indent;
         sorted_comma_separated_list(oss, std::cbegin(LANGUAGES), std::cend(LANGUAGES));
         oss << ".";
 
-        oss << "\n";
-
-        oss << "Libraries:\n";
-        oss << indent;
+        oss << "\n\n";
         sorted_comma_separated_list(oss, std::cbegin(LIBRARIES), std::cend(LIBRARIES));
         oss << ".";
 

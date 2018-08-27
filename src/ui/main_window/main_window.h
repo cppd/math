@@ -179,7 +179,6 @@ private:
         Threads m_threads;
 
         std::unordered_map<ObjectId, QRadioButton*> m_object_id_to_button;
-        std::vector<std::tuple<const QRadioButton*, ObjectId>> m_object_buttons;
 
         std::unordered_map<QObject*, std::tuple<int, std::string>> m_action_to_object_name_map;
 
@@ -195,16 +194,16 @@ private:
         QColor m_dft_background_color;
         QColor m_dft_color;
 
-        bool m_first_show = true;
+        bool m_first_show;
 
         QTimer m_timer_progress_bar;
 
         double m_bound_cocone_rho;
         double m_bound_cocone_alpha;
 
-        unsigned m_dimension = 0;
+        unsigned m_dimension;
 
-        bool m_close_without_confirmation = false;
+        bool m_close_without_confirmation;
 
         std::unordered_set<ObjectId> m_objects_to_load;
 };
