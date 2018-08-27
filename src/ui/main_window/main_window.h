@@ -100,8 +100,8 @@ private slots:
 private:
         void constructor_connect();
         void constructor_interface();
-        void constructor_repository();
         void constructor_buttons();
+        void constructor_objects_and_repository();
 
         static std::unordered_set<ObjectId> default_objects_to_load();
 
@@ -118,6 +118,7 @@ private:
         void catch_all(const F& function) const noexcept;
 
         bool find_object(std::string* object_name, ObjectId* object_id);
+        QRadioButton* object_id_to_button(ObjectId id);
 
         void thread_load_from_file(std::string file_name, bool use_object_selection_dialog);
         void thread_load_from_repository(const std::tuple<int, std::string>& object);
@@ -169,8 +170,6 @@ private:
         void direct_bound_cocone_loaded(double rho, double alpha) override;
         void direct_log(const std::string& msg) override;
 
-        void show_object_buttons(ObjectId id);
-
         Ui::MainWindow ui;
 
         const std::thread::id m_window_thread_id;
@@ -179,6 +178,7 @@ private:
 
         Threads m_threads;
 
+        std::unordered_map<ObjectId, QRadioButton*> m_object_id_to_button;
         std::vector<std::tuple<const QRadioButton*, ObjectId>> m_object_buttons;
 
         std::unordered_map<QObject*, std::tuple<int, std::string>> m_action_to_object_name_map;

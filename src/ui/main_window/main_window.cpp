@@ -105,9 +105,6 @@ MainWindow::MainWindow(QWidget* parent)
           m_threads([this](const std::exception_ptr& ptr, const std::string& msg) noexcept {
                   exception_handler(ptr, msg, true);
           }),
-          m_objects(create_main_objects(
-                  std::max(1, hardware_concurrency() - MESH_OBJECT_NOT_USED_THREAD_COUNT), m_event_emitter,
-                  [this](const std::exception_ptr& ptr, const std::string& msg) noexcept { exception_handler(ptr, msg, true); })),
           m_first_show(true),
           m_dimension(0),
           m_close_without_confirmation(false),
@@ -122,8 +119,8 @@ MainWindow::MainWindow(QWidget* parent)
 
         constructor_connect();
         constructor_interface();
-        constructor_repository();
         constructor_buttons();
+        constructor_objects_and_repository();
 
         set_log_callback(&m_event_emitter);
 }
@@ -185,8 +182,29 @@ void MainWindow::constructor_interface()
         ASSERT(((ui.slider_Specular->maximum() - ui.slider_Specular->minimum()) & 1) == 0);
 }
 
-void MainWindow::constructor_repository()
+void MainWindow::constructor_buttons()
 {
+        m_object_id_to_button.try_emplace(ObjectId::Model, ui.radioButton_Model);
+        m_object_id_to_button.try_emplace(ObjectId::ModelMst, ui.radioButton_ModelMST);
+        m_object_id_to_button.try_emplace(ObjectId::ModelConvexHull, ui.radioButton_ModelConvexHull);
+        m_object_id_to_button.try_emplace(ObjectId::Cocone, ui.radioButton_Cocone);
+        m_object_id_to_button.try_emplace(ObjectId::CoconeConvexHull, ui.radioButton_CoconeConvexHull);
+        m_object_id_to_button.try_emplace(ObjectId::BoundCocone, ui.radioButton_BoundCocone);
+        m_object_id_to_button.try_emplace(ObjectId::BoundCoconeConvexHull, ui.radioButton_BoundCoconeConvexHull);
+
+        for (const auto& [id, button] : m_object_id_to_button)
+        {
+                m_object_buttons.push_back({button, id});
+        }
+}
+
+void MainWindow::constructor_objects_and_repository()
+{
+        m_objects = create_main_objects(std::max(1, hardware_concurrency() - MESH_OBJECT_NOT_USED_THREAD_COUNT),
+                                        m_event_emitter, [this](const std::exception_ptr& ptr, const std::string& msg) noexcept {
+                                                exception_handler(ptr, msg, true);
+                                        });
+
         // QMenu* menuCreate = new QMenu("Create", this);
         // ui.menuBar->insertMenu(ui.menuHelp->menuAction(), menuCreate);
         for (const auto& [dimension, object_names] : m_objects->repository_point_object_names())
@@ -200,17 +218,6 @@ void MainWindow::constructor_repository()
                         connect(action, SIGNAL(triggered()), this, SLOT(slot_object_repository()));
                 }
         }
-}
-
-void MainWindow::constructor_buttons()
-{
-        m_object_buttons.push_back({ui.radioButton_Model, ObjectId::Model});
-        m_object_buttons.push_back({ui.radioButton_ModelMST, ObjectId::ModelMst});
-        m_object_buttons.push_back({ui.radioButton_ModelConvexHull, ObjectId::ModelConvexHull});
-        m_object_buttons.push_back({ui.radioButton_Cocone, ObjectId::Cocone});
-        m_object_buttons.push_back({ui.radioButton_CoconeConvexHull, ObjectId::CoconeConvexHull});
-        m_object_buttons.push_back({ui.radioButton_BoundCocone, ObjectId::BoundCocone});
-        m_object_buttons.push_back({ui.radioButton_BoundCoconeConvexHull, ObjectId::BoundCoconeConvexHull});
 }
 
 std::unordered_set<ObjectId> MainWindow::default_objects_to_load()
@@ -401,6 +408,13 @@ bool MainWindow::find_object(std::string* object_name, ObjectId* object_id)
         }
 
         return true;
+}
+
+QRadioButton* MainWindow::object_id_to_button(ObjectId id)
+{
+        auto f = m_object_id_to_button.find(id);
+        ASSERT(f != m_object_id_to_button.end());
+        return f->second;
 }
 
 bool MainWindow::dialog_object_selection(QWidget* parent, std::unordered_set<ObjectId>* objects_to_load)
@@ -980,7 +994,7 @@ void MainWindow::direct_object_loaded(int id)
         ASSERT(std::this_thread::get_id() == m_window_thread_id);
 
         ASSERT(m_dimension == 3);
-        show_object_buttons(int_to_object_id(id));
+        show_object_button(object_id_to_button(int_to_object_id(id)));
 }
 
 void MainWindow::direct_mesh_loaded(ObjectId id)
@@ -989,7 +1003,7 @@ void MainWindow::direct_mesh_loaded(ObjectId id)
 
         if (m_dimension != 3)
         {
-                show_object_buttons(id);
+                show_object_button(object_id_to_button(id));
         }
 }
 
@@ -1019,34 +1033,6 @@ void MainWindow::direct_log(const std::string& msg)
 
         // Здесь без вызовов функции LOG, так как начнёт вызывать сама себя
         add_to_text_edit_and_to_stderr(ui.text_log, format_log_message(msg), TextEditMessageType::Normal);
-}
-
-void MainWindow::show_object_buttons(ObjectId id)
-{
-        switch (id)
-        {
-        case ObjectId::Model:
-                show_object_button(ui.radioButton_Model);
-                break;
-        case ObjectId::ModelConvexHull:
-                show_object_button(ui.radioButton_ModelConvexHull);
-                break;
-        case ObjectId::ModelMst:
-                show_object_button(ui.radioButton_ModelMST);
-                break;
-        case ObjectId::Cocone:
-                show_object_button(ui.radioButton_Cocone);
-                break;
-        case ObjectId::CoconeConvexHull:
-                show_object_button(ui.radioButton_CoconeConvexHull);
-                break;
-        case ObjectId::BoundCocone:
-                show_object_button(ui.radioButton_BoundCocone);
-                break;
-        case ObjectId::BoundCoconeConvexHull:
-                show_object_button(ui.radioButton_BoundCoconeConvexHull);
-                break;
-        }
 }
 
 void MainWindow::showEvent(QShowEvent* /*event*/)
