@@ -60,7 +60,16 @@ struct MainObjects
 {
         virtual ~MainObjects() = default;
 
-        virtual std::vector<std::tuple<int, std::vector<std::string>>> repository_point_object_names() const = 0;
+        struct RepositoryObjects
+        {
+                int dimension;
+                std::vector<std::string> object_names;
+                RepositoryObjects(int dimension_, std::vector<std::string>&& object_names_)
+                        : dimension(dimension_), object_names(std::move(object_names_))
+                {
+                }
+        };
+        virtual std::vector<RepositoryObjects> repository_point_object_names() const = 0;
 
         virtual void set_show(IShow* show) = 0;
 
@@ -78,7 +87,7 @@ struct MainObjects
         virtual void load_from_file(const std::unordered_set<ObjectId>& objects, ProgressRatioList* progress_list,
                                     const std::string& file_name, double rho, double alpha) = 0;
         virtual void load_from_repository(const std::unordered_set<ObjectId>& objects, ProgressRatioList* progress_list,
-                                          const std::tuple<int, std::string>& object, double rho, double alpha,
+                                          int dimension, const std::string& object_name, double rho, double alpha,
                                           int point_count) = 0;
 
         virtual void save_to_file(ObjectId id, const std::string& file_name, const std::string& name) const = 0;

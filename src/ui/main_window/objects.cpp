@@ -761,21 +761,16 @@ class MainObjectStorage final : public MainObjects
                 }
         }
 
-        std::vector<std::tuple<int, std::vector<std::string>>> repository_point_object_names() const override
+        std::vector<RepositoryObjects> repository_point_object_names() const override
         {
-                // Количество измерений, названия объектов
-                std::vector<std::tuple<int, std::vector<std::string>>> list;
+                std::vector<RepositoryObjects> names;
 
                 for (const auto& p : m_objects)
                 {
-                        visit([&](const auto& v) { list.push_back({p.first, v.repository_point_object_names()}); }, p.second);
+                        visit([&](const auto& v) { names.emplace_back(p.first, v.repository_point_object_names()); }, p.second);
                 }
 
-                std::sort(list.begin(), list.end(),
-                          [](const std::tuple<int, std::vector<std::string>>& a,
-                             const std::tuple<int, std::vector<std::string>>& b) { return std::get<0>(a) < std::get<0>(b); });
-
-                return list;
+                return names;
         }
 
         void set_show(IShow* show) override
@@ -874,11 +869,9 @@ class MainObjectStorage final : public MainObjects
                       repository);
         }
 
-        void load_from_repository(const std::unordered_set<ObjectId>& objects, ProgressRatioList* progress_list,
-                                  const std::tuple<int, std::string>& object, double rho, double alpha, int point_count) override
+        void load_from_repository(const std::unordered_set<ObjectId>& objects, ProgressRatioList* progress_list, int dimension,
+                                  const std::string& object_name, double rho, double alpha, int point_count) override
         {
-                size_t dimension = std::get<0>(object);
-
                 check_dimension(dimension);
 
                 auto& repository = m_objects.at(dimension);
@@ -889,7 +882,7 @@ class MainObjectStorage final : public MainObjects
                 };
                 visit(
                         [&](auto& v) {
-                                v.load_from_repository(objects, progress_list, std::get<1>(object), rho, alpha, point_count,
+                                v.load_from_repository(objects, progress_list, object_name, rho, alpha, point_count,
                                                        clear_function);
                         },
                         repository);

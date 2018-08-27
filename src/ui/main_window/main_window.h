@@ -121,7 +121,7 @@ private:
         QRadioButton* object_id_to_button(ObjectId id);
 
         void thread_load_from_file(std::string file_name, bool use_object_selection_dialog);
-        void thread_load_from_repository(const std::tuple<int, std::string>& object);
+        void thread_load_from_repository(int dimension, const std::string& object_name);
         void thread_self_test(SelfTestType test_type, bool with_confirmation);
         void thread_export(const std::string& name, ObjectId id);
         void thread_reload_bound_cocone();
@@ -180,7 +180,7 @@ private:
 
         std::unordered_map<ObjectId, QRadioButton*> m_object_id_to_button;
 
-        std::unordered_map<QObject*, std::tuple<int, std::string>> m_action_to_object_name_map;
+        std::unordered_map<QObject*, std::tuple<int, std::string>> m_action_to_dimension_and_object_name;
 
         std::unique_ptr<IShow> m_show;
         std::unique_ptr<IShow> m_show_vulkan;

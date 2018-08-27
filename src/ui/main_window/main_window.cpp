@@ -202,14 +202,24 @@ void MainWindow::constructor_objects_and_repository()
 
         // QMenu* menuCreate = new QMenu("Create", this);
         // ui.menuBar->insertMenu(ui.menuHelp->menuAction(), menuCreate);
-        for (const auto& [dimension, object_names] : m_objects->repository_point_object_names())
+
+        std::vector<MainObjects::RepositoryObjects> repository_objects = m_objects->repository_point_object_names();
+
+        std::sort(repository_objects.begin(), repository_objects.end(),
+                  [](const auto& a, const auto& b) { return a.dimension < b.dimension; });
+
+        for (const auto& dimension_objects : repository_objects)
         {
-                QMenu* sub_menu = ui.menuCreate->addMenu(space_name(dimension).c_str());
-                for (const std::string& object_name : object_names)
+                ASSERT(dimension_objects.dimension > 0);
+
+                QMenu* sub_menu = ui.menuCreate->addMenu(space_name(dimension_objects.dimension).c_str());
+                for (const std::string& object_name : dimension_objects.object_names)
                 {
+                        ASSERT(object_name.size() > 0);
+
                         std::string text = object_name + "...";
                         QAction* action = sub_menu->addAction(text.c_str());
-                        m_action_to_object_name_map.try_emplace(action, dimension, object_name);
+                        m_action_to_dimension_and_object_name.try_emplace(action, dimension_objects.dimension, object_name);
                         connect(action, SIGNAL(triggered()), this, SLOT(slot_object_repository()));
                 }
         }
@@ -496,7 +506,7 @@ void MainWindow::thread_load_from_file(std::string file_name, bool use_object_se
         });
 }
 
-void MainWindow::thread_load_from_repository(const std::tuple<int, std::string>& object)
+void MainWindow::thread_load_from_repository(int dimension, const std::string& object_name)
 {
         ASSERT(std::this_thread::get_id() == m_window_thread_id);
 
@@ -506,7 +516,7 @@ void MainWindow::thread_load_from_repository(const std::tuple<int, std::string>&
                 return;
         }
 
-        if (std::get<1>(object).size() == 0)
+        if (object_name.size() == 0)
         {
                 m_event_emitter.message_error("Empty repository object name");
                 return;
@@ -519,7 +529,7 @@ void MainWindow::thread_load_from_repository(const std::tuple<int, std::string>&
 
                 {
                         QPointer ptr(this);
-                        if (!dialog::point_object_parameters(this, std::get<0>(object), std::get<1>(object), POINT_COUNT_DEFAULT,
+                        if (!dialog::point_object_parameters(this, dimension, object_name, POINT_COUNT_DEFAULT,
                                                              POINT_COUNT_MINIMUM, POINT_COUNT_MAXIMUM, &point_count))
                         {
                                 return;
@@ -546,9 +556,10 @@ void MainWindow::thread_load_from_repository(const std::tuple<int, std::string>&
 
                 m_threads.start_thread(ThreadAction::LoadObject, [=, rho = m_bound_cocone_rho, alpha = m_bound_cocone_alpha](
                                                                          ProgressRatioList* progress_list, std::string* message) {
-                        *message = "Load " + space_name(std::get<0>(object)) + " " + std::get<1>(object);
+                        *message = "Load " + space_name(dimension) + " " + object_name;
 
-                        m_objects->load_from_repository(objects_to_load, progress_list, object, rho, alpha, point_count);
+                        m_objects->load_from_repository(objects_to_load, progress_list, dimension, object_name, rho, alpha,
+                                                        point_count);
                 });
         });
 }
@@ -1117,19 +1128,14 @@ void MainWindow::on_actionLoad_triggered()
 
 void MainWindow::slot_object_repository()
 {
-        auto iter = m_action_to_object_name_map.find(sender());
-        if (iter == m_action_to_object_name_map.cend())
+        auto iter = m_action_to_dimension_and_object_name.find(sender());
+        if (iter == m_action_to_dimension_and_object_name.cend())
         {
                 m_event_emitter.message_error("Open object sender not found in map");
                 return;
         }
-        if (std::get<1>(iter->second).size() == 0)
-        {
-                m_event_emitter.message_error("Empty repository object name");
-                return;
-        }
 
-        thread_load_from_repository(iter->second);
+        thread_load_from_repository(std::get<0>(iter->second), std::get<1>(iter->second));
 }
 
 void MainWindow::on_actionExport_triggered()
