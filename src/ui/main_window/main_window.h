@@ -38,7 +38,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <unordered_set>
 #include <vector>
 
-class MainWindow final : public QMainWindow
+class MainWindow final : public QMainWindow, public DirectEvents
 {
         Q_OBJECT
 
@@ -90,7 +90,6 @@ private slots:
         void on_radioButton_BoundCoconeConvexHull_clicked();
 
         void slot_object_repository();
-        void slot_window_event(const WindowEvent&);
         void slot_timer_progress_bar();
         void slot_window_first_shown();
         void slot_widget_opengl_mouse_wheel(double delta);
@@ -157,6 +156,20 @@ private:
         void exception_handler(const std::exception_ptr& ptr, const std::string& msg, bool window_exists) const noexcept;
 
         static bool dialog_object_selection(QWidget* parent, std::unordered_set<ObjectId>* objects_to_load);
+
+        void direct_message_error(const std::string& msg) override;
+        void direct_message_error_fatal(const std::string& msg) override;
+        void direct_message_error_source(const std::string& msg, const std::string& src) override;
+        void direct_message_information(const std::string& msg) override;
+        void direct_message_warning(const std::string& msg) override;
+        void direct_object_loaded(int id) override;
+        void direct_mesh_loaded(ObjectId id) override;
+        void direct_file_loaded(const std::string& file_name, unsigned dimension,
+                                const std::unordered_set<ObjectId>& objects) override;
+        void direct_bound_cocone_loaded(double rho, double alpha) override;
+        void direct_log(const std::string& msg) override;
+
+        void show_object_buttons(ObjectId id);
 
         Ui::MainWindow ui;
 

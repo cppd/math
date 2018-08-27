@@ -101,6 +101,7 @@ constexpr double MAXIMUM_COLOR_AMPLIFICATION = 3;
 MainWindow::MainWindow(QWidget* parent)
         : QMainWindow(parent),
           m_window_thread_id(std::this_thread::get_id()),
+          m_event_emitter(this),
           m_threads([this](const std::exception_ptr& ptr, const std::string& msg) noexcept {
                   exception_handler(ptr, msg, true);
           }),
@@ -129,10 +130,6 @@ MainWindow::MainWindow(QWidget* parent)
 
 void MainWindow::constructor_connect()
 {
-        qRegisterMetaType<WindowEvent>("WindowEvent");
-        connect(&m_event_emitter, SIGNAL(window_event(WindowEvent)), this, SLOT(slot_window_event(WindowEvent)),
-                Qt::ConnectionType(Qt::QueuedConnection | Qt::UniqueConnection));
-
         ui.graphics_widget_opengl->setText("");
         connect(ui.graphics_widget_opengl, SIGNAL(wheel(double)), this, SLOT(slot_widget_opengl_mouse_wheel(double)));
         connect(ui.graphics_widget_opengl, SIGNAL(resize()), this, SLOT(slot_widget_opengl_resize()));
@@ -915,160 +912,140 @@ void MainWindow::reset_bound_cocone_buttons(const std::unordered_set<ObjectId>& 
         reset_object_button(ui.radioButton_BoundCoconeConvexHull, objects_to_load.count(ObjectId::BoundCoconeConvexHull) > 0);
 }
 
-void MainWindow::slot_window_event(const WindowEvent& event)
+void MainWindow::direct_message_error(const std::string& msg)
 {
-        switch (event.type())
+        ASSERT(std::this_thread::get_id() == m_window_thread_id);
+
+        add_to_text_edit_and_to_stderr(ui.text_log, format_log_message(msg), TextEditMessageType::Error);
+        dialog::message_critical(this, msg);
+}
+
+void MainWindow::direct_message_error_fatal(const std::string& msg)
+{
+        ASSERT(std::this_thread::get_id() == m_window_thread_id);
+
+        std::string message = (msg.size() != 0) ? msg : "Unknown Error. Exit failure.";
+
+        add_to_text_edit_and_to_stderr(ui.text_log, format_log_message(message), TextEditMessageType::Error);
+
+        QPointer ptr(this);
+        dialog::message_critical(this, message);
+        if (ptr.isNull())
         {
-        case WindowEvent::Type::MessageError:
-        {
-                const WindowEvent::message_error& d = event.get<WindowEvent::message_error>();
-                std::string message = d.msg;
-
-                add_to_text_edit_and_to_stderr(ui.text_log, format_log_message(message), TextEditMessageType::Error);
-
-                dialog::message_critical(this, message);
-
-                break;
+                return;
         }
-        case WindowEvent::Type::MessageErrorFatal:
+
+        close_without_confirmation();
+}
+
+void MainWindow::direct_message_error_source(const std::string& msg, const std::string& src)
+{
+        ASSERT(std::this_thread::get_id() == m_window_thread_id);
+
+        std::string message = msg;
+        std::string source = source_with_line_numbers(src);
+
+        add_to_text_edit_and_to_stderr(ui.text_log, format_log_message(message + "\n" + source), TextEditMessageType::Error);
+
+        QPointer ptr(this);
+        dialog::message_source_error(this, message, source);
+        if (ptr.isNull())
         {
-                const WindowEvent::message_error_fatal& d = event.get<WindowEvent::message_error_fatal>();
-                std::string message = (d.msg.size() != 0) ? d.msg : "Unknown Error. Exit failure.";
-
-                add_to_text_edit_and_to_stderr(ui.text_log, format_log_message(message), TextEditMessageType::Error);
-
-                QPointer ptr(this);
-                dialog::message_critical(this, message);
-                if (ptr.isNull())
-                {
-                        return;
-                }
-
-                close_without_confirmation();
-
-                break;
+                return;
         }
-        case WindowEvent::Type::MessageErrorSource:
+
+        close_without_confirmation();
+}
+
+void MainWindow::direct_message_information(const std::string& msg)
+{
+        ASSERT(std::this_thread::get_id() == m_window_thread_id);
+
+        add_to_text_edit_and_to_stderr(ui.text_log, format_log_message(msg), TextEditMessageType::Information);
+
+        dialog::message_information(this, msg);
+}
+
+void MainWindow::direct_message_warning(const std::string& msg)
+{
+        ASSERT(std::this_thread::get_id() == m_window_thread_id);
+
+        add_to_text_edit_and_to_stderr(ui.text_log, format_log_message(msg), TextEditMessageType::Warning);
+
+        dialog::message_warning(this, msg);
+}
+
+void MainWindow::direct_object_loaded(int id)
+{
+        ASSERT(std::this_thread::get_id() == m_window_thread_id);
+
+        ASSERT(m_dimension == 3);
+        show_object_buttons(int_to_object_id(id));
+}
+
+void MainWindow::direct_mesh_loaded(ObjectId id)
+{
+        ASSERT(std::this_thread::get_id() == m_window_thread_id);
+
+        if (m_dimension != 3)
         {
-                const WindowEvent::message_error_source& d = event.get<WindowEvent::message_error_source>();
-                std::string message = d.msg;
-                std::string source = source_with_line_numbers(d.src);
-
-                add_to_text_edit_and_to_stderr(ui.text_log, format_log_message(message + "\n" + source),
-                                               TextEditMessageType::Error);
-
-                QPointer ptr(this);
-                dialog::message_source_error(this, message, source);
-                if (ptr.isNull())
-                {
-                        return;
-                }
-
-                close_without_confirmation();
-
-                break;
+                show_object_buttons(id);
         }
-        case WindowEvent::Type::MessageInformation:
+}
+
+void MainWindow::direct_file_loaded(const std::string& file_name, unsigned dimension, const std::unordered_set<ObjectId>& objects)
+{
+        ASSERT(std::this_thread::get_id() == m_window_thread_id);
+
+        std::string base_name = file_base_name(file_name);
+        set_window_title_file(base_name + " [" + space_name(dimension) + "]");
+        reset_all_object_buttons(objects);
+        ui.radioButton_Model->setChecked(true);
+        m_dimension = dimension;
+        m_objects_to_load = objects;
+}
+
+void MainWindow::direct_bound_cocone_loaded(double rho, double alpha)
+{
+        ASSERT(std::this_thread::get_id() == m_window_thread_id);
+
+        set_bound_cocone_parameters(rho, alpha);
+        reset_bound_cocone_buttons(m_objects_to_load);
+}
+
+void MainWindow::direct_log(const std::string& msg)
+{
+        ASSERT(std::this_thread::get_id() == m_window_thread_id);
+
+        // Здесь без вызовов функции LOG, так как начнёт вызывать сама себя
+        add_to_text_edit_and_to_stderr(ui.text_log, format_log_message(msg), TextEditMessageType::Normal);
+}
+
+void MainWindow::show_object_buttons(ObjectId id)
+{
+        switch (id)
         {
-                const WindowEvent::message_information& d = event.get<WindowEvent::message_information>();
-                std::string message = d.msg;
-
-                add_to_text_edit_and_to_stderr(ui.text_log, format_log_message(message), TextEditMessageType::Information);
-
-                dialog::message_information(this, message);
-
+        case ObjectId::Model:
+                show_object_button(ui.radioButton_Model);
                 break;
-        }
-        case WindowEvent::Type::MessageWarning:
-        {
-                const WindowEvent::message_warning& d = event.get<WindowEvent::message_warning>();
-                std::string message = d.msg;
-
-                add_to_text_edit_and_to_stderr(ui.text_log, format_log_message(message), TextEditMessageType::Warning);
-
-                dialog::message_warning(this, message);
-
+        case ObjectId::ModelConvexHull:
+                show_object_button(ui.radioButton_ModelConvexHull);
                 break;
-        }
-        case WindowEvent::Type::WriteToLog:
-        {
-                // Здесь без вызовов функции LOG, так как начнёт вызывать сама себя
-
-                const WindowEvent::write_to_log& d = event.get<WindowEvent::write_to_log>();
-                std::string message = d.msg;
-
-                add_to_text_edit_and_to_stderr(ui.text_log, format_log_message(message), TextEditMessageType::Normal);
-
+        case ObjectId::ModelMst:
+                show_object_button(ui.radioButton_ModelMST);
                 break;
-        }
-        case WindowEvent::Type::LoadedObject:
-        case WindowEvent::Type::LoadedMesh:
-        {
-                ObjectId id;
-
-                if (event.type() == WindowEvent::Type::LoadedObject)
-                {
-                        ASSERT(m_dimension == 3);
-                        id = int_to_object_id(event.get<WindowEvent::loaded_object>().id);
-                }
-                else
-                {
-                        if (m_dimension == 3)
-                        {
-                                break;
-                        }
-                        id = event.get<WindowEvent::loaded_mesh>().id;
-                }
-
-                switch (id)
-                {
-                case ObjectId::Model:
-                        show_object_button(ui.radioButton_Model);
-                        break;
-                case ObjectId::ModelConvexHull:
-                        show_object_button(ui.radioButton_ModelConvexHull);
-                        break;
-                case ObjectId::ModelMst:
-                        show_object_button(ui.radioButton_ModelMST);
-                        break;
-                case ObjectId::Cocone:
-                        show_object_button(ui.radioButton_Cocone);
-                        break;
-                case ObjectId::CoconeConvexHull:
-                        show_object_button(ui.radioButton_CoconeConvexHull);
-                        break;
-                case ObjectId::BoundCocone:
-                        show_object_button(ui.radioButton_BoundCocone);
-                        break;
-                case ObjectId::BoundCoconeConvexHull:
-                        show_object_button(ui.radioButton_BoundCoconeConvexHull);
-                        break;
-                }
-
+        case ObjectId::Cocone:
+                show_object_button(ui.radioButton_Cocone);
                 break;
-        }
-        case WindowEvent::Type::LoadedFile:
-        {
-                const WindowEvent::loaded_file& d = event.get<WindowEvent::loaded_file>();
-
-                std::string file_name = file_base_name(d.file_name);
-                set_window_title_file(file_name + " [" + space_name(d.dimension) + "]");
-                reset_all_object_buttons(d.objects);
-                ui.radioButton_Model->setChecked(true);
-                m_dimension = d.dimension;
-                m_objects_to_load = d.objects;
-
+        case ObjectId::CoconeConvexHull:
+                show_object_button(ui.radioButton_CoconeConvexHull);
                 break;
-        }
-        case WindowEvent::Type::LoadedBoundCocone:
-        {
-                const WindowEvent::loaded_bound_cocone& d = event.get<WindowEvent::loaded_bound_cocone>();
-
-                set_bound_cocone_parameters(d.rho, d.alpha);
-                reset_bound_cocone_buttons(m_objects_to_load);
-
+        case ObjectId::BoundCocone:
+                show_object_button(ui.radioButton_BoundCocone);
                 break;
-        }
+        case ObjectId::BoundCoconeConvexHull:
+                show_object_button(ui.radioButton_BoundCoconeConvexHull);
+                break;
         }
 }
 

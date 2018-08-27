@@ -17,18 +17,126 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "event.h"
-
 #include "com/error.h"
 #include "com/log.h"
+#include "com/variant.h"
 #include "show/show.h"
 #include "ui/main_window/objects.h"
 
 #include <QObject>
 
-class WindowEventEmitter final : public QObject, public ILogCallback, public IObjectsCallback, public IShowCallback
+class DirectEvents
+{
+protected:
+        virtual ~DirectEvents() = default;
+
+public:
+        virtual void direct_message_error(const std::string& msg) = 0;
+        virtual void direct_message_error_fatal(const std::string& msg) = 0;
+        virtual void direct_message_error_source(const std::string& msg, const std::string& src) = 0;
+        virtual void direct_message_information(const std::string& msg) = 0;
+        virtual void direct_message_warning(const std::string& msg) = 0;
+        virtual void direct_object_loaded(int id) = 0;
+        virtual void direct_mesh_loaded(ObjectId id) = 0;
+        virtual void direct_file_loaded(const std::string& file_name, unsigned dimension,
+                                        const std::unordered_set<ObjectId>& objects) = 0;
+        virtual void direct_bound_cocone_loaded(double rho, double alpha) = 0;
+        virtual void direct_log(const std::string& msg) = 0;
+};
+
+class WindowEventEmitter : public QObject, public ILogCallback, public IObjectsCallback, public IShowCallback
 {
         Q_OBJECT
+
+private:
+        struct WindowEvent final
+        {
+                struct message_error final
+                {
+                        const std::string msg;
+                        message_error(const std::string& msg_) : msg(msg_)
+                        {
+                        }
+                };
+                struct message_error_fatal final
+                {
+                        const std::string msg;
+                        message_error_fatal(const std::string& msg_) : msg(msg_)
+                        {
+                        }
+                };
+                struct message_error_source final
+                {
+                        const std::string msg;
+                        const std::string src;
+                        message_error_source(const std::string& msg_, const std::string& src_) : msg(msg_), src(src_)
+                        {
+                        }
+                };
+                struct message_information final
+                {
+                        const std::string msg;
+                        message_information(const std::string& msg_) : msg(msg_)
+                        {
+                        }
+                };
+                struct message_warning final
+                {
+                        const std::string msg;
+                        message_warning(const std::string& msg_) : msg(msg_)
+                        {
+                        }
+                };
+                struct object_loaded final
+                {
+                        const int id;
+                        object_loaded(int id_) : id(id_)
+                        {
+                        }
+                };
+                struct mesh_loaded final
+                {
+                        const ObjectId id;
+                        mesh_loaded(ObjectId id_) : id(id_)
+                        {
+                        }
+                };
+                struct file_loaded final
+                {
+                        const std::string file_name;
+                        const unsigned dimension;
+                        const std::unordered_set<ObjectId> objects;
+                        file_loaded(const std::string& file_name_, unsigned dimension_,
+                                    const std::unordered_set<ObjectId>& objects_)
+                                : file_name(file_name_), dimension(dimension_), objects(objects_)
+                        {
+                        }
+                };
+                struct bound_cocone_loaded final
+                {
+                        const double rho;
+                        const double alpha;
+                        bound_cocone_loaded(double rho_, double alpha_) : rho(rho_), alpha(alpha_)
+                        {
+                        }
+                };
+                struct log final
+                {
+                        const std::string msg;
+                        log(const std::string& msg_) : msg(msg_)
+                        {
+                        }
+                };
+
+                Variant<std::monostate, object_loaded, mesh_loaded, bound_cocone_loaded, file_loaded, message_error,
+                        message_error_fatal, message_error_source, message_information, message_warning, log>
+                        event;
+
+                template <typename... Args>
+                WindowEvent(Args&&... args) : event(std::forward<Args>(args)...)
+                {
+                }
+        };
 
 signals:
         void window_event(const WindowEvent&) const;
@@ -51,18 +159,90 @@ private:
                 }
         }
 
+        DirectEvents* m_direct_events;
+
+        class Visitor
+        {
+                DirectEvents& m_f;
+
+        public:
+                Visitor(DirectEvents& f) : m_f(f)
+                {
+                }
+
+                void operator()(const std::monostate&) noexcept
+                {
+                }
+                void operator()(const WindowEvent::message_error& d)
+                {
+                        m_f.direct_message_error(d.msg);
+                }
+                void operator()(const WindowEvent::message_error_fatal& d)
+                {
+                        m_f.direct_message_error_fatal(d.msg);
+                }
+                void operator()(const WindowEvent::message_error_source& d)
+                {
+                        m_f.direct_message_error_source(d.msg, d.src);
+                }
+                void operator()(const WindowEvent::message_information& d)
+                {
+                        m_f.direct_message_information(d.msg);
+                }
+                void operator()(const WindowEvent::message_warning& d)
+                {
+                        m_f.direct_message_warning(d.msg);
+                }
+                void operator()(const WindowEvent::object_loaded& d)
+                {
+                        m_f.direct_object_loaded(d.id);
+                }
+                void operator()(const WindowEvent::mesh_loaded& d)
+                {
+                        m_f.direct_mesh_loaded(d.id);
+                }
+                void operator()(const WindowEvent::file_loaded& d)
+                {
+                        m_f.direct_file_loaded(d.file_name, d.dimension, d.objects);
+                }
+                void operator()(const WindowEvent::bound_cocone_loaded& d)
+                {
+                        m_f.direct_bound_cocone_loaded(d.rho, d.alpha);
+                }
+                void operator()(const WindowEvent::log& d)
+                {
+                        m_f.direct_log(d.msg);
+                }
+        };
+
+private slots:
+
+        void slot_window_event(const WindowEvent& event)
+        {
+                visit(Visitor(*m_direct_events), event.event);
+        }
+
 public:
+        WindowEventEmitter(DirectEvents* direct_events) : m_direct_events(direct_events)
+        {
+                ASSERT(m_direct_events);
+
+                qRegisterMetaType<WindowEvent>("WindowEvent");
+                connect(this, SIGNAL(window_event(WindowEvent)), this, SLOT(slot_window_event(WindowEvent)),
+                        Qt::ConnectionType(Qt::QueuedConnection | Qt::UniqueConnection));
+        }
+
         void message_error(const std::string& msg) const noexcept
         {
                 emit_message<WindowEvent::message_error>("Exception in emit message error", msg);
         }
 
-        void message_error_fatal(const std::string& msg) const noexcept override
+        void message_error_fatal(const std::string& msg) const noexcept override final
         {
                 emit_message<WindowEvent::message_error_fatal>("Exception in emit message error fatal", msg);
         }
 
-        void message_error_source(const std::string& msg, const std::string& src) const noexcept override
+        void message_error_source(const std::string& msg, const std::string& src) const noexcept override final
         {
                 emit_message<WindowEvent::message_error_source>("Exception in emit message error source", msg, src);
         }
@@ -72,34 +252,34 @@ public:
                 emit_message<WindowEvent::message_information>("Exception in emit message information", msg);
         }
 
-        void message_warning(const std::string& msg) const noexcept override
+        void message_warning(const std::string& msg) const noexcept override final
         {
                 emit_message<WindowEvent::message_warning>("Exception in emit message warning", msg);
         }
 
-        void object_loaded(int id) const noexcept override
+        void object_loaded(int id) const noexcept override final
         {
-                emit_message<WindowEvent::loaded_object>("Exception in emit object loaded", id);
+                emit_message<WindowEvent::object_loaded>("Exception in emit object loaded", id);
         }
 
-        void mesh_loaded(ObjectId id) const noexcept override
+        void mesh_loaded(ObjectId id) const noexcept override final
         {
-                emit_message<WindowEvent::loaded_mesh>("Exception in emit mesh loaded", id);
+                emit_message<WindowEvent::mesh_loaded>("Exception in emit mesh loaded", id);
         }
 
-        void file_loaded(const std::string& msg, unsigned dimension, const std::unordered_set<ObjectId>& objects) const
-                noexcept override
+        void file_loaded(const std::string& file_name, unsigned dimension, const std::unordered_set<ObjectId>& objects) const
+                noexcept override final
         {
-                emit_message<WindowEvent::loaded_file>("Exception in emit file loaded", msg, dimension, objects);
+                emit_message<WindowEvent::file_loaded>("Exception in emit file loaded", file_name, dimension, objects);
         }
 
-        void bound_cocone_loaded(double rho, double alpha) const noexcept override
+        void bound_cocone_loaded(double rho, double alpha) const noexcept override final
         {
-                emit_message<WindowEvent::loaded_bound_cocone>("Exception in emit BoundCocone loaded", rho, alpha);
+                emit_message<WindowEvent::bound_cocone_loaded>("Exception in emit BoundCocone loaded", rho, alpha);
         }
 
-        void log(const std::string& msg) const noexcept override
+        void log(const std::string& msg) const noexcept override final
         {
-                emit_message<WindowEvent::write_to_log>("Exception in emit log", msg);
+                emit_message<WindowEvent::log>("Exception in emit log", msg);
         }
 };
