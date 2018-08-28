@@ -648,7 +648,7 @@ void ShowObject<show_type>::loop()
 
                         if (!m_mouse_pressed_shift)
                         {
-                                m_camera->rotate(delta_x, delta_y);
+                                m_camera->rotate(-delta_x, -delta_y);
                         }
                         else
                         {

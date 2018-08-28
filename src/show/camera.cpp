@@ -99,12 +99,12 @@ vec3 Camera::light_direction() const
         return m_light_direction;
 }
 
-void Camera::rotate(int delta_x, int delta_y)
+void Camera::rotate(double around_up_axis, double around_right_axis)
 {
         std::lock_guard lg(m_lock);
 
-        vec3 right = rotate_vector_degree(m_camera_up, -delta_x, m_camera_right);
-        vec3 up = rotate_vector_degree(m_camera_right, -delta_y, m_camera_up);
+        vec3 right = rotate_vector_degree(m_camera_up, around_up_axis, m_camera_right);
+        vec3 up = rotate_vector_degree(m_camera_right, around_right_axis, m_camera_up);
         set_vectors(right, up);
 }
 

@@ -47,6 +47,6 @@ public:
         void camera_information(vec3* camera_up, vec3* camera_direction, vec3* view_center, double* view_width, int* paint_width,
                                 int* paint_height) const;
         vec3 light_direction() const;
-        void rotate(int delta_x, int delta_y);
+        void rotate(double around_up_axis, double around_right_axis);
         void set_view_center_and_width(const vec3& vec, double view_width, int paint_width, int paint_height);
 };
