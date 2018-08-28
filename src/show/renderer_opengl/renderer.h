@@ -56,6 +56,9 @@ struct OpenGLRenderer
 
         virtual const TextureRGBA32F& color_buffer_texture() const = 0;
         virtual const TextureR32I& object_texture() const = 0;
+
+        virtual bool frame_buffer_is_srgb() = 0;
+        virtual bool color_buffer_is_srgb() = 0;
 };
 
 std::unique_ptr<OpenGLRenderer> create_opengl_renderer();

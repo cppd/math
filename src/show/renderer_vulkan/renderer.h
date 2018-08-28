@@ -55,7 +55,7 @@ struct VulkanRenderer
         virtual void object_show(int id) = 0;
         virtual void object_delete_all() = 0;
 
-        virtual void draw() = 0;
+        virtual bool draw() = 0;
 };
 
 std::unique_ptr<VulkanRenderer> create_vulkan_renderer(const std::vector<std::string>& window_instance_extensions,

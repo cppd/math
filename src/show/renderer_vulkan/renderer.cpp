@@ -265,11 +265,13 @@ class VulkanRendererImplementation final : public VulkanRenderer
         {
         }
 
-        void draw() override
+        bool draw() override
         {
                 update_uniforms(*m_instance);
 
                 m_instance->draw_frame();
+
+                return true;
         }
 
 public:

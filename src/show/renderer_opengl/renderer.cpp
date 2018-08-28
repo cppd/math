@@ -501,6 +501,9 @@ class Renderer final : public OpenGLRenderer
         DrawObjects m_draw_objects;
         ColorSpaceConverterToRGB m_color_converter;
 
+        bool m_framebuffer_srgb;
+        bool m_colorbuffer_srgb;
+
         void set_light_a(const Color& light) override
         {
                 main_program.set_uniform("light_a", color_to_vec4f(light));
@@ -712,6 +715,16 @@ class Renderer final : public OpenGLRenderer
                 return *m_object_texture;
         }
 
+        bool frame_buffer_is_srgb() override
+        {
+                return m_framebuffer_srgb;
+        }
+
+        bool color_buffer_is_srgb() override
+        {
+                return m_colorbuffer_srgb;
+        }
+
         void object_add(const Obj<3>* obj, double size, const vec3& position, int id, int scale_id) override
         {
                 m_draw_objects.add_object(std::make_unique<DrawObject>(obj, m_color_converter, size, position), id, scale_id);
@@ -735,6 +748,15 @@ public:
                   shadow_program(VertexShader(shadow_vert), FragmentShader(shadow_frag)),
                   points_program(VertexShader(points_vert), FragmentShader(points_frag))
         {
+                glDisable(GL_CULL_FACE);
+                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+                glEnable(GL_FRAMEBUFFER_SRGB);
+
+                m_framebuffer_srgb = frame_buffer_is_srgb();
+                m_colorbuffer_srgb = color_buffer_is_srgb();
+
+                LOG(m_framebuffer_srgb ? "Framebuffer sRGB" : "Framebuffer linear");
+                LOG(m_colorbuffer_srgb ? "Colorbuffer sRGB" : "Colorbuffer linear");
         }
 };
 }

@@ -123,8 +123,8 @@ class ShowObject final : public EventQueue, public WindowEvent
         std::unique_ptr<OpticalFlow> m_optical_flow;
         std::unique_ptr<PencilEffect> m_pencil_effect;
 
-        int m_width = -1;
-        int m_height = -1;
+        int m_draw_width = -1;
+        int m_draw_height = -1;
         int m_new_mouse_x = 0;
         int m_new_mouse_y = 0;
         double m_wheel_delta = 0;
@@ -135,8 +135,8 @@ class ShowObject final : public EventQueue, public WindowEvent
         bool m_mouse_pressed = false;
         bool m_mouse_pressed_shift = false;
 
-        int m_new_width;
-        int m_new_height;
+        int m_new_window_width;
+        int m_new_window_height;
 
         // Неважно, какие тут будут значения при инициализации,
         // так как при создании окна задаются начальные параметры
@@ -371,7 +371,7 @@ class ShowObject final : public EventQueue, public WindowEvent
                 // Для полноэкранного режима обрабатывается в функции window_mouse_wheel
                 if (!m_fullscreen_active)
                 {
-                        if (m_new_mouse_x < m_width && m_new_mouse_y < m_height)
+                        if (m_new_mouse_x < m_draw_width && m_new_mouse_y < m_draw_height)
                         {
                                 m_wheel_delta = delta;
                         }
@@ -458,7 +458,7 @@ class ShowObject final : public EventQueue, public WindowEvent
         {
                 ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
-                if (m_new_mouse_x < m_width && m_new_mouse_y < m_height &&
+                if (m_new_mouse_x < m_draw_width && m_new_mouse_y < m_draw_height &&
                     (button == MouseButton::Left || button == MouseButton::Right))
                 {
                         m_mouse_pressed = true;
@@ -495,10 +495,10 @@ class ShowObject final : public EventQueue, public WindowEvent
                 // это сообщение для дочернего окна.
                 if (m_fullscreen_active)
                 {
-                        // if (m_new_mouse_x < m_width && m_new_mouse_y < m_height &&
+                        // if (m_new_mouse_x < m_draw_width && m_new_mouse_y < m_draw_height &&
                         //    object_under_mouse(m_new_mouse_x, m_new_mouse_y, window_height,
                         //                       m_renderer->object_texture()) > 0)
-                        if (m_new_mouse_x < m_width && m_new_mouse_y < m_height)
+                        if (m_new_mouse_x < m_draw_width && m_new_mouse_y < m_draw_height)
                         {
                                 m_wheel_delta = delta;
                         }
@@ -509,8 +509,8 @@ class ShowObject final : public EventQueue, public WindowEvent
         {
                 ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
-                m_new_width = width;
-                m_new_height = height;
+                m_new_window_width = width;
+                m_new_window_height = height;
         }
 
         //
@@ -574,68 +574,40 @@ public:
         ShowObject& operator=(ShowObject&&) = delete;
 };
 
-template <>
-void ShowObject<ShowType::Vulkan>::loop()
+template <ShowType show_type>
+void ShowObject<show_type>::loop()
 {
         ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
-        m_window = create_vulkan_window(this);
-        move_window_to_parent(m_window->get_system_handle(), m_parent_window);
-
-        m_renderer = create_vulkan_renderer(VulkanWindow::instance_extensions(),
-                                            [this](VkInstance instance) { return m_window->create_surface(instance); });
-
-        m_camera = std::make_unique<Camera>();
-
-        while (true)
+        if constexpr (show_type == ShowType::Vulkan)
         {
-                if (m_stop)
-                {
-                        return;
-                }
-
-                // Вначале команды, потом сообщения окна
-                this->pull_and_dispatch_events();
-                m_window->pull_and_dispath_events();
-
-                m_renderer->draw();
+                m_window = create_vulkan_window(this);
+                move_window_to_parent(m_window->get_system_handle(), m_parent_window);
+                m_renderer = create_vulkan_renderer(VulkanWindow::instance_extensions(),
+                                                    [this](VkInstance instance) { return m_window->create_surface(instance); });
         }
-}
 
-template <>
-void ShowObject<ShowType::OpenGL>::loop()
-{
-        ASSERT(std::this_thread::get_id() == m_thread.get_id());
+        if constexpr (show_type == ShowType::OpenGL)
+        {
+                m_window = create_opengl_window(this);
+                move_window_to_parent(m_window->get_system_handle(), m_parent_window);
+                m_renderer = create_opengl_renderer();
 
-        m_window = create_opengl_window(this);
-        move_window_to_parent(m_window->get_system_handle(), m_parent_window);
-
-        m_renderer = create_opengl_renderer();
+                m_text = std::make_unique<Text>(points_to_pixels(FPS_TEXT_SIZE_IN_POINTS, m_parent_window_dpi),
+                                                points_to_pixels(FPS_TEXT_STEP_Y_IN_POINTS, m_parent_window_dpi),
+                                                points_to_pixels(FPS_TEXT_START_X_IN_POINTS, m_parent_window_dpi),
+                                                points_to_pixels(FPS_TEXT_START_Y_IN_POINTS, m_parent_window_dpi));
+        }
 
         m_camera = std::make_unique<Camera>();
 
-        m_text = std::make_unique<Text>(points_to_pixels(FPS_TEXT_SIZE_IN_POINTS, m_parent_window_dpi),
-                                        points_to_pixels(FPS_TEXT_STEP_Y_IN_POINTS, m_parent_window_dpi),
-                                        points_to_pixels(FPS_TEXT_START_X_IN_POINTS, m_parent_window_dpi),
-                                        points_to_pixels(FPS_TEXT_START_Y_IN_POINTS, m_parent_window_dpi));
-
-        glDisable(GL_CULL_FACE);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glEnable(GL_FRAMEBUFFER_SRGB);
-
-        const bool framebuffer_srgb = frame_buffer_is_srgb();
-        const bool colorbuffer_srgb = color_buffer_is_srgb();
-
-        LOG(framebuffer_srgb ? "Framebuffer sRGB" : "Framebuffer linear");
-        LOG(colorbuffer_srgb ? "Colorbuffer sRGB" : "Colorbuffer linear");
-
-        m_new_width = m_window->get_width();
-        m_new_height = m_window->get_height();
-        double pixel_to_coord_no_zoom = 2.0 / std::min(m_new_width, m_new_height);
+        m_new_window_width = m_window->get_width();
+        m_new_window_height = m_window->get_height();
+        double pixel_to_coord_no_zoom = 2.0 / std::min(m_new_window_width, m_new_window_height);
         double pixel_to_coord = pixel_to_coord_no_zoom;
 
         // Обязательно задать начальные значения -1, чтобы отработала функция изменения размеров окна
-        ASSERT(m_new_width > 0 && m_new_height > 0);
+        ASSERT(m_new_window_width > 0 && m_new_window_height > 0);
         int window_width = -1;
         int window_height = -1;
         bool dft_active_old = !m_dft_active;
@@ -692,7 +664,7 @@ void ShowObject<ShowType::OpenGL>::loop()
                         {
                                 zoom_delta += m_wheel_delta;
 
-                                vec2 mouse_in_wnd(m_new_mouse_x - m_width * 0.5, m_height * 0.5 - m_new_mouse_y);
+                                vec2 mouse_in_wnd(m_new_mouse_x - m_draw_width * 0.5, m_draw_height * 0.5 - m_new_mouse_y);
 
                                 window_center +=
                                         pixel_to_coord * (mouse_in_wnd - mouse_in_wnd * std::pow(ZOOM_BASE, -m_wheel_delta));
@@ -704,36 +676,39 @@ void ShowObject<ShowType::OpenGL>::loop()
                         m_wheel_delta = 0;
                 }
 
-                if (window_width != m_new_width || window_height != m_new_height || dft_active_old != m_dft_active)
+                if (window_width != m_new_window_width || window_height != m_new_window_height || dft_active_old != m_dft_active)
                 {
-                        window_width = m_new_width;
-                        window_height = m_new_height;
+                        matrix_change = true;
 
-                        m_width = m_dft_active ? window_width / 2 : window_width;
-                        m_height = window_height;
-
+                        window_width = m_new_window_width;
+                        window_height = m_new_window_height;
                         dft_active_old = m_dft_active;
 
-                        // матрица для рисования на плоскости, 0 вверху
-                        mat4 plane_matrix = scale<double>(2.0 / window_width, -2.0 / window_height, 1) *
-                                            translate<double>(-window_width / 2.0, -window_height / 2.0, 0);
+                        m_draw_width = m_dft_active ? window_width / 2 : window_width;
+                        m_draw_height = window_height;
 
-                        m_renderer->set_size(m_width, m_height);
+                        m_renderer->set_size(m_draw_width, m_draw_height);
 
-                        int dft_pos_x = (window_width & 1) ? (m_width + 1) : m_width;
-                        int dft_pos_y = 0;
-                        m_dft_show =
-                                std::make_unique<DFTShow>(m_width, m_height, dft_pos_x, dft_pos_y, plane_matrix, framebuffer_srgb,
-                                                          m_dft_brightness, m_dft_background_color, m_dft_color);
+                        if constexpr (show_type == ShowType::OpenGL)
+                        {
+                                // матрица для рисования на плоскости, 0 вверху
+                                mat4 plane_matrix = scale<double>(2.0 / window_width, -2.0 / window_height, 1) *
+                                                    translate<double>(-window_width / 2.0, -window_height / 2.0, 0);
 
-                        m_pencil_effect = std::make_unique<PencilEffect>(m_renderer->color_buffer_texture(),
-                                                                         m_renderer->object_texture(), colorbuffer_srgb);
+                                int dft_pos_x = (window_width & 1) ? (m_draw_width + 1) : m_draw_width;
+                                int dft_pos_y = 0;
+                                m_dft_show = std::make_unique<DFTShow>(m_draw_width, m_draw_height, dft_pos_x, dft_pos_y,
+                                                                       plane_matrix, m_renderer->frame_buffer_is_srgb(),
+                                                                       m_dft_brightness, m_dft_background_color, m_dft_color);
 
-                        m_optical_flow = std::make_unique<OpticalFlow>(m_width, m_height, plane_matrix);
+                                m_pencil_effect = std::make_unique<PencilEffect>(m_renderer->color_buffer_texture(),
+                                                                                 m_renderer->object_texture(),
+                                                                                 m_renderer->color_buffer_is_srgb());
 
-                        m_convex_hull_2d = std::make_unique<ConvexHull2D>(m_renderer->object_texture(), plane_matrix);
+                                m_optical_flow = std::make_unique<OpticalFlow>(m_draw_width, m_draw_height, plane_matrix);
 
-                        matrix_change = true;
+                                m_convex_hull_2d = std::make_unique<ConvexHull2D>(m_renderer->object_texture(), plane_matrix);
+                        }
                 }
 
                 if (m_default_view)
@@ -742,7 +717,7 @@ void ShowObject<ShowType::OpenGL>::loop()
 
                         zoom_delta = 0;
                         window_center = vec2(0, 0);
-                        pixel_to_coord_no_zoom = 2.0 / std::min(m_width, m_height);
+                        pixel_to_coord_no_zoom = 2.0 / std::min(m_draw_width, m_draw_height);
                         pixel_to_coord = pixel_to_coord_no_zoom;
                         m_camera->set(vec3(1, 0, 0), vec3(0, 1, 0));
 
@@ -758,10 +733,10 @@ void ShowObject<ShowType::OpenGL>::loop()
                         mat4 shadow_matrix =
                                 ortho<double>(-1, 1, -1, 1, -1, 1) * look_at(vec3(0, 0, 0), light_direction, light_up);
 
-                        double left = -0.5 * m_width * pixel_to_coord;
-                        double right = 0.5 * m_width * pixel_to_coord;
-                        double bottom = -0.5 * m_height * pixel_to_coord;
-                        double top = 0.5 * m_height * pixel_to_coord;
+                        double left = -0.5 * m_draw_width * pixel_to_coord;
+                        double right = 0.5 * m_draw_width * pixel_to_coord;
+                        double bottom = -0.5 * m_draw_height * pixel_to_coord;
+                        double top = 0.5 * m_draw_height * pixel_to_coord;
                         double z_near = -1.0;
                         double z_far = 1.0;
 
@@ -778,78 +753,90 @@ void ShowObject<ShowType::OpenGL>::loop()
                         vec4 screen_center((right + left) * 0.5, (top + bottom) * 0.5, (z_far + z_near) * 0.5, 1.0);
                         vec4 view_center = inverse(view_matrix) * screen_center;
                         m_camera->set_view_center_and_width(vec3(view_center[0], view_center[1], view_center[2]), right - left,
-                                                            m_width, m_height);
+                                                            m_draw_width, m_draw_height);
                 }
 
-                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-                //
-
-                glEnable(GL_DEPTH_TEST);
-                glDisable(GL_BLEND);
-
-                // Параметр true означает рисование в цветной буфер,
-                // параметр false означает рисование в буфер экрана.
-                // Если возвращает false, то нет объекта для рисования.
-                if (!m_renderer->draw(m_pencil_effect_active))
+                if constexpr (show_type == ShowType::Vulkan)
                 {
-                        std::this_thread::sleep_until(last_frame_time + IDLE_MODE_FRAME_DURATION);
-                        last_frame_time = std::chrono::steady_clock::now();
+                        if (!m_renderer->draw())
+                        {
+                                std::this_thread::sleep_until(last_frame_time + IDLE_MODE_FRAME_DURATION);
+                                last_frame_time = std::chrono::steady_clock::now();
+                        }
                 }
 
-                //
-
-                // Рисование из цветного буфера в буфер экрана
-                if (m_pencil_effect_active && m_pencil_effect)
+                if constexpr (show_type == ShowType::OpenGL)
                 {
-                        m_pencil_effect->draw();
+                        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+                        //
+
+                        glEnable(GL_DEPTH_TEST);
+                        glDisable(GL_BLEND);
+
+                        // Параметр true означает рисование в цветной буфер,
+                        // параметр false означает рисование в буфер экрана.
+                        // Если возвращает false, то нет объекта для рисования.
+                        if (!m_renderer->draw(m_pencil_effect_active))
+                        {
+                                std::this_thread::sleep_until(last_frame_time + IDLE_MODE_FRAME_DURATION);
+                                last_frame_time = std::chrono::steady_clock::now();
+                        }
+
+                        //
+
+                        // Рисование из цветного буфера в буфер экрана
+                        if (m_pencil_effect_active && m_pencil_effect)
+                        {
+                                m_pencil_effect->draw();
+                        }
+
+                        if (m_dft_active && m_dft_show)
+                        {
+                                m_dft_show->copy_image();
+                        }
+                        if (m_optical_flow_active && m_optical_flow)
+                        {
+                                m_optical_flow->copy_image();
+                        }
+
+                        //
+
+                        glDisable(GL_DEPTH_TEST);
+                        glDisable(GL_BLEND);
+
+                        glViewport(0, 0, window_width, window_height);
+
+                        if (m_dft_active && m_dft_show)
+                        {
+                                m_dft_show->draw();
+                        }
+
+                        glEnable(GL_SCISSOR_TEST);
+                        glScissor(0, 0, m_draw_width, m_draw_height);
+                        if (m_optical_flow_active && m_optical_flow)
+                        {
+                                m_optical_flow->draw();
+                        }
+                        if (m_convex_hull_2d_active && m_convex_hull_2d)
+                        {
+                                m_convex_hull_2d->draw();
+                        }
+                        glDisable(GL_SCISSOR_TEST);
+
+                        //
+
+                        glDisable(GL_DEPTH_TEST);
+                        glEnable(GL_BLEND);
+
+                        fps_text[0].resize(sizeof(FPS_STRING) - 1);
+                        fps_text[0] += to_string(fps.calculate());
+                        m_text->draw(window_width, window_height, fps_text);
+
+                        //
+
+                        m_window->display();
                 }
-
-                if (m_dft_active && m_dft_show)
-                {
-                        m_dft_show->copy_image();
-                }
-                if (m_optical_flow_active && m_optical_flow)
-                {
-                        m_optical_flow->copy_image();
-                }
-
-                //
-
-                glDisable(GL_DEPTH_TEST);
-                glDisable(GL_BLEND);
-
-                glViewport(0, 0, window_width, window_height);
-
-                if (m_dft_active && m_dft_show)
-                {
-                        m_dft_show->draw();
-                }
-
-                glEnable(GL_SCISSOR_TEST);
-                glScissor(0, 0, m_width, m_height);
-                if (m_optical_flow_active && m_optical_flow)
-                {
-                        m_optical_flow->draw();
-                }
-                if (m_convex_hull_2d_active && m_convex_hull_2d)
-                {
-                        m_convex_hull_2d->draw();
-                }
-                glDisable(GL_SCISSOR_TEST);
-
-                //
-
-                glDisable(GL_DEPTH_TEST);
-                glEnable(GL_BLEND);
-
-                fps_text[0].resize(sizeof(FPS_STRING) - 1);
-                fps_text[0] += to_string(fps.calculate());
-                m_text->draw(window_width, window_height, fps_text);
-
-                //
-
-                m_window->display();
         }
 }
 
