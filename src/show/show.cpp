@@ -97,6 +97,10 @@ void make_fullscreen(bool fullscreen, WindowID window, WindowID parent)
 template <ShowType show_type>
 class ShowObject final : public EventQueue, public WindowEvent
 {
+        static_assert(show_type == ShowType::Vulkan || show_type == ShowType::OpenGL);
+        using Renderer = std::conditional_t<show_type == ShowType::Vulkan, VulkanRenderer, OpenGLRenderer>;
+        using Window = std::conditional_t<show_type == ShowType::Vulkan, VulkanWindow, OpenGLWindow>;
+
         // Камера и тени рассчитаны на размер объекта 2 и на положение в точке (0, 0, 0).
         static constexpr double OBJECT_SIZE = 2;
         static constexpr vec3 OBJECT_POSITION = vec3(0);
@@ -111,9 +115,8 @@ class ShowObject final : public EventQueue, public WindowEvent
 
         //
 
-        static_assert(show_type == ShowType::Vulkan || show_type == ShowType::OpenGL);
-        std::unique_ptr<std::conditional_t<show_type == ShowType::Vulkan, VulkanWindow, OpenGLWindow>> m_window;
-        std::unique_ptr<std::conditional_t<show_type == ShowType::Vulkan, VulkanRenderer, OpenGLRenderer>> m_renderer;
+        std::unique_ptr<Window> m_window;
+        std::unique_ptr<Renderer> m_renderer;
 
         std::unique_ptr<Camera> m_camera;
         std::unique_ptr<Text> m_text;
@@ -730,27 +733,25 @@ void ShowObject<show_type>::loop()
 
                         m_camera->get(&camera_up, &camera_direction, &light_up, &light_direction);
 
-                        mat4 shadow_matrix =
-                                ortho<double>(-1, 1, -1, 1, -1, 1) * look_at(vec3(0, 0, 0), light_direction, light_up);
+                        mat4 shadow_projection_matrix = Renderer::ortho(-1, 1, -1, 1, 1, -1);
+                        mat4 shadow_view_matrix = look_at(vec3(0, 0, 0), light_direction, light_up);
 
                         double left = -0.5 * m_draw_width * pixel_to_coord;
-                        double right = 0.5 * m_draw_width * pixel_to_coord;
+                        double right = -left;
                         double bottom = -0.5 * m_draw_height * pixel_to_coord;
-                        double top = 0.5 * m_draw_height * pixel_to_coord;
-                        double z_near = -1.0;
-                        double z_far = 1.0;
-
-                        mat4 projection_matrix = ortho<double>(left, right, bottom, top, z_near, z_far);
-
+                        double top = -bottom;
+                        double near = 1.0;
+                        double far = -near;
+                        mat4 projection_matrix = Renderer::ortho(left, right, bottom, top, near, far);
                         mat4 view_matrix = translate<double>(-window_center[0], -window_center[1], 0) *
                                            look_at<double>(vec3(0, 0, 0), camera_direction, camera_up);
 
-                        m_renderer->set_matrices(shadow_matrix, projection_matrix * view_matrix);
+                        m_renderer->set_matrices(shadow_projection_matrix * shadow_view_matrix, projection_matrix * view_matrix);
 
                         m_renderer->set_light_direction(-light_direction);
                         m_renderer->set_camera_direction(-camera_direction);
 
-                        vec4 screen_center((right + left) * 0.5, (top + bottom) * 0.5, (z_far + z_near) * 0.5, 1.0);
+                        vec4 screen_center((right + left) * 0.5, (top + bottom) * 0.5, (far + near) * 0.5, 1.0);
                         vec4 view_center = inverse(view_matrix) * screen_center;
                         m_camera->set_view_center_and_width(vec3(view_center[0], view_center[1], view_center[2]), right - left,
                                                             m_draw_width, m_draw_height);

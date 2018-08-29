@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "renderer.h"
 
 #include "com/log.h"
+#include "com/mat_alg.h"
 #include "com/math.h"
 #include "com/time.h"
 #include "com/vec.h"
@@ -294,6 +295,11 @@ public:
                 LOG(vulkan_overview_physical_devices_for_log(m_instance->instance()));
         }
 };
+}
+
+mat4 VulkanRenderer::ortho(double left, double right, double bottom, double top, double near, double far)
+{
+        return ortho_vulkan<double>(left, right, bottom, top, near, far);
 }
 
 std::unique_ptr<VulkanRenderer> create_vulkan_renderer(const std::vector<std::string>& window_instance_extensions,

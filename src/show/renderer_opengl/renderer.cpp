@@ -761,6 +761,11 @@ public:
 };
 }
 
+mat4 OpenGLRenderer::ortho(double left, double right, double bottom, double top, double near, double far)
+{
+        return ortho_opengl<double>(left, right, bottom, top, near, far);
+}
+
 std::unique_ptr<OpenGLRenderer> create_opengl_renderer()
 {
         return std::make_unique<Renderer>();

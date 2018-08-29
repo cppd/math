@@ -56,6 +56,8 @@ struct VulkanRenderer
         virtual void object_delete_all() = 0;
 
         virtual bool draw() = 0;
+
+        static mat4 ortho(double left, double right, double bottom, double top, double near, double far);
 };
 
 std::unique_ptr<VulkanRenderer> create_vulkan_renderer(const std::vector<std::string>& window_instance_extensions,

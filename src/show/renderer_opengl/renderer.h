@@ -59,6 +59,8 @@ struct OpenGLRenderer
 
         virtual bool frame_buffer_is_srgb() = 0;
         virtual bool color_buffer_is_srgb() = 0;
+
+        static mat4 ortho(double left, double right, double bottom, double top, double near, double far);
 };
 
 std::unique_ptr<OpenGLRenderer> create_opengl_renderer();
