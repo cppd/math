@@ -18,14 +18,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #version 450
 #extension GL_ARB_separate_shader_objects : enable
 
-layout(binding = 0) uniform UniformBufferObject0
+layout(binding = 1) uniform UniformBufferObject0
 {
         float value_r;
         float value_g;
 }
 ubo0;
 
-layout(binding = 1) uniform UniformBufferObject1
+layout(binding = 2) uniform UniformBufferObject1
 {
         float value_b;
 }

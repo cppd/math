@@ -1179,6 +1179,11 @@ void MainWindow::on_actionAbout_triggered()
 void MainWindow::on_pushButton_ResetView_clicked()
 {
         m_show->reset_view();
+
+        if (m_show_vulkan)
+        {
+                m_show_vulkan->reset_view();
+        }
 }
 
 void MainWindow::slot_widget_opengl_mouse_wheel(double delta)

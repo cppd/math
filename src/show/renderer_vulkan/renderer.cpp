@@ -109,6 +109,11 @@ struct Vertex
 
 //
 
+struct VertexShaderUniformBufferObject
+{
+        Matrix<4, 4, float> mvp_matrix;
+};
+
 struct FragmentShaderUniformBufferObject0
 {
         float value_r;
@@ -129,7 +134,7 @@ std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings()
                 layout_binding.binding = 0;
                 layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
                 layout_binding.descriptorCount = 1;
-                layout_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+                layout_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
                 // layout_binding.pImmutableSamplers = nullptr;
 
                 bindings.push_back(layout_binding);
@@ -146,25 +151,42 @@ std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings()
                 bindings.push_back(layout_binding);
         }
 
+        {
+                VkDescriptorSetLayoutBinding layout_binding = {};
+                layout_binding.binding = 2;
+                layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+                layout_binding.descriptorCount = 1;
+                layout_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+                // layout_binding.pImmutableSamplers = nullptr;
+
+                bindings.push_back(layout_binding);
+        }
+
         return bindings;
 }
 
 std::vector<VkDeviceSize> descriptor_set_layout_bindings_sizes()
 {
         std::vector<VkDeviceSize> sizes;
+        sizes.push_back(sizeof(VertexShaderUniformBufferObject));
         sizes.push_back(sizeof(FragmentShaderUniformBufferObject0));
         sizes.push_back(sizeof(FragmentShaderUniformBufferObject1));
         return sizes;
 }
 
+void set_vertex_uniform(const vulkan::VulkanInstance& instance, VertexShaderUniformBufferObject ubo)
+{
+        instance.copy_to_buffer(0, Span(&ubo, sizeof(ubo)));
+}
+
 void set_fragment_uniform_0(const vulkan::VulkanInstance& instance, FragmentShaderUniformBufferObject0 ubo0)
 {
-        instance.copy_to_buffer(0, Span(&ubo0, sizeof(ubo0)));
+        instance.copy_to_buffer(1, Span(&ubo0, sizeof(ubo0)));
 }
 
 void set_fragment_uniform_1(const vulkan::VulkanInstance& instance, FragmentShaderUniformBufferObject1 ubo1)
 {
-        instance.copy_to_buffer(1, Span(&ubo1, sizeof(ubo1)));
+        instance.copy_to_buffer(2, Span(&ubo1, sizeof(ubo1)));
 }
 
 //
@@ -172,10 +194,10 @@ void set_fragment_uniform_1(const vulkan::VulkanInstance& instance, FragmentShad
 // clang-format off
 constexpr std::array<Vertex, 4> vertices =
 {
-        Vertex{vec2f( 0.9,  0.9), vec3f(1, 0, 0)},
-        Vertex{vec2f( 0.9, -0.9), vec3f(0, 1, 0)},
-        Vertex{vec2f(-0.9, -0.9), vec3f(0, 0, 1)},
-        Vertex{vec2f(-0.9,  0.9), vec3f(1, 1, 1)}
+        Vertex{vec2f( 0.5, -0.5), vec3f(1, 0, 0)},
+        Vertex{vec2f( 0.5, 0.5), vec3f(0, 1, 0)},
+        Vertex{vec2f(-0.5, 0.5), vec3f(0, 0, 1)},
+        Vertex{vec2f(-0.5, -0.5), vec3f(1, 1, 1)}
 };
 constexpr std::array<uint16_t, 6> vertex_indices =
 {
@@ -240,8 +262,11 @@ class VulkanRendererImplementation final : public VulkanRenderer
         void set_shadow_zoom(double /*zoom*/) override
         {
         }
-        void set_matrices(const mat4& /*shadow_matrix*/, const mat4& /*main_matrix*/) override
+        void set_matrices(const mat4& /*shadow_matrix*/, const mat4& main_matrix) override
         {
+                VertexShaderUniformBufferObject ubo;
+                ubo.mvp_matrix = transpose(to_matrix<float>(main_matrix));
+                set_vertex_uniform(*m_instance, ubo);
         }
         void set_light_direction(vec3 /*dir*/) override
         {
