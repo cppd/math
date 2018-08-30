@@ -1061,19 +1061,16 @@ void MainWindow::slot_window_first_shown()
 
         move_window_to_desktop_center(this);
 
-        //
-
-        const CommandLineOptions options =
-                parse_command_line([this](const std::string& message) { m_event_emitter.message_error(message); });
-
-        //
-
-        thread_self_test(SelfTestType::Essential, false);
-
-        //
-
         try
         {
+                const CommandLineOptions options = command_line_options();
+
+                //
+
+                thread_self_test(SelfTestType::Essential, false);
+
+                //
+
                 GraphicsAndComputeAPI api;
 
                 if (options.graphics_and_compute_api.has_value())
@@ -1109,23 +1106,21 @@ void MainWindow::slot_window_first_shown()
                         ui.checkBox_VerticalSync->isChecked(), shadow_zoom());
 
                 m_objects->set_show(m_show.get());
+
+                //
+
+                if (options.file_name.size() > 0)
+                {
+                        thread_load_from_file(options.file_name, !options.no_object_selection_dialog);
+                }
         }
         catch (std::exception& e)
         {
                 m_event_emitter.message_error_fatal(e.what());
-                return;
         }
         catch (...)
         {
-                m_event_emitter.message_error_fatal("");
-                return;
-        }
-
-        //
-
-        if (options.file_name.size() > 0)
-        {
-                thread_load_from_file(options.file_name, !options.no_object_selection_dialog);
+                m_event_emitter.message_error_fatal("Error first show");
         }
 }
 

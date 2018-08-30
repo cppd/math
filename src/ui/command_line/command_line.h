@@ -19,7 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "graphics/api.h"
 
-#include <functional>
 #include <optional>
 #include <string>
 
@@ -27,9 +26,9 @@ const std::string& command_line_description();
 
 struct CommandLineOptions
 {
-        std::string file_name = "";
-        bool no_object_selection_dialog = false;
+        std::string file_name;
+        bool no_object_selection_dialog;
         std::optional<GraphicsAndComputeAPI> graphics_and_compute_api;
 };
 
-CommandLineOptions parse_command_line(std::function<void(const std::string& message)>&& error_message) noexcept;
+CommandLineOptions command_line_options();
