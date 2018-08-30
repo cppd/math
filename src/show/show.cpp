@@ -94,12 +94,12 @@ void make_fullscreen(bool fullscreen, WindowID window, WindowID parent)
         set_focus(window);
 }
 
-template <ShowType show_type>
+template <GraphicsAndComputeAPI API>
 class ShowObject final : public EventQueue, public WindowEvent
 {
-        static_assert(show_type == ShowType::Vulkan || show_type == ShowType::OpenGL);
-        using Renderer = std::conditional_t<show_type == ShowType::Vulkan, VulkanRenderer, OpenGLRenderer>;
-        using Window = std::conditional_t<show_type == ShowType::Vulkan, VulkanWindow, OpenGLWindow>;
+        static_assert(API == GraphicsAndComputeAPI::Vulkan || API == GraphicsAndComputeAPI::OpenGL);
+        using Renderer = std::conditional_t<API == GraphicsAndComputeAPI::Vulkan, VulkanRenderer, OpenGLRenderer>;
+        using Window = std::conditional_t<API == GraphicsAndComputeAPI::Vulkan, VulkanWindow, OpenGLWindow>;
 
         // Камера и тени рассчитаны на размер объекта 2 и на положение в точке (0, 0, 0).
         static constexpr double OBJECT_SIZE = 2;
@@ -393,7 +393,7 @@ class ShowObject final : public EventQueue, public WindowEvent
         {
                 ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
-                if constexpr (show_type == ShowType::OpenGL)
+                if constexpr (API == GraphicsAndComputeAPI::OpenGL)
                 {
                         m_window->set_vertical_sync_enabled(v);
                 }
@@ -577,12 +577,12 @@ public:
         ShowObject& operator=(ShowObject&&) = delete;
 };
 
-template <ShowType show_type>
-void ShowObject<show_type>::loop()
+template <GraphicsAndComputeAPI API>
+void ShowObject<API>::loop()
 {
         ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
-        if constexpr (show_type == ShowType::Vulkan)
+        if constexpr (API == GraphicsAndComputeAPI::Vulkan)
         {
                 m_window = create_vulkan_window(this);
                 move_window_to_parent(m_window->get_system_handle(), m_parent_window);
@@ -590,7 +590,7 @@ void ShowObject<show_type>::loop()
                                                     [this](VkInstance instance) { return m_window->create_surface(instance); });
         }
 
-        if constexpr (show_type == ShowType::OpenGL)
+        if constexpr (API == GraphicsAndComputeAPI::OpenGL)
         {
                 m_window = create_opengl_window(this);
                 move_window_to_parent(m_window->get_system_handle(), m_parent_window);
@@ -692,7 +692,7 @@ void ShowObject<show_type>::loop()
 
                         m_renderer->set_size(m_draw_width, m_draw_height);
 
-                        if constexpr (show_type == ShowType::OpenGL)
+                        if constexpr (API == GraphicsAndComputeAPI::OpenGL)
                         {
                                 // матрица для рисования на плоскости, 0 вверху
                                 mat4 plane_matrix = scale<double>(2.0 / window_width, -2.0 / window_height, 1) *
@@ -757,7 +757,7 @@ void ShowObject<show_type>::loop()
                                                             m_draw_width, m_draw_height);
                 }
 
-                if constexpr (show_type == ShowType::Vulkan)
+                if constexpr (API == GraphicsAndComputeAPI::Vulkan)
                 {
                         if (!m_renderer->draw())
                         {
@@ -766,7 +766,7 @@ void ShowObject<show_type>::loop()
                         }
                 }
 
-                if constexpr (show_type == ShowType::OpenGL)
+                if constexpr (API == GraphicsAndComputeAPI::OpenGL)
                 {
                         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -841,8 +841,8 @@ void ShowObject<show_type>::loop()
         }
 }
 
-template <ShowType show_type>
-void ShowObject<show_type>::loop_thread()
+template <GraphicsAndComputeAPI API>
+void ShowObject<API>::loop_thread()
 {
         ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
@@ -869,24 +869,24 @@ void ShowObject<show_type>::loop_thread()
 }
 }
 
-std::unique_ptr<IShow> create_show(ShowType show_type, IShowCallback* callback, WindowID parent_window, double parent_window_dpi,
-                                   const Color& background_color_rgb, const Color& default_color_rgb,
+std::unique_ptr<IShow> create_show(GraphicsAndComputeAPI api, IShowCallback* callback, WindowID parent_window,
+                                   double parent_window_dpi, const Color& background_color_rgb, const Color& default_color_rgb,
                                    const Color& wireframe_color_rgb, bool with_smooth, bool with_wireframe, bool with_shadow,
                                    bool with_fog, bool with_materials, bool with_effect, bool with_dft, bool with_convex_hull,
                                    bool with_optical_flow, double ambient, double diffuse, double specular, double dft_brightness,
                                    const Color& dft_background_color, const Color& dft_color, double default_ns,
                                    bool vertical_sync, double shadow_zoom)
 {
-        switch (show_type)
+        switch (api)
         {
-        case ShowType::Vulkan:
-                return std::make_unique<ShowObject<ShowType::Vulkan>>(
+        case GraphicsAndComputeAPI::Vulkan:
+                return std::make_unique<ShowObject<GraphicsAndComputeAPI::Vulkan>>(
                         callback, parent_window, parent_window_dpi, background_color_rgb, default_color_rgb, wireframe_color_rgb,
                         with_smooth, with_wireframe, with_shadow, with_fog, with_materials, with_effect, with_dft,
                         with_convex_hull, with_optical_flow, ambient, diffuse, specular, dft_brightness, dft_background_color,
                         dft_color, default_ns, vertical_sync, shadow_zoom);
-        case ShowType::OpenGL:
-                return std::make_unique<ShowObject<ShowType::OpenGL>>(
+        case GraphicsAndComputeAPI::OpenGL:
+                return std::make_unique<ShowObject<GraphicsAndComputeAPI::OpenGL>>(
                         callback, parent_window, parent_window_dpi, background_color_rgb, default_color_rgb, wireframe_color_rgb,
                         with_smooth, with_wireframe, with_shadow, with_fog, with_materials, with_effect, with_dft,
                         with_convex_hull, with_optical_flow, ambient, diffuse, specular, dft_brightness, dft_background_color,

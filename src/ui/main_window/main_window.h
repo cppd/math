@@ -92,10 +92,8 @@ private slots:
         void slot_object_repository();
         void slot_timer_progress_bar();
         void slot_window_first_shown();
-        void slot_widget_opengl_mouse_wheel(double delta);
-        void slot_widget_opengl_resize();
-        void slot_widget_vulkan_mouse_wheel(double delta);
-        void slot_widget_vulkan_resize();
+        void slot_graphics_widget_mouse_wheel(double delta);
+        void slot_graphics_widget_resize();
 
 private:
         void constructor_connect();
@@ -183,7 +181,6 @@ private:
         std::unordered_map<QObject*, std::tuple<int, std::string>> m_action_to_dimension_and_object_name;
 
         std::unique_ptr<IShow> m_show;
-        std::unique_ptr<IShow> m_show_vulkan;
 
         std::unique_ptr<MainObjects> m_objects;
 

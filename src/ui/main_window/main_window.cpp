@@ -33,6 +33,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "ui/dialogs/messages/message_box.h"
 #include "ui/dialogs/messages/source_error.h"
 #include "ui/dialogs/parameters/bound_cocone.h"
+#include "ui/dialogs/parameters/gc_api_selection.h"
 #include "ui/dialogs/parameters/object_selection.h"
 #include "ui/dialogs/parameters/point_object.h"
 #include "ui/support/support.h"
@@ -41,7 +42,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QDesktopWidget>
 #include <QPointer>
 
-constexpr bool SHOW_VULKAN_WINDOW = false;
+constexpr GraphicsAndComputeAPI DEFAULT_GRAPHICS_AND_COMPUTE_API = GraphicsAndComputeAPI::OpenGL;
 
 // Размер окна по сравнению с экраном.
 constexpr double WINDOW_SIZE_COEF = 0.7;
@@ -110,8 +111,7 @@ MainWindow::MainWindow(QWidget* parent)
           m_close_without_confirmation(false),
           m_objects_to_load(default_objects_to_load())
 {
-        static_assert(std::is_same_v<decltype(ui.graphics_widget_opengl), GraphicsWidget*>);
-        static_assert(std::is_same_v<decltype(ui.graphics_widget_vulkan), GraphicsWidget*>);
+        static_assert(std::is_same_v<decltype(ui.graphics_widget), GraphicsWidget*>);
 
         LOG(command_line_description() + "\n");
 
@@ -127,17 +127,9 @@ MainWindow::MainWindow(QWidget* parent)
 
 void MainWindow::constructor_connect()
 {
-        ui.graphics_widget_opengl->setText("");
-        connect(ui.graphics_widget_opengl, SIGNAL(wheel(double)), this, SLOT(slot_widget_opengl_mouse_wheel(double)));
-        connect(ui.graphics_widget_opengl, SIGNAL(resize()), this, SLOT(slot_widget_opengl_resize()));
-
-        ui.graphics_widget_vulkan->setText("");
-        connect(ui.graphics_widget_vulkan, SIGNAL(wheel(double)), this, SLOT(slot_widget_vulkan_mouse_wheel(double)));
-        connect(ui.graphics_widget_vulkan, SIGNAL(resize()), this, SLOT(slot_widget_vulkan_resize()));
-        if (!SHOW_VULKAN_WINDOW)
-        {
-                ui.graphics_widget_vulkan->setVisible(false);
-        }
+        ui.graphics_widget->setText("");
+        connect(ui.graphics_widget, SIGNAL(wheel(double)), this, SLOT(slot_graphics_widget_mouse_wheel(double)));
+        connect(ui.graphics_widget, SIGNAL(resize()), this, SLOT(slot_graphics_widget_resize()));
 
         connect(&m_timer_progress_bar, SIGNAL(timeout()), this, SLOT(slot_timer_progress_bar()));
 }
@@ -302,7 +294,6 @@ void MainWindow::terminate_all_threads()
 
         m_threads.terminate_all_threads();
 
-        m_show_vulkan.reset();
         m_show.reset();
 
         set_log_callback(nullptr);
@@ -1060,7 +1051,7 @@ void MainWindow::slot_window_first_shown()
         if (WINDOW_SIZE_GRAPHICS)
         {
                 QSize size = QDesktopWidget().screenGeometry(this).size() * WINDOW_SIZE_COEF;
-                resize_window_widget(this, ui.graphics_widget_opengl, size);
+                resize_window_widget(this, ui.graphics_widget, size);
         }
         else
         {
@@ -1074,31 +1065,32 @@ void MainWindow::slot_window_first_shown()
 
         try
         {
+                GraphicsAndComputeAPI api = DEFAULT_GRAPHICS_AND_COMPUTE_API;
+                QPointer ptr(this);
+                if (!dialog::graphics_and_compute_api_selection(this, &api))
+                {
+                        if (!ptr.isNull())
+                        {
+                                close_without_confirmation();
+                        }
+                        return;
+                }
+                if (ptr.isNull())
+                {
+                        return;
+                }
+
                 m_show = create_show(
-                        ShowType::OpenGL, &m_event_emitter, widget_window_id(ui.graphics_widget_opengl),
-                        widget_dpi(ui.graphics_widget_opengl), qcolor_to_rgb(m_background_color), qcolor_to_rgb(m_default_color),
-                        qcolor_to_rgb(m_wireframe_color), ui.checkBox_Smooth->isChecked(), ui.checkBox_Wireframe->isChecked(),
-                        ui.checkBox_Shadow->isChecked(), ui.checkBox_Fog->isChecked(), ui.checkBox_Materials->isChecked(),
-                        ui.checkBox_ShowEffect->isChecked(), ui.checkBox_show_dft->isChecked(),
-                        ui.checkBox_convex_hull_2d->isChecked(), ui.checkBox_OpticalFlow->isChecked(), ambient_light(),
-                        diffuse_light(), specular_light(), dft_brightness(), qcolor_to_rgb(m_dft_background_color),
-                        qcolor_to_rgb(m_dft_color), default_ns(), ui.checkBox_VerticalSync->isChecked(), shadow_zoom());
+                        api, &m_event_emitter, widget_window_id(ui.graphics_widget), widget_dpi(ui.graphics_widget),
+                        qcolor_to_rgb(m_background_color), qcolor_to_rgb(m_default_color), qcolor_to_rgb(m_wireframe_color),
+                        ui.checkBox_Smooth->isChecked(), ui.checkBox_Wireframe->isChecked(), ui.checkBox_Shadow->isChecked(),
+                        ui.checkBox_Fog->isChecked(), ui.checkBox_Materials->isChecked(), ui.checkBox_ShowEffect->isChecked(),
+                        ui.checkBox_show_dft->isChecked(), ui.checkBox_convex_hull_2d->isChecked(),
+                        ui.checkBox_OpticalFlow->isChecked(), ambient_light(), diffuse_light(), specular_light(),
+                        dft_brightness(), qcolor_to_rgb(m_dft_background_color), qcolor_to_rgb(m_dft_color), default_ns(),
+                        ui.checkBox_VerticalSync->isChecked(), shadow_zoom());
 
                 m_objects->set_show(m_show.get());
-
-                if (SHOW_VULKAN_WINDOW)
-                {
-                        m_show_vulkan = create_show(
-                                ShowType::Vulkan, &m_event_emitter, widget_window_id(ui.graphics_widget_vulkan),
-                                widget_dpi(ui.graphics_widget_vulkan), qcolor_to_rgb(m_background_color),
-                                qcolor_to_rgb(m_default_color), qcolor_to_rgb(m_wireframe_color), ui.checkBox_Smooth->isChecked(),
-                                ui.checkBox_Wireframe->isChecked(), ui.checkBox_Shadow->isChecked(), ui.checkBox_Fog->isChecked(),
-                                ui.checkBox_Materials->isChecked(), ui.checkBox_ShowEffect->isChecked(),
-                                ui.checkBox_show_dft->isChecked(), ui.checkBox_convex_hull_2d->isChecked(),
-                                ui.checkBox_OpticalFlow->isChecked(), ambient_light(), diffuse_light(), specular_light(),
-                                dft_brightness(), qcolor_to_rgb(m_dft_background_color), qcolor_to_rgb(m_dft_color), default_ns(),
-                                ui.checkBox_VerticalSync->isChecked(), shadow_zoom());
-                }
         }
         catch (std::exception& e)
         {
@@ -1179,14 +1171,9 @@ void MainWindow::on_actionAbout_triggered()
 void MainWindow::on_pushButton_ResetView_clicked()
 {
         m_show->reset_view();
-
-        if (m_show_vulkan)
-        {
-                m_show_vulkan->reset_view();
-        }
 }
 
-void MainWindow::slot_widget_opengl_mouse_wheel(double delta)
+void MainWindow::slot_graphics_widget_mouse_wheel(double delta)
 {
         if (m_show)
         {
@@ -1194,27 +1181,11 @@ void MainWindow::slot_widget_opengl_mouse_wheel(double delta)
         }
 }
 
-void MainWindow::slot_widget_opengl_resize()
+void MainWindow::slot_graphics_widget_resize()
 {
         if (m_show)
         {
                 m_show->parent_resized();
-        }
-}
-
-void MainWindow::slot_widget_vulkan_mouse_wheel(double delta)
-{
-        if (m_show_vulkan)
-        {
-                m_show_vulkan->mouse_wheel(delta);
-        }
-}
-
-void MainWindow::slot_widget_vulkan_resize()
-{
-        if (m_show_vulkan)
-        {
-                m_show_vulkan->parent_resized();
         }
 }
 
