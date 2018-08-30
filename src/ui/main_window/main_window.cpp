@@ -1074,19 +1074,28 @@ void MainWindow::slot_window_first_shown()
 
         try
         {
-                GraphicsAndComputeAPI api = DEFAULT_GRAPHICS_AND_COMPUTE_API;
-                QPointer ptr(this);
-                if (!dialog::graphics_and_compute_api_selection(this, &api))
+                GraphicsAndComputeAPI api;
+
+                if (options.graphics_and_compute_api.has_value())
                 {
-                        if (!ptr.isNull())
-                        {
-                                close_without_confirmation();
-                        }
-                        return;
+                        api = options.graphics_and_compute_api.value();
                 }
-                if (ptr.isNull())
+                else
                 {
-                        return;
+                        api = DEFAULT_GRAPHICS_AND_COMPUTE_API;
+                        QPointer ptr(this);
+                        if (!dialog::graphics_and_compute_api_selection(this, &api))
+                        {
+                                if (!ptr.isNull())
+                                {
+                                        close_without_confirmation();
+                                }
+                                return;
+                        }
+                        if (ptr.isNull())
+                        {
+                                return;
+                        }
                 }
 
                 m_show = create_show(
