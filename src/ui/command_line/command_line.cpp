@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "command_line.h"
 
+#include "com/error.h"
+
 #include <QCommandLineParser>
 
 constexpr const char NO_OBJECT_SELECTION_DIALOG_OPTION[] = "n";
@@ -28,14 +30,12 @@ std::string command_line_description_string()
         std::string s;
 
         s += "Usage:\n";
-        s += "    program [option] [file]\n";
-        s += "Argument:\n";
-        s += "    file\n";
-        s += "        The file to load\n";
-        s += "Option:\n";
+        s += "    program [[-" + std::string(NO_OBJECT_SELECTION_DIALOG_OPTION) + "] FILE]\n";
+        s += "Description:\n";
+        s += "    FILE\n";
+        s += "        the file to load\n";
         s += "    -" + std::string(NO_OBJECT_SELECTION_DIALOG_OPTION) + "\n";
-        s += "        Do not open object selection dialog.\n";
-        s += "        Not used if there is no the file argument.";
+        s += "        do not open object selection dialog\n";
 
         return s;
 }
@@ -47,40 +47,63 @@ const std::string& command_line_description()
         return s;
 }
 
-bool parse_command_line(std::function<void(const std::string& message)>&& error_message, std::string* file_to_load,
-                        bool* use_object_selection_dialog)
+CommandLineOptions parse_command_line(std::function<void(const std::string& message)>&& error_message) noexcept
 {
-        QCommandLineParser parser;
-
-        const QCommandLineOption no_object_selection_dialog_option(NO_OBJECT_SELECTION_DIALOG_OPTION);
-
-        if (!parser.addOption(no_object_selection_dialog_option))
+        try
         {
-                error_message("Failed to add a command line option.");
-                return false;
-        }
+                try
+                {
+                        QCommandLineParser parser;
 
-        if (!parser.parse(QCoreApplication::arguments()))
+                        const QCommandLineOption no_object_selection_dialog_option(NO_OBJECT_SELECTION_DIALOG_OPTION);
+
+                        if (!parser.addOption(no_object_selection_dialog_option))
+                        {
+                                error_message("Failed to add a command line option.");
+                                return CommandLineOptions();
+                        }
+
+                        if (!parser.parse(QCoreApplication::arguments()))
+                        {
+                                error_message(parser.errorText().toStdString());
+                                return CommandLineOptions();
+                        }
+
+                        const QStringList positional_arguments = parser.positionalArguments();
+
+                        if (positional_arguments.size() > 1)
+                        {
+                                error_message("Too many file name arguments.");
+                                return CommandLineOptions();
+                        }
+
+                        //
+
+                        CommandLineOptions options;
+
+                        if (positional_arguments.size() == 1)
+                        {
+                                ASSERT(positional_arguments.value(0).size() > 0);
+
+                                options.file_name = positional_arguments.value(0).toStdString();
+                                options.no_object_selection_dialog = parser.isSet(no_object_selection_dialog_option);
+                        }
+
+                        return options;
+                }
+                catch (std::exception& e)
+                {
+                        error_message(e.what());
+                        return CommandLineOptions();
+                }
+                catch (...)
+                {
+                        error_message("Unknown error in the command line option parser");
+                        return CommandLineOptions();
+                }
+        }
+        catch (...)
         {
-                error_message(parser.errorText().toStdString());
-                return false;
+                error_fatal("Exception in the command line option exception handler");
         }
-
-        const QStringList positional_arguments = parser.positionalArguments();
-
-        if (positional_arguments.size() > 1)
-        {
-                error_message("Too many file name arguments.");
-                return false;
-        }
-
-        if (positional_arguments.size() == 0)
-        {
-                return false;
-        }
-
-        *file_to_load = positional_arguments.value(0).toStdString();
-        *use_object_selection_dialog = !parser.isSet(no_object_selection_dialog_option);
-
-        return true;
 }

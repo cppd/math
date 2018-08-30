@@ -1061,7 +1061,16 @@ void MainWindow::slot_window_first_shown()
 
         move_window_to_desktop_center(this);
 
+        //
+
+        const CommandLineOptions options =
+                parse_command_line([this](const std::string& message) { m_event_emitter.message_error(message); });
+
+        //
+
         thread_self_test(SelfTestType::Essential, false);
+
+        //
 
         try
         {
@@ -1103,13 +1112,11 @@ void MainWindow::slot_window_first_shown()
                 return;
         }
 
-        std::string file_to_load;
-        bool use_object_selection_dialog;
+        //
 
-        if (parse_command_line([this](const std::string& message) { m_event_emitter.message_error(message); }, &file_to_load,
-                               &use_object_selection_dialog))
+        if (options.file_name.size() > 0)
         {
-                thread_load_from_file(file_to_load, use_object_selection_dialog);
+                thread_load_from_file(options.file_name, !options.no_object_selection_dialog);
         }
 }
 
