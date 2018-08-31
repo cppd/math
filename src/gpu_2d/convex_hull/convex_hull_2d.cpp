@@ -63,8 +63,8 @@ namespace
 {
 int group_size_prepare(int width, int shared_size_per_thread)
 {
-        int max_group_size_limit = std::min(gpu::max_work_group_size_x(), gpu::max_work_group_invocations());
-        int max_group_size_memory = gpu::max_compute_shared_memory() / shared_size_per_thread;
+        int max_group_size_limit = std::min(opengl::max_work_group_size_x(), opengl::max_work_group_invocations());
+        int max_group_size_memory = opengl::max_compute_shared_memory() / shared_size_per_thread;
 
         // максимально возможная степень 2
         int max_group_size = 1 << log_2(std::min(max_group_size_limit, max_group_size_memory));
@@ -77,13 +77,13 @@ int group_size_prepare(int width, int shared_size_per_thread)
 
 int group_size_merge(int height, int shared_size_per_item)
 {
-        if (gpu::max_compute_shared_memory() < height * shared_size_per_item)
+        if (opengl::max_compute_shared_memory() < height * shared_size_per_item)
         {
                 error("Shared memory problem: needs " + std::to_string(height * shared_size_per_item) + ", exists " +
-                      std::to_string(gpu::max_compute_shared_memory()));
+                      std::to_string(opengl::max_compute_shared_memory()));
         }
 
-        int max_group_size = std::min(gpu::max_work_group_size_x(), gpu::max_work_group_invocations());
+        int max_group_size = std::min(opengl::max_work_group_size_x(), opengl::max_work_group_invocations());
 
         // Один поток первоначально обрабатывает группы до 4 элементов.
         int pref_thread_count = group_count(height, 4);
@@ -135,26 +135,26 @@ class ConvexHull2D::Impl final
         const int m_width, m_height;
         const int m_group_size_prepare;
         const int m_group_size_merge;
-        ComputeProgram m_prepare_prog, m_merge_prog, m_filter_prog;
-        GraphicsProgram m_draw_prog;
-        TextureR32F m_line_min, m_line_max;
+        opengl::ComputeProgram m_prepare_prog, m_merge_prog, m_filter_prog;
+        opengl::GraphicsProgram m_draw_prog;
+        opengl::TextureR32F m_line_min, m_line_max;
 
-        ShaderStorageBuffer m_points;
+        opengl::ShaderStorageBuffer m_points;
 
-        TextureR32I m_point_count_texture;
+        opengl::TextureR32I m_point_count_texture;
 
         double m_start_time;
 
 public:
-        Impl(const TextureR32I& objects, const mat4& mtx)
+        Impl(const opengl::TextureR32I& objects, const mat4& mtx)
                 : m_width(objects.texture().width()),
                   m_height(objects.texture().height()),
                   m_group_size_prepare(group_size_prepare(m_width, 2 * sizeof(GLint))),
                   m_group_size_merge(group_size_merge(m_height, sizeof(GLfloat))),
-                  m_prepare_prog(ComputeShader(prepare_source(m_width, m_height, m_group_size_prepare))),
-                  m_merge_prog(ComputeShader(merge_source(m_height, m_group_size_merge))),
-                  m_filter_prog(ComputeShader(filter_source(m_height))),
-                  m_draw_prog(VertexShader(vertex_shader), FragmentShader(fragment_shader)),
+                  m_prepare_prog(opengl::ComputeShader(prepare_source(m_width, m_height, m_group_size_prepare))),
+                  m_merge_prog(opengl::ComputeShader(merge_source(m_height, m_group_size_merge))),
+                  m_filter_prog(opengl::ComputeShader(filter_source(m_height))),
+                  m_draw_prog(opengl::VertexShader(vertex_shader), opengl::FragmentShader(fragment_shader)),
                   m_line_min(m_height, 1),
                   m_line_max(m_height, 1),
                   m_point_count_texture(1, 1),
@@ -209,7 +209,7 @@ public:
         }
 };
 
-ConvexHull2D::ConvexHull2D(const TextureR32I& objects, const mat4& mtx) : m_impl(std::make_unique<Impl>(objects, mtx))
+ConvexHull2D::ConvexHull2D(const opengl::TextureR32I& objects, const mat4& mtx) : m_impl(std::make_unique<Impl>(objects, mtx))
 {
 }
 ConvexHull2D::~ConvexHull2D() = default;

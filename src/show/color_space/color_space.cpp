@@ -30,7 +30,7 @@ constexpr int GROUP_SIZE = 16;
 
 namespace
 {
-void convert_color_space(const ComputeProgram& program, const TextureRGBA32F& texture)
+void convert_color_space(const opengl::ComputeProgram& program, const opengl::TextureRGBA32F& texture)
 {
         int groups_x = group_count(texture.texture().width(), GROUP_SIZE);
         int groups_y = group_count(texture.texture().height(), GROUP_SIZE);
@@ -43,22 +43,22 @@ void convert_color_space(const ComputeProgram& program, const TextureRGBA32F& te
 }
 }
 
-ColorSpaceConverterToRGB::ColorSpaceConverterToRGB() : m_prog(ComputeShader(color_space_compute_shader))
+ColorSpaceConverterToRGB::ColorSpaceConverterToRGB() : m_prog(opengl::ComputeShader(color_space_compute_shader))
 {
         m_prog.set_uniform("to_rgb", 1);
 }
 
-void ColorSpaceConverterToRGB::convert(const TextureRGBA32F& tex) const
+void ColorSpaceConverterToRGB::convert(const opengl::TextureRGBA32F& tex) const
 {
         convert_color_space(m_prog, tex);
 }
 
-ColorSpaceConverterToSRGB::ColorSpaceConverterToSRGB() : m_prog(ComputeShader(color_space_compute_shader))
+ColorSpaceConverterToSRGB::ColorSpaceConverterToSRGB() : m_prog(opengl::ComputeShader(color_space_compute_shader))
 {
         m_prog.set_uniform("to_rgb", 0);
 }
 
-void ColorSpaceConverterToSRGB::convert(const TextureRGBA32F& tex) const
+void ColorSpaceConverterToSRGB::convert(const opengl::TextureRGBA32F& tex) const
 {
         convert_color_space(m_prog, tex);
 }

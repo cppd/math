@@ -124,9 +124,9 @@ GLint get_named_framebuffer_parameter(GLuint framebuffer, GLenum pname)
 }
 }
 
-namespace gpu
+namespace opengl
 {
-std::string graphics_overview()
+std::string overview()
 {
         std::ostringstream os;
 

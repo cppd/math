@@ -20,10 +20,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <vector>
 
-constexpr int MAJOR_GL_VERSION = 4;
-constexpr int MINOR_GL_VERSION = 5;
+namespace opengl
+{
+constexpr int VERSION_MAJOR = 4;
+constexpr int VERSION_MINOR = 5;
 
 inline std::vector<std::string> required_extensions()
 {
         return {"GL_ARB_bindless_texture", "GL_ARB_compute_variable_group_size"};
+}
 }

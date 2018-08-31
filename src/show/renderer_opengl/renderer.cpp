@@ -273,10 +273,10 @@ std::vector<float> integer_pixels_to_float_pixels(const std::vector<unsigned cha
 
 class DrawObject final
 {
-        VertexArray m_vertex_array;
-        ArrayBuffer m_vertex_buffer;
-        ShaderStorageBuffer m_storage_buffer;
-        std::vector<TextureRGBA32F> m_textures;
+        opengl::VertexArray m_vertex_array;
+        opengl::ArrayBuffer m_vertex_buffer;
+        opengl::ShaderStorageBuffer m_storage_buffer;
+        std::vector<opengl::TextureRGBA32F> m_textures;
         unsigned m_vertices_count;
 
         const mat4 m_model_matrix;
@@ -477,11 +477,11 @@ class Renderer final : public OpenGLRenderer
         static constexpr mat4 TRANSLATE = translate<double>(1, 1, 1);
         const mat4 SCALE_BIAS_MATRIX = SCALE * TRANSLATE;
 
-        GraphicsProgram main_program, shadow_program, points_program;
+        opengl::GraphicsProgram main_program, shadow_program, points_program;
 
-        std::unique_ptr<ShadowBuffer> m_shadow_buffer;
-        std::unique_ptr<ColorBuffer> m_color_buffer;
-        std::unique_ptr<TextureR32I> m_object_texture;
+        std::unique_ptr<opengl::ShadowBuffer> m_shadow_buffer;
+        std::unique_ptr<opengl::ColorBuffer> m_color_buffer;
+        std::unique_ptr<opengl::TextureR32I> m_object_texture;
 
         mat4 m_shadow_matrix;
         mat4 m_scale_bias_shadow_matrix;
@@ -494,7 +494,7 @@ class Renderer final : public OpenGLRenderer
         int m_shadow_width = -1;
         int m_shadow_height = -1;
 
-        const int m_max_texture_size = gpu::max_texture_size();
+        const int m_max_texture_size = opengl::max_texture_size();
 
         double m_shadow_zoom = 1;
 
@@ -678,7 +678,7 @@ class Renderer final : public OpenGLRenderer
                         m_shadow_height = 1;
                 }
 
-                m_shadow_buffer = std::make_unique<ShadowBuffer>(m_shadow_width, m_shadow_height);
+                m_shadow_buffer = std::make_unique<opengl::ShadowBuffer>(m_shadow_width, m_shadow_height);
                 main_program.set_uniform_handle("shadow_tex",
                                                 m_shadow_buffer->depth_texture().texture().texture_resident_handle());
         }
@@ -695,8 +695,8 @@ class Renderer final : public OpenGLRenderer
                 m_width = width;
                 m_height = height;
 
-                m_color_buffer = std::make_unique<ColorBuffer>(width, height);
-                m_object_texture = std::make_unique<TextureR32I>(width, height);
+                m_color_buffer = std::make_unique<opengl::ColorBuffer>(width, height);
+                m_object_texture = std::make_unique<opengl::TextureR32I>(width, height);
 
                 main_program.set_uniform_handle("object_img", m_object_texture->image_resident_handle_write_only());
                 points_program.set_uniform_handle("object_img", m_object_texture->image_resident_handle_write_only());
@@ -704,12 +704,12 @@ class Renderer final : public OpenGLRenderer
                 set_shadow_size();
         }
 
-        const TextureRGBA32F& color_buffer_texture() const override
+        const opengl::TextureRGBA32F& color_buffer_texture() const override
         {
                 ASSERT(m_color_buffer);
                 return m_color_buffer->color_texture();
         }
-        const TextureR32I& object_texture() const override
+        const opengl::TextureR32I& object_texture() const override
         {
                 ASSERT(m_object_texture);
                 return *m_object_texture;
@@ -744,9 +744,10 @@ class Renderer final : public OpenGLRenderer
 
 public:
         Renderer()
-                : main_program(VertexShader(triangles_vert), GeometryShader(triangles_geom), FragmentShader(triangles_frag)),
-                  shadow_program(VertexShader(shadow_vert), FragmentShader(shadow_frag)),
-                  points_program(VertexShader(points_vert), FragmentShader(points_frag))
+                : main_program(opengl::VertexShader(triangles_vert), opengl::GeometryShader(triangles_geom),
+                               opengl::FragmentShader(triangles_frag)),
+                  shadow_program(opengl::VertexShader(shadow_vert), opengl::FragmentShader(shadow_frag)),
+                  points_program(opengl::VertexShader(points_vert), opengl::FragmentShader(points_frag))
         {
                 glDisable(GL_CULL_FACE);
                 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

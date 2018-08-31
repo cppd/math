@@ -28,7 +28,7 @@ class ConvexHull2D final
         std::unique_ptr<Impl> m_impl;
 
 public:
-        ConvexHull2D(const TextureR32I& objects, const mat4& mtx);
+        ConvexHull2D(const opengl::TextureR32I& objects, const mat4& mtx);
         ~ConvexHull2D();
 
         void reset_timer();

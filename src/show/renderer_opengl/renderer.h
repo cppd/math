@@ -54,8 +54,8 @@ struct OpenGLRenderer
 
         virtual bool draw(bool draw_to_buffer) = 0;
 
-        virtual const TextureRGBA32F& color_buffer_texture() const = 0;
-        virtual const TextureR32I& object_texture() const = 0;
+        virtual const opengl::TextureRGBA32F& color_buffer_texture() const = 0;
+        virtual const opengl::TextureR32I& object_texture() const = 0;
 
         virtual bool frame_buffer_is_srgb() = 0;
         virtual bool color_buffer_is_srgb() = 0;

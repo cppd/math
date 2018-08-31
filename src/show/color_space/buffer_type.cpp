@@ -36,7 +36,7 @@ float read_color_from_buffer(float color) noexcept
         float c[4] = {color, color, color, 1};
         glClearBufferfv(GL_COLOR, 0, c);
 
-        TextureRGBA32F pixel_texture(1, 1);
+        opengl::TextureRGBA32F pixel_texture(1, 1);
         pixel_texture.copy_texture_sub_image();
 
         std::array<GLfloat, 4> pixel;
@@ -72,7 +72,7 @@ bool color_buffer_is_srgb()
         float rgb_color = 0.1;
         float srgb_color = 0.34902;
 
-        ColorBuffer color_buffer(1, 1);
+        opengl::ColorBuffer color_buffer(1, 1);
 
         color_buffer.bind_buffer();
         float color = read_color_from_buffer(rgb_color);

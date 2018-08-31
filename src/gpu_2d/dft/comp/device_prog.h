@@ -28,15 +28,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 template <typename FP>
 class DeviceProg final
 {
-        ComputeProgram m_reverse;
-        ComputeProgram m_FFT;
-        ComputeProgram m_rows_mul_to_buffer;
-        ComputeProgram m_rows_mul_fr_buffer;
-        ComputeProgram m_cols_mul_to_buffer;
-        ComputeProgram m_cols_mul_fr_buffer;
-        ComputeProgram m_rows_mul_D;
-        ComputeProgram m_move_to_input;
-        ComputeProgram m_move_to_output;
+        opengl::ComputeProgram m_reverse;
+        opengl::ComputeProgram m_FFT;
+        opengl::ComputeProgram m_rows_mul_to_buffer;
+        opengl::ComputeProgram m_rows_mul_fr_buffer;
+        opengl::ComputeProgram m_cols_mul_to_buffer;
+        opengl::ComputeProgram m_cols_mul_fr_buffer;
+        opengl::ComputeProgram m_rows_mul_D;
+        opengl::ComputeProgram m_move_to_input;
+        opengl::ComputeProgram m_move_to_output;
 
 public:
         DeviceProg();
@@ -155,7 +155,7 @@ template <typename FP>
 class DeviceProgFFTRadix2 final
 {
         const int m_group_size, m_shared_size;
-        ComputeProgram m_FFT;
+        opengl::ComputeProgram m_FFT;
 
 public:
         DeviceProgFFTRadix2(int N, int shared_size, bool reverse_input, int group_size);

@@ -147,7 +147,7 @@ void create_image_pyramid_sizes(int width, int height, int min, std::vector<vec2
 
 class ImageR32F
 {
-        TextureR32F m_texture;
+        opengl::TextureR32F m_texture;
         GLuint64 m_image_write_handle;
         GLuint64 m_image_read_handle;
         GLuint64 m_texture_handle;
@@ -195,7 +195,7 @@ void create_textures(const std::vector<vec2i>& level_dimensions, std::vector<Ima
         }
 }
 
-void create_flow_buffers(const std::vector<vec2i>& level_dimensions, std::vector<ShaderStorageBuffer>* buffers)
+void create_flow_buffers(const std::vector<vec2i>& level_dimensions, std::vector<opengl::ShaderStorageBuffer>* buffers)
 {
         buffers->clear();
         buffers->resize(level_dimensions.size());
@@ -234,17 +234,17 @@ class OpticalFlow::Impl final
 {
         const int m_width, m_height;
         const int m_groups_x, m_groups_y;
-        ComputeProgram m_comp_sobel;
-        ComputeProgram m_comp_flow;
-        ComputeProgram m_comp_downsample;
-        ComputeProgram m_comp_grayscale;
-        ComputeProgram m_comp_lines;
-        GraphicsProgram m_draw_prog;
-        GraphicsProgram m_draw_prog_debug;
+        opengl::ComputeProgram m_comp_sobel;
+        opengl::ComputeProgram m_comp_flow;
+        opengl::ComputeProgram m_comp_downsample;
+        opengl::ComputeProgram m_comp_grayscale;
+        opengl::ComputeProgram m_comp_lines;
+        opengl::GraphicsProgram m_draw_prog;
+        opengl::GraphicsProgram m_draw_prog_debug;
 
-        TextureRGBA32F m_texture_J;
+        opengl::TextureRGBA32F m_texture_J;
 
-        ShaderStorageBuffer m_top_points, m_top_points_flow, m_top_points_lines;
+        opengl::ShaderStorageBuffer m_top_points, m_top_points_flow, m_top_points_lines;
         int m_point_count_x, m_point_count_y;
 
         bool m_image_I_exists = false;
@@ -254,7 +254,7 @@ class OpticalFlow::Impl final
         std::array<std::vector<ImageR32F>, 2> m_image_pyramid;
         std::vector<ImageR32F> m_image_pyramid_dx;
         std::vector<ImageR32F> m_image_pyramid_dy;
-        std::vector<ShaderStorageBuffer> m_image_pyramid_flow;
+        std::vector<opengl::ShaderStorageBuffer> m_image_pyramid_flow;
         int m_i_index = 0;
         int m_j_index = 1;
 
@@ -311,7 +311,7 @@ class OpticalFlow::Impl final
 
         void compute_optical_flow(const std::vector<ImageR32F>& image_pyramid_I, const std::vector<ImageR32F>& image_pyramid_dx,
                                   const std::vector<ImageR32F>& image_pyramid_dy,
-                                  const std::vector<ShaderStorageBuffer>& image_pyramid_flow,
+                                  const std::vector<opengl::ShaderStorageBuffer>& image_pyramid_flow,
                                   const std::vector<ImageR32F>& image_pyramid_J)
         {
                 int image_pyramid_I_size = image_pyramid_I.size();
@@ -410,13 +410,13 @@ public:
                   m_height(height),
                   m_groups_x(group_count(m_width, GROUP_SIZE)),
                   m_groups_y(group_count(m_height, GROUP_SIZE)),
-                  m_comp_sobel(ComputeShader(sobel_compute_shader)),
-                  m_comp_flow(ComputeShader(flow_compute_shader)),
-                  m_comp_downsample(ComputeShader(downsample_compute_shader)),
-                  m_comp_grayscale(ComputeShader(grayscale_compute_shader)),
-                  m_comp_lines(ComputeShader(lines_compute_shader)),
-                  m_draw_prog(VertexShader(vertex_shader), FragmentShader(fragment_shader)),
-                  m_draw_prog_debug(VertexShader(vertex_debug_shader), FragmentShader(fragment_debug_shader)),
+                  m_comp_sobel(opengl::ComputeShader(sobel_compute_shader)),
+                  m_comp_flow(opengl::ComputeShader(flow_compute_shader)),
+                  m_comp_downsample(opengl::ComputeShader(downsample_compute_shader)),
+                  m_comp_grayscale(opengl::ComputeShader(grayscale_compute_shader)),
+                  m_comp_lines(opengl::ComputeShader(lines_compute_shader)),
+                  m_draw_prog(opengl::VertexShader(vertex_shader), opengl::FragmentShader(fragment_shader)),
+                  m_draw_prog_debug(opengl::VertexShader(vertex_debug_shader), opengl::FragmentShader(fragment_debug_shader)),
                   m_texture_J(m_width, m_height)
         {
                 std::vector<vec2i> level_dimensions;

@@ -29,6 +29,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <type_traits>
 #include <vector>
 
+namespace opengl
+{
 class Shader
 {
         // clang-format off
@@ -1151,3 +1153,4 @@ public:
                 return m_color;
         }
 };
+}

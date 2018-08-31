@@ -32,7 +32,7 @@ class DeviceMemory final
 {
         size_t m_size;
         MemoryUsage m_usage;
-        ShaderStorageBuffer m_buffer;
+        opengl::ShaderStorageBuffer m_buffer;
 
 public:
         DeviceMemory(int size, MemoryUsage usage) : m_size(size), m_usage(usage)

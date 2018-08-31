@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <vector>
 
-namespace gpu
+namespace opengl
 {
 bool framebuffer_srgb();
 int framebuffer_samples();
@@ -36,7 +36,7 @@ int max_work_group_count_z();
 int max_compute_shared_memory();
 int max_shader_storage_block_size();
 
-std::string graphics_overview();
+std::string overview();
 
 void check_context(int major, int minor, const std::vector<std::string>& extensions);
 void check_bit_sizes(int depthBits, int stencilBits, int antialiasing_level, int redBits, int greenBits, int blueBits,

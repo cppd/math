@@ -122,7 +122,7 @@ struct Vertex final
 
 class CharData final
 {
-        TextureR32F texture;
+        opengl::TextureR32F texture;
 
 public:
         const int w, h, left, top, advance;
@@ -163,9 +163,9 @@ class Text::Impl final
         int m_start_x;
         int m_start_y;
 
-        VertexArray m_vertex_array;
-        ArrayBuffer m_vertex_buffer;
-        GraphicsProgram m_program;
+        opengl::VertexArray m_vertex_array;
+        opengl::ArrayBuffer m_vertex_buffer;
+        opengl::GraphicsProgram m_program;
 
         std::unordered_map<char, CharData> m_chars;
 
@@ -191,7 +191,7 @@ class Text::Impl final
 public:
         Impl(int size, int step_y, int start_x, int start_y)
                 : m_face(m_ft.get(), font_bytes, sizeof(font_bytes)),
-                  m_program(VertexShader(text_vertex_shader), FragmentShader(text_fragment_shader))
+                  m_program(opengl::VertexShader(text_vertex_shader), opengl::FragmentShader(text_fragment_shader))
         {
                 m_vertex_array.attrib_pointer(0, 3, GL_FLOAT, m_vertex_buffer, offsetof(Vertex, v1), sizeof(Vertex), true);
                 m_vertex_array.attrib_pointer(1, 2, GL_FLOAT, m_vertex_buffer, offsetof(Vertex, t1), sizeof(Vertex), true);

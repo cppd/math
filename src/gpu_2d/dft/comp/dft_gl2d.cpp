@@ -164,14 +164,14 @@ int shared_size(int dft_size)
         // 1) требуемый размер, но не меньше 128, чтобы в группе было хотя бы 64 потока по потоку на 2 элемента:
         //   NVIDIA работает по 32 потока вместе (warp), AMD по 64 потока вместе (wavefront).
         // 2) максимальная степень 2, которая меньше или равна вместимости разделяемой памяти
-        return std::min(std::max(128, dft_size), 1 << log_2(gpu::max_compute_shared_memory() / sizeof(std::complex<FP>)));
+        return std::min(std::max(128, dft_size), 1 << log_2(opengl::max_compute_shared_memory() / sizeof(std::complex<FP>)));
 }
 template <typename FP>
 int group_size(int dft_size)
 {
         // не больше 1 потока на 2 элемента
         int max_threads_required = shared_size<FP>(dft_size) / 2;
-        int max_threads_supported = std::min(gpu::max_work_group_size_x(), gpu::max_work_group_invocations());
+        int max_threads_supported = std::min(opengl::max_work_group_size_x(), opengl::max_work_group_invocations());
         return std::min(max_threads_required, max_threads_supported);
 }
 
@@ -302,7 +302,7 @@ class GL2D final : public IFourierGL1, public IFourierGL2
         }
 
 public:
-        GL2D(int n1, int n2, const TextureRGBA32F* texture)
+        GL2D(int n1, int n2, const opengl::TextureRGBA32F* texture)
                 : m_N1(n1),
                   m_N2(n2),
                   m_M1(compute_M(m_N1)),
@@ -368,7 +368,7 @@ std::unique_ptr<IFourierGL1> create_fft_gl2d(int x, int y)
         return std::make_unique<GL2D<float>>(x, y, nullptr);
 }
 
-std::unique_ptr<IFourierGL2> create_fft_gl2d(int x, int y, const TextureRGBA32F& texture)
+std::unique_ptr<IFourierGL2> create_fft_gl2d(int x, int y, const opengl::TextureRGBA32F& texture)
 {
         return std::make_unique<GL2D<float>>(x, y, &texture);
 }

@@ -60,11 +60,11 @@ class DFTShow::Impl final
 {
         const int m_groups_x, m_groups_y;
         const bool m_source_srgb;
-        TextureRGBA32F m_image_texture;
+        opengl::TextureRGBA32F m_image_texture;
         std::unique_ptr<IFourierGL2> m_gl_fft;
-        VertexArray m_vertex_array;
-        ArrayBuffer m_vertex_buffer;
-        GraphicsProgram m_draw_prog;
+        opengl::VertexArray m_vertex_array;
+        opengl::ArrayBuffer m_vertex_buffer;
+        opengl::GraphicsProgram m_draw_prog;
 
         static constexpr int RectangleVertexCount = 4;
 
@@ -76,7 +76,7 @@ public:
                   m_source_srgb(source_srgb),
                   m_image_texture(width, height),
                   m_gl_fft(create_fft_gl2d(width, height, m_image_texture)),
-                  m_draw_prog(VertexShader(dft_show_vertex_shader), FragmentShader(dft_show_fragment_shader))
+                  m_draw_prog(opengl::VertexShader(dft_show_vertex_shader), opengl::FragmentShader(dft_show_fragment_shader))
         {
                 m_vertex_array.attrib_pointer(0, 3, GL_FLOAT, m_vertex_buffer, offsetof(Vertex, v1), sizeof(Vertex), true);
                 m_vertex_array.attrib_pointer(1, 2, GL_FLOAT, m_vertex_buffer, offsetof(Vertex, t1), sizeof(Vertex), true);

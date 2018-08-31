@@ -21,18 +21,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 class ColorSpaceConverterToRGB
 {
-        ComputeProgram m_prog;
+        opengl::ComputeProgram m_prog;
 
 public:
         ColorSpaceConverterToRGB();
-        void convert(const TextureRGBA32F& tex) const;
+        void convert(const opengl::TextureRGBA32F& tex) const;
 };
 
 class ColorSpaceConverterToSRGB
 {
-        ComputeProgram m_prog;
+        opengl::ComputeProgram m_prog;
 
 public:
         ColorSpaceConverterToSRGB();
-        void convert(const TextureRGBA32F& tex) const;
+        void convert(const opengl::TextureRGBA32F& tex) const;
 };

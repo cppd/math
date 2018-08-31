@@ -140,15 +140,15 @@ std::string fft_radix_2_shader_source(int N, int shared_size, bool reverse_input
 
 template <typename FP>
 DeviceProg<FP>::DeviceProg()
-        : m_reverse(ComputeShader(data_types<FP>() + reverse_shader_source())),
-          m_FFT(ComputeShader(data_types<FP>() + fft_shader_source())),
-          m_rows_mul_to_buffer(ComputeShader(data_types<FP>() + rows_mul_to_buffer_shader_source())),
-          m_rows_mul_fr_buffer(ComputeShader(data_types<FP>() + rows_mul_fr_buffer_shader_source())),
-          m_cols_mul_to_buffer(ComputeShader(data_types<FP>() + cols_mul_to_buffer_shader_source())),
-          m_cols_mul_fr_buffer(ComputeShader(data_types<FP>() + cols_mul_fr_buffer_shader_source())),
-          m_rows_mul_D(ComputeShader(data_types<FP>() + rows_mul_d_shader_source())),
-          m_move_to_input(ComputeShader(data_types<FP>() + move_to_input_shader_source())),
-          m_move_to_output(ComputeShader(data_types<FP>() + move_to_output_shader_source()))
+        : m_reverse(opengl::ComputeShader(data_types<FP>() + reverse_shader_source())),
+          m_FFT(opengl::ComputeShader(data_types<FP>() + fft_shader_source())),
+          m_rows_mul_to_buffer(opengl::ComputeShader(data_types<FP>() + rows_mul_to_buffer_shader_source())),
+          m_rows_mul_fr_buffer(opengl::ComputeShader(data_types<FP>() + rows_mul_fr_buffer_shader_source())),
+          m_cols_mul_to_buffer(opengl::ComputeShader(data_types<FP>() + cols_mul_to_buffer_shader_source())),
+          m_cols_mul_fr_buffer(opengl::ComputeShader(data_types<FP>() + cols_mul_fr_buffer_shader_source())),
+          m_rows_mul_D(opengl::ComputeShader(data_types<FP>() + rows_mul_d_shader_source())),
+          m_move_to_input(opengl::ComputeShader(data_types<FP>() + move_to_input_shader_source())),
+          m_move_to_output(opengl::ComputeShader(data_types<FP>() + move_to_output_shader_source()))
 {
 }
 
@@ -156,7 +156,7 @@ template <typename FP>
 DeviceProgFFTRadix2<FP>::DeviceProgFFTRadix2(int N, int shared_size, bool reverse_input, int group_size)
         : m_group_size(group_size),
           m_shared_size(shared_size),
-          m_FFT(ComputeShader(data_types<FP>() + fft_radix_2_shader_source(N, shared_size, reverse_input)))
+          m_FFT(opengl::ComputeShader(data_types<FP>() + fft_radix_2_shader_source(N, shared_size, reverse_input)))
 {
 }
 

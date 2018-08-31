@@ -40,18 +40,18 @@ class PencilEffect::Impl final
 {
         const int m_width, m_height;
         const int m_groups_x, m_groups_y;
-        ComputeProgram m_comp_prog;
-        GraphicsProgram m_draw_prog;
-        TextureRGBA32F m_texture;
+        opengl::ComputeProgram m_comp_prog;
+        opengl::GraphicsProgram m_draw_prog;
+        opengl::TextureRGBA32F m_texture;
 
 public:
-        Impl(const TextureRGBA32F& tex, const TextureR32I& tex_objects, bool source_srgb)
+        Impl(const opengl::TextureRGBA32F& tex, const opengl::TextureR32I& tex_objects, bool source_srgb)
                 : m_width(tex.texture().width()),
                   m_height(tex.texture().height()),
                   m_groups_x(group_count(m_width, GROUP_SIZE)),
                   m_groups_y(group_count(m_height, GROUP_SIZE)),
-                  m_comp_prog(ComputeShader(pencil_compute_shader)),
-                  m_draw_prog(VertexShader(pencil_vertex_shader), FragmentShader(pencil_fragment_shader)),
+                  m_comp_prog(opengl::ComputeShader(pencil_compute_shader)),
+                  m_draw_prog(opengl::VertexShader(pencil_vertex_shader), opengl::FragmentShader(pencil_fragment_shader)),
                   m_texture(m_width, m_height)
         {
                 m_comp_prog.set_uniform_handle("img_input", tex.image_resident_handle_read_only());
@@ -72,7 +72,7 @@ public:
         }
 };
 
-PencilEffect::PencilEffect(const TextureRGBA32F& tex, const TextureR32I& tex_objects, bool source_srgb)
+PencilEffect::PencilEffect(const opengl::TextureRGBA32F& tex, const opengl::TextureR32I& tex_objects, bool source_srgb)
         : m_impl(std::make_unique<Impl>(tex, tex_objects, source_srgb))
 {
 }

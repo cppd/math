@@ -71,10 +71,10 @@ void create_gl_window_1x1(int major_gl_version, int minor_gl_version, const std:
         init_opengl_functions();
 #endif
 
-        gpu::check_context(major_gl_version, minor_gl_version, extensions);
-        gpu::check_bit_sizes(depth_bits, stencil_bits, antialiasing_level, red_bits, green_bits, blue_bits, alpha_bits);
+        opengl::check_context(major_gl_version, minor_gl_version, extensions);
+        opengl::check_bit_sizes(depth_bits, stencil_bits, antialiasing_level, red_bits, green_bits, blue_bits, alpha_bits);
 
-        LOG("\n-----OpenGL Window-----\n" + gpu::graphics_overview());
+        LOG("\n-----OpenGL Window-----\n" + opengl::overview());
 }
 
 std::unique_ptr<sf::Context> create_gl_context_1x1(int major_gl_version, int minor_gl_version,
@@ -94,9 +94,9 @@ std::unique_ptr<sf::Context> create_gl_context_1x1(int major_gl_version, int min
         init_opengl_functions();
 #endif
 
-        gpu::check_context(major_gl_version, minor_gl_version, extensions);
+        opengl::check_context(major_gl_version, minor_gl_version, extensions);
 
-        LOG("\n-----OpenGL Context-----\n" + gpu::graphics_overview());
+        LOG("\n-----OpenGL Context-----\n" + opengl::overview());
 
         return context;
 }
@@ -203,8 +203,9 @@ public:
                         OpenGLContext opengl_context;
                 }
 
-                create_gl_window_1x1(MAJOR_GL_VERSION, MINOR_GL_VERSION, required_extensions(), ANTIALIASING_LEVEL, DEPTH_BITS,
-                                     STENCIL_BITS, RED_BITS, GREEN_BITS, BLUE_BITS, ALPHA_BITS, &m_window);
+                create_gl_window_1x1(opengl::VERSION_MAJOR, opengl::VERSION_MINOR, opengl::required_extensions(),
+                                     ANTIALIASING_LEVEL, DEPTH_BITS, STENCIL_BITS, RED_BITS, GREEN_BITS, BLUE_BITS, ALPHA_BITS,
+                                     &m_window);
         }
 };
 }
@@ -216,7 +217,7 @@ class OpenGLContext::Impl
         std::unique_ptr<sf::Context> m_context;
 
 public:
-        Impl() : m_context(create_gl_context_1x1(MAJOR_GL_VERSION, MINOR_GL_VERSION, required_extensions()))
+        Impl() : m_context(create_gl_context_1x1(opengl::VERSION_MAJOR, opengl::VERSION_MINOR, opengl::required_extensions()))
         {
         }
 };
