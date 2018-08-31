@@ -140,6 +140,10 @@ endfunction()
 
 function(AddBinaryFiles dir_name extensions)
 
+        set(dir_include_binary_files "${PROJECT_BINARY_DIR}/include_binary_files")
+        file(REMOVE_RECURSE "${dir_include_binary_files}")
+        file(MAKE_DIRECTORY "${dir_include_binary_files}")
+
         foreach(ext ${extensions})
                 list(APPEND all_globbing_expressions "${PROJECT_SOURCE_DIR}/${dir_name}/*.${ext}")
         endforeach()
@@ -150,7 +154,7 @@ function(AddBinaryFiles dir_name extensions)
 
                 get_filename_component(file_name ${long_file_name} NAME)
 
-                set(file_bin "${PROJECT_BINARY_DIR}/${file_name}.bin")
+                set(file_bin "${dir_include_binary_files}/${file_name}.bin")
 
                 add_custom_command(
                         OUTPUT  "${file_bin}"
@@ -160,18 +164,22 @@ function(AddBinaryFiles dir_name extensions)
                         VERBATIM
                         )
 
-                set(target_name "custom_target_bin_${file_name}")
+                set(target_name "custom_target_binary_files_${file_name}")
                 add_custom_target(${target_name} DEPENDS "${file_bin}")
                 add_dependencies(${target_name} create_str)
                 add_dependencies(${PROJECT_NAME} ${target_name})
 
         endforeach()
 
-        target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_BINARY_DIR})
+        target_include_directories(${PROJECT_NAME} PRIVATE "${dir_include_binary_files}")
 
 endfunction()
 
 function(AddOpenGLShaders dir_name extensions)
+
+        set(dir_include_opengl_shaders "${PROJECT_BINARY_DIR}/include_opengl_shaders")
+        file(REMOVE_RECURSE "${dir_include_opengl_shaders}")
+        file(MAKE_DIRECTORY "${dir_include_opengl_shaders}")
 
         foreach(ext ${extensions})
                 list(APPEND all_globbing_expressions "${PROJECT_SOURCE_DIR}/${dir_name}/*.${ext}")
@@ -183,7 +191,7 @@ function(AddOpenGLShaders dir_name extensions)
 
                 get_filename_component(shader_name ${long_shader_name} NAME)
 
-                set(shader_str "${PROJECT_BINARY_DIR}/${shader_name}.str")
+                set(shader_str "${dir_include_opengl_shaders}/${shader_name}.str")
 
                 add_custom_command(
                         OUTPUT  "${shader_str}"
@@ -193,18 +201,22 @@ function(AddOpenGLShaders dir_name extensions)
                         VERBATIM
                         )
 
-                set(target_name "custom_target_str_${shader_name}")
+                set(target_name "custom_target_opengl_shaders_${shader_name}")
                 add_custom_target(${target_name} DEPENDS "${shader_str}")
                 add_dependencies(${target_name} create_str)
                 add_dependencies(${PROJECT_NAME} ${target_name})
 
         endforeach()
 
-        target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_BINARY_DIR})
+        target_include_directories(${PROJECT_NAME} PRIVATE "${dir_include_opengl_shaders}")
 
 endfunction()
 
 function(AddVulkanShaders dir_name extensions)
+
+        set(dir_include_vulkan_shaders "${PROJECT_BINARY_DIR}/include_vulkan_shaders")
+        file(REMOVE_RECURSE "${dir_include_vulkan_shaders}")
+        file(MAKE_DIRECTORY "${dir_include_vulkan_shaders}")
 
         foreach(ext ${extensions})
                 list(APPEND all_globbing_expressions "${PROJECT_SOURCE_DIR}/${dir_name}/*.${ext}")
@@ -216,8 +228,8 @@ function(AddVulkanShaders dir_name extensions)
 
                 get_filename_component(shader_name ${long_shader_name} NAME)
 
-                set(shader_spr "${PROJECT_BINARY_DIR}/${shader_name}.spr")
-                set(shader_bin "${PROJECT_BINARY_DIR}/${shader_name}.bin")
+                set(shader_spr "${dir_include_vulkan_shaders}/${shader_name}.spr")
+                set(shader_bin "${dir_include_vulkan_shaders}/${shader_name}.bin")
 
                 add_custom_command(
                         OUTPUT  "${shader_bin}"
@@ -235,14 +247,14 @@ function(AddVulkanShaders dir_name extensions)
                         VERBATIM
                         )
 
-                set(target_name "custom_target_spr_${shader_name}")
+                set(target_name "custom_target_vulkan_shaders_${shader_name}")
                 add_custom_target(${target_name} DEPENDS "${shader_spr}")
                 add_dependencies(${target_name} create_str)
                 add_dependencies(${PROJECT_NAME} ${target_name})
 
         endforeach()
 
-        target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_BINARY_DIR})
+        target_include_directories(${PROJECT_NAME} PRIVATE "${dir_include_vulkan_shaders}")
 
 endfunction()
 
