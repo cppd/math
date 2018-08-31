@@ -38,7 +38,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/vulkan/window.h"
 #include "numerical/linear.h"
 #include "obj/obj.h"
-#include "show/color_space/buffer_type.h"
 #include "show/event_queue.h"
 #include "show/renderer_opengl/renderer.h"
 #include "show/renderer_vulkan/renderer.h"

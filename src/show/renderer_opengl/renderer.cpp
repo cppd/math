@@ -471,6 +471,17 @@ public:
 
 //
 
+std::string color_space_message(bool framebuffer_is_srgb, bool colorbuffer_is_srgb)
+{
+        std::string msg;
+        msg += "OpenGL renderer framebuffer color space is ";
+        msg += framebuffer_is_srgb ? "sRGB" : "linear";
+        msg += '\n';
+        msg += "OpenGL renderer colorbuffer color space is ";
+        msg += colorbuffer_is_srgb ? "sRGB" : "linear";
+        return msg;
+}
+
 class Renderer final : public OpenGLRenderer
 {
         static constexpr mat4 SCALE = scale<double>(0.5, 0.5, 0.5);
@@ -753,11 +764,14 @@ public:
                 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
                 glEnable(GL_FRAMEBUFFER_SRGB);
 
-                m_framebuffer_srgb = frame_buffer_is_srgb();
-                m_colorbuffer_srgb = color_buffer_is_srgb();
-
-                LOG(m_framebuffer_srgb ? "Framebuffer sRGB" : "Framebuffer linear");
-                LOG(m_colorbuffer_srgb ? "Colorbuffer sRGB" : "Colorbuffer linear");
+                m_framebuffer_srgb = opengl::current_buffer_is_srgb();
+                {
+                        opengl::ColorBuffer color_buffer(1, 1);
+                        color_buffer.bind_buffer();
+                        m_colorbuffer_srgb = opengl::current_buffer_is_srgb();
+                        color_buffer.unbind_buffer();
+                }
+                LOG(color_space_message(m_framebuffer_srgb, m_colorbuffer_srgb));
         }
 };
 }
