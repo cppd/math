@@ -114,16 +114,24 @@ class ShowObject final : public EventQueue, public WindowEvent
 
         //
 
-        std::unique_ptr<Window> m_window;
-        std::unique_ptr<Renderer> m_renderer;
+        Camera m_camera;
 
-        std::unique_ptr<Camera> m_camera;
+        //
 
-        std::unique_ptr<Text> m_text;
-        std::unique_ptr<DFTShow> m_dft_show;
-        std::unique_ptr<ConvexHull2D> m_convex_hull_2d;
-        std::unique_ptr<OpticalFlow> m_optical_flow;
-        std::unique_ptr<PencilEffect> m_pencil_effect;
+        // Только указатели для использования в обработчиках событий.
+        // Сами объекты создаются и удаляются в отдельном потоке,
+        // только в котором работают обработчики событий.
+
+        Window* m_window = nullptr;
+        Renderer* m_renderer = nullptr;
+
+        Text* m_text = nullptr;
+        DFTShow* m_dft_show = nullptr;
+        ConvexHull2D* m_convex_hull_2d = nullptr;
+        OpticalFlow* m_optical_flow = nullptr;
+        PencilEffect* m_pencil_effect = nullptr;
+
+        //
 
         int m_draw_width = -1;
         int m_draw_height = -1;
@@ -414,14 +422,14 @@ class ShowObject final : public EventQueue, public WindowEvent
         {
                 ASSERT(std::this_thread::get_id() != m_thread.get_id());
 
-                m_camera->camera_information(camera_up, camera_direction, view_center, view_width, paint_width, paint_height);
+                m_camera.camera_information(camera_up, camera_direction, view_center, view_width, paint_width, paint_height);
         }
 
         vec3 light_direction() const override
         {
                 ASSERT(std::this_thread::get_id() != m_thread.get_id());
 
-                return m_camera->light_direction();
+                return m_camera.light_direction();
         }
 
         double object_size() const override
@@ -580,22 +588,24 @@ void ShowObject<API>::loop()
 {
         ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
+        std::unique_ptr<Window> window;
+        std::unique_ptr<Renderer> renderer;
         if constexpr (API == GraphicsAndComputeAPI::Vulkan)
         {
-                m_window = create_vulkan_window(this);
-                move_window_to_parent(m_window->get_system_handle(), m_parent_window);
-                m_renderer = create_vulkan_renderer(VulkanWindow::instance_extensions(),
-                                                    [this](VkInstance instance) { return m_window->create_surface(instance); });
+                window = create_vulkan_window(this);
+                renderer = create_vulkan_renderer(VulkanWindow::instance_extensions(), [w = window.get()](VkInstance instance) {
+                        return w->create_surface(instance);
+                });
         }
-
         if constexpr (API == GraphicsAndComputeAPI::OpenGL)
         {
-                m_window = create_opengl_window(this);
-                move_window_to_parent(m_window->get_system_handle(), m_parent_window);
-                m_renderer = create_opengl_renderer();
+                window = create_opengl_window(this);
+                renderer = create_opengl_renderer();
         }
+        m_window = window.get();
+        m_renderer = renderer.get();
 
-        m_camera = std::make_unique<Camera>();
+        move_window_to_parent(m_window->get_system_handle(), m_parent_window);
 
         m_new_window_width = m_window->get_width();
         m_new_window_height = m_window->get_height();
@@ -615,6 +625,12 @@ void ShowObject<API>::loop()
         FPS fps;
 
         std::chrono::steady_clock::time_point last_frame_time = std::chrono::steady_clock::now();
+
+        std::unique_ptr<Text> text;
+        std::unique_ptr<DFTShow> dft_show;
+        std::unique_ptr<ConvexHull2D> convex_hull_2d;
+        std::unique_ptr<OpticalFlow> optical_flow;
+        std::unique_ptr<PencilEffect> pencil_effect;
 
         while (true)
         {
@@ -644,7 +660,7 @@ void ShowObject<API>::loop()
 
                         if (!m_mouse_pressed_shift)
                         {
-                                m_camera->rotate(-delta_x, -delta_y);
+                                m_camera.rotate(-delta_x, -delta_y);
                         }
                         else
                         {
@@ -693,23 +709,28 @@ void ShowObject<API>::loop()
 
                                 int dft_pos_x = (window_width & 1) ? (m_draw_width + 1) : m_draw_width;
                                 int dft_pos_y = 0;
-                                m_dft_show = std::make_unique<DFTShow>(m_draw_width, m_draw_height, dft_pos_x, dft_pos_y,
-                                                                       plane_matrix, m_renderer->frame_buffer_is_srgb(),
-                                                                       m_dft_brightness, m_dft_background_color, m_dft_color);
+                                dft_show = std::make_unique<DFTShow>(m_draw_width, m_draw_height, dft_pos_x, dft_pos_y,
+                                                                     plane_matrix, m_renderer->frame_buffer_is_srgb(),
+                                                                     m_dft_brightness, m_dft_background_color, m_dft_color);
+                                m_dft_show = dft_show.get();
 
-                                m_pencil_effect = std::make_unique<PencilEffect>(m_renderer->color_buffer_texture(),
-                                                                                 m_renderer->object_texture(),
-                                                                                 m_renderer->color_buffer_is_srgb());
+                                pencil_effect = std::make_unique<PencilEffect>(m_renderer->color_buffer_texture(),
+                                                                               m_renderer->object_texture(),
+                                                                               m_renderer->color_buffer_is_srgb());
+                                m_pencil_effect = pencil_effect.get();
 
-                                m_optical_flow = std::make_unique<OpticalFlow>(m_draw_width, m_draw_height, plane_matrix);
+                                optical_flow = std::make_unique<OpticalFlow>(m_draw_width, m_draw_height, plane_matrix);
+                                m_optical_flow = optical_flow.get();
 
-                                m_convex_hull_2d = std::make_unique<ConvexHull2D>(m_renderer->object_texture(), plane_matrix);
+                                convex_hull_2d = std::make_unique<ConvexHull2D>(m_renderer->object_texture(), plane_matrix);
+                                m_convex_hull_2d = convex_hull_2d.get();
 
-                                m_text = std::make_unique<Text>(points_to_pixels(FPS_TEXT_SIZE_IN_POINTS, m_parent_window_dpi),
-                                                                points_to_pixels(FPS_TEXT_STEP_Y_IN_POINTS, m_parent_window_dpi),
-                                                                points_to_pixels(FPS_TEXT_START_X_IN_POINTS, m_parent_window_dpi),
-                                                                points_to_pixels(FPS_TEXT_START_Y_IN_POINTS, m_parent_window_dpi),
-                                                                m_text_color, plane_matrix);
+                                text = std::make_unique<Text>(points_to_pixels(FPS_TEXT_SIZE_IN_POINTS, m_parent_window_dpi),
+                                                              points_to_pixels(FPS_TEXT_STEP_Y_IN_POINTS, m_parent_window_dpi),
+                                                              points_to_pixels(FPS_TEXT_START_X_IN_POINTS, m_parent_window_dpi),
+                                                              points_to_pixels(FPS_TEXT_START_Y_IN_POINTS, m_parent_window_dpi),
+                                                              m_text_color, plane_matrix);
+                                m_text = text.get();
                         }
                 }
 
@@ -721,7 +742,7 @@ void ShowObject<API>::loop()
                         window_center = vec2(0, 0);
                         pixel_to_coord_no_zoom = 2.0 / std::min(m_draw_width, m_draw_height);
                         pixel_to_coord = pixel_to_coord_no_zoom;
-                        m_camera->set(vec3(1, 0, 0), vec3(0, 1, 0));
+                        m_camera.set(vec3(1, 0, 0), vec3(0, 1, 0));
 
                         matrix_change = true;
                 }
@@ -730,7 +751,7 @@ void ShowObject<API>::loop()
                 {
                         vec3 camera_up, camera_direction, light_up, light_direction;
 
-                        m_camera->get(&camera_up, &camera_direction, &light_up, &light_direction);
+                        m_camera.get(&camera_up, &camera_direction, &light_up, &light_direction);
 
                         mat4 shadow_projection_matrix = Renderer::ortho(-1, 1, -1, 1, 1, -1);
                         mat4 shadow_view_matrix = look_at(vec3(0, 0, 0), light_direction, light_up);
@@ -752,8 +773,8 @@ void ShowObject<API>::loop()
 
                         vec4 screen_center((right + left) * 0.5, (top + bottom) * 0.5, (far + near) * 0.5, 1.0);
                         vec4 view_center = inverse(view_matrix) * screen_center;
-                        m_camera->set_view_center_and_width(vec3(view_center[0], view_center[1], view_center[2]), right - left,
-                                                            m_draw_width, m_draw_height);
+                        m_camera.set_view_center_and_width(vec3(view_center[0], view_center[1], view_center[2]), right - left,
+                                                           m_draw_width, m_draw_height);
                 }
 
                 if constexpr (API == GraphicsAndComputeAPI::Vulkan)
