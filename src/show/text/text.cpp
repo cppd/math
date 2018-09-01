@@ -38,16 +38,10 @@ constexpr const char text_fragment_shader[]
 
 namespace
 {
-struct Vertex final
+struct Vertex
 {
-        float v1, v2; // Координаты вершины в пространстве.
-        float t1, t2; // Координаты вершины в текстуре.
-        Vertex()
-        {
-        }
-        Vertex(float v1_, float v2_, float t1_, float t2_) : v1(v1_), v2(v2_), t1(t1_), t2(t2_)
-        {
-        }
+        GLint w1, w2; // Координаты вершины в пространстве экрана.
+        GLint t1, t2; // Координаты вершины в углах текстуры (0 или 1).
 };
 
 std::vector<float> integer_pixels_to_float_pixels(long long width, long long height, const unsigned char* pixels)
@@ -109,31 +103,30 @@ class Text::Impl final
         }
 
 public:
-        Impl(int size, int step_y, int start_x, int start_y)
+        Impl(int size, int step_y, int start_x, int start_y, const Color& color, const mat4& matrix)
                 : m_font(size),
                   m_step_y(step_y),
                   m_start_x(start_x),
                   m_start_y(start_y),
                   m_program(opengl::VertexShader(text_vertex_shader), opengl::FragmentShader(text_fragment_shader))
         {
-                m_vertex_array.attrib_pointer(0, 3, GL_FLOAT, m_vertex_buffer, offsetof(Vertex, v1), sizeof(Vertex), true);
-                m_vertex_array.attrib_pointer(1, 2, GL_FLOAT, m_vertex_buffer, offsetof(Vertex, t1), sizeof(Vertex), true);
+                m_vertex_array.attrib_i_pointer(0, 2, GL_INT, m_vertex_buffer, offsetof(Vertex, w1), sizeof(Vertex), true);
+                m_vertex_array.attrib_i_pointer(1, 2, GL_INT, m_vertex_buffer, offsetof(Vertex, t1), sizeof(Vertex), true);
+                m_program.set_uniform_float("matrix", matrix);
+                set_color(color);
         }
 
-        void set_color(const Color& color)
+        void set_color(const Color& color) const
         {
                 m_program.set_uniform("text_color", color.to_rgb_vector<float>());
         }
 
-        void draw(int width, int height, const std::vector<std::string>& text)
+        void draw(const std::vector<std::string>& text)
         {
                 m_vertex_array.bind();
 
-                float sx = 2.0f / width;
-                float sy = 2.0f / height;
-
-                float x = m_start_x;
-                float y = m_start_y;
+                int x = m_start_x;
+                int y = m_start_y;
 
                 for (const std::string& line : text)
                 {
@@ -143,15 +136,16 @@ public:
 
                                 m_program.set_uniform_handle("tex", cd.texture_handle);
 
-                                float x2 = -1.0f + (x + cd.left) * sx;
-                                float y2 = 1.0f - (y - cd.top) * sy;
+                                int x0 = x + cd.left;
+                                int y0 = y - cd.top;
+                                int x1 = x0 + cd.width;
+                                int y1 = y0 + cd.height;
 
                                 std::array<Vertex, 4> vertices;
-
-                                vertices[0] = Vertex(x2, y2, 0, 0);
-                                vertices[1] = Vertex(x2 + cd.width * sx, y2, 1, 0);
-                                vertices[2] = Vertex(x2, y2 - cd.height * sy, 0, 1);
-                                vertices[3] = Vertex(x2 + cd.width * sx, y2 - cd.height * sy, 1, 1);
+                                vertices[0] = {x0, y0, 0, 0};
+                                vertices[1] = {x1, y0, 1, 0};
+                                vertices[2] = {x0, y1, 0, 1};
+                                vertices[3] = {x1, y1, 1, 1};
 
                                 m_vertex_buffer.load_dynamic_draw(vertices);
                                 m_program.draw_arrays(GL_TRIANGLE_STRIP, 0, vertices.size());
@@ -165,18 +159,19 @@ public:
         }
 };
 
-Text::Text(int size, int step_y, int start_x, int start_y) : m_impl(std::make_unique<Impl>(size, step_y, start_x, start_y))
+Text::Text(int size, int step_y, int start_x, int start_y, const Color& color, const mat4& matrix)
+        : m_impl(std::make_unique<Impl>(size, step_y, start_x, start_y, color, matrix))
 {
 }
 
 Text::~Text() = default;
 
-void Text::set_color(const Color& color)
+void Text::set_color(const Color& color) const
 {
         m_impl->set_color(color);
 }
 
-void Text::draw(int width, int height, const std::vector<std::string>& text)
+void Text::draw(const std::vector<std::string>& text)
 {
-        m_impl->draw(width, height, text);
+        m_impl->draw(text);
 }

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -20,10 +20,10 @@ layout(bindless_sampler) uniform sampler2D tex;
 
 uniform vec3 text_color;
 
-in vec2 vs_tex_coord;
+in vec2 vs_texture_coordinates;
 
 out vec4 color;
 void main(void)
 {
-        color = vec4(text_color.rgb, texture(tex, vs_tex_coord).r);
+        color = vec4(text_color.rgb, texture(tex, vs_texture_coordinates).r);
 }

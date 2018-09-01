@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "com/color/colors.h"
+#include "com/mat.h"
 
 #include <memory>
 #include <string>
@@ -29,10 +30,10 @@ class Text final
         std::unique_ptr<Impl> m_impl;
 
 public:
-        Text(int size, int step_y, int start_x, int start_y);
+        Text(int size, int step_y, int start_x, int start_y, const Color& color, const mat4& matrix);
         ~Text();
 
-        void set_color(const Color& color);
+        void set_color(const Color& color) const;
 
-        void draw(int width, int height, const std::vector<std::string>& text);
+        void draw(const std::vector<std::string>& text);
 };

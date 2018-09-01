@@ -118,8 +118,8 @@ class ShowObject final : public EventQueue, public WindowEvent
         std::unique_ptr<Renderer> m_renderer;
 
         std::unique_ptr<Camera> m_camera;
-        std::unique_ptr<Text> m_text;
 
+        std::unique_ptr<Text> m_text;
         std::unique_ptr<DFTShow> m_dft_show;
         std::unique_ptr<ConvexHull2D> m_convex_hull_2d;
         std::unique_ptr<OpticalFlow> m_optical_flow;
@@ -147,6 +147,7 @@ class ShowObject final : public EventQueue, public WindowEvent
         double m_dft_brightness;
         Color m_dft_background_color;
         Color m_dft_color;
+        Color m_text_color;
         bool m_convex_hull_2d_active;
         bool m_optical_flow_active;
 
@@ -224,10 +225,11 @@ class ShowObject final : public EventQueue, public WindowEvent
                 glClearColor(c.red(), c.green(), c.blue(), 1);
                 m_renderer->set_background_color(c);
 
+                bool background_is_dark = c.luminance() <= 0.5;
+                m_text_color = background_is_dark ? Color(1) : Color(0);
                 if (m_text)
                 {
-                        bool background_is_dark = c.luminance() <= 0.5;
-                        m_text->set_color(background_is_dark ? Color(1) : Color(0));
+                        m_text->set_color(m_text_color);
                 }
         }
 
@@ -594,11 +596,6 @@ void ShowObject<API>::loop()
                 m_window = create_opengl_window(this);
                 move_window_to_parent(m_window->get_system_handle(), m_parent_window);
                 m_renderer = create_opengl_renderer();
-
-                m_text = std::make_unique<Text>(points_to_pixels(FPS_TEXT_SIZE_IN_POINTS, m_parent_window_dpi),
-                                                points_to_pixels(FPS_TEXT_STEP_Y_IN_POINTS, m_parent_window_dpi),
-                                                points_to_pixels(FPS_TEXT_START_X_IN_POINTS, m_parent_window_dpi),
-                                                points_to_pixels(FPS_TEXT_START_Y_IN_POINTS, m_parent_window_dpi));
         }
 
         m_camera = std::make_unique<Camera>();
@@ -710,6 +707,12 @@ void ShowObject<API>::loop()
                                 m_optical_flow = std::make_unique<OpticalFlow>(m_draw_width, m_draw_height, plane_matrix);
 
                                 m_convex_hull_2d = std::make_unique<ConvexHull2D>(m_renderer->object_texture(), plane_matrix);
+
+                                m_text = std::make_unique<Text>(points_to_pixels(FPS_TEXT_SIZE_IN_POINTS, m_parent_window_dpi),
+                                                                points_to_pixels(FPS_TEXT_STEP_Y_IN_POINTS, m_parent_window_dpi),
+                                                                points_to_pixels(FPS_TEXT_START_X_IN_POINTS, m_parent_window_dpi),
+                                                                points_to_pixels(FPS_TEXT_START_Y_IN_POINTS, m_parent_window_dpi),
+                                                                m_text_color, plane_matrix);
                         }
                 }
 
@@ -831,7 +834,7 @@ void ShowObject<API>::loop()
 
                         fps_text[0].resize(sizeof(FPS_STRING) - 1);
                         fps_text[0] += to_string(fps.calculate());
-                        m_text->draw(window_width, window_height, fps_text);
+                        m_text->draw(fps_text);
 
                         //
 
