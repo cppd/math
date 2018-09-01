@@ -690,9 +690,9 @@ void ShowObject<API>::loop()
 
                         if constexpr (API == GraphicsAndComputeAPI::OpenGL)
                         {
-                                // матрица для рисования на плоскости, 0 вверху
-                                mat4 plane_matrix = scale<double>(2.0 / window_width, -2.0 / window_height, 1) *
-                                                    translate<double>(-window_width / 2.0, -window_height / 2.0, 0);
+                                // Матрица для рисования на плоскости, точка (0, 0) слева вверху
+                                mat4 plane_matrix =
+                                        Renderer::ortho(0, window_width, window_height, 0, 1, -1) * scale<double>(1, 1, 0);
 
                                 int dft_pos_x = (window_width & 1) ? (m_draw_width + 1) : m_draw_width;
                                 int dft_pos_y = 0;
