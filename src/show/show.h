@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "window/window_handle.h"
 
 #include <memory>
+#include <optional>
 #include <string>
 
 class IShowCallback
@@ -79,10 +80,33 @@ public:
         virtual vec3 object_position() const = 0;
 };
 
-std::unique_ptr<IShow> create_show(GraphicsAndComputeAPI api, IShowCallback* callback, WindowID parent_window,
-                                   double parent_window_dpi, const Color& background_color_rgb, const Color& default_color_rgb,
-                                   const Color& wireframe_color_rgb, bool with_smooth, bool with_wireframe, bool with_shadow,
-                                   bool with_fog, bool with_materials, bool with_effect, bool with_dft, bool with_convex_hull,
-                                   bool with_optical_flow, double ambient, double diffuse, double specular, double dft_brightness,
-                                   const Color& dft_color, const Color& dft_background_color, double default_ns,
-                                   bool vertical_sync, double shadow_zoom);
+struct ShowCreateInfo
+{
+        // std::optional используется для проверки того, что все значения заданы
+        std::optional<IShowCallback*> callback;
+        std::optional<WindowID> parent_window;
+        std::optional<double> parent_window_dpi;
+        std::optional<Color> background_color_rgb;
+        std::optional<Color> default_color_rgb;
+        std::optional<Color> wireframe_color_rgb;
+        std::optional<bool> with_smooth;
+        std::optional<bool> with_wireframe;
+        std::optional<bool> with_shadow;
+        std::optional<bool> with_fog;
+        std::optional<bool> with_materials;
+        std::optional<bool> with_effect;
+        std::optional<bool> with_dft;
+        std::optional<bool> with_convex_hull;
+        std::optional<bool> with_optical_flow;
+        std::optional<double> ambient;
+        std::optional<double> diffuse;
+        std::optional<double> specular;
+        std::optional<double> dft_brightness;
+        std::optional<Color> dft_color;
+        std::optional<Color> dft_background_color;
+        std::optional<double> default_ns;
+        std::optional<bool> vertical_sync;
+        std::optional<double> shadow_zoom;
+};
+
+std::unique_ptr<IShow> create_show(GraphicsAndComputeAPI api, const ShowCreateInfo& info);

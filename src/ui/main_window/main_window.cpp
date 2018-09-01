@@ -1095,15 +1095,33 @@ void MainWindow::slot_window_first_shown()
                         }
                 }
 
-                m_show = create_show(
-                        api, &m_event_emitter, widget_window_id(ui.graphics_widget), widget_dpi(ui.graphics_widget),
-                        qcolor_to_rgb(m_background_color), qcolor_to_rgb(m_default_color), qcolor_to_rgb(m_wireframe_color),
-                        ui.checkBox_Smooth->isChecked(), ui.checkBox_Wireframe->isChecked(), ui.checkBox_Shadow->isChecked(),
-                        ui.checkBox_Fog->isChecked(), ui.checkBox_Materials->isChecked(), ui.checkBox_ShowEffect->isChecked(),
-                        ui.checkBox_show_dft->isChecked(), ui.checkBox_convex_hull_2d->isChecked(),
-                        ui.checkBox_OpticalFlow->isChecked(), ambient_light(), diffuse_light(), specular_light(),
-                        dft_brightness(), qcolor_to_rgb(m_dft_background_color), qcolor_to_rgb(m_dft_color), default_ns(),
-                        ui.checkBox_VerticalSync->isChecked(), shadow_zoom());
+                ShowCreateInfo info;
+                info.callback = &m_event_emitter;
+                info.parent_window = widget_window_id(ui.graphics_widget);
+                info.parent_window_dpi = widget_dpi(ui.graphics_widget);
+                info.background_color_rgb = qcolor_to_rgb(m_background_color);
+                info.default_color_rgb = qcolor_to_rgb(m_default_color);
+                info.wireframe_color_rgb = qcolor_to_rgb(m_wireframe_color);
+                info.with_smooth = ui.checkBox_Smooth->isChecked();
+                info.with_wireframe = ui.checkBox_Wireframe->isChecked();
+                info.with_shadow = ui.checkBox_Shadow->isChecked();
+                info.with_fog = ui.checkBox_Fog->isChecked();
+                info.with_materials = ui.checkBox_Materials->isChecked();
+                info.with_effect = ui.checkBox_ShowEffect->isChecked();
+                info.with_dft = ui.checkBox_show_dft->isChecked();
+                info.with_convex_hull = ui.checkBox_convex_hull_2d->isChecked();
+                info.with_optical_flow = ui.checkBox_OpticalFlow->isChecked();
+                info.ambient = ambient_light();
+                info.diffuse = diffuse_light();
+                info.specular = specular_light();
+                info.dft_brightness = dft_brightness();
+                info.dft_background_color = qcolor_to_rgb(m_dft_background_color);
+                info.dft_color = qcolor_to_rgb(m_dft_color);
+                info.default_ns = default_ns();
+                info.vertical_sync = ui.checkBox_VerticalSync->isChecked();
+                info.shadow_zoom = shadow_zoom();
+
+                m_show = create_show(api, info);
 
                 m_objects->set_show(m_show.get());
 

@@ -523,44 +523,41 @@ class ShowObject final : public EventQueue, public WindowEvent
         void loop_thread();
 
 public:
-        ShowObject(IShowCallback* callback, WindowID parent_window, double parent_window_dpi, const Color& background_color_rgb,
-                   const Color& default_color_rgb, const Color& wireframe_color_rgb, bool with_smooth, bool with_wireframe,
-                   bool with_shadow, bool with_fog, bool with_materials, bool with_effect, bool with_dft, bool with_convex_hull,
-                   bool with_optical_flow, double ambient, double diffuse, double specular, double dft_brightness,
-                   const Color& dft_background_color, const Color& dft_color, double default_ns, bool vertical_sync,
-                   double shadow_zoom)
-                : m_callback(callback), m_parent_window(parent_window), m_parent_window_dpi(parent_window_dpi)
-
+        ShowObject(const ShowCreateInfo& info) try : m_callback(info.callback.value()),
+                                                     m_parent_window(info.parent_window.value()),
+                                                     m_parent_window_dpi(info.parent_window_dpi.value())
         {
-                if (!callback)
-                {
-                        error("No callback pointer");
-                }
+                ASSERT(m_callback);
+                ASSERT(m_parent_window_dpi > 0);
 
                 reset_view();
-                set_ambient(ambient);
-                set_diffuse(diffuse);
-                set_specular(specular);
-                set_background_color_rgb(background_color_rgb);
-                set_default_color_rgb(default_color_rgb);
-                set_wireframe_color_rgb(wireframe_color_rgb);
-                set_default_ns(default_ns);
-                show_smooth(with_smooth);
-                show_wireframe(with_wireframe);
-                show_shadow(with_shadow);
-                show_fog(with_fog);
-                show_effect(with_effect);
-                show_dft(with_dft);
-                set_dft_brightness(dft_brightness);
-                set_dft_background_color(dft_background_color);
-                set_dft_color(dft_color);
-                show_materials(with_materials);
-                show_convex_hull_2d(with_convex_hull);
-                show_optical_flow(with_optical_flow);
-                set_vertical_sync(vertical_sync);
-                set_shadow_zoom(shadow_zoom);
+                set_ambient(info.ambient.value());
+                set_diffuse(info.diffuse.value());
+                set_specular(info.specular.value());
+                set_background_color_rgb(info.background_color_rgb.value());
+                set_default_color_rgb(info.default_color_rgb.value());
+                set_wireframe_color_rgb(info.wireframe_color_rgb.value());
+                set_default_ns(info.default_ns.value());
+                show_smooth(info.with_smooth.value());
+                show_wireframe(info.with_wireframe.value());
+                show_shadow(info.with_shadow.value());
+                show_fog(info.with_fog.value());
+                show_effect(info.with_effect.value());
+                show_dft(info.with_dft.value());
+                set_dft_brightness(info.dft_brightness.value());
+                set_dft_background_color(info.dft_background_color.value());
+                set_dft_color(info.dft_color.value());
+                show_materials(info.with_materials.value());
+                show_convex_hull_2d(info.with_convex_hull.value());
+                show_optical_flow(info.with_optical_flow.value());
+                set_vertical_sync(info.vertical_sync.value());
+                set_shadow_zoom(info.shadow_zoom.value());
 
                 m_thread = std::thread(&ShowObject::loop_thread, this);
+        }
+        catch (std::bad_optional_access&)
+        {
+                error_fatal("Show create information is not complete");
         }
 
         ~ShowObject() override
@@ -871,28 +868,14 @@ void ShowObject<API>::loop_thread()
 }
 }
 
-std::unique_ptr<IShow> create_show(GraphicsAndComputeAPI api, IShowCallback* callback, WindowID parent_window,
-                                   double parent_window_dpi, const Color& background_color_rgb, const Color& default_color_rgb,
-                                   const Color& wireframe_color_rgb, bool with_smooth, bool with_wireframe, bool with_shadow,
-                                   bool with_fog, bool with_materials, bool with_effect, bool with_dft, bool with_convex_hull,
-                                   bool with_optical_flow, double ambient, double diffuse, double specular, double dft_brightness,
-                                   const Color& dft_background_color, const Color& dft_color, double default_ns,
-                                   bool vertical_sync, double shadow_zoom)
+std::unique_ptr<IShow> create_show(GraphicsAndComputeAPI api, const ShowCreateInfo& info)
 {
         switch (api)
         {
         case GraphicsAndComputeAPI::Vulkan:
-                return std::make_unique<ShowObject<GraphicsAndComputeAPI::Vulkan>>(
-                        callback, parent_window, parent_window_dpi, background_color_rgb, default_color_rgb, wireframe_color_rgb,
-                        with_smooth, with_wireframe, with_shadow, with_fog, with_materials, with_effect, with_dft,
-                        with_convex_hull, with_optical_flow, ambient, diffuse, specular, dft_brightness, dft_background_color,
-                        dft_color, default_ns, vertical_sync, shadow_zoom);
+                return std::make_unique<ShowObject<GraphicsAndComputeAPI::Vulkan>>(info);
         case GraphicsAndComputeAPI::OpenGL:
-                return std::make_unique<ShowObject<GraphicsAndComputeAPI::OpenGL>>(
-                        callback, parent_window, parent_window_dpi, background_color_rgb, default_color_rgb, wireframe_color_rgb,
-                        with_smooth, with_wireframe, with_shadow, with_fog, with_materials, with_effect, with_dft,
-                        with_convex_hull, with_optical_flow, ambient, diffuse, specular, dft_brightness, dft_background_color,
-                        dft_color, default_ns, vertical_sync, shadow_zoom);
+                return std::make_unique<ShowObject<GraphicsAndComputeAPI::OpenGL>>(info);
         }
-        error_fatal("Unknown show type");
+        error_fatal("Unknown graphics and compute API for show creation");
 }
