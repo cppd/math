@@ -38,11 +38,11 @@ constexpr std::array<const char*, 1> VALIDATION_LAYERS = {"VK_LAYER_LUNARG_stand
 // clang-format off
 constexpr uint32_t vertex_shader[]
 {
-#include "draw_vulkan.vert.spr"
+#include "renderer_triangles.vert.spr"
 };
 constexpr uint32_t fragment_shader[]
 {
-#include "draw_vulkan.frag.spr"
+#include "renderer_triangles.frag.spr"
 };
 // clang-format on
 
