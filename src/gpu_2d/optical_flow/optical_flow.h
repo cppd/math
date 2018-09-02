@@ -18,7 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "com/mat.h"
-#include "graphics/opengl/objects.h"
 
 #include <memory>
 
@@ -28,12 +27,12 @@ class OpticalFlow final
         std::unique_ptr<Impl> m_impl;
 
 public:
-        OpticalFlow(int width, int height, const mat4& mtx);
+        OpticalFlow(int width, int height, const mat4& matrix);
         ~OpticalFlow();
 
         void reset();
 
-        void copy_image();
+        void take_image_from_framebuffer();
 
         void draw();
 };

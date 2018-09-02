@@ -38,6 +38,7 @@ Chapter 5. Tracking Objects in Videos.
 #include "com/math.h"
 #include "com/print.h"
 #include "com/time.h"
+#include "graphics/opengl/objects.h"
 
 #include <array>
 #include <limits>
@@ -405,7 +406,7 @@ class OpticalFlow::Impl final
         }
 
 public:
-        Impl(int width, int height, const mat4& mtx)
+        Impl(int width, int height, const mat4& matrix)
                 : m_width(width),
                   m_height(height),
                   m_groups_x(group_count(m_width, GROUP_SIZE)),
@@ -447,7 +448,7 @@ public:
                 m_comp_flow.set_uniform("STOP_MOVE_SQUARE", STOP_MOVE_SQUARE);
                 m_comp_flow.set_uniform("MIN_DETERMINANT", MIN_DETERMINANT);
 
-                m_draw_prog.set_uniform_float("mvpMatrix", mtx);
+                m_draw_prog.set_uniform_float("matrix", matrix);
         }
 
         void reset()
@@ -457,7 +458,7 @@ public:
                 m_flow_computed = false;
         }
 
-        void copy_image()
+        void take_image_from_framebuffer()
         {
                 m_texture_J.copy_texture_sub_image();
         }
@@ -509,7 +510,7 @@ public:
         }
 };
 
-OpticalFlow::OpticalFlow(int width, int height, const mat4& mtx) : m_impl(std::make_unique<Impl>(width, height, mtx))
+OpticalFlow::OpticalFlow(int width, int height, const mat4& matrix) : m_impl(std::make_unique<Impl>(width, height, matrix))
 {
 }
 
@@ -520,9 +521,9 @@ void OpticalFlow::reset()
         m_impl->reset();
 }
 
-void OpticalFlow::copy_image()
+void OpticalFlow::take_image_from_framebuffer()
 {
-        m_impl->copy_image();
+        m_impl->take_image_from_framebuffer();
 }
 
 void OpticalFlow::draw()

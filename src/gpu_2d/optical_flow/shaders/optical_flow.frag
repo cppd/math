@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -15,12 +15,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-// uniform float brightness;
-
 out vec4 color;
-
 void main(void)
 {
-        // color = vec4(brightness.xxx, 1);
         color = vec4(1, 1, 1, 1);
 }

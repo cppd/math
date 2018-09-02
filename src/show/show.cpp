@@ -818,7 +818,7 @@ void ShowObject<API>::loop()
                         }
                         if (m_optical_flow_active && m_optical_flow)
                         {
-                                m_optical_flow->copy_image();
+                                m_optical_flow->take_image_from_framebuffer();
                         }
 
                         //
