@@ -36,11 +36,11 @@ Chapter 2: CONVEX HULLS, 2.6 Divide-and-Conquer.
 // clang-format off
 constexpr const char vertex_shader[]
 {
-#include "convex_hull_2d.vert.str"
+#include "ch_2d.vert.str"
 };
 constexpr const char fragment_shader[]
 {
-#include "convex_hull_2d.frag.str"
+#include "ch_2d.frag.str"
 };
 constexpr const char prepare_shader[]
 {

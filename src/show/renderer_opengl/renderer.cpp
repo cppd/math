@@ -30,31 +30,31 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // clang-format off
 constexpr const char triangles_vert[]
 {
-#include "draw_triangles.vert.str"
+#include "renderer_triangles.vert.str"
 };
 constexpr const char triangles_geom[]
 {
-#include "draw_triangles.geom.str"
+#include "renderer_triangles.geom.str"
 };
 constexpr const char triangles_frag[]
 {
-#include "draw_triangles.frag.str"
+#include "renderer_triangles.frag.str"
 };
 constexpr const char shadow_vert[]
 {
-#include "draw_shadow.vert.str"
+#include "renderer_shadow.vert.str"
 };
 constexpr const char shadow_frag[]
 {
-#include "draw_shadow.frag.str"
+#include "renderer_shadow.frag.str"
 };
 constexpr const char points_vert[]
 {
-#include "draw_points.vert.str"
+#include "renderer_points.vert.str"
 };
 constexpr const char points_frag[]
 {
-#include "draw_points.frag.str"
+#include "renderer_points.frag.str"
 };
 // clang-format on
 

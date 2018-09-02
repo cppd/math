@@ -47,19 +47,19 @@ Chapter 5. Tracking Objects in Videos.
 // clang-format off
 constexpr const char vertex_shader[]
 {
-#include "optical_flow.vert.str"
+#include "of.vert.str"
 };
 constexpr const char fragment_shader[]
 {
-#include "optical_flow.frag.str"
+#include "of.frag.str"
 };
 constexpr const char vertex_debug_shader[]
 {
-#include "optical_flow_debug.vert.str"
+#include "of_debug.vert.str"
 };
 constexpr const char fragment_debug_shader[]
 {
-#include "optical_flow_debug.frag.str"
+#include "of_debug.frag.str"
 };
 constexpr const char sobel_compute_shader[]
 {
