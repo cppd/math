@@ -363,14 +363,12 @@ IncludeSourceAndSetCompilerFlags(src true "${extensions_all}")
 
 AddVulkanShaders(EXTENSIONS ${extensions_shaders}
                         DIRECTORIES
-                                src/show/renderer_vulkan)
+                                src/show/renderers/vulkan)
 AddOpenGLShaders(EXTENSIONS ${extensions_shaders}
                         DIRECTORIES
                                 src/graphics/opengl
                                 src/gpu_2d
-                                src/show/renderer_opengl
-                                src/show/color_space
-                                src/show/text)
+                                src/show/renderers/opengl)
 AddBinaryFiles(EXTENSIONS "ttf"
                         DIRECTORIES
                                 extern/resources)

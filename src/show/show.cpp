@@ -33,15 +33,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "gpu_2d/dft/show/dft_show.h"
 #include "gpu_2d/optical_flow/optical_flow.h"
 #include "gpu_2d/pencil/pencil.h"
+#include "gpu_2d/text/text.h"
 #include "graphics/opengl/objects.h"
 #include "graphics/opengl/window.h"
 #include "graphics/vulkan/window.h"
 #include "numerical/linear.h"
 #include "obj/obj.h"
 #include "show/event_queue.h"
-#include "show/renderer_opengl/renderer.h"
-#include "show/renderer_vulkan/renderer.h"
-#include "show/text/text.h"
+#include "show/renderers/opengl/renderer.h"
+#include "show/renderers/vulkan/renderer.h"
 #include "window/window_prop.h"
 
 #include <chrono>
