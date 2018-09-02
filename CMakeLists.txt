@@ -138,17 +138,32 @@ function(IncludeSourceAndSetCompilerFlags dir_name executable extensions)
 
 endfunction()
 
-function(AddBinaryFiles dir_name extensions)
+function(AddBinaryFiles)
+
+        cmake_parse_arguments(PARSE_ARGV 0 ARG "" "" "EXTENSIONS;DIRECTORIES")
+        if(NOT ARG_EXTENSIONS)
+                message(FATAL_ERROR "No extensions")
+        endif()
+        if(NOT ARG_DIRECTORIES)
+                message(FATAL_ERROR "No directories")
+        endif()
+        if(ARG_UNPARSED_ARGUMENTS)
+                message(FATAL_ERROR "Unparsed arguments ${ARG_UNPARSED_ARGUMENTS}")
+        endif()
+
+        foreach(dir ${ARG_DIRECTORIES})
+                foreach(ext ${ARG_EXTENSIONS})
+                        list(APPEND all_globbing_expressions "${PROJECT_SOURCE_DIR}/${dir}/*.${ext}")
+                endforeach()
+        endforeach()
+
+        file(GLOB_RECURSE binary_files LIST_DIRECTORIES false ${all_globbing_expressions})
+
+        #
 
         set(dir_include_binary_files "${PROJECT_BINARY_DIR}/include_binary_files")
         file(REMOVE_RECURSE "${dir_include_binary_files}")
         file(MAKE_DIRECTORY "${dir_include_binary_files}")
-
-        foreach(ext ${extensions})
-                list(APPEND all_globbing_expressions "${PROJECT_SOURCE_DIR}/${dir_name}/*.${ext}")
-        endforeach()
-
-        file(GLOB_RECURSE binary_files LIST_DIRECTORIES false ${all_globbing_expressions})
 
         foreach(long_file_name ${binary_files})
 
@@ -175,17 +190,32 @@ function(AddBinaryFiles dir_name extensions)
 
 endfunction()
 
-function(AddOpenGLShaders dir_name extensions)
+function(AddOpenGLShaders)
+
+        cmake_parse_arguments(PARSE_ARGV 0 ARG "" "" "EXTENSIONS;DIRECTORIES")
+        if(NOT ARG_EXTENSIONS)
+                message(FATAL_ERROR "No extensions")
+        endif()
+        if(NOT ARG_DIRECTORIES)
+                message(FATAL_ERROR "No directories")
+        endif()
+        if(ARG_UNPARSED_ARGUMENTS)
+                message(FATAL_ERROR "Unparsed arguments ${ARG_UNPARSED_ARGUMENTS}")
+        endif()
+
+        foreach(dir ${ARG_DIRECTORIES})
+                foreach(ext ${ARG_EXTENSIONS})
+                        list(APPEND all_globbing_expressions "${PROJECT_SOURCE_DIR}/${dir}/*.${ext}")
+                endforeach()
+        endforeach()
+
+        file(GLOB_RECURSE shader_files LIST_DIRECTORIES false ${all_globbing_expressions})
+
+        #
 
         set(dir_include_opengl_shaders "${PROJECT_BINARY_DIR}/include_opengl_shaders")
         file(REMOVE_RECURSE "${dir_include_opengl_shaders}")
         file(MAKE_DIRECTORY "${dir_include_opengl_shaders}")
-
-        foreach(ext ${extensions})
-                list(APPEND all_globbing_expressions "${PROJECT_SOURCE_DIR}/${dir_name}/*.${ext}")
-        endforeach()
-
-        file(GLOB_RECURSE shader_files LIST_DIRECTORIES false ${all_globbing_expressions})
 
         foreach(long_shader_name ${shader_files})
 
@@ -212,17 +242,32 @@ function(AddOpenGLShaders dir_name extensions)
 
 endfunction()
 
-function(AddVulkanShaders dir_name extensions)
+function(AddVulkanShaders)
+
+        cmake_parse_arguments(PARSE_ARGV 0 ARG "" "" "EXTENSIONS;DIRECTORIES")
+        if(NOT ARG_EXTENSIONS)
+                message(FATAL_ERROR "No extensions")
+        endif()
+        if(NOT ARG_DIRECTORIES)
+                message(FATAL_ERROR "No directories")
+        endif()
+        if(ARG_UNPARSED_ARGUMENTS)
+                message(FATAL_ERROR "Unparsed arguments ${ARG_UNPARSED_ARGUMENTS}")
+        endif()
+
+        foreach(dir ${ARG_DIRECTORIES})
+                foreach(ext ${ARG_EXTENSIONS})
+                        list(APPEND all_globbing_expressions "${PROJECT_SOURCE_DIR}/${dir}/*.${ext}")
+                endforeach()
+        endforeach()
+
+        file(GLOB_RECURSE shader_files LIST_DIRECTORIES false ${all_globbing_expressions})
+
+        #
 
         set(dir_include_vulkan_shaders "${PROJECT_BINARY_DIR}/include_vulkan_shaders")
         file(REMOVE_RECURSE "${dir_include_vulkan_shaders}")
         file(MAKE_DIRECTORY "${dir_include_vulkan_shaders}")
-
-        foreach(ext ${extensions})
-                list(APPEND all_globbing_expressions "${PROJECT_SOURCE_DIR}/${dir_name}/*.${ext}")
-        endforeach()
-
-        file(GLOB_RECURSE shader_files LIST_DIRECTORIES false ${all_globbing_expressions})
 
         foreach(long_shader_name ${shader_files})
 
@@ -316,9 +361,19 @@ IncludeSourceAndSetCompilerFlags(src true "${extensions_all}")
 
 #target_compile_options(${PROJECT_NAME} PRIVATE -S -masm=intel)
 
-AddVulkanShaders(src/show/renderer_vulkan "${extensions_shaders}")
-AddOpenGLShaders(src "${extensions_shaders}")
-AddBinaryFiles(extern/resources "ttf")
+AddVulkanShaders(EXTENSIONS ${extensions_shaders}
+                        DIRECTORIES
+                                src/show/renderer_vulkan)
+AddOpenGLShaders(EXTENSIONS ${extensions_shaders}
+                        DIRECTORIES
+                                src/graphics/opengl
+                                src/gpu_2d
+                                src/show/renderer_opengl
+                                src/show/color_space
+                                src/show/text)
+AddBinaryFiles(EXTENSIONS "ttf"
+                        DIRECTORIES
+                                extern/resources)
 
 target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC "${CMAKE_SOURCE_DIR}/extern/include")
 
