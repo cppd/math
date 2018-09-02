@@ -15,23 +15,17 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-// uniform sampler2D tex;
-
 layout(bindless_sampler) uniform sampler2D tex;
-in vec2 vs_tex_coord;
 
-uniform float brightness;
+uniform float dft_brightness;
+uniform vec4 dft_background_color;
+uniform vec4 dft_color;
 
-uniform vec4 background_color;
-uniform vec4 color;
+in vec2 vs_texture_coordinates;
 
-out vec4 out_color;
-
+out vec4 color;
 void main(void)
 {
-        // color = texture(tex, vs_tex_coord);
-
-        float v = texture(tex, vs_tex_coord).r;
-        v = clamp(v * brightness, 0, 1);
-        out_color = mix(background_color, color, v);
+        float v = dft_brightness * texture(tex, vs_texture_coordinates).r;
+        color = mix(dft_background_color, dft_color, clamp(v, 0, 1));
 }

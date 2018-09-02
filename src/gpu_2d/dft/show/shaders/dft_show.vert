@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -15,13 +15,13 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-layout(location = 0) in vec4 position;
-layout(location = 1) in vec2 tex_coord;
+layout(location = 0) in vec4 vertex_position;
+layout(location = 1) in vec2 texture_coordinates;
 
-out vec2 vs_tex_coord;
+out vec2 vs_texture_coordinates;
 
 void main(void)
 {
-        gl_Position = vec4(position.xy, 0, 1);
-        vs_tex_coord = tex_coord;
+        gl_Position = vertex_position;
+        vs_texture_coordinates = texture_coordinates;
 }

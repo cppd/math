@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "gpu_2d/dft/comp/dft_gl2d.h"
 #include "graphics/opengl/objects.h"
 
+#include <array>
 #include <vector>
 
 // clang-format off
@@ -34,20 +35,15 @@ constexpr const char dft_show_fragment_shader[]
 };
 // clang-format on
 
-constexpr int GROUP_SIZE = 16;
-
 namespace
 {
 struct Vertex
 {
-        float v1, v2; // Координаты вершины в пространстве.
-        float t1, t2; // Координаты вершины в текстуре.
-        Vertex()
-        {
-        }
-        Vertex(float v1_, float v2_, float t1_, float t2_) : v1(v1_), v2(v2_), t1(t1_), t2(t2_)
-        {
-        }
+        static_assert(sizeof(Vector<4, float>) == 4 * sizeof(GLfloat));
+        static_assert(sizeof(Vector<2, float>) == 2 * sizeof(GLfloat));
+
+        Vector<4, GLfloat> v; // Конечные координаты вершины
+        Vector<2, GLfloat> t; // Координаты вершины в текстуре (0 или 1)
 };
 
 vec4f color_to_vec4f(const Color& c)
@@ -58,7 +54,8 @@ vec4f color_to_vec4f(const Color& c)
 
 class DFTShow::Impl final
 {
-        const int m_groups_x, m_groups_y;
+        static constexpr int VERTEX_COUNT = 4;
+
         const bool m_source_srgb;
         opengl::TextureRGBA32F m_image_texture;
         std::unique_ptr<IFourierGL2> m_gl_fft;
@@ -66,67 +63,56 @@ class DFTShow::Impl final
         opengl::ArrayBuffer m_vertex_buffer;
         opengl::GraphicsProgram m_draw_prog;
 
-        static constexpr int RectangleVertexCount = 4;
-
 public:
-        Impl(int width, int height, int pos_x, int pos_y, const mat4& mtx, bool source_srgb, double brightness,
-             const Color& background_color, const Color& color)
-                : m_groups_x(group_count(width, GROUP_SIZE)),
-                  m_groups_y(group_count(height, GROUP_SIZE)),
-                  m_source_srgb(source_srgb),
+        Impl(int width, int height, const mat4& matrix, bool source_srgb, double brightness, const Color& background_color,
+             const Color& color)
+                : m_source_srgb(source_srgb),
                   m_image_texture(width, height),
                   m_gl_fft(create_fft_gl2d(width, height, m_image_texture)),
                   m_draw_prog(opengl::VertexShader(dft_show_vertex_shader), opengl::FragmentShader(dft_show_fragment_shader))
         {
-                m_vertex_array.attrib_pointer(0, 3, GL_FLOAT, m_vertex_buffer, offsetof(Vertex, v1), sizeof(Vertex), true);
-                m_vertex_array.attrib_pointer(1, 2, GL_FLOAT, m_vertex_buffer, offsetof(Vertex, t1), sizeof(Vertex), true);
+                m_vertex_array.attrib_pointer(0, 4, GL_FLOAT, m_vertex_buffer, offsetof(Vertex, v), sizeof(Vertex), true);
+                m_vertex_array.attrib_pointer(1, 2, GL_FLOAT, m_vertex_buffer, offsetof(Vertex, t), sizeof(Vertex), true);
 
                 m_draw_prog.set_uniform_handle("tex", m_image_texture.texture().texture_resident_handle());
 
                 set_brightness(brightness);
-
                 set_background_color(background_color);
                 set_color(color);
 
-                int x_start = pos_x;
-                int x_end = pos_x + width;
-                int y_start = pos_y;
-                int y_end = pos_y + height;
+                int x0 = 0;
+                int y0 = 0;
+                int x1 = width;
+                int y1 = height;
 
-                vec4f pos00 = to_vector<float>(mtx * vec4(x_start, y_start, 0, 1));
-                vec4f pos10 = to_vector<float>(mtx * vec4(x_end, y_start, 0, 1));
-                vec4f pos01 = to_vector<float>(mtx * vec4(x_start, y_end, 0, 1));
-                vec4f pos11 = to_vector<float>(mtx * vec4(x_end, y_end, 0, 1));
+                std::array<Vertex, VERTEX_COUNT> vertices;
 
-                std::array<Vertex, RectangleVertexCount> vertices;
-                // текстурный 0 находится внизу
-                vertices[0] = Vertex(pos00[0], pos00[1], 0, 1);
-                vertices[1] = Vertex(pos10[0], pos10[1], 1, 1);
-                vertices[2] = Vertex(pos01[0], pos01[1], 0, 0);
-                vertices[3] = Vertex(pos11[0], pos11[1], 1, 0);
+                // Текстурный 0 находится внизу, поэтому текстурная
+                // координата по Y для y0 равна 1, а для y1 равна 0
+                vertices[0] = {to_vector<float>(matrix * vec4(x0, y0, 0, 1)), {0, 1}};
+                vertices[1] = {to_vector<float>(matrix * vec4(x1, y0, 0, 1)), {1, 1}};
+                vertices[2] = {to_vector<float>(matrix * vec4(x0, y1, 0, 1)), {0, 0}};
+                vertices[3] = {to_vector<float>(matrix * vec4(x1, y1, 0, 1)), {1, 0}};
 
                 m_vertex_buffer.load_static_draw(vertices);
-        }
-        ~Impl()
-        {
         }
 
         void set_brightness(double brightness)
         {
-                m_draw_prog.set_uniform("brightness", static_cast<float>(brightness));
+                m_draw_prog.set_uniform("dft_brightness", static_cast<float>(brightness));
         }
 
         void set_background_color(const Color& color)
         {
-                m_draw_prog.set_uniform("background_color", color_to_vec4f(color));
+                m_draw_prog.set_uniform("dft_background_color", color_to_vec4f(color));
         }
 
         void set_color(const Color& color)
         {
-                m_draw_prog.set_uniform("color", color_to_vec4f(color));
+                m_draw_prog.set_uniform("dft_color", color_to_vec4f(color));
         }
 
-        void copy_image()
+        void take_image_from_framebuffer()
         {
                 m_image_texture.copy_texture_sub_image();
         }
@@ -136,15 +122,16 @@ public:
                 m_gl_fft->exec(false, m_source_srgb);
 
                 m_vertex_array.bind();
-                m_draw_prog.draw_arrays(GL_TRIANGLE_STRIP, 0, RectangleVertexCount);
+                m_draw_prog.draw_arrays(GL_TRIANGLE_STRIP, 0, VERTEX_COUNT);
         }
 };
 
-DFTShow::DFTShow(int width, int height, int pos_x, int pos_y, const mat4& mtx, bool source_srgb, double brightness,
-                 const Color& background_color, const Color& color)
-        : m_impl(std::make_unique<Impl>(width, height, pos_x, pos_y, mtx, source_srgb, brightness, background_color, color))
+DFTShow::DFTShow(int width, int height, const mat4& matrix, bool source_srgb, double brightness, const Color& background_color,
+                 const Color& color)
+        : m_impl(std::make_unique<Impl>(width, height, matrix, source_srgb, brightness, background_color, color))
 {
 }
+
 DFTShow::~DFTShow() = default;
 
 void DFTShow::set_brightness(double brightness)
@@ -162,9 +149,9 @@ void DFTShow::set_color(const Color& color)
         m_impl->set_color(color);
 }
 
-void DFTShow::copy_image()
+void DFTShow::take_image_from_framebuffer()
 {
-        m_impl->copy_image();
+        m_impl->take_image_from_framebuffer();
 }
 
 void DFTShow::draw()

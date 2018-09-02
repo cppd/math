@@ -707,11 +707,11 @@ void ShowObject<API>::loop()
                                 mat4 plane_matrix =
                                         Renderer::ortho(0, window_width, window_height, 0, 1, -1) * scale<double>(1, 1, 0);
 
-                                int dft_pos_x = (window_width & 1) ? (m_draw_width + 1) : m_draw_width;
-                                int dft_pos_y = 0;
-                                dft_show = std::make_unique<DFTShow>(m_draw_width, m_draw_height, dft_pos_x, dft_pos_y,
-                                                                     plane_matrix, m_renderer->frame_buffer_is_srgb(),
-                                                                     m_dft_brightness, m_dft_background_color, m_dft_color);
+                                mat4 dft_matrix = plane_matrix *
+                                                  translate<double>((window_width & 1) ? (m_draw_width + 1) : m_draw_width, 0, 0);
+                                dft_show = std::make_unique<DFTShow>(m_draw_width, m_draw_height, dft_matrix,
+                                                                     m_renderer->frame_buffer_is_srgb(), m_dft_brightness,
+                                                                     m_dft_background_color, m_dft_color);
                                 m_dft_show = dft_show.get();
 
                                 pencil_effect = std::make_unique<PencilEffect>(m_renderer->color_buffer_texture(),
@@ -814,7 +814,7 @@ void ShowObject<API>::loop()
 
                         if (m_dft_active && m_dft_show)
                         {
-                                m_dft_show->copy_image();
+                                m_dft_show->take_image_from_framebuffer();
                         }
                         if (m_optical_flow_active && m_optical_flow)
                         {
