@@ -6,11 +6,18 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>231</width>
-    <height>157</height>
+    <width>300</width>
+    <height>191</height>
    </rect>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QLabel" name="label_text">
+     <property name="text">
+      <string>Graphics And Compute API</string>
+     </property>
+    </widget>
+   </item>
    <item>
     <widget class="QRadioButton" name="radio_button_vulkan">
      <property name="text">

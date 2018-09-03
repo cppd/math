@@ -27,7 +27,7 @@ namespace graphics_and_compute_api_selection_implementation
 GraphicsAndComputeAPISelection::GraphicsAndComputeAPISelection(QWidget* parent) : QDialog(parent)
 {
         ui.setupUi(this);
-        setWindowTitle("Graphics And Compute API Selection");
+        setWindowTitle("API");
 }
 
 bool GraphicsAndComputeAPISelection::show(GraphicsAndComputeAPI* api)
