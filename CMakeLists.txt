@@ -30,6 +30,7 @@ set(sfml_minimal_version "2.4.2")
 
 set(extensions_shaders "comp;frag;geom;vert;tesc;tese;glsl")
 set(extensions_all "h;c;cpp;ui" ${extensions_shaders})
+set(extensions_binary "ttf")
 
 ##################################################
 
@@ -82,7 +83,7 @@ include(CheckCXXSourceCompiles)
 
 ##################################################
 
-function(IncludeSourceAndSetCompilerFlags dir_name executable extensions)
+function(AddSourceFiles dir_name executable extensions)
 
         if("${PROJECT_BINARY_DIR}" STREQUAL "${PROJECT_SOURCE_DIR}")
                 message(FATAL_ERROR "In-source build")
@@ -138,9 +139,12 @@ function(IncludeSourceAndSetCompilerFlags dir_name executable extensions)
 
 endfunction()
 
-function(AddBinaryFiles)
+function(AddIncludeFiles TYPE)
 
-        cmake_parse_arguments(PARSE_ARGV 0 ARG "" "" "EXTENSIONS;DIRECTORIES")
+        cmake_parse_arguments(PARSE_ARGV 1 ARG "" "OUTPUT_EXTENSION" "EXTENSIONS;DIRECTORIES")
+        if(NOT ARG_OUTPUT_EXTENSION)
+                message(FATAL_ERROR "No output extension")
+        endif()
         if(NOT ARG_EXTENSIONS)
                 message(FATAL_ERROR "No extensions")
         endif()
@@ -151,155 +155,100 @@ function(AddBinaryFiles)
                 message(FATAL_ERROR "Unparsed arguments ${ARG_UNPARSED_ARGUMENTS}")
         endif()
 
+        #
+
+        unset(BINARY_FILES)
+        unset(OPENGL_SHADERS)
+        unset(VULKAN_SHADERS)
+
+        if ("${TYPE}" STREQUAL "BINARY_FILES")
+                set(BINARY_FILES TRUE)
+                set(custom_target_prefix "custom_target_binary_files")
+                set(output_directory "${PROJECT_BINARY_DIR}/include_binary_files")
+        elseif("${TYPE}" STREQUAL "OPENGL_SHADERS")
+                set(OPENGL_SHADERS TRUE)
+                set(custom_target_prefix "custom_target_opengl_shaders")
+                set(output_directory "${PROJECT_BINARY_DIR}/include_opengl_shaders")
+        elseif("${TYPE}" STREQUAL "VULKAN_SHADERS")
+                set(VULKAN_SHADERS TRUE)
+                set(custom_target_prefix "custom_target_vulkan_shaders")
+                set(output_directory "${PROJECT_BINARY_DIR}/include_vulkan_shaders")
+        else()
+                message(FATAL_ERROR "Unknown command ${TYPE}")
+        endif()
+
+        #
+
+        file(GLOB files_to_delete LIST_DIRECTORIES false "${output_directory}/*")
+        foreach(file ${files_to_delete})
+                string(FIND "${file}" "${PROJECT_BINARY_DIR}/include_" position)
+                if (${position} EQUAL 0)
+                        file(REMOVE "${file}")
+                else()
+                        message(FATAL_ERROR "file name error ${file}")
+                endif()
+        endforeach()
+        file(MAKE_DIRECTORY "${output_directory}")
+        target_include_directories(${PROJECT_NAME} PRIVATE "${output_directory}")
+
+        #
+
         foreach(dir ${ARG_DIRECTORIES})
                 foreach(ext ${ARG_EXTENSIONS})
                         list(APPEND all_globbing_expressions "${PROJECT_SOURCE_DIR}/${dir}/*.${ext}")
                 endforeach()
         endforeach()
-
-        file(GLOB_RECURSE binary_files LIST_DIRECTORIES false ${all_globbing_expressions})
-
-        #
-
-        set(dir_include_binary_files "${PROJECT_BINARY_DIR}/include_binary_files")
-        file(REMOVE_RECURSE "${dir_include_binary_files}")
-        file(MAKE_DIRECTORY "${dir_include_binary_files}")
-
-        foreach(long_file_name ${binary_files})
+        file(GLOB_RECURSE all_files LIST_DIRECTORIES false ${all_globbing_expressions})
+        foreach(long_file_name ${all_files})
 
                 get_filename_component(file_name ${long_file_name} NAME)
+                set(target_name "${custom_target_prefix}_${file_name}")
+                set(output_file "${output_directory}/${file_name}.${ARG_OUTPUT_EXTENSION}")
 
-                set(file_bin "${dir_include_binary_files}/${file_name}.bin")
-
-                add_custom_command(
-                        OUTPUT  "${file_bin}"
-                        COMMAND "${PROJECT_BINARY_DIR}/create_str" "bin" "${long_file_name}" "${file_bin}"
-                        DEPENDS "${long_file_name}" "${PROJECT_BINARY_DIR}/create_str"
-                        WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
-                        VERBATIM
-                        )
-
-                set(target_name "custom_target_binary_files_${file_name}")
-                add_custom_target(${target_name} DEPENDS "${file_bin}")
+                add_custom_target(${target_name} DEPENDS "${output_file}")
                 add_dependencies(${target_name} create_str)
                 add_dependencies(${PROJECT_NAME} ${target_name})
 
-        endforeach()
-
-        target_include_directories(${PROJECT_NAME} PRIVATE "${dir_include_binary_files}")
-
-endfunction()
-
-function(AddOpenGLShaders)
-
-        cmake_parse_arguments(PARSE_ARGV 0 ARG "" "" "EXTENSIONS;DIRECTORIES")
-        if(NOT ARG_EXTENSIONS)
-                message(FATAL_ERROR "No extensions")
-        endif()
-        if(NOT ARG_DIRECTORIES)
-                message(FATAL_ERROR "No directories")
-        endif()
-        if(ARG_UNPARSED_ARGUMENTS)
-                message(FATAL_ERROR "Unparsed arguments ${ARG_UNPARSED_ARGUMENTS}")
-        endif()
-
-        foreach(dir ${ARG_DIRECTORIES})
-                foreach(ext ${ARG_EXTENSIONS})
-                        list(APPEND all_globbing_expressions "${PROJECT_SOURCE_DIR}/${dir}/*.${ext}")
-                endforeach()
-        endforeach()
-
-        file(GLOB_RECURSE shader_files LIST_DIRECTORIES false ${all_globbing_expressions})
-
-        #
-
-        set(dir_include_opengl_shaders "${PROJECT_BINARY_DIR}/include_opengl_shaders")
-        file(REMOVE_RECURSE "${dir_include_opengl_shaders}")
-        file(MAKE_DIRECTORY "${dir_include_opengl_shaders}")
-
-        foreach(long_shader_name ${shader_files})
-
-                get_filename_component(shader_name ${long_shader_name} NAME)
-
-                set(shader_str "${dir_include_opengl_shaders}/${shader_name}.str")
-
-                add_custom_command(
-                        OUTPUT  "${shader_str}"
-                        COMMAND "${PROJECT_BINARY_DIR}/create_str" "str" "${long_shader_name}" "${shader_str}"
-                        DEPENDS "${long_shader_name}" "${PROJECT_BINARY_DIR}/create_str"
-                        WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
-                        VERBATIM
+                if (BINARY_FILES)
+                        add_custom_command(
+                                OUTPUT  "${output_file}"
+                                COMMAND "${PROJECT_BINARY_DIR}/create_str" "bin" "${long_file_name}" "${output_file}"
+                                DEPENDS "${long_file_name}" "${PROJECT_BINARY_DIR}/create_str"
+                                WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
+                                VERBATIM
                         )
+                endif()
 
-                set(target_name "custom_target_opengl_shaders_${shader_name}")
-                add_custom_target(${target_name} DEPENDS "${shader_str}")
-                add_dependencies(${target_name} create_str)
-                add_dependencies(${PROJECT_NAME} ${target_name})
-
-        endforeach()
-
-        target_include_directories(${PROJECT_NAME} PRIVATE "${dir_include_opengl_shaders}")
-
-endfunction()
-
-function(AddVulkanShaders)
-
-        cmake_parse_arguments(PARSE_ARGV 0 ARG "" "" "EXTENSIONS;DIRECTORIES")
-        if(NOT ARG_EXTENSIONS)
-                message(FATAL_ERROR "No extensions")
-        endif()
-        if(NOT ARG_DIRECTORIES)
-                message(FATAL_ERROR "No directories")
-        endif()
-        if(ARG_UNPARSED_ARGUMENTS)
-                message(FATAL_ERROR "Unparsed arguments ${ARG_UNPARSED_ARGUMENTS}")
-        endif()
-
-        foreach(dir ${ARG_DIRECTORIES})
-                foreach(ext ${ARG_EXTENSIONS})
-                        list(APPEND all_globbing_expressions "${PROJECT_SOURCE_DIR}/${dir}/*.${ext}")
-                endforeach()
-        endforeach()
-
-        file(GLOB_RECURSE shader_files LIST_DIRECTORIES false ${all_globbing_expressions})
-
-        #
-
-        set(dir_include_vulkan_shaders "${PROJECT_BINARY_DIR}/include_vulkan_shaders")
-        file(REMOVE_RECURSE "${dir_include_vulkan_shaders}")
-        file(MAKE_DIRECTORY "${dir_include_vulkan_shaders}")
-
-        foreach(long_shader_name ${shader_files})
-
-                get_filename_component(shader_name ${long_shader_name} NAME)
-
-                set(shader_spr "${dir_include_vulkan_shaders}/${shader_name}.spr")
-                set(shader_bin "${dir_include_vulkan_shaders}/${shader_name}.bin")
-
-                add_custom_command(
-                        OUTPUT  "${shader_bin}"
-                        COMMAND "glslangValidator" "-V" "${long_shader_name}" "-o" "${shader_bin}"
-                        DEPENDS "${long_shader_name}"
-                        WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
-                        VERBATIM
+                if (OPENGL_SHADERS)
+                        add_custom_command(
+                                OUTPUT  "${output_file}"
+                                COMMAND "${PROJECT_BINARY_DIR}/create_str" "str" "${long_file_name}" "${output_file}"
+                                DEPENDS "${long_file_name}" "${PROJECT_BINARY_DIR}/create_str"
+                                WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
+                                VERBATIM
                         )
+                endif()
 
-                add_custom_command(
-                        OUTPUT  "${shader_spr}"
-                        COMMAND "${PROJECT_BINARY_DIR}/create_str" "spr" "${shader_bin}" "${shader_spr}"
-                        DEPENDS "${shader_bin}" "${PROJECT_BINARY_DIR}/create_str"
-                        WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
-                        VERBATIM
+                if(VULKAN_SHADERS)
+                        string(RANDOM LENGTH 10 random_string)
+                        set(output_sprv "${output_file}.${random_string}.${ARG_OUTPUT_EXTENSION}")
+                        add_custom_command(
+                                OUTPUT  "${output_sprv}"
+                                COMMAND "glslangValidator" "-V" "${long_file_name}" "-o" "${output_sprv}"
+                                DEPENDS "${long_file_name}"
+                                WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
+                                VERBATIM
                         )
-
-                set(target_name "custom_target_vulkan_shaders_${shader_name}")
-                add_custom_target(${target_name} DEPENDS "${shader_spr}")
-                add_dependencies(${target_name} create_str)
-                add_dependencies(${PROJECT_NAME} ${target_name})
+                        add_custom_command(
+                                OUTPUT  "${output_file}"
+                                COMMAND "${PROJECT_BINARY_DIR}/create_str" "spr" "${output_sprv}" "${output_file}"
+                                DEPENDS "${output_sprv}" "${PROJECT_BINARY_DIR}/create_str"
+                                WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
+                                VERBATIM
+                        )
+                endif()
 
         endforeach()
-
-        target_include_directories(${PROJECT_NAME} PRIVATE "${dir_include_vulkan_shaders}")
 
 endfunction()
 
@@ -336,13 +285,13 @@ endfunction()
 
 project(create_str C CXX)
 
-IncludeSourceAndSetCompilerFlags(src_str true "${extensions_all}")
+AddSourceFiles(src_str true "${extensions_all}")
 
 ##################################################
 
 project(create_gl C CXX)
 
-IncludeSourceAndSetCompilerFlags(src_gl true "${extensions_all}")
+AddSourceFiles(src_gl true "${extensions_all}")
 
 ##################################################
 
@@ -357,23 +306,25 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 Check_C_Has_Int128()
 Check_CXX_Has_Int128()
 
-IncludeSourceAndSetCompilerFlags(src true "${extensions_all}")
+AddSourceFiles(src true "${extensions_all}")
 
-#target_compile_options(${PROJECT_NAME} PRIVATE -S -masm=intel)
-
-AddVulkanShaders(EXTENSIONS ${extensions_shaders}
+AddIncludeFiles(VULKAN_SHADERS OUTPUT_EXTENSION "spr" EXTENSIONS ${extensions_shaders}
                         DIRECTORIES
                                 src/show/renderers/vulkan)
-AddOpenGLShaders(EXTENSIONS ${extensions_shaders}
+
+AddIncludeFiles(OPENGL_SHADERS OUTPUT_EXTENSION "str" EXTENSIONS ${extensions_shaders}
                         DIRECTORIES
                                 src/graphics/opengl
                                 src/gpu_2d
                                 src/show/renderers/opengl)
-AddBinaryFiles(EXTENSIONS "ttf"
+
+AddIncludeFiles(BINARY_FILES OUTPUT_EXTENSION "bin" EXTENSIONS ${extensions_binary}
                         DIRECTORIES
                                 extern/resources)
 
 target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC "${CMAKE_SOURCE_DIR}/extern/include")
+
+#target_compile_options(${PROJECT_NAME} PRIVATE -S -masm=intel)
 
 ##################################################
 
