@@ -741,7 +741,7 @@ void MainWindow::progress_bars(const ThreadAction& thread_action, bool permanent
                 {
                         if (permanent)
                         {
-                                ui.statusBar->addPermanentWidget(&(*bar));
+                                ui.statusBar->insertPermanentWidget(0, &(*bar));
                         }
                         else
                         {
@@ -1094,6 +1094,12 @@ void MainWindow::slot_window_first_shown()
                                 return;
                         }
                 }
+
+                QLabel* api_label = new QLabel(to_string(api).c_str(), ui.statusBar);
+                api_label->setFrameStyle(QFrame::StyledPanel);
+                ui.statusBar->addPermanentWidget(api_label);
+
+                //
 
                 ShowCreateInfo info;
                 info.callback = &m_event_emitter;
