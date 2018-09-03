@@ -83,7 +83,20 @@ include(CheckCXXSourceCompiles)
 
 ##################################################
 
-function(AddSourceFiles dir_name executable extensions)
+function(AddSourceFiles TARGET_TYPE)
+
+        cmake_parse_arguments(PARSE_ARGV 1 ARG "" "" "EXTENSIONS;DIRECTORIES")
+        if(NOT ARG_EXTENSIONS)
+                message(FATAL_ERROR "No extensions")
+        endif()
+        if(NOT ARG_DIRECTORIES)
+                message(FATAL_ERROR "No directories")
+        endif()
+        if(ARG_UNPARSED_ARGUMENTS)
+                message(FATAL_ERROR "Unparsed arguments ${ARG_UNPARSED_ARGUMENTS}")
+        endif()
+
+        #
 
         if("${PROJECT_BINARY_DIR}" STREQUAL "${PROJECT_SOURCE_DIR}")
                 message(FATAL_ERROR "In-source build")
@@ -92,16 +105,21 @@ function(AddSourceFiles dir_name executable extensions)
         set(CMAKE_C_FLAGS)
         set(CMAKE_CXX_FLAGS)
 
-        foreach(ext ${extensions})
-                list(APPEND all_globbing_expressions "${PROJECT_SOURCE_DIR}/${dir_name}/*.${ext}")
+        #
+
+        foreach(dir ${ARG_DIRECTORIES})
+                foreach(ext ${ARG_EXTENSIONS})
+                        list(APPEND all_globbing_expressions "${PROJECT_SOURCE_DIR}/${dir}/*.${ext}")
+                endforeach()
         endforeach()
+        file(GLOB_RECURSE all_files LIST_DIRECTORIES false ${all_globbing_expressions})
 
-        file(GLOB_RECURSE source_files LIST_DIRECTORIES false ${all_globbing_expressions})
-
-        if(${executable})
-                add_executable(${PROJECT_NAME} ${source_files})
+        if ("${TARGET_TYPE}" STREQUAL "EXECUTABLE")
+                add_executable(${PROJECT_NAME} ${all_files})
+        elseif ("${TARGET_TYPE}" STREQUAL "LIBRARY")
+                add_library(${PROJECT_NAME} SHARED ${all_files})
         else()
-                add_library(${PROJECT_NAME} SHARED ${source_files})
+                message(FATAL_ERROR "Unknown target type ${TARGET_TYPE}")
         endif()
 
         #   CMake при использовании target_include_directories вставляет -I,
@@ -109,11 +127,13 @@ function(AddSourceFiles dir_name executable extensions)
         # чтобы поиск был только для #include"", не задевая поиск для #include<>.
         #   Если добавить -iquote к флагам компилятора, то перестают работать
         # зависимости и изменения в заголовочных файлах не замечаются.
-        # string(CONCAT CMAKE_C_FLAGS "${CMAKE_C_FLAGS}" " -iquote " "${PROJECT_SOURCE_DIR}/${dir_name}")
-        # string(CONCAT CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}" " -iquote " "${PROJECT_SOURCE_DIR}/${dir_name}")
+        # string(CONCAT CMAKE_C_FLAGS "${CMAKE_C_FLAGS}" " -iquote " "${PROJECT_SOURCE_DIR}/${dir}")
+        # string(CONCAT CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}" " -iquote " "${PROJECT_SOURCE_DIR}/${dir}")
         #   Добавление самого верхнего уровня может привести к совпадениям с системными
         # файлами из-за использования -I в target_include_directories
-        target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_SOURCE_DIR}/${dir_name}")
+        foreach(dir ${ARG_DIRECTORIES})
+                target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_SOURCE_DIR}/${dir}")
+        endforeach()
 
         #target_link_libraries(${PROJECT_NAME} -static-libgcc -static-libstdc++)
         #target_link_libraries(${PROJECT_NAME} -s)
@@ -135,11 +155,11 @@ function(AddSourceFiles dir_name executable extensions)
 
         target_compile_options(${PROJECT_NAME} PRIVATE $<$<CXX_COMPILER_ID:Clang>: -mllvm -inline-threshold=10000 >)
 
-        SetCompilerWarnings("${source_files}")
+        SetCompilerWarnings("${all_files}")
 
 endfunction()
 
-function(AddIncludeFiles TYPE)
+function(AddIncludeFiles FILE_TYPE)
 
         cmake_parse_arguments(PARSE_ARGV 1 ARG "" "OUTPUT_EXTENSION" "EXTENSIONS;DIRECTORIES")
         if(NOT ARG_OUTPUT_EXTENSION)
@@ -161,20 +181,20 @@ function(AddIncludeFiles TYPE)
         unset(OPENGL_SHADERS)
         unset(VULKAN_SHADERS)
 
-        if ("${TYPE}" STREQUAL "BINARY_FILES")
+        if ("${FILE_TYPE}" STREQUAL "BINARY_FILES")
                 set(BINARY_FILES TRUE)
                 set(custom_target_prefix "custom_target_binary_files")
                 set(output_directory "${PROJECT_BINARY_DIR}/include_binary_files")
-        elseif("${TYPE}" STREQUAL "OPENGL_SHADERS")
+        elseif("${FILE_TYPE}" STREQUAL "OPENGL_SHADERS")
                 set(OPENGL_SHADERS TRUE)
                 set(custom_target_prefix "custom_target_opengl_shaders")
                 set(output_directory "${PROJECT_BINARY_DIR}/include_opengl_shaders")
-        elseif("${TYPE}" STREQUAL "VULKAN_SHADERS")
+        elseif("${FILE_TYPE}" STREQUAL "VULKAN_SHADERS")
                 set(VULKAN_SHADERS TRUE)
                 set(custom_target_prefix "custom_target_vulkan_shaders")
                 set(output_directory "${PROJECT_BINARY_DIR}/include_vulkan_shaders")
         else()
-                message(FATAL_ERROR "Unknown command ${TYPE}")
+                message(FATAL_ERROR "Unknown file type ${FILE_TYPE}")
         endif()
 
         #
@@ -285,13 +305,13 @@ endfunction()
 
 project(create_str C CXX)
 
-AddSourceFiles(src_str true "${extensions_all}")
+AddSourceFiles(EXECUTABLE DIRECTORIES src_str EXTENSIONS ${extensions_all})
 
 ##################################################
 
 project(create_gl C CXX)
 
-AddSourceFiles(src_gl true "${extensions_all}")
+AddSourceFiles(EXECUTABLE DIRECTORIES src_gl EXTENSIONS ${extensions_all})
 
 ##################################################
 
@@ -306,7 +326,7 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 Check_C_Has_Int128()
 Check_CXX_Has_Int128()
 
-AddSourceFiles(src true "${extensions_all}")
+AddSourceFiles(EXECUTABLE DIRECTORIES src EXTENSIONS ${extensions_all})
 
 AddIncludeFiles(VULKAN_SHADERS OUTPUT_EXTENSION "spr" EXTENSIONS ${extensions_shaders}
                         DIRECTORIES
