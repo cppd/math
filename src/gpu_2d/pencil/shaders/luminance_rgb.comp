@@ -18,22 +18,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 layout(local_size_variable) in;
 
 layout(binding = 0, rgba32f) uniform image2D img;
-uniform int to_rgb;
 
 const ivec2 image_size = imageSize(img);
+
+vec4 luminance(vec4 c)
+{
+        float l = luminance_of_rgb(c);
+        return vec4(vec3(l), c.a);
+}
 
 void main(void)
 {
         const ivec2 p = ivec2(gl_GlobalInvocationID.xy);
         if (p.x < image_size.x && p.y < image_size.y)
         {
-                if (to_rgb > 0)
-                {
-                        imageStore(img, p, srgb_to_rgb(imageLoad(img, p)));
-                }
-                else
-                {
-                        imageStore(img, p, rgb_to_srgb(imageLoad(img, p)));
-                }
+                imageStore(img, p, luminance(imageLoad(img, p)));
         }
 }

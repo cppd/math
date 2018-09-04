@@ -64,8 +64,8 @@ class DFTShow::Impl final
         opengl::GraphicsProgram m_draw_prog;
 
 public:
-        Impl(int width, int height, const mat4& matrix, bool source_srgb, double brightness, const Color& background_color,
-             const Color& color)
+        Impl(int width, int height, int dst_x, int dst_y, const mat4& matrix, bool source_srgb, double brightness,
+             const Color& background_color, const Color& color)
                 : m_source_srgb(source_srgb),
                   m_image_texture(width, height),
                   m_gl_fft(create_fft_gl2d(width, height, m_image_texture)),
@@ -80,10 +80,10 @@ public:
                 set_background_color(background_color);
                 set_color(color);
 
-                int x0 = 0;
-                int y0 = 0;
-                int x1 = width;
-                int y1 = height;
+                int x0 = dst_x;
+                int y0 = dst_y;
+                int x1 = x0 + width;
+                int y1 = y0 + height;
 
                 std::array<Vertex, VERTEX_COUNT> vertices;
 
@@ -126,9 +126,9 @@ public:
         }
 };
 
-DFTShow::DFTShow(int width, int height, const mat4& matrix, bool source_srgb, double brightness, const Color& background_color,
-                 const Color& color)
-        : m_impl(std::make_unique<Impl>(width, height, matrix, source_srgb, brightness, background_color, color))
+DFTShow::DFTShow(int width, int height, int dst_x, int dst_y, const mat4& matrix, bool source_srgb, double brightness,
+                 const Color& background_color, const Color& color)
+        : m_impl(std::make_unique<Impl>(width, height, dst_x, dst_y, matrix, source_srgb, brightness, background_color, color))
 {
 }
 

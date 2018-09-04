@@ -605,10 +605,10 @@ void ShowObject<API>::loop()
         m_window = window.get();
         m_renderer = renderer.get();
 
-        move_window_to_parent(m_window->get_system_handle(), m_parent_window);
+        move_window_to_parent(window->get_system_handle(), m_parent_window);
 
-        m_new_window_width = m_window->get_width();
-        m_new_window_height = m_window->get_height();
+        m_new_window_width = window->get_width();
+        m_new_window_height = window->get_height();
         double pixel_to_coord_no_zoom = 2.0 / std::min(m_new_window_width, m_new_window_height);
         double pixel_to_coord = pixel_to_coord_no_zoom;
 
@@ -639,7 +639,7 @@ void ShowObject<API>::loop()
 #if defined(_WIN32)
                         // Без этого вызова почему-то зависает деструктор окна SFML на Винде,
                         // если это окно встроено в родительское окно.
-                        change_window_style_not_child(m_window->get_system_handle());
+                        change_window_style_not_child(window->get_system_handle());
 #endif
 
                         return;
@@ -647,7 +647,7 @@ void ShowObject<API>::loop()
 
                 // Вначале команды, потом сообщения окна
                 this->pull_and_dispatch_events();
-                m_window->pull_and_dispath_events();
+                window->pull_and_dispath_events();
 
                 bool matrix_change = false;
 
@@ -699,37 +699,37 @@ void ShowObject<API>::loop()
                         m_draw_width = m_dft_active ? window_width / 2 : window_width;
                         m_draw_height = window_height;
 
-                        m_renderer->set_size(m_draw_width, m_draw_height);
+                        renderer->set_size(m_draw_width, m_draw_height);
 
                         if constexpr (API == GraphicsAndComputeAPI::OpenGL)
                         {
-                                // Матрица для рисования на плоскости, точка (0, 0) слева вверху
-                                mat4 plane_matrix =
-                                        Renderer::ortho(0, window_width, window_height, 0, 1, -1) * scale<double>(1, 1, 0);
+                                // Матрица для рисования на плоскости окна, точка (0, 0) слева вверху
+                                mat4 matrix = Renderer::ortho(0, window_width, window_height, 0, 1, -1) * scale<double>(1, 1, 0);
 
-                                mat4 dft_matrix = plane_matrix *
-                                                  translate<double>((window_width & 1) ? (m_draw_width + 1) : m_draw_width, 0, 0);
-                                dft_show = std::make_unique<DFTShow>(m_draw_width, m_draw_height, dft_matrix,
-                                                                     m_renderer->frame_buffer_is_srgb(), m_dft_brightness,
+                                pencil_effect = std::make_unique<PencilEffect>(
+                                        renderer->color_buffer(), renderer->color_buffer_is_srgb(), renderer->objects(), matrix);
+
+                                int dft_dst_x = (window_width & 1) ? (m_draw_width + 1) : m_draw_width;
+                                int dft_dst_y = 0;
+                                dft_show = std::make_unique<DFTShow>(m_draw_width, m_draw_height, dft_dst_x, dft_dst_y, matrix,
+                                                                     renderer->frame_buffer_is_srgb(), m_dft_brightness,
                                                                      m_dft_background_color, m_dft_color);
-                                m_dft_show = dft_show.get();
 
-                                pencil_effect = std::make_unique<PencilEffect>(m_renderer->color_buffer_texture(),
-                                                                               m_renderer->object_texture(),
-                                                                               m_renderer->color_buffer_is_srgb());
-                                m_pencil_effect = pencil_effect.get();
+                                optical_flow = std::make_unique<OpticalFlow>(m_draw_width, m_draw_height, matrix);
 
-                                optical_flow = std::make_unique<OpticalFlow>(m_draw_width, m_draw_height, plane_matrix);
-                                m_optical_flow = optical_flow.get();
+                                convex_hull_2d = std::make_unique<ConvexHull2D>(renderer->objects(), matrix);
 
-                                convex_hull_2d = std::make_unique<ConvexHull2D>(m_renderer->object_texture(), plane_matrix);
+                                int text_size = points_to_pixels(FPS_TEXT_SIZE_IN_POINTS, m_parent_window_dpi);
+                                int text_step_y = points_to_pixels(FPS_TEXT_STEP_Y_IN_POINTS, m_parent_window_dpi);
+                                int text_start_x = points_to_pixels(FPS_TEXT_START_X_IN_POINTS, m_parent_window_dpi);
+                                int text_start_y = points_to_pixels(FPS_TEXT_START_Y_IN_POINTS, m_parent_window_dpi);
+                                text = std::make_unique<Text>(text_size, text_step_y, text_start_x, text_start_y, m_text_color,
+                                                              matrix);
+
                                 m_convex_hull_2d = convex_hull_2d.get();
-
-                                text = std::make_unique<Text>(points_to_pixels(FPS_TEXT_SIZE_IN_POINTS, m_parent_window_dpi),
-                                                              points_to_pixels(FPS_TEXT_STEP_Y_IN_POINTS, m_parent_window_dpi),
-                                                              points_to_pixels(FPS_TEXT_START_X_IN_POINTS, m_parent_window_dpi),
-                                                              points_to_pixels(FPS_TEXT_START_Y_IN_POINTS, m_parent_window_dpi),
-                                                              m_text_color, plane_matrix);
+                                m_optical_flow = optical_flow.get();
+                                m_pencil_effect = pencil_effect.get();
+                                m_dft_show = dft_show.get();
                                 m_text = text.get();
                         }
                 }
@@ -766,10 +766,10 @@ void ShowObject<API>::loop()
                         mat4 view_matrix = translate<double>(-window_center[0], -window_center[1], 0) *
                                            look_at<double>(vec3(0, 0, 0), camera_direction, camera_up);
 
-                        m_renderer->set_matrices(shadow_projection_matrix * shadow_view_matrix, projection_matrix * view_matrix);
+                        renderer->set_matrices(shadow_projection_matrix * shadow_view_matrix, projection_matrix * view_matrix);
 
-                        m_renderer->set_light_direction(-light_direction);
-                        m_renderer->set_camera_direction(-camera_direction);
+                        renderer->set_light_direction(-light_direction);
+                        renderer->set_camera_direction(-camera_direction);
 
                         vec4 screen_center((right + left) * 0.5, (top + bottom) * 0.5, (far + near) * 0.5, 1.0);
                         vec4 view_center = inverse(view_matrix) * screen_center;
@@ -779,7 +779,7 @@ void ShowObject<API>::loop()
 
                 if constexpr (API == GraphicsAndComputeAPI::Vulkan)
                 {
-                        if (!m_renderer->draw())
+                        if (!renderer->draw())
                         {
                                 std::this_thread::sleep_until(last_frame_time + IDLE_MODE_FRAME_DURATION);
                                 last_frame_time = std::chrono::steady_clock::now();
@@ -788,17 +788,16 @@ void ShowObject<API>::loop()
 
                 if constexpr (API == GraphicsAndComputeAPI::OpenGL)
                 {
-                        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-                        //
-
-                        glEnable(GL_DEPTH_TEST);
-                        glDisable(GL_BLEND);
+                        ASSERT(pencil_effect);
+                        ASSERT(dft_show);
+                        ASSERT(optical_flow);
+                        ASSERT(convex_hull_2d);
+                        ASSERT(text);
 
                         // Параметр true означает рисование в цветной буфер,
                         // параметр false означает рисование в буфер экрана.
                         // Если возвращает false, то нет объекта для рисования.
-                        if (!m_renderer->draw(m_pencil_effect_active))
+                        if (!renderer->draw(m_pencil_effect_active))
                         {
                                 std::this_thread::sleep_until(last_frame_time + IDLE_MODE_FRAME_DURATION);
                                 last_frame_time = std::chrono::steady_clock::now();
@@ -806,57 +805,45 @@ void ShowObject<API>::loop()
 
                         //
 
-                        // Рисование из цветного буфера в буфер экрана
-                        if (m_pencil_effect_active && m_pencil_effect)
-                        {
-                                m_pencil_effect->draw();
-                        }
-
-                        if (m_dft_active && m_dft_show)
-                        {
-                                m_dft_show->take_image_from_framebuffer();
-                        }
-                        if (m_optical_flow_active && m_optical_flow)
-                        {
-                                m_optical_flow->take_image_from_framebuffer();
-                        }
-
-                        //
-
-                        glDisable(GL_DEPTH_TEST);
-                        glDisable(GL_BLEND);
-
                         glViewport(0, 0, window_width, window_height);
 
-                        if (m_dft_active && m_dft_show)
+                        if (m_pencil_effect_active)
                         {
-                                m_dft_show->draw();
+                                // Рисование из цветного буфера в буфер экрана
+                                pencil_effect->draw();
                         }
 
-                        glEnable(GL_SCISSOR_TEST);
-                        glScissor(0, 0, m_draw_width, m_draw_height);
-                        if (m_optical_flow_active && m_optical_flow)
+                        if (m_dft_active)
                         {
-                                m_optical_flow->draw();
+                                dft_show->take_image_from_framebuffer();
                         }
-                        if (m_convex_hull_2d_active && m_convex_hull_2d)
+                        if (m_optical_flow_active)
                         {
-                                m_convex_hull_2d->draw();
+                                optical_flow->take_image_from_framebuffer();
                         }
-                        glDisable(GL_SCISSOR_TEST);
+
+                        if (m_dft_active)
+                        {
+                                dft_show->draw();
+                        }
+                        if (m_optical_flow_active)
+                        {
+                                optical_flow->draw();
+                        }
+                        if (m_convex_hull_2d_active)
+                        {
+                                convex_hull_2d->draw();
+                        }
 
                         //
-
-                        glDisable(GL_DEPTH_TEST);
-                        glEnable(GL_BLEND);
 
                         fps_text[0].resize(sizeof(FPS_STRING) - 1);
                         fps_text[0] += to_string(fps.calculate());
-                        m_text->draw(fps_text);
+                        text->draw(fps_text);
 
                         //
 
-                        m_window->display();
+                        window->display();
                 }
         }
 }

@@ -28,8 +28,8 @@ class DFTShow final
         std::unique_ptr<Impl> m_impl;
 
 public:
-        DFTShow(int width, int height, const mat4& matrix, bool source_srgb, double brightness, const Color& background_color,
-                const Color& color);
+        DFTShow(int width, int height, int dst_x, int dst_y, const mat4& matrix, bool source_srgb, double brightness,
+                const Color& background_color, const Color& color);
         ~DFTShow();
 
         void set_brightness(double brightness);

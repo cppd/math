@@ -161,11 +161,16 @@ T rgb_luminance(T red, T green, T blue)
 }
 }
 
+Color::T Color::srgb_integer_to_rgb_float(unsigned char c)
+{
+        return ::srgb_integer_to_rgb_float<T>(c);
+}
+
 void Color::set_from_srgb_integer(unsigned char r, unsigned char g, unsigned char b)
 {
-        m_data[0] = srgb_integer_to_rgb_float<T>(r);
-        m_data[1] = srgb_integer_to_rgb_float<T>(g);
-        m_data[2] = srgb_integer_to_rgb_float<T>(b);
+        m_data[0] = ::srgb_integer_to_rgb_float<T>(r);
+        m_data[1] = ::srgb_integer_to_rgb_float<T>(g);
+        m_data[2] = ::srgb_integer_to_rgb_float<T>(b);
 }
 
 SrgbInteger Color::to_srgb_integer() const

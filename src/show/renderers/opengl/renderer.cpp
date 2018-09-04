@@ -20,7 +20,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/log.h"
 #include "com/mat_alg.h"
 #include "com/print.h"
-#include "gpu_2d/color_space/color_space.h"
 #include "graphics/opengl/query.h"
 #include "obj/obj_alg.h"
 
@@ -257,14 +256,14 @@ DrawType calculate_draw_type_from_obj(const Obj<3>* obj)
         }
 }
 
-std::vector<float> integer_pixels_to_float_pixels(const std::vector<unsigned char>& pixels)
+std::vector<float> integer_srgb_pixels_to_float_rgb_pixels(const std::vector<unsigned char>& pixels)
 {
         static_assert(std::numeric_limits<unsigned char>::digits == 8);
 
         std::vector<float> buffer(pixels.size());
         for (size_t i = 0; i < buffer.size(); ++i)
         {
-                buffer[i] = pixels[i] / 255.0f;
+                buffer[i] = Color::srgb_integer_to_rgb_float(pixels[i]);
         }
         return buffer;
 }
@@ -283,7 +282,7 @@ class DrawObject final
         const DrawType m_draw_type;
 
 public:
-        DrawObject(const Obj<3>* obj, const ColorSpaceConverterToRGB& color_converter, double size, const vec3& position);
+        DrawObject(const Obj<3>* obj, double size, const vec3& position);
 
         void bind() const;
 
@@ -292,7 +291,7 @@ public:
         DrawType draw_type() const;
 };
 
-DrawObject::DrawObject(const Obj<3>* obj, const ColorSpaceConverterToRGB& color_converter, double size, const vec3& position)
+DrawObject::DrawObject(const Obj<3>* obj, double size, const vec3& position)
         : m_model_matrix(model_vertex_matrix(obj, size, position)), m_draw_type(calculate_draw_type_from_obj(obj))
 {
         if (m_draw_type == DrawType::Triangles)
@@ -315,10 +314,8 @@ DrawObject::DrawObject(const Obj<3>* obj, const ColorSpaceConverterToRGB& color_
 
                 for (const Obj<3>::Image& image : obj->images())
                 {
-                        m_textures.emplace_back(image.size[0], image.size[1], integer_pixels_to_float_pixels(image.srgba_pixels));
-
-                        // преобразование sRGB в RGB
-                        color_converter.convert(m_textures[m_textures.size() - 1]);
+                        m_textures.emplace_back(image.size[0], image.size[1],
+                                                integer_srgb_pixels_to_float_rgb_pixels(image.srgba_pixels));
                 }
 
                 //
@@ -492,7 +489,7 @@ class Renderer final : public OpenGLRenderer
 
         std::unique_ptr<opengl::ShadowBuffer> m_shadow_buffer;
         std::unique_ptr<opengl::ColorBuffer> m_color_buffer;
-        std::unique_ptr<opengl::TextureR32I> m_object_texture;
+        std::unique_ptr<opengl::TextureR32I> m_objects;
 
         mat4 m_shadow_matrix;
         mat4 m_scale_bias_shadow_matrix;
@@ -510,7 +507,6 @@ class Renderer final : public OpenGLRenderer
         double m_shadow_zoom = 1;
 
         DrawObjects m_draw_objects;
-        ColorSpaceConverterToRGB m_color_converter;
 
         bool m_framebuffer_srgb;
         bool m_colorbuffer_srgb;
@@ -583,23 +579,28 @@ class Renderer final : public OpenGLRenderer
                 main_program.set_uniform("camera_direction", to_vector<float>(dir));
         }
 
-        bool draw(bool draw_to_buffer) override
+        bool draw(bool draw_to_color_buffer) override
         {
                 const DrawObject* draw_object = m_draw_objects.object();
                 const DrawObject* draw_scale_object = m_draw_objects.scale_object();
 
-                m_object_texture->clear_tex_image(0);
+                m_objects->clear_tex_image(0);
 
                 if (!draw_object)
                 {
-                        if (draw_to_buffer)
+                        if (draw_to_color_buffer)
                         {
                                 m_color_buffer->bind_buffer();
-                                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+                        }
+                        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+                        if (draw_to_color_buffer)
+                        {
                                 m_color_buffer->unbind_buffer();
                         }
                         return false;
                 }
+
+                opengl::GLEnableAndRestore<GL_DEPTH_TEST> enable_depth_test;
 
                 draw_object->bind();
 
@@ -615,22 +616,25 @@ class Renderer final : public OpenGLRenderer
                         glViewport(0, 0, m_shadow_width, m_shadow_height);
                         glClearDepthf(1.0f);
                         glClear(GL_DEPTH_BUFFER_BIT);
-                        glEnable(GL_POLYGON_OFFSET_FILL); // depth-fighting
+
+                        // depth-fighting
+                        opengl::GLEnableAndRestore<GL_POLYGON_OFFSET_FILL> enable_polygon_offset_fill;
+
                         glPolygonOffset(2.0f, 2.0f); // glPolygonOffset(4.0f, 4.0f);
 
                         shadow_program.draw_arrays(GL_TRIANGLES, 0, draw_object->vertices_count());
 
-                        glDisable(GL_POLYGON_OFFSET_FILL);
                         m_shadow_buffer->unbind_buffer();
                 }
 
                 glViewport(0, 0, m_width, m_height);
 
-                if (draw_to_buffer)
+                if (draw_to_color_buffer)
                 {
                         m_color_buffer->bind_buffer();
-                        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
                 }
+
+                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
                 switch (draw_object->draw_type())
                 {
@@ -648,7 +652,7 @@ class Renderer final : public OpenGLRenderer
                         break;
                 }
 
-                if (draw_to_buffer)
+                if (draw_to_color_buffer)
                 {
                         m_color_buffer->unbind_buffer();
                 }
@@ -707,23 +711,23 @@ class Renderer final : public OpenGLRenderer
                 m_height = height;
 
                 m_color_buffer = std::make_unique<opengl::ColorBuffer>(width, height);
-                m_object_texture = std::make_unique<opengl::TextureR32I>(width, height);
+                m_objects = std::make_unique<opengl::TextureR32I>(width, height);
 
-                main_program.set_uniform_handle("object_img", m_object_texture->image_resident_handle_write_only());
-                points_program.set_uniform_handle("object_img", m_object_texture->image_resident_handle_write_only());
+                main_program.set_uniform_handle("object_img", m_objects->image_resident_handle_write_only());
+                points_program.set_uniform_handle("object_img", m_objects->image_resident_handle_write_only());
 
                 set_shadow_size();
         }
 
-        const opengl::TextureRGBA32F& color_buffer_texture() const override
+        const opengl::TextureRGBA32F& color_buffer() const override
         {
                 ASSERT(m_color_buffer);
                 return m_color_buffer->color_texture();
         }
-        const opengl::TextureR32I& object_texture() const override
+        const opengl::TextureR32I& objects() const override
         {
-                ASSERT(m_object_texture);
-                return *m_object_texture;
+                ASSERT(m_objects);
+                return *m_objects;
         }
 
         bool frame_buffer_is_srgb() override
@@ -738,7 +742,7 @@ class Renderer final : public OpenGLRenderer
 
         void object_add(const Obj<3>* obj, double size, const vec3& position, int id, int scale_id) override
         {
-                m_draw_objects.add_object(std::make_unique<DrawObject>(obj, m_color_converter, size, position), id, scale_id);
+                m_draw_objects.add_object(std::make_unique<DrawObject>(obj, size, position), id, scale_id);
         }
         void object_delete(int id) override
         {

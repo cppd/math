@@ -40,6 +40,8 @@ class Color
 public:
         using DataType = T;
 
+        static T srgb_integer_to_rgb_float(unsigned char c);
+
         Color() = default;
 
         explicit Color(T grayscale) : m_data(grayscale)

@@ -27,7 +27,8 @@ class PencilEffect final
         std::unique_ptr<Impl> m_impl;
 
 public:
-        PencilEffect(const opengl::TextureRGBA32F& tex, const opengl::TextureR32I& tex_objects, bool source_srgb);
+        PencilEffect(const opengl::TextureRGBA32F& source, bool source_is_srgb, const opengl::TextureR32I& objects,
+                     const mat4& matrix);
         ~PencilEffect();
 
         void draw();

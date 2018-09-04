@@ -52,10 +52,10 @@ struct OpenGLRenderer
         virtual void object_show(int id) = 0;
         virtual void object_delete_all() = 0;
 
-        virtual bool draw(bool draw_to_buffer) = 0;
+        virtual bool draw(bool draw_to_color_buffer) = 0;
 
-        virtual const opengl::TextureRGBA32F& color_buffer_texture() const = 0;
-        virtual const opengl::TextureR32I& object_texture() const = 0;
+        virtual const opengl::TextureRGBA32F& color_buffer() const = 0;
+        virtual const opengl::TextureR32I& objects() const = 0;
 
         virtual bool frame_buffer_is_srgb() = 0;
         virtual bool color_buffer_is_srgb() = 0;

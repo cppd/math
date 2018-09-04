@@ -465,6 +465,9 @@ public:
 
         void draw()
         {
+                opengl::GLEnableAndRestore<GL_SCISSOR_TEST> e;
+                glScissor(0, 0, m_width, m_height);
+
 #if 0
                 double current_time = time_in_seconds();
                 if (current_time - m_last_time < COMPUTE_INTERVAL_SECONDS)

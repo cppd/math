@@ -123,6 +123,8 @@ public:
 
         void draw(const std::vector<std::string>& text)
         {
+                opengl::GLEnableAndRestore<GL_BLEND> e;
+
                 m_vertex_array.bind();
 
                 int x = m_start_x;
