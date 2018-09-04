@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -17,31 +17,34 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 layout(location = 0) in vec4 position;
 layout(location = 1) in vec3 normal;
-layout(location = 2) in vec2 tex_coord;
+layout(location = 2) in vec2 texture_coordinates;
 layout(location = 3) in int material_index;
 layout(location = 4) in int property;
 
-uniform mat4 mvpMatrix;
-uniform mat4 shadowMatrix;
+uniform mat4 matrix;
+uniform mat4 shadow_matrix;
 
-out vec2 vs_tex_coord;
-out vec3 vs_normal;
-out vec4 vs_shadow_coord;
-
-flat out int vs_material_index;
-flat out int vs_property;
-flat out vec3 orig_position;
+out VS
+{
+        vec2 texture_coordinates;
+        vec3 normal;
+        vec4 shadow_position;
+        flat int material_index;
+        flat int property;
+        flat vec3 orig_position;
+}
+vs;
 
 void main(void)
 {
-        gl_Position = mvpMatrix * position;
+        gl_Position = matrix * position;
 
-        vs_shadow_coord = shadowMatrix * position;
+        vs.shadow_position = shadow_matrix * position;
 
-        orig_position = position.xyz;
+        vs.orig_position = position.xyz;
 
-        vs_normal = normal;
-        vs_tex_coord = tex_coord;
-        vs_material_index = material_index;
-        vs_property = property;
+        vs.normal = normal;
+        vs.texture_coordinates = texture_coordinates;
+        vs.material_index = material_index;
+        vs.property = property;
 }

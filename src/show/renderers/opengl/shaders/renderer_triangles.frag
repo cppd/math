@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -15,18 +15,14 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-// uniform sampler2D textures[gl_MaxCombinedTextureImageUnits];
-
-// layout (binding = 0)
-// uniform sampler2DShadow shadow_tex;
 layout(bindless_sampler) uniform sampler2DShadow shadow_tex;
 
 layout(bindless_image, r32i) writeonly uniform iimage2D object_img;
 
 uniform vec4 default_color;
 uniform vec4 wireframe_color;
-uniform vec3 light_direction;
-uniform vec3 camera_direction;
+uniform vec3 direction_to_light;
+uniform vec3 direction_to_camera;
 uniform float default_ns;
 
 uniform vec4 light_a;
@@ -37,12 +33,16 @@ uniform int show_wireframe;
 uniform int show_materials;
 uniform int show_shadow;
 
-in vec4 gs_shadow_coord;
-in vec2 gs_tex_coord;
-in vec3 gs_normal;
-in vec3 gs_baricentric;
-flat in int gs_material_index;
-flat in int gs_property;
+in GS
+{
+        vec2 texture_coordinates;
+        vec3 normal;
+        vec4 shadow_position;
+        flat int material_index;
+        flat int property;
+        vec3 baricentric;
+}
+gs;
 
 struct Material
 {
@@ -61,8 +61,8 @@ layout(location = 0) out vec4 color;
 
 float edge_factor()
 {
-        vec3 d = fwidth(gs_baricentric);
-        vec3 a = smoothstep(vec3(0), d, gs_baricentric);
+        vec3 d = fwidth(gs.baricentric);
+        vec3 a = smoothstep(vec3(0), d, gs.baricentric);
         return min(min(a.x, a.y), a.z);
 }
 
@@ -70,24 +70,24 @@ void main(void)
 {
         vec4 color_a, color_d, color_s;
 
-        if (gs_material_index >= 0 && show_materials > 0)
+        if (gs.material_index >= 0 && show_materials > 0)
         {
                 // материал есть
 
                 vec4 mtl_color_a =
-                        vec4(mtl[gs_material_index].Ka[0], mtl[gs_material_index].Ka[1], mtl[gs_material_index].Ka[2], 1);
+                        vec4(mtl[gs.material_index].Ka[0], mtl[gs.material_index].Ka[1], mtl[gs.material_index].Ka[2], 1);
                 vec4 mtl_color_d =
-                        vec4(mtl[gs_material_index].Kd[0], mtl[gs_material_index].Kd[1], mtl[gs_material_index].Kd[2], 1);
+                        vec4(mtl[gs.material_index].Kd[0], mtl[gs.material_index].Kd[1], mtl[gs.material_index].Kd[2], 1);
                 vec4 mtl_color_s =
-                        vec4(mtl[gs_material_index].Ks[0], mtl[gs_material_index].Ks[1], mtl[gs_material_index].Ks[2], 1);
+                        vec4(mtl[gs.material_index].Ks[0], mtl[gs.material_index].Ks[1], mtl[gs.material_index].Ks[2], 1);
 
-                // gs_property & 1 > 0 - есть текстурные координаты
+                // gs.property & 1 > 0 - есть текстурные координаты
 
-                if ((gs_property & 1) > 0 && mtl[gs_material_index].map_Ka >= 0)
+                if ((gs.property & 1) > 0 && mtl[gs.material_index].map_Ka >= 0)
                 {
                         // если есть и текстурные координаты, и текстура
-                        // vec4 tex_color = texture(textures[mtl[gs_material_index].map_Ka], gs_tex_coord);
-                        vec4 tex_color = texture(mtl[gs_material_index].map_Ka_handle, gs_tex_coord);
+                        // vec4 tex_color = texture(textures[mtl[gs.material_index].map_Ka], gs.texture_coordinates);
+                        vec4 tex_color = texture(mtl[gs.material_index].map_Ka_handle, gs.texture_coordinates);
                         color_a = mix(mtl_color_a, tex_color, tex_color.a);
                 }
                 else
@@ -96,11 +96,11 @@ void main(void)
                         color_a = mtl_color_a;
                 }
 
-                if ((gs_property & 1) > 0 && mtl[gs_material_index].map_Kd >= 0)
+                if ((gs.property & 1) > 0 && mtl[gs.material_index].map_Kd >= 0)
                 {
                         // если есть и текстурные координаты, и текстура
-                        // vec4 tex_color = texture(textures[mtl[gs_material_index].map_Kd], gs_tex_coord);
-                        vec4 tex_color = texture(mtl[gs_material_index].map_Kd_handle, gs_tex_coord);
+                        // vec4 tex_color = texture(textures[mtl[gs.material_index].map_Kd], gs.texture_coordinates);
+                        vec4 tex_color = texture(mtl[gs.material_index].map_Kd_handle, gs.texture_coordinates);
                         color_d = mix(mtl_color_d, tex_color, tex_color.a);
                 }
                 else
@@ -109,11 +109,11 @@ void main(void)
                         color_d = mtl_color_d;
                 }
 
-                if ((gs_property & 1) > 0 && mtl[gs_material_index].map_Ks >= 0)
+                if ((gs.property & 1) > 0 && mtl[gs.material_index].map_Ks >= 0)
                 {
                         // если есть и текстурные координаты, и текстура
-                        // vec4 tex_color = texture(textures[mtl[gs_material_index].map_Ks], gs_tex_coord);
-                        vec4 tex_color = texture(mtl[gs_material_index].map_Ks_handle, gs_tex_coord);
+                        // vec4 tex_color = texture(textures[mtl[gs.material_index].map_Ks], gs.texture_coordinates);
+                        vec4 tex_color = texture(mtl[gs.material_index].map_Ks_handle, gs.texture_coordinates);
                         color_s = mix(mtl_color_s, tex_color, tex_color.a);
                 }
                 else
@@ -128,9 +128,9 @@ void main(void)
                 color_a = color_d = color_s = default_color;
         }
 
-        vec3 N = normalize(gs_normal);
-        vec3 L = light_direction;
-        vec3 V = camera_direction;
+        vec3 N = normalize(gs.normal);
+        vec3 L = direction_to_light;
+        vec3 V = direction_to_camera;
 
         float dot_NL = dot(N, L);
         if (dot_NL >= 0.0)
@@ -139,9 +139,9 @@ void main(void)
 
                 float light_reflection = max(0.0, dot(V, reflect(-L, N)));
 
-                if (show_materials > 0 && gs_material_index >= 0)
+                if (show_materials > 0 && gs.material_index >= 0)
                 {
-                        color_s.rgb *= pow(light_reflection, mtl[gs_material_index].Ns);
+                        color_s.rgb *= pow(light_reflection, mtl[gs.material_index].Ns);
                 }
                 else
                 {
@@ -155,7 +155,7 @@ void main(void)
 
         if (show_shadow > 0)
         {
-                float shadow = textureProj(shadow_tex, gs_shadow_coord);
+                float shadow = textureProj(shadow_tex, gs.shadow_position);
                 color = color_a * light_a + (color_d * light_d + color_s * light_s) * shadow;
         }
         else

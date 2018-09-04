@@ -572,11 +572,11 @@ class Renderer final : public OpenGLRenderer
 
         void set_light_direction(vec3 dir) override
         {
-                main_program.set_uniform("light_direction", to_vector<float>(dir));
+                main_program.set_uniform("direction_to_light", -to_vector<float>(dir));
         }
         void set_camera_direction(vec3 dir) override
         {
-                main_program.set_uniform("camera_direction", to_vector<float>(dir));
+                main_program.set_uniform("direction_to_camera", -to_vector<float>(dir));
         }
 
         bool draw(bool draw_to_color_buffer) override
@@ -608,9 +608,9 @@ class Renderer final : public OpenGLRenderer
 
                 if (m_show_shadow && draw_object->draw_type() == DrawType::Triangles)
                 {
-                        main_program.set_uniform_float("shadowMatrix", m_scale_bias_shadow_matrix * scale->model_matrix());
+                        main_program.set_uniform_float("shadow_matrix", m_scale_bias_shadow_matrix * scale->model_matrix());
 
-                        shadow_program.set_uniform_float("mvpMatrix", m_shadow_matrix * scale->model_matrix());
+                        shadow_program.set_uniform_float("matrix", m_shadow_matrix * scale->model_matrix());
 
                         m_shadow_buffer->bind_buffer();
                         glViewport(0, 0, m_shadow_width, m_shadow_height);
@@ -639,15 +639,15 @@ class Renderer final : public OpenGLRenderer
                 switch (draw_object->draw_type())
                 {
                 case DrawType::Triangles:
-                        main_program.set_uniform_float("mvpMatrix", m_main_matrix * scale->model_matrix());
+                        main_program.set_uniform_float("matrix", m_main_matrix * scale->model_matrix());
                         main_program.draw_arrays(GL_TRIANGLES, 0, draw_object->vertices_count());
                         break;
                 case DrawType::Points:
-                        points_program.set_uniform_float("mvpMatrix", m_main_matrix * scale->model_matrix());
+                        points_program.set_uniform_float("matrix", m_main_matrix * scale->model_matrix());
                         points_program.draw_arrays(GL_POINTS, 0, draw_object->vertices_count());
                         break;
                 case DrawType::Lines:
-                        points_program.set_uniform_float("mvpMatrix", m_main_matrix * scale->model_matrix());
+                        points_program.set_uniform_float("matrix", m_main_matrix * scale->model_matrix());
                         points_program.draw_arrays(GL_LINES, 0, draw_object->vertices_count());
                         break;
                 }

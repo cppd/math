@@ -768,8 +768,8 @@ void ShowObject<API>::loop()
 
                         renderer->set_matrices(shadow_projection_matrix * shadow_view_matrix, projection_matrix * view_matrix);
 
-                        renderer->set_light_direction(-light_direction);
-                        renderer->set_camera_direction(-camera_direction);
+                        renderer->set_light_direction(light_direction);
+                        renderer->set_camera_direction(camera_direction);
 
                         vec4 screen_center((right + left) * 0.5, (top + bottom) * 0.5, (far + near) * 0.5, 1.0);
                         vec4 view_center = inverse(view_matrix) * screen_center;

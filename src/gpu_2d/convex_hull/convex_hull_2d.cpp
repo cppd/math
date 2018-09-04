@@ -146,7 +146,7 @@ class ConvexHull2D::Impl final
         double m_start_time;
 
 public:
-        Impl(const opengl::TextureR32I& objects, const mat4& mtx)
+        Impl(const opengl::TextureR32I& objects, const mat4& matrix)
                 : m_width(objects.texture().width()),
                   m_height(objects.texture().height()),
                   m_group_size_prepare(group_size_prepare(m_width, 2 * sizeof(GLint))),
@@ -173,7 +173,7 @@ public:
                 m_filter_prog.set_uniform_handle("line_max", m_line_max.image_resident_handle_read_only());
                 m_filter_prog.set_uniform_handle("points_count", m_point_count_texture.image_resident_handle_write_only());
 
-                m_draw_prog.set_uniform_float("mvpMatrix", mtx);
+                m_draw_prog.set_uniform_float("matrix", matrix);
         }
 
         void reset_timer()
@@ -209,7 +209,8 @@ public:
         }
 };
 
-ConvexHull2D::ConvexHull2D(const opengl::TextureR32I& objects, const mat4& mtx) : m_impl(std::make_unique<Impl>(objects, mtx))
+ConvexHull2D::ConvexHull2D(const opengl::TextureR32I& objects, const mat4& matrix)
+        : m_impl(std::make_unique<Impl>(objects, matrix))
 {
 }
 ConvexHull2D::~ConvexHull2D() = default;

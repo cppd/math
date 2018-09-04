@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-uniform mat4 mvpMatrix;
+uniform mat4 matrix;
 
 layout(std430, binding = 0) buffer StorageBuffer
 {
@@ -25,5 +25,5 @@ layout(std430, binding = 0) buffer StorageBuffer
 void main(void)
 {
         vec2 s = points[gl_VertexID];
-        gl_Position = mvpMatrix * vec4(s.x + 0.5, s.y + 0.5, 0, 1);
+        gl_Position = matrix * vec4(s.x + 0.5, s.y + 0.5, 0, 1);
 }
