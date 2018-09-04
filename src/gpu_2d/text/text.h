@@ -36,4 +36,5 @@ public:
         void set_color(const Color& color) const;
 
         void draw(const std::vector<std::string>& text);
+        void draw(const std::string& text);
 };

@@ -621,7 +621,7 @@ void ShowObject<API>::loop()
         vec2 window_center(0, 0);
         double zoom_delta = 0;
 
-        std::vector<std::string> fps_text({FPS_STRING});
+        std::vector<std::string> fps_text({FPS_STRING, ""});
         FPS fps;
 
         std::chrono::steady_clock::time_point last_frame_time = std::chrono::steady_clock::now();
@@ -837,8 +837,7 @@ void ShowObject<API>::loop()
 
                         //
 
-                        fps_text[0].resize(sizeof(FPS_STRING) - 1);
-                        fps_text[0] += to_string(fps.calculate());
+                        fps_text[1] = to_string(fps.calculate());
                         text->draw(fps_text);
 
                         //

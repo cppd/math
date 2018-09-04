@@ -102,6 +102,39 @@ class Text::Impl final
                 return iter->second;
         }
 
+        void draw(int& x, int& y, const std::string& line)
+        {
+                for (char c : line)
+                {
+                        if (c == '\n')
+                        {
+                                y += m_step_y;
+                                x = m_start_x;
+                                continue;
+                        }
+
+                        const CharData& cd = char_data(c);
+
+                        m_program.set_uniform_handle("tex", cd.texture_handle);
+
+                        int x0 = x + cd.left;
+                        int y0 = y - cd.top;
+                        int x1 = x0 + cd.width;
+                        int y1 = y0 + cd.height;
+
+                        std::array<Vertex, 4> vertices;
+                        vertices[0] = {x0, y0, 0, 0};
+                        vertices[1] = {x1, y0, 1, 0};
+                        vertices[2] = {x0, y1, 0, 1};
+                        vertices[3] = {x1, y1, 1, 1};
+
+                        m_vertex_buffer.load_dynamic_draw(vertices);
+                        m_program.draw_arrays(GL_TRIANGLE_STRIP, 0, vertices.size());
+
+                        x += cd.advance;
+                }
+        }
+
 public:
         Impl(int size, int step_y, int start_x, int start_y, const Color& color, const mat4& matrix)
                 : m_font(size),
@@ -130,34 +163,22 @@ public:
                 int x = m_start_x;
                 int y = m_start_y;
 
-                for (const std::string& line : text)
+                for (const std::string& s : text)
                 {
-                        for (char c : line)
-                        {
-                                const CharData& cd = char_data(c);
-
-                                m_program.set_uniform_handle("tex", cd.texture_handle);
-
-                                int x0 = x + cd.left;
-                                int y0 = y - cd.top;
-                                int x1 = x0 + cd.width;
-                                int y1 = y0 + cd.height;
-
-                                std::array<Vertex, 4> vertices;
-                                vertices[0] = {x0, y0, 0, 0};
-                                vertices[1] = {x1, y0, 1, 0};
-                                vertices[2] = {x0, y1, 0, 1};
-                                vertices[3] = {x1, y1, 1, 1};
-
-                                m_vertex_buffer.load_dynamic_draw(vertices);
-                                m_program.draw_arrays(GL_TRIANGLE_STRIP, 0, vertices.size());
-
-                                x += cd.advance;
-                        }
-
-                        y += m_step_y;
-                        x = m_start_x;
+                        draw(x, y, s);
                 }
+        }
+
+        void draw(const std::string& text)
+        {
+                opengl::GLEnableAndRestore<GL_BLEND> e;
+
+                m_vertex_array.bind();
+
+                int x = m_start_x;
+                int y = m_start_y;
+
+                draw(x, y, text);
         }
 };
 
@@ -174,6 +195,11 @@ void Text::set_color(const Color& color) const
 }
 
 void Text::draw(const std::vector<std::string>& text)
+{
+        m_impl->draw(text);
+}
+
+void Text::draw(const std::string& text)
 {
         m_impl->draw(text);
 }
