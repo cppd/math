@@ -48,7 +48,7 @@ class Application final : public QApplication
                 }
                 catch (...)
                 {
-                        error_fatal("Exception in exception handlers");
+                        error_fatal("Exception in the notify exception handlers");
                 }
         }
 
