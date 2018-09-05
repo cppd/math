@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -27,17 +27,24 @@ int main(int argc, char* argv[])
 {
         try
         {
-                Initialization init;
+                try
+                {
+                        Initialization init;
 
-                return main_function(argc, argv);
-        }
-        catch (std::exception& e)
-        {
-                error_fatal(std::string("Error\n") + e.what());
+                        return main_function(argc, argv);
+                }
+                catch (std::exception& e)
+                {
+                        error_fatal(std::string("Error in the main function\n") + e.what());
+                }
+                catch (...)
+                {
+                        error_fatal("Unknown error in the main function");
+                }
         }
         catch (...)
         {
-                error_fatal("Unknown error");
+                error_fatal("Exception in the main function exception handlers");
         }
 }
 
