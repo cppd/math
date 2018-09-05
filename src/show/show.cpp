@@ -20,7 +20,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "camera.h"
 #include "fps.h"
 
-#include "com/color/colors.h"
 #include "com/error.h"
 #include "com/log.h"
 #include "com/mat.h"
@@ -38,15 +37,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/opengl/window.h"
 #include "graphics/vulkan/window.h"
 #include "numerical/linear.h"
-#include "obj/obj.h"
 #include "show/event_queue.h"
 #include "show/renderers/opengl/renderer.h"
 #include "show/renderers/vulkan/renderer.h"
 #include "window/window_prop.h"
 
 #include <chrono>
-#include <cmath>
-#include <thread>
 #include <unordered_map>
 #include <vector>
 
@@ -609,8 +605,6 @@ void ShowObject<API>::loop()
 
         m_new_window_width = window->get_width();
         m_new_window_height = window->get_height();
-        double pixel_to_coord_no_zoom = 2.0 / std::min(m_new_window_width, m_new_window_height);
-        double pixel_to_coord = pixel_to_coord_no_zoom;
 
         // Обязательно задать начальные значения -1, чтобы отработала функция изменения размеров окна
         ASSERT(m_new_window_width > 0 && m_new_window_height > 0);
@@ -619,6 +613,7 @@ void ShowObject<API>::loop()
         bool dft_active_old = !m_dft_active;
 
         vec2 window_center(0, 0);
+        double default_ortho_scale = 1;
         double zoom_delta = 0;
 
         std::vector<std::string> fps_text({FPS_STRING, ""});
@@ -664,7 +659,7 @@ void ShowObject<API>::loop()
                         }
                         else
                         {
-                                window_center -= pixel_to_coord * vec2(delta_x, -delta_y);
+                                window_center -= vec2(delta_x, -delta_y);
                         }
 
                         matrix_change = true;
@@ -676,12 +671,15 @@ void ShowObject<API>::loop()
                         {
                                 zoom_delta += m_wheel_delta;
 
-                                vec2 mouse_in_wnd(m_new_mouse_x - m_draw_width * 0.5, m_draw_height * 0.5 - m_new_mouse_y);
+                                vec2 mouse_local(m_new_mouse_x - m_draw_width * 0.5, m_draw_height * 0.5 - m_new_mouse_y);
 
-                                window_center +=
-                                        pixel_to_coord * (mouse_in_wnd - mouse_in_wnd * std::pow(ZOOM_BASE, -m_wheel_delta));
+                                vec2 mouse_global(mouse_local + window_center);
 
-                                pixel_to_coord = pixel_to_coord_no_zoom * std::pow(ZOOM_BASE, -zoom_delta);
+                                // new_center = old_center + (mouse_global * zoom_r - mouse_global)
+                                // center += mouse_global * zoom_r - mouse_global
+                                // center += mouse_global * (zoom_r - 1)
+
+                                window_center += mouse_global * (std::pow(ZOOM_BASE, m_wheel_delta) - 1);
 
                                 matrix_change = true;
                         }
@@ -740,8 +738,7 @@ void ShowObject<API>::loop()
 
                         zoom_delta = 0;
                         window_center = vec2(0, 0);
-                        pixel_to_coord_no_zoom = 2.0 / std::min(m_draw_width, m_draw_height);
-                        pixel_to_coord = pixel_to_coord_no_zoom;
+                        default_ortho_scale = 2.0 / std::min(m_draw_width, m_draw_height);
                         m_camera.set(vec3(1, 0, 0), vec3(0, 1, 0));
 
                         matrix_change = true;
@@ -756,15 +753,15 @@ void ShowObject<API>::loop()
                         mat4 shadow_projection_matrix = Renderer::ortho(-1, 1, -1, 1, 1, -1);
                         mat4 shadow_view_matrix = look_at(vec3(0, 0, 0), light_direction, light_up);
 
-                        double left = -0.5 * m_draw_width * pixel_to_coord;
-                        double right = -left;
-                        double bottom = -0.5 * m_draw_height * pixel_to_coord;
-                        double top = -bottom;
+                        double ortho_scale = std::pow(ZOOM_BASE, -zoom_delta) * default_ortho_scale;
+                        double left = ortho_scale * (window_center[0] - 0.5 * m_draw_width);
+                        double right = ortho_scale * (window_center[0] + 0.5 * m_draw_width);
+                        double bottom = ortho_scale * (window_center[1] - 0.5 * m_draw_height);
+                        double top = ortho_scale * (window_center[1] + 0.5 * m_draw_height);
                         double near = 1.0;
-                        double far = -near;
+                        double far = -1.0;
                         mat4 projection_matrix = Renderer::ortho(left, right, bottom, top, near, far);
-                        mat4 view_matrix = translate<double>(-window_center[0], -window_center[1], 0) *
-                                           look_at<double>(vec3(0, 0, 0), camera_direction, camera_up);
+                        mat4 view_matrix = look_at<double>(vec3(0, 0, 0), camera_direction, camera_up);
 
                         renderer->set_matrices(shadow_projection_matrix * shadow_view_matrix, projection_matrix * view_matrix);
 
