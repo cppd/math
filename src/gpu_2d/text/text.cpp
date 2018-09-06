@@ -145,13 +145,18 @@ public:
         {
                 m_vertex_array.attrib_i_pointer(0, 2, GL_INT, m_vertex_buffer, offsetof(Vertex, w1), sizeof(Vertex), true);
                 m_vertex_array.attrib_i_pointer(1, 2, GL_INT, m_vertex_buffer, offsetof(Vertex, t1), sizeof(Vertex), true);
-                m_program.set_uniform_float("matrix", matrix);
                 set_color(color);
+                set_matrix(matrix);
         }
 
         void set_color(const Color& color) const
         {
                 m_program.set_uniform("text_color", color.to_rgb_vector<float>());
+        }
+
+        void set_matrix(const mat4& matrix) const
+        {
+                m_program.set_uniform_float("matrix", matrix);
         }
 
         void draw(const std::vector<std::string>& text)
@@ -192,6 +197,11 @@ Text::~Text() = default;
 void Text::set_color(const Color& color) const
 {
         m_impl->set_color(color);
+}
+
+void Text::set_matrix(const mat4& matrix) const
+{
+        m_impl->set_matrix(matrix);
 }
 
 void Text::draw(const std::vector<std::string>& text)
