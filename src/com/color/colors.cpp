@@ -166,6 +166,11 @@ Color::T Color::srgb_integer_to_rgb_float(unsigned char c)
         return ::srgb_integer_to_rgb_float<T>(c);
 }
 
+Color::T Color::rgb_float_to_srgb_float(T c)
+{
+        return rgb_to_srgb<T>(c);
+}
+
 void Color::set_from_srgb_integer(unsigned char r, unsigned char g, unsigned char b)
 {
         m_data[0] = ::srgb_integer_to_rgb_float<T>(r);
