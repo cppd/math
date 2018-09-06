@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "physical_device.h"
 #include "shader.h"
 
+#include "com/color/colors.h"
 #include "com/error.h"
 #include "com/span.h"
 
@@ -66,7 +67,7 @@ public:
         SwapChain& operator=(SwapChain&&) = delete;
 
         void create_command_buffers(VkBuffer vertex_buffer, VkBuffer vertex_index_buffer, VkIndexType vertex_index_type,
-                                    uint32_t vertex_count);
+                                    uint32_t vertex_count, const Color& clear_color);
         bool command_buffers_created() const;
 
         VkSwapchainKHR swap_chain() const noexcept;
@@ -118,6 +119,9 @@ class VulkanInstance
 
         std::optional<SwapChain> m_swapchain;
 
+        Color m_clear_color = Color(0);
+
+        void create_command_buffers();
         void create_swap_chain();
         void recreate_swap_chain();
 
@@ -148,5 +152,7 @@ public:
         void device_wait_idle() const;
 
         void copy_to_buffer(uint32_t index, const Span<const void>& data) const;
+
+        void set_clear_color(const Color& color);
 };
 }

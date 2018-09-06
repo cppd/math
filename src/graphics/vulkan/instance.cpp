@@ -496,16 +496,17 @@ vulkan::CommandBuffers create_command_buffers(VkDevice device, const VkExtent2D&
                                               VkPipelineLayout pipeline_layout, VkPipeline pipeline,
                                               const std::vector<vulkan::Framebuffer>& framebuffers, VkCommandPool command_pool,
                                               VkDescriptorSet descriptor_set, VkBuffer vertex_buffer, VkBuffer index_buffer,
-                                              VkIndexType index_type, uint32_t vertex_count)
+                                              VkIndexType index_type, uint32_t vertex_count, const Color& clear_color)
 {
         VkResult result;
 
         vulkan::CommandBuffers command_buffers(device, command_pool, framebuffers.size());
 
-        VkClearValue clear_color = {};
-        clear_color.color = {{0.0f, 0.0f, 0.0f, 1.0f}};
-        clear_color.depthStencil.depth = 0;
-        clear_color.depthStencil.stencil = 0;
+        VkClearValue clear_value = {};
+        clear_value.color.float32[0] = Color::rgb_float_to_srgb_float(clear_color.red());
+        clear_value.color.float32[1] = Color::rgb_float_to_srgb_float(clear_color.green());
+        clear_value.color.float32[2] = Color::rgb_float_to_srgb_float(clear_color.blue());
+        clear_value.color.float32[3] = 1;
 
         for (uint32_t i = 0; i < command_buffers.count(); ++i)
         {
@@ -527,7 +528,7 @@ vulkan::CommandBuffers create_command_buffers(VkDevice device, const VkExtent2D&
                 render_pass_info.renderArea.offset = {0, 0};
                 render_pass_info.renderArea.extent = swap_chain_extent;
                 render_pass_info.clearValueCount = 1;
-                render_pass_info.pClearValues = &clear_color;
+                render_pass_info.pClearValues = &clear_value;
 
                 vkCmdBeginRenderPass(command_buffers[i], &render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
 
@@ -659,7 +660,7 @@ SwapChain::SwapChain(VkSurfaceKHR surface, VkPhysicalDevice physical_device, con
 }
 
 void SwapChain::create_command_buffers(VkBuffer vertex_buffer, VkBuffer vertex_index_buffer, VkIndexType vertex_index_type,
-                                       uint32_t vertex_count)
+                                       uint32_t vertex_count, const Color& clear_color)
 {
         ASSERT(vertex_buffer != VK_NULL_HANDLE);
         ASSERT(vertex_index_buffer != VK_NULL_HANDLE);
@@ -671,7 +672,7 @@ void SwapChain::create_command_buffers(VkBuffer vertex_buffer, VkBuffer vertex_i
 
         m_command_buffers = ::create_command_buffers(m_device, m_extent, m_render_pass, m_pipeline_layout, m_pipeline,
                                                      m_framebuffers, m_command_pool, m_descriptor_set, vertex_buffer,
-                                                     vertex_index_buffer, vertex_index_type, vertex_count);
+                                                     vertex_index_buffer, vertex_index_type, vertex_count, clear_color);
 }
 
 bool SwapChain::command_buffers_created() const
@@ -762,6 +763,14 @@ VulkanInstance::~VulkanInstance()
         }
 }
 
+void VulkanInstance::create_command_buffers()
+{
+        ASSERT(m_swapchain);
+
+        m_swapchain->create_command_buffers(m_vertex_buffer, m_vertex_index_buffer, m_vertex_index_type, m_vertex_count,
+                                            m_clear_color);
+}
+
 void VulkanInstance::create_swap_chain()
 {
         std::vector<const vulkan::Shader*> shaders({&m_vertex_shader, &m_fragment_shader});
@@ -770,7 +779,7 @@ void VulkanInstance::create_swap_chain()
                             shaders, m_vertex_binding_descriptions, m_vertex_attribute_descriptions,
                             m_descriptor_with_buffers.descriptor_set_layout(), m_descriptor_with_buffers.descriptor_set());
 
-        m_swapchain->create_command_buffers(m_vertex_buffer, m_vertex_index_buffer, m_vertex_index_type, m_vertex_count);
+        create_command_buffers();
 }
 
 void VulkanInstance::recreate_swap_chain()
@@ -778,6 +787,15 @@ void VulkanInstance::recreate_swap_chain()
         device_wait_idle();
 
         create_swap_chain();
+}
+
+void VulkanInstance::set_clear_color(const Color& color)
+{
+        device_wait_idle();
+
+        m_clear_color = color;
+
+        create_command_buffers();
 }
 
 VkInstance VulkanInstance::instance() const noexcept

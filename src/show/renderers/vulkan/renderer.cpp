@@ -232,8 +232,9 @@ class VulkanRendererImplementation final : public VulkanRenderer
         void set_light_s(const Color& /*light*/) override
         {
         }
-        void set_background_color(const Color& /*color*/) override
+        void set_background_color(const Color& color) override
         {
+                m_instance->set_clear_color(color);
         }
         void set_default_color(const Color& /*color*/) override
         {
