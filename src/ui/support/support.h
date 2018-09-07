@@ -154,7 +154,7 @@ void add_to_text_edit_and_to_stderr(QTextEdit* text_edit, const std::vector<std:
                                     TextEditMessageType type) noexcept;
 
 WindowID widget_window_id(const QWidget* widget);
-double widget_dpi(const QWidget* widget);
+double widget_pixels_per_inch(const QWidget* widget);
 
 void move_window_to_desktop_center(QMainWindow* window);
 

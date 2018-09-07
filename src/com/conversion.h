@@ -17,25 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <memory>
+#include <cmath>
 
-class Font final
+inline int points_to_pixels(double points, double pixels_per_inch)
 {
-        class Impl;
-        std::unique_ptr<Impl> m_impl;
-
-public:
-        Font(int size_in_pixels);
-        ~Font();
-
-        void set_size(int size_in_pixels);
-
-        struct Char
-        {
-                const unsigned char* image;
-                int size, width, height, left, top, advance_x;
-                char c;
-        };
-
-        Char render_char(char c);
-};
+        return std::round(points / 72.0 * pixels_per_inch);
+}

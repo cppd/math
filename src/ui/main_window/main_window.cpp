@@ -1104,7 +1104,7 @@ void MainWindow::slot_window_first_shown()
                 ShowCreateInfo info;
                 info.callback = &m_event_emitter;
                 info.parent_window = widget_window_id(ui.graphics_widget);
-                info.parent_window_dpi = widget_dpi(ui.graphics_widget);
+                info.parent_window_ppi = widget_pixels_per_inch(ui.graphics_widget);
                 info.background_color_rgb = qcolor_to_rgb(m_background_color);
                 info.default_color_rgb = qcolor_to_rgb(m_default_color);
                 info.wireframe_color_rgb = qcolor_to_rgb(m_wireframe_color);

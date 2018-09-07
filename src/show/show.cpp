@@ -20,11 +20,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "camera.h"
 #include "fps.h"
 
+#include "com/conversion.h"
 #include "com/error.h"
 #include "com/log.h"
 #include "com/mat.h"
 #include "com/mat_alg.h"
-#include "com/math.h"
 #include "com/print.h"
 #include "com/thread.h"
 #include "com/time.h"
@@ -42,7 +42,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "show/renderers/vulkan/renderer.h"
 #include "window/window_prop.h"
 
+#include <algorithm>
 #include <chrono>
+#include <cmath>
 #include <limits>
 #include <type_traits>
 #include <vector>
@@ -61,11 +63,6 @@ constexpr std::chrono::milliseconds IDLE_MODE_FRAME_DURATION(100);
 
 namespace
 {
-int points_to_pixels(double points, double dpi)
-{
-        return std::round(points / 72.0 * dpi);
-}
-
 #if 0
 int object_under_mouse(int mouse_x, int mouse_y, int window_height, const TextureR32I& tex)
 {
@@ -188,7 +185,7 @@ class ShowObject final : public EventQueue, public WindowEvent
 
         IShowCallback* const m_callback;
         const WindowID m_parent_window;
-        const double m_parent_window_dpi;
+        const double m_parent_window_ppi;
         std::thread m_thread;
         std::atomic_bool m_stop{false};
 
@@ -636,10 +633,10 @@ class ShowObject final : public EventQueue, public WindowEvent
 public:
         ShowObject(const ShowCreateInfo& info) try : m_callback(info.callback.value()),
                                                      m_parent_window(info.parent_window.value()),
-                                                     m_parent_window_dpi(info.parent_window_dpi.value())
+                                                     m_parent_window_ppi(info.parent_window_ppi.value())
         {
                 ASSERT(m_callback);
-                ASSERT(m_parent_window_dpi > 0);
+                ASSERT(m_parent_window_ppi > 0);
 
                 set_ambient(info.ambient.value());
                 set_diffuse(info.diffuse.value());
@@ -863,10 +860,10 @@ void ShowObject<GraphicsAndComputeAPI::OpenGL>::create_2d_objects()
         }
         else
         {
-                int text_size = points_to_pixels(FPS_TEXT_SIZE_IN_POINTS, m_parent_window_dpi);
-                int text_step_y = points_to_pixels(FPS_TEXT_STEP_Y_IN_POINTS, m_parent_window_dpi);
-                int text_start_x = points_to_pixels(FPS_TEXT_START_X_IN_POINTS, m_parent_window_dpi);
-                int text_start_y = points_to_pixels(FPS_TEXT_START_Y_IN_POINTS, m_parent_window_dpi);
+                int text_size = points_to_pixels(FPS_TEXT_SIZE_IN_POINTS, m_parent_window_ppi);
+                int text_step_y = points_to_pixels(FPS_TEXT_STEP_Y_IN_POINTS, m_parent_window_ppi);
+                int text_start_x = points_to_pixels(FPS_TEXT_START_X_IN_POINTS, m_parent_window_ppi);
+                int text_start_y = points_to_pixels(FPS_TEXT_START_Y_IN_POINTS, m_parent_window_ppi);
                 m_fps_text =
                         std::make_unique<FPSText>(text_size, text_step_y, text_start_x, text_start_y, m_fps_text_color, matrix);
         }

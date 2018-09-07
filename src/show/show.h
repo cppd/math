@@ -85,7 +85,7 @@ struct ShowCreateInfo
         // std::optional используется для проверки того, что все значения заданы
         std::optional<IShowCallback*> callback;
         std::optional<WindowID> parent_window;
-        std::optional<double> parent_window_dpi;
+        std::optional<double> parent_window_ppi;
         std::optional<Color> background_color_rgb;
         std::optional<Color> default_color_rgb;
         std::optional<Color> wireframe_color_rgb;

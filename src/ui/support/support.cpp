@@ -191,18 +191,18 @@ WindowID widget_window_id(const QWidget* widget)
         return window_id;
 }
 
-double widget_dpi(const QWidget* widget)
+double widget_pixels_per_inch(const QWidget* widget)
 {
 #if 0
         int n = QApplication::desktop()->screenNumber(widget);
         QScreen* s = QApplication::screens().at(n);
         return s->logicalDotsPerInch();
 #else
-        double dpi_x = widget->logicalDpiX();
-        double dpi_y = widget->logicalDpiY();
-        double dpi = 0.5 * (dpi_x + dpi_y);
-        ASSERT(dpi > 0);
-        return dpi;
+        double ppi_x = widget->logicalDpiX();
+        double ppi_y = widget->logicalDpiY();
+        double ppi = 0.5 * (ppi_x + ppi_y);
+        ASSERT(ppi > 0);
+        return ppi;
 #endif
 }
 

@@ -182,9 +182,9 @@ class Font::Impl final
         int m_size;
 
 public:
-        Impl(int size) : m_thread_id(std::this_thread::get_id()), m_face(m_library, font_bytes, sizeof(font_bytes))
+        Impl(int size_in_pixels) : m_thread_id(std::this_thread::get_id()), m_face(m_library, font_bytes, sizeof(font_bytes))
         {
-                set_size(size);
+                set_size(size_in_pixels);
         }
         ~Impl()
         {
@@ -196,12 +196,12 @@ public:
         Impl(Impl&&) = delete;
         Impl& operator=(Impl&&) = delete;
 
-        void set_size(int size)
+        void set_size(int size_in_pixels)
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
-                m_size = size;
-                FT_Set_Pixel_Sizes(m_face, 0, size);
+                m_size = size_in_pixels;
+                FT_Set_Pixel_Sizes(m_face, 0, size_in_pixels);
         }
 
         Char render_char(char c)
@@ -238,15 +238,15 @@ public:
         }
 };
 
-Font::Font(int size) : m_impl(std::make_unique<Impl>(size))
+Font::Font(int size_in_pixels) : m_impl(std::make_unique<Impl>(size_in_pixels))
 {
 }
 
 Font::~Font() = default;
 
-void Font::set_size(int size)
+void Font::set_size(int size_in_pixels)
 {
-        m_impl->set_size(size);
+        m_impl->set_size(size_in_pixels);
 }
 
 Font::Char Font::render_char(char c)
