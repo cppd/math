@@ -225,10 +225,10 @@ class ShowObject final : public EventQueue, public WindowEvent
         double m_default_ortho_scale = 1;
 
         bool m_fullscreen_active = false;
-        bool m_fps_text_active = true;
 
         //
 
+        bool m_fps_text_active = true;
         bool m_pencil_effect_active = false;
         bool m_dft_show_active = false;
         bool m_convex_hull_active = false;
@@ -377,6 +377,13 @@ class ShowObject final : public EventQueue, public WindowEvent
                 ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
                 m_renderer->set_show_materials(v);
+        }
+
+        void direct_show_fps(bool v) override
+        {
+                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+
+                m_fps_text_active = v;
         }
 
         void direct_show_effect(bool v) override
@@ -649,6 +656,7 @@ public:
                 show_wireframe(info.with_wireframe.value());
                 show_shadow(info.with_shadow.value());
                 show_fog(info.with_fog.value());
+                show_fps(info.with_fps.value());
                 show_effect(info.with_effect.value());
                 show_dft(info.with_dft.value());
                 set_dft_brightness(info.dft_brightness.value());

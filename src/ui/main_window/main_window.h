@@ -76,6 +76,7 @@ private slots:
         void on_checkBox_Shadow_clicked();
         void on_checkBox_Fog_clicked();
         void on_checkBox_Smooth_clicked();
+        void on_checkBox_show_fps_clicked();
         void on_checkBox_ShowEffect_clicked();
         void on_checkBox_show_dft_clicked();
         void on_checkBox_convex_hull_2d_clicked();

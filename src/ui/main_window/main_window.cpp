@@ -1113,6 +1113,7 @@ void MainWindow::slot_window_first_shown()
                 info.with_shadow = ui.checkBox_Shadow->isChecked();
                 info.with_fog = ui.checkBox_Fog->isChecked();
                 info.with_materials = ui.checkBox_Materials->isChecked();
+                info.with_fps = ui.checkBox_show_fps->isChecked();
                 info.with_effect = ui.checkBox_ShowEffect->isChecked();
                 info.with_dft = ui.checkBox_show_dft->isChecked();
                 info.with_convex_hull = ui.checkBox_convex_hull_2d->isChecked();
@@ -1369,6 +1370,11 @@ void MainWindow::on_checkBox_Materials_clicked()
 void MainWindow::on_checkBox_Smooth_clicked()
 {
         m_show->show_smooth(ui.checkBox_Smooth->isChecked());
+}
+
+void MainWindow::on_checkBox_show_fps_clicked()
+{
+        m_show->show_fps(ui.checkBox_show_fps->isChecked());
 }
 
 void MainWindow::on_checkBox_ShowEffect_clicked()

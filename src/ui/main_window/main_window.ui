@@ -257,6 +257,16 @@
            </widget>
           </item>
           <item>
+           <widget class="QCheckBox" name="checkBox_show_fps">
+            <property name="text">
+             <string>FPS</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QCheckBox" name="checkBox_ShowEffect">
             <property name="text">
              <string>Pencil</string>

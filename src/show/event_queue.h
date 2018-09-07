@@ -167,6 +167,13 @@ class EventQueue : public IShow
                         {
                         }
                 };
+                struct show_fps final
+                {
+                        bool show;
+                        show_fps(bool v) : show(v)
+                        {
+                        }
+                };
                 struct show_effect final
                 {
                         bool show;
@@ -234,8 +241,9 @@ class EventQueue : public IShow
                 const Variant<add_object, delete_all_objects, delete_object, mouse_wheel, parent_resized, reset_view, set_ambient,
                               set_background_color_rgb, set_default_color_rgb, set_default_ns, set_dft_background_color,
                               set_dft_brightness, set_dft_color, set_diffuse, set_shadow_zoom, set_specular, set_vertical_sync,
-                              set_wireframe_color_rgb, show_convex_hull_2d, show_dft, show_effect, show_fog, show_materials,
-                              show_object, show_optical_flow, show_shadow, show_smooth, show_wireframe, toggle_fullscreen>
+                              set_wireframe_color_rgb, show_convex_hull_2d, show_dft, show_fps, show_effect, show_fog,
+                              show_materials, show_object, show_optical_flow, show_shadow, show_smooth, show_wireframe,
+                              toggle_fullscreen>
                         event;
 
                 template <typename... Args>
@@ -315,6 +323,10 @@ protected:
         {
                 m_event_queue.emplace(std::in_place_type<Event::show_materials>, v);
         }
+        void show_fps(bool v) override final
+        {
+                m_event_queue.emplace(std::in_place_type<Event::show_fps>, v);
+        }
         void show_effect(bool v) override final
         {
                 m_event_queue.emplace(std::in_place_type<Event::show_effect>, v);
@@ -384,6 +396,7 @@ protected:
         virtual void direct_show_shadow(bool) = 0;
         virtual void direct_show_fog(bool) = 0;
         virtual void direct_show_materials(bool) = 0;
+        virtual void direct_show_fps(bool) = 0;
         virtual void direct_show_effect(bool) = 0;
         virtual void direct_show_dft(bool) = 0;
         virtual void direct_set_dft_brightness(double) = 0;
@@ -483,6 +496,10 @@ private:
                 void operator()(const Event::show_materials& d)
                 {
                         m_f.direct_show_materials(d.show);
+                }
+                void operator()(const Event::show_fps& d)
+                {
+                        m_f.direct_show_fps(d.show);
                 }
                 void operator()(const Event::show_effect& d)
                 {
