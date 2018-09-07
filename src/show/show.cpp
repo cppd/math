@@ -43,7 +43,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "window/window_prop.h"
 
 #include <chrono>
-#include <unordered_map>
+#include <limits>
+#include <type_traits>
 #include <vector>
 
 constexpr double ZOOM_BASE = 1.1;
@@ -89,6 +90,22 @@ void make_fullscreen(bool fullscreen, WindowID window, WindowID parent)
         set_focus(window);
 }
 
+// Матрица для рисования на плоскости окна, точка (0, 0) слева вверху
+template <GraphicsAndComputeAPI API>
+mat4 ortho_matrix_for_2d_rendering(int width, int height)
+{
+        static_assert(API == GraphicsAndComputeAPI::Vulkan || API == GraphicsAndComputeAPI::OpenGL);
+        using Renderer = std::conditional_t<API == GraphicsAndComputeAPI::Vulkan, VulkanRenderer, OpenGLRenderer>;
+
+        double left = 0;
+        double right = width;
+        double bottom = height;
+        double top = 0;
+        double near = 1;
+        double far = -1;
+        return Renderer::ortho(left, right, bottom, top, near, far) * scale<double>(1, 1, 0);
+}
+
 // Объекты для std::unique_ptr создаются и удаляются в отдельном потоке. Поток этого
 // класса не должен владеть такими объектами. Этот класс нужен, чтобы в явном виде
 // не работать с std::unique_ptr.
@@ -109,6 +126,21 @@ public:
         operator bool() const
         {
                 return static_cast<bool>(*m_pointer);
+        }
+};
+
+template <typename T>
+class UniquePointerReset
+{
+        std::unique_ptr<T>& m_pointer;
+
+public:
+        UniquePointerReset(std::unique_ptr<T>& pointer) : m_pointer(pointer)
+        {
+        }
+        ~UniquePointerReset()
+        {
+                m_pointer.reset();
         }
 };
 
@@ -169,19 +201,19 @@ class ShowObject final : public EventQueue, public WindowEvent
         UniquePointerView<Window> m_window;
         UniquePointerView<Renderer> m_renderer;
 
-        UniquePointerView<FPSText> m_fps_text;
-        UniquePointerView<DFTShow> m_dft_show;
-        UniquePointerView<ConvexHull2D> m_convex_hull;
-        UniquePointerView<OpticalFlow> m_optical_flow;
-        UniquePointerView<PencilEffect> m_pencil_effect;
+        std::unique_ptr<FPSText> m_fps_text;
+        std::unique_ptr<DFTShow> m_dft_show;
+        std::unique_ptr<ConvexHull2D> m_convex_hull;
+        std::unique_ptr<OpticalFlow> m_optical_flow;
+        std::unique_ptr<PencilEffect> m_pencil_effect;
 
         //
 
-        int m_window_width = 0;
-        int m_window_height = 0;
+        int m_window_width = std::numeric_limits<int>::lowest();
+        int m_window_height = std::numeric_limits<int>::lowest();
 
-        int m_draw_width = 0;
-        int m_draw_height = 0;
+        int m_draw_width = std::numeric_limits<int>::lowest();
+        int m_draw_height = std::numeric_limits<int>::lowest();
 
         int m_mouse_x = 0;
         int m_mouse_y = 0;
@@ -193,27 +225,23 @@ class ShowObject final : public EventQueue, public WindowEvent
 
         vec2 m_window_center = vec2(0, 0);
         double m_zoom_exponent = 0;
-
-        bool m_matrix_changed = false;
-        bool m_window_size_changed = false;
-        bool m_dft_show_active_changed = false;
+        double m_default_ortho_scale = 1;
 
         bool m_fullscreen_active = false;
         bool m_fps_text_active = true;
 
-        // Неважно, какие тут будут значения при инициализации,
-        // так как при создании окна задаются начальные параметры
+        //
 
-        bool m_pencil_effect_active;
-        bool m_dft_show_active;
-        bool m_convex_hull_active;
-        bool m_optical_flow_active;
+        bool m_pencil_effect_active = false;
+        bool m_dft_show_active = false;
+        bool m_convex_hull_active = false;
+        bool m_optical_flow_active = false;
 
-        double m_dft_show_brightness;
-        Color m_dft_show_background_color;
-        Color m_dft_show_color;
+        double m_dft_show_brightness = 1;
+        Color m_dft_show_background_color = Color(0);
+        Color m_dft_show_color = Color(1);
 
-        Color m_fps_text_color;
+        Color m_fps_text_color = Color(1);
 
         //
 
@@ -365,9 +393,12 @@ class ShowObject final : public EventQueue, public WindowEvent
         {
                 ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
-                m_dft_show_active_changed = (v != m_dft_show_active);
+                if (v != m_dft_show_active)
+                {
+                        m_dft_show_active = v;
 
-                m_dft_show_active = v;
+                        window_resize_handler();
+                }
         }
 
         void direct_set_dft_brightness(double v) override
@@ -572,10 +603,15 @@ class ShowObject final : public EventQueue, public WindowEvent
         {
                 ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
-                m_window_size_changed = (m_window_width != width) || (m_window_height != height);
+                if (width <= 0 || height <= 0)
+                {
+                        error("Window resize error: width = " + to_string(width) + ", height = " + to_string(height));
+                }
 
                 m_window_width = width;
                 m_window_height = height;
+
+                window_resize_handler();
         }
 
         //
@@ -583,6 +619,14 @@ class ShowObject final : public EventQueue, public WindowEvent
         void mouse_wheel_handler(int delta);
         void mouse_move_handler();
         void reset_view_handler();
+        void window_resize_handler();
+
+        //
+
+        void pull_and_dispatch_all_events();
+        void create_2d_objects();
+        void compute_matrices();
+        bool render();
 
         //
 
@@ -596,8 +640,6 @@ public:
         {
                 ASSERT(m_callback);
                 ASSERT(m_parent_window_dpi > 0);
-
-                reset_view();
 
                 set_ambient(info.ambient.value());
                 set_diffuse(info.diffuse.value());
@@ -635,6 +677,12 @@ public:
                         m_stop = true;
                         m_thread.join();
                 }
+
+                ASSERT(!m_fps_text);
+                ASSERT(!m_dft_show);
+                ASSERT(!m_convex_hull);
+                ASSERT(!m_optical_flow);
+                ASSERT(!m_pencil_effect);
         }
 
         ShowObject(const ShowObject&) = delete;
@@ -642,18 +690,6 @@ public:
         ShowObject& operator=(const ShowObject&) = delete;
         ShowObject& operator=(ShowObject&&) = delete;
 };
-
-template <GraphicsAndComputeAPI API>
-void ShowObject<API>::reset_view_handler()
-{
-        m_zoom_exponent = 0;
-        m_window_center = vec2(0, 0);
-        m_camera.set(vec3(1, 0, 0), vec3(0, 1, 0));
-
-        //
-
-        m_matrix_changed = true;
-}
 
 template <GraphicsAndComputeAPI API>
 void ShowObject<API>::mouse_wheel_handler(int delta)
@@ -679,7 +715,7 @@ void ShowObject<API>::mouse_wheel_handler(int delta)
 
         //
 
-        m_matrix_changed = true;
+        compute_matrices();
 }
 
 template <GraphicsAndComputeAPI API>
@@ -713,7 +749,192 @@ void ShowObject<API>::mouse_move_handler()
 
         //
 
-        m_matrix_changed = true;
+        compute_matrices();
+}
+
+template <GraphicsAndComputeAPI API>
+void ShowObject<API>::reset_view_handler()
+{
+        m_zoom_exponent = 0;
+        m_window_center = vec2(0, 0);
+        m_camera.set(vec3(1, 0, 0), vec3(0, 1, 0));
+
+        if (m_draw_width > 0 && m_draw_height > 0)
+        {
+                m_default_ortho_scale = 2.0 / std::min(m_draw_width, m_draw_height);
+        }
+        else
+        {
+                m_default_ortho_scale = 1;
+        }
+
+        //
+
+        compute_matrices();
+}
+
+template <GraphicsAndComputeAPI API>
+void ShowObject<API>::window_resize_handler()
+{
+        if (m_window_width <= 0 || m_window_height <= 0)
+        {
+                // Вызов не из обработчика измерения окна (там есть проверка),
+                // а вызов из обработчика включения-выключения ДПФ в то время,
+                // когда окно ещё не готово.
+                return;
+        }
+
+        m_draw_width = API == GraphicsAndComputeAPI::OpenGL && m_dft_show_active ? m_window_width / 2 : m_window_width;
+        m_draw_height = m_window_height;
+
+        m_renderer->set_size(m_draw_width, m_draw_height);
+
+        if constexpr (API == GraphicsAndComputeAPI::OpenGL)
+        {
+                create_2d_objects();
+        }
+
+        //
+
+        compute_matrices();
+}
+
+template <GraphicsAndComputeAPI API>
+void ShowObject<API>::compute_matrices()
+{
+        vec3 camera_up, camera_direction, light_up, light_direction;
+
+        m_camera.get(&camera_up, &camera_direction, &light_up, &light_direction);
+
+        mat4 shadow_projection_matrix = Renderer::ortho(-1, 1, -1, 1, 1, -1);
+        mat4 shadow_view_matrix = look_at(vec3(0, 0, 0), light_direction, light_up);
+
+        double ortho_scale = std::pow(ZOOM_BASE, -m_zoom_exponent) * m_default_ortho_scale;
+        double left = ortho_scale * (m_window_center[0] - 0.5 * m_draw_width);
+        double right = ortho_scale * (m_window_center[0] + 0.5 * m_draw_width);
+        double bottom = ortho_scale * (m_window_center[1] - 0.5 * m_draw_height);
+        double top = ortho_scale * (m_window_center[1] + 0.5 * m_draw_height);
+        double near = 1;
+        double far = -1;
+        mat4 projection_matrix = Renderer::ortho(left, right, bottom, top, near, far);
+        mat4 view_matrix = look_at<double>(vec3(0, 0, 0), camera_direction, camera_up);
+
+        m_renderer->set_matrices(shadow_projection_matrix * shadow_view_matrix, projection_matrix * view_matrix);
+
+        m_renderer->set_light_direction(light_direction);
+        m_renderer->set_camera_direction(camera_direction);
+
+        vec4 screen_center((right + left) * 0.5, (top + bottom) * 0.5, (far + near) * 0.5, 1.0);
+        vec4 view_center = inverse(view_matrix) * screen_center;
+        m_camera.set_view_center_and_width(vec3(view_center[0], view_center[1], view_center[2]), right - left, m_draw_width,
+                                           m_draw_height);
+}
+
+template <GraphicsAndComputeAPI API>
+void ShowObject<API>::pull_and_dispatch_all_events()
+{
+        // Вначале команды, потом сообщения окна, потому что в командах
+        // могут быть действия с окном, а в событиях окна нет комманд
+        this->pull_and_dispatch_events();
+        m_window->pull_and_dispath_events();
+}
+
+template <>
+void ShowObject<GraphicsAndComputeAPI::OpenGL>::create_2d_objects()
+{
+        const mat4 matrix = ortho_matrix_for_2d_rendering<GraphicsAndComputeAPI::OpenGL>(m_window_width, m_window_height);
+
+        m_pencil_effect = std::make_unique<PencilEffect>(m_renderer->color_buffer(), m_renderer->color_buffer_is_srgb(),
+                                                         m_renderer->objects(), matrix);
+
+        int dft_dst_x = (m_window_width & 1) ? (m_draw_width + 1) : m_draw_width;
+        int dft_dst_y = 0;
+        m_dft_show = std::make_unique<DFTShow>(m_draw_width, m_draw_height, dft_dst_x, dft_dst_y, matrix,
+                                               m_renderer->frame_buffer_is_srgb(), m_dft_show_brightness,
+                                               m_dft_show_background_color, m_dft_show_color);
+
+        m_optical_flow = std::make_unique<OpticalFlow>(m_draw_width, m_draw_height, matrix);
+
+        m_convex_hull = std::make_unique<ConvexHull2D>(m_renderer->objects(), matrix);
+
+        if (m_fps_text)
+        {
+                m_fps_text->set_matrix(matrix);
+        }
+        else
+        {
+                int text_size = points_to_pixels(FPS_TEXT_SIZE_IN_POINTS, m_parent_window_dpi);
+                int text_step_y = points_to_pixels(FPS_TEXT_STEP_Y_IN_POINTS, m_parent_window_dpi);
+                int text_start_x = points_to_pixels(FPS_TEXT_START_X_IN_POINTS, m_parent_window_dpi);
+                int text_start_y = points_to_pixels(FPS_TEXT_START_Y_IN_POINTS, m_parent_window_dpi);
+                m_fps_text =
+                        std::make_unique<FPSText>(text_size, text_step_y, text_start_x, text_start_y, m_fps_text_color, matrix);
+        }
+}
+
+template <>
+bool ShowObject<GraphicsAndComputeAPI::OpenGL>::render()
+{
+        ASSERT(m_pencil_effect);
+        ASSERT(m_dft_show);
+        ASSERT(m_optical_flow);
+        ASSERT(m_convex_hull);
+        ASSERT(m_fps_text);
+
+        // Параметр true означает рисование в цветной буфер,
+        // параметр false означает рисование в буфер экрана.
+        // Если возвращает false, то нет объекта для рисования.
+        bool object_rendered = m_renderer->draw(m_pencil_effect_active);
+
+        //
+
+        glViewport(0, 0, m_window_width, m_window_height);
+
+        if (m_pencil_effect_active)
+        {
+                // Рисование из цветного буфера в буфер экрана
+                m_pencil_effect->draw();
+        }
+
+        if (m_dft_show_active)
+        {
+                m_dft_show->take_image_from_framebuffer();
+        }
+        if (m_optical_flow_active)
+        {
+                m_optical_flow->take_image_from_framebuffer();
+        }
+
+        if (m_dft_show_active)
+        {
+                m_dft_show->draw();
+        }
+        if (m_optical_flow_active)
+        {
+                m_optical_flow->draw();
+        }
+        if (m_convex_hull_active)
+        {
+                m_convex_hull->draw();
+        }
+        if (m_fps_text_active)
+        {
+                m_fps_text->draw();
+        }
+
+        //
+
+        m_window->display();
+
+        return object_rendered;
+}
+
+template <>
+bool ShowObject<GraphicsAndComputeAPI::Vulkan>::render()
+{
+        bool object_rendered = m_renderer->draw();
+
+        return object_rendered;
 }
 
 template <GraphicsAndComputeAPI API>
@@ -735,203 +956,53 @@ void ShowObject<API>::loop()
                 window = create_opengl_window(this);
                 renderer = create_opengl_renderer();
         }
-
-        move_window_to_parent(window->get_system_handle(), m_parent_window);
-
-        double default_ortho_scale = 1;
-
-        std::chrono::steady_clock::time_point last_frame_time = std::chrono::steady_clock::now();
-
-        std::unique_ptr<FPSText> fps_text;
-        std::unique_ptr<DFTShow> dft_show;
-        std::unique_ptr<ConvexHull2D> convex_hull;
-        std::unique_ptr<OpticalFlow> optical_flow;
-        std::unique_ptr<PencilEffect> pencil_effect;
-
         m_window.set(window);
         m_renderer.set(renderer);
 
-        m_convex_hull.set(convex_hull);
-        m_optical_flow.set(optical_flow);
-        m_pencil_effect.set(pencil_effect);
-        m_dft_show.set(dft_show);
-        m_fps_text.set(fps_text);
+        move_window_to_parent(window->get_system_handle(), m_parent_window);
 
-        while (true)
+        // При выходе из этой функции надо удалить объекты,
+        // чтобы их удаление было в этом же потоке
+        UniquePointerReset fps_text_reset = m_fps_text;
+        UniquePointerReset dft_show_reset = m_dft_show;
+        UniquePointerReset convex_hull_reset = m_convex_hull;
+        UniquePointerReset optical_flow_reset = m_optical_flow;
+        UniquePointerReset pencil_effect_reset = m_pencil_effect;
+
+        //
+
+        for (int i = 1; m_window_width != window->get_width() && m_window_height != window->get_height(); ++i)
         {
-                if (m_stop)
+                if (i > 10)
                 {
-#if defined(_WIN32)
-                        // Без этого вызова почему-то зависает деструктор окна SFML на Винде,
-                        // если это окно встроено в родительское окно.
-                        change_window_style_not_child(window->get_system_handle());
-#endif
-
-                        return;
+                        error("Failed to receive the resize window event for the window size (" + to_string(window->get_width()) +
+                              ", " + to_string(window->get_height()) + ")");
                 }
+                pull_and_dispatch_all_events();
+        }
+        ASSERT(m_draw_width > 0 && m_draw_height > 0);
 
-                // Вначале команды, потом сообщения окна, потому что в командах
-                // могут быть действия с окном, а в событиях окна нет комманд
-                this->pull_and_dispatch_events();
-                window->pull_and_dispath_events();
+        reset_view_handler();
 
-                if (m_window_size_changed || m_dft_show_active_changed)
+        //
+
+        std::chrono::steady_clock::time_point last_frame_time = std::chrono::steady_clock::now();
+        while (!m_stop)
+        {
+                pull_and_dispatch_all_events();
+
+                if (!render())
                 {
-                        m_window_size_changed = false;
-                        m_dft_show_active_changed = false;
-
-                        m_matrix_changed = true;
-
-                        //
-
-                        m_draw_width =
-                                API == GraphicsAndComputeAPI::OpenGL && m_dft_show_active ? m_window_width / 2 : m_window_width;
-                        m_draw_height = m_window_height;
-
-                        default_ortho_scale = 2.0 / std::min(m_draw_width, m_draw_height);
-
-                        renderer->set_size(m_draw_width, m_draw_height);
-
-                        if constexpr (API == GraphicsAndComputeAPI::OpenGL)
-                        {
-                                // Матрица для рисования на плоскости окна, точка (0, 0) слева вверху
-
-                                double left = 0;
-                                double right = m_window_width;
-                                double bottom = m_window_height;
-                                double top = 0;
-                                double near = 1;
-                                double far = -1;
-                                mat4 matrix = Renderer::ortho(left, right, bottom, top, near, far) * scale<double>(1, 1, 0);
-
-                                pencil_effect = std::make_unique<PencilEffect>(
-                                        renderer->color_buffer(), renderer->color_buffer_is_srgb(), renderer->objects(), matrix);
-
-                                int dft_dst_x = (m_window_width & 1) ? (m_draw_width + 1) : m_draw_width;
-                                int dft_dst_y = 0;
-                                dft_show = std::make_unique<DFTShow>(m_draw_width, m_draw_height, dft_dst_x, dft_dst_y, matrix,
-                                                                     renderer->frame_buffer_is_srgb(), m_dft_show_brightness,
-                                                                     m_dft_show_background_color, m_dft_show_color);
-
-                                optical_flow = std::make_unique<OpticalFlow>(m_draw_width, m_draw_height, matrix);
-
-                                convex_hull = std::make_unique<ConvexHull2D>(renderer->objects(), matrix);
-
-                                if (fps_text)
-                                {
-                                        fps_text->set_matrix(matrix);
-                                }
-                                else
-                                {
-                                        int text_size = points_to_pixels(FPS_TEXT_SIZE_IN_POINTS, m_parent_window_dpi);
-                                        int text_step_y = points_to_pixels(FPS_TEXT_STEP_Y_IN_POINTS, m_parent_window_dpi);
-                                        int text_start_x = points_to_pixels(FPS_TEXT_START_X_IN_POINTS, m_parent_window_dpi);
-                                        int text_start_y = points_to_pixels(FPS_TEXT_START_Y_IN_POINTS, m_parent_window_dpi);
-                                        fps_text = std::make_unique<FPSText>(text_size, text_step_y, text_start_x, text_start_y,
-                                                                             m_fps_text_color, matrix);
-                                }
-                        }
-                }
-
-                if (m_matrix_changed)
-                {
-                        m_matrix_changed = false;
-
-                        vec3 camera_up, camera_direction, light_up, light_direction;
-
-                        m_camera.get(&camera_up, &camera_direction, &light_up, &light_direction);
-
-                        mat4 shadow_projection_matrix = Renderer::ortho(-1, 1, -1, 1, 1, -1);
-                        mat4 shadow_view_matrix = look_at(vec3(0, 0, 0), light_direction, light_up);
-
-                        double ortho_scale = std::pow(ZOOM_BASE, -m_zoom_exponent) * default_ortho_scale;
-                        double left = ortho_scale * (m_window_center[0] - 0.5 * m_draw_width);
-                        double right = ortho_scale * (m_window_center[0] + 0.5 * m_draw_width);
-                        double bottom = ortho_scale * (m_window_center[1] - 0.5 * m_draw_height);
-                        double top = ortho_scale * (m_window_center[1] + 0.5 * m_draw_height);
-                        double near = 1;
-                        double far = -1;
-                        mat4 projection_matrix = Renderer::ortho(left, right, bottom, top, near, far);
-                        mat4 view_matrix = look_at<double>(vec3(0, 0, 0), camera_direction, camera_up);
-
-                        renderer->set_matrices(shadow_projection_matrix * shadow_view_matrix, projection_matrix * view_matrix);
-
-                        renderer->set_light_direction(light_direction);
-                        renderer->set_camera_direction(camera_direction);
-
-                        vec4 screen_center((right + left) * 0.5, (top + bottom) * 0.5, (far + near) * 0.5, 1.0);
-                        vec4 view_center = inverse(view_matrix) * screen_center;
-                        m_camera.set_view_center_and_width(vec3(view_center[0], view_center[1], view_center[2]), right - left,
-                                                           m_draw_width, m_draw_height);
-                }
-
-                if constexpr (API == GraphicsAndComputeAPI::Vulkan)
-                {
-                        if (!renderer->draw())
-                        {
-                                std::this_thread::sleep_until(last_frame_time + IDLE_MODE_FRAME_DURATION);
-                                last_frame_time = std::chrono::steady_clock::now();
-                        }
-                }
-
-                if constexpr (API == GraphicsAndComputeAPI::OpenGL)
-                {
-                        ASSERT(pencil_effect);
-                        ASSERT(dft_show);
-                        ASSERT(optical_flow);
-                        ASSERT(convex_hull);
-                        ASSERT(fps_text);
-
-                        // Параметр true означает рисование в цветной буфер,
-                        // параметр false означает рисование в буфер экрана.
-                        // Если возвращает false, то нет объекта для рисования.
-                        if (!renderer->draw(m_pencil_effect_active))
-                        {
-                                std::this_thread::sleep_until(last_frame_time + IDLE_MODE_FRAME_DURATION);
-                                last_frame_time = std::chrono::steady_clock::now();
-                        }
-
-                        //
-
-                        glViewport(0, 0, m_window_width, m_window_height);
-
-                        if (m_pencil_effect_active)
-                        {
-                                // Рисование из цветного буфера в буфер экрана
-                                pencil_effect->draw();
-                        }
-
-                        if (m_dft_show_active)
-                        {
-                                dft_show->take_image_from_framebuffer();
-                        }
-                        if (m_optical_flow_active)
-                        {
-                                optical_flow->take_image_from_framebuffer();
-                        }
-
-                        if (m_dft_show_active)
-                        {
-                                dft_show->draw();
-                        }
-                        if (m_optical_flow_active)
-                        {
-                                optical_flow->draw();
-                        }
-                        if (m_convex_hull_active)
-                        {
-                                convex_hull->draw();
-                        }
-                        if (m_fps_text_active)
-                        {
-                                fps_text->draw();
-                        }
-
-                        //
-
-                        window->display();
+                        std::this_thread::sleep_until(last_frame_time + IDLE_MODE_FRAME_DURATION);
+                        last_frame_time = std::chrono::steady_clock::now();
                 }
         }
+
+#if defined(_WIN32)
+        // Без этого вызова почему-то зависает деструктор окна SFML на Винде,
+        // если это окно встроено в родительское окно.
+        change_window_style_not_child(window->get_system_handle());
+#endif
 }
 
 template <GraphicsAndComputeAPI API>
