@@ -526,6 +526,7 @@ class Renderer final : public OpenGLRenderer
         }
         void set_background_color(const Color& color) override
         {
+                glClearColor(color.red(), color.green(), color.blue(), 1);
                 points_program.set_uniform("background_color", color_to_vec4f(color));
         }
         void set_default_color(const Color& color) override

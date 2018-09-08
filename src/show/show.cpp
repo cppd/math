@@ -18,7 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "show.h"
 
 #include "camera.h"
-#include "fps.h"
 
 #include "com/conversion.h"
 #include "com/error.h"
@@ -27,18 +26,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/mat_alg.h"
 #include "com/print.h"
 #include "com/thread.h"
-#include "com/time.h"
-#include "gpu_2d/convex_hull/convex_hull_2d.h"
-#include "gpu_2d/dft/show/dft_show.h"
-#include "gpu_2d/optical_flow/optical_flow.h"
-#include "gpu_2d/pencil/pencil.h"
-#include "gpu_2d/text/text.h"
 #include "graphics/opengl/objects.h"
 #include "graphics/opengl/window.h"
 #include "graphics/vulkan/window.h"
 #include "numerical/linear.h"
 #include "show/event_queue.h"
+#include "show/renderers/opengl/canvas.h"
 #include "show/renderers/opengl/renderer.h"
+#include "show/renderers/vulkan/canvas.h"
 #include "show/renderers/vulkan/renderer.h"
 #include "window/window_prop.h"
 
@@ -126,56 +121,13 @@ public:
         }
 };
 
-template <typename T>
-class UniquePointerReset
-{
-        std::unique_ptr<T>& m_pointer;
-
-public:
-        UniquePointerReset(std::unique_ptr<T>& pointer) : m_pointer(pointer)
-        {
-        }
-        ~UniquePointerReset()
-        {
-                m_pointer.reset();
-        }
-};
-
-class FPSText
-{
-        Text m_text;
-        FPS m_fps;
-        std::vector<std::string> m_fps_text;
-
-public:
-        FPSText(int size, int step_y, int start_x, int start_y, const Color& color, const mat4& matrix)
-                : m_text(size, step_y, start_x, start_y, color, matrix), m_fps_text({FPS_STRING, ""})
-        {
-        }
-
-        void set_color(const Color& color) const
-        {
-                m_text.set_color(color);
-        }
-
-        void set_matrix(const mat4& matrix) const
-        {
-                m_text.set_matrix(matrix);
-        }
-
-        void draw()
-        {
-                m_fps_text[1] = to_string(m_fps.calculate());
-                m_text.draw(m_fps_text);
-        }
-};
-
 template <GraphicsAndComputeAPI API>
 class ShowObject final : public EventQueue, public WindowEvent
 {
         static_assert(API == GraphicsAndComputeAPI::Vulkan || API == GraphicsAndComputeAPI::OpenGL);
         using Renderer = std::conditional_t<API == GraphicsAndComputeAPI::Vulkan, VulkanRenderer, OpenGLRenderer>;
         using Window = std::conditional_t<API == GraphicsAndComputeAPI::Vulkan, VulkanWindow, OpenGLWindow>;
+        using Canvas = std::conditional_t<API == GraphicsAndComputeAPI::Vulkan, VulkanCanvas, OpenGLCanvas>;
 
         // Камера и тени рассчитаны на размер объекта 2 и на положение в точке (0, 0, 0).
         static constexpr double OBJECT_SIZE = 2;
@@ -197,12 +149,7 @@ class ShowObject final : public EventQueue, public WindowEvent
 
         UniquePointerView<Window> m_window;
         UniquePointerView<Renderer> m_renderer;
-
-        std::unique_ptr<FPSText> m_fps_text;
-        std::unique_ptr<DFTShow> m_dft_show;
-        std::unique_ptr<ConvexHull2D> m_convex_hull;
-        std::unique_ptr<OpticalFlow> m_optical_flow;
-        std::unique_ptr<PencilEffect> m_pencil_effect;
+        UniquePointerView<Canvas> m_canvas;
 
         //
 
@@ -225,20 +172,6 @@ class ShowObject final : public EventQueue, public WindowEvent
         double m_default_ortho_scale = 1;
 
         bool m_fullscreen_active = false;
-
-        //
-
-        bool m_fps_text_active = true;
-        bool m_pencil_effect_active = false;
-        bool m_dft_show_active = false;
-        bool m_convex_hull_active = false;
-        bool m_optical_flow_active = false;
-
-        double m_dft_show_brightness = 1;
-        Color m_dft_show_background_color = Color(0);
-        Color m_dft_show_color = Color(1);
-
-        Color m_fps_text_color = Color(1);
 
         //
 
@@ -312,15 +245,10 @@ class ShowObject final : public EventQueue, public WindowEvent
         {
                 ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
-                glClearColor(c.red(), c.green(), c.blue(), 1);
                 m_renderer->set_background_color(c);
 
                 bool background_is_dark = c.luminance() <= 0.5;
-                m_fps_text_color = background_is_dark ? Color(1) : Color(0);
-                if (m_fps_text)
-                {
-                        m_fps_text->set_color(m_fps_text_color);
-                }
+                m_canvas->set_fps_text_color(background_is_dark ? Color(1) : Color(0));
         }
 
         void direct_set_default_color_rgb(const Color& c) override
@@ -383,24 +311,23 @@ class ShowObject final : public EventQueue, public WindowEvent
         {
                 ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
-                m_fps_text_active = v;
+                m_canvas->set_fps_text_active(v);
         }
 
         void direct_show_effect(bool v) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
-                m_pencil_effect_active = v;
+                m_canvas->set_pencil_effect_active(v);
         }
 
         void direct_show_dft(bool v) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
-                if (v != m_dft_show_active)
+                if (m_canvas->dft_active() != v)
                 {
-                        m_dft_show_active = v;
-
+                        m_canvas->set_dft_active(v);
                         window_resize_handler();
                 }
         }
@@ -409,55 +336,35 @@ class ShowObject final : public EventQueue, public WindowEvent
         {
                 ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
-                m_dft_show_brightness = v;
-                if (m_dft_show)
-                {
-                        m_dft_show->set_brightness(v);
-                }
+                m_canvas->set_dft_brightness(v);
         }
 
         void direct_set_dft_background_color(const Color& c) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
-                m_dft_show_background_color = c;
-                if (m_dft_show)
-                {
-                        m_dft_show->set_background_color(c);
-                }
+                m_canvas->set_dft_background_color(c);
         }
 
         void direct_set_dft_color(const Color& c) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
-                m_dft_show_color = c;
-                if (m_dft_show)
-                {
-                        m_dft_show->set_color(c);
-                }
+                m_canvas->set_dft_color(c);
         }
 
         void direct_show_convex_hull_2d(bool v) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
-                m_convex_hull_active = v;
-                if (m_convex_hull)
-                {
-                        m_convex_hull->reset_timer();
-                }
+                m_canvas->set_convex_hull_active(v);
         }
 
         void direct_show_optical_flow(bool v) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
-                m_optical_flow_active = v;
-                if (m_optical_flow)
-                {
-                        m_optical_flow->reset();
-                }
+                m_canvas->set_optical_flow_active(v);
         }
 
         void direct_parent_resized() override
@@ -628,7 +535,6 @@ class ShowObject final : public EventQueue, public WindowEvent
         //
 
         void pull_and_dispatch_all_events();
-        void create_2d_objects();
         void compute_matrices();
         bool render();
 
@@ -682,12 +588,6 @@ public:
                         m_stop = true;
                         m_thread.join();
                 }
-
-                ASSERT(!m_fps_text);
-                ASSERT(!m_dft_show);
-                ASSERT(!m_convex_hull);
-                ASSERT(!m_optical_flow);
-                ASSERT(!m_pencil_effect);
         }
 
         ShowObject(const ShowObject&) = delete;
@@ -789,14 +689,27 @@ void ShowObject<API>::window_resize_handler()
                 return;
         }
 
-        m_draw_width = API == GraphicsAndComputeAPI::OpenGL && m_dft_show_active ? m_window_width / 2 : m_window_width;
+        m_draw_width = m_canvas->dft_active() ? m_window_width / 2 : m_window_width;
         m_draw_height = m_window_height;
 
         m_renderer->set_size(m_draw_width, m_draw_height);
 
         if constexpr (API == GraphicsAndComputeAPI::OpenGL)
         {
-                create_2d_objects();
+                const mat4 matrix = ortho_matrix_for_2d_rendering<GraphicsAndComputeAPI::OpenGL>(m_window_width, m_window_height);
+
+                int dft_dst_x = (m_window_width & 1) ? (m_draw_width + 1) : m_draw_width;
+                int dft_dst_y = 0;
+
+                int text_size = points_to_pixels(FPS_TEXT_SIZE_IN_POINTS, m_parent_window_ppi);
+                int text_step_y = points_to_pixels(FPS_TEXT_STEP_Y_IN_POINTS, m_parent_window_ppi);
+                int text_start_x = points_to_pixels(FPS_TEXT_START_X_IN_POINTS, m_parent_window_ppi);
+                int text_start_y = points_to_pixels(FPS_TEXT_START_Y_IN_POINTS, m_parent_window_ppi);
+
+                m_canvas->create_objects(m_window_width, m_window_height, matrix, m_renderer->color_buffer(),
+                                         m_renderer->color_buffer_is_srgb(), m_renderer->objects(), m_draw_width, m_draw_height,
+                                         dft_dst_x, dft_dst_y, m_renderer->frame_buffer_is_srgb(), FPS_STRING, text_size,
+                                         text_step_y, text_start_x, text_start_y);
         }
 
         //
@@ -845,89 +758,14 @@ void ShowObject<API>::pull_and_dispatch_all_events()
 }
 
 template <>
-void ShowObject<GraphicsAndComputeAPI::OpenGL>::create_2d_objects()
-{
-        const mat4 matrix = ortho_matrix_for_2d_rendering<GraphicsAndComputeAPI::OpenGL>(m_window_width, m_window_height);
-
-        m_pencil_effect = std::make_unique<PencilEffect>(m_renderer->color_buffer(), m_renderer->color_buffer_is_srgb(),
-                                                         m_renderer->objects(), matrix);
-
-        int dft_dst_x = (m_window_width & 1) ? (m_draw_width + 1) : m_draw_width;
-        int dft_dst_y = 0;
-        m_dft_show = std::make_unique<DFTShow>(m_draw_width, m_draw_height, dft_dst_x, dft_dst_y, matrix,
-                                               m_renderer->frame_buffer_is_srgb(), m_dft_show_brightness,
-                                               m_dft_show_background_color, m_dft_show_color);
-
-        m_optical_flow = std::make_unique<OpticalFlow>(m_draw_width, m_draw_height, matrix);
-
-        m_convex_hull = std::make_unique<ConvexHull2D>(m_renderer->objects(), matrix);
-
-        if (m_fps_text)
-        {
-                m_fps_text->set_matrix(matrix);
-        }
-        else
-        {
-                int text_size = points_to_pixels(FPS_TEXT_SIZE_IN_POINTS, m_parent_window_ppi);
-                int text_step_y = points_to_pixels(FPS_TEXT_STEP_Y_IN_POINTS, m_parent_window_ppi);
-                int text_start_x = points_to_pixels(FPS_TEXT_START_X_IN_POINTS, m_parent_window_ppi);
-                int text_start_y = points_to_pixels(FPS_TEXT_START_Y_IN_POINTS, m_parent_window_ppi);
-                m_fps_text =
-                        std::make_unique<FPSText>(text_size, text_step_y, text_start_x, text_start_y, m_fps_text_color, matrix);
-        }
-}
-
-template <>
 bool ShowObject<GraphicsAndComputeAPI::OpenGL>::render()
 {
-        ASSERT(m_pencil_effect);
-        ASSERT(m_dft_show);
-        ASSERT(m_optical_flow);
-        ASSERT(m_convex_hull);
-        ASSERT(m_fps_text);
-
         // Параметр true означает рисование в цветной буфер,
         // параметр false означает рисование в буфер экрана.
         // Если возвращает false, то нет объекта для рисования.
-        bool object_rendered = m_renderer->draw(m_pencil_effect_active);
+        bool object_rendered = m_renderer->draw(m_canvas->pencil_effect_active());
 
-        //
-
-        glViewport(0, 0, m_window_width, m_window_height);
-
-        if (m_pencil_effect_active)
-        {
-                // Рисование из цветного буфера в буфер экрана
-                m_pencil_effect->draw();
-        }
-
-        if (m_dft_show_active)
-        {
-                m_dft_show->take_image_from_framebuffer();
-        }
-        if (m_optical_flow_active)
-        {
-                m_optical_flow->take_image_from_framebuffer();
-        }
-
-        if (m_dft_show_active)
-        {
-                m_dft_show->draw();
-        }
-        if (m_optical_flow_active)
-        {
-                m_optical_flow->draw();
-        }
-        if (m_convex_hull_active)
-        {
-                m_convex_hull->draw();
-        }
-        if (m_fps_text_active)
-        {
-                m_fps_text->draw();
-        }
-
-        //
+        m_canvas->draw();
 
         m_window->display();
 
@@ -949,32 +787,26 @@ void ShowObject<API>::loop()
 
         std::unique_ptr<Window> window;
         std::unique_ptr<Renderer> renderer;
+        std::unique_ptr<Canvas> canvas;
         if constexpr (API == GraphicsAndComputeAPI::Vulkan)
         {
                 window = create_vulkan_window(this);
                 renderer = create_vulkan_renderer(VulkanWindow::instance_extensions(), [w = window.get()](VkInstance instance) {
                         return w->create_surface(instance);
                 });
+                canvas = create_vulkan_canvas();
         }
         if constexpr (API == GraphicsAndComputeAPI::OpenGL)
         {
                 window = create_opengl_window(this);
                 renderer = create_opengl_renderer();
+                canvas = create_opengl_canvas();
         }
         m_window.set(window);
         m_renderer.set(renderer);
+        m_canvas.set(canvas);
 
         move_window_to_parent(window->get_system_handle(), m_parent_window);
-
-        // При выходе из этой функции надо удалить объекты,
-        // чтобы их удаление было в этом же потоке
-        UniquePointerReset fps_text_reset = m_fps_text;
-        UniquePointerReset dft_show_reset = m_dft_show;
-        UniquePointerReset convex_hull_reset = m_convex_hull;
-        UniquePointerReset optical_flow_reset = m_optical_flow;
-        UniquePointerReset pencil_effect_reset = m_pencil_effect;
-
-        //
 
         for (int i = 1; m_window_width != window->get_width() && m_window_height != window->get_height(); ++i)
         {
