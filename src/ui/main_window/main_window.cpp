@@ -805,7 +805,7 @@ void MainWindow::set_background_color(const QColor& c)
         m_background_color = c;
         if (m_show)
         {
-                m_show->set_background_color_rgb(qcolor_to_rgb(c));
+                m_show->set_background_color(qcolor_to_rgb(c));
         }
         QPalette palette;
         palette.setColor(QPalette::Window, m_background_color);
@@ -817,7 +817,7 @@ void MainWindow::set_default_color(const QColor& c)
         m_default_color = c;
         if (m_show)
         {
-                m_show->set_default_color_rgb(qcolor_to_rgb(c));
+                m_show->set_default_color(qcolor_to_rgb(c));
         }
         QPalette palette;
         palette.setColor(QPalette::Window, m_default_color);
@@ -829,7 +829,7 @@ void MainWindow::set_wireframe_color(const QColor& c)
         m_wireframe_color = c;
         if (m_show)
         {
-                m_show->set_wireframe_color_rgb(qcolor_to_rgb(c));
+                m_show->set_wireframe_color(qcolor_to_rgb(c));
         }
         QPalette palette;
         palette.setColor(QPalette::Window, m_wireframe_color);
@@ -1105,9 +1105,9 @@ void MainWindow::slot_window_first_shown()
                 info.callback = &m_event_emitter;
                 info.parent_window = widget_window_id(ui.graphics_widget);
                 info.parent_window_ppi = widget_pixels_per_inch(ui.graphics_widget);
-                info.background_color_rgb = qcolor_to_rgb(m_background_color);
-                info.default_color_rgb = qcolor_to_rgb(m_default_color);
-                info.wireframe_color_rgb = qcolor_to_rgb(m_wireframe_color);
+                info.background_color = qcolor_to_rgb(m_background_color);
+                info.default_color = qcolor_to_rgb(m_default_color);
+                info.wireframe_color = qcolor_to_rgb(m_wireframe_color);
                 info.with_smooth = ui.checkBox_Smooth->isChecked();
                 info.with_wireframe = ui.checkBox_Wireframe->isChecked();
                 info.with_shadow = ui.checkBox_Shadow->isChecked();

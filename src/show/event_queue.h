@@ -104,24 +104,24 @@ class EventQueue : public IShow
                         {
                         }
                 };
-                struct set_background_color_rgb final
+                struct set_background_color final
                 {
                         Color background_color;
-                        set_background_color_rgb(const Color& v) : background_color(v)
+                        set_background_color(const Color& v) : background_color(v)
                         {
                         }
                 };
-                struct set_default_color_rgb final
+                struct set_default_color final
                 {
                         Color default_color;
-                        set_default_color_rgb(const Color& v) : default_color(v)
+                        set_default_color(const Color& v) : default_color(v)
                         {
                         }
                 };
-                struct set_wireframe_color_rgb final
+                struct set_wireframe_color final
                 {
                         Color wireframe_color;
-                        set_wireframe_color_rgb(const Color& v) : wireframe_color(v)
+                        set_wireframe_color(const Color& v) : wireframe_color(v)
                         {
                         }
                 };
@@ -239,11 +239,10 @@ class EventQueue : public IShow
                 };
 
                 const Variant<add_object, delete_all_objects, delete_object, mouse_wheel, parent_resized, reset_view, set_ambient,
-                              set_background_color_rgb, set_default_color_rgb, set_default_ns, set_dft_background_color,
+                              set_background_color, set_default_color, set_default_ns, set_dft_background_color,
                               set_dft_brightness, set_dft_color, set_diffuse, set_shadow_zoom, set_specular, set_vertical_sync,
-                              set_wireframe_color_rgb, show_convex_hull_2d, show_dft, show_fps, show_effect, show_fog,
-                              show_materials, show_object, show_optical_flow, show_shadow, show_smooth, show_wireframe,
-                              toggle_fullscreen>
+                              set_wireframe_color, show_convex_hull_2d, show_dft, show_fps, show_effect, show_fog, show_materials,
+                              show_object, show_optical_flow, show_shadow, show_smooth, show_wireframe, toggle_fullscreen>
                         event;
 
                 template <typename... Args>
@@ -287,17 +286,17 @@ protected:
         {
                 m_event_queue.emplace(std::in_place_type<Event::set_specular>, v);
         }
-        void set_background_color_rgb(const Color& c) override final
+        void set_background_color(const Color& c) override final
         {
-                m_event_queue.emplace(std::in_place_type<Event::set_background_color_rgb>, c);
+                m_event_queue.emplace(std::in_place_type<Event::set_background_color>, c);
         }
-        void set_default_color_rgb(const Color& c) override final
+        void set_default_color(const Color& c) override final
         {
-                m_event_queue.emplace(std::in_place_type<Event::set_default_color_rgb>, c);
+                m_event_queue.emplace(std::in_place_type<Event::set_default_color>, c);
         }
-        void set_wireframe_color_rgb(const Color& c) override final
+        void set_wireframe_color(const Color& c) override final
         {
-                m_event_queue.emplace(std::in_place_type<Event::set_wireframe_color_rgb>, c);
+                m_event_queue.emplace(std::in_place_type<Event::set_wireframe_color>, c);
         }
         void set_default_ns(double ns) override final
         {
@@ -387,9 +386,9 @@ protected:
         virtual void direct_set_ambient(double) = 0;
         virtual void direct_set_diffuse(double) = 0;
         virtual void direct_set_specular(double) = 0;
-        virtual void direct_set_background_color_rgb(const Color&) = 0;
-        virtual void direct_set_default_color_rgb(const Color&) = 0;
-        virtual void direct_set_wireframe_color_rgb(const Color&) = 0;
+        virtual void direct_set_background_color(const Color&) = 0;
+        virtual void direct_set_default_color(const Color&) = 0;
+        virtual void direct_set_wireframe_color(const Color&) = 0;
         virtual void direct_set_default_ns(double) = 0;
         virtual void direct_show_smooth(bool) = 0;
         virtual void direct_show_wireframe(bool) = 0;
@@ -461,17 +460,17 @@ private:
                 {
                         m_f.direct_set_specular(d.specular);
                 }
-                void operator()(const Event::set_background_color_rgb& d)
+                void operator()(const Event::set_background_color& d)
                 {
-                        m_f.direct_set_background_color_rgb(d.background_color);
+                        m_f.direct_set_background_color(d.background_color);
                 }
-                void operator()(const Event::set_default_color_rgb& d)
+                void operator()(const Event::set_default_color& d)
                 {
-                        m_f.direct_set_default_color_rgb(d.default_color);
+                        m_f.direct_set_default_color(d.default_color);
                 }
-                void operator()(const Event::set_wireframe_color_rgb& d)
+                void operator()(const Event::set_wireframe_color& d)
                 {
-                        m_f.direct_set_wireframe_color_rgb(d.wireframe_color);
+                        m_f.direct_set_wireframe_color(d.wireframe_color);
                 }
                 void operator()(const Event::set_default_ns& d)
                 {

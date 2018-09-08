@@ -241,7 +241,7 @@ class ShowObject final : public EventQueue, public WindowEvent
                 m_renderer->set_light_s(light);
         }
 
-        void direct_set_background_color_rgb(const Color& c) override
+        void direct_set_background_color(const Color& c) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
@@ -251,14 +251,14 @@ class ShowObject final : public EventQueue, public WindowEvent
                 m_canvas->set_fps_text_color(background_is_dark ? Color(1) : Color(0));
         }
 
-        void direct_set_default_color_rgb(const Color& c) override
+        void direct_set_default_color(const Color& c) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
                 m_renderer->set_default_color(c);
         }
 
-        void direct_set_wireframe_color_rgb(const Color& c) override
+        void direct_set_wireframe_color(const Color& c) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
@@ -554,9 +554,9 @@ public:
                 set_ambient(info.ambient.value());
                 set_diffuse(info.diffuse.value());
                 set_specular(info.specular.value());
-                set_background_color_rgb(info.background_color_rgb.value());
-                set_default_color_rgb(info.default_color_rgb.value());
-                set_wireframe_color_rgb(info.wireframe_color_rgb.value());
+                set_background_color(info.background_color.value());
+                set_default_color(info.default_color.value());
+                set_wireframe_color(info.wireframe_color.value());
                 set_default_ns(info.default_ns.value());
                 show_smooth(info.with_smooth.value());
                 show_wireframe(info.with_wireframe.value());
