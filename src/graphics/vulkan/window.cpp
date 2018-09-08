@@ -163,7 +163,7 @@ class VulkanWindowImplementation final : public VulkanWindow
 {
         GLFWwindow* m_window;
 
-        WindowID get_system_handle() override
+        WindowID system_handle() override
         {
 #if defined(__linux__)
                 return glfwGetX11Window(m_window);
@@ -174,14 +174,14 @@ class VulkanWindowImplementation final : public VulkanWindow
 #endif
         }
 
-        int get_width() const override
+        int width() const override
         {
                 int width, height;
                 glfwGetFramebufferSize(m_window, &width, &height);
                 return width;
         }
 
-        int get_height() const override
+        int height() const override
         {
                 int width, height;
                 glfwGetFramebufferSize(m_window, &width, &height);

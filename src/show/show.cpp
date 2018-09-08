@@ -373,7 +373,7 @@ class ShowObject final : public EventQueue, public WindowEvent
 
                 if (!m_fullscreen_active)
                 {
-                        set_size_to_parent(m_window->get_system_handle(), m_parent_window);
+                        set_size_to_parent(m_window->system_handle(), m_parent_window);
                 }
         }
 
@@ -393,7 +393,7 @@ class ShowObject final : public EventQueue, public WindowEvent
                 ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
                 m_fullscreen_active = !m_fullscreen_active;
-                make_fullscreen(m_fullscreen_active, m_window->get_system_handle(), m_parent_window);
+                make_fullscreen(m_fullscreen_active, m_window->system_handle(), m_parent_window);
         }
 
         void direct_set_vertical_sync([[maybe_unused]] bool v) override
@@ -806,14 +806,14 @@ void ShowObject<API>::loop()
         m_renderer.set(renderer);
         m_canvas.set(canvas);
 
-        move_window_to_parent(window->get_system_handle(), m_parent_window);
+        move_window_to_parent(window->system_handle(), m_parent_window);
 
-        for (int i = 1; m_window_width != window->get_width() && m_window_height != window->get_height(); ++i)
+        for (int i = 1; m_window_width != window->width() && m_window_height != window->height(); ++i)
         {
                 if (i > 10)
                 {
-                        error("Failed to receive the resize window event for the window size (" + to_string(window->get_width()) +
-                              ", " + to_string(window->get_height()) + ")");
+                        error("Failed to receive the resize window event for the window size (" + to_string(window->width()) +
+                              ", " + to_string(window->height()) + ")");
                 }
                 pull_and_dispatch_all_events();
         }

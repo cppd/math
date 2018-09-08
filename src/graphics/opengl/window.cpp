@@ -108,7 +108,7 @@ class OpenGLWindowImplementation final : public OpenGLWindow
         sf::Window m_window;
         WindowEvent* m_event_interface;
 
-        WindowID get_system_handle() const override
+        WindowID system_handle() const override
         {
                 return m_window.getSystemHandle();
         }
@@ -118,11 +118,11 @@ class OpenGLWindowImplementation final : public OpenGLWindow
                 m_window.setVerticalSyncEnabled(v);
         }
 
-        int get_width() const override
+        int width() const override
         {
                 return m_window.getSize().x;
         }
-        int get_height() const override
+        int height() const override
         {
                 return m_window.getSize().y;
         }

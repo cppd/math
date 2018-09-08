@@ -37,9 +37,9 @@ class OpenGLWindow
 public:
         virtual ~OpenGLWindow() = default;
 
-        virtual WindowID get_system_handle() const = 0;
-        virtual int get_width() const = 0;
-        virtual int get_height() const = 0;
+        virtual WindowID system_handle() const = 0;
+        virtual int width() const = 0;
+        virtual int height() const = 0;
         virtual void pull_and_dispath_events() = 0;
 
         virtual void set_vertical_sync_enabled(bool v) = 0;

@@ -39,9 +39,9 @@ public:
 
         virtual ~VulkanWindow() = default;
 
-        virtual WindowID get_system_handle() = 0;
-        virtual int get_width() const = 0;
-        virtual int get_height() const = 0;
+        virtual WindowID system_handle() = 0;
+        virtual int width() const = 0;
+        virtual int height() const = 0;
         virtual void pull_and_dispath_events() = 0;
 
         virtual VkSurfaceKHR create_surface(VkInstance instance) = 0;
