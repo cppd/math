@@ -75,4 +75,17 @@ public:
 
         void copy(const void* data) const;
 };
+
+class TextureImage final
+{
+        Image m_image;
+        DeviceMemory m_device_memory;
+
+public:
+        TextureImage(const Device& device, VkCommandPool graphics_command_pool, VkQueue graphics_queue,
+                     VkCommandPool transfer_command_pool, VkQueue transfer_queue, const std::vector<uint32_t>& family_indices,
+                     uint32_t width, uint32_t height, const std::vector<unsigned char>& rgba_pixels);
+
+        operator VkImage() const noexcept;
+};
 }

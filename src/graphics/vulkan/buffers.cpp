@@ -19,10 +19,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "common.h"
 
+#include "com/alg.h"
 #include "com/error.h"
 
 #include <cstring>
-#include <unordered_set>
 
 namespace
 {
@@ -32,11 +32,12 @@ vulkan::Buffer create_buffer(VkDevice device, VkDeviceSize size, VkBufferUsageFl
         ASSERT(size > 0);
 
         VkBufferCreateInfo create_info = {};
+
         create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
         create_info.size = size;
         create_info.usage = usage;
 
-        ASSERT(family_indices.size() == std::unordered_set<uint32_t>(family_indices.cbegin(), family_indices.cend()).size());
+        ASSERT(family_indices.size() == unique_elements(family_indices).size());
 
         if (family_indices.size() > 1)
         {
@@ -50,6 +51,43 @@ vulkan::Buffer create_buffer(VkDevice device, VkDeviceSize size, VkBufferUsageFl
         }
 
         return vulkan::Buffer(device, create_info);
+}
+
+vulkan::Image create_image(VkDevice device, uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling,
+                           VkImageUsageFlags usage, const std::vector<uint32_t>& family_indices)
+{
+        ASSERT(width > 0 && height > 0);
+
+        VkImageCreateInfo create_info = {};
+
+        create_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+        create_info.imageType = VK_IMAGE_TYPE_2D;
+        create_info.extent.width = width;
+        create_info.extent.height = height;
+        create_info.extent.depth = 1;
+        create_info.mipLevels = 1;
+        create_info.arrayLayers = 1;
+        create_info.format = format;
+        create_info.tiling = tiling;
+        create_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        create_info.usage = usage;
+        create_info.samples = VK_SAMPLE_COUNT_1_BIT;
+        // create_info.flags = 0;
+
+        ASSERT(family_indices.size() == unique_elements(family_indices).size());
+
+        if (family_indices.size() > 1)
+        {
+                create_info.sharingMode = VK_SHARING_MODE_CONCURRENT;
+                create_info.queueFamilyIndexCount = family_indices.size();
+                create_info.pQueueFamilyIndices = family_indices.data();
+        }
+        else
+        {
+                create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+        }
+
+        return vulkan::Image(device, create_info);
 }
 
 vulkan::DeviceMemory create_device_memory(const vulkan::Device& device, VkBuffer buffer, VkMemoryPropertyFlags properties)
@@ -73,6 +111,27 @@ vulkan::DeviceMemory create_device_memory(const vulkan::Device& device, VkBuffer
         return device_memory;
 }
 
+vulkan::DeviceMemory create_device_memory(const vulkan::Device& device, VkImage image, VkMemoryPropertyFlags properties)
+{
+        VkMemoryRequirements memory_requirements;
+        vkGetImageMemoryRequirements(device, image, &memory_requirements);
+
+        VkMemoryAllocateInfo allocate_info = {};
+        allocate_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+        allocate_info.allocationSize = memory_requirements.size;
+        allocate_info.memoryTypeIndex = device.physical_device_memory_type_index(memory_requirements.memoryTypeBits, properties);
+
+        vulkan::DeviceMemory device_memory(device, allocate_info);
+
+        VkResult result = vkBindImageMemory(device, image, device_memory, 0);
+        if (result != VK_SUCCESS)
+        {
+                vulkan::vulkan_function_error("vkBindImageMemory", result);
+        }
+
+        return device_memory;
+}
+
 void memory_copy(VkDevice device, VkDeviceMemory device_memory, const void* data, VkDeviceSize data_size)
 {
         void* map_memory_data;
@@ -90,14 +149,9 @@ void memory_copy(VkDevice device, VkDeviceMemory device_memory, const void* data
         // vkFlushMappedMemoryRanges, vkInvalidateMappedMemoryRanges
 }
 
-void buffer_copy(VkDevice device, VkCommandPool command_pool, VkQueue queue, VkBuffer dst_buffer, VkBuffer src_buffer,
-                 VkDeviceSize size)
+void begin_commands(VkCommandBuffer command_buffer)
 {
-        constexpr VkFence NO_FENCE = VK_NULL_HANDLE;
-
         VkResult result;
-
-        vulkan::CommandBuffer command_buffer(device, command_pool);
 
         VkCommandBufferBeginInfo command_buffer_info = {};
         command_buffer_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -108,12 +162,13 @@ void buffer_copy(VkDevice device, VkCommandPool command_pool, VkQueue queue, VkB
         {
                 vulkan::vulkan_function_error("vkBeginCommandBuffer", result);
         }
+}
 
-        VkBufferCopy copy = {};
-        // copy.srcOffset = 0;
-        // copy.dstOffset = 0;
-        copy.size = size;
-        vkCmdCopyBuffer(command_buffer, src_buffer, dst_buffer, 1, &copy);
+void end_commands(VkQueue queue, const vulkan::CommandBuffer& command_buffer)
+{
+        constexpr VkFence NO_FENCE = VK_NULL_HANDLE;
+
+        VkResult result;
 
         result = vkEndCommandBuffer(command_buffer);
         if (result != VK_SUCCESS)
@@ -139,17 +194,151 @@ void buffer_copy(VkDevice device, VkCommandPool command_pool, VkQueue queue, VkB
         }
 }
 
-void staging_copy(const vulkan::Device& device, VkCommandPool command_pool, VkQueue queue, VkBuffer dst_buffer,
-                  VkDeviceSize src_data_size, const void* src_data)
+void copy_buffer_to_buffer(VkDevice device, VkCommandPool command_pool, VkQueue queue, VkBuffer dst_buffer, VkBuffer src_buffer,
+                           VkDeviceSize size)
+{
+        vulkan::CommandBuffer command_buffer(device, command_pool);
+
+        begin_commands(command_buffer);
+
+        //
+
+        VkBufferCopy copy = {};
+        // copy.srcOffset = 0;
+        // copy.dstOffset = 0;
+        copy.size = size;
+        vkCmdCopyBuffer(command_buffer, src_buffer, dst_buffer, 1, &copy);
+
+        //
+
+        end_commands(queue, command_buffer);
+}
+
+void copy_buffer_to_image(VkDevice device, VkCommandPool command_pool, VkQueue queue, VkImage image, VkBuffer buffer,
+                          uint32_t width, uint32_t height)
+{
+        vulkan::CommandBuffer command_buffer(device, command_pool);
+
+        begin_commands(command_buffer);
+
+        //
+
+        VkBufferImageCopy region = {};
+
+        region.bufferOffset = 0;
+        region.bufferRowLength = 0;
+        region.bufferImageHeight = 0;
+
+        region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        region.imageSubresource.mipLevel = 0;
+        region.imageSubresource.baseArrayLayer = 0;
+        region.imageSubresource.layerCount = 1;
+
+        region.imageOffset = {0, 0, 0};
+        region.imageExtent = {width, height, 1};
+
+        vkCmdCopyBufferToImage(command_buffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+
+        //
+
+        end_commands(queue, command_buffer);
+}
+
+void transition_image_layout(VkDevice device, VkCommandPool command_pool, VkQueue queue, VkImage image, VkFormat /*format*/,
+                             VkImageLayout old_layout, VkImageLayout new_layout)
+{
+        vulkan::CommandBuffer command_buffer(device, command_pool);
+
+        begin_commands(command_buffer);
+
+        //
+
+        VkImageMemoryBarrier barrier = {};
+
+        barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        barrier.oldLayout = old_layout;
+        barrier.newLayout = new_layout;
+
+        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+
+        barrier.image = image;
+        barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        barrier.subresourceRange.baseMipLevel = 0;
+        barrier.subresourceRange.levelCount = 1;
+        barrier.subresourceRange.baseArrayLayer = 0;
+        barrier.subresourceRange.layerCount = 1;
+
+        VkPipelineStageFlags source_stage;
+        VkPipelineStageFlags destination_stage;
+
+        if (old_layout == VK_IMAGE_LAYOUT_UNDEFINED && new_layout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
+        {
+                barrier.srcAccessMask = 0;
+                barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+
+                source_stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+                destination_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+        }
+        else if (old_layout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && new_layout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+        {
+                barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+                barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+                source_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+                destination_stage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+        }
+        else
+        {
+                error("Unsupported image layout transition");
+        }
+
+        vkCmdPipelineBarrier(command_buffer, source_stage, destination_stage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+
+        //
+
+        end_commands(queue, command_buffer);
+}
+
+void staging_buffer_copy(const vulkan::Device& device, VkCommandPool command_pool, VkQueue queue, VkBuffer dst_buffer,
+                         VkDeviceSize src_data_size, const void* src_data)
 {
         vulkan::Buffer staging_buffer(create_buffer(device, src_data_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, {}));
 
         vulkan::DeviceMemory staging_device_memory(create_device_memory(
                 device, staging_buffer, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT));
 
+        //
+
         memory_copy(device, staging_device_memory, src_data, src_data_size);
 
-        buffer_copy(device, command_pool, queue, dst_buffer, staging_buffer, src_data_size);
+        copy_buffer_to_buffer(device, command_pool, queue, dst_buffer, staging_buffer, src_data_size);
+}
+
+void staging_image_copy(const vulkan::Device& device, VkCommandPool graphics_command_pool, VkQueue graphics_queue,
+                        VkCommandPool transfer_command_pool, VkQueue transfer_queue, VkImage image, uint32_t width,
+                        uint32_t height, const std::vector<unsigned char>& rgba_pixels)
+{
+        VkDeviceSize data_size = width * height * 4;
+
+        ASSERT(rgba_pixels.size() == data_size);
+
+        vulkan::Buffer staging_buffer(create_buffer(device, data_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, {}));
+
+        vulkan::DeviceMemory staging_device_memory(create_device_memory(
+                device, staging_buffer, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT));
+
+        //
+
+        memory_copy(device, staging_device_memory, rgba_pixels.data(), data_size);
+
+        transition_image_layout(device, graphics_command_pool, graphics_queue, image, VK_FORMAT_R8G8B8A8_UNORM,
+                                VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+
+        copy_buffer_to_image(device, transfer_command_pool, transfer_queue, image, staging_buffer, width, height);
+
+        transition_image_layout(device, graphics_command_pool, graphics_queue, image, VK_FORMAT_R8G8B8A8_UNORM,
+                                VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 }
 }
 
@@ -182,7 +371,7 @@ VertexBufferWithDeviceLocalMemory::VertexBufferWithDeviceLocalMemory(const Devic
 {
         ASSERT(family_indices.size() > 0);
 
-        staging_copy(device, command_pool, queue, m_buffer, data_size, data);
+        staging_buffer_copy(device, command_pool, queue, m_buffer, data_size, data);
 }
 
 VertexBufferWithDeviceLocalMemory::operator VkBuffer() const noexcept
@@ -201,7 +390,7 @@ IndexBufferWithDeviceLocalMemory::IndexBufferWithDeviceLocalMemory(const Device&
 {
         ASSERT(family_indices.size() > 0);
 
-        staging_copy(device, command_pool, queue, m_buffer, data_size, data);
+        staging_buffer_copy(device, command_pool, queue, m_buffer, data_size, data);
 }
 
 IndexBufferWithDeviceLocalMemory::operator VkBuffer() const noexcept
@@ -233,5 +422,26 @@ VkDeviceSize UniformBufferWithHostVisibleMemory::size() const noexcept
 void UniformBufferWithHostVisibleMemory::copy(const void* data) const
 {
         memory_copy(m_device, m_device_memory, data, m_data_size);
+}
+
+//
+
+TextureImage::TextureImage(const Device& device, VkCommandPool graphics_command_pool, VkQueue graphics_queue,
+                           VkCommandPool transfer_command_pool, VkQueue transfer_queue,
+                           const std::vector<uint32_t>& family_indices, uint32_t width, uint32_t height,
+                           const std::vector<unsigned char>& rgba_pixels)
+        : m_image(create_image(device, width, height, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_TILING_OPTIMAL,
+                               VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, family_indices)),
+          m_device_memory(create_device_memory(device, m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
+{
+        ASSERT(family_indices.size() > 0);
+
+        staging_image_copy(device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, m_image, width,
+                           height, rgba_pixels);
+}
+
+TextureImage::operator VkImage() const noexcept
+{
+        return m_image;
 }
 }
