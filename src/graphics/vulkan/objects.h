@@ -515,4 +515,26 @@ public:
         uint32_t count() const noexcept;
         const VkDescriptorSet* data() const noexcept;
 };
+
+class Image final
+{
+        VkDevice m_device = VK_NULL_HANDLE;
+        VkImage m_image = VK_NULL_HANDLE;
+
+        void destroy() noexcept;
+        void move(Image* from) noexcept;
+
+public:
+        Image();
+        Image(VkDevice device, const VkImageCreateInfo& create_info);
+        ~Image();
+
+        Image(const Image&) = delete;
+        Image& operator=(const Image&) = delete;
+
+        Image(Image&&) noexcept;
+        Image& operator=(Image&&) noexcept;
+
+        operator VkImage() const noexcept;
+};
 }

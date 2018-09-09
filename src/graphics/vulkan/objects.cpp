@@ -1471,4 +1471,64 @@ const VkDescriptorSet* DescriptorSets::data() const noexcept
 {
         return m_descriptor_sets.data();
 }
+
+//
+
+void Image::destroy() noexcept
+{
+        if (m_image != VK_NULL_HANDLE)
+        {
+                ASSERT(m_device != VK_NULL_HANDLE);
+
+                vkDestroyImage(m_device, m_image, nullptr);
+        }
+}
+
+void Image::move(Image* from) noexcept
+{
+        m_device = from->m_device;
+        m_image = from->m_image;
+        from->m_device = VK_NULL_HANDLE;
+        from->m_image = VK_NULL_HANDLE;
+}
+
+Image::Image() = default;
+
+Image::Image(VkDevice device, const VkImageCreateInfo& create_info)
+{
+        VkResult result = vkCreateImage(device, &create_info, nullptr, &m_image);
+        if (result != VK_SUCCESS)
+        {
+                vulkan::vulkan_function_error("vkCreateImage", result);
+        }
+
+        ASSERT(m_image != VK_NULL_HANDLE);
+
+        m_device = device;
+}
+
+Image::~Image()
+{
+        destroy();
+}
+
+Image::Image(Image&& from) noexcept
+{
+        move(&from);
+}
+
+Image& Image::operator=(Image&& from) noexcept
+{
+        if (this != &from)
+        {
+                destroy();
+                move(&from);
+        }
+        return *this;
+}
+
+Image::operator VkImage() const noexcept
+{
+        return m_image;
+}
 }
