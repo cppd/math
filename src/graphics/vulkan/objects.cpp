@@ -1531,4 +1531,64 @@ Image::operator VkImage() const noexcept
 {
         return m_image;
 }
+
+//
+
+void Sampler::destroy() noexcept
+{
+        if (m_sampler != VK_NULL_HANDLE)
+        {
+                ASSERT(m_device != VK_NULL_HANDLE);
+
+                vkDestroySampler(m_device, m_sampler, nullptr);
+        }
+}
+
+void Sampler::move(Sampler* from) noexcept
+{
+        m_device = from->m_device;
+        m_sampler = from->m_sampler;
+        from->m_device = VK_NULL_HANDLE;
+        from->m_sampler = VK_NULL_HANDLE;
+}
+
+Sampler::Sampler() = default;
+
+Sampler::Sampler(VkDevice device, const VkSamplerCreateInfo& create_info)
+{
+        VkResult result = vkCreateSampler(device, &create_info, nullptr, &m_sampler);
+        if (result != VK_SUCCESS)
+        {
+                vulkan::vulkan_function_error("vkCreateSampler", result);
+        }
+
+        ASSERT(m_sampler != VK_NULL_HANDLE);
+
+        m_device = device;
+}
+
+Sampler::~Sampler()
+{
+        destroy();
+}
+
+Sampler::Sampler(Sampler&& from) noexcept
+{
+        move(&from);
+}
+
+Sampler& Sampler::operator=(Sampler&& from) noexcept
+{
+        if (this != &from)
+        {
+                destroy();
+                move(&from);
+        }
+        return *this;
+}
+
+Sampler::operator VkSampler() const noexcept
+{
+        return m_sampler;
+}
 }

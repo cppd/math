@@ -537,4 +537,26 @@ public:
 
         operator VkImage() const noexcept;
 };
+
+class Sampler final
+{
+        VkDevice m_device = VK_NULL_HANDLE;
+        VkSampler m_sampler = VK_NULL_HANDLE;
+
+        void destroy() noexcept;
+        void move(Sampler* from) noexcept;
+
+public:
+        Sampler();
+        Sampler(VkDevice device, const VkSamplerCreateInfo& create_info);
+        ~Sampler();
+
+        Sampler(const Sampler&) = delete;
+        Sampler& operator=(const Sampler&) = delete;
+
+        Sampler(Sampler&&) noexcept;
+        Sampler& operator=(Sampler&&) noexcept;
+
+        operator VkSampler() const noexcept;
+};
 }
