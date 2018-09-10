@@ -103,7 +103,8 @@ class VulkanInstance
         VkQueue m_presentation_queue = VK_NULL_HANDLE;
 
         std::vector<uint32_t> m_vertex_buffer_family_indices;
-        std::vector<uint32_t> m_image_family_indices;
+        std::vector<uint32_t> m_swap_chain_image_family_indices;
+        std::vector<uint32_t> m_texture_image_family_indices;
 
         vulkan::VertexShader m_vertex_shader;
         vulkan::FragmentShader m_fragment_shader;
@@ -116,6 +117,10 @@ class VulkanInstance
         VkIndexType m_vertex_index_type;
 
         DescriptorWithBuffers m_descriptor_with_buffers;
+
+        TextureImage m_texture_image;
+        ImageView m_texture_image_view;
+        Sampler m_texture_sampler;
 
         std::optional<SwapChain> m_swapchain;
 

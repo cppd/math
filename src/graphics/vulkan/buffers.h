@@ -78,6 +78,8 @@ public:
 
 class TextureImage final
 {
+        static constexpr VkFormat IMAGE_FORMAT = VK_FORMAT_R8G8B8A8_UNORM;
+
         Image m_image;
         DeviceMemory m_device_memory;
 
@@ -87,5 +89,7 @@ public:
                      uint32_t width, uint32_t height, const std::vector<unsigned char>& rgba_pixels);
 
         operator VkImage() const noexcept;
+
+        VkFormat image_format() const noexcept;
 };
 }

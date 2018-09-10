@@ -40,6 +40,6 @@ struct PhysicalDevice
 
 bool find_swap_chain_details(VkSurfaceKHR surface, VkPhysicalDevice device, SwapChainDetails* swap_chain_details);
 
-vulkan::PhysicalDevice find_physical_device(VkInstance instance, VkSurfaceKHR surface, int api_version_major,
-                                            int api_version_minor, const std::vector<std::string>& required_extensions);
+PhysicalDevice find_physical_device(VkInstance instance, VkSurfaceKHR surface, int api_version_major, int api_version_minor,
+                                    const std::vector<std::string>& required_extensions);
 }

@@ -182,6 +182,7 @@ vulkan::Device create_device(VkPhysicalDevice physical_device, const std::vector
         }
 
         VkPhysicalDeviceFeatures device_features = {};
+        device_features.samplerAnisotropy = VK_TRUE;
 
         VkDeviceCreateInfo create_info = {};
         create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
@@ -601,6 +602,36 @@ VkIndexType vertex_index_type(size_t vertex_index_data_size, size_t vertex_count
         error("Vertex index data size error: data size = " + to_string(vertex_index_data_size) +
               ", vertex count = " + to_string(vertex_count));
 }
+
+vulkan::Sampler create_sampler(VkDevice device)
+{
+        VkSamplerCreateInfo create_info = {};
+        create_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+
+        create_info.magFilter = VK_FILTER_LINEAR;
+        create_info.minFilter = VK_FILTER_LINEAR;
+
+        create_info.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        create_info.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        create_info.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+
+        create_info.anisotropyEnable = VK_TRUE;
+        create_info.maxAnisotropy = 16;
+
+        create_info.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+
+        create_info.unnormalizedCoordinates = VK_FALSE;
+
+        create_info.compareEnable = VK_FALSE;
+        create_info.compareOp = VK_COMPARE_OP_ALWAYS;
+
+        create_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+        create_info.mipLodBias = 0.0f;
+        create_info.minLod = 0.0f;
+        create_info.maxLod = 0.0f;
+
+        return vulkan::Sampler(device, create_info);
+}
 }
 
 namespace vulkan
@@ -731,7 +762,9 @@ VulkanInstance::VulkanInstance(int api_version_major, int api_version_minor,
           m_presentation_queue(device_queue(m_device, m_physical_device.presentation, 0 /*queue_index*/)),
           //
           m_vertex_buffer_family_indices(unique_elements(std::vector({m_physical_device.graphics, m_physical_device.transfer}))),
-          m_image_family_indices(unique_elements(std::vector({m_physical_device.graphics, m_physical_device.presentation}))),
+          m_swap_chain_image_family_indices(
+                  unique_elements(std::vector({m_physical_device.graphics, m_physical_device.presentation}))),
+          m_texture_image_family_indices(unique_elements(std::vector({m_physical_device.graphics, m_physical_device.transfer}))),
           //
           m_vertex_shader(m_device, vertex_shader_code, "main"),
           m_fragment_shader(m_device, fragment_shader_code, "main"),
@@ -745,8 +778,13 @@ VulkanInstance::VulkanInstance(int api_version_major, int api_version_minor,
                                 vertex_index_data_size, vertex_index_data),
           m_vertex_index_type(vertex_index_type(vertex_index_data_size, vertex_count)),
           //
-          m_descriptor_with_buffers(m_device, descriptor_set_layout_bindings, descriptor_set_layout_bindings_sizes)
-
+          m_descriptor_with_buffers(m_device, descriptor_set_layout_bindings, descriptor_set_layout_bindings_sizes),
+          //
+          m_texture_image(m_device, m_graphics_command_pool, m_graphics_queue, m_transfer_command_pool, m_transfer_queue,
+                          m_texture_image_family_indices, 2, 2,
+                          std::vector<unsigned char>({255, 0, 0, 255, 0, 255, 0, 255, 0, 0, 255, 255, 255, 255, 255, 255})),
+          m_texture_image_view(create_image_view(m_device, m_texture_image, m_texture_image.image_format())),
+          m_texture_sampler(create_sampler(m_device))
 {
         create_swap_chain();
 }
@@ -775,8 +813,8 @@ void VulkanInstance::create_swap_chain()
 {
         std::vector<const vulkan::Shader*> shaders({&m_vertex_shader, &m_fragment_shader});
 
-        m_swapchain.emplace(m_surface, m_physical_device.device, m_image_family_indices, m_device, m_graphics_command_pool,
-                            shaders, m_vertex_binding_descriptions, m_vertex_attribute_descriptions,
+        m_swapchain.emplace(m_surface, m_physical_device.device, m_swap_chain_image_family_indices, m_device,
+                            m_graphics_command_pool, shaders, m_vertex_binding_descriptions, m_vertex_attribute_descriptions,
                             m_descriptor_with_buffers.descriptor_set_layout(), m_descriptor_with_buffers.descriptor_set());
 
         create_command_buffers();

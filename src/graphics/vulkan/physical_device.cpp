@@ -133,8 +133,8 @@ bool find_swap_chain_details(VkSurfaceKHR surface, VkPhysicalDevice device, Swap
         return true;
 }
 
-vulkan::PhysicalDevice find_physical_device(VkInstance instance, VkSurfaceKHR surface, int api_version_major,
-                                            int api_version_minor, const std::vector<std::string>& required_extensions)
+PhysicalDevice find_physical_device(VkInstance instance, VkSurfaceKHR surface, int api_version_major, int api_version_minor,
+                                    const std::vector<std::string>& required_extensions)
 {
         const uint32_t required_api_version = VK_MAKE_VERSION(api_version_major, api_version_minor, 0);
 
@@ -162,6 +162,11 @@ vulkan::PhysicalDevice find_physical_device(VkInstance instance, VkSurfaceKHR su
                 }
 
                 if (!features.tessellationShader)
+                {
+                        continue;
+                }
+
+                if (!features.samplerAnisotropy)
                 {
                         continue;
                 }
