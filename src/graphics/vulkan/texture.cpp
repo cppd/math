@@ -83,4 +83,14 @@ Texture::Texture(const Device& device, VkCommandPool graphics_command_pool, VkQu
           m_image_view(create_image_view(device, m_texture_image, m_texture_image.image_format()))
 {
 }
+
+VkImageView Texture::image_view() const noexcept
+{
+        return m_image_view;
+}
+
+VkImageLayout Texture::image_layout() const noexcept
+{
+        return m_texture_image.image_layout();
+}
 }

@@ -58,9 +58,10 @@ vulkan::DescriptorPool create_descriptor_pool(VkDevice device,
 vulkan::DescriptorSet create_descriptor_set(VkDevice device, VkDescriptorPool descriptor_pool,
                                             VkDescriptorSetLayout descriptor_set_layout,
                                             const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings,
-                                            const std::vector<VkDescriptorBufferInfo>& descriptor_buffer_infos)
+                                            const std::vector<VkDescriptorBufferInfo>& descriptor_buffer_infos,
+                                            const std::vector<VkDescriptorImageInfo>& descriptor_image_infos)
 {
-        ASSERT(descriptor_set_layout_bindings.size() == descriptor_buffer_infos.size());
+        ASSERT(descriptor_set_layout_bindings.size() == descriptor_buffer_infos.size() + descriptor_image_infos.size());
 
         vulkan::DescriptorSet descriptor_set(device, descriptor_pool, descriptor_set_layout);
 
@@ -68,7 +69,7 @@ vulkan::DescriptorSet create_descriptor_set(VkDevice device, VkDescriptorPool de
 
         std::vector<VkWriteDescriptorSet> write_descriptor_set(size);
 
-        for (uint32_t i = 0; i < size; ++i)
+        for (uint32_t i = 0, buffer_i = 0, image_i = 0; i < size; ++i)
         {
                 write_descriptor_set[i] = {};
                 write_descriptor_set[i].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -79,9 +80,20 @@ vulkan::DescriptorSet create_descriptor_set(VkDevice device, VkDescriptorPool de
                 write_descriptor_set[i].descriptorType = descriptor_set_layout_bindings[i].descriptorType;
                 write_descriptor_set[i].descriptorCount = descriptor_set_layout_bindings[i].descriptorCount;
 
-                ASSERT(descriptor_set_layout_bindings[i].descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
-                write_descriptor_set[i].pBufferInfo = &descriptor_buffer_infos[i];
-                // write_descriptor_set[i].pImageInfo = nullptr;
+                if (descriptor_set_layout_bindings[i].descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER)
+                {
+                        ASSERT(buffer_i < descriptor_buffer_infos.size());
+                        write_descriptor_set[i].pBufferInfo = &descriptor_buffer_infos[buffer_i++];
+                }
+                else if (descriptor_set_layout_bindings[i].descriptorType == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER)
+                {
+                        ASSERT(image_i < descriptor_image_infos.size());
+                        write_descriptor_set[i].pImageInfo = &descriptor_image_infos[image_i++];
+                }
+                else
+                {
+                        error_fatal("Not supported descriptor type");
+                }
                 // write_descriptor_set[i].pTexelBufferView = nullptr;
         }
 
@@ -96,12 +108,13 @@ namespace vulkan
 Descriptors::Descriptors() = default;
 
 Descriptors::Descriptors(VkDevice device, const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings,
-                         const std::vector<VkDescriptorBufferInfo>& descriptor_buffer_infos)
+                         const std::vector<VkDescriptorBufferInfo>& descriptor_buffer_infos,
+                         const std::vector<VkDescriptorImageInfo>& descriptor_image_infos)
         : m_descriptor_set_layout(create_descriptor_set_layout(device, descriptor_set_layout_bindings)),
           m_descriptor_pool(create_descriptor_pool(device, descriptor_set_layout_bindings, 1 /*max_sets*/,
                                                    VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT)),
           m_descriptor_set(create_descriptor_set(device, m_descriptor_pool, m_descriptor_set_layout,
-                                                 descriptor_set_layout_bindings, descriptor_buffer_infos))
+                                                 descriptor_set_layout_bindings, descriptor_buffer_infos, descriptor_image_infos))
 {
 }
 

@@ -31,11 +31,19 @@ layout(binding = 2) uniform UniformBufferObject1
 }
 ubo1;
 
+layout(binding = 3) uniform sampler2D texture_sampler;
+
 layout(location = 0) in vec3 fragment_color;
+layout(location = 1) in vec2 fragment_texture_coordinates;
 
 layout(location = 0) out vec4 out_color;
 
 void main()
 {
-        out_color = vec4(fragment_color.r * ubo0.value_r, fragment_color.g * ubo0.value_g, fragment_color.b * ubo1.value_b, 1.0);
+        // out_color = vec4(fragment_color, 1) * vec4(ubo0.value_r, ubo0.value_g, ubo1.value_b, 1);
+
+        // out_color = vec4(fragment_texture_coordinates, 0, 1);
+
+        out_color = texture(texture_sampler, fragment_texture_coordinates);
+        out_color *= 0.5 + 0.5 * vec4(ubo0.value_r, ubo0.value_g, ubo1.value_b, 1);
 }

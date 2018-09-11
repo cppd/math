@@ -33,5 +33,8 @@ public:
         Texture(const Device& device, VkCommandPool graphics_command_pool, VkQueue graphics_queue,
                 VkCommandPool transfer_command_pool, VkQueue transfer_queue, const std::vector<uint32_t>& family_indices,
                 uint32_t width, uint32_t height, const std::vector<unsigned char>& rgba_pixels);
+
+        VkImageView image_view() const noexcept;
+        VkImageLayout image_layout() const noexcept;
 };
 }

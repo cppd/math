@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 layout(location = 0) in vec2 position;
 layout(location = 1) in vec3 color;
+layout(location = 2) in vec2 texture_coordinates;
 
 layout(binding = 0) uniform UniformBufferObject
 {
@@ -28,6 +29,7 @@ layout(binding = 0) uniform UniformBufferObject
 ubo;
 
 layout(location = 0) out vec3 fragment_color;
+layout(location = 1) out vec2 fragment_texture_coordinates;
 
 out gl_PerVertex
 {
@@ -38,4 +40,5 @@ void main()
 {
         gl_Position = ubo.mvp_matrix * vec4(position, 0.0, 1.0);
         fragment_color = color;
+        fragment_texture_coordinates = texture_coordinates;
 }

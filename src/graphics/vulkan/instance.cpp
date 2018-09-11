@@ -744,12 +744,7 @@ VulkanInstance::VulkanInstance(int api_version_major, int api_version_minor,
                           vertex_data),
           m_vertex_index_buffer(m_device, m_transfer_command_pool, m_transfer_queue, m_vertex_buffer_family_indices,
                                 vertex_index_data_size, vertex_index_data),
-          m_vertex_index_type(vertex_index_type(vertex_index_data_size, vertex_count)),
-          //
-          m_texture(m_device, m_graphics_command_pool, m_graphics_queue, m_transfer_command_pool, m_transfer_queue,
-                    m_texture_image_family_indices, 2, 2,
-                    std::vector<unsigned char>({255, 0, 0, 255, 0, 255, 0, 255, 0, 0, 255, 255, 255, 255, 255, 255})),
-          m_texture_sampler(create_sampler(m_device))
+          m_vertex_index_type(vertex_index_type(vertex_index_data_size, vertex_count))
 {
 }
 
@@ -787,6 +782,12 @@ void VulkanInstance::create_swap_chain(VkDescriptorSetLayout descriptor_set_layo
                             descriptor_set_layout, descriptor_set);
 
         create_command_buffers(swap_chain->value());
+}
+
+Texture VulkanInstance::create_texture(uint32_t width, uint32_t height, const std::vector<unsigned char>& rgba_pixels) const
+{
+        return Texture(m_device, m_graphics_command_pool, m_graphics_queue, m_transfer_command_pool, m_transfer_queue,
+                       m_texture_image_family_indices, width, height, rgba_pixels);
 }
 
 void VulkanInstance::set_clear_color(SwapChain& swap_chain, const Color& color)

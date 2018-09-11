@@ -37,7 +37,8 @@ public:
         Descriptors();
 
         Descriptors(VkDevice device, const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings,
-                    const std::vector<VkDescriptorBufferInfo>& descriptor_buffer_infos);
+                    const std::vector<VkDescriptorBufferInfo>& descriptor_buffer_infos,
+                    const std::vector<VkDescriptorImageInfo>& descriptor_image_infos);
 
         VkDescriptorSetLayout descriptor_set_layout() const noexcept;
         VkDescriptorSet descriptor_set() const noexcept;

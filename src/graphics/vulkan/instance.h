@@ -116,9 +116,6 @@ class VulkanInstance
         IndexBufferWithDeviceLocalMemory m_vertex_index_buffer;
         VkIndexType m_vertex_index_type;
 
-        Texture m_texture;
-        Sampler m_texture_sampler;
-
         Color m_clear_color = Color(0);
 
         void create_command_buffers(SwapChain& swap_chain);
@@ -146,6 +143,8 @@ public:
 
         void create_swap_chain(VkDescriptorSetLayout descriptor_set_layout, VkDescriptorSet descriptor_set,
                                std::optional<SwapChain>* swap_chain);
+
+        Texture create_texture(uint32_t width, uint32_t height, const std::vector<unsigned char>& rgba_pixels) const;
 
         void set_clear_color(SwapChain& swap_chain, const Color& color);
 
