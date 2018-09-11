@@ -27,21 +27,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace vulkan
 {
-class DescriptorWithBuffers
+class Descriptors
 {
         DescriptorSetLayout m_descriptor_set_layout;
-        std::vector<UniformBufferWithHostVisibleMemory> m_descriptor_set_layout_uniform_buffers;
         DescriptorPool m_descriptor_pool;
         DescriptorSet m_descriptor_set;
 
 public:
-        DescriptorWithBuffers(const vulkan::Device& device,
-                              const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings,
-                              const std::vector<VkDeviceSize>& descriptor_set_layout_bindings_sizes);
+        Descriptors();
+
+        Descriptors(VkDevice device, const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings,
+                    const std::vector<VkDescriptorBufferInfo>& descriptor_buffer_infos);
 
         VkDescriptorSetLayout descriptor_set_layout() const noexcept;
         VkDescriptorSet descriptor_set() const noexcept;
-
-        void copy_to_buffer(uint32_t index, const Span<const void>& data) const;
 };
 }

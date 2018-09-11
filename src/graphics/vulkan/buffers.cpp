@@ -317,7 +317,8 @@ void staging_buffer_copy(const vulkan::Device& device, VkCommandPool command_poo
 
 void staging_image_copy(const vulkan::Device& device, VkCommandPool graphics_command_pool, VkQueue graphics_queue,
                         VkCommandPool transfer_command_pool, VkQueue transfer_queue, VkImage image, VkFormat image_format,
-                        uint32_t width, uint32_t height, const std::vector<unsigned char>& rgba_pixels)
+                        VkImageLayout image_layout, uint32_t width, uint32_t height,
+                        const std::vector<unsigned char>& rgba_pixels)
 {
         VkDeviceSize data_size = width * height * 4;
 
@@ -338,7 +339,7 @@ void staging_image_copy(const vulkan::Device& device, VkCommandPool graphics_com
         copy_buffer_to_image(device, transfer_command_pool, transfer_queue, image, staging_buffer, width, height);
 
         transition_image_layout(device, graphics_command_pool, graphics_queue, image, image_format,
-                                VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+                                VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, image_layout);
 }
 }
 
@@ -437,7 +438,7 @@ TextureImage::TextureImage(const Device& device, VkCommandPool graphics_command_
         ASSERT(family_indices.size() > 0);
 
         staging_image_copy(device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, m_image,
-                           IMAGE_FORMAT, width, height, rgba_pixels);
+                           IMAGE_FORMAT, IMAGE_LAYOUT, width, height, rgba_pixels);
 }
 
 TextureImage::operator VkImage() const noexcept
@@ -448,5 +449,10 @@ TextureImage::operator VkImage() const noexcept
 VkFormat TextureImage::image_format() const noexcept
 {
         return IMAGE_FORMAT;
+}
+
+VkImageLayout TextureImage::image_layout() const noexcept
+{
+        return IMAGE_LAYOUT;
 }
 }

@@ -18,7 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "buffers.h"
-#include "descriptor.h"
 #include "objects.h"
 #include "physical_device.h"
 #include "shader.h"
@@ -116,19 +115,13 @@ class VulkanInstance
         IndexBufferWithDeviceLocalMemory m_vertex_index_buffer;
         VkIndexType m_vertex_index_type;
 
-        DescriptorWithBuffers m_descriptor_with_buffers;
-
         TextureImage m_texture_image;
         ImageView m_texture_image_view;
         Sampler m_texture_sampler;
 
-        std::optional<SwapChain> m_swapchain;
-
         Color m_clear_color = Color(0);
 
-        void create_command_buffers();
-        void create_swap_chain();
-        void recreate_swap_chain();
+        void create_command_buffers(SwapChain& swap_chain);
 
 public:
         VulkanInstance(int api_version_major, int api_version_minor, const std::vector<std::string>& required_instance_extensions,
@@ -139,9 +132,7 @@ public:
                        const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
                        const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions, uint32_t vertex_count,
                        size_t vertex_data_size, const void* vertex_data, size_t vertex_index_data_size,
-                       const void* vertex_index_data,
-                       const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings,
-                       const std::vector<VkDeviceSize>& descriptor_set_layout_bindings_sizes);
+                       const void* vertex_index_data);
 
         ~VulkanInstance();
 
@@ -151,13 +142,15 @@ public:
         VulkanInstance& operator=(VulkanInstance&&) = delete;
 
         VkInstance instance() const noexcept;
+        const Device& device() const noexcept;
 
-        void draw_frame();
+        void create_swap_chain(VkDescriptorSetLayout descriptor_set_layout, VkDescriptorSet descriptor_set,
+                               std::optional<SwapChain>* swap_chain);
+
+        void set_clear_color(SwapChain& swap_chain, const Color& color);
+
+        [[nodiscard]] bool draw_frame(SwapChain& swap_chain);
 
         void device_wait_idle() const;
-
-        void copy_to_buffer(uint32_t index, const Span<const void>& data) const;
-
-        void set_clear_color(const Color& color);
 };
 }

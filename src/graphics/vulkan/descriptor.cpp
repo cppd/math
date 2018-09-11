@@ -30,24 +30,6 @@ vulkan::DescriptorSetLayout create_descriptor_set_layout(
         return vulkan::DescriptorSetLayout(device, create_info);
 }
 
-std::vector<vulkan::UniformBufferWithHostVisibleMemory> create_uniform_buffers(
-        const vulkan::Device& device, const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings,
-        const std::vector<VkDeviceSize>& descriptor_set_layout_bindings_sizes)
-{
-        ASSERT(descriptor_set_layout_bindings.size() == descriptor_set_layout_bindings_sizes.size());
-
-        std::vector<vulkan::UniformBufferWithHostVisibleMemory> uniform_buffers;
-
-        for (size_t i = 0; i < descriptor_set_layout_bindings.size(); ++i)
-        {
-                ASSERT(descriptor_set_layout_bindings[i].descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
-
-                uniform_buffers.emplace_back(device, descriptor_set_layout_bindings_sizes[i]);
-        }
-
-        return uniform_buffers;
-}
-
 vulkan::DescriptorPool create_descriptor_pool(VkDevice device,
                                               const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings,
                                               uint32_t max_sets, VkDescriptorPoolCreateFlags flags)
@@ -73,27 +55,21 @@ vulkan::DescriptorPool create_descriptor_pool(VkDevice device,
         return vulkan::DescriptorPool(device, create_info);
 }
 
-vulkan::DescriptorSet create_descriptor_set(
-        VkDevice device, VkDescriptorPool descriptor_pool, VkDescriptorSetLayout descriptor_set_layout,
-        const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings,
-        const std::vector<vulkan::UniformBufferWithHostVisibleMemory>& descriptor_set_layout_uniform_buffers)
+vulkan::DescriptorSet create_descriptor_set(VkDevice device, VkDescriptorPool descriptor_pool,
+                                            VkDescriptorSetLayout descriptor_set_layout,
+                                            const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings,
+                                            const std::vector<VkDescriptorBufferInfo>& descriptor_buffer_infos)
 {
-        ASSERT(descriptor_set_layout_bindings.size() == descriptor_set_layout_uniform_buffers.size());
+        ASSERT(descriptor_set_layout_bindings.size() == descriptor_buffer_infos.size());
 
         vulkan::DescriptorSet descriptor_set(device, descriptor_pool, descriptor_set_layout);
 
         const uint32_t size = descriptor_set_layout_bindings.size();
 
-        std::vector<VkDescriptorBufferInfo> descriptor_buffer_info(size);
         std::vector<VkWriteDescriptorSet> write_descriptor_set(size);
 
         for (uint32_t i = 0; i < size; ++i)
         {
-                descriptor_buffer_info[i] = {};
-                descriptor_buffer_info[i].buffer = descriptor_set_layout_uniform_buffers[i];
-                descriptor_buffer_info[i].offset = 0;
-                descriptor_buffer_info[i].range = descriptor_set_layout_uniform_buffers[i].size();
-
                 write_descriptor_set[i] = {};
                 write_descriptor_set[i].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
                 write_descriptor_set[i].dstSet = descriptor_set;
@@ -104,7 +80,7 @@ vulkan::DescriptorSet create_descriptor_set(
                 write_descriptor_set[i].descriptorCount = descriptor_set_layout_bindings[i].descriptorCount;
 
                 ASSERT(descriptor_set_layout_bindings[i].descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
-                write_descriptor_set[i].pBufferInfo = &descriptor_buffer_info[i];
+                write_descriptor_set[i].pBufferInfo = &descriptor_buffer_infos[i];
                 // write_descriptor_set[i].pImageInfo = nullptr;
                 // write_descriptor_set[i].pTexelBufferView = nullptr;
         }
@@ -117,34 +93,25 @@ vulkan::DescriptorSet create_descriptor_set(
 
 namespace vulkan
 {
-DescriptorWithBuffers::DescriptorWithBuffers(const vulkan::Device& device,
-                                             const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings,
-                                             const std::vector<VkDeviceSize>& descriptor_set_layout_bindings_sizes)
+Descriptors::Descriptors() = default;
+
+Descriptors::Descriptors(VkDevice device, const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings,
+                         const std::vector<VkDescriptorBufferInfo>& descriptor_buffer_infos)
         : m_descriptor_set_layout(create_descriptor_set_layout(device, descriptor_set_layout_bindings)),
-          m_descriptor_set_layout_uniform_buffers(
-                  create_uniform_buffers(device, descriptor_set_layout_bindings, descriptor_set_layout_bindings_sizes)),
           m_descriptor_pool(create_descriptor_pool(device, descriptor_set_layout_bindings, 1 /*max_sets*/,
                                                    VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT)),
           m_descriptor_set(create_descriptor_set(device, m_descriptor_pool, m_descriptor_set_layout,
-                                                 descriptor_set_layout_bindings, m_descriptor_set_layout_uniform_buffers))
+                                                 descriptor_set_layout_bindings, descriptor_buffer_infos))
 {
 }
 
-VkDescriptorSetLayout DescriptorWithBuffers::descriptor_set_layout() const noexcept
+VkDescriptorSetLayout Descriptors::descriptor_set_layout() const noexcept
 {
         return m_descriptor_set_layout;
 }
 
-VkDescriptorSet DescriptorWithBuffers::descriptor_set() const noexcept
+VkDescriptorSet Descriptors::descriptor_set() const noexcept
 {
         return m_descriptor_set;
-}
-
-void DescriptorWithBuffers::copy_to_buffer(uint32_t index, const Span<const void>& data) const
-{
-        ASSERT(index < m_descriptor_set_layout_uniform_buffers.size());
-        ASSERT(data.size() == m_descriptor_set_layout_uniform_buffers[index].size());
-
-        m_descriptor_set_layout_uniform_buffers[index].copy(data.data());
 }
 }

@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/time.h"
 #include "com/vec.h"
 #include "graphics/vulkan/common.h"
+#include "graphics/vulkan/descriptor.h"
 #include "graphics/vulkan/instance.h"
 #include "graphics/vulkan/query.h"
 
@@ -109,85 +110,127 @@ struct Vertex
 
 //
 
-struct VertexShaderUniformBufferObject
+class ShaderMemory
 {
-        Matrix<4, 4, float> mvp_matrix;
-};
+        std::vector<vulkan::UniformBufferWithHostVisibleMemory> m_uniform_buffers;
+        vulkan::Descriptors m_descriptors;
 
-struct FragmentShaderUniformBufferObject0
-{
-        float value_r;
-        float value_g;
-};
-
-struct FragmentShaderUniformBufferObject1
-{
-        float value_b;
-};
-
-std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings()
-{
-        std::vector<VkDescriptorSetLayoutBinding> bindings;
-
+        void copy_to_buffer(uint32_t index, const Span<const void>& data) const
         {
-                VkDescriptorSetLayoutBinding layout_binding = {};
-                layout_binding.binding = 0;
-                layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-                layout_binding.descriptorCount = 1;
-                layout_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-                // layout_binding.pImmutableSamplers = nullptr;
+                ASSERT(index < m_uniform_buffers.size());
+                ASSERT(data.size() == m_uniform_buffers[index].size());
 
-                bindings.push_back(layout_binding);
+                m_uniform_buffers[index].copy(data.data());
         }
 
+public:
+        struct VertexShaderUniformBufferObject
         {
-                VkDescriptorSetLayoutBinding layout_binding = {};
-                layout_binding.binding = 1;
-                layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-                layout_binding.descriptorCount = 1;
-                layout_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-                // layout_binding.pImmutableSamplers = nullptr;
+                Matrix<4, 4, float> mvp_matrix;
+        };
 
-                bindings.push_back(layout_binding);
+        struct FragmentShaderUniformBufferObject0
+        {
+                float value_r;
+                float value_g;
+        };
+
+        struct FragmentShaderUniformBufferObject1
+        {
+                float value_b;
+        };
+
+        ShaderMemory(const vulkan::Device& device)
+        {
+                std::vector<VkDescriptorBufferInfo> buffer_infos;
+                std::vector<VkDescriptorSetLayoutBinding> bindings;
+
+                {
+                        m_uniform_buffers.emplace_back(device, sizeof(VertexShaderUniformBufferObject));
+
+                        VkDescriptorBufferInfo buffer_info = {};
+                        buffer_info.buffer = m_uniform_buffers.back();
+                        buffer_info.offset = 0;
+                        buffer_info.range = m_uniform_buffers.back().size();
+
+                        buffer_infos.push_back(buffer_info);
+
+                        VkDescriptorSetLayoutBinding binding = {};
+                        binding.binding = 0;
+                        binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+                        binding.descriptorCount = 1;
+                        binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+                        // layout_binding.pImmutableSamplers = nullptr;
+
+                        bindings.push_back(binding);
+                }
+                {
+                        m_uniform_buffers.emplace_back(device, sizeof(FragmentShaderUniformBufferObject0));
+
+                        VkDescriptorBufferInfo buffer_info = {};
+                        buffer_info.buffer = m_uniform_buffers.back();
+                        buffer_info.offset = 0;
+                        buffer_info.range = m_uniform_buffers.back().size();
+
+                        buffer_infos.push_back(buffer_info);
+
+                        VkDescriptorSetLayoutBinding binding = {};
+                        binding.binding = 1;
+                        binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+                        binding.descriptorCount = 1;
+                        binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+                        // layout_binding.pImmutableSamplers = nullptr;
+
+                        bindings.push_back(binding);
+                }
+                {
+                        m_uniform_buffers.emplace_back(device, sizeof(FragmentShaderUniformBufferObject1));
+
+                        VkDescriptorBufferInfo buffer_info = {};
+                        buffer_info.buffer = m_uniform_buffers.back();
+                        buffer_info.offset = 0;
+                        buffer_info.range = m_uniform_buffers.back().size();
+
+                        buffer_infos.push_back(buffer_info);
+
+                        VkDescriptorSetLayoutBinding binding = {};
+                        binding.binding = 2;
+                        binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+                        binding.descriptorCount = 1;
+                        binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+                        // layout_binding.pImmutableSamplers = nullptr;
+
+                        bindings.push_back(binding);
+                }
+
+                m_descriptors = vulkan::Descriptors(device, bindings, buffer_infos);
         }
 
+        VkDescriptorSetLayout descriptor_set_layout() const noexcept
         {
-                VkDescriptorSetLayoutBinding layout_binding = {};
-                layout_binding.binding = 2;
-                layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-                layout_binding.descriptorCount = 1;
-                layout_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-                // layout_binding.pImmutableSamplers = nullptr;
-
-                bindings.push_back(layout_binding);
+                return m_descriptors.descriptor_set_layout();
         }
 
-        return bindings;
-}
+        VkDescriptorSet descriptor_set() const noexcept
+        {
+                return m_descriptors.descriptor_set();
+        }
 
-std::vector<VkDeviceSize> descriptor_set_layout_bindings_sizes()
-{
-        std::vector<VkDeviceSize> sizes;
-        sizes.push_back(sizeof(VertexShaderUniformBufferObject));
-        sizes.push_back(sizeof(FragmentShaderUniformBufferObject0));
-        sizes.push_back(sizeof(FragmentShaderUniformBufferObject1));
-        return sizes;
-}
+        void set_uniform(const VertexShaderUniformBufferObject& ubo)
+        {
+                copy_to_buffer(0, Span(&ubo, sizeof(ubo)));
+        }
 
-void set_vertex_uniform(const vulkan::VulkanInstance& instance, VertexShaderUniformBufferObject ubo)
-{
-        instance.copy_to_buffer(0, Span(&ubo, sizeof(ubo)));
-}
+        void set_uniform(const FragmentShaderUniformBufferObject0& ubo)
+        {
+                copy_to_buffer(1, Span(&ubo, sizeof(ubo)));
+        }
 
-void set_fragment_uniform_0(const vulkan::VulkanInstance& instance, FragmentShaderUniformBufferObject0 ubo0)
-{
-        instance.copy_to_buffer(1, Span(&ubo0, sizeof(ubo0)));
-}
-
-void set_fragment_uniform_1(const vulkan::VulkanInstance& instance, FragmentShaderUniformBufferObject1 ubo1)
-{
-        instance.copy_to_buffer(2, Span(&ubo1, sizeof(ubo1)));
-}
+        void set_uniform(const FragmentShaderUniformBufferObject1& ubo)
+        {
+                copy_to_buffer(2, Span(&ubo, sizeof(ubo)));
+        }
+};
 
 //
 
@@ -205,23 +248,25 @@ constexpr std::array<uint16_t, 6> vertex_indices =
 };
 // clang-format on
 
-void update_uniforms(const vulkan::VulkanInstance& instance)
+void update_uniforms(ShaderMemory& shader_memory)
 {
         const double radians = time_in_seconds() * 2 * PI<double>;
 
-        FragmentShaderUniformBufferObject0 ubo0;
+        ShaderMemory::FragmentShaderUniformBufferObject0 ubo0;
         ubo0.value_r = 0.5 * (1 + std::sin(radians));
         ubo0.value_g = 0.5 * (1 + std::sin(radians * 2));
-        set_fragment_uniform_0(instance, ubo0);
+        shader_memory.set_uniform(ubo0);
 
-        FragmentShaderUniformBufferObject1 ubo1;
+        ShaderMemory::FragmentShaderUniformBufferObject1 ubo1;
         ubo1.value_b = 0.5 * (1 + std::sin(radians * 4));
-        set_fragment_uniform_1(instance, ubo1);
+        shader_memory.set_uniform(ubo1);
 }
 
 class VulkanRendererImplementation final : public VulkanRenderer
 {
-        std::unique_ptr<vulkan::VulkanInstance> m_instance;
+        std::optional<vulkan::VulkanInstance> m_instance;
+        std::optional<ShaderMemory> m_shader_memory;
+        std::optional<vulkan::SwapChain> m_swap_chain;
 
         void set_light_a(const Color& /*light*/) override
         {
@@ -234,7 +279,7 @@ class VulkanRendererImplementation final : public VulkanRenderer
         }
         void set_background_color(const Color& color) override
         {
-                m_instance->set_clear_color(color);
+                m_instance->set_clear_color(*m_swap_chain, color);
         }
         void set_default_color(const Color& /*color*/) override
         {
@@ -265,9 +310,9 @@ class VulkanRendererImplementation final : public VulkanRenderer
         }
         void set_matrices(const mat4& /*shadow_matrix*/, const mat4& main_matrix) override
         {
-                VertexShaderUniformBufferObject ubo;
+                ShaderMemory::VertexShaderUniformBufferObject ubo;
                 ubo.mvp_matrix = transpose(to_matrix<float>(main_matrix));
-                set_vertex_uniform(*m_instance, ubo);
+                m_shader_memory->set_uniform(ubo);
         }
         void set_light_direction(vec3 /*dir*/) override
         {
@@ -294,11 +339,20 @@ class VulkanRendererImplementation final : public VulkanRenderer
 
         bool draw() override
         {
-                update_uniforms(*m_instance);
+                update_uniforms(*m_shader_memory);
 
-                m_instance->draw_frame();
+                if (!m_instance->draw_frame(*m_swap_chain))
+                {
+                        create_swap_chain();
+                }
 
                 return true;
+        }
+
+        void create_swap_chain()
+        {
+                m_instance->create_swap_chain(m_shader_memory->descriptor_set_layout(), m_shader_memory->descriptor_set(),
+                                              &m_swap_chain);
         }
 
 public:
@@ -311,14 +365,22 @@ public:
                 std::vector<std::string> device_extensions(std::cbegin(DEVICE_EXTENSIONS), std::cend(DEVICE_EXTENSIONS));
                 std::vector<std::string> validation_layers(std::cbegin(VALIDATION_LAYERS), std::cend(VALIDATION_LAYERS));
 
-                m_instance = std::make_unique<vulkan::VulkanInstance>(
-                        API_VERSION_MAJOR, API_VERSION_MINOR, instance_extensions + window_instance_extensions, device_extensions,
-                        validation_layers, create_surface, vertex_shader, fragment_shader, Vertex::binding_descriptions(),
-                        Vertex::attribute_descriptions(), vertex_indices.size(), vertices.size() * sizeof(vertices[0]),
-                        vertices.data(), vertex_indices.size() * sizeof(vertex_indices[0]), vertex_indices.data(),
-                        descriptor_set_layout_bindings(), descriptor_set_layout_bindings_sizes());
+                m_instance.emplace(API_VERSION_MAJOR, API_VERSION_MINOR, instance_extensions + window_instance_extensions,
+                                   device_extensions, validation_layers, create_surface, vertex_shader, fragment_shader,
+                                   Vertex::binding_descriptions(), Vertex::attribute_descriptions(), vertex_indices.size(),
+                                   vertices.size() * sizeof(vertices[0]), vertices.data(),
+                                   vertex_indices.size() * sizeof(vertex_indices[0]), vertex_indices.data());
+
+                m_shader_memory.emplace(m_instance->device());
+
+                create_swap_chain();
 
                 LOG(vulkan_overview_physical_devices_for_log(m_instance->instance()));
+        }
+
+        ~VulkanRendererImplementation() override
+        {
+                m_instance->device_wait_idle();
         }
 };
 }

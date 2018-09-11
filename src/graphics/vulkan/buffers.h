@@ -79,6 +79,7 @@ public:
 class TextureImage final
 {
         static constexpr VkFormat IMAGE_FORMAT = VK_FORMAT_R8G8B8A8_UNORM;
+        static constexpr VkImageLayout IMAGE_LAYOUT = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
         Image m_image;
         DeviceMemory m_device_memory;
@@ -91,5 +92,6 @@ public:
         operator VkImage() const noexcept;
 
         VkFormat image_format() const noexcept;
+        VkImageLayout image_layout() const noexcept;
 };
 }

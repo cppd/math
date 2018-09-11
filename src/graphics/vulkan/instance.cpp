@@ -732,9 +732,7 @@ VulkanInstance::VulkanInstance(int api_version_major, int api_version_minor,
                                const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
                                const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions,
                                uint32_t vertex_count, size_t vertex_data_size, const void* vertex_data,
-                               size_t vertex_index_data_size, const void* vertex_index_data,
-                               const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings,
-                               const std::vector<VkDeviceSize>& descriptor_set_layout_bindings_sizes)
+                               size_t vertex_index_data_size, const void* vertex_index_data)
         : m_instance(create_instance(api_version_major, api_version_minor, required_instance_extensions,
                                      required_validation_layers)),
           m_callback(!required_validation_layers.empty() ? std::make_optional(create_debug_report_callback(m_instance)) :
@@ -778,15 +776,12 @@ VulkanInstance::VulkanInstance(int api_version_major, int api_version_minor,
                                 vertex_index_data_size, vertex_index_data),
           m_vertex_index_type(vertex_index_type(vertex_index_data_size, vertex_count)),
           //
-          m_descriptor_with_buffers(m_device, descriptor_set_layout_bindings, descriptor_set_layout_bindings_sizes),
-          //
           m_texture_image(m_device, m_graphics_command_pool, m_graphics_queue, m_transfer_command_pool, m_transfer_queue,
                           m_texture_image_family_indices, 2, 2,
                           std::vector<unsigned char>({255, 0, 0, 255, 0, 255, 0, 255, 0, 0, 255, 255, 255, 255, 255, 255})),
           m_texture_image_view(create_image_view(m_device, m_texture_image, m_texture_image.image_format())),
           m_texture_sampler(create_sampler(m_device))
 {
-        create_swap_chain();
 }
 
 VulkanInstance::~VulkanInstance()
@@ -801,39 +796,37 @@ VulkanInstance::~VulkanInstance()
         }
 }
 
-void VulkanInstance::create_command_buffers()
+void VulkanInstance::create_command_buffers(SwapChain& swap_chain)
 {
-        ASSERT(m_swapchain);
-
-        m_swapchain->create_command_buffers(m_vertex_buffer, m_vertex_index_buffer, m_vertex_index_type, m_vertex_count,
-                                            m_clear_color);
+        swap_chain.create_command_buffers(m_vertex_buffer, m_vertex_index_buffer, m_vertex_index_type, m_vertex_count,
+                                          m_clear_color);
 }
 
-void VulkanInstance::create_swap_chain()
+void VulkanInstance::create_swap_chain(VkDescriptorSetLayout descriptor_set_layout, VkDescriptorSet descriptor_set,
+                                       std::optional<SwapChain>* swap_chain)
 {
-        std::vector<const vulkan::Shader*> shaders({&m_vertex_shader, &m_fragment_shader});
+        ASSERT(descriptor_set_layout != VK_NULL_HANDLE);
+        ASSERT(descriptor_set != VK_NULL_HANDLE);
+        ASSERT(swap_chain);
 
-        m_swapchain.emplace(m_surface, m_physical_device.device, m_swap_chain_image_family_indices, m_device,
-                            m_graphics_command_pool, shaders, m_vertex_binding_descriptions, m_vertex_attribute_descriptions,
-                            m_descriptor_with_buffers.descriptor_set_layout(), m_descriptor_with_buffers.descriptor_set());
-
-        create_command_buffers();
-}
-
-void VulkanInstance::recreate_swap_chain()
-{
         device_wait_idle();
 
-        create_swap_chain();
+        std::vector<const vulkan::Shader*> shaders({&m_vertex_shader, &m_fragment_shader});
+
+        swap_chain->emplace(m_surface, m_physical_device.device, m_swap_chain_image_family_indices, m_device,
+                            m_graphics_command_pool, shaders, m_vertex_binding_descriptions, m_vertex_attribute_descriptions,
+                            descriptor_set_layout, descriptor_set);
+
+        create_command_buffers(swap_chain->value());
 }
 
-void VulkanInstance::set_clear_color(const Color& color)
+void VulkanInstance::set_clear_color(SwapChain& swap_chain, const Color& color)
 {
         device_wait_idle();
 
         m_clear_color = color;
 
-        create_command_buffers();
+        create_command_buffers(swap_chain);
 }
 
 VkInstance VulkanInstance::instance() const noexcept
@@ -841,12 +834,17 @@ VkInstance VulkanInstance::instance() const noexcept
         return m_instance;
 }
 
-void VulkanInstance::draw_frame()
+const Device& VulkanInstance::device() const noexcept
+{
+        return m_device;
+}
+
+// false - recreate swap chain
+bool VulkanInstance::draw_frame(SwapChain& swap_chain)
 {
         constexpr VkFence NO_FENCE = VK_NULL_HANDLE;
 
-        ASSERT(m_swapchain);
-        ASSERT(m_swapchain->command_buffers_created());
+        ASSERT(swap_chain.command_buffers_created());
 
         VkResult result;
 
@@ -864,12 +862,11 @@ void VulkanInstance::draw_frame()
         }
 
         uint32_t image_index;
-        result = vkAcquireNextImageKHR(m_device, m_swapchain->swap_chain(), std::numeric_limits<uint64_t>::max(),
+        result = vkAcquireNextImageKHR(m_device, swap_chain.swap_chain(), std::numeric_limits<uint64_t>::max(),
                                        m_image_available_semaphores[m_current_frame], NO_FENCE, &image_index);
         if (result == VK_ERROR_OUT_OF_DATE_KHR)
         {
-                recreate_swap_chain();
-                return;
+                return false;
         }
         else if (result == VK_SUBOPTIMAL_KHR)
         {
@@ -889,7 +886,7 @@ void VulkanInstance::draw_frame()
         submit_info.pWaitDstStageMask = wait_stages;
 
         submit_info.commandBufferCount = 1;
-        submit_info.pCommandBuffers = &m_swapchain->command_buffer(image_index);
+        submit_info.pCommandBuffers = &swap_chain.command_buffer(image_index);
 
         VkSemaphore signal_semaphores[] = {m_render_finished_semaphores[m_current_frame]};
         submit_info.signalSemaphoreCount = 1;
@@ -907,17 +904,18 @@ void VulkanInstance::draw_frame()
         present_info.waitSemaphoreCount = 1;
         present_info.pWaitSemaphores = signal_semaphores;
 
-        VkSwapchainKHR swap_chains[] = {m_swapchain->swap_chain()};
+        VkSwapchainKHR swap_chains[] = {swap_chain.swap_chain()};
         present_info.swapchainCount = 1;
         present_info.pSwapchains = swap_chains;
         present_info.pImageIndices = &image_index;
 
         // present_info.pResults = nullptr;
 
+        bool recreate_swap_chain = false;
         result = vkQueuePresentKHR(m_presentation_queue, &present_info);
         if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
         {
-                recreate_swap_chain();
+                recreate_swap_chain = true;
         }
         else if (result != VK_SUCCESS)
         {
@@ -925,6 +923,8 @@ void VulkanInstance::draw_frame()
         }
 
         m_current_frame = (m_current_frame + 1) % MAX_FRAMES_IN_FLIGHT;
+
+        return !recreate_swap_chain;
 }
 
 void VulkanInstance::device_wait_idle() const
@@ -936,10 +936,5 @@ void VulkanInstance::device_wait_idle() const
         {
                 vulkan_function_error("vkDeviceWaitIdle", result);
         }
-}
-
-void VulkanInstance::copy_to_buffer(uint32_t index, const Span<const void>& data) const
-{
-        m_descriptor_with_buffers.copy_to_buffer(index, data);
 }
 }
