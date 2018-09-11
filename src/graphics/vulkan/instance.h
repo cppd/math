@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "objects.h"
 #include "physical_device.h"
 #include "shader.h"
+#include "texture.h"
 
 #include "com/color/colors.h"
 #include "com/error.h"
@@ -115,8 +116,7 @@ class VulkanInstance
         IndexBufferWithDeviceLocalMemory m_vertex_index_buffer;
         VkIndexType m_vertex_index_type;
 
-        TextureImage m_texture_image;
-        ImageView m_texture_image_view;
+        Texture m_texture;
         Sampler m_texture_sampler;
 
         Color m_clear_color = Color(0);
