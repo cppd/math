@@ -16,11 +16,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #version 450
-#extension GL_ARB_separate_shader_objects : enable
 
 layout(location = 0) in vec3 position;
-layout(location = 1) in vec3 color;
-layout(location = 2) in vec2 texture_coordinates;
+layout(location = 1) in vec2 texture_coordinates;
 
 layout(binding = 0) uniform UniformBufferObject
 {
@@ -28,8 +26,13 @@ layout(binding = 0) uniform UniformBufferObject
 }
 ubo;
 
-layout(location = 0) out vec3 fragment_color;
-layout(location = 1) out vec2 fragment_texture_coordinates;
+//
+
+layout(location = 0) out VS
+{
+        vec2 texture_coordinates;
+}
+vs;
 
 out gl_PerVertex
 {
@@ -39,6 +42,5 @@ out gl_PerVertex
 void main()
 {
         gl_Position = ubo.mvp_matrix * vec4(position, 1.0);
-        fragment_color = color;
-        fragment_texture_coordinates = texture_coordinates;
+        vs.texture_coordinates = texture_coordinates;
 }

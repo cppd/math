@@ -78,7 +78,6 @@ std::string vulkan_overview_physical_devices_for_log(VkInstance instance)
 struct Vertex
 {
         vec3f position;
-        vec3f color;
         vec2f texture_coordinates;
 
         static std::vector<VkVertexInputBindingDescription> binding_descriptions()
@@ -99,19 +98,13 @@ struct Vertex
                 position_description.format = VK_FORMAT_R32G32B32_SFLOAT;
                 position_description.offset = offsetof(Vertex, position);
 
-                VkVertexInputAttributeDescription color_description = {};
-                color_description.binding = 0;
-                color_description.location = 1;
-                color_description.format = VK_FORMAT_R32G32B32_SFLOAT;
-                color_description.offset = offsetof(Vertex, color);
-
                 VkVertexInputAttributeDescription texture_coordinates_description = {};
                 texture_coordinates_description.binding = 0;
-                texture_coordinates_description.location = 2;
+                texture_coordinates_description.location = 1;
                 texture_coordinates_description.format = VK_FORMAT_R32G32_SFLOAT;
                 texture_coordinates_description.offset = offsetof(Vertex, texture_coordinates);
 
-                return {position_description, color_description, texture_coordinates_description};
+                return {position_description, texture_coordinates_description};
         }
 };
 
@@ -172,7 +165,6 @@ public:
                         binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
                         binding.descriptorCount = 1;
                         binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-                        // layout_binding.pImmutableSamplers = nullptr;
 
                         bindings.push_back(binding);
                 }
@@ -191,7 +183,6 @@ public:
                         binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
                         binding.descriptorCount = 1;
                         binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-                        // layout_binding.pImmutableSamplers = nullptr;
 
                         bindings.push_back(binding);
                 }
@@ -210,11 +201,9 @@ public:
                         binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
                         binding.descriptorCount = 1;
                         binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-                        // layout_binding.pImmutableSamplers = nullptr;
 
                         bindings.push_back(binding);
                 }
-
                 {
                         m_textures.push_back(
                                 instance.create_texture(2, 2,
@@ -233,7 +222,7 @@ public:
                         binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
                         binding.descriptorCount = 1;
                         binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-                        // layout_binding.pImmutableSamplers = nullptr;
+                        binding.pImmutableSamplers = nullptr;
 
                         bindings.push_back(binding);
                 }
@@ -272,15 +261,15 @@ public:
 // clang-format off
 constexpr std::array<Vertex, 8> vertices =
 {
-        Vertex{vec3f( 0.5, -0.5, 0.0), vec3f(1, 0, 0), vec2f(1, 1)},
-        Vertex{vec3f( 0.5,  0.5, 0.0), vec3f(0, 1, 0), vec2f(1, 0)},
-        Vertex{vec3f(-0.5,  0.5, 0.0), vec3f(0, 0, 1), vec2f(0, 0)},
-        Vertex{vec3f(-0.5, -0.5, 0.0), vec3f(1, 1, 1), vec2f(0, 1)},
+        Vertex{vec3f( 0.5, -0.5, 0.0), vec2f(1, 1)},
+        Vertex{vec3f( 0.5,  0.5, 0.0), vec2f(1, 0)},
+        Vertex{vec3f(-0.5,  0.5, 0.0), vec2f(0, 0)},
+        Vertex{vec3f(-0.5, -0.5, 0.0), vec2f(0, 1)},
 
-        Vertex{vec3f( 0.5, -0.5, 0.5), vec3f(1, 0, 0), vec2f(1, 1)},
-        Vertex{vec3f( 0.5,  0.5, 0.5), vec3f(0, 1, 0), vec2f(1, 0)},
-        Vertex{vec3f(-0.5,  0.5, 0.5), vec3f(0, 0, 1), vec2f(0, 0)},
-        Vertex{vec3f(-0.5, -0.5, 0.5), vec3f(1, 1, 1), vec2f(0, 1)}
+        Vertex{vec3f( 0.5, -0.5, 0.5), vec2f(1, 1)},
+        Vertex{vec3f( 0.5,  0.5, 0.5), vec2f(1, 0)},
+        Vertex{vec3f(-0.5,  0.5, 0.5), vec2f(0, 0)},
+        Vertex{vec3f(-0.5, -0.5, 0.5), vec2f(0, 1)}
 };
 constexpr std::array<uint16_t, 12> vertex_indices =
 {
