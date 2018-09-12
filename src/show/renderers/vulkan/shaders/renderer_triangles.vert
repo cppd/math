@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #version 450
 #extension GL_ARB_separate_shader_objects : enable
 
-layout(location = 0) in vec2 position;
+layout(location = 0) in vec3 position;
 layout(location = 1) in vec3 color;
 layout(location = 2) in vec2 texture_coordinates;
 
@@ -38,7 +38,7 @@ out gl_PerVertex
 
 void main()
 {
-        gl_Position = ubo.mvp_matrix * vec4(position, 0.0, 1.0);
+        gl_Position = ubo.mvp_matrix * vec4(position, 1.0);
         fragment_color = color;
         fragment_texture_coordinates = texture_coordinates;
 }

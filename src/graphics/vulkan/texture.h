@@ -37,4 +37,18 @@ public:
         VkImageView image_view() const noexcept;
         VkImageLayout image_layout() const noexcept;
 };
+
+class DepthAttachment
+{
+        DepthImage m_depth_image;
+        ImageView m_image_view;
+
+public:
+        DepthAttachment(const Device& device, VkCommandPool graphics_command_pool, VkQueue graphics_queue,
+                        const std::vector<uint32_t>& family_indices, uint32_t width, uint32_t height);
+
+        VkImageView image_view() const noexcept;
+        VkFormat image_format() const noexcept;
+        VkImageLayout image_layout() const noexcept;
+};
 }

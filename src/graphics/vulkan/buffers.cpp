@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "buffers.h"
 
 #include "common.h"
+#include "query.h"
 
 #include "com/alg.h"
 #include "com/error.h"
@@ -244,7 +245,7 @@ void copy_buffer_to_image(VkDevice device, VkCommandPool command_pool, VkQueue q
         end_commands(queue, command_buffer);
 }
 
-void transition_image_layout(VkDevice device, VkCommandPool command_pool, VkQueue queue, VkImage image, VkFormat /*format*/,
+void transition_image_layout(VkDevice device, VkCommandPool command_pool, VkQueue queue, VkImage image, VkFormat format,
                              VkImageLayout old_layout, VkImageLayout new_layout)
 {
         vulkan::CommandBuffer command_buffer(device, command_pool);
@@ -263,7 +264,31 @@ void transition_image_layout(VkDevice device, VkCommandPool command_pool, VkQueu
         barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 
         barrier.image = image;
-        barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+
+        if (new_layout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
+        {
+                if (format == VK_FORMAT_D32_SFLOAT)
+                {
+                        barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+                }
+                else if (format == VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT)
+                {
+                        barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
+                }
+                else
+                {
+                        error("Unsupported image format for layout transition");
+                }
+        }
+        else if (new_layout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL || new_layout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+        {
+                barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        }
+        else
+        {
+                error("Unsupported new layput for image layout transition");
+        }
+
         barrier.subresourceRange.baseMipLevel = 0;
         barrier.subresourceRange.levelCount = 1;
         barrier.subresourceRange.baseArrayLayer = 0;
@@ -287,6 +312,15 @@ void transition_image_layout(VkDevice device, VkCommandPool command_pool, VkQueu
 
                 source_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
                 destination_stage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+        }
+        else if (old_layout == VK_IMAGE_LAYOUT_UNDEFINED && new_layout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
+        {
+                barrier.srcAccessMask = 0;
+                barrier.dstAccessMask =
+                        VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+
+                source_stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+                destination_stage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
         }
         else
         {
@@ -452,6 +486,38 @@ VkFormat TextureImage::image_format() const noexcept
 }
 
 VkImageLayout TextureImage::image_layout() const noexcept
+{
+        return IMAGE_LAYOUT;
+}
+
+//
+
+DepthImage::DepthImage(const Device& device, VkCommandPool graphics_command_pool, VkQueue graphics_queue,
+                       const std::vector<uint32_t>& family_indices, uint32_t width, uint32_t height)
+        : m_image_format(find_supported_format(device.physical_device(),
+                                               {VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT},
+                                               VK_IMAGE_TILING_OPTIMAL, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT)),
+          m_image(create_image(device, width, height, m_image_format, VK_IMAGE_TILING_OPTIMAL,
+                               VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, family_indices)),
+          m_device_memory(create_device_memory(device, m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
+{
+        ASSERT(family_indices.size() > 0);
+
+        transition_image_layout(device, graphics_command_pool, graphics_queue, m_image, m_image_format, VK_IMAGE_LAYOUT_UNDEFINED,
+                                IMAGE_LAYOUT);
+}
+
+DepthImage::operator VkImage() const noexcept
+{
+        return m_image;
+}
+
+VkFormat DepthImage::image_format() const noexcept
+{
+        return m_image_format;
+}
+
+VkImageLayout DepthImage::image_layout() const noexcept
 {
         return IMAGE_LAYOUT;
 }

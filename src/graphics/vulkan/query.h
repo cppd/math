@@ -43,6 +43,9 @@ std::vector<VkSurfaceFormatKHR> surface_formats(VkPhysicalDevice physical_device
 std::vector<VkPresentModeKHR> present_modes(VkPhysicalDevice physical_device, VkSurfaceKHR surface);
 std::vector<VkImage> swap_chain_images(VkDevice device, VkSwapchainKHR swap_chain);
 
+VkFormat find_supported_format(VkPhysicalDevice physical_device, const std::vector<VkFormat>& candidates, VkImageTiling tiling,
+                               VkFormatFeatureFlags features);
+
 std::string overview();
 std::string overview_physical_devices(VkInstance instance);
 }

@@ -351,6 +351,41 @@ std::vector<VkImage> swap_chain_images(VkDevice device, VkSwapchainKHR swap_chai
         return images;
 }
 
+VkFormat find_supported_format(VkPhysicalDevice physical_device, const std::vector<VkFormat>& candidates, VkImageTiling tiling,
+                               VkFormatFeatureFlags features)
+{
+        if (tiling == VK_IMAGE_TILING_OPTIMAL)
+        {
+                for (VkFormat format : candidates)
+                {
+                        VkFormatProperties properties;
+                        vkGetPhysicalDeviceFormatProperties(physical_device, format, &properties);
+                        if ((properties.optimalTilingFeatures & features) == features)
+                        {
+                                return format;
+                        }
+                }
+        }
+        else if (tiling == VK_IMAGE_TILING_LINEAR)
+        {
+                for (VkFormat format : candidates)
+                {
+                        VkFormatProperties properties;
+                        vkGetPhysicalDeviceFormatProperties(physical_device, format, &properties);
+                        if ((properties.linearTilingFeatures & features) == features)
+                        {
+                                return format;
+                        }
+                }
+        }
+        else
+        {
+                error("Unknown image tiling");
+        }
+
+        error("Failed to find supported image format");
+}
+
 std::string overview()
 {
         constexpr const char* INDENT = "  ";

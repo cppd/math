@@ -77,7 +77,7 @@ std::string vulkan_overview_physical_devices_for_log(VkInstance instance)
 
 struct Vertex
 {
-        vec2f position;
+        vec3f position;
         vec3f color;
         vec2f texture_coordinates;
 
@@ -96,7 +96,7 @@ struct Vertex
                 VkVertexInputAttributeDescription position_description = {};
                 position_description.binding = 0;
                 position_description.location = 0;
-                position_description.format = VK_FORMAT_R32G32_SFLOAT;
+                position_description.format = VK_FORMAT_R32G32B32_SFLOAT;
                 position_description.offset = offsetof(Vertex, position);
 
                 VkVertexInputAttributeDescription color_description = {};
@@ -270,16 +270,22 @@ public:
 //
 
 // clang-format off
-constexpr std::array<Vertex, 4> vertices =
+constexpr std::array<Vertex, 8> vertices =
 {
-        Vertex{vec2f( 0.5, -0.5), vec3f(1, 0, 0), vec2f(1, 1)},
-        Vertex{vec2f( 0.5, 0.5), vec3f(0, 1, 0), vec2f(1, 0)},
-        Vertex{vec2f(-0.5, 0.5), vec3f(0, 0, 1), vec2f(0, 0)},
-        Vertex{vec2f(-0.5, -0.5), vec3f(1, 1, 1), vec2f(0, 1)}
+        Vertex{vec3f( 0.5, -0.5, 0.0), vec3f(1, 0, 0), vec2f(1, 1)},
+        Vertex{vec3f( 0.5,  0.5, 0.0), vec3f(0, 1, 0), vec2f(1, 0)},
+        Vertex{vec3f(-0.5,  0.5, 0.0), vec3f(0, 0, 1), vec2f(0, 0)},
+        Vertex{vec3f(-0.5, -0.5, 0.0), vec3f(1, 1, 1), vec2f(0, 1)},
+
+        Vertex{vec3f( 0.5, -0.5, 0.5), vec3f(1, 0, 0), vec2f(1, 1)},
+        Vertex{vec3f( 0.5,  0.5, 0.5), vec3f(0, 1, 0), vec2f(1, 0)},
+        Vertex{vec3f(-0.5,  0.5, 0.5), vec3f(0, 0, 1), vec2f(0, 0)},
+        Vertex{vec3f(-0.5, -0.5, 0.5), vec3f(1, 1, 1), vec2f(0, 1)}
 };
-constexpr std::array<uint16_t, 6> vertex_indices =
+constexpr std::array<uint16_t, 12> vertex_indices =
 {
-        0, 1, 2, 2, 3, 0
+        0, 1, 2, 2, 3, 0,
+        4, 5, 6, 6, 7, 4
 };
 // clang-format on
 

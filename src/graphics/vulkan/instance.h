@@ -37,14 +37,15 @@ namespace vulkan
 class SwapChain
 {
         VkDevice m_device;
-        VkCommandPool m_command_pool;
+        VkCommandPool m_graphics_command_pool;
         VkDescriptorSet m_descriptor_set;
         VkExtent2D m_extent;
 
         SwapChainKHR m_swap_chain;
         std::vector<VkImage> m_swap_chain_images;
-
         std::vector<ImageView> m_image_views;
+
+        std::optional<DepthAttachment> m_depth_attachment;
 
         RenderPass m_render_pass;
         PipelineLayout m_pipeline_layout;
@@ -55,8 +56,10 @@ class SwapChain
         CommandBuffers m_command_buffers;
 
 public:
-        SwapChain(VkSurfaceKHR surface, VkPhysicalDevice physical_device, const std::vector<uint32_t> family_indices,
-                  VkDevice device, VkCommandPool command_pool, const std::vector<const vulkan::Shader*>& shaders,
+        SwapChain(VkSurfaceKHR surface, VkPhysicalDevice physical_device,
+                  const std::vector<uint32_t>& swap_chain_image_family_indices,
+                  const std::vector<uint32_t>& depth_image_family_indices, const Device& device,
+                  VkCommandPool graphics_command_pool, VkQueue graphics_queue, const std::vector<const vulkan::Shader*>& shaders,
                   const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
                   const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions,
                   VkDescriptorSetLayout descriptor_set_layout, VkDescriptorSet descriptor_set);
@@ -105,6 +108,7 @@ class VulkanInstance
         std::vector<uint32_t> m_vertex_buffer_family_indices;
         std::vector<uint32_t> m_swap_chain_image_family_indices;
         std::vector<uint32_t> m_texture_image_family_indices;
+        std::vector<uint32_t> m_depth_image_family_indices;
 
         vulkan::VertexShader m_vertex_shader;
         vulkan::FragmentShader m_fragment_shader;

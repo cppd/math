@@ -87,6 +87,8 @@ public:
 
         operator VkDevice() const noexcept;
 
+        VkPhysicalDevice physical_device() const noexcept;
+
         uint32_t physical_device_memory_type_index(uint32_t memory_type_bits, VkMemoryPropertyFlags memory_property_flags) const;
 };
 

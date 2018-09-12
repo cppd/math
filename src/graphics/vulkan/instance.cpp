@@ -247,7 +247,7 @@ vulkan::SwapChainKHR create_swap_chain_khr(VkDevice device, VkSurfaceKHR surface
         return vulkan::SwapChainKHR(device, create_info);
 }
 
-vulkan::ImageView create_image_view(VkDevice device, VkImage image, VkFormat format)
+vulkan::ImageView create_image_view(VkDevice device, VkImage image, VkFormat format, VkImageAspectFlags aspect_flags)
 {
         VkImageViewCreateInfo create_info = {};
         create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -261,7 +261,7 @@ vulkan::ImageView create_image_view(VkDevice device, VkImage image, VkFormat for
         create_info.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
         create_info.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
 
-        create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        create_info.subresourceRange.aspectMask = aspect_flags;
         create_info.subresourceRange.baseMipLevel = 0;
         create_info.subresourceRange.levelCount = 1;
         create_info.subresourceRange.baseArrayLayer = 0;
@@ -270,29 +270,47 @@ vulkan::ImageView create_image_view(VkDevice device, VkImage image, VkFormat for
         return vulkan::ImageView(device, create_info);
 }
 
-vulkan::RenderPass create_render_pass(VkDevice device, VkFormat swap_chain_image_format)
+vulkan::RenderPass create_render_pass(VkDevice device, VkFormat swap_chain_image_format, VkFormat depth_image_format,
+                                      VkImageLayout depth_image_layout)
 {
-        VkAttachmentDescription attachment_description = {};
-        attachment_description.format = swap_chain_image_format;
-        attachment_description.samples = VK_SAMPLE_COUNT_1_BIT;
+        VkAttachmentDescription color_attachment = {};
+        color_attachment.format = swap_chain_image_format;
+        color_attachment.samples = VK_SAMPLE_COUNT_1_BIT;
+        color_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        color_attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        color_attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        color_attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        color_attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        color_attachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
-        attachment_description.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        attachment_description.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        VkAttachmentReference color_attachment_reference = {};
+        color_attachment_reference.attachment = 0;
+        color_attachment_reference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
-        attachment_description.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        attachment_description.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        //
 
-        attachment_description.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        attachment_description.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+        ASSERT(depth_image_layout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
+        VkAttachmentDescription depth_attachment = {};
+        depth_attachment.format = depth_image_format;
+        depth_attachment.samples = VK_SAMPLE_COUNT_1_BIT;
+        depth_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        depth_attachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        depth_attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        depth_attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        depth_attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        depth_attachment.finalLayout = depth_image_layout;
 
-        VkAttachmentReference attachment_reference = {};
-        attachment_reference.attachment = 0;
-        attachment_reference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        VkAttachmentReference depth_attachment_reference = {};
+        depth_attachment_reference.attachment = 1;
+        depth_attachment_reference.layout = depth_image_layout;
+
+        //
 
         VkSubpassDescription subpass_description = {};
         subpass_description.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
         subpass_description.colorAttachmentCount = 1;
-        subpass_description.pColorAttachments = &attachment_reference;
+        subpass_description.pColorAttachments = &color_attachment_reference;
+        subpass_description.pDepthStencilAttachment = &depth_attachment_reference;
 
         VkSubpassDependency subpass_dependency = {};
         subpass_dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
@@ -304,13 +322,13 @@ vulkan::RenderPass create_render_pass(VkDevice device, VkFormat swap_chain_image
         subpass_dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
         subpass_dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 
+        std::array<VkAttachmentDescription, 2> attachments = {color_attachment, depth_attachment};
         VkRenderPassCreateInfo create_info = {};
         create_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-        create_info.attachmentCount = 1;
-        create_info.pAttachments = &attachment_description;
+        create_info.attachmentCount = attachments.size();
+        create_info.pAttachments = attachments.data();
         create_info.subpassCount = 1;
         create_info.pSubpasses = &subpass_description;
-
         create_info.dependencyCount = 1;
         create_info.pDependencies = &subpass_dependency;
 
@@ -435,6 +453,21 @@ vulkan::Pipeline create_graphics_pipeline(VkDevice device, VkRenderPass render_p
         // dynamic_state_info.dynamicStateCount = dynamic_states.size();
         // dynamic_state_info.pDynamicStates = dynamic_states.data();
 
+        VkPipelineDepthStencilStateCreateInfo depth_stencil_state_info = {};
+        depth_stencil_state_info.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+        depth_stencil_state_info.depthTestEnable = VK_TRUE;
+        depth_stencil_state_info.depthWriteEnable = VK_TRUE;
+
+        depth_stencil_state_info.depthCompareOp = VK_COMPARE_OP_LESS;
+
+        depth_stencil_state_info.depthBoundsTestEnable = VK_FALSE;
+        // depth_stencil_state_info.minDepthBounds = 0.0f;
+        // depth_stencil_state_info.maxDepthBounds = 1.0f;
+
+        depth_stencil_state_info.stencilTestEnable = VK_FALSE;
+        // depth_stencil_state_info.front = {};
+        // depth_stencil_state_info.back = {};
+
         VkGraphicsPipelineCreateInfo create_info = {};
         create_info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
         create_info.stageCount = pipeline_shader_stages.size();
@@ -445,7 +478,7 @@ vulkan::Pipeline create_graphics_pipeline(VkDevice device, VkRenderPass render_p
         create_info.pViewportState = &viewport_state_info;
         create_info.pRasterizationState = &rasterization_state_info;
         create_info.pMultisampleState = &multisampling_state_info;
-        // create_info.pDepthStencilState = nullptr;
+        create_info.pDepthStencilState = &depth_stencil_state_info;
         create_info.pColorBlendState = &color_blending_state_info;
         // create_info.pDynamicState = nullptr;
 
@@ -460,13 +493,16 @@ vulkan::Pipeline create_graphics_pipeline(VkDevice device, VkRenderPass render_p
         return vulkan::Pipeline(device, create_info);
 }
 
-vulkan::Framebuffer create_framebuffer(VkDevice device, VkRenderPass render_pass, VkImageView attachment, VkExtent2D extent)
+vulkan::Framebuffer create_framebuffer(VkDevice device, VkRenderPass render_pass, VkImageView swap_chain_image_view,
+                                       VkImageView depth_image_view, VkExtent2D extent)
 {
+        std::array<VkImageView, 2> attachments = {swap_chain_image_view, depth_image_view};
+
         VkFramebufferCreateInfo create_info = {};
         create_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
         create_info.renderPass = render_pass;
-        create_info.attachmentCount = 1;
-        create_info.pAttachments = &attachment;
+        create_info.attachmentCount = attachments.size();
+        create_info.pAttachments = attachments.data();
         create_info.width = extent.width;
         create_info.height = extent.height;
         create_info.layers = 1;
@@ -503,11 +539,15 @@ vulkan::CommandBuffers create_command_buffers(VkDevice device, const VkExtent2D&
 
         vulkan::CommandBuffers command_buffers(device, command_pool, framebuffers.size());
 
-        VkClearValue clear_value = {};
-        clear_value.color.float32[0] = Color::rgb_float_to_srgb_float(clear_color.red());
-        clear_value.color.float32[1] = Color::rgb_float_to_srgb_float(clear_color.green());
-        clear_value.color.float32[2] = Color::rgb_float_to_srgb_float(clear_color.blue());
-        clear_value.color.float32[3] = 1;
+        std::array<VkClearValue, 2> clear_values = {};
+
+        clear_values[0].color.float32[0] = Color::rgb_float_to_srgb_float(clear_color.red());
+        clear_values[0].color.float32[1] = Color::rgb_float_to_srgb_float(clear_color.green());
+        clear_values[0].color.float32[2] = Color::rgb_float_to_srgb_float(clear_color.blue());
+        clear_values[0].color.float32[3] = 1;
+
+        clear_values[1].depthStencil.depth = 1;
+        clear_values[1].depthStencil.stencil = 0;
 
         for (uint32_t i = 0; i < command_buffers.count(); ++i)
         {
@@ -528,8 +568,8 @@ vulkan::CommandBuffers create_command_buffers(VkDevice device, const VkExtent2D&
                 render_pass_info.framebuffer = framebuffers[i];
                 render_pass_info.renderArea.offset = {0, 0};
                 render_pass_info.renderArea.extent = swap_chain_extent;
-                render_pass_info.clearValueCount = 1;
-                render_pass_info.pClearValues = &clear_value;
+                render_pass_info.clearValueCount = clear_values.size();
+                render_pass_info.pClearValues = clear_values.data();
 
                 vkCmdBeginRenderPass(command_buffers[i], &render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
 
@@ -606,21 +646,26 @@ VkIndexType vertex_index_type(size_t vertex_index_data_size, size_t vertex_count
 
 namespace vulkan
 {
-SwapChain::SwapChain(VkSurfaceKHR surface, VkPhysicalDevice physical_device, const std::vector<uint32_t> family_indices,
-                     VkDevice device, VkCommandPool command_pool, const std::vector<const vulkan::Shader*>& shaders,
+SwapChain::SwapChain(VkSurfaceKHR surface, VkPhysicalDevice physical_device,
+                     const std::vector<uint32_t>& swap_chain_image_family_indices,
+                     const std::vector<uint32_t>& depth_image_family_indices, const Device& device,
+                     VkCommandPool graphics_command_pool, VkQueue graphics_queue,
+                     const std::vector<const vulkan::Shader*>& shaders,
                      const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
                      const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions,
                      VkDescriptorSetLayout descriptor_set_layout, VkDescriptorSet descriptor_set)
-        : m_device(device), m_command_pool(command_pool), m_descriptor_set(descriptor_set)
+        : m_device(device), m_graphics_command_pool(graphics_command_pool), m_descriptor_set(descriptor_set)
 {
         ASSERT(surface != VK_NULL_HANDLE);
         ASSERT(physical_device != VK_NULL_HANDLE);
         ASSERT(device != VK_NULL_HANDLE);
-        ASSERT(command_pool != VK_NULL_HANDLE);
+        ASSERT(graphics_command_pool != VK_NULL_HANDLE);
+        ASSERT(graphics_queue != VK_NULL_HANDLE);
         ASSERT(descriptor_set != VK_NULL_HANDLE);
         ASSERT(descriptor_set_layout != VK_NULL_HANDLE);
 
-        ASSERT(family_indices.size() > 0);
+        ASSERT(swap_chain_image_family_indices.size() > 0);
+        ASSERT(depth_image_family_indices.size() > 0);
 
         SwapChainDetails swap_chain_details;
         if (!find_swap_chain_details(surface, physical_device, &swap_chain_details))
@@ -635,8 +680,9 @@ SwapChain::SwapChain(VkSurfaceKHR surface, VkPhysicalDevice physical_device, con
 
         const VkFormat image_format = surface_format.format;
 
-        m_swap_chain = create_swap_chain_khr(device, surface, surface_format, present_mode, m_extent, image_count,
-                                             swap_chain_details.surface_capabilities.currentTransform, family_indices);
+        m_swap_chain =
+                create_swap_chain_khr(device, surface, surface_format, present_mode, m_extent, image_count,
+                                      swap_chain_details.surface_capabilities.currentTransform, swap_chain_image_family_indices);
 
         m_swap_chain_images = swap_chain_images(device, m_swap_chain);
         if (m_swap_chain_images.empty())
@@ -646,17 +692,22 @@ SwapChain::SwapChain(VkSurfaceKHR surface, VkPhysicalDevice physical_device, con
 
         for (const VkImage& image : m_swap_chain_images)
         {
-                m_image_views.push_back(create_image_view(device, image, image_format));
+                m_image_views.push_back(create_image_view(device, image, image_format, VK_IMAGE_ASPECT_COLOR_BIT));
         }
 
-        m_render_pass = create_render_pass(device, image_format);
+        m_depth_attachment.emplace(device, graphics_command_pool, graphics_queue, depth_image_family_indices, m_extent.width,
+                                   m_extent.height);
+
+        m_render_pass =
+                create_render_pass(device, image_format, m_depth_attachment->image_format(), m_depth_attachment->image_layout());
         m_pipeline_layout = create_pipeline_layout(device, descriptor_set_layout);
         m_pipeline = create_graphics_pipeline(device, m_render_pass, m_pipeline_layout, m_extent, shaders,
                                               vertex_binding_descriptions, vertex_attribute_descriptions);
 
         for (const ImageView& image_view : m_image_views)
         {
-                m_framebuffers.push_back(create_framebuffer(device, m_render_pass, image_view, m_extent));
+                m_framebuffers.push_back(
+                        create_framebuffer(device, m_render_pass, image_view, m_depth_attachment->image_view(), m_extent));
         }
 }
 
@@ -672,7 +723,7 @@ void SwapChain::create_command_buffers(VkBuffer vertex_buffer, VkBuffer vertex_i
         }
 
         m_command_buffers = ::create_command_buffers(m_device, m_extent, m_render_pass, m_pipeline_layout, m_pipeline,
-                                                     m_framebuffers, m_command_pool, m_descriptor_set, vertex_buffer,
+                                                     m_framebuffers, m_graphics_command_pool, m_descriptor_set, vertex_buffer,
                                                      vertex_index_buffer, vertex_index_type, vertex_count, clear_color);
 }
 
@@ -733,6 +784,7 @@ VulkanInstance::VulkanInstance(int api_version_major, int api_version_minor,
           m_swap_chain_image_family_indices(
                   unique_elements(std::vector({m_physical_device.graphics, m_physical_device.presentation}))),
           m_texture_image_family_indices(unique_elements(std::vector({m_physical_device.graphics, m_physical_device.transfer}))),
+          m_depth_image_family_indices(unique_elements(std::vector({m_physical_device.graphics}))),
           //
           m_vertex_shader(m_device, vertex_shader_code, "main"),
           m_fragment_shader(m_device, fragment_shader_code, "main"),
@@ -777,9 +829,9 @@ void VulkanInstance::create_swap_chain(VkDescriptorSetLayout descriptor_set_layo
 
         std::vector<const vulkan::Shader*> shaders({&m_vertex_shader, &m_fragment_shader});
 
-        swap_chain->emplace(m_surface, m_physical_device.device, m_swap_chain_image_family_indices, m_device,
-                            m_graphics_command_pool, shaders, m_vertex_binding_descriptions, m_vertex_attribute_descriptions,
-                            descriptor_set_layout, descriptor_set);
+        swap_chain->emplace(m_surface, m_physical_device.device, m_swap_chain_image_family_indices, m_depth_image_family_indices,
+                            m_device, m_graphics_command_pool, m_graphics_queue, shaders, m_vertex_binding_descriptions,
+                            m_vertex_attribute_descriptions, descriptor_set_layout, descriptor_set);
 
         create_command_buffers(swap_chain->value());
 }

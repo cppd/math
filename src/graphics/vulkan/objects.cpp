@@ -193,6 +193,11 @@ Device::operator VkDevice() const noexcept
         return m_device;
 }
 
+VkPhysicalDevice Device::physical_device() const noexcept
+{
+        return m_physical_device;
+}
+
 uint32_t Device::physical_device_memory_type_index(uint32_t memory_type_bits, VkMemoryPropertyFlags memory_property_flags) const
 {
         if (m_physical_device == VK_NULL_HANDLE)
