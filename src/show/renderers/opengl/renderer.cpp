@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/print.h"
 #include "graphics/opengl/query.h"
 #include "obj/obj_alg.h"
+#include "show/renderers/com.h"
 
 #include <algorithm>
 #include <vector>
@@ -56,11 +57,6 @@ constexpr const char points_frag[]
 #include "renderer_points.frag.str"
 };
 // clang-format on
-
-// GLSL имеет размер float == 4
-constexpr int STD430_ALIGN_OF_VEC3 = 4 * 4; // для vec3 выравнивание по 4 * N
-static_assert(sizeof(vec2f) == 2 * sizeof(float));
-static_assert(sizeof(vec3f) == 3 * sizeof(float));
 
 namespace
 {
@@ -102,7 +98,7 @@ vec4f color_to_vec4f(const Color& c)
 // shader storage
 struct Material final
 {
-        alignas(STD430_ALIGN_OF_VEC3) vec3f Ka, Kd, Ks;
+        alignas(GLSL_STD430_VEC3_ALIGN) vec3f Ka, Kd, Ks;
 
         GLuint64 map_Ka_handle, map_Kd_handle, map_Ks_handle;
 
@@ -218,44 +214,6 @@ void load_materials(const Obj<3>& obj, std::vector<Material>* materials)
         }
 }
 
-enum class DrawType
-{
-        Points,
-        Lines,
-        Triangles
-};
-
-DrawType calculate_draw_type_from_obj(const Obj<3>* obj)
-{
-        int type_count = 0;
-
-        type_count += obj->facets().size() > 0 ? 1 : 0;
-        type_count += obj->points().size() > 0 ? 1 : 0;
-        type_count += obj->lines().size() > 0 ? 1 : 0;
-
-        if (type_count > 1)
-        {
-                error("Supported only faces or points or lines");
-        }
-
-        if (obj->facets().size() > 0)
-        {
-                return DrawType::Triangles;
-        }
-        else if (obj->points().size() > 0)
-        {
-                return DrawType::Points;
-        }
-        else if (obj->lines().size() > 0)
-        {
-                return DrawType::Lines;
-        }
-        else
-        {
-                error("Faces or points or lines not found");
-        }
-}
-
 std::vector<float> integer_srgb_pixels_to_float_rgb_pixels(const std::vector<unsigned char>& pixels)
 {
         static_assert(std::numeric_limits<unsigned char>::digits == 8);
@@ -292,7 +250,7 @@ public:
 };
 
 DrawObject::DrawObject(const Obj<3>* obj, double size, const vec3& position)
-        : m_model_matrix(model_vertex_matrix(obj, size, position)), m_draw_type(calculate_draw_type_from_obj(obj))
+        : m_model_matrix(model_vertex_matrix(obj, size, position)), m_draw_type(draw_type_of_obj(obj))
 {
         if (m_draw_type == DrawType::Triangles)
         {
@@ -377,97 +335,6 @@ DrawType DrawObject::draw_type() const
         return m_draw_type;
 }
 
-//
-
-class DrawObjects final
-{
-        struct MapEntry
-        {
-                std::unique_ptr<DrawObject> object;
-                int scale_object_id;
-                MapEntry(std::unique_ptr<DrawObject>&& obj_, int scale_id_) : object(std::move(obj_)), scale_object_id(scale_id_)
-                {
-                }
-        };
-
-        std::unordered_map<int, MapEntry> m_objects;
-
-        const DrawObject* m_draw_object = nullptr;
-        const DrawObject* m_draw_scale_object = nullptr;
-        int m_draw_scale_object_id = 0;
-
-public:
-        void add_object(std::unique_ptr<DrawObject>&& object, int id, int scale_id)
-        {
-                if (id == m_draw_scale_object_id)
-                {
-                        m_draw_scale_object = object.get();
-                }
-
-                m_objects.insert_or_assign(id, MapEntry(std::move(object), scale_id));
-        }
-
-        void delete_object(int id)
-        {
-                auto iter = m_objects.find(id);
-                if (iter != m_objects.cend())
-                {
-                        if (iter->second.object.get() == m_draw_object)
-                        {
-                                m_draw_object = nullptr;
-                        }
-                        if (iter->second.object.get() == m_draw_scale_object)
-                        {
-                                m_draw_scale_object = nullptr;
-                        }
-                        m_objects.erase(iter);
-                }
-        }
-
-        void show_object(int id)
-        {
-                auto iter = m_objects.find(id);
-                if (iter != m_objects.cend())
-                {
-                        m_draw_object = iter->second.object.get();
-
-                        m_draw_scale_object_id = iter->second.scale_object_id;
-
-                        auto scale_iter = m_objects.find(m_draw_scale_object_id);
-                        if (scale_iter != m_objects.cend())
-                        {
-                                m_draw_scale_object = scale_iter->second.object.get();
-                        }
-                        else
-                        {
-                                m_draw_scale_object = nullptr;
-                        }
-                }
-                else
-                {
-                        m_draw_object = nullptr;
-                }
-        }
-
-        void delete_all()
-        {
-                m_objects.clear();
-                m_draw_object = nullptr;
-        }
-
-        const DrawObject* object() const
-        {
-                return m_draw_object;
-        }
-
-        const DrawObject* scale_object() const
-        {
-                return m_draw_scale_object;
-        }
-};
-
-//
-
 std::string color_space_message(bool framebuffer_is_srgb, bool colorbuffer_is_srgb)
 {
         std::string msg;
@@ -506,7 +373,7 @@ class Renderer final : public OpenGLRenderer
 
         double m_shadow_zoom = 1;
 
-        DrawObjects m_draw_objects;
+        DrawObjects<DrawObject> m_draw_objects;
 
         bool m_framebuffer_srgb;
         bool m_colorbuffer_srgb;
@@ -583,7 +450,6 @@ class Renderer final : public OpenGLRenderer
         bool draw(bool draw_to_color_buffer) override
         {
                 const DrawObject* draw_object = m_draw_objects.object();
-                const DrawObject* draw_scale_object = m_draw_objects.scale_object();
 
                 m_objects->clear_tex_image(0);
 
@@ -605,13 +471,14 @@ class Renderer final : public OpenGLRenderer
 
                 draw_object->bind();
 
-                const DrawObject* scale = draw_scale_object ? draw_scale_object : draw_object;
+                const DrawObject* scale_object = m_draw_objects.scale_object();
 
                 if (m_show_shadow && draw_object->draw_type() == DrawType::Triangles)
                 {
-                        main_program.set_uniform_float("shadow_matrix", m_scale_bias_shadow_matrix * scale->model_matrix());
+                        main_program.set_uniform_float("shadow_matrix",
+                                                       m_scale_bias_shadow_matrix * scale_object->model_matrix());
 
-                        shadow_program.set_uniform_float("matrix", m_shadow_matrix * scale->model_matrix());
+                        shadow_program.set_uniform_float("matrix", m_shadow_matrix * scale_object->model_matrix());
 
                         m_shadow_buffer->bind_buffer();
                         glViewport(0, 0, m_shadow_width, m_shadow_height);
@@ -640,15 +507,15 @@ class Renderer final : public OpenGLRenderer
                 switch (draw_object->draw_type())
                 {
                 case DrawType::Triangles:
-                        main_program.set_uniform_float("matrix", m_main_matrix * scale->model_matrix());
+                        main_program.set_uniform_float("matrix", m_main_matrix * scale_object->model_matrix());
                         main_program.draw_arrays(GL_TRIANGLES, 0, draw_object->vertices_count());
                         break;
                 case DrawType::Points:
-                        points_program.set_uniform_float("matrix", m_main_matrix * scale->model_matrix());
+                        points_program.set_uniform_float("matrix", m_main_matrix * scale_object->model_matrix());
                         points_program.draw_arrays(GL_POINTS, 0, draw_object->vertices_count());
                         break;
                 case DrawType::Lines:
-                        points_program.set_uniform_float("matrix", m_main_matrix * scale->model_matrix());
+                        points_program.set_uniform_float("matrix", m_main_matrix * scale_object->model_matrix());
                         points_program.draw_arrays(GL_LINES, 0, draw_object->vertices_count());
                         break;
                 }
