@@ -25,7 +25,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/color/colors.h"
 #include "com/error.h"
-#include "com/span.h"
 
 #include <functional>
 #include <optional>
@@ -62,7 +61,7 @@ public:
                   VkCommandPool graphics_command_pool, VkQueue graphics_queue, const std::vector<const vulkan::Shader*>& shaders,
                   const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
                   const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions,
-                  VkDescriptorSetLayout descriptor_set_layout, VkDescriptorSet descriptor_set);
+                  VkDescriptorSetLayout descriptor_set_layout);
 
         SwapChain(const SwapChain&) = delete;
         SwapChain(SwapChain&&) = delete;
@@ -70,7 +69,7 @@ public:
         SwapChain& operator=(SwapChain&&) = delete;
 
         void create_command_buffers(VkBuffer vertex_buffer, VkBuffer vertex_index_buffer, VkIndexType vertex_index_type,
-                                    uint32_t vertex_count, const Color& clear_color);
+                                    uint32_t vertex_count, const Color& clear_color, VkDescriptorSet descriptor_set);
         bool command_buffers_created() const;
 
         VkSwapchainKHR swap_chain() const noexcept;
@@ -110,30 +109,11 @@ class VulkanInstance
         std::vector<uint32_t> m_texture_image_family_indices;
         std::vector<uint32_t> m_depth_image_family_indices;
 
-        vulkan::VertexShader m_vertex_shader;
-        vulkan::FragmentShader m_fragment_shader;
-        std::vector<VkVertexInputBindingDescription> m_vertex_binding_descriptions;
-        std::vector<VkVertexInputAttributeDescription> m_vertex_attribute_descriptions;
-        //
-        uint32_t m_vertex_count;
-        VertexBufferWithDeviceLocalMemory m_vertex_buffer;
-        IndexBufferWithDeviceLocalMemory m_vertex_index_buffer;
-        VkIndexType m_vertex_index_type;
-
-        Color m_clear_color = Color(0);
-
-        void create_command_buffers(SwapChain& swap_chain);
-
 public:
         VulkanInstance(int api_version_major, int api_version_minor, const std::vector<std::string>& required_instance_extensions,
                        const std::vector<std::string>& required_device_extensions,
                        const std::vector<std::string>& required_validation_layers,
-                       const std::function<VkSurfaceKHR(VkInstance)>& create_surface,
-                       const Span<const uint32_t>& vertex_shader_code, const Span<const uint32_t>& fragment_shader_code,
-                       const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
-                       const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions, uint32_t vertex_count,
-                       size_t vertex_data_size, const void* vertex_data, size_t vertex_index_data_size,
-                       const void* vertex_index_data);
+                       const std::function<VkSurfaceKHR(VkInstance)>& create_surface);
 
         ~VulkanInstance();
 
@@ -145,12 +125,14 @@ public:
         VkInstance instance() const noexcept;
         const Device& device() const noexcept;
 
-        void create_swap_chain(VkDescriptorSetLayout descriptor_set_layout, VkDescriptorSet descriptor_set,
-                               std::optional<SwapChain>* swap_chain);
+        void create_swap_chain(const VertexShader& vertex_shader, const FragmentShader& fragment_shader,
+                               const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
+                               const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions,
+                               VkDescriptorSetLayout descriptor_set_layout, std::optional<SwapChain>* swap_chain);
 
         Texture create_texture(uint32_t width, uint32_t height, const std::vector<unsigned char>& rgba_pixels) const;
-
-        void set_clear_color(SwapChain& swap_chain, const Color& color);
+        VertexBufferWithDeviceLocalMemory create_vertex_buffer(VkDeviceSize data_size, const void* data) const;
+        IndexBufferWithDeviceLocalMemory create_index_buffer(VkDeviceSize data_size, const void* data) const;
 
         [[nodiscard]] bool draw_frame(SwapChain& swap_chain);
 

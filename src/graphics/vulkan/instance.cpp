@@ -628,20 +628,6 @@ VkQueue device_queue(VkDevice device, uint32_t queue_family_index, uint32_t queu
         ASSERT(queue != VK_NULL_HANDLE);
         return queue;
 }
-
-VkIndexType vertex_index_type(size_t vertex_index_data_size, size_t vertex_count)
-{
-        if (vertex_index_data_size == vertex_count * sizeof(uint32_t))
-        {
-                return VK_INDEX_TYPE_UINT32;
-        }
-        if (vertex_index_data_size == vertex_count * sizeof(uint16_t))
-        {
-                return VK_INDEX_TYPE_UINT16;
-        }
-        error("Vertex index data size error: data size = " + to_string(vertex_index_data_size) +
-              ", vertex count = " + to_string(vertex_count));
-}
 }
 
 namespace vulkan
@@ -653,15 +639,14 @@ SwapChain::SwapChain(VkSurfaceKHR surface, VkPhysicalDevice physical_device,
                      const std::vector<const vulkan::Shader*>& shaders,
                      const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
                      const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions,
-                     VkDescriptorSetLayout descriptor_set_layout, VkDescriptorSet descriptor_set)
-        : m_device(device), m_graphics_command_pool(graphics_command_pool), m_descriptor_set(descriptor_set)
+                     VkDescriptorSetLayout descriptor_set_layout)
+        : m_device(device), m_graphics_command_pool(graphics_command_pool)
 {
         ASSERT(surface != VK_NULL_HANDLE);
         ASSERT(physical_device != VK_NULL_HANDLE);
         ASSERT(device != VK_NULL_HANDLE);
         ASSERT(graphics_command_pool != VK_NULL_HANDLE);
         ASSERT(graphics_queue != VK_NULL_HANDLE);
-        ASSERT(descriptor_set != VK_NULL_HANDLE);
         ASSERT(descriptor_set_layout != VK_NULL_HANDLE);
 
         ASSERT(swap_chain_image_family_indices.size() > 0);
@@ -712,10 +697,12 @@ SwapChain::SwapChain(VkSurfaceKHR surface, VkPhysicalDevice physical_device,
 }
 
 void SwapChain::create_command_buffers(VkBuffer vertex_buffer, VkBuffer vertex_index_buffer, VkIndexType vertex_index_type,
-                                       uint32_t vertex_count, const Color& clear_color)
+                                       uint32_t vertex_count, const Color& clear_color, VkDescriptorSet descriptor_set)
 {
         ASSERT(vertex_buffer != VK_NULL_HANDLE);
         ASSERT(vertex_index_buffer != VK_NULL_HANDLE);
+        ASSERT(descriptor_set != VK_NULL_HANDLE);
+        ASSERT(vertex_index_type == VK_INDEX_TYPE_UINT16 || vertex_index_type == VK_INDEX_TYPE_UINT32);
 
         if (vertex_count <= 0 || (vertex_count % 3 != 0))
         {
@@ -723,7 +710,7 @@ void SwapChain::create_command_buffers(VkBuffer vertex_buffer, VkBuffer vertex_i
         }
 
         m_command_buffers = ::create_command_buffers(m_device, m_extent, m_render_pass, m_pipeline_layout, m_pipeline,
-                                                     m_framebuffers, m_graphics_command_pool, m_descriptor_set, vertex_buffer,
+                                                     m_framebuffers, m_graphics_command_pool, descriptor_set, vertex_buffer,
                                                      vertex_index_buffer, vertex_index_type, vertex_count, clear_color);
 }
 
@@ -748,12 +735,7 @@ VulkanInstance::VulkanInstance(int api_version_major, int api_version_minor,
                                const std::vector<std::string>& required_instance_extensions,
                                const std::vector<std::string>& required_device_extensions,
                                const std::vector<std::string>& required_validation_layers,
-                               const std::function<VkSurfaceKHR(VkInstance)>& create_surface,
-                               const Span<const uint32_t>& vertex_shader_code, const Span<const uint32_t>& fragment_shader_code,
-                               const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
-                               const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions,
-                               uint32_t vertex_count, size_t vertex_data_size, const void* vertex_data,
-                               size_t vertex_index_data_size, const void* vertex_index_data)
+                               const std::function<VkSurfaceKHR(VkInstance)>& create_surface)
         : m_instance(create_instance(api_version_major, api_version_minor, required_instance_extensions,
                                      required_validation_layers)),
           m_callback(!required_validation_layers.empty() ? std::make_optional(create_debug_report_callback(m_instance)) :
@@ -784,19 +766,7 @@ VulkanInstance::VulkanInstance(int api_version_major, int api_version_minor,
           m_swap_chain_image_family_indices(
                   unique_elements(std::vector({m_physical_device.graphics, m_physical_device.presentation}))),
           m_texture_image_family_indices(unique_elements(std::vector({m_physical_device.graphics, m_physical_device.transfer}))),
-          m_depth_image_family_indices(unique_elements(std::vector({m_physical_device.graphics}))),
-          //
-          m_vertex_shader(m_device, vertex_shader_code, "main"),
-          m_fragment_shader(m_device, fragment_shader_code, "main"),
-          m_vertex_binding_descriptions(vertex_binding_descriptions),
-          m_vertex_attribute_descriptions(vertex_attribute_descriptions),
-          //
-          m_vertex_count(vertex_count),
-          m_vertex_buffer(m_device, m_transfer_command_pool, m_transfer_queue, m_vertex_buffer_family_indices, vertex_data_size,
-                          vertex_data),
-          m_vertex_index_buffer(m_device, m_transfer_command_pool, m_transfer_queue, m_vertex_buffer_family_indices,
-                                vertex_index_data_size, vertex_index_data),
-          m_vertex_index_type(vertex_index_type(vertex_index_data_size, vertex_count))
+          m_depth_image_family_indices(unique_elements(std::vector({m_physical_device.graphics})))
 {
 }
 
@@ -812,28 +782,18 @@ VulkanInstance::~VulkanInstance()
         }
 }
 
-void VulkanInstance::create_command_buffers(SwapChain& swap_chain)
-{
-        swap_chain.create_command_buffers(m_vertex_buffer, m_vertex_index_buffer, m_vertex_index_type, m_vertex_count,
-                                          m_clear_color);
-}
-
-void VulkanInstance::create_swap_chain(VkDescriptorSetLayout descriptor_set_layout, VkDescriptorSet descriptor_set,
-                                       std::optional<SwapChain>* swap_chain)
+void VulkanInstance::create_swap_chain(const VertexShader& vertex_shader, const FragmentShader& fragment_shader,
+                                       const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
+                                       const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions,
+                                       VkDescriptorSetLayout descriptor_set_layout, std::optional<SwapChain>* swap_chain)
 {
         ASSERT(descriptor_set_layout != VK_NULL_HANDLE);
-        ASSERT(descriptor_set != VK_NULL_HANDLE);
         ASSERT(swap_chain);
 
-        device_wait_idle();
-
-        std::vector<const vulkan::Shader*> shaders({&m_vertex_shader, &m_fragment_shader});
-
         swap_chain->emplace(m_surface, m_physical_device.device, m_swap_chain_image_family_indices, m_depth_image_family_indices,
-                            m_device, m_graphics_command_pool, m_graphics_queue, shaders, m_vertex_binding_descriptions,
-                            m_vertex_attribute_descriptions, descriptor_set_layout, descriptor_set);
-
-        create_command_buffers(swap_chain->value());
+                            m_device, m_graphics_command_pool, m_graphics_queue,
+                            std::vector<const vulkan::Shader*>({&vertex_shader, &fragment_shader}), vertex_binding_descriptions,
+                            vertex_attribute_descriptions, descriptor_set_layout);
 }
 
 Texture VulkanInstance::create_texture(uint32_t width, uint32_t height, const std::vector<unsigned char>& rgba_pixels) const
@@ -842,13 +802,16 @@ Texture VulkanInstance::create_texture(uint32_t width, uint32_t height, const st
                        m_texture_image_family_indices, width, height, rgba_pixels);
 }
 
-void VulkanInstance::set_clear_color(SwapChain& swap_chain, const Color& color)
+VertexBufferWithDeviceLocalMemory VulkanInstance::create_vertex_buffer(VkDeviceSize data_size, const void* data) const
 {
-        device_wait_idle();
+        return VertexBufferWithDeviceLocalMemory(m_device, m_transfer_command_pool, m_transfer_queue,
+                                                 m_vertex_buffer_family_indices, data_size, data);
+}
 
-        m_clear_color = color;
-
-        create_command_buffers(swap_chain);
+IndexBufferWithDeviceLocalMemory VulkanInstance::create_index_buffer(VkDeviceSize data_size, const void* data) const
+{
+        return IndexBufferWithDeviceLocalMemory(m_device, m_transfer_command_pool, m_transfer_queue,
+                                                m_vertex_buffer_family_indices, data_size, data);
 }
 
 VkInstance VulkanInstance::instance() const noexcept

@@ -36,6 +36,9 @@ constexpr std::array<const char*, 0> INSTANCE_EXTENSIONS = {};
 constexpr std::array<const char*, 0> DEVICE_EXTENSIONS = {};
 constexpr std::array<const char*, 1> VALIDATION_LAYERS = {"VK_LAYER_LUNARG_standard_validation"};
 
+using VERTEX_INDEX_TYPE = uint32_t;
+constexpr VkIndexType VERTEX_INDEX_TYPE_VULKAN = VK_INDEX_TYPE_UINT32;
+
 // clang-format off
 constexpr uint32_t vertex_shader[]
 {
@@ -271,7 +274,7 @@ constexpr std::array<Vertex, 8> vertices =
         Vertex{vec3f(-0.5,  0.5, 0.5), vec2f(0, 0)},
         Vertex{vec3f(-0.5, -0.5, 0.5), vec2f(0, 1)}
 };
-constexpr std::array<uint16_t, 12> vertex_indices =
+constexpr std::array<VERTEX_INDEX_TYPE, 12> vertex_indices =
 {
         0, 1, 2, 2, 3, 0,
         4, 5, 6, 6, 7, 4
@@ -295,7 +298,17 @@ void update_uniforms(ShaderMemory& shader_memory)
 class VulkanRendererImplementation final : public VulkanRenderer
 {
         std::optional<vulkan::VulkanInstance> m_instance;
+
+        std::optional<vulkan::VertexShader> m_vertex_shader;
+        std::optional<vulkan::FragmentShader> m_fragment_shader;
+
         std::optional<ShaderMemory> m_shader_memory;
+
+        uint32_t m_vertex_count;
+        std::optional<vulkan::VertexBufferWithDeviceLocalMemory> m_vertex_buffer;
+        std::optional<vulkan::IndexBufferWithDeviceLocalMemory> m_vertex_index_buffer;
+        Color m_clear_color = Color(0);
+
         std::optional<vulkan::SwapChain> m_swap_chain;
 
         void set_light_a(const Color& /*light*/) override
@@ -309,7 +322,8 @@ class VulkanRendererImplementation final : public VulkanRenderer
         }
         void set_background_color(const Color& color) override
         {
-                m_instance->set_clear_color(*m_swap_chain, color);
+                m_clear_color = color;
+                create_command_buffers();
         }
         void set_default_color(const Color& /*color*/) override
         {
@@ -373,16 +387,41 @@ class VulkanRendererImplementation final : public VulkanRenderer
 
                 if (!m_instance->draw_frame(*m_swap_chain))
                 {
-                        create_swap_chain();
+                        create_swap_chain_and_command_buffers();
                 }
 
                 return true;
         }
 
-        void create_swap_chain()
+        void create_swap_chain_and_command_buffers()
         {
-                m_instance->create_swap_chain(m_shader_memory->descriptor_set_layout(), m_shader_memory->descriptor_set(),
+                m_instance->device_wait_idle();
+
+                ASSERT(m_vertex_shader);
+                ASSERT(m_fragment_shader);
+                ASSERT(m_shader_memory);
+
+                m_instance->create_swap_chain(*m_vertex_shader, *m_fragment_shader, Vertex::binding_descriptions(),
+                                              Vertex::attribute_descriptions(), m_shader_memory->descriptor_set_layout(),
                                               &m_swap_chain);
+
+                create_command_buffers(false /*wait_idle*/);
+        }
+
+        void create_command_buffers(bool wait_idle = true)
+        {
+                if (wait_idle)
+                {
+                        m_instance->device_wait_idle();
+                }
+
+                ASSERT(m_swap_chain);
+                ASSERT(m_vertex_buffer);
+                ASSERT(m_vertex_index_buffer);
+                ASSERT(m_shader_memory);
+
+                m_swap_chain->create_command_buffers(*m_vertex_buffer, *m_vertex_index_buffer, VERTEX_INDEX_TYPE_VULKAN,
+                                                     m_vertex_count, m_clear_color, m_shader_memory->descriptor_set());
         }
 
 public:
@@ -396,14 +435,19 @@ public:
                 std::vector<std::string> validation_layers(std::cbegin(VALIDATION_LAYERS), std::cend(VALIDATION_LAYERS));
 
                 m_instance.emplace(API_VERSION_MAJOR, API_VERSION_MINOR, instance_extensions + window_instance_extensions,
-                                   device_extensions, validation_layers, create_surface, vertex_shader, fragment_shader,
-                                   Vertex::binding_descriptions(), Vertex::attribute_descriptions(), vertex_indices.size(),
-                                   vertices.size() * sizeof(vertices[0]), vertices.data(),
-                                   vertex_indices.size() * sizeof(vertex_indices[0]), vertex_indices.data());
+                                   device_extensions, validation_layers, create_surface);
+
+                m_vertex_shader.emplace(m_instance->device(), vertex_shader, "main");
+                m_fragment_shader.emplace(m_instance->device(), fragment_shader, "main");
 
                 m_shader_memory.emplace(m_instance.value());
 
-                create_swap_chain();
+                m_vertex_count = vertex_indices.size();
+                m_vertex_buffer.emplace(m_instance->create_vertex_buffer(vertices.size() * sizeof(vertices[0]), vertices.data()));
+                m_vertex_index_buffer.emplace(m_instance->create_index_buffer(vertex_indices.size() * sizeof(vertex_indices[0]),
+                                                                              vertex_indices.data()));
+
+                create_swap_chain_and_command_buffers();
 
                 LOG(vulkan_overview_physical_devices_for_log(m_instance->instance()));
         }
