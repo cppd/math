@@ -37,7 +37,6 @@ class SwapChain
 {
         VkDevice m_device;
         VkCommandPool m_graphics_command_pool;
-        VkDescriptorSet m_descriptor_set;
         VkExtent2D m_extent;
 
         SwapChainKHR m_swap_chain;
