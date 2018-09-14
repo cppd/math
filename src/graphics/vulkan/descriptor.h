@@ -17,11 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "buffers.h"
 #include "objects.h"
 
-#include "com/error.h"
-#include "com/span.h"
+#include "com/variant.h"
 
 #include <vector>
 
@@ -29,18 +27,19 @@ namespace vulkan
 {
 class Descriptors
 {
-        DescriptorSetLayout m_descriptor_set_layout;
+        VkDevice m_device;
         DescriptorPool m_descriptor_pool;
-        DescriptorSet m_descriptor_set;
+        DescriptorSetLayout m_descriptor_set_layout;
+        std::vector<VkDescriptorSetLayoutBinding> m_descriptor_set_layout_bindings;
 
 public:
         Descriptors();
 
-        Descriptors(VkDevice device, const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings,
-                    const std::vector<VkDescriptorBufferInfo>& descriptor_buffer_infos,
-                    const std::vector<VkDescriptorImageInfo>& descriptor_image_infos);
+        Descriptors(VkDevice device, uint32_t max_sets, const std::vector<VkDescriptorSetLayoutBinding>& bindings);
 
         VkDescriptorSetLayout descriptor_set_layout() const noexcept;
-        VkDescriptorSet descriptor_set() const noexcept;
+
+        DescriptorSet create_descriptor_set(
+                const std::vector<Variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>>& descriptor_infos);
 };
 }

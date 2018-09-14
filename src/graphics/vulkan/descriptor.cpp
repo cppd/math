@@ -17,18 +17,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "descriptor.h"
 
+#include "com/error.h"
+
 namespace
 {
-vulkan::DescriptorSetLayout create_descriptor_set_layout(
-        VkDevice device, const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings)
+template <typename... T>
+struct Visitors : T...
 {
-        VkDescriptorSetLayoutCreateInfo create_info = {};
-        create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-        create_info.bindingCount = descriptor_set_layout_bindings.size();
-        create_info.pBindings = descriptor_set_layout_bindings.data();
-
-        return vulkan::DescriptorSetLayout(device, create_info);
-}
+        using T::operator()...;
+};
+template <typename... T>
+Visitors(T...)->Visitors<T...>;
 
 vulkan::DescriptorPool create_descriptor_pool(VkDevice device,
                                               const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings,
@@ -55,13 +54,23 @@ vulkan::DescriptorPool create_descriptor_pool(VkDevice device,
         return vulkan::DescriptorPool(device, create_info);
 }
 
-vulkan::DescriptorSet create_descriptor_set(VkDevice device, VkDescriptorPool descriptor_pool,
-                                            VkDescriptorSetLayout descriptor_set_layout,
-                                            const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings,
-                                            const std::vector<VkDescriptorBufferInfo>& descriptor_buffer_infos,
-                                            const std::vector<VkDescriptorImageInfo>& descriptor_image_infos)
+vulkan::DescriptorSetLayout create_descriptor_set_layout(
+        VkDevice device, const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings)
 {
-        ASSERT(descriptor_set_layout_bindings.size() == descriptor_buffer_infos.size() + descriptor_image_infos.size());
+        VkDescriptorSetLayoutCreateInfo create_info = {};
+        create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        create_info.bindingCount = descriptor_set_layout_bindings.size();
+        create_info.pBindings = descriptor_set_layout_bindings.data();
+
+        return vulkan::DescriptorSetLayout(device, create_info);
+}
+
+vulkan::DescriptorSet create_descriptor_set(
+        VkDevice device, VkDescriptorPool descriptor_pool, VkDescriptorSetLayout descriptor_set_layout,
+        const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings,
+        const std::vector<Variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>>& descriptor_infos)
+{
+        ASSERT(descriptor_set_layout_bindings.size() == descriptor_infos.size());
 
         vulkan::DescriptorSet descriptor_set(device, descriptor_pool, descriptor_set_layout);
 
@@ -69,7 +78,7 @@ vulkan::DescriptorSet create_descriptor_set(VkDevice device, VkDescriptorPool de
 
         std::vector<VkWriteDescriptorSet> write_descriptor_set(size);
 
-        for (uint32_t i = 0, buffer_i = 0, image_i = 0; i < size; ++i)
+        for (uint32_t i = 0; i < size; ++i)
         {
                 write_descriptor_set[i] = {};
                 write_descriptor_set[i].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -80,20 +89,18 @@ vulkan::DescriptorSet create_descriptor_set(VkDevice device, VkDescriptorPool de
                 write_descriptor_set[i].descriptorType = descriptor_set_layout_bindings[i].descriptorType;
                 write_descriptor_set[i].descriptorCount = descriptor_set_layout_bindings[i].descriptorCount;
 
-                if (descriptor_set_layout_bindings[i].descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER)
+                auto buffer = [&](const VkDescriptorBufferInfo& info) noexcept
                 {
-                        ASSERT(buffer_i < descriptor_buffer_infos.size());
-                        write_descriptor_set[i].pBufferInfo = &descriptor_buffer_infos[buffer_i++];
-                }
-                else if (descriptor_set_layout_bindings[i].descriptorType == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER)
+                        ASSERT(descriptor_set_layout_bindings[i].descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+                        write_descriptor_set[i].pBufferInfo = &info;
+                };
+                auto image = [&](const VkDescriptorImageInfo& info) noexcept
                 {
-                        ASSERT(image_i < descriptor_image_infos.size());
-                        write_descriptor_set[i].pImageInfo = &descriptor_image_infos[image_i++];
-                }
-                else
-                {
-                        error_fatal("Not supported descriptor type");
-                }
+                        ASSERT(descriptor_set_layout_bindings[i].descriptorType == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
+                        write_descriptor_set[i].pImageInfo = &info;
+                };
+                visit(Visitors{buffer, image}, descriptor_infos[i]);
+
                 // write_descriptor_set[i].pTexelBufferView = nullptr;
         }
 
@@ -107,14 +114,12 @@ namespace vulkan
 {
 Descriptors::Descriptors() = default;
 
-Descriptors::Descriptors(VkDevice device, const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings,
-                         const std::vector<VkDescriptorBufferInfo>& descriptor_buffer_infos,
-                         const std::vector<VkDescriptorImageInfo>& descriptor_image_infos)
-        : m_descriptor_set_layout(create_descriptor_set_layout(device, descriptor_set_layout_bindings)),
-          m_descriptor_pool(create_descriptor_pool(device, descriptor_set_layout_bindings, 1 /*max_sets*/,
-                                                   VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT)),
-          m_descriptor_set(create_descriptor_set(device, m_descriptor_pool, m_descriptor_set_layout,
-                                                 descriptor_set_layout_bindings, descriptor_buffer_infos, descriptor_image_infos))
+Descriptors::Descriptors(VkDevice device, uint32_t max_sets, const std::vector<VkDescriptorSetLayoutBinding>& bindings)
+        : m_device(device),
+          m_descriptor_pool(
+                  create_descriptor_pool(device, bindings, max_sets, VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT)),
+          m_descriptor_set_layout(create_descriptor_set_layout(device, bindings)),
+          m_descriptor_set_layout_bindings(bindings)
 {
 }
 
@@ -123,8 +128,10 @@ VkDescriptorSetLayout Descriptors::descriptor_set_layout() const noexcept
         return m_descriptor_set_layout;
 }
 
-VkDescriptorSet Descriptors::descriptor_set() const noexcept
+DescriptorSet Descriptors::create_descriptor_set(
+        const std::vector<Variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>>& descriptor_infos)
 {
-        return m_descriptor_set;
+        return ::create_descriptor_set(m_device, m_descriptor_pool, m_descriptor_set_layout, m_descriptor_set_layout_bindings,
+                                       descriptor_infos);
 }
 }

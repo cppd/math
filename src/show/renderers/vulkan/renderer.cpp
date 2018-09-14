@@ -154,6 +154,7 @@ class ShaderMemory
         std::vector<vulkan::UniformBufferWithHostVisibleMemory> m_uniform_buffers;
         std::vector<vulkan::Texture> m_textures;
         vulkan::Descriptors m_descriptors;
+        vulkan::DescriptorSet m_descriptor_set;
 
         void copy_to_buffer(uint32_t index, const Span<const void>& data) const
         {
@@ -188,9 +189,9 @@ public:
         {
                 m_sampler = vulkan::create_sampler(instance.device());
 
-                std::vector<VkDescriptorBufferInfo> buffer_infos;
-                std::vector<VkDescriptorImageInfo> image_infos;
                 std::vector<VkDescriptorSetLayoutBinding> bindings;
+
+                std::vector<Variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
 
                 {
                         m_uniform_buffers.emplace_back(instance.device(), sizeof(VertexShaderUniformMatrices));
@@ -200,7 +201,7 @@ public:
                         buffer_info.offset = 0;
                         buffer_info.range = m_uniform_buffers.back().size();
 
-                        buffer_infos.push_back(buffer_info);
+                        infos.push_back(buffer_info);
 
                         VkDescriptorSetLayoutBinding binding = {};
                         binding.binding = 0;
@@ -218,7 +219,7 @@ public:
                         buffer_info.offset = 0;
                         buffer_info.range = m_uniform_buffers.back().size();
 
-                        buffer_infos.push_back(buffer_info);
+                        infos.push_back(buffer_info);
 
                         VkDescriptorSetLayoutBinding binding = {};
                         binding.binding = 1;
@@ -236,7 +237,7 @@ public:
                         buffer_info.offset = 0;
                         buffer_info.range = m_uniform_buffers.back().size();
 
-                        buffer_infos.push_back(buffer_info);
+                        infos.push_back(buffer_info);
 
                         VkDescriptorSetLayoutBinding binding = {};
                         binding.binding = 2;
@@ -257,7 +258,7 @@ public:
                         image_info.imageView = m_textures.back().image_view();
                         image_info.sampler = m_sampler;
 
-                        image_infos.push_back(image_info);
+                        infos.push_back(image_info);
 
                         VkDescriptorSetLayoutBinding binding = {};
                         binding.binding = 3;
@@ -269,7 +270,9 @@ public:
                         bindings.push_back(binding);
                 }
 
-                m_descriptors = vulkan::Descriptors(instance.device(), bindings, buffer_infos, image_infos);
+                m_descriptors = vulkan::Descriptors(instance.device(), 1 /*max_sets*/, bindings);
+
+                m_descriptor_set = m_descriptors.create_descriptor_set(infos);
         }
 
         VkDescriptorSetLayout descriptor_set_layout() const noexcept
@@ -279,7 +282,7 @@ public:
 
         VkDescriptorSet descriptor_set() const noexcept
         {
-                return m_descriptors.descriptor_set();
+                return m_descriptor_set;
         }
 
         void set_uniform(const VertexShaderUniformMatrices& matrices)
