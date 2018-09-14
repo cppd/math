@@ -150,18 +150,67 @@ struct Vertex
 
 class ShaderMemory
 {
+        static constexpr uint32_t MAX_SETS = 1;
+
         vulkan::Sampler m_sampler;
+        vulkan::Descriptors m_descriptors;
+
         std::vector<vulkan::UniformBufferWithHostVisibleMemory> m_uniform_buffers;
         std::vector<vulkan::Texture> m_textures;
-        vulkan::Descriptors m_descriptors;
         vulkan::DescriptorSet m_descriptor_set;
 
-        void copy_to_buffer(uint32_t index, const Span<const void>& data) const
+        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings()
+        {
+                std::vector<VkDescriptorSetLayoutBinding> bindings;
+
+                {
+                        VkDescriptorSetLayoutBinding b = {};
+                        b.binding = 0;
+                        b.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+                        b.descriptorCount = 1;
+                        b.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+                        bindings.push_back(b);
+                }
+                {
+                        VkDescriptorSetLayoutBinding b = {};
+                        b.binding = 1;
+                        b.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+                        b.descriptorCount = 1;
+                        b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+                        bindings.push_back(b);
+                }
+                {
+                        VkDescriptorSetLayoutBinding b = {};
+                        b.binding = 2;
+                        b.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+                        b.descriptorCount = 1;
+                        b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+                        bindings.push_back(b);
+                }
+                {
+                        VkDescriptorSetLayoutBinding b = {};
+                        b.binding = 3;
+                        b.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+                        b.descriptorCount = 1;
+                        b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+                        b.pImmutableSamplers = nullptr;
+
+                        bindings.push_back(b);
+                }
+
+                return bindings;
+        }
+
+        template <typename T>
+        void copy_to_buffer(uint32_t index, const T& data) const
         {
                 ASSERT(index < m_uniform_buffers.size());
-                ASSERT(data.size() == m_uniform_buffers[index].size());
+                ASSERT(sizeof(data) == m_uniform_buffers[index].size());
 
-                m_uniform_buffers[index].copy(data.data());
+                m_uniform_buffers[index].copy(&data);
         }
 
 public:
@@ -186,11 +235,9 @@ public:
         };
 
         ShaderMemory(const vulkan::VulkanInstance& instance)
+                : m_sampler(vulkan::create_sampler(instance.device())),
+                  m_descriptors(vulkan::Descriptors(instance.device(), MAX_SETS, descriptor_set_layout_bindings()))
         {
-                m_sampler = vulkan::create_sampler(instance.device());
-
-                std::vector<VkDescriptorSetLayoutBinding> bindings;
-
                 std::vector<Variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
 
                 {
@@ -202,14 +249,6 @@ public:
                         buffer_info.range = m_uniform_buffers.back().size();
 
                         infos.push_back(buffer_info);
-
-                        VkDescriptorSetLayoutBinding binding = {};
-                        binding.binding = 0;
-                        binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-                        binding.descriptorCount = 1;
-                        binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-
-                        bindings.push_back(binding);
                 }
                 {
                         m_uniform_buffers.emplace_back(instance.device(), sizeof(FragmentShaderUniformBufferObject0));
@@ -220,14 +259,6 @@ public:
                         buffer_info.range = m_uniform_buffers.back().size();
 
                         infos.push_back(buffer_info);
-
-                        VkDescriptorSetLayoutBinding binding = {};
-                        binding.binding = 1;
-                        binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-                        binding.descriptorCount = 1;
-                        binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-                        bindings.push_back(binding);
                 }
                 {
                         m_uniform_buffers.emplace_back(instance.device(), sizeof(FragmentShaderUniformBufferObject1));
@@ -238,14 +269,6 @@ public:
                         buffer_info.range = m_uniform_buffers.back().size();
 
                         infos.push_back(buffer_info);
-
-                        VkDescriptorSetLayoutBinding binding = {};
-                        binding.binding = 2;
-                        binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-                        binding.descriptorCount = 1;
-                        binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-                        bindings.push_back(binding);
                 }
                 {
                         m_textures.push_back(
@@ -259,18 +282,7 @@ public:
                         image_info.sampler = m_sampler;
 
                         infos.push_back(image_info);
-
-                        VkDescriptorSetLayoutBinding binding = {};
-                        binding.binding = 3;
-                        binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-                        binding.descriptorCount = 1;
-                        binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-                        binding.pImmutableSamplers = nullptr;
-
-                        bindings.push_back(binding);
                 }
-
-                m_descriptors = vulkan::Descriptors(instance.device(), 1 /*max_sets*/, bindings);
 
                 m_descriptor_set = m_descriptors.create_descriptor_set(infos);
         }
@@ -287,17 +299,17 @@ public:
 
         void set_uniform(const VertexShaderUniformMatrices& matrices)
         {
-                copy_to_buffer(0, Span(&matrices, sizeof(matrices)));
+                copy_to_buffer(0, matrices);
         }
 
         void set_uniform(const FragmentShaderUniformBufferObject0& ubo)
         {
-                copy_to_buffer(1, Span(&ubo, sizeof(ubo)));
+                copy_to_buffer(1, ubo);
         }
 
         void set_uniform(const FragmentShaderUniformBufferObject1& ubo)
         {
-                copy_to_buffer(2, Span(&ubo, sizeof(ubo)));
+                copy_to_buffer(2, ubo);
         }
 };
 
