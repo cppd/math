@@ -18,13 +18,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #version 450
 
 layout(location = 0) in vec3 position;
-layout(location = 1) in vec2 texture_coordinates;
+layout(location = 1) in vec3 normal;
+layout(location = 2) in vec2 texture_coordinates;
 
-layout(binding = 0) uniform UniformBufferObject
+layout(binding = 0) uniform Matrices
 {
-        mat4 mvp_matrix;
+        mat4 mvp;
 }
-ubo;
+matrices;
 
 //
 
@@ -41,6 +42,6 @@ out gl_PerVertex
 
 void main()
 {
-        gl_Position = ubo.mvp_matrix * vec4(position, 1.0);
+        gl_Position = matrices.mvp * vec4(position, 1.0);
         vs.texture_coordinates = texture_coordinates;
 }

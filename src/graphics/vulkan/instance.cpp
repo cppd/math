@@ -529,11 +529,12 @@ vulkan::CommandPool create_transient_command_pool(VkDevice device, uint32_t queu
         return vulkan::CommandPool(device, create_info);
 }
 
-vulkan::CommandBuffers create_command_buffers(VkDevice device, const VkExtent2D& swap_chain_extent, VkRenderPass render_pass,
-                                              VkPipelineLayout pipeline_layout, VkPipeline pipeline,
-                                              const std::vector<vulkan::Framebuffer>& framebuffers, VkCommandPool command_pool,
-                                              VkDescriptorSet descriptor_set, VkBuffer vertex_buffer, VkBuffer index_buffer,
-                                              VkIndexType index_type, uint32_t vertex_count, const Color& clear_color)
+vulkan::CommandBuffers create_command_buffers(
+        VkDevice device, const VkExtent2D& swap_chain_extent, VkRenderPass render_pass, VkPipelineLayout pipeline_layout,
+        VkPipeline pipeline, const std::vector<vulkan::Framebuffer>& framebuffers, VkCommandPool command_pool,
+        const Color& clear_color,
+        const std::function<void(VkPipelineLayout pipeline_layout, VkPipeline pipeline, VkCommandBuffer command_buffer)>&
+                commands_for_triangle_topology)
 {
         VkResult result;
 
@@ -573,6 +574,10 @@ vulkan::CommandBuffers create_command_buffers(VkDevice device, const VkExtent2D&
 
                 vkCmdBeginRenderPass(command_buffers[i], &render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
 
+#if 1
+                commands_for_triangle_topology(pipeline_layout, pipeline, command_buffers[i]);
+
+#else
                 vkCmdBindPipeline(command_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 
                 vkCmdBindDescriptorSets(command_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline_layout, 0, 1,
@@ -587,6 +592,7 @@ vulkan::CommandBuffers create_command_buffers(VkDevice device, const VkExtent2D&
 #else
                 vkCmdBindIndexBuffer(command_buffers[i], index_buffer, 0, index_type);
                 vkCmdDrawIndexed(command_buffers[i], vertex_count, 1, 0, 0, 0);
+#endif
 #endif
 
                 vkCmdEndRenderPass(command_buffers[i]);
@@ -696,22 +702,18 @@ SwapChain::SwapChain(VkSurfaceKHR surface, VkPhysicalDevice physical_device,
         }
 }
 
-void SwapChain::create_command_buffers(VkBuffer vertex_buffer, VkBuffer vertex_index_buffer, VkIndexType vertex_index_type,
-                                       uint32_t vertex_count, const Color& clear_color, VkDescriptorSet descriptor_set)
+void SwapChain::create_command_buffers(const Color& clear_color,
+                                       const std::function<void(VkPipelineLayout pipeline_layout, VkPipeline pipeline,
+                                                                VkCommandBuffer command_buffer)>& commands_for_triangle_topology)
 {
-        ASSERT(vertex_buffer != VK_NULL_HANDLE);
-        ASSERT(vertex_index_buffer != VK_NULL_HANDLE);
-        ASSERT(descriptor_set != VK_NULL_HANDLE);
-        ASSERT(vertex_index_type == VK_INDEX_TYPE_UINT16 || vertex_index_type == VK_INDEX_TYPE_UINT32);
+        m_command_buffers =
+                ::create_command_buffers(m_device, m_extent, m_render_pass, m_pipeline_layout, m_pipeline, m_framebuffers,
+                                         m_graphics_command_pool, clear_color, commands_for_triangle_topology);
+}
 
-        if (vertex_count <= 0 || (vertex_count % 3 != 0))
-        {
-                error("Error vertex count (" + to_string(vertex_count) + ") for triangle list primitive topology");
-        }
-
-        m_command_buffers = ::create_command_buffers(m_device, m_extent, m_render_pass, m_pipeline_layout, m_pipeline,
-                                                     m_framebuffers, m_graphics_command_pool, descriptor_set, vertex_buffer,
-                                                     vertex_index_buffer, vertex_index_type, vertex_count, clear_color);
+void SwapChain::delete_command_buffers()
+{
+        m_command_buffers = CommandBuffers();
 }
 
 bool SwapChain::command_buffers_created() const
@@ -800,18 +802,6 @@ Texture VulkanInstance::create_texture(uint32_t width, uint32_t height, const st
 {
         return Texture(m_device, m_graphics_command_pool, m_graphics_queue, m_transfer_command_pool, m_transfer_queue,
                        m_texture_image_family_indices, width, height, rgba_pixels);
-}
-
-VertexBufferWithDeviceLocalMemory VulkanInstance::create_vertex_buffer(VkDeviceSize data_size, const void* data) const
-{
-        return VertexBufferWithDeviceLocalMemory(m_device, m_transfer_command_pool, m_transfer_queue,
-                                                 m_vertex_buffer_family_indices, data_size, data);
-}
-
-IndexBufferWithDeviceLocalMemory VulkanInstance::create_index_buffer(VkDeviceSize data_size, const void* data) const
-{
-        return IndexBufferWithDeviceLocalMemory(m_device, m_transfer_command_pool, m_transfer_queue,
-                                                m_vertex_buffer_family_indices, data_size, data);
 }
 
 VkInstance VulkanInstance::instance() const noexcept

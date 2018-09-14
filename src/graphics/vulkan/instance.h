@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/color/colors.h"
 #include "com/error.h"
+#include "com/type_detect.h"
 
 #include <functional>
 #include <optional>
@@ -67,8 +68,10 @@ public:
         SwapChain& operator=(const SwapChain&) = delete;
         SwapChain& operator=(SwapChain&&) = delete;
 
-        void create_command_buffers(VkBuffer vertex_buffer, VkBuffer vertex_index_buffer, VkIndexType vertex_index_type,
-                                    uint32_t vertex_count, const Color& clear_color, VkDescriptorSet descriptor_set);
+        void create_command_buffers(const Color& clear_color,
+                                    const std::function<void(VkPipelineLayout pipeline_layout, VkPipeline pipeline,
+                                                             VkCommandBuffer command_buffer)>& commands_for_triangle_topology);
+        void delete_command_buffers();
         bool command_buffers_created() const;
 
         VkSwapchainKHR swap_chain() const noexcept;
@@ -130,8 +133,24 @@ public:
                                VkDescriptorSetLayout descriptor_set_layout, std::optional<SwapChain>* swap_chain);
 
         Texture create_texture(uint32_t width, uint32_t height, const std::vector<unsigned char>& rgba_pixels) const;
-        VertexBufferWithDeviceLocalMemory create_vertex_buffer(VkDeviceSize data_size, const void* data) const;
-        IndexBufferWithDeviceLocalMemory create_index_buffer(VkDeviceSize data_size, const void* data) const;
+
+        template <typename T>
+        VertexBufferWithDeviceLocalMemory create_vertex_buffer(const T& data) const
+        {
+                static_assert(is_vector<T> || is_array<T>);
+                return VertexBufferWithDeviceLocalMemory(m_device, m_transfer_command_pool, m_transfer_queue,
+                                                         m_vertex_buffer_family_indices,
+                                                         data.size() * sizeof(typename T::value_type), data.data());
+        }
+
+        template <typename T>
+        IndexBufferWithDeviceLocalMemory create_index_buffer(const T& data) const
+        {
+                static_assert(is_vector<T> || is_array<T>);
+                return IndexBufferWithDeviceLocalMemory(m_device, m_transfer_command_pool, m_transfer_queue,
+                                                        m_vertex_buffer_family_indices,
+                                                        data.size() * sizeof(typename T::value_type), data.data());
+        }
 
         [[nodiscard]] bool draw_frame(SwapChain& swap_chain);
 

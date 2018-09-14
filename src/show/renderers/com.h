@@ -52,6 +52,7 @@ class DrawObjects final
 
         const T* m_draw_object = nullptr;
         const T* m_draw_scale_object = nullptr;
+        int m_draw_object_id = 0;
         int m_draw_scale_object_id = 0;
 
 public:
@@ -63,6 +64,11 @@ public:
                 }
 
                 m_objects.insert_or_assign(id, MapEntry(std::move(object), scale_id));
+        }
+
+        bool is_current_object(int id) const
+        {
+                return m_draw_object && id == m_draw_object_id;
         }
 
         void delete_object(int id)
@@ -89,6 +95,7 @@ public:
                 {
                         m_draw_object = iter->second.object.get();
 
+                        m_draw_object_id = id;
                         m_draw_scale_object_id = iter->second.scale_object_id;
 
                         auto scale_iter = m_objects.find(m_draw_scale_object_id);
