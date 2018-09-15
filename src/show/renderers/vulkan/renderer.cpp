@@ -44,6 +44,9 @@ using VERTEX_INDEX_TYPE =
         std::conditional_t<VULKAN_VERTEX_INDEX_TYPE == VK_INDEX_TYPE_UINT32, uint32_t,
                            std::conditional_t<VULKAN_VERTEX_INDEX_TYPE == VK_INDEX_TYPE_UINT16, uint16_t, void>>;
 
+constexpr uint32_t SHADER_SHARED_DESCRIPTION_SET_LAYOUT_INDEX = 0;
+constexpr uint32_t SHADER_PER_OBJECT_DESCRIPTION_SET_LAYOUT_INDEX = 1;
+
 // clang-format off
 constexpr uint32_t vertex_shader[]
 {
@@ -148,18 +151,26 @@ struct Vertex
 
 //
 
-class ShaderMemory
+template <typename Buffer, typename T>
+void copy_to_buffer(const std::vector<Buffer>& buffers, uint32_t index, const T& data)
+{
+        ASSERT(index < buffers.size());
+        ASSERT(sizeof(data) == buffers[index].size());
+
+        buffers[index].copy(&data);
+}
+
+class SharedShaderMemory
 {
         static constexpr uint32_t MAX_SETS = 1;
 
-        vulkan::Sampler m_sampler;
         vulkan::Descriptors m_descriptors;
 
         std::vector<vulkan::UniformBufferWithHostVisibleMemory> m_uniform_buffers;
-        std::vector<vulkan::Texture> m_textures;
         vulkan::DescriptorSet m_descriptor_set;
 
-        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings()
+public:
+        static std::vector<VkDescriptorSetLayoutBinding> shared_descriptor_set_layout_bindings()
         {
                 std::vector<VkDescriptorSetLayoutBinding> bindings;
 
@@ -172,48 +183,10 @@ class ShaderMemory
 
                         bindings.push_back(b);
                 }
-                {
-                        VkDescriptorSetLayoutBinding b = {};
-                        b.binding = 1;
-                        b.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-                        b.descriptorCount = 1;
-                        b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-                        bindings.push_back(b);
-                }
-                {
-                        VkDescriptorSetLayoutBinding b = {};
-                        b.binding = 2;
-                        b.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-                        b.descriptorCount = 1;
-                        b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-                        bindings.push_back(b);
-                }
-                {
-                        VkDescriptorSetLayoutBinding b = {};
-                        b.binding = 3;
-                        b.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-                        b.descriptorCount = 1;
-                        b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-                        b.pImmutableSamplers = nullptr;
-
-                        bindings.push_back(b);
-                }
 
                 return bindings;
         }
 
-        template <typename T>
-        void copy_to_buffer(uint32_t index, const T& data) const
-        {
-                ASSERT(index < m_uniform_buffers.size());
-                ASSERT(sizeof(data) == m_uniform_buffers[index].size());
-
-                m_uniform_buffers[index].copy(&data);
-        }
-
-public:
         struct VertexShaderUniformMatrices
         {
                 Matrix<4, 4, float> mvp;
@@ -223,20 +196,9 @@ public:
                 }
         };
 
-        struct FragmentShaderUniformBufferObject0
-        {
-                float value_r;
-                float value_g;
-        };
-
-        struct FragmentShaderUniformBufferObject1
-        {
-                float value_b;
-        };
-
-        ShaderMemory(const vulkan::VulkanInstance& instance)
-                : m_sampler(vulkan::create_sampler(instance.device())),
-                  m_descriptors(vulkan::Descriptors(instance.device(), MAX_SETS, descriptor_set_layout_bindings()))
+        SharedShaderMemory(const vulkan::VulkanInstance& instance, VkDescriptorSetLayout descriptor_set_layout)
+                : m_descriptors(vulkan::Descriptors(instance.device(), MAX_SETS, descriptor_set_layout,
+                                                    shared_descriptor_set_layout_bindings()))
         {
                 std::vector<Variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
 
@@ -250,18 +212,75 @@ public:
 
                         infos.push_back(buffer_info);
                 }
+
+                m_descriptor_set = m_descriptors.create_descriptor_set(infos);
+        }
+
+        VkDescriptorSet descriptor_set() const noexcept
+        {
+                return m_descriptor_set;
+        }
+
+        void set_uniform(const VertexShaderUniformMatrices& matrices) const
+        {
+                copy_to_buffer(m_uniform_buffers, 0, matrices);
+        }
+};
+
+class PerObjectShaderMemory
+{
+        static constexpr uint32_t MAX_SETS = 1;
+
+        vulkan::Descriptors m_descriptors;
+
+        std::vector<vulkan::UniformBufferWithHostVisibleMemory> m_uniform_buffers;
+        std::vector<vulkan::Texture> m_textures;
+        vulkan::DescriptorSet m_descriptor_set;
+
+public:
+        static std::vector<VkDescriptorSetLayoutBinding> per_object_descriptor_set_layout_bindings()
+        {
+                std::vector<VkDescriptorSetLayoutBinding> bindings;
+
                 {
-                        m_uniform_buffers.emplace_back(instance.device(), sizeof(FragmentShaderUniformBufferObject0));
+                        VkDescriptorSetLayoutBinding b = {};
+                        b.binding = 0;
+                        b.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+                        b.descriptorCount = 1;
+                        b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-                        VkDescriptorBufferInfo buffer_info = {};
-                        buffer_info.buffer = m_uniform_buffers.back();
-                        buffer_info.offset = 0;
-                        buffer_info.range = m_uniform_buffers.back().size();
-
-                        infos.push_back(buffer_info);
+                        bindings.push_back(b);
                 }
                 {
-                        m_uniform_buffers.emplace_back(instance.device(), sizeof(FragmentShaderUniformBufferObject1));
+                        VkDescriptorSetLayoutBinding b = {};
+                        b.binding = 1;
+                        b.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+                        b.descriptorCount = 1;
+                        b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+                        b.pImmutableSamplers = nullptr;
+
+                        bindings.push_back(b);
+                }
+
+                return bindings;
+        }
+
+        struct FragmentShaderUniformBufferObject
+        {
+                float value_r;
+                float value_g;
+                float value_b;
+        };
+
+        PerObjectShaderMemory(const vulkan::VulkanInstance& instance, VkSampler sampler,
+                              VkDescriptorSetLayout descriptor_set_layout)
+                : m_descriptors(vulkan::Descriptors(instance.device(), MAX_SETS, descriptor_set_layout,
+                                                    per_object_descriptor_set_layout_bindings()))
+        {
+                std::vector<Variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
+
+                {
+                        m_uniform_buffers.emplace_back(instance.device(), sizeof(FragmentShaderUniformBufferObject));
 
                         VkDescriptorBufferInfo buffer_info = {};
                         buffer_info.buffer = m_uniform_buffers.back();
@@ -279,7 +298,7 @@ public:
                         VkDescriptorImageInfo image_info = {};
                         image_info.imageLayout = m_textures.back().image_layout();
                         image_info.imageView = m_textures.back().image_view();
-                        image_info.sampler = m_sampler;
+                        image_info.sampler = sampler;
 
                         infos.push_back(image_info);
                 }
@@ -287,47 +306,18 @@ public:
                 m_descriptor_set = m_descriptors.create_descriptor_set(infos);
         }
 
-        VkDescriptorSetLayout descriptor_set_layout() const noexcept
-        {
-                return m_descriptors.descriptor_set_layout();
-        }
-
         VkDescriptorSet descriptor_set() const noexcept
         {
                 return m_descriptor_set;
         }
 
-        void set_uniform(const VertexShaderUniformMatrices& matrices)
+        void set_uniform(const FragmentShaderUniformBufferObject& ubo) const
         {
-                copy_to_buffer(0, matrices);
-        }
-
-        void set_uniform(const FragmentShaderUniformBufferObject0& ubo)
-        {
-                copy_to_buffer(1, ubo);
-        }
-
-        void set_uniform(const FragmentShaderUniformBufferObject1& ubo)
-        {
-                copy_to_buffer(2, ubo);
+                copy_to_buffer(m_uniform_buffers, 0, ubo);
         }
 };
 
 //
-
-void update_uniforms(ShaderMemory& shader_memory)
-{
-        const double radians = time_in_seconds() * 2 * PI<double>;
-
-        ShaderMemory::FragmentShaderUniformBufferObject0 ubo0;
-        ubo0.value_r = 0.5 * (1 + std::sin(radians));
-        ubo0.value_g = 0.5 * (1 + std::sin(radians * 2));
-        shader_memory.set_uniform(ubo0);
-
-        ShaderMemory::FragmentShaderUniformBufferObject1 ubo1;
-        ubo1.value_b = 0.5 * (1 + std::sin(radians * 4));
-        shader_memory.set_uniform(ubo1);
-}
 
 std::vector<Vertex> load_face_vertices(const Obj<3>& obj)
 {
@@ -418,14 +408,17 @@ class DrawObject
         uint32_t m_vertex_count;
         std::optional<vulkan::VertexBufferWithDeviceLocalMemory> m_vertex_buffer;
         std::optional<vulkan::IndexBufferWithDeviceLocalMemory> m_vertex_index_buffer;
+        PerObjectShaderMemory m_shader_memory;
 
         mat4 m_model_matrix;
-
         DrawType m_draw_type;
 
 public:
-        DrawObject(const vulkan::VulkanInstance& instance, const Obj<3>* obj, double size, const vec3& position)
-                : m_model_matrix(model_vertex_matrix(obj, size, position)), m_draw_type(draw_type_of_obj(obj))
+        DrawObject(const vulkan::VulkanInstance& instance, VkSampler sampler, VkDescriptorSetLayout descriptor_set_layout,
+                   const Obj<3>* obj, double size, const vec3& position)
+                : m_shader_memory(instance, sampler, descriptor_set_layout),
+                  m_model_matrix(model_vertex_matrix(obj, size, position)),
+                  m_draw_type(draw_type_of_obj(obj))
         {
                 if (m_draw_type == DrawType::Triangles)
                 {
@@ -438,6 +431,8 @@ public:
 
                         m_vertex_count = vertices.size();
                         m_vertex_buffer.emplace(instance.create_vertex_buffer(vertices));
+
+                        ASSERT((m_vertex_count > 0) && (m_vertex_count % 3 == 0));
                 }
                 else
                 {
@@ -452,21 +447,48 @@ public:
 #endif
                 }
         }
-        uint32_t vertex_count() const noexcept
-        {
-                return m_vertex_count;
-        }
-        VkBuffer vertex_buffer() const noexcept
-        {
-                return m_vertex_buffer ? static_cast<VkBuffer>(*m_vertex_buffer) : VK_NULL_HANDLE;
-        }
-        VkBuffer index_buffer() const noexcept
-        {
-                return m_vertex_index_buffer ? static_cast<VkBuffer>(*m_vertex_index_buffer) : VK_NULL_HANDLE;
-        }
+
         const mat4& model_matrix() const noexcept
         {
                 return m_model_matrix;
+        }
+
+        void draw_commands(VkPipelineLayout pipeline_layout, VkCommandBuffer command_buffer,
+                           uint32_t description_set_layout_index) const
+        {
+                if (!m_vertex_buffer.has_value())
+                {
+                        return;
+                }
+
+                std::array<VkDescriptorSet, 1> descriptor_sets = {m_shader_memory.descriptor_set()};
+                vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline_layout,
+                                        description_set_layout_index, descriptor_sets.size(), descriptor_sets.data(), 0, nullptr);
+
+                std::array<VkBuffer, 1> vertex_buffers = {*m_vertex_buffer};
+                std::array<VkDeviceSize, vertex_buffers.size()> offsets = {0};
+                vkCmdBindVertexBuffers(command_buffer, 0, vertex_buffers.size(), vertex_buffers.data(), offsets.data());
+
+                if (!m_vertex_index_buffer.has_value())
+                {
+                        vkCmdDraw(command_buffer, m_vertex_count, 1, 0, 0);
+                }
+                else
+                {
+                        vkCmdBindIndexBuffer(command_buffer, *m_vertex_index_buffer, 0, VULKAN_VERTEX_INDEX_TYPE);
+                        vkCmdDrawIndexed(command_buffer, m_vertex_count, 1, 0, 0, 0);
+                }
+        }
+
+        void update() const
+        {
+                const double radians = time_in_seconds() * 2 * PI<double>;
+
+                PerObjectShaderMemory::FragmentShaderUniformBufferObject ubo;
+                ubo.value_r = 0.5 * (1 + std::sin(radians));
+                ubo.value_g = 0.5 * (1 + std::sin(radians * 2));
+                ubo.value_b = 0.5 * (1 + std::sin(radians * 4));
+                m_shader_memory.set_uniform(ubo);
         }
 };
 
@@ -474,17 +496,16 @@ class Renderer final : public VulkanRenderer
 {
         const std::thread::id m_thread_id = std::this_thread::get_id();
 
-        std::optional<vulkan::VulkanInstance> m_instance;
-
-        std::optional<vulkan::VertexShader> m_vertex_shader;
-        std::optional<vulkan::FragmentShader> m_fragment_shader;
-
-        std::optional<ShaderMemory> m_shader_memory;
-
         Color m_clear_color = Color(0);
-
         mat4 m_main_matrix = mat4(1);
 
+        std::optional<vulkan::VulkanInstance> m_instance;
+        vulkan::Sampler m_sampler;
+        vulkan::DescriptorSetLayout m_shared_descriptor_set_layout;
+        vulkan::DescriptorSetLayout m_per_object_descriptor_set_layout;
+        std::optional<SharedShaderMemory> m_shared_shader_memory;
+        std::optional<vulkan::VertexShader> m_vertex_shader;
+        std::optional<vulkan::FragmentShader> m_fragment_shader;
         std::optional<vulkan::SwapChain> m_swap_chain;
 
         DrawObjects<DrawObject> m_draw_objects;
@@ -568,7 +589,9 @@ class Renderer final : public VulkanRenderer
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                m_draw_objects.add_object(std::make_unique<DrawObject>(*m_instance, obj, size, position), id, scale_id);
+                m_draw_objects.add_object(std::make_unique<DrawObject>(*m_instance, m_sampler, m_per_object_descriptor_set_layout,
+                                                                       obj, size, position),
+                                          id, scale_id);
                 set_matrices();
         }
         void object_delete(int id) override
@@ -624,14 +647,17 @@ class Renderer final : public VulkanRenderer
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                update_uniforms(*m_shader_memory);
+                if (m_draw_objects.object())
+                {
+                        m_draw_objects.object()->update();
+                }
 
                 if (!m_instance->draw_frame(*m_swap_chain))
                 {
                         create_swap_chain_and_command_buffers();
                 }
 
-                return m_draw_objects.object() && m_draw_objects.object()->vertex_buffer() != VK_NULL_HANDLE;
+                return m_draw_objects.object() != nullptr;
         }
 
         void set_matrices()
@@ -643,7 +669,7 @@ class Renderer final : public VulkanRenderer
                 if (m_draw_objects.scale_object())
                 {
                         mat4 mvp = m_main_matrix * m_draw_objects.scale_object()->model_matrix();
-                        m_shader_memory->set_uniform(ShaderMemory::VertexShaderUniformMatrices(mvp));
+                        m_shared_shader_memory->set_uniform(SharedShaderMemory::VertexShaderUniformMatrices(mvp));
                 }
         }
 
@@ -653,59 +679,41 @@ class Renderer final : public VulkanRenderer
 
                 ASSERT(m_vertex_shader);
                 ASSERT(m_fragment_shader);
-                ASSERT(m_shader_memory);
+                ASSERT(m_shared_shader_memory);
+                ASSERT(m_shared_descriptor_set_layout != VK_NULL_HANDLE);
+                ASSERT(m_per_object_descriptor_set_layout != VK_NULL_HANDLE);
 
                 m_instance->device_wait_idle();
 
+                std::vector<VkDescriptorSetLayout> layouts(2);
+                layouts[SHADER_SHARED_DESCRIPTION_SET_LAYOUT_INDEX] = m_shared_descriptor_set_layout;
+                layouts[SHADER_PER_OBJECT_DESCRIPTION_SET_LAYOUT_INDEX] = m_per_object_descriptor_set_layout;
                 m_instance->create_swap_chain(*m_vertex_shader, *m_fragment_shader, Vertex::binding_descriptions(),
-                                              Vertex::attribute_descriptions(), m_shader_memory->descriptor_set_layout(),
-                                              &m_swap_chain);
+                                              Vertex::attribute_descriptions(), layouts, &m_swap_chain);
 
                 create_command_buffers(false /*wait_idle*/);
         }
 
-        void commands(VkPipelineLayout pipeline_layout, VkPipeline pipeline, VkCommandBuffer command_buffer)
+        void draw_commands(VkPipelineLayout pipeline_layout, VkPipeline pipeline, VkCommandBuffer command_buffer)
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                if (!m_draw_objects.object() || m_draw_objects.object()->vertex_buffer() == VK_NULL_HANDLE)
-                {
-                        return;
-                }
-
                 //
 
-                if (m_draw_objects.object()->vertex_count() <= 0 || (m_draw_objects.object()->vertex_count() % 3 != 0))
-                {
-                        error("Error vertex count (" + to_string(m_draw_objects.object()->vertex_count()) +
-                              ") for triangle list primitive topology");
-                }
-                ASSERT(m_draw_objects.object()->vertex_buffer() != VK_NULL_HANDLE);
-                ASSERT(m_shader_memory);
-                ASSERT(m_shader_memory->descriptor_set() != VK_NULL_HANDLE);
-
-                //
+                ASSERT(m_shared_shader_memory);
+                ASSERT(m_shared_shader_memory->descriptor_set() != VK_NULL_HANDLE);
 
                 vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 
-                std::array<VkDescriptorSet, 1> descriptor_sets = {m_shader_memory->descriptor_set()};
-                vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline_layout, 0,
-                                        descriptor_sets.size(), descriptor_sets.data(), 0, nullptr);
+                std::array<VkDescriptorSet, 1> descriptor_sets = {m_shared_shader_memory->descriptor_set()};
+                vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline_layout,
+                                        SHADER_SHARED_DESCRIPTION_SET_LAYOUT_INDEX, descriptor_sets.size(),
+                                        descriptor_sets.data(), 0, nullptr);
 
-                std::array<VkBuffer, 1> vertex_buffers = {m_draw_objects.object()->vertex_buffer()};
-                std::array<VkDeviceSize, 1> offsets = {0};
-                static_assert(vertex_buffers.size() == offsets.size());
-                vkCmdBindVertexBuffers(command_buffer, 0, vertex_buffers.size(), vertex_buffers.data(), offsets.data());
-
-                if (m_draw_objects.object()->index_buffer() == VK_NULL_HANDLE)
+                if (m_draw_objects.object())
                 {
-                        vkCmdDraw(command_buffer, m_draw_objects.object()->vertex_count(), 1, 0, 0);
-                }
-                else
-                {
-                        vkCmdBindIndexBuffer(command_buffer, m_draw_objects.object()->index_buffer(), 0,
-                                             VULKAN_VERTEX_INDEX_TYPE);
-                        vkCmdDrawIndexed(command_buffer, m_draw_objects.object()->vertex_count(), 1, 0, 0, 0);
+                        m_draw_objects.object()->draw_commands(pipeline_layout, command_buffer,
+                                                               SHADER_PER_OBJECT_DESCRIPTION_SET_LAYOUT_INDEX);
                 }
         }
 
@@ -724,7 +732,7 @@ class Renderer final : public VulkanRenderer
                 using std::placeholders::_2;
                 using std::placeholders::_3;
 
-                m_swap_chain->create_command_buffers(m_clear_color, std::bind(&Renderer::commands, this, _1, _2, _3));
+                m_swap_chain->create_command_buffers(m_clear_color, std::bind(&Renderer::draw_commands, this, _1, _2, _3));
         }
 
         void delete_command_buffers()
@@ -750,10 +758,18 @@ public:
                 m_instance.emplace(API_VERSION_MAJOR, API_VERSION_MINOR, instance_extensions + window_instance_extensions,
                                    device_extensions, validation_layers, create_surface);
 
+                m_sampler = vulkan::create_sampler(m_instance->device());
+
+                m_shared_descriptor_set_layout = vulkan::create_descriptor_set_layout(
+                        m_instance->device(), SharedShaderMemory::shared_descriptor_set_layout_bindings());
+
+                m_per_object_descriptor_set_layout = vulkan::create_descriptor_set_layout(
+                        m_instance->device(), PerObjectShaderMemory::per_object_descriptor_set_layout_bindings());
+
+                m_shared_shader_memory.emplace(m_instance.value(), m_shared_descriptor_set_layout);
+
                 m_vertex_shader.emplace(m_instance->device(), vertex_shader, "main");
                 m_fragment_shader.emplace(m_instance->device(), fragment_shader, "main");
-
-                m_shader_memory.emplace(m_instance.value());
 
                 create_swap_chain_and_command_buffers();
 

@@ -54,17 +54,6 @@ vulkan::DescriptorPool create_descriptor_pool(VkDevice device,
         return vulkan::DescriptorPool(device, create_info);
 }
 
-vulkan::DescriptorSetLayout create_descriptor_set_layout(
-        VkDevice device, const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings)
-{
-        VkDescriptorSetLayoutCreateInfo create_info = {};
-        create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-        create_info.bindingCount = descriptor_set_layout_bindings.size();
-        create_info.pBindings = descriptor_set_layout_bindings.data();
-
-        return vulkan::DescriptorSetLayout(device, create_info);
-}
-
 vulkan::DescriptorSet create_descriptor_set(
         VkDevice device, VkDescriptorPool descriptor_pool, VkDescriptorSetLayout descriptor_set_layout,
         const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings,
@@ -112,20 +101,27 @@ vulkan::DescriptorSet create_descriptor_set(
 
 namespace vulkan
 {
-Descriptors::Descriptors() = default;
-
-Descriptors::Descriptors(VkDevice device, uint32_t max_sets, const std::vector<VkDescriptorSetLayoutBinding>& bindings)
-        : m_device(device),
-          m_descriptor_pool(
-                  create_descriptor_pool(device, bindings, max_sets, VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT)),
-          m_descriptor_set_layout(create_descriptor_set_layout(device, bindings)),
-          m_descriptor_set_layout_bindings(bindings)
+DescriptorSetLayout create_descriptor_set_layout(VkDevice device, const std::vector<VkDescriptorSetLayoutBinding>& bindings)
 {
+        VkDescriptorSetLayoutCreateInfo create_info = {};
+        create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        create_info.bindingCount = bindings.size();
+        create_info.pBindings = bindings.data();
+
+        return DescriptorSetLayout(device, create_info);
 }
 
-VkDescriptorSetLayout Descriptors::descriptor_set_layout() const noexcept
+Descriptors::Descriptors() = default;
+
+Descriptors::Descriptors(VkDevice device, uint32_t max_sets, VkDescriptorSetLayout descriptor_set_layout,
+                         const std::vector<VkDescriptorSetLayoutBinding>& bindings)
+        : m_device(device),
+          m_descriptor_set_layout(descriptor_set_layout),
+          m_descriptor_pool(
+                  create_descriptor_pool(device, bindings, max_sets, VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT)),
+          m_descriptor_set_layout_bindings(bindings)
 {
-        return m_descriptor_set_layout;
+        ASSERT(descriptor_set_layout != VK_NULL_HANDLE);
 }
 
 DescriptorSet Descriptors::create_descriptor_set(

@@ -61,7 +61,7 @@ public:
                   VkCommandPool graphics_command_pool, VkQueue graphics_queue, const std::vector<const vulkan::Shader*>& shaders,
                   const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
                   const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions,
-                  VkDescriptorSetLayout descriptor_set_layout);
+                  const std::vector<VkDescriptorSetLayout>& descriptor_set_layouts);
 
         SwapChain(const SwapChain&) = delete;
         SwapChain(SwapChain&&) = delete;
@@ -130,7 +130,8 @@ public:
         void create_swap_chain(const VertexShader& vertex_shader, const FragmentShader& fragment_shader,
                                const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
                                const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions,
-                               VkDescriptorSetLayout descriptor_set_layout, std::optional<SwapChain>* swap_chain);
+                               const std::vector<VkDescriptorSetLayout>& descriptor_set_layouts,
+                               std::optional<SwapChain>* swap_chain);
 
         Texture create_texture(uint32_t width, uint32_t height, const std::vector<unsigned char>& rgba_pixels) const;
 

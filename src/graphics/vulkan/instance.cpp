@@ -335,12 +335,12 @@ vulkan::RenderPass create_render_pass(VkDevice device, VkFormat swap_chain_image
         return vulkan::RenderPass(device, create_info);
 }
 
-vulkan::PipelineLayout create_pipeline_layout(VkDevice device, VkDescriptorSetLayout descriptor_set_layout)
+vulkan::PipelineLayout create_pipeline_layout(VkDevice device, const std::vector<VkDescriptorSetLayout>& descriptor_set_layouts)
 {
         VkPipelineLayoutCreateInfo create_info = {};
         create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-        create_info.setLayoutCount = 1;
-        create_info.pSetLayouts = &descriptor_set_layout;
+        create_info.setLayoutCount = descriptor_set_layouts.size();
+        create_info.pSetLayouts = descriptor_set_layouts.data();
         // create_info.pushConstantRangeCount = 0;
         // create_info.pPushConstantRanges = nullptr;
 
@@ -645,7 +645,7 @@ SwapChain::SwapChain(VkSurfaceKHR surface, VkPhysicalDevice physical_device,
                      const std::vector<const vulkan::Shader*>& shaders,
                      const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
                      const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions,
-                     VkDescriptorSetLayout descriptor_set_layout)
+                     const std::vector<VkDescriptorSetLayout>& descriptor_set_layouts)
         : m_device(device), m_graphics_command_pool(graphics_command_pool)
 {
         ASSERT(surface != VK_NULL_HANDLE);
@@ -653,8 +653,8 @@ SwapChain::SwapChain(VkSurfaceKHR surface, VkPhysicalDevice physical_device,
         ASSERT(device != VK_NULL_HANDLE);
         ASSERT(graphics_command_pool != VK_NULL_HANDLE);
         ASSERT(graphics_queue != VK_NULL_HANDLE);
-        ASSERT(descriptor_set_layout != VK_NULL_HANDLE);
 
+        ASSERT(descriptor_set_layouts.size() > 0);
         ASSERT(swap_chain_image_family_indices.size() > 0);
         ASSERT(depth_image_family_indices.size() > 0);
 
@@ -691,7 +691,7 @@ SwapChain::SwapChain(VkSurfaceKHR surface, VkPhysicalDevice physical_device,
 
         m_render_pass =
                 create_render_pass(device, image_format, m_depth_attachment->image_format(), m_depth_attachment->image_layout());
-        m_pipeline_layout = create_pipeline_layout(device, descriptor_set_layout);
+        m_pipeline_layout = create_pipeline_layout(device, descriptor_set_layouts);
         m_pipeline = create_graphics_pipeline(device, m_render_pass, m_pipeline_layout, m_extent, shaders,
                                               vertex_binding_descriptions, vertex_attribute_descriptions);
 
@@ -787,15 +787,16 @@ VulkanInstance::~VulkanInstance()
 void VulkanInstance::create_swap_chain(const VertexShader& vertex_shader, const FragmentShader& fragment_shader,
                                        const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
                                        const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions,
-                                       VkDescriptorSetLayout descriptor_set_layout, std::optional<SwapChain>* swap_chain)
+                                       const std::vector<VkDescriptorSetLayout>& descriptor_set_layouts,
+                                       std::optional<SwapChain>* swap_chain)
 {
-        ASSERT(descriptor_set_layout != VK_NULL_HANDLE);
+        ASSERT(descriptor_set_layouts.size() > 0);
         ASSERT(swap_chain);
 
         swap_chain->emplace(m_surface, m_physical_device.device, m_swap_chain_image_family_indices, m_depth_image_family_indices,
                             m_device, m_graphics_command_pool, m_graphics_queue,
                             std::vector<const vulkan::Shader*>({&vertex_shader, &fragment_shader}), vertex_binding_descriptions,
-                            vertex_attribute_descriptions, descriptor_set_layout);
+                            vertex_attribute_descriptions, descriptor_set_layouts);
 }
 
 Texture VulkanInstance::create_texture(uint32_t width, uint32_t height, const std::vector<unsigned char>& rgba_pixels) const
