@@ -39,6 +39,8 @@ void Instance::move(Instance* from) noexcept
         from->m_instance = VK_NULL_HANDLE;
 }
 
+Instance::Instance() = default;
+
 Instance::Instance(const VkInstanceCreateInfo& create_info)
 {
         VkResult result = vkCreateInstance(&create_info, nullptr, &m_instance);
@@ -94,6 +96,8 @@ void DebugReportCallback::move(DebugReportCallback* from) noexcept
         from->m_instance = VK_NULL_HANDLE;
         from->m_callback = VK_NULL_HANDLE;
 }
+
+DebugReportCallback::DebugReportCallback() = default;
 
 DebugReportCallback::DebugReportCallback(VkInstance instance, const VkDebugReportCallbackCreateInfoEXT& create_info)
 {
@@ -245,6 +249,8 @@ void SurfaceKHR::move(SurfaceKHR* from) noexcept
         from->m_surface = VK_NULL_HANDLE;
 }
 
+SurfaceKHR::SurfaceKHR() = default;
+
 SurfaceKHR::SurfaceKHR(VkInstance instance, const std::function<VkSurfaceKHR(VkInstance)>& create_surface)
 {
         if (instance == VK_NULL_HANDLE)
@@ -364,6 +370,8 @@ void ImageView::move(ImageView* from) noexcept
         from->m_image_view = VK_NULL_HANDLE;
 }
 
+ImageView::ImageView() = default;
+
 ImageView::ImageView(VkDevice device, const VkImageViewCreateInfo& create_info)
 {
         VkResult result = vkCreateImageView(device, &create_info, nullptr, &m_image_view);
@@ -421,6 +429,8 @@ void ShaderModule::move(ShaderModule* from) noexcept
         from->m_device = VK_NULL_HANDLE;
         from->m_shader_module = VK_NULL_HANDLE;
 }
+
+ShaderModule::ShaderModule() = default;
 
 ShaderModule::ShaderModule(VkDevice device, const Span<const uint32_t>& code)
 {
@@ -675,6 +685,8 @@ void Framebuffer::move(Framebuffer* from) noexcept
         from->m_device = VK_NULL_HANDLE;
         from->m_framebuffer = VK_NULL_HANDLE;
 }
+
+Framebuffer::Framebuffer() = default;
 
 Framebuffer::Framebuffer(VkDevice device, const VkFramebufferCreateInfo& create_info)
 {
@@ -1050,6 +1062,8 @@ void CommandBuffer::move(CommandBuffer* from) noexcept
         from->m_command_pool = VK_NULL_HANDLE;
         from->m_command_buffer = VK_NULL_HANDLE;
 }
+
+CommandBuffer::CommandBuffer() = default;
 
 CommandBuffer::CommandBuffer(VkDevice device, VkCommandPool command_pool)
 {

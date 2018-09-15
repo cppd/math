@@ -35,8 +35,6 @@ class Descriptors
         std::vector<VkDescriptorSetLayoutBinding> m_descriptor_set_layout_bindings;
 
 public:
-        Descriptors();
-
         Descriptors(VkDevice device, uint32_t max_sets, VkDescriptorSetLayout descriptor_set_layout,
                     const std::vector<VkDescriptorSetLayoutBinding>& bindings);
 

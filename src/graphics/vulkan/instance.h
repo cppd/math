@@ -64,9 +64,13 @@ public:
                   const std::vector<VkDescriptorSetLayout>& descriptor_set_layouts);
 
         SwapChain(const SwapChain&) = delete;
-        SwapChain(SwapChain&&) = delete;
         SwapChain& operator=(const SwapChain&) = delete;
         SwapChain& operator=(SwapChain&&) = delete;
+
+        SwapChain(SwapChain&&) = default;
+        ~SwapChain() = default;
+
+        //
 
         void create_command_buffers(const Color& clear_color,
                                     const std::function<void(VkPipelineLayout pipeline_layout, VkPipeline pipeline,
@@ -124,14 +128,15 @@ public:
         VulkanInstance& operator=(const VulkanInstance&) = delete;
         VulkanInstance& operator=(VulkanInstance&&) = delete;
 
+        //
+
         VkInstance instance() const noexcept;
         const Device& device() const noexcept;
 
-        void create_swap_chain(const VertexShader& vertex_shader, const FragmentShader& fragment_shader,
-                               const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
-                               const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions,
-                               const std::vector<VkDescriptorSetLayout>& descriptor_set_layouts,
-                               std::optional<SwapChain>* swap_chain);
+        SwapChain create_swap_chain(const VertexShader& vertex_shader, const FragmentShader& fragment_shader,
+                                    const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
+                                    const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions,
+                                    const std::vector<VkDescriptorSetLayout>& descriptor_set_layouts);
 
         Texture create_texture(uint32_t width, uint32_t height, const std::vector<unsigned char>& rgba_pixels) const;
 

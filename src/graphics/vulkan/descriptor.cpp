@@ -111,8 +111,6 @@ DescriptorSetLayout create_descriptor_set_layout(VkDevice device, const std::vec
         return DescriptorSetLayout(device, create_info);
 }
 
-Descriptors::Descriptors() = default;
-
 Descriptors::Descriptors(VkDevice device, uint32_t max_sets, VkDescriptorSetLayout descriptor_set_layout,
                          const std::vector<VkDescriptorSetLayoutBinding>& bindings)
         : m_device(device),

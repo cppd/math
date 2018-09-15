@@ -33,6 +33,7 @@ class Instance final
         void move(Instance* from) noexcept;
 
 public:
+        Instance();
         Instance(const VkInstanceCreateInfo& create_info);
         ~Instance();
 
@@ -54,6 +55,7 @@ class DebugReportCallback final
         void move(DebugReportCallback* from) noexcept;
 
 public:
+        DebugReportCallback();
         DebugReportCallback(VkInstance instance, const VkDebugReportCallbackCreateInfoEXT& create_info);
         ~DebugReportCallback();
 
@@ -101,6 +103,7 @@ class SurfaceKHR final
         void move(SurfaceKHR* from) noexcept;
 
 public:
+        SurfaceKHR();
         SurfaceKHR(VkInstance instance, const std::function<VkSurfaceKHR(VkInstance)>& create_surface);
         ~SurfaceKHR();
 
@@ -144,6 +147,7 @@ class ImageView final
         void move(ImageView* from) noexcept;
 
 public:
+        ImageView();
         ImageView(VkDevice device, const VkImageViewCreateInfo& create_info);
         ~ImageView();
 
@@ -165,6 +169,7 @@ class ShaderModule final
         void move(ShaderModule* from) noexcept;
 
 public:
+        ShaderModule();
         ShaderModule(VkDevice device, const Span<const uint32_t>& code);
         ~ShaderModule();
 
@@ -252,6 +257,7 @@ class Framebuffer final
         void move(Framebuffer* from) noexcept;
 
 public:
+        Framebuffer();
         Framebuffer(VkDevice device, const VkFramebufferCreateInfo& create_info);
         ~Framebuffer();
 
@@ -384,6 +390,7 @@ class CommandBuffer
         void move(CommandBuffer* from) noexcept;
 
 public:
+        CommandBuffer();
         CommandBuffer(VkDevice device, VkCommandPool command_pool);
         ~CommandBuffer();
 

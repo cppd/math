@@ -784,19 +784,17 @@ VulkanInstance::~VulkanInstance()
         }
 }
 
-void VulkanInstance::create_swap_chain(const VertexShader& vertex_shader, const FragmentShader& fragment_shader,
-                                       const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
-                                       const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions,
-                                       const std::vector<VkDescriptorSetLayout>& descriptor_set_layouts,
-                                       std::optional<SwapChain>* swap_chain)
+SwapChain VulkanInstance::create_swap_chain(const VertexShader& vertex_shader, const FragmentShader& fragment_shader,
+                                            const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
+                                            const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions,
+                                            const std::vector<VkDescriptorSetLayout>& descriptor_set_layouts)
 {
         ASSERT(descriptor_set_layouts.size() > 0);
-        ASSERT(swap_chain);
 
-        swap_chain->emplace(m_surface, m_physical_device.device, m_swap_chain_image_family_indices, m_depth_image_family_indices,
-                            m_device, m_graphics_command_pool, m_graphics_queue,
-                            std::vector<const vulkan::Shader*>({&vertex_shader, &fragment_shader}), vertex_binding_descriptions,
-                            vertex_attribute_descriptions, descriptor_set_layouts);
+        return SwapChain(m_surface, m_physical_device.device, m_swap_chain_image_family_indices, m_depth_image_family_indices,
+                         m_device, m_graphics_command_pool, m_graphics_queue,
+                         std::vector<const vulkan::Shader*>({&vertex_shader, &fragment_shader}), vertex_binding_descriptions,
+                         vertex_attribute_descriptions, descriptor_set_layouts);
 }
 
 Texture VulkanInstance::create_texture(uint32_t width, uint32_t height, const std::vector<unsigned char>& rgba_pixels) const

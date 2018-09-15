@@ -34,6 +34,15 @@ public:
                 VkCommandPool transfer_command_pool, VkQueue transfer_queue, const std::vector<uint32_t>& family_indices,
                 uint32_t width, uint32_t height, const std::vector<unsigned char>& rgba_pixels);
 
+        Texture(const Texture&) = delete;
+        Texture& operator=(const Texture&) = delete;
+        Texture& operator=(Texture&&) = delete;
+
+        Texture(Texture&&) = default;
+        ~Texture() = default;
+
+        //
+
         VkImageView image_view() const noexcept;
         VkImageLayout image_layout() const noexcept;
 };
@@ -46,6 +55,15 @@ class DepthAttachment
 public:
         DepthAttachment(const Device& device, VkCommandPool graphics_command_pool, VkQueue graphics_queue,
                         const std::vector<uint32_t>& family_indices, uint32_t width, uint32_t height);
+
+        DepthAttachment(const DepthAttachment&) = delete;
+        DepthAttachment& operator=(const DepthAttachment&) = delete;
+        DepthAttachment& operator=(DepthAttachment&&) = delete;
+
+        DepthAttachment(DepthAttachment&&) = default;
+        ~DepthAttachment() = default;
+
+        //
 
         VkImageView image_view() const noexcept;
         VkFormat image_format() const noexcept;

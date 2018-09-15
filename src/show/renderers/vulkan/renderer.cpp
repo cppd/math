@@ -688,8 +688,11 @@ class Renderer final : public VulkanRenderer
                 std::vector<VkDescriptorSetLayout> layouts(2);
                 layouts[SHADER_SHARED_DESCRIPTION_SET_LAYOUT_INDEX] = m_shared_descriptor_set_layout;
                 layouts[SHADER_PER_OBJECT_DESCRIPTION_SET_LAYOUT_INDEX] = m_per_object_descriptor_set_layout;
-                m_instance->create_swap_chain(*m_vertex_shader, *m_fragment_shader, Vertex::binding_descriptions(),
-                                              Vertex::attribute_descriptions(), layouts, &m_swap_chain);
+                // Сначала надо удалить объект, а потом создавать
+                m_swap_chain.reset();
+                m_swap_chain.emplace(m_instance->create_swap_chain(*m_vertex_shader, *m_fragment_shader,
+                                                                   Vertex::binding_descriptions(),
+                                                                   Vertex::attribute_descriptions(), layouts));
 
                 create_command_buffers(false /*wait_idle*/);
         }
