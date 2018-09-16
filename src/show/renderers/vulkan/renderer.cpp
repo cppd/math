@@ -151,8 +151,8 @@ struct Vertex
 
 //
 
-template <typename Buffer, typename T>
-void copy_to_buffer(const std::vector<Buffer>& buffers, uint32_t index, const T& data)
+template <typename T>
+void copy_to_buffer(const std::vector<vulkan::UniformBufferWithHostVisibleMemory>& buffers, uint32_t index, const T& data)
 {
         ASSERT(index < buffers.size());
         ASSERT(sizeof(data) == buffers[index].size());
@@ -160,12 +160,17 @@ void copy_to_buffer(const std::vector<Buffer>& buffers, uint32_t index, const T&
         buffers[index].copy(&data);
 }
 
+template <typename T>
+void copy_to_buffer(const vulkan::UniformBufferWithHostVisibleMemory& buffer, const T& data)
+{
+        ASSERT(sizeof(data) == buffer.size());
+
+        buffer.copy(&data);
+}
+
 class SharedShaderMemory
 {
-        static constexpr uint32_t MAX_SETS = 1;
-
         vulkan::Descriptors m_descriptors;
-
         std::vector<vulkan::UniformBufferWithHostVisibleMemory> m_uniform_buffers;
         vulkan::DescriptorSet m_descriptor_set;
 
@@ -196,14 +201,15 @@ public:
                 }
         };
 
-        SharedShaderMemory(const vulkan::VulkanInstance& instance, VkDescriptorSetLayout descriptor_set_layout)
-                : m_descriptors(vulkan::Descriptors(instance.device(), MAX_SETS, descriptor_set_layout,
-                                                    shared_descriptor_set_layout_bindings()))
+        //
+
+        SharedShaderMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout)
+                : m_descriptors(vulkan::Descriptors(device, 1, descriptor_set_layout, shared_descriptor_set_layout_bindings()))
         {
                 std::vector<Variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
 
                 {
-                        m_uniform_buffers.emplace_back(instance.device(), sizeof(VertexShaderUniformMatrices));
+                        m_uniform_buffers.emplace_back(device, sizeof(VertexShaderUniformMatrices));
 
                         VkDescriptorBufferInfo buffer_info = {};
                         buffer_info.buffer = m_uniform_buffers.back();
@@ -215,6 +221,15 @@ public:
 
                 m_descriptor_set = m_descriptors.create_descriptor_set(infos);
         }
+
+        SharedShaderMemory(const SharedShaderMemory&) = delete;
+        SharedShaderMemory& operator=(const SharedShaderMemory&) = delete;
+        SharedShaderMemory& operator=(SharedShaderMemory&&) = delete;
+
+        SharedShaderMemory(SharedShaderMemory&&) = default;
+        ~SharedShaderMemory() = default;
+
+        //
 
         VkDescriptorSet descriptor_set() const noexcept
         {
@@ -229,13 +244,9 @@ public:
 
 class PerObjectShaderMemory
 {
-        static constexpr uint32_t MAX_SETS = 1;
-
         vulkan::Descriptors m_descriptors;
-
         std::vector<vulkan::UniformBufferWithHostVisibleMemory> m_uniform_buffers;
-        std::vector<vulkan::Texture> m_textures;
-        vulkan::DescriptorSet m_descriptor_set;
+        std::vector<vulkan::DescriptorSet> m_descriptor_sets;
 
 public:
         static std::vector<VkDescriptorSetLayoutBinding> per_object_descriptor_set_layout_bindings()
@@ -272,48 +283,65 @@ public:
                 float value_b;
         };
 
-        PerObjectShaderMemory(const vulkan::VulkanInstance& instance, VkSampler sampler,
-                              VkDescriptorSetLayout descriptor_set_layout)
-                : m_descriptors(vulkan::Descriptors(instance.device(), MAX_SETS, descriptor_set_layout,
+        //
+
+        PerObjectShaderMemory(const vulkan::Device& device, VkSampler sampler, VkDescriptorSetLayout descriptor_set_layout,
+                              const std::vector<FragmentShaderUniformBufferObject>& uniforms,
+                              const std::vector<vulkan::Texture>& textures)
+                : m_descriptors(vulkan::Descriptors(device, uniforms.size(), descriptor_set_layout,
                                                     per_object_descriptor_set_layout_bindings()))
         {
+                ASSERT(uniforms.size() > 0);
+                ASSERT(uniforms.size() == textures.size());
+
                 std::vector<Variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
 
+                for (size_t i = 0; i < uniforms.size(); ++i)
                 {
-                        m_uniform_buffers.emplace_back(instance.device(), sizeof(FragmentShaderUniformBufferObject));
+                        infos.clear();
+                        {
+                                m_uniform_buffers.emplace_back(device, sizeof(FragmentShaderUniformBufferObject));
 
-                        VkDescriptorBufferInfo buffer_info = {};
-                        buffer_info.buffer = m_uniform_buffers.back();
-                        buffer_info.offset = 0;
-                        buffer_info.range = m_uniform_buffers.back().size();
+                                VkDescriptorBufferInfo buffer_info = {};
+                                buffer_info.buffer = m_uniform_buffers.back();
+                                buffer_info.offset = 0;
+                                buffer_info.range = m_uniform_buffers.back().size();
 
-                        infos.push_back(buffer_info);
+                                infos.push_back(buffer_info);
+                        }
+                        {
+                                VkDescriptorImageInfo image_info = {};
+                                image_info.imageLayout = textures[i].image_layout();
+                                image_info.imageView = textures[i].image_view();
+                                image_info.sampler = sampler;
+
+                                infos.push_back(image_info);
+                        }
+                        m_descriptor_sets.push_back(m_descriptors.create_descriptor_set(infos));
                 }
+
+                ASSERT(uniforms.size() == m_descriptor_sets.size());
+
+                for (size_t i = 0; i < uniforms.size(); ++i)
                 {
-                        m_textures.push_back(
-                                instance.create_texture(2, 2,
-                                                        std::vector<unsigned char>({255, 0, 0, 255, 0, 255, 0, 255, 0, 0, 255,
-                                                                                    255, 255, 255, 255, 255})));
-
-                        VkDescriptorImageInfo image_info = {};
-                        image_info.imageLayout = m_textures.back().image_layout();
-                        image_info.imageView = m_textures.back().image_view();
-                        image_info.sampler = sampler;
-
-                        infos.push_back(image_info);
+                        copy_to_buffer(m_uniform_buffers[i], uniforms[i]);
                 }
-
-                m_descriptor_set = m_descriptors.create_descriptor_set(infos);
         }
 
-        VkDescriptorSet descriptor_set() const noexcept
-        {
-                return m_descriptor_set;
-        }
+        PerObjectShaderMemory(const PerObjectShaderMemory&) = delete;
+        PerObjectShaderMemory& operator=(const PerObjectShaderMemory&) = delete;
+        PerObjectShaderMemory& operator=(PerObjectShaderMemory&&) = delete;
 
-        void set_uniform(const FragmentShaderUniformBufferObject& ubo) const
+        PerObjectShaderMemory(PerObjectShaderMemory&&) = default;
+        ~PerObjectShaderMemory() = default;
+
+        //
+
+        VkDescriptorSet descriptor_set(uint32_t index) const noexcept
         {
-                copy_to_buffer(m_uniform_buffers, 0, ubo);
+                ASSERT(index < m_descriptor_sets.size());
+
+                return m_descriptor_sets[index];
         }
 };
 
@@ -380,6 +408,48 @@ std::vector<Vertex> load_face_vertices(const Obj<3>& obj)
         return vertices;
 }
 
+template <unsigned i>
+std::vector<unsigned char> default_pixels_2x2();
+template <>
+std::vector<unsigned char> default_pixels_2x2<0>()
+{
+        // clang-format off
+        return
+        {
+                255,   0,   0, 255,
+                  0, 255,   0, 255,
+                  0,   0, 255, 255,
+                255, 255, 255, 255
+        };
+        // clang-format on
+}
+template <>
+std::vector<unsigned char> default_pixels_2x2<1>()
+{
+        // clang-format off
+        return
+        {
+                  0,   0, 255, 255,
+                  0, 255,   0, 255,
+                255,   0,   0, 255,
+                255, 255, 255, 255
+        };
+        // clang-format on
+}
+template <>
+std::vector<unsigned char> default_pixels_2x2<2>()
+{
+        // clang-format off
+        return
+        {
+                255,   0, 255, 255,
+                  0, 255,   0, 255,
+                255,   0, 255, 255,
+                255, 255, 255, 255
+        };
+        // clang-format on
+}
+
 class DrawObject
 {
 #if 0
@@ -408,7 +478,9 @@ class DrawObject
         uint32_t m_vertex_count;
         std::optional<vulkan::VertexBufferWithDeviceLocalMemory> m_vertex_buffer;
         std::optional<vulkan::IndexBufferWithDeviceLocalMemory> m_vertex_index_buffer;
-        PerObjectShaderMemory m_shader_memory;
+
+        std::vector<vulkan::Texture> m_textures;
+        std::optional<PerObjectShaderMemory> m_shader_memory;
 
         mat4 m_model_matrix;
         DrawType m_draw_type;
@@ -416,9 +488,7 @@ class DrawObject
 public:
         DrawObject(const vulkan::VulkanInstance& instance, VkSampler sampler, VkDescriptorSetLayout descriptor_set_layout,
                    const Obj<3>* obj, double size, const vec3& position)
-                : m_shader_memory(instance, sampler, descriptor_set_layout),
-                  m_model_matrix(model_vertex_matrix(obj, size, position)),
-                  m_draw_type(draw_type_of_obj(obj))
+                : m_model_matrix(model_vertex_matrix(obj, size, position)), m_draw_type(draw_type_of_obj(obj))
         {
                 if (m_draw_type == DrawType::Triangles)
                 {
@@ -433,6 +503,21 @@ public:
                         m_vertex_buffer.emplace(instance.create_vertex_buffer(vertices));
 
                         ASSERT((m_vertex_count > 0) && (m_vertex_count % 3 == 0));
+
+                        //
+
+                        std::vector<PerObjectShaderMemory::FragmentShaderUniformBufferObject> uniforms;
+
+                        m_textures.emplace_back(instance.create_texture(2, 2, default_pixels_2x2<0>()));
+                        uniforms.push_back({1.0, 1.0, 1.0});
+
+                        m_textures.emplace_back(instance.create_texture(2, 2, default_pixels_2x2<1>()));
+                        uniforms.push_back({1.0, 1.0, 1.0});
+
+                        m_textures.emplace_back(instance.create_texture(2, 2, default_pixels_2x2<2>()));
+                        uniforms.push_back({1.0, 1.0, 1.0});
+
+                        m_shader_memory.emplace(instance.device(), sampler, descriptor_set_layout, uniforms, m_textures);
                 }
                 else
                 {
@@ -461,7 +546,7 @@ public:
                         return;
                 }
 
-                std::array<VkDescriptorSet, 1> descriptor_sets = {m_shader_memory.descriptor_set()};
+                std::array<VkDescriptorSet, 1> descriptor_sets = {m_shader_memory->descriptor_set(1)};
                 vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline_layout,
                                         description_set_layout_index, descriptor_sets.size(), descriptor_sets.data(), 0, nullptr);
 
@@ -480,6 +565,7 @@ public:
                 }
         }
 
+#if 0
         void update() const
         {
                 const double radians = time_in_seconds() * 2 * PI<double>;
@@ -490,6 +576,7 @@ public:
                 ubo.value_b = 0.5 * (1 + std::sin(radians * 4));
                 m_shader_memory.set_uniform(ubo);
         }
+#endif
 };
 
 class Renderer final : public VulkanRenderer
@@ -647,11 +734,6 @@ class Renderer final : public VulkanRenderer
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                if (m_draw_objects.object())
-                {
-                        m_draw_objects.object()->update();
-                }
-
                 if (!m_instance->draw_frame(*m_swap_chain))
                 {
                         create_swap_chain_and_command_buffers();
@@ -769,7 +851,7 @@ public:
                 m_per_object_descriptor_set_layout = vulkan::create_descriptor_set_layout(
                         m_instance->device(), PerObjectShaderMemory::per_object_descriptor_set_layout_bindings());
 
-                m_shared_shader_memory.emplace(m_instance.value(), m_shared_descriptor_set_layout);
+                m_shared_shader_memory.emplace(m_instance->device(), m_shared_descriptor_set_layout);
 
                 m_vertex_shader.emplace(m_instance->device(), vertex_shader, "main");
                 m_fragment_shader.emplace(m_instance->device(), fragment_shader, "main");

@@ -40,7 +40,7 @@ vulkan::DescriptorPool create_descriptor_pool(VkDevice device,
         {
                 VkDescriptorPoolSize pool_size = {};
                 pool_size.type = binding.descriptorType;
-                pool_size.descriptorCount = binding.descriptorCount;
+                pool_size.descriptorCount = max_sets * binding.descriptorCount;
                 pool_sizes.push_back(pool_size);
         }
 
