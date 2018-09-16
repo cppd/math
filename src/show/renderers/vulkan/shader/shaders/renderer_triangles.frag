@@ -17,13 +17,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #version 450
 
-layout(set = 1, binding = 0) uniform UniformBufferObject
+layout(set = 1, binding = 0) uniform Material
 {
         float value_r;
         float value_g;
         float value_b;
 }
-ubo;
+material;
 
 layout(set = 1, binding = 1) uniform sampler2D texture_sampler;
 
@@ -45,5 +45,5 @@ void main()
 
         color = texture(texture_sampler, vs.texture_coordinates);
 
-        color *= 0.5 + 0.5 * vec4(ubo.value_r, ubo.value_g, ubo.value_b, 1);
+        color *= 0.5 + 0.5 * vec4(material.value_r, material.value_g, material.value_b, 1);
 }
