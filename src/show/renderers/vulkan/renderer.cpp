@@ -87,20 +87,53 @@ std::string vulkan_overview_physical_devices_for_log(VkInstance instance)
         return LOG_MESSAGE_BEGIN + vulkan::overview_physical_devices(instance) + LOG_MESSAGE_END;
 }
 
-std::vector<shaders::Vertex> load_face_vertices(const Obj<3>& obj)
+struct MaterialVertices
 {
+        int offset;
+        int count;
+};
+
+template <size_t N>
+void facets_sorted_by_material(const Obj<N>& obj, std::vector<int>& sorted_facet_indices,
+                               std::vector<MaterialVertices>& material_vertices)
+{
+        std::vector<int> material_facet_offset;
+        std::vector<int> material_facet_count;
+
+        sort_facets_by_material(obj, sorted_facet_indices, material_facet_offset, material_facet_count);
+
+        material_vertices.resize(material_facet_offset.size());
+        for (size_t i = 0; i < material_vertices.size(); ++i)
+        {
+                material_vertices[i].offset = N * material_facet_offset[i];
+                material_vertices[i].count = N * material_facet_count[i];
+        }
+}
+
+void load_vertices(const vulkan::VulkanInstance& instance, const Obj<3>& obj,
+                   std::optional<vulkan::VertexBufferWithDeviceLocalMemory>& vertex_buffer,
+                   std::vector<MaterialVertices>& material_vertices)
+{
+        std::vector<int> sorted_face_indices;
+
+        facets_sorted_by_material(obj, sorted_face_indices, material_vertices);
+
+        const std::vector<Obj<3>::Facet>& obj_faces = obj.facets();
         const std::vector<vec3f>& obj_vertices = obj.vertices();
         const std::vector<vec3f>& obj_normals = obj.normals();
         const std::vector<vec2f>& obj_texcoords = obj.texcoords();
 
-        std::vector<shaders::Vertex> vertices;
-        vertices.reserve(obj.facets().size() * 3);
+        std::vector<shaders::Vertex> shader_vertices;
+        shader_vertices.reserve(3 * obj_faces.size());
 
-        vec3f v0, v1, v2, n0, n1, n2;
+        vec3f v0, v1, v2;
+        vec3f n0, n1, n2;
         vec2f t0, t1, t2;
 
-        for (const Obj<3>::Facet& f : obj.facets())
+        for (int face_index : sorted_face_indices)
         {
+                const Obj<3>::Facet& f = obj_faces[face_index];
+
                 v0 = obj_vertices[f.vertices[0]];
                 v1 = obj_vertices[f.vertices[1]];
                 v2 = obj_vertices[f.vertices[2]];
@@ -137,15 +170,15 @@ std::vector<shaders::Vertex> load_face_vertices(const Obj<3>& obj)
 #endif
                 }
 
-                // vertices.emplace_back(v0, n0, t0, f.material, f.has_texcoord, f.has_normal);
-                // vertices.emplace_back(v1, n1, t1, f.material, f.has_texcoord, f.has_normal);
-                // vertices.emplace_back(v2, n2, t2, f.material, f.has_texcoord, f.has_normal);
-                vertices.emplace_back(v0, n0, t0);
-                vertices.emplace_back(v1, n1, t1);
-                vertices.emplace_back(v2, n2, t2);
+                shader_vertices.emplace_back(v0, n0, t0);
+                shader_vertices.emplace_back(v1, n1, t1);
+                shader_vertices.emplace_back(v2, n2, t2);
         }
 
-        return vertices;
+        if (shader_vertices.size() > 0)
+        {
+                vertex_buffer.emplace(instance.create_vertex_buffer(shader_vertices));
+        }
 }
 
 template <unsigned i>
@@ -215,15 +248,16 @@ class DrawObject
         // clang-format on
 #endif
 
-        uint32_t m_vertex_count;
         std::optional<vulkan::VertexBufferWithDeviceLocalMemory> m_vertex_buffer;
-        std::optional<vulkan::IndexBufferWithDeviceLocalMemory> m_vertex_index_buffer;
+        // std::optional<vulkan::IndexBufferWithDeviceLocalMemory> m_vertex_index_buffer;
 
         std::vector<vulkan::Texture> m_textures;
         std::optional<shaders::PerObjectMemory> m_shader_memory;
 
         mat4 m_model_matrix;
         DrawType m_draw_type;
+
+        std::vector<MaterialVertices> m_material_vertices;
 
 public:
         DrawObject(const vulkan::VulkanInstance& instance, VkSampler sampler, VkDescriptorSetLayout descriptor_set_layout,
@@ -232,23 +266,20 @@ public:
         {
                 if (m_draw_type == DrawType::Triangles)
                 {
-                        std::vector<shaders::Vertex> vertices = load_face_vertices(*obj);
-                        if (vertices.size() == 0)
+                        load_vertices(instance, *obj, m_vertex_buffer, m_material_vertices);
+
+                        if (!m_vertex_buffer.has_value())
                         {
-                                m_vertex_count = 0;
                                 return;
                         }
-
-                        m_vertex_count = vertices.size();
-                        m_vertex_buffer.emplace(instance.create_vertex_buffer(vertices));
-
-                        ASSERT((m_vertex_count > 0) && (m_vertex_count % 3 == 0));
 
                         //
 
                         m_textures.emplace_back(instance.create_texture(2, 2, default_pixels_2x2<0>()));
                         m_textures.emplace_back(instance.create_texture(2, 2, default_pixels_2x2<1>()));
                         m_textures.emplace_back(instance.create_texture(2, 2, default_pixels_2x2<2>()));
+
+                        //
 
                         std::vector<shaders::PerObjectMemory::Material> materials;
                         std::vector<const vulkan::Texture*> texture_pointers;
@@ -263,9 +294,7 @@ public:
                 }
                 else
                 {
-#if 1
-                        m_vertex_count = 0;
-#else
+#if 0
 
                         m_model_matrix = mat4(1);
                         m_vertex_count = VERTEX_INDICES.size();
@@ -288,23 +317,29 @@ public:
                         return;
                 }
 
-                std::array<VkDescriptorSet, 1> descriptor_sets = {m_shader_memory->descriptor_set(1)};
-                vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline_layout,
-                                        description_set_layout_index, descriptor_sets.size(), descriptor_sets.data(), 0, nullptr);
-
                 std::array<VkBuffer, 1> vertex_buffers = {*m_vertex_buffer};
                 std::array<VkDeviceSize, vertex_buffers.size()> offsets = {0};
                 vkCmdBindVertexBuffers(command_buffer, 0, vertex_buffers.size(), vertex_buffers.data(), offsets.data());
 
-                if (!m_vertex_index_buffer.has_value())
+                std::array<VkDescriptorSet, 1> descriptor_sets = {m_shader_memory->descriptor_set(1)};
+                vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline_layout,
+                                        description_set_layout_index, descriptor_sets.size(), descriptor_sets.data(), 0, nullptr);
+
+#if 1
+                for (const MaterialVertices& m : m_material_vertices)
                 {
-                        vkCmdDraw(command_buffer, m_vertex_count, 1, 0, 0);
+                        if (m.count <= 0)
+                        {
+                                continue;
+                        }
+
+                        vkCmdDraw(command_buffer, m.count, 1, m.offset, 0);
                 }
-                else
-                {
-                        vkCmdBindIndexBuffer(command_buffer, *m_vertex_index_buffer, 0, VULKAN_VERTEX_INDEX_TYPE);
-                        vkCmdDrawIndexed(command_buffer, m_vertex_count, 1, 0, 0, 0);
-                }
+#else
+                // Рисование с индексами вершин вместо самих вершин
+                vkCmdBindIndexBuffer(command_buffer, *m_vertex_index_buffer, 0, VULKAN_VERTEX_INDEX_TYPE);
+                vkCmdDrawIndexed(command_buffer, m_vertex_count, 1, 0, 0, 0);
+#endif
         }
 
 #if 0
