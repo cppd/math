@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "query.h"
 
 #include "common.h"
+#include "window.h"
 
 #include "com/error.h"
 #include "com/print.h"
@@ -26,7 +27,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace
 {
-std::vector<std::string> sorted(const std::unordered_set<std::string>& s)
+template <typename T>
+std::vector<std::string> sorted(const T& s)
 {
         std::vector<std::string> res(s.cbegin(), s.cend());
         std::sort(res.begin(), res.end());
@@ -433,6 +435,24 @@ std::string overview()
                         s += "\n";
                         s += INDENT;
                         s += layer;
+                }
+        }
+        catch (std::exception& e)
+        {
+                s += "\n";
+                s += INDENT;
+                s += e.what();
+        }
+
+        s += "\n";
+        s += "Required Window Extensions";
+        try
+        {
+                for (const std::string& extension : sorted(VulkanWindow::instance_extensions()))
+                {
+                        s += "\n";
+                        s += INDENT;
+                        s += extension;
                 }
         }
         catch (std::exception& e)

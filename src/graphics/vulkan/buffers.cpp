@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/alg.h"
 #include "com/error.h"
+#include "com/print.h"
 
 #include <cstring>
 
@@ -286,7 +287,7 @@ void transition_image_layout(VkDevice device, VkCommandPool command_pool, VkQueu
         }
         else
         {
-                error("Unsupported new layput for image layout transition");
+                error("Unsupported new layout for image layout transition");
         }
 
         barrier.subresourceRange.baseMipLevel = 0;
@@ -356,7 +357,11 @@ void staging_image_copy(const vulkan::Device& device, VkCommandPool graphics_com
 {
         VkDeviceSize data_size = width * height * 4;
 
-        ASSERT(rgba_pixels.size() == data_size);
+        if (rgba_pixels.size() != data_size)
+        {
+                error("Wrong RGBA pixel component count " + to_string(rgba_pixels.size()) + " for image dimensions width " +
+                      to_string(width) + " and height " + to_string(height));
+        }
 
         vulkan::Buffer staging_buffer(create_buffer(device, data_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, {}));
 

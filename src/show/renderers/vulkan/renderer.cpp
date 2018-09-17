@@ -61,30 +61,17 @@ namespace shaders = vulkan_renderer_shaders;
 
 namespace
 {
-constexpr const char LOG_MESSAGE_BEGIN[] = "\n---Vulkan---\n";
-constexpr const char LOG_MESSAGE_END[] = "\n---";
-
-std::string vulkan_overview_for_log(const std::vector<std::string>& window_instance_extensions)
+std::vector<std::string> instance_extensions()
 {
-        std::string extensions = "Required Window Extensions";
-        if (window_instance_extensions.size() > 0)
-        {
-                for (const std::string& s : window_instance_extensions)
-                {
-                        extensions += "\n  " + s;
-                }
-        }
-        else
-        {
-                extensions += "\n  no extensions";
-        }
-
-        return LOG_MESSAGE_BEGIN + vulkan::overview() + LOG_MESSAGE_END + LOG_MESSAGE_BEGIN + extensions + LOG_MESSAGE_END;
+        return std::vector<std::string>(std::cbegin(INSTANCE_EXTENSIONS), std::cend(INSTANCE_EXTENSIONS));
 }
-
-std::string vulkan_overview_physical_devices_for_log(VkInstance instance)
+std::vector<std::string> device_extensions()
 {
-        return LOG_MESSAGE_BEGIN + vulkan::overview_physical_devices(instance) + LOG_MESSAGE_END;
+        return std::vector<std::string>(std::cbegin(DEVICE_EXTENSIONS), std::cend(DEVICE_EXTENSIONS));
+}
+std::vector<std::string> validation_layers()
+{
+        return std::vector<std::string>(std::cbegin(VALIDATION_LAYERS), std::cend(VALIDATION_LAYERS));
 }
 
 struct MaterialVertices
@@ -363,13 +350,14 @@ class Renderer final : public VulkanRenderer
         Color m_clear_color = Color(0);
         mat4 m_main_matrix = mat4(1);
 
-        std::optional<vulkan::VulkanInstance> m_instance;
+        vulkan::VulkanInstance m_instance;
         vulkan::Sampler m_sampler;
         vulkan::DescriptorSetLayout m_shared_descriptor_set_layout;
         vulkan::DescriptorSetLayout m_per_object_descriptor_set_layout;
-        std::optional<shaders::SharedMemory> m_shared_shader_memory;
-        std::optional<vulkan::VertexShader> m_vertex_shader;
-        std::optional<vulkan::FragmentShader> m_fragment_shader;
+        shaders::SharedMemory m_shared_shader_memory;
+        vulkan::VertexShader m_vertex_shader;
+        vulkan::FragmentShader m_fragment_shader;
+
         std::optional<vulkan::SwapChain> m_swap_chain;
 
         DrawObjects<DrawObject> m_draw_objects;
@@ -453,7 +441,7 @@ class Renderer final : public VulkanRenderer
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                m_draw_objects.add_object(std::make_unique<DrawObject>(*m_instance, m_sampler, m_per_object_descriptor_set_layout,
+                m_draw_objects.add_object(std::make_unique<DrawObject>(m_instance, m_sampler, m_per_object_descriptor_set_layout,
                                                                        obj, size, position),
                                           id, scale_id);
                 set_matrices();
@@ -511,7 +499,7 @@ class Renderer final : public VulkanRenderer
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                if (!m_instance->draw_frame(*m_swap_chain))
+                if (!m_instance.draw_frame(*m_swap_chain))
                 {
                         create_swap_chain_and_command_buffers();
                 }
@@ -528,7 +516,7 @@ class Renderer final : public VulkanRenderer
                 if (m_draw_objects.scale_object())
                 {
                         mat4 mvp = m_main_matrix * m_draw_objects.scale_object()->model_matrix();
-                        m_shared_shader_memory->set_uniform(shaders::SharedMemory::Matrices(mvp));
+                        m_shared_shader_memory.set_uniform(shaders::SharedMemory::Matrices(mvp));
                 }
         }
 
@@ -536,22 +524,19 @@ class Renderer final : public VulkanRenderer
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                ASSERT(m_vertex_shader);
-                ASSERT(m_fragment_shader);
-                ASSERT(m_shared_shader_memory);
                 ASSERT(m_shared_descriptor_set_layout != VK_NULL_HANDLE);
                 ASSERT(m_per_object_descriptor_set_layout != VK_NULL_HANDLE);
 
-                m_instance->device_wait_idle();
+                m_instance.device_wait_idle();
 
                 std::vector<VkDescriptorSetLayout> layouts(2);
                 layouts[SHADER_SHARED_DESCRIPTION_SET_LAYOUT_INDEX] = m_shared_descriptor_set_layout;
                 layouts[SHADER_PER_OBJECT_DESCRIPTION_SET_LAYOUT_INDEX] = m_per_object_descriptor_set_layout;
                 // Сначала надо удалить объект, а потом создавать
                 m_swap_chain.reset();
-                m_swap_chain.emplace(m_instance->create_swap_chain(*m_vertex_shader, *m_fragment_shader,
-                                                                   shaders::Vertex::binding_descriptions(),
-                                                                   shaders::Vertex::attribute_descriptions(), layouts));
+                m_swap_chain.emplace(m_instance.create_swap_chain(m_vertex_shader, m_fragment_shader,
+                                                                  shaders::Vertex::binding_descriptions(),
+                                                                  shaders::Vertex::attribute_descriptions(), layouts));
 
                 create_command_buffers(false /*wait_idle*/);
         }
@@ -562,12 +547,11 @@ class Renderer final : public VulkanRenderer
 
                 //
 
-                ASSERT(m_shared_shader_memory);
-                ASSERT(m_shared_shader_memory->descriptor_set() != VK_NULL_HANDLE);
+                ASSERT(m_shared_shader_memory.descriptor_set() != VK_NULL_HANDLE);
 
                 vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 
-                std::array<VkDescriptorSet, 1> descriptor_sets = {m_shared_shader_memory->descriptor_set()};
+                std::array<VkDescriptorSet, 1> descriptor_sets = {m_shared_shader_memory.descriptor_set()};
                 vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline_layout,
                                         SHADER_SHARED_DESCRIPTION_SET_LAYOUT_INDEX, descriptor_sets.size(),
                                         descriptor_sets.data(), 0, nullptr);
@@ -587,7 +571,7 @@ class Renderer final : public VulkanRenderer
 
                 if (wait_idle)
                 {
-                        m_instance->device_wait_idle();
+                        m_instance.device_wait_idle();
                 }
 
                 using std::placeholders::_1;
@@ -603,46 +587,34 @@ class Renderer final : public VulkanRenderer
 
                 ASSERT(m_swap_chain);
 
-                m_instance->device_wait_idle();
+                m_instance.device_wait_idle();
                 m_swap_chain->delete_command_buffers();
         }
 
 public:
         Renderer(const std::vector<std::string>& window_instance_extensions,
                  const std::function<VkSurfaceKHR(VkInstance)>& create_surface)
+                : m_instance(API_VERSION_MAJOR, API_VERSION_MINOR, instance_extensions() + window_instance_extensions,
+                             device_extensions(), validation_layers(), create_surface),
+                  m_sampler(vulkan::create_sampler(m_instance.device())),
+                  m_shared_descriptor_set_layout(vulkan::create_descriptor_set_layout(
+                          m_instance.device(), shaders::SharedMemory::descriptor_set_layout_bindings())),
+                  m_per_object_descriptor_set_layout(vulkan::create_descriptor_set_layout(
+                          m_instance.device(), shaders::PerObjectMemory::descriptor_set_layout_bindings())),
+                  m_shared_shader_memory(m_instance.device(), m_shared_descriptor_set_layout),
+                  m_vertex_shader(m_instance.device(), vertex_shader, "main"),
+                  m_fragment_shader(m_instance.device(), fragment_shader, "main")
         {
-                LOG(vulkan_overview_for_log(window_instance_extensions));
-
-                std::vector<std::string> instance_extensions(std::cbegin(INSTANCE_EXTENSIONS), std::cend(INSTANCE_EXTENSIONS));
-                std::vector<std::string> device_extensions(std::cbegin(DEVICE_EXTENSIONS), std::cend(DEVICE_EXTENSIONS));
-                std::vector<std::string> validation_layers(std::cbegin(VALIDATION_LAYERS), std::cend(VALIDATION_LAYERS));
-
-                m_instance.emplace(API_VERSION_MAJOR, API_VERSION_MINOR, instance_extensions + window_instance_extensions,
-                                   device_extensions, validation_layers, create_surface);
-
-                m_sampler = vulkan::create_sampler(m_instance->device());
-
-                m_shared_descriptor_set_layout = vulkan::create_descriptor_set_layout(
-                        m_instance->device(), shaders::SharedMemory::descriptor_set_layout_bindings());
-
-                m_per_object_descriptor_set_layout = vulkan::create_descriptor_set_layout(
-                        m_instance->device(), shaders::PerObjectMemory::descriptor_set_layout_bindings());
-
-                m_shared_shader_memory.emplace(m_instance->device(), m_shared_descriptor_set_layout);
-
-                m_vertex_shader.emplace(m_instance->device(), vertex_shader, "main");
-                m_fragment_shader.emplace(m_instance->device(), fragment_shader, "main");
-
                 create_swap_chain_and_command_buffers();
 
-                LOG(vulkan_overview_physical_devices_for_log(m_instance->instance()));
+                LOG(vulkan::overview_physical_devices(m_instance.instance()));
         }
 
         ~Renderer() override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                m_instance->device_wait_idle();
+                m_instance.device_wait_idle();
         }
 };
 }
