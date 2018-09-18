@@ -73,16 +73,17 @@ layout(set = 1, binding = 3) uniform sampler2D texture_Ks;
 
 //
 
-layout(location = 0) in VS
+layout(location = 0) in GS
 {
+        vec3 normal;
         vec2 texture_coordinates;
 }
-vs;
+gs;
 
 bool has_texture_coordinates()
 {
         // Если нет текстурных координат, то они задаются числом -1e10
-        return vs.texture_coordinates[0] > -1e9;
+        return gs.texture_coordinates[0] > -1e9;
 }
 
 //
@@ -91,7 +92,7 @@ layout(location = 0) out vec4 color;
 
 void main()
 {
-        // color = vec4(vs.texture_coordinates, 0, 1);
+        // color = vec4(gs.texture_coordinates, 0, 1);
 
         vec3 color_a, color_d, color_s;
 
@@ -99,7 +100,7 @@ void main()
         {
                 if (has_texture_coordinates() && mtl.use_texture_Ka)
                 {
-                        vec4 tex_color = texture(texture_Ka, vs.texture_coordinates);
+                        vec4 tex_color = texture(texture_Ka, gs.texture_coordinates);
                         color_a = mix(mtl.Ka, tex_color.rgb, tex_color.a);
                 }
                 else
@@ -109,7 +110,7 @@ void main()
 
                 if (has_texture_coordinates() && mtl.use_texture_Kd)
                 {
-                        vec4 tex_color = texture(texture_Kd, vs.texture_coordinates);
+                        vec4 tex_color = texture(texture_Kd, gs.texture_coordinates);
                         color_d = mix(mtl.Kd, tex_color.rgb, tex_color.a);
                 }
                 else
@@ -119,7 +120,7 @@ void main()
 
                 if (has_texture_coordinates() && mtl.use_texture_Ks)
                 {
-                        vec4 tex_color = texture(texture_Ks, vs.texture_coordinates);
+                        vec4 tex_color = texture(texture_Ks, gs.texture_coordinates);
                         color_s = mix(mtl.Ks, tex_color.rgb, tex_color.a);
                 }
                 else

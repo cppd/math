@@ -133,7 +133,7 @@ public:
         VkInstance instance() const noexcept;
         const Device& device() const noexcept;
 
-        SwapChain create_swap_chain(const VertexShader& vertex_shader, const FragmentShader& fragment_shader,
+        SwapChain create_swap_chain(const std::vector<const vulkan::Shader*>& shaders,
                                     const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
                                     const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions,
                                     const std::vector<VkDescriptorSetLayout>& descriptor_set_layouts);

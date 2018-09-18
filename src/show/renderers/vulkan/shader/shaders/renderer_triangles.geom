@@ -17,33 +17,34 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #version 450
 
-layout(location = 0) in vec3 position;
-layout(location = 1) in vec3 normal;
-layout(location = 2) in vec2 texture_coordinates;
+layout(triangles) in;
+layout(triangle_strip, max_vertices = 3) out;
 
-layout(set = 0, binding = 0) uniform Matrices
-{
-        mat4 mvp;
-}
-matrices;
-
-//
-
-layout(location = 0) out VS
+layout(location = 0) in VS
 {
         vec3 normal;
         vec2 texture_coordinates;
 }
-vs;
+vs[3];
 
-out gl_PerVertex
+layout(location = 0) out GS
 {
-        vec4 gl_Position;
-};
+        vec3 normal;
+        vec2 texture_coordinates;
+}
+gs;
 
-void main()
+void main(void)
 {
-        gl_Position = matrices.mvp * vec4(position, 1.0);
-        vs.normal = normal;
-        vs.texture_coordinates = texture_coordinates;
+        for (int i = 0; i < 3; ++i)
+        {
+                gl_Position = gl_in[i].gl_Position;
+
+                gs.normal = vs[i].normal;
+                gs.texture_coordinates = vs[i].texture_coordinates;
+
+                EmitVertex();
+        }
+
+        EndPrimitive();
 }

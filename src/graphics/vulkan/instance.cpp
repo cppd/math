@@ -183,6 +183,7 @@ vulkan::Device create_device(VkPhysicalDevice physical_device, const std::vector
 
         VkPhysicalDeviceFeatures device_features = {};
         device_features.samplerAnisotropy = VK_TRUE;
+        device_features.geometryShader = VK_TRUE;
 
         VkDeviceCreateInfo create_info = {};
         create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
@@ -784,7 +785,7 @@ VulkanInstance::~VulkanInstance()
         }
 }
 
-SwapChain VulkanInstance::create_swap_chain(const VertexShader& vertex_shader, const FragmentShader& fragment_shader,
+SwapChain VulkanInstance::create_swap_chain(const std::vector<const vulkan::Shader*>& shaders,
                                             const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
                                             const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions,
                                             const std::vector<VkDescriptorSetLayout>& descriptor_set_layouts)
@@ -792,8 +793,7 @@ SwapChain VulkanInstance::create_swap_chain(const VertexShader& vertex_shader, c
         ASSERT(descriptor_set_layouts.size() > 0);
 
         return SwapChain(m_surface, m_physical_device.device, m_swap_chain_image_family_indices, m_depth_image_family_indices,
-                         m_device, m_graphics_command_pool, m_graphics_queue,
-                         std::vector<const vulkan::Shader*>({&vertex_shader, &fragment_shader}), vertex_binding_descriptions,
+                         m_device, m_graphics_command_pool, m_graphics_queue, shaders, vertex_binding_descriptions,
                          vertex_attribute_descriptions, descriptor_set_layouts);
 }
 

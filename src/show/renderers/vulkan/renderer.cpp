@@ -54,6 +54,10 @@ constexpr uint32_t vertex_shader[]
 {
 #include "renderer_triangles.vert.spr"
 };
+constexpr uint32_t geometry_shader[]
+{
+#include "renderer_triangles.geom.spr"
+};
 constexpr uint32_t fragment_shader[]
 {
 #include "renderer_triangles.frag.spr"
@@ -383,7 +387,9 @@ class Renderer final : public VulkanRenderer
         vulkan::DescriptorSetLayout m_per_object_descriptor_set_layout;
         shaders::SharedMemory m_shared_shader_memory;
         vulkan::VertexShader m_vertex_shader;
+        vulkan::GeometryShader m_geometry_shader;
         vulkan::FragmentShader m_fragment_shader;
+        std::vector<const vulkan::Shader*> m_shaders;
 
         std::optional<vulkan::SwapChain> m_swap_chain;
 
@@ -567,6 +573,7 @@ class Renderer final : public VulkanRenderer
 
                 ASSERT(m_shared_descriptor_set_layout != VK_NULL_HANDLE);
                 ASSERT(m_per_object_descriptor_set_layout != VK_NULL_HANDLE);
+                ASSERT(m_shaders.size() > 0);
 
                 m_instance.device_wait_idle();
 
@@ -575,8 +582,7 @@ class Renderer final : public VulkanRenderer
                 layouts[SHADER_PER_OBJECT_DESCRIPTION_SET_LAYOUT_INDEX] = m_per_object_descriptor_set_layout;
                 // Сначала надо удалить объект, а потом создавать
                 m_swap_chain.reset();
-                m_swap_chain.emplace(m_instance.create_swap_chain(m_vertex_shader, m_fragment_shader,
-                                                                  shaders::Vertex::binding_descriptions(),
+                m_swap_chain.emplace(m_instance.create_swap_chain(m_shaders, shaders::Vertex::binding_descriptions(),
                                                                   shaders::Vertex::attribute_descriptions(), layouts));
 
                 create_command_buffers(false /*wait_idle*/);
@@ -644,7 +650,9 @@ public:
                           m_instance.device(), shaders::PerObjectMemory::descriptor_set_layout_bindings())),
                   m_shared_shader_memory(m_instance.device(), m_shared_descriptor_set_layout),
                   m_vertex_shader(m_instance.device(), vertex_shader, "main"),
-                  m_fragment_shader(m_instance.device(), fragment_shader, "main")
+                  m_geometry_shader(m_instance.device(), geometry_shader, "main"),
+                  m_fragment_shader(m_instance.device(), fragment_shader, "main"),
+                  m_shaders({&m_vertex_shader, &m_geometry_shader, &m_fragment_shader})
         {
                 create_swap_chain_and_command_buffers();
 
