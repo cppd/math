@@ -168,46 +168,90 @@ void load_vertices(const vulkan::VulkanInstance& instance, const Obj<3>& obj,
         }
 }
 
-template <unsigned i>
-std::vector<unsigned char> default_pixels_2x2();
-template <>
-std::vector<unsigned char> default_pixels_2x2<0>()
+std::vector<unsigned char> integer_srgb_pixels_to_integer_rgb_pixels(const std::vector<unsigned char>& pixels)
 {
-        // clang-format off
-        return
+        static_assert(std::numeric_limits<unsigned char>::digits == 8);
+
+        std::vector<unsigned char> buffer(pixels.size());
+        for (size_t i = 0; i < buffer.size(); ++i)
         {
-                255,   0,   0, 255,
-                  0, 255,   0, 255,
-                  0,   0, 255, 255,
-                255, 255, 255, 255
-        };
-        // clang-format on
+                buffer[i] = Color::srgb_integer_to_rgb_integer(pixels[i]);
+        }
+        return buffer;
 }
-template <>
-std::vector<unsigned char> default_pixels_2x2<1>()
+
+void load_textures(const vulkan::VulkanInstance& instance, const Obj<3>& obj, std::vector<vulkan::Texture>& textures)
 {
-        // clang-format off
-        return
+        textures.clear();
+
+        for (const typename Obj<3>::Image& image : obj.images())
         {
-                  0,   0, 255, 255,
-                  0, 255,   0, 255,
-                255,   0,   0, 255,
-                255, 255, 255, 255
-        };
-        // clang-format on
+                textures.push_back(instance.create_texture(image.size[0], image.size[1],
+                                                           integer_srgb_pixels_to_integer_rgb_pixels(image.srgba_pixels)));
+        }
+
+        // На одну текстуру больше для её указания, но не использования в тех материалах, где нет текстуры
+        textures.push_back(instance.create_texture(
+                2, 2, {/*0*/ 255, 0, 0, 255, /*1*/ 0, 255, 0, 255, /*2*/ 0, 0, 255, 255, /*3*/ 255, 255, 255, 255}));
 }
-template <>
-std::vector<unsigned char> default_pixels_2x2<2>()
+
+void load_materials(const vulkan::Device& device, VkSampler sampler, VkDescriptorSetLayout descriptor_set_layout,
+                    const Obj<3>& obj, const std::vector<vulkan::Texture>& textures,
+                    std::optional<shaders::PerObjectMemory>& shader_memory)
 {
-        // clang-format off
-        return
+        // Текстур имеется больше на одну для её использования в тех материалах, где нет текстуры
+
+        ASSERT(textures.size() == obj.images().size() + 1);
+
+        const vulkan::Texture* const no_texture = &textures.back();
+
+        std::vector<shaders::PerObjectMemory::MaterialAndTexture> materials;
+        materials.reserve(obj.materials().size() + 1);
+
+        for (const typename Obj<3>::Material& material : obj.materials())
         {
-                255,   0, 255, 255,
-                  0, 255,   0, 255,
-                255,   0, 255, 255,
-                255, 255, 255, 255
-        };
-        // clang-format on
+                ASSERT(material.map_Ka < static_cast<int>(textures.size()) - 1);
+                ASSERT(material.map_Kd < static_cast<int>(textures.size()) - 1);
+                ASSERT(material.map_Ks < static_cast<int>(textures.size()) - 1);
+
+                shaders::PerObjectMemory::MaterialAndTexture m;
+
+                m.material.Ka = material.Ka.to_rgb_vector<float>();
+                m.material.Kd = material.Kd.to_rgb_vector<float>();
+                m.material.Ks = material.Ks.to_rgb_vector<float>();
+
+                m.material.Ns = material.Ns;
+
+                m.material.use_texture_Ka = (material.map_Ka >= 0) ? 1 : 0;
+                m.texture_Ka = (material.map_Ka >= 0) ? &textures[material.map_Ka] : no_texture;
+
+                m.material.use_texture_Kd = (material.map_Kd >= 0) ? 1 : 0;
+                m.texture_Kd = (material.map_Kd >= 0) ? &textures[material.map_Kd] : no_texture;
+
+                m.material.use_texture_Ks = (material.map_Ks >= 0) ? 1 : 0;
+                m.texture_Ks = (material.map_Ks >= 0) ? &textures[material.map_Ks] : no_texture;
+
+                m.material.use_material = 1;
+
+                materials.push_back(m);
+        }
+
+        // На один материал больше для его указания, но не использования в вершинах, не имеющих материала
+        shaders::PerObjectMemory::MaterialAndTexture m;
+        m.material.Ka = vec3f(0);
+        m.material.Kd = vec3f(0);
+        m.material.Ks = vec3f(0);
+        m.material.Ns = 0;
+        m.material.use_texture_Ka = 0;
+        m.texture_Ka = no_texture;
+        m.material.use_texture_Kd = 0;
+        m.texture_Kd = no_texture;
+        m.material.use_texture_Ks = 0;
+        m.texture_Ks = no_texture;
+        m.material.use_material = 0;
+        materials.push_back(m);
+
+        shader_memory.emplace(device, sampler, descriptor_set_layout, materials);
 }
 
 class DrawObject
@@ -235,16 +279,14 @@ class DrawObject
         // clang-format on
 #endif
 
-        std::optional<vulkan::VertexBufferWithDeviceLocalMemory> m_vertex_buffer;
-        // std::optional<vulkan::IndexBufferWithDeviceLocalMemory> m_vertex_index_buffer;
-
-        std::vector<vulkan::Texture> m_textures;
-        std::optional<shaders::PerObjectMemory> m_shader_memory;
-
         mat4 m_model_matrix;
         DrawType m_draw_type;
 
+        std::optional<vulkan::VertexBufferWithDeviceLocalMemory> m_vertex_buffer;
+        // std::optional<vulkan::IndexBufferWithDeviceLocalMemory> m_vertex_index_buffer;
         std::vector<MaterialVertices> m_material_vertices;
+        std::vector<vulkan::Texture> m_textures;
+        std::optional<shaders::PerObjectMemory> m_shader_memory;
 
 public:
         DrawObject(const vulkan::VulkanInstance& instance, VkSampler sampler, VkDescriptorSetLayout descriptor_set_layout,
@@ -260,24 +302,9 @@ public:
                                 return;
                         }
 
-                        //
+                        load_textures(instance, *obj, m_textures);
 
-                        m_textures.emplace_back(instance.create_texture(2, 2, default_pixels_2x2<0>()));
-                        m_textures.emplace_back(instance.create_texture(2, 2, default_pixels_2x2<1>()));
-                        m_textures.emplace_back(instance.create_texture(2, 2, default_pixels_2x2<2>()));
-
-                        //
-
-                        std::vector<shaders::PerObjectMemory::Material> materials;
-                        std::vector<const vulkan::Texture*> texture_pointers;
-                        materials.push_back({1.0, 1.0, 1.0});
-                        texture_pointers.push_back(&m_textures[0]);
-                        materials.push_back({1.0, 1.0, 1.0});
-                        texture_pointers.push_back(&m_textures[1]);
-                        materials.push_back({1.0, 1.0, 1.0});
-                        texture_pointers.push_back(&m_textures[2]);
-
-                        m_shader_memory.emplace(instance.device(), sampler, descriptor_set_layout, materials, texture_pointers);
+                        load_materials(instance.device(), sampler, descriptor_set_layout, *obj, m_textures, m_shader_memory);
                 }
                 else
                 {
@@ -308,19 +335,22 @@ public:
                 std::array<VkDeviceSize, vertex_buffers.size()> offsets = {0};
                 vkCmdBindVertexBuffers(command_buffer, 0, vertex_buffers.size(), vertex_buffers.data(), offsets.data());
 
-                std::array<VkDescriptorSet, 1> descriptor_sets = {m_shader_memory->descriptor_set(1)};
-                vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline_layout,
-                                        description_set_layout_index, descriptor_sets.size(), descriptor_sets.data(), 0, nullptr);
-
 #if 1
-                for (const MaterialVertices& m : m_material_vertices)
+                ASSERT(m_material_vertices.size() == m_shader_memory->descriptor_set_count());
+
+                for (size_t i = 0; i < m_material_vertices.size(); ++i)
                 {
-                        if (m.count <= 0)
+                        if (m_material_vertices[i].count <= 0)
                         {
                                 continue;
                         }
 
-                        vkCmdDraw(command_buffer, m.count, 1, m.offset, 0);
+                        std::array<VkDescriptorSet, 1> descriptor_sets = {m_shader_memory->descriptor_set(i)};
+                        vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline_layout,
+                                                description_set_layout_index, descriptor_sets.size(), descriptor_sets.data(), 0,
+                                                nullptr);
+
+                        vkCmdDraw(command_buffer, m_material_vertices[i].count, 1, m_material_vertices[i].offset, 0);
                 }
 #else
                 // Рисование с индексами вершин вместо самих вершин

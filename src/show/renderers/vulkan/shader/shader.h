@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/vulkan/descriptor.h"
 #include "graphics/vulkan/objects.h"
 #include "graphics/vulkan/texture.h"
+#include "show/renderers/com.h"
 
 #include <vector>
 
@@ -91,15 +92,28 @@ public:
 
         struct Material
         {
-                float value_r;
-                float value_g;
-                float value_b;
+                alignas(GLSL_STD140_VEC3_ALIGN) vec3f Ka;
+                alignas(GLSL_STD140_VEC3_ALIGN) vec3f Kd;
+                alignas(GLSL_STD140_VEC3_ALIGN) vec3f Ks;
+                float Ns;
+                uint32_t use_texture_Ka;
+                uint32_t use_texture_Kd;
+                uint32_t use_texture_Ks;
+                uint32_t use_material;
+        };
+
+        struct MaterialAndTexture
+        {
+                Material material;
+                const vulkan::Texture* texture_Ka;
+                const vulkan::Texture* texture_Kd;
+                const vulkan::Texture* texture_Ks;
         };
 
         //
 
         PerObjectMemory(const vulkan::Device& device, VkSampler sampler, VkDescriptorSetLayout descriptor_set_layout,
-                        const std::vector<Material>& materials, const std::vector<const vulkan::Texture*>& textures);
+                        const std::vector<MaterialAndTexture>& materials);
 
         PerObjectMemory(const PerObjectMemory&) = delete;
         PerObjectMemory& operator=(const PerObjectMemory&) = delete;
@@ -110,6 +124,7 @@ public:
 
         //
 
+        uint32_t descriptor_set_count() const noexcept;
         VkDescriptorSet descriptor_set(uint32_t index) const noexcept;
 };
 }

@@ -41,6 +41,7 @@ public:
         using DataType = T;
 
         static T srgb_integer_to_rgb_float(unsigned char c);
+        static unsigned char srgb_integer_to_rgb_integer(unsigned char c);
         static T rgb_float_to_srgb_float(T c);
 
         Color() = default;

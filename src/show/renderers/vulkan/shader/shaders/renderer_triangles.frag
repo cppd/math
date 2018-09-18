@@ -17,15 +17,44 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #version 450
 
+float rgb_to_srgb(float c)
+{
+        if (c >= 1.0)
+        {
+                return 1.0;
+        }
+        if (c >= 0.0031308)
+        {
+                return 1.055 * pow(c, 1.0 / 2.4) - 0.055;
+        }
+        if (c > 0.0)
+        {
+                return c * 12.92;
+        }
+        return 0.0;
+}
+
+vec4 rgb_to_srgb(vec4 c)
+{
+        return vec4(rgb_to_srgb(c.r), rgb_to_srgb(c.g), rgb_to_srgb(c.b), c.a);
+}
+
 layout(set = 1, binding = 0) uniform Material
 {
-        float value_r;
-        float value_g;
-        float value_b;
+        vec3 Ka;
+        vec3 Kd;
+        vec3 Ks;
+        float Ns;
+        bool use_texture_Ka;
+        bool use_texture_Kd;
+        bool use_texture_Ks;
+        bool use_material;
 }
 material;
 
-layout(set = 1, binding = 1) uniform sampler2D texture_sampler;
+layout(set = 1, binding = 1) uniform sampler2D texture_Ka;
+layout(set = 1, binding = 2) uniform sampler2D texture_Kd;
+layout(set = 1, binding = 3) uniform sampler2D texture_Ks;
 
 //
 
@@ -43,7 +72,14 @@ void main()
 {
         // color = vec4(vs.texture_coordinates, 0, 1);
 
-        color = texture(texture_sampler, vs.texture_coordinates);
+        if (material.use_texture_Kd)
+        {
+                color = texture(texture_Kd, vs.texture_coordinates);
+        }
+        else
+        {
+                color = vec4(material.Kd, 1);
+        }
 
-        color *= 0.5 + 0.5 * vec4(material.value_r, material.value_g, material.value_b, 1);
+        color = rgb_to_srgb(color);
 }

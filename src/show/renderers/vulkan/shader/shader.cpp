@@ -165,21 +165,41 @@ std::vector<VkDescriptorSetLayoutBinding> PerObjectMemory::descriptor_set_layout
 
                 bindings.push_back(b);
         }
+        {
+                VkDescriptorSetLayoutBinding b = {};
+                b.binding = 2;
+                b.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+                b.descriptorCount = 1;
+                b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+                b.pImmutableSamplers = nullptr;
+
+                bindings.push_back(b);
+        }
+        {
+                VkDescriptorSetLayoutBinding b = {};
+                b.binding = 3;
+                b.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+                b.descriptorCount = 1;
+                b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+                b.pImmutableSamplers = nullptr;
+
+                bindings.push_back(b);
+        }
 
         return bindings;
 }
 
 PerObjectMemory::PerObjectMemory(const vulkan::Device& device, VkSampler sampler, VkDescriptorSetLayout descriptor_set_layout,
-                                 const std::vector<Material>& materials, const std::vector<const vulkan::Texture*>& textures)
+                                 const std::vector<MaterialAndTexture>& materials)
         : m_descriptors(vulkan::Descriptors(device, materials.size(), descriptor_set_layout, descriptor_set_layout_bindings()))
 {
         ASSERT(materials.size() > 0);
-        ASSERT(materials.size() == textures.size());
-        ASSERT(std::all_of(textures.cbegin(), textures.cend(), [](const vulkan::Texture* t) { return t != nullptr; }));
+        ASSERT(std::all_of(materials.cbegin(), materials.cend(),
+                           [](const MaterialAndTexture& m) { return m.texture_Ka && m.texture_Kd && m.texture_Ks; }));
 
         std::vector<Variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
 
-        for (size_t i = 0; i < materials.size(); ++i)
+        for (const MaterialAndTexture& material : materials)
         {
                 infos.clear();
                 {
@@ -194,8 +214,24 @@ PerObjectMemory::PerObjectMemory(const vulkan::Device& device, VkSampler sampler
                 }
                 {
                         VkDescriptorImageInfo image_info = {};
-                        image_info.imageLayout = textures[i]->image_layout();
-                        image_info.imageView = textures[i]->image_view();
+                        image_info.imageLayout = material.texture_Ka->image_layout();
+                        image_info.imageView = material.texture_Ka->image_view();
+                        image_info.sampler = sampler;
+
+                        infos.push_back(image_info);
+                }
+                {
+                        VkDescriptorImageInfo image_info = {};
+                        image_info.imageLayout = material.texture_Kd->image_layout();
+                        image_info.imageView = material.texture_Kd->image_view();
+                        image_info.sampler = sampler;
+
+                        infos.push_back(image_info);
+                }
+                {
+                        VkDescriptorImageInfo image_info = {};
+                        image_info.imageLayout = material.texture_Ks->image_layout();
+                        image_info.imageView = material.texture_Ks->image_view();
                         image_info.sampler = sampler;
 
                         infos.push_back(image_info);
@@ -207,8 +243,13 @@ PerObjectMemory::PerObjectMemory(const vulkan::Device& device, VkSampler sampler
 
         for (size_t i = 0; i < materials.size(); ++i)
         {
-                copy_to_buffer(m_uniform_buffers[i], materials[i]);
+                copy_to_buffer(m_uniform_buffers[i], materials[i].material);
         }
+}
+
+uint32_t PerObjectMemory::descriptor_set_count() const noexcept
+{
+        return m_descriptor_sets.size();
 }
 
 VkDescriptorSet PerObjectMemory::descriptor_set(uint32_t index) const noexcept
