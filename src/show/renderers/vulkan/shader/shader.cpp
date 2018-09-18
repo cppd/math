@@ -96,6 +96,15 @@ std::vector<VkDescriptorSetLayoutBinding> SharedMemory::descriptor_set_layout_bi
 
                 bindings.push_back(b);
         }
+        {
+                VkDescriptorSetLayoutBinding b = {};
+                b.binding = 1;
+                b.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+                b.descriptorCount = 1;
+                b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+                bindings.push_back(b);
+        }
 
         return bindings;
 }
@@ -107,6 +116,18 @@ SharedMemory::SharedMemory(const vulkan::Device& device, VkDescriptorSetLayout d
 
         {
                 m_uniform_buffers.emplace_back(device, sizeof(Matrices));
+                m_matrices_buffer_index = m_uniform_buffers.size() - 1;
+
+                VkDescriptorBufferInfo buffer_info = {};
+                buffer_info.buffer = m_uniform_buffers.back();
+                buffer_info.offset = 0;
+                buffer_info.range = m_uniform_buffers.back().size();
+
+                infos.push_back(buffer_info);
+        }
+        {
+                m_uniform_buffers.emplace_back(device, sizeof(Drawing));
+                m_drawing_buffer_index = m_uniform_buffers.size() - 1;
 
                 VkDescriptorBufferInfo buffer_info = {};
                 buffer_info.buffer = m_uniform_buffers.back();
@@ -124,11 +145,56 @@ VkDescriptorSet SharedMemory::descriptor_set() const noexcept
         return m_descriptor_set;
 }
 
+template <typename T>
+void SharedMemory::copy_to_matrices_buffer(VkDeviceSize offset, const T& data) const
+{
+        copy_to_buffer(m_uniform_buffers[m_matrices_buffer_index], offset, data);
+}
+template <typename T>
+void SharedMemory::copy_to_drawing_buffer(VkDeviceSize offset, const T& data) const
+{
+        copy_to_buffer(m_uniform_buffers[m_drawing_buffer_index], offset, data);
+}
+
 void SharedMemory::set_matrix(const mat4& matrix) const
 {
-        Matrices d;
-        d.mvp = transpose(to_matrix<float>(matrix));
-        copy_to_buffer(m_uniform_buffers[0], offsetof(Matrices, mvp), d.mvp);
+        decltype(Matrices().mvp) m = transpose(to_matrix<float>(matrix));
+        copy_to_matrices_buffer(offsetof(Matrices, mvp), m);
+}
+void SharedMemory::set_default_color(const Color& color) const
+{
+        decltype(Drawing().default_color) c = color.to_rgb_vector<float>();
+        copy_to_drawing_buffer(offsetof(Drawing, default_color), c);
+}
+void SharedMemory::set_wireframe_color(const Color& color) const
+{
+        decltype(Drawing().wireframe_color) c = color.to_rgb_vector<float>();
+        copy_to_drawing_buffer(offsetof(Drawing, wireframe_color), c);
+}
+void SharedMemory::set_default_ns(float default_ns) const
+{
+        decltype(Drawing().default_ns) ns = default_ns;
+        copy_to_drawing_buffer(offsetof(Drawing, default_ns), ns);
+}
+void SharedMemory::set_light_a(const Color& color) const
+{
+        decltype(Drawing().light_a) c = color.to_rgb_vector<float>();
+        copy_to_drawing_buffer(offsetof(Drawing, light_a), c);
+}
+void SharedMemory::set_light_d(const Color& color) const
+{
+        decltype(Drawing().light_d) c = color.to_rgb_vector<float>();
+        copy_to_drawing_buffer(offsetof(Drawing, light_d), c);
+}
+void SharedMemory::set_light_s(const Color& color) const
+{
+        decltype(Drawing().light_s) c = color.to_rgb_vector<float>();
+        copy_to_drawing_buffer(offsetof(Drawing, light_s), c);
+}
+void SharedMemory::set_show_materials(bool show) const
+{
+        decltype(Drawing().show_materials) s = show ? 1 : 0;
+        copy_to_drawing_buffer(offsetof(Drawing, show_materials), s);
 }
 
 //

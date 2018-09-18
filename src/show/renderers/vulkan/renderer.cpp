@@ -46,6 +46,9 @@ using VERTEX_INDEX_TYPE =
 constexpr uint32_t SHADER_SHARED_DESCRIPTION_SET_LAYOUT_INDEX = 0;
 constexpr uint32_t SHADER_PER_OBJECT_DESCRIPTION_SET_LAYOUT_INDEX = 1;
 
+// Число используется в шейдере для определения наличия текстурных координат
+constexpr vec2f NO_TEXTURE_COORDINATES = vec2f(-1e10);
+
 // clang-format off
 constexpr uint32_t vertex_shader[]
 {
@@ -148,13 +151,7 @@ void load_vertices(const vulkan::VulkanInstance& instance, const Obj<3>& obj,
                 }
                 else
                 {
-#if 0
-                        t0 = t1 = t2 = vec2f(0);
-#else
-                        t0 = vec2f(0, 0);
-                        t1 = vec2f(1, 0);
-                        t2 = vec2f(0, 1);
-#endif
+                        t0 = t1 = t2 = NO_TEXTURE_COORDINATES;
                 }
 
                 shader_vertices.emplace_back(v0, n0, t0);
@@ -392,17 +389,23 @@ class Renderer final : public VulkanRenderer
 
         DrawObjects<DrawObject> m_draw_objects;
 
-        void set_light_a(const Color& /*light*/) override
+        void set_light_a(const Color& light) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
+
+                m_shared_shader_memory.set_light_a(light);
         }
-        void set_light_d(const Color& /*light*/) override
+        void set_light_d(const Color& light) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
+
+                m_shared_shader_memory.set_light_d(light);
         }
-        void set_light_s(const Color& /*light*/) override
+        void set_light_s(const Color& light) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
+
+                m_shared_shader_memory.set_light_s(light);
         }
         void set_background_color(const Color& color) override
         {
@@ -411,17 +414,23 @@ class Renderer final : public VulkanRenderer
                 m_clear_color = color;
                 create_command_buffers();
         }
-        void set_default_color(const Color& /*color*/) override
+        void set_default_color(const Color& color) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
+
+                m_shared_shader_memory.set_default_color(color);
         }
-        void set_wireframe_color(const Color& /*color*/) override
+        void set_wireframe_color(const Color& color) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
+
+                m_shared_shader_memory.set_wireframe_color(color);
         }
-        void set_default_ns(double /*default_ns*/) override
+        void set_default_ns(double default_ns) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
+
+                m_shared_shader_memory.set_default_ns(default_ns);
         }
         void set_show_smooth(bool /*show*/) override
         {
@@ -439,9 +448,11 @@ class Renderer final : public VulkanRenderer
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
         }
-        void set_show_materials(bool /*show*/) override
+        void set_show_materials(bool show) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
+
+                m_shared_shader_memory.set_show_materials(show);
         }
         void set_shadow_zoom(double /*zoom*/) override
         {

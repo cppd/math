@@ -52,10 +52,29 @@ class SharedMemory
         std::vector<vulkan::UniformBufferWithHostVisibleMemory> m_uniform_buffers;
         vulkan::DescriptorSet m_descriptor_set;
 
+        // Если размещать структуры в одном буфере, то требуется выравнивание каждой структуры
+        // на VkPhysicalDeviceLimits::minUniformBufferOffsetAlignment для VkDescriptorBufferInfo::offset.
         struct Matrices
         {
                 Matrix<4, 4, float> mvp;
         };
+        struct Drawing
+        {
+                alignas(GLSL_STD140_VEC3_ALIGN) vec3f default_color;
+                alignas(GLSL_STD140_VEC3_ALIGN) vec3f wireframe_color;
+                float default_ns;
+                alignas(GLSL_STD140_VEC3_ALIGN) vec3f light_a;
+                alignas(GLSL_STD140_VEC3_ALIGN) vec3f light_d;
+                alignas(GLSL_STD140_VEC3_ALIGN) vec3f light_s;
+                uint32_t show_materials;
+        };
+        size_t m_matrices_buffer_index;
+        size_t m_drawing_buffer_index;
+
+        template <typename T>
+        void copy_to_matrices_buffer(VkDeviceSize offset, const T& data) const;
+        template <typename T>
+        void copy_to_drawing_buffer(VkDeviceSize offset, const T& data) const;
 
 public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
@@ -75,7 +94,17 @@ public:
 
         VkDescriptorSet descriptor_set() const noexcept;
 
+        //
+
         void set_matrix(const mat4& matrix) const;
+
+        void set_default_color(const Color& color) const;
+        void set_wireframe_color(const Color& color) const;
+        void set_default_ns(float default_ns) const;
+        void set_light_a(const Color& color) const;
+        void set_light_d(const Color& color) const;
+        void set_light_s(const Color& color) const;
+        void set_show_materials(bool show) const;
 };
 
 class PerObjectMemory
