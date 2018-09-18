@@ -134,11 +134,12 @@ vulkan::DeviceMemory create_device_memory(const vulkan::Device& device, VkImage 
         return device_memory;
 }
 
-void memory_copy(VkDevice device, VkDeviceMemory device_memory, const void* data, VkDeviceSize data_size)
+void memory_copy_offset(VkDevice device, VkDeviceMemory device_memory, VkDeviceSize offset, const void* data,
+                        VkDeviceSize data_size)
 {
         void* map_memory_data;
 
-        VkResult result = vkMapMemory(device, device_memory, 0, data_size, 0, &map_memory_data);
+        VkResult result = vkMapMemory(device, device_memory, offset, data_size, 0, &map_memory_data);
         if (result != VK_SUCCESS)
         {
                 vulkan::vulkan_function_error("vkMapMemory", result);
@@ -149,6 +150,11 @@ void memory_copy(VkDevice device, VkDeviceMemory device_memory, const void* data
         vkUnmapMemory(device, device_memory);
 
         // vkFlushMappedMemoryRanges, vkInvalidateMappedMemoryRanges
+}
+
+void memory_copy(VkDevice device, VkDeviceMemory device_memory, const void* data, VkDeviceSize data_size)
+{
+        memory_copy_offset(device, device_memory, 0 /*offset*/, data, data_size);
 }
 
 void begin_commands(VkCommandBuffer command_buffer)
@@ -459,9 +465,11 @@ VkDeviceSize UniformBufferWithHostVisibleMemory::size() const noexcept
         return m_data_size;
 }
 
-void UniformBufferWithHostVisibleMemory::copy(const void* data) const
+void UniformBufferWithHostVisibleMemory::copy(VkDeviceSize offset, const void* data, VkDeviceSize data_size) const
 {
-        memory_copy(m_device, m_device_memory, data, m_data_size);
+        ASSERT(offset + data_size <= m_data_size);
+
+        memory_copy_offset(m_device, m_device_memory, offset, data, data_size);
 }
 
 //

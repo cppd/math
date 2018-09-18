@@ -546,7 +546,7 @@ class Renderer final : public VulkanRenderer
                 if (m_draw_objects.scale_object())
                 {
                         mat4 mvp = m_main_matrix * m_draw_objects.scale_object()->model_matrix();
-                        m_shared_shader_memory.set_uniform(shaders::SharedMemory::Matrices(mvp));
+                        m_shared_shader_memory.set_matrix(mvp);
                 }
         }
 

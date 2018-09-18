@@ -52,17 +52,13 @@ class SharedMemory
         std::vector<vulkan::UniformBufferWithHostVisibleMemory> m_uniform_buffers;
         vulkan::DescriptorSet m_descriptor_set;
 
-public:
-        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
-
         struct Matrices
         {
                 Matrix<4, 4, float> mvp;
-
-                Matrices(const mat4& mvp_) : mvp(transpose(to_matrix<float>(mvp_)))
-                {
-                }
         };
+
+public:
+        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
 
         //
 
@@ -78,7 +74,8 @@ public:
         //
 
         VkDescriptorSet descriptor_set() const noexcept;
-        void set_uniform(const Matrices& matrices) const;
+
+        void set_matrix(const mat4& matrix) const;
 };
 
 class PerObjectMemory

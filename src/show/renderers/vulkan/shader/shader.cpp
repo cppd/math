@@ -22,20 +22,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace
 {
 template <typename T>
-void copy_to_buffer(const std::vector<vulkan::UniformBufferWithHostVisibleMemory>& buffers, uint32_t index, const T& data)
+void copy_to_buffer(const vulkan::UniformBufferWithHostVisibleMemory& buffer, VkDeviceSize offset, const T& data)
 {
-        ASSERT(index < buffers.size());
-        ASSERT(sizeof(data) == buffers[index].size());
-
-        buffers[index].copy(&data);
-}
-
-template <typename T>
-void copy_to_buffer(const vulkan::UniformBufferWithHostVisibleMemory& buffer, const T& data)
-{
-        ASSERT(sizeof(data) == buffer.size());
-
-        buffer.copy(&data);
+        buffer.copy(offset, &data, sizeof(data));
 }
 }
 
@@ -135,9 +124,11 @@ VkDescriptorSet SharedMemory::descriptor_set() const noexcept
         return m_descriptor_set;
 }
 
-void SharedMemory::set_uniform(const Matrices& matrices) const
+void SharedMemory::set_matrix(const mat4& matrix) const
 {
-        copy_to_buffer(m_uniform_buffers, 0, matrices);
+        Matrices d;
+        d.mvp = transpose(to_matrix<float>(matrix));
+        copy_to_buffer(m_uniform_buffers[0], offsetof(Matrices, mvp), d.mvp);
 }
 
 //
@@ -243,7 +234,7 @@ PerObjectMemory::PerObjectMemory(const vulkan::Device& device, VkSampler sampler
 
         for (size_t i = 0; i < materials.size(); ++i)
         {
-                copy_to_buffer(m_uniform_buffers[i], materials[i].material);
+                copy_to_buffer(m_uniform_buffers[i], 0 /*offset*/, materials[i].material);
         }
 }
 

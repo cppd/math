@@ -109,7 +109,7 @@ public:
 
         VkDeviceSize size() const noexcept;
 
-        void copy(const void* data) const;
+        void copy(VkDeviceSize offset, const void* data, VkDeviceSize data_size) const;
 };
 
 class TextureImage final
