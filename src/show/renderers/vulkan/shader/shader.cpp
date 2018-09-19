@@ -195,6 +195,7 @@ void SharedMemory::set_matrix(const mat4& matrix) const
         decltype(Matrices().mvp) m = transpose(to_matrix<float>(matrix));
         copy_to_matrices_buffer(offsetof(Matrices, mvp), m);
 }
+
 void SharedMemory::set_default_color(const Color& color) const
 {
         decltype(Drawing().default_color) c = color.to_rgb_vector<float>();
@@ -230,6 +231,12 @@ void SharedMemory::set_show_materials(bool show) const
         decltype(Drawing().show_materials) s = show ? 1 : 0;
         copy_to_drawing_buffer(offsetof(Drawing, show_materials), s);
 }
+void SharedMemory::set_show_wireframe(bool show) const
+{
+        decltype(Drawing().show_wireframe) s = show ? 1 : 0;
+        copy_to_drawing_buffer(offsetof(Drawing, show_wireframe), s);
+}
+
 void SharedMemory::set_direction_to_light(const vec3f& direction) const
 {
         decltype(Lighting().direction_to_light) d = direction;

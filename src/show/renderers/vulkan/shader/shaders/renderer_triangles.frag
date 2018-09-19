@@ -58,6 +58,7 @@ layout(set = 0, binding = 2) uniform Drawing
         vec3 light_d;
         vec3 light_s;
         bool show_materials;
+        bool show_wireframe;
 }
 drawing;
 
@@ -84,8 +85,13 @@ layout(location = 0) in GS
 {
         vec3 normal;
         vec2 texture_coordinates;
+        vec3 baricentric;
 }
 gs;
+
+layout(location = 0) out vec4 color;
+
+//
 
 bool has_texture_coordinates()
 {
@@ -93,9 +99,12 @@ bool has_texture_coordinates()
         return gs.texture_coordinates[0] > -1e9;
 }
 
-//
-
-layout(location = 0) out vec4 color;
+float edge_factor()
+{
+        vec3 d = fwidth(gs.baricentric);
+        vec3 a = smoothstep(vec3(0), d, gs.baricentric);
+        return min(min(a.x, a.y), a.z);
+}
 
 void main()
 {
@@ -162,6 +171,11 @@ void main()
         //
 
         vec3 color3 = color_a * drawing.light_a + color_d * drawing.light_d + color_s * drawing.light_s;
+
+        if (drawing.show_wireframe)
+        {
+                color3 = mix(drawing.wireframe_color, color3, edge_factor());
+        }
 
         color = rgb_to_srgb(vec4(color3, 1));
 }

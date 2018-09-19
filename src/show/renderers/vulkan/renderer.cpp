@@ -453,9 +453,11 @@ class Renderer final : public VulkanRenderer
 
                 m_shared_shader_memory.set_show_smooth(show);
         }
-        void set_show_wireframe(bool /*show*/) override
+        void set_show_wireframe(bool show) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
+
+                m_shared_shader_memory.set_show_wireframe(show);
         }
         void set_show_shadow(bool /*show*/) override
         {

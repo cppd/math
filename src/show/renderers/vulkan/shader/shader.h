@@ -78,6 +78,7 @@ class SharedMemory
                 alignas(GLSL_STD140_VEC3_ALIGN) vec3f light_d;
                 alignas(GLSL_STD140_VEC3_ALIGN) vec3f light_s;
                 uint32_t show_materials;
+                uint32_t show_wireframe;
         };
         size_t m_matrices_buffer_index;
         size_t m_lighting_buffer_index;
@@ -122,6 +123,7 @@ public:
         void set_direction_to_light(const vec3f& direction) const;
         void set_direction_to_camera(const vec3f& direction) const;
         void set_show_smooth(bool show) const;
+        void set_show_wireframe(bool show) const;
 };
 
 class PerObjectMemory

@@ -42,10 +42,13 @@ layout(location = 0) out GS
 {
         vec3 normal;
         vec2 texture_coordinates;
+        vec3 baricentric;
 }
 gs;
 
 //
+
+const vec3 baricentric[3] = {vec3(1, 0, 0), vec3(0, 1, 0), vec3(0, 0, 1)};
 
 vec3[3] compute_normals()
 {
@@ -95,6 +98,7 @@ void main(void)
                 gl_Position = gl_in[i].gl_Position;
 
                 gs.normal = normals[i];
+                gs.baricentric = baricentric[i];
 
                 gs.texture_coordinates = vs[i].texture_coordinates;
 
