@@ -680,7 +680,18 @@ public:
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                m_instance.device_wait_idle();
+                try
+                {
+                        m_instance.device_wait_idle();
+                }
+                catch (std::exception& e)
+                {
+                        LOG(std::string("Device wait idle exception in the Vulkan renderer destructor: ") + e.what());
+                }
+                catch (...)
+                {
+                        LOG("Device wait idle unknown exception in the Vulkan renderer destructor");
+                }
         }
 };
 }

@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "application/application_name.h"
 #include "com/alg.h"
 #include "com/error.h"
+#include "com/log.h"
 #include "com/print.h"
 
 #include <cstring>
@@ -781,7 +782,11 @@ VulkanInstance::~VulkanInstance()
         }
         catch (std::exception& e)
         {
-                error_fatal(e.what());
+                LOG(std::string("Device wait idle exception in the Vulkan instance destructor: ") + e.what());
+        }
+        catch (...)
+        {
+                LOG("Device wait idle unknown exception in the Vulkan instance destructor");
         }
 }
 
