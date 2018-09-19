@@ -42,7 +42,14 @@ vec4 rgb_to_srgb(vec4 c)
 //
 
 // Общие данные для всех треугольников всех объектов
-layout(set = 0, binding = 1) uniform Drawing
+layout(set = 0, binding = 1) uniform Lighting
+{
+        vec3 direction_to_light;
+        vec3 direction_to_camera;
+        bool show_smooth;
+}
+lighting;
+layout(set = 0, binding = 2) uniform Drawing
 {
         vec3 default_color;
         vec3 wireframe_color;
@@ -132,6 +139,27 @@ void main()
         {
                 color_a = color_d = color_s = drawing.default_color;
         }
+
+        //
+
+        vec3 N = normalize(gs.normal);
+        vec3 L = lighting.direction_to_light;
+        vec3 V = lighting.direction_to_camera;
+
+        float dot_NL = dot(N, L);
+        if (dot_NL >= 0.0)
+        {
+                color_d *= dot_NL;
+
+                float light_reflection = max(0.0, dot(V, reflect(-L, N)));
+                color_s *= pow(light_reflection, (mtl.use_material && drawing.show_materials) ? mtl.Ns : drawing.default_ns);
+        }
+        else
+        {
+                color_d = color_s = vec3(0.0);
+        }
+
+        //
 
         vec3 color3 = color_a * drawing.light_a + color_d * drawing.light_d + color_s * drawing.light_s;
 

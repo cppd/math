@@ -34,10 +34,15 @@ struct Vertex
 {
         vec3f position;
         vec3f normal;
+        vec3f geometric_normal;
         vec2f texture_coordinates;
 
-        constexpr Vertex(const vec3f& position_, const vec3f& normal_, const vec2f& texture_coordinates_)
-                : position(position_), normal(normal_), texture_coordinates(texture_coordinates_)
+        constexpr Vertex(const vec3f& position_, const vec3f& normal_, const vec3f& geometric_normal_,
+                         const vec2f& texture_coordinates_)
+                : position(position_),
+                  normal(normal_),
+                  geometric_normal(geometric_normal_),
+                  texture_coordinates(texture_coordinates_)
         {
         }
 
@@ -58,6 +63,12 @@ class SharedMemory
         {
                 Matrix<4, 4, float> mvp;
         };
+        struct Lighting
+        {
+                alignas(GLSL_STD140_VEC3_ALIGN) vec3f direction_to_light;
+                alignas(GLSL_STD140_VEC3_ALIGN) vec3f direction_to_camera;
+                uint32_t show_smooth;
+        };
         struct Drawing
         {
                 alignas(GLSL_STD140_VEC3_ALIGN) vec3f default_color;
@@ -69,10 +80,13 @@ class SharedMemory
                 uint32_t show_materials;
         };
         size_t m_matrices_buffer_index;
+        size_t m_lighting_buffer_index;
         size_t m_drawing_buffer_index;
 
         template <typename T>
         void copy_to_matrices_buffer(VkDeviceSize offset, const T& data) const;
+        template <typename T>
+        void copy_to_lighting_buffer(VkDeviceSize offset, const T& data) const;
         template <typename T>
         void copy_to_drawing_buffer(VkDeviceSize offset, const T& data) const;
 
@@ -105,6 +119,9 @@ public:
         void set_light_d(const Color& color) const;
         void set_light_s(const Color& color) const;
         void set_show_materials(bool show) const;
+        void set_direction_to_light(const vec3f& direction) const;
+        void set_direction_to_camera(const vec3f& direction) const;
+        void set_show_smooth(bool show) const;
 };
 
 class PerObjectMemory

@@ -132,19 +132,28 @@ void load_vertices(const vulkan::VulkanInstance& instance, const Obj<3>& obj,
                 v1 = obj_vertices[f.vertices[1]];
                 v2 = obj_vertices[f.vertices[2]];
 
+                vec3f geometric_normal = normalize(cross(v1 - v0, v2 - v0));
+                if (!is_finite(geometric_normal))
+                {
+                        error("Face unit orthogonal vector is not finite for the face with vertices (" + to_string(v0) + ", " +
+                              to_string(v1) + ", " + to_string(v2) + ")");
+                }
+
                 if (f.has_normal)
                 {
                         n0 = obj_normals[f.normals[0]];
                         n1 = obj_normals[f.normals[1]];
                         n2 = obj_normals[f.normals[2]];
+
+                        // Векторы вершин грани могут быть направлены в разные стороны от грани,
+                        // поэтому надо им задать одинаковое направление
+                        n0 = dot(n0, geometric_normal) >= 0 ? n0 : -n0;
+                        n1 = dot(n1, geometric_normal) >= 0 ? n1 : -n1;
+                        n2 = dot(n2, geometric_normal) >= 0 ? n2 : -n2;
                 }
                 else
                 {
-#if 0
-                        n0 = n1 = n2 = vec3f(0);
-#else
-                        n0 = n1 = n2 = normalize(cross(v1 - v0, v2 - v0));
-#endif
+                        n0 = n1 = n2 = geometric_normal;
                 }
 
                 if (f.has_texcoord)
@@ -158,9 +167,9 @@ void load_vertices(const vulkan::VulkanInstance& instance, const Obj<3>& obj,
                         t0 = t1 = t2 = NO_TEXTURE_COORDINATES;
                 }
 
-                shader_vertices.emplace_back(v0, n0, t0);
-                shader_vertices.emplace_back(v1, n1, t1);
-                shader_vertices.emplace_back(v2, n2, t2);
+                shader_vertices.emplace_back(v0, n0, geometric_normal, t0);
+                shader_vertices.emplace_back(v1, n1, geometric_normal, t1);
+                shader_vertices.emplace_back(v2, n2, geometric_normal, t2);
         }
 
         if (shader_vertices.size() > 0)
@@ -438,9 +447,11 @@ class Renderer final : public VulkanRenderer
 
                 m_shared_shader_memory.set_default_ns(default_ns);
         }
-        void set_show_smooth(bool /*show*/) override
+        void set_show_smooth(bool show) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
+
+                m_shared_shader_memory.set_show_smooth(show);
         }
         void set_show_wireframe(bool /*show*/) override
         {
@@ -471,13 +482,17 @@ class Renderer final : public VulkanRenderer
                 m_main_matrix = main_matrix;
                 set_matrices();
         }
-        void set_light_direction(vec3 /*dir*/) override
+        void set_light_direction(vec3 dir) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
+
+                m_shared_shader_memory.set_direction_to_light(-to_vector<float>(dir));
         }
-        void set_camera_direction(vec3 /*dir*/) override
+        void set_camera_direction(vec3 dir) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
+
+                m_shared_shader_memory.set_direction_to_camera(-to_vector<float>(dir));
         }
         void set_size(int /*width*/, int /*height*/) override
         {

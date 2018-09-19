@@ -72,6 +72,15 @@ std::vector<VkVertexInputAttributeDescription> Vertex::attribute_descriptions()
                 VkVertexInputAttributeDescription d = {};
                 d.binding = 0;
                 d.location = 2;
+                d.format = VK_FORMAT_R32G32B32_SFLOAT;
+                d.offset = offsetof(Vertex, geometric_normal);
+
+                descriptions.push_back(d);
+        }
+        {
+                VkVertexInputAttributeDescription d = {};
+                d.binding = 0;
+                d.location = 3;
                 d.format = VK_FORMAT_R32G32_SFLOAT;
                 d.offset = offsetof(Vertex, texture_coordinates);
 
@@ -101,6 +110,15 @@ std::vector<VkDescriptorSetLayoutBinding> SharedMemory::descriptor_set_layout_bi
                 b.binding = 1;
                 b.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
                 b.descriptorCount = 1;
+                b.stageFlags = VK_SHADER_STAGE_GEOMETRY_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+
+                bindings.push_back(b);
+        }
+        {
+                VkDescriptorSetLayoutBinding b = {};
+                b.binding = 2;
+                b.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+                b.descriptorCount = 1;
                 b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
                 bindings.push_back(b);
@@ -117,6 +135,17 @@ SharedMemory::SharedMemory(const vulkan::Device& device, VkDescriptorSetLayout d
         {
                 m_uniform_buffers.emplace_back(device, sizeof(Matrices));
                 m_matrices_buffer_index = m_uniform_buffers.size() - 1;
+
+                VkDescriptorBufferInfo buffer_info = {};
+                buffer_info.buffer = m_uniform_buffers.back();
+                buffer_info.offset = 0;
+                buffer_info.range = m_uniform_buffers.back().size();
+
+                infos.push_back(buffer_info);
+        }
+        {
+                m_uniform_buffers.emplace_back(device, sizeof(Lighting));
+                m_lighting_buffer_index = m_uniform_buffers.size() - 1;
 
                 VkDescriptorBufferInfo buffer_info = {};
                 buffer_info.buffer = m_uniform_buffers.back();
@@ -149,6 +178,11 @@ template <typename T>
 void SharedMemory::copy_to_matrices_buffer(VkDeviceSize offset, const T& data) const
 {
         copy_to_buffer(m_uniform_buffers[m_matrices_buffer_index], offset, data);
+}
+template <typename T>
+void SharedMemory::copy_to_lighting_buffer(VkDeviceSize offset, const T& data) const
+{
+        copy_to_buffer(m_uniform_buffers[m_lighting_buffer_index], offset, data);
 }
 template <typename T>
 void SharedMemory::copy_to_drawing_buffer(VkDeviceSize offset, const T& data) const
@@ -195,6 +229,21 @@ void SharedMemory::set_show_materials(bool show) const
 {
         decltype(Drawing().show_materials) s = show ? 1 : 0;
         copy_to_drawing_buffer(offsetof(Drawing, show_materials), s);
+}
+void SharedMemory::set_direction_to_light(const vec3f& direction) const
+{
+        decltype(Lighting().direction_to_light) d = direction;
+        copy_to_lighting_buffer(offsetof(Lighting, direction_to_light), d);
+}
+void SharedMemory::set_direction_to_camera(const vec3f& direction) const
+{
+        decltype(Lighting().direction_to_camera) d = direction;
+        copy_to_lighting_buffer(offsetof(Lighting, direction_to_camera), d);
+}
+void SharedMemory::set_show_smooth(bool show) const
+{
+        decltype(Lighting().show_smooth) s = show ? 1 : 0;
+        copy_to_lighting_buffer(offsetof(Lighting, show_smooth), s);
 }
 
 //

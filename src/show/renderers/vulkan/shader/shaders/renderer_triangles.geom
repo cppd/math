@@ -20,9 +20,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 layout(triangles) in;
 layout(triangle_strip, max_vertices = 3) out;
 
+layout(set = 0, binding = 1) uniform Lighting
+{
+        vec3 direction_to_light;
+        vec3 direction_to_camera;
+        bool show_smooth;
+}
+lighting;
+
+//
+
 layout(location = 0) in VS
 {
         vec3 normal;
+        flat vec3 geometric_normal;
         vec2 texture_coordinates;
 }
 vs[3];
@@ -34,13 +45,57 @@ layout(location = 0) out GS
 }
 gs;
 
+//
+
+vec3[3] compute_normals()
+{
+        vec3 normals[3];
+
+        // Нужно направить векторы вершин грани по направлению перпендикуляра
+        // к той стороне грани, которая обращена к камере.
+
+        // Все нормали в вершинах исходных данных направлены по одну сторону
+        // с перпендикуляром к грани, поэтому задавать им другое направление
+        // нужно только тогда, когда нужно задать другое направление самому
+        // этому перпендикуляру.
+
+        if (lighting.show_smooth)
+        {
+                if (dot(lighting.direction_to_camera, vs[0].geometric_normal) >= 0)
+                {
+                        normals[0] = vs[0].normal;
+                        normals[1] = vs[1].normal;
+                        normals[2] = vs[2].normal;
+                }
+                else
+                {
+                        normals[0] = -vs[0].normal;
+                        normals[1] = -vs[1].normal;
+                        normals[2] = -vs[2].normal;
+                }
+        }
+        else
+        {
+                vec3 normal = faceforward(vs[0].geometric_normal, -lighting.direction_to_camera, vs[0].geometric_normal);
+
+                normals[0] = normal;
+                normals[1] = normal;
+                normals[2] = normal;
+        }
+
+        return normals;
+}
+
 void main(void)
 {
+        vec3 normals[3] = compute_normals();
+
         for (int i = 0; i < 3; ++i)
         {
                 gl_Position = gl_in[i].gl_Position;
 
-                gs.normal = vs[i].normal;
+                gs.normal = normals[i];
+
                 gs.texture_coordinates = vs[i].texture_coordinates;
 
                 EmitVertex();
