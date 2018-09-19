@@ -23,20 +23,26 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #error VK_NO_PROTOTYPES defined
 #endif
 
+#define GET_PROC_ADDR(name, instance)                                                                         \
+        [](VkInstance instance_local_parameter) -> PFN_##name                                                 \
+        {                                                                                                     \
+                ASSERT(instance_local_parameter != VK_NULL_HANDLE);                                           \
+                PFN_##name function_address_local_parameter =                                                 \
+                        reinterpret_cast<PFN_##name>(vkGetInstanceProcAddr(instance_local_parameter, #name)); \
+                if (!function_address_local_parameter)                                                        \
+                {                                                                                             \
+                        error("Failed to find address of " #name);                                            \
+                }                                                                                             \
+                return function_address_local_parameter;                                                      \
+        }                                                                                                     \
+        (instance)
+
 VKAPI_ATTR VkResult VKAPI_CALL vkCreateDebugReportCallbackEXT(VkInstance instance,
                                                               const VkDebugReportCallbackCreateInfoEXT* pCreateInfo,
                                                               const VkAllocationCallbacks* pAllocator,
                                                               VkDebugReportCallbackEXT* pCallback)
 {
-        ASSERT(instance != VK_NULL_HANDLE);
-
-        PFN_vkCreateDebugReportCallbackEXT f = reinterpret_cast<PFN_vkCreateDebugReportCallbackEXT>(
-                vkGetInstanceProcAddr(instance, "vkCreateDebugReportCallbackEXT"));
-
-        if (!f)
-        {
-                error_fatal("vkCreateDebugReportCallbackEXT address not found");
-        }
+        auto f = GET_PROC_ADDR(vkCreateDebugReportCallbackEXT, instance);
 
         return f(instance, pCreateInfo, pAllocator, pCallback);
 }
@@ -44,15 +50,7 @@ VKAPI_ATTR VkResult VKAPI_CALL vkCreateDebugReportCallbackEXT(VkInstance instanc
 VKAPI_ATTR void VKAPI_CALL vkDestroyDebugReportCallbackEXT(VkInstance instance, VkDebugReportCallbackEXT callback,
                                                            const VkAllocationCallbacks* pAllocator)
 {
-        ASSERT(instance != VK_NULL_HANDLE);
-
-        PFN_vkDestroyDebugReportCallbackEXT f = reinterpret_cast<PFN_vkDestroyDebugReportCallbackEXT>(
-                vkGetInstanceProcAddr(instance, "vkDestroyDebugReportCallbackEXT"));
-
-        if (!f)
-        {
-                error_fatal("vkDestroyDebugReportCallbackEXT address not found");
-        }
+        auto f = GET_PROC_ADDR(vkDestroyDebugReportCallbackEXT, instance);
 
         f(instance, callback, pAllocator);
 }

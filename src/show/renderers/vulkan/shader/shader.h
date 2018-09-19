@@ -65,18 +65,18 @@ class SharedMemory
         };
         struct Lighting
         {
-                alignas(GLSL_STD140_VEC3_ALIGN) vec3f direction_to_light;
-                alignas(GLSL_STD140_VEC3_ALIGN) vec3f direction_to_camera;
+                alignas(GLSL_VEC3_ALIGN) vec3f direction_to_light;
+                alignas(GLSL_VEC3_ALIGN) vec3f direction_to_camera;
                 uint32_t show_smooth;
         };
         struct Drawing
         {
-                alignas(GLSL_STD140_VEC3_ALIGN) vec3f default_color;
-                alignas(GLSL_STD140_VEC3_ALIGN) vec3f wireframe_color;
+                alignas(GLSL_VEC3_ALIGN) vec3f default_color;
+                alignas(GLSL_VEC3_ALIGN) vec3f wireframe_color;
                 float default_ns;
-                alignas(GLSL_STD140_VEC3_ALIGN) vec3f light_a;
-                alignas(GLSL_STD140_VEC3_ALIGN) vec3f light_d;
-                alignas(GLSL_STD140_VEC3_ALIGN) vec3f light_s;
+                alignas(GLSL_VEC3_ALIGN) vec3f light_a;
+                alignas(GLSL_VEC3_ALIGN) vec3f light_d;
+                alignas(GLSL_VEC3_ALIGN) vec3f light_s;
                 uint32_t show_materials;
                 uint32_t show_wireframe;
         };
@@ -137,9 +137,9 @@ public:
 
         struct Material
         {
-                alignas(GLSL_STD140_VEC3_ALIGN) vec3f Ka;
-                alignas(GLSL_STD140_VEC3_ALIGN) vec3f Kd;
-                alignas(GLSL_STD140_VEC3_ALIGN) vec3f Ks;
+                alignas(GLSL_VEC3_ALIGN) vec3f Ka;
+                alignas(GLSL_VEC3_ALIGN) vec3f Kd;
+                alignas(GLSL_VEC3_ALIGN) vec3f Ks;
                 float Ns;
                 uint32_t use_texture_Ka;
                 uint32_t use_texture_Kd;

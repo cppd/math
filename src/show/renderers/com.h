@@ -23,10 +23,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <unordered_map>
 
 // GLSL имеет размер float == 4
-constexpr int GLSL_STD430_VEC3_ALIGN = 4 * 4; // для vec3 выравнивание по 4 * N
-constexpr int GLSL_STD140_VEC3_ALIGN = 4 * 4; // для vec3 выравнивание по 4 * N
+constexpr int GLSL_VEC3_ALIGN = 4 * sizeof(float); // для vec3 выравнивание по 4 * N
 static_assert(sizeof(vec2f) == 2 * sizeof(float));
 static_assert(sizeof(vec3f) == 3 * sizeof(float));
+static_assert(sizeof(vec4f) == 4 * sizeof(float));
 
 enum class DrawType
 {

@@ -212,13 +212,14 @@ class VulkanWindowImplementation final : public VulkanWindow
                 glfwPollEvents();
         }
 
-        void set_global_variables(WindowEvent* event_interface) const noexcept
+        void set_global_variables(WindowEvent* event_interface) const
         {
                 ASSERT(event_interface);
 
                 if (++global_glfw_window_count != 1)
                 {
-                        error_fatal("Too many GLFW windows");
+                        --global_glfw_window_count;
+                        error("Too many GLFW windows");
                 }
                 global_event_interface = event_interface;
         }

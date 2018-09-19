@@ -42,15 +42,15 @@ class SwapChain
 
         SwapChainKHR m_swap_chain;
         std::vector<VkImage> m_swap_chain_images;
-        std::vector<ImageView> m_image_views;
+        std::vector<ImageView> m_swap_chain_image_views;
 
         std::optional<DepthAttachment> m_depth_attachment;
 
         RenderPass m_render_pass;
+        std::vector<Framebuffer> m_framebuffers;
+
         PipelineLayout m_pipeline_layout;
         Pipeline m_pipeline;
-
-        std::vector<Framebuffer> m_framebuffers;
 
         CommandBuffers m_command_buffers;
 

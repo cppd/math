@@ -27,7 +27,7 @@ void vertex_min_max(const Container& vertices, Vector<N, T>* min, Vector<N, T>* 
 {
         if (std::empty(vertices))
         {
-                error_fatal("No vertex for minimum and maximum");
+                error("No vertex for minimum and maximum");
         }
 
         auto i = std::cbegin(vertices);

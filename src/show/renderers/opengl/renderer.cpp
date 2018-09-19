@@ -98,7 +98,7 @@ vec4f color_to_vec4f(const Color& c)
 // shader storage
 struct Material final
 {
-        alignas(GLSL_STD430_VEC3_ALIGN) vec3f Ka, Kd, Ks;
+        alignas(GLSL_VEC3_ALIGN) vec3f Ka, Kd, Ks;
 
         GLuint64 map_Ka_handle, map_Kd_handle, map_Ks_handle;
 

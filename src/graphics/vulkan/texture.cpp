@@ -82,7 +82,8 @@ Texture::Texture(const Device& device, VkCommandPool graphics_command_pool, VkQu
                  uint32_t width, uint32_t height, const std::vector<unsigned char>& rgba_pixels)
         : m_texture_image(device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, family_indices,
                           width, height, rgba_pixels),
-          m_image_view(create_image_view(device, m_texture_image, m_texture_image.image_format(), VK_IMAGE_ASPECT_COLOR_BIT))
+          m_image_view(
+                  create_image_view(device, m_texture_image.image(), m_texture_image.image_format(), VK_IMAGE_ASPECT_COLOR_BIT))
 {
 }
 
@@ -101,7 +102,7 @@ VkImageLayout Texture::image_layout() const noexcept
 DepthAttachment::DepthAttachment(const Device& device, VkCommandPool graphics_command_pool, VkQueue graphics_queue,
                                  const std::vector<uint32_t>& family_indices, uint32_t width, uint32_t height)
         : m_depth_image(device, graphics_command_pool, graphics_queue, family_indices, width, height),
-          m_image_view(create_image_view(device, m_depth_image, m_depth_image.image_format(), VK_IMAGE_ASPECT_DEPTH_BIT))
+          m_image_view(create_image_view(device, m_depth_image.image(), m_depth_image.image_format(), VK_IMAGE_ASPECT_DEPTH_BIT))
 {
 }
 

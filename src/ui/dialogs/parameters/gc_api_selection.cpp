@@ -36,7 +36,7 @@ bool GraphicsAndComputeAPISelection::show(GraphicsAndComputeAPI* api)
 
         if (!(*api == GraphicsAndComputeAPI::Vulkan || *api == GraphicsAndComputeAPI::OpenGL))
         {
-                error_fatal("Default graphics and compute API is neither Vulkan nor OpenGL");
+                error("Default graphics and compute API is neither Vulkan nor OpenGL");
         }
 
         std::string vulkan_comment = graphics_and_compute_api_comment(GraphicsAndComputeAPI::Vulkan);
@@ -68,7 +68,7 @@ bool GraphicsAndComputeAPISelection::show(GraphicsAndComputeAPI* api)
         }
         else
         {
-                error_fatal("Failed to select graphics and compute API");
+                error("Failed to select graphics and compute API");
         }
 
         return true;

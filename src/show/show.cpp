@@ -578,7 +578,7 @@ public:
         }
         catch (std::bad_optional_access&)
         {
-                error_fatal("Show create information is not complete");
+                error("Show create information is not complete");
         }
 
         ~ShowObject() override

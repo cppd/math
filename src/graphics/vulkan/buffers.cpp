@@ -488,7 +488,7 @@ TextureImage::TextureImage(const Device& device, VkCommandPool graphics_command_
                            IMAGE_FORMAT, IMAGE_LAYOUT, width, height, rgba_pixels);
 }
 
-TextureImage::operator VkImage() const noexcept
+VkImage TextureImage::image() const noexcept
 {
         return m_image;
 }
@@ -520,7 +520,7 @@ DepthImage::DepthImage(const Device& device, VkCommandPool graphics_command_pool
                                 IMAGE_LAYOUT);
 }
 
-DepthImage::operator VkImage() const noexcept
+VkImage DepthImage::image() const noexcept
 {
         return m_image;
 }

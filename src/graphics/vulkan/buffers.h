@@ -134,8 +134,7 @@ public:
 
         //
 
-        operator VkImage() const noexcept;
-
+        VkImage image() const noexcept;
         VkFormat image_format() const noexcept;
         VkImageLayout image_layout() const noexcept;
 };
@@ -161,8 +160,7 @@ public:
 
         //
 
-        operator VkImage() const noexcept;
-
+        VkImage image() const noexcept;
         VkFormat image_format() const noexcept;
         VkImageLayout image_layout() const noexcept;
 };

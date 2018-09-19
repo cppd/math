@@ -337,6 +337,22 @@ vulkan::RenderPass create_render_pass(VkDevice device, VkFormat swap_chain_image
         return vulkan::RenderPass(device, create_info);
 }
 
+template <size_t N>
+vulkan::Framebuffer create_framebuffer(VkDevice device, VkRenderPass render_pass, VkExtent2D extent,
+                                       const std::array<VkImageView, N>& attachments)
+{
+        VkFramebufferCreateInfo create_info = {};
+        create_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+        create_info.renderPass = render_pass;
+        create_info.attachmentCount = attachments.size();
+        create_info.pAttachments = attachments.data();
+        create_info.width = extent.width;
+        create_info.height = extent.height;
+        create_info.layers = 1;
+
+        return vulkan::Framebuffer(device, create_info);
+}
+
 vulkan::PipelineLayout create_pipeline_layout(VkDevice device, const std::vector<VkDescriptorSetLayout>& descriptor_set_layouts)
 {
         VkPipelineLayoutCreateInfo create_info = {};
@@ -495,23 +511,6 @@ vulkan::Pipeline create_graphics_pipeline(VkDevice device, VkRenderPass render_p
         return vulkan::Pipeline(device, create_info);
 }
 
-vulkan::Framebuffer create_framebuffer(VkDevice device, VkRenderPass render_pass, VkImageView swap_chain_image_view,
-                                       VkImageView depth_image_view, VkExtent2D extent)
-{
-        std::array<VkImageView, 2> attachments = {swap_chain_image_view, depth_image_view};
-
-        VkFramebufferCreateInfo create_info = {};
-        create_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-        create_info.renderPass = render_pass;
-        create_info.attachmentCount = attachments.size();
-        create_info.pAttachments = attachments.data();
-        create_info.width = extent.width;
-        create_info.height = extent.height;
-        create_info.layers = 1;
-
-        return vulkan::Framebuffer(device, create_info);
-}
-
 vulkan::CommandPool create_command_pool(VkDevice device, uint32_t queue_family_index)
 {
         VkCommandPoolCreateInfo create_info = {};
@@ -531,26 +530,17 @@ vulkan::CommandPool create_transient_command_pool(VkDevice device, uint32_t queu
         return vulkan::CommandPool(device, create_info);
 }
 
+template <size_t N>
 vulkan::CommandBuffers create_command_buffers(
         VkDevice device, const VkExtent2D& swap_chain_extent, VkRenderPass render_pass, VkPipelineLayout pipeline_layout,
         VkPipeline pipeline, const std::vector<vulkan::Framebuffer>& framebuffers, VkCommandPool command_pool,
-        const Color& clear_color,
+        const std::array<VkClearValue, N>& clear_values,
         const std::function<void(VkPipelineLayout pipeline_layout, VkPipeline pipeline, VkCommandBuffer command_buffer)>&
                 commands_for_triangle_topology)
 {
         VkResult result;
 
         vulkan::CommandBuffers command_buffers(device, command_pool, framebuffers.size());
-
-        std::array<VkClearValue, 2> clear_values = {};
-
-        clear_values[0].color.float32[0] = Color::rgb_float_to_srgb_float(clear_color.red());
-        clear_values[0].color.float32[1] = Color::rgb_float_to_srgb_float(clear_color.green());
-        clear_values[0].color.float32[2] = Color::rgb_float_to_srgb_float(clear_color.blue());
-        clear_values[0].color.float32[3] = 1;
-
-        clear_values[1].depthStencil.depth = 1;
-        clear_values[1].depthStencil.stencil = 0;
 
         for (uint32_t i = 0; i < command_buffers.count(); ++i)
         {
@@ -685,7 +675,7 @@ SwapChain::SwapChain(VkSurfaceKHR surface, VkPhysicalDevice physical_device,
 
         for (const VkImage& image : m_swap_chain_images)
         {
-                m_image_views.push_back(create_image_view(device, image, image_format, VK_IMAGE_ASPECT_COLOR_BIT));
+                m_swap_chain_image_views.push_back(create_image_view(device, image, image_format, VK_IMAGE_ASPECT_COLOR_BIT));
         }
 
         m_depth_attachment.emplace(device, graphics_command_pool, graphics_queue, depth_image_family_indices, m_extent.width,
@@ -693,24 +683,37 @@ SwapChain::SwapChain(VkSurfaceKHR surface, VkPhysicalDevice physical_device,
 
         m_render_pass =
                 create_render_pass(device, image_format, m_depth_attachment->image_format(), m_depth_attachment->image_layout());
+
+        for (VkImageView swap_chain_image_view : m_swap_chain_image_views)
+        {
+                std::array<VkImageView, 2> attachments;
+                attachments[0] = swap_chain_image_view;
+                attachments[1] = m_depth_attachment->image_view();
+                m_framebuffers.push_back(create_framebuffer(device, m_render_pass, m_extent, attachments));
+        }
+
         m_pipeline_layout = create_pipeline_layout(device, descriptor_set_layouts);
         m_pipeline = create_graphics_pipeline(device, m_render_pass, m_pipeline_layout, m_extent, shaders,
                                               vertex_binding_descriptions, vertex_attribute_descriptions);
-
-        for (const ImageView& image_view : m_image_views)
-        {
-                m_framebuffers.push_back(
-                        create_framebuffer(device, m_render_pass, image_view, m_depth_attachment->image_view(), m_extent));
-        }
 }
 
 void SwapChain::create_command_buffers(const Color& clear_color,
                                        const std::function<void(VkPipelineLayout pipeline_layout, VkPipeline pipeline,
                                                                 VkCommandBuffer command_buffer)>& commands_for_triangle_topology)
 {
+        std::array<VkClearValue, 2> clear_values = {};
+
+        clear_values[0].color.float32[0] = Color::rgb_float_to_srgb_float(clear_color.red());
+        clear_values[0].color.float32[1] = Color::rgb_float_to_srgb_float(clear_color.green());
+        clear_values[0].color.float32[2] = Color::rgb_float_to_srgb_float(clear_color.blue());
+        clear_values[0].color.float32[3] = 1;
+
+        clear_values[1].depthStencil.depth = 1;
+        clear_values[1].depthStencil.stencil = 0;
+
         m_command_buffers =
                 ::create_command_buffers(m_device, m_extent, m_render_pass, m_pipeline_layout, m_pipeline, m_framebuffers,
-                                         m_graphics_command_pool, clear_color, commands_for_triangle_topology);
+                                         m_graphics_command_pool, clear_values, commands_for_triangle_topology);
 }
 
 void SwapChain::delete_command_buffers()
