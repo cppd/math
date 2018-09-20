@@ -112,56 +112,87 @@ public:
         void copy(VkDeviceSize offset, const void* data, VkDeviceSize data_size) const;
 };
 
-class TextureImage final
+class Texture final
 {
-        static constexpr VkFormat IMAGE_FORMAT = VK_FORMAT_R8G8B8A8_UNORM;
-        static constexpr VkImageLayout IMAGE_LAYOUT = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-
+        VkFormat m_format;
+        VkImageLayout m_image_layout;
         Image m_image;
         DeviceMemory m_device_memory;
+        ImageView m_image_view;
 
 public:
-        TextureImage(const Device& device, VkCommandPool graphics_command_pool, VkQueue graphics_queue,
-                     VkCommandPool transfer_command_pool, VkQueue transfer_queue, const std::vector<uint32_t>& family_indices,
-                     uint32_t width, uint32_t height, const std::vector<unsigned char>& rgba_pixels);
+        Texture(const Device& device, VkCommandPool graphics_command_pool, VkQueue graphics_queue,
+                VkCommandPool transfer_command_pool, VkQueue transfer_queue, const std::vector<uint32_t>& family_indices,
+                uint32_t width, uint32_t height, const std::vector<unsigned char>& rgba_pixels);
 
-        TextureImage(const TextureImage&) = delete;
-        TextureImage& operator=(const TextureImage&) = delete;
-        TextureImage& operator=(TextureImage&&) = delete;
+        Texture(const Texture&) = delete;
+        Texture& operator=(const Texture&) = delete;
+        Texture& operator=(Texture&&) = delete;
 
-        TextureImage(TextureImage&&) = default;
-        ~TextureImage() = default;
+        Texture(Texture&&) = default;
+        ~Texture() = default;
 
         //
 
         VkImage image() const noexcept;
-        VkFormat image_format() const noexcept;
+        VkFormat format() const noexcept;
         VkImageLayout image_layout() const noexcept;
+        VkImageView image_view() const noexcept;
 };
 
-class DepthImage final
+class DepthAttachment final
 {
-        static constexpr VkImageLayout IMAGE_LAYOUT = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-
-        VkFormat m_image_format;
+        VkFormat m_format;
+        VkImageLayout m_image_layout;
         Image m_image;
         DeviceMemory m_device_memory;
+        ImageView m_image_view;
 
 public:
-        DepthImage(const Device& device, VkCommandPool graphics_command_pool, VkQueue graphics_queue,
-                   const std::vector<uint32_t>& family_indices, uint32_t width, uint32_t height);
+        DepthAttachment(const Device& device, VkCommandPool graphics_command_pool, VkQueue graphics_queue,
+                        const std::vector<uint32_t>& family_indices, VkSampleCountFlagBits samples, uint32_t width,
+                        uint32_t height);
 
-        DepthImage(const DepthImage&) = delete;
-        DepthImage& operator=(const DepthImage&) = delete;
-        DepthImage& operator=(DepthImage&&) = delete;
+        DepthAttachment(const DepthAttachment&) = delete;
+        DepthAttachment& operator=(const DepthAttachment&) = delete;
+        DepthAttachment& operator=(DepthAttachment&&) = delete;
 
-        DepthImage(DepthImage&&) = default;
-        ~DepthImage() = default;
+        DepthAttachment(DepthAttachment&&) = default;
+        ~DepthAttachment() = default;
 
         //
 
         VkImage image() const noexcept;
-        VkFormat image_format() const noexcept;
+        VkFormat format() const noexcept;
         VkImageLayout image_layout() const noexcept;
+        VkImageView image_view() const noexcept;
+};
+
+class ColorAttachment final
+{
+        VkFormat m_format;
+        VkImageLayout m_image_layout;
+        Image m_image;
+        DeviceMemory m_device_memory;
+        ImageView m_image_view;
+
+public:
+        ColorAttachment(const Device& device, VkCommandPool graphics_command_pool, VkQueue graphics_queue,
+                        const std::vector<uint32_t>& family_indices, VkFormat format, VkSampleCountFlagBits samples,
+                        uint32_t width, uint32_t height);
+
+        ColorAttachment(const ColorAttachment&) = delete;
+        ColorAttachment& operator=(const ColorAttachment&) = delete;
+        ColorAttachment& operator=(ColorAttachment&&) = delete;
+
+        ColorAttachment(ColorAttachment&&) = default;
+        ~ColorAttachment() = default;
+
+        //
+
+        VkImage image() const noexcept;
+        VkFormat format() const noexcept;
+        VkImageLayout image_layout() const noexcept;
+        VkImageView image_view() const noexcept;
 };
 }

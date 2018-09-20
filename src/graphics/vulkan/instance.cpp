@@ -48,7 +48,7 @@ VkSurfaceFormatKHR choose_surface_format(const std::vector<VkSurfaceFormatKHR>& 
                 }
         }
 
-        return surface_formats[0];
+        error("Surface format (VK_FORMAT_B8G8R8A8_UNORM, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) is not found");
 }
 
 VkPresentModeKHR choose_present_mode(const std::vector<VkPresentModeKHR>& present_modes)
@@ -661,8 +661,6 @@ SwapChain::SwapChain(VkSurfaceKHR surface, VkPhysicalDevice physical_device,
         const VkPresentModeKHR present_mode = choose_present_mode(swap_chain_details.present_modes);
         const uint32_t image_count = choose_image_count(swap_chain_details.surface_capabilities);
 
-        const VkFormat image_format = surface_format.format;
-
         m_swap_chain =
                 create_swap_chain_khr(device, surface, surface_format, present_mode, m_extent, image_count,
                                       swap_chain_details.surface_capabilities.currentTransform, swap_chain_image_family_indices);
@@ -675,14 +673,15 @@ SwapChain::SwapChain(VkSurfaceKHR surface, VkPhysicalDevice physical_device,
 
         for (const VkImage& image : m_swap_chain_images)
         {
-                m_swap_chain_image_views.push_back(create_image_view(device, image, image_format, VK_IMAGE_ASPECT_COLOR_BIT));
+                m_swap_chain_image_views.push_back(
+                        create_image_view(device, image, surface_format.format, VK_IMAGE_ASPECT_COLOR_BIT));
         }
 
-        m_depth_attachment.emplace(device, graphics_command_pool, graphics_queue, depth_image_family_indices, m_extent.width,
-                                   m_extent.height);
+        m_depth_attachment.emplace(device, graphics_command_pool, graphics_queue, depth_image_family_indices,
+                                   VK_SAMPLE_COUNT_1_BIT, m_extent.width, m_extent.height);
 
-        m_render_pass =
-                create_render_pass(device, image_format, m_depth_attachment->image_format(), m_depth_attachment->image_layout());
+        m_render_pass = create_render_pass(device, surface_format.format, m_depth_attachment->format(),
+                                           m_depth_attachment->image_layout());
 
         for (VkImageView swap_chain_image_view : m_swap_chain_image_views)
         {

@@ -46,6 +46,8 @@ std::vector<VkImage> swap_chain_images(VkDevice device, VkSwapchainKHR swap_chai
 VkFormat find_supported_format(VkPhysicalDevice physical_device, const std::vector<VkFormat>& candidates, VkImageTiling tiling,
                                VkFormatFeatureFlags features);
 
+VkSampleCountFlagBits maximum_supported_framebuffer_sample_count(VkPhysicalDevice physical_device, int required_sample_count);
+
 std::string overview();
 std::string overview_physical_devices(VkInstance instance);
 }

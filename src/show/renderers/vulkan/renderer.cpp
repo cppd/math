@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/vulkan/common.h"
 #include "graphics/vulkan/instance.h"
 #include "graphics/vulkan/query.h"
+#include "graphics/vulkan/sampler.h"
 #include "obj/obj_alg.h"
 #include "show/renderers/com.h"
 #include "show/renderers/vulkan/shader/shader.h"

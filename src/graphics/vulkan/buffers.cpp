@@ -55,8 +55,9 @@ vulkan::Buffer create_buffer(VkDevice device, VkDeviceSize size, VkBufferUsageFl
         return vulkan::Buffer(device, create_info);
 }
 
-vulkan::Image create_image(VkDevice device, uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling,
-                           VkImageUsageFlags usage, const std::vector<uint32_t>& family_indices)
+vulkan::Image create_image(VkDevice device, uint32_t width, uint32_t height, VkFormat format,
+                           const std::vector<uint32_t>& family_indices, VkSampleCountFlagBits samples, VkImageTiling tiling,
+                           VkImageUsageFlags usage)
 {
         ASSERT(width > 0 && height > 0);
 
@@ -73,7 +74,7 @@ vulkan::Image create_image(VkDevice device, uint32_t width, uint32_t height, VkF
         create_info.tiling = tiling;
         create_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
         create_info.usage = usage;
-        create_info.samples = VK_SAMPLE_COUNT_1_BIT;
+        create_info.samples = samples;
         // create_info.flags = 0;
 
         ASSERT(family_indices.size() == unique_elements(family_indices).size());
@@ -287,7 +288,8 @@ void transition_image_layout(VkDevice device, VkCommandPool command_pool, VkQueu
                         error("Unsupported image format for layout transition");
                 }
         }
-        else if (new_layout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL || new_layout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+        else if (new_layout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL || new_layout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL ||
+                 new_layout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
         {
                 barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
         }
@@ -329,6 +331,14 @@ void transition_image_layout(VkDevice device, VkCommandPool command_pool, VkQueu
                 source_stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
                 destination_stage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
         }
+        else if (old_layout == VK_IMAGE_LAYOUT_UNDEFINED && new_layout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
+        {
+                barrier.srcAccessMask = 0;
+                barrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+
+                source_stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+                destination_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        }
         else
         {
                 error("Unsupported image layout transition");
@@ -357,7 +367,7 @@ void staging_buffer_copy(const vulkan::Device& device, VkCommandPool command_poo
 }
 
 void staging_image_copy(const vulkan::Device& device, VkCommandPool graphics_command_pool, VkQueue graphics_queue,
-                        VkCommandPool transfer_command_pool, VkQueue transfer_queue, VkImage image, VkFormat image_format,
+                        VkCommandPool transfer_command_pool, VkQueue transfer_queue, VkImage image, VkFormat format,
                         VkImageLayout image_layout, uint32_t width, uint32_t height,
                         const std::vector<unsigned char>& rgba_pixels)
 {
@@ -378,13 +388,36 @@ void staging_image_copy(const vulkan::Device& device, VkCommandPool graphics_com
 
         memory_copy(device, staging_device_memory, rgba_pixels.data(), data_size);
 
-        transition_image_layout(device, graphics_command_pool, graphics_queue, image, image_format, VK_IMAGE_LAYOUT_UNDEFINED,
+        transition_image_layout(device, graphics_command_pool, graphics_queue, image, format, VK_IMAGE_LAYOUT_UNDEFINED,
                                 VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 
         copy_buffer_to_image(device, transfer_command_pool, transfer_queue, image, staging_buffer, width, height);
 
-        transition_image_layout(device, graphics_command_pool, graphics_queue, image, image_format,
+        transition_image_layout(device, graphics_command_pool, graphics_queue, image, format,
                                 VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, image_layout);
+}
+
+vulkan::ImageView create_image_view(VkDevice device, VkImage image, VkFormat format, VkImageAspectFlags aspect_flags)
+{
+        VkImageViewCreateInfo create_info = {};
+        create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        create_info.image = image;
+
+        create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+        create_info.format = format;
+
+        create_info.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+        create_info.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+        create_info.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+        create_info.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+
+        create_info.subresourceRange.aspectMask = aspect_flags;
+        create_info.subresourceRange.baseMipLevel = 0;
+        create_info.subresourceRange.levelCount = 1;
+        create_info.subresourceRange.baseArrayLayer = 0;
+        create_info.subresourceRange.layerCount = 1;
+
+        return vulkan::ImageView(device, create_info);
 }
 }
 
@@ -474,64 +507,118 @@ void UniformBufferWithHostVisibleMemory::copy(VkDeviceSize offset, const void* d
 
 //
 
-TextureImage::TextureImage(const Device& device, VkCommandPool graphics_command_pool, VkQueue graphics_queue,
-                           VkCommandPool transfer_command_pool, VkQueue transfer_queue,
-                           const std::vector<uint32_t>& family_indices, uint32_t width, uint32_t height,
-                           const std::vector<unsigned char>& rgba_pixels)
-        : m_image(create_image(device, width, height, IMAGE_FORMAT, VK_IMAGE_TILING_OPTIMAL,
-                               VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, family_indices)),
-          m_device_memory(create_device_memory(device, m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
+Texture::Texture(const Device& device, VkCommandPool graphics_command_pool, VkQueue graphics_queue,
+                 VkCommandPool transfer_command_pool, VkQueue transfer_queue, const std::vector<uint32_t>& family_indices,
+                 uint32_t width, uint32_t height, const std::vector<unsigned char>& rgba_pixels)
+        : m_format(find_supported_format(device.physical_device(), {VK_FORMAT_R8G8B8A8_UNORM}, VK_IMAGE_TILING_OPTIMAL,
+                                         VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT)),
+          m_image_layout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL),
+          m_image(create_image(device, width, height, m_format, family_indices, VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TILING_OPTIMAL,
+                               VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT)),
+          m_device_memory(create_device_memory(device, m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)),
+          m_image_view(create_image_view(device, m_image, m_format, VK_IMAGE_ASPECT_COLOR_BIT))
 {
         ASSERT(family_indices.size() > 0);
 
         staging_image_copy(device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, m_image,
-                           IMAGE_FORMAT, IMAGE_LAYOUT, width, height, rgba_pixels);
+                           m_format, m_image_layout, width, height, rgba_pixels);
 }
 
-VkImage TextureImage::image() const noexcept
+VkImage Texture::image() const noexcept
 {
         return m_image;
 }
 
-VkFormat TextureImage::image_format() const noexcept
+VkFormat Texture::format() const noexcept
 {
-        return IMAGE_FORMAT;
+        return m_format;
 }
 
-VkImageLayout TextureImage::image_layout() const noexcept
+VkImageLayout Texture::image_layout() const noexcept
 {
-        return IMAGE_LAYOUT;
+        return m_image_layout;
+}
+
+VkImageView Texture::image_view() const noexcept
+{
+        return m_image_view;
 }
 
 //
 
-DepthImage::DepthImage(const Device& device, VkCommandPool graphics_command_pool, VkQueue graphics_queue,
-                       const std::vector<uint32_t>& family_indices, uint32_t width, uint32_t height)
-        : m_image_format(find_supported_format(device.physical_device(),
-                                               {VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT},
-                                               VK_IMAGE_TILING_OPTIMAL, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT)),
-          m_image(create_image(device, width, height, m_image_format, VK_IMAGE_TILING_OPTIMAL,
-                               VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, family_indices)),
-          m_device_memory(create_device_memory(device, m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
+DepthAttachment::DepthAttachment(const Device& device, VkCommandPool graphics_command_pool, VkQueue graphics_queue,
+                                 const std::vector<uint32_t>& family_indices, VkSampleCountFlagBits samples, uint32_t width,
+                                 uint32_t height)
+        : m_format(find_supported_format(device.physical_device(),
+                                         {VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT},
+                                         VK_IMAGE_TILING_OPTIMAL, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT)),
+          m_image_layout(VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL),
+          m_image(create_image(device, width, height, m_format, family_indices, samples, VK_IMAGE_TILING_OPTIMAL,
+                               VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)),
+          m_device_memory(create_device_memory(device, m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)),
+          m_image_view(create_image_view(device, m_image, m_format, VK_IMAGE_ASPECT_DEPTH_BIT))
 {
         ASSERT(family_indices.size() > 0);
 
-        transition_image_layout(device, graphics_command_pool, graphics_queue, m_image, m_image_format, VK_IMAGE_LAYOUT_UNDEFINED,
-                                IMAGE_LAYOUT);
+        transition_image_layout(device, graphics_command_pool, graphics_queue, m_image, m_format, VK_IMAGE_LAYOUT_UNDEFINED,
+                                m_image_layout);
 }
 
-VkImage DepthImage::image() const noexcept
+VkImage DepthAttachment::image() const noexcept
 {
         return m_image;
 }
 
-VkFormat DepthImage::image_format() const noexcept
+VkFormat DepthAttachment::format() const noexcept
 {
-        return m_image_format;
+        return m_format;
 }
 
-VkImageLayout DepthImage::image_layout() const noexcept
+VkImageLayout DepthAttachment::image_layout() const noexcept
 {
-        return IMAGE_LAYOUT;
+        return m_image_layout;
+}
+
+VkImageView DepthAttachment::image_view() const noexcept
+{
+        return m_image_view;
+}
+
+//
+
+ColorAttachment::ColorAttachment(const Device& device, VkCommandPool graphics_command_pool, VkQueue graphics_queue,
+                                 const std::vector<uint32_t>& family_indices, VkFormat format, VkSampleCountFlagBits samples,
+                                 uint32_t width, uint32_t height)
+        : m_format(format),
+          m_image_layout(VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL),
+          m_image(create_image(device, width, height, m_format, family_indices, samples, VK_IMAGE_TILING_OPTIMAL,
+                               VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)),
+          m_device_memory(create_device_memory(device, m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)),
+          m_image_view(create_image_view(device, m_image, m_format, VK_IMAGE_ASPECT_COLOR_BIT))
+{
+        ASSERT(family_indices.size() > 0);
+
+        transition_image_layout(device, graphics_command_pool, graphics_queue, m_image, m_format, VK_IMAGE_LAYOUT_UNDEFINED,
+                                m_image_layout);
+}
+
+VkImage ColorAttachment::image() const noexcept
+{
+        return m_image;
+}
+
+VkFormat ColorAttachment::format() const noexcept
+{
+        return m_format;
+}
+
+VkImageLayout ColorAttachment::image_layout() const noexcept
+{
+        return m_image_layout;
+}
+
+VkImageView ColorAttachment::image_view() const noexcept
+{
+        return m_image_view;
 }
 }

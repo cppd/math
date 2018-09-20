@@ -21,7 +21,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "objects.h"
 #include "physical_device.h"
 #include "shader.h"
-#include "texture.h"
 
 #include "com/color/colors.h"
 #include "com/error.h"
