@@ -27,6 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/type_detect.h"
 
 #include <functional>
+#include <memory>
 #include <optional>
 #include <string>
 #include <vector>
@@ -43,7 +44,7 @@ class SwapChain
         std::vector<VkImage> m_swap_chain_images;
         std::vector<ImageView> m_swap_chain_image_views;
 
-        std::optional<DepthAttachment> m_depth_attachment;
+        std::unique_ptr<DepthAttachment> m_depth_attachment;
 
         RenderPass m_render_pass;
         std::vector<Framebuffer> m_framebuffers;

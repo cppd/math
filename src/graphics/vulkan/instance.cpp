@@ -677,8 +677,9 @@ SwapChain::SwapChain(VkSurfaceKHR surface, VkPhysicalDevice physical_device,
                         create_image_view(device, image, surface_format.format, VK_IMAGE_ASPECT_COLOR_BIT));
         }
 
-        m_depth_attachment.emplace(device, graphics_command_pool, graphics_queue, depth_image_family_indices,
-                                   VK_SAMPLE_COUNT_1_BIT, m_extent.width, m_extent.height);
+        m_depth_attachment =
+                std::make_unique<DepthAttachment>(device, graphics_command_pool, graphics_queue, depth_image_family_indices,
+                                                  VK_SAMPLE_COUNT_1_BIT, m_extent.width, m_extent.height);
 
         m_render_pass = create_render_pass(device, surface_format.format, m_depth_attachment->format(),
                                            m_depth_attachment->image_layout());
