@@ -39,6 +39,8 @@ constexpr std::array<const char*, 0> INSTANCE_EXTENSIONS = {};
 constexpr std::array<const char*, 0> DEVICE_EXTENSIONS = {};
 constexpr std::array<const char*, 1> VALIDATION_LAYERS = {"VK_LAYER_LUNARG_standard_validation"};
 
+constexpr int SAMPLE_COUNT = 4;
+
 constexpr VkIndexType VULKAN_VERTEX_INDEX_TYPE = VK_INDEX_TYPE_UINT32;
 using VERTEX_INDEX_TYPE =
         std::conditional_t<VULKAN_VERTEX_INDEX_TYPE == VK_INDEX_TYPE_UINT32, uint32_t,
@@ -559,8 +561,9 @@ class Renderer final : public VulkanRenderer
                 layouts[SHADER_PER_OBJECT_DESCRIPTION_SET_LAYOUT_INDEX] = m_per_object_descriptor_set_layout;
                 // Сначала надо удалить объект, а потом создавать
                 m_swap_chain.reset();
-                m_swap_chain = std::make_unique<vulkan::SwapChain>(m_instance.create_swap_chain(
-                        m_shaders, shaders::Vertex::binding_descriptions(), shaders::Vertex::attribute_descriptions(), layouts));
+                m_swap_chain = std::make_unique<vulkan::SwapChain>(
+                        m_instance.create_swap_chain(SAMPLE_COUNT, m_shaders, shaders::Vertex::binding_descriptions(),
+                                                     shaders::Vertex::attribute_descriptions(), layouts));
 
                 create_command_buffers(false /*wait_idle*/);
         }

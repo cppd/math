@@ -31,6 +31,23 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace
 {
+VkClearValue color_float_srgb_clear_value(const Color& clear_color)
+{
+        VkClearValue clear_value;
+        clear_value.color.float32[0] = Color::rgb_float_to_srgb_float(clear_color.red());
+        clear_value.color.float32[1] = Color::rgb_float_to_srgb_float(clear_color.green());
+        clear_value.color.float32[2] = Color::rgb_float_to_srgb_float(clear_color.blue());
+        clear_value.color.float32[3] = 1;
+        return clear_value;
+}
+VkClearValue depth_stencil_clear_value()
+{
+        VkClearValue clear_value;
+        clear_value.depthStencil.depth = 1;
+        clear_value.depthStencil.stencil = 0;
+        return clear_value;
+}
+
 VkSurfaceFormatKHR choose_surface_format(const std::vector<VkSurfaceFormatKHR>& surface_formats)
 {
         ASSERT(surface_formats.size() > 0);
@@ -272,8 +289,7 @@ vulkan::ImageView create_image_view(VkDevice device, VkImage image, VkFormat for
         return vulkan::ImageView(device, create_info);
 }
 
-vulkan::RenderPass create_render_pass(VkDevice device, VkFormat swap_chain_image_format, VkFormat depth_image_format,
-                                      VkImageLayout depth_image_layout)
+vulkan::RenderPass create_render_pass(VkDevice device, VkFormat swap_chain_image_format, VkFormat depth_image_format)
 {
         VkAttachmentDescription color_attachment = {};
         color_attachment.format = swap_chain_image_format;
@@ -291,7 +307,6 @@ vulkan::RenderPass create_render_pass(VkDevice device, VkFormat swap_chain_image
 
         //
 
-        ASSERT(depth_image_layout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
         VkAttachmentDescription depth_attachment = {};
         depth_attachment.format = depth_image_format;
         depth_attachment.samples = VK_SAMPLE_COUNT_1_BIT;
@@ -300,11 +315,11 @@ vulkan::RenderPass create_render_pass(VkDevice device, VkFormat swap_chain_image
         depth_attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
         depth_attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
         depth_attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        depth_attachment.finalLayout = depth_image_layout;
+        depth_attachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
         VkAttachmentReference depth_attachment_reference = {};
         depth_attachment_reference.attachment = 1;
-        depth_attachment_reference.layout = depth_image_layout;
+        depth_attachment_reference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
         //
 
@@ -317,11 +332,9 @@ vulkan::RenderPass create_render_pass(VkDevice device, VkFormat swap_chain_image
         VkSubpassDependency subpass_dependency = {};
         subpass_dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
         subpass_dependency.dstSubpass = 0;
-
         subpass_dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        subpass_dependency.srcAccessMask = 0;
-
         subpass_dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        subpass_dependency.srcAccessMask = 0;
         subpass_dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 
         std::array<VkAttachmentDescription, 2> attachments = {color_attachment, depth_attachment};
@@ -333,6 +346,100 @@ vulkan::RenderPass create_render_pass(VkDevice device, VkFormat swap_chain_image
         create_info.pSubpasses = &subpass_description;
         create_info.dependencyCount = 1;
         create_info.pDependencies = &subpass_dependency;
+
+        return vulkan::RenderPass(device, create_info);
+}
+
+vulkan::RenderPass create_multisampling_render_pass(VkDevice device, VkSampleCountFlagBits sample_count,
+                                                    VkFormat swap_chain_image_format, VkFormat depth_image_format)
+{
+        std::array<VkAttachmentDescription, 4> attachments = {};
+
+        // Color resolve
+        attachments[0].format = swap_chain_image_format;
+        attachments[0].samples = VK_SAMPLE_COUNT_1_BIT;
+        attachments[0].loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        attachments[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        attachments[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        attachments[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        attachments[0].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        attachments[0].finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+
+        // Depth resolve
+        attachments[1].format = depth_image_format;
+        attachments[1].samples = VK_SAMPLE_COUNT_1_BIT;
+        attachments[1].loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        attachments[1].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        attachments[1].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        attachments[1].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        attachments[1].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        attachments[1].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+        // Multisampling color
+        attachments[2].format = swap_chain_image_format;
+        attachments[2].samples = sample_count;
+        attachments[2].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        attachments[2].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE; // VK_ATTACHMENT_STORE_OP_STORE;
+        attachments[2].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        attachments[2].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        attachments[2].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        attachments[2].finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+        // Multisampling depth
+        attachments[3].format = depth_image_format;
+        attachments[3].samples = sample_count;
+        attachments[3].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        attachments[3].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        attachments[3].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        attachments[3].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        attachments[3].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        attachments[3].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+        VkAttachmentReference multisampling_color_reference = {};
+        multisampling_color_reference.attachment = 2;
+        multisampling_color_reference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+        VkAttachmentReference multisampling_depth_reference = {};
+        multisampling_depth_reference.attachment = 3;
+        multisampling_depth_reference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+        VkAttachmentReference color_resolve_reference = {};
+        color_resolve_reference.attachment = 0;
+        color_resolve_reference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+        VkSubpassDescription subpass_description = {};
+        subpass_description.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+        subpass_description.colorAttachmentCount = 1;
+        subpass_description.pColorAttachments = &multisampling_color_reference;
+        subpass_description.pResolveAttachments = &color_resolve_reference;
+        subpass_description.pDepthStencilAttachment = &multisampling_depth_reference;
+
+        std::array<VkSubpassDependency, 2> subpass_dependencies;
+
+        subpass_dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
+        subpass_dependencies[0].dstSubpass = 0;
+        subpass_dependencies[0].srcStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+        subpass_dependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        subpass_dependencies[0].srcAccessMask = 0; // VK_ACCESS_MEMORY_READ_BIT;
+        subpass_dependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        subpass_dependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+
+        subpass_dependencies[1].srcSubpass = 0;
+        subpass_dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
+        subpass_dependencies[1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        subpass_dependencies[1].dstStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+        subpass_dependencies[1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        subpass_dependencies[1].dstAccessMask = 0; // VK_ACCESS_MEMORY_READ_BIT;
+        subpass_dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+
+        VkRenderPassCreateInfo create_info = {};
+        create_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+        create_info.attachmentCount = attachments.size();
+        create_info.pAttachments = attachments.data();
+        create_info.subpassCount = 1;
+        create_info.pSubpasses = &subpass_description;
+        create_info.dependencyCount = subpass_dependencies.size();
+        create_info.pDependencies = subpass_dependencies.data();
 
         return vulkan::RenderPass(device, create_info);
 }
@@ -365,8 +472,9 @@ vulkan::PipelineLayout create_pipeline_layout(VkDevice device, const std::vector
         return vulkan::PipelineLayout(device, create_info);
 }
 
-vulkan::Pipeline create_graphics_pipeline(VkDevice device, VkRenderPass render_pass, VkPipelineLayout pipeline_layout,
-                                          VkExtent2D swap_chain_extent, const std::vector<const vulkan::Shader*>& shaders,
+vulkan::Pipeline create_graphics_pipeline(VkDevice device, VkRenderPass render_pass, VkSampleCountFlagBits sample_count,
+                                          VkPipelineLayout pipeline_layout, VkExtent2D swap_chain_extent,
+                                          const std::vector<const vulkan::Shader*>& shaders,
                                           const std::vector<VkVertexInputBindingDescription>& binding_descriptions,
                                           const std::vector<VkVertexInputAttributeDescription>& attribute_descriptions)
 {
@@ -423,8 +531,8 @@ vulkan::Pipeline create_graphics_pipeline(VkDevice device, VkRenderPass render_p
 
         VkPipelineMultisampleStateCreateInfo multisampling_state_info = {};
         multisampling_state_info.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+        multisampling_state_info.rasterizationSamples = sample_count;
         multisampling_state_info.sampleShadingEnable = VK_FALSE;
-        multisampling_state_info.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
         // multisampling_state_info.minSampleShading = 1.0f;
         // multisampling_state_info.pSampleMask = nullptr;
         // multisampling_state_info.alphaToCoverageEnable = VK_FALSE;
@@ -633,7 +741,7 @@ namespace vulkan
 SwapChain::SwapChain(VkSurfaceKHR surface, VkPhysicalDevice physical_device,
                      const std::vector<uint32_t>& swap_chain_image_family_indices,
                      const std::vector<uint32_t>& depth_image_family_indices, const Device& device,
-                     VkCommandPool graphics_command_pool, VkQueue graphics_queue,
+                     VkCommandPool graphics_command_pool, VkQueue graphics_queue, int required_sample_count,
                      const std::vector<const vulkan::Shader*>& shaders,
                      const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
                      const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions,
@@ -661,6 +769,8 @@ SwapChain::SwapChain(VkSurfaceKHR surface, VkPhysicalDevice physical_device,
         const VkPresentModeKHR present_mode = choose_present_mode(swap_chain_details.present_modes);
         const uint32_t image_count = choose_image_count(swap_chain_details.surface_capabilities);
 
+        m_sample_count_bit = maximum_supported_framebuffer_sample_count(physical_device, required_sample_count);
+
         m_swap_chain =
                 create_swap_chain_khr(device, surface, surface_format, present_mode, m_extent, image_count,
                                       swap_chain_details.surface_capabilities.currentTransform, swap_chain_image_family_indices);
@@ -681,19 +791,48 @@ SwapChain::SwapChain(VkSurfaceKHR surface, VkPhysicalDevice physical_device,
                 std::make_unique<DepthAttachment>(device, graphics_command_pool, graphics_queue, depth_image_family_indices,
                                                   VK_SAMPLE_COUNT_1_BIT, m_extent.width, m_extent.height);
 
-        m_render_pass = create_render_pass(device, surface_format.format, m_depth_attachment->format(),
-                                           m_depth_attachment->image_layout());
-
-        for (VkImageView swap_chain_image_view : m_swap_chain_image_views)
+        if (m_sample_count_bit != VK_SAMPLE_COUNT_1_BIT)
         {
-                std::array<VkImageView, 2> attachments;
-                attachments[0] = swap_chain_image_view;
-                attachments[1] = m_depth_attachment->image_view();
-                m_framebuffers.push_back(create_framebuffer(device, m_render_pass, m_extent, attachments));
+                m_multisampling_color_attachment = std::make_unique<ColorAttachment>(
+                        device, graphics_command_pool, graphics_queue, depth_image_family_indices, surface_format.format,
+                        m_sample_count_bit, m_extent.width, m_extent.height);
+
+                m_multisampling_depth_attachment = std::make_unique<DepthAttachment>(
+                        device, graphics_command_pool, graphics_queue, depth_image_family_indices, m_sample_count_bit,
+                        m_extent.width, m_extent.height);
+
+                ASSERT(m_multisampling_depth_attachment->format() == m_depth_attachment->format());
+
+                m_render_pass = create_multisampling_render_pass(device, m_sample_count_bit, surface_format.format,
+                                                                 m_depth_attachment->format());
+
+                for (VkImageView swap_chain_image_view : m_swap_chain_image_views)
+                {
+                        std::array<VkImageView, 4> attachments;
+                        attachments[0] = swap_chain_image_view;
+                        attachments[1] = m_depth_attachment->image_view();
+                        attachments[2] = m_multisampling_color_attachment->image_view();
+                        attachments[3] = m_multisampling_depth_attachment->image_view();
+
+                        m_framebuffers.push_back(create_framebuffer(device, m_render_pass, m_extent, attachments));
+                }
+        }
+        else
+        {
+                m_render_pass = create_render_pass(device, surface_format.format, m_depth_attachment->format());
+
+                for (VkImageView swap_chain_image_view : m_swap_chain_image_views)
+                {
+                        std::array<VkImageView, 2> attachments;
+                        attachments[0] = swap_chain_image_view;
+                        attachments[1] = m_depth_attachment->image_view();
+
+                        m_framebuffers.push_back(create_framebuffer(device, m_render_pass, m_extent, attachments));
+                }
         }
 
         m_pipeline_layout = create_pipeline_layout(device, descriptor_set_layouts);
-        m_pipeline = create_graphics_pipeline(device, m_render_pass, m_pipeline_layout, m_extent, shaders,
+        m_pipeline = create_graphics_pipeline(device, m_render_pass, m_sample_count_bit, m_pipeline_layout, m_extent, shaders,
                                               vertex_binding_descriptions, vertex_attribute_descriptions);
 }
 
@@ -701,19 +840,26 @@ void SwapChain::create_command_buffers(const Color& clear_color,
                                        const std::function<void(VkPipelineLayout pipeline_layout, VkPipeline pipeline,
                                                                 VkCommandBuffer command_buffer)>& commands_for_triangle_topology)
 {
-        std::array<VkClearValue, 2> clear_values = {};
-
-        clear_values[0].color.float32[0] = Color::rgb_float_to_srgb_float(clear_color.red());
-        clear_values[0].color.float32[1] = Color::rgb_float_to_srgb_float(clear_color.green());
-        clear_values[0].color.float32[2] = Color::rgb_float_to_srgb_float(clear_color.blue());
-        clear_values[0].color.float32[3] = 1;
-
-        clear_values[1].depthStencil.depth = 1;
-        clear_values[1].depthStencil.stencil = 0;
-
-        m_command_buffers =
-                ::create_command_buffers(m_device, m_extent, m_render_pass, m_pipeline_layout, m_pipeline, m_framebuffers,
-                                         m_graphics_command_pool, clear_values, commands_for_triangle_topology);
+        if (m_sample_count_bit != VK_SAMPLE_COUNT_1_BIT)
+        {
+                std::array<VkClearValue, 4> clear_values;
+                clear_values[0] = color_float_srgb_clear_value(clear_color);
+                clear_values[1] = depth_stencil_clear_value();
+                clear_values[2] = color_float_srgb_clear_value(clear_color);
+                clear_values[3] = depth_stencil_clear_value();
+                m_command_buffers =
+                        ::create_command_buffers(m_device, m_extent, m_render_pass, m_pipeline_layout, m_pipeline, m_framebuffers,
+                                                 m_graphics_command_pool, clear_values, commands_for_triangle_topology);
+        }
+        else
+        {
+                std::array<VkClearValue, 2> clear_values;
+                clear_values[0] = color_float_srgb_clear_value(clear_color);
+                clear_values[1] = depth_stencil_clear_value();
+                m_command_buffers =
+                        ::create_command_buffers(m_device, m_extent, m_render_pass, m_pipeline_layout, m_pipeline, m_framebuffers,
+                                                 m_graphics_command_pool, clear_values, commands_for_triangle_topology);
+        }
 }
 
 void SwapChain::delete_command_buffers()
@@ -793,7 +939,7 @@ VulkanInstance::~VulkanInstance()
         }
 }
 
-SwapChain VulkanInstance::create_swap_chain(const std::vector<const vulkan::Shader*>& shaders,
+SwapChain VulkanInstance::create_swap_chain(int required_sample_count, const std::vector<const vulkan::Shader*>& shaders,
                                             const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
                                             const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions,
                                             const std::vector<VkDescriptorSetLayout>& descriptor_set_layouts)
@@ -801,8 +947,8 @@ SwapChain VulkanInstance::create_swap_chain(const std::vector<const vulkan::Shad
         ASSERT(descriptor_set_layouts.size() > 0);
 
         return SwapChain(m_surface, m_physical_device.device, m_swap_chain_image_family_indices, m_depth_image_family_indices,
-                         m_device, m_graphics_command_pool, m_graphics_queue, shaders, vertex_binding_descriptions,
-                         vertex_attribute_descriptions, descriptor_set_layouts);
+                         m_device, m_graphics_command_pool, m_graphics_queue, required_sample_count, shaders,
+                         vertex_binding_descriptions, vertex_attribute_descriptions, descriptor_set_layouts);
 }
 
 Texture VulkanInstance::create_texture(uint32_t width, uint32_t height, const std::vector<unsigned char>& rgba_pixels) const

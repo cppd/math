@@ -40,11 +40,16 @@ class SwapChain
         VkCommandPool m_graphics_command_pool;
         VkExtent2D m_extent;
 
+        VkSampleCountFlagBits m_sample_count_bit;
+
         SwapChainKHR m_swap_chain;
         std::vector<VkImage> m_swap_chain_images;
         std::vector<ImageView> m_swap_chain_image_views;
 
         std::unique_ptr<DepthAttachment> m_depth_attachment;
+
+        std::unique_ptr<ColorAttachment> m_multisampling_color_attachment;
+        std::unique_ptr<DepthAttachment> m_multisampling_depth_attachment;
 
         RenderPass m_render_pass;
         std::vector<Framebuffer> m_framebuffers;
@@ -58,7 +63,8 @@ public:
         SwapChain(VkSurfaceKHR surface, VkPhysicalDevice physical_device,
                   const std::vector<uint32_t>& swap_chain_image_family_indices,
                   const std::vector<uint32_t>& depth_image_family_indices, const Device& device,
-                  VkCommandPool graphics_command_pool, VkQueue graphics_queue, const std::vector<const vulkan::Shader*>& shaders,
+                  VkCommandPool graphics_command_pool, VkQueue graphics_queue, int required_sample_count,
+                  const std::vector<const vulkan::Shader*>& shaders,
                   const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
                   const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions,
                   const std::vector<VkDescriptorSetLayout>& descriptor_set_layouts);
@@ -133,7 +139,7 @@ public:
         VkInstance instance() const noexcept;
         const Device& device() const noexcept;
 
-        SwapChain create_swap_chain(const std::vector<const vulkan::Shader*>& shaders,
+        SwapChain create_swap_chain(int required_sample_count, const std::vector<const vulkan::Shader*>& shaders,
                                     const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
                                     const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions,
                                     const std::vector<VkDescriptorSetLayout>& descriptor_set_layouts);
