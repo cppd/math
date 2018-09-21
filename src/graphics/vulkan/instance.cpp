@@ -291,61 +291,78 @@ vulkan::ImageView create_image_view(VkDevice device, VkImage image, VkFormat for
 
 vulkan::RenderPass create_render_pass(VkDevice device, VkFormat swap_chain_image_format, VkFormat depth_image_format)
 {
-        VkAttachmentDescription color_attachment = {};
-        color_attachment.format = swap_chain_image_format;
-        color_attachment.samples = VK_SAMPLE_COUNT_1_BIT;
-        color_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        color_attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-        color_attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        color_attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        color_attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        color_attachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+        std::array<VkAttachmentDescription, 2> attachments = {};
 
-        VkAttachmentReference color_attachment_reference = {};
-        color_attachment_reference.attachment = 0;
-        color_attachment_reference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        // Color
+        attachments[0].format = swap_chain_image_format;
+        attachments[0].samples = VK_SAMPLE_COUNT_1_BIT;
+        attachments[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        attachments[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        attachments[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        attachments[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        attachments[0].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        attachments[0].finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
-        //
+        // Depth
+        attachments[1].format = depth_image_format;
+        attachments[1].samples = VK_SAMPLE_COUNT_1_BIT;
+        attachments[1].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        attachments[1].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        attachments[1].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        attachments[1].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        attachments[1].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        attachments[1].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
-        VkAttachmentDescription depth_attachment = {};
-        depth_attachment.format = depth_image_format;
-        depth_attachment.samples = VK_SAMPLE_COUNT_1_BIT;
-        depth_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        depth_attachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        depth_attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        depth_attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        depth_attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        depth_attachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+        VkAttachmentReference color_reference = {};
+        color_reference.attachment = 0;
+        color_reference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
-        VkAttachmentReference depth_attachment_reference = {};
-        depth_attachment_reference.attachment = 1;
-        depth_attachment_reference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-
-        //
+        VkAttachmentReference depth_reference = {};
+        depth_reference.attachment = 1;
+        depth_reference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
         VkSubpassDescription subpass_description = {};
         subpass_description.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
         subpass_description.colorAttachmentCount = 1;
-        subpass_description.pColorAttachments = &color_attachment_reference;
-        subpass_description.pDepthStencilAttachment = &depth_attachment_reference;
+        subpass_description.pColorAttachments = &color_reference;
+        subpass_description.pDepthStencilAttachment = &depth_reference;
 
-        VkSubpassDependency subpass_dependency = {};
-        subpass_dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-        subpass_dependency.dstSubpass = 0;
-        subpass_dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        subpass_dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        subpass_dependency.srcAccessMask = 0;
-        subpass_dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+#if 0
+        std::array<VkSubpassDependency, 1> subpass_dependencies = {};
+        subpass_dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
+        subpass_dependencies[0].dstSubpass = 0;
+        subpass_dependencies[0].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        subpass_dependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        subpass_dependencies[0].srcAccessMask = 0;
+        subpass_dependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+#else
+        std::array<VkSubpassDependency, 2> subpass_dependencies = {};
 
-        std::array<VkAttachmentDescription, 2> attachments = {color_attachment, depth_attachment};
+        subpass_dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
+        subpass_dependencies[0].dstSubpass = 0;
+        subpass_dependencies[0].srcStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+        subpass_dependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        subpass_dependencies[0].srcAccessMask = 0; // VK_ACCESS_MEMORY_READ_BIT;
+        subpass_dependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        subpass_dependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+
+        subpass_dependencies[1].srcSubpass = 0;
+        subpass_dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
+        subpass_dependencies[1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        subpass_dependencies[1].dstStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+        subpass_dependencies[1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        subpass_dependencies[1].dstAccessMask = 0; // VK_ACCESS_MEMORY_READ_BIT;
+        subpass_dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+#endif
+
         VkRenderPassCreateInfo create_info = {};
         create_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
         create_info.attachmentCount = attachments.size();
         create_info.pAttachments = attachments.data();
         create_info.subpassCount = 1;
         create_info.pSubpasses = &subpass_description;
-        create_info.dependencyCount = 1;
-        create_info.pDependencies = &subpass_dependency;
+        create_info.dependencyCount = subpass_dependencies.size();
+        create_info.pDependencies = subpass_dependencies.data();
 
         return vulkan::RenderPass(device, create_info);
 }
@@ -414,7 +431,7 @@ vulkan::RenderPass create_multisampling_render_pass(VkDevice device, VkSampleCou
         subpass_description.pResolveAttachments = &color_resolve_reference;
         subpass_description.pDepthStencilAttachment = &multisampling_depth_reference;
 
-        std::array<VkSubpassDependency, 2> subpass_dependencies;
+        std::array<VkSubpassDependency, 2> subpass_dependencies = {};
 
         subpass_dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
         subpass_dependencies[0].dstSubpass = 0;
@@ -472,9 +489,9 @@ vulkan::PipelineLayout create_pipeline_layout(VkDevice device, const std::vector
         return vulkan::PipelineLayout(device, create_info);
 }
 
-vulkan::Pipeline create_graphics_pipeline(VkDevice device, VkRenderPass render_pass, VkSampleCountFlagBits sample_count,
-                                          VkPipelineLayout pipeline_layout, VkExtent2D swap_chain_extent,
-                                          const std::vector<const vulkan::Shader*>& shaders,
+vulkan::Pipeline create_graphics_pipeline(VkDevice device, VkRenderPass render_pass, uint32_t sub_pass,
+                                          VkSampleCountFlagBits sample_count, VkPipelineLayout pipeline_layout,
+                                          VkExtent2D swap_chain_extent, const std::vector<const vulkan::Shader*>& shaders,
                                           const std::vector<VkVertexInputBindingDescription>& binding_descriptions,
                                           const std::vector<VkVertexInputAttributeDescription>& attribute_descriptions)
 {
@@ -611,7 +628,7 @@ vulkan::Pipeline create_graphics_pipeline(VkDevice device, VkRenderPass render_p
         create_info.layout = pipeline_layout;
 
         create_info.renderPass = render_pass;
-        create_info.subpass = 0;
+        create_info.subpass = sub_pass;
 
         // create_info.basePipelineHandle = VK_NULL_HANDLE;
         // create_info.basePipelineIndex = -1;
@@ -832,8 +849,8 @@ SwapChain::SwapChain(VkSurfaceKHR surface, VkPhysicalDevice physical_device,
         }
 
         m_pipeline_layout = create_pipeline_layout(device, descriptor_set_layouts);
-        m_pipeline = create_graphics_pipeline(device, m_render_pass, m_sample_count_bit, m_pipeline_layout, m_extent, shaders,
-                                              vertex_binding_descriptions, vertex_attribute_descriptions);
+        m_pipeline = create_graphics_pipeline(device, m_render_pass, 0 /*sub_pass*/, m_sample_count_bit, m_pipeline_layout,
+                                              m_extent, shaders, vertex_binding_descriptions, vertex_attribute_descriptions);
 }
 
 void SwapChain::create_command_buffers(const Color& clear_color,
