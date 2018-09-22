@@ -63,8 +63,8 @@ public:
         SwapChain(VkSurfaceKHR surface, VkPhysicalDevice physical_device,
                   const std::vector<uint32_t>& swap_chain_image_family_indices,
                   const std::vector<uint32_t>& depth_image_family_indices, const Device& device,
-                  VkCommandPool graphics_command_pool, VkQueue graphics_queue, int required_sample_count,
-                  const std::vector<const vulkan::Shader*>& shaders,
+                  VkCommandPool graphics_command_pool, VkQueue graphics_queue, int preferred_image_count,
+                  int required_minimum_sample_count, const std::vector<const vulkan::Shader*>& shaders,
                   const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
                   const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions,
                   const std::vector<VkDescriptorSetLayout>& descriptor_set_layouts);
@@ -90,8 +90,6 @@ public:
 
 class VulkanInstance
 {
-        static constexpr unsigned MAX_FRAMES_IN_FLIGHT = 2;
-
         unsigned m_current_frame = 0;
 
         Instance m_instance;
@@ -103,6 +101,7 @@ class VulkanInstance
 
         Device m_device;
 
+        unsigned m_max_frames_in_flight;
         std::vector<Semaphore> m_image_available_semaphores;
         std::vector<Semaphore> m_render_finished_semaphores;
         std::vector<Fence> m_in_flight_fences;
@@ -125,7 +124,7 @@ public:
         VulkanInstance(int api_version_major, int api_version_minor, const std::vector<std::string>& required_instance_extensions,
                        const std::vector<std::string>& required_device_extensions,
                        const std::vector<std::string>& required_validation_layers,
-                       const std::function<VkSurfaceKHR(VkInstance)>& create_surface);
+                       const std::function<VkSurfaceKHR(VkInstance)>& create_surface, unsigned max_frames_in_flight);
 
         ~VulkanInstance();
 
@@ -139,7 +138,8 @@ public:
         VkInstance instance() const noexcept;
         const Device& device() const noexcept;
 
-        SwapChain create_swap_chain(int required_sample_count, const std::vector<const vulkan::Shader*>& shaders,
+        SwapChain create_swap_chain(int preferred_image_count, int required_minimum_sample_count,
+                                    const std::vector<const vulkan::Shader*>& shaders,
                                     const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
                                     const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions,
                                     const std::vector<VkDescriptorSetLayout>& descriptor_set_layouts);

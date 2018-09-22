@@ -39,7 +39,11 @@ constexpr std::array<const char*, 0> INSTANCE_EXTENSIONS = {};
 constexpr std::array<const char*, 0> DEVICE_EXTENSIONS = {};
 constexpr std::array<const char*, 1> VALIDATION_LAYERS = {"VK_LAYER_LUNARG_standard_validation"};
 
-constexpr int SAMPLE_COUNT = 4;
+// 2 - double buffering, 3 - triple buffering
+constexpr int PREFERRED_IMAGE_COUNT = 3;
+constexpr int MAX_FRAMES_IN_FLIGHT = 2;
+
+constexpr int REQUIRED_MINIMUM_SAMPLE_COUNT = 4;
 
 constexpr VkIndexType VULKAN_VERTEX_INDEX_TYPE = VK_INDEX_TYPE_UINT32;
 using VERTEX_INDEX_TYPE =
@@ -561,9 +565,9 @@ class Renderer final : public VulkanRenderer
                 layouts[SHADER_PER_OBJECT_DESCRIPTION_SET_LAYOUT_INDEX] = m_per_object_descriptor_set_layout;
                 // Сначала надо удалить объект, а потом создавать
                 m_swap_chain.reset();
-                m_swap_chain = std::make_unique<vulkan::SwapChain>(
-                        m_instance.create_swap_chain(SAMPLE_COUNT, m_shaders, shaders::Vertex::binding_descriptions(),
-                                                     shaders::Vertex::attribute_descriptions(), layouts));
+                m_swap_chain = std::make_unique<vulkan::SwapChain>(m_instance.create_swap_chain(
+                        PREFERRED_IMAGE_COUNT, REQUIRED_MINIMUM_SAMPLE_COUNT, m_shaders, shaders::Vertex::binding_descriptions(),
+                        shaders::Vertex::attribute_descriptions(), layouts));
 
                 create_command_buffers(false /*wait_idle*/);
         }
@@ -622,7 +626,7 @@ public:
         Renderer(const std::vector<std::string>& window_instance_extensions,
                  const std::function<VkSurfaceKHR(VkInstance)>& create_surface)
                 : m_instance(API_VERSION_MAJOR, API_VERSION_MINOR, instance_extensions() + window_instance_extensions,
-                             device_extensions(), validation_layers(), create_surface),
+                             device_extensions(), validation_layers(), create_surface, MAX_FRAMES_IN_FLIGHT),
                   m_sampler(vulkan::create_sampler(m_instance.device())),
                   m_shared_descriptor_set_layout(vulkan::create_descriptor_set_layout(
                           m_instance.device(), shaders::SharedMemory::descriptor_set_layout_bindings())),

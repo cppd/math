@@ -106,13 +106,22 @@ VkExtent2D choose_extent(const VkSurfaceCapabilitiesKHR& capabilities)
 #endif
 }
 
-uint32_t choose_image_count(const VkSurfaceCapabilitiesKHR& capabilities)
+uint32_t choose_image_count(const VkSurfaceCapabilitiesKHR& capabilities, int image_count)
 {
-        uint32_t image_count = capabilities.minImageCount + 1;
-        if (capabilities.maxImageCount > 0)
+        if (image_count <= 0)
         {
-                image_count = std::min(image_count, capabilities.maxImageCount);
+                error("Requested image count <= 0");
         }
+
+        if (static_cast<uint32_t>(image_count) <= capabilities.minImageCount)
+        {
+                return capabilities.minImageCount;
+        }
+        if (capabilities.maxImageCount > 0 && static_cast<uint32_t>(image_count) >= capabilities.maxImageCount)
+        {
+                return capabilities.maxImageCount;
+        }
+
         return image_count;
 }
 
@@ -327,7 +336,7 @@ vulkan::RenderPass create_render_pass(VkDevice device, VkFormat swap_chain_image
         subpass_description.pColorAttachments = &color_reference;
         subpass_description.pDepthStencilAttachment = &depth_reference;
 
-#if 0
+#if 1
         std::array<VkSubpassDependency, 1> subpass_dependencies = {};
         subpass_dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
         subpass_dependencies[0].dstSubpass = 0;
@@ -370,7 +379,7 @@ vulkan::RenderPass create_render_pass(VkDevice device, VkFormat swap_chain_image
 vulkan::RenderPass create_multisampling_render_pass(VkDevice device, VkSampleCountFlagBits sample_count,
                                                     VkFormat swap_chain_image_format, VkFormat depth_image_format)
 {
-        std::array<VkAttachmentDescription, 4> attachments = {};
+        std::array<VkAttachmentDescription, 3> attachments = {};
 
         // Color resolve
         attachments[0].format = swap_chain_image_format;
@@ -382,42 +391,32 @@ vulkan::RenderPass create_multisampling_render_pass(VkDevice device, VkSampleCou
         attachments[0].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
         attachments[0].finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
-        // Depth resolve
-        attachments[1].format = depth_image_format;
-        attachments[1].samples = VK_SAMPLE_COUNT_1_BIT;
-        attachments[1].loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        attachments[1].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        // Multisampling color
+        attachments[1].format = swap_chain_image_format;
+        attachments[1].samples = sample_count;
+        attachments[1].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        attachments[1].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE; // VK_ATTACHMENT_STORE_OP_STORE;
         attachments[1].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
         attachments[1].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
         attachments[1].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        attachments[1].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+        attachments[1].finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
-        // Multisampling color
-        attachments[2].format = swap_chain_image_format;
+        // Multisampling depth
+        attachments[2].format = depth_image_format;
         attachments[2].samples = sample_count;
         attachments[2].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        attachments[2].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE; // VK_ATTACHMENT_STORE_OP_STORE;
+        attachments[2].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
         attachments[2].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
         attachments[2].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
         attachments[2].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        attachments[2].finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
-        // Multisampling depth
-        attachments[3].format = depth_image_format;
-        attachments[3].samples = sample_count;
-        attachments[3].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        attachments[3].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        attachments[3].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        attachments[3].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        attachments[3].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        attachments[3].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+        attachments[2].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
         VkAttachmentReference multisampling_color_reference = {};
-        multisampling_color_reference.attachment = 2;
+        multisampling_color_reference.attachment = 1;
         multisampling_color_reference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
         VkAttachmentReference multisampling_depth_reference = {};
-        multisampling_depth_reference.attachment = 3;
+        multisampling_depth_reference.attachment = 2;
         multisampling_depth_reference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
         VkAttachmentReference color_resolve_reference = {};
@@ -431,6 +430,15 @@ vulkan::RenderPass create_multisampling_render_pass(VkDevice device, VkSampleCou
         subpass_description.pResolveAttachments = &color_resolve_reference;
         subpass_description.pDepthStencilAttachment = &multisampling_depth_reference;
 
+#if 1
+        std::array<VkSubpassDependency, 1> subpass_dependencies = {};
+        subpass_dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
+        subpass_dependencies[0].dstSubpass = 0;
+        subpass_dependencies[0].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        subpass_dependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        subpass_dependencies[0].srcAccessMask = 0;
+        subpass_dependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+#else
         std::array<VkSubpassDependency, 2> subpass_dependencies = {};
 
         subpass_dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
@@ -448,6 +456,7 @@ vulkan::RenderPass create_multisampling_render_pass(VkDevice device, VkSampleCou
         subpass_dependencies[1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
         subpass_dependencies[1].dstAccessMask = 0; // VK_ACCESS_MEMORY_READ_BIT;
         subpass_dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+#endif
 
         VkRenderPassCreateInfo create_info = {};
         create_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
@@ -758,8 +767,8 @@ namespace vulkan
 SwapChain::SwapChain(VkSurfaceKHR surface, VkPhysicalDevice physical_device,
                      const std::vector<uint32_t>& swap_chain_image_family_indices,
                      const std::vector<uint32_t>& depth_image_family_indices, const Device& device,
-                     VkCommandPool graphics_command_pool, VkQueue graphics_queue, int required_sample_count,
-                     const std::vector<const vulkan::Shader*>& shaders,
+                     VkCommandPool graphics_command_pool, VkQueue graphics_queue, int preferred_image_count,
+                     int required_minimum_sample_count, const std::vector<const vulkan::Shader*>& shaders,
                      const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
                      const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions,
                      const std::vector<VkDescriptorSetLayout>& descriptor_set_layouts)
@@ -784,9 +793,14 @@ SwapChain::SwapChain(VkSurfaceKHR surface, VkPhysicalDevice physical_device,
         const VkSurfaceFormatKHR surface_format = choose_surface_format(swap_chain_details.surface_formats);
         m_extent = choose_extent(swap_chain_details.surface_capabilities);
         const VkPresentModeKHR present_mode = choose_present_mode(swap_chain_details.present_modes);
-        const uint32_t image_count = choose_image_count(swap_chain_details.surface_capabilities);
+        const uint32_t image_count = choose_image_count(swap_chain_details.surface_capabilities, preferred_image_count);
 
-        m_sample_count_bit = maximum_supported_framebuffer_sample_count(physical_device, required_sample_count);
+        const uint32_t sample_count = supported_framebuffer_sample_count(physical_device, required_minimum_sample_count);
+        m_sample_count_bit = sample_count_flag_bit(sample_count);
+
+        LOG("Preferred image count = " + to_string(preferred_image_count) + ", chosen image count = " + to_string(image_count) +
+            "\n" + "Minimum sample count = " + to_string(required_minimum_sample_count) +
+            ", chosen sample count = " + to_string(sample_count));
 
         m_swap_chain =
                 create_swap_chain_khr(device, surface, surface_format, present_mode, m_extent, image_count,
@@ -804,10 +818,6 @@ SwapChain::SwapChain(VkSurfaceKHR surface, VkPhysicalDevice physical_device,
                         create_image_view(device, image, surface_format.format, VK_IMAGE_ASPECT_COLOR_BIT));
         }
 
-        m_depth_attachment =
-                std::make_unique<DepthAttachment>(device, graphics_command_pool, graphics_queue, depth_image_family_indices,
-                                                  VK_SAMPLE_COUNT_1_BIT, m_extent.width, m_extent.height);
-
         if (m_sample_count_bit != VK_SAMPLE_COUNT_1_BIT)
         {
                 m_multisampling_color_attachment = std::make_unique<ColorAttachment>(
@@ -818,24 +828,25 @@ SwapChain::SwapChain(VkSurfaceKHR surface, VkPhysicalDevice physical_device,
                         device, graphics_command_pool, graphics_queue, depth_image_family_indices, m_sample_count_bit,
                         m_extent.width, m_extent.height);
 
-                ASSERT(m_multisampling_depth_attachment->format() == m_depth_attachment->format());
-
                 m_render_pass = create_multisampling_render_pass(device, m_sample_count_bit, surface_format.format,
-                                                                 m_depth_attachment->format());
+                                                                 m_multisampling_depth_attachment->format());
 
                 for (VkImageView swap_chain_image_view : m_swap_chain_image_views)
                 {
-                        std::array<VkImageView, 4> attachments;
+                        std::array<VkImageView, 3> attachments;
                         attachments[0] = swap_chain_image_view;
-                        attachments[1] = m_depth_attachment->image_view();
-                        attachments[2] = m_multisampling_color_attachment->image_view();
-                        attachments[3] = m_multisampling_depth_attachment->image_view();
+                        attachments[1] = m_multisampling_color_attachment->image_view();
+                        attachments[2] = m_multisampling_depth_attachment->image_view();
 
                         m_framebuffers.push_back(create_framebuffer(device, m_render_pass, m_extent, attachments));
                 }
         }
         else
         {
+                m_depth_attachment = std::make_unique<DepthAttachment>(device, graphics_command_pool, graphics_queue,
+                                                                       depth_image_family_indices, VK_SAMPLE_COUNT_1_BIT,
+                                                                       m_extent.width, m_extent.height);
+
                 m_render_pass = create_render_pass(device, surface_format.format, m_depth_attachment->format());
 
                 for (VkImageView swap_chain_image_view : m_swap_chain_image_views)
@@ -859,11 +870,10 @@ void SwapChain::create_command_buffers(const Color& clear_color,
 {
         if (m_sample_count_bit != VK_SAMPLE_COUNT_1_BIT)
         {
-                std::array<VkClearValue, 4> clear_values;
+                std::array<VkClearValue, 3> clear_values;
                 clear_values[0] = color_float_srgb_clear_value(clear_color);
-                clear_values[1] = depth_stencil_clear_value();
-                clear_values[2] = color_float_srgb_clear_value(clear_color);
-                clear_values[3] = depth_stencil_clear_value();
+                clear_values[1] = color_float_srgb_clear_value(clear_color);
+                clear_values[2] = depth_stencil_clear_value();
                 m_command_buffers =
                         ::create_command_buffers(m_device, m_extent, m_render_pass, m_pipeline_layout, m_pipeline, m_framebuffers,
                                                  m_graphics_command_pool, clear_values, commands_for_triangle_topology);
@@ -905,7 +915,7 @@ VulkanInstance::VulkanInstance(int api_version_major, int api_version_minor,
                                const std::vector<std::string>& required_instance_extensions,
                                const std::vector<std::string>& required_device_extensions,
                                const std::vector<std::string>& required_validation_layers,
-                               const std::function<VkSurfaceKHR(VkInstance)>& create_surface)
+                               const std::function<VkSurfaceKHR(VkInstance)>& create_surface, unsigned max_frames_in_flight)
         : m_instance(create_instance(api_version_major, api_version_minor, required_instance_extensions,
                                      required_validation_layers)),
           m_callback(!required_validation_layers.empty() ? std::make_optional(create_debug_report_callback(m_instance)) :
@@ -919,9 +929,10 @@ VulkanInstance::VulkanInstance(int api_version_major, int api_version_minor,
                                   m_physical_device.presentation},
                                  required_device_extensions + VK_KHR_SWAPCHAIN_EXTENSION_NAME, required_validation_layers)),
           //
-          m_image_available_semaphores(create_semaphores(m_device, MAX_FRAMES_IN_FLIGHT)),
-          m_render_finished_semaphores(create_semaphores(m_device, MAX_FRAMES_IN_FLIGHT)),
-          m_in_flight_fences(create_fences(m_device, MAX_FRAMES_IN_FLIGHT, true /*signaled_state*/)),
+          m_max_frames_in_flight(max_frames_in_flight),
+          m_image_available_semaphores(create_semaphores(m_device, m_max_frames_in_flight)),
+          m_render_finished_semaphores(create_semaphores(m_device, m_max_frames_in_flight)),
+          m_in_flight_fences(create_fences(m_device, m_max_frames_in_flight, true /*signaled_state*/)),
           //
           m_graphics_command_pool(create_command_pool(m_device, m_physical_device.graphics)),
           m_graphics_queue(device_queue(m_device, m_physical_device.graphics, 0 /*queue_index*/)),
@@ -956,7 +967,8 @@ VulkanInstance::~VulkanInstance()
         }
 }
 
-SwapChain VulkanInstance::create_swap_chain(int required_sample_count, const std::vector<const vulkan::Shader*>& shaders,
+SwapChain VulkanInstance::create_swap_chain(int preferred_image_count, int required_minimum_sample_count,
+                                            const std::vector<const vulkan::Shader*>& shaders,
                                             const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
                                             const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions,
                                             const std::vector<VkDescriptorSetLayout>& descriptor_set_layouts)
@@ -964,8 +976,9 @@ SwapChain VulkanInstance::create_swap_chain(int required_sample_count, const std
         ASSERT(descriptor_set_layouts.size() > 0);
 
         return SwapChain(m_surface, m_physical_device.device, m_swap_chain_image_family_indices, m_depth_image_family_indices,
-                         m_device, m_graphics_command_pool, m_graphics_queue, required_sample_count, shaders,
-                         vertex_binding_descriptions, vertex_attribute_descriptions, descriptor_set_layouts);
+                         m_device, m_graphics_command_pool, m_graphics_queue, preferred_image_count,
+                         required_minimum_sample_count, shaders, vertex_binding_descriptions, vertex_attribute_descriptions,
+                         descriptor_set_layouts);
 }
 
 Texture VulkanInstance::create_texture(uint32_t width, uint32_t height, const std::vector<unsigned char>& rgba_pixels) const
@@ -1006,6 +1019,8 @@ bool VulkanInstance::draw_frame(SwapChain& swap_chain)
                 vulkan_function_error("vkResetFences", result);
         }
 
+        //
+
         uint32_t image_index;
         result = vkAcquireNextImageKHR(m_device, swap_chain.swap_chain(), std::numeric_limits<uint64_t>::max(),
                                        m_image_available_semaphores[m_current_frame], NO_FENCE, &image_index);
@@ -1021,21 +1036,22 @@ bool VulkanInstance::draw_frame(SwapChain& swap_chain)
                 vulkan_function_error("vkAcquireNextImageKHR", result);
         }
 
+        //
+
+        std::array<VkSemaphore, 1> wait_semaphores = {m_image_available_semaphores[m_current_frame]};
+        std::array<VkPipelineStageFlags, 1> wait_stages = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+
+        std::array<VkSemaphore, 1> signal_semaphores = {m_render_finished_semaphores[m_current_frame]};
+
         VkSubmitInfo submit_info = {};
         submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-
-        VkSemaphore wait_semaphores[] = {m_image_available_semaphores[m_current_frame]};
-        VkPipelineStageFlags wait_stages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
-        submit_info.waitSemaphoreCount = 1;
-        submit_info.pWaitSemaphores = wait_semaphores;
-        submit_info.pWaitDstStageMask = wait_stages;
-
+        submit_info.waitSemaphoreCount = wait_semaphores.size();
+        submit_info.pWaitSemaphores = wait_semaphores.data();
+        submit_info.pWaitDstStageMask = wait_stages.data();
         submit_info.commandBufferCount = 1;
         submit_info.pCommandBuffers = &swap_chain.command_buffer(image_index);
-
-        VkSemaphore signal_semaphores[] = {m_render_finished_semaphores[m_current_frame]};
-        submit_info.signalSemaphoreCount = 1;
-        submit_info.pSignalSemaphores = signal_semaphores;
+        submit_info.signalSemaphoreCount = signal_semaphores.size();
+        submit_info.pSignalSemaphores = signal_semaphores.data();
 
         result = vkQueueSubmit(m_graphics_queue, 1, &submit_info, current_frame_fence);
         if (result != VK_SUCCESS)
@@ -1043,33 +1059,33 @@ bool VulkanInstance::draw_frame(SwapChain& swap_chain)
                 vulkan_function_error("vkQueueSubmit", result);
         }
 
+        //
+
+        std::array<VkSwapchainKHR, 1> swap_chains = {swap_chain.swap_chain()};
+        std::array<uint32_t, 1> image_indices = {image_index};
+
         VkPresentInfoKHR present_info = {};
         present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-
-        present_info.waitSemaphoreCount = 1;
-        present_info.pWaitSemaphores = signal_semaphores;
-
-        VkSwapchainKHR swap_chains[] = {swap_chain.swap_chain()};
-        present_info.swapchainCount = 1;
-        present_info.pSwapchains = swap_chains;
-        present_info.pImageIndices = &image_index;
-
+        present_info.waitSemaphoreCount = signal_semaphores.size();
+        present_info.pWaitSemaphores = signal_semaphores.data();
+        present_info.swapchainCount = swap_chains.size();
+        present_info.pSwapchains = swap_chains.data();
+        present_info.pImageIndices = image_indices.data();
         // present_info.pResults = nullptr;
 
-        bool recreate_swap_chain = false;
         result = vkQueuePresentKHR(m_presentation_queue, &present_info);
         if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
         {
-                recreate_swap_chain = true;
+                return false;
         }
         else if (result != VK_SUCCESS)
         {
                 vulkan_function_error("vkQueuePresentKHR", result);
         }
 
-        m_current_frame = (m_current_frame + 1) % MAX_FRAMES_IN_FLIGHT;
+        m_current_frame = (m_current_frame + 1) % m_max_frames_in_flight;
 
-        return !recreate_swap_chain;
+        return true;
 }
 
 void VulkanInstance::device_wait_idle() const

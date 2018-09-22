@@ -388,15 +388,15 @@ VkFormat find_supported_format(VkPhysicalDevice physical_device, const std::vect
         error("Failed to find supported image format");
 }
 
-VkSampleCountFlagBits maximum_supported_framebuffer_sample_count(VkPhysicalDevice physical_device, int required_sample_count)
+int supported_framebuffer_sample_count(VkPhysicalDevice physical_device, int required_minimum_sample_count)
 {
-        if (required_sample_count < 1)
+        if (required_minimum_sample_count < 1)
         {
-                error("Required sample count < 1");
+                error("Minimum sample count < 1");
         }
-        if (required_sample_count > 64)
+        if (required_minimum_sample_count > 64)
         {
-                error("Required sample count > 64");
+                error("Minimum sample count > 64");
         }
 
         VkPhysicalDeviceProperties properties;
@@ -405,36 +405,59 @@ VkSampleCountFlagBits maximum_supported_framebuffer_sample_count(VkPhysicalDevic
         VkSampleCountFlags sample_counts =
                 std::min(properties.limits.framebufferColorSampleCounts, properties.limits.framebufferDepthSampleCounts);
 
-        if ((required_sample_count >= 64) && (sample_counts & VK_SAMPLE_COUNT_64_BIT))
+        if ((required_minimum_sample_count <= 1) && (sample_counts & VK_SAMPLE_COUNT_1_BIT))
         {
-                return VK_SAMPLE_COUNT_64_BIT;
+                return 1;
         }
-        if ((required_sample_count >= 32) && (sample_counts & VK_SAMPLE_COUNT_32_BIT))
+        if ((required_minimum_sample_count <= 2) && (sample_counts & VK_SAMPLE_COUNT_2_BIT))
         {
-                return VK_SAMPLE_COUNT_32_BIT;
+                return 2;
         }
-        if ((required_sample_count >= 16) && (sample_counts & VK_SAMPLE_COUNT_16_BIT))
+        if ((required_minimum_sample_count <= 4) && (sample_counts & VK_SAMPLE_COUNT_4_BIT))
         {
-                return VK_SAMPLE_COUNT_16_BIT;
+                return 4;
         }
-        if ((required_sample_count >= 8) && (sample_counts & VK_SAMPLE_COUNT_8_BIT))
+        if ((required_minimum_sample_count <= 8) && (sample_counts & VK_SAMPLE_COUNT_8_BIT))
         {
-                return VK_SAMPLE_COUNT_8_BIT;
+                return 8;
         }
-        if ((required_sample_count >= 4) && (sample_counts & VK_SAMPLE_COUNT_4_BIT))
+        if ((required_minimum_sample_count <= 16) && (sample_counts & VK_SAMPLE_COUNT_16_BIT))
         {
-                return VK_SAMPLE_COUNT_4_BIT;
+                return 16;
         }
-        if ((required_sample_count >= 2) && (sample_counts & VK_SAMPLE_COUNT_2_BIT))
+        if ((required_minimum_sample_count <= 32) && (sample_counts & VK_SAMPLE_COUNT_32_BIT))
         {
-                return VK_SAMPLE_COUNT_2_BIT;
+                return 32;
         }
-        if ((required_sample_count >= 1) && (sample_counts & VK_SAMPLE_COUNT_1_BIT))
+        if ((required_minimum_sample_count <= 64) && (sample_counts & VK_SAMPLE_COUNT_64_BIT))
         {
-                return VK_SAMPLE_COUNT_1_BIT;
+                return 64;
         }
 
         error("Failed to find framebuffer sample count");
+}
+
+VkSampleCountFlagBits sample_count_flag_bit(int sample_count)
+{
+        switch (sample_count)
+        {
+        case 1:
+                return VK_SAMPLE_COUNT_1_BIT;
+        case 2:
+                return VK_SAMPLE_COUNT_2_BIT;
+        case 4:
+                return VK_SAMPLE_COUNT_4_BIT;
+        case 8:
+                return VK_SAMPLE_COUNT_8_BIT;
+        case 16:
+                return VK_SAMPLE_COUNT_16_BIT;
+        case 32:
+                return VK_SAMPLE_COUNT_32_BIT;
+        case 64:
+                return VK_SAMPLE_COUNT_64_BIT;
+        default:
+                error("Not supported sample count " + to_string(sample_count));
+        }
 }
 
 std::string overview()
