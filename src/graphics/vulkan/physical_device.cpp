@@ -171,6 +171,11 @@ PhysicalDevice find_physical_device(VkInstance instance, VkSurfaceKHR surface, i
                         continue;
                 }
 
+                if (!features.sampleRateShading)
+                {
+                        continue;
+                }
+
                 if (required_api_version > properties.apiVersion)
                 {
                         continue;

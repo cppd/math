@@ -211,6 +211,7 @@ vulkan::Device create_device(VkPhysicalDevice physical_device, const std::vector
         VkPhysicalDeviceFeatures device_features = {};
         device_features.samplerAnisotropy = VK_TRUE;
         device_features.geometryShader = VK_TRUE;
+        device_features.sampleRateShading = VK_TRUE;
 
         VkDeviceCreateInfo create_info = {};
         create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
@@ -558,8 +559,8 @@ vulkan::Pipeline create_graphics_pipeline(VkDevice device, VkRenderPass render_p
         VkPipelineMultisampleStateCreateInfo multisampling_state_info = {};
         multisampling_state_info.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
         multisampling_state_info.rasterizationSamples = sample_count;
-        multisampling_state_info.sampleShadingEnable = VK_FALSE;
-        // multisampling_state_info.minSampleShading = 1.0f;
+        multisampling_state_info.sampleShadingEnable = VK_TRUE;
+        multisampling_state_info.minSampleShading = 1.0f;
         // multisampling_state_info.pSampleMask = nullptr;
         // multisampling_state_info.alphaToCoverageEnable = VK_FALSE;
         // multisampling_state_info.alphaToOneEnable = VK_FALSE;
