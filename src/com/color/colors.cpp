@@ -18,6 +18,25 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "colors.h"
 
 #include <cmath>
+#include <type_traits>
+
+template <typename Float>
+constexpr unsigned char float_to_integer(Float c)
+{
+        static_assert(std::numeric_limits<unsigned char>::digits == 8);
+        static_assert(std::is_floating_point_v<Float>);
+
+        return static_cast<unsigned char>(c * Float(255) + Float(0.5));
+}
+
+template <typename Float>
+constexpr Float integer_to_float(unsigned char c)
+{
+        static_assert(std::numeric_limits<unsigned char>::digits == 8);
+        static_assert(std::is_floating_point_v<Float>);
+
+        return Float(c) / Float(255);
+}
 
 namespace
 {
@@ -102,11 +121,19 @@ T srgb_integer_to_rgb_float(unsigned char c)
         return FROM_SRGB_TO_RGB_LOOKUP_TABLE<T>[c];
 }
 
+template <typename T>
+T srgb_integer_to_rgb_integer(unsigned char c)
+{
+        return float_to_integer(srgb_integer_to_rgb_float<T>(c));
+}
+
 #else
 
 template <typename T>
 T srgb_to_rgb(T c)
 {
+        static_assert(std::is_floating_point_v<T>);
+
         if (c >= 1)
         {
                 return 1;
@@ -125,7 +152,13 @@ T srgb_to_rgb(T c)
 template <typename T>
 T srgb_integer_to_rgb_float(unsigned char c)
 {
-        return srgb_to_rgb(c / static_cast<T>(255));
+        return srgb_to_rgb(integer_to_float<T>(c));
+}
+
+template <typename T>
+T srgb_integer_to_rgb_integer(unsigned char c)
+{
+        return float_to_integer(srgb_integer_to_rgb_float<T>(c));
 }
 
 #endif
@@ -133,6 +166,8 @@ T srgb_integer_to_rgb_float(unsigned char c)
 template <typename T>
 T rgb_to_srgb(T c)
 {
+        static_assert(std::is_floating_point_v<T>);
+
         if (c >= 1)
         {
                 return 1;
@@ -151,12 +186,14 @@ T rgb_to_srgb(T c)
 template <typename T>
 unsigned char rgb_float_to_srgb_integer(T c)
 {
-        return static_cast<unsigned char>(rgb_to_srgb(c) * T(255) + T(0.5));
+        return float_to_integer(rgb_to_srgb(c));
 }
 
 template <typename T>
 T rgb_luminance(T red, T green, T blue)
 {
+        static_assert(std::is_floating_point_v<T>);
+
         return T(0.2126) * red + T(0.7152) * green + T(0.0722) * blue;
 }
 }
@@ -168,7 +205,7 @@ Color::T Color::srgb_integer_to_rgb_float(unsigned char c)
 
 unsigned char Color::srgb_integer_to_rgb_integer(unsigned char c)
 {
-        return static_cast<unsigned char>(::srgb_integer_to_rgb_float<T>(c) * T(255) + T(0.5));
+        return ::srgb_integer_to_rgb_integer<T>(c);
 }
 
 Color::T Color::rgb_float_to_srgb_float(T c)
@@ -216,7 +253,7 @@ std::string lookup_table()
         {
                 oss << ((i != 0) ? "," : "");
                 oss << (((i & 0b11) != 0) ? " " : "\n" + std::string(8, ' '));
-                oss << srgb_to_rgb<T>(i / T(255)) << suffix;
+                oss << srgb_integer_to_rgb_float<T>(i) << suffix;
         }
         oss << "\n};\n";
         oss << "// clang-format on\n";
