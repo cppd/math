@@ -20,6 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cmath>
 #include <type_traits>
 
+#define USE_COLOR_LOOKUP_TABLES 1
+
 template <typename Float>
 constexpr unsigned char float_to_integer(Float c)
 {
@@ -40,7 +42,7 @@ constexpr Float integer_to_float(unsigned char c)
 
 namespace
 {
-#if 1
+#if USE_COLOR_LOOKUP_TABLES
 
 // clang-format off
 template <typename T>
@@ -113,6 +115,28 @@ constexpr T FROM_SRGB_TO_RGB_LOOKUP_TABLE[256] =
 };
 // clang-format on
 
+// clang-format off
+constexpr unsigned char FROM_SRGB_TO_RGB_INTEGER_LOOKUP_TABLE[256] =
+{
+          0,   0,   0,   0,   0,   0,   0,   1,   1,   1,   1,   1,   1,   1,   1,   1,
+          1,   1,   2,   2,   2,   2,   2,   2,   2,   2,   3,   3,   3,   3,   3,   3,
+          4,   4,   4,   4,   4,   5,   5,   5,   5,   6,   6,   6,   6,   7,   7,   7,
+          8,   8,   8,   8,   9,   9,   9,  10,  10,  10,  11,  11,  12,  12,  12,  13,
+         13,  13,  14,  14,  15,  15,  16,  16,  17,  17,  17,  18,  18,  19,  19,  20,
+         20,  21,  22,  22,  23,  23,  24,  24,  25,  25,  26,  27,  27,  28,  29,  29,
+         30,  30,  31,  32,  32,  33,  34,  35,  35,  36,  37,  37,  38,  39,  40,  41,
+         41,  42,  43,  44,  45,  45,  46,  47,  48,  49,  50,  51,  51,  52,  53,  54,
+         55,  56,  57,  58,  59,  60,  61,  62,  63,  64,  65,  66,  67,  68,  69,  70,
+         71,  72,  73,  74,  76,  77,  78,  79,  80,  81,  82,  84,  85,  86,  87,  88,
+         90,  91,  92,  93,  95,  96,  97,  99, 100, 101, 103, 104, 105, 107, 108, 109,
+        111, 112, 114, 115, 116, 118, 119, 121, 122, 124, 125, 127, 128, 130, 131, 133,
+        134, 136, 138, 139, 141, 142, 144, 146, 147, 149, 151, 152, 154, 156, 157, 159,
+        161, 163, 164, 166, 168, 170, 171, 173, 175, 177, 179, 181, 183, 184, 186, 188,
+        190, 192, 194, 196, 198, 200, 202, 204, 206, 208, 210, 212, 214, 216, 218, 220,
+        222, 224, 226, 229, 231, 233, 235, 237, 239, 242, 244, 246, 248, 250, 253, 255
+};
+// clang-format on
+
 template <typename T>
 T srgb_integer_to_rgb_float(unsigned char c)
 {
@@ -121,10 +145,11 @@ T srgb_integer_to_rgb_float(unsigned char c)
         return FROM_SRGB_TO_RGB_LOOKUP_TABLE<T>[c];
 }
 
-template <typename T>
-T srgb_integer_to_rgb_integer(unsigned char c)
+unsigned char srgb_integer_to_rgb_integer(unsigned char c)
 {
-        return float_to_integer(srgb_integer_to_rgb_float<T>(c));
+        static_assert(std::numeric_limits<unsigned char>::digits == 8);
+
+        return FROM_SRGB_TO_RGB_INTEGER_LOOKUP_TABLE[c];
 }
 
 #else
@@ -155,10 +180,9 @@ T srgb_integer_to_rgb_float(unsigned char c)
         return srgb_to_rgb(integer_to_float<T>(c));
 }
 
-template <typename T>
-T srgb_integer_to_rgb_integer(unsigned char c)
+unsigned char srgb_integer_to_rgb_integer(unsigned char c)
 {
-        return float_to_integer(srgb_integer_to_rgb_float<T>(c));
+        return float_to_integer(srgb_integer_to_rgb_float<float>(c));
 }
 
 #endif
@@ -205,7 +229,7 @@ Color::T Color::srgb_integer_to_rgb_float(unsigned char c)
 
 unsigned char Color::srgb_integer_to_rgb_integer(unsigned char c)
 {
-        return ::srgb_integer_to_rgb_integer<T>(c);
+        return ::srgb_integer_to_rgb_integer(c);
 }
 
 Color::T Color::rgb_float_to_srgb_float(T c)
@@ -233,9 +257,10 @@ Color::T Color::luminance() const
         return rgb_luminance(m_data[0], m_data[1], m_data[2]);
 }
 
-#if 0
-//Функция для создания таблицы
+#if !USE_COLOR_LOOKUP_TABLES
+//Функции для создания таблиц
 #include "com/string/str.h"
+#include <iomanip>
 #include <limits>
 #include <sstream>
 std::string lookup_table()
@@ -254,6 +279,23 @@ std::string lookup_table()
                 oss << ((i != 0) ? "," : "");
                 oss << (((i & 0b11) != 0) ? " " : "\n" + std::string(8, ' '));
                 oss << srgb_integer_to_rgb_float<T>(i) << suffix;
+        }
+        oss << "\n};\n";
+        oss << "// clang-format on\n";
+        return oss.str();
+}
+std::string lookup_table_integer()
+{
+        std::ostringstream oss;
+        oss << std::setfill(' ');
+        oss << "// clang-format off\n";
+        oss << "constexpr unsigned char FROM_SRGB_TO_RGB_INTEGER_LOOKUP_TABLE[256] =\n";
+        oss << "{";
+        for (int i = 0; i <= 255; ++i)
+        {
+                oss << ((i != 0) ? "," : "");
+                oss << (((i % 16) != 0) ? " " : "\n" + std::string(8, ' '));
+                oss << std::setw(3) << static_cast<int>(srgb_integer_to_rgb_integer(i));
         }
         oss << "\n};\n";
         oss << "// clang-format on\n";
