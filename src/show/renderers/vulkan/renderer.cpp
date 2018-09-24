@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "renderer.h"
 
+#include "com/color/conversion.h"
 #include "com/log.h"
 #include "com/math.h"
 #include "com/time.h"
@@ -196,7 +197,7 @@ std::vector<unsigned char> integer_srgb_pixels_to_integer_rgb_pixels(const std::
         std::vector<unsigned char> buffer(pixels.size());
         for (size_t i = 0; i < buffer.size(); ++i)
         {
-                buffer[i] = Color::srgb_integer_to_rgb_integer(pixels[i]);
+                buffer[i] = color_conversion::srgb_integer_to_rgb_integer(pixels[i]);
         }
         return buffer;
 }

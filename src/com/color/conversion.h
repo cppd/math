@@ -17,25 +17,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "com/color/color.h"
-#include "com/mat.h"
-
-#include <memory>
-#include <string>
-#include <vector>
-
-class Text final
+namespace color_conversion
 {
-        class Impl;
-        std::unique_ptr<Impl> m_impl;
+template <typename T>
+T srgb_integer_to_rgb_float(unsigned char c);
 
-public:
-        Text(int size, int step_y, int start_x, int start_y, const Color& color, const mat4& matrix);
-        ~Text();
+unsigned char srgb_integer_to_rgb_integer(unsigned char c);
 
-        void set_color(const Color& color) const;
-        void set_matrix(const mat4& matrix) const;
+template <typename T>
+T rgb_float_to_srgb_float(T c);
 
-        void draw(const std::vector<std::string>& text);
-        void draw(const std::string& text);
-};
+template <typename T>
+unsigned char rgb_float_to_srgb_integer(T c);
+
+template <typename T>
+T rgb_float_to_rgb_luminance(T red, T green, T blue);
+}

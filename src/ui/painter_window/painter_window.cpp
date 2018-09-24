@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "painter_window.h"
 
 #include "com/alg.h"
+#include "com/color/conversion.h"
 #include "com/error.h"
 
 #include <algorithm>
@@ -122,12 +123,12 @@ void PainterWindow<N, T>::painter_pixel_before(const std::array<int_least16_t, N
 }
 
 template <size_t N, typename T>
-void PainterWindow<N, T>::painter_pixel_after(const std::array<int_least16_t, N_IMAGE>& pixel, const SrgbInteger& c) noexcept
+void PainterWindow<N, T>::painter_pixel_after(const std::array<int_least16_t, N_IMAGE>& pixel, const Color& color) noexcept
 {
         std::array<int_least16_t, N_IMAGE> p = pixel;
         p[1] = m_height - 1 - pixel[1];
 
-        set_pixel(pixel_index(p), c.red, c.green, c.blue);
+        set_pixel(pixel_index(p), color);
 }
 
 template <size_t N, typename T>
@@ -143,9 +144,11 @@ void PainterWindow<N, T>::mark_pixel_busy(long long index) noexcept
 }
 
 template <size_t N, typename T>
-void PainterWindow<N, T>::set_pixel(long long index, unsigned char r, unsigned char g, unsigned char b) noexcept
+void PainterWindow<N, T>::set_pixel(long long index, const Color& color) noexcept
 {
-        static_assert(std::numeric_limits<unsigned char>::digits == 8);
+        unsigned char r = color_conversion::rgb_float_to_srgb_integer(color.red());
+        unsigned char g = color_conversion::rgb_float_to_srgb_integer(color.green());
+        unsigned char b = color_conversion::rgb_float_to_srgb_integer(color.blue());
 
         quint32 c = (r << 16u) | (g << 8u) | b;
 

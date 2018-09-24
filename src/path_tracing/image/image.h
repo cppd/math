@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "com/color/colors.h"
+#include "com/color/color.h"
 #include "com/global_index.h"
 #include "com/vec.h"
 
@@ -55,7 +55,7 @@ public:
         template <typename T>
         Color texture(const Vector<N, T>& p) const;
 
-        void set_pixel(const std::array<int, N>& p, const SrgbInteger& color);
+        void set_pixel(const std::array<int, N>& p, const Color& color);
 
         template <size_t X = N>
         std::enable_if_t<X == 2> read_from_file(const std::string& file_name);

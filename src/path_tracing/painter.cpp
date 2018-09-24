@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "painter.h"
 
 #include "com/alg.h"
-#include "com/color/colors.h"
+#include "com/color/color.h"
 #include "com/error.h"
 #include "com/global_index.h"
 #include "com/random/engine.h"
@@ -442,7 +442,7 @@ void paint_pixels(PainterRandomEngine<T>& random_engine, std::vector<Vector<N - 
 
                 Color pixel_color = pixels->add_color_and_samples(pixel, color, samples->size());
 
-                painter_notifier->painter_pixel_after(pixel, pixel_color.to_srgb_integer());
+                painter_notifier->painter_pixel_after(pixel, pixel_color);
         }
 }
 

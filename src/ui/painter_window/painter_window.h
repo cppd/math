@@ -54,7 +54,7 @@ class PainterWindow final : public PainterWindow2d, public IPainterNotifier<N - 
 
         long long pixel_index(const std::array<int_least16_t, N_IMAGE>& pixel) const noexcept;
         long long offset_for_slider_positions(const std::vector<int>& slider_positions) const;
-        void set_pixel(long long index, unsigned char r, unsigned char g, unsigned char b) noexcept;
+        void set_pixel(long long index, const Color& color) noexcept;
         void mark_pixel_busy(long long index) noexcept;
 
         // PainterWindow2d
@@ -65,7 +65,7 @@ class PainterWindow final : public PainterWindow2d, public IPainterNotifier<N - 
 
         // IPainterNotifier
         void painter_pixel_before(const std::array<int_least16_t, N_IMAGE>& pixel) noexcept override;
-        void painter_pixel_after(const std::array<int_least16_t, N_IMAGE>& pixel, const SrgbInteger& c) noexcept override;
+        void painter_pixel_after(const std::array<int_least16_t, N_IMAGE>& pixel, const Color& color) noexcept override;
         void painter_error_message(const std::string& msg) noexcept override;
 
 public:

@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "physical_device.h"
 #include "shader.h"
 
-#include "com/color/colors.h"
+#include "com/color/color.h"
 #include "com/error.h"
 #include "com/type_detect.h"
 

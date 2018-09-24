@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "scenes.h"
 
+#include "com/color/color.h"
 #include "com/color/colors.h"
 #include "obj/obj_alg.h"
 #include "obj/obj_file_load.h"
@@ -101,30 +102,30 @@ public:
 
                 m_rectangle_back = std::make_unique<VisibleHyperplaneParallelotope<3, double>>(lower_left + size * dir,
                                                                                                size * right, size * up);
-                m_rectangle_back->set_color(srgb::WHITE);
+                m_rectangle_back->set_color(colors::WHITE);
                 m_rectangle_back->set_diffuse_and_fresnel(1, 0);
                 m_rectangle_back->set_light_source(false);
 
                 m_rectangle_top =
                         std::make_unique<VisibleHyperplaneParallelotope<3, double>>(upper_left, size * dir, size * right);
-                m_rectangle_top->set_color(srgb::WHITE);
+                m_rectangle_top->set_color(colors::WHITE);
                 m_rectangle_top->set_diffuse_and_fresnel(1, 0);
                 m_rectangle_top->set_light_source(false);
 
                 m_rectangle_bottom =
                         std::make_unique<VisibleHyperplaneParallelotope<3, double>>(lower_left, size * dir, size * right);
-                m_rectangle_bottom->set_color(srgb::WHITE);
+                m_rectangle_bottom->set_color(colors::WHITE);
                 m_rectangle_bottom->set_diffuse_and_fresnel(1, 0);
                 m_rectangle_bottom->set_light_source(false);
 
                 m_rectangle_left = std::make_unique<VisibleHyperplaneParallelotope<3, double>>(lower_left, size * dir, size * up);
-                m_rectangle_left->set_color(srgb::RED);
+                m_rectangle_left->set_color(colors::RED);
                 m_rectangle_left->set_diffuse_and_fresnel(1, 0);
                 m_rectangle_left->set_light_source(false);
 
                 m_rectangle_right =
                         std::make_unique<VisibleHyperplaneParallelotope<3, double>>(lower_right, size * dir, size * up);
-                m_rectangle_right->set_color(srgb::GREEN);
+                m_rectangle_right->set_color(colors::GREEN);
                 m_rectangle_right->set_diffuse_and_fresnel(1, 0);
                 m_rectangle_right->set_light_source(false);
 
@@ -139,16 +140,16 @@ public:
                 m_spherical_projector =
                         std::make_unique<VisibleSphericalProjector<3, double>>(view_point, dir, screen_axes, 80, screen_sizes);
 
-                m_default_surface_properties.set_color(srgb::BLACK);
+                m_default_surface_properties.set_color(colors::BLACK);
                 m_default_surface_properties.set_diffuse_and_fresnel(1, 0);
                 m_default_surface_properties.set_light_source(false);
-                m_default_surface_properties.set_light_source_color(srgb::BLACK);
+                m_default_surface_properties.set_light_source_color(colors::BLACK);
 
                 m_box = std::make_unique<VisibleParallelotope<3, double>>(lower_left + 0.7 * size * dir + 0.8 * size * right +
                                                                                   0.1 * size * up,
                                                                           0.1 * size * right, 0.8 * size * up, 0.1 * size * dir);
 
-                m_box->set_color(srgb::MAGENTA);
+                m_box->set_color(colors::MAGENTA);
                 m_box->set_diffuse_and_fresnel(1, 0);
                 m_box->set_light_source(false);
 
@@ -156,7 +157,7 @@ public:
 
                 m_lamp = std::make_unique<VisibleHyperplaneParallelotope<3, double>>(
                         upper_center - 0.1 * size * dir - 0.1 * size * right, 0.2 * size * right, 0.2 * size * dir);
-                m_lamp->set_color(srgb::WHITE);
+                m_lamp->set_color(colors::WHITE);
                 m_lamp->set_diffuse_and_fresnel(1, 0);
                 m_lamp->set_light_source(true);
                 m_lamp->set_light_source_color(Color(50));

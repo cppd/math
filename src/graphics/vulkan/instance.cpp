@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "application/application_name.h"
 #include "com/alg.h"
+#include "com/color/conversion.h"
 #include "com/error.h"
 #include "com/log.h"
 #include "com/print.h"
@@ -34,9 +35,9 @@ namespace
 VkClearValue color_float_srgb_clear_value(const Color& clear_color)
 {
         VkClearValue clear_value;
-        clear_value.color.float32[0] = Color::rgb_float_to_srgb_float(clear_color.red());
-        clear_value.color.float32[1] = Color::rgb_float_to_srgb_float(clear_color.green());
-        clear_value.color.float32[2] = Color::rgb_float_to_srgb_float(clear_color.blue());
+        clear_value.color.float32[0] = color_conversion::rgb_float_to_srgb_float(clear_color.red());
+        clear_value.color.float32[1] = color_conversion::rgb_float_to_srgb_float(clear_color.green());
+        clear_value.color.float32[2] = color_conversion::rgb_float_to_srgb_float(clear_color.blue());
         clear_value.color.float32[3] = 1;
         return clear_value;
 }

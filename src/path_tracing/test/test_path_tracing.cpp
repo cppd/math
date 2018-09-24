@@ -63,11 +63,11 @@ public:
         {
         }
 
-        void painter_pixel_after(const std::array<int_least16_t, 3>& pixel, const SrgbInteger& c) noexcept override
+        void painter_pixel_after(const std::array<int_least16_t, 3>& pixel, const Color& color) noexcept override
         {
                 try
                 {
-                        m_images[pixel[2]].set_pixel(std::array<int, 2>{pixel[0], m_size[1] - 1 - pixel[1]}, c);
+                        m_images[pixel[2]].set_pixel(std::array<int, 2>{pixel[0], m_size[1] - 1 - pixel[1]}, color);
                 }
                 catch (...)
                 {

@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "colors.h"
+#include "conversion.h"
 
 #include <cmath>
 #include <type_traits>
@@ -46,7 +46,7 @@ namespace
 
 // clang-format off
 template <typename T>
-constexpr T FROM_SRGB_TO_RGB_LOOKUP_TABLE[256] =
+constexpr T FROM_SRGB_TO_RGB_FLOAT_LOOKUP_TABLE[256] =
 {
         0.000000000000000000000e+00L, 3.035269835488374933221e-04L, 6.070539670976749866442e-04L, 9.105809506465124800192e-04L,
         1.214107934195349973288e-03L, 1.517634917744187466610e-03L, 1.821161901293024960038e-03L, 2.124688884841862453466e-03L,
@@ -137,23 +137,7 @@ constexpr unsigned char FROM_SRGB_TO_RGB_INTEGER_LOOKUP_TABLE[256] =
 };
 // clang-format on
 
-template <typename T>
-T srgb_integer_to_rgb_float(unsigned char c)
-{
-        static_assert(std::numeric_limits<unsigned char>::digits == 8);
-
-        return FROM_SRGB_TO_RGB_LOOKUP_TABLE<T>[c];
-}
-
-unsigned char srgb_integer_to_rgb_integer(unsigned char c)
-{
-        static_assert(std::numeric_limits<unsigned char>::digits == 8);
-
-        return FROM_SRGB_TO_RGB_INTEGER_LOOKUP_TABLE[c];
-}
-
 #else
-
 template <typename T>
 T srgb_to_rgb(T c)
 {
@@ -173,18 +157,6 @@ T srgb_to_rgb(T c)
         }
         return 0;
 }
-
-template <typename T>
-T srgb_integer_to_rgb_float(unsigned char c)
-{
-        return srgb_to_rgb(integer_to_float<T>(c));
-}
-
-unsigned char srgb_integer_to_rgb_integer(unsigned char c)
-{
-        return float_to_integer(srgb_integer_to_rgb_float<float>(c));
-}
-
 #endif
 
 template <typename T>
@@ -208,12 +180,6 @@ T rgb_to_srgb(T c)
 }
 
 template <typename T>
-unsigned char rgb_float_to_srgb_integer(T c)
-{
-        return float_to_integer(rgb_to_srgb(c));
-}
-
-template <typename T>
 T rgb_luminance(T red, T green, T blue)
 {
         static_assert(std::is_floating_point_v<T>);
@@ -222,47 +188,78 @@ T rgb_luminance(T red, T green, T blue)
 }
 }
 
-Color::T Color::srgb_integer_to_rgb_float(unsigned char c)
+namespace color_conversion
 {
-        return ::srgb_integer_to_rgb_float<T>(c);
-}
-
-unsigned char Color::srgb_integer_to_rgb_integer(unsigned char c)
+#if USE_COLOR_LOOKUP_TABLES
+template <typename T>
+T srgb_integer_to_rgb_float(unsigned char c)
 {
-        return ::srgb_integer_to_rgb_integer(c);
-}
+        static_assert(std::numeric_limits<unsigned char>::digits == 8);
 
-Color::T Color::rgb_float_to_srgb_float(T c)
+        return FROM_SRGB_TO_RGB_FLOAT_LOOKUP_TABLE<T>[c];
+}
+unsigned char srgb_integer_to_rgb_integer(unsigned char c)
+{
+        static_assert(std::numeric_limits<unsigned char>::digits == 8);
+
+        return FROM_SRGB_TO_RGB_INTEGER_LOOKUP_TABLE[c];
+}
+#else
+template <typename T>
+T srgb_integer_to_rgb_float(unsigned char c)
+{
+        return srgb_to_rgb(integer_to_float<T>(c));
+}
+unsigned char srgb_integer_to_rgb_integer(unsigned char c)
+{
+        return float_to_integer(srgb_to_rgb(integer_to_float<float>(c)));
+}
+#endif
+
+template <typename T>
+T rgb_float_to_srgb_float(T c)
 {
         return rgb_to_srgb<T>(c);
 }
 
-void Color::set_from_srgb_integer(unsigned char r, unsigned char g, unsigned char b)
+template <typename T>
+unsigned char rgb_float_to_srgb_integer(T c)
 {
-        m_data[0] = ::srgb_integer_to_rgb_float<T>(r);
-        m_data[1] = ::srgb_integer_to_rgb_float<T>(g);
-        m_data[2] = ::srgb_integer_to_rgb_float<T>(b);
+        return float_to_integer(rgb_to_srgb(c));
 }
 
-SrgbInteger Color::to_srgb_integer() const
+template <typename T>
+T rgb_float_to_rgb_luminance(T red, T green, T blue)
 {
-        unsigned char red = rgb_float_to_srgb_integer(m_data[0]);
-        unsigned char green = rgb_float_to_srgb_integer(m_data[1]);
-        unsigned char blue = rgb_float_to_srgb_integer(m_data[2]);
-        return SrgbInteger(red, green, blue);
+        return rgb_luminance(red, green, blue);
 }
 
-Color::T Color::luminance() const
-{
-        return rgb_luminance(m_data[0], m_data[1], m_data[2]);
+template float srgb_integer_to_rgb_float(unsigned char c);
+template double srgb_integer_to_rgb_float(unsigned char c);
+template long double srgb_integer_to_rgb_float(unsigned char c);
+
+template float rgb_float_to_srgb_float(float c);
+template double rgb_float_to_srgb_float(double c);
+template long double rgb_float_to_srgb_float(long double c);
+
+template unsigned char rgb_float_to_srgb_integer(float c);
+template unsigned char rgb_float_to_srgb_integer(double c);
+template unsigned char rgb_float_to_srgb_integer(long double c);
+
+template float rgb_float_to_rgb_luminance(float red, float green, float blue);
+template double rgb_float_to_rgb_luminance(double red, double green, double blue);
+template long double rgb_float_to_rgb_luminance(long double red, long double green, long double blue);
 }
 
 #if !USE_COLOR_LOOKUP_TABLES
 //Функции для создания таблиц
 #include "com/string/str.h"
+#include "com/types.h"
 #include <iomanip>
 #include <limits>
 #include <sstream>
+namespace color_conversion
+{
 std::string lookup_table()
 {
         using T = long double;
@@ -272,7 +269,7 @@ std::string lookup_table()
         oss << std::scientific;
         oss << "// clang-format off\n";
         oss << "template <typename T>\n";
-        oss << "constexpr T FROM_SRGB_TO_RGB_LOOKUP_TABLE[256] =\n";
+        oss << "constexpr T FROM_SRGB_TO_RGB_FLOAT_LOOKUP_TABLE[256] =\n";
         oss << "{";
         for (int i = 0; i <= 255; ++i)
         {
@@ -300,5 +297,6 @@ std::string lookup_table_integer()
         oss << "\n};\n";
         oss << "// clang-format on\n";
         return oss.str();
+}
 }
 #endif

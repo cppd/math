@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "image.h"
 
-#include "com/color/colors.h"
+#include "com/color/conversion.h"
 #include "com/error.h"
 #include "com/file/file.h"
 #include "com/file/file_sys.h"
@@ -56,11 +56,6 @@ long long mul(const std::array<int, N>& size)
                 res *= size[i];
         }
         return res;
-}
-
-std::array<unsigned char, 3> srgb_integer_to_unsigned_char_array(const SrgbInteger& c)
-{
-        return {c.red, c.green, c.blue};
 }
 
 #if 0
@@ -214,18 +209,20 @@ Color Image<N>::texture(const Vector<N, T>& p) const
 template <size_t N>
 void Image<N>::read_from_srgba_pixels(const std::array<int, N>& size, const unsigned char* srgba_pixels)
 {
+        static_assert(std::numeric_limits<unsigned char>::digits == 8);
+
         resize(size);
 
         for (size_t i = 0, p = 0; i < m_data.size(); p += 4, ++i)
         {
-                m_data[i].set_from_srgb_integer(srgba_pixels[p], srgba_pixels[p + 1], srgba_pixels[p + 2]);
+                m_data[i] = SrgbInteger(srgba_pixels[p], srgba_pixels[p + 1], srgba_pixels[p + 2]);
         }
 }
 
 template <size_t N>
-void Image<N>::set_pixel(const std::array<int, N>& p, const SrgbInteger& color)
+void Image<N>::set_pixel(const std::array<int, N>& p, const Color& color)
 {
-        m_data[pixel_index(p)] = Color(color);
+        m_data[pixel_index(p)] = color;
 }
 
 template <size_t N>
@@ -270,14 +267,16 @@ std::enable_if_t<X == 2> Image<N>::write_to_file(const std::string& file_name) c
                 error("Error writing image header");
         }
 
-        std::vector<std::array<unsigned char, 3>> buffer(m_data.size());
+        std::vector<unsigned char> buffer(m_data.size() * 3);
 
-        for (size_t i = 0; i < m_data.size(); ++i)
+        for (size_t i = 0, buf = 0; i < m_data.size(); ++i)
         {
-                buffer[i] = srgb_integer_to_unsigned_char_array(m_data[i].to_srgb_integer());
+                buffer[buf++] = color_conversion::rgb_float_to_srgb_integer(m_data[i].red());
+                buffer[buf++] = color_conversion::rgb_float_to_srgb_integer(m_data[i].green());
+                buffer[buf++] = color_conversion::rgb_float_to_srgb_integer(m_data[i].blue());
         }
 
-        if (fwrite(buffer.data(), 3, buffer.size(), fp) != buffer.size())
+        if (fwrite(buffer.data(), sizeof(buffer[0]), buffer.size(), fp) != buffer.size())
         {
                 error("Error writing image data");
         }
