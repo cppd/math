@@ -146,9 +146,9 @@ void PainterWindow<N, T>::mark_pixel_busy(long long index) noexcept
 template <size_t N, typename T>
 void PainterWindow<N, T>::set_pixel(long long index, const Color& color) noexcept
 {
-        unsigned char r = color_conversion::rgb_float_to_srgb_integer(color.red());
-        unsigned char g = color_conversion::rgb_float_to_srgb_integer(color.green());
-        unsigned char b = color_conversion::rgb_float_to_srgb_integer(color.blue());
+        unsigned char r = color_conversion::rgb_float_to_srgb_uint8(color.red());
+        unsigned char g = color_conversion::rgb_float_to_srgb_uint8(color.green());
+        unsigned char b = color_conversion::rgb_float_to_srgb_uint8(color.blue());
 
         quint32 c = (r << 16u) | (g << 8u) | b;
 

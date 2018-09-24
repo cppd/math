@@ -197,7 +197,7 @@ std::vector<unsigned char> integer_srgb_pixels_to_integer_rgb_pixels(const std::
         std::vector<unsigned char> buffer(pixels.size());
         for (size_t i = 0; i < buffer.size(); ++i)
         {
-                buffer[i] = color_conversion::srgb_integer_to_rgb_integer(pixels[i]);
+                buffer[i] = color_conversion::srgb_uint8_to_rgb_uint8(pixels[i]);
         }
         return buffer;
 }

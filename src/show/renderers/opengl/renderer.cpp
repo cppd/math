@@ -222,7 +222,7 @@ std::vector<float> integer_srgb_pixels_to_float_rgb_pixels(const std::vector<uns
         std::vector<float> buffer(pixels.size());
         for (size_t i = 0; i < buffer.size(); ++i)
         {
-                buffer[i] = color_conversion::srgb_integer_to_rgb_float<float>(pixels[i]);
+                buffer[i] = color_conversion::srgb_uint8_to_rgb_float<float>(pixels[i]);
         }
         return buffer;
 }

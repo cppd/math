@@ -271,9 +271,9 @@ std::enable_if_t<X == 2> Image<N>::write_to_file(const std::string& file_name) c
 
         for (size_t i = 0, buf = 0; i < m_data.size(); ++i)
         {
-                buffer[buf++] = color_conversion::rgb_float_to_srgb_integer(m_data[i].red());
-                buffer[buf++] = color_conversion::rgb_float_to_srgb_integer(m_data[i].green());
-                buffer[buf++] = color_conversion::rgb_float_to_srgb_integer(m_data[i].blue());
+                buffer[buf++] = color_conversion::rgb_float_to_srgb_uint8(m_data[i].red());
+                buffer[buf++] = color_conversion::rgb_float_to_srgb_uint8(m_data[i].green());
+                buffer[buf++] = color_conversion::rgb_float_to_srgb_uint8(m_data[i].blue());
         }
 
         if (fwrite(buffer.data(), sizeof(buffer[0]), buffer.size(), fp) != buffer.size())
