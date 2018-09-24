@@ -51,7 +51,7 @@ constexpr std::uint_least16_t float_to_uint16(Float c)
 }
 
 // Функция работает до преобразований с плавающей точкой,
-// поэтому если параметр больше 255 при unsigned char не 8 бит,
+// поэтому если параметр больше MAX8 при unsigned char не 8 бит,
 // то значение больше 1 будет далее правильно обработано
 template <typename Float>
 constexpr Float uint8_to_float(unsigned char c)
@@ -159,7 +159,30 @@ constexpr unsigned char SRGB_UINT8_TO_RGB_UINT8_LOOKUP_TABLE[256] =
         222, 224, 226, 229, 231, 233, 235, 237, 239, 242, 244, 246, 248, 250, 253, 255
 };
 // clang-format on
-#endif
+
+// clang-format off
+constexpr std::uint_least16_t SRGB_UINT8_TO_RGB_UINT16_LOOKUP_TABLE[256] =
+{
+            0,    20,    40,    60,    80,    99,   119,   139,   159,   179,   199,   219,   241,   264,   288,   313,
+          340,   367,   396,   427,   458,   491,   526,   562,   599,   637,   677,   718,   761,   805,   851,   898,
+          947,   997,  1048,  1101,  1156,  1212,  1270,  1330,  1391,  1453,  1517,  1583,  1651,  1720,  1790,  1863,
+         1937,  2013,  2090,  2170,  2250,  2333,  2418,  2504,  2592,  2681,  2773,  2866,  2961,  3058,  3157,  3258,
+         3360,  3464,  3570,  3678,  3788,  3900,  4014,  4129,  4247,  4366,  4488,  4611,  4736,  4864,  4993,  5124,
+         5257,  5392,  5530,  5669,  5810,  5953,  6099,  6246,  6395,  6547,  6700,  6856,  7014,  7174,  7335,  7500,
+         7666,  7834,  8004,  8177,  8352,  8528,  8708,  8889,  9072,  9258,  9445,  9635,  9828, 10022, 10219, 10418,
+        10619, 10822, 11028, 11235, 11446, 11658, 11873, 12090, 12309, 12530, 12754, 12980, 13209, 13440, 13673, 13909,
+        14146, 14387, 14629, 14874, 15122, 15371, 15623, 15878, 16135, 16394, 16656, 16920, 17187, 17456, 17727, 18001,
+        18277, 18556, 18837, 19121, 19407, 19696, 19987, 20281, 20577, 20876, 21177, 21481, 21787, 22096, 22407, 22721,
+        23038, 23357, 23678, 24002, 24329, 24658, 24990, 25325, 25662, 26001, 26344, 26688, 27036, 27386, 27739, 28094,
+        28452, 28813, 29176, 29542, 29911, 30282, 30656, 31033, 31412, 31794, 32179, 32567, 32957, 33350, 33745, 34143,
+        34544, 34948, 35355, 35764, 36176, 36591, 37008, 37429, 37852, 38278, 38706, 39138, 39572, 40009, 40449, 40891,
+        41337, 41785, 42236, 42690, 43147, 43606, 44069, 44534, 45002, 45473, 45947, 46423, 46903, 47385, 47871, 48359,
+        48850, 49344, 49841, 50341, 50844, 51349, 51858, 52369, 52884, 53401, 53921, 54445, 54971, 55500, 56032, 56567,
+        57105, 57646, 58190, 58737, 59287, 59840, 60396, 60955, 61517, 62082, 62650, 63221, 63795, 64372, 64952, 65535
+};
+// clang-format on
+
+#else
 
 template <typename T>
 T srgb_to_rgb(T c)
@@ -180,6 +203,8 @@ T srgb_to_rgb(T c)
         }
         return 0;
 }
+
+#endif
 
 template <typename T>
 T rgb_to_srgb(T c)
@@ -217,31 +242,38 @@ namespace color_conversion
 template <typename T>
 T srgb_uint8_to_rgb_float(unsigned char c)
 {
-        if constexpr (std::numeric_limits<unsigned char>::max() == 255)
+        if constexpr (std::numeric_limits<unsigned char>::max() == MAX8)
         {
                 return SRGB_UINT8_TO_RGB_FLOAT_LOOKUP_TABLE<T>[c];
         }
         else
         {
-                return SRGB_UINT8_TO_RGB_FLOAT_LOOKUP_TABLE<T>[std::min(c, static_cast<unsigned char>(255))];
+                return SRGB_UINT8_TO_RGB_FLOAT_LOOKUP_TABLE<T>[std::min(c, static_cast<unsigned char>(MAX8))];
         }
 }
 
 unsigned char srgb_uint8_to_rgb_uint8(unsigned char c)
 {
-        if constexpr (std::numeric_limits<unsigned char>::max() == 255)
+        if constexpr (std::numeric_limits<unsigned char>::max() == MAX8)
         {
                 return SRGB_UINT8_TO_RGB_UINT8_LOOKUP_TABLE[c];
         }
         else
         {
-                return SRGB_UINT8_TO_RGB_UINT8_LOOKUP_TABLE[std::min(c, static_cast<unsigned char>(255))];
+                return SRGB_UINT8_TO_RGB_UINT8_LOOKUP_TABLE[std::min(c, static_cast<unsigned char>(MAX8))];
         }
 }
 
 std::uint_least16_t srgb_uint8_to_rgb_uint16(unsigned char c)
 {
-        return float_to_uint16(srgb_to_rgb(uint8_to_float<float>(c)));
+        if constexpr (std::numeric_limits<unsigned char>::max() == MAX8)
+        {
+                return SRGB_UINT8_TO_RGB_UINT16_LOOKUP_TABLE[c];
+        }
+        else
+        {
+                return SRGB_UINT8_TO_RGB_UINT16_LOOKUP_TABLE[std::min(c, static_cast<unsigned char>(MAX8))];
+        }
 }
 
 #else
@@ -308,7 +340,7 @@ template long double rgb_float_to_rgb_luminance(long double red, long double gre
 #include <sstream>
 namespace color_conversion
 {
-std::string lookup_table()
+std::string lookup_table_float()
 {
         using T = long double;
         std::string suffix = to_upper(floating_point_suffix<T>());
@@ -319,7 +351,7 @@ std::string lookup_table()
         oss << "template <typename T>\n";
         oss << "constexpr T SRGB_UINT8_TO_RGB_FLOAT_LOOKUP_TABLE[256] =\n";
         oss << "{";
-        for (int i = 0; i <= 255; ++i)
+        for (unsigned i = 0; i <= MAX8; ++i)
         {
                 oss << ((i != 0) ? "," : "");
                 oss << (((i & 0b11) != 0) ? " " : "\n" + std::string(8, ' '));
@@ -329,18 +361,35 @@ std::string lookup_table()
         oss << "// clang-format on\n";
         return oss.str();
 }
-std::string lookup_table_integer()
+std::string lookup_table_uint8()
 {
         std::ostringstream oss;
         oss << std::setfill(' ');
         oss << "// clang-format off\n";
         oss << "constexpr unsigned char SRGB_UINT8_TO_RGB_UINT8_LOOKUP_TABLE[256] =\n";
         oss << "{";
-        for (int i = 0; i <= 255; ++i)
+        for (unsigned i = 0; i <= MAX8; ++i)
         {
                 oss << ((i != 0) ? "," : "");
                 oss << (((i % 16) != 0) ? " " : "\n" + std::string(8, ' '));
-                oss << std::setw(3) << static_cast<int>(srgb_uint8_to_rgb_uint8(i));
+                oss << std::setw(3) << static_cast<unsigned>(srgb_uint8_to_rgb_uint8(i));
+        }
+        oss << "\n};\n";
+        oss << "// clang-format on\n";
+        return oss.str();
+}
+std::string lookup_table_uint16()
+{
+        std::ostringstream oss;
+        oss << std::setfill(' ');
+        oss << "// clang-format off\n";
+        oss << "constexpr std::uint_least16_t SRGB_UINT8_TO_RGB_UINT16_LOOKUP_TABLE[256] =\n";
+        oss << "{";
+        for (unsigned i = 0; i <= MAX8; ++i)
+        {
+                oss << ((i != 0) ? "," : "");
+                oss << (((i % 16) != 0) ? " " : "\n" + std::string(8, ' '));
+                oss << std::setw(5) << static_cast<unsigned>(srgb_uint8_to_rgb_uint16(i));
         }
         oss << "\n};\n";
         oss << "// clang-format on\n";
