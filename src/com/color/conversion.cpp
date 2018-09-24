@@ -26,8 +26,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #define USE_COLOR_LOOKUP_TABLES 1
 
-// Функция работает после преобразований с плавающей точкой,
-// поэтому параметр функции находится в интервале [0, 1]
+constexpr unsigned MAX8 = (1u << 8) - 1;
+constexpr unsigned MAX16 = (1u << 16) - 1;
+
+// Функции работают после преобразований с плавающей точкой,
+// поэтому параметр функций находится в интервале [0, 1]
 template <typename Float>
 constexpr unsigned char float_to_uint8(Float c)
 {
@@ -35,7 +38,16 @@ constexpr unsigned char float_to_uint8(Float c)
 
         ASSERT(c >= 0 && c <= 1);
 
-        return static_cast<unsigned char>(c * Float(255) + Float(0.5));
+        return c * Float(MAX8) + Float(0.5);
+}
+template <typename Float>
+constexpr std::uint_least16_t float_to_uint16(Float c)
+{
+        static_assert(std::is_floating_point_v<Float>);
+
+        ASSERT(c >= 0 && c <= 1);
+
+        return c * Float(MAX16) + Float(0.5);
 }
 
 // Функция работает до преобразований с плавающей точкой,
@@ -46,9 +58,9 @@ constexpr Float uint8_to_float(unsigned char c)
 {
         static_assert(std::is_floating_point_v<Float>);
 
-        ASSERT(std::numeric_limits<unsigned char>::max() == 255 || c <= 255);
+        ASSERT(std::numeric_limits<unsigned char>::max() == MAX8 || c <= MAX8);
 
-        return Float(c) / Float(255);
+        return Float(c) / Float(MAX8);
 }
 
 namespace
@@ -147,8 +159,8 @@ constexpr unsigned char SRGB_UINT8_TO_RGB_UINT8_LOOKUP_TABLE[256] =
         222, 224, 226, 229, 231, 233, 235, 237, 239, 242, 244, 246, 248, 250, 253, 255
 };
 // clang-format on
+#endif
 
-#else
 template <typename T>
 T srgb_to_rgb(T c)
 {
@@ -168,7 +180,6 @@ T srgb_to_rgb(T c)
         }
         return 0;
 }
-#endif
 
 template <typename T>
 T rgb_to_srgb(T c)
@@ -202,6 +213,7 @@ T rgb_luminance(T red, T green, T blue)
 namespace color_conversion
 {
 #if USE_COLOR_LOOKUP_TABLES
+
 template <typename T>
 T srgb_uint8_to_rgb_float(unsigned char c)
 {
@@ -214,6 +226,7 @@ T srgb_uint8_to_rgb_float(unsigned char c)
                 return SRGB_UINT8_TO_RGB_FLOAT_LOOKUP_TABLE<T>[std::min(c, static_cast<unsigned char>(255))];
         }
 }
+
 unsigned char srgb_uint8_to_rgb_uint8(unsigned char c)
 {
         if constexpr (std::numeric_limits<unsigned char>::max() == 255)
@@ -225,16 +238,30 @@ unsigned char srgb_uint8_to_rgb_uint8(unsigned char c)
                 return SRGB_UINT8_TO_RGB_UINT8_LOOKUP_TABLE[std::min(c, static_cast<unsigned char>(255))];
         }
 }
+
+std::uint_least16_t srgb_uint8_to_rgb_uint16(unsigned char c)
+{
+        return float_to_uint16(srgb_to_rgb(uint8_to_float<float>(c)));
+}
+
 #else
+
 template <typename T>
 T srgb_uint8_to_rgb_float(unsigned char c)
 {
         return srgb_to_rgb(uint8_to_float<T>(c));
 }
+
 unsigned char srgb_uint8_to_rgb_uint8(unsigned char c)
 {
         return float_to_uint8(srgb_to_rgb(uint8_to_float<float>(c)));
 }
+
+std::uint_least16_t srgb_uint8_to_rgb_uint16(unsigned char c)
+{
+        return float_to_uint16(srgb_to_rgb(uint8_to_float<float>(c)));
+}
+
 #endif
 
 template <typename T>
