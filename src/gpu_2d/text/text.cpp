@@ -46,12 +46,10 @@ struct Vertex
 
 std::vector<float> integer_pixels_to_float_pixels(long long width, long long height, const unsigned char* pixels)
 {
-        static_assert(std::numeric_limits<unsigned char>::digits == 8);
-
         std::vector<float> buffer(width * height);
         for (size_t i = 0; i < buffer.size(); ++i)
         {
-                buffer[i] = pixels[i] / 255.0f;
+                buffer[i] = color_conversion::srgb_uint8_to_rgb_float<float>(pixels[i]);
         }
         return buffer;
 }

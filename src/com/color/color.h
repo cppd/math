@@ -23,12 +23,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <algorithm>
 
-struct SrgbInteger
+struct Srgb8
 {
         unsigned char red, green, blue;
 
-        constexpr SrgbInteger(unsigned char red_, unsigned char green_, unsigned char blue_)
-                : red(red_), green(green_), blue(blue_)
+        constexpr Srgb8(unsigned char red_, unsigned char green_, unsigned char blue_) : red(red_), green(green_), blue(blue_)
         {
         }
 };
@@ -52,7 +51,7 @@ public:
         {
         }
 
-        Color(const SrgbInteger& c)
+        Color(const Srgb8& c)
                 : m_data(color_conversion::srgb_uint8_to_rgb_float<T>(c.red),
                          color_conversion::srgb_uint8_to_rgb_float<T>(c.green),
                          color_conversion::srgb_uint8_to_rgb_float<T>(c.blue))

@@ -33,8 +33,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "ui/painter_window/painter_window.h"
 #include "ui/support/support.h"
 
-constexpr SrgbInteger BACKGROUND_COLOR(50, 100, 150);
-constexpr SrgbInteger DEFAULT_COLOR(150, 170, 150);
+constexpr Srgb8 BACKGROUND_COLOR(50, 100, 150);
+constexpr Srgb8 DEFAULT_COLOR(150, 170, 150);
 
 namespace
 {

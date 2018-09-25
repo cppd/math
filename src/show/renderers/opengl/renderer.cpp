@@ -217,8 +217,6 @@ void load_materials(const Obj<3>& obj, std::vector<Material>* materials)
 
 std::vector<float> integer_srgb_pixels_to_float_rgb_pixels(const std::vector<unsigned char>& pixels)
 {
-        static_assert(std::numeric_limits<unsigned char>::digits == 8);
-
         std::vector<float> buffer(pixels.size());
         for (size_t i = 0; i < buffer.size(); ++i)
         {

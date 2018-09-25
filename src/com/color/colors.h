@@ -21,12 +21,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace colors
 {
-inline constexpr SrgbInteger BLACK(0, 0, 0);
-inline constexpr SrgbInteger BLUE(0, 0, 255);
-inline constexpr SrgbInteger CYAN(0, 255, 255);
-inline constexpr SrgbInteger GREEN(0, 255, 0);
-inline constexpr SrgbInteger MAGENTA(255, 0, 255);
-inline constexpr SrgbInteger RED(255, 0, 0);
-inline constexpr SrgbInteger WHITE(255, 255, 255);
-inline constexpr SrgbInteger YELLOW(255, 255, 0);
+inline constexpr Srgb8 BLACK(0, 0, 0);
+inline constexpr Srgb8 BLUE(0, 0, 255);
+inline constexpr Srgb8 CYAN(0, 255, 255);
+inline constexpr Srgb8 GREEN(0, 255, 0);
+inline constexpr Srgb8 MAGENTA(255, 0, 255);
+inline constexpr Srgb8 RED(255, 0, 0);
+inline constexpr Srgb8 WHITE(255, 255, 255);
+inline constexpr Srgb8 YELLOW(255, 255, 0);
 }

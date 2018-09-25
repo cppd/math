@@ -209,13 +209,11 @@ Color Image<N>::texture(const Vector<N, T>& p) const
 template <size_t N>
 void Image<N>::read_from_srgba_pixels(const std::array<int, N>& size, const unsigned char* srgba_pixels)
 {
-        static_assert(std::numeric_limits<unsigned char>::digits == 8);
-
         resize(size);
 
         for (size_t i = 0, p = 0; i < m_data.size(); p += 4, ++i)
         {
-                m_data[i] = SrgbInteger(srgba_pixels[p], srgba_pixels[p + 1], srgba_pixels[p + 2]);
+                m_data[i] = Srgb8(srgba_pixels[p], srgba_pixels[p + 1], srgba_pixels[p + 2]);
         }
 }
 

@@ -192,8 +192,6 @@ std::unique_ptr<vulkan::VertexBufferWithDeviceLocalMemory> load_vertices(const v
 
 std::vector<unsigned char> integer_srgb_pixels_to_integer_rgb_pixels(const std::vector<unsigned char>& pixels)
 {
-        static_assert(std::numeric_limits<unsigned char>::digits == 8);
-
         std::vector<unsigned char> buffer(pixels.size());
         for (size_t i = 0; i < buffer.size(); ++i)
         {
