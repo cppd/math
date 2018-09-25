@@ -144,8 +144,6 @@ public:
                                     const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions,
                                     const std::vector<VkDescriptorSetLayout>& descriptor_set_layouts);
 
-        Texture create_texture(uint32_t width, uint32_t height, const std::vector<unsigned char>& rgba_pixels) const;
-
         template <typename T>
         VertexBufferWithDeviceLocalMemory create_vertex_buffer(const T& data) const
         {
@@ -162,6 +160,13 @@ public:
                 return IndexBufferWithDeviceLocalMemory(m_device, m_transfer_command_pool, m_transfer_queue,
                                                         m_vertex_buffer_family_indices,
                                                         data.size() * sizeof(typename T::value_type), data.data());
+        }
+
+        template <typename T>
+        Texture create_texture(uint32_t width, uint32_t height, const std::vector<T>& rgba_pixels) const
+        {
+                return Texture(m_device, m_graphics_command_pool, m_graphics_queue, m_transfer_command_pool, m_transfer_queue,
+                               m_texture_image_family_indices, width, height, rgba_pixels);
         }
 
         [[nodiscard]] bool draw_frame(SwapChain& swap_chain);

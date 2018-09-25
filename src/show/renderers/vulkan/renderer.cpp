@@ -190,12 +190,12 @@ std::unique_ptr<vulkan::VertexBufferWithDeviceLocalMemory> load_vertices(const v
         return std::make_unique<vulkan::VertexBufferWithDeviceLocalMemory>(instance.create_vertex_buffer(shader_vertices));
 }
 
-std::vector<unsigned char> integer_srgb_pixels_to_integer_rgb_pixels(const std::vector<unsigned char>& pixels)
+std::vector<uint16_t> integer_srgb_pixels_to_integer_rgb_pixels(const std::vector<unsigned char>& pixels)
 {
-        std::vector<unsigned char> buffer(pixels.size());
+        std::vector<uint16_t> buffer(pixels.size());
         for (size_t i = 0; i < buffer.size(); ++i)
         {
-                buffer[i] = color_conversion::srgb_uint8_to_rgb_uint8(pixels[i]);
+                buffer[i] = color_conversion::srgb_uint8_to_rgb_uint16(pixels[i]);
         }
         return buffer;
 }
@@ -211,8 +211,9 @@ std::vector<vulkan::Texture> load_textures(const vulkan::VulkanInstance& instanc
         }
 
         // На одну текстуру больше для её указания, но не использования в тех материалах, где нет текстуры
-        textures.push_back(instance.create_texture(
-                2, 2, {/*0*/ 255, 0, 0, 255, /*1*/ 0, 255, 0, 255, /*2*/ 0, 0, 255, 255, /*3*/ 255, 255, 255, 255}));
+        std::vector<std::uint16_t> pixels = {/*0*/ 0, 0, 0, 0, /*1*/ 0, 0, 0, 0,
+                                             /*2*/ 0, 0, 0, 0, /*3*/ 0, 0, 0, 0};
+        textures.push_back(instance.create_texture(2, 2, pixels));
 
         return textures;
 }

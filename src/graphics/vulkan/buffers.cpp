@@ -366,18 +366,21 @@ void staging_buffer_copy(const vulkan::Device& device, VkCommandPool command_poo
         copy_buffer_to_buffer(device, command_pool, queue, dst_buffer, staging_buffer, src_data_size);
 }
 
+template <typename ColorFormat>
 void staging_image_copy(const vulkan::Device& device, VkCommandPool graphics_command_pool, VkQueue graphics_queue,
                         VkCommandPool transfer_command_pool, VkQueue transfer_queue, VkImage image, VkFormat format,
-                        VkImageLayout image_layout, uint32_t width, uint32_t height,
-                        const std::vector<unsigned char>& rgba_pixels)
+                        VkImageLayout image_layout, uint32_t width, uint32_t height, const std::vector<ColorFormat>& rgba_pixels)
 {
-        VkDeviceSize data_size = width * height * 4;
+        static_assert(std::is_same_v<ColorFormat, uint8_t> || std::is_same_v<ColorFormat, uint16_t> ||
+                      std::is_same_v<ColorFormat, float>);
 
-        if (rgba_pixels.size() != data_size)
+        if (rgba_pixels.size() != width * height * 4)
         {
                 error("Wrong RGBA pixel component count " + to_string(rgba_pixels.size()) + " for image dimensions width " +
                       to_string(width) + " and height " + to_string(height));
         }
+
+        VkDeviceSize data_size = width * height * 4 * sizeof(rgba_pixels[0]);
 
         vulkan::Buffer staging_buffer(create_buffer(device, data_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, {}));
 
@@ -509,8 +512,8 @@ void UniformBufferWithHostVisibleMemory::copy(VkDeviceSize offset, const void* d
 
 Texture::Texture(const Device& device, VkCommandPool graphics_command_pool, VkQueue graphics_queue,
                  VkCommandPool transfer_command_pool, VkQueue transfer_queue, const std::vector<uint32_t>& family_indices,
-                 uint32_t width, uint32_t height, const std::vector<unsigned char>& rgba_pixels)
-        : m_format(find_supported_format(device.physical_device(), {VK_FORMAT_R8G8B8A8_UNORM}, VK_IMAGE_TILING_OPTIMAL,
+                 uint32_t width, uint32_t height, const std::vector<uint16_t>& rgba_pixels)
+        : m_format(find_supported_format(device.physical_device(), {VK_FORMAT_R16G16B16A16_UNORM}, VK_IMAGE_TILING_OPTIMAL,
                                          VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT)),
           m_image_layout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL),
           m_image(create_image(device, width, height, m_format, family_indices, VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TILING_OPTIMAL,

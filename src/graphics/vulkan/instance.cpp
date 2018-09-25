@@ -983,12 +983,6 @@ SwapChain VulkanInstance::create_swap_chain(int preferred_image_count, int requi
                          descriptor_set_layouts);
 }
 
-Texture VulkanInstance::create_texture(uint32_t width, uint32_t height, const std::vector<unsigned char>& rgba_pixels) const
-{
-        return Texture(m_device, m_graphics_command_pool, m_graphics_queue, m_transfer_command_pool, m_transfer_queue,
-                       m_texture_image_family_indices, width, height, rgba_pixels);
-}
-
 VkInstance VulkanInstance::instance() const noexcept
 {
         return m_instance;
