@@ -26,8 +26,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #define USE_COLOR_LOOKUP_TABLES 1
 
-constexpr unsigned MAX8 = (1u << 8) - 1;
-constexpr unsigned MAX16 = (1u << 16) - 1;
+constexpr unsigned char MAX8 = (1u << 8) - 1;
+constexpr std::uint_least16_t MAX16 = (1u << 16) - 1;
 
 // Функции работают после преобразований с плавающей точкой,
 // поэтому параметр функций находится в интервале [0, 1]
@@ -53,9 +53,10 @@ constexpr std::uint_least16_t float_to_uint16(Float c)
 // Функция работает до преобразований с плавающей точкой,
 // поэтому если параметр больше MAX8 при unsigned char не 8 бит,
 // то значение больше 1 будет далее правильно обработано
-template <typename Float>
-constexpr Float uint8_to_float(unsigned char c)
+template <typename Float, typename UInt8>
+constexpr Float uint8_to_float(UInt8 c)
 {
+        static_assert(std::is_same_v<UInt8, unsigned char>);
         static_assert(std::is_floating_point_v<Float>);
 
         ASSERT(std::numeric_limits<unsigned char>::max() == MAX8 || c <= MAX8);
@@ -239,62 +240,75 @@ namespace color_conversion
 {
 #if USE_COLOR_LOOKUP_TABLES
 
-template <typename T>
-T srgb_uint8_to_rgb_float(unsigned char c)
+template <typename T, typename UInt8>
+T srgb_uint8_to_rgb_float(UInt8 c)
 {
+        static_assert(std::is_same_v<UInt8, unsigned char>);
+        static_assert(std::is_floating_point_v<T>);
+
         if constexpr (std::numeric_limits<unsigned char>::max() == MAX8)
         {
                 return SRGB_UINT8_TO_RGB_FLOAT_LOOKUP_TABLE<T>[c];
         }
         else
         {
-                return SRGB_UINT8_TO_RGB_FLOAT_LOOKUP_TABLE<T>[std::min(c, static_cast<unsigned char>(MAX8))];
+                return SRGB_UINT8_TO_RGB_FLOAT_LOOKUP_TABLE<T>[std::min(c, MAX8)];
         }
 }
 
-unsigned char srgb_uint8_to_rgb_uint8(unsigned char c)
+template <typename UInt8>
+unsigned char srgb_uint8_to_rgb_uint8(UInt8 c)
 {
+        static_assert(std::is_same_v<UInt8, unsigned char>);
+
         if constexpr (std::numeric_limits<unsigned char>::max() == MAX8)
         {
                 return SRGB_UINT8_TO_RGB_UINT8_LOOKUP_TABLE[c];
         }
         else
         {
-                return SRGB_UINT8_TO_RGB_UINT8_LOOKUP_TABLE[std::min(c, static_cast<unsigned char>(MAX8))];
+                return SRGB_UINT8_TO_RGB_UINT8_LOOKUP_TABLE[std::min(c, MAX8)];
         }
 }
 
-std::uint_least16_t srgb_uint8_to_rgb_uint16(unsigned char c)
+template <typename UInt8>
+std::uint_least16_t srgb_uint8_to_rgb_uint16(UInt8 c)
 {
+        static_assert(std::is_same_v<UInt8, unsigned char>);
+
         if constexpr (std::numeric_limits<unsigned char>::max() == MAX8)
         {
                 return SRGB_UINT8_TO_RGB_UINT16_LOOKUP_TABLE[c];
         }
         else
         {
-                return SRGB_UINT8_TO_RGB_UINT16_LOOKUP_TABLE[std::min(c, static_cast<unsigned char>(MAX8))];
+                return SRGB_UINT8_TO_RGB_UINT16_LOOKUP_TABLE[std::min(c, MAX8)];
         }
 }
 
 #else
 
-template <typename T>
-T srgb_uint8_to_rgb_float(unsigned char c)
+template <typename T, typename UInt8>
+T srgb_uint8_to_rgb_float(UInt8 c)
 {
         return srgb_to_rgb(uint8_to_float<T>(c));
 }
 
-unsigned char srgb_uint8_to_rgb_uint8(unsigned char c)
+template <typename UInt8>
+unsigned char srgb_uint8_to_rgb_uint8(UInt8 c)
 {
         return float_to_uint8(srgb_to_rgb(uint8_to_float<float>(c)));
 }
 
-std::uint_least16_t srgb_uint8_to_rgb_uint16(unsigned char c)
+template <typename UInt8>
+std::uint_least16_t srgb_uint8_to_rgb_uint16(UInt8 c)
 {
         return float_to_uint16(srgb_to_rgb(uint8_to_float<float>(c)));
 }
 
 #endif
+
+//
 
 template <typename T>
 T rgb_float_to_srgb_float(T c)
@@ -308,15 +322,25 @@ unsigned char rgb_float_to_srgb_uint8(T c)
         return float_to_uint8(rgb_to_srgb(c));
 }
 
+//
+
 template <typename T>
 T rgb_float_to_rgb_luminance(T red, T green, T blue)
 {
         return rgb_luminance(red, green, blue);
 }
 
+//
+
 template float srgb_uint8_to_rgb_float(unsigned char c);
 template double srgb_uint8_to_rgb_float(unsigned char c);
 template long double srgb_uint8_to_rgb_float(unsigned char c);
+
+template unsigned char srgb_uint8_to_rgb_uint8(unsigned char c);
+
+template std::uint_least16_t srgb_uint8_to_rgb_uint16(unsigned char c);
+
+//
 
 template float rgb_float_to_srgb_float(float c);
 template double rgb_float_to_srgb_float(double c);
@@ -325,6 +349,8 @@ template long double rgb_float_to_srgb_float(long double c);
 template unsigned char rgb_float_to_srgb_uint8(float c);
 template unsigned char rgb_float_to_srgb_uint8(double c);
 template unsigned char rgb_float_to_srgb_uint8(long double c);
+
+//
 
 template float rgb_float_to_rgb_luminance(float red, float green, float blue);
 template double rgb_float_to_rgb_luminance(double red, double green, double blue);
@@ -355,7 +381,7 @@ std::string lookup_table_float()
         {
                 oss << ((i != 0) ? "," : "");
                 oss << (((i & 0b11) != 0) ? " " : "\n" + std::string(8, ' '));
-                oss << srgb_uint8_to_rgb_float<T>(i) << suffix;
+                oss << srgb_uint8_to_rgb_float<T>(static_cast<unsigned char>(i)) << suffix;
         }
         oss << "\n};\n";
         oss << "// clang-format on\n";
@@ -372,7 +398,7 @@ std::string lookup_table_uint8()
         {
                 oss << ((i != 0) ? "," : "");
                 oss << (((i % 16) != 0) ? " " : "\n" + std::string(8, ' '));
-                oss << std::setw(3) << static_cast<unsigned>(srgb_uint8_to_rgb_uint8(i));
+                oss << std::setw(3) << static_cast<unsigned>(srgb_uint8_to_rgb_uint8(static_cast<unsigned char>(i)));
         }
         oss << "\n};\n";
         oss << "// clang-format on\n";
@@ -389,7 +415,7 @@ std::string lookup_table_uint16()
         {
                 oss << ((i != 0) ? "," : "");
                 oss << (((i % 16) != 0) ? " " : "\n" + std::string(8, ' '));
-                oss << std::setw(5) << static_cast<unsigned>(srgb_uint8_to_rgb_uint16(i));
+                oss << std::setw(5) << static_cast<unsigned>(srgb_uint8_to_rgb_uint16(static_cast<unsigned char>(i)));
         }
         oss << "\n};\n";
         oss << "// clang-format on\n";
