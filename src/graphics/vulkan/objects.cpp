@@ -153,8 +153,10 @@ void Device::move(Device* from) noexcept
 {
         m_physical_device = from->m_physical_device;
         m_device = from->m_device;
+        m_features = from->m_features;
         from->m_physical_device = VK_NULL_HANDLE;
         from->m_device = VK_NULL_HANDLE;
+        from->m_features = {};
 }
 
 Device::Device() = default;
@@ -170,6 +172,7 @@ Device::Device(VkPhysicalDevice physical_device, const VkDeviceCreateInfo& creat
         ASSERT(m_device != VK_NULL_HANDLE);
 
         m_physical_device = physical_device;
+        m_features = *create_info.pEnabledFeatures;
 }
 
 Device::~Device()
@@ -200,6 +203,11 @@ Device::operator VkDevice() const noexcept
 VkPhysicalDevice Device::physical_device() const noexcept
 {
         return m_physical_device;
+}
+
+const VkPhysicalDeviceFeatures& Device::features() const noexcept
+{
+        return m_features;
 }
 
 uint32_t Device::physical_device_memory_type_index(uint32_t memory_type_bits, VkMemoryPropertyFlags memory_property_flags) const

@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/vec.h"
 #include "graphics/vulkan/common.h"
 #include "graphics/vulkan/instance.h"
+#include "graphics/vulkan/physical_device.h"
 #include "graphics/vulkan/query.h"
 #include "graphics/vulkan/sampler.h"
 #include "obj/obj_alg.h"
@@ -39,6 +40,11 @@ constexpr int API_VERSION_MINOR = 0;
 constexpr std::array<const char*, 0> INSTANCE_EXTENSIONS = {};
 constexpr std::array<const char*, 0> DEVICE_EXTENSIONS = {};
 constexpr std::array<const char*, 1> VALIDATION_LAYERS = {"VK_LAYER_LUNARG_standard_validation"};
+
+constexpr std::array<vulkan::PhysicalDeviceFeatures, 3> REQUIRED_FEATURES = {vulkan::PhysicalDeviceFeatures::GeometryShader,
+                                                                             vulkan::PhysicalDeviceFeatures::SampleRateShading,
+                                                                             vulkan::PhysicalDeviceFeatures::SamplerAnisotropy};
+constexpr std::array<vulkan::PhysicalDeviceFeatures, 0> OPTIONAL_FEATURES = {};
 
 // 2 - double buffering, 3 - triple buffering
 constexpr int PREFERRED_IMAGE_COUNT = 3;
@@ -87,6 +93,14 @@ std::vector<std::string> device_extensions()
 std::vector<std::string> validation_layers()
 {
         return std::vector<std::string>(std::cbegin(VALIDATION_LAYERS), std::cend(VALIDATION_LAYERS));
+}
+std::vector<vulkan::PhysicalDeviceFeatures> required_features()
+{
+        return std::vector<vulkan::PhysicalDeviceFeatures>(std::cbegin(REQUIRED_FEATURES), std::cend(REQUIRED_FEATURES));
+}
+std::vector<vulkan::PhysicalDeviceFeatures> optional_features()
+{
+        return std::vector<vulkan::PhysicalDeviceFeatures>(std::cbegin(OPTIONAL_FEATURES), std::cend(OPTIONAL_FEATURES));
 }
 
 struct VerticesOfMaterial
@@ -626,7 +640,8 @@ public:
         Renderer(const std::vector<std::string>& window_instance_extensions,
                  const std::function<VkSurfaceKHR(VkInstance)>& create_surface)
                 : m_instance(API_VERSION_MAJOR, API_VERSION_MINOR, instance_extensions() + window_instance_extensions,
-                             device_extensions(), validation_layers(), create_surface, MAX_FRAMES_IN_FLIGHT),
+                             device_extensions(), validation_layers(), required_features(), optional_features(), create_surface,
+                             MAX_FRAMES_IN_FLIGHT),
                   m_sampler(vulkan::create_sampler(m_instance.device())),
                   m_shared_descriptor_set_layout(vulkan::create_descriptor_set_layout(
                           m_instance.device(), shaders::SharedMemory::descriptor_set_layout_bindings())),

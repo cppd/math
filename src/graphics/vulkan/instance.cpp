@@ -189,7 +189,8 @@ vulkan::Instance create_instance(int api_version_major, int api_version_minor, s
 
 vulkan::Device create_device(VkPhysicalDevice physical_device, const std::vector<uint32_t>& family_indices,
                              const std::vector<std::string>& required_extensions,
-                             const std::vector<std::string>& required_validation_layers)
+                             const std::vector<std::string>& required_validation_layers,
+                             const VkPhysicalDeviceFeatures& enabled_features)
 {
         if (family_indices.empty())
         {
@@ -209,16 +210,11 @@ vulkan::Device create_device(VkPhysicalDevice physical_device, const std::vector
                 queue_create_infos.push_back(queue_create_info);
         }
 
-        VkPhysicalDeviceFeatures device_features = {};
-        device_features.samplerAnisotropy = VK_TRUE;
-        device_features.geometryShader = VK_TRUE;
-        device_features.sampleRateShading = VK_TRUE;
-
         VkDeviceCreateInfo create_info = {};
         create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
         create_info.queueCreateInfoCount = queue_create_infos.size();
         create_info.pQueueCreateInfos = queue_create_infos.data();
-        create_info.pEnabledFeatures = &device_features;
+        create_info.pEnabledFeatures = &enabled_features;
 
         const std::vector<const char*> extensions = to_char_pointer_vector(required_extensions);
         if (extensions.size() > 0)
@@ -500,7 +496,7 @@ vulkan::PipelineLayout create_pipeline_layout(VkDevice device, const std::vector
         return vulkan::PipelineLayout(device, create_info);
 }
 
-vulkan::Pipeline create_graphics_pipeline(VkDevice device, VkRenderPass render_pass, uint32_t sub_pass,
+vulkan::Pipeline create_graphics_pipeline(const vulkan::Device& device, VkRenderPass render_pass, uint32_t sub_pass,
                                           VkSampleCountFlagBits sample_count, VkPipelineLayout pipeline_layout,
                                           VkExtent2D swap_chain_extent, const std::vector<const vulkan::Shader*>& shaders,
                                           const std::vector<VkVertexInputBindingDescription>& binding_descriptions,
@@ -560,7 +556,7 @@ vulkan::Pipeline create_graphics_pipeline(VkDevice device, VkRenderPass render_p
         VkPipelineMultisampleStateCreateInfo multisampling_state_info = {};
         multisampling_state_info.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
         multisampling_state_info.rasterizationSamples = sample_count;
-        multisampling_state_info.sampleShadingEnable = VK_TRUE;
+        multisampling_state_info.sampleShadingEnable = device.features().sampleRateShading;
         multisampling_state_info.minSampleShading = 1.0f;
         // multisampling_state_info.pSampleMask = nullptr;
         // multisampling_state_info.alphaToCoverageEnable = VK_FALSE;
@@ -917,6 +913,8 @@ VulkanInstance::VulkanInstance(int api_version_major, int api_version_minor,
                                const std::vector<std::string>& required_instance_extensions,
                                const std::vector<std::string>& required_device_extensions,
                                const std::vector<std::string>& required_validation_layers,
+                               const std::vector<PhysicalDeviceFeatures>& required_features,
+                               const std::vector<PhysicalDeviceFeatures>& optional_features,
                                const std::function<VkSurfaceKHR(VkInstance)>& create_surface, unsigned max_frames_in_flight)
         : m_instance(create_instance(api_version_major, api_version_minor, required_instance_extensions,
                                      required_validation_layers)),
@@ -925,11 +923,13 @@ VulkanInstance::VulkanInstance(int api_version_major, int api_version_minor,
           m_surface(m_instance, create_surface),
           //
           m_physical_device(find_physical_device(m_instance, m_surface, api_version_major, api_version_minor,
-                                                 required_device_extensions + VK_KHR_SWAPCHAIN_EXTENSION_NAME)),
+                                                 required_device_extensions + VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+                                                 required_features)),
           m_device(create_device(m_physical_device.device,
                                  {m_physical_device.graphics, m_physical_device.compute, m_physical_device.transfer,
                                   m_physical_device.presentation},
-                                 required_device_extensions + VK_KHR_SWAPCHAIN_EXTENSION_NAME, required_validation_layers)),
+                                 required_device_extensions + VK_KHR_SWAPCHAIN_EXTENSION_NAME, required_validation_layers,
+                                 make_enabled_device_features(required_features, optional_features, m_physical_device.features))),
           //
           m_max_frames_in_flight(max_frames_in_flight),
           m_image_available_semaphores(create_semaphores(m_device, m_max_frames_in_flight)),

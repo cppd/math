@@ -21,5 +21,5 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace vulkan
 {
-vulkan::Sampler create_sampler(VkDevice device);
+vulkan::Sampler create_sampler(const vulkan::Device& device);
 }

@@ -23,6 +23,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace vulkan
 {
+enum class PhysicalDeviceFeatures
+{
+        GeometryShader,
+        SampleRateShading,
+        SamplerAnisotropy,
+        TessellationShader
+};
+
 struct SwapChainDetails
 {
         VkSurfaceCapabilitiesKHR surface_capabilities;
@@ -36,10 +44,17 @@ struct PhysicalDevice
 
         // family_indices
         uint32_t graphics, compute, transfer, presentation;
+
+        VkPhysicalDeviceFeatures features;
 };
+
+VkPhysicalDeviceFeatures make_enabled_device_features(const std::vector<PhysicalDeviceFeatures>& required_features,
+                                                      const std::vector<PhysicalDeviceFeatures>& optional_features,
+                                                      const VkPhysicalDeviceFeatures& supported_device_features);
 
 bool find_swap_chain_details(VkSurfaceKHR surface, VkPhysicalDevice device, SwapChainDetails* swap_chain_details);
 
 PhysicalDevice find_physical_device(VkInstance instance, VkSurfaceKHR surface, int api_version_major, int api_version_minor,
-                                    const std::vector<std::string>& required_extensions);
+                                    const std::vector<std::string>& required_extensions,
+                                    const std::vector<PhysicalDeviceFeatures>& required_features);
 }

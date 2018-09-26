@@ -22,6 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/error.h"
 
+#include <algorithm>
+
 namespace
 {
 bool find_graphics_family(const std::vector<VkQueueFamilyProperties>& queue_families, uint32_t* family_index)
@@ -96,10 +98,129 @@ bool find_presentation_family(VkSurfaceKHR surface, VkPhysicalDevice device,
         }
         return false;
 }
+
+bool physical_device_features_are_supported(const std::vector<vulkan::PhysicalDeviceFeatures>& required_features,
+                                            VkPhysicalDeviceFeatures device_features)
+{
+        for (vulkan::PhysicalDeviceFeatures f : required_features)
+        {
+                switch (f)
+                {
+                case vulkan::PhysicalDeviceFeatures::GeometryShader:
+                        if (!device_features.geometryShader)
+                        {
+                                return false;
+                        }
+                        break;
+                case vulkan::PhysicalDeviceFeatures::SampleRateShading:
+                        if (!device_features.sampleRateShading)
+                        {
+                                return false;
+                        }
+                        break;
+                case vulkan::PhysicalDeviceFeatures::SamplerAnisotropy:
+                        if (!device_features.samplerAnisotropy)
+                        {
+                                return false;
+                        }
+                        break;
+                case vulkan::PhysicalDeviceFeatures::TessellationShader:
+                        if (!device_features.tessellationShader)
+                        {
+                                return false;
+                        }
+                        break;
+                }
+        }
+
+        return true;
+}
+
+void check_no_intersection(std::vector<vulkan::PhysicalDeviceFeatures> required_features,
+                           std::vector<vulkan::PhysicalDeviceFeatures> optional_features)
+{
+        std::sort(required_features.begin(), required_features.end());
+        std::sort(optional_features.begin(), optional_features.end());
+
+        std::vector<vulkan::PhysicalDeviceFeatures> intersection;
+
+        std::set_intersection(required_features.cbegin(), required_features.cend(), optional_features.cbegin(),
+                              optional_features.cend(), std::back_inserter(intersection));
+
+        if (!intersection.empty())
+        {
+                error("Required and optional physical device features intersection");
+        }
+}
 }
 
 namespace vulkan
 {
+VkPhysicalDeviceFeatures make_enabled_device_features(const std::vector<PhysicalDeviceFeatures>& required_features,
+                                                      const std::vector<PhysicalDeviceFeatures>& optional_features,
+                                                      const VkPhysicalDeviceFeatures& supported_device_features)
+{
+        check_no_intersection(required_features, optional_features);
+
+        VkPhysicalDeviceFeatures device_features = {};
+
+        for (vulkan::PhysicalDeviceFeatures f : required_features)
+        {
+                switch (f)
+                {
+                case vulkan::PhysicalDeviceFeatures::GeometryShader:
+                        if (!supported_device_features.geometryShader)
+                        {
+                                error("Required physical device feature Geometry Shader is not supported");
+                        }
+                        device_features.geometryShader = true;
+                        break;
+                case vulkan::PhysicalDeviceFeatures::SampleRateShading:
+                        if (!supported_device_features.sampleRateShading)
+                        {
+                                error("Required physical device feature Sample Rate Shading is not supported");
+                        }
+                        device_features.sampleRateShading = true;
+                        break;
+                case vulkan::PhysicalDeviceFeatures::SamplerAnisotropy:
+                        if (!supported_device_features.samplerAnisotropy)
+                        {
+                                error("Required physical device feature Sampler Anisotropy is not supported");
+                        }
+                        device_features.samplerAnisotropy = true;
+                        break;
+                case vulkan::PhysicalDeviceFeatures::TessellationShader:
+                        if (!supported_device_features.tessellationShader)
+                        {
+                                error("Required physical device feature Tessellation Shader is not supported");
+                        }
+                        device_features.tessellationShader = true;
+                        break;
+                }
+        }
+
+        for (vulkan::PhysicalDeviceFeatures f : optional_features)
+        {
+                switch (f)
+                {
+                case vulkan::PhysicalDeviceFeatures::GeometryShader:
+                        device_features.geometryShader = supported_device_features.geometryShader;
+                        break;
+                case vulkan::PhysicalDeviceFeatures::SampleRateShading:
+                        device_features.sampleRateShading = supported_device_features.sampleRateShading;
+                        break;
+                case vulkan::PhysicalDeviceFeatures::SamplerAnisotropy:
+                        device_features.samplerAnisotropy = supported_device_features.samplerAnisotropy;
+                        break;
+                case vulkan::PhysicalDeviceFeatures::TessellationShader:
+                        device_features.tessellationShader = supported_device_features.tessellationShader;
+                        break;
+                }
+        }
+
+        return device_features;
+}
+
 bool find_swap_chain_details(VkSurfaceKHR surface, VkPhysicalDevice device, SwapChainDetails* swap_chain_details)
 {
         VkSurfaceCapabilitiesKHR surface_capabilities;
@@ -134,7 +255,8 @@ bool find_swap_chain_details(VkSurfaceKHR surface, VkPhysicalDevice device, Swap
 }
 
 PhysicalDevice find_physical_device(VkInstance instance, VkSurfaceKHR surface, int api_version_major, int api_version_minor,
-                                    const std::vector<std::string>& required_extensions)
+                                    const std::vector<std::string>& required_extensions,
+                                    const std::vector<PhysicalDeviceFeatures>& required_features)
 {
         const uint32_t required_api_version = VK_MAKE_VERSION(api_version_major, api_version_minor, 0);
 
@@ -156,22 +278,7 @@ PhysicalDevice find_physical_device(VkInstance instance, VkSurfaceKHR surface, i
                         continue;
                 }
 
-                if (!features.geometryShader)
-                {
-                        continue;
-                }
-
-                if (!features.tessellationShader)
-                {
-                        continue;
-                }
-
-                if (!features.samplerAnisotropy)
-                {
-                        continue;
-                }
-
-                if (!features.sampleRateShading)
+                if (!physical_device_features_are_supported(required_features, features))
                 {
                         continue;
                 }
@@ -209,7 +316,10 @@ PhysicalDevice find_physical_device(VkInstance instance, VkSurfaceKHR surface, i
                 {
                         continue;
                 }
+
                 r.device = device;
+
+                r.features = features;
 
                 return r;
         }

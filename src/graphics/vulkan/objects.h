@@ -72,6 +72,7 @@ class Device final
 {
         VkPhysicalDevice m_physical_device = VK_NULL_HANDLE;
         VkDevice m_device = VK_NULL_HANDLE;
+        VkPhysicalDeviceFeatures m_features = {};
 
         void destroy() noexcept;
         void move(Device* from) noexcept;
@@ -90,6 +91,8 @@ public:
         operator VkDevice() const noexcept;
 
         VkPhysicalDevice physical_device() const noexcept;
+
+        const VkPhysicalDeviceFeatures& features() const noexcept;
 
         uint32_t physical_device_memory_type_index(uint32_t memory_type_bits, VkMemoryPropertyFlags memory_property_flags) const;
 };

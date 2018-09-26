@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace vulkan
 {
-vulkan::Sampler create_sampler(VkDevice device)
+vulkan::Sampler create_sampler(const vulkan::Device& device)
 {
         VkSamplerCreateInfo create_info = {};
         create_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
@@ -31,7 +31,7 @@ vulkan::Sampler create_sampler(VkDevice device)
         create_info.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
         create_info.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
 
-        create_info.anisotropyEnable = VK_TRUE;
+        create_info.anisotropyEnable = device.features().samplerAnisotropy;
         create_info.maxAnisotropy = 16;
 
         create_info.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;

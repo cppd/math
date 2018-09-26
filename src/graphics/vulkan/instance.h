@@ -124,6 +124,8 @@ public:
         VulkanInstance(int api_version_major, int api_version_minor, const std::vector<std::string>& required_instance_extensions,
                        const std::vector<std::string>& required_device_extensions,
                        const std::vector<std::string>& required_validation_layers,
+                       const std::vector<PhysicalDeviceFeatures>& required_features,
+                       const std::vector<PhysicalDeviceFeatures>& optional_features,
                        const std::function<VkSurfaceKHR(VkInstance)>& create_surface, unsigned max_frames_in_flight);
 
         ~VulkanInstance();
