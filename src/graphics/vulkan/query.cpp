@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/print.h"
 
 #include <algorithm>
+#include <sstream>
 
 namespace
 {
@@ -382,10 +383,75 @@ VkFormat find_supported_format(VkPhysicalDevice physical_device, const std::vect
         }
         else
         {
-                error("Unknown image tiling");
+                error("Unknown image tiling " + to_string(static_cast<long long>(tiling)));
         }
 
-        error("Failed to find supported image format");
+        std::ostringstream oss;
+
+        oss << "Failed to find supported 2D image format.";
+        oss << " Format candidates " << to_string(std::vector<long long>(candidates.cbegin(), candidates.cend())) << ".";
+        oss << " Tiling " << static_cast<long long>(tiling) << ".";
+        oss << std::hex;
+        oss << " Features 0x" << features << ".";
+
+        error(oss.str());
+}
+
+VkFormat find_supported_2d_image_format(VkPhysicalDevice physical_device, const std::vector<VkFormat>& candidates,
+                                        VkImageTiling tiling, VkFormatFeatureFlags features, VkImageUsageFlags usage,
+                                        VkSampleCountFlags sample_count)
+{
+        for (VkFormat format : candidates)
+        {
+                VkFormatProperties properties;
+                vkGetPhysicalDeviceFormatProperties(physical_device, format, &properties);
+
+                if (tiling == VK_IMAGE_TILING_OPTIMAL)
+                {
+                        if ((properties.optimalTilingFeatures & features) != features)
+                        {
+                                continue;
+                        }
+                }
+                else if (tiling == VK_IMAGE_TILING_LINEAR)
+                {
+                        if ((properties.linearTilingFeatures & features) != features)
+                        {
+                                continue;
+                        }
+                }
+                else
+                {
+                        error("Unknown image tiling " + to_string(static_cast<long long>(tiling)));
+                }
+
+                VkImageFormatProperties image_properties;
+                VkResult result = vkGetPhysicalDeviceImageFormatProperties(physical_device, format, VK_IMAGE_TYPE_2D, tiling,
+                                                                           usage, 0 /*VkImageCreateFlags*/, &image_properties);
+                if (result != VK_SUCCESS)
+                {
+                        vulkan_function_error("vkGetPhysicalDeviceImageFormatProperties", result);
+                }
+
+                if ((image_properties.sampleCounts & sample_count) != sample_count)
+                {
+                        continue;
+                }
+
+                return format;
+        }
+
+        std::ostringstream oss;
+
+        oss << "Failed to find supported 2D image format.";
+        oss << " Format candidates " << to_string(std::vector<long long>(candidates.cbegin(), candidates.cend())) << ".";
+        oss << " Tiling " << static_cast<long long>(tiling) << ".";
+        oss << std::hex;
+        oss << " Features 0x" << features << ".";
+        oss << " Usage 0x" << usage << ".";
+        oss << " Sample count 0x" << sample_count << ".";
+
+        error(oss.str());
 }
 
 int supported_framebuffer_sample_count(VkPhysicalDevice physical_device, int required_minimum_sample_count)

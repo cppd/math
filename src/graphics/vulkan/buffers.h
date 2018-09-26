@@ -114,8 +114,8 @@ public:
 
 class Texture final
 {
-        VkFormat m_format;
         VkImageLayout m_image_layout;
+        VkFormat m_format;
         Image m_image;
         DeviceMemory m_device_memory;
         ImageView m_image_view;
@@ -142,8 +142,8 @@ public:
 
 class DepthAttachment final
 {
-        VkFormat m_format;
         VkImageLayout m_image_layout;
+        VkFormat m_format;
         Image m_image;
         DeviceMemory m_device_memory;
         ImageView m_image_view;
@@ -170,8 +170,8 @@ public:
 
 class ColorAttachment final
 {
-        VkFormat m_format;
         VkImageLayout m_image_layout;
+        VkFormat m_format;
         Image m_image;
         DeviceMemory m_device_memory;
         ImageView m_image_view;

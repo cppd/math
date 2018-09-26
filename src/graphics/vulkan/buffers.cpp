@@ -55,9 +55,9 @@ vulkan::Buffer create_buffer(VkDevice device, VkDeviceSize size, VkBufferUsageFl
         return vulkan::Buffer(device, create_info);
 }
 
-vulkan::Image create_image(VkDevice device, uint32_t width, uint32_t height, VkFormat format,
-                           const std::vector<uint32_t>& family_indices, VkSampleCountFlagBits samples, VkImageTiling tiling,
-                           VkImageUsageFlags usage)
+vulkan::Image create_2d_image(VkDevice device, uint32_t width, uint32_t height, VkFormat format,
+                              const std::vector<uint32_t>& family_indices, VkSampleCountFlagBits samples, VkImageTiling tiling,
+                              VkImageUsageFlags usage)
 {
         ASSERT(width > 0 && height > 0);
 
@@ -374,13 +374,13 @@ void staging_image_copy(const vulkan::Device& device, VkCommandPool graphics_com
         static_assert(std::is_same_v<ColorFormat, uint8_t> || std::is_same_v<ColorFormat, uint16_t> ||
                       std::is_same_v<ColorFormat, float>);
 
-        if (rgba_pixels.size() != width * height * 4)
+        if (rgba_pixels.size() != 4ull * width * height)
         {
                 error("Wrong RGBA pixel component count " + to_string(rgba_pixels.size()) + " for image dimensions width " +
                       to_string(width) + " and height " + to_string(height));
         }
 
-        VkDeviceSize data_size = width * height * 4 * sizeof(rgba_pixels[0]);
+        VkDeviceSize data_size = rgba_pixels.size() * sizeof(rgba_pixels[0]);
 
         vulkan::Buffer staging_buffer(create_buffer(device, data_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, {}));
 
@@ -513,15 +513,20 @@ void UniformBufferWithHostVisibleMemory::copy(VkDeviceSize offset, const void* d
 Texture::Texture(const Device& device, VkCommandPool graphics_command_pool, VkQueue graphics_queue,
                  VkCommandPool transfer_command_pool, VkQueue transfer_queue, const std::vector<uint32_t>& family_indices,
                  uint32_t width, uint32_t height, const std::vector<uint16_t>& rgba_pixels)
-        : m_format(find_supported_format(device.physical_device(), {VK_FORMAT_R16G16B16A16_UNORM}, VK_IMAGE_TILING_OPTIMAL,
-                                         VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT)),
-          m_image_layout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL),
-          m_image(create_image(device, width, height, m_format, family_indices, VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TILING_OPTIMAL,
-                               VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT)),
-          m_device_memory(create_device_memory(device, m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)),
-          m_image_view(create_image_view(device, m_image, m_format, VK_IMAGE_ASPECT_COLOR_BIT))
 {
         ASSERT(family_indices.size() > 0);
+
+        std::vector<VkFormat> candidates = {VK_FORMAT_R16G16B16A16_UNORM};
+        VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
+        VkFormatFeatureFlags features = VK_FORMAT_FEATURE_TRANSFER_DST_BIT | VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT;
+        VkImageUsageFlags usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+        VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT;
+
+        m_image_layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        m_format = find_supported_2d_image_format(device.physical_device(), candidates, tiling, features, usage, samples);
+        m_image = create_2d_image(device, width, height, m_format, family_indices, samples, tiling, usage);
+        m_device_memory = create_device_memory(device, m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+        m_image_view = create_image_view(device, m_image, m_format, VK_IMAGE_ASPECT_COLOR_BIT);
 
         staging_image_copy(device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, m_image,
                            m_format, m_image_layout, width, height, rgba_pixels);
@@ -552,16 +557,19 @@ VkImageView Texture::image_view() const noexcept
 DepthAttachment::DepthAttachment(const Device& device, VkCommandPool graphics_command_pool, VkQueue graphics_queue,
                                  const std::vector<uint32_t>& family_indices, VkSampleCountFlagBits samples, uint32_t width,
                                  uint32_t height)
-        : m_format(find_supported_format(device.physical_device(),
-                                         {VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT},
-                                         VK_IMAGE_TILING_OPTIMAL, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT)),
-          m_image_layout(VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL),
-          m_image(create_image(device, width, height, m_format, family_indices, samples, VK_IMAGE_TILING_OPTIMAL,
-                               VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)),
-          m_device_memory(create_device_memory(device, m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)),
-          m_image_view(create_image_view(device, m_image, m_format, VK_IMAGE_ASPECT_DEPTH_BIT))
 {
         ASSERT(family_indices.size() > 0);
+
+        std::vector<VkFormat> candidates = {VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT};
+        VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
+        VkFormatFeatureFlags features = VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT;
+        VkImageUsageFlags usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+
+        m_image_layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+        m_format = find_supported_2d_image_format(device.physical_device(), candidates, tiling, features, usage, samples);
+        m_image = create_2d_image(device, width, height, m_format, family_indices, samples, tiling, usage);
+        m_device_memory = create_device_memory(device, m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+        m_image_view = create_image_view(device, m_image, m_format, VK_IMAGE_ASPECT_DEPTH_BIT);
 
         transition_image_layout(device, graphics_command_pool, graphics_queue, m_image, m_format, VK_IMAGE_LAYOUT_UNDEFINED,
                                 m_image_layout);
@@ -592,14 +600,21 @@ VkImageView DepthAttachment::image_view() const noexcept
 ColorAttachment::ColorAttachment(const Device& device, VkCommandPool graphics_command_pool, VkQueue graphics_queue,
                                  const std::vector<uint32_t>& family_indices, VkFormat format, VkSampleCountFlagBits samples,
                                  uint32_t width, uint32_t height)
-        : m_format(format),
-          m_image_layout(VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL),
-          m_image(create_image(device, width, height, m_format, family_indices, samples, VK_IMAGE_TILING_OPTIMAL,
-                               VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)),
-          m_device_memory(create_device_memory(device, m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)),
-          m_image_view(create_image_view(device, m_image, m_format, VK_IMAGE_ASPECT_COLOR_BIT))
 {
         ASSERT(family_indices.size() > 0);
+
+        std::vector<VkFormat> candidates = {format}; // должен быть только этот формат
+        VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
+        VkFormatFeatureFlags features = VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT;
+        VkImageUsageFlags usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+
+        m_image_layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        m_format = find_supported_2d_image_format(device.physical_device(), candidates, tiling, features, usage, samples);
+        m_image = create_2d_image(device, width, height, m_format, family_indices, samples, tiling, usage);
+        m_device_memory = create_device_memory(device, m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+        m_image_view = create_image_view(device, m_image, m_format, VK_IMAGE_ASPECT_COLOR_BIT);
+
+        ASSERT(m_format == format);
 
         transition_image_layout(device, graphics_command_pool, graphics_queue, m_image, m_format, VK_IMAGE_LAYOUT_UNDEFINED,
                                 m_image_layout);
