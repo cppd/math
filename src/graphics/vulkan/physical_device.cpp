@@ -299,29 +299,25 @@ PhysicalDevice find_physical_device(VkInstance instance, VkSurfaceKHR surface, i
                 }
 
                 const std::vector<VkQueueFamilyProperties> families = vulkan::queue_families(device);
-                PhysicalDevice r;
-                if (!find_graphics_family(families, &r.graphics))
+                uint32_t graphics, compute, transfer, presentation;
+                if (!find_graphics_family(families, &graphics))
                 {
                         continue;
                 }
-                if (!find_compute_family(families, &r.compute))
+                if (!find_compute_family(families, &compute))
                 {
                         continue;
                 }
-                if (!find_presentation_family(surface, device, families, &r.presentation))
+                if (!find_presentation_family(surface, device, families, &presentation))
                 {
                         continue;
                 }
-                if (!find_transfer_family(families, &r.transfer))
+                if (!find_transfer_family(families, &transfer))
                 {
                         continue;
                 }
 
-                r.device = device;
-
-                r.features = features;
-
-                return r;
+                return PhysicalDevice(device, graphics, compute, transfer, presentation, features);
         }
 
         error("Failed to find a suitable Vulkan physical device");

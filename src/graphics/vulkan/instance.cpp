@@ -980,31 +980,34 @@ VulkanInstance::VulkanInstance(int api_version_major, int api_version_minor,
           m_physical_device(find_physical_device(m_instance, m_surface, api_version_major, api_version_minor,
                                                  required_device_extensions + VK_KHR_SWAPCHAIN_EXTENSION_NAME,
                                                  required_features)),
-          m_device(create_device(m_physical_device.device,
-                                 {m_physical_device.graphics, m_physical_device.compute, m_physical_device.transfer,
-                                  m_physical_device.presentation},
-                                 required_device_extensions + VK_KHR_SWAPCHAIN_EXTENSION_NAME, required_validation_layers,
-                                 make_enabled_device_features(required_features, optional_features, m_physical_device.features))),
+          m_device(create_device(
+                  m_physical_device,
+                  {m_physical_device.graphics(), m_physical_device.compute(), m_physical_device.transfer(),
+                   m_physical_device.presentation()},
+                  required_device_extensions + VK_KHR_SWAPCHAIN_EXTENSION_NAME, required_validation_layers,
+                  make_enabled_device_features(required_features, optional_features, m_physical_device.features()))),
           //
           m_max_frames_in_flight(max_frames_in_flight),
           m_image_available_semaphores(create_semaphores(m_device, m_max_frames_in_flight)),
           m_render_finished_semaphores(create_semaphores(m_device, m_max_frames_in_flight)),
           m_in_flight_fences(create_fences(m_device, m_max_frames_in_flight, true /*signaled_state*/)),
           //
-          m_graphics_command_pool(create_command_pool(m_device, m_physical_device.graphics)),
-          m_graphics_queue(device_queue(m_device, m_physical_device.graphics, 0 /*queue_index*/)),
+          m_graphics_command_pool(create_command_pool(m_device, m_physical_device.graphics())),
+          m_graphics_queue(device_queue(m_device, m_physical_device.graphics(), 0 /*queue_index*/)),
           //
-          m_transfer_command_pool(create_transient_command_pool(m_device, m_physical_device.transfer)),
-          m_transfer_queue(device_queue(m_device, m_physical_device.transfer, 0 /*queue_index*/)),
+          m_transfer_command_pool(create_transient_command_pool(m_device, m_physical_device.transfer())),
+          m_transfer_queue(device_queue(m_device, m_physical_device.transfer(), 0 /*queue_index*/)),
           //
-          m_compute_queue(device_queue(m_device, m_physical_device.compute, 0 /*queue_index*/)),
-          m_presentation_queue(device_queue(m_device, m_physical_device.presentation, 0 /*queue_index*/)),
+          m_compute_queue(device_queue(m_device, m_physical_device.compute(), 0 /*queue_index*/)),
+          m_presentation_queue(device_queue(m_device, m_physical_device.presentation(), 0 /*queue_index*/)),
           //
-          m_vertex_buffer_family_indices(unique_elements(std::vector({m_physical_device.graphics, m_physical_device.transfer}))),
+          m_vertex_buffer_family_indices(
+                  unique_elements(std::vector({m_physical_device.graphics(), m_physical_device.transfer()}))),
           m_swap_chain_image_family_indices(
-                  unique_elements(std::vector({m_physical_device.graphics, m_physical_device.presentation}))),
-          m_texture_image_family_indices(unique_elements(std::vector({m_physical_device.graphics, m_physical_device.transfer}))),
-          m_depth_image_family_indices(unique_elements(std::vector({m_physical_device.graphics})))
+                  unique_elements(std::vector({m_physical_device.graphics(), m_physical_device.presentation()}))),
+          m_texture_image_family_indices(
+                  unique_elements(std::vector({m_physical_device.graphics(), m_physical_device.transfer()}))),
+          m_depth_image_family_indices(unique_elements(std::vector({m_physical_device.graphics()})))
 {
 }
 
@@ -1032,10 +1035,9 @@ SwapChain VulkanInstance::create_swap_chain(int preferred_image_count, int requi
 {
         ASSERT(descriptor_set_layouts.size() > 0);
 
-        return SwapChain(m_surface, m_physical_device.device, m_swap_chain_image_family_indices, m_depth_image_family_indices,
-                         m_device, m_graphics_command_pool, m_graphics_queue, preferred_image_count,
-                         required_minimum_sample_count, shaders, vertex_binding_descriptions, vertex_attribute_descriptions,
-                         descriptor_set_layouts);
+        return SwapChain(m_surface, m_physical_device, m_swap_chain_image_family_indices, m_depth_image_family_indices, m_device,
+                         m_graphics_command_pool, m_graphics_queue, preferred_image_count, required_minimum_sample_count, shaders,
+                         vertex_binding_descriptions, vertex_attribute_descriptions, descriptor_set_layouts);
 }
 
 VkInstance VulkanInstance::instance() const noexcept

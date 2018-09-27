@@ -38,14 +38,51 @@ struct SwapChainDetails
         std::vector<VkPresentModeKHR> present_modes;
 };
 
-struct PhysicalDevice
+class PhysicalDevice
 {
-        VkPhysicalDevice device;
+        VkPhysicalDevice m_device;
 
         // family_indices
-        uint32_t graphics, compute, transfer, presentation;
+        uint32_t m_graphics, m_compute, m_transfer, m_presentation;
 
-        VkPhysicalDeviceFeatures features;
+        VkPhysicalDeviceFeatures m_features;
+
+public:
+        PhysicalDevice(VkPhysicalDevice device, uint32_t graphics, uint32_t compute, uint32_t transfer, uint32_t presentation,
+                       const VkPhysicalDeviceFeatures& features)
+                : m_device(device),
+                  m_graphics(graphics),
+                  m_compute(compute),
+                  m_transfer(transfer),
+                  m_presentation(presentation),
+                  m_features(features)
+        {
+        }
+
+        operator VkPhysicalDevice() const noexcept
+        {
+                return m_device;
+        }
+        uint32_t graphics() const noexcept
+        {
+                return m_graphics;
+        }
+        uint32_t compute() const noexcept
+        {
+                return m_compute;
+        }
+        uint32_t transfer() const noexcept
+        {
+                return m_transfer;
+        }
+        uint32_t presentation() const noexcept
+        {
+                return m_presentation;
+        }
+        const VkPhysicalDeviceFeatures& features() const noexcept
+        {
+                return m_features;
+        }
 };
 
 VkPhysicalDeviceFeatures make_enabled_device_features(const std::vector<PhysicalDeviceFeatures>& required_features,
