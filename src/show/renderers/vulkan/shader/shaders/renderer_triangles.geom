@@ -33,6 +33,7 @@ lighting;
 layout(location = 0) in VS
 {
         vec3 normal;
+        vec4 shadow_position;
         flat vec3 geometric_normal;
         vec2 texture_coordinates;
 }
@@ -41,6 +42,7 @@ vs[3];
 layout(location = 0) out GS
 {
         vec3 normal;
+        vec4 shadow_position;
         vec2 texture_coordinates;
         vec3 baricentric;
 }
@@ -100,6 +102,7 @@ void main(void)
                 gs.normal = normals[i];
                 gs.baricentric = baricentric[i];
 
+                gs.shadow_position = vs[i].shadow_position;
                 gs.texture_coordinates = vs[i].texture_coordinates;
 
                 EmitVertex();

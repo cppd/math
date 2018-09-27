@@ -123,6 +123,16 @@ std::vector<VkDescriptorSetLayoutBinding> SharedMemory::descriptor_set_layout_bi
 
                 bindings.push_back(b);
         }
+        {
+                VkDescriptorSetLayoutBinding b = {};
+                b.binding = 3;
+                b.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+                b.descriptorCount = 1;
+                b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+                b.pImmutableSamplers = nullptr;
+
+                bindings.push_back(b);
+        }
 
         return bindings;
 }
@@ -131,6 +141,7 @@ SharedMemory::SharedMemory(const vulkan::Device& device, VkDescriptorSetLayout d
         : m_descriptors(vulkan::Descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings()))
 {
         std::vector<Variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
+        std::vector<uint32_t> bindings;
 
         {
                 m_uniform_buffers.emplace_back(device, sizeof(Matrices));
@@ -142,6 +153,8 @@ SharedMemory::SharedMemory(const vulkan::Device& device, VkDescriptorSetLayout d
                 buffer_info.range = m_uniform_buffers.back().size();
 
                 infos.push_back(buffer_info);
+
+                bindings.push_back(0);
         }
         {
                 m_uniform_buffers.emplace_back(device, sizeof(Lighting));
@@ -153,6 +166,8 @@ SharedMemory::SharedMemory(const vulkan::Device& device, VkDescriptorSetLayout d
                 buffer_info.range = m_uniform_buffers.back().size();
 
                 infos.push_back(buffer_info);
+
+                bindings.push_back(1);
         }
         {
                 m_uniform_buffers.emplace_back(device, sizeof(Drawing));
@@ -164,9 +179,11 @@ SharedMemory::SharedMemory(const vulkan::Device& device, VkDescriptorSetLayout d
                 buffer_info.range = m_uniform_buffers.back().size();
 
                 infos.push_back(buffer_info);
+
+                bindings.push_back(2);
         }
 
-        m_descriptor_set = m_descriptors.create_descriptor_set(infos);
+        m_descriptor_set = m_descriptors.create_and_update_descriptor_set(bindings, infos);
 }
 
 VkDescriptorSet SharedMemory::descriptor_set() const noexcept
@@ -190,10 +207,12 @@ void SharedMemory::copy_to_drawing_buffer(VkDeviceSize offset, const T& data) co
         copy_to_buffer(m_uniform_buffers[m_drawing_buffer_index], offset, data);
 }
 
-void SharedMemory::set_matrix(const mat4& matrix) const
+void SharedMemory::set_matrices(const mat4& matrix, const mat4& shadow_matrix) const
 {
-        decltype(Matrices().mvp) m = transpose(to_matrix<float>(matrix));
-        copy_to_matrices_buffer(offsetof(Matrices, mvp), m);
+        Matrices matrices;
+        matrices.matrix = transpose(to_matrix<float>(matrix));
+        matrices.shadow_matrix = transpose(to_matrix<float>(shadow_matrix));
+        copy_to_matrices_buffer(0, matrices);
 }
 
 void SharedMemory::set_default_color(const Color& color) const
@@ -251,6 +270,15 @@ void SharedMemory::set_show_smooth(bool show) const
 {
         decltype(Lighting().show_smooth) s = show ? 1 : 0;
         copy_to_lighting_buffer(offsetof(Lighting, show_smooth), s);
+}
+void SharedMemory::set_shadow_texture(VkSampler sampler, const vulkan::ShadowDepthAttachment* shadow_texture) const
+{
+        VkDescriptorImageInfo image_info = {};
+        image_info.imageLayout = shadow_texture->image_layout();
+        image_info.imageView = shadow_texture->image_view();
+        image_info.sampler = sampler;
+
+        m_descriptors.update_descriptor_set(m_descriptor_set, 3, image_info);
 }
 
 //
@@ -311,10 +339,12 @@ PerObjectMemory::PerObjectMemory(const vulkan::Device& device, VkSampler sampler
                            [](const MaterialAndTexture& m) { return m.texture_Ka && m.texture_Kd && m.texture_Ks; }));
 
         std::vector<Variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
+        std::vector<uint32_t> bindings;
 
         for (const MaterialAndTexture& material : materials)
         {
                 infos.clear();
+                bindings.clear();
                 {
                         m_uniform_buffers.emplace_back(device, sizeof(Material));
 
@@ -324,6 +354,8 @@ PerObjectMemory::PerObjectMemory(const vulkan::Device& device, VkSampler sampler
                         buffer_info.range = m_uniform_buffers.back().size();
 
                         infos.push_back(buffer_info);
+
+                        bindings.push_back(0);
                 }
                 {
                         VkDescriptorImageInfo image_info = {};
@@ -332,6 +364,8 @@ PerObjectMemory::PerObjectMemory(const vulkan::Device& device, VkSampler sampler
                         image_info.sampler = sampler;
 
                         infos.push_back(image_info);
+
+                        bindings.push_back(1);
                 }
                 {
                         VkDescriptorImageInfo image_info = {};
@@ -340,6 +374,8 @@ PerObjectMemory::PerObjectMemory(const vulkan::Device& device, VkSampler sampler
                         image_info.sampler = sampler;
 
                         infos.push_back(image_info);
+
+                        bindings.push_back(2);
                 }
                 {
                         VkDescriptorImageInfo image_info = {};
@@ -348,8 +384,10 @@ PerObjectMemory::PerObjectMemory(const vulkan::Device& device, VkSampler sampler
                         image_info.sampler = sampler;
 
                         infos.push_back(image_info);
+
+                        bindings.push_back(3);
                 }
-                m_descriptor_sets.push_back(m_descriptors.create_descriptor_set(infos));
+                m_descriptor_sets.push_back(m_descriptors.create_and_update_descriptor_set(bindings, infos));
         }
 
         ASSERT(m_descriptor_sets.size() == materials.size());
@@ -370,5 +408,58 @@ VkDescriptorSet PerObjectMemory::descriptor_set(uint32_t index) const noexcept
         ASSERT(index < m_descriptor_sets.size());
 
         return m_descriptor_sets[index];
+}
+
+//
+
+std::vector<VkDescriptorSetLayoutBinding> ShadowMemory::descriptor_set_layout_bindings()
+{
+        std::vector<VkDescriptorSetLayoutBinding> bindings;
+
+        {
+                VkDescriptorSetLayoutBinding b = {};
+                b.binding = 0;
+                b.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+                b.descriptorCount = 1;
+                b.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+                bindings.push_back(b);
+        }
+
+        return bindings;
+}
+
+ShadowMemory::ShadowMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout)
+        : m_descriptors(vulkan::Descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings()))
+{
+        std::vector<Variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
+        std::vector<uint32_t> bindings;
+
+        {
+                m_uniform_buffers.emplace_back(device, sizeof(Matrices));
+
+                VkDescriptorBufferInfo buffer_info = {};
+                buffer_info.buffer = m_uniform_buffers.back();
+                buffer_info.offset = 0;
+                buffer_info.range = m_uniform_buffers.back().size();
+
+                infos.push_back(buffer_info);
+
+                bindings.push_back(0);
+        }
+
+        m_descriptor_set = m_descriptors.create_and_update_descriptor_set(bindings, infos);
+}
+
+VkDescriptorSet ShadowMemory::descriptor_set() const noexcept
+{
+        return m_descriptor_set;
+}
+
+void ShadowMemory::set_matrix(const mat4& matrix) const
+{
+        Matrices matrices;
+        matrices.matrix = transpose(to_matrix<float>(matrix));
+        copy_to_buffer(m_uniform_buffers[0], 0, matrices);
 }
 }

@@ -468,6 +468,61 @@ vulkan::RenderPass create_multisampling_render_pass(VkDevice device, VkSampleCou
         return vulkan::RenderPass(device, create_info);
 }
 
+vulkan::RenderPass create_shadow_render_pass[[maybe_unused]](VkDevice device, VkFormat depth_image_format)
+{
+        std::array<VkAttachmentDescription, 1> attachments = {};
+
+        // Depth
+        attachments[0].format = depth_image_format;
+        attachments[0].samples = VK_SAMPLE_COUNT_1_BIT;
+        attachments[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        attachments[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        attachments[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        attachments[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        attachments[0].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        attachments[0].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+
+        VkAttachmentReference depth_reference = {};
+        depth_reference.attachment = 0;
+        depth_reference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+        VkSubpassDescription subpass_description = {};
+        subpass_description.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+        subpass_description.colorAttachmentCount = 0;
+        subpass_description.pDepthStencilAttachment = &depth_reference;
+
+        std::array<VkSubpassDependency, 2> subpass_dependencies = {};
+
+        subpass_dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
+        subpass_dependencies[0].dstSubpass = 0;
+        subpass_dependencies[0].srcStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+        subpass_dependencies[0].dstStageMask = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+        subpass_dependencies[0].srcAccessMask = 0; // VK_ACCESS_MEMORY_READ_BIT;
+        subpass_dependencies[0].dstAccessMask =
+                VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+        subpass_dependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+
+        subpass_dependencies[1].srcSubpass = 0;
+        subpass_dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
+        subpass_dependencies[1].srcStageMask = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+        subpass_dependencies[1].dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+        subpass_dependencies[1].srcAccessMask =
+                VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+        subpass_dependencies[1].dstAccessMask = VK_ACCESS_SHADER_READ_BIT; // VK_ACCESS_MEMORY_READ_BIT;
+        subpass_dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+
+        VkRenderPassCreateInfo create_info = {};
+        create_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+        create_info.attachmentCount = attachments.size();
+        create_info.pAttachments = attachments.data();
+        create_info.subpassCount = 1;
+        create_info.pSubpasses = &subpass_description;
+        create_info.dependencyCount = subpass_dependencies.size();
+        create_info.pDependencies = subpass_dependencies.data();
+
+        return vulkan::RenderPass(device, create_info);
+}
+
 template <size_t N>
 vulkan::Framebuffer create_framebuffer(VkDevice device, VkRenderPass render_pass, VkExtent2D extent,
                                        const std::array<VkImageView, N>& attachments)

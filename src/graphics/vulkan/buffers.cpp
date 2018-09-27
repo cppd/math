@@ -639,4 +639,47 @@ VkImageView ColorAttachment::image_view() const noexcept
 {
         return m_image_view;
 }
+
+//
+
+ShadowDepthAttachment::ShadowDepthAttachment(const Device& device, VkCommandPool graphics_command_pool, VkQueue graphics_queue,
+                                             const std::vector<uint32_t>& family_indices, uint32_t width, uint32_t height)
+{
+        ASSERT(family_indices.size() > 0);
+
+        std::vector<VkFormat> candidates = {VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT};
+        VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
+        VkFormatFeatureFlags features = VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT;
+        VkImageUsageFlags usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+        VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT;
+
+        m_image_layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL; // VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+        m_format = find_supported_2d_image_format(device.physical_device(), candidates, tiling, features, usage, samples);
+        m_image = create_2d_image(device, width, height, m_format, family_indices, samples, tiling, usage);
+        m_device_memory = create_device_memory(device, m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+        m_image_view = create_image_view(device, m_image, m_format, VK_IMAGE_ASPECT_DEPTH_BIT);
+
+        transition_image_layout(device, graphics_command_pool, graphics_queue, m_image, m_format, VK_IMAGE_LAYOUT_UNDEFINED,
+                                m_image_layout);
+}
+
+VkImage ShadowDepthAttachment::image() const noexcept
+{
+        return m_image;
+}
+
+VkFormat ShadowDepthAttachment::format() const noexcept
+{
+        return m_format;
+}
+
+VkImageLayout ShadowDepthAttachment::image_layout() const noexcept
+{
+        return m_image_layout;
+}
+
+VkImageView ShadowDepthAttachment::image_view() const noexcept
+{
+        return m_image_view;
+}
 }

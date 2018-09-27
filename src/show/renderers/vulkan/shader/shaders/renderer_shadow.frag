@@ -15,13 +15,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#pragma once
+#version 450
 
-#include "objects.h"
+layout(location = 0) out vec4 color;
 
-namespace vulkan
+void main(void)
 {
-vulkan::Sampler create_sampler(const vulkan::Device& device);
-
-vulkan::Sampler create_shadow_sampler(VkDevice device);
+        color = vec4(1);
 }

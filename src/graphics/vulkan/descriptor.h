@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/variant.h"
 
+#include <unordered_map>
 #include <vector>
 
 namespace vulkan
@@ -34,11 +35,21 @@ class Descriptors
         DescriptorPool m_descriptor_pool;
         std::vector<VkDescriptorSetLayoutBinding> m_descriptor_set_layout_bindings;
 
+        // VkDescriptorSetLayoutBinding::binding -> m_descriptor_set_layout_bindings index
+        std::unordered_map<uint32_t, uint32_t> m_binding_map;
+
+        // VkDescriptorSetLayoutBinding::binding -> const VkDescriptorSetLayoutBinding&
+        const VkDescriptorSetLayoutBinding& find_layout_binding(uint32_t binding) const;
+
 public:
         Descriptors(VkDevice device, uint32_t max_sets, VkDescriptorSetLayout descriptor_set_layout,
                     const std::vector<VkDescriptorSetLayoutBinding>& bindings);
 
-        DescriptorSet create_descriptor_set(
-                const std::vector<Variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>>& descriptor_infos);
+        DescriptorSet create_and_update_descriptor_set(
+                const std::vector<uint32_t>& bindings,
+                const std::vector<Variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>>& descriptor_infos) const;
+
+        void update_descriptor_set(VkDescriptorSet descriptor_set, uint32_t binding,
+                                   const Variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>& info) const;
 };
 }

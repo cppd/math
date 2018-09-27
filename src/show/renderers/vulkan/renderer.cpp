@@ -76,6 +76,14 @@ constexpr uint32_t fragment_shader[]
 {
 #include "renderer_triangles.frag.spr"
 };
+constexpr uint32_t shadow_vertex_shader[]
+{
+#include "renderer_shadow.vert.spr"
+};
+constexpr uint32_t shadow_fragment_shader[]
+{
+#include "renderer_shadow.frag.spr"
+};
 // clang-format on
 
 namespace shaders = vulkan_renderer_shaders;
@@ -365,20 +373,32 @@ public:
 
 class Renderer final : public VulkanRenderer
 {
+        static constexpr mat4 SCALE = scale<double>(0.5, 0.5, 0.5);
+        static constexpr mat4 TRANSLATE = translate<double>(1, 1, 1);
+        const mat4 SCALE_BIAS_MATRIX = SCALE * TRANSLATE;
+
         const std::thread::id m_thread_id = std::this_thread::get_id();
 
         Color m_clear_color = Color(0);
+
         mat4 m_main_matrix = mat4(1);
+        mat4 m_shadow_matrix = mat4(1);
+        mat4 m_scale_bias_shadow_matrix = mat4(1);
 
         vulkan::VulkanInstance m_instance;
         vulkan::Sampler m_sampler;
         vulkan::DescriptorSetLayout m_shared_descriptor_set_layout;
         vulkan::DescriptorSetLayout m_per_object_descriptor_set_layout;
+        vulkan::DescriptorSetLayout m_shadow_descriptor_set_layout;
         shaders::SharedMemory m_shared_shader_memory;
+        shaders::ShadowMemory m_shadow_shader_memory;
         vulkan::VertexShader m_vertex_shader;
         vulkan::GeometryShader m_geometry_shader;
         vulkan::FragmentShader m_fragment_shader;
+        vulkan::VertexShader m_shadow_vertex_shader;
+        vulkan::FragmentShader m_shadow_fragment_shader;
         std::vector<const vulkan::Shader*> m_shaders;
+        std::vector<const vulkan::Shader*> m_shadow_shaders;
 
         std::unique_ptr<vulkan::SwapChain> m_swap_chain;
 
@@ -457,11 +477,14 @@ class Renderer final : public VulkanRenderer
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
         }
-        void set_matrices(const mat4& /*shadow_matrix*/, const mat4& main_matrix) override
+        void set_matrices(const mat4& shadow_matrix, const mat4& main_matrix) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
                 m_main_matrix = main_matrix;
+                m_shadow_matrix = shadow_matrix;
+                m_scale_bias_shadow_matrix = SCALE_BIAS_MATRIX * shadow_matrix;
+
                 set_matrices();
         }
         void set_light_direction(vec3 dir) override
@@ -559,8 +582,13 @@ class Renderer final : public VulkanRenderer
 
                 if (m_draw_objects.scale_object())
                 {
-                        mat4 mvp = m_main_matrix * m_draw_objects.scale_object()->model_matrix();
-                        m_shared_shader_memory.set_matrix(mvp);
+                        mat4 matrix = m_main_matrix * m_draw_objects.scale_object()->model_matrix();
+                        mat4 scale_bias_shadow_matrix =
+                                m_scale_bias_shadow_matrix * m_draw_objects.scale_object()->model_matrix();
+                        mat4 shadow_matrix = m_shadow_matrix * m_draw_objects.scale_object()->model_matrix();
+
+                        m_shared_shader_memory.set_matrices(matrix, scale_bias_shadow_matrix);
+                        m_shadow_shader_memory.set_matrix(shadow_matrix);
                 }
         }
 
@@ -647,11 +675,17 @@ public:
                           m_instance.device(), shaders::SharedMemory::descriptor_set_layout_bindings())),
                   m_per_object_descriptor_set_layout(vulkan::create_descriptor_set_layout(
                           m_instance.device(), shaders::PerObjectMemory::descriptor_set_layout_bindings())),
+                  m_shadow_descriptor_set_layout(vulkan::create_descriptor_set_layout(
+                          m_instance.device(), shaders::ShadowMemory::descriptor_set_layout_bindings())),
                   m_shared_shader_memory(m_instance.device(), m_shared_descriptor_set_layout),
+                  m_shadow_shader_memory(m_instance.device(), m_shadow_descriptor_set_layout),
                   m_vertex_shader(m_instance.device(), vertex_shader, "main"),
                   m_geometry_shader(m_instance.device(), geometry_shader, "main"),
                   m_fragment_shader(m_instance.device(), fragment_shader, "main"),
-                  m_shaders({&m_vertex_shader, &m_geometry_shader, &m_fragment_shader})
+                  m_shadow_vertex_shader(m_instance.device(), shadow_vertex_shader, "main"),
+                  m_shadow_fragment_shader(m_instance.device(), shadow_fragment_shader, "main"),
+                  m_shaders({&m_vertex_shader, &m_geometry_shader, &m_fragment_shader}),
+                  m_shadow_shaders({&m_shadow_vertex_shader, &m_shadow_fragment_shader})
         {
                 create_swap_chain_and_command_buffers();
 

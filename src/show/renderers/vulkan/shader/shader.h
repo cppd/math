@@ -60,7 +60,8 @@ class SharedMemory
         // на VkPhysicalDeviceLimits::minUniformBufferOffsetAlignment для VkDescriptorBufferInfo::offset.
         struct Matrices
         {
-                Matrix<4, 4, float> mvp;
+                Matrix<4, 4, float> matrix;
+                Matrix<4, 4, float> shadow_matrix;
         };
         struct Lighting
         {
@@ -110,7 +111,7 @@ public:
 
         //
 
-        void set_matrix(const mat4& matrix) const;
+        void set_matrices(const mat4& matrix, const mat4& shadow_matrix) const;
 
         void set_default_color(const Color& color) const;
         void set_wireframe_color(const Color& color) const;
@@ -123,6 +124,7 @@ public:
         void set_direction_to_camera(const vec3f& direction) const;
         void set_show_smooth(bool show) const;
         void set_show_wireframe(bool show) const;
+        void set_shadow_texture(VkSampler sampler, const vulkan::ShadowDepthAttachment* shadow_texture) const;
 };
 
 class PerObjectMemory
@@ -170,5 +172,39 @@ public:
 
         uint32_t descriptor_set_count() const noexcept;
         VkDescriptorSet descriptor_set(uint32_t index) const noexcept;
+};
+
+class ShadowMemory
+{
+        vulkan::Descriptors m_descriptors;
+        std::vector<vulkan::UniformBufferWithHostVisibleMemory> m_uniform_buffers;
+        vulkan::DescriptorSet m_descriptor_set;
+
+        struct Matrices
+        {
+                Matrix<4, 4, float> matrix;
+        };
+
+public:
+        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
+
+        //
+
+        ShadowMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout);
+
+        ShadowMemory(const ShadowMemory&) = delete;
+        ShadowMemory& operator=(const ShadowMemory&) = delete;
+        ShadowMemory& operator=(ShadowMemory&&) = delete;
+
+        ShadowMemory(ShadowMemory&&) = default;
+        ~ShadowMemory() = default;
+
+        //
+
+        VkDescriptorSet descriptor_set() const noexcept;
+
+        //
+
+        void set_matrix(const mat4& matrix) const;
 };
 }

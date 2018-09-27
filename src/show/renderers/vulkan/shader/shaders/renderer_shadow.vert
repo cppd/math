@@ -18,38 +18,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #version 450
 
 layout(location = 0) in vec3 position;
-layout(location = 1) in vec3 normal;
-layout(location = 2) in vec3 geometric_normal;
-layout(location = 3) in vec2 texture_coordinates;
 
 layout(set = 0, binding = 0) uniform Matrices
 {
         mat4 matrix;
-        mat4 shadow_matrix;
 }
 matrices;
-
-//
-
-layout(location = 0) out VS
-{
-        vec3 normal;
-        vec4 shadow_position;
-        flat vec3 geometric_normal;
-        vec2 texture_coordinates;
-}
-vs;
 
 out gl_PerVertex
 {
         vec4 gl_Position;
 };
 
-void main()
+void main(void)
 {
         gl_Position = matrices.matrix * vec4(position, 1.0);
-        vs.shadow_position = matrices.shadow_matrix * vec4(position, 1.0);
-        vs.normal = normal;
-        vs.geometric_normal = geometric_normal;
-        vs.texture_coordinates = texture_coordinates;
 }

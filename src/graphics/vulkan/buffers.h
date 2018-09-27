@@ -195,4 +195,31 @@ public:
         VkImageLayout image_layout() const noexcept;
         VkImageView image_view() const noexcept;
 };
+
+class ShadowDepthAttachment final
+{
+        VkImageLayout m_image_layout;
+        VkFormat m_format;
+        Image m_image;
+        DeviceMemory m_device_memory;
+        ImageView m_image_view;
+
+public:
+        ShadowDepthAttachment(const Device& device, VkCommandPool graphics_command_pool, VkQueue graphics_queue,
+                              const std::vector<uint32_t>& family_indices, uint32_t width, uint32_t height);
+
+        ShadowDepthAttachment(const ShadowDepthAttachment&) = delete;
+        ShadowDepthAttachment& operator=(const ShadowDepthAttachment&) = delete;
+        ShadowDepthAttachment& operator=(ShadowDepthAttachment&&) = delete;
+
+        ShadowDepthAttachment(ShadowDepthAttachment&&) = default;
+        ~ShadowDepthAttachment() = default;
+
+        //
+
+        VkImage image() const noexcept;
+        VkFormat format() const noexcept;
+        VkImageLayout image_layout() const noexcept;
+        VkImageView image_view() const noexcept;
+};
 }

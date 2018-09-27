@@ -62,6 +62,8 @@ layout(set = 0, binding = 2) uniform Drawing
 }
 drawing;
 
+layout(set = 0, binding = 3) uniform sampler2DShadow shadow_texture;
+
 // Для каждой группы треугольников с одним материалом отдельно задаётся этот материал и его текстуры
 layout(set = 1, binding = 0) uniform Material
 {
@@ -84,6 +86,7 @@ layout(set = 1, binding = 3) uniform sampler2D texture_Ks;
 layout(location = 0) in GS
 {
         vec3 normal;
+        vec4 shadow_position;
         vec2 texture_coordinates;
         vec3 baricentric;
 }
