@@ -22,14 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace
 {
-template <typename... T>
-struct Visitors : T...
-{
-        using T::operator()...;
-};
-template <typename... T>
-Visitors(T...)->Visitors<T...>;
-
 vulkan::DescriptorPool create_descriptor_pool(VkDevice device,
                                               const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings,
                                               uint32_t max_sets, VkDescriptorPoolCreateFlags flags)
