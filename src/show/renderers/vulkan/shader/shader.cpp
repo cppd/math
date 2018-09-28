@@ -255,6 +255,11 @@ void SharedMemory::set_show_wireframe(bool show) const
         decltype(Drawing().show_wireframe) s = show ? 1 : 0;
         copy_to_drawing_buffer(offsetof(Drawing, show_wireframe), s);
 }
+void SharedMemory::set_show_shadow(bool show) const
+{
+        decltype(Drawing().show_shadow) s = show ? 1 : 0;
+        copy_to_drawing_buffer(offsetof(Drawing, show_shadow), s);
+}
 
 void SharedMemory::set_direction_to_light(const vec3f& direction) const
 {

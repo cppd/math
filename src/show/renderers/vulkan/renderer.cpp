@@ -369,12 +369,36 @@ public:
                 vkCmdDrawIndexed(command_buffer, m_vertex_count, 1, 0, 0, 0);
 #endif
         }
+
+        void shadow_draw_commands(VkCommandBuffer command_buffer) const
+        {
+                if (!m_vertex_buffer)
+                {
+                        return;
+                }
+
+                std::array<VkBuffer, 1> vertex_buffers = {*m_vertex_buffer};
+                std::array<VkDeviceSize, vertex_buffers.size()> offsets = {0};
+                vkCmdBindVertexBuffers(command_buffer, 0, vertex_buffers.size(), vertex_buffers.data(), offsets.data());
+
+                ASSERT(m_vertices_of_materials.size() == m_shader_memory->descriptor_set_count());
+
+                for (size_t i = 0; i < m_vertices_of_materials.size(); ++i)
+                {
+                        if (m_vertices_of_materials[i].count <= 0)
+                        {
+                                continue;
+                        }
+
+                        vkCmdDraw(command_buffer, m_vertices_of_materials[i].count, 1, m_vertices_of_materials[i].offset, 0);
+                }
+        }
 };
 
 class Renderer final : public VulkanRenderer
 {
-        static constexpr mat4 SCALE = scale<double>(0.5, 0.5, 0.5);
-        static constexpr mat4 TRANSLATE = translate<double>(1, 1, 1);
+        static constexpr mat4 SCALE = scale<double>(0.5, 0.5, 1);
+        static constexpr mat4 TRANSLATE = translate<double>(1, 1, 0);
         const mat4 SCALE_BIAS_MATRIX = SCALE * TRANSLATE;
 
         const std::thread::id m_thread_id = std::this_thread::get_id();
@@ -387,6 +411,7 @@ class Renderer final : public VulkanRenderer
 
         vulkan::VulkanInstance m_instance;
         vulkan::Sampler m_sampler;
+        vulkan::Sampler m_shadow_sampler;
         vulkan::DescriptorSetLayout m_shared_descriptor_set_layout;
         vulkan::DescriptorSetLayout m_per_object_descriptor_set_layout;
         vulkan::DescriptorSetLayout m_shadow_descriptor_set_layout;
@@ -459,9 +484,12 @@ class Renderer final : public VulkanRenderer
 
                 m_shared_shader_memory.set_show_wireframe(show);
         }
-        void set_show_shadow(bool /*show*/) override
+        void set_show_shadow(bool show) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
+
+                m_shared_shader_memory.set_show_shadow(show);
+                m_instance.set_draw_shadow(show);
         }
         void set_show_fog(bool /*show*/) override
         {
@@ -602,19 +630,28 @@ class Renderer final : public VulkanRenderer
 
                 m_instance.device_wait_idle();
 
+                //
+
                 std::vector<VkDescriptorSetLayout> layouts(2);
                 layouts[SHADER_SHARED_DESCRIPTION_SET_LAYOUT_INDEX] = m_shared_descriptor_set_layout;
                 layouts[SHADER_PER_OBJECT_DESCRIPTION_SET_LAYOUT_INDEX] = m_per_object_descriptor_set_layout;
+
+                std::vector<VkDescriptorSetLayout> shadow_layouts(1);
+                shadow_layouts[0] = m_shadow_descriptor_set_layout;
+
                 // Сначала надо удалить объект, а потом создавать
                 m_swap_chain.reset();
+
                 m_swap_chain = std::make_unique<vulkan::SwapChain>(m_instance.create_swap_chain(
                         PREFERRED_IMAGE_COUNT, REQUIRED_MINIMUM_SAMPLE_COUNT, m_shaders, shaders::Vertex::binding_descriptions(),
-                        shaders::Vertex::attribute_descriptions(), layouts));
+                        shaders::Vertex::attribute_descriptions(), layouts, m_shadow_shaders, shadow_layouts));
+
+                m_shared_shader_memory.set_shadow_texture(m_shadow_sampler, m_swap_chain->shadow_texture());
 
                 create_command_buffers(false /*wait_idle*/);
         }
 
-        void draw_commands(VkPipelineLayout pipeline_layout, VkPipeline pipeline, VkCommandBuffer command_buffer)
+        void draw_commands(VkPipelineLayout pipeline_layout, VkPipeline pipeline, VkCommandBuffer command_buffer) const
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
@@ -636,6 +673,28 @@ class Renderer final : public VulkanRenderer
                 }
         }
 
+        void shadow_draw_commands(VkPipelineLayout pipeline_layout, VkPipeline pipeline, VkCommandBuffer command_buffer) const
+        {
+                ASSERT(m_thread_id == std::this_thread::get_id());
+
+                //
+
+                ASSERT(m_shadow_shader_memory.descriptor_set() != VK_NULL_HANDLE);
+
+                vkCmdSetDepthBias(command_buffer, 1.5f, 0.0f, 1.5f);
+
+                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+
+                std::array<VkDescriptorSet, 1> descriptor_sets = {m_shadow_shader_memory.descriptor_set()};
+                vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline_layout, 0 /*firstSet*/,
+                                        descriptor_sets.size(), descriptor_sets.data(), 0, nullptr);
+
+                if (m_draw_objects.object())
+                {
+                        m_draw_objects.object()->shadow_draw_commands(command_buffer);
+                }
+        }
+
         void create_command_buffers(bool wait_idle = true)
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
@@ -651,7 +710,8 @@ class Renderer final : public VulkanRenderer
                 using std::placeholders::_2;
                 using std::placeholders::_3;
 
-                m_swap_chain->create_command_buffers(m_clear_color, std::bind(&Renderer::draw_commands, this, _1, _2, _3));
+                m_swap_chain->create_command_buffers(m_clear_color, std::bind(&Renderer::draw_commands, this, _1, _2, _3),
+                                                     std::bind(&Renderer::shadow_draw_commands, this, _1, _2, _3));
         }
 
         void delete_command_buffers()
@@ -671,6 +731,7 @@ public:
                              device_extensions(), validation_layers(), required_features(), optional_features(), create_surface,
                              MAX_FRAMES_IN_FLIGHT),
                   m_sampler(vulkan::create_sampler(m_instance.device())),
+                  m_shadow_sampler(vulkan::create_shadow_sampler(m_instance.device())),
                   m_shared_descriptor_set_layout(vulkan::create_descriptor_set_layout(
                           m_instance.device(), shaders::SharedMemory::descriptor_set_layout_bindings())),
                   m_per_object_descriptor_set_layout(vulkan::create_descriptor_set_layout(

@@ -555,7 +555,8 @@ vulkan::Pipeline create_graphics_pipeline(const vulkan::Device& device, VkRender
                                           VkSampleCountFlagBits sample_count, VkPipelineLayout pipeline_layout,
                                           VkExtent2D swap_chain_extent, const std::vector<const vulkan::Shader*>& shaders,
                                           const std::vector<VkVertexInputBindingDescription>& binding_descriptions,
-                                          const std::vector<VkVertexInputAttributeDescription>& attribute_descriptions)
+                                          const std::vector<VkVertexInputAttributeDescription>& attribute_descriptions,
+                                          bool for_shadow)
 {
         std::vector<VkPipelineShaderStageCreateInfo> pipeline_shader_stages = pipeline_shader_stage_create_info(shaders);
 
@@ -603,7 +604,14 @@ vulkan::Pipeline create_graphics_pipeline(const vulkan::Device& device, VkRender
         rasterization_state_info.cullMode = VK_CULL_MODE_NONE;
         rasterization_state_info.frontFace = VK_FRONT_FACE_CLOCKWISE;
 
-        rasterization_state_info.depthBiasEnable = VK_FALSE;
+        if (for_shadow)
+        {
+                rasterization_state_info.depthBiasEnable = VK_TRUE;
+        }
+        else
+        {
+                rasterization_state_info.depthBiasEnable = VK_FALSE;
+        }
         // rasterization_state_info.depthBiasConstantFactor = 0.0f;
         // rasterization_state_info.depthBiasClamp = 0.0f;
         // rasterization_state_info.depthBiasSlopeFactor = 0.0f;
@@ -652,11 +660,13 @@ vulkan::Pipeline create_graphics_pipeline(const vulkan::Device& device, VkRender
         // color_blending_state_info.blendConstants[2] = 0.0f;
         // color_blending_state_info.blendConstants[3] = 0.0f;
 
-        // std::vector<VkDynamicState> dynamic_states({VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_LINE_WIDTH});
-        // VkPipelineDynamicStateCreateInfo dynamic_state_info = {};
-        // dynamic_state_info.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
-        // dynamic_state_info.dynamicStateCount = dynamic_states.size();
-        // dynamic_state_info.pDynamicStates = dynamic_states.data();
+        // VK_DYNAMIC_STATE_VIEWPORT
+        // VK_DYNAMIC_STATE_LINE_WIDTH
+        std::vector<VkDynamicState> dynamic_states({VK_DYNAMIC_STATE_DEPTH_BIAS});
+        VkPipelineDynamicStateCreateInfo dynamic_state_info = {};
+        dynamic_state_info.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+        dynamic_state_info.dynamicStateCount = dynamic_states.size();
+        dynamic_state_info.pDynamicStates = dynamic_states.data();
 
         VkPipelineDepthStencilStateCreateInfo depth_stencil_state_info = {};
         depth_stencil_state_info.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
@@ -685,7 +695,7 @@ vulkan::Pipeline create_graphics_pipeline(const vulkan::Device& device, VkRender
         create_info.pMultisampleState = &multisampling_state_info;
         create_info.pDepthStencilState = &depth_stencil_state_info;
         create_info.pColorBlendState = &color_blending_state_info;
-        // create_info.pDynamicState = nullptr;
+        create_info.pDynamicState = for_shadow ? &dynamic_state_info : nullptr;
 
         create_info.layout = pipeline_layout;
 
@@ -824,7 +834,9 @@ SwapChain::SwapChain(VkSurfaceKHR surface, VkPhysicalDevice physical_device,
                      int required_minimum_sample_count, const std::vector<const vulkan::Shader*>& shaders,
                      const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
                      const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions,
-                     const std::vector<VkDescriptorSetLayout>& descriptor_set_layouts)
+                     const std::vector<VkDescriptorSetLayout>& descriptor_set_layouts,
+                     const std::vector<const vulkan::Shader*>& shadow_shaders,
+                     const std::vector<VkDescriptorSetLayout>& shadow_descriptor_set_layouts)
         : m_device(device), m_graphics_command_pool(graphics_command_pool)
 {
         ASSERT(surface != VK_NULL_HANDLE);
@@ -914,12 +926,36 @@ SwapChain::SwapChain(VkSurfaceKHR surface, VkPhysicalDevice physical_device,
 
         m_pipeline_layout = create_pipeline_layout(device, descriptor_set_layouts);
         m_pipeline = create_graphics_pipeline(device, m_render_pass, 0 /*sub_pass*/, m_sample_count_bit, m_pipeline_layout,
-                                              m_extent, shaders, vertex_binding_descriptions, vertex_attribute_descriptions);
+                                              m_extent, shaders, vertex_binding_descriptions, vertex_attribute_descriptions,
+                                              false /*for_shadow*/);
+
+        //
+
+        m_shadow_depth_attachment = std::make_unique<ShadowDepthAttachment>(
+                device, graphics_command_pool, graphics_queue, depth_image_family_indices, m_extent.width, m_extent.height);
+        m_shadow_render_pass = create_shadow_render_pass(device, m_shadow_depth_attachment->format());
+        std::array<VkImageView, 1> shadow_attachments = {m_shadow_depth_attachment->image_view()};
+        for (size_t i = 0; i < m_swap_chain_image_views.size(); ++i)
+        {
+                m_shadow_framebuffers.push_back(create_framebuffer(device, m_shadow_render_pass, m_extent, shadow_attachments));
+        }
+        m_shadow_pipeline_layout = create_pipeline_layout(device, shadow_descriptor_set_layouts);
+        m_shadow_pipeline = create_graphics_pipeline(
+                device, m_shadow_render_pass, 0 /*sub_pass*/, VK_SAMPLE_COUNT_1_BIT, m_shadow_pipeline_layout, m_extent,
+                shadow_shaders, vertex_binding_descriptions, vertex_attribute_descriptions, true /*for_shadow*/);
 }
 
-void SwapChain::create_command_buffers(const Color& clear_color,
-                                       const std::function<void(VkPipelineLayout pipeline_layout, VkPipeline pipeline,
-                                                                VkCommandBuffer command_buffer)>& commands_for_triangle_topology)
+const ShadowDepthAttachment* SwapChain::shadow_texture() const noexcept
+{
+        return m_shadow_depth_attachment.get();
+}
+
+void SwapChain::create_command_buffers(
+        const Color& clear_color,
+        const std::function<void(VkPipelineLayout pipeline_layout, VkPipeline pipeline, VkCommandBuffer command_buffer)>&
+                commands_for_triangle_topology,
+        const std::function<void(VkPipelineLayout pipeline_layout, VkPipeline pipeline, VkCommandBuffer command_buffer)>&
+                commands_for_shadow_triangle_topology)
 {
         if (m_sample_count_bit != VK_SAMPLE_COUNT_1_BIT)
         {
@@ -940,16 +976,27 @@ void SwapChain::create_command_buffers(const Color& clear_color,
                         ::create_command_buffers(m_device, m_extent, m_render_pass, m_pipeline_layout, m_pipeline, m_framebuffers,
                                                  m_graphics_command_pool, clear_values, commands_for_triangle_topology);
         }
+
+        //
+
+        {
+                std::array<VkClearValue, 1> clear_values;
+                clear_values[0] = depth_stencil_clear_value();
+                m_shadow_command_buffers = ::create_command_buffers(
+                        m_device, m_extent, m_shadow_render_pass, m_shadow_pipeline_layout, m_shadow_pipeline,
+                        m_shadow_framebuffers, m_graphics_command_pool, clear_values, commands_for_shadow_triangle_topology);
+        }
 }
 
 void SwapChain::delete_command_buffers()
 {
         m_command_buffers = CommandBuffers();
+        m_shadow_command_buffers = CommandBuffers();
 }
 
 bool SwapChain::command_buffers_created() const
 {
-        return m_command_buffers.count() > 0;
+        return m_command_buffers.count() > 0 && m_shadow_command_buffers.count() > 0;
 }
 
 VkSwapchainKHR SwapChain::swap_chain() const noexcept
@@ -960,6 +1007,11 @@ VkSwapchainKHR SwapChain::swap_chain() const noexcept
 const VkCommandBuffer& SwapChain::command_buffer(uint32_t index) const noexcept
 {
         return m_command_buffers[index];
+}
+
+const VkCommandBuffer& SwapChain::shadow_command_buffer(uint32_t index) const noexcept
+{
+        return m_shadow_command_buffers[index];
 }
 
 //
@@ -989,6 +1041,7 @@ VulkanInstance::VulkanInstance(int api_version_major, int api_version_minor,
           //
           m_max_frames_in_flight(max_frames_in_flight),
           m_image_available_semaphores(create_semaphores(m_device, m_max_frames_in_flight)),
+          m_shadow_available_semaphores(create_semaphores(m_device, m_max_frames_in_flight)),
           m_render_finished_semaphores(create_semaphores(m_device, m_max_frames_in_flight)),
           m_in_flight_fences(create_fences(m_device, m_max_frames_in_flight, true /*signaled_state*/)),
           //
@@ -1031,13 +1084,16 @@ SwapChain VulkanInstance::create_swap_chain(int preferred_image_count, int requi
                                             const std::vector<const vulkan::Shader*>& shaders,
                                             const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
                                             const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions,
-                                            const std::vector<VkDescriptorSetLayout>& descriptor_set_layouts)
+                                            const std::vector<VkDescriptorSetLayout>& descriptor_set_layouts,
+                                            const std::vector<const vulkan::Shader*>& shadow_shaders,
+                                            const std::vector<VkDescriptorSetLayout>& shadow_descriptor_set_layouts)
 {
         ASSERT(descriptor_set_layouts.size() > 0);
 
         return SwapChain(m_surface, m_physical_device, m_swap_chain_image_family_indices, m_depth_image_family_indices, m_device,
                          m_graphics_command_pool, m_graphics_queue, preferred_image_count, required_minimum_sample_count, shaders,
-                         vertex_binding_descriptions, vertex_attribute_descriptions, descriptor_set_layouts);
+                         vertex_binding_descriptions, vertex_attribute_descriptions, descriptor_set_layouts, shadow_shaders,
+                         shadow_descriptor_set_layouts);
 }
 
 VkInstance VulkanInstance::instance() const noexcept
@@ -1091,25 +1147,71 @@ bool VulkanInstance::draw_frame(SwapChain& swap_chain)
 
         //
 
-        std::array<VkSemaphore, 1> wait_semaphores = {m_image_available_semaphores[m_current_frame]};
-        std::array<VkPipelineStageFlags, 1> wait_stages = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+        std::array<VkSemaphore, 1> render_finished_semaphores = {m_render_finished_semaphores[m_current_frame]};
 
-        std::array<VkSemaphore, 1> signal_semaphores = {m_render_finished_semaphores[m_current_frame]};
-
-        VkSubmitInfo submit_info = {};
-        submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-        submit_info.waitSemaphoreCount = wait_semaphores.size();
-        submit_info.pWaitSemaphores = wait_semaphores.data();
-        submit_info.pWaitDstStageMask = wait_stages.data();
-        submit_info.commandBufferCount = 1;
-        submit_info.pCommandBuffers = &swap_chain.command_buffer(image_index);
-        submit_info.signalSemaphoreCount = signal_semaphores.size();
-        submit_info.pSignalSemaphores = signal_semaphores.data();
-
-        result = vkQueueSubmit(m_graphics_queue, 1, &submit_info, current_frame_fence);
-        if (result != VK_SUCCESS)
+        if (!m_draw_shadow)
         {
-                vulkan_function_error("vkQueueSubmit", result);
+                std::array<VkSemaphore, 1> image_signal_semaphores = {m_image_available_semaphores[m_current_frame]};
+                std::array<VkPipelineStageFlags, 1> image_wait_stages = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+
+                VkSubmitInfo submit_info = {};
+                submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+                submit_info.waitSemaphoreCount = image_signal_semaphores.size();
+                submit_info.pWaitSemaphores = image_signal_semaphores.data();
+                submit_info.pWaitDstStageMask = image_wait_stages.data();
+                submit_info.commandBufferCount = 1;
+                submit_info.pCommandBuffers = &swap_chain.command_buffer(image_index);
+                submit_info.signalSemaphoreCount = render_finished_semaphores.size();
+                submit_info.pSignalSemaphores = render_finished_semaphores.data();
+
+                result = vkQueueSubmit(m_graphics_queue, 1, &submit_info, current_frame_fence);
+                if (result != VK_SUCCESS)
+                {
+                        vulkan_function_error("vkQueueSubmit", result);
+                }
+        }
+        else
+        {
+                std::array<VkSemaphore, 1> image_signal_semaphores = {m_image_available_semaphores[m_current_frame]};
+                std::array<VkPipelineStageFlags, 1> image_wait_stages = {VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT};
+
+                std::array<VkSemaphore, 1> shadow_signal_semaphores = {m_shadow_available_semaphores[m_current_frame]};
+                std::array<VkPipelineStageFlags, 1> shadow_wait_stages = {VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT};
+
+                {
+                        VkSubmitInfo submit_info = {};
+                        submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+                        submit_info.waitSemaphoreCount = image_signal_semaphores.size();
+                        submit_info.pWaitSemaphores = image_signal_semaphores.data();
+                        submit_info.pWaitDstStageMask = image_wait_stages.data();
+                        submit_info.commandBufferCount = 1;
+                        submit_info.pCommandBuffers = &swap_chain.shadow_command_buffer(image_index);
+                        submit_info.signalSemaphoreCount = shadow_signal_semaphores.size();
+                        submit_info.pSignalSemaphores = shadow_signal_semaphores.data();
+
+                        result = vkQueueSubmit(m_graphics_queue, 1, &submit_info, NO_FENCE);
+                        if (result != VK_SUCCESS)
+                        {
+                                vulkan_function_error("vkQueueSubmit", result);
+                        }
+                }
+                {
+                        VkSubmitInfo submit_info = {};
+                        submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+                        submit_info.waitSemaphoreCount = shadow_signal_semaphores.size();
+                        submit_info.pWaitSemaphores = shadow_signal_semaphores.data();
+                        submit_info.pWaitDstStageMask = shadow_wait_stages.data();
+                        submit_info.commandBufferCount = 1;
+                        submit_info.pCommandBuffers = &swap_chain.command_buffer(image_index);
+                        submit_info.signalSemaphoreCount = render_finished_semaphores.size();
+                        submit_info.pSignalSemaphores = render_finished_semaphores.data();
+
+                        result = vkQueueSubmit(m_graphics_queue, 1, &submit_info, current_frame_fence);
+                        if (result != VK_SUCCESS)
+                        {
+                                vulkan_function_error("vkQueueSubmit", result);
+                        }
+                }
         }
 
         //
@@ -1119,8 +1221,8 @@ bool VulkanInstance::draw_frame(SwapChain& swap_chain)
 
         VkPresentInfoKHR present_info = {};
         present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-        present_info.waitSemaphoreCount = signal_semaphores.size();
-        present_info.pWaitSemaphores = signal_semaphores.data();
+        present_info.waitSemaphoreCount = render_finished_semaphores.size();
+        present_info.pWaitSemaphores = render_finished_semaphores.data();
         present_info.swapchainCount = swap_chains.size();
         present_info.pSwapchains = swap_chains.data();
         present_info.pImageIndices = image_indices.data();
@@ -1139,6 +1241,11 @@ bool VulkanInstance::draw_frame(SwapChain& swap_chain)
         m_current_frame = (m_current_frame + 1) % m_max_frames_in_flight;
 
         return true;
+}
+
+void VulkanInstance::set_draw_shadow(bool draw)
+{
+        m_draw_shadow = draw;
 }
 
 void VulkanInstance::device_wait_idle() const

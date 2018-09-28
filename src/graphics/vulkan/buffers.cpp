@@ -642,8 +642,9 @@ VkImageView ColorAttachment::image_view() const noexcept
 
 //
 
-ShadowDepthAttachment::ShadowDepthAttachment(const Device& device, VkCommandPool graphics_command_pool, VkQueue graphics_queue,
-                                             const std::vector<uint32_t>& family_indices, uint32_t width, uint32_t height)
+ShadowDepthAttachment::ShadowDepthAttachment(const Device& device, VkCommandPool /*graphics_command_pool*/,
+                                             VkQueue /*graphics_queue*/, const std::vector<uint32_t>& family_indices,
+                                             uint32_t width, uint32_t height)
 {
         ASSERT(family_indices.size() > 0);
 
@@ -659,8 +660,8 @@ ShadowDepthAttachment::ShadowDepthAttachment(const Device& device, VkCommandPool
         m_device_memory = create_device_memory(device, m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
         m_image_view = create_image_view(device, m_image, m_format, VK_IMAGE_ASPECT_DEPTH_BIT);
 
-        transition_image_layout(device, graphics_command_pool, graphics_queue, m_image, m_format, VK_IMAGE_LAYOUT_UNDEFINED,
-                                m_image_layout);
+        // transition_image_layout(device, graphics_command_pool, graphics_queue, m_image, m_format, VK_IMAGE_LAYOUT_UNDEFINED,
+        //                        m_image_layout);
 }
 
 VkImage ShadowDepthAttachment::image() const noexcept

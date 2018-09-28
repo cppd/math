@@ -17,9 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #version 450
 
-layout(location = 0) out vec4 color;
-
 void main(void)
 {
-        color = vec4(1);
 }

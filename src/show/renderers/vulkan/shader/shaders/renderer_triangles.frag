@@ -59,10 +59,11 @@ layout(set = 0, binding = 2) uniform Drawing
         vec3 light_s;
         bool show_materials;
         bool show_wireframe;
+        bool show_shadow;
 }
 drawing;
 
-layout(set = 0, binding = 3) uniform sampler2DShadow shadow_texture;
+layout(set = 0, binding = 3) uniform sampler2D shadow_texture;
 
 // Для каждой группы треугольников с одним материалом отдельно задаётся этот материал и его текстуры
 layout(set = 1, binding = 0) uniform Material
@@ -173,7 +174,19 @@ void main()
 
         //
 
-        vec3 color3 = color_a * drawing.light_a + color_d * drawing.light_d + color_s * drawing.light_s;
+        vec3 color3;
+
+        if (drawing.show_shadow)
+        {
+                float dist = texture(shadow_texture, gs.shadow_position.xy).r;
+                float shadow = dist > gs.shadow_position.z ? 1 : 0;
+
+                color3 = color_a * drawing.light_a + shadow * (color_d * drawing.light_d + color_s * drawing.light_s);
+        }
+        else
+        {
+                color3 = color_a * drawing.light_a + color_d * drawing.light_d + color_s * drawing.light_s;
+        }
 
         if (drawing.show_wireframe)
         {

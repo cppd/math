@@ -47,17 +47,20 @@ class SwapChain
         std::vector<ImageView> m_swap_chain_image_views;
 
         std::unique_ptr<DepthAttachment> m_depth_attachment;
-
         std::unique_ptr<ColorAttachment> m_multisampling_color_attachment;
         std::unique_ptr<DepthAttachment> m_multisampling_depth_attachment;
-
         RenderPass m_render_pass;
         std::vector<Framebuffer> m_framebuffers;
-
         PipelineLayout m_pipeline_layout;
         Pipeline m_pipeline;
-
         CommandBuffers m_command_buffers;
+
+        std::unique_ptr<ShadowDepthAttachment> m_shadow_depth_attachment;
+        RenderPass m_shadow_render_pass;
+        std::vector<Framebuffer> m_shadow_framebuffers;
+        PipelineLayout m_shadow_pipeline_layout;
+        Pipeline m_shadow_pipeline;
+        CommandBuffers m_shadow_command_buffers;
 
 public:
         SwapChain(VkSurfaceKHR surface, VkPhysicalDevice physical_device,
@@ -67,7 +70,9 @@ public:
                   int required_minimum_sample_count, const std::vector<const vulkan::Shader*>& shaders,
                   const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
                   const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions,
-                  const std::vector<VkDescriptorSetLayout>& descriptor_set_layouts);
+                  const std::vector<VkDescriptorSetLayout>& descriptor_set_layouts,
+                  const std::vector<const vulkan::Shader*>& shadow_shaders,
+                  const std::vector<VkDescriptorSetLayout>& shadow_descriptor_set_layouts);
 
         SwapChain(const SwapChain&) = delete;
         SwapChain& operator=(const SwapChain&) = delete;
@@ -78,14 +83,22 @@ public:
 
         //
 
-        void create_command_buffers(const Color& clear_color,
-                                    const std::function<void(VkPipelineLayout pipeline_layout, VkPipeline pipeline,
-                                                             VkCommandBuffer command_buffer)>& commands_for_triangle_topology);
+        const ShadowDepthAttachment* shadow_texture() const noexcept;
+
+        void create_command_buffers(
+                const Color& clear_color,
+                const std::function<void(VkPipelineLayout pipeline_layout, VkPipeline pipeline, VkCommandBuffer command_buffer)>&
+                        commands_for_triangle_topology,
+                const std::function<void(VkPipelineLayout pipeline_layout, VkPipeline pipeline, VkCommandBuffer command_buffer)>&
+                        commands_for_shadow_triangle_topology);
+
         void delete_command_buffers();
         bool command_buffers_created() const;
 
-        VkSwapchainKHR swap_chain() const noexcept;
         const VkCommandBuffer& command_buffer(uint32_t index) const noexcept;
+        const VkCommandBuffer& shadow_command_buffer(uint32_t index) const noexcept;
+
+        VkSwapchainKHR swap_chain() const noexcept;
 };
 
 class VulkanInstance
@@ -103,6 +116,7 @@ class VulkanInstance
 
         unsigned m_max_frames_in_flight;
         std::vector<Semaphore> m_image_available_semaphores;
+        std::vector<Semaphore> m_shadow_available_semaphores;
         std::vector<Semaphore> m_render_finished_semaphores;
         std::vector<Fence> m_in_flight_fences;
 
@@ -119,6 +133,8 @@ class VulkanInstance
         std::vector<uint32_t> m_swap_chain_image_family_indices;
         std::vector<uint32_t> m_texture_image_family_indices;
         std::vector<uint32_t> m_depth_image_family_indices;
+
+        bool m_draw_shadow = false;
 
 public:
         VulkanInstance(int api_version_major, int api_version_minor, const std::vector<std::string>& required_instance_extensions,
@@ -144,7 +160,9 @@ public:
                                     const std::vector<const vulkan::Shader*>& shaders,
                                     const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
                                     const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions,
-                                    const std::vector<VkDescriptorSetLayout>& descriptor_set_layouts);
+                                    const std::vector<VkDescriptorSetLayout>& descriptor_set_layouts,
+                                    const std::vector<const vulkan::Shader*>& shadow_shaders,
+                                    const std::vector<VkDescriptorSetLayout>& shadow_descriptor_set_layouts);
 
         template <typename T>
         VertexBufferWithDeviceLocalMemory create_vertex_buffer(const T& data) const
@@ -172,6 +190,8 @@ public:
         }
 
         [[nodiscard]] bool draw_frame(SwapChain& swap_chain);
+
+        void set_draw_shadow(bool draw);
 
         void device_wait_idle() const;
 };
