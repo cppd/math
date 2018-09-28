@@ -39,6 +39,7 @@ class SwapChain
         VkDevice m_device;
         VkCommandPool m_graphics_command_pool;
         VkExtent2D m_extent;
+        VkExtent2D m_shadow_extent;
 
         VkSampleCountFlagBits m_sample_count_bit;
 
@@ -72,7 +73,7 @@ public:
                   const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions,
                   const std::vector<VkDescriptorSetLayout>& descriptor_set_layouts,
                   const std::vector<const vulkan::Shader*>& shadow_shaders,
-                  const std::vector<VkDescriptorSetLayout>& shadow_descriptor_set_layouts);
+                  const std::vector<VkDescriptorSetLayout>& shadow_descriptor_set_layouts, double shadow_zoom);
 
         SwapChain(const SwapChain&) = delete;
         SwapChain& operator=(const SwapChain&) = delete;
@@ -96,7 +97,7 @@ public:
         bool command_buffers_created() const;
 
         const VkCommandBuffer& command_buffer(uint32_t index) const noexcept;
-        const VkCommandBuffer& shadow_command_buffer(uint32_t index) const noexcept;
+        const VkCommandBuffer& shadow_command_buffer() const noexcept;
 
         VkSwapchainKHR swap_chain() const noexcept;
 };
@@ -162,7 +163,7 @@ public:
                                     const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions,
                                     const std::vector<VkDescriptorSetLayout>& descriptor_set_layouts,
                                     const std::vector<const vulkan::Shader*>& shadow_shaders,
-                                    const std::vector<VkDescriptorSetLayout>& shadow_descriptor_set_layouts);
+                                    const std::vector<VkDescriptorSetLayout>& shadow_descriptor_set_layouts, double shadow_zoom);
 
         template <typename T>
         VertexBufferWithDeviceLocalMemory create_vertex_buffer(const T& data) const

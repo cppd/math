@@ -836,7 +836,7 @@ SwapChain::SwapChain(VkSurfaceKHR surface, VkPhysicalDevice physical_device,
                      const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions,
                      const std::vector<VkDescriptorSetLayout>& descriptor_set_layouts,
                      const std::vector<const vulkan::Shader*>& shadow_shaders,
-                     const std::vector<VkDescriptorSetLayout>& shadow_descriptor_set_layouts)
+                     const std::vector<VkDescriptorSetLayout>& shadow_descriptor_set_layouts, double shadow_zoom)
         : m_device(device), m_graphics_command_pool(graphics_command_pool)
 {
         ASSERT(surface != VK_NULL_HANDLE);
@@ -931,17 +931,25 @@ SwapChain::SwapChain(VkSurfaceKHR surface, VkPhysicalDevice physical_device,
 
         //
 
-        m_shadow_depth_attachment = std::make_unique<ShadowDepthAttachment>(
-                device, graphics_command_pool, graphics_queue, depth_image_family_indices, m_extent.width, m_extent.height);
+        m_shadow_extent.width = std::round(m_extent.width * shadow_zoom);
+        m_shadow_extent.height = std::round(m_extent.height * shadow_zoom);
+        VkExtent2D old_extent = m_shadow_extent;
+        m_shadow_depth_attachment =
+                std::make_unique<ShadowDepthAttachment>(device, graphics_command_pool, graphics_queue, depth_image_family_indices,
+                                                        &m_shadow_extent.width, &m_shadow_extent.height);
+        LOG("Shadow zoom " + to_string_fixed(shadow_zoom, 5));
+        if (old_extent.width != m_shadow_extent.width || old_extent.height != m_shadow_extent.height)
+        {
+                LOG("Requested shadow size (" + to_string(old_extent.width) + ", " + to_string(old_extent.height) +
+                    "), selected shadow size (" + to_string(m_shadow_extent.width) + ", " + to_string(m_shadow_extent.height) +
+                    ")");
+        }
         m_shadow_render_pass = create_shadow_render_pass(device, m_shadow_depth_attachment->format());
         std::array<VkImageView, 1> shadow_attachments = {m_shadow_depth_attachment->image_view()};
-        for (size_t i = 0; i < m_swap_chain_image_views.size(); ++i)
-        {
-                m_shadow_framebuffers.push_back(create_framebuffer(device, m_shadow_render_pass, m_extent, shadow_attachments));
-        }
+        m_shadow_framebuffers.push_back(create_framebuffer(device, m_shadow_render_pass, m_shadow_extent, shadow_attachments));
         m_shadow_pipeline_layout = create_pipeline_layout(device, shadow_descriptor_set_layouts);
         m_shadow_pipeline = create_graphics_pipeline(
-                device, m_shadow_render_pass, 0 /*sub_pass*/, VK_SAMPLE_COUNT_1_BIT, m_shadow_pipeline_layout, m_extent,
+                device, m_shadow_render_pass, 0 /*sub_pass*/, VK_SAMPLE_COUNT_1_BIT, m_shadow_pipeline_layout, m_shadow_extent,
                 shadow_shaders, vertex_binding_descriptions, vertex_attribute_descriptions, true /*for_shadow*/);
 }
 
@@ -983,7 +991,7 @@ void SwapChain::create_command_buffers(
                 std::array<VkClearValue, 1> clear_values;
                 clear_values[0] = depth_stencil_clear_value();
                 m_shadow_command_buffers = ::create_command_buffers(
-                        m_device, m_extent, m_shadow_render_pass, m_shadow_pipeline_layout, m_shadow_pipeline,
+                        m_device, m_shadow_extent, m_shadow_render_pass, m_shadow_pipeline_layout, m_shadow_pipeline,
                         m_shadow_framebuffers, m_graphics_command_pool, clear_values, commands_for_shadow_triangle_topology);
         }
 }
@@ -1009,9 +1017,11 @@ const VkCommandBuffer& SwapChain::command_buffer(uint32_t index) const noexcept
         return m_command_buffers[index];
 }
 
-const VkCommandBuffer& SwapChain::shadow_command_buffer(uint32_t index) const noexcept
+const VkCommandBuffer& SwapChain::shadow_command_buffer() const noexcept
 {
-        return m_shadow_command_buffers[index];
+        ASSERT(m_shadow_command_buffers.count() == 1);
+
+        return m_shadow_command_buffers[0];
 }
 
 //
@@ -1062,6 +1072,10 @@ VulkanInstance::VulkanInstance(int api_version_major, int api_version_minor,
                   unique_elements(std::vector({m_physical_device.graphics(), m_physical_device.transfer()}))),
           m_depth_image_family_indices(unique_elements(std::vector({m_physical_device.graphics()})))
 {
+        if (max_frames_in_flight > 1)
+        {
+                error("Max frames in flight > 1 is not supported");
+        }
 }
 
 VulkanInstance::~VulkanInstance()
@@ -1086,14 +1100,15 @@ SwapChain VulkanInstance::create_swap_chain(int preferred_image_count, int requi
                                             const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions,
                                             const std::vector<VkDescriptorSetLayout>& descriptor_set_layouts,
                                             const std::vector<const vulkan::Shader*>& shadow_shaders,
-                                            const std::vector<VkDescriptorSetLayout>& shadow_descriptor_set_layouts)
+                                            const std::vector<VkDescriptorSetLayout>& shadow_descriptor_set_layouts,
+                                            double shadow_zoom)
 {
         ASSERT(descriptor_set_layouts.size() > 0);
 
         return SwapChain(m_surface, m_physical_device, m_swap_chain_image_family_indices, m_depth_image_family_indices, m_device,
                          m_graphics_command_pool, m_graphics_queue, preferred_image_count, required_minimum_sample_count, shaders,
                          vertex_binding_descriptions, vertex_attribute_descriptions, descriptor_set_layouts, shadow_shaders,
-                         shadow_descriptor_set_layouts);
+                         shadow_descriptor_set_layouts, shadow_zoom);
 }
 
 VkInstance VulkanInstance::instance() const noexcept
@@ -1172,20 +1187,18 @@ bool VulkanInstance::draw_frame(SwapChain& swap_chain)
         }
         else
         {
-                std::array<VkSemaphore, 1> image_signal_semaphores = {m_image_available_semaphores[m_current_frame]};
-                std::array<VkPipelineStageFlags, 1> image_wait_stages = {VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT};
-
                 std::array<VkSemaphore, 1> shadow_signal_semaphores = {m_shadow_available_semaphores[m_current_frame]};
-                std::array<VkPipelineStageFlags, 1> shadow_wait_stages = {VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT};
+
+                std::array<VkSemaphore, 2> color_wait_semaphores = {m_shadow_available_semaphores[m_current_frame],
+                                                                    m_image_available_semaphores[m_current_frame]};
+                std::array<VkPipelineStageFlags, 2> color_wait_stages = {VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+                                                                         VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
 
                 {
                         VkSubmitInfo submit_info = {};
                         submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-                        submit_info.waitSemaphoreCount = image_signal_semaphores.size();
-                        submit_info.pWaitSemaphores = image_signal_semaphores.data();
-                        submit_info.pWaitDstStageMask = image_wait_stages.data();
                         submit_info.commandBufferCount = 1;
-                        submit_info.pCommandBuffers = &swap_chain.shadow_command_buffer(image_index);
+                        submit_info.pCommandBuffers = &swap_chain.shadow_command_buffer();
                         submit_info.signalSemaphoreCount = shadow_signal_semaphores.size();
                         submit_info.pSignalSemaphores = shadow_signal_semaphores.data();
 
@@ -1198,9 +1211,9 @@ bool VulkanInstance::draw_frame(SwapChain& swap_chain)
                 {
                         VkSubmitInfo submit_info = {};
                         submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-                        submit_info.waitSemaphoreCount = shadow_signal_semaphores.size();
-                        submit_info.pWaitSemaphores = shadow_signal_semaphores.data();
-                        submit_info.pWaitDstStageMask = shadow_wait_stages.data();
+                        submit_info.waitSemaphoreCount = color_wait_semaphores.size();
+                        submit_info.pWaitSemaphores = color_wait_semaphores.data();
+                        submit_info.pWaitDstStageMask = color_wait_stages.data();
                         submit_info.commandBufferCount = 1;
                         submit_info.pCommandBuffers = &swap_chain.command_buffer(image_index);
                         submit_info.signalSemaphoreCount = render_finished_semaphores.size();

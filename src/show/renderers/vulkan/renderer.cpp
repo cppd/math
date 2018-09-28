@@ -47,8 +47,8 @@ constexpr std::array<vulkan::PhysicalDeviceFeatures, 3> REQUIRED_FEATURES = {vul
 constexpr std::array<vulkan::PhysicalDeviceFeatures, 0> OPTIONAL_FEATURES = {};
 
 // 2 - double buffering, 3 - triple buffering
-constexpr int PREFERRED_IMAGE_COUNT = 3;
-constexpr int MAX_FRAMES_IN_FLIGHT = 2;
+constexpr int PREFERRED_IMAGE_COUNT = 2;
+constexpr int MAX_FRAMES_IN_FLIGHT = 1;
 
 constexpr int REQUIRED_MINIMUM_SAMPLE_COUNT = 4;
 
@@ -409,6 +409,8 @@ class Renderer final : public VulkanRenderer
         mat4 m_shadow_matrix = mat4(1);
         mat4 m_scale_bias_shadow_matrix = mat4(1);
 
+        double m_shadow_zoom = 1;
+
         vulkan::VulkanInstance m_instance;
         vulkan::Sampler m_sampler;
         vulkan::Sampler m_shadow_sampler;
@@ -501,9 +503,13 @@ class Renderer final : public VulkanRenderer
 
                 m_shared_shader_memory.set_show_materials(show);
         }
-        void set_shadow_zoom(double /*zoom*/) override
+        void set_shadow_zoom(double zoom) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
+
+                m_shadow_zoom = zoom;
+
+                create_swap_chain_and_command_buffers();
         }
         void set_matrices(const mat4& shadow_matrix, const mat4& main_matrix) override
         {
@@ -644,7 +650,7 @@ class Renderer final : public VulkanRenderer
 
                 m_swap_chain = std::make_unique<vulkan::SwapChain>(m_instance.create_swap_chain(
                         PREFERRED_IMAGE_COUNT, REQUIRED_MINIMUM_SAMPLE_COUNT, m_shaders, shaders::Vertex::binding_descriptions(),
-                        shaders::Vertex::attribute_descriptions(), layouts, m_shadow_shaders, shadow_layouts));
+                        shaders::Vertex::attribute_descriptions(), layouts, m_shadow_shaders, shadow_layouts, m_shadow_zoom));
 
                 m_shared_shader_memory.set_shadow_texture(m_shadow_sampler, m_swap_chain->shadow_texture());
 

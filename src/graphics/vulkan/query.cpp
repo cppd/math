@@ -454,6 +454,24 @@ VkFormat find_supported_2d_image_format(VkPhysicalDevice physical_device, const 
         error(oss.str());
 }
 
+VkExtent2D max_2d_image_extent(VkPhysicalDevice physical_device, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage)
+{
+        VkImageFormatProperties image_properties;
+
+        VkResult result = vkGetPhysicalDeviceImageFormatProperties(physical_device, format, VK_IMAGE_TYPE_2D, tiling, usage,
+                                                                   0 /*VkImageCreateFlags*/, &image_properties);
+        if (result != VK_SUCCESS)
+        {
+                vulkan_function_error("vkGetPhysicalDeviceImageFormatProperties", result);
+        }
+
+        VkExtent2D extent;
+        extent.width = image_properties.maxExtent.width;
+        extent.height = image_properties.maxExtent.height;
+
+        return extent;
+}
+
 int supported_framebuffer_sample_count(VkPhysicalDevice physical_device, int required_minimum_sample_count)
 {
         if (required_minimum_sample_count < 1)
