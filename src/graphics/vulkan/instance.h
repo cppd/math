@@ -18,8 +18,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "buffers.h"
+#include "device.h"
 #include "objects.h"
-#include "physical_device.h"
 #include "shader.h"
 
 #include "com/color/color.h"
