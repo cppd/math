@@ -863,6 +863,7 @@ SwapChain::SwapChain(VkSurfaceKHR surface, VkPhysicalDevice physical_device,
         const uint32_t sample_count = supported_framebuffer_sample_count(physical_device, required_minimum_sample_count);
         m_sample_count_bit = sample_count_flag_bit(sample_count);
 
+        LOG("Surface format " + format_to_string(surface_format.format));
         LOG("Preferred image count = " + to_string(preferred_image_count) + ", chosen image count = " + to_string(image_count) +
             "\n" + "Minimum sample count = " + to_string(required_minimum_sample_count) +
             ", chosen sample count = " + to_string(sample_count));
@@ -905,6 +906,9 @@ SwapChain::SwapChain(VkSurfaceKHR surface, VkPhysicalDevice physical_device,
 
                         m_framebuffers.push_back(create_framebuffer(device, m_render_pass, m_extent, attachments));
                 }
+
+                LOG("Multisampling color attachment format " + format_to_string(m_multisampling_color_attachment->format()));
+                LOG("Multisampling depth attachment format " + format_to_string(m_multisampling_depth_attachment->format()));
         }
         else
         {
@@ -922,6 +926,8 @@ SwapChain::SwapChain(VkSurfaceKHR surface, VkPhysicalDevice physical_device,
 
                         m_framebuffers.push_back(create_framebuffer(device, m_render_pass, m_extent, attachments));
                 }
+
+                LOG("Depth attachment format " + format_to_string(m_depth_attachment->format()));
         }
 
         m_pipeline_layout = create_pipeline_layout(device, descriptor_set_layouts);
@@ -937,13 +943,6 @@ SwapChain::SwapChain(VkSurfaceKHR surface, VkPhysicalDevice physical_device,
         m_shadow_depth_attachment =
                 std::make_unique<ShadowDepthAttachment>(device, graphics_command_pool, graphics_queue, depth_image_family_indices,
                                                         &m_shadow_extent.width, &m_shadow_extent.height);
-        LOG("Shadow zoom " + to_string_fixed(shadow_zoom, 5));
-        if (old_extent.width != m_shadow_extent.width || old_extent.height != m_shadow_extent.height)
-        {
-                LOG("Requested shadow size (" + to_string(old_extent.width) + ", " + to_string(old_extent.height) +
-                    "), selected shadow size (" + to_string(m_shadow_extent.width) + ", " + to_string(m_shadow_extent.height) +
-                    ")");
-        }
         m_shadow_render_pass = create_shadow_render_pass(device, m_shadow_depth_attachment->format());
         std::array<VkImageView, 1> shadow_attachments = {m_shadow_depth_attachment->image_view()};
         m_shadow_framebuffers.push_back(create_framebuffer(device, m_shadow_render_pass, m_shadow_extent, shadow_attachments));
@@ -951,6 +950,15 @@ SwapChain::SwapChain(VkSurfaceKHR surface, VkPhysicalDevice physical_device,
         m_shadow_pipeline = create_graphics_pipeline(
                 device, m_shadow_render_pass, 0 /*sub_pass*/, VK_SAMPLE_COUNT_1_BIT, m_shadow_pipeline_layout, m_shadow_extent,
                 shadow_shaders, vertex_binding_descriptions, vertex_attribute_descriptions, true /*for_shadow*/);
+
+        LOG("Shadow depth attachment format " + format_to_string(m_shadow_depth_attachment->format()));
+        LOG("Shadow zoom " + to_string_fixed(shadow_zoom, 5));
+        if (old_extent.width != m_shadow_extent.width || old_extent.height != m_shadow_extent.height)
+        {
+                LOG("Requested shadow size (" + to_string(old_extent.width) + ", " + to_string(old_extent.height) +
+                    "), selected shadow size (" + to_string(m_shadow_extent.width) + ", " + to_string(m_shadow_extent.height) +
+                    ")");
+        }
 }
 
 const ShadowDepthAttachment* SwapChain::shadow_texture() const noexcept

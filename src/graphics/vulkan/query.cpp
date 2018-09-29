@@ -35,6 +35,21 @@ std::vector<std::string> sorted(const T& s)
         std::sort(res.begin(), res.end());
         return res;
 }
+
+std::string vulkan_formats_to_string(const std::vector<VkFormat>& formats)
+{
+        if (formats.size() == 0)
+        {
+                return std::string();
+        }
+        std::string s = vulkan::format_to_string(formats[0]);
+        for (size_t i = 1; i < formats.size(); ++i)
+        {
+                s += ", ";
+                s += vulkan::format_to_string(formats[i]);
+        }
+        return s;
+}
 }
 
 namespace vulkan
@@ -389,7 +404,7 @@ VkFormat find_supported_format(VkPhysicalDevice physical_device, const std::vect
         std::ostringstream oss;
 
         oss << "Failed to find supported 2D image format.";
-        oss << " Format candidates " << to_string(std::vector<long long>(candidates.cbegin(), candidates.cend())) << ".";
+        oss << " Format candidates " << vulkan_formats_to_string(candidates) << ".";
         oss << " Tiling " << static_cast<long long>(tiling) << ".";
         oss << std::hex;
         oss << " Features 0x" << features << ".";
@@ -444,7 +459,7 @@ VkFormat find_supported_2d_image_format(VkPhysicalDevice physical_device, const 
         std::ostringstream oss;
 
         oss << "Failed to find supported 2D image format.";
-        oss << " Format candidates " << to_string(std::vector<long long>(candidates.cbegin(), candidates.cend())) << ".";
+        oss << " Format candidates " << vulkan_formats_to_string(candidates) << ".";
         oss << " Tiling " << static_cast<long long>(tiling) << ".";
         oss << std::hex;
         oss << " Features 0x" << features << ".";
