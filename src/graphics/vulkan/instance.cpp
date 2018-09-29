@@ -170,14 +170,14 @@ vulkan::Instance create_instance(int api_version_major, int api_version_minor, s
         create_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
         create_info.pApplicationInfo = &app_info;
 
-        const std::vector<const char*> extensions = to_char_pointer_vector(required_extensions);
+        const std::vector<const char*> extensions = const_char_pointer_vector(required_extensions);
         if (extensions.size() > 0)
         {
                 create_info.enabledExtensionCount = extensions.size();
                 create_info.ppEnabledExtensionNames = extensions.data();
         }
 
-        const std::vector<const char*> validation_layers = to_char_pointer_vector(required_validation_layers);
+        const std::vector<const char*> validation_layers = const_char_pointer_vector(required_validation_layers);
         if (validation_layers.size() > 0)
         {
                 create_info.enabledLayerCount = validation_layers.size();
@@ -216,14 +216,14 @@ vulkan::Device create_device(VkPhysicalDevice physical_device, const std::vector
         create_info.pQueueCreateInfos = queue_create_infos.data();
         create_info.pEnabledFeatures = &enabled_features;
 
-        const std::vector<const char*> extensions = to_char_pointer_vector(required_extensions);
+        const std::vector<const char*> extensions = const_char_pointer_vector(required_extensions);
         if (extensions.size() > 0)
         {
                 create_info.enabledExtensionCount = extensions.size();
                 create_info.ppEnabledExtensionNames = extensions.data();
         }
 
-        const std::vector<const char*> validation_layers = to_char_pointer_vector(required_validation_layers);
+        const std::vector<const char*> validation_layers = const_char_pointer_vector(required_validation_layers);
         if (validation_layers.size() > 0)
         {
                 create_info.enabledLayerCount = validation_layers.size();

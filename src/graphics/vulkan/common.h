@@ -34,4 +34,4 @@ std::vector<std::string> operator+(const std::vector<std::string>& v1, const std
 std::vector<std::string> operator+(const std::vector<std::string>& v, const std::string& s);
 std::vector<std::string> operator+(const std::string& s, const std::vector<std::string>& v);
 
-std::vector<const char*> to_char_pointer_vector(const std::vector<std::string>& c);
+std::vector<const char*> const_char_pointer_vector(const std::vector<std::string>& c);

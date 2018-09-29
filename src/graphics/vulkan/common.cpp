@@ -25,8 +25,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace
 {
-std::array<std::string, 2> return_code_strings(const VkResult& code)
+template <typename T>
+std::string enum_to_string(T e)
 {
+        static_assert(sizeof(e) <= sizeof(long long));
+
+        return to_string(static_cast<long long>(e));
+}
+
+std::array<std::string, 2> result_to_strings(const VkResult& code)
+{
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wswitch"
         switch (code)
         {
         case VK_SUCCESS:
@@ -93,22 +103,20 @@ std::array<std::string, 2> return_code_strings(const VkResult& code)
         case VK_ERROR_VALIDATION_FAILED_EXT:
                 return {"VK_ERROR_VALIDATION_FAILED_EXT", ""};
         case VK_ERROR_INVALID_SHADER_NV:
-                return {"VK_ERROR_INVALID_SHADER_NV", ""};
+                return {"VK_ERROR_INVALID_SHADER_NV", "One or more shaders failed to compile or link"};
         case VK_ERROR_FRAGMENTATION_EXT:
-                return {"VK_ERROR_FRAGMENTATION_EXT", ""};
+                return {"VK_ERROR_FRAGMENTATION_EXT", "A descriptor pool creation has failed due to fragmentation"};
         case VK_ERROR_NOT_PERMITTED_EXT:
                 return {"VK_ERROR_NOT_PERMITTED_EXT", ""};
-        case VK_RESULT_RANGE_SIZE:
-                return {"VK_RESULT_RANGE_SIZE", ""};
-        case VK_RESULT_MAX_ENUM:
-                return {"VK_RESULT_MAX_ENUM", ""};
         }
-        return {"Unknown Vulkan return code " + to_string(static_cast<long long>(code)), ""};
+#pragma GCC diagnostic pop
+
+        return {"Unknown Vulkan return code " + enum_to_string(code), ""};
 }
 
 std::string return_code_string(const std::string& function_name, const VkResult& code)
 {
-        std::array<std::string, 2> strings = return_code_strings(code);
+        std::array<std::string, 2> strings = result_to_strings(code);
 
         std::string result;
 
@@ -130,9 +138,7 @@ std::string return_code_string(const std::string& function_name, const VkResult&
                 return result;
         }
 
-        static_assert(sizeof(VkResult) <= sizeof(long long));
-
-        return "Vulkan Return Code " + to_string(static_cast<long long>(code));
+        return "Vulkan Return Code " + enum_to_string(code);
 }
 }
 
@@ -153,26 +159,22 @@ void vulkan_function_error[[noreturn]](const std::string& function_name, const V
 
 std::string physical_device_type_to_string(VkPhysicalDeviceType type)
 {
-        if (type == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wswitch"
+        switch (type)
         {
+        case VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU:
                 return "Discrete GPU";
-        }
-        else if (type == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU)
-        {
+        case VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU:
                 return "Integrated GPU";
-        }
-        else if (type == VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU)
-        {
+        case VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU:
                 return "Virtual GPU";
-        }
-        else if (type == VK_PHYSICAL_DEVICE_TYPE_CPU)
-        {
+        case VK_PHYSICAL_DEVICE_TYPE_CPU:
                 return "CPU";
         }
-        else
-        {
-                return "Unknown Device Type";
-        }
+#pragma GCC diagnostic pop
+
+        return "Unknown physical device type " + enum_to_string(type);
 }
 
 std::string format_to_string(VkFormat format)
@@ -638,7 +640,7 @@ std::string format_to_string(VkFormat format)
         }
 #pragma GCC diagnostic pop
 
-        return "Unknown Vulkan VkFormat " + to_string(static_cast<long long>(format));
+        return "Unknown Vulkan VkFormat " + enum_to_string(format);
 }
 }
 
@@ -670,7 +672,7 @@ std::vector<std::string> operator+(const std::string& s, const std::vector<std::
         return std::vector<std::string>({s}) + v;
 }
 
-std::vector<const char*> to_char_pointer_vector(const std::vector<std::string>& c)
+std::vector<const char*> const_char_pointer_vector(const std::vector<std::string>& c)
 {
         std::vector<const char*> res;
         res.reserve(c.size());
