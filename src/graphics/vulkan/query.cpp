@@ -28,14 +28,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace
 {
-template <typename T>
-std::vector<std::string> sorted(const T& s)
-{
-        std::vector<std::string> res(s.cbegin(), s.cend());
-        std::sort(res.begin(), res.end());
-        return res;
-}
-
 std::string vulkan_formats_to_string(const std::vector<VkFormat>& formats)
 {
         if (formats.size() == 0)
@@ -76,40 +68,6 @@ std::unordered_set<std::string> supported_instance_extensions()
         if (result != VK_SUCCESS)
         {
                 vulkan_function_error("vkEnumerateInstanceExtensionProperties", result);
-        }
-
-        std::unordered_set<std::string> extension_set;
-
-        for (const VkExtensionProperties& e : extensions)
-        {
-                extension_set.emplace(e.extensionName);
-        }
-
-        return extension_set;
-}
-
-std::unordered_set<std::string> supported_physical_device_extensions(VkPhysicalDevice physical_device)
-{
-        uint32_t extension_count;
-        VkResult result;
-
-        result = vkEnumerateDeviceExtensionProperties(physical_device, nullptr, &extension_count, nullptr);
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkEnumerateDeviceExtensionProperties", result);
-        }
-
-        if (extension_count < 1)
-        {
-                return {};
-        }
-
-        std::vector<VkExtensionProperties> extensions(extension_count);
-
-        result = vkEnumerateDeviceExtensionProperties(physical_device, nullptr, &extension_count, extensions.data());
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkEnumerateDeviceExtensionProperties", result);
         }
 
         std::unordered_set<std::string> extension_set;
@@ -176,51 +134,6 @@ uint32_t supported_instance_api_version()
         return api_version;
 }
 
-std::vector<VkPhysicalDevice> physical_devices(VkInstance instance)
-{
-        uint32_t device_count;
-        VkResult result;
-
-        result = vkEnumeratePhysicalDevices(instance, &device_count, nullptr);
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkEnumeratePhysicalDevices", result);
-        }
-
-        if (device_count < 1)
-        {
-                error("No Vulkan device found");
-        }
-
-        std::vector<VkPhysicalDevice> devices(device_count);
-
-        result = vkEnumeratePhysicalDevices(instance, &device_count, devices.data());
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkEnumeratePhysicalDevices", result);
-        }
-
-        return devices;
-}
-
-std::vector<VkQueueFamilyProperties> queue_families(VkPhysicalDevice device)
-{
-        uint32_t queue_family_count;
-
-        vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, nullptr);
-
-        if (queue_family_count < 1)
-        {
-                return {};
-        }
-
-        std::vector<VkQueueFamilyProperties> queue_families(queue_family_count);
-
-        vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, queue_families.data());
-
-        return queue_families;
-}
-
 void check_instance_extension_support(const std::vector<std::string>& required_extensions)
 {
         if (required_extensions.empty())
@@ -266,107 +179,6 @@ void check_api_version(uint32_t required_api_version)
                 error("Vulkan API version " + api_version_to_string(required_api_version) + " is not supported. Supported " +
                       api_version_to_string(api_version) + ".");
         }
-}
-
-bool device_supports_extensions(VkPhysicalDevice physical_device, const std::vector<std::string>& extensions)
-{
-        if (extensions.empty())
-        {
-                return true;
-        }
-
-        const std::unordered_set<std::string> extension_set = supported_physical_device_extensions(physical_device);
-
-        for (const std::string& e : extensions)
-        {
-                if (extension_set.count(e) < 1)
-                {
-                        return false;
-                }
-        }
-
-        return true;
-}
-
-std::vector<VkSurfaceFormatKHR> surface_formats(VkPhysicalDevice physical_device, VkSurfaceKHR surface)
-{
-        uint32_t format_count;
-        VkResult result;
-
-        result = vkGetPhysicalDeviceSurfaceFormatsKHR(physical_device, surface, &format_count, nullptr);
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkGetPhysicalDeviceSurfaceFormatsKHR", result);
-        }
-
-        if (format_count < 1)
-        {
-                return {};
-        }
-
-        std::vector<VkSurfaceFormatKHR> formats(format_count);
-
-        result = vkGetPhysicalDeviceSurfaceFormatsKHR(physical_device, surface, &format_count, formats.data());
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkGetPhysicalDeviceSurfaceFormatsKHR", result);
-        }
-
-        return formats;
-}
-
-std::vector<VkPresentModeKHR> present_modes(VkPhysicalDevice physical_device, VkSurfaceKHR surface)
-{
-        uint32_t mode_count;
-        VkResult result;
-
-        result = vkGetPhysicalDeviceSurfacePresentModesKHR(physical_device, surface, &mode_count, nullptr);
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkGetPhysicalDeviceSurfacePresentModesKHR", result);
-        }
-
-        if (mode_count < 1)
-        {
-                return {};
-        }
-
-        std::vector<VkPresentModeKHR> modes(mode_count);
-
-        result = vkGetPhysicalDeviceSurfacePresentModesKHR(physical_device, surface, &mode_count, modes.data());
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkGetPhysicalDeviceSurfacePresentModesKHR", result);
-        }
-
-        return modes;
-}
-
-std::vector<VkImage> swap_chain_images(VkDevice device, VkSwapchainKHR swap_chain)
-{
-        uint32_t image_count;
-        VkResult result;
-
-        result = vkGetSwapchainImagesKHR(device, swap_chain, &image_count, nullptr);
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkGetSwapchainImagesKHR", result);
-        }
-
-        if (image_count < 1)
-        {
-                return {};
-        }
-
-        std::vector<VkImage> images(image_count);
-
-        result = vkGetSwapchainImagesKHR(device, swap_chain, &image_count, images.data());
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkGetSwapchainImagesKHR", result);
-        }
-
-        return images;
 }
 
 VkFormat find_supported_format(VkPhysicalDevice physical_device, const std::vector<VkFormat>& candidates, VkImageTiling tiling,
@@ -487,7 +299,7 @@ VkExtent2D max_2d_image_extent(VkPhysicalDevice physical_device, VkFormat format
         return extent;
 }
 
-int supported_framebuffer_sample_count(VkPhysicalDevice physical_device, int required_minimum_sample_count)
+VkSampleCountFlagBits supported_framebuffer_sample_count_flag(VkPhysicalDevice physical_device, int required_minimum_sample_count)
 {
         if (required_minimum_sample_count < 1)
         {
@@ -506,235 +318,60 @@ int supported_framebuffer_sample_count(VkPhysicalDevice physical_device, int req
 
         if ((required_minimum_sample_count <= 1) && (sample_counts & VK_SAMPLE_COUNT_1_BIT))
         {
-                return 1;
+                return VK_SAMPLE_COUNT_1_BIT;
         }
         if ((required_minimum_sample_count <= 2) && (sample_counts & VK_SAMPLE_COUNT_2_BIT))
         {
-                return 2;
+                return VK_SAMPLE_COUNT_2_BIT;
         }
         if ((required_minimum_sample_count <= 4) && (sample_counts & VK_SAMPLE_COUNT_4_BIT))
         {
-                return 4;
+                return VK_SAMPLE_COUNT_4_BIT;
         }
         if ((required_minimum_sample_count <= 8) && (sample_counts & VK_SAMPLE_COUNT_8_BIT))
         {
-                return 8;
+                return VK_SAMPLE_COUNT_8_BIT;
         }
         if ((required_minimum_sample_count <= 16) && (sample_counts & VK_SAMPLE_COUNT_16_BIT))
         {
-                return 16;
+                return VK_SAMPLE_COUNT_16_BIT;
         }
         if ((required_minimum_sample_count <= 32) && (sample_counts & VK_SAMPLE_COUNT_32_BIT))
         {
-                return 32;
+                return VK_SAMPLE_COUNT_32_BIT;
         }
         if ((required_minimum_sample_count <= 64) && (sample_counts & VK_SAMPLE_COUNT_64_BIT))
         {
-                return 64;
+                return VK_SAMPLE_COUNT_64_BIT;
         }
 
         error("Failed to find framebuffer sample count");
 }
 
-VkSampleCountFlagBits sample_count_flag_bit(int sample_count)
+int integer_sample_count_flag(VkSampleCountFlagBits sample_count)
 {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wswitch"
         switch (sample_count)
         {
-        case 1:
-                return VK_SAMPLE_COUNT_1_BIT;
-        case 2:
-                return VK_SAMPLE_COUNT_2_BIT;
-        case 4:
-                return VK_SAMPLE_COUNT_4_BIT;
-        case 8:
-                return VK_SAMPLE_COUNT_8_BIT;
-        case 16:
-                return VK_SAMPLE_COUNT_16_BIT;
-        case 32:
-                return VK_SAMPLE_COUNT_32_BIT;
-        case 64:
-                return VK_SAMPLE_COUNT_64_BIT;
-        default:
-                error("Not supported sample count " + to_string(sample_count));
+        case VK_SAMPLE_COUNT_1_BIT:
+                return 1;
+        case VK_SAMPLE_COUNT_2_BIT:
+                return 2;
+        case VK_SAMPLE_COUNT_4_BIT:
+                return 4;
+        case VK_SAMPLE_COUNT_8_BIT:
+                return 8;
+        case VK_SAMPLE_COUNT_16_BIT:
+                return 16;
+        case VK_SAMPLE_COUNT_32_BIT:
+                return 32;
+        case VK_SAMPLE_COUNT_64_BIT:
+                return 64;
         }
-}
+#pragma GCC diagnostic pop
 
-std::string overview()
-{
-        constexpr const char* INDENT = "  ";
-
-        std::string s;
-
-        s += "API Version";
-        try
-        {
-                s += "\n";
-                s += INDENT;
-                s += api_version_to_string(supported_instance_api_version());
-        }
-        catch (std::exception& e)
-        {
-                s += "\n";
-                s += INDENT;
-                s += e.what();
-        }
-
-        s += "\n";
-        s += "Extensions";
-        try
-        {
-                for (const std::string& extension : sorted(supported_instance_extensions()))
-                {
-                        s += "\n";
-                        s += INDENT;
-                        s += extension;
-                }
-        }
-        catch (std::exception& e)
-        {
-                s += "\n";
-                s += INDENT;
-                s += e.what();
-        }
-
-        s += "\n";
-        s += "Validation Layers";
-        try
-        {
-                for (const std::string& layer : sorted(supported_validation_layers()))
-                {
-                        s += "\n";
-                        s += INDENT;
-                        s += layer;
-                }
-        }
-        catch (std::exception& e)
-        {
-                s += "\n";
-                s += INDENT;
-                s += e.what();
-        }
-
-        s += "\n";
-        s += "Required Window Extensions";
-        try
-        {
-                for (const std::string& extension : sorted(VulkanWindow::instance_extensions()))
-                {
-                        s += "\n";
-                        s += INDENT;
-                        s += extension;
-                }
-        }
-        catch (std::exception& e)
-        {
-                s += "\n";
-                s += INDENT;
-                s += e.what();
-        }
-
-        return s;
-}
-
-std::string overview_physical_devices(VkInstance instance)
-{
-        const std::string INDENT = "  ";
-
-        std::string indent;
-
-        std::string s;
-
-        s += "Physical Devices";
-
-        for (const VkPhysicalDevice& device : physical_devices(instance))
-        {
-                VkPhysicalDeviceProperties properties;
-                VkPhysicalDeviceFeatures features;
-                vkGetPhysicalDeviceProperties(device, &properties);
-                vkGetPhysicalDeviceFeatures(device, &features);
-
-                indent = "\n" + INDENT;
-                s += indent;
-                s += properties.deviceName;
-
-                indent = "\n" + INDENT + INDENT;
-                s += indent;
-                s += physical_device_type_to_string(properties.deviceType);
-
-                indent = "\n" + INDENT + INDENT;
-                s += indent;
-                s += "API Version " + api_version_to_string(properties.apiVersion);
-
-                indent = "\n" + INDENT + INDENT;
-                s += indent;
-                s += "Extensions";
-                indent = "\n" + INDENT + INDENT + INDENT;
-                try
-                {
-                        for (const std::string& e : sorted(supported_physical_device_extensions(device)))
-                        {
-                                s += indent;
-                                s += e;
-                        }
-                }
-                catch (std::exception& e)
-                {
-                        indent = "\n" + INDENT + INDENT + INDENT;
-                        s += indent;
-                        s += e.what();
-                }
-
-                indent = "\n" + INDENT + INDENT;
-                s += indent;
-                s += "QueueFamilies";
-                try
-                {
-                        for (const VkQueueFamilyProperties& p : queue_families(device))
-                        {
-                                indent = "\n" + INDENT + INDENT + INDENT;
-
-                                s += indent + "Family";
-
-                                indent = "\n" + INDENT + INDENT + INDENT + INDENT;
-
-                                s += indent;
-                                s += "queue count: " + to_string(p.queueCount);
-
-                                if (p.queueCount < 1)
-                                {
-                                        continue;
-                                }
-
-                                if (p.queueFlags & VK_QUEUE_GRAPHICS_BIT)
-                                {
-                                        s += indent + "graphics";
-                                }
-                                if (p.queueFlags & VK_QUEUE_COMPUTE_BIT)
-                                {
-                                        s += indent + "compute";
-                                }
-                                if (p.queueFlags & VK_QUEUE_TRANSFER_BIT)
-                                {
-                                        s += indent + "transfer";
-                                }
-                                if (p.queueFlags & VK_QUEUE_SPARSE_BINDING_BIT)
-                                {
-                                        s += indent + "sparse_binding";
-                                }
-                                if (p.queueFlags & VK_QUEUE_PROTECTED_BIT)
-                                {
-                                        s += indent + "protected";
-                                }
-                        }
-                }
-                catch (std::exception& e)
-                {
-                        indent = "\n" + INDENT + INDENT + INDENT;
-                        s += indent;
-                        s += e.what();
-                }
-        }
-
-        return s;
+        static_assert(sizeof(sample_count) <= sizeof(long long));
+        error("Unknown sample count flag " + to_string(static_cast<long long>(sample_count)));
 }
 }

@@ -17,9 +17,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "objects.h"
+
+#include <optional>
 #include <string>
+#include <unordered_set>
 #include <vector>
-#include <vulkan/vulkan.h>
 
 namespace vulkan
 {
@@ -31,67 +34,43 @@ enum class PhysicalDeviceFeatures
         TessellationShader
 };
 
-struct SwapChainDetails
-{
-        VkSurfaceCapabilitiesKHR surface_capabilities;
-        std::vector<VkSurfaceFormatKHR> surface_formats;
-        std::vector<VkPresentModeKHR> present_modes;
-};
-
 class PhysicalDevice
 {
-        VkPhysicalDevice m_device;
-
+        VkPhysicalDevice m_physical_device;
         // family_indices
         uint32_t m_graphics, m_compute, m_transfer, m_presentation;
-
         VkPhysicalDeviceFeatures m_features;
 
 public:
-        PhysicalDevice(VkPhysicalDevice device, uint32_t graphics, uint32_t compute, uint32_t transfer, uint32_t presentation,
-                       const VkPhysicalDeviceFeatures& features)
-                : m_device(device),
-                  m_graphics(graphics),
-                  m_compute(compute),
-                  m_transfer(transfer),
-                  m_presentation(presentation),
-                  m_features(features)
-        {
-        }
+        PhysicalDevice(VkPhysicalDevice physical_device, uint32_t graphics, uint32_t compute, uint32_t transfer,
+                       uint32_t presentation, const VkPhysicalDeviceFeatures& features);
 
-        operator VkPhysicalDevice() const noexcept
-        {
-                return m_device;
-        }
-        uint32_t graphics() const noexcept
-        {
-                return m_graphics;
-        }
-        uint32_t compute() const noexcept
-        {
-                return m_compute;
-        }
-        uint32_t transfer() const noexcept
-        {
-                return m_transfer;
-        }
-        uint32_t presentation() const noexcept
-        {
-                return m_presentation;
-        }
-        const VkPhysicalDeviceFeatures& features() const noexcept
-        {
-                return m_features;
-        }
+        operator VkPhysicalDevice() const noexcept;
+
+        uint32_t graphics() const noexcept;
+        uint32_t compute() const noexcept;
+        uint32_t transfer() const noexcept;
+        uint32_t presentation() const noexcept;
+
+        const VkPhysicalDeviceFeatures& features() const noexcept;
 };
+
+std::vector<VkPhysicalDevice> physical_devices(VkInstance instance);
+std::vector<VkQueueFamilyProperties> physical_device_queue_families(VkPhysicalDevice device);
+std::unordered_set<std::string> supported_physical_device_extensions(VkPhysicalDevice physical_device);
 
 VkPhysicalDeviceFeatures make_enabled_device_features(const std::vector<PhysicalDeviceFeatures>& required_features,
                                                       const std::vector<PhysicalDeviceFeatures>& optional_features,
                                                       const VkPhysicalDeviceFeatures& supported_device_features);
 
-bool find_swap_chain_details(VkSurfaceKHR surface, VkPhysicalDevice device, SwapChainDetails* swap_chain_details);
-
 PhysicalDevice find_physical_device(VkInstance instance, VkSurfaceKHR surface, int api_version_major, int api_version_minor,
                                     const std::vector<std::string>& required_extensions,
                                     const std::vector<PhysicalDeviceFeatures>& required_features);
+
+Device create_device(VkPhysicalDevice physical_device, const std::vector<uint32_t>& family_indices,
+                     const std::vector<std::string>& required_extensions,
+                     const std::vector<std::string>& required_validation_layers,
+                     const VkPhysicalDeviceFeatures& enabled_features);
+
+VkQueue device_queue(VkDevice device, uint32_t queue_family_index, uint32_t queue_index);
 }

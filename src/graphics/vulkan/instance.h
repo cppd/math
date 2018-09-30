@@ -21,9 +21,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "device.h"
 #include "objects.h"
 #include "shader.h"
+#include "swapchain.h"
 
 #include "com/color/color.h"
-#include "com/error.h"
 #include "com/type_detect.h"
 
 #include <functional>
@@ -34,18 +34,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace vulkan
 {
-class SwapChain
+class SwapchainAndBuffers
 {
         VkDevice m_device;
         VkCommandPool m_graphics_command_pool;
-        VkExtent2D m_extent;
-        VkExtent2D m_shadow_extent;
-
         VkSampleCountFlagBits m_sample_count_bit;
 
-        SwapChainKHR m_swap_chain;
-        std::vector<VkImage> m_swap_chain_images;
-        std::vector<ImageView> m_swap_chain_image_views;
+        std::unique_ptr<Swapchain> m_swapchain;
 
         std::unique_ptr<DepthAttachment> m_depth_attachment;
         std::unique_ptr<ColorAttachment> m_multisampling_color_attachment;
@@ -56,6 +51,8 @@ class SwapChain
         Pipeline m_pipeline;
         CommandBuffers m_command_buffers;
 
+        uint32_t m_shadow_width;
+        uint32_t m_shadow_height;
         std::unique_ptr<ShadowDepthAttachment> m_shadow_depth_attachment;
         RenderPass m_shadow_render_pass;
         std::vector<Framebuffer> m_shadow_framebuffers;
@@ -64,23 +61,23 @@ class SwapChain
         CommandBuffers m_shadow_command_buffers;
 
 public:
-        SwapChain(VkSurfaceKHR surface, VkPhysicalDevice physical_device,
-                  const std::vector<uint32_t>& swap_chain_image_family_indices,
-                  const std::vector<uint32_t>& depth_image_family_indices, const Device& device,
-                  VkCommandPool graphics_command_pool, VkQueue graphics_queue, int preferred_image_count,
-                  int required_minimum_sample_count, const std::vector<const vulkan::Shader*>& shaders,
-                  const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
-                  const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions,
-                  const std::vector<VkDescriptorSetLayout>& descriptor_set_layouts,
-                  const std::vector<const vulkan::Shader*>& shadow_shaders,
-                  const std::vector<VkDescriptorSetLayout>& shadow_descriptor_set_layouts, double shadow_zoom);
+        SwapchainAndBuffers(VkSurfaceKHR surface, VkPhysicalDevice physical_device,
+                            const std::vector<uint32_t>& swapchain_family_indices,
+                            const std::vector<uint32_t>& attachment_family_indices, const Device& device,
+                            VkCommandPool graphics_command_pool, VkQueue graphics_queue, int preferred_image_count,
+                            int required_minimum_sample_count, const std::vector<const vulkan::Shader*>& shaders,
+                            const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
+                            const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions,
+                            const std::vector<VkDescriptorSetLayout>& descriptor_set_layouts,
+                            const std::vector<const vulkan::Shader*>& shadow_shaders,
+                            const std::vector<VkDescriptorSetLayout>& shadow_descriptor_set_layouts, double shadow_zoom);
 
-        SwapChain(const SwapChain&) = delete;
-        SwapChain& operator=(const SwapChain&) = delete;
-        SwapChain& operator=(SwapChain&&) = delete;
+        SwapchainAndBuffers(const SwapchainAndBuffers&) = delete;
+        SwapchainAndBuffers& operator=(const SwapchainAndBuffers&) = delete;
+        SwapchainAndBuffers& operator=(SwapchainAndBuffers&&) = delete;
 
-        SwapChain(SwapChain&&) = default;
-        ~SwapChain() = default;
+        SwapchainAndBuffers(SwapchainAndBuffers&&) = default;
+        ~SwapchainAndBuffers() = default;
 
         //
 
@@ -99,7 +96,7 @@ public:
         const VkCommandBuffer& command_buffer(uint32_t index) const noexcept;
         const VkCommandBuffer& shadow_command_buffer() const noexcept;
 
-        VkSwapchainKHR swap_chain() const noexcept;
+        VkSwapchainKHR swapchain() const noexcept;
 };
 
 class VulkanInstance
@@ -130,10 +127,10 @@ class VulkanInstance
         VkQueue m_compute_queue = VK_NULL_HANDLE;
         VkQueue m_presentation_queue = VK_NULL_HANDLE;
 
-        std::vector<uint32_t> m_vertex_buffer_family_indices;
-        std::vector<uint32_t> m_swap_chain_image_family_indices;
-        std::vector<uint32_t> m_texture_image_family_indices;
-        std::vector<uint32_t> m_depth_image_family_indices;
+        std::vector<uint32_t> m_buffer_family_indices;
+        std::vector<uint32_t> m_swapchain_family_indices;
+        std::vector<uint32_t> m_texture_family_indices;
+        std::vector<uint32_t> m_attachment_family_indices;
 
         bool m_draw_shadow = false;
 
@@ -156,22 +153,32 @@ public:
 
         VkInstance instance() const noexcept;
         const Device& device() const noexcept;
+        [[nodiscard]] bool draw_frame(SwapchainAndBuffers& swapchain_and_buffers);
+        void set_draw_shadow(bool draw);
+        void device_wait_idle() const;
 
-        SwapChain create_swap_chain(int preferred_image_count, int required_minimum_sample_count,
-                                    const std::vector<const vulkan::Shader*>& shaders,
-                                    const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
-                                    const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions,
-                                    const std::vector<VkDescriptorSetLayout>& descriptor_set_layouts,
-                                    const std::vector<const vulkan::Shader*>& shadow_shaders,
-                                    const std::vector<VkDescriptorSetLayout>& shadow_descriptor_set_layouts, double shadow_zoom);
+        SwapchainAndBuffers create_swapchain_and_buffers(
+                int preferred_image_count, int required_minimum_sample_count, const std::vector<const vulkan::Shader*>& shaders,
+                const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
+                const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions,
+                const std::vector<VkDescriptorSetLayout>& descriptor_set_layouts,
+                const std::vector<const vulkan::Shader*>& shadow_shaders,
+                const std::vector<VkDescriptorSetLayout>& shadow_descriptor_set_layouts, double shadow_zoom)
+        {
+                return SwapchainAndBuffers(m_surface, m_physical_device, m_swapchain_family_indices, m_attachment_family_indices,
+                                           m_device, m_graphics_command_pool, m_graphics_queue, preferred_image_count,
+                                           required_minimum_sample_count, shaders, vertex_binding_descriptions,
+                                           vertex_attribute_descriptions, descriptor_set_layouts, shadow_shaders,
+                                           shadow_descriptor_set_layouts, shadow_zoom);
+        }
 
         template <typename T>
         VertexBufferWithDeviceLocalMemory create_vertex_buffer(const T& data) const
         {
                 static_assert(is_vector<T> || is_array<T>);
                 return VertexBufferWithDeviceLocalMemory(m_device, m_transfer_command_pool, m_transfer_queue,
-                                                         m_vertex_buffer_family_indices,
-                                                         data.size() * sizeof(typename T::value_type), data.data());
+                                                         m_buffer_family_indices, data.size() * sizeof(typename T::value_type),
+                                                         data.data());
         }
 
         template <typename T>
@@ -179,21 +186,15 @@ public:
         {
                 static_assert(is_vector<T> || is_array<T>);
                 return IndexBufferWithDeviceLocalMemory(m_device, m_transfer_command_pool, m_transfer_queue,
-                                                        m_vertex_buffer_family_indices,
-                                                        data.size() * sizeof(typename T::value_type), data.data());
+                                                        m_buffer_family_indices, data.size() * sizeof(typename T::value_type),
+                                                        data.data());
         }
 
         template <typename T>
         Texture create_texture(uint32_t width, uint32_t height, const std::vector<T>& rgba_pixels) const
         {
                 return Texture(m_device, m_graphics_command_pool, m_graphics_queue, m_transfer_command_pool, m_transfer_queue,
-                               m_texture_image_family_indices, width, height, rgba_pixels);
+                               m_texture_family_indices, width, height, rgba_pixels);
         }
-
-        [[nodiscard]] bool draw_frame(SwapChain& swap_chain);
-
-        void set_draw_shadow(bool draw);
-
-        void device_wait_idle() const;
 };
 }

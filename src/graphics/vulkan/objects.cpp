@@ -300,50 +300,50 @@ SurfaceKHR::operator VkSurfaceKHR() const noexcept
 
 //
 
-void SwapChainKHR::destroy() noexcept
+void SwapchainKHR::destroy() noexcept
 {
-        if (m_swap_chain != VK_NULL_HANDLE)
+        if (m_swapchain != VK_NULL_HANDLE)
         {
                 ASSERT(m_device != VK_NULL_HANDLE);
 
-                vkDestroySwapchainKHR(m_device, m_swap_chain, nullptr);
+                vkDestroySwapchainKHR(m_device, m_swapchain, nullptr);
         }
 }
 
-void SwapChainKHR::move(SwapChainKHR* from) noexcept
+void SwapchainKHR::move(SwapchainKHR* from) noexcept
 {
         m_device = from->m_device;
-        m_swap_chain = from->m_swap_chain;
+        m_swapchain = from->m_swapchain;
         from->m_device = VK_NULL_HANDLE;
-        from->m_swap_chain = VK_NULL_HANDLE;
+        from->m_swapchain = VK_NULL_HANDLE;
 }
 
-SwapChainKHR::SwapChainKHR() = default;
+SwapchainKHR::SwapchainKHR() = default;
 
-SwapChainKHR::SwapChainKHR(VkDevice device, const VkSwapchainCreateInfoKHR& create_info)
+SwapchainKHR::SwapchainKHR(VkDevice device, const VkSwapchainCreateInfoKHR& create_info)
 {
-        VkResult result = vkCreateSwapchainKHR(device, &create_info, nullptr, &m_swap_chain);
+        VkResult result = vkCreateSwapchainKHR(device, &create_info, nullptr, &m_swapchain);
         if (result != VK_SUCCESS)
         {
                 vulkan::vulkan_function_error("vkCreateSwapchainKHR", result);
         }
 
-        ASSERT(m_swap_chain != VK_NULL_HANDLE);
+        ASSERT(m_swapchain != VK_NULL_HANDLE);
 
         m_device = device;
 }
 
-SwapChainKHR::~SwapChainKHR()
+SwapchainKHR::~SwapchainKHR()
 {
         destroy();
 }
 
-SwapChainKHR::SwapChainKHR(SwapChainKHR&& from) noexcept
+SwapchainKHR::SwapchainKHR(SwapchainKHR&& from) noexcept
 {
         move(&from);
 }
 
-SwapChainKHR& SwapChainKHR::operator=(SwapChainKHR&& from) noexcept
+SwapchainKHR& SwapchainKHR::operator=(SwapchainKHR&& from) noexcept
 {
         if (this != &from)
         {
@@ -353,9 +353,9 @@ SwapChainKHR& SwapChainKHR::operator=(SwapChainKHR&& from) noexcept
         return *this;
 }
 
-SwapChainKHR::operator VkSwapchainKHR() const noexcept
+SwapchainKHR::operator VkSwapchainKHR() const noexcept
 {
-        return m_swap_chain;
+        return m_swapchain;
 }
 
 //

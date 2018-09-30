@@ -19,7 +19,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "common.h"
 #include "query.h"
+#include "swapchain.h"
 
+#include "com/alg.h"
 #include "com/error.h"
 
 #include <algorithm>
@@ -99,6 +101,26 @@ bool find_presentation_family(VkSurfaceKHR surface, VkPhysicalDevice device,
         return false;
 }
 
+bool device_supports_extensions(VkPhysicalDevice physical_device, const std::vector<std::string>& extensions)
+{
+        if (extensions.empty())
+        {
+                return true;
+        }
+
+        const std::unordered_set<std::string> extension_set = vulkan::supported_physical_device_extensions(physical_device);
+
+        for (const std::string& e : extensions)
+        {
+                if (extension_set.count(e) < 1)
+                {
+                        return false;
+                }
+        }
+
+        return true;
+}
+
 bool physical_device_features_are_supported(const std::vector<vulkan::PhysicalDeviceFeatures>& required_features,
                                             VkPhysicalDeviceFeatures device_features)
 {
@@ -135,32 +157,132 @@ bool physical_device_features_are_supported(const std::vector<vulkan::PhysicalDe
 
         return true;
 }
-
-void check_no_intersection(std::vector<vulkan::PhysicalDeviceFeatures> required_features,
-                           std::vector<vulkan::PhysicalDeviceFeatures> optional_features)
-{
-        std::sort(required_features.begin(), required_features.end());
-        std::sort(optional_features.begin(), optional_features.end());
-
-        std::vector<vulkan::PhysicalDeviceFeatures> intersection;
-
-        std::set_intersection(required_features.cbegin(), required_features.cend(), optional_features.cbegin(),
-                              optional_features.cend(), std::back_inserter(intersection));
-
-        if (!intersection.empty())
-        {
-                error("Required and optional physical device features intersection");
-        }
-}
 }
 
 namespace vulkan
 {
+PhysicalDevice::PhysicalDevice(VkPhysicalDevice physical_device, uint32_t graphics, uint32_t compute, uint32_t transfer,
+                               uint32_t presentation, const VkPhysicalDeviceFeatures& features)
+        : m_physical_device(physical_device),
+          m_graphics(graphics),
+          m_compute(compute),
+          m_transfer(transfer),
+          m_presentation(presentation),
+          m_features(features)
+{
+}
+PhysicalDevice::operator VkPhysicalDevice() const noexcept
+{
+        return m_physical_device;
+}
+uint32_t PhysicalDevice::graphics() const noexcept
+{
+        return m_graphics;
+}
+uint32_t PhysicalDevice::compute() const noexcept
+{
+        return m_compute;
+}
+uint32_t PhysicalDevice::transfer() const noexcept
+{
+        return m_transfer;
+}
+uint32_t PhysicalDevice::presentation() const noexcept
+{
+        return m_presentation;
+}
+const VkPhysicalDeviceFeatures& PhysicalDevice::features() const noexcept
+{
+        return m_features;
+}
+
+std::vector<VkPhysicalDevice> physical_devices(VkInstance instance)
+{
+        uint32_t device_count;
+        VkResult result;
+
+        result = vkEnumeratePhysicalDevices(instance, &device_count, nullptr);
+        if (result != VK_SUCCESS)
+        {
+                vulkan_function_error("vkEnumeratePhysicalDevices", result);
+        }
+
+        if (device_count < 1)
+        {
+                error("No Vulkan device found");
+        }
+
+        std::vector<VkPhysicalDevice> devices(device_count);
+
+        result = vkEnumeratePhysicalDevices(instance, &device_count, devices.data());
+        if (result != VK_SUCCESS)
+        {
+                vulkan_function_error("vkEnumeratePhysicalDevices", result);
+        }
+
+        return devices;
+}
+
+std::vector<VkQueueFamilyProperties> physical_device_queue_families(VkPhysicalDevice device)
+{
+        uint32_t queue_family_count;
+
+        vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, nullptr);
+
+        if (queue_family_count < 1)
+        {
+                return {};
+        }
+
+        std::vector<VkQueueFamilyProperties> queue_families(queue_family_count);
+
+        vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, queue_families.data());
+
+        return queue_families;
+}
+
+std::unordered_set<std::string> supported_physical_device_extensions(VkPhysicalDevice physical_device)
+{
+        uint32_t extension_count;
+        VkResult result;
+
+        result = vkEnumerateDeviceExtensionProperties(physical_device, nullptr, &extension_count, nullptr);
+        if (result != VK_SUCCESS)
+        {
+                vulkan::vulkan_function_error("vkEnumerateDeviceExtensionProperties", result);
+        }
+
+        if (extension_count < 1)
+        {
+                return {};
+        }
+
+        std::vector<VkExtensionProperties> extensions(extension_count);
+
+        result = vkEnumerateDeviceExtensionProperties(physical_device, nullptr, &extension_count, extensions.data());
+        if (result != VK_SUCCESS)
+        {
+                vulkan::vulkan_function_error("vkEnumerateDeviceExtensionProperties", result);
+        }
+
+        std::unordered_set<std::string> extension_set;
+
+        for (const VkExtensionProperties& e : extensions)
+        {
+                extension_set.emplace(e.extensionName);
+        }
+
+        return extension_set;
+}
+
 VkPhysicalDeviceFeatures make_enabled_device_features(const std::vector<PhysicalDeviceFeatures>& required_features,
                                                       const std::vector<PhysicalDeviceFeatures>& optional_features,
                                                       const VkPhysicalDeviceFeatures& supported_device_features)
 {
-        check_no_intersection(required_features, optional_features);
+        if (there_is_intersection(required_features, optional_features))
+        {
+                error("Required and optional physical device features intersect");
+        }
 
         VkPhysicalDeviceFeatures device_features = {};
 
@@ -221,54 +343,21 @@ VkPhysicalDeviceFeatures make_enabled_device_features(const std::vector<Physical
         return device_features;
 }
 
-bool find_swap_chain_details(VkSurfaceKHR surface, VkPhysicalDevice device, SwapChainDetails* swap_chain_details)
-{
-        VkSurfaceCapabilitiesKHR surface_capabilities;
-
-        VkResult result;
-        result = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, &surface_capabilities);
-        if (result != VK_SUCCESS)
-        {
-                vulkan::vulkan_function_error("vkGetPhysicalDeviceSurfaceCapabilitiesKHR", result);
-        }
-
-        std::vector<VkSurfaceFormatKHR> surface_formats = vulkan::surface_formats(device, surface);
-        if (surface_formats.empty())
-        {
-                return false;
-        }
-
-        std::vector<VkPresentModeKHR> present_modes = vulkan::present_modes(device, surface);
-        if (present_modes.empty())
-        {
-                return false;
-        }
-
-        if (swap_chain_details)
-        {
-                swap_chain_details->surface_capabilities = surface_capabilities;
-                swap_chain_details->surface_formats = surface_formats;
-                swap_chain_details->present_modes = present_modes;
-        }
-
-        return true;
-}
-
 PhysicalDevice find_physical_device(VkInstance instance, VkSurfaceKHR surface, int api_version_major, int api_version_minor,
                                     const std::vector<std::string>& required_extensions,
                                     const std::vector<PhysicalDeviceFeatures>& required_features)
 {
         const uint32_t required_api_version = VK_MAKE_VERSION(api_version_major, api_version_minor, 0);
 
-        for (const VkPhysicalDevice& device : vulkan::physical_devices(instance))
+        for (const VkPhysicalDevice& physical_device : physical_devices(instance))
         {
-                ASSERT(device != VK_NULL_HANDLE);
+                ASSERT(physical_device != VK_NULL_HANDLE);
 
                 VkPhysicalDeviceProperties properties;
                 VkPhysicalDeviceFeatures features;
 
-                vkGetPhysicalDeviceProperties(device, &properties);
-                vkGetPhysicalDeviceFeatures(device, &features);
+                vkGetPhysicalDeviceProperties(physical_device, &properties);
+                vkGetPhysicalDeviceFeatures(physical_device, &features);
 
                 if (properties.deviceType != VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU &&
                     properties.deviceType != VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU &&
@@ -288,17 +377,17 @@ PhysicalDevice find_physical_device(VkInstance instance, VkSurfaceKHR surface, i
                         continue;
                 }
 
-                if (!vulkan::device_supports_extensions(device, required_extensions))
+                if (!device_supports_extensions(physical_device, required_extensions))
                 {
                         continue;
                 }
 
-                if (!find_swap_chain_details(surface, device, nullptr))
+                if (!surface_suitable(surface, physical_device))
                 {
                         continue;
                 }
 
-                const std::vector<VkQueueFamilyProperties> families = vulkan::queue_families(device);
+                const std::vector<VkQueueFamilyProperties> families = vulkan::physical_device_queue_families(physical_device);
                 uint32_t graphics, compute, transfer, presentation;
                 if (!find_graphics_family(families, &graphics))
                 {
@@ -308,7 +397,7 @@ PhysicalDevice find_physical_device(VkInstance instance, VkSurfaceKHR surface, i
                 {
                         continue;
                 }
-                if (!find_presentation_family(surface, device, families, &presentation))
+                if (!find_presentation_family(surface, physical_device, families, &presentation))
                 {
                         continue;
                 }
@@ -317,9 +406,62 @@ PhysicalDevice find_physical_device(VkInstance instance, VkSurfaceKHR surface, i
                         continue;
                 }
 
-                return PhysicalDevice(device, graphics, compute, transfer, presentation, features);
+                return PhysicalDevice(physical_device, graphics, compute, transfer, presentation, features);
         }
 
         error("Failed to find a suitable Vulkan physical device");
+}
+
+Device create_device(VkPhysicalDevice physical_device, const std::vector<uint32_t>& family_indices,
+                     const std::vector<std::string>& required_extensions,
+                     const std::vector<std::string>& required_validation_layers, const VkPhysicalDeviceFeatures& enabled_features)
+{
+        if (family_indices.empty())
+        {
+                error("No family indices for device creation");
+        }
+
+        constexpr float queue_priority = 1;
+        std::vector<VkDeviceQueueCreateInfo> queue_create_infos;
+        for (uint32_t unique_queue_family_index : std::unordered_set<uint32_t>(family_indices.cbegin(), family_indices.cend()))
+        {
+                VkDeviceQueueCreateInfo queue_create_info = {};
+                queue_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+                queue_create_info.queueFamilyIndex = unique_queue_family_index;
+                queue_create_info.queueCount = 1;
+                queue_create_info.pQueuePriorities = &queue_priority;
+
+                queue_create_infos.push_back(queue_create_info);
+        }
+
+        VkDeviceCreateInfo create_info = {};
+        create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+        create_info.queueCreateInfoCount = queue_create_infos.size();
+        create_info.pQueueCreateInfos = queue_create_infos.data();
+        create_info.pEnabledFeatures = &enabled_features;
+
+        const std::vector<const char*> extensions = const_char_pointer_vector(required_extensions);
+        if (extensions.size() > 0)
+        {
+                create_info.enabledExtensionCount = extensions.size();
+                create_info.ppEnabledExtensionNames = extensions.data();
+        }
+
+        const std::vector<const char*> validation_layers = const_char_pointer_vector(required_validation_layers);
+        if (validation_layers.size() > 0)
+        {
+                create_info.enabledLayerCount = validation_layers.size();
+                create_info.ppEnabledLayerNames = validation_layers.data();
+        }
+
+        return vulkan::Device(physical_device, create_info);
+}
+
+VkQueue device_queue(VkDevice device, uint32_t queue_family_index, uint32_t queue_index)
+{
+        VkQueue queue;
+        vkGetDeviceQueue(device, queue_family_index, queue_index, &queue);
+        ASSERT(queue != VK_NULL_HANDLE);
+        return queue;
 }
 }

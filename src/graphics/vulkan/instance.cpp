@@ -28,8 +28,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/log.h"
 #include "com/print.h"
 
-#include <cstring>
-
 namespace
 {
 VkClearValue color_float_srgb_clear_value(const Color& clear_color)
@@ -47,83 +45,6 @@ VkClearValue depth_stencil_clear_value()
         clear_value.depthStencil.depth = 1;
         clear_value.depthStencil.stencil = 0;
         return clear_value;
-}
-
-VkSurfaceFormatKHR choose_surface_format(const std::vector<VkSurfaceFormatKHR>& surface_formats)
-{
-        ASSERT(surface_formats.size() > 0);
-
-        if (surface_formats.size() == 1 && surface_formats[0].format == VK_FORMAT_UNDEFINED)
-        {
-                return {VK_FORMAT_B8G8R8A8_UNORM, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR};
-        }
-
-        for (const VkSurfaceFormatKHR& format : surface_formats)
-        {
-                if (format.format == VK_FORMAT_B8G8R8A8_UNORM && format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
-                {
-                        return format;
-                }
-        }
-
-        error("Surface format (VK_FORMAT_B8G8R8A8_UNORM, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) is not found");
-}
-
-VkPresentModeKHR choose_present_mode(const std::vector<VkPresentModeKHR>& present_modes)
-{
-        for (const VkPresentModeKHR& present_mode : present_modes)
-        {
-                if (present_mode == VK_PRESENT_MODE_MAILBOX_KHR)
-                {
-                        return present_mode;
-                }
-        }
-
-        for (const VkPresentModeKHR& present_mode : present_modes)
-        {
-                if (present_mode == VK_PRESENT_MODE_IMMEDIATE_KHR)
-                {
-                        return present_mode;
-                }
-        }
-
-        return VK_PRESENT_MODE_FIFO_KHR;
-}
-
-VkExtent2D choose_extent(const VkSurfaceCapabilitiesKHR& capabilities)
-{
-        if (!(capabilities.currentExtent.width == 0xffff'ffff && capabilities.currentExtent.height == 0xffff'ffff))
-        {
-                return capabilities.currentExtent;
-        }
-
-        error("Current width and height of the surface are not defined");
-
-#if 0
-        VkExtent2D extent;
-        extent.width = std::clamp(1u, capabilities.minImageExtent.width, capabilities.maxImageExtent.width);
-        extent.height = std::clamp(1u, capabilities.minImageExtent.height, capabilities.maxImageExtent.height);
-        return extent;
-#endif
-}
-
-uint32_t choose_image_count(const VkSurfaceCapabilitiesKHR& capabilities, int image_count)
-{
-        if (image_count <= 0)
-        {
-                error("Requested image count <= 0");
-        }
-
-        if (static_cast<uint32_t>(image_count) <= capabilities.minImageCount)
-        {
-                return capabilities.minImageCount;
-        }
-        if (capabilities.maxImageCount > 0 && static_cast<uint32_t>(image_count) >= capabilities.maxImageCount)
-        {
-                return capabilities.maxImageCount;
-        }
-
-        return image_count;
 }
 
 std::vector<VkPipelineShaderStageCreateInfo> pipeline_shader_stage_create_info(const std::vector<const vulkan::Shader*>& shaders)
@@ -187,121 +108,12 @@ vulkan::Instance create_instance(int api_version_major, int api_version_minor, s
         return vulkan::Instance(create_info);
 }
 
-vulkan::Device create_device(VkPhysicalDevice physical_device, const std::vector<uint32_t>& family_indices,
-                             const std::vector<std::string>& required_extensions,
-                             const std::vector<std::string>& required_validation_layers,
-                             const VkPhysicalDeviceFeatures& enabled_features)
-{
-        if (family_indices.empty())
-        {
-                error("No family indices for device creation");
-        }
-
-        constexpr float queue_priority = 1;
-        std::vector<VkDeviceQueueCreateInfo> queue_create_infos;
-        for (uint32_t unique_queue_family_index : std::unordered_set<uint32_t>(family_indices.cbegin(), family_indices.cend()))
-        {
-                VkDeviceQueueCreateInfo queue_create_info = {};
-                queue_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-                queue_create_info.queueFamilyIndex = unique_queue_family_index;
-                queue_create_info.queueCount = 1;
-                queue_create_info.pQueuePriorities = &queue_priority;
-
-                queue_create_infos.push_back(queue_create_info);
-        }
-
-        VkDeviceCreateInfo create_info = {};
-        create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-        create_info.queueCreateInfoCount = queue_create_infos.size();
-        create_info.pQueueCreateInfos = queue_create_infos.data();
-        create_info.pEnabledFeatures = &enabled_features;
-
-        const std::vector<const char*> extensions = const_char_pointer_vector(required_extensions);
-        if (extensions.size() > 0)
-        {
-                create_info.enabledExtensionCount = extensions.size();
-                create_info.ppEnabledExtensionNames = extensions.data();
-        }
-
-        const std::vector<const char*> validation_layers = const_char_pointer_vector(required_validation_layers);
-        if (validation_layers.size() > 0)
-        {
-                create_info.enabledLayerCount = validation_layers.size();
-                create_info.ppEnabledLayerNames = validation_layers.data();
-        }
-
-        return vulkan::Device(physical_device, create_info);
-}
-
-vulkan::SwapChainKHR create_swap_chain_khr(VkDevice device, VkSurfaceKHR surface, VkSurfaceFormatKHR surface_format,
-                                           VkPresentModeKHR present_mode, VkExtent2D extent, uint32_t image_count,
-                                           VkSurfaceTransformFlagBitsKHR transform, const std::vector<uint32_t>& family_indices)
-{
-        VkSwapchainCreateInfoKHR create_info = {};
-        create_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-        create_info.surface = surface;
-
-        create_info.minImageCount = image_count;
-        create_info.imageFormat = surface_format.format;
-        create_info.imageColorSpace = surface_format.colorSpace;
-        create_info.imageExtent = extent;
-        create_info.imageArrayLayers = 1;
-        create_info.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-
-        ASSERT(family_indices.size() > 0);
-        ASSERT(family_indices.size() == std::unordered_set<uint32_t>(family_indices.cbegin(), family_indices.cend()).size());
-
-        if (family_indices.size() > 1)
-        {
-                create_info.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
-                create_info.queueFamilyIndexCount = family_indices.size();
-                create_info.pQueueFamilyIndices = family_indices.data();
-        }
-        else
-        {
-                create_info.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
-        }
-
-        create_info.preTransform = transform;
-        create_info.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-
-        create_info.presentMode = present_mode;
-        create_info.clipped = VK_TRUE;
-
-        create_info.oldSwapchain = VK_NULL_HANDLE;
-
-        return vulkan::SwapChainKHR(device, create_info);
-}
-
-vulkan::ImageView create_image_view(VkDevice device, VkImage image, VkFormat format, VkImageAspectFlags aspect_flags)
-{
-        VkImageViewCreateInfo create_info = {};
-        create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-        create_info.image = image;
-
-        create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
-        create_info.format = format;
-
-        create_info.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
-        create_info.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
-        create_info.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
-        create_info.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
-
-        create_info.subresourceRange.aspectMask = aspect_flags;
-        create_info.subresourceRange.baseMipLevel = 0;
-        create_info.subresourceRange.levelCount = 1;
-        create_info.subresourceRange.baseArrayLayer = 0;
-        create_info.subresourceRange.layerCount = 1;
-
-        return vulkan::ImageView(device, create_info);
-}
-
-vulkan::RenderPass create_render_pass(VkDevice device, VkFormat swap_chain_image_format, VkFormat depth_image_format)
+vulkan::RenderPass create_render_pass(VkDevice device, VkFormat swapchain_image_format, VkFormat depth_image_format)
 {
         std::array<VkAttachmentDescription, 2> attachments = {};
 
         // Color
-        attachments[0].format = swap_chain_image_format;
+        attachments[0].format = swapchain_image_format;
         attachments[0].samples = VK_SAMPLE_COUNT_1_BIT;
         attachments[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
         attachments[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -375,12 +187,12 @@ vulkan::RenderPass create_render_pass(VkDevice device, VkFormat swap_chain_image
 }
 
 vulkan::RenderPass create_multisampling_render_pass(VkDevice device, VkSampleCountFlagBits sample_count,
-                                                    VkFormat swap_chain_image_format, VkFormat depth_image_format)
+                                                    VkFormat swapchain_image_format, VkFormat depth_image_format)
 {
         std::array<VkAttachmentDescription, 3> attachments = {};
 
         // Color resolve
-        attachments[0].format = swap_chain_image_format;
+        attachments[0].format = swapchain_image_format;
         attachments[0].samples = VK_SAMPLE_COUNT_1_BIT;
         attachments[0].loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
         attachments[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -390,7 +202,7 @@ vulkan::RenderPass create_multisampling_render_pass(VkDevice device, VkSampleCou
         attachments[0].finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
         // Multisampling color
-        attachments[1].format = swap_chain_image_format;
+        attachments[1].format = swapchain_image_format;
         attachments[1].samples = sample_count;
         attachments[1].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
         attachments[1].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE; // VK_ATTACHMENT_STORE_OP_STORE;
@@ -524,7 +336,7 @@ vulkan::RenderPass create_shadow_render_pass[[maybe_unused]](VkDevice device, Vk
 }
 
 template <size_t N>
-vulkan::Framebuffer create_framebuffer(VkDevice device, VkRenderPass render_pass, VkExtent2D extent,
+vulkan::Framebuffer create_framebuffer(VkDevice device, VkRenderPass render_pass, uint32_t width, uint32_t height,
                                        const std::array<VkImageView, N>& attachments)
 {
         VkFramebufferCreateInfo create_info = {};
@@ -532,8 +344,8 @@ vulkan::Framebuffer create_framebuffer(VkDevice device, VkRenderPass render_pass
         create_info.renderPass = render_pass;
         create_info.attachmentCount = attachments.size();
         create_info.pAttachments = attachments.data();
-        create_info.width = extent.width;
-        create_info.height = extent.height;
+        create_info.width = width;
+        create_info.height = height;
         create_info.layers = 1;
 
         return vulkan::Framebuffer(device, create_info);
@@ -552,8 +364,8 @@ vulkan::PipelineLayout create_pipeline_layout(VkDevice device, const std::vector
 }
 
 vulkan::Pipeline create_graphics_pipeline(const vulkan::Device& device, VkRenderPass render_pass, uint32_t sub_pass,
-                                          VkSampleCountFlagBits sample_count, VkPipelineLayout pipeline_layout,
-                                          VkExtent2D swap_chain_extent, const std::vector<const vulkan::Shader*>& shaders,
+                                          VkSampleCountFlagBits sample_count, VkPipelineLayout pipeline_layout, uint32_t width,
+                                          uint32_t height, const std::vector<const vulkan::Shader*>& shaders,
                                           const std::vector<VkVertexInputBindingDescription>& binding_descriptions,
                                           const std::vector<VkVertexInputAttributeDescription>& attribute_descriptions,
                                           bool for_shadow)
@@ -575,14 +387,15 @@ vulkan::Pipeline create_graphics_pipeline(const vulkan::Device& device, VkRender
         VkViewport viewport = {};
         viewport.x = 0.0f;
         viewport.y = 0.0f;
-        viewport.width = swap_chain_extent.width;
-        viewport.height = swap_chain_extent.height;
+        viewport.width = width;
+        viewport.height = height;
         viewport.minDepth = 0.0f;
         viewport.maxDepth = 1.0f;
 
         VkRect2D scissor = {};
         scissor.offset = {0, 0};
-        scissor.extent = swap_chain_extent;
+        scissor.extent.width = width;
+        scissor.extent.height = height;
 
         VkPipelineViewportStateCreateInfo viewport_state_info = {};
         viewport_state_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
@@ -729,7 +542,7 @@ vulkan::CommandPool create_transient_command_pool(VkDevice device, uint32_t queu
 
 template <size_t N>
 vulkan::CommandBuffers create_command_buffers(
-        VkDevice device, const VkExtent2D& swap_chain_extent, VkRenderPass render_pass, VkPipelineLayout pipeline_layout,
+        VkDevice device, uint32_t width, uint32_t height, VkRenderPass render_pass, VkPipelineLayout pipeline_layout,
         VkPipeline pipeline, const std::vector<vulkan::Framebuffer>& framebuffers, VkCommandPool command_pool,
         const std::array<VkClearValue, N>& clear_values,
         const std::function<void(VkPipelineLayout pipeline_layout, VkPipeline pipeline, VkCommandBuffer command_buffer)>&
@@ -757,7 +570,8 @@ vulkan::CommandBuffers create_command_buffers(
                 render_pass_info.renderPass = render_pass;
                 render_pass_info.framebuffer = framebuffers[i];
                 render_pass_info.renderArea.offset = {0, 0};
-                render_pass_info.renderArea.extent = swap_chain_extent;
+                render_pass_info.renderArea.extent.width = width;
+                render_pass_info.renderArea.extent.height = height;
                 render_pass_info.clearValueCount = clear_values.size();
                 render_pass_info.pClearValues = clear_values.data();
 
@@ -815,29 +629,24 @@ std::vector<vulkan::Fence> create_fences(VkDevice device, int count, bool signal
         }
         return res;
 }
-
-VkQueue device_queue(VkDevice device, uint32_t queue_family_index, uint32_t queue_index)
-{
-        VkQueue queue;
-        vkGetDeviceQueue(device, queue_family_index, queue_index, &queue);
-        ASSERT(queue != VK_NULL_HANDLE);
-        return queue;
-}
 }
 
 namespace vulkan
 {
-SwapChain::SwapChain(VkSurfaceKHR surface, VkPhysicalDevice physical_device,
-                     const std::vector<uint32_t>& swap_chain_image_family_indices,
-                     const std::vector<uint32_t>& depth_image_family_indices, const Device& device,
-                     VkCommandPool graphics_command_pool, VkQueue graphics_queue, int preferred_image_count,
-                     int required_minimum_sample_count, const std::vector<const vulkan::Shader*>& shaders,
-                     const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
-                     const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions,
-                     const std::vector<VkDescriptorSetLayout>& descriptor_set_layouts,
-                     const std::vector<const vulkan::Shader*>& shadow_shaders,
-                     const std::vector<VkDescriptorSetLayout>& shadow_descriptor_set_layouts, double shadow_zoom)
-        : m_device(device), m_graphics_command_pool(graphics_command_pool)
+SwapchainAndBuffers::SwapchainAndBuffers(VkSurfaceKHR surface, VkPhysicalDevice physical_device,
+                                         const std::vector<uint32_t>& swapchain_family_indices,
+                                         const std::vector<uint32_t>& attachment_family_indices, const Device& device,
+                                         VkCommandPool graphics_command_pool, VkQueue graphics_queue, int preferred_image_count,
+                                         int required_minimum_sample_count, const std::vector<const vulkan::Shader*>& shaders,
+                                         const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
+                                         const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions,
+                                         const std::vector<VkDescriptorSetLayout>& descriptor_set_layouts,
+                                         const std::vector<const vulkan::Shader*>& shadow_shaders,
+                                         const std::vector<VkDescriptorSetLayout>& shadow_descriptor_set_layouts,
+                                         double shadow_zoom)
+        : m_device(device),
+          m_graphics_command_pool(graphics_command_pool),
+          m_sample_count_bit(supported_framebuffer_sample_count_flag(physical_device, required_minimum_sample_count))
 {
         ASSERT(surface != VK_NULL_HANDLE);
         ASSERT(physical_device != VK_NULL_HANDLE);
@@ -846,65 +655,36 @@ SwapChain::SwapChain(VkSurfaceKHR surface, VkPhysicalDevice physical_device,
         ASSERT(graphics_queue != VK_NULL_HANDLE);
 
         ASSERT(descriptor_set_layouts.size() > 0);
-        ASSERT(swap_chain_image_family_indices.size() > 0);
-        ASSERT(depth_image_family_indices.size() > 0);
+        ASSERT(swapchain_family_indices.size() > 0);
+        ASSERT(attachment_family_indices.size() > 0);
 
-        SwapChainDetails swap_chain_details;
-        if (!find_swap_chain_details(surface, physical_device, &swap_chain_details))
-        {
-                error("Failed to find swap chain details");
-        }
+        LOG("Minimum sample count = " + to_string(required_minimum_sample_count) +
+            ", chosen sample count = " + to_string(integer_sample_count_flag(m_sample_count_bit)));
 
-        const VkSurfaceFormatKHR surface_format = choose_surface_format(swap_chain_details.surface_formats);
-        m_extent = choose_extent(swap_chain_details.surface_capabilities);
-        const VkPresentModeKHR present_mode = choose_present_mode(swap_chain_details.present_modes);
-        const uint32_t image_count = choose_image_count(swap_chain_details.surface_capabilities, preferred_image_count);
-
-        const uint32_t sample_count = supported_framebuffer_sample_count(physical_device, required_minimum_sample_count);
-        m_sample_count_bit = sample_count_flag_bit(sample_count);
-
-        LOG("Surface format " + format_to_string(surface_format.format));
-        LOG("Preferred image count = " + to_string(preferred_image_count) + ", chosen image count = " + to_string(image_count) +
-            "\n" + "Minimum sample count = " + to_string(required_minimum_sample_count) +
-            ", chosen sample count = " + to_string(sample_count));
-
-        m_swap_chain =
-                create_swap_chain_khr(device, surface, surface_format, present_mode, m_extent, image_count,
-                                      swap_chain_details.surface_capabilities.currentTransform, swap_chain_image_family_indices);
-
-        m_swap_chain_images = swap_chain_images(device, m_swap_chain);
-        if (m_swap_chain_images.empty())
-        {
-                error("Failed to find swap chain images");
-        }
-
-        for (const VkImage& image : m_swap_chain_images)
-        {
-                m_swap_chain_image_views.push_back(
-                        create_image_view(device, image, surface_format.format, VK_IMAGE_ASPECT_COLOR_BIT));
-        }
+        m_swapchain = std::make_unique<Swapchain>(surface, device, swapchain_family_indices, preferred_image_count);
 
         if (m_sample_count_bit != VK_SAMPLE_COUNT_1_BIT)
         {
                 m_multisampling_color_attachment = std::make_unique<ColorAttachment>(
-                        device, graphics_command_pool, graphics_queue, depth_image_family_indices, surface_format.format,
-                        m_sample_count_bit, m_extent.width, m_extent.height);
+                        device, graphics_command_pool, graphics_queue, attachment_family_indices, m_swapchain->format(),
+                        m_sample_count_bit, m_swapchain->width(), m_swapchain->height());
 
                 m_multisampling_depth_attachment = std::make_unique<DepthAttachment>(
-                        device, graphics_command_pool, graphics_queue, depth_image_family_indices, m_sample_count_bit,
-                        m_extent.width, m_extent.height);
+                        device, graphics_command_pool, graphics_queue, attachment_family_indices, m_sample_count_bit,
+                        m_swapchain->width(), m_swapchain->height());
 
-                m_render_pass = create_multisampling_render_pass(device, m_sample_count_bit, surface_format.format,
+                m_render_pass = create_multisampling_render_pass(device, m_sample_count_bit, m_swapchain->format(),
                                                                  m_multisampling_depth_attachment->format());
 
-                for (VkImageView swap_chain_image_view : m_swap_chain_image_views)
+                for (VkImageView swapchain_image_view : m_swapchain->image_views())
                 {
                         std::array<VkImageView, 3> attachments;
-                        attachments[0] = swap_chain_image_view;
+                        attachments[0] = swapchain_image_view;
                         attachments[1] = m_multisampling_color_attachment->image_view();
                         attachments[2] = m_multisampling_depth_attachment->image_view();
 
-                        m_framebuffers.push_back(create_framebuffer(device, m_render_pass, m_extent, attachments));
+                        m_framebuffers.push_back(create_framebuffer(device, m_render_pass, m_swapchain->width(),
+                                                                    m_swapchain->height(), attachments));
                 }
 
                 LOG("Multisampling color attachment format " + format_to_string(m_multisampling_color_attachment->format()));
@@ -913,18 +693,19 @@ SwapChain::SwapChain(VkSurfaceKHR surface, VkPhysicalDevice physical_device,
         else
         {
                 m_depth_attachment = std::make_unique<DepthAttachment>(device, graphics_command_pool, graphics_queue,
-                                                                       depth_image_family_indices, VK_SAMPLE_COUNT_1_BIT,
-                                                                       m_extent.width, m_extent.height);
+                                                                       attachment_family_indices, VK_SAMPLE_COUNT_1_BIT,
+                                                                       m_swapchain->width(), m_swapchain->height());
 
-                m_render_pass = create_render_pass(device, surface_format.format, m_depth_attachment->format());
+                m_render_pass = create_render_pass(device, m_swapchain->format(), m_depth_attachment->format());
 
-                for (VkImageView swap_chain_image_view : m_swap_chain_image_views)
+                for (VkImageView swapchain_image_view : m_swapchain->image_views())
                 {
                         std::array<VkImageView, 2> attachments;
-                        attachments[0] = swap_chain_image_view;
+                        attachments[0] = swapchain_image_view;
                         attachments[1] = m_depth_attachment->image_view();
 
-                        m_framebuffers.push_back(create_framebuffer(device, m_render_pass, m_extent, attachments));
+                        m_framebuffers.push_back(create_framebuffer(device, m_render_pass, m_swapchain->width(),
+                                                                    m_swapchain->height(), attachments));
                 }
 
                 LOG("Depth attachment format " + format_to_string(m_depth_attachment->format()));
@@ -932,41 +713,43 @@ SwapChain::SwapChain(VkSurfaceKHR surface, VkPhysicalDevice physical_device,
 
         m_pipeline_layout = create_pipeline_layout(device, descriptor_set_layouts);
         m_pipeline = create_graphics_pipeline(device, m_render_pass, 0 /*sub_pass*/, m_sample_count_bit, m_pipeline_layout,
-                                              m_extent, shaders, vertex_binding_descriptions, vertex_attribute_descriptions,
-                                              false /*for_shadow*/);
+                                              m_swapchain->width(), m_swapchain->height(), shaders, vertex_binding_descriptions,
+                                              vertex_attribute_descriptions, false /*for_shadow*/);
 
         //
 
-        m_shadow_extent.width = std::round(m_extent.width * shadow_zoom);
-        m_shadow_extent.height = std::round(m_extent.height * shadow_zoom);
-        VkExtent2D old_extent = m_shadow_extent;
-        m_shadow_depth_attachment =
-                std::make_unique<ShadowDepthAttachment>(device, graphics_command_pool, graphics_queue, depth_image_family_indices,
-                                                        &m_shadow_extent.width, &m_shadow_extent.height);
+        m_shadow_width = std::round(m_swapchain->width() * shadow_zoom);
+        m_shadow_height = std::round(m_swapchain->height() * shadow_zoom);
+
+        uint32_t old_shadow_width = m_shadow_width;
+        uint32_t old_shadow_height = m_shadow_height;
+        m_shadow_depth_attachment = std::make_unique<ShadowDepthAttachment>(
+                device, graphics_command_pool, graphics_queue, attachment_family_indices, &m_shadow_width, &m_shadow_height);
+
         m_shadow_render_pass = create_shadow_render_pass(device, m_shadow_depth_attachment->format());
         std::array<VkImageView, 1> shadow_attachments = {m_shadow_depth_attachment->image_view()};
-        m_shadow_framebuffers.push_back(create_framebuffer(device, m_shadow_render_pass, m_shadow_extent, shadow_attachments));
+        m_shadow_framebuffers.push_back(
+                create_framebuffer(device, m_shadow_render_pass, m_shadow_width, m_shadow_height, shadow_attachments));
         m_shadow_pipeline_layout = create_pipeline_layout(device, shadow_descriptor_set_layouts);
         m_shadow_pipeline = create_graphics_pipeline(
-                device, m_shadow_render_pass, 0 /*sub_pass*/, VK_SAMPLE_COUNT_1_BIT, m_shadow_pipeline_layout, m_shadow_extent,
-                shadow_shaders, vertex_binding_descriptions, vertex_attribute_descriptions, true /*for_shadow*/);
+                device, m_shadow_render_pass, 0 /*sub_pass*/, VK_SAMPLE_COUNT_1_BIT, m_shadow_pipeline_layout, m_shadow_width,
+                m_shadow_height, shadow_shaders, vertex_binding_descriptions, vertex_attribute_descriptions, true /*for_shadow*/);
 
         LOG("Shadow depth attachment format " + format_to_string(m_shadow_depth_attachment->format()));
         LOG("Shadow zoom " + to_string_fixed(shadow_zoom, 5));
-        if (old_extent.width != m_shadow_extent.width || old_extent.height != m_shadow_extent.height)
+        if (old_shadow_width != m_shadow_width || old_shadow_height != m_shadow_height)
         {
-                LOG("Requested shadow size (" + to_string(old_extent.width) + ", " + to_string(old_extent.height) +
-                    "), selected shadow size (" + to_string(m_shadow_extent.width) + ", " + to_string(m_shadow_extent.height) +
-                    ")");
+                LOG("Requested shadow size (" + to_string(old_shadow_width) + ", " + to_string(old_shadow_height) +
+                    "), selected shadow size (" + to_string(m_shadow_width) + ", " + to_string(m_shadow_height) + ")");
         }
 }
 
-const ShadowDepthAttachment* SwapChain::shadow_texture() const noexcept
+const ShadowDepthAttachment* SwapchainAndBuffers::shadow_texture() const noexcept
 {
         return m_shadow_depth_attachment.get();
 }
 
-void SwapChain::create_command_buffers(
+void SwapchainAndBuffers::create_command_buffers(
         const Color& clear_color,
         const std::function<void(VkPipelineLayout pipeline_layout, VkPipeline pipeline, VkCommandBuffer command_buffer)>&
                 commands_for_triangle_topology,
@@ -979,18 +762,18 @@ void SwapChain::create_command_buffers(
                 clear_values[0] = color_float_srgb_clear_value(clear_color);
                 clear_values[1] = color_float_srgb_clear_value(clear_color);
                 clear_values[2] = depth_stencil_clear_value();
-                m_command_buffers =
-                        ::create_command_buffers(m_device, m_extent, m_render_pass, m_pipeline_layout, m_pipeline, m_framebuffers,
-                                                 m_graphics_command_pool, clear_values, commands_for_triangle_topology);
+                m_command_buffers = ::create_command_buffers(
+                        m_device, m_swapchain->width(), m_swapchain->height(), m_render_pass, m_pipeline_layout, m_pipeline,
+                        m_framebuffers, m_graphics_command_pool, clear_values, commands_for_triangle_topology);
         }
         else
         {
                 std::array<VkClearValue, 2> clear_values;
                 clear_values[0] = color_float_srgb_clear_value(clear_color);
                 clear_values[1] = depth_stencil_clear_value();
-                m_command_buffers =
-                        ::create_command_buffers(m_device, m_extent, m_render_pass, m_pipeline_layout, m_pipeline, m_framebuffers,
-                                                 m_graphics_command_pool, clear_values, commands_for_triangle_topology);
+                m_command_buffers = ::create_command_buffers(
+                        m_device, m_swapchain->width(), m_swapchain->height(), m_render_pass, m_pipeline_layout, m_pipeline,
+                        m_framebuffers, m_graphics_command_pool, clear_values, commands_for_triangle_topology);
         }
 
         //
@@ -998,34 +781,35 @@ void SwapChain::create_command_buffers(
         {
                 std::array<VkClearValue, 1> clear_values;
                 clear_values[0] = depth_stencil_clear_value();
-                m_shadow_command_buffers = ::create_command_buffers(
-                        m_device, m_shadow_extent, m_shadow_render_pass, m_shadow_pipeline_layout, m_shadow_pipeline,
-                        m_shadow_framebuffers, m_graphics_command_pool, clear_values, commands_for_shadow_triangle_topology);
+                m_shadow_command_buffers =
+                        ::create_command_buffers(m_device, m_shadow_width, m_shadow_height, m_shadow_render_pass,
+                                                 m_shadow_pipeline_layout, m_shadow_pipeline, m_shadow_framebuffers,
+                                                 m_graphics_command_pool, clear_values, commands_for_shadow_triangle_topology);
         }
 }
 
-void SwapChain::delete_command_buffers()
+void SwapchainAndBuffers::delete_command_buffers()
 {
         m_command_buffers = CommandBuffers();
         m_shadow_command_buffers = CommandBuffers();
 }
 
-bool SwapChain::command_buffers_created() const
+bool SwapchainAndBuffers::command_buffers_created() const
 {
         return m_command_buffers.count() > 0 && m_shadow_command_buffers.count() > 0;
 }
 
-VkSwapchainKHR SwapChain::swap_chain() const noexcept
+VkSwapchainKHR SwapchainAndBuffers::swapchain() const noexcept
 {
-        return m_swap_chain;
+        return m_swapchain->swapchain();
 }
 
-const VkCommandBuffer& SwapChain::command_buffer(uint32_t index) const noexcept
+const VkCommandBuffer& SwapchainAndBuffers::command_buffer(uint32_t index) const noexcept
 {
         return m_command_buffers[index];
 }
 
-const VkCommandBuffer& SwapChain::shadow_command_buffer() const noexcept
+const VkCommandBuffer& SwapchainAndBuffers::shadow_command_buffer() const noexcept
 {
         ASSERT(m_shadow_command_buffers.count() == 1);
 
@@ -1072,13 +856,11 @@ VulkanInstance::VulkanInstance(int api_version_major, int api_version_minor,
           m_compute_queue(device_queue(m_device, m_physical_device.compute(), 0 /*queue_index*/)),
           m_presentation_queue(device_queue(m_device, m_physical_device.presentation(), 0 /*queue_index*/)),
           //
-          m_vertex_buffer_family_indices(
-                  unique_elements(std::vector({m_physical_device.graphics(), m_physical_device.transfer()}))),
-          m_swap_chain_image_family_indices(
+          m_buffer_family_indices(unique_elements(std::vector({m_physical_device.graphics(), m_physical_device.transfer()}))),
+          m_swapchain_family_indices(
                   unique_elements(std::vector({m_physical_device.graphics(), m_physical_device.presentation()}))),
-          m_texture_image_family_indices(
-                  unique_elements(std::vector({m_physical_device.graphics(), m_physical_device.transfer()}))),
-          m_depth_image_family_indices(unique_elements(std::vector({m_physical_device.graphics()})))
+          m_texture_family_indices(unique_elements(std::vector({m_physical_device.graphics(), m_physical_device.transfer()}))),
+          m_attachment_family_indices(unique_elements(std::vector({m_physical_device.graphics()})))
 {
         if (max_frames_in_flight > 1)
         {
@@ -1102,23 +884,6 @@ VulkanInstance::~VulkanInstance()
         }
 }
 
-SwapChain VulkanInstance::create_swap_chain(int preferred_image_count, int required_minimum_sample_count,
-                                            const std::vector<const vulkan::Shader*>& shaders,
-                                            const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
-                                            const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions,
-                                            const std::vector<VkDescriptorSetLayout>& descriptor_set_layouts,
-                                            const std::vector<const vulkan::Shader*>& shadow_shaders,
-                                            const std::vector<VkDescriptorSetLayout>& shadow_descriptor_set_layouts,
-                                            double shadow_zoom)
-{
-        ASSERT(descriptor_set_layouts.size() > 0);
-
-        return SwapChain(m_surface, m_physical_device, m_swap_chain_image_family_indices, m_depth_image_family_indices, m_device,
-                         m_graphics_command_pool, m_graphics_queue, preferred_image_count, required_minimum_sample_count, shaders,
-                         vertex_binding_descriptions, vertex_attribute_descriptions, descriptor_set_layouts, shadow_shaders,
-                         shadow_descriptor_set_layouts, shadow_zoom);
-}
-
 VkInstance VulkanInstance::instance() const noexcept
 {
         return m_instance;
@@ -1129,12 +894,12 @@ const Device& VulkanInstance::device() const noexcept
         return m_device;
 }
 
-// false - recreate swap chain
-bool VulkanInstance::draw_frame(SwapChain& swap_chain)
+// return false - recreate swapchain
+bool VulkanInstance::draw_frame(SwapchainAndBuffers& swapchain_and_buffers)
 {
         constexpr VkFence NO_FENCE = VK_NULL_HANDLE;
 
-        ASSERT(swap_chain.command_buffers_created());
+        ASSERT(swapchain_and_buffers.command_buffers_created());
 
         VkResult result;
 
@@ -1154,7 +919,7 @@ bool VulkanInstance::draw_frame(SwapChain& swap_chain)
         //
 
         uint32_t image_index;
-        result = vkAcquireNextImageKHR(m_device, swap_chain.swap_chain(), std::numeric_limits<uint64_t>::max(),
+        result = vkAcquireNextImageKHR(m_device, swapchain_and_buffers.swapchain(), std::numeric_limits<uint64_t>::max(),
                                        m_image_available_semaphores[m_current_frame], NO_FENCE, &image_index);
         if (result == VK_ERROR_OUT_OF_DATE_KHR)
         {
@@ -1183,7 +948,7 @@ bool VulkanInstance::draw_frame(SwapChain& swap_chain)
                 submit_info.pWaitSemaphores = image_signal_semaphores.data();
                 submit_info.pWaitDstStageMask = image_wait_stages.data();
                 submit_info.commandBufferCount = 1;
-                submit_info.pCommandBuffers = &swap_chain.command_buffer(image_index);
+                submit_info.pCommandBuffers = &swapchain_and_buffers.command_buffer(image_index);
                 submit_info.signalSemaphoreCount = render_finished_semaphores.size();
                 submit_info.pSignalSemaphores = render_finished_semaphores.data();
 
@@ -1206,7 +971,7 @@ bool VulkanInstance::draw_frame(SwapChain& swap_chain)
                         VkSubmitInfo submit_info = {};
                         submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
                         submit_info.commandBufferCount = 1;
-                        submit_info.pCommandBuffers = &swap_chain.shadow_command_buffer();
+                        submit_info.pCommandBuffers = &swapchain_and_buffers.shadow_command_buffer();
                         submit_info.signalSemaphoreCount = shadow_signal_semaphores.size();
                         submit_info.pSignalSemaphores = shadow_signal_semaphores.data();
 
@@ -1223,7 +988,7 @@ bool VulkanInstance::draw_frame(SwapChain& swap_chain)
                         submit_info.pWaitSemaphores = color_wait_semaphores.data();
                         submit_info.pWaitDstStageMask = color_wait_stages.data();
                         submit_info.commandBufferCount = 1;
-                        submit_info.pCommandBuffers = &swap_chain.command_buffer(image_index);
+                        submit_info.pCommandBuffers = &swapchain_and_buffers.command_buffer(image_index);
                         submit_info.signalSemaphoreCount = render_finished_semaphores.size();
                         submit_info.pSignalSemaphores = render_finished_semaphores.data();
 
@@ -1237,15 +1002,15 @@ bool VulkanInstance::draw_frame(SwapChain& swap_chain)
 
         //
 
-        std::array<VkSwapchainKHR, 1> swap_chains = {swap_chain.swap_chain()};
+        std::array<VkSwapchainKHR, 1> swapchains = {swapchain_and_buffers.swapchain()};
         std::array<uint32_t, 1> image_indices = {image_index};
 
         VkPresentInfoKHR present_info = {};
         present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
         present_info.waitSemaphoreCount = render_finished_semaphores.size();
         present_info.pWaitSemaphores = render_finished_semaphores.data();
-        present_info.swapchainCount = swap_chains.size();
-        present_info.pSwapchains = swap_chains.data();
+        present_info.swapchainCount = swapchains.size();
+        present_info.pSwapchains = swapchains.data();
         present_info.pImageIndices = image_indices.data();
         // present_info.pResults = nullptr;
 

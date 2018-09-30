@@ -119,24 +119,24 @@ public:
         operator VkSurfaceKHR() const noexcept;
 };
 
-class SwapChainKHR final
+class SwapchainKHR final
 {
         VkDevice m_device = VK_NULL_HANDLE;
-        VkSwapchainKHR m_swap_chain = VK_NULL_HANDLE;
+        VkSwapchainKHR m_swapchain = VK_NULL_HANDLE;
 
         void destroy() noexcept;
-        void move(SwapChainKHR* from) noexcept;
+        void move(SwapchainKHR* from) noexcept;
 
 public:
-        SwapChainKHR();
-        SwapChainKHR(VkDevice device, const VkSwapchainCreateInfoKHR& create_info);
-        ~SwapChainKHR();
+        SwapchainKHR();
+        SwapchainKHR(VkDevice device, const VkSwapchainCreateInfoKHR& create_info);
+        ~SwapchainKHR();
 
-        SwapChainKHR(const SwapChainKHR&) = delete;
-        SwapChainKHR& operator=(const SwapChainKHR&) = delete;
+        SwapchainKHR(const SwapchainKHR&) = delete;
+        SwapchainKHR& operator=(const SwapchainKHR&) = delete;
 
-        SwapChainKHR(SwapChainKHR&&) noexcept;
-        SwapChainKHR& operator=(SwapChainKHR&&) noexcept;
+        SwapchainKHR(SwapchainKHR&&) noexcept;
+        SwapchainKHR& operator=(SwapchainKHR&&) noexcept;
 
         operator VkSwapchainKHR() const noexcept;
 };

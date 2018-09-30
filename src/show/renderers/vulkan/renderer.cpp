@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/vulkan/common.h"
 #include "graphics/vulkan/device.h"
 #include "graphics/vulkan/instance.h"
+#include "graphics/vulkan/overview.h"
 #include "graphics/vulkan/query.h"
 #include "graphics/vulkan/sampler.h"
 #include "obj/obj_alg.h"
@@ -427,7 +428,7 @@ class Renderer final : public VulkanRenderer
         std::vector<const vulkan::Shader*> m_shaders;
         std::vector<const vulkan::Shader*> m_shadow_shaders;
 
-        std::unique_ptr<vulkan::SwapChain> m_swap_chain;
+        std::unique_ptr<vulkan::SwapchainAndBuffers> m_swapchain_and_buffers;
 
         DrawObjects<DrawObject> m_draw_objects;
 
@@ -509,7 +510,7 @@ class Renderer final : public VulkanRenderer
 
                 m_shadow_zoom = zoom;
 
-                create_swap_chain_and_command_buffers();
+                create_swapchain_and_command_buffers();
         }
         void set_matrices(const mat4& shadow_matrix, const mat4& main_matrix) override
         {
@@ -600,9 +601,9 @@ class Renderer final : public VulkanRenderer
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                if (!m_instance.draw_frame(*m_swap_chain))
+                if (!m_instance.draw_frame(*m_swapchain_and_buffers))
                 {
-                        create_swap_chain_and_command_buffers();
+                        create_swapchain_and_command_buffers();
                 }
 
                 return m_draw_objects.object() != nullptr;
@@ -626,7 +627,7 @@ class Renderer final : public VulkanRenderer
                 }
         }
 
-        void create_swap_chain_and_command_buffers()
+        void create_swapchain_and_command_buffers()
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
@@ -646,13 +647,13 @@ class Renderer final : public VulkanRenderer
                 shadow_layouts[0] = m_shadow_descriptor_set_layout;
 
                 // Сначала надо удалить объект, а потом создавать
-                m_swap_chain.reset();
+                m_swapchain_and_buffers.reset();
 
-                m_swap_chain = std::make_unique<vulkan::SwapChain>(m_instance.create_swap_chain(
+                m_swapchain_and_buffers = std::make_unique<vulkan::SwapchainAndBuffers>(m_instance.create_swapchain_and_buffers(
                         PREFERRED_IMAGE_COUNT, REQUIRED_MINIMUM_SAMPLE_COUNT, m_shaders, shaders::Vertex::binding_descriptions(),
                         shaders::Vertex::attribute_descriptions(), layouts, m_shadow_shaders, shadow_layouts, m_shadow_zoom));
 
-                m_shared_shader_memory.set_shadow_texture(m_shadow_sampler, m_swap_chain->shadow_texture());
+                m_shared_shader_memory.set_shadow_texture(m_shadow_sampler, m_swapchain_and_buffers->shadow_texture());
 
                 create_command_buffers(false /*wait_idle*/);
         }
@@ -705,7 +706,7 @@ class Renderer final : public VulkanRenderer
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                ASSERT(m_swap_chain);
+                ASSERT(m_swapchain_and_buffers);
 
                 if (wait_idle)
                 {
@@ -716,18 +717,19 @@ class Renderer final : public VulkanRenderer
                 using std::placeholders::_2;
                 using std::placeholders::_3;
 
-                m_swap_chain->create_command_buffers(m_clear_color, std::bind(&Renderer::draw_commands, this, _1, _2, _3),
-                                                     std::bind(&Renderer::shadow_draw_commands, this, _1, _2, _3));
+                m_swapchain_and_buffers->create_command_buffers(m_clear_color,
+                                                                std::bind(&Renderer::draw_commands, this, _1, _2, _3),
+                                                                std::bind(&Renderer::shadow_draw_commands, this, _1, _2, _3));
         }
 
         void delete_command_buffers()
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                ASSERT(m_swap_chain);
+                ASSERT(m_swapchain_and_buffers);
 
                 m_instance.device_wait_idle();
-                m_swap_chain->delete_command_buffers();
+                m_swapchain_and_buffers->delete_command_buffers();
         }
 
 public:
@@ -754,7 +756,7 @@ public:
                   m_shaders({&m_vertex_shader, &m_geometry_shader, &m_fragment_shader}),
                   m_shadow_shaders({&m_shadow_vertex_shader, &m_shadow_fragment_shader})
         {
-                create_swap_chain_and_command_buffers();
+                create_swapchain_and_command_buffers();
 
                 LOG(vulkan::overview_physical_devices(m_instance.instance()));
         }

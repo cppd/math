@@ -150,3 +150,44 @@ void insert_or_erase(bool insert, const typename Container<T...>::value_type& va
                 container->erase(value);
         }
 }
+
+template <typename T1, typename T2>
+bool there_is_intersection(T1 t1, T2 t2)
+{
+        std::sort(t1.begin(), t1.end());
+        std::sort(t2.begin(), t2.end());
+
+        auto i1 = std::cbegin(t1);
+        auto i2 = std::cbegin(t2);
+
+        while (true)
+        {
+                if (i1 == std::cend(t1))
+                {
+                        return false;
+                }
+                if (i2 == std::cend(t2))
+                {
+                        return false;
+                }
+
+                if (*i1 < *i2)
+                {
+                        ++i1;
+                }
+                else if (*i1 > *i2)
+                {
+                        ++i2;
+                }
+                else
+                {
+                        // Из условия !(a < b) && !(a > b) не обязательно следует a == b
+                        if (!(*i1 == *i2))
+                        {
+                                error("Failed to find intersection. Not (a < b) and not (a > b) and not (a == b)");
+                        }
+
+                        return true;
+                }
+        }
+}

@@ -25,23 +25,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace vulkan
 {
 std::unordered_set<std::string> supported_instance_extensions();
-std::unordered_set<std::string> supported_physical_device_extensions(VkPhysicalDevice physical_device);
 std::unordered_set<std::string> supported_validation_layers();
 
 uint32_t supported_instance_api_version();
 
-std::vector<VkPhysicalDevice> physical_devices(VkInstance instance);
-std::vector<VkQueueFamilyProperties> queue_families(VkPhysicalDevice device);
-
 void check_instance_extension_support(const std::vector<std::string>& required_extensions);
 void check_validation_layer_support(const std::vector<std::string>& required_layers);
 void check_api_version(uint32_t required_api_version);
-
-bool device_supports_extensions(VkPhysicalDevice physical_device, const std::vector<std::string>& extensions);
-
-std::vector<VkSurfaceFormatKHR> surface_formats(VkPhysicalDevice physical_device, VkSurfaceKHR surface);
-std::vector<VkPresentModeKHR> present_modes(VkPhysicalDevice physical_device, VkSurfaceKHR surface);
-std::vector<VkImage> swap_chain_images(VkDevice device, VkSwapchainKHR swap_chain);
 
 VkFormat find_supported_format(VkPhysicalDevice physical_device, const std::vector<VkFormat>& candidates, VkImageTiling tiling,
                                VkFormatFeatureFlags features);
@@ -50,9 +40,7 @@ VkFormat find_supported_2d_image_format(VkPhysicalDevice physical_device, const 
                                         VkSampleCountFlags sample_count);
 VkExtent2D max_2d_image_extent(VkPhysicalDevice physical_device, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage);
 
-int supported_framebuffer_sample_count(VkPhysicalDevice physical_device, int required_minimum_sample_count);
-VkSampleCountFlagBits sample_count_flag_bit(int sample_count);
-
-std::string overview();
-std::string overview_physical_devices(VkInstance instance);
+VkSampleCountFlagBits supported_framebuffer_sample_count_flag(VkPhysicalDevice physical_device,
+                                                              int required_minimum_sample_count);
+int integer_sample_count_flag(VkSampleCountFlagBits sample_count);
 }
