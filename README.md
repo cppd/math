@@ -73,14 +73,17 @@ Realistic visualization                         | Path tracing                  
 
 ## Technical details
 
-Property                    | Value
-----------------------------|----------------------------------------------------------
-Programming languages       | C++17, GLSL 4.50
-Supported C++ compilers     | GCC 7, GCC 8, Clang 6
-Supported operating systems | Linux, Windows
-Required libraries          | FreeType, GLFW, GMP, OpenGL 4.5, Qt 5, SFML, Vulkan, Xlib
-Optional libraries          | cuFFT (for DFT tests), FFTW (for DFT tests)
-Build system                | CMake
+Property              | Value
+----------------------|--------------------------------------------
+Programming languages | C++17, GLSL 4.50
+C++ compilers         | GCC 7, GCC 8, Clang 6
+Platforms             | Linux, Windows
+Graphics APIs         | Vulkan, OpenGL 4.5
+Compute APIs          | OpenGL 4.5
+Frameworks            | Qt 5
+Libraries             | FreeType, GLFW, GMP, SFML, Xlib
+Optional libraries    | cuFFT (for DFT tests), FFTW (for DFT tests)
+Build systems         | CMake
 
 ## Images
 
