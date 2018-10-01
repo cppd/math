@@ -39,14 +39,33 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 constexpr int API_VERSION_MAJOR = 1;
 constexpr int API_VERSION_MINOR = 0;
 
-constexpr std::array<const char*, 0> INSTANCE_EXTENSIONS = {};
-constexpr std::array<const char*, 0> DEVICE_EXTENSIONS = {};
-constexpr std::array<const char*, 1> VALIDATION_LAYERS = {"VK_LAYER_LUNARG_standard_validation"};
-
-constexpr std::array<vulkan::PhysicalDeviceFeatures, 3> REQUIRED_FEATURES = {vulkan::PhysicalDeviceFeatures::GeometryShader,
-                                                                             vulkan::PhysicalDeviceFeatures::SampleRateShading,
-                                                                             vulkan::PhysicalDeviceFeatures::SamplerAnisotropy};
-constexpr std::array<vulkan::PhysicalDeviceFeatures, 0> OPTIONAL_FEATURES = {};
+// clang-format off
+constexpr std::initializer_list<const char*> INSTANCE_EXTENSIONS =
+{
+};
+constexpr std::initializer_list<const char*> DEVICE_EXTENSIONS =
+{
+};
+constexpr std::initializer_list<const char*> VALIDATION_LAYERS =
+{
+        "VK_LAYER_LUNARG_standard_validation"
+};
+constexpr std::initializer_list<vulkan::PhysicalDeviceFeatures> REQUIRED_DEVICE_FEATURES =
+{
+        vulkan::PhysicalDeviceFeatures::GeometryShader,
+        vulkan::PhysicalDeviceFeatures::SampleRateShading,
+        vulkan::PhysicalDeviceFeatures::SamplerAnisotropy
+};
+constexpr std::initializer_list<vulkan::PhysicalDeviceFeatures> OPTIONAL_DEVICE_FEATURES =
+{
+};
+constexpr std::initializer_list<VkFormat> DEPTH_IMAGE_FORMATS =
+{
+        VK_FORMAT_D32_SFLOAT,
+        VK_FORMAT_D32_SFLOAT_S8_UINT,
+        VK_FORMAT_D24_UNORM_S8_UINT
+};
+// clang-format on
 
 // 2 - double buffering, 3 - triple buffering
 constexpr int PREFERRED_IMAGE_COUNT = 2;
@@ -54,19 +73,17 @@ constexpr int MAX_FRAMES_IN_FLIGHT = 1;
 
 constexpr int REQUIRED_MINIMUM_SAMPLE_COUNT = 4;
 
-constexpr VkFormat DEPTH_IMAGE_FORMATS[] = {VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT};
-
-constexpr VkIndexType VULKAN_VERTEX_INDEX_TYPE = VK_INDEX_TYPE_UINT32;
-using VERTEX_INDEX_TYPE =
-        std::conditional_t<VULKAN_VERTEX_INDEX_TYPE == VK_INDEX_TYPE_UINT32, uint32_t,
-                           std::conditional_t<VULKAN_VERTEX_INDEX_TYPE == VK_INDEX_TYPE_UINT16, uint16_t, void>>;
-
 constexpr uint32_t SHADER_SHARED_SET = 0;
 constexpr uint32_t SHADER_PER_OBJECT_SET = 1;
 constexpr uint32_t SHADER_SHADOW_SET = 0;
 
 // Число используется в шейдере для определения наличия текстурных координат
 constexpr vec2f NO_TEXTURE_COORDINATES = vec2f(-1e10);
+
+// constexpr VkIndexType VULKAN_VERTEX_INDEX_TYPE = VK_INDEX_TYPE_UINT32;
+// using VERTEX_INDEX_TYPE =
+//        std::conditional_t<VULKAN_VERTEX_INDEX_TYPE == VK_INDEX_TYPE_UINT32, uint32_t,
+//                           std::conditional_t<VULKAN_VERTEX_INDEX_TYPE == VK_INDEX_TYPE_UINT16, uint16_t, void>>;
 
 // clang-format off
 constexpr uint32_t vertex_shader[]
@@ -95,29 +112,11 @@ namespace shaders = vulkan_renderer_shaders;
 
 namespace
 {
-std::vector<std::string> instance_extensions()
+template <typename T>
+std::vector<std::string> string_vector(const T& v)
 {
-        return std::vector<std::string>(std::cbegin(INSTANCE_EXTENSIONS), std::cend(INSTANCE_EXTENSIONS));
-}
-std::vector<std::string> device_extensions()
-{
-        return std::vector<std::string>(std::cbegin(DEVICE_EXTENSIONS), std::cend(DEVICE_EXTENSIONS));
-}
-std::vector<std::string> validation_layers()
-{
-        return std::vector<std::string>(std::cbegin(VALIDATION_LAYERS), std::cend(VALIDATION_LAYERS));
-}
-std::vector<vulkan::PhysicalDeviceFeatures> required_features()
-{
-        return std::vector<vulkan::PhysicalDeviceFeatures>(std::cbegin(REQUIRED_FEATURES), std::cend(REQUIRED_FEATURES));
-}
-std::vector<vulkan::PhysicalDeviceFeatures> optional_features()
-{
-        return std::vector<vulkan::PhysicalDeviceFeatures>(std::cbegin(OPTIONAL_FEATURES), std::cend(OPTIONAL_FEATURES));
-}
-std::vector<VkFormat> depth_image_formats()
-{
-        return std::vector<VkFormat>(std::cbegin(DEPTH_IMAGE_FORMATS), std::cend(DEPTH_IMAGE_FORMATS));
+        static_assert(std::is_same_v<typename T::value_type, const char*>);
+        return std::vector<std::string>(std::cbegin(v), std::cend(v));
 }
 
 struct VerticesOfMaterial
@@ -653,7 +652,7 @@ class Renderer final : public VulkanRenderer
                 m_swapchain_and_buffers.reset();
 
                 m_swapchain_and_buffers = std::make_unique<vulkan::SwapchainAndBuffers>(m_instance.create_swapchain_and_buffers(
-                        PREFERRED_IMAGE_COUNT, REQUIRED_MINIMUM_SAMPLE_COUNT, depth_image_formats(), m_shaders,
+                        PREFERRED_IMAGE_COUNT, REQUIRED_MINIMUM_SAMPLE_COUNT, DEPTH_IMAGE_FORMATS, m_shaders,
                         shaders::Vertex::binding_descriptions(), shaders::Vertex::attribute_descriptions(), m_pipeline_layout,
                         m_shadow_shaders, m_shadow_pipeline_layout, m_shadow_zoom));
 
@@ -745,8 +744,9 @@ class Renderer final : public VulkanRenderer
 public:
         Renderer(const std::vector<std::string>& window_instance_extensions,
                  const std::function<VkSurfaceKHR(VkInstance)>& create_surface)
-                : m_instance(API_VERSION_MAJOR, API_VERSION_MINOR, instance_extensions() + window_instance_extensions,
-                             device_extensions(), validation_layers(), required_features(), optional_features(), create_surface,
+                : m_instance(API_VERSION_MAJOR, API_VERSION_MINOR,
+                             string_vector(INSTANCE_EXTENSIONS) + window_instance_extensions, string_vector(DEVICE_EXTENSIONS),
+                             string_vector(VALIDATION_LAYERS), REQUIRED_DEVICE_FEATURES, OPTIONAL_DEVICE_FEATURES, create_surface,
                              MAX_FRAMES_IN_FLIGHT),
                   m_sampler(vulkan::create_sampler(m_instance.device())),
                   m_shadow_sampler(vulkan::create_shadow_sampler(m_instance.device())),
