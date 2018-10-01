@@ -150,8 +150,8 @@ class DepthAttachment final
 
 public:
         DepthAttachment(const Device& device, VkCommandPool graphics_command_pool, VkQueue graphics_queue,
-                        const std::vector<uint32_t>& family_indices, VkSampleCountFlagBits samples, uint32_t width,
-                        uint32_t height);
+                        const std::vector<uint32_t>& family_indices, const std::vector<VkFormat>& formats,
+                        VkSampleCountFlagBits samples, uint32_t width, uint32_t height);
 
         DepthAttachment(const DepthAttachment&) = delete;
         DepthAttachment& operator=(const DepthAttachment&) = delete;
@@ -206,7 +206,8 @@ class ShadowDepthAttachment final
 
 public:
         ShadowDepthAttachment(const Device& device, VkCommandPool graphics_command_pool, VkQueue graphics_queue,
-                              const std::vector<uint32_t>& family_indices, uint32_t* width, uint32_t* height);
+                              const std::vector<uint32_t>& family_indices, const std::vector<VkFormat>& formats, uint32_t* width,
+                              uint32_t* height);
 
         ShadowDepthAttachment(const ShadowDepthAttachment&) = delete;
         ShadowDepthAttachment& operator=(const ShadowDepthAttachment&) = delete;

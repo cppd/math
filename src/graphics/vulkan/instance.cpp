@@ -429,7 +429,8 @@ namespace vulkan
 SwapchainAndBuffers::SwapchainAndBuffers(VkSurfaceKHR surface, const std::vector<uint32_t>& swapchain_family_indices,
                                          const std::vector<uint32_t>& attachment_family_indices, const Device& device,
                                          VkCommandPool graphics_command_pool, VkQueue graphics_queue, int preferred_image_count,
-                                         int required_minimum_sample_count, const std::vector<const vulkan::Shader*>& shaders,
+                                         int required_minimum_sample_count, const std::vector<VkFormat>& depth_image_formats,
+                                         const std::vector<const vulkan::Shader*>& shaders,
                                          const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
                                          const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions,
                                          const PipelineLayout& pipeline_layout,
@@ -460,8 +461,8 @@ SwapchainAndBuffers::SwapchainAndBuffers(VkSurfaceKHR surface, const std::vector
                         m_sample_count_bit, m_swapchain.width(), m_swapchain.height());
 
                 m_multisampling_depth_attachment = std::make_unique<DepthAttachment>(
-                        device, graphics_command_pool, graphics_queue, attachment_family_indices, m_sample_count_bit,
-                        m_swapchain.width(), m_swapchain.height());
+                        device, graphics_command_pool, graphics_queue, attachment_family_indices, depth_image_formats,
+                        m_sample_count_bit, m_swapchain.width(), m_swapchain.height());
 
                 m_render_pass = create_multisampling_render_pass(device, m_sample_count_bit, m_swapchain.format(),
                                                                  m_multisampling_depth_attachment->format());
@@ -482,9 +483,9 @@ SwapchainAndBuffers::SwapchainAndBuffers(VkSurfaceKHR surface, const std::vector
         }
         else
         {
-                m_depth_attachment = std::make_unique<DepthAttachment>(device, graphics_command_pool, graphics_queue,
-                                                                       attachment_family_indices, VK_SAMPLE_COUNT_1_BIT,
-                                                                       m_swapchain.width(), m_swapchain.height());
+                m_depth_attachment = std::make_unique<DepthAttachment>(
+                        device, graphics_command_pool, graphics_queue, attachment_family_indices, depth_image_formats,
+                        VK_SAMPLE_COUNT_1_BIT, m_swapchain.width(), m_swapchain.height());
 
                 m_render_pass = create_render_pass(device, m_swapchain.format(), m_depth_attachment->format());
 
@@ -512,8 +513,9 @@ SwapchainAndBuffers::SwapchainAndBuffers(VkSurfaceKHR surface, const std::vector
 
         uint32_t old_shadow_width = m_shadow_width;
         uint32_t old_shadow_height = m_shadow_height;
-        m_shadow_depth_attachment = std::make_unique<ShadowDepthAttachment>(
-                device, graphics_command_pool, graphics_queue, attachment_family_indices, &m_shadow_width, &m_shadow_height);
+        m_shadow_depth_attachment =
+                std::make_unique<ShadowDepthAttachment>(device, graphics_command_pool, graphics_queue, attachment_family_indices,
+                                                        depth_image_formats, &m_shadow_width, &m_shadow_height);
 
         m_shadow_render_pass = create_shadow_render_pass(device, m_shadow_depth_attachment->format());
         std::array<VkImageView, 1> shadow_attachments = {m_shadow_depth_attachment->image_view()};

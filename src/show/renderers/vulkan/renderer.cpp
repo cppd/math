@@ -54,6 +54,8 @@ constexpr int MAX_FRAMES_IN_FLIGHT = 1;
 
 constexpr int REQUIRED_MINIMUM_SAMPLE_COUNT = 4;
 
+constexpr VkFormat DEPTH_IMAGE_FORMATS[] = {VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT};
+
 constexpr VkIndexType VULKAN_VERTEX_INDEX_TYPE = VK_INDEX_TYPE_UINT32;
 using VERTEX_INDEX_TYPE =
         std::conditional_t<VULKAN_VERTEX_INDEX_TYPE == VK_INDEX_TYPE_UINT32, uint32_t,
@@ -112,6 +114,10 @@ std::vector<vulkan::PhysicalDeviceFeatures> required_features()
 std::vector<vulkan::PhysicalDeviceFeatures> optional_features()
 {
         return std::vector<vulkan::PhysicalDeviceFeatures>(std::cbegin(OPTIONAL_FEATURES), std::cend(OPTIONAL_FEATURES));
+}
+std::vector<VkFormat> depth_image_formats()
+{
+        return std::vector<VkFormat>(std::cbegin(DEPTH_IMAGE_FORMATS), std::cend(DEPTH_IMAGE_FORMATS));
 }
 
 struct VerticesOfMaterial
@@ -647,9 +653,9 @@ class Renderer final : public VulkanRenderer
                 m_swapchain_and_buffers.reset();
 
                 m_swapchain_and_buffers = std::make_unique<vulkan::SwapchainAndBuffers>(m_instance.create_swapchain_and_buffers(
-                        PREFERRED_IMAGE_COUNT, REQUIRED_MINIMUM_SAMPLE_COUNT, m_shaders, shaders::Vertex::binding_descriptions(),
-                        shaders::Vertex::attribute_descriptions(), m_pipeline_layout, m_shadow_shaders, m_shadow_pipeline_layout,
-                        m_shadow_zoom));
+                        PREFERRED_IMAGE_COUNT, REQUIRED_MINIMUM_SAMPLE_COUNT, depth_image_formats(), m_shaders,
+                        shaders::Vertex::binding_descriptions(), shaders::Vertex::attribute_descriptions(), m_pipeline_layout,
+                        m_shadow_shaders, m_shadow_pipeline_layout, m_shadow_zoom));
 
                 if (m_swapchain_and_buffers->swapchain_format() != VK_FORMAT_B8G8R8A8_UNORM)
                 {

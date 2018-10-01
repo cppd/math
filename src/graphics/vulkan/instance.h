@@ -61,7 +61,8 @@ public:
         SwapchainAndBuffers(VkSurfaceKHR surface, const std::vector<uint32_t>& swapchain_family_indices,
                             const std::vector<uint32_t>& attachment_family_indices, const Device& device,
                             VkCommandPool graphics_command_pool, VkQueue graphics_queue, int preferred_image_count,
-                            int required_minimum_sample_count, const std::vector<const vulkan::Shader*>& shaders,
+                            int required_minimum_sample_count, const std::vector<VkFormat>& depth_image_formats,
+                            const std::vector<const vulkan::Shader*>& shaders,
                             const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
                             const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions,
                             const PipelineLayout& pipeline_layout, const std::vector<const vulkan::Shader*>& shadow_shaders,
@@ -155,7 +156,8 @@ public:
         void device_wait_idle() const;
 
         SwapchainAndBuffers create_swapchain_and_buffers(
-                int preferred_image_count, int required_minimum_sample_count, const std::vector<const vulkan::Shader*>& shaders,
+                int preferred_image_count, int required_minimum_sample_count, const std::vector<VkFormat>& depth_image_formats,
+                const std::vector<const vulkan::Shader*>& shaders,
                 const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
                 const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions,
                 const PipelineLayout& pipeline_layout, const std::vector<const vulkan::Shader*>& shadow_shaders,
@@ -163,9 +165,9 @@ public:
         {
                 return SwapchainAndBuffers(m_surface, m_swapchain_family_indices, m_attachment_family_indices, m_device,
                                            m_graphics_command_pool, m_graphics_queue, preferred_image_count,
-                                           required_minimum_sample_count, shaders, vertex_binding_descriptions,
-                                           vertex_attribute_descriptions, pipeline_layout, shadow_shaders, shadow_pipeline_layout,
-                                           shadow_zoom);
+                                           required_minimum_sample_count, depth_image_formats, shaders,
+                                           vertex_binding_descriptions, vertex_attribute_descriptions, pipeline_layout,
+                                           shadow_shaders, shadow_pipeline_layout, shadow_zoom);
         }
 
         template <typename T>
