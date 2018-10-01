@@ -26,6 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/vulkan/device.h"
 #include "graphics/vulkan/instance.h"
 #include "graphics/vulkan/overview.h"
+#include "graphics/vulkan/pipeline.h"
 #include "graphics/vulkan/query.h"
 #include "graphics/vulkan/sampler.h"
 #include "obj/obj_alg.h"
@@ -58,8 +59,9 @@ using VERTEX_INDEX_TYPE =
         std::conditional_t<VULKAN_VERTEX_INDEX_TYPE == VK_INDEX_TYPE_UINT32, uint32_t,
                            std::conditional_t<VULKAN_VERTEX_INDEX_TYPE == VK_INDEX_TYPE_UINT16, uint16_t, void>>;
 
-constexpr uint32_t SHADER_SHARED_DESCRIPTION_SET_LAYOUT_INDEX = 0;
-constexpr uint32_t SHADER_PER_OBJECT_DESCRIPTION_SET_LAYOUT_INDEX = 1;
+constexpr uint32_t SHADER_SHARED_SET = 0;
+constexpr uint32_t SHADER_PER_OBJECT_SET = 1;
+constexpr uint32_t SHADER_SHADOW_SET = 0;
 
 // Число используется в шейдере для определения наличия текстурных координат
 constexpr vec2f NO_TEXTURE_COORDINATES = vec2f(-1e10);
@@ -335,8 +337,7 @@ public:
                 return m_model_matrix;
         }
 
-        void draw_commands(VkPipelineLayout pipeline_layout, VkCommandBuffer command_buffer,
-                           uint32_t description_set_layout_index) const
+        void draw_commands(VkPipelineLayout pipeline_layout, VkCommandBuffer command_buffer) const
         {
                 if (!m_vertex_buffer)
                 {
@@ -359,7 +360,7 @@ public:
 
                         std::array<VkDescriptorSet, 1> descriptor_sets = {m_shader_memory->descriptor_set(i)};
                         vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline_layout,
-                                                description_set_layout_index, descriptor_sets.size(), descriptor_sets.data(), 0,
+                                                SHADER_PER_OBJECT_SET, descriptor_sets.size(), descriptor_sets.data(), 0,
                                                 nullptr);
 
                         vkCmdDraw(command_buffer, m_vertices_of_materials[i].count, 1, m_vertices_of_materials[i].offset, 0);
@@ -427,6 +428,9 @@ class Renderer final : public VulkanRenderer
         vulkan::FragmentShader m_shadow_fragment_shader;
         std::vector<const vulkan::Shader*> m_shaders;
         std::vector<const vulkan::Shader*> m_shadow_shaders;
+
+        vulkan::PipelineLayout m_pipeline_layout;
+        vulkan::PipelineLayout m_shadow_pipeline_layout;
 
         std::unique_ptr<vulkan::SwapchainAndBuffers> m_swapchain_and_buffers;
 
@@ -639,26 +643,30 @@ class Renderer final : public VulkanRenderer
 
                 //
 
-                std::vector<VkDescriptorSetLayout> layouts(2);
-                layouts[SHADER_SHARED_DESCRIPTION_SET_LAYOUT_INDEX] = m_shared_descriptor_set_layout;
-                layouts[SHADER_PER_OBJECT_DESCRIPTION_SET_LAYOUT_INDEX] = m_per_object_descriptor_set_layout;
-
-                std::vector<VkDescriptorSetLayout> shadow_layouts(1);
-                shadow_layouts[0] = m_shadow_descriptor_set_layout;
-
                 // Сначала надо удалить объект, а потом создавать
                 m_swapchain_and_buffers.reset();
 
                 m_swapchain_and_buffers = std::make_unique<vulkan::SwapchainAndBuffers>(m_instance.create_swapchain_and_buffers(
                         PREFERRED_IMAGE_COUNT, REQUIRED_MINIMUM_SAMPLE_COUNT, m_shaders, shaders::Vertex::binding_descriptions(),
-                        shaders::Vertex::attribute_descriptions(), layouts, m_shadow_shaders, shadow_layouts, m_shadow_zoom));
+                        shaders::Vertex::attribute_descriptions(), m_pipeline_layout, m_shadow_shaders, m_shadow_pipeline_layout,
+                        m_shadow_zoom));
+
+                if (m_swapchain_and_buffers->swapchain_format() != VK_FORMAT_B8G8R8A8_UNORM)
+                {
+                        error("Swapchain format is not VK_FORMAT_B8G8R8A8_UNORM");
+                }
+                if (m_swapchain_and_buffers->swapchain_color_space() != VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
+                {
+                        // Шейдеры пишут sRGB
+                        error("Swapchain color space is not VK_COLOR_SPACE_SRGB_NONLINEAR_KHR");
+                }
 
                 m_shared_shader_memory.set_shadow_texture(m_shadow_sampler, m_swapchain_and_buffers->shadow_texture());
 
                 create_command_buffers(false /*wait_idle*/);
         }
 
-        void draw_commands(VkPipelineLayout pipeline_layout, VkPipeline pipeline, VkCommandBuffer command_buffer) const
+        void draw_commands(VkPipeline pipeline, VkCommandBuffer command_buffer) const
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
@@ -669,18 +677,16 @@ class Renderer final : public VulkanRenderer
                 vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 
                 std::array<VkDescriptorSet, 1> descriptor_sets = {m_shared_shader_memory.descriptor_set()};
-                vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline_layout,
-                                        SHADER_SHARED_DESCRIPTION_SET_LAYOUT_INDEX, descriptor_sets.size(),
-                                        descriptor_sets.data(), 0, nullptr);
+                vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline_layout, SHADER_SHARED_SET,
+                                        descriptor_sets.size(), descriptor_sets.data(), 0, nullptr);
 
                 if (m_draw_objects.object())
                 {
-                        m_draw_objects.object()->draw_commands(pipeline_layout, command_buffer,
-                                                               SHADER_PER_OBJECT_DESCRIPTION_SET_LAYOUT_INDEX);
+                        m_draw_objects.object()->draw_commands(m_pipeline_layout, command_buffer);
                 }
         }
 
-        void shadow_draw_commands(VkPipelineLayout pipeline_layout, VkPipeline pipeline, VkCommandBuffer command_buffer) const
+        void shadow_draw_commands(VkPipeline pipeline, VkCommandBuffer command_buffer) const
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
@@ -693,8 +699,8 @@ class Renderer final : public VulkanRenderer
                 vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 
                 std::array<VkDescriptorSet, 1> descriptor_sets = {m_shadow_shader_memory.descriptor_set()};
-                vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline_layout, 0 /*firstSet*/,
-                                        descriptor_sets.size(), descriptor_sets.data(), 0, nullptr);
+                vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_shadow_pipeline_layout,
+                                        SHADER_SHADOW_SET, descriptor_sets.size(), descriptor_sets.data(), 0, nullptr);
 
                 if (m_draw_objects.object())
                 {
@@ -715,11 +721,9 @@ class Renderer final : public VulkanRenderer
 
                 using std::placeholders::_1;
                 using std::placeholders::_2;
-                using std::placeholders::_3;
 
-                m_swapchain_and_buffers->create_command_buffers(m_clear_color,
-                                                                std::bind(&Renderer::draw_commands, this, _1, _2, _3),
-                                                                std::bind(&Renderer::shadow_draw_commands, this, _1, _2, _3));
+                m_swapchain_and_buffers->create_command_buffers(m_clear_color, std::bind(&Renderer::draw_commands, this, _1, _2),
+                                                                std::bind(&Renderer::shadow_draw_commands, this, _1, _2));
         }
 
         void delete_command_buffers()
@@ -756,7 +760,20 @@ public:
                   m_shaders({&m_vertex_shader, &m_geometry_shader, &m_fragment_shader}),
                   m_shadow_shaders({&m_shadow_vertex_shader, &m_shadow_fragment_shader})
         {
+                static_assert(SHADER_SHARED_SET != SHADER_PER_OBJECT_SET);
+                std::vector<VkDescriptorSetLayout> main_layouts(2);
+                main_layouts.at(SHADER_SHARED_SET) = m_shared_descriptor_set_layout;
+                main_layouts.at(SHADER_PER_OBJECT_SET) = m_per_object_descriptor_set_layout;
+                m_pipeline_layout = vulkan::create_pipeline_layout(m_instance.device(), main_layouts);
+
+                std::vector<VkDescriptorSetLayout> shadow_layouts({m_shadow_descriptor_set_layout});
+                m_shadow_pipeline_layout = vulkan::create_pipeline_layout(m_instance.device(), shadow_layouts);
+
+                //
+
                 create_swapchain_and_command_buffers();
+
+                //
 
                 LOG(vulkan::overview_physical_devices(m_instance.instance()));
         }
