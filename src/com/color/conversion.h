@@ -32,6 +32,14 @@ std::uint_least16_t srgb_uint8_to_rgb_uint16(UInt8 c);
 
 //
 
+template <typename T, typename UInt8>
+T alpha_uint8_to_float(UInt8 c);
+
+template <typename UInt8>
+std::uint_least16_t alpha_uint8_to_uint16(UInt8 c);
+
+//
+
 template <typename T>
 T rgb_float_to_srgb_float(T c);
 

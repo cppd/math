@@ -310,6 +310,30 @@ std::uint_least16_t srgb_uint8_to_rgb_uint16(UInt8 c)
 
 //
 
+template <typename T, typename UInt8>
+T alpha_uint8_to_float(UInt8 c)
+{
+        static_assert(std::is_same_v<UInt8, unsigned char>);
+        if constexpr (std::numeric_limits<unsigned char>::max() != MAX8)
+        {
+                c = std::min(c, MAX8);
+        }
+        return uint8_to_float<T>(c);
+}
+
+template <typename UInt8>
+std::uint_least16_t alpha_uint8_to_uint16(UInt8 c)
+{
+        static_assert(std::is_same_v<UInt8, unsigned char>);
+        if constexpr (std::numeric_limits<unsigned char>::max() != MAX8)
+        {
+                c = std::min(c, MAX8);
+        }
+        return float_to_uint16(uint8_to_float<float>(c));
+}
+
+//
+
 template <typename T>
 T rgb_float_to_srgb_float(T c)
 {
@@ -339,6 +363,14 @@ template long double srgb_uint8_to_rgb_float(unsigned char c);
 template unsigned char srgb_uint8_to_rgb_uint8(unsigned char c);
 
 template std::uint_least16_t srgb_uint8_to_rgb_uint16(unsigned char c);
+
+//
+
+template float alpha_uint8_to_float(unsigned char c);
+template double alpha_uint8_to_float(unsigned char c);
+template long double alpha_uint8_to_float(unsigned char c);
+
+template std::uint_least16_t alpha_uint8_to_uint16(unsigned char c);
 
 //
 
