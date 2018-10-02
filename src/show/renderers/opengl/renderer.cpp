@@ -215,12 +215,22 @@ void load_materials(const Obj<3>& obj, std::vector<Material>* materials)
         }
 }
 
-std::vector<float> integer_srgb_pixels_to_float_rgb_pixels(const std::vector<unsigned char>& pixels)
+std::vector<float> rgba_pixels_from_srgb_uint8_to_rgb_float(const std::vector<unsigned char>& pixels)
 {
-        std::vector<float> buffer(pixels.size());
-        for (size_t i = 0; i < buffer.size(); ++i)
+        if (pixels.size() % 4 != 0)
         {
-                buffer[i] = color_conversion::srgb_uint8_to_rgb_float<float>(pixels[i]);
+                error("sRGB pixel buffer size is not a multiple of 4");
+        }
+
+        std::vector<float> buffer(pixels.size());
+        size_t b_i = 0;
+        size_t p_i = 0;
+        while (p_i < buffer.size())
+        {
+                buffer[b_i++] = color_conversion::srgb_uint8_to_rgb_float<float>(pixels[p_i++]);
+                buffer[b_i++] = color_conversion::srgb_uint8_to_rgb_float<float>(pixels[p_i++]);
+                buffer[b_i++] = color_conversion::srgb_uint8_to_rgb_float<float>(pixels[p_i++]);
+                buffer[b_i++] = color_conversion::alpha_uint8_to_float<float>(pixels[p_i++]);
         }
         return buffer;
 }
@@ -272,7 +282,7 @@ DrawObject::DrawObject(const Obj<3>* obj, double size, const vec3& position)
                 for (const Obj<3>::Image& image : obj->images())
                 {
                         m_textures.emplace_back(image.size[0], image.size[1],
-                                                integer_srgb_pixels_to_float_rgb_pixels(image.srgba_pixels));
+                                                rgba_pixels_from_srgb_uint8_to_rgb_float(image.srgba_pixels));
                 }
 
                 //

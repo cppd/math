@@ -220,12 +220,22 @@ std::unique_ptr<vulkan::VertexBufferWithDeviceLocalMemory> load_vertices(const v
         return std::make_unique<vulkan::VertexBufferWithDeviceLocalMemory>(instance.create_vertex_buffer(shader_vertices));
 }
 
-std::vector<uint16_t> integer_srgb_pixels_to_integer_rgb_pixels(const std::vector<unsigned char>& pixels)
+std::vector<uint16_t> rgba_pixels_from_srgb_uint8_to_rgb_uint16(const std::vector<unsigned char>& pixels)
 {
-        std::vector<uint16_t> buffer(pixels.size());
-        for (size_t i = 0; i < buffer.size(); ++i)
+        if (pixels.size() % 4 != 0)
         {
-                buffer[i] = color_conversion::srgb_uint8_to_rgb_uint16(pixels[i]);
+                error("sRGB pixel buffer size is not a multiple of 4");
+        }
+
+        std::vector<uint16_t> buffer(pixels.size());
+        size_t b_i = 0;
+        size_t p_i = 0;
+        while (p_i < buffer.size())
+        {
+                buffer[b_i++] = color_conversion::srgb_uint8_to_rgb_uint16(pixels[p_i++]);
+                buffer[b_i++] = color_conversion::srgb_uint8_to_rgb_uint16(pixels[p_i++]);
+                buffer[b_i++] = color_conversion::srgb_uint8_to_rgb_uint16(pixels[p_i++]);
+                buffer[b_i++] = color_conversion::alpha_uint8_to_uint16(pixels[p_i++]);
         }
         return buffer;
 }
@@ -237,7 +247,7 @@ std::vector<vulkan::Texture> load_textures(const vulkan::VulkanInstance& instanc
         for (const typename Obj<3>::Image& image : obj.images())
         {
                 textures.push_back(instance.create_texture(image.size[0], image.size[1],
-                                                           integer_srgb_pixels_to_integer_rgb_pixels(image.srgba_pixels)));
+                                                           rgba_pixels_from_srgb_uint8_to_rgb_uint16(image.srgba_pixels)));
         }
 
         // На одну текстуру больше для её указания, но не использования в тех материалах, где нет текстуры
