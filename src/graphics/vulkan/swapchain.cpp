@@ -274,6 +274,18 @@ vulkan::ImageView create_image_view(VkDevice device, VkImage image, VkFormat for
 
         return vulkan::ImageView(device, create_info);
 }
+std::string swapchain_info_string(VkFormat format, int preferred_image_count, int image_count)
+{
+        std::string s;
+
+        s += "Swapchain surface format " + vulkan::format_to_string(format);
+        s += '\n';
+        s += "Swapchain preferred image count = " + to_string(preferred_image_count);
+        s += '\n';
+        s += "Swapchain chosen image count = " + to_string(image_count);
+
+        return s;
+}
 }
 
 namespace vulkan
@@ -304,8 +316,7 @@ Swapchain::Swapchain(VkSurfaceKHR surface, const Device& device, const std::vect
         VkPresentModeKHR present_mode = choose_present_mode(present_modes);
         uint32_t image_count = choose_image_count(surface_capabilities, preferred_image_count);
 
-        LOG("Surface format " + format_to_string(m_surface_format.format));
-        LOG("Preferred image count = " + to_string(preferred_image_count) + ", chosen image count = " + to_string(image_count));
+        LOG(swapchain_info_string(m_surface_format.format, preferred_image_count, image_count));
 
         m_swapchain = create_swapchain_khr(device, surface, m_surface_format, present_mode, m_extent, image_count,
                                            surface_capabilities.currentTransform, family_indices);

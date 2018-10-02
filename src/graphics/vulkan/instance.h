@@ -36,37 +36,52 @@ namespace vulkan
 {
 class SwapchainAndBuffers
 {
-        VkDevice m_device;
+        const Device& m_device;
         VkCommandPool m_graphics_command_pool;
         VkSampleCountFlagBits m_sample_count_bit;
+
+        //
+
         Swapchain m_swapchain;
+
+        //
 
         std::unique_ptr<DepthAttachment> m_depth_attachment;
         std::unique_ptr<ColorAttachment> m_multisampling_color_attachment;
         std::unique_ptr<DepthAttachment> m_multisampling_depth_attachment;
         RenderPass m_render_pass;
         std::vector<Framebuffer> m_framebuffers;
-        Pipeline m_pipeline;
-        CommandBuffers m_command_buffers;
 
         uint32_t m_shadow_width;
         uint32_t m_shadow_height;
         std::unique_ptr<ShadowDepthAttachment> m_shadow_depth_attachment;
         RenderPass m_shadow_render_pass;
         std::vector<Framebuffer> m_shadow_framebuffers;
-        Pipeline m_shadow_pipeline;
+
+        //
+
+        std::vector<Pipeline> m_pipelines;
+
+        CommandBuffers m_command_buffers;
         CommandBuffers m_shadow_command_buffers;
+
+        std::string main_buffer_info_string() const;
+        std::string shadow_buffer_info_string(double shadow_zoom, uint32_t old_shadow_width, uint32_t old_shadow_height) const;
+
+        void create_main_buffers(const std::vector<uint32_t>& attachment_family_indices, const Device& device,
+                                 VkCommandPool graphics_command_pool, VkQueue graphics_queue,
+                                 const std::vector<VkFormat>& depth_image_formats);
+
+        void create_shadow_buffers(const std::vector<uint32_t>& attachment_family_indices, const Device& device,
+                                   VkCommandPool graphics_command_pool, VkQueue graphics_queue,
+                                   const std::vector<VkFormat>& depth_image_formats, double shadow_zoom);
 
 public:
         SwapchainAndBuffers(VkSurfaceKHR surface, const std::vector<uint32_t>& swapchain_family_indices,
                             const std::vector<uint32_t>& attachment_family_indices, const Device& device,
                             VkCommandPool graphics_command_pool, VkQueue graphics_queue, int preferred_image_count,
                             int required_minimum_sample_count, const std::vector<VkFormat>& depth_image_formats,
-                            const std::vector<const vulkan::Shader*>& shaders,
-                            const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
-                            const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions,
-                            const PipelineLayout& pipeline_layout, const std::vector<const vulkan::Shader*>& shadow_shaders,
-                            const PipelineLayout& shadow_pipeline_layout, double shadow_zoom);
+                            double shadow_zoom);
 
         SwapchainAndBuffers(const SwapchainAndBuffers&) = delete;
         SwapchainAndBuffers& operator=(const SwapchainAndBuffers&) = delete;
@@ -79,17 +94,22 @@ public:
 
         const ShadowDepthAttachment* shadow_texture() const noexcept;
 
-        void create_command_buffers(
-                const Color& clear_color,
-                const std::function<void(VkPipeline pipeline, VkCommandBuffer command_buffer)>& commands_for_triangle_topology,
-                const std::function<void(VkPipeline pipeline, VkCommandBuffer command_buffer)>&
-                        commands_for_shadow_triangle_topology);
+        void create_command_buffers(const Color& clear_color, const std::function<void(VkCommandBuffer command_buffer)>& commands,
+                                    const std::function<void(VkCommandBuffer command_buffer)>& shadow_commands);
 
         void delete_command_buffers();
         bool command_buffers_created() const;
 
         const VkCommandBuffer& command_buffer(uint32_t index) const noexcept;
         const VkCommandBuffer& shadow_command_buffer() const noexcept;
+
+        VkPipeline create_pipeline(const std::vector<const vulkan::Shader*>& shaders, const PipelineLayout& pipeline_layout,
+                                   const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
+                                   const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions);
+        VkPipeline create_shadow_pipeline(const std::vector<const vulkan::Shader*>& shaders,
+                                          const PipelineLayout& pipeline_layout,
+                                          const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
+                                          const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions);
 
         VkSwapchainKHR swapchain() const noexcept;
 
@@ -130,8 +150,6 @@ class VulkanInstance
         std::vector<uint32_t> m_texture_family_indices;
         std::vector<uint32_t> m_attachment_family_indices;
 
-        bool m_draw_shadow = false;
-
 public:
         VulkanInstance(int api_version_major, int api_version_minor, const std::vector<std::string>& required_instance_extensions,
                        const std::vector<std::string>& required_device_extensions,
@@ -151,23 +169,18 @@ public:
 
         VkInstance instance() const noexcept;
         const Device& device() const noexcept;
-        [[nodiscard]] bool draw_frame(SwapchainAndBuffers& swapchain_and_buffers);
-        void set_draw_shadow(bool draw);
         void device_wait_idle() const;
 
-        SwapchainAndBuffers create_swapchain_and_buffers(
-                int preferred_image_count, int required_minimum_sample_count, const std::vector<VkFormat>& depth_image_formats,
-                const std::vector<const vulkan::Shader*>& shaders,
-                const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
-                const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions,
-                const PipelineLayout& pipeline_layout, const std::vector<const vulkan::Shader*>& shadow_shaders,
-                const PipelineLayout& shadow_pipeline_layout, double shadow_zoom)
+        [[nodiscard]] bool draw_frame(SwapchainAndBuffers& swapchain_and_buffers, bool with_shadow);
+
+        //
+
+        SwapchainAndBuffers create_swapchain_and_buffers(int preferred_image_count, int required_minimum_sample_count,
+                                                         const std::vector<VkFormat>& depth_image_formats, double shadow_zoom)
         {
                 return SwapchainAndBuffers(m_surface, m_swapchain_family_indices, m_attachment_family_indices, m_device,
                                            m_graphics_command_pool, m_graphics_queue, preferred_image_count,
-                                           required_minimum_sample_count, depth_image_formats, shaders,
-                                           vertex_binding_descriptions, vertex_attribute_descriptions, pipeline_layout,
-                                           shadow_shaders, shadow_pipeline_layout, shadow_zoom);
+                                           required_minimum_sample_count, depth_image_formats, shadow_zoom);
         }
 
         template <typename T>

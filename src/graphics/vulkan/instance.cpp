@@ -355,11 +355,10 @@ vulkan::Framebuffer create_framebuffer(VkDevice device, VkRenderPass render_pass
 }
 
 template <size_t N>
-vulkan::CommandBuffers create_command_buffers(
-        VkDevice device, uint32_t width, uint32_t height, VkRenderPass render_pass, VkPipeline pipeline,
-        const std::vector<vulkan::Framebuffer>& framebuffers, VkCommandPool command_pool,
-        const std::array<VkClearValue, N>& clear_values,
-        const std::function<void(VkPipeline pipeline, VkCommandBuffer command_buffer)>& commands_for_triangle_topology)
+vulkan::CommandBuffers create_command_buffers(VkDevice device, uint32_t width, uint32_t height, VkRenderPass render_pass,
+                                              const std::vector<vulkan::Framebuffer>& framebuffers, VkCommandPool command_pool,
+                                              const std::array<VkClearValue, N>& clear_values,
+                                              const std::function<void(VkCommandBuffer command_buffer)>& commands)
 {
         VkResult result;
 
@@ -391,7 +390,7 @@ vulkan::CommandBuffers create_command_buffers(
                 vkCmdBeginRenderPass(command_buffers[i], &render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
 
 #if 1
-                commands_for_triangle_topology(pipeline, command_buffers[i]);
+                commands(command_buffers[i]);
 
 #else
                 vkCmdBindPipeline(command_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
@@ -430,29 +429,27 @@ SwapchainAndBuffers::SwapchainAndBuffers(VkSurfaceKHR surface, const std::vector
                                          const std::vector<uint32_t>& attachment_family_indices, const Device& device,
                                          VkCommandPool graphics_command_pool, VkQueue graphics_queue, int preferred_image_count,
                                          int required_minimum_sample_count, const std::vector<VkFormat>& depth_image_formats,
-                                         const std::vector<const vulkan::Shader*>& shaders,
-                                         const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
-                                         const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions,
-                                         const PipelineLayout& pipeline_layout,
-                                         const std::vector<const vulkan::Shader*>& shadow_shaders,
-                                         const PipelineLayout& shadow_pipeline_layout, double shadow_zoom)
+                                         double shadow_zoom)
         : m_device(device),
           m_graphics_command_pool(graphics_command_pool),
           m_sample_count_bit(supported_framebuffer_sample_count_flag(device.physical_device(), required_minimum_sample_count)),
           m_swapchain(surface, device, swapchain_family_indices, preferred_image_count)
 {
-        ASSERT(surface != VK_NULL_HANDLE);
+        create_main_buffers(attachment_family_indices, device, graphics_command_pool, graphics_queue, depth_image_formats);
+
+        create_shadow_buffers(attachment_family_indices, device, graphics_command_pool, graphics_queue, depth_image_formats,
+                              shadow_zoom);
+}
+
+void SwapchainAndBuffers::create_main_buffers(const std::vector<uint32_t>& attachment_family_indices, const Device& device,
+                                              VkCommandPool graphics_command_pool, VkQueue graphics_queue,
+                                              const std::vector<VkFormat>& depth_image_formats)
+{
         ASSERT(device != VK_NULL_HANDLE);
         ASSERT(graphics_command_pool != VK_NULL_HANDLE);
         ASSERT(graphics_queue != VK_NULL_HANDLE);
-        ASSERT(pipeline_layout != VK_NULL_HANDLE);
-        ASSERT(shadow_pipeline_layout != VK_NULL_HANDLE);
-
-        ASSERT(swapchain_family_indices.size() > 0);
         ASSERT(attachment_family_indices.size() > 0);
-
-        LOG("Minimum sample count = " + to_string(required_minimum_sample_count) +
-            ", chosen sample count = " + to_string(integer_sample_count_flag(m_sample_count_bit)));
+        ASSERT(depth_image_formats.size() > 0);
 
         if (m_sample_count_bit != VK_SAMPLE_COUNT_1_BIT)
         {
@@ -477,9 +474,6 @@ SwapchainAndBuffers::SwapchainAndBuffers(VkSurfaceKHR surface, const std::vector
                         m_framebuffers.push_back(create_framebuffer(device, m_render_pass, m_swapchain.width(),
                                                                     m_swapchain.height(), attachments));
                 }
-
-                LOG("Multisampling color attachment format " + format_to_string(m_multisampling_color_attachment->format()));
-                LOG("Multisampling depth attachment format " + format_to_string(m_multisampling_depth_attachment->format()));
         }
         else
         {
@@ -498,15 +492,22 @@ SwapchainAndBuffers::SwapchainAndBuffers(VkSurfaceKHR surface, const std::vector
                         m_framebuffers.push_back(create_framebuffer(device, m_render_pass, m_swapchain.width(),
                                                                     m_swapchain.height(), attachments));
                 }
-
-                LOG("Depth attachment format " + format_to_string(m_depth_attachment->format()));
         }
 
-        m_pipeline = create_graphics_pipeline(device, m_render_pass, 0 /*sub_pass*/, m_sample_count_bit, pipeline_layout,
-                                              m_swapchain.width(), m_swapchain.height(), shaders, vertex_binding_descriptions,
-                                              vertex_attribute_descriptions);
+        LOG(main_buffer_info_string());
+}
 
-        //
+void SwapchainAndBuffers::create_shadow_buffers(const std::vector<uint32_t>& attachment_family_indices, const Device& device,
+                                                VkCommandPool graphics_command_pool, VkQueue graphics_queue,
+                                                const std::vector<VkFormat>& depth_image_formats, double shadow_zoom)
+{
+        ASSERT(device != VK_NULL_HANDLE);
+        ASSERT(graphics_command_pool != VK_NULL_HANDLE);
+        ASSERT(graphics_queue != VK_NULL_HANDLE);
+        ASSERT(attachment_family_indices.size() > 0);
+        ASSERT(depth_image_formats.size() > 0);
+
+        shadow_zoom = std::max(shadow_zoom, 1.0);
 
         m_shadow_width = std::lround(m_swapchain.width() * shadow_zoom);
         m_shadow_height = std::lround(m_swapchain.height() * shadow_zoom);
@@ -518,32 +519,19 @@ SwapchainAndBuffers::SwapchainAndBuffers(VkSurfaceKHR surface, const std::vector
                                                         depth_image_formats, &m_shadow_width, &m_shadow_height);
 
         m_shadow_render_pass = create_shadow_render_pass(device, m_shadow_depth_attachment->format());
-        std::array<VkImageView, 1> shadow_attachments = {m_shadow_depth_attachment->image_view()};
+
+        std::array<VkImageView, 1> shadow_attachments;
+        shadow_attachments[0] = m_shadow_depth_attachment->image_view();
+
         m_shadow_framebuffers.push_back(
                 create_framebuffer(device, m_shadow_render_pass, m_shadow_width, m_shadow_height, shadow_attachments));
 
-        m_shadow_pipeline = create_shadow_graphics_pipeline(
-                device, m_shadow_render_pass, 0 /*sub_pass*/, VK_SAMPLE_COUNT_1_BIT, shadow_pipeline_layout, m_shadow_width,
-                m_shadow_height, shadow_shaders, vertex_binding_descriptions, vertex_attribute_descriptions);
-
-        LOG("Shadow depth attachment format " + format_to_string(m_shadow_depth_attachment->format()));
-        LOG("Shadow zoom " + to_string_fixed(shadow_zoom, 5));
-        if (old_shadow_width != m_shadow_width || old_shadow_height != m_shadow_height)
-        {
-                LOG("Requested shadow size (" + to_string(old_shadow_width) + ", " + to_string(old_shadow_height) +
-                    "), selected shadow size (" + to_string(m_shadow_width) + ", " + to_string(m_shadow_height) + ")");
-        }
+        LOG(shadow_buffer_info_string(shadow_zoom, old_shadow_width, old_shadow_height));
 }
 
-const ShadowDepthAttachment* SwapchainAndBuffers::shadow_texture() const noexcept
-{
-        return m_shadow_depth_attachment.get();
-}
-
-void SwapchainAndBuffers::create_command_buffers(
-        const Color& clear_color,
-        const std::function<void(VkPipeline pipeline, VkCommandBuffer command_buffer)>& commands_for_triangle_topology,
-        const std::function<void(VkPipeline pipeline, VkCommandBuffer command_buffer)>& commands_for_shadow_triangle_topology)
+void SwapchainAndBuffers::create_command_buffers(const Color& clear_color,
+                                                 const std::function<void(VkCommandBuffer command_buffer)>& commands,
+                                                 const std::function<void(VkCommandBuffer command_buffer)>& shadow_commands)
 {
         if (m_sample_count_bit != VK_SAMPLE_COUNT_1_BIT)
         {
@@ -552,8 +540,7 @@ void SwapchainAndBuffers::create_command_buffers(
                 clear_values[1] = color_float_srgb_clear_value(clear_color);
                 clear_values[2] = depth_stencil_clear_value();
                 m_command_buffers = ::create_command_buffers(m_device, m_swapchain.width(), m_swapchain.height(), m_render_pass,
-                                                             m_pipeline, m_framebuffers, m_graphics_command_pool, clear_values,
-                                                             commands_for_triangle_topology);
+                                                             m_framebuffers, m_graphics_command_pool, clear_values, commands);
         }
         else
         {
@@ -561,8 +548,7 @@ void SwapchainAndBuffers::create_command_buffers(
                 clear_values[0] = color_float_srgb_clear_value(clear_color);
                 clear_values[1] = depth_stencil_clear_value();
                 m_command_buffers = ::create_command_buffers(m_device, m_swapchain.width(), m_swapchain.height(), m_render_pass,
-                                                             m_pipeline, m_framebuffers, m_graphics_command_pool, clear_values,
-                                                             commands_for_triangle_topology);
+                                                             m_framebuffers, m_graphics_command_pool, clear_values, commands);
         }
 
         //
@@ -570,10 +556,75 @@ void SwapchainAndBuffers::create_command_buffers(
         {
                 std::array<VkClearValue, 1> clear_values;
                 clear_values[0] = depth_stencil_clear_value();
-                m_shadow_command_buffers = ::create_command_buffers(
-                        m_device, m_shadow_width, m_shadow_height, m_shadow_render_pass, m_shadow_pipeline, m_shadow_framebuffers,
-                        m_graphics_command_pool, clear_values, commands_for_shadow_triangle_topology);
+                m_shadow_command_buffers =
+                        ::create_command_buffers(m_device, m_shadow_width, m_shadow_height, m_shadow_render_pass,
+                                                 m_shadow_framebuffers, m_graphics_command_pool, clear_values, shadow_commands);
         }
+}
+
+std::string SwapchainAndBuffers::main_buffer_info_string() const
+{
+        std::string s;
+        s += "Sample count = " + to_string(integer_sample_count_flag(m_sample_count_bit));
+        s += '\n';
+        if (m_sample_count_bit != VK_SAMPLE_COUNT_1_BIT)
+        {
+                s += "Multisampling color attachment format " + format_to_string(m_multisampling_color_attachment->format());
+                s += '\n';
+                s += "Multisampling depth attachment format " + format_to_string(m_multisampling_depth_attachment->format());
+        }
+        else
+        {
+                s += "Depth attachment format " + format_to_string(m_depth_attachment->format());
+        }
+        return s;
+}
+
+std::string SwapchainAndBuffers::shadow_buffer_info_string(double shadow_zoom, uint32_t old_shadow_width,
+                                                           uint32_t old_shadow_height) const
+{
+        std::string s;
+        s += "Shadow depth attachment format " + format_to_string(m_shadow_depth_attachment->format());
+        s += '\n';
+        s += "Shadow zoom " + to_string_fixed(shadow_zoom, 5);
+        s += '\n';
+        s += "Requested shadow size (" + to_string(old_shadow_width) + ", " + to_string(old_shadow_height) + ")";
+        s += '\n';
+        s += "Chosen shadow size (" + to_string(m_shadow_width) + ", " + to_string(m_shadow_height) + ")";
+        return s;
+}
+
+const ShadowDepthAttachment* SwapchainAndBuffers::shadow_texture() const noexcept
+{
+        return m_shadow_depth_attachment.get();
+}
+
+VkPipeline SwapchainAndBuffers::create_pipeline(
+        const std::vector<const vulkan::Shader*>& shaders, const PipelineLayout& pipeline_layout,
+        const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
+        const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions)
+{
+        ASSERT(pipeline_layout != VK_NULL_HANDLE);
+
+        m_pipelines.push_back(create_graphics_pipeline(m_device, m_render_pass, 0 /*sub_pass*/, m_sample_count_bit,
+                                                       pipeline_layout, m_swapchain.width(), m_swapchain.height(), shaders,
+                                                       vertex_binding_descriptions, vertex_attribute_descriptions));
+
+        return m_pipelines.back();
+}
+
+VkPipeline SwapchainAndBuffers::create_shadow_pipeline(
+        const std::vector<const vulkan::Shader*>& shaders, const PipelineLayout& pipeline_layout,
+        const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
+        const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions)
+{
+        ASSERT(pipeline_layout != VK_NULL_HANDLE);
+
+        m_pipelines.push_back(create_shadow_graphics_pipeline(
+                m_device, m_shadow_render_pass, 0 /*sub_pass*/, VK_SAMPLE_COUNT_1_BIT, pipeline_layout, m_shadow_width,
+                m_shadow_height, shaders, vertex_binding_descriptions, vertex_attribute_descriptions));
+
+        return m_pipelines.back();
 }
 
 void SwapchainAndBuffers::delete_command_buffers()
@@ -695,8 +746,19 @@ const Device& VulkanInstance::device() const noexcept
         return m_device;
 }
 
+void VulkanInstance::device_wait_idle() const
+{
+        ASSERT(m_device != VK_NULL_HANDLE);
+
+        VkResult result = vkDeviceWaitIdle(m_device);
+        if (result != VK_SUCCESS)
+        {
+                vulkan_function_error("vkDeviceWaitIdle", result);
+        }
+}
+
 // return false - recreate swapchain
-bool VulkanInstance::draw_frame(SwapchainAndBuffers& swapchain_and_buffers)
+bool VulkanInstance::draw_frame(SwapchainAndBuffers& swapchain_and_buffers, bool with_shadow)
 {
         constexpr VkFence NO_FENCE = VK_NULL_HANDLE;
 
@@ -738,7 +800,7 @@ bool VulkanInstance::draw_frame(SwapchainAndBuffers& swapchain_and_buffers)
 
         std::array<VkSemaphore, 1> render_finished_semaphores = {m_render_finished_semaphores[m_current_frame]};
 
-        if (!m_draw_shadow)
+        if (!with_shadow)
         {
                 std::array<VkSemaphore, 1> image_signal_semaphores = {m_image_available_semaphores[m_current_frame]};
                 std::array<VkPipelineStageFlags, 1> image_wait_stages = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
@@ -828,21 +890,5 @@ bool VulkanInstance::draw_frame(SwapchainAndBuffers& swapchain_and_buffers)
         m_current_frame = (m_current_frame + 1) % m_max_frames_in_flight;
 
         return true;
-}
-
-void VulkanInstance::set_draw_shadow(bool draw)
-{
-        m_draw_shadow = draw;
-}
-
-void VulkanInstance::device_wait_idle() const
-{
-        ASSERT(m_device != VK_NULL_HANDLE);
-
-        VkResult result = vkDeviceWaitIdle(m_device);
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkDeviceWaitIdle", result);
-        }
 }
 }

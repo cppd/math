@@ -417,6 +417,7 @@ class Renderer final : public VulkanRenderer
         mat4 m_scale_bias_shadow_matrix = mat4(1);
 
         double m_shadow_zoom = 1;
+        bool m_show_shadow = false;
 
         vulkan::VulkanInstance m_instance;
         vulkan::Sampler m_sampler;
@@ -440,6 +441,9 @@ class Renderer final : public VulkanRenderer
         std::unique_ptr<vulkan::SwapchainAndBuffers> m_swapchain_and_buffers;
 
         DrawObjects<DrawObject> m_draw_objects;
+
+        VkPipeline m_pipeline = VK_NULL_HANDLE;
+        VkPipeline m_shadow_pipeline = VK_NULL_HANDLE;
 
         void set_light_a(const Color& light) override
         {
@@ -501,7 +505,7 @@ class Renderer final : public VulkanRenderer
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
                 m_shared_shader_memory.set_show_shadow(show);
-                m_instance.set_draw_shadow(show);
+                m_show_shadow = show;
         }
         void set_show_fog(bool /*show*/) override
         {
@@ -610,7 +614,7 @@ class Renderer final : public VulkanRenderer
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                if (!m_instance.draw_frame(*m_swapchain_and_buffers))
+                if (!m_instance.draw_frame(*m_swapchain_and_buffers, m_show_shadow))
                 {
                         create_swapchain_and_command_buffers();
                 }
@@ -652,9 +656,7 @@ class Renderer final : public VulkanRenderer
                 m_swapchain_and_buffers.reset();
 
                 m_swapchain_and_buffers = std::make_unique<vulkan::SwapchainAndBuffers>(m_instance.create_swapchain_and_buffers(
-                        PREFERRED_IMAGE_COUNT, REQUIRED_MINIMUM_SAMPLE_COUNT, DEPTH_IMAGE_FORMATS, m_shaders,
-                        shaders::Vertex::binding_descriptions(), shaders::Vertex::attribute_descriptions(), m_pipeline_layout,
-                        m_shadow_shaders, m_shadow_pipeline_layout, m_shadow_zoom));
+                        PREFERRED_IMAGE_COUNT, REQUIRED_MINIMUM_SAMPLE_COUNT, DEPTH_IMAGE_FORMATS, m_shadow_zoom));
 
                 if (m_swapchain_and_buffers->swapchain_format() != VK_FORMAT_B8G8R8A8_UNORM)
                 {
@@ -668,18 +670,26 @@ class Renderer final : public VulkanRenderer
 
                 m_shared_shader_memory.set_shadow_texture(m_shadow_sampler, m_swapchain_and_buffers->shadow_texture());
 
+                m_pipeline = m_swapchain_and_buffers->create_pipeline(m_shaders, m_pipeline_layout,
+                                                                      shaders::Vertex::binding_descriptions(),
+                                                                      shaders::Vertex::attribute_descriptions());
+                m_shadow_pipeline = m_swapchain_and_buffers->create_shadow_pipeline(m_shadow_shaders, m_shadow_pipeline_layout,
+                                                                                    shaders::Vertex::binding_descriptions(),
+                                                                                    shaders::Vertex::attribute_descriptions());
+
                 create_command_buffers(false /*wait_idle*/);
         }
 
-        void draw_commands(VkPipeline pipeline, VkCommandBuffer command_buffer) const
+        void draw_commands(VkCommandBuffer command_buffer) const
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
                 //
 
                 ASSERT(m_shared_shader_memory.descriptor_set() != VK_NULL_HANDLE);
+                ASSERT(m_pipeline != VK_NULL_HANDLE);
 
-                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline);
 
                 std::array<VkDescriptorSet, 1> descriptor_sets = {m_shared_shader_memory.descriptor_set()};
                 vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline_layout, SHADER_SHARED_SET,
@@ -691,17 +701,18 @@ class Renderer final : public VulkanRenderer
                 }
         }
 
-        void shadow_draw_commands(VkPipeline pipeline, VkCommandBuffer command_buffer) const
+        void shadow_draw_commands(VkCommandBuffer command_buffer) const
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
                 //
 
                 ASSERT(m_shadow_shader_memory.descriptor_set() != VK_NULL_HANDLE);
+                ASSERT(m_shadow_pipeline != VK_NULL_HANDLE);
 
                 vkCmdSetDepthBias(command_buffer, 1.5f, 0.0f, 1.5f);
 
-                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_shadow_pipeline);
 
                 std::array<VkDescriptorSet, 1> descriptor_sets = {m_shadow_shader_memory.descriptor_set()};
                 vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_shadow_pipeline_layout,
@@ -724,11 +735,9 @@ class Renderer final : public VulkanRenderer
                         m_instance.device_wait_idle();
                 }
 
-                using std::placeholders::_1;
-                using std::placeholders::_2;
-
-                m_swapchain_and_buffers->create_command_buffers(m_clear_color, std::bind(&Renderer::draw_commands, this, _1, _2),
-                                                                std::bind(&Renderer::shadow_draw_commands, this, _1, _2));
+                m_swapchain_and_buffers->create_command_buffers(
+                        m_clear_color, std::bind(&Renderer::draw_commands, this, std::placeholders::_1),
+                        std::bind(&Renderer::shadow_draw_commands, this, std::placeholders::_1));
         }
 
         void delete_command_buffers()
