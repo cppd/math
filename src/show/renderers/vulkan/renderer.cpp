@@ -76,6 +76,7 @@ constexpr int REQUIRED_MINIMUM_SAMPLE_COUNT = 4;
 constexpr uint32_t SHADER_SHARED_SET = 0;
 constexpr uint32_t SHADER_PER_OBJECT_SET = 1;
 constexpr uint32_t SHADER_SHADOW_SET = 0;
+constexpr uint32_t SHADER_POINT_SET = 0;
 
 // Число используется в шейдере для определения наличия текстурных координат
 constexpr vec2f NO_TEXTURE_COORDINATES = vec2f(-1e10);
@@ -105,6 +106,14 @@ constexpr uint32_t shadow_vertex_shader[]
 constexpr uint32_t shadow_fragment_shader[]
 {
 #include "renderer_shadow.frag.spr"
+};
+constexpr uint32_t point_vertex_shader[]
+{
+#include "renderer_points.vert.spr"
+};
+constexpr uint32_t point_fragment_shader[]
+{
+#include "renderer_points.frag.spr"
 };
 // clang-format on
 
@@ -146,7 +155,8 @@ void facets_sorted_by_material(const Obj<N>& obj, std::vector<int>& sorted_facet
 }
 
 std::unique_ptr<vulkan::VertexBufferWithDeviceLocalMemory> load_vertices(const vulkan::VulkanInstance& instance,
-                                                                         const Obj<3>& obj, std::vector<int> sorted_face_indices)
+                                                                         const Obj<3>& obj,
+                                                                         const std::vector<int>& sorted_face_indices)
 {
         if (obj.facets().size() == 0)
         {
@@ -216,6 +226,53 @@ std::unique_ptr<vulkan::VertexBufferWithDeviceLocalMemory> load_vertices(const v
         }
 
         ASSERT((shader_vertices.size() >= 3) && (shader_vertices.size() % 3 == 0));
+
+        return std::make_unique<vulkan::VertexBufferWithDeviceLocalMemory>(instance.create_vertex_buffer(shader_vertices));
+}
+
+std::unique_ptr<vulkan::VertexBufferWithDeviceLocalMemory> load_point_vertices(const vulkan::VulkanInstance& instance,
+                                                                               const Obj<3>& obj)
+{
+        if (obj.points().size() == 0)
+        {
+                error("No OBJ points found");
+        }
+
+        const std::vector<Obj<3>::Point>& obj_points = obj.points();
+        const std::vector<vec3f>& obj_vertices = obj.vertices();
+
+        std::vector<shaders::PointVertex> shader_vertices;
+        shader_vertices.reserve(obj_points.size());
+
+        for (const Obj<3>::Point& p : obj_points)
+        {
+                shader_vertices.push_back(obj_vertices[p.vertex]);
+        }
+
+        return std::make_unique<vulkan::VertexBufferWithDeviceLocalMemory>(instance.create_vertex_buffer(shader_vertices));
+}
+
+std::unique_ptr<vulkan::VertexBufferWithDeviceLocalMemory> load_line_vertices(const vulkan::VulkanInstance& instance,
+                                                                              const Obj<3>& obj)
+{
+        if (obj.lines().size() == 0)
+        {
+                error("No OBJ lines found");
+        }
+
+        const std::vector<Obj<3>::Line>& obj_lines = obj.lines();
+        const std::vector<vec3f>& obj_vertices = obj.vertices();
+
+        std::vector<shaders::PointVertex> shader_vertices;
+        shader_vertices.reserve(2 * obj_lines.size());
+
+        for (const Obj<3>::Line& line : obj_lines)
+        {
+                for (int index : line.vertices)
+                {
+                        shader_vertices.push_back(obj_vertices[index]);
+                }
+        }
 
         return std::make_unique<vulkan::VertexBufferWithDeviceLocalMemory>(instance.create_vertex_buffer(shader_vertices));
 }
@@ -327,6 +384,7 @@ class DrawObject
         std::vector<VerticesOfMaterial> m_vertices_of_materials;
         std::vector<vulkan::Texture> m_textures;
         std::unique_ptr<shaders::PerObjectMemory> m_shader_memory;
+        unsigned m_vertex_count;
 
 public:
         DrawObject(const vulkan::VulkanInstance& instance, VkSampler sampler, VkDescriptorSetLayout descriptor_set_layout,
@@ -339,11 +397,23 @@ public:
                         facets_sorted_by_material(*obj, sorted_face_indices, m_vertices_of_materials);
                         m_vertex_buffer = load_vertices(instance, *obj, sorted_face_indices);
 
-                        ASSERT(m_vertex_buffer && m_vertices_of_materials.size() > 0);
-
                         m_textures = load_textures(instance, *obj);
 
                         m_shader_memory = load_materials(instance.device(), sampler, descriptor_set_layout, *obj, m_textures);
+
+                        m_vertex_count = 3 * obj->facets().size();
+                }
+                else if (m_draw_type == DrawType::Points && obj->points().size() > 0)
+                {
+                        m_vertex_buffer = load_point_vertices(instance, *obj);
+
+                        m_vertex_count = obj->points().size();
+                }
+                else if (m_draw_type == DrawType::Lines && obj->lines().size() > 0)
+                {
+                        m_vertex_buffer = load_line_vertices(instance, *obj);
+
+                        m_vertex_count = 2 * obj->lines().size();
                 }
         }
 
@@ -352,9 +422,15 @@ public:
                 return m_model_matrix;
         }
 
-        void draw_commands(VkPipelineLayout pipeline_layout, VkCommandBuffer command_buffer) const
+        DrawType draw_type() const
         {
-                if (!m_vertex_buffer)
+                return m_draw_type;
+        }
+
+        void draw_texture_commands(VkCommandBuffer command_buffer, VkPipelineLayout pipeline_layout,
+                                   uint32_t descriptor_set_number) const
+        {
+                if (!m_vertex_buffer || m_draw_type != DrawType::Triangles)
                 {
                         return;
                 }
@@ -375,7 +451,7 @@ public:
 
                         std::array<VkDescriptorSet, 1> descriptor_sets = {m_shader_memory->descriptor_set(i)};
                         vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline_layout,
-                                                SHADER_PER_OBJECT_SET, descriptor_sets.size(), descriptor_sets.data(), 0,
+                                                descriptor_set_number, descriptor_sets.size(), descriptor_sets.data(), 0,
                                                 nullptr);
 
                         vkCmdDraw(command_buffer, m_vertices_of_materials[i].count, 1, m_vertices_of_materials[i].offset, 0);
@@ -387,7 +463,7 @@ public:
 #endif
         }
 
-        void shadow_draw_commands(VkCommandBuffer command_buffer) const
+        void draw_all_commands(VkCommandBuffer command_buffer) const
         {
                 if (!m_vertex_buffer)
                 {
@@ -398,17 +474,7 @@ public:
                 std::array<VkDeviceSize, vertex_buffers.size()> offsets = {0};
                 vkCmdBindVertexBuffers(command_buffer, 0, vertex_buffers.size(), vertex_buffers.data(), offsets.data());
 
-                ASSERT(m_vertices_of_materials.size() == m_shader_memory->descriptor_set_count());
-
-                for (size_t i = 0; i < m_vertices_of_materials.size(); ++i)
-                {
-                        if (m_vertices_of_materials[i].count <= 0)
-                        {
-                                continue;
-                        }
-
-                        vkCmdDraw(command_buffer, m_vertices_of_materials[i].count, 1, m_vertices_of_materials[i].offset, 0);
-                }
+                vkCmdDraw(command_buffer, m_vertex_count, 1, 0, 0);
         }
 };
 
@@ -432,21 +498,31 @@ class Renderer final : public VulkanRenderer
         vulkan::VulkanInstance m_instance;
         vulkan::Sampler m_sampler;
         vulkan::Sampler m_shadow_sampler;
+
         vulkan::DescriptorSetLayout m_shared_descriptor_set_layout;
         vulkan::DescriptorSetLayout m_per_object_descriptor_set_layout;
         vulkan::DescriptorSetLayout m_shadow_descriptor_set_layout;
+        vulkan::DescriptorSetLayout m_point_descriptor_set_layout;
+
         shaders::SharedMemory m_shared_shader_memory;
         shaders::ShadowMemory m_shadow_shader_memory;
+        shaders::PointMemory m_point_shader_memory;
+
         vulkan::VertexShader m_vertex_shader;
         vulkan::GeometryShader m_geometry_shader;
         vulkan::FragmentShader m_fragment_shader;
         vulkan::VertexShader m_shadow_vertex_shader;
         vulkan::FragmentShader m_shadow_fragment_shader;
+        vulkan::VertexShader m_point_vertex_shader;
+        vulkan::FragmentShader m_point_fragment_shader;
+
         std::vector<const vulkan::Shader*> m_shaders;
         std::vector<const vulkan::Shader*> m_shadow_shaders;
+        std::vector<const vulkan::Shader*> m_point_shaders;
 
         vulkan::PipelineLayout m_pipeline_layout;
         vulkan::PipelineLayout m_shadow_pipeline_layout;
+        vulkan::PipelineLayout m_point_pipeline_layout;
 
         std::unique_ptr<vulkan::SwapchainAndBuffers> m_swapchain_and_buffers;
 
@@ -454,12 +530,15 @@ class Renderer final : public VulkanRenderer
 
         VkPipeline m_pipeline = VK_NULL_HANDLE;
         VkPipeline m_shadow_pipeline = VK_NULL_HANDLE;
+        VkPipeline m_point_pipeline = VK_NULL_HANDLE;
+        VkPipeline m_line_pipeline = VK_NULL_HANDLE;
 
         void set_light_a(const Color& light) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
                 m_shared_shader_memory.set_light_a(light);
+                m_point_shader_memory.set_light_a(light);
         }
         void set_light_d(const Color& light) override
         {
@@ -478,6 +557,7 @@ class Renderer final : public VulkanRenderer
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
                 m_clear_color = color;
+                m_point_shader_memory.set_background_color(color);
                 create_command_buffers();
         }
         void set_default_color(const Color& color) override
@@ -485,6 +565,7 @@ class Renderer final : public VulkanRenderer
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
                 m_shared_shader_memory.set_default_color(color);
+                m_point_shader_memory.set_default_color(color);
         }
         void set_wireframe_color(const Color& color) override
         {
@@ -517,9 +598,11 @@ class Renderer final : public VulkanRenderer
                 m_shared_shader_memory.set_show_shadow(show);
                 m_show_shadow = show;
         }
-        void set_show_fog(bool /*show*/) override
+        void set_show_fog(bool show) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
+
+                m_point_shader_memory.set_show_fog(show);
         }
         void set_show_materials(bool show) override
         {
@@ -624,7 +707,10 @@ class Renderer final : public VulkanRenderer
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                if (!m_instance.draw_frame(*m_swapchain_and_buffers, m_show_shadow))
+                bool with_shadow = m_show_shadow && m_draw_objects.object() != nullptr &&
+                                   m_draw_objects.object()->draw_type() == DrawType::Triangles;
+
+                if (!m_instance.draw_frame(*m_swapchain_and_buffers, with_shadow))
                 {
                         create_swapchain_and_command_buffers();
                 }
@@ -647,6 +733,7 @@ class Renderer final : public VulkanRenderer
 
                         m_shared_shader_memory.set_matrices(matrix, scale_bias_shadow_matrix);
                         m_shadow_shader_memory.set_matrix(shadow_matrix);
+                        m_point_shader_memory.set_matrix(matrix);
                 }
         }
 
@@ -654,9 +741,7 @@ class Renderer final : public VulkanRenderer
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                ASSERT(m_shared_descriptor_set_layout != VK_NULL_HANDLE);
-                ASSERT(m_per_object_descriptor_set_layout != VK_NULL_HANDLE);
-                ASSERT(m_shaders.size() > 0);
+                //
 
                 m_instance.device_wait_idle();
 
@@ -680,12 +765,19 @@ class Renderer final : public VulkanRenderer
 
                 m_shared_shader_memory.set_shadow_texture(m_shadow_sampler, m_swapchain_and_buffers->shadow_texture());
 
-                m_pipeline = m_swapchain_and_buffers->create_pipeline(m_shaders, m_pipeline_layout,
-                                                                      shaders::Vertex::binding_descriptions(),
+                m_pipeline = m_swapchain_and_buffers->create_pipeline(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, m_shaders,
+                                                                      m_pipeline_layout, shaders::Vertex::binding_descriptions(),
                                                                       shaders::Vertex::attribute_descriptions());
-                m_shadow_pipeline = m_swapchain_and_buffers->create_shadow_pipeline(m_shadow_shaders, m_shadow_pipeline_layout,
-                                                                                    shaders::Vertex::binding_descriptions(),
-                                                                                    shaders::Vertex::attribute_descriptions());
+                m_shadow_pipeline = m_swapchain_and_buffers->create_shadow_pipeline(
+                        VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, m_shadow_shaders, m_shadow_pipeline_layout,
+                        shaders::Vertex::binding_descriptions(), shaders::Vertex::attribute_descriptions());
+
+                m_point_pipeline = m_swapchain_and_buffers->create_pipeline(
+                        VK_PRIMITIVE_TOPOLOGY_POINT_LIST, m_point_shaders, m_point_pipeline_layout,
+                        shaders::PointVertex::binding_descriptions(), shaders::PointVertex::attribute_descriptions());
+                m_line_pipeline = m_swapchain_and_buffers->create_pipeline(
+                        VK_PRIMITIVE_TOPOLOGY_LINE_LIST, m_point_shaders, m_point_pipeline_layout,
+                        shaders::PointVertex::binding_descriptions(), shaders::PointVertex::attribute_descriptions());
 
                 create_command_buffers(false /*wait_idle*/);
         }
@@ -696,18 +788,46 @@ class Renderer final : public VulkanRenderer
 
                 //
 
-                ASSERT(m_shared_shader_memory.descriptor_set() != VK_NULL_HANDLE);
-                ASSERT(m_pipeline != VK_NULL_HANDLE);
-
-                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline);
-
-                std::array<VkDescriptorSet, 1> descriptor_sets = {m_shared_shader_memory.descriptor_set()};
-                vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline_layout, SHADER_SHARED_SET,
-                                        descriptor_sets.size(), descriptor_sets.data(), 0, nullptr);
-
-                if (m_draw_objects.object())
+                if (!m_draw_objects.object())
                 {
-                        m_draw_objects.object()->draw_commands(m_pipeline_layout, command_buffer);
+                        return;
+                }
+
+                switch (m_draw_objects.object()->draw_type())
+                {
+                case DrawType::Triangles:
+                {
+                        vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline);
+
+                        std::array<VkDescriptorSet, 1> descriptor_sets = {m_shared_shader_memory.descriptor_set()};
+                        vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline_layout,
+                                                SHADER_SHARED_SET, descriptor_sets.size(), descriptor_sets.data(), 0, nullptr);
+
+                        m_draw_objects.object()->draw_texture_commands(command_buffer, m_pipeline_layout, SHADER_PER_OBJECT_SET);
+                        break;
+                }
+                case DrawType::Points:
+                {
+                        vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_point_pipeline);
+
+                        std::array<VkDescriptorSet, 1> descriptor_sets = {m_point_shader_memory.descriptor_set()};
+                        vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_point_pipeline_layout,
+                                                SHADER_POINT_SET, descriptor_sets.size(), descriptor_sets.data(), 0, nullptr);
+
+                        m_draw_objects.object()->draw_all_commands(command_buffer);
+                        break;
+                }
+                case DrawType::Lines:
+                {
+                        vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_line_pipeline);
+
+                        std::array<VkDescriptorSet, 1> descriptor_sets = {m_point_shader_memory.descriptor_set()};
+                        vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_point_pipeline_layout,
+                                                SHADER_POINT_SET, descriptor_sets.size(), descriptor_sets.data(), 0, nullptr);
+
+                        m_draw_objects.object()->draw_all_commands(command_buffer);
+                        break;
+                }
                 }
         }
 
@@ -717,20 +837,31 @@ class Renderer final : public VulkanRenderer
 
                 //
 
-                ASSERT(m_shadow_shader_memory.descriptor_set() != VK_NULL_HANDLE);
-                ASSERT(m_shadow_pipeline != VK_NULL_HANDLE);
-
-                vkCmdSetDepthBias(command_buffer, 1.5f, 0.0f, 1.5f);
-
-                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_shadow_pipeline);
-
-                std::array<VkDescriptorSet, 1> descriptor_sets = {m_shadow_shader_memory.descriptor_set()};
-                vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_shadow_pipeline_layout,
-                                        SHADER_SHADOW_SET, descriptor_sets.size(), descriptor_sets.data(), 0, nullptr);
-
-                if (m_draw_objects.object())
+                if (!m_draw_objects.object())
                 {
-                        m_draw_objects.object()->shadow_draw_commands(command_buffer);
+                        return;
+                }
+
+                switch (m_draw_objects.object()->draw_type())
+                {
+                case DrawType::Triangles:
+                {
+                        vkCmdSetDepthBias(command_buffer, 1.5f, 0.0f, 1.5f);
+
+                        vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_shadow_pipeline);
+
+                        std::array<VkDescriptorSet, 1> descriptor_sets = {m_shadow_shader_memory.descriptor_set()};
+                        vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_shadow_pipeline_layout,
+                                                SHADER_SHADOW_SET, descriptor_sets.size(), descriptor_sets.data(), 0, nullptr);
+
+                        m_draw_objects.object()->draw_all_commands(command_buffer);
+
+                        break;
+                }
+                case DrawType::Points:
+                        break;
+                case DrawType::Lines:
+                        break;
                 }
         }
 
@@ -769,21 +900,31 @@ public:
                              MAX_FRAMES_IN_FLIGHT),
                   m_sampler(vulkan::create_sampler(m_instance.device())),
                   m_shadow_sampler(vulkan::create_shadow_sampler(m_instance.device())),
+                  //
                   m_shared_descriptor_set_layout(vulkan::create_descriptor_set_layout(
                           m_instance.device(), shaders::SharedMemory::descriptor_set_layout_bindings())),
                   m_per_object_descriptor_set_layout(vulkan::create_descriptor_set_layout(
                           m_instance.device(), shaders::PerObjectMemory::descriptor_set_layout_bindings())),
                   m_shadow_descriptor_set_layout(vulkan::create_descriptor_set_layout(
                           m_instance.device(), shaders::ShadowMemory::descriptor_set_layout_bindings())),
+                  m_point_descriptor_set_layout(vulkan::create_descriptor_set_layout(
+                          m_instance.device(), shaders::PointMemory::descriptor_set_layout_bindings())),
+                  //
                   m_shared_shader_memory(m_instance.device(), m_shared_descriptor_set_layout),
                   m_shadow_shader_memory(m_instance.device(), m_shadow_descriptor_set_layout),
+                  m_point_shader_memory(m_instance.device(), m_point_descriptor_set_layout),
+                  //
                   m_vertex_shader(m_instance.device(), vertex_shader, "main"),
                   m_geometry_shader(m_instance.device(), geometry_shader, "main"),
                   m_fragment_shader(m_instance.device(), fragment_shader, "main"),
                   m_shadow_vertex_shader(m_instance.device(), shadow_vertex_shader, "main"),
                   m_shadow_fragment_shader(m_instance.device(), shadow_fragment_shader, "main"),
+                  m_point_vertex_shader(m_instance.device(), point_vertex_shader, "main"),
+                  m_point_fragment_shader(m_instance.device(), point_fragment_shader, "main"),
+                  //
                   m_shaders({&m_vertex_shader, &m_geometry_shader, &m_fragment_shader}),
-                  m_shadow_shaders({&m_shadow_vertex_shader, &m_shadow_fragment_shader})
+                  m_shadow_shaders({&m_shadow_vertex_shader, &m_shadow_fragment_shader}),
+                  m_point_shaders({&m_point_vertex_shader, &m_point_fragment_shader})
         {
                 static_assert(SHADER_SHARED_SET != SHADER_PER_OBJECT_SET);
                 std::vector<VkDescriptorSetLayout> main_layouts(2);
@@ -793,6 +934,9 @@ public:
 
                 std::vector<VkDescriptorSetLayout> shadow_layouts({m_shadow_descriptor_set_layout});
                 m_shadow_pipeline_layout = vulkan::create_pipeline_layout(m_instance.device(), shadow_layouts);
+
+                std::vector<VkDescriptorSetLayout> point_layouts({m_point_descriptor_set_layout});
+                m_point_pipeline_layout = vulkan::create_pipeline_layout(m_instance.device(), point_layouts);
 
                 //
 

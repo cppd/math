@@ -103,10 +103,12 @@ public:
         const VkCommandBuffer& command_buffer(uint32_t index) const noexcept;
         const VkCommandBuffer& shadow_command_buffer() const noexcept;
 
-        VkPipeline create_pipeline(const std::vector<const vulkan::Shader*>& shaders, const PipelineLayout& pipeline_layout,
+        VkPipeline create_pipeline(VkPrimitiveTopology primitive_topology, const std::vector<const vulkan::Shader*>& shaders,
+                                   const PipelineLayout& pipeline_layout,
                                    const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
                                    const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions);
-        VkPipeline create_shadow_pipeline(const std::vector<const vulkan::Shader*>& shaders,
+        VkPipeline create_shadow_pipeline(VkPrimitiveTopology primitive_topology,
+                                          const std::vector<const vulkan::Shader*>& shaders,
                                           const PipelineLayout& pipeline_layout,
                                           const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
                                           const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions);

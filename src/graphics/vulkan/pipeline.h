@@ -28,13 +28,15 @@ PipelineLayout create_pipeline_layout(VkDevice device, const std::vector<VkDescr
 
 Pipeline create_graphics_pipeline(const Device& device, VkRenderPass render_pass, uint32_t sub_pass,
                                   VkSampleCountFlagBits sample_count, VkPipelineLayout pipeline_layout, uint32_t width,
-                                  uint32_t height, const std::vector<const Shader*>& shaders,
+                                  uint32_t height, VkPrimitiveTopology primitive_topology,
+                                  const std::vector<const Shader*>& shaders,
                                   const std::vector<VkVertexInputBindingDescription>& binding_descriptions,
                                   const std::vector<VkVertexInputAttributeDescription>& attribute_descriptions);
 
 Pipeline create_shadow_graphics_pipeline(const Device& device, VkRenderPass render_pass, uint32_t sub_pass,
                                          VkSampleCountFlagBits sample_count, VkPipelineLayout pipeline_layout, uint32_t width,
-                                         uint32_t height, const std::vector<const Shader*>& shaders,
+                                         uint32_t height, VkPrimitiveTopology primitive_topology,
+                                         const std::vector<const Shader*>& shaders,
                                          const std::vector<VkVertexInputBindingDescription>& binding_descriptions,
                                          const std::vector<VkVertexInputAttributeDescription>& attribute_descriptions);
 }

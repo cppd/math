@@ -39,7 +39,8 @@ std::vector<VkPipelineShaderStageCreateInfo> pipeline_shader_stage_create_info(c
 
 vulkan::Pipeline create_graphics_pipeline(const vulkan::Device& device, VkRenderPass render_pass, uint32_t sub_pass,
                                           VkSampleCountFlagBits sample_count, VkPipelineLayout pipeline_layout, uint32_t width,
-                                          uint32_t height, const std::vector<const vulkan::Shader*>& shaders,
+                                          uint32_t height, VkPrimitiveTopology primitive_topology,
+                                          const std::vector<const vulkan::Shader*>& shaders,
                                           const std::vector<VkVertexInputBindingDescription>& binding_descriptions,
                                           const std::vector<VkVertexInputAttributeDescription>& attribute_descriptions,
                                           bool for_shadow)
@@ -55,7 +56,7 @@ vulkan::Pipeline create_graphics_pipeline(const vulkan::Device& device, VkRender
 
         VkPipelineInputAssemblyStateCreateInfo input_assembly_state_info = {};
         input_assembly_state_info.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-        input_assembly_state_info.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+        input_assembly_state_info.topology = primitive_topology;
         input_assembly_state_info.primitiveRestartEnable = VK_FALSE;
 
         VkViewport viewport = {};
@@ -212,21 +213,25 @@ PipelineLayout create_pipeline_layout(VkDevice device, const std::vector<VkDescr
 
 Pipeline create_graphics_pipeline(const Device& device, VkRenderPass render_pass, uint32_t sub_pass,
                                   VkSampleCountFlagBits sample_count, VkPipelineLayout pipeline_layout, uint32_t width,
-                                  uint32_t height, const std::vector<const Shader*>& shaders,
+                                  uint32_t height, VkPrimitiveTopology primitive_topology,
+                                  const std::vector<const Shader*>& shaders,
                                   const std::vector<VkVertexInputBindingDescription>& binding_descriptions,
                                   const std::vector<VkVertexInputAttributeDescription>& attribute_descriptions)
 {
-        return ::create_graphics_pipeline(device, render_pass, sub_pass, sample_count, pipeline_layout, width, height, shaders,
-                                          binding_descriptions, attribute_descriptions, false /*for_shadow*/);
+        return ::create_graphics_pipeline(device, render_pass, sub_pass, sample_count, pipeline_layout, width, height,
+                                          primitive_topology, shaders, binding_descriptions, attribute_descriptions,
+                                          false /*for_shadow*/);
 }
 
 Pipeline create_shadow_graphics_pipeline(const Device& device, VkRenderPass render_pass, uint32_t sub_pass,
                                          VkSampleCountFlagBits sample_count, VkPipelineLayout pipeline_layout, uint32_t width,
-                                         uint32_t height, const std::vector<const Shader*>& shaders,
+                                         uint32_t height, VkPrimitiveTopology primitive_topology,
+                                         const std::vector<const Shader*>& shaders,
                                          const std::vector<VkVertexInputBindingDescription>& binding_descriptions,
                                          const std::vector<VkVertexInputAttributeDescription>& attribute_descriptions)
 {
-        return ::create_graphics_pipeline(device, render_pass, sub_pass, sample_count, pipeline_layout, width, height, shaders,
-                                          binding_descriptions, attribute_descriptions, true /*for_shadow*/);
+        return ::create_graphics_pipeline(device, render_pass, sub_pass, sample_count, pipeline_layout, width, height,
+                                          primitive_topology, shaders, binding_descriptions, attribute_descriptions,
+                                          true /*for_shadow*/);
 }
 }

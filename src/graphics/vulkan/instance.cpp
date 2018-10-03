@@ -600,29 +600,29 @@ const ShadowDepthAttachment* SwapchainAndBuffers::shadow_texture() const noexcep
 }
 
 VkPipeline SwapchainAndBuffers::create_pipeline(
-        const std::vector<const vulkan::Shader*>& shaders, const PipelineLayout& pipeline_layout,
-        const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
+        VkPrimitiveTopology primitive_topology, const std::vector<const vulkan::Shader*>& shaders,
+        const PipelineLayout& pipeline_layout, const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
         const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions)
 {
         ASSERT(pipeline_layout != VK_NULL_HANDLE);
 
-        m_pipelines.push_back(create_graphics_pipeline(m_device, m_render_pass, 0 /*sub_pass*/, m_sample_count_bit,
-                                                       pipeline_layout, m_swapchain.width(), m_swapchain.height(), shaders,
-                                                       vertex_binding_descriptions, vertex_attribute_descriptions));
+        m_pipelines.push_back(create_graphics_pipeline(
+                m_device, m_render_pass, 0 /*sub_pass*/, m_sample_count_bit, pipeline_layout, m_swapchain.width(),
+                m_swapchain.height(), primitive_topology, shaders, vertex_binding_descriptions, vertex_attribute_descriptions));
 
         return m_pipelines.back();
 }
 
 VkPipeline SwapchainAndBuffers::create_shadow_pipeline(
-        const std::vector<const vulkan::Shader*>& shaders, const PipelineLayout& pipeline_layout,
-        const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
+        VkPrimitiveTopology primitive_topology, const std::vector<const vulkan::Shader*>& shaders,
+        const PipelineLayout& pipeline_layout, const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
         const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions)
 {
         ASSERT(pipeline_layout != VK_NULL_HANDLE);
 
         m_pipelines.push_back(create_shadow_graphics_pipeline(
                 m_device, m_shadow_render_pass, 0 /*sub_pass*/, VK_SAMPLE_COUNT_1_BIT, pipeline_layout, m_shadow_width,
-                m_shadow_height, shaders, vertex_binding_descriptions, vertex_attribute_descriptions));
+                m_shadow_height, primitive_topology, shaders, vertex_binding_descriptions, vertex_attribute_descriptions));
 
         return m_pipelines.back();
 }

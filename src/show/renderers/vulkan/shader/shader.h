@@ -209,4 +209,74 @@ public:
 
         void set_matrix(const mat4& matrix) const;
 };
+
+//
+
+struct PointVertex final
+{
+        vec3f position;
+
+        PointVertex(const vec3f& position_) : position(position_)
+        {
+        }
+
+        static std::vector<VkVertexInputBindingDescription> binding_descriptions();
+
+        static std::vector<VkVertexInputAttributeDescription> attribute_descriptions();
+};
+
+class PointMemory
+{
+        vulkan::Descriptors m_descriptors;
+        std::vector<vulkan::UniformBufferWithHostVisibleMemory> m_uniform_buffers;
+        vulkan::DescriptorSet m_descriptor_set;
+
+        struct Matrices
+        {
+                Matrix<4, 4, float> matrix;
+        };
+
+        struct Drawing
+        {
+                alignas(GLSL_VEC3_ALIGN) vec3f default_color;
+                alignas(GLSL_VEC3_ALIGN) vec3f background_color;
+                alignas(GLSL_VEC3_ALIGN) vec3f light_a;
+                uint32_t show_fog;
+        };
+
+        size_t m_matrices_buffer_index;
+        size_t m_drawing_buffer_index;
+
+        template <typename T>
+        void copy_to_matrices_buffer(VkDeviceSize offset, const T& data) const;
+        template <typename T>
+        void copy_to_drawing_buffer(VkDeviceSize offset, const T& data) const;
+
+public:
+        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
+
+        //
+
+        PointMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout);
+
+        PointMemory(const PointMemory&) = delete;
+        PointMemory& operator=(const PointMemory&) = delete;
+        PointMemory& operator=(PointMemory&&) = delete;
+
+        PointMemory(PointMemory&&) = default;
+        ~PointMemory() = default;
+
+        //
+
+        VkDescriptorSet descriptor_set() const noexcept;
+
+        //
+
+        void set_matrix(const mat4& matrix) const;
+
+        void set_default_color(const Color& color) const;
+        void set_background_color(const Color& color) const;
+        void set_light_a(const Color& color) const;
+        void set_show_fog(bool show) const;
+};
 }
