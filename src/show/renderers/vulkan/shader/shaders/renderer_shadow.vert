@@ -18,9 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #version 450
 
 layout(location = 0) in vec3 position;
-layout(location = 1) in vec3 normal;
-layout(location = 2) in vec3 geometric_normal;
-layout(location = 3) in vec2 texture_coordinates;
 
 layout(set = 0, binding = 0) uniform Matrices
 {

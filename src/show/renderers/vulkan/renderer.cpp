@@ -73,10 +73,11 @@ constexpr int MAX_FRAMES_IN_FLIGHT = 1;
 
 constexpr int REQUIRED_MINIMUM_SAMPLE_COUNT = 4;
 
-constexpr uint32_t SHADER_SHARED_SET = 0;
-constexpr uint32_t SHADER_PER_OBJECT_SET = 1;
-constexpr uint32_t SHADER_SHADOW_SET = 0;
-constexpr uint32_t SHADER_POINT_SET = 0;
+// Это в шейдерах layout(set = N, ...)
+constexpr uint32_t TRIANGLES_SHARED_SET_NUMBER = 0;
+constexpr uint32_t TRIANGLES_MATERIAL_SET_NUMBER = 1;
+constexpr uint32_t SHADOW_SET_NUMBER = 0;
+constexpr uint32_t POINTS_SET_NUMBER = 0;
 
 // Число используется в шейдере для определения наличия текстурных координат
 constexpr vec2f NO_TEXTURE_COORDINATES = vec2f(-1e10);
@@ -87,31 +88,31 @@ constexpr vec2f NO_TEXTURE_COORDINATES = vec2f(-1e10);
 //                           std::conditional_t<VULKAN_VERTEX_INDEX_TYPE == VK_INDEX_TYPE_UINT16, uint16_t, void>>;
 
 // clang-format off
-constexpr uint32_t vertex_shader[]
+constexpr uint32_t triangles_vert[]
 {
 #include "renderer_triangles.vert.spr"
 };
-constexpr uint32_t geometry_shader[]
+constexpr uint32_t triangles_geom[]
 {
 #include "renderer_triangles.geom.spr"
 };
-constexpr uint32_t fragment_shader[]
+constexpr uint32_t triangles_frag[]
 {
 #include "renderer_triangles.frag.spr"
 };
-constexpr uint32_t shadow_vertex_shader[]
+constexpr uint32_t shadow_vert[]
 {
 #include "renderer_shadow.vert.spr"
 };
-constexpr uint32_t shadow_fragment_shader[]
+constexpr uint32_t shadow_frag[]
 {
 #include "renderer_shadow.frag.spr"
 };
-constexpr uint32_t point_vertex_shader[]
+constexpr uint32_t points_vert[]
 {
 #include "renderer_points.vert.spr"
 };
-constexpr uint32_t point_fragment_shader[]
+constexpr uint32_t points_frag[]
 {
 #include "renderer_points.frag.spr"
 };
@@ -315,9 +316,9 @@ std::vector<vulkan::Texture> load_textures(const vulkan::VulkanInstance& instanc
         return textures;
 }
 
-std::unique_ptr<shaders::PerObjectMemory> load_materials(const vulkan::Device& device, VkSampler sampler,
-                                                         VkDescriptorSetLayout descriptor_set_layout, const Obj<3>& obj,
-                                                         const std::vector<vulkan::Texture>& textures)
+std::unique_ptr<shaders::TrianglesMaterialMemory> load_materials(const vulkan::Device& device, VkSampler sampler,
+                                                                 VkDescriptorSetLayout descriptor_set_layout, const Obj<3>& obj,
+                                                                 const std::vector<vulkan::Texture>& textures)
 {
         // Текстур имеется больше на одну для её использования в тех материалах, где нет текстуры
 
@@ -325,7 +326,7 @@ std::unique_ptr<shaders::PerObjectMemory> load_materials(const vulkan::Device& d
 
         const vulkan::Texture* const no_texture = &textures.back();
 
-        std::vector<shaders::PerObjectMemory::MaterialAndTexture> materials;
+        std::vector<shaders::TrianglesMaterialMemory::MaterialAndTexture> materials;
         materials.reserve(obj.materials().size() + 1);
 
         for (const typename Obj<3>::Material& material : obj.materials())
@@ -334,7 +335,7 @@ std::unique_ptr<shaders::PerObjectMemory> load_materials(const vulkan::Device& d
                 ASSERT(material.map_Kd < static_cast<int>(textures.size()) - 1);
                 ASSERT(material.map_Ks < static_cast<int>(textures.size()) - 1);
 
-                shaders::PerObjectMemory::MaterialAndTexture m;
+                shaders::TrianglesMaterialMemory::MaterialAndTexture m;
 
                 m.material.Ka = material.Ka.to_rgb_vector<float>();
                 m.material.Kd = material.Kd.to_rgb_vector<float>();
@@ -357,7 +358,7 @@ std::unique_ptr<shaders::PerObjectMemory> load_materials(const vulkan::Device& d
         }
 
         // На один материал больше для его указания, но не использования в вершинах, не имеющих материала
-        shaders::PerObjectMemory::MaterialAndTexture m;
+        shaders::TrianglesMaterialMemory::MaterialAndTexture m;
         m.material.Ka = vec3f(0);
         m.material.Kd = vec3f(0);
         m.material.Ks = vec3f(0);
@@ -371,7 +372,7 @@ std::unique_ptr<shaders::PerObjectMemory> load_materials(const vulkan::Device& d
         m.material.use_material = 0;
         materials.push_back(m);
 
-        return std::make_unique<shaders::PerObjectMemory>(device, sampler, descriptor_set_layout, materials);
+        return std::make_unique<shaders::TrianglesMaterialMemory>(device, sampler, descriptor_set_layout, materials);
 }
 
 class DrawObject
@@ -383,7 +384,7 @@ class DrawObject
         // std::unique_ptr<vulkan::IndexBufferWithDeviceLocalMemory> m_vertex_index_buffer;
         std::vector<VerticesOfMaterial> m_vertices_of_materials;
         std::vector<vulkan::Texture> m_textures;
-        std::unique_ptr<shaders::PerObjectMemory> m_shader_memory;
+        std::unique_ptr<shaders::TrianglesMaterialMemory> m_shader_memory;
         unsigned m_vertex_count;
 
 public:
@@ -480,6 +481,8 @@ public:
 
 class Renderer final : public VulkanRenderer
 {
+        // Для получения текстуры для тени результат рисования находится в интервалах x(-1, 1) y(-1, 1) z(0, 1).
+        // Для работы с этой текстурой надо преобразовать в интервалы x(0, 1) y(0, 1) z(0, 1).
         static constexpr mat4 SCALE = scale<double>(0.5, 0.5, 1);
         static constexpr mat4 TRANSLATE = translate<double>(1, 1, 0);
         const mat4 SCALE_BIAS_MATRIX = SCALE * TRANSLATE;
@@ -496,119 +499,120 @@ class Renderer final : public VulkanRenderer
         bool m_show_shadow = false;
 
         vulkan::VulkanInstance m_instance;
-        vulkan::Sampler m_sampler;
+
+        vulkan::Sampler m_triangles_sampler;
         vulkan::Sampler m_shadow_sampler;
 
-        vulkan::DescriptorSetLayout m_shared_descriptor_set_layout;
-        vulkan::DescriptorSetLayout m_per_object_descriptor_set_layout;
+        vulkan::DescriptorSetLayout m_triangles_shared_descriptor_set_layout;
+        vulkan::DescriptorSetLayout m_triangles_material_descriptor_set_layout;
         vulkan::DescriptorSetLayout m_shadow_descriptor_set_layout;
         vulkan::DescriptorSetLayout m_point_descriptor_set_layout;
 
-        shaders::SharedMemory m_shared_shader_memory;
+        shaders::TrianglesSharedMemory m_triangles_shared_shader_memory;
         shaders::ShadowMemory m_shadow_shader_memory;
-        shaders::PointMemory m_point_shader_memory;
+        shaders::PointsMemory m_points_shader_memory;
 
-        vulkan::VertexShader m_vertex_shader;
-        vulkan::GeometryShader m_geometry_shader;
-        vulkan::FragmentShader m_fragment_shader;
-        vulkan::VertexShader m_shadow_vertex_shader;
-        vulkan::FragmentShader m_shadow_fragment_shader;
-        vulkan::VertexShader m_point_vertex_shader;
-        vulkan::FragmentShader m_point_fragment_shader;
+        vulkan::VertexShader m_triangles_vert;
+        vulkan::GeometryShader m_triangles_geom;
+        vulkan::FragmentShader m_triangles_frag;
+        vulkan::VertexShader m_shadow_vert;
+        vulkan::FragmentShader m_shadow_frag;
+        vulkan::VertexShader m_points_vert;
+        vulkan::FragmentShader m_points_frag;
 
-        std::vector<const vulkan::Shader*> m_shaders;
+        std::vector<const vulkan::Shader*> m_triangles_shaders;
         std::vector<const vulkan::Shader*> m_shadow_shaders;
-        std::vector<const vulkan::Shader*> m_point_shaders;
+        std::vector<const vulkan::Shader*> m_points_shaders;
 
-        vulkan::PipelineLayout m_pipeline_layout;
+        vulkan::PipelineLayout m_triangles_pipeline_layout;
         vulkan::PipelineLayout m_shadow_pipeline_layout;
-        vulkan::PipelineLayout m_point_pipeline_layout;
+        vulkan::PipelineLayout m_points_pipeline_layout;
 
         std::unique_ptr<vulkan::SwapchainAndBuffers> m_swapchain_and_buffers;
 
         DrawObjects<DrawObject> m_draw_objects;
 
-        VkPipeline m_pipeline = VK_NULL_HANDLE;
+        VkPipeline m_triangles_pipeline = VK_NULL_HANDLE;
         VkPipeline m_shadow_pipeline = VK_NULL_HANDLE;
-        VkPipeline m_point_pipeline = VK_NULL_HANDLE;
-        VkPipeline m_line_pipeline = VK_NULL_HANDLE;
+        VkPipeline m_points_pipeline = VK_NULL_HANDLE;
+        VkPipeline m_lines_pipeline = VK_NULL_HANDLE;
 
         void set_light_a(const Color& light) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                m_shared_shader_memory.set_light_a(light);
-                m_point_shader_memory.set_light_a(light);
+                m_triangles_shared_shader_memory.set_light_a(light);
+                m_points_shader_memory.set_light_a(light);
         }
         void set_light_d(const Color& light) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                m_shared_shader_memory.set_light_d(light);
+                m_triangles_shared_shader_memory.set_light_d(light);
         }
         void set_light_s(const Color& light) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                m_shared_shader_memory.set_light_s(light);
+                m_triangles_shared_shader_memory.set_light_s(light);
         }
         void set_background_color(const Color& color) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
                 m_clear_color = color;
-                m_point_shader_memory.set_background_color(color);
+                m_points_shader_memory.set_background_color(color);
                 create_command_buffers();
         }
         void set_default_color(const Color& color) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                m_shared_shader_memory.set_default_color(color);
-                m_point_shader_memory.set_default_color(color);
+                m_triangles_shared_shader_memory.set_default_color(color);
+                m_points_shader_memory.set_default_color(color);
         }
         void set_wireframe_color(const Color& color) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                m_shared_shader_memory.set_wireframe_color(color);
+                m_triangles_shared_shader_memory.set_wireframe_color(color);
         }
         void set_default_ns(double default_ns) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                m_shared_shader_memory.set_default_ns(default_ns);
+                m_triangles_shared_shader_memory.set_default_ns(default_ns);
         }
         void set_show_smooth(bool show) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                m_shared_shader_memory.set_show_smooth(show);
+                m_triangles_shared_shader_memory.set_show_smooth(show);
         }
         void set_show_wireframe(bool show) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                m_shared_shader_memory.set_show_wireframe(show);
+                m_triangles_shared_shader_memory.set_show_wireframe(show);
         }
         void set_show_shadow(bool show) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                m_shared_shader_memory.set_show_shadow(show);
+                m_triangles_shared_shader_memory.set_show_shadow(show);
                 m_show_shadow = show;
         }
         void set_show_fog(bool show) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                m_point_shader_memory.set_show_fog(show);
+                m_points_shader_memory.set_show_fog(show);
         }
         void set_show_materials(bool show) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                m_shared_shader_memory.set_show_materials(show);
+                m_triangles_shared_shader_memory.set_show_materials(show);
         }
         void set_shadow_zoom(double zoom) override
         {
@@ -632,13 +636,13 @@ class Renderer final : public VulkanRenderer
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                m_shared_shader_memory.set_direction_to_light(-to_vector<float>(dir));
+                m_triangles_shared_shader_memory.set_direction_to_light(-to_vector<float>(dir));
         }
         void set_camera_direction(vec3 dir) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                m_shared_shader_memory.set_direction_to_camera(-to_vector<float>(dir));
+                m_triangles_shared_shader_memory.set_direction_to_camera(-to_vector<float>(dir));
         }
         void set_size(int /*width*/, int /*height*/) override
         {
@@ -649,8 +653,9 @@ class Renderer final : public VulkanRenderer
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                m_draw_objects.add_object(std::make_unique<DrawObject>(m_instance, m_sampler, m_per_object_descriptor_set_layout,
-                                                                       obj, size, position),
+                m_draw_objects.add_object(std::make_unique<DrawObject>(m_instance, m_triangles_sampler,
+                                                                       m_triangles_material_descriptor_set_layout, obj, size,
+                                                                       position),
                                           id, scale_id);
                 set_matrices();
         }
@@ -731,9 +736,9 @@ class Renderer final : public VulkanRenderer
                                 m_scale_bias_shadow_matrix * m_draw_objects.scale_object()->model_matrix();
                         mat4 shadow_matrix = m_shadow_matrix * m_draw_objects.scale_object()->model_matrix();
 
-                        m_shared_shader_memory.set_matrices(matrix, scale_bias_shadow_matrix);
+                        m_triangles_shared_shader_memory.set_matrices(matrix, scale_bias_shadow_matrix);
                         m_shadow_shader_memory.set_matrix(shadow_matrix);
-                        m_point_shader_memory.set_matrix(matrix);
+                        m_points_shader_memory.set_matrix(matrix);
                 }
         }
 
@@ -763,20 +768,21 @@ class Renderer final : public VulkanRenderer
                         error("Swapchain color space is not VK_COLOR_SPACE_SRGB_NONLINEAR_KHR");
                 }
 
-                m_shared_shader_memory.set_shadow_texture(m_shadow_sampler, m_swapchain_and_buffers->shadow_texture());
+                m_triangles_shared_shader_memory.set_shadow_texture(m_shadow_sampler, m_swapchain_and_buffers->shadow_texture());
 
-                m_pipeline = m_swapchain_and_buffers->create_pipeline(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, m_shaders,
-                                                                      m_pipeline_layout, shaders::Vertex::binding_descriptions(),
-                                                                      shaders::Vertex::attribute_descriptions());
+                m_triangles_pipeline = m_swapchain_and_buffers->create_pipeline(
+                        VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, m_triangles_shaders, m_triangles_pipeline_layout,
+                        shaders::Vertex::binding_descriptions(), shaders::Vertex::all_attribute_descriptions());
+
                 m_shadow_pipeline = m_swapchain_and_buffers->create_shadow_pipeline(
                         VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, m_shadow_shaders, m_shadow_pipeline_layout,
-                        shaders::Vertex::binding_descriptions(), shaders::Vertex::attribute_descriptions());
+                        shaders::Vertex::binding_descriptions(), shaders::Vertex::position_attribute_descriptions());
 
-                m_point_pipeline = m_swapchain_and_buffers->create_pipeline(
-                        VK_PRIMITIVE_TOPOLOGY_POINT_LIST, m_point_shaders, m_point_pipeline_layout,
+                m_points_pipeline = m_swapchain_and_buffers->create_pipeline(
+                        VK_PRIMITIVE_TOPOLOGY_POINT_LIST, m_points_shaders, m_points_pipeline_layout,
                         shaders::PointVertex::binding_descriptions(), shaders::PointVertex::attribute_descriptions());
-                m_line_pipeline = m_swapchain_and_buffers->create_pipeline(
-                        VK_PRIMITIVE_TOPOLOGY_LINE_LIST, m_point_shaders, m_point_pipeline_layout,
+                m_lines_pipeline = m_swapchain_and_buffers->create_pipeline(
+                        VK_PRIMITIVE_TOPOLOGY_LINE_LIST, m_points_shaders, m_points_pipeline_layout,
                         shaders::PointVertex::binding_descriptions(), shaders::PointVertex::attribute_descriptions());
 
                 create_command_buffers(false /*wait_idle*/);
@@ -797,33 +803,35 @@ class Renderer final : public VulkanRenderer
                 {
                 case DrawType::Triangles:
                 {
-                        vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline);
+                        vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_triangles_pipeline);
 
-                        std::array<VkDescriptorSet, 1> descriptor_sets = {m_shared_shader_memory.descriptor_set()};
-                        vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline_layout,
-                                                SHADER_SHARED_SET, descriptor_sets.size(), descriptor_sets.data(), 0, nullptr);
+                        std::array<VkDescriptorSet, 1> descriptor_sets = {m_triangles_shared_shader_memory.descriptor_set()};
+                        vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_triangles_pipeline_layout,
+                                                TRIANGLES_SHARED_SET_NUMBER, descriptor_sets.size(), descriptor_sets.data(), 0,
+                                                nullptr);
 
-                        m_draw_objects.object()->draw_texture_commands(command_buffer, m_pipeline_layout, SHADER_PER_OBJECT_SET);
+                        m_draw_objects.object()->draw_texture_commands(command_buffer, m_triangles_pipeline_layout,
+                                                                       TRIANGLES_MATERIAL_SET_NUMBER);
                         break;
                 }
                 case DrawType::Points:
                 {
-                        vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_point_pipeline);
+                        vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_points_pipeline);
 
-                        std::array<VkDescriptorSet, 1> descriptor_sets = {m_point_shader_memory.descriptor_set()};
-                        vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_point_pipeline_layout,
-                                                SHADER_POINT_SET, descriptor_sets.size(), descriptor_sets.data(), 0, nullptr);
+                        std::array<VkDescriptorSet, 1> descriptor_sets = {m_points_shader_memory.descriptor_set()};
+                        vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_points_pipeline_layout,
+                                                POINTS_SET_NUMBER, descriptor_sets.size(), descriptor_sets.data(), 0, nullptr);
 
                         m_draw_objects.object()->draw_all_commands(command_buffer);
                         break;
                 }
                 case DrawType::Lines:
                 {
-                        vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_line_pipeline);
+                        vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_lines_pipeline);
 
-                        std::array<VkDescriptorSet, 1> descriptor_sets = {m_point_shader_memory.descriptor_set()};
-                        vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_point_pipeline_layout,
-                                                SHADER_POINT_SET, descriptor_sets.size(), descriptor_sets.data(), 0, nullptr);
+                        std::array<VkDescriptorSet, 1> descriptor_sets = {m_points_shader_memory.descriptor_set()};
+                        vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_points_pipeline_layout,
+                                                POINTS_SET_NUMBER, descriptor_sets.size(), descriptor_sets.data(), 0, nullptr);
 
                         m_draw_objects.object()->draw_all_commands(command_buffer);
                         break;
@@ -852,7 +860,7 @@ class Renderer final : public VulkanRenderer
 
                         std::array<VkDescriptorSet, 1> descriptor_sets = {m_shadow_shader_memory.descriptor_set()};
                         vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_shadow_pipeline_layout,
-                                                SHADER_SHADOW_SET, descriptor_sets.size(), descriptor_sets.data(), 0, nullptr);
+                                                SHADOW_SET_NUMBER, descriptor_sets.size(), descriptor_sets.data(), 0, nullptr);
 
                         m_draw_objects.object()->draw_all_commands(command_buffer);
 
@@ -898,45 +906,45 @@ public:
                              string_vector(INSTANCE_EXTENSIONS) + window_instance_extensions, string_vector(DEVICE_EXTENSIONS),
                              string_vector(VALIDATION_LAYERS), REQUIRED_DEVICE_FEATURES, OPTIONAL_DEVICE_FEATURES, create_surface,
                              MAX_FRAMES_IN_FLIGHT),
-                  m_sampler(vulkan::create_sampler(m_instance.device())),
+                  m_triangles_sampler(vulkan::create_sampler(m_instance.device())),
                   m_shadow_sampler(vulkan::create_shadow_sampler(m_instance.device())),
                   //
-                  m_shared_descriptor_set_layout(vulkan::create_descriptor_set_layout(
-                          m_instance.device(), shaders::SharedMemory::descriptor_set_layout_bindings())),
-                  m_per_object_descriptor_set_layout(vulkan::create_descriptor_set_layout(
-                          m_instance.device(), shaders::PerObjectMemory::descriptor_set_layout_bindings())),
+                  m_triangles_shared_descriptor_set_layout(vulkan::create_descriptor_set_layout(
+                          m_instance.device(), shaders::TrianglesSharedMemory::descriptor_set_layout_bindings())),
+                  m_triangles_material_descriptor_set_layout(vulkan::create_descriptor_set_layout(
+                          m_instance.device(), shaders::TrianglesMaterialMemory::descriptor_set_layout_bindings())),
                   m_shadow_descriptor_set_layout(vulkan::create_descriptor_set_layout(
                           m_instance.device(), shaders::ShadowMemory::descriptor_set_layout_bindings())),
                   m_point_descriptor_set_layout(vulkan::create_descriptor_set_layout(
-                          m_instance.device(), shaders::PointMemory::descriptor_set_layout_bindings())),
+                          m_instance.device(), shaders::PointsMemory::descriptor_set_layout_bindings())),
                   //
-                  m_shared_shader_memory(m_instance.device(), m_shared_descriptor_set_layout),
+                  m_triangles_shared_shader_memory(m_instance.device(), m_triangles_shared_descriptor_set_layout),
                   m_shadow_shader_memory(m_instance.device(), m_shadow_descriptor_set_layout),
-                  m_point_shader_memory(m_instance.device(), m_point_descriptor_set_layout),
+                  m_points_shader_memory(m_instance.device(), m_point_descriptor_set_layout),
                   //
-                  m_vertex_shader(m_instance.device(), vertex_shader, "main"),
-                  m_geometry_shader(m_instance.device(), geometry_shader, "main"),
-                  m_fragment_shader(m_instance.device(), fragment_shader, "main"),
-                  m_shadow_vertex_shader(m_instance.device(), shadow_vertex_shader, "main"),
-                  m_shadow_fragment_shader(m_instance.device(), shadow_fragment_shader, "main"),
-                  m_point_vertex_shader(m_instance.device(), point_vertex_shader, "main"),
-                  m_point_fragment_shader(m_instance.device(), point_fragment_shader, "main"),
+                  m_triangles_vert(m_instance.device(), triangles_vert, "main"),
+                  m_triangles_geom(m_instance.device(), triangles_geom, "main"),
+                  m_triangles_frag(m_instance.device(), triangles_frag, "main"),
+                  m_shadow_vert(m_instance.device(), shadow_vert, "main"),
+                  m_shadow_frag(m_instance.device(), shadow_frag, "main"),
+                  m_points_vert(m_instance.device(), points_vert, "main"),
+                  m_points_frag(m_instance.device(), points_frag, "main"),
                   //
-                  m_shaders({&m_vertex_shader, &m_geometry_shader, &m_fragment_shader}),
-                  m_shadow_shaders({&m_shadow_vertex_shader, &m_shadow_fragment_shader}),
-                  m_point_shaders({&m_point_vertex_shader, &m_point_fragment_shader})
+                  m_triangles_shaders({&m_triangles_vert, &m_triangles_geom, &m_triangles_frag}),
+                  m_shadow_shaders({&m_shadow_vert, &m_shadow_frag}),
+                  m_points_shaders({&m_points_vert, &m_points_frag})
         {
-                static_assert(SHADER_SHARED_SET != SHADER_PER_OBJECT_SET);
+                static_assert(TRIANGLES_SHARED_SET_NUMBER != TRIANGLES_MATERIAL_SET_NUMBER);
                 std::vector<VkDescriptorSetLayout> main_layouts(2);
-                main_layouts.at(SHADER_SHARED_SET) = m_shared_descriptor_set_layout;
-                main_layouts.at(SHADER_PER_OBJECT_SET) = m_per_object_descriptor_set_layout;
-                m_pipeline_layout = vulkan::create_pipeline_layout(m_instance.device(), main_layouts);
+                main_layouts.at(TRIANGLES_SHARED_SET_NUMBER) = m_triangles_shared_descriptor_set_layout;
+                main_layouts.at(TRIANGLES_MATERIAL_SET_NUMBER) = m_triangles_material_descriptor_set_layout;
+                m_triangles_pipeline_layout = vulkan::create_pipeline_layout(m_instance.device(), main_layouts);
 
                 std::vector<VkDescriptorSetLayout> shadow_layouts({m_shadow_descriptor_set_layout});
                 m_shadow_pipeline_layout = vulkan::create_pipeline_layout(m_instance.device(), shadow_layouts);
 
                 std::vector<VkDescriptorSetLayout> point_layouts({m_point_descriptor_set_layout});
-                m_point_pipeline_layout = vulkan::create_pipeline_layout(m_instance.device(), point_layouts);
+                m_points_pipeline_layout = vulkan::create_pipeline_layout(m_instance.device(), point_layouts);
 
                 //
 

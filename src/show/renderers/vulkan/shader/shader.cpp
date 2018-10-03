@@ -46,7 +46,7 @@ std::vector<VkVertexInputBindingDescription> Vertex::binding_descriptions()
         return descriptions;
 }
 
-std::vector<VkVertexInputAttributeDescription> Vertex::attribute_descriptions()
+std::vector<VkVertexInputAttributeDescription> Vertex::all_attribute_descriptions()
 {
         std::vector<VkVertexInputAttributeDescription> descriptions;
 
@@ -90,9 +90,26 @@ std::vector<VkVertexInputAttributeDescription> Vertex::attribute_descriptions()
         return descriptions;
 }
 
+std::vector<VkVertexInputAttributeDescription> Vertex::position_attribute_descriptions()
+{
+        std::vector<VkVertexInputAttributeDescription> descriptions;
+
+        {
+                VkVertexInputAttributeDescription d = {};
+                d.binding = 0;
+                d.location = 0;
+                d.format = VK_FORMAT_R32G32B32_SFLOAT;
+                d.offset = offsetof(Vertex, position);
+
+                descriptions.push_back(d);
+        }
+
+        return descriptions;
+}
+
 //
 
-std::vector<VkDescriptorSetLayoutBinding> SharedMemory::descriptor_set_layout_bindings()
+std::vector<VkDescriptorSetLayoutBinding> TrianglesSharedMemory::descriptor_set_layout_bindings()
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
 
@@ -137,7 +154,7 @@ std::vector<VkDescriptorSetLayoutBinding> SharedMemory::descriptor_set_layout_bi
         return bindings;
 }
 
-SharedMemory::SharedMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout)
+TrianglesSharedMemory::TrianglesSharedMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout)
         : m_descriptors(vulkan::Descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings()))
 {
         std::vector<Variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
@@ -186,28 +203,28 @@ SharedMemory::SharedMemory(const vulkan::Device& device, VkDescriptorSetLayout d
         m_descriptor_set = m_descriptors.create_and_update_descriptor_set(bindings, infos);
 }
 
-VkDescriptorSet SharedMemory::descriptor_set() const noexcept
+VkDescriptorSet TrianglesSharedMemory::descriptor_set() const noexcept
 {
         return m_descriptor_set;
 }
 
 template <typename T>
-void SharedMemory::copy_to_matrices_buffer(VkDeviceSize offset, const T& data) const
+void TrianglesSharedMemory::copy_to_matrices_buffer(VkDeviceSize offset, const T& data) const
 {
         copy_to_buffer(m_uniform_buffers[m_matrices_buffer_index], offset, data);
 }
 template <typename T>
-void SharedMemory::copy_to_lighting_buffer(VkDeviceSize offset, const T& data) const
+void TrianglesSharedMemory::copy_to_lighting_buffer(VkDeviceSize offset, const T& data) const
 {
         copy_to_buffer(m_uniform_buffers[m_lighting_buffer_index], offset, data);
 }
 template <typename T>
-void SharedMemory::copy_to_drawing_buffer(VkDeviceSize offset, const T& data) const
+void TrianglesSharedMemory::copy_to_drawing_buffer(VkDeviceSize offset, const T& data) const
 {
         copy_to_buffer(m_uniform_buffers[m_drawing_buffer_index], offset, data);
 }
 
-void SharedMemory::set_matrices(const mat4& matrix, const mat4& shadow_matrix) const
+void TrianglesSharedMemory::set_matrices(const mat4& matrix, const mat4& shadow_matrix) const
 {
         Matrices matrices;
         matrices.matrix = transpose(to_matrix<float>(matrix));
@@ -215,68 +232,68 @@ void SharedMemory::set_matrices(const mat4& matrix, const mat4& shadow_matrix) c
         copy_to_matrices_buffer(0, matrices);
 }
 
-void SharedMemory::set_default_color(const Color& color) const
+void TrianglesSharedMemory::set_default_color(const Color& color) const
 {
         decltype(Drawing().default_color) c = color.to_rgb_vector<float>();
         copy_to_drawing_buffer(offsetof(Drawing, default_color), c);
 }
-void SharedMemory::set_wireframe_color(const Color& color) const
+void TrianglesSharedMemory::set_wireframe_color(const Color& color) const
 {
         decltype(Drawing().wireframe_color) c = color.to_rgb_vector<float>();
         copy_to_drawing_buffer(offsetof(Drawing, wireframe_color), c);
 }
-void SharedMemory::set_default_ns(float default_ns) const
+void TrianglesSharedMemory::set_default_ns(float default_ns) const
 {
         decltype(Drawing().default_ns) ns = default_ns;
         copy_to_drawing_buffer(offsetof(Drawing, default_ns), ns);
 }
-void SharedMemory::set_light_a(const Color& color) const
+void TrianglesSharedMemory::set_light_a(const Color& color) const
 {
         decltype(Drawing().light_a) c = color.to_rgb_vector<float>();
         copy_to_drawing_buffer(offsetof(Drawing, light_a), c);
 }
-void SharedMemory::set_light_d(const Color& color) const
+void TrianglesSharedMemory::set_light_d(const Color& color) const
 {
         decltype(Drawing().light_d) c = color.to_rgb_vector<float>();
         copy_to_drawing_buffer(offsetof(Drawing, light_d), c);
 }
-void SharedMemory::set_light_s(const Color& color) const
+void TrianglesSharedMemory::set_light_s(const Color& color) const
 {
         decltype(Drawing().light_s) c = color.to_rgb_vector<float>();
         copy_to_drawing_buffer(offsetof(Drawing, light_s), c);
 }
-void SharedMemory::set_show_materials(bool show) const
+void TrianglesSharedMemory::set_show_materials(bool show) const
 {
         decltype(Drawing().show_materials) s = show ? 1 : 0;
         copy_to_drawing_buffer(offsetof(Drawing, show_materials), s);
 }
-void SharedMemory::set_show_wireframe(bool show) const
+void TrianglesSharedMemory::set_show_wireframe(bool show) const
 {
         decltype(Drawing().show_wireframe) s = show ? 1 : 0;
         copy_to_drawing_buffer(offsetof(Drawing, show_wireframe), s);
 }
-void SharedMemory::set_show_shadow(bool show) const
+void TrianglesSharedMemory::set_show_shadow(bool show) const
 {
         decltype(Drawing().show_shadow) s = show ? 1 : 0;
         copy_to_drawing_buffer(offsetof(Drawing, show_shadow), s);
 }
 
-void SharedMemory::set_direction_to_light(const vec3f& direction) const
+void TrianglesSharedMemory::set_direction_to_light(const vec3f& direction) const
 {
         decltype(Lighting().direction_to_light) d = direction;
         copy_to_lighting_buffer(offsetof(Lighting, direction_to_light), d);
 }
-void SharedMemory::set_direction_to_camera(const vec3f& direction) const
+void TrianglesSharedMemory::set_direction_to_camera(const vec3f& direction) const
 {
         decltype(Lighting().direction_to_camera) d = direction;
         copy_to_lighting_buffer(offsetof(Lighting, direction_to_camera), d);
 }
-void SharedMemory::set_show_smooth(bool show) const
+void TrianglesSharedMemory::set_show_smooth(bool show) const
 {
         decltype(Lighting().show_smooth) s = show ? 1 : 0;
         copy_to_lighting_buffer(offsetof(Lighting, show_smooth), s);
 }
-void SharedMemory::set_shadow_texture(VkSampler sampler, const vulkan::ShadowDepthAttachment* shadow_texture) const
+void TrianglesSharedMemory::set_shadow_texture(VkSampler sampler, const vulkan::ShadowDepthAttachment* shadow_texture) const
 {
         VkDescriptorImageInfo image_info = {};
         image_info.imageLayout = shadow_texture->image_layout();
@@ -288,7 +305,7 @@ void SharedMemory::set_shadow_texture(VkSampler sampler, const vulkan::ShadowDep
 
 //
 
-std::vector<VkDescriptorSetLayoutBinding> PerObjectMemory::descriptor_set_layout_bindings()
+std::vector<VkDescriptorSetLayoutBinding> TrianglesMaterialMemory::descriptor_set_layout_bindings()
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
 
@@ -335,8 +352,9 @@ std::vector<VkDescriptorSetLayoutBinding> PerObjectMemory::descriptor_set_layout
         return bindings;
 }
 
-PerObjectMemory::PerObjectMemory(const vulkan::Device& device, VkSampler sampler, VkDescriptorSetLayout descriptor_set_layout,
-                                 const std::vector<MaterialAndTexture>& materials)
+TrianglesMaterialMemory::TrianglesMaterialMemory(const vulkan::Device& device, VkSampler sampler,
+                                                 VkDescriptorSetLayout descriptor_set_layout,
+                                                 const std::vector<MaterialAndTexture>& materials)
         : m_descriptors(vulkan::Descriptors(device, materials.size(), descriptor_set_layout, descriptor_set_layout_bindings()))
 {
         ASSERT(materials.size() > 0);
@@ -403,12 +421,12 @@ PerObjectMemory::PerObjectMemory(const vulkan::Device& device, VkSampler sampler
         }
 }
 
-uint32_t PerObjectMemory::descriptor_set_count() const noexcept
+uint32_t TrianglesMaterialMemory::descriptor_set_count() const noexcept
 {
         return m_descriptor_sets.size();
 }
 
-VkDescriptorSet PerObjectMemory::descriptor_set(uint32_t index) const noexcept
+VkDescriptorSet TrianglesMaterialMemory::descriptor_set(uint32_t index) const noexcept
 {
         ASSERT(index < m_descriptor_sets.size());
 
@@ -505,7 +523,7 @@ std::vector<VkVertexInputAttributeDescription> PointVertex::attribute_descriptio
 
 //
 
-std::vector<VkDescriptorSetLayoutBinding> PointMemory::descriptor_set_layout_bindings()
+std::vector<VkDescriptorSetLayoutBinding> PointsMemory::descriptor_set_layout_bindings()
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
 
@@ -531,7 +549,7 @@ std::vector<VkDescriptorSetLayoutBinding> PointMemory::descriptor_set_layout_bin
         return bindings;
 }
 
-PointMemory::PointMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout)
+PointsMemory::PointsMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout)
         : m_descriptors(vulkan::Descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings()))
 {
         std::vector<Variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
@@ -567,45 +585,45 @@ PointMemory::PointMemory(const vulkan::Device& device, VkDescriptorSetLayout des
         m_descriptor_set = m_descriptors.create_and_update_descriptor_set(bindings, infos);
 }
 
-VkDescriptorSet PointMemory::descriptor_set() const noexcept
+VkDescriptorSet PointsMemory::descriptor_set() const noexcept
 {
         return m_descriptor_set;
 }
 
 template <typename T>
-void PointMemory::copy_to_matrices_buffer(VkDeviceSize offset, const T& data) const
+void PointsMemory::copy_to_matrices_buffer(VkDeviceSize offset, const T& data) const
 {
         copy_to_buffer(m_uniform_buffers[m_matrices_buffer_index], offset, data);
 }
 template <typename T>
-void PointMemory::copy_to_drawing_buffer(VkDeviceSize offset, const T& data) const
+void PointsMemory::copy_to_drawing_buffer(VkDeviceSize offset, const T& data) const
 {
         copy_to_buffer(m_uniform_buffers[m_drawing_buffer_index], offset, data);
 }
 
-void PointMemory::set_matrix(const mat4& matrix) const
+void PointsMemory::set_matrix(const mat4& matrix) const
 {
         Matrices matrices;
         matrices.matrix = transpose(to_matrix<float>(matrix));
         copy_to_matrices_buffer(0, matrices);
 }
 
-void PointMemory::set_default_color(const Color& color) const
+void PointsMemory::set_default_color(const Color& color) const
 {
         decltype(Drawing().default_color) c = color.to_rgb_vector<float>();
         copy_to_drawing_buffer(offsetof(Drawing, default_color), c);
 }
-void PointMemory::set_background_color(const Color& color) const
+void PointsMemory::set_background_color(const Color& color) const
 {
         decltype(Drawing().background_color) c = color.to_rgb_vector<float>();
         copy_to_drawing_buffer(offsetof(Drawing, background_color), c);
 }
-void PointMemory::set_light_a(const Color& color) const
+void PointsMemory::set_light_a(const Color& color) const
 {
         decltype(Drawing().light_a) c = color.to_rgb_vector<float>();
         copy_to_drawing_buffer(offsetof(Drawing, light_a), c);
 }
-void PointMemory::set_show_fog(bool show) const
+void PointsMemory::set_show_fog(bool show) const
 {
         decltype(Drawing().show_fog) s = show ? 1 : 0;
         copy_to_drawing_buffer(offsetof(Drawing, show_fog), s);

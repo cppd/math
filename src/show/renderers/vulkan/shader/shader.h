@@ -47,28 +47,33 @@ struct Vertex
 
         static std::vector<VkVertexInputBindingDescription> binding_descriptions();
 
-        static std::vector<VkVertexInputAttributeDescription> attribute_descriptions();
+        static std::vector<VkVertexInputAttributeDescription> all_attribute_descriptions();
+
+        static std::vector<VkVertexInputAttributeDescription> position_attribute_descriptions();
 };
 
-class SharedMemory
+class TrianglesSharedMemory
 {
         vulkan::Descriptors m_descriptors;
         std::vector<vulkan::UniformBufferWithHostVisibleMemory> m_uniform_buffers;
         vulkan::DescriptorSet m_descriptor_set;
 
         // Если размещать структуры в одном буфере, то требуется выравнивание каждой структуры
-        // на VkPhysicalDeviceLimits::minUniformBufferOffsetAlignment для VkDescriptorBufferInfo::offset.
+        // на VkPhysicalDeviceLimits::minUniformBufferOffsetAlignment для VkDescriptorBufferInfo::offset
+
         struct Matrices
         {
                 Matrix<4, 4, float> matrix;
                 Matrix<4, 4, float> shadow_matrix;
         };
+
         struct Lighting
         {
                 alignas(GLSL_VEC3_ALIGN) vec3f direction_to_light;
                 alignas(GLSL_VEC3_ALIGN) vec3f direction_to_camera;
                 uint32_t show_smooth;
         };
+
         struct Drawing
         {
                 alignas(GLSL_VEC3_ALIGN) vec3f default_color;
@@ -81,6 +86,7 @@ class SharedMemory
                 uint32_t show_wireframe;
                 uint32_t show_shadow;
         };
+
         size_t m_matrices_buffer_index;
         size_t m_lighting_buffer_index;
         size_t m_drawing_buffer_index;
@@ -97,14 +103,14 @@ public:
 
         //
 
-        SharedMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout);
+        TrianglesSharedMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout);
 
-        SharedMemory(const SharedMemory&) = delete;
-        SharedMemory& operator=(const SharedMemory&) = delete;
-        SharedMemory& operator=(SharedMemory&&) = delete;
+        TrianglesSharedMemory(const TrianglesSharedMemory&) = delete;
+        TrianglesSharedMemory& operator=(const TrianglesSharedMemory&) = delete;
+        TrianglesSharedMemory& operator=(TrianglesSharedMemory&&) = delete;
 
-        SharedMemory(SharedMemory&&) = default;
-        ~SharedMemory() = default;
+        TrianglesSharedMemory(TrianglesSharedMemory&&) = default;
+        ~TrianglesSharedMemory() = default;
 
         //
 
@@ -129,7 +135,7 @@ public:
         void set_shadow_texture(VkSampler sampler, const vulkan::ShadowDepthAttachment* shadow_texture) const;
 };
 
-class PerObjectMemory
+class TrianglesMaterialMemory
 {
         vulkan::Descriptors m_descriptors;
         std::vector<vulkan::UniformBufferWithHostVisibleMemory> m_uniform_buffers;
@@ -160,15 +166,15 @@ public:
 
         //
 
-        PerObjectMemory(const vulkan::Device& device, VkSampler sampler, VkDescriptorSetLayout descriptor_set_layout,
-                        const std::vector<MaterialAndTexture>& materials);
+        TrianglesMaterialMemory(const vulkan::Device& device, VkSampler sampler, VkDescriptorSetLayout descriptor_set_layout,
+                                const std::vector<MaterialAndTexture>& materials);
 
-        PerObjectMemory(const PerObjectMemory&) = delete;
-        PerObjectMemory& operator=(const PerObjectMemory&) = delete;
-        PerObjectMemory& operator=(PerObjectMemory&&) = delete;
+        TrianglesMaterialMemory(const TrianglesMaterialMemory&) = delete;
+        TrianglesMaterialMemory& operator=(const TrianglesMaterialMemory&) = delete;
+        TrianglesMaterialMemory& operator=(TrianglesMaterialMemory&&) = delete;
 
-        PerObjectMemory(PerObjectMemory&&) = default;
-        ~PerObjectMemory() = default;
+        TrianglesMaterialMemory(TrianglesMaterialMemory&&) = default;
+        ~TrianglesMaterialMemory() = default;
 
         //
 
@@ -225,7 +231,7 @@ struct PointVertex final
         static std::vector<VkVertexInputAttributeDescription> attribute_descriptions();
 };
 
-class PointMemory
+class PointsMemory
 {
         vulkan::Descriptors m_descriptors;
         std::vector<vulkan::UniformBufferWithHostVisibleMemory> m_uniform_buffers;
@@ -257,14 +263,14 @@ public:
 
         //
 
-        PointMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout);
+        PointsMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout);
 
-        PointMemory(const PointMemory&) = delete;
-        PointMemory& operator=(const PointMemory&) = delete;
-        PointMemory& operator=(PointMemory&&) = delete;
+        PointsMemory(const PointsMemory&) = delete;
+        PointsMemory& operator=(const PointsMemory&) = delete;
+        PointsMemory& operator=(PointsMemory&&) = delete;
 
-        PointMemory(PointMemory&&) = default;
-        ~PointMemory() = default;
+        PointsMemory(PointsMemory&&) = default;
+        ~PointsMemory() = default;
 
         //
 
