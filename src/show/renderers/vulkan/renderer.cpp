@@ -69,6 +69,9 @@ constexpr std::initializer_list<VkFormat> DEPTH_IMAGE_FORMATS =
 };
 // clang-format on
 
+// Шейдеры пишут результат в цветовом пространстве sRGB
+constexpr VkSurfaceFormatKHR SURFACE_FORMAT = {VK_FORMAT_B8G8R8A8_UNORM, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR};
+
 // 2 - double buffering, 3 - triple buffering
 constexpr int PREFERRED_IMAGE_COUNT = 2;
 constexpr int MAX_FRAMES_IN_FLIGHT = 1;
@@ -863,17 +866,8 @@ class Renderer final : public VulkanRenderer
                 m_swapchain_and_buffers.reset();
 
                 m_swapchain_and_buffers = std::make_unique<vulkan::SwapchainAndBuffers>(m_instance.create_swapchain_and_buffers(
-                        PREFERRED_IMAGE_COUNT, REQUIRED_MINIMUM_SAMPLE_COUNT, DEPTH_IMAGE_FORMATS, m_shadow_zoom));
-
-                if (m_swapchain_and_buffers->swapchain_format() != VK_FORMAT_B8G8R8A8_UNORM)
-                {
-                        error("Swapchain format is not VK_FORMAT_B8G8R8A8_UNORM");
-                }
-                if (m_swapchain_and_buffers->swapchain_color_space() != VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
-                {
-                        // Шейдеры пишут sRGB
-                        error("Swapchain color space is not VK_COLOR_SPACE_SRGB_NONLINEAR_KHR");
-                }
+                        SURFACE_FORMAT, PREFERRED_IMAGE_COUNT, REQUIRED_MINIMUM_SAMPLE_COUNT, DEPTH_IMAGE_FORMATS,
+                        m_shadow_zoom));
 
                 m_triangles_shared_shader_memory.set_shadow_texture(m_shadow_sampler, m_swapchain_and_buffers->shadow_texture());
 

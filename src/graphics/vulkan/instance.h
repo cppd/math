@@ -79,7 +79,8 @@ class SwapchainAndBuffers
 public:
         SwapchainAndBuffers(VkSurfaceKHR surface, const std::vector<uint32_t>& swapchain_family_indices,
                             const std::vector<uint32_t>& attachment_family_indices, const Device& device,
-                            VkCommandPool graphics_command_pool, VkQueue graphics_queue, int preferred_image_count,
+                            VkCommandPool graphics_command_pool, VkQueue graphics_queue,
+                            const VkSurfaceFormatKHR& required_surface_format, int preferred_image_count,
                             int required_minimum_sample_count, const std::vector<VkFormat>& depth_image_formats,
                             double shadow_zoom);
 
@@ -177,12 +178,14 @@ public:
 
         //
 
-        SwapchainAndBuffers create_swapchain_and_buffers(int preferred_image_count, int required_minimum_sample_count,
+        SwapchainAndBuffers create_swapchain_and_buffers(const VkSurfaceFormatKHR& required_surface_format,
+                                                         int preferred_image_count, int required_minimum_sample_count,
                                                          const std::vector<VkFormat>& depth_image_formats, double shadow_zoom)
         {
                 return SwapchainAndBuffers(m_surface, m_swapchain_family_indices, m_attachment_family_indices, m_device,
-                                           m_graphics_command_pool, m_graphics_queue, preferred_image_count,
-                                           required_minimum_sample_count, depth_image_formats, shadow_zoom);
+                                           m_graphics_command_pool, m_graphics_queue, required_surface_format,
+                                           preferred_image_count, required_minimum_sample_count, depth_image_formats,
+                                           shadow_zoom);
         }
 
         template <typename T>

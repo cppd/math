@@ -427,13 +427,14 @@ namespace vulkan
 {
 SwapchainAndBuffers::SwapchainAndBuffers(VkSurfaceKHR surface, const std::vector<uint32_t>& swapchain_family_indices,
                                          const std::vector<uint32_t>& attachment_family_indices, const Device& device,
-                                         VkCommandPool graphics_command_pool, VkQueue graphics_queue, int preferred_image_count,
+                                         VkCommandPool graphics_command_pool, VkQueue graphics_queue,
+                                         const VkSurfaceFormatKHR& required_surface_format, int preferred_image_count,
                                          int required_minimum_sample_count, const std::vector<VkFormat>& depth_image_formats,
                                          double shadow_zoom)
         : m_device(device),
           m_graphics_command_pool(graphics_command_pool),
           m_sample_count_bit(supported_framebuffer_sample_count_flag(device.physical_device(), required_minimum_sample_count)),
-          m_swapchain(surface, device, swapchain_family_indices, preferred_image_count)
+          m_swapchain(surface, device, swapchain_family_indices, required_surface_format, preferred_image_count)
 {
         create_main_buffers(attachment_family_indices, device, graphics_command_pool, graphics_queue, depth_image_formats);
 

@@ -108,24 +108,35 @@ bool find_surface_details(VkSurfaceKHR surface, VkPhysicalDevice device, VkSurfa
         return true;
 }
 
-VkSurfaceFormatKHR choose_surface_format(const std::vector<VkSurfaceFormatKHR>& surface_formats)
+VkSurfaceFormatKHR choose_surface_format(const VkSurfaceFormatKHR& required_surface_format,
+                                         const std::vector<VkSurfaceFormatKHR>& surface_formats)
 {
         ASSERT(surface_formats.size() > 0);
 
         if (surface_formats.size() == 1 && surface_formats[0].format == VK_FORMAT_UNDEFINED)
         {
-                return {VK_FORMAT_B8G8R8A8_UNORM, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR};
+                return required_surface_format;
         }
 
         for (const VkSurfaceFormatKHR& format : surface_formats)
         {
-                if (format.format == VK_FORMAT_B8G8R8A8_UNORM && format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
+                if (format.format == required_surface_format.format && format.colorSpace == required_surface_format.colorSpace)
                 {
-                        return format;
+                        return required_surface_format;
                 }
         }
 
-        error("Surface format (VK_FORMAT_B8G8R8A8_UNORM, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) was not found");
+        std::string s;
+        for (const VkSurfaceFormatKHR& format : surface_formats)
+        {
+                if (s.size() > 0)
+                {
+                        s += '\n';
+                }
+                s += vulkan::format_to_string(format.format) + ", " + vulkan::color_space_to_string(format.colorSpace);
+        }
+        error("Failed to find surface format " + vulkan::format_to_string(required_surface_format.format) + ", " +
+              vulkan::color_space_to_string(required_surface_format.colorSpace) + ".\nSupported surface formats:\n" + s);
 }
 
 VkPresentModeKHR choose_present_mode(const std::vector<VkPresentModeKHR>& present_modes)
@@ -274,11 +285,13 @@ vulkan::ImageView create_image_view(VkDevice device, VkImage image, VkFormat for
 
         return vulkan::ImageView(device, create_info);
 }
-std::string swapchain_info_string(VkFormat format, int preferred_image_count, int image_count)
+std::string swapchain_info_string(const VkSurfaceFormatKHR& surface_format, int preferred_image_count, int image_count)
 {
         std::string s;
 
-        s += "Swapchain surface format " + vulkan::format_to_string(format);
+        s += "Swapchain surface format " + vulkan::format_to_string(surface_format.format);
+        s += '\n';
+        s += "Swapchain color space " + vulkan::color_space_to_string(surface_format.colorSpace);
         s += '\n';
         s += "Swapchain preferred image count = " + to_string(preferred_image_count);
         s += '\n';
@@ -300,7 +313,7 @@ bool surface_suitable(VkSurfaceKHR surface, VkPhysicalDevice physical_device)
 }
 
 Swapchain::Swapchain(VkSurfaceKHR surface, const Device& device, const std::vector<uint32_t>& family_indices,
-                     int preferred_image_count)
+                     const VkSurfaceFormatKHR& required_surface_format, int preferred_image_count)
 {
         VkSurfaceCapabilitiesKHR surface_capabilities;
         std::vector<VkSurfaceFormatKHR> surface_formats;
@@ -311,12 +324,12 @@ Swapchain::Swapchain(VkSurfaceKHR surface, const Device& device, const std::vect
                 error("Failed to find surface details");
         }
 
-        m_surface_format = choose_surface_format(surface_formats);
+        m_surface_format = choose_surface_format(required_surface_format, surface_formats);
         m_extent = choose_extent(surface_capabilities);
         VkPresentModeKHR present_mode = choose_present_mode(present_modes);
         uint32_t image_count = choose_image_count(surface_capabilities, preferred_image_count);
 
-        LOG(swapchain_info_string(m_surface_format.format, preferred_image_count, image_count));
+        LOG(swapchain_info_string(m_surface_format, preferred_image_count, image_count));
 
         m_swapchain = create_swapchain_khr(device, surface, m_surface_format, present_mode, m_extent, image_count,
                                            surface_capabilities.currentTransform, family_indices);

@@ -33,7 +33,7 @@ class Swapchain
 
 public:
         Swapchain(VkSurfaceKHR surface, const Device& device, const std::vector<uint32_t>& family_indices,
-                  int preferred_image_count);
+                  const VkSurfaceFormatKHR& required_surface_format, int preferred_image_count);
 
         Swapchain(const Swapchain&) = delete;
         Swapchain& operator=(const Swapchain&) = delete;
