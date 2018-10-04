@@ -642,6 +642,48 @@ std::string format_to_string(VkFormat format)
 
         return "Unknown Vulkan VkFormat " + enum_to_string(format);
 }
+
+std::string color_space_to_string(VkColorSpaceKHR color_space)
+{
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wswitch"
+        switch (color_space)
+        {
+        case VK_COLOR_SPACE_SRGB_NONLINEAR_KHR:
+                return "VK_COLOR_SPACE_SRGB_NONLINEAR_KHR";
+        case VK_COLOR_SPACE_DISPLAY_P3_NONLINEAR_EXT:
+                return "VK_COLOR_SPACE_DISPLAY_P3_NONLINEAR_EXT";
+        case VK_COLOR_SPACE_EXTENDED_SRGB_LINEAR_EXT:
+                return "VK_COLOR_SPACE_EXTENDED_SRGB_LINEAR_EXT";
+        case VK_COLOR_SPACE_DCI_P3_LINEAR_EXT:
+                return "VK_COLOR_SPACE_DCI_P3_LINEAR_EXT";
+        case VK_COLOR_SPACE_DCI_P3_NONLINEAR_EXT:
+                return "VK_COLOR_SPACE_DCI_P3_NONLINEAR_EXT";
+        case VK_COLOR_SPACE_BT709_LINEAR_EXT:
+                return "VK_COLOR_SPACE_BT709_LINEAR_EXT";
+        case VK_COLOR_SPACE_BT709_NONLINEAR_EXT:
+                return "VK_COLOR_SPACE_BT709_NONLINEAR_EXT";
+        case VK_COLOR_SPACE_BT2020_LINEAR_EXT:
+                return "VK_COLOR_SPACE_BT2020_LINEAR_EXT";
+        case VK_COLOR_SPACE_HDR10_ST2084_EXT:
+                return "VK_COLOR_SPACE_HDR10_ST2084_EXT";
+        case VK_COLOR_SPACE_DOLBYVISION_EXT:
+                return "VK_COLOR_SPACE_DOLBYVISION_EXT";
+        case VK_COLOR_SPACE_HDR10_HLG_EXT:
+                return "VK_COLOR_SPACE_HDR10_HLG_EXT";
+        case VK_COLOR_SPACE_ADOBERGB_LINEAR_EXT:
+                return "VK_COLOR_SPACE_ADOBERGB_LINEAR_EXT";
+        case VK_COLOR_SPACE_ADOBERGB_NONLINEAR_EXT:
+                return "VK_COLOR_SPACE_ADOBERGB_NONLINEAR_EXT";
+        case VK_COLOR_SPACE_PASS_THROUGH_EXT:
+                return "VK_COLOR_SPACE_PASS_THROUGH_EXT";
+        case VK_COLOR_SPACE_EXTENDED_SRGB_NONLINEAR_EXT:
+                return "VK_COLOR_SPACE_EXTENDED_SRGB_NONLINEAR_EXT";
+        }
+#pragma GCC diagnostic pop
+
+        return "Unknown Vulkan VkColorSpaceKHR " + enum_to_string(color_space);
+}
 }
 
 std::vector<std::string> operator+(const std::vector<std::string>& v1, const std::vector<std::string>& v2)

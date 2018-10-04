@@ -26,6 +26,7 @@ namespace vulkan
 std::string api_version_to_string(uint32_t api_version);
 std::string physical_device_type_to_string(VkPhysicalDeviceType type);
 std::string format_to_string(VkFormat format);
+std::string color_space_to_string(VkColorSpaceKHR color_space);
 
 void vulkan_function_error[[noreturn]](const std::string& function_name, const VkResult& code);
 }
