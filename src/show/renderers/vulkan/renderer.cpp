@@ -33,8 +33,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "show/renderers/com.h"
 #include "show/renderers/vulkan/shader/shader.h"
 
+#include <algorithm>
 #include <array>
 #include <thread>
+#include <unordered_set>
 
 constexpr int API_VERSION_MAJOR = 1;
 constexpr int API_VERSION_MINOR = 0;
@@ -78,6 +80,8 @@ constexpr uint32_t TRIANGLES_SHARED_SET_NUMBER = 0;
 constexpr uint32_t TRIANGLES_MATERIAL_SET_NUMBER = 1;
 constexpr uint32_t SHADOW_SET_NUMBER = 0;
 constexpr uint32_t POINTS_SET_NUMBER = 0;
+
+static_assert(TRIANGLES_SHARED_SET_NUMBER != TRIANGLES_MATERIAL_SET_NUMBER);
 
 // Число используется в шейдере для определения наличия текстурных координат
 constexpr vec2f NO_TEXTURE_COORDINATES = vec2f(-1e10);
@@ -131,8 +135,8 @@ std::vector<std::string> string_vector(const T& v)
 
 struct VerticesOfMaterial
 {
-        int offset;
-        int count;
+        unsigned offset;
+        unsigned count;
 };
 
 template <size_t N>
@@ -381,41 +385,86 @@ class DrawObject
         DrawType m_draw_type;
 
         std::unique_ptr<vulkan::VertexBufferWithDeviceLocalMemory> m_vertex_buffer;
-        // std::unique_ptr<vulkan::IndexBufferWithDeviceLocalMemory> m_vertex_index_buffer;
-        std::vector<VerticesOfMaterial> m_vertices_of_materials;
         std::vector<vulkan::Texture> m_textures;
         std::unique_ptr<shaders::TrianglesMaterialMemory> m_shader_memory;
         unsigned m_vertex_count;
+
+        //
+
+        std::array<VkBuffer, 1> m_buffers;
+        std::array<VkDeviceSize, 1> m_offsets;
+
+        struct Material
+        {
+                VkDescriptorSet set;
+                unsigned vertex_offset;
+                unsigned vertex_count;
+
+                Material(VkDescriptorSet set_, unsigned vertex_offset_, unsigned vertex_count_)
+                        : set(set_), vertex_offset(vertex_offset_), vertex_count(vertex_count_)
+                {
+                }
+        };
+        std::vector<Material> m_materials;
+
+        // Рисование с индексами вершин вместо самих вершин
+        // std::unique_ptr<vulkan::IndexBufferWithDeviceLocalMemory> m_vertex_index_buffer;
+        // vkCmdBindIndexBuffer(command_buffer, *m_vertex_index_buffer, 0, VULKAN_VERTEX_INDEX_TYPE);
+        // vkCmdDrawIndexed(command_buffer, m_vertex_count, 1, 0, 0, 0);
 
 public:
         DrawObject(const vulkan::VulkanInstance& instance, VkSampler sampler, VkDescriptorSetLayout descriptor_set_layout,
                    const Obj<3>* obj, double size, const vec3& position)
                 : m_model_matrix(model_vertex_matrix(obj, size, position)), m_draw_type(draw_type_of_obj(obj))
         {
-                if (m_draw_type == DrawType::Triangles && obj->facets().size() > 0)
+                switch (m_draw_type)
+                {
+                case DrawType::Triangles:
                 {
                         std::vector<int> sorted_face_indices;
-                        facets_sorted_by_material(*obj, sorted_face_indices, m_vertices_of_materials);
+                        std::vector<VerticesOfMaterial> vertices_of_materials;
+                        facets_sorted_by_material(*obj, sorted_face_indices, vertices_of_materials);
+
                         m_vertex_buffer = load_vertices(instance, *obj, sorted_face_indices);
-
                         m_textures = load_textures(instance, *obj);
-
                         m_shader_memory = load_materials(instance.device(), sampler, descriptor_set_layout, *obj, m_textures);
-
                         m_vertex_count = 3 * obj->facets().size();
+
+                        ASSERT(vertices_of_materials.size() == m_shader_memory->descriptor_set_count());
+                        for (unsigned i = 0; i < m_shader_memory->descriptor_set_count(); ++i)
+                        {
+                                if (vertices_of_materials[i].count > 0)
+                                {
+                                        m_materials.emplace_back(m_shader_memory->descriptor_set(i),
+                                                                 vertices_of_materials[i].offset, vertices_of_materials[i].count);
+                                }
+                        }
+
+                        break;
                 }
-                else if (m_draw_type == DrawType::Points && obj->points().size() > 0)
+                case DrawType::Points:
                 {
                         m_vertex_buffer = load_point_vertices(instance, *obj);
-
                         m_vertex_count = obj->points().size();
+
+                        break;
                 }
-                else if (m_draw_type == DrawType::Lines && obj->lines().size() > 0)
+                case DrawType::Lines:
                 {
                         m_vertex_buffer = load_line_vertices(instance, *obj);
-
                         m_vertex_count = 2 * obj->lines().size();
+
+                        break;
                 }
+                }
+
+                if (!m_vertex_buffer)
+                {
+                        error("No vertex buffer created");
+                }
+
+                m_buffers = {*m_vertex_buffer};
+                m_offsets = {0};
         }
 
         const mat4& model_matrix() const noexcept
@@ -423,59 +472,118 @@ public:
                 return m_model_matrix;
         }
 
-        DrawType draw_type() const
+        bool has_shadow() const noexcept
         {
-                return m_draw_type;
+                return m_draw_type == DrawType::Triangles;
         }
 
-        void draw_texture_commands(VkCommandBuffer command_buffer, VkPipelineLayout pipeline_layout,
-                                   uint32_t descriptor_set_number) const
+        struct DrawInfo
         {
-                if (!m_vertex_buffer || m_draw_type != DrawType::Triangles)
+                VkPipelineLayout triangles_pipeline_layout;
+                VkPipeline triangles_pipeline;
+                VkDescriptorSet triangles_shared_set;
+                unsigned triangles_shared_set_number;
+                unsigned triangles_material_set_number;
+
+                VkPipelineLayout points_pipeline_layout;
+                VkPipeline points_pipeline;
+                VkDescriptorSet points_set;
+                unsigned points_set_number;
+
+                VkPipelineLayout lines_pipeline_layout;
+                VkPipeline lines_pipeline;
+                VkDescriptorSet lines_set;
+                unsigned lines_set_number;
+        };
+
+        struct ShadowTrianglesDrawInfo
+        {
+                VkPipelineLayout pipeline_layout;
+                VkPipeline pipeline;
+                VkDescriptorSet set;
+                unsigned set_number;
+        };
+
+        void draw_commands(VkCommandBuffer command_buffer, const DrawInfo& info) const
+        {
+                switch (m_draw_type)
                 {
-                        return;
-                }
-
-                std::array<VkBuffer, 1> vertex_buffers = {*m_vertex_buffer};
-                std::array<VkDeviceSize, vertex_buffers.size()> offsets = {0};
-                vkCmdBindVertexBuffers(command_buffer, 0, vertex_buffers.size(), vertex_buffers.data(), offsets.data());
-
-#if 1
-                ASSERT(m_vertices_of_materials.size() == m_shader_memory->descriptor_set_count());
-
-                for (size_t i = 0; i < m_vertices_of_materials.size(); ++i)
+                case DrawType::Triangles:
                 {
-                        if (m_vertices_of_materials[i].count <= 0)
-                        {
-                                continue;
-                        }
+                        vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, info.triangles_pipeline);
 
-                        std::array<VkDescriptorSet, 1> descriptor_sets = {m_shader_memory->descriptor_set(i)};
-                        vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline_layout,
-                                                descriptor_set_number, descriptor_sets.size(), descriptor_sets.data(), 0,
+                        vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, info.triangles_pipeline_layout,
+                                                info.triangles_shared_set_number, 1 /*set count*/, &info.triangles_shared_set, 0,
                                                 nullptr);
 
-                        vkCmdDraw(command_buffer, m_vertices_of_materials[i].count, 1, m_vertices_of_materials[i].offset, 0);
+                        vkCmdBindVertexBuffers(command_buffer, 0, m_buffers.size(), m_buffers.data(), m_offsets.data());
+
+                        for (const Material& material : m_materials)
+                        {
+                                ASSERT(material.vertex_count > 0);
+
+                                vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                                        info.triangles_pipeline_layout, info.triangles_material_set_number,
+                                                        1 /*set count*/, &material.set, 0, nullptr);
+
+                                vkCmdDraw(command_buffer, material.vertex_count, 1, material.vertex_offset, 0);
+                        }
+
+                        break;
                 }
-#else
-                // Рисование с индексами вершин вместо самих вершин
-                vkCmdBindIndexBuffer(command_buffer, *m_vertex_index_buffer, 0, VULKAN_VERTEX_INDEX_TYPE);
-                vkCmdDrawIndexed(command_buffer, m_vertex_count, 1, 0, 0, 0);
-#endif
+                case DrawType::Points:
+                {
+                        vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, info.points_pipeline);
+
+                        vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, info.points_pipeline_layout,
+                                                info.points_set_number, 1 /*set count*/, &info.points_set, 0, nullptr);
+
+                        vkCmdBindVertexBuffers(command_buffer, 0, m_buffers.size(), m_buffers.data(), m_offsets.data());
+
+                        vkCmdDraw(command_buffer, m_vertex_count, 1, 0, 0);
+
+                        break;
+                }
+                case DrawType::Lines:
+                {
+                        vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, info.lines_pipeline);
+
+                        vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, info.lines_pipeline_layout,
+                                                info.lines_set_number, 1 /*set count*/, &info.lines_set, 0, nullptr);
+
+                        vkCmdBindVertexBuffers(command_buffer, 0, m_buffers.size(), m_buffers.data(), m_offsets.data());
+
+                        vkCmdDraw(command_buffer, m_vertex_count, 1, 0, 0);
+
+                        break;
+                }
+                }
         }
 
-        void draw_all_commands(VkCommandBuffer command_buffer) const
+        void shadow_draw_commands(VkCommandBuffer command_buffer, const ShadowTrianglesDrawInfo& info) const
         {
-                if (!m_vertex_buffer)
+                switch (m_draw_type)
                 {
-                        return;
+                case DrawType::Triangles:
+                {
+                        vkCmdSetDepthBias(command_buffer, 1.5f, 0.0f, 1.5f);
+
+                        vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, info.pipeline);
+
+                        vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, info.pipeline_layout,
+                                                info.set_number, 1 /*set count*/, &info.set, 0, nullptr);
+
+                        vkCmdBindVertexBuffers(command_buffer, 0, m_buffers.size(), m_buffers.data(), m_offsets.data());
+
+                        vkCmdDraw(command_buffer, m_vertex_count, 1, 0, 0);
+
+                        break;
                 }
-
-                std::array<VkBuffer, 1> vertex_buffers = {*m_vertex_buffer};
-                std::array<VkDeviceSize, vertex_buffers.size()> offsets = {0};
-                vkCmdBindVertexBuffers(command_buffer, 0, vertex_buffers.size(), vertex_buffers.data(), offsets.data());
-
-                vkCmdDraw(command_buffer, m_vertex_count, 1, 0, 0);
+                case DrawType::Points:
+                        break;
+                case DrawType::Lines:
+                        break;
+                }
         }
 };
 
@@ -620,7 +728,7 @@ class Renderer final : public VulkanRenderer
 
                 m_shadow_zoom = zoom;
 
-                create_swapchain_and_command_buffers();
+                create_swapchain_and_pipelines_and_command_buffers();
         }
         void set_matrices(const mat4& shadow_matrix, const mat4& main_matrix) override
         {
@@ -712,12 +820,11 @@ class Renderer final : public VulkanRenderer
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                bool with_shadow = m_show_shadow && m_draw_objects.object() != nullptr &&
-                                   m_draw_objects.object()->draw_type() == DrawType::Triangles;
+                bool with_shadow = m_show_shadow && m_draw_objects.object() && m_draw_objects.object()->has_shadow();
 
                 if (!m_instance.draw_frame(*m_swapchain_and_buffers, with_shadow))
                 {
-                        create_swapchain_and_command_buffers();
+                        create_swapchain_and_pipelines_and_command_buffers();
                 }
 
                 return m_draw_objects.object() != nullptr;
@@ -742,7 +849,7 @@ class Renderer final : public VulkanRenderer
                 }
         }
 
-        void create_swapchain_and_command_buffers()
+        void create_swapchain_and_pipelines_and_command_buffers()
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
@@ -799,44 +906,26 @@ class Renderer final : public VulkanRenderer
                         return;
                 }
 
-                switch (m_draw_objects.object()->draw_type())
-                {
-                case DrawType::Triangles:
-                {
-                        vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_triangles_pipeline);
+                DrawObject::DrawInfo info;
 
-                        std::array<VkDescriptorSet, 1> descriptor_sets = {m_triangles_shared_shader_memory.descriptor_set()};
-                        vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_triangles_pipeline_layout,
-                                                TRIANGLES_SHARED_SET_NUMBER, descriptor_sets.size(), descriptor_sets.data(), 0,
-                                                nullptr);
+                info.triangles_pipeline_layout = m_triangles_pipeline_layout;
+                info.triangles_pipeline = m_triangles_pipeline;
+                info.triangles_shared_set = m_triangles_shared_shader_memory.descriptor_set();
+                info.triangles_shared_set_number = TRIANGLES_SHARED_SET_NUMBER;
+                info.triangles_material_set_number = TRIANGLES_MATERIAL_SET_NUMBER;
 
-                        m_draw_objects.object()->draw_texture_commands(command_buffer, m_triangles_pipeline_layout,
-                                                                       TRIANGLES_MATERIAL_SET_NUMBER);
-                        break;
-                }
-                case DrawType::Points:
-                {
-                        vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_points_pipeline);
+                info.points_pipeline_layout = m_points_pipeline_layout;
+                info.points_pipeline = m_points_pipeline;
+                info.points_set = m_points_shader_memory.descriptor_set();
+                info.points_set_number = POINTS_SET_NUMBER;
 
-                        std::array<VkDescriptorSet, 1> descriptor_sets = {m_points_shader_memory.descriptor_set()};
-                        vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_points_pipeline_layout,
-                                                POINTS_SET_NUMBER, descriptor_sets.size(), descriptor_sets.data(), 0, nullptr);
+                info.lines_pipeline_layout = m_points_pipeline_layout;
+                // Отличие линий от точек состоит только в типе объекта
+                info.lines_pipeline = m_lines_pipeline;
+                info.lines_set = m_points_shader_memory.descriptor_set();
+                info.lines_set_number = POINTS_SET_NUMBER;
 
-                        m_draw_objects.object()->draw_all_commands(command_buffer);
-                        break;
-                }
-                case DrawType::Lines:
-                {
-                        vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_lines_pipeline);
-
-                        std::array<VkDescriptorSet, 1> descriptor_sets = {m_points_shader_memory.descriptor_set()};
-                        vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_points_pipeline_layout,
-                                                POINTS_SET_NUMBER, descriptor_sets.size(), descriptor_sets.data(), 0, nullptr);
-
-                        m_draw_objects.object()->draw_all_commands(command_buffer);
-                        break;
-                }
-                }
+                m_draw_objects.object()->draw_commands(command_buffer, info);
         }
 
         void shadow_draw_commands(VkCommandBuffer command_buffer) const
@@ -850,27 +939,14 @@ class Renderer final : public VulkanRenderer
                         return;
                 }
 
-                switch (m_draw_objects.object()->draw_type())
-                {
-                case DrawType::Triangles:
-                {
-                        vkCmdSetDepthBias(command_buffer, 1.5f, 0.0f, 1.5f);
+                DrawObject::ShadowTrianglesDrawInfo info;
 
-                        vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_shadow_pipeline);
+                info.pipeline_layout = m_shadow_pipeline_layout;
+                info.pipeline = m_shadow_pipeline;
+                info.set = m_shadow_shader_memory.descriptor_set();
+                info.set_number = SHADOW_SET_NUMBER;
 
-                        std::array<VkDescriptorSet, 1> descriptor_sets = {m_shadow_shader_memory.descriptor_set()};
-                        vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_shadow_pipeline_layout,
-                                                SHADOW_SET_NUMBER, descriptor_sets.size(), descriptor_sets.data(), 0, nullptr);
-
-                        m_draw_objects.object()->draw_all_commands(command_buffer);
-
-                        break;
-                }
-                case DrawType::Points:
-                        break;
-                case DrawType::Lines:
-                        break;
-                }
+                m_draw_objects.object()->shadow_draw_commands(command_buffer, info);
         }
 
         void create_command_buffers(bool wait_idle = true)
@@ -897,6 +973,27 @@ class Renderer final : public VulkanRenderer
 
                 m_instance.device_wait_idle();
                 m_swapchain_and_buffers->delete_command_buffers();
+        }
+
+        static vulkan::PipelineLayout create_pipeline_layout(VkDevice device, const std::initializer_list<unsigned>& set_numbers,
+                                                             const std::initializer_list<VkDescriptorSetLayout>& set_layouts)
+        {
+                ASSERT(set_numbers.size() == set_layouts.size() && set_numbers.size() > 0);
+                ASSERT(set_numbers.size() == std::unordered_set<unsigned>(set_numbers.begin(), set_numbers.end()).size());
+                ASSERT(0 == *std::min_element(set_numbers.begin(), set_numbers.end()));
+                ASSERT(set_numbers.size() - 1 == *std::max_element(set_numbers.begin(), set_numbers.end()));
+
+                std::vector<VkDescriptorSetLayout> layouts(set_numbers.size());
+                auto n = set_numbers.begin();
+                auto l = set_layouts.begin();
+                while (n != set_numbers.end() && l != set_layouts.end())
+                {
+                        layouts.at(*n++) = *l++;
+                }
+
+                ASSERT(n == set_numbers.end() && l == set_layouts.end());
+
+                return vulkan::create_pipeline_layout(device, layouts);
         }
 
 public:
@@ -932,23 +1029,19 @@ public:
                   //
                   m_triangles_shaders({&m_triangles_vert, &m_triangles_geom, &m_triangles_frag}),
                   m_shadow_shaders({&m_shadow_vert, &m_shadow_frag}),
-                  m_points_shaders({&m_points_vert, &m_points_frag})
+                  m_points_shaders({&m_points_vert, &m_points_frag}),
+                  //
+                  m_triangles_pipeline_layout(create_pipeline_layout(
+                          m_instance.device(), {TRIANGLES_SHARED_SET_NUMBER, TRIANGLES_MATERIAL_SET_NUMBER},
+                          {m_triangles_shared_descriptor_set_layout, m_triangles_material_descriptor_set_layout})),
+                  m_shadow_pipeline_layout(
+                          create_pipeline_layout(m_instance.device(), {SHADOW_SET_NUMBER}, {m_shadow_descriptor_set_layout})),
+                  m_points_pipeline_layout(
+                          create_pipeline_layout(m_instance.device(), {POINTS_SET_NUMBER}, {m_point_descriptor_set_layout}))
         {
-                static_assert(TRIANGLES_SHARED_SET_NUMBER != TRIANGLES_MATERIAL_SET_NUMBER);
-                std::vector<VkDescriptorSetLayout> main_layouts(2);
-                main_layouts.at(TRIANGLES_SHARED_SET_NUMBER) = m_triangles_shared_descriptor_set_layout;
-                main_layouts.at(TRIANGLES_MATERIAL_SET_NUMBER) = m_triangles_material_descriptor_set_layout;
-                m_triangles_pipeline_layout = vulkan::create_pipeline_layout(m_instance.device(), main_layouts);
-
-                std::vector<VkDescriptorSetLayout> shadow_layouts({m_shadow_descriptor_set_layout});
-                m_shadow_pipeline_layout = vulkan::create_pipeline_layout(m_instance.device(), shadow_layouts);
-
-                std::vector<VkDescriptorSetLayout> point_layouts({m_point_descriptor_set_layout});
-                m_points_pipeline_layout = vulkan::create_pipeline_layout(m_instance.device(), point_layouts);
-
                 //
 
-                create_swapchain_and_command_buffers();
+                create_swapchain_and_pipelines_and_command_buffers();
 
                 //
 
