@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace color_conversion
 {
-std::vector<float> rgba_pixels_from_srgb_uint8_to_rgb_float(Span<const std::uint_least8_t>&& pixels)
+std::vector<float> rgba_pixels_from_srgb_uint8_to_rgb_float(const Span<const std::uint_least8_t>& pixels)
 {
         if (pixels.size() % 4 != 0)
         {
@@ -43,7 +43,7 @@ std::vector<float> rgba_pixels_from_srgb_uint8_to_rgb_float(Span<const std::uint
         return buffer;
 }
 
-std::vector<std::uint_least16_t> rgba_pixels_from_srgb_uint8_to_rgb_uint16(Span<const std::uint_least8_t>&& pixels)
+std::vector<std::uint_least16_t> rgba_pixels_from_srgb_uint8_to_rgb_uint16(const Span<const std::uint_least8_t>& pixels)
 {
         if (pixels.size() % 4 != 0)
         {
@@ -63,7 +63,7 @@ std::vector<std::uint_least16_t> rgba_pixels_from_srgb_uint8_to_rgb_uint16(Span<
         return buffer;
 }
 
-std::vector<float> grayscale_pixels_from_srgb_uint8_to_rgb_float(Span<const std::uint_least8_t>&& pixels)
+std::vector<float> grayscale_pixels_from_srgb_uint8_to_rgb_float(const Span<const std::uint_least8_t>& pixels)
 {
         std::vector<float> buffer(pixels.size());
         for (size_t i = 0; i < buffer.size(); ++i)
