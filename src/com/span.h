@@ -42,6 +42,11 @@ public:
         {
         }
 
+        constexpr T& operator[](size_t i) const noexcept
+        {
+                return m_pointer[i];
+        }
+
         constexpr T* data() const noexcept
         {
                 return m_pointer;

@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "renderer.h"
 
-#include "com/color/conversion.h"
+#include "com/color/conversion_span.h"
 #include "com/log.h"
 #include "com/mat_alg.h"
 #include "com/print.h"
@@ -215,26 +215,6 @@ void load_materials(const Obj<3>& obj, std::vector<Material>* materials)
         }
 }
 
-std::vector<float> rgba_pixels_from_srgb_uint8_to_rgb_float(const std::vector<unsigned char>& pixels)
-{
-        if (pixels.size() % 4 != 0)
-        {
-                error("sRGB pixel buffer size is not a multiple of 4");
-        }
-
-        std::vector<float> buffer(pixels.size());
-        size_t b_i = 0;
-        size_t p_i = 0;
-        while (p_i < buffer.size())
-        {
-                buffer[b_i++] = color_conversion::srgb_uint8_to_rgb_float<float>(pixels[p_i++]);
-                buffer[b_i++] = color_conversion::srgb_uint8_to_rgb_float<float>(pixels[p_i++]);
-                buffer[b_i++] = color_conversion::srgb_uint8_to_rgb_float<float>(pixels[p_i++]);
-                buffer[b_i++] = color_conversion::alpha_uint8_to_float<float>(pixels[p_i++]);
-        }
-        return buffer;
-}
-
 //
 
 class DrawObject final
@@ -282,7 +262,7 @@ DrawObject::DrawObject(const Obj<3>* obj, double size, const vec3& position)
                 for (const Obj<3>::Image& image : obj->images())
                 {
                         m_textures.emplace_back(image.size[0], image.size[1],
-                                                rgba_pixels_from_srgb_uint8_to_rgb_float(image.srgba_pixels));
+                                                color_conversion::rgba_pixels_from_srgb_uint8_to_rgb_float(image.srgba_pixels));
                 }
 
                 //

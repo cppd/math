@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "text.h"
 
+#include "com/color/conversion_span.h"
 #include "com/error.h"
 #include "com/font.h"
 #include "graphics/opengl/objects.h"
@@ -44,16 +45,6 @@ struct Vertex
         GLint t1, t2; // Координаты вершины в углах текстуры (0 или 1).
 };
 
-std::vector<float> integer_pixels_to_float_pixels(long long width, long long height, const unsigned char* pixels)
-{
-        std::vector<float> buffer(width * height);
-        for (size_t i = 0; i < buffer.size(); ++i)
-        {
-                buffer[i] = color_conversion::srgb_uint8_to_rgb_float<float>(pixels[i]);
-        }
-        return buffer;
-}
-
 class CharData final
 {
         const opengl::TextureR32F texture;
@@ -63,7 +54,9 @@ public:
         const GLuint64 texture_handle;
 
         CharData(const Font::Char& c)
-                : texture(c.width, c.height, integer_pixels_to_float_pixels(c.width, c.height, c.image)),
+                : texture(c.width, c.height,
+                          color_conversion::grayscale_pixels_from_srgb_uint8_to_rgb_float(
+                                  Span<const unsigned char>(c.image, static_cast<long long>(c.width) * c.height))),
                   width(c.width),
                   height(c.height),
                   left(c.left),

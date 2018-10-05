@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "renderer.h"
 
-#include "com/color/conversion.h"
+#include "com/color/conversion_span.h"
 #include "com/log.h"
 #include "com/math.h"
 #include "com/time.h"
@@ -280,34 +280,15 @@ std::unique_ptr<vulkan::VertexBufferWithDeviceLocalMemory> load_line_vertices(co
         return std::make_unique<vulkan::VertexBufferWithDeviceLocalMemory>(instance.create_vertex_buffer(shader_vertices));
 }
 
-std::vector<uint16_t> rgba_pixels_from_srgb_uint8_to_rgb_uint16(const std::vector<unsigned char>& pixels)
-{
-        if (pixels.size() % 4 != 0)
-        {
-                error("sRGB pixel buffer size is not a multiple of 4");
-        }
-
-        std::vector<uint16_t> buffer(pixels.size());
-        size_t b_i = 0;
-        size_t p_i = 0;
-        while (p_i < buffer.size())
-        {
-                buffer[b_i++] = color_conversion::srgb_uint8_to_rgb_uint16(pixels[p_i++]);
-                buffer[b_i++] = color_conversion::srgb_uint8_to_rgb_uint16(pixels[p_i++]);
-                buffer[b_i++] = color_conversion::srgb_uint8_to_rgb_uint16(pixels[p_i++]);
-                buffer[b_i++] = color_conversion::alpha_uint8_to_uint16(pixels[p_i++]);
-        }
-        return buffer;
-}
-
 std::vector<vulkan::Texture> load_textures(const vulkan::VulkanInstance& instance, const Obj<3>& obj)
 {
         std::vector<vulkan::Texture> textures;
 
         for (const typename Obj<3>::Image& image : obj.images())
         {
-                textures.push_back(instance.create_texture(image.size[0], image.size[1],
-                                                           rgba_pixels_from_srgb_uint8_to_rgb_uint16(image.srgba_pixels)));
+                textures.push_back(
+                        instance.create_texture(image.size[0], image.size[1],
+                                                color_conversion::rgba_pixels_from_srgb_uint8_to_rgb_uint16(image.srgba_pixels)));
         }
 
         // На одну текстуру больше для её указания, но не использования в тех материалах, где нет текстуры
