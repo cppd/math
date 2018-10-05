@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "com/color/conversion_span.h"
 #include "com/error.h"
 #include "com/mat.h"
 #include "com/type_detect.h"
@@ -852,12 +853,14 @@ class TextureRGBA32F final
         }
 
 public:
-        TextureRGBA32F(GLsizei width, GLsizei height, const std::vector<GLfloat>& pixels) noexcept
+        TextureRGBA32F(GLsizei width, GLsizei height, const Span<const std::uint_least8_t>& srgb_uint8_rgba_pixels) noexcept
                 : m_texture(1, GL_RGBA32F, width, height)
         {
-                ASSERT(width >= 0 && height >= 0 && (4ull * width * height == pixels.size()));
+                ASSERT(width >= 0 && height >= 0 && (4ull * width * height == srgb_uint8_rgba_pixels.size()));
 
-                m_texture.texture_sub_image_2d(0, 0, 0, width, height, GL_RGBA, GL_FLOAT, pixels.data());
+                std::vector<float> buffer = color_conversion::rgba_pixels_from_srgb_uint8_to_rgb_float(srgb_uint8_rgba_pixels);
+
+                m_texture.texture_sub_image_2d(0, 0, 0, width, height, GL_RGBA, GL_FLOAT, buffer.data());
                 set_parameters();
         }
 
@@ -946,12 +949,15 @@ class TextureR32F final
         }
 
 public:
-        TextureR32F(GLsizei width, GLsizei height, const std::vector<GLfloat>& pixels) noexcept
+        TextureR32F(GLsizei width, GLsizei height, const Span<const std::uint_least8_t>& srgb_uint8_grayscale_pixels) noexcept
                 : m_texture(1, GL_R32F, width, height)
         {
-                ASSERT(width >= 0 && height >= 0 && static_cast<unsigned long long>(width) * height == pixels.size());
+                ASSERT(width >= 0 && height >= 0 && 1ull * width * height == srgb_uint8_grayscale_pixels.size());
 
-                m_texture.texture_sub_image_2d(0, 0, 0, width, height, GL_RED, GL_FLOAT, pixels.data());
+                std::vector<float> buffer =
+                        color_conversion::grayscale_pixels_from_srgb_uint8_to_rgb_float(srgb_uint8_grayscale_pixels);
+
+                m_texture.texture_sub_image_2d(0, 0, 0, width, height, GL_RED, GL_FLOAT, buffer.data());
                 set_parameters();
         }
 

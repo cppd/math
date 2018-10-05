@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "renderer.h"
 
-#include "com/color/conversion_span.h"
 #include "com/log.h"
 #include "com/math.h"
 #include "com/time.h"
@@ -286,14 +285,12 @@ std::vector<vulkan::Texture> load_textures(const vulkan::VulkanInstance& instanc
 
         for (const typename Obj<3>::Image& image : obj.images())
         {
-                textures.push_back(
-                        instance.create_texture(image.size[0], image.size[1],
-                                                color_conversion::rgba_pixels_from_srgb_uint8_to_rgb_uint16(image.srgba_pixels)));
+                textures.push_back(instance.create_texture(image.size[0], image.size[1], image.srgba_pixels));
         }
 
         // На одну текстуру больше для её указания, но не использования в тех материалах, где нет текстуры
-        std::vector<std::uint16_t> pixels = {/*0*/ 0, 0, 0, 0, /*1*/ 0, 0, 0, 0,
-                                             /*2*/ 0, 0, 0, 0, /*3*/ 0, 0, 0, 0};
+        std::vector<std::uint_least8_t> pixels = {/*0*/ 0, 0, 0, 0, /*1*/ 0, 0, 0, 0,
+                                                  /*2*/ 0, 0, 0, 0, /*3*/ 0, 0, 0, 0};
         textures.push_back(instance.create_texture(2, 2, pixels));
 
         return textures;

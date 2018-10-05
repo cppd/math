@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "text.h"
 
-#include "com/color/conversion_span.h"
 #include "com/error.h"
 #include "com/font.h"
 #include "graphics/opengl/objects.h"
@@ -54,9 +53,7 @@ public:
         const GLuint64 texture_handle;
 
         CharData(const Font::Char& c)
-                : texture(c.width, c.height,
-                          color_conversion::grayscale_pixels_from_srgb_uint8_to_rgb_float(
-                                  Span<const unsigned char>(c.image, static_cast<long long>(c.width) * c.height))),
+                : texture(c.width, c.height, Span<const unsigned char>(c.image, 1ll * c.width * c.height)),
                   width(c.width),
                   height(c.height),
                   left(c.left),

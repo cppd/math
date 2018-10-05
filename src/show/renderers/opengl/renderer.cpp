@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "renderer.h"
 
-#include "com/color/conversion_span.h"
 #include "com/log.h"
 #include "com/mat_alg.h"
 #include "com/print.h"
@@ -261,8 +260,7 @@ DrawObject::DrawObject(const Obj<3>* obj, double size, const vec3& position)
 
                 for (const Obj<3>::Image& image : obj->images())
                 {
-                        m_textures.emplace_back(image.size[0], image.size[1],
-                                                color_conversion::rgba_pixels_from_srgb_uint8_to_rgb_float(image.srgba_pixels));
+                        m_textures.emplace_back(image.size[0], image.size[1], image.srgba_pixels);
                 }
 
                 //

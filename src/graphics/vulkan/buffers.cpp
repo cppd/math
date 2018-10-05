@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "query.h"
 
 #include "com/alg.h"
+#include "com/color/conversion_span.h"
 #include "com/error.h"
 #include "com/print.h"
 
@@ -512,7 +513,7 @@ void UniformBufferWithHostVisibleMemory::copy(VkDeviceSize offset, const void* d
 
 Texture::Texture(const Device& device, VkCommandPool graphics_command_pool, VkQueue graphics_queue,
                  VkCommandPool transfer_command_pool, VkQueue transfer_queue, const std::vector<uint32_t>& family_indices,
-                 uint32_t width, uint32_t height, const std::vector<uint16_t>& rgba_pixels)
+                 uint32_t width, uint32_t height, const Span<const std::uint_least8_t>& srgb_uint8_rgba_pixels)
 {
         ASSERT(family_indices.size() > 0);
 
@@ -528,8 +529,10 @@ Texture::Texture(const Device& device, VkCommandPool graphics_command_pool, VkQu
         m_device_memory = create_device_memory(device, m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
         m_image_view = create_image_view(device, m_image, m_format, VK_IMAGE_ASPECT_COLOR_BIT);
 
+        std::vector<uint16_t> buffer = color_conversion::rgba_pixels_from_srgb_uint8_to_rgb_uint16(srgb_uint8_rgba_pixels);
+
         staging_image_copy(device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, m_image,
-                           m_format, m_image_layout, width, height, rgba_pixels);
+                           m_format, m_image_layout, width, height, buffer);
 }
 
 VkImage Texture::image() const noexcept
