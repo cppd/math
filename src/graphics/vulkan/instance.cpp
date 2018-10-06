@@ -51,15 +51,35 @@ vulkan::CommandPool create_transient_command_pool(VkDevice device, uint32_t queu
         return vulkan::CommandPool(device, create_info);
 }
 
-VkClearValue color_float_srgb_clear_value(const Color& clear_color)
+VkClearValue color_clear_value(VkFormat format, VkColorSpaceKHR color_space, const Color& color)
 {
-        VkClearValue clear_value;
-        clear_value.color.float32[0] = color_conversion::rgb_float_to_srgb_float(clear_color.red());
-        clear_value.color.float32[1] = color_conversion::rgb_float_to_srgb_float(clear_color.green());
-        clear_value.color.float32[2] = color_conversion::rgb_float_to_srgb_float(clear_color.blue());
-        clear_value.color.float32[3] = 1;
-        return clear_value;
+        if (color_space == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
+        {
+                if (format == VK_FORMAT_R8G8B8A8_UNORM || format == VK_FORMAT_B8G8R8A8_UNORM)
+                {
+                        VkClearValue clear_value;
+                        clear_value.color.float32[0] = color_conversion::rgb_float_to_srgb_float(color.red());
+                        clear_value.color.float32[1] = color_conversion::rgb_float_to_srgb_float(color.green());
+                        clear_value.color.float32[2] = color_conversion::rgb_float_to_srgb_float(color.blue());
+                        clear_value.color.float32[3] = 1;
+                        return clear_value;
+                }
+
+                if (format == VK_FORMAT_R8G8B8A8_SRGB || format == VK_FORMAT_B8G8R8A8_SRGB)
+                {
+                        VkClearValue clear_value;
+                        clear_value.color.float32[0] = color.red();
+                        clear_value.color.float32[1] = color.green();
+                        clear_value.color.float32[2] = color.blue();
+                        clear_value.color.float32[3] = 1;
+                        return clear_value;
+                }
+        }
+
+        error("Unsupported clear color format " + vulkan::format_to_string(format) + " and color space " +
+              vulkan::color_space_to_string(color_space));
 }
+
 VkClearValue depth_stencil_clear_value()
 {
         VkClearValue clear_value;
@@ -534,11 +554,13 @@ void SwapchainAndBuffers::create_command_buffers(const Color& clear_color,
                                                  const std::function<void(VkCommandBuffer command_buffer)>& commands,
                                                  const std::function<void(VkCommandBuffer command_buffer)>& shadow_commands)
 {
+        VkClearValue color = color_clear_value(m_swapchain.format(), m_swapchain.color_space(), clear_color);
+
         if (m_sample_count_bit != VK_SAMPLE_COUNT_1_BIT)
         {
                 std::array<VkClearValue, 3> clear_values;
-                clear_values[0] = color_float_srgb_clear_value(clear_color);
-                clear_values[1] = color_float_srgb_clear_value(clear_color);
+                clear_values[0] = color;
+                clear_values[1] = color;
                 clear_values[2] = depth_stencil_clear_value();
                 m_command_buffers = ::create_command_buffers(m_device, m_swapchain.width(), m_swapchain.height(), m_render_pass,
                                                              m_framebuffers, m_graphics_command_pool, clear_values, commands);
@@ -546,7 +568,7 @@ void SwapchainAndBuffers::create_command_buffers(const Color& clear_color,
         else
         {
                 std::array<VkClearValue, 2> clear_values;
-                clear_values[0] = color_float_srgb_clear_value(clear_color);
+                clear_values[0] = color;
                 clear_values[1] = depth_stencil_clear_value();
                 m_command_buffers = ::create_command_buffers(m_device, m_swapchain.width(), m_swapchain.height(), m_render_pass,
                                                              m_framebuffers, m_graphics_command_pool, clear_values, commands);
