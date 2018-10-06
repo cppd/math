@@ -17,28 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #version 450
 
-float rgb_to_srgb(float c)
-{
-        if (c >= 1.0)
-        {
-                return 1.0;
-        }
-        if (c >= 0.0031308)
-        {
-                return 1.055 * pow(c, 1.0 / 2.4) - 0.055;
-        }
-        if (c > 0.0)
-        {
-                return c * 12.92;
-        }
-        return 0.0;
-}
-
-vec4 rgb_to_srgb(vec4 c)
-{
-        return vec4(rgb_to_srgb(c.r), rgb_to_srgb(c.g), rgb_to_srgb(c.b), c.a);
-}
-
 layout(set = 0, binding = 1) uniform Drawing
 {
         vec3 default_color;
@@ -76,5 +54,5 @@ void main(void)
                 color3 = drawing.default_color * drawing.light_a;
         }
 
-        color = rgb_to_srgb(vec4(color3, 1));
+        color = vec4(color3, 1);
 }

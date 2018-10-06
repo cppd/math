@@ -68,8 +68,8 @@ constexpr std::initializer_list<VkFormat> DEPTH_IMAGE_FORMATS =
 };
 // clang-format on
 
-// Шейдеры пишут результат в цветовом пространстве sRGB
-constexpr VkSurfaceFormatKHR SURFACE_FORMAT = {VK_FORMAT_B8G8R8A8_UNORM, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR};
+// Шейдеры пишут результат в цветовом пространстве RGB, поэтому _SRGB (для результата в sRGB нужен _UNORM).
+constexpr VkSurfaceFormatKHR SURFACE_FORMAT = {VK_FORMAT_B8G8R8A8_SRGB, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR};
 
 // 2 - double buffering, 3 - triple buffering
 constexpr int PREFERRED_IMAGE_COUNT = 2;
