@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <iterator>
+#include <type_traits>
 
 template <typename T>
 class Span
@@ -26,6 +27,8 @@ class Span
         const size_t m_size;
 
 public:
+        using value_type = std::remove_cv_t<T>;
+
         constexpr Span(T* pointer, size_t size) noexcept : m_pointer(pointer), m_size(size)
         {
         }
