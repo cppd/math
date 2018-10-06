@@ -367,13 +367,13 @@ void staging_buffer_copy(const vulkan::Device& device, VkCommandPool command_poo
         copy_buffer_to_buffer(device, command_pool, queue, dst_buffer, staging_buffer, src_data_size);
 }
 
-template <typename ColorFormat>
+template <typename T>
 void staging_image_copy(const vulkan::Device& device, VkCommandPool graphics_command_pool, VkQueue graphics_queue,
                         VkCommandPool transfer_command_pool, VkQueue transfer_queue, VkImage image, VkFormat format,
-                        VkImageLayout image_layout, uint32_t width, uint32_t height, const std::vector<ColorFormat>& rgba_pixels)
+                        VkImageLayout image_layout, uint32_t width, uint32_t height, const T& rgba_pixels)
 {
-        static_assert(std::is_same_v<ColorFormat, uint8_t> || std::is_same_v<ColorFormat, uint16_t> ||
-                      std::is_same_v<ColorFormat, float>);
+        static_assert(std::is_same_v<typename T::value_type, uint8_t> || std::is_same_v<typename T::value_type, uint16_t> ||
+                      std::is_same_v<typename T::value_type, float>);
 
         if (rgba_pixels.size() != 4ull * width * height)
         {
@@ -517,7 +517,7 @@ Texture::Texture(const Device& device, VkCommandPool graphics_command_pool, VkQu
 {
         ASSERT(family_indices.size() > 0);
 
-        std::vector<VkFormat> candidates = {VK_FORMAT_R16G16B16A16_UNORM};
+        std::vector<VkFormat> candidates = {VK_FORMAT_R8G8B8A8_SRGB, VK_FORMAT_R16G16B16A16_UNORM, VK_FORMAT_R32G32B32A32_SFLOAT};
         VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
         VkFormatFeatureFlags features = VK_FORMAT_FEATURE_TRANSFER_DST_BIT | VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT;
         VkImageUsageFlags usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
@@ -529,10 +529,28 @@ Texture::Texture(const Device& device, VkCommandPool graphics_command_pool, VkQu
         m_device_memory = create_device_memory(device, m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
         m_image_view = create_image_view(device, m_image, m_format, VK_IMAGE_ASPECT_COLOR_BIT);
 
-        std::vector<uint16_t> buffer = color_conversion::rgba_pixels_from_srgb_uint8_to_rgb_uint16(srgb_uint8_rgba_pixels);
-
-        staging_image_copy(device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, m_image,
-                           m_format, m_image_layout, width, height, buffer);
+        if (m_format == VK_FORMAT_R16G16B16A16_UNORM)
+        {
+                std::vector<uint16_t> buffer =
+                        color_conversion::rgba_pixels_from_srgb_uint8_to_rgb_uint16(srgb_uint8_rgba_pixels);
+                staging_image_copy(device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, m_image,
+                                   m_format, m_image_layout, width, height, buffer);
+        }
+        else if (m_format == VK_FORMAT_R32G32B32A32_SFLOAT)
+        {
+                std::vector<float> buffer = color_conversion::rgba_pixels_from_srgb_uint8_to_rgb_float(srgb_uint8_rgba_pixels);
+                staging_image_copy(device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, m_image,
+                                   m_format, m_image_layout, width, height, buffer);
+        }
+        else if (m_format == VK_FORMAT_R8G8B8A8_SRGB)
+        {
+                staging_image_copy(device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, m_image,
+                                   m_format, m_image_layout, width, height, srgb_uint8_rgba_pixels);
+        }
+        else
+        {
+                error("Unsupported texture image format " + format_to_string(m_format));
+        }
 }
 
 VkImage Texture::image() const noexcept
