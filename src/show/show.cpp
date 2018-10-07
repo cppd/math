@@ -35,7 +35,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "show/renderers/opengl/renderer.h"
 #include "show/renderers/vulkan/canvas.h"
 #include "show/renderers/vulkan/renderer.h"
-#include "window/window_prop.h"
+#include "window/window_manage.h"
 
 #include <algorithm>
 #include <chrono>
