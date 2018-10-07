@@ -83,3 +83,18 @@ float luminance_of_rgb(vec4 c)
 {
         return luminance_of_rgb(c.rgb);
 }
+
+// Умножение комплексных чисел
+vec2 mul(vec2 a, vec2 b)
+{
+        return vec2(a.x * b.x - a.y * b.y, a.x * b.y + a.y * b.x);
+}
+dvec2 mul(dvec2 a, dvec2 b)
+{
+        return dvec2(a.x * b.x - a.y * b.y, a.x * b.y + a.y * b.x);
+}
+
+uint bit_reverse(uint i, uint bits)
+{
+        return bitfieldReverse(i) >> (32 - bits);
+}

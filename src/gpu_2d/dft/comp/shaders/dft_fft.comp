@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -18,16 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // gl_GlobalInvocationID = gl_WorkGroupID * gl_LocalGroupSizeARB + gl_LocalInvocationID
 
 layout(local_size_variable) in;
-
-complex mul(complex a, complex b)
-{
-        return complex(a.x * b.x - a.y * b.y, a.x * b.y + a.y * b.x);
-}
-
-uint bit_reverse(uint i, uint bits)
-{
-        return bitfieldReverse(i) >> (32 - bits);
-}
 
 #if defined(function_reverse)
 
