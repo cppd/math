@@ -28,4 +28,5 @@ std::vector<float> rgba_pixels_from_srgb_uint8_to_rgb_float(const Span<const std
 std::vector<std::uint_least16_t> rgba_pixels_from_srgb_uint8_to_rgb_uint16(const Span<const std::uint_least8_t>& pixels);
 
 std::vector<float> grayscale_pixels_from_srgb_uint8_to_rgb_float(const Span<const std::uint_least8_t>& pixels);
+std::vector<std::uint_least16_t> grayscale_pixels_from_srgb_uint8_to_rgb_uint16(const Span<const std::uint_least8_t>& pixels);
 }
