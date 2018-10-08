@@ -511,9 +511,10 @@ void UniformBufferWithHostVisibleMemory::copy(VkDeviceSize offset, const void* d
 
 //
 
-Texture::Texture(const Device& device, VkCommandPool graphics_command_pool, VkQueue graphics_queue,
-                 VkCommandPool transfer_command_pool, VkQueue transfer_queue, const std::vector<uint32_t>& family_indices,
-                 uint32_t width, uint32_t height, const Span<const std::uint_least8_t>& srgb_uint8_rgba_pixels)
+ColorTexture::ColorTexture(const Device& device, VkCommandPool graphics_command_pool, VkQueue graphics_queue,
+                           VkCommandPool transfer_command_pool, VkQueue transfer_queue,
+                           const std::vector<uint32_t>& family_indices, uint32_t width, uint32_t height,
+                           const Span<const std::uint_least8_t>& srgb_uint8_rgba_pixels)
 {
         ASSERT(family_indices.size() > 0);
 
@@ -553,22 +554,22 @@ Texture::Texture(const Device& device, VkCommandPool graphics_command_pool, VkQu
         }
 }
 
-VkImage Texture::image() const noexcept
+VkImage ColorTexture::image() const noexcept
 {
         return m_image;
 }
 
-VkFormat Texture::format() const noexcept
+VkFormat ColorTexture::format() const noexcept
 {
         return m_format;
 }
 
-VkImageLayout Texture::image_layout() const noexcept
+VkImageLayout ColorTexture::image_layout() const noexcept
 {
         return m_image_layout;
 }
 
-VkImageView Texture::image_view() const noexcept
+VkImageView ColorTexture::image_view() const noexcept
 {
         return m_image_view;
 }

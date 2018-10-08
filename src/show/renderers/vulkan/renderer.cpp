@@ -279,9 +279,9 @@ std::unique_ptr<vulkan::VertexBufferWithDeviceLocalMemory> load_line_vertices(co
         return std::make_unique<vulkan::VertexBufferWithDeviceLocalMemory>(instance.create_vertex_buffer(shader_vertices));
 }
 
-std::vector<vulkan::Texture> load_textures(const vulkan::VulkanInstance& instance, const Obj<3>& obj)
+std::vector<vulkan::ColorTexture> load_textures(const vulkan::VulkanInstance& instance, const Obj<3>& obj)
 {
-        std::vector<vulkan::Texture> textures;
+        std::vector<vulkan::ColorTexture> textures;
 
         for (const typename Obj<3>::Image& image : obj.images())
         {
@@ -298,13 +298,13 @@ std::vector<vulkan::Texture> load_textures(const vulkan::VulkanInstance& instanc
 
 std::unique_ptr<shaders::TrianglesMaterialMemory> load_materials(const vulkan::Device& device, VkSampler sampler,
                                                                  VkDescriptorSetLayout descriptor_set_layout, const Obj<3>& obj,
-                                                                 const std::vector<vulkan::Texture>& textures)
+                                                                 const std::vector<vulkan::ColorTexture>& textures)
 {
         // Текстур имеется больше на одну для её использования в тех материалах, где нет текстуры
 
         ASSERT(textures.size() == obj.images().size() + 1);
 
-        const vulkan::Texture* const no_texture = &textures.back();
+        const vulkan::ColorTexture* const no_texture = &textures.back();
 
         std::vector<shaders::TrianglesMaterialMemory::MaterialAndTexture> materials;
         materials.reserve(obj.materials().size() + 1);
@@ -395,7 +395,7 @@ struct DrawObjectInterface
 class DrawObjectTriangles final : public DrawObjectInterface
 {
         std::unique_ptr<vulkan::VertexBufferWithDeviceLocalMemory> m_vertex_buffer;
-        std::vector<vulkan::Texture> m_textures;
+        std::vector<vulkan::ColorTexture> m_textures;
         std::unique_ptr<shaders::TrianglesMaterialMemory> m_shader_memory;
         unsigned m_vertex_count;
 

@@ -159,9 +159,9 @@ public:
         struct MaterialAndTexture
         {
                 Material material;
-                const vulkan::Texture* texture_Ka;
-                const vulkan::Texture* texture_Kd;
-                const vulkan::Texture* texture_Ks;
+                const vulkan::ColorTexture* texture_Ka;
+                const vulkan::ColorTexture* texture_Kd;
+                const vulkan::ColorTexture* texture_Ks;
         };
 
         //

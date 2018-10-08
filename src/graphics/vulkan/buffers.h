@@ -112,7 +112,7 @@ public:
         void copy(VkDeviceSize offset, const void* data, VkDeviceSize data_size) const;
 };
 
-class Texture final
+class ColorTexture final
 {
         VkImageLayout m_image_layout;
         VkFormat m_format;
@@ -121,16 +121,16 @@ class Texture final
         ImageView m_image_view;
 
 public:
-        Texture(const Device& device, VkCommandPool graphics_command_pool, VkQueue graphics_queue,
-                VkCommandPool transfer_command_pool, VkQueue transfer_queue, const std::vector<uint32_t>& family_indices,
-                uint32_t width, uint32_t height, const Span<const std::uint_least8_t>& srgb_uint8_rgba_pixels);
+        ColorTexture(const Device& device, VkCommandPool graphics_command_pool, VkQueue graphics_queue,
+                     VkCommandPool transfer_command_pool, VkQueue transfer_queue, const std::vector<uint32_t>& family_indices,
+                     uint32_t width, uint32_t height, const Span<const std::uint_least8_t>& srgb_uint8_rgba_pixels);
 
-        Texture(const Texture&) = delete;
-        Texture& operator=(const Texture&) = delete;
-        Texture& operator=(Texture&&) = delete;
+        ColorTexture(const ColorTexture&) = delete;
+        ColorTexture& operator=(const ColorTexture&) = delete;
+        ColorTexture& operator=(ColorTexture&&) = delete;
 
-        Texture(Texture&&) = default;
-        ~Texture() = default;
+        ColorTexture(ColorTexture&&) = default;
+        ~ColorTexture() = default;
 
         //
 

@@ -207,10 +207,10 @@ public:
         }
 
         template <typename T>
-        Texture create_texture(uint32_t width, uint32_t height, const std::vector<T>& rgba_pixels) const
+        ColorTexture create_texture(uint32_t width, uint32_t height, const std::vector<T>& rgba_pixels) const
         {
-                return Texture(m_device, m_graphics_command_pool, m_graphics_queue, m_transfer_command_pool, m_transfer_queue,
-                               m_texture_family_indices, width, height, rgba_pixels);
+                return ColorTexture(m_device, m_graphics_command_pool, m_graphics_queue, m_transfer_command_pool,
+                                    m_transfer_queue, m_texture_family_indices, width, height, rgba_pixels);
         }
 };
 }
