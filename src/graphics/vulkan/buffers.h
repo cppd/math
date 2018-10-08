@@ -140,6 +140,34 @@ public:
         VkImageView image_view() const noexcept;
 };
 
+class GrayscaleTexture final
+{
+        VkImageLayout m_image_layout;
+        VkFormat m_format;
+        Image m_image;
+        DeviceMemory m_device_memory;
+        ImageView m_image_view;
+
+public:
+        GrayscaleTexture(const Device& device, VkCommandPool graphics_command_pool, VkQueue graphics_queue,
+                         VkCommandPool transfer_command_pool, VkQueue transfer_queue, const std::vector<uint32_t>& family_indices,
+                         uint32_t width, uint32_t height, const Span<const std::uint_least8_t>& srgb_uint8_grayscale_pixels);
+
+        GrayscaleTexture(const GrayscaleTexture&) = delete;
+        GrayscaleTexture& operator=(const GrayscaleTexture&) = delete;
+        GrayscaleTexture& operator=(GrayscaleTexture&&) = delete;
+
+        GrayscaleTexture(GrayscaleTexture&&) = default;
+        ~GrayscaleTexture() = default;
+
+        //
+
+        VkImage image() const noexcept;
+        VkFormat format() const noexcept;
+        VkImageLayout image_layout() const noexcept;
+        VkImageView image_view() const noexcept;
+};
+
 class DepthAttachment final
 {
         VkImageLayout m_image_layout;

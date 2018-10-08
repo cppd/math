@@ -370,18 +370,13 @@ void staging_buffer_copy(const vulkan::Device& device, VkCommandPool command_poo
 template <typename T>
 void staging_image_copy(const vulkan::Device& device, VkCommandPool graphics_command_pool, VkQueue graphics_queue,
                         VkCommandPool transfer_command_pool, VkQueue transfer_queue, VkImage image, VkFormat format,
-                        VkImageLayout image_layout, uint32_t width, uint32_t height, const T& rgba_pixels)
+                        VkImageLayout image_layout, uint32_t width, uint32_t height, const T& pixels)
 {
         static_assert(std::is_same_v<typename T::value_type, uint8_t> || std::is_same_v<typename T::value_type, uint16_t> ||
                       std::is_same_v<typename T::value_type, float>);
+        static_assert(std::is_same_v<typename T::value_type, std::remove_cv_t<std::remove_reference_t<decltype(pixels[0])>>>);
 
-        if (rgba_pixels.size() != 4ull * width * height)
-        {
-                error("Wrong RGBA pixel component count " + to_string(rgba_pixels.size()) + " for image dimensions width " +
-                      to_string(width) + " and height " + to_string(height));
-        }
-
-        VkDeviceSize data_size = rgba_pixels.size() * sizeof(rgba_pixels[0]);
+        VkDeviceSize data_size = pixels.size() * sizeof(pixels[0]);
 
         vulkan::Buffer staging_buffer(create_buffer(device, data_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, {}));
 
@@ -390,7 +385,7 @@ void staging_image_copy(const vulkan::Device& device, VkCommandPool graphics_com
 
         //
 
-        memory_copy(device, staging_device_memory, rgba_pixels.data(), data_size);
+        memory_copy(device, staging_device_memory, pixels.data(), data_size);
 
         transition_image_layout(device, graphics_command_pool, graphics_queue, image, format, VK_IMAGE_LAYOUT_UNDEFINED,
                                 VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
@@ -518,6 +513,12 @@ ColorTexture::ColorTexture(const Device& device, VkCommandPool graphics_command_
 {
         ASSERT(family_indices.size() > 0);
 
+        if (srgb_uint8_rgba_pixels.size() != 4ull * width * height)
+        {
+                error("Wrong RGBA pixel component count " + to_string(srgb_uint8_rgba_pixels.size()) +
+                      " for image dimensions width " + to_string(width) + " and height " + to_string(height));
+        }
+
         std::vector<VkFormat> candidates = {VK_FORMAT_R8G8B8A8_SRGB, VK_FORMAT_R16G16B16A16_UNORM, VK_FORMAT_R32G32B32A32_SFLOAT};
         VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
         VkFormatFeatureFlags features = VK_FORMAT_FEATURE_TRANSFER_DST_BIT | VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT;
@@ -570,6 +571,78 @@ VkImageLayout ColorTexture::image_layout() const noexcept
 }
 
 VkImageView ColorTexture::image_view() const noexcept
+{
+        return m_image_view;
+}
+
+//
+
+GrayscaleTexture::GrayscaleTexture(const Device& device, VkCommandPool graphics_command_pool, VkQueue graphics_queue,
+                                   VkCommandPool transfer_command_pool, VkQueue transfer_queue,
+                                   const std::vector<uint32_t>& family_indices, uint32_t width, uint32_t height,
+                                   const Span<const std::uint_least8_t>& srgb_uint8_grayscale_pixels)
+{
+        ASSERT(family_indices.size() > 0);
+
+        if (srgb_uint8_grayscale_pixels.size() != 1ull * width * height)
+        {
+                error("Wrong grayscale pixel component count " + to_string(srgb_uint8_grayscale_pixels.size()) +
+                      " for image dimensions width " + to_string(width) + " and height " + to_string(height));
+        }
+
+        std::vector<VkFormat> candidates = {VK_FORMAT_R8_SRGB, VK_FORMAT_R16_UNORM, VK_FORMAT_R32_SFLOAT};
+        VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
+        VkFormatFeatureFlags features = VK_FORMAT_FEATURE_TRANSFER_DST_BIT | VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT;
+        VkImageUsageFlags usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+        VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT;
+
+        m_image_layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        m_format = find_supported_2d_image_format(device.physical_device(), candidates, tiling, features, usage, samples);
+        m_image = create_2d_image(device, width, height, m_format, family_indices, samples, tiling, usage);
+        m_device_memory = create_device_memory(device, m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+        m_image_view = create_image_view(device, m_image, m_format, VK_IMAGE_ASPECT_COLOR_BIT);
+
+        if (m_format == VK_FORMAT_R16_UNORM)
+        {
+                std::vector<uint16_t> buffer =
+                        color_conversion::grayscale_pixels_from_srgb_uint8_to_rgb_uint16(srgb_uint8_grayscale_pixels);
+                staging_image_copy(device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, m_image,
+                                   m_format, m_image_layout, width, height, buffer);
+        }
+        else if (m_format == VK_FORMAT_R32_SFLOAT)
+        {
+                std::vector<float> buffer =
+                        color_conversion::grayscale_pixels_from_srgb_uint8_to_rgb_float(srgb_uint8_grayscale_pixels);
+                staging_image_copy(device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, m_image,
+                                   m_format, m_image_layout, width, height, buffer);
+        }
+        else if (m_format == VK_FORMAT_R8_SRGB)
+        {
+                staging_image_copy(device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, m_image,
+                                   m_format, m_image_layout, width, height, srgb_uint8_grayscale_pixels);
+        }
+        else
+        {
+                error("Unsupported texture image format " + format_to_string(m_format));
+        }
+}
+
+VkImage GrayscaleTexture::image() const noexcept
+{
+        return m_image;
+}
+
+VkFormat GrayscaleTexture::format() const noexcept
+{
+        return m_format;
+}
+
+VkImageLayout GrayscaleTexture::image_layout() const noexcept
+{
+        return m_image_layout;
+}
+
+VkImageView GrayscaleTexture::image_view() const noexcept
 {
         return m_image_view;
 }
