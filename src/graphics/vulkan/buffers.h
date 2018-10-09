@@ -21,14 +21,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace vulkan
 {
-#if 0
 class VertexBufferWithHostVisibleMemory final
 {
+        VkDevice m_device;
+        VkDeviceSize m_data_size;
+
         Buffer m_buffer;
         DeviceMemory m_device_memory;
 
 public:
         VertexBufferWithHostVisibleMemory(const Device& device, VkDeviceSize data_size, const void* data);
+        VertexBufferWithHostVisibleMemory(const Device& device, VkDeviceSize data_size);
 
         VertexBufferWithHostVisibleMemory(const VertexBufferWithHostVisibleMemory&) = delete;
         VertexBufferWithHostVisibleMemory& operator=(const VertexBufferWithHostVisibleMemory&) = delete;
@@ -40,8 +43,11 @@ public:
         //
 
         operator VkBuffer() const noexcept;
+
+        VkDeviceSize size() const noexcept;
+
+        void copy(VkDeviceSize offset, const void* data, VkDeviceSize data_size) const;
 };
-#endif
 
 class VertexBufferWithDeviceLocalMemory final
 {
