@@ -523,6 +523,46 @@ void UniformBufferWithHostVisibleMemory::copy(VkDeviceSize offset, const void* d
 
 //
 
+IndirectBufferWithHostVisibleMemory::IndirectBufferWithHostVisibleMemory(const Device& device, unsigned command_count)
+        : m_device(device),
+          m_data_size(command_count * sizeof(VkDrawIndirectCommand)),
+          m_buffer(create_buffer(device, m_data_size, VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT, {})),
+          m_device_memory(create_device_memory(device, m_buffer,
+                                               VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT))
+{
+        ASSERT(stride() == sizeof(VkDrawIndirectCommand));
+}
+
+IndirectBufferWithHostVisibleMemory::operator VkBuffer() const noexcept
+{
+        return m_buffer;
+}
+
+unsigned IndirectBufferWithHostVisibleMemory::stride() const noexcept
+{
+        return sizeof(VkDrawIndirectCommand);
+}
+
+VkDeviceSize IndirectBufferWithHostVisibleMemory::offset(unsigned command_number) const noexcept
+{
+        return static_cast<VkDeviceSize>(command_number) * stride();
+}
+
+void IndirectBufferWithHostVisibleMemory::set(uint32_t command_number, uint32_t vertex_count, uint32_t instance_count,
+                                              uint32_t first_vertex, uint32_t first_instance) const
+{
+        ASSERT(offset(command_number) + sizeof(VkDrawIndirectCommand) <= m_data_size);
+
+        VkDrawIndirectCommand command;
+        command.vertexCount = vertex_count;
+        command.instanceCount = instance_count;
+        command.firstVertex = first_vertex;
+        command.firstInstance = first_instance;
+        memory_copy_offset(m_device, m_device_memory, offset(command_number), &command, sizeof(command));
+}
+
+//
+
 ColorTexture::ColorTexture(const Device& device, VkCommandPool graphics_command_pool, VkQueue graphics_queue,
                            VkCommandPool transfer_command_pool, VkQueue transfer_queue,
                            const std::vector<uint32_t>& family_indices, uint32_t width, uint32_t height,

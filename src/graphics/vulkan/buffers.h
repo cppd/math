@@ -118,6 +118,35 @@ public:
         void copy(VkDeviceSize offset, const void* data, VkDeviceSize data_size) const;
 };
 
+class IndirectBufferWithHostVisibleMemory final
+{
+        VkDevice m_device;
+        VkDeviceSize m_data_size;
+
+        Buffer m_buffer;
+        DeviceMemory m_device_memory;
+
+public:
+        IndirectBufferWithHostVisibleMemory(const Device& device, unsigned command_count);
+
+        IndirectBufferWithHostVisibleMemory(const IndirectBufferWithHostVisibleMemory&) = delete;
+        IndirectBufferWithHostVisibleMemory& operator=(const IndirectBufferWithHostVisibleMemory&) = delete;
+        IndirectBufferWithHostVisibleMemory& operator=(IndirectBufferWithHostVisibleMemory&&) = delete;
+
+        IndirectBufferWithHostVisibleMemory(IndirectBufferWithHostVisibleMemory&&) = default;
+        ~IndirectBufferWithHostVisibleMemory() = default;
+
+        //
+
+        operator VkBuffer() const noexcept;
+
+        unsigned stride() const noexcept;
+        VkDeviceSize offset(unsigned command_number) const noexcept;
+
+        void set(unsigned command_number, uint32_t vertex_count, uint32_t instance_count, uint32_t first_vertex,
+                 uint32_t first_instance) const;
+};
+
 class ColorTexture final
 {
         VkImageLayout m_image_layout;
