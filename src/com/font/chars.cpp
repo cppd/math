@@ -15,11 +15,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "font_chars.h"
-
-#include "error.h"
+#include "chars.h"
 
 #include "com/alg.h"
+#include "com/error.h"
 
 #include <SFML/Graphics/Image.hpp>
 #include <numeric>

@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "text.h"
 
 #include "com/error.h"
-#include "com/font.h"
+#include "com/font/font.h"
 #include "graphics/opengl/objects.h"
 
 #include <array>
