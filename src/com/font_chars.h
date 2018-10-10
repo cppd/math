@@ -17,28 +17,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <memory>
+#include "font.h"
+
+#include <cstdint>
+#include <unordered_map>
 #include <vector>
 
-class Font final
+struct FontChar
 {
-        class Impl;
-        std::unique_ptr<Impl> m_impl;
-
-public:
-        Font(int size_in_pixels);
-        ~Font();
-
-        void set_size(int size_in_pixels);
-
-        struct Char
-        {
-                const unsigned char* image;
-                int size, width, height, left, top, advance_x;
-                char c;
-        };
-
-        Char render_char(char c);
-
-        std::vector<char> supported_characters() const;
+        int width, height, left, top, advance_x;
+        float texture_x, texture_y, texture_width, texture_height;
 };
+
+// Информация о символах шрифта с картинкой всех символов вместе.
+// Grayscale, sRGB, uint8.
+void create_font_chars(Font& font, unsigned max_width, unsigned max_height, std::unordered_map<char, FontChar>* chars,
+                       int* texture_width, int* texture_height, std::vector<std::uint_least8_t>* texture_pixels);

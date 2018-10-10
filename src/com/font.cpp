@@ -26,7 +26,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <sstream>
 #include <thread>
 #include <type_traits>
-#include <vector>
 
 #include FT_FREETYPE_H
 
@@ -236,6 +235,17 @@ public:
                         save_to_file(render_char(i));
                 }
         }
+
+        std::vector<char> supported_characters() const
+        {
+                std::vector<char> chars;
+                chars.reserve(MAX_CHAR - MIN_CHAR + 1);
+                for (int i = MIN_CHAR; i <= MAX_CHAR; ++i)
+                {
+                        chars.push_back(i);
+                }
+                return chars;
+        }
 };
 
 Font::Font(int size_in_pixels) : m_impl(std::make_unique<Impl>(size_in_pixels))
@@ -247,6 +257,11 @@ Font::~Font() = default;
 void Font::set_size(int size_in_pixels)
 {
         m_impl->set_size(size_in_pixels);
+}
+
+std::vector<char> Font::supported_characters() const
+{
+        return m_impl->supported_characters();
 }
 
 Font::Char Font::render_char(char c)
