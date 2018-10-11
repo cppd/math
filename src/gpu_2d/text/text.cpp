@@ -18,12 +18,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "text.h"
 
 #include "com/error.h"
+#include "com/font/chars.h"
 #include "com/font/font.h"
 #include "graphics/opengl/objects.h"
+#include "graphics/opengl/query.h"
 
 #include <array>
 #include <limits>
 #include <unordered_map>
+
+constexpr char DEFAULT_CHAR = ' ';
 
 // clang-format off
 constexpr const char text_vertex_shader[]
@@ -41,34 +45,19 @@ namespace
 struct Vertex
 {
         GLint w1, w2; // Координаты вершины в пространстве экрана.
-        GLint t1, t2; // Координаты вершины в углах текстуры (0 или 1).
+        float t1, t2; // Координаты вершины в текстуре.
 };
 
-class CharData final
+template <typename T>
+constexpr unsigned char_to_int(T c)
 {
-        const opengl::TextureR32F texture;
-
-public:
-        const int width, height, left, top, advance;
-        const GLuint64 texture_handle;
-
-        CharData(const Font::Char& c)
-                : texture(c.width, c.height, Span<const unsigned char>(c.image, 1ll * c.width * c.height)),
-                  width(c.width),
-                  height(c.height),
-                  left(c.left),
-                  top(c.top),
-                  advance(c.advance_x),
-                  texture_handle(texture.texture().texture_resident_handle())
-        {
-        }
-};
+        static_assert(std::is_same_v<T, char>);
+        return static_cast<unsigned char>(c);
+}
 }
 
 class Text::Impl final
 {
-        Font m_font;
-
         int m_step_y;
         int m_start_x;
         int m_start_y;
@@ -76,21 +65,25 @@ class Text::Impl final
         opengl::VertexArray m_vertex_array;
         opengl::ArrayBuffer m_vertex_buffer;
         opengl::GraphicsProgram m_program;
+        std::unordered_map<char, FontChar> m_chars;
+        std::unique_ptr<opengl::TextureR32F> m_texture;
 
-        std::unordered_map<char, CharData> m_chars;
-
-        const CharData& char_data(char c)
+        const FontChar& char_data(char c, char default_char) const
         {
                 auto iter = m_chars.find(c);
-                if (iter == m_chars.end())
+                if (iter == m_chars.cend())
                 {
-                        iter = m_chars.try_emplace(c, m_font.render_char(c)).first;
+                        iter = m_chars.find(default_char);
+                        if (iter == m_chars.cend())
+                        {
+                                error("Error finding character " + to_string(char_to_int(c)) + " and default character " +
+                                      to_string(char_to_int(default_char)));
+                        }
                 }
-
                 return iter->second;
         }
 
-        void draw(int& x, int& y, const std::string& line)
+        void draw(int& x, int& y, const std::string& line) const
         {
                 for (char c : line)
                 {
@@ -101,40 +94,55 @@ class Text::Impl final
                                 continue;
                         }
 
-                        const CharData& cd = char_data(c);
+                        const FontChar& fc = char_data(c, DEFAULT_CHAR);
 
-                        m_program.set_uniform_handle("tex", cd.texture_handle);
+                        int x0 = x + fc.left;
+                        int y0 = y - fc.top;
+                        int x1 = x0 + fc.width;
+                        int y1 = y0 + fc.height;
 
-                        int x0 = x + cd.left;
-                        int y0 = y - cd.top;
-                        int x1 = x0 + cd.width;
-                        int y1 = y0 + cd.height;
+                        float s0 = fc.texture_x;
+                        float t0 = fc.texture_y;
+                        float s1 = s0 + fc.texture_width;
+                        float t1 = t0 + fc.texture_height;
 
                         std::array<Vertex, 4> vertices;
-                        vertices[0] = {x0, y0, 0, 0};
-                        vertices[1] = {x1, y0, 1, 0};
-                        vertices[2] = {x0, y1, 0, 1};
-                        vertices[3] = {x1, y1, 1, 1};
+                        vertices[0] = {x0, y0, s0, t0};
+                        vertices[1] = {x1, y0, s1, t0};
+                        vertices[2] = {x0, y1, s0, t1};
+                        vertices[3] = {x1, y1, s1, t1};
 
                         m_vertex_buffer.load_dynamic_draw(vertices);
                         m_program.draw_arrays(GL_TRIANGLE_STRIP, 0, vertices.size());
 
-                        x += cd.advance;
+                        x += fc.advance_x;
                 }
         }
 
 public:
         Impl(int size, int step_y, int start_x, int start_y, const Color& color, const mat4& matrix)
-                : m_font(size),
-                  m_step_y(step_y),
+                : m_step_y(step_y),
                   m_start_x(start_x),
                   m_start_y(start_y),
                   m_program(opengl::VertexShader(text_vertex_shader), opengl::FragmentShader(text_fragment_shader))
         {
                 m_vertex_array.attrib_i_pointer(0, 2, GL_INT, m_vertex_buffer, offsetof(Vertex, w1), sizeof(Vertex), true);
-                m_vertex_array.attrib_i_pointer(1, 2, GL_INT, m_vertex_buffer, offsetof(Vertex, t1), sizeof(Vertex), true);
+                m_vertex_array.attrib_pointer(1, 2, GL_FLOAT, m_vertex_buffer, offsetof(Vertex, t1), sizeof(Vertex), true);
+
                 set_color(color);
                 set_matrix(matrix);
+
+                //
+
+                int max_size = opengl::max_texture_size();
+
+                Font font(size);
+                int width, height;
+                std::vector<std::uint_least8_t> pixels;
+                create_font_chars(font, max_size, max_size, &m_chars, &width, &height, &pixels);
+
+                m_texture = std::make_unique<opengl::TextureR32F>(width, height, pixels);
+                m_program.set_uniform_handle("tex", m_texture->texture().texture_resident_handle());
         }
 
         void set_color(const Color& color) const
@@ -147,7 +155,7 @@ public:
                 m_program.set_uniform_float("matrix", matrix);
         }
 
-        void draw(const std::vector<std::string>& text)
+        void draw(const std::vector<std::string>& text) const
         {
                 opengl::GLEnableAndRestore<GL_BLEND> e;
 
@@ -162,7 +170,7 @@ public:
                 }
         }
 
-        void draw(const std::string& text)
+        void draw(const std::string& text) const
         {
                 opengl::GLEnableAndRestore<GL_BLEND> e;
 
@@ -192,12 +200,12 @@ void Text::set_matrix(const mat4& matrix) const
         m_impl->set_matrix(matrix);
 }
 
-void Text::draw(const std::vector<std::string>& text)
+void Text::draw(const std::vector<std::string>& text) const
 {
         m_impl->draw(text);
 }
 
-void Text::draw(const std::string& text)
+void Text::draw(const std::string& text) const
 {
         m_impl->draw(text);
 }

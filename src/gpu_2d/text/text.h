@@ -36,6 +36,6 @@ public:
         void set_color(const Color& color) const;
         void set_matrix(const mat4& matrix) const;
 
-        void draw(const std::vector<std::string>& text);
-        void draw(const std::string& text);
+        void draw(const std::vector<std::string>& text) const;
+        void draw(const std::string& text) const;
 };
