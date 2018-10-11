@@ -65,18 +65,13 @@ void text_vertices(const std::unordered_map<char, FontChar>& chars, int step_y, 
                 int x1 = x0 + fc.width;
                 int y1 = y0 + fc.height;
 
-                float s0 = fc.texture_x;
-                float t0 = fc.texture_y;
-                float s1 = s0 + fc.texture_width;
-                float t1 = t0 + fc.texture_height;
+                vertices->emplace_back(x0, y0, fc.s0, fc.t0);
+                vertices->emplace_back(x1, y0, fc.s1, fc.t0);
+                vertices->emplace_back(x0, y1, fc.s0, fc.t1);
 
-                vertices->emplace_back(x0, y0, s0, t0);
-                vertices->emplace_back(x1, y0, s1, t0);
-                vertices->emplace_back(x0, y1, s0, t1);
-
-                vertices->emplace_back(x1, y0, s1, t0);
-                vertices->emplace_back(x0, y1, s0, t1);
-                vertices->emplace_back(x1, y1, s1, t1);
+                vertices->emplace_back(x1, y0, fc.s1, fc.t0);
+                vertices->emplace_back(x0, y1, fc.s0, fc.t1);
+                vertices->emplace_back(x1, y1, fc.s1, fc.t1);
 
                 x += fc.advance_x;
         }
@@ -90,6 +85,7 @@ void text_vertices(const std::unordered_map<char, FontChar>& chars, int step_y, 
 
         int x = start_x;
         int y = start_y;
+
         for (const std::string& s : text)
         {
                 text_vertices(chars, step_y, start_x, x, y, s, vertices);

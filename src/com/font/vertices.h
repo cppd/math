@@ -19,17 +19,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "chars.h"
 
+#include "com/vec.h"
+
 #include <cstdint>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
+// Данные вершин треугольников для непосредственной передачи в шейдеры.
+// Типы данных GLSL для координат вершин ivec2 и для координат текстуры vec2.
+// Для общего случая используется int_least32_t вместо int32_t.
 struct TextVertex
 {
-        int_least32_t w1, w2; // Координаты вершины в пространстве экрана.
-        float t1, t2; // Координаты вершины в текстуре.
+        Vector<2, int_least32_t> v; // Координаты вершины в пространстве экрана.
+        Vector<2, float> t; // Координаты вершины в текстуре.
 
-        TextVertex(int_least32_t w1_, int_least32_t w2_, float t1_, float t2_) : w1(w1_), w2(w2_), t1(t1_), t2(t2_)
+        TextVertex(int v1, int v2, float t1, float t2) : v(v1, v2), t(t1, t2)
         {
         }
 };

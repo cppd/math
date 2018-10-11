@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "chars.h"
 
-#include "com/alg.h"
 #include "com/error.h"
 
 #include <SFML/Graphics/Image.hpp>
@@ -28,8 +27,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace
 {
-void save_grayscale_image_to_file[[maybe_unused]](const std::string& file_name, int width, int height,
-                                                  const std::vector<std::uint_least8_t>& pixels)
+void save_grayscale_image_to_file(const std::string& file_name, int width, int height,
+                                  const std::vector<std::uint_least8_t>& pixels)
 {
         ASSERT(1ull * width * height == pixels.size());
 
@@ -96,24 +95,16 @@ void copy_image(std::vector<T>* dst, const std::array<int, 2>& dst_size, const s
         copy_image(dst, dst_size, dst_offset, src, src_size, {0, 0}, src_size);
 }
 
-struct CharInfo
+void render_chars(Font& font, std::unordered_map<char, FontChar>* font_chars,
+                  std::unordered_map<char, std::vector<std::uint_least8_t>>* char_pixels)
 {
-        FontChar font_char;
-        std::vector<std::uint_least8_t> pixels;
-        std::array<int, 2> coordinates;
-};
-
-void make_chars_and_coordinates(Font& font, int max_width, int max_height, std::unordered_map<char, CharInfo>* char_infos,
-                                int* width, int* height)
-{
-        char_infos->clear();
-        *width = 0;
-        *height = 0;
-
-        int row_height = 0, insert_x = 0, insert_y = 0;
-
         std::vector<char> supported_characters = font.supported_characters();
-        sort_and_unique(&supported_characters);
+
+        font_chars->clear();
+        char_pixels->clear();
+
+        font_chars->reserve(supported_characters.size());
+        char_pixels->reserve(supported_characters.size());
 
         for (char c : supported_characters)
         {
@@ -127,13 +118,45 @@ void make_chars_and_coordinates(Font& font, int max_width, int max_height, std::
                 {
                         error("One-dimensional character image");
                 }
-                if (rc.width > max_width)
-                {
-                        error("Character is too wide");
-                }
 
-                ASSERT(insert_x <= max_width);
-                if (insert_x + rc.width > max_width || insert_x == max_width)
+                FontChar& font_char = font_chars->try_emplace(c).first->second;
+
+                font_char.left = rc.left;
+                font_char.top = rc.top;
+                font_char.width = rc.width;
+                font_char.height = rc.height;
+                font_char.advance_x = rc.advance_x;
+
+                std::vector<std::uint_least8_t>& pixels = char_pixels->try_emplace(c).first->second;
+
+                pixels.resize(1ull * rc.width * rc.height);
+                for (size_t i = 0; i < pixels.size(); ++i)
+                {
+                        pixels[i] = rc.image[i];
+                }
+        }
+}
+
+template <typename Key, typename Value>
+void place_rectangles_on_rectangle(const std::unordered_map<Key, Value>& rectangles, int max_rectangle_width,
+                                   int max_rectangle_height, int* rectangle_width, int* rectangle_height,
+                                   std::unordered_map<Key, std::array<int, 2>>* rectangle_coordinates)
+{
+        rectangle_coordinates->clear();
+        rectangle_coordinates->reserve(rectangles.size());
+
+        *rectangle_width = 0;
+        *rectangle_height = 0;
+
+        int row_height = 0;
+        int insert_x = 0;
+        int insert_y = 0;
+
+        for (const auto& [key, value] : rectangles)
+        {
+                ASSERT(insert_x <= max_rectangle_width);
+
+                if (insert_x + value.width > max_rectangle_width || insert_x == max_rectangle_width)
                 {
                         ASSERT(row_height > 0);
 
@@ -142,82 +165,73 @@ void make_chars_and_coordinates(Font& font, int max_width, int max_height, std::
                         row_height = 0;
                 }
 
-                if (insert_y + rc.height > max_height)
+                if (insert_x + value.width > max_rectangle_width)
                 {
-                        error("Maximum character image height limit");
+                        error("Maximum rectangle width exceeded");
+                }
+                if (insert_y + value.height > max_rectangle_height)
+                {
+                        error("Maximum rectangle height exceeded");
                 }
 
-                //
+                rectangle_coordinates->emplace(key, std::array<int, 2>{insert_x, insert_y});
 
-                CharInfo info;
+                *rectangle_width = std::max(*rectangle_width, insert_x + value.width);
+                *rectangle_height = std::max(*rectangle_height, insert_y + value.height);
 
-                info.font_char.left = rc.left;
-                info.font_char.top = rc.top;
-                info.font_char.width = rc.width;
-                info.font_char.height = rc.height;
-                info.font_char.advance_x = rc.advance_x;
-
-                info.pixels.resize(1ull * rc.width * rc.height);
-                for (size_t i = 0; i < info.pixels.size(); ++i)
-                {
-                        info.pixels[i] = rc.image[i];
-                }
-                info.coordinates = {insert_x, insert_y};
-
-                char_infos->emplace(c, std::move(info));
-
-                //
-
-                *width = std::max(*width, insert_x + rc.width);
-                *height = std::max(*height, insert_y + rc.height);
-
-                insert_x += rc.width;
-                row_height = std::max(row_height, rc.height);
+                insert_x += value.width;
+                row_height = std::max(row_height, value.height);
         }
 }
 
-void make_texture_and_texture_coordinates(int width, int height, std::unordered_map<char, CharInfo>* chars,
-                                          std::vector<std::uint_least8_t>* pixels)
+void fill_texture_pixels_and_texture_coordinates(int texture_width, int texture_height,
+                                                 const std::unordered_map<char, std::vector<std::uint_least8_t>>& char_pixels,
+                                                 const std::unordered_map<char, std::array<int, 2>>& char_coordinates,
+                                                 std::unordered_map<char, FontChar>* font_chars,
+                                                 std::vector<std::uint_least8_t>* texture_pixels)
 {
-        pixels->resize(1ll * width * height);
+        texture_pixels->clear();
+        texture_pixels->resize(1ull * texture_width * texture_height, 0);
 
-        float r_width = 1.0f / width;
-        float r_height = 1.0f / height;
+        float r_width = 1.0f / texture_width;
+        float r_height = 1.0f / texture_height;
 
-        for (auto& c : *chars)
+        for (auto& [c, font_char] : *font_chars)
         {
-                CharInfo& info = c.second;
+                ASSERT(char_pixels.count(c) == 1);
+                ASSERT(char_coordinates.count(c) == 1);
 
-                copy_image(pixels, {width, height}, info.coordinates, info.pixels, {info.font_char.width, info.font_char.height});
+                const std::vector<std::uint_least8_t>& pixels = char_pixels.find(c)->second;
+                const std::array<int, 2>& coordinates = char_coordinates.find(c)->second;
 
-                ASSERT(info.coordinates[0] >= 0 && info.coordinates[0] + info.font_char.width <= width);
-                ASSERT(info.coordinates[1] >= 0 && info.coordinates[1] + info.font_char.height <= height);
+                copy_image(texture_pixels, {texture_width, texture_height}, coordinates, pixels,
+                           {font_char.width, font_char.height});
 
-                info.font_char.texture_x = info.coordinates[0] * r_width;
-                info.font_char.texture_y = info.coordinates[1] * r_height;
-                info.font_char.texture_width = info.font_char.width * r_width;
-                info.font_char.texture_height = info.font_char.height * r_height;
+                font_char.s0 = r_width * coordinates[0];
+                font_char.s1 = r_width * (coordinates[0] + font_char.width);
+
+                font_char.t0 = r_height * coordinates[1];
+                font_char.t1 = r_height * (coordinates[1] + font_char.height);
         }
 }
 }
 
-void create_font_chars(Font& font, unsigned max_width, unsigned max_height, std::unordered_map<char, FontChar>* chars,
+void create_font_chars(Font& font, int max_width, int max_height, std::unordered_map<char, FontChar>* font_chars,
                        int* texture_width, int* texture_height, std::vector<std::uint_least8_t>* texture_pixels)
 {
-        std::unordered_map<char, CharInfo> char_info;
+        std::unordered_map<char, std::vector<std::uint_least8_t>> char_pixels;
 
-        make_chars_and_coordinates(font, max_width, max_height, &char_info, texture_width, texture_height);
+        render_chars(font, font_chars, &char_pixels);
 
-        make_texture_and_texture_coordinates(*texture_width, *texture_height, &char_info, texture_pixels);
+        std::unordered_map<char, std::array<int, 2>> char_coordinates;
 
-#if 0
-        save_grayscale_image_to_file("font_texture.png", *texture_width, *texture_height, *texture_pixels);
-#endif
+        place_rectangles_on_rectangle(*font_chars, max_width, max_height, texture_width, texture_height, &char_coordinates);
 
-        chars->clear();
-        chars->reserve(char_info.size());
-        for (const auto& [c, info] : char_info)
+        fill_texture_pixels_and_texture_coordinates(*texture_width, *texture_height, char_pixels, char_coordinates, font_chars,
+                                                    texture_pixels);
+
+        if ((false))
         {
-                chars->emplace(c, info.font_char);
+                save_grayscale_image_to_file("font_texture.png", *texture_width, *texture_height, *texture_pixels);
         }
 }

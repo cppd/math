@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/error.h"
 
 #include <SFML/Graphics/Image.hpp>
+#include <cmath>
 #include <fstream>
 #include <ft2build.h>
 #include <iomanip>
@@ -41,14 +42,16 @@ constexpr int MAX_CHAR = 126;
 
 namespace
 {
-constexpr int to_int(char c)
+template <typename T>
+constexpr unsigned char_to_int(T c)
 {
+        static_assert(std::is_same_v<T, char>);
         return static_cast<unsigned char>(c);
 }
 
 void check_char(char c)
 {
-        if (to_int(c) < MIN_CHAR || to_int(c) > MAX_CHAR)
+        if (char_to_int(c) < MIN_CHAR || char_to_int(c) > MAX_CHAR)
         {
                 error("Only ASCII printable characters are supported");
         }
@@ -131,7 +134,7 @@ void save_to_file(Font::Char data)
 {
         std::ostringstream oss;
         oss << std::setfill('0');
-        oss << "char=" << std::setw(3) << to_int(data.c);
+        oss << "char=" << std::setw(3) << char_to_int(data.c);
         oss << " size=" << data.size;
         oss << " w=" << data.width;
         oss << " h=" << data.height;
@@ -223,7 +226,7 @@ public:
                 res.height = m_face->glyph->bitmap.rows;
                 res.left = m_face->glyph->bitmap_left;
                 res.top = m_face->glyph->bitmap_top;
-                res.advance_x = m_face->glyph->advance.x / 64;
+                res.advance_x = std::lround(m_face->glyph->advance.x / 64.0);
 
                 return res;
         }

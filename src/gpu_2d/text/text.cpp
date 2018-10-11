@@ -40,8 +40,9 @@ constexpr const char text_fragment_shader[]
 };
 // clang-format on
 
-static_assert(std::is_same_v<decltype(TextVertex::w1), GLint>);
-static_assert(std::is_same_v<decltype(TextVertex::w2), GLint>);
+static_assert(sizeof(TextVertex) == sizeof(Vector<2, GLint>) + sizeof(Vector<2, GLfloat>));
+static_assert(std::is_same_v<decltype(TextVertex::v), Vector<2, GLint>>);
+static_assert(std::is_same_v<decltype(TextVertex::t), Vector<2, GLfloat>>);
 
 class Text::Impl final
 {
@@ -80,10 +81,8 @@ public:
                   m_start_y(start_y),
                   m_program(opengl::VertexShader(text_vertex_shader), opengl::FragmentShader(text_fragment_shader))
         {
-                m_vertex_array.attrib_i_pointer(0, 2, GL_INT, m_vertex_buffer, offsetof(TextVertex, w1), sizeof(TextVertex),
-                                                true);
-                m_vertex_array.attrib_pointer(1, 2, GL_FLOAT, m_vertex_buffer, offsetof(TextVertex, t1), sizeof(TextVertex),
-                                              true);
+                m_vertex_array.attrib_i_pointer(0, 2, GL_INT, m_vertex_buffer, offsetof(TextVertex, v), sizeof(TextVertex), true);
+                m_vertex_array.attrib_pointer(1, 2, GL_FLOAT, m_vertex_buffer, offsetof(TextVertex, t), sizeof(TextVertex), true);
 
                 set_color(color);
                 set_matrix(matrix);
