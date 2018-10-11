@@ -20,14 +20,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/error.h"
 #include "com/font/chars.h"
 #include "com/font/font.h"
+#include "com/font/vertices.h"
 #include "graphics/opengl/objects.h"
 #include "graphics/opengl/query.h"
 
 #include <array>
 #include <limits>
+#include <thread>
 #include <unordered_map>
-
-constexpr char DEFAULT_CHAR = ' ';
 
 // clang-format off
 constexpr const char text_vertex_shader[]
@@ -40,24 +40,13 @@ constexpr const char text_fragment_shader[]
 };
 // clang-format on
 
-namespace
-{
-struct Vertex
-{
-        GLint w1, w2; // Координаты вершины в пространстве экрана.
-        float t1, t2; // Координаты вершины в текстуре.
-};
-
-template <typename T>
-constexpr unsigned char_to_int(T c)
-{
-        static_assert(std::is_same_v<T, char>);
-        return static_cast<unsigned char>(c);
-}
-}
+static_assert(std::is_same_v<decltype(TextVertex::w1), GLint>);
+static_assert(std::is_same_v<decltype(TextVertex::w2), GLint>);
 
 class Text::Impl final
 {
+        const std::thread::id m_thread_id;
+
         int m_step_y;
         int m_start_x;
         int m_start_y;
@@ -68,66 +57,33 @@ class Text::Impl final
         std::unordered_map<char, FontChar> m_chars;
         std::unique_ptr<opengl::TextureR32F> m_texture;
 
-        const FontChar& char_data(char c, char default_char) const
+        template <typename T>
+        void draw(int x, int y, const T& text) const
         {
-                auto iter = m_chars.find(c);
-                if (iter == m_chars.cend())
-                {
-                        iter = m_chars.find(default_char);
-                        if (iter == m_chars.cend())
-                        {
-                                error("Error finding character " + to_string(char_to_int(c)) + " and default character " +
-                                      to_string(char_to_int(default_char)));
-                        }
-                }
-                return iter->second;
-        }
+                ASSERT(std::this_thread::get_id() == m_thread_id);
 
-        void draw(int& x, int& y, const std::string& line) const
-        {
-                for (char c : line)
-                {
-                        if (c == '\n')
-                        {
-                                y += m_step_y;
-                                x = m_start_x;
-                                continue;
-                        }
+                thread_local std::vector<TextVertex> vertices;
 
-                        const FontChar& fc = char_data(c, DEFAULT_CHAR);
+                text_vertices(m_chars, m_step_y, x, y, text, &vertices);
 
-                        int x0 = x + fc.left;
-                        int y0 = y - fc.top;
-                        int x1 = x0 + fc.width;
-                        int y1 = y0 + fc.height;
-
-                        float s0 = fc.texture_x;
-                        float t0 = fc.texture_y;
-                        float s1 = s0 + fc.texture_width;
-                        float t1 = t0 + fc.texture_height;
-
-                        std::array<Vertex, 4> vertices;
-                        vertices[0] = {x0, y0, s0, t0};
-                        vertices[1] = {x1, y0, s1, t0};
-                        vertices[2] = {x0, y1, s0, t1};
-                        vertices[3] = {x1, y1, s1, t1};
-
-                        m_vertex_buffer.load_dynamic_draw(vertices);
-                        m_program.draw_arrays(GL_TRIANGLE_STRIP, 0, vertices.size());
-
-                        x += fc.advance_x;
-                }
+                opengl::GLEnableAndRestore<GL_BLEND> e;
+                m_vertex_array.bind();
+                m_vertex_buffer.load_dynamic_draw(vertices);
+                m_program.draw_arrays(GL_TRIANGLES, 0, vertices.size());
         }
 
 public:
         Impl(int size, int step_y, int start_x, int start_y, const Color& color, const mat4& matrix)
-                : m_step_y(step_y),
+                : m_thread_id(std::this_thread::get_id()),
+                  m_step_y(step_y),
                   m_start_x(start_x),
                   m_start_y(start_y),
                   m_program(opengl::VertexShader(text_vertex_shader), opengl::FragmentShader(text_fragment_shader))
         {
-                m_vertex_array.attrib_i_pointer(0, 2, GL_INT, m_vertex_buffer, offsetof(Vertex, w1), sizeof(Vertex), true);
-                m_vertex_array.attrib_pointer(1, 2, GL_FLOAT, m_vertex_buffer, offsetof(Vertex, t1), sizeof(Vertex), true);
+                m_vertex_array.attrib_i_pointer(0, 2, GL_INT, m_vertex_buffer, offsetof(TextVertex, w1), sizeof(TextVertex),
+                                                true);
+                m_vertex_array.attrib_pointer(1, 2, GL_FLOAT, m_vertex_buffer, offsetof(TextVertex, t1), sizeof(TextVertex),
+                                              true);
 
                 set_color(color);
                 set_matrix(matrix);
@@ -145,6 +101,11 @@ public:
                 m_program.set_uniform_handle("tex", m_texture->texture().texture_resident_handle());
         }
 
+        ~Impl()
+        {
+                ASSERT(std::this_thread::get_id() == m_thread_id);
+        }
+
         void set_color(const Color& color) const
         {
                 m_program.set_uniform("text_color", color.to_rgb_vector<float>());
@@ -157,29 +118,12 @@ public:
 
         void draw(const std::vector<std::string>& text) const
         {
-                opengl::GLEnableAndRestore<GL_BLEND> e;
-
-                m_vertex_array.bind();
-
-                int x = m_start_x;
-                int y = m_start_y;
-
-                for (const std::string& s : text)
-                {
-                        draw(x, y, s);
-                }
+                draw(m_start_x, m_start_y, text);
         }
 
         void draw(const std::string& text) const
         {
-                opengl::GLEnableAndRestore<GL_BLEND> e;
-
-                m_vertex_array.bind();
-
-                int x = m_start_x;
-                int y = m_start_y;
-
-                draw(x, y, text);
+                draw(m_start_x, m_start_y, text);
         }
 };
 
