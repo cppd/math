@@ -18,8 +18,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "text.h"
 
 #include "com/error.h"
-#include "com/font/chars.h"
 #include "com/font/font.h"
+#include "com/font/glyphs.h"
 #include "com/font/vertices.h"
 #include "graphics/opengl/objects.h"
 #include "graphics/opengl/query.h"
@@ -55,7 +55,7 @@ class Text::Impl final
         opengl::VertexArray m_vertex_array;
         opengl::ArrayBuffer m_vertex_buffer;
         opengl::GraphicsProgram m_program;
-        std::unordered_map<char32_t, FontChar> m_chars;
+        std::unordered_map<char32_t, FontGlyph> m_glyphs;
         std::unique_ptr<opengl::TextureR32F> m_texture;
 
         template <typename T>
@@ -65,7 +65,7 @@ class Text::Impl final
 
                 thread_local std::vector<TextVertex> vertices;
 
-                text_vertices(m_chars, m_step_y, x, y, text, &vertices);
+                text_vertices(m_glyphs, m_step_y, x, y, text, &vertices);
 
                 opengl::GLEnableAndRestore<GL_BLEND> e;
                 m_vertex_array.bind();
@@ -94,7 +94,7 @@ public:
                 Font font(size);
                 int width, height;
                 std::vector<std::uint_least8_t> pixels;
-                create_font_chars(font, max_size, max_size, &m_chars, &width, &height, &pixels);
+                create_font_glyphs(font, max_size, max_size, &m_glyphs, &width, &height, &pixels);
 
                 m_texture = std::make_unique<opengl::TextureR32F>(width, height, pixels);
                 m_program.set_uniform_handle("tex", m_texture->texture().texture_resident_handle());

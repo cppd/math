@@ -15,13 +15,13 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "chars.h"
+#include "glyphs.h"
 
 #include "code_points.h"
+#include "file.h"
 
 #include "com/error.h"
 
-#include <SFML/Graphics/Image.hpp>
 #include <numeric>
 #include <unordered_map>
 #include <utility>
@@ -29,28 +29,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace
 {
-void save_grayscale_image_to_file(const std::string& file_name, int width, int height,
-                                  const std::vector<std::uint_least8_t>& pixels)
-{
-        ASSERT(1ull * width * height == pixels.size());
-
-        std::vector<sf::Uint8> buffer(4 * pixels.size());
-        for (size_t buffer_i = 0, i = 0; i < pixels.size(); ++i)
-        {
-                buffer[buffer_i++] = pixels[i];
-                buffer[buffer_i++] = pixels[i];
-                buffer[buffer_i++] = pixels[i];
-                buffer[buffer_i++] = 255;
-        }
-
-        sf::Image image;
-        image.create(width, height, buffer.data());
-        if (!image.saveToFile(file_name))
-        {
-                error("Error saving character texture to the file " + file_name);
-        }
-}
-
 template <size_t... I>
 bool check[[maybe_unused]](const std::array<int, sizeof...(I)>& offset, const std::array<int, sizeof...(I)>& copy_size,
                            const std::array<int, sizeof...(I)>& size, std::integer_sequence<size_t, I...>&&)
@@ -97,14 +75,14 @@ void copy_image(std::vector<T>* dst, const std::array<int, 2>& dst_size, const s
         copy_image(dst, dst_size, dst_offset, src, src_size, {0, 0}, src_size);
 }
 
-void render_chars(const std::vector<char32_t>& code_points, Font& font, std::unordered_map<char32_t, FontChar>* font_chars,
-                  std::unordered_map<char32_t, std::vector<std::uint_least8_t>>* char_pixels)
+void render_glyphs(const std::vector<char32_t>& code_points, Font& font, std::unordered_map<char32_t, FontGlyph>* font_glyphs,
+                   std::unordered_map<char32_t, std::vector<std::uint_least8_t>>* glyph_pixels)
 {
-        font_chars->clear();
-        char_pixels->clear();
+        font_glyphs->clear();
+        glyph_pixels->clear();
 
-        font_chars->reserve(code_points.size());
-        char_pixels->reserve(code_points.size());
+        font_glyphs->reserve(code_points.size());
+        glyph_pixels->reserve(code_points.size());
 
         for (char32_t code_point : code_points)
         {
@@ -124,15 +102,15 @@ void render_chars(const std::vector<char32_t>& code_points, Font& font, std::uno
                         error("One-dimensional character image");
                 }
 
-                FontChar& font_char = font_chars->try_emplace(code_point).first->second;
+                FontGlyph& font_glyph = font_glyphs->try_emplace(code_point).first->second;
 
-                font_char.left = rc->left;
-                font_char.top = rc->top;
-                font_char.width = rc->width;
-                font_char.height = rc->height;
-                font_char.advance_x = rc->advance_x;
+                font_glyph.left = rc->left;
+                font_glyph.top = rc->top;
+                font_glyph.width = rc->width;
+                font_glyph.height = rc->height;
+                font_glyph.advance_x = rc->advance_x;
 
-                std::vector<std::uint_least8_t>& pixels = char_pixels->try_emplace(code_point).first->second;
+                std::vector<std::uint_least8_t>& pixels = glyph_pixels->try_emplace(code_point).first->second;
 
                 pixels.resize(1ull * rc->width * rc->height);
                 for (size_t i = 0; i < pixels.size(); ++i)
@@ -189,11 +167,10 @@ void place_rectangles_on_rectangle(const std::unordered_map<Key, Value>& rectang
         }
 }
 
-void fill_texture_pixels_and_texture_coordinates(int texture_width, int texture_height,
-                                                 const std::unordered_map<char32_t, std::vector<std::uint_least8_t>>& char_pixels,
-                                                 const std::unordered_map<char32_t, std::array<int, 2>>& char_coordinates,
-                                                 std::unordered_map<char32_t, FontChar>* font_chars,
-                                                 std::vector<std::uint_least8_t>* texture_pixels)
+void fill_texture_pixels_and_texture_coordinates(
+        int texture_width, int texture_height, const std::unordered_map<char32_t, std::vector<std::uint_least8_t>>& glyph_pixels,
+        const std::unordered_map<char32_t, std::array<int, 2>>& glyph_coordinates,
+        std::unordered_map<char32_t, FontGlyph>* font_glyphs, std::vector<std::uint_least8_t>* texture_pixels)
 {
         texture_pixels->clear();
         texture_pixels->resize(1ull * texture_width * texture_height, 0);
@@ -201,38 +178,38 @@ void fill_texture_pixels_and_texture_coordinates(int texture_width, int texture_
         float r_width = 1.0f / texture_width;
         float r_height = 1.0f / texture_height;
 
-        for (auto& [cp, font_char] : *font_chars)
+        for (auto& [cp, font_glyph] : *font_glyphs)
         {
-                ASSERT(char_pixels.count(cp) == 1);
-                ASSERT(char_coordinates.count(cp) == 1);
+                ASSERT(glyph_pixels.count(cp) == 1);
+                ASSERT(glyph_coordinates.count(cp) == 1);
 
-                const std::vector<std::uint_least8_t>& pixels = char_pixels.find(cp)->second;
-                const std::array<int, 2>& coordinates = char_coordinates.find(cp)->second;
+                const std::vector<std::uint_least8_t>& pixels = glyph_pixels.find(cp)->second;
+                const std::array<int, 2>& coordinates = glyph_coordinates.find(cp)->second;
 
                 copy_image(texture_pixels, {texture_width, texture_height}, coordinates, pixels,
-                           {font_char.width, font_char.height});
+                           {font_glyph.width, font_glyph.height});
 
-                font_char.s0 = r_width * coordinates[0];
-                font_char.s1 = r_width * (coordinates[0] + font_char.width);
+                font_glyph.s0 = r_width * coordinates[0];
+                font_glyph.s1 = r_width * (coordinates[0] + font_glyph.width);
 
-                font_char.t0 = r_height * coordinates[1];
-                font_char.t1 = r_height * (coordinates[1] + font_char.height);
+                font_glyph.t0 = r_height * coordinates[1];
+                font_glyph.t1 = r_height * (coordinates[1] + font_glyph.height);
         }
 }
 }
 
-void create_font_chars(Font& font, int max_width, int max_height, std::unordered_map<char32_t, FontChar>* font_chars,
-                       int* texture_width, int* texture_height, std::vector<std::uint_least8_t>* texture_pixels)
+void create_font_glyphs(Font& font, int max_width, int max_height, std::unordered_map<char32_t, FontGlyph>* font_glyphs,
+                        int* texture_width, int* texture_height, std::vector<std::uint_least8_t>* texture_pixels)
 {
-        std::unordered_map<char32_t, std::vector<std::uint_least8_t>> char_pixels;
+        std::unordered_map<char32_t, std::vector<std::uint_least8_t>> glyph_pixels;
 
-        render_chars(supported_code_points(), font, font_chars, &char_pixels);
+        render_glyphs(supported_code_points(), font, font_glyphs, &glyph_pixels);
 
-        std::unordered_map<char32_t, std::array<int, 2>> char_coordinates;
+        std::unordered_map<char32_t, std::array<int, 2>> glyph_coordinates;
 
-        place_rectangles_on_rectangle(*font_chars, max_width, max_height, texture_width, texture_height, &char_coordinates);
+        place_rectangles_on_rectangle(*font_glyphs, max_width, max_height, texture_width, texture_height, &glyph_coordinates);
 
-        fill_texture_pixels_and_texture_coordinates(*texture_width, *texture_height, char_pixels, char_coordinates, font_chars,
+        fill_texture_pixels_and_texture_coordinates(*texture_width, *texture_height, glyph_pixels, glyph_coordinates, font_glyphs,
                                                     texture_pixels);
 
         if ((false))

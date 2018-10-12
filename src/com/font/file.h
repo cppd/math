@@ -17,21 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "font.h"
+#include "com/span.h"
 
-#include <cstdint>
-#include <unordered_map>
+#include <string>
 #include <vector>
 
-struct FontChar
-{
-        int width, height, left, top, advance_x;
-
-        // Начальные (s0, t0) и конечные (s1, t1) координаты символа в текстуре
-        float s0, s1, t0, t1;
-};
-
-// Информация о символах шрифта с картинкой всех символов вместе.
-// Grayscale, sRGB, uint8.
-void create_font_chars(Font& font, int max_width, int max_height, std::unordered_map<char32_t, FontChar>* font_chars,
-                       int* texture_width, int* texture_height, std::vector<std::uint_least8_t>* texture_pixels);
+void save_grayscale_image_to_file(const std::string& file_name, int width, int height, Span<const std::uint_least8_t> pixels);

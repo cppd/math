@@ -26,15 +26,15 @@ constexpr char32_t REPLACEMENT_CHARACTER = unicode_code_points::REPLACEMENT_CHAR
 namespace
 {
 template <typename T>
-const FontChar& char_data(const std::unordered_map<T, FontChar>& chars, T code_point)
+const FontGlyph& code_point_glyph(const std::unordered_map<T, FontGlyph>& glyphs, T code_point)
 {
         static_assert(std::is_same_v<T, char32_t>);
 
-        auto iter = chars.find(code_point);
-        if (iter == chars.cend())
+        auto iter = glyphs.find(code_point);
+        if (iter == glyphs.cend())
         {
-                iter = chars.find(REPLACEMENT_CHARACTER);
-                if (iter == chars.cend())
+                iter = glyphs.find(REPLACEMENT_CHARACTER);
+                if (iter == glyphs.cend())
                 {
                         error("Error finding character " + unicode::utf32_to_number_string(code_point) +
                               " and replacement character " + unicode::utf32_to_number_string(REPLACEMENT_CHARACTER));
@@ -43,7 +43,7 @@ const FontChar& char_data(const std::unordered_map<T, FontChar>& chars, T code_p
         return iter->second;
 }
 
-void text_vertices(const std::unordered_map<char32_t, FontChar>& chars, int step_y, int start_x, int& x, int& y,
+void text_vertices(const std::unordered_map<char32_t, FontGlyph>& glyphs, int step_y, int start_x, int& x, int& y,
                    const std::string& text, std::vector<TextVertex>* vertices)
 {
         size_t i = 0;
@@ -59,27 +59,27 @@ void text_vertices(const std::unordered_map<char32_t, FontChar>& chars, int step
 
                 char32_t code_point = unicode::read_utf8_as_utf32(text, i);
 
-                const FontChar& fc = char_data(chars, code_point);
+                const FontGlyph& g = code_point_glyph(glyphs, code_point);
 
-                int x0 = x + fc.left;
-                int y0 = y - fc.top;
-                int x1 = x0 + fc.width;
-                int y1 = y0 + fc.height;
+                int x0 = x + g.left;
+                int y0 = y - g.top;
+                int x1 = x0 + g.width;
+                int y1 = y0 + g.height;
 
-                vertices->emplace_back(x0, y0, fc.s0, fc.t0);
-                vertices->emplace_back(x1, y0, fc.s1, fc.t0);
-                vertices->emplace_back(x0, y1, fc.s0, fc.t1);
+                vertices->emplace_back(x0, y0, g.s0, g.t0);
+                vertices->emplace_back(x1, y0, g.s1, g.t0);
+                vertices->emplace_back(x0, y1, g.s0, g.t1);
 
-                vertices->emplace_back(x1, y0, fc.s1, fc.t0);
-                vertices->emplace_back(x0, y1, fc.s0, fc.t1);
-                vertices->emplace_back(x1, y1, fc.s1, fc.t1);
+                vertices->emplace_back(x1, y0, g.s1, g.t0);
+                vertices->emplace_back(x0, y1, g.s0, g.t1);
+                vertices->emplace_back(x1, y1, g.s1, g.t1);
 
-                x += fc.advance_x;
+                x += g.advance_x;
         }
 }
 }
 
-void text_vertices(const std::unordered_map<char32_t, FontChar>& chars, int step_y, int start_x, int start_y,
+void text_vertices(const std::unordered_map<char32_t, FontGlyph>& glyphs, int step_y, int start_x, int start_y,
                    const std::vector<std::string>& text, std::vector<TextVertex>* vertices)
 {
         vertices->clear();
@@ -89,11 +89,11 @@ void text_vertices(const std::unordered_map<char32_t, FontChar>& chars, int step
 
         for (const std::string& s : text)
         {
-                text_vertices(chars, step_y, start_x, x, y, s, vertices);
+                text_vertices(glyphs, step_y, start_x, x, y, s, vertices);
         }
 }
 
-void text_vertices(const std::unordered_map<char32_t, FontChar>& chars, int step_y, int start_x, int start_y,
+void text_vertices(const std::unordered_map<char32_t, FontGlyph>& glyphs, int step_y, int start_x, int start_y,
                    const std::string& text, std::vector<TextVertex>* vertices)
 {
         vertices->clear();
@@ -101,5 +101,5 @@ void text_vertices(const std::unordered_map<char32_t, FontChar>& chars, int step
         int x = start_x;
         int y = start_y;
 
-        text_vertices(chars, step_y, start_x, x, y, text, vertices);
+        text_vertices(glyphs, step_y, start_x, x, y, text, vertices);
 }

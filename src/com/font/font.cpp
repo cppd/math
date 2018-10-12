@@ -17,10 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "font.h"
 
+#include "file.h"
+
 #include "com/error.h"
 #include "com/unicode/unicode.h"
 
-#include <SFML/Graphics/Image.hpp>
 #include <cmath>
 #include <fstream>
 #include <ft2build.h>
@@ -151,20 +152,9 @@ void save_to_file(char32_t code_point, const std::optional<Font::Char>& data)
         }
 
         oss << ".png";
-        std::vector<sf::Uint8> image_buffer(data->width * data->height * 4);
-        for (size_t i_dst = 0, i_src = 0; i_dst < image_buffer.size(); i_dst += 4, ++i_src)
-        {
-                image_buffer[i_dst + 0] = data->image[i_src]; // red
-                image_buffer[i_dst + 1] = data->image[i_src]; // green
-                image_buffer[i_dst + 2] = 255; // blue
-                image_buffer[i_dst + 3] = 255; // alpha
-        }
-        sf::Image image;
-        image.create(data->width, data->height, image_buffer.data());
-        if (!image.saveToFile(oss.str()))
-        {
-                error("Error saving image to the file " + oss.str());
-        }
+
+        save_grayscale_image_to_file(oss.str(), data->width, data->height,
+                                     Span<const std::uint_least8_t>(data->image, 1ull * data->width * data->height));
 }
 }
 
