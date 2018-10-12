@@ -18,47 +18,48 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "vertices.h"
 
 #include "com/error.h"
-#include "com/print.h"
+#include "com/unicode/names.h"
+#include "com/unicode/unicode.h"
 
-constexpr char DEFAULT_CHAR = ' ';
+constexpr char32_t REPLACEMENT_CHARACTER = unicode_code_points::REPLACEMENT_CHARACTER;
 
 namespace
 {
 template <typename T>
-constexpr unsigned char_to_int(T c)
+const FontChar& char_data(const std::unordered_map<T, FontChar>& chars, T code_point)
 {
-        static_assert(std::is_same_v<T, char>);
-        return static_cast<unsigned char>(c);
-}
+        static_assert(std::is_same_v<T, char32_t>);
 
-const FontChar& char_data(const std::unordered_map<char, FontChar>& chars, char c, char default_char)
-{
-        auto iter = chars.find(c);
+        auto iter = chars.find(code_point);
         if (iter == chars.cend())
         {
-                iter = chars.find(default_char);
+                iter = chars.find(REPLACEMENT_CHARACTER);
                 if (iter == chars.cend())
                 {
-                        error("Error finding character " + to_string(char_to_int(c)) + " and default character " +
-                              to_string(char_to_int(default_char)));
+                        error("Error finding character " + unicode::utf32_to_number_string(code_point) +
+                              " and replacement character " + unicode::utf32_to_number_string(REPLACEMENT_CHARACTER));
                 }
         }
         return iter->second;
 }
 
-void text_vertices(const std::unordered_map<char, FontChar>& chars, int step_y, int start_x, int& x, int& y,
+void text_vertices(const std::unordered_map<char32_t, FontChar>& chars, int step_y, int start_x, int& x, int& y,
                    const std::string& text, std::vector<TextVertex>* vertices)
 {
-        for (char c : text)
+        size_t i = 0;
+        while (i < text.size())
         {
-                if (c == '\n')
+                if (text[i] == '\n')
                 {
                         y += step_y;
                         x = start_x;
+                        ++i;
                         continue;
                 }
 
-                const FontChar& fc = char_data(chars, c, DEFAULT_CHAR);
+                char32_t code_point = unicode::read_utf8_as_utf32(text, i);
+
+                const FontChar& fc = char_data(chars, code_point);
 
                 int x0 = x + fc.left;
                 int y0 = y - fc.top;
@@ -78,7 +79,7 @@ void text_vertices(const std::unordered_map<char, FontChar>& chars, int step_y, 
 }
 }
 
-void text_vertices(const std::unordered_map<char, FontChar>& chars, int step_y, int start_x, int start_y,
+void text_vertices(const std::unordered_map<char32_t, FontChar>& chars, int step_y, int start_x, int start_y,
                    const std::vector<std::string>& text, std::vector<TextVertex>* vertices)
 {
         vertices->clear();
@@ -92,8 +93,8 @@ void text_vertices(const std::unordered_map<char, FontChar>& chars, int step_y, 
         }
 }
 
-void text_vertices(const std::unordered_map<char, FontChar>& chars, int step_y, int start_x, int start_y, const std::string& text,
-                   std::vector<TextVertex>* vertices)
+void text_vertices(const std::unordered_map<char32_t, FontChar>& chars, int step_y, int start_x, int start_y,
+                   const std::string& text, std::vector<TextVertex>* vertices)
 {
         vertices->clear();
 

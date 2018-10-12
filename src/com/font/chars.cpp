@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "chars.h"
 
+#include "code_points.h"
+
 #include "com/error.h"
 
 #include <SFML/Graphics/Image.hpp>
@@ -45,7 +47,7 @@ void save_grayscale_image_to_file(const std::string& file_name, int width, int h
         image.create(width, height, buffer.data());
         if (!image.saveToFile(file_name))
         {
-                error("Error saving char texture to the file " + file_name);
+                error("Error saving character texture to the file " + file_name);
         }
 }
 
@@ -95,44 +97,47 @@ void copy_image(std::vector<T>* dst, const std::array<int, 2>& dst_size, const s
         copy_image(dst, dst_size, dst_offset, src, src_size, {0, 0}, src_size);
 }
 
-void render_chars(Font& font, std::unordered_map<char, FontChar>* font_chars,
-                  std::unordered_map<char, std::vector<std::uint_least8_t>>* char_pixels)
+void render_chars(const std::vector<char32_t>& code_points, Font& font, std::unordered_map<char32_t, FontChar>* font_chars,
+                  std::unordered_map<char32_t, std::vector<std::uint_least8_t>>* char_pixels)
 {
-        std::vector<char> supported_characters = font.supported_characters();
-
         font_chars->clear();
         char_pixels->clear();
 
-        font_chars->reserve(supported_characters.size());
-        char_pixels->reserve(supported_characters.size());
+        font_chars->reserve(code_points.size());
+        char_pixels->reserve(code_points.size());
 
-        for (char c : supported_characters)
+        for (char32_t code_point : code_points)
         {
-                Font::Char rc = font.render_char(c);
+                std::optional<Font::Char> rc = font.render(code_point);
 
-                if (rc.width < 0 || rc.height < 0)
+                if (!rc)
+                {
+                        continue;
+                }
+
+                if (rc->width < 0 || rc->height < 0)
                 {
                         error("Negative character size");
                 }
-                if ((rc.width <= 0 && rc.height > 0) || (rc.width > 0 && rc.height <= 0))
+                if ((rc->width <= 0 && rc->height > 0) || (rc->width > 0 && rc->height <= 0))
                 {
                         error("One-dimensional character image");
                 }
 
-                FontChar& font_char = font_chars->try_emplace(c).first->second;
+                FontChar& font_char = font_chars->try_emplace(code_point).first->second;
 
-                font_char.left = rc.left;
-                font_char.top = rc.top;
-                font_char.width = rc.width;
-                font_char.height = rc.height;
-                font_char.advance_x = rc.advance_x;
+                font_char.left = rc->left;
+                font_char.top = rc->top;
+                font_char.width = rc->width;
+                font_char.height = rc->height;
+                font_char.advance_x = rc->advance_x;
 
-                std::vector<std::uint_least8_t>& pixels = char_pixels->try_emplace(c).first->second;
+                std::vector<std::uint_least8_t>& pixels = char_pixels->try_emplace(code_point).first->second;
 
-                pixels.resize(1ull * rc.width * rc.height);
+                pixels.resize(1ull * rc->width * rc->height);
                 for (size_t i = 0; i < pixels.size(); ++i)
                 {
-                        pixels[i] = rc.image[i];
+                        pixels[i] = rc->image[i];
                 }
         }
 }
@@ -185,9 +190,9 @@ void place_rectangles_on_rectangle(const std::unordered_map<Key, Value>& rectang
 }
 
 void fill_texture_pixels_and_texture_coordinates(int texture_width, int texture_height,
-                                                 const std::unordered_map<char, std::vector<std::uint_least8_t>>& char_pixels,
-                                                 const std::unordered_map<char, std::array<int, 2>>& char_coordinates,
-                                                 std::unordered_map<char, FontChar>* font_chars,
+                                                 const std::unordered_map<char32_t, std::vector<std::uint_least8_t>>& char_pixels,
+                                                 const std::unordered_map<char32_t, std::array<int, 2>>& char_coordinates,
+                                                 std::unordered_map<char32_t, FontChar>* font_chars,
                                                  std::vector<std::uint_least8_t>* texture_pixels)
 {
         texture_pixels->clear();
@@ -196,13 +201,13 @@ void fill_texture_pixels_and_texture_coordinates(int texture_width, int texture_
         float r_width = 1.0f / texture_width;
         float r_height = 1.0f / texture_height;
 
-        for (auto& [c, font_char] : *font_chars)
+        for (auto& [cp, font_char] : *font_chars)
         {
-                ASSERT(char_pixels.count(c) == 1);
-                ASSERT(char_coordinates.count(c) == 1);
+                ASSERT(char_pixels.count(cp) == 1);
+                ASSERT(char_coordinates.count(cp) == 1);
 
-                const std::vector<std::uint_least8_t>& pixels = char_pixels.find(c)->second;
-                const std::array<int, 2>& coordinates = char_coordinates.find(c)->second;
+                const std::vector<std::uint_least8_t>& pixels = char_pixels.find(cp)->second;
+                const std::array<int, 2>& coordinates = char_coordinates.find(cp)->second;
 
                 copy_image(texture_pixels, {texture_width, texture_height}, coordinates, pixels,
                            {font_char.width, font_char.height});
@@ -216,14 +221,14 @@ void fill_texture_pixels_and_texture_coordinates(int texture_width, int texture_
 }
 }
 
-void create_font_chars(Font& font, int max_width, int max_height, std::unordered_map<char, FontChar>* font_chars,
+void create_font_chars(Font& font, int max_width, int max_height, std::unordered_map<char32_t, FontChar>* font_chars,
                        int* texture_width, int* texture_height, std::vector<std::uint_least8_t>* texture_pixels)
 {
-        std::unordered_map<char, std::vector<std::uint_least8_t>> char_pixels;
+        std::unordered_map<char32_t, std::vector<std::uint_least8_t>> char_pixels;
 
-        render_chars(font, font_chars, &char_pixels);
+        render_chars(supported_code_points(), font, font_chars, &char_pixels);
 
-        std::unordered_map<char, std::array<int, 2>> char_coordinates;
+        std::unordered_map<char32_t, std::array<int, 2>> char_coordinates;
 
         place_rectangles_on_rectangle(*font_chars, max_width, max_height, texture_width, texture_height, &char_coordinates);
 

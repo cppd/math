@@ -39,8 +39,8 @@ struct TextVertex
         }
 };
 
-void text_vertices(const std::unordered_map<char, FontChar>& chars, int step_y, int start_x, int start_y,
+void text_vertices(const std::unordered_map<char32_t, FontChar>& chars, int step_y, int start_x, int start_y,
                    const std::vector<std::string>& text, std::vector<TextVertex>* vertices);
 
-void text_vertices(const std::unordered_map<char, FontChar>& chars, int step_y, int start_x, int start_y, const std::string& text,
-                   std::vector<TextVertex>* vertices);
+void text_vertices(const std::unordered_map<char32_t, FontChar>& chars, int step_y, int start_x, int start_y,
+                   const std::string& text, std::vector<TextVertex>* vertices);

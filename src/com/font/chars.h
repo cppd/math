@@ -33,5 +33,5 @@ struct FontChar
 
 // Информация о символах шрифта с картинкой всех символов вместе.
 // Grayscale, sRGB, uint8.
-void create_font_chars(Font& font, int max_width, int max_height, std::unordered_map<char, FontChar>* font_chars,
+void create_font_chars(Font& font, int max_width, int max_height, std::unordered_map<char32_t, FontChar>* font_chars,
                        int* texture_width, int* texture_height, std::vector<std::uint_least8_t>* texture_pixels);

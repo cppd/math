@@ -18,12 +18,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "font.h"
 
 #include "com/error.h"
+#include "com/unicode/unicode.h"
 
 #include <SFML/Graphics/Image.hpp>
 #include <cmath>
 #include <fstream>
 #include <ft2build.h>
-#include <iomanip>
 #include <sstream>
 #include <thread>
 #include <type_traits>
@@ -37,26 +37,8 @@ constexpr const FT_Byte font_bytes[]
 };
 // clang-format on
 
-constexpr int MIN_CHAR = 32;
-constexpr int MAX_CHAR = 126;
-
 namespace
 {
-template <typename T>
-constexpr unsigned char_to_int(T c)
-{
-        static_assert(std::is_same_v<T, char>);
-        return static_cast<unsigned char>(c);
-}
-
-void check_char(char c)
-{
-        if (char_to_int(c) < MIN_CHAR || char_to_int(c) > MAX_CHAR)
-        {
-                error("Only ASCII printable characters are supported");
-        }
-}
-
 class Library final
 {
         FT_Library m_library;
@@ -130,46 +112,58 @@ public:
         Face& operator=(Face&&) = delete;
 };
 
-void save_to_file(Font::Char data)
+void save_to_file(char32_t code_point, const std::optional<Font::Char>& data)
 {
-        std::ostringstream oss;
-        oss << std::setfill('0');
-        oss << "char=" << std::setw(3) << char_to_int(data.c);
-        oss << " size=" << data.size;
-        oss << " w=" << data.width;
-        oss << " h=" << data.height;
-        oss << " left=" << data.left;
-        oss << " top=" << data.top;
-        oss << " advance_x=" << data.advance_x;
-
-        if (data.width * data.height == 0)
+        if (!data)
         {
-                if (data.c != ' ')
+                std::ostringstream oss;
+                oss << "code_point=" << unicode::utf32_to_number_string(code_point) << ".txt";
+                // Создать пустой файл
+                std::ofstream f(oss.str());
+                if (!f)
                 {
-                        error(std::string("No image for character '") + data.c + "'");
+                        error("Error creating the file " + oss.str());
                 }
+                return;
+        }
 
+        ASSERT(code_point == data->code_point);
+
+        std::ostringstream oss;
+        oss << "code_point=" << unicode::utf32_to_number_string(data->code_point);
+        oss << " size=" << data->size;
+        oss << " w=" << data->width;
+        oss << " h=" << data->height;
+        oss << " left=" << data->left;
+        oss << " top=" << data->top;
+        oss << " advance_x=" << data->advance_x;
+
+        if (data->width * data->height == 0)
+        {
                 // Создать пустой файл
                 oss << ".txt";
                 std::ofstream f(oss.str());
-
+                if (!f)
+                {
+                        error("Error creating the file " + oss.str());
+                }
                 return;
         }
 
         oss << ".png";
-        std::vector<sf::Uint8> image_buffer(data.width * data.height * 4);
+        std::vector<sf::Uint8> image_buffer(data->width * data->height * 4);
         for (size_t i_dst = 0, i_src = 0; i_dst < image_buffer.size(); i_dst += 4, ++i_src)
         {
-                image_buffer[i_dst + 0] = data.image[i_src]; // red
-                image_buffer[i_dst + 1] = data.image[i_src]; // green
+                image_buffer[i_dst + 0] = data->image[i_src]; // red
+                image_buffer[i_dst + 1] = data->image[i_src]; // green
                 image_buffer[i_dst + 2] = 255; // blue
                 image_buffer[i_dst + 3] = 255; // alpha
         }
         sf::Image image;
-        image.create(data.width, data.height, image_buffer.data());
+        image.create(data->width, data->height, image_buffer.data());
         if (!image.saveToFile(oss.str()))
         {
-                error(std::string("Error saving '") + data.c + "' image to file " + oss.str());
+                error("Error saving image to the file " + oss.str());
         }
 }
 }
@@ -206,20 +200,18 @@ public:
                 FT_Set_Pixel_Sizes(m_face, 0, size_in_pixels);
         }
 
-        Char render_char(char c)
+        std::optional<Char> render(char32_t code_point)
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
-                check_char(c);
-
-                if (FT_Load_Char(m_face, c, FT_LOAD_RENDER))
+                if (FT_Load_Char(m_face, code_point, FT_LOAD_RENDER))
                 {
-                        error(std::string("FreeType failed to load and render character '") + c + "'");
+                        return std::nullopt;
                 }
 
                 Char res;
 
-                res.c = c;
+                res.code_point = code_point;
                 res.image = m_face->glyph->bitmap.buffer;
                 res.size = m_size;
                 res.width = m_face->glyph->bitmap.width;
@@ -231,23 +223,12 @@ public:
                 return res;
         }
 
-        void render_all_to_files()
+        void render_ascii_printable_characters_to_files()
         {
-                for (int i = MIN_CHAR; i <= MAX_CHAR; ++i)
+                for (char32_t code_point = 32; code_point <= 126; ++code_point)
                 {
-                        save_to_file(render_char(i));
+                        save_to_file(code_point, render(code_point));
                 }
-        }
-
-        std::vector<char> supported_characters() const
-        {
-                std::vector<char> chars;
-                chars.reserve(MAX_CHAR - MIN_CHAR + 1);
-                for (int i = MIN_CHAR; i <= MAX_CHAR; ++i)
-                {
-                        chars.push_back(i);
-                }
-                return chars;
         }
 };
 
@@ -262,12 +243,10 @@ void Font::set_size(int size_in_pixels)
         m_impl->set_size(size_in_pixels);
 }
 
-std::vector<char> Font::supported_characters() const
+template <typename T>
+std::enable_if_t<std::is_same_v<T, char32_t>, std::optional<Font::Char>> Font::render(T code_point)
 {
-        return m_impl->supported_characters();
+        return m_impl->render(code_point);
 }
 
-Font::Char Font::render_char(char c)
-{
-        return m_impl->render_char(c);
-}
+template std::optional<Font::Char> Font::render(char32_t code_point);

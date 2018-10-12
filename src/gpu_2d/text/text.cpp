@@ -55,7 +55,7 @@ class Text::Impl final
         opengl::VertexArray m_vertex_array;
         opengl::ArrayBuffer m_vertex_buffer;
         opengl::GraphicsProgram m_program;
-        std::unordered_map<char, FontChar> m_chars;
+        std::unordered_map<char32_t, FontChar> m_chars;
         std::unique_ptr<opengl::TextureR32F> m_texture;
 
         template <typename T>

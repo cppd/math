@@ -17,28 +17,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <memory>
-#include <optional>
-#include <vector>
+#include <string>
+#include <type_traits>
 
-class Font final
+namespace unicode
 {
-        class Impl;
-        std::unique_ptr<Impl> m_impl;
+template <typename T>
+std::enable_if_t<std::is_same_v<T, char32_t>, std::string> utf32_to_number_string(T code_point);
+std::string utf8_to_number_string(const std::string& s);
 
-public:
-        Font(int size_in_pixels);
-        ~Font();
-
-        void set_size(int size_in_pixels);
-
-        struct Char
-        {
-                const unsigned char* image;
-                int size, width, height, left, top, advance_x;
-                char32_t code_point;
-        };
-
-        template <typename T>
-        std::enable_if_t<std::is_same_v<T, char32_t>, std::optional<Char>> render(T code_point);
-};
+char32_t read_utf8_as_utf32(const std::string& s, size_t& i);
+}
