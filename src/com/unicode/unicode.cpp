@@ -84,6 +84,41 @@ char32_t utf8_to_utf32(const std::string& s, size_t from, size_t count)
 namespace unicode
 {
 template <typename T>
+std::enable_if_t<std::is_same_v<T, char32_t>, std::string> utf32_to_utf8(T code_point)
+{
+        static_assert(std::is_same_v<T, char32_t>);
+
+        if (code_point <= 0x7F)
+        {
+                return std::string(1, code_point);
+        }
+        if (code_point <= 0x7FF)
+        {
+                char c0 = 0b11000000 | (code_point >> 6);
+                char c1 = 0b10000000 | (code_point & 0b11'1111);
+                return std::string({c0, c1});
+        }
+        if (code_point <= 0xFFFF)
+        {
+                char c0 = 0b11100000 | (code_point >> 12);
+                char c1 = 0b10000000 | ((code_point >> 6) & 0b11'1111);
+                char c2 = 0b10000000 | (code_point & 0b11'1111);
+                return std::string({c0, c1, c2});
+        }
+        if (code_point <= 0x10FFFF)
+        {
+                char c0 = 0b11110000 | (code_point >> 18);
+                char c1 = 0b10000000 | ((code_point >> 12) & 0b11'1111);
+                char c2 = 0b10000000 | ((code_point >> 6) & 0b11'1111);
+                char c3 = 0b10000000 | (code_point & 0b11'1111);
+                return std::string({c0, c1, c2, c3});
+        }
+
+        static_assert(unicode_code_points::REPLACEMENT_CHARACTER <= 0x10FFFF);
+        return utf32_to_utf8(unicode_code_points::REPLACEMENT_CHARACTER);
+}
+
+template <typename T>
 std::enable_if_t<std::is_same_v<T, char32_t>, std::string> utf32_to_number_string(T code_point)
 {
         static_assert(std::is_same_v<T, char32_t>);
@@ -146,4 +181,5 @@ char32_t read_utf8_as_utf32(const std::string& s, size_t& i)
 }
 
 template std::string utf32_to_number_string(char32_t code_point);
+template std::string utf32_to_utf8(char32_t code_point);
 }
