@@ -17,7 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-namespace unicode_code_points
+namespace unicode_names
 {
+constexpr char32_t SPACE = 0x20;
 constexpr char32_t REPLACEMENT_CHARACTER = 0xFFFD;
 }

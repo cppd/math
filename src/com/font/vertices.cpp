@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/unicode/names.h"
 #include "com/unicode/unicode.h"
 
-constexpr char32_t REPLACEMENT_CHARACTER = unicode_code_points::REPLACEMENT_CHARACTER;
+constexpr char32_t DEFAULT_CHARACTER = unicode_names::SPACE;
 
 namespace
 {
@@ -33,11 +33,11 @@ const FontGlyph& code_point_glyph(const std::unordered_map<T, FontGlyph>& glyphs
         auto iter = glyphs.find(code_point);
         if (iter == glyphs.cend())
         {
-                iter = glyphs.find(REPLACEMENT_CHARACTER);
+                iter = glyphs.find(DEFAULT_CHARACTER);
                 if (iter == glyphs.cend())
                 {
                         error("Error finding character " + unicode::utf32_to_number_string(code_point) +
-                              " and replacement character " + unicode::utf32_to_number_string(REPLACEMENT_CHARACTER));
+                              " and default character " + unicode::utf32_to_number_string(DEFAULT_CHARACTER));
                 }
         }
         return iter->second;
@@ -57,7 +57,7 @@ void text_vertices(const std::unordered_map<char32_t, FontGlyph>& glyphs, int st
                         continue;
                 }
 
-                char32_t code_point = unicode::read_utf8_as_utf32(text, i);
+                char32_t code_point = unicode::utf8_to_utf32(text, i);
 
                 const FontGlyph& g = code_point_glyph(glyphs, code_point);
 

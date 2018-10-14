@@ -24,7 +24,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cstdint>
 #include <iomanip>
 #include <sstream>
-#include <type_traits>
 
 // UTF-8
 // U+0000  .. U+007F    0xxxxxxx
@@ -35,7 +34,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace unicode
 {
 template <typename T>
-std::enable_if_t<std::is_same_v<T, char32_t>, std::string> utf32_to_number_string(T code_point)
+std::string utf32_to_number_string(T code_point)
 {
         static_assert(std::is_same_v<T, char32_t>);
 
@@ -43,7 +42,9 @@ std::enable_if_t<std::is_same_v<T, char32_t>, std::string> utf32_to_number_strin
         // Types char16_t and char32_t denote distinct types with the same size, signedness, and alignment
         // as uint_least16_t and uint_least32_t, respectively, in <cstdint>, called the underlying types.
         std::ostringstream oss;
-        oss << "U+" << std::uppercase << std::hex << static_cast<std::uint_least32_t>(code_point);
+        oss << "U+";
+        oss << std::uppercase << std::hex << std::setfill('0');
+        oss << std::setw(4) << static_cast<std::uint_least32_t>(code_point);
         return oss.str();
 }
 
@@ -55,7 +56,7 @@ std::string utf8_to_number_string(const std::string& s)
         }
 
         std::ostringstream oss;
-        oss << std::hex << std::uppercase << std::setfill('0');
+        oss << std::uppercase << std::hex << std::setfill('0');
         for (char c : s)
         {
                 if (oss.str().size() > 0)
@@ -68,7 +69,7 @@ std::string utf8_to_number_string(const std::string& s)
 }
 
 template <typename T>
-std::enable_if_t<std::is_same_v<T, char32_t>, std::string> utf32_to_utf8(T code_point)
+std::string utf32_to_utf8(T code_point)
 {
         static_assert(std::is_same_v<T, char32_t>);
 
@@ -101,11 +102,11 @@ std::enable_if_t<std::is_same_v<T, char32_t>, std::string> utf32_to_utf8(T code_
                 return std::string({c0, c1, c2, c3});
         }
 
-        static_assert(unicode_code_points::REPLACEMENT_CHARACTER <= 0x10FFFF);
-        return utf32_to_utf8(unicode_code_points::REPLACEMENT_CHARACTER);
+        static_assert(unicode_names::REPLACEMENT_CHARACTER <= 0x10FFFF);
+        return utf32_to_utf8(unicode_names::REPLACEMENT_CHARACTER);
 }
 
-char32_t read_utf8_as_utf32(const std::string& s, size_t& i)
+char32_t utf8_to_utf32(const std::string& s, size_t& i)
 {
         if (i >= s.size())
         {
@@ -167,13 +168,13 @@ char32_t read_utf8_as_utf32(const std::string& s, size_t& i)
         }
 
         i += 1;
-        return unicode_code_points::REPLACEMENT_CHARACTER;
+        return unicode_names::REPLACEMENT_CHARACTER;
 }
 
 char32_t utf8_to_utf32(const std::string& s)
 {
         size_t i = 0;
-        char32_t c = unicode::read_utf8_as_utf32(s, i);
+        char32_t c = unicode::utf8_to_utf32(s, i);
         if (i == s.size())
         {
                 return c;

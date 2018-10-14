@@ -52,13 +52,13 @@ void test_unicode()
         size_t i;
 
         i = 0;
-        if (0xFFFD != unicode::read_utf8_as_utf32("\x96\x96", i))
+        if (0xFFFD != unicode::utf8_to_utf32("\x96\x96", i))
         {
                 error("Error UTF-32 replacement character");
         }
 
         i = 0;
-        if (0xFFFD != unicode::read_utf8_as_utf32("\xE2\x88", i))
+        if (0xFFFD != unicode::utf8_to_utf32("\xE2\x88", i))
         {
                 error("Error UTF-32 replacement character");
         }
