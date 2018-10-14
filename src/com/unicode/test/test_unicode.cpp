@@ -21,15 +21,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/print.h"
 #include "com/unicode/unicode.h"
 
-namespace
-{
-char32_t utf8_to_utf32(const std::string& s)
-{
-        size_t p = 0;
-        return unicode::read_utf8_as_utf32(s, p);
-}
-}
-
 void test_unicode()
 {
         std::string utf8;
@@ -38,7 +29,7 @@ void test_unicode()
         {
                 utf8 = unicode::utf32_to_utf8(c1);
 
-                char32_t c2 = utf8_to_utf32(utf8);
+                char32_t c2 = unicode::utf8_to_utf32(utf8);
 
                 if (c2 != c1)
                 {
@@ -58,19 +49,23 @@ void test_unicode()
                 error("Error UTF-8 replacement character");
         }
 
-        if (0xFFFD != utf8_to_utf32("\x96\x96"))
+        size_t i;
+
+        i = 0;
+        if (0xFFFD != unicode::read_utf8_as_utf32("\x96\x96", i))
         {
                 error("Error UTF-32 replacement character");
         }
 
-        if (0xFFFD != utf8_to_utf32("\xE2\x88"))
+        i = 0;
+        if (0xFFFD != unicode::read_utf8_as_utf32("\xE2\x88", i))
         {
                 error("Error UTF-32 replacement character");
         }
 
         //
 
-        if (0x222B != utf8_to_utf32("\xE2\x88\xAB"))
+        if (0x222B != unicode::utf8_to_utf32("\xE2\x88\xAB"))
         {
                 error("Error UTF-8 to UTF-32");
         }

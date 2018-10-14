@@ -30,4 +30,5 @@ template <typename T>
 std::enable_if_t<std::is_same_v<T, char32_t>, std::string> utf32_to_utf8(T code_point);
 
 char32_t read_utf8_as_utf32(const std::string& s, size_t& i);
+char32_t utf8_to_utf32(const std::string& s);
 }
