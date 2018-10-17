@@ -357,10 +357,10 @@ std::tuple<Vector<N, T>, Vector<N, T>> min_max_coordinates(const std::vector<Vec
 }
 
 template <size_t N>
-Matrix<N + 1, N + 1, double> model_vertex_matrix(const Obj<N>* obj, double size, const Vector<N, double>& position)
+Matrix<N + 1, N + 1, double> model_vertex_matrix(const Obj<N>& obj, double size, const Vector<N, double>& position)
 {
-        Matrix<N + 1, N + 1, double> m_to_center = translate(to_vector<double>(-obj->center()));
-        Matrix<N + 1, N + 1, double> m_scale = scale(Vector<N, double>(size / obj->length()));
+        Matrix<N + 1, N + 1, double> m_to_center = translate(to_vector<double>(-obj.center()));
+        Matrix<N + 1, N + 1, double> m_scale = scale(Vector<N, double>(size / obj.length()));
         Matrix<N + 1, N + 1, double> m_to_position = translate(position);
         return m_to_position * m_scale * m_to_center;
 }

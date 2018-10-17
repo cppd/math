@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/log.h"
 #include "graphics/opengl/common_opengl.h"
 #include "graphics/opengl/query.h"
+#include "window/window_manage.h"
 
 #include <SFML/System/Err.hpp>
 #include <SFML/Window/Context.hpp>
@@ -206,6 +207,15 @@ public:
                 create_gl_window_1x1(opengl::VERSION_MAJOR, opengl::VERSION_MINOR, opengl::required_extensions(),
                                      ANTIALIASING_LEVEL, DEPTH_BITS, STENCIL_BITS, RED_BITS, GREEN_BITS, BLUE_BITS, ALPHA_BITS,
                                      &m_window);
+        }
+
+        ~OpenGLWindowImplementation() override
+        {
+#if defined(_WIN32)
+                // Без этого вызова почему-то зависает деструктор окна SFML на Винде,
+                // если это окно встроено в родительское окно.
+                change_window_style_not_child(system_handle());
+#endif
         }
 };
 }

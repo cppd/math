@@ -30,10 +30,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/opengl/window.h"
 #include "graphics/vulkan/window.h"
 #include "numerical/linear.h"
+#include "show/canvases/opengl/canvas.h"
+#include "show/canvases/vulkan/canvas.h"
 #include "show/event_queue.h"
-#include "show/renderers/opengl/canvas.h"
 #include "show/renderers/opengl/renderer.h"
-#include "show/renderers/vulkan/canvas.h"
 #include "show/renderers/vulkan/renderer.h"
 #include "window/window_manage.h"
 
@@ -68,6 +68,12 @@ int object_under_mouse(int mouse_x, int mouse_y, int window_height, const Textur
         return v[0];
 }
 #endif
+
+void sleep(std::chrono::steady_clock::time_point& last_frame_time)
+{
+        std::this_thread::sleep_until(last_frame_time + IDLE_MODE_FRAME_DURATION);
+        last_frame_time = std::chrono::steady_clock::now();
+}
 
 void make_fullscreen(bool fullscreen, WindowID window, WindowID parent)
 {
@@ -535,8 +541,8 @@ class ShowObject final : public EventQueue, public WindowEvent
         //
 
         void pull_and_dispatch_all_events();
+        void init_window_and_view();
         void compute_matrices();
-        bool render();
 
         //
 
@@ -757,69 +763,61 @@ void ShowObject<API>::pull_and_dispatch_all_events()
         m_window->pull_and_dispath_events();
 }
 
-template <>
-bool ShowObject<GraphicsAndComputeAPI::OpenGL>::render()
+template <GraphicsAndComputeAPI API>
+void ShowObject<API>::init_window_and_view()
+{
+        move_window_to_parent(m_window->system_handle(), m_parent_window);
+
+        for (int i = 1; m_window_width != m_window->width() && m_window_height != m_window->height(); ++i)
+        {
+                if (i > 10)
+                {
+                        error("Failed to receive the resize window event for the window size (" + to_string(m_window->width()) +
+                              ", " + to_string(m_window->height()) + ")");
+                }
+                pull_and_dispatch_all_events();
+        }
+
+        if (m_draw_width <= 0 || m_draw_height <= 0)
+        {
+                error("Draw size error (" + to_string(m_draw_width) + ", " + to_string(m_draw_height) + ")");
+        }
+
+        reset_view_handler();
+}
+
+//
+
+bool render_opengl(OpenGLWindow& window, OpenGLRenderer& renderer, OpenGLCanvas& canvas)
 {
         // Параметр true означает рисование в цветной буфер,
         // параметр false означает рисование в буфер экрана.
         // Если возвращает false, то нет объекта для рисования.
-        bool object_rendered = m_renderer->draw(m_canvas->pencil_effect_active());
+        bool object_rendered = renderer.draw(canvas.pencil_effect_active());
 
-        m_canvas->draw();
+        canvas.draw();
 
-        m_window->display();
+        window.display();
 
         return object_rendered;
 }
 
 template <>
-bool ShowObject<GraphicsAndComputeAPI::Vulkan>::render()
-{
-        bool object_rendered = m_renderer->draw();
-
-        return object_rendered;
-}
-
-template <GraphicsAndComputeAPI API>
-void ShowObject<API>::loop()
+void ShowObject<GraphicsAndComputeAPI::OpenGL>::loop()
 {
         ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
-        std::unique_ptr<Window> window;
-        std::unique_ptr<Renderer> renderer;
-        std::unique_ptr<Canvas> canvas;
-        if constexpr (API == GraphicsAndComputeAPI::Vulkan)
-        {
-                window = create_vulkan_window(this);
-                renderer = create_vulkan_renderer(VulkanWindow::instance_extensions(), [w = window.get()](VkInstance instance) {
-                        return w->create_surface(instance);
-                });
-                canvas = create_vulkan_canvas();
-        }
-        if constexpr (API == GraphicsAndComputeAPI::OpenGL)
-        {
-                window = create_opengl_window(this);
-                renderer = create_opengl_renderer();
-                canvas = create_opengl_canvas();
-        }
+        std::unique_ptr<Window> window = create_opengl_window(this);
+        std::unique_ptr<Renderer> renderer = create_opengl_renderer();
+        std::unique_ptr<Canvas> canvas = create_opengl_canvas();
+
         m_window.set(window);
         m_renderer.set(renderer);
         m_canvas.set(canvas);
 
-        move_window_to_parent(window->system_handle(), m_parent_window);
+        //
 
-        for (int i = 1; m_window_width != window->width() && m_window_height != window->height(); ++i)
-        {
-                if (i > 10)
-                {
-                        error("Failed to receive the resize window event for the window size (" + to_string(window->width()) +
-                              ", " + to_string(window->height()) + ")");
-                }
-                pull_and_dispatch_all_events();
-        }
-        ASSERT(m_draw_width > 0 && m_draw_height > 0);
-
-        reset_view_handler();
+        init_window_and_view();
 
         //
 
@@ -828,18 +826,53 @@ void ShowObject<API>::loop()
         {
                 pull_and_dispatch_all_events();
 
-                if (!render())
+                if (!render_opengl(*window, *renderer, *canvas))
                 {
-                        std::this_thread::sleep_until(last_frame_time + IDLE_MODE_FRAME_DURATION);
-                        last_frame_time = std::chrono::steady_clock::now();
+                        sleep(last_frame_time);
                 }
         }
+}
 
-#if defined(_WIN32)
-        // Без этого вызова почему-то зависает деструктор окна SFML на Винде,
-        // если это окно встроено в родительское окно.
-        change_window_style_not_child(window->get_system_handle());
-#endif
+//
+
+bool render_vulkan(VulkanRenderer& renderer)
+{
+        bool object_rendered = renderer.draw();
+
+        return object_rendered;
+}
+
+template <>
+void ShowObject<GraphicsAndComputeAPI::Vulkan>::loop()
+{
+        ASSERT(std::this_thread::get_id() == m_thread.get_id());
+
+        std::unique_ptr<Window> window = create_vulkan_window(this);
+        std::unique_ptr<Renderer> renderer =
+                create_vulkan_renderer(VulkanWindow::instance_extensions(),
+                                       [w = window.get()](VkInstance instance) { return w->create_surface(instance); });
+        std::unique_ptr<Canvas> canvas = create_vulkan_canvas();
+
+        m_window.set(window);
+        m_renderer.set(renderer);
+        m_canvas.set(canvas);
+
+        //
+
+        init_window_and_view();
+
+        //
+
+        std::chrono::steady_clock::time_point last_frame_time = std::chrono::steady_clock::now();
+        while (!m_stop)
+        {
+                pull_and_dispatch_all_events();
+
+                if (!render_vulkan(*renderer))
+                {
+                        sleep(last_frame_time);
+                }
+        }
 }
 
 template <GraphicsAndComputeAPI API>
@@ -850,6 +883,7 @@ void ShowObject<API>::loop_thread()
         try
         {
                 loop();
+
                 if (!m_stop)
                 {
                         m_callback->message_error_fatal("Thread ended.");

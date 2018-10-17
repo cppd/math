@@ -602,7 +602,7 @@ void MainObjectsImpl<N>::load_object(const std::unordered_set<ObjectId>& objects
 
         if constexpr (N == 3)
         {
-                m_model_vertex_matrix = model_vertex_matrix(obj.get(), m_show->object_size(), m_show->object_position());
+                m_model_vertex_matrix = model_vertex_matrix(*obj, m_show->object_size(), m_show->object_position());
         }
         else
         {

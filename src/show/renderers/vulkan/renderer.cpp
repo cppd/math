@@ -29,7 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/vulkan/query.h"
 #include "graphics/vulkan/sampler.h"
 #include "obj/obj_alg.h"
-#include "show/renderers/com.h"
+#include "show/renderers/draw_objects.h"
 #include "show/renderers/vulkan/shader/shader.h"
 
 #include <algorithm>
@@ -421,7 +421,7 @@ public:
         DrawObjectTriangles(const vulkan::VulkanInstance& instance, VkSampler sampler,
                             VkDescriptorSetLayout triangles_material_descriptor_set_layout, const Obj<3>& obj)
         {
-                ASSERT(draw_type_of_obj(&obj) == DrawType::Triangles);
+                ASSERT(obj.facets().size() > 0);
 
                 std::vector<int> sorted_face_indices;
                 std::vector<int> material_face_offset;
@@ -505,7 +505,7 @@ class DrawObjectPoints final : public DrawObjectInterface
 public:
         DrawObjectPoints(const vulkan::VulkanInstance& instance, const Obj<3>& obj)
         {
-                ASSERT(draw_type_of_obj(&obj) == DrawType::Points);
+                ASSERT(obj.points().size() > 0);
 
                 m_vertex_buffer = load_point_vertices(instance, obj);
                 m_vertex_count = obj.points().size();
@@ -549,7 +549,7 @@ class DrawObjectLines final : public DrawObjectInterface
 public:
         DrawObjectLines(const vulkan::VulkanInstance& instance, const Obj<3>& obj)
         {
-                ASSERT(draw_type_of_obj(&obj) == DrawType::Lines);
+                ASSERT(obj.lines().size() > 0);
 
                 m_vertex_buffer = load_line_vertices(instance, obj);
                 m_vertex_count = 2 * obj.lines().size();
@@ -590,7 +590,7 @@ class DrawObject
 public:
         DrawObject(const vulkan::VulkanInstance& instance, VkSampler sampler, VkDescriptorSetLayout descriptor_set_layout,
                    const Obj<3>& obj, double size, const vec3& position)
-                : m_model_matrix(model_vertex_matrix(&obj, size, position))
+                : m_model_matrix(model_vertex_matrix(obj, size, position))
         {
                 if (obj.facets().size() > 0)
                 {

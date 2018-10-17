@@ -21,8 +21,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/mat_alg.h"
 #include "com/print.h"
 #include "graphics/opengl/query.h"
+#include "graphics/types.h"
 #include "obj/obj_alg.h"
-#include "show/renderers/com.h"
+#include "show/renderers/draw_objects.h"
 
 #include <algorithm>
 #include <vector>
@@ -60,6 +61,44 @@ constexpr const char points_frag[]
 
 namespace
 {
+enum class DrawType
+{
+        Points,
+        Lines,
+        Triangles
+};
+
+DrawType draw_type_of_obj(const Obj<3>& obj)
+{
+        int type_count = 0;
+
+        type_count += obj.facets().size() > 0 ? 1 : 0;
+        type_count += obj.points().size() > 0 ? 1 : 0;
+        type_count += obj.lines().size() > 0 ? 1 : 0;
+
+        if (type_count > 1)
+        {
+                error("Supported only faces or points or lines");
+        }
+
+        if (obj.facets().size() > 0)
+        {
+                return DrawType::Triangles;
+        }
+        else if (obj.points().size() > 0)
+        {
+                return DrawType::Points;
+        }
+        else if (obj.lines().size() > 0)
+        {
+                return DrawType::Lines;
+        }
+        else
+        {
+                error("Faces or points or lines not found");
+        }
+}
+
 // Структуры данных для передачи данных в шейдеры
 
 struct FaceVertex final
@@ -228,7 +267,7 @@ class DrawObject final
         const DrawType m_draw_type;
 
 public:
-        DrawObject(const Obj<3>* obj, double size, const vec3& position);
+        DrawObject(const Obj<3>& obj, double size, const vec3& position);
 
         void bind() const;
 
@@ -237,13 +276,13 @@ public:
         DrawType draw_type() const;
 };
 
-DrawObject::DrawObject(const Obj<3>* obj, double size, const vec3& position)
+DrawObject::DrawObject(const Obj<3>& obj, double size, const vec3& position)
         : m_model_matrix(model_vertex_matrix(obj, size, position)), m_draw_type(draw_type_of_obj(obj))
 {
         if (m_draw_type == DrawType::Triangles)
         {
                 std::vector<FaceVertex> vertices;
-                load_face_vertices(*obj, &vertices);
+                load_face_vertices(obj, &vertices);
                 m_vertices_count = vertices.size();
 
                 m_vertex_buffer.load_static_draw(vertices);
@@ -258,7 +297,7 @@ DrawObject::DrawObject(const Obj<3>* obj, double size, const vec3& position)
 
                 //
 
-                for (const Obj<3>::Image& image : obj->images())
+                for (const Obj<3>::Image& image : obj.images())
                 {
                         m_textures.emplace_back(image.size[0], image.size[1], image.srgba_pixels);
                 }
@@ -266,7 +305,7 @@ DrawObject::DrawObject(const Obj<3>* obj, double size, const vec3& position)
                 //
 
                 std::vector<Material> materials;
-                load_materials(*obj, &materials);
+                load_materials(obj, &materials);
                 for (Material& m : materials)
                 {
                         if (m.map_Ka >= 0)
@@ -291,11 +330,11 @@ DrawObject::DrawObject(const Obj<3>* obj, double size, const vec3& position)
 
                 if (m_draw_type == DrawType::Points)
                 {
-                        load_point_vertices(*obj, &vertices);
+                        load_point_vertices(obj, &vertices);
                 }
                 else
                 {
-                        load_line_vertices(*obj, &vertices);
+                        load_line_vertices(obj, &vertices);
                 }
 
                 m_vertices_count = vertices.size();
@@ -597,7 +636,7 @@ class Renderer final : public OpenGLRenderer
 
         void object_add(const Obj<3>* obj, double size, const vec3& position, int id, int scale_id) override
         {
-                m_draw_objects.add_object(std::make_unique<DrawObject>(obj, size, position), id, scale_id);
+                m_draw_objects.add_object(std::make_unique<DrawObject>(*obj, size, position), id, scale_id);
         }
         void object_delete(int id) override
         {
