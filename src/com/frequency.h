@@ -20,30 +20,28 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <array>
 #include <deque>
 
-class FPS
+class Frequency
 {
         // Интервал в секундах
         static constexpr double INTERVAL_LENGTH = 1;
 
         // Сколько отсчётов на интервале, не считая текущего
-        static constexpr int INTERVAL_SAMPLE_COUNT = 10;
+        static constexpr int SAMPLE_COUNT = 10;
 
-        struct Frames
+        struct Events
         {
-                int time;
-                double fps = 0;
-                Frames(int time_) : time(time_)
+                int sample_number;
+                double event_count = 0;
+                Events(int sample_number_) : sample_number(sample_number_)
                 {
                 }
         };
 
-        static std::array<double, INTERVAL_SAMPLE_COUNT> window_function();
+        const std::array<double, SAMPLE_COUNT> m_window;
 
-        const std::array<double, INTERVAL_SAMPLE_COUNT> m_window;
-
-        std::deque<Frames> m_deque;
+        std::deque<Events> m_deque;
 
 public:
-        FPS();
-        long calculate();
+        Frequency();
+        double calculate();
 };
