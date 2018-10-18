@@ -28,13 +28,18 @@ namespace
 {
 class FPSText
 {
+        static constexpr double FPS_INTERVAL_LENGTH = 1;
+        static constexpr int FPS_SAMPLE_COUNT = 10;
+
         Text m_text;
         Frequency m_fps;
         std::vector<std::string> m_fps_text;
 
 public:
         FPSText(const char* fps_text, int size, int step_y, int start_x, int start_y, const Color& color, const mat4& matrix)
-                : m_text(size, step_y, start_x, start_y, color, matrix), m_fps_text({fps_text, ""})
+                : m_text(size, step_y, start_x, start_y, color, matrix),
+                  m_fps(FPS_INTERVAL_LENGTH, FPS_SAMPLE_COUNT),
+                  m_fps_text({fps_text, ""})
         {
         }
 

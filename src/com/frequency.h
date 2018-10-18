@@ -17,17 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <array>
 #include <deque>
+#include <vector>
 
 class Frequency
 {
-        // Интервал в секундах
-        static constexpr double INTERVAL_LENGTH = 1;
-
-        // Сколько отсчётов на интервале, не считая текущего
-        static constexpr int SAMPLE_COUNT = 10;
-
         struct Events
         {
                 int sample_number;
@@ -37,11 +31,18 @@ class Frequency
                 }
         };
 
-        const std::array<double, SAMPLE_COUNT> m_window;
+        // Интервал в секундах
+        const double m_interval_length;
+        // Сколько отсчётов на интервале, не считая текущего
+        const int m_sample_count;
+
+        const double m_sample_frequency;
+
+        const std::vector<double> m_window;
 
         std::deque<Events> m_deque;
 
 public:
-        Frequency();
+        Frequency(double interval_length, int sample_count);
         double calculate();
 };
