@@ -20,8 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/log.h"
 #include "com/mat_alg.h"
 #include "com/print.h"
+#include "graphics/glsl_types.h"
 #include "graphics/opengl/query.h"
-#include "graphics/types.h"
 #include "obj/obj_alg.h"
 #include "show/renderers/draw_objects.h"
 

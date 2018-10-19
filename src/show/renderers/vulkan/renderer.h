@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/color/color.h"
 #include "com/mat.h"
 #include "com/vec.h"
+#include "graphics/vulkan/instance.h"
 #include "obj/obj.h"
 
 #include <functional>
@@ -55,10 +56,19 @@ struct VulkanRenderer
         virtual void object_show(int id) = 0;
         virtual void object_delete_all() = 0;
 
-        virtual bool draw() = 0;
+        virtual bool draw(VkFence queue_fence, VkQueue graphics_queue, VkSemaphore image_available_semaphore,
+                          VkSemaphore render_finished_semaphore, unsigned image_index, unsigned current_frame) const = 0;
 
         static mat4 ortho(double left, double right, double bottom, double top, double near, double far);
+
+        static std::vector<std::string> instance_extensions();
+        static std::vector<std::string> device_extensions();
+        static std::vector<vulkan::PhysicalDeviceFeatures> required_device_features();
+        static std::vector<vulkan::PhysicalDeviceFeatures> optional_device_features();
+
+        virtual VkSwapchainKHR swapchain() const = 0;
+        virtual void create_swapchain_and_pipelines_and_command_buffers() = 0;
 };
 
-std::unique_ptr<VulkanRenderer> create_vulkan_renderer(const std::vector<std::string>& window_instance_extensions,
-                                                       const std::function<VkSurfaceKHR(VkInstance)>& create_surface);
+std::unique_ptr<VulkanRenderer> create_vulkan_renderer(int preferred_image_count, const vulkan::VulkanInstance& instance,
+                                                       unsigned max_frames_in_flight);

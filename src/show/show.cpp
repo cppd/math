@@ -28,6 +28,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/thread.h"
 #include "graphics/opengl/objects.h"
 #include "graphics/opengl/window.h"
+#include "graphics/vulkan/common.h"
+#include "graphics/vulkan/instance.h"
+#include "graphics/vulkan/sync.h"
 #include "graphics/vulkan/window.h"
 #include "numerical/linear.h"
 #include "show/canvases/opengl/canvas.h"
@@ -43,6 +46,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <limits>
 #include <type_traits>
 #include <vector>
+
+// 2 - double buffering, 3 - triple buffering
+constexpr int VULKAN_PREFERRED_IMAGE_COUNT = 2;
+constexpr int VULKAN_MAX_FRAMES_IN_FLIGHT = 1;
 
 constexpr double ZOOM_BASE = 1.1;
 constexpr double ZOOM_EXP_MIN = -50;
@@ -807,9 +814,11 @@ void ShowObject<GraphicsAndComputeAPI::OpenGL>::loop()
 {
         ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
-        std::unique_ptr<Window> window = create_opengl_window(this);
-        std::unique_ptr<Renderer> renderer = create_opengl_renderer();
-        std::unique_ptr<Canvas> canvas = create_opengl_canvas();
+        std::unique_ptr<OpenGLWindow> window = create_opengl_window(this);
+        std::unique_ptr<OpenGLRenderer> renderer = create_opengl_renderer();
+        std::unique_ptr<OpenGLCanvas> canvas = create_opengl_canvas();
+
+        //
 
         m_window.set(window);
         m_renderer.set(renderer);
@@ -835,9 +844,73 @@ void ShowObject<GraphicsAndComputeAPI::OpenGL>::loop()
 
 //
 
-bool render_vulkan(VulkanRenderer& renderer)
+bool render_vulkan(VkQueue presentation_queue, VkQueue graphics_queue, VkDevice device, VkFence current_frame_fence,
+                   VkSemaphore image_available_semaphore, VkSemaphore render_finished_semaphore, unsigned current_frame,
+                   VulkanRenderer& renderer)
 {
-        bool object_rendered = renderer.draw();
+        constexpr VkFence NO_FENCE = VK_NULL_HANDLE;
+
+        VkResult result;
+
+        result = vkWaitForFences(device, 1, &current_frame_fence, VK_TRUE, std::numeric_limits<uint64_t>::max());
+        if (result != VK_SUCCESS)
+        {
+                vulkan::vulkan_function_error("vkWaitForFences", result);
+        }
+        result = vkResetFences(device, 1, &current_frame_fence);
+        if (result != VK_SUCCESS)
+        {
+                vulkan::vulkan_function_error("vkResetFences", result);
+        }
+
+        //
+
+        uint32_t image_index;
+        result = vkAcquireNextImageKHR(device, renderer.swapchain(), std::numeric_limits<uint64_t>::max(),
+                                       image_available_semaphore, NO_FENCE, &image_index);
+        if (result == VK_ERROR_OUT_OF_DATE_KHR)
+        {
+                renderer.create_swapchain_and_pipelines_and_command_buffers();
+                return false;
+        }
+        else if (result == VK_SUBOPTIMAL_KHR)
+        {
+        }
+        else if (result != VK_SUCCESS)
+        {
+                vulkan::vulkan_function_error("vkAcquireNextImageKHR", result);
+        }
+
+        //
+
+        bool object_rendered = renderer.draw(current_frame_fence, graphics_queue, image_available_semaphore,
+                                             render_finished_semaphore, image_index, current_frame);
+
+        //
+
+        std::array<VkSemaphore, 1> render_finished_semaphores = {render_finished_semaphore};
+        std::array<VkSwapchainKHR, 1> swapchains = {renderer.swapchain()};
+        std::array<uint32_t, 1> image_indices = {image_index};
+
+        VkPresentInfoKHR present_info = {};
+        present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+        present_info.waitSemaphoreCount = render_finished_semaphores.size();
+        present_info.pWaitSemaphores = render_finished_semaphores.data();
+        present_info.swapchainCount = swapchains.size();
+        present_info.pSwapchains = swapchains.data();
+        present_info.pImageIndices = image_indices.data();
+        // present_info.pResults = nullptr;
+
+        result = vkQueuePresentKHR(presentation_queue, &present_info);
+        if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
+        {
+                renderer.create_swapchain_and_pipelines_and_command_buffers();
+                return false;
+        }
+        else if (result != VK_SUCCESS)
+        {
+                vulkan::vulkan_function_error("vkQueuePresentKHR", result);
+        }
 
         return object_rendered;
 }
@@ -847,11 +920,32 @@ void ShowObject<GraphicsAndComputeAPI::Vulkan>::loop()
 {
         ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
-        std::unique_ptr<Window> window = create_vulkan_window(this);
-        std::unique_ptr<Renderer> renderer =
-                create_vulkan_renderer(VulkanWindow::instance_extensions(),
-                                       [w = window.get()](VkInstance instance) { return w->create_surface(instance); });
-        std::unique_ptr<Canvas> canvas = create_vulkan_canvas();
+        static_assert(VULKAN_MAX_FRAMES_IN_FLIGHT == 1);
+
+        std::unique_ptr<VulkanWindow> window = create_vulkan_window(this);
+
+        vulkan::VulkanInstance instance(VulkanRenderer::instance_extensions() + VulkanWindow::instance_extensions(),
+                                        VulkanRenderer::device_extensions(), VulkanRenderer::required_device_features(),
+                                        VulkanRenderer::optional_device_features(),
+                                        [w = window.get()](VkInstance i) { return w->create_surface(i); });
+
+        std::vector<vulkan::Fence> in_flight_fences =
+                vulkan::create_fences(instance.device(), VULKAN_MAX_FRAMES_IN_FLIGHT, true /*signaled_state*/);
+
+        std::vector<vulkan::Semaphore> image_available_semaphores =
+                vulkan::create_semaphores(instance.device(), VULKAN_MAX_FRAMES_IN_FLIGHT);
+
+        std::vector<vulkan::Semaphore> render_finished_semaphores =
+                vulkan::create_semaphores(instance.device(), VULKAN_MAX_FRAMES_IN_FLIGHT);
+
+        //
+
+        std::unique_ptr<VulkanRenderer> renderer =
+                create_vulkan_renderer(VULKAN_PREFERRED_IMAGE_COUNT, instance, VULKAN_MAX_FRAMES_IN_FLIGHT);
+
+        std::unique_ptr<VulkanCanvas> canvas = create_vulkan_canvas();
+
+        //
 
         m_window.set(window);
         m_renderer.set(renderer);
@@ -864,11 +958,13 @@ void ShowObject<GraphicsAndComputeAPI::Vulkan>::loop()
         //
 
         std::chrono::steady_clock::time_point last_frame_time = std::chrono::steady_clock::now();
-        while (!m_stop)
+        for (unsigned frame = 0; !m_stop; frame = (frame + 1) % VULKAN_MAX_FRAMES_IN_FLIGHT)
         {
                 pull_and_dispatch_all_events();
 
-                if (!render_vulkan(*renderer))
+                if (!render_vulkan(instance.presentation_queue(), instance.graphics_queue(), instance.device(),
+                                   in_flight_fences[frame], image_available_semaphores[frame], render_finished_semaphores[frame],
+                                   frame, *renderer))
                 {
                         sleep(last_frame_time);
                 }

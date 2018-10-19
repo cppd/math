@@ -20,13 +20,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <vector>
 
-namespace opengl
+namespace vulkan
 {
-constexpr int VERSION_MAJOR = 4;
-constexpr int VERSION_MINOR = 5;
+constexpr int API_VERSION_MAJOR = 1;
+constexpr int API_VERSION_MINOR = 0;
 
-inline std::vector<std::string> required_extensions()
+inline std::vector<std::string> validation_layers()
 {
-        return {"GL_ARB_bindless_texture", "GL_ARB_compute_variable_group_size"};
-}
+        return {"VK_LAYER_LUNARG_standard_validation"};
+};
 }

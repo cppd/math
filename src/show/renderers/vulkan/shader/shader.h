@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/mat.h"
 #include "com/mat_alg.h"
 #include "com/vec.h"
-#include "graphics/types.h"
+#include "graphics/glsl_types.h"
 #include "graphics/vulkan/buffers.h"
 #include "graphics/vulkan/descriptor.h"
 #include "graphics/vulkan/objects.h"

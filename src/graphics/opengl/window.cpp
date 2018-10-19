@@ -17,10 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "window.h"
 
+#include "query.h"
+#include "settings.h"
+
 #include "com/error.h"
 #include "com/log.h"
-#include "graphics/opengl/common_opengl.h"
-#include "graphics/opengl/query.h"
 #include "window/window_manage.h"
 
 #include <SFML/System/Err.hpp>
@@ -204,7 +205,7 @@ public:
                         OpenGLContext opengl_context;
                 }
 
-                create_gl_window_1x1(opengl::VERSION_MAJOR, opengl::VERSION_MINOR, opengl::required_extensions(),
+                create_gl_window_1x1(opengl::API_VERSION_MAJOR, opengl::API_VERSION_MINOR, opengl::required_extensions(),
                                      ANTIALIASING_LEVEL, DEPTH_BITS, STENCIL_BITS, RED_BITS, GREEN_BITS, BLUE_BITS, ALPHA_BITS,
                                      &m_window);
         }
@@ -227,7 +228,9 @@ class OpenGLContext::Impl
         std::unique_ptr<sf::Context> m_context;
 
 public:
-        Impl() : m_context(create_gl_context_1x1(opengl::VERSION_MAJOR, opengl::VERSION_MINOR, opengl::required_extensions()))
+        Impl()
+                : m_context(create_gl_context_1x1(opengl::API_VERSION_MAJOR, opengl::API_VERSION_MINOR,
+                                                  opengl::required_extensions()))
         {
         }
 };

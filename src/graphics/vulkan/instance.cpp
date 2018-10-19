@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "debug.h"
 #include "pipeline.h"
 #include "query.h"
+#include "settings.h"
 #include "sync.h"
 
 #include "application/application_name.h"
@@ -693,34 +694,24 @@ const VkCommandBuffer& SwapchainAndBuffers::shadow_command_buffer() const noexce
 
 //
 
-VulkanInstance::VulkanInstance(int api_version_major, int api_version_minor,
-                               const std::vector<std::string>& required_instance_extensions,
+VulkanInstance::VulkanInstance(const std::vector<std::string>& required_instance_extensions,
                                const std::vector<std::string>& required_device_extensions,
-                               const std::vector<std::string>& required_validation_layers,
                                const std::vector<PhysicalDeviceFeatures>& required_features,
                                const std::vector<PhysicalDeviceFeatures>& optional_features,
-                               const std::function<VkSurfaceKHR(VkInstance)>& create_surface, unsigned max_frames_in_flight)
-        : m_instance(create_instance(api_version_major, api_version_minor, required_instance_extensions,
-                                     required_validation_layers)),
-          m_callback(!required_validation_layers.empty() ? std::make_optional(create_debug_report_callback(m_instance)) :
-                                                           std::nullopt),
+                               const std::function<VkSurfaceKHR(VkInstance)>& create_surface)
+        : m_instance(create_instance(API_VERSION_MAJOR, API_VERSION_MINOR, required_instance_extensions, validation_layers())),
+          m_callback(!validation_layers().empty() ? std::make_optional(create_debug_report_callback(m_instance)) : std::nullopt),
           m_surface(m_instance, create_surface),
           //
-          m_physical_device(find_physical_device(m_instance, m_surface, api_version_major, api_version_minor,
+          m_physical_device(find_physical_device(m_instance, m_surface, API_VERSION_MAJOR, API_VERSION_MINOR,
                                                  required_device_extensions + VK_KHR_SWAPCHAIN_EXTENSION_NAME,
                                                  required_features)),
           m_device(create_device(
                   m_physical_device,
                   {m_physical_device.graphics(), m_physical_device.compute(), m_physical_device.transfer(),
                    m_physical_device.presentation()},
-                  required_device_extensions + VK_KHR_SWAPCHAIN_EXTENSION_NAME, required_validation_layers,
+                  required_device_extensions + VK_KHR_SWAPCHAIN_EXTENSION_NAME, validation_layers(),
                   make_enabled_device_features(required_features, optional_features, m_physical_device.features()))),
-          //
-          m_max_frames_in_flight(max_frames_in_flight),
-          m_image_available_semaphores(create_semaphores(m_device, m_max_frames_in_flight)),
-          m_shadow_available_semaphores(create_semaphores(m_device, m_max_frames_in_flight)),
-          m_render_finished_semaphores(create_semaphores(m_device, m_max_frames_in_flight)),
-          m_in_flight_fences(create_fences(m_device, m_max_frames_in_flight, true /*signaled_state*/)),
           //
           m_graphics_command_pool(create_command_pool(m_device, m_physical_device.graphics())),
           m_graphics_queue(device_queue(m_device, m_physical_device.graphics(), 0 /*queue_index*/)),
@@ -737,10 +728,6 @@ VulkanInstance::VulkanInstance(int api_version_major, int api_version_minor,
           m_texture_family_indices(unique_elements(std::vector({m_physical_device.graphics(), m_physical_device.transfer()}))),
           m_attachment_family_indices(unique_elements(std::vector({m_physical_device.graphics()})))
 {
-        if (max_frames_in_flight > 1)
-        {
-                error("Max frames in flight > 1 is not supported");
-        }
 }
 
 VulkanInstance::~VulkanInstance()
@@ -759,16 +746,6 @@ VulkanInstance::~VulkanInstance()
         }
 }
 
-VkInstance VulkanInstance::instance() const noexcept
-{
-        return m_instance;
-}
-
-const Device& VulkanInstance::device() const noexcept
-{
-        return m_device;
-}
-
 void VulkanInstance::device_wait_idle() const
 {
         ASSERT(m_device != VK_NULL_HANDLE);
@@ -778,140 +755,5 @@ void VulkanInstance::device_wait_idle() const
         {
                 vulkan_function_error("vkDeviceWaitIdle", result);
         }
-}
-
-// return false - recreate swapchain
-bool VulkanInstance::draw_frame(SwapchainAndBuffers& swapchain_and_buffers, bool with_shadow)
-{
-        constexpr VkFence NO_FENCE = VK_NULL_HANDLE;
-
-        ASSERT(swapchain_and_buffers.command_buffers_created());
-
-        VkResult result;
-
-        const VkFence current_frame_fence = m_in_flight_fences[m_current_frame];
-
-        result = vkWaitForFences(m_device, 1, &current_frame_fence, VK_TRUE, std::numeric_limits<uint64_t>::max());
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkWaitForFences", result);
-        }
-        result = vkResetFences(m_device, 1, &current_frame_fence);
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkResetFences", result);
-        }
-
-        //
-
-        uint32_t image_index;
-        result = vkAcquireNextImageKHR(m_device, swapchain_and_buffers.swapchain(), std::numeric_limits<uint64_t>::max(),
-                                       m_image_available_semaphores[m_current_frame], NO_FENCE, &image_index);
-        if (result == VK_ERROR_OUT_OF_DATE_KHR)
-        {
-                return false;
-        }
-        else if (result == VK_SUBOPTIMAL_KHR)
-        {
-        }
-        else if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkAcquireNextImageKHR", result);
-        }
-
-        //
-
-        std::array<VkSemaphore, 1> render_finished_semaphores = {m_render_finished_semaphores[m_current_frame]};
-
-        if (!with_shadow)
-        {
-                std::array<VkSemaphore, 1> image_signal_semaphores = {m_image_available_semaphores[m_current_frame]};
-                std::array<VkPipelineStageFlags, 1> image_wait_stages = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
-
-                VkSubmitInfo submit_info = {};
-                submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-                submit_info.waitSemaphoreCount = image_signal_semaphores.size();
-                submit_info.pWaitSemaphores = image_signal_semaphores.data();
-                submit_info.pWaitDstStageMask = image_wait_stages.data();
-                submit_info.commandBufferCount = 1;
-                submit_info.pCommandBuffers = &swapchain_and_buffers.command_buffer(image_index);
-                submit_info.signalSemaphoreCount = render_finished_semaphores.size();
-                submit_info.pSignalSemaphores = render_finished_semaphores.data();
-
-                result = vkQueueSubmit(m_graphics_queue, 1, &submit_info, current_frame_fence);
-                if (result != VK_SUCCESS)
-                {
-                        vulkan_function_error("vkQueueSubmit", result);
-                }
-        }
-        else
-        {
-                std::array<VkSemaphore, 1> shadow_signal_semaphores = {m_shadow_available_semaphores[m_current_frame]};
-
-                std::array<VkSemaphore, 2> color_wait_semaphores = {m_shadow_available_semaphores[m_current_frame],
-                                                                    m_image_available_semaphores[m_current_frame]};
-                std::array<VkPipelineStageFlags, 2> color_wait_stages = {VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-                                                                         VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
-
-                {
-                        VkSubmitInfo submit_info = {};
-                        submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-                        submit_info.commandBufferCount = 1;
-                        submit_info.pCommandBuffers = &swapchain_and_buffers.shadow_command_buffer();
-                        submit_info.signalSemaphoreCount = shadow_signal_semaphores.size();
-                        submit_info.pSignalSemaphores = shadow_signal_semaphores.data();
-
-                        result = vkQueueSubmit(m_graphics_queue, 1, &submit_info, NO_FENCE);
-                        if (result != VK_SUCCESS)
-                        {
-                                vulkan_function_error("vkQueueSubmit", result);
-                        }
-                }
-                {
-                        VkSubmitInfo submit_info = {};
-                        submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-                        submit_info.waitSemaphoreCount = color_wait_semaphores.size();
-                        submit_info.pWaitSemaphores = color_wait_semaphores.data();
-                        submit_info.pWaitDstStageMask = color_wait_stages.data();
-                        submit_info.commandBufferCount = 1;
-                        submit_info.pCommandBuffers = &swapchain_and_buffers.command_buffer(image_index);
-                        submit_info.signalSemaphoreCount = render_finished_semaphores.size();
-                        submit_info.pSignalSemaphores = render_finished_semaphores.data();
-
-                        result = vkQueueSubmit(m_graphics_queue, 1, &submit_info, current_frame_fence);
-                        if (result != VK_SUCCESS)
-                        {
-                                vulkan_function_error("vkQueueSubmit", result);
-                        }
-                }
-        }
-
-        //
-
-        std::array<VkSwapchainKHR, 1> swapchains = {swapchain_and_buffers.swapchain()};
-        std::array<uint32_t, 1> image_indices = {image_index};
-
-        VkPresentInfoKHR present_info = {};
-        present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-        present_info.waitSemaphoreCount = render_finished_semaphores.size();
-        present_info.pWaitSemaphores = render_finished_semaphores.data();
-        present_info.swapchainCount = swapchains.size();
-        present_info.pSwapchains = swapchains.data();
-        present_info.pImageIndices = image_indices.data();
-        // present_info.pResults = nullptr;
-
-        result = vkQueuePresentKHR(m_presentation_queue, &present_info);
-        if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
-        {
-                return false;
-        }
-        else if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkQueuePresentKHR", result);
-        }
-
-        m_current_frame = (m_current_frame + 1) % m_max_frames_in_flight;
-
-        return true;
 }
 }

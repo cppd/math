@@ -23,11 +23,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/vec.h"
 #include "graphics/vulkan/common.h"
 #include "graphics/vulkan/device.h"
-#include "graphics/vulkan/instance.h"
 #include "graphics/vulkan/overview.h"
 #include "graphics/vulkan/pipeline.h"
 #include "graphics/vulkan/query.h"
 #include "graphics/vulkan/sampler.h"
+#include "graphics/vulkan/sync.h"
 #include "obj/obj_alg.h"
 #include "show/renderers/draw_objects.h"
 #include "show/renderers/vulkan/shader/shader.h"
@@ -37,19 +37,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <thread>
 #include <unordered_set>
 
-constexpr int API_VERSION_MAJOR = 1;
-constexpr int API_VERSION_MINOR = 0;
-
 // clang-format off
 constexpr std::initializer_list<const char*> INSTANCE_EXTENSIONS =
 {
 };
 constexpr std::initializer_list<const char*> DEVICE_EXTENSIONS =
 {
-};
-constexpr std::initializer_list<const char*> VALIDATION_LAYERS =
-{
-        "VK_LAYER_LUNARG_standard_validation"
 };
 constexpr std::initializer_list<vulkan::PhysicalDeviceFeatures> REQUIRED_DEVICE_FEATURES =
 {
@@ -70,10 +63,6 @@ constexpr std::initializer_list<VkFormat> DEPTH_IMAGE_FORMATS =
 
 // Шейдеры пишут результат в цветовом пространстве RGB, поэтому _SRGB (для результата в sRGB нужен _UNORM).
 constexpr VkSurfaceFormatKHR SURFACE_FORMAT = {VK_FORMAT_B8G8R8A8_SRGB, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR};
-
-// 2 - double buffering, 3 - triple buffering
-constexpr int PREFERRED_IMAGE_COUNT = 2;
-constexpr int MAX_FRAMES_IN_FLIGHT = 1;
 
 constexpr int REQUIRED_MINIMUM_SAMPLE_COUNT = 4;
 
@@ -658,7 +647,11 @@ class Renderer final : public VulkanRenderer
         double m_shadow_zoom = 1;
         bool m_show_shadow = false;
 
-        vulkan::VulkanInstance m_instance;
+        const int m_preferred_image_count;
+
+        const vulkan::VulkanInstance& m_instance;
+
+        std::vector<vulkan::Semaphore> m_shadow_available_semaphores;
 
         vulkan::Sampler m_triangles_sampler;
         vulkan::Sampler m_shadow_sampler;
@@ -869,40 +862,93 @@ class Renderer final : public VulkanRenderer
                 set_matrices();
         }
 
-        bool draw() override
+        bool draw(VkFence queue_fence, VkQueue graphics_queue, VkSemaphore image_available_semaphore,
+                  VkSemaphore render_finished_semaphore, unsigned image_index, unsigned current_frame) const override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
+                ASSERT(m_swapchain_and_buffers->command_buffers_created());
+
                 bool with_shadow = m_show_shadow && m_draw_objects.object() && m_draw_objects.object()->has_shadow();
 
-                if (!m_instance.draw_frame(*m_swapchain_and_buffers, with_shadow))
+                std::array<VkSemaphore, 1> render_finished_semaphores = {render_finished_semaphore};
+
+                if (!with_shadow)
                 {
-                        create_swapchain_and_pipelines_and_command_buffers();
+                        std::array<VkSemaphore, 1> image_signal_semaphores = {image_available_semaphore};
+                        std::array<VkPipelineStageFlags, 1> image_wait_stages = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+
+                        VkSubmitInfo submit_info = {};
+                        submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+                        submit_info.waitSemaphoreCount = image_signal_semaphores.size();
+                        submit_info.pWaitSemaphores = image_signal_semaphores.data();
+                        submit_info.pWaitDstStageMask = image_wait_stages.data();
+                        submit_info.commandBufferCount = 1;
+                        submit_info.pCommandBuffers = &m_swapchain_and_buffers->command_buffer(image_index);
+                        submit_info.signalSemaphoreCount = render_finished_semaphores.size();
+                        submit_info.pSignalSemaphores = render_finished_semaphores.data();
+
+                        VkResult result = vkQueueSubmit(graphics_queue, 1, &submit_info, queue_fence);
+                        if (result != VK_SUCCESS)
+                        {
+                                vulkan::vulkan_function_error("vkQueueSubmit", result);
+                        }
+                }
+                else
+                {
+                        std::array<VkSemaphore, 1> shadow_signal_semaphores = {m_shadow_available_semaphores[current_frame]};
+
+                        std::array<VkSemaphore, 2> color_wait_semaphores = {m_shadow_available_semaphores[current_frame],
+                                                                            image_available_semaphore};
+
+                        std::array<VkPipelineStageFlags, 2> color_wait_stages = {VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+                                                                                 VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+
+                        {
+                                VkSubmitInfo submit_info = {};
+                                submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+                                submit_info.commandBufferCount = 1;
+                                submit_info.pCommandBuffers = &m_swapchain_and_buffers->shadow_command_buffer();
+                                submit_info.signalSemaphoreCount = shadow_signal_semaphores.size();
+                                submit_info.pSignalSemaphores = shadow_signal_semaphores.data();
+
+                                constexpr VkFence NO_FENCE = VK_NULL_HANDLE;
+
+                                VkResult result = vkQueueSubmit(graphics_queue, 1, &submit_info, NO_FENCE);
+                                if (result != VK_SUCCESS)
+                                {
+                                        vulkan::vulkan_function_error("vkQueueSubmit", result);
+                                }
+                        }
+
+                        {
+                                VkSubmitInfo submit_info = {};
+                                submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+                                submit_info.waitSemaphoreCount = color_wait_semaphores.size();
+                                submit_info.pWaitSemaphores = color_wait_semaphores.data();
+                                submit_info.pWaitDstStageMask = color_wait_stages.data();
+                                submit_info.commandBufferCount = 1;
+                                submit_info.pCommandBuffers = &m_swapchain_and_buffers->command_buffer(image_index);
+                                submit_info.signalSemaphoreCount = render_finished_semaphores.size();
+                                submit_info.pSignalSemaphores = render_finished_semaphores.data();
+
+                                VkResult result = vkQueueSubmit(graphics_queue, 1, &submit_info, queue_fence);
+                                if (result != VK_SUCCESS)
+                                {
+                                        vulkan::vulkan_function_error("vkQueueSubmit", result);
+                                }
+                        }
                 }
 
                 return m_draw_objects.object() != nullptr;
         }
 
-        void set_matrices()
+        VkSwapchainKHR swapchain() const override
         {
-                ASSERT(m_thread_id == std::this_thread::get_id());
-
-                ASSERT(m_draw_objects.scale_object() || !m_draw_objects.object());
-
-                if (m_draw_objects.scale_object())
-                {
-                        mat4 matrix = m_main_matrix * m_draw_objects.scale_object()->model_matrix();
-                        mat4 scale_bias_shadow_matrix =
-                                m_scale_bias_shadow_matrix * m_draw_objects.scale_object()->model_matrix();
-                        mat4 shadow_matrix = m_shadow_matrix * m_draw_objects.scale_object()->model_matrix();
-
-                        m_triangles_shared_shader_memory.set_matrices(matrix, scale_bias_shadow_matrix);
-                        m_shadow_shader_memory.set_matrix(shadow_matrix);
-                        m_points_shader_memory.set_matrix(matrix);
-                }
+                return m_swapchain_and_buffers->swapchain();
         }
 
-        void create_swapchain_and_pipelines_and_command_buffers()
+        void create_swapchain_and_pipelines_and_command_buffers() override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
@@ -916,7 +962,7 @@ class Renderer final : public VulkanRenderer
                 m_swapchain_and_buffers.reset();
 
                 m_swapchain_and_buffers = std::make_unique<vulkan::SwapchainAndBuffers>(m_instance.create_swapchain_and_buffers(
-                        SURFACE_FORMAT, PREFERRED_IMAGE_COUNT, REQUIRED_MINIMUM_SAMPLE_COUNT, DEPTH_IMAGE_FORMATS,
+                        SURFACE_FORMAT, m_preferred_image_count, REQUIRED_MINIMUM_SAMPLE_COUNT, DEPTH_IMAGE_FORMATS,
                         m_shadow_zoom));
 
                 m_triangles_shared_shader_memory.set_shadow_texture(m_shadow_sampler, m_swapchain_and_buffers->shadow_texture());
@@ -937,6 +983,25 @@ class Renderer final : public VulkanRenderer
                         shaders::PointVertex::binding_descriptions(), shaders::PointVertex::attribute_descriptions());
 
                 create_command_buffers(false /*wait_idle*/);
+        }
+
+        void set_matrices()
+        {
+                ASSERT(m_thread_id == std::this_thread::get_id());
+
+                ASSERT(m_draw_objects.scale_object() || !m_draw_objects.object());
+
+                if (m_draw_objects.scale_object())
+                {
+                        mat4 matrix = m_main_matrix * m_draw_objects.scale_object()->model_matrix();
+                        mat4 scale_bias_shadow_matrix =
+                                m_scale_bias_shadow_matrix * m_draw_objects.scale_object()->model_matrix();
+                        mat4 shadow_matrix = m_shadow_matrix * m_draw_objects.scale_object()->model_matrix();
+
+                        m_triangles_shared_shader_memory.set_matrices(matrix, scale_bias_shadow_matrix);
+                        m_shadow_shader_memory.set_matrix(shadow_matrix);
+                        m_points_shader_memory.set_matrix(matrix);
+                }
         }
 
         void draw_commands(VkCommandBuffer command_buffer) const
@@ -1020,12 +1085,10 @@ class Renderer final : public VulkanRenderer
         }
 
 public:
-        Renderer(const std::vector<std::string>& window_instance_extensions,
-                 const std::function<VkSurfaceKHR(VkInstance)>& create_surface)
-                : m_instance(API_VERSION_MAJOR, API_VERSION_MINOR,
-                             string_vector(INSTANCE_EXTENSIONS) + window_instance_extensions, string_vector(DEVICE_EXTENSIONS),
-                             string_vector(VALIDATION_LAYERS), REQUIRED_DEVICE_FEATURES, OPTIONAL_DEVICE_FEATURES, create_surface,
-                             MAX_FRAMES_IN_FLIGHT),
+        Renderer(int preferred_image_count, const vulkan::VulkanInstance& instance, unsigned max_frames_in_flight)
+                : m_preferred_image_count(preferred_image_count),
+                  m_instance(instance),
+                  m_shadow_available_semaphores(vulkan::create_semaphores(m_instance.device(), max_frames_in_flight)),
                   m_triangles_sampler(vulkan::create_sampler(m_instance.device())),
                   m_shadow_sampler(vulkan::create_shadow_sampler(m_instance.device())),
                   //
@@ -1094,8 +1157,25 @@ mat4 VulkanRenderer::ortho(double left, double right, double bottom, double top,
         return ortho_vulkan<double>(left, right, bottom, top, near, far);
 }
 
-std::unique_ptr<VulkanRenderer> create_vulkan_renderer(const std::vector<std::string>& window_instance_extensions,
-                                                       const std::function<VkSurfaceKHR(VkInstance)>& create_surface)
+std::vector<std::string> VulkanRenderer::instance_extensions()
 {
-        return std::make_unique<Renderer>(window_instance_extensions, create_surface);
+        return string_vector(INSTANCE_EXTENSIONS);
+}
+std::vector<std::string> VulkanRenderer::device_extensions()
+{
+        return string_vector(DEVICE_EXTENSIONS);
+}
+std::vector<vulkan::PhysicalDeviceFeatures> VulkanRenderer::required_device_features()
+{
+        return REQUIRED_DEVICE_FEATURES;
+}
+std::vector<vulkan::PhysicalDeviceFeatures> VulkanRenderer::optional_device_features()
+{
+        return OPTIONAL_DEVICE_FEATURES;
+}
+
+std::unique_ptr<VulkanRenderer> create_vulkan_renderer(int preferred_image_count, const vulkan::VulkanInstance& instance,
+                                                       unsigned max_frames_in_flight)
+{
+        return std::make_unique<Renderer>(preferred_image_count, instance, max_frames_in_flight);
 }

@@ -122,8 +122,6 @@ public:
 
 class VulkanInstance
 {
-        unsigned m_current_frame = 0;
-
         Instance m_instance;
         std::optional<DebugReportCallback> m_callback;
 
@@ -132,12 +130,6 @@ class VulkanInstance
         PhysicalDevice m_physical_device;
 
         Device m_device;
-
-        unsigned m_max_frames_in_flight;
-        std::vector<Semaphore> m_image_available_semaphores;
-        std::vector<Semaphore> m_shadow_available_semaphores;
-        std::vector<Semaphore> m_render_finished_semaphores;
-        std::vector<Fence> m_in_flight_fences;
 
         CommandPool m_graphics_command_pool;
         VkQueue m_graphics_queue = VK_NULL_HANDLE;
@@ -154,12 +146,11 @@ class VulkanInstance
         std::vector<uint32_t> m_attachment_family_indices;
 
 public:
-        VulkanInstance(int api_version_major, int api_version_minor, const std::vector<std::string>& required_instance_extensions,
+        VulkanInstance(const std::vector<std::string>& required_instance_extensions,
                        const std::vector<std::string>& required_device_extensions,
-                       const std::vector<std::string>& required_validation_layers,
                        const std::vector<PhysicalDeviceFeatures>& required_features,
                        const std::vector<PhysicalDeviceFeatures>& optional_features,
-                       const std::function<VkSurfaceKHR(VkInstance)>& create_surface, unsigned max_frames_in_flight);
+                       const std::function<VkSurfaceKHR(VkInstance)>& create_surface);
 
         ~VulkanInstance();
 
@@ -170,17 +161,36 @@ public:
 
         //
 
-        VkInstance instance() const noexcept;
-        const Device& device() const noexcept;
         void device_wait_idle() const;
 
-        [[nodiscard]] bool draw_frame(SwapchainAndBuffers& swapchain_and_buffers, bool with_shadow);
+        //
+
+        VkInstance instance() const noexcept
+        {
+                return m_instance;
+        }
+
+        const Device& device() const noexcept
+        {
+                return m_device;
+        }
+
+        VkQueue presentation_queue() const noexcept
+        {
+                return m_presentation_queue;
+        }
+
+        VkQueue graphics_queue() const noexcept
+        {
+                return m_graphics_queue;
+        }
 
         //
 
         SwapchainAndBuffers create_swapchain_and_buffers(const VkSurfaceFormatKHR& required_surface_format,
                                                          int preferred_image_count, int required_minimum_sample_count,
-                                                         const std::vector<VkFormat>& depth_image_formats, double shadow_zoom)
+                                                         const std::vector<VkFormat>& depth_image_formats,
+                                                         double shadow_zoom) const
         {
                 return SwapchainAndBuffers(m_surface, m_swapchain_family_indices, m_attachment_family_indices, m_device,
                                            m_graphics_command_pool, m_graphics_queue, required_surface_format,
