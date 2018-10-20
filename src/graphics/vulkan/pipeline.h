@@ -24,8 +24,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace vulkan
 {
-PipelineLayout create_pipeline_layout(VkDevice device, const std::vector<VkDescriptorSetLayout>& descriptor_set_layouts);
-
 Pipeline create_graphics_pipeline(const Device& device, VkRenderPass render_pass, uint32_t sub_pass,
                                   VkSampleCountFlagBits sample_count, VkPipelineLayout pipeline_layout, uint32_t width,
                                   uint32_t height, VkPrimitiveTopology primitive_topology,

@@ -199,18 +199,6 @@ vulkan::Pipeline create_graphics_pipeline(const vulkan::Device& device, VkRender
 
 namespace vulkan
 {
-PipelineLayout create_pipeline_layout(VkDevice device, const std::vector<VkDescriptorSetLayout>& descriptor_set_layouts)
-{
-        VkPipelineLayoutCreateInfo create_info = {};
-        create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-        create_info.setLayoutCount = descriptor_set_layouts.size();
-        create_info.pSetLayouts = descriptor_set_layouts.data();
-        // create_info.pushConstantRangeCount = 0;
-        // create_info.pPushConstantRanges = nullptr;
-
-        return PipelineLayout(device, create_info);
-}
-
 Pipeline create_graphics_pipeline(const Device& device, VkRenderPass render_pass, uint32_t sub_pass,
                                   VkSampleCountFlagBits sample_count, VkPipelineLayout pipeline_layout, uint32_t width,
                                   uint32_t height, VkPrimitiveTopology primitive_topology,

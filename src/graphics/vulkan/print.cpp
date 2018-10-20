@@ -15,12 +15,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "common.h"
+#include "print.h"
 
-#include "com/error.h"
 #include "com/print.h"
 
-#include <array>
 #include <sstream>
 
 namespace
@@ -31,6 +29,16 @@ std::string enum_to_string(T e)
         static_assert(sizeof(e) <= sizeof(long long));
 
         return to_string(static_cast<long long>(e));
+}
+}
+
+namespace vulkan
+{
+std::string api_version_to_string(uint32_t api_version)
+{
+        std::ostringstream oss;
+        oss << VK_VERSION_MAJOR(api_version) << "." << VK_VERSION_MINOR(api_version) << "." << VK_VERSION_PATCH(api_version);
+        return oss.str();
 }
 
 std::array<std::string, 2> result_to_strings(const VkResult& code)
@@ -112,49 +120,6 @@ std::array<std::string, 2> result_to_strings(const VkResult& code)
 #pragma GCC diagnostic pop
 
         return {"Unknown Vulkan return code " + enum_to_string(code), ""};
-}
-
-std::string return_code_string(const std::string& function_name, const VkResult& code)
-{
-        std::array<std::string, 2> strings = result_to_strings(code);
-
-        std::string result;
-
-        if (function_name.size() > 0)
-        {
-                result += function_name + ".";
-        }
-
-        for (const std::string& s : strings)
-        {
-                if (s.size() > 0)
-                {
-                        result += " " + s + ".";
-                }
-        }
-
-        if (result.size() > 0)
-        {
-                return result;
-        }
-
-        return "Vulkan Return Code " + enum_to_string(code);
-}
-}
-
-namespace vulkan
-{
-std::string api_version_to_string(uint32_t api_version)
-{
-        std::ostringstream oss;
-        oss << VK_VERSION_MAJOR(api_version) << "." << VK_VERSION_MINOR(api_version) << "." << VK_VERSION_PATCH(api_version);
-        return oss.str();
-}
-
-// clang-format 6 неправильно форматирует, если [[noreturn]] поставить перед функцией
-void vulkan_function_error[[noreturn]](const std::string& function_name, const VkResult& code)
-{
-        error("Vulkan Error. " + return_code_string(function_name, code));
 }
 
 std::string physical_device_type_to_string(VkPhysicalDeviceType type)
@@ -684,45 +649,4 @@ std::string color_space_to_string(VkColorSpaceKHR color_space)
 
         return "Unknown Vulkan VkColorSpaceKHR " + enum_to_string(color_space);
 }
-}
-
-std::vector<std::string> operator+(const std::vector<std::string>& v1, const std::vector<std::string>& v2)
-{
-        std::vector<std::string> res;
-        res.reserve(v1.size() + v2.size());
-
-        for (const std::string& s : v1)
-        {
-                res.push_back(s);
-        }
-
-        for (const std::string& s : v2)
-        {
-                res.push_back(s);
-        }
-
-        return res;
-}
-
-std::vector<std::string> operator+(const std::vector<std::string>& v, const std::string& s)
-{
-        return v + std::vector<std::string>({s});
-}
-
-std::vector<std::string> operator+(const std::string& s, const std::vector<std::string>& v)
-{
-        return std::vector<std::string>({s}) + v;
-}
-
-std::vector<const char*> const_char_pointer_vector(const std::vector<std::string>& c)
-{
-        std::vector<const char*> res;
-        res.reserve(c.size());
-
-        for (const std::string& s : c)
-        {
-                res.push_back(s.c_str());
-        }
-
-        return res;
 }

@@ -17,7 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "buffers.h"
 
-#include "common.h"
+#include "error.h"
+#include "print.h"
 #include "query.h"
 
 #include "com/alg.h"

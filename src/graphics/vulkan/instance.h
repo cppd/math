@@ -36,19 +36,18 @@ namespace vulkan
 {
 class SwapchainAndBuffers
 {
+        Swapchain m_swapchain;
+
+        //
+
         const Device& m_device;
         VkCommandPool m_graphics_command_pool;
         VkSampleCountFlagBits m_sample_count_bit;
 
         //
 
-        Swapchain m_swapchain;
-
-        //
-
         std::unique_ptr<DepthAttachment> m_depth_attachment;
-        std::unique_ptr<ColorAttachment> m_multisampling_color_attachment;
-        std::unique_ptr<DepthAttachment> m_multisampling_depth_attachment;
+        std::unique_ptr<ColorAttachment> m_color_attachment;
         RenderPass m_render_pass;
         std::vector<Framebuffer> m_framebuffers;
 

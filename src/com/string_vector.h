@@ -17,13 +17,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "objects.h"
-
+#include <string>
 #include <vector>
 
-namespace vulkan
-{
-std::vector<Semaphore> create_semaphores(VkDevice device, int count);
+std::vector<std::string> operator+(const std::vector<std::string>& v1, const std::vector<std::string>& v2);
+std::vector<std::string> operator+(const std::vector<std::string>& v, const std::string& s);
+std::vector<std::string> operator+(const std::string& s, const std::vector<std::string>& v);
 
-std::vector<Fence> create_fences(VkDevice device, int count, bool signaled_state);
-}
+std::vector<const char*> const_char_pointer_vector(const std::vector<std::string>& v);
+std::vector<std::string> string_vector(const std::vector<const char*>& v);

@@ -17,8 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "overview.h"
 
-#include "common.h"
 #include "device.h"
+#include "print.h"
 #include "query.h"
 #include "window.h"
 

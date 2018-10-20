@@ -15,27 +15,12 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "sync.h"
+#pragma once
+
+#include <string>
+#include <vulkan/vulkan.h>
 
 namespace vulkan
 {
-std::vector<Semaphore> create_semaphores(VkDevice device, int count)
-{
-        std::vector<Semaphore> res;
-        for (int i = 0; i < count; ++i)
-        {
-                res.emplace_back(device);
-        }
-        return res;
-}
-
-std::vector<Fence> create_fences(VkDevice device, int count, bool signaled_state)
-{
-        std::vector<Fence> res;
-        for (int i = 0; i < count; ++i)
-        {
-                res.emplace_back(device, signaled_state);
-        }
-        return res;
-}
+void vulkan_function_error[[noreturn]](const std::string& function_name, const VkResult& code);
 }

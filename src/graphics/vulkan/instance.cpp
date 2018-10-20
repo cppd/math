@@ -17,121 +17,23 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "instance.h"
 
-#include "common.h"
+#include "create.h"
 #include "debug.h"
+#include "error.h"
 #include "pipeline.h"
+#include "print.h"
 #include "query.h"
 #include "settings.h"
-#include "sync.h"
 
-#include "application/application_name.h"
 #include "com/alg.h"
 #include "com/color/conversion.h"
 #include "com/error.h"
 #include "com/log.h"
 #include "com/print.h"
+#include "com/string_vector.h"
 
 namespace
 {
-vulkan::CommandPool create_command_pool(VkDevice device, uint32_t queue_family_index)
-{
-        VkCommandPoolCreateInfo create_info = {};
-        create_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-        create_info.queueFamilyIndex = queue_family_index;
-
-        return vulkan::CommandPool(device, create_info);
-}
-
-vulkan::CommandPool create_transient_command_pool(VkDevice device, uint32_t queue_family_index)
-{
-        VkCommandPoolCreateInfo create_info = {};
-        create_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-        create_info.queueFamilyIndex = queue_family_index;
-        create_info.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT;
-
-        return vulkan::CommandPool(device, create_info);
-}
-
-VkClearValue color_clear_value(VkFormat format, VkColorSpaceKHR color_space, const Color& color)
-{
-        if (color_space == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
-        {
-                if (format == VK_FORMAT_R8G8B8A8_UNORM || format == VK_FORMAT_B8G8R8A8_UNORM)
-                {
-                        VkClearValue clear_value;
-                        clear_value.color.float32[0] = color_conversion::rgb_float_to_srgb_float(color.red());
-                        clear_value.color.float32[1] = color_conversion::rgb_float_to_srgb_float(color.green());
-                        clear_value.color.float32[2] = color_conversion::rgb_float_to_srgb_float(color.blue());
-                        clear_value.color.float32[3] = 1;
-                        return clear_value;
-                }
-
-                if (format == VK_FORMAT_R8G8B8A8_SRGB || format == VK_FORMAT_B8G8R8A8_SRGB)
-                {
-                        VkClearValue clear_value;
-                        clear_value.color.float32[0] = color.red();
-                        clear_value.color.float32[1] = color.green();
-                        clear_value.color.float32[2] = color.blue();
-                        clear_value.color.float32[3] = 1;
-                        return clear_value;
-                }
-        }
-
-        error("Unsupported clear color format " + vulkan::format_to_string(format) + " and color space " +
-              vulkan::color_space_to_string(color_space));
-}
-
-VkClearValue depth_stencil_clear_value()
-{
-        VkClearValue clear_value;
-        clear_value.depthStencil.depth = 1;
-        clear_value.depthStencil.stencil = 0;
-        return clear_value;
-}
-
-vulkan::Instance create_instance(int api_version_major, int api_version_minor, std::vector<std::string> required_extensions,
-                                 const std::vector<std::string>& required_validation_layers)
-{
-        const uint32_t required_api_version = VK_MAKE_VERSION(api_version_major, api_version_minor, 0);
-
-        if (required_validation_layers.size() > 0)
-        {
-                required_extensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
-        }
-
-        vulkan::check_api_version(required_api_version);
-        vulkan::check_instance_extension_support(required_extensions);
-        vulkan::check_validation_layer_support(required_validation_layers);
-
-        VkApplicationInfo app_info = {};
-        app_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-        app_info.pApplicationName = APPLICATION_NAME;
-        app_info.applicationVersion = 1;
-        app_info.pEngineName = nullptr;
-        app_info.engineVersion = 0;
-        app_info.apiVersion = required_api_version;
-
-        VkInstanceCreateInfo create_info = {};
-        create_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-        create_info.pApplicationInfo = &app_info;
-
-        const std::vector<const char*> extensions = const_char_pointer_vector(required_extensions);
-        if (extensions.size() > 0)
-        {
-                create_info.enabledExtensionCount = extensions.size();
-                create_info.ppEnabledExtensionNames = extensions.data();
-        }
-
-        const std::vector<const char*> validation_layers = const_char_pointer_vector(required_validation_layers);
-        if (validation_layers.size() > 0)
-        {
-                create_info.enabledLayerCount = validation_layers.size();
-                create_info.ppEnabledLayerNames = validation_layers.data();
-        }
-
-        return vulkan::Instance(create_info);
-}
-
 vulkan::RenderPass create_render_pass(VkDevice device, VkFormat swapchain_image_format, VkFormat depth_image_format)
 {
         std::array<VkAttachmentDescription, 2> attachments = {};
@@ -304,7 +206,7 @@ vulkan::RenderPass create_multisampling_render_pass(VkDevice device, VkSampleCou
         return vulkan::RenderPass(device, create_info);
 }
 
-vulkan::RenderPass create_shadow_render_pass[[maybe_unused]](VkDevice device, VkFormat depth_image_format)
+vulkan::RenderPass create_shadow_render_pass(VkDevice device, VkFormat depth_image_format)
 {
         std::array<VkAttachmentDescription, 1> attachments = {};
 
@@ -360,22 +262,6 @@ vulkan::RenderPass create_shadow_render_pass[[maybe_unused]](VkDevice device, Vk
 }
 
 template <size_t N>
-vulkan::Framebuffer create_framebuffer(VkDevice device, VkRenderPass render_pass, uint32_t width, uint32_t height,
-                                       const std::array<VkImageView, N>& attachments)
-{
-        VkFramebufferCreateInfo create_info = {};
-        create_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-        create_info.renderPass = render_pass;
-        create_info.attachmentCount = attachments.size();
-        create_info.pAttachments = attachments.data();
-        create_info.width = width;
-        create_info.height = height;
-        create_info.layers = 1;
-
-        return vulkan::Framebuffer(device, create_info);
-}
-
-template <size_t N>
 vulkan::CommandBuffers create_command_buffers(VkDevice device, uint32_t width, uint32_t height, VkRenderPass render_pass,
                                               const std::vector<vulkan::Framebuffer>& framebuffers, VkCommandPool command_pool,
                                               const std::array<VkClearValue, N>& clear_values,
@@ -402,7 +288,8 @@ vulkan::CommandBuffers create_command_buffers(VkDevice device, uint32_t width, u
                 render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
                 render_pass_info.renderPass = render_pass;
                 render_pass_info.framebuffer = framebuffers[i];
-                render_pass_info.renderArea.offset = {0, 0};
+                render_pass_info.renderArea.offset.x = 0;
+                render_pass_info.renderArea.offset.y = 0;
                 render_pass_info.renderArea.extent.width = width;
                 render_pass_info.renderArea.extent.height = height;
                 render_pass_info.clearValueCount = clear_values.size();
@@ -452,10 +339,10 @@ SwapchainAndBuffers::SwapchainAndBuffers(VkSurfaceKHR surface, const std::vector
                                          const VkSurfaceFormatKHR& required_surface_format, int preferred_image_count,
                                          int required_minimum_sample_count, const std::vector<VkFormat>& depth_image_formats,
                                          double shadow_zoom)
-        : m_device(device),
+        : m_swapchain(surface, device, swapchain_family_indices, required_surface_format, preferred_image_count),
+          m_device(device),
           m_graphics_command_pool(graphics_command_pool),
-          m_sample_count_bit(supported_framebuffer_sample_count_flag(device.physical_device(), required_minimum_sample_count)),
-          m_swapchain(surface, device, swapchain_family_indices, required_surface_format, preferred_image_count)
+          m_sample_count_bit(supported_framebuffer_sample_count_flag(device.physical_device(), required_minimum_sample_count))
 {
         create_main_buffers(attachment_family_indices, device, graphics_command_pool, graphics_queue, depth_image_formats);
 
@@ -475,23 +362,23 @@ void SwapchainAndBuffers::create_main_buffers(const std::vector<uint32_t>& attac
 
         if (m_sample_count_bit != VK_SAMPLE_COUNT_1_BIT)
         {
-                m_multisampling_color_attachment = std::make_unique<ColorAttachment>(
+                m_color_attachment = std::make_unique<ColorAttachment>(
                         device, graphics_command_pool, graphics_queue, attachment_family_indices, m_swapchain.format(),
                         m_sample_count_bit, m_swapchain.width(), m_swapchain.height());
 
-                m_multisampling_depth_attachment = std::make_unique<DepthAttachment>(
+                m_depth_attachment = std::make_unique<DepthAttachment>(
                         device, graphics_command_pool, graphics_queue, attachment_family_indices, depth_image_formats,
                         m_sample_count_bit, m_swapchain.width(), m_swapchain.height());
 
                 m_render_pass = create_multisampling_render_pass(device, m_sample_count_bit, m_swapchain.format(),
-                                                                 m_multisampling_depth_attachment->format());
+                                                                 m_depth_attachment->format());
 
+                std::vector<VkImageView> attachments(3);
                 for (VkImageView swapchain_image_view : m_swapchain.image_views())
                 {
-                        std::array<VkImageView, 3> attachments;
                         attachments[0] = swapchain_image_view;
-                        attachments[1] = m_multisampling_color_attachment->image_view();
-                        attachments[2] = m_multisampling_depth_attachment->image_view();
+                        attachments[1] = m_color_attachment->image_view();
+                        attachments[2] = m_depth_attachment->image_view();
 
                         m_framebuffers.push_back(create_framebuffer(device, m_render_pass, m_swapchain.width(),
                                                                     m_swapchain.height(), attachments));
@@ -505,9 +392,9 @@ void SwapchainAndBuffers::create_main_buffers(const std::vector<uint32_t>& attac
 
                 m_render_pass = create_render_pass(device, m_swapchain.format(), m_depth_attachment->format());
 
+                std::vector<VkImageView> attachments(2);
                 for (VkImageView swapchain_image_view : m_swapchain.image_views())
                 {
-                        std::array<VkImageView, 2> attachments;
                         attachments[0] = swapchain_image_view;
                         attachments[1] = m_depth_attachment->image_view();
 
@@ -542,7 +429,7 @@ void SwapchainAndBuffers::create_shadow_buffers(const std::vector<uint32_t>& att
 
         m_shadow_render_pass = create_shadow_render_pass(device, m_shadow_depth_attachment->format());
 
-        std::array<VkImageView, 1> shadow_attachments;
+        std::vector<VkImageView> shadow_attachments(1);
         shadow_attachments[0] = m_shadow_depth_attachment->image_view();
 
         m_shadow_framebuffers.push_back(
@@ -591,15 +478,11 @@ std::string SwapchainAndBuffers::main_buffer_info_string() const
         std::string s;
         s += "Sample count = " + to_string(integer_sample_count_flag(m_sample_count_bit));
         s += '\n';
-        if (m_sample_count_bit != VK_SAMPLE_COUNT_1_BIT)
+        s += "Depth attachment format " + format_to_string(m_depth_attachment->format());
+        if (m_color_attachment)
         {
-                s += "Multisampling color attachment format " + format_to_string(m_multisampling_color_attachment->format());
                 s += '\n';
-                s += "Multisampling depth attachment format " + format_to_string(m_multisampling_depth_attachment->format());
-        }
-        else
-        {
-                s += "Depth attachment format " + format_to_string(m_depth_attachment->format());
+                s += "Color attachment format " + format_to_string(m_color_attachment->format());
         }
         return s;
 }

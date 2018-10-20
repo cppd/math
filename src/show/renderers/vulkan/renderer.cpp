@@ -19,15 +19,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/log.h"
 #include "com/math.h"
+#include "com/string_vector.h"
 #include "com/time.h"
 #include "com/vec.h"
-#include "graphics/vulkan/common.h"
+#include "graphics/vulkan/create.h"
 #include "graphics/vulkan/device.h"
+#include "graphics/vulkan/error.h"
 #include "graphics/vulkan/overview.h"
 #include "graphics/vulkan/pipeline.h"
 #include "graphics/vulkan/query.h"
 #include "graphics/vulkan/sampler.h"
-#include "graphics/vulkan/sync.h"
 #include "obj/obj_alg.h"
 #include "show/renderers/draw_objects.h"
 #include "show/renderers/vulkan/shader/shader.h"
@@ -117,34 +118,6 @@ namespace shaders = vulkan_renderer_shaders;
 
 namespace
 {
-template <typename T>
-std::vector<std::string> string_vector(const T& v)
-{
-        static_assert(std::is_same_v<typename T::value_type, const char*>);
-        return std::vector<std::string>(std::cbegin(v), std::cend(v));
-}
-
-vulkan::PipelineLayout create_pipeline_layout(VkDevice device, const std::initializer_list<unsigned>& set_numbers,
-                                              const std::initializer_list<VkDescriptorSetLayout>& set_layouts)
-{
-        ASSERT(set_numbers.size() == set_layouts.size() && set_numbers.size() > 0);
-        ASSERT(set_numbers.size() == std::unordered_set<unsigned>(set_numbers.begin(), set_numbers.end()).size());
-        ASSERT(0 == *std::min_element(set_numbers.begin(), set_numbers.end()));
-        ASSERT(set_numbers.size() - 1 == *std::max_element(set_numbers.begin(), set_numbers.end()));
-
-        std::vector<VkDescriptorSetLayout> layouts(set_numbers.size());
-        auto n = set_numbers.begin();
-        auto l = set_layouts.begin();
-        while (n != set_numbers.end() && l != set_layouts.end())
-        {
-                layouts.at(*n++) = *l++;
-        }
-
-        ASSERT(n == set_numbers.end() && l == set_layouts.end());
-
-        return vulkan::create_pipeline_layout(device, layouts);
-}
-
 std::unique_ptr<vulkan::VertexBufferWithDeviceLocalMemory> load_vertices(const vulkan::VulkanInstance& instance,
                                                                          const Obj<3>& obj,
                                                                          const std::vector<int>& sorted_face_indices)

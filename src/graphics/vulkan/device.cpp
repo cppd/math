@@ -17,12 +17,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "device.h"
 
-#include "common.h"
+#include "error.h"
 #include "query.h"
 #include "swapchain.h"
 
 #include "com/alg.h"
 #include "com/error.h"
+#include "com/string_vector.h"
 
 #include <algorithm>
 
