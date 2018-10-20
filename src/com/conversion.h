@@ -21,5 +21,5 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 inline int points_to_pixels(double points, double pixels_per_inch)
 {
-        return std::round(points / 72.0 * pixels_per_inch);
+        return std::lround(points / 72.0 * pixels_per_inch);
 }
