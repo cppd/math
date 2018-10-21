@@ -840,8 +840,6 @@ class Renderer final : public VulkanRenderer
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                ASSERT(m_swapchain_and_buffers->command_buffers_created());
-
                 bool with_shadow = m_show_shadow && m_draw_objects.object() && m_draw_objects.object()->has_shadow();
 
                 std::array<VkSemaphore, 1> render_finished_semaphores = {render_finished_semaphore};
@@ -1042,8 +1040,10 @@ class Renderer final : public VulkanRenderer
                         m_instance.device_wait_idle();
                 }
 
-                m_swapchain_and_buffers->create_command_buffers(
-                        m_clear_color, std::bind(&Renderer::draw_commands, this, std::placeholders::_1),
+                m_swapchain_and_buffers->create_command_buffers(m_clear_color,
+                                                                std::bind(&Renderer::draw_commands, this, std::placeholders::_1));
+
+                m_swapchain_and_buffers->create_shadow_command_buffers(
                         std::bind(&Renderer::draw_shadow_commands, this, std::placeholders::_1));
         }
 
@@ -1055,6 +1055,7 @@ class Renderer final : public VulkanRenderer
 
                 m_instance.device_wait_idle();
                 m_swapchain_and_buffers->delete_command_buffers();
+                m_swapchain_and_buffers->delete_shadow_command_buffers();
         }
 
 public:

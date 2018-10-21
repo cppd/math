@@ -722,6 +722,8 @@ DepthAttachment::DepthAttachment(const Device& device, VkCommandPool graphics_co
         m_image = create_2d_image(device, width, height, m_format, family_indices, samples, tiling, usage);
         m_device_memory = create_device_memory(device, m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
         m_image_view = create_image_view(device, m_image, m_format, VK_IMAGE_ASPECT_DEPTH_BIT);
+        m_width = width;
+        m_height = height;
 
         transition_image_layout(device, graphics_command_pool, graphics_queue, m_image, m_format, VK_IMAGE_LAYOUT_UNDEFINED,
                                 m_image_layout);
@@ -747,6 +749,16 @@ VkImageView DepthAttachment::image_view() const noexcept
         return m_image_view;
 }
 
+unsigned DepthAttachment::width() const noexcept
+{
+        return m_width;
+}
+
+unsigned DepthAttachment::height() const noexcept
+{
+        return m_height;
+}
+
 //
 
 ColorAttachment::ColorAttachment(const Device& device, VkCommandPool graphics_command_pool, VkQueue graphics_queue,
@@ -765,6 +777,7 @@ ColorAttachment::ColorAttachment(const Device& device, VkCommandPool graphics_co
         m_image = create_2d_image(device, width, height, m_format, family_indices, samples, tiling, usage);
         m_device_memory = create_device_memory(device, m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
         m_image_view = create_image_view(device, m_image, m_format, VK_IMAGE_ASPECT_COLOR_BIT);
+        m_sample_count = samples;
 
         ASSERT(m_format == format);
 
@@ -792,15 +805,20 @@ VkImageView ColorAttachment::image_view() const noexcept
         return m_image_view;
 }
 
+VkSampleCountFlagBits ColorAttachment::sample_count() const noexcept
+{
+        return m_sample_count;
+}
+
 //
 
 ShadowDepthAttachment::ShadowDepthAttachment(const Device& device, VkCommandPool /*graphics_command_pool*/,
                                              VkQueue /*graphics_queue*/, const std::vector<uint32_t>& family_indices,
-                                             const std::vector<VkFormat>& formats, uint32_t* width, uint32_t* height)
+                                             const std::vector<VkFormat>& formats, uint32_t width, uint32_t height)
 {
         ASSERT(family_indices.size() > 0);
 
-        if (!(*width > 0 && *height > 0))
+        if (width <= 0 || height <= 0)
         {
                 error("Shadow depth attachment size error");
         }
@@ -814,10 +832,10 @@ ShadowDepthAttachment::ShadowDepthAttachment(const Device& device, VkCommandPool
         m_format = find_supported_2d_image_format(device.physical_device(), formats, tiling, features, usage, samples);
 
         VkExtent2D max_extent = max_2d_image_extent(device.physical_device(), m_format, tiling, usage);
-        *width = std::min(*width, max_extent.width);
-        *height = std::min(*height, max_extent.height);
+        m_width = std::min(width, max_extent.width);
+        m_height = std::min(height, max_extent.height);
 
-        m_image = create_2d_image(device, *width, *height, m_format, family_indices, samples, tiling, usage);
+        m_image = create_2d_image(device, m_width, m_height, m_format, family_indices, samples, tiling, usage);
         m_device_memory = create_device_memory(device, m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
         m_image_view = create_image_view(device, m_image, m_format, VK_IMAGE_ASPECT_DEPTH_BIT);
 
@@ -843,5 +861,15 @@ VkImageLayout ShadowDepthAttachment::image_layout() const noexcept
 VkImageView ShadowDepthAttachment::image_view() const noexcept
 {
         return m_image_view;
+}
+
+unsigned ShadowDepthAttachment::width() const noexcept
+{
+        return m_width;
+}
+
+unsigned ShadowDepthAttachment::height() const noexcept
+{
+        return m_height;
 }
 }

@@ -342,141 +342,145 @@ SwapchainAndBuffers::SwapchainAndBuffers(VkSurfaceKHR surface, const std::vector
         : m_swapchain(surface, device, swapchain_family_indices, required_surface_format, preferred_image_count),
           m_device(device),
           m_graphics_command_pool(graphics_command_pool),
-          m_sample_count_bit(supported_framebuffer_sample_count_flag(device.physical_device(), required_minimum_sample_count))
-{
-        create_main_buffers(attachment_family_indices, device, graphics_command_pool, graphics_queue, depth_image_formats);
-
-        create_shadow_buffers(attachment_family_indices, device, graphics_command_pool, graphics_queue, depth_image_formats,
-                              shadow_zoom);
-}
-
-void SwapchainAndBuffers::create_main_buffers(const std::vector<uint32_t>& attachment_family_indices, const Device& device,
-                                              VkCommandPool graphics_command_pool, VkQueue graphics_queue,
-                                              const std::vector<VkFormat>& depth_image_formats)
+          m_swapchain_format(m_swapchain.format()),
+          m_swapchain_color_space(m_swapchain.color_space())
 {
         ASSERT(device != VK_NULL_HANDLE);
         ASSERT(graphics_command_pool != VK_NULL_HANDLE);
+
+        VkSampleCountFlagBits sample_count =
+                supported_framebuffer_sample_count_flag(device.physical_device(), required_minimum_sample_count);
+
+        create_main_buffers(m_swapchain, attachment_family_indices, graphics_queue, depth_image_formats, sample_count);
+
+        create_shadow_buffers(m_swapchain.width(), m_swapchain.height(), attachment_family_indices, graphics_queue,
+                              depth_image_formats, shadow_zoom);
+}
+
+void SwapchainAndBuffers::create_main_buffers(const Swapchain& swapchain, const std::vector<uint32_t>& attachment_family_indices,
+                                              VkQueue graphics_queue, const std::vector<VkFormat>& depth_image_formats,
+                                              VkSampleCountFlagBits sample_count)
+{
         ASSERT(graphics_queue != VK_NULL_HANDLE);
         ASSERT(attachment_family_indices.size() > 0);
         ASSERT(depth_image_formats.size() > 0);
 
-        if (m_sample_count_bit != VK_SAMPLE_COUNT_1_BIT)
+        if (sample_count != VK_SAMPLE_COUNT_1_BIT)
         {
-                m_color_attachment = std::make_unique<ColorAttachment>(
-                        device, graphics_command_pool, graphics_queue, attachment_family_indices, m_swapchain.format(),
-                        m_sample_count_bit, m_swapchain.width(), m_swapchain.height());
+                m_color_attachment = std::make_unique<ColorAttachment>(m_device, m_graphics_command_pool, graphics_queue,
+                                                                       attachment_family_indices, swapchain.format(),
+                                                                       sample_count, swapchain.width(), swapchain.height());
 
-                m_depth_attachment = std::make_unique<DepthAttachment>(
-                        device, graphics_command_pool, graphics_queue, attachment_family_indices, depth_image_formats,
-                        m_sample_count_bit, m_swapchain.width(), m_swapchain.height());
+                m_depth_attachment = std::make_unique<DepthAttachment>(m_device, m_graphics_command_pool, graphics_queue,
+                                                                       attachment_family_indices, depth_image_formats,
+                                                                       sample_count, swapchain.width(), swapchain.height());
 
-                m_render_pass = create_multisampling_render_pass(device, m_sample_count_bit, m_swapchain.format(),
+                m_render_pass = create_multisampling_render_pass(m_device, sample_count, swapchain.format(),
                                                                  m_depth_attachment->format());
 
                 std::vector<VkImageView> attachments(3);
-                for (VkImageView swapchain_image_view : m_swapchain.image_views())
+                for (VkImageView swapchain_image_view : swapchain.image_views())
                 {
                         attachments[0] = swapchain_image_view;
                         attachments[1] = m_color_attachment->image_view();
                         attachments[2] = m_depth_attachment->image_view();
 
-                        m_framebuffers.push_back(create_framebuffer(device, m_render_pass, m_swapchain.width(),
-                                                                    m_swapchain.height(), attachments));
+                        m_framebuffers.push_back(
+                                create_framebuffer(m_device, m_render_pass, swapchain.width(), swapchain.height(), attachments));
                 }
         }
         else
         {
                 m_depth_attachment = std::make_unique<DepthAttachment>(
-                        device, graphics_command_pool, graphics_queue, attachment_family_indices, depth_image_formats,
-                        VK_SAMPLE_COUNT_1_BIT, m_swapchain.width(), m_swapchain.height());
+                        m_device, m_graphics_command_pool, graphics_queue, attachment_family_indices, depth_image_formats,
+                        VK_SAMPLE_COUNT_1_BIT, swapchain.width(), swapchain.height());
 
-                m_render_pass = create_render_pass(device, m_swapchain.format(), m_depth_attachment->format());
+                m_render_pass = create_render_pass(m_device, swapchain.format(), m_depth_attachment->format());
 
                 std::vector<VkImageView> attachments(2);
-                for (VkImageView swapchain_image_view : m_swapchain.image_views())
+                for (VkImageView swapchain_image_view : swapchain.image_views())
                 {
                         attachments[0] = swapchain_image_view;
                         attachments[1] = m_depth_attachment->image_view();
 
-                        m_framebuffers.push_back(create_framebuffer(device, m_render_pass, m_swapchain.width(),
-                                                                    m_swapchain.height(), attachments));
+                        m_framebuffers.push_back(
+                                create_framebuffer(m_device, m_render_pass, swapchain.width(), swapchain.height(), attachments));
                 }
         }
 
         LOG(main_buffer_info_string());
 }
 
-void SwapchainAndBuffers::create_shadow_buffers(const std::vector<uint32_t>& attachment_family_indices, const Device& device,
-                                                VkCommandPool graphics_command_pool, VkQueue graphics_queue,
+void SwapchainAndBuffers::create_shadow_buffers(unsigned width, unsigned height,
+                                                const std::vector<uint32_t>& attachment_family_indices, VkQueue graphics_queue,
                                                 const std::vector<VkFormat>& depth_image_formats, double shadow_zoom)
 {
-        ASSERT(device != VK_NULL_HANDLE);
-        ASSERT(graphics_command_pool != VK_NULL_HANDLE);
         ASSERT(graphics_queue != VK_NULL_HANDLE);
         ASSERT(attachment_family_indices.size() > 0);
         ASSERT(depth_image_formats.size() > 0);
 
         shadow_zoom = std::max(shadow_zoom, 1.0);
 
-        m_shadow_width = std::lround(m_swapchain.width() * shadow_zoom);
-        m_shadow_height = std::lround(m_swapchain.height() * shadow_zoom);
+        unsigned preferred_width = std::lround(width * shadow_zoom);
+        unsigned preferred_height = std::lround(height * shadow_zoom);
 
-        uint32_t old_shadow_width = m_shadow_width;
-        uint32_t old_shadow_height = m_shadow_height;
-        m_shadow_depth_attachment =
-                std::make_unique<ShadowDepthAttachment>(device, graphics_command_pool, graphics_queue, attachment_family_indices,
-                                                        depth_image_formats, &m_shadow_width, &m_shadow_height);
+        m_shadow_depth_attachment = std::make_unique<ShadowDepthAttachment>(m_device, m_graphics_command_pool, graphics_queue,
+                                                                            attachment_family_indices, depth_image_formats,
+                                                                            preferred_width, preferred_height);
 
-        m_shadow_render_pass = create_shadow_render_pass(device, m_shadow_depth_attachment->format());
+        m_shadow_render_pass = create_shadow_render_pass(m_device, m_shadow_depth_attachment->format());
 
         std::vector<VkImageView> shadow_attachments(1);
         shadow_attachments[0] = m_shadow_depth_attachment->image_view();
 
-        m_shadow_framebuffers.push_back(
-                create_framebuffer(device, m_shadow_render_pass, m_shadow_width, m_shadow_height, shadow_attachments));
+        m_shadow_framebuffers.push_back(create_framebuffer(m_device, m_shadow_render_pass, m_shadow_depth_attachment->width(),
+                                                           m_shadow_depth_attachment->height(), shadow_attachments));
 
-        LOG(shadow_buffer_info_string(shadow_zoom, old_shadow_width, old_shadow_height));
+        LOG(shadow_buffer_info_string(shadow_zoom, preferred_width, preferred_height));
 }
 
 void SwapchainAndBuffers::create_command_buffers(const Color& clear_color,
-                                                 const std::function<void(VkCommandBuffer command_buffer)>& commands,
-                                                 const std::function<void(VkCommandBuffer command_buffer)>& shadow_commands)
+                                                 const std::function<void(VkCommandBuffer buffer)>& commands)
 {
-        VkClearValue color = color_clear_value(m_swapchain.format(), m_swapchain.color_space(), clear_color);
+        VkClearValue color = color_clear_value(m_swapchain_format, m_swapchain_color_space, clear_color);
 
-        if (m_sample_count_bit != VK_SAMPLE_COUNT_1_BIT)
+        if (m_color_attachment->sample_count() != VK_SAMPLE_COUNT_1_BIT)
         {
                 std::array<VkClearValue, 3> clear_values;
                 clear_values[0] = color;
                 clear_values[1] = color;
                 clear_values[2] = depth_stencil_clear_value();
-                m_command_buffers = ::create_command_buffers(m_device, m_swapchain.width(), m_swapchain.height(), m_render_pass,
-                                                             m_framebuffers, m_graphics_command_pool, clear_values, commands);
+
+                m_command_buffers =
+                        ::create_command_buffers(m_device, m_depth_attachment->width(), m_depth_attachment->height(),
+                                                 m_render_pass, m_framebuffers, m_graphics_command_pool, clear_values, commands);
         }
         else
         {
                 std::array<VkClearValue, 2> clear_values;
                 clear_values[0] = color;
                 clear_values[1] = depth_stencil_clear_value();
-                m_command_buffers = ::create_command_buffers(m_device, m_swapchain.width(), m_swapchain.height(), m_render_pass,
-                                                             m_framebuffers, m_graphics_command_pool, clear_values, commands);
-        }
 
-        //
-
-        {
-                std::array<VkClearValue, 1> clear_values;
-                clear_values[0] = depth_stencil_clear_value();
-                m_shadow_command_buffers =
-                        ::create_command_buffers(m_device, m_shadow_width, m_shadow_height, m_shadow_render_pass,
-                                                 m_shadow_framebuffers, m_graphics_command_pool, clear_values, shadow_commands);
+                m_command_buffers =
+                        ::create_command_buffers(m_device, m_depth_attachment->width(), m_depth_attachment->height(),
+                                                 m_render_pass, m_framebuffers, m_graphics_command_pool, clear_values, commands);
         }
+}
+
+void SwapchainAndBuffers::create_shadow_command_buffers(const std::function<void(VkCommandBuffer buffer)>& shadow_commands)
+{
+        std::array<VkClearValue, 1> clear_values;
+        clear_values[0] = depth_stencil_clear_value();
+
+        m_shadow_command_buffers = ::create_command_buffers(
+                m_device, m_shadow_depth_attachment->width(), m_shadow_depth_attachment->height(), m_shadow_render_pass,
+                m_shadow_framebuffers, m_graphics_command_pool, clear_values, shadow_commands);
 }
 
 std::string SwapchainAndBuffers::main_buffer_info_string() const
 {
         std::string s;
-        s += "Sample count = " + to_string(integer_sample_count_flag(m_sample_count_bit));
+        s += "Sample count = " + to_string(integer_sample_count_flag(m_color_attachment->sample_count()));
         s += '\n';
         s += "Depth attachment format " + format_to_string(m_depth_attachment->format());
         if (m_color_attachment)
@@ -487,17 +491,17 @@ std::string SwapchainAndBuffers::main_buffer_info_string() const
         return s;
 }
 
-std::string SwapchainAndBuffers::shadow_buffer_info_string(double shadow_zoom, uint32_t old_shadow_width,
-                                                           uint32_t old_shadow_height) const
+std::string SwapchainAndBuffers::shadow_buffer_info_string(double zoom, unsigned preferred_width, unsigned preferred_height) const
 {
         std::string s;
         s += "Shadow depth attachment format " + format_to_string(m_shadow_depth_attachment->format());
         s += '\n';
-        s += "Shadow zoom " + to_string_fixed(shadow_zoom, 5);
+        s += "Shadow zoom " + to_string_fixed(zoom, 5);
         s += '\n';
-        s += "Requested shadow size (" + to_string(old_shadow_width) + ", " + to_string(old_shadow_height) + ")";
+        s += "Requested shadow size (" + to_string(preferred_width) + ", " + to_string(preferred_height) + ")";
         s += '\n';
-        s += "Chosen shadow size (" + to_string(m_shadow_width) + ", " + to_string(m_shadow_height) + ")";
+        s += "Chosen shadow size (" + to_string(m_shadow_depth_attachment->width()) + ", " +
+             to_string(m_shadow_depth_attachment->height()) + ")";
         return s;
 }
 
@@ -514,8 +518,9 @@ VkPipeline SwapchainAndBuffers::create_pipeline(
         ASSERT(pipeline_layout != VK_NULL_HANDLE);
 
         m_pipelines.push_back(create_graphics_pipeline(
-                m_device, m_render_pass, 0 /*sub_pass*/, m_sample_count_bit, pipeline_layout, m_swapchain.width(),
-                m_swapchain.height(), primitive_topology, shaders, vertex_binding_descriptions, vertex_attribute_descriptions));
+                m_device, m_render_pass, 0 /*sub_pass*/, m_color_attachment->sample_count(), pipeline_layout,
+                m_depth_attachment->width(), m_depth_attachment->height(), primitive_topology, shaders,
+                vertex_binding_descriptions, vertex_attribute_descriptions));
 
         return m_pipelines.back();
 }
@@ -527,22 +532,32 @@ VkPipeline SwapchainAndBuffers::create_shadow_pipeline(
 {
         ASSERT(pipeline_layout != VK_NULL_HANDLE);
 
-        m_pipelines.push_back(create_shadow_graphics_pipeline(
-                m_device, m_shadow_render_pass, 0 /*sub_pass*/, VK_SAMPLE_COUNT_1_BIT, pipeline_layout, m_shadow_width,
-                m_shadow_height, primitive_topology, shaders, vertex_binding_descriptions, vertex_attribute_descriptions));
+        m_shadow_pipelines.push_back(create_shadow_graphics_pipeline(
+                m_device, m_shadow_render_pass, 0 /*sub_pass*/, VK_SAMPLE_COUNT_1_BIT, pipeline_layout,
+                m_shadow_depth_attachment->width(), m_shadow_depth_attachment->height(), primitive_topology, shaders,
+                vertex_binding_descriptions, vertex_attribute_descriptions));
 
-        return m_pipelines.back();
+        return m_shadow_pipelines.back();
 }
 
 void SwapchainAndBuffers::delete_command_buffers()
 {
         m_command_buffers = CommandBuffers();
+}
+
+void SwapchainAndBuffers::delete_shadow_command_buffers()
+{
         m_shadow_command_buffers = CommandBuffers();
 }
 
-bool SwapchainAndBuffers::command_buffers_created() const
+const VkCommandBuffer& SwapchainAndBuffers::command_buffer(uint32_t index) const noexcept
 {
-        return m_command_buffers.count() > 0 && m_shadow_command_buffers.count() > 0;
+        return m_command_buffers[index];
+}
+
+const VkCommandBuffer& SwapchainAndBuffers::shadow_command_buffer() const noexcept
+{
+        return m_shadow_command_buffers[0];
 }
 
 VkSwapchainKHR SwapchainAndBuffers::swapchain() const noexcept
@@ -561,18 +576,6 @@ VkColorSpaceKHR SwapchainAndBuffers::swapchain_color_space() const noexcept
 {
         static_assert(noexcept(m_swapchain.color_space()));
         return m_swapchain.color_space();
-}
-
-const VkCommandBuffer& SwapchainAndBuffers::command_buffer(uint32_t index) const noexcept
-{
-        return m_command_buffers[index];
-}
-
-const VkCommandBuffer& SwapchainAndBuffers::shadow_command_buffer() const noexcept
-{
-        ASSERT(m_shadow_command_buffers.count() == 1);
-
-        return m_shadow_command_buffers[0];
 }
 
 //

@@ -42,7 +42,8 @@ class SwapchainAndBuffers
 
         const Device& m_device;
         VkCommandPool m_graphics_command_pool;
-        VkSampleCountFlagBits m_sample_count_bit;
+        VkFormat m_swapchain_format;
+        VkColorSpaceKHR m_swapchain_color_space;
 
         //
 
@@ -50,30 +51,24 @@ class SwapchainAndBuffers
         std::unique_ptr<ColorAttachment> m_color_attachment;
         RenderPass m_render_pass;
         std::vector<Framebuffer> m_framebuffers;
+        std::vector<Pipeline> m_pipelines;
+        CommandBuffers m_command_buffers;
 
-        uint32_t m_shadow_width;
-        uint32_t m_shadow_height;
         std::unique_ptr<ShadowDepthAttachment> m_shadow_depth_attachment;
         RenderPass m_shadow_render_pass;
         std::vector<Framebuffer> m_shadow_framebuffers;
-
-        //
-
-        std::vector<Pipeline> m_pipelines;
-
-        CommandBuffers m_command_buffers;
+        std::vector<Pipeline> m_shadow_pipelines;
         CommandBuffers m_shadow_command_buffers;
 
         std::string main_buffer_info_string() const;
-        std::string shadow_buffer_info_string(double shadow_zoom, uint32_t old_shadow_width, uint32_t old_shadow_height) const;
+        std::string shadow_buffer_info_string(double zoom, unsigned preferred_width, unsigned preferred_height) const;
 
-        void create_main_buffers(const std::vector<uint32_t>& attachment_family_indices, const Device& device,
-                                 VkCommandPool graphics_command_pool, VkQueue graphics_queue,
-                                 const std::vector<VkFormat>& depth_image_formats);
+        void create_main_buffers(const Swapchain& swapchain, const std::vector<uint32_t>& attachment_family_indices,
+                                 VkQueue graphics_queue, const std::vector<VkFormat>& depth_image_formats,
+                                 VkSampleCountFlagBits sample_count);
 
-        void create_shadow_buffers(const std::vector<uint32_t>& attachment_family_indices, const Device& device,
-                                   VkCommandPool graphics_command_pool, VkQueue graphics_queue,
-                                   const std::vector<VkFormat>& depth_image_formats, double shadow_zoom);
+        void create_shadow_buffers(unsigned width, unsigned height, const std::vector<uint32_t>& attachment_family_indices,
+                                   VkQueue graphics_queue, const std::vector<VkFormat>& depth_image_formats, double shadow_zoom);
 
 public:
         SwapchainAndBuffers(VkSurfaceKHR surface, const std::vector<uint32_t>& swapchain_family_indices,
@@ -94,11 +89,11 @@ public:
 
         const ShadowDepthAttachment* shadow_texture() const noexcept;
 
-        void create_command_buffers(const Color& clear_color, const std::function<void(VkCommandBuffer command_buffer)>& commands,
-                                    const std::function<void(VkCommandBuffer command_buffer)>& shadow_commands);
+        void create_command_buffers(const Color& clear_color, const std::function<void(VkCommandBuffer buffer)>& commands);
+        void create_shadow_command_buffers(const std::function<void(VkCommandBuffer buffer)>& shadow_commands);
 
         void delete_command_buffers();
-        bool command_buffers_created() const;
+        void delete_shadow_command_buffers();
 
         const VkCommandBuffer& command_buffer(uint32_t index) const noexcept;
         const VkCommandBuffer& shadow_command_buffer() const noexcept;
@@ -114,7 +109,6 @@ public:
                                           const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions);
 
         VkSwapchainKHR swapchain() const noexcept;
-
         VkFormat swapchain_format() const noexcept;
         VkColorSpaceKHR swapchain_color_space() const noexcept;
 };
