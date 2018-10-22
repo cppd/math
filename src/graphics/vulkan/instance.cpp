@@ -333,17 +333,13 @@ vulkan::CommandBuffers create_command_buffers(VkDevice device, uint32_t width, u
 
 namespace vulkan
 {
-SwapchainAndBuffers::SwapchainAndBuffers(VkSurfaceKHR surface, const std::vector<uint32_t>& swapchain_family_indices,
-                                         const std::vector<uint32_t>& attachment_family_indices, const Device& device,
-                                         VkCommandPool graphics_command_pool, VkQueue graphics_queue,
-                                         const VkSurfaceFormatKHR& required_surface_format, int preferred_image_count,
-                                         int required_minimum_sample_count, const std::vector<VkFormat>& depth_image_formats,
-                                         double shadow_zoom)
-        : m_swapchain(surface, device, swapchain_family_indices, required_surface_format, preferred_image_count),
-          m_device(device),
+Buffers::Buffers(const Swapchain& swapchain, const std::vector<uint32_t>& attachment_family_indices, const Device& device,
+                 VkCommandPool graphics_command_pool, VkQueue graphics_queue, int required_minimum_sample_count,
+                 const std::vector<VkFormat>& depth_image_formats, double shadow_zoom)
+        : m_device(device),
           m_graphics_command_pool(graphics_command_pool),
-          m_swapchain_format(m_swapchain.format()),
-          m_swapchain_color_space(m_swapchain.color_space())
+          m_swapchain_format(swapchain.format()),
+          m_swapchain_color_space(swapchain.color_space())
 {
         ASSERT(device != VK_NULL_HANDLE);
         ASSERT(graphics_command_pool != VK_NULL_HANDLE);
@@ -351,15 +347,15 @@ SwapchainAndBuffers::SwapchainAndBuffers(VkSurfaceKHR surface, const std::vector
         VkSampleCountFlagBits sample_count =
                 supported_framebuffer_sample_count_flag(device.physical_device(), required_minimum_sample_count);
 
-        create_main_buffers(m_swapchain, attachment_family_indices, graphics_queue, depth_image_formats, sample_count);
+        create_main_buffers(swapchain, attachment_family_indices, graphics_queue, depth_image_formats, sample_count);
 
-        create_shadow_buffers(m_swapchain.width(), m_swapchain.height(), attachment_family_indices, graphics_queue,
+        create_shadow_buffers(swapchain.width(), swapchain.height(), attachment_family_indices, graphics_queue,
                               depth_image_formats, shadow_zoom);
 }
 
-void SwapchainAndBuffers::create_main_buffers(const Swapchain& swapchain, const std::vector<uint32_t>& attachment_family_indices,
-                                              VkQueue graphics_queue, const std::vector<VkFormat>& depth_image_formats,
-                                              VkSampleCountFlagBits sample_count)
+void Buffers::create_main_buffers(const Swapchain& swapchain, const std::vector<uint32_t>& attachment_family_indices,
+                                  VkQueue graphics_queue, const std::vector<VkFormat>& depth_image_formats,
+                                  VkSampleCountFlagBits sample_count)
 {
         ASSERT(graphics_queue != VK_NULL_HANDLE);
         ASSERT(attachment_family_indices.size() > 0);
@@ -411,9 +407,8 @@ void SwapchainAndBuffers::create_main_buffers(const Swapchain& swapchain, const 
         LOG(main_buffer_info_string());
 }
 
-void SwapchainAndBuffers::create_shadow_buffers(unsigned width, unsigned height,
-                                                const std::vector<uint32_t>& attachment_family_indices, VkQueue graphics_queue,
-                                                const std::vector<VkFormat>& depth_image_formats, double shadow_zoom)
+void Buffers::create_shadow_buffers(unsigned width, unsigned height, const std::vector<uint32_t>& attachment_family_indices,
+                                    VkQueue graphics_queue, const std::vector<VkFormat>& depth_image_formats, double shadow_zoom)
 {
         ASSERT(graphics_queue != VK_NULL_HANDLE);
         ASSERT(attachment_family_indices.size() > 0);
@@ -439,8 +434,7 @@ void SwapchainAndBuffers::create_shadow_buffers(unsigned width, unsigned height,
         LOG(shadow_buffer_info_string(shadow_zoom, preferred_width, preferred_height));
 }
 
-void SwapchainAndBuffers::create_command_buffers(const Color& clear_color,
-                                                 const std::function<void(VkCommandBuffer buffer)>& commands)
+void Buffers::create_command_buffers(const Color& clear_color, const std::function<void(VkCommandBuffer buffer)>& commands)
 {
         VkClearValue color = color_clear_value(m_swapchain_format, m_swapchain_color_space, clear_color);
 
@@ -467,7 +461,7 @@ void SwapchainAndBuffers::create_command_buffers(const Color& clear_color,
         }
 }
 
-void SwapchainAndBuffers::create_shadow_command_buffers(const std::function<void(VkCommandBuffer buffer)>& shadow_commands)
+void Buffers::create_shadow_command_buffers(const std::function<void(VkCommandBuffer buffer)>& shadow_commands)
 {
         std::array<VkClearValue, 1> clear_values;
         clear_values[0] = depth_stencil_clear_value();
@@ -477,7 +471,7 @@ void SwapchainAndBuffers::create_shadow_command_buffers(const std::function<void
                 m_shadow_framebuffers, m_graphics_command_pool, clear_values, shadow_commands);
 }
 
-std::string SwapchainAndBuffers::main_buffer_info_string() const
+std::string Buffers::main_buffer_info_string() const
 {
         std::string s;
         s += "Sample count = " + to_string(integer_sample_count_flag(m_color_attachment->sample_count()));
@@ -491,7 +485,7 @@ std::string SwapchainAndBuffers::main_buffer_info_string() const
         return s;
 }
 
-std::string SwapchainAndBuffers::shadow_buffer_info_string(double zoom, unsigned preferred_width, unsigned preferred_height) const
+std::string Buffers::shadow_buffer_info_string(double zoom, unsigned preferred_width, unsigned preferred_height) const
 {
         std::string s;
         s += "Shadow depth attachment format " + format_to_string(m_shadow_depth_attachment->format());
@@ -505,15 +499,15 @@ std::string SwapchainAndBuffers::shadow_buffer_info_string(double zoom, unsigned
         return s;
 }
 
-const ShadowDepthAttachment* SwapchainAndBuffers::shadow_texture() const noexcept
+const ShadowDepthAttachment* Buffers::shadow_texture() const noexcept
 {
         return m_shadow_depth_attachment.get();
 }
 
-VkPipeline SwapchainAndBuffers::create_pipeline(
-        VkPrimitiveTopology primitive_topology, const std::vector<const vulkan::Shader*>& shaders,
-        const PipelineLayout& pipeline_layout, const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
-        const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions)
+VkPipeline Buffers::create_pipeline(VkPrimitiveTopology primitive_topology, const std::vector<const vulkan::Shader*>& shaders,
+                                    const PipelineLayout& pipeline_layout,
+                                    const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
+                                    const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions)
 {
         ASSERT(pipeline_layout != VK_NULL_HANDLE);
 
@@ -525,10 +519,11 @@ VkPipeline SwapchainAndBuffers::create_pipeline(
         return m_pipelines.back();
 }
 
-VkPipeline SwapchainAndBuffers::create_shadow_pipeline(
-        VkPrimitiveTopology primitive_topology, const std::vector<const vulkan::Shader*>& shaders,
-        const PipelineLayout& pipeline_layout, const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
-        const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions)
+VkPipeline Buffers::create_shadow_pipeline(VkPrimitiveTopology primitive_topology,
+                                           const std::vector<const vulkan::Shader*>& shaders,
+                                           const PipelineLayout& pipeline_layout,
+                                           const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
+                                           const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions)
 {
         ASSERT(pipeline_layout != VK_NULL_HANDLE);
 
@@ -540,42 +535,24 @@ VkPipeline SwapchainAndBuffers::create_shadow_pipeline(
         return m_shadow_pipelines.back();
 }
 
-void SwapchainAndBuffers::delete_command_buffers()
+void Buffers::delete_command_buffers()
 {
         m_command_buffers = CommandBuffers();
 }
 
-void SwapchainAndBuffers::delete_shadow_command_buffers()
+void Buffers::delete_shadow_command_buffers()
 {
         m_shadow_command_buffers = CommandBuffers();
 }
 
-const VkCommandBuffer& SwapchainAndBuffers::command_buffer(uint32_t index) const noexcept
+const VkCommandBuffer& Buffers::command_buffer(uint32_t index) const noexcept
 {
         return m_command_buffers[index];
 }
 
-const VkCommandBuffer& SwapchainAndBuffers::shadow_command_buffer() const noexcept
+const VkCommandBuffer& Buffers::shadow_command_buffer() const noexcept
 {
         return m_shadow_command_buffers[0];
-}
-
-VkSwapchainKHR SwapchainAndBuffers::swapchain() const noexcept
-{
-        static_assert(noexcept(m_swapchain.swapchain()));
-        return m_swapchain.swapchain();
-}
-
-VkFormat SwapchainAndBuffers::swapchain_format() const noexcept
-{
-        static_assert(noexcept(m_swapchain.format()));
-        return m_swapchain.format();
-}
-
-VkColorSpaceKHR SwapchainAndBuffers::swapchain_color_space() const noexcept
-{
-        static_assert(noexcept(m_swapchain.color_space()));
-        return m_swapchain.color_space();
 }
 
 //

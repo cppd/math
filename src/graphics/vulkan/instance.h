@@ -34,12 +34,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace vulkan
 {
-class SwapchainAndBuffers
+class Buffers
 {
-        Swapchain m_swapchain;
-
-        //
-
         const Device& m_device;
         VkCommandPool m_graphics_command_pool;
         VkFormat m_swapchain_format;
@@ -71,19 +67,16 @@ class SwapchainAndBuffers
                                    VkQueue graphics_queue, const std::vector<VkFormat>& depth_image_formats, double shadow_zoom);
 
 public:
-        SwapchainAndBuffers(VkSurfaceKHR surface, const std::vector<uint32_t>& swapchain_family_indices,
-                            const std::vector<uint32_t>& attachment_family_indices, const Device& device,
-                            VkCommandPool graphics_command_pool, VkQueue graphics_queue,
-                            const VkSurfaceFormatKHR& required_surface_format, int preferred_image_count,
-                            int required_minimum_sample_count, const std::vector<VkFormat>& depth_image_formats,
-                            double shadow_zoom);
+        Buffers(const Swapchain& swapchain, const std::vector<uint32_t>& attachment_family_indices, const Device& device,
+                VkCommandPool graphics_command_pool, VkQueue graphics_queue, int required_minimum_sample_count,
+                const std::vector<VkFormat>& depth_image_formats, double shadow_zoom);
 
-        SwapchainAndBuffers(const SwapchainAndBuffers&) = delete;
-        SwapchainAndBuffers& operator=(const SwapchainAndBuffers&) = delete;
-        SwapchainAndBuffers& operator=(SwapchainAndBuffers&&) = delete;
+        Buffers(const Buffers&) = delete;
+        Buffers& operator=(const Buffers&) = delete;
+        Buffers& operator=(Buffers&&) = delete;
 
-        SwapchainAndBuffers(SwapchainAndBuffers&&) = default;
-        ~SwapchainAndBuffers() = default;
+        Buffers(Buffers&&) = default;
+        ~Buffers() = default;
 
         //
 
@@ -178,17 +171,21 @@ public:
                 return m_graphics_queue;
         }
 
+        VkCommandPool graphics_command_pool() const noexcept
+        {
+                return m_graphics_command_pool;
+        }
+
+        const std::vector<uint32_t>& attachment_family_indices() const noexcept
+        {
+                return m_attachment_family_indices;
+        }
+
         //
 
-        SwapchainAndBuffers create_swapchain_and_buffers(const VkSurfaceFormatKHR& required_surface_format,
-                                                         int preferred_image_count, int required_minimum_sample_count,
-                                                         const std::vector<VkFormat>& depth_image_formats,
-                                                         double shadow_zoom) const
+        Swapchain create_swapchain(VkSurfaceFormatKHR required_surface_format, int preferred_image_count)
         {
-                return SwapchainAndBuffers(m_surface, m_swapchain_family_indices, m_attachment_family_indices, m_device,
-                                           m_graphics_command_pool, m_graphics_queue, required_surface_format,
-                                           preferred_image_count, required_minimum_sample_count, depth_image_formats,
-                                           shadow_zoom);
+                return Swapchain(m_surface, m_device, m_swapchain_family_indices, required_surface_format, preferred_image_count);
         }
 
         template <typename T>

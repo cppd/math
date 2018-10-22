@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/mat.h"
 #include "com/vec.h"
 #include "graphics/vulkan/instance.h"
+#include "graphics/vulkan/swapchain.h"
 #include "obj/obj.h"
 
 #include <functional>
@@ -66,9 +67,8 @@ struct VulkanRenderer
         static std::vector<vulkan::PhysicalDeviceFeatures> required_device_features();
         static std::vector<vulkan::PhysicalDeviceFeatures> optional_device_features();
 
-        virtual VkSwapchainKHR swapchain() const = 0;
-        virtual void create_swapchain_and_pipelines_and_command_buffers() = 0;
+        virtual void create_buffers(const vulkan::Swapchain* swapchain) = 0;
+        virtual void delete_buffers() = 0;
 };
 
-std::unique_ptr<VulkanRenderer> create_vulkan_renderer(int preferred_image_count, const vulkan::VulkanInstance& instance,
-                                                       unsigned max_frames_in_flight);
+std::unique_ptr<VulkanRenderer> create_vulkan_renderer(const vulkan::VulkanInstance& instance, unsigned max_frames_in_flight);

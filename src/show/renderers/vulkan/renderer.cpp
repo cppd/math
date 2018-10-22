@@ -62,9 +62,6 @@ constexpr std::initializer_list<VkFormat> DEPTH_IMAGE_FORMATS =
 };
 // clang-format on
 
-// Шейдеры пишут результат в цветовом пространстве RGB, поэтому _SRGB (для результата в sRGB нужен _UNORM).
-constexpr VkSurfaceFormatKHR SURFACE_FORMAT = {VK_FORMAT_B8G8R8A8_SRGB, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR};
-
 constexpr int REQUIRED_MINIMUM_SAMPLE_COUNT = 4;
 
 // Это в шейдерах layout(set = N, ...)
@@ -620,9 +617,8 @@ class Renderer final : public VulkanRenderer
         double m_shadow_zoom = 1;
         bool m_show_shadow = false;
 
-        const int m_preferred_image_count;
-
         const vulkan::VulkanInstance& m_instance;
+        const vulkan::Swapchain* m_swapchain = nullptr;
 
         std::vector<vulkan::Semaphore> m_shadow_available_semaphores;
 
@@ -654,7 +650,7 @@ class Renderer final : public VulkanRenderer
         vulkan::PipelineLayout m_shadow_pipeline_layout;
         vulkan::PipelineLayout m_points_pipeline_layout;
 
-        std::unique_ptr<vulkan::SwapchainAndBuffers> m_swapchain_and_buffers;
+        std::unique_ptr<vulkan::Buffers> m_buffers;
 
         DrawObjects<DrawObject> m_draw_objects;
 
@@ -746,7 +742,7 @@ class Renderer final : public VulkanRenderer
 
                 m_shadow_zoom = zoom;
 
-                create_swapchain_and_pipelines_and_command_buffers();
+                create_buffers();
         }
         void set_matrices(const mat4& shadow_matrix, const mat4& main_matrix) override
         {
@@ -855,7 +851,7 @@ class Renderer final : public VulkanRenderer
                         submit_info.pWaitSemaphores = image_signal_semaphores.data();
                         submit_info.pWaitDstStageMask = image_wait_stages.data();
                         submit_info.commandBufferCount = 1;
-                        submit_info.pCommandBuffers = &m_swapchain_and_buffers->command_buffer(image_index);
+                        submit_info.pCommandBuffers = &m_buffers->command_buffer(image_index);
                         submit_info.signalSemaphoreCount = render_finished_semaphores.size();
                         submit_info.pSignalSemaphores = render_finished_semaphores.data();
 
@@ -879,7 +875,7 @@ class Renderer final : public VulkanRenderer
                                 VkSubmitInfo submit_info = {};
                                 submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
                                 submit_info.commandBufferCount = 1;
-                                submit_info.pCommandBuffers = &m_swapchain_and_buffers->shadow_command_buffer();
+                                submit_info.pCommandBuffers = &m_buffers->shadow_command_buffer();
                                 submit_info.signalSemaphoreCount = shadow_signal_semaphores.size();
                                 submit_info.pSignalSemaphores = shadow_signal_semaphores.data();
 
@@ -899,7 +895,7 @@ class Renderer final : public VulkanRenderer
                                 submit_info.pWaitSemaphores = color_wait_semaphores.data();
                                 submit_info.pWaitDstStageMask = color_wait_stages.data();
                                 submit_info.commandBufferCount = 1;
-                                submit_info.pCommandBuffers = &m_swapchain_and_buffers->command_buffer(image_index);
+                                submit_info.pCommandBuffers = &m_buffers->command_buffer(image_index);
                                 submit_info.signalSemaphoreCount = render_finished_semaphores.size();
                                 submit_info.pSignalSemaphores = render_finished_semaphores.data();
 
@@ -914,12 +910,7 @@ class Renderer final : public VulkanRenderer
                 return m_draw_objects.object() != nullptr;
         }
 
-        VkSwapchainKHR swapchain() const override
-        {
-                return m_swapchain_and_buffers->swapchain();
-        }
-
-        void create_swapchain_and_pipelines_and_command_buffers() override
+        void create_buffers()
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
@@ -929,31 +920,52 @@ class Renderer final : public VulkanRenderer
 
                 //
 
-                // Сначала надо удалить объект, а потом создавать
-                m_swapchain_and_buffers.reset();
+                m_buffers.reset();
 
-                m_swapchain_and_buffers = std::make_unique<vulkan::SwapchainAndBuffers>(m_instance.create_swapchain_and_buffers(
-                        SURFACE_FORMAT, m_preferred_image_count, REQUIRED_MINIMUM_SAMPLE_COUNT, DEPTH_IMAGE_FORMATS,
-                        m_shadow_zoom));
+                m_buffers = std::make_unique<vulkan::Buffers>(*m_swapchain, m_instance.attachment_family_indices(),
+                                                              m_instance.device(), m_instance.graphics_command_pool(),
+                                                              m_instance.graphics_queue(), REQUIRED_MINIMUM_SAMPLE_COUNT,
+                                                              DEPTH_IMAGE_FORMATS, m_shadow_zoom);
 
-                m_triangles_shared_shader_memory.set_shadow_texture(m_shadow_sampler, m_swapchain_and_buffers->shadow_texture());
+                m_triangles_shared_shader_memory.set_shadow_texture(m_shadow_sampler, m_buffers->shadow_texture());
 
-                m_triangles_pipeline = m_swapchain_and_buffers->create_pipeline(
+                m_triangles_pipeline = m_buffers->create_pipeline(
                         VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, m_triangles_shaders, m_triangles_pipeline_layout,
                         shaders::Vertex::binding_descriptions(), shaders::Vertex::all_attribute_descriptions());
 
-                m_shadow_pipeline = m_swapchain_and_buffers->create_shadow_pipeline(
+                m_shadow_pipeline = m_buffers->create_shadow_pipeline(
                         VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, m_shadow_shaders, m_shadow_pipeline_layout,
                         shaders::Vertex::binding_descriptions(), shaders::Vertex::position_attribute_descriptions());
 
-                m_points_pipeline = m_swapchain_and_buffers->create_pipeline(
+                m_points_pipeline = m_buffers->create_pipeline(
                         VK_PRIMITIVE_TOPOLOGY_POINT_LIST, m_points_shaders, m_points_pipeline_layout,
                         shaders::PointVertex::binding_descriptions(), shaders::PointVertex::attribute_descriptions());
-                m_lines_pipeline = m_swapchain_and_buffers->create_pipeline(
+                m_lines_pipeline = m_buffers->create_pipeline(
                         VK_PRIMITIVE_TOPOLOGY_LINE_LIST, m_points_shaders, m_points_pipeline_layout,
                         shaders::PointVertex::binding_descriptions(), shaders::PointVertex::attribute_descriptions());
 
                 create_command_buffers(false /*wait_idle*/);
+        }
+
+        void create_buffers(const vulkan::Swapchain* swapchain) override
+        {
+                ASSERT(m_thread_id == std::this_thread::get_id());
+
+                m_swapchain = swapchain;
+
+                create_buffers();
+        }
+
+        void delete_buffers() override
+        {
+                ASSERT(m_thread_id == std::this_thread::get_id());
+
+                if (m_buffers)
+                {
+                        m_instance.device_wait_idle();
+
+                        m_buffers.reset();
+                }
         }
 
         void set_matrices()
@@ -1033,35 +1045,33 @@ class Renderer final : public VulkanRenderer
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                ASSERT(m_swapchain_and_buffers);
+                ASSERT(m_buffers);
 
                 if (wait_idle)
                 {
                         m_instance.device_wait_idle();
                 }
 
-                m_swapchain_and_buffers->create_command_buffers(m_clear_color,
-                                                                std::bind(&Renderer::draw_commands, this, std::placeholders::_1));
+                m_buffers->create_command_buffers(m_clear_color,
+                                                  std::bind(&Renderer::draw_commands, this, std::placeholders::_1));
 
-                m_swapchain_and_buffers->create_shadow_command_buffers(
-                        std::bind(&Renderer::draw_shadow_commands, this, std::placeholders::_1));
+                m_buffers->create_shadow_command_buffers(std::bind(&Renderer::draw_shadow_commands, this, std::placeholders::_1));
         }
 
         void delete_command_buffers()
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                ASSERT(m_swapchain_and_buffers);
+                ASSERT(m_buffers);
 
                 m_instance.device_wait_idle();
-                m_swapchain_and_buffers->delete_command_buffers();
-                m_swapchain_and_buffers->delete_shadow_command_buffers();
+                m_buffers->delete_command_buffers();
+                m_buffers->delete_shadow_command_buffers();
         }
 
 public:
-        Renderer(int preferred_image_count, const vulkan::VulkanInstance& instance, unsigned max_frames_in_flight)
-                : m_preferred_image_count(preferred_image_count),
-                  m_instance(instance),
+        Renderer(const vulkan::VulkanInstance& instance, unsigned max_frames_in_flight)
+                : m_instance(instance),
                   m_shadow_available_semaphores(vulkan::create_semaphores(m_instance.device(), max_frames_in_flight)),
                   m_triangles_sampler(vulkan::create_sampler(m_instance.device())),
                   m_shadow_sampler(vulkan::create_shadow_sampler(m_instance.device())),
@@ -1100,10 +1110,6 @@ public:
                           create_pipeline_layout(m_instance.device(), {POINTS_SET_NUMBER}, {m_point_descriptor_set_layout}))
         {
                 LOG(vulkan::overview_physical_devices(m_instance.instance()));
-
-                //
-
-                create_swapchain_and_pipelines_and_command_buffers();
         }
 
         ~Renderer() override
@@ -1148,8 +1154,7 @@ std::vector<vulkan::PhysicalDeviceFeatures> VulkanRenderer::optional_device_feat
         return OPTIONAL_DEVICE_FEATURES;
 }
 
-std::unique_ptr<VulkanRenderer> create_vulkan_renderer(int preferred_image_count, const vulkan::VulkanInstance& instance,
-                                                       unsigned max_frames_in_flight)
+std::unique_ptr<VulkanRenderer> create_vulkan_renderer(const vulkan::VulkanInstance& instance, unsigned max_frames_in_flight)
 {
-        return std::make_unique<Renderer>(preferred_image_count, instance, max_frames_in_flight);
+        return std::make_unique<Renderer>(instance, max_frames_in_flight);
 }

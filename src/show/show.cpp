@@ -51,6 +51,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // 2 - double buffering, 3 - triple buffering
 constexpr int VULKAN_PREFERRED_IMAGE_COUNT = 2;
 constexpr int VULKAN_MAX_FRAMES_IN_FLIGHT = 1;
+// Шейдеры пишут результат в цветовом пространстве RGB, поэтому _SRGB (для результата в sRGB нужен _UNORM).
+constexpr VkSurfaceFormatKHR VULKAN_SURFACE_FORMAT = {VK_FORMAT_B8G8R8A8_SRGB, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR};
 
 constexpr double ZOOM_BASE = 1.1;
 constexpr double ZOOM_EXP_MIN = -50;
@@ -845,9 +847,16 @@ void ShowObject<GraphicsAndComputeAPI::OpenGL>::loop()
 
 //
 
-bool render_vulkan(VkQueue presentation_queue, VkQueue graphics_queue, VkDevice device, VkFence current_frame_fence,
-                   VkSemaphore image_available_semaphore, VkSemaphore render_finished_semaphore, unsigned current_frame,
-                   VulkanRenderer& renderer)
+enum class VulkanResult
+{
+        Swapchain,
+        NoObject,
+        Rendered
+};
+
+VulkanResult render_vulkan(VkSwapchainKHR swapchain, VkQueue presentation_queue, VkQueue graphics_queue, VkDevice device,
+                           VkFence current_frame_fence, VkSemaphore image_available_semaphore,
+                           VkSemaphore render_finished_semaphore, unsigned current_frame, VulkanRenderer& renderer)
 {
         constexpr VkFence NO_FENCE = VK_NULL_HANDLE;
 
@@ -867,12 +876,11 @@ bool render_vulkan(VkQueue presentation_queue, VkQueue graphics_queue, VkDevice 
         //
 
         uint32_t image_index;
-        result = vkAcquireNextImageKHR(device, renderer.swapchain(), std::numeric_limits<uint64_t>::max(),
-                                       image_available_semaphore, NO_FENCE, &image_index);
+        result = vkAcquireNextImageKHR(device, swapchain, std::numeric_limits<uint64_t>::max(), image_available_semaphore,
+                                       NO_FENCE, &image_index);
         if (result == VK_ERROR_OUT_OF_DATE_KHR)
         {
-                renderer.create_swapchain_and_pipelines_and_command_buffers();
-                return false;
+                return VulkanResult::Swapchain;
         }
         else if (result == VK_SUBOPTIMAL_KHR)
         {
@@ -890,7 +898,7 @@ bool render_vulkan(VkQueue presentation_queue, VkQueue graphics_queue, VkDevice 
         //
 
         std::array<VkSemaphore, 1> render_finished_semaphores = {render_finished_semaphore};
-        std::array<VkSwapchainKHR, 1> swapchains = {renderer.swapchain()};
+        std::array<VkSwapchainKHR, 1> swapchains = {swapchain};
         std::array<uint32_t, 1> image_indices = {image_index};
 
         VkPresentInfoKHR present_info = {};
@@ -905,15 +913,14 @@ bool render_vulkan(VkQueue presentation_queue, VkQueue graphics_queue, VkDevice 
         result = vkQueuePresentKHR(presentation_queue, &present_info);
         if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
         {
-                renderer.create_swapchain_and_pipelines_and_command_buffers();
-                return false;
+                return VulkanResult::Swapchain;
         }
         else if (result != VK_SUCCESS)
         {
                 vulkan::vulkan_function_error("vkQueuePresentKHR", result);
         }
 
-        return object_rendered;
+        return object_rendered ? VulkanResult::Rendered : VulkanResult::NoObject;
 }
 
 template <>
@@ -941,8 +948,11 @@ void ShowObject<GraphicsAndComputeAPI::Vulkan>::loop()
 
         //
 
-        std::unique_ptr<VulkanRenderer> renderer =
-                create_vulkan_renderer(VULKAN_PREFERRED_IMAGE_COUNT, instance, VULKAN_MAX_FRAMES_IN_FLIGHT);
+        std::unique_ptr<vulkan::Swapchain> swapchain = std::make_unique<vulkan::Swapchain>(
+                instance.create_swapchain(VULKAN_SURFACE_FORMAT, VULKAN_PREFERRED_IMAGE_COUNT));
+
+        std::unique_ptr<VulkanRenderer> renderer = create_vulkan_renderer(instance, VULKAN_MAX_FRAMES_IN_FLIGHT);
+        renderer->create_buffers(swapchain.get());
 
         std::unique_ptr<VulkanCanvas> canvas = create_vulkan_canvas();
 
@@ -963,11 +973,27 @@ void ShowObject<GraphicsAndComputeAPI::Vulkan>::loop()
         {
                 pull_and_dispatch_all_events();
 
-                if (!render_vulkan(instance.presentation_queue(), instance.graphics_queue(), instance.device(),
-                                   in_flight_fences[frame], image_available_semaphores[frame], render_finished_semaphores[frame],
-                                   frame, *renderer))
+                switch (render_vulkan(swapchain->swapchain(), instance.presentation_queue(), instance.graphics_queue(),
+                                      instance.device(), in_flight_fences[frame], image_available_semaphores[frame],
+                                      render_finished_semaphores[frame], frame, *renderer))
                 {
+                case VulkanResult::NoObject:
                         sleep(last_frame_time);
+                        break;
+                case VulkanResult::Rendered:
+                        break;
+                case VulkanResult::Swapchain:
+                        instance.device_wait_idle();
+
+                        renderer->delete_buffers();
+
+                        swapchain.reset();
+                        swapchain = std::make_unique<vulkan::Swapchain>(
+                                instance.create_swapchain(VULKAN_SURFACE_FORMAT, VULKAN_PREFERRED_IMAGE_COUNT));
+
+                        renderer->create_buffers(swapchain.get());
+
+                        break;
                 }
         }
 }
