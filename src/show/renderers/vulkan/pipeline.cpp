@@ -17,26 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "pipeline.h"
 
+#include "graphics/vulkan/create.h"
+
 namespace
 {
-std::vector<VkPipelineShaderStageCreateInfo> pipeline_shader_stage_create_info(const std::vector<const vulkan::Shader*>& shaders)
-{
-        std::vector<VkPipelineShaderStageCreateInfo> res;
-
-        for (const vulkan::Shader* s : shaders)
-        {
-                VkPipelineShaderStageCreateInfo stage_info = {};
-                stage_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-                stage_info.stage = s->stage();
-                stage_info.module = s->module();
-                stage_info.pName = s->entry_point_name();
-
-                res.push_back(stage_info);
-        }
-
-        return res;
-}
-
 vulkan::Pipeline create_graphics_pipeline(const vulkan::Device& device, VkRenderPass render_pass, uint32_t sub_pass,
                                           VkSampleCountFlagBits sample_count, VkPipelineLayout pipeline_layout, uint32_t width,
                                           uint32_t height, VkPrimitiveTopology primitive_topology,
@@ -45,7 +29,7 @@ vulkan::Pipeline create_graphics_pipeline(const vulkan::Device& device, VkRender
                                           const std::vector<VkVertexInputAttributeDescription>& attribute_descriptions,
                                           bool for_shadow)
 {
-        std::vector<VkPipelineShaderStageCreateInfo> pipeline_shader_stages = pipeline_shader_stage_create_info(shaders);
+        std::vector<VkPipelineShaderStageCreateInfo> pipeline_shader_stages = vulkan::pipeline_shader_stage_create_info(shaders);
 
         VkPipelineVertexInputStateCreateInfo vertex_input_state_info = {};
         vertex_input_state_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;

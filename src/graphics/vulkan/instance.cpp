@@ -54,6 +54,7 @@ VulkanInstance::VulkanInstance(const std::vector<std::string>& required_instance
           m_transfer_queue(device_queue(m_device, m_physical_device.transfer(), 0 /*queue_index*/)),
           //
           m_compute_queue(device_queue(m_device, m_physical_device.compute(), 0 /*queue_index*/)),
+          //
           m_presentation_queue(device_queue(m_device, m_physical_device.presentation(), 0 /*queue_index*/)),
           //
           m_buffer_family_indices(unique_elements(std::vector({m_physical_device.graphics(), m_physical_device.transfer()}))),

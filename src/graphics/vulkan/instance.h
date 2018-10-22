@@ -33,28 +33,29 @@ namespace vulkan
 {
 class VulkanInstance
 {
-        Instance m_instance;
-        std::optional<DebugReportCallback> m_callback;
+        const Instance m_instance;
+        const std::optional<DebugReportCallback> m_callback;
 
-        SurfaceKHR m_surface;
+        const SurfaceKHR m_surface;
 
-        PhysicalDevice m_physical_device;
+        const PhysicalDevice m_physical_device;
 
-        Device m_device;
+        const Device m_device;
 
-        CommandPool m_graphics_command_pool;
-        VkQueue m_graphics_queue = VK_NULL_HANDLE;
+        const CommandPool m_graphics_command_pool;
+        const VkQueue m_graphics_queue;
 
-        CommandPool m_transfer_command_pool;
-        VkQueue m_transfer_queue = VK_NULL_HANDLE;
+        const CommandPool m_transfer_command_pool;
+        const VkQueue m_transfer_queue;
 
-        VkQueue m_compute_queue = VK_NULL_HANDLE;
-        VkQueue m_presentation_queue = VK_NULL_HANDLE;
+        const VkQueue m_compute_queue;
 
-        std::vector<uint32_t> m_buffer_family_indices;
-        std::vector<uint32_t> m_swapchain_family_indices;
-        std::vector<uint32_t> m_texture_family_indices;
-        std::vector<uint32_t> m_attachment_family_indices;
+        const VkQueue m_presentation_queue;
+
+        const std::vector<uint32_t> m_buffer_family_indices;
+        const std::vector<uint32_t> m_swapchain_family_indices;
+        const std::vector<uint32_t> m_texture_family_indices;
+        const std::vector<uint32_t> m_attachment_family_indices;
 
 public:
         VulkanInstance(const std::vector<std::string>& required_instance_extensions,

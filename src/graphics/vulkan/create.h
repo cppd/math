@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "objects.h"
+#include "shader.h"
 
 #include "com/color/color.h"
 
@@ -44,4 +45,6 @@ Framebuffer create_framebuffer(VkDevice device, VkRenderPass render_pass, uint32
 
 VkClearValue color_clear_value(VkFormat format, VkColorSpaceKHR color_space, const Color& color);
 VkClearValue depth_stencil_clear_value();
+
+std::vector<VkPipelineShaderStageCreateInfo> pipeline_shader_stage_create_info(const std::vector<const Shader*>& shaders);
 }
