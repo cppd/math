@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "renderer.h"
 
+#include "buffers.h"
+
 #include "com/log.h"
 #include "com/math.h"
 #include "com/string_vector.h"
@@ -650,7 +652,7 @@ class Renderer final : public VulkanRenderer
         vulkan::PipelineLayout m_shadow_pipeline_layout;
         vulkan::PipelineLayout m_points_pipeline_layout;
 
-        std::unique_ptr<vulkan::Buffers> m_buffers;
+        std::unique_ptr<RenderBuffers> m_buffers;
 
         DrawObjects<DrawObject> m_draw_objects;
 
@@ -922,10 +924,10 @@ class Renderer final : public VulkanRenderer
 
                 m_buffers.reset();
 
-                m_buffers = std::make_unique<vulkan::Buffers>(*m_swapchain, m_instance.attachment_family_indices(),
-                                                              m_instance.device(), m_instance.graphics_command_pool(),
-                                                              m_instance.graphics_queue(), REQUIRED_MINIMUM_SAMPLE_COUNT,
-                                                              DEPTH_IMAGE_FORMATS, m_shadow_zoom);
+                m_buffers =
+                        std::make_unique<RenderBuffers>(*m_swapchain, m_instance.attachment_family_indices(), m_instance.device(),
+                                                        m_instance.graphics_command_pool(), m_instance.graphics_queue(),
+                                                        REQUIRED_MINIMUM_SAMPLE_COUNT, DEPTH_IMAGE_FORMATS, m_shadow_zoom);
 
                 m_triangles_shared_shader_memory.set_shadow_texture(m_shadow_sampler, m_buffers->shadow_texture());
 

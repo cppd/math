@@ -20,92 +20,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "buffers.h"
 #include "device.h"
 #include "objects.h"
-#include "shader.h"
 #include "swapchain.h"
 
-#include "com/color/color.h"
 #include "com/type_detect.h"
 
 #include <functional>
-#include <memory>
 #include <optional>
 #include <string>
 #include <vector>
 
 namespace vulkan
 {
-class Buffers
-{
-        const Device& m_device;
-        VkCommandPool m_graphics_command_pool;
-        VkFormat m_swapchain_format;
-        VkColorSpaceKHR m_swapchain_color_space;
-
-        //
-
-        std::unique_ptr<DepthAttachment> m_depth_attachment;
-        std::unique_ptr<ColorAttachment> m_color_attachment;
-        RenderPass m_render_pass;
-        std::vector<Framebuffer> m_framebuffers;
-        std::vector<Pipeline> m_pipelines;
-        CommandBuffers m_command_buffers;
-
-        std::unique_ptr<ShadowDepthAttachment> m_shadow_depth_attachment;
-        RenderPass m_shadow_render_pass;
-        std::vector<Framebuffer> m_shadow_framebuffers;
-        std::vector<Pipeline> m_shadow_pipelines;
-        CommandBuffers m_shadow_command_buffers;
-
-        std::string main_buffer_info_string() const;
-        std::string shadow_buffer_info_string(double zoom, unsigned preferred_width, unsigned preferred_height) const;
-
-        void create_main_buffers(const Swapchain& swapchain, const std::vector<uint32_t>& attachment_family_indices,
-                                 VkQueue graphics_queue, const std::vector<VkFormat>& depth_image_formats,
-                                 VkSampleCountFlagBits sample_count);
-
-        void create_shadow_buffers(unsigned width, unsigned height, const std::vector<uint32_t>& attachment_family_indices,
-                                   VkQueue graphics_queue, const std::vector<VkFormat>& depth_image_formats, double shadow_zoom);
-
-public:
-        Buffers(const Swapchain& swapchain, const std::vector<uint32_t>& attachment_family_indices, const Device& device,
-                VkCommandPool graphics_command_pool, VkQueue graphics_queue, int required_minimum_sample_count,
-                const std::vector<VkFormat>& depth_image_formats, double shadow_zoom);
-
-        Buffers(const Buffers&) = delete;
-        Buffers& operator=(const Buffers&) = delete;
-        Buffers& operator=(Buffers&&) = delete;
-
-        Buffers(Buffers&&) = default;
-        ~Buffers() = default;
-
-        //
-
-        const ShadowDepthAttachment* shadow_texture() const noexcept;
-
-        void create_command_buffers(const Color& clear_color, const std::function<void(VkCommandBuffer buffer)>& commands);
-        void create_shadow_command_buffers(const std::function<void(VkCommandBuffer buffer)>& shadow_commands);
-
-        void delete_command_buffers();
-        void delete_shadow_command_buffers();
-
-        const VkCommandBuffer& command_buffer(uint32_t index) const noexcept;
-        const VkCommandBuffer& shadow_command_buffer() const noexcept;
-
-        VkPipeline create_pipeline(VkPrimitiveTopology primitive_topology, const std::vector<const vulkan::Shader*>& shaders,
-                                   const PipelineLayout& pipeline_layout,
-                                   const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
-                                   const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions);
-        VkPipeline create_shadow_pipeline(VkPrimitiveTopology primitive_topology,
-                                          const std::vector<const vulkan::Shader*>& shaders,
-                                          const PipelineLayout& pipeline_layout,
-                                          const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
-                                          const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions);
-
-        VkSwapchainKHR swapchain() const noexcept;
-        VkFormat swapchain_format() const noexcept;
-        VkColorSpaceKHR swapchain_color_space() const noexcept;
-};
-
 class VulkanInstance
 {
         Instance m_instance;
