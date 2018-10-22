@@ -17,11 +17,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "buffers.h"
 
+#include "pipeline.h"
+
 #include "com/error.h"
 #include "com/log.h"
 #include "graphics/vulkan/create.h"
 #include "graphics/vulkan/error.h"
-#include "graphics/vulkan/pipeline.h"
 #include "graphics/vulkan/print.h"
 #include "graphics/vulkan/query.h"
 
@@ -505,7 +506,7 @@ VkPipeline RenderBuffers::create_pipeline(VkPrimitiveTopology primitive_topology
 {
         ASSERT(pipeline_layout != VK_NULL_HANDLE);
 
-        m_pipelines.push_back(vulkan::create_graphics_pipeline(
+        m_pipelines.push_back(create_graphics_pipeline(
                 m_device, m_render_pass, 0 /*sub_pass*/, m_color_attachment->sample_count(), pipeline_layout,
                 m_depth_attachment->width(), m_depth_attachment->height(), primitive_topology, shaders,
                 vertex_binding_descriptions, vertex_attribute_descriptions));
@@ -521,7 +522,7 @@ VkPipeline RenderBuffers::create_shadow_pipeline(
 {
         ASSERT(pipeline_layout != VK_NULL_HANDLE);
 
-        m_shadow_pipelines.push_back(vulkan::create_shadow_graphics_pipeline(
+        m_shadow_pipelines.push_back(create_shadow_graphics_pipeline(
                 m_device, m_shadow_render_pass, 0 /*sub_pass*/, VK_SAMPLE_COUNT_1_BIT, pipeline_layout,
                 m_shadow_depth_attachment->width(), m_shadow_depth_attachment->height(), primitive_topology, shaders,
                 vertex_binding_descriptions, vertex_attribute_descriptions));

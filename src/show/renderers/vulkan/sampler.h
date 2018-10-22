@@ -17,11 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "objects.h"
+#include "graphics/vulkan/objects.h"
 
-namespace vulkan
-{
 vulkan::Sampler create_sampler(const vulkan::Device& device);
 
 vulkan::Sampler create_shadow_sampler(VkDevice device);
-}

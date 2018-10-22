@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "renderer.h"
 
 #include "buffers.h"
+#include "sampler.h"
 
 #include "com/log.h"
 #include "com/math.h"
@@ -28,9 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/vulkan/device.h"
 #include "graphics/vulkan/error.h"
 #include "graphics/vulkan/overview.h"
-#include "graphics/vulkan/pipeline.h"
 #include "graphics/vulkan/query.h"
-#include "graphics/vulkan/sampler.h"
 #include "obj/obj_alg.h"
 #include "show/renderers/draw_objects.h"
 #include "show/renderers/vulkan/shader/shader.h"
@@ -1075,8 +1074,8 @@ public:
         Renderer(const vulkan::VulkanInstance& instance, unsigned max_frames_in_flight)
                 : m_instance(instance),
                   m_shadow_available_semaphores(vulkan::create_semaphores(m_instance.device(), max_frames_in_flight)),
-                  m_triangles_sampler(vulkan::create_sampler(m_instance.device())),
-                  m_shadow_sampler(vulkan::create_shadow_sampler(m_instance.device())),
+                  m_triangles_sampler(create_sampler(m_instance.device())),
+                  m_shadow_sampler(create_shadow_sampler(m_instance.device())),
                   //
                   m_triangles_shared_descriptor_set_layout(vulkan::create_descriptor_set_layout(
                           m_instance.device(), shaders::TrianglesSharedMemory::descriptor_set_layout_bindings())),

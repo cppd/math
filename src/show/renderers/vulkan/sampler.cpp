@@ -17,8 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "sampler.h"
 
-namespace vulkan
-{
 vulkan::Sampler create_sampler(const vulkan::Device& device)
 {
         VkSamplerCreateInfo create_info = {};
@@ -77,5 +75,4 @@ vulkan::Sampler create_shadow_sampler(VkDevice device)
         create_info.maxLod = 0.0f;
 
         return vulkan::Sampler(device, create_info);
-}
 }
