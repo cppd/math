@@ -19,6 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "graphics/vulkan/objects.h"
 
-vulkan::Sampler create_sampler(const vulkan::Device& device);
+vulkan::Sampler create_texture_sampler(const vulkan::Device& device);
 
 vulkan::Sampler create_shadow_sampler(VkDevice device);

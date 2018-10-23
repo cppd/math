@@ -623,7 +623,7 @@ class Renderer final : public VulkanRenderer
 
         std::vector<vulkan::Semaphore> m_shadow_available_semaphores;
 
-        vulkan::Sampler m_triangles_sampler;
+        vulkan::Sampler m_texture_sampler;
         vulkan::Sampler m_shadow_sampler;
 
         vulkan::DescriptorSetLayout m_triangles_shared_descriptor_set_layout;
@@ -638,20 +638,19 @@ class Renderer final : public VulkanRenderer
         vulkan::VertexShader m_triangles_vert;
         vulkan::GeometryShader m_triangles_geom;
         vulkan::FragmentShader m_triangles_frag;
+
         vulkan::VertexShader m_shadow_vert;
         vulkan::FragmentShader m_shadow_frag;
+
         vulkan::VertexShader m_points_vert;
         vulkan::FragmentShader m_points_frag;
-
-        std::vector<const vulkan::Shader*> m_triangles_shaders;
-        std::vector<const vulkan::Shader*> m_shadow_shaders;
-        std::vector<const vulkan::Shader*> m_points_shaders;
 
         vulkan::PipelineLayout m_triangles_pipeline_layout;
         vulkan::PipelineLayout m_shadow_pipeline_layout;
         vulkan::PipelineLayout m_points_pipeline_layout;
 
-        std::unique_ptr<RenderBuffers> m_buffers;
+        std::unique_ptr<MainBuffers> m_main_buffers;
+        std::unique_ptr<ShadowBuffers> m_shadow_buffers;
 
         DrawObjects<DrawObject> m_draw_objects;
 
@@ -777,7 +776,7 @@ class Renderer final : public VulkanRenderer
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
                 std::unique_ptr draw_object = std::make_unique<DrawObject>(
-                        m_instance, m_triangles_sampler, m_triangles_material_descriptor_set_layout, *obj, size, position);
+                        m_instance, m_texture_sampler, m_triangles_material_descriptor_set_layout, *obj, size, position);
 
                 m_draw_objects.add_object(std::move(draw_object), id, scale_id);
 
@@ -837,26 +836,25 @@ class Renderer final : public VulkanRenderer
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                bool with_shadow = m_show_shadow && m_draw_objects.object() && m_draw_objects.object()->has_shadow();
+                constexpr VkFence NO_FENCE = VK_NULL_HANDLE;
 
-                std::array<VkSemaphore, 1> render_finished_semaphores = {render_finished_semaphore};
-
-                if (!with_shadow)
+                if (!m_show_shadow || !m_draw_objects.object() || !m_draw_objects.object()->has_shadow())
                 {
-                        std::array<VkSemaphore, 1> image_signal_semaphores = {image_available_semaphore};
-                        std::array<VkPipelineStageFlags, 1> image_wait_stages = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+                        std::array<VkSemaphore, 1> wait_semaphores = {image_available_semaphore};
+                        std::array<VkPipelineStageFlags, 1> wait_stages = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
 
-                        VkSubmitInfo submit_info = {};
-                        submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-                        submit_info.waitSemaphoreCount = image_signal_semaphores.size();
-                        submit_info.pWaitSemaphores = image_signal_semaphores.data();
-                        submit_info.pWaitDstStageMask = image_wait_stages.data();
-                        submit_info.commandBufferCount = 1;
-                        submit_info.pCommandBuffers = &m_buffers->command_buffer(image_index);
-                        submit_info.signalSemaphoreCount = render_finished_semaphores.size();
-                        submit_info.pSignalSemaphores = render_finished_semaphores.data();
+                        VkSubmitInfo info = {};
 
-                        VkResult result = vkQueueSubmit(graphics_queue, 1, &submit_info, queue_fence);
+                        info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+                        info.waitSemaphoreCount = wait_semaphores.size();
+                        info.pWaitSemaphores = wait_semaphores.data();
+                        info.pWaitDstStageMask = wait_stages.data();
+                        info.commandBufferCount = 1;
+                        info.pCommandBuffers = &m_main_buffers->command_buffer(image_index);
+                        info.signalSemaphoreCount = 1;
+                        info.pSignalSemaphores = &render_finished_semaphore;
+
+                        VkResult result = vkQueueSubmit(graphics_queue, 1, &info, queue_fence);
                         if (result != VK_SUCCESS)
                         {
                                 vulkan::vulkan_function_error("vkQueueSubmit", result);
@@ -864,25 +862,18 @@ class Renderer final : public VulkanRenderer
                 }
                 else
                 {
-                        std::array<VkSemaphore, 1> shadow_signal_semaphores = {m_shadow_available_semaphores[current_frame]};
-
-                        std::array<VkSemaphore, 2> color_wait_semaphores = {m_shadow_available_semaphores[current_frame],
-                                                                            image_available_semaphore};
-
-                        std::array<VkPipelineStageFlags, 2> color_wait_stages = {VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-                                                                                 VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+                        VkSemaphore shadow_available_semaphore = m_shadow_available_semaphores[current_frame];
 
                         {
-                                VkSubmitInfo submit_info = {};
-                                submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-                                submit_info.commandBufferCount = 1;
-                                submit_info.pCommandBuffers = &m_buffers->shadow_command_buffer();
-                                submit_info.signalSemaphoreCount = shadow_signal_semaphores.size();
-                                submit_info.pSignalSemaphores = shadow_signal_semaphores.data();
+                                VkSubmitInfo info = {};
 
-                                constexpr VkFence NO_FENCE = VK_NULL_HANDLE;
+                                info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+                                info.commandBufferCount = 1;
+                                info.pCommandBuffers = &m_shadow_buffers->command_buffer();
+                                info.signalSemaphoreCount = 1;
+                                info.pSignalSemaphores = &shadow_available_semaphore;
 
-                                VkResult result = vkQueueSubmit(graphics_queue, 1, &submit_info, NO_FENCE);
+                                VkResult result = vkQueueSubmit(graphics_queue, 1, &info, NO_FENCE);
                                 if (result != VK_SUCCESS)
                                 {
                                         vulkan::vulkan_function_error("vkQueueSubmit", result);
@@ -890,17 +881,27 @@ class Renderer final : public VulkanRenderer
                         }
 
                         {
-                                VkSubmitInfo submit_info = {};
-                                submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-                                submit_info.waitSemaphoreCount = color_wait_semaphores.size();
-                                submit_info.pWaitSemaphores = color_wait_semaphores.data();
-                                submit_info.pWaitDstStageMask = color_wait_stages.data();
-                                submit_info.commandBufferCount = 1;
-                                submit_info.pCommandBuffers = &m_buffers->command_buffer(image_index);
-                                submit_info.signalSemaphoreCount = render_finished_semaphores.size();
-                                submit_info.pSignalSemaphores = render_finished_semaphores.data();
+                                std::array<VkSemaphore, 2> wait_semaphores;
+                                std::array<VkPipelineStageFlags, 2> wait_stages;
 
-                                VkResult result = vkQueueSubmit(graphics_queue, 1, &submit_info, queue_fence);
+                                wait_semaphores[0] = shadow_available_semaphore;
+                                wait_stages[0] = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+
+                                wait_semaphores[1] = image_available_semaphore;
+                                wait_stages[1] = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+
+                                VkSubmitInfo info = {};
+
+                                info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+                                info.waitSemaphoreCount = wait_semaphores.size();
+                                info.pWaitSemaphores = wait_semaphores.data();
+                                info.pWaitDstStageMask = wait_stages.data();
+                                info.commandBufferCount = 1;
+                                info.pCommandBuffers = &m_main_buffers->command_buffer(image_index);
+                                info.signalSemaphoreCount = 1;
+                                info.pSignalSemaphores = &render_finished_semaphore;
+
+                                VkResult result = vkQueueSubmit(graphics_queue, 1, &info, queue_fence);
                                 if (result != VK_SUCCESS)
                                 {
                                         vulkan::vulkan_function_error("vkQueueSubmit", result);
@@ -919,30 +920,36 @@ class Renderer final : public VulkanRenderer
 
                 m_instance.device_wait_idle();
 
+                m_main_buffers.reset();
+                m_shadow_buffers.reset();
+
                 //
 
-                m_buffers.reset();
+                m_main_buffers =
+                        std::make_unique<MainBuffers>(*m_swapchain, m_instance.attachment_family_indices(), m_instance.device(),
+                                                      m_instance.graphics_command_pool(), m_instance.graphics_queue(),
+                                                      REQUIRED_MINIMUM_SAMPLE_COUNT, DEPTH_IMAGE_FORMATS);
 
-                m_buffers =
-                        std::make_unique<RenderBuffers>(*m_swapchain, m_instance.attachment_family_indices(), m_instance.device(),
-                                                        m_instance.graphics_command_pool(), m_instance.graphics_queue(),
-                                                        REQUIRED_MINIMUM_SAMPLE_COUNT, DEPTH_IMAGE_FORMATS, m_shadow_zoom);
+                m_shadow_buffers = std::make_unique<ShadowBuffers>(
+                        *m_swapchain, m_instance.attachment_family_indices(), m_instance.device(),
+                        m_instance.graphics_command_pool(), m_instance.graphics_queue(), DEPTH_IMAGE_FORMATS, m_shadow_zoom);
 
-                m_triangles_shared_shader_memory.set_shadow_texture(m_shadow_sampler, m_buffers->shadow_texture());
+                m_triangles_shared_shader_memory.set_shadow_texture(m_shadow_sampler, m_shadow_buffers->texture());
 
-                m_triangles_pipeline = m_buffers->create_pipeline(
-                        VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, m_triangles_shaders, m_triangles_pipeline_layout,
-                        shaders::Vertex::binding_descriptions(), shaders::Vertex::all_attribute_descriptions());
-
-                m_shadow_pipeline = m_buffers->create_shadow_pipeline(
-                        VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, m_shadow_shaders, m_shadow_pipeline_layout,
+                m_triangles_pipeline = m_main_buffers->create_pipeline(
+                        VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, {&m_triangles_vert, &m_triangles_geom, &m_triangles_frag},
+                        m_triangles_pipeline_layout, shaders::Vertex::binding_descriptions(),
+                        shaders::Vertex::all_attribute_descriptions());
+                m_shadow_pipeline = m_shadow_buffers->create_pipeline(
+                        VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, {&m_shadow_vert, &m_shadow_frag}, m_shadow_pipeline_layout,
                         shaders::Vertex::binding_descriptions(), shaders::Vertex::position_attribute_descriptions());
 
-                m_points_pipeline = m_buffers->create_pipeline(
-                        VK_PRIMITIVE_TOPOLOGY_POINT_LIST, m_points_shaders, m_points_pipeline_layout,
+                m_points_pipeline = m_main_buffers->create_pipeline(
+                        VK_PRIMITIVE_TOPOLOGY_POINT_LIST, {&m_points_vert, &m_points_frag}, m_points_pipeline_layout,
                         shaders::PointVertex::binding_descriptions(), shaders::PointVertex::attribute_descriptions());
-                m_lines_pipeline = m_buffers->create_pipeline(
-                        VK_PRIMITIVE_TOPOLOGY_LINE_LIST, m_points_shaders, m_points_pipeline_layout,
+
+                m_lines_pipeline = m_main_buffers->create_pipeline(
+                        VK_PRIMITIVE_TOPOLOGY_LINE_LIST, {&m_points_vert, &m_points_frag}, m_points_pipeline_layout,
                         shaders::PointVertex::binding_descriptions(), shaders::PointVertex::attribute_descriptions());
 
                 create_command_buffers(false /*wait_idle*/);
@@ -961,11 +968,12 @@ class Renderer final : public VulkanRenderer
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                if (m_buffers)
+                if (m_main_buffers || m_shadow_buffers)
                 {
                         m_instance.device_wait_idle();
 
-                        m_buffers.reset();
+                        m_main_buffers.reset();
+                        m_shadow_buffers.reset();
                 }
         }
 
@@ -1046,35 +1054,40 @@ class Renderer final : public VulkanRenderer
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                ASSERT(m_buffers);
+                //
+
+                ASSERT(m_main_buffers && m_shadow_buffers);
 
                 if (wait_idle)
                 {
                         m_instance.device_wait_idle();
                 }
 
-                m_buffers->create_command_buffers(m_clear_color,
-                                                  std::bind(&Renderer::draw_commands, this, std::placeholders::_1));
+                m_main_buffers->create_command_buffers(m_clear_color,
+                                                       std::bind(&Renderer::draw_commands, this, std::placeholders::_1));
 
-                m_buffers->create_shadow_command_buffers(std::bind(&Renderer::draw_shadow_commands, this, std::placeholders::_1));
+                m_shadow_buffers->create_command_buffers(std::bind(&Renderer::draw_shadow_commands, this, std::placeholders::_1));
         }
 
         void delete_command_buffers()
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                ASSERT(m_buffers);
+                //
+
+                ASSERT(m_main_buffers && m_shadow_buffers);
 
                 m_instance.device_wait_idle();
-                m_buffers->delete_command_buffers();
-                m_buffers->delete_shadow_command_buffers();
+
+                m_main_buffers->delete_command_buffers();
+                m_shadow_buffers->delete_command_buffers();
         }
 
 public:
         Renderer(const vulkan::VulkanInstance& instance, unsigned max_frames_in_flight)
                 : m_instance(instance),
                   m_shadow_available_semaphores(vulkan::create_semaphores(m_instance.device(), max_frames_in_flight)),
-                  m_triangles_sampler(create_sampler(m_instance.device())),
+                  m_texture_sampler(create_texture_sampler(m_instance.device())),
                   m_shadow_sampler(create_shadow_sampler(m_instance.device())),
                   //
                   m_triangles_shared_descriptor_set_layout(vulkan::create_descriptor_set_layout(
@@ -1097,10 +1110,6 @@ public:
                   m_shadow_frag(m_instance.device(), shadow_frag, "main"),
                   m_points_vert(m_instance.device(), points_vert, "main"),
                   m_points_frag(m_instance.device(), points_frag, "main"),
-                  //
-                  m_triangles_shaders({&m_triangles_vert, &m_triangles_geom, &m_triangles_frag}),
-                  m_shadow_shaders({&m_shadow_vert, &m_shadow_frag}),
-                  m_points_shaders({&m_points_vert, &m_points_frag}),
                   //
                   m_triangles_pipeline_layout(create_pipeline_layout(
                           m_instance.device(), {TRIANGLES_SHARED_SET_NUMBER, TRIANGLES_MATERIAL_SET_NUMBER},

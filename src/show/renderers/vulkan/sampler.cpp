@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "sampler.h"
 
-vulkan::Sampler create_sampler(const vulkan::Device& device)
+vulkan::Sampler create_texture_sampler(const vulkan::Device& device)
 {
         VkSamplerCreateInfo create_info = {};
         create_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;

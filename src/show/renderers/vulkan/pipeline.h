@@ -20,18 +20,23 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/vulkan/objects.h"
 #include "graphics/vulkan/shader.h"
 
+#include <optional>
 #include <vector>
 
-vulkan::Pipeline create_graphics_pipeline(const vulkan::Device& device, VkRenderPass render_pass, uint32_t sub_pass,
-                                          VkSampleCountFlagBits sample_count, VkPipelineLayout pipeline_layout, uint32_t width,
-                                          uint32_t height, VkPrimitiveTopology primitive_topology,
-                                          const std::vector<const vulkan::Shader*>& shaders,
-                                          const std::vector<VkVertexInputBindingDescription>& binding_descriptions,
-                                          const std::vector<VkVertexInputAttributeDescription>& attribute_descriptions);
+struct GraphicsPipelineCreateInfo
+{
+        std::optional<const vulkan::Device*> device;
+        std::optional<VkRenderPass> render_pass;
+        std::optional<uint32_t> sub_pass;
+        std::optional<VkSampleCountFlagBits> sample_count;
+        std::optional<VkPipelineLayout> pipeline_layout;
+        std::optional<uint32_t> width;
+        std::optional<uint32_t> height;
+        std::optional<VkPrimitiveTopology> primitive_topology;
+        std::optional<const std::vector<const vulkan::Shader*>*> shaders;
+        std::optional<const std::vector<VkVertexInputBindingDescription>*> binding_descriptions;
+        std::optional<const std::vector<VkVertexInputAttributeDescription>*> attribute_descriptions;
+        std::optional<bool> for_shadow;
+};
 
-vulkan::Pipeline create_shadow_graphics_pipeline(const vulkan::Device& device, VkRenderPass render_pass, uint32_t sub_pass,
-                                                 VkSampleCountFlagBits sample_count, VkPipelineLayout pipeline_layout,
-                                                 uint32_t width, uint32_t height, VkPrimitiveTopology primitive_topology,
-                                                 const std::vector<const vulkan::Shader*>& shaders,
-                                                 const std::vector<VkVertexInputBindingDescription>& binding_descriptions,
-                                                 const std::vector<VkVertexInputAttributeDescription>& attribute_descriptions);
+vulkan::Pipeline create_graphics_pipeline(const GraphicsPipelineCreateInfo& info);
