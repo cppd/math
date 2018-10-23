@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/glsl_types.h"
 #include "graphics/opengl/query.h"
 #include "obj/obj_alg.h"
-#include "show/renderers/draw_objects.h"
+#include "show/renderers/com/storage.h"
 
 #include <algorithm>
 #include <vector>
@@ -399,7 +399,7 @@ class Renderer final : public OpenGLRenderer
 
         double m_shadow_zoom = 1;
 
-        DrawObjects<DrawObject> m_draw_objects;
+        RendererObjectStorage<DrawObject> m_storage;
 
         bool m_framebuffer_srgb;
         bool m_colorbuffer_srgb;
@@ -475,7 +475,7 @@ class Renderer final : public OpenGLRenderer
 
         bool draw(bool draw_to_color_buffer) override
         {
-                const DrawObject* draw_object = m_draw_objects.object();
+                const DrawObject* draw_object = m_storage.object();
 
                 m_objects->clear_tex_image(0);
 
@@ -497,7 +497,7 @@ class Renderer final : public OpenGLRenderer
 
                 draw_object->bind();
 
-                const DrawObject* scale_object = m_draw_objects.scale_object();
+                const DrawObject* scale_object = m_storage.scale_object();
 
                 if (m_show_shadow && draw_object->draw_type() == DrawType::Triangles)
                 {
@@ -636,19 +636,19 @@ class Renderer final : public OpenGLRenderer
 
         void object_add(const Obj<3>* obj, double size, const vec3& position, int id, int scale_id) override
         {
-                m_draw_objects.add_object(std::make_unique<DrawObject>(*obj, size, position), id, scale_id);
+                m_storage.add_object(std::make_unique<DrawObject>(*obj, size, position), id, scale_id);
         }
         void object_delete(int id) override
         {
-                m_draw_objects.delete_object(id);
+                m_storage.delete_object(id);
         }
         void object_show(int id) override
         {
-                m_draw_objects.show_object(id);
+                m_storage.show_object(id);
         }
         void object_delete_all() override
         {
-                m_draw_objects.delete_all();
+                m_storage.delete_all();
         }
 
 public:

@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <unordered_map>
 
 template <typename T>
-class DrawObjects final
+class RendererObjectStorage final
 {
         struct MapEntry
         {
@@ -34,17 +34,17 @@ class DrawObjects final
 
         std::unordered_map<int, MapEntry> m_objects;
 
-        const T* m_draw_object = nullptr;
-        const T* m_draw_scale_object = nullptr;
-        int m_draw_object_id = 0;
-        int m_draw_scale_object_id = 0;
+        const T* m_object = nullptr;
+        const T* m_scale_object = nullptr;
+        int m_object_id = 0;
+        int m_scale_object_id = 0;
 
 public:
         void add_object(std::unique_ptr<T>&& object, int id, int scale_id)
         {
-                if (m_draw_object && id == m_draw_scale_object_id)
+                if (m_object && id == m_scale_object_id)
                 {
-                        m_draw_scale_object = object.get();
+                        m_scale_object = object.get();
                 }
 
                 m_objects.insert_or_assign(id, MapEntry(std::move(object), scale_id));
@@ -52,7 +52,7 @@ public:
 
         bool is_current_object(int id) const
         {
-                return m_draw_object && id == m_draw_object_id;
+                return m_object && id == m_object_id;
         }
 
         void delete_object(int id)
@@ -60,13 +60,13 @@ public:
                 auto iter = m_objects.find(id);
                 if (iter != m_objects.cend())
                 {
-                        if (iter->second.object.get() == m_draw_object)
+                        if (iter->second.object.get() == m_object)
                         {
-                                m_draw_object = nullptr;
+                                m_object = nullptr;
                         }
-                        if (iter->second.object.get() == m_draw_scale_object)
+                        if (iter->second.object.get() == m_scale_object)
                         {
-                                m_draw_scale_object = nullptr;
+                                m_scale_object = nullptr;
                         }
                         m_objects.erase(iter);
                 }
@@ -77,42 +77,42 @@ public:
                 auto iter = m_objects.find(id);
                 if (iter != m_objects.cend())
                 {
-                        m_draw_object = iter->second.object.get();
+                        m_object = iter->second.object.get();
 
-                        m_draw_object_id = id;
-                        m_draw_scale_object_id = iter->second.scale_object_id;
+                        m_object_id = id;
+                        m_scale_object_id = iter->second.scale_object_id;
 
-                        auto scale_iter = m_objects.find(m_draw_scale_object_id);
+                        auto scale_iter = m_objects.find(m_scale_object_id);
                         if (scale_iter != m_objects.cend())
                         {
-                                m_draw_scale_object = scale_iter->second.object.get();
+                                m_scale_object = scale_iter->second.object.get();
                         }
                         else
                         {
-                                m_draw_scale_object = nullptr;
+                                m_scale_object = nullptr;
                         }
                 }
                 else
                 {
-                        m_draw_object = nullptr;
-                        m_draw_scale_object = nullptr;
+                        m_object = nullptr;
+                        m_scale_object = nullptr;
                 }
         }
 
         void delete_all()
         {
                 m_objects.clear();
-                m_draw_object = nullptr;
-                m_draw_scale_object = nullptr;
+                m_object = nullptr;
+                m_scale_object = nullptr;
         }
 
         const T* object() const
         {
-                return m_draw_object;
+                return m_object;
         }
 
         const T* scale_object() const
         {
-                return m_draw_scale_object ? m_draw_scale_object : m_draw_object;
+                return m_scale_object ? m_scale_object : m_object;
         }
 };

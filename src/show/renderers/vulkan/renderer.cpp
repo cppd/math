@@ -31,7 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/vulkan/overview.h"
 #include "graphics/vulkan/query.h"
 #include "obj/obj_alg.h"
-#include "show/renderers/draw_objects.h"
+#include "show/renderers/com/storage.h"
 #include "show/renderers/vulkan/shader/shader.h"
 
 #include <algorithm>
@@ -652,7 +652,7 @@ class Renderer final : public VulkanRenderer
         std::unique_ptr<MainBuffers> m_main_buffers;
         std::unique_ptr<ShadowBuffers> m_shadow_buffers;
 
-        DrawObjects<DrawObject> m_draw_objects;
+        RendererObjectStorage<DrawObject> m_storage;
 
         VkPipeline m_triangles_pipeline = VK_NULL_HANDLE;
         VkPipeline m_shadow_pipeline = VK_NULL_HANDLE;
@@ -778,7 +778,7 @@ class Renderer final : public VulkanRenderer
                 std::unique_ptr draw_object = std::make_unique<DrawObject>(
                         m_instance, m_texture_sampler, m_triangles_material_descriptor_set_layout, *obj, size, position);
 
-                m_draw_objects.add_object(std::move(draw_object), id, scale_id);
+                m_storage.add_object(std::move(draw_object), id, scale_id);
 
                 set_matrices();
         }
@@ -786,12 +786,12 @@ class Renderer final : public VulkanRenderer
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                bool delete_and_create_command_buffers = m_draw_objects.is_current_object(id);
+                bool delete_and_create_command_buffers = m_storage.is_current_object(id);
                 if (delete_and_create_command_buffers)
                 {
                         delete_command_buffers();
                 }
-                m_draw_objects.delete_object(id);
+                m_storage.delete_object(id);
                 if (delete_and_create_command_buffers)
                 {
                         create_command_buffers();
@@ -802,12 +802,12 @@ class Renderer final : public VulkanRenderer
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                bool delete_and_create_command_buffers = m_draw_objects.object() != nullptr;
+                bool delete_and_create_command_buffers = m_storage.object() != nullptr;
                 if (delete_and_create_command_buffers)
                 {
                         delete_command_buffers();
                 }
-                m_draw_objects.delete_all();
+                m_storage.delete_all();
                 if (delete_and_create_command_buffers)
                 {
                         create_command_buffers();
@@ -818,13 +818,13 @@ class Renderer final : public VulkanRenderer
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                if (m_draw_objects.is_current_object(id))
+                if (m_storage.is_current_object(id))
                 {
                         return;
                 }
-                const DrawObject* object = m_draw_objects.object();
-                m_draw_objects.show_object(id);
-                if (object != m_draw_objects.object())
+                const DrawObject* object = m_storage.object();
+                m_storage.show_object(id);
+                if (object != m_storage.object())
                 {
                         create_command_buffers();
                 }
@@ -838,7 +838,7 @@ class Renderer final : public VulkanRenderer
 
                 constexpr VkFence NO_FENCE = VK_NULL_HANDLE;
 
-                if (!m_show_shadow || !m_draw_objects.object() || !m_draw_objects.object()->has_shadow())
+                if (!m_show_shadow || !m_storage.object() || !m_storage.object()->has_shadow())
                 {
                         std::array<VkSemaphore, 1> wait_semaphores = {image_available_semaphore};
                         std::array<VkPipelineStageFlags, 1> wait_stages = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
@@ -909,7 +909,7 @@ class Renderer final : public VulkanRenderer
                         }
                 }
 
-                return m_draw_objects.object() != nullptr;
+                return m_storage.object() != nullptr;
         }
 
         void create_buffers()
@@ -981,14 +981,13 @@ class Renderer final : public VulkanRenderer
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                ASSERT(m_draw_objects.scale_object() || !m_draw_objects.object());
+                ASSERT(m_storage.scale_object() || !m_storage.object());
 
-                if (m_draw_objects.scale_object())
+                if (m_storage.scale_object())
                 {
-                        mat4 matrix = m_main_matrix * m_draw_objects.scale_object()->model_matrix();
-                        mat4 scale_bias_shadow_matrix =
-                                m_scale_bias_shadow_matrix * m_draw_objects.scale_object()->model_matrix();
-                        mat4 shadow_matrix = m_shadow_matrix * m_draw_objects.scale_object()->model_matrix();
+                        mat4 matrix = m_main_matrix * m_storage.scale_object()->model_matrix();
+                        mat4 scale_bias_shadow_matrix = m_scale_bias_shadow_matrix * m_storage.scale_object()->model_matrix();
+                        mat4 shadow_matrix = m_shadow_matrix * m_storage.scale_object()->model_matrix();
 
                         m_triangles_shared_shader_memory.set_matrices(matrix, scale_bias_shadow_matrix);
                         m_shadow_shader_memory.set_matrix(shadow_matrix);
@@ -1002,7 +1001,7 @@ class Renderer final : public VulkanRenderer
 
                 //
 
-                if (!m_draw_objects.object())
+                if (!m_storage.object())
                 {
                         return;
                 }
@@ -1026,7 +1025,7 @@ class Renderer final : public VulkanRenderer
                 info.lines_set = m_points_shader_memory.descriptor_set();
                 info.lines_set_number = POINTS_SET_NUMBER;
 
-                m_draw_objects.object()->draw_commands(command_buffer, info);
+                m_storage.object()->draw_commands(command_buffer, info);
         }
 
         void draw_shadow_commands(VkCommandBuffer command_buffer) const
@@ -1035,7 +1034,7 @@ class Renderer final : public VulkanRenderer
 
                 //
 
-                if (!m_draw_objects.object())
+                if (!m_storage.object())
                 {
                         return;
                 }
@@ -1047,7 +1046,7 @@ class Renderer final : public VulkanRenderer
                 info.triangles_set = m_shadow_shader_memory.descriptor_set();
                 info.triangles_set_number = SHADOW_SET_NUMBER;
 
-                m_draw_objects.object()->draw_shadow_commands(command_buffer, info);
+                m_storage.object()->draw_shadow_commands(command_buffer, info);
         }
 
         void create_command_buffers(bool wait_idle = true)
