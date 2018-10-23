@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "window_handle.h"
+#include "handle.h"
 
 void move_window_to_parent(WindowID window, WindowID parent);
 void make_window_fullscreen(WindowID window);

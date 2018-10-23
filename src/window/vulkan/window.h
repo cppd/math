@@ -17,8 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "graphics/window_event.h"
-#include "window/window_handle.h"
+#include "window/event.h"
+#include "window/handle.h"
 
 #include <array>
 #include <memory>

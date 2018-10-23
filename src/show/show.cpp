@@ -28,18 +28,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/string_vector.h"
 #include "com/thread.h"
 #include "graphics/opengl/objects.h"
-#include "graphics/opengl/window.h"
 #include "graphics/vulkan/create.h"
 #include "graphics/vulkan/error.h"
 #include "graphics/vulkan/instance.h"
-#include "graphics/vulkan/window.h"
 #include "numerical/linear.h"
 #include "show/canvases/opengl/canvas.h"
 #include "show/canvases/vulkan/canvas.h"
 #include "show/event_queue.h"
 #include "show/renderers/opengl/renderer.h"
 #include "show/renderers/vulkan/renderer.h"
-#include "window/window_manage.h"
+#include "window/manage.h"
+#include "window/opengl/window.h"
+#include "window/vulkan/window.h"
 
 #include <algorithm>
 #include <chrono>

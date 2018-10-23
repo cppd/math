@@ -17,12 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "window.h"
 
-#include "query.h"
-#include "settings.h"
-
 #include "com/error.h"
 #include "com/log.h"
-#include "window/window_manage.h"
+#include "graphics/opengl/query.h"
+#include "graphics/opengl/settings.h"
 
 #include <SFML/System/Err.hpp>
 #include <SFML/Window/Context.hpp>
