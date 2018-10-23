@@ -17,9 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "renderer.h"
 
-#include "buffers.h"
-#include "sampler.h"
-
 #include "com/log.h"
 #include "com/math.h"
 #include "com/string_vector.h"
@@ -32,6 +29,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/vulkan/query.h"
 #include "obj/obj_alg.h"
 #include "show/renderers/com/storage.h"
+#include "show/renderers/vulkan/objects/buffers.h"
+#include "show/renderers/vulkan/objects/sampler.h"
 #include "show/renderers/vulkan/shader/shader.h"
 
 #include <algorithm>
