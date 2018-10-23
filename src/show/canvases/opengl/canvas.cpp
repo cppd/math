@@ -18,11 +18,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "canvas.h"
 
 #include "com/frequency.h"
-#include "gpu_2d/convex_hull/convex_hull_2d.h"
-#include "gpu_2d/dft/show/dft_show.h"
-#include "gpu_2d/optical_flow/optical_flow.h"
-#include "gpu_2d/pencil/pencil.h"
-#include "gpu_2d/text/text.h"
+#include "gpu_2d/opengl/convex_hull/convex_hull_2d.h"
+#include "gpu_2d/opengl/dft/show/dft_show.h"
+#include "gpu_2d/opengl/optical_flow/optical_flow.h"
+#include "gpu_2d/opengl/pencil/pencil.h"
+#include "gpu_2d/opengl/text/text.h"
 
 namespace
 {
