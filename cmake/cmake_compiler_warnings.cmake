@@ -40,6 +40,7 @@ function(SetCompilerWarnings source_files)
                         $<$<COMPILE_LANGUAGE:CXX>:
                         -Wconditionally-supported
                         -Wctor-dtor-privacy
+                        -Wextra-semi
                         -Wnoexcept
                         -Wnon-virtual-dtor
                         -Wold-style-cast
