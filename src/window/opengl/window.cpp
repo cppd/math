@@ -29,6 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #if defined(_WIN32)
 #include "graphics/opengl/functions/opengl_functions.h"
+#include "window/manage.h"
 #endif
 
 constexpr int ANTIALIASING_LEVEL = 4;
