@@ -15,7 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-cmake_minimum_required(VERSION 3.11)
+cmake_minimum_required(VERSION 3.12)
 
 ##################################################
 
@@ -24,9 +24,8 @@ include("${CMAKE_SOURCE_DIR}/cmake/cmake_compiler_warnings.cmake")
 ##################################################
 
 set(compilers "GNU;Clang")
-set(gcc_minimal_version "7.3")
+set(gcc_minimal_version "8")
 set(clang_minimal_version "6")
-set(sfml_minimal_version "2.4.2")
 
 set(extensions_shaders "comp;frag;geom;vert;tesc;tese;glsl")
 set(extensions_all "h;c;cpp;ui" ${extensions_shaders})
@@ -378,7 +377,7 @@ endif()
 ##################################################
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/SFML")
-find_package(SFML ${sfml_minimal_version} REQUIRED COMPONENTS system window graphics)
+find_package(SFML REQUIRED COMPONENTS system window graphics)
 target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${SFML_INCLUDE_DIR})
 target_link_libraries(${PROJECT_NAME} ${SFML_LIBRARIES})
 
