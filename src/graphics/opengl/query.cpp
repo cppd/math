@@ -201,16 +201,14 @@ void check_context(int major, int minor, const std::vector<std::string>& extensi
         }
 }
 
-void check_bit_sizes(int depthBits, int stencilBits, int antialiasing_level, int redBits, int greenBits, int blueBits,
-                     int alphaBits)
+void check_bit_sizes(int depthBits, int stencilBits, int sample_count, int redBits, int greenBits, int blueBits, int alphaBits)
 {
         GLint p;
 
         p = framebuffer_samples();
-        if (p < antialiasing_level)
+        if (p < sample_count)
         {
-                error("Context framebuffer samples " + std::to_string(p) + ". Required " + std::to_string(antialiasing_level) +
-                      ".");
+                error("Context framebuffer samples " + std::to_string(p) + ". Required " + std::to_string(sample_count) + ".");
         }
 
         p = get_named_framebuffer_attachment_parameter(0, GL_BACK, GL_FRAMEBUFFER_ATTACHMENT_RED_SIZE);

@@ -54,6 +54,8 @@ constexpr int VULKAN_MAX_FRAMES_IN_FLIGHT = 1;
 // Шейдеры пишут результат в цветовом пространстве RGB, поэтому _SRGB (для результата в sRGB нужен _UNORM).
 constexpr VkSurfaceFormatKHR VULKAN_SURFACE_FORMAT = {VK_FORMAT_B8G8R8A8_SRGB, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR};
 
+constexpr int OPENGL_MINIMUM_SAMPLE_COUNT = 4;
+
 constexpr double ZOOM_BASE = 1.1;
 constexpr double ZOOM_EXP_MIN = -50;
 constexpr double ZOOM_EXP_MAX = 100;
@@ -817,7 +819,7 @@ void ShowObject<GraphicsAndComputeAPI::OpenGL>::loop()
 {
         ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
-        std::unique_ptr<OpenGLWindow> window = create_opengl_window(this);
+        std::unique_ptr<OpenGLWindow> window = create_opengl_window(OPENGL_MINIMUM_SAMPLE_COUNT, this);
         std::unique_ptr<OpenGLRenderer> renderer = create_opengl_renderer();
         std::unique_ptr<OpenGLCanvas> canvas = create_opengl_canvas();
 

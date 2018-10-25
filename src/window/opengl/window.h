@@ -48,4 +48,4 @@ public:
         virtual void display() = 0;
 };
 
-std::unique_ptr<OpenGLWindow> create_opengl_window(WindowEvent* event_interface);
+std::unique_ptr<OpenGLWindow> create_opengl_window(int minimum_sample_count, WindowEvent* event_interface);

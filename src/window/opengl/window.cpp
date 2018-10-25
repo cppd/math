@@ -32,7 +32,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "window/manage.h"
 #endif
 
-constexpr int ANTIALIASING_LEVEL = 4;
 constexpr int DEPTH_BITS = 24;
 constexpr int STENCIL_BITS = 8;
 constexpr int RED_BITS = 8;
@@ -53,13 +52,13 @@ void init_opengl_functions()
 #endif
 
 void create_gl_window_1x1(int major_gl_version, int minor_gl_version, const std::vector<std::string>& extensions,
-                          int antialiasing_level, int depth_bits, int stencil_bits, int red_bits, int green_bits, int blue_bits,
+                          int minimum_sample_count, int depth_bits, int stencil_bits, int red_bits, int green_bits, int blue_bits,
                           int alpha_bits, sf::Window* window)
 {
         sf::ContextSettings cs;
         cs.majorVersion = major_gl_version;
         cs.minorVersion = minor_gl_version;
-        cs.antialiasingLevel = antialiasing_level;
+        cs.antialiasingLevel = minimum_sample_count;
         cs.depthBits = depth_bits;
         cs.stencilBits = stencil_bits;
         cs.attributeFlags = sf::ContextSettings::Attribute::Core;
@@ -71,7 +70,7 @@ void create_gl_window_1x1(int major_gl_version, int minor_gl_version, const std:
 #endif
 
         opengl::check_context(major_gl_version, minor_gl_version, extensions);
-        opengl::check_bit_sizes(depth_bits, stencil_bits, antialiasing_level, red_bits, green_bits, blue_bits, alpha_bits);
+        opengl::check_bit_sizes(depth_bits, stencil_bits, minimum_sample_count, red_bits, green_bits, blue_bits, alpha_bits);
 
         LOG("\n-----OpenGL Window-----\n" + opengl::overview());
 }
@@ -189,21 +188,22 @@ class OpenGLWindowImplementation final : public OpenGLWindow
 #pragma GCC diagnostic pop
 
 public:
-        OpenGLWindowImplementation(WindowEvent* event_interface) : m_event_interface(event_interface)
+        OpenGLWindowImplementation(int minimum_sample_count, WindowEvent* event_interface) : m_event_interface(event_interface)
         {
                 ASSERT(event_interface);
 
 #if 0
                 {
                         // Без этого создания контекста почему-то не сможет установиться
-                        // ANTIALIASING_LEVEL в ненулевое значение далее при создании окна.
+                        // sf::ContextSettings::antialiasingLevel в ненулевое значение
+                        // далее при создании окна.
                         // В версии SFML 2.4.2 эта проблема исчезла.
                         OpenGLContext opengl_context;
                 }
 #endif
 
                 create_gl_window_1x1(opengl::API_VERSION_MAJOR, opengl::API_VERSION_MINOR, opengl::required_extensions(),
-                                     ANTIALIASING_LEVEL, DEPTH_BITS, STENCIL_BITS, RED_BITS, GREEN_BITS, BLUE_BITS, ALPHA_BITS,
+                                     minimum_sample_count, DEPTH_BITS, STENCIL_BITS, RED_BITS, GREEN_BITS, BLUE_BITS, ALPHA_BITS,
                                      &m_window);
         }
 
@@ -246,7 +246,7 @@ OpenGLContext::~OpenGLContext() = default;
 
 //
 
-std::unique_ptr<OpenGLWindow> create_opengl_window(WindowEvent* event_interface)
+std::unique_ptr<OpenGLWindow> create_opengl_window(int minimum_sample_count, WindowEvent* event_interface)
 {
-        return std::make_unique<OpenGLWindowImplementation>(event_interface);
+        return std::make_unique<OpenGLWindowImplementation>(minimum_sample_count, event_interface);
 }
