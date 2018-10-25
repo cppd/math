@@ -62,8 +62,6 @@ constexpr std::initializer_list<VkFormat> DEPTH_IMAGE_FORMATS =
 };
 // clang-format on
 
-constexpr int REQUIRED_MINIMUM_SAMPLE_COUNT = 4;
-
 // Это в шейдерах layout(set = N, ...)
 constexpr uint32_t TRIANGLES_SHARED_SET_NUMBER = 0;
 constexpr uint32_t TRIANGLES_MATERIAL_SET_NUMBER = 1;
@@ -608,6 +606,8 @@ class Renderer final : public VulkanRenderer
 
         const std::thread::id m_thread_id = std::this_thread::get_id();
 
+        const int m_minimum_sample_count;
+
         Color m_clear_color = Color(0);
 
         mat4 m_main_matrix = mat4(1);
@@ -927,7 +927,7 @@ class Renderer final : public VulkanRenderer
                 m_main_buffers =
                         std::make_unique<MainBuffers>(*m_swapchain, m_instance.attachment_family_indices(), m_instance.device(),
                                                       m_instance.graphics_command_pool(), m_instance.graphics_queue(),
-                                                      REQUIRED_MINIMUM_SAMPLE_COUNT, DEPTH_IMAGE_FORMATS);
+                                                      m_minimum_sample_count, DEPTH_IMAGE_FORMATS);
 
                 m_shadow_buffers = std::make_unique<ShadowBuffers>(
                         *m_swapchain, m_instance.attachment_family_indices(), m_instance.device(),
@@ -1082,8 +1082,9 @@ class Renderer final : public VulkanRenderer
         }
 
 public:
-        Renderer(const vulkan::VulkanInstance& instance, unsigned max_frames_in_flight)
-                : m_instance(instance),
+        Renderer(const vulkan::VulkanInstance& instance, int minimum_sample_count, int max_frames_in_flight)
+                : m_minimum_sample_count(minimum_sample_count),
+                  m_instance(instance),
                   m_shadow_available_semaphores(vulkan::create_semaphores(m_instance.device(), max_frames_in_flight)),
                   m_texture_sampler(create_texture_sampler(m_instance.device())),
                   m_shadow_sampler(create_shadow_sampler(m_instance.device())),
@@ -1162,7 +1163,8 @@ std::vector<vulkan::PhysicalDeviceFeatures> VulkanRenderer::optional_device_feat
         return OPTIONAL_DEVICE_FEATURES;
 }
 
-std::unique_ptr<VulkanRenderer> create_vulkan_renderer(const vulkan::VulkanInstance& instance, unsigned max_frames_in_flight)
+std::unique_ptr<VulkanRenderer> create_vulkan_renderer(const vulkan::VulkanInstance& instance, int minimum_sample_count,
+                                                       int max_frames_in_flight)
 {
-        return std::make_unique<Renderer>(instance, max_frames_in_flight);
+        return std::make_unique<Renderer>(instance, minimum_sample_count, max_frames_in_flight);
 }

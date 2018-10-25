@@ -54,6 +54,7 @@ constexpr int VULKAN_MAX_FRAMES_IN_FLIGHT = 1;
 // Шейдеры пишут результат в цветовом пространстве RGB, поэтому _SRGB (для результата в sRGB нужен _UNORM).
 constexpr VkSurfaceFormatKHR VULKAN_SURFACE_FORMAT = {VK_FORMAT_B8G8R8A8_SRGB, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR};
 
+constexpr int VULKAN_MINIMUM_SAMPLE_COUNT = 4;
 constexpr int OPENGL_MINIMUM_SAMPLE_COUNT = 4;
 
 constexpr double ZOOM_BASE = 1.1;
@@ -953,7 +954,8 @@ void ShowObject<GraphicsAndComputeAPI::Vulkan>::loop()
         std::unique_ptr<vulkan::Swapchain> swapchain = std::make_unique<vulkan::Swapchain>(
                 instance.create_swapchain(VULKAN_SURFACE_FORMAT, VULKAN_PREFERRED_IMAGE_COUNT));
 
-        std::unique_ptr<VulkanRenderer> renderer = create_vulkan_renderer(instance, VULKAN_MAX_FRAMES_IN_FLIGHT);
+        std::unique_ptr<VulkanRenderer> renderer =
+                create_vulkan_renderer(instance, VULKAN_MINIMUM_SAMPLE_COUNT, VULKAN_MAX_FRAMES_IN_FLIGHT);
         renderer->create_buffers(swapchain.get());
 
         std::unique_ptr<VulkanCanvas> canvas = create_vulkan_canvas();

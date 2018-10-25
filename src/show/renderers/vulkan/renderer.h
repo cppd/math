@@ -71,4 +71,5 @@ struct VulkanRenderer
         virtual void delete_buffers() = 0;
 };
 
-std::unique_ptr<VulkanRenderer> create_vulkan_renderer(const vulkan::VulkanInstance& instance, unsigned max_frames_in_flight);
+std::unique_ptr<VulkanRenderer> create_vulkan_renderer(const vulkan::VulkanInstance& instance, int minimum_sample_count,
+                                                       int max_frames_in_flight);
