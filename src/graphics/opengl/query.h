@@ -41,5 +41,5 @@ int max_shader_storage_block_size();
 std::string overview();
 
 void check_context(int major, int minor, const std::vector<std::string>& extensions);
-void check_bit_sizes(int depthBits, int stencilBits, int sample_count, int redBits, int greenBits, int blueBits, int alphaBits);
+void check_sizes(int sample_count, int depth_bits, int stencil_bits, int red_bits, int green_bits, int blue_bits, int alpha_bits);
 }

@@ -70,7 +70,7 @@ void create_gl_window_1x1(int major_gl_version, int minor_gl_version, const std:
 #endif
 
         opengl::check_context(major_gl_version, minor_gl_version, extensions);
-        opengl::check_bit_sizes(depth_bits, stencil_bits, minimum_sample_count, red_bits, green_bits, blue_bits, alpha_bits);
+        opengl::check_sizes(minimum_sample_count, depth_bits, stencil_bits, red_bits, green_bits, blue_bits, alpha_bits);
 
         LOG("\n-----OpenGL Window-----\n" + opengl::overview());
 }

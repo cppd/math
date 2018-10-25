@@ -201,7 +201,7 @@ void check_context(int major, int minor, const std::vector<std::string>& extensi
         }
 }
 
-void check_bit_sizes(int depthBits, int stencilBits, int sample_count, int redBits, int greenBits, int blueBits, int alphaBits)
+void check_sizes(int sample_count, int depth_bits, int stencil_bits, int red_bits, int green_bits, int blue_bits, int alpha_bits)
 {
         GLint p;
 
@@ -212,39 +212,39 @@ void check_bit_sizes(int depthBits, int stencilBits, int sample_count, int redBi
         }
 
         p = get_named_framebuffer_attachment_parameter(0, GL_BACK, GL_FRAMEBUFFER_ATTACHMENT_RED_SIZE);
-        if (p < redBits)
+        if (p < red_bits)
         {
-                error("Context red bits " + std::to_string(p) + ". Required " + std::to_string(redBits) + ".");
+                error("Context red bits " + std::to_string(p) + ". Required " + std::to_string(red_bits) + ".");
         }
 
         p = get_named_framebuffer_attachment_parameter(0, GL_BACK, GL_FRAMEBUFFER_ATTACHMENT_GREEN_SIZE);
-        if (p < greenBits)
+        if (p < green_bits)
         {
-                error("Context green bits " + std::to_string(p) + ". Required " + std::to_string(greenBits) + ".");
+                error("Context green bits " + std::to_string(p) + ". Required " + std::to_string(green_bits) + ".");
         }
 
         p = get_named_framebuffer_attachment_parameter(0, GL_BACK, GL_FRAMEBUFFER_ATTACHMENT_BLUE_SIZE);
-        if (p < blueBits)
+        if (p < blue_bits)
         {
-                error("Context blue bits " + std::to_string(p) + ". Required " + std::to_string(blueBits) + ".");
+                error("Context blue bits " + std::to_string(p) + ". Required " + std::to_string(blue_bits) + ".");
         }
 
         p = get_named_framebuffer_attachment_parameter(0, GL_BACK, GL_FRAMEBUFFER_ATTACHMENT_ALPHA_SIZE);
-        if (p < alphaBits)
+        if (p < alpha_bits)
         {
-                error("Context alpha bits " + std::to_string(p) + ". Required " + std::to_string(alphaBits) + ".");
+                error("Context alpha bits " + std::to_string(p) + ". Required " + std::to_string(alpha_bits) + ".");
         }
 
         p = get_named_framebuffer_attachment_parameter(0, GL_DEPTH, GL_FRAMEBUFFER_ATTACHMENT_DEPTH_SIZE);
-        if (p < depthBits)
+        if (p < depth_bits)
         {
-                error("Context depth bits " + std::to_string(p) + ". Required " + std::to_string(depthBits) + ".");
+                error("Context depth bits " + std::to_string(p) + ". Required " + std::to_string(depth_bits) + ".");
         }
 
         p = get_named_framebuffer_attachment_parameter(0, GL_STENCIL, GL_FRAMEBUFFER_ATTACHMENT_STENCIL_SIZE);
-        if (p < stencilBits)
+        if (p < stencil_bits)
         {
-                error("Context stencil bits " + std::to_string(p) + ". Required " + std::to_string(stencilBits) + ".");
+                error("Context stencil bits " + std::to_string(p) + ". Required " + std::to_string(stencil_bits) + ".");
         }
 }
 
