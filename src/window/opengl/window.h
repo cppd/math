@@ -22,6 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <memory>
 
+void opengl_window_init();
+
 class OpenGLContext
 {
         class Impl;

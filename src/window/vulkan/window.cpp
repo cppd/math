@@ -39,70 +39,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace
 {
-void glfw_error_callback(int /*error*/, const char* description)
-{
-        LOG(std::string("GLFW Error: ") + description);
-}
-}
-
-void VulkanWindow::init()
-{
-        glfwSetErrorCallback(glfw_error_callback);
-
-        if (glfwInit() != GLFW_TRUE)
-        {
-                error("Failed to initialize GLFW");
-        }
-}
-
-void VulkanWindow::terminate() noexcept
-{
-        glfwTerminate();
-}
-
-std::vector<std::string> VulkanWindow::instance_extensions()
-{
-        uint32_t count;
-        const char** extensions;
-
-        extensions = glfwGetRequiredInstanceExtensions(&count);
-        if (!extensions)
-        {
-                error("Failed to get GLFW required Vulkan instance extensions");
-        }
-        if (count < 1)
-        {
-                error("No GLFW required Vulkan instance extensions");
-        }
-
-        return std::vector<std::string>(extensions, extensions + count);
-}
-
-std::array<int, 2> VulkanWindow::screen_size()
-{
-        GLFWmonitor* monitor = glfwGetPrimaryMonitor();
-        if (!monitor)
-        {
-                error("Failed to find GLFW monitor");
-        }
-
-        const GLFWvidmode* mode = glfwGetVideoMode(monitor);
-        if (!mode)
-        {
-                error("Failed to find GLFW monitor video mode");
-        }
-
-        return {mode->width, mode->height};
-}
-
-//
-
-namespace
-{
 std::atomic_int global_glfw_window_count = 0;
 // В один момент времени допускается существование только одного окна,
 // поэтому можно использовать глобальную переменную
 WindowEvent* global_event_interface = nullptr;
+
+void callback_error(int /*error*/, const char* description)
+{
+        LOG(std::string("GLFW Error: ") + description);
+}
 
 void callback_framebuffer_size(GLFWwindow* /*window*/, int width, int height)
 {
@@ -274,6 +219,44 @@ public:
         VulkanWindowImplementation(VulkanWindowImplementation&&) = delete;
         VulkanWindowImplementation& operator=(VulkanWindowImplementation&&) = delete;
 };
+}
+
+//
+
+void vulkan_window_init()
+{
+        glfwSetErrorCallback(callback_error);
+
+        if (glfwInit() != GLFW_TRUE)
+        {
+                error("Failed to initialize GLFW");
+        }
+}
+
+void vulkan_window_terminate() noexcept
+{
+        glfwTerminate();
+}
+
+//
+
+std::vector<std::string> VulkanWindow::instance_extensions()
+{
+        uint32_t count;
+        const char** extensions;
+
+        extensions = glfwGetRequiredInstanceExtensions(&count);
+
+        if (!extensions)
+        {
+                error("Failed to get GLFW required Vulkan instance extensions");
+        }
+        if (count < 1)
+        {
+                error("No GLFW required Vulkan instance extensions");
+        }
+
+        return std::vector<std::string>(extensions, extensions + count);
 }
 
 std::unique_ptr<VulkanWindow> create_vulkan_window(WindowEvent* event_interface)

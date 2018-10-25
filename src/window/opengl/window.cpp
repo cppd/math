@@ -56,8 +56,6 @@ void create_gl_window_1x1(int major_gl_version, int minor_gl_version, const std:
                           int antialiasing_level, int depth_bits, int stencil_bits, int red_bits, int green_bits, int blue_bits,
                           int alpha_bits, sf::Window* window)
 {
-        sf::err().rdbuf(nullptr);
-
         sf::ContextSettings cs;
         cs.majorVersion = major_gl_version;
         cs.minorVersion = minor_gl_version;
@@ -81,8 +79,6 @@ void create_gl_window_1x1(int major_gl_version, int minor_gl_version, const std:
 std::unique_ptr<sf::Context> create_gl_context_1x1(int major_gl_version, int minor_gl_version,
                                                    const std::vector<std::string>& extensions)
 {
-        sf::err().rdbuf(nullptr);
-
         sf::ContextSettings cs;
         cs.majorVersion = major_gl_version;
         cs.minorVersion = minor_gl_version;
@@ -197,12 +193,14 @@ public:
         {
                 ASSERT(event_interface);
 
+#if 0
                 {
                         // Без этого создания контекста почему-то не сможет установиться
                         // ANTIALIASING_LEVEL в ненулевое значение далее при создании окна.
                         // В версии SFML 2.4.2 эта проблема исчезла.
                         OpenGLContext opengl_context;
                 }
+#endif
 
                 create_gl_window_1x1(opengl::API_VERSION_MAJOR, opengl::API_VERSION_MINOR, opengl::required_extensions(),
                                      ANTIALIASING_LEVEL, DEPTH_BITS, STENCIL_BITS, RED_BITS, GREEN_BITS, BLUE_BITS, ALPHA_BITS,
@@ -218,6 +216,13 @@ public:
 #endif
         }
 };
+}
+
+//
+
+void opengl_window_init()
+{
+        sf::err().rdbuf(nullptr);
 }
 
 //

@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/error.h"
 #include "com/log.h"
 #include "com/time.h"
+#include "window/opengl/window.h"
 #include "window/vulkan/window.h"
 
 #include <atomic>
@@ -97,12 +98,14 @@ Initialization::Initialization()
 
         init_os_specific();
 
-        VulkanWindow::init();
+        vulkan_window_init();
+
+        opengl_window_init();
 }
 
 Initialization::~Initialization()
 {
-        VulkanWindow::terminate();
+        vulkan_window_terminate();
 
         log_exit();
 }

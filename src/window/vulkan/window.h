@@ -26,14 +26,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <vector>
 #include <vulkan/vulkan.h>
 
+void vulkan_window_init();
+void vulkan_window_terminate() noexcept;
+
 class VulkanWindow
 {
 public:
-        static void init();
-        static void terminate() noexcept;
-
         static std::vector<std::string> instance_extensions();
-        static std::array<int, 2> screen_size();
 
         //
 
