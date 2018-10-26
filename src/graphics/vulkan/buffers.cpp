@@ -177,8 +177,6 @@ void begin_commands(VkCommandBuffer command_buffer)
 
 void end_commands(VkQueue queue, const vulkan::CommandBuffer& command_buffer)
 {
-        constexpr VkFence NO_FENCE = VK_NULL_HANDLE;
-
         VkResult result;
 
         result = vkEndCommandBuffer(command_buffer);
@@ -192,7 +190,7 @@ void end_commands(VkQueue queue, const vulkan::CommandBuffer& command_buffer)
         submit_info.commandBufferCount = 1;
         submit_info.pCommandBuffers = command_buffer.data();
 
-        result = vkQueueSubmit(queue, 1, &submit_info, NO_FENCE);
+        result = vkQueueSubmit(queue, 1, &submit_info, VK_NULL_HANDLE);
         if (result != VK_SUCCESS)
         {
                 vulkan::vulkan_function_error("vkQueueSubmit", result);

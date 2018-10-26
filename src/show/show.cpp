@@ -861,8 +861,6 @@ VulkanResult render_vulkan(VkSwapchainKHR swapchain, VkQueue presentation_queue,
                            VkFence current_frame_fence, VkSemaphore image_available_semaphore,
                            VkSemaphore render_finished_semaphore, unsigned current_frame, VulkanRenderer& renderer)
 {
-        constexpr VkFence NO_FENCE = VK_NULL_HANDLE;
-
         VkResult result;
 
         result = vkWaitForFences(device, 1, &current_frame_fence, VK_TRUE, std::numeric_limits<uint64_t>::max());
@@ -880,7 +878,7 @@ VulkanResult render_vulkan(VkSwapchainKHR swapchain, VkQueue presentation_queue,
 
         uint32_t image_index;
         result = vkAcquireNextImageKHR(device, swapchain, std::numeric_limits<uint64_t>::max(), image_available_semaphore,
-                                       NO_FENCE, &image_index);
+                                       VK_NULL_HANDLE, &image_index);
         if (result == VK_ERROR_OUT_OF_DATE_KHR)
         {
                 return VulkanResult::Swapchain;

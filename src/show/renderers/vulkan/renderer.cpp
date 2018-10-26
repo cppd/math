@@ -835,8 +835,6 @@ class Renderer final : public VulkanRenderer
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                constexpr VkFence NO_FENCE = VK_NULL_HANDLE;
-
                 if (!m_show_shadow || !m_storage.object() || !m_storage.object()->has_shadow())
                 {
                         std::array<VkSemaphore, 1> wait_semaphores = {image_available_semaphore};
@@ -872,7 +870,7 @@ class Renderer final : public VulkanRenderer
                                 info.signalSemaphoreCount = 1;
                                 info.pSignalSemaphores = &shadow_available_semaphore;
 
-                                VkResult result = vkQueueSubmit(graphics_queue, 1, &info, NO_FENCE);
+                                VkResult result = vkQueueSubmit(graphics_queue, 1, &info, VK_NULL_HANDLE);
                                 if (result != VK_SUCCESS)
                                 {
                                         vulkan::vulkan_function_error("vkQueueSubmit", result);
