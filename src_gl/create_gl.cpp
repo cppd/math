@@ -46,8 +46,7 @@ struct FuncData
         std::string parameter_names;
 };
 
-// clang-format 6 неправильно форматирует, если [[noreturn]] поставить перед функцией
-void error[[noreturn]](const std::string& msg)
+[[noreturn]] void error(const std::string& msg)
 {
         std::cerr << msg << std::endl;
         std::exit(EXIT_FAILURE);

@@ -53,8 +53,7 @@ std::string return_code_string(const std::string& function_name, const VkResult&
 
 namespace vulkan
 {
-// clang-format 6 неправильно форматирует, если [[noreturn]] поставить перед функцией
-void vulkan_function_error[[noreturn]](const std::string& function_name, const VkResult& code)
+[[noreturn]] void vulkan_function_error(const std::string& function_name, const VkResult& code)
 {
         error("Vulkan Error. " + return_code_string(function_name, code));
 }

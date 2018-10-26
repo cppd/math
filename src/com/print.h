@@ -147,7 +147,7 @@ void f(T v, int i, std::string& r, [[maybe_unused]] char s)
 }
 
 template <unsigned digit_group_size, typename T>
-std::enable_if_t<is_native_integral<T>, std::string> to_string_digit_groups(T v, [[maybe_unused]] char s)
+std::enable_if_t<is_native_integral<T>, std::string> to_string_digit_groups(T v, char s)
 {
         static_assert(is_signed<T> != is_unsigned<T>);
 

@@ -30,15 +30,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace
 {
 template <size_t... I>
-bool check[[maybe_unused]](const std::array<int, sizeof...(I)>& offset, const std::array<int, sizeof...(I)>& copy_size,
-                           const std::array<int, sizeof...(I)>& size, std::integer_sequence<size_t, I...>&&)
+[[maybe_unused]] bool check(const std::array<int, sizeof...(I)>& offset, const std::array<int, sizeof...(I)>& copy_size,
+                            const std::array<int, sizeof...(I)>& size, std::integer_sequence<size_t, I...>&&)
 {
         return ((offset[I] >= 0) && ...) && ((copy_size[I] >= 0) && ...) && ((size[I] >= 0) && ...) &&
                ((offset[I] + copy_size[I] <= size[I]) && ...);
 }
 
 template <size_t N>
-bool check[[maybe_unused]](const std::array<int, N>& offset, const std::array<int, N>& copy_size, const std::array<int, N>& size)
+[[maybe_unused]] bool check(const std::array<int, N>& offset, const std::array<int, N>& copy_size, const std::array<int, N>& size)
 {
         return check(offset, copy_size, size, std::make_integer_sequence<size_t, N>());
 }

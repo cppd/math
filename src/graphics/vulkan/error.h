@@ -22,5 +22,5 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace vulkan
 {
-void vulkan_function_error[[noreturn]](const std::string& function_name, const VkResult& code);
+[[noreturn]] void vulkan_function_error(const std::string& function_name, const VkResult& code);
 }

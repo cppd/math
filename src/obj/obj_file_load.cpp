@@ -1191,7 +1191,7 @@ void FileObj<N>::read_obj_thread(unsigned thread_num, unsigned thread_count, std
 
 template <size_t N>
 void FileObj<N>::read_lib(const std::string& dir_name, const std::string& file_name, ProgressRatio* progress,
-                          std::map<std::string, int>* material_index, [[maybe_unused]] std::map<std::string, int>* image_index)
+                          std::map<std::string, int>* material_index, std::map<std::string, int>* image_index)
 {
         std::vector<char> data;
         std::vector<long long> line_begin;

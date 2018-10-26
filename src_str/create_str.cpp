@@ -42,8 +42,7 @@ static_assert(bswap32(0x12345678) == 0x78563412);
 
 namespace
 {
-// clang-format 6 неправильно форматирует, если [[noreturn]] поставить перед функцией
-void error[[noreturn]](const std::string& msg)
+[[noreturn]] void error(const std::string& msg)
 {
         std::cerr << msg << std::endl;
         std::exit(EXIT_FAILURE);
