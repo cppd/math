@@ -24,5 +24,5 @@ in vec2 vs_texture_coordinates;
 out vec4 color;
 void main(void)
 {
-        color = vec4(text_color.rgb, texture(tex, vs_texture_coordinates).r);
+        color = vec4(text_color, texture(tex, vs_texture_coordinates).r);
 }
