@@ -31,7 +31,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "show/renderers/com/storage.h"
 #include "show/renderers/vulkan/objects/buffers.h"
 #include "show/renderers/vulkan/objects/sampler.h"
-#include "show/renderers/vulkan/shader/shader.h"
+#include "show/renderers/vulkan/shader/memory.h"
+#include "show/renderers/vulkan/shader/vertex.h"
 
 #include <algorithm>
 #include <array>
@@ -936,10 +937,10 @@ class Renderer final : public VulkanRenderer
                 m_triangles_pipeline = m_main_buffers->create_pipeline(
                         VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, {&m_triangles_vert, &m_triangles_geom, &m_triangles_frag},
                         m_triangles_pipeline_layout, shaders::Vertex::binding_descriptions(),
-                        shaders::Vertex::all_attribute_descriptions());
+                        shaders::Vertex::triangles_attribute_descriptions());
                 m_shadow_pipeline = m_shadow_buffers->create_pipeline(
                         VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, {&m_shadow_vert, &m_shadow_frag}, m_shadow_pipeline_layout,
-                        shaders::Vertex::binding_descriptions(), shaders::Vertex::position_attribute_descriptions());
+                        shaders::Vertex::binding_descriptions(), shaders::Vertex::shadow_attribute_descriptions());
 
                 m_points_pipeline = m_main_buffers->create_pipeline(
                         VK_PRIMITIVE_TOPOLOGY_POINT_LIST, {&m_points_vert, &m_points_frag}, m_points_pipeline_layout,

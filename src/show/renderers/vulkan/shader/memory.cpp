@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "shader.h"
+#include "memory.h"
 
 #include "com/error.h"
 
@@ -30,85 +30,6 @@ void copy_to_buffer(const vulkan::UniformBufferWithHostVisibleMemory& buffer, Vk
 
 namespace vulkan_renderer_shaders
 {
-std::vector<VkVertexInputBindingDescription> Vertex::binding_descriptions()
-{
-        std::vector<VkVertexInputBindingDescription> descriptions;
-
-        {
-                VkVertexInputBindingDescription d = {};
-                d.binding = 0;
-                d.stride = sizeof(Vertex);
-                d.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-
-                descriptions.push_back(d);
-        }
-
-        return descriptions;
-}
-
-std::vector<VkVertexInputAttributeDescription> Vertex::all_attribute_descriptions()
-{
-        std::vector<VkVertexInputAttributeDescription> descriptions;
-
-        {
-                VkVertexInputAttributeDescription d = {};
-                d.binding = 0;
-                d.location = 0;
-                d.format = VK_FORMAT_R32G32B32_SFLOAT;
-                d.offset = offsetof(Vertex, position);
-
-                descriptions.push_back(d);
-        }
-        {
-                VkVertexInputAttributeDescription d = {};
-                d.binding = 0;
-                d.location = 1;
-                d.format = VK_FORMAT_R32G32B32_SFLOAT;
-                d.offset = offsetof(Vertex, normal);
-
-                descriptions.push_back(d);
-        }
-        {
-                VkVertexInputAttributeDescription d = {};
-                d.binding = 0;
-                d.location = 2;
-                d.format = VK_FORMAT_R32G32B32_SFLOAT;
-                d.offset = offsetof(Vertex, geometric_normal);
-
-                descriptions.push_back(d);
-        }
-        {
-                VkVertexInputAttributeDescription d = {};
-                d.binding = 0;
-                d.location = 3;
-                d.format = VK_FORMAT_R32G32_SFLOAT;
-                d.offset = offsetof(Vertex, texture_coordinates);
-
-                descriptions.push_back(d);
-        }
-
-        return descriptions;
-}
-
-std::vector<VkVertexInputAttributeDescription> Vertex::position_attribute_descriptions()
-{
-        std::vector<VkVertexInputAttributeDescription> descriptions;
-
-        {
-                VkVertexInputAttributeDescription d = {};
-                d.binding = 0;
-                d.location = 0;
-                d.format = VK_FORMAT_R32G32B32_SFLOAT;
-                d.offset = offsetof(Vertex, position);
-
-                descriptions.push_back(d);
-        }
-
-        return descriptions;
-}
-
-//
-
 std::vector<VkDescriptorSetLayoutBinding> TrianglesSharedMemory::descriptor_set_layout_bindings()
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
@@ -484,41 +405,6 @@ void ShadowMemory::set_matrix(const mat4& matrix) const
         Matrices matrices;
         matrices.matrix = transpose(to_matrix<float>(matrix));
         copy_to_buffer(m_uniform_buffers[0], 0, matrices);
-}
-
-//
-
-std::vector<VkVertexInputBindingDescription> PointVertex::binding_descriptions()
-{
-        std::vector<VkVertexInputBindingDescription> descriptions;
-
-        {
-                VkVertexInputBindingDescription d = {};
-                d.binding = 0;
-                d.stride = sizeof(PointVertex);
-                d.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-
-                descriptions.push_back(d);
-        }
-
-        return descriptions;
-}
-
-std::vector<VkVertexInputAttributeDescription> PointVertex::attribute_descriptions()
-{
-        std::vector<VkVertexInputAttributeDescription> descriptions;
-
-        {
-                VkVertexInputAttributeDescription d = {};
-                d.binding = 0;
-                d.location = 0;
-                d.format = VK_FORMAT_R32G32B32_SFLOAT;
-                d.offset = offsetof(PointVertex, position);
-
-                descriptions.push_back(d);
-        }
-
-        return descriptions;
 }
 
 //

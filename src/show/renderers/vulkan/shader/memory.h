@@ -30,29 +30,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace vulkan_renderer_shaders
 {
-struct Vertex
-{
-        vec3f position;
-        vec3f normal;
-        vec3f geometric_normal;
-        vec2f texture_coordinates;
-
-        constexpr Vertex(const vec3f& position_, const vec3f& normal_, const vec3f& geometric_normal_,
-                         const vec2f& texture_coordinates_)
-                : position(position_),
-                  normal(normal_),
-                  geometric_normal(geometric_normal_),
-                  texture_coordinates(texture_coordinates_)
-        {
-        }
-
-        static std::vector<VkVertexInputBindingDescription> binding_descriptions();
-
-        static std::vector<VkVertexInputAttributeDescription> all_attribute_descriptions();
-
-        static std::vector<VkVertexInputAttributeDescription> position_attribute_descriptions();
-};
-
 class TrianglesSharedMemory
 {
         vulkan::Descriptors m_descriptors;
@@ -215,21 +192,6 @@ public:
         //
 
         void set_matrix(const mat4& matrix) const;
-};
-
-//
-
-struct PointVertex final
-{
-        vec3f position;
-
-        PointVertex(const vec3f& position_) : position(position_)
-        {
-        }
-
-        static std::vector<VkVertexInputBindingDescription> binding_descriptions();
-
-        static std::vector<VkVertexInputAttributeDescription> attribute_descriptions();
 };
 
 class PointsMemory
