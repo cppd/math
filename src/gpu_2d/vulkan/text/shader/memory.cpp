@@ -17,15 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "memory.h"
 
-namespace
-{
-template <typename T>
-void copy_to_buffer(const vulkan::UniformBufferWithHostVisibleMemory& buffer, VkDeviceSize offset, const T& data)
-{
-        buffer.copy(offset, &data, sizeof(data));
-}
-}
-
 namespace vulkan_text_shaders
 {
 std::vector<VkDescriptorSetLayoutBinding> TextMemory::descriptor_set_layout_bindings()
@@ -123,12 +114,12 @@ VkDescriptorSet TextMemory::descriptor_set() const noexcept
 template <typename T>
 void TextMemory::copy_to_matrices_buffer(VkDeviceSize offset, const T& data) const
 {
-        copy_to_buffer(m_uniform_buffers[m_matrices_buffer_index], offset, data);
+        m_uniform_buffers[m_matrices_buffer_index].copy(offset, data);
 }
 template <typename T>
 void TextMemory::copy_to_drawing_buffer(VkDeviceSize offset, const T& data) const
 {
-        copy_to_buffer(m_uniform_buffers[m_drawing_buffer_index], offset, data);
+        m_uniform_buffers[m_drawing_buffer_index].copy(offset, data);
 }
 
 void TextMemory::set_matrix(const mat4& matrix) const

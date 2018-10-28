@@ -19,15 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/error.h"
 
-namespace
-{
-template <typename T>
-void copy_to_buffer(const vulkan::UniformBufferWithHostVisibleMemory& buffer, VkDeviceSize offset, const T& data)
-{
-        buffer.copy(offset, &data, sizeof(data));
-}
-}
-
 namespace vulkan_renderer_shaders
 {
 std::vector<VkDescriptorSetLayoutBinding> TrianglesSharedMemory::descriptor_set_layout_bindings()
@@ -132,17 +123,17 @@ VkDescriptorSet TrianglesSharedMemory::descriptor_set() const noexcept
 template <typename T>
 void TrianglesSharedMemory::copy_to_matrices_buffer(VkDeviceSize offset, const T& data) const
 {
-        copy_to_buffer(m_uniform_buffers[m_matrices_buffer_index], offset, data);
+        m_uniform_buffers[m_matrices_buffer_index].copy(offset, data);
 }
 template <typename T>
 void TrianglesSharedMemory::copy_to_lighting_buffer(VkDeviceSize offset, const T& data) const
 {
-        copy_to_buffer(m_uniform_buffers[m_lighting_buffer_index], offset, data);
+        m_uniform_buffers[m_lighting_buffer_index].copy(offset, data);
 }
 template <typename T>
 void TrianglesSharedMemory::copy_to_drawing_buffer(VkDeviceSize offset, const T& data) const
 {
-        copy_to_buffer(m_uniform_buffers[m_drawing_buffer_index], offset, data);
+        m_uniform_buffers[m_drawing_buffer_index].copy(offset, data);
 }
 
 void TrianglesSharedMemory::set_matrices(const mat4& matrix, const mat4& shadow_matrix) const
@@ -338,7 +329,7 @@ TrianglesMaterialMemory::TrianglesMaterialMemory(const vulkan::Device& device, V
 
         for (size_t i = 0; i < materials.size(); ++i)
         {
-                copy_to_buffer(m_uniform_buffers[i], 0 /*offset*/, materials[i].material);
+                m_uniform_buffers[i].copy(materials[i].material);
         }
 }
 
@@ -402,9 +393,8 @@ VkDescriptorSet ShadowMemory::descriptor_set() const noexcept
 
 void ShadowMemory::set_matrix(const mat4& matrix) const
 {
-        Matrices matrices;
-        matrices.matrix = transpose(to_matrix<float>(matrix));
-        copy_to_buffer(m_uniform_buffers[0], 0, matrices);
+        decltype(Matrices().matrix) m = transpose(to_matrix<float>(matrix));
+        m_uniform_buffers[0].copy(offsetof(Matrices, matrix), m);
 }
 
 //
@@ -479,19 +469,18 @@ VkDescriptorSet PointsMemory::descriptor_set() const noexcept
 template <typename T>
 void PointsMemory::copy_to_matrices_buffer(VkDeviceSize offset, const T& data) const
 {
-        copy_to_buffer(m_uniform_buffers[m_matrices_buffer_index], offset, data);
+        m_uniform_buffers[m_matrices_buffer_index].copy(offset, data);
 }
 template <typename T>
 void PointsMemory::copy_to_drawing_buffer(VkDeviceSize offset, const T& data) const
 {
-        copy_to_buffer(m_uniform_buffers[m_drawing_buffer_index], offset, data);
+        m_uniform_buffers[m_drawing_buffer_index].copy(offset, data);
 }
 
 void PointsMemory::set_matrix(const mat4& matrix) const
 {
-        Matrices matrices;
-        matrices.matrix = transpose(to_matrix<float>(matrix));
-        copy_to_matrices_buffer(0, matrices);
+        decltype(Matrices().matrix) m = transpose(to_matrix<float>(matrix));
+        copy_to_matrices_buffer(offsetof(Matrices, matrix), m);
 }
 
 void PointsMemory::set_default_color(const Color& color) const

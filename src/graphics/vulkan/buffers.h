@@ -29,6 +29,8 @@ class VertexBufferWithHostVisibleMemory final
         Buffer m_buffer;
         DeviceMemory m_device_memory;
 
+        void copy(VkDeviceSize offset, const void* data, VkDeviceSize data_size) const;
+
 public:
         VertexBufferWithHostVisibleMemory(const Device& device, VkDeviceSize data_size, const void* data);
         VertexBufferWithHostVisibleMemory(const Device& device, VkDeviceSize data_size);
@@ -46,7 +48,16 @@ public:
 
         VkDeviceSize size() const noexcept;
 
-        void copy(VkDeviceSize offset, const void* data, VkDeviceSize data_size) const;
+        template <typename T>
+        void copy(VkDeviceSize offset, const T& data) const
+        {
+                copy(offset, &data, sizeof(data));
+        }
+        template <typename T>
+        void copy(const T& data) const
+        {
+                copy(0 /*offset*/, &data, sizeof(data));
+        }
 };
 
 class VertexBufferWithDeviceLocalMemory final
@@ -99,6 +110,8 @@ class UniformBufferWithHostVisibleMemory
         Buffer m_buffer;
         DeviceMemory m_device_memory;
 
+        void copy(VkDeviceSize offset, const void* data, VkDeviceSize data_size) const;
+
 public:
         UniformBufferWithHostVisibleMemory(const Device& device, VkDeviceSize data_size);
 
@@ -115,7 +128,16 @@ public:
 
         VkDeviceSize size() const noexcept;
 
-        void copy(VkDeviceSize offset, const void* data, VkDeviceSize data_size) const;
+        template <typename T>
+        void copy(VkDeviceSize offset, const T& data) const
+        {
+                copy(offset, &data, sizeof(data));
+        }
+        template <typename T>
+        void copy(const T& data) const
+        {
+                copy(0 /*offset*/, &data, sizeof(data));
+        }
 };
 
 class IndirectBufferWithHostVisibleMemory final
