@@ -15,9 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "shader.h"
-
-#include "com/font/vertices.h"
+#include "memory.h"
 
 namespace
 {
@@ -30,52 +28,6 @@ void copy_to_buffer(const vulkan::UniformBufferWithHostVisibleMemory& buffer, Vk
 
 namespace vulkan_text_shaders
 {
-static_assert(sizeof(TextVertex) == sizeof(Vector<2, int32_t>) + sizeof(Vector<2, float>));
-static_assert(std::is_same_v<decltype(TextVertex::v), Vector<2, int32_t>>);
-static_assert(std::is_same_v<decltype(TextVertex::t), Vector<2, float>>);
-
-std::vector<VkVertexInputBindingDescription> vertex_binding_descriptions()
-{
-        std::vector<VkVertexInputBindingDescription> descriptions;
-
-        {
-                VkVertexInputBindingDescription d = {};
-                d.binding = 0;
-                d.stride = sizeof(TextVertex);
-                d.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-
-                descriptions.push_back(d);
-        }
-
-        return descriptions;
-}
-
-std::vector<VkVertexInputAttributeDescription> vertex_attribute_descriptions()
-{
-        std::vector<VkVertexInputAttributeDescription> descriptions;
-
-        {
-                VkVertexInputAttributeDescription d = {};
-                d.binding = 0;
-                d.location = 0;
-                d.format = VK_FORMAT_R32G32_SINT;
-                d.offset = offsetof(TextVertex, v);
-
-                descriptions.push_back(d);
-        }
-        {
-                VkVertexInputAttributeDescription d = {};
-                d.binding = 0;
-                d.location = 1;
-                d.format = VK_FORMAT_R32G32_SFLOAT;
-                d.offset = offsetof(TextVertex, t);
-
-                descriptions.push_back(d);
-        }
-
-        return descriptions;
-}
-
 std::vector<VkDescriptorSetLayoutBinding> TextMemory::descriptor_set_layout_bindings()
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
@@ -190,5 +142,4 @@ void TextMemory::set_color(const Color& color) const
         decltype(Drawing().color) c = color.to_rgb_vector<float>();
         copy_to_drawing_buffer(offsetof(Drawing, color), c);
 }
-
 }

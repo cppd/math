@@ -28,9 +28,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace vulkan_text_shaders
 {
-std::vector<VkVertexInputBindingDescription> vertex_binding_descriptions();
-std::vector<VkVertexInputAttributeDescription> vertex_attribute_descriptions();
-
 class TextMemory
 {
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
@@ -78,5 +75,4 @@ public:
         void set_matrix(const mat4& matrix) const;
         void set_color(const Color& color) const;
 };
-
 }
