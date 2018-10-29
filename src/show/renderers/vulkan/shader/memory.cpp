@@ -66,8 +66,9 @@ std::vector<VkDescriptorSetLayoutBinding> TrianglesSharedMemory::descriptor_set_
         return bindings;
 }
 
-TrianglesSharedMemory::TrianglesSharedMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout)
-        : m_descriptors(vulkan::Descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings()))
+TrianglesSharedMemory::TrianglesSharedMemory(const vulkan::Device& device)
+        : m_descriptor_set_layout(vulkan::create_descriptor_set_layout(device, descriptor_set_layout_bindings())),
+          m_descriptors(vulkan::Descriptors(device, 1, m_descriptor_set_layout, descriptor_set_layout_bindings()))
 {
         std::vector<Variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
         std::vector<uint32_t> bindings;
@@ -113,6 +114,11 @@ TrianglesSharedMemory::TrianglesSharedMemory(const vulkan::Device& device, VkDes
         }
 
         m_descriptor_set = m_descriptors.create_and_update_descriptor_set(bindings, infos);
+}
+
+VkDescriptorSetLayout TrianglesSharedMemory::descriptor_set_layout() const noexcept
+{
+        return m_descriptor_set_layout;
 }
 
 VkDescriptorSet TrianglesSharedMemory::descriptor_set() const noexcept
@@ -364,8 +370,9 @@ std::vector<VkDescriptorSetLayoutBinding> ShadowMemory::descriptor_set_layout_bi
         return bindings;
 }
 
-ShadowMemory::ShadowMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout)
-        : m_descriptors(vulkan::Descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings()))
+ShadowMemory::ShadowMemory(const vulkan::Device& device)
+        : m_descriptor_set_layout(vulkan::create_descriptor_set_layout(device, descriptor_set_layout_bindings())),
+          m_descriptors(vulkan::Descriptors(device, 1, m_descriptor_set_layout, descriptor_set_layout_bindings()))
 {
         std::vector<Variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
         std::vector<uint32_t> bindings;
@@ -384,6 +391,11 @@ ShadowMemory::ShadowMemory(const vulkan::Device& device, VkDescriptorSetLayout d
         }
 
         m_descriptor_set = m_descriptors.create_and_update_descriptor_set(bindings, infos);
+}
+
+VkDescriptorSetLayout ShadowMemory::descriptor_set_layout() const noexcept
+{
+        return m_descriptor_set_layout;
 }
 
 VkDescriptorSet ShadowMemory::descriptor_set() const noexcept
@@ -425,8 +437,9 @@ std::vector<VkDescriptorSetLayoutBinding> PointsMemory::descriptor_set_layout_bi
         return bindings;
 }
 
-PointsMemory::PointsMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout)
-        : m_descriptors(vulkan::Descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings()))
+PointsMemory::PointsMemory(const vulkan::Device& device)
+        : m_descriptor_set_layout(vulkan::create_descriptor_set_layout(device, descriptor_set_layout_bindings())),
+          m_descriptors(vulkan::Descriptors(device, 1, m_descriptor_set_layout, descriptor_set_layout_bindings()))
 {
         std::vector<Variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
         std::vector<uint32_t> bindings;
@@ -459,6 +472,11 @@ PointsMemory::PointsMemory(const vulkan::Device& device, VkDescriptorSetLayout d
         }
 
         m_descriptor_set = m_descriptors.create_and_update_descriptor_set(bindings, infos);
+}
+
+VkDescriptorSetLayout PointsMemory::descriptor_set_layout() const noexcept
+{
+        return m_descriptor_set_layout;
 }
 
 VkDescriptorSet PointsMemory::descriptor_set() const noexcept

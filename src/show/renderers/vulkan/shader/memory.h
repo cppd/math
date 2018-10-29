@@ -32,6 +32,9 @@ namespace vulkan_renderer_shaders
 {
 class TrianglesSharedMemory
 {
+        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
+
+        vulkan::DescriptorSetLayout m_descriptor_set_layout;
         vulkan::Descriptors m_descriptors;
         std::vector<vulkan::UniformBufferWithHostVisibleMemory> m_uniform_buffers;
         vulkan::DescriptorSet m_descriptor_set;
@@ -77,11 +80,7 @@ class TrianglesSharedMemory
         void copy_to_drawing_buffer(VkDeviceSize offset, const T& data) const;
 
 public:
-        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
-
-        //
-
-        TrianglesSharedMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout);
+        TrianglesSharedMemory(const vulkan::Device& device);
 
         TrianglesSharedMemory(const TrianglesSharedMemory&) = delete;
         TrianglesSharedMemory& operator=(const TrianglesSharedMemory&) = delete;
@@ -92,6 +91,7 @@ public:
 
         //
 
+        VkDescriptorSetLayout descriptor_set_layout() const noexcept;
         VkDescriptorSet descriptor_set() const noexcept;
 
         //
@@ -162,6 +162,9 @@ public:
 
 class ShadowMemory
 {
+        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
+
+        vulkan::DescriptorSetLayout m_descriptor_set_layout;
         vulkan::Descriptors m_descriptors;
         std::vector<vulkan::UniformBufferWithHostVisibleMemory> m_uniform_buffers;
         vulkan::DescriptorSet m_descriptor_set;
@@ -172,11 +175,7 @@ class ShadowMemory
         };
 
 public:
-        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
-
-        //
-
-        ShadowMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout);
+        ShadowMemory(const vulkan::Device& device);
 
         ShadowMemory(const ShadowMemory&) = delete;
         ShadowMemory& operator=(const ShadowMemory&) = delete;
@@ -187,6 +186,7 @@ public:
 
         //
 
+        VkDescriptorSetLayout descriptor_set_layout() const noexcept;
         VkDescriptorSet descriptor_set() const noexcept;
 
         //
@@ -196,6 +196,9 @@ public:
 
 class PointsMemory
 {
+        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
+
+        vulkan::DescriptorSetLayout m_descriptor_set_layout;
         vulkan::Descriptors m_descriptors;
         std::vector<vulkan::UniformBufferWithHostVisibleMemory> m_uniform_buffers;
         vulkan::DescriptorSet m_descriptor_set;
@@ -222,11 +225,7 @@ class PointsMemory
         void copy_to_drawing_buffer(VkDeviceSize offset, const T& data) const;
 
 public:
-        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
-
-        //
-
-        PointsMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout);
+        PointsMemory(const vulkan::Device& device);
 
         PointsMemory(const PointsMemory&) = delete;
         PointsMemory& operator=(const PointsMemory&) = delete;
@@ -237,6 +236,7 @@ public:
 
         //
 
+        VkDescriptorSetLayout descriptor_set_layout() const noexcept;
         VkDescriptorSet descriptor_set() const noexcept;
 
         //

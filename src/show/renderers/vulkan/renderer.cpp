@@ -626,10 +626,7 @@ class Renderer final : public VulkanRenderer
         vulkan::Sampler m_texture_sampler;
         vulkan::Sampler m_shadow_sampler;
 
-        vulkan::DescriptorSetLayout m_triangles_shared_descriptor_set_layout;
         vulkan::DescriptorSetLayout m_triangles_material_descriptor_set_layout;
-        vulkan::DescriptorSetLayout m_shadow_descriptor_set_layout;
-        vulkan::DescriptorSetLayout m_point_descriptor_set_layout;
 
         shaders::TrianglesSharedMemory m_triangles_shared_shader_memory;
         shaders::ShadowMemory m_shadow_shader_memory;
@@ -1088,18 +1085,12 @@ public:
                   m_texture_sampler(create_texture_sampler(m_instance.device())),
                   m_shadow_sampler(create_shadow_sampler(m_instance.device())),
                   //
-                  m_triangles_shared_descriptor_set_layout(vulkan::create_descriptor_set_layout(
-                          m_instance.device(), shaders::TrianglesSharedMemory::descriptor_set_layout_bindings())),
                   m_triangles_material_descriptor_set_layout(vulkan::create_descriptor_set_layout(
                           m_instance.device(), shaders::TrianglesMaterialMemory::descriptor_set_layout_bindings())),
-                  m_shadow_descriptor_set_layout(vulkan::create_descriptor_set_layout(
-                          m_instance.device(), shaders::ShadowMemory::descriptor_set_layout_bindings())),
-                  m_point_descriptor_set_layout(vulkan::create_descriptor_set_layout(
-                          m_instance.device(), shaders::PointsMemory::descriptor_set_layout_bindings())),
                   //
-                  m_triangles_shared_shader_memory(m_instance.device(), m_triangles_shared_descriptor_set_layout),
-                  m_shadow_shader_memory(m_instance.device(), m_shadow_descriptor_set_layout),
-                  m_points_shader_memory(m_instance.device(), m_point_descriptor_set_layout),
+                  m_triangles_shared_shader_memory(m_instance.device()),
+                  m_shadow_shader_memory(m_instance.device()),
+                  m_points_shader_memory(m_instance.device()),
                   //
                   m_triangles_vert(m_instance.device(), triangles_vert, "main"),
                   m_triangles_geom(m_instance.device(), triangles_geom, "main"),
@@ -1109,13 +1100,14 @@ public:
                   m_points_vert(m_instance.device(), points_vert, "main"),
                   m_points_frag(m_instance.device(), points_frag, "main"),
                   //
-                  m_triangles_pipeline_layout(create_pipeline_layout(
-                          m_instance.device(), {TRIANGLES_SHARED_SET_NUMBER, TRIANGLES_MATERIAL_SET_NUMBER},
-                          {m_triangles_shared_descriptor_set_layout, m_triangles_material_descriptor_set_layout})),
-                  m_shadow_pipeline_layout(
-                          create_pipeline_layout(m_instance.device(), {SHADOW_SET_NUMBER}, {m_shadow_descriptor_set_layout})),
-                  m_points_pipeline_layout(
-                          create_pipeline_layout(m_instance.device(), {POINTS_SET_NUMBER}, {m_point_descriptor_set_layout}))
+                  m_triangles_pipeline_layout(create_pipeline_layout(m_instance.device(),
+                                                                     {TRIANGLES_SHARED_SET_NUMBER, TRIANGLES_MATERIAL_SET_NUMBER},
+                                                                     {m_triangles_shared_shader_memory.descriptor_set_layout(),
+                                                                      m_triangles_material_descriptor_set_layout})),
+                  m_shadow_pipeline_layout(create_pipeline_layout(m_instance.device(), {SHADOW_SET_NUMBER},
+                                                                  {m_shadow_shader_memory.descriptor_set_layout()})),
+                  m_points_pipeline_layout(create_pipeline_layout(m_instance.device(), {POINTS_SET_NUMBER},
+                                                                  {m_points_shader_memory.descriptor_set_layout()}))
         {
                 LOG(vulkan::overview_physical_devices(m_instance.instance()));
         }
