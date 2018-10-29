@@ -25,7 +25,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/vulkan/create.h"
 #include "graphics/vulkan/device.h"
 #include "graphics/vulkan/error.h"
-#include "graphics/vulkan/overview.h"
 #include "graphics/vulkan/query.h"
 #include "obj/obj_alg.h"
 #include "show/renderers/com/storage.h"
@@ -1109,7 +1108,6 @@ public:
                   m_points_pipeline_layout(create_pipeline_layout(m_instance.device(), {POINTS_SET_NUMBER},
                                                                   {m_points_shader_memory.descriptor_set_layout()}))
         {
-                LOG(vulkan::overview_physical_devices(m_instance.instance()));
         }
 
         ~Renderer() override

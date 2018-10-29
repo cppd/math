@@ -19,7 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/error.h"
 #include "com/log.h"
-#include "graphics/vulkan/overview.h"
 
 // clang-format off
 // Перед включением GLFW/glfw3.h надо включить vulkan/vulkan.h
@@ -198,8 +197,6 @@ public:
                         glfwSetCursorPosCallback(m_window, callback_cursor_pos);
                         glfwSetScrollCallback(m_window, callback_scroll);
                         glfwSetMouseButtonCallback(m_window, callback_mouse_button);
-
-                        LOG(vulkan::overview());
                 }
                 catch (...)
                 {

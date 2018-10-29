@@ -17,11 +17,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "create.h"
 
+#include "overview.h"
 #include "print.h"
 #include "query.h"
 
 #include "application/application_name.h"
 #include "com/error.h"
+#include "com/log.h"
 #include "com/string_vector.h"
 
 #include <unordered_set>
@@ -109,6 +111,8 @@ CommandPool create_transient_command_pool(VkDevice device, uint32_t queue_family
 Instance create_instance(int api_version_major, int api_version_minor, std::vector<std::string> required_extensions,
                          const std::vector<std::string>& required_validation_layers)
 {
+        LOG(overview());
+
         const uint32_t required_api_version = VK_MAKE_VERSION(api_version_major, api_version_minor, 0);
 
         if (required_validation_layers.size() > 0)
@@ -146,7 +150,11 @@ Instance create_instance(int api_version_major, int api_version_minor, std::vect
                 create_info.ppEnabledLayerNames = validation_layers.data();
         }
 
-        return Instance(create_info);
+        Instance instance(create_info);
+
+        LOG(overview_physical_devices(instance));
+
+        return instance;
 }
 
 //
