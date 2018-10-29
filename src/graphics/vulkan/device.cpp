@@ -250,7 +250,7 @@ std::unordered_set<std::string> supported_physical_device_extensions(VkPhysicalD
         result = vkEnumerateDeviceExtensionProperties(physical_device, nullptr, &extension_count, nullptr);
         if (result != VK_SUCCESS)
         {
-                vulkan::vulkan_function_error("vkEnumerateDeviceExtensionProperties", result);
+                vulkan_function_error("vkEnumerateDeviceExtensionProperties", result);
         }
 
         if (extension_count < 1)
@@ -263,7 +263,7 @@ std::unordered_set<std::string> supported_physical_device_extensions(VkPhysicalD
         result = vkEnumerateDeviceExtensionProperties(physical_device, nullptr, &extension_count, extensions.data());
         if (result != VK_SUCCESS)
         {
-                vulkan::vulkan_function_error("vkEnumerateDeviceExtensionProperties", result);
+                vulkan_function_error("vkEnumerateDeviceExtensionProperties", result);
         }
 
         std::unordered_set<std::string> extension_set;
@@ -287,32 +287,32 @@ VkPhysicalDeviceFeatures make_enabled_device_features(const std::vector<Physical
 
         VkPhysicalDeviceFeatures device_features = {};
 
-        for (vulkan::PhysicalDeviceFeatures f : required_features)
+        for (PhysicalDeviceFeatures f : required_features)
         {
                 switch (f)
                 {
-                case vulkan::PhysicalDeviceFeatures::GeometryShader:
+                case PhysicalDeviceFeatures::GeometryShader:
                         if (!supported_device_features.geometryShader)
                         {
                                 error("Required physical device feature Geometry Shader is not supported");
                         }
                         device_features.geometryShader = true;
                         break;
-                case vulkan::PhysicalDeviceFeatures::SampleRateShading:
+                case PhysicalDeviceFeatures::SampleRateShading:
                         if (!supported_device_features.sampleRateShading)
                         {
                                 error("Required physical device feature Sample Rate Shading is not supported");
                         }
                         device_features.sampleRateShading = true;
                         break;
-                case vulkan::PhysicalDeviceFeatures::SamplerAnisotropy:
+                case PhysicalDeviceFeatures::SamplerAnisotropy:
                         if (!supported_device_features.samplerAnisotropy)
                         {
                                 error("Required physical device feature Sampler Anisotropy is not supported");
                         }
                         device_features.samplerAnisotropy = true;
                         break;
-                case vulkan::PhysicalDeviceFeatures::TessellationShader:
+                case PhysicalDeviceFeatures::TessellationShader:
                         if (!supported_device_features.tessellationShader)
                         {
                                 error("Required physical device feature Tessellation Shader is not supported");
@@ -322,20 +322,20 @@ VkPhysicalDeviceFeatures make_enabled_device_features(const std::vector<Physical
                 }
         }
 
-        for (vulkan::PhysicalDeviceFeatures f : optional_features)
+        for (PhysicalDeviceFeatures f : optional_features)
         {
                 switch (f)
                 {
-                case vulkan::PhysicalDeviceFeatures::GeometryShader:
+                case PhysicalDeviceFeatures::GeometryShader:
                         device_features.geometryShader = supported_device_features.geometryShader;
                         break;
-                case vulkan::PhysicalDeviceFeatures::SampleRateShading:
+                case PhysicalDeviceFeatures::SampleRateShading:
                         device_features.sampleRateShading = supported_device_features.sampleRateShading;
                         break;
-                case vulkan::PhysicalDeviceFeatures::SamplerAnisotropy:
+                case PhysicalDeviceFeatures::SamplerAnisotropy:
                         device_features.samplerAnisotropy = supported_device_features.samplerAnisotropy;
                         break;
-                case vulkan::PhysicalDeviceFeatures::TessellationShader:
+                case PhysicalDeviceFeatures::TessellationShader:
                         device_features.tessellationShader = supported_device_features.tessellationShader;
                         break;
                 }
@@ -388,7 +388,7 @@ PhysicalDevice find_physical_device(VkInstance instance, VkSurfaceKHR surface, i
                         continue;
                 }
 
-                const std::vector<VkQueueFamilyProperties> families = vulkan::physical_device_queue_families(physical_device);
+                const std::vector<VkQueueFamilyProperties> families = physical_device_queue_families(physical_device);
                 uint32_t graphics, compute, transfer, presentation;
                 if (!find_graphics_family(families, &graphics))
                 {
@@ -455,7 +455,7 @@ Device create_device(VkPhysicalDevice physical_device, const std::vector<uint32_
                 create_info.ppEnabledLayerNames = validation_layers.data();
         }
 
-        return vulkan::Device(physical_device, create_info);
+        return Device(physical_device, create_info);
 }
 
 VkQueue device_queue(VkDevice device, uint32_t queue_family_index, uint32_t queue_index)

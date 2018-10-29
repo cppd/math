@@ -325,7 +325,7 @@ SwapchainKHR::SwapchainKHR(VkDevice device, const VkSwapchainCreateInfoKHR& crea
         VkResult result = vkCreateSwapchainKHR(device, &create_info, nullptr, &m_swapchain);
         if (result != VK_SUCCESS)
         {
-                vulkan::vulkan_function_error("vkCreateSwapchainKHR", result);
+                vulkan_function_error("vkCreateSwapchainKHR", result);
         }
 
         ASSERT(m_swapchain != VK_NULL_HANDLE);
@@ -385,7 +385,7 @@ ImageView::ImageView(VkDevice device, const VkImageViewCreateInfo& create_info)
         VkResult result = vkCreateImageView(device, &create_info, nullptr, &m_image_view);
         if (result != VK_SUCCESS)
         {
-                vulkan::vulkan_function_error("vkCreateImageView", result);
+                vulkan_function_error("vkCreateImageView", result);
         }
 
         ASSERT(m_image_view != VK_NULL_HANDLE);
@@ -459,7 +459,7 @@ ShaderModule::ShaderModule(VkDevice device, const Span<const uint32_t>& code)
         VkResult result = vkCreateShaderModule(device, &create_info, nullptr, &m_shader_module);
         if (result != VK_SUCCESS)
         {
-                vulkan::vulkan_function_error("vkCreateShaderModule", result);
+                vulkan_function_error("vkCreateShaderModule", result);
         }
 
         ASSERT(m_shader_module != VK_NULL_HANDLE);
@@ -519,7 +519,7 @@ RenderPass::RenderPass(VkDevice device, const VkRenderPassCreateInfo& create_inf
         VkResult result = vkCreateRenderPass(device, &create_info, nullptr, &m_render_pass);
         if (result != VK_SUCCESS)
         {
-                vulkan::vulkan_function_error("vkCreateRenderPass", result);
+                vulkan_function_error("vkCreateRenderPass", result);
         }
 
         ASSERT(m_render_pass != VK_NULL_HANDLE);
@@ -579,7 +579,7 @@ PipelineLayout::PipelineLayout(VkDevice device, const VkPipelineLayoutCreateInfo
         VkResult result = vkCreatePipelineLayout(device, &create_info, nullptr, &m_pipeline_layout);
         if (result != VK_SUCCESS)
         {
-                vulkan::vulkan_function_error("vkCreatePipelineLayout", result);
+                vulkan_function_error("vkCreatePipelineLayout", result);
         }
 
         ASSERT(m_pipeline_layout != VK_NULL_HANDLE);
@@ -641,7 +641,7 @@ Pipeline::Pipeline(VkDevice device, const VkGraphicsPipelineCreateInfo& create_i
         VkResult result = vkCreateGraphicsPipelines(device, pipeline_cache, 1, &create_info, nullptr, &m_pipeline);
         if (result != VK_SUCCESS)
         {
-                vulkan::vulkan_function_error("vkCreateGraphicsPipelines", result);
+                vulkan_function_error("vkCreateGraphicsPipelines", result);
         }
 
         ASSERT(m_pipeline != VK_NULL_HANDLE);
@@ -701,7 +701,7 @@ Framebuffer::Framebuffer(VkDevice device, const VkFramebufferCreateInfo& create_
         VkResult result = vkCreateFramebuffer(device, &create_info, nullptr, &m_framebuffer);
         if (result != VK_SUCCESS)
         {
-                vulkan::vulkan_function_error("vkCreateFramebuffer", result);
+                vulkan_function_error("vkCreateFramebuffer", result);
         }
 
         ASSERT(m_framebuffer != VK_NULL_HANDLE);
@@ -761,7 +761,7 @@ CommandPool::CommandPool(VkDevice device, const VkCommandPoolCreateInfo& create_
         VkResult result = vkCreateCommandPool(device, &create_info, nullptr, &m_command_pool);
         if (result != VK_SUCCESS)
         {
-                vulkan::vulkan_function_error("vkCreateCommandPool", result);
+                vulkan_function_error("vkCreateCommandPool", result);
         }
 
         ASSERT(m_command_pool != VK_NULL_HANDLE);
@@ -826,7 +826,7 @@ Semaphore::Semaphore(VkDevice device)
         VkResult result = vkCreateSemaphore(device, &create_info, nullptr, &m_semaphore);
         if (result != VK_SUCCESS)
         {
-                vulkan::vulkan_function_error("vkCreateSemaphore", result);
+                vulkan_function_error("vkCreateSemaphore", result);
         }
 
         ASSERT(m_semaphore != VK_NULL_HANDLE);
@@ -895,7 +895,7 @@ Fence::Fence(VkDevice device, bool signaled)
         VkResult result = vkCreateFence(device, &create_info, nullptr, &m_fence);
         if (result != VK_SUCCESS)
         {
-                vulkan::vulkan_function_error("vkCreateFence", result);
+                vulkan_function_error("vkCreateFence", result);
         }
 
         ASSERT(m_fence != VK_NULL_HANDLE);
@@ -955,7 +955,7 @@ Buffer::Buffer(VkDevice device, const VkBufferCreateInfo& create_info)
         VkResult result = vkCreateBuffer(device, &create_info, nullptr, &m_buffer);
         if (result != VK_SUCCESS)
         {
-                vulkan::vulkan_function_error("vkCreateBuffer", result);
+                vulkan_function_error("vkCreateBuffer", result);
         }
 
         ASSERT(m_buffer != VK_NULL_HANDLE);
@@ -1015,7 +1015,7 @@ DeviceMemory::DeviceMemory(VkDevice device, const VkMemoryAllocateInfo& allocate
         VkResult result = vkAllocateMemory(device, &allocate_info, nullptr, &m_device_memory);
         if (result != VK_SUCCESS)
         {
-                vulkan::vulkan_function_error("vkAllocateMemory", result);
+                vulkan_function_error("vkAllocateMemory", result);
         }
 
         ASSERT(m_device_memory != VK_NULL_HANDLE);
@@ -1086,7 +1086,7 @@ CommandBuffer::CommandBuffer(VkDevice device, VkCommandPool command_pool)
         VkResult result = vkAllocateCommandBuffers(device, &allocate_info, &m_command_buffer);
         if (result != VK_SUCCESS)
         {
-                vulkan::vulkan_function_error("vkAllocateCommandBuffers", result);
+                vulkan_function_error("vkAllocateCommandBuffers", result);
         }
 
         ASSERT(m_command_buffer != VK_NULL_HANDLE);
@@ -1163,7 +1163,7 @@ CommandBuffers::CommandBuffers(VkDevice device, VkCommandPool command_pool, uint
         VkResult result = vkAllocateCommandBuffers(device, &allocate_info, m_command_buffers.data());
         if (result != VK_SUCCESS)
         {
-                vulkan::vulkan_function_error("vkAllocateCommandBuffers", result);
+                vulkan_function_error("vkAllocateCommandBuffers", result);
         }
 
         ASSERT(std::all_of(m_command_buffers.cbegin(), m_command_buffers.cend(),
@@ -1237,7 +1237,7 @@ DescriptorSetLayout::DescriptorSetLayout(VkDevice device, const VkDescriptorSetL
         VkResult result = vkCreateDescriptorSetLayout(device, &create_info, nullptr, &m_descriptor_set_layout);
         if (result != VK_SUCCESS)
         {
-                vulkan::vulkan_function_error("vkCreateDescriptorSetLayout", result);
+                vulkan_function_error("vkCreateDescriptorSetLayout", result);
         }
 
         ASSERT(m_descriptor_set_layout != VK_NULL_HANDLE);
@@ -1297,7 +1297,7 @@ DescriptorPool::DescriptorPool(VkDevice device, const VkDescriptorPoolCreateInfo
         VkResult result = vkCreateDescriptorPool(device, &create_info, nullptr, &m_descriptor_pool);
         if (result != VK_SUCCESS)
         {
-                vulkan::vulkan_function_error("vkCreateDescriptorPool", result);
+                vulkan_function_error("vkCreateDescriptorPool", result);
         }
 
         ASSERT(m_descriptor_pool != VK_NULL_HANDLE);
@@ -1342,7 +1342,7 @@ void DescriptorSet::destroy() noexcept
                 VkResult result = vkFreeDescriptorSets(m_device, m_descriptor_pool, 1, &m_descriptor_set);
                 if (result != VK_SUCCESS)
                 {
-                        vulkan::vulkan_function_error("vkFreeDescriptorSets", result);
+                        vulkan_function_error("vkFreeDescriptorSets", result);
                 }
         }
 }
@@ -1370,7 +1370,7 @@ DescriptorSet::DescriptorSet(VkDevice device, VkDescriptorPool descriptor_pool, 
         VkResult result = vkAllocateDescriptorSets(device, &allocate_info, &m_descriptor_set);
         if (result != VK_SUCCESS)
         {
-                vulkan::vulkan_function_error("vkAllocateDescriptorSets", result);
+                vulkan_function_error("vkAllocateDescriptorSets", result);
         }
 
         ASSERT(m_descriptor_set != VK_NULL_HANDLE);
@@ -1417,7 +1417,7 @@ void DescriptorSets::destroy() noexcept
                         vkFreeDescriptorSets(m_device, m_descriptor_pool, m_descriptor_sets.size(), m_descriptor_sets.data());
                 if (result != VK_SUCCESS)
                 {
-                        vulkan::vulkan_function_error("vkFreeDescriptorSets", result);
+                        vulkan_function_error("vkFreeDescriptorSets", result);
                 }
         }
 }
@@ -1452,7 +1452,7 @@ DescriptorSets::DescriptorSets(VkDevice device, VkDescriptorPool descriptor_pool
         VkResult result = vkAllocateDescriptorSets(device, &allocate_info, m_descriptor_sets.data());
         if (result != VK_SUCCESS)
         {
-                vulkan::vulkan_function_error("vkAllocateDescriptorSets", result);
+                vulkan_function_error("vkAllocateDescriptorSets", result);
         }
 
         ASSERT(std::all_of(m_descriptor_sets.cbegin(), m_descriptor_sets.cend(),
@@ -1526,7 +1526,7 @@ Image::Image(VkDevice device, const VkImageCreateInfo& create_info)
         VkResult result = vkCreateImage(device, &create_info, nullptr, &m_image);
         if (result != VK_SUCCESS)
         {
-                vulkan::vulkan_function_error("vkCreateImage", result);
+                vulkan_function_error("vkCreateImage", result);
         }
 
         ASSERT(m_image != VK_NULL_HANDLE);
@@ -1586,7 +1586,7 @@ Sampler::Sampler(VkDevice device, const VkSamplerCreateInfo& create_info)
         VkResult result = vkCreateSampler(device, &create_info, nullptr, &m_sampler);
         if (result != VK_SUCCESS)
         {
-                vulkan::vulkan_function_error("vkCreateSampler", result);
+                vulkan_function_error("vkCreateSampler", result);
         }
 
         ASSERT(m_sampler != VK_NULL_HANDLE);
