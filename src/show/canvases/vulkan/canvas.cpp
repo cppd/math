@@ -21,11 +21,11 @@ namespace
 {
 class Canvas final : public VulkanCanvas
 {
-        void set_fps_text_color(const Color& /*c*/) override
+        void set_text_color(const Color& /*c*/) override
         {
         }
 
-        void set_fps_text_active(bool /*v*/) override
+        void set_text_active(bool /*v*/) override
         {
         }
 

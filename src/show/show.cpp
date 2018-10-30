@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/conversion.h"
 #include "com/error.h"
+#include "com/frequency.h"
 #include "com/log.h"
 #include "com/mat.h"
 #include "com/mat_alg.h"
@@ -61,11 +62,14 @@ constexpr double ZOOM_BASE = 1.1;
 constexpr double ZOOM_EXP_MIN = -50;
 constexpr double ZOOM_EXP_MAX = 100;
 
-constexpr const char FPS_STRING[] = "FPS: ";
 constexpr double FPS_TEXT_SIZE_IN_POINTS = 9.0;
 constexpr double FPS_TEXT_STEP_Y_IN_POINTS = 1.3 * FPS_TEXT_SIZE_IN_POINTS;
-constexpr double FPS_TEXT_START_X_IN_POINTS = 5;
-constexpr double FPS_TEXT_START_Y_IN_POINTS = FPS_TEXT_STEP_Y_IN_POINTS;
+constexpr double FPS_TEXT_X_IN_POINTS = 5;
+constexpr double FPS_TEXT_Y_IN_POINTS = FPS_TEXT_STEP_Y_IN_POINTS;
+
+constexpr const char FPS_TEXT[] = "FPS: ";
+constexpr double FPS_INTERVAL_LENGTH = 1;
+constexpr int FPS_SAMPLE_COUNT = 10;
 
 constexpr std::chrono::milliseconds IDLE_MODE_FRAME_DURATION(100);
 
@@ -162,7 +166,19 @@ class ShowObject final : public EventQueue, public WindowEvent
 
         //
 
+        const int m_text_size = points_to_pixels(FPS_TEXT_SIZE_IN_POINTS, m_parent_window_ppi);
+        const int m_text_step_y = points_to_pixels(FPS_TEXT_STEP_Y_IN_POINTS, m_parent_window_ppi);
+        const int m_text_x = points_to_pixels(FPS_TEXT_X_IN_POINTS, m_parent_window_ppi);
+        const int m_text_y = points_to_pixels(FPS_TEXT_Y_IN_POINTS, m_parent_window_ppi);
+
+        //
+
         Camera m_camera;
+
+        //
+
+        Frequency m_fps{FPS_INTERVAL_LENGTH, FPS_SAMPLE_COUNT};
+        std::vector<std::string> m_fps_text{FPS_TEXT, ""};
 
         //
 
@@ -267,7 +283,7 @@ class ShowObject final : public EventQueue, public WindowEvent
                 m_renderer->set_background_color(c);
 
                 bool background_is_dark = c.luminance() <= 0.5;
-                m_canvas->set_fps_text_color(background_is_dark ? Color(1) : Color(0));
+                m_canvas->set_text_color(background_is_dark ? Color(1) : Color(0));
         }
 
         void direct_set_default_color(const Color& c) override
@@ -330,7 +346,7 @@ class ShowObject final : public EventQueue, public WindowEvent
         {
                 ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
-                m_canvas->set_fps_text_active(v);
+                m_canvas->set_text_active(v);
         }
 
         void direct_show_effect(bool v) override
@@ -720,15 +736,9 @@ void ShowObject<API>::window_resize_handler()
                 int dft_dst_x = (m_window_width & 1) ? (m_draw_width + 1) : m_draw_width;
                 int dft_dst_y = 0;
 
-                int text_size = points_to_pixels(FPS_TEXT_SIZE_IN_POINTS, m_parent_window_ppi);
-                int text_step_y = points_to_pixels(FPS_TEXT_STEP_Y_IN_POINTS, m_parent_window_ppi);
-                int text_start_x = points_to_pixels(FPS_TEXT_START_X_IN_POINTS, m_parent_window_ppi);
-                int text_start_y = points_to_pixels(FPS_TEXT_START_Y_IN_POINTS, m_parent_window_ppi);
-
                 m_canvas->create_objects(m_window_width, m_window_height, matrix, m_renderer->color_buffer(),
                                          m_renderer->color_buffer_is_srgb(), m_renderer->objects(), m_draw_width, m_draw_height,
-                                         dft_dst_x, dft_dst_y, m_renderer->frame_buffer_is_srgb(), FPS_STRING, text_size,
-                                         text_step_y, text_start_x, text_start_y);
+                                         dft_dst_x, dft_dst_y, m_renderer->frame_buffer_is_srgb());
         }
 
         //
@@ -801,7 +811,8 @@ void ShowObject<API>::init_window_and_view()
 
 //
 
-bool render_opengl(OpenGLWindow& window, OpenGLRenderer& renderer, OpenGLCanvas& canvas)
+bool render_opengl(OpenGLWindow& window, OpenGLRenderer& renderer, OpenGLCanvas& canvas, int text_step_y, int text_x, int text_y,
+                   const std::vector<std::string>& text)
 {
         // Параметр true означает рисование в цветной буфер,
         // параметр false означает рисование в буфер экрана.
@@ -809,6 +820,8 @@ bool render_opengl(OpenGLWindow& window, OpenGLRenderer& renderer, OpenGLCanvas&
         bool object_rendered = renderer.draw(canvas.pencil_effect_active());
 
         canvas.draw();
+
+        canvas.draw_text(text_step_y, text_x, text_y, text);
 
         window.display();
 
@@ -822,7 +835,7 @@ void ShowObject<GraphicsAndComputeAPI::OpenGL>::loop()
 
         std::unique_ptr<OpenGLWindow> window = create_opengl_window(OPENGL_MINIMUM_SAMPLE_COUNT, this);
         std::unique_ptr<OpenGLRenderer> renderer = create_opengl_renderer();
-        std::unique_ptr<OpenGLCanvas> canvas = create_opengl_canvas();
+        std::unique_ptr<OpenGLCanvas> canvas = create_opengl_canvas(m_text_size);
 
         //
 
@@ -841,7 +854,9 @@ void ShowObject<GraphicsAndComputeAPI::OpenGL>::loop()
         {
                 pull_and_dispatch_all_events();
 
-                if (!render_opengl(*window, *renderer, *canvas))
+                m_fps_text[1] = to_string(std::lround(m_fps.calculate()));
+
+                if (!render_opengl(*window, *renderer, *canvas, m_text_step_y, m_text_x, m_text_y, m_fps_text))
                 {
                         sleep(last_frame_time);
                 }

@@ -48,10 +48,6 @@ class Text::Impl final
 {
         const std::thread::id m_thread_id;
 
-        int m_step_y;
-        int m_start_x;
-        int m_start_y;
-
         opengl::VertexArray m_vertex_array;
         opengl::ArrayBuffer m_vertex_buffer;
         opengl::GraphicsProgram m_program;
@@ -59,13 +55,13 @@ class Text::Impl final
         std::unique_ptr<opengl::TextureR32F> m_texture;
 
         template <typename T>
-        void draw(int x, int y, const T& text) const
+        void draw_text(int step_y, int x, int y, const T& text) const
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 thread_local std::vector<TextVertex> vertices;
 
-                text_vertices(m_glyphs, m_step_y, x, y, text, &vertices);
+                text_vertices(m_glyphs, step_y, x, y, text, &vertices);
 
                 opengl::GLEnableAndRestore<GL_BLEND> e;
                 m_vertex_array.bind();
@@ -74,11 +70,8 @@ class Text::Impl final
         }
 
 public:
-        Impl(int size, int step_y, int start_x, int start_y, const Color& color, const mat4& matrix)
+        Impl(int size, const Color& color, const mat4& matrix)
                 : m_thread_id(std::this_thread::get_id()),
-                  m_step_y(step_y),
-                  m_start_x(start_x),
-                  m_start_y(start_y),
                   m_program(opengl::VertexShader(text_vertex_shader), opengl::FragmentShader(text_fragment_shader))
         {
                 m_vertex_array.attrib_i_pointer(0, 2, GL_INT, m_vertex_buffer, offsetof(TextVertex, v), sizeof(TextVertex), true);
@@ -115,19 +108,18 @@ public:
                 m_program.set_uniform_float("matrix", matrix);
         }
 
-        void draw(const std::vector<std::string>& text) const
+        void draw(int step_y, int x, int y, const std::vector<std::string>& text) const
         {
-                draw(m_start_x, m_start_y, text);
+                draw_text(step_y, x, y, text);
         }
 
-        void draw(const std::string& text) const
+        void draw(int step_y, int x, int y, const std::string& text) const
         {
-                draw(m_start_x, m_start_y, text);
+                draw_text(step_y, x, y, text);
         }
 };
 
-Text::Text(int size, int step_y, int start_x, int start_y, const Color& color, const mat4& matrix)
-        : m_impl(std::make_unique<Impl>(size, step_y, start_x, start_y, color, matrix))
+Text::Text(int size, const Color& color, const mat4& matrix) : m_impl(std::make_unique<Impl>(size, color, matrix))
 {
 }
 
@@ -143,12 +135,12 @@ void Text::set_matrix(const mat4& matrix) const
         m_impl->set_matrix(matrix);
 }
 
-void Text::draw(const std::vector<std::string>& text) const
+void Text::draw(int step_y, int x, int y, const std::vector<std::string>& text) const
 {
-        m_impl->draw(text);
+        m_impl->draw(step_y, x, y, text);
 }
 
-void Text::draw(const std::string& text) const
+void Text::draw(int step_y, int x, int y, const std::string& text) const
 {
-        m_impl->draw(text);
+        m_impl->draw(step_y, x, y, text);
 }

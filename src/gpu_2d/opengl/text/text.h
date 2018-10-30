@@ -30,12 +30,12 @@ class Text final
         std::unique_ptr<Impl> m_impl;
 
 public:
-        Text(int size, int step_y, int start_x, int start_y, const Color& color, const mat4& matrix);
+        Text(int size, const Color& color, const mat4& matrix);
         ~Text();
 
         void set_color(const Color& color) const;
         void set_matrix(const mat4& matrix) const;
 
-        void draw(const std::vector<std::string>& text) const;
-        void draw(const std::string& text) const;
+        void draw(int step_y, int x, int y, const std::vector<std::string>& text) const;
+        void draw(int step_y, int x, int y, const std::string& text) const;
 };

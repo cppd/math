@@ -22,13 +22,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/opengl/objects.h"
 
 #include <memory>
+#include <string>
+#include <vector>
 
 struct OpenGLCanvas
 {
         virtual ~OpenGLCanvas() = default;
 
-        virtual void set_fps_text_color(const Color& c) = 0;
-        virtual void set_fps_text_active(bool v) = 0;
+        virtual void set_text_color(const Color& c) = 0;
+        virtual void set_text_active(bool v) = 0;
 
         virtual void set_pencil_effect_active(bool v) = 0;
         virtual bool pencil_effect_active() = 0;
@@ -48,10 +50,10 @@ struct OpenGLCanvas
         virtual void create_objects(int window_width, int window_height, const mat4& matrix,
                                     const opengl::TextureRGBA32F& color_texture, bool color_texture_is_srgb,
                                     const opengl::TextureR32I& objects, int draw_width, int draw_height, int dft_dst_x,
-                                    int dft_dst_y, bool frame_buffer_is_srgb, const char* fps_text, int text_size,
-                                    int text_step_y, int text_start_x, int text_start_y) = 0;
+                                    int dft_dst_y, bool frame_buffer_is_srgb) = 0;
 
         virtual void draw() = 0;
+        virtual void draw_text(int step_y, int x, int y, const std::vector<std::string>& text) = 0;
 };
 
-std::unique_ptr<OpenGLCanvas> create_opengl_canvas();
+std::unique_ptr<OpenGLCanvas> create_opengl_canvas(int text_size);

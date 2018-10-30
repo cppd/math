@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "canvas.h"
 
-#include "com/frequency.h"
 #include "gpu_2d/opengl/convex_hull/convex_hull_2d.h"
 #include "gpu_2d/opengl/dft/show/dft_show.h"
 #include "gpu_2d/opengl/optical_flow/optical_flow.h"
@@ -26,43 +25,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace
 {
-class FPSText
-{
-        static constexpr double FPS_INTERVAL_LENGTH = 1;
-        static constexpr int FPS_SAMPLE_COUNT = 10;
-
-        Text m_text;
-        Frequency m_fps;
-        std::vector<std::string> m_fps_text;
-
-public:
-        FPSText(const char* fps_text, int size, int step_y, int start_x, int start_y, const Color& color, const mat4& matrix)
-                : m_text(size, step_y, start_x, start_y, color, matrix),
-                  m_fps(FPS_INTERVAL_LENGTH, FPS_SAMPLE_COUNT),
-                  m_fps_text({fps_text, ""})
-        {
-        }
-
-        void set_color(const Color& color) const
-        {
-                m_text.set_color(color);
-        }
-
-        void set_matrix(const mat4& matrix) const
-        {
-                m_text.set_matrix(matrix);
-        }
-
-        void draw()
-        {
-                m_fps_text[1] = to_string(std::lround(m_fps.calculate()));
-                m_text.draw(m_fps_text);
-        }
-};
-
 class Canvas final : public OpenGLCanvas
 {
-        std::unique_ptr<FPSText> m_fps_text;
+        int m_text_size;
+
+        std::unique_ptr<Text> m_text;
         std::unique_ptr<DFTShow> m_dft_show;
         std::unique_ptr<ConvexHull2D> m_convex_hull;
         std::unique_ptr<OpticalFlow> m_optical_flow;
@@ -71,7 +38,7 @@ class Canvas final : public OpenGLCanvas
         int m_window_width;
         int m_window_height;
 
-        bool m_fps_text_active = true;
+        bool m_text_active = true;
         bool m_pencil_effect_active = false;
         bool m_dft_show_active = false;
         bool m_convex_hull_active = false;
@@ -81,20 +48,20 @@ class Canvas final : public OpenGLCanvas
         Color m_dft_show_background_color = Color(0);
         Color m_dft_show_color = Color(1);
 
-        Color m_fps_text_color = Color(1);
+        Color m_text_color = Color(1);
 
-        void set_fps_text_color(const Color& c) override
+        void set_text_color(const Color& c) override
         {
-                m_fps_text_color = c;
-                if (m_fps_text)
+                m_text_color = c;
+                if (m_text)
                 {
-                        m_fps_text->set_color(m_fps_text_color);
+                        m_text->set_color(m_text_color);
                 }
         }
 
-        void set_fps_text_active(bool v) override
+        void set_text_active(bool v) override
         {
-                m_fps_text_active = v;
+                m_text_active = v;
         }
 
         void set_pencil_effect_active(bool v) override
@@ -164,16 +131,20 @@ class Canvas final : public OpenGLCanvas
 
         void create_objects(int window_width, int window_height, const mat4& matrix, const opengl::TextureRGBA32F& color_texture,
                             bool color_texture_is_srgb, const opengl::TextureR32I& objects, int draw_width, int draw_height,
-                            int dft_dst_x, int dft_dst_y, bool frame_buffer_is_srgb, const char* fps_text, int text_size,
-                            int text_step_y, int text_start_x, int text_start_y) override;
+                            int dft_dst_x, int dft_dst_y, bool frame_buffer_is_srgb) override;
 
         void draw() override;
+        void draw_text(int step_y, int x, int y, const std::vector<std::string>& text) override;
+
+public:
+        Canvas(int text_size) : m_text_size(text_size)
+        {
+        }
 };
 
 void Canvas::create_objects(int window_width, int window_height, const mat4& matrix, const opengl::TextureRGBA32F& color_texture,
                             bool color_texture_is_srgb, const opengl::TextureR32I& objects, int draw_width, int draw_height,
-                            int dft_dst_x, int dft_dst_y, bool frame_buffer_is_srgb, const char* fps_text, int text_size,
-                            int text_step_y, int text_start_x, int text_start_y)
+                            int dft_dst_x, int dft_dst_y, bool frame_buffer_is_srgb)
 {
         m_window_width = window_width;
         m_window_height = window_height;
@@ -187,14 +158,13 @@ void Canvas::create_objects(int window_width, int window_height, const mat4& mat
 
         m_convex_hull = std::make_unique<ConvexHull2D>(objects, matrix);
 
-        if (m_fps_text)
+        if (m_text)
         {
-                m_fps_text->set_matrix(matrix);
+                m_text->set_matrix(matrix);
         }
         else
         {
-                m_fps_text = std::make_unique<FPSText>(fps_text, text_size, text_step_y, text_start_x, text_start_y,
-                                                       m_fps_text_color, matrix);
+                m_text = std::make_unique<Text>(m_text_size, m_text_color, matrix);
         }
 }
 
@@ -204,7 +174,6 @@ void Canvas::draw()
         ASSERT(m_dft_show);
         ASSERT(m_optical_flow);
         ASSERT(m_convex_hull);
-        ASSERT(m_fps_text);
 
         glViewport(0, 0, m_window_width, m_window_height);
 
@@ -235,14 +204,20 @@ void Canvas::draw()
         {
                 m_convex_hull->draw();
         }
-        if (m_fps_text_active)
+}
+
+void Canvas::draw_text(int step_y, int x, int y, const std::vector<std::string>& text)
+{
+        ASSERT(m_text);
+
+        if (m_text_active)
         {
-                m_fps_text->draw();
+                m_text->draw(step_y, x, y, text);
         }
 }
 }
 
-std::unique_ptr<OpenGLCanvas> create_opengl_canvas()
+std::unique_ptr<OpenGLCanvas> create_opengl_canvas(int text_size)
 {
-        return std::make_unique<Canvas>();
+        return std::make_unique<Canvas>(text_size);
 }
