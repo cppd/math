@@ -124,8 +124,7 @@ vulkan::CommandBuffers create_command_buffers(VkDevice device, uint32_t width, u
 }
 }
 
-TextBuffers::TextBuffers(const vulkan::Swapchain& swapchain, const std::vector<uint32_t>& attachment_family_indices,
-                         const vulkan::Device& device, VkCommandPool graphics_command_pool)
+TextBuffers::TextBuffers(const vulkan::Swapchain& swapchain, const vulkan::Device& device, VkCommandPool graphics_command_pool)
         : m_device(device),
           m_graphics_command_pool(graphics_command_pool),
           m_width(swapchain.width()),
@@ -133,7 +132,6 @@ TextBuffers::TextBuffers(const vulkan::Swapchain& swapchain, const std::vector<u
 {
         ASSERT(device != VK_NULL_HANDLE);
         ASSERT(graphics_command_pool != VK_NULL_HANDLE);
-        ASSERT(attachment_family_indices.size() > 0);
 
         m_render_pass = create_render_pass(m_device, swapchain.format());
 

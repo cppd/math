@@ -40,10 +40,12 @@ class PhysicalDevice
         // family_indices
         uint32_t m_graphics, m_compute, m_transfer, m_presentation;
         VkPhysicalDeviceFeatures m_features;
+        VkPhysicalDeviceProperties m_properties;
 
 public:
         PhysicalDevice(VkPhysicalDevice physical_device, uint32_t graphics, uint32_t compute, uint32_t transfer,
-                       uint32_t presentation, const VkPhysicalDeviceFeatures& features);
+                       uint32_t presentation, const VkPhysicalDeviceFeatures& features,
+                       const VkPhysicalDeviceProperties& properties);
 
         operator VkPhysicalDevice() const noexcept;
 
@@ -53,6 +55,7 @@ public:
         uint32_t presentation() const noexcept;
 
         const VkPhysicalDeviceFeatures& features() const noexcept;
+        const VkPhysicalDeviceProperties& properties() const noexcept;
 };
 
 std::vector<VkPhysicalDevice> physical_devices(VkInstance instance);

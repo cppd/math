@@ -87,6 +87,11 @@ public:
                 return m_device;
         }
 
+        const PhysicalDevice& physical_device() const noexcept
+        {
+                return m_physical_device;
+        }
+
         VkQueue presentation_queue() const noexcept
         {
                 return m_presentation_queue;
@@ -137,6 +142,13 @@ public:
         {
                 return ColorTexture(m_device, m_graphics_command_pool, m_graphics_queue, m_transfer_command_pool,
                                     m_transfer_queue, m_texture_family_indices, width, height, rgba_pixels);
+        }
+
+        template <typename T>
+        GrayscaleTexture create_grayscale_texture(uint32_t width, uint32_t height, const std::vector<T>& pixels) const
+        {
+                return GrayscaleTexture(m_device, m_graphics_command_pool, m_graphics_queue, m_transfer_command_pool,
+                                        m_transfer_queue, m_texture_family_indices, width, height, pixels);
         }
 };
 }

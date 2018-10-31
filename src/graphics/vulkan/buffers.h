@@ -58,8 +58,6 @@ public:
         template <typename T>
         void copy(const T& data) const
         {
-                ASSERT(size() == sizeof(data));
-
                 copy(0 /*offset*/, &data, sizeof(data));
         }
 };

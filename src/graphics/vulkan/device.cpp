@@ -163,13 +163,15 @@ bool physical_device_features_are_supported(const std::vector<vulkan::PhysicalDe
 namespace vulkan
 {
 PhysicalDevice::PhysicalDevice(VkPhysicalDevice physical_device, uint32_t graphics, uint32_t compute, uint32_t transfer,
-                               uint32_t presentation, const VkPhysicalDeviceFeatures& features)
+                               uint32_t presentation, const VkPhysicalDeviceFeatures& features,
+                               const VkPhysicalDeviceProperties& properties)
         : m_physical_device(physical_device),
           m_graphics(graphics),
           m_compute(compute),
           m_transfer(transfer),
           m_presentation(presentation),
-          m_features(features)
+          m_features(features),
+          m_properties(properties)
 {
 }
 PhysicalDevice::operator VkPhysicalDevice() const noexcept
@@ -195,6 +197,10 @@ uint32_t PhysicalDevice::presentation() const noexcept
 const VkPhysicalDeviceFeatures& PhysicalDevice::features() const noexcept
 {
         return m_features;
+}
+const VkPhysicalDeviceProperties& PhysicalDevice::properties() const noexcept
+{
+        return m_properties;
 }
 
 std::vector<VkPhysicalDevice> physical_devices(VkInstance instance)
@@ -407,7 +413,7 @@ PhysicalDevice find_physical_device(VkInstance instance, VkSurfaceKHR surface, i
                         continue;
                 }
 
-                return PhysicalDevice(physical_device, graphics, compute, transfer, presentation, features);
+                return PhysicalDevice(physical_device, graphics, compute, transfer, presentation, features, properties);
         }
 
         error("Failed to find a suitable Vulkan physical device");

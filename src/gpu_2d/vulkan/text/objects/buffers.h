@@ -43,8 +43,7 @@ class TextBuffers
         vulkan::CommandBuffers m_command_buffers;
 
 public:
-        TextBuffers(const vulkan::Swapchain& swapchain, const std::vector<uint32_t>& attachment_family_indices,
-                    const vulkan::Device& device, VkCommandPool graphics_command_pool);
+        TextBuffers(const vulkan::Swapchain& swapchain, const vulkan::Device& device, VkCommandPool graphics_command_pool);
 
         TextBuffers(const TextBuffers&) = delete;
         TextBuffers& operator=(const TextBuffers&) = delete;
