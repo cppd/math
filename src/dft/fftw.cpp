@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #if defined(FFTW_FOUND)
 
-#include "dft_fftw.h"
+#include "fftw.h"
 
 #include "com/error.h"
 #include "com/log.h"
@@ -97,7 +97,7 @@ public:
         FFTPlan& operator=(FFTPlan&&) = delete;
 };
 
-class DFT final : public IFourierFFTW
+class FFTW final : public DFT
 {
         FFTPlanThreads m_threads;
         std::vector<std::complex<float>> m_in, m_out;
@@ -105,19 +105,19 @@ class DFT final : public IFourierFFTW
         const float m_inv_k;
 
 public:
-        DFT(int n1, int n2)
+        FFTW(int n1, int n2)
                 : m_in(1ull * n1 * n2),
                   m_out(1ull * n1 * n2),
                   m_forward(false, n1, n2, &m_in, &m_out),
                   m_backward(true, n1, n2, &m_in, &m_out),
-                  m_inv_k(1.0f / (n1 * n2))
+                  m_inv_k(1.0f / (1ull * n1 * n2))
         {
         }
 
-        DFT(const DFT&) = delete;
-        DFT& operator=(const DFT&) = delete;
-        DFT(DFT&&) = delete;
-        DFT& operator=(DFT&&) = delete;
+        FFTW(const FFTW&) = delete;
+        FFTW& operator=(const FFTW&) = delete;
+        FFTW(DFT&&) = delete;
+        FFTW& operator=(FFTW&&) = delete;
 
         void exec(bool inv, std::vector<std::complex<float>>* data) override
         {
@@ -149,8 +149,9 @@ public:
 };
 }
 
-std::unique_ptr<IFourierFFTW> create_dft_fftw(int x, int y)
+std::unique_ptr<DFT> create_fftw(int x, int y)
 {
-        return std::make_unique<DFT>(x, y);
+        return std::make_unique<FFTW>(x, y);
 }
+
 #endif

@@ -18,10 +18,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "test_dft.h"
 
 #if defined(CUDA_FOUND)
-#include "dft_cufft.h"
+#include "dft/cufft.h"
 #endif
 #if defined(FFTW_FOUND)
-#include "dft_fftw.h"
+#include "dft/fftw.h"
 #endif
 
 #include "com/error.h"
@@ -188,7 +188,7 @@ void compute_cuda(bool inverse, int n1, int n2, std::vector<complex>* data)
         LOG("----- cuFFT -----");
         double start_time = time_in_seconds();
 
-        std::unique_ptr<IFourierCuda> cufft = create_fft_cufft(n1, n2);
+        std::unique_ptr<DFT> cufft = create_cufft(n1, n2);
         cufft->exec(inverse, data);
 
         LOG("cuFFT time: " + time_string(start_time));
@@ -201,7 +201,7 @@ void compute_fftw(bool inverse, int n1, int n2, std::vector<complex>* data)
         LOG("----- FFTW -----");
         double start_time = time_in_seconds();
 
-        std::unique_ptr<IFourierFFTW> fftw = create_dft_fftw(n1, n2);
+        std::unique_ptr<DFT> fftw = create_fftw(n1, n2);
         fftw->exec(inverse, data);
 
         LOG("FFTW time: " + time_string(start_time));

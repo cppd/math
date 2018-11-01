@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #if defined(CUDA_FOUND)
 
-#include "dft_cufft.h"
+#include "cufft.h"
 
 #include "com/error.h"
 #include "com/log.h"
@@ -154,7 +154,7 @@ void cuda_memory_copy(std::vector<T>* dst, const CudaMemory<T>& src)
         }
 }
 
-class CuFFT final : public IFourierCuda
+class CuFFT final : public DFT
 {
         cufftHandle m_plan;
         CudaMemory<cufftComplex> m_data;
@@ -245,7 +245,7 @@ public:
 };
 }
 
-std::unique_ptr<IFourierCuda> create_fft_cufft(int x, int y)
+std::unique_ptr<DFT> create_cufft(int x, int y)
 {
         cuda_select_device();
         return std::make_unique<CuFFT>(x, y);

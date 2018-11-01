@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -18,13 +18,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <complex>
-#include <memory>
 #include <vector>
 
-struct IFourierCuda
+struct DFT
 {
-        virtual ~IFourierCuda() = default;
-        virtual void exec(bool inv, std::vector<std::complex<float>>* src) = 0;
+        virtual ~DFT() = default;
+        virtual void exec(bool inv, std::vector<std::complex<float>>* data) = 0;
 };
-
-std::unique_ptr<IFourierCuda> create_fft_cufft(int x, int y);
