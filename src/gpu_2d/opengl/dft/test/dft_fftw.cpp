@@ -25,34 +25,68 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/thread.h"
 #include "com/time.h"
 
+#include <algorithm>
+#include <atomic>
 #include <fftw3.h>
-#include <thread>
 
 namespace
 {
+std::atomic_int global_fftw_counter = 0;
+
+class FFTPlanThreads final
+{
+public:
+        FFTPlanThreads()
+        {
+                if (++global_fftw_counter != 1)
+                {
+                        --global_fftw_counter;
+                        error("Error FFTW init threads");
+                }
+                fftwf_init_threads();
+        }
+        ~FFTPlanThreads()
+        {
+                fftwf_cleanup_threads();
+                --global_fftw_counter;
+        }
+};
+
 class FFTPlan final
 {
         fftwf_plan p;
 
 public:
-        FFTPlan(bool inv, int n1, int n2, std::vector<fftwf_complex>* i, std::vector<fftwf_complex>* o)
+        FFTPlan(bool inv, int n1, int n2, std::vector<std::complex<float>>* i, std::vector<std::complex<float>>* o)
         {
+                ASSERT(1ull * n1 * n2 == i->size());
+                ASSERT(i->size() == o->size());
+
                 fftwf_plan_with_nthreads(hardware_concurrency());
+
+                // По документации FFTW тип fftwf_complex является массивом float[2]
+                // из действительной части в элементе 0 и мнимой части в элементе 1.
+                // Это совпадает с требованиями к комплексным числам 29.5 Complex numbers
+                // в стандарте C++17.
+                fftwf_complex* in = reinterpret_cast<fftwf_complex*>(i->data());
+                fftwf_complex* out = reinterpret_cast<fftwf_complex*>(o->data());
 
                 if (inv)
                 {
-                        p = fftwf_plan_dft_2d(n2, n1, i->data(), o->data(), FFTW_BACKWARD, FFTW_MEASURE);
+                        p = fftwf_plan_dft_2d(n2, n1, in, out, FFTW_BACKWARD, FFTW_MEASURE);
                 }
                 else
                 {
-                        p = fftwf_plan_dft_2d(n2, n1, i->data(), o->data(), FFTW_FORWARD, FFTW_MEASURE);
+                        p = fftwf_plan_dft_2d(n2, n1, in, out, FFTW_FORWARD, FFTW_MEASURE);
                 }
         }
+
         ~FFTPlan()
         {
                 fftwf_destroy_plan(p);
         }
-        void execute()
+
+        void execute() const
         {
                 fftwf_execute(p);
         }
@@ -63,52 +97,36 @@ public:
         FFTPlan& operator=(FFTPlan&&) = delete;
 };
 
-class FFTPlanThreads final
-{
-public:
-        FFTPlanThreads()
-        {
-                fftwf_init_threads();
-        }
-        ~FFTPlanThreads()
-        {
-                fftwf_cleanup_threads();
-        }
-};
-
 class DFT final : public IFourierFFTW
 {
         FFTPlanThreads m_threads;
-        int m_n1, m_n2;
-        std::vector<fftwf_complex> m_src, m_res;
+        std::vector<std::complex<float>> m_in, m_out;
         FFTPlan m_forward, m_backward;
+        const float m_inv_k;
 
 public:
         DFT(int n1, int n2)
-                : m_n1(n1),
-                  m_n2(n2),
-                  m_src(n1 * n2),
-                  m_res(n1 * n2),
-                  m_forward(false, n1, n2, &m_src, &m_res),
-                  m_backward(true, n1, n2, &m_src, &m_res)
-        {
-        }
-        ~DFT() override
+                : m_in(1ull * n1 * n2),
+                  m_out(1ull * n1 * n2),
+                  m_forward(false, n1, n2, &m_in, &m_out),
+                  m_backward(true, n1, n2, &m_in, &m_out),
+                  m_inv_k(1.0f / (n1 * n2))
         {
         }
 
+        DFT(const DFT&) = delete;
+        DFT& operator=(const DFT&) = delete;
+        DFT(DFT&&) = delete;
+        DFT& operator=(DFT&&) = delete;
+
         void exec(bool inv, std::vector<std::complex<float>>* data) override
         {
-                if (data->size() != m_src.size())
+                if (data->size() != m_in.size())
                 {
                         error("Error size FFTW");
                 }
 
-                for (size_t i = 0; i < m_res.size(); ++i)
-                {
-                        m_src[i][0] = (*data)[i].real();
-                        m_src[i][1] = (*data)[i].imag();
-                }
+                std::copy(data->cbegin(), data->cend(), m_in.begin());
 
                 double start_time = time_in_seconds();
 
@@ -116,20 +134,14 @@ public:
                 {
                         m_backward.execute();
 
-                        float k = 1.0f / (m_n1 * m_n2);
-                        for (size_t i = 0; i < m_res.size(); ++i)
-                        {
-                                (*data)[i] = std::complex<float>(m_res[i][0], m_res[i][1]) * k;
-                        }
+                        std::transform(m_out.cbegin(), m_out.cend(), data->begin(),
+                                       [k = m_inv_k](const std::complex<float>& v) { return v * k; });
                 }
                 else
                 {
                         m_forward.execute();
 
-                        for (size_t i = 0; i < m_res.size(); ++i)
-                        {
-                                (*data)[i] = std::complex<float>(m_res[i][0], m_res[i][1]);
-                        }
+                        std::copy(m_out.cbegin(), m_out.cend(), data->begin());
                 }
 
                 LOG("calc FFTW: " + to_string_fixed(1000.0 * (time_in_seconds() - start_time), 5) + " ms");
