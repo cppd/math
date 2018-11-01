@@ -105,22 +105,6 @@ void make_fullscreen(bool fullscreen, WindowID window, WindowID parent)
         set_focus(window);
 }
 
-// Матрица для рисования на плоскости окна, точка (0, 0) слева вверху
-template <GraphicsAndComputeAPI API>
-mat4 ortho_matrix_for_2d_rendering(int width, int height)
-{
-        static_assert(API == GraphicsAndComputeAPI::Vulkan || API == GraphicsAndComputeAPI::OpenGL);
-        using Renderer = std::conditional_t<API == GraphicsAndComputeAPI::Vulkan, VulkanRenderer, OpenGLRenderer>;
-
-        double left = 0;
-        double right = width;
-        double bottom = height;
-        double top = 0;
-        double near = 1;
-        double far = -1;
-        return Renderer::ortho(left, right, bottom, top, near, far) * scale<double>(1, 1, 0);
-}
-
 // Объекты для std::unique_ptr создаются и удаляются в отдельном потоке. Поток этого
 // класса не должен владеть такими объектами. Этот класс нужен, чтобы в явном виде
 // не работать с std::unique_ptr.
@@ -207,6 +191,20 @@ class ShowObject final : public EventQueue, public WindowEvent
         double m_default_ortho_scale = 1;
 
         bool m_fullscreen_active = false;
+
+        //
+
+        // Матрица для рисования на плоскости окна, точка (0, 0) слева вверху
+        static mat4 ortho_matrix_for_2d_rendering(int width, int height)
+        {
+                double left = 0;
+                double right = width;
+                double bottom = height;
+                double top = 0;
+                double near = 1;
+                double far = -1;
+                return Renderer::ortho(left, right, bottom, top, near, far) * scale<double>(1, 1, 0);
+        }
 
         //
 
@@ -731,14 +729,13 @@ void ShowObject<API>::window_resize_handler()
 
         if constexpr (API == GraphicsAndComputeAPI::OpenGL)
         {
-                const mat4 matrix = ortho_matrix_for_2d_rendering<GraphicsAndComputeAPI::OpenGL>(m_window_width, m_window_height);
-
                 int dft_dst_x = (m_window_width & 1) ? (m_draw_width + 1) : m_draw_width;
                 int dft_dst_y = 0;
 
-                m_canvas->create_objects(m_window_width, m_window_height, matrix, m_renderer->color_buffer(),
-                                         m_renderer->color_buffer_is_srgb(), m_renderer->objects(), m_draw_width, m_draw_height,
-                                         dft_dst_x, dft_dst_y, m_renderer->frame_buffer_is_srgb());
+                m_canvas->create_objects(m_window_width, m_window_height,
+                                         ortho_matrix_for_2d_rendering(m_window_width, m_window_height),
+                                         m_renderer->color_buffer(), m_renderer->color_buffer_is_srgb(), m_renderer->objects(),
+                                         m_draw_width, m_draw_height, dft_dst_x, dft_dst_y, m_renderer->frame_buffer_is_srgb());
         }
 
         //
@@ -874,7 +871,9 @@ enum class VulkanResult
 
 VulkanResult render_vulkan(VkSwapchainKHR swapchain, VkQueue presentation_queue, VkQueue graphics_queue, VkDevice device,
                            VkFence current_frame_fence, VkSemaphore image_available_semaphore,
-                           VkSemaphore render_finished_semaphore, unsigned current_frame, VulkanRenderer& renderer)
+                           VkSemaphore renderer_finished_semaphore, VkSemaphore canvas_finished_semaphore, unsigned current_frame,
+                           VulkanRenderer& renderer, VulkanCanvas& canvas, int text_step_y, int text_x, int text_y,
+                           const std::vector<std::string>& text, bool show_text)
 {
         VkResult result;
 
@@ -908,19 +907,37 @@ VulkanResult render_vulkan(VkSwapchainKHR swapchain, VkQueue presentation_queue,
 
         //
 
-        bool object_rendered = renderer.draw(current_frame_fence, graphics_queue, image_available_semaphore,
-                                             render_finished_semaphore, image_index, current_frame);
+        bool object_rendered;
+        std::array<VkSemaphore, 1> finished_semaphores;
+
+        if (show_text)
+        {
+                object_rendered = renderer.draw(VK_NULL_HANDLE, graphics_queue, image_available_semaphore,
+                                                renderer_finished_semaphore, image_index, current_frame);
+
+                canvas.draw_text(current_frame_fence, graphics_queue, renderer_finished_semaphore, canvas_finished_semaphore,
+                                 image_index, text_step_y, text_x, text_y, text);
+
+                finished_semaphores = {canvas_finished_semaphore};
+        }
+
+        else
+        {
+                object_rendered = renderer.draw(current_frame_fence, graphics_queue, image_available_semaphore,
+                                                renderer_finished_semaphore, image_index, current_frame);
+
+                finished_semaphores = {renderer_finished_semaphore};
+        }
 
         //
 
-        std::array<VkSemaphore, 1> render_finished_semaphores = {render_finished_semaphore};
         std::array<VkSwapchainKHR, 1> swapchains = {swapchain};
         std::array<uint32_t, 1> image_indices = {image_index};
 
         VkPresentInfoKHR present_info = {};
         present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-        present_info.waitSemaphoreCount = render_finished_semaphores.size();
-        present_info.pWaitSemaphores = render_finished_semaphores.data();
+        present_info.waitSemaphoreCount = finished_semaphores.size();
+        present_info.pWaitSemaphores = finished_semaphores.data();
         present_info.swapchainCount = swapchains.size();
         present_info.pSwapchains = swapchains.data();
         present_info.pImageIndices = image_indices.data();
@@ -959,7 +976,10 @@ void ShowObject<GraphicsAndComputeAPI::Vulkan>::loop()
         std::vector<vulkan::Semaphore> image_available_semaphores =
                 vulkan::create_semaphores(instance.device(), VULKAN_MAX_FRAMES_IN_FLIGHT);
 
-        std::vector<vulkan::Semaphore> render_finished_semaphores =
+        std::vector<vulkan::Semaphore> renderer_finished_semaphores =
+                vulkan::create_semaphores(instance.device(), VULKAN_MAX_FRAMES_IN_FLIGHT);
+
+        std::vector<vulkan::Semaphore> canvas_finished_semaphores =
                 vulkan::create_semaphores(instance.device(), VULKAN_MAX_FRAMES_IN_FLIGHT);
 
         //
@@ -971,7 +991,8 @@ void ShowObject<GraphicsAndComputeAPI::Vulkan>::loop()
                 create_vulkan_renderer(instance, VULKAN_MINIMUM_SAMPLE_COUNT, VULKAN_MAX_FRAMES_IN_FLIGHT);
         renderer->create_buffers(swapchain.get());
 
-        std::unique_ptr<VulkanCanvas> canvas = create_vulkan_canvas();
+        std::unique_ptr<VulkanCanvas> canvas = create_vulkan_canvas(instance, m_text_size);
+        canvas->create_buffers(swapchain.get(), ortho_matrix_for_2d_rendering(swapchain->width(), swapchain->height()));
 
         //
 
@@ -990,9 +1011,12 @@ void ShowObject<GraphicsAndComputeAPI::Vulkan>::loop()
         {
                 pull_and_dispatch_all_events();
 
+                m_fps_text[1] = to_string(std::lround(m_fps.calculate()));
+
                 switch (render_vulkan(swapchain->swapchain(), instance.presentation_queue(), instance.graphics_queue(),
                                       instance.device(), in_flight_fences[frame], image_available_semaphores[frame],
-                                      render_finished_semaphores[frame], frame, *renderer))
+                                      renderer_finished_semaphores[frame], canvas_finished_semaphores[frame], frame, *renderer,
+                                      *canvas, m_text_step_y, m_text_x, m_text_y, m_fps_text, canvas->text_active()))
                 {
                 case VulkanResult::NoObject:
                         sleep(last_frame_time);
@@ -1002,6 +1026,7 @@ void ShowObject<GraphicsAndComputeAPI::Vulkan>::loop()
                 case VulkanResult::Swapchain:
                         instance.device_wait_idle();
 
+                        canvas->delete_buffers();
                         renderer->delete_buffers();
 
                         swapchain.reset();
@@ -1009,6 +1034,8 @@ void ShowObject<GraphicsAndComputeAPI::Vulkan>::loop()
                                 instance.create_swapchain(VULKAN_SURFACE_FORMAT, VULKAN_PREFERRED_IMAGE_COUNT));
 
                         renderer->create_buffers(swapchain.get());
+                        canvas->create_buffers(swapchain.get(),
+                                               ortho_matrix_for_2d_rendering(swapchain->width(), swapchain->height()));
 
                         break;
                 }

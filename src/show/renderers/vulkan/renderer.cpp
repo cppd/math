@@ -827,14 +827,14 @@ class Renderer final : public VulkanRenderer
                 set_matrices();
         }
 
-        bool draw(VkFence queue_fence, VkQueue graphics_queue, VkSemaphore image_available_semaphore,
-                  VkSemaphore render_finished_semaphore, unsigned image_index, unsigned current_frame) const override
+        bool draw(VkFence queue_fence, VkQueue graphics_queue, VkSemaphore wait_semaphore, VkSemaphore finished_semaphore,
+                  unsigned image_index, unsigned current_frame) const override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
                 if (!m_show_shadow || !m_storage.object() || !m_storage.object()->has_shadow())
                 {
-                        std::array<VkSemaphore, 1> wait_semaphores = {image_available_semaphore};
+                        std::array<VkSemaphore, 1> wait_semaphores = {wait_semaphore};
                         std::array<VkPipelineStageFlags, 1> wait_stages = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
 
                         VkSubmitInfo info = {};
@@ -846,7 +846,7 @@ class Renderer final : public VulkanRenderer
                         info.commandBufferCount = 1;
                         info.pCommandBuffers = &m_main_buffers->command_buffer(image_index);
                         info.signalSemaphoreCount = 1;
-                        info.pSignalSemaphores = &render_finished_semaphore;
+                        info.pSignalSemaphores = &finished_semaphore;
 
                         VkResult result = vkQueueSubmit(graphics_queue, 1, &info, queue_fence);
                         if (result != VK_SUCCESS)
@@ -881,7 +881,7 @@ class Renderer final : public VulkanRenderer
                                 wait_semaphores[0] = shadow_available_semaphore;
                                 wait_stages[0] = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
 
-                                wait_semaphores[1] = image_available_semaphore;
+                                wait_semaphores[1] = wait_semaphore;
                                 wait_stages[1] = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 
                                 VkSubmitInfo info = {};
@@ -893,7 +893,7 @@ class Renderer final : public VulkanRenderer
                                 info.commandBufferCount = 1;
                                 info.pCommandBuffers = &m_main_buffers->command_buffer(image_index);
                                 info.signalSemaphoreCount = 1;
-                                info.pSignalSemaphores = &render_finished_semaphore;
+                                info.pSignalSemaphores = &finished_semaphore;
 
                                 VkResult result = vkQueueSubmit(graphics_queue, 1, &info, queue_fence);
                                 if (result != VK_SUCCESS)
@@ -911,6 +911,8 @@ class Renderer final : public VulkanRenderer
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
                 //
+
+                ASSERT(m_swapchain);
 
                 m_instance.device_wait_idle();
 

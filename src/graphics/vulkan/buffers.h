@@ -51,14 +51,9 @@ public:
         VkDeviceSize size() const noexcept;
 
         template <typename T>
-        void copy(VkDeviceSize offset, const T& data) const
+        void copy(const std::vector<T>& v) const
         {
-                copy(offset, &data, sizeof(data));
-        }
-        template <typename T>
-        void copy(const T& data) const
-        {
-                copy(0 /*offset*/, &data, sizeof(data));
+                copy(0 /*offset*/, v.data(), v.size() * sizeof(T));
         }
 };
 

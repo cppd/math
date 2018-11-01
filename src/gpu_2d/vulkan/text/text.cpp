@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/font/font.h"
 #include "com/font/glyphs.h"
 #include "com/font/vertices.h"
+#include "com/log.h"
 #include "gpu_2d/vulkan/text/objects/buffers.h"
 #include "gpu_2d/vulkan/text/objects/sampler.h"
 #include "gpu_2d/vulkan/text/shader/memory.h"
@@ -141,11 +142,13 @@ class Impl final : public VulkanText
                                   m_indirect_buffer.stride());
         }
 
-        void create_buffers(const vulkan::Swapchain* swapchain) override
+        void create_buffers(const vulkan::Swapchain* swapchain, const mat4& matrix) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
                 //
+
+                ASSERT(swapchain);
 
                 m_instance.device_wait_idle();
 
@@ -156,11 +159,15 @@ class Impl final : public VulkanText
                                                         shaders::vertex_attribute_descriptions());
 
                 m_buffers->create_command_buffers(std::bind(&Impl::draw_commands, this, std::placeholders::_1));
+
+                set_matrix(matrix);
         }
 
         void delete_buffers() override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
+
+                //
 
                 if (m_buffers)
                 {
@@ -171,10 +178,14 @@ class Impl final : public VulkanText
         }
 
         template <typename T>
-        void draw_text(VkFence queue_fence, VkQueue graphics_queue, VkSemaphore image_available_semaphore,
-                       VkSemaphore render_finished_semaphore, unsigned image_index, int step_y, int x, int y, const T& text)
+        void draw_text(VkFence queue_fence, VkQueue graphics_queue, VkSemaphore wait_semaphore, VkSemaphore finished_semaphore,
+                       unsigned image_index, int step_y, int x, int y, const T& text)
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
+
+                //
+
+                ASSERT(m_buffers);
 
                 thread_local std::vector<TextVertex> vertices;
 
@@ -198,7 +209,7 @@ class Impl final : public VulkanText
 
                 //
 
-                std::array<VkSemaphore, 1> wait_semaphores = {image_available_semaphore};
+                std::array<VkSemaphore, 1> wait_semaphores = {wait_semaphore};
                 std::array<VkPipelineStageFlags, 1> wait_stages = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
 
                 VkSubmitInfo info = {};
@@ -210,7 +221,7 @@ class Impl final : public VulkanText
                 info.commandBufferCount = 1;
                 info.pCommandBuffers = &m_buffers->command_buffer(image_index);
                 info.signalSemaphoreCount = 1;
-                info.pSignalSemaphores = &render_finished_semaphore;
+                info.pSignalSemaphores = &finished_semaphore;
 
                 VkResult result = vkQueueSubmit(graphics_queue, 1, &info, queue_fence);
                 if (result != VK_SUCCESS)
@@ -219,23 +230,19 @@ class Impl final : public VulkanText
                 }
         }
 
-        void draw(VkFence queue_fence, VkQueue graphics_queue, VkSemaphore image_available_semaphore,
-                  VkSemaphore render_finished_semaphore, unsigned image_index, int step_y, int x, int y,
-                  const std::vector<std::string>& text) override
+        void draw(VkFence queue_fence, VkQueue graphics_queue, VkSemaphore wait_semaphore, VkSemaphore finished_semaphore,
+                  unsigned image_index, int step_y, int x, int y, const std::vector<std::string>& text) override
         {
-                draw_text(queue_fence, graphics_queue, image_available_semaphore, render_finished_semaphore, image_index, step_y,
-                          x, y, text);
+                draw_text(queue_fence, graphics_queue, wait_semaphore, finished_semaphore, image_index, step_y, x, y, text);
         }
 
-        void draw(VkFence queue_fence, VkQueue graphics_queue, VkSemaphore image_available_semaphore,
-                  VkSemaphore render_finished_semaphore, unsigned image_index, int step_y, int x, int y,
-                  const std::string& text) override
+        void draw(VkFence queue_fence, VkQueue graphics_queue, VkSemaphore wait_semaphore, VkSemaphore finished_semaphore,
+                  unsigned image_index, int step_y, int x, int y, const std::string& text) override
         {
-                draw_text(queue_fence, graphics_queue, image_available_semaphore, render_finished_semaphore, image_index, step_y,
-                          x, y, text);
+                draw_text(queue_fence, graphics_queue, wait_semaphore, finished_semaphore, image_index, step_y, x, y, text);
         }
 
-        Impl(const vulkan::VulkanInstance& instance, const Color& color, const mat4& matrix, Glyphs&& glyphs)
+        Impl(const vulkan::VulkanInstance& instance, const Color& color, Glyphs&& glyphs)
                 : m_instance(instance),
                   m_sampler(create_text_sampler(instance.device())),
                   m_glyph_texture(instance.create_grayscale_texture(glyphs.width(), glyphs.height(), std::move(glyphs.pixels()))),
@@ -249,24 +256,35 @@ class Impl final : public VulkanText
                   m_indirect_buffer(m_instance.device(), INDIRECT_BUFFER_COMMAND_COUNT)
         {
                 set_color(color);
-                set_matrix(matrix);
         }
 
 public:
-        Impl(const vulkan::VulkanInstance& instance, int size, const Color& color, const mat4& matrix)
-                : Impl(instance, color, matrix, Glyphs(size, instance.physical_device().properties().limits.maxImageDimension2D))
+        Impl(const vulkan::VulkanInstance& instance, int size, const Color& color)
+                : Impl(instance, color, Glyphs(size, instance.physical_device().properties().limits.maxImageDimension2D))
         {
         }
 
         ~Impl() override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
+
+                try
+                {
+                        m_instance.device_wait_idle();
+                }
+                catch (std::exception& e)
+                {
+                        LOG(std::string("Device wait idle exception in the Vulkan text destructor: ") + e.what());
+                }
+                catch (...)
+                {
+                        LOG("Device wait idle unknown exception in the Vulkan text destructor");
+                }
         }
 };
 }
 
-std::unique_ptr<VulkanText> create_vulkan_text(const vulkan::VulkanInstance& instance, int size, const Color& color,
-                                               const mat4& matrix)
+std::unique_ptr<VulkanText> create_vulkan_text(const vulkan::VulkanInstance& instance, int size, const Color& color)
 {
-        return std::make_unique<Impl>(instance, size, color, matrix);
+        return std::make_unique<Impl>(instance, size, color);
 }

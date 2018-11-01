@@ -17,16 +17,26 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "canvas.h"
 
+#include "gpu_2d/vulkan/text/text.h"
+
+constexpr Srgb8 TEXT_COLOR(255, 255, 255);
+
 namespace
 {
 class Canvas final : public VulkanCanvas
 {
-        void set_text_color(const Color& /*c*/) override
+        bool m_text_active = true;
+
+        std::unique_ptr<VulkanText> m_text;
+
+        void set_text_color(const Color& c) override
         {
+                m_text->set_color(c);
         }
 
-        void set_text_active(bool /*v*/) override
+        void set_text_active(bool v) override
         {
+                m_text_active = v;
         }
 
         void set_pencil_effect_active(bool /*v*/) override
@@ -66,10 +76,39 @@ class Canvas final : public VulkanCanvas
         void set_optical_flow_active(bool /*v*/) override
         {
         }
+
+        void create_buffers(const vulkan::Swapchain* swapchain, const mat4& matrix) override;
+        void delete_buffers() override;
+
+        bool text_active() const noexcept override
+        {
+                return m_text_active;
+        }
+        void draw_text(VkFence queue_fence, VkQueue graphics_queue, VkSemaphore wait_semaphore, VkSemaphore finished_semaphore,
+                       unsigned image_index, int step_y, int x, int y, const std::vector<std::string>& text) override
+        {
+                m_text->draw(queue_fence, graphics_queue, wait_semaphore, finished_semaphore, image_index, step_y, x, y, text);
+        }
+
+public:
+        Canvas(const vulkan::VulkanInstance& instance, int text_size)
+                : m_text(create_vulkan_text(instance, text_size, TEXT_COLOR))
+        {
+        }
 };
+
+void Canvas::create_buffers(const vulkan::Swapchain* swapchain, const mat4& matrix)
+{
+        m_text->create_buffers(swapchain, matrix);
 }
 
-std::unique_ptr<VulkanCanvas> create_vulkan_canvas()
+void Canvas::delete_buffers()
 {
-        return std::make_unique<Canvas>();
+        m_text->delete_buffers();
+}
+}
+
+std::unique_ptr<VulkanCanvas> create_vulkan_canvas(const vulkan::VulkanInstance& instance, int text_size)
+{
+        return std::make_unique<Canvas>(instance, text_size);
 }

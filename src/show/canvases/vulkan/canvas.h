@@ -18,8 +18,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "com/color/color.h"
+#include "com/mat.h"
+#include "graphics/vulkan/instance.h"
+#include "graphics/vulkan/swapchain.h"
 
 #include <memory>
+#include <string>
+#include <vector>
+#include <vulkan/vulkan.h>
 
 struct VulkanCanvas
 {
@@ -40,6 +46,16 @@ struct VulkanCanvas
         virtual void set_convex_hull_active(bool v) = 0;
 
         virtual void set_optical_flow_active(bool v) = 0;
+
+        //
+
+        virtual void create_buffers(const vulkan::Swapchain* swapchain, const mat4& matrix) = 0;
+        virtual void delete_buffers() = 0;
+
+        virtual bool text_active() const noexcept = 0;
+        virtual void draw_text(VkFence queue_fence, VkQueue graphics_queue, VkSemaphore wait_semaphore,
+                               VkSemaphore finished_semaphore, unsigned image_index, int step_y, int x, int y,
+                               const std::vector<std::string>& text) = 0;
 };
 
-std::unique_ptr<VulkanCanvas> create_vulkan_canvas();
+std::unique_ptr<VulkanCanvas> create_vulkan_canvas(const vulkan::VulkanInstance& instance, int text_size);
