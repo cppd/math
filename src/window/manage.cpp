@@ -17,9 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "manage.h"
 
-#include "com/error.h"
-
 #if defined(__linux__)
+
+#include "com/error.h"
 
 #include <X11/Xatom.h>
 #include <X11/Xlib.h>
@@ -27,6 +27,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace
 {
+int error_handler(Display*, XErrorEvent* e)
+{
+        constexpr int BUF_SIZE = 1000;
+        char buf[BUF_SIZE];
+        XGetErrorText(e->display, e->error_code, buf, BUF_SIZE);
+        error_fatal("X error handler: " + std::string(buf));
+}
+
 class CDisplay
 {
         Display* m_display;
@@ -34,7 +42,7 @@ class CDisplay
 public:
         CDisplay()
         {
-                m_display = XOpenDisplay(nullptr); // getenv( "DISPLAY" ) );
+                m_display = XOpenDisplay(nullptr); // getenv("DISPLAY")
                 if (m_display == nullptr)
                 {
                         error("Error XOpenDiplay");
@@ -58,6 +66,15 @@ constexpr Atom xa_atom()
         return XA_ATOM;
 #pragma GCC diagnostic pop
 }
+}
+
+void xlib_init()
+{
+        if (!XInitThreads())
+        {
+                error_fatal("Error XInitThreads");
+        }
+        XSetErrorHandler(error_handler);
 }
 
 void move_window_to_parent(WindowID window, WindowID parent)
@@ -96,11 +113,6 @@ void move_window_to_parent(WindowID window, WindowID parent)
         // показать обратно
         XMapWindow(display, window);
 }
-
-// Нет необходимости реализовывать на Линуксе
-// void move_window_to_desktop(WindowID)
-//{
-//}
 
 void make_window_fullscreen(WindowID window)
 {

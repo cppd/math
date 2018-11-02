@@ -26,58 +26,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <atomic>
 
 #if defined(__linux__)
-
 #include "graphics/opengl/functions/opengl_functions.h"
-
-#include <X11/Xlib.h>
-#include <cstdlib>
-
-namespace
-{
-int X_error_handler(Display*, XErrorEvent* e)
-{
-        constexpr int BUF_SIZE = 1000;
-        char buf[BUF_SIZE];
-        XGetErrorText(e->display, e->error_code, buf, BUF_SIZE);
-        error_fatal("X error handler: " + std::string(buf));
-}
-
-void init_XLib()
-{
-        if (!XInitThreads())
-        {
-                error_fatal("Error XInitThreads");
-        }
-        XSetErrorHandler(X_error_handler);
-}
-
-void init_gl()
-{
-        // Для Линукса адреса функций OpenGL не зависят от контекста,
-        // поэтому их можно определять один раз при запуске программы.
-        opengl_functions::init();
-}
-
-void init_os_specific()
-{
-        init_XLib();
-        init_gl();
-}
-}
-
-#elif defined(_WIN32)
-
-namespace
-{
-void init_os_specific()
-{
-}
-}
-
-#else
-
-#error This operating system is not supported
-
+#include "window/manage.h"
 #endif
 
 namespace
@@ -87,7 +37,7 @@ std::atomic_int global_call_counter = 0;
 
 Initialization::Initialization()
 {
-        if (++global_call_counter > 1)
+        if (++global_call_counter != 1)
         {
                 error_fatal("Initialization must be called once");
         }
@@ -96,7 +46,15 @@ Initialization::Initialization()
 
         reset_time();
 
-        init_os_specific();
+#if defined(__linux__)
+
+        xlib_init();
+
+        // Для Линукса адреса функций OpenGL не зависят от контекста,
+        // поэтому их можно определять один раз при запуске программы.
+        opengl_functions::init();
+
+#endif
 
         vulkan_window_init();
 

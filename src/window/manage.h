@@ -27,3 +27,7 @@ void set_size_to_parent(WindowID window, WindowID parent);
 #if defined(_WIN32)
 void change_window_style_not_child(WindowID window);
 #endif
+
+#if defined(__linux__)
+void xlib_init();
+#endif
