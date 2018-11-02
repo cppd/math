@@ -45,11 +45,17 @@ public:
                 }
                 fftwf_init_threads();
         }
+
         ~FFTPlanThreads()
         {
                 fftwf_cleanup_threads();
                 --global_fftw_counter;
         }
+
+        FFTPlanThreads(const FFTPlanThreads&) = delete;
+        FFTPlanThreads& operator=(const FFTPlanThreads&) = delete;
+        FFTPlanThreads(FFTPlanThreads&&) = delete;
+        FFTPlanThreads& operator=(FFTPlanThreads&&) = delete;
 };
 
 class FFTPlan final
@@ -104,21 +110,6 @@ class FFTW final : public DFT
         FFTPlan m_forward, m_backward;
         const float m_inv_k;
 
-public:
-        FFTW(int n1, int n2)
-                : m_in(1ull * n1 * n2),
-                  m_out(1ull * n1 * n2),
-                  m_forward(false, n1, n2, &m_in, &m_out),
-                  m_backward(true, n1, n2, &m_in, &m_out),
-                  m_inv_k(1.0f / (1ull * n1 * n2))
-        {
-        }
-
-        FFTW(const FFTW&) = delete;
-        FFTW& operator=(const FFTW&) = delete;
-        FFTW(DFT&&) = delete;
-        FFTW& operator=(FFTW&&) = delete;
-
         void exec(bool inv, std::vector<std::complex<float>>* data) override
         {
                 if (data->size() != m_in.size())
@@ -145,6 +136,16 @@ public:
                 }
 
                 LOG("calc FFTW: " + to_string_fixed(1000.0 * (time_in_seconds() - start_time), 5) + " ms");
+        }
+
+public:
+        FFTW(int n1, int n2)
+                : m_in(1ull * n1 * n2),
+                  m_out(1ull * n1 * n2),
+                  m_forward(false, n1, n2, &m_in, &m_out),
+                  m_backward(true, n1, n2, &m_in, &m_out),
+                  m_inv_k(1.0f / (1ull * n1 * n2))
+        {
         }
 };
 }
