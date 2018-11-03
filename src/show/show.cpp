@@ -45,6 +45,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <algorithm>
 #include <chrono>
 #include <cmath>
+#include <functional>
 #include <limits>
 #include <type_traits>
 #include <vector>
@@ -72,6 +73,9 @@ constexpr double FPS_INTERVAL_LENGTH = 1;
 constexpr int FPS_SAMPLE_COUNT = 10;
 
 constexpr std::chrono::milliseconds IDLE_MODE_FRAME_DURATION(100);
+
+// Это только для начального значения, а далее оно устанавливается командой set_vertical_sync
+constexpr vulkan::PresentMode VULKAN_INIT_PRESENT_MODE = vulkan::PresentMode::PreferFast;
 
 namespace
 {
@@ -127,6 +131,21 @@ public:
                 return static_cast<bool>(*m_pointer);
         }
 };
+
+// Матрица для рисования на плоскости окна, точка (0, 0) слева вверху
+template <typename Renderer>
+mat4 ortho_matrix_for_2d_rendering(int width, int height)
+{
+        static_assert(std::is_same_v<Renderer, OpenGLRenderer> || std::is_same_v<Renderer, VulkanRenderer>);
+
+        double left = 0;
+        double right = width;
+        double bottom = height;
+        double top = 0;
+        double near = 1;
+        double far = -1;
+        return Renderer::ortho(left, right, bottom, top, near, far) * scale<double>(1, 1, 0);
+}
 
 template <GraphicsAndComputeAPI API>
 class ShowObject final : public EventQueue, public WindowEvent
@@ -194,17 +213,7 @@ class ShowObject final : public EventQueue, public WindowEvent
 
         //
 
-        // Матрица для рисования на плоскости окна, точка (0, 0) слева вверху
-        static mat4 ortho_matrix_for_2d_rendering(int width, int height)
-        {
-                double left = 0;
-                double right = width;
-                double bottom = height;
-                double top = 0;
-                double near = 1;
-                double far = -1;
-                return Renderer::ortho(left, right, bottom, top, near, far) * scale<double>(1, 1, 0);
-        }
+        std::function<void(bool)> m_function_set_vertical_sync;
 
         //
 
@@ -429,14 +438,13 @@ class ShowObject final : public EventQueue, public WindowEvent
                 make_fullscreen(m_fullscreen_active, m_window->system_handle(), m_parent_window);
         }
 
-        void direct_set_vertical_sync([[maybe_unused]] bool v) override
+        void direct_set_vertical_sync(bool v) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
-                if constexpr (API == GraphicsAndComputeAPI::OpenGL)
-                {
-                        m_window->set_vertical_sync_enabled(v);
-                }
+                ASSERT(m_function_set_vertical_sync);
+
+                m_function_set_vertical_sync(v);
         }
 
         void direct_set_shadow_zoom(double v) override
@@ -733,7 +741,7 @@ void ShowObject<API>::window_resize_handler()
                 int dft_dst_y = 0;
 
                 m_canvas->create_objects(m_window_width, m_window_height,
-                                         ortho_matrix_for_2d_rendering(m_window_width, m_window_height),
+                                         ortho_matrix_for_2d_rendering<OpenGLRenderer>(m_window_width, m_window_height),
                                          m_renderer->color_buffer(), m_renderer->color_buffer_is_srgb(), m_renderer->objects(),
                                          m_draw_width, m_draw_height, dft_dst_x, dft_dst_y, m_renderer->frame_buffer_is_srgb());
         }
@@ -840,6 +848,8 @@ void ShowObject<GraphicsAndComputeAPI::OpenGL>::loop()
         m_renderer.set(renderer);
         m_canvas.set(canvas);
 
+        m_function_set_vertical_sync = [&](bool v) { window->set_vertical_sync_enabled(v); };
+
         //
 
         init_window_and_view();
@@ -862,11 +872,29 @@ void ShowObject<GraphicsAndComputeAPI::OpenGL>::loop()
 
 //
 
+void create_swapchain(const vulkan::VulkanInstance& instance, VulkanRenderer* renderer, VulkanCanvas* canvas,
+                      std::unique_ptr<vulkan::Swapchain>* swapchain, vulkan::PresentMode preferred_present_mode)
+{
+        instance.device_wait_idle();
+
+        canvas->delete_buffers();
+        renderer->delete_buffers();
+
+        swapchain->reset();
+        *swapchain = std::make_unique<vulkan::Swapchain>(
+                instance.create_swapchain(VULKAN_SURFACE_FORMAT, VULKAN_PREFERRED_IMAGE_COUNT, preferred_present_mode));
+
+        mat4 m = ortho_matrix_for_2d_rendering<VulkanRenderer>((*swapchain)->width(), (*swapchain)->height());
+
+        renderer->create_buffers(swapchain->get());
+        canvas->create_buffers(swapchain->get(), m);
+}
+
 enum class VulkanResult
 {
-        Swapchain,
+        CreateSwapchain,
         NoObject,
-        Rendered
+        ObjectRendered
 };
 
 VulkanResult render_vulkan(VkSwapchainKHR swapchain, VkQueue presentation_queue, VkQueue graphics_queue, VkDevice device,
@@ -895,7 +923,7 @@ VulkanResult render_vulkan(VkSwapchainKHR swapchain, VkQueue presentation_queue,
                                        VK_NULL_HANDLE, &image_index);
         if (result == VK_ERROR_OUT_OF_DATE_KHR)
         {
-                return VulkanResult::Swapchain;
+                return VulkanResult::CreateSwapchain;
         }
         else if (result == VK_SUBOPTIMAL_KHR)
         {
@@ -946,14 +974,14 @@ VulkanResult render_vulkan(VkSwapchainKHR swapchain, VkQueue presentation_queue,
         result = vkQueuePresentKHR(presentation_queue, &present_info);
         if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
         {
-                return VulkanResult::Swapchain;
+                return VulkanResult::CreateSwapchain;
         }
         else if (result != VK_SUCCESS)
         {
                 vulkan::vulkan_function_error("vkQueuePresentKHR", result);
         }
 
-        return object_rendered ? VulkanResult::Rendered : VulkanResult::NoObject;
+        return object_rendered ? VulkanResult::ObjectRendered : VulkanResult::NoObject;
 }
 
 template <>
@@ -984,21 +1012,42 @@ void ShowObject<GraphicsAndComputeAPI::Vulkan>::loop()
 
         //
 
-        std::unique_ptr<vulkan::Swapchain> swapchain = std::make_unique<vulkan::Swapchain>(
-                instance.create_swapchain(VULKAN_SURFACE_FORMAT, VULKAN_PREFERRED_IMAGE_COUNT));
+        // В последовательности swapchain, а затем renderer и canvas,
+        // так как буферы renderer и canvas могут зависеть от swapchain
+
+        std::unique_ptr<vulkan::Swapchain> swapchain;
 
         std::unique_ptr<VulkanRenderer> renderer =
                 create_vulkan_renderer(instance, VULKAN_MINIMUM_SAMPLE_COUNT, VULKAN_MAX_FRAMES_IN_FLIGHT);
-        renderer->create_buffers(swapchain.get());
 
         std::unique_ptr<VulkanCanvas> canvas = create_vulkan_canvas(instance, m_text_size);
-        canvas->create_buffers(swapchain.get(), ortho_matrix_for_2d_rendering(swapchain->width(), swapchain->height()));
+
+        //
+
+        vulkan::PresentMode present_mode = VULKAN_INIT_PRESENT_MODE;
+
+        create_swapchain(instance, renderer.get(), canvas.get(), &swapchain, present_mode);
 
         //
 
         m_window.set(window);
         m_renderer.set(renderer);
         m_canvas.set(canvas);
+
+        m_function_set_vertical_sync = [&](bool v) {
+                if (v && present_mode != vulkan::PresentMode::PreferSync)
+                {
+                        present_mode = vulkan::PresentMode::PreferSync;
+                        create_swapchain(instance, renderer.get(), canvas.get(), &swapchain, present_mode);
+                        return;
+                }
+                if (!v && present_mode != vulkan::PresentMode::PreferFast)
+                {
+                        present_mode = vulkan::PresentMode::PreferFast;
+                        create_swapchain(instance, renderer.get(), canvas.get(), &swapchain, present_mode);
+                        return;
+                }
+        };
 
         //
 
@@ -1021,22 +1070,10 @@ void ShowObject<GraphicsAndComputeAPI::Vulkan>::loop()
                 case VulkanResult::NoObject:
                         sleep(last_frame_time);
                         break;
-                case VulkanResult::Rendered:
+                case VulkanResult::ObjectRendered:
                         break;
-                case VulkanResult::Swapchain:
-                        instance.device_wait_idle();
-
-                        canvas->delete_buffers();
-                        renderer->delete_buffers();
-
-                        swapchain.reset();
-                        swapchain = std::make_unique<vulkan::Swapchain>(
-                                instance.create_swapchain(VULKAN_SURFACE_FORMAT, VULKAN_PREFERRED_IMAGE_COUNT));
-
-                        renderer->create_buffers(swapchain.get());
-                        canvas->create_buffers(swapchain.get(),
-                                               ortho_matrix_for_2d_rendering(swapchain->width(), swapchain->height()));
-
+                case VulkanResult::CreateSwapchain:
+                        create_swapchain(instance, renderer.get(), canvas.get(), &swapchain, present_mode);
                         break;
                 }
         }

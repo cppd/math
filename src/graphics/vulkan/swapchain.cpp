@@ -140,25 +140,31 @@ VkSurfaceFormatKHR choose_surface_format(const VkSurfaceFormatKHR& required_surf
               vulkan::color_space_to_string(required_surface_format.colorSpace) + ".\nSupported surface formats:\n" + s);
 }
 
-VkPresentModeKHR choose_present_mode(const std::vector<VkPresentModeKHR>& present_modes)
+VkPresentModeKHR choose_present_mode(const std::vector<VkPresentModeKHR>& present_modes,
+                                     vulkan::PresentMode preferred_present_mode)
 {
-        for (const VkPresentModeKHR& present_mode : present_modes)
+        // VK_PRESENT_MODE_FIFO_KHR всегда поддерживается
+
+        switch (preferred_present_mode)
         {
-                if (present_mode == VK_PRESENT_MODE_MAILBOX_KHR)
+        case vulkan::PresentMode::PreferSync:
+
+                return VK_PRESENT_MODE_FIFO_KHR;
+
+        case vulkan::PresentMode::PreferFast:
+
+                for (const VkPresentModeKHR& present_mode : present_modes)
                 {
-                        return present_mode;
+                        if (present_mode == VK_PRESENT_MODE_IMMEDIATE_KHR)
+                        {
+                                return present_mode;
+                        }
                 }
+
+                return VK_PRESENT_MODE_FIFO_KHR;
         }
 
-        for (const VkPresentModeKHR& present_mode : present_modes)
-        {
-                if (present_mode == VK_PRESENT_MODE_IMMEDIATE_KHR)
-                {
-                        return present_mode;
-                }
-        }
-
-        return VK_PRESENT_MODE_FIFO_KHR;
+        error_fatal("Unknown preferred present mode");
 }
 
 VkExtent2D choose_extent(const VkSurfaceCapabilitiesKHR& capabilities)
@@ -314,7 +320,8 @@ bool surface_suitable(VkSurfaceKHR surface, VkPhysicalDevice physical_device)
 }
 
 Swapchain::Swapchain(VkSurfaceKHR surface, const Device& device, const std::vector<uint32_t>& family_indices,
-                     const VkSurfaceFormatKHR& required_surface_format, int preferred_image_count)
+                     const VkSurfaceFormatKHR& required_surface_format, int preferred_image_count,
+                     PresentMode preferred_present_mode)
 {
         VkSurfaceCapabilitiesKHR surface_capabilities;
         std::vector<VkSurfaceFormatKHR> surface_formats;
@@ -327,7 +334,7 @@ Swapchain::Swapchain(VkSurfaceKHR surface, const Device& device, const std::vect
 
         m_surface_format = choose_surface_format(required_surface_format, surface_formats);
         m_extent = choose_extent(surface_capabilities);
-        VkPresentModeKHR present_mode = choose_present_mode(present_modes);
+        VkPresentModeKHR present_mode = choose_present_mode(present_modes, preferred_present_mode);
         uint32_t image_count = choose_image_count(surface_capabilities, preferred_image_count);
 
         LOG(swapchain_info_string(m_surface_format, preferred_image_count, image_count));

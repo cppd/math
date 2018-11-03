@@ -114,9 +114,11 @@ public:
 
         //
 
-        Swapchain create_swapchain(VkSurfaceFormatKHR required_surface_format, int preferred_image_count)
+        Swapchain create_swapchain(VkSurfaceFormatKHR required_surface_format, int preferred_image_count,
+                                   vulkan::PresentMode preferred_present_mode) const
         {
-                return Swapchain(m_surface, m_device, m_swapchain_family_indices, required_surface_format, preferred_image_count);
+                return Swapchain(m_surface, m_device, m_swapchain_family_indices, required_surface_format, preferred_image_count,
+                                 preferred_present_mode);
         }
 
         template <typename T>

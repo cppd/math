@@ -23,6 +23,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace vulkan
 {
+enum class PresentMode
+{
+        PreferSync,
+        PreferFast
+};
+
 class Swapchain
 {
         VkSurfaceFormatKHR m_surface_format;
@@ -33,7 +39,8 @@ class Swapchain
 
 public:
         Swapchain(VkSurfaceKHR surface, const Device& device, const std::vector<uint32_t>& family_indices,
-                  const VkSurfaceFormatKHR& required_surface_format, int preferred_image_count);
+                  const VkSurfaceFormatKHR& required_surface_format, int preferred_image_count,
+                  PresentMode preferred_present_mode);
 
         Swapchain(const Swapchain&) = delete;
         Swapchain& operator=(const Swapchain&) = delete;
