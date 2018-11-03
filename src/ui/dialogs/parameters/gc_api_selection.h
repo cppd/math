@@ -35,6 +35,10 @@ public:
 
 private:
         Ui::GraphicsAndComputeAPISelection ui;
+
+        GraphicsAndComputeAPI m_api;
+
+        void done(int r) override;
 };
 }
 

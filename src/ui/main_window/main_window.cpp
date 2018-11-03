@@ -42,8 +42,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QDesktopWidget>
 #include <QPointer>
 
-constexpr GraphicsAndComputeAPI DEFAULT_GRAPHICS_AND_COMPUTE_API = GraphicsAndComputeAPI::OpenGL;
-
 // Размер окна по сравнению с экраном.
 constexpr double WINDOW_SIZE_COEF = 0.7;
 // Если true, то размер для графики, если false, то размер всего окна.
@@ -1079,7 +1077,6 @@ void MainWindow::slot_window_first_shown()
                 }
                 else
                 {
-                        api = DEFAULT_GRAPHICS_AND_COMPUTE_API;
                         QPointer ptr(this);
                         if (!dialog::graphics_and_compute_api_selection(this, &api))
                         {

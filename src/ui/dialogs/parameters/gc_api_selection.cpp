@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "gc_api_selection.h"
 
 #include "com/error.h"
+#include "ui/dialogs/messages/message_box.h"
 #include "ui/support/support.h"
 
 #include <QPointer>
@@ -34,11 +35,6 @@ bool GraphicsAndComputeAPISelection::show(GraphicsAndComputeAPI* api)
 {
         ASSERT(api);
 
-        if (!(*api == GraphicsAndComputeAPI::Vulkan || *api == GraphicsAndComputeAPI::OpenGL))
-        {
-                error("Default graphics and compute API is neither Vulkan nor OpenGL");
-        }
-
         std::string vulkan_comment = graphics_and_compute_api_comment(GraphicsAndComputeAPI::Vulkan);
         std::string opengl_comment = graphics_and_compute_api_comment(GraphicsAndComputeAPI::OpenGL);
 
@@ -50,28 +46,52 @@ bool GraphicsAndComputeAPISelection::show(GraphicsAndComputeAPI* api)
         ui.radio_button_vulkan->setText(vulkan_text.c_str());
         ui.radio_button_opengl->setText(opengl_text.c_str());
 
-        ui.radio_button_vulkan->setChecked(*api == GraphicsAndComputeAPI::Vulkan);
-        ui.radio_button_opengl->setChecked(*api == GraphicsAndComputeAPI::OpenGL);
-
         if (QPointer ptr(this); !this->exec() || ptr.isNull())
         {
                 return false;
         }
 
-        if (ui.radio_button_vulkan->isChecked() && !ui.radio_button_opengl->isChecked())
+        *api = m_api;
+
+        return true;
+}
+
+void GraphicsAndComputeAPISelection::done(int r)
+{
+        if (r != QDialog::Accepted)
         {
-                *api = GraphicsAndComputeAPI::Vulkan;
+                QDialog::done(r);
+                return;
         }
-        else if (!ui.radio_button_vulkan->isChecked() && ui.radio_button_opengl->isChecked())
+
+        bool vulkan = ui.radio_button_vulkan->isChecked();
+        bool opengl = ui.radio_button_opengl->isChecked();
+
+        int count = 0;
+        count += vulkan ? 1 : 0;
+        count += opengl ? 1 : 0;
+        if (count > 1)
         {
-                *api = GraphicsAndComputeAPI::OpenGL;
+                std::string msg = "Button error";
+                dialog::message_critical(this, msg);
+                return;
+        }
+        else if (vulkan)
+        {
+                m_api = GraphicsAndComputeAPI::Vulkan;
+        }
+        else if (opengl)
+        {
+                m_api = GraphicsAndComputeAPI::OpenGL;
         }
         else
         {
-                error("Failed to select graphics and compute API");
+                std::string msg = "Graphics and compute API not selected";
+                dialog::message_critical(this, msg);
+                return;
         }
 
-        return true;
+        QDialog::done(r);
 }
 }
 
