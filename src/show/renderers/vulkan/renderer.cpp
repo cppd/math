@@ -47,8 +47,7 @@ constexpr std::initializer_list<const char*> DEVICE_EXTENSIONS =
 };
 constexpr std::initializer_list<vulkan::PhysicalDeviceFeatures> REQUIRED_DEVICE_FEATURES =
 {
-        vulkan::PhysicalDeviceFeatures::GeometryShader,
-        vulkan::PhysicalDeviceFeatures::SamplerAnisotropy
+        vulkan::PhysicalDeviceFeatures::GeometryShader
 };
 constexpr std::initializer_list<VkFormat> DEPTH_IMAGE_FORMATS =
 {
@@ -1076,12 +1075,13 @@ class Renderer final : public VulkanRenderer
         }
 
 public:
-        Renderer(const vulkan::VulkanInstance& instance, int minimum_sample_count, bool sample_shading, int max_frames_in_flight)
+        Renderer(const vulkan::VulkanInstance& instance, int minimum_sample_count, bool sample_shading, bool sampler_anisotropy,
+                 int max_frames_in_flight)
                 : m_minimum_sample_count(minimum_sample_count),
                   m_sample_shading(sample_shading),
                   m_instance(instance),
                   m_shadow_available_semaphores(vulkan::create_semaphores(m_instance.device(), max_frames_in_flight)),
-                  m_texture_sampler(create_texture_sampler(m_instance.device())),
+                  m_texture_sampler(create_texture_sampler(m_instance.device(), sampler_anisotropy)),
                   m_shadow_sampler(create_shadow_sampler(m_instance.device())),
                   //
                   m_triangles_material_descriptor_set_layout(vulkan::create_descriptor_set_layout(
@@ -1149,7 +1149,8 @@ std::vector<vulkan::PhysicalDeviceFeatures> VulkanRenderer::required_device_feat
 }
 
 std::unique_ptr<VulkanRenderer> create_vulkan_renderer(const vulkan::VulkanInstance& instance, int minimum_sample_count,
-                                                       bool sample_shading, int max_frames_in_flight)
+                                                       bool sample_shading, bool sampler_anisotropy, int max_frames_in_flight)
 {
-        return std::make_unique<Renderer>(instance, minimum_sample_count, sample_shading, max_frames_in_flight);
+        return std::make_unique<Renderer>(instance, minimum_sample_count, sample_shading, sampler_anisotropy,
+                                          max_frames_in_flight);
 }

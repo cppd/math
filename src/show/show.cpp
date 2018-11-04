@@ -61,6 +61,7 @@ constexpr int OPENGL_MINIMUM_SAMPLE_COUNT = 4;
 
 constexpr int VULKAN_MINIMUM_SAMPLE_COUNT = 4;
 constexpr bool VULKAN_SAMPLE_SHADING = true; // supersampling
+constexpr bool VULKAN_SAMPLER_ANISOTROPY = true; // anisotropic filtering
 
 constexpr double ZOOM_BASE = 1.1;
 constexpr double ZOOM_EXP_MIN = -50;
@@ -988,17 +989,28 @@ VulkanResult render_vulkan(VkSwapchainKHR swapchain, VkQueue presentation_queue,
 }
 
 template <typename... T>
-std::vector<vulkan::PhysicalDeviceFeatures> device_features(const T&... features)
+std::vector<vulkan::PhysicalDeviceFeatures> merge_device_features(const T&... features)
 {
         std::vector<vulkan::PhysicalDeviceFeatures> res;
         (res.insert(res.end(), features.cbegin(), features.cend()), ...);
         return unique_elements(std::move(res));
 }
-std::vector<vulkan::PhysicalDeviceFeatures> sample_shading_device_features(int sample_count, bool sample_shading)
+std::vector<vulkan::PhysicalDeviceFeatures> device_features_sample_shading(int sample_count, bool sample_shading)
 {
         if (sample_count > 1 && sample_shading)
         {
                 return {vulkan::PhysicalDeviceFeatures::SampleRateShading};
+        }
+        else
+        {
+                return {};
+        }
+}
+std::vector<vulkan::PhysicalDeviceFeatures> device_features_sampler_anisotropy(bool sampler_anisotropy)
+{
+        if (sampler_anisotropy)
+        {
+                return {vulkan::PhysicalDeviceFeatures::SamplerAnisotropy};
         }
         else
         {
@@ -1017,8 +1029,9 @@ void ShowObject<GraphicsAndComputeAPI::Vulkan>::loop()
 
         vulkan::VulkanInstance instance(
                 VulkanRenderer::instance_extensions() + VulkanWindow::instance_extensions(), VulkanRenderer::device_extensions(),
-                device_features(VulkanRenderer::required_device_features(),
-                                sample_shading_device_features(VULKAN_MINIMUM_SAMPLE_COUNT, VULKAN_SAMPLE_SHADING)),
+                merge_device_features(VulkanRenderer::required_device_features(),
+                                      device_features_sample_shading(VULKAN_MINIMUM_SAMPLE_COUNT, VULKAN_SAMPLE_SHADING),
+                                      device_features_sampler_anisotropy(VULKAN_SAMPLER_ANISOTROPY)),
                 {} /*optional_features*/, [w = window.get()](VkInstance i) { return w->create_surface(i); });
 
         std::vector<vulkan::Fence> in_flight_fences =
@@ -1041,7 +1054,8 @@ void ShowObject<GraphicsAndComputeAPI::Vulkan>::loop()
         std::unique_ptr<vulkan::Swapchain> swapchain;
 
         std::unique_ptr<VulkanRenderer> renderer =
-                create_vulkan_renderer(instance, VULKAN_MINIMUM_SAMPLE_COUNT, VULKAN_SAMPLE_SHADING, VULKAN_MAX_FRAMES_IN_FLIGHT);
+                create_vulkan_renderer(instance, VULKAN_MINIMUM_SAMPLE_COUNT, VULKAN_SAMPLE_SHADING, VULKAN_SAMPLER_ANISOTROPY,
+                                       VULKAN_MAX_FRAMES_IN_FLIGHT);
 
         std::unique_ptr<VulkanCanvas> canvas = create_vulkan_canvas(instance, m_text_size);
 

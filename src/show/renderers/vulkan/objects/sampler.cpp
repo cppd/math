@@ -17,7 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "sampler.h"
 
-vulkan::Sampler create_texture_sampler(const vulkan::Device& device)
+#include "com/error.h"
+#include "com/log.h"
+
+vulkan::Sampler create_texture_sampler(const vulkan::Device& device, bool anisotropy)
 {
         VkSamplerCreateInfo create_info = {};
         create_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
@@ -29,8 +32,20 @@ vulkan::Sampler create_texture_sampler(const vulkan::Device& device)
         create_info.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
         create_info.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
 
-        create_info.anisotropyEnable = device.features().samplerAnisotropy;
-        create_info.maxAnisotropy = 16;
+        if (anisotropy)
+        {
+                if (!device.features().samplerAnisotropy)
+                {
+                        error("Sampler anisotropy required but not supported");
+                }
+                create_info.anisotropyEnable = VK_TRUE;
+                create_info.maxAnisotropy = 16;
+                LOG("Anisotropy enabled");
+        }
+        else
+        {
+                create_info.anisotropyEnable = VK_FALSE;
+        }
 
         create_info.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
 

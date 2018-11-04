@@ -71,4 +71,4 @@ struct VulkanRenderer
 };
 
 std::unique_ptr<VulkanRenderer> create_vulkan_renderer(const vulkan::VulkanInstance& instance, int minimum_sample_count,
-                                                       bool sample_shading, int max_frames_in_flight);
+                                                       bool sample_shading, bool sampler_anisotropy, int max_frames_in_flight);
