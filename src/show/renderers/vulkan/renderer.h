@@ -65,11 +65,10 @@ struct VulkanRenderer
         static std::vector<std::string> instance_extensions();
         static std::vector<std::string> device_extensions();
         static std::vector<vulkan::PhysicalDeviceFeatures> required_device_features();
-        static std::vector<vulkan::PhysicalDeviceFeatures> optional_device_features();
 
         virtual void create_buffers(const vulkan::Swapchain* swapchain) = 0;
         virtual void delete_buffers() = 0;
 };
 
 std::unique_ptr<VulkanRenderer> create_vulkan_renderer(const vulkan::VulkanInstance& instance, int minimum_sample_count,
-                                                       int max_frames_in_flight);
+                                                       bool sample_shading, int max_frames_in_flight);

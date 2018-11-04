@@ -436,7 +436,8 @@ void MainBuffers::create_command_buffers(const Color& clear_color, const std::fu
         }
 }
 
-VkPipeline MainBuffers::create_pipeline(VkPrimitiveTopology primitive_topology, const std::vector<const vulkan::Shader*>& shaders,
+VkPipeline MainBuffers::create_pipeline(VkPrimitiveTopology primitive_topology, bool sample_shading,
+                                        const std::vector<const vulkan::Shader*>& shaders,
                                         const vulkan::PipelineLayout& pipeline_layout,
                                         const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
                                         const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions)
@@ -449,6 +450,7 @@ VkPipeline MainBuffers::create_pipeline(VkPrimitiveTopology primitive_topology, 
         info.render_pass = m_render_pass;
         info.sub_pass = 0;
         info.sample_count = m_color_attachment ? m_color_attachment->sample_count() : VK_SAMPLE_COUNT_1_BIT;
+        info.sample_shading = sample_shading;
         info.pipeline_layout = pipeline_layout;
         info.width = m_depth_attachment->width();
         info.height = m_depth_attachment->height();
@@ -534,6 +536,7 @@ VkPipeline ShadowBuffers::create_pipeline(VkPrimitiveTopology primitive_topology
         info.render_pass = m_render_pass;
         info.sub_pass = 0;
         info.sample_count = VK_SAMPLE_COUNT_1_BIT;
+        info.sample_shading = false;
         info.pipeline_layout = pipeline_layout;
         info.width = m_depth_attachment->width();
         info.height = m_depth_attachment->height();

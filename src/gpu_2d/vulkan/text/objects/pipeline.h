@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 struct TextPipelineCreateInfo
 {
-        std::optional<const vulkan::Device*> device;
+        std::optional<VkDevice> device;
         std::optional<VkRenderPass> render_pass;
         std::optional<VkPipelineLayout> pipeline_layout;
         std::optional<uint32_t> width;

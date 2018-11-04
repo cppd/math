@@ -124,7 +124,7 @@ vulkan::CommandBuffers create_command_buffers(VkDevice device, uint32_t width, u
 }
 }
 
-TextBuffers::TextBuffers(const vulkan::Swapchain& swapchain, const vulkan::Device& device, VkCommandPool graphics_command_pool)
+TextBuffers::TextBuffers(const vulkan::Swapchain& swapchain, VkDevice device, VkCommandPool graphics_command_pool)
         : m_device(device),
           m_graphics_command_pool(graphics_command_pool),
           m_width(swapchain.width()),
@@ -160,7 +160,7 @@ VkPipeline TextBuffers::create_pipeline(const std::vector<const vulkan::Shader*>
 
         TextPipelineCreateInfo info;
 
-        info.device = &m_device;
+        info.device = m_device;
         info.render_pass = m_render_pass;
         info.pipeline_layout = pipeline_layout;
         info.width = m_width;

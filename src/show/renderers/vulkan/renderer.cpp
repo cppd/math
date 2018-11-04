@@ -48,11 +48,7 @@ constexpr std::initializer_list<const char*> DEVICE_EXTENSIONS =
 constexpr std::initializer_list<vulkan::PhysicalDeviceFeatures> REQUIRED_DEVICE_FEATURES =
 {
         vulkan::PhysicalDeviceFeatures::GeometryShader,
-        vulkan::PhysicalDeviceFeatures::SampleRateShading,
         vulkan::PhysicalDeviceFeatures::SamplerAnisotropy
-};
-constexpr std::initializer_list<vulkan::PhysicalDeviceFeatures> OPTIONAL_DEVICE_FEATURES =
-{
 };
 constexpr std::initializer_list<VkFormat> DEPTH_IMAGE_FORMATS =
 {
@@ -607,6 +603,7 @@ class Renderer final : public VulkanRenderer
         const std::thread::id m_thread_id = std::this_thread::get_id();
 
         const int m_minimum_sample_count;
+        const bool m_sample_shading;
 
         Color m_clear_color = Color(0);
 
@@ -933,19 +930,19 @@ class Renderer final : public VulkanRenderer
                 m_triangles_shared_shader_memory.set_shadow_texture(m_shadow_sampler, m_shadow_buffers->texture());
 
                 m_triangles_pipeline = m_main_buffers->create_pipeline(
-                        VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, {&m_triangles_vert, &m_triangles_geom, &m_triangles_frag},
-                        m_triangles_pipeline_layout, shaders::Vertex::binding_descriptions(),
-                        shaders::Vertex::triangles_attribute_descriptions());
+                        VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, m_sample_shading,
+                        {&m_triangles_vert, &m_triangles_geom, &m_triangles_frag}, m_triangles_pipeline_layout,
+                        shaders::Vertex::binding_descriptions(), shaders::Vertex::triangles_attribute_descriptions());
                 m_shadow_pipeline = m_shadow_buffers->create_pipeline(
                         VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, {&m_shadow_vert, &m_shadow_frag}, m_shadow_pipeline_layout,
                         shaders::Vertex::binding_descriptions(), shaders::Vertex::shadow_attribute_descriptions());
 
                 m_points_pipeline = m_main_buffers->create_pipeline(
-                        VK_PRIMITIVE_TOPOLOGY_POINT_LIST, {&m_points_vert, &m_points_frag}, m_points_pipeline_layout,
+                        VK_PRIMITIVE_TOPOLOGY_POINT_LIST, false, {&m_points_vert, &m_points_frag}, m_points_pipeline_layout,
                         shaders::PointVertex::binding_descriptions(), shaders::PointVertex::attribute_descriptions());
 
                 m_lines_pipeline = m_main_buffers->create_pipeline(
-                        VK_PRIMITIVE_TOPOLOGY_LINE_LIST, {&m_points_vert, &m_points_frag}, m_points_pipeline_layout,
+                        VK_PRIMITIVE_TOPOLOGY_LINE_LIST, false, {&m_points_vert, &m_points_frag}, m_points_pipeline_layout,
                         shaders::PointVertex::binding_descriptions(), shaders::PointVertex::attribute_descriptions());
 
                 create_command_buffers(false /*wait_idle*/);
@@ -1079,8 +1076,9 @@ class Renderer final : public VulkanRenderer
         }
 
 public:
-        Renderer(const vulkan::VulkanInstance& instance, int minimum_sample_count, int max_frames_in_flight)
+        Renderer(const vulkan::VulkanInstance& instance, int minimum_sample_count, bool sample_shading, int max_frames_in_flight)
                 : m_minimum_sample_count(minimum_sample_count),
+                  m_sample_shading(sample_shading),
                   m_instance(instance),
                   m_shadow_available_semaphores(vulkan::create_semaphores(m_instance.device(), max_frames_in_flight)),
                   m_texture_sampler(create_texture_sampler(m_instance.device())),
@@ -1149,13 +1147,9 @@ std::vector<vulkan::PhysicalDeviceFeatures> VulkanRenderer::required_device_feat
 {
         return REQUIRED_DEVICE_FEATURES;
 }
-std::vector<vulkan::PhysicalDeviceFeatures> VulkanRenderer::optional_device_features()
-{
-        return OPTIONAL_DEVICE_FEATURES;
-}
 
 std::unique_ptr<VulkanRenderer> create_vulkan_renderer(const vulkan::VulkanInstance& instance, int minimum_sample_count,
-                                                       int max_frames_in_flight)
+                                                       bool sample_shading, int max_frames_in_flight)
 {
-        return std::make_unique<Renderer>(instance, minimum_sample_count, max_frames_in_flight);
+        return std::make_unique<Renderer>(instance, minimum_sample_count, sample_shading, max_frames_in_flight);
 }

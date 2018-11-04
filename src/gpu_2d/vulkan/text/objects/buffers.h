@@ -30,7 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 class TextBuffers
 {
-        const vulkan::Device& m_device;
+        VkDevice m_device;
         VkCommandPool m_graphics_command_pool;
 
         //
@@ -43,7 +43,7 @@ class TextBuffers
         vulkan::CommandBuffers m_command_buffers;
 
 public:
-        TextBuffers(const vulkan::Swapchain& swapchain, const vulkan::Device& device, VkCommandPool graphics_command_pool);
+        TextBuffers(const vulkan::Swapchain& swapchain, VkDevice device, VkCommandPool graphics_command_pool);
 
         TextBuffers(const TextBuffers&) = delete;
         TextBuffers& operator=(const TextBuffers&) = delete;

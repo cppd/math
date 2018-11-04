@@ -77,7 +77,7 @@ vulkan::Pipeline create_text_pipeline(const TextPipelineCreateInfo& info)
         VkPipelineMultisampleStateCreateInfo multisampling_state_info = {};
         multisampling_state_info.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
         multisampling_state_info.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
-        multisampling_state_info.sampleShadingEnable = info.device.value()->features().sampleRateShading;
+        multisampling_state_info.sampleShadingEnable = VK_FALSE;
         multisampling_state_info.minSampleShading = 1.0f;
         // multisampling_state_info.pSampleMask = nullptr;
         // multisampling_state_info.alphaToCoverageEnable = VK_FALSE;
@@ -148,5 +148,5 @@ vulkan::Pipeline create_text_pipeline(const TextPipelineCreateInfo& info)
         // create_info.basePipelineHandle = VK_NULL_HANDLE;
         // create_info.basePipelineIndex = -1;
 
-        return vulkan::Pipeline(*info.device.value(), create_info);
+        return vulkan::Pipeline(info.device.value(), create_info);
 }

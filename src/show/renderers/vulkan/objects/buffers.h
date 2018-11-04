@@ -62,7 +62,8 @@ public:
         void delete_command_buffers();
         const VkCommandBuffer& command_buffer(uint32_t index) const noexcept;
 
-        VkPipeline create_pipeline(VkPrimitiveTopology primitive_topology, const std::vector<const vulkan::Shader*>& shaders,
+        VkPipeline create_pipeline(VkPrimitiveTopology primitive_topology, bool sample_shading,
+                                   const std::vector<const vulkan::Shader*>& shaders,
                                    const vulkan::PipelineLayout& pipeline_layout,
                                    const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
                                    const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions);

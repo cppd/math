@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "pipeline.h"
 
+#include "com/error.h"
+#include "com/log.h"
 #include "graphics/vulkan/create.h"
 
 vulkan::Pipeline create_graphics_pipeline(const GraphicsPipelineCreateInfo& info)
@@ -84,8 +86,20 @@ vulkan::Pipeline create_graphics_pipeline(const GraphicsPipelineCreateInfo& info
         VkPipelineMultisampleStateCreateInfo multisampling_state_info = {};
         multisampling_state_info.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
         multisampling_state_info.rasterizationSamples = info.sample_count.value();
-        multisampling_state_info.sampleShadingEnable = info.device.value()->features().sampleRateShading;
-        multisampling_state_info.minSampleShading = 1.0f;
+        if (info.sample_count.value() != VK_SAMPLE_COUNT_1_BIT && info.sample_shading.value())
+        {
+                if (!info.device.value()->features().sampleRateShading)
+                {
+                        error("Sample shading required but not supported");
+                }
+                multisampling_state_info.sampleShadingEnable = VK_TRUE;
+                multisampling_state_info.minSampleShading = 1.0f;
+                LOG("Sample shading enabled");
+        }
+        else
+        {
+                multisampling_state_info.sampleShadingEnable = VK_FALSE;
+        }
         // multisampling_state_info.pSampleMask = nullptr;
         // multisampling_state_info.alphaToCoverageEnable = VK_FALSE;
         // multisampling_state_info.alphaToOneEnable = VK_FALSE;
