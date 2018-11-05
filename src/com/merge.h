@@ -17,8 +17,31 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <string>
+#include "com/alg.h"
+#include "com/type_detect.h"
+
 #include <vector>
 
-std::vector<const char*> const_char_pointer_vector(const std::vector<std::string>& v);
-std::vector<std::string> string_vector(const std::vector<const char*>& v);
+namespace merge_implementation
+{
+template <typename T1, typename T2>
+void add(std::vector<T1>* v, const T2& e)
+{
+        if constexpr (has_begin_end<T2>)
+        {
+                v->insert(v->end(), e.cbegin(), e.cend());
+        }
+        else
+        {
+                v->insert(v->end(), e);
+        }
+}
+}
+
+template <typename R, typename... T>
+std::vector<R> merge(const T&... data)
+{
+        std::vector<R> res;
+        (merge_implementation::add(&res, data), ...);
+        return unique_elements(std::move(res));
+}

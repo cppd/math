@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/alg.h"
 #include "com/log.h"
+#include "com/merge.h"
 #include "com/string_vector.h"
 
 namespace vulkan
@@ -38,13 +39,13 @@ VulkanInstance::VulkanInstance(const std::vector<std::string>& required_instance
           m_surface(m_instance, create_surface),
           //
           m_physical_device(find_physical_device(m_instance, m_surface, API_VERSION_MAJOR, API_VERSION_MINOR,
-                                                 required_device_extensions + VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+                                                 merge<std::string>(required_device_extensions, VK_KHR_SWAPCHAIN_EXTENSION_NAME),
                                                  required_features)),
           m_device(create_device(
                   m_physical_device,
                   {m_physical_device.graphics(), m_physical_device.compute(), m_physical_device.transfer(),
                    m_physical_device.presentation()},
-                  required_device_extensions + VK_KHR_SWAPCHAIN_EXTENSION_NAME, validation_layers(),
+                  merge<std::string>(required_device_extensions, VK_KHR_SWAPCHAIN_EXTENSION_NAME), validation_layers(),
                   make_enabled_device_features(required_features, optional_features, m_physical_device.features()))),
           //
           m_graphics_command_pool(create_command_pool(m_device, m_physical_device.graphics())),

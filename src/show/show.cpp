@@ -19,13 +19,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "camera.h"
 
-#include "com/alg.h"
 #include "com/conversion.h"
 #include "com/error.h"
 #include "com/frequency.h"
 #include "com/log.h"
 #include "com/mat.h"
 #include "com/mat_alg.h"
+#include "com/merge.h"
 #include "com/print.h"
 #include "com/string_vector.h"
 #include "com/thread.h"
@@ -988,13 +988,6 @@ VulkanResult render_vulkan(VkSwapchainKHR swapchain, VkQueue presentation_queue,
         return object_rendered ? VulkanResult::ObjectRendered : VulkanResult::NoObject;
 }
 
-template <typename... T>
-std::vector<vulkan::PhysicalDeviceFeatures> merge_device_features(const T&... features)
-{
-        std::vector<vulkan::PhysicalDeviceFeatures> res;
-        (res.insert(res.end(), features.cbegin(), features.cend()), ...);
-        return unique_elements(std::move(res));
-}
 std::vector<vulkan::PhysicalDeviceFeatures> device_features_sample_shading(int sample_count, bool sample_shading)
 {
         if (sample_count > 1 && sample_shading)
@@ -1028,10 +1021,12 @@ void ShowObject<GraphicsAndComputeAPI::Vulkan>::loop()
         std::unique_ptr<VulkanWindow> window = create_vulkan_window(this);
 
         vulkan::VulkanInstance instance(
-                VulkanRenderer::instance_extensions() + VulkanWindow::instance_extensions(), VulkanRenderer::device_extensions(),
-                merge_device_features(VulkanRenderer::required_device_features(),
-                                      device_features_sample_shading(VULKAN_MINIMUM_SAMPLE_COUNT, VULKAN_SAMPLE_SHADING),
-                                      device_features_sampler_anisotropy(VULKAN_SAMPLER_ANISOTROPY)),
+                merge<std::string>(VulkanRenderer::instance_extensions(), VulkanWindow::instance_extensions()),
+                VulkanRenderer::device_extensions(),
+                merge<vulkan::PhysicalDeviceFeatures>(
+                        VulkanRenderer::required_device_features(),
+                        device_features_sample_shading(VULKAN_MINIMUM_SAMPLE_COUNT, VULKAN_SAMPLE_SHADING),
+                        device_features_sampler_anisotropy(VULKAN_SAMPLER_ANISOTROPY)),
                 {} /*optional_features*/, [w = window.get()](VkInstance i) { return w->create_surface(i); });
 
         std::vector<vulkan::Fence> in_flight_fences =

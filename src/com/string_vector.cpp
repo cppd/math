@@ -17,34 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "string_vector.h"
 
-std::vector<std::string> operator+(const std::vector<std::string>& v1, const std::vector<std::string>& v2)
-{
-        std::vector<std::string> res;
-        res.reserve(v1.size() + v2.size());
-
-        for (const std::string& s : v1)
-        {
-                res.push_back(s);
-        }
-
-        for (const std::string& s : v2)
-        {
-                res.push_back(s);
-        }
-
-        return res;
-}
-
-std::vector<std::string> operator+(const std::vector<std::string>& v, const std::string& s)
-{
-        return v + std::vector<std::string>({s});
-}
-
-std::vector<std::string> operator+(const std::string& s, const std::vector<std::string>& v)
-{
-        return std::vector<std::string>({s}) + v;
-}
-
 std::vector<const char*> const_char_pointer_vector(const std::vector<std::string>& v)
 {
         std::vector<const char*> res;
