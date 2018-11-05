@@ -152,8 +152,6 @@ Instance create_instance(int api_version_major, int api_version_minor, std::vect
 
         Instance instance(create_info);
 
-        LOG(overview_physical_devices(instance));
-
         return instance;
 }
 

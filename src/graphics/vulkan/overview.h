@@ -23,5 +23,5 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace vulkan
 {
 std::string overview();
-std::string overview_physical_devices(VkInstance instance);
+std::string overview_physical_devices(VkInstance instance, VkSurfaceKHR surface);
 }

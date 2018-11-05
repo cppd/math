@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "overview.h"
 
 #include "device.h"
+#include "error.h"
 #include "print.h"
 #include "query.h"
 
@@ -25,6 +26,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "window/vulkan/window.h"
 
 #include <algorithm>
+#include <stack>
+#include <string_view>
+#include <tuple>
+#include <vector>
 
 namespace
 {
@@ -116,15 +121,21 @@ std::string overview()
         return s;
 }
 
-std::string overview_physical_devices(VkInstance instance)
+std::string overview_physical_devices(VkInstance instance, VkSurfaceKHR surface)
 {
-        const std::string INDENT = "  ";
+        struct Node
+        {
+                std::string name;
+                std::vector<size_t> children;
+                Node(const std::string_view& s) : name(s)
+                {
+                }
+        };
 
-        std::string indent;
+        std::vector<Node> nodes;
 
-        std::string s;
-
-        s += "Physical Devices";
+        nodes.emplace_back("Physical Devices");
+        size_t physical_devices_node = nodes.size() - 1;
 
         for (const VkPhysicalDevice& device : physical_devices(instance))
         {
@@ -133,52 +144,54 @@ std::string overview_physical_devices(VkInstance instance)
                 vkGetPhysicalDeviceProperties(device, &properties);
                 vkGetPhysicalDeviceFeatures(device, &features);
 
-                indent = "\n" + INDENT;
-                s += indent;
-                s += properties.deviceName;
+                nodes.emplace_back(properties.deviceName);
+                nodes[physical_devices_node].children.push_back(nodes.size() - 1);
 
-                indent = "\n" + INDENT + INDENT;
-                s += indent;
-                s += physical_device_type_to_string(properties.deviceType);
+                size_t physical_device_node = nodes.size() - 1;
 
-                indent = "\n" + INDENT + INDENT;
-                s += indent;
-                s += "API Version " + api_version_to_string(properties.apiVersion);
+                nodes.emplace_back(physical_device_type_to_string(properties.deviceType));
+                nodes[physical_device_node].children.push_back(nodes.size() - 1);
 
-                indent = "\n" + INDENT + INDENT;
-                s += indent;
-                s += "Extensions";
-                indent = "\n" + INDENT + INDENT + INDENT;
+                nodes.emplace_back("API Version " + api_version_to_string(properties.apiVersion));
+                nodes[physical_device_node].children.push_back(nodes.size() - 1);
+
+                nodes.emplace_back("Extensions");
+                nodes[physical_device_node].children.push_back(nodes.size() - 1);
+
+                size_t extension_node = nodes.size() - 1;
                 try
                 {
                         for (const std::string& e : sorted(supported_physical_device_extensions(device)))
                         {
-                                s += indent;
-                                s += e;
+                                nodes.emplace_back(e);
+                                nodes[extension_node].children.push_back(nodes.size() - 1);
                         }
                 }
                 catch (std::exception& e)
                 {
-                        indent = "\n" + INDENT + INDENT + INDENT;
-                        s += indent;
-                        s += e.what();
+                        nodes.emplace_back(e.what());
+                        nodes[extension_node].children.push_back(nodes.size() - 1);
                 }
 
-                indent = "\n" + INDENT + INDENT;
-                s += indent;
-                s += "QueueFamilies";
+                nodes.emplace_back("QueueFamilies");
+                nodes[physical_device_node].children.push_back(nodes.size() - 1);
+
+                size_t queue_families_node = nodes.size() - 1;
                 try
                 {
-                        for (const VkQueueFamilyProperties& p : physical_device_queue_families(device))
+                        std::vector<VkQueueFamilyProperties> families = physical_device_queue_families(device);
+
+                        for (size_t family_index = 0; family_index < families.size(); ++family_index)
                         {
-                                indent = "\n" + INDENT + INDENT + INDENT;
+                                const VkQueueFamilyProperties& p = families[family_index];
 
-                                s += indent + "Family";
+                                nodes.emplace_back("Family " + to_string(family_index));
+                                nodes[queue_families_node].children.push_back(nodes.size() - 1);
 
-                                indent = "\n" + INDENT + INDENT + INDENT + INDENT;
+                                size_t queue_family_node = nodes.size() - 1;
 
-                                s += indent;
-                                s += "queue count: " + to_string(p.queueCount);
+                                nodes.emplace_back("queue count: " + to_string(p.queueCount));
+                                nodes[queue_family_node].children.push_back(nodes.size() - 1);
 
                                 if (p.queueCount < 1)
                                 {
@@ -187,31 +200,64 @@ std::string overview_physical_devices(VkInstance instance)
 
                                 if (p.queueFlags & VK_QUEUE_GRAPHICS_BIT)
                                 {
-                                        s += indent + "graphics";
+                                        nodes.emplace_back("graphics");
+                                        nodes[queue_family_node].children.push_back(nodes.size() - 1);
                                 }
                                 if (p.queueFlags & VK_QUEUE_COMPUTE_BIT)
                                 {
-                                        s += indent + "compute";
+                                        nodes.emplace_back("compute");
+                                        nodes[queue_family_node].children.push_back(nodes.size() - 1);
                                 }
                                 if (p.queueFlags & VK_QUEUE_TRANSFER_BIT)
                                 {
-                                        s += indent + "transfer";
+                                        nodes.emplace_back("transfer");
+                                        nodes[queue_family_node].children.push_back(nodes.size() - 1);
                                 }
                                 if (p.queueFlags & VK_QUEUE_SPARSE_BINDING_BIT)
                                 {
-                                        s += indent + "sparse_binding";
+                                        nodes.emplace_back("sparse binding");
+                                        nodes[queue_family_node].children.push_back(nodes.size() - 1);
                                 }
                                 if (p.queueFlags & VK_QUEUE_PROTECTED_BIT)
                                 {
-                                        s += indent + "protected";
+                                        nodes.emplace_back("protected");
+                                        nodes[queue_family_node].children.push_back(nodes.size() - 1);
+                                }
+                                VkBool32 presentation_support;
+                                VkResult result = vkGetPhysicalDeviceSurfaceSupportKHR(device, family_index, surface,
+                                                                                       &presentation_support);
+                                if (result != VK_SUCCESS)
+                                {
+                                        vulkan_function_error("vkGetPhysicalDeviceSurfaceSupportKHR", result);
+                                }
+                                if (presentation_support == VK_TRUE)
+                                {
+                                        nodes.emplace_back("presentation");
+                                        nodes[queue_family_node].children.push_back(nodes.size() - 1);
                                 }
                         }
                 }
                 catch (std::exception& e)
                 {
-                        indent = "\n" + INDENT + INDENT + INDENT;
-                        s += indent;
-                        s += e.what();
+                        nodes.emplace_back(e.what());
+                        nodes[queue_families_node].children.push_back(nodes.size() - 1);
+                }
+        }
+
+        std::string s;
+
+        std::stack<std::tuple<size_t, unsigned>> stack({{0, 0}});
+        while (!stack.empty())
+        {
+                auto index = std::get<0>(stack.top());
+                auto level = std::get<1>(stack.top());
+                stack.pop();
+
+                s += '\n' + std::string(level * 2, ' ') + nodes[index].name;
+
+                for (auto iter = nodes[index].children.crbegin(); iter != nodes[index].children.crend(); ++iter)
+                {
+                        stack.push({*iter, level + 1});
                 }
         }
 

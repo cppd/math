@@ -18,11 +18,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "device.h"
 
 #include "error.h"
+#include "overview.h"
 #include "query.h"
 #include "swapchain.h"
 
 #include "com/alg.h"
 #include "com/error.h"
+#include "com/log.h"
 #include "com/string_vector.h"
 
 #include <algorithm>
@@ -354,6 +356,8 @@ PhysicalDevice find_physical_device(VkInstance instance, VkSurfaceKHR surface, i
                                     const std::vector<std::string>& required_extensions,
                                     const std::vector<PhysicalDeviceFeatures>& required_features)
 {
+        LOG(overview_physical_devices(instance, surface));
+
         const uint32_t required_api_version = VK_MAKE_VERSION(api_version_major, api_version_minor, 0);
 
         for (const VkPhysicalDevice& physical_device : physical_devices(instance))
