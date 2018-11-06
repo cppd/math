@@ -17,9 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "obj.h"
-
 #include "com/vec.h"
+#include "obj/obj.h"
 
 #include <array>
 #include <memory>

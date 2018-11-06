@@ -15,14 +15,13 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "obj_points.h"
-
-#include "obj_alg.h"
+#include "points.h"
 
 #include "com/error.h"
 #include "com/log.h"
 #include "com/print.h"
 #include "com/time.h"
+#include "obj/alg/alg.h"
 
 namespace
 {

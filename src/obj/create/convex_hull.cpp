@@ -15,9 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "obj_convex_hull.h"
-
-#include "obj_alg.h"
+#include "convex_hull.h"
 
 #include "com/error.h"
 #include "com/log.h"
@@ -25,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/time.h"
 #include "com/vec.h"
 #include "geometry/core/convex_hull.h"
+#include "obj/alg/alg.h"
 
 #include <unordered_map>
 

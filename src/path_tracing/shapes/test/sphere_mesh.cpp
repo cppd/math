@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/random/engine.h"
 #include "com/time.h"
 #include "geometry/core/convex_hull.h"
-#include "obj/obj_facets.h"
+#include "obj/create/facets.h"
 #include "path_tracing/sampling/sphere.h"
 
 #include <random>

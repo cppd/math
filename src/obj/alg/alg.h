@@ -17,13 +17,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "obj.h"
-
 #include "com/alg.h"
 #include "com/error.h"
 #include "com/mat.h"
 #include "com/mat_alg.h"
 #include "com/types.h"
+#include "obj/obj.h"
 
 #include <algorithm>
 #include <tuple>

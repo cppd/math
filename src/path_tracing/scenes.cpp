@@ -19,8 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/color/color.h"
 #include "com/color/colors.h"
-#include "obj/obj_alg.h"
-#include "obj/obj_file_load.h"
+#include "obj/alg/alg.h"
+#include "obj/file/file_load.h"
 #include "path_tracing/visible_lights.h"
 #include "path_tracing/visible_projectors.h"
 

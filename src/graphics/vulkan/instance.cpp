@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/alg.h"
 #include "com/log.h"
 #include "com/merge.h"
-#include "com/string_vector.h"
+#include "com/string/vector.h"
 
 namespace vulkan
 {

@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/names.h"
 #include "com/string/str.h"
 #include "com/time.h"
-#include "obj/obj_file_load.h"
+#include "obj/file/file_load.h"
 #include "path_tracing/image/image.h"
 #include "path_tracing/painter.h"
 #include "path_tracing/scenes.h"

@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/mat_alg.h"
 #include "com/merge.h"
 #include "com/print.h"
-#include "com/string_vector.h"
+#include "com/string/vector.h"
 #include "com/thread.h"
 #include "graphics/opengl/objects.h"
 #include "graphics/vulkan/create.h"

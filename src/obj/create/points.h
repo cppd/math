@@ -15,22 +15,12 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "string_vector.h"
+#pragma once
 
-std::vector<const char*> const_char_pointer_vector(const std::vector<std::string>& v)
-{
-        std::vector<const char*> res;
-        res.reserve(v.size());
+#include "obj/obj.h"
 
-        for (const std::string& s : v)
-        {
-                res.push_back(s.c_str());
-        }
+#include <memory>
+#include <vector>
 
-        return res;
-}
-
-std::vector<std::string> string_vector(const std::vector<const char*>& v)
-{
-        return std::vector<std::string>(std::cbegin(v), std::cend(v));
-}
+template <size_t N>
+std::unique_ptr<Obj<N>> create_obj_for_points(std::vector<Vector<N, float>>&& points);

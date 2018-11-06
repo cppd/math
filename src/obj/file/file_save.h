@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "obj.h"
+#include "obj/obj.h"
 
 #include <string>
 #include <string_view>

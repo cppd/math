@@ -15,9 +15,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "obj_file_save.h"
+#include "file_save.h"
 
-#include "obj_alg.h"
 #include "obj_file.h"
 
 #include "com/file/file.h"
@@ -26,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/print.h"
 #include "com/string/str.h"
 #include "com/time.h"
+#include "obj/alg/alg.h"
 
 constexpr const char OBJ_comment_and_space[] = "# ";
 constexpr const char OBJ_v[] = "v";

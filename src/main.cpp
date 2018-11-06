@@ -17,9 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #if 1
 
+#include "ui/main.h"
+
 #include "com/error.h"
 #include "init/init.h"
-#include "ui/main_function.h"
 
 #include <exception>
 

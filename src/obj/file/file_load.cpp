@@ -15,9 +15,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "obj_file_load.h"
+#include "file_load.h"
 
-#include "obj_alg.h"
 #include "obj_file.h"
 
 #include "com/error.h"
@@ -31,6 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/thread.h"
 #include "com/time.h"
 #include "com/types.h"
+#include "obj/alg/alg.h"
 
 #include <SFML/Graphics/Image.hpp>
 #include <cstdio>
