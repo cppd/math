@@ -15,12 +15,15 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "main.h"
+#include "application.h"
 
+#include "com/error.h"
 #include "ui/dialogs/messages/message_box.h"
 #include "ui/main_window/main_window.h"
 #include "ui/support/support.h"
 
+namespace
+{
 class Application final : public QApplication
 {
         bool notify(QObject* receiver, QEvent* event) noexcept override
@@ -57,8 +60,9 @@ public:
         {
         }
 };
+}
 
-int main_function(int argc, char* argv[])
+int application(int argc, char* argv[])
 {
         Application a(argc, argv);
 
