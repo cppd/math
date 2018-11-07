@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -53,7 +53,7 @@ Princeton University Press, 2011.
 
 #pragma once
 
-#include "com/mat.h"
+#include "com/matrix.h"
 #include "com/vec.h"
 #include "numerical/linear.h"
 

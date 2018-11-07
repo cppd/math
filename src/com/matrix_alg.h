@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "error.h"
-#include "mat.h"
+#include "matrix.h"
 
 // Для случаев, когда последняя строка матрицы состоит из нулей с последней единицей.
 template <size_t N, typename T>

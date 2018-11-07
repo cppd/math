@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/color/conversion_span.h"
 #include "com/error.h"
-#include "com/mat.h"
+#include "com/matrix.h"
 #include "com/type_detect.h"
 #include "com/vec.h"
 #include "graphics/opengl/functions/opengl_functions.h"

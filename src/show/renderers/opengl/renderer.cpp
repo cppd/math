@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "renderer.h"
 
 #include "com/log.h"
-#include "com/mat_alg.h"
+#include "com/matrix_alg.h"
 #include "com/print.h"
 #include "graphics/glsl.h"
 #include "graphics/opengl/query.h"

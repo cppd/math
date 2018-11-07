@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "mesh_hyperplane_simplex.h"
 
 #include "com/color/color.h"
-#include "com/mat.h"
+#include "com/matrix.h"
 #include "obj/obj.h"
 #include "path_tracing/image/image.h"
 #include "path_tracing/space/parallelotope_ortho.h"

@@ -18,8 +18,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "com/color/color.h"
-#include "com/mat.h"
-#include "com/mat_alg.h"
+#include "com/matrix.h"
+#include "com/matrix_alg.h"
 #include "com/vec.h"
 #include "graphics/glsl.h"
 #include "graphics/vulkan/buffers.h"

@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "com/color/color.h"
-#include "com/mat.h"
+#include "com/matrix.h"
 
 #include <memory>
 

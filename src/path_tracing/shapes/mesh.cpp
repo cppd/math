@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "mesh.h"
 
 #include "com/log.h"
-#include "com/mat_alg.h"
+#include "com/matrix_alg.h"
 #include "com/time.h"
 #include "com/vec.h"
 #include "path_tracing/space/hyperplane_simplex_wrapper.h"

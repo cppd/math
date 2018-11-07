@@ -26,8 +26,8 @@ Cambridge University Press.
 
 #pragma once
 
-#include "com/mat.h"
 #include "com/math.h"
+#include "com/matrix.h"
 #include "com/types.h"
 #include "com/vec.h"
 
