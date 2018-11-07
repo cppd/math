@@ -133,7 +133,7 @@ std::vector<char32_t> supported_code_points()
                 code_points.push_back(code_point);
         }
 
-        code_points.push_back(unicode_names::REPLACEMENT_CHARACTER);
+        code_points.push_back(unicode::REPLACEMENT_CHARACTER);
 
         return code_points;
 }

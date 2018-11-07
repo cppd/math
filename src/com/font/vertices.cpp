@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/unicode/names.h"
 #include "com/unicode/unicode.h"
 
-constexpr char32_t DEFAULT_CHARACTER = unicode_names::SPACE;
+constexpr char32_t DEFAULT_CHARACTER = unicode::SPACE;
 
 namespace
 {

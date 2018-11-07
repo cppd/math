@@ -102,8 +102,8 @@ std::string utf32_to_utf8(T code_point)
                 return std::string({c0, c1, c2, c3});
         }
 
-        static_assert(unicode_names::REPLACEMENT_CHARACTER <= 0x10FFFF);
-        return utf32_to_utf8(unicode_names::REPLACEMENT_CHARACTER);
+        static_assert(unicode::REPLACEMENT_CHARACTER <= 0x10FFFF);
+        return utf32_to_utf8(unicode::REPLACEMENT_CHARACTER);
 }
 
 char32_t utf8_to_utf32(const std::string& s, size_t& i)
@@ -168,7 +168,7 @@ char32_t utf8_to_utf32(const std::string& s, size_t& i)
         }
 
         i += 1;
-        return unicode_names::REPLACEMENT_CHARACTER;
+        return unicode::REPLACEMENT_CHARACTER;
 }
 
 char32_t utf8_to_utf32(const std::string& s)
