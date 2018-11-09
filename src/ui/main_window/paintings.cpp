@@ -18,7 +18,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "paintings.h"
 
 #include "com/math.h"
-#include "path_tracing/scenes.h"
+#include "path_tracing/scenes/cornell_box.h"
+#include "path_tracing/scenes/single_object.h"
 #include "path_tracing/visible_lights.h"
 #include "path_tracing/visible_projectors.h"
 #include "ui/dialogs/parameters/path_tracing_3d.h"

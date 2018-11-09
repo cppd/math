@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "obj/file/file_load.h"
 #include "path_tracing/image/image.h"
 #include "path_tracing/painter.h"
-#include "path_tracing/scenes.h"
+#include "path_tracing/scenes/single_object.h"
 #include "path_tracing/shapes/mesh.h"
 #include "path_tracing/shapes/test/sphere_mesh.h"
 #include "path_tracing/visible_lights.h"

@@ -17,8 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "objects.h"
-
+#include "com/color/color.h"
+#include "path_tracing/objects.h"
 #include "path_tracing/shapes/mesh.h"
 #include "path_tracing/visible_lights.h"
 #include "path_tracing/visible_projectors.h"
@@ -26,6 +26,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <memory>
 
+namespace single_object_scene_implementation
+{
 template <size_t N, typename T>
 class SingleObjectScene final : public PaintObjects<N, T>
 {
@@ -36,6 +38,28 @@ class SingleObjectScene final : public PaintObjects<N, T>
 
         std::vector<const GenericObject<N, T>*> m_objects;
         std::vector<const LightSource<N, T>*> m_light_sources;
+
+        //
+
+        const std::vector<const GenericObject<N, T>*>& objects() const override
+        {
+                return m_objects;
+        }
+
+        const std::vector<const LightSource<N, T>*>& light_sources() const override
+        {
+                return m_light_sources;
+        }
+
+        const Projector<N, T>& projector() const override
+        {
+                return *m_projector;
+        }
+
+        const SurfaceProperties<N, T>& default_surface_properties() const override
+        {
+                return m_default_surface_properties;
+        }
 
 public:
         SingleObjectScene(const Color& background_color, const Color& default_color, Color::DataType diffuse,
@@ -56,24 +80,8 @@ public:
 
                 m_objects.push_back(&m_object);
         }
-
-        const std::vector<const GenericObject<N, T>*>& objects() const override
-        {
-                return m_objects;
-        }
-        const std::vector<const LightSource<N, T>*>& light_sources() const override
-        {
-                return m_light_sources;
-        }
-        const Projector<N, T>& projector() const override
-        {
-                return *m_projector;
-        }
-        const SurfaceProperties<N, T>& default_surface_properties() const override
-        {
-                return m_default_surface_properties;
-        }
 };
+}
 
 template <size_t N, typename T>
 std::unique_ptr<const PaintObjects<N, T>> single_object_scene(const Color& background_color, const Color& default_color,
@@ -84,8 +92,10 @@ std::unique_ptr<const PaintObjects<N, T>> single_object_scene(const Color& backg
 {
         ASSERT(projector && light_source && mesh);
 
-        return std::make_unique<SingleObjectScene<N, T>>(background_color, default_color, diffuse, std::move(projector),
-                                                         std::move(light_source), std::move(mesh));
+        namespace impl = single_object_scene_implementation;
+
+        return std::make_unique<impl::SingleObjectScene<N, T>>(background_color, default_color, diffuse, std::move(projector),
+                                                               std::move(light_source), std::move(mesh));
 }
 
 template <size_t N, typename T>
@@ -161,15 +171,8 @@ std::unique_ptr<const PaintObjects<N, T>> single_object_scene(const Color& backg
 
         //
 
-        return std::make_unique<SingleObjectScene<N, T>>(background_color, default_color, diffuse, std::move(projector),
-                                                         std::move(light_source), std::move(mesh));
+        namespace impl = single_object_scene_implementation;
+
+        return std::make_unique<impl::SingleObjectScene<N, T>>(background_color, default_color, diffuse, std::move(projector),
+                                                               std::move(light_source), std::move(mesh));
 }
-
-std::unique_ptr<const PaintObjects<3, double>> cornell_box_scene(int width, int height, const std::string& obj_file_name,
-                                                                 double size, const Color& default_color, double diffuse,
-                                                                 const vec3& camera_direction, const vec3& camera_up);
-
-std::unique_ptr<const PaintObjects<3, double>> cornell_box_scene(int width, int height,
-                                                                 const std::shared_ptr<const Mesh<3, double>>& mesh, double size,
-                                                                 const Color& default_color, double diffuse,
-                                                                 const vec3& camera_direction, const vec3& camera_up);
