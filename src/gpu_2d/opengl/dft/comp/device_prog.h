@@ -54,7 +54,7 @@ public:
         void FFT(int blocks, int threads, bool inv, int max_threads, FP Two_PI_Div_M, int N_2_mask, int N_2_bits, int M_2,
                  DeviceMemory<std::complex<FP>>* data) const
         {
-                m_FFT.set_uniform_unsigned(0, inv ? 1 : 0);
+                m_FFT.set_uniform(0, inv);
                 m_FFT.set_uniform_unsigned(1, max_threads);
                 m_FFT.set_uniform_unsigned(2, N_2_mask);
                 m_FFT.set_uniform_unsigned(3, N_2_bits);
@@ -69,7 +69,7 @@ public:
         void rows_mul_to_buffer(vec2i blocks, vec2i threads, bool inv, int M1, int N1, int N2,
                                 const DeviceMemory<std::complex<FP>>& data, DeviceMemory<std::complex<FP>>* buffer) const
         {
-                m_rows_mul_to_buffer.set_uniform(0, inv ? 1 : 0);
+                m_rows_mul_to_buffer.set_uniform(0, inv);
                 m_rows_mul_to_buffer.set_uniform(1, M1);
                 m_rows_mul_to_buffer.set_uniform(2, N1);
                 m_rows_mul_to_buffer.set_uniform(3, N2);
@@ -81,7 +81,7 @@ public:
         void rows_mul_fr_buffer(vec2i blocks, vec2i threads, bool inv, int M1, int N1, int N2,
                                 DeviceMemory<std::complex<FP>>* data, const DeviceMemory<std::complex<FP>>& buffer) const
         {
-                m_rows_mul_fr_buffer.set_uniform(0, inv ? 1 : 0);
+                m_rows_mul_fr_buffer.set_uniform(0, inv);
                 m_rows_mul_fr_buffer.set_uniform(1, M1);
                 m_rows_mul_fr_buffer.set_uniform(2, N1);
                 m_rows_mul_fr_buffer.set_uniform(3, N2);
@@ -93,7 +93,7 @@ public:
         void cols_mul_to_buffer(vec2i blocks, vec2i threads, bool inv, int M2, int N1, int N2,
                                 const DeviceMemory<std::complex<FP>>& data, DeviceMemory<std::complex<FP>>* buffer) const
         {
-                m_cols_mul_to_buffer.set_uniform(0, inv ? 1 : 0);
+                m_cols_mul_to_buffer.set_uniform(0, inv);
                 m_cols_mul_to_buffer.set_uniform(1, M2);
                 m_cols_mul_to_buffer.set_uniform(2, N1);
                 m_cols_mul_to_buffer.set_uniform(3, N2);
@@ -105,7 +105,7 @@ public:
         void cols_mul_fr_buffer(vec2i blocks, vec2i threads, bool inv, int M2, int N1, int N2,
                                 DeviceMemory<std::complex<FP>>* data, const DeviceMemory<std::complex<FP>>& buffer) const
         {
-                m_cols_mul_fr_buffer.set_uniform(0, inv ? 1 : 0);
+                m_cols_mul_fr_buffer.set_uniform(0, inv);
                 m_cols_mul_fr_buffer.set_uniform(1, M2);
                 m_cols_mul_fr_buffer.set_uniform(2, N1);
                 m_cols_mul_fr_buffer.set_uniform(3, N2);
@@ -132,7 +132,7 @@ public:
         {
                 m_move_to_input.set_uniform(0, width);
                 m_move_to_input.set_uniform(1, height);
-                m_move_to_input.set_uniform(2, source_srgb ? 1 : 0);
+                m_move_to_input.set_uniform(2, source_srgb);
                 m_move_to_input.set_uniform_handle(3, tex);
                 data->bind(0);
                 m_move_to_input.dispatch_compute(blocks[0], blocks[1], 1, threads[0], threads[1], 1);
@@ -162,7 +162,7 @@ public:
 
         void exec(bool inv, int data_size, DeviceMemory<std::complex<FP>>* global_data) const
         {
-                m_FFT.set_uniform_unsigned(0, inv ? 1 : 0);
+                m_FFT.set_uniform(0, inv);
                 m_FFT.set_uniform_unsigned(1, data_size);
                 global_data->bind(0);
                 m_FFT.dispatch_compute(group_count(data_size, m_shared_size), 1, 1, m_group_size, 1, 1);

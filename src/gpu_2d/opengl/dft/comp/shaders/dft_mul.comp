@@ -21,9 +21,9 @@ layout(local_size_variable) in;
 
 // Функция подстановки переменных, формулы 13.4, 13.27, 13.28, 13.32.
 // Используется в 4 функциях: по строкам в обе стороны и по столбцам в обе 2 стороны
-complex mul_data(complex x, int inv, int l, int N)
+complex mul_data(complex x, bool inverse_dft, int l, int N)
 {
-        // float_point theta = (((inv > 0) ? PI : -PI) * l * l) / N;
+        // float_point theta = ((inverse_dft ? PI : -PI) * l * l) / N;
 
         // Вместо l * l / N нужно вычислить mod(l * l / N, 2), чтобы в тригонометрические функции
         // поступало не больше 2 * PI.
@@ -38,12 +38,12 @@ complex mul_data(complex x, int inv, int l, int N)
 
         // factor = (quotient mod 2) + (remainder / N).
         // float_point factor = (quotient & 1) + float_point(remainder) / N;
-        // precise float_point theta = (((inv > 0) ? PI : -PI)) * factor;
+        // precise float_point theta = (inverse_dft ? PI : -PI) * factor;
         // complex k = complex(cos(theta), sin(theta));
         // return mul(k, x);
 
         float_point factor = float_point(remainder) / N;
-        precise float_point theta = (((inv > 0) ? PI : -PI)) * factor;
+        precise float_point theta = (inverse_dft ? PI : -PI) * factor;
         if ((quotient & 1) == 0)
         {
                 complex k = complex(cos(theta), sin(theta));
@@ -58,7 +58,7 @@ complex mul_data(complex x, int inv, int l, int N)
 
 #if defined(function_rows_mul_to_buffer)
 
-layout(location = 0) uniform int inv;
+layout(location = 0) uniform bool inverse_dft;
 layout(location = 1) uniform int M1;
 layout(location = 2) uniform int N1;
 layout(location = 3) uniform int N2;
@@ -86,7 +86,7 @@ void main()
         else
         {
                 complex x = data[j * N1 + i];
-                buf[j * M1 + i] = mul_data(x, inv, i, N1);
+                buf[j * M1 + i] = mul_data(x, inverse_dft, i, N1);
         }
 }
 
@@ -94,7 +94,7 @@ void main()
 
 #if defined(function_rows_mul_fr_buffer)
 
-layout(location = 0) uniform int inv;
+layout(location = 0) uniform bool inverse_dft;
 layout(location = 1) uniform int M1;
 layout(location = 2) uniform int N1;
 layout(location = 3) uniform int N2;
@@ -115,14 +115,14 @@ void main()
                 return;
         }
         complex x = buf[j * M1 + i];
-        data[j * N1 + i] = mul_data(x, inv, i, N1);
+        data[j * N1 + i] = mul_data(x, inverse_dft, i, N1);
 }
 
 #endif
 
 #if defined(function_cols_mul_to_buffer)
 
-layout(location = 0) uniform int inv;
+layout(location = 0) uniform bool inverse_dft;
 layout(location = 1) uniform int M2;
 layout(location = 2) uniform int N1;
 layout(location = 3) uniform int N2;
@@ -151,7 +151,7 @@ void main()
         {
                 complex x = data[j * N1 + i];
                 // с транспонированием
-                buf[i * M2 + j] = mul_data(x, inv, j, N2);
+                buf[i * M2 + j] = mul_data(x, inverse_dft, j, N2);
         }
 }
 
@@ -159,7 +159,7 @@ void main()
 
 #if defined(function_cols_mul_fr_buffer)
 
-layout(location = 0) uniform int inv;
+layout(location = 0) uniform bool inverse_dft;
 layout(location = 1) uniform int M2;
 layout(location = 2) uniform int N1;
 layout(location = 3) uniform int N2;
@@ -181,7 +181,7 @@ void main()
         }
         // с транспонированием
         complex x = buf[i * M2 + j];
-        data[j * N1 + i] = mul_data(x, inv, j, N2);
+        data[j * N1 + i] = mul_data(x, inverse_dft, j, N2);
 }
 
 #endif

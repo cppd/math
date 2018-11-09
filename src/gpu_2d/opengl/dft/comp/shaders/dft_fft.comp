@@ -53,7 +53,7 @@ void main()
 
 #if defined(function_FFT)
 
-layout(location = 0) uniform uint inv;
+layout(location = 0) uniform bool inverse_dft;
 layout(location = 1) uniform uint max_threads;
 layout(location = 2) uniform uint N_2_mask;
 layout(location = 3) uniform uint N_2_bits;
@@ -90,7 +90,7 @@ void main()
 
         complex k = mul(twiddle_factor, v_u);
 
-        if (inv == 0)
+        if (!inverse_dft)
         {
                 data[index_t] = v_t + k;
                 data[index_u] = v_t - k;
@@ -106,7 +106,7 @@ void main()
 
 #if defined(function_FFT_radix_2)
 
-layout(location = 0) uniform uint inv;
+layout(location = 0) uniform bool inverse_dft;
 layout(location = 1) uniform uint MAX_DATA_SIZE;
 
 layout(std430, binding = 0) buffer StorageBuffer
@@ -148,7 +148,7 @@ void copy_shared_to_global()
         for (uint local = gl_LocalInvocationID.x, global = gl_WorkGroupID.x * SHARED_SIZE + gl_LocalInvocationID.x;
              local < SHARED_SIZE && global < MAX_DATA_SIZE; local += gl_LocalGroupSizeARB.x, global += gl_LocalGroupSizeARB.x)
         {
-                global_data[global] = (inv == 0) ? shared_data[local] : (shared_data[local] / N_MAX);
+                global_data[global] = !inverse_dft ? shared_data[local] : (shared_data[local] / N_MAX);
         }
 }
 
@@ -182,7 +182,7 @@ void main()
         uint max_local = min(SHARED_SIZE, MAX_DATA_SIZE - gl_WorkGroupID.x * SHARED_SIZE) >> 1;
 
         // первоначально M = 2, поэтому просто PI
-        float_point Two_PI_Div_M = (inv != 0) ? PI : -PI;
+        float_point Two_PI_Div_M = inverse_dft ? PI : -PI;
 
         for (uint M_2 = 1; M_2 < N_MAX; M_2 <<= 1, Two_PI_Div_M *= 0.5)
         {

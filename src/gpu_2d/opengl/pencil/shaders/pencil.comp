@@ -21,7 +21,7 @@ layout(bindless_image, rgba32f) readonly uniform image2D img_input;
 layout(bindless_image, rgba32f) writeonly uniform image2D img_output;
 layout(bindless_image, r32i) readonly uniform iimage2D img_objects;
 
-uniform int source_srgb;
+uniform bool source_srgb;
 
 const ivec2 image_size = imageSize(img_input);
 
@@ -53,12 +53,12 @@ bool background(ivec2 p)
 
 float grayscale(vec4 color)
 {
-        return (source_srgb == 0) ? luminance_of_rgb(color) : luminance_of_rgb(srgb_to_rgb(color));
+        return !source_srgb ? luminance_of_rgb(color) : luminance_of_rgb(srgb_to_rgb(color));
 }
 
 vec4 source_color_to_rgb(vec4 color)
 {
-        return (source_srgb == 0) ? color : srgb_to_rgb(color);
+        return !source_srgb ? color : srgb_to_rgb(color);
 }
 
 void main(void)

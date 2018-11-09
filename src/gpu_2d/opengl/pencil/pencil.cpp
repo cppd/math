@@ -86,7 +86,7 @@ public:
                 m_comp_prog.set_uniform_handle("img_input", source.image_resident_handle_read_only());
                 m_comp_prog.set_uniform_handle("img_output", m_texture.image_resident_handle_write_only());
                 m_comp_prog.set_uniform_handle("img_objects", objects.image_resident_handle_read_only());
-                m_comp_prog.set_uniform("source_srgb", source_is_srgb ? 1 : 0);
+                m_comp_prog.set_uniform("source_srgb", source_is_srgb);
 
                 m_draw_prog.set_uniform_handle("tex", m_texture.texture().texture_resident_handle());
 
