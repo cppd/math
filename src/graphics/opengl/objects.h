@@ -291,6 +291,10 @@ public:
         {
                 glProgramUniform1ui(m_program, get_uniform_location(var_name), var);
         }
+        void set_uniform(const char* var_name, bool var) const
+        {
+                glProgramUniform1i(m_program, get_uniform_location(var_name), var ? 1 : 0);
+        }
         void set_uniform(const char* var_name, GLfloat var) const
         {
                 glProgramUniform1f(m_program, get_uniform_location(var_name), var);
@@ -307,6 +311,10 @@ public:
         void set_uniform_unsigned(GLint loc, GLuint var) const
         {
                 glProgramUniform1ui(m_program, loc, var);
+        }
+        void set_uniform(GLint loc, bool var) const
+        {
+                glProgramUniform1i(m_program, loc, var ? 1 : 0);
         }
         void set_uniform(GLint loc, GLfloat var) const
         {
