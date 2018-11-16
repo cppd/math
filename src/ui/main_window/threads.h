@@ -20,8 +20,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "progress/progress_list.h"
 
 #include <QProgressBar>
+#include <atomic>
 #include <exception>
 #include <functional>
+#include <thread>
+#include <unordered_map>
 
 enum class ThreadAction
 {

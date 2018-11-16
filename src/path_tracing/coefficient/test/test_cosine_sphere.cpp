@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "path_tracing/coefficient/cosine_sphere.h"
 #include "path_tracing/sampling/sphere.h"
 
+#include <cmath>
 #include <random>
 #include <sstream>
 
