@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 layout(local_size_variable) in;
 
-#if defined(function_reverse)
+#if defined(FUNCTION_REVERSE)
 
 layout(location = 0) uniform uint max_threads;
 layout(location = 1) uniform uint N_mask;
@@ -51,7 +51,7 @@ void main()
 
 #endif
 
-#if defined(function_FFT)
+#if defined(FUNCTION_FFT)
 
 layout(location = 0) uniform bool inverse_dft;
 layout(location = 1) uniform uint max_threads;
@@ -104,7 +104,7 @@ void main()
 
 #endif
 
-#if defined(function_FFT_radix_2)
+#if defined(FUNCTION_FFT_RADIX_2)
 
 layout(location = 0) uniform bool inverse_dft;
 layout(location = 1) uniform uint MAX_DATA_SIZE;

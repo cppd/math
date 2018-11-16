@@ -18,7 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "device_prog.h"
 
 #include "com/bits.h"
-#include "com/math.h"
 
 // clang-format off
 constexpr const char dft_fft_shader[]
@@ -37,11 +36,11 @@ constexpr const char dft_mul_shader[]
 
 namespace
 {
-template <typename FP>
-std::string data_types();
+template <typename T>
+std::string floating_point_source();
 
 template <>
-std::string data_types<float>()
+std::string floating_point_source<float>()
 {
         std::string s;
         s += "#define complex vec2\n";
@@ -52,7 +51,7 @@ std::string data_types<float>()
 }
 
 template <>
-std::string data_types<double>()
+std::string floating_point_source<double>()
 {
         std::string s;
         s += "#define complex dvec2\n";
@@ -62,73 +61,93 @@ std::string data_types<double>()
         return s;
 }
 
-std::string reverse_shader_source()
+template <typename T>
+std::string reverse_source()
 {
         std::string s;
-        s += "#define function_reverse\n\n";
+        s += floating_point_source<T>();
+        s += "#define FUNCTION_REVERSE\n\n";
         return s + dft_fft_shader;
 }
 
-std::string fft_shader_source()
+template <typename T>
+std::string fft_source()
 {
         std::string s;
-        s += "#define function_FFT\n\n";
+        s += floating_point_source<T>();
+        s += "#define FUNCTION_FFT\n\n";
         return s + dft_fft_shader;
 }
 
-std::string rows_mul_to_buffer_shader_source()
+template <typename T>
+std::string rows_mul_to_buffer_source()
 {
         std::string s;
-        s += "#define function_rows_mul_to_buffer\n\n";
+        s += floating_point_source<T>();
+        s += "#define FUNCTION_ROWS_MUL_TO_BUFFER\n\n";
         return s + dft_mul_shader;
 }
 
-std::string rows_mul_fr_buffer_shader_source()
+template <typename T>
+std::string rows_mul_fr_buffer_source()
 {
         std::string s;
-        s += "#define function_rows_mul_fr_buffer\n\n";
+        s += floating_point_source<T>();
+        s += "#define FUNCTION_ROWS_MUL_FR_BUFFER\n\n";
         return s + dft_mul_shader;
 }
 
-std::string cols_mul_to_buffer_shader_source()
+template <typename T>
+std::string cols_mul_to_buffer_source()
 {
         std::string s;
-        s += "#define function_cols_mul_to_buffer\n\n";
+        s += floating_point_source<T>();
+        s += "#define FUNCTION_COLS_MUL_TO_BUFFER\n\n";
         return s + dft_mul_shader;
 }
 
-std::string cols_mul_fr_buffer_shader_source()
+template <typename T>
+std::string cols_mul_fr_buffer_source()
 {
         std::string s;
-        s += "#define function_cols_mul_fr_buffer\n\n";
+        s += floating_point_source<T>();
+        s += "#define FUNCTION_COLS_MUL_FR_BUFFER\n\n";
         return s + dft_mul_shader;
 }
 
-std::string rows_mul_d_shader_source()
+template <typename T>
+std::string rows_mul_d_source()
 {
         std::string s;
-        s += "#define function_rows_mul_D\n\n";
+        s += floating_point_source<T>();
+        s += "#define FUNCTION_ROWS_MUL_D\n\n";
         return s + dft_mul_shader;
 }
 
-std::string move_to_input_shader_source()
+template <typename T>
+std::string move_to_input_source()
 {
         std::string s;
-        s += "#define function_move_to_input\n\n";
+        s += floating_point_source<T>();
+        s += "#define FUNCTION_MOVE_TO_INPUT\n\n";
         return s + dft_copy_shader;
 }
 
-std::string move_to_output_shader_source()
+template <typename T>
+std::string move_to_output_source()
 {
         std::string s;
-        s += "#define function_move_to_output\n\n";
+        s += floating_point_source<T>();
+        s += "#define FUNCTION_MOVE_TO_OUTPUT\n\n";
         return s + dft_copy_shader;
 }
 
-std::string fft_radix_2_shader_source(int N, int shared_size, bool reverse_input)
+template <typename T>
+std::string fft_radix_2_source(int N, int shared_size, bool reverse_input)
 {
         std::string s;
-        s += "#define function_FFT_radix_2\n\n";
+        s += floating_point_source<T>();
+        s += "#define FUNCTION_FFT_RADIX_2\n\n";
         s += "const uint N = " + std::to_string(N) + ";\n";
         s += "const uint N_MASK = " + std::to_string(N - 1) + ";\n";
         s += "const uint N_BITS = " + std::to_string(binary_size(N)) + ";\n";
@@ -138,25 +157,25 @@ std::string fft_radix_2_shader_source(int N, int shared_size, bool reverse_input
 }
 }
 
-template <typename FP>
-DeviceProg<FP>::DeviceProg()
-        : m_reverse(opengl::ComputeShader(data_types<FP>() + reverse_shader_source())),
-          m_FFT(opengl::ComputeShader(data_types<FP>() + fft_shader_source())),
-          m_rows_mul_to_buffer(opengl::ComputeShader(data_types<FP>() + rows_mul_to_buffer_shader_source())),
-          m_rows_mul_fr_buffer(opengl::ComputeShader(data_types<FP>() + rows_mul_fr_buffer_shader_source())),
-          m_cols_mul_to_buffer(opengl::ComputeShader(data_types<FP>() + cols_mul_to_buffer_shader_source())),
-          m_cols_mul_fr_buffer(opengl::ComputeShader(data_types<FP>() + cols_mul_fr_buffer_shader_source())),
-          m_rows_mul_D(opengl::ComputeShader(data_types<FP>() + rows_mul_d_shader_source())),
-          m_move_to_input(opengl::ComputeShader(data_types<FP>() + move_to_input_shader_source())),
-          m_move_to_output(opengl::ComputeShader(data_types<FP>() + move_to_output_shader_source()))
+template <typename T>
+DeviceProg<T>::DeviceProg()
+        : m_reverse(opengl::ComputeShader(reverse_source<T>())),
+          m_fft(opengl::ComputeShader(fft_source<T>())),
+          m_rows_mul_to_buffer(opengl::ComputeShader(rows_mul_to_buffer_source<T>())),
+          m_rows_mul_fr_buffer(opengl::ComputeShader(rows_mul_fr_buffer_source<T>())),
+          m_cols_mul_to_buffer(opengl::ComputeShader(cols_mul_to_buffer_source<T>())),
+          m_cols_mul_fr_buffer(opengl::ComputeShader(cols_mul_fr_buffer_source<T>())),
+          m_rows_mul_d(opengl::ComputeShader(rows_mul_d_source<T>())),
+          m_move_to_input(opengl::ComputeShader(move_to_input_source<T>())),
+          m_move_to_output(opengl::ComputeShader(move_to_output_source<T>()))
 {
 }
 
-template <typename FP>
-DeviceProgFFTRadix2<FP>::DeviceProgFFTRadix2(int N, int shared_size, bool reverse_input, int group_size)
+template <typename T>
+DeviceProgFFTRadix2<T>::DeviceProgFFTRadix2(int N, int shared_size, bool reverse_input, int group_size)
         : m_group_size(group_size),
           m_shared_size(shared_size),
-          m_FFT(opengl::ComputeShader(data_types<FP>() + fft_radix_2_shader_source(N, shared_size, reverse_input)))
+          m_fft(opengl::ComputeShader(fft_radix_2_source<T>(N, shared_size, reverse_input)))
 {
 }
 

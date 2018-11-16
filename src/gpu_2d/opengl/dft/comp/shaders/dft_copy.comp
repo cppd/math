@@ -22,7 +22,7 @@ layout(local_size_variable) in;
 // Перенос данных изображения в исходные данные для ДПФ и обратно.
 // Преобразование Фурье делается для яркости пикселов без цвета.
 
-#if defined(function_move_to_input)
+#if defined(FUNCTION_MOVE_TO_INPUT)
 
 layout(location = 0) uniform int width;
 layout(location = 1) uniform int height;
@@ -49,7 +49,7 @@ void main()
 
 #endif
 
-#if defined(function_move_to_output)
+#if defined(FUNCTION_MOVE_TO_OUTPUT)
 
 layout(location = 0) uniform int width;
 layout(location = 1) uniform int height;

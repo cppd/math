@@ -236,7 +236,7 @@ class GL2D final : public IFourierGL1, public IFourierGL2
                         for (; M_2 < N; M_2 <<= 1, Two_PI_Div_M /= 2)
                         {
                                 // M_2 - половина размера текущих отдельных БПФ.
-                                m_prog.FFT(block_cnt, BLOCK_SIZE, inv, thread_cnt, Two_PI_Div_M, N_2_mask, N_2_bits, M_2, data);
+                                m_prog.fft(block_cnt, BLOCK_SIZE, inv, thread_cnt, Two_PI_Div_M, N_2_mask, N_2_bits, M_2, data);
                         }
                 }
         }
@@ -249,7 +249,7 @@ class GL2D final : public IFourierGL1, public IFourierGL2
 
                         m_prog.rows_mul_to_buffer(rows_to, block, inv, m_M1, m_N1, m_N2, m_x_d, &m_buffer);
                         fft1d<1>(inv, m_N2, &m_buffer);
-                        m_prog.rows_mul_D(rows_D, block, m_M1, m_N2, inv ? m_D1_inv : m_D1_fwd, &m_buffer);
+                        m_prog.rows_mul_d(rows_D, block, m_M1, m_N2, inv ? m_D1_inv : m_D1_fwd, &m_buffer);
                         fft1d<1>(!inv, m_N2, &m_buffer);
                         m_prog.rows_mul_fr_buffer(rows_fr, block, inv, m_M1, m_N1, m_N2, &m_x_d, m_buffer);
                 }
@@ -260,7 +260,7 @@ class GL2D final : public IFourierGL1, public IFourierGL2
 
                         m_prog.cols_mul_to_buffer(cols_to, block, inv, m_M2, m_N1, m_N2, m_x_d, &m_buffer);
                         fft1d<2>(inv, m_N1, &m_buffer);
-                        m_prog.rows_mul_D(cols_D, block, m_M2, m_N1, inv ? m_D2_inv : m_D2_fwd, &m_buffer);
+                        m_prog.rows_mul_d(cols_D, block, m_M2, m_N1, inv ? m_D2_inv : m_D2_fwd, &m_buffer);
                         fft1d<2>(!inv, m_N1, &m_buffer);
                         m_prog.cols_mul_fr_buffer(cols_fr, block, inv, m_M2, m_N1, m_N2, &m_x_d, m_buffer);
                 }

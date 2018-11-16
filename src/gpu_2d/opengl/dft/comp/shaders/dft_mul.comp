@@ -56,7 +56,7 @@ complex mul_data(complex x, bool inverse_dft, int l, int N)
         }
 }
 
-#if defined(function_rows_mul_to_buffer)
+#if defined(FUNCTION_ROWS_MUL_TO_BUFFER)
 
 layout(location = 0) uniform bool inverse_dft;
 layout(location = 1) uniform int M1;
@@ -92,7 +92,7 @@ void main()
 
 #endif
 
-#if defined(function_rows_mul_fr_buffer)
+#if defined(FUNCTION_ROWS_MUL_FR_BUFFER)
 
 layout(location = 0) uniform bool inverse_dft;
 layout(location = 1) uniform int M1;
@@ -120,7 +120,7 @@ void main()
 
 #endif
 
-#if defined(function_cols_mul_to_buffer)
+#if defined(FUNCTION_COLS_MUL_TO_BUFFER)
 
 layout(location = 0) uniform bool inverse_dft;
 layout(location = 1) uniform int M2;
@@ -157,7 +157,7 @@ void main()
 
 #endif
 
-#if defined(function_cols_mul_fr_buffer)
+#if defined(FUNCTION_COLS_MUL_FR_BUFFER)
 
 layout(location = 0) uniform bool inverse_dft;
 layout(location = 1) uniform int M2;
@@ -186,7 +186,7 @@ void main()
 
 #endif
 
-#if defined(function_rows_mul_D)
+#if defined(FUNCTION_ROWS_MUL_D)
 
 // Умножение на диагональ, формулы 13.20, 13.30.
 
