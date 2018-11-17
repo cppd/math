@@ -101,9 +101,6 @@ MainWindow::MainWindow(QWidget* parent)
         : QMainWindow(parent),
           m_window_thread_id(std::this_thread::get_id()),
           m_event_emitter(this),
-          m_threads([this](const std::exception_ptr& ptr, const std::string& msg) noexcept {
-                  exception_handler(ptr, msg, true);
-          }),
           m_first_show(true),
           m_dimension(0),
           m_close_without_confirmation(false),
@@ -115,12 +112,23 @@ MainWindow::MainWindow(QWidget* parent)
 
         ui.setupUi(this);
 
+        constructor_threads();
         constructor_connect();
         constructor_interface();
         constructor_buttons();
         constructor_objects_and_repository();
 
         set_log_callback(&m_event_emitter);
+}
+
+void MainWindow::constructor_threads()
+{
+        auto handler = [this](const std::exception_ptr& ptr, const std::string& msg) noexcept
+        {
+                exception_handler(ptr, msg, true);
+        };
+
+        m_threads = create_main_threads(handler);
 }
 
 void MainWindow::constructor_connect()
@@ -290,7 +298,7 @@ void MainWindow::terminate_all_threads()
 {
         ASSERT(std::this_thread::get_id() == m_window_thread_id);
 
-        m_threads.terminate_all_threads();
+        m_threads->terminate_all_threads();
 
         m_show.reset();
 
@@ -442,7 +450,7 @@ void MainWindow::thread_load_from_file(std::string file_name, bool use_object_se
 {
         ASSERT(std::this_thread::get_id() == m_window_thread_id);
 
-        if (!m_threads.action_allowed(ThreadAction::LoadObject))
+        if (!m_threads->action_allowed(MainThreads::Action::Load))
         {
                 m_event_emitter.message_warning("File loading is not available at this time (thread working)");
                 return;
@@ -486,12 +494,13 @@ void MainWindow::thread_load_from_file(std::string file_name, bool use_object_se
                         }
                 }
 
-                m_threads.start_thread(ThreadAction::LoadObject, [=, rho = m_bound_cocone_rho, alpha = m_bound_cocone_alpha](
-                                                                         ProgressRatioList* progress_list, std::string* message) {
-                        *message = "Load " + file_name;
+                m_threads->start_thread(MainThreads::Action::Load,
+                                        [=, rho = m_bound_cocone_rho,
+                                         alpha = m_bound_cocone_alpha](ProgressRatioList* progress_list, std::string* message) {
+                                                *message = "Load " + file_name;
 
-                        m_objects->load_from_file(objects_to_load, progress_list, file_name, rho, alpha);
-                });
+                                                m_objects->load_from_file(objects_to_load, progress_list, file_name, rho, alpha);
+                                        });
         });
 }
 
@@ -499,7 +508,7 @@ void MainWindow::thread_load_from_repository(int dimension, const std::string& o
 {
         ASSERT(std::this_thread::get_id() == m_window_thread_id);
 
-        if (!m_threads.action_allowed(ThreadAction::LoadObject))
+        if (!m_threads->action_allowed(MainThreads::Action::Load))
         {
                 m_event_emitter.message_warning("Creation of object is not available at this time (thread working)");
                 return;
@@ -543,13 +552,14 @@ void MainWindow::thread_load_from_repository(int dimension, const std::string& o
                         }
                 }
 
-                m_threads.start_thread(ThreadAction::LoadObject, [=, rho = m_bound_cocone_rho, alpha = m_bound_cocone_alpha](
-                                                                         ProgressRatioList* progress_list, std::string* message) {
-                        *message = "Load " + space_name(dimension) + " " + object_name;
+                m_threads->start_thread(MainThreads::Action::Load,
+                                        [=, rho = m_bound_cocone_rho,
+                                         alpha = m_bound_cocone_alpha](ProgressRatioList* progress_list, std::string* message) {
+                                                *message = "Load " + space_name(dimension) + " " + object_name;
 
-                        m_objects->load_from_repository(objects_to_load, progress_list, dimension, object_name, rho, alpha,
-                                                        point_count);
-                });
+                                                m_objects->load_from_repository(objects_to_load, progress_list, dimension,
+                                                                                object_name, rho, alpha, point_count);
+                                        });
         });
 }
 
@@ -557,7 +567,7 @@ void MainWindow::thread_self_test(SelfTestType test_type, bool with_confirmation
 {
         ASSERT(std::this_thread::get_id() == m_window_thread_id);
 
-        if (!m_threads.action_allowed(ThreadAction::SelfTest))
+        if (!m_threads->action_allowed(MainThreads::Action::SelfTest))
         {
                 m_event_emitter.message_warning("Self-Test is not available at this time (thread working)");
                 return;
@@ -576,7 +586,7 @@ void MainWindow::thread_self_test(SelfTestType test_type, bool with_confirmation
                 }
         }
 
-        m_threads.start_thread(ThreadAction::SelfTest, [=](ProgressRatioList* progress_list, std::string* message) {
+        m_threads->start_thread(MainThreads::Action::SelfTest, [=](ProgressRatioList* progress_list, std::string* message) {
                 *message = "Self-Test";
 
                 self_test(test_type, progress_list, [&](const std::exception_ptr& ptr, const std::string& msg) noexcept {
@@ -589,7 +599,7 @@ void MainWindow::thread_export(const std::string& name, ObjectId id)
 {
         ASSERT(std::this_thread::get_id() == m_window_thread_id);
 
-        if (!m_threads.action_allowed(ThreadAction::ExportObject))
+        if (!m_threads->action_allowed(MainThreads::Action::Export))
         {
                 m_event_emitter.message_warning("Export " + name + " to file is not available at this time (thread working)");
                 return;
@@ -639,7 +649,7 @@ void MainWindow::thread_export(const std::string& name, ObjectId id)
                         return;
                 }
 
-                m_threads.start_thread(ThreadAction::ExportObject, [=](ProgressRatioList*, std::string* message) {
+                m_threads->start_thread(MainThreads::Action::Export, [=](ProgressRatioList*, std::string* message) {
                         *message = "Export " + name + " to " + file_name;
 
                         m_objects->save_to_file(id, file_name, name);
@@ -658,7 +668,7 @@ void MainWindow::thread_reload_bound_cocone()
                 return;
         }
 
-        if (!m_threads.action_allowed(ThreadAction::ReloadBoundCocone))
+        if (!m_threads->action_allowed(MainThreads::Action::ReloadBoundCocone))
         {
                 m_event_emitter.message_warning("BoundCocone is not available at this time (thread working)");
                 return;
@@ -687,8 +697,8 @@ void MainWindow::thread_reload_bound_cocone()
                         return;
                 }
 
-                m_threads.start_thread(
-                        ThreadAction::ReloadBoundCocone,
+                m_threads->start_thread(
+                        MainThreads::Action::ReloadBoundCocone,
                         [=, objects_to_load = m_objects_to_load](ProgressRatioList* progress_list, std::string* message) {
                                 *message = "BoundCocone reconstruction";
 
@@ -697,7 +707,7 @@ void MainWindow::thread_reload_bound_cocone()
         });
 }
 
-void MainWindow::progress_bars(const ThreadAction& thread_action, bool permanent, const ProgressRatioList* progress_list,
+void MainWindow::progress_bars(MainThreads::Action thread_action, bool permanent, const ProgressRatioList* progress_list,
                                std::list<QProgressBar>* progress_bars)
 {
         static_assert(std::numeric_limits<unsigned>::max() >= std::numeric_limits<int>::max());
@@ -727,7 +737,7 @@ void MainWindow::progress_bars(const ThreadAction& thread_action, bool permanent
                                         return;
                                 }
 
-                                ptr_this->m_threads.terminate_thread_with_message(thread_action);
+                                ptr_this->m_threads->terminate_thread_with_message(thread_action);
                         });
         }
 
@@ -777,9 +787,9 @@ void MainWindow::progress_bars(const ThreadAction& thread_action, bool permanent
 
 void MainWindow::slot_timer_progress_bar()
 {
-        for (const ThreadProgress& t : m_threads.thread_progress())
+        for (const MainThreads::Progress& t : m_threads->thread_progress())
         {
-                progress_bars(t.thread_action, t.permanent, t.progress_list, t.progress_bars);
+                progress_bars(t.action, t.permanent, t.progress_list, t.progress_bars);
         }
 }
 

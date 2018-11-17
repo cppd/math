@@ -97,6 +97,7 @@ private slots:
         void slot_graphics_widget_resize();
 
 private:
+        void constructor_threads();
         void constructor_connect();
         void constructor_interface();
         void constructor_buttons();
@@ -132,7 +133,7 @@ private:
         void reset_all_object_buttons(const std::unordered_set<ObjectId>& objects_to_load);
         void reset_bound_cocone_buttons(const std::unordered_set<ObjectId>& objects_to_load);
 
-        void progress_bars(const ThreadAction& thread_action, bool permanent, const ProgressRatioList* progress_list,
+        void progress_bars(MainThreads::Action thread_action, bool permanent, const ProgressRatioList* progress_list,
                            std::list<QProgressBar>* progress_bars);
 
         double ambient_light() const;
@@ -175,7 +176,7 @@ private:
 
         WindowEventEmitter m_event_emitter;
 
-        Threads m_threads;
+        std::unique_ptr<MainThreads> m_threads;
 
         std::unordered_map<ObjectId, QRadioButton*> m_object_id_to_button;
 
