@@ -63,7 +63,7 @@ class FFTPlan final
         fftwf_plan p;
 
 public:
-        FFTPlan(bool inv, int n1, int n2, std::vector<std::complex<float>>* i, std::vector<std::complex<float>>* o)
+        FFTPlan(bool inverse, int n1, int n2, std::vector<std::complex<float>>* i, std::vector<std::complex<float>>* o)
         {
                 ASSERT(1ull * n1 * n2 == i->size());
                 ASSERT(i->size() == o->size());
@@ -77,7 +77,7 @@ public:
                 fftwf_complex* in = reinterpret_cast<fftwf_complex*>(i->data());
                 fftwf_complex* out = reinterpret_cast<fftwf_complex*>(o->data());
 
-                if (inv)
+                if (inverse)
                 {
                         p = fftwf_plan_dft_2d(n2, n1, in, out, FFTW_BACKWARD, FFTW_MEASURE);
                 }
@@ -110,7 +110,7 @@ class FFTW final : public DFT
         FFTPlan m_forward, m_backward;
         const float m_inv_k;
 
-        void exec(bool inv, std::vector<std::complex<float>>* data) override
+        void exec(bool inverse, std::vector<std::complex<float>>* data) override
         {
                 if (data->size() != m_in.size())
                 {
@@ -121,7 +121,7 @@ class FFTW final : public DFT
 
                 double start_time = time_in_seconds();
 
-                if (inv)
+                if (inverse)
                 {
                         m_backward.execute();
 

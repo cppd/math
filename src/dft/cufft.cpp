@@ -202,7 +202,7 @@ class CudaFFT final : public DFT
         CudaMemory<cufftComplex> m_cuda_data;
         const float m_inv_k;
 
-        void exec(bool inv, std::vector<std::complex<float>>* data) override
+        void exec(bool inverse, std::vector<std::complex<float>>* data) override
         {
                 if (data->size() != m_cuda_data.size())
                 {
@@ -215,7 +215,7 @@ class CudaFFT final : public DFT
 
                 double start_time = time_in_seconds();
 
-                if (inv)
+                if (inverse)
                 {
                         if (CUFFT_SUCCESS != cufftExecC2C(m_plan, m_cuda_data, m_cuda_data, CUFFT_INVERSE))
                         {
@@ -236,7 +236,7 @@ class CudaFFT final : public DFT
 
                 cuda_memory_copy(data, m_cuda_data);
 
-                if (inv)
+                if (inverse)
                 {
                         std::transform(data->cbegin(), data->cend(), data->begin(),
                                        [k = m_inv_k](const std::complex<float>& v) { return v * k; });
