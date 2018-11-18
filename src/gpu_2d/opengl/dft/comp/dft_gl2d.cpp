@@ -61,6 +61,9 @@ Chapter 13: FFTs for Arbitrary N.
 #include <type_traits>
 #include <vector>
 
+constexpr const int BLOCK_SQRT = 16;
+constexpr const int BLOCK_SIZE = square(BLOCK_SQRT);
+
 namespace
 {
 // Или само число степень двух,
@@ -87,15 +90,15 @@ int compute_M(int n)
 
 // Compute the symmetric Toeplitz H: for given N, compute the scalar constants
 // Формулы 13.4, 13.22.
-std::vector<std::complex<double>> compute_h(int N, bool inv, double Coef)
+std::vector<std::complex<double>> compute_h(int N, bool inverse, double Coef)
 {
         std::vector<std::complex<double>> h(N);
 
         for (int l = 0; l <= N - 1; ++l)
         {
-                // theta = (inv ? 1 : -1) * 2 * pi / N * (-0.5 * l * l) = (inv ? -pi : pi) / N * l * l
+                // theta = (inverse ? 1 : -1) * 2 * pi / N * (-0.5 * l * l) = (inverse ? -pi : pi) / N * l * l
 
-                // h[l] = std::polar(Coef, (inv ? -PI : PI) / N * l * l);
+                // h[l] = std::polar(Coef, (inverse ? -PI : PI) / N * l * l);
 
                 // Вместо l * l / N нужно вычислить mod(l * l / N, 2), чтобы в тригонометрические функции
                 // поступало не больше 2 * PI.
@@ -105,7 +108,7 @@ std::vector<std::complex<double>> compute_h(int N, bool inv, double Coef)
                 // factor = (quotient mod 2) + (remainder / N).
                 double factor = (quotient & 1) + static_cast<double>(remainder) / N;
 
-                h[l] = std::polar(Coef, (inv ? -PI<double> : PI<double>)*factor);
+                h[l] = std::polar(Coef, (inverse ? -PI<double> : PI<double>)*factor);
         }
 
         return h;
@@ -176,10 +179,59 @@ int group_size(int dft_size)
 }
 
 template <typename FP>
+void fft1d(bool inverse, int fft_count, const DeviceProgFFTShared<FP>& fft, const DeviceProg<FP>& programs,
+           DeviceMemory<std::complex<FP>>* data)
+{
+        const int N = fft.n();
+
+        if (N == 1)
+        {
+                return;
+        }
+
+        const int shared_size = fft.shared_size();
+        const int data_size = N * fft_count;
+
+        if (N <= shared_size)
+        {
+                fft.exec(inverse, data_size, data);
+                return;
+        }
+
+        const int N_bits = fft.n_bits();
+        ASSERT((1 << N_bits) == N);
+
+        // Если N превышает максимум обрабатываемых данных shared_size, то вначале
+        // надо отдельно выполнить перестановку данных, а потом запускать функции
+        // с отключенной перестановкой, иначе одни запуски будут вносить изменения
+        // в данные других запусков, так как результат пишется в исходные данные.
+
+        programs.bit_reverse(group_count(data_size, BLOCK_SIZE), BLOCK_SIZE, data_size, N - 1, N_bits, data);
+
+        fft.exec(inverse, data_size, data);
+
+        // Досчитать до нужного размера уже в глобальной памяти без разделяемой
+
+        const int N_2 = N / 2;
+        const int N_2_mask = N_2 - 1;
+        const int N_2_bits = N_bits - 1;
+
+        const int thread_cnt = data_size / 2;
+        const int block_cnt = group_count(thread_cnt, BLOCK_SIZE);
+
+        int M_2 = shared_size;
+        FP Two_PI_Div_M = inverse ? (PI<FP> / M_2) : -(PI<FP> / M_2);
+
+        for (; M_2 < N; M_2 <<= 1, Two_PI_Div_M /= 2)
+        {
+                // M_2 - половина размера текущих отдельных БПФ.
+                programs.fft(block_cnt, BLOCK_SIZE, inverse, thread_cnt, Two_PI_Div_M, N_2_mask, N_2_bits, M_2, data);
+        }
+}
+
+template <typename FP>
 class GL2D final : public IFourierGL1, public IFourierGL2
 {
-        const int BLOCK_SIZE = 256;
-        const int BLOCK_SQRT = std::lround(std::sqrt(BLOCK_SIZE));
         const int m_N1, m_N2, m_M1, m_M2, m_M1_bin, m_M2_bin;
         const vec2i block, rows_to, rows_fr, rows_D, cols_to, cols_fr, cols_D;
         DeviceMemory<std::complex<FP>> m_D1_fwd, m_D1_inv, m_D2_fwd, m_D2_inv;
@@ -191,82 +243,32 @@ class GL2D final : public IFourierGL1, public IFourierGL2
         DeviceProgFFTShared<FP> m_FFT_1;
         DeviceProgFFTShared<FP> m_FFT_2;
 
-        template <int type>
-        void fft1d(bool inv, int rows, DeviceMemory<std::complex<FP>>* data) const
-        {
-                static_assert(type == 1 || type == 2, "fft1d calling error");
-
-                const int N = (type == 1) ? m_M1 : m_M2;
-
-                if (N == 1)
-                {
-                        return;
-                }
-
-                const int N_bits = (type == 1) ? m_M1_bin : m_M2_bin;
-                const int data_size = N * rows;
-                const int shared_size = (type == 1) ? m_shared_size_1 : m_shared_size_2;
-
-                if (N <= shared_size)
-                {
-                        (type == 1) ? m_FFT_1.exec(inv, data_size, data) : m_FFT_2.exec(inv, data_size, data);
-                }
-                else
-                {
-                        // Если N превышает максимум обрабатываемых данных shared_size для функций
-                        // m_prog.FFT_1 и m_prog.FFT_2, то вначале надо отдельно выполнить перестановку данных,
-                        // а потом запускать функции с отключенной перестановкой, иначе одни запуски будут
-                        // вносить изменения в данные других запусков, так как результат пишется в исходные данные.
-                        m_prog.bit_reverse(group_count(data_size, BLOCK_SIZE), BLOCK_SIZE, data_size, N - 1, N_bits, data);
-
-                        (type == 1) ? m_FFT_1.exec(inv, data_size, data) : m_FFT_2.exec(inv, data_size, data);
-
-                        // досчитать до нужного размера уже в глобальной памяти без разделяемой
-
-                        const int N_2 = N / 2;
-                        const int N_2_mask = N_2 - 1;
-                        const int N_2_bits = N_bits - 1;
-
-                        const int thread_cnt = data_size / 2;
-                        const int block_cnt = group_count(thread_cnt, BLOCK_SIZE);
-
-                        int M_2 = shared_size;
-                        FP Two_PI_Div_M = inv ? (PI<FP> / M_2) : -(PI<FP> / M_2);
-
-                        for (; M_2 < N; M_2 <<= 1, Two_PI_Div_M /= 2)
-                        {
-                                // M_2 - половина размера текущих отдельных БПФ.
-                                m_prog.fft(block_cnt, BLOCK_SIZE, inv, thread_cnt, Two_PI_Div_M, N_2_mask, N_2_bits, M_2, data);
-                        }
-                }
-        }
-
-        void dft2d(bool inv)
+        void dft2d(bool inverse)
         {
                 if (m_N1 > 1)
                 {
                         // по строкам
 
-                        m_prog.rows_mul_to_buffer(rows_to, block, inv, m_M1, m_N1, m_N2, m_x_d, &m_buffer);
-                        fft1d<1>(inv, m_N2, &m_buffer);
-                        m_prog.rows_mul_d(rows_D, block, m_M1, m_N2, inv ? m_D1_inv : m_D1_fwd, &m_buffer);
-                        fft1d<1>(!inv, m_N2, &m_buffer);
-                        m_prog.rows_mul_fr_buffer(rows_fr, block, inv, m_M1, m_N1, m_N2, &m_x_d, m_buffer);
+                        m_prog.rows_mul_to_buffer(rows_to, block, inverse, m_M1, m_N1, m_N2, m_x_d, &m_buffer);
+                        fft1d(inverse, m_N2, m_FFT_1, m_prog, &m_buffer);
+                        m_prog.rows_mul_d(rows_D, block, m_M1, m_N2, inverse ? m_D1_inv : m_D1_fwd, &m_buffer);
+                        fft1d(!inverse, m_N2, m_FFT_1, m_prog, &m_buffer);
+                        m_prog.rows_mul_fr_buffer(rows_fr, block, inverse, m_M1, m_N1, m_N2, &m_x_d, m_buffer);
                 }
 
                 if (m_N2 > 1)
                 {
                         // по столбцам
 
-                        m_prog.cols_mul_to_buffer(cols_to, block, inv, m_M2, m_N1, m_N2, m_x_d, &m_buffer);
-                        fft1d<2>(inv, m_N1, &m_buffer);
-                        m_prog.rows_mul_d(cols_D, block, m_M2, m_N1, inv ? m_D2_inv : m_D2_fwd, &m_buffer);
-                        fft1d<2>(!inv, m_N1, &m_buffer);
-                        m_prog.cols_mul_fr_buffer(cols_fr, block, inv, m_M2, m_N1, m_N2, &m_x_d, m_buffer);
+                        m_prog.cols_mul_to_buffer(cols_to, block, inverse, m_M2, m_N1, m_N2, m_x_d, &m_buffer);
+                        fft1d(inverse, m_N1, m_FFT_2, m_prog, &m_buffer);
+                        m_prog.rows_mul_d(cols_D, block, m_M2, m_N1, inverse ? m_D2_inv : m_D2_fwd, &m_buffer);
+                        fft1d(!inverse, m_N1, m_FFT_2, m_prog, &m_buffer);
+                        m_prog.cols_mul_fr_buffer(cols_fr, block, inverse, m_M2, m_N1, m_N2, &m_x_d, m_buffer);
                 }
         }
 
-        void exec(bool inv, std::vector<std::complex<float>>* src) override
+        void exec(bool inverse, std::vector<std::complex<float>>* src) override
         {
                 int size = src->size();
                 if (size != m_N1 * m_N2)
@@ -282,7 +284,7 @@ class GL2D final : public IFourierGL1, public IFourierGL2
 
                 double start_time = time_in_seconds();
 
-                dft2d(inv);
+                dft2d(inverse);
 
                 glFinish();
 
@@ -292,12 +294,13 @@ class GL2D final : public IFourierGL1, public IFourierGL2
 
                 *src = conv<float>(std::move(data));
         }
-        void exec(bool inv, bool srgb) override
+
+        void exec(bool inverse, bool srgb) override
         {
                 vec2i grid(group_count(m_N1, block[0]), group_count(m_N2, block[1]));
 
                 m_prog.move_to_input(grid, block, m_N1, m_N2, srgb, m_texture_handle, &m_x_d);
-                dft2d(inv);
+                dft2d(inverse);
                 m_prog.move_to_output(grid, block, m_N1, m_N2, static_cast<FP>(1.0 / (m_N1 * m_N2)), m_texture_handle, m_x_d);
         }
 
@@ -349,16 +352,16 @@ public:
                 // Формулы 13.13, 13.26.
 
                 m_D1_fwd.load(conv<FP>(compute_h2(m_N1, m_M1, compute_h(m_N1, false, 1.0))));
-                fft1d<1>(false, 1, &m_D1_fwd);
+                fft1d(false, 1, m_FFT_1, m_prog, &m_D1_fwd);
 
                 m_D1_inv.load(conv<FP>(compute_h2(m_N1, m_M1, compute_h(m_N1, true, M1_Div_N1))));
-                fft1d<1>(true, 1, &m_D1_inv);
+                fft1d(true, 1, m_FFT_1, m_prog, &m_D1_inv);
 
                 m_D2_fwd.load(conv<FP>(compute_h2(m_N2, m_M2, compute_h(m_N2, false, 1.0))));
-                fft1d<2>(false, 1, &m_D2_fwd);
+                fft1d(false, 1, m_FFT_2, m_prog, &m_D2_fwd);
 
                 m_D2_inv.load(conv<FP>(compute_h2(m_N2, m_M2, compute_h(m_N2, true, M2_Div_N2))));
-                fft1d<2>(true, 1, &m_D2_inv);
+                fft1d(true, 1, m_FFT_2, m_prog, &m_D2_inv);
         }
 };
 }

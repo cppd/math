@@ -26,13 +26,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 struct IFourierGL1
 {
         virtual ~IFourierGL1() = default;
-        virtual void exec(bool inv, std::vector<std::complex<float>>* src) = 0;
+        virtual void exec(bool inverse, std::vector<std::complex<float>>* src) = 0;
 };
 
 struct IFourierGL2
 {
         virtual ~IFourierGL2() = default;
-        virtual void exec(bool inv, bool srgb) = 0;
+        virtual void exec(bool inverse, bool srgb) = 0;
 };
 
 std::unique_ptr<IFourierGL1> create_fft_gl2d(int x, int y);

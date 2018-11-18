@@ -149,13 +149,13 @@ std::string move_to_output_source()
 }
 
 template <typename T>
-std::string fft_shared_source(int N, int shared_size, bool reverse_input)
+std::string fft_shared_source(int n, int n_bits, int shared_size, bool reverse_input)
 {
         std::string s;
         s += floating_point_source<T>();
-        s += "const uint N = " + std::to_string(N) + ";\n";
-        s += "const uint N_MASK = " + std::to_string(N - 1) + ";\n";
-        s += "const uint N_BITS = " + std::to_string(binary_size(N)) + ";\n";
+        s += "const uint N = " + std::to_string(n) + ";\n";
+        s += "const uint N_MASK = " + std::to_string(n - 1) + ";\n";
+        s += "const uint N_BITS = " + std::to_string(n_bits) + ";\n";
         s += "const uint SHARED_SIZE = " + std::to_string(shared_size) + ";\n";
         s += "const bool REVERSE_INPUT = " + (reverse_input ? std::string("true") : std::string("false")) + ";\n";
         return s + dft_fft_shared_shader;
@@ -177,11 +177,14 @@ DeviceProg<T>::DeviceProg()
 }
 
 template <typename T>
-DeviceProgFFTShared<T>::DeviceProgFFTShared(int N, int shared_size, bool reverse_input, int group_size)
-        : m_group_size(group_size),
+DeviceProgFFTShared<T>::DeviceProgFFTShared(int n, int shared_size, bool reverse_input, int group_size)
+        : m_n(n),
+          m_n_bits(binary_size(n)),
+          m_group_size(group_size),
           m_shared_size(shared_size),
-          m_fft(opengl::ComputeShader(fft_shared_source<T>(N, shared_size, reverse_input)))
+          m_fft(opengl::ComputeShader(fft_shared_source<T>(m_n, m_n_bits, m_shared_size, reverse_input)))
 {
+        ASSERT((1 << m_n_bits) == m_n);
 }
 
 template class DeviceProg<float>;
