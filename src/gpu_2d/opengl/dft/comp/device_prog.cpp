@@ -20,9 +20,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/bits.h"
 
 // clang-format off
-constexpr const char dft_fft_shader[]
+constexpr const char dft_fft_global_shader[]
 {
-#include "dft_fft.comp.str"
+#include "dft_fft_global.comp.str"
+};
+constexpr const char dft_fft_shared_shader[]
+{
+#include "dft_fft_shared.comp.str"
+};
+constexpr const char dft_bit_reverse_shader[]
+{
+#include "dft_bit_reverse.comp.str"
 };
 constexpr const char dft_copy_shader[]
 {
@@ -62,21 +70,19 @@ std::string floating_point_source<double>()
 }
 
 template <typename T>
-std::string reverse_source()
+std::string bit_reverse_source()
 {
         std::string s;
         s += floating_point_source<T>();
-        s += "#define FUNCTION_REVERSE\n\n";
-        return s + dft_fft_shader;
+        return s + dft_bit_reverse_shader;
 }
 
 template <typename T>
-std::string fft_source()
+std::string fft_global_source()
 {
         std::string s;
         s += floating_point_source<T>();
-        s += "#define FUNCTION_FFT\n\n";
-        return s + dft_fft_shader;
+        return s + dft_fft_global_shader;
 }
 
 template <typename T>
@@ -143,24 +149,23 @@ std::string move_to_output_source()
 }
 
 template <typename T>
-std::string fft_radix_2_source(int N, int shared_size, bool reverse_input)
+std::string fft_shared_source(int N, int shared_size, bool reverse_input)
 {
         std::string s;
         s += floating_point_source<T>();
-        s += "#define FUNCTION_FFT_RADIX_2\n\n";
         s += "const uint N = " + std::to_string(N) + ";\n";
         s += "const uint N_MASK = " + std::to_string(N - 1) + ";\n";
         s += "const uint N_BITS = " + std::to_string(binary_size(N)) + ";\n";
         s += "const uint SHARED_SIZE = " + std::to_string(shared_size) + ";\n";
         s += "const bool REVERSE_INPUT = " + (reverse_input ? std::string("true") : std::string("false")) + ";\n";
-        return s + dft_fft_shader;
+        return s + dft_fft_shared_shader;
 }
 }
 
 template <typename T>
 DeviceProg<T>::DeviceProg()
-        : m_reverse(opengl::ComputeShader(reverse_source<T>())),
-          m_fft(opengl::ComputeShader(fft_source<T>())),
+        : m_bit_reverse(opengl::ComputeShader(bit_reverse_source<T>())),
+          m_fft(opengl::ComputeShader(fft_global_source<T>())),
           m_rows_mul_to_buffer(opengl::ComputeShader(rows_mul_to_buffer_source<T>())),
           m_rows_mul_fr_buffer(opengl::ComputeShader(rows_mul_fr_buffer_source<T>())),
           m_cols_mul_to_buffer(opengl::ComputeShader(cols_mul_to_buffer_source<T>())),
@@ -172,14 +177,14 @@ DeviceProg<T>::DeviceProg()
 }
 
 template <typename T>
-DeviceProgFFTRadix2<T>::DeviceProgFFTRadix2(int N, int shared_size, bool reverse_input, int group_size)
+DeviceProgFFTShared<T>::DeviceProgFFTShared(int N, int shared_size, bool reverse_input, int group_size)
         : m_group_size(group_size),
           m_shared_size(shared_size),
-          m_fft(opengl::ComputeShader(fft_radix_2_source<T>(N, shared_size, reverse_input)))
+          m_fft(opengl::ComputeShader(fft_shared_source<T>(N, shared_size, reverse_input)))
 {
 }
 
 template class DeviceProg<float>;
 template class DeviceProg<double>;
-template class DeviceProgFFTRadix2<float>;
-template class DeviceProgFFTRadix2<double>;
+template class DeviceProgFFTShared<float>;
+template class DeviceProgFFTShared<double>;

@@ -188,8 +188,8 @@ class GL2D final : public IFourierGL1, public IFourierGL2
         const int m_shared_size_1, m_shared_size_2;
         const int m_group_size_1, m_group_size_2;
         DeviceProg<FP> m_prog;
-        DeviceProgFFTRadix2<FP> m_FFT_1;
-        DeviceProgFFTRadix2<FP> m_FFT_2;
+        DeviceProgFFTShared<FP> m_FFT_1;
+        DeviceProgFFTShared<FP> m_FFT_2;
 
         template <int type>
         void fft1d(bool inv, int rows, DeviceMemory<std::complex<FP>>* data) const
@@ -217,7 +217,7 @@ class GL2D final : public IFourierGL1, public IFourierGL2
                         // m_prog.FFT_1 и m_prog.FFT_2, то вначале надо отдельно выполнить перестановку данных,
                         // а потом запускать функции с отключенной перестановкой, иначе одни запуски будут
                         // вносить изменения в данные других запусков, так как результат пишется в исходные данные.
-                        m_prog.reverse(group_count(data_size, BLOCK_SIZE), BLOCK_SIZE, data_size, N - 1, N_bits, data);
+                        m_prog.bit_reverse(group_count(data_size, BLOCK_SIZE), BLOCK_SIZE, data_size, N - 1, N_bits, data);
 
                         (type == 1) ? m_FFT_1.exec(inv, data_size, data) : m_FFT_2.exec(inv, data_size, data);
 

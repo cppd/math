@@ -1,0 +1,49 @@
+/*
+Copyright (C) 2017, 2018 Topological Manifold
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+// gl_GlobalInvocationID = gl_WorkGroupID * gl_LocalGroupSizeARB + gl_LocalInvocationID
+
+layout(local_size_variable) in;
+
+layout(location = 0) uniform uint max_threads;
+layout(location = 1) uniform uint N_mask;
+layout(location = 2) uniform uint N_bits;
+
+layout(std430, binding = 0) buffer StorageBuffer
+{
+        complex data[];
+};
+
+void main()
+{
+        uint thread_id = gl_GlobalInvocationID.x;
+        if (thread_id >= max_threads)
+        {
+                return;
+        }
+        uint i = thread_id & N_mask;
+        uint N_base = thread_id - i;
+        uint r = bit_reverse(i, N_bits);
+        if (i < r) // для исключения одинаковых обменов и уже сделанных обменов
+        {
+                uint i_index = N_base + i;
+                uint r_index = N_base + r;
+                complex t = data[i_index];
+                data[i_index] = data[r_index];
+                data[r_index] = t;
+        }
+}

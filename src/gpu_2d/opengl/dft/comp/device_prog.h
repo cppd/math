@@ -28,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 template <typename T>
 class DeviceProg final
 {
-        opengl::ComputeProgram m_reverse;
+        opengl::ComputeProgram m_bit_reverse;
         opengl::ComputeProgram m_fft;
         opengl::ComputeProgram m_rows_mul_to_buffer;
         opengl::ComputeProgram m_rows_mul_fr_buffer;
@@ -41,13 +41,14 @@ class DeviceProg final
 public:
         DeviceProg();
 
-        void reverse(int blocks, int threads, int max_threads, int N_mask, int N_bits, DeviceMemory<std::complex<T>>* data) const
+        void bit_reverse(int blocks, int threads, int max_threads, int N_mask, int N_bits,
+                         DeviceMemory<std::complex<T>>* data) const
         {
-                m_reverse.set_uniform_unsigned(0, max_threads);
-                m_reverse.set_uniform_unsigned(1, N_mask);
-                m_reverse.set_uniform_unsigned(2, N_bits);
+                m_bit_reverse.set_uniform_unsigned(0, max_threads);
+                m_bit_reverse.set_uniform_unsigned(1, N_mask);
+                m_bit_reverse.set_uniform_unsigned(2, N_bits);
                 data->bind(0);
-                m_reverse.dispatch_compute(blocks, 1, 1, threads, 1, 1);
+                m_bit_reverse.dispatch_compute(blocks, 1, 1, threads, 1, 1);
                 glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
         }
 
@@ -152,13 +153,13 @@ public:
 };
 
 template <typename T>
-class DeviceProgFFTRadix2 final
+class DeviceProgFFTShared final
 {
         const int m_group_size, m_shared_size;
         opengl::ComputeProgram m_fft;
 
 public:
-        DeviceProgFFTRadix2(int N, int shared_size, bool reverse_input, int group_size);
+        DeviceProgFFTShared(int N, int shared_size, bool reverse_input, int group_size);
 
         void exec(bool inv, int data_size, DeviceMemory<std::complex<T>>* global_data) const
         {

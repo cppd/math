@@ -1,0 +1,129 @@
+/*
+Copyright (C) 2017, 2018 Topological Manifold
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+// gl_GlobalInvocationID = gl_WorkGroupID * gl_LocalGroupSizeARB + gl_LocalInvocationID
+
+layout(local_size_variable) in;
+
+layout(location = 0) uniform bool inverse_dft;
+layout(location = 1) uniform uint DATA_SIZE;
+
+layout(std430, binding = 0) buffer StorageBuffer
+{
+        complex global_data[];
+};
+
+// Вставляются в текст программы
+// const uint N =
+// const uint N_MASK =
+// const uint N_BITS =
+// const uint SHARED_SIZE =
+// const bool REVERSE_INPUT =
+
+// До какого размера рассчитывать
+const uint N_MAX = (N <= SHARED_SIZE) ? N : SHARED_SIZE;
+
+shared complex shared_data[SHARED_SIZE];
+
+void copy_global_to_shared()
+{
+        for (uint local = gl_LocalInvocationID.x, global = gl_WorkGroupID.x * SHARED_SIZE + gl_LocalInvocationID.x;
+             local < SHARED_SIZE && global < DATA_SIZE; local += gl_LocalGroupSizeARB.x, global += gl_LocalGroupSizeARB.x)
+        {
+                if (REVERSE_INPUT)
+                {
+                        uint i = global & N_MASK; // номер элемента внутри одного БПФ
+                        shared_data[local] = global_data[global - i + bit_reverse(i, N_BITS)];
+                }
+                else
+                {
+                        shared_data[local] = global_data[global];
+                }
+        }
+}
+
+void copy_shared_to_global()
+{
+        for (uint local = gl_LocalInvocationID.x, global = gl_WorkGroupID.x * SHARED_SIZE + gl_LocalInvocationID.x;
+             local < SHARED_SIZE && global < DATA_SIZE; local += gl_LocalGroupSizeARB.x, global += gl_LocalGroupSizeARB.x)
+        {
+                global_data[global] = !inverse_dft ? shared_data[local] : (shared_data[local] / N_MAX);
+        }
+}
+
+void main()
+{
+        // Каждая группа потоков обрабатывает количество данных максимум SHARED_SIZE.
+        //  Может быть три случая размера ДПФ = N:
+        // 1)   Размер каждого ДПФ кратно меньше SHARED_SIZE.
+        //    Тогда глобально обработать не больше DATA_SIZE.
+        //    Например, может потребоваться выполнить 10 преобразований размером
+        //    по 16 элементов с размером SHARED_SIZE = 128, то есть 8 преобразований
+        //    на первую группу и на вторую группу только 2 преобразования, а не 8.
+        // 2)  Размер каждого ДПФ равен SHARED_SIZE.
+        // 3)  Размер каждого ДПФ кратно больше SHARED_SIZE. Тогда рассчитывается
+        //     частично до SHARED_SIZE и без bit_reverse на входных данных.
+
+        // Проверка ошибки запуска. Нужно, чтобы на 2 элемента было не больше одного потока.
+        if (gl_LocalGroupSizeARB.x > SHARED_SIZE / 2)
+        {
+                return;
+        }
+        // Проверка ошибки на лишнее число групп потоков
+        if (DATA_SIZE <= gl_WorkGroupID.x * SHARED_SIZE)
+        {
+                return;
+        }
+
+        copy_global_to_shared();
+
+        // Один поток обрабатывает 2 элемента, поэтому >> 1
+        uint max_local = min(SHARED_SIZE, DATA_SIZE - gl_WorkGroupID.x * SHARED_SIZE) >> 1;
+
+        // Первоначально M = 2, поэтому просто PI
+        float_point Two_PI_Div_M = inverse_dft ? PI : -PI;
+
+        for (uint M_2 = 1; M_2 < N_MAX; M_2 <<= 1, Two_PI_Div_M *= 0.5)
+        {
+                barrier();
+
+                for (uint local = gl_LocalInvocationID.x; local < max_local; local += gl_LocalGroupSizeARB.x)
+                {
+                        // Номер внутри отдельного БПФ
+                        uint idx = local & (M_2 - 1); // Это равно local % M_2
+                        // Смещение блока БПФ в массиве
+                        uint base = (local - idx) << 1;
+
+                        uint index_t = base + idx;
+                        uint index_u = index_t + M_2;
+
+                        complex v_t = shared_data[index_t];
+                        complex v_u = shared_data[index_u];
+
+                        complex twiddle_factor = complex(cos(Two_PI_Div_M * idx), sin(Two_PI_Div_M * idx));
+
+                        complex k = mul(twiddle_factor, v_u);
+
+                        shared_data[index_t] = v_t + k;
+                        shared_data[index_u] = v_t - k;
+                }
+        }
+
+        barrier();
+
+        copy_shared_to_global();
+}
