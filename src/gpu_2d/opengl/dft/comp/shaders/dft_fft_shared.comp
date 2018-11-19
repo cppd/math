@@ -116,7 +116,7 @@ void main()
 
                         complex twiddle_factor = complex(cos(Two_PI_Div_M * idx), sin(Two_PI_Div_M * idx));
 
-                        complex k = mul(twiddle_factor, v_u);
+                        complex k = complex_mul(twiddle_factor, v_u);
 
                         shared_data[index_t] = v_t + k;
                         shared_data[index_u] = v_t - k;

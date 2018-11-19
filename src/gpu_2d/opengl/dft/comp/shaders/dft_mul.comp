@@ -40,19 +40,19 @@ complex mul_data(complex x, bool inverse_dft, int l, int N)
         // float_point factor = (quotient & 1) + float_point(remainder) / N;
         // precise float_point theta = (inverse_dft ? PI : -PI) * factor;
         // complex k = complex(cos(theta), sin(theta));
-        // return mul(k, x);
+        // return complex_mul(k, x);
 
         float_point factor = float_point(remainder) / N;
         precise float_point theta = (inverse_dft ? PI : -PI) * factor;
         if ((quotient & 1) == 0)
         {
                 complex k = complex(cos(theta), sin(theta));
-                return mul(k, x);
+                return complex_mul(k, x);
         }
         else
         {
                 complex k = complex(-cos(theta), -sin(theta));
-                return mul(k, x);
+                return complex_mul(k, x);
         }
 }
 
@@ -211,7 +211,7 @@ void main()
         }
         complex d = D[i];
         complex y = data[j * columns + i];
-        data[j * columns + i] = mul(d, y);
+        data[j * columns + i] = complex_mul(d, y);
 }
 
 #endif

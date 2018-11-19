@@ -35,9 +35,9 @@ namespace opengl
 class Shader
 {
         // clang-format off
-        static constexpr std::string_view COMMON_SHADER_TEXT
+        static constexpr std::string_view HEADER
         {
-#include "common_opengl.glsl.str"
+#include "opengl_header.glsl.str"
         };
         // clang-format on
 
@@ -83,10 +83,10 @@ protected:
                 m_shader = glCreateShader(type);
                 try
                 {
-                        const std::array<const GLchar*, 3> source_pointers = {COMMON_SHADER_TEXT.data(), EMPTY_LINE.data(),
+                        const std::array<const GLchar*, 3> source_pointers = {HEADER.data(), EMPTY_LINE.data(),
                                                                               shader_text.data()};
 
-                        const std::array<GLint, 3> source_sizes = {to_type<GLint, COMMON_SHADER_TEXT.size()>(),
+                        const std::array<GLint, 3> source_sizes = {to_type<GLint, HEADER.size()>(),
                                                                    to_type<GLint, EMPTY_LINE.size()>(),
                                                                    to_type<GLint>(shader_text.size())};
 
