@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -15,20 +15,18 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-// layout(binding = 0) uniform sampler2D tex;
 layout(bindless_sampler) uniform sampler2D tex;
 
-// layout(binding = 1, rgba32f) readonly uniform image2D img;
-
-// in vec2 vs_tex_coord;
+// in vec2 vs_texture_coordinates;
 
 out vec4 color;
 
 void main(void)
 {
-        // color = texture(tex, vs_tex_coord).xxxx;
-        color = texelFetch(tex, ivec2(gl_FragCoord.xy), 0).xxxx;
-        // color = imageLoad(img, ivec2(gl_FragCoord.xy));
+        // float c = texture(tex, vs_texture_coordinates).x;
+        float c = texelFetch(tex, ivec2(gl_FragCoord.xy), 0).x;
 
-        // color += vec4(0.5);
+        // c += 0.5;
+
+        color = vec4(c, c, c, 1);
 }

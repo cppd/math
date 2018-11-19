@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -15,10 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-// layout (location = 0) in vec4 position;
-// layout (location = 1) in vec2 tex_coord;
-
-out vec2 vs_tex_coord;
+// out vec2 vs_texture_coordinates;
 
 // clang-format off
 const vec4 vertices[4] = vec4[4]
@@ -30,15 +27,15 @@ const vec4 vertices[4] = vec4[4]
 );
 // clang-format on
 
-// рисование в текстуру перевёрнуто по вертикали,
+// Рисование в текстуру перевёрнуто по вертикали,
 // поэтому координаты текстуры (0, 0) находятся внизу слева
-// const vec2 texture_coord[4] = vec2[4](vec2(0, 1), vec2(1, 1), vec2(0, 0), vec2(1, 0));
+// const vec2 texture_coordinates[4] = vec2[4](vec2(0, 1), vec2(1, 1), vec2(0, 0), vec2(1, 0));
 
 void main(void)
 {
         if (gl_VertexID < 4)
         {
                 gl_Position = vertices[gl_VertexID];
-                // vs_tex_coord = texture_coord[gl_VertexID];
+                // vs_texture_coordinates = texture_coordinates[gl_VertexID];
         }
 }

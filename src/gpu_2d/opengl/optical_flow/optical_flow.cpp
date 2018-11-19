@@ -499,7 +499,7 @@ public:
                                      m_image_pyramid[m_j_index]);
 
 #if 0
-                // m_draw_prog_image.set_uniform_handle("tex", m_image_pyramid_dx[0].texture_handle());
+                // m_draw_prog_debug.set_uniform_handle("tex", m_image_pyramid_dx[0].texture_handle());
                 m_draw_prog_debug.set_uniform_handle("tex", m_image_pyramid[m_i_index][0].texture_handle());
                 m_draw_prog_debug.draw_arrays(GL_TRIANGLE_STRIP, 0, 4);
 #else
