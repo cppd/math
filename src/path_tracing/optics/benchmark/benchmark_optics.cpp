@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "optics_benchmark.h"
+#include "benchmark_optics.h"
 
 #include "com/log.h"
 #include "com/random/engine.h"
@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <random>
 #include <vector>
 
-void optics_benchmark()
+void benchmark_optics()
 {
         constexpr int COUNT = 10000000;
 

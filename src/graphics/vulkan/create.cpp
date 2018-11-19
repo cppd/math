@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "print.h"
 #include "query.h"
 
-#include "application/application_name.h"
+#include "application/name.h"
 #include "com/error.h"
 #include "com/log.h"
 #include "com/string/vector.h"

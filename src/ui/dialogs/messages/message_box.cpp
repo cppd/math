@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "message_box.h"
 
-#include "application/application_name.h"
+#include "application/name.h"
 #include "ui/support/support.h"
 
 #include <QMessageBox>

@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "main_window.h"
 
-#include "application/application_name.h"
+#include "application/name.h"
 #include "com/alg.h"
 #include "com/error.h"
 #include "com/file/file_sys.h"
