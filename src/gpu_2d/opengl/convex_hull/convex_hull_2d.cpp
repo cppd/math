@@ -100,33 +100,23 @@ int iteration_count_merge(int size)
         return (size > 2) ? log_2(size - 1) : 0;
 }
 
-std::string prepare_source(int width, int height, int group_size)
+std::string prepare_source(int group_size)
 {
         std::string s;
-        s += "const int WIDTH = " + std::to_string(width) + ";\n";
-        s += "const int HEIGHT = " + std::to_string(height) + ";\n";
         s += "const int GROUP_SIZE = " + std::to_string(group_size) + ";\n";
         s += '\n';
-        s += prepare_shader;
-        return s;
+        return s + prepare_shader;
 }
-std::string merge_source(int size, int group_size)
+std::string merge_source(int line_size)
 {
         std::string s;
-        s += "const int SIZE = " + std::to_string(size) + ";\n";
-        s += "const int GROUP_SIZE = " + std::to_string(group_size) + ";\n";
-        s += "const int ITERATION_COUNT = " + std::to_string(iteration_count_merge(size)) + ";\n";
+        s += "const int LINE_SIZE = " + std::to_string(line_size) + ";\n";
         s += '\n';
-        s += merge_shader;
-        return s;
+        return s + merge_shader;
 }
-std::string filter_source(int size)
+std::string filter_source()
 {
-        std::string s;
-        s += "const int SIZE = " + std::to_string(size) + ";\n";
-        s += '\n';
-        s += filter_shader;
-        return s;
+        return filter_shader;
 }
 }
 
@@ -151,9 +141,9 @@ public:
                   m_height(objects.texture().height()),
                   m_group_size_prepare(group_size_prepare(m_width, 2 * sizeof(GLint))),
                   m_group_size_merge(group_size_merge(m_height, sizeof(GLfloat))),
-                  m_prepare_prog(opengl::ComputeShader(prepare_source(m_width, m_height, m_group_size_prepare))),
-                  m_merge_prog(opengl::ComputeShader(merge_source(m_height, m_group_size_merge))),
-                  m_filter_prog(opengl::ComputeShader(filter_source(m_height))),
+                  m_prepare_prog(opengl::ComputeShader(prepare_source(m_group_size_prepare))),
+                  m_merge_prog(opengl::ComputeShader(merge_source(m_height))),
+                  m_filter_prog(opengl::ComputeShader(filter_source())),
                   m_draw_prog(opengl::VertexShader(vertex_shader), opengl::FragmentShader(fragment_shader)),
                   m_line_min(m_height, 1),
                   m_line_max(m_height, 1),
@@ -166,6 +156,7 @@ public:
 
                 m_merge_prog.set_uniform_handles(
                         "lines", {m_line_min.image_resident_handle_read_write(), m_line_max.image_resident_handle_read_write()});
+                m_merge_prog.set_uniform("iteration_count", iteration_count_merge(m_height));
 
                 m_points.create_dynamic_copy((2 * m_height) * (2 * sizeof(GLfloat)));
 

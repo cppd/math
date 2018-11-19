@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -15,6 +15,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+// gl_GlobalInvocationID = gl_WorkGroupID * gl_LocalGroupSizeARB + gl_LocalInvocationID
+
 // Работает только 1 поток
 
 layout(local_size_variable) in;
@@ -24,14 +26,16 @@ layout(local_size_variable) in;
 layout(bindless_image, r32f) readonly uniform image2D line_min;
 layout(bindless_image, r32f) readonly uniform image2D line_max;
 
+const int SIZE = imageSize(line_min).x;
+
 // Точки с отрицательным значением минимума или максимума надо убрать.
 
-// тут результат
+// Тут результат
 layout(std430, binding = 0) writeonly buffer StorageBuffer
 {
         vec2 points[];
 };
-// количество точек результата
+// Количество точек результата
 layout(bindless_image, r32i) writeonly uniform iimage2D points_count;
 
 void main(void)

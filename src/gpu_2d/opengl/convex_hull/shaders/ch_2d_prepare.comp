@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -15,11 +15,18 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+// gl_GlobalInvocationID = gl_WorkGroupID * gl_LocalGroupSizeARB + gl_LocalInvocationID
+
+// Вставляется в текст программы
+// const int GROUP_SIZE =
+
 layout(local_size_variable) in;
 
 layout(bindless_image, r32i) readonly uniform iimage2D objects;
 layout(bindless_image, r32f) writeonly uniform image2D line_min;
 layout(bindless_image, r32f) writeonly uniform image2D line_max;
+
+const ivec2 image_size = imageSize(objects);
 
 bool not_background(ivec2 p)
 {
@@ -27,13 +34,11 @@ bool not_background(ivec2 p)
         return s.r != 0;
 }
 
-// в x пишутся минимумы, в y пишутся максимумы
+// В x пишутся минимумы, в y пишутся максимумы
 shared ivec2 shared_buffer[GROUP_SIZE];
 
 void main(void)
 {
-        // gl_GlobalInvocationID = gl_WorkGroupID * gl_LocalGroupSizeARB + gl_LocalInvocationID;
-
         // Одна группа обрабатывает одну строку
         // gl_LocalInvocationID.x координата X по горизонтали
         // gl_WorkGroupID.x координата Y по вертикали
@@ -44,7 +49,7 @@ void main(void)
         int min_x = 1000000;
         int max_x = -1000000;
 
-        for (int x = local_id; x < WIDTH; x += GROUP_SIZE)
+        for (int x = local_id; x < image_size.x; x += GROUP_SIZE)
         {
                 if (not_background(ivec2(x, y)))
                 {
@@ -73,7 +78,7 @@ void main(void)
                 ivec2 result = shared_buffer[0];
 
                 // objects имеет 0 по вертикали внизу, надо записать с 0 вверху
-                int reverse_y = HEIGHT - y - 1;
+                int reverse_y = image_size.y - y - 1;
 
                 if (result.y >= 0)
                 {

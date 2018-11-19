@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -15,22 +15,28 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+// gl_GlobalInvocationID = gl_WorkGroupID * gl_LocalGroupSizeARB + gl_LocalInvocationID
+
+// Вставляется в текст программы
+// const int LINE_SIZE =
+
 layout(local_size_variable) in;
 
 layout(bindless_image, r32f) uniform image2D lines[2];
+uniform int iteration_count;
 
-shared float shared_buffer[SIZE];
+shared float shared_buffer[LINE_SIZE];
 
 void copy_to_buffer()
 {
-        for (int i = int(gl_LocalInvocationID.x); i < SIZE; i += GROUP_SIZE)
+        for (int i = int(gl_LocalInvocationID.x); i < LINE_SIZE; i += int(gl_LocalGroupSizeARB.x))
         {
                 shared_buffer[i] = imageLoad(lines[gl_WorkGroupID.x], ivec2(i, 0)).r;
         }
 }
 void copy_from_buffer()
 {
-        for (int i = int(gl_LocalInvocationID.x); i < SIZE; i += GROUP_SIZE)
+        for (int i = int(gl_LocalInvocationID.x); i < LINE_SIZE; i += int(gl_LocalGroupSizeARB.x))
         {
                 imageStore(lines[gl_WorkGroupID.x], ivec2(i, 0), vec4(shared_buffer[i], 0, 0, 0));
         }
@@ -149,18 +155,18 @@ void main(void)
 {
         copy_to_buffer();
 
-        int len = GROUP_SIZE << 2;
+        int len = int(gl_LocalGroupSizeARB.x << 2);
         int low = int(gl_LocalInvocationID.x << 2);
         int middle = low + 2;
         int high = low + 4;
 
-        for (int i = 0; i < ITERATION_COUNT; ++i, low <<= 1, middle <<= 1, high <<= 1, len <<= 1)
+        for (int i = 0; i < iteration_count; ++i, low <<= 1, middle <<= 1, high <<= 1, len <<= 1)
         {
                 barrier();
 
-                for (int shift = 0; middle + shift < SIZE; shift += len)
+                for (int shift = 0; middle + shift < LINE_SIZE; shift += len)
                 {
-                        process(low + shift, middle + shift, min(high + shift, SIZE));
+                        process(low + shift, middle + shift, min(high + shift, LINE_SIZE));
                 }
         }
 
