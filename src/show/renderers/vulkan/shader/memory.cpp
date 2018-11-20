@@ -62,6 +62,16 @@ std::vector<VkDescriptorSetLayoutBinding> TrianglesSharedMemory::descriptor_set_
 
                 bindings.push_back(b);
         }
+        {
+                VkDescriptorSetLayoutBinding b = {};
+                b.binding = 4;
+                b.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+                b.descriptorCount = 1;
+                b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+                b.pImmutableSamplers = nullptr;
+
+                bindings.push_back(b);
+        }
 
         return bindings;
 }
@@ -219,6 +229,16 @@ void TrianglesSharedMemory::set_shadow_texture(VkSampler sampler, const vulkan::
         image_info.sampler = sampler;
 
         m_descriptors.update_descriptor_set(m_descriptor_set, 3, image_info);
+}
+void TrianglesSharedMemory::set_object_image(const vulkan::StorageImage* storage_image) const
+{
+        ASSERT(storage_image && storage_image->format() == VK_FORMAT_R32_UINT);
+
+        VkDescriptorImageInfo image_info = {};
+        image_info.imageLayout = storage_image->image_layout();
+        image_info.imageView = storage_image->image_view();
+
+        m_descriptors.update_descriptor_set(m_descriptor_set, 4, image_info);
 }
 
 //

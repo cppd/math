@@ -292,10 +292,12 @@ vulkan::RenderPass create_shadow_render_pass(VkDevice device, VkFormat depth_ima
 }
 
 template <size_t N>
-vulkan::CommandBuffers create_command_buffers(VkDevice device, uint32_t width, uint32_t height, VkRenderPass render_pass,
-                                              const std::vector<vulkan::Framebuffer>& framebuffers, VkCommandPool command_pool,
-                                              const std::array<VkClearValue, N>& clear_values,
-                                              const std::function<void(VkCommandBuffer command_buffer)>& commands)
+vulkan::CommandBuffers create_command_buffers(
+        VkDevice device, uint32_t width, uint32_t height, VkRenderPass render_pass,
+        const std::vector<vulkan::Framebuffer>& framebuffers, VkCommandPool command_pool,
+        const std::array<VkClearValue, N>& clear_values,
+        const std::optional<std::function<void(VkCommandBuffer command_buffer)>>& before_render_pass,
+        const std::function<void(VkCommandBuffer command_buffer)>& commands)
 {
         VkResult result;
 
@@ -312,6 +314,11 @@ vulkan::CommandBuffers create_command_buffers(VkDevice device, uint32_t width, u
                 if (result != VK_SUCCESS)
                 {
                         vulkan::vulkan_function_error("vkBeginCommandBuffer", result);
+                }
+
+                if (before_render_pass)
+                {
+                        (*before_render_pass)(command_buffers[i]);
                 }
 
                 VkRenderPassBeginInfo render_pass_info = {};
@@ -409,7 +416,9 @@ MainBuffers::MainBuffers(const vulkan::Swapchain& swapchain, const std::vector<u
         LOG(main_info_string(m_color_attachment.get(), m_depth_attachment.get()));
 }
 
-void MainBuffers::create_command_buffers(const Color& clear_color, const std::function<void(VkCommandBuffer buffer)>& commands)
+void MainBuffers::create_command_buffers(
+        const Color& clear_color, const std::optional<std::function<void(VkCommandBuffer command_buffer)>>& before_render_pass,
+        const std::function<void(VkCommandBuffer buffer)>& commands)
 {
         VkClearValue color = vulkan::color_clear_value(m_swapchain_format, m_swapchain_color_space, clear_color);
 
@@ -420,9 +429,9 @@ void MainBuffers::create_command_buffers(const Color& clear_color, const std::fu
                 clear_values[1] = color;
                 clear_values[2] = vulkan::depth_stencil_clear_value();
 
-                m_command_buffers =
-                        ::create_command_buffers(m_device, m_depth_attachment->width(), m_depth_attachment->height(),
-                                                 m_render_pass, m_framebuffers, m_graphics_command_pool, clear_values, commands);
+                m_command_buffers = ::create_command_buffers(m_device, m_depth_attachment->width(), m_depth_attachment->height(),
+                                                             m_render_pass, m_framebuffers, m_graphics_command_pool, clear_values,
+                                                             before_render_pass, commands);
         }
         else
         {
@@ -430,9 +439,9 @@ void MainBuffers::create_command_buffers(const Color& clear_color, const std::fu
                 clear_values[0] = color;
                 clear_values[1] = vulkan::depth_stencil_clear_value();
 
-                m_command_buffers =
-                        ::create_command_buffers(m_device, m_depth_attachment->width(), m_depth_attachment->height(),
-                                                 m_render_pass, m_framebuffers, m_graphics_command_pool, clear_values, commands);
+                m_command_buffers = ::create_command_buffers(m_device, m_depth_attachment->width(), m_depth_attachment->height(),
+                                                             m_render_pass, m_framebuffers, m_graphics_command_pool, clear_values,
+                                                             before_render_pass, commands);
         }
 }
 
@@ -514,7 +523,7 @@ void ShadowBuffers::create_command_buffers(const std::function<void(VkCommandBuf
 
         m_command_buffers =
                 ::create_command_buffers(m_device, m_depth_attachment->width(), m_depth_attachment->height(), m_render_pass,
-                                         m_framebuffers, m_graphics_command_pool, clear_values, commands);
+                                         m_framebuffers, m_graphics_command_pool, clear_values, std::nullopt, commands);
 }
 
 const vulkan::ShadowDepthAttachment* ShadowBuffers::texture() const noexcept

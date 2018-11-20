@@ -47,7 +47,8 @@ constexpr std::initializer_list<const char*> DEVICE_EXTENSIONS =
 };
 constexpr std::initializer_list<vulkan::PhysicalDeviceFeatures> REQUIRED_DEVICE_FEATURES =
 {
-        vulkan::PhysicalDeviceFeatures::GeometryShader
+        vulkan::PhysicalDeviceFeatures::GeometryShader,
+        vulkan::PhysicalDeviceFeatures::FragmentStoresAndAtomics
 };
 constexpr std::initializer_list<VkFormat> DEPTH_IMAGE_FORMATS =
 {
@@ -643,6 +644,7 @@ class Renderer final : public VulkanRenderer
 
         std::unique_ptr<MainBuffers> m_main_buffers;
         std::unique_ptr<ShadowBuffers> m_shadow_buffers;
+        std::unique_ptr<vulkan::StorageImage> m_object_image;
 
         RendererObjectStorage<DrawObject> m_storage;
 
@@ -828,6 +830,8 @@ class Renderer final : public VulkanRenderer
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
+                //
+
                 if (!m_show_shadow || !m_storage.object() || !m_storage.object()->has_shadow())
                 {
                         std::array<VkSemaphore, 1> wait_semaphores = {wait_semaphore};
@@ -914,6 +918,7 @@ class Renderer final : public VulkanRenderer
 
                 m_main_buffers.reset();
                 m_shadow_buffers.reset();
+                m_object_image.reset();
 
                 //
 
@@ -926,7 +931,11 @@ class Renderer final : public VulkanRenderer
                         *m_swapchain, m_instance.attachment_family_indices(), m_instance.device(),
                         m_instance.graphics_command_pool(), m_instance.graphics_queue(), DEPTH_IMAGE_FORMATS, m_shadow_zoom);
 
+                m_object_image = std::make_unique<vulkan::StorageImage>(
+                        m_instance.create_storage_image(VK_FORMAT_R32_UINT, m_swapchain->width(), m_swapchain->height()));
+
                 m_triangles_shared_shader_memory.set_shadow_texture(m_shadow_sampler, m_shadow_buffers->texture());
+                m_triangles_shared_shader_memory.set_object_image(m_object_image.get());
 
                 m_triangles_pipeline = m_main_buffers->create_pipeline(
                         VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, m_sample_shading,
@@ -951,6 +960,8 @@ class Renderer final : public VulkanRenderer
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
+                //
+
                 m_swapchain = swapchain;
 
                 create_buffers();
@@ -960,18 +971,26 @@ class Renderer final : public VulkanRenderer
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                if (m_main_buffers || m_shadow_buffers)
+                //
+
+                ASSERT((m_main_buffers && m_shadow_buffers && m_object_image) ||
+                       (!m_main_buffers && !m_shadow_buffers && !m_object_image));
+
+                if (m_main_buffers || m_shadow_buffers || m_object_image)
                 {
                         m_instance.device_wait_idle();
 
                         m_main_buffers.reset();
                         m_shadow_buffers.reset();
+                        m_object_image.reset();
                 }
         }
 
         void set_matrices()
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
+
+                //
 
                 ASSERT(m_storage.scale_object() || !m_storage.object());
 
@@ -985,6 +1004,15 @@ class Renderer final : public VulkanRenderer
                         m_shadow_shader_memory.set_matrix(shadow_matrix);
                         m_points_shader_memory.set_matrix(matrix);
                 }
+        }
+
+        void before_render_pass_commands(VkCommandBuffer command_buffer) const
+        {
+                ASSERT(m_thread_id == std::this_thread::get_id());
+
+                //
+
+                m_object_image->clear_commands(command_buffer);
         }
 
         void draw_commands(VkCommandBuffer command_buffer) const
@@ -1054,8 +1082,9 @@ class Renderer final : public VulkanRenderer
                         m_instance.device_wait_idle();
                 }
 
-                m_main_buffers->create_command_buffers(m_clear_color,
-                                                       std::bind(&Renderer::draw_commands, this, std::placeholders::_1));
+                m_main_buffers->create_command_buffers(
+                        m_clear_color, std::bind(&Renderer::before_render_pass_commands, this, std::placeholders::_1),
+                        std::bind(&Renderer::draw_commands, this, std::placeholders::_1));
 
                 m_shadow_buffers->create_command_buffers(std::bind(&Renderer::draw_shadow_commands, this, std::placeholders::_1));
         }

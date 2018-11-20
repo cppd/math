@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <functional>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -58,7 +59,9 @@ public:
 
         //
 
-        void create_command_buffers(const Color& clear_color, const std::function<void(VkCommandBuffer buffer)>& commands);
+        void create_command_buffers(const Color& clear_color,
+                                    const std::optional<std::function<void(VkCommandBuffer command_buffer)>>& before_render_pass,
+                                    const std::function<void(VkCommandBuffer buffer)>& commands);
         void delete_command_buffers();
         const VkCommandBuffer& command_buffer(uint32_t index) const noexcept;
 

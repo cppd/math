@@ -40,6 +40,7 @@ layout(set = 0, binding = 2) uniform Drawing
 drawing;
 
 layout(set = 0, binding = 3) uniform sampler2D shadow_texture;
+layout(set = 0, binding = 4, r32ui) writeonly uniform uimage2D object_image;
 
 // Для каждой группы треугольников с одним материалом отдельно задаётся этот материал и его текстуры
 layout(set = 1, binding = 0) uniform Material
@@ -170,4 +171,6 @@ void main()
         }
 
         color = vec4(color3, 1);
+
+        imageStore(object_image, ivec2(gl_FragCoord.xy), uvec4(1));
 }
