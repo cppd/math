@@ -80,6 +80,12 @@ set(CMAKE_VERBOSE_MAKEFILE TRUE)
 include(CheckCSourceCompiles)
 include(CheckCXXSourceCompiles)
 
+set(CMAKE_C_FLAGS)
+set(CMAKE_CXX_FLAGS)
+#if (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
+#        set(CMAKE_CXX_FLAGS "-stdlib=libc++")
+#endif()
+
 ##################################################
 
 function(AddSourceFiles TARGET_TYPE)
@@ -100,9 +106,6 @@ function(AddSourceFiles TARGET_TYPE)
         if("${PROJECT_BINARY_DIR}" STREQUAL "${PROJECT_SOURCE_DIR}")
                 message(FATAL_ERROR "In-source build")
         endif()
-
-        set(CMAKE_C_FLAGS)
-        set(CMAKE_CXX_FLAGS)
 
         #
 
@@ -317,6 +320,20 @@ function(Check_CXX_Variant_Works)
                 CXX_VARIANT_WORKS)
 endfunction()
 
+# libc++ 7 не имеет std::beta
+function(Check_CXX_Beta_Function_Works)
+        unset(CXX_BETA_FUNCTION_WORKS CACHE)
+        check_cxx_source_compiles(
+                "
+                #include <cmath>
+                int main()
+                {
+                        std::beta(1, 1);
+                }
+                "
+                CXX_BETA_FUNCTION_WORKS)
+endfunction()
+
 ##################################################
 
 project(create_str C CXX)
@@ -372,6 +389,11 @@ target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC "${CMAKE_SOURCE_DIR}/ex
 Check_CXX_Variant_Works()
 if(NOT CXX_VARIANT_WORKS)
         target_compile_definitions(${PROJECT_NAME} PRIVATE -DSTD_VARIANT_NOT_FOUND)
+endif()
+
+Check_CXX_Beta_Function_Works()
+if(NOT CXX_BETA_FUNCTION_WORKS)
+        target_compile_definitions(${PROJECT_NAME} PRIVATE -DSTD_BETA_FUNCTION_NOT_FOUND)
 endif()
 
 ##################################################
