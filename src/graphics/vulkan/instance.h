@@ -56,6 +56,7 @@ class VulkanInstance
         const std::vector<uint32_t> m_swapchain_family_indices;
         const std::vector<uint32_t> m_texture_family_indices;
         const std::vector<uint32_t> m_attachment_family_indices;
+        const std::vector<uint32_t> m_graphics_and_compute_family_indices;
 
 public:
         VulkanInstance(const std::vector<std::string>& required_instance_extensions,
@@ -151,6 +152,12 @@ public:
         {
                 return GrayscaleTexture(m_device, m_graphics_command_pool, m_graphics_queue, m_transfer_command_pool,
                                         m_transfer_queue, m_texture_family_indices, width, height, pixels);
+        }
+
+        StorageImage create_storage_image(VkFormat format, uint32_t width, uint32_t height) const
+        {
+                return StorageImage(m_device, m_graphics_command_pool, m_graphics_queue, m_graphics_and_compute_family_indices,
+                                    format, width, height);
         }
 };
 }

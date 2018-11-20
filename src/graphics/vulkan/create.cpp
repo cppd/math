@@ -211,6 +211,27 @@ VkClearValue depth_stencil_clear_value()
         return clear_value;
 }
 
+VkClearColorValue clear_color_image_value(VkFormat format)
+{
+        VkClearColorValue clear_color;
+        if (format == VK_FORMAT_R32_UINT)
+        {
+                clear_color.uint32[0] = 0;
+        }
+        else if (format == VK_FORMAT_R32_SINT)
+        {
+                clear_color.int32[0] = 0;
+        }
+        else if (format == VK_FORMAT_R32_SFLOAT)
+        {
+                clear_color.float32[0] = 0;
+        }
+        else
+        {
+                error("Unsupported clear color image format " + format_to_string(format));
+        }
+        return clear_color;
+}
 std::vector<VkPipelineShaderStageCreateInfo> pipeline_shader_stage_create_info(const std::vector<const Shader*>& shaders)
 {
         std::vector<VkPipelineShaderStageCreateInfo> res;

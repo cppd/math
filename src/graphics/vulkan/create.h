@@ -46,5 +46,7 @@ Framebuffer create_framebuffer(VkDevice device, VkRenderPass render_pass, uint32
 VkClearValue color_clear_value(VkFormat format, VkColorSpaceKHR color_space, const Color& color);
 VkClearValue depth_stencil_clear_value();
 
+VkClearColorValue clear_color_image_value(VkFormat format);
+
 std::vector<VkPipelineShaderStageCreateInfo> pipeline_shader_stage_create_info(const std::vector<const Shader*>& shaders);
 }

@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "buffers.h"
 
+#include "create.h"
 #include "error.h"
 #include "print.h"
 #include "query.h"
@@ -345,6 +346,77 @@ void transition_image_layout(VkDevice device, VkCommandPool command_pool, VkQueu
         }
 
         vkCmdPipelineBarrier(command_buffer, source_stage, destination_stage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+
+        //
+
+        end_commands(queue, command_buffer);
+}
+
+void cmd_image_pipeline_barrier(VkCommandBuffer command_buffer, VkImage image, VkImageLayout old_layout, VkImageLayout new_layout)
+{
+        VkImageMemoryBarrier barrier = {};
+
+        barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+
+        barrier.oldLayout = old_layout;
+        barrier.newLayout = new_layout;
+
+        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+
+        barrier.image = image;
+
+        barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        barrier.subresourceRange.baseMipLevel = 0;
+        barrier.subresourceRange.levelCount = 1;
+        barrier.subresourceRange.baseArrayLayer = 0;
+        barrier.subresourceRange.layerCount = 1;
+
+        VkPipelineStageFlags source_stage;
+        VkPipelineStageFlags destination_stage;
+
+        if (old_layout == VK_IMAGE_LAYOUT_UNDEFINED && new_layout == VK_IMAGE_LAYOUT_GENERAL)
+        {
+                barrier.srcAccessMask = 0;
+                barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT;
+
+                source_stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+                destination_stage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+        }
+        else if (old_layout == VK_IMAGE_LAYOUT_GENERAL && new_layout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
+        {
+                barrier.srcAccessMask = 0;
+                barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+
+                source_stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+                destination_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+        }
+        else if (old_layout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && new_layout == VK_IMAGE_LAYOUT_GENERAL)
+        {
+                barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+                barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT;
+
+                source_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+                destination_stage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+        }
+        else
+        {
+                error("Unsupported storage image layout transition");
+        }
+
+        vkCmdPipelineBarrier(command_buffer, source_stage, destination_stage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+}
+
+void transition_storage_image_layout(VkDevice device, VkCommandPool command_pool, VkQueue queue, VkImage image,
+                                     VkImageLayout old_layout, VkImageLayout new_layout)
+{
+        vulkan::CommandBuffer command_buffer(device, command_pool);
+
+        begin_commands(command_buffer);
+
+        //
+
+        cmd_image_pipeline_barrier(command_buffer, image, old_layout, new_layout);
 
         //
 
@@ -869,5 +941,73 @@ unsigned ShadowDepthAttachment::width() const noexcept
 unsigned ShadowDepthAttachment::height() const noexcept
 {
         return m_height;
+}
+
+//
+
+StorageImage::StorageImage(const Device& device, VkCommandPool graphics_command_pool, VkQueue graphics_queue,
+                           const std::vector<uint32_t>& family_indices, VkFormat format, uint32_t width, uint32_t height)
+{
+        ASSERT(family_indices.size() > 0);
+
+        std::vector<VkFormat> candidates = {format};
+        VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
+        // Для vkCmdClearColorImage нужно TRANSFER DST
+        VkFormatFeatureFlags features = VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT | VK_FORMAT_FEATURE_TRANSFER_DST_BIT;
+        VkImageUsageFlags usage = VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+        VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT;
+
+        m_image_layout = VK_IMAGE_LAYOUT_GENERAL;
+        m_format = find_supported_2d_image_format(device.physical_device(), candidates, tiling, features, usage, samples);
+        m_image = create_2d_image(device, width, height, m_format, family_indices, samples, tiling, usage);
+        m_device_memory = create_device_memory(device, m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+        m_image_view = create_image_view(device, m_image, m_format, VK_IMAGE_ASPECT_COLOR_BIT);
+
+        ASSERT(m_format == format);
+
+        transition_storage_image_layout(device, graphics_command_pool, graphics_queue, m_image, VK_IMAGE_LAYOUT_UNDEFINED,
+                                        m_image_layout);
+}
+
+VkImage StorageImage::image() const noexcept
+{
+        return m_image;
+}
+
+VkFormat StorageImage::format() const noexcept
+{
+        return m_format;
+}
+
+VkImageLayout StorageImage::image_layout() const noexcept
+{
+        return m_image_layout;
+}
+
+VkImageView StorageImage::image_view() const noexcept
+{
+        return m_image_view;
+}
+
+void StorageImage::clear_commands(VkCommandBuffer command_buffer) const
+{
+        cmd_image_pipeline_barrier(command_buffer, m_image, m_image_layout, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+
+        //
+
+        VkClearColorValue clear_color = clear_color_image_value(m_format);
+
+        VkImageSubresourceRange range = {};
+        range.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        range.baseMipLevel = 0;
+        range.levelCount = 1;
+        range.baseArrayLayer = 0;
+        range.layerCount = 1;
+
+        vkCmdClearColorImage(command_buffer, m_image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &clear_color, 1, &range);
+
+        //
+
+        cmd_image_pipeline_barrier(command_buffer, m_image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, m_image_layout);
 }
 }

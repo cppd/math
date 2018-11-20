@@ -31,7 +31,8 @@ enum class PhysicalDeviceFeatures
         GeometryShader,
         SampleRateShading,
         SamplerAnisotropy,
-        TessellationShader
+        TessellationShader,
+        FragmentStoresAndAtomics
 };
 
 class PhysicalDevice

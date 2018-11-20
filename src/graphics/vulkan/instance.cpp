@@ -62,7 +62,9 @@ VulkanInstance::VulkanInstance(const std::vector<std::string>& required_instance
           m_swapchain_family_indices(
                   unique_elements(std::vector({m_physical_device.graphics(), m_physical_device.presentation()}))),
           m_texture_family_indices(unique_elements(std::vector({m_physical_device.graphics(), m_physical_device.transfer()}))),
-          m_attachment_family_indices(unique_elements(std::vector({m_physical_device.graphics()})))
+          m_attachment_family_indices(unique_elements(std::vector({m_physical_device.graphics()}))),
+          m_graphics_and_compute_family_indices(
+                  unique_elements(std::vector({m_physical_device.graphics(), m_physical_device.compute()})))
 {
 }
 

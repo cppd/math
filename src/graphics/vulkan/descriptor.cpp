@@ -68,7 +68,8 @@ VkWriteDescriptorSet create_write_descriptor_set(VkDescriptorSet descriptor_set,
         };
         auto image = [&](const VkDescriptorImageInfo& info) noexcept
         {
-                ASSERT(descriptor_set_layout_binding.descriptorType == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
+                ASSERT(descriptor_set_layout_binding.descriptorType == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER ||
+                       descriptor_set_layout_binding.descriptorType == VK_DESCRIPTOR_TYPE_STORAGE_IMAGE);
                 write_descriptor_set.pImageInfo = &info;
         };
         visit(Visitors{buffer, image}, descriptor_info);
