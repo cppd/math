@@ -29,9 +29,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace
 {
+#if !(defined(__clang__) && defined(STD_BETA_FUNCTION_NOT_FOUND))
+using std::betal;
+#else
+long double betal(long double x, long double y)
+{
+        // Β(x, y) = Γ(x) * Γ(y) / Γ(x + y)
+        // Β(x, y) = exp(log(Β(x, y)))
+        // Β(x, y) = exp(log(Γ(x) * Γ(y) / Γ(x + y)))
+        // Β(x, y) = exp(log(Γ(x)) + log(Γ(y)) - log(Γ(x + y)))
+        return std::exp(std::lgamma(x) + std::lgamma(y) - std::lgamma(x + y));
+}
+#endif
+
 void test_compare_with_beta(unsigned n)
 {
-        long double beta = std::betal(0.5l, (n - 1) / 2.0l) / std::betal(1.0l, (n - 1) / 2.0l);
+        long double beta = betal(0.5l, (n - 1) / 2.0l) / betal(1.0l, (n - 1) / 2.0l);
         long double function = cosine_sphere_coefficient(n);
         long double discrepancy_percent = std::abs(beta - function) / function * 100;
 
