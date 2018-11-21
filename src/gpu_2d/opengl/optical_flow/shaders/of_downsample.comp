@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -23,8 +23,6 @@ layout(bindless_image, r32f, location = 1) writeonly uniform image2D img_small;
 layout(location = 2) uniform int k_x;
 layout(location = 3) uniform int k_y;
 
-const ivec2 IMAGE_SIZE_BIG = imageSize(img_big);
-
 // clang-format off
 // GaussianMatrix[2]
 const int delta = 2;
@@ -41,7 +39,7 @@ const float filter_1d[5] = {0.05088, 0.21184, 0.47456, 0.21184, 0.05088};
 
 bool point_inside_big(ivec2 p)
 {
-        return all(lessThanEqual(ivec2(0), p)) && all(lessThan(p, IMAGE_SIZE_BIG));
+        return all(lessThanEqual(ivec2(0), p)) && all(lessThan(p, imageSize(img_big)));
 }
 
 float get_big(ivec2 p)

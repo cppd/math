@@ -23,8 +23,6 @@ layout(bindless_image, r32i) readonly uniform iimage2D img_objects;
 
 uniform bool source_srgb;
 
-const ivec2 image_size = imageSize(img_input);
-
 // clang-format off
 //GaussianMatrix[{4, 3}]
 const int delta = 4;
@@ -61,11 +59,16 @@ vec4 source_color_to_rgb(vec4 color)
         return !source_srgb ? color : srgb_to_rgb(color);
 }
 
+bool point_inside_input(ivec2 p)
+{
+        return all(lessThanEqual(ivec2(0), p)) && all(lessThan(p, imageSize(img_input)));
+}
+
 void main(void)
 {
         const ivec2 p = ivec2(gl_GlobalInvocationID.xy);
 
-        if (p.x >= image_size.x || p.y >= image_size.y)
+        if (any(greaterThanEqual(p, imageSize(img_input))))
         {
                 return;
         }
@@ -85,7 +88,7 @@ void main(void)
                 {
                         const ivec2 p2 = ivec2(p.x + i, p.y + j);
                         float gr;
-                        if (p2.x >= 0 && p2.x < image_size.x && p2.y >= 0 && p2.y < image_size.y && !background(p2))
+                        if (point_inside_input(p2) && !background(p2))
                         {
                                 gr = grayscale(imageLoad(img_input, p2));
                         }

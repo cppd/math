@@ -26,8 +26,6 @@ layout(bindless_image, r32i) readonly uniform iimage2D objects;
 layout(bindless_image, r32f) writeonly uniform image2D line_min;
 layout(bindless_image, r32f) writeonly uniform image2D line_max;
 
-const ivec2 image_size = imageSize(objects);
-
 bool not_background(ivec2 p)
 {
         ivec4 s = imageLoad(objects, p);
@@ -42,6 +40,8 @@ void main(void)
         // Одна группа обрабатывает одну строку
         // gl_LocalInvocationID.x координата X по горизонтали
         // gl_WorkGroupID.x координата Y по вертикали
+
+        const ivec2 image_size = imageSize(objects);
 
         const int local_id = int(gl_LocalInvocationID.x);
         const int y = int(gl_WorkGroupID.x);

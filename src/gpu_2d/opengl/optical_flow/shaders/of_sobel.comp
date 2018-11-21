@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -20,11 +20,6 @@ layout(local_size_variable) in;
 layout(bindless_image, r32f) readonly uniform image2D img_I;
 layout(bindless_image, r32f) writeonly uniform image2D img_dx;
 layout(bindless_image, r32f) writeonly uniform image2D img_dy;
-
-const ivec2 IMAGE_SIZE = imageSize(img_I);
-
-const ivec2 IMAGE_MIN = ivec2(0, 0);
-const ivec2 IMAGE_MAX = ivec2(IMAGE_SIZE.x - 1, IMAGE_SIZE.y - 1);
 
 const int SOBEL_DELTA = 1;
 
@@ -55,7 +50,8 @@ float get_sobel_dy(int x, int y)
 
 float get_pixel(int x, int y)
 {
-        return imageLoad(img_I, clamp(ivec2(x, y), IMAGE_MIN, IMAGE_MAX)).r;
+        ivec2 p = clamp(ivec2(x, y), ivec2(0), imageSize(img_I) - 1);
+        return imageLoad(img_I, p).r;
 }
 
 void set_dx(ivec2 p, float v)
@@ -72,7 +68,7 @@ void main(void)
 {
         const ivec2 p = ivec2(gl_GlobalInvocationID.xy);
 
-        if (any(greaterThanEqual(p, IMAGE_SIZE)))
+        if (any(greaterThanEqual(p, imageSize(img_I))))
         {
                 return;
         }

@@ -26,8 +26,6 @@ layout(local_size_variable) in;
 layout(bindless_image, r32f) readonly uniform image2D line_min;
 layout(bindless_image, r32f) readonly uniform image2D line_max;
 
-const int SIZE = imageSize(line_min).x;
-
 // Точки с отрицательным значением минимума или максимума надо убрать.
 
 // Тут результат
@@ -40,12 +38,14 @@ layout(bindless_image, r32i) writeonly uniform iimage2D points_count;
 
 void main(void)
 {
+        const int size = imageSize(line_min).x;
+
         int count = 0;
 
         float y;
 
         y = 0;
-        for (int i = 0; i < SIZE; ++i, ++y)
+        for (int i = 0; i < size; ++i, ++y)
         {
                 vec4 s = imageLoad(line_min, ivec2(i, 0));
                 if (s.x >= 0) // для координаты Y==i имеется минимум по X
@@ -55,8 +55,8 @@ void main(void)
                 }
         }
 
-        y = SIZE - 1;
-        for (int i = SIZE - 1; i >= 0; --i, --y)
+        y = size - 1;
+        for (int i = size - 1; i >= 0; --i, --y)
         {
                 vec4 s = imageLoad(line_max, ivec2(i, 0));
                 if (s.x >= 0) // для координаты Y==i имеется максимум по X
