@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@ void main(void)
 {
         const ivec2 p = ivec2(gl_GlobalInvocationID.xy);
 
-        if (p.x >= point_count_x || p.y >= point_count_y)
+        if (any(greaterThanEqual(p, ivec2(point_count_x, point_count_y))))
         {
                 return;
         }

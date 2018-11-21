@@ -20,21 +20,18 @@ layout(local_size_variable) in;
 layout(bindless_image, rgba32f) readonly uniform image2D img_src;
 layout(bindless_image, r32f) writeonly uniform image2D img_dst;
 
-float gray(vec4 a)
+vec4 grayscale(vec4 c)
 {
-        return (a.r + a.g + a.b) * 0.33333333333333333333;
+        float g = (c.r + c.g + c.b) * 0.33333333333333333333;
+        return vec4(vec3(g), c.a);
 }
 
 void main(void)
 {
         const ivec2 p = ivec2(gl_GlobalInvocationID.xy);
 
-        if (any(greaterThanEqual(p, imageSize(img_src))))
+        if (all(lessThan(p, imageSize(img_src))))
         {
-                return;
+                imageStore(img_dst, p, grayscale(imageLoad(img_src, p)));
         }
-
-        float g = gray(imageLoad(img_src, p));
-
-        imageStore(img_dst, p, vec4(g, g, g, 1));
 }
