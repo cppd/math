@@ -456,6 +456,12 @@ public:
                 static_assert((std::is_same_v<ComputeShader, S> && ...), "ComputeProgram accepts only compute shaders");
         }
 
+        void dispatch_compute(unsigned num_groups_x, unsigned num_groups_y, unsigned num_groups_z) const noexcept
+        {
+                Program::use();
+                glDispatchCompute(num_groups_x, num_groups_y, num_groups_z);
+        }
+
         void dispatch_compute(unsigned num_groups_x, unsigned num_groups_y, unsigned num_groups_z, unsigned group_size_x,
                               unsigned group_size_y, unsigned group_size_z) const noexcept
         {
