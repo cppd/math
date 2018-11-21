@@ -232,7 +232,7 @@ function(AddIncludeFiles FILE_TYPE)
                                 get_filename_component(file_dir "${long_file_name}" DIRECTORY)
                                 string(SUBSTRING ${file_dir} ${search_directory_length} -1 substring_dir)
                                 file(TO_CMAKE_PATH "${substring_dir}" cmake_style_dir)
-                                string(FIND "${cmake_style_dir}" "/${ARG_PATH_CONTAINS_DIRECTORY}/" position)
+                                string(FIND "${cmake_style_dir}/" "/${ARG_PATH_CONTAINS_DIRECTORY}/" position)
                                 if (${position} LESS 0)
                                         continue()
                                 endif()
@@ -307,6 +307,7 @@ endfunction()
 
 # Clang 5 не работает с std::variant из libstdc++
 function(Check_CXX_Variant_Works)
+        unset(CXX_VARIANT_WORKS CACHE)
         check_cxx_source_compiles(
                 "
                 #include <utility>
