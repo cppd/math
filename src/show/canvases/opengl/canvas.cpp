@@ -31,7 +31,7 @@ class Canvas final : public OpenGLCanvas
 
         std::unique_ptr<Text> m_text;
         std::unique_ptr<DFTShow> m_dft_show;
-        std::unique_ptr<ConvexHull2D> m_convex_hull;
+        std::unique_ptr<ConvexHull2DShow> m_convex_hull;
         std::unique_ptr<OpticalFlow> m_optical_flow;
         std::unique_ptr<PencilEffect> m_pencil_effect;
 
@@ -156,7 +156,7 @@ void Canvas::create_objects(int window_width, int window_height, const mat4& mat
 
         m_optical_flow = std::make_unique<OpticalFlow>(draw_width, draw_height, matrix);
 
-        m_convex_hull = std::make_unique<ConvexHull2D>(objects, matrix);
+        m_convex_hull = std::make_unique<ConvexHull2DShow>(objects, matrix);
 
         if (m_text)
         {

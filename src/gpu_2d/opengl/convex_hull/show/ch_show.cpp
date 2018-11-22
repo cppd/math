@@ -36,7 +36,7 @@ constexpr const char fragment_shader[]
 // rad / ms
 constexpr double ANGULAR_FREQUENCY = TWO_PI<double> * 5;
 
-class ConvexHull2D::Impl final
+class ConvexHull2DShow::Impl final
 {
         opengl::GraphicsProgram m_draw_prog;
         opengl::ShaderStorageBuffer m_points;
@@ -77,19 +77,19 @@ public:
         }
 };
 
-ConvexHull2D::ConvexHull2D(const opengl::TextureR32I& objects, const mat4& matrix)
+ConvexHull2DShow::ConvexHull2DShow(const opengl::TextureR32I& objects, const mat4& matrix)
         : m_impl(std::make_unique<Impl>(objects, matrix))
 {
 }
 
-ConvexHull2D::~ConvexHull2D() = default;
+ConvexHull2DShow::~ConvexHull2DShow() = default;
 
-void ConvexHull2D::reset_timer()
+void ConvexHull2DShow::reset_timer()
 {
         m_impl->reset_timer();
 }
 
-void ConvexHull2D::draw()
+void ConvexHull2DShow::draw()
 {
         m_impl->draw();
 }
