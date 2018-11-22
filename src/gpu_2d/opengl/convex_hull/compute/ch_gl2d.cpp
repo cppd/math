@@ -25,7 +25,7 @@ Princeton University Press, 2011.
 Chapter 2: CONVEX HULLS, 2.6 Divide-and-Conquer.
 */
 
-#include "convex_hull_2d.h"
+#include "ch_gl2d.h"
 
 #include "com/bits.h"
 #include "graphics/opengl/query.h"
@@ -33,15 +33,15 @@ Chapter 2: CONVEX HULLS, 2.6 Divide-and-Conquer.
 // clang-format off
 constexpr const char prepare_shader[]
 {
-#include "ch_2d_prepare.comp.str"
+#include "ch_prepare.comp.str"
 };
 constexpr const char merge_shader[]
 {
-#include "ch_2d_merge.comp.str"
+#include "ch_merge.comp.str"
 };
 constexpr const char filter_shader[]
 {
-#include "ch_2d_filter.comp.str"
+#include "ch_filter.comp.str"
 };
 // clang-format on
 

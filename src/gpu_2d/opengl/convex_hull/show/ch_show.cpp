@@ -15,21 +15,21 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "convex_hull_2d.h"
+#include "ch_show.h"
 
 #include "com/error.h"
 #include "com/math.h"
 #include "com/time.h"
-#include "gpu_2d/opengl/convex_hull/comp/convex_hull_2d.h"
+#include "gpu_2d/opengl/convex_hull/compute/ch_gl2d.h"
 
 // clang-format off
 constexpr const char vertex_shader[]
 {
-#include "ch_2d.vert.str"
+#include "ch_show.vert.str"
 };
 constexpr const char fragment_shader[]
 {
-#include "ch_2d.frag.str"
+#include "ch_show.frag.str"
 };
 // clang-format on
 

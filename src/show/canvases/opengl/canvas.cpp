@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "canvas.h"
 
-#include "gpu_2d/opengl/convex_hull/show/convex_hull_2d.h"
+#include "gpu_2d/opengl/convex_hull/show/ch_show.h"
 #include "gpu_2d/opengl/dft/show/dft_show.h"
 #include "gpu_2d/opengl/optical_flow/optical_flow.h"
 #include "gpu_2d/opengl/pencil/pencil.h"

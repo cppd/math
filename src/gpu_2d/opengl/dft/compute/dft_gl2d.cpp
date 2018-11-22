@@ -45,8 +45,8 @@ Chapter 13: FFTs for Arbitrary N.
 
 #include "dft_gl2d.h"
 
-#include "device_mem.h"
-#include "device_prog.h"
+#include "memory.h"
+#include "program.h"
 
 #include "com/bits.h"
 #include "com/error.h"
