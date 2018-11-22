@@ -28,20 +28,9 @@ Chapter 2: CONVEX HULLS, 2.6 Divide-and-Conquer.
 #include "convex_hull_2d.h"
 
 #include "com/bits.h"
-#include "com/error.h"
-#include "com/math.h"
-#include "com/time.h"
 #include "graphics/opengl/query.h"
 
 // clang-format off
-constexpr const char vertex_shader[]
-{
-#include "ch_2d.vert.str"
-};
-constexpr const char fragment_shader[]
-{
-#include "ch_2d.frag.str"
-};
 constexpr const char prepare_shader[]
 {
 #include "ch_2d_prepare.comp.str"
@@ -55,9 +44,6 @@ constexpr const char filter_shader[]
 #include "ch_2d_filter.comp.str"
 };
 // clang-format on
-
-// rad / ms
-constexpr double ANGULAR_FREQUENCY = TWO_PI<double> * 5;
 
 namespace
 {
@@ -107,6 +93,7 @@ std::string prepare_source(int group_size)
         s += '\n';
         return s + prepare_shader;
 }
+
 std::string merge_source(int line_size)
 {
         std::string s;
@@ -114,65 +101,28 @@ std::string merge_source(int line_size)
         s += '\n';
         return s + merge_shader;
 }
+
 std::string filter_source()
 {
         return filter_shader;
 }
-}
 
-class ConvexHull2D::Impl final
+class Impl final : public ConvexHullGL2D
 {
-        const int m_width, m_height;
+        const int m_height;
         const int m_group_size_prepare;
         const int m_group_size_merge;
-        opengl::ComputeProgram m_prepare_prog, m_merge_prog, m_filter_prog;
-        opengl::GraphicsProgram m_draw_prog;
-        opengl::TextureR32F m_line_min, m_line_max;
+        const opengl::ShaderStorageBuffer& m_points;
 
-        opengl::ShaderStorageBuffer m_points;
+        opengl::ComputeProgram m_prepare_prog;
+        opengl::ComputeProgram m_merge_prog;
+        opengl::ComputeProgram m_filter_prog;
 
+        opengl::TextureR32F m_line_min;
+        opengl::TextureR32F m_line_max;
         opengl::TextureR32I m_point_count_texture;
 
-        double m_start_time;
-
-public:
-        Impl(const opengl::TextureR32I& objects, const mat4& matrix)
-                : m_width(objects.texture().width()),
-                  m_height(objects.texture().height()),
-                  m_group_size_prepare(group_size_prepare(m_width, 2 * sizeof(GLint))),
-                  m_group_size_merge(group_size_merge(m_height, sizeof(GLfloat))),
-                  m_prepare_prog(opengl::ComputeShader(prepare_source(m_group_size_prepare))),
-                  m_merge_prog(opengl::ComputeShader(merge_source(m_height))),
-                  m_filter_prog(opengl::ComputeShader(filter_source())),
-                  m_draw_prog(opengl::VertexShader(vertex_shader), opengl::FragmentShader(fragment_shader)),
-                  m_line_min(m_height, 1),
-                  m_line_max(m_height, 1),
-                  m_point_count_texture(1, 1),
-                  m_start_time(time_in_seconds())
-        {
-                m_prepare_prog.set_uniform_handle("objects", objects.image_resident_handle_read_only());
-                m_prepare_prog.set_uniform_handle("line_min", m_line_min.image_resident_handle_write_only());
-                m_prepare_prog.set_uniform_handle("line_max", m_line_max.image_resident_handle_write_only());
-
-                m_merge_prog.set_uniform_handles(
-                        "lines", {m_line_min.image_resident_handle_read_write(), m_line_max.image_resident_handle_read_write()});
-                m_merge_prog.set_uniform("iteration_count", iteration_count_merge(m_height));
-
-                m_points.create_dynamic_copy((2 * m_height) * (2 * sizeof(GLfloat)));
-
-                m_filter_prog.set_uniform_handle("line_min", m_line_min.image_resident_handle_read_only());
-                m_filter_prog.set_uniform_handle("line_max", m_line_max.image_resident_handle_read_only());
-                m_filter_prog.set_uniform_handle("points_count", m_point_count_texture.image_resident_handle_write_only());
-
-                m_draw_prog.set_uniform_float("matrix", matrix);
-        }
-
-        void reset_timer()
-        {
-                m_start_time = time_in_seconds();
-        }
-
-        void draw()
+        int exec() override
         {
                 m_points.bind(0);
 
@@ -192,25 +142,43 @@ public:
                 std::array<GLint, 1> point_count;
                 m_point_count_texture.get_texture_sub_image(0, 0, 1, 1, &point_count);
 
-                float d = 0.5 + 0.5 * std::sin(ANGULAR_FREQUENCY * (time_in_seconds() - m_start_time));
-                m_draw_prog.set_uniform("brightness", d);
-
                 glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-                m_draw_prog.draw_arrays(GL_LINE_LOOP, 0, point_count[0]);
+
+                return point_count[0];
+        }
+
+public:
+        Impl(const opengl::TextureR32I& objects, const opengl::ShaderStorageBuffer& points)
+                : m_height(objects.texture().height()),
+                  m_group_size_prepare(group_size_prepare(objects.texture().width(), 2 * sizeof(GLint))),
+                  m_group_size_merge(group_size_merge(m_height, sizeof(GLfloat))),
+                  m_points(points),
+                  m_prepare_prog(opengl::ComputeShader(prepare_source(m_group_size_prepare))),
+                  m_merge_prog(opengl::ComputeShader(merge_source(m_height))),
+                  m_filter_prog(opengl::ComputeShader(filter_source())),
+                  m_line_min(m_height, 1),
+                  m_line_max(m_height, 1),
+                  m_point_count_texture(1, 1)
+        {
+                m_prepare_prog.set_uniform_handle("objects", objects.image_resident_handle_read_only());
+                m_prepare_prog.set_uniform_handle("line_min", m_line_min.image_resident_handle_write_only());
+                m_prepare_prog.set_uniform_handle("line_max", m_line_max.image_resident_handle_write_only());
+
+                std::vector<GLuint64> line_handles(2);
+                line_handles[0] = m_line_min.image_resident_handle_read_write();
+                line_handles[1] = m_line_max.image_resident_handle_read_write();
+                m_merge_prog.set_uniform_handles("lines", line_handles);
+                m_merge_prog.set_uniform("iteration_count", iteration_count_merge(m_height));
+
+                m_filter_prog.set_uniform_handle("line_min", m_line_min.image_resident_handle_read_only());
+                m_filter_prog.set_uniform_handle("line_max", m_line_max.image_resident_handle_read_only());
+                m_filter_prog.set_uniform_handle("points_count", m_point_count_texture.image_resident_handle_write_only());
         }
 };
-
-ConvexHull2D::ConvexHull2D(const opengl::TextureR32I& objects, const mat4& matrix)
-        : m_impl(std::make_unique<Impl>(objects, matrix))
-{
 }
-ConvexHull2D::~ConvexHull2D() = default;
 
-void ConvexHull2D::reset_timer()
+std::unique_ptr<ConvexHullGL2D> create_convex_hull_gl2d(const opengl::TextureR32I& object_image,
+                                                        const opengl::ShaderStorageBuffer& points)
 {
-        m_impl->reset_timer();
-}
-void ConvexHull2D::draw()
-{
-        m_impl->draw();
+        return std::make_unique<Impl>(object_image, points);
 }
