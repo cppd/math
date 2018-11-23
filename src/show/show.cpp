@@ -844,7 +844,7 @@ void ShowObject<GraphicsAndComputeAPI::OpenGL>::loop()
 
         std::unique_ptr<OpenGLWindow> window = create_opengl_window(OPENGL_MINIMUM_SAMPLE_COUNT, this);
         std::unique_ptr<OpenGLRenderer> renderer = create_opengl_renderer();
-        std::unique_ptr<OpenGLCanvas> canvas = create_opengl_canvas(m_text_size);
+        std::unique_ptr<OpenGLCanvas> canvas = create_opengl_canvas(m_text_size, m_parent_window_ppi);
 
         //
 

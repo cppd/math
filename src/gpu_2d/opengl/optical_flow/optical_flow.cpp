@@ -33,6 +33,7 @@ Chapter 5. Tracking Objects in Videos.
 
 #include "optical_flow.h"
 
+#include "com/conversion.h"
 #include "com/error.h"
 #include "com/log.h"
 #include "com/math.h"
@@ -84,8 +85,8 @@ constexpr int GROUP_SIZE = 16;
 
 // Минимальный размер изображения для пирамиды изображений
 constexpr int BOTTOM_IMAGE_SIZE = 16;
-// Расстояние между точками потока на экране
-constexpr int POINT_DISTANCE = 8;
+// Расстояние между точками потока на экране в миллиметрах
+constexpr double DISTANCE_BETWEEN_POINTS = 2;
 
 // Интервал ожидания для расчёта потока не для каждого кадра
 // constexpr double COMPUTE_INTERVAL_SECONDS = 1.0 / 10;
@@ -387,7 +388,7 @@ class OpticalFlow::Impl final
         }
 
 public:
-        Impl(int width, int height, const mat4& matrix)
+        Impl(int width, int height, double window_ppi, const mat4& matrix)
                 : m_width(width),
                   m_height(height),
                   m_groups_x(group_count(m_width, GROUP_SIZE)),
@@ -412,7 +413,8 @@ public:
                 create_flow_buffers(level_dimensions, &m_image_pyramid_flow);
 
                 std::vector<vec2i> top_points;
-                create_points_for_top_level(m_width, m_height, POINT_DISTANCE, &m_point_count_x, &m_point_count_y, &top_points);
+                create_points_for_top_level(m_width, m_height, millimeters_to_pixels(DISTANCE_BETWEEN_POINTS, window_ppi),
+                                            &m_point_count_x, &m_point_count_y, &top_points);
 
                 m_top_points.load_dynamic_copy(top_points);
                 m_top_points_flow.create_dynamic_copy(top_points.size() * SIZE_OF_VEC2);
@@ -487,7 +489,8 @@ public:
         }
 };
 
-OpticalFlow::OpticalFlow(int width, int height, const mat4& matrix) : m_impl(std::make_unique<Impl>(width, height, matrix))
+OpticalFlow::OpticalFlow(int width, int height, double window_ppi, const mat4& matrix)
+        : m_impl(std::make_unique<Impl>(width, height, window_ppi, matrix))
 {
 }
 

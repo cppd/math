@@ -27,7 +27,7 @@ class OpticalFlow final
         std::unique_ptr<Impl> m_impl;
 
 public:
-        OpticalFlow(int width, int height, const mat4& matrix);
+        OpticalFlow(int width, int height, double window_ppi, const mat4& matrix);
         ~OpticalFlow();
 
         void reset();

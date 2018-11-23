@@ -56,4 +56,4 @@ struct OpenGLCanvas
         virtual void draw_text(int step_y, int x, int y, const std::vector<std::string>& text) = 0;
 };
 
-std::unique_ptr<OpenGLCanvas> create_opengl_canvas(int text_size);
+std::unique_ptr<OpenGLCanvas> create_opengl_canvas(int text_size, double window_ppi);

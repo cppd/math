@@ -28,6 +28,7 @@ namespace
 class Canvas final : public OpenGLCanvas
 {
         int m_text_size;
+        double m_window_ppi;
 
         std::unique_ptr<Text> m_text;
         std::unique_ptr<DFTShow> m_dft_show;
@@ -137,7 +138,7 @@ class Canvas final : public OpenGLCanvas
         void draw_text(int step_y, int x, int y, const std::vector<std::string>& text) override;
 
 public:
-        Canvas(int text_size) : m_text_size(text_size)
+        Canvas(int text_size, double window_ppi) : m_text_size(text_size), m_window_ppi(window_ppi)
         {
         }
 };
@@ -154,7 +155,7 @@ void Canvas::create_objects(int window_width, int window_height, const mat4& mat
         m_dft_show = std::make_unique<DFTShow>(draw_width, draw_height, dft_dst_x, dft_dst_y, matrix, frame_buffer_is_srgb,
                                                m_dft_show_brightness, m_dft_show_background_color, m_dft_show_color);
 
-        m_optical_flow = std::make_unique<OpticalFlow>(draw_width, draw_height, matrix);
+        m_optical_flow = std::make_unique<OpticalFlow>(draw_width, draw_height, m_window_ppi, matrix);
 
         m_convex_hull = std::make_unique<ConvexHull2DShow>(objects, matrix);
 
@@ -217,7 +218,7 @@ void Canvas::draw_text(int step_y, int x, int y, const std::vector<std::string>&
 }
 }
 
-std::unique_ptr<OpenGLCanvas> create_opengl_canvas(int text_size)
+std::unique_ptr<OpenGLCanvas> create_opengl_canvas(int text_size, double window_ppi)
 {
-        return std::make_unique<Canvas>(text_size);
+        return std::make_unique<Canvas>(text_size, window_ppi);
 }
