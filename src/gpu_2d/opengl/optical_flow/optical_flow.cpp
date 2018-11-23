@@ -77,10 +77,6 @@ constexpr const char grayscale_compute_shader[]
 {
 #include "of_grayscale.comp.str"
 };
-constexpr const char lines_compute_shader[]
-{
-#include "of_lines.comp.str"
-};
 // clang-format on
 
 // Размер по X и по Y группы потоков вычислительных шейдеров
@@ -105,7 +101,6 @@ constexpr float STOP_MOVE_SQUARE = square(1e-3f);
 constexpr float MIN_DETERMINANT = 1;
 
 constexpr int SIZE_OF_VEC2 = 2 * 4; // GLSL vec2
-constexpr int SIZE_OF_IVEC2 = 2 * 4; // GLSL ivec2
 
 namespace
 {
@@ -239,13 +234,12 @@ class OpticalFlow::Impl final
         opengl::ComputeProgram m_comp_flow;
         opengl::ComputeProgram m_comp_downsample;
         opengl::ComputeProgram m_comp_grayscale;
-        opengl::ComputeProgram m_comp_lines;
         opengl::GraphicsProgram m_draw_prog;
         opengl::GraphicsProgram m_draw_prog_debug;
 
         opengl::TextureRGBA32F m_texture_J;
 
-        opengl::ShaderStorageBuffer m_top_points, m_top_points_flow, m_top_points_lines;
+        opengl::ShaderStorageBuffer m_top_points, m_top_points_flow;
         int m_point_count_x, m_point_count_y;
 
         bool m_image_I_exists = false;
@@ -383,23 +377,10 @@ class OpticalFlow::Impl final
                 }
         }
 
-        void create_flow_lines()
+        void draw_flow_lines()
         {
                 m_top_points.bind(0);
                 m_top_points_flow.bind(1);
-                m_top_points_lines.bind(2);
-
-                int groups_x = group_count(m_point_count_x, GROUP_SIZE);
-                int groups_y = group_count(m_point_count_y, GROUP_SIZE);
-
-                m_comp_lines.dispatch_compute(groups_x, groups_y, 1, GROUP_SIZE, GROUP_SIZE, 1);
-
-                glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-        }
-
-        void draw_lines()
-        {
-                m_top_points_lines.bind(0);
 
                 m_draw_prog.draw_arrays(GL_POINTS, 0, m_point_count_x * m_point_count_y * 2);
                 m_draw_prog.draw_arrays(GL_LINES, 0, m_point_count_x * m_point_count_y * 2);
@@ -415,7 +396,6 @@ public:
                   m_comp_flow(opengl::ComputeShader(flow_compute_shader)),
                   m_comp_downsample(opengl::ComputeShader(downsample_compute_shader)),
                   m_comp_grayscale(opengl::ComputeShader(grayscale_compute_shader)),
-                  m_comp_lines(opengl::ComputeShader(lines_compute_shader)),
                   m_draw_prog(opengl::VertexShader(vertex_shader), opengl::FragmentShader(fragment_shader)),
                   m_draw_prog_debug(opengl::VertexShader(vertex_debug_shader), opengl::FragmentShader(fragment_debug_shader)),
                   m_texture_J(m_width, m_height)
@@ -436,12 +416,8 @@ public:
 
                 m_top_points.load_dynamic_copy(top_points);
                 m_top_points_flow.create_dynamic_copy(top_points.size() * SIZE_OF_VEC2);
-                m_top_points_lines.create_dynamic_copy(top_points.size() * 2 * SIZE_OF_IVEC2);
 
                 m_comp_grayscale.set_uniform_handle("img_src", m_texture_J.image_resident_handle_read_only());
-
-                m_comp_lines.set_uniform("point_count_x", m_point_count_x);
-                m_comp_lines.set_uniform("point_count_y", m_point_count_y);
 
                 m_comp_flow.set_uniform("RADIUS", RADIUS);
                 m_comp_flow.set_uniform("ITERATION_COUNT", ITERATION_COUNT);
@@ -504,9 +480,7 @@ public:
                 m_draw_prog_debug.draw_arrays(GL_TRIANGLE_STRIP, 0, 4);
 #else
 
-                create_flow_lines();
-
-                draw_lines();
+                draw_flow_lines();
 
                 m_flow_computed = true;
 #endif

@@ -17,13 +17,31 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 uniform mat4 matrix;
 
-layout(std430, binding = 0) readonly buffer StorageBuffer
+layout(std430, binding = 0) readonly buffer StorageBufferPoints
 {
-        ivec2 points_lines[];
+        ivec2 points[];
+};
+layout(std430, binding = 1) readonly buffer StorageBufferPointsFlow
+{
+        vec2 points_optical_flow[];
 };
 
 void main(void)
 {
-        ivec2 s = points_lines[gl_VertexID];
-        gl_Position = matrix * vec4(s.x + 0.5, s.y + 0.5, 0, 1);
+        // Две вершины на одну точку.
+        // Одна вершина начало линии, вторая вершина конец линии.
+
+        uint point_number = gl_VertexID >> 1;
+
+        vec2 s;
+        if ((gl_VertexID & 1) == 0)
+        {
+                s = points[point_number];
+        }
+        else
+        {
+                s = round(points[point_number] + points_optical_flow[point_number]);
+        }
+
+        gl_Position = matrix * vec4(s + 0.5, 0, 1);
 }
