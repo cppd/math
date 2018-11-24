@@ -15,12 +15,12 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "optical_flow.h"
+#include "of_show.h"
 
 #include "com/conversion.h"
 #include "com/error.h"
 #include "com/time.h"
-#include "gpu_2d/opengl/optical_flow/compute/optical_flow.h"
+#include "gpu_2d/opengl/optical_flow/compute/of_gl2d.h"
 #include "graphics/opengl/objects.h"
 
 #include <limits>
