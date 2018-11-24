@@ -33,35 +33,14 @@ Chapter 5. Tracking Objects in Videos.
 
 #include "optical_flow.h"
 
-#include "com/conversion.h"
 #include "com/error.h"
 #include "com/log.h"
 #include "com/math.h"
 #include "com/print.h"
-#include "com/time.h"
-#include "graphics/opengl/objects.h"
 
 #include <array>
-#include <limits>
-#include <vector>
 
 // clang-format off
-constexpr const char vertex_shader[]
-{
-#include "of.vert.str"
-};
-constexpr const char fragment_shader[]
-{
-#include "of.frag.str"
-};
-constexpr const char vertex_debug_shader[]
-{
-#include "of_debug.vert.str"
-};
-constexpr const char fragment_debug_shader[]
-{
-#include "of_debug.frag.str"
-};
 constexpr const char sobel_compute_shader[]
 {
 #include "of_sobel.comp.str"
@@ -82,14 +61,8 @@ constexpr const char grayscale_compute_shader[]
 
 // Размер по X и по Y группы потоков вычислительных шейдеров
 constexpr int GROUP_SIZE = 16;
-
 // Минимальный размер изображения для пирамиды изображений
 constexpr int BOTTOM_IMAGE_SIZE = 16;
-// Расстояние между точками потока на экране в миллиметрах
-constexpr double DISTANCE_BETWEEN_POINTS = 2;
-
-// Интервал ожидания для расчёта потока не для каждого кадра
-// constexpr double COMPUTE_INTERVAL_SECONDS = 1.0 / 10;
 
 // Параметры алгоритма для передачи в вычислительный шейдер
 // Радиус окрестности точки
@@ -202,57 +175,30 @@ void create_flow_buffers(const std::vector<vec2i>& level_dimensions, std::vector
         }
 }
 
-void create_points_for_top_level(int width, int height, int distance, int* point_count_x, int* point_count_y,
-                                 std::vector<vec2i>* points)
-{
-        int size = distance + 1;
-        *point_count_x = (width - 2 * distance + size - 1) / size;
-        *point_count_y = (height - 2 * distance + size - 1) / size;
-
-        int point_count = *point_count_x * *point_count_y;
-
-        points->clear();
-        points->resize(point_count);
-
-        int index = 0;
-        for (int y = distance; y < height - distance; y += size)
-        {
-                for (int x = distance; x < width - distance; x += size)
-                {
-                        (*points)[index++] = vec2i(x, y);
-                }
-        }
-
-        ASSERT(index == point_count);
-}
-}
-
-class OpticalFlow::Impl final
+class Impl final : public OpticalFlowGL2D
 {
         const int m_width, m_height;
         const int m_groups_x, m_groups_y;
+
+        int m_top_point_count_x;
+        int m_top_point_count_y;
+
+        const opengl::ShaderStorageBuffer& m_top_points;
+        const opengl::ShaderStorageBuffer& m_top_points_flow;
+
         opengl::ComputeProgram m_comp_sobel;
         opengl::ComputeProgram m_comp_flow;
         opengl::ComputeProgram m_comp_downsample;
         opengl::ComputeProgram m_comp_grayscale;
-        opengl::GraphicsProgram m_draw_prog;
-        opengl::GraphicsProgram m_draw_prog_debug;
-
-        opengl::TextureRGBA32F m_texture_J;
-
-        opengl::ShaderStorageBuffer m_top_points, m_top_points_flow;
-        int m_point_count_x, m_point_count_y;
-
-        bool m_image_I_exists = false;
-        bool m_flow_computed = false;
-        double m_last_time = std::numeric_limits<double>::lowest();
 
         std::array<std::vector<ImageR32F>, 2> m_image_pyramid;
         std::vector<ImageR32F> m_image_pyramid_dx;
         std::vector<ImageR32F> m_image_pyramid_dy;
+
         std::vector<opengl::ShaderStorageBuffer> m_image_pyramid_flow;
         int m_i_index = 0;
         int m_j_index = 1;
+        bool m_image_I_exists = false;
 
         void build_image_pyramid(std::vector<ImageR32F>* pyramid)
         {
@@ -335,8 +281,8 @@ class OpticalFlow::Impl final
                                 m_top_points.bind(0);
                                 m_top_points_flow.bind(1);
 
-                                points_x = m_point_count_x;
-                                points_y = m_point_count_y;
+                                points_x = m_top_point_count_x;
+                                points_y = m_top_point_count_y;
                         }
 
                         if (i != image_pyramid_I_size - 1)
@@ -378,28 +324,57 @@ class OpticalFlow::Impl final
                 }
         }
 
-        void draw_flow_lines()
+        void reset() override
         {
-                m_top_points.bind(0);
-                m_top_points_flow.bind(1);
+                m_image_I_exists = false;
+        }
 
-                m_draw_prog.draw_arrays(GL_POINTS, 0, m_point_count_x * m_point_count_y * 2);
-                m_draw_prog.draw_arrays(GL_LINES, 0, m_point_count_x * m_point_count_y * 2);
+        bool exec() override
+        {
+                // Обозначения: I и i - предыдущее изображение, J и j - следующее изображение
+
+                std::swap(m_i_index, m_j_index);
+
+                build_image_pyramid(&m_image_pyramid[m_j_index]);
+
+                if (!m_image_I_exists)
+                {
+                        m_image_I_exists = true;
+                        return false;
+                }
+
+                compute_dxdy(m_image_pyramid[m_i_index], m_image_pyramid_dx, m_image_pyramid_dy);
+
+                compute_optical_flow(m_image_pyramid[m_i_index], m_image_pyramid_dx, m_image_pyramid_dy, m_image_pyramid_flow,
+                                     m_image_pyramid[m_j_index]);
+
+                return true;
+        }
+
+        GLuint64 image_pyramid_dx_texture() const override
+        {
+                return m_image_pyramid_dx[0].texture_handle();
+        }
+        GLuint64 image_pyramid_texture() const override
+        {
+                return m_image_pyramid[m_i_index][0].texture_handle();
         }
 
 public:
-        Impl(int width, int height, double window_ppi, const mat4& matrix)
+        Impl(int width, int height, const opengl::TextureRGBA32F& source_image, int top_point_count_x, int top_point_count_y,
+             const opengl::ShaderStorageBuffer& top_points, const opengl::ShaderStorageBuffer& top_points_flow)
                 : m_width(width),
                   m_height(height),
                   m_groups_x(group_count(m_width, GROUP_SIZE)),
                   m_groups_y(group_count(m_height, GROUP_SIZE)),
+                  m_top_point_count_x(top_point_count_x),
+                  m_top_point_count_y(top_point_count_y),
+                  m_top_points(top_points),
+                  m_top_points_flow(top_points_flow),
                   m_comp_sobel(opengl::ComputeShader(sobel_compute_shader)),
                   m_comp_flow(opengl::ComputeShader(flow_compute_shader)),
                   m_comp_downsample(opengl::ComputeShader(downsample_compute_shader)),
-                  m_comp_grayscale(opengl::ComputeShader(grayscale_compute_shader)),
-                  m_draw_prog(opengl::VertexShader(vertex_shader), opengl::FragmentShader(fragment_shader)),
-                  m_draw_prog_debug(opengl::VertexShader(vertex_debug_shader), opengl::FragmentShader(fragment_debug_shader)),
-                  m_texture_J(m_width, m_height)
+                  m_comp_grayscale(opengl::ComputeShader(grayscale_compute_shader))
         {
                 std::vector<vec2i> level_dimensions;
 
@@ -412,101 +387,21 @@ public:
 
                 create_flow_buffers(level_dimensions, &m_image_pyramid_flow);
 
-                std::vector<vec2i> top_points;
-                create_points_for_top_level(m_width, m_height, millimeters_to_pixels(DISTANCE_BETWEEN_POINTS, window_ppi),
-                                            &m_point_count_x, &m_point_count_y, &top_points);
-
-                m_top_points.load_dynamic_copy(top_points);
-                m_top_points_flow.create_dynamic_copy(top_points.size() * SIZE_OF_VEC2);
-
-                m_comp_grayscale.set_uniform_handle("img_src", m_texture_J.image_resident_handle_read_only());
+                m_comp_grayscale.set_uniform_handle("img_src", source_image.image_resident_handle_read_only());
 
                 m_comp_flow.set_uniform("RADIUS", RADIUS);
                 m_comp_flow.set_uniform("ITERATION_COUNT", ITERATION_COUNT);
                 m_comp_flow.set_uniform("STOP_MOVE_SQUARE", STOP_MOVE_SQUARE);
                 m_comp_flow.set_uniform("MIN_DETERMINANT", MIN_DETERMINANT);
-
-                m_draw_prog.set_uniform_float("matrix", matrix);
-        }
-
-        void reset()
-        {
-                m_last_time = std::numeric_limits<double>::lowest();
-                m_image_I_exists = false;
-                m_flow_computed = false;
-        }
-
-        void take_image_from_framebuffer()
-        {
-                m_texture_J.copy_texture_sub_image();
-        }
-
-        void draw()
-        {
-                opengl::GLEnableAndRestore<GL_SCISSOR_TEST> e;
-                glScissor(0, 0, m_width, m_height);
-
-#if 0
-                double current_time = time_in_seconds();
-                if (current_time - m_last_time < COMPUTE_INTERVAL_SECONDS)
-                {
-                        if (m_flow_computed)
-                        {
-                                draw_lines();
-                        }
-                        return;
-                }
-                m_last_time = current_time;
-#endif
-
-                // Обозначения: I и i - предыдущее изображение, J и j - следующее изображение
-
-                std::swap(m_i_index, m_j_index);
-
-                build_image_pyramid(&m_image_pyramid[m_j_index]);
-
-                if (!m_image_I_exists)
-                {
-                        m_image_I_exists = true;
-                        return;
-                }
-
-                compute_dxdy(m_image_pyramid[m_i_index], m_image_pyramid_dx, m_image_pyramid_dy);
-
-                compute_optical_flow(m_image_pyramid[m_i_index], m_image_pyramid_dx, m_image_pyramid_dy, m_image_pyramid_flow,
-                                     m_image_pyramid[m_j_index]);
-
-#if 0
-                // m_draw_prog_debug.set_uniform_handle("tex", m_image_pyramid_dx[0].texture_handle());
-                m_draw_prog_debug.set_uniform_handle("tex", m_image_pyramid[m_i_index][0].texture_handle());
-                m_draw_prog_debug.draw_arrays(GL_TRIANGLE_STRIP, 0, 4);
-#else
-
-                draw_flow_lines();
-
-                m_flow_computed = true;
-#endif
         }
 };
-
-OpticalFlow::OpticalFlow(int width, int height, double window_ppi, const mat4& matrix)
-        : m_impl(std::make_unique<Impl>(width, height, window_ppi, matrix))
-{
 }
 
-OpticalFlow::~OpticalFlow() = default;
-
-void OpticalFlow::reset()
+std::unique_ptr<OpticalFlowGL2D> create_optical_flow_gl2d(int width, int height, const opengl::TextureRGBA32F& source_image,
+                                                          int top_point_count_x, int top_point_count_y,
+                                                          const opengl::ShaderStorageBuffer& top_points,
+                                                          const opengl::ShaderStorageBuffer& top_points_flow)
 {
-        m_impl->reset();
-}
-
-void OpticalFlow::take_image_from_framebuffer()
-{
-        m_impl->take_image_from_framebuffer();
-}
-
-void OpticalFlow::draw()
-{
-        m_impl->draw();
+        return std::make_unique<Impl>(width, height, source_image, top_point_count_x, top_point_count_y, top_points,
+                                      top_points_flow);
 }
