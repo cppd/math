@@ -152,10 +152,14 @@ std::string overview()
         }
 
         os << "framebuffer: " << (framebuffer_srgb() ? "sRGB" : "RGB") << "\n";
-        os << "max work group size x: " << max_work_group_size_x() << "\n";
-        os << "max work group size y: " << max_work_group_size_y() << "\n";
-        os << "max work group size z: " << max_work_group_size_z() << "\n";
-        os << "max work group invocations: " << max_work_group_invocations() << "\n";
+        os << "max variable group size x: " << max_variable_group_size_x() << "\n";
+        os << "max variable group size y: " << max_variable_group_size_y() << "\n";
+        os << "max variable group size z: " << max_variable_group_size_z() << "\n";
+        os << "max variable group invocations: " << max_variable_group_invocations() << "\n";
+        os << "max fixed group size x: " << max_fixed_group_size_x() << "\n";
+        os << "max fixed group size y: " << max_fixed_group_size_y() << "\n";
+        os << "max fixed group size z: " << max_fixed_group_size_z() << "\n";
+        os << "max fixed group invocations: " << max_fixed_group_invocations() << "\n";
         os << "max work group count x: " << max_work_group_count_x() << "\n";
         os << "max work group count y: " << max_work_group_count_y() << "\n";
         os << "max work group count z: " << max_work_group_count_z() << "\n";
@@ -308,24 +312,44 @@ int framebuffer_samples()
         return get_named_framebuffer_parameter(0, GL_SAMPLES);
 }
 
-int max_work_group_size_x()
+int max_variable_group_size_x()
 {
         return get_integer_i(GL_MAX_COMPUTE_VARIABLE_GROUP_SIZE_ARB, 0);
 }
 
-int max_work_group_size_y()
+int max_variable_group_size_y()
 {
         return get_integer_i(GL_MAX_COMPUTE_VARIABLE_GROUP_SIZE_ARB, 1);
 }
 
-int max_work_group_size_z()
+int max_variable_group_size_z()
 {
         return get_integer_i(GL_MAX_COMPUTE_VARIABLE_GROUP_SIZE_ARB, 2);
 }
 
-int max_work_group_invocations()
+int max_variable_group_invocations()
 {
         return get_integer(GL_MAX_COMPUTE_VARIABLE_GROUP_INVOCATIONS_ARB);
+}
+
+int max_fixed_group_size_x()
+{
+        return get_integer_i(GL_MAX_COMPUTE_FIXED_GROUP_SIZE_ARB, 0);
+}
+
+int max_fixed_group_size_y()
+{
+        return get_integer_i(GL_MAX_COMPUTE_FIXED_GROUP_SIZE_ARB, 1);
+}
+
+int max_fixed_group_size_z()
+{
+        return get_integer_i(GL_MAX_COMPUTE_FIXED_GROUP_SIZE_ARB, 2);
+}
+
+int max_fixed_group_invocations()
+{
+        return get_integer(GL_MAX_COMPUTE_FIXED_GROUP_INVOCATIONS_ARB);
 }
 
 int max_work_group_count_x()

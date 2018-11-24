@@ -49,7 +49,7 @@ namespace
 {
 int group_size_prepare(int width, int shared_size_per_thread)
 {
-        int max_group_size_limit = std::min(opengl::max_work_group_size_x(), opengl::max_work_group_invocations());
+        int max_group_size_limit = std::min(opengl::max_variable_group_size_x(), opengl::max_variable_group_invocations());
         int max_group_size_memory = opengl::max_compute_shared_memory() / shared_size_per_thread;
 
         // максимально возможная степень 2
@@ -69,7 +69,7 @@ int group_size_merge(int height, int shared_size_per_item)
                       std::to_string(opengl::max_compute_shared_memory()));
         }
 
-        int max_group_size = std::min(opengl::max_work_group_size_x(), opengl::max_work_group_invocations());
+        int max_group_size = std::min(opengl::max_variable_group_size_x(), opengl::max_variable_group_invocations());
 
         // Один поток первоначально обрабатывает группы до 4 элементов.
         int pref_thread_count = group_count(height, 4);

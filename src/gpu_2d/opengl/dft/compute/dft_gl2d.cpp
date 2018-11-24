@@ -174,7 +174,7 @@ int group_size(int dft_size)
 {
         // не больше 1 потока на 2 элемента
         int max_threads_required = shared_size<FP>(dft_size) / 2;
-        int max_threads_supported = std::min(opengl::max_work_group_size_x(), opengl::max_work_group_invocations());
+        int max_threads_supported = std::min(opengl::max_variable_group_size_x(), opengl::max_variable_group_invocations());
         return std::min(max_threads_required, max_threads_supported);
 }
 
