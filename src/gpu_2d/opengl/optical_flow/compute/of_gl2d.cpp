@@ -74,8 +74,6 @@ constexpr float STOP_MOVE_SQUARE = square(1e-3f);
 // Если определитель матрицы G меньше этого значения, то считается, что нет потока
 constexpr float MIN_DETERMINANT = 1;
 
-constexpr int SIZE_OF_VEC2 = 2 * 4; // GLSL vec2
-
 namespace
 {
 void create_image_pyramid_sizes(int width, int height, int min, std::vector<vec2i>* level_dimensions)
@@ -171,7 +169,7 @@ void create_flow_buffers(const std::vector<vec2i>& level_dimensions, std::vector
         buffers->resize(level_dimensions.size());
         for (unsigned i = 0; i < level_dimensions.size(); ++i)
         {
-                (*buffers)[i].create_dynamic_copy(level_dimensions[i][0] * level_dimensions[i][1] * SIZE_OF_VEC2);
+                (*buffers)[i].create_dynamic_copy(level_dimensions[i][0] * level_dimensions[i][1] * sizeof(vec2f));
         }
 }
 

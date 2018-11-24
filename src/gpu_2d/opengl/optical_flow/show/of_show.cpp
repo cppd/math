@@ -51,8 +51,6 @@ constexpr double DISTANCE_BETWEEN_POINTS = 2;
 // Интервал ожидания для расчёта потока не для каждого кадра
 // constexpr double COMPUTE_INTERVAL_SECONDS = 1.0 / 10;
 
-constexpr int SIZE_OF_VEC2 = 2 * 4; // GLSL vec2
-
 namespace
 {
 void create_points_for_top_level(int width, int height, int distance, int* point_count_x, int* point_count_y,
@@ -120,7 +118,7 @@ public:
                                             &m_top_point_count_x, &m_top_point_count_y, &top_points);
 
                 m_top_points.load_dynamic_copy(top_points);
-                m_top_points_flow.create_dynamic_copy(top_points.size() * SIZE_OF_VEC2);
+                m_top_points_flow.create_dynamic_copy(top_points.size() * sizeof(vec2f));
 
                 m_draw_prog.set_uniform_float("matrix", matrix);
 
