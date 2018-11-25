@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "gpu_2d/opengl/convex_hull/show/ch_show.h"
 #include "gpu_2d/opengl/dft/show/dft_show.h"
 #include "gpu_2d/opengl/optical_flow/show/of_show.h"
-#include "gpu_2d/opengl/pencil/show/pencil.h"
+#include "gpu_2d/opengl/pencil_sketch/show/ps_show.h"
 #include "gpu_2d/opengl/text/text.h"
 
 namespace

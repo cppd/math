@@ -29,11 +29,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // clang-format off
 constexpr const char vertex_shader[]
 {
-#include "of.vert.str"
+#include "of_show.vert.str"
 };
 constexpr const char fragment_shader[]
 {
-#include "of.frag.str"
+#include "of_show.frag.str"
 };
 constexpr const char vertex_debug_shader[]
 {

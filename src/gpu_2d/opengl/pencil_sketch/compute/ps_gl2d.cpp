@@ -15,18 +15,18 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "pencil.h"
+#include "ps_gl2d.h"
 
 #include "com/math.h"
 
 // clang-format off
-constexpr const char pencil_shader[]
+constexpr const char compute_shader[]
 {
-#include "pencil.comp.str"
+#include "ps_compute.comp.str"
 };
-constexpr const char luminance_rgb_shader[]
+constexpr const char luminance_shader[]
 {
-#include "luminance_rgb.comp.str"
+#include "ps_luminance.comp.str"
 };
 // clang-format on
 
@@ -41,17 +41,17 @@ class Impl final : public PencilSketchGL2D
 
         const opengl::TextureRGBA32F& m_output;
 
-        opengl::ComputeProgram m_comp_prog;
-        opengl::ComputeProgram m_luminance_rgb_prog;
+        opengl::ComputeProgram m_compute_prog;
+        opengl::ComputeProgram m_luminance_prog;
 
         void exec() override
         {
-                m_comp_prog.dispatch_compute(m_groups_x, m_groups_y, 1, GROUP_SIZE, GROUP_SIZE, 1);
+                m_compute_prog.dispatch_compute(m_groups_x, m_groups_y, 1, GROUP_SIZE, GROUP_SIZE, 1);
                 glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
                 // Теперь в текстуре находится цвет RGB
                 m_output.bind_image_texture_read_write(0);
-                m_luminance_rgb_prog.dispatch_compute(m_groups_x, m_groups_y, 1, GROUP_SIZE, GROUP_SIZE, 1);
+                m_luminance_prog.dispatch_compute(m_groups_x, m_groups_y, 1, GROUP_SIZE, GROUP_SIZE, 1);
                 glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
         }
 
@@ -61,13 +61,13 @@ public:
                 : m_groups_x(group_count(input.texture().width(), GROUP_SIZE)),
                   m_groups_y(group_count(input.texture().height(), GROUP_SIZE)),
                   m_output(output),
-                  m_comp_prog(opengl::ComputeShader(pencil_shader)),
-                  m_luminance_rgb_prog(opengl::ComputeShader(luminance_rgb_shader))
+                  m_compute_prog(opengl::ComputeShader(compute_shader)),
+                  m_luminance_prog(opengl::ComputeShader(luminance_shader))
         {
-                m_comp_prog.set_uniform_handle("img_input", input.image_resident_handle_read_only());
-                m_comp_prog.set_uniform_handle("img_output", output.image_resident_handle_write_only());
-                m_comp_prog.set_uniform_handle("img_objects", objects.image_resident_handle_read_only());
-                m_comp_prog.set_uniform("source_srgb", input_is_srgb);
+                m_compute_prog.set_uniform_handle("img_input", input.image_resident_handle_read_only());
+                m_compute_prog.set_uniform_handle("img_output", output.image_resident_handle_write_only());
+                m_compute_prog.set_uniform_handle("img_objects", objects.image_resident_handle_read_only());
+                m_compute_prog.set_uniform("source_srgb", input_is_srgb);
         }
 };
 }

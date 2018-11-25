@@ -15,18 +15,18 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "pencil.h"
+#include "ps_show.h"
 
-#include "gpu_2d/opengl/pencil/compute/pencil.h"
+#include "gpu_2d/opengl/pencil_sketch/compute/ps_gl2d.h"
 
 // clang-format off
 constexpr const char vertex_shader[]
 {
-#include "pencil.vert.str"
+#include "ps_show.vert.str"
 };
 constexpr const char fragment_shader[]
 {
-#include "pencil.frag.str"
+#include "ps_show.frag.str"
 };
 // clang-format on
 
