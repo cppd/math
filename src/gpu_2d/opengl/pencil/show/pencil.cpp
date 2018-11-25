@@ -17,28 +17,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "pencil.h"
 
-#include "com/math.h"
+#include "gpu_2d/opengl/pencil/compute/pencil.h"
 
 // clang-format off
-constexpr const char pencil_vertex_shader[]
+constexpr const char vertex_shader[]
 {
 #include "pencil.vert.str"
 };
-constexpr const char pencil_fragment_shader[]
+constexpr const char fragment_shader[]
 {
 #include "pencil.frag.str"
 };
-constexpr const char pencil_compute_shader[]
-{
-#include "pencil.comp.str"
-};
-constexpr const char luminance_rgb_compute_shader[]
-{
-#include "luminance_rgb.comp.str"
-};
 // clang-format on
-
-constexpr int GROUP_SIZE = 16;
 
 constexpr int VERTEX_COUNT = 4;
 
@@ -56,44 +46,32 @@ struct Vertex
 
 class PencilEffect::Impl final
 {
-        const int m_width, m_height;
-        const int m_groups_x, m_groups_y;
-        opengl::ComputeProgram m_comp_prog;
-        opengl::ComputeProgram m_luminance_rgb_prog;
         opengl::GraphicsProgram m_draw_prog;
         opengl::TextureRGBA32F m_texture;
 
         opengl::VertexArray m_vertex_array;
         opengl::ArrayBuffer m_vertex_buffer;
 
+        std::unique_ptr<PencilEffectGL2D> m_pencil_effect;
+
 public:
         Impl(const opengl::TextureRGBA32F& source, bool source_is_srgb, const opengl::TextureR32I& objects, const mat4& matrix)
-                : m_width(source.texture().width()),
-                  m_height(source.texture().height()),
-                  m_groups_x(group_count(m_width, GROUP_SIZE)),
-                  m_groups_y(group_count(m_height, GROUP_SIZE)),
-                  m_comp_prog(opengl::ComputeShader(pencil_compute_shader)),
-                  m_luminance_rgb_prog(opengl::ComputeShader(luminance_rgb_compute_shader)),
-                  m_draw_prog(opengl::VertexShader(pencil_vertex_shader), opengl::FragmentShader(pencil_fragment_shader)),
-                  m_texture(m_width, m_height)
+                : m_draw_prog(opengl::VertexShader(vertex_shader), opengl::FragmentShader(fragment_shader)),
+                  m_texture(source.texture().width(), source.texture().height()),
+                  m_pencil_effect(create_pencil_effect_gl2d(source, source_is_srgb, objects, m_texture))
         {
                 ASSERT(source.texture().width() == objects.texture().width());
                 ASSERT(source.texture().height() == objects.texture().height());
 
+                m_draw_prog.set_uniform_handle("tex", m_texture.texture().texture_resident_handle());
+
                 m_vertex_array.attrib_pointer(0, 4, GL_FLOAT, m_vertex_buffer, offsetof(Vertex, v), sizeof(Vertex), true);
                 m_vertex_array.attrib_pointer(1, 2, GL_FLOAT, m_vertex_buffer, offsetof(Vertex, t), sizeof(Vertex), true);
 
-                m_comp_prog.set_uniform_handle("img_input", source.image_resident_handle_read_only());
-                m_comp_prog.set_uniform_handle("img_output", m_texture.image_resident_handle_write_only());
-                m_comp_prog.set_uniform_handle("img_objects", objects.image_resident_handle_read_only());
-                m_comp_prog.set_uniform("source_srgb", source_is_srgb);
-
-                m_draw_prog.set_uniform_handle("tex", m_texture.texture().texture_resident_handle());
-
                 int x0 = 0;
                 int y0 = 0;
-                int x1 = m_width;
-                int y1 = m_height;
+                int x1 = source.texture().width();
+                int y1 = source.texture().height();
 
                 std::array<Vertex, VERTEX_COUNT> vertices;
 
@@ -107,15 +85,14 @@ public:
                 m_vertex_buffer.load_static_draw(vertices);
         }
 
+        Impl(const Impl&) = delete;
+        Impl(Impl&&) = delete;
+        Impl& operator=(const Impl&) = delete;
+        Impl& operator=(Impl&&) = delete;
+
         void draw()
         {
-                m_comp_prog.dispatch_compute(m_groups_x, m_groups_y, 1, GROUP_SIZE, GROUP_SIZE, 1);
-                glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-
-                // Теперь в текстуре находится цвет RGB
-                m_texture.bind_image_texture_read_write(0);
-                m_luminance_rgb_prog.dispatch_compute(m_groups_x, m_groups_y, 1, GROUP_SIZE, GROUP_SIZE, 1);
-                glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+                m_pencil_effect->exec();
 
                 // Два треугольника на всё окно с текстурой
                 m_vertex_array.bind();

@@ -21,15 +21,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <memory>
 
-class PencilEffect final
+struct PencilEffectGL2D
 {
-        class Impl;
-        std::unique_ptr<Impl> m_impl;
+        virtual ~PencilEffectGL2D() = default;
 
-public:
-        PencilEffect(const opengl::TextureRGBA32F& source, bool source_is_srgb, const opengl::TextureR32I& objects,
-                     const mat4& matrix);
-        ~PencilEffect();
-
-        void draw();
+        virtual void exec() = 0;
 };
+
+std::unique_ptr<PencilEffectGL2D> create_pencil_effect_gl2d(const opengl::TextureRGBA32F& input, bool input_is_srgb,
+                                                            const opengl::TextureR32I& objects,
+                                                            const opengl::TextureRGBA32F& output);
