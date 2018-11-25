@@ -174,10 +174,10 @@ class EventQueue : public IShow
                         {
                         }
                 };
-                struct show_effect final
+                struct show_pencil_sketch final
                 {
                         bool show;
-                        show_effect(bool v) : show(v)
+                        show_pencil_sketch(bool v) : show(v)
                         {
                         }
                 };
@@ -241,8 +241,9 @@ class EventQueue : public IShow
                 const Variant<add_object, delete_all_objects, delete_object, mouse_wheel, parent_resized, reset_view, set_ambient,
                               set_background_color, set_default_color, set_default_ns, set_dft_background_color,
                               set_dft_brightness, set_dft_color, set_diffuse, set_shadow_zoom, set_specular, set_vertical_sync,
-                              set_wireframe_color, show_convex_hull_2d, show_dft, show_fps, show_effect, show_fog, show_materials,
-                              show_object, show_optical_flow, show_shadow, show_smooth, show_wireframe, toggle_fullscreen>
+                              set_wireframe_color, show_convex_hull_2d, show_dft, show_fps, show_pencil_sketch, show_fog,
+                              show_materials, show_object, show_optical_flow, show_shadow, show_smooth, show_wireframe,
+                              toggle_fullscreen>
                         event;
 
                 template <typename... Args>
@@ -326,9 +327,9 @@ protected:
         {
                 m_event_queue.emplace(std::in_place_type<Event::show_fps>, v);
         }
-        void show_effect(bool v) override final
+        void show_pencil_sketch(bool v) override final
         {
-                m_event_queue.emplace(std::in_place_type<Event::show_effect>, v);
+                m_event_queue.emplace(std::in_place_type<Event::show_pencil_sketch>, v);
         }
         void show_dft(bool v) override final
         {
@@ -396,7 +397,7 @@ protected:
         virtual void direct_show_fog(bool) = 0;
         virtual void direct_show_materials(bool) = 0;
         virtual void direct_show_fps(bool) = 0;
-        virtual void direct_show_effect(bool) = 0;
+        virtual void direct_show_pencil_sketch(bool) = 0;
         virtual void direct_show_dft(bool) = 0;
         virtual void direct_set_dft_brightness(double) = 0;
         virtual void direct_set_dft_background_color(const Color&) = 0;
@@ -500,9 +501,9 @@ private:
                 {
                         m_f.direct_show_fps(d.show);
                 }
-                void operator()(const Event::show_effect& d)
+                void operator()(const Event::show_pencil_sketch& d)
                 {
-                        m_f.direct_show_effect(d.show);
+                        m_f.direct_show_pencil_sketch(d.show);
                 }
                 void operator()(const Event::show_dft& d)
                 {

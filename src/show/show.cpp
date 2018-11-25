@@ -360,11 +360,11 @@ class ShowObject final : public EventQueue, public WindowEvent
                 m_canvas->set_text_active(v);
         }
 
-        void direct_show_effect(bool v) override
+        void direct_show_pencil_sketch(bool v) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
-                m_canvas->set_pencil_effect_active(v);
+                m_canvas->set_pencil_sketch_active(v);
         }
 
         void direct_show_dft(bool v) override
@@ -608,7 +608,7 @@ public:
                 show_shadow(info.with_shadow.value());
                 show_fog(info.with_fog.value());
                 show_fps(info.with_fps.value());
-                show_effect(info.with_effect.value());
+                show_pencil_sketch(info.with_pencil_sketch.value());
                 show_dft(info.with_dft.value());
                 set_dft_brightness(info.dft_brightness.value());
                 set_dft_background_color(info.dft_background_color.value());
@@ -826,7 +826,7 @@ bool render_opengl(OpenGLWindow& window, OpenGLRenderer& renderer, OpenGLCanvas&
         // Параметр true означает рисование в цветной буфер,
         // параметр false означает рисование в буфер экрана.
         // Если возвращает false, то нет объекта для рисования.
-        bool object_rendered = renderer.draw(canvas.pencil_effect_active());
+        bool object_rendered = renderer.draw(canvas.pencil_sketch_active());
 
         canvas.draw();
 

@@ -46,21 +46,21 @@
          </attribute>
          <layout class="QVBoxLayout" name="verticalLayout_4">
           <item>
-           <widget class="QRadioButton" name="radioButton_Model">
+           <widget class="QRadioButton" name="radioButton_model">
             <property name="text">
              <string>Model</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QRadioButton" name="radioButton_ModelConvexHull">
+           <widget class="QRadioButton" name="radioButton_model_convex_hull">
             <property name="text">
              <string>Model CH</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QRadioButton" name="radioButton_ModelMST">
+           <widget class="QRadioButton" name="radioButton_model_mst">
             <property name="text">
              <string>Model MST</string>
             </property>
@@ -74,14 +74,14 @@
            </widget>
           </item>
           <item>
-           <widget class="QRadioButton" name="radioButton_Cocone">
+           <widget class="QRadioButton" name="radioButton_cocone">
             <property name="text">
              <string>Cocone</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QRadioButton" name="radioButton_CoconeConvexHull">
+           <widget class="QRadioButton" name="radioButton_cocone_convex_hull">
             <property name="text">
              <string>Cocone CH</string>
             </property>
@@ -95,21 +95,21 @@
            </widget>
           </item>
           <item>
-           <widget class="QLabel" name="BoundCocone_label">
+           <widget class="QLabel" name="label_bound_cocone_info">
             <property name="text">
              <string>BoundCocone Info</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QRadioButton" name="radioButton_BoundCocone">
+           <widget class="QRadioButton" name="radioButton_bound_cocone">
             <property name="text">
              <string>BoundCocone</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QRadioButton" name="radioButton_BoundCoconeConvexHull">
+           <widget class="QRadioButton" name="radioButton_bound_cocone_convex_hull">
             <property name="text">
              <string>BoundCocone CH</string>
             </property>
@@ -138,7 +138,7 @@
           <item>
            <layout class="QHBoxLayout" name="horizontalLayout">
             <item>
-             <widget class="QPushButton" name="pushButton_ResetView">
+             <widget class="QPushButton" name="pushButton_reset_view">
               <property name="maximumSize">
                <size>
                 <width>16777215</width>
@@ -176,7 +176,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QCheckBox" name="checkBox_Materials">
+           <widget class="QCheckBox" name="checkBox_materials">
             <property name="text">
              <string>Materials</string>
             </property>
@@ -186,7 +186,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QCheckBox" name="checkBox_Smooth">
+           <widget class="QCheckBox" name="checkBox_smooth">
             <property name="text">
              <string>Smooth</string>
             </property>
@@ -196,7 +196,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QCheckBox" name="checkBox_Fog">
+           <widget class="QCheckBox" name="checkBox_fog">
             <property name="text">
              <string>Fog</string>
             </property>
@@ -206,7 +206,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QCheckBox" name="checkBox_Wireframe">
+           <widget class="QCheckBox" name="checkBox_wireframe">
             <property name="text">
              <string>Wireframe</string>
             </property>
@@ -216,7 +216,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QCheckBox" name="checkBox_Shadow">
+           <widget class="QCheckBox" name="checkBox_shadow">
             <property name="text">
              <string>Shadow</string>
             </property>
@@ -228,14 +228,14 @@
           <item>
            <layout class="QHBoxLayout" name="horizontalLayout_3">
             <item>
-             <widget class="QLabel" name="label_ShadowQuality">
+             <widget class="QLabel" name="label_shadow_quality">
               <property name="text">
                <string>Quality:</string>
               </property>
              </widget>
             </item>
             <item>
-             <widget class="QSlider" name="slider_ShadowQuality">
+             <widget class="QSlider" name="slider_shadow_quality">
               <property name="minimum">
                <number>1</number>
               </property>
@@ -257,7 +257,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QCheckBox" name="checkBox_show_fps">
+           <widget class="QCheckBox" name="checkBox_fps">
             <property name="text">
              <string>FPS</string>
             </property>
@@ -267,9 +267,9 @@
            </widget>
           </item>
           <item>
-           <widget class="QCheckBox" name="checkBox_ShowEffect">
+           <widget class="QCheckBox" name="checkBox_pencil_sketch">
             <property name="text">
-             <string>Pencil</string>
+             <string>Pencil Sketch</string>
             </property>
            </widget>
           </item>
@@ -284,14 +284,14 @@
            </widget>
           </item>
           <item>
-           <widget class="QCheckBox" name="checkBox_OpticalFlow">
+           <widget class="QCheckBox" name="checkBox_optical_flow">
             <property name="text">
              <string>Optical Flow</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QCheckBox" name="checkBox_show_dft">
+           <widget class="QCheckBox" name="checkBox_dft">
             <property name="text">
              <string>DFT</string>
             </property>
@@ -300,14 +300,14 @@
           <item>
            <layout class="QFormLayout" name="formLayout_2">
             <item row="0" column="0">
-             <widget class="QLabel" name="label_DFT_Brightness">
+             <widget class="QLabel" name="label_dft_brightness">
               <property name="text">
                <string>Brightness:</string>
               </property>
              </widget>
             </item>
             <item row="0" column="1">
-             <widget class="QSlider" name="slider_DFT_Brightness">
+             <widget class="QSlider" name="slider_dft_brightness">
               <property name="maximum">
                <number>1000</number>
               </property>
@@ -329,7 +329,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QCheckBox" name="checkBox_VerticalSync">
+           <widget class="QCheckBox" name="checkBox_vertical_sync">
             <property name="text">
              <string>V-Sync</string>
             </property>
@@ -358,14 +358,14 @@
           <item>
            <layout class="QFormLayout" name="formLayout_4">
             <item row="0" column="0">
-             <widget class="QLabel" name="label_Ambient">
+             <widget class="QLabel" name="label_ambient">
               <property name="text">
                <string>Ambient:</string>
               </property>
              </widget>
             </item>
             <item row="0" column="1">
-             <widget class="QSlider" name="slider_Ambient">
+             <widget class="QSlider" name="slider_ambient">
               <property name="maximum">
                <number>2000</number>
               </property>
@@ -378,14 +378,14 @@
              </widget>
             </item>
             <item row="1" column="0">
-             <widget class="QLabel" name="Label_Diffuse">
+             <widget class="QLabel" name="label_diffuse">
               <property name="text">
                <string>Diffuse:</string>
               </property>
              </widget>
             </item>
             <item row="1" column="1">
-             <widget class="QSlider" name="slider_Diffuse">
+             <widget class="QSlider" name="slider_diffuse">
               <property name="maximum">
                <number>2000</number>
               </property>
@@ -398,14 +398,14 @@
              </widget>
             </item>
             <item row="2" column="0">
-             <widget class="QLabel" name="label_Specular">
+             <widget class="QLabel" name="label_specular">
               <property name="text">
                <string>Specular:</string>
               </property>
              </widget>
             </item>
             <item row="2" column="1">
-             <widget class="QSlider" name="slider_Specular">
+             <widget class="QSlider" name="slider_specular">
               <property name="maximum">
                <number>2000</number>
               </property>
@@ -425,7 +425,7 @@
              </widget>
             </item>
             <item row="3" column="1">
-             <widget class="QSlider" name="slider_Default_Ns">
+             <widget class="QSlider" name="slider_default_ns">
               <property name="minimum">
                <number>1</number>
               </property>
@@ -445,7 +445,7 @@
           <item>
            <layout class="QHBoxLayout" name="horizontalLayout_4">
             <item>
-             <widget class="QPushButton" name="pushButton_ResetLighting">
+             <widget class="QPushButton" name="pushButton_reset_lighting">
               <property name="text">
                <string>Reset</string>
               </property>
@@ -555,7 +555,7 @@
                </widget>
               </item>
               <item row="4" column="2">
-               <widget class="QToolButton" name="toolButton_DefaultColor">
+               <widget class="QToolButton" name="toolButton_default_color">
                 <property name="text">
                  <string>...</string>
                 </property>
@@ -639,7 +639,7 @@
                </widget>
               </item>
               <item row="2" column="2">
-               <widget class="QToolButton" name="toolButton_BackgroundColor">
+               <widget class="QToolButton" name="toolButton_background_color">
                 <property name="text">
                  <string>...</string>
                 </property>
@@ -744,7 +744,7 @@
                </widget>
               </item>
               <item row="3" column="2">
-               <widget class="QToolButton" name="toolButton_WireframeColor">
+               <widget class="QToolButton" name="toolButton_wireframe_color">
                 <property name="enabled">
                  <bool>true</bool>
                 </property>

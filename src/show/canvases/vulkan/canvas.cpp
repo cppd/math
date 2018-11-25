@@ -39,11 +39,11 @@ class Canvas final : public VulkanCanvas
                 m_text_active = v;
         }
 
-        void set_pencil_effect_active(bool /*v*/) override
+        void set_pencil_sketch_active(bool /*v*/) override
         {
         }
 
-        bool pencil_effect_active() override
+        bool pencil_sketch_active() override
         {
                 return false;
         }

@@ -64,7 +64,7 @@ public:
         virtual void show_fog(bool) = 0;
         virtual void show_materials(bool) = 0;
         virtual void show_fps(bool) = 0;
-        virtual void show_effect(bool) = 0;
+        virtual void show_pencil_sketch(bool) = 0;
         virtual void show_dft(bool) = 0;
         virtual void set_dft_brightness(double) = 0;
         virtual void set_dft_background_color(const Color&) = 0;
@@ -96,7 +96,7 @@ struct ShowCreateInfo
         std::optional<bool> with_fog;
         std::optional<bool> with_materials;
         std::optional<bool> with_fps;
-        std::optional<bool> with_effect;
+        std::optional<bool> with_pencil_sketch;
         std::optional<bool> with_dft;
         std::optional<bool> with_convex_hull;
         std::optional<bool> with_optical_flow;

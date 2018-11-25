@@ -34,8 +34,8 @@ struct VulkanCanvas
         virtual void set_text_color(const Color& c) = 0;
         virtual void set_text_active(bool v) = 0;
 
-        virtual void set_pencil_effect_active(bool v) = 0;
-        virtual bool pencil_effect_active() = 0;
+        virtual void set_pencil_sketch_active(bool v) = 0;
+        virtual bool pencil_sketch_active() = 0;
 
         virtual void set_dft_active(bool v) = 0;
         virtual bool dft_active() = 0;

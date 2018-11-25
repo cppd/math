@@ -162,33 +162,33 @@ void MainWindow::constructor_interface()
         ui.mainWidget->layout()->setContentsMargins(3, 3, 3, 3);
         ui.mainWidget->layout()->setSpacing(3);
 
-        ui.radioButton_Model->setChecked(true);
+        ui.radioButton_model->setChecked(true);
 
         ui.tabWidget->setCurrentIndex(0);
 
         ui.actionHelp->setText(QString(APPLICATION_NAME) + " Help");
         ui.actionAbout->setText("About " + QString(APPLICATION_NAME));
 
-        ui.slider_ShadowQuality->setSliderPosition(SHADOW_ZOOM);
+        ui.slider_shadow_quality->setSliderPosition(SHADOW_ZOOM);
 
         // Чтобы добавление и удаление QProgressBar не меняло высоту ui.statusBar
         ui.statusBar->setFixedHeight(ui.statusBar->height());
 
         // Должно быть точное среднее положение
-        ASSERT(((ui.slider_Ambient->maximum() - ui.slider_Ambient->minimum()) & 1) == 0);
-        ASSERT(((ui.slider_Diffuse->maximum() - ui.slider_Diffuse->minimum()) & 1) == 0);
-        ASSERT(((ui.slider_Specular->maximum() - ui.slider_Specular->minimum()) & 1) == 0);
+        ASSERT(((ui.slider_ambient->maximum() - ui.slider_ambient->minimum()) & 1) == 0);
+        ASSERT(((ui.slider_diffuse->maximum() - ui.slider_diffuse->minimum()) & 1) == 0);
+        ASSERT(((ui.slider_specular->maximum() - ui.slider_specular->minimum()) & 1) == 0);
 }
 
 void MainWindow::constructor_buttons()
 {
-        m_object_id_to_button.try_emplace(ObjectId::Model, ui.radioButton_Model);
-        m_object_id_to_button.try_emplace(ObjectId::ModelMst, ui.radioButton_ModelMST);
-        m_object_id_to_button.try_emplace(ObjectId::ModelConvexHull, ui.radioButton_ModelConvexHull);
-        m_object_id_to_button.try_emplace(ObjectId::Cocone, ui.radioButton_Cocone);
-        m_object_id_to_button.try_emplace(ObjectId::CoconeConvexHull, ui.radioButton_CoconeConvexHull);
-        m_object_id_to_button.try_emplace(ObjectId::BoundCocone, ui.radioButton_BoundCocone);
-        m_object_id_to_button.try_emplace(ObjectId::BoundCoconeConvexHull, ui.radioButton_BoundCoconeConvexHull);
+        m_object_id_to_button.try_emplace(ObjectId::Model, ui.radioButton_model);
+        m_object_id_to_button.try_emplace(ObjectId::ModelMst, ui.radioButton_model_mst);
+        m_object_id_to_button.try_emplace(ObjectId::ModelConvexHull, ui.radioButton_model_convex_hull);
+        m_object_id_to_button.try_emplace(ObjectId::Cocone, ui.radioButton_cocone);
+        m_object_id_to_button.try_emplace(ObjectId::CoconeConvexHull, ui.radioButton_cocone_convex_hull);
+        m_object_id_to_button.try_emplace(ObjectId::BoundCocone, ui.radioButton_bound_cocone);
+        m_object_id_to_button.try_emplace(ObjectId::BoundCoconeConvexHull, ui.radioButton_bound_cocone_convex_hull);
 }
 
 void MainWindow::constructor_objects_and_repository()
@@ -805,7 +805,7 @@ void MainWindow::set_bound_cocone_parameters(double rho, double alpha)
         label += u8"ρ " + to_string_fixed(rho, -BOUND_COCONE_MINIMUM_RHO_EXPONENT);
         label += "; ";
         label += u8"α " + to_string_fixed(alpha, -BOUND_COCONE_MINIMUM_ALPHA_EXPONENT);
-        ui.BoundCocone_label->setText(label.c_str());
+        ui.label_bound_cocone_info->setText(label.c_str());
 }
 
 void MainWindow::set_background_color(const QColor& c)
@@ -871,17 +871,17 @@ void MainWindow::set_dft_color(const QColor& c)
 void MainWindow::set_dependent_interface()
 {
         {
-                bool enabled_and_checked = ui.checkBox_Shadow->isEnabled() && ui.checkBox_Shadow->isChecked();
+                bool enabled_and_checked = ui.checkBox_shadow->isEnabled() && ui.checkBox_shadow->isChecked();
 
-                ui.label_ShadowQuality->setEnabled(enabled_and_checked);
-                ui.slider_ShadowQuality->setEnabled(enabled_and_checked);
+                ui.label_shadow_quality->setEnabled(enabled_and_checked);
+                ui.slider_shadow_quality->setEnabled(enabled_and_checked);
         }
 
         {
-                bool enabled_and_checked = ui.checkBox_show_dft->isEnabled() && ui.checkBox_show_dft->isChecked();
+                bool enabled_and_checked = ui.checkBox_dft->isEnabled() && ui.checkBox_dft->isChecked();
 
-                ui.label_DFT_Brightness->setEnabled(enabled_and_checked);
-                ui.slider_DFT_Brightness->setEnabled(enabled_and_checked);
+                ui.label_dft_brightness->setEnabled(enabled_and_checked);
+                ui.slider_dft_brightness->setEnabled(enabled_and_checked);
         }
 }
 
@@ -916,19 +916,19 @@ void MainWindow::show_object_button(QRadioButton* button)
 
 void MainWindow::reset_all_object_buttons(const std::unordered_set<ObjectId>& objects_to_load)
 {
-        reset_object_button(ui.radioButton_Model, true);
-        reset_object_button(ui.radioButton_ModelConvexHull, objects_to_load.count(ObjectId::ModelConvexHull) > 0);
-        reset_object_button(ui.radioButton_ModelMST, objects_to_load.count(ObjectId::ModelMst) > 0);
-        reset_object_button(ui.radioButton_Cocone, objects_to_load.count(ObjectId::Cocone) > 0);
-        reset_object_button(ui.radioButton_CoconeConvexHull, objects_to_load.count(ObjectId::CoconeConvexHull) > 0);
-        reset_object_button(ui.radioButton_BoundCocone, objects_to_load.count(ObjectId::BoundCocone) > 0);
-        reset_object_button(ui.radioButton_BoundCoconeConvexHull, objects_to_load.count(ObjectId::BoundCoconeConvexHull) > 0);
+        reset_object_button(ui.radioButton_model, true);
+        reset_object_button(ui.radioButton_model_convex_hull, objects_to_load.count(ObjectId::ModelConvexHull) > 0);
+        reset_object_button(ui.radioButton_model_mst, objects_to_load.count(ObjectId::ModelMst) > 0);
+        reset_object_button(ui.radioButton_cocone, objects_to_load.count(ObjectId::Cocone) > 0);
+        reset_object_button(ui.radioButton_cocone_convex_hull, objects_to_load.count(ObjectId::CoconeConvexHull) > 0);
+        reset_object_button(ui.radioButton_bound_cocone, objects_to_load.count(ObjectId::BoundCocone) > 0);
+        reset_object_button(ui.radioButton_bound_cocone_convex_hull, objects_to_load.count(ObjectId::BoundCoconeConvexHull) > 0);
 }
 
 void MainWindow::reset_bound_cocone_buttons(const std::unordered_set<ObjectId>& objects_to_load)
 {
-        reset_object_button(ui.radioButton_BoundCocone, objects_to_load.count(ObjectId::BoundCocone) > 0);
-        reset_object_button(ui.radioButton_BoundCoconeConvexHull, objects_to_load.count(ObjectId::BoundCoconeConvexHull) > 0);
+        reset_object_button(ui.radioButton_bound_cocone, objects_to_load.count(ObjectId::BoundCocone) > 0);
+        reset_object_button(ui.radioButton_bound_cocone_convex_hull, objects_to_load.count(ObjectId::BoundCoconeConvexHull) > 0);
 }
 
 void MainWindow::direct_message_error(const std::string& msg)
@@ -1019,7 +1019,7 @@ void MainWindow::direct_file_loaded(const std::string& file_name, unsigned dimen
         std::string base_name = file_base_name(file_name);
         set_window_title_file(base_name + " [" + space_name(dimension) + "]");
         reset_all_object_buttons(objects);
-        ui.radioButton_Model->setChecked(true);
+        ui.radioButton_model->setChecked(true);
         m_dimension = dimension;
         m_objects_to_load = objects;
 }
@@ -1115,16 +1115,16 @@ void MainWindow::slot_window_first_shown()
                 info.background_color = qcolor_to_rgb(m_background_color);
                 info.default_color = qcolor_to_rgb(m_default_color);
                 info.wireframe_color = qcolor_to_rgb(m_wireframe_color);
-                info.with_smooth = ui.checkBox_Smooth->isChecked();
-                info.with_wireframe = ui.checkBox_Wireframe->isChecked();
-                info.with_shadow = ui.checkBox_Shadow->isChecked();
-                info.with_fog = ui.checkBox_Fog->isChecked();
-                info.with_materials = ui.checkBox_Materials->isChecked();
-                info.with_fps = ui.checkBox_show_fps->isChecked();
-                info.with_effect = ui.checkBox_ShowEffect->isChecked();
-                info.with_dft = ui.checkBox_show_dft->isChecked();
+                info.with_smooth = ui.checkBox_smooth->isChecked();
+                info.with_wireframe = ui.checkBox_wireframe->isChecked();
+                info.with_shadow = ui.checkBox_shadow->isChecked();
+                info.with_fog = ui.checkBox_fog->isChecked();
+                info.with_materials = ui.checkBox_materials->isChecked();
+                info.with_fps = ui.checkBox_fps->isChecked();
+                info.with_pencil_sketch = ui.checkBox_pencil_sketch->isChecked();
+                info.with_dft = ui.checkBox_dft->isChecked();
                 info.with_convex_hull = ui.checkBox_convex_hull_2d->isChecked();
-                info.with_optical_flow = ui.checkBox_OpticalFlow->isChecked();
+                info.with_optical_flow = ui.checkBox_optical_flow->isChecked();
                 info.ambient = ambient_light();
                 info.diffuse = diffuse_light();
                 info.specular = specular_light();
@@ -1132,7 +1132,7 @@ void MainWindow::slot_window_first_shown()
                 info.dft_background_color = qcolor_to_rgb(m_dft_background_color);
                 info.dft_color = qcolor_to_rgb(m_dft_color);
                 info.default_ns = default_ns();
-                info.vertical_sync = ui.checkBox_VerticalSync->isChecked();
+                info.vertical_sync = ui.checkBox_vertical_sync->isChecked();
                 info.shadow_zoom = shadow_zoom();
 
                 m_show = create_show(api, info);
@@ -1211,7 +1211,7 @@ void MainWindow::on_actionAbout_triggered()
         dialog::application_about(this);
 }
 
-void MainWindow::on_pushButton_ResetView_clicked()
+void MainWindow::on_pushButton_reset_view_clicked()
 {
         m_show->reset_view();
 }
@@ -1242,24 +1242,24 @@ double MainWindow::lighting_slider_value(const QSlider* slider)
 
 double MainWindow::ambient_light() const
 {
-        return lighting_slider_value(ui.slider_Ambient);
+        return lighting_slider_value(ui.slider_ambient);
 }
 double MainWindow::diffuse_light() const
 {
-        return lighting_slider_value(ui.slider_Diffuse);
+        return lighting_slider_value(ui.slider_diffuse);
 }
 
 double MainWindow::specular_light() const
 {
-        return lighting_slider_value(ui.slider_Specular);
+        return lighting_slider_value(ui.slider_specular);
 }
 
 double MainWindow::default_ns() const
 {
-        return ui.slider_Default_Ns->value();
+        return ui.slider_default_ns->value();
 }
 
-void MainWindow::on_pushButton_ResetLighting_clicked()
+void MainWindow::on_pushButton_reset_lighting_clicked()
 {
         QPointer ptr(this);
         if (!dialog::message_question_default_yes(this, "Reset lighting?"))
@@ -1271,51 +1271,51 @@ void MainWindow::on_pushButton_ResetLighting_clicked()
                 return;
         }
 
-        set_slider_to_middle(ui.slider_Ambient);
-        set_slider_to_middle(ui.slider_Diffuse);
-        set_slider_to_middle(ui.slider_Specular);
-        set_slider_to_middle(ui.slider_Default_Ns);
+        set_slider_to_middle(ui.slider_ambient);
+        set_slider_to_middle(ui.slider_diffuse);
+        set_slider_to_middle(ui.slider_specular);
+        set_slider_to_middle(ui.slider_default_ns);
 }
 
 double MainWindow::dft_brightness() const
 {
-        double value = ui.slider_DFT_Brightness->value() - ui.slider_DFT_Brightness->minimum();
-        double delta = ui.slider_DFT_Brightness->maximum() - ui.slider_DFT_Brightness->minimum();
+        double value = ui.slider_dft_brightness->value() - ui.slider_dft_brightness->minimum();
+        double delta = ui.slider_dft_brightness->maximum() - ui.slider_dft_brightness->minimum();
         double value_gamma = std::pow(value / delta, DFT_GAMMA);
         return std::pow(DFT_MAX_BRIGHTNESS, value_gamma);
 }
 
 double MainWindow::shadow_zoom() const
 {
-        return ui.slider_ShadowQuality->value();
+        return ui.slider_shadow_quality->value();
 }
 
-void MainWindow::on_slider_Ambient_valueChanged(int)
+void MainWindow::on_slider_ambient_valueChanged(int)
 {
         m_show->set_ambient(ambient_light());
 }
 
-void MainWindow::on_slider_Diffuse_valueChanged(int)
+void MainWindow::on_slider_diffuse_valueChanged(int)
 {
         m_show->set_diffuse(diffuse_light());
 }
 
-void MainWindow::on_slider_Specular_valueChanged(int)
+void MainWindow::on_slider_specular_valueChanged(int)
 {
         m_show->set_specular(specular_light());
 }
 
-void MainWindow::on_slider_DFT_Brightness_valueChanged(int)
+void MainWindow::on_slider_dft_brightness_valueChanged(int)
 {
         m_show->set_dft_brightness(dft_brightness());
 }
 
-void MainWindow::on_slider_Default_Ns_valueChanged(int)
+void MainWindow::on_slider_default_ns_valueChanged(int)
 {
         m_show->set_default_ns(default_ns());
 }
 
-void MainWindow::on_slider_ShadowQuality_valueChanged(int)
+void MainWindow::on_slider_shadow_quality_valueChanged(int)
 {
         if (m_show)
         {
@@ -1323,17 +1323,17 @@ void MainWindow::on_slider_ShadowQuality_valueChanged(int)
         }
 }
 
-void MainWindow::on_toolButton_BackgroundColor_clicked()
+void MainWindow::on_toolButton_background_color_clicked()
 {
         dialog::color_dialog(this, "Background Color", m_background_color, [this](const QColor& c) { set_background_color(c); });
 }
 
-void MainWindow::on_toolButton_DefaultColor_clicked()
+void MainWindow::on_toolButton_default_color_clicked()
 {
         dialog::color_dialog(this, "Default Color", m_default_color, [this](const QColor& c) { set_default_color(c); });
 }
 
-void MainWindow::on_toolButton_WireframeColor_clicked()
+void MainWindow::on_toolButton_wireframe_color_clicked()
 {
         dialog::color_dialog(this, "Wireframe Color", m_wireframe_color, [this](const QColor& c) { set_wireframe_color(c); });
 }
@@ -1349,52 +1349,52 @@ void MainWindow::on_toolButton_dft_color_clicked()
         dialog::color_dialog(this, "DFT Color", m_dft_color, [this](const QColor& c) { set_dft_color(c); });
 }
 
-void MainWindow::on_checkBox_Shadow_clicked()
+void MainWindow::on_checkBox_shadow_clicked()
 {
-        bool checked = ui.checkBox_Shadow->isChecked();
+        bool checked = ui.checkBox_shadow->isChecked();
 
-        ui.label_ShadowQuality->setEnabled(checked);
-        ui.slider_ShadowQuality->setEnabled(checked);
+        ui.label_shadow_quality->setEnabled(checked);
+        ui.slider_shadow_quality->setEnabled(checked);
 
         m_show->show_shadow(checked);
 }
 
-void MainWindow::on_checkBox_Fog_clicked()
+void MainWindow::on_checkBox_fog_clicked()
 {
-        m_show->show_fog(ui.checkBox_Fog->isChecked());
+        m_show->show_fog(ui.checkBox_fog->isChecked());
 }
 
-void MainWindow::on_checkBox_Wireframe_clicked()
+void MainWindow::on_checkBox_wireframe_clicked()
 {
-        m_show->show_wireframe(ui.checkBox_Wireframe->isChecked());
+        m_show->show_wireframe(ui.checkBox_wireframe->isChecked());
 }
 
-void MainWindow::on_checkBox_Materials_clicked()
+void MainWindow::on_checkBox_materials_clicked()
 {
-        m_show->show_materials(ui.checkBox_Materials->isChecked());
+        m_show->show_materials(ui.checkBox_materials->isChecked());
 }
 
-void MainWindow::on_checkBox_Smooth_clicked()
+void MainWindow::on_checkBox_smooth_clicked()
 {
-        m_show->show_smooth(ui.checkBox_Smooth->isChecked());
+        m_show->show_smooth(ui.checkBox_smooth->isChecked());
 }
 
-void MainWindow::on_checkBox_show_fps_clicked()
+void MainWindow::on_checkBox_fps_clicked()
 {
-        m_show->show_fps(ui.checkBox_show_fps->isChecked());
+        m_show->show_fps(ui.checkBox_fps->isChecked());
 }
 
-void MainWindow::on_checkBox_ShowEffect_clicked()
+void MainWindow::on_checkBox_pencil_sketch_clicked()
 {
-        m_show->show_effect(ui.checkBox_ShowEffect->isChecked());
+        m_show->show_pencil_sketch(ui.checkBox_pencil_sketch->isChecked());
 }
 
-void MainWindow::on_checkBox_show_dft_clicked()
+void MainWindow::on_checkBox_dft_clicked()
 {
-        bool checked = ui.checkBox_show_dft->isChecked();
+        bool checked = ui.checkBox_dft->isChecked();
 
-        ui.label_DFT_Brightness->setEnabled(checked);
-        ui.slider_DFT_Brightness->setEnabled(checked);
+        ui.label_dft_brightness->setEnabled(checked);
+        ui.slider_dft_brightness->setEnabled(checked);
 
         m_show->show_dft(checked);
 }
@@ -1404,14 +1404,14 @@ void MainWindow::on_checkBox_convex_hull_2d_clicked()
         m_show->show_convex_hull_2d(ui.checkBox_convex_hull_2d->isChecked());
 }
 
-void MainWindow::on_checkBox_OpticalFlow_clicked()
+void MainWindow::on_checkBox_optical_flow_clicked()
 {
-        m_show->show_optical_flow(ui.checkBox_OpticalFlow->isChecked());
+        m_show->show_optical_flow(ui.checkBox_optical_flow->isChecked());
 }
 
-void MainWindow::on_checkBox_VerticalSync_clicked()
+void MainWindow::on_checkBox_vertical_sync_clicked()
 {
-        m_show->set_vertical_sync(ui.checkBox_VerticalSync->isChecked());
+        m_show->set_vertical_sync(ui.checkBox_vertical_sync->isChecked());
 }
 
 void MainWindow::on_actionFullScreen_triggered()
@@ -1419,37 +1419,37 @@ void MainWindow::on_actionFullScreen_triggered()
         m_show->toggle_fullscreen();
 }
 
-void MainWindow::on_radioButton_Model_clicked()
+void MainWindow::on_radioButton_model_clicked()
 {
         m_show->show_object(object_id_to_int(ObjectId::Model));
 }
 
-void MainWindow::on_radioButton_ModelConvexHull_clicked()
+void MainWindow::on_radioButton_model_convex_hull_clicked()
 {
         m_show->show_object(object_id_to_int(ObjectId::ModelConvexHull));
 }
 
-void MainWindow::on_radioButton_ModelMST_clicked()
+void MainWindow::on_radioButton_model_mst_clicked()
 {
         m_show->show_object(object_id_to_int(ObjectId::ModelMst));
 }
 
-void MainWindow::on_radioButton_Cocone_clicked()
+void MainWindow::on_radioButton_cocone_clicked()
 {
         m_show->show_object(object_id_to_int(ObjectId::Cocone));
 }
 
-void MainWindow::on_radioButton_CoconeConvexHull_clicked()
+void MainWindow::on_radioButton_cocone_convex_hull_clicked()
 {
         m_show->show_object(object_id_to_int(ObjectId::CoconeConvexHull));
 }
 
-void MainWindow::on_radioButton_BoundCocone_clicked()
+void MainWindow::on_radioButton_bound_cocone_clicked()
 {
         m_show->show_object(object_id_to_int(ObjectId::BoundCocone));
 }
 
-void MainWindow::on_radioButton_BoundCoconeConvexHull_clicked()
+void MainWindow::on_radioButton_bound_cocone_convex_hull_clicked()
 {
         m_show->show_object(object_id_to_int(ObjectId::BoundCoconeConvexHull));
 }

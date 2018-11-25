@@ -34,7 +34,7 @@ constexpr int GROUP_SIZE = 16;
 
 namespace
 {
-class Impl final : public PencilEffectGL2D
+class Impl final : public PencilSketchGL2D
 {
         const int m_groups_x;
         const int m_groups_y;
@@ -72,7 +72,7 @@ public:
 };
 }
 
-std::unique_ptr<PencilEffectGL2D> create_pencil_effect_gl2d(const opengl::TextureRGBA32F& input, bool input_is_srgb,
+std::unique_ptr<PencilSketchGL2D> create_pencil_sketch_gl2d(const opengl::TextureRGBA32F& input, bool input_is_srgb,
                                                             const opengl::TextureR32I& objects,
                                                             const opengl::TextureRGBA32F& output)
 {

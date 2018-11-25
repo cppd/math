@@ -44,7 +44,7 @@ struct Vertex
 };
 }
 
-class PencilEffect::Impl final
+class PencilSketch::Impl final
 {
         opengl::GraphicsProgram m_draw_prog;
         opengl::TextureRGBA32F m_texture;
@@ -52,13 +52,13 @@ class PencilEffect::Impl final
         opengl::VertexArray m_vertex_array;
         opengl::ArrayBuffer m_vertex_buffer;
 
-        std::unique_ptr<PencilEffectGL2D> m_pencil_effect;
+        std::unique_ptr<PencilSketchGL2D> m_pencil_sketch;
 
 public:
         Impl(const opengl::TextureRGBA32F& source, bool source_is_srgb, const opengl::TextureR32I& objects, const mat4& matrix)
                 : m_draw_prog(opengl::VertexShader(vertex_shader), opengl::FragmentShader(fragment_shader)),
                   m_texture(source.texture().width(), source.texture().height()),
-                  m_pencil_effect(create_pencil_effect_gl2d(source, source_is_srgb, objects, m_texture))
+                  m_pencil_sketch(create_pencil_sketch_gl2d(source, source_is_srgb, objects, m_texture))
         {
                 ASSERT(source.texture().width() == objects.texture().width());
                 ASSERT(source.texture().height() == objects.texture().height());
@@ -92,7 +92,7 @@ public:
 
         void draw()
         {
-                m_pencil_effect->exec();
+                m_pencil_sketch->exec();
 
                 // Два треугольника на всё окно с текстурой
                 m_vertex_array.bind();
@@ -100,15 +100,15 @@ public:
         }
 };
 
-PencilEffect::PencilEffect(const opengl::TextureRGBA32F& source, bool source_is_srgb, const opengl::TextureR32I& objects,
+PencilSketch::PencilSketch(const opengl::TextureRGBA32F& source, bool source_is_srgb, const opengl::TextureR32I& objects,
                            const mat4& matrix)
         : m_impl(std::make_unique<Impl>(source, source_is_srgb, objects, matrix))
 {
 }
 
-PencilEffect::~PencilEffect() = default;
+PencilSketch::~PencilSketch() = default;
 
-void PencilEffect::draw()
+void PencilSketch::draw()
 {
         m_impl->draw();
 }

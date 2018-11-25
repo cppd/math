@@ -34,13 +34,13 @@ class Canvas final : public OpenGLCanvas
         std::unique_ptr<DFTShow> m_dft_show;
         std::unique_ptr<ConvexHull2DShow> m_convex_hull;
         std::unique_ptr<OpticalFlow> m_optical_flow;
-        std::unique_ptr<PencilEffect> m_pencil_effect;
+        std::unique_ptr<PencilSketch> m_pencil_sketch;
 
         int m_window_width;
         int m_window_height;
 
         bool m_text_active = true;
-        bool m_pencil_effect_active = false;
+        bool m_pencil_sketch_active = false;
         bool m_dft_show_active = false;
         bool m_convex_hull_active = false;
         bool m_optical_flow_active = false;
@@ -65,14 +65,14 @@ class Canvas final : public OpenGLCanvas
                 m_text_active = v;
         }
 
-        void set_pencil_effect_active(bool v) override
+        void set_pencil_sketch_active(bool v) override
         {
-                m_pencil_effect_active = v;
+                m_pencil_sketch_active = v;
         }
 
-        bool pencil_effect_active() override
+        bool pencil_sketch_active() override
         {
-                return m_pencil_effect_active;
+                return m_pencil_sketch_active;
         }
 
         void set_dft_active(bool v) override
@@ -150,7 +150,7 @@ void Canvas::create_objects(int window_width, int window_height, const mat4& mat
         m_window_width = window_width;
         m_window_height = window_height;
 
-        m_pencil_effect = std::make_unique<PencilEffect>(color_texture, color_texture_is_srgb, objects, matrix);
+        m_pencil_sketch = std::make_unique<PencilSketch>(color_texture, color_texture_is_srgb, objects, matrix);
 
         m_dft_show = std::make_unique<DFTShow>(draw_width, draw_height, dft_dst_x, dft_dst_y, matrix, frame_buffer_is_srgb,
                                                m_dft_show_brightness, m_dft_show_background_color, m_dft_show_color);
@@ -171,17 +171,17 @@ void Canvas::create_objects(int window_width, int window_height, const mat4& mat
 
 void Canvas::draw()
 {
-        ASSERT(m_pencil_effect);
+        ASSERT(m_pencil_sketch);
         ASSERT(m_dft_show);
         ASSERT(m_optical_flow);
         ASSERT(m_convex_hull);
 
         glViewport(0, 0, m_window_width, m_window_height);
 
-        if (m_pencil_effect_active)
+        if (m_pencil_sketch_active)
         {
                 // Рисование из цветного буфера в буфер экрана
-                m_pencil_effect->draw();
+                m_pencil_sketch->draw();
         }
 
         if (m_dft_show_active)
