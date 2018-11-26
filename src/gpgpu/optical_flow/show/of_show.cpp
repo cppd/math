@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/conversion.h"
 #include "com/error.h"
 #include "com/time.h"
-#include "gpu_2d/opengl/optical_flow/compute/of_gl2d.h"
+#include "gpgpu/optical_flow/compute/of_gl2d.h"
 #include "graphics/opengl/objects.h"
 
 #include <limits>

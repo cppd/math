@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "canvas.h"
 
-#include "gpu_2d/vulkan/text/text.h"
+#include "text/vulkan/text.h"
 
 constexpr Srgb8 TEXT_COLOR(255, 255, 255);
 

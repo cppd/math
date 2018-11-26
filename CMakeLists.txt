@@ -375,6 +375,10 @@ AddIncludeFiles(OPENGL_SHADERS
                         DIRECTORIES "src"
                         PATH_CONTAINS_DIRECTORY "opengl"
                         EXTENSIONS ${extensions_shaders})
+AddIncludeFiles(OPENGL_SHADERS
+                        OUTPUT_EXTENSION "str"
+                        DIRECTORIES "src/gpgpu"
+                        EXTENSIONS ${extensions_shaders})
 
 AddIncludeFiles(BINARY_FILES
                         OUTPUT_EXTENSION "bin"

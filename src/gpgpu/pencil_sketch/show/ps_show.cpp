@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "ps_show.h"
 
-#include "gpu_2d/opengl/pencil_sketch/compute/ps_gl2d.h"
+#include "gpgpu/pencil_sketch/compute/ps_gl2d.h"
 
 // clang-format off
 constexpr const char vertex_shader[]

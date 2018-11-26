@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/string/str.h"
 #include "geometry/test/test_convex_hull.h"
 #include "geometry/test/test_reconstruction.h"
-#include "gpu_2d/opengl/dft/test/test_dft.h"
+#include "gpgpu/dft/test/test_dft.h"
 #include "path_tracing/shapes/test/test_mesh.h"
 #include "path_tracing/space/test/test_parallelotope.h"
 

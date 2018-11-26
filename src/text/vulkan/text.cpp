@@ -21,14 +21,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/font/glyphs.h"
 #include "com/font/vertices.h"
 #include "com/log.h"
-#include "gpu_2d/vulkan/text/objects/buffers.h"
-#include "gpu_2d/vulkan/text/objects/sampler.h"
-#include "gpu_2d/vulkan/text/shader/memory.h"
-#include "gpu_2d/vulkan/text/shader/vertex.h"
 #include "graphics/vulkan/buffers.h"
 #include "graphics/vulkan/create.h"
 #include "graphics/vulkan/error.h"
 #include "graphics/vulkan/shader.h"
+#include "text/vulkan/objects/buffers.h"
+#include "text/vulkan/objects/sampler.h"
+#include "text/vulkan/shader/memory.h"
+#include "text/vulkan/shader/vertex.h"
 
 #include <optional>
 #include <thread>

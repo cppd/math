@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/error.h"
 #include "com/math.h"
 #include "com/time.h"
-#include "gpu_2d/opengl/convex_hull/compute/ch_gl2d.h"
+#include "gpgpu/convex_hull/compute/ch_gl2d.h"
 
 // clang-format off
 constexpr const char vertex_shader[]
