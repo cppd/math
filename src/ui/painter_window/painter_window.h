@@ -20,8 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "painter_window_2d.h"
 
 #include "com/global_index.h"
-#include "path_tracing/painter.h"
-#include "path_tracing/visible_paintbrush.h"
+#include "painter/painter.h"
+#include "painter/visible_paintbrush.h"
 
 #include <array>
 #include <atomic>

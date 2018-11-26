@@ -37,7 +37,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "obj/file/file_save.h"
 #include "obj/file/obj_file.h"
 #include "obj/obj.h"
-#include "path_tracing/shapes/mesh.h"
+#include "painter/shapes/mesh.h"
 #include "progress/progress.h"
 
 #include <mutex>

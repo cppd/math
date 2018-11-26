@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/color/color.h"
 #include "com/vec.h"
-#include "path_tracing/shapes/mesh.h"
+#include "painter/shapes/mesh.h"
 
 #include <QWidget>
 #include <memory>

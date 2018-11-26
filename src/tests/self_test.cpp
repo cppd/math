@@ -22,8 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "geometry/test/test_convex_hull.h"
 #include "geometry/test/test_reconstruction.h"
 #include "gpgpu/dft/test/test_dft.h"
-#include "path_tracing/shapes/test/test_mesh.h"
-#include "path_tracing/space/test/test_parallelotope.h"
+#include "painter/shapes/test/test_mesh.h"
+#include "painter/space/test/test_parallelotope.h"
 
 namespace
 {
