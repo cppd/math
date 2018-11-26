@@ -44,7 +44,7 @@ static_assert(sizeof(TextVertex) == sizeof(Vector<2, GLint>) + sizeof(Vector<2, 
 static_assert(std::is_same_v<decltype(TextVertex::v), Vector<2, GLint>>);
 static_assert(std::is_same_v<decltype(TextVertex::t), Vector<2, GLfloat>>);
 
-class Text::Impl final
+class OpenGLText::Impl final
 {
         const std::thread::id m_thread_id;
 
@@ -119,28 +119,28 @@ public:
         }
 };
 
-Text::Text(int size, const Color& color, const mat4& matrix) : m_impl(std::make_unique<Impl>(size, color, matrix))
+OpenGLText::OpenGLText(int size, const Color& color, const mat4& matrix) : m_impl(std::make_unique<Impl>(size, color, matrix))
 {
 }
 
-Text::~Text() = default;
+OpenGLText::~OpenGLText() = default;
 
-void Text::set_color(const Color& color) const
+void OpenGLText::set_color(const Color& color) const
 {
         m_impl->set_color(color);
 }
 
-void Text::set_matrix(const mat4& matrix) const
+void OpenGLText::set_matrix(const mat4& matrix) const
 {
         m_impl->set_matrix(matrix);
 }
 
-void Text::draw(int step_y, int x, int y, const std::vector<std::string>& text) const
+void OpenGLText::draw(int step_y, int x, int y, const std::vector<std::string>& text) const
 {
         m_impl->draw(step_y, x, y, text);
 }
 
-void Text::draw(int step_y, int x, int y, const std::string& text) const
+void OpenGLText::draw(int step_y, int x, int y, const std::string& text) const
 {
         m_impl->draw(step_y, x, y, text);
 }

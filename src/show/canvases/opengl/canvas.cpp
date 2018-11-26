@@ -30,7 +30,7 @@ class Canvas final : public OpenGLCanvas
         int m_text_size;
         double m_window_ppi;
 
-        std::unique_ptr<Text> m_text;
+        std::unique_ptr<OpenGLText> m_text;
         std::unique_ptr<DFTShow> m_dft_show;
         std::unique_ptr<ConvexHull2DShow> m_convex_hull;
         std::unique_ptr<OpticalFlow> m_optical_flow;
@@ -165,7 +165,7 @@ void Canvas::create_objects(int window_width, int window_height, const mat4& mat
         }
         else
         {
-                m_text = std::make_unique<Text>(m_text_size, m_text_color, matrix);
+                m_text = std::make_unique<OpenGLText>(m_text_size, m_text_color, matrix);
         }
 }
 

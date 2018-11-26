@@ -24,14 +24,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <vector>
 
-class Text final
+class OpenGLText final
 {
         class Impl;
         std::unique_ptr<Impl> m_impl;
 
 public:
-        Text(int size, const Color& color, const mat4& matrix);
-        ~Text();
+        OpenGLText(int size, const Color& color, const mat4& matrix);
+        ~OpenGLText();
 
         void set_color(const Color& color) const;
         void set_matrix(const mat4& matrix) const;
