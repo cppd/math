@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "progress/progress_list.h"
 #include "show/show.h"
-#include "tests/self_test.h"
+#include "test/self_test.h"
 
 #include "ui_main_window.h"
 
