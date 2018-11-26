@@ -20,14 +20,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <string>
+#include <string_view>
+#include <vector>
 
 constexpr int LINE_LENGTH_STR = 24;
 constexpr int LINE_LENGTH_BIN = 16;
 constexpr int LINE_LENGTH_SPR = 8;
 
-constexpr const char TYPE_STR[] = "str";
-constexpr const char TYPE_BIN[] = "bin";
-constexpr const char TYPE_SPR[] = "spr";
+constexpr const char COMMAND_STR[] = "str";
+constexpr const char COMMAND_BIN[] = "bin";
+constexpr const char COMMAND_SPR[] = "spr";
+constexpr const char COMMAND_CAT[] = "cat";
 
 // SPIR-V Specification
 // 3.1 Magic Number
@@ -42,10 +46,20 @@ static_assert(bswap32(0x12345678) == 0x78563412);
 
 namespace
 {
-[[noreturn]] void error(const std::string& msg)
+[[noreturn]] void error(const std::string_view& msg) noexcept
 {
         std::cerr << msg << std::endl;
         std::exit(EXIT_FAILURE);
+}
+
+std::string usage()
+{
+        std::string s;
+        s += "Usage:\n";
+        s += "program " + std::string(COMMAND_STR) + "|" + std::string(COMMAND_BIN) + "|" + std::string(COMMAND_SPR) +
+             " file_in file_out\n";
+        s += "program " + std::string(COMMAND_CAT) + " files_in file_out";
+        return s;
 }
 
 int to_int(char c)
@@ -53,35 +67,48 @@ int to_int(char c)
         return static_cast<unsigned char>(c);
 }
 
-enum class ConversionType
+class ifstream final : public std::ifstream
 {
-        Str,
-        Bin,
-        Spr
+public:
+        ifstream(const char* name, std::ios_base::openmode mode = ios_base::in) : std::ifstream(name, mode)
+        {
+                if (fail())
+                {
+                        error("Error opening input file \"" + std::string(name) + "\"");
+                }
+        }
 };
 
-ConversionType conversion_type_string_to_enum(const char* t)
+class ofstream final : public std::ofstream
 {
-        if (!std::strcmp(t, TYPE_STR))
+        std::string m_name;
+
+public:
+        ofstream(const char* name, std::ios_base::openmode mode = ios_base::out) : std::ofstream(name, mode)
         {
-                return ConversionType::Str;
+                if (fail())
+                {
+                        error("Error opening output file \"" + std::string(name) + "\"");
+                }
+                m_name = name;
         }
 
-        if (!std::strcmp(t, TYPE_BIN))
+        ~ofstream() override
         {
-                return ConversionType::Bin;
+                if (fail())
+                {
+                        error("Error writing to output file \"" + m_name + "\"");
+                }
         }
+};
 
-        if (!std::strcmp(t, TYPE_SPR))
-        {
-                return ConversionType::Spr;
-        }
-
-        error("Error conversion type \"" + std::string(t) + "\"");
-}
-
-void str(std::ifstream& ifs, std::ofstream& ofs)
+void str(const char* input_name, const char* output_name)
 {
+        ifstream ifs(input_name);
+        ofstream ofs(output_name);
+
+        ofs << std::hex << std::setfill('0');
+
         long long i = 0;
 
         ofs << "\"";
@@ -97,10 +124,17 @@ void str(std::ifstream& ifs, std::ofstream& ofs)
                 ofs << "\\x" << std::setw(2) << to_int(c);
         }
         ofs << "\"";
+
+        ofs << std::endl;
 }
 
-void bin(std::ifstream& ifs, std::ofstream& ofs)
+void bin(const char* input_name, const char* output_name)
 {
+        ifstream ifs(input_name, std::ios_base::binary);
+        ofstream ofs(output_name);
+
+        ofs << std::hex << std::setfill('0');
+
         long long i = 0;
 
         for (char c; ifs.get(c); ++i)
@@ -119,10 +153,17 @@ void bin(std::ifstream& ifs, std::ofstream& ofs)
                 }
                 ofs << "0x" << std::setw(2) << to_int(c);
         }
+
+        ofs << std::endl;
 }
 
-void spr(std::ifstream& ifs, std::ofstream& ofs)
+void spr(const char* input_name, const char* output_name)
 {
+        ifstream ifs(input_name, std::ios_base::binary);
+        ofstream ofs(output_name);
+
+        ofs << std::hex << std::setfill('0');
+
         long long i = 0;
 
         bool reverse_byte_order = false;
@@ -168,68 +209,75 @@ void spr(std::ifstream& ifs, std::ofstream& ofs)
         {
                 error("Error reading SPIR-V (empty file)");
         }
+
+        ofs << std::endl;
+}
+
+void cat(const std::vector<const char*>& input_names, const char* output_name)
+{
+        ofstream ofs(output_name, std::ios_base::binary);
+
+        for (const char* name : input_names)
+        {
+                ifstream ifs(name, std::ios_base::binary);
+
+                char c;
+                while (ifs.get(c))
+                {
+                        ofs << c;
+                }
+        }
 }
 }
 
 int main(int argc, char* argv[])
 {
-        if (argc != 4)
+        if (argc < 2)
         {
-                error("Usage: program " + std::string(TYPE_STR) + "|" + std::string(TYPE_BIN) + "|" + std::string(TYPE_SPR) +
-                      " file_in file_out");
+                error(usage());
         }
 
-        const ConversionType conversion_type = conversion_type_string_to_enum(argv[1]);
-        const char* const input_name = argv[2];
-        const char* const output_name = argv[3];
+        const char* const command = argv[1];
 
-        std::ifstream ifs;
-
-        switch (conversion_type)
+        if (!std::strcmp(command, COMMAND_STR))
         {
-        case ConversionType::Str:
-                ifs = std::ifstream(input_name);
-                break;
-        case ConversionType::Bin:
-                ifs = std::ifstream(input_name, std::ios_base::binary);
-                break;
-        case ConversionType::Spr:
-                ifs = std::ifstream(input_name, std::ios_base::binary);
-                break;
+                if (argc != 4)
+                {
+                        error(usage());
+                }
+
+                str(argv[2], argv[3]);
         }
-
-        std::ofstream ofs(output_name);
-
-        if (!ifs)
+        else if (!std::strcmp(command, COMMAND_BIN))
         {
-                error("Error opening input file \"" + std::string(input_name) + "\"");
+                if (argc != 4)
+                {
+                        error(usage());
+                }
+
+                bin(argv[2], argv[3]);
         }
-
-        if (!ofs)
+        else if (!std::strcmp(command, COMMAND_SPR))
         {
-                error("Error opening output file \"" + std::string(output_name) + "\"");
+                if (argc != 4)
+                {
+                        error(usage());
+                }
+
+                spr(argv[2], argv[3]);
         }
-
-        ofs << std::hex << std::setfill('0');
-
-        switch (conversion_type)
+        else if (!std::strcmp(command, COMMAND_CAT))
         {
-        case ConversionType::Str:
-                str(ifs, ofs);
-                break;
-        case ConversionType::Bin:
-                bin(ifs, ofs);
-                break;
-        case ConversionType::Spr:
-                spr(ifs, ofs);
-                break;
+                if (argc < 5)
+                {
+                        error(usage());
+                }
+
+                cat({argv + 2, argv + argc - 1}, argv[argc - 1]);
         }
-
-        ofs << std::endl;
-
-        if (!ofs)
+        else
         {
-                error("Error writing to output file \"" + std::string(output_name) + "\"");
+                error(usage());
         }
 
         return EXIT_SUCCESS;
