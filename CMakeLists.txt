@@ -374,6 +374,7 @@ AddSourceFiles(EXECUTABLE
                         EXTENSIONS ${extensions_all})
 
 AddIncludeFiles(VULKAN_SHADERS
+                        HEADER_FILE "src/graphics/header.glsl"
                         OUTPUT_EXTENSION "spr"
                         DIRECTORIES "src"
                         PATH_CONTAINS_DIRECTORY "vulkan"
