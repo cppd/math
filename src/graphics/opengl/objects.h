@@ -37,7 +37,7 @@ class Shader
         // clang-format off
         static constexpr std::string_view HEADER
         {
-#include "opengl_header.glsl.str"
+#include "header.glsl.str"
         };
         // clang-format on
 
