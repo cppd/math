@@ -163,7 +163,7 @@ endfunction()
 
 function(AddIncludeFiles FILE_TYPE)
 
-        cmake_parse_arguments(PARSE_ARGV 1 ARG "" "PATH_CONTAINS_DIRECTORY;OUTPUT_EXTENSION" "EXTENSIONS;DIRECTORIES")
+        cmake_parse_arguments(PARSE_ARGV 1 ARG "" "HEADER_FILE;PATH_CONTAINS_DIRECTORY;OUTPUT_EXTENSION" "EXTENSIONS;DIRECTORIES")
         if(NOT ARG_OUTPUT_EXTENSION)
                 message(FATAL_ERROR "No output extension")
         endif()
@@ -184,10 +184,16 @@ function(AddIncludeFiles FILE_TYPE)
         unset(VULKAN_SHADERS)
 
         if ("${FILE_TYPE}" STREQUAL "BINARY_FILES")
+                if (ARG_HEADER_FILE)
+                        message(FATAL_ERROR "Binary file header is not supported")
+                endif()
                 set(BINARY_FILES TRUE)
                 set(custom_target_prefix "custom_target_binary_files")
                 set(output_directory "${PROJECT_BINARY_DIR}/include_binary_files")
         elseif("${FILE_TYPE}" STREQUAL "OPENGL_SHADERS")
+                if (ARG_HEADER_FILE)
+                        message(FATAL_ERROR "OpenGL shader header is not supported")
+                endif()
                 set(OPENGL_SHADERS TRUE)
                 set(custom_target_prefix "custom_target_opengl_shaders")
                 set(output_directory "${PROJECT_BINARY_DIR}/include_opengl_shaders")
@@ -239,6 +245,7 @@ function(AddIncludeFiles FILE_TYPE)
                         endif()
 
                         get_filename_component(file_name "${long_file_name}" NAME)
+                        get_filename_component(file_ext "${long_file_name}" EXT)
                         set(target_name "${custom_target_prefix}_${file_name}")
                         set(output_file "${output_directory}/${file_name}.${ARG_OUTPUT_EXTENSION}")
 
@@ -268,18 +275,20 @@ function(AddIncludeFiles FILE_TYPE)
 
                         if(VULKAN_SHADERS)
                                 string(RANDOM LENGTH 10 random_string)
-                                set(output_sprv "${output_file}.${random_string}.${ARG_OUTPUT_EXTENSION}")
-                                add_custom_command(
-                                        OUTPUT  "${output_sprv}"
-                                        COMMAND "glslangValidator" "-V" "${long_file_name}" "-o" "${output_sprv}"
-                                        DEPENDS "${long_file_name}"
-                                        WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
-                                        VERBATIM
-                                )
+                                set(output_sprv "${output_directory}/${file_name}_${random_string}.sprv")
+                                set(output_glsl "${output_directory}/${file_name}_${random_string}${file_ext}")
+                                if (ARG_HEADER_FILE)
+                                        set(header "${PROJECT_SOURCE_DIR}/${ARG_HEADER_FILE}")
+                                else()
+                                        unset(header)
+                                endif()
                                 add_custom_command(
                                         OUTPUT  "${output_file}"
+                                        COMMAND "${PROJECT_BINARY_DIR}/create_str" "cat"
+                                                        ${header} "${long_file_name}" "${output_glsl}"
+                                        COMMAND "glslangValidator" "-V" "${output_glsl}" "-o" "${output_sprv}"
                                         COMMAND "${PROJECT_BINARY_DIR}/create_str" "spr" "${output_sprv}" "${output_file}"
-                                        DEPENDS "${output_sprv}" "${PROJECT_BINARY_DIR}/create_str"
+                                        DEPENDS "${header}" "${long_file_name}" "${PROJECT_BINARY_DIR}/create_str"
                                         WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
                                         VERBATIM
                                 )
