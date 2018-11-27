@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "path_tracing_3d.h"
+#include "painter_3d.h"
 
 #include "com/error.h"
 #include "com/names.h"
@@ -28,18 +28,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // Это диалоговое окно предназначено только для 3 измерений
 constexpr int DIMENSION = 3;
 
-namespace path_tracing_parameters_for_3d_implementation
+namespace painter_parameters_for_3d_implementation
 {
-PathTracingParametersFor3d::PathTracingParametersFor3d(QWidget* parent) : QDialog(parent)
+PainterParametersFor3d::PainterParametersFor3d(QWidget* parent) : QDialog(parent)
 {
         ui.setupUi(this);
-        setWindowTitle("Path Tracing");
+        setWindowTitle("Painter");
 }
 
-bool PathTracingParametersFor3d::show(int max_thread_count, int width, int height, int max_screen_size,
-                                      int default_samples_per_pixel, int max_samples_per_pixel, int* thread_count,
-                                      int* paint_width, int* paint_height, int* samples_per_pixel, bool* flat_facets,
-                                      bool* cornell_box)
+bool PainterParametersFor3d::show(int max_thread_count, int width, int height, int max_screen_size, int default_samples_per_pixel,
+                                  int max_samples_per_pixel, int* thread_count, int* paint_width, int* paint_height,
+                                  int* samples_per_pixel, bool* flat_facets, bool* cornell_box)
 {
         if (!(max_thread_count >= 1))
         {
@@ -109,7 +108,7 @@ bool PathTracingParametersFor3d::show(int max_thread_count, int width, int heigh
         return true;
 }
 
-void PathTracingParametersFor3d::done(int r)
+void PainterParametersFor3d::done(int r)
 {
         if (r != QDialog::Accepted)
         {
@@ -158,7 +157,7 @@ void PathTracingParametersFor3d::done(int r)
         QDialog::done(r);
 }
 
-void PathTracingParametersFor3d::width_value_changed(int)
+void PainterParametersFor3d::width_value_changed(int)
 {
         disconnect(ui.spinBox_height, SIGNAL(valueChanged(int)), this, SLOT(height_value_changed(int)));
 
@@ -168,7 +167,7 @@ void PathTracingParametersFor3d::width_value_changed(int)
         connect(ui.spinBox_height, SIGNAL(valueChanged(int)), this, SLOT(height_value_changed(int)));
 }
 
-void PathTracingParametersFor3d::height_value_changed(int)
+void PainterParametersFor3d::height_value_changed(int)
 {
         disconnect(ui.spinBox_width, SIGNAL(valueChanged(int)), this, SLOT(width_value_changed(int)));
 
@@ -181,11 +180,11 @@ void PathTracingParametersFor3d::height_value_changed(int)
 
 namespace dialog
 {
-bool path_tracing_parameters_for_3d(QWidget* parent, int max_thread_count, int width, int height, int max_screen_size,
-                                    int default_samples_per_pixel, int max_samples_per_pixel, int* thread_count, int* paint_width,
-                                    int* paint_height, int* samples_per_pixel, bool* flat_facets, bool* cornell_box)
+bool painter_parameters_for_3d(QWidget* parent, int max_thread_count, int width, int height, int max_screen_size,
+                               int default_samples_per_pixel, int max_samples_per_pixel, int* thread_count, int* paint_width,
+                               int* paint_height, int* samples_per_pixel, bool* flat_facets, bool* cornell_box)
 {
-        QtObjectInDynamicMemory<path_tracing_parameters_for_3d_implementation::PathTracingParametersFor3d> w(parent);
+        QtObjectInDynamicMemory<painter_parameters_for_3d_implementation::PainterParametersFor3d> w(parent);
         return w->show(max_thread_count, width, height, max_screen_size, default_samples_per_pixel, max_samples_per_pixel,
                        thread_count, paint_width, paint_height, samples_per_pixel, flat_facets, cornell_box);
 }

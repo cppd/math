@@ -17,18 +17,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "ui_path_tracing_nd.h"
+#include "ui_painter_nd.h"
 
 #include <string>
 
-namespace path_tracing_parameters_for_nd_implementation
+namespace painter_parameters_for_nd_implementation
 {
-class PathTracingParametersForNd final : public QDialog
+class PainterParametersForNd final : public QDialog
 {
         Q_OBJECT
 
 public:
-        explicit PathTracingParametersForNd(QWidget* parent = nullptr);
+        explicit PainterParametersForNd(QWidget* parent = nullptr);
 
         [[nodiscard]] bool show(int dimension, int max_thread_count, int default_screen_size, int min_screen_size,
                                 int max_screen_size, int default_samples_per_pixel, int max_samples_per_pixel, int* thread_count,
@@ -50,7 +50,7 @@ private:
         int m_samples_per_pixel;
         bool m_flat_facets;
 
-        Ui::PathTracingParametersForNd ui;
+        Ui::PainterParametersForNd ui;
 
         void done(int r) override;
 };
@@ -58,8 +58,8 @@ private:
 
 namespace dialog
 {
-[[nodiscard]] bool path_tracing_parameters_for_nd(QWidget* parent, int dimension, int max_thread_count, int default_screen_size,
-                                                  int min_screen_size, int max_screen_size, int default_samples_per_pixel,
-                                                  int max_samples_per_pixel, int* thread_count, int* min_size, int* max_size,
-                                                  int* samples_per_pixel, bool* flat_facets);
+[[nodiscard]] bool painter_parameters_for_nd(QWidget* parent, int dimension, int max_thread_count, int default_screen_size,
+                                             int min_screen_size, int max_screen_size, int default_samples_per_pixel,
+                                             int max_samples_per_pixel, int* thread_count, int* min_size, int* max_size,
+                                             int* samples_per_pixel, bool* flat_facets);
 }

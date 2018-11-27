@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>PathTracingParametersFor3d</class>
- <widget class="QDialog" name="PathTracingParametersFor3d">
+ <class>PainterParametersFor3d</class>
+ <widget class="QDialog" name="PainterParametersFor3d">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -190,7 +190,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>accepted()</signal>
-   <receiver>PathTracingParametersFor3d</receiver>
+   <receiver>PainterParametersFor3d</receiver>
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -206,7 +206,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>rejected()</signal>
-   <receiver>PathTracingParametersFor3d</receiver>
+   <receiver>PainterParametersFor3d</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">

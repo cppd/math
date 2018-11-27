@@ -17,16 +17,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "ui_path_tracing_3d.h"
+#include "ui_painter_3d.h"
 
-namespace path_tracing_parameters_for_3d_implementation
+namespace painter_parameters_for_3d_implementation
 {
-class PathTracingParametersFor3d final : public QDialog
+class PainterParametersFor3d final : public QDialog
 {
         Q_OBJECT
 
 public:
-        explicit PathTracingParametersFor3d(QWidget* parent = nullptr);
+        explicit PainterParametersFor3d(QWidget* parent = nullptr);
 
         [[nodiscard]] bool show(int max_thread_count, int width, int height, int max_screen_size, int default_samples_per_pixel,
                                 int max_samples_per_pixel, int* thread_count, int* paint_width, int* paint_height,
@@ -54,7 +54,7 @@ private:
         bool m_flat_facets;
         bool m_cornell_box;
 
-        Ui::PathTracingParametersFor3d ui;
+        Ui::PainterParametersFor3d ui;
 
         void done(int r) override;
 };
@@ -62,8 +62,8 @@ private:
 
 namespace dialog
 {
-[[nodiscard]] bool path_tracing_parameters_for_3d(QWidget* parent, int max_thread_count, int width, int height,
-                                                  int max_screen_size, int default_samples_per_pixel, int max_samples_per_pixel,
-                                                  int* thread_count, int* paint_width, int* paint_height, int* samples_per_pixel,
-                                                  bool* flat_facets, bool* cornell_box);
+[[nodiscard]] bool painter_parameters_for_3d(QWidget* parent, int max_thread_count, int width, int height, int max_screen_size,
+                                             int default_samples_per_pixel, int max_samples_per_pixel, int* thread_count,
+                                             int* paint_width, int* paint_height, int* samples_per_pixel, bool* flat_facets,
+                                             bool* cornell_box);
 }

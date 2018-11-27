@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "path_tracing_nd.h"
+#include "painter_nd.h"
 
 #include "com/error.h"
 #include "com/names.h"
@@ -25,17 +25,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <QPointer>
 
-namespace path_tracing_parameters_for_nd_implementation
+namespace painter_parameters_for_nd_implementation
 {
-PathTracingParametersForNd::PathTracingParametersForNd(QWidget* parent) : QDialog(parent)
+PainterParametersForNd::PainterParametersForNd(QWidget* parent) : QDialog(parent)
 {
         ui.setupUi(this);
-        setWindowTitle("Path Tracing");
+        setWindowTitle("Painter");
 }
 
-bool PathTracingParametersForNd::show(int dimension, int max_thread_count, int default_screen_size, int min_screen_size,
-                                      int max_screen_size, int default_samples_per_pixel, int max_samples_per_pixel,
-                                      int* thread_count, int* min_size, int* max_size, int* samples_per_pixel, bool* flat_facets)
+bool PainterParametersForNd::show(int dimension, int max_thread_count, int default_screen_size, int min_screen_size,
+                                  int max_screen_size, int default_samples_per_pixel, int max_samples_per_pixel,
+                                  int* thread_count, int* min_size, int* max_size, int* samples_per_pixel, bool* flat_facets)
 {
         if (!(dimension >= 4))
         {
@@ -95,7 +95,7 @@ bool PathTracingParametersForNd::show(int dimension, int max_thread_count, int d
         return true;
 }
 
-void PathTracingParametersForNd::on_spinBox_min_size_valueChanged(int)
+void PainterParametersForNd::on_spinBox_min_size_valueChanged(int)
 {
         int min = ui.spinBox_min_size->value();
         if (min > ui.spinBox_max_size->value())
@@ -104,7 +104,7 @@ void PathTracingParametersForNd::on_spinBox_min_size_valueChanged(int)
         }
 }
 
-void PathTracingParametersForNd::on_spinBox_max_size_valueChanged(int)
+void PainterParametersForNd::on_spinBox_max_size_valueChanged(int)
 {
         int max = ui.spinBox_max_size->value();
         if (max < ui.spinBox_min_size->value())
@@ -113,7 +113,7 @@ void PathTracingParametersForNd::on_spinBox_max_size_valueChanged(int)
         }
 }
 
-void PathTracingParametersForNd::done(int r)
+void PainterParametersForNd::done(int r)
 {
         if (r != QDialog::Accepted)
         {
@@ -171,12 +171,11 @@ void PathTracingParametersForNd::done(int r)
 
 namespace dialog
 {
-bool path_tracing_parameters_for_nd(QWidget* parent, int dimension, int max_thread_count, int default_screen_size,
-                                    int min_screen_size, int max_screen_size, int default_samples_per_pixel,
-                                    int max_samples_per_pixel, int* thread_count, int* min_size, int* max_size,
-                                    int* samples_per_pixel, bool* flat_facets)
+bool painter_parameters_for_nd(QWidget* parent, int dimension, int max_thread_count, int default_screen_size, int min_screen_size,
+                               int max_screen_size, int default_samples_per_pixel, int max_samples_per_pixel, int* thread_count,
+                               int* min_size, int* max_size, int* samples_per_pixel, bool* flat_facets)
 {
-        QtObjectInDynamicMemory<path_tracing_parameters_for_nd_implementation::PathTracingParametersForNd> w(parent);
+        QtObjectInDynamicMemory<painter_parameters_for_nd_implementation::PainterParametersForNd> w(parent);
         return w->show(dimension, max_thread_count, default_screen_size, min_screen_size, max_screen_size,
                        default_samples_per_pixel, max_samples_per_pixel, thread_count, min_size, max_size, samples_per_pixel,
                        flat_facets);
