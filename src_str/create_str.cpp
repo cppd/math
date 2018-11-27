@@ -215,7 +215,7 @@ void spr(const char* input_name, const char* output_name)
 
 void cat(const std::vector<const char*>& input_names, const char* output_name)
 {
-        ofstream ofs(output_name, std::ios_base::binary);
+        std::string s;
 
         for (const char* name : input_names)
         {
@@ -224,9 +224,12 @@ void cat(const std::vector<const char*>& input_names, const char* output_name)
                 char c;
                 while (ifs.get(c))
                 {
-                        ofs << c;
+                        s += c;
                 }
         }
+
+        ofstream ofs(output_name, std::ios_base::binary);
+        ofs.write(s.c_str(), s.size());
 }
 }
 
@@ -268,7 +271,7 @@ int main(int argc, char* argv[])
         }
         else if (!std::strcmp(command, COMMAND_CAT))
         {
-                if (argc < 5)
+                if (argc < 4)
                 {
                         error(usage());
                 }
