@@ -15,12 +15,13 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-// gl_GlobalInvocationID = gl_WorkGroupID * gl_LocalGroupSizeARB + gl_LocalInvocationID
+// gl_GlobalInvocationID = gl_WorkGroupID * gl_WorkGroupSize + gl_LocalInvocationID
 
 // Вставляется в текст программы
+// const uint GROUP_SIZE =
 // const int LINE_SIZE =
 
-layout(local_size_variable) in;
+layout(local_size_x = GROUP_SIZE) in;
 
 layout(bindless_image, r32f) uniform image2D lines[2];
 uniform int iteration_count;
@@ -29,14 +30,14 @@ shared float shared_buffer[LINE_SIZE];
 
 void copy_to_buffer()
 {
-        for (int i = int(gl_LocalInvocationID.x); i < LINE_SIZE; i += int(gl_LocalGroupSizeARB.x))
+        for (int i = int(gl_LocalInvocationID.x); i < LINE_SIZE; i += int(gl_WorkGroupSize.x))
         {
                 shared_buffer[i] = imageLoad(lines[gl_WorkGroupID.x], ivec2(i, 0)).r;
         }
 }
 void copy_from_buffer()
 {
-        for (int i = int(gl_LocalInvocationID.x); i < LINE_SIZE; i += int(gl_LocalGroupSizeARB.x))
+        for (int i = int(gl_LocalInvocationID.x); i < LINE_SIZE; i += int(gl_WorkGroupSize.x))
         {
                 imageStore(lines[gl_WorkGroupID.x], ivec2(i, 0), vec4(shared_buffer[i], 0, 0, 0));
         }
@@ -155,7 +156,7 @@ void main(void)
 {
         copy_to_buffer();
 
-        int len = int(gl_LocalGroupSizeARB.x << 2);
+        int len = int(gl_WorkGroupSize.x << 2);
         int low = int(gl_LocalInvocationID.x << 2);
         int middle = low + 2;
         int high = low + 4;

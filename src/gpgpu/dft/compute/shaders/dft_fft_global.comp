@@ -15,9 +15,12 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-// gl_GlobalInvocationID = gl_WorkGroupID * gl_LocalGroupSizeARB + gl_LocalInvocationID
+// gl_GlobalInvocationID = gl_WorkGroupID * gl_WorkGroupSize + gl_LocalInvocationID
 
-layout(local_size_variable) in;
+// Вставляется в текст программы
+// const uint GROUP_SIZE =
+
+layout(local_size_x = GROUP_SIZE) in;
 
 layout(location = 0) uniform bool inverse_dft;
 layout(location = 1) uniform uint max_threads;

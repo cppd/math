@@ -69,87 +69,106 @@ std::string floating_point_source<double>()
         return s;
 }
 
+std::string group_size_string(int group_size)
+{
+        return "const uint GROUP_SIZE = " + std::to_string(group_size) + ";\n";
+}
+
+std::string group_size_string(vec2i group_size)
+{
+        return "const uvec2 GROUP_SIZE = uvec2(" + std::to_string(group_size[0]) + ", " + std::to_string(group_size[1]) + ");\n";
+}
+
 template <typename T>
-std::string bit_reverse_source()
+std::string bit_reverse_source(int group_size)
 {
         std::string s;
         s += floating_point_source<T>();
+        s += group_size_string(group_size);
         return s + dft_bit_reverse_shader;
 }
 
 template <typename T>
-std::string fft_global_source()
+std::string fft_global_source(int group_size)
 {
         std::string s;
         s += floating_point_source<T>();
+        s += group_size_string(group_size);
         return s + dft_fft_global_shader;
 }
 
 template <typename T>
-std::string rows_mul_to_buffer_source()
+std::string rows_mul_to_buffer_source(vec2i group_size)
 {
         std::string s;
         s += floating_point_source<T>();
         s += "#define FUNCTION_ROWS_MUL_TO_BUFFER\n\n";
+        s += group_size_string(group_size);
         return s + dft_mul_shader;
 }
 
 template <typename T>
-std::string rows_mul_fr_buffer_source()
+std::string rows_mul_fr_buffer_source(vec2i group_size)
 {
         std::string s;
         s += floating_point_source<T>();
         s += "#define FUNCTION_ROWS_MUL_FR_BUFFER\n\n";
+        s += group_size_string(group_size);
         return s + dft_mul_shader;
 }
 
 template <typename T>
-std::string cols_mul_to_buffer_source()
+std::string cols_mul_to_buffer_source(vec2i group_size)
 {
         std::string s;
         s += floating_point_source<T>();
         s += "#define FUNCTION_COLS_MUL_TO_BUFFER\n\n";
+        s += group_size_string(group_size);
         return s + dft_mul_shader;
 }
 
 template <typename T>
-std::string cols_mul_fr_buffer_source()
+std::string cols_mul_fr_buffer_source(vec2i group_size)
 {
         std::string s;
         s += floating_point_source<T>();
         s += "#define FUNCTION_COLS_MUL_FR_BUFFER\n\n";
+        s += group_size_string(group_size);
         return s + dft_mul_shader;
 }
 
 template <typename T>
-std::string rows_mul_d_source()
+std::string rows_mul_d_source(vec2i group_size)
 {
         std::string s;
         s += floating_point_source<T>();
         s += "#define FUNCTION_ROWS_MUL_D\n\n";
+        s += group_size_string(group_size);
         return s + dft_mul_shader;
 }
 
 template <typename T>
-std::string move_to_input_source()
+std::string move_to_input_source(vec2i group_size)
 {
         std::string s;
         s += floating_point_source<T>();
         s += "#define FUNCTION_MOVE_TO_INPUT\n\n";
+        s += group_size_string(group_size);
         return s + dft_copy_shader;
 }
 
 template <typename T>
-std::string move_to_output_source()
+std::string move_to_output_source(vec2i group_size)
 {
         std::string s;
         s += floating_point_source<T>();
         s += "#define FUNCTION_MOVE_TO_OUTPUT\n\n";
+        s += group_size_string(group_size);
         return s + dft_copy_shader;
 }
 
 template <typename T>
-std::string fft_shared_source(int n, int n_bits, int shared_size, bool reverse_input)
+std::string fft_shared_source(int n, int n_bits, int shared_size, int group_size, bool reverse_input)
 {
         std::string s;
         s += floating_point_source<T>();
@@ -157,32 +176,34 @@ std::string fft_shared_source(int n, int n_bits, int shared_size, bool reverse_i
         s += "const uint N_MASK = " + std::to_string(n - 1) + ";\n";
         s += "const uint N_BITS = " + std::to_string(n_bits) + ";\n";
         s += "const uint SHARED_SIZE = " + std::to_string(shared_size) + ";\n";
+        s += "const uint GROUP_SIZE = " + std::to_string(group_size) + ";\n";
         s += "const bool REVERSE_INPUT = " + (reverse_input ? std::string("true") : std::string("false")) + ";\n";
         return s + dft_fft_shared_shader;
 }
 }
 
 template <typename T>
-DeviceProg<T>::DeviceProg()
-        : m_bit_reverse(opengl::ComputeShader(bit_reverse_source<T>())),
-          m_fft(opengl::ComputeShader(fft_global_source<T>())),
-          m_rows_mul_to_buffer(opengl::ComputeShader(rows_mul_to_buffer_source<T>())),
-          m_rows_mul_fr_buffer(opengl::ComputeShader(rows_mul_fr_buffer_source<T>())),
-          m_cols_mul_to_buffer(opengl::ComputeShader(cols_mul_to_buffer_source<T>())),
-          m_cols_mul_fr_buffer(opengl::ComputeShader(cols_mul_fr_buffer_source<T>())),
-          m_rows_mul_d(opengl::ComputeShader(rows_mul_d_source<T>())),
-          m_move_to_input(opengl::ComputeShader(move_to_input_source<T>())),
-          m_move_to_output(opengl::ComputeShader(move_to_output_source<T>()))
+DeviceProg<T>::DeviceProg(int group_size_1d, vec2i group_size_2d)
+        : m_group_size_1d(group_size_1d),
+          m_group_size_2d(group_size_2d),
+          m_bit_reverse(opengl::ComputeShader(bit_reverse_source<T>(group_size_1d))),
+          m_fft(opengl::ComputeShader(fft_global_source<T>(group_size_1d))),
+          m_rows_mul_to_buffer(opengl::ComputeShader(rows_mul_to_buffer_source<T>(group_size_2d))),
+          m_rows_mul_fr_buffer(opengl::ComputeShader(rows_mul_fr_buffer_source<T>(group_size_2d))),
+          m_cols_mul_to_buffer(opengl::ComputeShader(cols_mul_to_buffer_source<T>(group_size_2d))),
+          m_cols_mul_fr_buffer(opengl::ComputeShader(cols_mul_fr_buffer_source<T>(group_size_2d))),
+          m_rows_mul_d(opengl::ComputeShader(rows_mul_d_source<T>(group_size_2d))),
+          m_move_to_input(opengl::ComputeShader(move_to_input_source<T>(group_size_2d))),
+          m_move_to_output(opengl::ComputeShader(move_to_output_source<T>(group_size_2d)))
 {
 }
 
 template <typename T>
-DeviceProgFFTShared<T>::DeviceProgFFTShared(int n, int shared_size, bool reverse_input, int group_size)
+DeviceProgFFTShared<T>::DeviceProgFFTShared(int n, int shared_size, int group_size, bool reverse_input)
         : m_n(n),
           m_n_bits(binary_size(n)),
-          m_group_size(group_size),
           m_shared_size(shared_size),
-          m_fft(opengl::ComputeShader(fft_shared_source<T>(m_n, m_n_bits, m_shared_size, reverse_input)))
+          m_fft(opengl::ComputeShader(fft_shared_source<T>(m_n, m_n_bits, m_shared_size, group_size, reverse_input)))
 {
         ASSERT((1 << m_n_bits) == m_n);
 }

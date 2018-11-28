@@ -15,11 +15,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-// gl_GlobalInvocationID = gl_WorkGroupID * gl_LocalGroupSizeARB + gl_LocalInvocationID
+// gl_GlobalInvocationID = gl_WorkGroupID * gl_WorkGroupSize + gl_LocalInvocationID
 
-// Работает только 1 поток
+// Работает только 1 поток 1 группы
 
-layout(local_size_variable) in;
+layout(local_size_x = 1) in;
 
 // Входные данные 2 линии точек с координатами по X с минимумом и максимумом.
 // Координата Y равна индексу.

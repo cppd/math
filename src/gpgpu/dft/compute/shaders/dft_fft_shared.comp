@@ -15,9 +15,17 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-// gl_GlobalInvocationID = gl_WorkGroupID * gl_LocalGroupSizeARB + gl_LocalInvocationID
+// gl_GlobalInvocationID = gl_WorkGroupID * gl_WorkGroupSize + gl_LocalInvocationID
 
-layout(local_size_variable) in;
+// Вставляется в текст программы
+// const uint N =
+// const uint N_MASK =
+// const uint N_BITS =
+// const uint SHARED_SIZE =
+// const uint GROUP_SIZE =
+// const bool REVERSE_INPUT =
+
+layout(local_size_x = GROUP_SIZE) in;
 
 layout(location = 0) uniform bool inverse_dft;
 layout(location = 1) uniform uint DATA_SIZE;
@@ -27,13 +35,6 @@ layout(std430, binding = 0) buffer StorageBuffer
         complex global_data[];
 };
 
-// Вставляются в текст программы
-// const uint N =
-// const uint N_MASK =
-// const uint N_BITS =
-// const uint SHARED_SIZE =
-// const bool REVERSE_INPUT =
-
 // До какого размера рассчитывать
 const uint N_MAX = (N <= SHARED_SIZE) ? N : SHARED_SIZE;
 
@@ -42,7 +43,7 @@ shared complex shared_data[SHARED_SIZE];
 void copy_global_to_shared()
 {
         for (uint local = gl_LocalInvocationID.x, global = gl_WorkGroupID.x * SHARED_SIZE + gl_LocalInvocationID.x;
-             local < SHARED_SIZE && global < DATA_SIZE; local += gl_LocalGroupSizeARB.x, global += gl_LocalGroupSizeARB.x)
+             local < SHARED_SIZE && global < DATA_SIZE; local += gl_WorkGroupSize.x, global += gl_WorkGroupSize.x)
         {
                 if (REVERSE_INPUT)
                 {
@@ -59,7 +60,7 @@ void copy_global_to_shared()
 void copy_shared_to_global()
 {
         for (uint local = gl_LocalInvocationID.x, global = gl_WorkGroupID.x * SHARED_SIZE + gl_LocalInvocationID.x;
-             local < SHARED_SIZE && global < DATA_SIZE; local += gl_LocalGroupSizeARB.x, global += gl_LocalGroupSizeARB.x)
+             local < SHARED_SIZE && global < DATA_SIZE; local += gl_WorkGroupSize.x, global += gl_WorkGroupSize.x)
         {
                 global_data[global] = !inverse_dft ? shared_data[local] : (shared_data[local] / N_MAX);
         }
@@ -79,7 +80,7 @@ void main()
         //     частично до SHARED_SIZE и без bit_reverse на входных данных.
 
         // Проверка ошибки запуска. Нужно, чтобы на 2 элемента было не больше одного потока.
-        if (gl_LocalGroupSizeARB.x > SHARED_SIZE / 2)
+        if (gl_WorkGroupSize.x > SHARED_SIZE / 2)
         {
                 return;
         }
@@ -101,7 +102,7 @@ void main()
         {
                 barrier();
 
-                for (uint local = gl_LocalInvocationID.x; local < max_local; local += gl_LocalGroupSizeARB.x)
+                for (uint local = gl_LocalInvocationID.x; local < max_local; local += gl_WorkGroupSize.x)
                 {
                         // Номер внутри отдельного БПФ
                         uint idx = local & (M_2 - 1); // Это равно local % M_2

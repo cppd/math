@@ -61,8 +61,13 @@ Chapter 13: FFTs for Arbitrary N.
 #include <type_traits>
 #include <vector>
 
-constexpr const int BLOCK_SQRT = 16;
-constexpr const int BLOCK_SIZE = square(BLOCK_SQRT);
+constexpr const int GROUP_SIZE_1D = 256;
+constexpr const vec2i GROUP_SIZE_2D = vec2i(16, 16);
+
+constexpr vec2i group_count(int x, int y, vec2i group_size)
+{
+        return vec2i(group_count(x, group_size[0]), group_count(y, group_size[1]));
+}
 
 namespace
 {
@@ -169,12 +174,13 @@ int shared_size(int dft_size)
         // 2) максимальная степень 2, которая меньше или равна вместимости разделяемой памяти
         return std::min(std::max(128, dft_size), 1 << log_2(opengl::max_compute_shared_memory() / sizeof(std::complex<FP>)));
 }
+
 template <typename FP>
 int group_size(int dft_size)
 {
         // не больше 1 потока на 2 элемента
         int max_threads_required = shared_size<FP>(dft_size) / 2;
-        int max_threads_supported = std::min(opengl::max_variable_group_size_x(), opengl::max_variable_group_invocations());
+        int max_threads_supported = std::min(opengl::max_fixed_group_size_x(), opengl::max_fixed_group_invocations());
         return std::min(max_threads_required, max_threads_supported);
 }
 
@@ -206,7 +212,7 @@ void fft1d(bool inverse, int fft_count, const DeviceProgFFTShared<FP>& fft, cons
         // с отключенной перестановкой, иначе одни запуски будут вносить изменения
         // в данные других запусков, так как результат пишется в исходные данные.
 
-        programs.bit_reverse(group_count(data_size, BLOCK_SIZE), BLOCK_SIZE, data_size, N - 1, N_bits, data);
+        programs.bit_reverse(data_size, N - 1, N_bits, data);
 
         fft.exec(inverse, data_size, data);
 
@@ -216,8 +222,7 @@ void fft1d(bool inverse, int fft_count, const DeviceProgFFTShared<FP>& fft, cons
         const int N_2_mask = N_2 - 1;
         const int N_2_bits = N_bits - 1;
 
-        const int thread_cnt = data_size / 2;
-        const int block_cnt = group_count(thread_cnt, BLOCK_SIZE);
+        const int thread_count = data_size / 2;
 
         int M_2 = shared_size;
         FP Two_PI_Div_M = inverse ? (PI<FP> / M_2) : -(PI<FP> / M_2);
@@ -225,7 +230,7 @@ void fft1d(bool inverse, int fft_count, const DeviceProgFFTShared<FP>& fft, cons
         for (; M_2 < N; M_2 <<= 1, Two_PI_Div_M /= 2)
         {
                 // M_2 - половина размера текущих отдельных БПФ.
-                programs.fft(block_cnt, BLOCK_SIZE, inverse, thread_cnt, Two_PI_Div_M, N_2_mask, N_2_bits, M_2, data);
+                programs.fft(thread_count, inverse, Two_PI_Div_M, N_2_mask, N_2_bits, M_2, data);
         }
 }
 
@@ -233,15 +238,13 @@ template <typename FP>
 class GL2D final : public IFourierGL1, public IFourierGL2
 {
         const int m_N1, m_N2, m_M1, m_M2, m_M1_bin, m_M2_bin;
-        const vec2i block, rows_to, rows_fr, rows_D, cols_to, cols_fr, cols_D;
-        DeviceMemory<std::complex<FP>> m_D1_fwd, m_D1_inv, m_D2_fwd, m_D2_inv;
+        const vec2i m_rows_to, m_rows_fr, m_rows_d, m_cols_to, m_cols_fr, m_cols_d;
+        DeviceMemory<std::complex<FP>> m_d1_fwd, m_d1_inv, m_d2_fwd, m_d2_inv;
         DeviceMemory<std::complex<FP>> m_x_d, m_buffer;
         GLuint64 m_texture_handle;
-        const int m_shared_size_1, m_shared_size_2;
-        const int m_group_size_1, m_group_size_2;
         DeviceProg<FP> m_prog;
-        DeviceProgFFTShared<FP> m_FFT_1;
-        DeviceProgFFTShared<FP> m_FFT_2;
+        DeviceProgFFTShared<FP> m_fft_1;
+        DeviceProgFFTShared<FP> m_fft_2;
 
         void dft2d(bool inverse)
         {
@@ -249,22 +252,22 @@ class GL2D final : public IFourierGL1, public IFourierGL2
                 {
                         // по строкам
 
-                        m_prog.rows_mul_to_buffer(rows_to, block, inverse, m_M1, m_N1, m_N2, m_x_d, &m_buffer);
-                        fft1d(inverse, m_N2, m_FFT_1, m_prog, &m_buffer);
-                        m_prog.rows_mul_d(rows_D, block, m_M1, m_N2, inverse ? m_D1_inv : m_D1_fwd, &m_buffer);
-                        fft1d(!inverse, m_N2, m_FFT_1, m_prog, &m_buffer);
-                        m_prog.rows_mul_fr_buffer(rows_fr, block, inverse, m_M1, m_N1, m_N2, &m_x_d, m_buffer);
+                        m_prog.rows_mul_to_buffer(m_rows_to, inverse, m_M1, m_N1, m_N2, m_x_d, &m_buffer);
+                        fft1d(inverse, m_N2, m_fft_1, m_prog, &m_buffer);
+                        m_prog.rows_mul_d(m_rows_d, m_M1, m_N2, inverse ? m_d1_inv : m_d1_fwd, &m_buffer);
+                        fft1d(!inverse, m_N2, m_fft_1, m_prog, &m_buffer);
+                        m_prog.rows_mul_fr_buffer(m_rows_fr, inverse, m_M1, m_N1, m_N2, &m_x_d, m_buffer);
                 }
 
                 if (m_N2 > 1)
                 {
                         // по столбцам
 
-                        m_prog.cols_mul_to_buffer(cols_to, block, inverse, m_M2, m_N1, m_N2, m_x_d, &m_buffer);
-                        fft1d(inverse, m_N1, m_FFT_2, m_prog, &m_buffer);
-                        m_prog.rows_mul_d(cols_D, block, m_M2, m_N1, inverse ? m_D2_inv : m_D2_fwd, &m_buffer);
-                        fft1d(!inverse, m_N1, m_FFT_2, m_prog, &m_buffer);
-                        m_prog.cols_mul_fr_buffer(cols_fr, block, inverse, m_M2, m_N1, m_N2, &m_x_d, m_buffer);
+                        m_prog.cols_mul_to_buffer(m_cols_to, inverse, m_M2, m_N1, m_N2, m_x_d, &m_buffer);
+                        fft1d(inverse, m_N1, m_fft_2, m_prog, &m_buffer);
+                        m_prog.rows_mul_d(m_cols_d, m_M2, m_N1, inverse ? m_d2_inv : m_d2_fwd, &m_buffer);
+                        fft1d(!inverse, m_N1, m_fft_2, m_prog, &m_buffer);
+                        m_prog.cols_mul_fr_buffer(m_cols_fr, inverse, m_M2, m_N1, m_N2, &m_x_d, m_buffer);
                 }
         }
 
@@ -297,11 +300,9 @@ class GL2D final : public IFourierGL1, public IFourierGL2
 
         void exec(bool inverse, bool srgb) override
         {
-                vec2i grid(group_count(m_N1, block[0]), group_count(m_N2, block[1]));
-
-                m_prog.move_to_input(grid, block, m_N1, m_N2, srgb, m_texture_handle, &m_x_d);
+                m_prog.move_to_input(m_N1, m_N2, srgb, m_texture_handle, &m_x_d);
                 dft2d(inverse);
-                m_prog.move_to_output(grid, block, m_N1, m_N2, static_cast<FP>(1.0 / (m_N1 * m_N2)), m_texture_handle, m_x_d);
+                m_prog.move_to_output(m_N1, m_N2, static_cast<FP>(1.0 / (m_N1 * m_N2)), m_texture_handle, m_x_d);
         }
 
 public:
@@ -312,25 +313,21 @@ public:
                   m_M2(compute_M(m_N2)),
                   m_M1_bin(binary_size(m_M1)),
                   m_M2_bin(binary_size(m_M2)),
-                  block(BLOCK_SQRT, BLOCK_SQRT),
-                  rows_to(group_count(m_M1, block[0]), group_count(m_N2, block[1])),
-                  rows_fr(group_count(m_N1, block[0]), group_count(m_N2, block[1])),
-                  rows_D(group_count(m_M1, block[0]), group_count(m_N2, block[1])),
-                  cols_to(group_count(m_N1, block[0]), group_count(m_M2, block[1])),
-                  cols_fr(group_count(m_N1, block[0]), group_count(m_N2, block[1])),
-                  cols_D(group_count(m_M2, block[0]), group_count(m_N1, block[1])),
-                  m_D1_fwd(m_M1, MemoryUsage::StaticCopy),
-                  m_D1_inv(m_M1, MemoryUsage::StaticCopy),
-                  m_D2_fwd(m_M2, MemoryUsage::StaticCopy),
-                  m_D2_inv(m_M2, MemoryUsage::StaticCopy),
+                  m_rows_to(group_count(m_M1, m_N2, GROUP_SIZE_2D)),
+                  m_rows_fr(group_count(m_N1, m_N2, GROUP_SIZE_2D)),
+                  m_rows_d(group_count(m_M1, m_N2, GROUP_SIZE_2D)),
+                  m_cols_to(group_count(m_N1, m_M2, GROUP_SIZE_2D)),
+                  m_cols_fr(group_count(m_N1, m_N2, GROUP_SIZE_2D)),
+                  m_cols_d(group_count(m_M2, m_N1, GROUP_SIZE_2D)),
+                  m_d1_fwd(m_M1, MemoryUsage::StaticCopy),
+                  m_d1_inv(m_M1, MemoryUsage::StaticCopy),
+                  m_d2_fwd(m_M2, MemoryUsage::StaticCopy),
+                  m_d2_inv(m_M2, MemoryUsage::StaticCopy),
                   m_x_d(m_N1 * m_N2, MemoryUsage::DynamicCopy),
                   m_buffer(std::max(m_M1 * m_N2, m_M2 * m_N1), MemoryUsage::DynamicCopy),
-                  m_shared_size_1(shared_size<FP>(m_M1)),
-                  m_shared_size_2(shared_size<FP>(m_M2)),
-                  m_group_size_1(group_size<FP>(m_M1)),
-                  m_group_size_2(group_size<FP>(m_M2)),
-                  m_FFT_1(m_M1, m_shared_size_1, m_M1 <= m_shared_size_1, m_group_size_1),
-                  m_FFT_2(m_M2, m_shared_size_2, m_M2 <= m_shared_size_2, m_group_size_2)
+                  m_prog(GROUP_SIZE_1D, GROUP_SIZE_2D),
+                  m_fft_1(m_M1, shared_size<FP>(m_M1), group_size<FP>(m_M1), m_M1 <= shared_size<FP>(m_M1)),
+                  m_fft_2(m_M2, shared_size<FP>(m_M2), group_size<FP>(m_M2), m_M2 <= shared_size<FP>(m_M2))
 
         {
                 if (m_N1 < 1 || m_N2 < 1)
@@ -351,17 +348,17 @@ public:
                 // Compute the diagonal D in Lemma 13.2: use the radix-2 FFT
                 // Формулы 13.13, 13.26.
 
-                m_D1_fwd.load(conv<FP>(compute_h2(m_N1, m_M1, compute_h(m_N1, false, 1.0))));
-                fft1d(false, 1, m_FFT_1, m_prog, &m_D1_fwd);
+                m_d1_fwd.load(conv<FP>(compute_h2(m_N1, m_M1, compute_h(m_N1, false, 1.0))));
+                fft1d(false, 1, m_fft_1, m_prog, &m_d1_fwd);
 
-                m_D1_inv.load(conv<FP>(compute_h2(m_N1, m_M1, compute_h(m_N1, true, M1_Div_N1))));
-                fft1d(true, 1, m_FFT_1, m_prog, &m_D1_inv);
+                m_d1_inv.load(conv<FP>(compute_h2(m_N1, m_M1, compute_h(m_N1, true, M1_Div_N1))));
+                fft1d(true, 1, m_fft_1, m_prog, &m_d1_inv);
 
-                m_D2_fwd.load(conv<FP>(compute_h2(m_N2, m_M2, compute_h(m_N2, false, 1.0))));
-                fft1d(false, 1, m_FFT_2, m_prog, &m_D2_fwd);
+                m_d2_fwd.load(conv<FP>(compute_h2(m_N2, m_M2, compute_h(m_N2, false, 1.0))));
+                fft1d(false, 1, m_fft_2, m_prog, &m_d2_fwd);
 
-                m_D2_inv.load(conv<FP>(compute_h2(m_N2, m_M2, compute_h(m_N2, true, M2_Div_N2))));
-                fft1d(true, 1, m_FFT_2, m_prog, &m_D2_inv);
+                m_d2_inv.load(conv<FP>(compute_h2(m_N2, m_M2, compute_h(m_N2, true, M2_Div_N2))));
+                fft1d(true, 1, m_fft_2, m_prog, &m_d2_inv);
         }
 };
 }

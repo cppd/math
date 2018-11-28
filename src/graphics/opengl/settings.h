@@ -27,6 +27,6 @@ constexpr int API_VERSION_MINOR = 5;
 
 inline std::vector<std::string> required_extensions()
 {
-        return {"GL_ARB_bindless_texture", "GL_ARB_compute_variable_group_size"};
+        return {"GL_ARB_bindless_texture"};
 }
 }

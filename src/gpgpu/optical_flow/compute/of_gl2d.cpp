@@ -41,19 +41,19 @@ Chapter 5. Tracking Objects in Videos.
 #include <array>
 
 // clang-format off
-constexpr const char sobel_compute_shader[]
+constexpr const char sobel_shader[]
 {
 #include "of_sobel.comp.str"
 };
-constexpr const char flow_compute_shader[]
+constexpr const char flow_shader[]
 {
 #include "of_flow.comp.str"
 };
-constexpr const char downsample_compute_shader[]
+constexpr const char downsample_shader[]
 {
 #include "of_downsample.comp.str"
 };
-constexpr const char grayscale_compute_shader[]
+constexpr const char grayscale_shader[]
 {
 #include "of_grayscale.comp.str"
 };
@@ -76,6 +76,39 @@ constexpr float MIN_DETERMINANT = 1;
 
 namespace
 {
+std::string group_size_string()
+{
+        return "const uint GROUP_SIZE = " + std::to_string(GROUP_SIZE) + ";\n";
+}
+
+std::string downsample_source()
+{
+        std::string s;
+        s += group_size_string();
+        return s + downsample_shader;
+}
+
+std::string flow_source()
+{
+        std::string s;
+        s += group_size_string();
+        return s + flow_shader;
+}
+
+std::string grayscale_source()
+{
+        std::string s;
+        s += group_size_string();
+        return s + grayscale_shader;
+}
+
+std::string sobel_source()
+{
+        std::string s;
+        s += group_size_string();
+        return s + sobel_shader;
+}
+
 void create_image_pyramid_sizes(int width, int height, int min, std::vector<vec2i>* level_dimensions)
 {
         level_dimensions->clear();
@@ -184,10 +217,10 @@ class Impl final : public OpticalFlowGL2D
         const opengl::ShaderStorageBuffer& m_top_points;
         const opengl::ShaderStorageBuffer& m_top_points_flow;
 
-        opengl::ComputeProgram m_comp_sobel;
-        opengl::ComputeProgram m_comp_flow;
         opengl::ComputeProgram m_comp_downsample;
+        opengl::ComputeProgram m_comp_flow;
         opengl::ComputeProgram m_comp_grayscale;
+        opengl::ComputeProgram m_comp_sobel;
 
         std::array<std::vector<ImageR32F>, 2> m_image_pyramid;
         std::vector<ImageR32F> m_image_pyramid_dx;
@@ -202,7 +235,7 @@ class Impl final : public OpticalFlowGL2D
         {
                 // уровень 0 заполняется по исходному изображению
                 m_comp_grayscale.set_uniform_handle("img_dst", (*pyramid)[0].image_write_handle());
-                m_comp_grayscale.dispatch_compute(m_groups_x, m_groups_y, 1, GROUP_SIZE, GROUP_SIZE, 1);
+                m_comp_grayscale.dispatch_compute(m_groups_x, m_groups_y, 1);
                 glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
                 // Каждый следующий уровень меньше предыдущего
@@ -223,8 +256,7 @@ class Impl final : public OpticalFlowGL2D
 
                         int groups_x = group_count(img_small.width(), GROUP_SIZE);
                         int groups_y = group_count(img_small.height(), GROUP_SIZE);
-
-                        m_comp_downsample.dispatch_compute(groups_x, groups_y, 1, GROUP_SIZE, GROUP_SIZE, 1);
+                        m_comp_downsample.dispatch_compute(groups_x, groups_y, 1);
                         glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
                 }
         }
@@ -242,8 +274,7 @@ class Impl final : public OpticalFlowGL2D
 
                         int groups_x = group_count(image_pyramid[i].width(), GROUP_SIZE);
                         int groups_y = group_count(image_pyramid[i].height(), GROUP_SIZE);
-
-                        m_comp_sobel.dispatch_compute(groups_x, groups_y, 1, GROUP_SIZE, GROUP_SIZE, 1);
+                        m_comp_sobel.dispatch_compute(groups_x, groups_y, 1);
                 }
 
                 glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
@@ -308,15 +339,14 @@ class Impl final : public OpticalFlowGL2D
                         m_comp_flow.set_uniform("point_count_x", points_x);
                         m_comp_flow.set_uniform("point_count_y", points_y);
 
-                        int groups_x = group_count(points_x, GROUP_SIZE);
-                        int groups_y = group_count(points_y, GROUP_SIZE);
-
                         m_comp_flow.set_uniform_handle("img_dx", image_pyramid_dx[i].image_read_handle());
                         m_comp_flow.set_uniform_handle("img_dy", image_pyramid_dy[i].image_read_handle());
                         m_comp_flow.set_uniform_handle("img_I", image_pyramid_I[i].image_read_handle());
                         m_comp_flow.set_uniform_handle("tex_J", image_pyramid_J[i].texture_handle());
 
-                        m_comp_flow.dispatch_compute(groups_x, groups_y, 1, GROUP_SIZE, GROUP_SIZE, 1);
+                        int groups_x = group_count(points_x, GROUP_SIZE);
+                        int groups_y = group_count(points_y, GROUP_SIZE);
+                        m_comp_flow.dispatch_compute(groups_x, groups_y, 1);
 
                         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
                 }
@@ -369,10 +399,10 @@ public:
                   m_top_point_count_y(top_point_count_y),
                   m_top_points(top_points),
                   m_top_points_flow(top_points_flow),
-                  m_comp_sobel(opengl::ComputeShader(sobel_compute_shader)),
-                  m_comp_flow(opengl::ComputeShader(flow_compute_shader)),
-                  m_comp_downsample(opengl::ComputeShader(downsample_compute_shader)),
-                  m_comp_grayscale(opengl::ComputeShader(grayscale_compute_shader))
+                  m_comp_downsample(opengl::ComputeShader(downsample_source())),
+                  m_comp_flow(opengl::ComputeShader(flow_source())),
+                  m_comp_grayscale(opengl::ComputeShader(grayscale_source())),
+                  m_comp_sobel(opengl::ComputeShader(sobel_source()))
         {
                 std::vector<vec2i> level_dimensions;
 

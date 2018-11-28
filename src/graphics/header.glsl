@@ -19,7 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #if !defined(VULKAN)
 #extension GL_ARB_bindless_texture : require
-#extension GL_ARB_compute_variable_group_size : require
 #endif
 
 float rgb_to_srgb(float c)

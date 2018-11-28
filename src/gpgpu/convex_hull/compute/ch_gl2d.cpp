@@ -49,7 +49,7 @@ namespace
 {
 int group_size_prepare(int width, int shared_size_per_thread)
 {
-        int max_group_size_limit = std::min(opengl::max_variable_group_size_x(), opengl::max_variable_group_invocations());
+        int max_group_size_limit = std::min(opengl::max_fixed_group_size_x(), opengl::max_fixed_group_invocations());
         int max_group_size_memory = opengl::max_compute_shared_memory() / shared_size_per_thread;
 
         // максимально возможная степень 2
@@ -69,7 +69,7 @@ int group_size_merge(int height, int shared_size_per_item)
                       std::to_string(opengl::max_compute_shared_memory()));
         }
 
-        int max_group_size = std::min(opengl::max_variable_group_size_x(), opengl::max_variable_group_invocations());
+        int max_group_size = std::min(opengl::max_fixed_group_size_x(), opengl::max_fixed_group_invocations());
 
         // Один поток первоначально обрабатывает группы до 4 элементов.
         int pref_thread_count = group_count(height, 4);
@@ -86,17 +86,23 @@ int iteration_count_merge(int size)
         return (size > 2) ? log_2(size - 1) : 0;
 }
 
+std::string group_size_string(int group_size)
+{
+        return "const uint GROUP_SIZE = " + std::to_string(group_size) + ";\n";
+}
+
 std::string prepare_source(int group_size)
 {
         std::string s;
-        s += "const int GROUP_SIZE = " + std::to_string(group_size) + ";\n";
+        s += group_size_string(group_size);
         s += '\n';
         return s + prepare_shader;
 }
 
-std::string merge_source(int line_size)
+std::string merge_source(int line_size, int group_size)
 {
         std::string s;
+        s += group_size_string(group_size);
         s += "const int LINE_SIZE = " + std::to_string(line_size) + ";\n";
         s += '\n';
         return s + merge_shader;
@@ -110,8 +116,6 @@ std::string filter_source()
 class Impl final : public ConvexHullGL2D
 {
         const int m_height;
-        const int m_group_size_prepare;
-        const int m_group_size_merge;
         const opengl::ShaderStorageBuffer& m_points;
 
         opengl::ComputeProgram m_prepare_prog;
@@ -128,15 +132,15 @@ class Impl final : public ConvexHullGL2D
 
                 // Поиск минимума и максимума для каждой строки.
                 // Если нет, то -1.
-                m_prepare_prog.dispatch_compute(m_height, 1, 1, m_group_size_prepare, 1, 1);
+                m_prepare_prog.dispatch_compute(m_height, 1, 1);
                 glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
                 // Объединение оболочек, начиная от 4 элементов.
-                m_merge_prog.dispatch_compute(2, 1, 1, m_group_size_merge, 1, 1);
+                m_merge_prog.dispatch_compute(2, 1, 1);
                 glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
                 // Выбрасывание элементов со значением -1.
-                m_filter_prog.dispatch_compute(1, 1, 1, 1, 1, 1);
+                m_filter_prog.dispatch_compute(1, 1, 1);
 
                 glMemoryBarrier(GL_TEXTURE_UPDATE_BARRIER_BIT);
                 std::array<GLint, 1> point_count;
@@ -150,11 +154,10 @@ class Impl final : public ConvexHullGL2D
 public:
         Impl(const opengl::TextureR32I& objects, const opengl::ShaderStorageBuffer& points)
                 : m_height(objects.texture().height()),
-                  m_group_size_prepare(group_size_prepare(objects.texture().width(), 2 * sizeof(GLint))),
-                  m_group_size_merge(group_size_merge(m_height, sizeof(GLfloat))),
                   m_points(points),
-                  m_prepare_prog(opengl::ComputeShader(prepare_source(m_group_size_prepare))),
-                  m_merge_prog(opengl::ComputeShader(merge_source(m_height))),
+                  m_prepare_prog(opengl::ComputeShader(
+                          prepare_source(group_size_prepare(objects.texture().width(), 2 * sizeof(GLint))))),
+                  m_merge_prog(opengl::ComputeShader(merge_source(m_height, group_size_merge(m_height, sizeof(GLfloat))))),
                   m_filter_prog(opengl::ComputeShader(filter_source())),
                   m_line_min(m_height, 1),
                   m_line_max(m_height, 1),

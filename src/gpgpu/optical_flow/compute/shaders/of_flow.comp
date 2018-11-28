@@ -15,7 +15,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-layout(local_size_variable) in;
+// Вставляется в текст программы
+// const uint GROUP_SIZE =
+
+layout(local_size_x = GROUP_SIZE, local_size_y = GROUP_SIZE) in;
 
 layout(bindless_image, r32f) readonly uniform image2D img_dx;
 layout(bindless_image, r32f) readonly uniform image2D img_dy;
