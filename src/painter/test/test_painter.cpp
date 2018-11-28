@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "test_path_tracing.h"
+#include "test_painter.h"
 
 #include "com/file/file_sys.h"
 #include "com/names.h"
@@ -40,7 +40,7 @@ namespace
 {
 class Images : public IPainterNotifier<3>
 {
-        static constexpr const char beginning_of_file_name[] = "path_tracing_";
+        static constexpr const char beginning_of_file_name[] = "painter_";
 
         std::vector<Image<2>> m_images;
         std::array<int, 3> m_size;
@@ -136,7 +136,7 @@ std::shared_ptr<const Mesh<N, T>> file_mesh(const std::string& file_name, int th
 }
 
 template <size_t N, typename T>
-void test_path_tracing_file(int samples_per_pixel, int thread_count, std::unique_ptr<const PaintObjects<N, T>>&& paint_objects)
+void test_painter_file(int samples_per_pixel, int thread_count, std::unique_ptr<const PaintObjects<N, T>>&& paint_objects)
 {
         constexpr int paint_height = 2;
         constexpr int max_pass_count = 1;
@@ -160,7 +160,7 @@ void test_path_tracing_file(int samples_per_pixel, int thread_count, std::unique
 }
 
 template <size_t N, typename T>
-void test_path_tracing_window(int samples_per_pixel, int thread_count, std::unique_ptr<const PaintObjects<N, T>>&& paint_objects)
+void test_painter_window(int samples_per_pixel, int thread_count, std::unique_ptr<const PaintObjects<N, T>>&& paint_objects)
 {
         constexpr bool smooth_normal = true;
 
@@ -174,81 +174,81 @@ void test_path_tracing_window(int samples_per_pixel, int thread_count, std::uniq
                                                                     std::move(paint_objects));
 }
 
-enum class PathTracingTestOutputType
+enum class PainterTestOutputType
 {
         File,
         Window
 };
 
-template <PathTracingTestOutputType type, size_t N, typename T>
-void test_path_tracing(const std::shared_ptr<const Mesh<N, T>>& mesh, int min_screen_size, int max_screen_size,
-                       int samples_per_pixel, int thread_count)
+template <PainterTestOutputType type, size_t N, typename T>
+void test_painter(const std::shared_ptr<const Mesh<N, T>>& mesh, int min_screen_size, int max_screen_size, int samples_per_pixel,
+                  int thread_count)
 {
         Color::DataType diffuse = 1;
 
         std::unique_ptr<const PaintObjects<N, T>> paint_objects =
                 single_object_scene(BACKGROUND_COLOR, DEFAULT_COLOR, diffuse, min_screen_size, max_screen_size, mesh);
 
-        static_assert(type == PathTracingTestOutputType::File || type == PathTracingTestOutputType::Window);
+        static_assert(type == PainterTestOutputType::File || type == PainterTestOutputType::Window);
 
-        if constexpr (type == PathTracingTestOutputType::File)
+        if constexpr (type == PainterTestOutputType::File)
         {
-                test_path_tracing_file(samples_per_pixel, thread_count, std::move(paint_objects));
+                test_painter_file(samples_per_pixel, thread_count, std::move(paint_objects));
         }
 
-        if constexpr (type == PathTracingTestOutputType::Window)
+        if constexpr (type == PainterTestOutputType::Window)
         {
-                test_path_tracing_window(samples_per_pixel, thread_count, std::move(paint_objects));
+                test_painter_window(samples_per_pixel, thread_count, std::move(paint_objects));
         }
 }
 
-template <size_t N, typename T, PathTracingTestOutputType type>
-void test_path_tracing(int samples_per_pixel, int point_count, int min_screen_size, int max_screen_size)
+template <size_t N, typename T, PainterTestOutputType type>
+void test_painter(int samples_per_pixel, int point_count, int min_screen_size, int max_screen_size)
 {
         const int thread_count = hardware_concurrency();
         ProgressRatio progress(nullptr);
 
         std::shared_ptr<const Mesh<N, T>> mesh = sphere_mesh<N, T>(point_count, thread_count, &progress);
 
-        test_path_tracing<type>(mesh, min_screen_size, max_screen_size, samples_per_pixel, thread_count);
+        test_painter<type>(mesh, min_screen_size, max_screen_size, samples_per_pixel, thread_count);
 }
 
-template <size_t N, typename T, PathTracingTestOutputType type>
-void test_path_tracing(int samples_per_pixel, const std::string& file_name, int min_screen_size, int max_screen_size)
+template <size_t N, typename T, PainterTestOutputType type>
+void test_painter(int samples_per_pixel, const std::string& file_name, int min_screen_size, int max_screen_size)
 {
         const int thread_count = hardware_concurrency();
         ProgressRatio progress(nullptr);
 
         std::shared_ptr<const Mesh<N, T>> mesh = file_mesh<N, T>(file_name, thread_count, &progress);
 
-        test_path_tracing<type>(mesh, min_screen_size, max_screen_size, samples_per_pixel, thread_count);
+        test_painter<type>(mesh, min_screen_size, max_screen_size, samples_per_pixel, thread_count);
 }
 }
 
-void test_path_tracing_file()
+void test_painter_file()
 {
         constexpr unsigned N = 4;
         int samples_per_pixel = 25;
-        test_path_tracing<N, double, PathTracingTestOutputType::File>(samples_per_pixel, 1000, 10, 100);
+        test_painter<N, double, PainterTestOutputType::File>(samples_per_pixel, 1000, 10, 100);
 }
 
-void test_path_tracing_file(const std::string& file_name)
+void test_painter_file(const std::string& file_name)
 {
         constexpr unsigned N = 4;
         int samples_per_pixel = 25;
-        test_path_tracing<N, double, PathTracingTestOutputType::File>(samples_per_pixel, file_name, 10, 100);
+        test_painter<N, double, PainterTestOutputType::File>(samples_per_pixel, file_name, 10, 100);
 }
 
-void test_path_tracing_window()
+void test_painter_window()
 {
         constexpr unsigned N = 4;
         int samples_per_pixel = 25;
-        test_path_tracing<N, double, PathTracingTestOutputType::Window>(samples_per_pixel, 1000, 50, 500);
+        test_painter<N, double, PainterTestOutputType::Window>(samples_per_pixel, 1000, 50, 500);
 }
 
-void test_path_tracing_window(const std::string& file_name)
+void test_painter_window(const std::string& file_name)
 {
         constexpr unsigned N = 4;
         int samples_per_pixel = 25;
-        test_path_tracing<N, double, PathTracingTestOutputType::Window>(samples_per_pixel, file_name, 50, 500);
+        test_painter<N, double, PainterTestOutputType::Window>(samples_per_pixel, file_name, 50, 500);
 }

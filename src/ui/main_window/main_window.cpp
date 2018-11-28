@@ -77,19 +77,19 @@ constexpr int WINDOW_SHOW_DELAY_MSEC = 50;
 // увеличение текстуры тени по сравнению с размером окна.
 constexpr int SHADOW_ZOOM = 2;
 
-// Для трассировки пути. Количество лучей на один пиксель на одно измерение
-// в одном проходе. Тогда для количества измерений D в пространстве экрана
-// количество лучей равно std::pow(эта_величина, D).
-constexpr int PATH_TRACING_DEFAULT_SAMPLES_PER_DIMENSION = 5;
-constexpr int PATH_TRACING_MAX_SAMPLES_PER_DIMENSION = 10;
+// Количество лучей на один пиксель на одно измерение в одном проходе.
+// Тогда для количества измерений D в пространстве экрана количество
+// лучей равно std::pow(эта_величина, D).
+constexpr int PAINTER_DEFAULT_SAMPLES_PER_DIMENSION = 5;
+constexpr int PAINTER_MAX_SAMPLES_PER_DIMENSION = 10;
 
-// Для трассировки пути для 3 измерений. Максимальный размер экрана в пикселях.
-constexpr int PATH_TRACING_3D_MAX_SCREEN_SIZE = 10000;
+// Максимальный размер экрана в пикселях для 3 измерений
+constexpr int PAINTER_3D_MAX_SCREEN_SIZE = 10000;
 
-// Для трассировки пути для 4 и более измерений. Размеры экрана в пикселях.
-constexpr int PATH_TRACING_DEFAULT_SCREEN_SIZE = 500;
-constexpr int PATH_TRACING_MINIMUM_SCREEN_SIZE = 50;
-constexpr int PATH_TRACING_MAXIMUM_SCREEN_SIZE = 5000;
+// Размеры экрана в пикселях для 4 и более измерений
+constexpr int PAINTER_DEFAULT_SCREEN_SIZE = 500;
+constexpr int PAINTER_MINIMUM_SCREEN_SIZE = 50;
+constexpr int PAINTER_MAXIMUM_SCREEN_SIZE = 5000;
 
 // Сколько потоков не надо использовать от максимума для создания октадеревьев.
 constexpr int MESH_OBJECT_NOT_USED_THREAD_COUNT = 2;
@@ -1479,19 +1479,19 @@ void MainWindow::on_actionPainter_triggered()
                 info_3d.object_position = m_show->object_position();
                 info_3d.light_direction = m_show->light_direction();
                 info_3d.object_size = m_show->object_size();
-                info_3d.max_screen_size = PATH_TRACING_3D_MAX_SCREEN_SIZE;
+                info_3d.max_screen_size = PAINTER_3D_MAX_SCREEN_SIZE;
 
                 PaintingInformationNd info_nd;
-                info_nd.default_screen_size = PATH_TRACING_DEFAULT_SCREEN_SIZE;
-                info_nd.minimum_screen_size = PATH_TRACING_MINIMUM_SCREEN_SIZE;
-                info_nd.maximum_screen_size = PATH_TRACING_MAXIMUM_SCREEN_SIZE;
+                info_nd.default_screen_size = PAINTER_DEFAULT_SCREEN_SIZE;
+                info_nd.minimum_screen_size = PAINTER_MINIMUM_SCREEN_SIZE;
+                info_nd.maximum_screen_size = PAINTER_MAXIMUM_SCREEN_SIZE;
 
                 PaintingInformationAll info_all;
                 info_all.parent_window = this;
                 info_all.window_title = QMainWindow::windowTitle().toStdString();
                 info_all.object_name = object_name;
-                info_all.default_samples_per_dimension = PATH_TRACING_DEFAULT_SAMPLES_PER_DIMENSION;
-                info_all.max_samples_per_dimension = PATH_TRACING_MAX_SAMPLES_PER_DIMENSION;
+                info_all.default_samples_per_dimension = PAINTER_DEFAULT_SAMPLES_PER_DIMENSION;
+                info_all.max_samples_per_dimension = PAINTER_MAX_SAMPLES_PER_DIMENSION;
                 info_all.background_color = qcolor_to_rgb(m_background_color);
                 info_all.default_color = qcolor_to_rgb(m_default_color);
                 info_all.diffuse = diffuse_light();
