@@ -92,6 +92,10 @@ std::string flow_source()
 {
         std::string s;
         s += group_size_string();
+        s += "const int RADIUS = " + to_string(RADIUS) + ";\n";
+        s += "const int ITERATION_COUNT = " + to_string(ITERATION_COUNT) + ";\n";
+        s += "const float STOP_MOVE_SQUARE = " + to_string(STOP_MOVE_SQUARE) + ";\n";
+        s += "const float MIN_DETERMINANT = " + to_string(MIN_DETERMINANT) + ";\n";
         return s + flow_shader;
 }
 
@@ -416,11 +420,6 @@ public:
                 create_flow_buffers(level_dimensions, &m_image_pyramid_flow);
 
                 m_comp_grayscale.set_uniform_handle("img_src", source_image.image_resident_handle_read_only());
-
-                m_comp_flow.set_uniform("RADIUS", RADIUS);
-                m_comp_flow.set_uniform("ITERATION_COUNT", ITERATION_COUNT);
-                m_comp_flow.set_uniform("STOP_MOVE_SQUARE", STOP_MOVE_SQUARE);
-                m_comp_flow.set_uniform("MIN_DETERMINANT", MIN_DETERMINANT);
         }
 };
 }
