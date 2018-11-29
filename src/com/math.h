@@ -32,11 +32,6 @@ inline constexpr const char PI_STR[] = "3.14159265358979323846264338327950288419
 template <typename T>
 inline constexpr T TWO_PI = 6.2831853071795864769252867665590057683943387987502L;
 
-constexpr int group_count(int size, int group_size) noexcept
-{
-        return (size + group_size - 1) / group_size;
-}
-
 template <typename T>
 constexpr T square(const T& v)
 {

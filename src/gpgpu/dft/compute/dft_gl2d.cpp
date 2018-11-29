@@ -54,6 +54,7 @@ Chapter 13: FFTs for Arbitrary N.
 #include "com/math.h"
 #include "com/print.h"
 #include "com/time.h"
+#include "gpgpu/com/groups.h"
 #include "graphics/opengl/query.h"
 
 #include <complex>
@@ -63,11 +64,6 @@ Chapter 13: FFTs for Arbitrary N.
 
 constexpr const int GROUP_SIZE_1D = 256;
 constexpr const vec2i GROUP_SIZE_2D = vec2i(16, 16);
-
-constexpr vec2i group_count(int x, int y, vec2i group_size)
-{
-        return vec2i(group_count(x, group_size[0]), group_count(y, group_size[1]));
-}
 
 namespace
 {

@@ -28,6 +28,7 @@ Chapter 2: CONVEX HULLS, 2.6 Divide-and-Conquer.
 #include "ch_gl2d.h"
 
 #include "com/bits.h"
+#include "gpgpu/com/groups.h"
 #include "graphics/opengl/query.h"
 
 // clang-format off

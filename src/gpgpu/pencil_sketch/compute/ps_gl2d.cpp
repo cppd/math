@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "ps_gl2d.h"
 
-#include "com/math.h"
+#include "gpgpu/com/groups.h"
 
 // clang-format off
 constexpr const char compute_shader[]

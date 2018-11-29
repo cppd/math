@@ -19,8 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "memory.h"
 
-#include "com/math.h"
 #include "com/vec.h"
+#include "gpgpu/com/groups.h"
 #include "graphics/opengl/objects.h"
 
 #include <complex>
@@ -131,7 +131,7 @@ public:
 
         void move_to_input(int width, int height, bool source_srgb, const GLuint64 tex, DeviceMemory<std::complex<T>>* data)
         {
-                vec2i groups(group_count(width, m_group_size_2d[0]), group_count(height, m_group_size_2d[1]));
+                vec2i groups = group_count(width, height, m_group_size_2d);
 
                 m_move_to_input.set_uniform(0, width);
                 m_move_to_input.set_uniform(1, height);
@@ -143,7 +143,7 @@ public:
         }
         void move_to_output(int width, int height, T to_mul, const GLuint64 tex, const DeviceMemory<std::complex<T>>& data)
         {
-                vec2i groups(group_count(width, m_group_size_2d[0]), group_count(height, m_group_size_2d[1]));
+                vec2i groups = group_count(width, height, m_group_size_2d);
 
                 m_move_to_output.set_uniform(0, width);
                 m_move_to_output.set_uniform(1, height);

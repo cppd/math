@@ -37,6 +37,7 @@ Chapter 5. Tracking Objects in Videos.
 #include "com/log.h"
 #include "com/math.h"
 #include "com/print.h"
+#include "gpgpu/com/groups.h"
 
 #include <array>
 
