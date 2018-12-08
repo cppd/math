@@ -727,6 +727,12 @@ public:
                 glGetNamedBufferSubData(m_buffer, 0, data->size() * sizeof(T), data->data());
         }
 
+        template <typename T>
+        void read(T* data) const
+        {
+                glGetNamedBufferSubData(m_buffer, 0, sizeof(T), data);
+        }
+
         void bind(GLuint binding_point) const noexcept
         {
                 glBindBufferBase(GL_SHADER_STORAGE_BUFFER, binding_point, m_buffer);
