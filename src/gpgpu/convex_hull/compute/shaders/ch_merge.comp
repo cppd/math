@@ -23,8 +23,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 layout(local_size_x = GROUP_SIZE) in;
 
-layout(bindless_image, r32f) uniform image2D lines[2];
 uniform int iteration_count;
+
+layout(std430, binding = 0) restrict buffer Lines
+{
+        float lines[2][LINE_SIZE];
+};
 
 shared float shared_buffer[LINE_SIZE];
 
@@ -32,14 +36,15 @@ void copy_to_buffer()
 {
         for (int i = int(gl_LocalInvocationID.x); i < LINE_SIZE; i += int(gl_WorkGroupSize.x))
         {
-                shared_buffer[i] = imageLoad(lines[gl_WorkGroupID.x], ivec2(i, 0)).r;
+                shared_buffer[i] = lines[gl_WorkGroupID.x][i];
         }
 }
+
 void copy_from_buffer()
 {
         for (int i = int(gl_LocalInvocationID.x); i < LINE_SIZE; i += int(gl_WorkGroupSize.x))
         {
-                imageStore(lines[gl_WorkGroupID.x], ivec2(i, 0), vec4(shared_buffer[i], 0, 0, 0));
+                lines[gl_WorkGroupID.x][i] = shared_buffer[i];
         }
 }
 

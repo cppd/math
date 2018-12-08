@@ -92,10 +92,11 @@ std::string group_size_string(int group_size)
         return "const uint GROUP_SIZE = " + std::to_string(group_size) + ";\n";
 }
 
-std::string prepare_source(int group_size)
+std::string prepare_source(int line_size, int group_size)
 {
         std::string s;
         s += group_size_string(group_size);
+        s += "const int LINE_SIZE = " + std::to_string(line_size) + ";\n";
         s += '\n';
         return s + prepare_shader;
 }
@@ -109,9 +110,12 @@ std::string merge_source(int line_size, int group_size)
         return s + merge_shader;
 }
 
-std::string filter_source()
+std::string filter_source(int line_size)
 {
-        return filter_shader;
+        std::string s;
+        s += "const int LINE_SIZE = " + std::to_string(line_size) + ";\n";
+        s += '\n';
+        return s + filter_shader;
 }
 
 class Impl final : public ConvexHullGL2D
@@ -123,33 +127,32 @@ class Impl final : public ConvexHullGL2D
         opengl::ComputeProgram m_merge_prog;
         opengl::ComputeProgram m_filter_prog;
 
-        opengl::TextureR32F m_line_min;
-        opengl::TextureR32F m_line_max;
-        opengl::TextureR32I m_point_count_texture;
+        opengl::ShaderStorageBuffer m_lines;
+        opengl::ShaderStorageBuffer m_point_count;
 
         int exec() override
         {
-                m_points.bind(0);
+                m_lines.bind(0);
+                m_points.bind(1);
+                m_point_count.bind(2);
 
                 // Поиск минимума и максимума для каждой строки.
                 // Если нет, то -1.
                 m_prepare_prog.dispatch_compute(m_height, 1, 1);
-                glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+                glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
                 // Объединение оболочек, начиная от 4 элементов.
                 m_merge_prog.dispatch_compute(2, 1, 1);
-                glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+                glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
                 // Выбрасывание элементов со значением -1.
                 m_filter_prog.dispatch_compute(1, 1, 1);
-
-                glMemoryBarrier(GL_TEXTURE_UPDATE_BARRIER_BIT);
-                std::array<GLint, 1> point_count;
-                m_point_count_texture.get_texture_sub_image(0, 0, 1, 1, &point_count);
-
                 glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
-                return point_count[0];
+                GLint point_count;
+                m_point_count.read(&point_count);
+
+                return point_count;
         }
 
 public:
@@ -157,26 +160,16 @@ public:
                 : m_height(objects.texture().height()),
                   m_points(points),
                   m_prepare_prog(opengl::ComputeShader(
-                          prepare_source(group_size_prepare(objects.texture().width(), 2 * sizeof(GLint))))),
+                          prepare_source(m_height, group_size_prepare(objects.texture().width(), 2 * sizeof(GLint))))),
                   m_merge_prog(opengl::ComputeShader(merge_source(m_height, group_size_merge(m_height, sizeof(GLfloat))))),
-                  m_filter_prog(opengl::ComputeShader(filter_source())),
-                  m_line_min(m_height, 1),
-                  m_line_max(m_height, 1),
-                  m_point_count_texture(1, 1)
+                  m_filter_prog(opengl::ComputeShader(filter_source(m_height)))
         {
                 m_prepare_prog.set_uniform_handle("objects", objects.image_resident_handle_read_only());
-                m_prepare_prog.set_uniform_handle("line_min", m_line_min.image_resident_handle_write_only());
-                m_prepare_prog.set_uniform_handle("line_max", m_line_max.image_resident_handle_write_only());
 
-                std::vector<GLuint64> line_handles(2);
-                line_handles[0] = m_line_min.image_resident_handle_read_write();
-                line_handles[1] = m_line_max.image_resident_handle_read_write();
-                m_merge_prog.set_uniform_handles("lines", line_handles);
                 m_merge_prog.set_uniform("iteration_count", iteration_count_merge(m_height));
 
-                m_filter_prog.set_uniform_handle("line_min", m_line_min.image_resident_handle_read_only());
-                m_filter_prog.set_uniform_handle("line_max", m_line_max.image_resident_handle_read_only());
-                m_filter_prog.set_uniform_handle("points_count", m_point_count_texture.image_resident_handle_write_only());
+                m_lines.create_dynamic_copy(2 * m_height * sizeof(GLfloat));
+                m_point_count.create_dynamic_copy(sizeof(GLint));
         }
 };
 }

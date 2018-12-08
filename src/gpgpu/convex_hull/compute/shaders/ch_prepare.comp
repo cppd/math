@@ -19,12 +19,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 // Вставляется в текст программы
 // const uint GROUP_SIZE =
+// const int LINE_SIZE =
 
 layout(local_size_x = GROUP_SIZE) in;
 
-layout(bindless_image, r32i) readonly uniform iimage2D objects;
-layout(bindless_image, r32f) writeonly uniform image2D line_min;
-layout(bindless_image, r32f) writeonly uniform image2D line_max;
+layout(bindless_image, r32i) readonly restrict uniform iimage2D objects;
+
+layout(std430, binding = 0) writeonly restrict buffer Lines
+{
+        float line_min[LINE_SIZE];
+        float line_max[LINE_SIZE];
+};
 
 bool not_background(ivec2 p)
 {
@@ -83,13 +88,13 @@ void main(void)
 
                 if (result.y >= 0)
                 {
-                        imageStore(line_min, ivec2(reverse_y, 0), vec4(result.x, 0, 0, 0));
-                        imageStore(line_max, ivec2(reverse_y, 0), vec4(result.y, 0, 0, 0));
+                        line_min[reverse_y] = result.x;
+                        line_max[reverse_y] = result.y;
                 }
                 else
                 {
-                        imageStore(line_min, ivec2(reverse_y, 0), vec4(-1, 0, 0, 0));
-                        imageStore(line_max, ivec2(reverse_y, 0), vec4(-1, 0, 0, 0));
+                        line_min[reverse_y] = -1;
+                        line_max[reverse_y] = -1;
                 }
         }
 }
