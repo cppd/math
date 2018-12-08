@@ -31,7 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <vector>
 
 template <size_t N, typename T>
-class PainterWindow final : public PainterWindow2d, public IPainterNotifier<N - 1>
+class PainterWindow final : public PainterWindow2d, public PainterNotifier<N - 1>
 {
         static_assert(N >= 3);
         static constexpr size_t N_IMAGE = N - 1;

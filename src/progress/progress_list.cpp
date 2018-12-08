@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/error.h"
 
 // Для работы в потоках расчётов
-void ProgressRatioList::add_progress_ratio(IProgressRatioControl* ratio)
+void ProgressRatioList::add_progress_ratio(ProgressRatioControl* ratio)
 {
         ASSERT(std::this_thread::get_id() != m_thread_id);
 
@@ -40,7 +40,7 @@ void ProgressRatioList::add_progress_ratio(IProgressRatioControl* ratio)
 }
 
 // Для работы в потоках расчётов
-void ProgressRatioList::delete_progress_ratio(const IProgressRatioControl* ratio) noexcept
+void ProgressRatioList::delete_progress_ratio(const ProgressRatioControl* ratio) noexcept
 {
         ASSERT(std::this_thread::get_id() != m_thread_id);
 

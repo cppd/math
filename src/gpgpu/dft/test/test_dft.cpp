@@ -176,7 +176,7 @@ void compute_gl2d(bool inverse, int n1, int n2, std::vector<complex>* data)
         LOG("----- GL2D -----");
         double start_time = time_in_seconds();
 
-        std::unique_ptr<IFourierGL1> gl2d = create_fft_gl2d(n1, n2);
+        std::unique_ptr<FourierGL1> gl2d = create_dft_gl2d(n1, n2);
         gl2d->exec(inverse, data);
 
         LOG("GL2D time: " + time_string(start_time));

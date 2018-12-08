@@ -316,9 +316,9 @@ std::vector<std::string> names_of_map(const std::map<std::string, T>& map)
 }
 
 template <size_t N>
-class ObjectRepository final : public IObjectRepository<N>
+class ObjectRepositoryImpl final : public ObjectRepository<N>
 {
-        std::map<std::string, std::vector<Vector<N, float>> (ObjectRepository<N>::*)(unsigned) const> m_map;
+        std::map<std::string, std::vector<Vector<N, float>> (ObjectRepositoryImpl<N>::*)(unsigned) const> m_map;
 
         std::vector<Vector<N, float>> ellipsoid(unsigned point_count) const override
         {
@@ -368,35 +368,35 @@ class ObjectRepository final : public IObjectRepository<N>
         }
 
 public:
-        ObjectRepository()
+        ObjectRepositoryImpl()
         {
-                m_map.emplace("Ellipsoid", &ObjectRepository<N>::ellipsoid);
-                m_map.emplace("Ellipsoid, bound", &ObjectRepository<N>::ellipsoid_bound);
+                m_map.emplace("Ellipsoid", &ObjectRepositoryImpl<N>::ellipsoid);
+                m_map.emplace("Ellipsoid, bound", &ObjectRepositoryImpl<N>::ellipsoid_bound);
 
-                m_map.emplace("Sphere with a notch", &ObjectRepository<N>::sphere_with_notch);
-                m_map.emplace("Sphere with a notch, bound", &ObjectRepository<N>::sphere_with_notch_bound);
+                m_map.emplace("Sphere with a notch", &ObjectRepositoryImpl<N>::sphere_with_notch);
+                m_map.emplace("Sphere with a notch, bound", &ObjectRepositoryImpl<N>::sphere_with_notch_bound);
 
                 if constexpr (N == 3)
                 {
-                        m_map.emplace(u8"Möbius strip", &ObjectRepository<N>::mobius_strip);
+                        m_map.emplace(u8"Möbius strip", &ObjectRepositoryImpl<N>::mobius_strip);
                 }
 
                 if constexpr (N >= 3)
                 {
-                        m_map.emplace("Torus", &ObjectRepository<N>::torus);
-                        m_map.emplace("Torus, bound", &ObjectRepository<N>::torus_bound);
+                        m_map.emplace("Torus", &ObjectRepositoryImpl<N>::torus);
+                        m_map.emplace("Torus, bound", &ObjectRepositoryImpl<N>::torus_bound);
                 }
         }
 };
 }
 
 template <size_t N>
-std::unique_ptr<IObjectRepository<N>> create_object_repository()
+std::unique_ptr<ObjectRepository<N>> create_object_repository()
 {
-        return std::make_unique<ObjectRepository<N>>();
+        return std::make_unique<ObjectRepositoryImpl<N>>();
 }
 
-template std::unique_ptr<IObjectRepository<2>> create_object_repository<2>();
-template std::unique_ptr<IObjectRepository<3>> create_object_repository<3>();
-template std::unique_ptr<IObjectRepository<4>> create_object_repository<4>();
-template std::unique_ptr<IObjectRepository<5>> create_object_repository<5>();
+template std::unique_ptr<ObjectRepository<2>> create_object_repository<2>();
+template std::unique_ptr<ObjectRepository<3>> create_object_repository<3>();
+template std::unique_ptr<ObjectRepository<4>> create_object_repository<4>();
+template std::unique_ptr<ObjectRepository<5>> create_object_repository<5>();

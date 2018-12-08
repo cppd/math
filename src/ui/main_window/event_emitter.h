@@ -44,7 +44,7 @@ public:
         virtual void direct_log(const std::string& msg) = 0;
 };
 
-class WindowEventEmitter final : public QObject, public ILogCallback, public IObjectsCallback, public IShowCallback
+class WindowEventEmitter final : public QObject, public LogCallback, public ObjectsCallback, public ShowCallback
 {
         Q_OBJECT
 

@@ -408,7 +408,7 @@ Vector<N, VectorType> array_to_vector(const std::array<ArrayType, N>& array)
 
 template <size_t N, typename T>
 void paint_pixels(PainterRandomEngine<T>& random_engine, std::vector<Vector<N - 1, T>>* samples, std::atomic_bool& stop,
-                  const Projector<N, T>& projector, const PaintData<N, T>& paint_data, IPainterNotifier<N - 1>* painter_notifier,
+                  const Projector<N, T>& projector, const PaintData<N, T>& paint_data, PainterNotifier<N - 1>* painter_notifier,
                   Paintbrush<N - 1>* paintbrush, const PainterSampler<N - 1, T>& sampler, Pixels<N - 1>* pixels)
 {
         std::array<int_least16_t, N - 1> pixel;
@@ -449,8 +449,8 @@ void paint_pixels(PainterRandomEngine<T>& random_engine, std::vector<Vector<N - 
 template <size_t N, typename T>
 void work_thread(unsigned thread_number, ThreadBarrier& barrier, std::atomic_bool& stop, std::atomic_bool& error_caught,
                  std::atomic_bool& stop_painting, const Projector<N, T>& projector, const PaintData<N, T>& paint_data,
-                 IPainterNotifier<N - 1>* painter_notifier, Paintbrush<N - 1>* paintbrush,
-                 const PainterSampler<N - 1, T>& sampler, Pixels<N - 1>* pixels) noexcept
+                 PainterNotifier<N - 1>* painter_notifier, Paintbrush<N - 1>* paintbrush, const PainterSampler<N - 1, T>& sampler,
+                 Pixels<N - 1>* pixels) noexcept
 {
         try
         {
@@ -557,7 +557,7 @@ T compute_ray_offset(const std::vector<const GenericObject<N, T>*>& objects)
 }
 
 template <size_t N, typename T>
-void paint_threads(IPainterNotifier<N - 1>* painter_notifier, int samples_per_pixel, const PaintObjects<N, T>& paint_objects,
+void paint_threads(PainterNotifier<N - 1>* painter_notifier, int samples_per_pixel, const PaintObjects<N, T>& paint_objects,
                    Paintbrush<N - 1>* paintbrush, int thread_count, std::atomic_bool* stop, bool smooth_normal)
 
 {
@@ -596,7 +596,7 @@ void paint_threads(IPainterNotifier<N - 1>* painter_notifier, int samples_per_pi
 
 // Без выдачи исключений. Про проблемы сообщать через painter_notifier.
 template <size_t N, typename T>
-void paint(IPainterNotifier<N - 1>* painter_notifier, int samples_per_pixel, const PaintObjects<N, T>& paint_objects,
+void paint(PainterNotifier<N - 1>* painter_notifier, int samples_per_pixel, const PaintObjects<N, T>& paint_objects,
            Paintbrush<N - 1>* paintbrush, int thread_count, std::atomic_bool* stop, bool smooth_normal) noexcept
 {
         try
@@ -623,20 +623,20 @@ void paint(IPainterNotifier<N - 1>* painter_notifier, int samples_per_pixel, con
         }
 }
 
-template void paint(IPainterNotifier<2>* painter_notifier, int samples_per_pixel, const PaintObjects<3, float>& paint_objects,
+template void paint(PainterNotifier<2>* painter_notifier, int samples_per_pixel, const PaintObjects<3, float>& paint_objects,
                     Paintbrush<2>* paintbrush, int thread_count, std::atomic_bool* stop, bool smooth_normal) noexcept;
-template void paint(IPainterNotifier<3>* painter_notifier, int samples_per_pixel, const PaintObjects<4, float>& paint_objects,
+template void paint(PainterNotifier<3>* painter_notifier, int samples_per_pixel, const PaintObjects<4, float>& paint_objects,
                     Paintbrush<3>* paintbrush, int thread_count, std::atomic_bool* stop, bool smooth_normal) noexcept;
-template void paint(IPainterNotifier<4>* painter_notifier, int samples_per_pixel, const PaintObjects<5, float>& paint_objects,
+template void paint(PainterNotifier<4>* painter_notifier, int samples_per_pixel, const PaintObjects<5, float>& paint_objects,
                     Paintbrush<4>* paintbrush, int thread_count, std::atomic_bool* stop, bool smooth_normal) noexcept;
-template void paint(IPainterNotifier<5>* painter_notifier, int samples_per_pixel, const PaintObjects<6, float>& paint_objects,
+template void paint(PainterNotifier<5>* painter_notifier, int samples_per_pixel, const PaintObjects<6, float>& paint_objects,
                     Paintbrush<5>* paintbrush, int thread_count, std::atomic_bool* stop, bool smooth_normal) noexcept;
 
-template void paint(IPainterNotifier<2>* painter_notifier, int samples_per_pixel, const PaintObjects<3, double>& paint_objects,
+template void paint(PainterNotifier<2>* painter_notifier, int samples_per_pixel, const PaintObjects<3, double>& paint_objects,
                     Paintbrush<2>* paintbrush, int thread_count, std::atomic_bool* stop, bool smooth_normal) noexcept;
-template void paint(IPainterNotifier<3>* painter_notifier, int samples_per_pixel, const PaintObjects<4, double>& paint_objects,
+template void paint(PainterNotifier<3>* painter_notifier, int samples_per_pixel, const PaintObjects<4, double>& paint_objects,
                     Paintbrush<3>* paintbrush, int thread_count, std::atomic_bool* stop, bool smooth_normal) noexcept;
-template void paint(IPainterNotifier<4>* painter_notifier, int samples_per_pixel, const PaintObjects<5, double>& paint_objects,
+template void paint(PainterNotifier<4>* painter_notifier, int samples_per_pixel, const PaintObjects<5, double>& paint_objects,
                     Paintbrush<4>* paintbrush, int thread_count, std::atomic_bool* stop, bool smooth_normal) noexcept;
-template void paint(IPainterNotifier<5>* painter_notifier, int samples_per_pixel, const PaintObjects<6, double>& paint_objects,
+template void paint(PainterNotifier<5>* painter_notifier, int samples_per_pixel, const PaintObjects<6, double>& paint_objects,
                     Paintbrush<5>* paintbrush, int thread_count, std::atomic_bool* stop, bool smooth_normal) noexcept;

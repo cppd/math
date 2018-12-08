@@ -58,7 +58,7 @@ class DFTShow::Impl final
 
         const bool m_source_srgb;
         opengl::TextureRGBA32F m_image_texture;
-        std::unique_ptr<IFourierGL2> m_gl_fft;
+        std::unique_ptr<FourierGL2> m_dft;
         opengl::VertexArray m_vertex_array;
         opengl::ArrayBuffer m_vertex_buffer;
         opengl::GraphicsProgram m_draw_prog;
@@ -68,7 +68,7 @@ public:
              const Color& background_color, const Color& color)
                 : m_source_srgb(source_srgb),
                   m_image_texture(width, height),
-                  m_gl_fft(create_fft_gl2d(width, height, m_image_texture)),
+                  m_dft(create_dft_gl2d(width, height, m_image_texture)),
                   m_draw_prog(opengl::VertexShader(dft_show_vertex_shader), opengl::FragmentShader(dft_show_fragment_shader))
         {
                 m_vertex_array.attrib_pointer(0, 4, GL_FLOAT, m_vertex_buffer, offsetof(Vertex, v), sizeof(Vertex), true);
@@ -119,7 +119,7 @@ public:
 
         void draw()
         {
-                m_gl_fft->exec(false, m_source_srgb);
+                m_dft->exec(false, m_source_srgb);
 
                 m_vertex_array.bind();
                 m_draw_prog.draw_arrays(GL_TRIANGLE_STRIP, 0, VERTEX_COUNT);

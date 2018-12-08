@@ -43,10 +43,10 @@ enum class ObjectId
 int object_id_to_int(ObjectId id);
 ObjectId int_to_object_id(int id);
 
-class IObjectsCallback
+class ObjectsCallback
 {
 protected:
-        virtual ~IObjectsCallback() = default;
+        virtual ~ObjectsCallback() = default;
 
 public:
         virtual void file_loaded(const std::string& msg, unsigned dimension, const std::unordered_set<ObjectId>& objects) const
@@ -71,7 +71,7 @@ struct MainObjects
         };
         virtual std::vector<RepositoryObjects> repository_point_object_names() const = 0;
 
-        virtual void set_show(IShow* show) = 0;
+        virtual void set_show(Show* show) = 0;
 
         virtual bool manifold_constructor_exists() const = 0;
         virtual bool object_exists(ObjectId id) const = 0;
@@ -97,5 +97,5 @@ struct MainObjects
 };
 
 std::unique_ptr<MainObjects> create_main_objects(
-        int mesh_threads, const IObjectsCallback& event_emitter,
+        int mesh_threads, const ObjectsCallback& event_emitter,
         std::function<void(const std::exception_ptr& ptr, const std::string& msg)> exception_handler);

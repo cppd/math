@@ -24,10 +24,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 
 template <size_t N>
-struct IPainterNotifier
+struct PainterNotifier
 {
 protected:
-        virtual ~IPainterNotifier()
+        virtual ~PainterNotifier()
         {
         }
 
@@ -38,5 +38,5 @@ public:
 };
 
 template <size_t N, typename T>
-void paint(IPainterNotifier<N - 1>* painter_notifier, int samples_per_pixel, const PaintObjects<N, T>& paint_objects,
+void paint(PainterNotifier<N - 1>* painter_notifier, int samples_per_pixel, const PaintObjects<N, T>& paint_objects,
            Paintbrush<N - 1>* paintbrush, int thread_count, std::atomic_bool* stop, bool smooth_normal) noexcept;

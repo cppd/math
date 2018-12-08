@@ -19,10 +19,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <string>
 
-class IProgressRatioControl
+class ProgressRatioControl
 {
 protected:
-        virtual ~IProgressRatioControl() = default;
+        virtual ~ProgressRatioControl() = default;
 
 public:
         virtual void terminate_quietly() noexcept = 0;
@@ -31,12 +31,12 @@ public:
         virtual std::string text() const = 0;
 };
 
-class IProgressRatioList
+class ProgressRatios
 {
 protected:
-        virtual ~IProgressRatioList() = default;
+        virtual ~ProgressRatios() = default;
 
 public:
-        virtual void add_progress_ratio(IProgressRatioControl* ratio) = 0;
-        virtual void delete_progress_ratio(const IProgressRatioControl* ratio) noexcept = 0;
+        virtual void add_progress_ratio(ProgressRatioControl* ratio) = 0;
+        virtual void delete_progress_ratio(const ProgressRatioControl* ratio) noexcept = 0;
 };

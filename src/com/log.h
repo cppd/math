@@ -23,16 +23,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 void log_init();
 void log_exit() noexcept;
 
-class ILogCallback
+class LogCallback
 {
 protected:
-        ~ILogCallback() = default;
+        ~LogCallback() = default;
 
 public:
         virtual void log(const std::string& msg) const noexcept = 0;
 };
 
-void set_log_callback(ILogCallback* callback) noexcept;
+void set_log_callback(LogCallback* callback) noexcept;
 
 std::vector<std::string> format_log_message(const std::string& msg) noexcept;
 void write_formatted_log_messages_to_stderr(const std::vector<std::string>& message);

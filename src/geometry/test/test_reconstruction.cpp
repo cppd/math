@@ -169,7 +169,7 @@ void test_algorithms(const std::string& name, const std::unordered_set<Algorithm
 
         LOG("Point count: " + to_string(points.size()));
 
-        std::unique_ptr<IManifoldConstructor<N>> sr = create_manifold_constructor(points, progress);
+        std::unique_ptr<ManifoldConstructor<N>> sr = create_manifold_constructor(points, progress);
 
         if (algorithms.count(Algorithms::Cocone))
         {

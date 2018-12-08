@@ -44,7 +44,7 @@ struct Vertex
 };
 }
 
-class PencilSketch::Impl final
+class PencilSketchShow::Impl final
 {
         opengl::GraphicsProgram m_draw_prog;
         opengl::TextureRGBA32F m_texture;
@@ -100,15 +100,15 @@ public:
         }
 };
 
-PencilSketch::PencilSketch(const opengl::TextureRGBA32F& source, bool source_is_srgb, const opengl::TextureR32I& objects,
-                           const mat4& matrix)
+PencilSketchShow::PencilSketchShow(const opengl::TextureRGBA32F& source, bool source_is_srgb, const opengl::TextureR32I& objects,
+                                   const mat4& matrix)
         : m_impl(std::make_unique<Impl>(source, source_is_srgb, objects, matrix))
 {
 }
 
-PencilSketch::~PencilSketch() = default;
+PencilSketchShow::~PencilSketchShow() = default;
 
-void PencilSketch::draw()
+void PencilSketchShow::draw()
 {
         m_impl->draw();
 }

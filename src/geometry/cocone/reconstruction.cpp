@@ -277,7 +277,7 @@ void check_rho_and_aplha(double rho, double alpha)
 }
 
 template <size_t N>
-class ManifoldConstructor : public IManifoldConstructor<N>, public IManifoldConstructorCocone<N>
+class ManifoldConstructorImpl : public ManifoldConstructor<N>, public ManifoldConstructorCocone<N>
 {
         const bool m_cocone_only;
 
@@ -384,7 +384,7 @@ class ManifoldConstructor : public IManifoldConstructor<N>, public IManifoldCons
         }
 
 public:
-        ManifoldConstructor(const std::vector<Vector<N, float>>& source_points, bool cocone_only, ProgressRatio* progress)
+        ManifoldConstructorImpl(const std::vector<Vector<N, float>>& source_points, bool cocone_only, ProgressRatio* progress)
                 : m_cocone_only(cocone_only)
         {
                 // Проверить на самый минимум по количеству точек
@@ -407,42 +407,42 @@ public:
 }
 
 template <size_t N>
-std::unique_ptr<IManifoldConstructor<N>> create_manifold_constructor(const std::vector<Vector<N, float>>& source_points,
-                                                                     ProgressRatio* progress)
+std::unique_ptr<ManifoldConstructor<N>> create_manifold_constructor(const std::vector<Vector<N, float>>& source_points,
+                                                                    ProgressRatio* progress)
 {
-        return std::make_unique<ManifoldConstructor<N>>(source_points, false, progress);
+        return std::make_unique<ManifoldConstructorImpl<N>>(source_points, false, progress);
 }
 
 template <size_t N>
-std::unique_ptr<IManifoldConstructorCocone<N>> create_manifold_constructor_cocone(
+std::unique_ptr<ManifoldConstructorCocone<N>> create_manifold_constructor_cocone(
         const std::vector<Vector<N, float>>& source_points, ProgressRatio* progress)
 {
-        return std::make_unique<ManifoldConstructor<N>>(source_points, true, progress);
+        return std::make_unique<ManifoldConstructorImpl<N>>(source_points, true, progress);
 }
 
 // clang-format off
 template
-std::unique_ptr<IManifoldConstructor<2>> create_manifold_constructor(const std::vector<Vector<2, float>>& source_points,
-                                                                     ProgressRatio* progress);
+std::unique_ptr<ManifoldConstructor<2>> create_manifold_constructor(const std::vector<Vector<2, float>>& source_points,
+                                                                    ProgressRatio* progress);
 template
-std::unique_ptr<IManifoldConstructor<3>> create_manifold_constructor(const std::vector<Vector<3, float>>& source_points,
-                                                                     ProgressRatio* progress);
+std::unique_ptr<ManifoldConstructor<3>> create_manifold_constructor(const std::vector<Vector<3, float>>& source_points,
+                                                                    ProgressRatio* progress);
 template
-std::unique_ptr<IManifoldConstructor<4>> create_manifold_constructor(const std::vector<Vector<4, float>>& source_points,
-                                                                     ProgressRatio* progress);
+std::unique_ptr<ManifoldConstructor<4>> create_manifold_constructor(const std::vector<Vector<4, float>>& source_points,
+                                                                    ProgressRatio* progress);
 template
-std::unique_ptr<IManifoldConstructor<5>> create_manifold_constructor(const std::vector<Vector<5, float>>& source_points,
-                                                                     ProgressRatio* progress);
+std::unique_ptr<ManifoldConstructor<5>> create_manifold_constructor(const std::vector<Vector<5, float>>& source_points,
+                                                                    ProgressRatio* progress);
 template
-std::unique_ptr<IManifoldConstructorCocone<2>> create_manifold_constructor_cocone(
+std::unique_ptr<ManifoldConstructorCocone<2>> create_manifold_constructor_cocone(
         const std::vector<Vector<2, float>>& source_points, ProgressRatio* progress);
 template
-std::unique_ptr<IManifoldConstructorCocone<3>> create_manifold_constructor_cocone(
+std::unique_ptr<ManifoldConstructorCocone<3>> create_manifold_constructor_cocone(
         const std::vector<Vector<3, float>>& source_points, ProgressRatio* progress);
 template
-std::unique_ptr<IManifoldConstructorCocone<4>> create_manifold_constructor_cocone(
+std::unique_ptr<ManifoldConstructorCocone<4>> create_manifold_constructor_cocone(
         const std::vector<Vector<4, float>>& source_points, ProgressRatio* progress);
 template
-std::unique_ptr<IManifoldConstructorCocone<5>> create_manifold_constructor_cocone(
+std::unique_ptr<ManifoldConstructorCocone<5>> create_manifold_constructor_cocone(
         const std::vector<Vector<5, float>>& source_points, ProgressRatio* progress);
 // clang-format on

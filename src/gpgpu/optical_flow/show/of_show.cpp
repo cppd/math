@@ -78,7 +78,7 @@ void create_points_for_top_level(int width, int height, int distance, int* point
 }
 }
 
-class OpticalFlow::Impl final
+class OpticalFlowShow::Impl final
 {
         const int m_width, m_height;
         opengl::GraphicsProgram m_draw_prog;
@@ -172,24 +172,24 @@ public:
         }
 };
 
-OpticalFlow::OpticalFlow(int width, int height, double window_ppi, const mat4& matrix)
+OpticalFlowShow::OpticalFlowShow(int width, int height, double window_ppi, const mat4& matrix)
         : m_impl(std::make_unique<Impl>(width, height, window_ppi, matrix))
 {
 }
 
-OpticalFlow::~OpticalFlow() = default;
+OpticalFlowShow::~OpticalFlowShow() = default;
 
-void OpticalFlow::reset()
+void OpticalFlowShow::reset()
 {
         m_impl->reset();
 }
 
-void OpticalFlow::take_image_from_framebuffer()
+void OpticalFlowShow::take_image_from_framebuffer()
 {
         m_impl->take_image_from_framebuffer();
 }
 
-void OpticalFlow::draw()
+void OpticalFlowShow::draw()
 {
         m_impl->draw();
 }

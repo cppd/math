@@ -24,9 +24,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <vector>
 
 template <size_t N>
-struct IObjectRepository
+struct ObjectRepository
 {
-        virtual ~IObjectRepository() = default;
+        virtual ~ObjectRepository() = default;
 
         virtual std::vector<Vector<N, float>> ellipsoid(unsigned point_count) const = 0;
         virtual std::vector<Vector<N, float>> ellipsoid_bound(unsigned point_count) const = 0;
@@ -38,4 +38,4 @@ struct IObjectRepository
 };
 
 template <size_t N>
-std::unique_ptr<IObjectRepository<N>> create_object_repository();
+std::unique_ptr<ObjectRepository<N>> create_object_repository();

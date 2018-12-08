@@ -63,7 +63,7 @@ public:
         }
 };
 
-class ProgressRatio::Impl final : public IProgressRatioControl
+class ProgressRatio::Impl final : public ProgressRatioControl
 {
         static constexpr unsigned SHIFT = 32;
         static constexpr unsigned MAX = (1u << 31) - 1;
@@ -77,7 +77,7 @@ class ProgressRatio::Impl final : public IProgressRatioControl
         std::string m_text;
         mutable std::mutex m_text_mutex;
 
-        IProgressRatioList* m_ratios;
+        ProgressRatios* m_ratios;
 
         const std::string m_permanent_text;
 
@@ -87,7 +87,7 @@ public:
 
         static_assert(LOCK_FREE);
 
-        Impl(IProgressRatioList* list, const std::string& permanent_text) : m_ratios(list), m_permanent_text(permanent_text)
+        Impl(ProgressRatios* ratios, const std::string& permanent_text) : m_ratios(ratios), m_permanent_text(permanent_text)
         {
                 set_undefined();
 
@@ -171,8 +171,8 @@ public:
         Impl& operator=(Impl&&) = delete;
 };
 
-ProgressRatio::ProgressRatio(IProgressRatioList* list, const std::string& permanent_text)
-        : m_progress(std::make_unique<Impl>(list, permanent_text))
+ProgressRatio::ProgressRatio(ProgressRatios* ratios, const std::string& permanent_text)
+        : m_progress(std::make_unique<Impl>(ratios, permanent_text))
 {
 }
 ProgressRatio::~ProgressRatio()

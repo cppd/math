@@ -165,7 +165,7 @@ class ShowObject final : public EventQueue, public WindowEvent
 
         //
 
-        IShowCallback* const m_callback;
+        ShowCallback* const m_callback;
         const WindowID m_parent_window;
         const double m_parent_window_ppi;
         std::thread m_thread;
@@ -1140,7 +1140,7 @@ void ShowObject<API>::loop_thread()
 }
 }
 
-std::unique_ptr<IShow> create_show(GraphicsAndComputeAPI api, const ShowCreateInfo& info)
+std::unique_ptr<Show> create_show(GraphicsAndComputeAPI api, const ShowCreateInfo& info)
 {
         switch (api)
         {

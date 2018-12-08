@@ -21,14 +21,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <memory>
 
-class OpticalFlow final
+class OpticalFlowShow final
 {
         class Impl;
         std::unique_ptr<Impl> m_impl;
 
 public:
-        OpticalFlow(int width, int height, double window_ppi, const mat4& matrix);
-        ~OpticalFlow();
+        OpticalFlowShow(int width, int height, double window_ppi, const mat4& matrix);
+        ~OpticalFlowShow();
 
         void reset();
 

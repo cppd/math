@@ -34,7 +34,7 @@ SpinLock* global_lock = nullptr;
 // в лог, поэтому с этой переменной нужна последовательная работа.
 // Использование единственной блокировки означает, что и сообщения будут
 // последовательные, но это не является проблемой.
-ILogCallback* global_log_callback = nullptr;
+LogCallback* global_log_callback = nullptr;
 }
 
 void log_init()
@@ -53,7 +53,7 @@ void log_exit() noexcept
         global_lock = nullptr;
 }
 
-void set_log_callback(ILogCallback* callback) noexcept
+void set_log_callback(LogCallback* callback) noexcept
 {
         std::lock_guard lg(*global_lock);
 

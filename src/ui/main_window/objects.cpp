@@ -86,16 +86,16 @@ class MainObjectsImpl
         const std::thread::id m_thread_id = std::this_thread::get_id();
         const int m_mesh_threads;
 
-        const IObjectsCallback& m_event_emitter;
+        const ObjectsCallback& m_event_emitter;
         std::function<void(const std::exception_ptr& ptr, const std::string& msg)> m_exception_handler;
 
         //
 
-        const std::unique_ptr<IObjectRepository<N>> m_object_repository;
+        const std::unique_ptr<ObjectRepository<N>> m_object_repository;
         Meshes<ObjectId, const Mesh<N, double>> m_meshes;
         Meshes<ObjectId, const Obj<N>> m_objects;
         std::vector<Vector<N, float>> m_manifold_points;
-        std::unique_ptr<IManifoldConstructor<N>> m_manifold_constructor;
+        std::unique_ptr<ManifoldConstructor<N>> m_manifold_constructor;
         Matrix<N + 1, N + 1, double> m_model_vertex_matrix;
 
         //
@@ -105,7 +105,7 @@ class MainObjectsImpl
         double m_bound_cocone_rho;
         double m_bound_cocone_alpha;
 
-        IShow* m_show;
+        Show* m_show;
 
         template <typename F>
         void catch_all(const F& function) const noexcept;
@@ -134,14 +134,14 @@ class MainObjectsImpl
                          const ObjectLoaded& object_loaded);
 
 public:
-        MainObjectsImpl(int mesh_threads, const IObjectsCallback& event_emitter,
+        MainObjectsImpl(int mesh_threads, const ObjectsCallback& event_emitter,
                         std::function<void(const std::exception_ptr& ptr, const std::string& msg)> exception_handler);
 
         void clear_all_data() noexcept;
 
         std::vector<std::string> repository_point_object_names() const;
 
-        void set_show(IShow* show);
+        void set_show(Show* show);
 
         bool manifold_constructor_exists() const;
         bool object_exists(ObjectId id) const;
@@ -165,7 +165,7 @@ public:
 };
 
 template <size_t N>
-MainObjectsImpl<N>::MainObjectsImpl(int mesh_threads, const IObjectsCallback& event_emitter,
+MainObjectsImpl<N>::MainObjectsImpl(int mesh_threads, const ObjectsCallback& event_emitter,
                                     std::function<void(const std::exception_ptr& ptr, const std::string& msg)> exception_handler)
         : m_mesh_threads(mesh_threads),
           m_event_emitter(event_emitter),
@@ -197,7 +197,7 @@ std::vector<std::string> MainObjectsImpl<N>::repository_point_object_names() con
 }
 
 template <size_t N>
-void MainObjectsImpl<N>::set_show(IShow* show)
+void MainObjectsImpl<N>::set_show(Show* show)
 {
         m_show = show;
 }
@@ -773,7 +773,7 @@ class MainObjectStorage final : public MainObjects
                 return names;
         }
 
-        void set_show(IShow* show) override
+        void set_show(Show* show) override
         {
                 for (auto& p : m_objects)
                 {
@@ -971,7 +971,7 @@ class MainObjectStorage final : public MainObjects
         }
 
         template <size_t... I>
-        void init_map(int mesh_threads, const IObjectsCallback& event_emitter,
+        void init_map(int mesh_threads, const ObjectsCallback& event_emitter,
                       std::function<void(const std::exception_ptr& ptr, const std::string& msg)> exception_handler,
                       std::integer_sequence<size_t, I...>&&)
         {
@@ -987,7 +987,7 @@ class MainObjectStorage final : public MainObjects
         }
 
 public:
-        MainObjectStorage(int mesh_threads, const IObjectsCallback& event_emitter,
+        MainObjectStorage(int mesh_threads, const ObjectsCallback& event_emitter,
                           std::function<void(const std::exception_ptr& ptr, const std::string& msg)> exception_handler)
         {
                 init_map(mesh_threads, event_emitter, exception_handler, std::make_integer_sequence<size_t, Count>());
@@ -995,7 +995,7 @@ public:
 };
 
 std::unique_ptr<MainObjects> create_main_objects(
-        int mesh_threads, const IObjectsCallback& event_emitter,
+        int mesh_threads, const ObjectsCallback& event_emitter,
         std::function<void(const std::exception_ptr& ptr, const std::string& msg)> exception_handler)
 {
         return std::make_unique<MainObjectStorage<MinDimension, MaxDimension>>(mesh_threads, event_emitter, exception_handler);

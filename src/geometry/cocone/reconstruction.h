@@ -25,9 +25,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <vector>
 
 template <size_t N>
-struct IManifoldConstructorCocone
+struct ManifoldConstructorCocone
 {
-        virtual ~IManifoldConstructorCocone() = default;
+        virtual ~ManifoldConstructorCocone() = default;
 
         virtual std::vector<std::array<int, N + 1>> delaunay_objects() const = 0;
 
@@ -36,9 +36,9 @@ struct IManifoldConstructorCocone
 };
 
 template <size_t N>
-struct IManifoldConstructor
+struct ManifoldConstructor
 {
-        virtual ~IManifoldConstructor() = default;
+        virtual ~ManifoldConstructor() = default;
 
         virtual std::vector<std::array<int, N + 1>> delaunay_objects() const = 0;
 
@@ -49,9 +49,9 @@ struct IManifoldConstructor
 };
 
 template <size_t N>
-std::unique_ptr<IManifoldConstructor<N>> create_manifold_constructor(const std::vector<Vector<N, float>>& source_points,
-                                                                     ProgressRatio* progress);
+std::unique_ptr<ManifoldConstructor<N>> create_manifold_constructor(const std::vector<Vector<N, float>>& source_points,
+                                                                    ProgressRatio* progress);
 
 template <size_t N>
-std::unique_ptr<IManifoldConstructorCocone<N>> create_manifold_constructor_cocone(
+std::unique_ptr<ManifoldConstructorCocone<N>> create_manifold_constructor_cocone(
         const std::vector<Vector<N, float>>& source_points, ProgressRatio* progress);

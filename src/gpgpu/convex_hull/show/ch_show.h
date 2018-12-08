@@ -22,14 +22,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <memory>
 
-class ConvexHull2DShow final
+class ConvexHullShow final
 {
         class Impl;
         std::unique_ptr<Impl> m_impl;
 
 public:
-        ConvexHull2DShow(const opengl::TextureR32I& objects, const mat4& matrix);
-        ~ConvexHull2DShow();
+        ConvexHullShow(const opengl::TextureR32I& objects, const mat4& matrix);
+        ~ConvexHullShow();
 
         void reset_timer();
         void draw();

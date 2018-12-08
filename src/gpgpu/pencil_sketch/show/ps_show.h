@@ -22,15 +22,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <memory>
 
-class PencilSketch final
+class PencilSketchShow final
 {
         class Impl;
         std::unique_ptr<Impl> m_impl;
 
 public:
-        PencilSketch(const opengl::TextureRGBA32F& source, bool source_is_srgb, const opengl::TextureR32I& objects,
-                     const mat4& matrix);
-        ~PencilSketch();
+        PencilSketchShow(const opengl::TextureRGBA32F& source, bool source_is_srgb, const opengl::TextureR32I& objects,
+                         const mat4& matrix);
+        ~PencilSketchShow();
 
         void draw();
 };

@@ -38,7 +38,7 @@ constexpr Srgb8 DEFAULT_COLOR(150, 170, 150);
 
 namespace
 {
-class Images : public IPainterNotifier<3>
+class Images : public PainterNotifier<3>
 {
         static constexpr const char beginning_of_file_name[] = "painter_";
 

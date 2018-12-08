@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // Класс для вызова функций не напрямую, а через очередь.
 // Это нужно для работы функций в другом потоке.
 
-class EventQueue : public IShow
+class EventQueue : public Show
 {
         struct Event final
         {

@@ -231,7 +231,7 @@ void fft1d(bool inverse, int fft_count, const DeviceProgFFTShared<FP>& fft, cons
 }
 
 template <typename FP>
-class GL2D final : public IFourierGL1, public IFourierGL2
+class Impl final : public FourierGL1, public FourierGL2
 {
         const int m_N1, m_N2, m_M1, m_M2, m_M1_bin, m_M2_bin;
         const vec2i m_rows_to, m_rows_fr, m_rows_d, m_cols_to, m_cols_fr, m_cols_d;
@@ -302,7 +302,7 @@ class GL2D final : public IFourierGL1, public IFourierGL2
         }
 
 public:
-        GL2D(int n1, int n2, const opengl::TextureRGBA32F* texture)
+        Impl(int n1, int n2, const opengl::TextureRGBA32F* texture)
                 : m_N1(n1),
                   m_N2(n2),
                   m_M1(compute_M(m_N1)),
@@ -359,12 +359,12 @@ public:
 };
 }
 
-std::unique_ptr<IFourierGL1> create_fft_gl2d(int x, int y)
+std::unique_ptr<FourierGL1> create_dft_gl2d(int x, int y)
 {
-        return std::make_unique<GL2D<float>>(x, y, nullptr);
+        return std::make_unique<Impl<float>>(x, y, nullptr);
 }
 
-std::unique_ptr<IFourierGL2> create_fft_gl2d(int x, int y, const opengl::TextureRGBA32F& texture)
+std::unique_ptr<FourierGL2> create_dft_gl2d(int x, int y, const opengl::TextureRGBA32F& texture)
 {
-        return std::make_unique<GL2D<float>>(x, y, &texture);
+        return std::make_unique<Impl<float>>(x, y, &texture);
 }

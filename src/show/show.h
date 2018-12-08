@@ -27,10 +27,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <optional>
 #include <string>
 
-class IShowCallback
+class ShowCallback
 {
 protected:
-        virtual ~IShowCallback() = default;
+        virtual ~ShowCallback() = default;
 
 public:
         virtual void message_error_fatal(const std::string&) const noexcept = 0;
@@ -38,10 +38,10 @@ public:
         virtual void object_loaded(int) const noexcept = 0;
 };
 
-class IShow
+class Show
 {
 public:
-        virtual ~IShow() = default;
+        virtual ~Show() = default;
 
         virtual void add_object(const std::shared_ptr<const Obj<3>>&, int id, int scale_id) = 0;
         virtual void delete_object(int id) = 0;
@@ -84,7 +84,7 @@ public:
 struct ShowCreateInfo
 {
         // std::optional используется для проверки того, что все значения заданы
-        std::optional<IShowCallback*> callback;
+        std::optional<ShowCallback*> callback;
         std::optional<WindowID> parent_window;
         std::optional<double> parent_window_ppi;
         std::optional<Color> background_color;
@@ -111,4 +111,4 @@ struct ShowCreateInfo
         std::optional<double> shadow_zoom;
 };
 
-std::unique_ptr<IShow> create_show(GraphicsAndComputeAPI api, const ShowCreateInfo& info);
+std::unique_ptr<Show> create_show(GraphicsAndComputeAPI api, const ShowCreateInfo& info);
