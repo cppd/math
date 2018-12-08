@@ -101,11 +101,12 @@ std::string prepare_source(int line_size, int group_size)
         return s + prepare_shader;
 }
 
-std::string merge_source(int line_size, int group_size)
+std::string merge_source(int line_size, int group_size, int iteration_count)
 {
         std::string s;
         s += group_size_string(group_size);
         s += "const int LINE_SIZE = " + std::to_string(line_size) + ";\n";
+        s += "const int ITERATION_COUNT = " + std::to_string(iteration_count) + ";\n";
         s += '\n';
         return s + merge_shader;
 }
@@ -161,12 +162,11 @@ public:
                   m_points(points),
                   m_prepare_prog(opengl::ComputeShader(
                           prepare_source(m_height, group_size_prepare(objects.texture().width(), 2 * sizeof(GLint))))),
-                  m_merge_prog(opengl::ComputeShader(merge_source(m_height, group_size_merge(m_height, sizeof(GLfloat))))),
+                  m_merge_prog(opengl::ComputeShader(
+                          merge_source(m_height, group_size_merge(m_height, sizeof(GLfloat)), iteration_count_merge(m_height)))),
                   m_filter_prog(opengl::ComputeShader(filter_source(m_height)))
         {
                 m_prepare_prog.set_uniform_handle("objects", objects.image_resident_handle_read_only());
-
-                m_merge_prog.set_uniform("iteration_count", iteration_count_merge(m_height));
 
                 m_lines.create_dynamic_copy(2 * m_height * sizeof(GLfloat));
                 m_point_count.create_dynamic_copy(sizeof(GLint));
