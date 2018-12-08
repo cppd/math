@@ -858,16 +858,16 @@ void FileObj<N>::check_facet_indices() const
                 {
                         if (facet.vertices[i] < 0 || facet.vertices[i] >= vertex_count)
                         {
-                                error("Vertex index " + std::to_string(facet.vertices[i]) + " is out of bounds [0, " +
-                                      std::to_string(vertex_count) + ")");
+                                error("Vertex index " + to_string(facet.vertices[i]) + " is out of bounds [0, " +
+                                      to_string(vertex_count) + ")");
                         }
 
                         if (facet.has_texcoord)
                         {
                                 if (facet.texcoords[i] < 0 || facet.texcoords[i] >= texcoord_count)
                                 {
-                                        error("Texture coordinate index " + std::to_string(facet.texcoords[i]) +
-                                              " is out of bounds [0, " + std::to_string(texcoord_count) + ")");
+                                        error("Texture coordinate index " + to_string(facet.texcoords[i]) +
+                                              " is out of bounds [0, " + to_string(texcoord_count) + ")");
                                 }
                         }
                         else
@@ -882,8 +882,8 @@ void FileObj<N>::check_facet_indices() const
                         {
                                 if (facet.normals[i] < 0 || facet.normals[i] >= normal_count)
                                 {
-                                        error("Normal index " + std::to_string(facet.normals[i]) + " is out of bounds [0, " +
-                                              std::to_string(normal_count) + ")");
+                                        error("Normal index " + to_string(facet.normals[i]) + " is out of bounds [0, " +
+                                              to_string(normal_count) + ")");
                                 }
                         }
                         else

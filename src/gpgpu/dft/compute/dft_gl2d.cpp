@@ -272,7 +272,7 @@ class Impl final : public FourierGL1, public FourierGL2
                 int size = src->size();
                 if (size != m_N1 * m_N2)
                 {
-                        error("FFT input size error: input " + std::to_string(size) + ", must be " + std::to_string(m_N1 * m_N2));
+                        error("FFT input size error: input " + to_string(size) + ", must be " + to_string(m_N1 * m_N2));
                 }
 
                 std::vector<std::complex<FP>> data = conv<FP>(std::move(*src));
@@ -328,7 +328,7 @@ public:
         {
                 if (m_N1 < 1 || m_N2 < 1)
                 {
-                        error("FFT size error: " + std::to_string(m_N1) + "x" + std::to_string(m_N2));
+                        error("FFT size error: " + to_string(m_N1) + "x" + to_string(m_N2));
                 }
 
                 if (texture)

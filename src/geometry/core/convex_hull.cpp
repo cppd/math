@@ -572,7 +572,7 @@ void create_convex_hull(const std::vector<Vector<N, S>>& points, FacetList<Facet
         // Проверить на минимум по количеству точек
         if (points.size() < N + 1)
         {
-                error("Error point count " + std::to_string(points.size()) + " for convex hull in " + space_name(N));
+                error("Error point count " + to_string(points.size()) + " for convex hull in " + space_name(N));
         }
 
         facets->clear();

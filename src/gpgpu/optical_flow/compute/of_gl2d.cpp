@@ -79,7 +79,7 @@ namespace
 {
 std::string group_size_string()
 {
-        return "const uint GROUP_SIZE = " + std::to_string(GROUP_SIZE) + ";\n";
+        return "const uint GROUP_SIZE = " + to_string(GROUP_SIZE) + ";\n";
 }
 
 std::string downsample_source()

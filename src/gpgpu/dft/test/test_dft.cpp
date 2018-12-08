@@ -55,7 +55,7 @@ double discrepancy(const std::vector<complex>& x1, const std::vector<complex>& x
 {
         if (x1.size() != x2.size())
         {
-                error("discrepancy size error: input " + std::to_string(x1.size()) + ", " + std::to_string(x2.size()));
+                error("discrepancy size error: input " + to_string(x1.size()) + ", " + to_string(x2.size()));
         }
 
         double sum = 0;
@@ -114,7 +114,7 @@ void load_data(const std::string& file_name, int* n1, int* n2, std::vector<compl
                 double real, imag;
                 if (2 != fscanf(f, "%lf%lf", &real, &imag))
                 {
-                        error("Error read number № " + std::to_string(i));
+                        error("Error read number № " + to_string(i));
                 }
                 x[i] = complex(real, imag);
         }

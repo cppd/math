@@ -28,6 +28,7 @@ Chapter 2: CONVEX HULLS, 2.6 Divide-and-Conquer.
 #include "ch_gl2d.h"
 
 #include "com/bits.h"
+#include "com/print.h"
 #include "gpgpu/com/groups.h"
 #include "graphics/opengl/query.h"
 
@@ -66,8 +67,8 @@ int group_size_merge(int height, int shared_size_per_item)
 {
         if (opengl::max_compute_shared_memory() < height * shared_size_per_item)
         {
-                error("Shared memory problem: needs " + std::to_string(height * shared_size_per_item) + ", exists " +
-                      std::to_string(opengl::max_compute_shared_memory()));
+                error("Shared memory problem: needs " + to_string(height * shared_size_per_item) + ", exists " +
+                      to_string(opengl::max_compute_shared_memory()));
         }
 
         int max_group_size = std::min(opengl::max_fixed_group_size_x(), opengl::max_fixed_group_invocations());
@@ -89,14 +90,14 @@ int iteration_count_merge(int size)
 
 std::string group_size_string(int group_size)
 {
-        return "const uint GROUP_SIZE = " + std::to_string(group_size) + ";\n";
+        return "const uint GROUP_SIZE = " + to_string(group_size) + ";\n";
 }
 
 std::string prepare_source(int line_size, int group_size)
 {
         std::string s;
         s += group_size_string(group_size);
-        s += "const int LINE_SIZE = " + std::to_string(line_size) + ";\n";
+        s += "const int LINE_SIZE = " + to_string(line_size) + ";\n";
         s += '\n';
         return s + prepare_shader;
 }
@@ -105,8 +106,8 @@ std::string merge_source(int line_size, int group_size, int iteration_count)
 {
         std::string s;
         s += group_size_string(group_size);
-        s += "const int LINE_SIZE = " + std::to_string(line_size) + ";\n";
-        s += "const int ITERATION_COUNT = " + std::to_string(iteration_count) + ";\n";
+        s += "const int LINE_SIZE = " + to_string(line_size) + ";\n";
+        s += "const int ITERATION_COUNT = " + to_string(iteration_count) + ";\n";
         s += '\n';
         return s + merge_shader;
 }
@@ -114,7 +115,7 @@ std::string merge_source(int line_size, int group_size, int iteration_count)
 std::string filter_source(int line_size)
 {
         std::string s;
-        s += "const int LINE_SIZE = " + std::to_string(line_size) + ";\n";
+        s += "const int LINE_SIZE = " + to_string(line_size) + ";\n";
         s += '\n';
         return s + filter_shader;
 }

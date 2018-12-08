@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "program.h"
 
 #include "com/bits.h"
+#include "com/print.h"
 
 // clang-format off
 constexpr const char dft_fft_global_shader[]
@@ -71,12 +72,12 @@ std::string floating_point_source<double>()
 
 std::string group_size_string(int group_size)
 {
-        return "const uint GROUP_SIZE = " + std::to_string(group_size) + ";\n";
+        return "const uint GROUP_SIZE = " + to_string(group_size) + ";\n";
 }
 
 std::string group_size_string(vec2i group_size)
 {
-        return "const uvec2 GROUP_SIZE = uvec2(" + std::to_string(group_size[0]) + ", " + std::to_string(group_size[1]) + ");\n";
+        return "const uvec2 GROUP_SIZE = uvec2(" + to_string(group_size[0]) + ", " + to_string(group_size[1]) + ");\n";
 }
 
 template <typename T>
@@ -172,11 +173,11 @@ std::string fft_shared_source(int n, int n_bits, int shared_size, int group_size
 {
         std::string s;
         s += floating_point_source<T>();
-        s += "const uint N = " + std::to_string(n) + ";\n";
-        s += "const uint N_MASK = " + std::to_string(n - 1) + ";\n";
-        s += "const uint N_BITS = " + std::to_string(n_bits) + ";\n";
-        s += "const uint SHARED_SIZE = " + std::to_string(shared_size) + ";\n";
-        s += "const uint GROUP_SIZE = " + std::to_string(group_size) + ";\n";
+        s += "const uint N = " + to_string(n) + ";\n";
+        s += "const uint N_MASK = " + to_string(n - 1) + ";\n";
+        s += "const uint N_BITS = " + to_string(n_bits) + ";\n";
+        s += "const uint SHARED_SIZE = " + to_string(shared_size) + ";\n";
+        s += "const uint GROUP_SIZE = " + to_string(group_size) + ";\n";
         s += "const bool REVERSE_INPUT = " + (reverse_input ? std::string("true") : std::string("false")) + ";\n";
         return s + dft_fft_shared_shader;
 }

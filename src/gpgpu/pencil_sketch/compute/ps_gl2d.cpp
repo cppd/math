@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "ps_gl2d.h"
 
+#include "com/print.h"
 #include "gpgpu/com/groups.h"
 
 // clang-format off
@@ -36,7 +37,7 @@ namespace
 {
 std::string group_size_string()
 {
-        return "const uint GROUP_SIZE = " + std::to_string(GROUP_SIZE) + ";\n";
+        return "const uint GROUP_SIZE = " + to_string(GROUP_SIZE) + ";\n";
 }
 
 std::string compute_source()

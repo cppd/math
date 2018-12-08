@@ -390,8 +390,8 @@ public:
                 // Проверить на самый минимум по количеству точек
                 if (source_points.size() < N + 2)
                 {
-                        error("Error point count " + std::to_string(source_points.size()) +
-                              " for cocone manifold reconstruction in " + space_name(N));
+                        error("Error point count " + to_string(source_points.size()) + " for cocone manifold reconstruction in " +
+                              space_name(N));
                 }
 
                 progress->set_text("Voronoi-Delaunay: %v of %m");
