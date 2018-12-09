@@ -193,13 +193,18 @@ DeviceProg<T>::DeviceProg(int group_size_1d, vec2i group_size_2d)
         : m_group_size_1d(group_size_1d),
           m_bit_reverse(opengl::ComputeShader(bit_reverse_source<T>(group_size_1d))),
           m_fft(opengl::ComputeShader(fft_global_source<T>(group_size_1d))),
-          m_rows_mul_to_buffer(opengl::ComputeShader(rows_mul_to_buffer_source<T>(group_size_2d))),
-          m_rows_mul_fr_buffer(opengl::ComputeShader(rows_mul_fr_buffer_source<T>(group_size_2d))),
-          m_cols_mul_to_buffer(opengl::ComputeShader(cols_mul_to_buffer_source<T>(group_size_2d))),
-          m_cols_mul_fr_buffer(opengl::ComputeShader(cols_mul_fr_buffer_source<T>(group_size_2d))),
           m_rows_mul_d(opengl::ComputeShader(rows_mul_d_source<T>(group_size_2d))),
           m_copy_input(opengl::ComputeShader(copy_input_source<T>(group_size_2d))),
           m_copy_output(opengl::ComputeShader(copy_output_source<T>(group_size_2d)))
+{
+}
+
+template <typename T>
+DeviceProgMul<T>::DeviceProgMul(vec2i group_size_2d)
+        : m_rows_to_buffer(opengl::ComputeShader(rows_mul_to_buffer_source<T>(group_size_2d))),
+          m_rows_from_buffer(opengl::ComputeShader(rows_mul_fr_buffer_source<T>(group_size_2d))),
+          m_columns_to_buffer(opengl::ComputeShader(cols_mul_to_buffer_source<T>(group_size_2d))),
+          m_columns_from_buffer(opengl::ComputeShader(cols_mul_fr_buffer_source<T>(group_size_2d)))
 {
 }
 
@@ -215,5 +220,7 @@ DeviceProgFFTShared<T>::DeviceProgFFTShared(int n, int shared_size, int group_si
 
 template class DeviceProg<float>;
 template class DeviceProg<double>;
+template class DeviceProgMul<float>;
+template class DeviceProgMul<double>;
 template class DeviceProgFFTShared<float>;
 template class DeviceProgFFTShared<double>;
