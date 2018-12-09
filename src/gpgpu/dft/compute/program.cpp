@@ -45,6 +45,10 @@ constexpr const char dft_mul_shader[]
 {
 #include "dft_mul.comp.str"
 };
+constexpr const char dft_mul_d_shader[]
+{
+#include "dft_mul_d.comp.str"
+};
 // clang-format on
 
 namespace
@@ -147,9 +151,8 @@ std::string rows_mul_d_source(vec2i group_size)
 {
         std::string s;
         s += floating_point_source<T>();
-        s += "#define FUNCTION_ROWS_MUL_D\n\n";
         s += group_size_string(group_size);
-        return s + dft_mul_shader;
+        return s + dft_mul_d_shader;
 }
 
 template <typename T>
