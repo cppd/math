@@ -26,25 +26,25 @@ layout(local_size_x = GROUP_SIZE.x, local_size_y = GROUP_SIZE.y) in;
 
 layout(location = 0) uniform float_point to_mul;
 
-layout(bindless_image, rgba32f, location = 1) uniform writeonly restrict image2D img;
+layout(bindless_image, rgba32f, location = 1) uniform writeonly restrict image2D dst_image;
 
 layout(std430, binding = 0) readonly restrict buffer StorageBuffer
 {
-        complex data[];
+        complex src_data[];
 };
 
 void main()
 {
         const ivec2 p = ivec2(gl_GlobalInvocationID.xy);
 
-        if (any(greaterThanEqual(p, imageSize(img))))
+        if (any(greaterThanEqual(p, imageSize(dst_image))))
         {
                 return;
         }
 
-        const int width = imageSize(img).x;
+        const int width = imageSize(dst_image).x;
 
-        complex d = data[p.y * width + p.x];
+        complex d = src_data[p.y * width + p.x];
         vec4 pixel = vec4(vec3(to_mul * length(d)), 1);
-        imageStore(img, p, pixel);
+        imageStore(dst_image, p, pixel);
 }

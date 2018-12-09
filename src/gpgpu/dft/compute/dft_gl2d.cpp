@@ -335,6 +335,8 @@ public:
 
                 if (texture)
                 {
+                        ASSERT(texture->texture().width() == n1 && texture->texture().height() == n2);
+
                         m_texture_handle = texture->image_resident_handle_read_write();
                 }
 
