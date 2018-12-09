@@ -25,11 +25,9 @@ layout(local_size_x = GROUP_SIZE.x, local_size_y = GROUP_SIZE.y) in;
 // Перенос данных изображения в исходные данные для ДПФ.
 // Преобразование Фурье делается для яркости пикселов без цвета.
 
-layout(location = 0) uniform int width;
-layout(location = 1) uniform int height;
-layout(location = 2) uniform bool source_srgb;
+layout(location = 0) uniform bool source_srgb;
 
-layout(bindless_image, rgba32f, location = 3) uniform readonly restrict image2D img;
+layout(bindless_image, rgba32f, location = 1) uniform readonly restrict image2D img;
 
 layout(std430, binding = 0) writeonly restrict buffer StorageBuffer
 {
@@ -38,15 +36,16 @@ layout(std430, binding = 0) writeonly restrict buffer StorageBuffer
 
 void main()
 {
-        int x = int(gl_GlobalInvocationID.x);
-        int y = int(gl_GlobalInvocationID.y);
+        const ivec2 p = ivec2(gl_GlobalInvocationID.xy);
 
-        if (x >= width || y >= height)
+        if (any(greaterThanEqual(p, imageSize(img))))
         {
                 return;
         }
 
-        vec4 pixel = imageLoad(img, ivec2(x, y));
+        const int width = imageSize(img).x;
+
+        vec4 pixel = imageLoad(img, p);
         float_point gr = source_srgb ? luminance_of_rgb(srgb_to_rgb(pixel)) : luminance_of_rgb(pixel);
-        data[y * width + x] = complex(gr, 0);
+        data[p.y * width + p.x] = complex(gr, 0);
 }
