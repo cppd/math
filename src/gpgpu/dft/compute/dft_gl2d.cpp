@@ -296,9 +296,9 @@ class Impl final : public FourierGL1, public FourierGL2
 
         void exec(bool inverse, bool srgb) override
         {
-                m_prog.move_to_input(m_N1, m_N2, srgb, m_texture_handle, &m_x_d);
+                m_prog.copy_input(m_N1, m_N2, srgb, m_texture_handle, &m_x_d);
                 dft2d(inverse);
-                m_prog.move_to_output(m_N1, m_N2, static_cast<FP>(1.0 / (m_N1 * m_N2)), m_texture_handle, m_x_d);
+                m_prog.copy_output(m_N1, m_N2, static_cast<FP>(1.0 / (m_N1 * m_N2)), m_texture_handle, m_x_d);
         }
 
 public:

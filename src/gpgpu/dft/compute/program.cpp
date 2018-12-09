@@ -33,9 +33,13 @@ constexpr const char dft_bit_reverse_shader[]
 {
 #include "dft_bit_reverse.comp.str"
 };
-constexpr const char dft_copy_shader[]
+constexpr const char dft_copy_input_shader[]
 {
-#include "dft_copy.comp.str"
+#include "dft_copy_input.comp.str"
+};
+constexpr const char dft_copy_output_shader[]
+{
+#include "dft_copy_output.comp.str"
 };
 constexpr const char dft_mul_shader[]
 {
@@ -149,23 +153,21 @@ std::string rows_mul_d_source(vec2i group_size)
 }
 
 template <typename T>
-std::string move_to_input_source(vec2i group_size)
+std::string copy_input_source(vec2i group_size)
 {
         std::string s;
         s += floating_point_source<T>();
-        s += "#define FUNCTION_MOVE_TO_INPUT\n\n";
         s += group_size_string(group_size);
-        return s + dft_copy_shader;
+        return s + dft_copy_input_shader;
 }
 
 template <typename T>
-std::string move_to_output_source(vec2i group_size)
+std::string copy_output_source(vec2i group_size)
 {
         std::string s;
         s += floating_point_source<T>();
-        s += "#define FUNCTION_MOVE_TO_OUTPUT\n\n";
         s += group_size_string(group_size);
-        return s + dft_copy_shader;
+        return s + dft_copy_output_shader;
 }
 
 template <typename T>
@@ -194,8 +196,8 @@ DeviceProg<T>::DeviceProg(int group_size_1d, vec2i group_size_2d)
           m_cols_mul_to_buffer(opengl::ComputeShader(cols_mul_to_buffer_source<T>(group_size_2d))),
           m_cols_mul_fr_buffer(opengl::ComputeShader(cols_mul_fr_buffer_source<T>(group_size_2d))),
           m_rows_mul_d(opengl::ComputeShader(rows_mul_d_source<T>(group_size_2d))),
-          m_move_to_input(opengl::ComputeShader(move_to_input_source<T>(group_size_2d))),
-          m_move_to_output(opengl::ComputeShader(move_to_output_source<T>(group_size_2d)))
+          m_copy_input(opengl::ComputeShader(copy_input_source<T>(group_size_2d))),
+          m_copy_output(opengl::ComputeShader(copy_output_source<T>(group_size_2d)))
 {
 }
 

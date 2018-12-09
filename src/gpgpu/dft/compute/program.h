@@ -37,8 +37,8 @@ class DeviceProg final
         opengl::ComputeProgram m_cols_mul_to_buffer;
         opengl::ComputeProgram m_cols_mul_fr_buffer;
         opengl::ComputeProgram m_rows_mul_d;
-        opengl::ComputeProgram m_move_to_input;
-        opengl::ComputeProgram m_move_to_output;
+        opengl::ComputeProgram m_copy_input;
+        opengl::ComputeProgram m_copy_output;
 
 public:
         DeviceProg(int group_size_1d, vec2i group_size_2d);
@@ -129,28 +129,29 @@ public:
                 glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
         }
 
-        void move_to_input(int width, int height, bool source_srgb, const GLuint64 tex, DeviceMemory<std::complex<T>>* data)
+        void copy_input(int width, int height, bool source_srgb, const GLuint64 tex, DeviceMemory<std::complex<T>>* data)
         {
                 vec2i groups = group_count(width, height, m_group_size_2d);
 
-                m_move_to_input.set_uniform(0, width);
-                m_move_to_input.set_uniform(1, height);
-                m_move_to_input.set_uniform(2, source_srgb);
-                m_move_to_input.set_uniform_handle(3, tex);
+                m_copy_input.set_uniform(0, width);
+                m_copy_input.set_uniform(1, height);
+                m_copy_input.set_uniform(2, source_srgb);
+                m_copy_input.set_uniform_handle(3, tex);
                 data->bind(0);
-                m_move_to_input.dispatch_compute(groups[0], groups[1], 1);
+                m_copy_input.dispatch_compute(groups[0], groups[1], 1);
                 glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
         }
-        void move_to_output(int width, int height, T to_mul, const GLuint64 tex, const DeviceMemory<std::complex<T>>& data)
+
+        void copy_output(int width, int height, T to_mul, const GLuint64 tex, const DeviceMemory<std::complex<T>>& data)
         {
                 vec2i groups = group_count(width, height, m_group_size_2d);
 
-                m_move_to_output.set_uniform(0, width);
-                m_move_to_output.set_uniform(1, height);
-                m_move_to_output.set_uniform(2, to_mul);
-                m_move_to_output.set_uniform_handle(3, tex);
+                m_copy_output.set_uniform(0, width);
+                m_copy_output.set_uniform(1, height);
+                m_copy_output.set_uniform(2, to_mul);
+                m_copy_output.set_uniform_handle(3, tex);
                 data.bind(0);
-                m_move_to_output.dispatch_compute(groups[0], groups[1], 1);
+                m_copy_output.dispatch_compute(groups[0], groups[1], 1);
                 glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
         }
 };
