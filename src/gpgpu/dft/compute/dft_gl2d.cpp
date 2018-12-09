@@ -235,6 +235,7 @@ class Impl final : public FourierGL1, public FourierGL2
 {
         const int m_N1, m_N2, m_M1, m_M2, m_M1_bin, m_M2_bin;
         const vec2i m_rows_to, m_rows_fr, m_rows_d, m_cols_to, m_cols_fr, m_cols_d;
+        const vec2i m_texture_groups;
         DeviceMemory<std::complex<FP>> m_d1_fwd, m_d1_inv, m_d2_fwd, m_d2_inv;
         DeviceMemory<std::complex<FP>> m_x_d, m_buffer;
         GLuint64 m_texture_handle;
@@ -296,9 +297,9 @@ class Impl final : public FourierGL1, public FourierGL2
 
         void exec(bool inverse, bool srgb) override
         {
-                m_prog.copy_input(m_N1, m_N2, srgb, m_texture_handle, &m_x_d);
+                m_prog.copy_input(m_texture_groups, srgb, m_texture_handle, &m_x_d);
                 dft2d(inverse);
-                m_prog.copy_output(m_N1, m_N2, static_cast<FP>(1.0 / (m_N1 * m_N2)), m_texture_handle, m_x_d);
+                m_prog.copy_output(m_texture_groups, static_cast<FP>(1.0 / (m_N1 * m_N2)), m_texture_handle, m_x_d);
         }
 
 public:
@@ -315,6 +316,7 @@ public:
                   m_cols_to(group_count(m_N1, m_M2, GROUP_SIZE_2D)),
                   m_cols_fr(group_count(m_N1, m_N2, GROUP_SIZE_2D)),
                   m_cols_d(group_count(m_M2, m_N1, GROUP_SIZE_2D)),
+                  m_texture_groups(group_count(m_N1, m_N2, GROUP_SIZE_2D)),
                   m_d1_fwd(m_M1, MemoryUsage::StaticCopy),
                   m_d1_inv(m_M1, MemoryUsage::StaticCopy),
                   m_d2_fwd(m_M2, MemoryUsage::StaticCopy),

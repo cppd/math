@@ -29,7 +29,6 @@ template <typename T>
 class DeviceProg final
 {
         const int m_group_size_1d;
-        const vec2i m_group_size_2d;
         opengl::ComputeProgram m_bit_reverse;
         opengl::ComputeProgram m_fft;
         opengl::ComputeProgram m_rows_mul_to_buffer;
@@ -129,10 +128,8 @@ public:
                 glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
         }
 
-        void copy_input(int width, int height, bool source_srgb, const GLuint64 tex, DeviceMemory<std::complex<T>>* data)
+        void copy_input(vec2i groups, bool source_srgb, const GLuint64 tex, DeviceMemory<std::complex<T>>* data)
         {
-                vec2i groups = group_count(width, height, m_group_size_2d);
-
                 m_copy_input.set_uniform(0, source_srgb);
                 m_copy_input.set_uniform_handle(1, tex);
                 data->bind(0);
@@ -140,10 +137,8 @@ public:
                 glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
         }
 
-        void copy_output(int width, int height, T to_mul, const GLuint64 tex, const DeviceMemory<std::complex<T>>& data)
+        void copy_output(vec2i groups, T to_mul, const GLuint64 tex, const DeviceMemory<std::complex<T>>& data)
         {
-                vec2i groups = group_count(width, height, m_group_size_2d);
-
                 m_copy_output.set_uniform(0, to_mul);
                 m_copy_output.set_uniform_handle(1, tex);
                 data.bind(0);

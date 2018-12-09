@@ -188,7 +188,6 @@ std::string fft_shared_source(int n, int n_bits, int shared_size, int group_size
 template <typename T>
 DeviceProg<T>::DeviceProg(int group_size_1d, vec2i group_size_2d)
         : m_group_size_1d(group_size_1d),
-          m_group_size_2d(group_size_2d),
           m_bit_reverse(opengl::ComputeShader(bit_reverse_source<T>(group_size_1d))),
           m_fft(opengl::ComputeShader(fft_global_source<T>(group_size_1d))),
           m_rows_mul_to_buffer(opengl::ComputeShader(rows_mul_to_buffer_source<T>(group_size_2d))),
