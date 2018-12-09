@@ -88,6 +88,16 @@ std::string group_size_string(vec2i group_size)
         return "const uvec2 GROUP_SIZE = uvec2(" + to_string(group_size[0]) + ", " + to_string(group_size[1]) + ");\n";
 }
 
+std::string n_m_string(int n1, int n2, int m1, int m2)
+{
+        std::string s;
+        s += "const int N1 = " + to_string(n1) + ";\n";
+        s += "const int N2 = " + to_string(n2) + ";\n";
+        s += "const int M1 = " + to_string(m1) + ";\n";
+        s += "const int M2 = " + to_string(m2) + ";\n";
+        return s;
+}
+
 template <typename T>
 std::string bit_reverse_source(int group_size)
 {
@@ -107,42 +117,46 @@ std::string fft_global_source(int group_size)
 }
 
 template <typename T>
-std::string rows_mul_to_buffer_source(vec2i group_size)
+std::string rows_mul_to_buffer_source(vec2i group_size, int n1, int n2, int m1, int m2)
 {
         std::string s;
         s += floating_point_source<T>();
         s += group_size_string(group_size);
         s += "const int FUNCTION_INDEX = 0;\n";
+        s += n_m_string(n1, n2, m1, m2);
         return s + dft_mul_shader;
 }
 
 template <typename T>
-std::string rows_mul_fr_buffer_source(vec2i group_size)
+std::string rows_mul_fr_buffer_source(vec2i group_size, int n1, int n2, int m1, int m2)
 {
         std::string s;
         s += floating_point_source<T>();
         s += group_size_string(group_size);
         s += "const int FUNCTION_INDEX = 1;\n";
+        s += n_m_string(n1, n2, m1, m2);
         return s + dft_mul_shader;
 }
 
 template <typename T>
-std::string cols_mul_to_buffer_source(vec2i group_size)
+std::string cols_mul_to_buffer_source(vec2i group_size, int n1, int n2, int m1, int m2)
 {
         std::string s;
         s += floating_point_source<T>();
         s += group_size_string(group_size);
         s += "const int FUNCTION_INDEX = 2;\n";
+        s += n_m_string(n1, n2, m1, m2);
         return s + dft_mul_shader;
 }
 
 template <typename T>
-std::string cols_mul_fr_buffer_source(vec2i group_size)
+std::string cols_mul_fr_buffer_source(vec2i group_size, int n1, int n2, int m1, int m2)
 {
         std::string s;
         s += floating_point_source<T>();
         s += group_size_string(group_size);
         s += "const int FUNCTION_INDEX = 3;\n";
+        s += n_m_string(n1, n2, m1, m2);
         return s + dft_mul_shader;
 }
 
@@ -200,11 +214,11 @@ DeviceProg<T>::DeviceProg(int group_size_1d, vec2i group_size_2d)
 }
 
 template <typename T>
-DeviceProgMul<T>::DeviceProgMul(vec2i group_size_2d)
-        : m_rows_to_buffer(opengl::ComputeShader(rows_mul_to_buffer_source<T>(group_size_2d))),
-          m_rows_from_buffer(opengl::ComputeShader(rows_mul_fr_buffer_source<T>(group_size_2d))),
-          m_columns_to_buffer(opengl::ComputeShader(cols_mul_to_buffer_source<T>(group_size_2d))),
-          m_columns_from_buffer(opengl::ComputeShader(cols_mul_fr_buffer_source<T>(group_size_2d)))
+DeviceProgMul<T>::DeviceProgMul(vec2i group_size, int n1, int n2, int m1, int m2)
+        : m_rows_to_buffer(opengl::ComputeShader(rows_mul_to_buffer_source<T>(group_size, n1, n2, m1, m2))),
+          m_rows_from_buffer(opengl::ComputeShader(rows_mul_fr_buffer_source<T>(group_size, n1, n2, m1, m2))),
+          m_columns_to_buffer(opengl::ComputeShader(cols_mul_to_buffer_source<T>(group_size, n1, n2, m1, m2))),
+          m_columns_from_buffer(opengl::ComputeShader(cols_mul_fr_buffer_source<T>(group_size, n1, n2, m1, m2)))
 {
 }
 
