@@ -144,10 +144,8 @@ public:
         {
                 vec2i groups = group_count(width, height, m_group_size_2d);
 
-                m_copy_output.set_uniform(0, width);
-                m_copy_output.set_uniform(1, height);
-                m_copy_output.set_uniform(2, to_mul);
-                m_copy_output.set_uniform_handle(3, tex);
+                m_copy_output.set_uniform(0, to_mul);
+                m_copy_output.set_uniform_handle(1, tex);
                 data.bind(0);
                 m_copy_output.dispatch_compute(groups[0], groups[1], 1);
                 glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
