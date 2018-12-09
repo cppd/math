@@ -72,8 +72,9 @@ public:
         {
                 m_rows_mul_to_buffer.set_uniform(0, inverse);
                 m_rows_mul_to_buffer.set_uniform(1, M1);
-                m_rows_mul_to_buffer.set_uniform(2, N1);
-                m_rows_mul_to_buffer.set_uniform(3, N2);
+                //
+                m_rows_mul_to_buffer.set_uniform(3, N1);
+                m_rows_mul_to_buffer.set_uniform(4, N2);
                 data.bind(0);
                 buffer->bind(1);
                 m_rows_mul_to_buffer.dispatch_compute(groups[0], groups[1], 1);
@@ -84,8 +85,9 @@ public:
         {
                 m_rows_mul_fr_buffer.set_uniform(0, inverse);
                 m_rows_mul_fr_buffer.set_uniform(1, M1);
-                m_rows_mul_fr_buffer.set_uniform(2, N1);
-                m_rows_mul_fr_buffer.set_uniform(3, N2);
+                //
+                m_rows_mul_fr_buffer.set_uniform(3, N1);
+                m_rows_mul_fr_buffer.set_uniform(4, N2);
                 data->bind(0);
                 buffer.bind(1);
                 m_rows_mul_fr_buffer.dispatch_compute(groups[0], groups[1], 1);
@@ -95,9 +97,10 @@ public:
                                 DeviceMemory<std::complex<T>>* buffer) const
         {
                 m_cols_mul_to_buffer.set_uniform(0, inverse);
-                m_cols_mul_to_buffer.set_uniform(1, M2);
-                m_cols_mul_to_buffer.set_uniform(2, N1);
-                m_cols_mul_to_buffer.set_uniform(3, N2);
+                //
+                m_cols_mul_to_buffer.set_uniform(2, M2);
+                m_cols_mul_to_buffer.set_uniform(3, N1);
+                m_cols_mul_to_buffer.set_uniform(4, N2);
                 data.bind(0);
                 buffer->bind(1);
                 m_cols_mul_to_buffer.dispatch_compute(groups[0], groups[1], 1);
@@ -107,9 +110,10 @@ public:
                                 const DeviceMemory<std::complex<T>>& buffer) const
         {
                 m_cols_mul_fr_buffer.set_uniform(0, inverse);
-                m_cols_mul_fr_buffer.set_uniform(1, M2);
-                m_cols_mul_fr_buffer.set_uniform(2, N1);
-                m_cols_mul_fr_buffer.set_uniform(3, N2);
+                //
+                m_cols_mul_fr_buffer.set_uniform(2, M2);
+                m_cols_mul_fr_buffer.set_uniform(3, N1);
+                m_cols_mul_fr_buffer.set_uniform(4, N2);
                 data->bind(0);
                 buffer.bind(1);
                 m_cols_mul_fr_buffer.dispatch_compute(groups[0], groups[1], 1);

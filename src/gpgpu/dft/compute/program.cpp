@@ -111,8 +111,8 @@ std::string rows_mul_to_buffer_source(vec2i group_size)
 {
         std::string s;
         s += floating_point_source<T>();
-        s += "#define FUNCTION_ROWS_MUL_TO_BUFFER\n\n";
         s += group_size_string(group_size);
+        s += "const int FUNCTION_INDEX = 0;\n";
         return s + dft_mul_shader;
 }
 
@@ -121,8 +121,8 @@ std::string rows_mul_fr_buffer_source(vec2i group_size)
 {
         std::string s;
         s += floating_point_source<T>();
-        s += "#define FUNCTION_ROWS_MUL_FR_BUFFER\n\n";
         s += group_size_string(group_size);
+        s += "const int FUNCTION_INDEX = 1;\n";
         return s + dft_mul_shader;
 }
 
@@ -131,8 +131,8 @@ std::string cols_mul_to_buffer_source(vec2i group_size)
 {
         std::string s;
         s += floating_point_source<T>();
-        s += "#define FUNCTION_COLS_MUL_TO_BUFFER\n\n";
         s += group_size_string(group_size);
+        s += "const int FUNCTION_INDEX = 2;\n";
         return s + dft_mul_shader;
 }
 
@@ -141,8 +141,8 @@ std::string cols_mul_fr_buffer_source(vec2i group_size)
 {
         std::string s;
         s += floating_point_source<T>();
-        s += "#define FUNCTION_COLS_MUL_FR_BUFFER\n\n";
         s += group_size_string(group_size);
+        s += "const int FUNCTION_INDEX = 3;\n";
         return s + dft_mul_shader;
 }
 
