@@ -215,7 +215,11 @@ DeviceProg<T>::DeviceProg(int group_size_1d, vec2i group_size_2d)
 
 template <typename T>
 DeviceProgMul<T>::DeviceProgMul(vec2i group_size, int n1, int n2, int m1, int m2)
-        : m_rows_to_buffer(opengl::ComputeShader(rows_mul_to_buffer_source<T>(group_size, n1, n2, m1, m2))),
+        : m_rows_to(group_count(m1, n2, group_size)),
+          m_rows_from(group_count(n1, n2, group_size)),
+          m_columns_to(group_count(n1, m2, group_size)),
+          m_columns_from(group_count(n1, n2, group_size)),
+          m_rows_to_buffer(opengl::ComputeShader(rows_mul_to_buffer_source<T>(group_size, n1, n2, m1, m2))),
           m_rows_from_buffer(opengl::ComputeShader(rows_mul_fr_buffer_source<T>(group_size, n1, n2, m1, m2))),
           m_columns_to_buffer(opengl::ComputeShader(cols_mul_to_buffer_source<T>(group_size, n1, n2, m1, m2))),
           m_columns_from_buffer(opengl::ComputeShader(cols_mul_fr_buffer_source<T>(group_size, n1, n2, m1, m2)))

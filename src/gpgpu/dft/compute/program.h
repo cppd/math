@@ -96,6 +96,10 @@ public:
 template <typename T>
 class DeviceProgMul final
 {
+        const vec2i m_rows_to;
+        const vec2i m_rows_from;
+        const vec2i m_columns_to;
+        const vec2i m_columns_from;
         opengl::ComputeProgram m_rows_to_buffer;
         opengl::ComputeProgram m_rows_from_buffer;
         opengl::ComputeProgram m_columns_to_buffer;
@@ -106,43 +110,42 @@ public:
 
         // Функции подстановки переменных, формулы 13.4, 13.27, 13.28, 13.32.
 
-        void rows_to_buffer(vec2i groups, bool inverse, const DeviceMemory<std::complex<T>>& data,
-                            DeviceMemory<std::complex<T>>* buffer) const
+        void rows_to_buffer(bool inverse, const DeviceMemory<std::complex<T>>& data, DeviceMemory<std::complex<T>>* buffer) const
         {
                 m_rows_to_buffer.set_uniform(0, inverse);
                 data.bind(0);
                 buffer->bind(1);
-                m_rows_to_buffer.dispatch_compute(groups[0], groups[1], 1);
+                m_rows_to_buffer.dispatch_compute(m_rows_to[0], m_rows_to[1], 1);
                 glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
         }
 
-        void rows_from_buffer(vec2i groups, bool inverse, DeviceMemory<std::complex<T>>* data,
+        void rows_from_buffer(bool inverse, DeviceMemory<std::complex<T>>* data,
                               const DeviceMemory<std::complex<T>>& buffer) const
         {
                 m_rows_from_buffer.set_uniform(0, inverse);
                 data->bind(0);
                 buffer.bind(1);
-                m_rows_from_buffer.dispatch_compute(groups[0], groups[1], 1);
+                m_rows_from_buffer.dispatch_compute(m_rows_from[0], m_rows_from[1], 1);
                 glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
         }
 
-        void columns_to_buffer(vec2i groups, bool inverse, const DeviceMemory<std::complex<T>>& data,
+        void columns_to_buffer(bool inverse, const DeviceMemory<std::complex<T>>& data,
                                DeviceMemory<std::complex<T>>* buffer) const
         {
                 m_columns_to_buffer.set_uniform(0, inverse);
                 data.bind(0);
                 buffer->bind(1);
-                m_columns_to_buffer.dispatch_compute(groups[0], groups[1], 1);
+                m_columns_to_buffer.dispatch_compute(m_columns_to[0], m_columns_to[1], 1);
                 glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
         }
 
-        void columns_from_buffer(vec2i groups, bool inverse, DeviceMemory<std::complex<T>>* data,
+        void columns_from_buffer(bool inverse, DeviceMemory<std::complex<T>>* data,
                                  const DeviceMemory<std::complex<T>>& buffer) const
         {
                 m_columns_from_buffer.set_uniform(0, inverse);
                 data->bind(0);
                 buffer.bind(1);
-                m_columns_from_buffer.dispatch_compute(groups[0], groups[1], 1);
+                m_columns_from_buffer.dispatch_compute(m_columns_from[0], m_columns_from[1], 1);
                 glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
         }
 };
