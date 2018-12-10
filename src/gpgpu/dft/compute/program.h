@@ -28,14 +28,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 template <typename T>
 class DeviceProg final
 {
-        const int m_group_size_1d;
+        const int m_group_size;
         opengl::ComputeProgram m_bit_reverse;
         opengl::ComputeProgram m_fft;
-        opengl::ComputeProgram m_copy_input;
-        opengl::ComputeProgram m_copy_output;
 
 public:
-        DeviceProg(int group_size_1d, vec2i group_size_2d);
+        DeviceProg(int group_size);
 
         void bit_reverse(int max_threads, int N_mask, int N_bits, DeviceMemory<std::complex<T>>* data) const
         {
@@ -43,7 +41,7 @@ public:
                 m_bit_reverse.set_uniform_unsigned(1, N_mask);
                 m_bit_reverse.set_uniform_unsigned(2, N_bits);
                 data->bind(0);
-                m_bit_reverse.dispatch_compute(group_count(max_threads, m_group_size_1d), 1, 1);
+                m_bit_reverse.dispatch_compute(group_count(max_threads, m_group_size), 1, 1);
                 glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
         }
 
@@ -57,25 +55,36 @@ public:
                 m_fft.set_uniform_unsigned(4, M_2);
                 m_fft.set_uniform(5, Two_PI_Div_M);
                 data->bind(0);
-                m_fft.dispatch_compute(group_count(max_threads, m_group_size_1d), 1, 1);
+                m_fft.dispatch_compute(group_count(max_threads, m_group_size), 1, 1);
                 glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
         }
+};
 
-        void copy_input(vec2i groups, bool source_srgb, const GLuint64 tex, DeviceMemory<std::complex<T>>* data)
+template <typename T>
+class DeviceProgCopy final
+{
+        const vec2i m_group_count;
+        opengl::ComputeProgram m_copy_input;
+        opengl::ComputeProgram m_copy_output;
+
+public:
+        DeviceProgCopy(vec2i group_size, int n1, int n2);
+
+        void copy_input(bool source_srgb, const GLuint64 tex, DeviceMemory<std::complex<T>>* data)
         {
                 m_copy_input.set_uniform(0, source_srgb);
                 m_copy_input.set_uniform_handle(1, tex);
                 data->bind(0);
-                m_copy_input.dispatch_compute(groups[0], groups[1], 1);
+                m_copy_input.dispatch_compute(m_group_count[0], m_group_count[1], 1);
                 glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
         }
 
-        void copy_output(vec2i groups, T to_mul, const GLuint64 tex, const DeviceMemory<std::complex<T>>& data)
+        void copy_output(T to_mul, const GLuint64 tex, const DeviceMemory<std::complex<T>>& data)
         {
                 m_copy_output.set_uniform(0, to_mul);
                 m_copy_output.set_uniform_handle(1, tex);
                 data.bind(0);
-                m_copy_output.dispatch_compute(groups[0], groups[1], 1);
+                m_copy_output.dispatch_compute(m_group_count[0], m_group_count[1], 1);
                 glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
         }
 };

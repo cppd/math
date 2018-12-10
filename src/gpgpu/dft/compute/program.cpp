@@ -203,12 +203,18 @@ std::string fft_shared_source(int n, int n_bits, int shared_size, int group_size
 }
 
 template <typename T>
-DeviceProg<T>::DeviceProg(int group_size_1d, vec2i group_size_2d)
-        : m_group_size_1d(group_size_1d),
-          m_bit_reverse(opengl::ComputeShader(bit_reverse_source<T>(group_size_1d))),
-          m_fft(opengl::ComputeShader(fft_global_source<T>(group_size_1d))),
-          m_copy_input(opengl::ComputeShader(copy_input_source<T>(group_size_2d))),
-          m_copy_output(opengl::ComputeShader(copy_output_source<T>(group_size_2d)))
+DeviceProg<T>::DeviceProg(int group_size)
+        : m_group_size(group_size),
+          m_bit_reverse(opengl::ComputeShader(bit_reverse_source<T>(group_size))),
+          m_fft(opengl::ComputeShader(fft_global_source<T>(group_size)))
+{
+}
+
+template <typename T>
+DeviceProgCopy<T>::DeviceProgCopy(vec2i group_size, int n1, int n2)
+        : m_group_count(group_count(n1, n2, group_size)),
+          m_copy_input(opengl::ComputeShader(copy_input_source<T>(group_size))),
+          m_copy_output(opengl::ComputeShader(copy_output_source<T>(group_size)))
 {
 }
 
@@ -249,6 +255,8 @@ DeviceProgFFTShared<T>::DeviceProgFFTShared(int n, int shared_size, int group_si
 
 template class DeviceProg<float>;
 template class DeviceProg<double>;
+template class DeviceProgCopy<float>;
+template class DeviceProgCopy<double>;
 template class DeviceProgMul<float>;
 template class DeviceProgMul<double>;
 template class DeviceProgMulD<float>;
