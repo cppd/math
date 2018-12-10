@@ -40,11 +40,11 @@ layout(std430, binding = 1) restrict buffer StorageBuffer1
 
 // Функция подстановки переменных, формулы 13.4, 13.27, 13.28, 13.32.
 // Используется в 4 функциях: по строкам в обе стороны и по столбцам в обе 2 стороны
-complex mul_data(complex x, bool inverse_dft, int l, int N)
+complex mul_data(complex x, bool inverse_dft, int l, int n)
 {
-        // float_point theta = ((inverse_dft ? PI : -PI) * l * l) / N;
+        // float_point theta = ((inverse_dft ? PI : -PI) * l * l) / n;
 
-        // Вместо l * l / N нужно вычислить mod(l * l / N, 2), чтобы в тригонометрические функции
+        // Вместо l * l / n нужно вычислить mod(l * l / n, 2), чтобы в тригонометрические функции
         // поступало не больше 2 * PI.
         // Также надо избежать вычисления l * l с плавающей точкой, так как может потеряться точность
         // при использовании float.
@@ -52,16 +52,16 @@ complex mul_data(complex x, bool inverse_dft, int l, int N)
         // задачи 46340 достаточно.
 
         int dividend = l * l;
-        int quotient = dividend / N;
-        int remainder = dividend - quotient * N;
+        int quotient = dividend / n;
+        int remainder = dividend - quotient * n;
 
-        // factor = (quotient mod 2) + (remainder / N).
-        // float_point factor = (quotient & 1) + float_point(remainder) / N;
+        // factor = (quotient mod 2) + (remainder / n).
+        // float_point factor = (quotient & 1) + float_point(remainder) / n;
         // precise float_point theta = (inverse_dft ? PI : -PI) * factor;
         // complex k = complex(cos(theta), sin(theta));
         // return complex_mul(k, x);
 
-        float_point factor = float_point(remainder) / N;
+        float_point factor = float_point(remainder) / n;
         precise float_point theta = (inverse_dft ? PI : -PI) * factor;
         if ((quotient & 1) == 0)
         {

@@ -25,23 +25,23 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <complex>
 
 template <typename T>
-class DeviceProg final
+class DeviceProgFFTGlobal
 {
         const int m_group_size;
         opengl::ComputeProgram m_bit_reverse;
         opengl::ComputeProgram m_fft;
 
 public:
-        DeviceProg(int group_size);
+        DeviceProgFFTGlobal(int group_size);
 
-        void bit_reverse(int max_threads, int N_mask, int N_bits, DeviceMemory<std::complex<T>>* data) const;
+        void bit_reverse(int max_threads, int n_mask, int n_bits, DeviceMemory<std::complex<T>>* data) const;
 
-        void fft(int max_threads, bool inverse, T Two_PI_Div_M, int N_2_mask, int N_2_bits, int M_2,
+        void fft(int max_threads, bool inverse, T two_pi_div_m, int n_div_2_mask, int m_div_2,
                  DeviceMemory<std::complex<T>>* data) const;
 };
 
 template <typename T>
-class DeviceProgCopy final
+class DeviceProgCopy
 {
         const vec2i m_group_count;
         opengl::ComputeProgram m_copy_input;
@@ -55,12 +55,12 @@ public:
 };
 
 template <typename T>
-class DeviceProgMul final
+class DeviceProgMul
 {
-        const vec2i m_rows_to;
-        const vec2i m_rows_from;
-        const vec2i m_columns_to;
-        const vec2i m_columns_from;
+        const vec2i m_rows_to_buffer_groups;
+        const vec2i m_rows_from_buffer_groups;
+        const vec2i m_columns_to_buffer_groups;
+        const vec2i m_columns_from_buffer_groups;
         opengl::ComputeProgram m_rows_to_buffer;
         opengl::ComputeProgram m_rows_from_buffer;
         opengl::ComputeProgram m_columns_to_buffer;
@@ -80,14 +80,10 @@ public:
 };
 
 template <typename T>
-class DeviceProgMulD final
+class DeviceProgMulD
 {
-        const int m_n1;
-        const int m_n2;
-        const int m_m1;
-        const int m_m2;
-        const vec2i m_rows_d;
-        const vec2i m_cols_d;
+        const int m_n1, m_n2, m_m1, m_m2;
+        const vec2i m_row_groups, m_column_groups;
         opengl::ComputeProgram m_mul_d;
 
 public:
@@ -99,7 +95,7 @@ public:
 };
 
 template <typename T>
-class DeviceProgFFTShared final
+class DeviceProgFFTShared
 {
         const int m_n, m_n_bits, m_shared_size;
         opengl::ComputeProgram m_fft;

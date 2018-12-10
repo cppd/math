@@ -23,8 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 layout(local_size_x = GROUP_SIZE) in;
 
 layout(location = 0) uniform uint max_threads;
-layout(location = 1) uniform uint N_mask;
-layout(location = 2) uniform uint N_bits;
+layout(location = 1) uniform uint n_mask;
+layout(location = 2) uniform uint n_bits;
 
 layout(std430, binding = 0) buffer StorageBuffer
 {
@@ -34,17 +34,20 @@ layout(std430, binding = 0) buffer StorageBuffer
 void main()
 {
         uint thread_id = gl_GlobalInvocationID.x;
+
         if (thread_id >= max_threads)
         {
                 return;
         }
-        uint i = thread_id & N_mask;
-        uint N_base = thread_id - i;
-        uint r = bit_reverse(i, N_bits);
+
+        uint i = thread_id & n_mask;
+        uint n_base = thread_id - i;
+        uint r = bit_reverse(i, n_bits);
+
         if (i < r) // для исключения одинаковых обменов и уже сделанных обменов
         {
-                uint i_index = N_base + i;
-                uint r_index = N_base + r;
+                uint i_index = n_base + i;
+                uint r_index = n_base + r;
                 complex t = data[i_index];
                 data[i_index] = data[r_index];
                 data[r_index] = t;

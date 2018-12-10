@@ -89,6 +89,11 @@ std::string group_size_string(vec2i group_size)
         return "const uvec2 GROUP_SIZE = uvec2(" + to_string(group_size[0]) + ", " + to_string(group_size[1]) + ");\n";
 }
 
+std::string function_index_string(int index)
+{
+        return "const int FUNCTION_INDEX = " + to_string(index) + ";\n";
+}
+
 std::string n_m_string(int n1, int n2, int m1, int m2)
 {
         std::string s;
@@ -123,7 +128,7 @@ std::string rows_mul_to_buffer_source(vec2i group_size, int n1, int n2, int m1, 
         std::string s;
         s += floating_point_source<T>();
         s += group_size_string(group_size);
-        s += "const int FUNCTION_INDEX = 0;\n";
+        s += function_index_string(0);
         s += n_m_string(n1, n2, m1, m2);
         return s + dft_mul_shader;
 }
@@ -134,7 +139,7 @@ std::string rows_mul_fr_buffer_source(vec2i group_size, int n1, int n2, int m1, 
         std::string s;
         s += floating_point_source<T>();
         s += group_size_string(group_size);
-        s += "const int FUNCTION_INDEX = 1;\n";
+        s += function_index_string(1);
         s += n_m_string(n1, n2, m1, m2);
         return s + dft_mul_shader;
 }
@@ -145,7 +150,7 @@ std::string cols_mul_to_buffer_source(vec2i group_size, int n1, int n2, int m1, 
         std::string s;
         s += floating_point_source<T>();
         s += group_size_string(group_size);
-        s += "const int FUNCTION_INDEX = 2;\n";
+        s += function_index_string(2);
         s += n_m_string(n1, n2, m1, m2);
         return s + dft_mul_shader;
 }
@@ -156,7 +161,7 @@ std::string cols_mul_fr_buffer_source(vec2i group_size, int n1, int n2, int m1, 
         std::string s;
         s += floating_point_source<T>();
         s += group_size_string(group_size);
-        s += "const int FUNCTION_INDEX = 3;\n";
+        s += function_index_string(3);
         s += n_m_string(n1, n2, m1, m2);
         return s + dft_mul_shader;
 }
@@ -206,7 +211,7 @@ std::string fft_shared_source(int n, int n_bits, int shared_size, int group_size
 //
 
 template <typename T>
-DeviceProg<T>::DeviceProg(int group_size)
+DeviceProgFFTGlobal<T>::DeviceProgFFTGlobal(int group_size)
         : m_group_size(group_size),
           m_bit_reverse(opengl::ComputeShader(bit_reverse_source<T>(group_size))),
           m_fft(opengl::ComputeShader(fft_global_source<T>(group_size)))
@@ -214,26 +219,25 @@ DeviceProg<T>::DeviceProg(int group_size)
 }
 
 template <typename T>
-void DeviceProg<T>::bit_reverse(int max_threads, int N_mask, int N_bits, DeviceMemory<std::complex<T>>* data) const
+void DeviceProgFFTGlobal<T>::bit_reverse(int max_threads, int n_mask, int n_bits, DeviceMemory<std::complex<T>>* data) const
 {
         m_bit_reverse.set_uniform_unsigned(0, max_threads);
-        m_bit_reverse.set_uniform_unsigned(1, N_mask);
-        m_bit_reverse.set_uniform_unsigned(2, N_bits);
+        m_bit_reverse.set_uniform_unsigned(1, n_mask);
+        m_bit_reverse.set_uniform_unsigned(2, n_bits);
         data->bind(0);
         m_bit_reverse.dispatch_compute(group_count(max_threads, m_group_size), 1, 1);
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 }
 
 template <typename T>
-void DeviceProg<T>::fft(int max_threads, bool inverse, T Two_PI_Div_M, int N_2_mask, int N_2_bits, int M_2,
-                        DeviceMemory<std::complex<T>>* data) const
+void DeviceProgFFTGlobal<T>::fft(int max_threads, bool inverse, T two_pi_div_m, int n_div_2_mask, int m_div_2,
+                                 DeviceMemory<std::complex<T>>* data) const
 {
         m_fft.set_uniform(0, inverse);
         m_fft.set_uniform_unsigned(1, max_threads);
-        m_fft.set_uniform_unsigned(2, N_2_mask);
-        m_fft.set_uniform_unsigned(3, N_2_bits);
-        m_fft.set_uniform_unsigned(4, M_2);
-        m_fft.set_uniform(5, Two_PI_Div_M);
+        m_fft.set_uniform_unsigned(2, n_div_2_mask);
+        m_fft.set_uniform_unsigned(3, m_div_2);
+        m_fft.set_uniform(4, two_pi_div_m);
         data->bind(0);
         m_fft.dispatch_compute(group_count(max_threads, m_group_size), 1, 1);
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
@@ -273,10 +277,10 @@ void DeviceProgCopy<T>::copy_output(T to_mul, const GLuint64 tex, const DeviceMe
 
 template <typename T>
 DeviceProgMul<T>::DeviceProgMul(vec2i group_size, int n1, int n2, int m1, int m2)
-        : m_rows_to(group_count(m1, n2, group_size)),
-          m_rows_from(group_count(n1, n2, group_size)),
-          m_columns_to(group_count(n1, m2, group_size)),
-          m_columns_from(group_count(n1, n2, group_size)),
+        : m_rows_to_buffer_groups(group_count(m1, n2, group_size)),
+          m_rows_from_buffer_groups(group_count(n1, n2, group_size)),
+          m_columns_to_buffer_groups(group_count(n1, m2, group_size)),
+          m_columns_from_buffer_groups(group_count(n1, n2, group_size)),
           m_rows_to_buffer(opengl::ComputeShader(rows_mul_to_buffer_source<T>(group_size, n1, n2, m1, m2))),
           m_rows_from_buffer(opengl::ComputeShader(rows_mul_fr_buffer_source<T>(group_size, n1, n2, m1, m2))),
           m_columns_to_buffer(opengl::ComputeShader(cols_mul_to_buffer_source<T>(group_size, n1, n2, m1, m2))),
@@ -291,7 +295,7 @@ void DeviceProgMul<T>::rows_to_buffer(bool inverse, const DeviceMemory<std::comp
         m_rows_to_buffer.set_uniform(0, inverse);
         data.bind(0);
         buffer->bind(1);
-        m_rows_to_buffer.dispatch_compute(m_rows_to[0], m_rows_to[1], 1);
+        m_rows_to_buffer.dispatch_compute(m_rows_to_buffer_groups[0], m_rows_to_buffer_groups[1], 1);
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 }
 
@@ -302,7 +306,7 @@ void DeviceProgMul<T>::rows_from_buffer(bool inverse, DeviceMemory<std::complex<
         m_rows_from_buffer.set_uniform(0, inverse);
         data->bind(0);
         buffer.bind(1);
-        m_rows_from_buffer.dispatch_compute(m_rows_from[0], m_rows_from[1], 1);
+        m_rows_from_buffer.dispatch_compute(m_rows_from_buffer_groups[0], m_rows_from_buffer_groups[1], 1);
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 }
 
@@ -313,7 +317,7 @@ void DeviceProgMul<T>::columns_to_buffer(bool inverse, const DeviceMemory<std::c
         m_columns_to_buffer.set_uniform(0, inverse);
         data.bind(0);
         buffer->bind(1);
-        m_columns_to_buffer.dispatch_compute(m_columns_to[0], m_columns_to[1], 1);
+        m_columns_to_buffer.dispatch_compute(m_columns_to_buffer_groups[0], m_columns_to_buffer_groups[1], 1);
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 }
 
@@ -324,7 +328,7 @@ void DeviceProgMul<T>::columns_from_buffer(bool inverse, DeviceMemory<std::compl
         m_columns_from_buffer.set_uniform(0, inverse);
         data->bind(0);
         buffer.bind(1);
-        m_columns_from_buffer.dispatch_compute(m_columns_from[0], m_columns_from[1], 1);
+        m_columns_from_buffer.dispatch_compute(m_columns_from_buffer_groups[0], m_columns_from_buffer_groups[1], 1);
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 }
 
@@ -336,8 +340,8 @@ DeviceProgMulD<T>::DeviceProgMulD(vec2i group_size, int n1, int n2, int m1, int 
           m_n2(n2),
           m_m1(m1),
           m_m2(m2),
-          m_rows_d(group_count(m1, n2, group_size)),
-          m_cols_d(group_count(m2, n1, group_size)),
+          m_row_groups(group_count(m1, n2, group_size)),
+          m_column_groups(group_count(m2, n1, group_size)),
           m_mul_d(opengl::ComputeShader(rows_mul_d_source<T>(group_size)))
 {
 }
@@ -349,7 +353,7 @@ void DeviceProgMulD<T>::rows_mul_d(const DeviceMemory<std::complex<T>>& d, Devic
         m_mul_d.set_uniform(1, m_n2);
         d.bind(0);
         data->bind(1);
-        m_mul_d.dispatch_compute(m_rows_d[0], m_rows_d[1], 1);
+        m_mul_d.dispatch_compute(m_row_groups[0], m_row_groups[1], 1);
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 }
 
@@ -360,7 +364,7 @@ void DeviceProgMulD<T>::columns_mul_d(const DeviceMemory<std::complex<T>>& d, De
         m_mul_d.set_uniform(1, m_n1);
         d.bind(0);
         data->bind(1);
-        m_mul_d.dispatch_compute(m_cols_d[0], m_cols_d[1], 1);
+        m_mul_d.dispatch_compute(m_column_groups[0], m_column_groups[1], 1);
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 }
 
@@ -388,8 +392,8 @@ void DeviceProgFFTShared<T>::exec(bool inverse, int data_size, DeviceMemory<std:
 
 //
 
-template class DeviceProg<float>;
-template class DeviceProg<double>;
+template class DeviceProgFFTGlobal<float>;
+template class DeviceProgFFTGlobal<double>;
 template class DeviceProgCopy<float>;
 template class DeviceProgCopy<double>;
 template class DeviceProgMul<float>;

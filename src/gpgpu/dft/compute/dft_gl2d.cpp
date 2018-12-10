@@ -69,10 +69,10 @@ namespace
 {
 // Или само число степень двух,
 // или минимальная степень двух, равная или больше 2N-2
-int compute_M(int n)
+int compute_m(int n)
 {
-        int log2_N = log_2(n);
-        if ((1 << log2_N) == n)
+        int log2_n = log_2(n);
+        if ((1 << log2_n) == n)
         {
                 return n;
         }
@@ -91,25 +91,25 @@ int compute_M(int n)
 
 // Compute the symmetric Toeplitz H: for given N, compute the scalar constants
 // Формулы 13.4, 13.22.
-std::vector<std::complex<double>> compute_h(int N, bool inverse, double Coef)
+std::vector<std::complex<double>> compute_h(int n, bool inverse, double coef)
 {
-        std::vector<std::complex<double>> h(N);
+        std::vector<std::complex<double>> h(n);
 
-        for (int l = 0; l <= N - 1; ++l)
+        for (int l = 0; l <= n - 1; ++l)
         {
-                // theta = (inverse ? 1 : -1) * 2 * pi / N * (-0.5 * l * l) = (inverse ? -pi : pi) / N * l * l
+                // theta = (inverse ? 1 : -1) * 2 * pi / n * (-0.5 * l * l) = (inverse ? -pi : pi) / n * l * l
 
-                // h[l] = std::polar(Coef, (inverse ? -PI : PI) / N * l * l);
+                // h[l] = std::polar(Coef, (inverse ? -PI : PI) / n * l * l);
 
-                // Вместо l * l / N нужно вычислить mod(l * l / N, 2), чтобы в тригонометрические функции
+                // Вместо l * l / n нужно вычислить mod(l * l / n, 2), чтобы в тригонометрические функции
                 // поступало не больше 2 * PI.
                 long long dividend = l * l;
-                long long quotient = dividend / N;
-                long long remainder = dividend - quotient * N;
-                // factor = (quotient mod 2) + (remainder / N).
-                double factor = (quotient & 1) + static_cast<double>(remainder) / N;
+                long long quotient = dividend / n;
+                long long remainder = dividend - quotient * n;
+                // factor = (quotient mod 2) + (remainder / n).
+                double factor = (quotient & 1) + static_cast<double>(remainder) / n;
 
-                h[l] = std::polar(Coef, (inverse ? -PI<double> : PI<double>)*factor);
+                h[l] = std::polar(coef, (inverse ? -PI<double> : PI<double>)*factor);
         }
 
         return h;
@@ -118,21 +118,21 @@ std::vector<std::complex<double>> compute_h(int N, bool inverse, double Coef)
 // Embed H in the circulant H(2)
 // На основе исправленных формул 13.11, 13.23, 13.24, 13.25.
 // Об исправлении в комментарии о книге.
-std::vector<std::complex<double>> compute_h2(int N, int M, const std::vector<std::complex<double>>& h)
+std::vector<std::complex<double>> compute_h2(int n, int m, const std::vector<std::complex<double>>& h)
 {
-        std::vector<std::complex<double>> h2(M);
+        std::vector<std::complex<double>> h2(m);
 
-        for (int l = 0; l <= N - 1; ++l)
+        for (int l = 0; l <= n - 1; ++l)
         {
                 h2[l] = h[l];
         }
-        for (int l = N; l <= M - N; ++l)
+        for (int l = n; l <= m - n; ++l)
         {
                 h2[l] = std::complex<double>(0, 0);
         }
-        for (int l = M - N + 1; l <= M - 1; ++l)
+        for (int l = m - n + 1; l <= m - 1; ++l)
         {
-                h2[l] = h[M - l];
+                h2[l] = h[m - l];
         }
         return h2;
 }
@@ -181,63 +181,62 @@ int group_size(int dft_size)
 }
 
 template <typename FP>
-void fft1d(bool inverse, int fft_count, const DeviceProgFFTShared<FP>& fft, const DeviceProg<FP>& programs,
+void fft1d(bool inverse, int fft_count, const DeviceProgFFTShared<FP>& fft, const DeviceProgFFTGlobal<FP>& programs,
            DeviceMemory<std::complex<FP>>* data)
 {
-        const int N = fft.n();
+        const int n = fft.n();
 
-        if (N == 1)
+        if (n == 1)
         {
                 return;
         }
 
         const int shared_size = fft.shared_size();
-        const int data_size = N * fft_count;
+        const int data_size = n * fft_count;
 
-        if (N <= shared_size)
+        if (n <= shared_size)
         {
                 fft.exec(inverse, data_size, data);
                 return;
         }
 
-        const int N_bits = fft.n_bits();
-        ASSERT((1 << N_bits) == N);
+        const int n_bits = fft.n_bits();
+        ASSERT((1 << n_bits) == n);
 
-        // Если N превышает максимум обрабатываемых данных shared_size, то вначале
+        // Если n превышает максимум обрабатываемых данных shared_size, то вначале
         // надо отдельно выполнить перестановку данных, а потом запускать функции
         // с отключенной перестановкой, иначе одни запуски будут вносить изменения
         // в данные других запусков, так как результат пишется в исходные данные.
 
-        programs.bit_reverse(data_size, N - 1, N_bits, data);
+        programs.bit_reverse(data_size, n - 1, n_bits, data);
 
         fft.exec(inverse, data_size, data);
 
         // Досчитать до нужного размера уже в глобальной памяти без разделяемой
 
-        const int N_2 = N / 2;
-        const int N_2_mask = N_2 - 1;
-        const int N_2_bits = N_bits - 1;
+        const int n_div_2 = n / 2;
+        const int n_div_2_mask = n_div_2 - 1;
 
         const int thread_count = data_size / 2;
 
-        int M_2 = shared_size;
-        FP Two_PI_Div_M = inverse ? (PI<FP> / M_2) : -(PI<FP> / M_2);
+        int m_div_2 = shared_size;
+        FP two_pi_div_m = inverse ? (PI<FP> / m_div_2) : -(PI<FP> / m_div_2);
 
-        for (; M_2 < N; M_2 <<= 1, Two_PI_Div_M /= 2)
+        for (; m_div_2 < n; m_div_2 <<= 1, two_pi_div_m /= 2)
         {
-                // M_2 - половина размера текущих отдельных БПФ.
-                programs.fft(thread_count, inverse, Two_PI_Div_M, N_2_mask, N_2_bits, M_2, data);
+                // m_div_2 - половина размера текущих отдельных БПФ
+                programs.fft(thread_count, inverse, two_pi_div_m, n_div_2_mask, m_div_2, data);
         }
 }
 
 template <typename FP>
 class Impl final : public FourierGL1, public FourierGL2
 {
-        const int m_N1, m_N2, m_M1, m_M2, m_M1_bin, m_M2_bin;
+        const int m_n1, m_n2, m_m1, m_m2, m_m1_bin, m_m2_bin;
         DeviceMemory<std::complex<FP>> m_d1_fwd, m_d1_inv, m_d2_fwd, m_d2_inv;
         DeviceMemory<std::complex<FP>> m_x_d, m_buffer;
         GLuint64 m_texture_handle;
-        DeviceProg<FP> m_prog;
+        DeviceProgFFTGlobal<FP> m_fft_global;
         DeviceProgCopy<FP> m_copy;
         DeviceProgMul<FP> m_mul;
         DeviceProgMulD<FP> m_mul_d;
@@ -246,25 +245,25 @@ class Impl final : public FourierGL1, public FourierGL2
 
         void dft2d(bool inverse)
         {
-                if (m_N1 > 1)
+                if (m_n1 > 1)
                 {
                         // По строкам
 
                         m_mul.rows_to_buffer(inverse, m_x_d, &m_buffer);
-                        fft1d(inverse, m_N2, m_fft_1, m_prog, &m_buffer);
+                        fft1d(inverse, m_n2, m_fft_1, m_fft_global, &m_buffer);
                         m_mul_d.rows_mul_d(inverse ? m_d1_inv : m_d1_fwd, &m_buffer);
-                        fft1d(!inverse, m_N2, m_fft_1, m_prog, &m_buffer);
+                        fft1d(!inverse, m_n2, m_fft_1, m_fft_global, &m_buffer);
                         m_mul.rows_from_buffer(inverse, &m_x_d, m_buffer);
                 }
 
-                if (m_N2 > 1)
+                if (m_n2 > 1)
                 {
                         // По столбцам
 
                         m_mul.columns_to_buffer(inverse, m_x_d, &m_buffer);
-                        fft1d(inverse, m_N1, m_fft_2, m_prog, &m_buffer);
+                        fft1d(inverse, m_n1, m_fft_2, m_fft_global, &m_buffer);
                         m_mul_d.columns_mul_d(inverse ? m_d2_inv : m_d2_fwd, &m_buffer);
-                        fft1d(!inverse, m_N1, m_fft_2, m_prog, &m_buffer);
+                        fft1d(!inverse, m_n1, m_fft_2, m_fft_global, &m_buffer);
                         m_mul.columns_from_buffer(inverse, &m_x_d, m_buffer);
                 }
         }
@@ -272,9 +271,9 @@ class Impl final : public FourierGL1, public FourierGL2
         void exec(bool inverse, std::vector<std::complex<float>>* src) override
         {
                 int size = src->size();
-                if (size != m_N1 * m_N2)
+                if (size != m_n1 * m_n2)
                 {
-                        error("FFT input size error: input " + to_string(size) + ", must be " + to_string(m_N1 * m_N2));
+                        error("FFT input size error: input " + to_string(size) + ", must be " + to_string(m_n1 * m_n2));
                 }
 
                 std::vector<std::complex<FP>> data = conv<FP>(std::move(*src));
@@ -300,34 +299,34 @@ class Impl final : public FourierGL1, public FourierGL2
         {
                 m_copy.copy_input(srgb, m_texture_handle, &m_x_d);
                 dft2d(inverse);
-                m_copy.copy_output(static_cast<FP>(1.0 / (m_N1 * m_N2)), m_texture_handle, m_x_d);
+                m_copy.copy_output(static_cast<FP>(1.0 / (m_n1 * m_n2)), m_texture_handle, m_x_d);
         }
 
 public:
         Impl(int n1, int n2, const opengl::TextureRGBA32F* texture)
-                : m_N1(n1),
-                  m_N2(n2),
-                  m_M1(compute_M(m_N1)),
-                  m_M2(compute_M(m_N2)),
-                  m_M1_bin(binary_size(m_M1)),
-                  m_M2_bin(binary_size(m_M2)),
-                  m_d1_fwd(m_M1, MemoryUsage::StaticCopy),
-                  m_d1_inv(m_M1, MemoryUsage::StaticCopy),
-                  m_d2_fwd(m_M2, MemoryUsage::StaticCopy),
-                  m_d2_inv(m_M2, MemoryUsage::StaticCopy),
-                  m_x_d(m_N1 * m_N2, MemoryUsage::DynamicCopy),
-                  m_buffer(std::max(m_M1 * m_N2, m_M2 * m_N1), MemoryUsage::DynamicCopy),
-                  m_prog(GROUP_SIZE_1D),
-                  m_copy(GROUP_SIZE_2D, m_N1, m_N2),
-                  m_mul(GROUP_SIZE_2D, m_N1, m_N2, m_M1, m_M2),
-                  m_mul_d(GROUP_SIZE_2D, m_N1, m_N2, m_M1, m_M2),
-                  m_fft_1(m_M1, shared_size<FP>(m_M1), group_size<FP>(m_M1), m_M1 <= shared_size<FP>(m_M1)),
-                  m_fft_2(m_M2, shared_size<FP>(m_M2), group_size<FP>(m_M2), m_M2 <= shared_size<FP>(m_M2))
+                : m_n1(n1),
+                  m_n2(n2),
+                  m_m1(compute_m(m_n1)),
+                  m_m2(compute_m(m_n2)),
+                  m_m1_bin(binary_size(m_m1)),
+                  m_m2_bin(binary_size(m_m2)),
+                  m_d1_fwd(m_m1, MemoryUsage::StaticCopy),
+                  m_d1_inv(m_m1, MemoryUsage::StaticCopy),
+                  m_d2_fwd(m_m2, MemoryUsage::StaticCopy),
+                  m_d2_inv(m_m2, MemoryUsage::StaticCopy),
+                  m_x_d(m_n1 * m_n2, MemoryUsage::DynamicCopy),
+                  m_buffer(std::max(m_m1 * m_n2, m_m2 * m_n1), MemoryUsage::DynamicCopy),
+                  m_fft_global(GROUP_SIZE_1D),
+                  m_copy(GROUP_SIZE_2D, m_n1, m_n2),
+                  m_mul(GROUP_SIZE_2D, m_n1, m_n2, m_m1, m_m2),
+                  m_mul_d(GROUP_SIZE_2D, m_n1, m_n2, m_m1, m_m2),
+                  m_fft_1(m_m1, shared_size<FP>(m_m1), group_size<FP>(m_m1), m_m1 <= shared_size<FP>(m_m1)),
+                  m_fft_2(m_m2, shared_size<FP>(m_m2), group_size<FP>(m_m2), m_m2 <= shared_size<FP>(m_m2))
 
         {
-                if (m_N1 < 1 || m_N2 < 1)
+                if (m_n1 < 1 || m_n2 < 1)
                 {
-                        error("FFT size error: " + to_string(m_N1) + "x" + to_string(m_N2));
+                        error("FFT size error: " + to_string(m_n1) + "x" + to_string(m_n2));
                 }
 
                 if (texture)
@@ -339,23 +338,23 @@ public:
 
                 // Для обратного преобразования нужна корректировка данных с умножением на коэффициент,
                 // так как разный размер у исходного вектора N и его расширенного M.
-                double M1_Div_N1 = static_cast<double>(m_M1) / m_N1;
-                double M2_Div_N2 = static_cast<double>(m_M2) / m_N2;
+                double m1_div_n1 = static_cast<double>(m_m1) / m_n1;
+                double m2_div_n2 = static_cast<double>(m_m2) / m_n2;
 
                 // Compute the diagonal D in Lemma 13.2: use the radix-2 FFT
                 // Формулы 13.13, 13.26.
 
-                m_d1_fwd.load(conv<FP>(compute_h2(m_N1, m_M1, compute_h(m_N1, false, 1.0))));
-                fft1d(false, 1, m_fft_1, m_prog, &m_d1_fwd);
+                m_d1_fwd.load(conv<FP>(compute_h2(m_n1, m_m1, compute_h(m_n1, false, 1.0))));
+                fft1d(false, 1, m_fft_1, m_fft_global, &m_d1_fwd);
 
-                m_d1_inv.load(conv<FP>(compute_h2(m_N1, m_M1, compute_h(m_N1, true, M1_Div_N1))));
-                fft1d(true, 1, m_fft_1, m_prog, &m_d1_inv);
+                m_d1_inv.load(conv<FP>(compute_h2(m_n1, m_m1, compute_h(m_n1, true, m1_div_n1))));
+                fft1d(true, 1, m_fft_1, m_fft_global, &m_d1_inv);
 
-                m_d2_fwd.load(conv<FP>(compute_h2(m_N2, m_M2, compute_h(m_N2, false, 1.0))));
-                fft1d(false, 1, m_fft_2, m_prog, &m_d2_fwd);
+                m_d2_fwd.load(conv<FP>(compute_h2(m_n2, m_m2, compute_h(m_n2, false, 1.0))));
+                fft1d(false, 1, m_fft_2, m_fft_global, &m_d2_fwd);
 
-                m_d2_inv.load(conv<FP>(compute_h2(m_N2, m_M2, compute_h(m_N2, true, M2_Div_N2))));
-                fft1d(true, 1, m_fft_2, m_prog, &m_d2_inv);
+                m_d2_inv.load(conv<FP>(compute_h2(m_n2, m_m2, compute_h(m_n2, true, m2_div_n2))));
+                fft1d(true, 1, m_fft_2, m_fft_global, &m_d2_inv);
         }
 };
 }
