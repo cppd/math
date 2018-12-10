@@ -234,13 +234,13 @@ template <typename FP>
 class Impl final : public FourierGL1, public FourierGL2
 {
         const int m_N1, m_N2, m_M1, m_M2, m_M1_bin, m_M2_bin;
-        const vec2i m_rows_d, m_cols_d;
         const vec2i m_texture_groups;
         DeviceMemory<std::complex<FP>> m_d1_fwd, m_d1_inv, m_d2_fwd, m_d2_inv;
         DeviceMemory<std::complex<FP>> m_x_d, m_buffer;
         GLuint64 m_texture_handle;
         DeviceProg<FP> m_prog;
         DeviceProgMul<FP> m_mul;
+        DeviceProgMulD<FP> m_mul_d;
         DeviceProgFFTShared<FP> m_fft_1;
         DeviceProgFFTShared<FP> m_fft_2;
 
@@ -252,7 +252,7 @@ class Impl final : public FourierGL1, public FourierGL2
 
                         m_mul.rows_to_buffer(inverse, m_x_d, &m_buffer);
                         fft1d(inverse, m_N2, m_fft_1, m_prog, &m_buffer);
-                        m_prog.rows_mul_d(m_rows_d, m_M1, m_N2, inverse ? m_d1_inv : m_d1_fwd, &m_buffer);
+                        m_mul_d.rows_mul_d(inverse ? m_d1_inv : m_d1_fwd, &m_buffer);
                         fft1d(!inverse, m_N2, m_fft_1, m_prog, &m_buffer);
                         m_mul.rows_from_buffer(inverse, &m_x_d, m_buffer);
                 }
@@ -263,7 +263,7 @@ class Impl final : public FourierGL1, public FourierGL2
 
                         m_mul.columns_to_buffer(inverse, m_x_d, &m_buffer);
                         fft1d(inverse, m_N1, m_fft_2, m_prog, &m_buffer);
-                        m_prog.rows_mul_d(m_cols_d, m_M2, m_N1, inverse ? m_d2_inv : m_d2_fwd, &m_buffer);
+                        m_mul_d.columns_mul_d(inverse ? m_d2_inv : m_d2_fwd, &m_buffer);
                         fft1d(!inverse, m_N1, m_fft_2, m_prog, &m_buffer);
                         m_mul.columns_from_buffer(inverse, &m_x_d, m_buffer);
                 }
@@ -311,8 +311,6 @@ public:
                   m_M2(compute_M(m_N2)),
                   m_M1_bin(binary_size(m_M1)),
                   m_M2_bin(binary_size(m_M2)),
-                  m_rows_d(group_count(m_M1, m_N2, GROUP_SIZE_2D)),
-                  m_cols_d(group_count(m_M2, m_N1, GROUP_SIZE_2D)),
                   m_texture_groups(group_count(m_N1, m_N2, GROUP_SIZE_2D)),
                   m_d1_fwd(m_M1, MemoryUsage::StaticCopy),
                   m_d1_inv(m_M1, MemoryUsage::StaticCopy),
@@ -322,6 +320,7 @@ public:
                   m_buffer(std::max(m_M1 * m_N2, m_M2 * m_N1), MemoryUsage::DynamicCopy),
                   m_prog(GROUP_SIZE_1D, GROUP_SIZE_2D),
                   m_mul(GROUP_SIZE_2D, m_N1, m_N2, m_M1, m_M2),
+                  m_mul_d(GROUP_SIZE_2D, m_N1, m_N2, m_M1, m_M2),
                   m_fft_1(m_M1, shared_size<FP>(m_M1), group_size<FP>(m_M1), m_M1 <= shared_size<FP>(m_M1)),
                   m_fft_2(m_M2, shared_size<FP>(m_M2), group_size<FP>(m_M2), m_M2 <= shared_size<FP>(m_M2))
 

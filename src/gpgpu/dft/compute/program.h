@@ -31,7 +31,6 @@ class DeviceProg final
         const int m_group_size_1d;
         opengl::ComputeProgram m_bit_reverse;
         opengl::ComputeProgram m_fft;
-        opengl::ComputeProgram m_rows_mul_d;
         opengl::ComputeProgram m_copy_input;
         opengl::ComputeProgram m_copy_output;
 
@@ -59,18 +58,6 @@ public:
                 m_fft.set_uniform(5, Two_PI_Div_M);
                 data->bind(0);
                 m_fft.dispatch_compute(group_count(max_threads, m_group_size_1d), 1, 1);
-                glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-        }
-
-        // Умножение на диагональ, формулы 13.20, 13.30.
-        void rows_mul_d(vec2i groups, int columns, int rows, const DeviceMemory<std::complex<T>>& D,
-                        DeviceMemory<std::complex<T>>* data) const
-        {
-                m_rows_mul_d.set_uniform(0, columns);
-                m_rows_mul_d.set_uniform(1, rows);
-                D.bind(0);
-                data->bind(1);
-                m_rows_mul_d.dispatch_compute(groups[0], groups[1], 1);
                 glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
         }
 
@@ -146,6 +133,43 @@ public:
                 data->bind(0);
                 buffer.bind(1);
                 m_columns_from_buffer.dispatch_compute(m_columns_from[0], m_columns_from[1], 1);
+                glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+        }
+};
+
+template <typename T>
+class DeviceProgMulD final
+{
+        const int m_n1;
+        const int m_n2;
+        const int m_m1;
+        const int m_m2;
+        const vec2i m_rows_d;
+        const vec2i m_cols_d;
+        opengl::ComputeProgram m_mul_d;
+
+public:
+        DeviceProgMulD(vec2i group_size, int n1, int n2, int m1, int m2);
+
+        // Умножение на диагональ, формулы 13.20, 13.30.
+
+        void rows_mul_d(const DeviceMemory<std::complex<T>>& d, DeviceMemory<std::complex<T>>* data) const
+        {
+                m_mul_d.set_uniform(0, m_m1);
+                m_mul_d.set_uniform(1, m_n2);
+                d.bind(0);
+                data->bind(1);
+                m_mul_d.dispatch_compute(m_rows_d[0], m_rows_d[1], 1);
+                glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+        }
+
+        void columns_mul_d(const DeviceMemory<std::complex<T>>& d, DeviceMemory<std::complex<T>>* data) const
+        {
+                m_mul_d.set_uniform(0, m_m2);
+                m_mul_d.set_uniform(1, m_n1);
+                d.bind(0);
+                data->bind(1);
+                m_mul_d.dispatch_compute(m_cols_d[0], m_cols_d[1], 1);
                 glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
         }
 };
