@@ -15,7 +15,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-uniform float brightness;
+layout(std140, binding = 0) uniform Data
+{
+        mat4 matrix;
+        float brightness;
+};
 
 out vec4 color;
 void main(void)

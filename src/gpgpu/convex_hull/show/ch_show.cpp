@@ -36,12 +36,49 @@ constexpr const char fragment_shader[]
 // rad / ms
 constexpr double ANGULAR_FREQUENCY = TWO_PI<double> * 5;
 
+namespace
+{
+class ShaderMemory
+{
+        opengl::UniformBuffer m_buffer;
+
+        struct Data
+        {
+                Matrix<4, 4, float> matrix;
+                float brightness;
+        };
+
+public:
+        ShaderMemory() : m_buffer(sizeof(Data))
+        {
+        }
+
+        void set_matrix(const mat4& matrix) const
+        {
+                decltype(Data().matrix) m = transpose(to_matrix<float>(matrix));
+                m_buffer.copy(offsetof(Data, matrix), m);
+        }
+
+        void set_brightness(float brightness) const
+        {
+                decltype(Data().brightness) b = brightness;
+                m_buffer.copy(offsetof(Data, brightness), b);
+        }
+
+        void bind()
+        {
+                m_buffer.bind(0);
+        }
+};
+}
+
 class ConvexHullShow::Impl final
 {
         opengl::GraphicsProgram m_draw_prog;
         opengl::ShaderStorageBuffer m_points;
         double m_start_time;
         std::unique_ptr<ConvexHullGL2D> m_convex_hull;
+        ShaderMemory m_shader_memory;
 
 public:
         Impl(const opengl::TextureR32I& objects, const mat4& matrix)
@@ -52,7 +89,7 @@ public:
 
                 m_convex_hull = create_convex_hull_gl2d(objects, m_points);
 
-                m_draw_prog.set_uniform_float("matrix", matrix);
+                m_shader_memory.set_matrix(matrix);
         }
 
         Impl(const Impl&) = delete;
@@ -69,10 +106,11 @@ public:
         {
                 int point_count = m_convex_hull->exec();
 
-                float d = 0.5 + 0.5 * std::sin(ANGULAR_FREQUENCY * (time_in_seconds() - m_start_time));
-                m_draw_prog.set_uniform("brightness", d);
+                float brightness = 0.5 + 0.5 * std::sin(ANGULAR_FREQUENCY * (time_in_seconds() - m_start_time));
+                m_shader_memory.set_brightness(brightness);
 
                 m_points.bind(0);
+                m_shader_memory.bind();
                 m_draw_prog.draw_arrays(GL_LINE_LOOP, 0, point_count);
         }
 };
