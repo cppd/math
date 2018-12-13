@@ -839,6 +839,70 @@ public:
         }
 };
 
+class StorageBuffer final
+{
+        Buffer m_buffer;
+        GLsizeiptr m_data_size;
+
+        void copy_to(GLintptr offset, const void* data, GLsizeiptr data_size) const
+        {
+                ASSERT(offset + data_size <= m_data_size);
+
+                void* map_memory_data =
+                        glMapNamedBufferRange(m_buffer, offset, data_size, GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_RANGE_BIT);
+
+                std::memcpy(map_memory_data, data, data_size);
+
+                glUnmapNamedBuffer(m_buffer);
+        }
+
+        void copy_from(GLintptr offset, void* data, GLsizeiptr data_size) const
+        {
+                ASSERT(offset + data_size <= m_data_size);
+
+                void* map_memory_data = glMapNamedBufferRange(m_buffer, offset, data_size, GL_MAP_READ_BIT);
+
+                std::memcpy(data, map_memory_data, data_size);
+
+                glUnmapNamedBuffer(m_buffer);
+        }
+
+public:
+        StorageBuffer(GLsizeiptr data_size) noexcept : m_buffer(GL_SHADER_STORAGE_BUFFER), m_data_size(data_size)
+        {
+                glNamedBufferStorage(m_buffer, data_size, nullptr, GL_MAP_WRITE_BIT | GL_MAP_READ_BIT);
+        }
+
+        void bind(GLuint point) const noexcept
+        {
+                glBindBufferBase(GL_SHADER_STORAGE_BUFFER, point, m_buffer);
+        }
+
+        GLsizeiptr size() const noexcept
+        {
+                return m_data_size;
+        }
+
+        template <typename T>
+        void load(const T& data) const
+        {
+                static_assert(is_vector<T> || is_array<T>);
+                copy_to(0, data.data(), data.size() * sizeof(typename T::value_type));
+        }
+
+        template <typename T>
+        std::enable_if_t<is_vector<T> || is_array<T>> read(T* data) const
+        {
+                copy_from(0 /*offset*/, data->data(), data->size() * sizeof(T));
+        }
+        template <typename T>
+        void read(T* data) const
+        {
+                static_assert(!is_vector<T> && !is_array<T>);
+                copy_from(0 /*offset*/, data, sizeof(T));
+        }
+};
+
 class ArrayBuffer final
 {
         GLuint m_buffer = 0;
