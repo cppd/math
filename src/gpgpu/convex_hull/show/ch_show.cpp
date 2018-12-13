@@ -75,7 +75,7 @@ public:
 class ConvexHullShow::Impl final
 {
         opengl::GraphicsProgram m_draw_prog;
-        opengl::ShaderStorageBuffer m_points;
+        opengl::StorageBuffer m_points;
         double m_start_time;
         std::unique_ptr<ConvexHullGL2D> m_convex_hull;
         ShaderMemory m_shader_memory;
@@ -83,10 +83,9 @@ class ConvexHullShow::Impl final
 public:
         Impl(const opengl::TextureR32I& objects, const mat4& matrix)
                 : m_draw_prog(opengl::VertexShader(vertex_shader), opengl::FragmentShader(fragment_shader)),
+                  m_points((2 * objects.texture().height()) * (2 * sizeof(GLfloat))),
                   m_start_time(time_in_seconds())
         {
-                m_points.create_dynamic_copy((2 * objects.texture().height()) * (2 * sizeof(GLfloat)));
-
                 m_convex_hull = create_convex_hull_gl2d(objects, m_points);
 
                 m_shader_memory.set_matrix(matrix);

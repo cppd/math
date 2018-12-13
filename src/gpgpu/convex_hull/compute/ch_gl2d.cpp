@@ -123,14 +123,14 @@ std::string filter_source(int line_size)
 class Impl final : public ConvexHullGL2D
 {
         const int m_height;
-        const opengl::ShaderStorageBuffer& m_points;
+        const opengl::StorageBuffer& m_points;
 
         opengl::ComputeProgram m_prepare_prog;
         opengl::ComputeProgram m_merge_prog;
         opengl::ComputeProgram m_filter_prog;
 
-        opengl::ShaderStorageBuffer m_lines;
-        opengl::ShaderStorageBuffer m_point_count;
+        opengl::StorageBuffer m_lines;
+        opengl::StorageBuffer m_point_count;
 
         int exec() override
         {
@@ -158,25 +158,24 @@ class Impl final : public ConvexHullGL2D
         }
 
 public:
-        Impl(const opengl::TextureR32I& objects, const opengl::ShaderStorageBuffer& points)
+        Impl(const opengl::TextureR32I& objects, const opengl::StorageBuffer& points)
                 : m_height(objects.texture().height()),
                   m_points(points),
                   m_prepare_prog(opengl::ComputeShader(
                           prepare_source(m_height, group_size_prepare(objects.texture().width(), 2 * sizeof(GLint))))),
                   m_merge_prog(opengl::ComputeShader(
                           merge_source(m_height, group_size_merge(m_height, sizeof(GLfloat)), iteration_count_merge(m_height)))),
-                  m_filter_prog(opengl::ComputeShader(filter_source(m_height)))
+                  m_filter_prog(opengl::ComputeShader(filter_source(m_height))),
+                  m_lines(2 * m_height * sizeof(GLfloat)),
+                  m_point_count(sizeof(GLint))
         {
                 m_prepare_prog.set_uniform_handle("objects", objects.image_resident_handle_read_only());
-
-                m_lines.create_dynamic_copy(2 * m_height * sizeof(GLfloat));
-                m_point_count.create_dynamic_copy(sizeof(GLint));
         }
 };
 }
 
 std::unique_ptr<ConvexHullGL2D> create_convex_hull_gl2d(const opengl::TextureR32I& object_image,
-                                                        const opengl::ShaderStorageBuffer& points)
+                                                        const opengl::StorageBuffer& points)
 {
         return std::make_unique<Impl>(object_image, points);
 }

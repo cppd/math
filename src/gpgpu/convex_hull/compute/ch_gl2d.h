@@ -27,5 +27,4 @@ struct ConvexHullGL2D
         virtual int exec() = 0;
 };
 
-std::unique_ptr<ConvexHullGL2D> create_convex_hull_gl2d(const opengl::TextureR32I& objects,
-                                                        const opengl::ShaderStorageBuffer& points);
+std::unique_ptr<ConvexHullGL2D> create_convex_hull_gl2d(const opengl::TextureR32I& objects, const opengl::StorageBuffer& points);
