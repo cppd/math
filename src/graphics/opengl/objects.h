@@ -739,6 +739,106 @@ public:
         }
 };
 
+class Buffer final
+{
+        GLuint m_buffer = 0;
+
+        void destroy() noexcept
+        {
+                if (m_buffer != 0)
+                {
+                        glDeleteBuffers(1, &m_buffer);
+                }
+        }
+
+        void move(Buffer* from) noexcept
+        {
+                m_buffer = from->m_buffer;
+                from->m_buffer = 0;
+        }
+
+public:
+        Buffer(GLenum target)
+        {
+                glCreateBuffers(1, &m_buffer);
+                glBindBuffer(target, m_buffer);
+                glBindBuffer(target, 0);
+        }
+        ~Buffer()
+        {
+                destroy();
+        }
+
+        Buffer(const Buffer&) = delete;
+        Buffer& operator=(const Buffer&) = delete;
+
+        Buffer(Buffer&& from) noexcept
+        {
+                move(&from);
+        }
+        Buffer& operator=(Buffer&& from) noexcept
+        {
+                if (this != &from)
+                {
+                        destroy();
+                        move(&from);
+                }
+                return *this;
+        }
+
+        operator GLuint() const noexcept
+        {
+                return m_buffer;
+        }
+};
+
+class UniformBuffer final
+{
+        Buffer m_buffer;
+        GLsizeiptr m_data_size;
+
+        void copy(GLintptr offset, const void* data, GLsizeiptr data_size) const
+        {
+                ASSERT(offset + data_size <= m_data_size);
+
+                void* map_memory_data =
+                        glMapNamedBufferRange(m_buffer, offset, data_size, GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_RANGE_BIT);
+
+                std::memcpy(map_memory_data, data, data_size);
+
+                glUnmapNamedBuffer(m_buffer);
+        }
+
+public:
+        UniformBuffer(GLsizeiptr data_size) noexcept : m_buffer(GL_UNIFORM_BUFFER), m_data_size(data_size)
+        {
+                glNamedBufferStorage(m_buffer, data_size, nullptr, GL_MAP_WRITE_BIT);
+        }
+
+        void bind(GLuint point) const noexcept
+        {
+                glBindBufferBase(GL_UNIFORM_BUFFER, point, m_buffer);
+        }
+
+        GLsizeiptr size() const noexcept
+        {
+                return m_data_size;
+        }
+
+        template <typename T>
+        void copy(GLintptr offset, const T& data) const
+        {
+                copy(offset, &data, sizeof(data));
+        }
+        template <typename T>
+        void copy(const T& data) const
+        {
+                ASSERT(size() == sizeof(data));
+
+                copy(0 /*offset*/, &data, sizeof(data));
+        }
+};
+
 class ArrayBuffer final
 {
         GLuint m_buffer = 0;
