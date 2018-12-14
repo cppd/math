@@ -17,13 +17,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 // gl_GlobalInvocationID = gl_WorkGroupID * gl_WorkGroupSize + gl_LocalInvocationID
 
+#if !defined(VULKAN)
 // Вставляется в текст программы
 // const uint GROUP_SIZE =
 // const int LINE_SIZE =
-
 layout(local_size_x = GROUP_SIZE) in;
-
 layout(bindless_image, r32i) readonly restrict uniform iimage2D objects;
+#else
+layout(constant_id = 0) const int LINE_SIZE = 1;
+layout(local_size_x_id = 1) in;
+layout(binding = 1, r32i) readonly restrict uniform iimage2D objects;
+#endif
 
 layout(std430, binding = 0) writeonly restrict buffer Lines
 {

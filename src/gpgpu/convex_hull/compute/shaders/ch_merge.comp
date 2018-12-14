@@ -17,33 +17,40 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 // gl_GlobalInvocationID = gl_WorkGroupID * gl_WorkGroupSize + gl_LocalInvocationID
 
+#if !defined(VULKAN)
 // Вставляется в текст программы
 // const uint GROUP_SIZE =
 // const int LINE_SIZE =
 // const int ITERATION_COUNT =
-
 layout(local_size_x = GROUP_SIZE) in;
+#else
+layout(constant_id = 0) const int LINE_SIZE = 1;
+layout(constant_id = 1) const int ITERATION_COUNT = 1;
+layout(local_size_x_id = 2) in;
+#endif
 
 layout(std430, binding = 0) restrict buffer Lines
 {
-        float lines[2][LINE_SIZE];
+        float lines[2 * LINE_SIZE];
 };
 
 shared float shared_buffer[LINE_SIZE];
 
 void copy_to_buffer()
 {
+        int offset = int(gl_WorkGroupID.x) * LINE_SIZE;
         for (int i = int(gl_LocalInvocationID.x); i < LINE_SIZE; i += int(gl_WorkGroupSize.x))
         {
-                shared_buffer[i] = lines[gl_WorkGroupID.x][i];
+                shared_buffer[i] = lines[offset + i];
         }
 }
 
 void copy_from_buffer()
 {
+        int offset = int(gl_WorkGroupID.x) * LINE_SIZE;
         for (int i = int(gl_LocalInvocationID.x); i < LINE_SIZE; i += int(gl_WorkGroupSize.x))
         {
-                lines[gl_WorkGroupID.x][i] = shared_buffer[i];
+                lines[offset + i] = shared_buffer[i];
         }
 }
 

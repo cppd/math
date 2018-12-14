@@ -108,7 +108,7 @@ public:
                 float brightness = 0.5 + 0.5 * std::sin(ANGULAR_FREQUENCY * (time_in_seconds() - m_start_time));
                 m_shader_memory.set_brightness(brightness);
 
-                m_points.bind(0);
+                m_points.bind(1);
                 m_shader_memory.bind();
                 m_draw_prog.draw_arrays(GL_LINE_LOOP, 0, point_count);
         }

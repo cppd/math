@@ -17,14 +17,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 // gl_GlobalInvocationID = gl_WorkGroupID * gl_WorkGroupSize + gl_LocalInvocationID
 
+#if !defined(VULKAN)
 // Вставляется в текст программы
 // const int LINE_SIZE =
+#else
+layout(constant_id = 0) const int LINE_SIZE = 1;
+#endif
 
 // Работает только 1 поток 1 группы.
+layout(local_size_x = 1) in;
 
 // Точки с отрицательным значением минимума или максимума надо убрать.
-
-layout(local_size_x = 1) in;
 
 // Входные данные 2 линии точек с координатами по X с минимумом и максимумом.
 // Координата Y равна индексу.

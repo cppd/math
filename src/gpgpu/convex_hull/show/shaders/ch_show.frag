@@ -21,7 +21,8 @@ layout(std140, binding = 0) uniform Data
         float brightness;
 };
 
-out vec4 color;
+layout(location = 0) out vec4 color;
+
 void main(void)
 {
         color = vec4(brightness.xxx, 1);

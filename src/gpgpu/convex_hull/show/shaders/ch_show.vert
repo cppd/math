@@ -21,13 +21,19 @@ layout(std140, binding = 0) uniform Data
         float brightness;
 };
 
-layout(std430, binding = 0) buffer StorageBuffer
+layout(std430, binding = 1) buffer Points
 {
         vec2 points[];
 };
 
 void main(void)
 {
-        vec2 s = points[gl_VertexID];
+#if defined(VULKAN)
+        int vertex_index = gl_VertexIndex;
+#else
+        int vertex_index = gl_VertexID;
+#endif
+
+        vec2 s = points[vertex_index];
         gl_Position = matrix * vec4(s.x + 0.5, s.y + 0.5, 0, 1);
 }
