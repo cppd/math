@@ -259,7 +259,7 @@ class DrawObject final
 {
         opengl::VertexArray m_vertex_array;
         opengl::ArrayBuffer m_vertex_buffer;
-        opengl::ShaderStorageBuffer m_storage_buffer;
+        std::unique_ptr<opengl::StorageBuffer> m_storage_buffer;
         std::vector<opengl::TextureRGBA32F> m_textures;
         unsigned m_vertices_count;
 
@@ -322,7 +322,7 @@ DrawObject::DrawObject(const Obj<3>& obj, double size, const vec3& position)
                         }
                 }
 
-                m_storage_buffer.load_static_draw(materials);
+                m_storage_buffer = std::make_unique<opengl::StorageBuffer>(materials);
         }
         else
         {
@@ -346,7 +346,7 @@ DrawObject::DrawObject(const Obj<3>& obj, double size, const vec3& position)
 void DrawObject::bind() const
 {
         m_vertex_array.bind();
-        m_storage_buffer.bind(0);
+        m_storage_buffer->bind(0);
 }
 const mat4& DrawObject::model_matrix() const
 {

@@ -21,31 +21,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <vector>
 
-enum class MemoryUsage
-{
-        StaticCopy,
-        DynamicCopy
-};
-
 template <typename T>
 class DeviceMemory final
 {
         size_t m_size;
-        MemoryUsage m_usage;
-        opengl::ShaderStorageBuffer m_buffer;
+        opengl::StorageBuffer m_buffer;
 
 public:
-        DeviceMemory(int size, MemoryUsage usage) : m_size(size), m_usage(usage)
+        DeviceMemory(int size) : m_size(size), m_buffer(size * sizeof(T))
         {
-                switch (m_usage)
-                {
-                case MemoryUsage::StaticCopy:
-                        m_buffer.create_static_copy(size * sizeof(T));
-                        break;
-                case MemoryUsage::DynamicCopy:
-                        m_buffer.create_dynamic_copy(size * sizeof(T));
-                        break;
-                }
         }
 
         void load(const std::vector<T>& data) const
@@ -54,15 +38,7 @@ public:
                 {
                         error("Storage size error");
                 }
-                switch (m_usage)
-                {
-                case MemoryUsage::StaticCopy:
-                        m_buffer.load_static_copy(data);
-                        break;
-                case MemoryUsage::DynamicCopy:
-                        m_buffer.load_dynamic_copy(data);
-                        break;
-                }
+                m_buffer.load(data);
         }
 
         void read(std::vector<T>* data) const

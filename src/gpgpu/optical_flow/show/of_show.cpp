@@ -86,10 +86,9 @@ class OpticalFlowShow::Impl final
 
         opengl::TextureRGBA32F m_source_image;
 
-        opengl::ShaderStorageBuffer m_top_points;
-        opengl::ShaderStorageBuffer m_top_points_flow;
-        int m_top_point_count_x;
-        int m_top_point_count_y;
+        std::unique_ptr<opengl::StorageBuffer> m_top_points;
+        std::unique_ptr<opengl::StorageBuffer> m_top_points_flow;
+        int m_top_point_count;
 
         bool m_flow_computed = false;
         double m_last_time = std::numeric_limits<double>::lowest();
@@ -98,11 +97,11 @@ class OpticalFlowShow::Impl final
 
         void draw_flow_lines()
         {
-                m_top_points.bind(0);
-                m_top_points_flow.bind(1);
+                m_top_points->bind(0);
+                m_top_points_flow->bind(1);
 
-                m_draw_prog.draw_arrays(GL_POINTS, 0, m_top_point_count_x * m_top_point_count_y * 2);
-                m_draw_prog.draw_arrays(GL_LINES, 0, m_top_point_count_x * m_top_point_count_y * 2);
+                m_draw_prog.draw_arrays(GL_POINTS, 0, m_top_point_count * 2);
+                m_draw_prog.draw_arrays(GL_LINES, 0, m_top_point_count * 2);
         }
 
 public:
@@ -113,17 +112,19 @@ public:
                   m_draw_prog_debug(opengl::VertexShader(vertex_debug_shader), opengl::FragmentShader(fragment_debug_shader)),
                   m_source_image(m_width, m_height)
         {
-                std::vector<vec2i> top_points;
+                std::vector<vec2i> points;
+                int point_count_x, point_count_y;
                 create_points_for_top_level(m_width, m_height, millimeters_to_pixels(DISTANCE_BETWEEN_POINTS, window_ppi),
-                                            &m_top_point_count_x, &m_top_point_count_y, &top_points);
+                                            &point_count_x, &point_count_y, &points);
 
-                m_top_points.load_dynamic_copy(top_points);
-                m_top_points_flow.create_dynamic_copy(top_points.size() * sizeof(vec2f));
+                m_top_point_count = point_count_x * point_count_y;
+                m_top_points = std::make_unique<opengl::StorageBuffer>(points);
+                m_top_points_flow = std::make_unique<opengl::StorageBuffer>(points.size() * sizeof(vec2f));
 
                 m_draw_prog.set_uniform_float("matrix", matrix);
 
-                m_optical_flow = create_optical_flow_gl2d(width, height, m_source_image, m_top_point_count_x, m_top_point_count_y,
-                                                          m_top_points, m_top_points_flow);
+                m_optical_flow = create_optical_flow_gl2d(width, height, m_source_image, point_count_x, point_count_y,
+                                                          *m_top_points, *m_top_points_flow);
         }
 
         void reset()

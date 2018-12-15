@@ -34,5 +34,5 @@ struct OpticalFlowGL2D
 
 std::unique_ptr<OpticalFlowGL2D> create_optical_flow_gl2d(int width, int height, const opengl::TextureRGBA32F& source_image,
                                                           int top_point_count_x, int top_point_count_y,
-                                                          const opengl::ShaderStorageBuffer& top_points,
-                                                          const opengl::ShaderStorageBuffer& top_points_flow);
+                                                          const opengl::StorageBuffer& top_points,
+                                                          const opengl::StorageBuffer& top_points_flow);

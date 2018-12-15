@@ -201,13 +201,13 @@ void create_textures(const std::vector<vec2i>& level_dimensions, std::vector<Ima
         }
 }
 
-void create_flow_buffers(const std::vector<vec2i>& level_dimensions, std::vector<opengl::ShaderStorageBuffer>* buffers)
+void create_flow_buffers(const std::vector<vec2i>& level_dimensions, std::vector<opengl::StorageBuffer>* buffers)
 {
         buffers->clear();
-        buffers->resize(level_dimensions.size());
+        buffers->reserve(level_dimensions.size());
         for (unsigned i = 0; i < level_dimensions.size(); ++i)
         {
-                (*buffers)[i].create_dynamic_copy(level_dimensions[i][0] * level_dimensions[i][1] * sizeof(vec2f));
+                buffers->emplace_back(level_dimensions[i][0] * level_dimensions[i][1] * sizeof(vec2f));
         }
 }
 
@@ -219,8 +219,8 @@ class Impl final : public OpticalFlowGL2D
         int m_top_point_count_x;
         int m_top_point_count_y;
 
-        const opengl::ShaderStorageBuffer& m_top_points;
-        const opengl::ShaderStorageBuffer& m_top_points_flow;
+        const opengl::StorageBuffer& m_top_points;
+        const opengl::StorageBuffer& m_top_points_flow;
 
         opengl::ComputeProgram m_comp_downsample;
         opengl::ComputeProgram m_comp_flow;
@@ -231,7 +231,7 @@ class Impl final : public OpticalFlowGL2D
         std::vector<ImageR32F> m_image_pyramid_dx;
         std::vector<ImageR32F> m_image_pyramid_dy;
 
-        std::vector<opengl::ShaderStorageBuffer> m_image_pyramid_flow;
+        std::vector<opengl::StorageBuffer> m_image_pyramid_flow;
         int m_i_index = 0;
         int m_j_index = 1;
         bool m_image_I_exists = false;
@@ -287,7 +287,7 @@ class Impl final : public OpticalFlowGL2D
 
         void compute_optical_flow(const std::vector<ImageR32F>& image_pyramid_I, const std::vector<ImageR32F>& image_pyramid_dx,
                                   const std::vector<ImageR32F>& image_pyramid_dy,
-                                  const std::vector<opengl::ShaderStorageBuffer>& image_pyramid_flow,
+                                  const std::vector<opengl::StorageBuffer>& image_pyramid_flow,
                                   const std::vector<ImageR32F>& image_pyramid_J)
         {
                 int image_pyramid_I_size = image_pyramid_I.size();
@@ -395,7 +395,7 @@ class Impl final : public OpticalFlowGL2D
 
 public:
         Impl(int width, int height, const opengl::TextureRGBA32F& source_image, int top_point_count_x, int top_point_count_y,
-             const opengl::ShaderStorageBuffer& top_points, const opengl::ShaderStorageBuffer& top_points_flow)
+             const opengl::StorageBuffer& top_points, const opengl::StorageBuffer& top_points_flow)
                 : m_width(width),
                   m_height(height),
                   m_groups_x(group_count(m_width, GROUP_SIZE)),
@@ -427,8 +427,8 @@ public:
 
 std::unique_ptr<OpticalFlowGL2D> create_optical_flow_gl2d(int width, int height, const opengl::TextureRGBA32F& source_image,
                                                           int top_point_count_x, int top_point_count_y,
-                                                          const opengl::ShaderStorageBuffer& top_points,
-                                                          const opengl::ShaderStorageBuffer& top_points_flow)
+                                                          const opengl::StorageBuffer& top_points,
+                                                          const opengl::StorageBuffer& top_points_flow)
 {
         return std::make_unique<Impl>(width, height, source_image, top_point_count_x, top_point_count_y, top_points,
                                       top_points_flow);
