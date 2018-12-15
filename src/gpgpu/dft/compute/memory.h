@@ -32,13 +32,13 @@ public:
         {
         }
 
-        void load(const std::vector<T>& data) const
+        void write(const std::vector<T>& data) const
         {
                 if (data.size() != m_size)
                 {
                         error("Storage size error");
                 }
-                m_buffer.load(data);
+                m_buffer.write(data);
         }
 
         void read(std::vector<T>* data) const

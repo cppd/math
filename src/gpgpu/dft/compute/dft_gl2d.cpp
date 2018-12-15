@@ -278,7 +278,7 @@ class Impl final : public FourierGL1, public FourierGL2
 
                 std::vector<std::complex<FP>> data = conv<FP>(std::move(*src));
 
-                m_x_d.load(data);
+                m_x_d.write(data);
 
                 glFinish();
 
@@ -344,16 +344,16 @@ public:
                 // Compute the diagonal D in Lemma 13.2: use the radix-2 FFT
                 // Формулы 13.13, 13.26.
 
-                m_d1_fwd.load(conv<FP>(compute_h2(m_n1, m_m1, compute_h(m_n1, false, 1.0))));
+                m_d1_fwd.write(conv<FP>(compute_h2(m_n1, m_m1, compute_h(m_n1, false, 1.0))));
                 fft1d(false, 1, m_fft_1, m_fft_global, &m_d1_fwd);
 
-                m_d1_inv.load(conv<FP>(compute_h2(m_n1, m_m1, compute_h(m_n1, true, m1_div_n1))));
+                m_d1_inv.write(conv<FP>(compute_h2(m_n1, m_m1, compute_h(m_n1, true, m1_div_n1))));
                 fft1d(true, 1, m_fft_1, m_fft_global, &m_d1_inv);
 
-                m_d2_fwd.load(conv<FP>(compute_h2(m_n2, m_m2, compute_h(m_n2, false, 1.0))));
+                m_d2_fwd.write(conv<FP>(compute_h2(m_n2, m_m2, compute_h(m_n2, false, 1.0))));
                 fft1d(false, 1, m_fft_2, m_fft_global, &m_d2_fwd);
 
-                m_d2_inv.load(conv<FP>(compute_h2(m_n2, m_m2, compute_h(m_n2, true, m2_div_n2))));
+                m_d2_inv.write(conv<FP>(compute_h2(m_n2, m_m2, compute_h(m_n2, true, m2_div_n2))));
                 fft1d(true, 1, m_fft_2, m_fft_global, &m_d2_inv);
         }
 };

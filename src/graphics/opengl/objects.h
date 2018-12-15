@@ -882,7 +882,7 @@ public:
         template <typename T, typename = std::enable_if_t<sizeof(std::declval<T>().size()) && sizeof(typename T::value_type)>>
         StorageBuffer(const T& data) noexcept : StorageBuffer(binary_size(data))
         {
-                load(data);
+                write(data);
         }
 
         void bind(GLuint point) const noexcept
@@ -896,7 +896,7 @@ public:
         }
 
         template <typename T>
-        void load(const T& data) const noexcept
+        void write(const T& data) const noexcept
         {
                 static_assert(is_vector<T> || is_array<T>);
                 copy_to(0, data.data(), binary_size(data));
