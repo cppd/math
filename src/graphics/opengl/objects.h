@@ -797,7 +797,7 @@ class UniformBuffer final
         Buffer m_buffer;
         GLsizeiptr m_data_size;
 
-        void copy(GLintptr offset, const void* data, GLsizeiptr data_size) const
+        void copy(GLintptr offset, const void* data, GLsizeiptr data_size) const noexcept
         {
                 ASSERT(offset + data_size <= m_data_size);
 
@@ -826,16 +826,16 @@ public:
         }
 
         template <typename T>
-        void copy(GLintptr offset, const T& data) const
+        void copy(GLintptr offset, const T& data) const noexcept
         {
                 copy(offset, &data, sizeof(data));
         }
         template <typename T>
-        void copy(const T& data) const
+        void copy(const T& data) const noexcept
         {
                 ASSERT(size() == sizeof(data));
 
-                copy(0 /*offset*/, &data, sizeof(data));
+                copy(0, &data, sizeof(data));
         }
 };
 
@@ -844,7 +844,7 @@ class StorageBuffer final
         Buffer m_buffer;
         GLsizeiptr m_data_size;
 
-        void copy_to(GLintptr offset, const void* data, GLsizeiptr data_size) const
+        void copy_to(GLintptr offset, const void* data, GLsizeiptr data_size) const noexcept
         {
                 ASSERT(offset + data_size <= m_data_size);
 
@@ -856,7 +856,7 @@ class StorageBuffer final
                 glUnmapNamedBuffer(m_buffer);
         }
 
-        void copy_from(GLintptr offset, void* data, GLsizeiptr data_size) const
+        void copy_from(GLintptr offset, void* data, GLsizeiptr data_size) const noexcept
         {
                 ASSERT(offset + data_size <= m_data_size);
 
@@ -867,10 +867,22 @@ class StorageBuffer final
                 glUnmapNamedBuffer(m_buffer);
         }
 
+        template <typename T>
+        static std::enable_if_t<is_vector<T> || is_array<T>, size_t> binary_size(const T& c) noexcept
+        {
+                return c.size() * sizeof(typename T::value_type);
+        }
+
 public:
         StorageBuffer(GLsizeiptr data_size) noexcept : m_buffer(GL_SHADER_STORAGE_BUFFER), m_data_size(data_size)
         {
                 glNamedBufferStorage(m_buffer, data_size, nullptr, GL_MAP_WRITE_BIT | GL_MAP_READ_BIT);
+        }
+
+        template <typename T, typename = std::enable_if_t<sizeof(std::declval<T>().size()) && sizeof(typename T::value_type)>>
+        StorageBuffer(const T& data) noexcept : StorageBuffer(binary_size(data))
+        {
+                load(data);
         }
 
         void bind(GLuint point) const noexcept
@@ -884,22 +896,21 @@ public:
         }
 
         template <typename T>
-        void load(const T& data) const
+        void load(const T& data) const noexcept
         {
                 static_assert(is_vector<T> || is_array<T>);
-                copy_to(0, data.data(), data.size() * sizeof(typename T::value_type));
+                copy_to(0, data.data(), binary_size(data));
         }
 
         template <typename T>
-        std::enable_if_t<is_vector<T> || is_array<T>> read(T* data) const
+        std::enable_if_t<is_vector<T> || is_array<T>> read(T* data) const noexcept
         {
-                copy_from(0 /*offset*/, data->data(), data->size() * sizeof(T));
+                copy_from(0, data->data(), binary_size(*data));
         }
         template <typename T>
-        void read(T* data) const
+        std::enable_if_t<!is_vector<T> && !is_array<T>> read(T* data) const noexcept
         {
-                static_assert(!is_vector<T> && !is_array<T>);
-                copy_from(0 /*offset*/, data, sizeof(T));
+                copy_from(0, data, sizeof(T));
         }
 };
 
