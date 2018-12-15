@@ -831,35 +831,11 @@ public:
 
 class ArrayBuffer final
 {
-        GLuint m_buffer = 0;
+        Buffer m_buffer = 0;
 
 public:
-        ArrayBuffer() noexcept
+        ArrayBuffer() noexcept : m_buffer(GL_ARRAY_BUFFER)
         {
-                glCreateBuffers(1, &m_buffer);
-                glBindBuffer(GL_ARRAY_BUFFER, m_buffer);
-                glBindBuffer(GL_ARRAY_BUFFER, 0);
-        }
-        ~ArrayBuffer()
-        {
-                glDeleteBuffers(1, &m_buffer);
-        }
-        ArrayBuffer(const ArrayBuffer&) = delete;
-        ArrayBuffer& operator=(const ArrayBuffer&) = delete;
-        ArrayBuffer(ArrayBuffer&& from) noexcept
-        {
-                *this = std::move(from);
-        }
-        ArrayBuffer& operator=(ArrayBuffer&& from) noexcept
-        {
-                if (this == &from)
-                {
-                        return *this;
-                }
-                glDeleteBuffers(1, &m_buffer);
-                m_buffer = from.m_buffer;
-                from.m_buffer = 0;
-                return *this;
         }
 
         void vertex_array_vertex_buffer(GLuint vertex_array, GLuint binding_index, GLintptr offset, GLsizei stride) const noexcept
