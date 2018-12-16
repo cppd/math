@@ -36,6 +36,9 @@ constexpr const char fragment_shader[]
 // rad / ms
 constexpr double ANGULAR_FREQUENCY = TWO_PI<double> * 5;
 
+constexpr int DATA_BINDING = 0;
+constexpr int POINTS_BINDING = 1;
+
 namespace
 {
 class ShaderMemory
@@ -65,9 +68,9 @@ public:
                 m_buffer.copy(offsetof(Data, brightness), b);
         }
 
-        void bind()
+        void bind(int point)
         {
-                m_buffer.bind(0);
+                m_buffer.bind(point);
         }
 };
 }
@@ -108,8 +111,8 @@ public:
                 float brightness = 0.5 + 0.5 * std::sin(ANGULAR_FREQUENCY * (time_in_seconds() - m_start_time));
                 m_shader_memory.set_brightness(brightness);
 
-                m_points.bind(1);
-                m_shader_memory.bind();
+                m_points.bind(POINTS_BINDING);
+                m_shader_memory.bind(DATA_BINDING);
                 m_draw_prog.draw_arrays(GL_LINE_LOOP, 0, point_count);
         }
 };

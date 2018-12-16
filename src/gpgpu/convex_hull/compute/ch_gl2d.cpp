@@ -47,6 +47,12 @@ constexpr const char filter_shader[]
 };
 // clang-format on
 
+constexpr int LINES_PREPARE_BINDING = 0;
+constexpr int LINES_MERGE_BINDING = 0;
+constexpr int LINES_FILTER_BINDING = 0;
+constexpr int POINTS_BINDING = 1;
+constexpr int POINT_COUNT_BINDING = 2;
+
 namespace
 {
 int group_size_prepare(int width, int shared_size_per_thread)
@@ -134,20 +140,21 @@ class Impl final : public ConvexHullGL2D
 
         int exec() override
         {
-                m_lines.bind(0);
-                m_points.bind(1);
-                m_point_count.bind(2);
-
                 // Поиск минимума и максимума для каждой строки.
                 // Если нет, то -1.
+                m_lines.bind(LINES_PREPARE_BINDING);
                 m_prepare_prog.dispatch_compute(m_height, 1, 1);
                 glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
                 // Объединение оболочек, начиная от 4 элементов.
+                m_lines.bind(LINES_MERGE_BINDING);
                 m_merge_prog.dispatch_compute(2, 1, 1);
                 glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
                 // Выбрасывание элементов со значением -1.
+                m_lines.bind(LINES_FILTER_BINDING);
+                m_points.bind(POINTS_BINDING);
+                m_point_count.bind(POINT_COUNT_BINDING);
                 m_filter_prog.dispatch_compute(1, 1, 1);
                 glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
