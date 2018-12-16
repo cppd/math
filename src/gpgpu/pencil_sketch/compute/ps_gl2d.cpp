@@ -40,10 +40,11 @@ std::string group_size_string()
         return "const uint GROUP_SIZE = " + to_string(GROUP_SIZE) + ";\n";
 }
 
-std::string compute_source()
+std::string compute_source(bool input_is_srgb)
 {
         std::string s;
         s += group_size_string();
+        s += std::string("const bool SOURCE_SRGB = ") + (input_is_srgb ? "true" : "false") + ";\n";
         return s + compute_shader;
 }
 
@@ -81,13 +82,12 @@ public:
                 : m_groups_x(group_count(input.texture().width(), GROUP_SIZE)),
                   m_groups_y(group_count(input.texture().height(), GROUP_SIZE)),
                   m_output(output),
-                  m_compute_prog(opengl::ComputeShader(compute_source())),
+                  m_compute_prog(opengl::ComputeShader(compute_source(input_is_srgb))),
                   m_luminance_prog(opengl::ComputeShader(luminance_source()))
         {
                 m_compute_prog.set_uniform_handle("img_input", input.image_resident_handle_read_only());
                 m_compute_prog.set_uniform_handle("img_output", output.image_resident_handle_write_only());
                 m_compute_prog.set_uniform_handle("img_objects", objects.image_resident_handle_read_only());
-                m_compute_prog.set_uniform("source_srgb", input_is_srgb);
         }
 };
 }

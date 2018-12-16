@@ -382,7 +382,7 @@ AddIncludeFiles(VULKAN_SHADERS
 AddIncludeFiles(VULKAN_SHADERS
                         HEADER_FILE "src/graphics/header.glsl"
                         OUTPUT_EXTENSION "spr"
-                        DIRECTORIES "src/gpgpu/convex_hull"
+                        DIRECTORIES "src/gpgpu/convex_hull" "src/gpgpu/pencil_sketch"
                         EXTENSIONS ${extensions_shaders})
 
 AddIncludeFiles(OPENGL_SHADERS

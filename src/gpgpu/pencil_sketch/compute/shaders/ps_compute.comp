@@ -15,16 +15,21 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#if !defined(VULKAN)
 // Вставляется в текст программы
 // const uint GROUP_SIZE =
-
+// const bool SOURCE_SRGB =
 layout(local_size_x = GROUP_SIZE, local_size_y = GROUP_SIZE) in;
-
 layout(bindless_image, rgba32f) readonly uniform image2D img_input;
 layout(bindless_image, rgba32f) writeonly uniform image2D img_output;
 layout(bindless_image, r32i) readonly uniform iimage2D img_objects;
-
-uniform bool source_srgb;
+#else
+layout(constant_id = 0) const bool SOURCE_SRGB = false;
+layout(local_size_x_id = 1, local_size_y_id = 1) in;
+layout(binding = 0, rgba32f) readonly uniform image2D img_input;
+layout(binding = 1, rgba32f) writeonly uniform image2D img_output;
+layout(binding = 2, r32i) readonly uniform iimage2D img_objects;
+#endif
 
 // clang-format off
 //GaussianMatrix[{4, 3}]
@@ -54,12 +59,12 @@ bool background(ivec2 p)
 
 float grayscale(vec4 color)
 {
-        return !source_srgb ? luminance_of_rgb(color) : luminance_of_rgb(srgb_to_rgb(color));
+        return !SOURCE_SRGB ? luminance_of_rgb(color) : luminance_of_rgb(srgb_to_rgb(color));
 }
 
 vec4 source_color_to_rgb(vec4 color)
 {
-        return !source_srgb ? color : srgb_to_rgb(color);
+        return !SOURCE_SRGB ? color : srgb_to_rgb(color);
 }
 
 bool point_inside_input(ivec2 p)
