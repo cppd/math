@@ -75,6 +75,8 @@ constexpr float STOP_MOVE_SQUARE = square(1e-3f);
 // Если определитель матрицы G меньше этого значения, то считается, что нет потока
 constexpr float MIN_DETERMINANT = 1;
 
+constexpr int DOWNSAMPLE_UNIFORM_BINDING = 0;
+
 namespace
 {
 std::string group_size_string()
@@ -113,6 +115,33 @@ std::string sobel_source()
         s += group_size_string();
         return s + sobel_shader;
 }
+
+class DownsampleMemory
+{
+        opengl::UniformBuffer m_buffer;
+
+        struct Data
+        {
+                int k_x;
+                int k_y;
+        };
+
+public:
+        DownsampleMemory() : m_buffer(sizeof(Data))
+        {
+        }
+
+        void set(int k_x, int k_y) const
+        {
+                Data d{k_x, k_y};
+                m_buffer.copy(0, d);
+        }
+
+        void bind(int point)
+        {
+                m_buffer.bind(point);
+        }
+};
 
 void create_image_pyramid_sizes(int width, int height, int min, std::vector<vec2i>* level_dimensions)
 {
@@ -236,6 +265,8 @@ class Impl final : public OpticalFlowGL2D
         int m_j_index = 1;
         bool m_image_I_exists = false;
 
+        DownsampleMemory m_downsample_memory;
+
         void build_image_pyramid(std::vector<ImageR32F>* pyramid)
         {
                 // уровень 0 заполняется по исходному изображению
@@ -256,8 +287,8 @@ class Impl final : public OpticalFlowGL2D
 
                         m_comp_downsample.set_uniform_handle("img_big", img_big.image_read_handle());
                         m_comp_downsample.set_uniform_handle("img_small", img_small.image_write_handle());
-                        m_comp_downsample.set_uniform("k_x", k_x);
-                        m_comp_downsample.set_uniform("k_y", k_y);
+                        m_downsample_memory.set(k_x, k_y);
+                        m_downsample_memory.bind(DOWNSAMPLE_UNIFORM_BINDING);
 
                         int groups_x = group_count(img_small.width(), GROUP_SIZE);
                         int groups_y = group_count(img_small.height(), GROUP_SIZE);
