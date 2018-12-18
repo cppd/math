@@ -76,6 +76,10 @@ constexpr float STOP_MOVE_SQUARE = square(1e-3f);
 constexpr float MIN_DETERMINANT = 1;
 
 constexpr int DOWNSAMPLE_UNIFORM_BINDING = 0;
+
+constexpr int FLOW_POINTS_BINDING = 0;
+constexpr int FLOW_POINTS_FLOW_BINDING = 1;
+constexpr int FLOW_POINTS_FLOW_GUESS_BINDING = 2;
 constexpr int FLOW_UNIFORM_BINDING = 3;
 
 namespace
@@ -403,7 +407,7 @@ class Impl final : public OpticalFlowGL2D
 
                                 m_flow_memory.set_all_points(1);
 
-                                image_pyramid_flow[i].bind(1);
+                                image_pyramid_flow[i].bind(FLOW_POINTS_FLOW_BINDING);
 
                                 points_x = image_pyramid_I[i].width();
                                 points_y = image_pyramid_I[i].height();
@@ -414,8 +418,8 @@ class Impl final : public OpticalFlowGL2D
 
                                 m_flow_memory.set_all_points(0);
 
-                                m_top_points.bind(0);
-                                m_top_points_flow.bind(1);
+                                m_top_points.bind(FLOW_POINTS_BINDING);
+                                m_top_points_flow.bind(FLOW_POINTS_FLOW_BINDING);
 
                                 points_x = m_top_point_count_x;
                                 points_y = m_top_point_count_y;
@@ -426,7 +430,7 @@ class Impl final : public OpticalFlowGL2D
                                 // Если не самый нижний уровень, то в качестве приближения использовать поток,
                                 // полученный на меньших изображениях
 
-                                image_pyramid_flow[i + 1].bind(2);
+                                image_pyramid_flow[i + 1].bind(FLOW_POINTS_FLOW_GUESS_BINDING);
 
                                 int use_guess = 1;
 
