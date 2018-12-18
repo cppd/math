@@ -51,6 +51,10 @@ constexpr double DISTANCE_BETWEEN_POINTS = 2;
 // Интервал ожидания для расчёта потока не для каждого кадра
 // constexpr double COMPUTE_INTERVAL_SECONDS = 1.0 / 10;
 
+constexpr int POINTS_BINDING = 0;
+constexpr int POINTS_FLOW_BINDING = 1;
+constexpr int DATA_BINDING = 2;
+
 namespace
 {
 class ShaderMemory
@@ -125,9 +129,9 @@ class OpticalFlowShow::Impl final
 
         void draw_flow_lines()
         {
-                m_top_points->bind(0);
-                m_top_points_flow->bind(1);
-                m_shader_memory.bind(2);
+                m_top_points->bind(POINTS_BINDING);
+                m_top_points_flow->bind(POINTS_FLOW_BINDING);
+                m_shader_memory.bind(DATA_BINDING);
 
                 m_draw_prog.draw_arrays(GL_POINTS, 0, m_top_point_count * 2);
                 m_draw_prog.draw_arrays(GL_LINES, 0, m_top_point_count * 2);
