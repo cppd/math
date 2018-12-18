@@ -15,8 +15,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-uniform mat4 matrix;
-
 layout(std430, binding = 0) readonly buffer StorageBufferPoints
 {
         ivec2 points[];
@@ -24,6 +22,10 @@ layout(std430, binding = 0) readonly buffer StorageBufferPoints
 layout(std430, binding = 1) readonly buffer StorageBufferPointsFlow
 {
         vec2 points_optical_flow[];
+};
+layout(std140, binding = 2) uniform Data
+{
+        mat4 matrix;
 };
 
 void main(void)

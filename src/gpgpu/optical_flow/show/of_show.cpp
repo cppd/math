@@ -53,6 +53,32 @@ constexpr double DISTANCE_BETWEEN_POINTS = 2;
 
 namespace
 {
+class ShaderMemory
+{
+        opengl::UniformBuffer m_buffer;
+
+        struct Data
+        {
+                Matrix<4, 4, float> matrix;
+        };
+
+public:
+        ShaderMemory() : m_buffer(sizeof(Data))
+        {
+        }
+
+        void set_matrix(const mat4& matrix) const
+        {
+                decltype(Data().matrix) m = transpose(to_matrix<float>(matrix));
+                m_buffer.copy(offsetof(Data, matrix), m);
+        }
+
+        void bind(int point)
+        {
+                m_buffer.bind(point);
+        }
+};
+
 void create_points_for_top_level(int width, int height, int distance, int* point_count_x, int* point_count_y,
                                  std::vector<vec2i>* points)
 {
@@ -95,10 +121,13 @@ class OpticalFlowShow::Impl final
 
         std::unique_ptr<OpticalFlowGL2D> m_optical_flow;
 
+        ShaderMemory m_shader_memory;
+
         void draw_flow_lines()
         {
                 m_top_points->bind(0);
                 m_top_points_flow->bind(1);
+                m_shader_memory.bind(2);
 
                 m_draw_prog.draw_arrays(GL_POINTS, 0, m_top_point_count * 2);
                 m_draw_prog.draw_arrays(GL_LINES, 0, m_top_point_count * 2);
@@ -121,7 +150,7 @@ public:
                 m_top_points = std::make_unique<opengl::StorageBuffer>(points);
                 m_top_points_flow = std::make_unique<opengl::StorageBuffer>(points.size() * sizeof(vec2f));
 
-                m_draw_prog.set_uniform_float("matrix", matrix);
+                m_shader_memory.set_matrix(matrix);
 
                 m_optical_flow = create_optical_flow_gl2d(width, height, m_source_image, point_count_x, point_count_y,
                                                           *m_top_points, *m_top_points_flow);
