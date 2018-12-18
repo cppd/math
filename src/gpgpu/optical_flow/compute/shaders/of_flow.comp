@@ -29,14 +29,6 @@ layout(bindless_image, r32f) readonly uniform image2D img_dy;
 layout(bindless_image, r32f) readonly uniform image2D img_I;
 layout(bindless_sampler) uniform sampler2D tex_J;
 
-uniform int point_count_x;
-uniform int point_count_y;
-
-uniform int all_points;
-
-uniform int use_guess;
-uniform int guess_kx, guess_ky, guess_width;
-
 layout(std430, binding = 0) readonly buffer StorageBufferPoints
 {
         ivec2 points[];
@@ -48,6 +40,17 @@ layout(std430, binding = 1) writeonly buffer StorageBufferPointsFlow
 layout(std430, binding = 2) readonly buffer StorageBufferPointsFlowGuess
 {
         vec2 points_flow_guess[];
+};
+
+layout(std140, binding = 3) uniform Data
+{
+        int point_count_x;
+        int point_count_y;
+        int all_points;
+        int use_guess;
+        int guess_kx;
+        int guess_ky;
+        int guess_width;
 };
 
 ivec2 screen_to_texture(ivec2 p)

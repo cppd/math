@@ -76,6 +76,7 @@ constexpr float STOP_MOVE_SQUARE = square(1e-3f);
 constexpr float MIN_DETERMINANT = 1;
 
 constexpr int DOWNSAMPLE_UNIFORM_BINDING = 0;
+constexpr int FLOW_UNIFORM_BINDING = 3;
 
 namespace
 {
@@ -122,8 +123,8 @@ class DownsampleMemory
 
         struct Data
         {
-                int k_x;
-                int k_y;
+                GLint k_x;
+                GLint k_y;
         };
 
 public:
@@ -135,6 +136,75 @@ public:
         {
                 Data d{k_x, k_y};
                 m_buffer.copy(0, d);
+        }
+
+        void bind(int point)
+        {
+                m_buffer.bind(point);
+        }
+};
+
+class FlowMemory
+{
+        opengl::UniformBuffer m_buffer;
+
+        struct Data
+        {
+                GLint point_count_x;
+                GLint point_count_y;
+                GLint all_points;
+                GLint use_guess;
+                GLint guess_kx;
+                GLint guess_ky;
+                GLint guess_width;
+        };
+
+public:
+        FlowMemory() : m_buffer(sizeof(Data))
+        {
+        }
+
+        void set_all_points(int all_points) const
+        {
+                decltype(Data().all_points) d = all_points;
+                m_buffer.copy(offsetof(Data, all_points), d);
+        }
+
+        void set_point_count(int x, int y) const
+        {
+                constexpr size_t size = sizeof(Data::point_count_x) + sizeof(Data::point_count_y);
+                constexpr size_t offset = offsetof(Data, point_count_x);
+
+                static_assert(offsetof(Data, all_points) == offset + size);
+
+                Data data;
+                data.point_count_x = x;
+                data.point_count_y = y;
+
+                m_buffer.copy(offset, offset, size, data);
+        }
+
+        void set_use_guess(int use_guess) const
+        {
+                decltype(Data().use_guess) d = use_guess;
+                m_buffer.copy(offsetof(Data, use_guess), d);
+        }
+
+        void set_guess(int use_guess, int guess_kx, int guess_ky, int guess_width)
+        {
+                constexpr size_t size =
+                        sizeof(Data::use_guess) + sizeof(Data::guess_kx) + sizeof(Data::guess_ky) + sizeof(Data::guess_width);
+                constexpr size_t offset = offsetof(Data, use_guess);
+
+                static_assert(sizeof(Data) == offset + size);
+
+                Data data;
+                data.use_guess = use_guess;
+                data.guess_kx = guess_kx;
+                data.guess_ky = guess_ky;
+                data.guess_width = guess_width;
+
+                m_buffer.copy(offset, offset, size, data);
         }
 
         void bind(int point)
@@ -266,6 +336,7 @@ class Impl final : public OpticalFlowGL2D
         bool m_image_I_exists = false;
 
         DownsampleMemory m_downsample_memory;
+        FlowMemory m_flow_memory;
 
         void build_image_pyramid(std::vector<ImageR32F>* pyramid)
         {
@@ -330,7 +401,7 @@ class Impl final : public OpticalFlowGL2D
                         {
                                 // Если не самый верхний уровень, то расчёт для всех точек
 
-                                m_comp_flow.set_uniform("all_points", 1);
+                                m_flow_memory.set_all_points(1);
 
                                 image_pyramid_flow[i].bind(1);
 
@@ -341,7 +412,7 @@ class Impl final : public OpticalFlowGL2D
                         {
                                 // Если самый верхний уровень, то расчёт только для заданных точек для рисования на экране
 
-                                m_comp_flow.set_uniform("all_points", 0);
+                                m_flow_memory.set_all_points(0);
 
                                 m_top_points.bind(0);
                                 m_top_points_flow.bind(1);
@@ -355,30 +426,30 @@ class Impl final : public OpticalFlowGL2D
                                 // Если не самый нижний уровень, то в качестве приближения использовать поток,
                                 // полученный на меньших изображениях
 
-                                m_comp_flow.set_uniform("use_guess", 1);
-
-                                m_comp_flow.set_uniform("guess_width", image_pyramid_I[i + 1].width());
-
                                 image_pyramid_flow[i + 1].bind(2);
 
-                                int kx = (image_pyramid_I[i + 1].width() != image_pyramid_I[i].width()) ? 2 : 1;
-                                int ky = (image_pyramid_I[i + 1].height() != image_pyramid_I[i].height()) ? 2 : 1;
-                                m_comp_flow.set_uniform("guess_kx", kx);
-                                m_comp_flow.set_uniform("guess_ky", ky);
+                                int use_guess = 1;
+
+                                int guess_kx = (image_pyramid_I[i + 1].width() != image_pyramid_I[i].width()) ? 2 : 1;
+                                int guess_ky = (image_pyramid_I[i + 1].height() != image_pyramid_I[i].height()) ? 2 : 1;
+                                int guess_width = image_pyramid_I[i + 1].width();
+
+                                m_flow_memory.set_guess(use_guess, guess_kx, guess_ky, guess_width);
                         }
                         else
                         {
                                 // Самый нижний уровень пирамиды, поэтому нет начального потока
-                                m_comp_flow.set_uniform("use_guess", 0);
+                                m_flow_memory.set_use_guess(0);
                         }
 
-                        m_comp_flow.set_uniform("point_count_x", points_x);
-                        m_comp_flow.set_uniform("point_count_y", points_y);
+                        m_flow_memory.set_point_count(points_x, points_y);
 
                         m_comp_flow.set_uniform_handle("img_dx", image_pyramid_dx[i].image_read_handle());
                         m_comp_flow.set_uniform_handle("img_dy", image_pyramid_dy[i].image_read_handle());
                         m_comp_flow.set_uniform_handle("img_I", image_pyramid_I[i].image_read_handle());
                         m_comp_flow.set_uniform_handle("tex_J", image_pyramid_J[i].texture_handle());
+
+                        m_flow_memory.bind(FLOW_UNIFORM_BINDING);
 
                         int groups_x = group_count(points_x, GROUP_SIZE);
                         int groups_y = group_count(points_y, GROUP_SIZE);
