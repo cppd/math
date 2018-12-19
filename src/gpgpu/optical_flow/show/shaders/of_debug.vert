@@ -33,9 +33,15 @@ const vec4 vertices[4] = vec4[4]
 
 void main(void)
 {
-        if (gl_VertexID < 4)
+#if defined(VULKAN)
+        int vertex_index = gl_VertexIndex;
+#else
+        int vertex_index = gl_VertexID;
+#endif
+
+        if (vertex_index < 4)
         {
-                gl_Position = vertices[gl_VertexID];
-                // vs_texture_coordinates = texture_coordinates[gl_VertexID];
+                gl_Position = vertices[vertex_index];
+                // vs_texture_coordinates = texture_coordinates[vertex_index];
         }
 }

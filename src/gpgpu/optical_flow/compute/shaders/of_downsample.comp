@@ -15,13 +15,17 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#if !defined(VULKAN)
 // Вставляется в текст программы
 // const uint GROUP_SIZE =
-
 layout(local_size_x = GROUP_SIZE, local_size_y = GROUP_SIZE) in;
-
 layout(bindless_image, r32f, location = 0) readonly uniform image2D img_big;
 layout(bindless_image, r32f, location = 1) writeonly uniform image2D img_small;
+#else
+layout(local_size_x_id = 0, local_size_y_id = 0) in;
+layout(binding = 1, r32f, location = 0) readonly uniform image2D img_big;
+layout(binding = 2, r32f, location = 1) writeonly uniform image2D img_small;
+#endif
 
 layout(binding = 0) uniform Data
 {

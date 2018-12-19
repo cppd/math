@@ -15,7 +15,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-out vec4 color;
+layout(location = 0) out vec4 color;
+
 void main(void)
 {
         color = vec4(1, 1, 1, 1);

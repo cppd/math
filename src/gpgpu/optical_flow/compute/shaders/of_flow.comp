@@ -15,19 +15,29 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#if !defined(VULKAN)
 // Вставляется в текст программы
 // const uint GROUP_SIZE =
 // const int RADIUS =
 // const int ITERATION_COUNT =
 // const float STOP_MOVE_SQUARE =
 // const float MIN_DETERMINANT =
-
 layout(local_size_x = GROUP_SIZE, local_size_y = GROUP_SIZE) in;
-
 layout(bindless_image, r32f) readonly uniform image2D img_dx;
 layout(bindless_image, r32f) readonly uniform image2D img_dy;
 layout(bindless_image, r32f) readonly uniform image2D img_I;
 layout(bindless_sampler) uniform sampler2D tex_J;
+#else
+layout(local_size_x_id = 0, local_size_y_id = 0) in;
+layout(constant_id = 1) const int RADIUS = 1;
+layout(constant_id = 2) const int ITERATION_COUNT = 1;
+layout(constant_id = 3) const float STOP_MOVE_SQUARE = 1;
+layout(constant_id = 4) const float MIN_DETERMINANT = 1;
+layout(binding = 4, r32f) readonly uniform image2D img_dx;
+layout(binding = 5, r32f) readonly uniform image2D img_dy;
+layout(binding = 6, r32f) readonly uniform image2D img_I;
+layout(binding = 7) uniform sampler2D tex_J;
+#endif
 
 layout(std430, binding = 0) readonly buffer StorageBufferPoints
 {

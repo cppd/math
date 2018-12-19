@@ -30,13 +30,19 @@ layout(std140, binding = 2) uniform Data
 
 void main(void)
 {
+#if defined(VULKAN)
+        int vertex_index = gl_VertexIndex;
+#else
+        int vertex_index = gl_VertexID;
+#endif
+
         // Две вершины на одну точку.
         // Одна вершина начало линии, вторая вершина конец линии.
 
-        uint point_number = gl_VertexID >> 1;
+        uint point_number = vertex_index >> 1;
 
         vec2 s;
-        if ((gl_VertexID & 1) == 0)
+        if ((vertex_index & 1) == 0)
         {
                 s = points[point_number];
         }
