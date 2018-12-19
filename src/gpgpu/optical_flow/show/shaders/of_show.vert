@@ -31,9 +31,9 @@ layout(std140, binding = 2) uniform Data
 void main(void)
 {
 #if defined(VULKAN)
-        int vertex_index = gl_VertexIndex;
+        const int vertex_index = gl_VertexIndex;
 #else
-        int vertex_index = gl_VertexID;
+        const int vertex_index = gl_VertexID;
 #endif
 
         // Две вершины на одну точку.

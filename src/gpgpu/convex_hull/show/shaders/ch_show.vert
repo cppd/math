@@ -29,9 +29,9 @@ layout(std430, binding = 1) buffer Points
 void main(void)
 {
 #if defined(VULKAN)
-        int vertex_index = gl_VertexIndex;
+        const int vertex_index = gl_VertexIndex;
 #else
-        int vertex_index = gl_VertexID;
+        const int vertex_index = gl_VertexID;
 #endif
 
         vec2 s = points[vertex_index];

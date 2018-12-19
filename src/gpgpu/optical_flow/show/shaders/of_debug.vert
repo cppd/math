@@ -34,9 +34,9 @@ const vec4 vertices[4] = vec4[4]
 void main(void)
 {
 #if defined(VULKAN)
-        int vertex_index = gl_VertexIndex;
+        const int vertex_index = gl_VertexIndex;
 #else
-        int vertex_index = gl_VertexID;
+        const int vertex_index = gl_VertexID;
 #endif
 
         if (vertex_index < 4)
