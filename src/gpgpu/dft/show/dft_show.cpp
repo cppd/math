@@ -35,8 +35,15 @@ constexpr const char dft_show_fragment_shader[]
 };
 // clang-format on
 
+constexpr int DATA_BINDING = 0;
+
 namespace
 {
+vec4f color_to_vec4f(const Color& c)
+{
+        return vec4f(c.red(), c.green(), c.blue(), 1);
+}
+
 struct Vertex
 {
         static_assert(sizeof(Vector<4, float>) == 4 * sizeof(GLfloat));
@@ -46,10 +53,46 @@ struct Vertex
         Vector<2, GLfloat> t; // Координаты вершины в текстуре (0 или 1)
 };
 
-vec4f color_to_vec4f(const Color& c)
+class ShaderMemory
 {
-        return vec4f(c.red(), c.green(), c.blue(), 1);
-}
+        opengl::UniformBuffer m_buffer;
+
+        struct Data
+        {
+                Vector<4, GLfloat> background_color;
+                Vector<4, GLfloat> foreground_color;
+                GLfloat brightness;
+        };
+
+public:
+        ShaderMemory() : m_buffer(sizeof(Data))
+        {
+        }
+
+        void set_brightness(double brightness) const
+        {
+                decltype(Data().brightness) b = brightness;
+                m_buffer.copy(offsetof(Data, brightness), b);
+        }
+
+        void set_background_color(const Color& color) const
+        {
+                decltype(Data().background_color) c = color_to_vec4f(color);
+                m_buffer.copy(offsetof(Data, background_color), c);
+        }
+
+        void set_foreground_color(const Color& color) const
+        {
+                decltype(Data().foreground_color) c = color_to_vec4f(color);
+                m_buffer.copy(offsetof(Data, foreground_color), c);
+        }
+
+        void bind(int point)
+        {
+                m_buffer.bind(point);
+        }
+};
+
 }
 
 class DFTShow::Impl final
@@ -62,6 +105,7 @@ class DFTShow::Impl final
         opengl::VertexArray m_vertex_array;
         opengl::ArrayBuffer m_vertex_buffer;
         opengl::GraphicsProgram m_draw_prog;
+        ShaderMemory m_shader_memory;
 
 public:
         Impl(int width, int height, int dst_x, int dst_y, const mat4& matrix, bool source_srgb, double brightness,
@@ -99,17 +143,17 @@ public:
 
         void set_brightness(double brightness)
         {
-                m_draw_prog.set_uniform("dft_brightness", static_cast<float>(brightness));
+                m_shader_memory.set_brightness(brightness);
         }
 
         void set_background_color(const Color& color)
         {
-                m_draw_prog.set_uniform("dft_background_color", color_to_vec4f(color));
+                m_shader_memory.set_background_color(color);
         }
 
         void set_color(const Color& color)
         {
-                m_draw_prog.set_uniform("dft_color", color_to_vec4f(color));
+                m_shader_memory.set_foreground_color(color);
         }
 
         void take_image_from_framebuffer()
@@ -121,6 +165,7 @@ public:
         {
                 m_dft->exec(false, m_source_srgb);
 
+                m_shader_memory.bind(DATA_BINDING);
                 m_vertex_array.bind();
                 m_draw_prog.draw_arrays(GL_TRIANGLE_STRIP, 0, VERTEX_COUNT);
         }

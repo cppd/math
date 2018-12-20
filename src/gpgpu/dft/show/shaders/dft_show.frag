@@ -17,15 +17,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 layout(bindless_sampler) uniform sampler2D tex;
 
-uniform float dft_brightness;
-uniform vec4 dft_background_color;
-uniform vec4 dft_color;
+layout(std140, binding = 0) uniform Data
+{
+        vec4 background_color;
+        vec4 foreground_color;
+        float brightness;
+};
 
 in vec2 vs_texture_coordinates;
 
 out vec4 color;
 void main(void)
 {
-        float v = dft_brightness * texture(tex, vs_texture_coordinates).r;
-        color = mix(dft_background_color, dft_color, clamp(v, 0, 1));
+        float v = brightness * texture(tex, vs_texture_coordinates).r;
+        color = mix(background_color, foreground_color, clamp(v, 0, 1));
 }
