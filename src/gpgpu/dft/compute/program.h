@@ -25,19 +25,29 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <complex>
 
 template <typename T>
-class DeviceProgFFTGlobal
+class DeviceProgBitReverse
 {
         const int m_group_size;
         opengl::ComputeProgram m_bit_reverse;
+
+public:
+        DeviceProgBitReverse(int group_size);
+
+        void exec(int max_threads, int n_mask, int n_bits, DeviceMemory<std::complex<T>>* data) const;
+};
+
+template <typename T>
+class DeviceProgFFTGlobal
+{
+        const int m_group_size;
+
         opengl::ComputeProgram m_fft;
 
 public:
         DeviceProgFFTGlobal(int group_size);
 
-        void bit_reverse(int max_threads, int n_mask, int n_bits, DeviceMemory<std::complex<T>>* data) const;
-
-        void fft(int max_threads, bool inverse, T two_pi_div_m, int n_div_2_mask, int m_div_2,
-                 DeviceMemory<std::complex<T>>* data) const;
+        void exec(int max_threads, bool inverse, T two_pi_div_m, int n_div_2_mask, int m_div_2,
+                  DeviceMemory<std::complex<T>>* data) const;
 };
 
 template <typename T>

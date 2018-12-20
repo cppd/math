@@ -211,15 +211,13 @@ std::string fft_shared_source(int n, int n_bits, int shared_size, int group_size
 //
 
 template <typename T>
-DeviceProgFFTGlobal<T>::DeviceProgFFTGlobal(int group_size)
-        : m_group_size(group_size),
-          m_bit_reverse(opengl::ComputeShader(bit_reverse_source<T>(group_size))),
-          m_fft(opengl::ComputeShader(fft_global_source<T>(group_size)))
+DeviceProgBitReverse<T>::DeviceProgBitReverse(int group_size)
+        : m_group_size(group_size), m_bit_reverse(opengl::ComputeShader(bit_reverse_source<T>(group_size)))
 {
 }
 
 template <typename T>
-void DeviceProgFFTGlobal<T>::bit_reverse(int max_threads, int n_mask, int n_bits, DeviceMemory<std::complex<T>>* data) const
+void DeviceProgBitReverse<T>::exec(int max_threads, int n_mask, int n_bits, DeviceMemory<std::complex<T>>* data) const
 {
         m_bit_reverse.set_uniform_unsigned(0, max_threads);
         m_bit_reverse.set_uniform_unsigned(1, n_mask);
@@ -229,9 +227,17 @@ void DeviceProgFFTGlobal<T>::bit_reverse(int max_threads, int n_mask, int n_bits
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 }
 
+//
+
 template <typename T>
-void DeviceProgFFTGlobal<T>::fft(int max_threads, bool inverse, T two_pi_div_m, int n_div_2_mask, int m_div_2,
-                                 DeviceMemory<std::complex<T>>* data) const
+DeviceProgFFTGlobal<T>::DeviceProgFFTGlobal(int group_size)
+        : m_group_size(group_size), m_fft(opengl::ComputeShader(fft_global_source<T>(group_size)))
+{
+}
+
+template <typename T>
+void DeviceProgFFTGlobal<T>::exec(int max_threads, bool inverse, T two_pi_div_m, int n_div_2_mask, int m_div_2,
+                                  DeviceMemory<std::complex<T>>* data) const
 {
         m_fft.set_uniform(0, inverse);
         m_fft.set_uniform_unsigned(1, max_threads);
@@ -392,6 +398,8 @@ void DeviceProgFFTShared<T>::exec(bool inverse, int data_size, DeviceMemory<std:
 
 //
 
+template class DeviceProgBitReverse<float>;
+template class DeviceProgBitReverse<double>;
 template class DeviceProgFFTGlobal<float>;
 template class DeviceProgFFTGlobal<double>;
 template class DeviceProgCopy<float>;
