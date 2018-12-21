@@ -196,7 +196,7 @@ void fft1d(bool inverse, int fft_count, const DeviceProgFFTShared<FP>& fft, cons
 
         if (n <= shared_size)
         {
-                fft.exec(inverse, data_size, data);
+                fft.exec(inverse, data_size, *data);
                 return;
         }
 
@@ -208,9 +208,9 @@ void fft1d(bool inverse, int fft_count, const DeviceProgFFTShared<FP>& fft, cons
         // с отключенной перестановкой, иначе одни запуски будут вносить изменения
         // в данные других запусков, так как результат пишется в исходные данные.
 
-        bit_reverse.exec(data_size, n - 1, n_bits, data);
+        bit_reverse.exec(data_size, n - 1, n_bits, *data);
 
-        fft.exec(inverse, data_size, data);
+        fft.exec(inverse, data_size, *data);
 
         // Досчитать до нужного размера уже в глобальной памяти без разделяемой
 
@@ -225,7 +225,7 @@ void fft1d(bool inverse, int fft_count, const DeviceProgFFTShared<FP>& fft, cons
         for (; m_div_2 < n; m_div_2 <<= 1, two_pi_div_m /= 2)
         {
                 // m_div_2 - половина размера текущих отдельных БПФ
-                fft_global.exec(thread_count, inverse, two_pi_div_m, n_div_2_mask, m_div_2, data);
+                fft_global.exec(thread_count, inverse, two_pi_div_m, n_div_2_mask, m_div_2, *data);
         }
 }
 
@@ -250,22 +250,22 @@ class Impl final : public FourierGL1, public FourierGL2
                 {
                         // По строкам
 
-                        m_mul.rows_to_buffer(inverse, m_x_d, &m_buffer);
+                        m_mul.rows_to_buffer(inverse, m_x_d, m_buffer);
                         fft1d(inverse, m_n2, m_fft_1, m_bit_reverse, m_fft_global, &m_buffer);
-                        m_mul_d.rows_mul_d(inverse ? m_d1_inv : m_d1_fwd, &m_buffer);
+                        m_mul_d.rows_mul_d(inverse ? m_d1_inv : m_d1_fwd, m_buffer);
                         fft1d(!inverse, m_n2, m_fft_1, m_bit_reverse, m_fft_global, &m_buffer);
-                        m_mul.rows_from_buffer(inverse, &m_x_d, m_buffer);
+                        m_mul.rows_from_buffer(inverse, m_x_d, m_buffer);
                 }
 
                 if (m_n2 > 1)
                 {
                         // По столбцам
 
-                        m_mul.columns_to_buffer(inverse, m_x_d, &m_buffer);
+                        m_mul.columns_to_buffer(inverse, m_x_d, m_buffer);
                         fft1d(inverse, m_n1, m_fft_2, m_bit_reverse, m_fft_global, &m_buffer);
-                        m_mul_d.columns_mul_d(inverse ? m_d2_inv : m_d2_fwd, &m_buffer);
+                        m_mul_d.columns_mul_d(inverse ? m_d2_inv : m_d2_fwd, m_buffer);
                         fft1d(!inverse, m_n1, m_fft_2, m_bit_reverse, m_fft_global, &m_buffer);
-                        m_mul.columns_from_buffer(inverse, &m_x_d, m_buffer);
+                        m_mul.columns_from_buffer(inverse, m_x_d, m_buffer);
                 }
         }
 
@@ -298,7 +298,7 @@ class Impl final : public FourierGL1, public FourierGL2
 
         void exec(bool inverse, bool srgb) override
         {
-                m_copy.copy_input(srgb, m_texture_handle, &m_x_d);
+                m_copy.copy_input(srgb, m_texture_handle, m_x_d);
                 dft2d(inverse);
                 m_copy.copy_output(static_cast<FP>(1.0 / (m_n1 * m_n2)), m_texture_handle, m_x_d);
         }

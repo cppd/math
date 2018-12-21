@@ -24,11 +24,14 @@ layout(local_size_x = GROUP_SIZE.x, local_size_y = GROUP_SIZE.y) in;
 
 // Перенос данных ДПФ обратно в изображение.
 
-layout(location = 0) uniform float_point to_mul;
+layout(bindless_image, rgba32f, location = 0) uniform writeonly restrict image2D dst_image;
 
-layout(bindless_image, rgba32f, location = 1) uniform writeonly restrict image2D dst_image;
+layout(std140, binding = 0) uniform Data
+{
+        float_point to_mul;
+};
 
-layout(std430, binding = 0) readonly restrict buffer StorageBuffer
+layout(std430, binding = 1) readonly restrict buffer Buffer
 {
         complex src_data[];
 };

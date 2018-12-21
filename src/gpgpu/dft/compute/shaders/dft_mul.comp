@@ -27,13 +27,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 layout(local_size_x = GROUP_SIZE.x, local_size_y = GROUP_SIZE.y) in;
 
-layout(location = 0) uniform bool inverse_dft;
+layout(std140, binding = 0) uniform Data
+{
+        bool inverse_dft;
+};
 
-layout(std430, binding = 0) restrict buffer StorageBuffer0
+layout(std430, binding = 1) restrict buffer Buffer0
 {
         complex data[];
 };
-layout(std430, binding = 1) restrict buffer StorageBuffer1
+
+layout(std430, binding = 2) restrict buffer Buffer1
 {
         complex buf[];
 };
