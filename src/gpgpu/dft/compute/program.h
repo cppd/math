@@ -68,29 +68,39 @@ public:
 };
 
 template <typename T>
-class DeviceProgCopy
+class DeviceProgCopyInput
 {
-        struct InputMemory
+        struct ShaderMemory
         {
                 GLuint source_srgb;
         };
 
-        struct OutputMemory
+        const vec2i m_group_count;
+        opengl::ComputeProgram m_copy_input;
+        opengl::UniformBuffer m_shader_memory;
+
+public:
+        DeviceProgCopyInput(vec2i group_size, int n1, int n2);
+
+        void copy(bool source_srgb, const GLuint64 tex, const DeviceMemory<std::complex<T>>& data);
+};
+
+template <typename T>
+class DeviceProgCopyOutput
+{
+        struct ShaderMemory
         {
                 T to_mul;
         };
 
         const vec2i m_group_count;
-        opengl::ComputeProgram m_copy_input;
         opengl::ComputeProgram m_copy_output;
-        opengl::UniformBuffer m_memory_input;
-        opengl::UniformBuffer m_memory_output;
+        opengl::UniformBuffer m_shader_memory;
 
 public:
-        DeviceProgCopy(vec2i group_size, int n1, int n2);
+        DeviceProgCopyOutput(vec2i group_size, int n1, int n2);
 
-        void copy_input(bool source_srgb, const GLuint64 tex, const DeviceMemory<std::complex<T>>& data);
-        void copy_output(T to_mul, const GLuint64 tex, const DeviceMemory<std::complex<T>>& data);
+        void copy(T to_mul, const GLuint64 tex, const DeviceMemory<std::complex<T>>& data);
 };
 
 template <typename T>

@@ -238,7 +238,8 @@ class Impl final : public FourierGL1, public FourierGL2
         GLuint64 m_texture_handle;
         DeviceProgBitReverse<FP> m_bit_reverse;
         DeviceProgFFTGlobal<FP> m_fft_global;
-        DeviceProgCopy<FP> m_copy;
+        DeviceProgCopyInput<FP> m_copy_input;
+        DeviceProgCopyOutput<FP> m_copy_output;
         DeviceProgMul<FP> m_mul;
         DeviceProgMulD<FP> m_mul_d;
         DeviceProgFFTShared<FP> m_fft_1;
@@ -298,9 +299,9 @@ class Impl final : public FourierGL1, public FourierGL2
 
         void exec(bool inverse, bool srgb) override
         {
-                m_copy.copy_input(srgb, m_texture_handle, m_x_d);
+                m_copy_input.copy(srgb, m_texture_handle, m_x_d);
                 dft2d(inverse);
-                m_copy.copy_output(static_cast<FP>(1.0 / (m_n1 * m_n2)), m_texture_handle, m_x_d);
+                m_copy_output.copy(static_cast<FP>(1.0 / (m_n1 * m_n2)), m_texture_handle, m_x_d);
         }
 
 public:
@@ -319,7 +320,8 @@ public:
                   m_buffer(std::max(m_m1 * m_n2, m_m2 * m_n1)),
                   m_bit_reverse(GROUP_SIZE_1D),
                   m_fft_global(GROUP_SIZE_1D),
-                  m_copy(GROUP_SIZE_2D, m_n1, m_n2),
+                  m_copy_input(GROUP_SIZE_2D, m_n1, m_n2),
+                  m_copy_output(GROUP_SIZE_2D, m_n1, m_n2),
                   m_mul(GROUP_SIZE_2D, m_n1, m_n2, m_m1, m_m2),
                   m_mul_d(GROUP_SIZE_2D, m_n1, m_n2, m_m1, m_m2),
                   m_fft_1(m_m1, shared_size<FP>(m_m1), group_size<FP>(m_m1), m_m1 <= shared_size<FP>(m_m1)),

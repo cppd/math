@@ -266,39 +266,47 @@ void DeviceProgFFTGlobal<T>::exec(int max_threads, bool inverse, T two_pi_div_m,
 //
 
 template <typename T>
-DeviceProgCopy<T>::DeviceProgCopy(vec2i group_size, int n1, int n2)
+DeviceProgCopyInput<T>::DeviceProgCopyInput(vec2i group_size, int n1, int n2)
         : m_group_count(group_count(n1, n2, group_size)),
           m_copy_input(opengl::ComputeShader(copy_input_source<T>(group_size))),
-          m_copy_output(opengl::ComputeShader(copy_output_source<T>(group_size))),
-          m_memory_input(sizeof(InputMemory)),
-          m_memory_output(sizeof(OutputMemory))
+          m_shader_memory(sizeof(ShaderMemory))
 {
 }
 
 template <typename T>
-void DeviceProgCopy<T>::copy_input(bool source_srgb, const GLuint64 tex, const DeviceMemory<std::complex<T>>& data)
+void DeviceProgCopyInput<T>::copy(bool source_srgb, const GLuint64 tex, const DeviceMemory<std::complex<T>>& data)
 {
-        InputMemory m;
+        ShaderMemory m;
         m.source_srgb = source_srgb;
-        m_memory_input.copy(m);
+        m_shader_memory.copy(m);
 
         m_copy_input.set_uniform_handle(0, tex);
-        m_memory_input.bind(0);
+        m_shader_memory.bind(0);
         data.bind(1);
 
         m_copy_input.dispatch_compute(m_group_count[0], m_group_count[1], 1);
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 }
 
+//
+
 template <typename T>
-void DeviceProgCopy<T>::copy_output(T to_mul, const GLuint64 tex, const DeviceMemory<std::complex<T>>& data)
+DeviceProgCopyOutput<T>::DeviceProgCopyOutput(vec2i group_size, int n1, int n2)
+        : m_group_count(group_count(n1, n2, group_size)),
+          m_copy_output(opengl::ComputeShader(copy_output_source<T>(group_size))),
+          m_shader_memory(sizeof(ShaderMemory))
 {
-        OutputMemory m;
+}
+
+template <typename T>
+void DeviceProgCopyOutput<T>::copy(T to_mul, const GLuint64 tex, const DeviceMemory<std::complex<T>>& data)
+{
+        ShaderMemory m;
         m.to_mul = to_mul;
-        m_memory_output.copy(m);
+        m_shader_memory.copy(m);
 
         m_copy_output.set_uniform_handle(0, tex);
-        m_memory_output.bind(0);
+        m_shader_memory.bind(0);
         data.bind(1);
 
         m_copy_output.dispatch_compute(m_group_count[0], m_group_count[1], 1);
@@ -454,8 +462,10 @@ template class DeviceProgBitReverse<float>;
 template class DeviceProgBitReverse<double>;
 template class DeviceProgFFTGlobal<float>;
 template class DeviceProgFFTGlobal<double>;
-template class DeviceProgCopy<float>;
-template class DeviceProgCopy<double>;
+template class DeviceProgCopyInput<float>;
+template class DeviceProgCopyInput<double>;
+template class DeviceProgCopyOutput<float>;
+template class DeviceProgCopyOutput<double>;
 template class DeviceProgMul<float>;
 template class DeviceProgMul<double>;
 template class DeviceProgMulD<float>;
