@@ -54,31 +54,6 @@ constexpr const char dft_mul_d_shader[]
 
 namespace
 {
-template <typename T>
-std::string floating_point_source();
-
-template <>
-std::string floating_point_source<float>()
-{
-        std::string s;
-        s += "#define complex vec2\n";
-        s += "#define float_point float\n";
-        s += "const float PI = " + std::string(PI_STR) + ";\n";
-        s += "\n";
-        return s;
-}
-
-template <>
-std::string floating_point_source<double>()
-{
-        std::string s;
-        s += "#define complex dvec2\n";
-        s += "#define float_point double\n";
-        s += "const double PI = " + std::string(PI_STR) + "LF;\n";
-        s += "\n";
-        return s;
-}
-
 std::string group_size_string(int group_size)
 {
         return "const uint GROUP_SIZE = " + to_string(group_size) + ";\n";
@@ -108,7 +83,6 @@ template <typename T>
 std::string bit_reverse_source(int group_size)
 {
         std::string s;
-        s += floating_point_source<T>();
         s += group_size_string(group_size);
         return s + dft_bit_reverse_shader;
 }
@@ -117,7 +91,6 @@ template <typename T>
 std::string fft_global_source(int group_size)
 {
         std::string s;
-        s += floating_point_source<T>();
         s += group_size_string(group_size);
         return s + dft_fft_global_shader;
 }
@@ -126,7 +99,6 @@ template <typename T>
 std::string rows_mul_to_buffer_source(vec2i group_size, int n1, int n2, int m1, int m2)
 {
         std::string s;
-        s += floating_point_source<T>();
         s += group_size_string(group_size);
         s += function_index_string(0);
         s += n_m_string(n1, n2, m1, m2);
@@ -137,7 +109,6 @@ template <typename T>
 std::string rows_mul_fr_buffer_source(vec2i group_size, int n1, int n2, int m1, int m2)
 {
         std::string s;
-        s += floating_point_source<T>();
         s += group_size_string(group_size);
         s += function_index_string(1);
         s += n_m_string(n1, n2, m1, m2);
@@ -148,7 +119,6 @@ template <typename T>
 std::string cols_mul_to_buffer_source(vec2i group_size, int n1, int n2, int m1, int m2)
 {
         std::string s;
-        s += floating_point_source<T>();
         s += group_size_string(group_size);
         s += function_index_string(2);
         s += n_m_string(n1, n2, m1, m2);
@@ -159,7 +129,6 @@ template <typename T>
 std::string cols_mul_fr_buffer_source(vec2i group_size, int n1, int n2, int m1, int m2)
 {
         std::string s;
-        s += floating_point_source<T>();
         s += group_size_string(group_size);
         s += function_index_string(3);
         s += n_m_string(n1, n2, m1, m2);
@@ -170,7 +139,6 @@ template <typename T>
 std::string rows_mul_d_source(vec2i group_size)
 {
         std::string s;
-        s += floating_point_source<T>();
         s += group_size_string(group_size);
         return s + dft_mul_d_shader;
 }
@@ -179,7 +147,6 @@ template <typename T>
 std::string copy_input_source(vec2i group_size)
 {
         std::string s;
-        s += floating_point_source<T>();
         s += group_size_string(group_size);
         return s + dft_copy_input_shader;
 }
@@ -188,7 +155,6 @@ template <typename T>
 std::string copy_output_source(vec2i group_size)
 {
         std::string s;
-        s += floating_point_source<T>();
         s += group_size_string(group_size);
         return s + dft_copy_output_shader;
 }
@@ -197,7 +163,6 @@ template <typename T>
 std::string fft_shared_source(int n, int n_bits, int shared_size, int group_size, bool reverse_input)
 {
         std::string s;
-        s += floating_point_source<T>();
         s += "const uint N = " + to_string(n) + ";\n";
         s += "const uint N_MASK = " + to_string(n - 1) + ";\n";
         s += "const uint N_BITS = " + to_string(n_bits) + ";\n";
@@ -459,16 +424,9 @@ void DeviceProgFFTShared<T>::exec(bool inverse, int data_size, const DeviceMemor
 //
 
 template class DeviceProgBitReverse<float>;
-template class DeviceProgBitReverse<double>;
 template class DeviceProgFFTGlobal<float>;
-template class DeviceProgFFTGlobal<double>;
 template class DeviceProgCopyInput<float>;
-template class DeviceProgCopyInput<double>;
 template class DeviceProgCopyOutput<float>;
-template class DeviceProgCopyOutput<double>;
 template class DeviceProgMul<float>;
-template class DeviceProgMul<double>;
 template class DeviceProgMulD<float>;
-template class DeviceProgMulD<double>;
 template class DeviceProgFFTShared<float>;
-template class DeviceProgFFTShared<double>;
