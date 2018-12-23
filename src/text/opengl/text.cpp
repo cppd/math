@@ -45,7 +45,7 @@ static_assert(std::is_same_v<decltype(TextVertex::v), Vector<2, GLint>>);
 static_assert(std::is_same_v<decltype(TextVertex::t), Vector<2, GLfloat>>);
 
 constexpr int MATRICES_BINDING = 0;
-constexpr int DRAWING_BINDING = 1;
+constexpr int DRAWING_BINDING = 2;
 
 namespace
 {

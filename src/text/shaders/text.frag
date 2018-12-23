@@ -15,23 +15,27 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-layout(location = 0) in ivec2 window_coordinates;
-layout(location = 1) in vec2 texture_coordinates;
+#if defined(VULKAN)
+layout(binding = 1) uniform sampler2D tex;
+#else
+layout(bindless_sampler) uniform sampler2D tex;
+#endif
 
-layout(set = 0, binding = 0) uniform Matrices
+layout(std140, binding = 2) uniform Drawing
 {
-        mat4 matrix;
+        vec3 color;
 }
-matrices;
+drawing;
 
-layout(location = 0) out VS
+layout(location = 0) in VS
 {
         vec2 texture_coordinates;
 }
 vs;
 
+layout(location = 0) out vec4 color;
+
 void main(void)
 {
-        gl_Position = matrices.matrix * vec4(window_coordinates, 0, 1);
-        vs.texture_coordinates = texture_coordinates;
+        color = vec4(drawing.color, texture(tex, vs.texture_coordinates).r);
 }

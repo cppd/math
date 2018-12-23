@@ -386,6 +386,7 @@ AddIncludeFiles(VULKAN_SHADERS
                                     "src/gpgpu/pencil_sketch"
                                     "src/gpgpu/optical_flow"
                                     "src/gpgpu/dft"
+                                    "src/text"
                         EXTENSIONS ${extensions_shaders})
 
 AddIncludeFiles(OPENGL_SHADERS
@@ -395,7 +396,7 @@ AddIncludeFiles(OPENGL_SHADERS
                         EXTENSIONS ${extensions_shaders})
 AddIncludeFiles(OPENGL_SHADERS
                         OUTPUT_EXTENSION "str"
-                        DIRECTORIES "src/graphics" "src/gpgpu"
+                        DIRECTORIES "src/graphics" "src/gpgpu" "src/text"
                         EXTENSIONS ${extensions_shaders})
 
 AddIncludeFiles(BINARY_FILES

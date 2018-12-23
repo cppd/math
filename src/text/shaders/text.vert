@@ -15,23 +15,23 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-layout(set = 0, binding = 1) uniform sampler2D tex;
+layout(location = 0) in ivec2 window_coordinates;
+layout(location = 1) in vec2 texture_coordinates;
 
-layout(set = 0, binding = 2) uniform Drawing
+layout(std140, binding = 0) uniform Matrices
 {
-        vec3 color;
+        mat4 matrix;
 }
-drawing;
+matrices;
 
-layout(location = 0) in VS
+layout(location = 0) out VS
 {
         vec2 texture_coordinates;
 }
 vs;
 
-layout(location = 0) out vec4 color;
-
 void main(void)
 {
-        color = vec4(drawing.color, texture(tex, vs.texture_coordinates).r);
+        gl_Position = matrices.matrix * vec4(window_coordinates, 0, 1);
+        vs.texture_coordinates = texture_coordinates;
 }
