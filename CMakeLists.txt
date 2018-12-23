@@ -385,7 +385,7 @@ AddIncludeFiles(VULKAN_SHADERS
                         DIRECTORIES "src/gpgpu/convex_hull"
                                     "src/gpgpu/pencil_sketch"
                                     "src/gpgpu/optical_flow"
-                                    "src/gpgpu/dft/show"
+                                    "src/gpgpu/dft"
                         EXTENSIONS ${extensions_shaders})
 
 AddIncludeFiles(OPENGL_SHADERS

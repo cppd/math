@@ -17,10 +17,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 // gl_GlobalInvocationID = gl_WorkGroupID * gl_WorkGroupSize + gl_LocalInvocationID
 
+#if !defined(VULKAN)
 // Вставляется в текст программы
 // const uint GROUP_SIZE =
-
 layout(local_size_x = GROUP_SIZE) in;
+#else
+layout(local_size_x_id = 0) in;
+#endif
 
 layout(std140, binding = 0) uniform Data
 {
