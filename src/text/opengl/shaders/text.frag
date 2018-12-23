@@ -17,7 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 layout(bindless_sampler) uniform sampler2D tex;
 
-uniform vec3 text_color;
+layout(std140, binding = 1) uniform Drawing
+{
+        vec3 text_color;
+};
 
 in vec2 vs_texture_coordinates;
 

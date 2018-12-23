@@ -18,7 +18,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 layout(location = 0) in ivec2 window_coordinates;
 layout(location = 1) in vec2 texture_coordinates;
 
-uniform mat4 matrix;
+layout(std140, binding = 0) uniform Matrices
+{
+        mat4 matrix;
+};
 
 out vec2 vs_texture_coordinates;
 

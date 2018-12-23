@@ -44,6 +44,55 @@ static_assert(sizeof(TextVertex) == sizeof(Vector<2, GLint>) + sizeof(Vector<2, 
 static_assert(std::is_same_v<decltype(TextVertex::v), Vector<2, GLint>>);
 static_assert(std::is_same_v<decltype(TextVertex::t), Vector<2, GLfloat>>);
 
+constexpr int MATRICES_BINDING = 0;
+constexpr int DRAWING_BINDING = 1;
+
+namespace
+{
+class ShaderMemory
+{
+        struct Matrices
+        {
+                Matrix<4, 4, float> matrix;
+        };
+
+        struct Drawing
+        {
+                vec3f text_color;
+        };
+
+        opengl::UniformBuffer m_matrices;
+        opengl::UniformBuffer m_drawing;
+
+public:
+        ShaderMemory() : m_matrices(sizeof(Matrices)), m_drawing(sizeof(Drawing))
+        {
+        }
+
+        void set_matrix(const mat4& matrix) const
+        {
+                decltype(Matrices().matrix) m = transpose(to_matrix<float>(matrix));
+                m_matrices.copy(offsetof(Matrices, matrix), m);
+        }
+
+        void set_color(const Color& color) const
+        {
+                decltype(Drawing().text_color) c = color.to_rgb_vector<float>();
+                m_drawing.copy(offsetof(Drawing, text_color), c);
+        }
+
+        void bind_matrices(int point) const
+        {
+                m_matrices.bind(point);
+        }
+
+        void bind_drawing(int point) const
+        {
+                m_drawing.bind(point);
+        }
+};
+}
+
 class OpenGLText::Impl final
 {
         const std::thread::id m_thread_id;
@@ -53,6 +102,7 @@ class OpenGLText::Impl final
         opengl::GraphicsProgram m_program;
         std::unordered_map<char32_t, FontGlyph> m_glyphs;
         std::unique_ptr<opengl::TextureR32F> m_texture;
+        ShaderMemory m_shader_memory;
 
         template <typename T>
         void draw_text(int step_y, int x, int y, const T& text) const
@@ -63,9 +113,13 @@ class OpenGLText::Impl final
 
                 text_vertices(m_glyphs, step_y, x, y, text, &vertices);
 
-                opengl::GLEnableAndRestore<GL_BLEND> e;
-                m_vertex_array.bind();
                 m_vertex_buffer.load_dynamic_draw(vertices);
+
+                opengl::GLEnableAndRestore<GL_BLEND> e;
+
+                m_shader_memory.bind_matrices(MATRICES_BINDING);
+                m_shader_memory.bind_drawing(DRAWING_BINDING);
+                m_vertex_array.bind();
                 m_program.draw_arrays(GL_TRIANGLES, 0, vertices.size());
         }
 
@@ -100,12 +154,12 @@ public:
 
         void set_color(const Color& color) const
         {
-                m_program.set_uniform("text_color", color.to_rgb_vector<float>());
+                m_shader_memory.set_color(color);
         }
 
         void set_matrix(const mat4& matrix) const
         {
-                m_program.set_uniform_float("matrix", matrix);
+                m_shader_memory.set_matrix(matrix);
         }
 
         void draw(int step_y, int x, int y, const std::vector<std::string>& text) const
