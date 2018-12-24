@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "renderer.h"
 
+#include "memory.h"
+
 #include "com/log.h"
 #include "com/matrix_alg.h"
 #include "com/print.h"
@@ -257,6 +259,8 @@ void load_materials(const Obj<3>& obj, std::vector<Material>* materials)
 
 class DrawObject final
 {
+        static constexpr int BUFFER_BINDING = 0;
+
         opengl::VertexArray m_vertex_array;
         opengl::ArrayBuffer m_vertex_buffer;
         std::unique_ptr<opengl::StorageBuffer> m_storage_buffer;
@@ -269,7 +273,8 @@ class DrawObject final
 public:
         DrawObject(const Obj<3>& obj, double size, const vec3& position);
 
-        void bind() const;
+        void bind_vertices() const;
+        void bind_buffer() const;
 
         const mat4& model_matrix() const;
         unsigned vertices_count() const;
@@ -343,10 +348,13 @@ DrawObject::DrawObject(const Obj<3>& obj, double size, const vec3& position)
                                               true);
         }
 }
-void DrawObject::bind() const
+void DrawObject::bind_vertices() const
 {
         m_vertex_array.bind();
-        m_storage_buffer->bind(0);
+}
+void DrawObject::bind_buffer() const
+{
+        m_storage_buffer->bind(BUFFER_BINDING);
 }
 const mat4& DrawObject::model_matrix() const
 {
@@ -371,6 +379,8 @@ std::string color_space_message(bool framebuffer_is_srgb, bool colorbuffer_is_sr
         msg += colorbuffer_is_srgb ? "sRGB" : "linear";
         return msg;
 }
+
+namespace shaders = opengl_renderer_shaders;
 
 class Renderer final : public OpenGLRenderer
 {
@@ -404,10 +414,12 @@ class Renderer final : public OpenGLRenderer
         bool m_framebuffer_srgb;
         bool m_colorbuffer_srgb;
 
+        shaders::PointsMemory m_points_memory;
+
         void set_light_a(const Color& light) override
         {
                 main_program.set_uniform("light_a", color_to_vec4f(light));
-                points_program.set_uniform("light_a", color_to_vec4f(light));
+                m_points_memory.set_light_a(light);
         }
         void set_light_d(const Color& light) override
         {
@@ -420,12 +432,12 @@ class Renderer final : public OpenGLRenderer
         void set_background_color(const Color& color) override
         {
                 glClearColor(color.red(), color.green(), color.blue(), 1);
-                points_program.set_uniform("background_color", color_to_vec4f(color));
+                m_points_memory.set_background_color(color);
         }
         void set_default_color(const Color& color) override
         {
                 main_program.set_uniform("default_color", color_to_vec4f(color));
-                points_program.set_uniform("default_color", color_to_vec4f(color));
+                m_points_memory.set_default_color(color);
         }
         void set_wireframe_color(const Color& color) override
         {
@@ -450,7 +462,7 @@ class Renderer final : public OpenGLRenderer
         }
         void set_show_fog(bool show) override
         {
-                points_program.set_uniform("show_fog", show ? 1 : 0);
+                m_points_memory.set_show_fog(show);
         }
         void set_show_materials(bool show) override
         {
@@ -495,7 +507,7 @@ class Renderer final : public OpenGLRenderer
 
                 opengl::GLEnableAndRestore<GL_DEPTH_TEST> enable_depth_test;
 
-                draw_object->bind();
+                draw_object->bind_vertices();
 
                 const DrawObject* scale_object = m_storage.scale_object();
 
@@ -534,14 +546,17 @@ class Renderer final : public OpenGLRenderer
                 {
                 case DrawType::Triangles:
                         main_program.set_uniform_float("matrix", m_main_matrix * scale_object->model_matrix());
+                        draw_object->bind_buffer();
                         main_program.draw_arrays(GL_TRIANGLES, 0, draw_object->vertices_count());
                         break;
                 case DrawType::Points:
-                        points_program.set_uniform_float("matrix", m_main_matrix * scale_object->model_matrix());
+                        m_points_memory.set_matrix(m_main_matrix * scale_object->model_matrix());
+                        m_points_memory.bind();
                         points_program.draw_arrays(GL_POINTS, 0, draw_object->vertices_count());
                         break;
                 case DrawType::Lines:
-                        points_program.set_uniform_float("matrix", m_main_matrix * scale_object->model_matrix());
+                        m_points_memory.set_matrix(m_main_matrix * scale_object->model_matrix());
+                        m_points_memory.bind();
                         points_program.draw_arrays(GL_LINES, 0, draw_object->vertices_count());
                         break;
                 }

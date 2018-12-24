@@ -17,7 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 layout(location = 0) in vec4 position;
 
-uniform mat4 matrix;
+layout(std140, binding = 0) uniform Matrices
+{
+        mat4 matrix;
+};
 
 void main(void)
 {

@@ -17,16 +17,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 layout(bindless_image, r32i) writeonly uniform iimage2D object_img;
 
-uniform vec4 default_color;
-uniform vec4 background_color;
-
-uniform vec4 light_a;
-
-uniform int show_fog;
+layout(std140, binding = 1) uniform Drawing
+{
+        vec3 default_color;
+        vec3 background_color;
+        vec3 light_a;
+        bool show_fog;
+};
 
 layout(location = 0) out vec4 color;
 
-vec4 fog(vec4 fog_color, vec4 fragment_color)
+vec3 fog(vec3 fog_color, vec3 fragment_color)
 {
         float fog_density = 2;
 
@@ -41,14 +42,18 @@ vec4 fog(vec4 fog_color, vec4 fragment_color)
 
 void main(void)
 {
-        if (show_fog != 0)
+        vec3 color3;
+
+        if (show_fog)
         {
-                color = fog(background_color, default_color * light_a);
+                color3 = fog(background_color, default_color * light_a);
         }
         else
         {
-                color = default_color * light_a;
+                color3 = default_color * light_a;
         }
+
+        color = vec4(color3, 1);
 
         imageStore(object_img, ivec2(gl_FragCoord.xy), ivec4(1));
 }
