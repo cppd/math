@@ -86,4 +86,32 @@ public:
                 m_drawing.copy(offsetof(Drawing, show_fog), s);
         }
 };
+
+class ShadowMemory
+{
+        static constexpr int MATRICES_BINDING = 0;
+
+        opengl::UniformBuffer m_matrices;
+
+        struct Matrices
+        {
+                Matrix<4, 4, float> matrix;
+        };
+
+public:
+        ShadowMemory() : m_matrices(sizeof(Matrices))
+        {
+        }
+
+        void bind() const
+        {
+                m_matrices.bind(MATRICES_BINDING);
+        }
+
+        void set_matrix(const mat4& matrix) const
+        {
+                decltype(Matrices().matrix) m = transpose(to_matrix<float>(matrix));
+                m_matrices.copy(offsetof(Matrices, matrix), m);
+        }
+};
 }

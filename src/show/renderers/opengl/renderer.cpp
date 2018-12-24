@@ -415,6 +415,7 @@ class Renderer final : public OpenGLRenderer
         bool m_colorbuffer_srgb;
 
         shaders::PointsMemory m_points_memory;
+        shaders::ShadowMemory m_shadow_memory;
 
         void set_light_a(const Color& light) override
         {
@@ -516,7 +517,7 @@ class Renderer final : public OpenGLRenderer
                         main_program.set_uniform_float("shadow_matrix",
                                                        m_scale_bias_shadow_matrix * scale_object->model_matrix());
 
-                        shadow_program.set_uniform_float("matrix", m_shadow_matrix * scale_object->model_matrix());
+                        m_shadow_memory.set_matrix(m_shadow_matrix * scale_object->model_matrix());
 
                         m_shadow_buffer->bind_buffer();
                         glViewport(0, 0, m_shadow_width, m_shadow_height);
@@ -525,8 +526,9 @@ class Renderer final : public OpenGLRenderer
 
                         // depth-fighting
                         opengl::GLEnableAndRestore<GL_POLYGON_OFFSET_FILL> enable_polygon_offset_fill;
-
                         glPolygonOffset(2.0f, 2.0f); // glPolygonOffset(4.0f, 4.0f);
+
+                        m_shadow_memory.bind();
 
                         shadow_program.draw_arrays(GL_TRIANGLES, 0, draw_object->vertices_count());
 
