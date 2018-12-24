@@ -27,7 +27,7 @@ layout(binding = 1, r32f, location = 0) readonly uniform image2D img_big;
 layout(binding = 2, r32f, location = 1) writeonly uniform image2D img_small;
 #endif
 
-layout(binding = 0) uniform Data
+layout(std140, binding = 0) uniform Data
 {
         int k_x;
         int k_y;

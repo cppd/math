@@ -16,14 +16,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 // Общие данные для всех треугольников всех объектов
-layout(set = 0, binding = 1) uniform Lighting
+layout(std140, set = 0, binding = 1) uniform Lighting
 {
         vec3 direction_to_light;
         vec3 direction_to_camera;
         bool show_smooth;
 }
 lighting;
-layout(set = 0, binding = 2) uniform Drawing
+layout(std140, set = 0, binding = 2) uniform Drawing
 {
         vec3 default_color;
         vec3 wireframe_color;
@@ -41,7 +41,7 @@ layout(set = 0, binding = 3) uniform sampler2D shadow_texture;
 layout(set = 0, binding = 4, r32ui) writeonly uniform uimage2D object_image;
 
 // Для каждой группы треугольников с одним материалом отдельно задаётся этот материал и его текстуры
-layout(set = 1, binding = 0) uniform Material
+layout(std140, set = 1, binding = 0) uniform Material
 {
         vec3 Ka;
         vec3 Kd;

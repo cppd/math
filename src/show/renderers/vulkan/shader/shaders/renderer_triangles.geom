@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 layout(triangles) in;
 layout(triangle_strip, max_vertices = 3) out;
 
-layout(set = 0, binding = 1) uniform Lighting
+layout(std140, set = 0, binding = 1) uniform Lighting
 {
         vec3 direction_to_light;
         vec3 direction_to_camera;

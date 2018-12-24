@@ -20,7 +20,7 @@ layout(location = 1) in vec3 normal;
 layout(location = 2) in vec3 geometric_normal;
 layout(location = 3) in vec2 texture_coordinates;
 
-layout(set = 0, binding = 0) uniform Matrices
+layout(std140, set = 0, binding = 0) uniform Matrices
 {
         mat4 matrix;
         mat4 shadow_matrix;

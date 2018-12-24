@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 layout(location = 0) in vec3 position;
 
-layout(set = 0, binding = 0) uniform Matrices
+layout(std140, set = 0, binding = 0) uniform Matrices
 {
         mat4 matrix;
 }
