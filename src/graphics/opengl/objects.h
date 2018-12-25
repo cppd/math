@@ -283,100 +283,24 @@ protected:
         }
 
 public:
-        void set_uniform(const char* var_name, GLint var) const
-        {
-                glProgramUniform1i(m_program, get_uniform_location(var_name), var);
-        }
-        void set_uniform_unsigned(const char* var_name, GLuint var) const
-        {
-                glProgramUniform1ui(m_program, get_uniform_location(var_name), var);
-        }
-        void set_uniform(const char* var_name, bool var) const
-        {
-                glProgramUniform1i(m_program, get_uniform_location(var_name), var ? 1 : 0);
-        }
-        void set_uniform(const char* var_name, GLfloat var) const
-        {
-                glProgramUniform1f(m_program, get_uniform_location(var_name), var);
-        }
-        void set_uniform(const char* var_name, GLdouble var) const
-        {
-                glProgramUniform1d(m_program, get_uniform_location(var_name), var);
-        }
-
-        void set_uniform(GLint loc, GLint var) const
-        {
-                glProgramUniform1i(m_program, loc, var);
-        }
-        void set_uniform_unsigned(GLint loc, GLuint var) const
-        {
-                glProgramUniform1ui(m_program, loc, var);
-        }
-        void set_uniform(GLint loc, bool var) const
-        {
-                glProgramUniform1i(m_program, loc, var ? 1 : 0);
-        }
-        void set_uniform(GLint loc, GLfloat var) const
-        {
-                glProgramUniform1f(m_program, loc, var);
-        }
-        void set_uniform(GLint loc, GLdouble var) const
-        {
-                glProgramUniform1d(m_program, loc, var);
-        }
         void set_uniform_handle(GLint loc, GLuint64 var) const
         {
                 glProgramUniformHandleui64ARB(m_program, loc, var);
         }
+
         void set_uniform_handles(GLint loc, const std::vector<GLuint64>& var) const
         {
                 glProgramUniformHandleui64vARB(m_program, loc, var.size(), var.data());
         }
 
-        void set_uniform(const char* var_name, const vec2f& var) const
-        {
-                static_assert(sizeof(vec2f) == 2 * sizeof(float));
-                glProgramUniform2fv(m_program, get_uniform_location(var_name), 1, var.data());
-        }
-        void set_uniform(const char* var_name, const vec3f& var) const
-        {
-                static_assert(sizeof(vec3f) == 3 * sizeof(float));
-                glProgramUniform3fv(m_program, get_uniform_location(var_name), 1, var.data());
-        }
-        void set_uniform(const char* var_name, const vec4f& var) const
-        {
-                static_assert(sizeof(vec4f) == 4 * sizeof(float));
-                glProgramUniform4fv(m_program, get_uniform_location(var_name), 1, var.data());
-        }
-
-        void set_uniform_float(const char* var_name, const Matrix<4, 4, double>& var) const
-        {
-                static_assert(sizeof(Matrix<4, 4, float>) == 16 * sizeof(float));
-                static_assert(sizeof(Matrix<4, 4, double>) == 16 * sizeof(double));
-                glProgramUniformMatrix4fv(m_program, get_uniform_location(var_name), 1, GL_TRUE, to_matrix<float>(var).data());
-        }
-        void set_uniform_float(const char* var_name, const Matrix<4, 4, float>& var) const
-        {
-                static_assert(sizeof(Matrix<4, 4, float>) == 16 * sizeof(float));
-                glProgramUniformMatrix4fv(m_program, get_uniform_location(var_name), 1, GL_TRUE, var.data());
-        }
-
-        void set_uniform(const char* var_name, const std::vector<int>& var) const
-        {
-                glProgramUniform1iv(m_program, get_uniform_location(var_name), var.size(), var.data());
-        }
-        void set_uniform(const char* var_name, const std::vector<unsigned>& var) const
-        {
-                glProgramUniform1uiv(m_program, get_uniform_location(var_name), var.size(), var.data());
-        }
-
         void set_uniform_handle(const char* var_name, GLuint64 var) const
         {
-                glProgramUniformHandleui64ARB(m_program, get_uniform_location(var_name), var);
+                set_uniform_handle(get_uniform_location(var_name), var);
         }
+
         void set_uniform_handles(const char* var_name, const std::vector<GLuint64>& var) const
         {
-                glProgramUniformHandleui64vARB(m_program, get_uniform_location(var_name), var.size(), var.data());
+                set_uniform_handles(get_uniform_location(var_name), var);
         }
 };
 
