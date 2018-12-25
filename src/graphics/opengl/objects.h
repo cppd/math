@@ -34,274 +34,44 @@ namespace opengl
 {
 class Shader
 {
-        // clang-format off
-        static constexpr std::string_view HEADER
-        {
-#include "header.glsl.str"
-        };
-        // clang-format on
-
-        static constexpr std::string_view EMPTY_LINE = "\n";
-
         GLuint m_shader = 0;
 
-        template <typename Type, size_t size>
-        static constexpr Type to_type()
-        {
-                constexpr bool is_same = std::is_same_v<size_t, std::remove_cv_t<Type>>;
-                static_assert(is_same || std::numeric_limits<Type>::is_specialized);
-                static_assert(is_same || size <= std::numeric_limits<Type>::max());
-                return size;
-        }
-
-        template <typename Type>
-        static constexpr Type to_type(size_t size)
-        {
-                constexpr bool is_same = std::is_same_v<size_t, std::remove_cv_t<Type>>;
-                static_assert(is_same || std::numeric_limits<Type>::is_specialized);
-                if constexpr (!is_same)
-                {
-                        ASSERT(size <= std::numeric_limits<Type>::max());
-                }
-                return size;
-        }
-
-        template <typename Data, typename Size, size_t N>
-        static std::string string_source(const std::array<const Data*, N>& pointers, const std::array<Size, N>& sizes)
-        {
-                std::string s;
-                for (size_t i = 0; i < N; ++i)
-                {
-                        s += std::string_view(pointers[i], sizes[i]);
-                }
-                return s;
-        }
-
 protected:
-        Shader(GLenum type, const std::string_view& shader_text)
-        {
-                m_shader = glCreateShader(type);
-                try
-                {
-                        const std::array<const GLchar*, 3> source_pointers = {HEADER.data(), EMPTY_LINE.data(),
-                                                                              shader_text.data()};
-
-                        const std::array<GLint, 3> source_sizes = {to_type<GLint, HEADER.size()>(),
-                                                                   to_type<GLint, EMPTY_LINE.size()>(),
-                                                                   to_type<GLint>(shader_text.size())};
-
-                        glShaderSource(m_shader, source_pointers.size(), source_pointers.data(), source_sizes.data());
-
-                        glCompileShader(m_shader);
-
-                        GLint status;
-                        glGetShaderiv(m_shader, GL_COMPILE_STATUS, &status);
-                        if (status != GL_TRUE)
-                        {
-                                std::string error_message = "CompileShader\n\n";
-
-                                GLint length;
-                                glGetShaderiv(m_shader, GL_INFO_LOG_LENGTH, &length);
-                                if (length > 1)
-                                {
-                                        std::vector<GLchar> buffer(length);
-                                        glGetShaderInfoLog(m_shader, length, nullptr, buffer.data());
-                                        error_message += buffer.data();
-                                }
-                                else
-                                {
-                                        error_message += "Unknown error";
-                                }
-
-                                error_source(std::move(error_message), string_source(source_pointers, source_sizes));
-                        }
-                }
-                catch (...)
-                {
-                        glDeleteShader(m_shader);
-                        throw;
-                }
-        }
-
-        ~Shader()
-        {
-                glDeleteShader(m_shader);
-        }
+        Shader(GLenum type, const std::string_view& shader_text);
+        ~Shader();
 
         Shader(const Shader&) = delete;
         Shader& operator=(const Shader&) = delete;
 
-        Shader(Shader&& from) noexcept
-        {
-                *this = std::move(from);
-        }
-        Shader& operator=(Shader&& from) noexcept
-        {
-                if (this == &from)
-                {
-                        return *this;
-                }
-                glDeleteShader(m_shader);
-                m_shader = from.m_shader;
-                from.m_shader = 0;
-                return *this;
-        }
+        Shader(Shader&& from) noexcept;
+        Shader& operator=(Shader&& from) noexcept;
 
 public:
-        void attach_to_program(GLuint program) const noexcept
-        {
-                glAttachShader(program, m_shader);
-        }
-        void detach_from_program(GLuint program) const noexcept
-        {
-                glDetachShader(program, m_shader);
-        }
+        void attach_to_program(GLuint program) const noexcept;
+        void detach_from_program(GLuint program) const noexcept;
 };
 
 class Program
 {
-        class AttachShader final
-        {
-                GLuint m_program;
-                const Shader* m_shader;
-
-        public:
-                AttachShader(GLuint program, const Shader& shader) : m_program(program), m_shader(&shader)
-                {
-                        m_shader->attach_to_program(m_program);
-                }
-                ~AttachShader()
-                {
-                        if (m_shader && m_program)
-                        {
-                                m_shader->detach_from_program(m_program);
-                        }
-                }
-
-                AttachShader(const AttachShader&) = delete;
-                AttachShader& operator=(const AttachShader&) = delete;
-
-                AttachShader(AttachShader&& from) noexcept
-                {
-                        *this = std::move(from);
-                }
-                AttachShader& operator=(AttachShader&& from) noexcept
-                {
-                        if (this == &from)
-                        {
-                                return *this;
-                        }
-                        m_program = from.m_program;
-                        m_shader = from.m_shader;
-                        from.m_program = 0;
-                        from.m_shader = nullptr;
-                        return *this;
-                }
-        };
-
-        //
         GLuint m_program = 0;
 
-        GLint get_uniform_location(const char* name) const
-        {
-                GLint loc = glGetUniformLocation(m_program, name);
-                if (loc < 0)
-                {
-                        error(std::string("glGetUniformLocation error: ") + name);
-                }
-                return loc;
-        }
-
 protected:
-        Program() = delete; // Программа без шейдеров не должна делаться
-
-        template <typename... S>
-        Program(const S&... shader)
-        {
-                static_assert(sizeof...(S) > 0);
-
-                m_program = glCreateProgram();
-                try
-                {
-                        std::vector<AttachShader> attaches;
-
-                        (attaches.emplace_back(m_program, shader), ...);
-
-                        glLinkProgram(m_program);
-
-                        GLint status;
-                        glGetProgramiv(m_program, GL_LINK_STATUS, &status);
-                        if (status != GL_TRUE)
-                        {
-                                GLint length;
-                                glGetProgramiv(m_program, GL_INFO_LOG_LENGTH, &length);
-                                if (length > 1)
-                                {
-                                        std::vector<GLchar> buffer(length);
-                                        glGetProgramInfoLog(m_program, length, nullptr, buffer.data());
-                                        error(std::string("LinkProgram Error: ") + buffer.data());
-                                }
-                                else
-                                {
-                                        error("LinkProgram Error");
-                                }
-                        }
-                }
-                catch (...)
-                {
-                        glDeleteProgram(m_program);
-                        throw;
-                }
-        }
+        Program(const std::vector<const Shader*>& shaders);
+        ~Program();
 
         Program(const Program&) = delete;
         Program& operator=(const Program&) = delete;
-        Program(Program&& from) noexcept
-        {
-                *this = std::move(from);
-        }
-        Program& operator=(Program&& from) noexcept
-        {
-                if (this == &from)
-                {
-                        return *this;
-                }
-                glDeleteProgram(m_program);
-                m_program = from.m_program;
-                from.m_program = 0;
-                return *this;
-        }
 
-        ~Program()
-        {
-                glDeleteProgram(m_program);
-        }
+        Program(Program&& from) noexcept;
+        Program& operator=(Program&& from) noexcept;
 
-        void use() const noexcept
-        {
-                glUseProgram(m_program);
-        }
+        void use() const noexcept;
 
 public:
-        void set_uniform_handle(GLint loc, GLuint64 var) const
-        {
-                glProgramUniformHandleui64ARB(m_program, loc, var);
-        }
-
-        void set_uniform_handles(GLint loc, const std::vector<GLuint64>& var) const
-        {
-                glProgramUniformHandleui64vARB(m_program, loc, var.size(), var.data());
-        }
-
-        void set_uniform_handle(const char* var_name, GLuint64 var) const
-        {
-                set_uniform_handle(get_uniform_location(var_name), var);
-        }
-
-        void set_uniform_handles(const char* var_name, const std::vector<GLuint64>& var) const
-        {
-                set_uniform_handles(get_uniform_location(var_name), var);
-        }
+        void set_uniform_handle(GLint loc, GLuint64 var) const;
+        void set_uniform_handles(GLint loc, const std::vector<GLuint64>& var) const;
+        void set_uniform_handle(const char* var_name, GLuint64 var) const;
+        void set_uniform_handles(const char* var_name, const std::vector<GLuint64>& var) const;
 };
 
 class VertexShader final : public Shader
@@ -356,7 +126,7 @@ class GraphicsProgram final : public Program
 {
 public:
         template <typename... S>
-        GraphicsProgram(const S&... s) : Program(s...)
+        GraphicsProgram(const S&... s) : Program({&s...})
         {
                 static_assert(((std::is_same_v<VertexShader, S> || std::is_same_v<TessControlShader, S> ||
                                 std::is_same_v<TessEvaluationShader, S> || std::is_same_v<GeometryShader, S> ||
@@ -375,7 +145,7 @@ class ComputeProgram final : public Program
 {
 public:
         template <typename... S>
-        ComputeProgram(const S&... s) : Program(s...)
+        ComputeProgram(const S&... s) : Program({&s...})
         {
                 static_assert((std::is_same_v<ComputeShader, S> && ...), "ComputeProgram accepts only compute shaders");
         }
