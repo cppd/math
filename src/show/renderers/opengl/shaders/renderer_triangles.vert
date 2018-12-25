@@ -21,8 +21,11 @@ layout(location = 2) in vec2 texture_coordinates;
 layout(location = 3) in int material_index;
 layout(location = 4) in int property;
 
-uniform mat4 matrix;
-uniform mat4 shadow_matrix;
+layout(std140, binding = 0) uniform Matrices
+{
+        mat4 matrix;
+        mat4 shadow_matrix;
+};
 
 out VS
 {

@@ -19,19 +19,25 @@ layout(bindless_sampler) uniform sampler2DShadow shadow_tex;
 
 layout(bindless_image, r32i) writeonly uniform iimage2D object_img;
 
-uniform vec4 default_color;
-uniform vec4 wireframe_color;
-uniform vec3 direction_to_light;
-uniform vec3 direction_to_camera;
-uniform float default_ns;
+layout(std140, binding = 1) uniform Lighting
+{
+        vec3 direction_to_light;
+        vec3 direction_to_camera;
+        bool show_smooth;
+};
 
-uniform vec4 light_a;
-uniform vec4 light_d;
-uniform vec4 light_s;
-
-uniform int show_wireframe;
-uniform int show_materials;
-uniform int show_shadow;
+layout(std140, binding = 2) uniform Drawing
+{
+        vec3 default_color;
+        vec3 wireframe_color;
+        float default_ns;
+        vec3 light_a;
+        vec3 light_d;
+        vec3 light_s;
+        bool show_materials;
+        bool show_wireframe;
+        bool show_shadow;
+};
 
 in GS
 {
@@ -52,7 +58,7 @@ struct Material
         // если нет текстуры, то -1
         int map_Ka, map_Kd, map_Ks;
 };
-layout(std430, binding = 0) buffer BufferObject
+layout(std430, binding = 3) buffer BufferObject
 {
         Material mtl[];
 };
@@ -68,18 +74,15 @@ float edge_factor()
 
 void main(void)
 {
-        vec4 color_a, color_d, color_s;
+        vec3 color_a, color_d, color_s;
 
-        if (gs.material_index >= 0 && show_materials > 0)
+        if (gs.material_index >= 0 && show_materials)
         {
                 // материал есть
 
-                vec4 mtl_color_a =
-                        vec4(mtl[gs.material_index].Ka[0], mtl[gs.material_index].Ka[1], mtl[gs.material_index].Ka[2], 1);
-                vec4 mtl_color_d =
-                        vec4(mtl[gs.material_index].Kd[0], mtl[gs.material_index].Kd[1], mtl[gs.material_index].Kd[2], 1);
-                vec4 mtl_color_s =
-                        vec4(mtl[gs.material_index].Ks[0], mtl[gs.material_index].Ks[1], mtl[gs.material_index].Ks[2], 1);
+                vec3 mtl_color_a = mtl[gs.material_index].Ka;
+                vec3 mtl_color_d = mtl[gs.material_index].Kd;
+                vec3 mtl_color_s = mtl[gs.material_index].Ks;
 
                 // gs.property & 1 > 0 - есть текстурные координаты
 
@@ -88,7 +91,7 @@ void main(void)
                         // если есть и текстурные координаты, и текстура
                         // vec4 tex_color = texture(textures[mtl[gs.material_index].map_Ka], gs.texture_coordinates);
                         vec4 tex_color = texture(mtl[gs.material_index].map_Ka_handle, gs.texture_coordinates);
-                        color_a = mix(mtl_color_a, tex_color, tex_color.a);
+                        color_a = mix(mtl_color_a, tex_color.rgb, tex_color.a);
                 }
                 else
                 {
@@ -101,7 +104,7 @@ void main(void)
                         // если есть и текстурные координаты, и текстура
                         // vec4 tex_color = texture(textures[mtl[gs.material_index].map_Kd], gs.texture_coordinates);
                         vec4 tex_color = texture(mtl[gs.material_index].map_Kd_handle, gs.texture_coordinates);
-                        color_d = mix(mtl_color_d, tex_color, tex_color.a);
+                        color_d = mix(mtl_color_d, tex_color.rgb, tex_color.a);
                 }
                 else
                 {
@@ -114,7 +117,7 @@ void main(void)
                         // если есть и текстурные координаты, и текстура
                         // vec4 tex_color = texture(textures[mtl[gs.material_index].map_Ks], gs.texture_coordinates);
                         vec4 tex_color = texture(mtl[gs.material_index].map_Ks_handle, gs.texture_coordinates);
-                        color_s = mix(mtl_color_s, tex_color, tex_color.a);
+                        color_s = mix(mtl_color_s, tex_color.rgb, tex_color.a);
                 }
                 else
                 {
@@ -135,38 +138,42 @@ void main(void)
         float dot_NL = dot(N, L);
         if (dot_NL >= 0.0)
         {
-                color_d.rgb *= dot_NL;
+                color_d *= dot_NL;
 
                 float light_reflection = max(0.0, dot(V, reflect(-L, N)));
 
-                if (show_materials > 0 && gs.material_index >= 0)
+                if (show_materials && gs.material_index >= 0)
                 {
-                        color_s.rgb *= pow(light_reflection, mtl[gs.material_index].Ns);
+                        color_s *= pow(light_reflection, mtl[gs.material_index].Ns);
                 }
                 else
                 {
-                        color_s.rgb *= pow(light_reflection, default_ns);
+                        color_s *= pow(light_reflection, default_ns);
                 }
         }
         else
         {
-                color_d.rgb = color_s.rgb = vec3(0.0);
+                color_d = color_s = vec3(0);
         }
 
-        if (show_shadow > 0)
+        vec3 color3;
+
+        if (show_shadow)
         {
                 float shadow = textureProj(shadow_tex, gs.shadow_position);
-                color = color_a * light_a + (color_d * light_d + color_s * light_s) * shadow;
+                color3 = color_a * light_a + (color_d * light_d + color_s * light_s) * shadow;
         }
         else
         {
-                color = color_a * light_a + color_d * light_d + color_s * light_s;
+                color3 = color_a * light_a + color_d * light_d + color_s * light_s;
         }
 
-        if (show_wireframe > 0)
+        if (show_wireframe)
         {
-                color = mix(wireframe_color, color, edge_factor());
+                color3 = mix(wireframe_color, color3, edge_factor());
         }
+
+        color = vec4(color3, 1);
 
         imageStore(object_img, ivec2(gl_FragCoord.xy), ivec4(1));
 }

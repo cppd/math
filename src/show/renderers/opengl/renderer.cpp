@@ -61,6 +61,8 @@ constexpr const char points_frag[]
 };
 // clang-format on
 
+constexpr int BUFFER_BINDING = 3;
+
 namespace
 {
 enum class DrawType
@@ -130,11 +132,6 @@ struct PointVertex final
         {
         }
 };
-
-vec4f color_to_vec4f(const Color& c)
-{
-        return vec4f(c.red(), c.green(), c.blue(), 1);
-}
 
 // shader storage
 struct Material final
@@ -259,8 +256,6 @@ void load_materials(const Obj<3>& obj, std::vector<Material>* materials)
 
 class DrawObject final
 {
-        static constexpr int BUFFER_BINDING = 0;
-
         opengl::VertexArray m_vertex_array;
         opengl::ArrayBuffer m_vertex_buffer;
         std::unique_ptr<opengl::StorageBuffer> m_storage_buffer;
@@ -416,19 +411,20 @@ class Renderer final : public OpenGLRenderer
 
         shaders::PointsMemory m_points_memory;
         shaders::ShadowMemory m_shadow_memory;
+        shaders::TrianglesMemory m_triangles_memory;
 
         void set_light_a(const Color& light) override
         {
-                main_program.set_uniform("light_a", color_to_vec4f(light));
+                m_triangles_memory.set_light_a(light);
                 m_points_memory.set_light_a(light);
         }
         void set_light_d(const Color& light) override
         {
-                main_program.set_uniform("light_d", color_to_vec4f(light));
+                m_triangles_memory.set_light_d(light);
         }
         void set_light_s(const Color& light) override
         {
-                main_program.set_uniform("light_s", color_to_vec4f(light));
+                m_triangles_memory.set_light_s(light);
         }
         void set_background_color(const Color& color) override
         {
@@ -437,29 +433,29 @@ class Renderer final : public OpenGLRenderer
         }
         void set_default_color(const Color& color) override
         {
-                main_program.set_uniform("default_color", color_to_vec4f(color));
+                m_triangles_memory.set_default_color(color);
                 m_points_memory.set_default_color(color);
         }
         void set_wireframe_color(const Color& color) override
         {
-                main_program.set_uniform("wireframe_color", color_to_vec4f(color));
+                m_triangles_memory.set_wireframe_color(color);
         }
         void set_default_ns(double default_ns) override
         {
-                main_program.set_uniform("default_ns", static_cast<float>(default_ns));
+                m_triangles_memory.set_default_ns(default_ns);
         }
         void set_show_smooth(bool show) override
         {
-                main_program.set_uniform("show_smooth", show ? 1 : 0);
+                m_triangles_memory.set_show_smooth(show);
         }
         void set_show_wireframe(bool show) override
         {
-                main_program.set_uniform("show_wireframe", show ? 1 : 0);
+                m_triangles_memory.set_show_wireframe(show);
         }
         void set_show_shadow(bool show) override
         {
                 m_show_shadow = show;
-                main_program.set_uniform("show_shadow", show ? 1 : 0);
+                m_triangles_memory.set_show_shadow(show);
         }
         void set_show_fog(bool show) override
         {
@@ -467,7 +463,7 @@ class Renderer final : public OpenGLRenderer
         }
         void set_show_materials(bool show) override
         {
-                main_program.set_uniform("show_materials", show ? 1 : 0);
+                m_triangles_memory.set_show_materials(show);
         }
 
         void set_matrices(const mat4& shadow_matrix, const mat4& main_matrix) override
@@ -479,11 +475,11 @@ class Renderer final : public OpenGLRenderer
 
         void set_light_direction(vec3 dir) override
         {
-                main_program.set_uniform("direction_to_light", -to_vector<float>(dir));
+                m_triangles_memory.set_direction_to_light(-dir);
         }
         void set_camera_direction(vec3 dir) override
         {
-                main_program.set_uniform("direction_to_camera", -to_vector<float>(dir));
+                m_triangles_memory.set_direction_to_camera(-dir);
         }
 
         bool draw(bool draw_to_color_buffer) override
@@ -514,9 +510,7 @@ class Renderer final : public OpenGLRenderer
 
                 if (m_show_shadow && draw_object->draw_type() == DrawType::Triangles)
                 {
-                        main_program.set_uniform_float("shadow_matrix",
-                                                       m_scale_bias_shadow_matrix * scale_object->model_matrix());
-
+                        m_triangles_memory.set_shadow_matrix(m_scale_bias_shadow_matrix * scale_object->model_matrix());
                         m_shadow_memory.set_matrix(m_shadow_matrix * scale_object->model_matrix());
 
                         m_shadow_buffer->bind_buffer();
@@ -547,8 +541,9 @@ class Renderer final : public OpenGLRenderer
                 switch (draw_object->draw_type())
                 {
                 case DrawType::Triangles:
-                        main_program.set_uniform_float("matrix", m_main_matrix * scale_object->model_matrix());
+                        m_triangles_memory.set_matrix(m_main_matrix * scale_object->model_matrix());
                         draw_object->bind_buffer();
+                        m_triangles_memory.bind();
                         main_program.draw_arrays(GL_TRIANGLES, 0, draw_object->vertices_count());
                         break;
                 case DrawType::Points:

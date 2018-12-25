@@ -18,8 +18,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 layout(triangles) in;
 layout(triangle_strip, max_vertices = 3) out;
 
-uniform int show_smooth;
-uniform vec3 direction_to_camera;
+layout(std140, binding = 1) uniform Lighting
+{
+        vec3 direction_to_light;
+        vec3 direction_to_camera;
+        bool show_smooth;
+};
 
 in VS
 {
@@ -53,7 +57,7 @@ vec3[3] compute_normals()
 
         bool face_has_normal = (vs[0].property & 2) > 0;
 
-        if (face_has_normal && show_smooth > 0)
+        if (face_has_normal && show_smooth)
         {
                 // Направить векторы вершин грани по направлению перпендикуляра
                 // к той стороне грани, которая обращена к камере.
