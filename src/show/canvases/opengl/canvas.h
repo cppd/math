@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/color/color.h"
 #include "com/matrix.h"
-#include "graphics/opengl/objects.h"
+#include "graphics/opengl/buffers.h"
 
 #include <memory>
 #include <string>

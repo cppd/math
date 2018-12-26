@@ -17,7 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "graphics/opengl/objects.h"
+#include "com/error.h"
+#include "graphics/opengl/buffers.h"
 
 #include <vector>
 

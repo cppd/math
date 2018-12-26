@@ -21,8 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/font/font.h"
 #include "com/font/glyphs.h"
 #include "com/font/vertices.h"
+#include "graphics/opengl/buffers.h"
 #include "graphics/opengl/capabilities.h"
-#include "graphics/opengl/objects.h"
 #include "graphics/opengl/query.h"
 #include "graphics/opengl/shader.h"
 

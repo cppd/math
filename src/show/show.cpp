@@ -29,7 +29,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/print.h"
 #include "com/string/vector.h"
 #include "com/thread.h"
-#include "graphics/opengl/objects.h"
 #include "graphics/vulkan/create.h"
 #include "graphics/vulkan/error.h"
 #include "graphics/vulkan/instance.h"

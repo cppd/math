@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/math.h"
 #include "gpgpu/dft/compute/dft_gl2d.h"
-#include "graphics/opengl/objects.h"
+#include "graphics/opengl/buffers.h"
 #include "graphics/opengl/shader.h"
 
 #include <array>
