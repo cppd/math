@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/vec.h"
 #include "graphics/opengl/objects.h"
+#include "graphics/opengl/shader.h"
 
 #include <complex>
 

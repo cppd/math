@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/math.h"
 #include "com/time.h"
 #include "gpgpu/convex_hull/compute/ch_gl2d.h"
+#include "graphics/opengl/shader.h"
 
 // clang-format off
 constexpr const char vertex_shader[]

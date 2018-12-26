@@ -38,6 +38,7 @@ Chapter 5. Tracking Objects in Videos.
 #include "com/math.h"
 #include "com/print.h"
 #include "gpgpu/com/groups.h"
+#include "graphics/opengl/shader.h"
 
 #include <array>
 

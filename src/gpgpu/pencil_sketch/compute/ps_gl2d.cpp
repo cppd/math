@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/print.h"
 #include "gpgpu/com/groups.h"
+#include "graphics/opengl/shader.h"
 
 // clang-format off
 constexpr const char compute_shader[]

@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/font/vertices.h"
 #include "graphics/opengl/objects.h"
 #include "graphics/opengl/query.h"
+#include "graphics/opengl/shader.h"
 
 #include <array>
 #include <limits>

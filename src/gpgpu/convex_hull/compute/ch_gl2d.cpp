@@ -31,6 +31,7 @@ Chapter 2: CONVEX HULLS, 2.6 Divide-and-Conquer.
 #include "com/print.h"
 #include "gpgpu/com/groups.h"
 #include "graphics/opengl/query.h"
+#include "graphics/opengl/shader.h"
 
 // clang-format off
 constexpr const char prepare_shader[]

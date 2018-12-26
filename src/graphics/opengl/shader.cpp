@@ -15,7 +15,12 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "objects.h"
+#include "shader.h"
+
+#include "com/error.h"
+
+#include <algorithm>
+#include <array>
 
 // clang-format off
 constexpr std::string_view GLSL_HEADER =
