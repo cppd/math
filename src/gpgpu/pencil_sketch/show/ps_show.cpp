@@ -58,6 +58,7 @@ public:
         Impl(const opengl::TextureRGBA32F& source, bool source_is_srgb, const opengl::TextureR32I& objects, const mat4& matrix)
                 : m_draw_prog(opengl::VertexShader(vertex_shader), opengl::FragmentShader(fragment_shader)),
                   m_texture(source.texture().width(), source.texture().height()),
+                  m_vertex_buffer(sizeof(Vertex) * VERTEX_COUNT),
                   m_pencil_sketch(create_pencil_sketch_gl2d(source, source_is_srgb, objects, m_texture))
         {
                 ASSERT(source.texture().width() == objects.texture().width());
@@ -82,7 +83,7 @@ public:
                 vertices[2] = {to_vector<float>(matrix * vec4(x0, y1, 0, 1)), {0, 0}};
                 vertices[3] = {to_vector<float>(matrix * vec4(x1, y1, 0, 1)), {1, 0}};
 
-                m_vertex_buffer.load_static_draw(vertices);
+                m_vertex_buffer.write(vertices);
         }
 
         Impl(const Impl&) = delete;

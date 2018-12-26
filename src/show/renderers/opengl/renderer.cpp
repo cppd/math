@@ -257,7 +257,7 @@ void load_materials(const Obj<3>& obj, std::vector<Material>* materials)
 class DrawObject final
 {
         opengl::VertexArray m_vertex_array;
-        opengl::ArrayBuffer m_vertex_buffer;
+        std::unique_ptr<opengl::ArrayBuffer> m_vertex_buffer;
         std::unique_ptr<opengl::StorageBuffer> m_storage_buffer;
         std::vector<opengl::TextureRGBA32F> m_textures;
         unsigned m_vertices_count;
@@ -285,14 +285,17 @@ DrawObject::DrawObject(const Obj<3>& obj, double size, const vec3& position)
                 load_face_vertices(obj, &vertices);
                 m_vertices_count = vertices.size();
 
-                m_vertex_buffer.load_static_draw(vertices);
+                m_vertex_buffer = std::make_unique<opengl::ArrayBuffer>(vertices);
 
-                m_vertex_array.attrib_pointer(0, 3, GL_FLOAT, m_vertex_buffer, offsetof(FaceVertex, v), sizeof(FaceVertex), true);
-                m_vertex_array.attrib_pointer(1, 3, GL_FLOAT, m_vertex_buffer, offsetof(FaceVertex, n), sizeof(FaceVertex), true);
-                m_vertex_array.attrib_pointer(2, 2, GL_FLOAT, m_vertex_buffer, offsetof(FaceVertex, t), sizeof(FaceVertex), true);
-                m_vertex_array.attrib_i_pointer(3, 1, GL_INT, m_vertex_buffer, offsetof(FaceVertex, index), sizeof(FaceVertex),
+                m_vertex_array.attrib_pointer(0, 3, GL_FLOAT, *m_vertex_buffer, offsetof(FaceVertex, v), sizeof(FaceVertex),
+                                              true);
+                m_vertex_array.attrib_pointer(1, 3, GL_FLOAT, *m_vertex_buffer, offsetof(FaceVertex, n), sizeof(FaceVertex),
+                                              true);
+                m_vertex_array.attrib_pointer(2, 2, GL_FLOAT, *m_vertex_buffer, offsetof(FaceVertex, t), sizeof(FaceVertex),
+                                              true);
+                m_vertex_array.attrib_i_pointer(3, 1, GL_INT, *m_vertex_buffer, offsetof(FaceVertex, index), sizeof(FaceVertex),
                                                 true);
-                m_vertex_array.attrib_i_pointer(4, 1, GL_UNSIGNED_BYTE, m_vertex_buffer, offsetof(FaceVertex, property),
+                m_vertex_array.attrib_i_pointer(4, 1, GL_UNSIGNED_BYTE, *m_vertex_buffer, offsetof(FaceVertex, property),
                                                 sizeof(FaceVertex), true);
 
                 //
@@ -338,8 +341,8 @@ DrawObject::DrawObject(const Obj<3>& obj, double size, const vec3& position)
                 }
 
                 m_vertices_count = vertices.size();
-                m_vertex_buffer.load_static_draw(vertices);
-                m_vertex_array.attrib_pointer(0, 3, GL_FLOAT, m_vertex_buffer, offsetof(PointVertex, v), sizeof(PointVertex),
+                m_vertex_buffer = std::make_unique<opengl::ArrayBuffer>(vertices);
+                m_vertex_array.attrib_pointer(0, 3, GL_FLOAT, *m_vertex_buffer, offsetof(PointVertex, v), sizeof(PointVertex),
                                               true);
         }
 }

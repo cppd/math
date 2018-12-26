@@ -533,10 +533,36 @@ public:
 class ArrayBuffer final
 {
         Buffer m_buffer = 0;
+        GLsizeiptr m_data_size;
+
+        void copy_to(GLintptr offset, const void* data, GLsizeiptr data_size) const noexcept
+        {
+                ASSERT(offset + data_size <= m_data_size);
+
+                void* map_memory_data =
+                        glMapNamedBufferRange(m_buffer, offset, data_size, GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_RANGE_BIT);
+
+                std::memcpy(map_memory_data, data, data_size);
+
+                glUnmapNamedBuffer(m_buffer);
+        }
+
+        template <typename T>
+        static std::enable_if_t<is_vector<T> || is_array<T>, size_t> binary_size(const T& c) noexcept
+        {
+                return c.size() * sizeof(typename T::value_type);
+        }
 
 public:
-        ArrayBuffer() noexcept : m_buffer(GL_ARRAY_BUFFER)
+        ArrayBuffer(GLsizeiptr data_size) noexcept : m_buffer(GL_ARRAY_BUFFER), m_data_size(data_size)
         {
+                glNamedBufferStorage(m_buffer, data_size, nullptr, GL_MAP_WRITE_BIT);
+        }
+
+        template <typename T, typename = std::enable_if_t<sizeof(std::declval<T>().size()) && sizeof(typename T::value_type)>>
+        ArrayBuffer(const T& data) noexcept : ArrayBuffer(binary_size(data))
+        {
+                write(data);
         }
 
         void vertex_array_vertex_buffer(GLuint vertex_array, GLuint binding_index, GLintptr offset, GLsizei stride) const noexcept
@@ -544,17 +570,16 @@ public:
                 glVertexArrayVertexBuffer(vertex_array, binding_index, m_buffer, offset, stride);
         }
 
-        template <typename T>
-        void load_static_draw(const T& v) const
+        size_t size() const noexcept
         {
-                static_assert(is_vector<T> || is_array<T>);
-                glNamedBufferData(m_buffer, v.size() * sizeof(typename T::value_type), v.data(), GL_STATIC_DRAW);
+                return m_data_size;
         }
+
         template <typename T>
-        void load_dynamic_draw(const T& v) const
+        void write(const T& data) const noexcept
         {
                 static_assert(is_vector<T> || is_array<T>);
-                glNamedBufferData(m_buffer, v.size() * sizeof(typename T::value_type), v.data(), GL_DYNAMIC_DRAW);
+                copy_to(0, data.data(), binary_size(data));
         }
 };
 
@@ -594,30 +619,32 @@ public:
                 glBindVertexArray(m_vertex_array);
         }
 
-        void attrib_pointer(GLuint attrib_index, GLint size, GLenum type, const ArrayBuffer& buffer, GLintptr offset,
+        void attrib_pointer(GLuint attrib_index, GLint size, GLenum type, const ArrayBuffer& array_buffer, GLintptr offset,
                             GLsizei stride, bool enable) const noexcept
         {
                 GLuint binding_index = attrib_index;
                 glVertexArrayAttribFormat(m_vertex_array, attrib_index, size, type, GL_FALSE, 0);
                 glVertexArrayAttribBinding(m_vertex_array, attrib_index, binding_index);
-                buffer.vertex_array_vertex_buffer(m_vertex_array, binding_index, offset, stride);
+                array_buffer.vertex_array_vertex_buffer(m_vertex_array, binding_index, offset, stride);
                 if (enable)
                 {
                         glEnableVertexArrayAttrib(m_vertex_array, attrib_index);
                 }
         }
-        void attrib_i_pointer(GLuint attrib_index, GLint size, GLenum type, const ArrayBuffer& buffer, GLintptr offset,
+
+        void attrib_i_pointer(GLuint attrib_index, GLint size, GLenum type, const ArrayBuffer& array_buffer, GLintptr offset,
                               GLsizei stride, bool enable) const noexcept
         {
                 GLuint binding_index = attrib_index;
                 glVertexArrayAttribIFormat(m_vertex_array, attrib_index, size, type, 0);
                 glVertexArrayAttribBinding(m_vertex_array, attrib_index, binding_index);
-                buffer.vertex_array_vertex_buffer(m_vertex_array, binding_index, offset, stride);
+                array_buffer.vertex_array_vertex_buffer(m_vertex_array, binding_index, offset, stride);
                 if (enable)
                 {
                         glEnableVertexArrayAttrib(m_vertex_array, attrib_index);
                 }
         }
+
         void enable_attrib(GLuint index) const noexcept
         {
                 glEnableVertexArrayAttrib(m_vertex_array, index);

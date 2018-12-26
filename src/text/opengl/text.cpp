@@ -26,6 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <array>
 #include <limits>
+#include <optional>
 #include <thread>
 #include <unordered_map>
 
@@ -95,10 +96,10 @@ public:
 
 class OpenGLText::Impl final
 {
-        const std::thread::id m_thread_id;
+        const std::thread::id m_thread_id = std::this_thread::get_id();
 
         opengl::VertexArray m_vertex_array;
-        opengl::ArrayBuffer m_vertex_buffer;
+        mutable std::optional<opengl::ArrayBuffer> m_vertex_buffer;
         opengl::GraphicsProgram m_program;
         std::unordered_map<char32_t, FontGlyph> m_glyphs;
         std::unique_ptr<opengl::TextureR32F> m_texture;
@@ -113,7 +114,18 @@ class OpenGLText::Impl final
 
                 text_vertices(m_glyphs, step_y, x, y, text, &vertices);
 
-                m_vertex_buffer.load_dynamic_draw(vertices);
+                const size_t data_size = vertices.size() * sizeof(vertices[0]);
+
+                if (!m_vertex_buffer || m_vertex_buffer->size() < data_size)
+                {
+                        m_vertex_buffer.emplace(data_size);
+                        m_vertex_array.attrib_i_pointer(0, 2, GL_INT, *m_vertex_buffer, offsetof(TextVertex, v),
+                                                        sizeof(TextVertex), true);
+                        m_vertex_array.attrib_pointer(1, 2, GL_FLOAT, *m_vertex_buffer, offsetof(TextVertex, t),
+                                                      sizeof(TextVertex), true);
+                }
+
+                m_vertex_buffer->write(vertices);
 
                 opengl::GLEnableAndRestore<GL_BLEND> e;
 
@@ -125,12 +137,8 @@ class OpenGLText::Impl final
 
 public:
         Impl(int size, const Color& color, const mat4& matrix)
-                : m_thread_id(std::this_thread::get_id()),
-                  m_program(opengl::VertexShader(text_vertex_shader), opengl::FragmentShader(text_fragment_shader))
+                : m_program(opengl::VertexShader(text_vertex_shader), opengl::FragmentShader(text_fragment_shader))
         {
-                m_vertex_array.attrib_i_pointer(0, 2, GL_INT, m_vertex_buffer, offsetof(TextVertex, v), sizeof(TextVertex), true);
-                m_vertex_array.attrib_pointer(1, 2, GL_FLOAT, m_vertex_buffer, offsetof(TextVertex, t), sizeof(TextVertex), true);
-
                 set_color(color);
                 set_matrix(matrix);
 

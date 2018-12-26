@@ -113,6 +113,7 @@ public:
                 : m_source_srgb(source_srgb),
                   m_image_texture(width, height),
                   m_dft(create_dft_gl2d(width, height, m_image_texture)),
+                  m_vertex_buffer(sizeof(Vertex) * VERTEX_COUNT),
                   m_draw_prog(opengl::VertexShader(dft_show_vertex_shader), opengl::FragmentShader(dft_show_fragment_shader))
         {
                 m_vertex_array.attrib_pointer(0, 4, GL_FLOAT, m_vertex_buffer, offsetof(Vertex, v), sizeof(Vertex), true);
@@ -138,7 +139,7 @@ public:
                 vertices[2] = {to_vector<float>(matrix * vec4(x0, y1, 0, 1)), {0, 0}};
                 vertices[3] = {to_vector<float>(matrix * vec4(x1, y1, 0, 1)), {1, 0}};
 
-                m_vertex_buffer.load_static_draw(vertices);
+                m_vertex_buffer.write(vertices);
         }
 
         void set_brightness(double brightness)
