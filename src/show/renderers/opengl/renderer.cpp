@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/matrix_alg.h"
 #include "com/print.h"
 #include "graphics/glsl.h"
+#include "graphics/opengl/capabilities.h"
 #include "graphics/opengl/query.h"
 #include "graphics/opengl/shader.h"
 #include "obj/alg/alg.h"
