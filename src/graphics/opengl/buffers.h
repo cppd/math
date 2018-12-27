@@ -30,47 +30,88 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace opengl
 {
-class Texture2D final
+class Texture2DHandle final
 {
-        class Texture2DHandle final
-        {
-                GLuint m_texture = 0;
+        GLuint m_texture = 0;
 
-        public:
-                Texture2DHandle() noexcept
-                {
-                        glCreateTextures(GL_TEXTURE_2D, 1, &m_texture);
-                        glBindTexture(GL_TEXTURE_2D, m_texture);
-                        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-                        glBindTexture(GL_TEXTURE_2D, 0);
-                }
-                ~Texture2DHandle()
-                {
-                        glDeleteTextures(1, &m_texture);
-                }
-                Texture2DHandle(const Texture2DHandle&) = delete;
-                Texture2DHandle& operator=(const Texture2DHandle&) = delete;
-                Texture2DHandle(Texture2DHandle&& from) noexcept
-                {
-                        *this = std::move(from);
-                }
-                Texture2DHandle& operator=(Texture2DHandle&& from) noexcept
-                {
-                        if (this == &from)
-                        {
-                                return *this;
-                        }
-                        glDeleteTextures(1, &m_texture);
-                        m_texture = from.m_texture;
-                        from.m_texture = 0;
-                        return *this;
-                }
-                operator GLuint() const noexcept
-                {
-                        return m_texture;
-                }
-        };
+        void destroy() noexcept;
+        void move(Texture2DHandle* from) noexcept;
 
+public:
+        Texture2DHandle();
+        ~Texture2DHandle();
+
+        Texture2DHandle(const Texture2DHandle&) = delete;
+        Texture2DHandle& operator=(const Texture2DHandle&) = delete;
+
+        Texture2DHandle(Texture2DHandle&& from) noexcept;
+        Texture2DHandle& operator=(Texture2DHandle&& from) noexcept;
+
+        operator GLuint() const noexcept;
+};
+
+class FramebufferHandle final
+{
+        GLuint m_framebuffer = 0;
+
+        void destroy() noexcept;
+        void move(FramebufferHandle* from) noexcept;
+
+public:
+        FramebufferHandle();
+        ~FramebufferHandle();
+
+        FramebufferHandle(const FramebufferHandle&) = delete;
+        FramebufferHandle& operator=(const FramebufferHandle&) = delete;
+
+        FramebufferHandle(FramebufferHandle&& from) noexcept;
+        FramebufferHandle& operator=(FramebufferHandle&& from) noexcept;
+
+        operator GLuint() const noexcept;
+};
+
+class BufferHandle final
+{
+        GLuint m_buffer = 0;
+
+        void destroy() noexcept;
+        void move(BufferHandle* from) noexcept;
+
+public:
+        BufferHandle(GLenum target);
+        ~BufferHandle();
+
+        BufferHandle(const BufferHandle&) = delete;
+        BufferHandle& operator=(const BufferHandle&) = delete;
+
+        BufferHandle(BufferHandle&& from) noexcept;
+        BufferHandle& operator=(BufferHandle&& from) noexcept;
+
+        operator GLuint() const noexcept;
+};
+
+class VertexArrayHandle final
+{
+        GLuint m_vertex_array = 0;
+
+        void destroy() noexcept;
+        void move(VertexArrayHandle* from) noexcept;
+
+public:
+        VertexArrayHandle();
+        ~VertexArrayHandle();
+
+        VertexArrayHandle(const VertexArrayHandle&) = delete;
+        VertexArrayHandle& operator=(const VertexArrayHandle&) = delete;
+
+        VertexArrayHandle(VertexArrayHandle&& from) noexcept;
+        VertexArrayHandle& operator=(VertexArrayHandle&& from) noexcept;
+
+        operator GLuint() const noexcept;
+};
+
+class Texture2D
+{
         Texture2DHandle m_texture;
         int m_width = 0, m_height = 0;
 
@@ -152,39 +193,11 @@ public:
         }
 };
 
-class FrameBuffer final
+class FrameBuffer
 {
-        GLuint m_framebuffer = 0;
+        FramebufferHandle m_framebuffer;
 
 public:
-        FrameBuffer() noexcept
-        {
-                glCreateFramebuffers(1, &m_framebuffer);
-                glBindFramebuffer(GL_FRAMEBUFFER, m_framebuffer);
-                glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        }
-        ~FrameBuffer()
-        {
-                glDeleteFramebuffers(1, &m_framebuffer);
-        }
-        FrameBuffer(const FrameBuffer&) = delete;
-        FrameBuffer& operator=(const FrameBuffer&) = delete;
-        FrameBuffer(FrameBuffer&& from) noexcept
-        {
-                *this = std::move(from);
-        }
-        FrameBuffer& operator=(FrameBuffer&& from) noexcept
-        {
-                if (this == &from)
-                {
-                        return *this;
-                }
-                glDeleteFramebuffers(1, &m_framebuffer);
-                m_framebuffer = from.m_framebuffer;
-                from.m_framebuffer = 0;
-                return *this;
-        }
-
         GLenum check_named_framebuffer_status() const noexcept
         {
                 return glCheckNamedFramebufferStatus(m_framebuffer, GL_FRAMEBUFFER);
@@ -214,75 +227,12 @@ public:
         }
 };
 
-class Buffer final
+class UniformBuffer
 {
-        GLuint m_buffer = 0;
-
-        void destroy() noexcept
-        {
-                if (m_buffer != 0)
-                {
-                        glDeleteBuffers(1, &m_buffer);
-                }
-        }
-
-        void move(Buffer* from) noexcept
-        {
-                m_buffer = from->m_buffer;
-                from->m_buffer = 0;
-        }
-
-public:
-        Buffer(GLenum target)
-        {
-                glCreateBuffers(1, &m_buffer);
-                glBindBuffer(target, m_buffer);
-                glBindBuffer(target, 0);
-        }
-        ~Buffer()
-        {
-                destroy();
-        }
-
-        Buffer(const Buffer&) = delete;
-        Buffer& operator=(const Buffer&) = delete;
-
-        Buffer(Buffer&& from) noexcept
-        {
-                move(&from);
-        }
-        Buffer& operator=(Buffer&& from) noexcept
-        {
-                if (this != &from)
-                {
-                        destroy();
-                        move(&from);
-                }
-                return *this;
-        }
-
-        operator GLuint() const noexcept
-        {
-                return m_buffer;
-        }
-};
-
-class UniformBuffer final
-{
-        Buffer m_buffer;
+        BufferHandle m_buffer;
         GLsizeiptr m_data_size;
 
-        void copy(GLintptr offset, const void* data, GLsizeiptr data_size) const noexcept
-        {
-                ASSERT(offset + data_size <= m_data_size);
-
-                void* map_memory_data =
-                        glMapNamedBufferRange(m_buffer, offset, data_size, GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_RANGE_BIT);
-
-                std::memcpy(map_memory_data, data, data_size);
-
-                glUnmapNamedBuffer(m_buffer);
-        }
+        void copy_to(GLintptr offset, const void* data, GLsizeiptr data_size) const noexcept;
 
 public:
         UniformBuffer(GLsizeiptr data_size) noexcept : m_buffer(GL_UNIFORM_BUFFER), m_data_size(data_size)
@@ -303,51 +253,33 @@ public:
         template <typename T>
         void copy(GLintptr offset, const T& data) const noexcept
         {
-                copy(offset, &data, sizeof(data));
+                copy_to(offset, &data, sizeof(data));
         }
+
         template <typename T>
         void copy(GLintptr offset, GLintptr data_offset, size_t data_size, const T& data) const noexcept
         {
                 ASSERT(data_offset + data_size <= sizeof(data));
 
-                copy(offset, data_offset + reinterpret_cast<const char*>(&data), data_size);
+                copy_to(offset, data_offset + reinterpret_cast<const char*>(&data), data_size);
         }
+
         template <typename T>
         void copy(const T& data) const noexcept
         {
                 ASSERT(size() == sizeof(data));
 
-                copy(0, &data, sizeof(data));
+                copy_to(0, &data, sizeof(data));
         }
 };
 
-class StorageBuffer final
+class StorageBuffer
 {
-        Buffer m_buffer;
+        BufferHandle m_buffer;
         GLsizeiptr m_data_size;
 
-        void copy_to(GLintptr offset, const void* data, GLsizeiptr data_size) const noexcept
-        {
-                ASSERT(offset + data_size <= m_data_size);
-
-                void* map_memory_data =
-                        glMapNamedBufferRange(m_buffer, offset, data_size, GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_RANGE_BIT);
-
-                std::memcpy(map_memory_data, data, data_size);
-
-                glUnmapNamedBuffer(m_buffer);
-        }
-
-        void copy_from(GLintptr offset, void* data, GLsizeiptr data_size) const noexcept
-        {
-                ASSERT(offset + data_size <= m_data_size);
-
-                void* map_memory_data = glMapNamedBufferRange(m_buffer, offset, data_size, GL_MAP_READ_BIT);
-
-                std::memcpy(data, map_memory_data, data_size);
-
-                glUnmapNamedBuffer(m_buffer);
-        }
+        void copy_to(GLintptr offset, const void* data, GLsizeiptr data_size) const noexcept;
+        void copy_from(GLintptr offset, void* data, GLsizeiptr data_size) const noexcept;
 
         template <typename T>
         static std::enable_if_t<is_vector<T> || is_array<T>, size_t> binary_size(const T& c) noexcept
@@ -389,6 +321,7 @@ public:
         {
                 copy_from(0, data->data(), binary_size(*data));
         }
+
         template <typename T>
         std::enable_if_t<!is_vector<T> && !is_array<T>> read(T* data) const noexcept
         {
@@ -396,22 +329,12 @@ public:
         }
 };
 
-class ArrayBuffer final
+class ArrayBuffer
 {
-        Buffer m_buffer = 0;
+        BufferHandle m_buffer = 0;
         GLsizeiptr m_data_size;
 
-        void copy_to(GLintptr offset, const void* data, GLsizeiptr data_size) const noexcept
-        {
-                ASSERT(offset + data_size <= m_data_size);
-
-                void* map_memory_data =
-                        glMapNamedBufferRange(m_buffer, offset, data_size, GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_RANGE_BIT);
-
-                std::memcpy(map_memory_data, data, data_size);
-
-                glUnmapNamedBuffer(m_buffer);
-        }
+        void copy_to(GLintptr offset, const void* data, GLsizeiptr data_size) const noexcept;
 
         template <typename T>
         static std::enable_if_t<is_vector<T> || is_array<T>, size_t> binary_size(const T& c) noexcept
@@ -449,37 +372,11 @@ public:
         }
 };
 
-class VertexArray final
+class VertexArray
 {
-        GLuint m_vertex_array = 0;
+        VertexArrayHandle m_vertex_array;
 
 public:
-        VertexArray() noexcept
-        {
-                glCreateVertexArrays(1, &m_vertex_array);
-        }
-        ~VertexArray()
-        {
-                glDeleteVertexArrays(1, &m_vertex_array);
-        }
-        VertexArray(const VertexArray&) = delete;
-        VertexArray& operator=(const VertexArray&) = delete;
-        VertexArray(VertexArray&& from) noexcept
-        {
-                *this = std::move(from);
-        }
-        VertexArray& operator=(VertexArray&& from) noexcept
-        {
-                if (this == &from)
-                {
-                        return *this;
-                }
-                glDeleteVertexArrays(1, &m_vertex_array);
-                m_vertex_array = from.m_vertex_array;
-                from.m_vertex_array = 0;
-                return *this;
-        }
-
         void bind() const noexcept
         {
                 glBindVertexArray(m_vertex_array);
