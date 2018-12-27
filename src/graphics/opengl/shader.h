@@ -25,88 +25,94 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace opengl
 {
-class Shader
+class ShaderHandle final
 {
         GLuint m_shader = 0;
 
+        void destroy() noexcept;
+        void move(ShaderHandle* from) noexcept;
+
+public:
+        ShaderHandle(GLenum type);
+        ~ShaderHandle();
+
+        ShaderHandle(const ShaderHandle&) = delete;
+        ShaderHandle& operator=(const ShaderHandle&) = delete;
+
+        ShaderHandle(ShaderHandle&& from) noexcept;
+        ShaderHandle& operator=(ShaderHandle&& from) noexcept;
+
+        operator GLuint() const noexcept;
+};
+
+class ProgramHandle final
+{
+        GLuint m_program = 0;
+
+        void destroy() noexcept;
+        void move(ProgramHandle* from) noexcept;
+
+public:
+        ProgramHandle();
+        ~ProgramHandle();
+
+        ProgramHandle(const ProgramHandle&) = delete;
+        ProgramHandle& operator=(const ProgramHandle&) = delete;
+
+        ProgramHandle(ProgramHandle&& from) noexcept;
+        ProgramHandle& operator=(ProgramHandle&& from) noexcept;
+
+        operator GLuint() const noexcept;
+};
+
+class Shader
+{
+        ShaderHandle m_shader;
+
 protected:
         Shader(GLenum type, const std::string_view& shader_text);
-        ~Shader();
-
-        Shader(const Shader&) = delete;
-        Shader& operator=(const Shader&) = delete;
-
-        Shader(Shader&& from) noexcept;
-        Shader& operator=(Shader&& from) noexcept;
 
 public:
         void attach_to_program(GLuint program) const noexcept;
         void detach_from_program(GLuint program) const noexcept;
 };
 
-class VertexShader final : public Shader
+struct VertexShader final : Shader
 {
-public:
-        VertexShader(const std::string_view& shader_text) : Shader(GL_VERTEX_SHADER, shader_text)
-        {
-        }
+        VertexShader(const std::string_view& text);
 };
 
-class TessControlShader final : public Shader
+struct TessControlShader final : Shader
 {
-public:
-        TessControlShader(const std::string_view& shader_text) : Shader(GL_TESS_CONTROL_SHADER, shader_text)
-        {
-        }
+        TessControlShader(const std::string_view& text);
 };
 
-class TessEvaluationShader final : public Shader
+struct TessEvaluationShader final : Shader
 {
-public:
-        TessEvaluationShader(const std::string_view& shader_text) : Shader(GL_TESS_EVALUATION_SHADER, shader_text)
-        {
-        }
+        TessEvaluationShader(const std::string_view& text);
 };
 
-class GeometryShader final : public Shader
+struct GeometryShader final : Shader
 {
-public:
-        GeometryShader(const std::string_view& shader_text) : Shader(GL_GEOMETRY_SHADER, shader_text)
-        {
-        }
+        GeometryShader(const std::string_view& text);
 };
 
-class FragmentShader final : public Shader
+struct FragmentShader final : Shader
 {
-public:
-        FragmentShader(const std::string_view& shader_text) : Shader(GL_FRAGMENT_SHADER, shader_text)
-        {
-        }
+        FragmentShader(const std::string_view& text);
 };
 
-class ComputeShader final : public Shader
+struct ComputeShader final : Shader
 {
-public:
-        ComputeShader(const std::string_view& shader_text) : Shader(GL_COMPUTE_SHADER, shader_text)
-        {
-        }
+        ComputeShader(const std::string_view& text);
 };
-
-//
 
 class Program
 {
-        GLuint m_program = 0;
+        ProgramHandle m_program;
 
 protected:
         Program(const std::vector<const Shader*>& shaders);
-        ~Program();
-
-        Program(const Program&) = delete;
-        Program& operator=(const Program&) = delete;
-
-        Program(Program&& from) noexcept;
-        Program& operator=(Program&& from) noexcept;
 
         void use() const noexcept;
 
@@ -125,8 +131,7 @@ public:
         {
                 static_assert(((std::is_same_v<VertexShader, S> || std::is_same_v<TessControlShader, S> ||
                                 std::is_same_v<TessEvaluationShader, S> || std::is_same_v<GeometryShader, S> ||
-                                std::is_same_v<FragmentShader, S>)&&...),
-                              "GraphicsProgram accepts only vertex, tesselation, geometry and fragment shaders");
+                                std::is_same_v<FragmentShader, S>)&&...));
         }
 
         void draw_arrays(GLenum mode, GLint first, GLsizei count) const noexcept
@@ -142,7 +147,7 @@ public:
         template <typename... S>
         ComputeProgram(const S&... s) : Program({&s...})
         {
-                static_assert((std::is_same_v<ComputeShader, S> && ...), "ComputeProgram accepts only compute shaders");
+                static_assert((std::is_same_v<ComputeShader, S> && ...));
         }
 
         void dispatch_compute(unsigned num_groups_x, unsigned num_groups_y, unsigned num_groups_z) const noexcept
