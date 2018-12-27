@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/error.h"
 #include "com/type_detect.h"
 #include "graphics/opengl/functions/opengl_functions.h"
+#include "graphics/opengl/objects.h"
 
 #include <array>
 #include <cstring>
@@ -30,86 +31,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace opengl
 {
-class Texture2DHandle final
-{
-        GLuint m_texture = 0;
-
-        void destroy() noexcept;
-        void move(Texture2DHandle* from) noexcept;
-
-public:
-        Texture2DHandle();
-        ~Texture2DHandle();
-
-        Texture2DHandle(const Texture2DHandle&) = delete;
-        Texture2DHandle& operator=(const Texture2DHandle&) = delete;
-
-        Texture2DHandle(Texture2DHandle&& from) noexcept;
-        Texture2DHandle& operator=(Texture2DHandle&& from) noexcept;
-
-        operator GLuint() const noexcept;
-};
-
-class FramebufferHandle final
-{
-        GLuint m_framebuffer = 0;
-
-        void destroy() noexcept;
-        void move(FramebufferHandle* from) noexcept;
-
-public:
-        FramebufferHandle();
-        ~FramebufferHandle();
-
-        FramebufferHandle(const FramebufferHandle&) = delete;
-        FramebufferHandle& operator=(const FramebufferHandle&) = delete;
-
-        FramebufferHandle(FramebufferHandle&& from) noexcept;
-        FramebufferHandle& operator=(FramebufferHandle&& from) noexcept;
-
-        operator GLuint() const noexcept;
-};
-
-class BufferHandle final
-{
-        GLuint m_buffer = 0;
-
-        void destroy() noexcept;
-        void move(BufferHandle* from) noexcept;
-
-public:
-        BufferHandle(GLenum target);
-        ~BufferHandle();
-
-        BufferHandle(const BufferHandle&) = delete;
-        BufferHandle& operator=(const BufferHandle&) = delete;
-
-        BufferHandle(BufferHandle&& from) noexcept;
-        BufferHandle& operator=(BufferHandle&& from) noexcept;
-
-        operator GLuint() const noexcept;
-};
-
-class VertexArrayHandle final
-{
-        GLuint m_vertex_array = 0;
-
-        void destroy() noexcept;
-        void move(VertexArrayHandle* from) noexcept;
-
-public:
-        VertexArrayHandle();
-        ~VertexArrayHandle();
-
-        VertexArrayHandle(const VertexArrayHandle&) = delete;
-        VertexArrayHandle& operator=(const VertexArrayHandle&) = delete;
-
-        VertexArrayHandle(VertexArrayHandle&& from) noexcept;
-        VertexArrayHandle& operator=(VertexArrayHandle&& from) noexcept;
-
-        operator GLuint() const noexcept;
-};
-
 class Texture2D
 {
         Texture2DHandle m_texture;

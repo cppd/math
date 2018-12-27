@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "graphics/opengl/functions/opengl_functions.h"
+#include "graphics/opengl/objects.h"
 
 #include <string_view>
 #include <type_traits>
@@ -25,46 +26,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace opengl
 {
-class ShaderHandle final
-{
-        GLuint m_shader = 0;
-
-        void destroy() noexcept;
-        void move(ShaderHandle* from) noexcept;
-
-public:
-        ShaderHandle(GLenum type);
-        ~ShaderHandle();
-
-        ShaderHandle(const ShaderHandle&) = delete;
-        ShaderHandle& operator=(const ShaderHandle&) = delete;
-
-        ShaderHandle(ShaderHandle&& from) noexcept;
-        ShaderHandle& operator=(ShaderHandle&& from) noexcept;
-
-        operator GLuint() const noexcept;
-};
-
-class ProgramHandle final
-{
-        GLuint m_program = 0;
-
-        void destroy() noexcept;
-        void move(ProgramHandle* from) noexcept;
-
-public:
-        ProgramHandle();
-        ~ProgramHandle();
-
-        ProgramHandle(const ProgramHandle&) = delete;
-        ProgramHandle& operator=(const ProgramHandle&) = delete;
-
-        ProgramHandle(ProgramHandle&& from) noexcept;
-        ProgramHandle& operator=(ProgramHandle&& from) noexcept;
-
-        operator GLuint() const noexcept;
-};
-
 class Shader
 {
         ShaderHandle m_shader;
