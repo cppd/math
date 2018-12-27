@@ -121,10 +121,8 @@ class OpenGLText::Impl final
                 if (!m_vertex_buffer || m_vertex_buffer->size() < data_size)
                 {
                         m_vertex_buffer.emplace(data_size);
-                        m_vertex_array.attrib_i_pointer(0, 2, GL_INT, *m_vertex_buffer, offsetof(TextVertex, v),
-                                                        sizeof(TextVertex), true);
-                        m_vertex_array.attrib_pointer(1, 2, GL_FLOAT, *m_vertex_buffer, offsetof(TextVertex, t),
-                                                      sizeof(TextVertex), true);
+                        m_vertex_array.attrib_i(0, 2, GL_INT, *m_vertex_buffer, offsetof(TextVertex, v), sizeof(TextVertex));
+                        m_vertex_array.attrib(1, 2, GL_FLOAT, *m_vertex_buffer, offsetof(TextVertex, t), sizeof(TextVertex));
                 }
 
                 m_vertex_buffer->write(vertices);

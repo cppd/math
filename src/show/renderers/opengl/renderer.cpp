@@ -289,16 +289,12 @@ DrawObject::DrawObject(const Obj<3>& obj, double size, const vec3& position)
 
                 m_vertex_buffer = std::make_unique<opengl::ArrayBuffer>(vertices);
 
-                m_vertex_array.attrib_pointer(0, 3, GL_FLOAT, *m_vertex_buffer, offsetof(FaceVertex, v), sizeof(FaceVertex),
-                                              true);
-                m_vertex_array.attrib_pointer(1, 3, GL_FLOAT, *m_vertex_buffer, offsetof(FaceVertex, n), sizeof(FaceVertex),
-                                              true);
-                m_vertex_array.attrib_pointer(2, 2, GL_FLOAT, *m_vertex_buffer, offsetof(FaceVertex, t), sizeof(FaceVertex),
-                                              true);
-                m_vertex_array.attrib_i_pointer(3, 1, GL_INT, *m_vertex_buffer, offsetof(FaceVertex, index), sizeof(FaceVertex),
-                                                true);
-                m_vertex_array.attrib_i_pointer(4, 1, GL_UNSIGNED_BYTE, *m_vertex_buffer, offsetof(FaceVertex, property),
-                                                sizeof(FaceVertex), true);
+                m_vertex_array.attrib(0, 3, GL_FLOAT, *m_vertex_buffer, offsetof(FaceVertex, v), sizeof(FaceVertex));
+                m_vertex_array.attrib(1, 3, GL_FLOAT, *m_vertex_buffer, offsetof(FaceVertex, n), sizeof(FaceVertex));
+                m_vertex_array.attrib(2, 2, GL_FLOAT, *m_vertex_buffer, offsetof(FaceVertex, t), sizeof(FaceVertex));
+                m_vertex_array.attrib_i(3, 1, GL_INT, *m_vertex_buffer, offsetof(FaceVertex, index), sizeof(FaceVertex));
+                m_vertex_array.attrib_i(4, 1, GL_UNSIGNED_BYTE, *m_vertex_buffer, offsetof(FaceVertex, property),
+                                        sizeof(FaceVertex));
 
                 //
 
@@ -344,8 +340,7 @@ DrawObject::DrawObject(const Obj<3>& obj, double size, const vec3& position)
 
                 m_vertices_count = vertices.size();
                 m_vertex_buffer = std::make_unique<opengl::ArrayBuffer>(vertices);
-                m_vertex_array.attrib_pointer(0, 3, GL_FLOAT, *m_vertex_buffer, offsetof(PointVertex, v), sizeof(PointVertex),
-                                              true);
+                m_vertex_array.attrib(0, 3, GL_FLOAT, *m_vertex_buffer, offsetof(PointVertex, v), sizeof(PointVertex));
         }
 }
 void DrawObject::bind_vertices() const

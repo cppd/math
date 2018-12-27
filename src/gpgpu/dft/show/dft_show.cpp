@@ -117,8 +117,8 @@ public:
                   m_vertex_buffer(sizeof(Vertex) * VERTEX_COUNT),
                   m_draw_prog(opengl::VertexShader(dft_show_vertex_shader), opengl::FragmentShader(dft_show_fragment_shader))
         {
-                m_vertex_array.attrib_pointer(0, 4, GL_FLOAT, m_vertex_buffer, offsetof(Vertex, v), sizeof(Vertex), true);
-                m_vertex_array.attrib_pointer(1, 2, GL_FLOAT, m_vertex_buffer, offsetof(Vertex, t), sizeof(Vertex), true);
+                m_vertex_array.attrib(0, 4, GL_FLOAT, m_vertex_buffer, offsetof(Vertex, v), sizeof(Vertex));
+                m_vertex_array.attrib(1, 2, GL_FLOAT, m_vertex_buffer, offsetof(Vertex, t), sizeof(Vertex));
 
                 m_draw_prog.set_uniform_handle("tex", m_image_texture.texture().texture_resident_handle());
 

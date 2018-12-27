@@ -114,7 +114,7 @@ public:
         }
 };
 
-class FrameBuffer
+class Framebuffer
 {
         FramebufferHandle m_framebuffer;
 
@@ -156,7 +156,7 @@ class UniformBuffer
         void copy_to(GLintptr offset, const void* data, GLsizeiptr data_size) const noexcept;
 
 public:
-        UniformBuffer(GLsizeiptr data_size) noexcept : m_buffer(GL_UNIFORM_BUFFER), m_data_size(data_size)
+        explicit UniformBuffer(GLsizeiptr data_size) noexcept : m_buffer(GL_UNIFORM_BUFFER), m_data_size(data_size)
         {
                 glNamedBufferStorage(m_buffer, data_size, nullptr, GL_MAP_WRITE_BIT);
         }
@@ -209,13 +209,13 @@ class StorageBuffer
         }
 
 public:
-        StorageBuffer(GLsizeiptr data_size) noexcept : m_buffer(GL_SHADER_STORAGE_BUFFER), m_data_size(data_size)
+        explicit StorageBuffer(GLsizeiptr data_size) noexcept : m_buffer(GL_SHADER_STORAGE_BUFFER), m_data_size(data_size)
         {
                 glNamedBufferStorage(m_buffer, data_size, nullptr, GL_MAP_WRITE_BIT | GL_MAP_READ_BIT);
         }
 
         template <typename T, typename = std::enable_if_t<sizeof(std::declval<T>().size()) && sizeof(typename T::value_type)>>
-        StorageBuffer(const T& data) noexcept : StorageBuffer(binary_size(data))
+        explicit StorageBuffer(const T& data) noexcept : StorageBuffer(binary_size(data))
         {
                 write(data);
         }
@@ -264,13 +264,13 @@ class ArrayBuffer
         }
 
 public:
-        ArrayBuffer(GLsizeiptr data_size) noexcept : m_buffer(GL_ARRAY_BUFFER), m_data_size(data_size)
+        explicit ArrayBuffer(GLsizeiptr data_size) noexcept : m_buffer(GL_ARRAY_BUFFER), m_data_size(data_size)
         {
                 glNamedBufferStorage(m_buffer, data_size, nullptr, GL_MAP_WRITE_BIT);
         }
 
         template <typename T, typename = std::enable_if_t<sizeof(std::declval<T>().size()) && sizeof(typename T::value_type)>>
-        ArrayBuffer(const T& data) noexcept : ArrayBuffer(binary_size(data))
+        explicit ArrayBuffer(const T& data) noexcept : ArrayBuffer(binary_size(data))
         {
                 write(data);
         }
@@ -303,39 +303,37 @@ public:
                 glBindVertexArray(m_vertex_array);
         }
 
-        void attrib_pointer(GLuint attrib_index, GLint size, GLenum type, const ArrayBuffer& array_buffer, GLintptr offset,
-                            GLsizei stride, bool enable) const noexcept
+        void attrib(GLuint attrib_index, GLint size, GLenum type, const ArrayBuffer& array_buffer, GLintptr offset,
+                    GLsizei stride) const noexcept
         {
                 GLuint binding_index = attrib_index;
                 glVertexArrayAttribFormat(m_vertex_array, attrib_index, size, type, GL_FALSE, 0);
                 glVertexArrayAttribBinding(m_vertex_array, attrib_index, binding_index);
                 array_buffer.vertex_array_vertex_buffer(m_vertex_array, binding_index, offset, stride);
-                if (enable)
-                {
-                        glEnableVertexArrayAttrib(m_vertex_array, attrib_index);
-                }
+
+                glEnableVertexArrayAttrib(m_vertex_array, attrib_index);
         }
 
-        void attrib_i_pointer(GLuint attrib_index, GLint size, GLenum type, const ArrayBuffer& array_buffer, GLintptr offset,
-                              GLsizei stride, bool enable) const noexcept
+        void attrib_i(GLuint attrib_index, GLint size, GLenum type, const ArrayBuffer& array_buffer, GLintptr offset,
+                      GLsizei stride) const noexcept
         {
                 GLuint binding_index = attrib_index;
                 glVertexArrayAttribIFormat(m_vertex_array, attrib_index, size, type, 0);
                 glVertexArrayAttribBinding(m_vertex_array, attrib_index, binding_index);
                 array_buffer.vertex_array_vertex_buffer(m_vertex_array, binding_index, offset, stride);
-                if (enable)
-                {
-                        glEnableVertexArrayAttrib(m_vertex_array, attrib_index);
-                }
+
+                glEnableVertexArrayAttrib(m_vertex_array, attrib_index);
         }
 
+#if 0
         void enable_attrib(GLuint index) const noexcept
         {
                 glEnableVertexArrayAttrib(m_vertex_array, index);
         }
+#endif
 };
 
-class TextureRGBA32F final
+class TextureRGBA32F
 {
         template <typename T>
         static constexpr bool is_float_buffer = (is_vector<T> || is_array<T>)&&std::is_same_v<typename T::value_type, GLfloat>;
@@ -431,7 +429,7 @@ public:
         }
 };
 
-class TextureR32F final
+class TextureR32F
 {
         template <typename T>
         static constexpr bool is_float_buffer = (is_vector<T> || is_array<T>)&&std::is_same_v<typename T::value_type, GLfloat>;
@@ -509,7 +507,7 @@ public:
         }
 };
 
-class TextureR32I final
+class TextureR32I
 {
         template <typename T>
         static constexpr bool is_int_buffer = (is_vector<T> || is_array<T>)&&std::is_same_v<typename T::value_type, GLint>;
@@ -568,7 +566,7 @@ public:
         }
 };
 
-class TextureDepth32 final
+class TextureDepth32
 {
         Texture2D m_texture;
 
@@ -589,17 +587,17 @@ public:
         }
 };
 
-class ShadowBuffer final
+class ShadowBuffer
 {
-        FrameBuffer m_fb;
+        Framebuffer m_framebuffer;
         TextureDepth32 m_depth;
 
 public:
         ShadowBuffer(GLsizei width, GLsizei height) : m_depth(width, height)
         {
-                m_fb.named_framebuffer_texture(GL_DEPTH_ATTACHMENT, m_depth.texture(), 0);
+                m_framebuffer.named_framebuffer_texture(GL_DEPTH_ATTACHMENT, m_depth.texture(), 0);
 
-                GLenum check = m_fb.check_named_framebuffer_status();
+                GLenum check = m_framebuffer.check_named_framebuffer_status();
                 if (check != GL_FRAMEBUFFER_COMPLETE)
                 {
                         error("Error create shadow framebuffer: " + std::to_string(check));
@@ -608,11 +606,11 @@ public:
 
         void bind_buffer() const noexcept
         {
-                m_fb.bind_framebuffer();
+                m_framebuffer.bind_framebuffer();
         }
         void unbind_buffer() const noexcept
         {
-                m_fb.unbind_framebuffer();
+                m_framebuffer.unbind_framebuffer();
         }
 
         const TextureDepth32& depth_texture() const noexcept
@@ -621,35 +619,35 @@ public:
         }
 };
 
-class ColorBuffer final
+class ColorBuffer
 {
-        FrameBuffer m_fb;
+        Framebuffer m_framebuffer;
         TextureRGBA32F m_color;
         TextureDepth32 m_depth;
 
 public:
         ColorBuffer(GLsizei width, GLsizei height) : m_color(width, height), m_depth(width, height)
         {
-                m_fb.named_framebuffer_texture(GL_COLOR_ATTACHMENT0, m_color.texture(), 0);
-                m_fb.named_framebuffer_texture(GL_DEPTH_ATTACHMENT, m_depth.texture(), 0);
+                m_framebuffer.named_framebuffer_texture(GL_COLOR_ATTACHMENT0, m_color.texture(), 0);
+                m_framebuffer.named_framebuffer_texture(GL_DEPTH_ATTACHMENT, m_depth.texture(), 0);
 
-                GLenum check = m_fb.check_named_framebuffer_status();
+                GLenum check = m_framebuffer.check_named_framebuffer_status();
                 if (check != GL_FRAMEBUFFER_COMPLETE)
                 {
                         error("Error create framebuffer: " + std::to_string(check));
                 }
 
                 const GLenum draw_buffers[] = {GL_COLOR_ATTACHMENT0};
-                m_fb.named_framebuffer_draw_buffers(1, draw_buffers);
+                m_framebuffer.named_framebuffer_draw_buffers(1, draw_buffers);
         }
 
         void bind_buffer() const noexcept
         {
-                m_fb.bind_framebuffer();
+                m_framebuffer.bind_framebuffer();
         }
         void unbind_buffer() const noexcept
         {
-                m_fb.unbind_framebuffer();
+                m_framebuffer.unbind_framebuffer();
         }
 
         const TextureRGBA32F& color_texture() const noexcept
