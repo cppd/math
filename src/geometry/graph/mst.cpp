@@ -128,7 +128,7 @@ std::vector<std::array<int, 2>> kruskal(int point_count, int vertex_count, const
 
         mst.reserve(mst_size);
 
-        WeightedQuickUnion wqn(point_count);
+        WeightedQuickUnion<int> wqn(point_count);
 
         for (unsigned i = 0; i < sorted_edges.size() && mst.size() < mst_size; ++i)
         {

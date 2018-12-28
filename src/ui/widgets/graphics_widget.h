@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -29,6 +29,7 @@ public:
         explicit GraphicsWidget(QWidget* parent = nullptr, Qt::WindowFlags = Qt::WindowFlags()) : QLabel(parent)
         {
         }
+
         ~GraphicsWidget() override
         {
         }
@@ -38,16 +39,14 @@ signals:
         void resize();
 
 protected:
-        // Это нужно для Винды для перехвата сообщений о вращении колеса мыши
-        // над окном с графикой, встроенным дочерним окном.
-        // В Линуксе может работать и без этого.
+        // Это нужно для Винды для перехвата сообщений о вращении
+        // колеса мыши над окном с графикой, встроенным дочерним
+        // окном. В Линуксе может работать и без этого.
         void wheelEvent(QWheelEvent* event) override
         {
                 QPoint local_mouse_pos = this->mapFromGlobal(event->globalPos());
 
-                QRect label_rect(0, 0, this->width(), this->height());
-
-                if (label_rect.contains(local_mouse_pos))
+                if (this->rect().contains(local_mouse_pos))
                 {
                         emit wheel(event->angleDelta().ry() / 120.0);
                 }

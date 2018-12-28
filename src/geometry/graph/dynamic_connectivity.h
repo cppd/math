@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -31,20 +31,23 @@ Pearson Education, 2011.
 #include <numeric>
 #include <vector>
 
+template <typename T>
 class WeightedQuickUnion
 {
-        std::vector<int> m_parent;
-        std::vector<int> m_component_size;
-        int m_component_count;
+        static_assert(std::is_integral_v<T>);
+
+        std::vector<T> m_parent;
+        std::vector<T> m_component_size;
+        T m_component_count;
 
 public:
-        WeightedQuickUnion(int N) : m_parent(N), m_component_size(N), m_component_count(N)
+        WeightedQuickUnion(T N) : m_parent(N), m_component_size(N), m_component_count(N)
         {
                 std::iota(m_parent.begin(), m_parent.end(), 0);
                 std::fill(m_component_size.begin(), m_component_size.end(), 1);
         }
 
-        int find(int p) const
+        T find(T p) const
         {
                 while (p != m_parent[p])
                 {
@@ -53,10 +56,10 @@ public:
                 return p;
         }
 
-        bool add_connection(int p, int q)
+        bool add_connection(T p, T q)
         {
-                int i = find(p);
-                int j = find(q);
+                T i = find(p);
+                T j = find(q);
 
                 if (i == j)
                 {
@@ -80,12 +83,12 @@ public:
                 return true;
         }
 
-        int count() const
+        T count() const
         {
                 return m_component_count;
         }
 
-        bool connected(int p, int q) const
+        bool connected(T p, T q) const
         {
                 return find(p) == find(q);
         }

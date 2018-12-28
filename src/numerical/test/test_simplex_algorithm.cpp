@@ -81,7 +81,7 @@ void test_feasible()
                 if (cs != n::ConstraintSolution::Feasible)
                 {
                         n::solve_constraints_with_print(a, b);
-                        LOG(n::ConstraintSolutionName(cs));
+                        LOG(n::constraint_solution_to_string(cs));
                         error("Not Feasible");
                 }
                 LOG("passed feasible");
@@ -95,7 +95,7 @@ void test_feasible()
                 if (cs != n::ConstraintSolution::Feasible)
                 {
                         n::solve_constraints_with_print(a, b);
-                        LOG(n::ConstraintSolutionName(cs));
+                        LOG(n::constraint_solution_to_string(cs));
                         error("Not Feasible");
                 }
                 LOG("passed feasible");
@@ -109,7 +109,7 @@ void test_feasible()
                 if (cs != n::ConstraintSolution::Infeasible)
                 {
                         n::solve_constraints_with_print(a, b);
-                        LOG(n::ConstraintSolutionName(cs));
+                        LOG(n::constraint_solution_to_string(cs));
                         error("Not Infeasible");
                 }
                 LOG("passed infeasible");

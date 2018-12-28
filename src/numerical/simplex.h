@@ -45,7 +45,7 @@ enum class ConstraintSolution
         Cycling
 };
 
-inline const char* ConstraintSolutionName(const ConstraintSolution& cs) noexcept
+inline const char* constraint_solution_to_string(const ConstraintSolution& cs) noexcept
 {
         switch (cs)
         {

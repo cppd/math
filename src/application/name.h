@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -18,3 +18,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 inline constexpr const char APPLICATION_NAME[] = "Math Viewer";
+
+inline constexpr const char* APPLICATION_LANGUAGES[] = {"C++17", "GLSL 4.50"};
+
+inline constexpr const char* APPLICATION_LIBRARIES[] = {"FreeType",
+                                                        "GLFW",
+                                                        "GMP",
+                                                        "OpenGL",
+                                                        "Qt",
+                                                        "SFML",
+                                                        "Vulkan"
+#if defined(__linux__)
+                                                        ,
+                                                        "Xlib"
+#endif
+};

@@ -27,21 +27,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <vector>
 
-constexpr const char* LANGUAGES[] = {"C++17", "GLSL 4.50"};
-
-constexpr const char* LIBRARIES[] = {"FreeType",
-                                     "GLFW",
-                                     "GMP",
-                                     "OpenGL",
-                                     "Qt",
-                                     "SFML",
-                                     "Vulkan"
-#if defined(__linux__)
-                                     ,
-                                     "Xlib"
-#endif
-};
-
 namespace
 {
 template <typename Iterator>
@@ -79,11 +64,11 @@ std::string message()
 #endif
 
         oss << "\n\n";
-        sorted_comma_separated_list(oss, std::cbegin(LANGUAGES), std::cend(LANGUAGES));
+        sorted_comma_separated_list(oss, std::cbegin(APPLICATION_LANGUAGES), std::cend(APPLICATION_LANGUAGES));
         oss << ".";
 
         oss << "\n\n";
-        sorted_comma_separated_list(oss, std::cbegin(LIBRARIES), std::cend(LIBRARIES));
+        sorted_comma_separated_list(oss, std::cbegin(APPLICATION_LIBRARIES), std::cend(APPLICATION_LIBRARIES));
         oss << ".";
 
         return oss.str();

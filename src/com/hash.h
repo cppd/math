@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -19,9 +19,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <array>
 #include <functional>
-#include <string>
+#include <string_view>
 #include <type_traits>
 
+#if 0
 constexpr uint32_t jenkins_one_at_a_time_hash(const char* key, int len)
 {
         uint32_t hash = 0;
@@ -36,6 +37,7 @@ constexpr uint32_t jenkins_one_at_a_time_hash(const char* key, int len)
         hash += (hash << 15);
         return hash;
 }
+#endif
 
 template <typename T, size_t N>
 size_t hash_as_string(const std::array<T, N>& v)
@@ -43,10 +45,10 @@ size_t hash_as_string(const std::array<T, N>& v)
         static_assert(std::is_integral_v<T> || std::is_floating_point_v<T>);
 
         const char* s = reinterpret_cast<const char*>(v.data());
-        size_t size = v.size() * sizeof(T);
+        size_t size = v.size() * sizeof(v[0]);
 
         // return jenkins_one_at_a_time_hash(s, size);
-        return std::hash<std::string>()(std::string(s, size));
+        return std::hash<std::string_view>()(std::string_view(s, size));
 }
 
 template <typename T, size_t N>

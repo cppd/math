@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "error.h"
 
-inline unsigned long long ull_from_mpz(mpz_t z)
+inline unsigned long long mpz_to_ull(mpz_t z)
 {
         if (mpz_cmp(z, mpz_class("18446744073709551615").get_mpz_t()) > 0)
         {
@@ -37,6 +37,8 @@ inline unsigned long long ull_from_mpz(mpz_t z)
 
 #endif
 
+namespace mpz_implementation
+{
 inline void mpz_from_llong(mpz_t z, unsigned long long v)
 {
         mpz_import(z, 1, -1, sizeof(v), 0, 0, &v);
@@ -70,6 +72,7 @@ inline void mpz_from_int128(mpz_t z, __int128 v)
                 mpz_neg(z, z);
         }
 }
+}
 
 template <typename T>
 void mpz_from_any(mpz_class* z, T v)
@@ -78,21 +81,22 @@ void mpz_from_any(mpz_class* z, T v)
 }
 inline void mpz_from_any(mpz_class* z, unsigned __int128 v)
 {
-        mpz_from_int128(z->get_mpz_t(), v);
+        mpz_implementation::mpz_from_int128(z->get_mpz_t(), v);
 }
 inline void mpz_from_any(mpz_class* z, __int128 v)
 {
-        mpz_from_int128(z->get_mpz_t(), v);
+        mpz_implementation::mpz_from_int128(z->get_mpz_t(), v);
 }
 inline void mpz_from_any(mpz_class* z, unsigned long long v)
 {
-        mpz_from_llong(z->get_mpz_t(), v);
+        mpz_implementation::mpz_from_llong(z->get_mpz_t(), v);
 }
 inline void mpz_from_any(mpz_class* z, long long v)
 {
-        mpz_from_llong(z->get_mpz_t(), v);
+        mpz_implementation::mpz_from_llong(z->get_mpz_t(), v);
 }
 
+#if 0
 class MPZ : public mpz_class
 {
 public:
@@ -124,12 +128,13 @@ public:
         }
         MPZ& operator=(unsigned long long v)
         {
-                mpz_from_llong(this->get_mpz_t(), v);
+                mpz_from_any(this, v);
                 return *this;
         }
         MPZ& operator=(long long v)
         {
-                mpz_from_llong(this->get_mpz_t(), v);
+                mpz_from_any(this, v);
                 return *this;
         }
 };
+#endif
