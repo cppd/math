@@ -27,6 +27,8 @@ namespace
 template <typename T>
 void test_pivot()
 {
+        namespace impl = numerical::simplex_algorithm_implementation;
+
         LOG(std::string("PIVOT, ") + type_name<T>());
 
         std::array<T, 3> b{30, 24, 36};
@@ -34,30 +36,30 @@ void test_pivot()
         T v = 5;
         Vector<3, T> c(3, 1, 2);
 
-        pivot(b, a, v, c, 2, 0);
+        impl::pivot(b, a, v, c, 2, 0);
 
         if (!(b == std::array<T, 3>{21, 6, 9}))
         {
-                print_simplex_algorithm_data(b, a, v, c);
+                impl::print_simplex_algorithm_data(b, a, v, c);
                 error("b error");
         }
 
         if (!(a == std::array<Vector<3, T>, 3>{Vector<3, T>(0.25, -0.75, -2.5), Vector<3, T>(0.5, -1.5, -4),
                                                Vector<3, T>(-0.25, -0.25, -0.5)}))
         {
-                print_simplex_algorithm_data(b, a, v, c);
+                impl::print_simplex_algorithm_data(b, a, v, c);
                 error("a error");
         }
 
         if (!(v == 32))
         {
-                print_simplex_algorithm_data(b, a, v, c);
+                impl::print_simplex_algorithm_data(b, a, v, c);
                 error("v error");
         }
 
         if (!(c == Vector<3, T>(-0.75, 0.25, 0.5)))
         {
-                print_simplex_algorithm_data(b, a, v, c);
+                impl::print_simplex_algorithm_data(b, a, v, c);
                 error("c error");
         }
 
@@ -67,17 +69,19 @@ void test_pivot()
 template <typename T>
 void test_feasible()
 {
+        namespace n = numerical;
+
         LOG(std::string("SOLVE CONSTRAINTS, ") + type_name<T>());
 
         {
                 std::array<T, 2> b{2, -4};
                 std::array<Vector<2, T>, 2> a{Vector<2, T>(-2, 1), Vector<2, T>(-1, 5)};
 
-                ConstraintSolution cs = solve_constraints(a, b);
-                if (cs != ConstraintSolution::Feasible)
+                n::ConstraintSolution cs = n::solve_constraints(a, b);
+                if (cs != n::ConstraintSolution::Feasible)
                 {
-                        solve_constraints_with_print(a, b);
-                        LOG(ConstraintSolutionName(cs));
+                        n::solve_constraints_with_print(a, b);
+                        LOG(n::ConstraintSolutionName(cs));
                         error("Not Feasible");
                 }
                 LOG("passed feasible");
@@ -87,11 +91,11 @@ void test_feasible()
                 std::array<Vector<2, T>, 5> a{Vector<2, T>(1, 0), Vector<2, T>(-1, 0), Vector<2, T>(0, 1), Vector<2, T>(0, -1),
                                               Vector<2, T>(1.01e10, 1.00132e10)};
 
-                ConstraintSolution cs = solve_constraints(a, b);
-                if (cs != ConstraintSolution::Feasible)
+                n::ConstraintSolution cs = n::solve_constraints(a, b);
+                if (cs != n::ConstraintSolution::Feasible)
                 {
-                        solve_constraints_with_print(a, b);
-                        LOG(ConstraintSolutionName(cs));
+                        n::solve_constraints_with_print(a, b);
+                        LOG(n::ConstraintSolutionName(cs));
                         error("Not Feasible");
                 }
                 LOG("passed feasible");
@@ -101,11 +105,11 @@ void test_feasible()
                 std::array<Vector<2, T>, 5> a{Vector<2, T>(1, 0), Vector<2, T>(-1, 0), Vector<2, T>(0, 1), Vector<2, T>(0, -1),
                                               Vector<2, T>(1.01, 1.00132)};
 
-                ConstraintSolution cs = solve_constraints(a, b);
-                if (cs != ConstraintSolution::Infeasible)
+                n::ConstraintSolution cs = n::solve_constraints(a, b);
+                if (cs != n::ConstraintSolution::Infeasible)
                 {
-                        solve_constraints_with_print(a, b);
-                        LOG(ConstraintSolutionName(cs));
+                        n::solve_constraints_with_print(a, b);
+                        LOG(n::ConstraintSolutionName(cs));
                         error("Not Infeasible");
                 }
                 LOG("passed infeasible");

@@ -89,7 +89,7 @@ Vector<N, T> compute_voronoi_vertex(const std::vector<Vector<N, T>>& points, con
                 b[row] = dot(pn, pn) - dot0;
         }
 
-        Vector<N, T> voronoi_vertex = solve(std::move(a), b);
+        Vector<N, T> voronoi_vertex = numerical::solve(std::move(a), b);
 
         ASSERT(is_finite(voronoi_vertex));
 

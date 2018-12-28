@@ -109,7 +109,7 @@ bool intersect_cocone(const Vector<N, T>& normalized_cone_axis, const Vector<N, 
         T c = square(a_n) - square_a * square_cos;
 
         T t1, t2;
-        if (!quadratic_equation(a, b, c, &t1, &t2))
+        if (!numerical::quadratic_equation(a, b, c, &t1, &t2))
         {
                 return false;
         }

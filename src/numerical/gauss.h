@@ -31,6 +31,8 @@ Cambridge University Press.
 #include "com/types.h"
 #include "com/vec.h"
 
+namespace numerical
+{
 namespace gauss_implementation
 {
 template <size_t N, typename T>
@@ -195,4 +197,5 @@ T determinant_gauss(Matrix<Size, Size, T>* A_p)
         }
 
         return sign ? -d : d;
+}
 }

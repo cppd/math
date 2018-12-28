@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Topological Manifold
+Copyright (C) 2017, 2018 Topological Manifold
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "gauss.h"
 
+namespace numerical
+{
 template <size_t Size, typename T>
 Vector<Size, T> solve(Matrix<Size, Size, T>&& a, const Vector<Size, T>& b)
 {
@@ -61,4 +63,5 @@ template <size_t Size, typename T>
 T determinant(const Matrix<Size, Size, T>& m)
 {
         return determinant(Matrix<Size, Size, T>(m));
+}
 }

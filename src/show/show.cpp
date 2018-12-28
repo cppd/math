@@ -780,7 +780,7 @@ void ShowObject<API>::compute_matrices()
         m_renderer->set_camera_direction(camera_direction);
 
         vec4 screen_center((right + left) * 0.5, (top + bottom) * 0.5, (far + near) * 0.5, 1.0);
-        vec4 view_center = inverse(view_matrix) * screen_center;
+        vec4 view_center = numerical::inverse(view_matrix) * screen_center;
         m_camera.set_view_center_and_width(vec3(view_center[0], view_center[1], view_center[2]), right - left, m_draw_width,
                                            m_draw_height);
 }

@@ -35,6 +35,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <array>
 #include <sstream>
 
+namespace numerical
+{
 enum class ConstraintSolution
 {
         Infeasible,
@@ -59,6 +61,8 @@ inline const char* ConstraintSolutionName(const ConstraintSolution& cs) noexcept
         error_fatal("Unknown ConstraintSolution");
 }
 
+namespace simplex_algorithm_implementation
+{
 template <size_t N, size_t M, typename T>
 void print_simplex_algorithm_data(const std::array<T, M>& b, const std::array<Vector<N, T>, M>& a, const T& v,
                                   const Vector<N, T>& c) noexcept
@@ -190,8 +194,6 @@ void pivot(std::array<T, M>& b, std::array<Vector<N, T>, M>& a, T& v, Vector<N, 
         c[e] = c[e] * a[l][e];
 }
 
-namespace simplex_algorithm_implementation
-{
 template <size_t N_Source, size_t M, typename T>
 void make_aux_and_maps(const std::array<Vector<N_Source, T>, M>& a_input, std::array<T, M>* b,
                        std::array<Vector<N_Source + 1, T>, M>* a, T* v, Vector<N_Source + 1, T>* c,
@@ -434,4 +436,5 @@ template <size_t N, size_t M, typename T>
 ConstraintSolution solve_constraints_with_print(const std::array<Vector<N, T>, M>& a, const std::array<T, M>& b) noexcept
 {
         return simplex_algorithm_implementation::solve_constraints<true>(b, a);
+}
 }

@@ -268,7 +268,7 @@ bool shapes_intersect_by_spaces(const Shape1& shape_1, const Shape2& shape_2,
 
         ASSERT(i == CONSTRAINT_COUNT);
 
-        if (solve_constraints(a, b) == ConstraintSolution::Feasible)
+        if (numerical::solve_constraints(a, b) == numerical::ConstraintSolution::Feasible)
         {
                 return true;
         }
