@@ -22,19 +22,103 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/print.h"
 #include "com/random/engine.h"
 #include "com/time.h"
+#include "com/types.h"
 #include "painter/sampling/sampler.h"
 
+#include <cctype>
 #include <fstream>
+#include <random>
+#include <string_view>
 
 namespace
 {
-template <size_t N, typename T, typename Sampler, typename RandomEngine>
-void write_samples_to_file(RandomEngine& random_engine, const Sampler& sampler, const std::string& sampler_name,
-                           const std::string& file_name, int pass_count)
+template <typename T>
+constexpr std::enable_if_t<std::is_same_v<std::remove_cv_t<T>, std::mt19937>, const char*> random_engine_type_name()
 {
-        std::ofstream file(file_name);
+        return "std::mt19937";
+}
+template <typename T>
+constexpr std::enable_if_t<std::is_same_v<std::remove_cv_t<T>, std::mt19937_64>, const char*> random_engine_type_name()
+{
+        return "std::mt19937_64";
+}
 
-        file << sampler_name << "\n";
+std::string replace_space(const std::string_view& s)
+{
+        std::string r;
+        r.reserve(s.size());
+        for (char c : s)
+        {
+                r += !std::isspace(static_cast<unsigned char>(c)) ? c : '_';
+        }
+        return r;
+}
+
+template <size_t N>
+constexpr int sample_count()
+{
+        static_assert(N >= 2);
+        switch (N)
+        {
+        case 2:
+                return power<N>(5u);
+        case 3:
+                return power<N>(5u);
+        case 4:
+                return power<N>(4u);
+        case 5:
+                return power<N>(3u);
+        case 6:
+                return power<N>(3u);
+        default:
+                return power<N>(2u);
+        }
+}
+
+template <size_t N, typename T>
+struct StratifiedJitteredSamplerForTest : StratifiedJitteredSampler<N, T>
+{
+        StratifiedJitteredSamplerForTest() : StratifiedJitteredSampler<N, T>(sample_count<N>())
+        {
+        }
+        const std::string& sampler_name() const
+        {
+                static const std::string s = "Stratified Jittered Sampler";
+                return s;
+        }
+        const std::string& file_name() const
+        {
+                static const std::string s = "samples_sjs_" + to_string(N) + "d_" + replace_space(type_name<T>()) + ".txt";
+                return s;
+        }
+};
+
+template <size_t N, typename T>
+struct LatinHypercubeSamplerForTest : LatinHypercubeSampler<N, T>
+{
+        LatinHypercubeSamplerForTest() : LatinHypercubeSampler<N, T>(sample_count<N>())
+        {
+        }
+        const std::string& sampler_name() const
+        {
+                static const std::string s = "Latin Hypercube Sampler";
+                return s;
+        }
+        const std::string& file_name() const
+        {
+                static const std::string s = "samples_lhc_" + to_string(N) + "d_" + replace_space(type_name<T>()) + ".txt";
+                return s;
+        }
+};
+
+//
+
+template <size_t N, typename T, typename Sampler, typename RandomEngine>
+void write_samples_to_file(RandomEngine& random_engine, const Sampler& sampler, const std::string& directory, int pass_count)
+{
+        std::ofstream file(directory + "/" + sampler.file_name());
+
+        file << sampler.sampler_name() << "\n";
         file << "Pass count: " << to_string(pass_count) << "\n";
 
         std::vector<Vector<N, T>> data;
@@ -51,7 +135,7 @@ void write_samples_to_file(RandomEngine& random_engine, const Sampler& sampler, 
 }
 
 template <size_t N, typename T, typename Sampler, typename RandomEngine>
-void test_speed(RandomEngine& random_engine, const Sampler& sampler, const std::string& sampler_name, int iter_count)
+void test_performance(RandomEngine& random_engine, const Sampler& sampler, int iter_count)
 {
         std::vector<Vector<N, T>> data;
 
@@ -62,42 +146,89 @@ void test_speed(RandomEngine& random_engine, const Sampler& sampler, const std::
                 sampler.generate(random_engine, &data);
         }
 
-        LOG(sampler_name + ": time = " + to_string_fixed(time_in_seconds() - t, 5) +
+        LOG(sampler.sampler_name() + ": time = " + to_string_fixed(time_in_seconds() - t, 5) +
             " seconds, size = " + to_string(data.size()));
 }
 
-template <size_t N, typename T, typename Sampler, typename RandomEngine>
-void test_sampler(RandomEngine& random_engine, const Sampler& sampler, const std::string& sampler_name,
-                  const std::string& file_name, int iter_count, int pass_count)
+template <size_t N, typename T, typename RandomEngine>
+void write_samples_to_files()
 {
-        write_samples_to_file<N, T>(random_engine, sampler, sampler_name, file_name, pass_count);
+        RandomEngineWithSeed<RandomEngine> random_engine;
 
-        test_speed<N, T>(random_engine, sampler, sampler_name, iter_count);
+        constexpr int pass_count = 10;
+
+        const std::string tmp_dir = temp_directory();
+
+        LOG("Writing samples " + to_string(N) + "D");
+        write_samples_to_file<N, T>(random_engine, StratifiedJitteredSamplerForTest<N, T>(), tmp_dir, pass_count);
+        write_samples_to_file<N, T>(random_engine, LatinHypercubeSamplerForTest<N, T>(), tmp_dir, pass_count);
 }
 
 template <size_t N, typename T, typename RandomEngine>
-void test_samplers()
+void test_performance()
 {
         RandomEngineWithSeed<RandomEngine> random_engine;
 
         constexpr int iter_count = 1e6;
-        constexpr int sample_count = power<N>(5u);
-        constexpr int pass_count = 10;
 
-        std::string tmp_dir = temp_directory() + "/";
-        const std::string dimension_str = to_string(N) + "d";
-
-        test_sampler<N, T>(random_engine, StratifiedJitteredSampler<N, T>(sample_count), "Stratified Jittered Sampler",
-                           tmp_dir + "samples_sjs_" + dimension_str + ".txt", iter_count, pass_count);
-        LOG("");
-        test_sampler<N, T>(random_engine, LatinHypercubeSampler<N, T>(sample_count), "Latin Hypercube Sampler",
-                           tmp_dir + "samples_lhc_" + dimension_str + ".txt", iter_count, pass_count);
-}
+        LOG("Testing performance " + to_string(N) + "D");
+        test_performance<N, T>(random_engine, StratifiedJitteredSamplerForTest<N, T>(), iter_count);
+        test_performance<N, T>(random_engine, LatinHypercubeSamplerForTest<N, T>(), iter_count);
 }
 
-void test_samplers()
+template <typename T, typename RandomEngine>
+void write_samples_to_files()
 {
-        test_samplers<2, double, std::mt19937_64>();
+        static_assert(std::is_floating_point_v<T>);
+
+        LOG(std::string("Files <") + type_name<T>() + ", " + random_engine_type_name<RandomEngine>() + ">");
+
+        write_samples_to_files<2, T, RandomEngine>();
+        write_samples_to_files<3, T, RandomEngine>();
+        write_samples_to_files<4, T, RandomEngine>();
+}
+
+template <typename T, typename RandomEngine>
+void test_performance()
+{
+        static_assert(std::is_floating_point_v<T>);
+
+        LOG(std::string("Performance <") + type_name<T>() + ", " + random_engine_type_name<RandomEngine>() + ">");
+
+        test_performance<2, T, RandomEngine>();
+        test_performance<3, T, RandomEngine>();
+        test_performance<4, T, RandomEngine>();
+        test_performance<5, T, RandomEngine>();
+        test_performance<6, T, RandomEngine>();
+}
+
+template <typename RandomEngine>
+void write_samples_to_files()
+{
+        write_samples_to_files<float, RandomEngine>();
         LOG("");
-        test_samplers<3, double, std::mt19937_64>();
+        write_samples_to_files<double, RandomEngine>();
+        LOG("");
+        write_samples_to_files<long double, RandomEngine>();
+}
+
+template <typename T>
+void test_performance()
+{
+        test_performance<T, std::mt19937>();
+        LOG("");
+        test_performance<T, std::mt19937_64>();
+}
+}
+
+void write_samples_to_files_and_test_performance()
+{
+        write_samples_to_files<std::mt19937_64>();
+
+        LOG("");
+        test_performance<float>();
+        LOG("");
+        test_performance<double>();
+        LOG("");
+        test_performance<long double>();
 }
