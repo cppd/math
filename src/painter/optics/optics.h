@@ -83,9 +83,9 @@ bool refract(const Vector<3, T>& v, const Vector<3, T>& normal, T eta, Vector<3,
 }
 
 // 3D Computer Graphics. A Mathematical Introduction with OpenGL.
-// Для GCC работает в 2 раза медленнее функции из документации GLSL, где косинус
-// второго угла определяется через косинус первого угла, а не через синус второго угла,
-// как в этой функции.
+// Для GCC работает медленнее функции из документации GLSL, где косинус
+// второго угла определяется через косинус первого угла, а не через синус
+// второго угла, как в этой функции.
 template <typename T>
 bool refract2(const Vector<3, T>& v, const Vector<3, T>& normal, T eta, Vector<3, T>* t)
 {
