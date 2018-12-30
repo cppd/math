@@ -60,6 +60,7 @@ namespace opengl_functions
         extern PFNGLBINDRENDERBUFFERPROC                               glBindRenderbuffer;
         extern PFNGLBINDSAMPLERPROC                                    glBindSampler;
         extern PFNGLBINDSAMPLERSPROC                                   glBindSamplers;
+        extern PFNGLBINDSHADINGRATEIMAGENVPROC                         glBindShadingRateImageNV;
         extern PFNGLBINDTEXTUREPROC                                    glBindTexture;
         extern PFNGLBINDTEXTUREUNITPROC                                glBindTextureUnit;
         extern PFNGLBINDTEXTURESPROC                                   glBindTextures;
@@ -86,6 +87,7 @@ namespace opengl_functions
         extern PFNGLBLITFRAMEBUFFERPROC                                glBlitFramebuffer;
         extern PFNGLBLITNAMEDFRAMEBUFFERPROC                           glBlitNamedFramebuffer;
         extern PFNGLBUFFERADDRESSRANGENVPROC                           glBufferAddressRangeNV;
+        extern PFNGLBUFFERATTACHMEMORYNVPROC                           glBufferAttachMemoryNV;
         extern PFNGLBUFFERDATAPROC                                     glBufferData;
         extern PFNGLBUFFERPAGECOMMITMENTARBPROC                        glBufferPageCommitmentARB;
         extern PFNGLBUFFERSTORAGEPROC                                  glBufferStorage;
@@ -259,6 +261,8 @@ namespace opengl_functions
         extern PFNGLDRAWELEMENTSINSTANCEDBASEVERTEXPROC                glDrawElementsInstancedBaseVertex;
         extern PFNGLDRAWELEMENTSINSTANCEDBASEVERTEXBASEINSTANCEPROC    glDrawElementsInstancedBaseVertexBaseInstance;
         extern PFNGLDRAWELEMENTSINSTANCEDEXTPROC                       glDrawElementsInstancedEXT;
+        extern PFNGLDRAWMESHTASKSINDIRECTNVPROC                        glDrawMeshTasksIndirectNV;
+        extern PFNGLDRAWMESHTASKSNVPROC                                glDrawMeshTasksNV;
         extern PFNGLDRAWRANGEELEMENTSPROC                              glDrawRangeElements;
         extern PFNGLDRAWRANGEELEMENTSBASEVERTEXPROC                    glDrawRangeElementsBaseVertex;
         extern PFNGLDRAWTRANSFORMFEEDBACKPROC                          glDrawTransformFeedback;
@@ -266,6 +270,8 @@ namespace opengl_functions
         extern PFNGLDRAWTRANSFORMFEEDBACKSTREAMPROC                    glDrawTransformFeedbackStream;
         extern PFNGLDRAWTRANSFORMFEEDBACKSTREAMINSTANCEDPROC           glDrawTransformFeedbackStreamInstanced;
         extern PFNGLDRAWVKIMAGENVPROC                                  glDrawVkImageNV;
+        extern PFNGLEGLIMAGETARGETTEXSTORAGEEXTPROC                    glEGLImageTargetTexStorageEXT;
+        extern PFNGLEGLIMAGETARGETTEXTURESTORAGEEXTPROC                glEGLImageTargetTextureStorageEXT;
         extern PFNGLEDGEFLAGFORMATNVPROC                               glEdgeFlagFormatNV;
         extern PFNGLENABLEPROC                                         glEnable;
         extern PFNGLENABLECLIENTSTATEINDEXEDEXTPROC                    glEnableClientStateIndexedEXT;
@@ -294,6 +300,7 @@ namespace opengl_functions
         extern PFNGLFRAGMENTCOVERAGECOLORNVPROC                        glFragmentCoverageColorNV;
         extern PFNGLFRAMEBUFFERDRAWBUFFEREXTPROC                       glFramebufferDrawBufferEXT;
         extern PFNGLFRAMEBUFFERDRAWBUFFERSEXTPROC                      glFramebufferDrawBuffersEXT;
+        extern PFNGLFRAMEBUFFERFETCHBARRIEREXTPROC                     glFramebufferFetchBarrierEXT;
         extern PFNGLFRAMEBUFFERPARAMETERIPROC                          glFramebufferParameteri;
         extern PFNGLFRAMEBUFFERREADBUFFEREXTPROC                       glFramebufferReadBufferEXT;
         extern PFNGLFRAMEBUFFERRENDERBUFFERPROC                        glFramebufferRenderbuffer;
@@ -382,6 +389,7 @@ namespace opengl_functions
         extern PFNGLGETINTERNALFORMATSAMPLEIVNVPROC                    glGetInternalformatSampleivNV;
         extern PFNGLGETINTERNALFORMATI64VPROC                          glGetInternalformati64v;
         extern PFNGLGETINTERNALFORMATIVPROC                            glGetInternalformativ;
+        extern PFNGLGETMEMORYOBJECTDETACHEDRESOURCESUIVNVPROC          glGetMemoryObjectDetachedResourcesuivNV;
         extern PFNGLGETMULTITEXENVFVEXTPROC                            glGetMultiTexEnvfvEXT;
         extern PFNGLGETMULTITEXENVIVEXTPROC                            glGetMultiTexEnvivEXT;
         extern PFNGLGETMULTITEXGENDVEXTPROC                            glGetMultiTexGendvEXT;
@@ -475,6 +483,8 @@ namespace opengl_functions
         extern PFNGLGETSHADERPRECISIONFORMATPROC                       glGetShaderPrecisionFormat;
         extern PFNGLGETSHADERSOURCEPROC                                glGetShaderSource;
         extern PFNGLGETSHADERIVPROC                                    glGetShaderiv;
+        extern PFNGLGETSHADINGRATEIMAGEPALETTENVPROC                   glGetShadingRateImagePaletteNV;
+        extern PFNGLGETSHADINGRATESAMPLELOCATIONIVNVPROC               glGetShadingRateSampleLocationivNV;
         extern PFNGLGETSTAGEINDEXNVPROC                                glGetStageIndexNV;
         extern PFNGLGETSTRINGPROC                                      glGetString;
         extern PFNGLGETSTRINGIPROC                                     glGetStringi;
@@ -661,6 +671,8 @@ namespace opengl_functions
         extern PFNGLMULTIDRAWELEMENTSINDIRECTBINDLESSNVPROC            glMultiDrawElementsIndirectBindlessNV;
         extern PFNGLMULTIDRAWELEMENTSINDIRECTCOUNTPROC                 glMultiDrawElementsIndirectCount;
         extern PFNGLMULTIDRAWELEMENTSINDIRECTCOUNTARBPROC              glMultiDrawElementsIndirectCountARB;
+        extern PFNGLMULTIDRAWMESHTASKSINDIRECTCOUNTNVPROC              glMultiDrawMeshTasksIndirectCountNV;
+        extern PFNGLMULTIDRAWMESHTASKSINDIRECTNVPROC                   glMultiDrawMeshTasksIndirectNV;
         extern PFNGLMULTITEXBUFFEREXTPROC                              glMultiTexBufferEXT;
         extern PFNGLMULTITEXCOORDPOINTEREXTPROC                        glMultiTexCoordPointerEXT;
         extern PFNGLMULTITEXENVFEXTPROC                                glMultiTexEnvfEXT;
@@ -686,6 +698,7 @@ namespace opengl_functions
         extern PFNGLMULTITEXSUBIMAGE1DEXTPROC                          glMultiTexSubImage1DEXT;
         extern PFNGLMULTITEXSUBIMAGE2DEXTPROC                          glMultiTexSubImage2DEXT;
         extern PFNGLMULTITEXSUBIMAGE3DEXTPROC                          glMultiTexSubImage3DEXT;
+        extern PFNGLNAMEDBUFFERATTACHMEMORYNVPROC                      glNamedBufferAttachMemoryNV;
         extern PFNGLNAMEDBUFFERDATAPROC                                glNamedBufferData;
         extern PFNGLNAMEDBUFFERDATAEXTPROC                             glNamedBufferDataEXT;
         extern PFNGLNAMEDBUFFERPAGECOMMITMENTARBPROC                   glNamedBufferPageCommitmentARB;
@@ -727,6 +740,7 @@ namespace opengl_functions
         extern PFNGLNAMEDRENDERBUFFERSTORAGEPROC                       glNamedRenderbufferStorage;
         extern PFNGLNAMEDRENDERBUFFERSTORAGEEXTPROC                    glNamedRenderbufferStorageEXT;
         extern PFNGLNAMEDRENDERBUFFERSTORAGEMULTISAMPLEPROC            glNamedRenderbufferStorageMultisample;
+        extern PFNGLNAMEDRENDERBUFFERSTORAGEMULTISAMPLEADVANCEDAMDPROC glNamedRenderbufferStorageMultisampleAdvancedAMD;
         extern PFNGLNAMEDRENDERBUFFERSTORAGEMULTISAMPLECOVERAGEEXTPROC glNamedRenderbufferStorageMultisampleCoverageEXT;
         extern PFNGLNAMEDRENDERBUFFERSTORAGEMULTISAMPLEEXTPROC         glNamedRenderbufferStorageMultisampleEXT;
         extern PFNGLNAMEDSTRINGARBPROC                                 glNamedStringARB;
@@ -925,7 +939,9 @@ namespace opengl_functions
         extern PFNGLRELEASESHADERCOMPILERPROC                          glReleaseShaderCompiler;
         extern PFNGLRENDERBUFFERSTORAGEPROC                            glRenderbufferStorage;
         extern PFNGLRENDERBUFFERSTORAGEMULTISAMPLEPROC                 glRenderbufferStorageMultisample;
+        extern PFNGLRENDERBUFFERSTORAGEMULTISAMPLEADVANCEDAMDPROC      glRenderbufferStorageMultisampleAdvancedAMD;
         extern PFNGLRENDERBUFFERSTORAGEMULTISAMPLECOVERAGENVPROC       glRenderbufferStorageMultisampleCoverageNV;
+        extern PFNGLRESETMEMORYOBJECTPARAMETERNVPROC                   glResetMemoryObjectParameterNV;
         extern PFNGLRESOLVEDEPTHVALUESNVPROC                           glResolveDepthValuesNV;
         extern PFNGLRESUMETRANSFORMFEEDBACKPROC                        glResumeTransformFeedback;
         extern PFNGLSAMPLECOVERAGEPROC                                 glSampleCoverage;
@@ -938,6 +954,8 @@ namespace opengl_functions
         extern PFNGLSAMPLERPARAMETERIVPROC                             glSamplerParameteriv;
         extern PFNGLSCISSORPROC                                        glScissor;
         extern PFNGLSCISSORARRAYVPROC                                  glScissorArrayv;
+        extern PFNGLSCISSOREXCLUSIVEARRAYVNVPROC                       glScissorExclusiveArrayvNV;
+        extern PFNGLSCISSOREXCLUSIVENVPROC                             glScissorExclusiveNV;
         extern PFNGLSCISSORINDEXEDPROC                                 glScissorIndexed;
         extern PFNGLSCISSORINDEXEDVPROC                                glScissorIndexedv;
         extern PFNGLSECONDARYCOLORFORMATNVPROC                         glSecondaryColorFormatNV;
@@ -945,6 +963,10 @@ namespace opengl_functions
         extern PFNGLSHADERBINARYPROC                                   glShaderBinary;
         extern PFNGLSHADERSOURCEPROC                                   glShaderSource;
         extern PFNGLSHADERSTORAGEBLOCKBINDINGPROC                      glShaderStorageBlockBinding;
+        extern PFNGLSHADINGRATEIMAGEBARRIERNVPROC                      glShadingRateImageBarrierNV;
+        extern PFNGLSHADINGRATEIMAGEPALETTENVPROC                      glShadingRateImagePaletteNV;
+        extern PFNGLSHADINGRATESAMPLEORDERCUSTOMNVPROC                 glShadingRateSampleOrderCustomNV;
+        extern PFNGLSHADINGRATESAMPLEORDERNVPROC                       glShadingRateSampleOrderNV;
         extern PFNGLSIGNALVKFENCENVPROC                                glSignalVkFenceNV;
         extern PFNGLSIGNALVKSEMAPHORENVPROC                            glSignalVkSemaphoreNV;
         extern PFNGLSPECIALIZESHADERPROC                               glSpecializeShader;
@@ -965,6 +987,7 @@ namespace opengl_functions
         extern PFNGLSTENCILTHENCOVERSTROKEPATHINSTANCEDNVPROC          glStencilThenCoverStrokePathInstancedNV;
         extern PFNGLSTENCILTHENCOVERSTROKEPATHNVPROC                   glStencilThenCoverStrokePathNV;
         extern PFNGLSUBPIXELPRECISIONBIASNVPROC                        glSubpixelPrecisionBiasNV;
+        extern PFNGLTEXATTACHMEMORYNVPROC                              glTexAttachMemoryNV;
         extern PFNGLTEXBUFFERPROC                                      glTexBuffer;
         extern PFNGLTEXBUFFERARBPROC                                   glTexBufferARB;
         extern PFNGLTEXBUFFERRANGEPROC                                 glTexBufferRange;
@@ -989,6 +1012,7 @@ namespace opengl_functions
         extern PFNGLTEXSUBIMAGE1DPROC                                  glTexSubImage1D;
         extern PFNGLTEXSUBIMAGE2DPROC                                  glTexSubImage2D;
         extern PFNGLTEXSUBIMAGE3DPROC                                  glTexSubImage3D;
+        extern PFNGLTEXTUREATTACHMEMORYNVPROC                          glTextureAttachMemoryNV;
         extern PFNGLTEXTUREBARRIERPROC                                 glTextureBarrier;
         extern PFNGLTEXTUREBARRIERNVPROC                               glTextureBarrierNV;
         extern PFNGLTEXTUREBUFFERPROC                                  glTextureBuffer;
@@ -1386,6 +1410,10 @@ inline void glBindSamplers(GLuint first, GLsizei count, const GLuint *samplers) 
 {
         opengl_functions::glBindSamplers(first, count, samplers);
 }
+inline void glBindShadingRateImageNV(GLuint texture) noexcept
+{
+        opengl_functions::glBindShadingRateImageNV(texture);
+}
 inline void glBindTexture(GLenum target, GLuint texture) noexcept
 {
         opengl_functions::glBindTexture(target, texture);
@@ -1489,6 +1517,10 @@ inline void glBlitNamedFramebuffer(GLuint readFramebuffer, GLuint drawFramebuffe
 inline void glBufferAddressRangeNV(GLenum pname, GLuint index, GLuint64EXT address, GLsizeiptr length) noexcept
 {
         opengl_functions::glBufferAddressRangeNV(pname, index, address, length);
+}
+inline void glBufferAttachMemoryNV(GLenum target, GLuint memory, GLuint64 offset) noexcept
+{
+        opengl_functions::glBufferAttachMemoryNV(target, memory, offset);
 }
 inline void glBufferData(GLenum target, GLsizeiptr size, const void *data, GLenum usage) noexcept
 {
@@ -2030,9 +2062,9 @@ inline void glDepthMask(GLboolean flag) noexcept
 {
         opengl_functions::glDepthMask(flag);
 }
-inline void glDepthRange(GLdouble near, GLdouble far) noexcept
+inline void glDepthRange(GLdouble n, GLdouble f) noexcept
 {
-        opengl_functions::glDepthRange(near, far);
+        opengl_functions::glDepthRange(n, f);
 }
 inline void glDepthRangeArrayv(GLuint first, GLsizei count, const GLdouble *v) noexcept
 {
@@ -2182,6 +2214,14 @@ inline void glDrawElementsInstancedEXT(GLenum mode, GLsizei count, GLenum type, 
 {
         opengl_functions::glDrawElementsInstancedEXT(mode, count, type, indices, primcount);
 }
+inline void glDrawMeshTasksIndirectNV(GLintptr indirect) noexcept
+{
+        opengl_functions::glDrawMeshTasksIndirectNV(indirect);
+}
+inline void glDrawMeshTasksNV(GLuint first, GLuint count) noexcept
+{
+        opengl_functions::glDrawMeshTasksNV(first, count);
+}
 inline void glDrawRangeElements(GLenum mode, GLuint start, GLuint end, GLsizei count, GLenum type, const void *indices) noexcept
 {
         opengl_functions::glDrawRangeElements(mode, start, end, count, type, indices);
@@ -2209,6 +2249,14 @@ inline void glDrawTransformFeedbackStreamInstanced(GLenum mode, GLuint id, GLuin
 inline void glDrawVkImageNV(GLuint64 vkImage, GLuint sampler, GLfloat x0, GLfloat y0, GLfloat x1, GLfloat y1, GLfloat z, GLfloat s0, GLfloat t0, GLfloat s1, GLfloat t1) noexcept
 {
         opengl_functions::glDrawVkImageNV(vkImage, sampler, x0, y0, x1, y1, z, s0, t0, s1, t1);
+}
+inline void glEGLImageTargetTexStorageEXT(GLenum target, GLeglImageOES image, const GLint* attrib_list) noexcept
+{
+        opengl_functions::glEGLImageTargetTexStorageEXT(target, image, attrib_list);
+}
+inline void glEGLImageTargetTextureStorageEXT(GLuint texture, GLeglImageOES image, const GLint* attrib_list) noexcept
+{
+        opengl_functions::glEGLImageTargetTextureStorageEXT(texture, image, attrib_list);
 }
 inline void glEdgeFlagFormatNV(GLsizei stride) noexcept
 {
@@ -2321,6 +2369,10 @@ inline void glFramebufferDrawBufferEXT(GLuint framebuffer, GLenum mode) noexcept
 inline void glFramebufferDrawBuffersEXT(GLuint framebuffer, GLsizei n, const GLenum *bufs) noexcept
 {
         opengl_functions::glFramebufferDrawBuffersEXT(framebuffer, n, bufs);
+}
+inline void glFramebufferFetchBarrierEXT() noexcept
+{
+        opengl_functions::glFramebufferFetchBarrierEXT();
 }
 inline void glFramebufferParameteri(GLenum target, GLenum pname, GLint param) noexcept
 {
@@ -2674,6 +2726,10 @@ inline void glGetInternalformativ(GLenum target, GLenum internalformat, GLenum p
 {
         opengl_functions::glGetInternalformativ(target, internalformat, pname, bufSize, params);
 }
+inline void glGetMemoryObjectDetachedResourcesuivNV(GLuint memory, GLenum pname, GLint first, GLsizei count, GLuint *params) noexcept
+{
+        opengl_functions::glGetMemoryObjectDetachedResourcesuivNV(memory, pname, first, count, params);
+}
 inline void glGetMultiTexEnvfvEXT(GLenum texunit, GLenum target, GLenum pname, GLfloat *params) noexcept
 {
         opengl_functions::glGetMultiTexEnvfvEXT(texunit, target, pname, params);
@@ -2894,7 +2950,7 @@ inline void glGetPerfMonitorGroupsAMD(GLint *numGroups, GLsizei groupsSize, GLui
 {
         opengl_functions::glGetPerfMonitorGroupsAMD(numGroups, groupsSize, groups);
 }
-inline void glGetPerfQueryDataINTEL(GLuint queryHandle, GLuint flags, GLsizei dataSize, GLvoid *data, GLuint *bytesWritten) noexcept
+inline void glGetPerfQueryDataINTEL(GLuint queryHandle, GLuint flags, GLsizei dataSize, void *data, GLuint *bytesWritten) noexcept
 {
         opengl_functions::glGetPerfQueryDataINTEL(queryHandle, flags, dataSize, data, bytesWritten);
 }
@@ -3045,6 +3101,14 @@ inline void glGetShaderSource(GLuint shader, GLsizei bufSize, GLsizei *length, G
 inline void glGetShaderiv(GLuint shader, GLenum pname, GLint *params) noexcept
 {
         opengl_functions::glGetShaderiv(shader, pname, params);
+}
+inline void glGetShadingRateImagePaletteNV(GLuint viewport, GLuint entry, GLenum *rate) noexcept
+{
+        opengl_functions::glGetShadingRateImagePaletteNV(viewport, entry, rate);
+}
+inline void glGetShadingRateSampleLocationivNV(GLenum rate, GLuint samples, GLuint index, GLint *location) noexcept
+{
+        opengl_functions::glGetShadingRateSampleLocationivNV(rate, samples, index, location);
 }
 inline GLushort glGetStageIndexNV(GLenum shadertype) noexcept
 {
@@ -3790,6 +3854,14 @@ inline void glMultiDrawElementsIndirectCountARB(GLenum mode, GLenum type, const 
 {
         opengl_functions::glMultiDrawElementsIndirectCountARB(mode, type, indirect, drawcount, maxdrawcount, stride);
 }
+inline void glMultiDrawMeshTasksIndirectCountNV(GLintptr indirect, GLintptr drawcount, GLsizei maxdrawcount, GLsizei stride) noexcept
+{
+        opengl_functions::glMultiDrawMeshTasksIndirectCountNV(indirect, drawcount, maxdrawcount, stride);
+}
+inline void glMultiDrawMeshTasksIndirectNV(GLintptr indirect, GLsizei drawcount, GLsizei stride) noexcept
+{
+        opengl_functions::glMultiDrawMeshTasksIndirectNV(indirect, drawcount, stride);
+}
 inline void glMultiTexBufferEXT(GLenum texunit, GLenum target, GLenum internalformat, GLuint buffer) noexcept
 {
         opengl_functions::glMultiTexBufferEXT(texunit, target, internalformat, buffer);
@@ -3889,6 +3961,10 @@ inline void glMultiTexSubImage2DEXT(GLenum texunit, GLenum target, GLint level, 
 inline void glMultiTexSubImage3DEXT(GLenum texunit, GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type, const void *pixels) noexcept
 {
         opengl_functions::glMultiTexSubImage3DEXT(texunit, target, level, xoffset, yoffset, zoffset, width, height, depth, format, type, pixels);
+}
+inline void glNamedBufferAttachMemoryNV(GLuint buffer, GLuint memory, GLuint64 offset) noexcept
+{
+        opengl_functions::glNamedBufferAttachMemoryNV(buffer, memory, offset);
 }
 inline void glNamedBufferData(GLuint buffer, GLsizeiptr size, const void *data, GLenum usage) noexcept
 {
@@ -4053,6 +4129,10 @@ inline void glNamedRenderbufferStorageEXT(GLuint renderbuffer, GLenum internalfo
 inline void glNamedRenderbufferStorageMultisample(GLuint renderbuffer, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height) noexcept
 {
         opengl_functions::glNamedRenderbufferStorageMultisample(renderbuffer, samples, internalformat, width, height);
+}
+inline void glNamedRenderbufferStorageMultisampleAdvancedAMD(GLuint renderbuffer, GLsizei samples, GLsizei storageSamples, GLenum internalformat, GLsizei width, GLsizei height) noexcept
+{
+        opengl_functions::glNamedRenderbufferStorageMultisampleAdvancedAMD(renderbuffer, samples, storageSamples, internalformat, width, height);
 }
 inline void glNamedRenderbufferStorageMultisampleCoverageEXT(GLuint renderbuffer, GLsizei coverageSamples, GLsizei colorSamples, GLenum internalformat, GLsizei width, GLsizei height) noexcept
 {
@@ -4846,9 +4926,17 @@ inline void glRenderbufferStorageMultisample(GLenum target, GLsizei samples, GLe
 {
         opengl_functions::glRenderbufferStorageMultisample(target, samples, internalformat, width, height);
 }
+inline void glRenderbufferStorageMultisampleAdvancedAMD(GLenum target, GLsizei samples, GLsizei storageSamples, GLenum internalformat, GLsizei width, GLsizei height) noexcept
+{
+        opengl_functions::glRenderbufferStorageMultisampleAdvancedAMD(target, samples, storageSamples, internalformat, width, height);
+}
 inline void glRenderbufferStorageMultisampleCoverageNV(GLenum target, GLsizei coverageSamples, GLsizei colorSamples, GLenum internalformat, GLsizei width, GLsizei height) noexcept
 {
         opengl_functions::glRenderbufferStorageMultisampleCoverageNV(target, coverageSamples, colorSamples, internalformat, width, height);
+}
+inline void glResetMemoryObjectParameterNV(GLuint memory, GLenum pname) noexcept
+{
+        opengl_functions::glResetMemoryObjectParameterNV(memory, pname);
 }
 inline void glResolveDepthValuesNV() noexcept
 {
@@ -4898,6 +4986,14 @@ inline void glScissorArrayv(GLuint first, GLsizei count, const GLint *v) noexcep
 {
         opengl_functions::glScissorArrayv(first, count, v);
 }
+inline void glScissorExclusiveArrayvNV(GLuint first, GLsizei count, const GLint *v) noexcept
+{
+        opengl_functions::glScissorExclusiveArrayvNV(first, count, v);
+}
+inline void glScissorExclusiveNV(GLint x, GLint y, GLsizei width, GLsizei height) noexcept
+{
+        opengl_functions::glScissorExclusiveNV(x, y, width, height);
+}
 inline void glScissorIndexed(GLuint index, GLint left, GLint bottom, GLsizei width, GLsizei height) noexcept
 {
         opengl_functions::glScissorIndexed(index, left, bottom, width, height);
@@ -4925,6 +5021,22 @@ inline void glShaderSource(GLuint shader, GLsizei count, const GLchar *const*str
 inline void glShaderStorageBlockBinding(GLuint program, GLuint storageBlockIndex, GLuint storageBlockBinding) noexcept
 {
         opengl_functions::glShaderStorageBlockBinding(program, storageBlockIndex, storageBlockBinding);
+}
+inline void glShadingRateImageBarrierNV(GLboolean synchronize) noexcept
+{
+        opengl_functions::glShadingRateImageBarrierNV(synchronize);
+}
+inline void glShadingRateImagePaletteNV(GLuint viewport, GLuint first, GLsizei count, const GLenum *rates) noexcept
+{
+        opengl_functions::glShadingRateImagePaletteNV(viewport, first, count, rates);
+}
+inline void glShadingRateSampleOrderCustomNV(GLenum rate, GLuint samples, const GLint *locations) noexcept
+{
+        opengl_functions::glShadingRateSampleOrderCustomNV(rate, samples, locations);
+}
+inline void glShadingRateSampleOrderNV(GLenum order) noexcept
+{
+        opengl_functions::glShadingRateSampleOrderNV(order);
 }
 inline void glSignalVkFenceNV(GLuint64 vkFence) noexcept
 {
@@ -5005,6 +5117,10 @@ inline void glStencilThenCoverStrokePathNV(GLuint path, GLint reference, GLuint 
 inline void glSubpixelPrecisionBiasNV(GLuint xbits, GLuint ybits) noexcept
 {
         opengl_functions::glSubpixelPrecisionBiasNV(xbits, ybits);
+}
+inline void glTexAttachMemoryNV(GLenum target, GLuint memory, GLuint64 offset) noexcept
+{
+        opengl_functions::glTexAttachMemoryNV(target, memory, offset);
 }
 inline void glTexBuffer(GLenum target, GLenum internalformat, GLuint buffer) noexcept
 {
@@ -5101,6 +5217,10 @@ inline void glTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yof
 inline void glTexSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type, const void *pixels) noexcept
 {
         opengl_functions::glTexSubImage3D(target, level, xoffset, yoffset, zoffset, width, height, depth, format, type, pixels);
+}
+inline void glTextureAttachMemoryNV(GLuint texture, GLuint memory, GLuint64 offset) noexcept
+{
+        opengl_functions::glTextureAttachMemoryNV(texture, memory, offset);
 }
 inline void glTextureBarrier() noexcept
 {
