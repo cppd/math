@@ -296,3 +296,14 @@ constexpr std::enable_if_t<std::is_same_v<std::remove_cv_t<T>, long double>, con
 {
         return "l";
 }
+
+// C++20
+// std::type_identity и std::type_identity_t
+// Может использоваться для запрета class template argument deduction.
+template <typename T>
+struct TypeIdentity
+{
+        using type = T;
+};
+template <class T>
+using type_identity_t = typename TypeIdentity<T>::type;
