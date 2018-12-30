@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/print.h"
 #include "com/random/engine.h"
 #include "com/time.h"
+#include "com/type_name.h"
 #include "com/vec.h"
 #include "painter/sampling/sphere.h"
 #include "painter/shapes/test/sphere_mesh.h"

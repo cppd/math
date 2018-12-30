@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/print.h"
 #include "com/random/engine.h"
 #include "com/time.h"
-#include "com/types.h"
+#include "com/type_name.h"
 #include "painter/sampling/sampler.h"
 
 #include <cctype>

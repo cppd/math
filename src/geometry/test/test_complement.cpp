@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/random/engine.h"
 #include "com/random/vector.h"
 #include "com/time.h"
+#include "com/type_name.h"
 #include "com/types.h"
 #include "geometry/core/complement.h"
 #include "geometry/core/linear_algebra.h"

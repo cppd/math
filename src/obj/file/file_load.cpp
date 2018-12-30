@@ -29,6 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/string/str.h"
 #include "com/thread.h"
 #include "com/time.h"
+#include "com/type_name.h"
 #include "com/types.h"
 #include "obj/alg/alg.h"
 

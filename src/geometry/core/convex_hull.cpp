@@ -122,6 +122,17 @@ using Facet = FacetInteger<N, DataType, ComputeType, FacetListConstIterator>;
 
 namespace
 {
+template <typename T>
+std::enable_if_t<is_native_integral<T>, std::string> type_str()
+{
+        return to_string(limits<T>::digits) + " bits";
+}
+template <typename T>
+std::enable_if_t<std::is_same_v<std::remove_cv_t<T>, mpz_class>, std::string> type_str()
+{
+        return "mpz_class";
+}
+
 // Количество потоков для обработки горизонта.
 // В одних случаях параллельность ускоряет (точки внутри сферы), в других замедляет (точки на поверхности сферы).
 // При использовании mpz_class параллельность ускоряет.

@@ -19,7 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <gmpxx.h>
 #include <limits>
-#include <string>
 #include <type_traits>
 
 namespace types_implementation
@@ -224,78 +223,6 @@ using LeastUnsignedInteger =
         std::conditional_t<BITS <= 128, unsigned __int128,
         mpz_class>>>>>;
 // clang-format on
-
-//
-
-template <typename T>
-std::enable_if_t<std::is_same_v<std::remove_cv_t<T>, mpz_class>, std::string> type_str()
-{
-        return "mpz_class";
-}
-template <typename T>
-std::enable_if_t<std::is_same_v<std::remove_cv_t<T>, mpf_class>, std::string> type_str()
-{
-        return "mpf_class";
-}
-template <typename T>
-std::enable_if_t<std::is_same_v<std::remove_cv_t<T>, mpq_class>, std::string> type_str()
-{
-        return "mpq_class";
-}
-template <typename T>
-std::enable_if_t<is_native_integral<T>, std::string> type_str()
-{
-        return std::to_string(limits<T>::digits) + " bits";
-}
-template <typename T>
-std::enable_if_t<is_native_floating_point<T>, std::string> type_str()
-{
-        return "fp " + std::to_string(limits<T>::digits) + " bits";
-}
-
-//
-
-template <typename T>
-constexpr std::enable_if_t<std::is_same_v<std::remove_cv_t<T>, float>, const char*> type_name()
-{
-        return "float";
-}
-template <typename T>
-constexpr std::enable_if_t<std::is_same_v<std::remove_cv_t<T>, double>, const char*> type_name()
-{
-        return "double";
-}
-template <typename T>
-constexpr std::enable_if_t<std::is_same_v<std::remove_cv_t<T>, long double>, const char*> type_name()
-{
-        return "long double";
-}
-template <typename T>
-constexpr std::enable_if_t<std::is_same_v<std::remove_cv_t<T>, __float128>, const char*> type_name()
-{
-        return "__float128";
-}
-template <typename T>
-constexpr std::enable_if_t<std::is_same_v<std::remove_cv_t<T>, mpf_class>, const char*> type_name()
-{
-        return "mpf_class";
-}
-
-template <typename T>
-constexpr std::enable_if_t<std::is_same_v<std::remove_cv_t<T>, float>, const char*> floating_point_suffix()
-{
-        return "f";
-}
-template <typename T>
-constexpr std::enable_if_t<std::is_same_v<std::remove_cv_t<T>, double>, const char*> floating_point_suffix()
-{
-        return "";
-}
-template <typename T>
-constexpr std::enable_if_t<std::is_same_v<std::remove_cv_t<T>, long double>, const char*> floating_point_suffix()
-{
-        return "l";
-}
 
 // C++20
 // std::type_identity и std::type_identity_t
