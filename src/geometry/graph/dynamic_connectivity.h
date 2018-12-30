@@ -27,6 +27,8 @@ Pearson Education, 2011.
 
 #pragma once
 
+#include "com/types.h"
+
 #include <algorithm>
 #include <numeric>
 #include <vector>
@@ -41,7 +43,7 @@ class WeightedQuickUnion
         T m_component_count;
 
 public:
-        WeightedQuickUnion(T N) : m_parent(N), m_component_size(N), m_component_count(N)
+        WeightedQuickUnion(type_identity_t<T> N) : m_parent(N), m_component_size(N), m_component_count(N)
         {
                 std::iota(m_parent.begin(), m_parent.end(), 0);
                 std::fill(m_component_size.begin(), m_component_size.end(), 1);
