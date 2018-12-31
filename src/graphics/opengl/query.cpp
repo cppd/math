@@ -29,9 +29,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace
 {
+void get_errors()
+{
+        while (glGetError() != GL_NO_ERROR)
+        {
+        }
+}
+
 GLint get_integer(GLenum pname)
 {
-        glGetError();
+        get_errors();
 
         GLint data;
 
@@ -46,9 +53,10 @@ GLint get_integer(GLenum pname)
         return data;
 }
 
+#if 0
 GLint get_integer_i(GLenum target, GLuint index)
 {
-        glGetError();
+        get_errors();
 
         GLint data;
 
@@ -62,10 +70,45 @@ GLint get_integer_i(GLenum target, GLuint index)
 
         return data;
 }
+#endif
 
-const GLubyte* get_string(GLenum name)
+GLint64 get_integer_64(GLenum pname)
 {
-        glGetError();
+        get_errors();
+
+        GLint64 data;
+
+        glGetInteger64v(pname, &data);
+
+        GLenum e = glGetError();
+        if (e != GL_NO_ERROR)
+        {
+                error("GetInteger64v error " + std::to_string(e));
+        }
+
+        return data;
+}
+
+GLint64 get_integer_i_64(GLenum target, GLuint index)
+{
+        get_errors();
+
+        GLint64 data;
+
+        glGetInteger64i_v(target, index, &data);
+
+        GLenum e = glGetError();
+        if (e != GL_NO_ERROR)
+        {
+                error("glGetInteger64i_v error " + std::to_string(e));
+        }
+
+        return data;
+}
+
+const char* get_string(GLenum name)
+{
+        get_errors();
 
         const GLubyte* data = glGetString(name);
 
@@ -75,12 +118,12 @@ const GLubyte* get_string(GLenum name)
                 error("glGetString error " + std::to_string(e));
         }
 
-        return data;
+        return reinterpret_cast<const char*>(data);
 }
 
-const GLubyte* get_string_i(GLenum name, GLuint index)
+const char* get_string_i(GLenum name, GLuint index)
 {
-        glGetError();
+        get_errors();
 
         const GLubyte* data = glGetStringi(name, index);
 
@@ -90,12 +133,12 @@ const GLubyte* get_string_i(GLenum name, GLuint index)
                 error("glGetStringi error " + std::to_string(e));
         }
 
-        return data;
+        return reinterpret_cast<const char*>(data);
 }
 
 GLint get_named_framebuffer_attachment_parameter(GLuint framebuffer, GLenum attachment, GLenum pname)
 {
-        glGetError();
+        get_errors();
 
         GLint params;
 
@@ -112,7 +155,7 @@ GLint get_named_framebuffer_attachment_parameter(GLuint framebuffer, GLenum atta
 
 GLint get_named_framebuffer_parameter(GLuint framebuffer, GLenum pname)
 {
-        glGetError();
+        get_errors();
 
         GLint param;
 
@@ -130,49 +173,6 @@ GLint get_named_framebuffer_parameter(GLuint framebuffer, GLenum pname)
 
 namespace opengl
 {
-std::string overview()
-{
-        std::ostringstream os;
-
-        os << "GL_VERSION: " << get_string(GL_VERSION) << "\n";
-        os << "GL_VENDOR: " << get_string(GL_VENDOR) << "\n";
-        os << "GL_RENDERER: " << get_string(GL_RENDERER) << "\n";
-
-        GLint flags = get_integer(GL_CONTEXT_FLAGS);
-        if (flags & GL_CONTEXT_FLAG_FORWARD_COMPATIBLE_BIT)
-        {
-                os << "CONTEXT_FLAG_FORWARD_COMPATIBLE\n";
-        }
-        if (flags & GL_CONTEXT_FLAG_DEBUG_BIT)
-        {
-                os << "CONTEXT_FLAG_DEBUG\n";
-        }
-        if (flags & GL_CONTEXT_FLAG_ROBUST_ACCESS_BIT)
-        {
-                os << "CONTEXT_FLAG_ROBUST_ACCESS\n";
-        }
-
-        os << "framebuffer: " << (framebuffer_srgb() ? "sRGB" : "RGB") << "\n";
-        os << "max variable group size x: " << max_variable_group_size_x() << "\n";
-        os << "max variable group size y: " << max_variable_group_size_y() << "\n";
-        os << "max variable group size z: " << max_variable_group_size_z() << "\n";
-        os << "max variable group invocations: " << max_variable_group_invocations() << "\n";
-        os << "max fixed group size x: " << max_fixed_group_size_x() << "\n";
-        os << "max fixed group size y: " << max_fixed_group_size_y() << "\n";
-        os << "max fixed group size z: " << max_fixed_group_size_z() << "\n";
-        os << "max fixed group invocations: " << max_fixed_group_invocations() << "\n";
-        os << "max work group count x: " << max_work_group_count_x() << "\n";
-        os << "max work group count y: " << max_work_group_count_y() << "\n";
-        os << "max work group count z: " << max_work_group_count_z() << "\n";
-        os << "max compute shared memory: " << max_compute_shared_memory() << "\n";
-        os << "max texture size: " << max_texture_size() << "\n";
-        // os << "max texture buffer size: " << max_texture_buffer_size() << "\n";
-        os << "max shader storage block size: " << max_shader_storage_block_size() << "\n";
-        os << "samples: " << framebuffer_samples() << "\n";
-
-        return os.str();
-}
-
 void check_context(int major, int minor, const std::vector<std::string>& extensions)
 {
         GLint mj = get_integer(GL_MAJOR_VERSION);
@@ -193,7 +193,7 @@ void check_context(int major, int minor, const std::vector<std::string>& extensi
         std::vector<std::string> supported_extensions(num_ext);
         for (int i = 0; i < num_ext; ++i)
         {
-                supported_extensions[i] = reinterpret_cast<const char*>(get_string_i(GL_EXTENSIONS, i));
+                supported_extensions[i] = get_string_i(GL_EXTENSIONS, i);
         }
         std::sort(supported_extensions.begin(), supported_extensions.end());
 
@@ -313,78 +313,117 @@ int framebuffer_samples()
         return get_named_framebuffer_parameter(0, GL_SAMPLES);
 }
 
-int max_variable_group_size_x()
+long long max_variable_group_size_x()
 {
-        return get_integer_i(GL_MAX_COMPUTE_VARIABLE_GROUP_SIZE_ARB, 0);
+        return get_integer_i_64(GL_MAX_COMPUTE_VARIABLE_GROUP_SIZE_ARB, 0);
 }
 
-int max_variable_group_size_y()
+long long max_variable_group_size_y()
 {
-        return get_integer_i(GL_MAX_COMPUTE_VARIABLE_GROUP_SIZE_ARB, 1);
+        return get_integer_i_64(GL_MAX_COMPUTE_VARIABLE_GROUP_SIZE_ARB, 1);
 }
 
-int max_variable_group_size_z()
+long long max_variable_group_size_z()
 {
-        return get_integer_i(GL_MAX_COMPUTE_VARIABLE_GROUP_SIZE_ARB, 2);
+        return get_integer_i_64(GL_MAX_COMPUTE_VARIABLE_GROUP_SIZE_ARB, 2);
 }
 
-int max_variable_group_invocations()
+long long max_variable_group_invocations()
 {
-        return get_integer(GL_MAX_COMPUTE_VARIABLE_GROUP_INVOCATIONS_ARB);
+        return get_integer_64(GL_MAX_COMPUTE_VARIABLE_GROUP_INVOCATIONS_ARB);
 }
 
-int max_fixed_group_size_x()
+long long max_fixed_group_size_x()
 {
-        return get_integer_i(GL_MAX_COMPUTE_FIXED_GROUP_SIZE_ARB, 0);
+        return get_integer_i_64(GL_MAX_COMPUTE_FIXED_GROUP_SIZE_ARB, 0);
 }
 
-int max_fixed_group_size_y()
+long long max_fixed_group_size_y()
 {
-        return get_integer_i(GL_MAX_COMPUTE_FIXED_GROUP_SIZE_ARB, 1);
+        return get_integer_i_64(GL_MAX_COMPUTE_FIXED_GROUP_SIZE_ARB, 1);
 }
 
-int max_fixed_group_size_z()
+long long max_fixed_group_size_z()
 {
-        return get_integer_i(GL_MAX_COMPUTE_FIXED_GROUP_SIZE_ARB, 2);
+        return get_integer_i_64(GL_MAX_COMPUTE_FIXED_GROUP_SIZE_ARB, 2);
 }
 
-int max_fixed_group_invocations()
+long long max_fixed_group_invocations()
 {
-        return get_integer(GL_MAX_COMPUTE_FIXED_GROUP_INVOCATIONS_ARB);
+        return get_integer_64(GL_MAX_COMPUTE_FIXED_GROUP_INVOCATIONS_ARB);
 }
 
-int max_work_group_count_x()
+long long max_work_group_count_x()
 {
-        return get_integer_i(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0);
+        return get_integer_i_64(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0);
 }
 
-int max_work_group_count_y()
+long long max_work_group_count_y()
 {
-        return get_integer_i(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1);
+        return get_integer_i_64(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1);
 }
 
-int max_work_group_count_z()
+long long max_work_group_count_z()
 {
-        return get_integer_i(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2);
+        return get_integer_i_64(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2);
 }
 
-int max_compute_shared_memory()
+long long max_compute_shared_memory()
 {
-        return get_integer(GL_MAX_COMPUTE_SHARED_MEMORY_SIZE);
+        return get_integer_64(GL_MAX_COMPUTE_SHARED_MEMORY_SIZE);
 }
 
-int max_texture_size()
+long long max_texture_size()
 {
-        return get_integer(GL_MAX_TEXTURE_SIZE);
+        return get_integer_64(GL_MAX_TEXTURE_SIZE);
 }
 
-int max_texture_buffer_size()
+long long max_texture_buffer_size()
 {
-        return get_integer(GL_MAX_TEXTURE_BUFFER_SIZE);
+        return get_integer_64(GL_MAX_TEXTURE_BUFFER_SIZE);
 }
 
-int max_shader_storage_block_size()
+long long max_shader_storage_block_size()
 {
-        return get_integer(GL_MAX_SHADER_STORAGE_BLOCK_SIZE);
+        return get_integer_64(GL_MAX_SHADER_STORAGE_BLOCK_SIZE);
+}
+
+const char* version()
+{
+        return get_string(GL_VERSION);
+}
+
+const char* vendor()
+{
+        return get_string(GL_VENDOR);
+}
+
+const char* renderer()
+{
+        return get_string(GL_RENDERER);
+}
+
+std::vector<const char*> context_flags()
+{
+        std::vector<const char*> r;
+
+        GLint flags = get_integer(GL_CONTEXT_FLAGS);
+
+        if (flags & GL_CONTEXT_FLAG_FORWARD_COMPATIBLE_BIT)
+        {
+                r.push_back("CONTEXT_FLAG_FORWARD_COMPATIBLE");
+        }
+
+        if (flags & GL_CONTEXT_FLAG_DEBUG_BIT)
+        {
+                r.push_back("CONTEXT_FLAG_DEBUG");
+        }
+
+        if (flags & GL_CONTEXT_FLAG_ROBUST_ACCESS_BIT)
+        {
+                r.push_back("CONTEXT_FLAG_ROBUST_ACCESS");
+        }
+
+        return r;
 }
 }

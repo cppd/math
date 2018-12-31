@@ -26,24 +26,27 @@ bool framebuffer_srgb();
 bool current_buffer_is_srgb();
 
 int framebuffer_samples();
-int max_texture_size();
-int max_texture_buffer_size();
-int max_variable_group_size_x();
-int max_variable_group_size_y();
-int max_variable_group_size_z();
-int max_variable_group_invocations();
-int max_fixed_group_size_x();
-int max_fixed_group_size_y();
-int max_fixed_group_size_z();
-int max_fixed_group_invocations();
-int max_work_group_count_x();
-int max_work_group_count_y();
-int max_work_group_count_z();
-int max_compute_shared_memory();
-int max_shader_storage_block_size();
-
-std::string overview();
+long long max_texture_size();
+long long max_texture_buffer_size();
+long long max_variable_group_size_x();
+long long max_variable_group_size_y();
+long long max_variable_group_size_z();
+long long max_variable_group_invocations();
+long long max_fixed_group_size_x();
+long long max_fixed_group_size_y();
+long long max_fixed_group_size_z();
+long long max_fixed_group_invocations();
+long long max_work_group_count_x();
+long long max_work_group_count_y();
+long long max_work_group_count_z();
+long long max_compute_shared_memory();
+long long max_shader_storage_block_size();
 
 void check_context(int major, int minor, const std::vector<std::string>& extensions);
 void check_sizes(int sample_count, int depth_bits, int stencil_bits, int red_bits, int green_bits, int blue_bits, int alpha_bits);
+
+const char* version();
+const char* vendor();
+const char* renderer();
+std::vector<const char*> context_flags();
 }
