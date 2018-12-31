@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/print.h"
 #include "com/string/str.h"
 #include "com/time.h"
+#include "com/type/limit.h"
 #include "obj/alg/alg.h"
 
 constexpr const char OBJ_comment_and_space[] = "# ";
@@ -65,8 +66,8 @@ void write_comment(const CFile& file, const std::string_view& comment)
 template <size_t N, typename T>
 void write_vector(const CFile& file, const Vector<N, T>& vector)
 {
-        static_assert(std::numeric_limits<float>::max_digits10 <= 9);
-        static_assert(std::numeric_limits<double>::max_digits10 <= 17);
+        static_assert(limits<float>::max_digits10 <= 9);
+        static_assert(limits<double>::max_digits10 <= 17);
         static_assert(std::is_same_v<T, float> || std::is_same_v<T, double>);
 
         constexpr const char* format = (std::is_same_v<T, float>) ? " %12.9f" : " %20.17f";

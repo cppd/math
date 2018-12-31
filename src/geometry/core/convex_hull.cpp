@@ -74,7 +74,6 @@ Chapman & Hall/CRC, 2004.
 
 #include <algorithm>
 #include <cstdint>
-#include <limits>
 #include <map>
 #include <random>
 #include <unordered_map>

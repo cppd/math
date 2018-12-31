@@ -19,10 +19,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/error.h"
 #include "com/ray.h"
+#include "com/type/limit.h"
 #include "com/vec.h"
 
 #include <array>
-#include <limits>
 #include <type_traits>
 
 template <typename Parallelotope>
@@ -146,7 +146,7 @@ public:
         {
                 static_assert(std::is_floating_point_v<T>);
 
-                T max_length = std::numeric_limits<T>::lowest();
+                T max_length = limits<T>::lowest();
 
                 diagonals(p, [&max_length](const Vector<N, T>& d) { max_length = std::max(max_length, length(d)); });
 

@@ -25,7 +25,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cmath>
 #include <complex>
 #include <iomanip>
-#include <limits>
 #include <sstream>
 #include <string>
 
@@ -41,7 +40,7 @@ template <typename T>
 std::enable_if_t<std::is_floating_point_v<T>, std::string> to_string(std::complex<T> t)
 {
         std::ostringstream o;
-        o << std::setprecision(std::numeric_limits<T>::max_digits10);
+        o << std::setprecision(limits<T>::max_digits10);
 
         o << (t.real() >= 0 ? " " : "-") << std::abs(t.real());
         o << (t.imag() >= 0 ? " + " : " - ") << std::abs(t.imag()) << "*I";
@@ -53,7 +52,7 @@ template <typename T>
 std::enable_if_t<std::is_floating_point_v<T>, std::string> to_string(T t)
 {
         std::ostringstream o;
-        o << std::setprecision(std::numeric_limits<T>::max_digits10);
+        o << std::setprecision(limits<T>::max_digits10);
         o << t;
         return o.str();
 }

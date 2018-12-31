@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/math.h"
 #include "com/names.h"
 #include "com/print.h"
+#include "com/type/limit.h"
 #include "ui/command_line/command_line.h"
 #include "ui/dialogs/messages/application_about.h"
 #include "ui/dialogs/messages/application_help.h"
@@ -710,9 +711,9 @@ void MainWindow::thread_reload_bound_cocone()
 void MainWindow::progress_bars(MainThreads::Action thread_action, bool permanent, const ProgressRatioList* progress_list,
                                std::list<QProgressBar>* progress_bars)
 {
-        static_assert(std::numeric_limits<unsigned>::max() >= std::numeric_limits<int>::max());
+        static_assert(limits<unsigned>::max() >= limits<int>::max());
 
-        constexpr unsigned MAX_INT = std::numeric_limits<int>::max();
+        constexpr unsigned MAX_INT = limits<int>::max();
 
         std::vector<std::tuple<unsigned, unsigned, std::string>> ratios = progress_list->ratios();
 

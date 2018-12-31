@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "shader.h"
 
 #include "com/error.h"
+#include "com/type/limit.h"
 
 #include <algorithm>
 #include <array>
@@ -37,8 +38,7 @@ template <typename Type, size_t size>
 constexpr Type to_type()
 {
         constexpr bool is_same = std::is_same_v<size_t, std::remove_cv_t<Type>>;
-        static_assert(is_same || std::numeric_limits<Type>::is_specialized);
-        static_assert(is_same || size <= std::numeric_limits<Type>::max());
+        static_assert(is_same || size <= limits<Type>::max());
         return size;
 }
 
@@ -46,10 +46,9 @@ template <typename Type>
 constexpr Type to_type(size_t size)
 {
         constexpr bool is_same = std::is_same_v<size_t, std::remove_cv_t<Type>>;
-        static_assert(is_same || std::numeric_limits<Type>::is_specialized);
         if constexpr (!is_same)
         {
-                ASSERT(size <= std::numeric_limits<Type>::max());
+                ASSERT(size <= limits<Type>::max());
         }
         return size;
 }

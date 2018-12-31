@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/log.h"
 #include "com/random/engine.h"
+#include "com/type/limit.h"
 #include "com/type/name.h"
 #include "com/vec.h"
 #include "painter/coefficient/cosine_sphere.h"
@@ -53,7 +54,7 @@ void test_compare_with_beta(unsigned n)
         {
                 std::ostringstream oss;
                 oss << std::fixed;
-                oss << std::setprecision(std::numeric_limits<long double>::max_digits10);
+                oss << std::setprecision(limits<long double>::max_digits10);
                 oss << "N = " << n << ": beta = " << beta << ", function = " << function;
                 oss << std::scientific;
                 oss << std::setprecision(5);
@@ -111,7 +112,7 @@ void test()
 
         std::ostringstream oss;
         oss << std::fixed;
-        oss << std::setprecision(std::numeric_limits<long double>::max_digits10);
+        oss << std::setprecision(limits<long double>::max_digits10);
         oss << std::setw(2) << N << ": data = " << data << ", function = " << function;
         oss << std::setprecision(5);
         oss << ", discrepancy = " << discrepancy_percent << "%";

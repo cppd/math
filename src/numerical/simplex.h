@@ -94,7 +94,7 @@ void print_simplex_algorithm_data(const std::array<T, M>& b, const std::array<Ve
         {
                 int int_w = (N + M - 1) < 10 ? 1 : std::floor(std::log10(N + M - 1)) + 1;
 
-                int precision = std::numeric_limits<T>::max_digits10;
+                int precision = limits<T>::max_digits10;
 
                 std::ostringstream oss;
                 oss << std::setprecision(precision);

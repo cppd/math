@@ -20,12 +20,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/conversion.h"
 #include "com/error.h"
 #include "com/time.h"
+#include "com/type/limit.h"
 #include "gpgpu/optical_flow/compute/of_gl2d.h"
 #include "graphics/opengl/buffers.h"
 #include "graphics/opengl/capabilities.h"
 #include "graphics/opengl/shader.h"
 
-#include <limits>
 #include <vector>
 
 // clang-format off
@@ -123,7 +123,7 @@ class OpticalFlowShow::Impl final
         int m_top_point_count;
 
         bool m_flow_computed = false;
-        double m_last_time = std::numeric_limits<double>::lowest();
+        double m_last_time = limits<double>::lowest();
 
         std::unique_ptr<OpticalFlowGL2D> m_optical_flow;
 
@@ -164,7 +164,7 @@ public:
 
         void reset()
         {
-                m_last_time = std::numeric_limits<double>::lowest();
+                m_last_time = limits<double>::lowest();
                 m_flow_computed = false;
                 m_optical_flow->reset();
         }

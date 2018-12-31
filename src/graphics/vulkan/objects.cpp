@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "error.h"
 
 #include "com/error.h"
+#include "com/type/limit.h"
 
 #include <algorithm>
 
@@ -220,7 +221,7 @@ uint32_t Device::physical_device_memory_type_index(uint32_t memory_type_bits, Vk
         VkPhysicalDeviceMemoryProperties memory_properties;
         vkGetPhysicalDeviceMemoryProperties(m_physical_device, &memory_properties);
 
-        if (memory_properties.memoryTypeCount >= std::numeric_limits<uint32_t>::digits)
+        if (memory_properties.memoryTypeCount >= limits<uint32_t>::digits)
         {
                 error("memoryTypeCount >= memory_type_bits bit count");
         }

@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/random/engine.h"
 #include "com/random/vector.h"
 #include "com/time.h"
+#include "com/type/limit.h"
 #include "com/type/name.h"
 #include "painter/sampling/sphere.h"
 
@@ -52,7 +53,7 @@ void normalize(Map* map)
 {
         using T = typename Map::mapped_type;
 
-        T max = std::numeric_limits<T>::lowest();
+        T max = limits<T>::lowest();
 
         for (const auto& i : *map)
         {

@@ -29,6 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/print.h"
 #include "com/string/vector.h"
 #include "com/thread.h"
+#include "com/type/limit.h"
 #include "graphics/vulkan/create.h"
 #include "graphics/vulkan/error.h"
 #include "graphics/vulkan/instance.h"
@@ -46,7 +47,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <chrono>
 #include <cmath>
 #include <functional>
-#include <limits>
 #include <type_traits>
 #include <vector>
 
@@ -194,11 +194,11 @@ class ShowObject final : public EventQueue, public WindowEvent
 
         //
 
-        int m_window_width = std::numeric_limits<int>::lowest();
-        int m_window_height = std::numeric_limits<int>::lowest();
+        int m_window_width = limits<int>::lowest();
+        int m_window_height = limits<int>::lowest();
 
-        int m_draw_width = std::numeric_limits<int>::lowest();
-        int m_draw_height = std::numeric_limits<int>::lowest();
+        int m_draw_width = limits<int>::lowest();
+        int m_draw_height = limits<int>::lowest();
 
         int m_mouse_x = 0;
         int m_mouse_y = 0;
@@ -908,7 +908,7 @@ VulkanResult render_vulkan(VkSwapchainKHR swapchain, VkQueue presentation_queue,
 {
         VkResult result;
 
-        result = vkWaitForFences(device, 1, &current_frame_fence, VK_TRUE, std::numeric_limits<uint64_t>::max());
+        result = vkWaitForFences(device, 1, &current_frame_fence, VK_TRUE, limits<uint64_t>::max());
         if (result != VK_SUCCESS)
         {
                 vulkan::vulkan_function_error("vkWaitForFences", result);
@@ -922,8 +922,8 @@ VulkanResult render_vulkan(VkSwapchainKHR swapchain, VkQueue presentation_queue,
         //
 
         uint32_t image_index;
-        result = vkAcquireNextImageKHR(device, swapchain, std::numeric_limits<uint64_t>::max(), image_available_semaphore,
-                                       VK_NULL_HANDLE, &image_index);
+        result = vkAcquireNextImageKHR(device, swapchain, limits<uint64_t>::max(), image_available_semaphore, VK_NULL_HANDLE,
+                                       &image_index);
         if (result == VK_ERROR_OUT_OF_DATE_KHR)
         {
                 return VulkanResult::CreateSwapchain;

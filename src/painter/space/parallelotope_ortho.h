@@ -30,12 +30,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/error.h"
 #include "com/print.h"
 #include "com/ray.h"
+#include "com/type/limit.h"
 #include "com/vec.h"
 #include "painter/space/constraint.h"
 
 #include <algorithm>
 #include <array>
-#include <limits>
 #include <utility>
 
 namespace parallelotope_ortho_implementation
@@ -254,8 +254,8 @@ void ParallelotopeOrtho<N, T>::constraints(std::array<Constraint<N, T>, 2 * N>* 
 template <size_t N, typename T>
 bool ParallelotopeOrtho<N, T>::intersect_impl(const Ray<N, T>& r, T* first, T* second) const
 {
-        T f_max = std::numeric_limits<T>::lowest();
-        T b_min = std::numeric_limits<T>::max();
+        T f_max = limits<T>::lowest();
+        T b_min = limits<T>::max();
 
         for (unsigned i = 0; i < N; ++i)
         {
@@ -342,7 +342,7 @@ Vector<N, T> ParallelotopeOrtho<N, T>::normal(const Vector<N, T>& p) const
 {
         // К какой плоскости точка ближе, такой и перпендикуляр в точке
 
-        T min = std::numeric_limits<T>::max();
+        T min = limits<T>::max();
 
         Vector<N, T> n;
         for (unsigned i = 0; i < N; ++i)
@@ -360,7 +360,7 @@ Vector<N, T> ParallelotopeOrtho<N, T>::normal(const Vector<N, T>& p) const
                 }
         }
 
-        ASSERT(min < std::numeric_limits<T>::max());
+        ASSERT(min < limits<T>::max());
 
         return n;
 }

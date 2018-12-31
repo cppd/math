@@ -27,7 +27,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/opengl/shader.h"
 
 #include <array>
-#include <limits>
 #include <optional>
 #include <thread>
 #include <unordered_map>

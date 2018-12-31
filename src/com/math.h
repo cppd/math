@@ -21,7 +21,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/type/trait.h"
 
 #include <cmath>
-#include <limits>
 #include <type_traits>
 #if !defined(__clang__)
 #include <quadmath.h>
@@ -96,10 +95,10 @@ inline __float128 any_cos(__float128 a)
 template <typename T>
 constexpr bool is_finite(T v)
 {
-        static_assert(std::is_floating_point_v<T> && std::numeric_limits<T>::is_specialized);
+        static_assert(std::is_floating_point_v<T>);
         // std::isfinite не работает с -Ofast (-ffast-math),
-        // поэтому сравнение с std::numeric_limits<T> lowest и max
-        return v >= std::numeric_limits<T>::lowest() && v <= std::numeric_limits<T>::max();
+        // поэтому сравнение с limits<T> lowest и max
+        return v >= limits<T>::lowest() && v <= limits<T>::max();
 }
 
 constexpr bool is_finite(__float128 v)

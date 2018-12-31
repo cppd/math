@@ -21,10 +21,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/alg.h"
 #include "com/error.h"
+#include "com/type/limit.h"
 
-#include <limits>
-
-constexpr double MIN_DOUBLE = std::numeric_limits<double>::lowest();
+constexpr double MIN_DOUBLE = limits<double>::lowest();
 
 // Значения косинусов для частного случая, когда вместе имеется:
 // а) маленький угол между вектором PA от вершины P к вершине A ребра
@@ -168,7 +167,7 @@ double voronoi_edge_radius(const std::vector<DelaunayObject<N>>& delaunay_object
 {
         if (facet.one_sided() && cocone_inside_or_equal(cos_n_b))
         {
-                return std::numeric_limits<double>::max();
+                return limits<double>::max();
         }
 
         if (!facet.one_sided() && cocone_inside_or_equal(cos_n_a, cos_n_b))
@@ -271,7 +270,7 @@ void cocone_facets_and_voronoi_radius(const vec<N>& vertex, const std::vector<De
                 // Найдено пересечение с cocone одной из вершин.
                 (*facet_data)[vertex_facet.facet_index].cocone_vertex[vertex_facet.vertex_index] = true;
 
-                if (find_radius && *radius != std::numeric_limits<double>::max())
+                if (find_radius && *radius != limits<double>::max())
                 {
                         double edge_radius = voronoi_edge_radius(delaunay_objects, facet, positive_pole, pa, pa_length, pb_length,
                                                                  cos_n_a, cos_n_b);
@@ -280,7 +279,7 @@ void cocone_facets_and_voronoi_radius(const vec<N>& vertex, const std::vector<De
                 }
         }
 
-        ASSERT(!find_radius || (*radius > 0 && *radius <= std::numeric_limits<double>::max()));
+        ASSERT(!find_radius || (*radius > 0 && *radius <= limits<double>::max()));
 }
 
 template <size_t N>

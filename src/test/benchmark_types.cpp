@@ -21,9 +21,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/math.h"
 #include "com/print.h"
 #include "com/time.h"
+#include "com/type/limit.h"
 
 #include <gmpxx.h>
-#include <limits>
 #include <vector>
 
 constexpr int N = 1 << 27;
@@ -105,15 +105,15 @@ void benchmark_types()
                 LOG("long double " + to_string(computation(v)));
         }
         {
-                std::vector<int> v(N, std::sqrt(std::numeric_limits<int>::max()) / 10);
+                std::vector<int> v(N, std::sqrt(limits<int>::max()) / 10);
                 LOG("int " + to_string(computation(v)));
         }
         {
-                std::vector<long> v(N, std::sqrt(std::numeric_limits<long>::max()) / 10);
+                std::vector<long> v(N, std::sqrt(limits<long>::max()) / 10);
                 LOG("long " + to_string(computation(v)));
         }
         {
-                std::vector<long long> v(N, std::sqrt(std::numeric_limits<long long>::max()) / 10);
+                std::vector<long long> v(N, std::sqrt(limits<long long>::max()) / 10);
                 LOG("long long " + to_string(computation(v)));
         }
         {

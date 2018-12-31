@@ -18,10 +18,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "conversion.h"
 
 #include "com/error.h"
+#include "com/type/limit.h"
 
 #include <algorithm>
 #include <cmath>
-#include <limits>
 #include <type_traits>
 
 #define USE_COLOR_LOOKUP_TABLES 1
@@ -59,7 +59,7 @@ constexpr Float uint8_to_float(UInt8 c)
         static_assert(std::is_same_v<UInt8, unsigned char>);
         static_assert(std::is_floating_point_v<Float>);
 
-        ASSERT(std::numeric_limits<unsigned char>::max() == MAX8 || c <= MAX8);
+        ASSERT(limits<unsigned char>::max() == MAX8 || c <= MAX8);
 
         return Float(c) / Float(MAX8);
 }
@@ -246,7 +246,7 @@ T srgb_uint8_to_rgb_float(UInt8 c)
         static_assert(std::is_same_v<UInt8, unsigned char>);
         static_assert(std::is_floating_point_v<T>);
 
-        if constexpr (std::numeric_limits<unsigned char>::max() == MAX8)
+        if constexpr (limits<unsigned char>::max() == MAX8)
         {
                 return SRGB_UINT8_TO_RGB_FLOAT_LOOKUP_TABLE<T>[c];
         }
@@ -261,7 +261,7 @@ unsigned char srgb_uint8_to_rgb_uint8(UInt8 c)
 {
         static_assert(std::is_same_v<UInt8, unsigned char>);
 
-        if constexpr (std::numeric_limits<unsigned char>::max() == MAX8)
+        if constexpr (limits<unsigned char>::max() == MAX8)
         {
                 return SRGB_UINT8_TO_RGB_UINT8_LOOKUP_TABLE[c];
         }
@@ -276,7 +276,7 @@ std::uint_least16_t srgb_uint8_to_rgb_uint16(UInt8 c)
 {
         static_assert(std::is_same_v<UInt8, unsigned char>);
 
-        if constexpr (std::numeric_limits<unsigned char>::max() == MAX8)
+        if constexpr (limits<unsigned char>::max() == MAX8)
         {
                 return SRGB_UINT8_TO_RGB_UINT16_LOOKUP_TABLE[c];
         }
@@ -314,7 +314,7 @@ template <typename T, typename UInt8>
 T alpha_uint8_to_float(UInt8 c)
 {
         static_assert(std::is_same_v<UInt8, unsigned char>);
-        if constexpr (std::numeric_limits<unsigned char>::max() != MAX8)
+        if constexpr (limits<unsigned char>::max() != MAX8)
         {
                 c = std::min(c, MAX8);
         }
@@ -325,7 +325,7 @@ template <typename UInt8>
 std::uint_least16_t alpha_uint8_to_uint16(UInt8 c)
 {
         static_assert(std::is_same_v<UInt8, unsigned char>);
-        if constexpr (std::numeric_limits<unsigned char>::max() != MAX8)
+        if constexpr (limits<unsigned char>::max() != MAX8)
         {
                 c = std::min(c, MAX8);
         }
@@ -392,9 +392,9 @@ template long double rgb_float_to_rgb_luminance(long double red, long double gre
 #if !USE_COLOR_LOOKUP_TABLES
 //Функции для создания таблиц
 #include "com/string/str.h"
-#include "com/types.h"
+#include "com/type/name.h"
+#include "com/type/limit.h"
 #include <iomanip>
-#include <limits>
 #include <sstream>
 namespace color_conversion
 {
@@ -403,7 +403,7 @@ std::string lookup_table_float()
         using T = long double;
         std::string suffix = to_upper(floating_point_suffix<T>());
         std::ostringstream oss;
-        oss << std::setprecision(std::numeric_limits<T>::max_digits10);
+        oss << std::setprecision(limits<T>::max_digits10);
         oss << std::scientific;
         oss << "// clang-format off\n";
         oss << "template <typename T>\n";
