@@ -97,6 +97,7 @@ public:
         }
         static constexpr int digits = std::numeric_limits<T>::digits;
         static constexpr int digits10 = std::numeric_limits<T>::digits10;
+        static constexpr int max_digits10 = std::numeric_limits<T>::max_digits10;
         static constexpr int radix = std::numeric_limits<T>::radix;
 };
 
