@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/log.h"
 #include "com/matrix_alg.h"
 #include "com/time.h"
+#include "com/type/limit.h"
 #include "com/vec.h"
 #include "painter/space/hyperplane_simplex_wrapper.h"
 #include "painter/space/ray_intersection.h"

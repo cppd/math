@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/global_index.h"
 #include "com/random/engine.h"
 #include "com/thread.h"
+#include "com/type/limit.h"
 #include "painter/coefficient/cosine_sphere.h"
 #include "painter/sampling/sampler.h"
 #include "painter/sampling/sphere.h"

@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/error.h"
 #include "com/ray.h"
-#include "com/types.h"
+#include "com/type/trait.h"
 #include "com/vec.h"
 #include "geometry/core/linear_algebra.h"
 #include "painter/space/constraint.h"

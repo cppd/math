@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <gmpxx.h>
 #include <limits>
 #include <type_traits>
 
@@ -184,53 +183,3 @@ template <typename T>
 class limits<const volatile T> : public types_implementation::limits<T>
 {
 };
-
-template <typename T>
-inline constexpr bool is_native_integral = std::is_same_v<std::remove_cv_t<T>, unsigned __int128> ||
-                                           std::is_same_v<std::remove_cv_t<T>, signed __int128> || std::is_integral_v<T>;
-template <typename T>
-inline constexpr bool is_integral = is_native_integral<T> || std::is_same_v<std::remove_cv_t<T>, mpz_class>;
-
-template <typename T>
-inline constexpr bool is_native_floating_point = std::is_same_v<std::remove_cv_t<T>, __float128> || std::is_floating_point_v<T>;
-template <typename T>
-inline constexpr bool is_floating_point = is_native_floating_point<T> || std::is_same_v<std::remove_cv_t<T>, mpf_class>;
-
-template <typename T>
-inline constexpr bool is_signed =
-        std::is_same_v<std::remove_cv_t<T>, mpz_class> || std::is_same_v<std::remove_cv_t<T>, mpf_class> ||
-        std::is_same_v<std::remove_cv_t<T>, __int128> || std::is_same_v<std::remove_cv_t<T>, __float128> || std::is_signed_v<T>;
-
-template <typename T>
-inline constexpr bool is_unsigned = std::is_same_v<std::remove_cv_t<T>, unsigned __int128> || std::is_unsigned_v<T>;
-
-// clang-format off
-template<int BITS>
-using LeastSignedInteger =
-        std::conditional_t<BITS <=   7, int_least8_t,
-        std::conditional_t<BITS <=  15, int_least16_t,
-        std::conditional_t<BITS <=  31, int_least32_t,
-        std::conditional_t<BITS <=  63, int_least64_t,
-        std::conditional_t<BITS <= 127, signed __int128,
-        mpz_class>>>>>;
-
-template<int BITS>
-using LeastUnsignedInteger =
-        std::conditional_t<BITS <=   8, uint_least8_t,
-        std::conditional_t<BITS <=  16, uint_least16_t,
-        std::conditional_t<BITS <=  32, uint_least32_t,
-        std::conditional_t<BITS <=  64, uint_least64_t,
-        std::conditional_t<BITS <= 128, unsigned __int128,
-        mpz_class>>>>>;
-// clang-format on
-
-// C++20
-// std::type_identity и std::type_identity_t
-// Может использоваться для запрета class template argument deduction.
-template <typename T>
-struct TypeIdentity
-{
-        using type = T;
-};
-template <class T>
-using type_identity_t = typename TypeIdentity<T>::type;

@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "objects.h"
 #include "swapchain.h"
 
-#include "com/type_detect.h"
+#include "com/type/detect.h"
 
 #include <functional>
 #include <optional>

@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/arrays.h"
 #include "com/combinatorics.h"
 #include "com/math.h"
+#include "com/type/trait.h"
 #include "com/vec.h"
 
 #include <array>

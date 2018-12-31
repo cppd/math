@@ -67,7 +67,9 @@ Chapman & Hall/CRC, 2004.
 #include "com/names.h"
 #include "com/print.h"
 #include "com/thread_pool.h"
-#include "com/types.h"
+#include "com/type/integer.h"
+#include "com/type/limit.h"
+#include "com/type/trait.h"
 #include "com/vec.h"
 
 #include <algorithm>

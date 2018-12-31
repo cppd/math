@@ -18,7 +18,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "error.h"
-#include "types.h"
+
+#include "com/type/limit.h"
+#include "com/type/trait.h"
 
 #include <algorithm>
 #include <type_traits>

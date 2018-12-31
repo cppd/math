@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/error.h"
 #include "com/math.h"
 #include "com/ray.h"
+#include "com/type/limit.h"
 #include "com/vec.h"
 #include "numerical/simplex.h"
 #include "painter/space/constraint.h"

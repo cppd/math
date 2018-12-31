@@ -18,7 +18,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "com/math.h"
-#include "com/types.h"
+#include "com/type/limit.h"
+#include "com/type/trait.h"
 #include "com/vec.h"
 #include "numerical/quadratic.h"
 

@@ -29,7 +29,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/error.h"
 #include "com/log.h"
 #include "com/print.h"
-#include "com/types.h"
+#include "com/type/limit.h"
+#include "com/type/trait.h"
 #include "com/vec.h"
 
 #include <array>

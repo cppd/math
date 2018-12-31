@@ -28,7 +28,7 @@ Cambridge University Press.
 
 #include "com/math.h"
 #include "com/matrix.h"
-#include "com/types.h"
+#include "com/type/trait.h"
 #include "com/vec.h"
 
 namespace numerical

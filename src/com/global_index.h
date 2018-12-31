@@ -19,8 +19,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "alg.h"
 #include "error.h"
-#include "type_detect.h"
-#include "types.h"
+
+#include "com/type/detect.h"
+#include "com/type/limit.h"
+#include "com/type/trait.h"
 
 #include <array>
 #include <cstddef>

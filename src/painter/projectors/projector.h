@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/math.h"
 #include "com/print.h"
 #include "com/ray.h"
-#include "com/types.h"
+#include "com/type/limit.h"
 #include "com/vec.h"
 
 namespace projector_implementation

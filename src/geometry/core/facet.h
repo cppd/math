@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/mpz.h"
 #include "com/print.h"
 #include "com/sort.h"
-#include "com/types.h"
+#include "com/type/trait.h"
 #include "com/vec.h"
 
 #include <array>

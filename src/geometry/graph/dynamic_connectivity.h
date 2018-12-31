@@ -27,7 +27,7 @@ Pearson Education, 2011.
 
 #pragma once
 
-#include "com/types.h"
+#include "com/type/trait.h"
 
 #include <algorithm>
 #include <numeric>

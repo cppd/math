@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/log.h"
 #include "com/random/engine.h"
-#include "com/type_name.h"
+#include "com/type/name.h"
 #include "com/vec.h"
 #include "painter/coefficient/cosine_sphere.h"
 #include "painter/sampling/sphere.h"

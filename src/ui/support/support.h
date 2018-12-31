@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/color/color.h"
 #include "com/error.h"
-#include "com/type_detect.h"
+#include "com/type/detect.h"
 #include "com/vec.h"
 #include "window/handle.h"
 
