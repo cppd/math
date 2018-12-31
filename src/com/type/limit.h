@@ -75,16 +75,38 @@ constexpr T binary_exponent(int e) noexcept
         return r;
 }
 
-template <typename T, bool = true>
-class limits
+template <typename T, typename = void>
+class limits;
+
+template <typename T>
+class limits<T, std::enable_if_t<std::is_integral_v<T>>>
 {
         static_assert(std::numeric_limits<T>::is_specialized);
-        static_assert(std::is_integral_v<T> || std::is_floating_point_v<T>);
+        static_assert(std::is_integral_v<T>);
+
+public:
+        static constexpr T max() noexcept
+        {
+                return std::numeric_limits<T>::max();
+        }
+        static constexpr T lowest() noexcept
+        {
+                return std::numeric_limits<T>::lowest();
+        }
+        static constexpr int digits = std::numeric_limits<T>::digits;
+        static constexpr int digits10 = std::numeric_limits<T>::digits10;
+        static constexpr int radix = std::numeric_limits<T>::radix;
+};
+
+template <typename T>
+class limits<T, std::enable_if_t<std::is_floating_point_v<T>>>
+{
+        static_assert(std::numeric_limits<T>::is_specialized);
+        static_assert(std::is_floating_point_v<T>);
 
 public:
         static constexpr T epsilon() noexcept
         {
-                static_assert(std::is_floating_point_v<T>);
                 return std::numeric_limits<T>::epsilon();
         }
         static constexpr T max() noexcept
@@ -102,8 +124,10 @@ public:
 };
 
 template <>
-class limits<unsigned __int128, !std::numeric_limits<unsigned __int128>::is_specialized>
+class limits<unsigned __int128, std::enable_if_t<!std::numeric_limits<unsigned __int128>::is_specialized>>
 {
+        static_assert(!std::numeric_limits<unsigned __int128>::is_specialized);
+
         using T = unsigned __int128;
 
 public:
@@ -121,8 +145,10 @@ public:
 };
 
 template <>
-class limits<signed __int128, !std::numeric_limits<signed __int128>::is_specialized>
+class limits<signed __int128, std::enable_if_t<!std::numeric_limits<signed __int128>::is_specialized>>
 {
+        static_assert(!std::numeric_limits<signed __int128>::is_specialized);
+
         using T = signed __int128;
 
 public:
@@ -140,8 +166,10 @@ public:
 };
 
 template <>
-class limits<__float128, !std::numeric_limits<__float128>::is_specialized>
+class limits<__float128, std::enable_if_t<!std::numeric_limits<__float128>::is_specialized>>
 {
+        static_assert(!std::numeric_limits<__float128>::is_specialized);
+
         using T = __float128;
 
         // epsilon = strtoflt128("1.92592994438723585305597794258492732e-34", nullptr)
@@ -162,6 +190,7 @@ public:
         }
         static constexpr int digits = 113;
         static constexpr int digits10 = 33;
+        static constexpr int max_digits10 = 36;
         static constexpr int radix = 2;
 };
 }

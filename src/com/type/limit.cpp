@@ -47,6 +47,7 @@ class compare_with_numeric_limits
         static_assert(limits<T>::lowest() == std::numeric_limits<T>::lowest());
         static_assert(limits<T>::digits == std::numeric_limits<T>::digits);
         static_assert(limits<T>::digits10 == std::numeric_limits<T>::digits10);
+        static_assert(limits<T>::max_digits10 == std::numeric_limits<T>::max_digits10);
         static_assert(limits<T>::radix == std::numeric_limits<T>::radix);
 };
 template class compare_with_numeric_limits<float>;
