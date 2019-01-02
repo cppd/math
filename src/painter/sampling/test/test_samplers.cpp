@@ -32,17 +32,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace
 {
-template <typename T>
-constexpr std::enable_if_t<std::is_same_v<std::remove_cv_t<T>, std::mt19937>, const char*> random_engine_type_name()
-{
-        return "std::mt19937";
-}
-template <typename T>
-constexpr std::enable_if_t<std::is_same_v<std::remove_cv_t<T>, std::mt19937_64>, const char*> random_engine_type_name()
-{
-        return "std::mt19937_64";
-}
-
 std::string replace_space(const std::string_view& s)
 {
         std::string r;
@@ -54,25 +43,15 @@ std::string replace_space(const std::string_view& s)
         return r;
 }
 
-template <size_t N>
-constexpr int sample_count()
+template <typename T>
+constexpr std::enable_if_t<std::is_same_v<std::remove_cv_t<T>, std::mt19937>, const char*> random_engine_name()
 {
-        static_assert(N >= 2);
-        switch (N)
-        {
-        case 2:
-                return power<N>(5u);
-        case 3:
-                return power<N>(5u);
-        case 4:
-                return power<N>(4u);
-        case 5:
-                return power<N>(3u);
-        case 6:
-                return power<N>(3u);
-        default:
-                return power<N>(2u);
-        }
+        return "std::mt19937";
+}
+template <typename T>
+constexpr std::enable_if_t<std::is_same_v<std::remove_cv_t<T>, std::mt19937_64>, const char*> random_engine_name()
+{
+        return "std::mt19937_64";
 }
 
 template <size_t N, typename T>
@@ -111,7 +90,26 @@ const std::string& sampler_file_name(const S<N, T>& sampler)
         return s;
 }
 
-//
+template <size_t N>
+constexpr int sample_count()
+{
+        static_assert(N >= 2);
+        switch (N)
+        {
+        case 2:
+                return power<N>(5u);
+        case 3:
+                return power<N>(5u);
+        case 4:
+                return power<N>(4u);
+        case 5:
+                return power<N>(3u);
+        case 6:
+                return power<N>(3u);
+        default:
+                return power<N>(2u);
+        }
+}
 
 template <size_t N, typename T, typename Sampler, typename RandomEngine>
 void write_samples_to_file(RandomEngine& random_engine, const Sampler& sampler, const std::string& directory, int pass_count)
@@ -181,7 +179,7 @@ void write_samples_to_files()
 {
         static_assert(std::is_floating_point_v<T>);
 
-        LOG(std::string("Files <") + type_name<T>() + ", " + random_engine_type_name<RandomEngine>() + ">");
+        LOG(std::string("Files <") + type_name<T>() + ", " + random_engine_name<RandomEngine>() + ">");
 
         write_samples_to_files<2, T, RandomEngine>();
         write_samples_to_files<3, T, RandomEngine>();
@@ -193,7 +191,7 @@ void test_performance()
 {
         static_assert(std::is_floating_point_v<T>);
 
-        LOG(std::string("Performance <") + type_name<T>() + ", " + random_engine_type_name<RandomEngine>() + ">");
+        LOG(std::string("Performance <") + type_name<T>() + ", " + random_engine_name<RandomEngine>() + ">");
 
         test_performance<2, T, RandomEngine>();
         test_performance<3, T, RandomEngine>();
