@@ -58,7 +58,7 @@ public:
                 return v;
         }
 
-        void bind(int point) const noexcept
+        void bind(int point) const
         {
                 m_buffer.bind(point);
         }

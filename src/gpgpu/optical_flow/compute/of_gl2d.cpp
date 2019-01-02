@@ -143,7 +143,7 @@ public:
                 m_buffer.copy(0, d);
         }
 
-        void bind(int point)
+        void bind(int point) const
         {
                 m_buffer.bind(point);
         }
@@ -195,7 +195,7 @@ public:
                 m_buffer.copy(offsetof(Data, use_guess), d);
         }
 
-        void set_guess(int use_guess, int guess_kx, int guess_ky, int guess_width)
+        void set_guess(int use_guess, int guess_kx, int guess_ky, int guess_width) const
         {
                 constexpr size_t size =
                         sizeof(Data::use_guess) + sizeof(Data::guess_kx) + sizeof(Data::guess_ky) + sizeof(Data::guess_width);
@@ -212,7 +212,7 @@ public:
                 m_buffer.copy(offset, offset, size, data);
         }
 
-        void bind(int point)
+        void bind(int point) const
         {
                 m_buffer.bind(point);
         }

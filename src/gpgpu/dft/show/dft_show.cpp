@@ -88,7 +88,7 @@ public:
                 m_buffer.copy(offsetof(Data, foreground_color), c);
         }
 
-        void bind(int point)
+        void bind(int point) const
         {
                 m_buffer.bind(point);
         }
