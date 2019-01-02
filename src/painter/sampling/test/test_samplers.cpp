@@ -76,49 +76,49 @@ constexpr int sample_count()
 }
 
 template <size_t N, typename T>
-struct StratifiedJitteredSamplerForTest : StratifiedJitteredSampler<N, T>
+const std::string_view& sampler_name(const StratifiedJitteredSampler<N, T>&)
 {
-        StratifiedJitteredSamplerForTest() : StratifiedJitteredSampler<N, T>(sample_count<N>())
-        {
-        }
-        const std::string& sampler_name() const
-        {
-                static const std::string s = "Stratified Jittered Sampler";
-                return s;
-        }
-        const std::string& file_name() const
-        {
-                static const std::string s = "samples_sjs_" + to_string(N) + "d_" + replace_space(type_name<T>()) + ".txt";
-                return s;
-        }
-};
+        static constexpr std::string_view s = "Stratified Jittered Sampler";
+        return s;
+}
 
 template <size_t N, typename T>
-struct LatinHypercubeSamplerForTest : LatinHypercubeSampler<N, T>
+const std::string_view& sampler_name(const LatinHypercubeSampler<N, T>&)
 {
-        LatinHypercubeSamplerForTest() : LatinHypercubeSampler<N, T>(sample_count<N>())
-        {
-        }
-        const std::string& sampler_name() const
-        {
-                static const std::string s = "Latin Hypercube Sampler";
-                return s;
-        }
-        const std::string& file_name() const
-        {
-                static const std::string s = "samples_lhc_" + to_string(N) + "d_" + replace_space(type_name<T>()) + ".txt";
-                return s;
-        }
-};
+        static constexpr std::string_view s = "Latin Hypercube Sampler";
+        return s;
+}
+
+template <size_t N, typename T>
+const std::string_view& short_sampler_name(const StratifiedJitteredSampler<N, T>&)
+{
+        static constexpr std::string_view s = "sjs";
+        return s;
+}
+
+template <size_t N, typename T>
+const std::string_view& short_sampler_name(const LatinHypercubeSampler<N, T>&)
+{
+        static constexpr std::string_view s = "lhc";
+        return s;
+}
+
+template <template <size_t, typename> typename S, size_t N, typename T>
+const std::string& sampler_file_name(const S<N, T>& sampler)
+{
+        static const std::string s = "samples_" + std::string(short_sampler_name(sampler)) + "_" + to_string(N) + "d_" +
+                                     replace_space(type_name<T>()) + ".txt";
+        return s;
+}
 
 //
 
 template <size_t N, typename T, typename Sampler, typename RandomEngine>
 void write_samples_to_file(RandomEngine& random_engine, const Sampler& sampler, const std::string& directory, int pass_count)
 {
-        std::ofstream file(directory + "/" + sampler.file_name());
+        std::ofstream file(directory + "/" + sampler_file_name(sampler));
 
-        file << sampler.sampler_name() << "\n";
+        file << sampler_name(sampler) << "\n";
         file << "Pass count: " << to_string(pass_count) << "\n";
 
         std::vector<Vector<N, T>> data;
@@ -146,7 +146,7 @@ void test_performance(RandomEngine& random_engine, const Sampler& sampler, int i
                 sampler.generate(random_engine, &data);
         }
 
-        LOG(sampler.sampler_name() + ": time = " + to_string_fixed(time_in_seconds() - t, 5) +
+        LOG(std::string(sampler_name(sampler)) + ": time = " + to_string_fixed(time_in_seconds() - t, 5) +
             " seconds, size = " + to_string(data.size()));
 }
 
@@ -160,8 +160,8 @@ void write_samples_to_files()
         const std::string tmp_dir = temp_directory();
 
         LOG("Writing samples " + to_string(N) + "D");
-        write_samples_to_file<N, T>(random_engine, StratifiedJitteredSamplerForTest<N, T>(), tmp_dir, pass_count);
-        write_samples_to_file<N, T>(random_engine, LatinHypercubeSamplerForTest<N, T>(), tmp_dir, pass_count);
+        write_samples_to_file<N, T>(random_engine, StratifiedJitteredSampler<N, T>(sample_count<N>()), tmp_dir, pass_count);
+        write_samples_to_file<N, T>(random_engine, LatinHypercubeSampler<N, T>(sample_count<N>()), tmp_dir, pass_count);
 }
 
 template <size_t N, typename T, typename RandomEngine>
@@ -172,8 +172,8 @@ void test_performance()
         constexpr int iter_count = 1e6;
 
         LOG("Testing performance " + to_string(N) + "D");
-        test_performance<N, T>(random_engine, StratifiedJitteredSamplerForTest<N, T>(), iter_count);
-        test_performance<N, T>(random_engine, LatinHypercubeSamplerForTest<N, T>(), iter_count);
+        test_performance<N, T>(random_engine, StratifiedJitteredSampler<N, T>(sample_count<N>()), iter_count);
+        test_performance<N, T>(random_engine, LatinHypercubeSampler<N, T>(sample_count<N>()), iter_count);
 }
 
 template <typename T, typename RandomEngine>
