@@ -32,6 +32,7 @@ class Shader
 
 protected:
         Shader(GLenum type, const std::string_view& shader_text);
+        ~Shader();
 
 public:
         void attach_to_program(GLuint program) const noexcept;
@@ -74,6 +75,7 @@ class Program
 
 protected:
         Program(const std::vector<const Shader*>& shaders);
+        ~Program();
 
         void use() const noexcept;
 

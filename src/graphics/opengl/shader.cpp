@@ -163,6 +163,8 @@ Shader::Shader(GLenum type, const std::string_view& shader_text) : m_shader(type
         }
 }
 
+Shader::~Shader() = default;
+
 void Shader::attach_to_program(GLuint program) const noexcept
 {
         glAttachShader(program, m_shader);
@@ -232,6 +234,8 @@ Program::Program(const std::vector<const Shader*>& shaders)
                 }
         }
 }
+
+Program::~Program() = default;
 
 void Program::use() const noexcept
 {
