@@ -31,7 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace opengl
 {
-class Texture2D
+class Texture2D final
 {
         Texture2DHandle m_texture;
         int m_width = 0, m_height = 0;
@@ -114,7 +114,7 @@ public:
         }
 };
 
-class Framebuffer
+class Framebuffer final
 {
         FramebufferHandle m_framebuffer;
 
@@ -148,7 +148,7 @@ public:
         }
 };
 
-class UniformBuffer
+class UniformBuffer final
 {
         BufferHandle m_buffer;
         GLsizeiptr m_data_size;
@@ -194,7 +194,7 @@ public:
         }
 };
 
-class StorageBuffer
+class StorageBuffer final
 {
         BufferHandle m_buffer;
         GLsizeiptr m_data_size;
@@ -250,7 +250,7 @@ public:
         }
 };
 
-class ArrayBuffer
+class ArrayBuffer final
 {
         BufferHandle m_buffer = 0;
         GLsizeiptr m_data_size;
@@ -293,7 +293,7 @@ public:
         }
 };
 
-class VertexArray
+class VertexArray final
 {
         VertexArrayHandle m_vertex_array;
 
@@ -333,7 +333,7 @@ public:
 #endif
 };
 
-class TextureRGBA32F
+class TextureRGBA32F final
 {
         template <typename T>
         static constexpr bool is_float_buffer = (is_vector<T> || is_array<T>)&&std::is_same_v<typename T::value_type, GLfloat>;
@@ -429,7 +429,7 @@ public:
         }
 };
 
-class TextureR32F
+class TextureR32F final
 {
         template <typename T>
         static constexpr bool is_float_buffer = (is_vector<T> || is_array<T>)&&std::is_same_v<typename T::value_type, GLfloat>;
@@ -507,7 +507,7 @@ public:
         }
 };
 
-class TextureR32I
+class TextureR32I final
 {
         template <typename T>
         static constexpr bool is_int_buffer = (is_vector<T> || is_array<T>)&&std::is_same_v<typename T::value_type, GLint>;
@@ -566,7 +566,7 @@ public:
         }
 };
 
-class TextureDepth32
+class TextureDepth32 final
 {
         Texture2D m_texture;
 
@@ -587,7 +587,7 @@ public:
         }
 };
 
-class ShadowBuffer
+class ShadowBuffer final
 {
         Framebuffer m_framebuffer;
         TextureDepth32 m_depth;
@@ -619,7 +619,7 @@ public:
         }
 };
 
-class ColorBuffer
+class ColorBuffer final
 {
         Framebuffer m_framebuffer;
         TextureRGBA32F m_color;

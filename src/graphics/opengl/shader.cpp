@@ -74,7 +74,7 @@ GLint get_uniform_location(GLuint program, const char* name)
         return loc;
 }
 
-class AttachShader
+class AttachShader final
 {
         GLuint m_program = 0;
         const opengl::Shader* m_shader = nullptr;

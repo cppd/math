@@ -99,7 +99,7 @@ public:
         operator VkBuffer() const noexcept;
 };
 
-class UniformBufferWithHostVisibleMemory
+class UniformBufferWithHostVisibleMemory final
 {
         VkDevice m_device;
         VkDeviceSize m_data_size;
