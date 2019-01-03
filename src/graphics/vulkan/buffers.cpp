@@ -161,6 +161,24 @@ void memory_copy(VkDevice device, VkDeviceMemory device_memory, const void* data
         memory_copy_offset(device, device_memory, 0 /*offset*/, data, data_size);
 }
 
+void memory_copy_from_buffer(VkDevice device, VkDeviceMemory device_memory, VkDeviceSize offset, void* data,
+                             VkDeviceSize data_size)
+{
+        void* map_memory_data;
+
+        VkResult result = vkMapMemory(device, device_memory, offset, data_size, 0, &map_memory_data);
+        if (result != VK_SUCCESS)
+        {
+                vulkan::vulkan_function_error("vkMapMemory", result);
+        }
+
+        std::memcpy(data, map_memory_data, data_size);
+
+        vkUnmapMemory(device, device_memory);
+
+        // vkFlushMappedMemoryRanges, vkInvalidateMappedMemoryRanges
+}
+
 void begin_commands(VkCommandBuffer command_buffer)
 {
         VkResult result;
@@ -590,6 +608,61 @@ void UniformBufferWithHostVisibleMemory::copy(VkDeviceSize offset, const void* d
         ASSERT(offset + data_size <= m_data_size);
 
         memory_copy_offset(m_device, m_device_memory, offset, data, data_size);
+}
+
+//
+
+StorageBufferWithHostVisibleMemory::StorageBufferWithHostVisibleMemory(const Device& device, VkDeviceSize data_size)
+        : m_device(device),
+          m_data_size(data_size),
+          m_buffer(create_buffer(device, data_size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, {})),
+          m_device_memory(create_device_memory(device, m_buffer,
+                                               VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT))
+{
+}
+
+StorageBufferWithHostVisibleMemory::operator VkBuffer() const noexcept
+{
+        return m_buffer;
+}
+
+VkDeviceSize StorageBufferWithHostVisibleMemory::size() const noexcept
+{
+        return m_data_size;
+}
+
+void StorageBufferWithHostVisibleMemory::copy_to(VkDeviceSize offset, const void* data, VkDeviceSize data_size) const
+{
+        ASSERT(offset + data_size <= m_data_size);
+
+        memory_copy_offset(m_device, m_device_memory, offset, data, data_size);
+}
+
+void StorageBufferWithHostVisibleMemory::copy_from(VkDeviceSize offset, void* data, VkDeviceSize data_size) const
+{
+        ASSERT(offset + data_size <= m_data_size);
+
+        memory_copy_from_buffer(m_device, m_device_memory, offset, data, data_size);
+}
+
+//
+
+StorageBufferWithDeviceLocalMemory::StorageBufferWithDeviceLocalMemory(const Device& device, VkDeviceSize data_size)
+        : m_device(device),
+          m_data_size(data_size),
+          m_buffer(create_buffer(device, data_size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, {})),
+          m_device_memory(create_device_memory(device, m_buffer, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
+{
+}
+
+StorageBufferWithDeviceLocalMemory::operator VkBuffer() const noexcept
+{
+        return m_buffer;
+}
+
+VkDeviceSize StorageBufferWithDeviceLocalMemory::size() const noexcept
+{
+        return m_data_size;
 }
 
 //

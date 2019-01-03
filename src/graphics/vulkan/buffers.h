@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "objects.h"
 
 #include "com/error.h"
+#include "com/type/detect.h"
 
 namespace vulkan
 {
@@ -137,6 +138,91 @@ public:
 
                 copy(0 /*offset*/, &data, sizeof(data));
         }
+};
+
+class StorageBufferWithHostVisibleMemory final
+{
+        VkDevice m_device;
+        VkDeviceSize m_data_size;
+
+        Buffer m_buffer;
+        DeviceMemory m_device_memory;
+
+        void copy_to(VkDeviceSize offset, const void* data, VkDeviceSize data_size) const;
+        void copy_from(VkDeviceSize offset, void* data, VkDeviceSize data_size) const;
+
+        template <typename T>
+        static std::enable_if_t<is_vector<T> || is_array<T>, size_t> binary_size(const T& c) noexcept
+        {
+                return c.size() * sizeof(typename T::value_type);
+        }
+
+public:
+        StorageBufferWithHostVisibleMemory(const Device& device, VkDeviceSize data_size);
+
+        template <typename T, typename = std::enable_if_t<sizeof(std::declval<T>().size()) && sizeof(typename T::value_type)>>
+        explicit StorageBufferWithHostVisibleMemory(const Device& device, const T& data)
+                : StorageBufferWithHostVisibleMemory(device, binary_size(data))
+        {
+                write(data);
+        }
+
+        StorageBufferWithHostVisibleMemory(const StorageBufferWithHostVisibleMemory&) = delete;
+        StorageBufferWithHostVisibleMemory& operator=(const StorageBufferWithHostVisibleMemory&) = delete;
+        StorageBufferWithHostVisibleMemory& operator=(StorageBufferWithHostVisibleMemory&&) = delete;
+
+        StorageBufferWithHostVisibleMemory(StorageBufferWithHostVisibleMemory&&) = default;
+        ~StorageBufferWithHostVisibleMemory() = default;
+
+        //
+
+        operator VkBuffer() const noexcept;
+
+        VkDeviceSize size() const noexcept;
+
+        template <typename T>
+        void write(const T& data) const
+        {
+                static_assert(is_vector<T> || is_array<T>);
+                copy_to(0, data.data(), binary_size(data));
+        }
+
+        template <typename T>
+        std::enable_if_t<is_vector<T> || is_array<T>> read(T* data) const
+        {
+                copy_from(0, data->data(), binary_size(*data));
+        }
+
+        template <typename T>
+        std::enable_if_t<!is_vector<T> && !is_array<T>> read(T* data) const
+        {
+                copy_from(0, data, sizeof(T));
+        }
+};
+
+class StorageBufferWithDeviceLocalMemory final
+{
+        VkDevice m_device;
+        VkDeviceSize m_data_size;
+
+        Buffer m_buffer;
+        DeviceMemory m_device_memory;
+
+public:
+        StorageBufferWithDeviceLocalMemory(const Device& device, VkDeviceSize data_size);
+
+        StorageBufferWithDeviceLocalMemory(const StorageBufferWithDeviceLocalMemory&) = delete;
+        StorageBufferWithDeviceLocalMemory& operator=(const StorageBufferWithDeviceLocalMemory&) = delete;
+        StorageBufferWithDeviceLocalMemory& operator=(StorageBufferWithDeviceLocalMemory&&) = delete;
+
+        StorageBufferWithDeviceLocalMemory(StorageBufferWithDeviceLocalMemory&&) = default;
+        ~StorageBufferWithDeviceLocalMemory() = default;
+
+        //
+
+        operator VkBuffer() const noexcept;
+
+        VkDeviceSize size() const noexcept;
 };
 
 class IndirectBufferWithHostVisibleMemory final
