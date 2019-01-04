@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "com/color/conversion_span.h"
+#include "com/container.h"
 #include "com/error.h"
 #include "com/type/detect.h"
 #include "graphics/opengl/functions/opengl_functions.h"
@@ -202,20 +203,14 @@ class StorageBuffer final
         void copy_to(GLintptr offset, const void* data, GLsizeiptr data_size) const noexcept;
         void copy_from(GLintptr offset, void* data, GLsizeiptr data_size) const noexcept;
 
-        template <typename T>
-        static std::enable_if_t<is_vector<T> || is_array<T>, size_t> binary_size(const T& c) noexcept
-        {
-                return c.size() * sizeof(typename T::value_type);
-        }
-
 public:
         explicit StorageBuffer(GLsizeiptr data_size) noexcept : m_buffer(GL_SHADER_STORAGE_BUFFER), m_data_size(data_size)
         {
                 glNamedBufferStorage(m_buffer, data_size, nullptr, GL_MAP_WRITE_BIT | GL_MAP_READ_BIT);
         }
 
-        template <typename T, typename = std::enable_if_t<sizeof(std::declval<T>().size()) && sizeof(typename T::value_type)>>
-        explicit StorageBuffer(const T& data) noexcept : StorageBuffer(binary_size(data))
+        template <typename T, typename = std::enable_if_t<sizeof(std::declval<T>().size()) && sizeof(std::declval<T>().data())>>
+        explicit StorageBuffer(const T& data) noexcept : StorageBuffer(storage_size(data))
         {
                 write(data);
         }
@@ -234,13 +229,13 @@ public:
         void write(const T& data) const noexcept
         {
                 static_assert(is_vector<T> || is_array<T>);
-                copy_to(0, data.data(), binary_size(data));
+                copy_to(0, data.data(), storage_size(data));
         }
 
         template <typename T>
         std::enable_if_t<is_vector<T> || is_array<T>> read(T* data) const noexcept
         {
-                copy_from(0, data->data(), binary_size(*data));
+                copy_from(0, data->data(), storage_size(*data));
         }
 
         template <typename T>
@@ -257,20 +252,14 @@ class ArrayBuffer final
 
         void copy_to(GLintptr offset, const void* data, GLsizeiptr data_size) const noexcept;
 
-        template <typename T>
-        static std::enable_if_t<is_vector<T> || is_array<T>, size_t> binary_size(const T& c) noexcept
-        {
-                return c.size() * sizeof(typename T::value_type);
-        }
-
 public:
         explicit ArrayBuffer(GLsizeiptr data_size) noexcept : m_buffer(GL_ARRAY_BUFFER), m_data_size(data_size)
         {
                 glNamedBufferStorage(m_buffer, data_size, nullptr, GL_MAP_WRITE_BIT);
         }
 
-        template <typename T, typename = std::enable_if_t<sizeof(std::declval<T>().size()) && sizeof(typename T::value_type)>>
-        explicit ArrayBuffer(const T& data) noexcept : ArrayBuffer(binary_size(data))
+        template <typename T, typename = std::enable_if_t<sizeof(std::declval<T>().size()) && sizeof(std::declval<T>().data())>>
+        explicit ArrayBuffer(const T& data) noexcept : ArrayBuffer(storage_size(data))
         {
                 write(data);
         }
@@ -289,7 +278,7 @@ public:
         void write(const T& data) const noexcept
         {
                 static_assert(is_vector<T> || is_array<T>);
-                copy_to(0, data.data(), binary_size(data));
+                copy_to(0, data.data(), storage_size(data));
         }
 };
 

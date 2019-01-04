@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "container.h"
+
 #include <array>
 #include <functional>
 #include <string_view>
@@ -45,7 +47,7 @@ size_t hash_as_string(const std::array<T, N>& v)
         static_assert(std::is_integral_v<T> || std::is_floating_point_v<T>);
 
         const char* s = reinterpret_cast<const char*>(v.data());
-        size_t size = v.size() * sizeof(v[0]);
+        size_t size = storage_size(v);
 
         // return jenkins_one_at_a_time_hash(s, size);
         return std::hash<std::string_view>()(std::string_view(s, size));

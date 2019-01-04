@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "text.h"
 
+#include "com/container.h"
 #include "com/error.h"
 #include "com/font/font.h"
 #include "com/font/glyphs.h"
@@ -115,7 +116,7 @@ class OpenGLText::Impl final
 
                 text_vertices(m_glyphs, step_y, x, y, text, &vertices);
 
-                const size_t data_size = vertices.size() * sizeof(vertices[0]);
+                const size_t data_size = storage_size(vertices);
 
                 if (!m_vertex_buffer || m_vertex_buffer->size() < data_size)
                 {

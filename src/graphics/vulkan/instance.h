@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "objects.h"
 #include "swapchain.h"
 
+#include "com/container.h"
 #include "com/type/detect.h"
 
 #include <functional>
@@ -127,8 +128,7 @@ public:
         {
                 static_assert(is_vector<T> || is_array<T>);
                 return VertexBufferWithDeviceLocalMemory(m_device, m_transfer_command_pool, m_transfer_queue,
-                                                         m_buffer_family_indices, data.size() * sizeof(typename T::value_type),
-                                                         data.data());
+                                                         m_buffer_family_indices, storage_size(data), data.data());
         }
 
         template <typename T>
@@ -136,8 +136,7 @@ public:
         {
                 static_assert(is_vector<T> || is_array<T>);
                 return IndexBufferWithDeviceLocalMemory(m_device, m_transfer_command_pool, m_transfer_queue,
-                                                        m_buffer_family_indices, data.size() * sizeof(typename T::value_type),
-                                                        data.data());
+                                                        m_buffer_family_indices, storage_size(data), data.data());
         }
 
         template <typename T>

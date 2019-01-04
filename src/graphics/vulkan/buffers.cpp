@@ -465,7 +465,7 @@ void staging_image_copy(const vulkan::Device& device, VkCommandPool graphics_com
                       std::is_same_v<typename T::value_type, float>);
         static_assert(std::is_same_v<typename T::value_type, std::remove_cv_t<std::remove_reference_t<decltype(pixels[0])>>>);
 
-        VkDeviceSize data_size = pixels.size() * sizeof(pixels[0]);
+        VkDeviceSize data_size = storage_size(pixels);
 
         vulkan::Buffer staging_buffer(create_buffer(device, data_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, {}));
 

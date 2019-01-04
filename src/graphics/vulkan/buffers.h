@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "objects.h"
 
+#include "com/container.h"
 #include "com/error.h"
 #include "com/type/detect.h"
 
@@ -151,18 +152,12 @@ class StorageBufferWithHostVisibleMemory final
         void copy_to(VkDeviceSize offset, const void* data, VkDeviceSize data_size) const;
         void copy_from(VkDeviceSize offset, void* data, VkDeviceSize data_size) const;
 
-        template <typename T>
-        static std::enable_if_t<is_vector<T> || is_array<T>, size_t> binary_size(const T& c) noexcept
-        {
-                return c.size() * sizeof(typename T::value_type);
-        }
-
 public:
         StorageBufferWithHostVisibleMemory(const Device& device, VkDeviceSize data_size);
 
-        template <typename T, typename = std::enable_if_t<sizeof(std::declval<T>().size()) && sizeof(typename T::value_type)>>
+        template <typename T, typename = std::enable_if_t<sizeof(std::declval<T>().size()) && sizeof(std::declval<T>().data())>>
         explicit StorageBufferWithHostVisibleMemory(const Device& device, const T& data)
-                : StorageBufferWithHostVisibleMemory(device, binary_size(data))
+                : StorageBufferWithHostVisibleMemory(device, storage_size(data))
         {
                 write(data);
         }
@@ -184,13 +179,13 @@ public:
         void write(const T& data) const
         {
                 static_assert(is_vector<T> || is_array<T>);
-                copy_to(0, data.data(), binary_size(data));
+                copy_to(0, data.data(), storage_size(data));
         }
 
         template <typename T>
         std::enable_if_t<is_vector<T> || is_array<T>> read(T* data) const
         {
-                copy_from(0, data->data(), binary_size(*data));
+                copy_from(0, data->data(), storage_size(*data));
         }
 
         template <typename T>
