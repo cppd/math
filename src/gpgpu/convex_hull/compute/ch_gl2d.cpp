@@ -48,12 +48,6 @@ constexpr const char filter_shader[]
 };
 // clang-format on
 
-constexpr int LINES_PREPARE_BINDING = 0;
-constexpr int LINES_MERGE_BINDING = 0;
-constexpr int LINES_FILTER_BINDING = 0;
-constexpr int POINTS_BINDING = 1;
-constexpr int POINT_COUNT_BINDING = 2;
-
 namespace
 {
 int group_size_prepare(int width, int shared_size_per_thread)
@@ -127,10 +121,85 @@ std::string filter_source(int line_size)
         return s + filter_shader;
 }
 
+class FilterMemory
+{
+        static constexpr int LINES_BINDING = 0;
+        static constexpr int POINTS_BINDING = 1;
+        static constexpr int POINT_COUNT_BINDING = 2;
+
+        const opengl::StorageBuffer* m_lines = nullptr;
+        const opengl::StorageBuffer* m_points = nullptr;
+        const opengl::StorageBuffer* m_point_count = nullptr;
+
+public:
+        void set_lines(const opengl::StorageBuffer& lines)
+        {
+                m_lines = &lines;
+        }
+
+        void set_points(const opengl::StorageBuffer& points)
+        {
+                m_points = &points;
+        }
+
+        void set_point_count(const opengl::StorageBuffer& point_count)
+        {
+                m_point_count = &point_count;
+        }
+
+        void bind() const
+        {
+                ASSERT(m_lines && m_points && m_point_count);
+
+                m_lines->bind(LINES_BINDING);
+                m_points->bind(POINTS_BINDING);
+                m_point_count->bind(POINT_COUNT_BINDING);
+        }
+};
+
+class MergeMemory
+{
+        static constexpr int LINES_BINDING = 0;
+
+        const opengl::StorageBuffer* m_lines = nullptr;
+
+public:
+        void set_lines(const opengl::StorageBuffer& lines)
+        {
+                m_lines = &lines;
+        }
+
+        void bind() const
+        {
+                ASSERT(m_lines);
+
+                m_lines->bind(LINES_BINDING);
+        }
+};
+
+class PrepareMemory
+{
+        static constexpr int LINES_BINDING = 0;
+
+        const opengl::StorageBuffer* m_lines = nullptr;
+
+public:
+        void set_lines(const opengl::StorageBuffer& lines)
+        {
+                m_lines = &lines;
+        }
+
+        void bind() const
+        {
+                ASSERT(m_lines);
+
+                m_lines->bind(LINES_BINDING);
+        }
+};
+
 class Impl final : public ConvexHullGL2D
 {
         const int m_height;
-        const opengl::StorageBuffer& m_points;
 
         opengl::ComputeProgram m_prepare_prog;
         opengl::ComputeProgram m_merge_prog;
@@ -139,23 +208,25 @@ class Impl final : public ConvexHullGL2D
         opengl::StorageBuffer m_lines;
         opengl::StorageBuffer m_point_count;
 
+        FilterMemory m_filter_memory;
+        MergeMemory m_merge_memory;
+        PrepareMemory m_prepare_memory;
+
         int exec() override
         {
                 // Поиск минимума и максимума для каждой строки.
                 // Если нет, то -1.
-                m_lines.bind(LINES_PREPARE_BINDING);
+                m_prepare_memory.bind();
                 m_prepare_prog.dispatch_compute(m_height, 1, 1);
                 glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
                 // Объединение оболочек, начиная от 4 элементов.
-                m_lines.bind(LINES_MERGE_BINDING);
+                m_merge_memory.bind();
                 m_merge_prog.dispatch_compute(2, 1, 1);
                 glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
                 // Выбрасывание элементов со значением -1.
-                m_lines.bind(LINES_FILTER_BINDING);
-                m_points.bind(POINTS_BINDING);
-                m_point_count.bind(POINT_COUNT_BINDING);
+                m_filter_memory.bind();
                 m_filter_prog.dispatch_compute(1, 1, 1);
                 glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
@@ -168,7 +239,6 @@ class Impl final : public ConvexHullGL2D
 public:
         Impl(const opengl::TextureR32I& objects, const opengl::StorageBuffer& points)
                 : m_height(objects.texture().height()),
-                  m_points(points),
                   m_prepare_prog(opengl::ComputeShader(
                           prepare_source(m_height, group_size_prepare(objects.texture().width(), 2 * sizeof(GLint))))),
                   m_merge_prog(opengl::ComputeShader(
@@ -177,8 +247,20 @@ public:
                   m_lines(2 * m_height * sizeof(GLfloat)),
                   m_point_count(sizeof(GLint))
         {
+                m_filter_memory.set_lines(m_lines);
+                m_filter_memory.set_points(points);
+                m_filter_memory.set_point_count(m_point_count);
+
+                m_merge_memory.set_lines(m_lines);
+
+                m_prepare_memory.set_lines(m_lines);
                 m_prepare_prog.set_uniform_handle("objects", objects.image_resident_handle_read_only());
         }
+
+        Impl(const Impl&) = delete;
+        Impl(Impl&&) = delete;
+        Impl& operator=(const Impl&) = delete;
+        Impl& operator=(Impl&&) = delete;
 };
 }
 
