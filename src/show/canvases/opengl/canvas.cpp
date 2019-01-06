@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "canvas.h"
 
-#include "gpgpu/convex_hull/show/ch_show.h"
+#include "gpgpu/convex_hull/show/opengl/ch_show.h"
 #include "gpgpu/dft/show/dft_show.h"
 #include "gpgpu/optical_flow/show/of_show.h"
 #include "gpgpu/pencil_sketch/show/ps_show.h"
