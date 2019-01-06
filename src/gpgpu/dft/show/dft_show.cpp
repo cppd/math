@@ -26,11 +26,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <vector>
 
 // clang-format off
-constexpr const char dft_show_vertex_shader[]
+constexpr const char vertex_shader[]
 {
 #include "dft_show.vert.str"
 };
-constexpr const char dft_show_fragment_shader[]
+constexpr const char fragment_shader[]
 {
 #include "dft_show.frag.str"
 };
@@ -115,7 +115,7 @@ public:
                   m_image_texture(width, height),
                   m_dft(create_dft_compute_texture(width, height, m_image_texture)),
                   m_vertex_buffer(sizeof(Vertex) * VERTEX_COUNT),
-                  m_draw_prog(opengl::VertexShader(dft_show_vertex_shader), opengl::FragmentShader(dft_show_fragment_shader))
+                  m_draw_prog(opengl::VertexShader(vertex_shader), opengl::FragmentShader(fragment_shader))
         {
                 m_vertex_array.attrib(0, 4, GL_FLOAT, m_vertex_buffer, offsetof(Vertex, v), sizeof(Vertex));
                 m_vertex_array.attrib(1, 2, GL_FLOAT, m_vertex_buffer, offsetof(Vertex, t), sizeof(Vertex));

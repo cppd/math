@@ -43,11 +43,11 @@ constexpr int INDIRECT_BUFFER_COMMAND_NUMBER = 0;
 constexpr int VERTEX_BUFFER_FIRST_SIZE = 10;
 
 // clang-format off
-constexpr uint32_t text_vert[]
+constexpr uint32_t vertex_shader[]
 {
 #include "text.vert.spr"
 };
-constexpr uint32_t text_frag[]
+constexpr uint32_t fragment_shader[]
 {
 #include "text.frag.spr"
 };
@@ -249,8 +249,8 @@ class Impl final : public VulkanText
                   m_glyph_texture(instance.create_grayscale_texture(glyphs.width(), glyphs.height(), std::move(glyphs.pixels()))),
                   m_glyphs(std::move(glyphs.glyphs())),
                   m_shader_memory(instance.device(), m_sampler, &m_glyph_texture),
-                  m_text_vert(m_instance.device(), text_vert, "main"),
-                  m_text_frag(m_instance.device(), text_frag, "main"),
+                  m_text_vert(m_instance.device(), vertex_shader, "main"),
+                  m_text_frag(m_instance.device(), fragment_shader, "main"),
                   m_pipeline_layout(vulkan::create_pipeline_layout(m_instance.device(), {TEXT_SET_NUMBER},
                                                                    {m_shader_memory.descriptor_set_layout()})),
                   m_vertex_buffer(std::in_place, m_instance.device(), VERTEX_BUFFER_FIRST_SIZE),

@@ -33,11 +33,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <unordered_map>
 
 // clang-format off
-constexpr const char text_vertex_shader[]
+constexpr const char vertex_shader[]
 {
 #include "text.vert.str"
 };
-constexpr const char text_fragment_shader[]
+constexpr const char fragment_shader[]
 {
 #include "text.frag.str"
 };
@@ -137,7 +137,7 @@ class OpenGLText::Impl final
 
 public:
         Impl(int size, const Color& color, const mat4& matrix)
-                : m_program(opengl::VertexShader(text_vertex_shader), opengl::FragmentShader(text_fragment_shader))
+                : m_program(opengl::VertexShader(vertex_shader), opengl::FragmentShader(fragment_shader))
         {
                 set_color(color);
                 set_matrix(matrix);

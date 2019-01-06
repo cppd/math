@@ -37,11 +37,11 @@ constexpr const char fragment_shader[]
 {
 #include "of_show.frag.str"
 };
-constexpr const char vertex_debug_shader[]
+constexpr const char debug_vertex_shader[]
 {
 #include "of_debug.vert.str"
 };
-constexpr const char fragment_debug_shader[]
+constexpr const char debug_fragment_shader[]
 {
 #include "of_debug.frag.str"
 };
@@ -144,7 +144,7 @@ public:
                 : m_width(width),
                   m_height(height),
                   m_draw_prog(opengl::VertexShader(vertex_shader), opengl::FragmentShader(fragment_shader)),
-                  m_draw_prog_debug(opengl::VertexShader(vertex_debug_shader), opengl::FragmentShader(fragment_debug_shader)),
+                  m_draw_prog_debug(opengl::VertexShader(debug_vertex_shader), opengl::FragmentShader(debug_fragment_shader)),
                   m_source_image(m_width, m_height)
         {
                 std::vector<vec2i> points;
