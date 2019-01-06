@@ -63,7 +63,8 @@ VkWriteDescriptorSet create_write_descriptor_set(VkDescriptorSet descriptor_set,
 
         auto buffer = [&](const VkDescriptorBufferInfo& info) noexcept
         {
-                ASSERT(descriptor_set_layout_binding.descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+                ASSERT(descriptor_set_layout_binding.descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER ||
+                       descriptor_set_layout_binding.descriptorType == VK_DESCRIPTOR_TYPE_STORAGE_BUFFER);
                 write_descriptor_set.pBufferInfo = &info;
         };
         auto image = [&](const VkDescriptorImageInfo& info) noexcept
