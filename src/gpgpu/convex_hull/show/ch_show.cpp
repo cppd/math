@@ -37,14 +37,15 @@ constexpr const char fragment_shader[]
 // rad / ms
 constexpr double ANGULAR_FREQUENCY = TWO_PI<double> * 5;
 
-constexpr int DATA_BINDING = 0;
-constexpr int POINTS_BINDING = 1;
-
 namespace
 {
 class ShaderMemory
 {
+        static constexpr int DATA_BINDING = 0;
+        static constexpr int POINTS_BINDING = 1;
+
         opengl::UniformBuffer m_buffer;
+        const opengl::StorageBuffer* m_points = nullptr;
 
         struct Data
         {
@@ -69,9 +70,17 @@ public:
                 m_buffer.copy(offsetof(Data, brightness), b);
         }
 
-        void bind(int point) const
+        void set_points(const opengl::StorageBuffer& points)
         {
-                m_buffer.bind(point);
+                m_points = &points;
+        }
+
+        void bind() const
+        {
+                ASSERT(m_points);
+
+                m_buffer.bind(DATA_BINDING);
+                m_points->bind(POINTS_BINDING);
         }
 };
 }
@@ -93,6 +102,7 @@ public:
                 m_convex_hull = create_convex_hull_gl2d(objects, m_points);
 
                 m_shader_memory.set_matrix(matrix);
+                m_shader_memory.set_points(m_points);
         }
 
         Impl(const Impl&) = delete;
@@ -112,8 +122,7 @@ public:
                 float brightness = 0.5 + 0.5 * std::sin(ANGULAR_FREQUENCY * (time_in_seconds() - m_start_time));
                 m_shader_memory.set_brightness(brightness);
 
-                m_points.bind(POINTS_BINDING);
-                m_shader_memory.bind(DATA_BINDING);
+                m_shader_memory.bind();
                 m_draw_prog.draw_arrays(GL_LINE_LOOP, 0, point_count);
         }
 };
