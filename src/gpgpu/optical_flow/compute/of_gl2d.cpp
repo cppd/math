@@ -315,7 +315,7 @@ void create_flow_buffers(const std::vector<vec2i>& level_dimensions, std::vector
         }
 }
 
-class Impl final : public OpticalFlowGL2D
+class Impl final : public OpticalFlowCompute
 {
         const int m_width, m_height;
         const int m_groups_x, m_groups_y;
@@ -532,10 +532,10 @@ public:
 };
 }
 
-std::unique_ptr<OpticalFlowGL2D> create_optical_flow_gl2d(int width, int height, const opengl::TextureRGBA32F& source_image,
-                                                          int top_point_count_x, int top_point_count_y,
-                                                          const opengl::StorageBuffer& top_points,
-                                                          const opengl::StorageBuffer& top_points_flow)
+std::unique_ptr<OpticalFlowCompute> create_optical_flow_compute(int width, int height, const opengl::TextureRGBA32F& source_image,
+                                                                int top_point_count_x, int top_point_count_y,
+                                                                const opengl::StorageBuffer& top_points,
+                                                                const opengl::StorageBuffer& top_points_flow)
 {
         return std::make_unique<Impl>(width, height, source_image, top_point_count_x, top_point_count_y, top_points,
                                       top_points_flow);

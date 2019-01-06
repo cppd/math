@@ -197,7 +197,7 @@ public:
         }
 };
 
-class Impl final : public ConvexHullGL2D
+class Impl final : public ConvexHullCompute
 {
         const int m_height;
 
@@ -264,8 +264,8 @@ public:
 };
 }
 
-std::unique_ptr<ConvexHullGL2D> create_convex_hull_gl2d(const opengl::TextureR32I& object_image,
-                                                        const opengl::StorageBuffer& points)
+std::unique_ptr<ConvexHullCompute> create_convex_hull_compute(const opengl::TextureR32I& object_image,
+                                                              const opengl::StorageBuffer& points)
 {
         return std::make_unique<Impl>(object_image, points);
 }

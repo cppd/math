@@ -230,7 +230,7 @@ void fft1d(bool inverse, int fft_count, const DeviceProgFFTShared<FP>& fft, cons
 }
 
 template <typename FP>
-class Impl final : public FourierGL1, public FourierGL2
+class Impl final : public DFTCompute, public DFTComputeTexture
 {
         const int m_n1, m_n2, m_m1, m_m2, m_m1_bin, m_m2_bin;
         DeviceMemory<std::complex<FP>> m_d1_fwd, m_d1_inv, m_d2_fwd, m_d2_inv;
@@ -290,7 +290,7 @@ class Impl final : public FourierGL1, public FourierGL2
 
                 glFinish();
 
-                LOG("calc gl2d: " + to_string_fixed(1000.0 * (time_in_seconds() - start_time), 5) + " ms");
+                LOG("calc OpenGL: " + to_string_fixed(1000.0 * (time_in_seconds() - start_time), 5) + " ms");
 
                 m_x_d.read(&data);
 
@@ -363,12 +363,12 @@ public:
 };
 }
 
-std::unique_ptr<FourierGL1> create_dft_gl2d(int x, int y)
+std::unique_ptr<DFTCompute> create_dft_compute(int x, int y)
 {
         return std::make_unique<Impl<float>>(x, y, nullptr);
 }
 
-std::unique_ptr<FourierGL2> create_dft_gl2d(int x, int y, const opengl::TextureRGBA32F& texture)
+std::unique_ptr<DFTComputeTexture> create_dft_compute_texture(int x, int y, const opengl::TextureRGBA32F& texture)
 {
         return std::make_unique<Impl<float>>(x, y, &texture);
 }

@@ -23,17 +23,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <memory>
 #include <vector>
 
-struct FourierGL1
+struct DFTCompute
 {
-        virtual ~FourierGL1() = default;
+        virtual ~DFTCompute() = default;
         virtual void exec(bool inverse, std::vector<std::complex<float>>* src) = 0;
 };
 
-struct FourierGL2
+struct DFTComputeTexture
 {
-        virtual ~FourierGL2() = default;
+        virtual ~DFTComputeTexture() = default;
         virtual void exec(bool inverse, bool srgb) = 0;
 };
 
-std::unique_ptr<FourierGL1> create_dft_gl2d(int x, int y);
-std::unique_ptr<FourierGL2> create_dft_gl2d(int x, int y, const opengl::TextureRGBA32F& texture);
+std::unique_ptr<DFTCompute> create_dft_compute(int x, int y);
+std::unique_ptr<DFTComputeTexture> create_dft_compute_texture(int x, int y, const opengl::TextureRGBA32F& texture);

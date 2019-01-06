@@ -21,10 +21,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <memory>
 
-struct ConvexHullGL2D
+struct ConvexHullCompute
 {
-        virtual ~ConvexHullGL2D() = default;
+        virtual ~ConvexHullCompute() = default;
         virtual int exec() = 0;
 };
 
-std::unique_ptr<ConvexHullGL2D> create_convex_hull_gl2d(const opengl::TextureR32I& objects, const opengl::StorageBuffer& points);
+std::unique_ptr<ConvexHullCompute> create_convex_hull_compute(const opengl::TextureR32I& objects,
+                                                              const opengl::StorageBuffer& points);

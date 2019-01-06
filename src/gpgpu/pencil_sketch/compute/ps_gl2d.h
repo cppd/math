@@ -21,13 +21,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <memory>
 
-struct PencilSketchGL2D
+struct PencilSketchCompute
 {
-        virtual ~PencilSketchGL2D() = default;
+        virtual ~PencilSketchCompute() = default;
 
         virtual void exec() = 0;
 };
 
-std::unique_ptr<PencilSketchGL2D> create_pencil_sketch_gl2d(const opengl::TextureRGBA32F& input, bool input_is_srgb,
-                                                            const opengl::TextureR32I& objects,
-                                                            const opengl::TextureRGBA32F& output);
+std::unique_ptr<PencilSketchCompute> create_pencil_sketch_compute(const opengl::TextureRGBA32F& input, bool input_is_srgb,
+                                                                  const opengl::TextureR32I& objects,
+                                                                  const opengl::TextureRGBA32F& output);

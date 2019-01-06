@@ -171,15 +171,15 @@ std::string time_string(double start_time)
         return to_string_fixed(1000.0 * (time_in_seconds() - start_time), 5) + " ms";
 }
 
-void compute_gl2d(bool inverse, int n1, int n2, std::vector<complex>* data)
+void compute_opengl(bool inverse, int n1, int n2, std::vector<complex>* data)
 {
-        LOG("----- GL2D -----");
+        LOG("----- OpenGL -----");
         double start_time = time_in_seconds();
 
-        std::unique_ptr<FourierGL1> gl2d = create_dft_gl2d(n1, n2);
-        gl2d->exec(inverse, data);
+        std::unique_ptr<DFTCompute> dft = create_dft_compute(n1, n2);
+        dft->exec(inverse, data);
 
-        LOG("GL2D time: " + time_string(start_time));
+        LOG("OpenGL time: " + time_string(start_time));
 }
 
 #if defined(CUDA_FOUND)
@@ -209,7 +209,7 @@ void compute_fftw(bool inverse, int n1, int n2, std::vector<complex>* data)
 #endif
 
 void dft_test(const int n1, const int n2, const std::vector<complex>& source_data, ProgressRatio* progress,
-              const std::string& output_gl2d_file_name, const std::string& output_inverse_gl2d_file_name,
+              const std::string& output_opengl_file_name, const std::string& output_inverse_opengl_file_name,
               [[maybe_unused]] const std::string& output_cuda_file_name,
               [[maybe_unused]] const std::string& output_inverse_cuda_file_name,
               [[maybe_unused]] const std::string& output_fftw_file_name,
@@ -227,15 +227,15 @@ void dft_test(const int n1, const int n2, const std::vector<complex>& source_dat
         int computation = 0;
         progress->set(0, computation_count);
 
-        std::vector<complex> data_gl2d(source_data);
-        compute_gl2d(false, n1, n2, &data_gl2d);
-        save_data(output_gl2d_file_name, data_gl2d);
+        std::vector<complex> data_opengl(source_data);
+        compute_opengl(false, n1, n2, &data_opengl);
+        save_data(output_opengl_file_name, data_opengl);
 
         progress->set(++computation, computation_count);
 
-        std::vector<complex> data_gl2d_inverse(data_gl2d);
-        compute_gl2d(true, n1, n2, &data_gl2d_inverse);
-        save_data(output_inverse_gl2d_file_name, data_gl2d_inverse);
+        std::vector<complex> data_opengl_inverse(data_opengl);
+        compute_opengl(true, n1, n2, &data_opengl_inverse);
+        save_data(output_inverse_opengl_file_name, data_opengl_inverse);
 
         progress->set(++computation, computation_count);
 
@@ -245,13 +245,13 @@ void dft_test(const int n1, const int n2, const std::vector<complex>& source_dat
 
                 compute_cuda(false, n1, n2, &data);
                 save_data(output_cuda_file_name, data);
-                check_discrepancy("cuFFT", data_gl2d, data);
+                check_discrepancy("cuFFT", data_opengl, data);
 
                 progress->set(++computation, computation_count);
 
                 compute_cuda(true, n1, n2, &data);
                 save_data(output_inverse_cuda_file_name, data);
-                check_discrepancy("Inverse cuFFT", data_gl2d_inverse, data);
+                check_discrepancy("Inverse cuFFT", data_opengl_inverse, data);
 
                 progress->set(++computation, computation_count);
         }
@@ -263,13 +263,13 @@ void dft_test(const int n1, const int n2, const std::vector<complex>& source_dat
 
                 compute_fftw(false, n1, n2, &data);
                 save_data(output_fftw_file_name, data);
-                check_discrepancy("FFTW", data_gl2d, data);
+                check_discrepancy("FFTW", data_opengl, data);
 
                 progress->set(++computation, computation_count);
 
                 compute_fftw(true, n1, n2, &data);
                 save_data(output_inverse_fftw_file_name, data);
-                check_discrepancy("Inverse FFTW", data_gl2d_inverse, data);
+                check_discrepancy("Inverse FFTW", data_opengl_inverse, data);
 
                 progress->set(++computation, computation_count);
         }
@@ -310,11 +310,14 @@ void random_data_test(const std::array<int, 2>& dimensions, ProgressRatio* progr
         LOG("\n----- Random Data DFT Tests -----");
 
         const std::string tmp_dir = temp_directory();
+
         const std::string input_file_name = tmp_dir + "/dft_input.txt";
-        const std::string gl2d_file_name = tmp_dir + "/dft_output_gl2d.txt";
+
+        const std::string opengl_file_name = tmp_dir + "/dft_output_opengl.txt";
         const std::string cuda_file_name = tmp_dir + "/dft_output_cuda.txt";
         const std::string fftw_file_name = tmp_dir + "/dft_output_fftw.txt";
-        const std::string inverse_gl2d_file_name = tmp_dir + "/dft_output_inverse_gl2d.txt";
+
+        const std::string inverse_opengl_file_name = tmp_dir + "/dft_output_inverse_opengl.txt";
         const std::string inverse_cuda_file_name = tmp_dir + "/dft_output_inverse_cuda.txt";
         const std::string inverse_fftw_file_name = tmp_dir + "/dft_output_inverse_fftw.txt";
 
@@ -330,8 +333,8 @@ void random_data_test(const std::array<int, 2>& dimensions, ProgressRatio* progr
                       "), loaded from file (" + to_string(n1) + ", " + to_string(n2) + ")");
         }
 
-        dft_test(n1, n2, source_data, progress, gl2d_file_name, inverse_gl2d_file_name, cuda_file_name, inverse_cuda_file_name,
-                 fftw_file_name, inverse_fftw_file_name);
+        dft_test(n1, n2, source_data, progress, opengl_file_name, inverse_opengl_file_name, cuda_file_name,
+                 inverse_cuda_file_name, fftw_file_name, inverse_fftw_file_name);
 
         LOG("---\nDFT check passed");
 }

@@ -21,9 +21,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <memory>
 
-struct OpticalFlowGL2D
+struct OpticalFlowCompute
 {
-        virtual ~OpticalFlowGL2D() = default;
+        virtual ~OpticalFlowCompute() = default;
 
         virtual void reset() = 0;
         virtual bool exec() = 0;
@@ -32,7 +32,7 @@ struct OpticalFlowGL2D
         virtual GLuint64 image_pyramid_texture() const = 0;
 };
 
-std::unique_ptr<OpticalFlowGL2D> create_optical_flow_gl2d(int width, int height, const opengl::TextureRGBA32F& source_image,
-                                                          int top_point_count_x, int top_point_count_y,
-                                                          const opengl::StorageBuffer& top_points,
-                                                          const opengl::StorageBuffer& top_points_flow);
+std::unique_ptr<OpticalFlowCompute> create_optical_flow_compute(int width, int height, const opengl::TextureRGBA32F& source_image,
+                                                                int top_point_count_x, int top_point_count_y,
+                                                                const opengl::StorageBuffer& top_points,
+                                                                const opengl::StorageBuffer& top_points_flow);

@@ -102,7 +102,7 @@ class DFTShow::Impl final
 
         const bool m_source_srgb;
         opengl::TextureRGBA32F m_image_texture;
-        std::unique_ptr<FourierGL2> m_dft;
+        std::unique_ptr<DFTComputeTexture> m_dft;
         opengl::VertexArray m_vertex_array;
         opengl::ArrayBuffer m_vertex_buffer;
         opengl::GraphicsProgram m_draw_prog;
@@ -113,7 +113,7 @@ public:
              const Color& background_color, const Color& color)
                 : m_source_srgb(source_srgb),
                   m_image_texture(width, height),
-                  m_dft(create_dft_gl2d(width, height, m_image_texture)),
+                  m_dft(create_dft_compute_texture(width, height, m_image_texture)),
                   m_vertex_buffer(sizeof(Vertex) * VERTEX_COUNT),
                   m_draw_prog(opengl::VertexShader(dft_show_vertex_shader), opengl::FragmentShader(dft_show_fragment_shader))
         {

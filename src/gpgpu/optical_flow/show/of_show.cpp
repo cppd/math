@@ -125,7 +125,7 @@ class OpticalFlowShow::Impl final
         bool m_flow_computed = false;
         double m_last_time = limits<double>::lowest();
 
-        std::unique_ptr<OpticalFlowGL2D> m_optical_flow;
+        std::unique_ptr<OpticalFlowCompute> m_optical_flow;
 
         ShaderMemory m_shader_memory;
 
@@ -158,8 +158,8 @@ public:
 
                 m_shader_memory.set_matrix(matrix);
 
-                m_optical_flow = create_optical_flow_gl2d(width, height, m_source_image, point_count_x, point_count_y,
-                                                          *m_top_points, *m_top_points_flow);
+                m_optical_flow = create_optical_flow_compute(width, height, m_source_image, point_count_x, point_count_y,
+                                                             *m_top_points, *m_top_points_flow);
         }
 
         void reset()
