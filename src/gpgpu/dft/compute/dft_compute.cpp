@@ -43,7 +43,7 @@ Chapter 13: FFTs for Arbitrary N.
       h2(l) = h(M - l) для l = M - N + 1,..., M - 1.
 */
 
-#include "dft_gl2d.h"
+#include "dft_compute.h"
 
 #include "memory.h"
 #include "program.h"

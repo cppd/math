@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "dft_show.h"
 
 #include "com/math.h"
-#include "gpgpu/dft/compute/dft_gl2d.h"
+#include "gpgpu/dft/compute/dft_compute.h"
 #include "graphics/opengl/buffers.h"
 #include "graphics/opengl/shader.h"
 

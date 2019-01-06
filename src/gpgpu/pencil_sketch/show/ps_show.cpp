@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "ps_show.h"
 
-#include "gpgpu/pencil_sketch/compute/ps_gl2d.h"
+#include "gpgpu/pencil_sketch/compute/ps_compute.h"
 #include "graphics/opengl/shader.h"
 
 // clang-format off

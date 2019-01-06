@@ -31,7 +31,7 @@ Packt Publishing, 2015.
 Chapter 5. Tracking Objects in Videos.
 */
 
-#include "of_gl2d.h"
+#include "of_compute.h"
 
 #include "com/error.h"
 #include "com/log.h"
