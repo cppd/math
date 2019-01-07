@@ -39,9 +39,9 @@ layout(binding = 6, r32f) readonly uniform image2D img_I;
 layout(binding = 7) uniform sampler2D tex_J;
 #endif
 
-layout(std430, binding = 0) readonly buffer StorageBufferPoints
+layout(std430, binding = 0) readonly buffer StorageBufferTopPoints
 {
-        ivec2 points[];
+        ivec2 top_points[];
 };
 layout(std430, binding = 1) writeonly buffer StorageBufferPointsFlow
 {
@@ -56,8 +56,8 @@ layout(std140, binding = 3) uniform Data
 {
         int point_count_x;
         int point_count_y;
-        int all_points;
-        int use_guess;
+        bool use_all_points;
+        bool use_guess;
         int guess_kx;
         int guess_ky;
         int guess_width;
@@ -144,7 +144,7 @@ void main(void)
 
         int point_index = int(gl_GlobalInvocationID.y * point_count_x + gl_GlobalInvocationID.x);
 
-        const ivec2 p_screen = (all_points != 0) ? ivec2(gl_GlobalInvocationID.xy) : points[point_index];
+        const ivec2 p_screen = use_all_points ? ivec2(gl_GlobalInvocationID.xy) : top_points[point_index];
         const ivec2 p = screen_to_texture(p_screen);
 
         mat2 g_inv;
@@ -157,7 +157,7 @@ void main(void)
 
         vec2 v = vec2(0, 0);
 
-        vec2 guess = (use_guess != 0) ? get_guess(p_screen) : vec2(0, 0);
+        vec2 guess = use_guess ? get_guess(p_screen) : vec2(0, 0);
 
         // Пишется с 0 вверху экрана, рассчитывается с 0 внизу экрана, поэтому поменять знак y
         guess.y = -guess.y;

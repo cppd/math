@@ -21,7 +21,7 @@ layout(std430, binding = 0) readonly buffer StorageBufferPoints
 };
 layout(std430, binding = 1) readonly buffer StorageBufferPointsFlow
 {
-        vec2 points_optical_flow[];
+        vec2 points_flow[];
 };
 layout(std140, binding = 2) uniform Data
 {
@@ -48,7 +48,7 @@ void main(void)
         }
         else
         {
-                s = round(points[point_number] + points_optical_flow[point_number]);
+                s = round(points[point_number] + points_flow[point_number]);
         }
 
         gl_Position = matrix * vec4(s + 0.5, 0, 1);
