@@ -53,14 +53,16 @@ constexpr double DISTANCE_BETWEEN_POINTS = 2;
 // Интервал ожидания для расчёта потока не для каждого кадра
 // constexpr double COMPUTE_INTERVAL_SECONDS = 1.0 / 10;
 
-constexpr int POINTS_BINDING = 0;
-constexpr int POINTS_FLOW_BINDING = 1;
-constexpr int DATA_BINDING = 2;
-
 namespace
 {
 class ShaderMemory
 {
+        static constexpr int POINTS_BINDING = 0;
+        static constexpr int POINTS_FLOW_BINDING = 1;
+        static constexpr int DATA_BINDING = 2;
+
+        const opengl::StorageBuffer* m_points = nullptr;
+        const opengl::StorageBuffer* m_points_flow = nullptr;
         opengl::UniformBuffer m_buffer;
 
         struct Data
@@ -79,9 +81,23 @@ public:
                 m_buffer.copy(offsetof(Data, matrix), m);
         }
 
-        void bind(int point) const
+        void set_points(const opengl::StorageBuffer& buffer)
         {
-                m_buffer.bind(point);
+                m_points = &buffer;
+        }
+
+        void set_points_flow(const opengl::StorageBuffer& buffer)
+        {
+                m_points_flow = &buffer;
+        }
+
+        void bind() const
+        {
+                ASSERT(m_points && m_points_flow);
+
+                m_points->bind(POINTS_BINDING);
+                m_points_flow->bind(POINTS_FLOW_BINDING);
+                m_buffer.bind(DATA_BINDING);
         }
 };
 
@@ -131,9 +147,7 @@ class OpticalFlowShow::Impl final
 
         void draw_flow_lines()
         {
-                m_top_points->bind(POINTS_BINDING);
-                m_top_points_flow->bind(POINTS_FLOW_BINDING);
-                m_shader_memory.bind(DATA_BINDING);
+                m_shader_memory.bind();
 
                 m_draw_prog.draw_arrays(GL_POINTS, 0, m_top_point_count * 2);
                 m_draw_prog.draw_arrays(GL_LINES, 0, m_top_point_count * 2);
@@ -157,6 +171,8 @@ public:
                 m_top_points_flow = std::make_unique<opengl::StorageBuffer>(points.size() * sizeof(vec2f));
 
                 m_shader_memory.set_matrix(matrix);
+                m_shader_memory.set_points(*m_top_points);
+                m_shader_memory.set_points_flow(*m_top_points_flow);
 
                 m_optical_flow = create_optical_flow_compute(width, height, m_source_image, point_count_x, point_count_y,
                                                              *m_top_points, *m_top_points_flow);
