@@ -62,8 +62,6 @@ constexpr const char points_frag[]
 };
 // clang-format on
 
-constexpr int BUFFER_BINDING = 3;
-
 namespace
 {
 enum class DrawType
@@ -270,7 +268,7 @@ public:
         DrawObject(const Obj<3>& obj, double size, const vec3& position);
 
         void bind_vertices() const;
-        void bind_buffer() const;
+        const opengl::StorageBuffer* materials() const;
 
         const mat4& model_matrix() const;
         unsigned vertices_count() const;
@@ -346,9 +344,9 @@ void DrawObject::bind_vertices() const
 {
         m_vertex_array.bind();
 }
-void DrawObject::bind_buffer() const
+const opengl::StorageBuffer* DrawObject::materials() const
 {
-        m_storage_buffer->bind(BUFFER_BINDING);
+        return m_storage_buffer.get();
 }
 const mat4& DrawObject::model_matrix() const
 {
@@ -541,7 +539,7 @@ class Renderer final : public OpenGLRenderer
                 {
                 case DrawType::Triangles:
                         m_triangles_memory.set_matrix(m_main_matrix * scale_object->model_matrix());
-                        draw_object->bind_buffer();
+                        m_triangles_memory.set_materials(draw_object->materials());
                         m_triangles_memory.bind();
                         main_program.draw_arrays(GL_TRIANGLES, 0, draw_object->vertices_count());
                         break;
