@@ -47,13 +47,13 @@ static_assert(sizeof(TextVertex) == sizeof(Vector<2, GLint>) + sizeof(Vector<2, 
 static_assert(std::is_same_v<decltype(TextVertex::v), Vector<2, GLint>>);
 static_assert(std::is_same_v<decltype(TextVertex::t), Vector<2, GLfloat>>);
 
-constexpr int MATRICES_BINDING = 0;
-constexpr int DRAWING_BINDING = 2;
-
 namespace
 {
 class ShaderMemory
 {
+        static constexpr int MATRICES_BINDING = 0;
+        static constexpr int DRAWING_BINDING = 2;
+
         struct Matrices
         {
                 Matrix<4, 4, float> matrix;
@@ -84,14 +84,10 @@ public:
                 m_drawing.copy(offsetof(Drawing, text_color), c);
         }
 
-        void bind_matrices(int point) const
+        void bind() const
         {
-                m_matrices.bind(point);
-        }
-
-        void bind_drawing(int point) const
-        {
-                m_drawing.bind(point);
+                m_matrices.bind(MATRICES_BINDING);
+                m_drawing.bind(DRAWING_BINDING);
         }
 };
 }
@@ -129,8 +125,7 @@ class OpenGLText::Impl final
 
                 opengl::GLEnableAndRestore<GL_BLEND> e;
 
-                m_shader_memory.bind_matrices(MATRICES_BINDING);
-                m_shader_memory.bind_drawing(DRAWING_BINDING);
+                m_shader_memory.bind();
                 m_vertex_array.bind();
                 m_program.draw_arrays(GL_TRIANGLES, 0, vertices.size());
         }
