@@ -19,11 +19,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // Вставляется в текст программы
 // const uint GROUP_SIZE =
 layout(local_size_x = GROUP_SIZE, local_size_y = GROUP_SIZE) in;
+layout(bindless_image, rgba32f) uniform image2D img;
 #else
 layout(local_size_x_id = 0, local_size_y_id = 0) in;
-#endif
-
 layout(binding = 0, rgba32f) uniform image2D img;
+#endif
 
 vec4 luminance(vec4 c)
 {

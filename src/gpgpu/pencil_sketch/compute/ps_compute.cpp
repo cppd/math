@@ -61,8 +61,6 @@ class Impl final : public PencilSketchCompute
         const int m_groups_x;
         const int m_groups_y;
 
-        const opengl::TextureRGBA32F& m_output;
-
         opengl::ComputeProgram m_compute_prog;
         opengl::ComputeProgram m_luminance_prog;
 
@@ -72,7 +70,6 @@ class Impl final : public PencilSketchCompute
                 glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
                 // Теперь в текстуре находится цвет RGB
-                m_output.bind_image_texture_read_write(0);
                 m_luminance_prog.dispatch_compute(m_groups_x, m_groups_y, 1);
                 glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
         }
@@ -82,13 +79,14 @@ public:
              const opengl::TextureRGBA32F& output)
                 : m_groups_x(group_count(input.texture().width(), GROUP_SIZE)),
                   m_groups_y(group_count(input.texture().height(), GROUP_SIZE)),
-                  m_output(output),
                   m_compute_prog(opengl::ComputeShader(compute_source(input_is_srgb))),
                   m_luminance_prog(opengl::ComputeShader(luminance_source()))
         {
                 m_compute_prog.set_uniform_handle("img_input", input.image_resident_handle_read_only());
                 m_compute_prog.set_uniform_handle("img_output", output.image_resident_handle_write_only());
                 m_compute_prog.set_uniform_handle("img_objects", objects.image_resident_handle_read_only());
+
+                m_luminance_prog.set_uniform_handle("img", output.image_resident_handle_read_write());
         }
 };
 }
