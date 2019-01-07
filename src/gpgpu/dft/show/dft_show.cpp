@@ -36,8 +36,6 @@ constexpr const char fragment_shader[]
 };
 // clang-format on
 
-constexpr int DATA_BINDING = 0;
-
 namespace
 {
 vec4f color_to_vec4f(const Color& c)
@@ -56,6 +54,8 @@ struct Vertex
 
 class ShaderMemory
 {
+        static constexpr int DATA_BINDING = 0;
+
         opengl::UniformBuffer m_buffer;
 
         struct Data
@@ -88,9 +88,9 @@ public:
                 m_buffer.copy(offsetof(Data, foreground_color), c);
         }
 
-        void bind(int point) const
+        void bind() const
         {
-                m_buffer.bind(point);
+                m_buffer.bind(DATA_BINDING);
         }
 };
 
@@ -167,7 +167,7 @@ public:
         {
                 m_dft->exec(false, m_source_srgb);
 
-                m_shader_memory.bind(DATA_BINDING);
+                m_shader_memory.bind();
                 m_vertex_array.bind();
                 m_draw_prog.draw_arrays(GL_TRIANGLE_STRIP, 0, VERTEX_COUNT);
         }
