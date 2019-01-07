@@ -76,13 +76,6 @@ constexpr float STOP_MOVE_SQUARE = square(1e-3f);
 // Если определитель матрицы G меньше этого значения, то считается, что нет потока
 constexpr float MIN_DETERMINANT = 1;
 
-constexpr int DOWNSAMPLE_UNIFORM_BINDING = 0;
-
-constexpr int FLOW_POINTS_BINDING = 0;
-constexpr int FLOW_POINTS_FLOW_BINDING = 1;
-constexpr int FLOW_POINTS_FLOW_GUESS_BINDING = 2;
-constexpr int FLOW_UNIFORM_BINDING = 3;
-
 namespace
 {
 std::string group_size_string()
@@ -124,6 +117,8 @@ std::string sobel_source()
 
 class DownsampleMemory
 {
+        static constexpr int DATA_BINDING = 0;
+
         opengl::UniformBuffer m_buffer;
 
         struct Data
@@ -143,14 +138,23 @@ public:
                 m_buffer.copy(0, d);
         }
 
-        void bind(int point) const
+        void bind() const
         {
-                m_buffer.bind(point);
+                m_buffer.bind(DATA_BINDING);
         }
 };
 
 class FlowMemory
 {
+        static constexpr int POINTS_BINDING = 0;
+        static constexpr int POINTS_FLOW_BINDING = 1;
+        static constexpr int POINTS_FLOW_GUESS_BINDING = 2;
+        static constexpr int DATA_BINDING = 3;
+
+        const opengl::StorageBuffer* m_points = nullptr;
+        const opengl::StorageBuffer* m_points_flow = nullptr;
+        const opengl::StorageBuffer* m_points_flow_guess = nullptr;
+
         opengl::UniformBuffer m_buffer;
 
         struct Data
@@ -212,9 +216,38 @@ public:
                 m_buffer.copy(offset, offset, size, data);
         }
 
-        void bind(int point) const
+        void set_points(const opengl::StorageBuffer& buffer)
         {
-                m_buffer.bind(point);
+                m_points = &buffer;
+        }
+
+        void set_points_flow(const opengl::StorageBuffer& buffer)
+        {
+                m_points_flow = &buffer;
+        }
+
+        void set_points_flow_guess(const opengl::StorageBuffer& buffer)
+        {
+                m_points_flow_guess = &buffer;
+        }
+
+        void bind() const
+        {
+                ASSERT(m_points_flow);
+
+                if (m_points)
+                {
+                        m_points->bind(POINTS_BINDING);
+                }
+
+                m_points_flow->bind(POINTS_FLOW_BINDING);
+
+                if (m_points_flow_guess)
+                {
+                        m_points_flow_guess->bind(POINTS_FLOW_GUESS_BINDING);
+                }
+
+                m_buffer.bind(DATA_BINDING);
         }
 };
 
@@ -364,7 +397,7 @@ class Impl final : public OpticalFlowCompute
                         m_comp_downsample.set_uniform_handle("img_big", img_big.image_read_handle());
                         m_comp_downsample.set_uniform_handle("img_small", img_small.image_write_handle());
                         m_downsample_memory.set(k_x, k_y);
-                        m_downsample_memory.bind(DOWNSAMPLE_UNIFORM_BINDING);
+                        m_downsample_memory.bind();
 
                         int groups_x = group_count(img_small.width(), GROUP_SIZE);
                         int groups_y = group_count(img_small.height(), GROUP_SIZE);
@@ -408,7 +441,7 @@ class Impl final : public OpticalFlowCompute
 
                                 m_flow_memory.set_all_points(1);
 
-                                image_pyramid_flow[i].bind(FLOW_POINTS_FLOW_BINDING);
+                                m_flow_memory.set_points_flow(image_pyramid_flow[i]);
 
                                 points_x = image_pyramid_I[i].width();
                                 points_y = image_pyramid_I[i].height();
@@ -418,9 +451,9 @@ class Impl final : public OpticalFlowCompute
                                 // Если самый верхний уровень, то расчёт только для заданных точек для рисования на экране
 
                                 m_flow_memory.set_all_points(0);
+                                m_flow_memory.set_points(m_top_points);
 
-                                m_top_points.bind(FLOW_POINTS_BINDING);
-                                m_top_points_flow.bind(FLOW_POINTS_FLOW_BINDING);
+                                m_flow_memory.set_points_flow(m_top_points_flow);
 
                                 points_x = m_top_point_count_x;
                                 points_y = m_top_point_count_y;
@@ -431,7 +464,7 @@ class Impl final : public OpticalFlowCompute
                                 // Если не самый нижний уровень, то в качестве приближения использовать поток,
                                 // полученный на меньших изображениях
 
-                                image_pyramid_flow[i + 1].bind(FLOW_POINTS_FLOW_GUESS_BINDING);
+                                m_flow_memory.set_points_flow_guess(image_pyramid_flow[i + 1]);
 
                                 int use_guess = 1;
 
@@ -454,7 +487,7 @@ class Impl final : public OpticalFlowCompute
                         m_comp_flow.set_uniform_handle("img_I", image_pyramid_I[i].image_read_handle());
                         m_comp_flow.set_uniform_handle("tex_J", image_pyramid_J[i].texture_handle());
 
-                        m_flow_memory.bind(FLOW_UNIFORM_BINDING);
+                        m_flow_memory.bind();
 
                         int groups_x = group_count(points_x, GROUP_SIZE);
                         int groups_y = group_count(points_y, GROUP_SIZE);
@@ -529,6 +562,11 @@ public:
 
                 m_comp_grayscale.set_uniform_handle("img_src", source_image.image_resident_handle_read_only());
         }
+
+        Impl(const Impl&) = delete;
+        Impl(Impl&&) = delete;
+        Impl& operator=(const Impl&) = delete;
+        Impl& operator=(Impl&&) = delete;
 };
 }
 
