@@ -353,6 +353,8 @@ vulkan::CommandBuffers create_command_buffers(
 }
 }
 
+namespace vulkan_renderer_implementation
+{
 MainBuffers::MainBuffers(const vulkan::Swapchain& swapchain, const std::vector<uint32_t>& attachment_family_indices,
                          const vulkan::Device& device, VkCommandPool graphics_command_pool, VkQueue graphics_queue,
                          int required_minimum_sample_count, const std::vector<VkFormat>& depth_image_formats)
@@ -568,4 +570,5 @@ void ShadowBuffers::delete_command_buffers()
 const VkCommandBuffer& ShadowBuffers::command_buffer() const noexcept
 {
         return m_command_buffers[0];
+}
 }

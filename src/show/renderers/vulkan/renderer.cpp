@@ -105,7 +105,7 @@ constexpr uint32_t points_frag[]
 };
 // clang-format on
 
-namespace shaders = vulkan_renderer_shaders;
+namespace impl = vulkan_renderer_implementation;
 
 namespace
 {
@@ -125,7 +125,7 @@ std::unique_ptr<vulkan::VertexBufferWithDeviceLocalMemory> load_vertices(const v
         const std::vector<vec3f>& obj_normals = obj.normals();
         const std::vector<vec2f>& obj_texcoords = obj.texcoords();
 
-        std::vector<shaders::Vertex> shader_vertices;
+        std::vector<impl::Vertex> shader_vertices;
         shader_vertices.reserve(3 * obj_faces.size());
 
         vec3f v0, v1, v2;
@@ -196,7 +196,7 @@ std::unique_ptr<vulkan::VertexBufferWithDeviceLocalMemory> load_point_vertices(c
         const std::vector<Obj<3>::Point>& obj_points = obj.points();
         const std::vector<vec3f>& obj_vertices = obj.vertices();
 
-        std::vector<shaders::PointVertex> shader_vertices;
+        std::vector<impl::PointVertex> shader_vertices;
         shader_vertices.reserve(obj_points.size());
 
         for (const Obj<3>::Point& p : obj_points)
@@ -218,7 +218,7 @@ std::unique_ptr<vulkan::VertexBufferWithDeviceLocalMemory> load_line_vertices(co
         const std::vector<Obj<3>::Line>& obj_lines = obj.lines();
         const std::vector<vec3f>& obj_vertices = obj.vertices();
 
-        std::vector<shaders::PointVertex> shader_vertices;
+        std::vector<impl::PointVertex> shader_vertices;
         shader_vertices.reserve(2 * obj_lines.size());
 
         for (const Obj<3>::Line& line : obj_lines)
@@ -249,9 +249,9 @@ std::vector<vulkan::ColorTexture> load_textures(const vulkan::VulkanInstance& in
         return textures;
 }
 
-std::unique_ptr<shaders::TrianglesMaterialMemory> load_materials(const vulkan::Device& device, VkSampler sampler,
-                                                                 VkDescriptorSetLayout descriptor_set_layout, const Obj<3>& obj,
-                                                                 const std::vector<vulkan::ColorTexture>& textures)
+std::unique_ptr<impl::TrianglesMaterialMemory> load_materials(const vulkan::Device& device, VkSampler sampler,
+                                                              VkDescriptorSetLayout descriptor_set_layout, const Obj<3>& obj,
+                                                              const std::vector<vulkan::ColorTexture>& textures)
 {
         // Текстур имеется больше на одну для её использования в тех материалах, где нет текстуры
 
@@ -259,7 +259,7 @@ std::unique_ptr<shaders::TrianglesMaterialMemory> load_materials(const vulkan::D
 
         const vulkan::ColorTexture* const no_texture = &textures.back();
 
-        std::vector<shaders::TrianglesMaterialMemory::MaterialAndTexture> materials;
+        std::vector<impl::TrianglesMaterialMemory::MaterialAndTexture> materials;
         materials.reserve(obj.materials().size() + 1);
 
         for (const typename Obj<3>::Material& material : obj.materials())
@@ -268,7 +268,7 @@ std::unique_ptr<shaders::TrianglesMaterialMemory> load_materials(const vulkan::D
                 ASSERT(material.map_Kd < static_cast<int>(textures.size()) - 1);
                 ASSERT(material.map_Ks < static_cast<int>(textures.size()) - 1);
 
-                shaders::TrianglesMaterialMemory::MaterialAndTexture m;
+                impl::TrianglesMaterialMemory::MaterialAndTexture m;
 
                 m.material.Ka = material.Ka.to_rgb_vector<float>();
                 m.material.Kd = material.Kd.to_rgb_vector<float>();
@@ -291,7 +291,7 @@ std::unique_ptr<shaders::TrianglesMaterialMemory> load_materials(const vulkan::D
         }
 
         // На один материал больше для его указания, но не использования в вершинах, не имеющих материала
-        shaders::TrianglesMaterialMemory::MaterialAndTexture m;
+        impl::TrianglesMaterialMemory::MaterialAndTexture m;
         m.material.Ka = vec3f(0);
         m.material.Kd = vec3f(0);
         m.material.Ks = vec3f(0);
@@ -305,7 +305,7 @@ std::unique_ptr<shaders::TrianglesMaterialMemory> load_materials(const vulkan::D
         m.material.use_material = 0;
         materials.push_back(m);
 
-        return std::make_unique<shaders::TrianglesMaterialMemory>(device, sampler, descriptor_set_layout, materials);
+        return std::make_unique<impl::TrianglesMaterialMemory>(device, sampler, descriptor_set_layout, materials);
 }
 
 struct DrawInfo
@@ -349,7 +349,7 @@ class DrawObjectTriangles final : public DrawObjectInterface
 {
         std::unique_ptr<vulkan::VertexBufferWithDeviceLocalMemory> m_vertex_buffer;
         std::vector<vulkan::ColorTexture> m_textures;
-        std::unique_ptr<shaders::TrianglesMaterialMemory> m_shader_memory;
+        std::unique_ptr<impl::TrianglesMaterialMemory> m_shader_memory;
         unsigned m_vertex_count;
 
         //
@@ -624,9 +624,9 @@ class Renderer final : public VulkanRenderer
 
         vulkan::DescriptorSetLayout m_triangles_material_descriptor_set_layout;
 
-        shaders::TrianglesSharedMemory m_triangles_shared_shader_memory;
-        shaders::ShadowMemory m_shadow_shader_memory;
-        shaders::PointsMemory m_points_shader_memory;
+        impl::TrianglesSharedMemory m_triangles_shared_shader_memory;
+        impl::ShadowMemory m_shadow_shader_memory;
+        impl::PointsMemory m_points_shader_memory;
 
         vulkan::VertexShader m_triangles_vert;
         vulkan::GeometryShader m_triangles_geom;
@@ -642,8 +642,8 @@ class Renderer final : public VulkanRenderer
         vulkan::PipelineLayout m_shadow_pipeline_layout;
         vulkan::PipelineLayout m_points_pipeline_layout;
 
-        std::unique_ptr<MainBuffers> m_main_buffers;
-        std::unique_ptr<ShadowBuffers> m_shadow_buffers;
+        std::unique_ptr<impl::MainBuffers> m_main_buffers;
+        std::unique_ptr<impl::ShadowBuffers> m_shadow_buffers;
         std::unique_ptr<vulkan::StorageImage> m_object_image;
 
         RendererObjectStorage<DrawObject> m_storage;
@@ -922,12 +922,12 @@ class Renderer final : public VulkanRenderer
 
                 //
 
-                m_main_buffers =
-                        std::make_unique<MainBuffers>(*m_swapchain, m_instance.attachment_family_indices(), m_instance.device(),
-                                                      m_instance.graphics_command_pool(), m_instance.graphics_queue(),
-                                                      m_minimum_sample_count, DEPTH_IMAGE_FORMATS);
+                m_main_buffers = std::make_unique<impl::MainBuffers>(*m_swapchain, m_instance.attachment_family_indices(),
+                                                                     m_instance.device(), m_instance.graphics_command_pool(),
+                                                                     m_instance.graphics_queue(), m_minimum_sample_count,
+                                                                     DEPTH_IMAGE_FORMATS);
 
-                m_shadow_buffers = std::make_unique<ShadowBuffers>(
+                m_shadow_buffers = std::make_unique<impl::ShadowBuffers>(
                         *m_swapchain, m_instance.attachment_family_indices(), m_instance.device(),
                         m_instance.graphics_command_pool(), m_instance.graphics_queue(), DEPTH_IMAGE_FORMATS, m_shadow_zoom);
 
@@ -940,18 +940,18 @@ class Renderer final : public VulkanRenderer
                 m_triangles_pipeline = m_main_buffers->create_pipeline(
                         VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, m_sample_shading,
                         {&m_triangles_vert, &m_triangles_geom, &m_triangles_frag}, m_triangles_pipeline_layout,
-                        shaders::Vertex::binding_descriptions(), shaders::Vertex::triangles_attribute_descriptions());
+                        impl::Vertex::binding_descriptions(), impl::Vertex::triangles_attribute_descriptions());
                 m_shadow_pipeline = m_shadow_buffers->create_pipeline(
                         VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, {&m_shadow_vert, &m_shadow_frag}, m_shadow_pipeline_layout,
-                        shaders::Vertex::binding_descriptions(), shaders::Vertex::shadow_attribute_descriptions());
+                        impl::Vertex::binding_descriptions(), impl::Vertex::shadow_attribute_descriptions());
 
                 m_points_pipeline = m_main_buffers->create_pipeline(
                         VK_PRIMITIVE_TOPOLOGY_POINT_LIST, false, {&m_points_vert, &m_points_frag}, m_points_pipeline_layout,
-                        shaders::PointVertex::binding_descriptions(), shaders::PointVertex::attribute_descriptions());
+                        impl::PointVertex::binding_descriptions(), impl::PointVertex::attribute_descriptions());
 
                 m_lines_pipeline = m_main_buffers->create_pipeline(
                         VK_PRIMITIVE_TOPOLOGY_LINE_LIST, false, {&m_points_vert, &m_points_frag}, m_points_pipeline_layout,
-                        shaders::PointVertex::binding_descriptions(), shaders::PointVertex::attribute_descriptions());
+                        impl::PointVertex::binding_descriptions(), impl::PointVertex::attribute_descriptions());
 
                 create_command_buffers(false /*wait_idle*/);
         }
@@ -1110,11 +1110,11 @@ public:
                   m_sample_shading(sample_shading),
                   m_instance(instance),
                   m_shadow_available_semaphores(vulkan::create_semaphores(m_instance.device(), max_frames_in_flight)),
-                  m_texture_sampler(create_texture_sampler(m_instance.device(), sampler_anisotropy)),
-                  m_shadow_sampler(create_shadow_sampler(m_instance.device())),
+                  m_texture_sampler(impl::create_texture_sampler(m_instance.device(), sampler_anisotropy)),
+                  m_shadow_sampler(impl::create_shadow_sampler(m_instance.device())),
                   //
                   m_triangles_material_descriptor_set_layout(vulkan::create_descriptor_set_layout(
-                          m_instance.device(), shaders::TrianglesMaterialMemory::descriptor_set_layout_bindings())),
+                          m_instance.device(), impl::TrianglesMaterialMemory::descriptor_set_layout_bindings())),
                   //
                   m_triangles_shared_shader_memory(m_instance.device()),
                   m_shadow_shader_memory(m_instance.device()),

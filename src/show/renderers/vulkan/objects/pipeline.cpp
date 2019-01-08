@@ -21,6 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/log.h"
 #include "graphics/vulkan/create.h"
 
+namespace vulkan_renderer_implementation
+{
 vulkan::Pipeline create_graphics_pipeline(const GraphicsPipelineCreateInfo& info)
 {
         std::vector<VkPipelineShaderStageCreateInfo> pipeline_shader_stages =
@@ -189,4 +191,5 @@ vulkan::Pipeline create_graphics_pipeline(const GraphicsPipelineCreateInfo& info
         // create_info.basePipelineIndex = -1;
 
         return vulkan::Pipeline(*info.device.value(), create_info);
+}
 }

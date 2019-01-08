@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "vertex.h"
 
-namespace vulkan_renderer_shaders
+namespace vulkan_renderer_implementation
 {
 std::vector<VkVertexInputBindingDescription> Vertex::binding_descriptions()
 {

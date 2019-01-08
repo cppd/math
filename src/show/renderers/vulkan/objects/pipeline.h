@@ -23,6 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <optional>
 #include <vector>
 
+namespace vulkan_renderer_implementation
+{
 struct GraphicsPipelineCreateInfo
 {
         std::optional<const vulkan::Device*> device;
@@ -41,3 +43,4 @@ struct GraphicsPipelineCreateInfo
 };
 
 vulkan::Pipeline create_graphics_pipeline(const GraphicsPipelineCreateInfo& info);
+}

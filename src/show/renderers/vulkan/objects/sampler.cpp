@@ -20,6 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/error.h"
 #include "com/log.h"
 
+namespace vulkan_renderer_implementation
+{
 vulkan::Sampler create_texture_sampler(const vulkan::Device& device, bool anisotropy)
 {
         VkSamplerCreateInfo create_info = {};
@@ -90,4 +92,5 @@ vulkan::Sampler create_shadow_sampler(VkDevice device)
         create_info.maxLod = 0.0f;
 
         return vulkan::Sampler(device, create_info);
+}
 }
