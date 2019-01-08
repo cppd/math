@@ -23,6 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <optional>
 #include <vector>
 
+namespace vulkan_text_implementation
+{
 struct TextPipelineCreateInfo
 {
         std::optional<VkDevice> device;
@@ -36,3 +38,4 @@ struct TextPipelineCreateInfo
 };
 
 vulkan::Pipeline create_text_pipeline(const TextPipelineCreateInfo& info);
+}

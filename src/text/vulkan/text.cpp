@@ -53,7 +53,7 @@ constexpr uint32_t fragment_shader[]
 };
 // clang-format on
 
-namespace shaders = vulkan_text_shaders;
+namespace impl = vulkan_text_implementation;
 
 namespace
 {
@@ -98,7 +98,7 @@ class Impl final : public VulkanText
         vulkan::GrayscaleTexture m_glyph_texture;
         std::unordered_map<char32_t, FontGlyph> m_glyphs;
 
-        shaders::TextMemory m_shader_memory;
+        impl::TextMemory m_shader_memory;
 
         vulkan::VertexShader m_text_vert;
         vulkan::FragmentShader m_text_frag;
@@ -108,7 +108,7 @@ class Impl final : public VulkanText
         std::optional<vulkan::VertexBufferWithHostVisibleMemory> m_vertex_buffer;
         vulkan::IndirectBufferWithHostVisibleMemory m_indirect_buffer;
 
-        std::optional<TextBuffers> m_buffers;
+        std::optional<impl::TextBuffers> m_buffers;
         VkPipeline m_pipeline = VK_NULL_HANDLE;
 
         void set_color(const Color& color) const override
@@ -155,9 +155,9 @@ class Impl final : public VulkanText
 
                 m_buffers.emplace(*swapchain, m_instance.device(), m_instance.graphics_command_pool());
 
-                m_pipeline = m_buffers->create_pipeline({&m_text_vert, &m_text_frag}, m_pipeline_layout,
-                                                        shaders::vertex_binding_descriptions(),
-                                                        shaders::vertex_attribute_descriptions());
+                m_pipeline =
+                        m_buffers->create_pipeline({&m_text_vert, &m_text_frag}, m_pipeline_layout,
+                                                   impl::vertex_binding_descriptions(), impl::vertex_attribute_descriptions());
 
                 m_buffers->create_command_buffers(std::bind(&Impl::draw_commands, this, std::placeholders::_1));
 
@@ -245,7 +245,7 @@ class Impl final : public VulkanText
 
         Impl(const vulkan::VulkanInstance& instance, const Color& color, Glyphs&& glyphs)
                 : m_instance(instance),
-                  m_sampler(create_text_sampler(instance.device())),
+                  m_sampler(impl::create_text_sampler(instance.device())),
                   m_glyph_texture(instance.create_grayscale_texture(glyphs.width(), glyphs.height(), std::move(glyphs.pixels()))),
                   m_glyphs(std::move(glyphs.glyphs())),
                   m_shader_memory(instance.device(), m_sampler, &m_glyph_texture),

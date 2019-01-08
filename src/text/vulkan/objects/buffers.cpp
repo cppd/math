@@ -124,6 +124,8 @@ vulkan::CommandBuffers create_command_buffers(VkDevice device, uint32_t width, u
 }
 }
 
+namespace vulkan_text_implementation
+{
 TextBuffers::TextBuffers(const vulkan::Swapchain& swapchain, VkDevice device, VkCommandPool graphics_command_pool)
         : m_device(device),
           m_graphics_command_pool(graphics_command_pool),
@@ -182,4 +184,5 @@ void TextBuffers::delete_command_buffers()
 const VkCommandBuffer& TextBuffers::command_buffer(uint32_t index) const noexcept
 {
         return m_command_buffers[index];
+}
 }

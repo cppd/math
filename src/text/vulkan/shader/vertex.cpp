@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "vertex.h"
 
-namespace vulkan_text_shaders
+namespace vulkan_text_implementation
 {
 static_assert(sizeof(Vertex) == sizeof(Vector<2, int32_t>) + sizeof(Vector<2, float>));
 static_assert(std::is_same_v<decltype(Vertex::v), Vector<2, int32_t>>);

@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "graphics/vulkan/create.h"
 
+namespace vulkan_text_implementation
+{
 vulkan::Pipeline create_text_pipeline(const TextPipelineCreateInfo& info)
 {
         std::vector<VkPipelineShaderStageCreateInfo> pipeline_shader_stages =
@@ -149,4 +151,5 @@ vulkan::Pipeline create_text_pipeline(const TextPipelineCreateInfo& info)
         // create_info.basePipelineIndex = -1;
 
         return vulkan::Pipeline(info.device.value(), create_info);
+}
 }

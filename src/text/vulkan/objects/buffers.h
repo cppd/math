@@ -28,6 +28,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <vector>
 
+namespace vulkan_text_implementation
+{
 class TextBuffers
 {
         VkDevice m_device;
@@ -63,3 +65,4 @@ public:
                                    const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
                                    const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions);
 };
+}
