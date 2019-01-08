@@ -192,8 +192,8 @@ void DeviceProgBitReverse<T>::exec(int max_threads, int n_mask, int n_bits, cons
         m.n_bits = n_bits;
         m_shader_memory.copy(m);
 
-        m_shader_memory.bind(0);
-        data.bind(1);
+        m_shader_memory.bind(DATA_BINDING);
+        data.bind(BUFFER_BINDING);
 
         m_bit_reverse.dispatch_compute(group_count(max_threads, m_group_size), 1, 1);
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
@@ -221,8 +221,8 @@ void DeviceProgFFTGlobal<T>::exec(int max_threads, bool inverse, T two_pi_div_m,
         m.two_pi_div_m = two_pi_div_m;
         m_shader_memory.copy(m);
 
-        m_shader_memory.bind(0);
-        data.bind(1);
+        m_shader_memory.bind(DATA_BINDING);
+        data.bind(BUFFER_BINDING);
 
         m_fft.dispatch_compute(group_count(max_threads, m_group_size), 1, 1);
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
@@ -246,8 +246,8 @@ void DeviceProgCopyInput<T>::copy(bool source_srgb, const GLuint64 tex, const De
         m_shader_memory.copy(m);
 
         m_copy_input.set_uniform_handle(0, tex);
-        m_shader_memory.bind(0);
-        data.bind(1);
+        m_shader_memory.bind(DATA_BINDING);
+        data.bind(BUFFER_BINDING);
 
         m_copy_input.dispatch_compute(m_group_count[0], m_group_count[1], 1);
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
@@ -271,8 +271,8 @@ void DeviceProgCopyOutput<T>::copy(T to_mul, const GLuint64 tex, const DeviceMem
         m_shader_memory.copy(m);
 
         m_copy_output.set_uniform_handle(0, tex);
-        m_shader_memory.bind(0);
-        data.bind(1);
+        m_shader_memory.bind(DATA_BINDING);
+        data.bind(BUFFER_BINDING);
 
         m_copy_output.dispatch_compute(m_group_count[0], m_group_count[1], 1);
         glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
@@ -302,9 +302,9 @@ void DeviceProgMul<T>::set_and_bind(bool inverse, const DeviceMemory<std::comple
         m.inverse_dft = inverse;
         m_shader_memory.copy(m);
 
-        m_shader_memory.bind(0);
-        data.bind(1);
-        buffer.bind(2);
+        m_shader_memory.bind(DATA_BINDING);
+        data.bind(BUFFER_0_BINDING);
+        buffer.bind(BUFFER_1_BINDING);
 }
 
 template <typename T>
@@ -374,9 +374,9 @@ DeviceProgMulD<T>::DeviceProgMulD(vec2i group_size, int n1, int n2, int m1, int 
 template <typename T>
 void DeviceProgMulD<T>::rows_mul_d(const DeviceMemory<std::complex<T>>& d, const DeviceMemory<std::complex<T>>& data) const
 {
-        m_memory_rows.bind(0);
-        d.bind(1);
-        data.bind(2);
+        m_memory_rows.bind(DATA_BINDING);
+        d.bind(BUFFER_DIAGONAL_BINDING);
+        data.bind(BUFFER_DATA_BINDING);
 
         m_mul_d.dispatch_compute(m_row_groups[0], m_row_groups[1], 1);
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
@@ -385,9 +385,9 @@ void DeviceProgMulD<T>::rows_mul_d(const DeviceMemory<std::complex<T>>& d, const
 template <typename T>
 void DeviceProgMulD<T>::columns_mul_d(const DeviceMemory<std::complex<T>>& d, const DeviceMemory<std::complex<T>>& data) const
 {
-        m_memory_columns.bind(0);
-        d.bind(1);
-        data.bind(2);
+        m_memory_columns.bind(DATA_BINDING);
+        d.bind(BUFFER_DIAGONAL_BINDING);
+        data.bind(BUFFER_DATA_BINDING);
 
         m_mul_d.dispatch_compute(m_column_groups[0], m_column_groups[1], 1);
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
@@ -414,8 +414,8 @@ void DeviceProgFFTShared<T>::exec(bool inverse, int data_size, const DeviceMemor
         m.data_size = data_size;
         m_shader_memory.copy(m);
 
-        m_shader_memory.bind(0);
-        data.bind(1);
+        m_shader_memory.bind(DATA_BINDING);
+        data.bind(BUFFER_BINDING);
 
         m_fft.dispatch_compute(group_count(data_size, m_shared_size), 1, 1);
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);

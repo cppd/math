@@ -28,6 +28,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 template <typename T>
 class DeviceProgBitReverse
 {
+        static constexpr int DATA_BINDING = 0;
+        static constexpr int BUFFER_BINDING = 1;
+
         struct ShaderMemory
         {
                 GLuint max_threads;
@@ -48,6 +51,9 @@ public:
 template <typename T>
 class DeviceProgFFTGlobal
 {
+        static constexpr int DATA_BINDING = 0;
+        static constexpr int BUFFER_BINDING = 1;
+
         struct ShaderMemory
         {
                 GLuint inverse_dft;
@@ -71,6 +77,9 @@ public:
 template <typename T>
 class DeviceProgCopyInput
 {
+        static constexpr int DATA_BINDING = 0;
+        static constexpr int BUFFER_BINDING = 1;
+
         struct ShaderMemory
         {
                 GLuint source_srgb;
@@ -89,6 +98,9 @@ public:
 template <typename T>
 class DeviceProgCopyOutput
 {
+        static constexpr int DATA_BINDING = 0;
+        static constexpr int BUFFER_BINDING = 1;
+
         struct ShaderMemory
         {
                 T to_mul;
@@ -107,6 +119,10 @@ public:
 template <typename T>
 class DeviceProgMul
 {
+        static constexpr int DATA_BINDING = 0;
+        static constexpr int BUFFER_0_BINDING = 1;
+        static constexpr int BUFFER_1_BINDING = 2;
+
         struct ShaderMemory
         {
                 GLuint inverse_dft;
@@ -142,6 +158,10 @@ public:
 template <typename T>
 class DeviceProgMulD
 {
+        static constexpr int DATA_BINDING = 0;
+        static constexpr int BUFFER_DIAGONAL_BINDING = 1;
+        static constexpr int BUFFER_DATA_BINDING = 2;
+
         struct ShaderMemory
         {
                 GLint columns;
@@ -164,6 +184,9 @@ public:
 template <typename T>
 class DeviceProgFFTShared
 {
+        static constexpr int DATA_BINDING = 0;
+        static constexpr int BUFFER_BINDING = 1;
+
         struct ShaderMemory
         {
                 GLuint inverse_dft;
