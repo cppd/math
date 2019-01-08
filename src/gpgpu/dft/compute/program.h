@@ -80,6 +80,8 @@ class DeviceProgCopyInput
         static constexpr int DATA_BINDING = 0;
         static constexpr int BUFFER_BINDING = 1;
 
+        static constexpr int SRC_IMAGE_LOCATION = 0;
+
         struct ShaderMemory
         {
                 GLuint source_srgb;
@@ -100,6 +102,8 @@ class DeviceProgCopyOutput
 {
         static constexpr int DATA_BINDING = 0;
         static constexpr int BUFFER_BINDING = 1;
+
+        static constexpr int DST_IMAGE_LOCATION = 0;
 
         struct ShaderMemory
         {

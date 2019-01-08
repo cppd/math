@@ -245,7 +245,7 @@ void DeviceProgCopyInput<T>::copy(bool source_srgb, const GLuint64 tex, const De
         m.source_srgb = source_srgb;
         m_shader_memory.copy(m);
 
-        m_copy_input.set_uniform_handle(0, tex);
+        m_copy_input.set_uniform_handle(SRC_IMAGE_LOCATION, tex);
         m_shader_memory.bind(DATA_BINDING);
         data.bind(BUFFER_BINDING);
 
@@ -270,7 +270,7 @@ void DeviceProgCopyOutput<T>::copy(T to_mul, const GLuint64 tex, const DeviceMem
         m.to_mul = to_mul;
         m_shader_memory.copy(m);
 
-        m_copy_output.set_uniform_handle(0, tex);
+        m_copy_output.set_uniform_handle(DST_IMAGE_LOCATION, tex);
         m_shader_memory.bind(DATA_BINDING);
         data.bind(BUFFER_BINDING);
 
