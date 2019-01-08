@@ -372,7 +372,7 @@ std::string color_space_message(bool framebuffer_is_srgb, bool colorbuffer_is_sr
         return msg;
 }
 
-namespace shaders = opengl_renderer_shaders;
+namespace impl = opengl_renderer_implementation;
 
 class Renderer final : public OpenGLRenderer
 {
@@ -406,9 +406,9 @@ class Renderer final : public OpenGLRenderer
         bool m_framebuffer_srgb;
         bool m_colorbuffer_srgb;
 
-        shaders::PointsMemory m_points_memory;
-        shaders::ShadowMemory m_shadow_memory;
-        shaders::TrianglesMemory m_triangles_memory;
+        impl::PointsMemory m_points_memory;
+        impl::ShadowMemory m_shadow_memory;
+        impl::TrianglesMemory m_triangles_memory;
 
         void set_light_a(const Color& light) override
         {

@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/glsl.h"
 #include "graphics/opengl/buffers.h"
 
-namespace opengl_renderer_shaders
+namespace opengl_renderer_implementation
 {
 class TrianglesMemory
 {
