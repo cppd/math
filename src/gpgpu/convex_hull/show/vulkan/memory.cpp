@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "memory.h"
 
-namespace gpgpu_vulkan_convex_hull_show
+namespace gpgpu_vulkan_convex_hull_show_implementation
 {
 std::vector<VkDescriptorSetLayoutBinding> ShaderMemory::descriptor_set_layout_bindings()
 {
