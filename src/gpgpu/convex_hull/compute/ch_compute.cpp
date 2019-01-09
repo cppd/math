@@ -244,7 +244,7 @@ public:
                   m_merge_prog(opengl::ComputeShader(
                           merge_source(m_height, group_size_merge(m_height, sizeof(GLfloat)), iteration_count_merge(m_height)))),
                   m_filter_prog(opengl::ComputeShader(filter_source(m_height))),
-                  m_lines(2 * m_height * sizeof(GLfloat)),
+                  m_lines(2 * m_height * sizeof(GLint)),
                   m_point_count(sizeof(GLint))
         {
                 m_filter_memory.set_lines(m_lines);

@@ -31,8 +31,8 @@ layout(binding = 1, r32i) readonly restrict uniform iimage2D objects;
 
 layout(std430, binding = 0) writeonly restrict buffer Lines
 {
-        float line_min[LINE_SIZE];
-        float line_max[LINE_SIZE];
+        int line_min[LINE_SIZE];
+        int line_max[LINE_SIZE];
 };
 
 bool not_background(ivec2 p)

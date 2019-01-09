@@ -96,7 +96,7 @@ class ConvexHullShow::Impl final
 public:
         Impl(const opengl::TextureR32I& objects, const mat4& matrix)
                 : m_draw_prog(opengl::VertexShader(vertex_shader), opengl::FragmentShader(fragment_shader)),
-                  m_points((2 * objects.texture().height()) * (2 * sizeof(GLfloat))),
+                  m_points((2 * objects.texture().height()) * (2 * sizeof(GLint))),
                   m_start_time(time_in_seconds())
         {
                 m_convex_hull = create_convex_hull_compute(objects, m_points);

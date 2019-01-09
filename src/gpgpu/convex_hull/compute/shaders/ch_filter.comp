@@ -33,13 +33,13 @@ layout(local_size_x = 1) in;
 // Координата Y равна индексу.
 layout(std430, binding = 0) readonly restrict buffer Lines
 {
-        float line_min[LINE_SIZE];
-        float line_max[LINE_SIZE];
+        int line_min[LINE_SIZE];
+        int line_max[LINE_SIZE];
 };
 // Тут результат
 layout(std430, binding = 1) writeonly restrict buffer Points
 {
-        vec2 points[];
+        ivec2 points[];
 };
 // Количество точек результата
 layout(std430, binding = 2) writeonly restrict buffer PointCount
@@ -51,26 +51,22 @@ void main(void)
 {
         int count = 0;
 
-        float y;
-
-        y = 0;
-        for (int i = 0; i < LINE_SIZE; ++i, ++y)
+        for (int y = 0; y < LINE_SIZE; ++y)
         {
-                float s = line_min[i];
-                if (s >= 0) // для координаты Y==i имеется минимум по X
+                int s = line_min[y];
+                if (s >= 0) // для координаты y имеется минимум по X
                 {
-                        points[count] = vec2(s, y);
+                        points[count] = ivec2(s, y);
                         ++count;
                 }
         }
 
-        y = LINE_SIZE - 1;
-        for (int i = LINE_SIZE - 1; i >= 0; --i, --y)
+        for (int y = LINE_SIZE - 1; y >= 0; --y)
         {
-                float s = line_max[i];
-                if (s >= 0) // для координаты Y==i имеется максимум по X
+                int s = line_max[y];
+                if (s >= 0) // для координаты y имеется максимум по X
                 {
-                        points[count] = vec2(s, y);
+                        points[count] = ivec2(s, y);
                         ++count;
                 }
         }

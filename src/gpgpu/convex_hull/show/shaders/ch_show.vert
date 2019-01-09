@@ -23,7 +23,7 @@ layout(std140, binding = 0) uniform Data
 
 layout(std430, binding = 1) buffer Points
 {
-        vec2 points[];
+        ivec2 points[];
 };
 
 void main(void)
@@ -34,6 +34,6 @@ void main(void)
         const int vertex_index = gl_VertexID;
 #endif
 
-        vec2 s = points[vertex_index];
+        ivec2 s = points[vertex_index];
         gl_Position = matrix * vec4(s.x + 0.5, s.y + 0.5, 0, 1);
 }
