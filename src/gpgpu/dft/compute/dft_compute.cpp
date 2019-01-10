@@ -55,6 +55,7 @@ Chapter 13: FFTs for Arbitrary N.
 #include "com/print.h"
 #include "com/time.h"
 #include "gpgpu/com/groups.h"
+#include "graphics/opengl/buffers.h"
 #include "graphics/opengl/query.h"
 
 #include <complex>
@@ -67,6 +68,41 @@ constexpr const vec2i GROUP_SIZE_2D = vec2i(16, 16);
 
 namespace
 {
+template <typename T>
+class DeviceMemory final
+{
+        size_t m_size;
+        opengl::StorageBuffer m_buffer;
+
+public:
+        DeviceMemory(int size) : m_size(size), m_buffer(size * sizeof(T))
+        {
+        }
+
+        void write(const std::vector<T>& data) const
+        {
+                if (data.size() != m_size)
+                {
+                        error("Storage size error");
+                }
+                m_buffer.write(data);
+        }
+
+        void read(std::vector<T>* data) const
+        {
+                if (data->size() != m_size)
+                {
+                        error("Storage size error");
+                }
+                m_buffer.read(data);
+        }
+
+        operator const opengl::StorageBuffer&() const
+        {
+                return m_buffer;
+        }
+};
+
 // Или само число степень двух,
 // или минимальная степень двух, равная или больше 2N-2
 int compute_m(int n)

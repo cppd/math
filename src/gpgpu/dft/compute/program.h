@@ -17,13 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "memory.h"
-
 #include "com/vec.h"
 #include "graphics/opengl/buffers.h"
 #include "graphics/opengl/shader.h"
-
-#include <complex>
 
 template <typename T>
 class DeviceProgBitReverse
@@ -45,7 +41,7 @@ class DeviceProgBitReverse
 public:
         DeviceProgBitReverse(int group_size);
 
-        void exec(int max_threads, int n_mask, int n_bits, const DeviceMemory<std::complex<T>>& data) const;
+        void exec(int max_threads, int n_mask, int n_bits, const opengl::StorageBuffer& data) const;
 };
 
 template <typename T>
@@ -71,7 +67,7 @@ public:
         DeviceProgFFTGlobal(int group_size);
 
         void exec(int max_threads, bool inverse, T two_pi_div_m, int n_div_2_mask, int m_div_2,
-                  const DeviceMemory<std::complex<T>>& data) const;
+                  const opengl::StorageBuffer& data) const;
 };
 
 template <typename T>
@@ -94,7 +90,7 @@ class DeviceProgCopyInput
 public:
         DeviceProgCopyInput(vec2i group_size, int n1, int n2);
 
-        void copy(bool source_srgb, const GLuint64 tex, const DeviceMemory<std::complex<T>>& data);
+        void copy(bool source_srgb, const GLuint64 tex, const opengl::StorageBuffer& data);
 };
 
 template <typename T>
@@ -117,7 +113,7 @@ class DeviceProgCopyOutput
 public:
         DeviceProgCopyOutput(vec2i group_size, int n1, int n2);
 
-        void copy(T to_mul, const GLuint64 tex, const DeviceMemory<std::complex<T>>& data);
+        void copy(T to_mul, const GLuint64 tex, const opengl::StorageBuffer& data);
 };
 
 template <typename T>
@@ -142,21 +138,16 @@ class DeviceProgMul
         opengl::ComputeProgram m_columns_from_buffer;
         opengl::UniformBuffer m_shader_memory;
 
-        void set_and_bind(bool inverse, const DeviceMemory<std::complex<T>>& data,
-                          const DeviceMemory<std::complex<T>>& buffer) const;
+        void set_and_bind(bool inverse, const opengl::StorageBuffer& data, const opengl::StorageBuffer& buffer) const;
 
 public:
         DeviceProgMul(vec2i group_size, int n1, int n2, int m1, int m2);
 
         // Функции подстановки переменных, формулы 13.4, 13.27, 13.28, 13.32.
-        void rows_to_buffer(bool inverse, const DeviceMemory<std::complex<T>>& data,
-                            const DeviceMemory<std::complex<T>>& buffer) const;
-        void rows_from_buffer(bool inverse, const DeviceMemory<std::complex<T>>& data,
-                              const DeviceMemory<std::complex<T>>& buffer) const;
-        void columns_to_buffer(bool inverse, const DeviceMemory<std::complex<T>>& data,
-                               const DeviceMemory<std::complex<T>>& buffer) const;
-        void columns_from_buffer(bool inverse, const DeviceMemory<std::complex<T>>& data,
-                                 const DeviceMemory<std::complex<T>>& buffer) const;
+        void rows_to_buffer(bool inverse, const opengl::StorageBuffer& data, const opengl::StorageBuffer& buffer) const;
+        void rows_from_buffer(bool inverse, const opengl::StorageBuffer& data, const opengl::StorageBuffer& buffer) const;
+        void columns_to_buffer(bool inverse, const opengl::StorageBuffer& data, const opengl::StorageBuffer& buffer) const;
+        void columns_from_buffer(bool inverse, const opengl::StorageBuffer& data, const opengl::StorageBuffer& buffer) const;
 };
 
 template <typename T>
@@ -181,8 +172,8 @@ public:
         DeviceProgMulD(vec2i group_size, int n1, int n2, int m1, int m2);
 
         // Умножение на диагональ, формулы 13.20, 13.30.
-        void rows_mul_d(const DeviceMemory<std::complex<T>>& d, const DeviceMemory<std::complex<T>>& data) const;
-        void columns_mul_d(const DeviceMemory<std::complex<T>>& d, const DeviceMemory<std::complex<T>>& data) const;
+        void rows_mul_d(const opengl::StorageBuffer& d, const opengl::StorageBuffer& data) const;
+        void columns_mul_d(const opengl::StorageBuffer& d, const opengl::StorageBuffer& data) const;
 };
 
 template <typename T>
@@ -219,5 +210,5 @@ public:
                 return m_shared_size;
         }
 
-        void exec(bool inverse, int data_size, const DeviceMemory<std::complex<T>>& data) const;
+        void exec(bool inverse, int data_size, const opengl::StorageBuffer& data) const;
 };
