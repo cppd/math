@@ -37,7 +37,7 @@ layout(std430, binding = 0) readonly restrict buffer Lines
         int line_max[LINE_SIZE];
 };
 // Тут результат
-layout(std430, binding = 1) writeonly restrict buffer Points
+layout(std430, binding = 1) restrict buffer Points
 {
         ivec2 points[];
 };
@@ -69,6 +69,12 @@ void main(void)
                         points[count] = ivec2(s, y);
                         ++count;
                 }
+        }
+
+        if (count > 0)
+        {
+                points[count] = points[0];
+                ++count;
         }
 
         point_count = count;

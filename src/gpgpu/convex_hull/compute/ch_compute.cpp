@@ -247,6 +247,8 @@ public:
                   m_lines(2 * m_height * sizeof(GLint)),
                   m_point_count(sizeof(GLint))
         {
+                ASSERT(static_cast<unsigned>(points.size()) == (2 * m_height + 1) * (2 * sizeof(GLint)));
+
                 m_filter_memory.set_lines(m_lines);
                 m_filter_memory.set_points(points);
                 m_filter_memory.set_point_count(m_point_count);

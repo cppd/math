@@ -83,6 +83,12 @@ public:
                 m_points->bind(POINTS_BINDING);
         }
 };
+
+int points_buffer_size(int height)
+{
+        // 2 линии точек + 1 точка, тип ivec2
+        return (2 * height + 1) * (2 * sizeof(GLint));
+}
 }
 
 class ConvexHullShow::Impl final
@@ -96,7 +102,7 @@ class ConvexHullShow::Impl final
 public:
         Impl(const opengl::TextureR32I& objects, const mat4& matrix)
                 : m_draw_prog(opengl::VertexShader(vertex_shader), opengl::FragmentShader(fragment_shader)),
-                  m_points((2 * objects.texture().height()) * (2 * sizeof(GLint))),
+                  m_points(points_buffer_size(objects.texture().height())),
                   m_start_time(time_in_seconds())
         {
                 m_convex_hull = create_convex_hull_compute(objects, m_points);
@@ -123,7 +129,7 @@ public:
                 m_shader_memory.set_brightness(brightness);
 
                 m_shader_memory.bind();
-                m_draw_prog.draw_arrays(GL_LINE_LOOP, 0, point_count);
+                m_draw_prog.draw_arrays(GL_LINE_STRIP, 0, point_count);
         }
 };
 
