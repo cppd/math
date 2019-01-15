@@ -17,13 +17,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "buffers.h"
 
-#include "pipeline.h"
-
 #include "com/error.h"
 #include "com/log.h"
 #include "com/print.h"
 #include "graphics/vulkan/create.h"
 #include "graphics/vulkan/error.h"
+#include "graphics/vulkan/pipeline.h"
 #include "graphics/vulkan/print.h"
 #include "graphics/vulkan/query.h"
 
@@ -455,7 +454,7 @@ VkPipeline MainBuffers::create_pipeline(VkPrimitiveTopology primitive_topology, 
 {
         ASSERT(pipeline_layout != VK_NULL_HANDLE);
 
-        GraphicsPipelineCreateInfo info;
+        vulkan::GraphicsPipelineCreateInfo info;
 
         info.device = &m_device;
         info.render_pass = m_render_pass;
@@ -469,9 +468,10 @@ VkPipeline MainBuffers::create_pipeline(VkPrimitiveTopology primitive_topology, 
         info.shaders = &shaders;
         info.binding_descriptions = &vertex_binding_descriptions;
         info.attribute_descriptions = &vertex_attribute_descriptions;
-        info.for_shadow = false;
+        info.depth_bias = false;
+        info.color_blend = false;
 
-        m_pipelines.push_back(create_graphics_pipeline(info));
+        m_pipelines.push_back(vulkan::create_graphics_pipeline(info));
 
         return m_pipelines.back();
 }
@@ -541,7 +541,7 @@ VkPipeline ShadowBuffers::create_pipeline(VkPrimitiveTopology primitive_topology
 {
         ASSERT(pipeline_layout != VK_NULL_HANDLE);
 
-        GraphicsPipelineCreateInfo info;
+        vulkan::GraphicsPipelineCreateInfo info;
 
         info.device = &m_device;
         info.render_pass = m_render_pass;
@@ -555,9 +555,10 @@ VkPipeline ShadowBuffers::create_pipeline(VkPrimitiveTopology primitive_topology
         info.shaders = &shaders;
         info.binding_descriptions = &vertex_binding_descriptions;
         info.attribute_descriptions = &vertex_attribute_descriptions;
-        info.for_shadow = true;
+        info.depth_bias = true;
+        info.color_blend = false;
 
-        m_pipelines.push_back(create_graphics_pipeline(info));
+        m_pipelines.push_back(vulkan::create_graphics_pipeline(info));
 
         return m_pipelines.back();
 }

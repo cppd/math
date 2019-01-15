@@ -17,14 +17,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "pipeline.h"
 
+#include "com/error.h"
+#include "com/log.h"
 #include "graphics/vulkan/create.h"
 
-namespace vulkan_text_implementation
+namespace vulkan
 {
-vulkan::Pipeline create_text_pipeline(const TextPipelineCreateInfo& info)
+Pipeline create_graphics_pipeline(const GraphicsPipelineCreateInfo& info)
 {
         std::vector<VkPipelineShaderStageCreateInfo> pipeline_shader_stages =
-                vulkan::pipeline_shader_stage_create_info(*info.shaders.value());
+                pipeline_shader_stage_create_info(*info.shaders.value());
 
         VkPipelineVertexInputStateCreateInfo vertex_input_state_info = {};
         vertex_input_state_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
@@ -35,7 +37,7 @@ vulkan::Pipeline create_text_pipeline(const TextPipelineCreateInfo& info)
 
         VkPipelineInputAssemblyStateCreateInfo input_assembly_state_info = {};
         input_assembly_state_info.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-        input_assembly_state_info.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+        input_assembly_state_info.topology = info.primitive_topology.value();
         input_assembly_state_info.primitiveRestartEnable = VK_FALSE;
 
         VkViewport viewport = {};
@@ -71,16 +73,35 @@ vulkan::Pipeline create_text_pipeline(const TextPipelineCreateInfo& info)
         rasterization_state_info.cullMode = VK_CULL_MODE_NONE;
         rasterization_state_info.frontFace = VK_FRONT_FACE_CLOCKWISE;
 
-        rasterization_state_info.depthBiasEnable = VK_FALSE;
+        if (info.depth_bias.value())
+        {
+                rasterization_state_info.depthBiasEnable = VK_TRUE;
+        }
+        else
+        {
+                rasterization_state_info.depthBiasEnable = VK_FALSE;
+        }
         // rasterization_state_info.depthBiasConstantFactor = 0.0f;
         // rasterization_state_info.depthBiasClamp = 0.0f;
         // rasterization_state_info.depthBiasSlopeFactor = 0.0f;
 
         VkPipelineMultisampleStateCreateInfo multisampling_state_info = {};
         multisampling_state_info.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-        multisampling_state_info.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
-        multisampling_state_info.sampleShadingEnable = VK_FALSE;
-        multisampling_state_info.minSampleShading = 1.0f;
+        multisampling_state_info.rasterizationSamples = info.sample_count.value();
+        if (info.sample_count.value() != VK_SAMPLE_COUNT_1_BIT && info.sample_shading.value())
+        {
+                if (!info.device.value()->features().sampleRateShading)
+                {
+                        error("Sample shading required but not supported");
+                }
+                multisampling_state_info.sampleShadingEnable = VK_TRUE;
+                multisampling_state_info.minSampleShading = 1.0f;
+                LOG("Sample shading enabled");
+        }
+        else
+        {
+                multisampling_state_info.sampleShadingEnable = VK_FALSE;
+        }
         // multisampling_state_info.pSampleMask = nullptr;
         // multisampling_state_info.alphaToCoverageEnable = VK_FALSE;
         // multisampling_state_info.alphaToOneEnable = VK_FALSE;
@@ -88,13 +109,20 @@ vulkan::Pipeline create_text_pipeline(const TextPipelineCreateInfo& info)
         VkPipelineColorBlendAttachmentState color_blend_attachment_state = {};
         color_blend_attachment_state.colorWriteMask =
                 VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-        color_blend_attachment_state.blendEnable = VK_TRUE;
-        color_blend_attachment_state.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
-        color_blend_attachment_state.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
-        color_blend_attachment_state.colorBlendOp = VK_BLEND_OP_ADD;
-        color_blend_attachment_state.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
-        color_blend_attachment_state.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
-        color_blend_attachment_state.alphaBlendOp = VK_BLEND_OP_ADD;
+        if (!info.color_blend.value())
+        {
+                color_blend_attachment_state.blendEnable = VK_FALSE;
+        }
+        else
+        {
+                color_blend_attachment_state.blendEnable = VK_TRUE;
+                color_blend_attachment_state.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+                color_blend_attachment_state.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+                color_blend_attachment_state.colorBlendOp = VK_BLEND_OP_ADD;
+                color_blend_attachment_state.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+                color_blend_attachment_state.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+                color_blend_attachment_state.alphaBlendOp = VK_BLEND_OP_ADD;
+        }
 
         VkPipelineColorBlendStateCreateInfo color_blending_state_info = {};
         color_blending_state_info.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
@@ -107,7 +135,13 @@ vulkan::Pipeline create_text_pipeline(const TextPipelineCreateInfo& info)
         // color_blending_state_info.blendConstants[2] = 0.0f;
         // color_blending_state_info.blendConstants[3] = 0.0f;
 
+        // VK_DYNAMIC_STATE_VIEWPORT
+        // VK_DYNAMIC_STATE_LINE_WIDTH
         std::vector<VkDynamicState> dynamic_states;
+        if (info.depth_bias.value())
+        {
+                dynamic_states.push_back(VK_DYNAMIC_STATE_DEPTH_BIAS);
+        }
         VkPipelineDynamicStateCreateInfo dynamic_state_info = {};
         dynamic_state_info.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
         dynamic_state_info.dynamicStateCount = dynamic_states.size();
@@ -145,11 +179,11 @@ vulkan::Pipeline create_text_pipeline(const TextPipelineCreateInfo& info)
         create_info.layout = info.pipeline_layout.value();
 
         create_info.renderPass = info.render_pass.value();
-        create_info.subpass = 0;
+        create_info.subpass = info.sub_pass.value();
 
         // create_info.basePipelineHandle = VK_NULL_HANDLE;
         // create_info.basePipelineIndex = -1;
 
-        return vulkan::Pipeline(info.device.value(), create_info);
+        return Pipeline(*info.device.value(), create_info);
 }
 }

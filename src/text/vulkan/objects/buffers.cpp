@@ -17,13 +17,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "buffers.h"
 
-#include "pipeline.h"
-
 #include "com/error.h"
 #include "com/log.h"
 #include "com/print.h"
 #include "graphics/vulkan/create.h"
 #include "graphics/vulkan/error.h"
+#include "graphics/vulkan/pipeline.h"
 #include "graphics/vulkan/print.h"
 #include "graphics/vulkan/query.h"
 
@@ -126,7 +125,7 @@ vulkan::CommandBuffers create_command_buffers(VkDevice device, uint32_t width, u
 
 namespace vulkan_text_implementation
 {
-TextBuffers::TextBuffers(const vulkan::Swapchain& swapchain, VkDevice device, VkCommandPool graphics_command_pool)
+TextBuffers::TextBuffers(const vulkan::Swapchain& swapchain, const vulkan::Device& device, VkCommandPool graphics_command_pool)
         : m_device(device),
           m_graphics_command_pool(graphics_command_pool),
           m_width(swapchain.width()),
@@ -160,18 +159,24 @@ VkPipeline TextBuffers::create_pipeline(const std::vector<const vulkan::Shader*>
 {
         ASSERT(pipeline_layout != VK_NULL_HANDLE);
 
-        TextPipelineCreateInfo info;
+        vulkan::GraphicsPipelineCreateInfo info;
 
-        info.device = m_device;
+        info.device = &m_device;
         info.render_pass = m_render_pass;
+        info.sub_pass = 0;
+        info.sample_count = VK_SAMPLE_COUNT_1_BIT;
+        // info.sample_shading = false;
         info.pipeline_layout = pipeline_layout;
         info.width = m_width;
         info.height = m_height;
+        info.primitive_topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
         info.shaders = &shaders;
         info.binding_descriptions = &vertex_binding_descriptions;
         info.attribute_descriptions = &vertex_attribute_descriptions;
+        info.depth_bias = false;
+        info.color_blend = true;
 
-        m_pipelines.push_back(create_text_pipeline(info));
+        m_pipelines.push_back(vulkan::create_graphics_pipeline(info));
 
         return m_pipelines.back();
 }
