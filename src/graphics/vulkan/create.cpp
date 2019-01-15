@@ -232,21 +232,4 @@ VkClearColorValue clear_color_image_value(VkFormat format)
         }
         return clear_color;
 }
-std::vector<VkPipelineShaderStageCreateInfo> pipeline_shader_stage_create_info(const std::vector<const Shader*>& shaders)
-{
-        std::vector<VkPipelineShaderStageCreateInfo> res;
-
-        for (const Shader* s : shaders)
-        {
-                VkPipelineShaderStageCreateInfo stage_info = {};
-                stage_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-                stage_info.stage = s->stage();
-                stage_info.module = s->module();
-                stage_info.pName = s->entry_point_name();
-
-                res.push_back(stage_info);
-        }
-
-        return res;
-}
 }
