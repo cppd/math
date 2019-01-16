@@ -24,6 +24,8 @@ layout(std140, set = 0, binding = 1) uniform Drawing
 }
 drawing;
 
+layout(set = 0, binding = 2, r32ui) writeonly uniform uimage2D object_image;
+
 layout(location = 0) out vec4 color;
 
 vec3 fog(vec3 fog_color, vec3 fragment_color)
@@ -53,4 +55,6 @@ void main(void)
         }
 
         color = vec4(color3, 1);
+
+        imageStore(object_image, ivec2(gl_FragCoord.xy), uvec4(1));
 }

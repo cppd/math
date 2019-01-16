@@ -936,6 +936,7 @@ class Renderer final : public VulkanRenderer
 
                 m_triangles_shared_shader_memory.set_shadow_texture(m_shadow_sampler, m_shadow_buffers->texture());
                 m_triangles_shared_shader_memory.set_object_image(m_object_image.get());
+                m_points_shader_memory.set_object_image(m_object_image.get());
 
                 m_triangles_pipeline = m_main_buffers->create_pipeline(
                         VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, m_sample_shading,

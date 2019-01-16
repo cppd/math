@@ -453,6 +453,16 @@ std::vector<VkDescriptorSetLayoutBinding> PointsMemory::descriptor_set_layout_bi
 
                 bindings.push_back(b);
         }
+        {
+                VkDescriptorSetLayoutBinding b = {};
+                b.binding = 2;
+                b.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+                b.descriptorCount = 1;
+                b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+                b.pImmutableSamplers = nullptr;
+
+                bindings.push_back(b);
+        }
 
         return bindings;
 }
@@ -540,5 +550,15 @@ void PointsMemory::set_show_fog(bool show) const
 {
         decltype(Drawing().show_fog) s = show ? 1 : 0;
         copy_to_drawing_buffer(offsetof(Drawing, show_fog), s);
+}
+void PointsMemory::set_object_image(const vulkan::StorageImage* storage_image) const
+{
+        ASSERT(storage_image && storage_image->format() == VK_FORMAT_R32_UINT);
+
+        VkDescriptorImageInfo image_info = {};
+        image_info.imageLayout = storage_image->image_layout();
+        image_info.imageView = storage_image->image_view();
+
+        m_descriptors.update_descriptor_set(m_descriptor_set, 2, image_info);
 }
 }

@@ -248,5 +248,7 @@ public:
         void set_background_color(const Color& color) const;
         void set_light_a(const Color& color) const;
         void set_show_fog(bool show) const;
+
+        void set_object_image(const vulkan::StorageImage* storage_image) const;
 };
 }
