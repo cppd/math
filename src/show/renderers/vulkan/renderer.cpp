@@ -28,8 +28,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/vulkan/query.h"
 #include "obj/alg/alg.h"
 #include "show/renderers/com/storage.h"
-#include "show/renderers/vulkan/objects/buffers.h"
+#include "show/renderers/vulkan/objects/render_buffer.h"
 #include "show/renderers/vulkan/objects/sampler.h"
+#include "show/renderers/vulkan/objects/shadow_buffer.h"
 #include "show/renderers/vulkan/shader/memory.h"
 #include "show/renderers/vulkan/shader/vertex.h"
 
