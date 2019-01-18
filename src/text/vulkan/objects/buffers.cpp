@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/error.h"
 #include "com/log.h"
 #include "com/print.h"
+#include "graphics/vulkan/command.h"
 #include "graphics/vulkan/create.h"
 #include "graphics/vulkan/error.h"
 #include "graphics/vulkan/pipeline.h"
@@ -70,57 +71,6 @@ vulkan::RenderPass create_render_pass(VkDevice device, VkFormat swapchain_image_
 
         return vulkan::RenderPass(device, create_info);
 }
-
-vulkan::CommandBuffers create_command_buffers(VkDevice device, uint32_t width, uint32_t height, VkRenderPass render_pass,
-                                              const std::vector<vulkan::Framebuffer>& framebuffers, VkCommandPool command_pool,
-                                              const std::function<void(VkCommandBuffer command_buffer)>& commands)
-{
-        VkResult result;
-
-        vulkan::CommandBuffers command_buffers(device, command_pool, framebuffers.size());
-
-        for (uint32_t i = 0; i < command_buffers.count(); ++i)
-        {
-                VkCommandBufferBeginInfo command_buffer_info = {};
-                command_buffer_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-                command_buffer_info.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
-                // command_buffer_info.pInheritanceInfo = nullptr;
-
-                result = vkBeginCommandBuffer(command_buffers[i], &command_buffer_info);
-                if (result != VK_SUCCESS)
-                {
-                        vulkan::vulkan_function_error("vkBeginCommandBuffer", result);
-                }
-
-                VkRenderPassBeginInfo render_pass_info = {};
-                render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-                render_pass_info.renderPass = render_pass;
-                render_pass_info.framebuffer = framebuffers[i];
-                render_pass_info.renderArea.offset.x = 0;
-                render_pass_info.renderArea.offset.y = 0;
-                render_pass_info.renderArea.extent.width = width;
-                render_pass_info.renderArea.extent.height = height;
-                render_pass_info.clearValueCount = 0;
-
-                vkCmdBeginRenderPass(command_buffers[i], &render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
-
-                //
-
-                commands(command_buffers[i]);
-
-                //
-
-                vkCmdEndRenderPass(command_buffers[i]);
-
-                result = vkEndCommandBuffer(command_buffers[i]);
-                if (result != VK_SUCCESS)
-                {
-                        vulkan::vulkan_function_error("vkEndCommandBuffer", result);
-                }
-        }
-
-        return command_buffers;
-}
 }
 
 namespace vulkan_text_implementation
@@ -148,8 +98,16 @@ TextBuffers::TextBuffers(const vulkan::Swapchain& swapchain, const vulkan::Devic
 
 void TextBuffers::create_command_buffers(const std::function<void(VkCommandBuffer buffer)>& commands)
 {
-        m_command_buffers = ::create_command_buffers(m_device, m_width, m_height, m_render_pass, m_framebuffers,
-                                                     m_graphics_command_pool, commands);
+        vulkan::CommandBufferCreateInfo info;
+        info.device = m_device;
+        info.width = m_width;
+        info.height = m_height;
+        info.render_pass = m_render_pass;
+        info.framebuffers.emplace(m_framebuffers);
+        info.command_pool = m_graphics_command_pool;
+        info.render_pass_commands = commands;
+
+        m_command_buffers = vulkan::create_command_buffers(info);
 }
 
 VkPipeline TextBuffers::create_pipeline(const std::vector<const vulkan::Shader*>& shaders,
