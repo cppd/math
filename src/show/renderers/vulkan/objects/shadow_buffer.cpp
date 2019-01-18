@@ -22,10 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/print.h"
 #include "graphics/vulkan/command.h"
 #include "graphics/vulkan/create.h"
-#include "graphics/vulkan/error.h"
 #include "graphics/vulkan/pipeline.h"
 #include "graphics/vulkan/print.h"
-#include "graphics/vulkan/query.h"
 
 #include <sstream>
 

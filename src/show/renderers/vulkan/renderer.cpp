@@ -643,7 +643,7 @@ class Renderer final : public VulkanRenderer
         vulkan::PipelineLayout m_shadow_pipeline_layout;
         vulkan::PipelineLayout m_points_pipeline_layout;
 
-        std::unique_ptr<impl::MainBuffers> m_main_buffers;
+        std::unique_ptr<impl::RenderBuffers> m_render_buffers;
         std::unique_ptr<impl::ShadowBuffers> m_shadow_buffers;
         std::unique_ptr<vulkan::StorageImage> m_object_image;
 
@@ -845,7 +845,7 @@ class Renderer final : public VulkanRenderer
                         info.pWaitSemaphores = wait_semaphores.data();
                         info.pWaitDstStageMask = wait_stages.data();
                         info.commandBufferCount = 1;
-                        info.pCommandBuffers = &m_main_buffers->command_buffer(image_index);
+                        info.pCommandBuffers = &m_render_buffers->command_buffer(image_index);
                         info.signalSemaphoreCount = 1;
                         info.pSignalSemaphores = &finished_semaphore;
 
@@ -892,7 +892,7 @@ class Renderer final : public VulkanRenderer
                                 info.pWaitSemaphores = wait_semaphores.data();
                                 info.pWaitDstStageMask = wait_stages.data();
                                 info.commandBufferCount = 1;
-                                info.pCommandBuffers = &m_main_buffers->command_buffer(image_index);
+                                info.pCommandBuffers = &m_render_buffers->command_buffer(image_index);
                                 info.signalSemaphoreCount = 1;
                                 info.pSignalSemaphores = &finished_semaphore;
 
@@ -917,16 +917,16 @@ class Renderer final : public VulkanRenderer
 
                 m_instance.device_wait_idle();
 
-                m_main_buffers.reset();
+                m_render_buffers.reset();
                 m_shadow_buffers.reset();
                 m_object_image.reset();
 
                 //
 
-                m_main_buffers = std::make_unique<impl::MainBuffers>(*m_swapchain, m_instance.attachment_family_indices(),
-                                                                     m_instance.device(), m_instance.graphics_command_pool(),
-                                                                     m_instance.graphics_queue(), m_minimum_sample_count,
-                                                                     DEPTH_IMAGE_FORMATS);
+                m_render_buffers = std::make_unique<impl::RenderBuffers>(*m_swapchain, m_instance.attachment_family_indices(),
+                                                                         m_instance.device(), m_instance.graphics_command_pool(),
+                                                                         m_instance.graphics_queue(), m_minimum_sample_count,
+                                                                         DEPTH_IMAGE_FORMATS);
 
                 m_shadow_buffers = std::make_unique<impl::ShadowBuffers>(
                         *m_swapchain, m_instance.attachment_family_indices(), m_instance.device(),
@@ -939,7 +939,7 @@ class Renderer final : public VulkanRenderer
                 m_triangles_shared_shader_memory.set_object_image(m_object_image.get());
                 m_points_shader_memory.set_object_image(m_object_image.get());
 
-                m_triangles_pipeline = m_main_buffers->create_pipeline(
+                m_triangles_pipeline = m_render_buffers->create_pipeline(
                         VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, m_sample_shading,
                         {&m_triangles_vert, &m_triangles_geom, &m_triangles_frag}, m_triangles_pipeline_layout,
                         impl::Vertex::binding_descriptions(), impl::Vertex::triangles_attribute_descriptions());
@@ -947,11 +947,11 @@ class Renderer final : public VulkanRenderer
                         VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, {&m_shadow_vert, &m_shadow_frag}, m_shadow_pipeline_layout,
                         impl::Vertex::binding_descriptions(), impl::Vertex::shadow_attribute_descriptions());
 
-                m_points_pipeline = m_main_buffers->create_pipeline(
+                m_points_pipeline = m_render_buffers->create_pipeline(
                         VK_PRIMITIVE_TOPOLOGY_POINT_LIST, false, {&m_points_vert, &m_points_frag}, m_points_pipeline_layout,
                         impl::PointVertex::binding_descriptions(), impl::PointVertex::attribute_descriptions());
 
-                m_lines_pipeline = m_main_buffers->create_pipeline(
+                m_lines_pipeline = m_render_buffers->create_pipeline(
                         VK_PRIMITIVE_TOPOLOGY_LINE_LIST, false, {&m_points_vert, &m_points_frag}, m_points_pipeline_layout,
                         impl::PointVertex::binding_descriptions(), impl::PointVertex::attribute_descriptions());
 
@@ -975,14 +975,14 @@ class Renderer final : public VulkanRenderer
 
                 //
 
-                ASSERT((m_main_buffers && m_shadow_buffers && m_object_image) ||
-                       (!m_main_buffers && !m_shadow_buffers && !m_object_image));
+                ASSERT((m_render_buffers && m_shadow_buffers && m_object_image) ||
+                       (!m_render_buffers && !m_shadow_buffers && !m_object_image));
 
-                if (m_main_buffers || m_shadow_buffers || m_object_image)
+                if (m_render_buffers || m_shadow_buffers || m_object_image)
                 {
                         m_instance.device_wait_idle();
 
-                        m_main_buffers.reset();
+                        m_render_buffers.reset();
                         m_shadow_buffers.reset();
                         m_object_image.reset();
                 }
@@ -1077,14 +1077,14 @@ class Renderer final : public VulkanRenderer
 
                 //
 
-                ASSERT(m_main_buffers && m_shadow_buffers);
+                ASSERT(m_render_buffers && m_shadow_buffers);
 
                 if (wait_idle)
                 {
                         m_instance.device_wait_idle();
                 }
 
-                m_main_buffers->create_command_buffers(
+                m_render_buffers->create_command_buffers(
                         m_clear_color, std::bind(&Renderer::before_render_pass_commands, this, std::placeholders::_1),
                         std::bind(&Renderer::draw_commands, this, std::placeholders::_1));
 
@@ -1097,11 +1097,11 @@ class Renderer final : public VulkanRenderer
 
                 //
 
-                ASSERT(m_main_buffers && m_shadow_buffers);
+                ASSERT(m_render_buffers && m_shadow_buffers);
 
                 m_instance.device_wait_idle();
 
-                m_main_buffers->delete_command_buffers();
+                m_render_buffers->delete_command_buffers();
                 m_shadow_buffers->delete_command_buffers();
         }
 

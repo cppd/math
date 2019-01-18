@@ -30,7 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace vulkan_renderer_implementation
 {
-class MainBuffers
+class RenderBuffers
 {
         const vulkan::Device& m_device;
         VkCommandPool m_graphics_command_pool;
@@ -47,16 +47,16 @@ class MainBuffers
         vulkan::CommandBuffers m_command_buffers;
 
 public:
-        MainBuffers(const vulkan::Swapchain& swapchain, const std::vector<uint32_t>& attachment_family_indices,
-                    const vulkan::Device& device, VkCommandPool graphics_command_pool, VkQueue graphics_queue,
-                    int required_minimum_sample_count, const std::vector<VkFormat>& depth_image_formats);
+        RenderBuffers(const vulkan::Swapchain& swapchain, const std::vector<uint32_t>& attachment_family_indices,
+                      const vulkan::Device& device, VkCommandPool graphics_command_pool, VkQueue graphics_queue,
+                      int required_minimum_sample_count, const std::vector<VkFormat>& depth_image_formats);
 
-        MainBuffers(const MainBuffers&) = delete;
-        MainBuffers& operator=(const MainBuffers&) = delete;
-        MainBuffers& operator=(MainBuffers&&) = delete;
+        RenderBuffers(const RenderBuffers&) = delete;
+        RenderBuffers& operator=(const RenderBuffers&) = delete;
+        RenderBuffers& operator=(RenderBuffers&&) = delete;
 
-        MainBuffers(MainBuffers&&) = default;
-        ~MainBuffers() = default;
+        RenderBuffers(RenderBuffers&&) = default;
+        ~RenderBuffers() = default;
 
         //
 

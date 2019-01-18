@@ -17,15 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "com/color/color.h"
-#include "graphics/vulkan/buffers.h"
 #include "graphics/vulkan/objects.h"
 #include "graphics/vulkan/shader.h"
 #include "graphics/vulkan/swapchain.h"
 
 #include <functional>
-#include <memory>
-#include <string>
 #include <vector>
 
 namespace vulkan_text_implementation

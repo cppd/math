@@ -19,10 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/error.h"
 #include "com/log.h"
-#include "com/print.h"
 #include "graphics/vulkan/command.h"
 #include "graphics/vulkan/create.h"
-#include "graphics/vulkan/error.h"
 #include "graphics/vulkan/pipeline.h"
 #include "graphics/vulkan/print.h"
 #include "graphics/vulkan/query.h"
@@ -224,9 +222,9 @@ vulkan::RenderPass create_multisampling_render_pass(VkDevice device, VkSampleCou
 
 namespace vulkan_renderer_implementation
 {
-MainBuffers::MainBuffers(const vulkan::Swapchain& swapchain, const std::vector<uint32_t>& attachment_family_indices,
-                         const vulkan::Device& device, VkCommandPool graphics_command_pool, VkQueue graphics_queue,
-                         int required_minimum_sample_count, const std::vector<VkFormat>& depth_image_formats)
+RenderBuffers::RenderBuffers(const vulkan::Swapchain& swapchain, const std::vector<uint32_t>& attachment_family_indices,
+                             const vulkan::Device& device, VkCommandPool graphics_command_pool, VkQueue graphics_queue,
+                             int required_minimum_sample_count, const std::vector<VkFormat>& depth_image_formats)
         : m_device(device),
           m_graphics_command_pool(graphics_command_pool),
           m_swapchain_format(swapchain.format()),
@@ -287,7 +285,7 @@ MainBuffers::MainBuffers(const vulkan::Swapchain& swapchain, const std::vector<u
         LOG(buffer_info(m_color_attachment.get(), m_depth_attachment.get()));
 }
 
-void MainBuffers::create_command_buffers(
+void RenderBuffers::create_command_buffers(
         const Color& clear_color, const std::optional<std::function<void(VkCommandBuffer command_buffer)>>& before_render_pass,
         const std::function<void(VkCommandBuffer buffer)>& commands)
 {
@@ -326,11 +324,11 @@ void MainBuffers::create_command_buffers(
         }
 }
 
-VkPipeline MainBuffers::create_pipeline(VkPrimitiveTopology primitive_topology, bool sample_shading,
-                                        const std::vector<const vulkan::Shader*>& shaders,
-                                        const vulkan::PipelineLayout& pipeline_layout,
-                                        const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
-                                        const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions)
+VkPipeline RenderBuffers::create_pipeline(VkPrimitiveTopology primitive_topology, bool sample_shading,
+                                          const std::vector<const vulkan::Shader*>& shaders,
+                                          const vulkan::PipelineLayout& pipeline_layout,
+                                          const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
+                                          const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions)
 {
         ASSERT(pipeline_layout != VK_NULL_HANDLE);
 
@@ -356,12 +354,12 @@ VkPipeline MainBuffers::create_pipeline(VkPrimitiveTopology primitive_topology, 
         return m_pipelines.back();
 }
 
-void MainBuffers::delete_command_buffers()
+void RenderBuffers::delete_command_buffers()
 {
         m_command_buffers = vulkan::CommandBuffers();
 }
 
-const VkCommandBuffer& MainBuffers::command_buffer(uint32_t index) const noexcept
+const VkCommandBuffer& RenderBuffers::command_buffer(uint32_t index) const noexcept
 {
         return m_command_buffers[index];
 }
