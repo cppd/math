@@ -41,10 +41,15 @@ class RenderBuffers
 
         std::unique_ptr<vulkan::DepthAttachment> m_depth_attachment;
         std::unique_ptr<vulkan::ColorAttachment> m_color_attachment;
+
         vulkan::RenderPass m_render_pass;
+        vulkan::RenderPass m_render_pass_no_depth;
         std::vector<vulkan::Framebuffer> m_framebuffers;
-        std::vector<vulkan::Pipeline> m_pipelines;
+        std::vector<vulkan::Framebuffer> m_framebuffers_no_depth;
         vulkan::CommandBuffers m_command_buffers;
+        vulkan::CommandBuffers m_command_buffers_no_depth;
+
+        std::vector<vulkan::Pipeline> m_pipelines;
 
 public:
         RenderBuffers(const vulkan::Swapchain& swapchain, const std::vector<uint32_t>& attachment_family_indices,
@@ -63,13 +68,23 @@ public:
         void create_command_buffers(const Color& clear_color,
                                     const std::optional<std::function<void(VkCommandBuffer command_buffer)>>& before_render_pass,
                                     const std::function<void(VkCommandBuffer buffer)>& commands);
+        void create_command_buffers_no_depth(
+                const std::optional<std::function<void(VkCommandBuffer command_buffer)>>& before_render_pass,
+                const std::function<void(VkCommandBuffer buffer)>& commands);
         void delete_command_buffers();
+        void delete_command_buffers_no_depth();
         const VkCommandBuffer& command_buffer(uint32_t index) const noexcept;
+        const VkCommandBuffer& command_buffer_no_depth(uint32_t index) const noexcept;
 
         VkPipeline create_pipeline(VkPrimitiveTopology primitive_topology, bool sample_shading,
                                    const std::vector<const vulkan::Shader*>& shaders,
                                    const vulkan::PipelineLayout& pipeline_layout,
                                    const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
                                    const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions);
+        VkPipeline create_pipeline_no_depth(VkPrimitiveTopology primitive_topology, bool sample_shading, bool color_blend,
+                                            const std::vector<const vulkan::Shader*>& shaders,
+                                            const vulkan::PipelineLayout& pipeline_layout,
+                                            const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
+                                            const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions);
 };
 }
