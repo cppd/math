@@ -383,7 +383,7 @@ public:
         operator VkDeviceMemory() const noexcept;
 };
 
-class CommandBuffer
+class CommandBuffer final
 {
         VkDevice m_device = VK_NULL_HANDLE;
         VkCommandPool m_command_pool = VK_NULL_HANDLE;
@@ -404,11 +404,9 @@ public:
         CommandBuffer& operator=(CommandBuffer&&) noexcept;
 
         operator VkCommandBuffer() const noexcept;
-
-        const VkCommandBuffer* data() const noexcept;
 };
 
-class CommandBuffers
+class CommandBuffers final
 {
         VkDevice m_device = VK_NULL_HANDLE;
         VkCommandPool m_command_pool = VK_NULL_HANDLE;
@@ -429,9 +427,7 @@ public:
         CommandBuffers& operator=(CommandBuffers&&) noexcept;
 
         const VkCommandBuffer& operator[](uint32_t index) const noexcept;
-
         uint32_t count() const noexcept;
-        const VkCommandBuffer* data() const noexcept;
 };
 
 class DescriptorSetLayout final

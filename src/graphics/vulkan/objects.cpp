@@ -1121,11 +1121,6 @@ CommandBuffer::operator VkCommandBuffer() const noexcept
         return m_command_buffer;
 }
 
-const VkCommandBuffer* CommandBuffer::data() const noexcept
-{
-        return &m_command_buffer;
-}
-
 //
 
 void CommandBuffers::destroy() noexcept
@@ -1204,11 +1199,6 @@ const VkCommandBuffer& CommandBuffers::operator[](uint32_t index) const noexcept
 uint32_t CommandBuffers::count() const noexcept
 {
         return m_command_buffers.size();
-}
-
-const VkCommandBuffer* CommandBuffers::data() const noexcept
-{
-        return m_command_buffers.data();
 }
 
 //

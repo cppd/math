@@ -194,7 +194,7 @@ void begin_commands(VkCommandBuffer command_buffer)
         }
 }
 
-void end_commands(VkQueue queue, const vulkan::CommandBuffer& command_buffer)
+void end_commands(VkQueue queue, VkCommandBuffer command_buffer)
 {
         VkResult result;
 
@@ -207,7 +207,7 @@ void end_commands(VkQueue queue, const vulkan::CommandBuffer& command_buffer)
         VkSubmitInfo submit_info = {};
         submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
         submit_info.commandBufferCount = 1;
-        submit_info.pCommandBuffers = command_buffer.data();
+        submit_info.pCommandBuffers = &command_buffer;
 
         result = vkQueueSubmit(queue, 1, &submit_info, VK_NULL_HANDLE);
         if (result != VK_SUCCESS)
