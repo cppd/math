@@ -680,7 +680,8 @@ class Renderer final : public VulkanRenderer
 
                 m_clear_color = color;
                 m_points_shader_memory.set_background_color(color);
-                create_command_buffers();
+
+                create_render_command_buffers();
         }
         void set_default_color(const Color& color) override
         {
@@ -738,7 +739,8 @@ class Renderer final : public VulkanRenderer
 
                 m_shadow_zoom = zoom;
 
-                create_buffers();
+                create_shadow_buffers(true /*wait_idle*/);
+                create_all_command_buffers(false /*wait_idle*/);
         }
         void set_matrices(const mat4& shadow_matrix, const mat4& main_matrix) override
         {
@@ -785,12 +787,12 @@ class Renderer final : public VulkanRenderer
                 bool delete_and_create_command_buffers = m_storage.is_current_object(id);
                 if (delete_and_create_command_buffers)
                 {
-                        delete_command_buffers();
+                        delete_all_command_buffers();
                 }
                 m_storage.delete_object(id);
                 if (delete_and_create_command_buffers)
                 {
-                        create_command_buffers();
+                        create_all_command_buffers();
                 }
                 set_matrices();
         }
@@ -801,12 +803,12 @@ class Renderer final : public VulkanRenderer
                 bool delete_and_create_command_buffers = m_storage.object() != nullptr;
                 if (delete_and_create_command_buffers)
                 {
-                        delete_command_buffers();
+                        delete_all_command_buffers();
                 }
                 m_storage.delete_all();
                 if (delete_and_create_command_buffers)
                 {
-                        create_command_buffers();
+                        create_all_command_buffers();
                 }
                 set_matrices();
         }
@@ -822,7 +824,7 @@ class Renderer final : public VulkanRenderer
                 m_storage.show_object(id);
                 if (object != m_storage.object())
                 {
-                        create_command_buffers();
+                        create_all_command_buffers();
                 }
                 set_matrices();
         }
@@ -910,7 +912,7 @@ class Renderer final : public VulkanRenderer
                 return m_storage.object() != nullptr;
         }
 
-        void create_buffers()
+        void create_render_buffers(bool wait_idle = true)
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
@@ -918,11 +920,14 @@ class Renderer final : public VulkanRenderer
 
                 ASSERT(m_swapchain);
 
-                m_instance.device_wait_idle();
+                if (wait_idle)
+                {
+                        m_instance.device_wait_idle();
+                }
 
-                m_render_buffers.reset();
-                m_shadow_buffers.reset();
+                m_render_command_buffers.clear();
                 m_object_image.reset();
+                m_render_buffers.reset();
 
                 //
 
@@ -931,14 +936,9 @@ class Renderer final : public VulkanRenderer
                                                     m_instance.graphics_command_pool(), m_instance.graphics_queue(),
                                                     m_minimum_sample_count, DEPTH_IMAGE_FORMATS);
 
-                m_shadow_buffers = std::make_unique<impl::ShadowBuffers>(
-                        *m_swapchain, m_instance.attachment_family_indices(), m_instance.device(),
-                        m_instance.graphics_command_pool(), m_instance.graphics_queue(), DEPTH_IMAGE_FORMATS, m_shadow_zoom);
-
                 m_object_image = std::make_unique<vulkan::StorageImage>(
                         m_instance.create_storage_image(VK_FORMAT_R32_UINT, m_swapchain->width(), m_swapchain->height()));
 
-                m_triangles_shared_shader_memory.set_shadow_texture(m_shadow_sampler, m_shadow_buffers->texture());
                 m_triangles_shared_shader_memory.set_object_image(m_object_image.get());
                 m_points_shader_memory.set_object_image(m_object_image.get());
 
@@ -946,9 +946,6 @@ class Renderer final : public VulkanRenderer
                         VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, m_sample_shading,
                         {&m_triangles_vert, &m_triangles_geom, &m_triangles_frag}, m_triangles_pipeline_layout,
                         impl::Vertex::binding_descriptions(), impl::Vertex::triangles_attribute_descriptions());
-                m_shadow_pipeline = m_shadow_buffers->create_pipeline(
-                        VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, {&m_shadow_vert, &m_shadow_frag}, m_shadow_pipeline_layout,
-                        impl::Vertex::binding_descriptions(), impl::Vertex::shadow_attribute_descriptions());
 
                 m_points_pipeline = m_render_buffers->create_pipeline(
                         VK_PRIMITIVE_TOPOLOGY_POINT_LIST, false, {&m_points_vert, &m_points_frag}, m_points_pipeline_layout,
@@ -957,8 +954,34 @@ class Renderer final : public VulkanRenderer
                 m_lines_pipeline = m_render_buffers->create_pipeline(
                         VK_PRIMITIVE_TOPOLOGY_LINE_LIST, false, {&m_points_vert, &m_points_frag}, m_points_pipeline_layout,
                         impl::PointVertex::binding_descriptions(), impl::PointVertex::attribute_descriptions());
+        }
 
-                create_command_buffers(false /*wait_idle*/);
+        void create_shadow_buffers(bool wait_idle = true)
+        {
+                ASSERT(m_thread_id == std::this_thread::get_id());
+
+                //
+
+                ASSERT(m_swapchain);
+
+                if (wait_idle)
+                {
+                        m_instance.device_wait_idle();
+                }
+
+                m_shadow_buffers.reset();
+
+                //
+
+                m_shadow_buffers = std::make_unique<impl::ShadowBuffers>(
+                        *m_swapchain, m_instance.attachment_family_indices(), m_instance.device(),
+                        m_instance.graphics_command_pool(), m_instance.graphics_queue(), DEPTH_IMAGE_FORMATS, m_shadow_zoom);
+
+                m_triangles_shared_shader_memory.set_shadow_texture(m_shadow_sampler, m_shadow_buffers->texture());
+
+                m_shadow_pipeline = m_shadow_buffers->create_pipeline(
+                        VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, {&m_shadow_vert, &m_shadow_frag}, m_shadow_pipeline_layout,
+                        impl::Vertex::binding_descriptions(), impl::Vertex::shadow_attribute_descriptions());
         }
 
         void create_buffers(const vulkan::Swapchain* swapchain) override
@@ -969,7 +992,12 @@ class Renderer final : public VulkanRenderer
 
                 m_swapchain = swapchain;
 
-                create_buffers();
+                m_instance.device_wait_idle();
+
+                create_render_buffers(false /*wait_idle*/);
+                create_shadow_buffers(false /*wait_idle*/);
+
+                create_all_command_buffers(false /*wait_idle*/);
         }
 
         void delete_buffers() override
@@ -985,9 +1013,11 @@ class Renderer final : public VulkanRenderer
                 {
                         m_instance.device_wait_idle();
 
-                        m_render_buffers.reset();
                         m_shadow_buffers.reset();
+
+                        m_render_command_buffers.clear();
                         m_object_image.reset();
+                        m_render_buffers.reset();
                 }
         }
 
@@ -1074,27 +1104,58 @@ class Renderer final : public VulkanRenderer
                 m_storage.object()->draw_shadow_commands(command_buffer, info);
         }
 
-        void create_command_buffers(bool wait_idle = true)
+        void create_render_command_buffers(bool wait_idle = true)
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
                 //
 
-                ASSERT(m_render_buffers && m_shadow_buffers);
+                ASSERT(m_render_buffers);
 
                 if (wait_idle)
                 {
                         m_instance.device_wait_idle();
                 }
 
+                m_render_buffers->delete_command_buffers(&m_render_command_buffers);
                 m_render_command_buffers = m_render_buffers->create_command_buffers(
                         m_clear_color, std::bind(&Renderer::before_render_pass_commands, this, std::placeholders::_1),
                         std::bind(&Renderer::draw_commands, this, std::placeholders::_1));
+        }
 
+        void create_shadow_command_buffers(bool wait_idle = true)
+        {
+                ASSERT(m_thread_id == std::this_thread::get_id());
+
+                //
+
+                ASSERT(m_shadow_buffers);
+
+                if (wait_idle)
+                {
+                        m_instance.device_wait_idle();
+                }
+
+                m_shadow_buffers->delete_command_buffers();
                 m_shadow_buffers->create_command_buffers(std::bind(&Renderer::draw_shadow_commands, this, std::placeholders::_1));
         }
 
-        void delete_command_buffers()
+        void create_all_command_buffers(bool wait_idle = true)
+        {
+                ASSERT(m_thread_id == std::this_thread::get_id());
+
+                //
+
+                if (wait_idle)
+                {
+                        m_instance.device_wait_idle();
+                }
+
+                create_render_command_buffers(false /*wait_idle*/);
+                create_shadow_command_buffers(false /*wait_idle*/);
+        }
+
+        void delete_all_command_buffers()
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
