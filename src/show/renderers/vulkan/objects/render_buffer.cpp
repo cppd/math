@@ -136,7 +136,7 @@ vulkan::RenderPass create_render_pass_no_depth(VkDevice device, VkFormat swapcha
         attachments[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
         attachments[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
         attachments[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        attachments[0].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        attachments[0].initialLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
         attachments[0].finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
         VkAttachmentReference color_reference = {};
@@ -284,7 +284,7 @@ vulkan::RenderPass create_multisampling_render_pass_no_depth(VkDevice device, Vk
         attachments[1].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE; // VK_ATTACHMENT_STORE_OP_STORE;
         attachments[1].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
         attachments[1].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        attachments[1].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        attachments[1].initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
         attachments[1].finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
         VkAttachmentReference multisampling_color_reference = {};
@@ -416,7 +416,7 @@ RenderBuffers::RenderBuffers(const vulkan::Swapchain& swapchain, const std::vect
         LOG(buffer_info(m_color_attachment.get(), m_depth_attachment.get()));
 }
 
-void RenderBuffers::create_command_buffers(
+std::vector<VkCommandBuffer> RenderBuffers::create_command_buffers(
         const Color& clear_color, const std::optional<std::function<void(VkCommandBuffer command_buffer)>>& before_render_pass,
         const std::function<void(VkCommandBuffer buffer)>& commands)
 {
@@ -441,7 +441,7 @@ void RenderBuffers::create_command_buffers(
 
                 info.clear_values.emplace(clear_values);
 
-                m_command_buffers = vulkan::create_command_buffers(info);
+                m_command_buffers.push_back(vulkan::create_command_buffers(info));
         }
         else
         {
@@ -451,11 +451,13 @@ void RenderBuffers::create_command_buffers(
 
                 info.clear_values.emplace(clear_values);
 
-                m_command_buffers = vulkan::create_command_buffers(info);
+                m_command_buffers.push_back(vulkan::create_command_buffers(info));
         }
+
+        return m_command_buffers.back().buffers();
 }
 
-void RenderBuffers::create_command_buffers_no_depth(
+std::vector<VkCommandBuffer> RenderBuffers::create_command_buffers_no_depth(
         const std::optional<std::function<void(VkCommandBuffer command_buffer)>>& before_render_pass,
         const std::function<void(VkCommandBuffer buffer)>& commands)
 {
@@ -469,7 +471,9 @@ void RenderBuffers::create_command_buffers_no_depth(
         info.before_render_pass_commands = before_render_pass;
         info.render_pass_commands = commands;
 
-        m_command_buffers_no_depth = vulkan::create_command_buffers(info);
+        m_command_buffers_no_depth.push_back(vulkan::create_command_buffers(info));
+
+        return m_command_buffers_no_depth.back().buffers();
 }
 
 VkPipeline RenderBuffers::create_pipeline(VkPrimitiveTopology primitive_topology, bool sample_shading,
@@ -532,23 +536,51 @@ VkPipeline RenderBuffers::create_pipeline_no_depth(
         return m_pipelines.back();
 }
 
-void RenderBuffers::delete_command_buffers()
+void RenderBuffers::delete_command_buffers(std::vector<VkCommandBuffer>* buffers)
 {
-        m_command_buffers = vulkan::CommandBuffers();
+        ASSERT(buffers);
+
+        if (buffers->size() == 0)
+        {
+                return;
+        }
+
+        ASSERT(buffers->size() == m_framebuffers.size());
+
+        // Буферов не предполагается много, поэтому достаточно искать перебором
+        for (auto iter = m_command_buffers.cbegin(); iter != m_command_buffers.cend(); ++iter)
+        {
+                if (iter->buffers() == *buffers)
+                {
+                        m_command_buffers.erase(iter);
+                        buffers->clear();
+                        return;
+                }
+        }
+        error_fatal("Command buffers not found");
 }
 
-void RenderBuffers::delete_command_buffers_no_depth()
+void RenderBuffers::delete_command_buffers_no_depth(std::vector<VkCommandBuffer>* buffers)
 {
-        m_command_buffers_no_depth = vulkan::CommandBuffers();
-}
+        ASSERT(buffers);
 
-const VkCommandBuffer& RenderBuffers::command_buffer(uint32_t index) const noexcept
-{
-        return m_command_buffers[index];
-}
+        if (buffers->size() == 0)
+        {
+                return;
+        }
 
-const VkCommandBuffer& RenderBuffers::command_buffer_no_depth(uint32_t index) const noexcept
-{
-        return m_command_buffers_no_depth[index];
+        ASSERT(buffers->size() == m_framebuffers_no_depth.size());
+
+        // Буферов не предполагается много, поэтому достаточно искать перебором
+        for (auto iter = m_command_buffers_no_depth.cbegin(); iter != m_command_buffers_no_depth.cend(); ++iter)
+        {
+                if (iter->buffers() == *buffers)
+                {
+                        m_command_buffers_no_depth.erase(iter);
+                        buffers->clear();
+                        return;
+                }
+        }
+        error_fatal("Command buffers no depth not found");
 }
 }

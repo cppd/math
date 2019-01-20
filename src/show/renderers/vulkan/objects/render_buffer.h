@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/vulkan/swapchain.h"
 
 #include <functional>
+#include <list>
 #include <memory>
 #include <optional>
 #include <vector>
@@ -46,9 +47,9 @@ class RenderBuffers
         vulkan::RenderPass m_render_pass_no_depth;
         std::vector<vulkan::Framebuffer> m_framebuffers;
         std::vector<vulkan::Framebuffer> m_framebuffers_no_depth;
-        vulkan::CommandBuffers m_command_buffers;
-        vulkan::CommandBuffers m_command_buffers_no_depth;
 
+        std::list<vulkan::CommandBuffers> m_command_buffers;
+        std::list<vulkan::CommandBuffers> m_command_buffers_no_depth;
         std::vector<vulkan::Pipeline> m_pipelines;
 
 public:
@@ -65,16 +66,14 @@ public:
 
         //
 
-        void create_command_buffers(const Color& clear_color,
-                                    const std::optional<std::function<void(VkCommandBuffer command_buffer)>>& before_render_pass,
-                                    const std::function<void(VkCommandBuffer buffer)>& commands);
-        void create_command_buffers_no_depth(
-                const std::optional<std::function<void(VkCommandBuffer command_buffer)>>& before_render_pass,
+        std::vector<VkCommandBuffer> create_command_buffers(
+                const Color& clear_color, const std::optional<std::function<void(VkCommandBuffer buffer)>>& before_render_pass,
                 const std::function<void(VkCommandBuffer buffer)>& commands);
-        void delete_command_buffers();
-        void delete_command_buffers_no_depth();
-        const VkCommandBuffer& command_buffer(uint32_t index) const noexcept;
-        const VkCommandBuffer& command_buffer_no_depth(uint32_t index) const noexcept;
+        std::vector<VkCommandBuffer> create_command_buffers_no_depth(
+                const std::optional<std::function<void(VkCommandBuffer buffer)>>& before_render_pass,
+                const std::function<void(VkCommandBuffer buffer)>& commands);
+        void delete_command_buffers(std::vector<VkCommandBuffer>* buffers);
+        void delete_command_buffers_no_depth(std::vector<VkCommandBuffer>* buffers);
 
         VkPipeline create_pipeline(VkPrimitiveTopology primitive_topology, bool sample_shading,
                                    const std::vector<const vulkan::Shader*>& shaders,

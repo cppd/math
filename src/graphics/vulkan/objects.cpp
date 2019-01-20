@@ -1201,6 +1201,11 @@ uint32_t CommandBuffers::count() const noexcept
         return m_command_buffers.size();
 }
 
+const std::vector<VkCommandBuffer>& CommandBuffers::buffers() const noexcept
+{
+        return m_command_buffers;
+}
+
 //
 
 void DescriptorSetLayout::destroy() noexcept

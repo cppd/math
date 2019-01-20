@@ -644,6 +644,7 @@ class Renderer final : public VulkanRenderer
         vulkan::PipelineLayout m_points_pipeline_layout;
 
         std::unique_ptr<impl::RenderBuffers> m_render_buffers;
+        std::vector<VkCommandBuffer> m_render_command_buffers;
         std::unique_ptr<impl::ShadowBuffers> m_shadow_buffers;
         std::unique_ptr<vulkan::StorageImage> m_object_image;
 
@@ -833,6 +834,8 @@ class Renderer final : public VulkanRenderer
 
                 //
 
+                ASSERT(image_index < m_render_command_buffers.size());
+
                 if (!m_show_shadow || !m_storage.object() || !m_storage.object()->has_shadow())
                 {
                         std::array<VkSemaphore, 1> wait_semaphores = {wait_semaphore};
@@ -845,7 +848,7 @@ class Renderer final : public VulkanRenderer
                         info.pWaitSemaphores = wait_semaphores.data();
                         info.pWaitDstStageMask = wait_stages.data();
                         info.commandBufferCount = 1;
-                        info.pCommandBuffers = &m_render_buffers->command_buffer(image_index);
+                        info.pCommandBuffers = &m_render_command_buffers[image_index];
                         info.signalSemaphoreCount = 1;
                         info.pSignalSemaphores = &finished_semaphore;
 
@@ -892,7 +895,7 @@ class Renderer final : public VulkanRenderer
                                 info.pWaitSemaphores = wait_semaphores.data();
                                 info.pWaitDstStageMask = wait_stages.data();
                                 info.commandBufferCount = 1;
-                                info.pCommandBuffers = &m_render_buffers->command_buffer(image_index);
+                                info.pCommandBuffers = &m_render_command_buffers[image_index];
                                 info.signalSemaphoreCount = 1;
                                 info.pSignalSemaphores = &finished_semaphore;
 
@@ -1084,7 +1087,7 @@ class Renderer final : public VulkanRenderer
                         m_instance.device_wait_idle();
                 }
 
-                m_render_buffers->create_command_buffers(
+                m_render_command_buffers = m_render_buffers->create_command_buffers(
                         m_clear_color, std::bind(&Renderer::before_render_pass_commands, this, std::placeholders::_1),
                         std::bind(&Renderer::draw_commands, this, std::placeholders::_1));
 
@@ -1101,7 +1104,7 @@ class Renderer final : public VulkanRenderer
 
                 m_instance.device_wait_idle();
 
-                m_render_buffers->delete_command_buffers();
+                m_render_buffers->delete_command_buffers(&m_render_command_buffers);
                 m_shadow_buffers->delete_command_buffers();
         }
 

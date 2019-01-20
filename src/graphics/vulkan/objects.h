@@ -428,6 +428,7 @@ public:
 
         const VkCommandBuffer& operator[](uint32_t index) const noexcept;
         uint32_t count() const noexcept;
+        const std::vector<VkCommandBuffer>& buffers() const noexcept;
 };
 
 class DescriptorSetLayout final
