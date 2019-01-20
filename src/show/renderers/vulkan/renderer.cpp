@@ -838,7 +838,8 @@ class Renderer final : public VulkanRenderer
 
                 //
 
-                ASSERT(image_index < m_render_command_buffers.size());
+                ASSERT(image_index < m_swapchain->image_views().size());
+                ASSERT(m_render_command_buffers.size() == m_swapchain->image_views().size());
 
                 if (!m_show_shadow || !m_storage.object() || !m_storage.object()->has_shadow())
                 {
@@ -864,16 +865,19 @@ class Renderer final : public VulkanRenderer
                 }
                 else
                 {
-                        ASSERT(1 == m_shadow_command_buffers.size());
-
                         VkSemaphore shadow_available_semaphore = m_shadow_available_semaphores[current_frame];
 
                         {
+                                ASSERT(m_shadow_command_buffers.size() == m_swapchain->image_views().size() ||
+                                       m_shadow_command_buffers.size() == 1);
+
+                                unsigned buffer_index = m_shadow_command_buffers.size() == 1 ? 0 : image_index;
+
                                 VkSubmitInfo info = {};
 
                                 info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
                                 info.commandBufferCount = 1;
-                                info.pCommandBuffers = &m_shadow_command_buffers[0];
+                                info.pCommandBuffers = &m_shadow_command_buffers[buffer_index];
                                 info.signalSemaphoreCount = 1;
                                 info.pSignalSemaphores = &shadow_available_semaphore;
 
@@ -978,11 +982,12 @@ class Renderer final : public VulkanRenderer
 
                 //
 
-                m_shadow_buffers = impl::create_shadow_buffers(*m_swapchain, m_instance.attachment_family_indices(),
+                constexpr impl::ShadowBufferCount buffer_count = impl::ShadowBufferCount::One;
+                m_shadow_buffers = impl::create_shadow_buffers(buffer_count, *m_swapchain, m_instance.attachment_family_indices(),
                                                                m_instance.device(), m_instance.graphics_command_pool(),
                                                                m_instance.graphics_queue(), DEPTH_IMAGE_FORMATS, m_shadow_zoom);
 
-                m_triangles_shared_shader_memory.set_shadow_texture(m_shadow_sampler, m_shadow_buffers->texture());
+                m_triangles_shared_shader_memory.set_shadow_texture(m_shadow_sampler, m_shadow_buffers->texture(0));
 
                 m_shadow_pipeline = m_shadow_buffers->create_pipeline(
                         VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, {&m_shadow_vert, &m_shadow_frag}, m_shadow_pipeline_layout,

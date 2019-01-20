@@ -28,11 +28,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace vulkan_renderer_implementation
 {
+enum class ShadowBufferCount
+{
+        One,
+        Swapchain
+};
+
 struct ShadowBuffers
 {
         virtual ~ShadowBuffers() = default;
 
-        virtual const vulkan::ShadowDepthAttachment* texture() const noexcept = 0;
+        virtual const vulkan::ShadowDepthAttachment* texture(unsigned index) const noexcept = 0;
 
         virtual std::vector<VkCommandBuffer> create_command_buffers(
                 const std::function<void(VkCommandBuffer buffer)>& commands) = 0;
@@ -46,7 +52,7 @@ struct ShadowBuffers
                                            const std::vector<VkVertexInputAttributeDescription>& vertex_attribute) = 0;
 };
 
-std::unique_ptr<ShadowBuffers> create_shadow_buffers(const vulkan::Swapchain& swapchain,
+std::unique_ptr<ShadowBuffers> create_shadow_buffers(ShadowBufferCount buffer_count, const vulkan::Swapchain& swapchain,
                                                      const std::vector<uint32_t>& attachment_family_indices,
                                                      const vulkan::Device& device, VkCommandPool graphics_command_pool,
                                                      VkQueue graphics_queue, const std::vector<VkFormat>& depth_image_formats,
