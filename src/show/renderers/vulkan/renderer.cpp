@@ -978,9 +978,9 @@ class Renderer final : public VulkanRenderer
 
                 //
 
-                m_shadow_buffers = std::make_unique<impl::ShadowBuffers>(
-                        *m_swapchain, m_instance.attachment_family_indices(), m_instance.device(),
-                        m_instance.graphics_command_pool(), m_instance.graphics_queue(), DEPTH_IMAGE_FORMATS, m_shadow_zoom);
+                m_shadow_buffers = impl::create_shadow_buffers(*m_swapchain, m_instance.attachment_family_indices(),
+                                                               m_instance.device(), m_instance.graphics_command_pool(),
+                                                               m_instance.graphics_queue(), DEPTH_IMAGE_FORMATS, m_shadow_zoom);
 
                 m_triangles_shared_shader_memory.set_shadow_texture(m_shadow_sampler, m_shadow_buffers->texture());
 

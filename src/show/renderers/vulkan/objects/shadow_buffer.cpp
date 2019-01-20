@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/vulkan/pipeline.h"
 #include "graphics/vulkan/print.h"
 
+#include <list>
 #include <sstream>
 
 namespace
@@ -121,13 +122,46 @@ vulkan::RenderPass create_shadow_render_pass(VkDevice device, VkFormat depth_ima
 
         return vulkan::RenderPass(device, create_info);
 }
-}
 
-namespace vulkan_renderer_implementation
+class Impl final : public vulkan_renderer_implementation::ShadowBuffers
 {
-ShadowBuffers::ShadowBuffers(const vulkan::Swapchain& swapchain, const std::vector<uint32_t>& attachment_family_indices,
-                             const vulkan::Device& device, VkCommandPool graphics_command_pool, VkQueue graphics_queue,
-                             const std::vector<VkFormat>& depth_image_formats, double zoom)
+        const vulkan::Device& m_device;
+        VkCommandPool m_graphics_command_pool;
+
+        //
+
+        std::unique_ptr<vulkan::ShadowDepthAttachment> m_depth_attachment;
+        vulkan::RenderPass m_render_pass;
+        std::vector<vulkan::Framebuffer> m_framebuffers;
+        std::vector<vulkan::Pipeline> m_pipelines;
+        std::list<vulkan::CommandBuffers> m_command_buffers;
+
+public:
+        Impl(const vulkan::Swapchain& swapchain, const std::vector<uint32_t>& attachment_family_indices,
+             const vulkan::Device& device, VkCommandPool graphics_command_pool, VkQueue graphics_queue,
+             const std::vector<VkFormat>& depth_image_formats, double zoom);
+
+        Impl(const Impl&) = delete;
+        Impl& operator=(const Impl&) = delete;
+        Impl& operator=(Impl&&) = delete;
+
+        //
+
+        const vulkan::ShadowDepthAttachment* texture() const noexcept override;
+
+        std::vector<VkCommandBuffer> create_command_buffers(const std::function<void(VkCommandBuffer buffer)>& commands) override;
+
+        void delete_command_buffers(std::vector<VkCommandBuffer>* buffers) override;
+
+        VkPipeline create_pipeline(VkPrimitiveTopology primitive_topology, const std::vector<const vulkan::Shader*>& shaders,
+                                   const vulkan::PipelineLayout& pipeline_layout,
+                                   const std::vector<VkVertexInputBindingDescription>& vertex_binding,
+                                   const std::vector<VkVertexInputAttributeDescription>& vertex_attribute) override;
+};
+
+Impl::Impl(const vulkan::Swapchain& swapchain, const std::vector<uint32_t>& attachment_family_indices,
+           const vulkan::Device& device, VkCommandPool graphics_command_pool, VkQueue graphics_queue,
+           const std::vector<VkFormat>& depth_image_formats, double zoom)
         : m_device(device), m_graphics_command_pool(graphics_command_pool)
 {
         ASSERT(device != VK_NULL_HANDLE);
@@ -155,7 +189,7 @@ ShadowBuffers::ShadowBuffers(const vulkan::Swapchain& swapchain, const std::vect
         LOG(buffer_info(m_depth_attachment.get(), zoom, width, height));
 }
 
-std::vector<VkCommandBuffer> ShadowBuffers::create_command_buffers(const std::function<void(VkCommandBuffer buffer)>& commands)
+std::vector<VkCommandBuffer> Impl::create_command_buffers(const std::function<void(VkCommandBuffer buffer)>& commands)
 {
         std::array<VkClearValue, 1> clear_values;
         clear_values[0] = vulkan::depth_stencil_clear_value();
@@ -176,21 +210,20 @@ std::vector<VkCommandBuffer> ShadowBuffers::create_command_buffers(const std::fu
         return m_command_buffers.back().buffers();
 }
 
-void ShadowBuffers::delete_command_buffers(std::vector<VkCommandBuffer>* buffers)
+void Impl::delete_command_buffers(std::vector<VkCommandBuffer>* buffers)
 {
         delete_buffers(&m_command_buffers, buffers);
 }
 
-const vulkan::ShadowDepthAttachment* ShadowBuffers::texture() const noexcept
+const vulkan::ShadowDepthAttachment* Impl::texture() const noexcept
 {
         return m_depth_attachment.get();
 }
 
-VkPipeline ShadowBuffers::create_pipeline(VkPrimitiveTopology primitive_topology,
-                                          const std::vector<const vulkan::Shader*>& shaders,
-                                          const vulkan::PipelineLayout& pipeline_layout,
-                                          const std::vector<VkVertexInputBindingDescription>& vertex_binding_descriptions,
-                                          const std::vector<VkVertexInputAttributeDescription>& vertex_attribute_descriptions)
+VkPipeline Impl::create_pipeline(VkPrimitiveTopology primitive_topology, const std::vector<const vulkan::Shader*>& shaders,
+                                 const vulkan::PipelineLayout& pipeline_layout,
+                                 const std::vector<VkVertexInputBindingDescription>& vertex_binding,
+                                 const std::vector<VkVertexInputAttributeDescription>& vertex_attribute)
 {
         ASSERT(pipeline_layout != VK_NULL_HANDLE);
 
@@ -206,13 +239,26 @@ VkPipeline ShadowBuffers::create_pipeline(VkPrimitiveTopology primitive_topology
         info.height = m_depth_attachment->height();
         info.primitive_topology = primitive_topology;
         info.shaders = &shaders;
-        info.binding_descriptions = &vertex_binding_descriptions;
-        info.attribute_descriptions = &vertex_attribute_descriptions;
+        info.binding_descriptions = &vertex_binding;
+        info.attribute_descriptions = &vertex_attribute;
         info.depth_bias = true;
         info.color_blend = false;
 
         m_pipelines.push_back(vulkan::create_graphics_pipeline(info));
 
         return m_pipelines.back();
+}
+}
+
+namespace vulkan_renderer_implementation
+{
+std::unique_ptr<ShadowBuffers> create_shadow_buffers(const vulkan::Swapchain& swapchain,
+                                                     const std::vector<uint32_t>& attachment_family_indices,
+                                                     const vulkan::Device& device, VkCommandPool graphics_command_pool,
+                                                     VkQueue graphics_queue, const std::vector<VkFormat>& depth_image_formats,
+                                                     double zoom)
+{
+        return std::make_unique<Impl>(swapchain, attachment_family_indices, device, graphics_command_pool, graphics_queue,
+                                      depth_image_formats, zoom);
 }
 }
