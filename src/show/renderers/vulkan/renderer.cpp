@@ -646,6 +646,8 @@ class Renderer final : public VulkanRenderer
         std::unique_ptr<impl::RenderBuffers> m_render_buffers;
         std::vector<VkCommandBuffer> m_render_command_buffers;
         std::unique_ptr<impl::ShadowBuffers> m_shadow_buffers;
+        std::vector<VkCommandBuffer> m_shadow_command_buffers;
+
         std::unique_ptr<vulkan::StorageImage> m_object_image;
 
         RendererObjectStorage<DrawObject> m_storage;
@@ -862,6 +864,8 @@ class Renderer final : public VulkanRenderer
                 }
                 else
                 {
+                        ASSERT(1 == m_shadow_command_buffers.size());
+
                         VkSemaphore shadow_available_semaphore = m_shadow_available_semaphores[current_frame];
 
                         {
@@ -869,7 +873,7 @@ class Renderer final : public VulkanRenderer
 
                                 info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
                                 info.commandBufferCount = 1;
-                                info.pCommandBuffers = &m_shadow_buffers->command_buffer();
+                                info.pCommandBuffers = &m_shadow_command_buffers[0];
                                 info.signalSemaphoreCount = 1;
                                 info.pSignalSemaphores = &shadow_available_semaphore;
 
@@ -969,6 +973,7 @@ class Renderer final : public VulkanRenderer
                         m_instance.device_wait_idle();
                 }
 
+                m_shadow_command_buffers.clear();
                 m_shadow_buffers.reset();
 
                 //
@@ -1013,6 +1018,7 @@ class Renderer final : public VulkanRenderer
                 {
                         m_instance.device_wait_idle();
 
+                        m_shadow_command_buffers.clear();
                         m_shadow_buffers.reset();
 
                         m_render_command_buffers.clear();
@@ -1136,8 +1142,9 @@ class Renderer final : public VulkanRenderer
                         m_instance.device_wait_idle();
                 }
 
-                m_shadow_buffers->delete_command_buffers();
-                m_shadow_buffers->create_command_buffers(std::bind(&Renderer::draw_shadow_commands, this, std::placeholders::_1));
+                m_shadow_buffers->delete_command_buffers(&m_shadow_command_buffers);
+                m_shadow_command_buffers = m_shadow_buffers->create_command_buffers(
+                        std::bind(&Renderer::draw_shadow_commands, this, std::placeholders::_1));
         }
 
         void create_all_command_buffers(bool wait_idle = true)
@@ -1166,7 +1173,7 @@ class Renderer final : public VulkanRenderer
                 m_instance.device_wait_idle();
 
                 m_render_buffers->delete_command_buffers(&m_render_command_buffers);
-                m_shadow_buffers->delete_command_buffers();
+                m_shadow_buffers->delete_command_buffers(&m_shadow_command_buffers);
         }
 
 public:

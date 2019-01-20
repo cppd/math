@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/vulkan/swapchain.h"
 
 #include <functional>
+#include <list>
 #include <memory>
 #include <vector>
 
@@ -39,7 +40,7 @@ class ShadowBuffers
         vulkan::RenderPass m_render_pass;
         std::vector<vulkan::Framebuffer> m_framebuffers;
         std::vector<vulkan::Pipeline> m_pipelines;
-        vulkan::CommandBuffers m_command_buffers;
+        std::list<vulkan::CommandBuffers> m_command_buffers;
 
 public:
         ShadowBuffers(const vulkan::Swapchain& swapchain, const std::vector<uint32_t>& attachment_family_indices,
@@ -57,9 +58,9 @@ public:
 
         const vulkan::ShadowDepthAttachment* texture() const noexcept;
 
-        void create_command_buffers(const std::function<void(VkCommandBuffer buffer)>& commands);
-        void delete_command_buffers();
-        const VkCommandBuffer& command_buffer() const noexcept;
+        std::vector<VkCommandBuffer> create_command_buffers(const std::function<void(VkCommandBuffer buffer)>& commands);
+
+        void delete_command_buffers(std::vector<VkCommandBuffer>* buffers);
 
         VkPipeline create_pipeline(VkPrimitiveTopology primitive_topology, const std::vector<const vulkan::Shader*>& shaders,
                                    const vulkan::PipelineLayout& pipeline_layout,

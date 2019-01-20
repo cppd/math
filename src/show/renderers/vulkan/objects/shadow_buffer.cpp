@@ -44,6 +44,29 @@ std::string buffer_info(const vulkan::ShadowDepthAttachment* depth, double zoom,
         return oss.str();
 }
 
+void delete_buffers(std::list<vulkan::CommandBuffers>* command_buffers, std::vector<VkCommandBuffer>* buffers)
+{
+        ASSERT(command_buffers && buffers);
+
+        if (buffers->size() == 0)
+        {
+                return;
+        }
+
+        // Буферов не предполагается много, поэтому достаточно искать перебором
+        for (auto iter = command_buffers->cbegin(); iter != command_buffers->cend(); ++iter)
+        {
+                if (iter->buffers() == *buffers)
+                {
+                        command_buffers->erase(iter);
+                        buffers->clear();
+                        return;
+                }
+        }
+
+        error_fatal("Shadow command buffers not found");
+}
+
 vulkan::RenderPass create_shadow_render_pass(VkDevice device, VkFormat depth_image_format)
 {
         std::array<VkAttachmentDescription, 1> attachments = {};
@@ -132,7 +155,7 @@ ShadowBuffers::ShadowBuffers(const vulkan::Swapchain& swapchain, const std::vect
         LOG(buffer_info(m_depth_attachment.get(), zoom, width, height));
 }
 
-void ShadowBuffers::create_command_buffers(const std::function<void(VkCommandBuffer buffer)>& commands)
+std::vector<VkCommandBuffer> ShadowBuffers::create_command_buffers(const std::function<void(VkCommandBuffer buffer)>& commands)
 {
         std::array<VkClearValue, 1> clear_values;
         clear_values[0] = vulkan::depth_stencil_clear_value();
@@ -148,7 +171,14 @@ void ShadowBuffers::create_command_buffers(const std::function<void(VkCommandBuf
         info.before_render_pass_commands = std::nullopt;
         info.render_pass_commands = commands;
 
-        m_command_buffers = vulkan::create_command_buffers(info);
+        m_command_buffers.push_back(vulkan::create_command_buffers(info));
+
+        return m_command_buffers.back().buffers();
+}
+
+void ShadowBuffers::delete_command_buffers(std::vector<VkCommandBuffer>* buffers)
+{
+        delete_buffers(&m_command_buffers, buffers);
 }
 
 const vulkan::ShadowDepthAttachment* ShadowBuffers::texture() const noexcept
@@ -184,15 +214,5 @@ VkPipeline ShadowBuffers::create_pipeline(VkPrimitiveTopology primitive_topology
         m_pipelines.push_back(vulkan::create_graphics_pipeline(info));
 
         return m_pipelines.back();
-}
-
-void ShadowBuffers::delete_command_buffers()
-{
-        m_command_buffers = vulkan::CommandBuffers();
-}
-
-const VkCommandBuffer& ShadowBuffers::command_buffer() const noexcept
-{
-        return m_command_buffers[0];
 }
 }
