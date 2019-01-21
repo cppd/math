@@ -29,6 +29,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace vulkan_renderer_implementation
 {
+enum class RenderBufferCount
+{
+        One,
+        Swapchain
+};
+
 struct RenderBuffers
 {
         virtual ~RenderBuffers() = default;
@@ -64,7 +70,7 @@ struct RenderBuffers
                                                     const std::vector<VkVertexInputAttributeDescription>& vertex_attribute) = 0;
 };
 
-std::unique_ptr<RenderBuffers> create_render_buffers(const vulkan::Swapchain& swapchain,
+std::unique_ptr<RenderBuffers> create_render_buffers(RenderBufferCount buffer_count, const vulkan::Swapchain& swapchain,
                                                      const std::vector<uint32_t>& attachment_family_indices,
                                                      const vulkan::Device& device, VkCommandPool graphics_command_pool,
                                                      VkQueue graphics_queue, int required_minimum_sample_count,

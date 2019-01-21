@@ -939,10 +939,11 @@ class Renderer final : public VulkanRenderer
 
                 //
 
+                constexpr impl::RenderBufferCount buffer_count = impl::RenderBufferCount::One;
                 m_render_buffers =
-                        impl::create_render_buffers(*m_swapchain, m_instance.attachment_family_indices(), m_instance.device(),
-                                                    m_instance.graphics_command_pool(), m_instance.graphics_queue(),
-                                                    m_minimum_sample_count, DEPTH_IMAGE_FORMATS);
+                        impl::create_render_buffers(buffer_count, *m_swapchain, m_instance.attachment_family_indices(),
+                                                    m_instance.device(), m_instance.graphics_command_pool(),
+                                                    m_instance.graphics_queue(), m_minimum_sample_count, DEPTH_IMAGE_FORMATS);
 
                 m_object_image = std::make_unique<vulkan::StorageImage>(
                         m_instance.create_storage_image(VK_FORMAT_R32_UINT, m_swapchain->width(), m_swapchain->height()));
