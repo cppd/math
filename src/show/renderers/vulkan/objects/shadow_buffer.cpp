@@ -25,22 +25,28 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/vulkan/pipeline.h"
 #include "graphics/vulkan/print.h"
 
+#include <algorithm>
 #include <list>
 #include <sstream>
 
 namespace
 {
-std::string buffer_info(const vulkan::ShadowDepthAttachment& depth, double zoom, unsigned width, unsigned height)
+std::string buffer_info(const std::vector<vulkan::ShadowDepthAttachment>& depth, double zoom, unsigned width, unsigned height)
 {
+        ASSERT(depth.size() > 0);
+        ASSERT(std::all_of(depth.cbegin(), depth.cend(), [&](const vulkan::ShadowDepthAttachment& d) {
+                return d.format() == depth[0].format() && d.width() == depth[0].width() && d.height() == depth[0].height();
+        }));
+
         std::ostringstream oss;
 
-        oss << "Shadow buffers depth attachment format " << vulkan::format_to_string(depth.format());
+        oss << "Shadow buffers depth attachment format " << vulkan::format_to_string(depth[0].format());
         oss << '\n';
         oss << "Shadow buffers zoom = " << to_string_fixed(zoom, 5);
         oss << '\n';
         oss << "Shadow buffers requested size = (" << width << ", " << height << ")";
         oss << '\n';
-        oss << "Shadow buffers chosen size = (" << depth.width() << ", " << depth.height() << ")";
+        oss << "Shadow buffers chosen size = (" << depth[0].width() << ", " << depth[0].height() << ")";
 
         return oss.str();
 }
@@ -66,6 +72,20 @@ void delete_buffers(std::list<vulkan::CommandBuffers>* command_buffers, std::vec
         }
 
         error_fatal("Shadow command buffers not found");
+}
+
+unsigned compute_buffer_count(vulkan_renderer_implementation::ShadowBufferCount buffer_count, const vulkan::Swapchain& swapchain)
+{
+        namespace impl = vulkan_renderer_implementation;
+        switch (buffer_count)
+        {
+        case impl::ShadowBufferCount::One:
+                return 1;
+        case impl::ShadowBufferCount::Swapchain:
+                ASSERT(swapchain.image_views().size() > 0);
+                return swapchain.image_views().size();
+        }
+        error_fatal("Error shadow buffer count");
 }
 
 vulkan::RenderPass create_shadow_render_pass(VkDevice device, VkFormat depth_image_format)
@@ -121,20 +141,6 @@ vulkan::RenderPass create_shadow_render_pass(VkDevice device, VkFormat depth_ima
         create_info.pDependencies = subpass_dependencies.data();
 
         return vulkan::RenderPass(device, create_info);
-}
-
-unsigned compute_buffer_count(vulkan_renderer_implementation::ShadowBufferCount buffer_count, const vulkan::Swapchain& swapchain)
-{
-        namespace impl = vulkan_renderer_implementation;
-        switch (buffer_count)
-        {
-        case impl::ShadowBufferCount::One:
-                return 1;
-        case impl::ShadowBufferCount::Swapchain:
-                ASSERT(swapchain.image_views().size() > 0);
-                return swapchain.image_views().size();
-        }
-        error_fatal("Error shadow buffer count");
 }
 
 class Impl final : public vulkan_renderer_implementation::ShadowBuffers
@@ -214,7 +220,7 @@ Impl::Impl(vulkan_renderer_implementation::ShadowBufferCount buffer_count, const
                 m_framebuffers.push_back(create_framebuffer(m_device, m_render_pass, depth_width, depth_height, attachments));
         }
 
-        LOG(buffer_info(m_depth_attachments[0], zoom, width, height));
+        LOG(buffer_info(m_depth_attachments, zoom, width, height));
 }
 
 std::vector<VkCommandBuffer> Impl::create_command_buffers(const std::function<void(VkCommandBuffer buffer)>& commands)
