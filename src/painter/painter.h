@@ -27,9 +27,7 @@ template <size_t N>
 struct PainterNotifier
 {
 protected:
-        virtual ~PainterNotifier()
-        {
-        }
+        virtual ~PainterNotifier() = default;
 
 public:
         virtual void painter_pixel_before(const std::array<int_least16_t, N>& pixel) noexcept = 0;
