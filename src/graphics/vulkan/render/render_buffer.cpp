@@ -80,14 +80,13 @@ void delete_buffers(std::list<vulkan::CommandBuffers>* command_buffers, std::vec
         error_fatal("Command buffers not found");
 }
 
-unsigned compute_buffer_count(vulkan_renderer_implementation::RenderBufferCount buffer_count, const vulkan::Swapchain& swapchain)
+unsigned compute_buffer_count(vulkan::RenderBufferCount buffer_count, const vulkan::Swapchain& swapchain)
 {
-        namespace impl = vulkan_renderer_implementation;
         switch (buffer_count)
         {
-        case impl::RenderBufferCount::One:
+        case vulkan::RenderBufferCount::One:
                 return 1;
-        case impl::RenderBufferCount::Swapchain:
+        case vulkan::RenderBufferCount::Swapchain:
                 ASSERT(swapchain.image_views().size() > 0);
                 return swapchain.image_views().size();
         }
@@ -368,9 +367,7 @@ vulkan::RenderPass create_multisampling_render_pass_no_depth(VkDevice device, Vk
         return vulkan::RenderPass(device, create_info);
 }
 
-namespace impl = vulkan_renderer_implementation;
-
-class Impl3D : public impl::RenderBuffers3D
+class Impl3D : public vulkan::RenderBuffers3D
 {
         virtual std::vector<VkCommandBuffer> create_command_buffers_3d(
                 const Color& clear_color,
@@ -412,7 +409,7 @@ protected:
         ~Impl3D() override = default;
 };
 
-class Impl2D : public impl::RenderBuffers2D
+class Impl2D : public vulkan::RenderBuffers2D
 {
         virtual std::vector<VkCommandBuffer> create_command_buffers_2d(
                 const std::optional<std::function<void(VkCommandBuffer buffer)>>& before_render_pass_commands,
@@ -452,7 +449,7 @@ protected:
         ~Impl2D() override = default;
 };
 
-class Impl final : public impl::RenderBuffers, public Impl3D, public Impl2D
+class Impl final : public vulkan::RenderBuffers, public Impl3D, public Impl2D
 {
         const vulkan::Device& m_device;
         VkCommandPool m_graphics_command_pool;
@@ -481,7 +478,7 @@ class Impl final : public impl::RenderBuffers, public Impl3D, public Impl2D
                                const std::vector<VkFormat>& depth_image_formats);
 
 public:
-        Impl(impl::RenderBufferCount buffer_count, const vulkan::Swapchain& swapchain,
+        Impl(vulkan::RenderBufferCount buffer_count, const vulkan::Swapchain& swapchain,
              const std::vector<uint32_t>& attachment_family_indices, const vulkan::Device& device,
              VkCommandPool graphics_command_pool, VkQueue graphics_queue, int required_minimum_sample_count,
              const std::vector<VkFormat>& depth_image_formats);
@@ -525,7 +522,7 @@ public:
                                       const std::vector<VkVertexInputAttributeDescription>& vertex_attribute) override;
 };
 
-Impl::Impl(impl::RenderBufferCount buffer_count, const vulkan::Swapchain& swapchain,
+Impl::Impl(vulkan::RenderBufferCount buffer_count, const vulkan::Swapchain& swapchain,
            const std::vector<uint32_t>& attachment_family_indices, const vulkan::Device& device,
            VkCommandPool graphics_command_pool, VkQueue graphics_queue, int required_minimum_sample_count,
            const std::vector<VkFormat>& depth_image_formats)
@@ -558,12 +555,12 @@ Impl::Impl(impl::RenderBufferCount buffer_count, const vulkan::Swapchain& swapch
         LOG(buffer_info(m_color_attachments, m_depth_attachments));
 }
 
-impl::RenderBuffers3D& Impl::buffers_3d()
+vulkan::RenderBuffers3D& Impl::buffers_3d()
 {
         return *this;
 }
 
-impl::RenderBuffers2D& Impl::buffers_2d()
+vulkan::RenderBuffers2D& Impl::buffers_2d()
 {
         return *this;
 }
@@ -791,7 +788,7 @@ VkPipeline Impl::create_pipeline_2d(VkPrimitiveTopology primitive_topology, bool
 }
 }
 
-namespace vulkan_renderer_implementation
+namespace vulkan
 {
 std::unique_ptr<RenderBuffers> create_render_buffers(RenderBufferCount buffer_count, const vulkan::Swapchain& swapchain,
                                                      const std::vector<uint32_t>& attachment_family_indices,

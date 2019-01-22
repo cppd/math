@@ -26,11 +26,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/vulkan/device.h"
 #include "graphics/vulkan/error.h"
 #include "graphics/vulkan/query.h"
+#include "graphics/vulkan/render/render_buffer.h"
+#include "graphics/vulkan/render/shadow_buffer.h"
 #include "obj/alg/alg.h"
 #include "show/renderers/com/storage.h"
-#include "show/renderers/vulkan/objects/render_buffer.h"
 #include "show/renderers/vulkan/objects/sampler.h"
-#include "show/renderers/vulkan/objects/shadow_buffer.h"
 #include "show/renderers/vulkan/shader/memory.h"
 #include "show/renderers/vulkan/shader/vertex.h"
 
@@ -643,9 +643,9 @@ class Renderer final : public VulkanRenderer
         vulkan::PipelineLayout m_shadow_pipeline_layout;
         vulkan::PipelineLayout m_points_pipeline_layout;
 
-        std::unique_ptr<impl::RenderBuffers> m_render_buffers;
+        std::unique_ptr<vulkan::RenderBuffers> m_render_buffers;
         std::vector<VkCommandBuffer> m_render_command_buffers;
-        std::unique_ptr<impl::ShadowBuffers> m_shadow_buffers;
+        std::unique_ptr<vulkan::ShadowBuffers> m_shadow_buffers;
         std::vector<VkCommandBuffer> m_shadow_command_buffers;
 
         std::unique_ptr<vulkan::StorageImage> m_object_image;
@@ -939,11 +939,11 @@ class Renderer final : public VulkanRenderer
 
                 //
 
-                constexpr impl::RenderBufferCount buffer_count = impl::RenderBufferCount::One;
+                constexpr vulkan::RenderBufferCount buffer_count = vulkan::RenderBufferCount::One;
                 m_render_buffers =
-                        impl::create_render_buffers(buffer_count, *m_swapchain, m_instance.attachment_family_indices(),
-                                                    m_instance.device(), m_instance.graphics_command_pool(),
-                                                    m_instance.graphics_queue(), m_minimum_sample_count, DEPTH_IMAGE_FORMATS);
+                        vulkan::create_render_buffers(buffer_count, *m_swapchain, m_instance.attachment_family_indices(),
+                                                      m_instance.device(), m_instance.graphics_command_pool(),
+                                                      m_instance.graphics_queue(), m_minimum_sample_count, DEPTH_IMAGE_FORMATS);
 
                 m_object_image = std::make_unique<vulkan::StorageImage>(
                         m_instance.create_storage_image(VK_FORMAT_R32_UINT, m_swapchain->width(), m_swapchain->height()));
@@ -983,10 +983,10 @@ class Renderer final : public VulkanRenderer
 
                 //
 
-                constexpr impl::ShadowBufferCount buffer_count = impl::ShadowBufferCount::One;
-                m_shadow_buffers = impl::create_shadow_buffers(buffer_count, *m_swapchain, m_instance.attachment_family_indices(),
-                                                               m_instance.device(), m_instance.graphics_command_pool(),
-                                                               m_instance.graphics_queue(), DEPTH_IMAGE_FORMATS, m_shadow_zoom);
+                constexpr vulkan::ShadowBufferCount buffer_count = vulkan::ShadowBufferCount::One;
+                m_shadow_buffers = vulkan::create_shadow_buffers(
+                        buffer_count, *m_swapchain, m_instance.attachment_family_indices(), m_instance.device(),
+                        m_instance.graphics_command_pool(), m_instance.graphics_queue(), DEPTH_IMAGE_FORMATS, m_shadow_zoom);
 
                 m_triangles_shared_shader_memory.set_shadow_texture(m_shadow_sampler, m_shadow_buffers->texture(0));
 

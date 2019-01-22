@@ -74,14 +74,13 @@ void delete_buffers(std::list<vulkan::CommandBuffers>* command_buffers, std::vec
         error_fatal("Shadow command buffers not found");
 }
 
-unsigned compute_buffer_count(vulkan_renderer_implementation::ShadowBufferCount buffer_count, const vulkan::Swapchain& swapchain)
+unsigned compute_buffer_count(vulkan::ShadowBufferCount buffer_count, const vulkan::Swapchain& swapchain)
 {
-        namespace impl = vulkan_renderer_implementation;
         switch (buffer_count)
         {
-        case impl::ShadowBufferCount::One:
+        case vulkan::ShadowBufferCount::One:
                 return 1;
-        case impl::ShadowBufferCount::Swapchain:
+        case vulkan::ShadowBufferCount::Swapchain:
                 ASSERT(swapchain.image_views().size() > 0);
                 return swapchain.image_views().size();
         }
@@ -143,7 +142,7 @@ vulkan::RenderPass create_shadow_render_pass(VkDevice device, VkFormat depth_ima
         return vulkan::RenderPass(device, create_info);
 }
 
-class Impl final : public vulkan_renderer_implementation::ShadowBuffers
+class Impl final : public vulkan::ShadowBuffers
 {
         const vulkan::Device& m_device;
         VkCommandPool m_graphics_command_pool;
@@ -158,7 +157,7 @@ class Impl final : public vulkan_renderer_implementation::ShadowBuffers
         std::vector<vulkan::Pipeline> m_pipelines;
 
 public:
-        Impl(vulkan_renderer_implementation::ShadowBufferCount buffer_count, const vulkan::Swapchain& swapchain,
+        Impl(vulkan::ShadowBufferCount buffer_count, const vulkan::Swapchain& swapchain,
              const std::vector<uint32_t>& attachment_family_indices, const vulkan::Device& device,
              VkCommandPool graphics_command_pool, VkQueue graphics_queue, const std::vector<VkFormat>& depth_image_formats,
              double zoom);
@@ -181,7 +180,7 @@ public:
                                    const std::vector<VkVertexInputAttributeDescription>& vertex_attribute) override;
 };
 
-Impl::Impl(vulkan_renderer_implementation::ShadowBufferCount buffer_count, const vulkan::Swapchain& swapchain,
+Impl::Impl(vulkan::ShadowBufferCount buffer_count, const vulkan::Swapchain& swapchain,
            const std::vector<uint32_t>& attachment_family_indices, const vulkan::Device& device,
            VkCommandPool graphics_command_pool, VkQueue graphics_queue, const std::vector<VkFormat>& depth_image_formats,
            double zoom)
@@ -298,7 +297,7 @@ VkPipeline Impl::create_pipeline(VkPrimitiveTopology primitive_topology, const s
 }
 }
 
-namespace vulkan_renderer_implementation
+namespace vulkan
 {
 std::unique_ptr<ShadowBuffers> create_shadow_buffers(ShadowBufferCount buffer_count, const vulkan::Swapchain& swapchain,
                                                      const std::vector<uint32_t>& attachment_family_indices,

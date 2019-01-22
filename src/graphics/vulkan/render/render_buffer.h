@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <optional>
 #include <vector>
 
-namespace vulkan_renderer_implementation
+namespace vulkan
 {
 enum class RenderBufferCount
 {
