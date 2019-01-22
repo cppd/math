@@ -951,16 +951,16 @@ class Renderer final : public VulkanRenderer
                 m_triangles_shared_shader_memory.set_object_image(m_object_image.get());
                 m_points_shader_memory.set_object_image(m_object_image.get());
 
-                m_triangles_pipeline = m_render_buffers->create_pipeline(
+                m_triangles_pipeline = m_render_buffers->buffers_3d().create_pipeline(
                         VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, m_sample_shading,
                         {&m_triangles_vert, &m_triangles_geom, &m_triangles_frag}, m_triangles_pipeline_layout,
                         impl::Vertex::binding_descriptions(), impl::Vertex::triangles_attribute_descriptions());
 
-                m_points_pipeline = m_render_buffers->create_pipeline(
+                m_points_pipeline = m_render_buffers->buffers_3d().create_pipeline(
                         VK_PRIMITIVE_TOPOLOGY_POINT_LIST, false, {&m_points_vert, &m_points_frag}, m_points_pipeline_layout,
                         impl::PointVertex::binding_descriptions(), impl::PointVertex::attribute_descriptions());
 
-                m_lines_pipeline = m_render_buffers->create_pipeline(
+                m_lines_pipeline = m_render_buffers->buffers_3d().create_pipeline(
                         VK_PRIMITIVE_TOPOLOGY_LINE_LIST, false, {&m_points_vert, &m_points_frag}, m_points_pipeline_layout,
                         impl::PointVertex::binding_descriptions(), impl::PointVertex::attribute_descriptions());
         }
@@ -1129,8 +1129,8 @@ class Renderer final : public VulkanRenderer
                         m_instance.device_wait_idle();
                 }
 
-                m_render_buffers->delete_command_buffers(&m_render_command_buffers);
-                m_render_command_buffers = m_render_buffers->create_command_buffers(
+                m_render_buffers->buffers_3d().delete_command_buffers(&m_render_command_buffers);
+                m_render_command_buffers = m_render_buffers->buffers_3d().create_command_buffers(
                         m_clear_color, std::bind(&Renderer::before_render_pass_commands, this, std::placeholders::_1),
                         std::bind(&Renderer::draw_commands, this, std::placeholders::_1));
         }
@@ -1178,7 +1178,7 @@ class Renderer final : public VulkanRenderer
 
                 m_instance.device_wait_idle();
 
-                m_render_buffers->delete_command_buffers(&m_render_command_buffers);
+                m_render_buffers->buffers_3d().delete_command_buffers(&m_render_command_buffers);
                 m_shadow_buffers->delete_command_buffers(&m_shadow_command_buffers);
         }
 

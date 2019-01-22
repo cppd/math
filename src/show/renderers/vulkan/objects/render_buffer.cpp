@@ -368,7 +368,91 @@ vulkan::RenderPass create_multisampling_render_pass_no_depth(VkDevice device, Vk
         return vulkan::RenderPass(device, create_info);
 }
 
-class Impl final : public vulkan_renderer_implementation::RenderBuffers
+namespace impl = vulkan_renderer_implementation;
+
+class Impl3D : public impl::RenderBuffers3D
+{
+        virtual std::vector<VkCommandBuffer> create_command_buffers_3d(
+                const Color& clear_color,
+                const std::optional<std::function<void(VkCommandBuffer buffer)>>& before_render_pass_commands,
+                const std::function<void(VkCommandBuffer buffer)>& commands) = 0;
+
+        virtual void delete_command_buffers_3d(std::vector<VkCommandBuffer>* buffers) = 0;
+
+        virtual VkPipeline create_pipeline_3d(VkPrimitiveTopology primitive_topology, bool sample_shading,
+                                              const std::vector<const vulkan::Shader*>& shaders, VkPipelineLayout pipeline_layout,
+                                              const std::vector<VkVertexInputBindingDescription>& vertex_binding,
+                                              const std::vector<VkVertexInputAttributeDescription>& vertex_attribute) = 0;
+
+        //
+
+        std::vector<VkCommandBuffer> create_command_buffers(
+                const Color& clear_color,
+                const std::optional<std::function<void(VkCommandBuffer buffer)>>& before_render_pass_commands,
+                const std::function<void(VkCommandBuffer buffer)>& commands) override final
+        {
+                return create_command_buffers_3d(clear_color, before_render_pass_commands, commands);
+        }
+
+        void delete_command_buffers(std::vector<VkCommandBuffer>* buffers) override final
+        {
+                delete_command_buffers_3d(buffers);
+        }
+
+        VkPipeline create_pipeline(VkPrimitiveTopology primitive_topology, bool sample_shading,
+                                   const std::vector<const vulkan::Shader*>& shaders, VkPipelineLayout pipeline_layout,
+                                   const std::vector<VkVertexInputBindingDescription>& vertex_binding,
+                                   const std::vector<VkVertexInputAttributeDescription>& vertex_attribute) override final
+        {
+                return create_pipeline_3d(primitive_topology, sample_shading, shaders, pipeline_layout, vertex_binding,
+                                          vertex_attribute);
+        }
+
+protected:
+        ~Impl3D() override = default;
+};
+
+class Impl2D : public impl::RenderBuffers2D
+{
+        virtual std::vector<VkCommandBuffer> create_command_buffers_2d(
+                const std::optional<std::function<void(VkCommandBuffer buffer)>>& before_render_pass_commands,
+                const std::function<void(VkCommandBuffer buffer)>& commands) = 0;
+
+        virtual void delete_command_buffers_2d(std::vector<VkCommandBuffer>* buffers) = 0;
+
+        virtual VkPipeline create_pipeline_2d(VkPrimitiveTopology primitive_topology, bool sample_shading, bool color_blend,
+                                              const std::vector<const vulkan::Shader*>& shaders, VkPipelineLayout pipeline_layout,
+                                              const std::vector<VkVertexInputBindingDescription>& vertex_binding,
+                                              const std::vector<VkVertexInputAttributeDescription>& vertex_attribute) = 0;
+
+        //
+
+        std::vector<VkCommandBuffer> create_command_buffers(
+                const std::optional<std::function<void(VkCommandBuffer buffer)>>& before_render_pass_commands,
+                const std::function<void(VkCommandBuffer buffer)>& commands) override final
+        {
+                return create_command_buffers_2d(before_render_pass_commands, commands);
+        }
+
+        void delete_command_buffers(std::vector<VkCommandBuffer>* buffers) override final
+        {
+                delete_command_buffers_2d(buffers);
+        }
+
+        VkPipeline create_pipeline(VkPrimitiveTopology primitive_topology, bool sample_shading, bool color_blend,
+                                   const std::vector<const vulkan::Shader*>& shaders, VkPipelineLayout pipeline_layout,
+                                   const std::vector<VkVertexInputBindingDescription>& vertex_binding,
+                                   const std::vector<VkVertexInputAttributeDescription>& vertex_attribute) override final
+        {
+                return create_pipeline_2d(primitive_topology, sample_shading, color_blend, shaders, pipeline_layout,
+                                          vertex_binding, vertex_attribute);
+        }
+
+protected:
+        ~Impl2D() override = default;
+};
+
+class Impl final : public impl::RenderBuffers, public Impl3D, public Impl2D
 {
         const vulkan::Device& m_device;
         VkCommandPool m_graphics_command_pool;
@@ -397,7 +481,7 @@ class Impl final : public vulkan_renderer_implementation::RenderBuffers
                                const std::vector<VkFormat>& depth_image_formats);
 
 public:
-        Impl(vulkan_renderer_implementation::RenderBufferCount buffer_count, const vulkan::Swapchain& swapchain,
+        Impl(impl::RenderBufferCount buffer_count, const vulkan::Swapchain& swapchain,
              const std::vector<uint32_t>& attachment_family_indices, const vulkan::Device& device,
              VkCommandPool graphics_command_pool, VkQueue graphics_queue, int required_minimum_sample_count,
              const std::vector<VkFormat>& depth_image_formats);
@@ -408,35 +492,40 @@ public:
 
         //
 
-        std::vector<VkCommandBuffer> create_command_buffers(
+        virtual RenderBuffers3D& buffers_3d() override;
+        virtual RenderBuffers2D& buffers_2d() override;
+
+        //
+
+        std::vector<VkCommandBuffer> create_command_buffers_3d(
                 const Color& clear_color,
                 const std::optional<std::function<void(VkCommandBuffer buffer)>>& before_render_pass_commands,
                 const std::function<void(VkCommandBuffer buffer)>& commands) override;
 
-        std::vector<VkCommandBuffer> create_command_buffers_no_depth(
+        std::vector<VkCommandBuffer> create_command_buffers_2d(
                 const std::optional<std::function<void(VkCommandBuffer buffer)>>& before_render_pass_commands,
                 const std::function<void(VkCommandBuffer buffer)>& commands) override;
 
         //
 
-        void delete_command_buffers(std::vector<VkCommandBuffer>* buffers) override;
+        void delete_command_buffers_3d(std::vector<VkCommandBuffer>* buffers) override;
 
-        void delete_command_buffers_no_depth(std::vector<VkCommandBuffer>* buffers) override;
+        void delete_command_buffers_2d(std::vector<VkCommandBuffer>* buffers) override;
 
         //
 
-        VkPipeline create_pipeline(VkPrimitiveTopology primitive_topology, bool sample_shading,
-                                   const std::vector<const vulkan::Shader*>& shaders, VkPipelineLayout pipeline_layout,
-                                   const std::vector<VkVertexInputBindingDescription>& vertex_binding,
-                                   const std::vector<VkVertexInputAttributeDescription>& vertex_attribute) override;
+        VkPipeline create_pipeline_3d(VkPrimitiveTopology primitive_topology, bool sample_shading,
+                                      const std::vector<const vulkan::Shader*>& shaders, VkPipelineLayout pipeline_layout,
+                                      const std::vector<VkVertexInputBindingDescription>& vertex_binding,
+                                      const std::vector<VkVertexInputAttributeDescription>& vertex_attribute) override;
 
-        VkPipeline create_pipeline_no_depth(VkPrimitiveTopology primitive_topology, bool sample_shading, bool color_blend,
-                                            const std::vector<const vulkan::Shader*>& shaders, VkPipelineLayout pipeline_layout,
-                                            const std::vector<VkVertexInputBindingDescription>& vertex_binding,
-                                            const std::vector<VkVertexInputAttributeDescription>& vertex_attribute) override;
+        VkPipeline create_pipeline_2d(VkPrimitiveTopology primitive_topology, bool sample_shading, bool color_blend,
+                                      const std::vector<const vulkan::Shader*>& shaders, VkPipelineLayout pipeline_layout,
+                                      const std::vector<VkVertexInputBindingDescription>& vertex_binding,
+                                      const std::vector<VkVertexInputAttributeDescription>& vertex_attribute) override;
 };
 
-Impl::Impl(vulkan_renderer_implementation::RenderBufferCount buffer_count, const vulkan::Swapchain& swapchain,
+Impl::Impl(impl::RenderBufferCount buffer_count, const vulkan::Swapchain& swapchain,
            const std::vector<uint32_t>& attachment_family_indices, const vulkan::Device& device,
            VkCommandPool graphics_command_pool, VkQueue graphics_queue, int required_minimum_sample_count,
            const std::vector<VkFormat>& depth_image_formats)
@@ -467,6 +556,16 @@ Impl::Impl(vulkan_renderer_implementation::RenderBufferCount buffer_count, const
         }
 
         LOG(buffer_info(m_color_attachments, m_depth_attachments));
+}
+
+impl::RenderBuffers3D& Impl::buffers_3d()
+{
+        return *this;
+}
+
+impl::RenderBuffers2D& Impl::buffers_2d()
+{
+        return *this;
 }
 
 void Impl::create_multisample(unsigned buffer_count, const vulkan::Swapchain& swapchain, VkSampleCountFlagBits sample_count,
@@ -556,7 +655,7 @@ void Impl::create_one_sample(unsigned buffer_count, const vulkan::Swapchain& swa
         }
 }
 
-std::vector<VkCommandBuffer> Impl::create_command_buffers(
+std::vector<VkCommandBuffer> Impl::create_command_buffers_3d(
         const Color& clear_color,
         const std::optional<std::function<void(VkCommandBuffer command_buffer)>>& before_render_pass_commands,
         const std::function<void(VkCommandBuffer buffer)>& commands)
@@ -600,7 +699,7 @@ std::vector<VkCommandBuffer> Impl::create_command_buffers(
         return m_command_buffers.back().buffers();
 }
 
-std::vector<VkCommandBuffer> Impl::create_command_buffers_no_depth(
+std::vector<VkCommandBuffer> Impl::create_command_buffers_2d(
         const std::optional<std::function<void(VkCommandBuffer command_buffer)>>& before_render_pass_commands,
         const std::function<void(VkCommandBuffer buffer)>& commands)
 {
@@ -621,20 +720,20 @@ std::vector<VkCommandBuffer> Impl::create_command_buffers_no_depth(
         return m_command_buffers_no_depth.back().buffers();
 }
 
-void Impl::delete_command_buffers(std::vector<VkCommandBuffer>* buffers)
+void Impl::delete_command_buffers_3d(std::vector<VkCommandBuffer>* buffers)
 {
         delete_buffers(&m_command_buffers, buffers);
 }
 
-void Impl::delete_command_buffers_no_depth(std::vector<VkCommandBuffer>* buffers)
+void Impl::delete_command_buffers_2d(std::vector<VkCommandBuffer>* buffers)
 {
         delete_buffers(&m_command_buffers_no_depth, buffers);
 }
 
-VkPipeline Impl::create_pipeline(VkPrimitiveTopology primitive_topology, bool sample_shading,
-                                 const std::vector<const vulkan::Shader*>& shaders, VkPipelineLayout pipeline_layout,
-                                 const std::vector<VkVertexInputBindingDescription>& vertex_binding,
-                                 const std::vector<VkVertexInputAttributeDescription>& vertex_attribute)
+VkPipeline Impl::create_pipeline_3d(VkPrimitiveTopology primitive_topology, bool sample_shading,
+                                    const std::vector<const vulkan::Shader*>& shaders, VkPipelineLayout pipeline_layout,
+                                    const std::vector<VkVertexInputBindingDescription>& vertex_binding,
+                                    const std::vector<VkVertexInputAttributeDescription>& vertex_attribute)
 {
         ASSERT(pipeline_layout != VK_NULL_HANDLE);
         ASSERT(m_depth_attachments.size() > 0);
@@ -661,10 +760,10 @@ VkPipeline Impl::create_pipeline(VkPrimitiveTopology primitive_topology, bool sa
         return m_pipelines.back();
 }
 
-VkPipeline Impl::create_pipeline_no_depth(VkPrimitiveTopology primitive_topology, bool sample_shading, bool color_blend,
-                                          const std::vector<const vulkan::Shader*>& shaders, VkPipelineLayout pipeline_layout,
-                                          const std::vector<VkVertexInputBindingDescription>& vertex_binding,
-                                          const std::vector<VkVertexInputAttributeDescription>& vertex_attribute)
+VkPipeline Impl::create_pipeline_2d(VkPrimitiveTopology primitive_topology, bool sample_shading, bool color_blend,
+                                    const std::vector<const vulkan::Shader*>& shaders, VkPipelineLayout pipeline_layout,
+                                    const std::vector<VkVertexInputBindingDescription>& vertex_binding,
+                                    const std::vector<VkVertexInputAttributeDescription>& vertex_attribute)
 {
         ASSERT(pipeline_layout != VK_NULL_HANDLE);
         ASSERT(m_depth_attachments.size() > 0);

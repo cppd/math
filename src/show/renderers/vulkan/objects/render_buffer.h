@@ -35,39 +35,49 @@ enum class RenderBufferCount
         Swapchain
 };
 
-struct RenderBuffers
+class RenderBuffers3D
 {
-        virtual ~RenderBuffers() = default;
+protected:
+        virtual ~RenderBuffers3D() = default;
 
-        //
-
+public:
         virtual std::vector<VkCommandBuffer> create_command_buffers(
                 const Color& clear_color,
                 const std::optional<std::function<void(VkCommandBuffer buffer)>>& before_render_pass_commands,
                 const std::function<void(VkCommandBuffer buffer)>& commands) = 0;
 
-        virtual std::vector<VkCommandBuffer> create_command_buffers_no_depth(
-                const std::optional<std::function<void(VkCommandBuffer buffer)>>& before_render_pass_commands,
-                const std::function<void(VkCommandBuffer buffer)>& commands) = 0;
-
-        //
-
         virtual void delete_command_buffers(std::vector<VkCommandBuffer>* buffers) = 0;
-
-        virtual void delete_command_buffers_no_depth(std::vector<VkCommandBuffer>* buffers) = 0;
-
-        //
 
         virtual VkPipeline create_pipeline(VkPrimitiveTopology primitive_topology, bool sample_shading,
                                            const std::vector<const vulkan::Shader*>& shaders, VkPipelineLayout pipeline_layout,
                                            const std::vector<VkVertexInputBindingDescription>& vertex_binding,
                                            const std::vector<VkVertexInputAttributeDescription>& vertex_attribute) = 0;
+};
 
-        virtual VkPipeline create_pipeline_no_depth(VkPrimitiveTopology primitive_topology, bool sample_shading, bool color_blend,
-                                                    const std::vector<const vulkan::Shader*>& shaders,
-                                                    VkPipelineLayout pipeline_layout,
-                                                    const std::vector<VkVertexInputBindingDescription>& vertex_binding,
-                                                    const std::vector<VkVertexInputAttributeDescription>& vertex_attribute) = 0;
+class RenderBuffers2D
+{
+protected:
+        virtual ~RenderBuffers2D() = default;
+
+public:
+        virtual std::vector<VkCommandBuffer> create_command_buffers(
+                const std::optional<std::function<void(VkCommandBuffer buffer)>>& before_render_pass_commands,
+                const std::function<void(VkCommandBuffer buffer)>& commands) = 0;
+
+        virtual void delete_command_buffers(std::vector<VkCommandBuffer>* buffers) = 0;
+
+        virtual VkPipeline create_pipeline(VkPrimitiveTopology primitive_topology, bool sample_shading, bool color_blend,
+                                           const std::vector<const vulkan::Shader*>& shaders, VkPipelineLayout pipeline_layout,
+                                           const std::vector<VkVertexInputBindingDescription>& vertex_binding,
+                                           const std::vector<VkVertexInputAttributeDescription>& vertex_attribute) = 0;
+};
+
+struct RenderBuffers
+{
+        virtual ~RenderBuffers() = default;
+
+        virtual RenderBuffers3D& buffers_3d() = 0;
+        virtual RenderBuffers2D& buffers_2d() = 0;
 };
 
 std::unique_ptr<RenderBuffers> create_render_buffers(RenderBufferCount buffer_count, const vulkan::Swapchain& swapchain,
