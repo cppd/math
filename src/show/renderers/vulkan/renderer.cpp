@@ -26,7 +26,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/vulkan/device.h"
 #include "graphics/vulkan/error.h"
 #include "graphics/vulkan/query.h"
-#include "graphics/vulkan/render/render_buffer.h"
 #include "graphics/vulkan/render/shadow_buffer.h"
 #include "obj/alg/alg.h"
 #include "show/renderers/com/storage.h"
@@ -51,7 +50,7 @@ constexpr std::initializer_list<vulkan::PhysicalDeviceFeatures> REQUIRED_DEVICE_
         vulkan::PhysicalDeviceFeatures::GeometryShader,
         vulkan::PhysicalDeviceFeatures::FragmentStoresAndAtomics
 };
-constexpr std::initializer_list<VkFormat> DEPTH_IMAGE_FORMATS =
+constexpr std::initializer_list<VkFormat> SHADOW_DEPTH_IMAGE_FORMATS =
 {
         VK_FORMAT_D32_SFLOAT,
         VK_FORMAT_D32_SFLOAT_S8_UINT,
@@ -603,7 +602,6 @@ class Renderer final : public VulkanRenderer
 
         const std::thread::id m_thread_id = std::this_thread::get_id();
 
-        const int m_minimum_sample_count;
         const bool m_sample_shading;
 
         Color m_clear_color = Color(0);
@@ -643,7 +641,7 @@ class Renderer final : public VulkanRenderer
         vulkan::PipelineLayout m_shadow_pipeline_layout;
         vulkan::PipelineLayout m_points_pipeline_layout;
 
-        std::unique_ptr<vulkan::RenderBuffers> m_render_buffers;
+        vulkan::RenderBuffers3D* m_render_buffers = nullptr;
         std::vector<VkCommandBuffer> m_render_command_buffers;
         std::unique_ptr<vulkan::ShadowBuffers> m_shadow_buffers;
         std::vector<VkCommandBuffer> m_shadow_command_buffers;
@@ -927,6 +925,7 @@ class Renderer final : public VulkanRenderer
                 //
 
                 ASSERT(m_swapchain);
+                ASSERT(m_render_buffers);
 
                 if (wait_idle)
                 {
@@ -935,15 +934,8 @@ class Renderer final : public VulkanRenderer
 
                 m_render_command_buffers.clear();
                 m_object_image.reset();
-                m_render_buffers.reset();
 
                 //
-
-                constexpr vulkan::RenderBufferCount buffer_count = vulkan::RenderBufferCount::One;
-                m_render_buffers =
-                        vulkan::create_render_buffers(buffer_count, *m_swapchain, m_instance.attachment_family_indices(),
-                                                      m_instance.device(), m_instance.graphics_command_pool(),
-                                                      m_instance.graphics_queue(), m_minimum_sample_count, DEPTH_IMAGE_FORMATS);
 
                 m_object_image = std::make_unique<vulkan::StorageImage>(
                         m_instance.create_storage_image(VK_FORMAT_R32_UINT, m_swapchain->width(), m_swapchain->height()));
@@ -951,16 +943,16 @@ class Renderer final : public VulkanRenderer
                 m_triangles_shared_shader_memory.set_object_image(m_object_image.get());
                 m_points_shader_memory.set_object_image(m_object_image.get());
 
-                m_triangles_pipeline = m_render_buffers->buffers_3d().create_pipeline(
+                m_triangles_pipeline = m_render_buffers->create_pipeline(
                         VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, m_sample_shading,
                         {&m_triangles_vert, &m_triangles_geom, &m_triangles_frag}, m_triangles_pipeline_layout,
                         impl::Vertex::binding_descriptions(), impl::Vertex::triangles_attribute_descriptions());
 
-                m_points_pipeline = m_render_buffers->buffers_3d().create_pipeline(
+                m_points_pipeline = m_render_buffers->create_pipeline(
                         VK_PRIMITIVE_TOPOLOGY_POINT_LIST, false, {&m_points_vert, &m_points_frag}, m_points_pipeline_layout,
                         impl::PointVertex::binding_descriptions(), impl::PointVertex::attribute_descriptions());
 
-                m_lines_pipeline = m_render_buffers->buffers_3d().create_pipeline(
+                m_lines_pipeline = m_render_buffers->create_pipeline(
                         VK_PRIMITIVE_TOPOLOGY_LINE_LIST, false, {&m_points_vert, &m_points_frag}, m_points_pipeline_layout,
                         impl::PointVertex::binding_descriptions(), impl::PointVertex::attribute_descriptions());
         }
@@ -984,9 +976,10 @@ class Renderer final : public VulkanRenderer
                 //
 
                 constexpr vulkan::ShadowBufferCount buffer_count = vulkan::ShadowBufferCount::One;
-                m_shadow_buffers = vulkan::create_shadow_buffers(
-                        buffer_count, *m_swapchain, m_instance.attachment_family_indices(), m_instance.device(),
-                        m_instance.graphics_command_pool(), m_instance.graphics_queue(), DEPTH_IMAGE_FORMATS, m_shadow_zoom);
+                m_shadow_buffers =
+                        vulkan::create_shadow_buffers(buffer_count, *m_swapchain, m_instance.attachment_family_indices(),
+                                                      m_instance.device(), m_instance.graphics_command_pool(),
+                                                      m_instance.graphics_queue(), SHADOW_DEPTH_IMAGE_FORMATS, m_shadow_zoom);
 
                 m_triangles_shared_shader_memory.set_shadow_texture(m_shadow_sampler, m_shadow_buffers->texture(0));
 
@@ -995,13 +988,14 @@ class Renderer final : public VulkanRenderer
                         impl::Vertex::binding_descriptions(), impl::Vertex::shadow_attribute_descriptions());
         }
 
-        void create_buffers(const vulkan::Swapchain* swapchain) override
+        void create_buffers(const vulkan::Swapchain* swapchain, vulkan::RenderBuffers3D* render_buffers) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
                 //
 
                 m_swapchain = swapchain;
+                m_render_buffers = render_buffers;
 
                 m_instance.device_wait_idle();
 
@@ -1017,10 +1011,9 @@ class Renderer final : public VulkanRenderer
 
                 //
 
-                ASSERT((m_render_buffers && m_shadow_buffers && m_object_image) ||
-                       (!m_render_buffers && !m_shadow_buffers && !m_object_image));
+                ASSERT((m_shadow_buffers && m_object_image) || (!m_shadow_buffers && !m_object_image));
 
-                if (m_render_buffers || m_shadow_buffers || m_object_image)
+                if (m_shadow_buffers || m_object_image)
                 {
                         m_instance.device_wait_idle();
 
@@ -1029,7 +1022,6 @@ class Renderer final : public VulkanRenderer
 
                         m_render_command_buffers.clear();
                         m_object_image.reset();
-                        m_render_buffers.reset();
                 }
         }
 
@@ -1129,8 +1121,8 @@ class Renderer final : public VulkanRenderer
                         m_instance.device_wait_idle();
                 }
 
-                m_render_buffers->buffers_3d().delete_command_buffers(&m_render_command_buffers);
-                m_render_command_buffers = m_render_buffers->buffers_3d().create_command_buffers(
+                m_render_buffers->delete_command_buffers(&m_render_command_buffers);
+                m_render_command_buffers = m_render_buffers->create_command_buffers(
                         m_clear_color, std::bind(&Renderer::before_render_pass_commands, this, std::placeholders::_1),
                         std::bind(&Renderer::draw_commands, this, std::placeholders::_1));
         }
@@ -1178,15 +1170,13 @@ class Renderer final : public VulkanRenderer
 
                 m_instance.device_wait_idle();
 
-                m_render_buffers->buffers_3d().delete_command_buffers(&m_render_command_buffers);
+                m_render_buffers->delete_command_buffers(&m_render_command_buffers);
                 m_shadow_buffers->delete_command_buffers(&m_shadow_command_buffers);
         }
 
 public:
-        Renderer(const vulkan::VulkanInstance& instance, int minimum_sample_count, bool sample_shading, bool sampler_anisotropy,
-                 int max_frames_in_flight)
-                : m_minimum_sample_count(minimum_sample_count),
-                  m_sample_shading(sample_shading),
+        Renderer(const vulkan::VulkanInstance& instance, bool sample_shading, bool sampler_anisotropy, int max_frames_in_flight)
+                : m_sample_shading(sample_shading),
                   m_instance(instance),
                   m_shadow_available_semaphores(vulkan::create_semaphores(m_instance.device(), max_frames_in_flight)),
                   m_texture_sampler(impl::create_texture_sampler(m_instance.device(), sampler_anisotropy)),
@@ -1256,9 +1246,8 @@ std::vector<vulkan::PhysicalDeviceFeatures> VulkanRenderer::required_device_feat
         return REQUIRED_DEVICE_FEATURES;
 }
 
-std::unique_ptr<VulkanRenderer> create_vulkan_renderer(const vulkan::VulkanInstance& instance, int minimum_sample_count,
-                                                       bool sample_shading, bool sampler_anisotropy, int max_frames_in_flight)
+std::unique_ptr<VulkanRenderer> create_vulkan_renderer(const vulkan::VulkanInstance& instance, bool sample_shading,
+                                                       bool sampler_anisotropy, int max_frames_in_flight)
 {
-        return std::make_unique<Renderer>(instance, minimum_sample_count, sample_shading, sampler_anisotropy,
-                                          max_frames_in_flight);
+        return std::make_unique<Renderer>(instance, sample_shading, sampler_anisotropy, max_frames_in_flight);
 }
