@@ -77,7 +77,8 @@ class Canvas final : public VulkanCanvas
         {
         }
 
-        void create_buffers(const vulkan::Swapchain* swapchain, const mat4& matrix) override;
+        void create_buffers(const vulkan::Swapchain* swapchain, vulkan::RenderBuffers2D* render_buffers,
+                            const mat4& matrix) override;
         void delete_buffers() override;
 
         bool text_active() const noexcept override
@@ -91,15 +92,15 @@ class Canvas final : public VulkanCanvas
         }
 
 public:
-        Canvas(const vulkan::VulkanInstance& instance, int text_size)
-                : m_text(create_vulkan_text(instance, text_size, TEXT_COLOR))
+        Canvas(const vulkan::VulkanInstance& instance, bool sample_shading, int text_size)
+                : m_text(create_vulkan_text(instance, sample_shading, text_size, TEXT_COLOR))
         {
         }
 };
 
-void Canvas::create_buffers(const vulkan::Swapchain* swapchain, const mat4& matrix)
+void Canvas::create_buffers(const vulkan::Swapchain* /*swapchain*/, vulkan::RenderBuffers2D* render_buffers, const mat4& matrix)
 {
-        m_text->create_buffers(swapchain, matrix);
+        m_text->create_buffers(render_buffers, matrix);
 }
 
 void Canvas::delete_buffers()
@@ -108,7 +109,7 @@ void Canvas::delete_buffers()
 }
 }
 
-std::unique_ptr<VulkanCanvas> create_vulkan_canvas(const vulkan::VulkanInstance& instance, int text_size)
+std::unique_ptr<VulkanCanvas> create_vulkan_canvas(const vulkan::VulkanInstance& instance, bool sample_shading, int text_size)
 {
-        return std::make_unique<Canvas>(instance, text_size);
+        return std::make_unique<Canvas>(instance, sample_shading, text_size);
 }

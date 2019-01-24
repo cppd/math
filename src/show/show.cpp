@@ -68,8 +68,12 @@ constexpr std::initializer_list<VkFormat> VULKAN_DEPTH_IMAGE_FORMATS =
 constexpr int OPENGL_MINIMUM_SAMPLE_COUNT = 4;
 
 constexpr int VULKAN_MINIMUM_SAMPLE_COUNT = 4;
-constexpr bool VULKAN_SAMPLE_SHADING = true; // supersampling
-constexpr bool VULKAN_SAMPLER_ANISOTROPY = true; // anisotropic filtering
+
+// supersampling
+constexpr bool VULKAN_RENDERER_SAMPLE_SHADING = true;
+constexpr bool VULKAN_CANVAS_SAMPLE_SHADING = true;
+// anisotropic filtering
+constexpr bool VULKAN_SAMPLER_ANISOTROPY = true;
 
 constexpr double ZOOM_BASE = 1.1;
 constexpr double ZOOM_EXP_MIN = -50;
@@ -907,7 +911,7 @@ void create_swapchain(const vulkan::VulkanInstance& instance, VulkanRenderer* re
         renderer->create_buffers(swapchain->get(), &(*render_buffers)->buffers_3d());
 
         mat4 m = ortho_matrix_for_2d_rendering<VulkanRenderer>((*swapchain)->width(), (*swapchain)->height());
-        canvas->create_buffers(swapchain->get(), m);
+        canvas->create_buffers(swapchain->get(), &(*render_buffers)->buffers_2d(), m);
 }
 
 enum class VulkanResult
@@ -1041,7 +1045,8 @@ void ShowObject<GraphicsAndComputeAPI::Vulkan>::loop()
                 VulkanRenderer::device_extensions(),
                 merge<vulkan::PhysicalDeviceFeatures>(
                         VulkanRenderer::required_device_features(),
-                        device_features_sample_shading(VULKAN_MINIMUM_SAMPLE_COUNT, VULKAN_SAMPLE_SHADING),
+                        device_features_sample_shading(VULKAN_MINIMUM_SAMPLE_COUNT,
+                                                       VULKAN_RENDERER_SAMPLE_SHADING || VULKAN_CANVAS_SAMPLE_SHADING),
                         device_features_sampler_anisotropy(VULKAN_SAMPLER_ANISOTROPY)),
                 {} /*optional_features*/, [w = window.get()](VkInstance i) { return w->create_surface(i); });
 
@@ -1065,10 +1070,10 @@ void ShowObject<GraphicsAndComputeAPI::Vulkan>::loop()
         std::unique_ptr<vulkan::Swapchain> swapchain;
         std::unique_ptr<vulkan::RenderBuffers> render_buffers;
 
-        std::unique_ptr<VulkanRenderer> renderer =
-                create_vulkan_renderer(instance, VULKAN_SAMPLE_SHADING, VULKAN_SAMPLER_ANISOTROPY, VULKAN_MAX_FRAMES_IN_FLIGHT);
+        std::unique_ptr<VulkanRenderer> renderer = create_vulkan_renderer(instance, VULKAN_RENDERER_SAMPLE_SHADING,
+                                                                          VULKAN_SAMPLER_ANISOTROPY, VULKAN_MAX_FRAMES_IN_FLIGHT);
 
-        std::unique_ptr<VulkanCanvas> canvas = create_vulkan_canvas(instance, m_text_size);
+        std::unique_ptr<VulkanCanvas> canvas = create_vulkan_canvas(instance, VULKAN_CANVAS_SAMPLE_SHADING, m_text_size);
 
         //
 
