@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/vulkan/buffers.h"
 #include "graphics/vulkan/create.h"
 #include "graphics/vulkan/error.h"
+#include "graphics/vulkan/queue.h"
 #include "graphics/vulkan/shader.h"
 #include "text/vulkan/objects/sampler.h"
 #include "text/vulkan/shader/memory.h"
@@ -207,25 +208,8 @@ class Impl final : public VulkanText
 
                 ASSERT(image_index < m_command_buffers.size());
 
-                std::array<VkSemaphore, 1> wait_semaphores = {wait_semaphore};
-                std::array<VkPipelineStageFlags, 1> wait_stages = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
-
-                VkSubmitInfo info = {};
-
-                info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-                info.waitSemaphoreCount = wait_semaphores.size();
-                info.pWaitSemaphores = wait_semaphores.data();
-                info.pWaitDstStageMask = wait_stages.data();
-                info.commandBufferCount = 1;
-                info.pCommandBuffers = &m_command_buffers[image_index];
-                info.signalSemaphoreCount = 1;
-                info.pSignalSemaphores = &finished_semaphore;
-
-                VkResult result = vkQueueSubmit(graphics_queue, 1, &info, queue_fence);
-                if (result != VK_SUCCESS)
-                {
-                        vulkan::vulkan_function_error("vkQueueSubmit", result);
-                }
+                vulkan::queue_submit(wait_semaphore, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+                                     m_command_buffers[image_index], finished_semaphore, graphics_queue, queue_fence);
         }
 
         void draw(VkFence queue_fence, VkQueue graphics_queue, VkSemaphore wait_semaphore, VkSemaphore finished_semaphore,

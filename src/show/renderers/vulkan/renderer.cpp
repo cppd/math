@@ -26,6 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/vulkan/device.h"
 #include "graphics/vulkan/error.h"
 #include "graphics/vulkan/query.h"
+#include "graphics/vulkan/queue.h"
 #include "graphics/vulkan/render/shadow_buffer.h"
 #include "obj/alg/alg.h"
 #include "show/renderers/com/storage.h"
@@ -841,78 +842,33 @@ class Renderer final : public VulkanRenderer
 
                 if (!m_show_shadow || !m_storage.object() || !m_storage.object()->has_shadow())
                 {
-                        std::array<VkSemaphore, 1> wait_semaphores = {wait_semaphore};
-                        std::array<VkPipelineStageFlags, 1> wait_stages = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
-
-                        VkSubmitInfo info = {};
-
-                        info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-                        info.waitSemaphoreCount = wait_semaphores.size();
-                        info.pWaitSemaphores = wait_semaphores.data();
-                        info.pWaitDstStageMask = wait_stages.data();
-                        info.commandBufferCount = 1;
-                        info.pCommandBuffers = &m_render_command_buffers[image_index];
-                        info.signalSemaphoreCount = 1;
-                        info.pSignalSemaphores = &finished_semaphore;
-
-                        VkResult result = vkQueueSubmit(graphics_queue, 1, &info, queue_fence);
-                        if (result != VK_SUCCESS)
-                        {
-                                vulkan::vulkan_function_error("vkQueueSubmit", result);
-                        }
+                        vulkan::queue_submit(wait_semaphore, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+                                             m_render_command_buffers[image_index], finished_semaphore, graphics_queue,
+                                             queue_fence);
                 }
                 else
                 {
+                        ASSERT(m_shadow_command_buffers.size() == m_swapchain->image_views().size() ||
+                               m_shadow_command_buffers.size() == 1);
+
                         VkSemaphore shadow_available_semaphore = m_shadow_available_semaphores[current_frame];
 
-                        {
-                                ASSERT(m_shadow_command_buffers.size() == m_swapchain->image_views().size() ||
-                                       m_shadow_command_buffers.size() == 1);
+                        vulkan::queue_submit(m_shadow_command_buffers[m_shadow_command_buffers.size() == 1 ? 0 : image_index],
+                                             shadow_available_semaphore, graphics_queue, VK_NULL_HANDLE);
 
-                                unsigned buffer_index = m_shadow_command_buffers.size() == 1 ? 0 : image_index;
+                        //
 
-                                VkSubmitInfo info = {};
+                        std::array<VkSemaphore, 2> wait_semaphores;
+                        std::array<VkPipelineStageFlags, 2> wait_stages;
 
-                                info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-                                info.commandBufferCount = 1;
-                                info.pCommandBuffers = &m_shadow_command_buffers[buffer_index];
-                                info.signalSemaphoreCount = 1;
-                                info.pSignalSemaphores = &shadow_available_semaphore;
+                        wait_semaphores[0] = shadow_available_semaphore;
+                        wait_stages[0] = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
 
-                                VkResult result = vkQueueSubmit(graphics_queue, 1, &info, VK_NULL_HANDLE);
-                                if (result != VK_SUCCESS)
-                                {
-                                        vulkan::vulkan_function_error("vkQueueSubmit", result);
-                                }
-                        }
+                        wait_semaphores[1] = wait_semaphore;
+                        wait_stages[1] = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 
-                        {
-                                std::array<VkSemaphore, 2> wait_semaphores;
-                                std::array<VkPipelineStageFlags, 2> wait_stages;
-
-                                wait_semaphores[0] = shadow_available_semaphore;
-                                wait_stages[0] = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-
-                                wait_semaphores[1] = wait_semaphore;
-                                wait_stages[1] = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-
-                                VkSubmitInfo info = {};
-
-                                info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-                                info.waitSemaphoreCount = wait_semaphores.size();
-                                info.pWaitSemaphores = wait_semaphores.data();
-                                info.pWaitDstStageMask = wait_stages.data();
-                                info.commandBufferCount = 1;
-                                info.pCommandBuffers = &m_render_command_buffers[image_index];
-                                info.signalSemaphoreCount = 1;
-                                info.pSignalSemaphores = &finished_semaphore;
-
-                                VkResult result = vkQueueSubmit(graphics_queue, 1, &info, queue_fence);
-                                if (result != VK_SUCCESS)
-                                {
-                                        vulkan::vulkan_function_error("vkQueueSubmit", result);
-                                }
-                        }
+                        vulkan::queue_submit(wait_semaphores, wait_stages, m_render_command_buffers[image_index],
+                                             finished_semaphore, graphics_queue, queue_fence);
                 }
 
                 return m_storage.object() != nullptr;
