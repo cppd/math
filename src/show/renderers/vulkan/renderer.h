@@ -69,6 +69,8 @@ struct VulkanRenderer
 
         virtual void create_buffers(const vulkan::Swapchain* swapchain, vulkan::RenderBuffers3D* render_buffers) = 0;
         virtual void delete_buffers() = 0;
+
+        virtual const vulkan::StorageImage& objects() const = 0;
 };
 
 std::unique_ptr<VulkanRenderer> create_vulkan_renderer(const vulkan::VulkanInstance& instance, bool sample_shading,

@@ -77,8 +77,8 @@ class Canvas final : public VulkanCanvas
         {
         }
 
-        void create_buffers(const vulkan::Swapchain* swapchain, vulkan::RenderBuffers2D* render_buffers,
-                            const mat4& matrix) override;
+        void create_buffers(const vulkan::Swapchain* swapchain, vulkan::RenderBuffers2D* render_buffers, const mat4& matrix,
+                            const vulkan::StorageImage& objects) override;
         void delete_buffers() override;
 
         bool text_active() const noexcept override
@@ -98,7 +98,8 @@ public:
         }
 };
 
-void Canvas::create_buffers(const vulkan::Swapchain* /*swapchain*/, vulkan::RenderBuffers2D* render_buffers, const mat4& matrix)
+void Canvas::create_buffers(const vulkan::Swapchain* /*swapchain*/, vulkan::RenderBuffers2D* render_buffers, const mat4& matrix,
+                            const vulkan::StorageImage& /*objects*/)
 {
         m_text->create_buffers(render_buffers, matrix);
 }

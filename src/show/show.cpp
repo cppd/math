@@ -911,7 +911,7 @@ void create_swapchain(const vulkan::VulkanInstance& instance, VulkanRenderer* re
         renderer->create_buffers(swapchain->get(), &(*render_buffers)->buffers_3d());
 
         mat4 m = ortho_matrix_for_2d_rendering<VulkanRenderer>((*swapchain)->width(), (*swapchain)->height());
-        canvas->create_buffers(swapchain->get(), &(*render_buffers)->buffers_2d(), m);
+        canvas->create_buffers(swapchain->get(), &(*render_buffers)->buffers_2d(), m, renderer->objects());
 }
 
 enum class VulkanResult

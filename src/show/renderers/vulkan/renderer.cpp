@@ -889,6 +889,16 @@ class Renderer final : public VulkanRenderer
                 create_all_command_buffers(false /*wait_idle*/);
         }
 
+        const vulkan::StorageImage& objects() const override
+        {
+                ASSERT(m_thread_id == std::this_thread::get_id());
+
+                //
+
+                ASSERT(m_object_image);
+                return *m_object_image;
+        }
+
         void delete_buffers() override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());

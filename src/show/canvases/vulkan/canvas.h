@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/color/color.h"
 #include "com/matrix.h"
+#include "graphics/vulkan/buffers.h"
 #include "graphics/vulkan/instance.h"
 #include "graphics/vulkan/render/render_buffer.h"
 #include "graphics/vulkan/swapchain.h"
@@ -51,7 +52,7 @@ struct VulkanCanvas
         //
 
         virtual void create_buffers(const vulkan::Swapchain* swapchain, vulkan::RenderBuffers2D* render_buffers,
-                                    const mat4& matrix) = 0;
+                                    const mat4& matrix, const vulkan::StorageImage& objects) = 0;
         virtual void delete_buffers() = 0;
 
         virtual bool text_active() const noexcept = 0;
