@@ -216,9 +216,12 @@ int group_size(int dft_size)
         return std::min(max_threads_required, max_threads_supported);
 }
 
+namespace impl = gpgpu_opengl::dft_compute_implementation;
+
 template <typename FP>
-void fft1d(bool inverse, int fft_count, const DeviceProgFFTShared<FP>& fft, const DeviceProgBitReverse<FP>& bit_reverse,
-           const DeviceProgFFTGlobal<FP>& fft_global, DeviceMemory<std::complex<FP>>* data)
+void fft1d(bool inverse, int fft_count, const impl::DeviceProgFFTShared<FP>& fft,
+           const impl::DeviceProgBitReverse<FP>& bit_reverse, const impl::DeviceProgFFTGlobal<FP>& fft_global,
+           DeviceMemory<std::complex<FP>>* data)
 {
         const int n = fft.n();
 
@@ -266,20 +269,20 @@ void fft1d(bool inverse, int fft_count, const DeviceProgFFTShared<FP>& fft, cons
 }
 
 template <typename FP>
-class Impl final : public DFTCompute, public DFTComputeTexture
+class Impl final : public gpgpu_opengl::DFTCompute, public gpgpu_opengl::DFTComputeTexture
 {
         const int m_n1, m_n2, m_m1, m_m2, m_m1_bin, m_m2_bin;
         DeviceMemory<std::complex<FP>> m_d1_fwd, m_d1_inv, m_d2_fwd, m_d2_inv;
         DeviceMemory<std::complex<FP>> m_x_d, m_buffer;
         GLuint64 m_texture_handle;
-        DeviceProgBitReverse<FP> m_bit_reverse;
-        DeviceProgFFTGlobal<FP> m_fft_global;
-        DeviceProgCopyInput<FP> m_copy_input;
-        DeviceProgCopyOutput<FP> m_copy_output;
-        DeviceProgMul<FP> m_mul;
-        DeviceProgMulD<FP> m_mul_d;
-        DeviceProgFFTShared<FP> m_fft_1;
-        DeviceProgFFTShared<FP> m_fft_2;
+        impl::DeviceProgBitReverse<FP> m_bit_reverse;
+        impl::DeviceProgFFTGlobal<FP> m_fft_global;
+        impl::DeviceProgCopyInput<FP> m_copy_input;
+        impl::DeviceProgCopyOutput<FP> m_copy_output;
+        impl::DeviceProgMul<FP> m_mul;
+        impl::DeviceProgMulD<FP> m_mul_d;
+        impl::DeviceProgFFTShared<FP> m_fft_1;
+        impl::DeviceProgFFTShared<FP> m_fft_2;
 
         void dft2d(bool inverse)
         {
@@ -399,6 +402,8 @@ public:
 };
 }
 
+namespace gpgpu_opengl
+{
 std::unique_ptr<DFTCompute> create_dft_compute(int x, int y)
 {
         return std::make_unique<Impl<float>>(x, y, nullptr);
@@ -407,4 +412,5 @@ std::unique_ptr<DFTCompute> create_dft_compute(int x, int y)
 std::unique_ptr<DFTComputeTexture> create_dft_compute_texture(int x, int y, const opengl::TextureRGBA32F& texture)
 {
         return std::make_unique<Impl<float>>(x, y, &texture);
+}
 }

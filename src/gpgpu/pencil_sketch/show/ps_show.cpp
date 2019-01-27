@@ -45,6 +45,8 @@ struct Vertex
 };
 }
 
+namespace gpgpu_opengl
+{
 class PencilSketchShow::Impl final
 {
         opengl::GraphicsProgram m_draw_prog;
@@ -113,4 +115,5 @@ PencilSketchShow::~PencilSketchShow() = default;
 void PencilSketchShow::draw()
 {
         m_impl->draw();
+}
 }

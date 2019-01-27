@@ -91,6 +91,8 @@ int points_buffer_size(int height)
 }
 }
 
+namespace gpgpu_opengl
+{
 class ConvexHullShow::Impl final
 {
         opengl::GraphicsProgram m_draw_prog;
@@ -148,4 +150,5 @@ void ConvexHullShow::reset_timer()
 void ConvexHullShow::draw()
 {
         m_impl->draw();
+}
 }

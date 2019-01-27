@@ -21,6 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <memory>
 
+namespace gpgpu_opengl
+{
 struct ConvexHullCompute
 {
         virtual ~ConvexHullCompute() = default;
@@ -29,3 +31,4 @@ struct ConvexHullCompute
 
 std::unique_ptr<ConvexHullCompute> create_convex_hull_compute(const opengl::TextureR32I& objects,
                                                               const opengl::StorageBuffer& points);
+}

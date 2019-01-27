@@ -31,10 +31,10 @@ class Canvas final : public OpenGLCanvas
         double m_window_ppi;
 
         std::unique_ptr<OpenGLText> m_text;
-        std::unique_ptr<DFTShow> m_dft_show;
-        std::unique_ptr<ConvexHullShow> m_convex_hull;
-        std::unique_ptr<OpticalFlowShow> m_optical_flow;
-        std::unique_ptr<PencilSketchShow> m_pencil_sketch;
+        std::unique_ptr<gpgpu_opengl::DFTShow> m_dft_show;
+        std::unique_ptr<gpgpu_opengl::ConvexHullShow> m_convex_hull;
+        std::unique_ptr<gpgpu_opengl::OpticalFlowShow> m_optical_flow;
+        std::unique_ptr<gpgpu_opengl::PencilSketchShow> m_pencil_sketch;
 
         int m_window_width;
         int m_window_height;
@@ -150,14 +150,15 @@ void Canvas::create_objects(int window_width, int window_height, const mat4& mat
         m_window_width = window_width;
         m_window_height = window_height;
 
-        m_pencil_sketch = std::make_unique<PencilSketchShow>(color_texture, color_texture_is_srgb, objects, matrix);
+        m_pencil_sketch = std::make_unique<gpgpu_opengl::PencilSketchShow>(color_texture, color_texture_is_srgb, objects, matrix);
 
-        m_dft_show = std::make_unique<DFTShow>(draw_width, draw_height, dft_dst_x, dft_dst_y, matrix, frame_buffer_is_srgb,
-                                               m_dft_show_brightness, m_dft_show_background_color, m_dft_show_color);
+        m_dft_show = std::make_unique<gpgpu_opengl::DFTShow>(draw_width, draw_height, dft_dst_x, dft_dst_y, matrix,
+                                                             frame_buffer_is_srgb, m_dft_show_brightness,
+                                                             m_dft_show_background_color, m_dft_show_color);
 
-        m_optical_flow = std::make_unique<OpticalFlowShow>(draw_width, draw_height, m_window_ppi, matrix);
+        m_optical_flow = std::make_unique<gpgpu_opengl::OpticalFlowShow>(draw_width, draw_height, m_window_ppi, matrix);
 
-        m_convex_hull = std::make_unique<ConvexHullShow>(objects, matrix);
+        m_convex_hull = std::make_unique<gpgpu_opengl::ConvexHullShow>(objects, matrix);
 
         if (m_text)
         {

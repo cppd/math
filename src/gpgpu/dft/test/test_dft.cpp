@@ -176,7 +176,7 @@ void compute_opengl(bool inverse, int n1, int n2, std::vector<complex>* data)
         LOG("----- OpenGL -----");
         double start_time = time_in_seconds();
 
-        std::unique_ptr<DFTCompute> dft = create_dft_compute(n1, n2);
+        std::unique_ptr<gpgpu_opengl::DFTCompute> dft = gpgpu_opengl::create_dft_compute(n1, n2);
         dft->exec(inverse, data);
 
         LOG("OpenGL time: " + time_string(start_time));

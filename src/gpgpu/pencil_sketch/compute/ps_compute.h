@@ -21,6 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <memory>
 
+namespace gpgpu_opengl
+{
 struct PencilSketchCompute
 {
         virtual ~PencilSketchCompute() = default;
@@ -31,3 +33,4 @@ struct PencilSketchCompute
 std::unique_ptr<PencilSketchCompute> create_pencil_sketch_compute(const opengl::TextureRGBA32F& input, bool input_is_srgb,
                                                                   const opengl::TextureR32I& objects,
                                                                   const opengl::TextureRGBA32F& output);
+}

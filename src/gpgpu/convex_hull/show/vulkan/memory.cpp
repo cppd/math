@@ -17,7 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "memory.h"
 
-namespace gpgpu_vulkan_convex_hull_show_implementation
+namespace gpgpu_vulkan
+{
+namespace convex_hull_show_implementation
 {
 std::vector<VkDescriptorSetLayoutBinding> ShaderMemory::descriptor_set_layout_bindings()
 {
@@ -99,5 +101,6 @@ void ShaderMemory::set_points(const vulkan::StorageBufferWithHostVisibleMemory& 
         buffer_info.range = storage_buffer.size();
 
         m_descriptors.update_descriptor_set(m_descriptor_set, 1, buffer_info);
+}
 }
 }

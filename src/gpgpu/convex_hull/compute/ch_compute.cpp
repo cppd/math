@@ -197,7 +197,7 @@ public:
         }
 };
 
-class Impl final : public ConvexHullCompute
+class Impl final : public gpgpu_opengl::ConvexHullCompute
 {
         const int m_height;
 
@@ -266,8 +266,11 @@ public:
 };
 }
 
+namespace gpgpu_opengl
+{
 std::unique_ptr<ConvexHullCompute> create_convex_hull_compute(const opengl::TextureR32I& object_image,
                                                               const opengl::StorageBuffer& points)
 {
         return std::make_unique<Impl>(object_image, points);
+}
 }

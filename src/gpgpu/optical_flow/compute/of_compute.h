@@ -21,6 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <memory>
 
+namespace gpgpu_opengl
+{
 struct OpticalFlowCompute
 {
         virtual ~OpticalFlowCompute() = default;
@@ -36,3 +38,4 @@ std::unique_ptr<OpticalFlowCompute> create_optical_flow_compute(int width, int h
                                                                 int top_point_count_x, int top_point_count_y,
                                                                 const opengl::StorageBuffer& top_points,
                                                                 const opengl::StorageBuffer& top_points_flow);
+}

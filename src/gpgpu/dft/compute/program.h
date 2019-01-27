@@ -21,6 +21,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/opengl/buffers.h"
 #include "graphics/opengl/shader.h"
 
+namespace gpgpu_opengl
+{
+namespace dft_compute_implementation
+{
 template <typename T>
 class DeviceProgBitReverse
 {
@@ -212,3 +216,5 @@ public:
 
         void exec(bool inverse, int data_size, const opengl::StorageBuffer& data) const;
 };
+}
+}

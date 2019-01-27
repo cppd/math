@@ -22,6 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <memory>
 
+namespace gpgpu_opengl
+{
 class ConvexHullShow final
 {
         class Impl;
@@ -34,3 +36,4 @@ public:
         void reset_timer();
         void draw();
 };
+}

@@ -23,6 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <memory>
 #include <vector>
 
+namespace gpgpu_opengl
+{
 struct DFTCompute
 {
         virtual ~DFTCompute() = default;
@@ -37,3 +39,4 @@ struct DFTComputeTexture
 
 std::unique_ptr<DFTCompute> create_dft_compute(int x, int y);
 std::unique_ptr<DFTComputeTexture> create_dft_compute_texture(int x, int y, const opengl::TextureRGBA32F& texture);
+}

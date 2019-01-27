@@ -56,7 +56,7 @@ std::string luminance_source()
         return s + luminance_shader;
 }
 
-class Impl final : public PencilSketchCompute
+class Impl final : public gpgpu_opengl::PencilSketchCompute
 {
         const int m_groups_x;
         const int m_groups_y;
@@ -91,9 +91,12 @@ public:
 };
 }
 
+namespace gpgpu_opengl
+{
 std::unique_ptr<PencilSketchCompute> create_pencil_sketch_compute(const opengl::TextureRGBA32F& input, bool input_is_srgb,
                                                                   const opengl::TextureR32I& objects,
                                                                   const opengl::TextureRGBA32F& output)
 {
         return std::make_unique<Impl>(input, input_is_srgb, objects, output);
+}
 }

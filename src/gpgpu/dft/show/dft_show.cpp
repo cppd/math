@@ -93,9 +93,10 @@ public:
                 m_buffer.bind(DATA_BINDING);
         }
 };
-
 }
 
+namespace gpgpu_opengl
+{
 class DFTShow::Impl final
 {
         static constexpr int VERTEX_COUNT = 4;
@@ -204,4 +205,5 @@ void DFTShow::take_image_from_framebuffer()
 void DFTShow::draw()
 {
         m_impl->draw();
+}
 }

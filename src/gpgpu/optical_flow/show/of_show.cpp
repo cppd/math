@@ -126,6 +126,8 @@ void create_points_for_top_level(int width, int height, int distance, int* point
 }
 }
 
+namespace gpgpu_opengl
+{
 class OpticalFlowShow::Impl final
 {
         const int m_width, m_height;
@@ -244,4 +246,5 @@ void OpticalFlowShow::take_image_from_framebuffer()
 void OpticalFlowShow::draw()
 {
         m_impl->draw();
+}
 }
