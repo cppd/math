@@ -156,16 +156,6 @@ class Impl final : public vulkan::ShadowBuffers
         std::list<vulkan::CommandBuffers> m_command_buffers;
         std::vector<vulkan::Pipeline> m_pipelines;
 
-public:
-        Impl(vulkan::ShadowBufferCount buffer_count, const vulkan::Swapchain& swapchain,
-             const std::vector<uint32_t>& attachment_family_indices, const vulkan::Device& device,
-             VkCommandPool graphics_command_pool, VkQueue graphics_queue, const std::vector<VkFormat>& depth_image_formats,
-             double zoom);
-
-        Impl(const Impl&) = delete;
-        Impl& operator=(const Impl&) = delete;
-        Impl& operator=(Impl&&) = delete;
-
         //
 
         const vulkan::ShadowDepthAttachment* texture(unsigned index) const noexcept override;
@@ -178,6 +168,16 @@ public:
                                    const vulkan::PipelineLayout& pipeline_layout,
                                    const std::vector<VkVertexInputBindingDescription>& vertex_binding,
                                    const std::vector<VkVertexInputAttributeDescription>& vertex_attribute) override;
+
+public:
+        Impl(vulkan::ShadowBufferCount buffer_count, const vulkan::Swapchain& swapchain,
+             const std::vector<uint32_t>& attachment_family_indices, const vulkan::Device& device,
+             VkCommandPool graphics_command_pool, VkQueue graphics_queue, const std::vector<VkFormat>& depth_image_formats,
+             double zoom);
+
+        Impl(const Impl&) = delete;
+        Impl& operator=(const Impl&) = delete;
+        Impl& operator=(Impl&&) = delete;
 };
 
 Impl::Impl(vulkan::ShadowBufferCount buffer_count, const vulkan::Swapchain& swapchain,

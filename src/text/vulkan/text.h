@@ -21,7 +21,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/matrix.h"
 #include "graphics/vulkan/instance.h"
 #include "graphics/vulkan/render/render_buffer.h"
-#include "graphics/vulkan/swapchain.h"
 
 #include <memory>
 #include <string>
@@ -33,7 +32,6 @@ struct VulkanText
         virtual ~VulkanText() = default;
 
         virtual void set_color(const Color& color) const = 0;
-        virtual void set_matrix(const mat4& matrix) const = 0;
 
         virtual void create_buffers(vulkan::RenderBuffers2D* render_buffers, const mat4& matrix) = 0;
         virtual void delete_buffers() = 0;

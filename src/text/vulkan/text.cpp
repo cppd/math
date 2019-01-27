@@ -119,11 +119,6 @@ class Impl final : public VulkanText
                 m_shader_memory.set_color(color);
         }
 
-        void set_matrix(const mat4& matrix) const override
-        {
-                m_shader_memory.set_matrix(matrix);
-        }
-
         void draw_commands(VkCommandBuffer command_buffer) const
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
@@ -161,7 +156,7 @@ class Impl final : public VulkanText
                 m_command_buffers = m_render_buffers->create_command_buffers(
                         std::nullopt, std::bind(&Impl::draw_commands, this, std::placeholders::_1));
 
-                set_matrix(matrix);
+                m_shader_memory.set_matrix(matrix);
         }
 
         void delete_buffers() override
