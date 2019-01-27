@@ -46,7 +46,6 @@ Chapter 13: FFTs for Arbitrary N.
 #include "dft_compute.h"
 
 #include "memory.h"
-#include "program.h"
 
 #include "com/bits.h"
 #include "com/error.h"
@@ -55,6 +54,7 @@ Chapter 13: FFTs for Arbitrary N.
 #include "com/print.h"
 #include "com/time.h"
 #include "gpgpu/com/groups.h"
+#include "gpgpu/dft/compute/device/program.h"
 #include "graphics/opengl/buffers.h"
 #include "graphics/opengl/query.h"
 
