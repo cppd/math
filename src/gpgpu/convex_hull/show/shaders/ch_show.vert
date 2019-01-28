@@ -21,7 +21,7 @@ layout(std140, binding = 0) uniform Data
         float brightness;
 };
 
-layout(std430, binding = 1) buffer Points
+layout(std430, binding = 1) readonly buffer Points
 {
         ivec2 points[];
 };
