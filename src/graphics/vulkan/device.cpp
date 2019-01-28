@@ -161,6 +161,12 @@ bool physical_device_features_are_supported(const std::vector<vulkan::PhysicalDe
                                 return false;
                         }
                         break;
+                case vulkan::PhysicalDeviceFeatures::vertexPipelineStoresAndAtomics:
+                        if (!device_features.vertexPipelineStoresAndAtomics)
+                        {
+                                return false;
+                        }
+                        break;
                 }
         }
 
@@ -340,6 +346,13 @@ VkPhysicalDeviceFeatures make_enabled_device_features(const std::vector<Physical
                         }
                         device_features.fragmentStoresAndAtomics = true;
                         break;
+                case PhysicalDeviceFeatures::vertexPipelineStoresAndAtomics:
+                        if (!supported_device_features.vertexPipelineStoresAndAtomics)
+                        {
+                                error("Required physical device feature Vertex Pipeline Stores And Atomics is not supported");
+                        }
+                        device_features.vertexPipelineStoresAndAtomics = true;
+                        break;
                 }
         }
 
@@ -361,6 +374,9 @@ VkPhysicalDeviceFeatures make_enabled_device_features(const std::vector<Physical
                         break;
                 case PhysicalDeviceFeatures::FragmentStoresAndAtomics:
                         device_features.fragmentStoresAndAtomics = supported_device_features.fragmentStoresAndAtomics;
+                        break;
+                case PhysicalDeviceFeatures::vertexPipelineStoresAndAtomics:
+                        device_features.vertexPipelineStoresAndAtomics = supported_device_features.vertexPipelineStoresAndAtomics;
                         break;
                 }
         }
