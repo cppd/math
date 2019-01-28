@@ -960,7 +960,7 @@ VulkanResult render_vulkan(VkSwapchainKHR swapchain, VkQueue presentation_queue,
         //
 
         bool object_rendered;
-        std::array<VkSemaphore, 1> finished_semaphores;
+        VkSemaphore finished_semaphore;
 
         if (show_text)
         {
@@ -970,7 +970,7 @@ VulkanResult render_vulkan(VkSwapchainKHR swapchain, VkQueue presentation_queue,
                 canvas.draw_text(current_frame_fence, graphics_queue, renderer_finished_semaphore, canvas_finished_semaphore,
                                  image_index, text_step_y, text_x, text_y, text);
 
-                finished_semaphores = {canvas_finished_semaphore};
+                finished_semaphore = canvas_finished_semaphore;
         }
 
         else
@@ -978,32 +978,17 @@ VulkanResult render_vulkan(VkSwapchainKHR swapchain, VkQueue presentation_queue,
                 object_rendered = renderer.draw(current_frame_fence, graphics_queue, image_available_semaphore,
                                                 renderer_finished_semaphore, image_index, current_frame);
 
-                finished_semaphores = {renderer_finished_semaphore};
+                finished_semaphore = renderer_finished_semaphore;
         }
 
         //
 
-        std::array<VkSwapchainKHR, 1> swapchains = {swapchain};
-        std::array<uint32_t, 1> image_indices = {image_index};
-
-        VkPresentInfoKHR present_info = {};
-        present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-        present_info.waitSemaphoreCount = finished_semaphores.size();
-        present_info.pWaitSemaphores = finished_semaphores.data();
-        present_info.swapchainCount = swapchains.size();
-        present_info.pSwapchains = swapchains.data();
-        present_info.pImageIndices = image_indices.data();
-        // present_info.pResults = nullptr;
-
-        result = vkQueuePresentKHR(presentation_queue, &present_info);
-        if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
+        if (!vulkan::queue_present(finished_semaphore, swapchain, image_index, presentation_queue))
         {
                 return VulkanResult::CreateSwapchain;
         }
-        else if (result != VK_SUCCESS)
-        {
-                vulkan::vulkan_function_error("vkQueuePresentKHR", result);
-        }
+
+        //
 
         return object_rendered ? VulkanResult::ObjectRendered : VulkanResult::NoObject;
 }
