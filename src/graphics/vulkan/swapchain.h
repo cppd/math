@@ -61,4 +61,6 @@ public:
 };
 
 bool surface_suitable(VkSurfaceKHR surface, VkPhysicalDevice device);
+
+bool queue_present(VkSemaphore wait_semaphore, VkSwapchainKHR swapchain, uint32_t image_index, VkQueue queue);
 }

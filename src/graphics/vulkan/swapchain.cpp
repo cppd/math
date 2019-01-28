@@ -319,6 +319,30 @@ bool surface_suitable(VkSurfaceKHR surface, VkPhysicalDevice physical_device)
         return find_surface_details(surface, physical_device, &surface_capabilities, &surface_formats, &present_modes);
 }
 
+bool queue_present(VkSemaphore wait_semaphore, VkSwapchainKHR swapchain, uint32_t image_index, VkQueue queue)
+{
+        VkPresentInfoKHR present_info = {};
+        present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+        present_info.waitSemaphoreCount = 1;
+        present_info.pWaitSemaphores = &wait_semaphore;
+        present_info.swapchainCount = 1;
+        present_info.pSwapchains = &swapchain;
+        present_info.pImageIndices = &image_index;
+        // present_info.pResults = nullptr;
+
+        VkResult result = vkQueuePresentKHR(queue, &present_info);
+        if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
+        {
+                return false;
+        }
+        else if (result != VK_SUCCESS)
+        {
+                vulkan::vulkan_function_error("vkQueuePresentKHR", result);
+        }
+
+        return true;
+}
+
 Swapchain::Swapchain(VkSurfaceKHR surface, const Device& device, const std::vector<uint32_t>& family_indices,
                      const VkSurfaceFormatKHR& required_surface_format, int preferred_image_count,
                      PresentMode preferred_present_mode)
