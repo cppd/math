@@ -51,6 +51,8 @@ struct VulkanCanvas
 
         //
 
+        static std::vector<vulkan::PhysicalDeviceFeatures> required_device_features();
+
         virtual void create_buffers(const vulkan::Swapchain* swapchain, vulkan::RenderBuffers2D* render_buffers,
                                     const mat4& matrix, const vulkan::StorageImage& objects) = 0;
         virtual void delete_buffers() = 0;
@@ -59,6 +61,9 @@ struct VulkanCanvas
         virtual void draw_text(VkFence queue_fence, VkQueue graphics_queue, VkSemaphore wait_semaphore,
                                VkSemaphore finished_semaphore, unsigned image_index, int step_y, int x, int y,
                                const std::vector<std::string>& text) = 0;
+
+        virtual void draw(VkFence queue_fence, VkQueue graphics_queue, VkSemaphore wait_semaphore, VkSemaphore finished_semaphore,
+                          unsigned image_index) = 0;
 };
 
 std::unique_ptr<VulkanCanvas> create_vulkan_canvas(const vulkan::VulkanInstance& instance, bool sample_shading, int text_size);

@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "canvas.h"
 
+#include "gpgpu/convex_hull/show/vulkan/ch_show.h"
 #include "text/vulkan/text.h"
 
 constexpr Srgb8 TEXT_COLOR(255, 255, 255);
@@ -26,8 +27,10 @@ namespace
 class Canvas final : public VulkanCanvas
 {
         bool m_text_active = true;
+        bool m_convex_hull_active = true;
 
         std::unique_ptr<VulkanText> m_text;
+        std::unique_ptr<gpgpu_vulkan::ConvexHullShow> m_convex_hull;
 
         void set_text_color(const Color& c) override
         {
@@ -69,8 +72,13 @@ class Canvas final : public VulkanCanvas
         {
         }
 
-        void set_convex_hull_active(bool /*v*/) override
+        void set_convex_hull_active(bool v) override
         {
+                m_convex_hull_active = v;
+                if (m_convex_hull_active)
+                {
+                        m_convex_hull->reset_timer();
+                }
         }
 
         void set_optical_flow_active(bool /*v*/) override
@@ -91,23 +99,40 @@ class Canvas final : public VulkanCanvas
                 m_text->draw(queue_fence, graphics_queue, wait_semaphore, finished_semaphore, image_index, step_y, x, y, text);
         }
 
+        void draw(VkFence queue_fence, VkQueue graphics_queue, VkSemaphore wait_semaphore, VkSemaphore finished_semaphore,
+                  unsigned image_index) override
+        {
+                if (m_convex_hull_active)
+                {
+                        m_convex_hull->draw(queue_fence, graphics_queue, wait_semaphore, finished_semaphore, image_index);
+                }
+        }
+
 public:
         Canvas(const vulkan::VulkanInstance& instance, bool sample_shading, int text_size)
-                : m_text(create_vulkan_text(instance, sample_shading, text_size, TEXT_COLOR))
+                : m_text(create_vulkan_text(instance, sample_shading, text_size, TEXT_COLOR)),
+                  m_convex_hull(gpgpu_vulkan::create_convex_hull_show(instance, sample_shading))
         {
         }
 };
 
 void Canvas::create_buffers(const vulkan::Swapchain* /*swapchain*/, vulkan::RenderBuffers2D* render_buffers, const mat4& matrix,
-                            const vulkan::StorageImage& /*objects*/)
+                            const vulkan::StorageImage& objects)
 {
         m_text->create_buffers(render_buffers, matrix);
+        m_convex_hull->create_buffers(render_buffers, matrix, objects);
 }
 
 void Canvas::delete_buffers()
 {
         m_text->delete_buffers();
+        m_convex_hull->delete_buffers();
 }
+}
+
+std::vector<vulkan::PhysicalDeviceFeatures> VulkanCanvas::required_device_features()
+{
+        return gpgpu_vulkan::ConvexHullShow::required_device_features();
 }
 
 std::unique_ptr<VulkanCanvas> create_vulkan_canvas(const vulkan::VulkanInstance& instance, bool sample_shading, int text_size)

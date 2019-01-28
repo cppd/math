@@ -1044,7 +1044,7 @@ void ShowObject<GraphicsAndComputeAPI::Vulkan>::loop()
                 merge<std::string>(VulkanRenderer::instance_extensions(), VulkanWindow::instance_extensions()),
                 VulkanRenderer::device_extensions(),
                 merge<vulkan::PhysicalDeviceFeatures>(
-                        VulkanRenderer::required_device_features(),
+                        VulkanRenderer::required_device_features(), VulkanCanvas::required_device_features(),
                         device_features_sample_shading(VULKAN_MINIMUM_SAMPLE_COUNT,
                                                        VULKAN_RENDERER_SAMPLE_SHADING || VULKAN_CANVAS_SAMPLE_SHADING),
                         device_features_sampler_anisotropy(VULKAN_SAMPLER_ANISOTROPY)),
