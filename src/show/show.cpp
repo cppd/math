@@ -31,9 +31,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/thread.h"
 #include "com/type/limit.h"
 #include "graphics/vulkan/create.h"
-#include "graphics/vulkan/error.h"
 #include "graphics/vulkan/instance.h"
 #include "graphics/vulkan/render/render_buffer.h"
+#include "graphics/vulkan/sync.h"
 #include "numerical/linear.h"
 #include "show/canvases/opengl/canvas.h"
 #include "show/canvases/vulkan/canvas.h"
@@ -927,18 +927,7 @@ VulkanResult render_vulkan(VkSwapchainKHR swapchain, VkQueue presentation_queue,
                            VulkanRenderer& renderer, VulkanCanvas& canvas, int text_step_y, int text_x, int text_y,
                            const std::vector<std::string>& text, bool show_text)
 {
-        VkResult result;
-
-        result = vkWaitForFences(device, 1, &current_frame_fence, VK_TRUE, limits<uint64_t>::max());
-        if (result != VK_SUCCESS)
-        {
-                vulkan::vulkan_function_error("vkWaitForFences", result);
-        }
-        result = vkResetFences(device, 1, &current_frame_fence);
-        if (result != VK_SUCCESS)
-        {
-                vulkan::vulkan_function_error("vkResetFences", result);
-        }
+        vulkan::wait_for_fence_and_reset(device, current_frame_fence);
 
         //
 
