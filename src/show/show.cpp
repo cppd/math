@@ -943,18 +943,9 @@ VulkanResult render_vulkan(VkSwapchainKHR swapchain, VkQueue presentation_queue,
         //
 
         uint32_t image_index;
-        result = vkAcquireNextImageKHR(device, swapchain, limits<uint64_t>::max(), image_available_semaphore, VK_NULL_HANDLE,
-                                       &image_index);
-        if (result == VK_ERROR_OUT_OF_DATE_KHR)
+        if (!vulkan::acquire_next_image(device, swapchain, image_available_semaphore, VK_NULL_HANDLE /*fence*/, &image_index))
         {
                 return VulkanResult::CreateSwapchain;
-        }
-        else if (result == VK_SUBOPTIMAL_KHR)
-        {
-        }
-        else if (result != VK_SUCCESS)
-        {
-                vulkan::vulkan_function_error("vkAcquireNextImageKHR", result);
         }
 
         //

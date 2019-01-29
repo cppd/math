@@ -319,6 +319,26 @@ bool surface_suitable(VkSurfaceKHR surface, VkPhysicalDevice physical_device)
         return find_surface_details(surface, physical_device, &surface_capabilities, &surface_formats, &present_modes);
 }
 
+bool acquire_next_image(VkDevice device, VkSwapchainKHR swapchain, VkSemaphore semaphore, VkFence fence, uint32_t* image_index)
+{
+        constexpr uint64_t timeout = limits<uint64_t>::max();
+
+        VkResult result = vkAcquireNextImageKHR(device, swapchain, timeout, semaphore, fence, image_index);
+        if (result == VK_ERROR_OUT_OF_DATE_KHR)
+        {
+                return false;
+        }
+        else if (result == VK_SUBOPTIMAL_KHR)
+        {
+        }
+        else if (result != VK_SUCCESS)
+        {
+                vulkan::vulkan_function_error("vkAcquireNextImageKHR", result);
+        }
+
+        return true;
+}
+
 bool queue_present(VkSemaphore wait_semaphore, VkSwapchainKHR swapchain, uint32_t image_index, VkQueue queue)
 {
         VkPresentInfoKHR present_info = {};
