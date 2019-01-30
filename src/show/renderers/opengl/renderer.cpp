@@ -384,7 +384,10 @@ class Renderer final : public OpenGLRenderer
         static constexpr mat4 TRANSLATE = translate<double>(1, 1, 1);
         const mat4 SCALE_BIAS_MATRIX = SCALE * TRANSLATE;
 
-        opengl::GraphicsProgram main_program, shadow_program, points_0d_program, points_1d_program;
+        opengl::GraphicsProgram m_triangles_program;
+        opengl::GraphicsProgram m_shadow_program;
+        opengl::GraphicsProgram m_points_0d_program;
+        opengl::GraphicsProgram m_points_1d_program;
 
         std::unique_ptr<opengl::ShadowBuffer> m_shadow_buffer;
         std::unique_ptr<opengl::ColorBuffer> m_color_buffer;
@@ -525,7 +528,7 @@ class Renderer final : public OpenGLRenderer
 
                         m_shadow_memory.bind();
 
-                        shadow_program.draw_arrays(GL_TRIANGLES, 0, draw_object->vertices_count());
+                        m_shadow_program.draw_arrays(GL_TRIANGLES, 0, draw_object->vertices_count());
 
                         m_shadow_buffer->unbind_buffer();
                 }
@@ -545,17 +548,17 @@ class Renderer final : public OpenGLRenderer
                         m_triangles_memory.set_matrix(m_main_matrix * scale_object->model_matrix());
                         m_triangles_memory.set_materials(draw_object->materials());
                         m_triangles_memory.bind();
-                        main_program.draw_arrays(GL_TRIANGLES, 0, draw_object->vertices_count());
+                        m_triangles_program.draw_arrays(GL_TRIANGLES, 0, draw_object->vertices_count());
                         break;
                 case DrawType::Points:
                         m_points_memory.set_matrix(m_main_matrix * scale_object->model_matrix());
                         m_points_memory.bind();
-                        points_0d_program.draw_arrays(GL_POINTS, 0, draw_object->vertices_count());
+                        m_points_0d_program.draw_arrays(GL_POINTS, 0, draw_object->vertices_count());
                         break;
                 case DrawType::Lines:
                         m_points_memory.set_matrix(m_main_matrix * scale_object->model_matrix());
                         m_points_memory.bind();
-                        points_1d_program.draw_arrays(GL_LINES, 0, draw_object->vertices_count());
+                        m_points_1d_program.draw_arrays(GL_LINES, 0, draw_object->vertices_count());
                         break;
                 }
 
@@ -601,8 +604,8 @@ class Renderer final : public OpenGLRenderer
                 }
 
                 m_shadow_buffer = std::make_unique<opengl::ShadowBuffer>(m_shadow_width, m_shadow_height);
-                main_program.set_uniform_handle("shadow_tex",
-                                                m_shadow_buffer->depth_texture().texture().texture_resident_handle());
+                m_triangles_program.set_uniform_handle("shadow_tex",
+                                                       m_shadow_buffer->depth_texture().texture().texture_resident_handle());
         }
 
         void set_shadow_zoom(double zoom) override
@@ -620,9 +623,9 @@ class Renderer final : public OpenGLRenderer
                 m_color_buffer = std::make_unique<opengl::ColorBuffer>(width, height);
                 m_objects = std::make_unique<opengl::TextureR32I>(width, height);
 
-                main_program.set_uniform_handle("object_img", m_objects->image_resident_handle_write_only());
-                points_0d_program.set_uniform_handle("object_img", m_objects->image_resident_handle_write_only());
-                points_1d_program.set_uniform_handle("object_img", m_objects->image_resident_handle_write_only());
+                m_triangles_program.set_uniform_handle("object_img", m_objects->image_resident_handle_write_only());
+                m_points_0d_program.set_uniform_handle("object_img", m_objects->image_resident_handle_write_only());
+                m_points_1d_program.set_uniform_handle("object_img", m_objects->image_resident_handle_write_only());
 
                 set_shadow_size();
         }
@@ -667,11 +670,11 @@ class Renderer final : public OpenGLRenderer
 
 public:
         Renderer()
-                : main_program(opengl::VertexShader(triangles_vert), opengl::GeometryShader(triangles_geom),
-                               opengl::FragmentShader(triangles_frag)),
-                  shadow_program(opengl::VertexShader(shadow_vert), opengl::FragmentShader(shadow_frag)),
-                  points_0d_program(opengl::VertexShader(points_0d_vert), opengl::FragmentShader(points_frag)),
-                  points_1d_program(opengl::VertexShader(points_1d_vert), opengl::FragmentShader(points_frag))
+                : m_triangles_program(opengl::VertexShader(triangles_vert), opengl::GeometryShader(triangles_geom),
+                                      opengl::FragmentShader(triangles_frag)),
+                  m_shadow_program(opengl::VertexShader(shadow_vert), opengl::FragmentShader(shadow_frag)),
+                  m_points_0d_program(opengl::VertexShader(points_0d_vert), opengl::FragmentShader(points_frag)),
+                  m_points_1d_program(opengl::VertexShader(points_1d_vert), opengl::FragmentShader(points_frag))
         {
                 glDisable(GL_CULL_FACE);
                 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
