@@ -96,9 +96,13 @@ constexpr uint32_t shadow_frag[]
 {
 #include "renderer_shadow.frag.spr"
 };
-constexpr uint32_t points_vert[]
+constexpr uint32_t points_0d_vert[]
 {
-#include "renderer_points.vert.spr"
+#include "renderer_points_0d.vert.spr"
+};
+constexpr uint32_t points_1d_vert[]
+{
+#include "renderer_points_1d.vert.spr"
 };
 constexpr uint32_t points_frag[]
 {
@@ -635,7 +639,8 @@ class Renderer final : public VulkanRenderer
         vulkan::VertexShader m_shadow_vert;
         vulkan::FragmentShader m_shadow_frag;
 
-        vulkan::VertexShader m_points_vert;
+        vulkan::VertexShader m_points_0d_vert;
+        vulkan::VertexShader m_points_1d_vert;
         vulkan::FragmentShader m_points_frag;
 
         vulkan::PipelineLayout m_triangles_pipeline_layout;
@@ -653,8 +658,8 @@ class Renderer final : public VulkanRenderer
 
         VkPipeline m_triangles_pipeline = VK_NULL_HANDLE;
         VkPipeline m_shadow_pipeline = VK_NULL_HANDLE;
-        VkPipeline m_points_pipeline = VK_NULL_HANDLE;
-        VkPipeline m_lines_pipeline = VK_NULL_HANDLE;
+        VkPipeline m_points_0d_pipeline = VK_NULL_HANDLE;
+        VkPipeline m_points_1d_pipeline = VK_NULL_HANDLE;
 
         void set_light_a(const Color& light) override
         {
@@ -944,12 +949,12 @@ class Renderer final : public VulkanRenderer
                         {&m_triangles_vert, &m_triangles_geom, &m_triangles_frag}, m_triangles_pipeline_layout,
                         impl::Vertex::binding_descriptions(), impl::Vertex::triangles_attribute_descriptions());
 
-                m_points_pipeline = m_render_buffers->create_pipeline(
-                        VK_PRIMITIVE_TOPOLOGY_POINT_LIST, false, {&m_points_vert, &m_points_frag}, m_points_pipeline_layout,
+                m_points_0d_pipeline = m_render_buffers->create_pipeline(
+                        VK_PRIMITIVE_TOPOLOGY_POINT_LIST, false, {&m_points_0d_vert, &m_points_frag}, m_points_pipeline_layout,
                         impl::PointVertex::binding_descriptions(), impl::PointVertex::attribute_descriptions());
 
-                m_lines_pipeline = m_render_buffers->create_pipeline(
-                        VK_PRIMITIVE_TOPOLOGY_LINE_LIST, false, {&m_points_vert, &m_points_frag}, m_points_pipeline_layout,
+                m_points_1d_pipeline = m_render_buffers->create_pipeline(
+                        VK_PRIMITIVE_TOPOLOGY_LINE_LIST, false, {&m_points_1d_vert, &m_points_frag}, m_points_pipeline_layout,
                         impl::PointVertex::binding_descriptions(), impl::PointVertex::attribute_descriptions());
         }
 
@@ -1038,13 +1043,12 @@ class Renderer final : public VulkanRenderer
                 info.triangles_material_set_number = TRIANGLES_MATERIAL_SET_NUMBER;
 
                 info.points_pipeline_layout = m_points_pipeline_layout;
-                info.points_pipeline = m_points_pipeline;
+                info.points_pipeline = m_points_0d_pipeline;
                 info.points_set = m_points_shader_memory.descriptor_set();
                 info.points_set_number = POINTS_SET_NUMBER;
 
                 info.lines_pipeline_layout = m_points_pipeline_layout;
-                // Отличие линий от точек состоит только в типе объекта
-                info.lines_pipeline = m_lines_pipeline;
+                info.lines_pipeline = m_points_1d_pipeline;
                 info.lines_set = m_points_shader_memory.descriptor_set();
                 info.lines_set_number = POINTS_SET_NUMBER;
 
@@ -1158,7 +1162,8 @@ public:
                   m_triangles_frag(m_instance.device(), triangles_frag, "main"),
                   m_shadow_vert(m_instance.device(), shadow_vert, "main"),
                   m_shadow_frag(m_instance.device(), shadow_frag, "main"),
-                  m_points_vert(m_instance.device(), points_vert, "main"),
+                  m_points_0d_vert(m_instance.device(), points_0d_vert, "main"),
+                  m_points_1d_vert(m_instance.device(), points_1d_vert, "main"),
                   m_points_frag(m_instance.device(), points_frag, "main"),
                   //
                   m_triangles_pipeline_layout(create_pipeline_layout(m_instance.device(),
