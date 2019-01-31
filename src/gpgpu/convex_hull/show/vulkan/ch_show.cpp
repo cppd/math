@@ -133,8 +133,8 @@ class Impl final : public gpgpu_vulkan::ConvexHullShow
                 m_command_buffers.clear();
         }
 
-        void draw(VkFence queue_fence, VkQueue graphics_queue, VkSemaphore wait_semaphore, VkSemaphore finished_semaphore,
-                  unsigned image_index) override
+        void draw(VkQueue graphics_queue, VkSemaphore wait_semaphore, VkSemaphore finished_semaphore, unsigned image_index,
+                  VkFence command_completed_fence) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
@@ -154,7 +154,7 @@ class Impl final : public gpgpu_vulkan::ConvexHullShow
                 ASSERT(image_index < m_command_buffers.size());
 
                 vulkan::queue_submit(wait_semaphore, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-                                     m_command_buffers[image_index], finished_semaphore, graphics_queue, queue_fence);
+                                     m_command_buffers[image_index], finished_semaphore, graphics_queue, command_completed_fence);
         }
 
 public:

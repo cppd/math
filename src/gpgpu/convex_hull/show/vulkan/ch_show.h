@@ -36,8 +36,8 @@ struct ConvexHullShow
                                     const vulkan::StorageImage& objects) = 0;
         virtual void delete_buffers() = 0;
 
-        virtual void draw(VkFence queue_fence, VkQueue graphics_queue, VkSemaphore wait_semaphore, VkSemaphore finished_semaphore,
-                          unsigned image_index) = 0;
+        virtual void draw(VkQueue graphics_queue, VkSemaphore wait_semaphore, VkSemaphore finished_semaphore,
+                          unsigned image_index, VkFence command_completed_fence) = 0;
 
         virtual void reset_timer() = 0;
 };

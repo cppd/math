@@ -96,7 +96,7 @@ class Canvas final : public VulkanCanvas
         void draw_text(VkQueue graphics_queue, VkSemaphore wait_semaphore, VkSemaphore finished_semaphore, unsigned image_index,
                        VkFence command_completed_fence, int step_y, int x, int y, const std::vector<std::string>& text) override
         {
-                m_text->draw(command_completed_fence, graphics_queue, wait_semaphore, finished_semaphore, image_index, step_y, x,
+                m_text->draw(graphics_queue, wait_semaphore, finished_semaphore, image_index, command_completed_fence, step_y, x,
                              y, text);
         }
 
@@ -105,8 +105,8 @@ class Canvas final : public VulkanCanvas
         {
                 if (m_convex_hull_active)
                 {
-                        m_convex_hull->draw(command_completed_fence, graphics_queue, wait_semaphore, finished_semaphore,
-                                            image_index);
+                        m_convex_hull->draw(graphics_queue, wait_semaphore, finished_semaphore, image_index,
+                                            command_completed_fence);
                 }
         }
 
