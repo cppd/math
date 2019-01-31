@@ -30,8 +30,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/string/vector.h"
 #include "com/thread.h"
 #include "com/type/limit.h"
-#include "graphics/vulkan/create.h"
 #include "graphics/vulkan/instance.h"
+#include "graphics/vulkan/objects.h"
 #include "graphics/vulkan/render/render_buffer.h"
 #include "graphics/vulkan/sync.h"
 #include "numerical/linear.h"
@@ -53,7 +53,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 // 2 - double buffering, 3 - triple buffering
 constexpr int VULKAN_PREFERRED_IMAGE_COUNT = 2;
-constexpr int VULKAN_MAX_FRAMES_IN_FLIGHT = 1;
 // Шейдеры пишут результат в цветовом пространстве RGB, поэтому _SRGB (для результата в sRGB нужен _UNORM).
 constexpr VkSurfaceFormatKHR VULKAN_SURFACE_FORMAT = {VK_FORMAT_B8G8R8A8_SRGB, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR};
 // clang-format off
@@ -922,12 +921,12 @@ enum class VulkanResult
 };
 
 VulkanResult render_vulkan(VkSwapchainKHR swapchain, VkQueue presentation_queue, VkQueue graphics_queue, VkDevice device,
-                           VkFence current_frame_fence, VkSemaphore image_available_semaphore,
-                           VkSemaphore renderer_finished_semaphore, VkSemaphore canvas_finished_semaphore, unsigned current_frame,
+                           VkFence command_completed_fence, VkSemaphore image_available_semaphore,
+                           VkSemaphore renderer_finished_semaphore, VkSemaphore canvas_finished_semaphore,
                            VulkanRenderer& renderer, VulkanCanvas& canvas, int text_step_y, int text_x, int text_y,
                            const std::vector<std::string>& text, bool show_text)
 {
-        vulkan::wait_for_fence_and_reset(device, current_frame_fence);
+        vulkan::wait_for_fence_and_reset(device, command_completed_fence);
 
         //
 
@@ -944,19 +943,19 @@ VulkanResult render_vulkan(VkSwapchainKHR swapchain, VkQueue presentation_queue,
 
         if (show_text)
         {
-                object_rendered = renderer.draw(VK_NULL_HANDLE, graphics_queue, image_available_semaphore,
-                                                renderer_finished_semaphore, image_index, current_frame);
+                object_rendered = renderer.draw(graphics_queue, image_available_semaphore, renderer_finished_semaphore,
+                                                image_index, VK_NULL_HANDLE /*command_completed_fence*/);
 
-                canvas.draw_text(current_frame_fence, graphics_queue, renderer_finished_semaphore, canvas_finished_semaphore,
-                                 image_index, text_step_y, text_x, text_y, text);
+                canvas.draw_text(graphics_queue, renderer_finished_semaphore, canvas_finished_semaphore, image_index,
+                                 command_completed_fence, text_step_y, text_x, text_y, text);
 
                 finished_semaphore = canvas_finished_semaphore;
         }
 
         else
         {
-                object_rendered = renderer.draw(current_frame_fence, graphics_queue, image_available_semaphore,
-                                                renderer_finished_semaphore, image_index, current_frame);
+                object_rendered = renderer.draw(graphics_queue, image_available_semaphore, renderer_finished_semaphore,
+                                                image_index, command_completed_fence);
 
                 finished_semaphore = renderer_finished_semaphore;
         }
@@ -1001,8 +1000,6 @@ void ShowObject<GraphicsAndComputeAPI::Vulkan>::loop()
 {
         ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
-        static_assert(VULKAN_MAX_FRAMES_IN_FLIGHT == 1);
-
         std::unique_ptr<VulkanWindow> window = create_vulkan_window(this);
 
         vulkan::VulkanInstance instance(
@@ -1015,17 +1012,10 @@ void ShowObject<GraphicsAndComputeAPI::Vulkan>::loop()
                         device_features_sampler_anisotropy(VULKAN_SAMPLER_ANISOTROPY)),
                 {} /*optional_features*/, [w = window.get()](VkInstance i) { return w->create_surface(i); });
 
-        std::vector<vulkan::Fence> in_flight_fences =
-                vulkan::create_fences(instance.device(), VULKAN_MAX_FRAMES_IN_FLIGHT, true /*signaled_state*/);
-
-        std::vector<vulkan::Semaphore> image_available_semaphores =
-                vulkan::create_semaphores(instance.device(), VULKAN_MAX_FRAMES_IN_FLIGHT);
-
-        std::vector<vulkan::Semaphore> renderer_finished_semaphores =
-                vulkan::create_semaphores(instance.device(), VULKAN_MAX_FRAMES_IN_FLIGHT);
-
-        std::vector<vulkan::Semaphore> canvas_finished_semaphores =
-                vulkan::create_semaphores(instance.device(), VULKAN_MAX_FRAMES_IN_FLIGHT);
+        vulkan::Fence command_completed_fence(instance.device(), true /*signaled_state*/);
+        vulkan::Semaphore image_available_semaphore(instance.device());
+        vulkan::Semaphore renderer_finished_semaphore(instance.device());
+        vulkan::Semaphore canvas_finished_semaphore(instance.device());
 
         //
 
@@ -1035,8 +1025,8 @@ void ShowObject<GraphicsAndComputeAPI::Vulkan>::loop()
         std::unique_ptr<vulkan::Swapchain> swapchain;
         std::unique_ptr<vulkan::RenderBuffers> render_buffers;
 
-        std::unique_ptr<VulkanRenderer> renderer = create_vulkan_renderer(instance, VULKAN_RENDERER_SAMPLE_SHADING,
-                                                                          VULKAN_SAMPLER_ANISOTROPY, VULKAN_MAX_FRAMES_IN_FLIGHT);
+        std::unique_ptr<VulkanRenderer> renderer =
+                create_vulkan_renderer(instance, VULKAN_RENDERER_SAMPLE_SHADING, VULKAN_SAMPLER_ANISOTROPY);
 
         std::unique_ptr<VulkanCanvas> canvas = create_vulkan_canvas(instance, VULKAN_CANVAS_SAMPLE_SHADING, m_text_size);
 
@@ -1074,16 +1064,16 @@ void ShowObject<GraphicsAndComputeAPI::Vulkan>::loop()
         //
 
         std::chrono::steady_clock::time_point last_frame_time = std::chrono::steady_clock::now();
-        for (unsigned frame = 0; !m_stop; frame = (frame + 1) % VULKAN_MAX_FRAMES_IN_FLIGHT)
+        while (!m_stop)
         {
                 pull_and_dispatch_all_events();
 
                 m_fps_text[1] = to_string(std::lround(m_fps.calculate()));
 
                 switch (render_vulkan(swapchain->swapchain(), instance.presentation_queue(), instance.graphics_queue(),
-                                      instance.device(), in_flight_fences[frame], image_available_semaphores[frame],
-                                      renderer_finished_semaphores[frame], canvas_finished_semaphores[frame], frame, *renderer,
-                                      *canvas, m_text_step_y, m_text_x, m_text_y, m_fps_text, canvas->text_active()))
+                                      instance.device(), command_completed_fence, image_available_semaphore,
+                                      renderer_finished_semaphore, canvas_finished_semaphore, *renderer, *canvas, m_text_step_y,
+                                      m_text_x, m_text_y, m_fps_text, canvas->text_active()))
                 {
                 case VulkanResult::NoObject:
                         sleep(last_frame_time);

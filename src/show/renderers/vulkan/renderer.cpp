@@ -621,7 +621,7 @@ class Renderer final : public VulkanRenderer
         const vulkan::VulkanInstance& m_instance;
         const vulkan::Swapchain* m_swapchain = nullptr;
 
-        std::vector<vulkan::Semaphore> m_shadow_available_semaphores;
+        vulkan::Semaphore m_shadow_available_semaphore;
 
         vulkan::Sampler m_texture_sampler;
         vulkan::Sampler m_shadow_sampler;
@@ -835,8 +835,8 @@ class Renderer final : public VulkanRenderer
                 set_matrices();
         }
 
-        bool draw(VkFence queue_fence, VkQueue graphics_queue, VkSemaphore wait_semaphore, VkSemaphore finished_semaphore,
-                  unsigned image_index, unsigned current_frame) const override
+        bool draw(VkQueue graphics_queue, VkSemaphore wait_semaphore, VkSemaphore finished_semaphore, unsigned image_index,
+                  VkFence command_completed_fence) const override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
@@ -849,31 +849,29 @@ class Renderer final : public VulkanRenderer
                 {
                         vulkan::queue_submit(wait_semaphore, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
                                              m_render_command_buffers[image_index], finished_semaphore, graphics_queue,
-                                             queue_fence);
+                                             command_completed_fence);
                 }
                 else
                 {
                         ASSERT(m_shadow_command_buffers.size() == m_swapchain->image_views().size() ||
                                m_shadow_command_buffers.size() == 1);
 
-                        VkSemaphore shadow_available_semaphore = m_shadow_available_semaphores[current_frame];
-
                         vulkan::queue_submit(m_shadow_command_buffers[m_shadow_command_buffers.size() == 1 ? 0 : image_index],
-                                             shadow_available_semaphore, graphics_queue, VK_NULL_HANDLE);
+                                             m_shadow_available_semaphore, graphics_queue, VK_NULL_HANDLE);
 
                         //
 
                         std::array<VkSemaphore, 2> wait_semaphores;
                         std::array<VkPipelineStageFlags, 2> wait_stages;
 
-                        wait_semaphores[0] = shadow_available_semaphore;
+                        wait_semaphores[0] = m_shadow_available_semaphore;
                         wait_stages[0] = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
 
                         wait_semaphores[1] = wait_semaphore;
                         wait_stages[1] = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 
                         vulkan::queue_submit(wait_semaphores, wait_stages, m_render_command_buffers[image_index],
-                                             finished_semaphore, graphics_queue, queue_fence);
+                                             finished_semaphore, graphics_queue, command_completed_fence);
                 }
 
                 return m_storage.object() != nullptr;
@@ -1143,10 +1141,10 @@ class Renderer final : public VulkanRenderer
         }
 
 public:
-        Renderer(const vulkan::VulkanInstance& instance, bool sample_shading, bool sampler_anisotropy, int max_frames_in_flight)
+        Renderer(const vulkan::VulkanInstance& instance, bool sample_shading, bool sampler_anisotropy)
                 : m_sample_shading(sample_shading),
                   m_instance(instance),
-                  m_shadow_available_semaphores(vulkan::create_semaphores(m_instance.device(), max_frames_in_flight)),
+                  m_shadow_available_semaphore(m_instance.device()),
                   m_texture_sampler(impl::create_texture_sampler(m_instance.device(), sampler_anisotropy)),
                   m_shadow_sampler(impl::create_shadow_sampler(m_instance.device())),
                   //
@@ -1216,7 +1214,7 @@ std::vector<vulkan::PhysicalDeviceFeatures> VulkanRenderer::required_device_feat
 }
 
 std::unique_ptr<VulkanRenderer> create_vulkan_renderer(const vulkan::VulkanInstance& instance, bool sample_shading,
-                                                       bool sampler_anisotropy, int max_frames_in_flight)
+                                                       bool sampler_anisotropy)
 {
-        return std::make_unique<Renderer>(instance, sample_shading, sampler_anisotropy, max_frames_in_flight);
+        return std::make_unique<Renderer>(instance, sample_shading, sampler_anisotropy);
 }

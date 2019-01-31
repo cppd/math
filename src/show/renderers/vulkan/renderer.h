@@ -58,8 +58,8 @@ struct VulkanRenderer
         virtual void object_show(int id) = 0;
         virtual void object_delete_all() = 0;
 
-        virtual bool draw(VkFence queue_fence, VkQueue graphics_queue, VkSemaphore wait_semaphore, VkSemaphore finished_semaphore,
-                          unsigned image_index, unsigned current_frame) const = 0;
+        virtual bool draw(VkQueue graphics_queue, VkSemaphore wait_semaphore, VkSemaphore finished_semaphore,
+                          unsigned image_index, VkFence command_completed_fence) const = 0;
 
         static mat4 ortho(double left, double right, double bottom, double top, double near, double far);
 
@@ -74,4 +74,4 @@ struct VulkanRenderer
 };
 
 std::unique_ptr<VulkanRenderer> create_vulkan_renderer(const vulkan::VulkanInstance& instance, bool sample_shading,
-                                                       bool sampler_anisotropy, int max_frames_in_flight);
+                                                       bool sampler_anisotropy);
