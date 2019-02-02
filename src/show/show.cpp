@@ -921,15 +921,10 @@ enum class VulkanResult
 };
 
 VulkanResult render_vulkan(VkSwapchainKHR swapchain, VkQueue presentation_queue, VkQueue graphics_queue, VkDevice device,
-                           VkFence command_completed_fence, VkSemaphore image_available_semaphore,
-                           VkSemaphore renderer_finished_semaphore, VkSemaphore canvas_finished_semaphore,
-                           VulkanRenderer& renderer, VulkanCanvas& canvas, int text_step_y, int text_x, int text_y,
-                           const std::vector<std::string>& text, bool show_text)
+                           VkSemaphore image_available_semaphore, VkSemaphore renderer_finished_semaphore,
+                           VkSemaphore canvas_finished_semaphore, VulkanRenderer& renderer, VulkanCanvas& canvas, int text_step_y,
+                           int text_x, int text_y, const std::vector<std::string>& text, bool show_text)
 {
-        vulkan::wait_for_fence_and_reset(device, command_completed_fence);
-
-        //
-
         uint32_t image_index;
         if (!vulkan::acquire_next_image(device, swapchain, image_available_semaphore, VK_NULL_HANDLE /*fence*/, &image_index))
         {
@@ -947,7 +942,7 @@ VulkanResult render_vulkan(VkSwapchainKHR swapchain, VkQueue presentation_queue,
                                                 image_index, VK_NULL_HANDLE /*command_completed_fence*/);
 
                 canvas.draw_text(graphics_queue, renderer_finished_semaphore, canvas_finished_semaphore, image_index,
-                                 command_completed_fence, text_step_y, text_x, text_y, text);
+                                 VK_NULL_HANDLE /*command_completed_fence*/, text_step_y, text_x, text_y, text);
 
                 finished_semaphore = canvas_finished_semaphore;
         }
@@ -955,7 +950,7 @@ VulkanResult render_vulkan(VkSwapchainKHR swapchain, VkQueue presentation_queue,
         else
         {
                 object_rendered = renderer.draw(graphics_queue, image_available_semaphore, renderer_finished_semaphore,
-                                                image_index, command_completed_fence);
+                                                image_index, VK_NULL_HANDLE /*command_completed_fence*/);
 
                 finished_semaphore = renderer_finished_semaphore;
         }
@@ -966,6 +961,10 @@ VulkanResult render_vulkan(VkSwapchainKHR swapchain, VkQueue presentation_queue,
         {
                 return VulkanResult::CreateSwapchain;
         }
+
+        //
+
+        vulkan::queue_wait_idle(graphics_queue);
 
         //
 
@@ -1012,7 +1011,6 @@ void ShowObject<GraphicsAndComputeAPI::Vulkan>::loop()
                         device_features_sampler_anisotropy(VULKAN_SAMPLER_ANISOTROPY)),
                 {} /*optional_features*/, [w = window.get()](VkInstance i) { return w->create_surface(i); });
 
-        vulkan::Fence command_completed_fence(instance.device(), true /*signaled_state*/);
         vulkan::Semaphore image_available_semaphore(instance.device());
         vulkan::Semaphore renderer_finished_semaphore(instance.device());
         vulkan::Semaphore canvas_finished_semaphore(instance.device());
@@ -1071,9 +1069,9 @@ void ShowObject<GraphicsAndComputeAPI::Vulkan>::loop()
                 m_fps_text[1] = to_string(std::lround(m_fps.calculate()));
 
                 switch (render_vulkan(swapchain->swapchain(), instance.presentation_queue(), instance.graphics_queue(),
-                                      instance.device(), command_completed_fence, image_available_semaphore,
-                                      renderer_finished_semaphore, canvas_finished_semaphore, *renderer, *canvas, m_text_step_y,
-                                      m_text_x, m_text_y, m_fps_text, canvas->text_active()))
+                                      instance.device(), image_available_semaphore, renderer_finished_semaphore,
+                                      canvas_finished_semaphore, *renderer, *canvas, m_text_step_y, m_text_x, m_text_y,
+                                      m_fps_text, canvas->text_active()))
                 {
                 case VulkanResult::NoObject:
                         sleep(last_frame_time);
