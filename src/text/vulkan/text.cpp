@@ -169,8 +169,8 @@ class Impl final : public VulkanText
         }
 
         template <typename T>
-        void draw_text(VkQueue graphics_queue, VkSemaphore wait_semaphore, VkSemaphore finished_semaphore, unsigned image_index,
-                       VkFence command_completed_fence, int step_y, int x, int y, const T& text)
+        void draw_text(VkQueue graphics_queue, VkSemaphore wait_semaphore, VkSemaphore signal_semaphore, unsigned image_index,
+                       int step_y, int x, int y, const T& text)
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
@@ -204,21 +204,19 @@ class Impl final : public VulkanText
                 ASSERT(image_index < m_command_buffers.size());
 
                 vulkan::queue_submit(wait_semaphore, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-                                     m_command_buffers[image_index], finished_semaphore, graphics_queue, command_completed_fence);
+                                     m_command_buffers[image_index], signal_semaphore, graphics_queue, VK_NULL_HANDLE);
         }
 
-        void draw(VkQueue graphics_queue, VkSemaphore wait_semaphore, VkSemaphore finished_semaphore, unsigned image_index,
-                  VkFence command_completed_fence, int step_y, int x, int y, const std::vector<std::string>& text) override
+        void draw(VkQueue graphics_queue, VkSemaphore wait_semaphore, VkSemaphore signal_semaphore, unsigned image_index,
+                  int step_y, int x, int y, const std::vector<std::string>& text) override
         {
-                draw_text(graphics_queue, wait_semaphore, finished_semaphore, image_index, command_completed_fence, step_y, x, y,
-                          text);
+                draw_text(graphics_queue, wait_semaphore, signal_semaphore, image_index, step_y, x, y, text);
         }
 
-        void draw(VkQueue graphics_queue, VkSemaphore wait_semaphore, VkSemaphore finished_semaphore, unsigned image_index,
-                  VkFence command_completed_fence, int step_y, int x, int y, const std::string& text) override
+        void draw(VkQueue graphics_queue, VkSemaphore wait_semaphore, VkSemaphore signal_semaphore, unsigned image_index,
+                  int step_y, int x, int y, const std::string& text) override
         {
-                draw_text(graphics_queue, wait_semaphore, finished_semaphore, image_index, command_completed_fence, step_y, x, y,
-                          text);
+                draw_text(graphics_queue, wait_semaphore, signal_semaphore, image_index, step_y, x, y, text);
         }
 
         Impl(const vulkan::VulkanInstance& instance, bool sample_shading, const Color& color, Glyphs&& glyphs)

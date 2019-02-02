@@ -93,20 +93,17 @@ class Canvas final : public VulkanCanvas
         {
                 return m_text_active;
         }
-        void draw_text(VkQueue graphics_queue, VkSemaphore wait_semaphore, VkSemaphore finished_semaphore, unsigned image_index,
-                       VkFence command_completed_fence, int step_y, int x, int y, const std::vector<std::string>& text) override
+        void draw_text(VkQueue graphics_queue, VkSemaphore wait_semaphore, VkSemaphore signal_semaphore, unsigned image_index,
+                       int step_y, int x, int y, const std::vector<std::string>& text) override
         {
-                m_text->draw(graphics_queue, wait_semaphore, finished_semaphore, image_index, command_completed_fence, step_y, x,
-                             y, text);
+                m_text->draw(graphics_queue, wait_semaphore, signal_semaphore, image_index, step_y, x, y, text);
         }
 
-        void draw(VkQueue graphics_queue, VkSemaphore wait_semaphore, VkSemaphore finished_semaphore, unsigned image_index,
-                  VkFence command_completed_fence) override
+        void draw(VkQueue graphics_queue, VkSemaphore wait_semaphore, VkSemaphore signal_semaphore, unsigned image_index) override
         {
                 if (m_convex_hull_active)
                 {
-                        m_convex_hull->draw(graphics_queue, wait_semaphore, finished_semaphore, image_index,
-                                            command_completed_fence);
+                        m_convex_hull->draw(graphics_queue, wait_semaphore, signal_semaphore, image_index);
                 }
         }
 

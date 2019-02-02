@@ -938,19 +938,19 @@ VulkanResult render_vulkan(VkSwapchainKHR swapchain, VkQueue presentation_queue,
 
         if (show_text)
         {
-                object_rendered = renderer.draw(graphics_queue, image_available_semaphore, renderer_finished_semaphore,
-                                                image_index, VK_NULL_HANDLE /*command_completed_fence*/);
+                object_rendered =
+                        renderer.draw(graphics_queue, image_available_semaphore, renderer_finished_semaphore, image_index);
 
-                canvas.draw_text(graphics_queue, renderer_finished_semaphore, canvas_finished_semaphore, image_index,
-                                 VK_NULL_HANDLE /*command_completed_fence*/, text_step_y, text_x, text_y, text);
+                canvas.draw_text(graphics_queue, renderer_finished_semaphore, canvas_finished_semaphore, image_index, text_step_y,
+                                 text_x, text_y, text);
 
                 finished_semaphore = canvas_finished_semaphore;
         }
 
         else
         {
-                object_rendered = renderer.draw(graphics_queue, image_available_semaphore, renderer_finished_semaphore,
-                                                image_index, VK_NULL_HANDLE /*command_completed_fence*/);
+                object_rendered =
+                        renderer.draw(graphics_queue, image_available_semaphore, renderer_finished_semaphore, image_index);
 
                 finished_semaphore = renderer_finished_semaphore;
         }

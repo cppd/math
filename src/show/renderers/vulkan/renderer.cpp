@@ -835,8 +835,8 @@ class Renderer final : public VulkanRenderer
                 set_matrices();
         }
 
-        bool draw(VkQueue graphics_queue, VkSemaphore wait_semaphore, VkSemaphore finished_semaphore, unsigned image_index,
-                  VkFence command_completed_fence) const override
+        bool draw(VkQueue graphics_queue, VkSemaphore wait_semaphore, VkSemaphore signal_semaphore,
+                  unsigned image_index) const override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
@@ -848,8 +848,8 @@ class Renderer final : public VulkanRenderer
                 if (!m_show_shadow || !m_storage.object() || !m_storage.object()->has_shadow())
                 {
                         vulkan::queue_submit(wait_semaphore, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-                                             m_render_command_buffers[image_index], finished_semaphore, graphics_queue,
-                                             command_completed_fence);
+                                             m_render_command_buffers[image_index], signal_semaphore, graphics_queue,
+                                             VK_NULL_HANDLE);
                 }
                 else
                 {
@@ -871,7 +871,7 @@ class Renderer final : public VulkanRenderer
                         wait_stages[1] = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 
                         vulkan::queue_submit(wait_semaphores, wait_stages, m_render_command_buffers[image_index],
-                                             finished_semaphore, graphics_queue, command_completed_fence);
+                                             signal_semaphore, graphics_queue, VK_NULL_HANDLE);
                 }
 
                 return m_storage.object() != nullptr;

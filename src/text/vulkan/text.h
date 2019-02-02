@@ -36,13 +36,11 @@ struct VulkanText
         virtual void create_buffers(vulkan::RenderBuffers2D* render_buffers, const mat4& matrix) = 0;
         virtual void delete_buffers() = 0;
 
-        virtual void draw(VkQueue graphics_queue, VkSemaphore wait_semaphore, VkSemaphore finished_semaphore,
-                          unsigned image_index, VkFence command_completed_fence, int step_y, int x, int y,
-                          const std::vector<std::string>& text) = 0;
+        virtual void draw(VkQueue graphics_queue, VkSemaphore wait_semaphore, VkSemaphore signal_semaphore, unsigned image_index,
+                          int step_y, int x, int y, const std::vector<std::string>& text) = 0;
 
-        virtual void draw(VkQueue graphics_queue, VkSemaphore wait_semaphore, VkSemaphore finished_semaphore,
-                          unsigned image_index, VkFence command_completed_fence, int step_y, int x, int y,
-                          const std::string& text) = 0;
+        virtual void draw(VkQueue graphics_queue, VkSemaphore wait_semaphore, VkSemaphore signal_semaphore, unsigned image_index,
+                          int step_y, int x, int y, const std::string& text) = 0;
 };
 
 std::unique_ptr<VulkanText> create_vulkan_text(const vulkan::VulkanInstance& instance, bool sample_shading, int size,
