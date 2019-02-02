@@ -42,4 +42,13 @@ void wait_for_fence_and_reset(VkDevice device, VkFence fence)
                 vulkan::vulkan_function_error("vkResetFences", result);
         }
 }
+
+void queue_wait_idle(VkQueue queue)
+{
+        VkResult result = vkQueueWaitIdle(queue);
+        if (result != VK_SUCCESS)
+        {
+                vulkan::vulkan_function_error("vkQueueWaitIdle", result);
+        }
+}
 }

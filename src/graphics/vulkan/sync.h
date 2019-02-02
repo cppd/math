@@ -20,4 +20,5 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace vulkan
 {
 void wait_for_fence_and_reset(VkDevice device, VkFence fence);
+void queue_wait_idle(VkQueue queue);
 }
