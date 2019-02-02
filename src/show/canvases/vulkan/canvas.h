@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "com/color/color.h"
+#include "com/font/text_data.h"
 #include "com/matrix.h"
 #include "graphics/vulkan/buffers.h"
 #include "graphics/vulkan/instance.h"
@@ -59,7 +60,7 @@ struct VulkanCanvas
 
         virtual bool text_active() const noexcept = 0;
         virtual void draw_text(VkQueue graphics_queue, VkSemaphore wait_semaphore, VkSemaphore signal_semaphore,
-                               unsigned image_index, int step_y, int x, int y, const std::vector<std::string>& text) = 0;
+                               unsigned image_index, const TextData& text_data) = 0;
 
         virtual void draw(VkQueue graphics_queue, VkSemaphore wait_semaphore, VkSemaphore signal_semaphore,
                           unsigned image_index) = 0;

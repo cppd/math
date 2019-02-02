@@ -135,7 +135,7 @@ class Canvas final : public OpenGLCanvas
                             int dft_dst_x, int dft_dst_y, bool frame_buffer_is_srgb) override;
 
         void draw() override;
-        void draw_text(int step_y, int x, int y, const std::vector<std::string>& text) override;
+        void draw_text(const TextData& text_data) override;
 
 public:
         Canvas(int text_size, double window_ppi) : m_text_size(text_size), m_window_ppi(window_ppi)
@@ -208,13 +208,13 @@ void Canvas::draw()
         }
 }
 
-void Canvas::draw_text(int step_y, int x, int y, const std::vector<std::string>& text)
+void Canvas::draw_text(const TextData& text_data)
 {
         ASSERT(m_text);
 
         if (m_text_active)
         {
-                m_text->draw(step_y, x, y, text);
+                m_text->draw(text_data);
         }
 }
 }

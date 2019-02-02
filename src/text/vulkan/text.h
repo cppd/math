@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "com/color/color.h"
+#include "com/font/text_data.h"
 #include "com/matrix.h"
 #include "graphics/vulkan/instance.h"
 #include "graphics/vulkan/render/render_buffer.h"
@@ -37,10 +38,7 @@ struct VulkanText
         virtual void delete_buffers() = 0;
 
         virtual void draw(VkQueue graphics_queue, VkSemaphore wait_semaphore, VkSemaphore signal_semaphore, unsigned image_index,
-                          int step_y, int x, int y, const std::vector<std::string>& text) = 0;
-
-        virtual void draw(VkQueue graphics_queue, VkSemaphore wait_semaphore, VkSemaphore signal_semaphore, unsigned image_index,
-                          int step_y, int x, int y, const std::string& text) = 0;
+                          const TextData& text_data) = 0;
 };
 
 std::unique_ptr<VulkanText> create_vulkan_text(const vulkan::VulkanInstance& instance, bool sample_shading, int size,

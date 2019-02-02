@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "com/color/color.h"
+#include "com/font/text_data.h"
 #include "com/matrix.h"
 #include "graphics/opengl/buffers.h"
 
@@ -53,7 +54,7 @@ struct OpenGLCanvas
                                     int dft_dst_y, bool frame_buffer_is_srgb) = 0;
 
         virtual void draw() = 0;
-        virtual void draw_text(int step_y, int x, int y, const std::vector<std::string>& text) = 0;
+        virtual void draw_text(const TextData& text_data) = 0;
 };
 
 std::unique_ptr<OpenGLCanvas> create_opengl_canvas(int text_size, double window_ppi);

@@ -168,9 +168,8 @@ class Impl final : public VulkanText
                 m_command_buffers.clear();
         }
 
-        template <typename T>
-        void draw_text(VkQueue graphics_queue, VkSemaphore wait_semaphore, VkSemaphore signal_semaphore, unsigned image_index,
-                       int step_y, int x, int y, const T& text)
+        void draw(VkQueue graphics_queue, VkSemaphore wait_semaphore, VkSemaphore signal_semaphore, unsigned image_index,
+                  const TextData& text_data) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
@@ -180,7 +179,7 @@ class Impl final : public VulkanText
 
                 thread_local std::vector<TextVertex> vertices;
 
-                text_vertices(m_glyphs, step_y, x, y, text, &vertices);
+                text_vertices(m_glyphs, text_data, &vertices);
 
                 const size_t data_size = storage_size(vertices);
 
@@ -205,18 +204,6 @@ class Impl final : public VulkanText
 
                 vulkan::queue_submit(wait_semaphore, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
                                      m_command_buffers[image_index], signal_semaphore, graphics_queue, VK_NULL_HANDLE);
-        }
-
-        void draw(VkQueue graphics_queue, VkSemaphore wait_semaphore, VkSemaphore signal_semaphore, unsigned image_index,
-                  int step_y, int x, int y, const std::vector<std::string>& text) override
-        {
-                draw_text(graphics_queue, wait_semaphore, signal_semaphore, image_index, step_y, x, y, text);
-        }
-
-        void draw(VkQueue graphics_queue, VkSemaphore wait_semaphore, VkSemaphore signal_semaphore, unsigned image_index,
-                  int step_y, int x, int y, const std::string& text) override
-        {
-                draw_text(graphics_queue, wait_semaphore, signal_semaphore, image_index, step_y, x, y, text);
         }
 
         Impl(const vulkan::VulkanInstance& instance, bool sample_shading, const Color& color, Glyphs&& glyphs)

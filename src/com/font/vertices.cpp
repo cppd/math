@@ -79,27 +79,16 @@ void text_vertices(const std::unordered_map<char32_t, FontGlyph>& glyphs, int st
 }
 }
 
-void text_vertices(const std::unordered_map<char32_t, FontGlyph>& glyphs, int step_y, int start_x, int start_y,
-                   const std::vector<std::string>& text, std::vector<TextVertex>* vertices)
+void text_vertices(const std::unordered_map<char32_t, FontGlyph>& glyphs, const TextData& text_data,
+                   std::vector<TextVertex>* vertices)
 {
         vertices->clear();
 
-        int x = start_x;
-        int y = start_y;
+        int x = text_data.start_x;
+        int y = text_data.start_y;
 
-        for (const std::string& s : text)
+        for (const std::string& s : text_data.text)
         {
-                text_vertices(glyphs, step_y, start_x, x, y, s, vertices);
+                text_vertices(glyphs, text_data.step_y, text_data.start_x, x, y, s, vertices);
         }
-}
-
-void text_vertices(const std::unordered_map<char32_t, FontGlyph>& glyphs, int step_y, int start_x, int start_y,
-                   const std::string& text, std::vector<TextVertex>* vertices)
-{
-        vertices->clear();
-
-        int x = start_x;
-        int y = start_y;
-
-        text_vertices(glyphs, step_y, start_x, x, y, text, vertices);
 }

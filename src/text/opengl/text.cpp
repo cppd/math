@@ -103,33 +103,6 @@ class OpenGLText::Impl final
         std::unique_ptr<opengl::TextureR32F> m_texture;
         ShaderMemory m_shader_memory;
 
-        template <typename T>
-        void draw_text(int step_y, int x, int y, const T& text) const
-        {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
-
-                thread_local std::vector<TextVertex> vertices;
-
-                text_vertices(m_glyphs, step_y, x, y, text, &vertices);
-
-                const size_t data_size = storage_size(vertices);
-
-                if (!m_vertex_buffer || m_vertex_buffer->size() < data_size)
-                {
-                        m_vertex_buffer.emplace(data_size);
-                        m_vertex_array.attrib_i(0, 2, GL_INT, *m_vertex_buffer, offsetof(TextVertex, v), sizeof(TextVertex));
-                        m_vertex_array.attrib(1, 2, GL_FLOAT, *m_vertex_buffer, offsetof(TextVertex, t), sizeof(TextVertex));
-                }
-
-                m_vertex_buffer->write(vertices);
-
-                opengl::GLEnableAndRestore<GL_BLEND> e;
-
-                m_shader_memory.bind();
-                m_vertex_array.bind();
-                m_program.draw_arrays(GL_TRIANGLES, 0, vertices.size());
-        }
-
 public:
         Impl(int size, const Color& color, const mat4& matrix)
                 : m_program(opengl::VertexShader(vertex_shader), opengl::FragmentShader(fragment_shader))
@@ -165,14 +138,30 @@ public:
                 m_shader_memory.set_matrix(matrix);
         }
 
-        void draw(int step_y, int x, int y, const std::vector<std::string>& text) const
+        void draw(const TextData& text_data) const
         {
-                draw_text(step_y, x, y, text);
-        }
+                ASSERT(std::this_thread::get_id() == m_thread_id);
 
-        void draw(int step_y, int x, int y, const std::string& text) const
-        {
-                draw_text(step_y, x, y, text);
+                thread_local std::vector<TextVertex> vertices;
+
+                text_vertices(m_glyphs, text_data, &vertices);
+
+                const size_t data_size = storage_size(vertices);
+
+                if (!m_vertex_buffer || m_vertex_buffer->size() < data_size)
+                {
+                        m_vertex_buffer.emplace(data_size);
+                        m_vertex_array.attrib_i(0, 2, GL_INT, *m_vertex_buffer, offsetof(TextVertex, v), sizeof(TextVertex));
+                        m_vertex_array.attrib(1, 2, GL_FLOAT, *m_vertex_buffer, offsetof(TextVertex, t), sizeof(TextVertex));
+                }
+
+                m_vertex_buffer->write(vertices);
+
+                opengl::GLEnableAndRestore<GL_BLEND> e;
+
+                m_shader_memory.bind();
+                m_vertex_array.bind();
+                m_program.draw_arrays(GL_TRIANGLES, 0, vertices.size());
         }
 };
 
@@ -192,12 +181,7 @@ void OpenGLText::set_matrix(const mat4& matrix) const
         m_impl->set_matrix(matrix);
 }
 
-void OpenGLText::draw(int step_y, int x, int y, const std::vector<std::string>& text) const
+void OpenGLText::draw(const TextData& text_data) const
 {
-        m_impl->draw(step_y, x, y, text);
-}
-
-void OpenGLText::draw(int step_y, int x, int y, const std::string& text) const
-{
-        m_impl->draw(step_y, x, y, text);
+        m_impl->draw(text_data);
 }

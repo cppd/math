@@ -17,25 +17,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "com/color/color.h"
-#include "com/font/text_data.h"
-#include "com/matrix.h"
-
-#include <memory>
 #include <string>
 #include <vector>
 
-class OpenGLText final
+struct TextData
 {
-        class Impl;
-        std::unique_ptr<Impl> m_impl;
-
-public:
-        OpenGLText(int size, const Color& color, const mat4& matrix);
-        ~OpenGLText();
-
-        void set_color(const Color& color) const;
-        void set_matrix(const mat4& matrix) const;
-
-        void draw(const TextData& text_data) const;
+        int step_y;
+        int start_x;
+        int start_y;
+        std::vector<std::string> text;
 };

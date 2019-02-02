@@ -184,19 +184,18 @@ class ShowObject final : public EventQueue, public WindowEvent
 
         //
 
-        const int m_text_size = points_to_pixels(FPS_TEXT_SIZE_IN_POINTS, m_parent_window_ppi);
-        const int m_text_step_y = points_to_pixels(FPS_TEXT_STEP_Y_IN_POINTS, m_parent_window_ppi);
-        const int m_text_x = points_to_pixels(FPS_TEXT_X_IN_POINTS, m_parent_window_ppi);
-        const int m_text_y = points_to_pixels(FPS_TEXT_Y_IN_POINTS, m_parent_window_ppi);
+        Frequency m_fps{FPS_INTERVAL_LENGTH, FPS_SAMPLE_COUNT};
+
+        const int m_fps_text_size = points_to_pixels(FPS_TEXT_SIZE_IN_POINTS, m_parent_window_ppi);
+
+        TextData m_fps_text_data{points_to_pixels(FPS_TEXT_STEP_Y_IN_POINTS, m_parent_window_ppi),
+                                 points_to_pixels(FPS_TEXT_X_IN_POINTS, m_parent_window_ppi),
+                                 points_to_pixels(FPS_TEXT_Y_IN_POINTS, m_parent_window_ppi),
+                                 {FPS_TEXT, ""}};
 
         //
 
         Camera m_camera;
-
-        //
-
-        Frequency m_fps{FPS_INTERVAL_LENGTH, FPS_SAMPLE_COUNT};
-        std::vector<std::string> m_fps_text{FPS_TEXT, ""};
 
         //
 
@@ -831,8 +830,7 @@ void ShowObject<API>::init_window_and_view()
 
 //
 
-bool render_opengl(OpenGLWindow& window, OpenGLRenderer& renderer, OpenGLCanvas& canvas, int text_step_y, int text_x, int text_y,
-                   const std::vector<std::string>& text)
+bool render_opengl(OpenGLWindow& window, OpenGLRenderer& renderer, OpenGLCanvas& canvas, const TextData& text_data)
 {
         // Параметр true означает рисование в цветной буфер,
         // параметр false означает рисование в буфер экрана.
@@ -841,7 +839,7 @@ bool render_opengl(OpenGLWindow& window, OpenGLRenderer& renderer, OpenGLCanvas&
 
         canvas.draw();
 
-        canvas.draw_text(text_step_y, text_x, text_y, text);
+        canvas.draw_text(text_data);
 
         window.display();
 
@@ -855,7 +853,7 @@ void ShowObject<GraphicsAndComputeAPI::OpenGL>::loop()
 
         std::unique_ptr<OpenGLWindow> window = create_opengl_window(OPENGL_MINIMUM_SAMPLE_COUNT, this);
         std::unique_ptr<OpenGLRenderer> renderer = create_opengl_renderer();
-        std::unique_ptr<OpenGLCanvas> canvas = create_opengl_canvas(m_text_size, m_parent_window_ppi);
+        std::unique_ptr<OpenGLCanvas> canvas = create_opengl_canvas(m_fps_text_size, m_parent_window_ppi);
 
         //
 
@@ -876,9 +874,9 @@ void ShowObject<GraphicsAndComputeAPI::OpenGL>::loop()
         {
                 pull_and_dispatch_all_events();
 
-                m_fps_text[1] = to_string(std::lround(m_fps.calculate()));
+                m_fps_text_data.text[1] = to_string(std::lround(m_fps.calculate()));
 
-                if (!render_opengl(*window, *renderer, *canvas, m_text_step_y, m_text_x, m_text_y, m_fps_text))
+                if (!render_opengl(*window, *renderer, *canvas, m_fps_text_data))
                 {
                         sleep(last_frame_time);
                 }
@@ -922,8 +920,8 @@ enum class VulkanResult
 
 VulkanResult render_vulkan(VkSwapchainKHR swapchain, VkQueue presentation_queue, VkQueue graphics_queue, VkDevice device,
                            VkSemaphore image_available_semaphore, VkSemaphore renderer_finished_semaphore,
-                           VkSemaphore canvas_finished_semaphore, VulkanRenderer& renderer, VulkanCanvas& canvas, int text_step_y,
-                           int text_x, int text_y, const std::vector<std::string>& text, bool show_text)
+                           VkSemaphore canvas_finished_semaphore, VulkanRenderer& renderer, VulkanCanvas& canvas,
+                           const TextData& text_data, bool show_text)
 {
         uint32_t image_index;
         if (!vulkan::acquire_next_image(device, swapchain, image_available_semaphore, VK_NULL_HANDLE /*fence*/, &image_index))
@@ -941,8 +939,7 @@ VulkanResult render_vulkan(VkSwapchainKHR swapchain, VkQueue presentation_queue,
                 object_rendered =
                         renderer.draw(graphics_queue, image_available_semaphore, renderer_finished_semaphore, image_index);
 
-                canvas.draw_text(graphics_queue, renderer_finished_semaphore, canvas_finished_semaphore, image_index, text_step_y,
-                                 text_x, text_y, text);
+                canvas.draw_text(graphics_queue, renderer_finished_semaphore, canvas_finished_semaphore, image_index, text_data);
 
                 finished_semaphore = canvas_finished_semaphore;
         }
@@ -1026,7 +1023,7 @@ void ShowObject<GraphicsAndComputeAPI::Vulkan>::loop()
         std::unique_ptr<VulkanRenderer> renderer =
                 create_vulkan_renderer(instance, VULKAN_RENDERER_SAMPLE_SHADING, VULKAN_SAMPLER_ANISOTROPY);
 
-        std::unique_ptr<VulkanCanvas> canvas = create_vulkan_canvas(instance, VULKAN_CANVAS_SAMPLE_SHADING, m_text_size);
+        std::unique_ptr<VulkanCanvas> canvas = create_vulkan_canvas(instance, VULKAN_CANVAS_SAMPLE_SHADING, m_fps_text_size);
 
         //
 
@@ -1066,12 +1063,11 @@ void ShowObject<GraphicsAndComputeAPI::Vulkan>::loop()
         {
                 pull_and_dispatch_all_events();
 
-                m_fps_text[1] = to_string(std::lround(m_fps.calculate()));
+                m_fps_text_data.text[1] = to_string(std::lround(m_fps.calculate()));
 
                 switch (render_vulkan(swapchain->swapchain(), instance.presentation_queue(), instance.graphics_queue(),
                                       instance.device(), image_available_semaphore, renderer_finished_semaphore,
-                                      canvas_finished_semaphore, *renderer, *canvas, m_text_step_y, m_text_x, m_text_y,
-                                      m_fps_text, canvas->text_active()))
+                                      canvas_finished_semaphore, *renderer, *canvas, m_fps_text_data, canvas->text_active()))
                 {
                 case VulkanResult::NoObject:
                         sleep(last_frame_time);

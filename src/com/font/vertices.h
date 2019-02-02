@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "glyphs.h"
+#include "text_data.h"
 
 #include "com/vec.h"
 
@@ -39,8 +40,5 @@ struct TextVertex
         }
 };
 
-void text_vertices(const std::unordered_map<char32_t, FontGlyph>& glyphs, int step_y, int start_x, int start_y,
-                   const std::vector<std::string>& text, std::vector<TextVertex>* vertices);
-
-void text_vertices(const std::unordered_map<char32_t, FontGlyph>& glyphs, int step_y, int start_x, int start_y,
-                   const std::string& text, std::vector<TextVertex>* vertices);
+void text_vertices(const std::unordered_map<char32_t, FontGlyph>& glyphs, const TextData& text_data,
+                   std::vector<TextVertex>* vertices);

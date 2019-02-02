@@ -94,9 +94,9 @@ class Canvas final : public VulkanCanvas
                 return m_text_active;
         }
         void draw_text(VkQueue graphics_queue, VkSemaphore wait_semaphore, VkSemaphore signal_semaphore, unsigned image_index,
-                       int step_y, int x, int y, const std::vector<std::string>& text) override
+                       const TextData& text_data) override
         {
-                m_text->draw(graphics_queue, wait_semaphore, signal_semaphore, image_index, step_y, x, y, text);
+                m_text->draw(graphics_queue, wait_semaphore, signal_semaphore, image_index, text_data);
         }
 
         void draw(VkQueue graphics_queue, VkSemaphore wait_semaphore, VkSemaphore signal_semaphore, unsigned image_index) override
