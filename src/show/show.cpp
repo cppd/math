@@ -830,18 +830,15 @@ void ShowObject<API>::init_window_and_view()
 
 //
 
-bool render_opengl(OpenGLWindow& window, OpenGLRenderer& renderer, OpenGLCanvas& canvas, const TextData& text_data)
+void render_opengl(OpenGLWindow& window, OpenGLRenderer& renderer, OpenGLCanvas& canvas, const TextData& text_data)
 {
         // Параметр true означает рисование в цветной буфер,
         // параметр false означает рисование в буфер экрана.
-        // Если возвращает false, то нет объекта для рисования.
-        bool object_rendered = renderer.draw(canvas.pencil_sketch_active());
+        renderer.draw(canvas.pencil_sketch_active());
 
         canvas.draw(text_data);
 
         window.display();
-
-        return object_rendered;
 }
 
 template <>
@@ -874,7 +871,9 @@ void ShowObject<GraphicsAndComputeAPI::OpenGL>::loop()
 
                 m_fps_text_data.text[1] = to_string(std::lround(m_fps.calculate()));
 
-                if (!render_opengl(*window, *renderer, *canvas, m_fps_text_data))
+                render_opengl(*window, *renderer, *canvas, m_fps_text_data);
+
+                if (renderer->empty())
                 {
                         sleep(last_frame_time);
                 }

@@ -486,7 +486,7 @@ class Renderer final : public OpenGLRenderer
                 m_triangles_memory.set_direction_to_camera(-dir);
         }
 
-        bool draw(bool draw_to_color_buffer) override
+        void draw(bool draw_to_color_buffer) override
         {
                 const DrawObject* draw_object = m_storage.object();
 
@@ -503,7 +503,7 @@ class Renderer final : public OpenGLRenderer
                         {
                                 m_color_buffer->unbind_buffer();
                         }
-                        return false;
+                        return;
                 }
 
                 opengl::GLEnableAndRestore<GL_DEPTH_TEST> enable_depth_test;
@@ -566,8 +566,11 @@ class Renderer final : public OpenGLRenderer
                 {
                         m_color_buffer->unbind_buffer();
                 }
+        }
 
-                return true;
+        virtual bool empty() const override
+        {
+                return !m_storage.object();
         }
 
         void set_shadow_size()
