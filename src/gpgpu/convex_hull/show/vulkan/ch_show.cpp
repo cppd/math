@@ -144,7 +144,8 @@ class Impl final : public gpgpu_vulkan::ConvexHullShow
                 float brightness = 0.5 + 0.5 * std::sin(ANGULAR_FREQUENCY * (time_in_seconds() - m_start_time));
                 m_shader_memory.set_brightness(brightness);
 
-                int vertex_count = TEST_POINTS.size();
+                // int vertex_count = TEST_POINTS.size();
+                int vertex_count = 0;
 
                 m_indirect_buffer.set(INDIRECT_BUFFER_COMMAND_NUMBER, vertex_count, 1, 0, 0);
 

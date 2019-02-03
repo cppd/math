@@ -105,8 +105,7 @@ class Canvas final : public VulkanCanvas
         {
                 VkSemaphore signal_semaphore;
 
-                // if (m_convex_hull_active)
-                if ((false))
+                if (m_convex_hull_active)
                 {
                         m_convex_hull->draw(graphics_queue, wait_semaphore, m_convex_hull_semaphore, image_index);
                         wait_semaphore = m_convex_hull_semaphore;
