@@ -53,8 +53,7 @@ struct OpenGLCanvas
                                     const opengl::TextureR32I& objects, int draw_width, int draw_height, int dft_dst_x,
                                     int dft_dst_y, bool frame_buffer_is_srgb) = 0;
 
-        virtual void draw() = 0;
-        virtual void draw_text(const TextData& text_data) = 0;
+        virtual void draw(const TextData& text_data) = 0;
 };
 
 std::unique_ptr<OpenGLCanvas> create_opengl_canvas(int text_size, double window_ppi);

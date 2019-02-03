@@ -837,9 +837,7 @@ bool render_opengl(OpenGLWindow& window, OpenGLRenderer& renderer, OpenGLCanvas&
         // Если возвращает false, то нет объекта для рисования.
         bool object_rendered = renderer.draw(canvas.pencil_sketch_active());
 
-        canvas.draw();
-
-        canvas.draw_text(text_data);
+        canvas.draw(text_data);
 
         window.display();
 

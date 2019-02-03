@@ -134,8 +134,7 @@ class Canvas final : public OpenGLCanvas
                             bool color_texture_is_srgb, const opengl::TextureR32I& objects, int draw_width, int draw_height,
                             int dft_dst_x, int dft_dst_y, bool frame_buffer_is_srgb) override;
 
-        void draw() override;
-        void draw_text(const TextData& text_data) override;
+        void draw(const TextData& text_data) override;
 
 public:
         Canvas(int text_size, double window_ppi) : m_text_size(text_size), m_window_ppi(window_ppi)
@@ -170,12 +169,13 @@ void Canvas::create_objects(int window_width, int window_height, const mat4& mat
         }
 }
 
-void Canvas::draw()
+void Canvas::draw(const TextData& text_data)
 {
         ASSERT(m_pencil_sketch);
         ASSERT(m_dft_show);
         ASSERT(m_optical_flow);
         ASSERT(m_convex_hull);
+        ASSERT(m_text);
 
         glViewport(0, 0, m_window_width, m_window_height);
 
@@ -206,12 +206,6 @@ void Canvas::draw()
         {
                 m_convex_hull->draw();
         }
-}
-
-void Canvas::draw_text(const TextData& text_data)
-{
-        ASSERT(m_text);
-
         if (m_text_active)
         {
                 m_text->draw(text_data);
