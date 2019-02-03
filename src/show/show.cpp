@@ -908,35 +908,28 @@ void create_swapchain(const vulkan::VulkanInstance& instance, VulkanRenderer* re
         canvas->create_buffers(swapchain->get(), &(*render_buffers)->buffers_2d(), m, renderer->objects());
 }
 
-enum class VulkanResult
-{
-        CreateSwapchain,
-        NoObject,
-        ObjectRendered
-};
-
-VulkanResult render_vulkan(VkSwapchainKHR swapchain, VkQueue presentation_queue, VkQueue graphics_queue, VkDevice device,
-                           VkSemaphore image_semaphore, VkSemaphore renderer_semaphore, VulkanRenderer& renderer,
-                           VulkanCanvas& canvas, const TextData& text_data)
+bool render_vulkan(VkSwapchainKHR swapchain, VkQueue presentation_queue, VkQueue graphics_queue, VkDevice device,
+                   VkSemaphore image_semaphore, VkSemaphore renderer_semaphore, VulkanRenderer& renderer, VulkanCanvas& canvas,
+                   const TextData& text_data)
 {
         uint32_t image_index;
         if (!vulkan::acquire_next_image(device, swapchain, image_semaphore, VK_NULL_HANDLE /*fence*/, &image_index))
         {
-                return VulkanResult::CreateSwapchain;
+                return false;
         }
 
-        bool object_rendered = renderer.draw(graphics_queue, image_semaphore, renderer_semaphore, image_index);
+        renderer.draw(graphics_queue, image_semaphore, renderer_semaphore, image_index);
 
         VkSemaphore canvas_semaphore = canvas.draw(graphics_queue, renderer_semaphore, image_index, text_data);
 
         if (!vulkan::queue_present(canvas_semaphore, swapchain, image_index, presentation_queue))
         {
-                return VulkanResult::CreateSwapchain;
+                return false;
         }
 
         vulkan::queue_wait_idle(graphics_queue);
 
-        return object_rendered ? VulkanResult::ObjectRendered : VulkanResult::NoObject;
+        return true;
 }
 
 std::vector<vulkan::PhysicalDeviceFeatures> device_features_sample_shading(int sample_count, bool sample_shading)
@@ -1035,18 +1028,16 @@ void ShowObject<GraphicsAndComputeAPI::Vulkan>::loop()
 
                 m_fps_text_data.text[1] = to_string(std::lround(m_fps.calculate()));
 
-                switch (render_vulkan(swapchain->swapchain(), instance.presentation_queue(), instance.graphics_queue(),
-                                      instance.device(), image_semaphore, renderer_semaphore, *renderer, *canvas,
-                                      m_fps_text_data))
+                if (!render_vulkan(swapchain->swapchain(), instance.presentation_queue(), instance.graphics_queue(),
+                                   instance.device(), image_semaphore, renderer_semaphore, *renderer, *canvas, m_fps_text_data))
                 {
-                case VulkanResult::NoObject:
-                        sleep(last_frame_time);
-                        break;
-                case VulkanResult::ObjectRendered:
-                        break;
-                case VulkanResult::CreateSwapchain:
                         create_swapchain(instance, renderer.get(), canvas.get(), &swapchain, &render_buffers, present_mode);
-                        break;
+                        continue;
+                }
+
+                if (renderer->empty())
+                {
+                        sleep(last_frame_time);
                 }
         }
 }

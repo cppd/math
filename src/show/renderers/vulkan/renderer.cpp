@@ -835,7 +835,7 @@ class Renderer final : public VulkanRenderer
                 set_matrices();
         }
 
-        bool draw(VkQueue graphics_queue, VkSemaphore wait_semaphore, VkSemaphore signal_semaphore,
+        void draw(VkQueue graphics_queue, VkSemaphore wait_semaphore, VkSemaphore signal_semaphore,
                   unsigned image_index) const override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
@@ -873,8 +873,11 @@ class Renderer final : public VulkanRenderer
                         vulkan::queue_submit(wait_semaphores, wait_stages, m_render_command_buffers[image_index],
                                              signal_semaphore, graphics_queue, VK_NULL_HANDLE);
                 }
+        }
 
-                return m_storage.object() != nullptr;
+        bool empty() const override
+        {
+                return !m_storage.object();
         }
 
         void create_buffers(const vulkan::Swapchain* swapchain, vulkan::RenderBuffers3D* render_buffers) override

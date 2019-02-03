@@ -58,8 +58,10 @@ struct VulkanRenderer
         virtual void object_show(int id) = 0;
         virtual void object_delete_all() = 0;
 
-        virtual bool draw(VkQueue graphics_queue, VkSemaphore wait_semaphore, VkSemaphore signal_semaphore,
+        virtual void draw(VkQueue graphics_queue, VkSemaphore wait_semaphore, VkSemaphore signal_semaphore,
                           unsigned image_index) const = 0;
+
+        virtual bool empty() const = 0;
 
         static mat4 ortho(double left, double right, double bottom, double top, double near, double far);
 
