@@ -17,8 +17,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "canvas.h"
 
+#include "com/log.h"
 #include "gpgpu/convex_hull/show/vulkan/ch_show.h"
+#include "graphics/vulkan/objects.h"
 #include "text/vulkan/text.h"
+
+#include <thread>
 
 constexpr Srgb8 TEXT_COLOR(255, 255, 255);
 
@@ -26,11 +30,18 @@ namespace
 {
 class Canvas final : public VulkanCanvas
 {
+        const std::thread::id m_thread_id = std::this_thread::get_id();
+
+        const vulkan::VulkanInstance& m_instance;
+
         bool m_text_active = true;
         bool m_convex_hull_active = true;
 
         std::unique_ptr<VulkanText> m_text;
         std::unique_ptr<gpgpu_vulkan::ConvexHullShow> m_convex_hull;
+
+        vulkan::Semaphore m_text_semaphore;
+        vulkan::Semaphore m_convex_hull_semaphore;
 
         void set_text_color(const Color& c) override
         {
@@ -89,29 +100,63 @@ class Canvas final : public VulkanCanvas
                             const vulkan::StorageImage& objects) override;
         void delete_buffers() override;
 
-        bool text_active() const noexcept override
+        VkSemaphore draw(VkQueue graphics_queue, VkSemaphore wait_semaphore, unsigned image_index,
+                         const TextData& text_data) override
         {
-                return m_text_active;
-        }
-        void draw_text(VkQueue graphics_queue, VkSemaphore wait_semaphore, VkSemaphore signal_semaphore, unsigned image_index,
-                       const TextData& text_data) override
-        {
-                m_text->draw(graphics_queue, wait_semaphore, signal_semaphore, image_index, text_data);
-        }
+                VkSemaphore signal_semaphore;
 
-        void draw(VkQueue graphics_queue, VkSemaphore wait_semaphore, VkSemaphore signal_semaphore, unsigned image_index) override
-        {
-                if (m_convex_hull_active)
+                // if (m_convex_hull_active)
+                if ((false))
                 {
-                        m_convex_hull->draw(graphics_queue, wait_semaphore, signal_semaphore, image_index);
+                        m_convex_hull->draw(graphics_queue, wait_semaphore, m_convex_hull_semaphore, image_index);
+                        wait_semaphore = m_convex_hull_semaphore;
+                        signal_semaphore = m_convex_hull_semaphore;
                 }
+                else
+                {
+                        signal_semaphore = wait_semaphore;
+                }
+
+                if (m_text_active)
+                {
+                        m_text->draw(graphics_queue, wait_semaphore, m_text_semaphore, image_index, text_data);
+                        wait_semaphore = m_text_semaphore;
+                        signal_semaphore = m_text_semaphore;
+                }
+                else
+                {
+                        signal_semaphore = wait_semaphore;
+                }
+
+                return signal_semaphore;
         }
 
 public:
         Canvas(const vulkan::VulkanInstance& instance, bool sample_shading, int text_size)
-                : m_text(create_vulkan_text(instance, sample_shading, text_size, TEXT_COLOR)),
-                  m_convex_hull(gpgpu_vulkan::create_convex_hull_show(instance, sample_shading))
+                : m_instance(instance),
+                  m_text(create_vulkan_text(instance, sample_shading, text_size, TEXT_COLOR)),
+                  m_convex_hull(gpgpu_vulkan::create_convex_hull_show(instance, sample_shading)),
+                  m_text_semaphore(instance.device()),
+                  m_convex_hull_semaphore(instance.device())
         {
+        }
+
+        ~Canvas() override
+        {
+                ASSERT(m_thread_id == std::this_thread::get_id());
+
+                try
+                {
+                        m_instance.device_wait_idle();
+                }
+                catch (std::exception& e)
+                {
+                        LOG(std::string("Device wait idle exception in the Vulkan canvas destructor: ") + e.what());
+                }
+                catch (...)
+                {
+                        LOG("Device wait idle unknown exception in the Vulkan canvas destructor");
+                }
         }
 };
 
