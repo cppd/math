@@ -917,18 +917,18 @@ enum class VulkanResult
 };
 
 VulkanResult render_vulkan(VkSwapchainKHR swapchain, VkQueue presentation_queue, VkQueue graphics_queue, VkDevice device,
-                           VkSemaphore image_available_semaphore, VkSemaphore renderer_finished_semaphore,
-                           VulkanRenderer& renderer, VulkanCanvas& canvas, const TextData& text_data)
+                           VkSemaphore image_semaphore, VkSemaphore renderer_semaphore, VulkanRenderer& renderer,
+                           VulkanCanvas& canvas, const TextData& text_data)
 {
         uint32_t image_index;
-        if (!vulkan::acquire_next_image(device, swapchain, image_available_semaphore, VK_NULL_HANDLE /*fence*/, &image_index))
+        if (!vulkan::acquire_next_image(device, swapchain, image_semaphore, VK_NULL_HANDLE /*fence*/, &image_index))
         {
                 return VulkanResult::CreateSwapchain;
         }
 
-        bool object_rendered = renderer.draw(graphics_queue, image_available_semaphore, renderer_finished_semaphore, image_index);
+        bool object_rendered = renderer.draw(graphics_queue, image_semaphore, renderer_semaphore, image_index);
 
-        VkSemaphore canvas_semaphore = canvas.draw(graphics_queue, renderer_finished_semaphore, image_index, text_data);
+        VkSemaphore canvas_semaphore = canvas.draw(graphics_queue, renderer_semaphore, image_index, text_data);
 
         if (!vulkan::queue_present(canvas_semaphore, swapchain, image_index, presentation_queue))
         {
@@ -980,8 +980,8 @@ void ShowObject<GraphicsAndComputeAPI::Vulkan>::loop()
                         device_features_sampler_anisotropy(VULKAN_SAMPLER_ANISOTROPY)),
                 {} /*optional_features*/, [w = window.get()](VkInstance i) { return w->create_surface(i); });
 
-        vulkan::Semaphore image_available_semaphore(instance.device());
-        vulkan::Semaphore renderer_finished_semaphore(instance.device());
+        vulkan::Semaphore image_semaphore(instance.device());
+        vulkan::Semaphore renderer_semaphore(instance.device());
 
         //
 
@@ -1037,8 +1037,8 @@ void ShowObject<GraphicsAndComputeAPI::Vulkan>::loop()
                 m_fps_text_data.text[1] = to_string(std::lround(m_fps.calculate()));
 
                 switch (render_vulkan(swapchain->swapchain(), instance.presentation_queue(), instance.graphics_queue(),
-                                      instance.device(), image_available_semaphore, renderer_finished_semaphore, *renderer,
-                                      *canvas, m_fps_text_data))
+                                      instance.device(), image_semaphore, renderer_semaphore, *renderer, *canvas,
+                                      m_fps_text_data))
                 {
                 case VulkanResult::NoObject:
                         sleep(last_frame_time);

@@ -103,31 +103,19 @@ class Canvas final : public VulkanCanvas
         VkSemaphore draw(VkQueue graphics_queue, VkSemaphore wait_semaphore, unsigned image_index,
                          const TextData& text_data) override
         {
-                VkSemaphore signal_semaphore;
-
                 if (m_convex_hull_active)
                 {
                         m_convex_hull->draw(graphics_queue, wait_semaphore, m_convex_hull_semaphore, image_index);
                         wait_semaphore = m_convex_hull_semaphore;
-                        signal_semaphore = m_convex_hull_semaphore;
-                }
-                else
-                {
-                        signal_semaphore = wait_semaphore;
                 }
 
                 if (m_text_active)
                 {
                         m_text->draw(graphics_queue, wait_semaphore, m_text_semaphore, image_index, text_data);
                         wait_semaphore = m_text_semaphore;
-                        signal_semaphore = m_text_semaphore;
-                }
-                else
-                {
-                        signal_semaphore = wait_semaphore;
                 }
 
-                return signal_semaphore;
+                return wait_semaphore;
         }
 
 public:
