@@ -912,7 +912,7 @@ bool render_vulkan(VkSwapchainKHR swapchain, VkQueue presentation_queue, VkQueue
                    VkSemaphore image_semaphore, VulkanRenderer& renderer, VulkanCanvas& canvas, const TextData& text_data)
 {
         uint32_t image_index;
-        if (!vulkan::acquire_next_image(device, swapchain, image_semaphore, VK_NULL_HANDLE /*fence*/, &image_index))
+        if (!vulkan::acquire_next_image(device, swapchain, image_semaphore, &image_index))
         {
                 return false;
         }
