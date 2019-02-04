@@ -37,8 +37,8 @@ struct VulkanText
         virtual void create_buffers(vulkan::RenderBuffers2D* render_buffers, const mat4& matrix) = 0;
         virtual void delete_buffers() = 0;
 
-        virtual void draw(VkQueue graphics_queue, VkSemaphore wait_semaphore, VkSemaphore signal_semaphore, unsigned image_index,
-                          const TextData& text_data) = 0;
+        virtual VkSemaphore draw(VkQueue graphics_queue, VkSemaphore wait_semaphore, unsigned image_index,
+                                 const TextData& text_data) = 0;
 };
 
 std::unique_ptr<VulkanText> create_vulkan_text(const vulkan::VulkanInstance& instance, bool sample_shading, int size,

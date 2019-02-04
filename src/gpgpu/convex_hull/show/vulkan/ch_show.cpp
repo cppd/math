@@ -70,6 +70,8 @@ class Impl final : public gpgpu_vulkan::ConvexHullShow
 
         const vulkan::VulkanInstance& m_instance;
 
+        vulkan::Semaphore m_signal_semaphore;
+
         impl::ShaderMemory m_shader_memory;
 
         vulkan::VertexShader m_vertex_shader;
@@ -133,7 +135,7 @@ class Impl final : public gpgpu_vulkan::ConvexHullShow
                 m_command_buffers.clear();
         }
 
-        void draw(VkQueue graphics_queue, VkSemaphore wait_semaphore, VkSemaphore signal_semaphore, unsigned image_index) override
+        VkSemaphore draw(VkQueue graphics_queue, VkSemaphore wait_semaphore, unsigned image_index) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
@@ -154,13 +156,16 @@ class Impl final : public gpgpu_vulkan::ConvexHullShow
                 ASSERT(image_index < m_command_buffers.size());
 
                 vulkan::queue_submit(wait_semaphore, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-                                     m_command_buffers[image_index], signal_semaphore, graphics_queue, VK_NULL_HANDLE);
+                                     m_command_buffers[image_index], m_signal_semaphore, graphics_queue, VK_NULL_HANDLE);
+
+                return m_signal_semaphore;
         }
 
 public:
         Impl(const vulkan::VulkanInstance& instance, bool sample_shading)
                 : m_sample_shading(sample_shading),
                   m_instance(instance),
+                  m_signal_semaphore(instance.device()),
                   m_shader_memory(instance.device()),
                   m_vertex_shader(m_instance.device(), vertex_shader, "main"),
                   m_fragment_shader(m_instance.device(), fragment_shader, "main"),

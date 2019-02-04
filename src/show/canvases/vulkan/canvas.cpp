@@ -30,18 +30,11 @@ namespace
 {
 class Canvas final : public VulkanCanvas
 {
-        const std::thread::id m_thread_id = std::this_thread::get_id();
-
-        const vulkan::VulkanInstance& m_instance;
-
         bool m_text_active = true;
         bool m_convex_hull_active = true;
 
         std::unique_ptr<VulkanText> m_text;
         std::unique_ptr<gpgpu_vulkan::ConvexHullShow> m_convex_hull;
-
-        vulkan::Semaphore m_text_semaphore;
-        vulkan::Semaphore m_convex_hull_semaphore;
 
         void set_text_color(const Color& c) override
         {
@@ -105,14 +98,12 @@ class Canvas final : public VulkanCanvas
         {
                 if (m_convex_hull_active)
                 {
-                        m_convex_hull->draw(graphics_queue, wait_semaphore, m_convex_hull_semaphore, image_index);
-                        wait_semaphore = m_convex_hull_semaphore;
+                        wait_semaphore = m_convex_hull->draw(graphics_queue, wait_semaphore, image_index);
                 }
 
                 if (m_text_active)
                 {
-                        m_text->draw(graphics_queue, wait_semaphore, m_text_semaphore, image_index, text_data);
-                        wait_semaphore = m_text_semaphore;
+                        wait_semaphore = m_text->draw(graphics_queue, wait_semaphore, image_index, text_data);
                 }
 
                 return wait_semaphore;
@@ -120,30 +111,9 @@ class Canvas final : public VulkanCanvas
 
 public:
         Canvas(const vulkan::VulkanInstance& instance, bool sample_shading, int text_size)
-                : m_instance(instance),
-                  m_text(create_vulkan_text(instance, sample_shading, text_size, TEXT_COLOR)),
-                  m_convex_hull(gpgpu_vulkan::create_convex_hull_show(instance, sample_shading)),
-                  m_text_semaphore(instance.device()),
-                  m_convex_hull_semaphore(instance.device())
+                : m_text(create_vulkan_text(instance, sample_shading, text_size, TEXT_COLOR)),
+                  m_convex_hull(gpgpu_vulkan::create_convex_hull_show(instance, sample_shading))
         {
-        }
-
-        ~Canvas() override
-        {
-                ASSERT(m_thread_id == std::this_thread::get_id());
-
-                try
-                {
-                        m_instance.device_wait_idle();
-                }
-                catch (std::exception& e)
-                {
-                        LOG(std::string("Device wait idle exception in the Vulkan canvas destructor: ") + e.what());
-                }
-                catch (...)
-                {
-                        LOG("Device wait idle unknown exception in the Vulkan canvas destructor");
-                }
         }
 };
 

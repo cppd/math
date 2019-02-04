@@ -909,8 +909,7 @@ void create_swapchain(const vulkan::VulkanInstance& instance, VulkanRenderer* re
 }
 
 bool render_vulkan(VkSwapchainKHR swapchain, VkQueue presentation_queue, VkQueue graphics_queue, VkDevice device,
-                   VkSemaphore image_semaphore, VkSemaphore renderer_semaphore, VulkanRenderer& renderer, VulkanCanvas& canvas,
-                   const TextData& text_data)
+                   VkSemaphore image_semaphore, VulkanRenderer& renderer, VulkanCanvas& canvas, const TextData& text_data)
 {
         uint32_t image_index;
         if (!vulkan::acquire_next_image(device, swapchain, image_semaphore, VK_NULL_HANDLE /*fence*/, &image_index))
@@ -918,11 +917,13 @@ bool render_vulkan(VkSwapchainKHR swapchain, VkQueue presentation_queue, VkQueue
                 return false;
         }
 
-        renderer.draw(graphics_queue, image_semaphore, renderer_semaphore, image_index);
+        VkSemaphore wait_semaphore = image_semaphore;
 
-        VkSemaphore canvas_semaphore = canvas.draw(graphics_queue, renderer_semaphore, image_index, text_data);
+        wait_semaphore = renderer.draw(graphics_queue, wait_semaphore, image_index);
 
-        if (!vulkan::queue_present(canvas_semaphore, swapchain, image_index, presentation_queue))
+        wait_semaphore = canvas.draw(graphics_queue, wait_semaphore, image_index, text_data);
+
+        if (!vulkan::queue_present(wait_semaphore, swapchain, image_index, presentation_queue))
         {
                 return false;
         }
@@ -973,7 +974,6 @@ void ShowObject<GraphicsAndComputeAPI::Vulkan>::loop()
                 {} /*optional_features*/, [w = window.get()](VkInstance i) { return w->create_surface(i); });
 
         vulkan::Semaphore image_semaphore(instance.device());
-        vulkan::Semaphore renderer_semaphore(instance.device());
 
         //
 
@@ -1029,7 +1029,7 @@ void ShowObject<GraphicsAndComputeAPI::Vulkan>::loop()
                 m_fps_text_data.text[1] = to_string(std::lround(m_fps.calculate()));
 
                 if (!render_vulkan(swapchain->swapchain(), instance.presentation_queue(), instance.graphics_queue(),
-                                   instance.device(), image_semaphore, renderer_semaphore, *renderer, *canvas, m_fps_text_data))
+                                   instance.device(), image_semaphore, *renderer, *canvas, m_fps_text_data))
                 {
                         create_swapchain(instance, renderer.get(), canvas.get(), &swapchain, &render_buffers, present_mode);
                         continue;

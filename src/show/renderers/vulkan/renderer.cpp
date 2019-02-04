@@ -621,7 +621,8 @@ class Renderer final : public VulkanRenderer
         const vulkan::VulkanInstance& m_instance;
         const vulkan::Swapchain* m_swapchain = nullptr;
 
-        vulkan::Semaphore m_shadow_available_semaphore;
+        vulkan::Semaphore m_shadow_signal_semaphore;
+        vulkan::Semaphore m_render_signal_semaphore;
 
         vulkan::Sampler m_texture_sampler;
         vulkan::Sampler m_shadow_sampler;
@@ -835,8 +836,7 @@ class Renderer final : public VulkanRenderer
                 set_matrices();
         }
 
-        void draw(VkQueue graphics_queue, VkSemaphore wait_semaphore, VkSemaphore signal_semaphore,
-                  unsigned image_index) const override
+        VkSemaphore draw(VkQueue graphics_queue, VkSemaphore wait_semaphore, unsigned image_index) const override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
@@ -848,7 +848,7 @@ class Renderer final : public VulkanRenderer
                 if (!m_show_shadow || !m_storage.object() || !m_storage.object()->has_shadow())
                 {
                         vulkan::queue_submit(wait_semaphore, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-                                             m_render_command_buffers[image_index], signal_semaphore, graphics_queue,
+                                             m_render_command_buffers[image_index], m_render_signal_semaphore, graphics_queue,
                                              VK_NULL_HANDLE);
                 }
                 else
@@ -857,22 +857,24 @@ class Renderer final : public VulkanRenderer
                                m_shadow_command_buffers.size() == 1);
 
                         vulkan::queue_submit(m_shadow_command_buffers[m_shadow_command_buffers.size() == 1 ? 0 : image_index],
-                                             m_shadow_available_semaphore, graphics_queue, VK_NULL_HANDLE);
+                                             m_shadow_signal_semaphore, graphics_queue, VK_NULL_HANDLE);
 
                         //
 
                         std::array<VkSemaphore, 2> wait_semaphores;
                         std::array<VkPipelineStageFlags, 2> wait_stages;
 
-                        wait_semaphores[0] = m_shadow_available_semaphore;
+                        wait_semaphores[0] = m_shadow_signal_semaphore;
                         wait_stages[0] = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
 
                         wait_semaphores[1] = wait_semaphore;
                         wait_stages[1] = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 
                         vulkan::queue_submit(wait_semaphores, wait_stages, m_render_command_buffers[image_index],
-                                             signal_semaphore, graphics_queue, VK_NULL_HANDLE);
+                                             m_render_signal_semaphore, graphics_queue, VK_NULL_HANDLE);
                 }
+
+                return m_render_signal_semaphore;
         }
 
         bool empty() const override
@@ -1147,7 +1149,8 @@ public:
         Renderer(const vulkan::VulkanInstance& instance, bool sample_shading, bool sampler_anisotropy)
                 : m_sample_shading(sample_shading),
                   m_instance(instance),
-                  m_shadow_available_semaphore(m_instance.device()),
+                  m_shadow_signal_semaphore(m_instance.device()),
+                  m_render_signal_semaphore(m_instance.device()),
                   m_texture_sampler(impl::create_texture_sampler(m_instance.device(), sampler_anisotropy)),
                   m_shadow_sampler(impl::create_shadow_sampler(m_instance.device())),
                   //

@@ -96,6 +96,8 @@ class Impl final : public VulkanText
 
         const vulkan::VulkanInstance& m_instance;
 
+        vulkan::Semaphore m_signal_semaphore;
+
         vulkan::Sampler m_sampler;
         vulkan::GrayscaleTexture m_glyph_texture;
         std::unordered_map<char32_t, FontGlyph> m_glyphs;
@@ -168,8 +170,8 @@ class Impl final : public VulkanText
                 m_command_buffers.clear();
         }
 
-        void draw(VkQueue graphics_queue, VkSemaphore wait_semaphore, VkSemaphore signal_semaphore, unsigned image_index,
-                  const TextData& text_data) override
+        VkSemaphore draw(VkQueue graphics_queue, VkSemaphore wait_semaphore, unsigned image_index,
+                         const TextData& text_data) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
@@ -203,12 +205,15 @@ class Impl final : public VulkanText
                 ASSERT(image_index < m_command_buffers.size());
 
                 vulkan::queue_submit(wait_semaphore, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-                                     m_command_buffers[image_index], signal_semaphore, graphics_queue, VK_NULL_HANDLE);
+                                     m_command_buffers[image_index], m_signal_semaphore, graphics_queue, VK_NULL_HANDLE);
+
+                return m_signal_semaphore;
         }
 
         Impl(const vulkan::VulkanInstance& instance, bool sample_shading, const Color& color, Glyphs&& glyphs)
                 : m_sample_shading(sample_shading),
                   m_instance(instance),
+                  m_signal_semaphore(instance.device()),
                   m_sampler(impl::create_text_sampler(instance.device())),
                   m_glyph_texture(instance.create_grayscale_texture(glyphs.width(), glyphs.height(), std::move(glyphs.pixels()))),
                   m_glyphs(std::move(glyphs.glyphs())),
