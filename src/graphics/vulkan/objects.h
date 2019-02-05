@@ -240,6 +240,7 @@ class Pipeline final
 public:
         Pipeline();
         Pipeline(VkDevice device, const VkGraphicsPipelineCreateInfo& create_info);
+        Pipeline(VkDevice device, const VkComputePipelineCreateInfo& create_info);
         ~Pipeline();
 
         Pipeline(const Pipeline&) = delete;

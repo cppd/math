@@ -650,6 +650,21 @@ Pipeline::Pipeline(VkDevice device, const VkGraphicsPipelineCreateInfo& create_i
         m_device = device;
 }
 
+Pipeline::Pipeline(VkDevice device, const VkComputePipelineCreateInfo& create_info)
+{
+        VkPipelineCache pipeline_cache = VK_NULL_HANDLE;
+
+        VkResult result = vkCreateComputePipelines(device, pipeline_cache, 1, &create_info, nullptr, &m_pipeline);
+        if (result != VK_SUCCESS)
+        {
+                vulkan_function_error("vkCreateComputePipelines", result);
+        }
+
+        ASSERT(m_pipeline != VK_NULL_HANDLE);
+
+        m_device = device;
+}
+
 Pipeline::~Pipeline()
 {
         destroy();
