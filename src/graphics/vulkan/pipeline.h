@@ -20,6 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "objects.h"
 #include "shader.h"
 
+#include "com/span.h"
+
 #include <optional>
 #include <vector>
 
@@ -44,4 +46,16 @@ struct GraphicsPipelineCreateInfo
 };
 
 Pipeline create_graphics_pipeline(const GraphicsPipelineCreateInfo& info);
+
+struct ComputePipelineCreateInfo
+{
+        std::optional<const Device*> device;
+        std::optional<VkPipelineLayout> pipeline_layout;
+        std::optional<const ComputeShader*> shader;
+
+        std::optional<std::vector<VkSpecializationMapEntry>> specialization_map_entries;
+        std::optional<Span<const void*>> specialization_data;
+};
+
+Pipeline create_compute_pipeline(const ComputePipelineCreateInfo& info);
 }

@@ -206,4 +206,42 @@ Pipeline create_graphics_pipeline(const GraphicsPipelineCreateInfo& info)
 
         return Pipeline(*info.device.value(), create_info);
 }
+
+Pipeline create_compute_pipeline(const ComputePipelineCreateInfo& info)
+{
+        ASSERT(info.shader.value()->stage() == VK_SHADER_STAGE_COMPUTE_BIT);
+
+        ASSERT(info.specialization_map_entries.has_value() == info.specialization_data.has_value());
+        ASSERT(!info.specialization_map_entries.has_value() || (info.specialization_map_entries.value().size() > 0));
+        ASSERT(!info.specialization_data.has_value() || (info.specialization_data.value().size() > 0));
+
+        ASSERT(!info.specialization_map_entries.has_value() ||
+               std::all_of(info.specialization_map_entries.value().cbegin(), info.specialization_map_entries.value().cend(),
+                           [&](const VkSpecializationMapEntry& entry) {
+                                   return entry.offset + entry.size <= info.specialization_data.value().size();
+                           }));
+
+        VkSpecializationInfo specialization_info = {};
+        if (info.specialization_map_entries.has_value() && info.specialization_data.has_value())
+        {
+                specialization_info.mapEntryCount = info.specialization_map_entries.value().size();
+                specialization_info.pMapEntries = info.specialization_map_entries.value().data();
+                specialization_info.dataSize = info.specialization_data.value().size();
+                specialization_info.pData = info.specialization_data.value().data();
+        }
+
+        VkPipelineShaderStageCreateInfo stage_info = {};
+        stage_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+        stage_info.stage = info.shader.value()->stage();
+        stage_info.module = info.shader.value()->module();
+        stage_info.pName = info.shader.value()->entry_point_name();
+        stage_info.pSpecializationInfo = &specialization_info;
+
+        VkComputePipelineCreateInfo create_info = {};
+        create_info.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
+        create_info.stage = stage_info;
+        create_info.layout = info.pipeline_layout.value();
+
+        return Pipeline(*info.device.value(), create_info);
+}
 }
