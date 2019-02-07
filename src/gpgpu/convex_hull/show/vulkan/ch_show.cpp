@@ -19,7 +19,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/container.h"
 #include "com/log.h"
+#include "com/merge.h"
 #include "com/time.h"
+#include "gpgpu/convex_hull/compute/vulkan_ch_compute.h"
 #include "gpgpu/convex_hull/show/vulkan/shader/memory.h"
 #include "graphics/vulkan/create.h"
 #include "graphics/vulkan/error.h"
@@ -86,6 +88,8 @@ class Impl final : public gpgpu_vulkan::ConvexHullShow
         std::vector<VkCommandBuffer> m_command_buffers;
         VkPipeline m_pipeline = VK_NULL_HANDLE;
 
+        std::unique_ptr<gpgpu_vulkan::ConvexHullCompute> m_compute;
+
         void reset_timer() override
         {
                 m_start_time = time_in_seconds();
@@ -107,7 +111,7 @@ class Impl final : public gpgpu_vulkan::ConvexHullShow
         }
 
         void create_buffers(vulkan::RenderBuffers2D* render_buffers, const mat4& matrix,
-                            const vulkan::StorageImage& /*objects*/) override
+                            const vulkan::StorageImage& objects) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
@@ -122,8 +126,11 @@ class Impl final : public gpgpu_vulkan::ConvexHullShow
                                                                false /*color_blend*/, {&m_vertex_shader, &m_fragment_shader},
                                                                m_pipeline_layout, {}, {});
 
+                m_compute->create_buffers(objects);
+
                 m_command_buffers = m_render_buffers->create_command_buffers(
-                        std::nullopt, std::bind(&Impl::draw_commands, this, std::placeholders::_1));
+                        [&](VkCommandBuffer command_buffer) { m_compute->compute_commands(command_buffer); },
+                        std::bind(&Impl::draw_commands, this, std::placeholders::_1));
         }
 
         void delete_buffers() override
@@ -133,6 +140,8 @@ class Impl final : public gpgpu_vulkan::ConvexHullShow
                 //
 
                 m_command_buffers.clear();
+
+                m_compute->delete_buffers();
         }
 
         VkSemaphore draw(VkQueue graphics_queue, VkSemaphore wait_semaphore, unsigned image_index) override
@@ -172,7 +181,8 @@ public:
                   m_pipeline_layout(vulkan::create_pipeline_layout(m_instance.device(), {SET_NUMBER},
                                                                    {m_shader_memory.descriptor_set_layout()})),
                   m_points(instance.device(), TEST_POINTS),
-                  m_indirect_buffer(m_instance.device(), INDIRECT_BUFFER_COMMAND_COUNT)
+                  m_indirect_buffer(m_instance.device(), INDIRECT_BUFFER_COMMAND_COUNT),
+                  m_compute(gpgpu_vulkan::create_convex_hull_compute(instance))
         {
         }
 
@@ -200,7 +210,8 @@ namespace gpgpu_vulkan
 {
 std::vector<vulkan::PhysicalDeviceFeatures> ConvexHullShow::required_device_features()
 {
-        return REQUIRED_DEVICE_FEATURES;
+        return merge<vulkan::PhysicalDeviceFeatures>(std::vector<vulkan::PhysicalDeviceFeatures>(REQUIRED_DEVICE_FEATURES),
+                                                     ConvexHullCompute::required_device_features());
 }
 
 std::unique_ptr<ConvexHullShow> create_convex_hull_show(const vulkan::VulkanInstance& instance, bool sample_shading)
