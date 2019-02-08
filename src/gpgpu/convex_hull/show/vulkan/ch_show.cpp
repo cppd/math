@@ -126,7 +126,7 @@ class Impl final : public gpgpu_vulkan::ConvexHullShow
                                                                false /*color_blend*/, {&m_vertex_shader, &m_fragment_shader},
                                                                m_pipeline_layout, {}, {});
 
-                m_compute->create_buffers(objects);
+                m_compute->create_buffers(objects, m_points);
 
                 m_command_buffers = m_render_buffers->create_command_buffers(
                         [&](VkCommandBuffer command_buffer) { m_compute->compute_commands(command_buffer); },

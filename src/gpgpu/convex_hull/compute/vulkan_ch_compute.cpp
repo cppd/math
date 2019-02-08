@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "vulkan_ch_compute.h"
 
+#include "vulkan_ch_memory.h"
+
 #include "com/log.h"
 #include "graphics/vulkan/create.h"
 #include "graphics/vulkan/descriptor.h"
@@ -40,15 +42,10 @@ constexpr uint32_t compute_shader[]
 };
 // clang-format on
 
+namespace impl = gpgpu_vulkan::convex_hull_compute_implementation;
+
 namespace
 {
-std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings()
-{
-        std::vector<VkDescriptorSetLayoutBinding> bindings;
-
-        return bindings;
-}
-
 class Impl final : public gpgpu_vulkan::ConvexHullCompute
 {
         const std::thread::id m_thread_id = std::this_thread::get_id();
@@ -56,9 +53,10 @@ class Impl final : public gpgpu_vulkan::ConvexHullCompute
         const vulkan::VulkanInstance& m_instance;
         const vulkan::Device& m_device;
 
+        impl::ShaderMemory m_shader_memory;
+
         vulkan::ComputeShader m_compute_shader;
 
-        vulkan::DescriptorSetLayout m_descriptor_set_layout;
         vulkan::PipelineLayout m_pipeline_layout;
 
         vulkan::Pipeline m_pipeline;
@@ -72,20 +70,22 @@ class Impl final : public gpgpu_vulkan::ConvexHullCompute
                 vkCmdDispatch(command_buffer, 8, 8, 8);
         }
 
-        void create_buffers(const vulkan::StorageImage& /*objects*/) override
+        void create_buffers(const vulkan::StorageImage& objects,
+                            const vulkan::StorageBufferWithHostVisibleMemory& points) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
                 //
 
-                vulkan::ComputePipelineCreateInfo info;
+                m_shader_memory.set_object_image(objects);
+                m_shader_memory.set_points(points);
 
+                vulkan::ComputePipelineCreateInfo info;
                 info.device = &m_device;
                 info.pipeline_layout = m_pipeline_layout;
                 info.shader = &m_compute_shader;
                 // info.specialization_map_entries;
                 // info.specialization_data;
-
                 m_pipeline = create_compute_pipeline(info);
         }
 
@@ -102,9 +102,10 @@ public:
         Impl(const vulkan::VulkanInstance& instance)
                 : m_instance(instance),
                   m_device(m_instance.device()),
+                  m_shader_memory(m_device),
                   m_compute_shader(m_device, compute_shader, "main"),
-                  m_descriptor_set_layout(vulkan::create_descriptor_set_layout(m_device, descriptor_set_layout_bindings())),
-                  m_pipeline_layout(vulkan::create_pipeline_layout(m_device, {SET_NUMBER}, {m_descriptor_set_layout}))
+                  m_pipeline_layout(
+                          vulkan::create_pipeline_layout(m_device, {SET_NUMBER}, {m_shader_memory.descriptor_set_layout()}))
         {
         }
 
