@@ -15,11 +15,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "vulkan_ch_memory.h"
+#include "vulkan_memory.h"
 
 namespace gpgpu_vulkan
 {
-namespace convex_hull_compute_implementation
+namespace convex_hull_show_implementation
 {
 std::vector<VkDescriptorSetLayoutBinding> ShaderMemory::descriptor_set_layout_bindings()
 {
@@ -28,10 +28,9 @@ std::vector<VkDescriptorSetLayoutBinding> ShaderMemory::descriptor_set_layout_bi
         {
                 VkDescriptorSetLayoutBinding b = {};
                 b.binding = 0;
-                b.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+                b.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
                 b.descriptorCount = 1;
-                b.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
-                b.pImmutableSamplers = nullptr;
+                b.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
 
                 bindings.push_back(b);
         }
@@ -40,7 +39,7 @@ std::vector<VkDescriptorSetLayoutBinding> ShaderMemory::descriptor_set_layout_bi
                 b.binding = 1;
                 b.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
                 b.descriptorCount = 1;
-                b.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+                b.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
                 bindings.push_back(b);
         }
@@ -55,6 +54,20 @@ ShaderMemory::ShaderMemory(const vulkan::Device& device)
         std::vector<Variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
         std::vector<uint32_t> bindings;
 
+        {
+                m_uniform_buffers.emplace_back(device, sizeof(Data));
+                m_data_buffer_index = m_uniform_buffers.size() - 1;
+
+                VkDescriptorBufferInfo buffer_info = {};
+                buffer_info.buffer = m_uniform_buffers.back();
+                buffer_info.offset = 0;
+                buffer_info.range = m_uniform_buffers.back().size();
+
+                infos.push_back(buffer_info);
+
+                bindings.push_back(0);
+        }
+
         m_descriptor_set = m_descriptors.create_and_update_descriptor_set(bindings, infos);
 }
 
@@ -68,15 +81,16 @@ VkDescriptorSet ShaderMemory::descriptor_set() const noexcept
         return m_descriptor_set;
 }
 
-void ShaderMemory::set_object_image(const vulkan::StorageImage& storage_image) const
+void ShaderMemory::set_matrix(const mat4& matrix) const
 {
-        ASSERT(storage_image.format() == VK_FORMAT_R32_UINT);
+        decltype(Data().matrix) m = transpose(to_matrix<float>(matrix));
+        m_uniform_buffers[m_data_buffer_index].copy(offsetof(Data, matrix), m);
+}
 
-        VkDescriptorImageInfo image_info = {};
-        image_info.imageLayout = storage_image.image_layout();
-        image_info.imageView = storage_image.image_view();
-
-        m_descriptors.update_descriptor_set(m_descriptor_set, 0, image_info);
+void ShaderMemory::set_brightness(float brightness) const
+{
+        decltype(Data().brightness) b = brightness;
+        m_uniform_buffers[m_data_buffer_index].copy(offsetof(Data, brightness), b);
 }
 
 void ShaderMemory::set_points(const vulkan::StorageBufferWithHostVisibleMemory& storage_buffer) const
@@ -88,6 +102,5 @@ void ShaderMemory::set_points(const vulkan::StorageBufferWithHostVisibleMemory& 
 
         m_descriptors.update_descriptor_set(m_descriptor_set, 1, buffer_info);
 }
-
 }
 }

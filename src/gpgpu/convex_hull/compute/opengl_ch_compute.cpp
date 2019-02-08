@@ -25,7 +25,7 @@ Princeton University Press, 2011.
 Chapter 2: CONVEX HULLS, 2.6 Divide-and-Conquer.
 */
 
-#include "ch_compute.h"
+#include "opengl_ch_compute.h"
 
 #include "com/bits.h"
 #include "com/print.h"

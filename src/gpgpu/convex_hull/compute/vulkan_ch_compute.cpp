@@ -17,9 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "vulkan_ch_compute.h"
 
-#include "vulkan_ch_memory.h"
-
 #include "com/log.h"
+#include "gpgpu/convex_hull/compute/objects/vulkan_memory.h"
 #include "graphics/vulkan/create.h"
 #include "graphics/vulkan/descriptor.h"
 #include "graphics/vulkan/pipeline.h"
