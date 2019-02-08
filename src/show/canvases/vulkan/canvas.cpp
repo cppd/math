@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/log.h"
 #include "gpgpu/convex_hull/show/vulkan_ch_show.h"
 #include "graphics/vulkan/objects.h"
-#include "text/vulkan/text.h"
+#include "text/vulkan_text.h"
 
 #include <thread>
 

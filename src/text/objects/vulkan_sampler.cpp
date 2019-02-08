@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "sampler.h"
+#include "vulkan_sampler.h"
 
 namespace vulkan_text_implementation
 {
