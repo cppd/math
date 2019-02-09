@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/opengl/shader.h"
 #include "obj/alg/alg.h"
 #include "show/renderers/com/storage.h"
-#include "show/renderers/opengl/shader/memory.h"
+#include "show/renderers/opengl/objects/memory.h"
 
 #include <algorithm>
 #include <vector>
