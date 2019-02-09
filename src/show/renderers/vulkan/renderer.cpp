@@ -30,9 +30,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/vulkan/render/shadow_buffer.h"
 #include "obj/alg/alg.h"
 #include "show/renderers/com/storage.h"
+#include "show/renderers/vulkan/objects/memory.h"
 #include "show/renderers/vulkan/objects/sampler.h"
-#include "show/renderers/vulkan/shader/memory.h"
-#include "show/renderers/vulkan/shader/vertex.h"
+#include "show/renderers/vulkan/objects/vertex.h"
 
 #include <algorithm>
 #include <array>
