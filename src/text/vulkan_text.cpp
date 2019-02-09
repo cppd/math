@@ -31,8 +31,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "text/objects/vulkan_sampler.h"
 #include "text/objects/vulkan_vertex.h"
 
+#include <array>
 #include <optional>
 #include <thread>
+#include <unordered_map>
+#include <vector>
 
 // Это в шейдерах layout(set = N, ...)
 constexpr uint32_t TEXT_SET_NUMBER = 0;

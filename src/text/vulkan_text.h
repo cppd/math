@@ -24,8 +24,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/vulkan/render/render_buffer.h"
 
 #include <memory>
-#include <string>
-#include <vector>
 #include <vulkan/vulkan.h>
 
 struct VulkanText
