@@ -22,20 +22,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/matrix.h"
 
 #include <memory>
-#include <string>
-#include <vector>
 
-class OpenGLText final
+struct OpenGLText
 {
-        class Impl;
-        std::unique_ptr<Impl> m_impl;
+        virtual ~OpenGLText() = default;
 
-public:
-        OpenGLText(int size, const Color& color, const mat4& matrix);
-        ~OpenGLText();
+        virtual void set_color(const Color& color) const = 0;
+        virtual void set_matrix(const mat4& matrix) const = 0;
 
-        void set_color(const Color& color) const;
-        void set_matrix(const mat4& matrix) const;
-
-        void draw(const TextData& text_data) const;
+        virtual void draw(const TextData& text_data) = 0;
 };
+
+std::unique_ptr<OpenGLText> create_opengl_text(int size, const Color& color, const mat4& matrix);

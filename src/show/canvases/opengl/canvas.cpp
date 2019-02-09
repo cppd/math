@@ -165,7 +165,7 @@ void Canvas::create_objects(int window_width, int window_height, const mat4& mat
         }
         else
         {
-                m_text = std::make_unique<OpenGLText>(m_text_size, m_text_color, matrix);
+                m_text = create_opengl_text(m_text_size, m_text_color, matrix);
         }
 }
 

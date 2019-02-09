@@ -32,6 +32,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <optional>
 #include <thread>
 #include <unordered_map>
+#include <vector>
 
 // clang-format off
 constexpr const char vertex_shader[]
@@ -50,53 +51,30 @@ static_assert(std::is_same_v<decltype(TextVertex::t), Vector<2, GLfloat>>);
 
 namespace impl = opengl_text_implementation;
 
-class OpenGLText::Impl final
+namespace
+{
+class Impl final : public OpenGLText
 {
         const std::thread::id m_thread_id = std::this_thread::get_id();
 
         opengl::VertexArray m_vertex_array;
-        mutable std::optional<opengl::ArrayBuffer> m_vertex_buffer;
+        std::optional<opengl::ArrayBuffer> m_vertex_buffer;
         opengl::GraphicsProgram m_program;
         std::unordered_map<char32_t, FontGlyph> m_glyphs;
         std::unique_ptr<opengl::TextureR32F> m_texture;
         impl::ShaderMemory m_shader_memory;
 
-public:
-        Impl(int size, const Color& color, const mat4& matrix)
-                : m_program(opengl::VertexShader(vertex_shader), opengl::FragmentShader(fragment_shader))
-        {
-                set_color(color);
-                set_matrix(matrix);
-
-                //
-
-                int max_size = opengl::max_texture_size();
-
-                Font font(size);
-                int width, height;
-                std::vector<std::uint_least8_t> pixels;
-                create_font_glyphs(font, max_size, max_size, &m_glyphs, &width, &height, &pixels);
-
-                m_texture = std::make_unique<opengl::TextureR32F>(width, height, pixels);
-                m_program.set_uniform_handle("tex", m_texture->texture().texture_resident_handle());
-        }
-
-        ~Impl()
-        {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
-        }
-
-        void set_color(const Color& color) const
+        void set_color(const Color& color) const override
         {
                 m_shader_memory.set_color(color);
         }
 
-        void set_matrix(const mat4& matrix) const
+        void set_matrix(const mat4& matrix) const override
         {
                 m_shader_memory.set_matrix(matrix);
         }
 
-        void draw(const TextData& text_data) const
+        void draw(const TextData& text_data) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
@@ -121,25 +99,35 @@ public:
                 m_vertex_array.bind();
                 m_program.draw_arrays(GL_TRIANGLES, 0, vertices.size());
         }
+
+public:
+        Impl(int size, const Color& color, const mat4& matrix)
+                : m_program(opengl::VertexShader(vertex_shader), opengl::FragmentShader(fragment_shader))
+        {
+                set_color(color);
+                set_matrix(matrix);
+
+                //
+
+                int max_size = opengl::max_texture_size();
+
+                Font font(size);
+                int width, height;
+                std::vector<std::uint_least8_t> pixels;
+                create_font_glyphs(font, max_size, max_size, &m_glyphs, &width, &height, &pixels);
+
+                m_texture = std::make_unique<opengl::TextureR32F>(width, height, pixels);
+                m_program.set_uniform_handle("tex", m_texture->texture().texture_resident_handle());
+        }
+
+        ~Impl() override
+        {
+                ASSERT(std::this_thread::get_id() == m_thread_id);
+        }
 };
-
-OpenGLText::OpenGLText(int size, const Color& color, const mat4& matrix) : m_impl(std::make_unique<Impl>(size, color, matrix))
-{
 }
 
-OpenGLText::~OpenGLText() = default;
-
-void OpenGLText::set_color(const Color& color) const
+std::unique_ptr<OpenGLText> create_opengl_text(int size, const Color& color, const mat4& matrix)
 {
-        m_impl->set_color(color);
-}
-
-void OpenGLText::set_matrix(const mat4& matrix) const
-{
-        m_impl->set_matrix(matrix);
-}
-
-void OpenGLText::draw(const TextData& text_data) const
-{
-        m_impl->draw(text_data);
+        return std::make_unique<Impl>(size, color, matrix);
 }
