@@ -61,7 +61,7 @@ namespace impl = gpgpu_vulkan::convex_hull_show_implementation;
 
 namespace
 {
-constexpr std::array<vec2i, 4> TEST_POINTS = {vec2i(10, 10), vec2i(10, 1000), vec2i(1000, 1000), vec2i(10, 10)};
+constexpr int TEST_POINT_COUNT = 4;
 
 class Impl final : public gpgpu_vulkan::ConvexHullShow
 {
@@ -155,7 +155,7 @@ class Impl final : public gpgpu_vulkan::ConvexHullShow
                 float brightness = 0.5 + 0.5 * std::sin(ANGULAR_FREQUENCY * (time_in_seconds() - m_start_time));
                 m_shader_memory.set_brightness(brightness);
 
-                // int vertex_count = TEST_POINTS.size();
+                // int vertex_count = TEST_POINT_COUNT;
                 int vertex_count = 0;
 
                 m_indirect_buffer.set(INDIRECT_BUFFER_COMMAND_NUMBER, vertex_count, 1, 0, 0);
@@ -180,7 +180,7 @@ public:
                   m_fragment_shader(m_instance.device(), fragment_shader, "main"),
                   m_pipeline_layout(vulkan::create_pipeline_layout(m_instance.device(), {SET_NUMBER},
                                                                    {m_shader_memory.descriptor_set_layout()})),
-                  m_points(instance.device(), TEST_POINTS),
+                  m_points(instance.device(), TEST_POINT_COUNT * 2 * sizeof(int32_t)),
                   m_indirect_buffer(m_instance.device(), INDIRECT_BUFFER_COMMAND_COUNT),
                   m_compute(gpgpu_vulkan::create_convex_hull_compute(instance))
         {
