@@ -26,6 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/opengl/capabilities.h"
 #include "graphics/opengl/query.h"
 #include "graphics/opengl/shader.h"
+#include "text/objects/opengl_memory.h"
 
 #include <array>
 #include <optional>
@@ -47,50 +48,7 @@ static_assert(sizeof(TextVertex) == sizeof(Vector<2, GLint>) + sizeof(Vector<2, 
 static_assert(std::is_same_v<decltype(TextVertex::v), Vector<2, GLint>>);
 static_assert(std::is_same_v<decltype(TextVertex::t), Vector<2, GLfloat>>);
 
-namespace
-{
-class ShaderMemory
-{
-        static constexpr int MATRICES_BINDING = 0;
-        static constexpr int DRAWING_BINDING = 2;
-
-        struct Matrices
-        {
-                Matrix<4, 4, float> matrix;
-        };
-
-        struct Drawing
-        {
-                vec3f text_color;
-        };
-
-        opengl::UniformBuffer m_matrices;
-        opengl::UniformBuffer m_drawing;
-
-public:
-        ShaderMemory() : m_matrices(sizeof(Matrices)), m_drawing(sizeof(Drawing))
-        {
-        }
-
-        void set_matrix(const mat4& matrix) const
-        {
-                decltype(Matrices().matrix) m = transpose(to_matrix<float>(matrix));
-                m_matrices.copy(offsetof(Matrices, matrix), m);
-        }
-
-        void set_color(const Color& color) const
-        {
-                decltype(Drawing().text_color) c = color.to_rgb_vector<float>();
-                m_drawing.copy(offsetof(Drawing, text_color), c);
-        }
-
-        void bind() const
-        {
-                m_matrices.bind(MATRICES_BINDING);
-                m_drawing.bind(DRAWING_BINDING);
-        }
-};
-}
+namespace impl = opengl_text_implementation;
 
 class OpenGLText::Impl final
 {
@@ -101,7 +59,7 @@ class OpenGLText::Impl final
         opengl::GraphicsProgram m_program;
         std::unordered_map<char32_t, FontGlyph> m_glyphs;
         std::unique_ptr<opengl::TextureR32F> m_texture;
-        ShaderMemory m_shader_memory;
+        impl::ShaderMemory m_shader_memory;
 
 public:
         Impl(int size, const Color& color, const mat4& matrix)
