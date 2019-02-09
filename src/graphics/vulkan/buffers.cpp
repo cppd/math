@@ -1036,6 +1036,9 @@ StorageImage::StorageImage(const Device& device, VkCommandPool graphics_command_
         m_device_memory = create_device_memory(device, m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
         m_image_view = create_image_view(device, m_image, m_format, VK_IMAGE_ASPECT_COLOR_BIT);
 
+        m_width = width;
+        m_height = height;
+
         ASSERT(m_format == format);
 
         transition_storage_image_layout(device, graphics_command_pool, graphics_queue, m_image, VK_IMAGE_LAYOUT_UNDEFINED,
@@ -1060,6 +1063,16 @@ VkImageLayout StorageImage::image_layout() const noexcept
 VkImageView StorageImage::image_view() const noexcept
 {
         return m_image_view;
+}
+
+unsigned StorageImage::width() const noexcept
+{
+        return m_width;
+}
+
+unsigned StorageImage::height() const noexcept
+{
+        return m_height;
 }
 
 void StorageImage::clear_commands(VkCommandBuffer command_buffer) const

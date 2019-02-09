@@ -406,6 +406,7 @@ class StorageImage final
         Image m_image;
         DeviceMemory m_device_memory;
         ImageView m_image_view;
+        unsigned m_width, m_height;
 
 public:
         StorageImage(const Device& device, VkCommandPool graphics_command_pool, VkQueue graphics_queue,
@@ -424,6 +425,9 @@ public:
         VkFormat format() const noexcept;
         VkImageLayout image_layout() const noexcept;
         VkImageView image_view() const noexcept;
+
+        unsigned width() const noexcept;
+        unsigned height() const noexcept;
 
         //
 
