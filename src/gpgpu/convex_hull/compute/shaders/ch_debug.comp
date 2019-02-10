@@ -23,10 +23,19 @@ layout(std430, binding = 1) writeonly buffer Points
 {
         ivec2 points[];
 };
+layout(std430, binding = 2) writeonly buffer PointCount
+{
+        uint point_count;
+};
 
 const ivec2 TEST_POINTS[4] = {ivec2(10, 10), ivec2(10, 1000), ivec2(1000, 1000), ivec2(10, 10)};
 
 void main(void)
 {
         points[gl_LocalInvocationID.x] = TEST_POINTS[gl_LocalInvocationID.x];
+
+        if (gl_LocalInvocationID.x == 0)
+        {
+                point_count = 0;
+        }
 }

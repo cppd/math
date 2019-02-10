@@ -242,6 +242,8 @@ public:
 
         operator VkBuffer() const noexcept;
 
+        VkDeviceSize size() const noexcept;
+
         unsigned stride() const noexcept;
         VkDeviceSize offset(unsigned command_number) const noexcept;
 

@@ -44,6 +44,15 @@ std::vector<VkDescriptorSetLayoutBinding> ShaderMemory::descriptor_set_layout_bi
 
                 bindings.push_back(b);
         }
+        {
+                VkDescriptorSetLayoutBinding b = {};
+                b.binding = 2;
+                b.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+                b.descriptorCount = 1;
+                b.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+
+                bindings.push_back(b);
+        }
 
         return bindings;
 }
@@ -79,15 +88,24 @@ void ShaderMemory::set_object_image(const vulkan::StorageImage& storage_image) c
         m_descriptors.update_descriptor_set(m_descriptor_set, 0, image_info);
 }
 
-void ShaderMemory::set_points(const vulkan::StorageBufferWithHostVisibleMemory& storage_buffer) const
+void ShaderMemory::set_points(const vulkan::StorageBufferWithHostVisibleMemory& buffer) const
 {
         VkDescriptorBufferInfo buffer_info = {};
-        buffer_info.buffer = storage_buffer;
+        buffer_info.buffer = buffer;
         buffer_info.offset = 0;
-        buffer_info.range = storage_buffer.size();
+        buffer_info.range = buffer.size();
 
         m_descriptors.update_descriptor_set(m_descriptor_set, 1, buffer_info);
 }
 
+void ShaderMemory::set_point_count(const vulkan::IndirectBufferWithHostVisibleMemory& buffer) const
+{
+        VkDescriptorBufferInfo buffer_info = {};
+        buffer_info.buffer = buffer;
+        buffer_info.offset = 0;
+        buffer_info.range = buffer.size();
+
+        m_descriptors.update_descriptor_set(m_descriptor_set, 2, buffer_info);
+}
 }
 }

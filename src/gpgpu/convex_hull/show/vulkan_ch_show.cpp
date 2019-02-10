@@ -61,7 +61,11 @@ namespace impl = gpgpu_vulkan::convex_hull_show_implementation;
 
 namespace
 {
-constexpr int TEST_POINT_COUNT = 4;
+int points_buffer_size(int height)
+{
+        // 2 линии точек + 1 точка, тип ivec2
+        return (2 * height + 1) * (2 * sizeof(int32_t));
+}
 
 class Impl final : public gpgpu_vulkan::ConvexHullShow
 {
@@ -81,7 +85,7 @@ class Impl final : public gpgpu_vulkan::ConvexHullShow
 
         vulkan::PipelineLayout m_pipeline_layout;
 
-        vulkan::StorageBufferWithHostVisibleMemory m_points;
+        std::optional<vulkan::StorageBufferWithHostVisibleMemory> m_points;
         vulkan::IndirectBufferWithHostVisibleMemory m_indirect_buffer;
 
         vulkan::RenderBuffers2D* m_render_buffers = nullptr;
@@ -117,7 +121,9 @@ class Impl final : public gpgpu_vulkan::ConvexHullShow
 
                 //
 
-                m_shader_memory.set_points(m_points);
+                m_points.emplace(m_instance.device(), points_buffer_size(objects.height()));
+
+                m_shader_memory.set_points(*m_points);
                 m_shader_memory.set_matrix(matrix);
 
                 m_render_buffers = render_buffers;
@@ -126,7 +132,7 @@ class Impl final : public gpgpu_vulkan::ConvexHullShow
                                                                false /*color_blend*/, {&m_vertex_shader, &m_fragment_shader},
                                                                m_pipeline_layout, {}, {});
 
-                m_compute->create_buffers(objects, m_points);
+                m_compute->create_buffers(objects, *m_points, m_indirect_buffer);
 
                 m_command_buffers = m_render_buffers->create_command_buffers(
                         [&](VkCommandBuffer command_buffer) { m_compute->compute_commands(command_buffer); },
@@ -155,11 +161,6 @@ class Impl final : public gpgpu_vulkan::ConvexHullShow
                 float brightness = 0.5 + 0.5 * std::sin(ANGULAR_FREQUENCY * (time_in_seconds() - m_start_time));
                 m_shader_memory.set_brightness(brightness);
 
-                // int vertex_count = TEST_POINT_COUNT;
-                int vertex_count = 0;
-
-                m_indirect_buffer.set(INDIRECT_BUFFER_COMMAND_NUMBER, vertex_count, 1, 0, 0);
-
                 //
 
                 ASSERT(image_index < m_command_buffers.size());
@@ -180,10 +181,10 @@ public:
                   m_fragment_shader(m_instance.device(), fragment_shader, "main"),
                   m_pipeline_layout(vulkan::create_pipeline_layout(m_instance.device(), {SET_NUMBER},
                                                                    {m_shader_memory.descriptor_set_layout()})),
-                  m_points(instance.device(), TEST_POINT_COUNT * 2 * sizeof(int32_t)),
                   m_indirect_buffer(m_instance.device(), INDIRECT_BUFFER_COMMAND_COUNT),
                   m_compute(gpgpu_vulkan::create_convex_hull_compute(instance))
         {
+                m_indirect_buffer.set(INDIRECT_BUFFER_COMMAND_NUMBER, 0, 1, 0, 0);
         }
 
         ~Impl() override

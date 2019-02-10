@@ -60,14 +60,13 @@ class Impl final : public gpgpu_vulkan::ConvexHullCompute
 
         vulkan::Pipeline m_pipeline;
         VkBuffer m_points_buffer = VK_NULL_HANDLE;
+        VkBuffer m_point_count_buffer = VK_NULL_HANDLE;
 
         void compute_commands(VkCommandBuffer command_buffer) const override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 //
-
-                ASSERT(m_points_buffer != VK_NULL_HANDLE);
 
                 vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_pipeline);
 
@@ -78,28 +77,51 @@ class Impl final : public gpgpu_vulkan::ConvexHullCompute
 
                 vkCmdDispatch(command_buffer, 1, 1, 1);
 
-                VkBufferMemoryBarrier barrier = {};
-                barrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
-                barrier.srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
-                barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-                barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-                barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-                barrier.buffer = m_points_buffer;
-                barrier.offset = 0;
-                barrier.size = VK_WHOLE_SIZE;
-                vkCmdPipelineBarrier(command_buffer, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_VERTEX_SHADER_BIT,
-                                     VK_DEPENDENCY_BY_REGION_BIT, 0, nullptr, 1, &barrier, 0, nullptr);
+                ASSERT(m_points_buffer != VK_NULL_HANDLE);
+                {
+                        VkBufferMemoryBarrier barrier = {};
+                        barrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
+                        barrier.srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
+                        barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+                        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+                        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+                        barrier.buffer = m_points_buffer;
+                        barrier.offset = 0;
+                        barrier.size = VK_WHOLE_SIZE;
+
+                        vkCmdPipelineBarrier(command_buffer, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+                                             VK_PIPELINE_STAGE_VERTEX_SHADER_BIT, VK_DEPENDENCY_BY_REGION_BIT, 0, nullptr, 1,
+                                             &barrier, 0, nullptr);
+                }
+
+                ASSERT(m_point_count_buffer != VK_NULL_HANDLE);
+                {
+                        VkBufferMemoryBarrier barrier = {};
+                        barrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
+                        barrier.srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
+                        barrier.dstAccessMask = VK_ACCESS_INDIRECT_COMMAND_READ_BIT;
+                        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+                        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+                        barrier.buffer = m_point_count_buffer;
+                        barrier.offset = 0;
+                        barrier.size = VK_WHOLE_SIZE;
+
+                        vkCmdPipelineBarrier(command_buffer, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+                                             VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT, VK_DEPENDENCY_BY_REGION_BIT, 0, nullptr, 1,
+                                             &barrier, 0, nullptr);
+                }
         }
 
-        void create_buffers(const vulkan::StorageImage& objects,
-                            const vulkan::StorageBufferWithHostVisibleMemory& points) override
+        void create_buffers(const vulkan::StorageImage& objects, const vulkan::StorageBufferWithHostVisibleMemory& points_buffer,
+                            const vulkan::IndirectBufferWithHostVisibleMemory& point_count_buffer) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
                 //
 
                 m_shader_memory.set_object_image(objects);
-                m_shader_memory.set_points(points);
+                m_shader_memory.set_points(points_buffer);
+                m_shader_memory.set_point_count(point_count_buffer);
 
                 vulkan::ComputePipelineCreateInfo info;
                 info.device = &m_device;
@@ -109,7 +131,8 @@ class Impl final : public gpgpu_vulkan::ConvexHullCompute
                 // info.specialization_data;
                 m_pipeline = create_compute_pipeline(info);
 
-                m_points_buffer = points;
+                m_points_buffer = points_buffer;
+                m_point_count_buffer = point_count_buffer;
         }
 
         void delete_buffers() override
@@ -119,6 +142,7 @@ class Impl final : public gpgpu_vulkan::ConvexHullCompute
                 //
 
                 m_points_buffer = VK_NULL_HANDLE;
+                m_point_count_buffer = VK_NULL_HANDLE;
                 m_pipeline = vulkan::Pipeline();
         }
 

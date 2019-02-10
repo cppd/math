@@ -670,7 +670,8 @@ VkDeviceSize StorageBufferWithDeviceLocalMemory::size() const noexcept
 IndirectBufferWithHostVisibleMemory::IndirectBufferWithHostVisibleMemory(const Device& device, unsigned command_count)
         : m_device(device),
           m_data_size(command_count * sizeof(VkDrawIndirectCommand)),
-          m_buffer(create_buffer(device, m_data_size, VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT, {})),
+          m_buffer(create_buffer(device, m_data_size, VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+                                 {})),
           m_device_memory(create_device_memory(device, m_buffer,
                                                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT))
 {
@@ -680,6 +681,11 @@ IndirectBufferWithHostVisibleMemory::IndirectBufferWithHostVisibleMemory(const D
 IndirectBufferWithHostVisibleMemory::operator VkBuffer() const noexcept
 {
         return m_buffer;
+}
+
+VkDeviceSize IndirectBufferWithHostVisibleMemory::size() const noexcept
+{
+        return m_data_size;
 }
 
 unsigned IndirectBufferWithHostVisibleMemory::stride() const noexcept
