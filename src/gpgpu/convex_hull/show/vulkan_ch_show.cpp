@@ -85,7 +85,7 @@ class Impl final : public gpgpu_vulkan::ConvexHullShow
 
         vulkan::PipelineLayout m_pipeline_layout;
 
-        std::optional<vulkan::StorageBufferWithHostVisibleMemory> m_points;
+        std::optional<vulkan::BufferWithHostVisibleMemory> m_points;
         vulkan::IndirectBufferWithHostVisibleMemory m_indirect_buffer;
 
         vulkan::RenderBuffers2D* m_render_buffers = nullptr;
@@ -121,7 +121,7 @@ class Impl final : public gpgpu_vulkan::ConvexHullShow
 
                 //
 
-                m_points.emplace(m_instance.device(), points_buffer_size(objects.height()));
+                m_points.emplace(m_instance.device(), VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, points_buffer_size(objects.height()));
 
                 m_shader_memory.set_points(*m_points);
                 m_shader_memory.set_matrix(matrix);

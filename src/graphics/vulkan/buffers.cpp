@@ -612,33 +612,39 @@ void UniformBufferWithHostVisibleMemory::copy(VkDeviceSize offset, const void* d
 
 //
 
-StorageBufferWithHostVisibleMemory::StorageBufferWithHostVisibleMemory(const Device& device, VkDeviceSize data_size)
+BufferWithHostVisibleMemory::BufferWithHostVisibleMemory(const Device& device, VkBufferUsageFlags usage, VkDeviceSize data_size)
         : m_device(device),
           m_data_size(data_size),
-          m_buffer(create_buffer(device, data_size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, {})),
+          m_usage(usage),
+          m_buffer(create_buffer(device, data_size, usage, {})),
           m_device_memory(create_device_memory(device, m_buffer,
                                                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT))
 {
 }
 
-StorageBufferWithHostVisibleMemory::operator VkBuffer() const noexcept
+BufferWithHostVisibleMemory::operator VkBuffer() const noexcept
 {
         return m_buffer;
 }
 
-VkDeviceSize StorageBufferWithHostVisibleMemory::size() const noexcept
+VkDeviceSize BufferWithHostVisibleMemory::size() const noexcept
 {
         return m_data_size;
 }
 
-void StorageBufferWithHostVisibleMemory::copy_to(VkDeviceSize offset, const void* data, VkDeviceSize data_size) const
+bool BufferWithHostVisibleMemory::usage(VkBufferUsageFlagBits flag) const noexcept
+{
+        return (m_usage & flag) == flag;
+}
+
+void BufferWithHostVisibleMemory::copy_to(VkDeviceSize offset, const void* data, VkDeviceSize data_size) const
 {
         ASSERT(offset + data_size <= m_data_size);
 
         memory_copy_offset(m_device, m_device_memory, offset, data, data_size);
 }
 
-void StorageBufferWithHostVisibleMemory::copy_from(VkDeviceSize offset, void* data, VkDeviceSize data_size) const
+void BufferWithHostVisibleMemory::copy_from(VkDeviceSize offset, void* data, VkDeviceSize data_size) const
 {
         ASSERT(offset + data_size <= m_data_size);
 
@@ -647,22 +653,28 @@ void StorageBufferWithHostVisibleMemory::copy_from(VkDeviceSize offset, void* da
 
 //
 
-StorageBufferWithDeviceLocalMemory::StorageBufferWithDeviceLocalMemory(const Device& device, VkDeviceSize data_size)
+BufferWithDeviceLocalMemory::BufferWithDeviceLocalMemory(const Device& device, VkBufferUsageFlags usage, VkDeviceSize data_size)
         : m_device(device),
           m_data_size(data_size),
-          m_buffer(create_buffer(device, data_size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, {})),
+          m_usage(usage),
+          m_buffer(create_buffer(device, data_size, usage, {})),
           m_device_memory(create_device_memory(device, m_buffer, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
 {
 }
 
-StorageBufferWithDeviceLocalMemory::operator VkBuffer() const noexcept
+BufferWithDeviceLocalMemory::operator VkBuffer() const noexcept
 {
         return m_buffer;
 }
 
-VkDeviceSize StorageBufferWithDeviceLocalMemory::size() const noexcept
+VkDeviceSize BufferWithDeviceLocalMemory::size() const noexcept
 {
         return m_data_size;
+}
+
+bool BufferWithDeviceLocalMemory::usage(VkBufferUsageFlagBits flag) const noexcept
+{
+        return (m_usage & flag) == flag;
 }
 
 //

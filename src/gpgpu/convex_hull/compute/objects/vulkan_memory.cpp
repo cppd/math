@@ -88,8 +88,10 @@ void ShaderMemory::set_object_image(const vulkan::StorageImage& storage_image) c
         m_descriptors.update_descriptor_set(m_descriptor_set, 0, image_info);
 }
 
-void ShaderMemory::set_points(const vulkan::StorageBufferWithHostVisibleMemory& buffer) const
+void ShaderMemory::set_points(const vulkan::BufferWithHostVisibleMemory& buffer) const
 {
+        ASSERT(buffer.usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
+
         VkDescriptorBufferInfo buffer_info = {};
         buffer_info.buffer = buffer;
         buffer_info.offset = 0;

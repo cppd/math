@@ -65,7 +65,7 @@ public:
 
         void set_matrix(const mat4& matrix) const;
         void set_brightness(float brightness) const;
-        void set_points(const vulkan::StorageBufferWithHostVisibleMemory& storage_buffer) const;
+        void set_points(const vulkan::BufferWithHostVisibleMemory& buffer) const;
 };
 }
 }

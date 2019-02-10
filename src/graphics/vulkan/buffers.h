@@ -141,10 +141,11 @@ public:
         }
 };
 
-class StorageBufferWithHostVisibleMemory final
+class BufferWithHostVisibleMemory final
 {
         VkDevice m_device;
         VkDeviceSize m_data_size;
+        VkBufferUsageFlags m_usage;
 
         Buffer m_buffer;
         DeviceMemory m_device_memory;
@@ -153,27 +154,29 @@ class StorageBufferWithHostVisibleMemory final
         void copy_from(VkDeviceSize offset, void* data, VkDeviceSize data_size) const;
 
 public:
-        StorageBufferWithHostVisibleMemory(const Device& device, VkDeviceSize data_size);
+        BufferWithHostVisibleMemory(const Device& device, VkBufferUsageFlags usage, VkDeviceSize data_size);
 
         template <typename T, typename = std::enable_if_t<sizeof(std::declval<T>().size()) && sizeof(std::declval<T>().data())>>
-        explicit StorageBufferWithHostVisibleMemory(const Device& device, const T& data)
-                : StorageBufferWithHostVisibleMemory(device, storage_size(data))
+        explicit BufferWithHostVisibleMemory(const Device& device, VkBufferUsageFlags usage, const T& data)
+                : BufferWithHostVisibleMemory(device, usage, storage_size(data))
         {
                 write(data);
         }
 
-        StorageBufferWithHostVisibleMemory(const StorageBufferWithHostVisibleMemory&) = delete;
-        StorageBufferWithHostVisibleMemory& operator=(const StorageBufferWithHostVisibleMemory&) = delete;
-        StorageBufferWithHostVisibleMemory& operator=(StorageBufferWithHostVisibleMemory&&) = delete;
+        BufferWithHostVisibleMemory(const BufferWithHostVisibleMemory&) = delete;
+        BufferWithHostVisibleMemory& operator=(const BufferWithHostVisibleMemory&) = delete;
+        BufferWithHostVisibleMemory& operator=(BufferWithHostVisibleMemory&&) = delete;
 
-        StorageBufferWithHostVisibleMemory(StorageBufferWithHostVisibleMemory&&) = default;
-        ~StorageBufferWithHostVisibleMemory() = default;
+        BufferWithHostVisibleMemory(BufferWithHostVisibleMemory&&) = default;
+        ~BufferWithHostVisibleMemory() = default;
 
         //
 
         operator VkBuffer() const noexcept;
-
         VkDeviceSize size() const noexcept;
+        bool usage(VkBufferUsageFlagBits flag) const noexcept;
+
+        //
 
         template <typename T>
         void write(const T& data) const
@@ -195,29 +198,30 @@ public:
         }
 };
 
-class StorageBufferWithDeviceLocalMemory final
+class BufferWithDeviceLocalMemory final
 {
         VkDevice m_device;
         VkDeviceSize m_data_size;
+        VkBufferUsageFlags m_usage;
 
         Buffer m_buffer;
         DeviceMemory m_device_memory;
 
 public:
-        StorageBufferWithDeviceLocalMemory(const Device& device, VkDeviceSize data_size);
+        BufferWithDeviceLocalMemory(const Device& device, VkBufferUsageFlags usage, VkDeviceSize data_size);
 
-        StorageBufferWithDeviceLocalMemory(const StorageBufferWithDeviceLocalMemory&) = delete;
-        StorageBufferWithDeviceLocalMemory& operator=(const StorageBufferWithDeviceLocalMemory&) = delete;
-        StorageBufferWithDeviceLocalMemory& operator=(StorageBufferWithDeviceLocalMemory&&) = delete;
+        BufferWithDeviceLocalMemory(const BufferWithDeviceLocalMemory&) = delete;
+        BufferWithDeviceLocalMemory& operator=(const BufferWithDeviceLocalMemory&) = delete;
+        BufferWithDeviceLocalMemory& operator=(BufferWithDeviceLocalMemory&&) = delete;
 
-        StorageBufferWithDeviceLocalMemory(StorageBufferWithDeviceLocalMemory&&) = default;
-        ~StorageBufferWithDeviceLocalMemory() = default;
+        BufferWithDeviceLocalMemory(BufferWithDeviceLocalMemory&&) = default;
+        ~BufferWithDeviceLocalMemory() = default;
 
         //
 
         operator VkBuffer() const noexcept;
-
         VkDeviceSize size() const noexcept;
+        bool usage(VkBufferUsageFlagBits flag) const noexcept;
 };
 
 class IndirectBufferWithHostVisibleMemory final
