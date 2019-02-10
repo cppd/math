@@ -137,18 +137,9 @@ public:
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
-                try
-                {
-                        m_instance.device_wait_idle();
-                }
-                catch (std::exception& e)
-                {
-                        LOG(std::string("Device wait idle exception in the Vulkan convex hull compute destructor: ") + e.what());
-                }
-                catch (...)
-                {
-                        LOG("Device wait idle unknown exception in the Vulkan convex hull compute destructor");
-                }
+                //
+
+                m_instance.device_wait_idle_noexcept("the Vulkan convex hull compute destructor");
         }
 };
 }

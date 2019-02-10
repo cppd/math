@@ -76,6 +76,7 @@ public:
         //
 
         void device_wait_idle() const;
+        void device_wait_idle_noexcept(const char* msg) const noexcept;
 
         //
 

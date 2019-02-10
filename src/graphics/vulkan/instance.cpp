@@ -70,18 +70,7 @@ VulkanInstance::VulkanInstance(const std::vector<std::string>& required_instance
 
 VulkanInstance::~VulkanInstance()
 {
-        try
-        {
-                device_wait_idle();
-        }
-        catch (std::exception& e)
-        {
-                LOG(std::string("Device wait idle exception in the Vulkan instance destructor: ") + e.what());
-        }
-        catch (...)
-        {
-                LOG("Device wait idle unknown exception in the Vulkan instance destructor");
-        }
+        device_wait_idle_noexcept("the Vulkan instance destructor");
 }
 
 void VulkanInstance::device_wait_idle() const
@@ -92,6 +81,39 @@ void VulkanInstance::device_wait_idle() const
         if (result != VK_SUCCESS)
         {
                 vulkan_function_error("vkDeviceWaitIdle", result);
+        }
+}
+
+void VulkanInstance::device_wait_idle_noexcept(const char* msg) const noexcept
+{
+        try
+        {
+                try
+                {
+                        device_wait_idle();
+                }
+                catch (std::exception& e)
+                {
+                        if (!msg)
+                        {
+                                error_fatal("No message for the device wait idle function");
+                        }
+                        std::string s = "Device wait idle exception in " + std::string(msg) + ": " + e.what();
+                        LOG(s);
+                }
+                catch (...)
+                {
+                        if (!msg)
+                        {
+                                error_fatal("No message for the device wait idle function");
+                        }
+                        std::string s = "Device wait idle unknown exception in " + std::string(msg);
+                        LOG(s);
+                }
+        }
+        catch (...)
+        {
+                error_fatal("Exception in the device wait idle exception handlers");
         }
 }
 }
