@@ -46,10 +46,11 @@ class VulkanInstance
         const CommandPool m_graphics_command_pool;
         const VkQueue m_graphics_queue;
 
+        const CommandPool m_compute_command_pool;
+        const VkQueue m_compute_queue;
+
         const CommandPool m_transfer_command_pool;
         const VkQueue m_transfer_queue;
-
-        const VkQueue m_compute_queue;
 
         const VkQueue m_presentation_queue;
 

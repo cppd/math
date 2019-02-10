@@ -51,10 +51,11 @@ VulkanInstance::VulkanInstance(const std::vector<std::string>& required_instance
           m_graphics_command_pool(create_command_pool(m_device, m_physical_device.graphics())),
           m_graphics_queue(device_queue(m_device, m_physical_device.graphics(), 0 /*queue_index*/)),
           //
+          m_compute_command_pool(create_command_pool(m_device, m_physical_device.compute())),
+          m_compute_queue(device_queue(m_device, m_physical_device.compute(), 0 /*queue_index*/)),
+          //
           m_transfer_command_pool(create_transient_command_pool(m_device, m_physical_device.transfer())),
           m_transfer_queue(device_queue(m_device, m_physical_device.transfer(), 0 /*queue_index*/)),
-          //
-          m_compute_queue(device_queue(m_device, m_physical_device.compute(), 0 /*queue_index*/)),
           //
           m_presentation_queue(device_queue(m_device, m_physical_device.presentation(), 0 /*queue_index*/)),
           //

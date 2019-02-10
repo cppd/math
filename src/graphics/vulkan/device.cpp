@@ -31,49 +31,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace
 {
-bool find_graphics_family(const std::vector<VkQueueFamilyProperties>& queue_families, uint32_t* family_index)
+bool find_family(const std::vector<VkQueueFamilyProperties>& families, VkQueueFlags flags, VkQueueFlags no_flags, uint32_t* index)
 {
-        for (uint32_t i = 0; i < queue_families.size(); ++i)
-        {
-                const VkQueueFamilyProperties& p = queue_families[i];
+        ASSERT((flags & no_flags) == 0);
 
-                if (p.queueCount >= 1 && (p.queueFlags & VK_QUEUE_GRAPHICS_BIT))
+        for (size_t i = 0; i < families.size(); ++i)
+        {
+                const VkQueueFamilyProperties& p = families[i];
+
+                if (p.queueCount >= 1 && ((p.queueFlags & flags) == flags) && !(p.queueFlags & no_flags))
                 {
-                        *family_index = i;
+                        *index = i;
                         return true;
-                }
-        }
-        return false;
-}
-
-bool find_compute_family(const std::vector<VkQueueFamilyProperties>& queue_families, uint32_t* family_index)
-{
-        for (uint32_t i = 0; i < queue_families.size(); ++i)
-        {
-                const VkQueueFamilyProperties& p = queue_families[i];
-
-                if (p.queueCount >= 1 && (p.queueFlags & VK_QUEUE_COMPUTE_BIT))
-                {
-                        *family_index = i;
-                        return true;
-                }
-        }
-        return false;
-}
-
-bool find_transfer_family(const std::vector<VkQueueFamilyProperties>& queue_families, uint32_t* family_index)
-{
-        for (uint32_t i = 0; i < queue_families.size(); ++i)
-        {
-                const VkQueueFamilyProperties& p = queue_families[i];
-
-                if (p.queueCount >= 1 && (p.queueFlags & VK_QUEUE_TRANSFER_BIT))
-                {
-                        if (!(p.queueFlags & VK_QUEUE_GRAPHICS_BIT) && !(p.queueFlags & VK_QUEUE_COMPUTE_BIT))
-                        {
-                                *family_index = i;
-                                return true;
-                        }
                 }
         }
         return false;
@@ -432,19 +401,23 @@ PhysicalDevice find_physical_device(VkInstance instance, VkSurfaceKHR surface, i
 
                 const std::vector<VkQueueFamilyProperties> families = physical_device_queue_families(physical_device);
                 uint32_t graphics, compute, transfer, presentation;
-                if (!find_graphics_family(families, &graphics))
+                if (!find_family(families, VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT, 0, &graphics))
                 {
                         continue;
                 }
-                if (!find_compute_family(families, &compute))
+                if (!find_family(families, VK_QUEUE_COMPUTE_BIT, 0, &compute))
                 {
                         continue;
+                }
+                if (!find_family(families, VK_QUEUE_TRANSFER_BIT, VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT, &transfer))
+                {
+                        // Наличие VK_QUEUE_GRAPHICS_BIT или VK_QUEUE_COMPUTE_BIT означает VK_QUEUE_TRANSFER_BIT
+                        if (!find_family(families, VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT, 0, &transfer))
+                        {
+                                continue;
+                        }
                 }
                 if (!find_presentation_family(surface, physical_device, families, &presentation))
-                {
-                        continue;
-                }
-                if (!find_transfer_family(families, &transfer))
                 {
                         continue;
                 }
