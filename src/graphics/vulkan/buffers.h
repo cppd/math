@@ -179,10 +179,15 @@ public:
         //
 
         template <typename T>
-        void write(const T& data) const
+        std::enable_if_t<is_vector<T> || is_array<T>> write(const T& data) const
         {
-                static_assert(is_vector<T> || is_array<T>);
                 copy_to(0, data.data(), storage_size(data));
+        }
+
+        template <typename T>
+        void write(VkDeviceSize offset, const T& data) const
+        {
+                copy_to(offset, &data, sizeof(data));
         }
 
         template <typename T>
@@ -222,37 +227,6 @@ public:
         operator VkBuffer() const noexcept;
         VkDeviceSize size() const noexcept;
         bool usage(VkBufferUsageFlagBits flag) const noexcept;
-};
-
-class IndirectBufferWithHostVisibleMemory final
-{
-        VkDevice m_device;
-        VkDeviceSize m_data_size;
-
-        Buffer m_buffer;
-        DeviceMemory m_device_memory;
-
-public:
-        IndirectBufferWithHostVisibleMemory(const Device& device, unsigned command_count);
-
-        IndirectBufferWithHostVisibleMemory(const IndirectBufferWithHostVisibleMemory&) = delete;
-        IndirectBufferWithHostVisibleMemory& operator=(const IndirectBufferWithHostVisibleMemory&) = delete;
-        IndirectBufferWithHostVisibleMemory& operator=(IndirectBufferWithHostVisibleMemory&&) = delete;
-
-        IndirectBufferWithHostVisibleMemory(IndirectBufferWithHostVisibleMemory&&) = default;
-        ~IndirectBufferWithHostVisibleMemory() = default;
-
-        //
-
-        operator VkBuffer() const noexcept;
-
-        VkDeviceSize size() const noexcept;
-
-        unsigned stride() const noexcept;
-        VkDeviceSize offset(unsigned command_number) const noexcept;
-
-        void set(unsigned command_number, uint32_t vertex_count, uint32_t instance_count, uint32_t first_vertex,
-                 uint32_t first_instance) const;
 };
 
 class ColorTexture final

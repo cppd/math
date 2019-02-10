@@ -113,7 +113,7 @@ class Impl final : public gpgpu_vulkan::ConvexHullCompute
         }
 
         void create_buffers(const vulkan::StorageImage& objects, const vulkan::BufferWithHostVisibleMemory& points_buffer,
-                            const vulkan::IndirectBufferWithHostVisibleMemory& point_count_buffer) override
+                            const vulkan::BufferWithHostVisibleMemory& point_count_buffer) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 

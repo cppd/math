@@ -34,9 +34,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // Это в шейдерах layout(set = N, ...)
 constexpr uint32_t SET_NUMBER = 0;
 
-constexpr int INDIRECT_BUFFER_COMMAND_COUNT = 1;
-constexpr int INDIRECT_BUFFER_COMMAND_NUMBER = 0;
-
 constexpr double ANGULAR_FREQUENCY = TWO_PI<double> * 5;
 
 // clang-format off
@@ -86,7 +83,7 @@ class Impl final : public gpgpu_vulkan::ConvexHullShow
         vulkan::PipelineLayout m_pipeline_layout;
 
         std::optional<vulkan::BufferWithHostVisibleMemory> m_points;
-        vulkan::IndirectBufferWithHostVisibleMemory m_indirect_buffer;
+        vulkan::BufferWithHostVisibleMemory m_indirect_buffer;
 
         vulkan::RenderBuffers2D* m_render_buffers = nullptr;
         std::vector<VkCommandBuffer> m_command_buffers;
@@ -110,8 +107,8 @@ class Impl final : public gpgpu_vulkan::ConvexHullShow
                 vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline_layout, SET_NUMBER,
                                         1 /*set count*/, &descriptor_set, 0, nullptr);
 
-                vkCmdDrawIndirect(command_buffer, m_indirect_buffer, m_indirect_buffer.offset(INDIRECT_BUFFER_COMMAND_NUMBER), 1,
-                                  m_indirect_buffer.stride());
+                ASSERT(m_indirect_buffer.usage(VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT));
+                vkCmdDrawIndirect(command_buffer, m_indirect_buffer, 0, 1, sizeof(VkDrawIndirectCommand));
         }
 
         void create_buffers(vulkan::RenderBuffers2D* render_buffers, const mat4& matrix,
@@ -181,10 +178,16 @@ public:
                   m_fragment_shader(m_instance.device(), fragment_shader, "main"),
                   m_pipeline_layout(vulkan::create_pipeline_layout(m_instance.device(), {SET_NUMBER},
                                                                    {m_shader_memory.descriptor_set_layout()})),
-                  m_indirect_buffer(m_instance.device(), INDIRECT_BUFFER_COMMAND_COUNT),
+                  m_indirect_buffer(m_instance.device(), VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT,
+                                    sizeof(VkDrawIndirectCommand)),
                   m_compute(gpgpu_vulkan::create_convex_hull_compute(instance))
         {
-                m_indirect_buffer.set(INDIRECT_BUFFER_COMMAND_NUMBER, 0, 1, 0, 0);
+                VkDrawIndirectCommand command = {};
+                command.vertexCount = 0;
+                command.instanceCount = 1;
+                command.firstVertex = 0;
+                command.firstInstance = 0;
+                m_indirect_buffer.write(0, command);
         }
 
         ~Impl() override

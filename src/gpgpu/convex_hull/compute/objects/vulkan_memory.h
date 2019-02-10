@@ -59,7 +59,7 @@ public:
 
         void set_object_image(const vulkan::StorageImage& storage_image) const;
         void set_points(const vulkan::BufferWithHostVisibleMemory& buffer) const;
-        void set_point_count(const vulkan::IndirectBufferWithHostVisibleMemory& buffer) const;
+        void set_point_count(const vulkan::BufferWithHostVisibleMemory& buffer) const;
 };
 }
 }

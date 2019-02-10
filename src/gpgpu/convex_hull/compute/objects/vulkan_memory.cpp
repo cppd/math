@@ -100,8 +100,10 @@ void ShaderMemory::set_points(const vulkan::BufferWithHostVisibleMemory& buffer)
         m_descriptors.update_descriptor_set(m_descriptor_set, 1, buffer_info);
 }
 
-void ShaderMemory::set_point_count(const vulkan::IndirectBufferWithHostVisibleMemory& buffer) const
+void ShaderMemory::set_point_count(const vulkan::BufferWithHostVisibleMemory& buffer) const
 {
+        ASSERT(buffer.usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
+
         VkDescriptorBufferInfo buffer_info = {};
         buffer_info.buffer = buffer;
         buffer_info.offset = 0;
