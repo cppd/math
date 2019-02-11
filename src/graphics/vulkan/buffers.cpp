@@ -511,41 +511,6 @@ vulkan::ImageView create_image_view(VkDevice device, VkImage image, VkFormat for
 
 namespace vulkan
 {
-VertexBufferWithHostVisibleMemory::VertexBufferWithHostVisibleMemory(const Device& device, VkDeviceSize data_size)
-        : m_device(device),
-          m_data_size(data_size),
-          m_buffer(create_buffer(device, data_size, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, {})),
-          m_device_memory(create_device_memory(device, m_buffer,
-                                               VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT))
-{
-}
-
-VertexBufferWithHostVisibleMemory::VertexBufferWithHostVisibleMemory(const Device& device, VkDeviceSize data_size,
-                                                                     const void* data)
-        : VertexBufferWithHostVisibleMemory(device, data_size)
-{
-        memory_copy(device, m_device_memory, data, data_size);
-}
-
-VertexBufferWithHostVisibleMemory::operator VkBuffer() const noexcept
-{
-        return m_buffer;
-}
-
-VkDeviceSize VertexBufferWithHostVisibleMemory::size() const noexcept
-{
-        return m_data_size;
-}
-
-void VertexBufferWithHostVisibleMemory::copy(VkDeviceSize offset, const void* data, VkDeviceSize data_size) const
-{
-        ASSERT(offset + data_size <= m_data_size);
-
-        memory_copy_offset(m_device, m_device_memory, offset, data, data_size);
-}
-
-//
-
 VertexBufferWithDeviceLocalMemory::VertexBufferWithDeviceLocalMemory(const Device& device, VkCommandPool command_pool,
                                                                      VkQueue queue, const std::vector<uint32_t>& family_indices,
                                                                      VkDeviceSize data_size, const void* data)

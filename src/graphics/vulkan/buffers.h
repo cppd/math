@@ -25,40 +25,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace vulkan
 {
-class VertexBufferWithHostVisibleMemory final
-{
-        VkDevice m_device;
-        VkDeviceSize m_data_size;
-
-        Buffer m_buffer;
-        DeviceMemory m_device_memory;
-
-        void copy(VkDeviceSize offset, const void* data, VkDeviceSize data_size) const;
-
-public:
-        VertexBufferWithHostVisibleMemory(const Device& device, VkDeviceSize data_size, const void* data);
-        VertexBufferWithHostVisibleMemory(const Device& device, VkDeviceSize data_size);
-
-        VertexBufferWithHostVisibleMemory(const VertexBufferWithHostVisibleMemory&) = delete;
-        VertexBufferWithHostVisibleMemory& operator=(const VertexBufferWithHostVisibleMemory&) = delete;
-        VertexBufferWithHostVisibleMemory& operator=(VertexBufferWithHostVisibleMemory&&) = delete;
-
-        VertexBufferWithHostVisibleMemory(VertexBufferWithHostVisibleMemory&&) = default;
-        ~VertexBufferWithHostVisibleMemory() = default;
-
-        //
-
-        operator VkBuffer() const noexcept;
-
-        VkDeviceSize size() const noexcept;
-
-        template <typename T>
-        void copy(const std::vector<T>& v) const
-        {
-                copy(0 /*offset*/, v.data(), v.size() * sizeof(T));
-        }
-};
-
 class VertexBufferWithDeviceLocalMemory final
 {
         Buffer m_buffer;
@@ -141,7 +107,6 @@ public:
         template <typename T>
         std::enable_if_t<is_vector<T> || is_array<T>> write(const T& data) const
         {
-                ASSERT(size() == storage_size(data));
                 copy_to(0, data.data(), storage_size(data));
         }
 
@@ -169,7 +134,6 @@ public:
         template <typename T>
         std::enable_if_t<is_vector<T> || is_array<T>> read(T* data) const
         {
-                ASSERT(size() == storage_size(*data));
                 copy_from(0, data->data(), storage_size(*data));
         }
 

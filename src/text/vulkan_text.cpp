@@ -109,7 +109,7 @@ class Impl final : public VulkanText
 
         vulkan::PipelineLayout m_pipeline_layout;
 
-        std::optional<vulkan::VertexBufferWithHostVisibleMemory> m_vertex_buffer;
+        std::optional<vulkan::BufferWithHostVisibleMemory> m_vertex_buffer;
         vulkan::BufferWithHostVisibleMemory m_indirect_buffer;
 
         vulkan::RenderBuffers2D* m_render_buffers = nullptr;
@@ -191,13 +191,14 @@ class Impl final : public VulkanText
 
                         m_render_buffers->delete_command_buffers(&m_command_buffers);
 
-                        m_vertex_buffer.emplace(m_instance.device(), std::max(m_vertex_buffer->size() * 2, data_size));
+                        m_vertex_buffer.emplace(m_instance.device(), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+                                                std::max(m_vertex_buffer->size() * 2, data_size));
 
                         m_command_buffers = m_render_buffers->create_command_buffers(
                                 std::nullopt, std::bind(&Impl::draw_commands, this, std::placeholders::_1));
                 }
 
-                m_vertex_buffer->copy(vertices);
+                m_vertex_buffer->write(vertices);
 
                 VkDrawIndirectCommand command = {};
                 command.vertexCount = vertices.size();
@@ -228,7 +229,8 @@ class Impl final : public VulkanText
                   m_text_frag(m_instance.device(), fragment_shader, "main"),
                   m_pipeline_layout(vulkan::create_pipeline_layout(m_instance.device(), {TEXT_SET_NUMBER},
                                                                    {m_shader_memory.descriptor_set_layout()})),
-                  m_vertex_buffer(std::in_place, m_instance.device(), VERTEX_BUFFER_FIRST_SIZE),
+                  m_vertex_buffer(std::in_place, m_instance.device(), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+                                  VERTEX_BUFFER_FIRST_SIZE),
                   m_indirect_buffer(m_instance.device(), VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT, sizeof(VkDrawIndirectCommand))
         {
                 set_color(color);
