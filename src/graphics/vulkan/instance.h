@@ -126,19 +126,11 @@ public:
         }
 
         template <typename T>
-        VertexBufferWithDeviceLocalMemory create_vertex_buffer(const T& data) const
+        BufferWithDeviceLocalMemory create_buffer(VkBufferUsageFlags usage, const T& data) const
         {
                 static_assert(is_vector<T> || is_array<T>);
-                return VertexBufferWithDeviceLocalMemory(m_device, m_transfer_command_pool, m_transfer_queue,
-                                                         m_buffer_family_indices, storage_size(data), data.data());
-        }
-
-        template <typename T>
-        IndexBufferWithDeviceLocalMemory create_index_buffer(const T& data) const
-        {
-                static_assert(is_vector<T> || is_array<T>);
-                return IndexBufferWithDeviceLocalMemory(m_device, m_transfer_command_pool, m_transfer_queue,
-                                                        m_buffer_family_indices, storage_size(data), data.data());
+                return BufferWithDeviceLocalMemory(m_device, usage, m_transfer_command_pool, m_transfer_queue,
+                                                   m_buffer_family_indices, storage_size(data), data.data());
         }
 
         template <typename T>

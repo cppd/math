@@ -25,48 +25,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace vulkan
 {
-class VertexBufferWithDeviceLocalMemory final
-{
-        Buffer m_buffer;
-        DeviceMemory m_device_memory;
-
-public:
-        VertexBufferWithDeviceLocalMemory(const Device& device, VkCommandPool command_pool, VkQueue queue,
-                                          const std::vector<uint32_t>& family_indices, VkDeviceSize data_size, const void* data);
-
-        VertexBufferWithDeviceLocalMemory(const VertexBufferWithDeviceLocalMemory&) = delete;
-        VertexBufferWithDeviceLocalMemory& operator=(const VertexBufferWithDeviceLocalMemory&) = delete;
-        VertexBufferWithDeviceLocalMemory& operator=(VertexBufferWithDeviceLocalMemory&&) = delete;
-
-        VertexBufferWithDeviceLocalMemory(VertexBufferWithDeviceLocalMemory&&) = default;
-        ~VertexBufferWithDeviceLocalMemory() = default;
-
-        //
-
-        operator VkBuffer() const noexcept;
-};
-
-class IndexBufferWithDeviceLocalMemory final
-{
-        Buffer m_buffer;
-        DeviceMemory m_device_memory;
-
-public:
-        IndexBufferWithDeviceLocalMemory(const Device& device, VkCommandPool command_pool, VkQueue queue,
-                                         const std::vector<uint32_t>& family_indices, VkDeviceSize data_size, const void* data);
-
-        IndexBufferWithDeviceLocalMemory(const IndexBufferWithDeviceLocalMemory&) = delete;
-        IndexBufferWithDeviceLocalMemory& operator=(const IndexBufferWithDeviceLocalMemory&) = delete;
-        IndexBufferWithDeviceLocalMemory& operator=(IndexBufferWithDeviceLocalMemory&&) = delete;
-
-        IndexBufferWithDeviceLocalMemory(IndexBufferWithDeviceLocalMemory&&) = default;
-        ~IndexBufferWithDeviceLocalMemory() = default;
-
-        //
-
-        operator VkBuffer() const noexcept;
-};
-
 class BufferWithHostVisibleMemory final
 {
         VkDevice m_device;
@@ -156,6 +114,9 @@ class BufferWithDeviceLocalMemory final
 
 public:
         BufferWithDeviceLocalMemory(const Device& device, VkBufferUsageFlags usage, VkDeviceSize data_size);
+
+        BufferWithDeviceLocalMemory(const Device& device, VkBufferUsageFlags usage, VkCommandPool command_pool, VkQueue queue,
+                                    const std::vector<uint32_t>& family_indices, VkDeviceSize data_size, const void* data);
 
         BufferWithDeviceLocalMemory(const BufferWithDeviceLocalMemory&) = delete;
         BufferWithDeviceLocalMemory& operator=(const BufferWithDeviceLocalMemory&) = delete;

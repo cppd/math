@@ -511,44 +511,6 @@ vulkan::ImageView create_image_view(VkDevice device, VkImage image, VkFormat for
 
 namespace vulkan
 {
-VertexBufferWithDeviceLocalMemory::VertexBufferWithDeviceLocalMemory(const Device& device, VkCommandPool command_pool,
-                                                                     VkQueue queue, const std::vector<uint32_t>& family_indices,
-                                                                     VkDeviceSize data_size, const void* data)
-        : m_buffer(create_buffer(device, data_size, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-                                 family_indices)),
-          m_device_memory(create_device_memory(device, m_buffer, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
-{
-        ASSERT(family_indices.size() > 0);
-
-        staging_buffer_copy(device, command_pool, queue, m_buffer, data_size, data);
-}
-
-VertexBufferWithDeviceLocalMemory::operator VkBuffer() const noexcept
-{
-        return m_buffer;
-}
-
-//
-
-IndexBufferWithDeviceLocalMemory::IndexBufferWithDeviceLocalMemory(const Device& device, VkCommandPool command_pool,
-                                                                   VkQueue queue, const std::vector<uint32_t>& family_indices,
-                                                                   VkDeviceSize data_size, const void* data)
-        : m_buffer(create_buffer(device, data_size, VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-                                 family_indices)),
-          m_device_memory(create_device_memory(device, m_buffer, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
-{
-        ASSERT(family_indices.size() > 0);
-
-        staging_buffer_copy(device, command_pool, queue, m_buffer, data_size, data);
-}
-
-IndexBufferWithDeviceLocalMemory::operator VkBuffer() const noexcept
-{
-        return m_buffer;
-}
-
-//
-
 BufferWithHostVisibleMemory::BufferWithHostVisibleMemory(const Device& device, VkBufferUsageFlags usage, VkDeviceSize data_size)
         : m_device(device),
           m_data_size(data_size),
@@ -597,6 +559,21 @@ BufferWithDeviceLocalMemory::BufferWithDeviceLocalMemory(const Device& device, V
           m_buffer(create_buffer(device, data_size, usage, {})),
           m_device_memory(create_device_memory(device, m_buffer, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
 {
+}
+
+BufferWithDeviceLocalMemory::BufferWithDeviceLocalMemory(const Device& device, VkBufferUsageFlags usage,
+                                                         VkCommandPool command_pool, VkQueue queue,
+                                                         const std::vector<uint32_t>& family_indices, VkDeviceSize data_size,
+                                                         const void* data)
+        : m_buffer(create_buffer(device, data_size, usage | VK_BUFFER_USAGE_TRANSFER_DST_BIT, family_indices)),
+          m_device_memory(create_device_memory(device, m_buffer, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
+{
+        ASSERT(command_pool != VK_NULL_HANDLE);
+        ASSERT(queue != VK_NULL_HANDLE);
+        ASSERT(family_indices.size() > 0);
+        ASSERT(data_size > 0 && data);
+
+        staging_buffer_copy(device, command_pool, queue, m_buffer, data_size, data);
 }
 
 BufferWithDeviceLocalMemory::operator VkBuffer() const noexcept

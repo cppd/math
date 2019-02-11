@@ -114,9 +114,8 @@ namespace impl = vulkan_renderer_implementation;
 
 namespace
 {
-std::unique_ptr<vulkan::VertexBufferWithDeviceLocalMemory> load_vertices(const vulkan::VulkanInstance& instance,
-                                                                         const Obj<3>& obj,
-                                                                         const std::vector<int>& sorted_face_indices)
+std::unique_ptr<vulkan::BufferWithDeviceLocalMemory> load_vertices(const vulkan::VulkanInstance& instance, const Obj<3>& obj,
+                                                                   const std::vector<int>& sorted_face_indices)
 {
         if (obj.facets().size() == 0)
         {
@@ -187,11 +186,12 @@ std::unique_ptr<vulkan::VertexBufferWithDeviceLocalMemory> load_vertices(const v
 
         ASSERT((shader_vertices.size() >= 3) && (shader_vertices.size() % 3 == 0));
 
-        return std::make_unique<vulkan::VertexBufferWithDeviceLocalMemory>(instance.create_vertex_buffer(shader_vertices));
+        return std::make_unique<vulkan::BufferWithDeviceLocalMemory>(
+                instance.create_buffer(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, shader_vertices));
 }
 
-std::unique_ptr<vulkan::VertexBufferWithDeviceLocalMemory> load_point_vertices(const vulkan::VulkanInstance& instance,
-                                                                               const Obj<3>& obj)
+std::unique_ptr<vulkan::BufferWithDeviceLocalMemory> load_point_vertices(const vulkan::VulkanInstance& instance,
+                                                                         const Obj<3>& obj)
 {
         if (obj.points().size() == 0)
         {
@@ -209,11 +209,11 @@ std::unique_ptr<vulkan::VertexBufferWithDeviceLocalMemory> load_point_vertices(c
                 shader_vertices.push_back(obj_vertices[p.vertex]);
         }
 
-        return std::make_unique<vulkan::VertexBufferWithDeviceLocalMemory>(instance.create_vertex_buffer(shader_vertices));
+        return std::make_unique<vulkan::BufferWithDeviceLocalMemory>(
+                instance.create_buffer(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, shader_vertices));
 }
 
-std::unique_ptr<vulkan::VertexBufferWithDeviceLocalMemory> load_line_vertices(const vulkan::VulkanInstance& instance,
-                                                                              const Obj<3>& obj)
+std::unique_ptr<vulkan::BufferWithDeviceLocalMemory> load_line_vertices(const vulkan::VulkanInstance& instance, const Obj<3>& obj)
 {
         if (obj.lines().size() == 0)
         {
@@ -234,7 +234,8 @@ std::unique_ptr<vulkan::VertexBufferWithDeviceLocalMemory> load_line_vertices(co
                 }
         }
 
-        return std::make_unique<vulkan::VertexBufferWithDeviceLocalMemory>(instance.create_vertex_buffer(shader_vertices));
+        return std::make_unique<vulkan::BufferWithDeviceLocalMemory>(
+                instance.create_buffer(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, shader_vertices));
 }
 
 std::vector<vulkan::ColorTexture> load_textures(const vulkan::VulkanInstance& instance, const Obj<3>& obj)
@@ -352,7 +353,7 @@ struct DrawObjectInterface
 
 class DrawObjectTriangles final : public DrawObjectInterface
 {
-        std::unique_ptr<vulkan::VertexBufferWithDeviceLocalMemory> m_vertex_buffer;
+        std::unique_ptr<vulkan::BufferWithDeviceLocalMemory> m_vertex_buffer;
         std::vector<vulkan::ColorTexture> m_textures;
         std::unique_ptr<impl::TrianglesMaterialMemory> m_shader_memory;
         unsigned m_vertex_count;
@@ -452,7 +453,7 @@ public:
 
 class DrawObjectPoints final : public DrawObjectInterface
 {
-        std::unique_ptr<vulkan::VertexBufferWithDeviceLocalMemory> m_vertex_buffer;
+        std::unique_ptr<vulkan::BufferWithDeviceLocalMemory> m_vertex_buffer;
         unsigned m_vertex_count;
 
         //
@@ -496,7 +497,7 @@ public:
 
 class DrawObjectLines final : public DrawObjectInterface
 {
-        std::unique_ptr<vulkan::VertexBufferWithDeviceLocalMemory> m_vertex_buffer;
+        std::unique_ptr<vulkan::BufferWithDeviceLocalMemory> m_vertex_buffer;
         unsigned m_vertex_count;
 
         //
