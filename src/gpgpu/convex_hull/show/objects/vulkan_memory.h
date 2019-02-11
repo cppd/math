@@ -35,7 +35,7 @@ class ShaderMemory
 
         vulkan::DescriptorSetLayout m_descriptor_set_layout;
         vulkan::Descriptors m_descriptors;
-        std::vector<vulkan::UniformBufferWithHostVisibleMemory> m_uniform_buffers;
+        std::vector<vulkan::BufferWithHostVisibleMemory> m_uniform_buffers;
         vulkan::DescriptorSet m_descriptor_set;
 
         struct Data

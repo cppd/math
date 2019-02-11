@@ -101,46 +101,6 @@ public:
         operator VkBuffer() const noexcept;
 };
 
-class UniformBufferWithHostVisibleMemory final
-{
-        VkDevice m_device;
-        VkDeviceSize m_data_size;
-
-        Buffer m_buffer;
-        DeviceMemory m_device_memory;
-
-        void copy(VkDeviceSize offset, const void* data, VkDeviceSize data_size) const;
-
-public:
-        UniformBufferWithHostVisibleMemory(const Device& device, VkDeviceSize data_size);
-
-        UniformBufferWithHostVisibleMemory(const UniformBufferWithHostVisibleMemory&) = delete;
-        UniformBufferWithHostVisibleMemory& operator=(const UniformBufferWithHostVisibleMemory&) = delete;
-        UniformBufferWithHostVisibleMemory& operator=(UniformBufferWithHostVisibleMemory&&) = delete;
-
-        UniformBufferWithHostVisibleMemory(UniformBufferWithHostVisibleMemory&&) = default;
-        ~UniformBufferWithHostVisibleMemory() = default;
-
-        //
-
-        operator VkBuffer() const noexcept;
-
-        VkDeviceSize size() const noexcept;
-
-        template <typename T>
-        void copy(VkDeviceSize offset, const T& data) const
-        {
-                copy(offset, &data, sizeof(data));
-        }
-        template <typename T>
-        void copy(const T& data) const
-        {
-                ASSERT(size() == sizeof(data));
-
-                copy(0 /*offset*/, &data, sizeof(data));
-        }
-};
-
 class BufferWithHostVisibleMemory final
 {
         VkDevice m_device;
@@ -181,25 +141,43 @@ public:
         template <typename T>
         std::enable_if_t<is_vector<T> || is_array<T>> write(const T& data) const
         {
+                ASSERT(size() == storage_size(data));
                 copy_to(0, data.data(), storage_size(data));
         }
 
         template <typename T>
-        void write(VkDeviceSize offset, const T& data) const
+        std::enable_if_t<!is_vector<T> && !is_array<T>> write(const T& data) const
+        {
+                ASSERT(size() == sizeof(data));
+                copy_to(0, &data, sizeof(data));
+        }
+
+        template <typename T>
+        std::enable_if_t<is_vector<T> || is_array<T>> write(VkDeviceSize offset, const T& data) const
+        {
+                copy_to(offset, data.data(), storage_size(data));
+        }
+
+        template <typename T>
+        std::enable_if_t<!is_vector<T> && !is_array<T>> write(VkDeviceSize offset, const T& data) const
         {
                 copy_to(offset, &data, sizeof(data));
         }
 
+        //
+
         template <typename T>
         std::enable_if_t<is_vector<T> || is_array<T>> read(T* data) const
         {
+                ASSERT(size() == storage_size(*data));
                 copy_from(0, data->data(), storage_size(*data));
         }
 
         template <typename T>
         std::enable_if_t<!is_vector<T> && !is_array<T>> read(T* data) const
         {
-                copy_from(0, data, sizeof(T));
+                ASSERT(size() == sizeof(*data));
+                copy_from(0, data, sizeof(*data));
         }
 };
 

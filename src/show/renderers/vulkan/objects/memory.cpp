@@ -84,7 +84,7 @@ TrianglesSharedMemory::TrianglesSharedMemory(const vulkan::Device& device)
         std::vector<uint32_t> bindings;
 
         {
-                m_uniform_buffers.emplace_back(device, sizeof(Matrices));
+                m_uniform_buffers.emplace_back(device, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Matrices));
                 m_matrices_buffer_index = m_uniform_buffers.size() - 1;
 
                 VkDescriptorBufferInfo buffer_info = {};
@@ -97,7 +97,7 @@ TrianglesSharedMemory::TrianglesSharedMemory(const vulkan::Device& device)
                 bindings.push_back(0);
         }
         {
-                m_uniform_buffers.emplace_back(device, sizeof(Lighting));
+                m_uniform_buffers.emplace_back(device, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Lighting));
                 m_lighting_buffer_index = m_uniform_buffers.size() - 1;
 
                 VkDescriptorBufferInfo buffer_info = {};
@@ -110,7 +110,7 @@ TrianglesSharedMemory::TrianglesSharedMemory(const vulkan::Device& device)
                 bindings.push_back(1);
         }
         {
-                m_uniform_buffers.emplace_back(device, sizeof(Drawing));
+                m_uniform_buffers.emplace_back(device, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Drawing));
                 m_drawing_buffer_index = m_uniform_buffers.size() - 1;
 
                 VkDescriptorBufferInfo buffer_info = {};
@@ -139,17 +139,17 @@ VkDescriptorSet TrianglesSharedMemory::descriptor_set() const noexcept
 template <typename T>
 void TrianglesSharedMemory::copy_to_matrices_buffer(VkDeviceSize offset, const T& data) const
 {
-        m_uniform_buffers[m_matrices_buffer_index].copy(offset, data);
+        m_uniform_buffers[m_matrices_buffer_index].write(offset, data);
 }
 template <typename T>
 void TrianglesSharedMemory::copy_to_lighting_buffer(VkDeviceSize offset, const T& data) const
 {
-        m_uniform_buffers[m_lighting_buffer_index].copy(offset, data);
+        m_uniform_buffers[m_lighting_buffer_index].write(offset, data);
 }
 template <typename T>
 void TrianglesSharedMemory::copy_to_drawing_buffer(VkDeviceSize offset, const T& data) const
 {
-        m_uniform_buffers[m_drawing_buffer_index].copy(offset, data);
+        m_uniform_buffers[m_drawing_buffer_index].write(offset, data);
 }
 
 void TrianglesSharedMemory::set_matrices(const mat4& matrix, const mat4& shadow_matrix) const
@@ -307,7 +307,7 @@ TrianglesMaterialMemory::TrianglesMaterialMemory(const vulkan::Device& device, V
                 infos.clear();
                 bindings.clear();
                 {
-                        m_uniform_buffers.emplace_back(device, sizeof(Material));
+                        m_uniform_buffers.emplace_back(device, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Material));
 
                         VkDescriptorBufferInfo buffer_info = {};
                         buffer_info.buffer = m_uniform_buffers.back();
@@ -355,7 +355,7 @@ TrianglesMaterialMemory::TrianglesMaterialMemory(const vulkan::Device& device, V
 
         for (size_t i = 0; i < materials.size(); ++i)
         {
-                m_uniform_buffers[i].copy(materials[i].material);
+                m_uniform_buffers[i].write(materials[i].material);
         }
 }
 
@@ -398,7 +398,7 @@ ShadowMemory::ShadowMemory(const vulkan::Device& device)
         std::vector<uint32_t> bindings;
 
         {
-                m_uniform_buffers.emplace_back(device, sizeof(Matrices));
+                m_uniform_buffers.emplace_back(device, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Matrices));
 
                 VkDescriptorBufferInfo buffer_info = {};
                 buffer_info.buffer = m_uniform_buffers.back();
@@ -426,7 +426,7 @@ VkDescriptorSet ShadowMemory::descriptor_set() const noexcept
 void ShadowMemory::set_matrix(const mat4& matrix) const
 {
         decltype(Matrices().matrix) m = transpose(to_matrix<float>(matrix));
-        m_uniform_buffers[0].copy(offsetof(Matrices, matrix), m);
+        m_uniform_buffers[0].write(offsetof(Matrices, matrix), m);
 }
 
 //
@@ -475,7 +475,7 @@ PointsMemory::PointsMemory(const vulkan::Device& device)
         std::vector<uint32_t> bindings;
 
         {
-                m_uniform_buffers.emplace_back(device, sizeof(Matrices));
+                m_uniform_buffers.emplace_back(device, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Matrices));
                 m_matrices_buffer_index = m_uniform_buffers.size() - 1;
 
                 VkDescriptorBufferInfo buffer_info = {};
@@ -488,7 +488,7 @@ PointsMemory::PointsMemory(const vulkan::Device& device)
                 bindings.push_back(0);
         }
         {
-                m_uniform_buffers.emplace_back(device, sizeof(Drawing));
+                m_uniform_buffers.emplace_back(device, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Drawing));
                 m_drawing_buffer_index = m_uniform_buffers.size() - 1;
 
                 VkDescriptorBufferInfo buffer_info = {};
@@ -517,12 +517,12 @@ VkDescriptorSet PointsMemory::descriptor_set() const noexcept
 template <typename T>
 void PointsMemory::copy_to_matrices_buffer(VkDeviceSize offset, const T& data) const
 {
-        m_uniform_buffers[m_matrices_buffer_index].copy(offset, data);
+        m_uniform_buffers[m_matrices_buffer_index].write(offset, data);
 }
 template <typename T>
 void PointsMemory::copy_to_drawing_buffer(VkDeviceSize offset, const T& data) const
 {
-        m_uniform_buffers[m_drawing_buffer_index].copy(offset, data);
+        m_uniform_buffers[m_drawing_buffer_index].write(offset, data);
 }
 
 void PointsMemory::set_matrix(const mat4& matrix) const

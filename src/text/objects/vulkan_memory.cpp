@@ -62,7 +62,7 @@ TextMemory::TextMemory(const vulkan::Device& device, VkSampler sampler, const vu
         std::vector<uint32_t> bindings;
 
         {
-                m_uniform_buffers.emplace_back(device, sizeof(Matrices));
+                m_uniform_buffers.emplace_back(device, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Matrices));
                 m_matrices_buffer_index = m_uniform_buffers.size() - 1;
 
                 VkDescriptorBufferInfo buffer_info = {};
@@ -85,7 +85,7 @@ TextMemory::TextMemory(const vulkan::Device& device, VkSampler sampler, const vu
                 bindings.push_back(1);
         }
         {
-                m_uniform_buffers.emplace_back(device, sizeof(Drawing));
+                m_uniform_buffers.emplace_back(device, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Drawing));
                 m_drawing_buffer_index = m_uniform_buffers.size() - 1;
 
                 VkDescriptorBufferInfo buffer_info = {};
@@ -114,12 +114,12 @@ VkDescriptorSet TextMemory::descriptor_set() const noexcept
 template <typename T>
 void TextMemory::copy_to_matrices_buffer(VkDeviceSize offset, const T& data) const
 {
-        m_uniform_buffers[m_matrices_buffer_index].copy(offset, data);
+        m_uniform_buffers[m_matrices_buffer_index].write(offset, data);
 }
 template <typename T>
 void TextMemory::copy_to_drawing_buffer(VkDeviceSize offset, const T& data) const
 {
-        m_uniform_buffers[m_drawing_buffer_index].copy(offset, data);
+        m_uniform_buffers[m_drawing_buffer_index].write(offset, data);
 }
 
 void TextMemory::set_matrix(const mat4& matrix) const

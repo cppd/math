@@ -55,7 +55,7 @@ ShaderMemory::ShaderMemory(const vulkan::Device& device)
         std::vector<uint32_t> bindings;
 
         {
-                m_uniform_buffers.emplace_back(device, sizeof(Data));
+                m_uniform_buffers.emplace_back(device, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Data));
                 m_data_buffer_index = m_uniform_buffers.size() - 1;
 
                 VkDescriptorBufferInfo buffer_info = {};
@@ -84,13 +84,13 @@ VkDescriptorSet ShaderMemory::descriptor_set() const noexcept
 void ShaderMemory::set_matrix(const mat4& matrix) const
 {
         decltype(Data().matrix) m = transpose(to_matrix<float>(matrix));
-        m_uniform_buffers[m_data_buffer_index].copy(offsetof(Data, matrix), m);
+        m_uniform_buffers[m_data_buffer_index].write(offsetof(Data, matrix), m);
 }
 
 void ShaderMemory::set_brightness(float brightness) const
 {
         decltype(Data().brightness) b = brightness;
-        m_uniform_buffers[m_data_buffer_index].copy(offsetof(Data, brightness), b);
+        m_uniform_buffers[m_data_buffer_index].write(offsetof(Data, brightness), b);
 }
 
 void ShaderMemory::set_points(const vulkan::BufferWithHostVisibleMemory& buffer) const

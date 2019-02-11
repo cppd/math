@@ -584,34 +584,6 @@ IndexBufferWithDeviceLocalMemory::operator VkBuffer() const noexcept
 
 //
 
-UniformBufferWithHostVisibleMemory::UniformBufferWithHostVisibleMemory(const Device& device, VkDeviceSize data_size)
-        : m_device(device),
-          m_data_size(data_size),
-          m_buffer(create_buffer(device, data_size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, {})),
-          m_device_memory(create_device_memory(device, m_buffer,
-                                               VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT))
-{
-}
-
-UniformBufferWithHostVisibleMemory::operator VkBuffer() const noexcept
-{
-        return m_buffer;
-}
-
-VkDeviceSize UniformBufferWithHostVisibleMemory::size() const noexcept
-{
-        return m_data_size;
-}
-
-void UniformBufferWithHostVisibleMemory::copy(VkDeviceSize offset, const void* data, VkDeviceSize data_size) const
-{
-        ASSERT(offset + data_size <= m_data_size);
-
-        memory_copy_offset(m_device, m_device_memory, offset, data, data_size);
-}
-
-//
-
 BufferWithHostVisibleMemory::BufferWithHostVisibleMemory(const Device& device, VkBufferUsageFlags usage, VkDeviceSize data_size)
         : m_device(device),
           m_data_size(data_size),

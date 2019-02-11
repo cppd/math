@@ -36,7 +36,7 @@ class TrianglesSharedMemory
 
         vulkan::DescriptorSetLayout m_descriptor_set_layout;
         vulkan::Descriptors m_descriptors;
-        std::vector<vulkan::UniformBufferWithHostVisibleMemory> m_uniform_buffers;
+        std::vector<vulkan::BufferWithHostVisibleMemory> m_uniform_buffers;
         vulkan::DescriptorSet m_descriptor_set;
 
         // Если размещать структуры в одном буфере, то требуется выравнивание каждой структуры
@@ -117,7 +117,7 @@ public:
 class TrianglesMaterialMemory
 {
         vulkan::Descriptors m_descriptors;
-        std::vector<vulkan::UniformBufferWithHostVisibleMemory> m_uniform_buffers;
+        std::vector<vulkan::BufferWithHostVisibleMemory> m_uniform_buffers;
         std::vector<vulkan::DescriptorSet> m_descriptor_sets;
 
 public:
@@ -167,7 +167,7 @@ class ShadowMemory
 
         vulkan::DescriptorSetLayout m_descriptor_set_layout;
         vulkan::Descriptors m_descriptors;
-        std::vector<vulkan::UniformBufferWithHostVisibleMemory> m_uniform_buffers;
+        std::vector<vulkan::BufferWithHostVisibleMemory> m_uniform_buffers;
         vulkan::DescriptorSet m_descriptor_set;
 
         struct Matrices
@@ -201,7 +201,7 @@ class PointsMemory
 
         vulkan::DescriptorSetLayout m_descriptor_set_layout;
         vulkan::Descriptors m_descriptors;
-        std::vector<vulkan::UniformBufferWithHostVisibleMemory> m_uniform_buffers;
+        std::vector<vulkan::BufferWithHostVisibleMemory> m_uniform_buffers;
         vulkan::DescriptorSet m_descriptor_set;
 
         struct Matrices
