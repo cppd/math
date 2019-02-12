@@ -53,6 +53,7 @@ class Impl final : public gpgpu_vulkan::ConvexHullCompute
         const vulkan::Device& m_device;
 
         impl::ShaderMemory m_shader_memory;
+        impl::ShaderConstant m_shader_constant;
 
         vulkan::ComputeShader m_compute_shader;
 
@@ -123,12 +124,18 @@ class Impl final : public gpgpu_vulkan::ConvexHullCompute
                 m_shader_memory.set_points(points_buffer);
                 m_shader_memory.set_point_count(point_count_buffer);
 
+                m_shader_constant.set_local_size_x(4);
+                m_shader_constant.set_local_size_y(1);
+                m_shader_constant.set_local_size_z(1);
+
                 vulkan::ComputePipelineCreateInfo info;
                 info.device = &m_device;
                 info.pipeline_layout = m_pipeline_layout;
                 info.shader = &m_compute_shader;
-                // info.specialization_map_entries;
-                // info.specialization_data;
+                info.specialization_map_entries = m_shader_constant.entries();
+                info.specialization_data = m_shader_constant.data();
+                info.specialization_data_size = m_shader_constant.size();
+
                 m_pipeline = create_compute_pipeline(info);
 
                 m_points_buffer = points_buffer;

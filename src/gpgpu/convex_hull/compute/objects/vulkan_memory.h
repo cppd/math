@@ -61,5 +61,28 @@ public:
         void set_points(const vulkan::BufferWithHostVisibleMemory& buffer) const;
         void set_point_count(const vulkan::BufferWithHostVisibleMemory& buffer) const;
 };
+
+class ShaderConstant
+{
+        struct Data
+        {
+                uint32_t local_size_x;
+                uint32_t local_size_y;
+                uint32_t local_size_z;
+        } m_data;
+
+        std::vector<VkSpecializationMapEntry> m_entries;
+
+public:
+        ShaderConstant();
+
+        void set_local_size_x(uint32_t x);
+        void set_local_size_y(uint32_t y);
+        void set_local_size_z(uint32_t z);
+
+        const std::vector<VkSpecializationMapEntry>& entries() const noexcept;
+        const void* data() const noexcept;
+        size_t size() const noexcept;
+};
 }
 }

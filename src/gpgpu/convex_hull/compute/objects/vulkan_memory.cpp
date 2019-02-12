@@ -111,5 +111,60 @@ void ShaderMemory::set_point_count(const vulkan::BufferWithHostVisibleMemory& bu
 
         m_descriptors.update_descriptor_set(m_descriptor_set, 2, buffer_info);
 }
+
+//
+
+ShaderConstant::ShaderConstant()
+{
+        {
+                VkSpecializationMapEntry entry = {};
+                entry.constantID = 0;
+                entry.offset = offsetof(Data, local_size_x);
+                entry.size = sizeof(Data::local_size_x);
+                m_entries.push_back(entry);
+        }
+        {
+                VkSpecializationMapEntry entry = {};
+                entry.constantID = 1;
+                entry.offset = offsetof(Data, local_size_y);
+                entry.size = sizeof(Data::local_size_y);
+                m_entries.push_back(entry);
+        }
+        {
+                VkSpecializationMapEntry entry = {};
+                entry.constantID = 2;
+                entry.offset = offsetof(Data, local_size_z);
+                entry.size = sizeof(Data::local_size_z);
+                m_entries.push_back(entry);
+        }
+}
+
+void ShaderConstant::set_local_size_x(uint32_t x)
+{
+        m_data.local_size_x = x;
+}
+void ShaderConstant::set_local_size_y(uint32_t y)
+{
+        m_data.local_size_y = y;
+}
+void ShaderConstant::set_local_size_z(uint32_t z)
+{
+        m_data.local_size_z = z;
+}
+
+const std::vector<VkSpecializationMapEntry>& ShaderConstant::entries() const noexcept
+{
+        return m_entries;
+}
+
+const void* ShaderConstant::data() const noexcept
+{
+        return &m_data;
+}
+
+size_t ShaderConstant::size() const noexcept
+{
+        return sizeof(m_data);
+}
 }
 }
