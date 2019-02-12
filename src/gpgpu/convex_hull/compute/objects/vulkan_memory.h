@@ -80,7 +80,7 @@ public:
         void set_local_size_y(uint32_t y);
         void set_local_size_z(uint32_t z);
 
-        const std::vector<VkSpecializationMapEntry>& entries() const noexcept;
+        const std::vector<VkSpecializationMapEntry>* entries() const noexcept;
         const void* data() const noexcept;
         size_t size() const noexcept;
 };

@@ -152,9 +152,9 @@ void ShaderConstant::set_local_size_z(uint32_t z)
         m_data.local_size_z = z;
 }
 
-const std::vector<VkSpecializationMapEntry>& ShaderConstant::entries() const noexcept
+const std::vector<VkSpecializationMapEntry>* ShaderConstant::entries() const noexcept
 {
-        return m_entries;
+        return &m_entries;
 }
 
 const void* ShaderConstant::data() const noexcept

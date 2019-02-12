@@ -51,7 +51,7 @@ struct ComputePipelineCreateInfo
         std::optional<VkPipelineLayout> pipeline_layout;
         std::optional<const ComputeShader*> shader;
 
-        std::optional<std::vector<VkSpecializationMapEntry>> specialization_map_entries;
+        std::optional<const std::vector<VkSpecializationMapEntry>*> specialization_map_entries;
         std::optional<const void*> specialization_data;
         std::optional<size_t> specialization_data_size;
 };
