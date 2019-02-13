@@ -29,26 +29,23 @@ namespace gpgpu_vulkan
 {
 namespace convex_hull_compute_implementation
 {
-class ShaderMemory
+class DebugMemory
 {
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
 
         vulkan::DescriptorSetLayout m_descriptor_set_layout;
         vulkan::Descriptors m_descriptors;
-        // std::vector<vulkan::UniformBufferWithHostVisibleMemory> m_uniform_buffers;
         vulkan::DescriptorSet m_descriptor_set;
 
-        // size_t m_data_buffer_index;
-
 public:
-        ShaderMemory(const vulkan::Device& device);
+        DebugMemory(const vulkan::Device& device);
 
-        ShaderMemory(const ShaderMemory&) = delete;
-        ShaderMemory& operator=(const ShaderMemory&) = delete;
-        ShaderMemory& operator=(ShaderMemory&&) = delete;
+        DebugMemory(const DebugMemory&) = delete;
+        DebugMemory& operator=(const DebugMemory&) = delete;
+        DebugMemory& operator=(DebugMemory&&) = delete;
 
-        ShaderMemory(ShaderMemory&&) = default;
-        ~ShaderMemory() = default;
+        DebugMemory(DebugMemory&&) = default;
+        ~DebugMemory() = default;
 
         //
 
@@ -62,7 +59,7 @@ public:
         void set_point_count(const vulkan::BufferWithHostVisibleMemory& buffer) const;
 };
 
-class ShaderConstant
+class DebugConstant
 {
         struct Data
         {
@@ -74,11 +71,169 @@ class ShaderConstant
         std::vector<VkSpecializationMapEntry> m_entries;
 
 public:
-        ShaderConstant();
+        DebugConstant();
 
-        void set_local_size_x(uint32_t x);
-        void set_local_size_y(uint32_t y);
-        void set_local_size_z(uint32_t z);
+        void set_local_size_x(uint32_t v);
+        void set_local_size_y(uint32_t v);
+        void set_local_size_z(uint32_t v);
+
+        const std::vector<VkSpecializationMapEntry>* entries() const noexcept;
+        const void* data() const noexcept;
+        size_t size() const noexcept;
+};
+
+//
+
+class PrepareMemory
+{
+        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
+
+        vulkan::DescriptorSetLayout m_descriptor_set_layout;
+        vulkan::Descriptors m_descriptors;
+        vulkan::DescriptorSet m_descriptor_set;
+
+public:
+        PrepareMemory(const vulkan::Device& device);
+
+        PrepareMemory(const PrepareMemory&) = delete;
+        PrepareMemory& operator=(const PrepareMemory&) = delete;
+        PrepareMemory& operator=(PrepareMemory&&) = delete;
+
+        PrepareMemory(PrepareMemory&&) = default;
+        ~PrepareMemory() = default;
+
+        //
+
+        VkDescriptorSetLayout descriptor_set_layout() const noexcept;
+        VkDescriptorSet descriptor_set() const noexcept;
+
+        //
+
+        void set_object_image(const vulkan::StorageImage& storage_image) const;
+        void set_lines(const vulkan::BufferWithHostVisibleMemory& buffer) const;
+};
+
+class PrepareConstant
+{
+        struct Data
+        {
+                int32_t line_size;
+                uint32_t local_size_x;
+        } m_data;
+
+        std::vector<VkSpecializationMapEntry> m_entries;
+
+public:
+        PrepareConstant();
+
+        void set_line_size(int32_t v);
+        void set_local_size_x(uint32_t v);
+
+        const std::vector<VkSpecializationMapEntry>* entries() const noexcept;
+        const void* data() const noexcept;
+        size_t size() const noexcept;
+};
+
+//
+
+class MergeMemory
+{
+        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
+
+        vulkan::DescriptorSetLayout m_descriptor_set_layout;
+        vulkan::Descriptors m_descriptors;
+        vulkan::DescriptorSet m_descriptor_set;
+
+public:
+        MergeMemory(const vulkan::Device& device);
+
+        MergeMemory(const MergeMemory&) = delete;
+        MergeMemory& operator=(const MergeMemory&) = delete;
+        MergeMemory& operator=(MergeMemory&&) = delete;
+
+        MergeMemory(MergeMemory&&) = default;
+        ~MergeMemory() = default;
+
+        //
+
+        VkDescriptorSetLayout descriptor_set_layout() const noexcept;
+        VkDescriptorSet descriptor_set() const noexcept;
+
+        //
+
+        void set_lines(const vulkan::BufferWithHostVisibleMemory& buffer) const;
+};
+
+class MergeConstant
+{
+        struct Data
+        {
+                int32_t line_size;
+                int32_t iteration_count;
+                uint32_t local_size_x;
+        } m_data;
+
+        std::vector<VkSpecializationMapEntry> m_entries;
+
+public:
+        MergeConstant();
+
+        void set_line_size(int32_t v);
+        void set_iteration_count(int32_t v);
+        void set_local_size_x(uint32_t v);
+
+        const std::vector<VkSpecializationMapEntry>* entries() const noexcept;
+        const void* data() const noexcept;
+        size_t size() const noexcept;
+};
+
+//
+
+class FilterMemory
+{
+        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
+
+        vulkan::DescriptorSetLayout m_descriptor_set_layout;
+        vulkan::Descriptors m_descriptors;
+        vulkan::DescriptorSet m_descriptor_set;
+
+public:
+        FilterMemory(const vulkan::Device& device);
+
+        FilterMemory(const FilterMemory&) = delete;
+        FilterMemory& operator=(const FilterMemory&) = delete;
+        FilterMemory& operator=(FilterMemory&&) = delete;
+
+        FilterMemory(FilterMemory&&) = default;
+        ~FilterMemory() = default;
+
+        //
+
+        VkDescriptorSetLayout descriptor_set_layout() const noexcept;
+        VkDescriptorSet descriptor_set() const noexcept;
+
+        //
+
+        void set_lines(const vulkan::BufferWithHostVisibleMemory& buffer) const;
+        void set_points(const vulkan::BufferWithHostVisibleMemory& buffer) const;
+        void set_point_count(const vulkan::BufferWithHostVisibleMemory& buffer) const;
+};
+
+class FilterConstant
+{
+        struct Data
+        {
+                int32_t line_size;
+                uint32_t local_size_x;
+        } m_data;
+
+        std::vector<VkSpecializationMapEntry> m_entries;
+
+public:
+        FilterConstant();
+
+        void set_line_size(int32_t v);
+        void set_local_size_x(uint32_t v);
 
         const std::vector<VkSpecializationMapEntry>* entries() const noexcept;
         const void* data() const noexcept;
