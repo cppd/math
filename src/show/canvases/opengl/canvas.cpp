@@ -154,7 +154,7 @@ void Canvas::create_objects(int window_width, int window_height, const mat4& mat
         m_dft_show = gpgpu_opengl::create_dft_show(draw_width, draw_height, dft_dst_x, dft_dst_y, matrix, frame_buffer_is_srgb,
                                                    m_dft_show_brightness, m_dft_show_background_color, m_dft_show_color);
 
-        m_optical_flow = std::make_unique<gpgpu_opengl::OpticalFlowShow>(draw_width, draw_height, m_window_ppi, matrix);
+        m_optical_flow = gpgpu_opengl::create_optical_flow_show(draw_width, draw_height, m_window_ppi, matrix);
 
         m_convex_hull = gpgpu_opengl::create_convex_hull_show(objects, matrix);
 
