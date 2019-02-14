@@ -24,22 +24,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpgpu_opengl
 {
-class DFTShow final
+struct DFTShow
 {
-        class Impl;
-        std::unique_ptr<Impl> m_impl;
+        virtual ~DFTShow() = default;
 
-public:
-        DFTShow(int width, int height, int dst_x, int dst_y, const mat4& matrix, bool source_srgb, double brightness,
-                const Color& background_color, const Color& color);
-        ~DFTShow();
-
-        void set_brightness(double brightness);
-        void set_background_color(const Color& color);
-        void set_color(const Color& color);
-
-        void take_image_from_framebuffer();
-
-        void draw();
+        virtual void set_brightness(double brightness) = 0;
+        virtual void set_background_color(const Color& color) = 0;
+        virtual void set_color(const Color& color) = 0;
+        virtual void take_image_from_framebuffer() = 0;
+        virtual void draw() = 0;
 };
+
+std::unique_ptr<DFTShow> create_dft_show(int width, int height, int dst_x, int dst_y, const mat4& matrix, bool source_srgb,
+                                         double brightness, const Color& background_color, const Color& color);
 }

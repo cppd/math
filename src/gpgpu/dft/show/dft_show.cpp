@@ -93,28 +93,54 @@ public:
                 m_buffer.bind(DATA_BINDING);
         }
 };
-}
 
-namespace gpgpu_opengl
-{
-class DFTShow::Impl final
+class Impl final : public gpgpu_opengl::DFTShow
 {
         static constexpr int VERTEX_COUNT = 4;
 
         const bool m_source_srgb;
         opengl::TextureRGBA32F m_image_texture;
-        std::unique_ptr<DFTComputeTexture> m_dft;
+        std::unique_ptr<gpgpu_opengl::DFTComputeTexture> m_dft;
         opengl::VertexArray m_vertex_array;
         opengl::ArrayBuffer m_vertex_buffer;
         opengl::GraphicsProgram m_draw_prog;
         ShaderMemory m_shader_memory;
+
+        void set_brightness(double brightness) override
+        {
+                m_shader_memory.set_brightness(brightness);
+        }
+
+        void set_background_color(const Color& color) override
+        {
+                m_shader_memory.set_background_color(color);
+        }
+
+        void set_color(const Color& color) override
+        {
+                m_shader_memory.set_foreground_color(color);
+        }
+
+        void take_image_from_framebuffer() override
+        {
+                m_image_texture.copy_texture_sub_image();
+        }
+
+        void draw() override
+        {
+                m_dft->exec(false, m_source_srgb);
+
+                m_shader_memory.bind();
+                m_vertex_array.bind();
+                m_draw_prog.draw_arrays(GL_TRIANGLE_STRIP, 0, VERTEX_COUNT);
+        }
 
 public:
         Impl(int width, int height, int dst_x, int dst_y, const mat4& matrix, bool source_srgb, double brightness,
              const Color& background_color, const Color& color)
                 : m_source_srgb(source_srgb),
                   m_image_texture(width, height),
-                  m_dft(create_dft_compute_texture(width, height, m_image_texture)),
+                  m_dft(gpgpu_opengl::create_dft_compute_texture(width, height, m_image_texture)),
                   m_vertex_buffer(sizeof(Vertex) * VERTEX_COUNT),
                   m_draw_prog(opengl::VertexShader(vertex_shader), opengl::FragmentShader(fragment_shader))
         {
@@ -143,67 +169,14 @@ public:
 
                 m_vertex_buffer.write(vertices);
         }
-
-        void set_brightness(double brightness)
-        {
-                m_shader_memory.set_brightness(brightness);
-        }
-
-        void set_background_color(const Color& color)
-        {
-                m_shader_memory.set_background_color(color);
-        }
-
-        void set_color(const Color& color)
-        {
-                m_shader_memory.set_foreground_color(color);
-        }
-
-        void take_image_from_framebuffer()
-        {
-                m_image_texture.copy_texture_sub_image();
-        }
-
-        void draw()
-        {
-                m_dft->exec(false, m_source_srgb);
-
-                m_shader_memory.bind();
-                m_vertex_array.bind();
-                m_draw_prog.draw_arrays(GL_TRIANGLE_STRIP, 0, VERTEX_COUNT);
-        }
 };
-
-DFTShow::DFTShow(int width, int height, int dst_x, int dst_y, const mat4& matrix, bool source_srgb, double brightness,
-                 const Color& background_color, const Color& color)
-        : m_impl(std::make_unique<Impl>(width, height, dst_x, dst_y, matrix, source_srgb, brightness, background_color, color))
-{
 }
 
-DFTShow::~DFTShow() = default;
-
-void DFTShow::set_brightness(double brightness)
+namespace gpgpu_opengl
 {
-        m_impl->set_brightness(brightness);
-}
-
-void DFTShow::set_background_color(const Color& color)
+std::unique_ptr<DFTShow> create_dft_show(int width, int height, int dst_x, int dst_y, const mat4& matrix, bool source_srgb,
+                                         double brightness, const Color& background_color, const Color& color)
 {
-        m_impl->set_background_color(color);
-}
-
-void DFTShow::set_color(const Color& color)
-{
-        m_impl->set_color(color);
-}
-
-void DFTShow::take_image_from_framebuffer()
-{
-        m_impl->take_image_from_framebuffer();
-}
-
-void DFTShow::draw()
-{
-        m_impl->draw();
+        return std::make_unique<Impl>(width, height, dst_x, dst_y, matrix, source_srgb, brightness, background_color, color);
 }
 }
