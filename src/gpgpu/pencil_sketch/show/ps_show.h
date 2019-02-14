@@ -24,16 +24,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpgpu_opengl
 {
-class PencilSketchShow final
+struct PencilSketchShow
 {
-        class Impl;
-        std::unique_ptr<Impl> m_impl;
+        virtual ~PencilSketchShow() = default;
 
-public:
-        PencilSketchShow(const opengl::TextureRGBA32F& source, bool source_is_srgb, const opengl::TextureR32I& objects,
-                         const mat4& matrix);
-        ~PencilSketchShow();
-
-        void draw();
+        virtual void draw() = 0;
 };
+
+std::unique_ptr<PencilSketchShow> create_pencil_sketch_show(const opengl::TextureRGBA32F& source, bool source_is_srgb,
+                                                            const opengl::TextureR32I& objects, const mat4& matrix);
 }

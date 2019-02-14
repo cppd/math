@@ -43,11 +43,8 @@ struct Vertex
         Vector<4, GLfloat> v; // Конечные координаты вершины
         Vector<2, GLfloat> t; // Координаты вершины в текстуре (0 или 1)
 };
-}
 
-namespace gpgpu_opengl
-{
-class PencilSketchShow::Impl final
+class Impl final : public gpgpu_opengl::PencilSketchShow
 {
         opengl::GraphicsProgram m_draw_prog;
         opengl::TextureRGBA32F m_texture;
@@ -55,14 +52,23 @@ class PencilSketchShow::Impl final
         opengl::VertexArray m_vertex_array;
         opengl::ArrayBuffer m_vertex_buffer;
 
-        std::unique_ptr<PencilSketchCompute> m_pencil_sketch;
+        std::unique_ptr<gpgpu_opengl::PencilSketchCompute> m_pencil_sketch;
+
+        void draw() override
+        {
+                m_pencil_sketch->exec();
+
+                // Два треугольника на всё окно с текстурой
+                m_vertex_array.bind();
+                m_draw_prog.draw_arrays(GL_TRIANGLE_STRIP, 0, VERTEX_COUNT);
+        }
 
 public:
         Impl(const opengl::TextureRGBA32F& source, bool source_is_srgb, const opengl::TextureR32I& objects, const mat4& matrix)
                 : m_draw_prog(opengl::VertexShader(vertex_shader), opengl::FragmentShader(fragment_shader)),
                   m_texture(source.texture().width(), source.texture().height()),
                   m_vertex_buffer(sizeof(Vertex) * VERTEX_COUNT),
-                  m_pencil_sketch(create_pencil_sketch_compute(source, source_is_srgb, objects, m_texture))
+                  m_pencil_sketch(gpgpu_opengl::create_pencil_sketch_compute(source, source_is_srgb, objects, m_texture))
         {
                 ASSERT(source.texture().width() == objects.texture().width());
                 ASSERT(source.texture().height() == objects.texture().height());
@@ -93,27 +99,14 @@ public:
         Impl(Impl&&) = delete;
         Impl& operator=(const Impl&) = delete;
         Impl& operator=(Impl&&) = delete;
-
-        void draw()
-        {
-                m_pencil_sketch->exec();
-
-                // Два треугольника на всё окно с текстурой
-                m_vertex_array.bind();
-                m_draw_prog.draw_arrays(GL_TRIANGLE_STRIP, 0, VERTEX_COUNT);
-        }
 };
-
-PencilSketchShow::PencilSketchShow(const opengl::TextureRGBA32F& source, bool source_is_srgb, const opengl::TextureR32I& objects,
-                                   const mat4& matrix)
-        : m_impl(std::make_unique<Impl>(source, source_is_srgb, objects, matrix))
-{
 }
 
-PencilSketchShow::~PencilSketchShow() = default;
-
-void PencilSketchShow::draw()
+namespace gpgpu_opengl
 {
-        m_impl->draw();
+std::unique_ptr<PencilSketchShow> create_pencil_sketch_show(const opengl::TextureRGBA32F& source, bool source_is_srgb,
+                                                            const opengl::TextureR32I& objects, const mat4& matrix)
+{
+        return std::make_unique<Impl>(source, source_is_srgb, objects, matrix);
 }
 }
