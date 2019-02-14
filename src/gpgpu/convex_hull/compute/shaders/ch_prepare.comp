@@ -20,12 +20,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #if !defined(VULKAN)
 // Вставляется в текст программы
 // const uint GROUP_SIZE =
-// const int LINE_SIZE =
+// const uint LINE_SIZE =
+// const uint BUFFER_SIZE =
 layout(local_size_x = GROUP_SIZE) in;
 layout(bindless_image, r32i) readonly restrict uniform iimage2D objects;
 #else
-layout(constant_id = 0) const int LINE_SIZE = 1;
-layout(local_size_x_id = 1) in;
+layout(constant_id = 0) const uint LINE_SIZE = 1;
+layout(constant_id = 1) const uint BUFFER_SIZE = 1;
+layout(local_size_x_id = 2) in;
 layout(binding = 1, r32i) readonly restrict uniform iimage2D objects;
 #endif
 
@@ -42,7 +44,7 @@ bool not_background(ivec2 p)
 }
 
 // В x пишутся минимумы, в y пишутся максимумы
-shared ivec2 shared_buffer[gl_WorkGroupSize.x];
+shared ivec2 shared_buffer[BUFFER_SIZE];
 
 void main(void)
 {

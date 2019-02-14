@@ -15,7 +15,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "vulkan_memory.h"
+#include "vulkan_shader.h"
+
+#include <type_traits>
 
 namespace gpgpu_vulkan
 {
@@ -137,6 +139,13 @@ DebugConstant::DebugConstant()
                 entry.size = sizeof(Data::local_size_z);
                 m_entries.push_back(entry);
         }
+        {
+                VkSpecializationMapEntry entry = {};
+                entry.constantID = 3;
+                entry.offset = offsetof(Data, buffer_size);
+                entry.size = sizeof(Data::buffer_size);
+                m_entries.push_back(entry);
+        }
 }
 
 void DebugConstant::set_local_size_x(uint32_t v)
@@ -155,6 +164,12 @@ void DebugConstant::set_local_size_z(uint32_t v)
 {
         static_assert(std::is_same_v<decltype(m_data.local_size_z), decltype(v)>);
         m_data.local_size_z = v;
+}
+
+void DebugConstant::set_buffer_size(uint32_t v)
+{
+        static_assert(std::is_same_v<decltype(m_data.buffer_size), decltype(v)>);
+        m_data.buffer_size = v;
 }
 
 const std::vector<VkSpecializationMapEntry>* DebugConstant::entries() const noexcept
@@ -258,20 +273,29 @@ PrepareConstant::PrepareConstant()
         {
                 VkSpecializationMapEntry entry = {};
                 entry.constantID = 1;
+                entry.offset = offsetof(Data, buffer_size);
+                entry.size = sizeof(Data::buffer_size);
+                m_entries.push_back(entry);
+        }
+        {
+                VkSpecializationMapEntry entry = {};
+                entry.constantID = 2;
                 entry.offset = offsetof(Data, local_size_x);
                 entry.size = sizeof(Data::local_size_x);
                 m_entries.push_back(entry);
         }
 }
 
-void PrepareConstant::set_line_size(int32_t v)
+void PrepareConstant::set_line_size(uint32_t v)
 {
         static_assert(std::is_same_v<decltype(m_data.line_size), decltype(v)>);
         m_data.line_size = v;
 }
 
-void PrepareConstant::set_local_size_x(uint32_t v)
+void PrepareConstant::set_buffer_and_group_size(uint32_t v)
 {
+        static_assert(std::is_same_v<decltype(m_data.buffer_size), decltype(v)>);
+        m_data.buffer_size = v;
         static_assert(std::is_same_v<decltype(m_data.local_size_x), decltype(v)>);
         m_data.local_size_x = v;
 }
@@ -506,25 +530,12 @@ FilterConstant::FilterConstant()
                 entry.size = sizeof(Data::line_size);
                 m_entries.push_back(entry);
         }
-        {
-                VkSpecializationMapEntry entry = {};
-                entry.constantID = 1;
-                entry.offset = offsetof(Data, local_size_x);
-                entry.size = sizeof(Data::local_size_x);
-                m_entries.push_back(entry);
-        }
 }
 
 void FilterConstant::set_line_size(int32_t v)
 {
         static_assert(std::is_same_v<decltype(m_data.line_size), decltype(v)>);
         m_data.line_size = v;
-}
-
-void FilterConstant::set_local_size_x(uint32_t v)
-{
-        static_assert(std::is_same_v<decltype(m_data.local_size_x), decltype(v)>);
-        m_data.local_size_x = v;
 }
 
 const std::vector<VkSpecializationMapEntry>* FilterConstant::entries() const noexcept

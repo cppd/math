@@ -18,11 +18,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "vulkan_ch_show.h"
 
 #include "com/container.h"
+#include "com/error.h"
 #include "com/log.h"
 #include "com/merge.h"
 #include "com/time.h"
 #include "gpgpu/convex_hull/compute/vulkan_ch_compute.h"
-#include "gpgpu/convex_hull/show/objects/vulkan_memory.h"
+#include "gpgpu/convex_hull/show/objects/vulkan_shader.h"
 #include "graphics/vulkan/create.h"
 #include "graphics/vulkan/error.h"
 #include "graphics/vulkan/queue.h"
@@ -145,6 +146,7 @@ class Impl final : public gpgpu_vulkan::ConvexHullShow
                 m_command_buffers.clear();
 
                 m_compute->delete_buffers();
+                m_points.reset();
         }
 
         VkSemaphore draw(VkQueue graphics_queue, VkSemaphore wait_semaphore, unsigned image_index) override

@@ -17,10 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "opengl_ch_show.h"
 
-#include "com/error.h"
 #include "com/math.h"
 #include "com/time.h"
 #include "gpgpu/convex_hull/compute/opengl_ch_compute.h"
+#include "gpgpu/convex_hull/show/objects/opengl_shader.h"
 #include "graphics/opengl/shader.h"
 
 // clang-format off
@@ -37,53 +37,10 @@ constexpr const char fragment_shader[]
 // rad / ms
 constexpr double ANGULAR_FREQUENCY = TWO_PI<double> * 5;
 
+namespace impl = gpgpu_opengl::convex_hull_show_implementation;
+
 namespace
 {
-class ShaderMemory
-{
-        static constexpr int DATA_BINDING = 0;
-        static constexpr int POINTS_BINDING = 1;
-
-        opengl::UniformBuffer m_buffer;
-        const opengl::StorageBuffer* m_points = nullptr;
-
-        struct Data
-        {
-                Matrix<4, 4, float> matrix;
-                float brightness;
-        };
-
-public:
-        ShaderMemory() : m_buffer(sizeof(Data))
-        {
-        }
-
-        void set_matrix(const mat4& matrix) const
-        {
-                decltype(Data().matrix) m = transpose(to_matrix<float>(matrix));
-                m_buffer.copy(offsetof(Data, matrix), m);
-        }
-
-        void set_brightness(float brightness) const
-        {
-                decltype(Data().brightness) b = brightness;
-                m_buffer.copy(offsetof(Data, brightness), b);
-        }
-
-        void set_points(const opengl::StorageBuffer& points)
-        {
-                m_points = &points;
-        }
-
-        void bind() const
-        {
-                ASSERT(m_points);
-
-                m_buffer.bind(DATA_BINDING);
-                m_points->bind(POINTS_BINDING);
-        }
-};
-
 int points_buffer_size(int height)
 {
         // 2 линии точек + 1 точка, тип ivec2
@@ -99,7 +56,7 @@ class ConvexHullShow::Impl final
         opengl::StorageBuffer m_points;
         double m_start_time;
         std::unique_ptr<ConvexHullCompute> m_convex_hull;
-        ShaderMemory m_shader_memory;
+        impl::ShaderMemory m_shader_memory;
 
 public:
         Impl(const opengl::TextureR32I& objects, const mat4& matrix)

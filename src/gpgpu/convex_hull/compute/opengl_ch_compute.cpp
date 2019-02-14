@@ -28,8 +28,10 @@ Chapter 2: CONVEX HULLS, 2.6 Divide-and-Conquer.
 #include "opengl_ch_compute.h"
 
 #include "com/bits.h"
+#include "com/error.h"
 #include "com/print.h"
 #include "gpgpu/com/groups.h"
+#include "gpgpu/convex_hull/compute/objects/opengl_shader.h"
 #include "graphics/opengl/query.h"
 #include "graphics/opengl/shader.h"
 
@@ -48,12 +50,16 @@ constexpr const char filter_shader[]
 };
 // clang-format on
 
+namespace impl = gpgpu_opengl::convex_hull_compute_implementation;
+
 namespace
 {
-int group_size_prepare(int width, int shared_size_per_thread)
+int group_size_prepare(int width, unsigned max_group_size_x, unsigned max_group_invocations, unsigned max_shared_memory_size)
 {
-        int max_group_size_limit = std::min(opengl::max_fixed_group_size_x(), opengl::max_fixed_group_invocations());
-        int max_group_size_memory = opengl::max_compute_shared_memory() / shared_size_per_thread;
+        unsigned shared_size_per_thread = 2 * sizeof(int32_t); // GLSL ivec2
+
+        int max_group_size_limit = std::min(max_group_size_x, max_group_invocations);
+        int max_group_size_memory = max_shared_memory_size / shared_size_per_thread;
 
         // максимально возможная степень 2
         int max_group_size = 1 << log_2(std::min(max_group_size_limit, max_group_size_memory));
@@ -64,15 +70,19 @@ int group_size_prepare(int width, int shared_size_per_thread)
         return (pref_thread_count <= max_group_size) ? pref_thread_count : max_group_size;
 }
 
-int group_size_merge(int height, int shared_size_per_item)
+int group_size_merge(int height, unsigned max_group_size_x, unsigned max_group_invocations, unsigned max_shared_memory_size)
 {
-        if (opengl::max_compute_shared_memory() < height * shared_size_per_item)
+        static_assert(sizeof(float) == 4);
+
+        unsigned shared_size_per_item = sizeof(float); // GLSL float
+
+        if (max_shared_memory_size < height * shared_size_per_item)
         {
                 error("Shared memory problem: needs " + to_string(height * shared_size_per_item) + ", exists " +
-                      to_string(opengl::max_compute_shared_memory()));
+                      to_string(max_shared_memory_size));
         }
 
-        int max_group_size = std::min(opengl::max_fixed_group_size_x(), opengl::max_fixed_group_invocations());
+        int max_group_size = std::min(max_group_size_x, max_group_invocations);
 
         // Один поток первоначально обрабатывает группы до 4 элементов.
         int pref_thread_count = group_count(height, 4);
@@ -89,113 +99,17 @@ int iteration_count_merge(int size)
         return (size > 2) ? log_2(size - 1) : 0;
 }
 
-std::string group_size_string(int group_size)
+int group_size_prepare_opengl(int width)
 {
-        return "const uint GROUP_SIZE = " + to_string(group_size) + ";\n";
+        return group_size_prepare(width, opengl::max_fixed_group_size_x(), opengl::max_fixed_group_invocations(),
+                                  opengl::max_compute_shared_memory());
 }
 
-std::string prepare_source(int line_size, int group_size)
+int group_size_merge_opengl(int height)
 {
-        std::string s;
-        s += group_size_string(group_size);
-        s += "const int LINE_SIZE = " + to_string(line_size) + ";\n";
-        s += '\n';
-        return s + prepare_shader;
+        return group_size_merge(height, opengl::max_fixed_group_size_x(), opengl::max_fixed_group_invocations(),
+                                opengl::max_compute_shared_memory());
 }
-
-std::string merge_source(int line_size, int group_size, int iteration_count)
-{
-        std::string s;
-        s += group_size_string(group_size);
-        s += "const int LINE_SIZE = " + to_string(line_size) + ";\n";
-        s += "const int ITERATION_COUNT = " + to_string(iteration_count) + ";\n";
-        s += '\n';
-        return s + merge_shader;
-}
-
-std::string filter_source(int line_size)
-{
-        std::string s;
-        s += "const int LINE_SIZE = " + to_string(line_size) + ";\n";
-        s += '\n';
-        return s + filter_shader;
-}
-
-class FilterMemory
-{
-        static constexpr int LINES_BINDING = 0;
-        static constexpr int POINTS_BINDING = 1;
-        static constexpr int POINT_COUNT_BINDING = 2;
-
-        const opengl::StorageBuffer* m_lines = nullptr;
-        const opengl::StorageBuffer* m_points = nullptr;
-        const opengl::StorageBuffer* m_point_count = nullptr;
-
-public:
-        void set_lines(const opengl::StorageBuffer& lines)
-        {
-                m_lines = &lines;
-        }
-
-        void set_points(const opengl::StorageBuffer& points)
-        {
-                m_points = &points;
-        }
-
-        void set_point_count(const opengl::StorageBuffer& point_count)
-        {
-                m_point_count = &point_count;
-        }
-
-        void bind() const
-        {
-                ASSERT(m_lines && m_points && m_point_count);
-
-                m_lines->bind(LINES_BINDING);
-                m_points->bind(POINTS_BINDING);
-                m_point_count->bind(POINT_COUNT_BINDING);
-        }
-};
-
-class MergeMemory
-{
-        static constexpr int LINES_BINDING = 0;
-
-        const opengl::StorageBuffer* m_lines = nullptr;
-
-public:
-        void set_lines(const opengl::StorageBuffer& lines)
-        {
-                m_lines = &lines;
-        }
-
-        void bind() const
-        {
-                ASSERT(m_lines);
-
-                m_lines->bind(LINES_BINDING);
-        }
-};
-
-class PrepareMemory
-{
-        static constexpr int LINES_BINDING = 0;
-
-        const opengl::StorageBuffer* m_lines = nullptr;
-
-public:
-        void set_lines(const opengl::StorageBuffer& lines)
-        {
-                m_lines = &lines;
-        }
-
-        void bind() const
-        {
-                ASSERT(m_lines);
-
-                m_lines->bind(LINES_BINDING);
-        }
-};
 
 class Impl final : public gpgpu_opengl::ConvexHullCompute
 {
@@ -208,9 +122,9 @@ class Impl final : public gpgpu_opengl::ConvexHullCompute
         opengl::StorageBuffer m_lines;
         opengl::StorageBuffer m_point_count;
 
-        FilterMemory m_filter_memory;
-        MergeMemory m_merge_memory;
-        PrepareMemory m_prepare_memory;
+        impl::FilterMemory m_filter_memory;
+        impl::MergeMemory m_merge_memory;
+        impl::PrepareMemory m_prepare_memory;
 
         int exec() override
         {
@@ -240,10 +154,12 @@ public:
         Impl(const opengl::TextureR32I& objects, const opengl::StorageBuffer& points)
                 : m_height(objects.texture().height()),
                   m_prepare_prog(opengl::ComputeShader(
-                          prepare_source(m_height, group_size_prepare(objects.texture().width(), 2 * sizeof(GLint))))),
+                          impl::prepare_constants(m_height, group_size_prepare_opengl(objects.texture().width())) +
+                          prepare_shader)),
                   m_merge_prog(opengl::ComputeShader(
-                          merge_source(m_height, group_size_merge(m_height, sizeof(GLfloat)), iteration_count_merge(m_height)))),
-                  m_filter_prog(opengl::ComputeShader(filter_source(m_height))),
+                          impl::merge_constants(m_height, group_size_merge_opengl(m_height), iteration_count_merge(m_height)) +
+                          merge_shader)),
+                  m_filter_prog(opengl::ComputeShader(impl::filter_constants(m_height) + filter_shader)),
                   m_lines(2 * m_height * sizeof(GLint)),
                   m_point_count(sizeof(GLint))
         {

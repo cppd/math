@@ -17,8 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "com/matrix.h"
-#include "graphics/glsl.h"
 #include "graphics/vulkan/buffers.h"
 #include "graphics/vulkan/descriptor.h"
 #include "graphics/vulkan/objects.h"
@@ -29,7 +27,7 @@ namespace gpgpu_vulkan
 {
 namespace convex_hull_compute_implementation
 {
-class DebugMemory
+class DebugMemory final
 {
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
 
@@ -59,13 +57,14 @@ public:
         void set_point_count(const vulkan::BufferWithHostVisibleMemory& buffer) const;
 };
 
-class DebugConstant
+class DebugConstant final
 {
         struct Data
         {
                 uint32_t local_size_x;
                 uint32_t local_size_y;
                 uint32_t local_size_z;
+                uint32_t buffer_size;
         } m_data;
 
         std::vector<VkSpecializationMapEntry> m_entries;
@@ -76,6 +75,7 @@ public:
         void set_local_size_x(uint32_t v);
         void set_local_size_y(uint32_t v);
         void set_local_size_z(uint32_t v);
+        void set_buffer_size(uint32_t v);
 
         const std::vector<VkSpecializationMapEntry>* entries() const noexcept;
         const void* data() const noexcept;
@@ -84,7 +84,7 @@ public:
 
 //
 
-class PrepareMemory
+class PrepareMemory final
 {
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
 
@@ -113,11 +113,12 @@ public:
         void set_lines(const vulkan::BufferWithHostVisibleMemory& buffer) const;
 };
 
-class PrepareConstant
+class PrepareConstant final
 {
         struct Data
         {
-                int32_t line_size;
+                uint32_t line_size;
+                uint32_t buffer_size;
                 uint32_t local_size_x;
         } m_data;
 
@@ -126,8 +127,8 @@ class PrepareConstant
 public:
         PrepareConstant();
 
-        void set_line_size(int32_t v);
-        void set_local_size_x(uint32_t v);
+        void set_line_size(uint32_t v);
+        void set_buffer_and_group_size(uint32_t v);
 
         const std::vector<VkSpecializationMapEntry>* entries() const noexcept;
         const void* data() const noexcept;
@@ -136,7 +137,7 @@ public:
 
 //
 
-class MergeMemory
+class MergeMemory final
 {
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
 
@@ -164,7 +165,7 @@ public:
         void set_lines(const vulkan::BufferWithHostVisibleMemory& buffer) const;
 };
 
-class MergeConstant
+class MergeConstant final
 {
         struct Data
         {
@@ -189,7 +190,7 @@ public:
 
 //
 
-class FilterMemory
+class FilterMemory final
 {
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
 
@@ -219,12 +220,11 @@ public:
         void set_point_count(const vulkan::BufferWithHostVisibleMemory& buffer) const;
 };
 
-class FilterConstant
+class FilterConstant final
 {
         struct Data
         {
                 int32_t line_size;
-                uint32_t local_size_x;
         } m_data;
 
         std::vector<VkSpecializationMapEntry> m_entries;
@@ -233,7 +233,6 @@ public:
         FilterConstant();
 
         void set_line_size(int32_t v);
-        void set_local_size_x(uint32_t v);
 
         const std::vector<VkSpecializationMapEntry>* entries() const noexcept;
         const void* data() const noexcept;

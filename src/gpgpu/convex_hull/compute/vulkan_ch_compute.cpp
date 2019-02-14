@@ -17,13 +17,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "vulkan_ch_compute.h"
 
-#include "com/log.h"
-#include "gpgpu/convex_hull/compute/objects/vulkan_memory.h"
+#include "com/error.h"
+#include "gpgpu/convex_hull/compute/objects/vulkan_shader.h"
 #include "graphics/vulkan/create.h"
-#include "graphics/vulkan/descriptor.h"
 #include "graphics/vulkan/pipeline.h"
 #include "graphics/vulkan/shader.h"
 
+#include <optional>
 #include <thread>
 
 constexpr uint32_t SET_NUMBER = 0;
@@ -35,9 +35,21 @@ constexpr std::initializer_list<vulkan::PhysicalDeviceFeatures> REQUIRED_DEVICE_
 // clang-format on
 
 // clang-format off
-constexpr uint32_t compute_shader[]
+constexpr uint32_t debug_shader[]
 {
 #include "ch_debug.comp.spr"
+};
+constexpr uint32_t prepare_shader[]
+{
+#include "ch_prepare.comp.spr"
+};
+constexpr uint32_t merge_shader[]
+{
+#include "ch_merge.comp.spr"
+};
+constexpr uint32_t filter_shader[]
+{
+#include "ch_filter.comp.spr"
 };
 // clang-format on
 
@@ -52,14 +64,33 @@ class Impl final : public gpgpu_vulkan::ConvexHullCompute
         const vulkan::VulkanInstance& m_instance;
         const vulkan::Device& m_device;
 
+        std::optional<vulkan::BufferWithHostVisibleMemory> m_lines_buffer;
+        VkBuffer m_points_buffer = VK_NULL_HANDLE;
+        VkBuffer m_point_count_buffer = VK_NULL_HANDLE;
+
         impl::DebugMemory m_debug_memory;
         impl::DebugConstant m_debug_constant;
         vulkan::ComputeShader m_debug_shader;
         vulkan::PipelineLayout m_debug_pipeline_layout;
         vulkan::Pipeline m_debug_pipeline;
 
-        VkBuffer m_points_buffer = VK_NULL_HANDLE;
-        VkBuffer m_point_count_buffer = VK_NULL_HANDLE;
+        impl::PrepareMemory m_prepare_memory;
+        impl::PrepareConstant m_prepare_constant;
+        vulkan::ComputeShader m_prepare_shader;
+        vulkan::PipelineLayout m_prepare_pipeline_layout;
+        vulkan::Pipeline m_prepare_pipeline;
+
+        impl::MergeMemory m_merge_memory;
+        impl::MergeConstant m_merge_constant;
+        vulkan::ComputeShader m_merge_shader;
+        vulkan::PipelineLayout m_merge_pipeline_layout;
+        vulkan::Pipeline m_merge_pipeline;
+
+        impl::FilterMemory m_filter_memory;
+        impl::FilterConstant m_filter_constant;
+        vulkan::ComputeShader m_filter_shader;
+        vulkan::PipelineLayout m_filter_pipeline_layout;
+        vulkan::Pipeline m_filter_pipeline;
 
         void compute_commands(VkCommandBuffer command_buffer) const override
         {
@@ -118,13 +149,21 @@ class Impl final : public gpgpu_vulkan::ConvexHullCompute
 
                 //
 
+                ASSERT(points_buffer.size() == (2 * objects.height() + 1) * (2 * sizeof(int32_t)));
+                ASSERT(point_count_buffer.size() >= sizeof(int32_t));
+
+                m_lines_buffer.emplace(m_instance.device(), VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+                                       2 * objects.height() * sizeof(int32_t));
+                m_points_buffer = points_buffer;
+                m_point_count_buffer = point_count_buffer;
+
                 m_debug_memory.set_object_image(objects);
                 m_debug_memory.set_points(points_buffer);
                 m_debug_memory.set_point_count(point_count_buffer);
-
                 m_debug_constant.set_local_size_x(4);
                 m_debug_constant.set_local_size_y(1);
                 m_debug_constant.set_local_size_z(1);
+                m_debug_constant.set_buffer_size(1);
 
                 vulkan::ComputePipelineCreateInfo info;
                 info.device = &m_device;
@@ -133,11 +172,7 @@ class Impl final : public gpgpu_vulkan::ConvexHullCompute
                 info.specialization_map_entries = m_debug_constant.entries();
                 info.specialization_data = m_debug_constant.data();
                 info.specialization_data_size = m_debug_constant.size();
-
                 m_debug_pipeline = create_compute_pipeline(info);
-
-                m_points_buffer = points_buffer;
-                m_point_count_buffer = point_count_buffer;
         }
 
         void delete_buffers() override
@@ -146,19 +181,37 @@ class Impl final : public gpgpu_vulkan::ConvexHullCompute
 
                 //
 
+                m_debug_pipeline = vulkan::Pipeline();
+
                 m_points_buffer = VK_NULL_HANDLE;
                 m_point_count_buffer = VK_NULL_HANDLE;
-                m_debug_pipeline = vulkan::Pipeline();
+                m_lines_buffer.reset();
         }
 
 public:
         Impl(const vulkan::VulkanInstance& instance)
                 : m_instance(instance),
                   m_device(m_instance.device()),
+                  //
                   m_debug_memory(m_device),
-                  m_debug_shader(m_device, compute_shader, "main"),
+                  m_debug_shader(m_device, debug_shader, "main"),
                   m_debug_pipeline_layout(
-                          vulkan::create_pipeline_layout(m_device, {SET_NUMBER}, {m_debug_memory.descriptor_set_layout()}))
+                          vulkan::create_pipeline_layout(m_device, {SET_NUMBER}, {m_debug_memory.descriptor_set_layout()})),
+
+                  m_prepare_memory(m_device),
+                  m_prepare_shader(m_device, prepare_shader, "main"),
+                  m_prepare_pipeline_layout(
+                          vulkan::create_pipeline_layout(m_device, {SET_NUMBER}, {m_prepare_memory.descriptor_set_layout()})),
+                  //
+                  m_merge_memory(m_device),
+                  m_merge_shader(m_device, merge_shader, "main"),
+                  m_merge_pipeline_layout(
+                          vulkan::create_pipeline_layout(m_device, {SET_NUMBER}, {m_merge_memory.descriptor_set_layout()})),
+                  //
+                  m_filter_memory(m_device),
+                  m_filter_shader(m_device, filter_shader, "main"),
+                  m_filter_pipeline_layout(
+                          vulkan::create_pipeline_layout(m_device, {SET_NUMBER}, {m_filter_memory.descriptor_set_layout()}))
         {
         }
 
