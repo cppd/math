@@ -157,7 +157,7 @@ void Canvas::create_objects(int window_width, int window_height, const mat4& mat
 
         m_optical_flow = std::make_unique<gpgpu_opengl::OpticalFlowShow>(draw_width, draw_height, m_window_ppi, matrix);
 
-        m_convex_hull = std::make_unique<gpgpu_opengl::ConvexHullShow>(objects, matrix);
+        m_convex_hull = gpgpu_opengl::create_convex_hull_show(objects, matrix);
 
         if (m_text)
         {

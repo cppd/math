@@ -48,39 +48,22 @@ int points_buffer_size(int height)
 }
 }
 
-namespace gpgpu_opengl
+namespace
 {
-class ConvexHullShow::Impl final
+class Impl final : public gpgpu_opengl::ConvexHullShow
 {
         opengl::GraphicsProgram m_draw_prog;
         opengl::StorageBuffer m_points;
         double m_start_time;
-        std::unique_ptr<ConvexHullCompute> m_convex_hull;
+        std::unique_ptr<gpgpu_opengl::ConvexHullCompute> m_convex_hull;
         impl::ShaderMemory m_shader_memory;
 
-public:
-        Impl(const opengl::TextureR32I& objects, const mat4& matrix)
-                : m_draw_prog(opengl::VertexShader(vertex_shader), opengl::FragmentShader(fragment_shader)),
-                  m_points(points_buffer_size(objects.texture().height())),
-                  m_start_time(time_in_seconds())
-        {
-                m_convex_hull = create_convex_hull_compute(objects, m_points);
-
-                m_shader_memory.set_matrix(matrix);
-                m_shader_memory.set_points(m_points);
-        }
-
-        Impl(const Impl&) = delete;
-        Impl(Impl&&) = delete;
-        Impl& operator=(const Impl&) = delete;
-        Impl& operator=(Impl&&) = delete;
-
-        void reset_timer()
+        void reset_timer() override
         {
                 m_start_time = time_in_seconds();
         }
 
-        void draw()
+        void draw() override
         {
                 int point_count = m_convex_hull->exec();
 
@@ -90,22 +73,30 @@ public:
                 m_shader_memory.bind();
                 m_draw_prog.draw_arrays(GL_LINE_STRIP, 0, point_count);
         }
+
+public:
+        Impl(const opengl::TextureR32I& objects, const mat4& matrix)
+                : m_draw_prog(opengl::VertexShader(vertex_shader), opengl::FragmentShader(fragment_shader)),
+                  m_points(points_buffer_size(objects.texture().height())),
+                  m_start_time(time_in_seconds())
+        {
+                m_convex_hull = gpgpu_opengl::create_convex_hull_compute(objects, m_points);
+
+                m_shader_memory.set_matrix(matrix);
+                m_shader_memory.set_points(m_points);
+        }
+
+        Impl(const Impl&) = delete;
+        Impl(Impl&&) = delete;
+        Impl& operator=(const Impl&) = delete;
+        Impl& operator=(Impl&&) = delete;
 };
-
-ConvexHullShow::ConvexHullShow(const opengl::TextureR32I& objects, const mat4& matrix)
-        : m_impl(std::make_unique<Impl>(objects, matrix))
-{
 }
 
-ConvexHullShow::~ConvexHullShow() = default;
-
-void ConvexHullShow::reset_timer()
+namespace gpgpu_opengl
 {
-        m_impl->reset_timer();
-}
-
-void ConvexHullShow::draw()
+std::unique_ptr<ConvexHullShow> create_convex_hull_show(const opengl::TextureR32I& objects, const mat4& matrix)
 {
-        m_impl->draw();
+        return std::make_unique<Impl>(objects, matrix);
 }
 }

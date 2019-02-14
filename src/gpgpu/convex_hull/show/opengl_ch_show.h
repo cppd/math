@@ -24,16 +24,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpgpu_opengl
 {
-class ConvexHullShow final
+struct ConvexHullShow
 {
-        class Impl;
-        std::unique_ptr<Impl> m_impl;
+        virtual ~ConvexHullShow() = default;
 
-public:
-        ConvexHullShow(const opengl::TextureR32I& objects, const mat4& matrix);
-        ~ConvexHullShow();
-
-        void reset_timer();
-        void draw();
+        virtual void reset_timer() = 0;
+        virtual void draw() = 0;
 };
+
+std::unique_ptr<ConvexHullShow> create_convex_hull_show(const opengl::TextureR32I& objects, const mat4& matrix);
 }
