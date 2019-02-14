@@ -19,9 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/print.h"
 
-namespace gpgpu_opengl
-{
-namespace convex_hull_compute_implementation
+namespace gpgpu_convex_hull_compute_opengl_implementation
 {
 void PrepareMemory::set_lines(const opengl::StorageBuffer& lines)
 {
@@ -101,6 +99,5 @@ std::string filter_constants(int line_size)
         s += "const int LINE_SIZE = " + to_string(line_size) + ";\n";
         s += '\n';
         return s;
-}
 }
 }

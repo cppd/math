@@ -175,9 +175,7 @@ std::string fft_shared_source(int n, int n_bits, int shared_size, int group_size
 
 //
 
-namespace gpgpu_opengl
-{
-namespace dft_compute_implementation
+namespace gpgpu_dft_compute_opengl_implementation
 {
 template <typename T>
 DeviceProgBitReverse<T>::DeviceProgBitReverse(int group_size)
@@ -432,5 +430,4 @@ template class DeviceProgCopyOutput<float>;
 template class DeviceProgMul<float>;
 template class DeviceProgMulD<float>;
 template class DeviceProgFFTShared<float>;
-}
 }

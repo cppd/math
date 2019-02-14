@@ -21,9 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <string>
 
-namespace gpgpu_opengl
-{
-namespace convex_hull_compute_implementation
+namespace gpgpu_convex_hull_compute_opengl_implementation
 {
 class PrepareMemory final
 {
@@ -76,5 +74,4 @@ public:
 };
 
 std::string filter_constants(int line_size);
-}
 }

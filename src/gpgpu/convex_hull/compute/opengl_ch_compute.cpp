@@ -50,7 +50,7 @@ constexpr const char filter_shader[]
 };
 // clang-format on
 
-namespace impl = gpgpu_opengl::convex_hull_compute_implementation;
+namespace impl = gpgpu_convex_hull_compute_opengl_implementation;
 
 namespace
 {

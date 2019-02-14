@@ -55,7 +55,7 @@ constexpr uint32_t fragment_shader[]
 };
 // clang-format on
 
-namespace impl = gpgpu_vulkan::convex_hull_show_implementation;
+namespace impl = gpgpu_convex_hull_show_vulkan_implementation;
 
 namespace
 {

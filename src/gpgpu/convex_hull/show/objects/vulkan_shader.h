@@ -24,9 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <vector>
 
-namespace gpgpu_vulkan
-{
-namespace convex_hull_show_implementation
+namespace gpgpu_convex_hull_show_vulkan_implementation
 {
 class ShaderMemory final
 {
@@ -66,5 +64,4 @@ public:
         void set_brightness(float brightness) const;
         void set_points(const vulkan::BufferWithHostVisibleMemory& buffer) const;
 };
-}
 }

@@ -19,9 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <type_traits>
 
-namespace gpgpu_vulkan
-{
-namespace convex_hull_compute_implementation
+namespace gpgpu_convex_hull_compute_vulkan_implementation
 {
 std::vector<VkDescriptorSetLayoutBinding> DebugMemory::descriptor_set_layout_bindings()
 {
@@ -551,6 +549,5 @@ const void* FilterConstant::data() const noexcept
 size_t FilterConstant::size() const noexcept
 {
         return sizeof(m_data);
-}
 }
 }

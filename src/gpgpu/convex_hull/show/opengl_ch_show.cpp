@@ -37,7 +37,7 @@ constexpr const char fragment_shader[]
 // rad / ms
 constexpr double ANGULAR_FREQUENCY = TWO_PI<double> * 5;
 
-namespace impl = gpgpu_opengl::convex_hull_show_implementation;
+namespace impl = gpgpu_convex_hull_show_opengl_implementation;
 
 namespace
 {

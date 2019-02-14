@@ -19,9 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/error.h"
 
-namespace gpgpu_opengl
-{
-namespace convex_hull_show_implementation
+namespace gpgpu_convex_hull_show_opengl_implementation
 {
 ShaderMemory::ShaderMemory() : m_buffer(sizeof(Data))
 {
@@ -50,6 +48,5 @@ void ShaderMemory::bind() const
 
         m_buffer.bind(DATA_BINDING);
         m_points->bind(POINTS_BINDING);
-}
 }
 }

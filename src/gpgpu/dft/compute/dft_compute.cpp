@@ -216,7 +216,7 @@ int group_size(int dft_size)
         return std::min(max_threads_required, max_threads_supported);
 }
 
-namespace impl = gpgpu_opengl::dft_compute_implementation;
+namespace impl = gpgpu_dft_compute_opengl_implementation;
 
 template <typename FP>
 void fft1d(bool inverse, int fft_count, const impl::DeviceProgFFTShared<FP>& fft,

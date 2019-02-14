@@ -53,7 +53,7 @@ constexpr uint32_t filter_shader[]
 };
 // clang-format on
 
-namespace impl = gpgpu_vulkan::convex_hull_compute_implementation;
+namespace impl = gpgpu_convex_hull_compute_vulkan_implementation;
 
 namespace
 {
