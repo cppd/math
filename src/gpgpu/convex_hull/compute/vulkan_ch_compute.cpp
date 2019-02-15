@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "vulkan_ch_compute.h"
 
 #include "com/error.h"
+#include "gpgpu/convex_hull/compute/objects/com.h"
 #include "gpgpu/convex_hull/compute/objects/vulkan_shader.h"
 #include "graphics/vulkan/create.h"
 #include "graphics/vulkan/pipeline.h"
@@ -53,10 +54,14 @@ constexpr uint32_t filter_shader[]
 };
 // clang-format on
 
-namespace impl = gpgpu_convex_hull_compute_vulkan_implementation;
-
 namespace
 {
+namespace impl
+{
+using namespace gpgpu_convex_hull_compute_implementation;
+using namespace gpgpu_convex_hull_compute_vulkan_implementation;
+}
+
 class Impl final : public gpgpu_vulkan::ConvexHullCompute
 {
         const std::thread::id m_thread_id = std::this_thread::get_id();

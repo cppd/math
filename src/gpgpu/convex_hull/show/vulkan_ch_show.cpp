@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/merge.h"
 #include "com/time.h"
 #include "gpgpu/convex_hull/compute/vulkan_ch_compute.h"
+#include "gpgpu/convex_hull/show/objects/com.h"
 #include "gpgpu/convex_hull/show/objects/vulkan_shader.h"
 #include "graphics/vulkan/create.h"
 #include "graphics/vulkan/error.h"
@@ -34,8 +35,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 // Это в шейдерах layout(set = N, ...)
 constexpr uint32_t SET_NUMBER = 0;
-
-constexpr double ANGULAR_FREQUENCY = TWO_PI<double> * 5;
 
 // clang-format off
 constexpr std::initializer_list<vulkan::PhysicalDeviceFeatures> REQUIRED_DEVICE_FEATURES =
@@ -55,14 +54,12 @@ constexpr uint32_t fragment_shader[]
 };
 // clang-format on
 
-namespace impl = gpgpu_convex_hull_show_vulkan_implementation;
-
 namespace
 {
-int points_buffer_size(int height)
+namespace impl
 {
-        // 2 линии точек + 1 точка, тип ivec2
-        return (2 * height + 1) * (2 * sizeof(int32_t));
+using namespace gpgpu_convex_hull_show_implementation;
+using namespace gpgpu_convex_hull_show_vulkan_implementation;
 }
 
 class Impl final : public gpgpu_vulkan::ConvexHullShow
@@ -119,7 +116,8 @@ class Impl final : public gpgpu_vulkan::ConvexHullShow
 
                 //
 
-                m_points.emplace(m_instance.device(), VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, points_buffer_size(objects.height()));
+                m_points.emplace(m_instance.device(), VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+                                 impl::points_buffer_size(objects.height()));
 
                 m_shader_memory.set_points(*m_points);
                 m_shader_memory.set_matrix(matrix);
@@ -157,7 +155,7 @@ class Impl final : public gpgpu_vulkan::ConvexHullShow
 
                 ASSERT(m_render_buffers);
 
-                float brightness = 0.5 + 0.5 * std::sin(ANGULAR_FREQUENCY * (time_in_seconds() - m_start_time));
+                float brightness = 0.5 + 0.5 * std::sin(impl::ANGULAR_FREQUENCY * (time_in_seconds() - m_start_time));
                 m_shader_memory.set_brightness(brightness);
 
                 //

@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/math.h"
 #include "com/time.h"
 #include "gpgpu/convex_hull/compute/opengl_ch_compute.h"
+#include "gpgpu/convex_hull/show/objects/com.h"
 #include "gpgpu/convex_hull/show/objects/opengl_shader.h"
 #include "graphics/opengl/shader.h"
 
@@ -34,22 +35,14 @@ constexpr const char fragment_shader[]
 };
 // clang-format on
 
-// rad / ms
-constexpr double ANGULAR_FREQUENCY = TWO_PI<double> * 5;
-
-namespace impl = gpgpu_convex_hull_show_opengl_implementation;
-
 namespace
 {
-int points_buffer_size(int height)
+namespace impl
 {
-        // 2 линии точек + 1 точка, тип ivec2
-        return (2 * height + 1) * (2 * sizeof(GLint));
-}
+using namespace gpgpu_convex_hull_show_implementation;
+using namespace gpgpu_convex_hull_show_opengl_implementation;
 }
 
-namespace
-{
 class Impl final : public gpgpu_opengl::ConvexHullShow
 {
         opengl::GraphicsProgram m_draw_prog;
@@ -67,7 +60,7 @@ class Impl final : public gpgpu_opengl::ConvexHullShow
         {
                 int point_count = m_convex_hull->exec();
 
-                float brightness = 0.5 + 0.5 * std::sin(ANGULAR_FREQUENCY * (time_in_seconds() - m_start_time));
+                float brightness = 0.5 + 0.5 * std::sin(impl::ANGULAR_FREQUENCY * (time_in_seconds() - m_start_time));
                 m_shader_memory.set_brightness(brightness);
 
                 m_shader_memory.bind();
@@ -77,7 +70,7 @@ class Impl final : public gpgpu_opengl::ConvexHullShow
 public:
         Impl(const opengl::TextureR32I& objects, const mat4& matrix)
                 : m_draw_prog(opengl::VertexShader(vertex_shader), opengl::FragmentShader(fragment_shader)),
-                  m_points(points_buffer_size(objects.texture().height())),
+                  m_points(impl::points_buffer_size(objects.texture().height())),
                   m_start_time(time_in_seconds())
         {
                 m_convex_hull = gpgpu_opengl::create_convex_hull_compute(objects, m_points);

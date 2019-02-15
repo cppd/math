@@ -31,6 +31,7 @@ Chapter 2: CONVEX HULLS, 2.6 Divide-and-Conquer.
 #include "com/error.h"
 #include "com/print.h"
 #include "gpgpu/com/groups.h"
+#include "gpgpu/convex_hull/compute/objects/com.h"
 #include "gpgpu/convex_hull/compute/objects/opengl_shader.h"
 #include "graphics/opengl/query.h"
 #include "graphics/opengl/shader.h"
@@ -50,65 +51,24 @@ constexpr const char filter_shader[]
 };
 // clang-format on
 
-namespace impl = gpgpu_convex_hull_compute_opengl_implementation;
-
 namespace
 {
-int group_size_prepare(int width, unsigned max_group_size_x, unsigned max_group_invocations, unsigned max_shared_memory_size)
+namespace impl
 {
-        unsigned shared_size_per_thread = 2 * sizeof(int32_t); // GLSL ivec2
-
-        int max_group_size_limit = std::min(max_group_size_x, max_group_invocations);
-        int max_group_size_memory = max_shared_memory_size / shared_size_per_thread;
-
-        // максимально возможная степень 2
-        int max_group_size = 1 << log_2(std::min(max_group_size_limit, max_group_size_memory));
-
-        // один поток обрабатывает 2 и более пикселей, при этом число потоков должно быть степенью 2.
-        int pref_thread_count = (width > 1) ? (1 << log_2(width - 1)) : 1;
-
-        return (pref_thread_count <= max_group_size) ? pref_thread_count : max_group_size;
+using namespace gpgpu_convex_hull_compute_implementation;
+using namespace gpgpu_convex_hull_compute_opengl_implementation;
 }
 
-int group_size_merge(int height, unsigned max_group_size_x, unsigned max_group_invocations, unsigned max_shared_memory_size)
+int group_size_prepare(int width)
 {
-        static_assert(sizeof(float) == 4);
-
-        unsigned shared_size_per_item = sizeof(float); // GLSL float
-
-        if (max_shared_memory_size < height * shared_size_per_item)
-        {
-                error("Shared memory problem: needs " + to_string(height * shared_size_per_item) + ", exists " +
-                      to_string(max_shared_memory_size));
-        }
-
-        int max_group_size = std::min(max_group_size_x, max_group_invocations);
-
-        // Один поток первоначально обрабатывает группы до 4 элементов.
-        int pref_thread_count = group_count(height, 4);
-
-        return (pref_thread_count <= max_group_size) ? pref_thread_count : max_group_size;
+        return impl::group_size_prepare(width, opengl::max_fixed_group_size_x(), opengl::max_fixed_group_invocations(),
+                                        opengl::max_compute_shared_memory());
 }
 
-int iteration_count_merge(int size)
+int group_size_merge(int height)
 {
-        // Расчёт начинается с 4 элементов, правый средний индекс (начало второй половины) равен 2.
-        // На каждой итерации индекс увеличивается в 2 раза.
-        // Этот индекс должен быть строго меньше заданного числа size.
-        // Поэтому число итераций равно максимальной степени 2, в которой число 2 строго меньше заданного числа size.
-        return (size > 2) ? log_2(size - 1) : 0;
-}
-
-int group_size_prepare_opengl(int width)
-{
-        return group_size_prepare(width, opengl::max_fixed_group_size_x(), opengl::max_fixed_group_invocations(),
-                                  opengl::max_compute_shared_memory());
-}
-
-int group_size_merge_opengl(int height)
-{
-        return group_size_merge(height, opengl::max_fixed_group_size_x(), opengl::max_fixed_group_invocations(),
-                                opengl::max_compute_shared_memory());
+        return impl::group_size_merge(height, opengl::max_fixed_group_size_x(), opengl::max_fixed_group_invocations(),
+                                      opengl::max_compute_shared_memory());
 }
 
 class Impl final : public gpgpu_opengl::ConvexHullCompute
@@ -154,10 +114,9 @@ public:
         Impl(const opengl::TextureR32I& objects, const opengl::StorageBuffer& points)
                 : m_height(objects.texture().height()),
                   m_prepare_prog(opengl::ComputeShader(
-                          impl::prepare_constants(m_height, group_size_prepare_opengl(objects.texture().width())) +
-                          prepare_shader)),
+                          impl::prepare_constants(m_height, group_size_prepare(objects.texture().width())) + prepare_shader)),
                   m_merge_prog(opengl::ComputeShader(
-                          impl::merge_constants(m_height, group_size_merge_opengl(m_height), iteration_count_merge(m_height)) +
+                          impl::merge_constants(m_height, group_size_merge(m_height), impl::iteration_count_merge(m_height)) +
                           merge_shader)),
                   m_filter_prog(opengl::ComputeShader(impl::filter_constants(m_height) + filter_shader)),
                   m_lines(2 * m_height * sizeof(GLint)),
