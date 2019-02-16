@@ -131,7 +131,7 @@ class Canvas final : public OpenGLCanvas
         }
 
         void create_objects(int window_width, int window_height, const mat4& matrix, const opengl::TextureRGBA32F& color_texture,
-                            bool color_texture_is_srgb, const opengl::TextureR32I& objects, int draw_width, int draw_height,
+                            bool color_texture_is_srgb, const opengl::TextureImage& objects, int draw_width, int draw_height,
                             int dft_dst_x, int dft_dst_y, bool frame_buffer_is_srgb) override;
 
         void draw(const TextData& text_data) override;
@@ -143,7 +143,7 @@ public:
 };
 
 void Canvas::create_objects(int window_width, int window_height, const mat4& matrix, const opengl::TextureRGBA32F& color_texture,
-                            bool color_texture_is_srgb, const opengl::TextureR32I& objects, int draw_width, int draw_height,
+                            bool color_texture_is_srgb, const opengl::TextureImage& objects, int draw_width, int draw_height,
                             int dft_dst_x, int dft_dst_y, bool frame_buffer_is_srgb)
 {
         m_window_width = window_width;

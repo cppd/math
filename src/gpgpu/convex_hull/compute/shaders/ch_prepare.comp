@@ -23,12 +23,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // const uint LINE_SIZE =
 // const uint BUFFER_SIZE =
 layout(local_size_x = GROUP_SIZE) in;
-layout(bindless_image, r32i) readonly restrict uniform iimage2D objects;
+layout(bindless_image, r32ui) readonly restrict uniform uimage2D objects;
 #else
 layout(constant_id = 0) const uint LINE_SIZE = 1;
 layout(constant_id = 1) const uint BUFFER_SIZE = 1;
 layout(local_size_x_id = 2) in;
-layout(binding = 1, r32i) readonly restrict uniform iimage2D objects;
+layout(binding = 1, r32ui) readonly restrict uniform uimage2D objects;
 #endif
 
 layout(std430, binding = 0) writeonly restrict buffer Lines
@@ -39,7 +39,7 @@ layout(std430, binding = 0) writeonly restrict buffer Lines
 
 bool not_background(ivec2 p)
 {
-        ivec4 s = imageLoad(objects, p);
+        uvec4 s = imageLoad(objects, p);
         return s.r != 0;
 }
 

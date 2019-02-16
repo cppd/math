@@ -236,7 +236,7 @@ VkDescriptorSet PrepareMemory::descriptor_set() const noexcept
 
 void PrepareMemory::set_object_image(const vulkan::StorageImage& storage_image) const
 {
-        ASSERT(storage_image.format() == VK_FORMAT_R32_SINT);
+        ASSERT(storage_image.format() == VK_FORMAT_R32_UINT);
 
         VkDescriptorImageInfo image_info = {};
         image_info.imageLayout = storage_image.image_layout();

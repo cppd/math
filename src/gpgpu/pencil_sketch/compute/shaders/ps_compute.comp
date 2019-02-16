@@ -22,13 +22,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 layout(local_size_x = GROUP_SIZE, local_size_y = GROUP_SIZE) in;
 layout(bindless_image, rgba32f) readonly uniform image2D img_input;
 layout(bindless_image, rgba32f) writeonly uniform image2D img_output;
-layout(bindless_image, r32i) readonly uniform iimage2D img_objects;
+layout(bindless_image, r32ui) readonly uniform uimage2D img_objects;
 #else
 layout(constant_id = 0) const bool SOURCE_SRGB = false;
 layout(local_size_x_id = 1, local_size_y_id = 1) in;
 layout(binding = 0, rgba32f) readonly uniform image2D img_input;
 layout(binding = 1, rgba32f) writeonly uniform image2D img_output;
-layout(binding = 2, r32i) readonly uniform iimage2D img_objects;
+layout(binding = 2, r32ui) readonly uniform uimage2D img_objects;
 #endif
 
 // clang-format off
@@ -53,7 +53,7 @@ const float background_value = 0;
 
 bool background(ivec2 p)
 {
-        ivec4 s = imageLoad(img_objects, p);
+        uvec4 s = imageLoad(img_objects, p);
         return s.r == 0;
 }
 

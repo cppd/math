@@ -32,5 +32,5 @@ struct PencilSketchShow
 };
 
 std::unique_ptr<PencilSketchShow> create_pencil_sketch_show(const opengl::TextureRGBA32F& source, bool source_is_srgb,
-                                                            const opengl::TextureR32I& objects, const mat4& matrix);
+                                                            const opengl::TextureImage& objects, const mat4& matrix);
 }

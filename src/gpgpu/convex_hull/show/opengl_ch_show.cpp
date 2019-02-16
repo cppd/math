@@ -68,9 +68,9 @@ class Impl final : public gpgpu_opengl::ConvexHullShow
         }
 
 public:
-        Impl(const opengl::TextureR32I& objects, const mat4& matrix)
+        Impl(const opengl::TextureImage& objects, const mat4& matrix)
                 : m_draw_prog(opengl::VertexShader(vertex_shader), opengl::FragmentShader(fragment_shader)),
-                  m_points(impl::points_buffer_size(objects.texture().height())),
+                  m_points(impl::points_buffer_size(objects.height())),
                   m_start_time(time_in_seconds())
         {
                 m_convex_hull = gpgpu_opengl::create_convex_hull_compute(objects, m_points);
@@ -88,7 +88,7 @@ public:
 
 namespace gpgpu_opengl
 {
-std::unique_ptr<ConvexHullShow> create_convex_hull_show(const opengl::TextureR32I& objects, const mat4& matrix)
+std::unique_ptr<ConvexHullShow> create_convex_hull_show(const opengl::TextureImage& objects, const mat4& matrix)
 {
         return std::make_unique<Impl>(objects, matrix);
 }

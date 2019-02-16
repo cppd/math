@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 layout(bindless_sampler) uniform sampler2DShadow shadow_tex;
 
-layout(bindless_image, r32i) writeonly uniform iimage2D object_img;
+layout(bindless_image, r32ui) writeonly uniform uimage2D object_img;
 
 layout(std140, binding = 1) uniform Lighting
 {
@@ -175,5 +175,5 @@ void main(void)
 
         color = vec4(color3, 1);
 
-        imageStore(object_img, ivec2(gl_FragCoord.xy), ivec4(1));
+        imageStore(object_img, ivec2(gl_FragCoord.xy), uvec4(1));
 }

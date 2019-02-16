@@ -75,13 +75,15 @@ class Impl final : public gpgpu_opengl::PencilSketchCompute
         }
 
 public:
-        Impl(const opengl::TextureRGBA32F& input, bool input_is_srgb, const opengl::TextureR32I& objects,
+        Impl(const opengl::TextureRGBA32F& input, bool input_is_srgb, const opengl::TextureImage& objects,
              const opengl::TextureRGBA32F& output)
                 : m_groups_x(group_count(input.texture().width(), GROUP_SIZE)),
                   m_groups_y(group_count(input.texture().height(), GROUP_SIZE)),
                   m_compute_prog(opengl::ComputeShader(compute_source(input_is_srgb))),
                   m_luminance_prog(opengl::ComputeShader(luminance_source()))
         {
+                ASSERT(objects.format() == GL_R32UI);
+
                 m_compute_prog.set_uniform_handle("img_input", input.image_resident_handle_read_only());
                 m_compute_prog.set_uniform_handle("img_output", output.image_resident_handle_write_only());
                 m_compute_prog.set_uniform_handle("img_objects", objects.image_resident_handle_read_only());
@@ -94,7 +96,7 @@ public:
 namespace gpgpu_opengl
 {
 std::unique_ptr<PencilSketchCompute> create_pencil_sketch_compute(const opengl::TextureRGBA32F& input, bool input_is_srgb,
-                                                                  const opengl::TextureR32I& objects,
+                                                                  const opengl::TextureImage& objects,
                                                                   const opengl::TextureRGBA32F& output)
 {
         return std::make_unique<Impl>(input, input_is_srgb, objects, output);

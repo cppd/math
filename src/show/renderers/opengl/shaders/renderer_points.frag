@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-layout(bindless_image, r32i) writeonly uniform iimage2D object_img;
+layout(bindless_image, r32ui) writeonly uniform uimage2D object_img;
 
 layout(std140, binding = 1) uniform Drawing
 {
@@ -55,5 +55,5 @@ void main(void)
 
         color = vec4(color3, 1);
 
-        imageStore(object_img, ivec2(gl_FragCoord.xy), ivec4(1));
+        imageStore(object_img, ivec2(gl_FragCoord.xy), uvec4(1));
 }

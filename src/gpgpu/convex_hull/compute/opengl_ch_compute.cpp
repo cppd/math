@@ -111,10 +111,10 @@ class Impl final : public gpgpu_opengl::ConvexHullCompute
         }
 
 public:
-        Impl(const opengl::TextureR32I& objects, const opengl::StorageBuffer& points)
-                : m_height(objects.texture().height()),
-                  m_prepare_prog(opengl::ComputeShader(
-                          impl::prepare_constants(m_height, group_size_prepare(objects.texture().width())) + prepare_shader)),
+        Impl(const opengl::TextureImage& objects, const opengl::StorageBuffer& points)
+                : m_height(objects.height()),
+                  m_prepare_prog(opengl::ComputeShader(impl::prepare_constants(m_height, group_size_prepare(objects.width())) +
+                                                       prepare_shader)),
                   m_merge_prog(opengl::ComputeShader(
                           impl::merge_constants(m_height, group_size_merge(m_height), impl::iteration_count_merge(m_height)) +
                           merge_shader)),
@@ -123,6 +123,7 @@ public:
                   m_point_count(sizeof(GLint))
         {
                 ASSERT(static_cast<unsigned>(points.size()) == (2 * m_height + 1) * (2 * sizeof(GLint)));
+                ASSERT(objects.format() == GL_R32UI);
 
                 m_filter_memory.set_lines(m_lines);
                 m_filter_memory.set_points(points);
@@ -143,7 +144,7 @@ public:
 
 namespace gpgpu_opengl
 {
-std::unique_ptr<ConvexHullCompute> create_convex_hull_compute(const opengl::TextureR32I& object_image,
+std::unique_ptr<ConvexHullCompute> create_convex_hull_compute(const opengl::TextureImage& object_image,
                                                               const opengl::StorageBuffer& points)
 {
         return std::make_unique<Impl>(object_image, points);

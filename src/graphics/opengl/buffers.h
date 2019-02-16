@@ -496,62 +496,70 @@ public:
         }
 };
 
-class TextureR32I final
+class TextureImage final
 {
-        template <typename T>
-        static constexpr bool is_int_buffer = (is_vector<T> || is_array<T>)&&std::is_same_v<typename T::value_type, GLint>;
-
         Texture2D m_texture;
+        GLenum m_format;
 
 public:
-        TextureR32I(GLsizei width, GLsizei height) noexcept : m_texture(1, GL_R32I, width, height)
+        TextureImage(GLsizei width, GLsizei height, GLenum format) noexcept
+                : m_texture(1, format, width, height), m_format(format)
         {
                 m_texture.texture_parameter(GL_TEXTURE_WRAP_S, GL_REPEAT);
                 m_texture.texture_parameter(GL_TEXTURE_WRAP_T, GL_REPEAT);
-                m_texture.texture_parameter(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-                m_texture.texture_parameter(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+                m_texture.texture_parameter(GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+                m_texture.texture_parameter(GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         }
 
         GLuint64 image_resident_handle_write_only() const noexcept
         {
-                return m_texture.image_resident_handle(0, GL_FALSE, 0, GL_R32I, GL_WRITE_ONLY);
+                return m_texture.image_resident_handle(0, GL_FALSE, 0, m_format, GL_WRITE_ONLY);
         }
         GLuint64 image_resident_handle_read_only() const noexcept
         {
-                return m_texture.image_resident_handle(0, GL_FALSE, 0, GL_R32I, GL_READ_ONLY);
+                return m_texture.image_resident_handle(0, GL_FALSE, 0, m_format, GL_READ_ONLY);
         }
         GLuint64 image_resident_handle_read_write() const noexcept
         {
-                return m_texture.image_resident_handle(0, GL_FALSE, 0, GL_R32I, GL_READ_WRITE);
+                return m_texture.image_resident_handle(0, GL_FALSE, 0, m_format, GL_READ_WRITE);
         }
 
-        void clear_tex_image(GLint v) const noexcept
+        void clear() const noexcept
         {
-                m_texture.clear_tex_image(0, GL_RED_INTEGER, GL_INT, &v);
-        }
-        template <typename T>
-        void get_texture_image(T* pixels) const noexcept
-        {
-                static_assert(is_int_buffer<T>);
-                unsigned long long size = static_cast<unsigned long long>(m_texture.width()) * m_texture.height();
-                ASSERT(pixels->size() == size);
-                m_texture.get_texture_image(0, GL_RED_INTEGER, GL_INT, size * sizeof(GLint), pixels->data());
-        }
-        template <typename T>
-        void get_texture_sub_image(GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, T* pixels) const noexcept
-        {
-                static_assert(is_int_buffer<T>);
-                unsigned long long size = static_cast<unsigned long long>(width) * height;
-                ASSERT(pixels->size() == size);
-                ASSERT(width > 0 && height > 0);
-                ASSERT(width <= m_texture.width() && height <= m_texture.height());
-                m_texture.get_texture_sub_image(0, xoffset, yoffset, 0, width, height, 1, GL_RED_INTEGER, GL_INT,
-                                                size * sizeof(GLint), pixels->data());
+                if (m_format == GL_R32I)
+                {
+                        GLint v = 0;
+                        m_texture.clear_tex_image(0, GL_RED_INTEGER, GL_INT, &v);
+                        return;
+                }
+                if (m_format == GL_R32UI)
+                {
+                        GLuint v = 0;
+                        m_texture.clear_tex_image(0, GL_RED_INTEGER, GL_UNSIGNED_INT, &v);
+                        return;
+                }
+                if (m_format == GL_R32F)
+                {
+                        GLfloat v = 0;
+                        m_texture.clear_tex_image(0, GL_RED, GL_FLOAT, &v);
+                        return;
+                }
+                error("Unsupported TextureImage format " + std::to_string(static_cast<long long>(m_format)));
         }
 
-        const Texture2D& texture() const noexcept
+        int width() const noexcept
         {
-                return m_texture;
+                return m_texture.width();
+        }
+
+        int height() const noexcept
+        {
+                return m_texture.height();
+        }
+
+        GLenum format() const noexcept
+        {
+                return m_format;
         }
 };
 

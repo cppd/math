@@ -64,14 +64,14 @@ class Impl final : public gpgpu_opengl::PencilSketchShow
         }
 
 public:
-        Impl(const opengl::TextureRGBA32F& source, bool source_is_srgb, const opengl::TextureR32I& objects, const mat4& matrix)
+        Impl(const opengl::TextureRGBA32F& source, bool source_is_srgb, const opengl::TextureImage& objects, const mat4& matrix)
                 : m_draw_prog(opengl::VertexShader(vertex_shader), opengl::FragmentShader(fragment_shader)),
                   m_texture(source.texture().width(), source.texture().height()),
                   m_vertex_buffer(sizeof(Vertex) * VERTEX_COUNT),
                   m_pencil_sketch(gpgpu_opengl::create_pencil_sketch_compute(source, source_is_srgb, objects, m_texture))
         {
-                ASSERT(source.texture().width() == objects.texture().width());
-                ASSERT(source.texture().height() == objects.texture().height());
+                ASSERT(source.texture().width() == objects.width());
+                ASSERT(source.texture().height() == objects.height());
 
                 m_draw_prog.set_uniform_handle("tex", m_texture.texture().texture_resident_handle());
 
@@ -105,7 +105,7 @@ public:
 namespace gpgpu_opengl
 {
 std::unique_ptr<PencilSketchShow> create_pencil_sketch_show(const opengl::TextureRGBA32F& source, bool source_is_srgb,
-                                                            const opengl::TextureR32I& objects, const mat4& matrix)
+                                                            const opengl::TextureImage& objects, const mat4& matrix)
 {
         return std::make_unique<Impl>(source, source_is_srgb, objects, matrix);
 }

@@ -31,6 +31,6 @@ struct PencilSketchCompute
 };
 
 std::unique_ptr<PencilSketchCompute> create_pencil_sketch_compute(const opengl::TextureRGBA32F& input, bool input_is_srgb,
-                                                                  const opengl::TextureR32I& objects,
+                                                                  const opengl::TextureImage& objects,
                                                                   const opengl::TextureRGBA32F& output);
 }

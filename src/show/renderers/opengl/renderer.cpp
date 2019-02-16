@@ -391,7 +391,7 @@ class Renderer final : public OpenGLRenderer
 
         std::unique_ptr<opengl::ShadowBuffer> m_shadow_buffer;
         std::unique_ptr<opengl::ColorBuffer> m_color_buffer;
-        std::unique_ptr<opengl::TextureR32I> m_objects;
+        std::unique_ptr<opengl::TextureImage> m_objects;
 
         mat4 m_shadow_matrix;
         mat4 m_scale_bias_shadow_matrix;
@@ -490,7 +490,7 @@ class Renderer final : public OpenGLRenderer
         {
                 const DrawObject* draw_object = m_storage.object();
 
-                m_objects->clear_tex_image(0);
+                m_objects->clear();
 
                 if (!draw_object)
                 {
@@ -624,7 +624,7 @@ class Renderer final : public OpenGLRenderer
                 m_height = height;
 
                 m_color_buffer = std::make_unique<opengl::ColorBuffer>(width, height);
-                m_objects = std::make_unique<opengl::TextureR32I>(width, height);
+                m_objects = std::make_unique<opengl::TextureImage>(width, height, GL_R32UI);
 
                 m_triangles_program.set_uniform_handle("object_img", m_objects->image_resident_handle_write_only());
                 m_points_0d_program.set_uniform_handle("object_img", m_objects->image_resident_handle_write_only());
@@ -638,7 +638,7 @@ class Renderer final : public OpenGLRenderer
                 ASSERT(m_color_buffer);
                 return m_color_buffer->color_texture();
         }
-        const opengl::TextureR32I& objects() const override
+        const opengl::TextureImage& objects() const override
         {
                 ASSERT(m_objects);
                 return *m_objects;
