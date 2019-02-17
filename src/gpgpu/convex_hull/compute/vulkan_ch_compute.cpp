@@ -104,6 +104,8 @@ class Impl final : public gpgpu_vulkan::ConvexHullCompute
         VkBuffer m_points_buffer = VK_NULL_HANDLE;
         VkBuffer m_point_count_buffer = VK_NULL_HANDLE;
 
+        unsigned m_height = 0;
+
         impl::DebugMemory m_debug_memory;
         impl::DebugConstant m_debug_constant;
         vulkan::ComputeShader m_debug_shader;
@@ -134,18 +136,52 @@ class Impl final : public gpgpu_vulkan::ConvexHullCompute
 
                 //
 
-                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_debug_pipeline);
+                VkDescriptorSet descriptor_set;
 
-                VkDescriptorSet descriptor_set = m_debug_memory.descriptor_set();
+                if ((true))
+                {
+                        vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_debug_pipeline);
+                        descriptor_set = m_debug_memory.descriptor_set();
+                        vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_debug_pipeline_layout,
+                                                SET_NUMBER, 1 /*set count*/, &descriptor_set, 0, nullptr);
+                        vkCmdDispatch(command_buffer, 1, 1, 1);
+                        buffer_barrier(command_buffer, m_points_buffer, VK_ACCESS_SHADER_READ_BIT,
+                                       VK_PIPELINE_STAGE_VERTEX_SHADER_BIT);
+                        buffer_barrier(command_buffer, m_point_count_buffer, VK_ACCESS_INDIRECT_COMMAND_READ_BIT,
+                                       VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT);
+                }
+                else
+                {
+                        vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_prepare_pipeline);
+                        descriptor_set = m_prepare_memory.descriptor_set();
+                        vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_prepare_pipeline_layout,
+                                                SET_NUMBER, 1 /*set count*/, &descriptor_set, 0, nullptr);
+                        vkCmdDispatch(command_buffer, m_height, 1, 1);
+                        buffer_barrier(command_buffer, *m_lines_buffer, VK_ACCESS_SHADER_READ_BIT,
+                                       VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
 
-                vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_debug_pipeline_layout, SET_NUMBER,
-                                        1 /*set count*/, &descriptor_set, 0, nullptr);
+                        //
 
-                vkCmdDispatch(command_buffer, 1, 1, 1);
+                        vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_merge_pipeline);
+                        descriptor_set = m_merge_memory.descriptor_set();
+                        vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_merge_pipeline_layout,
+                                                SET_NUMBER, 1 /*set count*/, &descriptor_set, 0, nullptr);
+                        vkCmdDispatch(command_buffer, 2, 1, 1);
+                        buffer_barrier(command_buffer, *m_lines_buffer, VK_ACCESS_SHADER_READ_BIT,
+                                       VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
 
-                buffer_barrier(command_buffer, m_points_buffer, VK_ACCESS_SHADER_READ_BIT, VK_PIPELINE_STAGE_VERTEX_SHADER_BIT);
-                buffer_barrier(command_buffer, m_point_count_buffer, VK_ACCESS_INDIRECT_COMMAND_READ_BIT,
-                               VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT);
+                        //
+
+                        vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_filter_pipeline);
+                        descriptor_set = m_filter_memory.descriptor_set();
+                        vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_filter_pipeline_layout,
+                                                SET_NUMBER, 1 /*set count*/, &descriptor_set, 0, nullptr);
+                        vkCmdDispatch(command_buffer, 1, 1, 1);
+                        buffer_barrier(command_buffer, m_points_buffer, VK_ACCESS_SHADER_READ_BIT,
+                                       VK_PIPELINE_STAGE_VERTEX_SHADER_BIT);
+                        buffer_barrier(command_buffer, m_point_count_buffer, VK_ACCESS_INDIRECT_COMMAND_READ_BIT,
+                                       VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT);
+                }
         }
 
         void create_buffers(const vulkan::StorageImage& objects, const vulkan::BufferWithHostVisibleMemory& points_buffer,
@@ -162,6 +198,8 @@ class Impl final : public gpgpu_vulkan::ConvexHullCompute
                                        2 * objects.height() * sizeof(int32_t));
                 m_points_buffer = points_buffer;
                 m_point_count_buffer = point_count_buffer;
+
+                m_height = objects.height();
 
                 const VkPhysicalDeviceLimits& limits = m_instance.physical_device().properties().limits;
 
