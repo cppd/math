@@ -74,6 +74,25 @@ int group_size_merge(int height, const VkPhysicalDeviceLimits& limits)
                                       limits.maxComputeSharedMemorySize);
 }
 
+void buffer_barrier(VkCommandBuffer command_buffer, VkBuffer buffer, VkAccessFlags dst_access_mask,
+                    VkPipelineStageFlags dst_stage_mask)
+{
+        ASSERT(buffer != VK_NULL_HANDLE);
+
+        VkBufferMemoryBarrier barrier = {};
+        barrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
+        barrier.srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
+        barrier.dstAccessMask = dst_access_mask;
+        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.buffer = buffer;
+        barrier.offset = 0;
+        barrier.size = VK_WHOLE_SIZE;
+
+        vkCmdPipelineBarrier(command_buffer, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, dst_stage_mask, VK_DEPENDENCY_BY_REGION_BIT, 0,
+                             nullptr, 1, &barrier, 0, nullptr);
+}
+
 class Impl final : public gpgpu_vulkan::ConvexHullCompute
 {
         const std::thread::id m_thread_id = std::this_thread::get_id();
@@ -124,39 +143,9 @@ class Impl final : public gpgpu_vulkan::ConvexHullCompute
 
                 vkCmdDispatch(command_buffer, 1, 1, 1);
 
-                ASSERT(m_points_buffer != VK_NULL_HANDLE);
-                {
-                        VkBufferMemoryBarrier barrier = {};
-                        barrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
-                        barrier.srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
-                        barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-                        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-                        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-                        barrier.buffer = m_points_buffer;
-                        barrier.offset = 0;
-                        barrier.size = VK_WHOLE_SIZE;
-
-                        vkCmdPipelineBarrier(command_buffer, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
-                                             VK_PIPELINE_STAGE_VERTEX_SHADER_BIT, VK_DEPENDENCY_BY_REGION_BIT, 0, nullptr, 1,
-                                             &barrier, 0, nullptr);
-                }
-
-                ASSERT(m_point_count_buffer != VK_NULL_HANDLE);
-                {
-                        VkBufferMemoryBarrier barrier = {};
-                        barrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
-                        barrier.srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
-                        barrier.dstAccessMask = VK_ACCESS_INDIRECT_COMMAND_READ_BIT;
-                        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-                        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-                        barrier.buffer = m_point_count_buffer;
-                        barrier.offset = 0;
-                        barrier.size = VK_WHOLE_SIZE;
-
-                        vkCmdPipelineBarrier(command_buffer, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
-                                             VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT, VK_DEPENDENCY_BY_REGION_BIT, 0, nullptr, 1,
-                                             &barrier, 0, nullptr);
-                }
+                buffer_barrier(command_buffer, m_points_buffer, VK_ACCESS_SHADER_READ_BIT, VK_PIPELINE_STAGE_VERTEX_SHADER_BIT);
+                buffer_barrier(command_buffer, m_point_count_buffer, VK_ACCESS_INDIRECT_COMMAND_READ_BIT,
+                               VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT);
         }
 
         void create_buffers(const vulkan::StorageImage& objects, const vulkan::BufferWithHostVisibleMemory& points_buffer,
