@@ -138,50 +138,44 @@ class Impl final : public gpgpu_vulkan::ConvexHullCompute
 
                 VkDescriptorSet descriptor_set;
 
-                if ((true))
-                {
-                        vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_debug_pipeline);
-                        descriptor_set = m_debug_memory.descriptor_set();
-                        vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_debug_pipeline_layout,
-                                                SET_NUMBER, 1 /*set count*/, &descriptor_set, 0, nullptr);
-                        vkCmdDispatch(command_buffer, 1, 1, 1);
-                        buffer_barrier(command_buffer, m_points_buffer, VK_ACCESS_SHADER_READ_BIT,
-                                       VK_PIPELINE_STAGE_VERTEX_SHADER_BIT);
-                        buffer_barrier(command_buffer, m_point_count_buffer, VK_ACCESS_INDIRECT_COMMAND_READ_BIT,
-                                       VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT);
-                }
-                else
-                {
-                        vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_prepare_pipeline);
-                        descriptor_set = m_prepare_memory.descriptor_set();
-                        vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_prepare_pipeline_layout,
-                                                SET_NUMBER, 1 /*set count*/, &descriptor_set, 0, nullptr);
-                        vkCmdDispatch(command_buffer, m_height, 1, 1);
-                        buffer_barrier(command_buffer, *m_lines_buffer, VK_ACCESS_SHADER_READ_BIT,
-                                       VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
+#if 0
+                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_debug_pipeline);
+                descriptor_set = m_debug_memory.descriptor_set();
+                vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_debug_pipeline_layout, SET_NUMBER,
+                                        1 /*set count*/, &descriptor_set, 0, nullptr);
+                vkCmdDispatch(command_buffer, 1, 1, 1);
+                buffer_barrier(command_buffer, m_points_buffer, VK_ACCESS_SHADER_READ_BIT, VK_PIPELINE_STAGE_VERTEX_SHADER_BIT);
+                buffer_barrier(command_buffer, m_point_count_buffer, VK_ACCESS_INDIRECT_COMMAND_READ_BIT,
+                               VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT);
+#else
 
-                        //
+                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_prepare_pipeline);
+                descriptor_set = m_prepare_memory.descriptor_set();
+                vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_prepare_pipeline_layout, SET_NUMBER,
+                                        1 /*set count*/, &descriptor_set, 0, nullptr);
+                vkCmdDispatch(command_buffer, m_height, 1, 1);
+                buffer_barrier(command_buffer, *m_lines_buffer, VK_ACCESS_SHADER_READ_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
 
-                        vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_merge_pipeline);
-                        descriptor_set = m_merge_memory.descriptor_set();
-                        vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_merge_pipeline_layout,
-                                                SET_NUMBER, 1 /*set count*/, &descriptor_set, 0, nullptr);
-                        vkCmdDispatch(command_buffer, 2, 1, 1);
-                        buffer_barrier(command_buffer, *m_lines_buffer, VK_ACCESS_SHADER_READ_BIT,
-                                       VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
+                //
 
-                        //
+                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_merge_pipeline);
+                descriptor_set = m_merge_memory.descriptor_set();
+                vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_merge_pipeline_layout, SET_NUMBER,
+                                        1 /*set count*/, &descriptor_set, 0, nullptr);
+                vkCmdDispatch(command_buffer, 2, 1, 1);
+                buffer_barrier(command_buffer, *m_lines_buffer, VK_ACCESS_SHADER_READ_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
 
-                        vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_filter_pipeline);
-                        descriptor_set = m_filter_memory.descriptor_set();
-                        vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_filter_pipeline_layout,
-                                                SET_NUMBER, 1 /*set count*/, &descriptor_set, 0, nullptr);
-                        vkCmdDispatch(command_buffer, 1, 1, 1);
-                        buffer_barrier(command_buffer, m_points_buffer, VK_ACCESS_SHADER_READ_BIT,
-                                       VK_PIPELINE_STAGE_VERTEX_SHADER_BIT);
-                        buffer_barrier(command_buffer, m_point_count_buffer, VK_ACCESS_INDIRECT_COMMAND_READ_BIT,
-                                       VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT);
-                }
+                //
+
+                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_filter_pipeline);
+                descriptor_set = m_filter_memory.descriptor_set();
+                vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_filter_pipeline_layout, SET_NUMBER,
+                                        1 /*set count*/, &descriptor_set, 0, nullptr);
+                vkCmdDispatch(command_buffer, 1, 1, 1);
+                buffer_barrier(command_buffer, m_points_buffer, VK_ACCESS_SHADER_READ_BIT, VK_PIPELINE_STAGE_VERTEX_SHADER_BIT);
+                buffer_barrier(command_buffer, m_point_count_buffer, VK_ACCESS_INDIRECT_COMMAND_READ_BIT,
+                               VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT);
+#endif
         }
 
         void create_buffers(const vulkan::StorageImage& objects, const vulkan::BufferWithHostVisibleMemory& points_buffer,

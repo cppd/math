@@ -33,8 +33,9 @@ layout(binding = 1, r32ui) readonly restrict uniform uimage2D objects;
 
 layout(std430, binding = 0) writeonly restrict buffer Lines
 {
-        int line_min[LINE_SIZE];
-        int line_max[LINE_SIZE];
+        // Индексы для минимумов [0, LINE_SIZE - 1].
+        // Индексы для максимумов [LINE_SIZE, 2 * LINE_SIZE - 1].
+        int lines[2 * LINE_SIZE];
 };
 
 bool not_background(ivec2 p)
@@ -89,18 +90,23 @@ void main(void)
         {
                 ivec2 result = shared_buffer[0];
 
-                // objects имеет 0 по вертикали внизу, надо записать с 0 вверху
-                int reverse_y = image_size.y - y - 1;
-
+                // Надо записать с 0 вверху.
+#if defined(VULKAN)
+                // objects имеет 0 по вертикали вверху.
+                int write_y = y;
+#else
+                // objects имеет 0 по вертикали внизу.
+                int write_y = image_size.y - y - 1;
+#endif
                 if (result.y >= 0)
                 {
-                        line_min[reverse_y] = result.x;
-                        line_max[reverse_y] = result.y;
+                        lines[write_y] = result.x;
+                        lines[write_y + LINE_SIZE] = result.y;
                 }
                 else
                 {
-                        line_min[reverse_y] = -1;
-                        line_max[reverse_y] = -1;
+                        lines[write_y] = -1;
+                        lines[write_y + LINE_SIZE] = -1;
                 }
         }
 }
