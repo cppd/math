@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace vulkan
 {
 constexpr int API_VERSION_MAJOR = 1;
-constexpr int API_VERSION_MINOR = 0;
+constexpr int API_VERSION_MINOR = 1;
 
 inline std::vector<std::string> validation_layers()
 {
