@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "constant.h"
 #include "objects.h"
 #include "shader.h"
 
@@ -51,9 +52,7 @@ struct ComputePipelineCreateInfo
         std::optional<VkPipelineLayout> pipeline_layout;
         std::optional<const ComputeShader*> shader;
 
-        std::optional<const std::vector<VkSpecializationMapEntry>*> specialization_map_entries;
-        std::optional<const void*> specialization_data;
-        std::optional<size_t> specialization_data_size;
+        std::optional<const SpecializationConstant*> constants;
 };
 
 Pipeline create_compute_pipeline(const ComputePipelineCreateInfo& info);

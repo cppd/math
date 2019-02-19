@@ -211,9 +211,7 @@ class Impl final : public gpgpu_vulkan::ConvexHullCompute
                         info.device = &m_device;
                         info.pipeline_layout = m_debug_pipeline_layout;
                         info.shader = &m_debug_shader;
-                        info.specialization_map_entries = m_debug_constant.entries();
-                        info.specialization_data = m_debug_constant.data();
-                        info.specialization_data_size = m_debug_constant.size();
+                        info.constants = &m_debug_constant;
                         m_debug_pipeline = create_compute_pipeline(info);
                 }
                 {
@@ -227,9 +225,7 @@ class Impl final : public gpgpu_vulkan::ConvexHullCompute
                         info.device = &m_device;
                         info.pipeline_layout = m_prepare_pipeline_layout;
                         info.shader = &m_prepare_shader;
-                        info.specialization_map_entries = m_prepare_constant.entries();
-                        info.specialization_data = m_prepare_constant.data();
-                        info.specialization_data_size = m_prepare_constant.size();
+                        info.constants = &m_prepare_constant;
                         m_prepare_pipeline = create_compute_pipeline(info);
                 }
                 {
@@ -243,9 +239,7 @@ class Impl final : public gpgpu_vulkan::ConvexHullCompute
                         info.device = &m_device;
                         info.pipeline_layout = m_merge_pipeline_layout;
                         info.shader = &m_merge_shader;
-                        info.specialization_map_entries = m_merge_constant.entries();
-                        info.specialization_data = m_merge_constant.data();
-                        info.specialization_data_size = m_merge_constant.size();
+                        info.constants = &m_merge_constant;
                         m_merge_pipeline = create_compute_pipeline(info);
                 }
                 {
@@ -259,9 +253,7 @@ class Impl final : public gpgpu_vulkan::ConvexHullCompute
                         info.device = &m_device;
                         info.pipeline_layout = m_filter_pipeline_layout;
                         info.shader = &m_filter_shader;
-                        info.specialization_map_entries = m_filter_constant.entries();
-                        info.specialization_data = m_filter_constant.data();
-                        info.specialization_data_size = m_filter_constant.size();
+                        info.constants = &m_filter_constant;
                         m_filter_pipeline = create_compute_pipeline(info);
                 }
         }

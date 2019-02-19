@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "graphics/vulkan/buffers.h"
+#include "graphics/vulkan/constant.h"
 #include "graphics/vulkan/descriptor.h"
 #include "graphics/vulkan/objects.h"
 
@@ -55,7 +56,7 @@ public:
         void set_point_count(const vulkan::BufferWithHostVisibleMemory& buffer) const;
 };
 
-class DebugConstant final
+class DebugConstant final : public vulkan::SpecializationConstant
 {
         struct Data
         {
@@ -67,6 +68,10 @@ class DebugConstant final
 
         std::vector<VkSpecializationMapEntry> m_entries;
 
+        const std::vector<VkSpecializationMapEntry>& entries() const noexcept override;
+        const void* data() const noexcept override;
+        size_t size() const noexcept override;
+
 public:
         DebugConstant();
 
@@ -74,10 +79,6 @@ public:
         void set_local_size_y(uint32_t v);
         void set_local_size_z(uint32_t v);
         void set_buffer_size(uint32_t v);
-
-        const std::vector<VkSpecializationMapEntry>* entries() const noexcept;
-        const void* data() const noexcept;
-        size_t size() const noexcept;
 };
 
 //
@@ -111,7 +112,7 @@ public:
         void set_lines(const vulkan::BufferWithHostVisibleMemory& buffer) const;
 };
 
-class PrepareConstant final
+class PrepareConstant final : public vulkan::SpecializationConstant
 {
         struct Data
         {
@@ -122,15 +123,15 @@ class PrepareConstant final
 
         std::vector<VkSpecializationMapEntry> m_entries;
 
+        const std::vector<VkSpecializationMapEntry>& entries() const noexcept override;
+        const void* data() const noexcept override;
+        size_t size() const noexcept override;
+
 public:
         PrepareConstant();
 
         void set_line_size(uint32_t v);
         void set_buffer_and_group_size(uint32_t v);
-
-        const std::vector<VkSpecializationMapEntry>* entries() const noexcept;
-        const void* data() const noexcept;
-        size_t size() const noexcept;
 };
 
 //
@@ -163,7 +164,7 @@ public:
         void set_lines(const vulkan::BufferWithHostVisibleMemory& buffer) const;
 };
 
-class MergeConstant final
+class MergeConstant final : public vulkan::SpecializationConstant
 {
         struct Data
         {
@@ -174,16 +175,16 @@ class MergeConstant final
 
         std::vector<VkSpecializationMapEntry> m_entries;
 
+        const std::vector<VkSpecializationMapEntry>& entries() const noexcept override;
+        const void* data() const noexcept override;
+        size_t size() const noexcept override;
+
 public:
         MergeConstant();
 
         void set_line_size(int32_t v);
         void set_iteration_count(int32_t v);
         void set_local_size_x(uint32_t v);
-
-        const std::vector<VkSpecializationMapEntry>* entries() const noexcept;
-        const void* data() const noexcept;
-        size_t size() const noexcept;
 };
 
 //
@@ -218,7 +219,7 @@ public:
         void set_point_count(const vulkan::BufferWithHostVisibleMemory& buffer) const;
 };
 
-class FilterConstant final
+class FilterConstant final : public vulkan::SpecializationConstant
 {
         struct Data
         {
@@ -227,13 +228,13 @@ class FilterConstant final
 
         std::vector<VkSpecializationMapEntry> m_entries;
 
+        const std::vector<VkSpecializationMapEntry>& entries() const noexcept override;
+        const void* data() const noexcept override;
+        size_t size() const noexcept override;
+
 public:
         FilterConstant();
 
         void set_line_size(int32_t v);
-
-        const std::vector<VkSpecializationMapEntry>* entries() const noexcept;
-        const void* data() const noexcept;
-        size_t size() const noexcept;
 };
 }

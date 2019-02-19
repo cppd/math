@@ -211,26 +211,25 @@ Pipeline create_compute_pipeline(const ComputePipelineCreateInfo& info)
 {
         ASSERT(info.shader.value()->stage() == VK_SHADER_STAGE_COMPUTE_BIT);
 
-        ASSERT(info.specialization_map_entries.has_value() == info.specialization_data.has_value());
-        ASSERT(info.specialization_data.has_value() == info.specialization_data_size.has_value());
-        ASSERT(!info.specialization_map_entries.has_value() || info.specialization_map_entries.value());
-        ASSERT(!info.specialization_map_entries.has_value() || (info.specialization_map_entries.value()->size() > 0));
-        ASSERT(!info.specialization_data.has_value() || info.specialization_data.value());
-        ASSERT(!info.specialization_data_size.has_value() || (info.specialization_data_size.value() > 0));
-        ASSERT(!info.specialization_map_entries.has_value() ||
-               std::all_of(info.specialization_map_entries.value()->cbegin(), info.specialization_map_entries.value()->cend(),
+        ASSERT(!info.constants.has_value() || info.constants.value() != nullptr);
+        ASSERT(!info.constants.has_value() || info.constants.value()->size() > 0);
+        ASSERT(!info.constants.has_value() || info.constants.value()->data() != nullptr);
+        ASSERT(!info.constants.has_value() || info.constants.value()->entries().size() > 0);
+
+        ASSERT(!info.constants.has_value() ||
+               std::all_of(info.constants.value()->entries().cbegin(), info.constants.value()->entries().cend(),
                            [&](const VkSpecializationMapEntry& entry) {
-                                   return entry.offset + entry.size <= info.specialization_data_size.value();
+                                   return entry.offset + entry.size <= info.constants.value()->size();
                            }));
 
         VkSpecializationInfo specialization_info;
-        if (info.specialization_map_entries.has_value())
+        if (info.constants.has_value())
         {
                 specialization_info = {};
-                specialization_info.mapEntryCount = info.specialization_map_entries.value()->size();
-                specialization_info.pMapEntries = info.specialization_map_entries.value()->data();
-                specialization_info.dataSize = info.specialization_data_size.value();
-                specialization_info.pData = info.specialization_data.value();
+                specialization_info.mapEntryCount = info.constants.value()->entries().size();
+                specialization_info.pMapEntries = info.constants.value()->entries().data();
+                specialization_info.dataSize = info.constants.value()->size();
+                specialization_info.pData = info.constants.value()->data();
         }
 
         VkPipelineShaderStageCreateInfo stage_info = {};
@@ -238,7 +237,7 @@ Pipeline create_compute_pipeline(const ComputePipelineCreateInfo& info)
         stage_info.stage = info.shader.value()->stage();
         stage_info.module = info.shader.value()->module();
         stage_info.pName = info.shader.value()->entry_point_name();
-        if (info.specialization_map_entries.has_value())
+        if (info.constants.has_value())
         {
                 stage_info.pSpecializationInfo = &specialization_info;
         }

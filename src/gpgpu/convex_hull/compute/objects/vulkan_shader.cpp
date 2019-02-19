@@ -170,9 +170,9 @@ void DebugConstant::set_buffer_size(uint32_t v)
         m_data.buffer_size = v;
 }
 
-const std::vector<VkSpecializationMapEntry>* DebugConstant::entries() const noexcept
+const std::vector<VkSpecializationMapEntry>& DebugConstant::entries() const noexcept
 {
-        return &m_entries;
+        return m_entries;
 }
 
 const void* DebugConstant::data() const noexcept
@@ -298,9 +298,9 @@ void PrepareConstant::set_buffer_and_group_size(uint32_t v)
         m_data.local_size_x = v;
 }
 
-const std::vector<VkSpecializationMapEntry>* PrepareConstant::entries() const noexcept
+const std::vector<VkSpecializationMapEntry>& PrepareConstant::entries() const noexcept
 {
-        return &m_entries;
+        return m_entries;
 }
 
 const void* PrepareConstant::data() const noexcept
@@ -409,9 +409,9 @@ void MergeConstant::set_local_size_x(uint32_t v)
         m_data.local_size_x = v;
 }
 
-const std::vector<VkSpecializationMapEntry>* MergeConstant::entries() const noexcept
+const std::vector<VkSpecializationMapEntry>& MergeConstant::entries() const noexcept
 {
-        return &m_entries;
+        return m_entries;
 }
 
 const void* MergeConstant::data() const noexcept
@@ -536,9 +536,9 @@ void FilterConstant::set_line_size(int32_t v)
         m_data.line_size = v;
 }
 
-const std::vector<VkSpecializationMapEntry>* FilterConstant::entries() const noexcept
+const std::vector<VkSpecializationMapEntry>& FilterConstant::entries() const noexcept
 {
-        return &m_entries;
+        return m_entries;
 }
 
 const void* FilterConstant::data() const noexcept
