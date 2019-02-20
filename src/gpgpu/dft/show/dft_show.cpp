@@ -52,7 +52,7 @@ struct Vertex
         Vector<2, GLfloat> t; // Координаты вершины в текстуре (0 или 1)
 };
 
-class ShaderMemory
+class ShaderMemory final
 {
         static constexpr int DATA_BINDING = 0;
 

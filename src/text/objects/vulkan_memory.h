@@ -28,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace vulkan_text_implementation
 {
-class TextMemory
+class TextMemory final
 {
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
 

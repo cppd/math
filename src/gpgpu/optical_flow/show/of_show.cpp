@@ -55,7 +55,7 @@ constexpr double DISTANCE_BETWEEN_POINTS = 2;
 
 namespace
 {
-class ShaderMemory
+class ShaderMemory final
 {
         static constexpr int POINTS_BINDING = 0;
         static constexpr int POINTS_FLOW_BINDING = 1;

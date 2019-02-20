@@ -115,7 +115,7 @@ std::string sobel_source()
         return s + sobel_shader;
 }
 
-class DownsampleMemory
+class DownsampleMemory final
 {
         static constexpr int DATA_BINDING = 0;
 
@@ -144,7 +144,7 @@ public:
         }
 };
 
-class FlowMemory
+class FlowMemory final
 {
         static constexpr int POINTS_BINDING = 0;
         static constexpr int POINTS_FLOW_BINDING = 1;
@@ -292,7 +292,7 @@ void create_image_pyramid_sizes(int width, int height, int min, std::vector<vec2
 #endif
 }
 
-class ImageR32F
+class ImageR32F final
 {
         opengl::TextureR32F m_texture;
         GLuint64 m_image_write_handle;

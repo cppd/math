@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace opengl_renderer_implementation
 {
-class TrianglesMemory
+class TrianglesMemory final
 {
         static constexpr int MATRICES_BINDING = 0;
         static constexpr int LIGHTING_BINDING = 1;
@@ -168,7 +168,7 @@ public:
         }
 };
 
-class PointsMemory
+class PointsMemory final
 {
         static constexpr int MATRICES_BINDING = 0;
         static constexpr int DRAWING_BINDING = 1;
@@ -231,7 +231,7 @@ public:
         }
 };
 
-class ShadowMemory
+class ShadowMemory final
 {
         static constexpr int MATRICES_BINDING = 0;
 

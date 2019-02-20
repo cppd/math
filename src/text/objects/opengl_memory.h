@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace opengl_text_implementation
 {
-class ShaderMemory
+class ShaderMemory final
 {
         static constexpr int MATRICES_BINDING = 0;
         static constexpr int DRAWING_BINDING = 2;

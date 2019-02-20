@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace gpgpu_dft_compute_opengl_implementation
 {
 template <typename T>
-class DeviceProgBitReverse
+class DeviceProgBitReverse final
 {
         static constexpr int DATA_BINDING = 0;
         static constexpr int BUFFER_BINDING = 1;
@@ -47,7 +47,7 @@ public:
 };
 
 template <typename T>
-class DeviceProgFFTGlobal
+class DeviceProgFFTGlobal final
 {
         static constexpr int DATA_BINDING = 0;
         static constexpr int BUFFER_BINDING = 1;
@@ -73,7 +73,7 @@ public:
 };
 
 template <typename T>
-class DeviceProgCopyInput
+class DeviceProgCopyInput final
 {
         static constexpr int DATA_BINDING = 0;
         static constexpr int BUFFER_BINDING = 1;
@@ -96,7 +96,7 @@ public:
 };
 
 template <typename T>
-class DeviceProgCopyOutput
+class DeviceProgCopyOutput final
 {
         static constexpr int DATA_BINDING = 0;
         static constexpr int BUFFER_BINDING = 1;
@@ -119,7 +119,7 @@ public:
 };
 
 template <typename T>
-class DeviceProgMul
+class DeviceProgMul final
 {
         static constexpr int DATA_BINDING = 0;
         static constexpr int BUFFER_0_BINDING = 1;
@@ -153,7 +153,7 @@ public:
 };
 
 template <typename T>
-class DeviceProgMulD
+class DeviceProgMulD final
 {
         static constexpr int DATA_BINDING = 0;
         static constexpr int BUFFER_DIAGONAL_BINDING = 1;
@@ -179,7 +179,7 @@ public:
 };
 
 template <typename T>
-class DeviceProgFFTShared
+class DeviceProgFFTShared final
 {
         static constexpr int DATA_BINDING = 0;
         static constexpr int BUFFER_BINDING = 1;

@@ -30,7 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace vulkan_renderer_implementation
 {
-class TrianglesSharedMemory
+class TrianglesSharedMemory final
 {
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
 
@@ -114,7 +114,7 @@ public:
         void set_object_image(const vulkan::StorageImage* storage_image) const;
 };
 
-class TrianglesMaterialMemory
+class TrianglesMaterialMemory final
 {
         vulkan::Descriptors m_descriptors;
         std::vector<vulkan::BufferWithHostVisibleMemory> m_uniform_buffers;
@@ -161,7 +161,7 @@ public:
         VkDescriptorSet descriptor_set(uint32_t index) const noexcept;
 };
 
-class ShadowMemory
+class ShadowMemory final
 {
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
 
@@ -195,7 +195,7 @@ public:
         void set_matrix(const mat4& matrix) const;
 };
 
-class PointsMemory
+class PointsMemory final
 {
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
 

@@ -539,7 +539,7 @@ public:
         }
 };
 
-class DrawObject
+class DrawObject final
 {
         mat4 m_model_matrix;
         std::vector<std::unique_ptr<DrawObjectInterface>> m_objects;
