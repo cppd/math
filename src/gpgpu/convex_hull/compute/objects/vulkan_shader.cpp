@@ -50,12 +50,9 @@ std::vector<VkDescriptorSetLayoutBinding> PrepareMemory::descriptor_set_layout_b
 
 PrepareMemory::PrepareMemory(const vulkan::Device& device)
         : m_descriptor_set_layout(vulkan::create_descriptor_set_layout(device, descriptor_set_layout_bindings())),
-          m_descriptors(vulkan::Descriptors(device, 1, m_descriptor_set_layout, descriptor_set_layout_bindings()))
+          m_descriptors(vulkan::Descriptors(device, 1, m_descriptor_set_layout, descriptor_set_layout_bindings())),
+          m_descriptor_set(m_descriptors.create_descriptor_set())
 {
-        std::vector<Variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
-        std::vector<uint32_t> bindings;
-
-        m_descriptor_set = m_descriptors.create_and_update_descriptor_set(bindings, infos);
 }
 
 VkDescriptorSetLayout PrepareMemory::descriptor_set_layout() const noexcept
@@ -168,12 +165,9 @@ std::vector<VkDescriptorSetLayoutBinding> MergeMemory::descriptor_set_layout_bin
 
 MergeMemory::MergeMemory(const vulkan::Device& device)
         : m_descriptor_set_layout(vulkan::create_descriptor_set_layout(device, descriptor_set_layout_bindings())),
-          m_descriptors(vulkan::Descriptors(device, 1, m_descriptor_set_layout, descriptor_set_layout_bindings()))
+          m_descriptors(vulkan::Descriptors(device, 1, m_descriptor_set_layout, descriptor_set_layout_bindings())),
+          m_descriptor_set(m_descriptors.create_descriptor_set())
 {
-        std::vector<Variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
-        std::vector<uint32_t> bindings;
-
-        m_descriptor_set = m_descriptors.create_and_update_descriptor_set(bindings, infos);
 }
 
 VkDescriptorSetLayout MergeMemory::descriptor_set_layout() const noexcept
@@ -297,12 +291,9 @@ std::vector<VkDescriptorSetLayoutBinding> FilterMemory::descriptor_set_layout_bi
 
 FilterMemory::FilterMemory(const vulkan::Device& device)
         : m_descriptor_set_layout(vulkan::create_descriptor_set_layout(device, descriptor_set_layout_bindings())),
-          m_descriptors(vulkan::Descriptors(device, 1, m_descriptor_set_layout, descriptor_set_layout_bindings()))
+          m_descriptors(vulkan::Descriptors(device, 1, m_descriptor_set_layout, descriptor_set_layout_bindings())),
+          m_descriptor_set(m_descriptors.create_descriptor_set())
 {
-        std::vector<Variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
-        std::vector<uint32_t> bindings;
-
-        m_descriptor_set = m_descriptors.create_and_update_descriptor_set(bindings, infos);
 }
 
 VkDescriptorSetLayout FilterMemory::descriptor_set_layout() const noexcept
