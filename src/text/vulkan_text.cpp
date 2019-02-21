@@ -27,6 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/vulkan/error.h"
 #include "graphics/vulkan/queue.h"
 #include "graphics/vulkan/shader.h"
+#include "graphics/vulkan/sync.h"
 #include "text/objects/vulkan_memory.h"
 #include "text/objects/vulkan_sampler.h"
 #include "text/objects/vulkan_vertex.h"
@@ -187,7 +188,7 @@ class Impl final : public VulkanText
 
                 if (m_vertex_buffer->size() < data_size)
                 {
-                        m_instance.device_wait_idle();
+                        vulkan::queue_wait_idle(graphics_queue);
 
                         m_render_buffers->delete_command_buffers(&m_command_buffers);
 

@@ -747,8 +747,8 @@ class Renderer final : public VulkanRenderer
 
                 m_shadow_zoom = zoom;
 
-                create_shadow_buffers(true /*wait_idle*/);
-                create_all_command_buffers(false /*wait_idle*/);
+                create_shadow_buffers();
+                create_all_command_buffers();
         }
         void set_matrices(const mat4& shadow_matrix, const mat4& main_matrix) override
         {
@@ -880,6 +880,8 @@ class Renderer final : public VulkanRenderer
 
         bool empty() const override
         {
+                ASSERT(m_thread_id == std::this_thread::get_id());
+
                 return !m_storage.object();
         }
 
@@ -892,10 +894,10 @@ class Renderer final : public VulkanRenderer
                 m_swapchain = swapchain;
                 m_render_buffers = render_buffers;
 
-                create_render_buffers(false /*wait_idle*/);
-                create_shadow_buffers(false /*wait_idle*/);
+                create_render_buffers();
+                create_shadow_buffers();
 
-                create_all_command_buffers(false /*wait_idle*/);
+                create_all_command_buffers();
         }
 
         const vulkan::StorageImage& objects() const override
@@ -924,7 +926,7 @@ class Renderer final : public VulkanRenderer
                 m_object_image.reset();
         }
 
-        void create_render_buffers(bool wait_idle = true)
+        void create_render_buffers()
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
@@ -932,11 +934,6 @@ class Renderer final : public VulkanRenderer
 
                 ASSERT(m_swapchain);
                 ASSERT(m_render_buffers);
-
-                if (wait_idle)
-                {
-                        m_instance.device_wait_idle();
-                }
 
                 delete_render_buffers();
 
@@ -968,18 +965,13 @@ class Renderer final : public VulkanRenderer
                 m_shadow_buffers.reset();
         }
 
-        void create_shadow_buffers(bool wait_idle = true)
+        void create_shadow_buffers()
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
                 //
 
                 ASSERT(m_swapchain);
-
-                if (wait_idle)
-                {
-                        m_instance.device_wait_idle();
-                }
 
                 delete_shadow_buffers();
 
@@ -1080,7 +1072,7 @@ class Renderer final : public VulkanRenderer
                 m_storage.object()->draw_shadow_commands(command_buffer, info);
         }
 
-        void create_render_command_buffers(bool wait_idle = true)
+        void create_render_command_buffers()
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
@@ -1088,18 +1080,13 @@ class Renderer final : public VulkanRenderer
 
                 ASSERT(m_render_buffers);
 
-                if (wait_idle)
-                {
-                        m_instance.device_wait_idle();
-                }
-
                 m_render_buffers->delete_command_buffers(&m_render_command_buffers);
                 m_render_command_buffers = m_render_buffers->create_command_buffers(
                         m_clear_color, std::bind(&Renderer::before_render_pass_commands, this, std::placeholders::_1),
                         std::bind(&Renderer::draw_commands, this, std::placeholders::_1));
         }
 
-        void create_shadow_command_buffers(bool wait_idle = true)
+        void create_shadow_command_buffers()
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
@@ -1107,29 +1094,19 @@ class Renderer final : public VulkanRenderer
 
                 ASSERT(m_shadow_buffers);
 
-                if (wait_idle)
-                {
-                        m_instance.device_wait_idle();
-                }
-
                 m_shadow_buffers->delete_command_buffers(&m_shadow_command_buffers);
                 m_shadow_command_buffers = m_shadow_buffers->create_command_buffers(
                         std::bind(&Renderer::draw_shadow_commands, this, std::placeholders::_1));
         }
 
-        void create_all_command_buffers(bool wait_idle = true)
+        void create_all_command_buffers()
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
                 //
 
-                if (wait_idle)
-                {
-                        m_instance.device_wait_idle();
-                }
-
-                create_render_command_buffers(false /*wait_idle*/);
-                create_shadow_command_buffers(false /*wait_idle*/);
+                create_render_command_buffers();
+                create_shadow_command_buffers();
         }
 
         void delete_all_command_buffers()
@@ -1139,8 +1116,6 @@ class Renderer final : public VulkanRenderer
                 //
 
                 ASSERT(m_render_buffers && m_shadow_buffers);
-
-                m_instance.device_wait_idle();
 
                 m_render_buffers->delete_command_buffers(&m_render_command_buffers);
                 m_shadow_buffers->delete_command_buffers(&m_shadow_command_buffers);
