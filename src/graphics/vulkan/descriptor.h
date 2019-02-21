@@ -45,8 +45,14 @@ public:
         Descriptors(VkDevice device, uint32_t max_sets, VkDescriptorSetLayout descriptor_set_layout,
                     const std::vector<VkDescriptorSetLayoutBinding>& bindings);
 
+        DescriptorSet create_descriptor_set() const;
+
         DescriptorSet create_and_update_descriptor_set(
                 const std::vector<uint32_t>& bindings,
+                const std::vector<Variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>>& descriptor_infos) const;
+
+        void update_descriptor_set(
+                VkDescriptorSet descriptor_set, const std::vector<uint32_t>& bindings,
                 const std::vector<Variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>>& descriptor_infos) const;
 
         void update_descriptor_set(VkDescriptorSet descriptor_set, uint32_t binding,

@@ -137,20 +137,16 @@ DescriptorSet Descriptors::create_and_update_descriptor_set(
         const std::vector<uint32_t>& bindings,
         const std::vector<Variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>>& descriptor_infos) const
 {
-        ASSERT(bindings.size() == descriptor_infos.size());
-
         DescriptorSet descriptor_set(m_device, m_descriptor_pool, m_descriptor_set_layout);
 
-        std::vector<VkWriteDescriptorSet> write(bindings.size());
-
-        for (size_t i = 0; i < bindings.size(); ++i)
-        {
-                write[i] = create_write_descriptor_set(descriptor_set, find_layout_binding(bindings[i]), descriptor_infos[i]);
-        }
-
-        vkUpdateDescriptorSets(m_device, write.size(), write.data(), 0, nullptr);
+        update_descriptor_set(descriptor_set, bindings, descriptor_infos);
 
         return descriptor_set;
+}
+
+DescriptorSet Descriptors::create_descriptor_set() const
+{
+        return DescriptorSet(m_device, m_descriptor_pool, m_descriptor_set_layout);
 }
 
 void Descriptors::update_descriptor_set(VkDescriptorSet descriptor_set, uint32_t binding,
@@ -160,4 +156,21 @@ void Descriptors::update_descriptor_set(VkDescriptorSet descriptor_set, uint32_t
 
         vkUpdateDescriptorSets(m_device, 1, &write, 0, nullptr);
 }
+
+void Descriptors::update_descriptor_set(
+        VkDescriptorSet descriptor_set, const std::vector<uint32_t>& bindings,
+        const std::vector<Variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>>& descriptor_infos) const
+{
+        ASSERT(bindings.size() == descriptor_infos.size());
+
+        std::vector<VkWriteDescriptorSet> write(bindings.size());
+
+        for (size_t i = 0; i < bindings.size(); ++i)
+        {
+                write[i] = create_write_descriptor_set(descriptor_set, find_layout_binding(bindings[i]), descriptor_infos[i]);
+        }
+
+        vkUpdateDescriptorSets(m_device, write.size(), write.data(), 0, nullptr);
+}
+
 }
