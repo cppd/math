@@ -26,63 +26,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpgpu_convex_hull_compute_vulkan_implementation
 {
-class DebugMemory final
-{
-        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
-
-        vulkan::DescriptorSetLayout m_descriptor_set_layout;
-        vulkan::Descriptors m_descriptors;
-        vulkan::DescriptorSet m_descriptor_set;
-
-public:
-        DebugMemory(const vulkan::Device& device);
-
-        DebugMemory(const DebugMemory&) = delete;
-        DebugMemory& operator=(const DebugMemory&) = delete;
-        DebugMemory& operator=(DebugMemory&&) = delete;
-
-        DebugMemory(DebugMemory&&) = default;
-        ~DebugMemory() = default;
-
-        //
-
-        VkDescriptorSetLayout descriptor_set_layout() const noexcept;
-        VkDescriptorSet descriptor_set() const noexcept;
-
-        //
-
-        void set_object_image(const vulkan::StorageImage& storage_image) const;
-        void set_points(const vulkan::BufferWithHostVisibleMemory& buffer) const;
-        void set_point_count(const vulkan::BufferWithHostVisibleMemory& buffer) const;
-};
-
-class DebugConstant final : public vulkan::SpecializationConstant
-{
-        struct Data
-        {
-                uint32_t local_size_x;
-                uint32_t local_size_y;
-                uint32_t local_size_z;
-                uint32_t buffer_size;
-        } m_data;
-
-        std::vector<VkSpecializationMapEntry> m_entries;
-
-        const std::vector<VkSpecializationMapEntry>& entries() const noexcept override;
-        const void* data() const noexcept override;
-        size_t size() const noexcept override;
-
-public:
-        DebugConstant();
-
-        void set_local_size_x(uint32_t v);
-        void set_local_size_y(uint32_t v);
-        void set_local_size_z(uint32_t v);
-        void set_buffer_size(uint32_t v);
-};
-
-//
-
 class PrepareMemory final
 {
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();

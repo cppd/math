@@ -36,10 +36,6 @@ constexpr std::initializer_list<vulkan::PhysicalDeviceFeatures> REQUIRED_DEVICE_
 // clang-format on
 
 // clang-format off
-constexpr uint32_t debug_shader[]
-{
-#include "ch_debug.comp.spr"
-};
 constexpr uint32_t prepare_shader[]
 {
 #include "ch_prepare.comp.spr"
@@ -106,12 +102,6 @@ class Impl final : public gpgpu_vulkan::ConvexHullCompute
 
         unsigned m_height = 0;
 
-        impl::DebugMemory m_debug_memory;
-        impl::DebugConstant m_debug_constant;
-        vulkan::ComputeShader m_debug_shader;
-        vulkan::PipelineLayout m_debug_pipeline_layout;
-        vulkan::Pipeline m_debug_pipeline;
-
         impl::PrepareMemory m_prepare_memory;
         impl::PrepareConstant m_prepare_constant;
         vulkan::ComputeShader m_prepare_shader;
@@ -138,16 +128,7 @@ class Impl final : public gpgpu_vulkan::ConvexHullCompute
 
                 VkDescriptorSet descriptor_set;
 
-#if 0
-                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_debug_pipeline);
-                descriptor_set = m_debug_memory.descriptor_set();
-                vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_debug_pipeline_layout, SET_NUMBER,
-                                        1 /*set count*/, &descriptor_set, 0, nullptr);
-                vkCmdDispatch(command_buffer, 1, 1, 1);
-                buffer_barrier(command_buffer, m_points_buffer, VK_ACCESS_SHADER_READ_BIT, VK_PIPELINE_STAGE_VERTEX_SHADER_BIT);
-                buffer_barrier(command_buffer, m_point_count_buffer, VK_ACCESS_INDIRECT_COMMAND_READ_BIT,
-                               VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT);
-#else
+                //
 
                 vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_prepare_pipeline);
                 descriptor_set = m_prepare_memory.descriptor_set();
@@ -175,7 +156,6 @@ class Impl final : public gpgpu_vulkan::ConvexHullCompute
                 buffer_barrier(command_buffer, m_points_buffer, VK_ACCESS_SHADER_READ_BIT, VK_PIPELINE_STAGE_VERTEX_SHADER_BIT);
                 buffer_barrier(command_buffer, m_point_count_buffer, VK_ACCESS_INDIRECT_COMMAND_READ_BIT,
                                VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT);
-#endif
         }
 
         void create_buffers(const vulkan::StorageImage& objects, const vulkan::BufferWithHostVisibleMemory& points_buffer,
@@ -197,23 +177,6 @@ class Impl final : public gpgpu_vulkan::ConvexHullCompute
 
                 const VkPhysicalDeviceLimits& limits = m_instance.physical_device().properties().limits;
 
-                {
-                        m_debug_memory.set_object_image(objects);
-                        m_debug_memory.set_points(points_buffer);
-                        m_debug_memory.set_point_count(point_count_buffer);
-
-                        m_debug_constant.set_local_size_x(4);
-                        m_debug_constant.set_local_size_y(1);
-                        m_debug_constant.set_local_size_z(1);
-                        m_debug_constant.set_buffer_size(1);
-
-                        vulkan::ComputePipelineCreateInfo info;
-                        info.device = &m_device;
-                        info.pipeline_layout = m_debug_pipeline_layout;
-                        info.shader = &m_debug_shader;
-                        info.constants = &m_debug_constant;
-                        m_debug_pipeline = create_compute_pipeline(info);
-                }
                 {
                         m_prepare_memory.set_object_image(objects);
                         m_prepare_memory.set_lines(*m_lines_buffer);
@@ -264,8 +227,6 @@ class Impl final : public gpgpu_vulkan::ConvexHullCompute
 
                 //
 
-                m_debug_pipeline = vulkan::Pipeline();
-
                 m_points_buffer = VK_NULL_HANDLE;
                 m_point_count_buffer = VK_NULL_HANDLE;
                 m_lines_buffer.reset();
@@ -276,11 +237,6 @@ public:
                 : m_instance(instance),
                   m_device(m_instance.device()),
                   //
-                  m_debug_memory(m_device),
-                  m_debug_shader(m_device, debug_shader, "main"),
-                  m_debug_pipeline_layout(
-                          vulkan::create_pipeline_layout(m_device, {SET_NUMBER}, {m_debug_memory.descriptor_set_layout()})),
-
                   m_prepare_memory(m_device),
                   m_prepare_shader(m_device, prepare_shader, "main"),
                   m_prepare_pipeline_layout(
