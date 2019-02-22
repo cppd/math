@@ -130,10 +130,8 @@ class Impl final : public VulkanText
 
                 vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline);
 
-                VkDescriptorSet descriptor_set = m_shader_memory.descriptor_set();
-
                 vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline_layout, TEXT_SET_NUMBER,
-                                        1 /*set count*/, &descriptor_set, 0, nullptr);
+                                        1 /*set count*/, &m_shader_memory.descriptor_set(), 0, nullptr);
 
                 std::array<VkBuffer, 1> buffers = {*m_vertex_buffer};
                 std::array<VkDeviceSize, 1> offsets = {0};
