@@ -220,6 +220,10 @@ class Impl final : public gpgpu_vulkan::ConvexHullCompute
 
                 //
 
+                m_prepare_pipeline = vulkan::Pipeline();
+                m_merge_pipeline = vulkan::Pipeline();
+                m_filter_pipeline = vulkan::Pipeline();
+
                 m_points_buffer = VK_NULL_HANDLE;
                 m_point_count_buffer = VK_NULL_HANDLE;
                 m_lines_buffer.reset();
