@@ -60,7 +60,7 @@ VkDescriptorSetLayout PrepareMemory::descriptor_set_layout() const noexcept
         return m_descriptor_set_layout;
 }
 
-VkDescriptorSet PrepareMemory::descriptor_set() const noexcept
+const VkDescriptorSet& PrepareMemory::descriptor_set() const noexcept
 {
         return m_descriptor_set;
 }
@@ -175,7 +175,7 @@ VkDescriptorSetLayout MergeMemory::descriptor_set_layout() const noexcept
         return m_descriptor_set_layout;
 }
 
-VkDescriptorSet MergeMemory::descriptor_set() const noexcept
+const VkDescriptorSet& MergeMemory::descriptor_set() const noexcept
 {
         return m_descriptor_set;
 }
@@ -301,7 +301,7 @@ VkDescriptorSetLayout FilterMemory::descriptor_set_layout() const noexcept
         return m_descriptor_set_layout;
 }
 
-VkDescriptorSet FilterMemory::descriptor_set() const noexcept
+const VkDescriptorSet& FilterMemory::descriptor_set() const noexcept
 {
         return m_descriptor_set;
 }

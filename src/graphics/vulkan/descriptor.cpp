@@ -51,33 +51,33 @@ VkWriteDescriptorSet create_write_descriptor_set(VkDescriptorSet descriptor_set,
                                                  const VkDescriptorSetLayoutBinding& descriptor_set_layout_binding,
                                                  const Variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>& descriptor_info)
 {
-        VkWriteDescriptorSet write_descriptor_set = {};
-        write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        VkWriteDescriptorSet write = {};
+        write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 
-        write_descriptor_set.dstSet = descriptor_set;
-        write_descriptor_set.dstBinding = descriptor_set_layout_binding.binding;
-        write_descriptor_set.dstArrayElement = 0;
+        write.dstSet = descriptor_set;
+        write.dstBinding = descriptor_set_layout_binding.binding;
+        write.dstArrayElement = 0;
 
-        write_descriptor_set.descriptorType = descriptor_set_layout_binding.descriptorType;
-        write_descriptor_set.descriptorCount = descriptor_set_layout_binding.descriptorCount;
+        write.descriptorType = descriptor_set_layout_binding.descriptorType;
+        write.descriptorCount = descriptor_set_layout_binding.descriptorCount;
 
         auto buffer = [&](const VkDescriptorBufferInfo& info) noexcept
         {
                 ASSERT(descriptor_set_layout_binding.descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER ||
                        descriptor_set_layout_binding.descriptorType == VK_DESCRIPTOR_TYPE_STORAGE_BUFFER);
-                write_descriptor_set.pBufferInfo = &info;
+                write.pBufferInfo = &info;
         };
         auto image = [&](const VkDescriptorImageInfo& info) noexcept
         {
                 ASSERT(descriptor_set_layout_binding.descriptorType == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER ||
                        descriptor_set_layout_binding.descriptorType == VK_DESCRIPTOR_TYPE_STORAGE_IMAGE);
-                write_descriptor_set.pImageInfo = &info;
+                write.pImageInfo = &info;
         };
         visit(Visitors{buffer, image}, descriptor_info);
 
-        return write_descriptor_set;
+        return write;
 
-        // write_descriptor_set.pTexelBufferView = nullptr;
+        // write.pTexelBufferView = nullptr;
 }
 
 std::unordered_map<uint32_t, uint32_t> create_binding_map(const std::vector<VkDescriptorSetLayoutBinding>& bindings)
@@ -133,25 +133,18 @@ const VkDescriptorSetLayoutBinding& Descriptors::find_layout_binding(uint32_t bi
         return m_descriptor_set_layout_bindings[index];
 }
 
-DescriptorSet Descriptors::create_and_update_descriptor_set(
-        const std::vector<uint32_t>& bindings,
-        const std::vector<Variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>>& descriptor_infos) const
+VkDescriptorSet Descriptors::create_descriptor_set()
 {
-        DescriptorSet descriptor_set(m_device, m_descriptor_pool, m_descriptor_set_layout);
-
-        update_descriptor_set(descriptor_set, bindings, descriptor_infos);
-
-        return descriptor_set;
-}
-
-DescriptorSet Descriptors::create_descriptor_set() const
-{
-        return DescriptorSet(m_device, m_descriptor_pool, m_descriptor_set_layout);
+        m_descriptor_sets.emplace_back(m_device, m_descriptor_pool, m_descriptor_set_layout);
+        return m_descriptor_sets.back();
 }
 
 void Descriptors::update_descriptor_set(VkDescriptorSet descriptor_set, uint32_t binding,
                                         const Variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>& info) const
 {
+        ASSERT(std::any_of(m_descriptor_sets.cbegin(), m_descriptor_sets.cend(),
+                           [&](const VkDescriptorSet& s) -> bool { return s == descriptor_set; }));
+
         VkWriteDescriptorSet write = create_write_descriptor_set(descriptor_set, find_layout_binding(binding), info);
 
         vkUpdateDescriptorSets(m_device, 1, &write, 0, nullptr);
@@ -162,6 +155,9 @@ void Descriptors::update_descriptor_set(
         const std::vector<Variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>>& descriptor_infos) const
 {
         ASSERT(bindings.size() == descriptor_infos.size());
+
+        ASSERT(std::any_of(m_descriptor_sets.cbegin(), m_descriptor_sets.cend(),
+                           [&](const VkDescriptorSet& s) -> bool { return s == descriptor_set; }));
 
         std::vector<VkWriteDescriptorSet> write(bindings.size());
 

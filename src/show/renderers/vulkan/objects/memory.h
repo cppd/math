@@ -37,7 +37,7 @@ class TrianglesSharedMemory final
         vulkan::DescriptorSetLayout m_descriptor_set_layout;
         vulkan::Descriptors m_descriptors;
         std::vector<vulkan::BufferWithHostVisibleMemory> m_uniform_buffers;
-        vulkan::DescriptorSet m_descriptor_set;
+        VkDescriptorSet m_descriptor_set;
 
         // Если размещать структуры в одном буфере, то требуется выравнивание каждой структуры
         // на VkPhysicalDeviceLimits::minUniformBufferOffsetAlignment для VkDescriptorBufferInfo::offset
@@ -92,7 +92,7 @@ public:
         //
 
         VkDescriptorSetLayout descriptor_set_layout() const noexcept;
-        VkDescriptorSet descriptor_set() const noexcept;
+        const VkDescriptorSet& descriptor_set() const noexcept;
 
         //
 
@@ -118,7 +118,7 @@ class TrianglesMaterialMemory final
 {
         vulkan::Descriptors m_descriptors;
         std::vector<vulkan::BufferWithHostVisibleMemory> m_uniform_buffers;
-        std::vector<vulkan::DescriptorSet> m_descriptor_sets;
+        std::vector<VkDescriptorSet> m_descriptor_sets;
 
 public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
@@ -158,7 +158,7 @@ public:
         //
 
         uint32_t descriptor_set_count() const noexcept;
-        VkDescriptorSet descriptor_set(uint32_t index) const noexcept;
+        const VkDescriptorSet& descriptor_set(uint32_t index) const noexcept;
 };
 
 class ShadowMemory final
@@ -168,7 +168,7 @@ class ShadowMemory final
         vulkan::DescriptorSetLayout m_descriptor_set_layout;
         vulkan::Descriptors m_descriptors;
         std::vector<vulkan::BufferWithHostVisibleMemory> m_uniform_buffers;
-        vulkan::DescriptorSet m_descriptor_set;
+        VkDescriptorSet m_descriptor_set;
 
         struct Matrices
         {
@@ -188,7 +188,7 @@ public:
         //
 
         VkDescriptorSetLayout descriptor_set_layout() const noexcept;
-        VkDescriptorSet descriptor_set() const noexcept;
+        const VkDescriptorSet& descriptor_set() const noexcept;
 
         //
 
@@ -202,7 +202,7 @@ class PointsMemory final
         vulkan::DescriptorSetLayout m_descriptor_set_layout;
         vulkan::Descriptors m_descriptors;
         std::vector<vulkan::BufferWithHostVisibleMemory> m_uniform_buffers;
-        vulkan::DescriptorSet m_descriptor_set;
+        VkDescriptorSet m_descriptor_set;
 
         struct Matrices
         {
@@ -238,7 +238,7 @@ public:
         //
 
         VkDescriptorSetLayout descriptor_set_layout() const noexcept;
-        VkDescriptorSet descriptor_set() const noexcept;
+        const VkDescriptorSet& descriptor_set() const noexcept;
 
         //
 

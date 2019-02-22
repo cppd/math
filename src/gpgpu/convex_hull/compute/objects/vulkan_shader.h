@@ -32,7 +32,7 @@ class PrepareMemory final
 
         vulkan::DescriptorSetLayout m_descriptor_set_layout;
         vulkan::Descriptors m_descriptors;
-        vulkan::DescriptorSet m_descriptor_set;
+        VkDescriptorSet m_descriptor_set;
 
 public:
         PrepareMemory(const vulkan::Device& device);
@@ -47,7 +47,7 @@ public:
         //
 
         VkDescriptorSetLayout descriptor_set_layout() const noexcept;
-        VkDescriptorSet descriptor_set() const noexcept;
+        const VkDescriptorSet& descriptor_set() const noexcept;
 
         //
 
@@ -85,7 +85,7 @@ class MergeMemory final
 
         vulkan::DescriptorSetLayout m_descriptor_set_layout;
         vulkan::Descriptors m_descriptors;
-        vulkan::DescriptorSet m_descriptor_set;
+        VkDescriptorSet m_descriptor_set;
 
 public:
         MergeMemory(const vulkan::Device& device);
@@ -100,7 +100,7 @@ public:
         //
 
         VkDescriptorSetLayout descriptor_set_layout() const noexcept;
-        VkDescriptorSet descriptor_set() const noexcept;
+        const VkDescriptorSet& descriptor_set() const noexcept;
 
         //
 
@@ -138,7 +138,7 @@ class FilterMemory final
 
         vulkan::DescriptorSetLayout m_descriptor_set_layout;
         vulkan::Descriptors m_descriptors;
-        vulkan::DescriptorSet m_descriptor_set;
+        VkDescriptorSet m_descriptor_set;
 
 public:
         FilterMemory(const vulkan::Device& device);
@@ -153,7 +153,7 @@ public:
         //
 
         VkDescriptorSetLayout descriptor_set_layout() const noexcept;
-        VkDescriptorSet descriptor_set() const noexcept;
+        const VkDescriptorSet& descriptor_set() const noexcept;
 
         //
 
