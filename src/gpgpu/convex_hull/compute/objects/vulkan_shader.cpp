@@ -27,7 +27,7 @@ std::vector<VkDescriptorSetLayoutBinding> PrepareMemory::descriptor_set_layout_b
 
         {
                 VkDescriptorSetLayoutBinding b = {};
-                b.binding = 1;
+                b.binding = OBJECTS_BINDING;
                 b.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
                 b.descriptorCount = 1;
                 b.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
@@ -37,7 +37,7 @@ std::vector<VkDescriptorSetLayoutBinding> PrepareMemory::descriptor_set_layout_b
         }
         {
                 VkDescriptorSetLayoutBinding b = {};
-                b.binding = 0;
+                b.binding = LINES_BINDING;
                 b.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
                 b.descriptorCount = 1;
                 b.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
@@ -72,7 +72,7 @@ void PrepareMemory::set_object_image(const vulkan::StorageImage& storage_image) 
         image_info.imageLayout = storage_image.image_layout();
         image_info.imageView = storage_image.image_view();
 
-        m_descriptors.update_descriptor_set(0, 1, image_info);
+        m_descriptors.update_descriptor_set(0, OBJECTS_BINDING, image_info);
 }
 
 void PrepareMemory::set_lines(const vulkan::BufferWithHostVisibleMemory& buffer) const
@@ -84,7 +84,7 @@ void PrepareMemory::set_lines(const vulkan::BufferWithHostVisibleMemory& buffer)
         buffer_info.offset = 0;
         buffer_info.range = buffer.size();
 
-        m_descriptors.update_descriptor_set(0, 0, buffer_info);
+        m_descriptors.update_descriptor_set(0, LINES_BINDING, buffer_info);
 }
 
 //
@@ -151,7 +151,7 @@ std::vector<VkDescriptorSetLayoutBinding> MergeMemory::descriptor_set_layout_bin
 
         {
                 VkDescriptorSetLayoutBinding b = {};
-                b.binding = 0;
+                b.binding = LINES_BINDING;
                 b.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
                 b.descriptorCount = 1;
                 b.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
@@ -187,7 +187,7 @@ void MergeMemory::set_lines(const vulkan::BufferWithHostVisibleMemory& buffer) c
         buffer_info.offset = 0;
         buffer_info.range = buffer.size();
 
-        m_descriptors.update_descriptor_set(0, 0, buffer_info);
+        m_descriptors.update_descriptor_set(0, LINES_BINDING, buffer_info);
 }
 
 //
@@ -258,7 +258,7 @@ std::vector<VkDescriptorSetLayoutBinding> FilterMemory::descriptor_set_layout_bi
 
         {
                 VkDescriptorSetLayoutBinding b = {};
-                b.binding = 0;
+                b.binding = LINES_BINDING;
                 b.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
                 b.descriptorCount = 1;
                 b.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
@@ -267,7 +267,7 @@ std::vector<VkDescriptorSetLayoutBinding> FilterMemory::descriptor_set_layout_bi
         }
         {
                 VkDescriptorSetLayoutBinding b = {};
-                b.binding = 1;
+                b.binding = POINTS_BINDING;
                 b.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
                 b.descriptorCount = 1;
                 b.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
@@ -276,7 +276,7 @@ std::vector<VkDescriptorSetLayoutBinding> FilterMemory::descriptor_set_layout_bi
         }
         {
                 VkDescriptorSetLayoutBinding b = {};
-                b.binding = 2;
+                b.binding = POINT_COUNT_BINDING;
                 b.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
                 b.descriptorCount = 1;
                 b.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
@@ -312,7 +312,7 @@ void FilterMemory::set_lines(const vulkan::BufferWithHostVisibleMemory& buffer) 
         buffer_info.offset = 0;
         buffer_info.range = buffer.size();
 
-        m_descriptors.update_descriptor_set(0, 0, buffer_info);
+        m_descriptors.update_descriptor_set(0, LINES_BINDING, buffer_info);
 }
 
 void FilterMemory::set_points(const vulkan::BufferWithHostVisibleMemory& buffer) const
@@ -324,7 +324,7 @@ void FilterMemory::set_points(const vulkan::BufferWithHostVisibleMemory& buffer)
         buffer_info.offset = 0;
         buffer_info.range = buffer.size();
 
-        m_descriptors.update_descriptor_set(0, 1, buffer_info);
+        m_descriptors.update_descriptor_set(0, POINTS_BINDING, buffer_info);
 }
 
 void FilterMemory::set_point_count(const vulkan::BufferWithHostVisibleMemory& buffer) const
@@ -336,7 +336,7 @@ void FilterMemory::set_point_count(const vulkan::BufferWithHostVisibleMemory& bu
         buffer_info.offset = 0;
         buffer_info.range = buffer.size();
 
-        m_descriptors.update_descriptor_set(0, 2, buffer_info);
+        m_descriptors.update_descriptor_set(0, POINT_COUNT_BINDING, buffer_info);
 }
 
 //
