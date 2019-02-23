@@ -25,7 +25,7 @@ std::vector<VkDescriptorSetLayoutBinding> ShaderMemory::descriptor_set_layout_bi
 
         {
                 VkDescriptorSetLayoutBinding b = {};
-                b.binding = 0;
+                b.binding = DATA_BINDING;
                 b.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
                 b.descriptorCount = 1;
                 b.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
@@ -34,7 +34,7 @@ std::vector<VkDescriptorSetLayoutBinding> ShaderMemory::descriptor_set_layout_bi
         }
         {
                 VkDescriptorSetLayoutBinding b = {};
-                b.binding = 1;
+                b.binding = POINTS_BINDING;
                 b.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
                 b.descriptorCount = 1;
                 b.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
@@ -63,7 +63,7 @@ ShaderMemory::ShaderMemory(const vulkan::Device& device)
 
                 infos.push_back(buffer_info);
 
-                bindings.push_back(0);
+                bindings.push_back(DATA_BINDING);
         }
 
         m_descriptors.update_descriptor_set(0, bindings, infos);
@@ -100,6 +100,6 @@ void ShaderMemory::set_points(const vulkan::BufferWithHostVisibleMemory& buffer)
         buffer_info.offset = 0;
         buffer_info.range = buffer.size();
 
-        m_descriptors.update_descriptor_set(0, 1, buffer_info);
+        m_descriptors.update_descriptor_set(0, POINTS_BINDING, buffer_info);
 }
 }

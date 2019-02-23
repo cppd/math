@@ -28,6 +28,9 @@ namespace gpgpu_convex_hull_show_vulkan_implementation
 {
 class ShaderMemory final
 {
+        static constexpr int DATA_BINDING = 0;
+        static constexpr int POINTS_BINDING = 1;
+
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
 
         vulkan::DescriptorSetLayout m_descriptor_set_layout;
