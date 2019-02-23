@@ -30,6 +30,10 @@ namespace vulkan_text_implementation
 {
 class TextMemory final
 {
+        static constexpr int MATRICES_BINDING = 0;
+        static constexpr int TEXTURE_BINDING = 1;
+        static constexpr int DRAWING_BINDING = 2;
+
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
 
         vulkan::DescriptorSetLayout m_descriptor_set_layout;

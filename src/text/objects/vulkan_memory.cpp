@@ -25,7 +25,7 @@ std::vector<VkDescriptorSetLayoutBinding> TextMemory::descriptor_set_layout_bind
 
         {
                 VkDescriptorSetLayoutBinding b = {};
-                b.binding = 0;
+                b.binding = MATRICES_BINDING;
                 b.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
                 b.descriptorCount = 1;
                 b.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
@@ -34,7 +34,7 @@ std::vector<VkDescriptorSetLayoutBinding> TextMemory::descriptor_set_layout_bind
         }
         {
                 VkDescriptorSetLayoutBinding b = {};
-                b.binding = 1;
+                b.binding = TEXTURE_BINDING;
                 b.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
                 b.descriptorCount = 1;
                 b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
@@ -43,7 +43,7 @@ std::vector<VkDescriptorSetLayoutBinding> TextMemory::descriptor_set_layout_bind
         }
         {
                 VkDescriptorSetLayoutBinding b = {};
-                b.binding = 2;
+                b.binding = DRAWING_BINDING;
                 b.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
                 b.descriptorCount = 1;
                 b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
@@ -72,7 +72,7 @@ TextMemory::TextMemory(const vulkan::Device& device, VkSampler sampler, const vu
 
                 infos.push_back(buffer_info);
 
-                bindings.push_back(0);
+                bindings.push_back(MATRICES_BINDING);
         }
         {
                 VkDescriptorImageInfo image_info = {};
@@ -82,7 +82,7 @@ TextMemory::TextMemory(const vulkan::Device& device, VkSampler sampler, const vu
 
                 infos.push_back(image_info);
 
-                bindings.push_back(1);
+                bindings.push_back(TEXTURE_BINDING);
         }
         {
                 m_uniform_buffers.emplace_back(device, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Drawing));
@@ -95,7 +95,7 @@ TextMemory::TextMemory(const vulkan::Device& device, VkSampler sampler, const vu
 
                 infos.push_back(buffer_info);
 
-                bindings.push_back(2);
+                bindings.push_back(DRAWING_BINDING);
         }
 
         m_descriptors.update_descriptor_set(0, bindings, infos);
