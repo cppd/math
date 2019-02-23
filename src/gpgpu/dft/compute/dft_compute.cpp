@@ -219,8 +219,8 @@ int group_size(int dft_size)
 namespace impl = gpgpu_dft_compute_opengl_implementation;
 
 template <typename FP>
-void fft1d(bool inverse, int fft_count, const impl::DeviceProgFFTShared<FP>& fft,
-           const impl::DeviceProgBitReverse<FP>& bit_reverse, const impl::DeviceProgFFTGlobal<FP>& fft_global,
+void fft1d(bool inverse, int fft_count, const impl::ProgramFFTShared<FP>& fft,
+           const impl::ProgramBitReverse<FP>& program_bit_reverse, const impl::ProgramFFTGlobal<FP>& program_fft_global,
            DeviceMemory<std::complex<FP>>* data)
 {
         const int n = fft.n();
@@ -247,7 +247,7 @@ void fft1d(bool inverse, int fft_count, const impl::DeviceProgFFTShared<FP>& fft
         // с отключенной перестановкой, иначе одни запуски будут вносить изменения
         // в данные других запусков, так как результат пишется в исходные данные.
 
-        bit_reverse.exec(data_size, n - 1, n_bits, *data);
+        program_bit_reverse.exec(data_size, n - 1, n_bits, *data);
 
         fft.exec(inverse, data_size, *data);
 
@@ -264,7 +264,7 @@ void fft1d(bool inverse, int fft_count, const impl::DeviceProgFFTShared<FP>& fft
         for (; m_div_2 < n; m_div_2 <<= 1, two_pi_div_m /= 2)
         {
                 // m_div_2 - половина размера текущих отдельных БПФ
-                fft_global.exec(thread_count, inverse, two_pi_div_m, n_div_2_mask, m_div_2, *data);
+                program_fft_global.exec(thread_count, inverse, two_pi_div_m, n_div_2_mask, m_div_2, *data);
         }
 }
 
@@ -275,14 +275,14 @@ class Impl final : public gpgpu_opengl::DFTCompute, public gpgpu_opengl::DFTComp
         DeviceMemory<std::complex<FP>> m_d1_fwd, m_d1_inv, m_d2_fwd, m_d2_inv;
         DeviceMemory<std::complex<FP>> m_x_d, m_buffer;
         GLuint64 m_texture_handle;
-        impl::DeviceProgBitReverse<FP> m_bit_reverse;
-        impl::DeviceProgFFTGlobal<FP> m_fft_global;
-        impl::DeviceProgCopyInput<FP> m_copy_input;
-        impl::DeviceProgCopyOutput<FP> m_copy_output;
-        impl::DeviceProgMul<FP> m_mul;
-        impl::DeviceProgMulD<FP> m_mul_d;
-        impl::DeviceProgFFTShared<FP> m_fft_1;
-        impl::DeviceProgFFTShared<FP> m_fft_2;
+        impl::ProgramBitReverse<FP> m_program_bit_reverse;
+        impl::ProgramFFTGlobal<FP> m_program_fft_global;
+        impl::ProgramCopyInput<FP> m_program_copy_input;
+        impl::ProgramCopyOutput<FP> m_program_copy_output;
+        impl::ProgramMul<FP> m_program_mul;
+        impl::ProgramMulD<FP> m_program_mul_d;
+        impl::ProgramFFTShared<FP> m_program_fft_1;
+        impl::ProgramFFTShared<FP> m_program_fft_2;
 
         void dft2d(bool inverse)
         {
@@ -290,22 +290,22 @@ class Impl final : public gpgpu_opengl::DFTCompute, public gpgpu_opengl::DFTComp
                 {
                         // По строкам
 
-                        m_mul.rows_to_buffer(inverse, m_x_d, m_buffer);
-                        fft1d(inverse, m_n2, m_fft_1, m_bit_reverse, m_fft_global, &m_buffer);
-                        m_mul_d.rows_mul_d(inverse ? m_d1_inv : m_d1_fwd, m_buffer);
-                        fft1d(!inverse, m_n2, m_fft_1, m_bit_reverse, m_fft_global, &m_buffer);
-                        m_mul.rows_from_buffer(inverse, m_x_d, m_buffer);
+                        m_program_mul.rows_to_buffer(inverse, m_x_d, m_buffer);
+                        fft1d(inverse, m_n2, m_program_fft_1, m_program_bit_reverse, m_program_fft_global, &m_buffer);
+                        m_program_mul_d.rows_mul_d(inverse ? m_d1_inv : m_d1_fwd, m_buffer);
+                        fft1d(!inverse, m_n2, m_program_fft_1, m_program_bit_reverse, m_program_fft_global, &m_buffer);
+                        m_program_mul.rows_from_buffer(inverse, m_x_d, m_buffer);
                 }
 
                 if (m_n2 > 1)
                 {
                         // По столбцам
 
-                        m_mul.columns_to_buffer(inverse, m_x_d, m_buffer);
-                        fft1d(inverse, m_n1, m_fft_2, m_bit_reverse, m_fft_global, &m_buffer);
-                        m_mul_d.columns_mul_d(inverse ? m_d2_inv : m_d2_fwd, m_buffer);
-                        fft1d(!inverse, m_n1, m_fft_2, m_bit_reverse, m_fft_global, &m_buffer);
-                        m_mul.columns_from_buffer(inverse, m_x_d, m_buffer);
+                        m_program_mul.columns_to_buffer(inverse, m_x_d, m_buffer);
+                        fft1d(inverse, m_n1, m_program_fft_2, m_program_bit_reverse, m_program_fft_global, &m_buffer);
+                        m_program_mul_d.columns_mul_d(inverse ? m_d2_inv : m_d2_fwd, m_buffer);
+                        fft1d(!inverse, m_n1, m_program_fft_2, m_program_bit_reverse, m_program_fft_global, &m_buffer);
+                        m_program_mul.columns_from_buffer(inverse, m_x_d, m_buffer);
                 }
         }
 
@@ -338,9 +338,9 @@ class Impl final : public gpgpu_opengl::DFTCompute, public gpgpu_opengl::DFTComp
 
         void exec(bool inverse, bool srgb) override
         {
-                m_copy_input.copy(srgb, m_texture_handle, m_x_d);
+                m_program_copy_input.copy(srgb, m_texture_handle, m_x_d);
                 dft2d(inverse);
-                m_copy_output.copy(static_cast<FP>(1.0 / (m_n1 * m_n2)), m_texture_handle, m_x_d);
+                m_program_copy_output.copy(static_cast<FP>(1.0 / (m_n1 * m_n2)), m_texture_handle, m_x_d);
         }
 
 public:
@@ -357,14 +357,14 @@ public:
                   m_d2_inv(m_m2),
                   m_x_d(m_n1 * m_n2),
                   m_buffer(std::max(m_m1 * m_n2, m_m2 * m_n1)),
-                  m_bit_reverse(GROUP_SIZE_1D),
-                  m_fft_global(GROUP_SIZE_1D),
-                  m_copy_input(GROUP_SIZE_2D, m_n1, m_n2),
-                  m_copy_output(GROUP_SIZE_2D, m_n1, m_n2),
-                  m_mul(GROUP_SIZE_2D, m_n1, m_n2, m_m1, m_m2),
-                  m_mul_d(GROUP_SIZE_2D, m_n1, m_n2, m_m1, m_m2),
-                  m_fft_1(m_m1, shared_size<FP>(m_m1), group_size<FP>(m_m1), m_m1 <= shared_size<FP>(m_m1)),
-                  m_fft_2(m_m2, shared_size<FP>(m_m2), group_size<FP>(m_m2), m_m2 <= shared_size<FP>(m_m2))
+                  m_program_bit_reverse(GROUP_SIZE_1D),
+                  m_program_fft_global(GROUP_SIZE_1D),
+                  m_program_copy_input(GROUP_SIZE_2D, m_n1, m_n2),
+                  m_program_copy_output(GROUP_SIZE_2D, m_n1, m_n2),
+                  m_program_mul(GROUP_SIZE_2D, m_n1, m_n2, m_m1, m_m2),
+                  m_program_mul_d(GROUP_SIZE_2D, m_n1, m_n2, m_m1, m_m2),
+                  m_program_fft_1(m_m1, shared_size<FP>(m_m1), group_size<FP>(m_m1), m_m1 <= shared_size<FP>(m_m1)),
+                  m_program_fft_2(m_m2, shared_size<FP>(m_m2), group_size<FP>(m_m2), m_m2 <= shared_size<FP>(m_m2))
 
         {
                 if (m_n1 < 1 || m_n2 < 1)
@@ -388,16 +388,16 @@ public:
                 // Формулы 13.13, 13.26.
 
                 m_d1_fwd.write(conv<FP>(compute_h2(m_n1, m_m1, compute_h(m_n1, false, 1.0))));
-                fft1d(false, 1, m_fft_1, m_bit_reverse, m_fft_global, &m_d1_fwd);
+                fft1d(false, 1, m_program_fft_1, m_program_bit_reverse, m_program_fft_global, &m_d1_fwd);
 
                 m_d1_inv.write(conv<FP>(compute_h2(m_n1, m_m1, compute_h(m_n1, true, m1_div_n1))));
-                fft1d(true, 1, m_fft_1, m_bit_reverse, m_fft_global, &m_d1_inv);
+                fft1d(true, 1, m_program_fft_1, m_program_bit_reverse, m_program_fft_global, &m_d1_inv);
 
                 m_d2_fwd.write(conv<FP>(compute_h2(m_n2, m_m2, compute_h(m_n2, false, 1.0))));
-                fft1d(false, 1, m_fft_2, m_bit_reverse, m_fft_global, &m_d2_fwd);
+                fft1d(false, 1, m_program_fft_2, m_program_bit_reverse, m_program_fft_global, &m_d2_fwd);
 
                 m_d2_inv.write(conv<FP>(compute_h2(m_n2, m_m2, compute_h(m_n2, true, m2_div_n2))));
-                fft1d(true, 1, m_fft_2, m_bit_reverse, m_fft_global, &m_d2_inv);
+                fft1d(true, 1, m_program_fft_2, m_program_bit_reverse, m_program_fft_global, &m_d2_inv);
         }
 };
 }

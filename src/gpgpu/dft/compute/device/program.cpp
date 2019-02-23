@@ -178,7 +178,7 @@ std::string fft_shared_source(int n, int n_bits, int shared_size, int group_size
 namespace gpgpu_dft_compute_opengl_implementation
 {
 template <typename T>
-DeviceProgBitReverse<T>::DeviceProgBitReverse(int group_size)
+ProgramBitReverse<T>::ProgramBitReverse(int group_size)
         : m_group_size(group_size),
           m_bit_reverse(opengl::ComputeShader(bit_reverse_source<T>(group_size))),
           m_shader_memory(sizeof(ShaderMemory))
@@ -186,7 +186,7 @@ DeviceProgBitReverse<T>::DeviceProgBitReverse(int group_size)
 }
 
 template <typename T>
-void DeviceProgBitReverse<T>::exec(int max_threads, int n_mask, int n_bits, const opengl::StorageBuffer& data) const
+void ProgramBitReverse<T>::exec(int max_threads, int n_mask, int n_bits, const opengl::StorageBuffer& data) const
 {
         ShaderMemory m;
         m.max_threads = max_threads;
@@ -204,7 +204,7 @@ void DeviceProgBitReverse<T>::exec(int max_threads, int n_mask, int n_bits, cons
 //
 
 template <typename T>
-DeviceProgFFTGlobal<T>::DeviceProgFFTGlobal(int group_size)
+ProgramFFTGlobal<T>::ProgramFFTGlobal(int group_size)
         : m_group_size(group_size),
           m_fft(opengl::ComputeShader(fft_global_source<T>(group_size))),
           m_shader_memory(sizeof(ShaderMemory))
@@ -212,8 +212,8 @@ DeviceProgFFTGlobal<T>::DeviceProgFFTGlobal(int group_size)
 }
 
 template <typename T>
-void DeviceProgFFTGlobal<T>::exec(int max_threads, bool inverse, T two_pi_div_m, int n_div_2_mask, int m_div_2,
-                                  const opengl::StorageBuffer& data) const
+void ProgramFFTGlobal<T>::exec(int max_threads, bool inverse, T two_pi_div_m, int n_div_2_mask, int m_div_2,
+                               const opengl::StorageBuffer& data) const
 {
         ShaderMemory m;
         m.inverse_dft = inverse;
@@ -233,7 +233,7 @@ void DeviceProgFFTGlobal<T>::exec(int max_threads, bool inverse, T two_pi_div_m,
 //
 
 template <typename T>
-DeviceProgCopyInput<T>::DeviceProgCopyInput(vec2i group_size, int n1, int n2)
+ProgramCopyInput<T>::ProgramCopyInput(vec2i group_size, int n1, int n2)
         : m_group_count(group_count(n1, n2, group_size)),
           m_copy_input(opengl::ComputeShader(copy_input_source<T>(group_size))),
           m_shader_memory(sizeof(ShaderMemory))
@@ -241,7 +241,7 @@ DeviceProgCopyInput<T>::DeviceProgCopyInput(vec2i group_size, int n1, int n2)
 }
 
 template <typename T>
-void DeviceProgCopyInput<T>::copy(bool source_srgb, const GLuint64 tex, const opengl::StorageBuffer& data)
+void ProgramCopyInput<T>::copy(bool source_srgb, const GLuint64 tex, const opengl::StorageBuffer& data)
 {
         ShaderMemory m;
         m.source_srgb = source_srgb;
@@ -258,7 +258,7 @@ void DeviceProgCopyInput<T>::copy(bool source_srgb, const GLuint64 tex, const op
 //
 
 template <typename T>
-DeviceProgCopyOutput<T>::DeviceProgCopyOutput(vec2i group_size, int n1, int n2)
+ProgramCopyOutput<T>::ProgramCopyOutput(vec2i group_size, int n1, int n2)
         : m_group_count(group_count(n1, n2, group_size)),
           m_copy_output(opengl::ComputeShader(copy_output_source<T>(group_size))),
           m_shader_memory(sizeof(ShaderMemory))
@@ -266,7 +266,7 @@ DeviceProgCopyOutput<T>::DeviceProgCopyOutput(vec2i group_size, int n1, int n2)
 }
 
 template <typename T>
-void DeviceProgCopyOutput<T>::copy(T to_mul, const GLuint64 tex, const opengl::StorageBuffer& data)
+void ProgramCopyOutput<T>::copy(T to_mul, const GLuint64 tex, const opengl::StorageBuffer& data)
 {
         ShaderMemory m;
         m.to_mul = to_mul;
@@ -283,7 +283,7 @@ void DeviceProgCopyOutput<T>::copy(T to_mul, const GLuint64 tex, const opengl::S
 //
 
 template <typename T>
-DeviceProgMul<T>::DeviceProgMul(vec2i group_size, int n1, int n2, int m1, int m2)
+ProgramMul<T>::ProgramMul(vec2i group_size, int n1, int n2, int m1, int m2)
         : m_rows_to_buffer_groups(group_count(m1, n2, group_size)),
           m_rows_from_buffer_groups(group_count(n1, n2, group_size)),
           m_columns_to_buffer_groups(group_count(n1, m2, group_size)),
@@ -297,7 +297,7 @@ DeviceProgMul<T>::DeviceProgMul(vec2i group_size, int n1, int n2, int m1, int m2
 }
 
 template <typename T>
-void DeviceProgMul<T>::set_and_bind(bool inverse, const opengl::StorageBuffer& data, const opengl::StorageBuffer& buffer) const
+void ProgramMul<T>::set_and_bind(bool inverse, const opengl::StorageBuffer& data, const opengl::StorageBuffer& buffer) const
 {
         ShaderMemory m;
         m.inverse_dft = inverse;
@@ -309,7 +309,7 @@ void DeviceProgMul<T>::set_and_bind(bool inverse, const opengl::StorageBuffer& d
 }
 
 template <typename T>
-void DeviceProgMul<T>::rows_to_buffer(bool inverse, const opengl::StorageBuffer& data, const opengl::StorageBuffer& buffer) const
+void ProgramMul<T>::rows_to_buffer(bool inverse, const opengl::StorageBuffer& data, const opengl::StorageBuffer& buffer) const
 {
         set_and_bind(inverse, data, buffer);
 
@@ -318,8 +318,7 @@ void DeviceProgMul<T>::rows_to_buffer(bool inverse, const opengl::StorageBuffer&
 }
 
 template <typename T>
-void DeviceProgMul<T>::rows_from_buffer(bool inverse, const opengl::StorageBuffer& data,
-                                        const opengl::StorageBuffer& buffer) const
+void ProgramMul<T>::rows_from_buffer(bool inverse, const opengl::StorageBuffer& data, const opengl::StorageBuffer& buffer) const
 {
         set_and_bind(inverse, data, buffer);
 
@@ -328,8 +327,7 @@ void DeviceProgMul<T>::rows_from_buffer(bool inverse, const opengl::StorageBuffe
 }
 
 template <typename T>
-void DeviceProgMul<T>::columns_to_buffer(bool inverse, const opengl::StorageBuffer& data,
-                                         const opengl::StorageBuffer& buffer) const
+void ProgramMul<T>::columns_to_buffer(bool inverse, const opengl::StorageBuffer& data, const opengl::StorageBuffer& buffer) const
 {
         set_and_bind(inverse, data, buffer);
 
@@ -338,8 +336,8 @@ void DeviceProgMul<T>::columns_to_buffer(bool inverse, const opengl::StorageBuff
 }
 
 template <typename T>
-void DeviceProgMul<T>::columns_from_buffer(bool inverse, const opengl::StorageBuffer& data,
-                                           const opengl::StorageBuffer& buffer) const
+void ProgramMul<T>::columns_from_buffer(bool inverse, const opengl::StorageBuffer& data,
+                                        const opengl::StorageBuffer& buffer) const
 {
         set_and_bind(inverse, data, buffer);
 
@@ -350,7 +348,7 @@ void DeviceProgMul<T>::columns_from_buffer(bool inverse, const opengl::StorageBu
 //
 
 template <typename T>
-DeviceProgMulD<T>::DeviceProgMulD(vec2i group_size, int n1, int n2, int m1, int m2)
+ProgramMulD<T>::ProgramMulD(vec2i group_size, int n1, int n2, int m1, int m2)
         : m_row_groups(group_count(m1, n2, group_size)),
           m_column_groups(group_count(m2, n1, group_size)),
           m_mul_d(opengl::ComputeShader(rows_mul_d_source<T>(group_size))),
@@ -372,7 +370,7 @@ DeviceProgMulD<T>::DeviceProgMulD(vec2i group_size, int n1, int n2, int m1, int 
 }
 
 template <typename T>
-void DeviceProgMulD<T>::rows_mul_d(const opengl::StorageBuffer& d, const opengl::StorageBuffer& data) const
+void ProgramMulD<T>::rows_mul_d(const opengl::StorageBuffer& d, const opengl::StorageBuffer& data) const
 {
         m_memory_rows.bind(DATA_BINDING);
         d.bind(BUFFER_DIAGONAL_BINDING);
@@ -383,7 +381,7 @@ void DeviceProgMulD<T>::rows_mul_d(const opengl::StorageBuffer& d, const opengl:
 }
 
 template <typename T>
-void DeviceProgMulD<T>::columns_mul_d(const opengl::StorageBuffer& d, const opengl::StorageBuffer& data) const
+void ProgramMulD<T>::columns_mul_d(const opengl::StorageBuffer& d, const opengl::StorageBuffer& data) const
 {
         m_memory_columns.bind(DATA_BINDING);
         d.bind(BUFFER_DIAGONAL_BINDING);
@@ -396,7 +394,7 @@ void DeviceProgMulD<T>::columns_mul_d(const opengl::StorageBuffer& d, const open
 //
 
 template <typename T>
-DeviceProgFFTShared<T>::DeviceProgFFTShared(int n, int shared_size, int group_size, bool reverse_input)
+ProgramFFTShared<T>::ProgramFFTShared(int n, int shared_size, int group_size, bool reverse_input)
         : m_n(n),
           m_n_bits(binary_size(n)),
           m_shared_size(shared_size),
@@ -407,7 +405,7 @@ DeviceProgFFTShared<T>::DeviceProgFFTShared(int n, int shared_size, int group_si
 }
 
 template <typename T>
-void DeviceProgFFTShared<T>::exec(bool inverse, int data_size, const opengl::StorageBuffer& data) const
+void ProgramFFTShared<T>::exec(bool inverse, int data_size, const opengl::StorageBuffer& data) const
 {
         ShaderMemory m;
         m.inverse_dft = inverse;
@@ -423,11 +421,11 @@ void DeviceProgFFTShared<T>::exec(bool inverse, int data_size, const opengl::Sto
 
 //
 
-template class DeviceProgBitReverse<float>;
-template class DeviceProgFFTGlobal<float>;
-template class DeviceProgCopyInput<float>;
-template class DeviceProgCopyOutput<float>;
-template class DeviceProgMul<float>;
-template class DeviceProgMulD<float>;
-template class DeviceProgFFTShared<float>;
+template class ProgramBitReverse<float>;
+template class ProgramFFTGlobal<float>;
+template class ProgramCopyInput<float>;
+template class ProgramCopyOutput<float>;
+template class ProgramMul<float>;
+template class ProgramMulD<float>;
+template class ProgramFFTShared<float>;
 }

@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace gpgpu_dft_compute_opengl_implementation
 {
 template <typename T>
-class DeviceProgBitReverse final
+class ProgramBitReverse final
 {
         static constexpr int DATA_BINDING = 0;
         static constexpr int BUFFER_BINDING = 1;
@@ -41,13 +41,13 @@ class DeviceProgBitReverse final
         opengl::UniformBuffer m_shader_memory;
 
 public:
-        DeviceProgBitReverse(int group_size);
+        ProgramBitReverse(int group_size);
 
         void exec(int max_threads, int n_mask, int n_bits, const opengl::StorageBuffer& data) const;
 };
 
 template <typename T>
-class DeviceProgFFTGlobal final
+class ProgramFFTGlobal final
 {
         static constexpr int DATA_BINDING = 0;
         static constexpr int BUFFER_BINDING = 1;
@@ -66,14 +66,14 @@ class DeviceProgFFTGlobal final
         opengl::UniformBuffer m_shader_memory;
 
 public:
-        DeviceProgFFTGlobal(int group_size);
+        ProgramFFTGlobal(int group_size);
 
         void exec(int max_threads, bool inverse, T two_pi_div_m, int n_div_2_mask, int m_div_2,
                   const opengl::StorageBuffer& data) const;
 };
 
 template <typename T>
-class DeviceProgCopyInput final
+class ProgramCopyInput final
 {
         static constexpr int DATA_BINDING = 0;
         static constexpr int BUFFER_BINDING = 1;
@@ -90,13 +90,13 @@ class DeviceProgCopyInput final
         opengl::UniformBuffer m_shader_memory;
 
 public:
-        DeviceProgCopyInput(vec2i group_size, int n1, int n2);
+        ProgramCopyInput(vec2i group_size, int n1, int n2);
 
         void copy(bool source_srgb, const GLuint64 tex, const opengl::StorageBuffer& data);
 };
 
 template <typename T>
-class DeviceProgCopyOutput final
+class ProgramCopyOutput final
 {
         static constexpr int DATA_BINDING = 0;
         static constexpr int BUFFER_BINDING = 1;
@@ -113,13 +113,13 @@ class DeviceProgCopyOutput final
         opengl::UniformBuffer m_shader_memory;
 
 public:
-        DeviceProgCopyOutput(vec2i group_size, int n1, int n2);
+        ProgramCopyOutput(vec2i group_size, int n1, int n2);
 
         void copy(T to_mul, const GLuint64 tex, const opengl::StorageBuffer& data);
 };
 
 template <typename T>
-class DeviceProgMul final
+class ProgramMul final
 {
         static constexpr int DATA_BINDING = 0;
         static constexpr int BUFFER_0_BINDING = 1;
@@ -143,7 +143,7 @@ class DeviceProgMul final
         void set_and_bind(bool inverse, const opengl::StorageBuffer& data, const opengl::StorageBuffer& buffer) const;
 
 public:
-        DeviceProgMul(vec2i group_size, int n1, int n2, int m1, int m2);
+        ProgramMul(vec2i group_size, int n1, int n2, int m1, int m2);
 
         // Функции подстановки переменных, формулы 13.4, 13.27, 13.28, 13.32.
         void rows_to_buffer(bool inverse, const opengl::StorageBuffer& data, const opengl::StorageBuffer& buffer) const;
@@ -153,7 +153,7 @@ public:
 };
 
 template <typename T>
-class DeviceProgMulD final
+class ProgramMulD final
 {
         static constexpr int DATA_BINDING = 0;
         static constexpr int BUFFER_DIAGONAL_BINDING = 1;
@@ -171,7 +171,7 @@ class DeviceProgMulD final
         opengl::UniformBuffer m_memory_columns;
 
 public:
-        DeviceProgMulD(vec2i group_size, int n1, int n2, int m1, int m2);
+        ProgramMulD(vec2i group_size, int n1, int n2, int m1, int m2);
 
         // Умножение на диагональ, формулы 13.20, 13.30.
         void rows_mul_d(const opengl::StorageBuffer& d, const opengl::StorageBuffer& data) const;
@@ -179,7 +179,7 @@ public:
 };
 
 template <typename T>
-class DeviceProgFFTShared final
+class ProgramFFTShared final
 {
         static constexpr int DATA_BINDING = 0;
         static constexpr int BUFFER_BINDING = 1;
@@ -195,7 +195,7 @@ class DeviceProgFFTShared final
         opengl::UniformBuffer m_shader_memory;
 
 public:
-        DeviceProgFFTShared(int n, int shared_size, int group_size, bool reverse_input);
+        ProgramFFTShared(int n, int shared_size, int group_size, bool reverse_input);
 
         int n() const
         {
