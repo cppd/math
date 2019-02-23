@@ -1372,6 +1372,10 @@ DescriptorSet::DescriptorSet() = default;
 
 DescriptorSet::DescriptorSet(VkDevice device, VkDescriptorPool descriptor_pool, VkDescriptorSetLayout descriptor_set_layout)
 {
+        ASSERT(device != VK_NULL_HANDLE);
+        ASSERT(descriptor_pool != VK_NULL_HANDLE);
+        ASSERT(descriptor_set_layout != VK_NULL_HANDLE);
+
         VkDescriptorSetAllocateInfo allocate_info = {};
         allocate_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
         allocate_info.descriptorPool = descriptor_pool;
@@ -1449,6 +1453,8 @@ DescriptorSets::DescriptorSets(VkDevice device, VkDescriptorPool descriptor_pool
                                const std::vector<VkDescriptorSetLayout>& descriptor_set_layouts)
         : m_descriptor_sets(descriptor_set_layouts.size())
 {
+        ASSERT(device != VK_NULL_HANDLE);
+        ASSERT(descriptor_pool != VK_NULL_HANDLE);
         ASSERT(descriptor_set_layouts.size() > 0);
         ASSERT(std::all_of(
                 descriptor_set_layouts.cbegin(), descriptor_set_layouts.cend(),
@@ -1493,21 +1499,16 @@ DescriptorSets& DescriptorSets::operator=(DescriptorSets&& from) noexcept
         return *this;
 }
 
-const VkDescriptorSet& DescriptorSets::operator[](uint32_t index) const noexcept
-{
-        ASSERT(index < m_descriptor_sets.size());
-
-        return m_descriptor_sets[index];
-}
-
 uint32_t DescriptorSets::count() const noexcept
 {
         return m_descriptor_sets.size();
 }
 
-const VkDescriptorSet* DescriptorSets::data() const noexcept
+const VkDescriptorSet& DescriptorSets::operator[](uint32_t index) const noexcept
 {
-        return m_descriptor_sets.data();
+        ASSERT(index < m_descriptor_sets.size());
+
+        return m_descriptor_sets[index];
 }
 
 //

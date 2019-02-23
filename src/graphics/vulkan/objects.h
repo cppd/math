@@ -520,10 +520,8 @@ public:
         DescriptorSets(DescriptorSets&&) noexcept;
         DescriptorSets& operator=(DescriptorSets&&) noexcept;
 
-        const VkDescriptorSet& operator[](uint32_t index) const noexcept;
-
         uint32_t count() const noexcept;
-        const VkDescriptorSet* data() const noexcept;
+        const VkDescriptorSet& operator[](uint32_t index) const noexcept;
 };
 
 class Image final
