@@ -32,6 +32,12 @@ namespace vulkan_renderer_implementation
 {
 class TrianglesSharedMemory final
 {
+        static constexpr int MATRICES_BINDING = 0;
+        static constexpr int LIGHTING_BINDING = 1;
+        static constexpr int DRAWING_BINDING = 2;
+        static constexpr int SHADOW_BINDING = 3;
+        static constexpr int OBJECTS_BINDING = 4;
+
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
 
         vulkan::DescriptorSetLayout m_descriptor_set_layout;
@@ -115,6 +121,11 @@ public:
 
 class TrianglesMaterialMemory final
 {
+        static constexpr int MATERIAL_BINDING = 0;
+        static constexpr int TEXTURE_KA_BINDING = 1;
+        static constexpr int TEXTURE_KD_BINDING = 2;
+        static constexpr int TEXTURE_KS_BINDING = 3;
+
         vulkan::Descriptors m_descriptors;
         std::vector<vulkan::BufferWithHostVisibleMemory> m_uniform_buffers;
 
@@ -161,6 +172,8 @@ public:
 
 class ShadowMemory final
 {
+        static constexpr int MATRICES_BINDING = 0;
+
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
 
         vulkan::DescriptorSetLayout m_descriptor_set_layout;
@@ -194,6 +207,10 @@ public:
 
 class PointsMemory final
 {
+        static constexpr int MATRICES_BINDING = 0;
+        static constexpr int DRAWING_BINDING = 1;
+        static constexpr int OBJECTS_BINDING = 2;
+
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
 
         vulkan::DescriptorSetLayout m_descriptor_set_layout;

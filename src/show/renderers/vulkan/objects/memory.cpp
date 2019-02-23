@@ -27,7 +27,7 @@ std::vector<VkDescriptorSetLayoutBinding> TrianglesSharedMemory::descriptor_set_
 
         {
                 VkDescriptorSetLayoutBinding b = {};
-                b.binding = 0;
+                b.binding = MATRICES_BINDING;
                 b.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
                 b.descriptorCount = 1;
                 b.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
@@ -36,7 +36,7 @@ std::vector<VkDescriptorSetLayoutBinding> TrianglesSharedMemory::descriptor_set_
         }
         {
                 VkDescriptorSetLayoutBinding b = {};
-                b.binding = 1;
+                b.binding = LIGHTING_BINDING;
                 b.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
                 b.descriptorCount = 1;
                 b.stageFlags = VK_SHADER_STAGE_GEOMETRY_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
@@ -45,7 +45,7 @@ std::vector<VkDescriptorSetLayoutBinding> TrianglesSharedMemory::descriptor_set_
         }
         {
                 VkDescriptorSetLayoutBinding b = {};
-                b.binding = 2;
+                b.binding = DRAWING_BINDING;
                 b.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
                 b.descriptorCount = 1;
                 b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
@@ -54,7 +54,7 @@ std::vector<VkDescriptorSetLayoutBinding> TrianglesSharedMemory::descriptor_set_
         }
         {
                 VkDescriptorSetLayoutBinding b = {};
-                b.binding = 3;
+                b.binding = SHADOW_BINDING;
                 b.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
                 b.descriptorCount = 1;
                 b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
@@ -64,7 +64,7 @@ std::vector<VkDescriptorSetLayoutBinding> TrianglesSharedMemory::descriptor_set_
         }
         {
                 VkDescriptorSetLayoutBinding b = {};
-                b.binding = 4;
+                b.binding = OBJECTS_BINDING;
                 b.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
                 b.descriptorCount = 1;
                 b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
@@ -94,7 +94,7 @@ TrianglesSharedMemory::TrianglesSharedMemory(const vulkan::Device& device)
 
                 infos.push_back(buffer_info);
 
-                bindings.push_back(0);
+                bindings.push_back(MATRICES_BINDING);
         }
         {
                 m_uniform_buffers.emplace_back(device, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Lighting));
@@ -107,7 +107,7 @@ TrianglesSharedMemory::TrianglesSharedMemory(const vulkan::Device& device)
 
                 infos.push_back(buffer_info);
 
-                bindings.push_back(1);
+                bindings.push_back(LIGHTING_BINDING);
         }
         {
                 m_uniform_buffers.emplace_back(device, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Drawing));
@@ -120,7 +120,7 @@ TrianglesSharedMemory::TrianglesSharedMemory(const vulkan::Device& device)
 
                 infos.push_back(buffer_info);
 
-                bindings.push_back(2);
+                bindings.push_back(DRAWING_BINDING);
         }
 
         m_descriptors.update_descriptor_set(0, bindings, infos);
@@ -228,7 +228,7 @@ void TrianglesSharedMemory::set_shadow_texture(VkSampler sampler, const vulkan::
         image_info.imageView = shadow_texture->image_view();
         image_info.sampler = sampler;
 
-        m_descriptors.update_descriptor_set(0, 3, image_info);
+        m_descriptors.update_descriptor_set(0, SHADOW_BINDING, image_info);
 }
 void TrianglesSharedMemory::set_object_image(const vulkan::StorageImage* storage_image) const
 {
@@ -238,7 +238,7 @@ void TrianglesSharedMemory::set_object_image(const vulkan::StorageImage* storage
         image_info.imageLayout = storage_image->image_layout();
         image_info.imageView = storage_image->image_view();
 
-        m_descriptors.update_descriptor_set(0, 4, image_info);
+        m_descriptors.update_descriptor_set(0, OBJECTS_BINDING, image_info);
 }
 
 //
@@ -249,7 +249,7 @@ std::vector<VkDescriptorSetLayoutBinding> TrianglesMaterialMemory::descriptor_se
 
         {
                 VkDescriptorSetLayoutBinding b = {};
-                b.binding = 0;
+                b.binding = MATERIAL_BINDING;
                 b.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
                 b.descriptorCount = 1;
                 b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
@@ -258,7 +258,7 @@ std::vector<VkDescriptorSetLayoutBinding> TrianglesMaterialMemory::descriptor_se
         }
         {
                 VkDescriptorSetLayoutBinding b = {};
-                b.binding = 1;
+                b.binding = TEXTURE_KA_BINDING;
                 b.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
                 b.descriptorCount = 1;
                 b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
@@ -268,7 +268,7 @@ std::vector<VkDescriptorSetLayoutBinding> TrianglesMaterialMemory::descriptor_se
         }
         {
                 VkDescriptorSetLayoutBinding b = {};
-                b.binding = 2;
+                b.binding = TEXTURE_KD_BINDING;
                 b.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
                 b.descriptorCount = 1;
                 b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
@@ -278,7 +278,7 @@ std::vector<VkDescriptorSetLayoutBinding> TrianglesMaterialMemory::descriptor_se
         }
         {
                 VkDescriptorSetLayoutBinding b = {};
-                b.binding = 3;
+                b.binding = TEXTURE_KS_BINDING;
                 b.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
                 b.descriptorCount = 1;
                 b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
@@ -318,7 +318,7 @@ TrianglesMaterialMemory::TrianglesMaterialMemory(const vulkan::Device& device, V
 
                         infos.push_back(buffer_info);
 
-                        bindings.push_back(0);
+                        bindings.push_back(MATERIAL_BINDING);
                 }
                 {
                         VkDescriptorImageInfo image_info = {};
@@ -328,7 +328,7 @@ TrianglesMaterialMemory::TrianglesMaterialMemory(const vulkan::Device& device, V
 
                         infos.push_back(image_info);
 
-                        bindings.push_back(1);
+                        bindings.push_back(TEXTURE_KA_BINDING);
                 }
                 {
                         VkDescriptorImageInfo image_info = {};
@@ -338,7 +338,7 @@ TrianglesMaterialMemory::TrianglesMaterialMemory(const vulkan::Device& device, V
 
                         infos.push_back(image_info);
 
-                        bindings.push_back(2);
+                        bindings.push_back(TEXTURE_KD_BINDING);
                 }
                 {
                         VkDescriptorImageInfo image_info = {};
@@ -348,7 +348,7 @@ TrianglesMaterialMemory::TrianglesMaterialMemory(const vulkan::Device& device, V
 
                         infos.push_back(image_info);
 
-                        bindings.push_back(3);
+                        bindings.push_back(TEXTURE_KS_BINDING);
                 }
                 m_descriptors.update_descriptor_set(i, bindings, infos);
         }
@@ -377,7 +377,7 @@ std::vector<VkDescriptorSetLayoutBinding> ShadowMemory::descriptor_set_layout_bi
 
         {
                 VkDescriptorSetLayoutBinding b = {};
-                b.binding = 0;
+                b.binding = MATRICES_BINDING;
                 b.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
                 b.descriptorCount = 1;
                 b.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
@@ -405,7 +405,7 @@ ShadowMemory::ShadowMemory(const vulkan::Device& device)
 
                 infos.push_back(buffer_info);
 
-                bindings.push_back(0);
+                bindings.push_back(MATRICES_BINDING);
         }
 
         m_descriptors.update_descriptor_set(0, bindings, infos);
@@ -435,7 +435,7 @@ std::vector<VkDescriptorSetLayoutBinding> PointsMemory::descriptor_set_layout_bi
 
         {
                 VkDescriptorSetLayoutBinding b = {};
-                b.binding = 0;
+                b.binding = MATRICES_BINDING;
                 b.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
                 b.descriptorCount = 1;
                 b.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
@@ -444,7 +444,7 @@ std::vector<VkDescriptorSetLayoutBinding> PointsMemory::descriptor_set_layout_bi
         }
         {
                 VkDescriptorSetLayoutBinding b = {};
-                b.binding = 1;
+                b.binding = DRAWING_BINDING;
                 b.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
                 b.descriptorCount = 1;
                 b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
@@ -453,7 +453,7 @@ std::vector<VkDescriptorSetLayoutBinding> PointsMemory::descriptor_set_layout_bi
         }
         {
                 VkDescriptorSetLayoutBinding b = {};
-                b.binding = 2;
+                b.binding = OBJECTS_BINDING;
                 b.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
                 b.descriptorCount = 1;
                 b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
@@ -483,7 +483,7 @@ PointsMemory::PointsMemory(const vulkan::Device& device)
 
                 infos.push_back(buffer_info);
 
-                bindings.push_back(0);
+                bindings.push_back(MATRICES_BINDING);
         }
         {
                 m_uniform_buffers.emplace_back(device, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Drawing));
@@ -496,7 +496,7 @@ PointsMemory::PointsMemory(const vulkan::Device& device)
 
                 infos.push_back(buffer_info);
 
-                bindings.push_back(1);
+                bindings.push_back(DRAWING_BINDING);
         }
 
         m_descriptors.update_descriptor_set(0, bindings, infos);
@@ -557,6 +557,6 @@ void PointsMemory::set_object_image(const vulkan::StorageImage* storage_image) c
         image_info.imageLayout = storage_image->image_layout();
         image_info.imageView = storage_image->image_view();
 
-        m_descriptors.update_descriptor_set(0, 2, image_info);
+        m_descriptors.update_descriptor_set(0, OBJECTS_BINDING, image_info);
 }
 }
