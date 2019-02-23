@@ -56,8 +56,7 @@ std::vector<VkDescriptorSetLayoutBinding> TextMemory::descriptor_set_layout_bind
 
 TextMemory::TextMemory(const vulkan::Device& device, VkSampler sampler, const vulkan::GrayscaleTexture* texture)
         : m_descriptor_set_layout(vulkan::create_descriptor_set_layout(device, descriptor_set_layout_bindings())),
-          m_descriptors(vulkan::Descriptors(device, 1, m_descriptor_set_layout, descriptor_set_layout_bindings())),
-          m_descriptor_set(m_descriptors.create_descriptor_set())
+          m_descriptors(device, 1, m_descriptor_set_layout, descriptor_set_layout_bindings())
 {
         std::vector<Variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
         std::vector<uint32_t> bindings;
@@ -99,7 +98,7 @@ TextMemory::TextMemory(const vulkan::Device& device, VkSampler sampler, const vu
                 bindings.push_back(2);
         }
 
-        m_descriptors.update_descriptor_set(m_descriptor_set, bindings, infos);
+        m_descriptors.update_descriptor_set(0, bindings, infos);
 }
 
 VkDescriptorSetLayout TextMemory::descriptor_set_layout() const noexcept
@@ -109,7 +108,7 @@ VkDescriptorSetLayout TextMemory::descriptor_set_layout() const noexcept
 
 const VkDescriptorSet& TextMemory::descriptor_set() const noexcept
 {
-        return m_descriptor_set;
+        return m_descriptors.descriptor_set(0);
 }
 
 template <typename T>

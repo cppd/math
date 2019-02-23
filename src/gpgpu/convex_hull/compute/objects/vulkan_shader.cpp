@@ -50,8 +50,7 @@ std::vector<VkDescriptorSetLayoutBinding> PrepareMemory::descriptor_set_layout_b
 
 PrepareMemory::PrepareMemory(const vulkan::Device& device)
         : m_descriptor_set_layout(vulkan::create_descriptor_set_layout(device, descriptor_set_layout_bindings())),
-          m_descriptors(vulkan::Descriptors(device, 1, m_descriptor_set_layout, descriptor_set_layout_bindings())),
-          m_descriptor_set(m_descriptors.create_descriptor_set())
+          m_descriptors(device, 1, m_descriptor_set_layout, descriptor_set_layout_bindings())
 {
 }
 
@@ -62,7 +61,7 @@ VkDescriptorSetLayout PrepareMemory::descriptor_set_layout() const noexcept
 
 const VkDescriptorSet& PrepareMemory::descriptor_set() const noexcept
 {
-        return m_descriptor_set;
+        return m_descriptors.descriptor_set(0);
 }
 
 void PrepareMemory::set_object_image(const vulkan::StorageImage& storage_image) const
@@ -73,7 +72,7 @@ void PrepareMemory::set_object_image(const vulkan::StorageImage& storage_image) 
         image_info.imageLayout = storage_image.image_layout();
         image_info.imageView = storage_image.image_view();
 
-        m_descriptors.update_descriptor_set(m_descriptor_set, 1, image_info);
+        m_descriptors.update_descriptor_set(0, 1, image_info);
 }
 
 void PrepareMemory::set_lines(const vulkan::BufferWithHostVisibleMemory& buffer) const
@@ -85,7 +84,7 @@ void PrepareMemory::set_lines(const vulkan::BufferWithHostVisibleMemory& buffer)
         buffer_info.offset = 0;
         buffer_info.range = buffer.size();
 
-        m_descriptors.update_descriptor_set(m_descriptor_set, 0, buffer_info);
+        m_descriptors.update_descriptor_set(0, 0, buffer_info);
 }
 
 //
@@ -165,8 +164,7 @@ std::vector<VkDescriptorSetLayoutBinding> MergeMemory::descriptor_set_layout_bin
 
 MergeMemory::MergeMemory(const vulkan::Device& device)
         : m_descriptor_set_layout(vulkan::create_descriptor_set_layout(device, descriptor_set_layout_bindings())),
-          m_descriptors(vulkan::Descriptors(device, 1, m_descriptor_set_layout, descriptor_set_layout_bindings())),
-          m_descriptor_set(m_descriptors.create_descriptor_set())
+          m_descriptors(device, 1, m_descriptor_set_layout, descriptor_set_layout_bindings())
 {
 }
 
@@ -177,7 +175,7 @@ VkDescriptorSetLayout MergeMemory::descriptor_set_layout() const noexcept
 
 const VkDescriptorSet& MergeMemory::descriptor_set() const noexcept
 {
-        return m_descriptor_set;
+        return m_descriptors.descriptor_set(0);
 }
 
 void MergeMemory::set_lines(const vulkan::BufferWithHostVisibleMemory& buffer) const
@@ -189,7 +187,7 @@ void MergeMemory::set_lines(const vulkan::BufferWithHostVisibleMemory& buffer) c
         buffer_info.offset = 0;
         buffer_info.range = buffer.size();
 
-        m_descriptors.update_descriptor_set(m_descriptor_set, 0, buffer_info);
+        m_descriptors.update_descriptor_set(0, 0, buffer_info);
 }
 
 //
@@ -291,8 +289,7 @@ std::vector<VkDescriptorSetLayoutBinding> FilterMemory::descriptor_set_layout_bi
 
 FilterMemory::FilterMemory(const vulkan::Device& device)
         : m_descriptor_set_layout(vulkan::create_descriptor_set_layout(device, descriptor_set_layout_bindings())),
-          m_descriptors(vulkan::Descriptors(device, 1, m_descriptor_set_layout, descriptor_set_layout_bindings())),
-          m_descriptor_set(m_descriptors.create_descriptor_set())
+          m_descriptors(device, 1, m_descriptor_set_layout, descriptor_set_layout_bindings())
 {
 }
 
@@ -303,7 +300,7 @@ VkDescriptorSetLayout FilterMemory::descriptor_set_layout() const noexcept
 
 const VkDescriptorSet& FilterMemory::descriptor_set() const noexcept
 {
-        return m_descriptor_set;
+        return m_descriptors.descriptor_set(0);
 }
 
 void FilterMemory::set_lines(const vulkan::BufferWithHostVisibleMemory& buffer) const
@@ -315,7 +312,7 @@ void FilterMemory::set_lines(const vulkan::BufferWithHostVisibleMemory& buffer) 
         buffer_info.offset = 0;
         buffer_info.range = buffer.size();
 
-        m_descriptors.update_descriptor_set(m_descriptor_set, 0, buffer_info);
+        m_descriptors.update_descriptor_set(0, 0, buffer_info);
 }
 
 void FilterMemory::set_points(const vulkan::BufferWithHostVisibleMemory& buffer) const
@@ -327,7 +324,7 @@ void FilterMemory::set_points(const vulkan::BufferWithHostVisibleMemory& buffer)
         buffer_info.offset = 0;
         buffer_info.range = buffer.size();
 
-        m_descriptors.update_descriptor_set(m_descriptor_set, 1, buffer_info);
+        m_descriptors.update_descriptor_set(0, 1, buffer_info);
 }
 
 void FilterMemory::set_point_count(const vulkan::BufferWithHostVisibleMemory& buffer) const
@@ -339,7 +336,7 @@ void FilterMemory::set_point_count(const vulkan::BufferWithHostVisibleMemory& bu
         buffer_info.offset = 0;
         buffer_info.range = buffer.size();
 
-        m_descriptors.update_descriptor_set(m_descriptor_set, 2, buffer_info);
+        m_descriptors.update_descriptor_set(0, 2, buffer_info);
 }
 
 //

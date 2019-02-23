@@ -35,7 +35,6 @@ class TextMemory final
         vulkan::DescriptorSetLayout m_descriptor_set_layout;
         vulkan::Descriptors m_descriptors;
         std::vector<vulkan::BufferWithHostVisibleMemory> m_uniform_buffers;
-        VkDescriptorSet m_descriptor_set;
 
         struct Matrices
         {

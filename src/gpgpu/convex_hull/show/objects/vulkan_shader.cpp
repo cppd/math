@@ -47,8 +47,7 @@ std::vector<VkDescriptorSetLayoutBinding> ShaderMemory::descriptor_set_layout_bi
 
 ShaderMemory::ShaderMemory(const vulkan::Device& device)
         : m_descriptor_set_layout(vulkan::create_descriptor_set_layout(device, descriptor_set_layout_bindings())),
-          m_descriptors(vulkan::Descriptors(device, 1, m_descriptor_set_layout, descriptor_set_layout_bindings())),
-          m_descriptor_set(m_descriptors.create_descriptor_set())
+          m_descriptors(device, 1, m_descriptor_set_layout, descriptor_set_layout_bindings())
 {
         std::vector<Variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
         std::vector<uint32_t> bindings;
@@ -67,7 +66,7 @@ ShaderMemory::ShaderMemory(const vulkan::Device& device)
                 bindings.push_back(0);
         }
 
-        m_descriptors.update_descriptor_set(m_descriptor_set, bindings, infos);
+        m_descriptors.update_descriptor_set(0, bindings, infos);
 }
 
 VkDescriptorSetLayout ShaderMemory::descriptor_set_layout() const noexcept
@@ -77,7 +76,7 @@ VkDescriptorSetLayout ShaderMemory::descriptor_set_layout() const noexcept
 
 const VkDescriptorSet& ShaderMemory::descriptor_set() const noexcept
 {
-        return m_descriptor_set;
+        return m_descriptors.descriptor_set(0);
 }
 
 void ShaderMemory::set_matrix(const mat4& matrix) const
@@ -101,6 +100,6 @@ void ShaderMemory::set_points(const vulkan::BufferWithHostVisibleMemory& buffer)
         buffer_info.offset = 0;
         buffer_info.range = buffer.size();
 
-        m_descriptors.update_descriptor_set(m_descriptor_set, 1, buffer_info);
+        m_descriptors.update_descriptor_set(0, 1, buffer_info);
 }
 }

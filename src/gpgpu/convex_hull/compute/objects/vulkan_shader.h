@@ -32,7 +32,6 @@ class PrepareMemory final
 
         vulkan::DescriptorSetLayout m_descriptor_set_layout;
         vulkan::Descriptors m_descriptors;
-        VkDescriptorSet m_descriptor_set;
 
 public:
         PrepareMemory(const vulkan::Device& device);
@@ -85,7 +84,6 @@ class MergeMemory final
 
         vulkan::DescriptorSetLayout m_descriptor_set_layout;
         vulkan::Descriptors m_descriptors;
-        VkDescriptorSet m_descriptor_set;
 
 public:
         MergeMemory(const vulkan::Device& device);
@@ -138,7 +136,6 @@ class FilterMemory final
 
         vulkan::DescriptorSetLayout m_descriptor_set_layout;
         vulkan::Descriptors m_descriptors;
-        VkDescriptorSet m_descriptor_set;
 
 public:
         FilterMemory(const vulkan::Device& device);
