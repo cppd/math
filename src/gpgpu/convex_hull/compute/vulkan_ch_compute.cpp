@@ -89,6 +89,70 @@ void buffer_barrier(VkCommandBuffer command_buffer, VkBuffer buffer, VkAccessFla
                              nullptr, 1, &barrier, 0, nullptr);
 }
 
+class ProgramPrepare
+{
+        const vulkan::VulkanInstance& m_instance;
+
+        impl::PrepareMemory m_prepare_memory;
+        impl::PrepareConstant m_prepare_constant;
+        vulkan::ComputeShader m_prepare_shader;
+        vulkan::PipelineLayout m_prepare_pipeline_layout;
+        vulkan::Pipeline m_prepare_pipeline;
+
+        const vulkan::BufferWithHostVisibleMemory* m_lines_buffer = nullptr;
+        unsigned m_height = 0;
+
+public:
+        ProgramPrepare(const vulkan::VulkanInstance& instance)
+                : m_instance(instance),
+                  m_prepare_memory(instance.device()),
+                  m_prepare_shader(instance.device(), prepare_shader, "main"),
+                  m_prepare_pipeline_layout(vulkan::create_pipeline_layout(instance.device(), {SET_NUMBER},
+                                                                           {m_prepare_memory.descriptor_set_layout()}))
+        {
+        }
+
+        void create_buffers(const vulkan::StorageImage& objects, const vulkan::BufferWithHostVisibleMemory& lines_buffer)
+        {
+                m_lines_buffer = &lines_buffer;
+                m_height = objects.height();
+
+                m_prepare_memory.set_object_image(objects);
+                m_prepare_memory.set_lines(lines_buffer);
+
+                m_prepare_constant.set_line_size(objects.height());
+                m_prepare_constant.set_buffer_and_group_size(
+                        group_size_prepare(objects.width(), m_instance.physical_device().properties().limits));
+
+                vulkan::ComputePipelineCreateInfo info;
+                info.device = &m_instance.device();
+                info.pipeline_layout = m_prepare_pipeline_layout;
+                info.shader = &m_prepare_shader;
+                info.constants = &m_prepare_constant;
+                m_prepare_pipeline = create_compute_pipeline(info);
+        }
+
+        void delete_buffers()
+        {
+                m_prepare_pipeline = vulkan::Pipeline();
+                m_lines_buffer = nullptr;
+                m_height = 0;
+        }
+
+        void commands(VkCommandBuffer command_buffer, VkAccessFlags barrier_access, VkPipelineStageFlags barrier_stage) const
+        {
+                ASSERT(m_lines_buffer);
+                ASSERT(m_height > 0);
+
+                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_prepare_pipeline);
+                vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_prepare_pipeline_layout, SET_NUMBER,
+                                        1 /*set count*/, &m_prepare_memory.descriptor_set(), 0, nullptr);
+                vkCmdDispatch(command_buffer, m_height, 1, 1);
+
+                buffer_barrier(command_buffer, *m_lines_buffer, barrier_access, barrier_stage);
+        }
+};
+
 class Impl final : public gpgpu_vulkan::ConvexHullCompute
 {
         const std::thread::id m_thread_id = std::this_thread::get_id();
@@ -100,13 +164,7 @@ class Impl final : public gpgpu_vulkan::ConvexHullCompute
         VkBuffer m_points_buffer = VK_NULL_HANDLE;
         VkBuffer m_point_count_buffer = VK_NULL_HANDLE;
 
-        unsigned m_height = 0;
-
-        impl::PrepareMemory m_prepare_memory;
-        impl::PrepareConstant m_prepare_constant;
-        vulkan::ComputeShader m_prepare_shader;
-        vulkan::PipelineLayout m_prepare_pipeline_layout;
-        vulkan::Pipeline m_prepare_pipeline;
+        ProgramPrepare m_program_prepare;
 
         impl::MergeMemory m_merge_memory;
         impl::MergeConstant m_merge_constant;
@@ -126,11 +184,7 @@ class Impl final : public gpgpu_vulkan::ConvexHullCompute
 
                 //
 
-                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_prepare_pipeline);
-                vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_prepare_pipeline_layout, SET_NUMBER,
-                                        1 /*set count*/, &m_prepare_memory.descriptor_set(), 0, nullptr);
-                vkCmdDispatch(command_buffer, m_height, 1, 1);
-                buffer_barrier(command_buffer, *m_lines_buffer, VK_ACCESS_SHADER_READ_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
+                m_program_prepare.commands(command_buffer, VK_ACCESS_SHADER_READ_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
 
                 //
 
@@ -166,24 +220,10 @@ class Impl final : public gpgpu_vulkan::ConvexHullCompute
                 m_points_buffer = points_buffer;
                 m_point_count_buffer = point_count_buffer;
 
-                m_height = objects.height();
-
                 const VkPhysicalDeviceLimits& limits = m_instance.physical_device().properties().limits;
 
-                {
-                        m_prepare_memory.set_object_image(objects);
-                        m_prepare_memory.set_lines(*m_lines_buffer);
+                m_program_prepare.create_buffers(objects, *m_lines_buffer);
 
-                        m_prepare_constant.set_line_size(objects.height());
-                        m_prepare_constant.set_buffer_and_group_size(group_size_prepare(objects.width(), limits));
-
-                        vulkan::ComputePipelineCreateInfo info;
-                        info.device = &m_device;
-                        info.pipeline_layout = m_prepare_pipeline_layout;
-                        info.shader = &m_prepare_shader;
-                        info.constants = &m_prepare_constant;
-                        m_prepare_pipeline = create_compute_pipeline(info);
-                }
                 {
                         m_merge_memory.set_lines(*m_lines_buffer);
 
@@ -220,7 +260,8 @@ class Impl final : public gpgpu_vulkan::ConvexHullCompute
 
                 //
 
-                m_prepare_pipeline = vulkan::Pipeline();
+                m_program_prepare.delete_buffers();
+
                 m_merge_pipeline = vulkan::Pipeline();
                 m_filter_pipeline = vulkan::Pipeline();
 
@@ -233,11 +274,7 @@ public:
         Impl(const vulkan::VulkanInstance& instance)
                 : m_instance(instance),
                   m_device(m_instance.device()),
-                  //
-                  m_prepare_memory(m_device),
-                  m_prepare_shader(m_device, prepare_shader, "main"),
-                  m_prepare_pipeline_layout(
-                          vulkan::create_pipeline_layout(m_device, {SET_NUMBER}, {m_prepare_memory.descriptor_set_layout()})),
+                  m_program_prepare(instance),
                   //
                   m_merge_memory(m_device),
                   m_merge_shader(m_device, merge_shader, "main"),
