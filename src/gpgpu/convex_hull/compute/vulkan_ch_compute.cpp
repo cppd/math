@@ -27,8 +27,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <optional>
 #include <thread>
 
-constexpr uint32_t SET_NUMBER = 0;
-
 // clang-format off
 constexpr std::initializer_list<vulkan::PhysicalDeviceFeatures> REQUIRED_DEVICE_FEATURES =
 {
@@ -93,21 +91,21 @@ class ProgramPrepare
 {
         const vulkan::VulkanInstance& m_instance;
 
-        impl::PrepareMemory m_prepare_memory;
-        impl::PrepareConstant m_prepare_constant;
-        vulkan::ComputeShader m_prepare_shader;
-        vulkan::PipelineLayout m_prepare_pipeline_layout;
-        vulkan::Pipeline m_prepare_pipeline;
+        impl::PrepareMemory m_memory;
+        impl::PrepareConstant m_constant;
+        vulkan::ComputeShader m_shader;
+        vulkan::PipelineLayout m_pipeline_layout;
+        vulkan::Pipeline m_pipeline;
 
         unsigned m_height = 0;
 
 public:
         ProgramPrepare(const vulkan::VulkanInstance& instance)
                 : m_instance(instance),
-                  m_prepare_memory(instance.device()),
-                  m_prepare_shader(instance.device(), prepare_shader, "main"),
-                  m_prepare_pipeline_layout(vulkan::create_pipeline_layout(instance.device(), {SET_NUMBER},
-                                                                           {m_prepare_memory.descriptor_set_layout()}))
+                  m_memory(instance.device()),
+                  m_shader(instance.device(), prepare_shader, "main"),
+                  m_pipeline_layout(vulkan::create_pipeline_layout(instance.device(), {m_memory.set_number()},
+                                                                   {m_memory.descriptor_set_layout()}))
         {
         }
 
@@ -115,24 +113,24 @@ public:
         {
                 m_height = objects.height();
 
-                m_prepare_memory.set_object_image(objects);
-                m_prepare_memory.set_lines(lines_buffer);
+                m_memory.set_object_image(objects);
+                m_memory.set_lines(lines_buffer);
 
-                m_prepare_constant.set_line_size(objects.height());
-                m_prepare_constant.set_buffer_and_group_size(
+                m_constant.set_line_size(objects.height());
+                m_constant.set_buffer_and_group_size(
                         group_size_prepare(objects.width(), m_instance.physical_device().properties().limits));
 
                 vulkan::ComputePipelineCreateInfo info;
                 info.device = &m_instance.device();
-                info.pipeline_layout = m_prepare_pipeline_layout;
-                info.shader = &m_prepare_shader;
-                info.constants = &m_prepare_constant;
-                m_prepare_pipeline = create_compute_pipeline(info);
+                info.pipeline_layout = m_pipeline_layout;
+                info.shader = &m_shader;
+                info.constants = &m_constant;
+                m_pipeline = create_compute_pipeline(info);
         }
 
         void delete_buffers()
         {
-                m_prepare_pipeline = vulkan::Pipeline();
+                m_pipeline = vulkan::Pipeline();
                 m_height = 0;
         }
 
@@ -140,9 +138,9 @@ public:
         {
                 ASSERT(m_height > 0);
 
-                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_prepare_pipeline);
-                vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_prepare_pipeline_layout, SET_NUMBER,
-                                        1 /*set count*/, &m_prepare_memory.descriptor_set(), 0, nullptr);
+                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_pipeline);
+                vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_pipeline_layout, m_memory.set_number(),
+                                        1 /*set count*/, &m_memory.descriptor_set(), 0, nullptr);
                 vkCmdDispatch(command_buffer, m_height, 1, 1);
         }
 };
@@ -151,49 +149,48 @@ class ProgramMerge
 {
         const vulkan::VulkanInstance& m_instance;
 
-        impl::MergeMemory m_merge_memory;
-        impl::MergeConstant m_merge_constant;
-        vulkan::ComputeShader m_merge_shader;
-        vulkan::PipelineLayout m_merge_pipeline_layout;
-        vulkan::Pipeline m_merge_pipeline;
+        impl::MergeMemory m_memory;
+        impl::MergeConstant m_constant;
+        vulkan::ComputeShader m_shader;
+        vulkan::PipelineLayout m_pipeline_layout;
+        vulkan::Pipeline m_pipeline;
 
 public:
         ProgramMerge(const vulkan::VulkanInstance& instance)
                 : m_instance(instance),
-                  m_merge_memory(instance.device()),
-                  m_merge_shader(instance.device(), merge_shader, "main"),
-                  m_merge_pipeline_layout(vulkan::create_pipeline_layout(instance.device(), {SET_NUMBER},
-                                                                         {m_merge_memory.descriptor_set_layout()}))
+                  m_memory(instance.device()),
+                  m_shader(instance.device(), merge_shader, "main"),
+                  m_pipeline_layout(vulkan::create_pipeline_layout(instance.device(), {m_memory.set_number()},
+                                                                   {m_memory.descriptor_set_layout()}))
         {
         }
 
         void create_buffers(const vulkan::StorageImage& objects, const vulkan::BufferWithHostVisibleMemory& lines_buffer)
         {
-                m_merge_memory.set_lines(lines_buffer);
+                m_memory.set_lines(lines_buffer);
 
-                m_merge_constant.set_line_size(objects.height());
-                m_merge_constant.set_local_size_x(
-                        group_size_merge(objects.height(), m_instance.physical_device().properties().limits));
-                m_merge_constant.set_iteration_count(impl::iteration_count_merge(objects.height()));
+                m_constant.set_line_size(objects.height());
+                m_constant.set_local_size_x(group_size_merge(objects.height(), m_instance.physical_device().properties().limits));
+                m_constant.set_iteration_count(impl::iteration_count_merge(objects.height()));
 
                 vulkan::ComputePipelineCreateInfo info;
                 info.device = &m_instance.device();
-                info.pipeline_layout = m_merge_pipeline_layout;
-                info.shader = &m_merge_shader;
-                info.constants = &m_merge_constant;
-                m_merge_pipeline = create_compute_pipeline(info);
+                info.pipeline_layout = m_pipeline_layout;
+                info.shader = &m_shader;
+                info.constants = &m_constant;
+                m_pipeline = create_compute_pipeline(info);
         }
 
         void delete_buffers()
         {
-                m_merge_pipeline = vulkan::Pipeline();
+                m_pipeline = vulkan::Pipeline();
         }
 
         void commands(VkCommandBuffer command_buffer) const
         {
-                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_merge_pipeline);
-                vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_merge_pipeline_layout, SET_NUMBER,
-                                        1 /*set count*/, &m_merge_memory.descriptor_set(), 0, nullptr);
+                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_pipeline);
+                vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_pipeline_layout, m_memory.set_number(),
+                                        1 /*set count*/, &m_memory.descriptor_set(), 0, nullptr);
                 vkCmdDispatch(command_buffer, 2, 1, 1);
         }
 };
@@ -202,19 +199,19 @@ class ProgramFilter
 {
         const vulkan::VulkanInstance& m_instance;
 
-        impl::FilterMemory m_filter_memory;
-        impl::FilterConstant m_filter_constant;
-        vulkan::ComputeShader m_filter_shader;
-        vulkan::PipelineLayout m_filter_pipeline_layout;
-        vulkan::Pipeline m_filter_pipeline;
+        impl::FilterMemory m_memory;
+        impl::FilterConstant m_constant;
+        vulkan::ComputeShader m_shader;
+        vulkan::PipelineLayout m_pipeline_layout;
+        vulkan::Pipeline m_pipeline;
 
 public:
         ProgramFilter(const vulkan::VulkanInstance& instance)
                 : m_instance(instance),
-                  m_filter_memory(instance.device()),
-                  m_filter_shader(instance.device(), filter_shader, "main"),
-                  m_filter_pipeline_layout(vulkan::create_pipeline_layout(instance.device(), {SET_NUMBER},
-                                                                          {m_filter_memory.descriptor_set_layout()}))
+                  m_memory(instance.device()),
+                  m_shader(instance.device(), filter_shader, "main"),
+                  m_pipeline_layout(vulkan::create_pipeline_layout(instance.device(), {m_memory.set_number()},
+                                                                   {m_memory.descriptor_set_layout()}))
         {
         }
 
@@ -222,30 +219,30 @@ public:
                             const vulkan::BufferWithHostVisibleMemory& points_buffer,
                             const vulkan::BufferWithHostVisibleMemory& point_count_buffer)
         {
-                m_filter_memory.set_lines(lines_buffer);
-                m_filter_memory.set_points(points_buffer);
-                m_filter_memory.set_point_count(point_count_buffer);
+                m_memory.set_lines(lines_buffer);
+                m_memory.set_points(points_buffer);
+                m_memory.set_point_count(point_count_buffer);
 
-                m_filter_constant.set_line_size(objects.height());
+                m_constant.set_line_size(objects.height());
 
                 vulkan::ComputePipelineCreateInfo info;
                 info.device = &m_instance.device();
-                info.pipeline_layout = m_filter_pipeline_layout;
-                info.shader = &m_filter_shader;
-                info.constants = &m_filter_constant;
-                m_filter_pipeline = create_compute_pipeline(info);
+                info.pipeline_layout = m_pipeline_layout;
+                info.shader = &m_shader;
+                info.constants = &m_constant;
+                m_pipeline = create_compute_pipeline(info);
         }
 
         void delete_buffers()
         {
-                m_filter_pipeline = vulkan::Pipeline();
+                m_pipeline = vulkan::Pipeline();
         }
 
         void commands(VkCommandBuffer command_buffer) const
         {
-                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_filter_pipeline);
-                vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_filter_pipeline_layout, SET_NUMBER,
-                                        1 /*set count*/, &m_filter_memory.descriptor_set(), 0, nullptr);
+                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_pipeline);
+                vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_pipeline_layout, m_memory.set_number(),
+                                        1 /*set count*/, &m_memory.descriptor_set(), 0, nullptr);
                 vkCmdDispatch(command_buffer, 1, 1, 1);
         }
 };

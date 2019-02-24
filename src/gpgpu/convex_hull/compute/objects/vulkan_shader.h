@@ -28,6 +28,8 @@ namespace gpgpu_convex_hull_compute_vulkan_implementation
 {
 class PrepareMemory final
 {
+        static constexpr int SET_NUMBER = 0;
+
         static constexpr int LINES_BINDING = 0;
         static constexpr int OBJECTS_BINDING = 1;
 
@@ -48,6 +50,7 @@ public:
 
         //
 
+        static unsigned set_number() noexcept;
         VkDescriptorSetLayout descriptor_set_layout() const noexcept;
         const VkDescriptorSet& descriptor_set() const noexcept;
 
@@ -83,6 +86,8 @@ public:
 
 class MergeMemory final
 {
+        static constexpr int SET_NUMBER = 0;
+
         static constexpr int LINES_BINDING = 0;
 
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
@@ -102,6 +107,7 @@ public:
 
         //
 
+        static unsigned set_number() noexcept;
         VkDescriptorSetLayout descriptor_set_layout() const noexcept;
         const VkDescriptorSet& descriptor_set() const noexcept;
 
@@ -137,6 +143,8 @@ public:
 
 class FilterMemory final
 {
+        static constexpr int SET_NUMBER = 0;
+
         static constexpr int LINES_BINDING = 0;
         static constexpr int POINTS_BINDING = 1;
         static constexpr int POINT_COUNT_BINDING = 2;
@@ -158,6 +166,7 @@ public:
 
         //
 
+        static unsigned set_number() noexcept;
         VkDescriptorSetLayout descriptor_set_layout() const noexcept;
         const VkDescriptorSet& descriptor_set() const noexcept;
 

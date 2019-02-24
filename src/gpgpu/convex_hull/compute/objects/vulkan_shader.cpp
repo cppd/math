@@ -54,6 +54,11 @@ PrepareMemory::PrepareMemory(const vulkan::Device& device)
 {
 }
 
+unsigned PrepareMemory::set_number() noexcept
+{
+        return SET_NUMBER;
+}
+
 VkDescriptorSetLayout PrepareMemory::descriptor_set_layout() const noexcept
 {
         return m_descriptor_set_layout;
@@ -166,6 +171,11 @@ MergeMemory::MergeMemory(const vulkan::Device& device)
         : m_descriptor_set_layout(vulkan::create_descriptor_set_layout(device, descriptor_set_layout_bindings())),
           m_descriptors(device, 1, m_descriptor_set_layout, descriptor_set_layout_bindings())
 {
+}
+
+unsigned MergeMemory::set_number() noexcept
+{
+        return SET_NUMBER;
 }
 
 VkDescriptorSetLayout MergeMemory::descriptor_set_layout() const noexcept
@@ -291,6 +301,11 @@ FilterMemory::FilterMemory(const vulkan::Device& device)
         : m_descriptor_set_layout(vulkan::create_descriptor_set_layout(device, descriptor_set_layout_bindings())),
           m_descriptors(device, 1, m_descriptor_set_layout, descriptor_set_layout_bindings())
 {
+}
+
+unsigned FilterMemory::set_number() noexcept
+{
+        return SET_NUMBER;
 }
 
 VkDescriptorSetLayout FilterMemory::descriptor_set_layout() const noexcept
