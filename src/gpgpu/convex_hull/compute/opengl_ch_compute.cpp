@@ -37,10 +37,6 @@ Chapter 2: CONVEX HULLS, 2.6 Divide-and-Conquer.
 #include "graphics/opengl/shader.h"
 
 // clang-format off
-constexpr const char merge_shader[]
-{
-#include "ch_merge.comp.str"
-};
 constexpr const char filter_shader[]
 {
 #include "ch_filter.comp.str"
@@ -55,24 +51,17 @@ using namespace gpgpu_convex_hull_compute_implementation;
 using namespace gpgpu_convex_hull_compute_opengl_implementation;
 }
 
-int group_size_merge(int height)
-{
-        return impl::group_size_merge(height, opengl::max_fixed_group_size_x(), opengl::max_fixed_group_invocations(),
-                                      opengl::max_compute_shared_memory());
-}
-
 class Impl final : public gpgpu_opengl::ConvexHullCompute
 {
-        opengl::ComputeProgram m_merge_prog;
         opengl::ComputeProgram m_filter_prog;
 
         opengl::StorageBuffer m_lines;
         opengl::StorageBuffer m_point_count;
 
         impl::FilterMemory m_filter_memory;
-        impl::MergeMemory m_merge_memory;
 
         impl::ProgramPrepare m_program_prepare;
+        impl::ProgramMerge m_program_merge;
 
         int exec() override
         {
@@ -82,8 +71,7 @@ class Impl final : public gpgpu_opengl::ConvexHullCompute
                 glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
                 // Объединение оболочек, начиная от 4 элементов.
-                m_merge_memory.bind();
-                m_merge_prog.dispatch_compute(2, 1, 1);
+                m_program_merge.exec();
                 glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
                 // Выбрасывание элементов со значением -1.
@@ -99,21 +87,17 @@ class Impl final : public gpgpu_opengl::ConvexHullCompute
 
 public:
         Impl(const opengl::TextureImage& objects, const opengl::StorageBuffer& points)
-                : m_merge_prog(opengl::ComputeShader(impl::merge_constants(objects.height(), group_size_merge(objects.height()),
-                                                                           impl::iteration_count_merge(objects.height())) +
-                                                     merge_shader)),
-                  m_filter_prog(opengl::ComputeShader(impl::filter_constants(objects.height()) + filter_shader)),
+                : m_filter_prog(opengl::ComputeShader(impl::filter_constants(objects.height()) + filter_shader)),
                   m_lines(2 * objects.height() * sizeof(GLint)),
                   m_point_count(sizeof(GLint)),
-                  m_program_prepare(objects, m_lines)
+                  m_program_prepare(objects, m_lines),
+                  m_program_merge(objects.height(), m_lines)
         {
                 ASSERT(static_cast<unsigned>(points.size()) == (2 * objects.height() + 1) * (2 * sizeof(GLint)));
 
                 m_filter_memory.set_lines(m_lines);
                 m_filter_memory.set_points(points);
                 m_filter_memory.set_point_count(m_point_count);
-
-                m_merge_memory.set_lines(m_lines);
         }
 
         Impl(const Impl&) = delete;

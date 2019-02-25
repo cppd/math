@@ -40,19 +40,18 @@ public:
 
 //
 
-class MergeMemory final
+class ProgramMerge final
 {
         static constexpr int LINES_BINDING = 0;
 
+        opengl::ComputeProgram m_program;
         const opengl::StorageBuffer* m_lines = nullptr;
 
 public:
-        void set_lines(const opengl::StorageBuffer& lines);
+        ProgramMerge(unsigned height, const opengl::StorageBuffer& lines);
 
-        void bind() const;
+        void exec() const;
 };
-
-std::string merge_constants(int line_size, int group_size, int iteration_count);
 
 //
 

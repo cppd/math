@@ -27,6 +27,10 @@ constexpr const char prepare_shader[]
 {
 #include "ch_prepare.comp.str"
 };
+constexpr const char merge_shader[]
+{
+#include "ch_merge.comp.str"
+};
 // clang-format on
 
 namespace
@@ -38,6 +42,13 @@ int group_size_prepare(int width)
                                         opengl::max_compute_shared_memory());
 }
 
+int group_size_merge(int height)
+{
+        namespace impl = gpgpu_convex_hull_compute_implementation;
+        return impl::group_size_merge(height, opengl::max_fixed_group_size_x(), opengl::max_fixed_group_invocations(),
+                                      opengl::max_compute_shared_memory());
+}
+
 std::string prepare_source(int line_size, int buffer_and_group_size)
 {
         std::string s;
@@ -46,6 +57,20 @@ std::string prepare_source(int line_size, int buffer_and_group_size)
         s += "const uint BUFFER_SIZE = " + to_string(buffer_and_group_size) + ";\n";
         s += '\n';
         return s + prepare_shader;
+}
+
+std::string merge_source(unsigned height)
+{
+        int line_size = height;
+        int group_size = group_size_merge(height);
+        int iteration_count = gpgpu_convex_hull_compute_implementation::iteration_count_merge(height);
+
+        std::string s;
+        s += "const uint GROUP_SIZE = " + to_string(group_size) + ";\n";
+        s += "const int LINE_SIZE = " + to_string(line_size) + ";\n";
+        s += "const int ITERATION_COUNT = " + to_string(iteration_count) + ";\n";
+        s += '\n';
+        return s + merge_shader;
 }
 }
 
@@ -69,26 +94,16 @@ void ProgramPrepare::exec() const
 
 //
 
-void MergeMemory::set_lines(const opengl::StorageBuffer& lines)
+ProgramMerge::ProgramMerge(unsigned height, const opengl::StorageBuffer& lines)
+        : m_program(opengl::ComputeShader(merge_source(height)))
 {
         m_lines = &lines;
 }
 
-void MergeMemory::bind() const
+void ProgramMerge::exec() const
 {
-        ASSERT(m_lines);
-
         m_lines->bind(LINES_BINDING);
-}
-
-std::string merge_constants(int line_size, int group_size, int iteration_count)
-{
-        std::string s;
-        s += "const uint GROUP_SIZE = " + to_string(group_size) + ";\n";
-        s += "const int LINE_SIZE = " + to_string(line_size) + ";\n";
-        s += "const int ITERATION_COUNT = " + to_string(iteration_count) + ";\n";
-        s += '\n';
-        return s;
+        m_program.dispatch_compute(2, 1, 1);
 }
 
 //
