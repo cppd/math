@@ -59,14 +59,6 @@ constexpr std::initializer_list<VkFormat> SHADOW_DEPTH_IMAGE_FORMATS =
 };
 // clang-format on
 
-// Это в шейдерах layout(set = N, ...)
-constexpr uint32_t TRIANGLES_SHARED_SET_NUMBER = 0;
-constexpr uint32_t TRIANGLES_MATERIAL_SET_NUMBER = 1;
-constexpr uint32_t SHADOW_SET_NUMBER = 0;
-constexpr uint32_t POINTS_SET_NUMBER = 0;
-
-static_assert(TRIANGLES_SHARED_SET_NUMBER != TRIANGLES_MATERIAL_SET_NUMBER);
-
 // Число используется в шейдере для определения наличия текстурных координат
 constexpr vec2f NO_TEXTURE_COORDINATES = vec2f(-1e10);
 
@@ -320,7 +312,6 @@ struct DrawInfo
         VkPipeline triangles_pipeline;
         VkDescriptorSet triangles_shared_set;
         unsigned triangles_shared_set_number;
-        unsigned triangles_material_set_number;
 
         VkPipelineLayout points_pipeline_layout;
         VkPipeline points_pipeline;
@@ -365,12 +356,12 @@ class DrawObjectTriangles final : public DrawObjectInterface
 
         struct Material
         {
-                VkDescriptorSet set;
+                VkDescriptorSet descriptor_set;
                 unsigned vertex_offset;
                 unsigned vertex_count;
 
-                Material(VkDescriptorSet set_, unsigned vertex_offset_, unsigned vertex_count_)
-                        : set(set_), vertex_offset(vertex_offset_), vertex_count(vertex_count_)
+                Material(VkDescriptorSet descriptor_set_, unsigned vertex_offset_, unsigned vertex_count_)
+                        : descriptor_set(descriptor_set_), vertex_offset(vertex_offset_), vertex_count(vertex_count_)
                 {
                 }
         };
@@ -430,7 +421,8 @@ public:
                         ASSERT(material.vertex_count > 0);
 
                         vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, info.triangles_pipeline_layout,
-                                                info.triangles_material_set_number, 1 /*set count*/, &material.set, 0, nullptr);
+                                                impl::TrianglesMaterialMemory::set_number(), 1 /*set count*/,
+                                                &material.descriptor_set, 0, nullptr);
 
                         vkCmdDraw(command_buffer, material.vertex_count, 1, material.vertex_offset, 0);
                 }
@@ -1035,18 +1027,17 @@ class Renderer final : public VulkanRenderer
                 info.triangles_pipeline_layout = m_triangles_pipeline_layout;
                 info.triangles_pipeline = m_triangles_pipeline;
                 info.triangles_shared_set = m_triangles_shared_shader_memory.descriptor_set();
-                info.triangles_shared_set_number = TRIANGLES_SHARED_SET_NUMBER;
-                info.triangles_material_set_number = TRIANGLES_MATERIAL_SET_NUMBER;
+                info.triangles_shared_set_number = m_triangles_shared_shader_memory.set_number();
 
                 info.points_pipeline_layout = m_points_pipeline_layout;
                 info.points_pipeline = m_points_0d_pipeline;
                 info.points_set = m_points_shader_memory.descriptor_set();
-                info.points_set_number = POINTS_SET_NUMBER;
+                info.points_set_number = m_points_shader_memory.set_number();
 
                 info.lines_pipeline_layout = m_points_pipeline_layout;
                 info.lines_pipeline = m_points_1d_pipeline;
                 info.lines_set = m_points_shader_memory.descriptor_set();
-                info.lines_set_number = POINTS_SET_NUMBER;
+                info.lines_set_number = m_points_shader_memory.set_number();
 
                 m_storage.object()->draw_commands(command_buffer, info);
         }
@@ -1067,7 +1058,7 @@ class Renderer final : public VulkanRenderer
                 info.triangles_pipeline_layout = m_shadow_pipeline_layout;
                 info.triangles_pipeline = m_shadow_pipeline;
                 info.triangles_set = m_shadow_shader_memory.descriptor_set();
-                info.triangles_set_number = SHADOW_SET_NUMBER;
+                info.triangles_set_number = m_shadow_shader_memory.set_number();
 
                 m_storage.object()->draw_shadow_commands(command_buffer, info);
         }
@@ -1146,13 +1137,14 @@ public:
                   m_points_1d_vert(m_instance.device(), points_1d_vert, "main"),
                   m_points_frag(m_instance.device(), points_frag, "main"),
                   //
-                  m_triangles_pipeline_layout(create_pipeline_layout(m_instance.device(),
-                                                                     {TRIANGLES_SHARED_SET_NUMBER, TRIANGLES_MATERIAL_SET_NUMBER},
-                                                                     {m_triangles_shared_shader_memory.descriptor_set_layout(),
-                                                                      m_triangles_material_descriptor_set_layout})),
-                  m_shadow_pipeline_layout(create_pipeline_layout(m_instance.device(), {SHADOW_SET_NUMBER},
+                  m_triangles_pipeline_layout(create_pipeline_layout(
+                          m_instance.device(),
+                          {impl::TrianglesSharedMemory::set_number(), impl::TrianglesMaterialMemory::set_number()},
+                          {m_triangles_shared_shader_memory.descriptor_set_layout(),
+                           m_triangles_material_descriptor_set_layout})),
+                  m_shadow_pipeline_layout(create_pipeline_layout(m_instance.device(), {m_shadow_shader_memory.set_number()},
                                                                   {m_shadow_shader_memory.descriptor_set_layout()})),
-                  m_points_pipeline_layout(create_pipeline_layout(m_instance.device(), {POINTS_SET_NUMBER},
+                  m_points_pipeline_layout(create_pipeline_layout(m_instance.device(), {m_points_shader_memory.set_number()},
                                                                   {m_points_shader_memory.descriptor_set_layout()}))
         {
         }

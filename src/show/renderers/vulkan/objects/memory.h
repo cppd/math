@@ -32,6 +32,8 @@ namespace vulkan_renderer_implementation
 {
 class TrianglesSharedMemory final
 {
+        static constexpr int SET_NUMBER = 0;
+
         static constexpr int MATRICES_BINDING = 0;
         static constexpr int LIGHTING_BINDING = 1;
         static constexpr int DRAWING_BINDING = 2;
@@ -96,6 +98,7 @@ public:
 
         //
 
+        static unsigned set_number() noexcept;
         VkDescriptorSetLayout descriptor_set_layout() const noexcept;
         const VkDescriptorSet& descriptor_set() const noexcept;
 
@@ -121,6 +124,8 @@ public:
 
 class TrianglesMaterialMemory final
 {
+        static constexpr int SET_NUMBER = 1;
+
         static constexpr int MATERIAL_BINDING = 0;
         static constexpr int TEXTURE_KA_BINDING = 1;
         static constexpr int TEXTURE_KD_BINDING = 2;
@@ -166,12 +171,15 @@ public:
 
         //
 
+        static unsigned set_number() noexcept;
         uint32_t descriptor_set_count() const noexcept;
         const VkDescriptorSet& descriptor_set(uint32_t index) const noexcept;
 };
 
 class ShadowMemory final
 {
+        static constexpr int SET_NUMBER = 0;
+
         static constexpr int MATRICES_BINDING = 0;
 
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
@@ -197,6 +205,7 @@ public:
 
         //
 
+        static unsigned set_number() noexcept;
         VkDescriptorSetLayout descriptor_set_layout() const noexcept;
         const VkDescriptorSet& descriptor_set() const noexcept;
 
@@ -207,6 +216,8 @@ public:
 
 class PointsMemory final
 {
+        static constexpr int SET_NUMBER = 0;
+
         static constexpr int MATRICES_BINDING = 0;
         static constexpr int DRAWING_BINDING = 1;
         static constexpr int OBJECTS_BINDING = 2;
@@ -250,6 +261,7 @@ public:
 
         //
 
+        static unsigned set_number() noexcept;
         VkDescriptorSetLayout descriptor_set_layout() const noexcept;
         const VkDescriptorSet& descriptor_set() const noexcept;
 
