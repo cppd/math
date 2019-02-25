@@ -101,6 +101,11 @@ TextMemory::TextMemory(const vulkan::Device& device, VkSampler sampler, const vu
         m_descriptors.update_descriptor_set(0, bindings, infos);
 }
 
+unsigned TextMemory::set_number() noexcept
+{
+        return SET_NUMBER;
+}
+
 VkDescriptorSetLayout TextMemory::descriptor_set_layout() const noexcept
 {
         return m_descriptor_set_layout;

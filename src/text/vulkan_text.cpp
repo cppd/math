@@ -38,9 +38,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <unordered_map>
 #include <vector>
 
-// Это в шейдерах layout(set = N, ...)
-constexpr uint32_t TEXT_SET_NUMBER = 0;
-
 constexpr int VERTEX_BUFFER_FIRST_SIZE = 10;
 
 // clang-format off
@@ -130,8 +127,9 @@ class Impl final : public VulkanText
 
                 vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline);
 
-                vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline_layout, TEXT_SET_NUMBER,
-                                        1 /*set count*/, &m_shader_memory.descriptor_set(), 0, nullptr);
+                vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline_layout,
+                                        m_shader_memory.set_number(), 1 /*set count*/, &m_shader_memory.descriptor_set(), 0,
+                                        nullptr);
 
                 std::array<VkBuffer, 1> buffers = {*m_vertex_buffer};
                 std::array<VkDeviceSize, 1> offsets = {0};
@@ -226,7 +224,7 @@ class Impl final : public VulkanText
                   m_shader_memory(instance.device(), m_sampler, &m_glyph_texture),
                   m_text_vert(m_instance.device(), vertex_shader, "main"),
                   m_text_frag(m_instance.device(), fragment_shader, "main"),
-                  m_pipeline_layout(vulkan::create_pipeline_layout(m_instance.device(), {TEXT_SET_NUMBER},
+                  m_pipeline_layout(vulkan::create_pipeline_layout(m_instance.device(), {m_shader_memory.set_number()},
                                                                    {m_shader_memory.descriptor_set_layout()})),
                   m_vertex_buffer(std::in_place, m_instance.device(), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
                                   VERTEX_BUFFER_FIRST_SIZE),

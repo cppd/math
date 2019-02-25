@@ -30,6 +30,8 @@ namespace vulkan_text_implementation
 {
 class TextMemory final
 {
+        static constexpr int SET_NUMBER = 0;
+
         static constexpr int MATRICES_BINDING = 0;
         static constexpr int TEXTURE_BINDING = 1;
         static constexpr int DRAWING_BINDING = 2;
@@ -70,6 +72,7 @@ public:
 
         //
 
+        static unsigned set_number() noexcept;
         VkDescriptorSetLayout descriptor_set_layout() const noexcept;
         const VkDescriptorSet& descriptor_set() const noexcept;
 
