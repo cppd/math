@@ -20,8 +20,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/opengl/buffers.h"
 #include "graphics/opengl/shader.h"
 
-#include <string>
-
 namespace gpgpu_convex_hull_compute_opengl_implementation
 {
 class ProgramPrepare final

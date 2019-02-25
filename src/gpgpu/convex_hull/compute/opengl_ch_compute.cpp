@@ -30,13 +30,10 @@ Chapter 2: CONVEX HULLS, 2.6 Divide-and-Conquer.
 #include "com/error.h"
 #include "gpgpu/convex_hull/compute/objects/opengl_shader.h"
 
+namespace impl = gpgpu_convex_hull_compute_opengl_implementation;
+
 namespace
 {
-namespace impl
-{
-using namespace gpgpu_convex_hull_compute_opengl_implementation;
-}
-
 class Impl final : public gpgpu_opengl::ConvexHullCompute
 {
         opengl::StorageBuffer m_lines;

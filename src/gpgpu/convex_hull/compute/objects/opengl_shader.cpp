@@ -22,6 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/print.h"
 #include "graphics/opengl/query.h"
 
+#include <string>
+
 // clang-format off
 constexpr const char prepare_shader[]
 {
@@ -37,24 +39,27 @@ constexpr const char filter_shader[]
 };
 // clang-format on
 
+namespace impl = gpgpu_convex_hull_compute_implementation;
+
 namespace
 {
 int group_size_prepare(int width)
 {
-        namespace impl = gpgpu_convex_hull_compute_implementation;
         return impl::group_size_prepare(width, opengl::max_fixed_group_size_x(), opengl::max_fixed_group_invocations(),
                                         opengl::max_compute_shared_memory());
 }
 
 int group_size_merge(int height)
 {
-        namespace impl = gpgpu_convex_hull_compute_implementation;
         return impl::group_size_merge(height, opengl::max_fixed_group_size_x(), opengl::max_fixed_group_invocations(),
                                       opengl::max_compute_shared_memory());
 }
 
-std::string prepare_source(int line_size, int buffer_and_group_size)
+std::string prepare_source(int width, int height)
 {
+        int line_size = height;
+        int buffer_and_group_size = group_size_prepare(width);
+
         std::string s;
         s += "const uint GROUP_SIZE = " + to_string(buffer_and_group_size) + ";\n";
         s += "const uint LINE_SIZE = " + to_string(line_size) + ";\n";
@@ -67,7 +72,7 @@ std::string merge_source(unsigned height)
 {
         int line_size = height;
         int group_size = group_size_merge(height);
-        int iteration_count = gpgpu_convex_hull_compute_implementation::iteration_count_merge(height);
+        int iteration_count = impl::iteration_count_merge(height);
 
         std::string s;
         s += "const uint GROUP_SIZE = " + to_string(group_size) + ";\n";
@@ -77,8 +82,10 @@ std::string merge_source(unsigned height)
         return s + merge_shader;
 }
 
-std::string filter_source(int line_size)
+std::string filter_source(int height)
 {
+        int line_size = height;
+
         std::string s;
         s += "const int LINE_SIZE = " + to_string(line_size) + ";\n";
         s += '\n';
@@ -89,12 +96,12 @@ std::string filter_source(int line_size)
 namespace gpgpu_convex_hull_compute_opengl_implementation
 {
 ProgramPrepare::ProgramPrepare(const opengl::TextureImage& objects, const opengl::StorageBuffer& lines)
-        : m_program(opengl::ComputeShader(prepare_source(objects.height(), group_size_prepare(objects.width())))),
+        : m_program(opengl::ComputeShader(prepare_source(objects.width(), objects.height()))),
+          m_lines(&lines),
           m_height(objects.height())
 {
         ASSERT(objects.format() == GL_R32UI);
 
-        m_lines = &lines;
         m_program.set_uniform_handle("objects", objects.image_resident_handle_read_only());
 }
 
@@ -107,9 +114,8 @@ void ProgramPrepare::exec() const
 //
 
 ProgramMerge::ProgramMerge(unsigned height, const opengl::StorageBuffer& lines)
-        : m_program(opengl::ComputeShader(merge_source(height)))
+        : m_program(opengl::ComputeShader(merge_source(height))), m_lines(&lines)
 {
-        m_lines = &lines;
 }
 
 void ProgramMerge::exec() const
@@ -122,11 +128,8 @@ void ProgramMerge::exec() const
 
 ProgramFilter::ProgramFilter(unsigned height, const opengl::StorageBuffer& lines, const opengl::StorageBuffer& points,
                              const opengl::StorageBuffer& point_count)
-        : m_program(opengl::ComputeShader(filter_source(height)))
+        : m_program(opengl::ComputeShader(filter_source(height))), m_lines(&lines), m_points(&points), m_point_count(&point_count)
 {
-        m_lines = &lines;
-        m_points = &points;
-        m_point_count = &point_count;
 }
 
 void ProgramFilter::exec() const
