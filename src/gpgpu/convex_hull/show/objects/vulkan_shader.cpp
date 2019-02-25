@@ -69,6 +69,11 @@ ShaderMemory::ShaderMemory(const vulkan::Device& device)
         m_descriptors.update_descriptor_set(0, bindings, infos);
 }
 
+unsigned ShaderMemory::set_number() noexcept
+{
+        return SET_NUMBER;
+}
+
 VkDescriptorSetLayout ShaderMemory::descriptor_set_layout() const noexcept
 {
         return m_descriptor_set_layout;

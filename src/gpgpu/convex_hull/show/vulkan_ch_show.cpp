@@ -33,9 +33,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <optional>
 #include <thread>
 
-// Это в шейдерах layout(set = N, ...)
-constexpr uint32_t SET_NUMBER = 0;
-
 // clang-format off
 constexpr std::initializer_list<vulkan::PhysicalDeviceFeatures> REQUIRED_DEVICE_FEATURES =
 {
@@ -100,8 +97,9 @@ class Impl final : public gpgpu_vulkan::ConvexHullShow
 
                 vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline);
 
-                vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline_layout, SET_NUMBER,
-                                        1 /*set count*/, &m_shader_memory.descriptor_set(), 0, nullptr);
+                vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline_layout,
+                                        m_shader_memory.set_number(), 1 /*set count*/, &m_shader_memory.descriptor_set(), 0,
+                                        nullptr);
 
                 ASSERT(m_indirect_buffer.usage(VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT));
                 vkCmdDrawIndirect(command_buffer, m_indirect_buffer, 0, 1, sizeof(VkDrawIndirectCommand));
@@ -174,7 +172,7 @@ public:
                   m_shader_memory(instance.device()),
                   m_vertex_shader(m_instance.device(), vertex_shader, "main"),
                   m_fragment_shader(m_instance.device(), fragment_shader, "main"),
-                  m_pipeline_layout(vulkan::create_pipeline_layout(m_instance.device(), {SET_NUMBER},
+                  m_pipeline_layout(vulkan::create_pipeline_layout(m_instance.device(), {m_shader_memory.set_number()},
                                                                    {m_shader_memory.descriptor_set_layout()})),
                   m_indirect_buffer(m_instance.device(), VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT,
                                     sizeof(VkDrawIndirectCommand)),

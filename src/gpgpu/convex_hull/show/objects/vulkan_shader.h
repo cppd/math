@@ -28,6 +28,8 @@ namespace gpgpu_convex_hull_show_vulkan_implementation
 {
 class ShaderMemory final
 {
+        static constexpr int SET_NUMBER = 0;
+
         static constexpr int DATA_BINDING = 0;
         static constexpr int POINTS_BINDING = 1;
 
@@ -57,6 +59,7 @@ public:
 
         //
 
+        static unsigned set_number() noexcept;
         VkDescriptorSetLayout descriptor_set_layout() const noexcept;
         const VkDescriptorSet& descriptor_set() const noexcept;
 
