@@ -18,24 +18,25 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "graphics/opengl/buffers.h"
+#include "graphics/opengl/shader.h"
 
 #include <string>
 
 namespace gpgpu_convex_hull_compute_opengl_implementation
 {
-class PrepareMemory final
+class ProgramPrepare final
 {
         static constexpr int LINES_BINDING = 0;
 
+        opengl::ComputeProgram m_program;
         const opengl::StorageBuffer* m_lines = nullptr;
+        unsigned m_height;
 
 public:
-        void set_lines(const opengl::StorageBuffer& lines);
+        ProgramPrepare(const opengl::TextureImage& objects, const opengl::StorageBuffer& lines);
 
-        void bind() const;
+        void exec() const;
 };
-
-std::string prepare_constants(int line_size, int buffer_and_group_size);
 
 //
 

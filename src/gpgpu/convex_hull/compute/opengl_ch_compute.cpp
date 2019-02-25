@@ -37,10 +37,6 @@ Chapter 2: CONVEX HULLS, 2.6 Divide-and-Conquer.
 #include "graphics/opengl/shader.h"
 
 // clang-format off
-constexpr const char prepare_shader[]
-{
-#include "ch_prepare.comp.str"
-};
 constexpr const char merge_shader[]
 {
 #include "ch_merge.comp.str"
@@ -59,12 +55,6 @@ using namespace gpgpu_convex_hull_compute_implementation;
 using namespace gpgpu_convex_hull_compute_opengl_implementation;
 }
 
-int group_size_prepare(int width)
-{
-        return impl::group_size_prepare(width, opengl::max_fixed_group_size_x(), opengl::max_fixed_group_invocations(),
-                                        opengl::max_compute_shared_memory());
-}
-
 int group_size_merge(int height)
 {
         return impl::group_size_merge(height, opengl::max_fixed_group_size_x(), opengl::max_fixed_group_invocations(),
@@ -73,9 +63,6 @@ int group_size_merge(int height)
 
 class Impl final : public gpgpu_opengl::ConvexHullCompute
 {
-        const int m_height;
-
-        opengl::ComputeProgram m_prepare_prog;
         opengl::ComputeProgram m_merge_prog;
         opengl::ComputeProgram m_filter_prog;
 
@@ -84,14 +71,14 @@ class Impl final : public gpgpu_opengl::ConvexHullCompute
 
         impl::FilterMemory m_filter_memory;
         impl::MergeMemory m_merge_memory;
-        impl::PrepareMemory m_prepare_memory;
+
+        impl::ProgramPrepare m_program_prepare;
 
         int exec() override
         {
                 // Поиск минимума и максимума для каждой строки.
                 // Если нет, то -1.
-                m_prepare_memory.bind();
-                m_prepare_prog.dispatch_compute(m_height, 1, 1);
+                m_program_prepare.exec();
                 glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
                 // Объединение оболочек, начиная от 4 элементов.
@@ -112,27 +99,21 @@ class Impl final : public gpgpu_opengl::ConvexHullCompute
 
 public:
         Impl(const opengl::TextureImage& objects, const opengl::StorageBuffer& points)
-                : m_height(objects.height()),
-                  m_prepare_prog(opengl::ComputeShader(impl::prepare_constants(m_height, group_size_prepare(objects.width())) +
-                                                       prepare_shader)),
-                  m_merge_prog(opengl::ComputeShader(
-                          impl::merge_constants(m_height, group_size_merge(m_height), impl::iteration_count_merge(m_height)) +
-                          merge_shader)),
-                  m_filter_prog(opengl::ComputeShader(impl::filter_constants(m_height) + filter_shader)),
-                  m_lines(2 * m_height * sizeof(GLint)),
-                  m_point_count(sizeof(GLint))
+                : m_merge_prog(opengl::ComputeShader(impl::merge_constants(objects.height(), group_size_merge(objects.height()),
+                                                                           impl::iteration_count_merge(objects.height())) +
+                                                     merge_shader)),
+                  m_filter_prog(opengl::ComputeShader(impl::filter_constants(objects.height()) + filter_shader)),
+                  m_lines(2 * objects.height() * sizeof(GLint)),
+                  m_point_count(sizeof(GLint)),
+                  m_program_prepare(objects, m_lines)
         {
-                ASSERT(static_cast<unsigned>(points.size()) == (2 * m_height + 1) * (2 * sizeof(GLint)));
-                ASSERT(objects.format() == GL_R32UI);
+                ASSERT(static_cast<unsigned>(points.size()) == (2 * objects.height() + 1) * (2 * sizeof(GLint)));
 
                 m_filter_memory.set_lines(m_lines);
                 m_filter_memory.set_points(points);
                 m_filter_memory.set_point_count(m_point_count);
 
                 m_merge_memory.set_lines(m_lines);
-
-                m_prepare_memory.set_lines(m_lines);
-                m_prepare_prog.set_uniform_handle("objects", objects.image_resident_handle_read_only());
         }
 
         Impl(const Impl&) = delete;

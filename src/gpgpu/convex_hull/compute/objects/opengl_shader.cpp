@@ -17,30 +17,54 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "opengl_shader.h"
 
+#include "com.h"
+
 #include "com/print.h"
+#include "graphics/opengl/query.h"
 
-namespace gpgpu_convex_hull_compute_opengl_implementation
+// clang-format off
+constexpr const char prepare_shader[]
 {
-void PrepareMemory::set_lines(const opengl::StorageBuffer& lines)
+#include "ch_prepare.comp.str"
+};
+// clang-format on
+
+namespace
 {
-        m_lines = &lines;
+int group_size_prepare(int width)
+{
+        namespace impl = gpgpu_convex_hull_compute_implementation;
+        return impl::group_size_prepare(width, opengl::max_fixed_group_size_x(), opengl::max_fixed_group_invocations(),
+                                        opengl::max_compute_shared_memory());
 }
 
-void PrepareMemory::bind() const
-{
-        ASSERT(m_lines);
-
-        m_lines->bind(LINES_BINDING);
-}
-
-std::string prepare_constants(int line_size, int buffer_and_group_size)
+std::string prepare_source(int line_size, int buffer_and_group_size)
 {
         std::string s;
         s += "const uint GROUP_SIZE = " + to_string(buffer_and_group_size) + ";\n";
         s += "const uint LINE_SIZE = " + to_string(line_size) + ";\n";
         s += "const uint BUFFER_SIZE = " + to_string(buffer_and_group_size) + ";\n";
         s += '\n';
-        return s;
+        return s + prepare_shader;
+}
+}
+
+namespace gpgpu_convex_hull_compute_opengl_implementation
+{
+ProgramPrepare::ProgramPrepare(const opengl::TextureImage& objects, const opengl::StorageBuffer& lines)
+        : m_program(opengl::ComputeShader(prepare_source(objects.height(), group_size_prepare(objects.width())))),
+          m_height(objects.height())
+{
+        ASSERT(objects.format() == GL_R32UI);
+
+        m_lines = &lines;
+        m_program.set_uniform_handle("objects", objects.image_resident_handle_read_only());
+}
+
+void ProgramPrepare::exec() const
+{
+        m_lines->bind(LINES_BINDING);
+        m_program.dispatch_compute(m_height, 1, 1);
 }
 
 //
