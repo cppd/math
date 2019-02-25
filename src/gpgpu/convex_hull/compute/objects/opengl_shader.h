@@ -55,23 +55,21 @@ public:
 
 //
 
-class FilterMemory final
+class ProgramFilter final
 {
         static constexpr int LINES_BINDING = 0;
         static constexpr int POINTS_BINDING = 1;
         static constexpr int POINT_COUNT_BINDING = 2;
 
+        opengl::ComputeProgram m_program;
         const opengl::StorageBuffer* m_lines = nullptr;
         const opengl::StorageBuffer* m_points = nullptr;
         const opengl::StorageBuffer* m_point_count = nullptr;
 
 public:
-        void set_lines(const opengl::StorageBuffer& lines);
-        void set_points(const opengl::StorageBuffer& points);
-        void set_point_count(const opengl::StorageBuffer& point_count);
+        ProgramFilter(unsigned height, const opengl::StorageBuffer& lines, const opengl::StorageBuffer& points,
+                      const opengl::StorageBuffer& point_count);
 
-        void bind() const;
+        void exec() const;
 };
-
-std::string filter_constants(int line_size);
 }

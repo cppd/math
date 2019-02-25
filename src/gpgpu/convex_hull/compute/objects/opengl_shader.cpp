@@ -31,6 +31,10 @@ constexpr const char merge_shader[]
 {
 #include "ch_merge.comp.str"
 };
+constexpr const char filter_shader[]
+{
+#include "ch_filter.comp.str"
+};
 // clang-format on
 
 namespace
@@ -72,6 +76,14 @@ std::string merge_source(unsigned height)
         s += '\n';
         return s + merge_shader;
 }
+
+std::string filter_source(int line_size)
+{
+        std::string s;
+        s += "const int LINE_SIZE = " + to_string(line_size) + ";\n";
+        s += '\n';
+        return s + filter_shader;
+}
 }
 
 namespace gpgpu_convex_hull_compute_opengl_implementation
@@ -108,35 +120,20 @@ void ProgramMerge::exec() const
 
 //
 
-void FilterMemory::set_lines(const opengl::StorageBuffer& lines)
+ProgramFilter::ProgramFilter(unsigned height, const opengl::StorageBuffer& lines, const opengl::StorageBuffer& points,
+                             const opengl::StorageBuffer& point_count)
+        : m_program(opengl::ComputeShader(filter_source(height)))
 {
         m_lines = &lines;
-}
-
-void FilterMemory::set_points(const opengl::StorageBuffer& points)
-{
         m_points = &points;
-}
-
-void FilterMemory::set_point_count(const opengl::StorageBuffer& point_count)
-{
         m_point_count = &point_count;
 }
 
-void FilterMemory::bind() const
+void ProgramFilter::exec() const
 {
-        ASSERT(m_lines && m_points && m_point_count);
-
         m_lines->bind(LINES_BINDING);
         m_points->bind(POINTS_BINDING);
         m_point_count->bind(POINT_COUNT_BINDING);
-}
-
-std::string filter_constants(int line_size)
-{
-        std::string s;
-        s += "const int LINE_SIZE = " + to_string(line_size) + ";\n";
-        s += '\n';
-        return s;
+        m_program.dispatch_compute(1, 1, 1);
 }
 }
