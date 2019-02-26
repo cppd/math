@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "ps_compute.h"
+#include "opengl_ps_compute.h"
 
 #include "com/print.h"
 #include "gpgpu/com/groups.h"

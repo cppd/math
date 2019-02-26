@@ -15,13 +15,13 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "of_show.h"
+#include "opengl_of_show.h"
 
 #include "com/conversion.h"
 #include "com/error.h"
 #include "com/time.h"
 #include "com/type/limit.h"
-#include "gpgpu/optical_flow/compute/of_compute.h"
+#include "gpgpu/optical_flow/compute/opengl_of_compute.h"
 #include "graphics/opengl/buffers.h"
 #include "graphics/opengl/capabilities.h"
 #include "graphics/opengl/shader.h"

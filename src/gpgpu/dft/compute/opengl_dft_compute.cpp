@@ -43,7 +43,7 @@ Chapter 13: FFTs for Arbitrary N.
       h2(l) = h(M - l) для l = M - N + 1,..., M - 1.
 */
 
-#include "dft_compute.h"
+#include "opengl_dft_compute.h"
 
 #include "memory.h"
 
@@ -54,7 +54,7 @@ Chapter 13: FFTs for Arbitrary N.
 #include "com/print.h"
 #include "com/time.h"
 #include "gpgpu/com/groups.h"
-#include "gpgpu/dft/compute/device/program.h"
+#include "gpgpu/dft/compute/objects/opengl_program.h"
 #include "graphics/opengl/buffers.h"
 #include "graphics/opengl/query.h"
 
