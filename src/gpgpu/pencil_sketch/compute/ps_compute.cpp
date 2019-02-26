@@ -32,63 +32,94 @@ constexpr const char luminance_shader[]
 };
 // clang-format on
 
-constexpr int GROUP_SIZE = 16;
-
 namespace
 {
-std::string group_size_string()
-{
-        return "const uint GROUP_SIZE = " + to_string(GROUP_SIZE) + ";\n";
-}
-
-std::string compute_source(bool input_is_srgb)
+std::string compute_source(bool input_is_srgb, int group_size)
 {
         std::string s;
-        s += group_size_string();
-        s += std::string("const bool SOURCE_SRGB = ") + (input_is_srgb ? "true" : "false") + ";\n";
+        s += "const uint GROUP_SIZE = " + to_string(group_size) + ";\n";
+        s += "const bool SOURCE_SRGB = " + std::string(input_is_srgb ? "true" : "false") + ";\n";
         return s + compute_shader;
 }
 
-std::string luminance_source()
+std::string luminance_source(int group_size)
 {
         std::string s;
-        s += group_size_string();
+        s += "const uint GROUP_SIZE = " + to_string(group_size) + ";\n";
         return s + luminance_shader;
 }
 
+class ProgramCompute final
+{
+        static constexpr int GROUP_SIZE = 16;
+
+        int m_groups_x;
+        int m_groups_y;
+        opengl::ComputeProgram m_program;
+
+public:
+        ProgramCompute(const opengl::TextureRGBA32F& input, bool input_is_srgb, const opengl::TextureImage& objects,
+                       const opengl::TextureRGBA32F& output)
+                : m_groups_x(group_count(input.texture().width(), GROUP_SIZE)),
+                  m_groups_y(group_count(input.texture().height(), GROUP_SIZE)),
+                  m_program(opengl::ComputeShader(compute_source(input_is_srgb, GROUP_SIZE)))
+        {
+                ASSERT(objects.format() == GL_R32UI);
+
+                m_program.set_uniform_handle("img_input", input.image_resident_handle_read_only());
+                m_program.set_uniform_handle("img_output", output.image_resident_handle_write_only());
+                m_program.set_uniform_handle("img_objects", objects.image_resident_handle_read_only());
+        }
+
+        void exec() const
+        {
+                m_program.dispatch_compute(m_groups_x, m_groups_y, 1);
+        }
+};
+
+class ProgramLuminance final
+{
+        static constexpr int GROUP_SIZE = 16;
+
+        int m_groups_x;
+        int m_groups_y;
+        opengl::ComputeProgram m_program;
+
+public:
+        ProgramLuminance(const opengl::TextureRGBA32F& output)
+                : m_groups_x(group_count(output.texture().width(), GROUP_SIZE)),
+                  m_groups_y(group_count(output.texture().height(), GROUP_SIZE)),
+                  m_program(opengl::ComputeShader(luminance_source(GROUP_SIZE)))
+        {
+                m_program.set_uniform_handle("img", output.image_resident_handle_read_write());
+        }
+
+        void exec() const
+        {
+                m_program.dispatch_compute(m_groups_x, m_groups_y, 1);
+        }
+};
+
 class Impl final : public gpgpu_opengl::PencilSketchCompute
 {
-        const int m_groups_x;
-        const int m_groups_y;
-
-        opengl::ComputeProgram m_compute_prog;
-        opengl::ComputeProgram m_luminance_prog;
+        ProgramCompute m_program_compute;
+        ProgramLuminance m_program_luminance;
 
         void exec() override
         {
-                m_compute_prog.dispatch_compute(m_groups_x, m_groups_y, 1);
+                m_program_compute.exec();
                 glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
                 // Теперь в текстуре находится цвет RGB
-                m_luminance_prog.dispatch_compute(m_groups_x, m_groups_y, 1);
+                m_program_luminance.exec();
                 glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
         }
 
 public:
         Impl(const opengl::TextureRGBA32F& input, bool input_is_srgb, const opengl::TextureImage& objects,
              const opengl::TextureRGBA32F& output)
-                : m_groups_x(group_count(input.texture().width(), GROUP_SIZE)),
-                  m_groups_y(group_count(input.texture().height(), GROUP_SIZE)),
-                  m_compute_prog(opengl::ComputeShader(compute_source(input_is_srgb))),
-                  m_luminance_prog(opengl::ComputeShader(luminance_source()))
+                : m_program_compute(input, input_is_srgb, objects, output), m_program_luminance(output)
         {
-                ASSERT(objects.format() == GL_R32UI);
-
-                m_compute_prog.set_uniform_handle("img_input", input.image_resident_handle_read_only());
-                m_compute_prog.set_uniform_handle("img_output", output.image_resident_handle_write_only());
-                m_compute_prog.set_uniform_handle("img_objects", objects.image_resident_handle_read_only());
-
-                m_luminance_prog.set_uniform_handle("img", output.image_resident_handle_read_write());
         }
 };
 }
