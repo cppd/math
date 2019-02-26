@@ -28,7 +28,7 @@ Chapter 2: CONVEX HULLS, 2.6 Divide-and-Conquer.
 #include "opengl_ch_compute.h"
 
 #include "com/error.h"
-#include "gpgpu/convex_hull/compute/objects/opengl_shader.h"
+#include "gpgpu/convex_hull/compute/objects/opengl_program.h"
 
 namespace impl = gpgpu_convex_hull_compute_opengl_implementation;
 

@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/time.h"
 #include "gpgpu/convex_hull/compute/opengl_ch_compute.h"
 #include "gpgpu/convex_hull/show/objects/com.h"
-#include "gpgpu/convex_hull/show/objects/opengl_shader.h"
+#include "gpgpu/convex_hull/show/objects/opengl_memory.h"
 #include "graphics/opengl/shader.h"
 
 // clang-format off
