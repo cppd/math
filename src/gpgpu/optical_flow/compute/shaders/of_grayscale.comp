@@ -19,8 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // Вставляется в текст программы
 // const uint GROUP_SIZE =
 layout(local_size_x = GROUP_SIZE, local_size_y = GROUP_SIZE) in;
-layout(bindless_image, rgba32f) readonly uniform image2D img_src;
-layout(bindless_image, r32f) writeonly uniform image2D img_dst;
+layout(bindless_image, rgba32f, location = 0) readonly uniform image2D img_src;
+layout(bindless_image, r32f, location = 1) writeonly uniform image2D img_dst;
 #else
 layout(local_size_x_id = 0, local_size_y_id = 0) in;
 layout(binding = 0, rgba32f) readonly uniform image2D img_src;

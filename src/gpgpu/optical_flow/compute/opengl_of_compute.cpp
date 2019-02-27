@@ -78,22 +78,58 @@ constexpr float MIN_DETERMINANT = 1;
 
 namespace
 {
-std::string group_size_string()
+class ImageR32F final
 {
-        return "const uint GROUP_SIZE = " + to_string(GROUP_SIZE) + ";\n";
-}
+        opengl::TextureR32F m_texture;
+        GLuint64 m_image_write_handle;
+        GLuint64 m_image_read_handle;
+        GLuint64 m_texture_handle;
+        int m_width;
+        int m_height;
+
+public:
+        ImageR32F(int x, int y)
+                : m_texture(x, y),
+                  m_image_write_handle(m_texture.image_resident_handle_write_only()),
+                  m_image_read_handle(m_texture.image_resident_handle_read_only()),
+                  m_texture_handle(m_texture.texture().texture_resident_handle()),
+                  m_width(x),
+                  m_height(y)
+        {
+        }
+        int width() const
+        {
+                return m_width;
+        }
+        int height() const
+        {
+                return m_height;
+        }
+        GLuint64 image_write_handle() const
+        {
+                return m_image_write_handle;
+        }
+        GLuint64 image_read_handle() const
+        {
+                return m_image_read_handle;
+        }
+        GLuint64 texture_handle() const
+        {
+                return m_texture_handle;
+        }
+};
 
 std::string downsample_source()
 {
         std::string s;
-        s += group_size_string();
+        s += "const uint GROUP_SIZE = " + to_string(GROUP_SIZE) + ";\n";
         return s + downsample_shader;
 }
 
 std::string flow_source()
 {
         std::string s;
-        s += group_size_string();
+        s += "const uint GROUP_SIZE = " + to_string(GROUP_SIZE) + ";\n";
         s += "const int RADIUS = " + to_string(RADIUS) + ";\n";
         s += "const int ITERATION_COUNT = " + to_string(ITERATION_COUNT) + ";\n";
         s += "const float STOP_MOVE_SQUARE = " + to_string(STOP_MOVE_SQUARE) + ";\n";
@@ -104,45 +140,16 @@ std::string flow_source()
 std::string grayscale_source()
 {
         std::string s;
-        s += group_size_string();
+        s += "const uint GROUP_SIZE = " + to_string(GROUP_SIZE) + ";\n";
         return s + grayscale_shader;
 }
 
 std::string sobel_source()
 {
         std::string s;
-        s += group_size_string();
+        s += "const uint GROUP_SIZE = " + to_string(GROUP_SIZE) + ";\n";
         return s + sobel_shader;
 }
-
-class DownsampleMemory final
-{
-        static constexpr int DATA_BINDING = 0;
-
-        opengl::UniformBuffer m_buffer;
-
-        struct Data
-        {
-                GLint k_x;
-                GLint k_y;
-        };
-
-public:
-        DownsampleMemory() : m_buffer(sizeof(Data))
-        {
-        }
-
-        void set(int k_x, int k_y) const
-        {
-                Data d{k_x, k_y};
-                m_buffer.copy(0, d);
-        }
-
-        void bind() const
-        {
-                m_buffer.bind(DATA_BINDING);
-        }
-};
 
 class FlowMemory final
 {
@@ -255,20 +262,95 @@ public:
         }
 };
 
-void create_image_pyramid_sizes(int width, int height, int min, std::vector<vec2i>* level_dimensions)
+class ProgramGrayscale
 {
-        level_dimensions->clear();
-        level_dimensions->emplace_back(width, height);
+        static constexpr int SRC_LOCATION = 0;
+        static constexpr int DST_LOCATION = 1;
+
+        int m_groups_x;
+        int m_groups_y;
+        opengl::ComputeProgram m_program;
+
+public:
+        ProgramGrayscale(const opengl::TextureRGBA32F& source_image)
+                : m_groups_x(group_count(source_image.texture().width(), GROUP_SIZE)),
+                  m_groups_y(group_count(source_image.texture().height(), GROUP_SIZE)),
+                  m_program(opengl::ComputeShader(grayscale_source()))
+        {
+                m_program.set_uniform_handle(SRC_LOCATION, source_image.image_resident_handle_read_only());
+        }
+
+        void exec(const ImageR32F& image) const
+        {
+                m_program.set_uniform_handle(DST_LOCATION, image.image_write_handle());
+                m_program.dispatch_compute(m_groups_x, m_groups_y, 1);
+        }
+};
+
+class ProgramDownsample
+{
+        static constexpr int BIG_LOCATION = 0;
+        static constexpr int SMALL_LOCATION = 1;
+
+        opengl::ComputeProgram m_program;
+
+public:
+        ProgramDownsample() : m_program(opengl::ComputeShader(downsample_source()))
+        {
+        }
+
+        void exec(const ImageR32F& big, const ImageR32F& small) const
+        {
+                m_program.set_uniform_handle(BIG_LOCATION, big.image_read_handle());
+                m_program.set_uniform_handle(SMALL_LOCATION, small.image_write_handle());
+
+                int groups_x = group_count(small.width(), GROUP_SIZE);
+                int groups_y = group_count(small.height(), GROUP_SIZE);
+                m_program.dispatch_compute(groups_x, groups_y, 1);
+        }
+};
+
+class ProgramSobel
+{
+        static constexpr int IMAGE_LOCATION = 0;
+        static constexpr int DX_LOCATION = 1;
+        static constexpr int DY_LOCATION = 2;
+
+        opengl::ComputeProgram m_program;
+
+public:
+        ProgramSobel() : m_program(opengl::ComputeShader(sobel_source()))
+        {
+        }
+
+        void exec(const ImageR32F& image, const ImageR32F& dx, const ImageR32F& dy) const
+        {
+                m_program.set_uniform_handle(IMAGE_LOCATION, image.image_read_handle());
+                m_program.set_uniform_handle(DX_LOCATION, dx.image_write_handle());
+                m_program.set_uniform_handle(DY_LOCATION, dy.image_write_handle());
+
+                int groups_x = group_count(image.width(), GROUP_SIZE);
+                int groups_y = group_count(image.height(), GROUP_SIZE);
+                m_program.dispatch_compute(groups_x, groups_y, 1);
+        }
+};
+
+std::vector<vec2i> create_image_pyramid_sizes(int width, int height, int min_size)
+{
+        std::vector<vec2i> sizes;
+
+        sizes.emplace_back(width, height);
+
         while (true)
         {
                 int new_width = (width + 1) / 2;
                 int new_height = (height + 1) / 2;
 
-                if (new_width < min)
+                if (new_width < min_size)
                 {
                         new_width = width;
                 }
-                if (new_height < min)
+                if (new_height < min_size)
                 {
                         new_height = height;
                 }
@@ -278,152 +360,128 @@ void create_image_pyramid_sizes(int width, int height, int min, std::vector<vec2
                         break;
                 }
 
-                level_dimensions->emplace_back(new_width, new_height);
+                sizes.emplace_back(new_width, new_height);
 
                 width = new_width;
                 height = new_height;
         }
 
 #if 0
-        for (const vec2i& v : *level_dimensions)
+        for (const vec2i& v : sizes)
         {
                 LOG(to_string(v[0]) + " x " + to_string(v[1]));
         }
 #endif
+
+        return sizes;
 }
 
-class ImageR32F final
+void create_textures(const std::vector<vec2i>& sizes, std::vector<ImageR32F>* textures)
 {
-        opengl::TextureR32F m_texture;
-        GLuint64 m_image_write_handle;
-        GLuint64 m_image_read_handle;
-        GLuint64 m_texture_handle;
-        int m_width;
-        int m_height;
+        textures->clear();
+        textures->reserve(sizes.size());
+        for (const vec2i& s : sizes)
+        {
+                textures->emplace_back(s[0], s[1]);
+        }
+}
+
+void create_buffers(const std::vector<vec2i>& sizes, std::vector<opengl::StorageBuffer>* buffers)
+{
+        buffers->clear();
+        buffers->reserve(sizes.size());
+        for (const vec2i& s : sizes)
+        {
+                buffers->emplace_back(s[0] * s[1] * sizeof(vec2f));
+        }
+}
+
+class ImagePyramid
+{
+        std::array<std::vector<ImageR32F>, 2> m_images;
+        std::vector<ImageR32F> m_dx;
+        std::vector<ImageR32F> m_dy;
+        std::vector<opengl::StorageBuffer> m_flow;
 
 public:
-        ImageR32F(int x, int y)
-                : m_texture(x, y),
-                  m_image_write_handle(m_texture.image_resident_handle_write_only()),
-                  m_image_read_handle(m_texture.image_resident_handle_read_only()),
-                  m_texture_handle(m_texture.texture().texture_resident_handle()),
-                  m_width(x),
-                  m_height(y)
+        ImagePyramid(int width, int height)
         {
+                std::vector<vec2i> sizes = create_image_pyramid_sizes(width, height, BOTTOM_IMAGE_SIZE);
+                create_textures(sizes, &m_images[0]);
+                create_textures(sizes, &m_images[1]);
+                create_textures(sizes, &m_dx);
+                create_textures(sizes, &m_dy);
+                create_buffers(sizes, &m_flow);
         }
-        int width() const
+
+        const std::vector<ImageR32F>& images(unsigned i) const
         {
-                return m_width;
+                ASSERT(i < 2);
+                return m_images[i];
         }
-        int height() const
+
+        const std::vector<ImageR32F>& dx() const
         {
-                return m_height;
+                return m_dx;
         }
-        GLuint64 image_write_handle() const
+
+        const std::vector<ImageR32F>& dy() const
         {
-                return m_image_write_handle;
+                return m_dy;
         }
-        GLuint64 image_read_handle() const
+
+        const std::vector<opengl::StorageBuffer>& flow() const
         {
-                return m_image_read_handle;
-        }
-        GLuint64 texture_handle() const
-        {
-                return m_texture_handle;
+                return m_flow;
         }
 };
 
-void create_textures(const std::vector<vec2i>& level_dimensions, std::vector<ImageR32F>* textures)
-{
-        textures->clear();
-        for (const vec2i& d : level_dimensions)
-        {
-                textures->emplace_back(d[0], d[1]);
-        }
-}
-
-void create_flow_buffers(const std::vector<vec2i>& level_dimensions, std::vector<opengl::StorageBuffer>* buffers)
-{
-        buffers->clear();
-        buffers->reserve(level_dimensions.size());
-        for (unsigned i = 0; i < level_dimensions.size(); ++i)
-        {
-                buffers->emplace_back(level_dimensions[i][0] * level_dimensions[i][1] * sizeof(vec2f));
-        }
-}
-
 class Impl final : public gpgpu_opengl::OpticalFlowCompute
 {
-        const int m_width, m_height;
-        const int m_groups_x, m_groups_y;
-
         int m_top_point_count_x;
         int m_top_point_count_y;
 
         const opengl::StorageBuffer& m_top_points;
         const opengl::StorageBuffer& m_top_points_flow;
 
-        opengl::ComputeProgram m_comp_downsample;
+        ProgramGrayscale m_program_grayscale;
+        ProgramDownsample m_program_downsample;
+        ProgramSobel m_program_sobel;
         opengl::ComputeProgram m_comp_flow;
-        opengl::ComputeProgram m_comp_grayscale;
-        opengl::ComputeProgram m_comp_sobel;
 
-        std::array<std::vector<ImageR32F>, 2> m_image_pyramid;
-        std::vector<ImageR32F> m_image_pyramid_dx;
-        std::vector<ImageR32F> m_image_pyramid_dy;
+        FlowMemory m_flow_memory;
 
-        std::vector<opengl::StorageBuffer> m_image_pyramid_flow;
+        ImagePyramid m_image_pyramid;
+
         int m_i_index = 0;
         int m_j_index = 1;
         bool m_image_I_exists = false;
 
-        DownsampleMemory m_downsample_memory;
-        FlowMemory m_flow_memory;
-
-        void build_image_pyramid(std::vector<ImageR32F>* pyramid)
+        void build_image_pyramid(const std::vector<ImageR32F>& pyramid)
         {
-                // уровень 0 заполняется по исходному изображению
-                m_comp_grayscale.set_uniform_handle("img_dst", (*pyramid)[0].image_write_handle());
-                m_comp_grayscale.dispatch_compute(m_groups_x, m_groups_y, 1);
+                // Уровень 0 заполняется по исходному изображению
+                m_program_grayscale.exec(pyramid[0]);
                 glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
                 // Каждый следующий уровень меньше предыдущего
-                for (unsigned i = 1; i < pyramid->size(); ++i)
+                for (unsigned i = 1; i < pyramid.size(); ++i)
                 {
-                        const ImageR32F& img_big = (*pyramid)[i - 1];
-                        const ImageR32F& img_small = (*pyramid)[i];
+                        ASSERT(pyramid[i - 1].width() > pyramid[i].width() || pyramid[i - 1].height() > pyramid[i].height());
 
-                        int k_x = (img_small.width() != img_big.width()) ? 2 : 1;
-                        int k_y = (img_small.height() != img_big.height()) ? 2 : 1;
-
-                        ASSERT(k_x > 1 || k_y > 1);
-
-                        m_comp_downsample.set_uniform_handle("img_big", img_big.image_read_handle());
-                        m_comp_downsample.set_uniform_handle("img_small", img_small.image_write_handle());
-                        m_downsample_memory.set(k_x, k_y);
-                        m_downsample_memory.bind();
-
-                        int groups_x = group_count(img_small.width(), GROUP_SIZE);
-                        int groups_y = group_count(img_small.height(), GROUP_SIZE);
-                        m_comp_downsample.dispatch_compute(groups_x, groups_y, 1);
+                        m_program_downsample.exec(pyramid[i - 1], pyramid[i]);
                         glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
                 }
         }
 
-        void compute_dxdy(const std::vector<ImageR32F>& image_pyramid, const std::vector<ImageR32F>& image_pyramid_dx,
-                          const std::vector<ImageR32F>& image_pyramid_dy)
+        void compute_dxdy(const std::vector<ImageR32F>& images, const std::vector<ImageR32F>& images_dx,
+                          const std::vector<ImageR32F>& images_dy)
         {
-                ASSERT(image_pyramid.size() == image_pyramid_dx.size() && image_pyramid.size() == image_pyramid_dy.size());
+                ASSERT(images.size() == images_dx.size());
+                ASSERT(images.size() == images_dy.size());
 
-                for (unsigned i = 0; i < image_pyramid.size(); ++i)
+                for (unsigned i = 0; i < images.size(); ++i)
                 {
-                        m_comp_sobel.set_uniform_handle("img_I", image_pyramid[i].image_read_handle());
-                        m_comp_sobel.set_uniform_handle("img_dx", image_pyramid_dx[i].image_write_handle());
-                        m_comp_sobel.set_uniform_handle("img_dy", image_pyramid_dy[i].image_write_handle());
-
-                        int groups_x = group_count(image_pyramid[i].width(), GROUP_SIZE);
-                        int groups_y = group_count(image_pyramid[i].height(), GROUP_SIZE);
-                        m_comp_sobel.dispatch_compute(groups_x, groups_y, 1);
+                        m_program_sobel.exec(images[i], images_dx[i], images_dy[i]);
                 }
 
                 glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
@@ -505,7 +563,7 @@ class Impl final : public gpgpu_opengl::OpticalFlowCompute
 
                 std::swap(m_i_index, m_j_index);
 
-                build_image_pyramid(&m_image_pyramid[m_j_index]);
+                build_image_pyramid(m_image_pyramid.images(m_j_index));
 
                 if (!m_image_I_exists)
                 {
@@ -513,51 +571,34 @@ class Impl final : public gpgpu_opengl::OpticalFlowCompute
                         return false;
                 }
 
-                compute_dxdy(m_image_pyramid[m_i_index], m_image_pyramid_dx, m_image_pyramid_dy);
+                compute_dxdy(m_image_pyramid.images(m_i_index), m_image_pyramid.dx(), m_image_pyramid.dy());
 
-                compute_optical_flow(m_image_pyramid[m_i_index], m_image_pyramid_dx, m_image_pyramid_dy, m_image_pyramid_flow,
-                                     m_image_pyramid[m_j_index]);
+                compute_optical_flow(m_image_pyramid.images(m_i_index), m_image_pyramid.dx(), m_image_pyramid.dy(),
+                                     m_image_pyramid.flow(), m_image_pyramid.images(m_j_index));
 
                 return true;
         }
 
         GLuint64 image_pyramid_dx_texture() const override
         {
-                return m_image_pyramid_dx[0].texture_handle();
+                return m_image_pyramid.dx()[0].texture_handle();
         }
         GLuint64 image_pyramid_texture() const override
         {
-                return m_image_pyramid[m_i_index][0].texture_handle();
+                return m_image_pyramid.images(m_i_index)[0].texture_handle();
         }
 
 public:
         Impl(int width, int height, const opengl::TextureRGBA32F& source_image, int top_point_count_x, int top_point_count_y,
              const opengl::StorageBuffer& top_points, const opengl::StorageBuffer& top_points_flow)
-                : m_width(width),
-                  m_height(height),
-                  m_groups_x(group_count(m_width, GROUP_SIZE)),
-                  m_groups_y(group_count(m_height, GROUP_SIZE)),
-                  m_top_point_count_x(top_point_count_x),
+                : m_top_point_count_x(top_point_count_x),
                   m_top_point_count_y(top_point_count_y),
                   m_top_points(top_points),
                   m_top_points_flow(top_points_flow),
-                  m_comp_downsample(opengl::ComputeShader(downsample_source())),
+                  m_program_grayscale(source_image),
                   m_comp_flow(opengl::ComputeShader(flow_source())),
-                  m_comp_grayscale(opengl::ComputeShader(grayscale_source())),
-                  m_comp_sobel(opengl::ComputeShader(sobel_source()))
+                  m_image_pyramid(width, height)
         {
-                std::vector<vec2i> level_dimensions;
-
-                create_image_pyramid_sizes(m_width, m_height, BOTTOM_IMAGE_SIZE, &level_dimensions);
-
-                create_textures(level_dimensions, &m_image_pyramid[m_i_index]);
-                create_textures(level_dimensions, &m_image_pyramid[m_j_index]);
-                create_textures(level_dimensions, &m_image_pyramid_dx);
-                create_textures(level_dimensions, &m_image_pyramid_dy);
-
-                create_flow_buffers(level_dimensions, &m_image_pyramid_flow);
-
-                m_comp_grayscale.set_uniform_handle("img_src", source_image.image_resident_handle_read_only());
         }
 
         Impl(const Impl&) = delete;
