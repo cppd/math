@@ -262,7 +262,7 @@ public:
         }
 };
 
-class ProgramGrayscale
+class ProgramGrayscale final
 {
         static constexpr int SRC_LOCATION = 0;
         static constexpr int DST_LOCATION = 1;
@@ -287,7 +287,7 @@ public:
         }
 };
 
-class ProgramDownsample
+class ProgramDownsample final
 {
         static constexpr int BIG_LOCATION = 0;
         static constexpr int SMALL_LOCATION = 1;
@@ -310,7 +310,7 @@ public:
         }
 };
 
-class ProgramSobel
+class ProgramSobel final
 {
         static constexpr int IMAGE_LOCATION = 0;
         static constexpr int DX_LOCATION = 1;
@@ -396,7 +396,7 @@ void create_buffers(const std::vector<vec2i>& sizes, std::vector<opengl::Storage
         }
 }
 
-class ImagePyramid
+class ImagePyramid final
 {
         std::array<std::vector<ImageR32F>, 2> m_images;
         std::vector<ImageR32F> m_dx;
@@ -434,15 +434,45 @@ public:
         {
                 return m_flow;
         }
+
+        int width(size_t i) const
+        {
+                ASSERT(i < m_images[0].size());
+                ASSERT(m_images[0].size() == m_images[1].size());
+                ASSERT(m_images[0][i].width() == m_images[1][i].width());
+
+                return m_images[0][i].width();
+        }
+
+        int height(size_t i) const
+        {
+                ASSERT(i < m_images[0].size());
+                ASSERT(m_images[0].size() == m_images[1].size());
+                ASSERT(m_images[0][i].height() == m_images[1][i].height());
+
+                return m_images[0][i].height();
+        }
+
+        size_t size() const
+        {
+                ASSERT(m_images[0].size() == m_images[1].size());
+
+                return m_images[0].size();
+        }
 };
 
 class Impl final : public gpgpu_opengl::OpticalFlowCompute
 {
-        int m_top_point_count_x;
-        int m_top_point_count_y;
+        static constexpr int IMAGE_DX_LOCATION = 0;
+        static constexpr int IMAGE_DY_LOCATION = 1;
+        static constexpr int IMAGE_I_LOCATION = 2;
+        static constexpr int TEXTURE_J_LOCATION = 3;
+
+        int m_top_x;
+        int m_top_y;
 
         const opengl::StorageBuffer& m_top_points;
-        const opengl::StorageBuffer& m_top_points_flow;
+        const opengl::StorageBuffer& m_top_flow;
 
         ProgramGrayscale m_program_grayscale;
         ProgramDownsample m_program_downsample;
@@ -455,26 +485,26 @@ class Impl final : public gpgpu_opengl::OpticalFlowCompute
 
         int m_i_index = 0;
         int m_j_index = 1;
-        bool m_image_I_exists = false;
+        bool m_image_i_exists = false;
 
-        void build_image_pyramid(const std::vector<ImageR32F>& pyramid)
+        void build_image_pyramid(const std::vector<ImageR32F>& images) const
         {
                 // Уровень 0 заполняется по исходному изображению
-                m_program_grayscale.exec(pyramid[0]);
+                m_program_grayscale.exec(images[0]);
                 glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
                 // Каждый следующий уровень меньше предыдущего
-                for (unsigned i = 1; i < pyramid.size(); ++i)
+                for (unsigned i = 1; i < images.size(); ++i)
                 {
-                        ASSERT(pyramid[i - 1].width() > pyramid[i].width() || pyramid[i - 1].height() > pyramid[i].height());
+                        ASSERT(images[i - 1].width() > images[i].width() || images[i - 1].height() > images[i].height());
 
-                        m_program_downsample.exec(pyramid[i - 1], pyramid[i]);
+                        m_program_downsample.exec(images[i - 1], images[i]);
                         glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
                 }
         }
 
         void compute_dxdy(const std::vector<ImageR32F>& images, const std::vector<ImageR32F>& images_dx,
-                          const std::vector<ImageR32F>& images_dy)
+                          const std::vector<ImageR32F>& images_dy) const
         {
                 ASSERT(images.size() == images_dx.size());
                 ASSERT(images.size() == images_dy.size());
@@ -487,47 +517,38 @@ class Impl final : public gpgpu_opengl::OpticalFlowCompute
                 glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
         }
 
-        void compute_optical_flow(const std::vector<ImageR32F>& image_pyramid_I, const std::vector<ImageR32F>& image_pyramid_dx,
-                                  const std::vector<ImageR32F>& image_pyramid_dy,
-                                  const std::vector<opengl::StorageBuffer>& image_pyramid_flow,
-                                  const std::vector<ImageR32F>& image_pyramid_J)
+        void compute_optical_flow(const ImagePyramid& pyramid, int i_index, int j_index)
         {
-                int image_pyramid_I_size = image_pyramid_I.size();
+                ASSERT((i_index == 0 || i_index == 1) && (i_index == 1 - j_index));
 
-                for (int i = image_pyramid_I_size - 1; i >= 0; --i)
+                int size = pyramid.size();
+
+                for (int i = size - 1; i >= 0; --i)
                 {
-                        int points_x, points_y;
                         if (i != 0)
                         {
                                 // Если не самый верхний уровень, то расчёт для всех точек
-
                                 m_flow_memory.set_use_all_points();
-                                m_flow_memory.set_points_flow(image_pyramid_flow[i]);
-
-                                points_x = image_pyramid_I[i].width();
-                                points_y = image_pyramid_I[i].height();
+                                m_flow_memory.set_points_flow(pyramid.flow()[i]);
+                                m_flow_memory.set_point_count(pyramid.width(i), pyramid.height(i));
                         }
                         else
                         {
                                 // Если самый верхний уровень, то расчёт только для заданных точек для рисования на экране
-
                                 m_flow_memory.set_use_top_points(m_top_points);
-                                m_flow_memory.set_points_flow(m_top_points_flow);
-
-                                points_x = m_top_point_count_x;
-                                points_y = m_top_point_count_y;
+                                m_flow_memory.set_points_flow(m_top_flow);
+                                m_flow_memory.set_point_count(m_top_x, m_top_y);
                         }
 
-                        if (i != image_pyramid_I_size - 1)
+                        if (i != size - 1)
                         {
                                 // Если не самый нижний уровень, то в качестве приближения использовать поток,
                                 // полученный на меньших изображениях
-
-                                int guess_kx = (image_pyramid_I[i + 1].width() != image_pyramid_I[i].width()) ? 2 : 1;
-                                int guess_ky = (image_pyramid_I[i + 1].height() != image_pyramid_I[i].height()) ? 2 : 1;
-                                int guess_width = image_pyramid_I[i + 1].width();
-
-                                m_flow_memory.set_guess(image_pyramid_flow[i + 1], guess_kx, guess_ky, guess_width);
+                                int i_prev = i + 1;
+                                int guess_kx = (pyramid.width(i_prev) != pyramid.width(i)) ? 2 : 1;
+                                int guess_ky = (pyramid.height(i_prev) != pyramid.height(i)) ? 2 : 1;
+                                int guess_width = pyramid.width(i_prev);
+                                m_flow_memory.set_guess(pyramid.flow()[i_prev], guess_kx, guess_ky, guess_width);
                         }
                         else
                         {
@@ -535,17 +556,15 @@ class Impl final : public gpgpu_opengl::OpticalFlowCompute
                                 m_flow_memory.set_no_guess();
                         }
 
-                        m_flow_memory.set_point_count(points_x, points_y);
-
-                        m_comp_flow.set_uniform_handle("img_dx", image_pyramid_dx[i].image_read_handle());
-                        m_comp_flow.set_uniform_handle("img_dy", image_pyramid_dy[i].image_read_handle());
-                        m_comp_flow.set_uniform_handle("img_I", image_pyramid_I[i].image_read_handle());
-                        m_comp_flow.set_uniform_handle("tex_J", image_pyramid_J[i].texture_handle());
+                        m_comp_flow.set_uniform_handle(IMAGE_DX_LOCATION, pyramid.dx()[i].image_read_handle());
+                        m_comp_flow.set_uniform_handle(IMAGE_DY_LOCATION, pyramid.dy()[i].image_read_handle());
+                        m_comp_flow.set_uniform_handle(IMAGE_I_LOCATION, pyramid.images(i_index)[i].image_read_handle());
+                        m_comp_flow.set_uniform_handle(TEXTURE_J_LOCATION, pyramid.images(j_index)[i].texture_handle());
 
                         m_flow_memory.bind();
 
-                        int groups_x = group_count(points_x, GROUP_SIZE);
-                        int groups_y = group_count(points_y, GROUP_SIZE);
+                        int groups_x = group_count(i != 0 ? pyramid.width(i) : m_top_x, GROUP_SIZE);
+                        int groups_y = group_count(i != 0 ? pyramid.height(i) : m_top_y, GROUP_SIZE);
                         m_comp_flow.dispatch_compute(groups_x, groups_y, 1);
 
                         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
@@ -554,27 +573,26 @@ class Impl final : public gpgpu_opengl::OpticalFlowCompute
 
         void reset() override
         {
-                m_image_I_exists = false;
+                m_image_i_exists = false;
         }
 
         bool exec() override
         {
-                // Обозначения: I и i - предыдущее изображение, J и j - следующее изображение
+                // Обозначения: i - предыдущее изображение, j - следующее изображение
 
                 std::swap(m_i_index, m_j_index);
 
                 build_image_pyramid(m_image_pyramid.images(m_j_index));
 
-                if (!m_image_I_exists)
+                if (!m_image_i_exists)
                 {
-                        m_image_I_exists = true;
+                        m_image_i_exists = true;
                         return false;
                 }
 
                 compute_dxdy(m_image_pyramid.images(m_i_index), m_image_pyramid.dx(), m_image_pyramid.dy());
 
-                compute_optical_flow(m_image_pyramid.images(m_i_index), m_image_pyramid.dx(), m_image_pyramid.dy(),
-                                     m_image_pyramid.flow(), m_image_pyramid.images(m_j_index));
+                compute_optical_flow(m_image_pyramid, m_i_index, m_j_index);
 
                 return true;
         }
@@ -589,12 +607,12 @@ class Impl final : public gpgpu_opengl::OpticalFlowCompute
         }
 
 public:
-        Impl(int width, int height, const opengl::TextureRGBA32F& source_image, int top_point_count_x, int top_point_count_y,
-             const opengl::StorageBuffer& top_points, const opengl::StorageBuffer& top_points_flow)
-                : m_top_point_count_x(top_point_count_x),
-                  m_top_point_count_y(top_point_count_y),
+        Impl(int width, int height, const opengl::TextureRGBA32F& source_image, int top_x, int top_y,
+             const opengl::StorageBuffer& top_points, const opengl::StorageBuffer& top_flow)
+                : m_top_x(top_x),
+                  m_top_y(top_y),
                   m_top_points(top_points),
-                  m_top_points_flow(top_points_flow),
+                  m_top_flow(top_flow),
                   m_program_grayscale(source_image),
                   m_comp_flow(opengl::ComputeShader(flow_source())),
                   m_image_pyramid(width, height)
@@ -611,11 +629,9 @@ public:
 namespace gpgpu_opengl
 {
 std::unique_ptr<OpticalFlowCompute> create_optical_flow_compute(int width, int height, const opengl::TextureRGBA32F& source_image,
-                                                                int top_point_count_x, int top_point_count_y,
-                                                                const opengl::StorageBuffer& top_points,
-                                                                const opengl::StorageBuffer& top_points_flow)
+                                                                int top_x, int top_y, const opengl::StorageBuffer& top_points,
+                                                                const opengl::StorageBuffer& top_flow)
 {
-        return std::make_unique<Impl>(width, height, source_image, top_point_count_x, top_point_count_y, top_points,
-                                      top_points_flow);
+        return std::make_unique<Impl>(width, height, source_image, top_x, top_y, top_points, top_flow);
 }
 }

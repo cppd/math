@@ -23,20 +23,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // const float STOP_MOVE_SQUARE =
 // const float MIN_DETERMINANT =
 layout(local_size_x = GROUP_SIZE, local_size_y = GROUP_SIZE) in;
-layout(bindless_image, r32f) readonly uniform image2D img_dx;
-layout(bindless_image, r32f) readonly uniform image2D img_dy;
-layout(bindless_image, r32f) readonly uniform image2D img_I;
-layout(bindless_sampler) uniform sampler2D tex_J;
+layout(bindless_image, r32f, location = 0) readonly uniform image2D image_dx;
+layout(bindless_image, r32f, location = 1) readonly uniform image2D image_dy;
+layout(bindless_image, r32f, location = 2) readonly uniform image2D image_i;
+layout(bindless_sampler, location = 3) uniform sampler2D texture_j;
 #else
 layout(local_size_x_id = 0, local_size_y_id = 0) in;
 layout(constant_id = 1) const int RADIUS = 1;
 layout(constant_id = 2) const int ITERATION_COUNT = 1;
 layout(constant_id = 3) const float STOP_MOVE_SQUARE = 1;
 layout(constant_id = 4) const float MIN_DETERMINANT = 1;
-layout(binding = 4, r32f) readonly uniform image2D img_dx;
-layout(binding = 5, r32f) readonly uniform image2D img_dy;
-layout(binding = 6, r32f) readonly uniform image2D img_I;
-layout(binding = 7) uniform sampler2D tex_J;
+layout(binding = 4, r32f) readonly uniform image2D image_dx;
+layout(binding = 5, r32f) readonly uniform image2D image_dy;
+layout(binding = 6, r32f) readonly uniform image2D image_i;
+layout(binding = 7) uniform sampler2D texture_j;
 #endif
 
 layout(std430, binding = 0) readonly buffer StorageBufferTopPoints
@@ -65,33 +65,33 @@ layout(std140, binding = 3) uniform Data
 
 ivec2 screen_to_texture(ivec2 p)
 {
-        return ivec2(p.x, imageSize(img_dx).y - p.y - 1);
+        return ivec2(p.x, imageSize(image_dx).y - p.y - 1);
 }
 ivec2 texture_to_screen(ivec2 p)
 {
-        return ivec2(p.x, imageSize(img_dx).y - p.y - 1);
+        return ivec2(p.x, imageSize(image_dx).y - p.y - 1);
 }
 
 vec2 pixel_to_texture(vec2 pixel)
 {
-        return vec2(pixel.x + 0.5, pixel.y + 0.5) / imageSize(img_dx);
+        return vec2(pixel.x + 0.5, pixel.y + 0.5) / imageSize(image_dx);
 }
 
 vec2 get_dx_dy(ivec2 p)
 {
-        p = clamp(p, ivec2(0), imageSize(img_dx) - 1);
-        return vec2(imageLoad(img_dx, p).r, imageLoad(img_dy, p).r);
+        p = clamp(p, ivec2(0), imageSize(image_dx) - 1);
+        return vec2(imageLoad(image_dx, p).r, imageLoad(image_dy, p).r);
 }
 
-float get_I(ivec2 p)
+float get_i(ivec2 p)
 {
-        p = clamp(p, ivec2(0), imageSize(img_dx) - 1);
-        return imageLoad(img_I, p).r;
+        p = clamp(p, ivec2(0), imageSize(image_dx) - 1);
+        return imageLoad(image_i, p).r;
 }
-float get_J(vec2 p)
+float get_j(vec2 p)
 {
-        p = clamp(p, vec2(0), imageSize(img_dx) - 1);
-        return texture(tex_J, pixel_to_texture(p)).r;
+        p = clamp(p, vec2(0), imageSize(image_dx) - 1);
+        return texture(texture_j, pixel_to_texture(p)).r;
 }
 
 bool compute_g_inv(ivec2 p, out mat2 g_inv)
@@ -172,9 +172,9 @@ void main(void)
                         {
                                 ivec2 pd = ivec2(p.x + i, p.y + j);
 
-                                vec2 pd_J = vec2(pd) + guess + v;
+                                vec2 pd_j = vec2(pd) + guess + v;
 
-                                b += (get_I(pd) - get_J(pd_J)) * get_dx_dy(pd);
+                                b += (get_i(pd) - get_j(pd_j)) * get_dx_dy(pd);
                         }
                 }
 
