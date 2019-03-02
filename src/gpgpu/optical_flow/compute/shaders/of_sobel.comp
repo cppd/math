@@ -19,14 +19,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // Вставляется в текст программы
 // const uint GROUP_SIZE =
 layout(local_size_x = GROUP_SIZE, local_size_y = GROUP_SIZE) in;
-layout(bindless_image, r32f, location = 0) readonly uniform image2D img_I;
-layout(bindless_image, r32f, location = 1) writeonly uniform image2D img_dx;
-layout(bindless_image, r32f, location = 2) writeonly uniform image2D img_dy;
+layout(bindless_image, r32f, location = 0) readonly restrict uniform image2D image_I;
+layout(bindless_image, r32f, location = 1) writeonly restrict uniform image2D image_dx;
+layout(bindless_image, r32f, location = 2) writeonly restrict uniform image2D image_dy;
 #else
 layout(local_size_x_id = 0, local_size_y_id = 0) in;
-layout(binding = 0, r32f) readonly uniform image2D img_I;
-layout(binding = 1, r32f) writeonly uniform image2D img_dx;
-layout(binding = 2, r32f) writeonly uniform image2D img_dy;
+layout(binding = 0, r32f) readonly restrict uniform image2D image_I;
+layout(binding = 1, r32f) writeonly restrict uniform image2D image_dx;
+layout(binding = 2, r32f) writeonly restrict uniform image2D image_dy;
 #endif
 
 const int SOBEL_DELTA = 1;
@@ -58,25 +58,25 @@ float get_sobel_dy(int x, int y)
 
 float get_pixel(int x, int y)
 {
-        ivec2 p = clamp(ivec2(x, y), ivec2(0), imageSize(img_I) - 1);
-        return imageLoad(img_I, p).r;
+        ivec2 p = clamp(ivec2(x, y), ivec2(0), imageSize(image_I) - 1);
+        return imageLoad(image_I, p).r;
 }
 
 void set_dx(ivec2 p, float v)
 {
-        imageStore(img_dx, p, vec4(v, v, v, 1));
+        imageStore(image_dx, p, vec4(v, v, v, 1));
 }
 
 void set_dy(ivec2 p, float v)
 {
-        imageStore(img_dy, p, vec4(v, v, v, 1));
+        imageStore(image_dy, p, vec4(v, v, v, 1));
 }
 
 void main(void)
 {
         const ivec2 p = ivec2(gl_GlobalInvocationID.xy);
 
-        if (any(greaterThanEqual(p, imageSize(img_I))))
+        if (any(greaterThanEqual(p, imageSize(image_I))))
         {
                 return;
         }

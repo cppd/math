@@ -19,12 +19,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // Вставляется в текст программы
 // const uint GROUP_SIZE =
 layout(local_size_x = GROUP_SIZE, local_size_y = GROUP_SIZE) in;
-layout(bindless_image, r32f, location = 0) readonly uniform image2D img_big;
-layout(bindless_image, r32f, location = 1) writeonly uniform image2D img_small;
+layout(bindless_image, r32f, location = 0) readonly restrict uniform image2D image_big;
+layout(bindless_image, r32f, location = 1) writeonly restrict uniform image2D image_small;
 #else
 layout(local_size_x_id = 0, local_size_y_id = 0) in;
-layout(binding = 1, r32f) readonly uniform image2D img_big;
-layout(binding = 2, r32f) writeonly uniform image2D img_small;
+layout(binding = 1, r32f) readonly restrict uniform image2D image_big;
+layout(binding = 2, r32f) writeonly restrict uniform image2D image_small;
 #endif
 
 // clang-format off
@@ -43,30 +43,30 @@ const float filter_1d[5] = {0.05088, 0.21184, 0.47456, 0.21184, 0.05088};
 
 bool point_inside_big(ivec2 p)
 {
-        return all(lessThanEqual(ivec2(0), p)) && all(lessThan(p, imageSize(img_big)));
+        return all(lessThanEqual(ivec2(0), p)) && all(lessThan(p, imageSize(image_big)));
 }
 
 float get_big(ivec2 p)
 {
-        return imageLoad(img_big, p).r;
+        return imageLoad(image_big, p).r;
 }
 
 void set_small(ivec2 p, float v)
 {
-        imageStore(img_small, p, vec4(v, v, v, 1));
+        imageStore(image_small, p, vec4(v, v, v, 1));
 }
 
 void main(void)
 {
         const ivec2 p_small = ivec2(gl_GlobalInvocationID.xy);
 
-        if (any(greaterThanEqual(p_small, imageSize(img_small))))
+        if (any(greaterThanEqual(p_small, imageSize(image_small))))
         {
                 return;
         }
 
-        int kx = imageSize(img_big).x > imageSize(img_small).x ? 2 : 1;
-        int ky = imageSize(img_big).y > imageSize(img_small).y ? 2 : 1;
+        int kx = imageSize(image_big).x > imageSize(image_small).x ? 2 : 1;
+        int ky = imageSize(image_big).y > imageSize(image_small).y ? 2 : 1;
 
         const ivec2 p_big = ivec2(p_small.x * kx, p_small.y * ky);
 

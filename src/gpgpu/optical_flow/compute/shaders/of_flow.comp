@@ -23,9 +23,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // const float STOP_MOVE_SQUARE =
 // const float MIN_DETERMINANT =
 layout(local_size_x = GROUP_SIZE, local_size_y = GROUP_SIZE) in;
-layout(bindless_image, r32f, location = 0) readonly uniform image2D image_dx;
-layout(bindless_image, r32f, location = 1) readonly uniform image2D image_dy;
-layout(bindless_image, r32f, location = 2) readonly uniform image2D image_i;
+layout(bindless_image, r32f, location = 0) readonly restrict uniform image2D image_dx;
+layout(bindless_image, r32f, location = 1) readonly restrict uniform image2D image_dy;
+layout(bindless_image, r32f, location = 2) readonly restrict uniform image2D image_i;
 layout(bindless_sampler, location = 3) uniform sampler2D texture_j;
 #else
 layout(local_size_x_id = 0, local_size_y_id = 0) in;
@@ -33,9 +33,9 @@ layout(constant_id = 1) const int RADIUS = 1;
 layout(constant_id = 2) const int ITERATION_COUNT = 1;
 layout(constant_id = 3) const float STOP_MOVE_SQUARE = 1;
 layout(constant_id = 4) const float MIN_DETERMINANT = 1;
-layout(binding = 4, r32f) readonly uniform image2D image_dx;
-layout(binding = 5, r32f) readonly uniform image2D image_dy;
-layout(binding = 6, r32f) readonly uniform image2D image_i;
+layout(binding = 4, r32f) readonly restrict uniform image2D image_dx;
+layout(binding = 5, r32f) readonly restrict uniform image2D image_dy;
+layout(binding = 6, r32f) readonly restrict uniform image2D image_i;
 layout(binding = 7) uniform sampler2D texture_j;
 #endif
 
