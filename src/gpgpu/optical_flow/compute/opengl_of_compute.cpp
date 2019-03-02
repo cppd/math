@@ -159,11 +159,12 @@ class FlowMemory final
         static constexpr int DATA_BINDING = 3;
 
         const opengl::StorageBuffer* m_top_points = nullptr;
-        const opengl::StorageBuffer* m_points_flow = nullptr;
-        const opengl::StorageBuffer* m_points_flow_guess = nullptr;
+        const opengl::StorageBuffer* m_flow = nullptr;
+        const opengl::StorageBuffer* m_flow_guess = nullptr;
 
         opengl::UniformBuffer m_buffer;
 
+public:
         struct Data
         {
                 GLint point_count_x;
@@ -175,87 +176,44 @@ class FlowMemory final
                 GLint guess_width;
         };
 
-public:
         FlowMemory() : m_buffer(sizeof(Data))
         {
         }
 
-        void set_use_all_points()
+        void set_top_points(const opengl::StorageBuffer* top_points)
         {
-                m_top_points = nullptr;
-
-                decltype(Data().use_all_points) use_all_points = 1;
-                m_buffer.copy(offsetof(Data, use_all_points), use_all_points);
+                m_top_points = top_points;
         }
 
-        void set_use_top_points(const opengl::StorageBuffer& top_points)
+        void set_flow_guess(const opengl::StorageBuffer* flow_guess)
         {
-                m_top_points = &top_points;
-
-                decltype(Data().use_all_points) use_all_points = 0;
-                m_buffer.copy(offsetof(Data, use_all_points), use_all_points);
+                m_flow_guess = flow_guess;
         }
 
-        void set_point_count(int x, int y) const
+        void set_flow(const opengl::StorageBuffer* flow)
         {
-                constexpr size_t size = sizeof(Data::point_count_x) + sizeof(Data::point_count_y);
-                constexpr size_t offset = offsetof(Data, point_count_x);
-
-                static_assert(offsetof(Data, use_all_points) == offset + size);
-
-                Data data;
-                data.point_count_x = x;
-                data.point_count_y = y;
-
-                m_buffer.copy(offset, offset, size, data);
+                m_flow = flow;
         }
 
-        void set_no_guess()
+        void set_data(const Data& data)
         {
-                m_points_flow_guess = nullptr;
-
-                decltype(Data().use_guess) d = 0;
-                m_buffer.copy(offsetof(Data, use_guess), d);
-        }
-
-        void set_guess(const opengl::StorageBuffer& points_flow_guess, int guess_kx, int guess_ky, int guess_width)
-        {
-                m_points_flow_guess = &points_flow_guess;
-
-                constexpr size_t size =
-                        sizeof(Data::use_guess) + sizeof(Data::guess_kx) + sizeof(Data::guess_ky) + sizeof(Data::guess_width);
-                constexpr size_t offset = offsetof(Data, use_guess);
-
-                static_assert(sizeof(Data) == offset + size);
-
-                Data data;
-                data.use_guess = 1;
-                data.guess_kx = guess_kx;
-                data.guess_ky = guess_ky;
-                data.guess_width = guess_width;
-
-                m_buffer.copy(offset, offset, size, data);
-        }
-
-        void set_points_flow(const opengl::StorageBuffer& buffer)
-        {
-                m_points_flow = &buffer;
+                m_buffer.copy(0, data);
         }
 
         void bind() const
         {
-                ASSERT(m_points_flow);
+                ASSERT(m_flow);
 
                 if (m_top_points)
                 {
                         m_top_points->bind(POINTS_BINDING);
                 }
 
-                m_points_flow->bind(POINTS_FLOW_BINDING);
+                m_flow->bind(POINTS_FLOW_BINDING);
 
-                if (m_points_flow_guess)
+                if (m_flow_guess)
                 {
-                        m_points_flow_guess->bind(POINTS_FLOW_GUESS_BINDING);
+                        m_flow_guess->bind(POINTS_FLOW_GUESS_BINDING);
                 }
 
                 m_buffer.bind(DATA_BINDING);
@@ -521,50 +479,63 @@ class Impl final : public gpgpu_opengl::OpticalFlowCompute
         {
                 ASSERT((i_index == 0 || i_index == 1) && (i_index == 1 - j_index));
 
+                FlowMemory::Data data;
+
                 int size = pyramid.size();
 
                 for (int i = size - 1; i >= 0; --i)
                 {
-                        if (i != 0)
+                        const bool top = (i == 0);
+                        const bool bottom = (i == size - 1);
+
+                        if (!top)
                         {
-                                // Если не самый верхний уровень, то расчёт для всех точек
-                                m_flow_memory.set_use_all_points();
-                                m_flow_memory.set_points_flow(pyramid.flow()[i]);
-                                m_flow_memory.set_point_count(pyramid.width(i), pyramid.height(i));
+                                // Не самый верхний уровень, поэтому расчёт для всех точек
+                                m_flow_memory.set_top_points(nullptr);
+                                m_flow_memory.set_flow(&pyramid.flow()[i]);
+                                data.use_all_points = 1;
+                                data.point_count_x = pyramid.width(i);
+                                data.point_count_y = pyramid.height(i);
                         }
                         else
                         {
-                                // Если самый верхний уровень, то расчёт только для заданных точек для рисования на экране
-                                m_flow_memory.set_use_top_points(m_top_points);
-                                m_flow_memory.set_points_flow(m_top_flow);
-                                m_flow_memory.set_point_count(m_top_x, m_top_y);
+                                // Самый верхний уровень, поэтому расчёт только для заданных
+                                // точек для рисования на экране
+                                m_flow_memory.set_top_points(&m_top_points);
+                                m_flow_memory.set_flow(&m_top_flow);
+                                data.use_all_points = 0;
+                                data.point_count_x = m_top_x;
+                                data.point_count_y = m_top_y;
                         }
 
-                        if (i != size - 1)
+                        if (!bottom)
                         {
-                                // Если не самый нижний уровень, то в качестве приближения использовать поток,
-                                // полученный на меньших изображениях
+                                // Не самый нижний уровень, поэтому в качестве приближения
+                                // использовать поток, полученный на меньших изображениях
                                 int i_prev = i + 1;
-                                int guess_kx = (pyramid.width(i_prev) != pyramid.width(i)) ? 2 : 1;
-                                int guess_ky = (pyramid.height(i_prev) != pyramid.height(i)) ? 2 : 1;
-                                int guess_width = pyramid.width(i_prev);
-                                m_flow_memory.set_guess(pyramid.flow()[i_prev], guess_kx, guess_ky, guess_width);
+                                data.use_guess = 1;
+                                data.guess_kx = (pyramid.width(i_prev) != pyramid.width(i)) ? 2 : 1;
+                                data.guess_ky = (pyramid.height(i_prev) != pyramid.height(i)) ? 2 : 1;
+                                data.guess_width = pyramid.width(i_prev);
+                                m_flow_memory.set_flow_guess(&pyramid.flow()[i_prev]);
                         }
                         else
                         {
-                                // Самый нижний уровень пирамиды, поэтому нет начального потока
-                                m_flow_memory.set_no_guess();
+                                // Самый нижний уровень пирамиды, поэтому нет приближения
+                                m_flow_memory.set_flow_guess(nullptr);
+                                data.use_guess = 0;
                         }
+
+                        m_flow_memory.set_data(data);
+                        m_flow_memory.bind();
 
                         m_comp_flow.set_uniform_handle(IMAGE_DX_LOCATION, pyramid.dx()[i].image_read_handle());
                         m_comp_flow.set_uniform_handle(IMAGE_DY_LOCATION, pyramid.dy()[i].image_read_handle());
                         m_comp_flow.set_uniform_handle(IMAGE_I_LOCATION, pyramid.images(i_index)[i].image_read_handle());
                         m_comp_flow.set_uniform_handle(TEXTURE_J_LOCATION, pyramid.images(j_index)[i].texture_handle());
 
-                        m_flow_memory.bind();
-
-                        int groups_x = group_count(i != 0 ? pyramid.width(i) : m_top_x, GROUP_SIZE);
-                        int groups_y = group_count(i != 0 ? pyramid.height(i) : m_top_y, GROUP_SIZE);
+                        int groups_x = group_count(data.point_count_x, GROUP_SIZE);
+                        int groups_y = group_count(data.point_count_y, GROUP_SIZE);
                         m_comp_flow.dispatch_compute(groups_x, groups_y, 1);
 
                         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
