@@ -23,10 +23,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // const float STOP_MOVE_SQUARE =
 // const float MIN_DETERMINANT =
 layout(local_size_x = GROUP_SIZE, local_size_y = GROUP_SIZE) in;
-layout(bindless_image, r32f, location = 0) readonly restrict uniform image2D image_dx;
-layout(bindless_image, r32f, location = 1) readonly restrict uniform image2D image_dy;
-layout(bindless_image, r32f, location = 2) readonly restrict uniform image2D image_i;
-layout(bindless_sampler, location = 3) uniform sampler2D texture_j;
+layout(std140, binding = 4) uniform Images
+{
+        layout(r32f) readonly restrict image2D image_dx;
+        layout(r32f) readonly restrict image2D image_dy;
+        layout(r32f) readonly restrict image2D image_i;
+        sampler2D texture_j;
+};
 #else
 layout(local_size_x_id = 0, local_size_y_id = 0) in;
 layout(constant_id = 1) const int RADIUS = 1;
@@ -39,15 +42,15 @@ layout(binding = 6, r32f) readonly restrict uniform image2D image_i;
 layout(binding = 7) uniform sampler2D texture_j;
 #endif
 
-layout(std430, binding = 0) readonly buffer StorageBufferTopPoints
+layout(std430, binding = 0) readonly buffer TopPoints
 {
         ivec2 top_points[];
 };
-layout(std430, binding = 1) writeonly buffer StorageBufferPointsFlow
+layout(std430, binding = 1) writeonly buffer PointsFlow
 {
         vec2 points_flow[];
 };
-layout(std430, binding = 2) readonly buffer StorageBufferPointsFlowGuess
+layout(std430, binding = 2) readonly buffer PointsFlowGuess
 {
         vec2 points_flow_guess[];
 };

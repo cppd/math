@@ -151,7 +151,7 @@ std::string sobel_source()
         return s + sobel_shader;
 }
 
-class FlowMemory final
+class FlowData final
 {
         static constexpr int POINTS_BINDING = 0;
         static constexpr int POINTS_FLOW_BINDING = 1;
@@ -163,6 +163,9 @@ class FlowMemory final
         const opengl::StorageBuffer* m_flow_guess = nullptr;
 
         opengl::UniformBuffer m_buffer;
+
+        int m_point_count_x = -1;
+        int m_point_count_y = -1;
 
 public:
         struct Data
@@ -176,7 +179,7 @@ public:
                 GLint guess_width;
         };
 
-        FlowMemory() : m_buffer(sizeof(Data))
+        FlowData() : m_buffer(sizeof(Data))
         {
         }
 
@@ -197,7 +200,19 @@ public:
 
         void set_data(const Data& data)
         {
-                m_buffer.copy(0, data);
+                m_buffer.copy(data);
+                m_point_count_x = data.point_count_x;
+                m_point_count_y = data.point_count_y;
+        }
+
+        int point_count_x() const
+        {
+                return m_point_count_x;
+        }
+
+        int point_count_y() const
+        {
+                return m_point_count_y;
         }
 
         void bind() const
@@ -217,6 +232,39 @@ public:
                 }
 
                 m_buffer.bind(DATA_BINDING);
+        }
+};
+
+class FlowImages final
+{
+        static constexpr int IMAGES_BINDING = 4;
+
+        opengl::UniformBuffer m_buffer;
+
+        struct Images
+        {
+                GLuint64 image_dx;
+                alignas(16) GLuint64 image_dy;
+                alignas(16) GLuint64 image_i;
+                alignas(16) GLuint64 texture_j;
+        };
+
+public:
+        FlowImages(GLuint64 image_dx, GLuint64 image_dy, GLuint64 image_i, GLuint64 texture_j) : m_buffer(sizeof(Images))
+        {
+                Images images;
+
+                images.image_dx = image_dx;
+                images.image_dy = image_dy;
+                images.image_i = image_i;
+                images.texture_j = texture_j;
+
+                m_buffer.copy(images);
+        }
+
+        void bind() const
+        {
+                m_buffer.bind(IMAGES_BINDING);
         }
 };
 
@@ -419,13 +467,80 @@ public:
         }
 };
 
+std::vector<FlowData> create_flow_data(const ImagePyramid& pyramid, int top_x, int top_y, const opengl::StorageBuffer& top_points,
+                                       const opengl::StorageBuffer& top_flow)
+{
+        FlowData::Data data;
+
+        std::vector<FlowData> flow_data(pyramid.size());
+
+        for (size_t i = 0; i < pyramid.size(); ++i)
+        {
+                const bool top = (i == 0);
+                const bool bottom = (i + 1 == pyramid.size());
+
+                if (!top)
+                {
+                        // Не самый верхний уровень, поэтому расчёт для всех точек
+                        flow_data[i].set_top_points(nullptr);
+                        flow_data[i].set_flow(&pyramid.flow()[i]);
+                        data.use_all_points = 1;
+                        data.point_count_x = pyramid.width(i);
+                        data.point_count_y = pyramid.height(i);
+                }
+                else
+                {
+                        // Самый верхний уровень, поэтому расчёт только для заданных
+                        // точек для рисования на экране
+                        flow_data[i].set_top_points(&top_points);
+                        flow_data[i].set_flow(&top_flow);
+                        data.use_all_points = 0;
+                        data.point_count_x = top_x;
+                        data.point_count_y = top_y;
+                }
+
+                if (!bottom)
+                {
+                        // Не самый нижний уровень, поэтому в качестве приближения
+                        // использовать поток, полученный на меньших изображениях
+                        int i_prev = i + 1;
+                        data.use_guess = 1;
+                        data.guess_kx = (pyramid.width(i_prev) != pyramid.width(i)) ? 2 : 1;
+                        data.guess_ky = (pyramid.height(i_prev) != pyramid.height(i)) ? 2 : 1;
+                        data.guess_width = pyramid.width(i_prev);
+                        flow_data[i].set_flow_guess(&pyramid.flow()[i_prev]);
+                }
+                else
+                {
+                        // Самый нижний уровень пирамиды, поэтому нет приближения
+                        flow_data[i].set_flow_guess(nullptr);
+                        data.use_guess = 0;
+                }
+
+                flow_data[i].set_data(data);
+        }
+
+        return flow_data;
+}
+
+std::array<std::vector<FlowImages>, 2> create_flow_images(const ImagePyramid& pyramid)
+{
+        std::array<std::vector<FlowImages>, 2> flow_images;
+
+        for (size_t i = 0; i < pyramid.size(); ++i)
+        {
+                flow_images[0].emplace_back(pyramid.dx()[i].image_read_handle(), pyramid.dy()[i].image_read_handle(),
+                                            pyramid.images(0)[i].image_read_handle(), pyramid.images(1)[i].texture_handle());
+
+                flow_images[1].emplace_back(pyramid.dx()[i].image_read_handle(), pyramid.dy()[i].image_read_handle(),
+                                            pyramid.images(1)[i].image_read_handle(), pyramid.images(0)[i].texture_handle());
+        }
+
+        return flow_images;
+}
+
 class Impl final : public gpgpu_opengl::OpticalFlowCompute
 {
-        static constexpr int IMAGE_DX_LOCATION = 0;
-        static constexpr int IMAGE_DY_LOCATION = 1;
-        static constexpr int IMAGE_I_LOCATION = 2;
-        static constexpr int TEXTURE_J_LOCATION = 3;
-
         int m_top_x;
         int m_top_y;
 
@@ -437,13 +552,12 @@ class Impl final : public gpgpu_opengl::OpticalFlowCompute
         ProgramSobel m_program_sobel;
         opengl::ComputeProgram m_comp_flow;
 
-        FlowMemory m_flow_memory;
+        ImagePyramid m_pyramid;
 
-        ImagePyramid m_image_pyramid;
+        std::vector<FlowData> m_flow_data;
+        std::array<std::vector<FlowImages>, 2> m_flow_images;
 
-        int m_i_index = 0;
-        int m_j_index = 1;
-        bool m_image_i_exists = false;
+        int m_i_index = -1;
 
         void build_image_pyramid(const std::vector<ImageR32F>& images) const
         {
@@ -475,67 +589,21 @@ class Impl final : public gpgpu_opengl::OpticalFlowCompute
                 glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
         }
 
-        void compute_optical_flow(const ImagePyramid& pyramid, int i_index, int j_index)
+        void compute_optical_flow(int i_index)
         {
-                ASSERT((i_index == 0 || i_index == 1) && (i_index == 1 - j_index));
+                ASSERT(i_index == 0 || i_index == 1);
+                ASSERT(m_flow_data.size() == m_flow_images[0].size());
+                ASSERT(m_flow_data.size() == m_flow_images[1].size());
 
-                FlowMemory::Data data;
-
-                int size = pyramid.size();
+                int size = m_flow_data.size();
 
                 for (int i = size - 1; i >= 0; --i)
                 {
-                        const bool top = (i == 0);
-                        const bool bottom = (i == size - 1);
+                        m_flow_data[i].bind();
+                        m_flow_images[i_index][i].bind();
 
-                        if (!top)
-                        {
-                                // Не самый верхний уровень, поэтому расчёт для всех точек
-                                m_flow_memory.set_top_points(nullptr);
-                                m_flow_memory.set_flow(&pyramid.flow()[i]);
-                                data.use_all_points = 1;
-                                data.point_count_x = pyramid.width(i);
-                                data.point_count_y = pyramid.height(i);
-                        }
-                        else
-                        {
-                                // Самый верхний уровень, поэтому расчёт только для заданных
-                                // точек для рисования на экране
-                                m_flow_memory.set_top_points(&m_top_points);
-                                m_flow_memory.set_flow(&m_top_flow);
-                                data.use_all_points = 0;
-                                data.point_count_x = m_top_x;
-                                data.point_count_y = m_top_y;
-                        }
-
-                        if (!bottom)
-                        {
-                                // Не самый нижний уровень, поэтому в качестве приближения
-                                // использовать поток, полученный на меньших изображениях
-                                int i_prev = i + 1;
-                                data.use_guess = 1;
-                                data.guess_kx = (pyramid.width(i_prev) != pyramid.width(i)) ? 2 : 1;
-                                data.guess_ky = (pyramid.height(i_prev) != pyramid.height(i)) ? 2 : 1;
-                                data.guess_width = pyramid.width(i_prev);
-                                m_flow_memory.set_flow_guess(&pyramid.flow()[i_prev]);
-                        }
-                        else
-                        {
-                                // Самый нижний уровень пирамиды, поэтому нет приближения
-                                m_flow_memory.set_flow_guess(nullptr);
-                                data.use_guess = 0;
-                        }
-
-                        m_flow_memory.set_data(data);
-                        m_flow_memory.bind();
-
-                        m_comp_flow.set_uniform_handle(IMAGE_DX_LOCATION, pyramid.dx()[i].image_read_handle());
-                        m_comp_flow.set_uniform_handle(IMAGE_DY_LOCATION, pyramid.dy()[i].image_read_handle());
-                        m_comp_flow.set_uniform_handle(IMAGE_I_LOCATION, pyramid.images(i_index)[i].image_read_handle());
-                        m_comp_flow.set_uniform_handle(TEXTURE_J_LOCATION, pyramid.images(j_index)[i].texture_handle());
-
-                        int groups_x = group_count(data.point_count_x, GROUP_SIZE);
-                        int groups_y = group_count(data.point_count_y, GROUP_SIZE);
+                        int groups_x = group_count(m_flow_data[i].point_count_x(), GROUP_SIZE);
+                        int groups_y = group_count(m_flow_data[i].point_count_y(), GROUP_SIZE);
                         m_comp_flow.dispatch_compute(groups_x, groups_y, 1);
 
                         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
@@ -544,37 +612,39 @@ class Impl final : public gpgpu_opengl::OpticalFlowCompute
 
         void reset() override
         {
-                m_image_i_exists = false;
+                m_i_index = -1;
         }
 
-        bool exec() override
+        void exec() override
         {
-                // Обозначения: i - предыдущее изображение, j - следующее изображение
+                ASSERT(m_i_index == -1 || m_i_index == 0 || m_i_index == 1);
 
-                std::swap(m_i_index, m_j_index);
-
-                build_image_pyramid(m_image_pyramid.images(m_j_index));
-
-                if (!m_image_i_exists)
+                if (m_i_index < 0)
                 {
-                        m_image_i_exists = true;
-                        return false;
+                        m_i_index = 0;
+                        build_image_pyramid(m_pyramid.images(m_i_index));
+                }
+                else
+                {
+                        m_i_index = 1 - m_i_index;
                 }
 
-                compute_dxdy(m_image_pyramid.images(m_i_index), m_image_pyramid.dx(), m_image_pyramid.dy());
+                // i — предыдущее изображение, 1-i — текущее изображение
 
-                compute_optical_flow(m_image_pyramid, m_i_index, m_j_index);
+                build_image_pyramid(m_pyramid.images(1 - m_i_index));
 
-                return true;
+                compute_dxdy(m_pyramid.images(m_i_index), m_pyramid.dx(), m_pyramid.dy());
+
+                compute_optical_flow(m_i_index);
         }
 
         GLuint64 image_pyramid_dx_texture() const override
         {
-                return m_image_pyramid.dx()[0].texture_handle();
+                return m_pyramid.dx()[0].texture_handle();
         }
         GLuint64 image_pyramid_texture() const override
         {
-                return m_image_pyramid.images(m_i_index)[0].texture_handle();
+                return m_pyramid.images(m_i_index)[0].texture_handle();
         }
 
 public:
@@ -586,7 +656,9 @@ public:
                   m_top_flow(top_flow),
                   m_program_grayscale(source_image),
                   m_comp_flow(opengl::ComputeShader(flow_source())),
-                  m_image_pyramid(width, height)
+                  m_pyramid(width, height),
+                  m_flow_data(create_flow_data(m_pyramid, m_top_x, m_top_y, m_top_points, m_top_flow)),
+                  m_flow_images(create_flow_images(m_pyramid))
         {
         }
 

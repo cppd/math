@@ -181,11 +181,7 @@ class Impl final : public gpgpu_opengl::OpticalFlowShow
                 }
                 m_last_time = current_time;
 #endif
-
-                if (!m_optical_flow->exec())
-                {
-                        return;
-                }
+                m_optical_flow->exec();
 
 #if 0
                 // m_draw_prog_debug.set_uniform_handle("tex", m_optical_flow->image_pyramid_dx_texture());

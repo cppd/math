@@ -28,7 +28,7 @@ struct OpticalFlowCompute
         virtual ~OpticalFlowCompute() = default;
 
         virtual void reset() = 0;
-        virtual bool exec() = 0;
+        virtual void exec() = 0;
 
         virtual GLuint64 image_pyramid_dx_texture() const = 0;
         virtual GLuint64 image_pyramid_texture() const = 0;
