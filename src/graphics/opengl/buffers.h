@@ -226,10 +226,16 @@ public:
         }
 
         template <typename T>
-        void write(const T& data) const noexcept
+        std::enable_if_t<is_vector<T> || is_array<T>> write(const T& data) const noexcept
         {
-                static_assert(is_vector<T> || is_array<T>);
                 copy_to(0, data.data(), storage_size(data));
+        }
+
+        template <typename T>
+        std::enable_if_t<!is_vector<T> && !is_array<T>> write(const T& data) const noexcept
+        {
+                ASSERT(size() == sizeof(data));
+                copy_to(0, &data, sizeof(data));
         }
 
         template <typename T>
