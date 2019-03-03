@@ -75,6 +75,7 @@ class Program
 
 protected:
         Program(const std::vector<const Shader*>& shaders);
+        Program(Program&&) = default;
         ~Program();
 
         void use() const noexcept;
@@ -97,6 +98,10 @@ public:
                                 std::is_same_v<FragmentShader, S>)&&...));
         }
 
+        GraphicsProgram(GraphicsProgram&& program) : Program(std::move(program))
+        {
+        }
+
         void draw_arrays(GLenum mode, GLint first, GLsizei count) const noexcept
         {
                 Program::use();
@@ -111,6 +116,10 @@ public:
         ComputeProgram(const S&... s) : Program({&s...})
         {
                 static_assert((std::is_same_v<ComputeShader, S> && ...));
+        }
+
+        ComputeProgram(ComputeProgram&& program) : Program(std::move(program))
+        {
         }
 
         void dispatch_compute(unsigned num_groups_x, unsigned num_groups_y, unsigned num_groups_z) const noexcept
