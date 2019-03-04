@@ -19,12 +19,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // Вставляется в текст программы
 // const uint GROUP_SIZE =
 layout(local_size_x = GROUP_SIZE, local_size_y = GROUP_SIZE) in;
-layout(bindless_image, r32f, location = 0) readonly restrict uniform image2D image_big;
-layout(bindless_image, r32f, location = 1) writeonly restrict uniform image2D image_small;
+layout(std140, binding = 0) uniform Images
+{
+        layout(r32f) readonly restrict image2D image_big;
+        layout(r32f) writeonly restrict image2D image_small;
+};
 #else
 layout(local_size_x_id = 0, local_size_y_id = 0) in;
-layout(binding = 1, r32f) readonly restrict uniform image2D image_big;
-layout(binding = 2, r32f) writeonly restrict uniform image2D image_small;
+layout(binding = 0, r32f) readonly restrict uniform image2D image_big;
+layout(binding = 1, r32f) writeonly restrict uniform image2D image_small;
 #endif
 
 // clang-format off
