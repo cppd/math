@@ -151,62 +151,15 @@ std::vector<vec2i> pyramid_sizes(int width, int height, int min_size)
         return sizes;
 }
 
-class ImageR32F final
-{
-        opengl::TextureR32F m_texture;
-        GLuint64 m_image_write_handle;
-        GLuint64 m_image_read_handle;
-        GLuint64 m_texture_handle;
-        int m_width;
-        int m_height;
-
-public:
-        ImageR32F(int x, int y)
-                : m_texture(x, y),
-                  m_image_write_handle(m_texture.image_resident_handle_write_only()),
-                  m_image_read_handle(m_texture.image_resident_handle_read_only()),
-                  m_texture_handle(m_texture.texture().texture_resident_handle()),
-                  m_width(x),
-                  m_height(y)
-        {
-        }
-
-        int width() const
-        {
-                return m_width;
-        }
-
-        int height() const
-        {
-                return m_height;
-        }
-
-        GLuint64 image_write_handle() const
-        {
-                return m_image_write_handle;
-        }
-
-        GLuint64 image_read_handle() const
-        {
-                return m_image_read_handle;
-        }
-
-        GLuint64 texture_handle() const
-        {
-                return m_texture_handle;
-        }
-};
-
 class Pyramid final
 {
-        std::array<std::vector<ImageR32F>, 2> m_images;
-        std::vector<ImageR32F> m_dx;
-        std::vector<ImageR32F> m_dy;
-        std::vector<opengl::StorageBuffer> m_flow;
+        std::array<std::vector<opengl::TextureR32F>, 2> m_images;
+        std::vector<opengl::TextureR32F> m_dx;
+        std::vector<opengl::TextureR32F> m_dy;
 
-        static std::vector<ImageR32F> create_images(const std::vector<vec2i>& sizes)
+        static std::vector<opengl::TextureR32F> create_images(const std::vector<vec2i>& sizes)
         {
-                std::vector<ImageR32F> images;
+                std::vector<opengl::TextureR32F> images;
                 images.reserve(sizes.size());
                 for (const vec2i& s : sizes)
                 {
@@ -215,63 +168,44 @@ class Pyramid final
                 return images;
         }
 
-        static std::vector<opengl::StorageBuffer> create_buffers(const std::vector<vec2i>& sizes)
-        {
-                std::vector<opengl::StorageBuffer> buffers;
-                buffers.reserve(sizes.size());
-                for (const vec2i& s : sizes)
-                {
-                        buffers.emplace_back(s[0] * s[1] * sizeof(vec2f));
-                }
-                return buffers;
-        }
-
 public:
         Pyramid(const std::vector<vec2i>& sizes)
-                : m_images{create_images(sizes), create_images(sizes)},
-                  m_dx(create_images(sizes)),
-                  m_dy(create_images(sizes)),
-                  m_flow(create_buffers(sizes))
+                : m_images{create_images(sizes), create_images(sizes)}, m_dx(create_images(sizes)), m_dy(create_images(sizes))
         {
         }
 
-        const std::vector<ImageR32F>& images(unsigned i) const
+        const std::vector<opengl::TextureR32F>& images(unsigned i) const
         {
                 ASSERT(i < 2);
                 return m_images[i];
         }
 
-        const std::vector<ImageR32F>& dx() const
+        const std::vector<opengl::TextureR32F>& dx() const
         {
                 return m_dx;
         }
 
-        const std::vector<ImageR32F>& dy() const
+        const std::vector<opengl::TextureR32F>& dy() const
         {
                 return m_dy;
-        }
-
-        const std::vector<opengl::StorageBuffer>& flow() const
-        {
-                return m_flow;
         }
 
         int width(size_t i) const
         {
                 ASSERT(i < m_images[0].size());
                 ASSERT(m_images[0].size() == m_images[1].size());
-                ASSERT(m_images[0][i].width() == m_images[1][i].width());
+                ASSERT(m_images[0][i].texture().width() == m_images[1][i].texture().width());
 
-                return m_images[0][i].width();
+                return m_images[0][i].texture().width();
         }
 
         int height(size_t i) const
         {
                 ASSERT(i < m_images[0].size());
                 ASSERT(m_images[0].size() == m_images[1].size());
-                ASSERT(m_images[0][i].height() == m_images[1][i].height());
+                ASSERT(m_images[0][i].texture().height() == m_images[1][i].texture().height());
 
-                return m_images[0][i].height();
+                return m_images[0][i].texture().height();
         }
 
         size_t size() const
@@ -279,6 +213,35 @@ public:
                 ASSERT(m_images[0].size() == m_images[1].size());
 
                 return m_images[0].size();
+        }
+};
+
+class FlowBuffers final
+{
+        std::vector<opengl::StorageBuffer> m_flow;
+
+        static std::vector<opengl::StorageBuffer> create_buffers(const Pyramid& pyramid)
+        {
+                std::vector<opengl::StorageBuffer> buffers;
+                buffers.reserve(pyramid.size());
+                for (size_t i = 1; i < pyramid.size(); ++i)
+                {
+                        buffers.emplace_back(pyramid.width(i) * pyramid.height(i) * sizeof(vec2f));
+                }
+                return buffers;
+        }
+
+public:
+        FlowBuffers(const Pyramid& pyramid) : m_flow(create_buffers(pyramid))
+        {
+        }
+
+        const opengl::StorageBuffer& flow(size_t i) const
+        {
+                ASSERT(i > 0);
+                ASSERT(i <= m_flow.size());
+
+                return m_flow[i - 1];
         }
 };
 
@@ -295,12 +258,12 @@ class GrayscaleMemory final
         };
 
 public:
-        GrayscaleMemory(const opengl::TextureRGBA32F& image_src, const ImageR32F& image_dst) : m_buffer(sizeof(Images))
+        GrayscaleMemory(const opengl::TextureRGBA32F& image_src, const opengl::TextureR32F& image_dst) : m_buffer(sizeof(Images))
         {
                 Images images;
 
                 images.image_src = image_src.image_resident_handle_read_only();
-                images.image_dst = image_dst.image_write_handle();
+                images.image_dst = image_dst.image_resident_handle_write_only();
 
                 m_buffer.copy(images);
         }
@@ -324,12 +287,12 @@ class DownsampleMemory final
         };
 
 public:
-        DownsampleMemory(const ImageR32F& image_big, const ImageR32F& image_small) : m_buffer(sizeof(Images))
+        DownsampleMemory(const opengl::TextureR32F& image_big, const opengl::TextureR32F& image_small) : m_buffer(sizeof(Images))
         {
                 Images images;
 
-                images.image_big = image_big.image_read_handle();
-                images.image_small = image_small.image_write_handle();
+                images.image_big = image_big.image_resident_handle_read_only();
+                images.image_small = image_small.image_resident_handle_write_only();
 
                 m_buffer.copy(images);
         }
@@ -354,13 +317,14 @@ class SobelMemory final
         };
 
 public:
-        SobelMemory(const ImageR32F& image_i, const ImageR32F& image_dx, const ImageR32F& image_dy) : m_buffer(sizeof(Images))
+        SobelMemory(const opengl::TextureR32F& image_i, const opengl::TextureR32F& image_dx, const opengl::TextureR32F& image_dy)
+                : m_buffer(sizeof(Images))
         {
                 Images images;
 
-                images.image_i = image_i.image_read_handle();
-                images.image_dx = image_dx.image_write_handle();
-                images.image_dy = image_dy.image_write_handle();
+                images.image_i = image_i.image_resident_handle_read_only();
+                images.image_dx = image_dx.image_resident_handle_write_only();
+                images.image_dy = image_dy.image_resident_handle_write_only();
 
                 m_buffer.copy(images);
         }
@@ -470,16 +434,16 @@ class FlowImagesMemory final
         };
 
 public:
-        FlowImagesMemory(const ImageR32F& image_dx, const ImageR32F& image_dy, const ImageR32F& image_i,
-                         const ImageR32F& texture_j)
+        FlowImagesMemory(const opengl::TextureR32F& image_dx, const opengl::TextureR32F& image_dy,
+                         const opengl::TextureR32F& image_i, const opengl::TextureR32F& texture_j)
                 : m_buffer(sizeof(Images))
         {
                 Images images;
 
-                images.image_dx = image_dx.image_read_handle();
-                images.image_dy = image_dy.image_read_handle();
-                images.image_i = image_i.image_read_handle();
-                images.texture_j = texture_j.texture_handle();
+                images.image_dx = image_dx.image_resident_handle_read_only();
+                images.image_dy = image_dy.image_resident_handle_read_only();
+                images.image_i = image_i.image_resident_handle_read_only();
+                images.texture_j = texture_j.texture().texture_resident_handle();
 
                 m_buffer.copy(images);
         }
@@ -559,7 +523,7 @@ std::vector<vec2i> create_sobel_groups(const Pyramid& pyramid)
         return groups;
 }
 
-std::vector<FlowDataMemory> create_flow_data_memory(const Pyramid& pyramid, int top_x, int top_y,
+std::vector<FlowDataMemory> create_flow_data_memory(const Pyramid& pyramid, const FlowBuffers& flow_buffers, int top_x, int top_y,
                                                     const opengl::StorageBuffer& top_points,
                                                     const opengl::StorageBuffer& top_flow)
 {
@@ -576,7 +540,7 @@ std::vector<FlowDataMemory> create_flow_data_memory(const Pyramid& pyramid, int 
                 {
                         // Не самый верхний уровень, поэтому расчёт для всех точек
                         flow_data[i].set_top_points(nullptr);
-                        flow_data[i].set_flow(&pyramid.flow()[i]);
+                        flow_data[i].set_flow(&flow_buffers.flow(i));
                         data.use_all_points = 1;
                         data.point_count_x = pyramid.width(i);
                         data.point_count_y = pyramid.height(i);
@@ -601,7 +565,7 @@ std::vector<FlowDataMemory> create_flow_data_memory(const Pyramid& pyramid, int 
                         data.guess_kx = (pyramid.width(i_prev) != pyramid.width(i)) ? 2 : 1;
                         data.guess_ky = (pyramid.height(i_prev) != pyramid.height(i)) ? 2 : 1;
                         data.guess_width = pyramid.width(i_prev);
-                        flow_data[i].set_flow_guess(&pyramid.flow()[i_prev]);
+                        flow_data[i].set_flow_guess(&flow_buffers.flow(i_prev));
                 }
                 else
                 {
@@ -646,6 +610,7 @@ std::vector<vec2i> create_flow_groups(const std::vector<FlowDataMemory>& flow_da
 class Impl final : public gpgpu_opengl::OpticalFlowCompute
 {
         Pyramid m_pyramid;
+        FlowBuffers m_flow_buffers;
 
         std::array<GrayscaleMemory, 2> m_grayscale_memory;
         vec2i m_grayscale_groups;
@@ -744,17 +709,18 @@ class Impl final : public gpgpu_opengl::OpticalFlowCompute
 
         GLuint64 image_pyramid_dx_texture() const override
         {
-                return m_pyramid.dx()[0].texture_handle();
+                return m_pyramid.dx()[0].texture().texture_resident_handle();
         }
         GLuint64 image_pyramid_texture() const override
         {
-                return m_pyramid.images(m_i_index)[0].texture_handle();
+                return m_pyramid.images(m_i_index)[0].texture().texture_resident_handle();
         }
 
 public:
         Impl(int width, int height, const opengl::TextureRGBA32F& source_image, int top_x, int top_y,
              const opengl::StorageBuffer& top_points, const opengl::StorageBuffer& top_flow)
                 : m_pyramid(pyramid_sizes(width, height, BOTTOM_IMAGE_SIZE)),
+                  m_flow_buffers(m_pyramid),
                   //
                   m_grayscale_memory(create_grayscale_memory(source_image, m_pyramid)),
                   m_grayscale_groups(create_grayscale_groups(m_pyramid)),
@@ -768,7 +734,7 @@ public:
                   m_sobel_groups(create_sobel_groups(m_pyramid)),
                   m_sobel_compute(opengl::ComputeShader(sobel_source())),
                   //
-                  m_flow_data_memory(create_flow_data_memory(m_pyramid, top_x, top_y, top_points, top_flow)),
+                  m_flow_data_memory(create_flow_data_memory(m_pyramid, m_flow_buffers, top_x, top_y, top_points, top_flow)),
                   m_flow_images_memory(create_flow_images_memory(m_pyramid)),
                   m_flow_groups(create_flow_groups(m_flow_data_memory)),
                   m_flow_compute(opengl::ComputeShader(flow_source()))
