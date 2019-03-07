@@ -179,14 +179,6 @@ public:
         }
 
         template <typename T>
-        void copy(GLintptr offset, GLintptr data_offset, size_t data_size, const T& data) const noexcept
-        {
-                ASSERT(data_offset + data_size <= sizeof(data));
-
-                copy_to(offset, data_offset + reinterpret_cast<const char*>(&data), data_size);
-        }
-
-        template <typename T>
         void copy(const T& data) const noexcept
         {
                 ASSERT(size() == sizeof(data));
