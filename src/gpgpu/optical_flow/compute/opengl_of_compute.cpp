@@ -38,6 +38,7 @@ Chapter 5. Tracking Objects in Videos.
 #include "com/math.h"
 #include "com/print.h"
 #include "gpgpu/com/groups.h"
+#include "gpgpu/optical_flow/compute/objects/opengl_memory.h"
 #include "graphics/opengl/shader.h"
 
 #include <array>
@@ -75,6 +76,8 @@ constexpr int ITERATION_COUNT = 10;
 constexpr float STOP_MOVE_SQUARE = square(1e-3f);
 // Если определитель матрицы G меньше этого значения, то считается, что нет потока
 constexpr float MIN_DETERMINANT = 1;
+
+namespace impl = gpgpu_optical_flow_compute_opengl_implementation;
 
 namespace
 {
@@ -177,204 +180,10 @@ std::vector<opengl::StorageBuffer> create_flow_buffers(const std::vector<vec2i>&
         return buffers;
 }
 
-class GrayscaleMemory final
+std::array<impl::GrayscaleMemory, 2> create_grayscale_memory(const opengl::TextureRGBA32F& source_image,
+                                                             const std::array<std::vector<opengl::TextureR32F>, 2>& images)
 {
-        static constexpr int IMAGES_BINDING = 0;
-
-        opengl::UniformBuffer m_buffer;
-
-        struct Images
-        {
-                GLuint64 image_src;
-                alignas(16) GLuint64 image_dst;
-        };
-
-public:
-        GrayscaleMemory(const opengl::TextureRGBA32F& image_src, const opengl::TextureR32F& image_dst) : m_buffer(sizeof(Images))
-        {
-                Images images;
-
-                images.image_src = image_src.image_resident_handle_read_only();
-                images.image_dst = image_dst.image_resident_handle_write_only();
-
-                m_buffer.copy(images);
-        }
-
-        void bind() const
-        {
-                m_buffer.bind(IMAGES_BINDING);
-        }
-};
-
-class DownsampleMemory final
-{
-        static constexpr int IMAGES_BINDING = 0;
-
-        opengl::UniformBuffer m_buffer;
-
-        struct Images
-        {
-                GLuint64 image_big;
-                alignas(16) GLuint64 image_small;
-        };
-
-public:
-        DownsampleMemory(const opengl::TextureR32F& image_big, const opengl::TextureR32F& image_small) : m_buffer(sizeof(Images))
-        {
-                Images images;
-
-                images.image_big = image_big.image_resident_handle_read_only();
-                images.image_small = image_small.image_resident_handle_write_only();
-
-                m_buffer.copy(images);
-        }
-
-        void bind() const
-        {
-                m_buffer.bind(IMAGES_BINDING);
-        }
-};
-
-class SobelMemory final
-{
-        static constexpr int IMAGES_BINDING = 0;
-
-        opengl::UniformBuffer m_buffer;
-
-        struct Images
-        {
-                GLuint64 image_i;
-                alignas(16) GLuint64 image_dx;
-                alignas(16) GLuint64 image_dy;
-        };
-
-public:
-        SobelMemory(const opengl::TextureR32F& image_i, const opengl::TextureR32F& image_dx, const opengl::TextureR32F& image_dy)
-                : m_buffer(sizeof(Images))
-        {
-                Images images;
-
-                images.image_i = image_i.image_resident_handle_read_only();
-                images.image_dx = image_dx.image_resident_handle_write_only();
-                images.image_dy = image_dy.image_resident_handle_write_only();
-
-                m_buffer.copy(images);
-        }
-
-        void bind() const
-        {
-                m_buffer.bind(IMAGES_BINDING);
-        }
-};
-
-class FlowDataMemory final
-{
-        static constexpr int POINTS_BINDING = 0;
-        static constexpr int POINTS_FLOW_BINDING = 1;
-        static constexpr int POINTS_FLOW_GUESS_BINDING = 2;
-        static constexpr int DATA_BINDING = 3;
-
-        const opengl::StorageBuffer* m_top_points = nullptr;
-        const opengl::StorageBuffer* m_flow = nullptr;
-        const opengl::StorageBuffer* m_flow_guess = nullptr;
-
-        opengl::UniformBuffer m_buffer;
-
-public:
-        struct Data
-        {
-                GLint point_count_x;
-                GLint point_count_y;
-                GLuint use_all_points;
-                GLuint use_guess;
-                GLint guess_kx;
-                GLint guess_ky;
-                GLint guess_width;
-        };
-
-        FlowDataMemory() : m_buffer(sizeof(Data))
-        {
-        }
-
-        void set_top_points(const opengl::StorageBuffer* top_points)
-        {
-                m_top_points = top_points;
-        }
-
-        void set_flow_guess(const opengl::StorageBuffer* flow_guess)
-        {
-                m_flow_guess = flow_guess;
-        }
-
-        void set_flow(const opengl::StorageBuffer* flow)
-        {
-                m_flow = flow;
-        }
-
-        void set_data(const Data& data)
-        {
-                m_buffer.copy(data);
-        }
-
-        void bind() const
-        {
-                ASSERT(m_flow);
-
-                if (m_top_points)
-                {
-                        m_top_points->bind(POINTS_BINDING);
-                }
-
-                m_flow->bind(POINTS_FLOW_BINDING);
-
-                if (m_flow_guess)
-                {
-                        m_flow_guess->bind(POINTS_FLOW_GUESS_BINDING);
-                }
-
-                m_buffer.bind(DATA_BINDING);
-        }
-};
-
-class FlowImagesMemory final
-{
-        static constexpr int IMAGES_BINDING = 4;
-
-        opengl::UniformBuffer m_buffer;
-
-        struct Images
-        {
-                GLuint64 image_dx;
-                alignas(16) GLuint64 image_dy;
-                alignas(16) GLuint64 image_i;
-                alignas(16) GLuint64 texture_j;
-        };
-
-public:
-        FlowImagesMemory(const opengl::TextureR32F& image_dx, const opengl::TextureR32F& image_dy,
-                         const opengl::TextureR32F& image_i, const opengl::TextureR32F& texture_j)
-                : m_buffer(sizeof(Images))
-        {
-                Images images;
-
-                images.image_dx = image_dx.image_resident_handle_read_only();
-                images.image_dy = image_dy.image_resident_handle_read_only();
-                images.image_i = image_i.image_resident_handle_read_only();
-                images.texture_j = texture_j.texture().texture_resident_handle();
-
-                m_buffer.copy(images);
-        }
-
-        void bind() const
-        {
-                m_buffer.bind(IMAGES_BINDING);
-        }
-};
-
-std::array<GrayscaleMemory, 2> create_grayscale_memory(const opengl::TextureRGBA32F& source_image,
-                                                       const std::array<std::vector<opengl::TextureR32F>, 2>& images)
-{
-        return {GrayscaleMemory(source_image, images[0][0]), GrayscaleMemory(source_image, images[1][0])};
+        return {impl::GrayscaleMemory(source_image, images[0][0]), impl::GrayscaleMemory(source_image, images[1][0])};
 }
 
 vec2i create_grayscale_groups(const std::vector<vec2i>& sizes)
@@ -385,12 +194,12 @@ vec2i create_grayscale_groups(const std::vector<vec2i>& sizes)
         return {x, y};
 }
 
-std::array<std::vector<DownsampleMemory>, 2> create_downsample_memory(
+std::array<std::vector<impl::DownsampleMemory>, 2> create_downsample_memory(
         const std::array<std::vector<opengl::TextureR32F>, 2>& images)
 {
         ASSERT(images[0].size() == images[1].size());
 
-        std::array<std::vector<DownsampleMemory>, 2> downsample_images;
+        std::array<std::vector<impl::DownsampleMemory>, 2> downsample_images;
 
         for (unsigned i = 1; i < images[0].size(); ++i)
         {
@@ -415,15 +224,15 @@ std::vector<vec2i> create_downsample_groups(const std::vector<vec2i>& sizes)
         return groups;
 }
 
-std::array<std::vector<SobelMemory>, 2> create_sobel_memory(const std::array<std::vector<opengl::TextureR32F>, 2>& images,
-                                                            const std::vector<opengl::TextureR32F>& dx,
-                                                            const std::vector<opengl::TextureR32F>& dy)
+std::array<std::vector<impl::SobelMemory>, 2> create_sobel_memory(const std::array<std::vector<opengl::TextureR32F>, 2>& images,
+                                                                  const std::vector<opengl::TextureR32F>& dx,
+                                                                  const std::vector<opengl::TextureR32F>& dy)
 {
         ASSERT(images[0].size() == images[1].size());
         ASSERT(images[0].size() == dx.size());
         ASSERT(images[0].size() == dy.size());
 
-        std::array<std::vector<SobelMemory>, 2> sobel_images;
+        std::array<std::vector<impl::SobelMemory>, 2> sobel_images;
 
         for (size_t i = 0; i < images[0].size(); ++i)
         {
@@ -448,10 +257,10 @@ std::vector<vec2i> create_sobel_groups(const std::vector<vec2i>& sizes)
         return groups;
 }
 
-std::vector<FlowDataMemory> create_flow_data_memory(const std::vector<vec2i>& sizes,
-                                                    const std::vector<opengl::StorageBuffer>& flow_buffers, int top_x, int top_y,
-                                                    const opengl::StorageBuffer& top_points,
-                                                    const opengl::StorageBuffer& top_flow)
+std::vector<impl::FlowDataMemory> create_flow_data_memory(const std::vector<vec2i>& sizes,
+                                                          const std::vector<opengl::StorageBuffer>& flow_buffers, int top_x,
+                                                          int top_y, const opengl::StorageBuffer& top_points,
+                                                          const opengl::StorageBuffer& top_flow)
 {
         ASSERT(flow_buffers.size() + 1 == sizes.size());
         auto flow_index = [&](size_t i) {
@@ -459,11 +268,11 @@ std::vector<FlowDataMemory> create_flow_data_memory(const std::vector<vec2i>& si
                 return i - 1; // буферы начинаются с уровня 1
         };
 
-        std::vector<FlowDataMemory> flow_data(sizes.size());
+        std::vector<impl::FlowDataMemory> flow_data(sizes.size());
 
         for (size_t i = 0; i < flow_data.size(); ++i)
         {
-                FlowDataMemory::Data data;
+                impl::FlowDataMemory::Data data;
 
                 const bool top = (i == 0);
                 const bool bottom = (i + 1 == flow_data.size());
@@ -512,7 +321,7 @@ std::vector<FlowDataMemory> create_flow_data_memory(const std::vector<vec2i>& si
         return flow_data;
 }
 
-std::array<std::vector<FlowImagesMemory>, 2> create_flow_images_memory(
+std::array<std::vector<impl::FlowImagesMemory>, 2> create_flow_images_memory(
         const std::array<std::vector<opengl::TextureR32F>, 2>& images, const std::vector<opengl::TextureR32F>& dx,
         const std::vector<opengl::TextureR32F>& dy)
 {
@@ -520,7 +329,7 @@ std::array<std::vector<FlowImagesMemory>, 2> create_flow_images_memory(
         ASSERT(images[0].size() == dx.size());
         ASSERT(images[0].size() == dy.size());
 
-        std::array<std::vector<FlowImagesMemory>, 2> flow_images;
+        std::array<std::vector<impl::FlowImagesMemory>, 2> flow_images;
 
         for (size_t i = 0; i < images[0].size(); ++i)
         {
@@ -554,20 +363,20 @@ class Impl final : public gpgpu_opengl::OpticalFlowCompute
         std::vector<opengl::TextureR32F> m_dy;
         std::vector<opengl::StorageBuffer> m_flow_buffers;
 
-        std::array<GrayscaleMemory, 2> m_grayscale_memory;
+        std::array<impl::GrayscaleMemory, 2> m_grayscale_memory;
         vec2i m_grayscale_groups;
         opengl::ComputeProgram m_grayscale_compute;
 
-        std::array<std::vector<DownsampleMemory>, 2> m_downsample_memory;
+        std::array<std::vector<impl::DownsampleMemory>, 2> m_downsample_memory;
         std::vector<vec2i> m_downsample_groups;
         opengl::ComputeProgram m_downsample_compute;
 
-        std::array<std::vector<SobelMemory>, 2> m_sobel_memory;
+        std::array<std::vector<impl::SobelMemory>, 2> m_sobel_memory;
         std::vector<vec2i> m_sobel_groups;
         opengl::ComputeProgram m_sobel_compute;
 
-        std::vector<FlowDataMemory> m_flow_data_memory;
-        std::array<std::vector<FlowImagesMemory>, 2> m_flow_images_memory;
+        std::vector<impl::FlowDataMemory> m_flow_data_memory;
+        std::array<std::vector<impl::FlowImagesMemory>, 2> m_flow_images_memory;
         std::vector<vec2i> m_flow_groups;
         opengl::ComputeProgram m_flow_compute;
 
