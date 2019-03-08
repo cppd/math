@@ -27,10 +27,6 @@ namespace vulkan
 {
 class BufferWithHostVisibleMemory final
 {
-        VkDevice m_device;
-        VkDeviceSize m_data_size;
-        VkBufferUsageFlags m_usage;
-
         Buffer m_buffer;
         DeviceMemory m_device_memory;
 
@@ -105,10 +101,6 @@ public:
 
 class BufferWithDeviceLocalMemory final
 {
-        VkDevice m_device;
-        VkDeviceSize m_data_size;
-        VkBufferUsageFlags m_usage;
-
         Buffer m_buffer;
         DeviceMemory m_device_memory;
 

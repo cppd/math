@@ -138,12 +138,11 @@ vulkan::DeviceMemory create_device_memory(const vulkan::Device& device, VkImage 
         return device_memory;
 }
 
-void memory_copy_offset(VkDevice device, VkDeviceMemory device_memory, VkDeviceSize offset, const void* data,
-                        VkDeviceSize data_size)
+void copy_host_to_device(const vulkan::DeviceMemory& device_memory, VkDeviceSize offset, const void* data, VkDeviceSize data_size)
 {
         void* map_memory_data;
 
-        VkResult result = vkMapMemory(device, device_memory, offset, data_size, 0, &map_memory_data);
+        VkResult result = vkMapMemory(device_memory.device(), device_memory, offset, data_size, 0, &map_memory_data);
         if (result != VK_SUCCESS)
         {
                 vulkan::vulkan_function_error("vkMapMemory", result);
@@ -151,22 +150,16 @@ void memory_copy_offset(VkDevice device, VkDeviceMemory device_memory, VkDeviceS
 
         std::memcpy(map_memory_data, data, data_size);
 
-        vkUnmapMemory(device, device_memory);
+        vkUnmapMemory(device_memory.device(), device_memory);
 
         // vkFlushMappedMemoryRanges, vkInvalidateMappedMemoryRanges
 }
 
-void memory_copy(VkDevice device, VkDeviceMemory device_memory, const void* data, VkDeviceSize data_size)
-{
-        memory_copy_offset(device, device_memory, 0 /*offset*/, data, data_size);
-}
-
-void memory_copy_from_buffer(VkDevice device, VkDeviceMemory device_memory, VkDeviceSize offset, void* data,
-                             VkDeviceSize data_size)
+void copy_device_to_host(const vulkan::DeviceMemory& device_memory, VkDeviceSize offset, void* data, VkDeviceSize data_size)
 {
         void* map_memory_data;
 
-        VkResult result = vkMapMemory(device, device_memory, offset, data_size, 0, &map_memory_data);
+        VkResult result = vkMapMemory(device_memory.device(), device_memory, offset, data_size, 0, &map_memory_data);
         if (result != VK_SUCCESS)
         {
                 vulkan::vulkan_function_error("vkMapMemory", result);
@@ -174,7 +167,7 @@ void memory_copy_from_buffer(VkDevice device, VkDeviceMemory device_memory, VkDe
 
         std::memcpy(data, map_memory_data, data_size);
 
-        vkUnmapMemory(device, device_memory);
+        vkUnmapMemory(device_memory.device(), device_memory);
 
         // vkFlushMappedMemoryRanges, vkInvalidateMappedMemoryRanges
 }
@@ -451,7 +444,7 @@ void staging_buffer_copy(const vulkan::Device& device, VkCommandPool command_poo
 
         //
 
-        memory_copy(device, staging_device_memory, src_data, src_data_size);
+        copy_host_to_device(staging_device_memory, 0, src_data, src_data_size);
 
         copy_buffer_to_buffer(device, command_pool, queue, dst_buffer, staging_buffer, src_data_size);
 }
@@ -474,7 +467,7 @@ void staging_image_copy(const vulkan::Device& device, VkCommandPool graphics_com
 
         //
 
-        memory_copy(device, staging_device_memory, pixels.data(), data_size);
+        copy_host_to_device(staging_device_memory, 0, pixels.data(), data_size);
 
         transition_image_layout(device, graphics_command_pool, graphics_queue, image, format, VK_IMAGE_LAYOUT_UNDEFINED,
                                 VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
@@ -512,10 +505,7 @@ vulkan::ImageView create_image_view(VkDevice device, VkImage image, VkFormat for
 namespace vulkan
 {
 BufferWithHostVisibleMemory::BufferWithHostVisibleMemory(const Device& device, VkBufferUsageFlags usage, VkDeviceSize data_size)
-        : m_device(device),
-          m_data_size(data_size),
-          m_usage(usage),
-          m_buffer(create_buffer(device, data_size, usage, {})),
+        : m_buffer(create_buffer(device, data_size, usage, {})),
           m_device_memory(create_device_memory(device, m_buffer,
                                                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT))
 {
@@ -528,35 +518,32 @@ BufferWithHostVisibleMemory::operator VkBuffer() const noexcept
 
 VkDeviceSize BufferWithHostVisibleMemory::size() const noexcept
 {
-        return m_data_size;
+        return m_buffer.size();
 }
 
 bool BufferWithHostVisibleMemory::usage(VkBufferUsageFlagBits flag) const noexcept
 {
-        return (m_usage & flag) == flag;
+        return (m_buffer.usage() & flag) == flag;
 }
 
 void BufferWithHostVisibleMemory::copy_to(VkDeviceSize offset, const void* data, VkDeviceSize data_size) const
 {
-        ASSERT(offset + data_size <= m_data_size);
+        ASSERT(offset + data_size <= m_buffer.size());
 
-        memory_copy_offset(m_device, m_device_memory, offset, data, data_size);
+        copy_host_to_device(m_device_memory, offset, data, data_size);
 }
 
 void BufferWithHostVisibleMemory::copy_from(VkDeviceSize offset, void* data, VkDeviceSize data_size) const
 {
-        ASSERT(offset + data_size <= m_data_size);
+        ASSERT(offset + data_size <= m_buffer.size());
 
-        memory_copy_from_buffer(m_device, m_device_memory, offset, data, data_size);
+        copy_device_to_host(m_device_memory, offset, data, data_size);
 }
 
 //
 
 BufferWithDeviceLocalMemory::BufferWithDeviceLocalMemory(const Device& device, VkBufferUsageFlags usage, VkDeviceSize data_size)
-        : m_device(device),
-          m_data_size(data_size),
-          m_usage(usage),
-          m_buffer(create_buffer(device, data_size, usage, {})),
+        : m_buffer(create_buffer(device, data_size, usage, {})),
           m_device_memory(create_device_memory(device, m_buffer, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
 {
 }
@@ -583,12 +570,12 @@ BufferWithDeviceLocalMemory::operator VkBuffer() const noexcept
 
 VkDeviceSize BufferWithDeviceLocalMemory::size() const noexcept
 {
-        return m_data_size;
+        return m_buffer.size();
 }
 
 bool BufferWithDeviceLocalMemory::usage(VkBufferUsageFlagBits flag) const noexcept
 {
-        return (m_usage & flag) == flag;
+        return (m_buffer.usage() & flag) == flag;
 }
 
 //
