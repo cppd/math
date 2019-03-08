@@ -946,7 +946,7 @@ Fence::operator VkFence() const noexcept
 
 //
 
-void Buffer::destroy() noexcept
+void BufferHandle::destroy() noexcept
 {
         if (m_buffer != VK_NULL_HANDLE)
         {
@@ -956,7 +956,7 @@ void Buffer::destroy() noexcept
         }
 }
 
-void Buffer::move(Buffer* from) noexcept
+void BufferHandle::move(BufferHandle* from) noexcept
 {
         m_device = from->m_device;
         m_buffer = from->m_buffer;
@@ -964,9 +964,9 @@ void Buffer::move(Buffer* from) noexcept
         from->m_buffer = VK_NULL_HANDLE;
 }
 
-Buffer::Buffer() = default;
+BufferHandle::BufferHandle() = default;
 
-Buffer::Buffer(VkDevice device, const VkBufferCreateInfo& create_info)
+BufferHandle::BufferHandle(VkDevice device, const VkBufferCreateInfo& create_info)
 {
         VkResult result = vkCreateBuffer(device, &create_info, nullptr, &m_buffer);
         if (result != VK_SUCCESS)
@@ -979,17 +979,17 @@ Buffer::Buffer(VkDevice device, const VkBufferCreateInfo& create_info)
         m_device = device;
 }
 
-Buffer::~Buffer()
+BufferHandle::~BufferHandle()
 {
         destroy();
 }
 
-Buffer::Buffer(Buffer&& from) noexcept
+BufferHandle::BufferHandle(BufferHandle&& from) noexcept
 {
         move(&from);
 }
 
-Buffer& Buffer::operator=(Buffer&& from) noexcept
+BufferHandle& BufferHandle::operator=(BufferHandle&& from) noexcept
 {
         if (this != &from)
         {
@@ -997,11 +997,6 @@ Buffer& Buffer::operator=(Buffer&& from) noexcept
                 move(&from);
         }
         return *this;
-}
-
-Buffer::operator VkBuffer() const noexcept
-{
-        return m_buffer;
 }
 
 //
@@ -1057,11 +1052,6 @@ DeviceMemory& DeviceMemory::operator=(DeviceMemory&& from) noexcept
                 move(&from);
         }
         return *this;
-}
-
-DeviceMemory::operator VkDeviceMemory() const noexcept
-{
-        return m_device_memory;
 }
 
 //

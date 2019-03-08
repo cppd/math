@@ -340,26 +340,65 @@ public:
         operator VkFence() const noexcept;
 };
 
-class Buffer final
+class BufferHandle final
 {
         VkDevice m_device = VK_NULL_HANDLE;
         VkBuffer m_buffer = VK_NULL_HANDLE;
 
         void destroy() noexcept;
-        void move(Buffer* from) noexcept;
+        void move(BufferHandle* from) noexcept;
 
 public:
-        Buffer();
-        Buffer(VkDevice device, const VkBufferCreateInfo& create_info);
-        ~Buffer();
+        BufferHandle();
+        BufferHandle(VkDevice device, const VkBufferCreateInfo& create_info);
+        ~BufferHandle();
 
-        Buffer(const Buffer&) = delete;
-        Buffer& operator=(const Buffer&) = delete;
+        BufferHandle(const BufferHandle&) = delete;
+        BufferHandle& operator=(const BufferHandle&) = delete;
 
-        Buffer(Buffer&&) noexcept;
-        Buffer& operator=(Buffer&&) noexcept;
+        BufferHandle(BufferHandle&&) noexcept;
+        BufferHandle& operator=(BufferHandle&&) noexcept;
 
-        operator VkBuffer() const noexcept;
+        operator VkBuffer() const noexcept
+        {
+                return m_buffer;
+        }
+        VkDevice device() const noexcept
+        {
+                return m_device;
+        }
+};
+
+class Buffer final
+{
+        BufferHandle m_buffer;
+        VkDeviceSize m_size;
+        VkBufferUsageFlags m_usage;
+
+public:
+        Buffer() = default;
+
+        Buffer(VkDevice device, const VkBufferCreateInfo& create_info)
+                : m_buffer(device, create_info), m_size(create_info.size), m_usage(create_info.usage)
+        {
+        }
+
+        operator VkBuffer() const noexcept
+        {
+                return m_buffer;
+        }
+        VkDevice device() const noexcept
+        {
+                return m_buffer.device();
+        }
+        VkDeviceSize size() const noexcept
+        {
+                return m_size;
+        }
+        VkBufferUsageFlags usage() const noexcept
+        {
+                return m_usage;
+        }
 };
 
 class DeviceMemory final
@@ -381,7 +420,14 @@ public:
         DeviceMemory(DeviceMemory&&) noexcept;
         DeviceMemory& operator=(DeviceMemory&&) noexcept;
 
-        operator VkDeviceMemory() const noexcept;
+        operator VkDeviceMemory() const noexcept
+        {
+                return m_device_memory;
+        }
+        VkDevice device() const noexcept
+        {
+                return m_device;
+        }
 };
 
 class CommandBuffer final
