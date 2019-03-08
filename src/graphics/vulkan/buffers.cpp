@@ -523,7 +523,7 @@ VkDeviceSize BufferWithHostVisibleMemory::size() const noexcept
 
 bool BufferWithHostVisibleMemory::usage(VkBufferUsageFlagBits flag) const noexcept
 {
-        return (m_buffer.usage() & flag) == flag;
+        return m_buffer.usage(flag);
 }
 
 void BufferWithHostVisibleMemory::copy_to(VkDeviceSize offset, const void* data, VkDeviceSize data_size) const
@@ -575,7 +575,7 @@ VkDeviceSize BufferWithDeviceLocalMemory::size() const noexcept
 
 bool BufferWithDeviceLocalMemory::usage(VkBufferUsageFlagBits flag) const noexcept
 {
-        return (m_buffer.usage() & flag) == flag;
+        return m_buffer.usage(flag);
 }
 
 //

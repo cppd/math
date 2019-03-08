@@ -395,9 +395,9 @@ public:
         {
                 return m_size;
         }
-        VkBufferUsageFlags usage() const noexcept
+        bool usage(VkBufferUsageFlagBits flag) const noexcept
         {
-                return m_usage;
+                return (m_usage & flag) == flag;
         }
 };
 
