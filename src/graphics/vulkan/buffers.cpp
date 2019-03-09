@@ -42,13 +42,13 @@ vulkan::Buffer create_buffer(VkDevice device, VkDeviceSize size, VkBufferUsageFl
         create_info.size = size;
         create_info.usage = usage;
 
-        ASSERT(family_indices.size() == unique_elements(family_indices).size());
+        std::vector<uint32_t> unique_indices = unique_elements(family_indices);
 
-        if (family_indices.size() > 1)
+        if (unique_indices.size() > 1)
         {
                 create_info.sharingMode = VK_SHARING_MODE_CONCURRENT;
-                create_info.queueFamilyIndexCount = family_indices.size();
-                create_info.pQueueFamilyIndices = family_indices.data();
+                create_info.queueFamilyIndexCount = unique_indices.size();
+                create_info.pQueueFamilyIndices = unique_indices.data();
         }
         else
         {
@@ -80,13 +80,13 @@ vulkan::Image create_2d_image(VkDevice device, uint32_t width, uint32_t height, 
         create_info.samples = samples;
         // create_info.flags = 0;
 
-        ASSERT(family_indices.size() == unique_elements(family_indices).size());
+        std::vector<uint32_t> unique_indices = unique_elements(family_indices);
 
-        if (family_indices.size() > 1)
+        if (unique_indices.size() > 1)
         {
                 create_info.sharingMode = VK_SHARING_MODE_CONCURRENT;
-                create_info.queueFamilyIndexCount = family_indices.size();
-                create_info.pQueueFamilyIndices = family_indices.data();
+                create_info.queueFamilyIndexCount = unique_indices.size();
+                create_info.pQueueFamilyIndices = unique_indices.data();
         }
         else
         {

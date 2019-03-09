@@ -614,6 +614,9 @@ class Renderer final : public VulkanRenderer
         const vulkan::VulkanInstance& m_instance;
         const vulkan::Swapchain* m_swapchain = nullptr;
 
+        const std::vector<uint32_t> m_object_image_family_indices{m_instance.physical_device().graphics(),
+                                                                  m_instance.physical_device().compute()};
+
         vulkan::Semaphore m_shadow_signal_semaphore;
         vulkan::Semaphore m_render_signal_semaphore;
 
@@ -931,8 +934,8 @@ class Renderer final : public VulkanRenderer
 
                 //
 
-                m_object_image = std::make_unique<vulkan::StorageImage>(
-                        m_instance.create_storage_image(VK_FORMAT_R32_UINT, m_swapchain->width(), m_swapchain->height()));
+                m_object_image = std::make_unique<vulkan::StorageImage>(m_instance.create_storage_image(
+                        m_object_image_family_indices, VK_FORMAT_R32_UINT, m_swapchain->width(), m_swapchain->height()));
 
                 m_triangles_shared_shader_memory.set_object_image(m_object_image.get());
                 m_points_shader_memory.set_object_image(m_object_image.get());
@@ -971,7 +974,7 @@ class Renderer final : public VulkanRenderer
 
                 constexpr vulkan::ShadowBufferCount buffer_count = vulkan::ShadowBufferCount::One;
                 m_shadow_buffers =
-                        vulkan::create_shadow_buffers(buffer_count, *m_swapchain, m_instance.attachment_family_indices(),
+                        vulkan::create_shadow_buffers(buffer_count, *m_swapchain, {m_instance.physical_device().graphics()},
                                                       m_instance.device(), m_instance.graphics_command_pool(),
                                                       m_instance.graphics_queue(), SHADOW_DEPTH_IMAGE_FORMATS, m_shadow_zoom);
 

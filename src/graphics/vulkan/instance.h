@@ -46,19 +46,16 @@ class VulkanInstance
         const CommandPool m_graphics_command_pool;
         const VkQueue m_graphics_queue;
 
-        const CommandPool m_compute_command_pool;
-        const VkQueue m_compute_queue;
+        // const CommandPool m_compute_command_pool;
+        // const VkQueue m_compute_queue;
 
         const CommandPool m_transfer_command_pool;
         const VkQueue m_transfer_queue;
 
         const VkQueue m_presentation_queue;
 
-        const std::vector<uint32_t> m_buffer_family_indices;
-        const std::vector<uint32_t> m_swapchain_family_indices;
-        const std::vector<uint32_t> m_texture_family_indices;
-        const std::vector<uint32_t> m_attachment_family_indices;
-        const std::vector<uint32_t> m_graphics_and_compute_family_indices;
+        const std::vector<uint32_t> m_graphics_and_transfer_family_indices;
+        const std::vector<uint32_t> m_graphics_and_presentation_family_indices;
 
 public:
         VulkanInstance(const std::vector<std::string>& required_instance_extensions,
@@ -111,18 +108,13 @@ public:
                 return m_graphics_command_pool;
         }
 
-        const std::vector<uint32_t>& attachment_family_indices() const noexcept
-        {
-                return m_attachment_family_indices;
-        }
-
         //
 
         Swapchain create_swapchain(VkSurfaceFormatKHR required_surface_format, int preferred_image_count,
                                    vulkan::PresentMode preferred_present_mode) const
         {
-                return Swapchain(m_surface, m_device, m_swapchain_family_indices, required_surface_format, preferred_image_count,
-                                 preferred_present_mode);
+                return Swapchain(m_surface, m_device, m_graphics_and_presentation_family_indices, required_surface_format,
+                                 preferred_image_count, preferred_present_mode);
         }
 
         template <typename T>
@@ -130,27 +122,29 @@ public:
         {
                 static_assert(is_vector<T> || is_array<T>);
                 return BufferWithDeviceLocalMemory(m_device, usage, m_transfer_command_pool, m_transfer_queue,
-                                                   m_buffer_family_indices, storage_size(data), data.data());
+                                                   m_graphics_and_transfer_family_indices, storage_size(data), data.data());
         }
 
         template <typename T>
         ColorTexture create_texture(uint32_t width, uint32_t height, const std::vector<T>& rgba_pixels) const
         {
                 return ColorTexture(m_device, m_graphics_command_pool, m_graphics_queue, m_transfer_command_pool,
-                                    m_transfer_queue, m_texture_family_indices, width, height, rgba_pixels);
+                                    m_transfer_queue, m_graphics_and_transfer_family_indices, width, height, rgba_pixels);
         }
 
         template <typename T>
         GrayscaleTexture create_grayscale_texture(uint32_t width, uint32_t height, const std::vector<T>& pixels) const
         {
                 return GrayscaleTexture(m_device, m_graphics_command_pool, m_graphics_queue, m_transfer_command_pool,
-                                        m_transfer_queue, m_texture_family_indices, width, height, pixels);
+                                        m_transfer_queue, m_graphics_and_transfer_family_indices, width, height, pixels);
         }
 
-        StorageImage create_storage_image(VkFormat format, uint32_t width, uint32_t height) const
+        StorageImage create_storage_image(const std::vector<uint32_t>& family_indices, VkFormat format, uint32_t width,
+                                          uint32_t height) const
         {
-                return StorageImage(m_device, m_graphics_command_pool, m_graphics_queue, m_graphics_and_compute_family_indices,
-                                    format, width, height);
+                ASSERT(family_indices.cend() !=
+                       std::find(family_indices.cbegin(), family_indices.cend(), m_physical_device.graphics()));
+                return StorageImage(m_device, m_graphics_command_pool, m_graphics_queue, family_indices, format, width, height);
         }
 };
 }
