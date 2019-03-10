@@ -374,4 +374,29 @@ int integer_sample_count_flag(VkSampleCountFlagBits sample_count)
         static_assert(sizeof(sample_count) <= sizeof(long long));
         error("Unknown sample count flag " + to_string(static_cast<long long>(sample_count)));
 }
+
+uint32_t physical_device_memory_type_index(VkPhysicalDevice physical_device, uint32_t memory_type_bits,
+                                           VkMemoryPropertyFlags memory_property_flags)
+{
+        ASSERT(physical_device != VK_NULL_HANDLE);
+
+        VkPhysicalDeviceMemoryProperties memory_properties;
+        vkGetPhysicalDeviceMemoryProperties(physical_device, &memory_properties);
+
+        if (memory_properties.memoryTypeCount >= limits<uint32_t>::digits)
+        {
+                error("memoryTypeCount >= memory_type_bits bit count");
+        }
+
+        for (uint32_t i = 0; i < memory_properties.memoryTypeCount; ++i)
+        {
+                if ((memory_type_bits & (static_cast<uint32_t>(1) << i)) &&
+                    (memory_properties.memoryTypes[i].propertyFlags & memory_property_flags) == memory_property_flags)
+                {
+                        return i;
+                }
+        }
+
+        error("Failed to find suitable memory type");
+}
 }

@@ -45,7 +45,7 @@ std::vector<VkDescriptorSetLayoutBinding> ShaderMemory::descriptor_set_layout_bi
         return bindings;
 }
 
-ShaderMemory::ShaderMemory(const vulkan::Device& device)
+ShaderMemory::ShaderMemory(const vulkan::Device& device, const std::vector<uint32_t>& family_indices)
         : m_descriptor_set_layout(vulkan::create_descriptor_set_layout(device, descriptor_set_layout_bindings())),
           m_descriptors(device, 1, m_descriptor_set_layout, descriptor_set_layout_bindings())
 {
@@ -53,7 +53,7 @@ ShaderMemory::ShaderMemory(const vulkan::Device& device)
         std::vector<uint32_t> bindings;
 
         {
-                m_uniform_buffers.emplace_back(device, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Data));
+                m_uniform_buffers.emplace_back(device, family_indices, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Data));
                 m_data_buffer_index = m_uniform_buffers.size() - 1;
 
                 VkDescriptorBufferInfo buffer_info = {};

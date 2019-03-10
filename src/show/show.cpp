@@ -894,13 +894,12 @@ void create_swapchain(const vulkan::VulkanInstance& instance, VulkanRenderer* re
         swapchain->reset();
 
         *swapchain = std::make_unique<vulkan::Swapchain>(
-                instance.create_swapchain(VULKAN_SURFACE_FORMAT, VULKAN_PREFERRED_IMAGE_COUNT, preferred_present_mode));
+                instance.surface(), instance.device(), instance.graphics_and_presentation_family_indices(), VULKAN_SURFACE_FORMAT,
+                VULKAN_PREFERRED_IMAGE_COUNT, preferred_present_mode);
 
         constexpr vulkan::RenderBufferCount buffer_count = vulkan::RenderBufferCount::One;
-        *render_buffers =
-                vulkan::create_render_buffers(buffer_count, *(swapchain->get()), {instance.physical_device().graphics()},
-                                              instance.device(), instance.graphics_command_pool(), instance.graphics_queue(),
-                                              VULKAN_MINIMUM_SAMPLE_COUNT, VULKAN_DEPTH_IMAGE_FORMATS);
+        *render_buffers = vulkan::create_render_buffers(buffer_count, *(swapchain->get()), instance.graphics_family_indices(),
+                                                        instance, VULKAN_MINIMUM_SAMPLE_COUNT, VULKAN_DEPTH_IMAGE_FORMATS);
 
         renderer->create_buffers(swapchain->get(), &(*render_buffers)->buffers_3d());
 

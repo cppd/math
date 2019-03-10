@@ -54,7 +54,8 @@ std::vector<VkDescriptorSetLayoutBinding> TextMemory::descriptor_set_layout_bind
         return bindings;
 }
 
-TextMemory::TextMemory(const vulkan::Device& device, VkSampler sampler, const vulkan::GrayscaleTexture* texture)
+TextMemory::TextMemory(const vulkan::Device& device, const std::vector<uint32_t>& family_indices, VkSampler sampler,
+                       const vulkan::GrayscaleTexture* texture)
         : m_descriptor_set_layout(vulkan::create_descriptor_set_layout(device, descriptor_set_layout_bindings())),
           m_descriptors(device, 1, m_descriptor_set_layout, descriptor_set_layout_bindings())
 {
@@ -62,7 +63,7 @@ TextMemory::TextMemory(const vulkan::Device& device, VkSampler sampler, const vu
         std::vector<uint32_t> bindings;
 
         {
-                m_uniform_buffers.emplace_back(device, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Matrices));
+                m_uniform_buffers.emplace_back(device, family_indices, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Matrices));
                 m_matrices_buffer_index = m_uniform_buffers.size() - 1;
 
                 VkDescriptorBufferInfo buffer_info = {};
@@ -85,7 +86,7 @@ TextMemory::TextMemory(const vulkan::Device& device, VkSampler sampler, const vu
                 bindings.push_back(TEXTURE_BINDING);
         }
         {
-                m_uniform_buffers.emplace_back(device, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Drawing));
+                m_uniform_buffers.emplace_back(device, family_indices, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Drawing));
                 m_drawing_buffer_index = m_uniform_buffers.size() - 1;
 
                 VkDescriptorBufferInfo buffer_info = {};

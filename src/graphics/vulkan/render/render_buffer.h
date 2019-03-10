@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "com/color/color.h"
+#include "graphics/vulkan/instance.h"
 #include "graphics/vulkan/objects.h"
 #include "graphics/vulkan/shader.h"
 #include "graphics/vulkan/swapchain.h"
@@ -82,7 +83,6 @@ struct RenderBuffers
 
 std::unique_ptr<RenderBuffers> create_render_buffers(RenderBufferCount buffer_count, const vulkan::Swapchain& swapchain,
                                                      const std::vector<uint32_t>& attachment_family_indices,
-                                                     const vulkan::Device& device, VkCommandPool graphics_command_pool,
-                                                     VkQueue graphics_queue, int required_minimum_sample_count,
+                                                     const vulkan::VulkanInstance& instance, int required_minimum_sample_count,
                                                      const std::vector<VkFormat>& depth_image_formats);
 }

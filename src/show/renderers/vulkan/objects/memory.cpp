@@ -76,7 +76,7 @@ std::vector<VkDescriptorSetLayoutBinding> TrianglesSharedMemory::descriptor_set_
         return bindings;
 }
 
-TrianglesSharedMemory::TrianglesSharedMemory(const vulkan::Device& device)
+TrianglesSharedMemory::TrianglesSharedMemory(const vulkan::Device& device, const std::vector<uint32_t>& family_indices)
         : m_descriptor_set_layout(vulkan::create_descriptor_set_layout(device, descriptor_set_layout_bindings())),
           m_descriptors(device, 1, m_descriptor_set_layout, descriptor_set_layout_bindings())
 {
@@ -84,7 +84,7 @@ TrianglesSharedMemory::TrianglesSharedMemory(const vulkan::Device& device)
         std::vector<uint32_t> bindings;
 
         {
-                m_uniform_buffers.emplace_back(device, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Matrices));
+                m_uniform_buffers.emplace_back(device, family_indices, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Matrices));
                 m_matrices_buffer_index = m_uniform_buffers.size() - 1;
 
                 VkDescriptorBufferInfo buffer_info = {};
@@ -97,7 +97,7 @@ TrianglesSharedMemory::TrianglesSharedMemory(const vulkan::Device& device)
                 bindings.push_back(MATRICES_BINDING);
         }
         {
-                m_uniform_buffers.emplace_back(device, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Lighting));
+                m_uniform_buffers.emplace_back(device, family_indices, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Lighting));
                 m_lighting_buffer_index = m_uniform_buffers.size() - 1;
 
                 VkDescriptorBufferInfo buffer_info = {};
@@ -110,7 +110,7 @@ TrianglesSharedMemory::TrianglesSharedMemory(const vulkan::Device& device)
                 bindings.push_back(LIGHTING_BINDING);
         }
         {
-                m_uniform_buffers.emplace_back(device, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Drawing));
+                m_uniform_buffers.emplace_back(device, family_indices, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Drawing));
                 m_drawing_buffer_index = m_uniform_buffers.size() - 1;
 
                 VkDescriptorBufferInfo buffer_info = {};
@@ -295,8 +295,8 @@ std::vector<VkDescriptorSetLayoutBinding> TrianglesMaterialMemory::descriptor_se
         return bindings;
 }
 
-TrianglesMaterialMemory::TrianglesMaterialMemory(const vulkan::Device& device, VkSampler sampler,
-                                                 VkDescriptorSetLayout descriptor_set_layout,
+TrianglesMaterialMemory::TrianglesMaterialMemory(const vulkan::Device& device, const std::vector<uint32_t>& family_indices,
+                                                 VkSampler sampler, VkDescriptorSetLayout descriptor_set_layout,
                                                  const std::vector<MaterialAndTexture>& materials)
         : m_descriptors(vulkan::Descriptors(device, materials.size(), descriptor_set_layout, descriptor_set_layout_bindings()))
 {
@@ -314,7 +314,8 @@ TrianglesMaterialMemory::TrianglesMaterialMemory(const vulkan::Device& device, V
                 infos.clear();
                 bindings.clear();
                 {
-                        m_uniform_buffers.emplace_back(device, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Material));
+                        m_uniform_buffers.emplace_back(device, family_indices, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                                                       sizeof(Material));
 
                         VkDescriptorBufferInfo buffer_info = {};
                         buffer_info.buffer = m_uniform_buffers.back();
@@ -398,7 +399,7 @@ std::vector<VkDescriptorSetLayoutBinding> ShadowMemory::descriptor_set_layout_bi
         return bindings;
 }
 
-ShadowMemory::ShadowMemory(const vulkan::Device& device)
+ShadowMemory::ShadowMemory(const vulkan::Device& device, const std::vector<uint32_t>& family_indices)
         : m_descriptor_set_layout(vulkan::create_descriptor_set_layout(device, descriptor_set_layout_bindings())),
           m_descriptors(device, 1, m_descriptor_set_layout, descriptor_set_layout_bindings())
 {
@@ -406,7 +407,7 @@ ShadowMemory::ShadowMemory(const vulkan::Device& device)
         std::vector<uint32_t> bindings;
 
         {
-                m_uniform_buffers.emplace_back(device, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Matrices));
+                m_uniform_buffers.emplace_back(device, family_indices, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Matrices));
 
                 VkDescriptorBufferInfo buffer_info = {};
                 buffer_info.buffer = m_uniform_buffers.back();
@@ -480,7 +481,7 @@ std::vector<VkDescriptorSetLayoutBinding> PointsMemory::descriptor_set_layout_bi
         return bindings;
 }
 
-PointsMemory::PointsMemory(const vulkan::Device& device)
+PointsMemory::PointsMemory(const vulkan::Device& device, const std::vector<uint32_t>& family_indices)
         : m_descriptor_set_layout(vulkan::create_descriptor_set_layout(device, descriptor_set_layout_bindings())),
           m_descriptors(device, 1, m_descriptor_set_layout, descriptor_set_layout_bindings())
 {
@@ -488,7 +489,7 @@ PointsMemory::PointsMemory(const vulkan::Device& device)
         std::vector<uint32_t> bindings;
 
         {
-                m_uniform_buffers.emplace_back(device, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Matrices));
+                m_uniform_buffers.emplace_back(device, family_indices, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Matrices));
                 m_matrices_buffer_index = m_uniform_buffers.size() - 1;
 
                 VkDescriptorBufferInfo buffer_info = {};
@@ -501,7 +502,7 @@ PointsMemory::PointsMemory(const vulkan::Device& device)
                 bindings.push_back(MATRICES_BINDING);
         }
         {
-                m_uniform_buffers.emplace_back(device, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Drawing));
+                m_uniform_buffers.emplace_back(device, family_indices, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Drawing));
                 m_drawing_buffer_index = m_uniform_buffers.size() - 1;
 
                 VkDescriptorBufferInfo buffer_info = {};

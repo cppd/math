@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "graphics/vulkan/buffers.h"
+#include "graphics/vulkan/instance.h"
 #include "graphics/vulkan/objects.h"
 #include "graphics/vulkan/shader.h"
 #include "graphics/vulkan/swapchain.h"
@@ -54,7 +55,6 @@ struct ShadowBuffers
 
 std::unique_ptr<ShadowBuffers> create_shadow_buffers(ShadowBufferCount buffer_count, const vulkan::Swapchain& swapchain,
                                                      const std::vector<uint32_t>& attachment_family_indices,
-                                                     const vulkan::Device& device, VkCommandPool graphics_command_pool,
-                                                     VkQueue graphics_queue, const std::vector<VkFormat>& depth_image_formats,
-                                                     double zoom);
+                                                     const vulkan::VulkanInstance& instance,
+                                                     const std::vector<VkFormat>& depth_image_formats, double zoom);
 }

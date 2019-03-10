@@ -73,8 +73,7 @@ void ProgramPrepare::create_buffers(const vulkan::StorageImage& objects, const v
         m_memory.set_lines(lines_buffer);
 
         m_constant.set_line_size(objects.height());
-        m_constant.set_buffer_and_group_size(
-                group_size_prepare(objects.width(), m_instance.physical_device().properties().limits));
+        m_constant.set_buffer_and_group_size(group_size_prepare(objects.width(), m_instance.limits()));
 
         vulkan::ComputePipelineCreateInfo info;
         info.device = &m_instance.device();
@@ -116,7 +115,7 @@ void ProgramMerge::create_buffers(const vulkan::StorageImage& objects, const vul
         m_memory.set_lines(lines_buffer);
 
         m_constant.set_line_size(objects.height());
-        m_constant.set_local_size_x(group_size_merge(objects.height(), m_instance.physical_device().properties().limits));
+        m_constant.set_local_size_x(group_size_merge(objects.height(), m_instance.limits()));
         m_constant.set_iteration_count(impl::iteration_count_merge(objects.height()));
 
         vulkan::ComputePipelineCreateInfo info;

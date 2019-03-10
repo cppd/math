@@ -25,7 +25,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/alg.h"
 #include "com/log.h"
 #include "com/merge.h"
-#include "com/string/vector.h"
 
 namespace vulkan
 {
@@ -59,10 +58,17 @@ VulkanInstance::VulkanInstance(const std::vector<std::string>& required_instance
           //
           m_presentation_queue(device_queue(m_device, m_physical_device.presentation(), 0 /*queue_index*/)),
           //
+          m_graphics_and_presentation_family_indices(
+                  unique_elements(std::vector({m_physical_device.graphics(), m_physical_device.presentation()}))),
           m_graphics_and_transfer_family_indices(
                   unique_elements(std::vector({m_physical_device.graphics(), m_physical_device.transfer()}))),
-          m_graphics_and_presentation_family_indices(
-                  unique_elements(std::vector({m_physical_device.graphics(), m_physical_device.presentation()})))
+          m_graphics_and_compute_family_indices(
+                  unique_elements(std::vector({m_physical_device.graphics(), m_physical_device.compute()}))),
+          m_graphics_family_indices(unique_elements(std::vector({m_physical_device.graphics()}))),
+          m_compute_family_indices(unique_elements(std::vector({m_physical_device.compute()}))),
+          m_graphics_family_index(m_physical_device.graphics()),
+          m_transfer_family_index(m_physical_device.transfer()),
+          m_compute_family_index(m_physical_device.compute())
 {
 }
 

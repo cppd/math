@@ -178,8 +178,8 @@ std::unique_ptr<vulkan::BufferWithDeviceLocalMemory> load_vertices(const vulkan:
 
         ASSERT((shader_vertices.size() >= 3) && (shader_vertices.size() % 3 == 0));
 
-        return std::make_unique<vulkan::BufferWithDeviceLocalMemory>(
-                instance.create_buffer(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, shader_vertices));
+        return std::make_unique<vulkan::BufferWithDeviceLocalMemory>(instance, instance.graphics_and_transfer_family_indices(),
+                                                                     VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, shader_vertices);
 }
 
 std::unique_ptr<vulkan::BufferWithDeviceLocalMemory> load_point_vertices(const vulkan::VulkanInstance& instance,
@@ -201,8 +201,8 @@ std::unique_ptr<vulkan::BufferWithDeviceLocalMemory> load_point_vertices(const v
                 shader_vertices.push_back(obj_vertices[p.vertex]);
         }
 
-        return std::make_unique<vulkan::BufferWithDeviceLocalMemory>(
-                instance.create_buffer(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, shader_vertices));
+        return std::make_unique<vulkan::BufferWithDeviceLocalMemory>(instance, instance.graphics_and_transfer_family_indices(),
+                                                                     VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, shader_vertices);
 }
 
 std::unique_ptr<vulkan::BufferWithDeviceLocalMemory> load_line_vertices(const vulkan::VulkanInstance& instance, const Obj<3>& obj)
@@ -226,8 +226,8 @@ std::unique_ptr<vulkan::BufferWithDeviceLocalMemory> load_line_vertices(const vu
                 }
         }
 
-        return std::make_unique<vulkan::BufferWithDeviceLocalMemory>(
-                instance.create_buffer(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, shader_vertices));
+        return std::make_unique<vulkan::BufferWithDeviceLocalMemory>(instance, instance.graphics_and_transfer_family_indices(),
+                                                                     VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, shader_vertices);
 }
 
 std::vector<vulkan::ColorTexture> load_textures(const vulkan::VulkanInstance& instance, const Obj<3>& obj)
@@ -236,18 +236,20 @@ std::vector<vulkan::ColorTexture> load_textures(const vulkan::VulkanInstance& in
 
         for (const typename Obj<3>::Image& image : obj.images())
         {
-                textures.push_back(instance.create_texture(image.size[0], image.size[1], image.srgba_pixels));
+                textures.emplace_back(instance, instance.graphics_and_transfer_family_indices(), image.size[0], image.size[1],
+                                      image.srgba_pixels);
         }
 
         // На одну текстуру больше для её указания, но не использования в тех материалах, где нет текстуры
         std::vector<std::uint_least8_t> pixels = {/*0*/ 0, 0, 0, 0, /*1*/ 0, 0, 0, 0,
                                                   /*2*/ 0, 0, 0, 0, /*3*/ 0, 0, 0, 0};
-        textures.push_back(instance.create_texture(2, 2, pixels));
+        textures.emplace_back(instance, instance.graphics_and_transfer_family_indices(), 2, 2, pixels);
 
         return textures;
 }
 
-std::unique_ptr<impl::TrianglesMaterialMemory> load_materials(const vulkan::Device& device, VkSampler sampler,
+std::unique_ptr<impl::TrianglesMaterialMemory> load_materials(const vulkan::Device& device,
+                                                              const std::vector<uint32_t>& family_indices, VkSampler sampler,
                                                               VkDescriptorSetLayout descriptor_set_layout, const Obj<3>& obj,
                                                               const std::vector<vulkan::ColorTexture>& textures)
 {
@@ -303,7 +305,7 @@ std::unique_ptr<impl::TrianglesMaterialMemory> load_materials(const vulkan::Devi
         m.material.use_material = 0;
         materials.push_back(m);
 
-        return std::make_unique<impl::TrianglesMaterialMemory>(device, sampler, descriptor_set_layout, materials);
+        return std::make_unique<impl::TrianglesMaterialMemory>(device, family_indices, sampler, descriptor_set_layout, materials);
 }
 
 struct DrawInfo
@@ -381,8 +383,8 @@ public:
 
                 m_vertex_buffer = load_vertices(instance, obj, sorted_face_indices);
                 m_textures = load_textures(instance, obj);
-                m_shader_memory =
-                        load_materials(instance.device(), sampler, triangles_material_descriptor_set_layout, obj, m_textures);
+                m_shader_memory = load_materials(instance.device(), instance.graphics_family_indices(), sampler,
+                                                 triangles_material_descriptor_set_layout, obj, m_textures);
                 m_vertex_count = 3 * obj.facets().size();
 
                 ASSERT(material_face_offset.size() == material_face_count.size());
@@ -613,9 +615,6 @@ class Renderer final : public VulkanRenderer
 
         const vulkan::VulkanInstance& m_instance;
         const vulkan::Swapchain* m_swapchain = nullptr;
-
-        const std::vector<uint32_t> m_object_image_family_indices{m_instance.physical_device().graphics(),
-                                                                  m_instance.physical_device().compute()};
 
         vulkan::Semaphore m_shadow_signal_semaphore;
         vulkan::Semaphore m_render_signal_semaphore;
@@ -934,8 +933,9 @@ class Renderer final : public VulkanRenderer
 
                 //
 
-                m_object_image = std::make_unique<vulkan::StorageImage>(m_instance.create_storage_image(
-                        m_object_image_family_indices, VK_FORMAT_R32_UINT, m_swapchain->width(), m_swapchain->height()));
+                m_object_image =
+                        std::make_unique<vulkan::StorageImage>(m_instance, m_instance.graphics_and_compute_family_indices(),
+                                                               VK_FORMAT_R32_UINT, m_swapchain->width(), m_swapchain->height());
 
                 m_triangles_shared_shader_memory.set_object_image(m_object_image.get());
                 m_points_shader_memory.set_object_image(m_object_image.get());
@@ -973,10 +973,8 @@ class Renderer final : public VulkanRenderer
                 //
 
                 constexpr vulkan::ShadowBufferCount buffer_count = vulkan::ShadowBufferCount::One;
-                m_shadow_buffers =
-                        vulkan::create_shadow_buffers(buffer_count, *m_swapchain, {m_instance.physical_device().graphics()},
-                                                      m_instance.device(), m_instance.graphics_command_pool(),
-                                                      m_instance.graphics_queue(), SHADOW_DEPTH_IMAGE_FORMATS, m_shadow_zoom);
+                m_shadow_buffers = vulkan::create_shadow_buffers(buffer_count, *m_swapchain, m_instance.graphics_family_indices(),
+                                                                 m_instance, SHADOW_DEPTH_IMAGE_FORMATS, m_shadow_zoom);
 
                 m_triangles_shared_shader_memory.set_shadow_texture(m_shadow_sampler, m_shadow_buffers->texture(0));
 
@@ -1127,9 +1125,9 @@ public:
                   m_triangles_material_descriptor_set_layout(vulkan::create_descriptor_set_layout(
                           m_instance.device(), impl::TrianglesMaterialMemory::descriptor_set_layout_bindings())),
                   //
-                  m_triangles_shared_shader_memory(m_instance.device()),
-                  m_shadow_shader_memory(m_instance.device()),
-                  m_points_shader_memory(m_instance.device()),
+                  m_triangles_shared_shader_memory(m_instance.device(), m_instance.graphics_family_indices()),
+                  m_shadow_shader_memory(m_instance.device(), m_instance.graphics_family_indices()),
+                  m_points_shader_memory(m_instance.device(), m_instance.graphics_family_indices()),
                   //
                   m_triangles_vert(m_instance.device(), triangles_vert, "main"),
                   m_triangles_geom(m_instance.device(), triangles_geom, "main"),

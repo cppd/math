@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/color/color.h"
 #include "com/matrix.h"
 #include "com/vec.h"
+#include "graphics/vulkan/buffers.h"
 #include "graphics/vulkan/instance.h"
 #include "graphics/vulkan/render/render_buffer.h"
 #include "graphics/vulkan/swapchain.h"

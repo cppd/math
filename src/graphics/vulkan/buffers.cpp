@@ -31,10 +31,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace
 {
+bool find_index(const std::vector<uint32_t>& indices, uint32_t index)
+{
+        return std::find(indices.cbegin(), indices.cend(), index) != indices.cend();
+}
+
 vulkan::Buffer create_buffer(VkDevice device, VkDeviceSize size, VkBufferUsageFlags usage,
                              const std::vector<uint32_t>& family_indices)
 {
-        ASSERT(size > 0);
+        if (!(size > 0))
+        {
+                error("Buffer zero size");
+        }
 
         VkBufferCreateInfo create_info = {};
 
@@ -62,7 +70,14 @@ vulkan::Image create_2d_image(VkDevice device, uint32_t width, uint32_t height, 
                               const std::vector<uint32_t>& family_indices, VkSampleCountFlagBits samples, VkImageTiling tiling,
                               VkImageUsageFlags usage)
 {
-        ASSERT(width > 0 && height > 0);
+        if (!(width > 0))
+        {
+                error("Image zero width");
+        }
+        if (!(height > 0))
+        {
+                error("Image zero height");
+        }
 
         VkImageCreateInfo create_info = {};
 
@@ -104,7 +119,8 @@ vulkan::DeviceMemory create_device_memory(const vulkan::Device& device, VkBuffer
         VkMemoryAllocateInfo allocate_info = {};
         allocate_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
         allocate_info.allocationSize = memory_requirements.size;
-        allocate_info.memoryTypeIndex = device.physical_device_memory_type_index(memory_requirements.memoryTypeBits, properties);
+        allocate_info.memoryTypeIndex = vulkan::physical_device_memory_type_index(device.physical_device(),
+                                                                                  memory_requirements.memoryTypeBits, properties);
 
         vulkan::DeviceMemory device_memory(device, allocate_info);
 
@@ -125,7 +141,8 @@ vulkan::DeviceMemory create_device_memory(const vulkan::Device& device, VkImage 
         VkMemoryAllocateInfo allocate_info = {};
         allocate_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
         allocate_info.allocationSize = memory_requirements.size;
-        allocate_info.memoryTypeIndex = device.physical_device_memory_type_index(memory_requirements.memoryTypeBits, properties);
+        allocate_info.memoryTypeIndex = vulkan::physical_device_memory_type_index(device.physical_device(),
+                                                                                  memory_requirements.memoryTypeBits, properties);
 
         vulkan::DeviceMemory device_memory(device, allocate_info);
 
@@ -504,8 +521,9 @@ vulkan::ImageView create_image_view(VkDevice device, VkImage image, VkFormat for
 
 namespace vulkan
 {
-BufferWithHostVisibleMemory::BufferWithHostVisibleMemory(const Device& device, VkBufferUsageFlags usage, VkDeviceSize data_size)
-        : m_buffer(create_buffer(device, data_size, usage, {})),
+BufferWithHostVisibleMemory::BufferWithHostVisibleMemory(const Device& device, const std::vector<uint32_t>& family_indices,
+                                                         VkBufferUsageFlags usage, VkDeviceSize data_size)
+        : m_buffer(create_buffer(device, data_size, usage, family_indices)),
           m_device_memory(create_device_memory(device, m_buffer,
                                                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT))
 {
@@ -542,25 +560,29 @@ void BufferWithHostVisibleMemory::copy_from(VkDeviceSize offset, void* data, VkD
 
 //
 
-BufferWithDeviceLocalMemory::BufferWithDeviceLocalMemory(const Device& device, VkBufferUsageFlags usage, VkDeviceSize data_size)
-        : m_buffer(create_buffer(device, data_size, usage, {})),
-          m_device_memory(create_device_memory(device, m_buffer, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
+BufferWithDeviceLocalMemory::BufferWithDeviceLocalMemory(const VulkanInstance& instance,
+                                                         const std::vector<uint32_t>& family_indices, VkBufferUsageFlags usage,
+                                                         VkDeviceSize data_size)
+        : m_buffer(create_buffer(instance.device(), data_size, usage, family_indices)),
+          m_device_memory(create_device_memory(instance.device(), m_buffer, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
 {
 }
 
-BufferWithDeviceLocalMemory::BufferWithDeviceLocalMemory(const Device& device, VkBufferUsageFlags usage,
-                                                         VkCommandPool command_pool, VkQueue queue,
-                                                         const std::vector<uint32_t>& family_indices, VkDeviceSize data_size,
-                                                         const void* data)
-        : m_buffer(create_buffer(device, data_size, usage | VK_BUFFER_USAGE_TRANSFER_DST_BIT, family_indices)),
-          m_device_memory(create_device_memory(device, m_buffer, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
+BufferWithDeviceLocalMemory::BufferWithDeviceLocalMemory(const VulkanInstance& instance,
+                                                         const std::vector<uint32_t>& family_indices, VkBufferUsageFlags usage,
+                                                         VkDeviceSize data_size, const void* data)
+        : m_buffer(create_buffer(instance.device(), data_size, usage | VK_BUFFER_USAGE_TRANSFER_DST_BIT, family_indices)),
+          m_device_memory(create_device_memory(instance.device(), m_buffer, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
 {
-        ASSERT(command_pool != VK_NULL_HANDLE);
-        ASSERT(queue != VK_NULL_HANDLE);
-        ASSERT(family_indices.size() > 0);
         ASSERT(data_size > 0 && data);
 
-        staging_buffer_copy(device, command_pool, queue, m_buffer, data_size, data);
+        if (!find_index(family_indices, instance.transfer_family_index()))
+        {
+                error("Transfer family index not found in buffer family indices");
+        }
+
+        staging_buffer_copy(instance.device(), instance.transfer_command_pool(), instance.transfer_queue(), m_buffer, data_size,
+                            data);
 }
 
 BufferWithDeviceLocalMemory::operator VkBuffer() const noexcept
@@ -580,12 +602,17 @@ bool BufferWithDeviceLocalMemory::usage(VkBufferUsageFlagBits flag) const noexce
 
 //
 
-ColorTexture::ColorTexture(const Device& device, VkCommandPool graphics_command_pool, VkQueue graphics_queue,
-                           VkCommandPool transfer_command_pool, VkQueue transfer_queue,
-                           const std::vector<uint32_t>& family_indices, uint32_t width, uint32_t height,
-                           const Span<const std::uint_least8_t>& srgb_uint8_rgba_pixels)
+ColorTexture::ColorTexture(const VulkanInstance& instance, const std::vector<uint32_t>& family_indices, uint32_t width,
+                           uint32_t height, const Span<const std::uint_least8_t>& srgb_uint8_rgba_pixels)
 {
-        ASSERT(family_indices.size() > 0);
+        if (!find_index(family_indices, instance.graphics_family_index()))
+        {
+                error("Graphics family index not found in color texture family indices");
+        }
+        if (!find_index(family_indices, instance.transfer_family_index()))
+        {
+                error("Transfer family index not found in color texture family indices");
+        }
 
         if (srgb_uint8_rgba_pixels.size() != 4ull * width * height)
         {
@@ -600,28 +627,31 @@ ColorTexture::ColorTexture(const Device& device, VkCommandPool graphics_command_
         VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT;
 
         m_image_layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        m_format = find_supported_2d_image_format(device.physical_device(), candidates, tiling, features, usage, samples);
-        m_image = create_2d_image(device, width, height, m_format, family_indices, samples, tiling, usage);
-        m_device_memory = create_device_memory(device, m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-        m_image_view = create_image_view(device, m_image, m_format, VK_IMAGE_ASPECT_COLOR_BIT);
+        m_format = find_supported_2d_image_format(instance.physical_device(), candidates, tiling, features, usage, samples);
+        m_image = create_2d_image(instance.device(), width, height, m_format, family_indices, samples, tiling, usage);
+        m_device_memory = create_device_memory(instance.device(), m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+        m_image_view = create_image_view(instance.device(), m_image, m_format, VK_IMAGE_ASPECT_COLOR_BIT);
 
         if (m_format == VK_FORMAT_R16G16B16A16_UNORM)
         {
                 std::vector<uint16_t> buffer =
                         color_conversion::rgba_pixels_from_srgb_uint8_to_rgb_uint16(srgb_uint8_rgba_pixels);
-                staging_image_copy(device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, m_image,
-                                   m_format, m_image_layout, width, height, buffer);
+                staging_image_copy(instance.device(), instance.graphics_command_pool(), instance.graphics_queue(),
+                                   instance.transfer_command_pool(), instance.transfer_queue(), m_image, m_format, m_image_layout,
+                                   width, height, buffer);
         }
         else if (m_format == VK_FORMAT_R32G32B32A32_SFLOAT)
         {
                 std::vector<float> buffer = color_conversion::rgba_pixels_from_srgb_uint8_to_rgb_float(srgb_uint8_rgba_pixels);
-                staging_image_copy(device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, m_image,
-                                   m_format, m_image_layout, width, height, buffer);
+                staging_image_copy(instance.device(), instance.graphics_command_pool(), instance.graphics_queue(),
+                                   instance.transfer_command_pool(), instance.transfer_queue(), m_image, m_format, m_image_layout,
+                                   width, height, buffer);
         }
         else if (m_format == VK_FORMAT_R8G8B8A8_SRGB)
         {
-                staging_image_copy(device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, m_image,
-                                   m_format, m_image_layout, width, height, srgb_uint8_rgba_pixels);
+                staging_image_copy(instance.device(), instance.graphics_command_pool(), instance.graphics_queue(),
+                                   instance.transfer_command_pool(), instance.transfer_queue(), m_image, m_format, m_image_layout,
+                                   width, height, srgb_uint8_rgba_pixels);
         }
         else
         {
@@ -651,12 +681,17 @@ VkImageView ColorTexture::image_view() const noexcept
 
 //
 
-GrayscaleTexture::GrayscaleTexture(const Device& device, VkCommandPool graphics_command_pool, VkQueue graphics_queue,
-                                   VkCommandPool transfer_command_pool, VkQueue transfer_queue,
-                                   const std::vector<uint32_t>& family_indices, uint32_t width, uint32_t height,
-                                   const Span<const std::uint_least8_t>& srgb_uint8_grayscale_pixels)
+GrayscaleTexture::GrayscaleTexture(const VulkanInstance& instance, const std::vector<uint32_t>& family_indices, uint32_t width,
+                                   uint32_t height, const Span<const std::uint_least8_t>& srgb_uint8_grayscale_pixels)
 {
-        ASSERT(family_indices.size() > 0);
+        if (!find_index(family_indices, instance.graphics_family_index()))
+        {
+                error("Graphics family index not found in grayscale texture family indices");
+        }
+        if (!find_index(family_indices, instance.transfer_family_index()))
+        {
+                error("Transfer family index not found in grayscale texture family indices");
+        }
 
         if (srgb_uint8_grayscale_pixels.size() != 1ull * width * height)
         {
@@ -671,29 +706,32 @@ GrayscaleTexture::GrayscaleTexture(const Device& device, VkCommandPool graphics_
         VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT;
 
         m_image_layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        m_format = find_supported_2d_image_format(device.physical_device(), candidates, tiling, features, usage, samples);
-        m_image = create_2d_image(device, width, height, m_format, family_indices, samples, tiling, usage);
-        m_device_memory = create_device_memory(device, m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-        m_image_view = create_image_view(device, m_image, m_format, VK_IMAGE_ASPECT_COLOR_BIT);
+        m_format = find_supported_2d_image_format(instance.physical_device(), candidates, tiling, features, usage, samples);
+        m_image = create_2d_image(instance.device(), width, height, m_format, family_indices, samples, tiling, usage);
+        m_device_memory = create_device_memory(instance.device(), m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+        m_image_view = create_image_view(instance.device(), m_image, m_format, VK_IMAGE_ASPECT_COLOR_BIT);
 
         if (m_format == VK_FORMAT_R16_UNORM)
         {
                 std::vector<uint16_t> buffer =
                         color_conversion::grayscale_pixels_from_srgb_uint8_to_rgb_uint16(srgb_uint8_grayscale_pixels);
-                staging_image_copy(device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, m_image,
-                                   m_format, m_image_layout, width, height, buffer);
+                staging_image_copy(instance.device(), instance.graphics_command_pool(), instance.graphics_queue(),
+                                   instance.transfer_command_pool(), instance.transfer_queue(), m_image, m_format, m_image_layout,
+                                   width, height, buffer);
         }
         else if (m_format == VK_FORMAT_R32_SFLOAT)
         {
                 std::vector<float> buffer =
                         color_conversion::grayscale_pixels_from_srgb_uint8_to_rgb_float(srgb_uint8_grayscale_pixels);
-                staging_image_copy(device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, m_image,
-                                   m_format, m_image_layout, width, height, buffer);
+                staging_image_copy(instance.device(), instance.graphics_command_pool(), instance.graphics_queue(),
+                                   instance.transfer_command_pool(), instance.transfer_queue(), m_image, m_format, m_image_layout,
+                                   width, height, buffer);
         }
         else if (m_format == VK_FORMAT_R8_SRGB)
         {
-                staging_image_copy(device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, m_image,
-                                   m_format, m_image_layout, width, height, srgb_uint8_grayscale_pixels);
+                staging_image_copy(instance.device(), instance.graphics_command_pool(), instance.graphics_queue(),
+                                   instance.transfer_command_pool(), instance.transfer_queue(), m_image, m_format, m_image_layout,
+                                   width, height, srgb_uint8_grayscale_pixels);
         }
         else
         {
@@ -723,26 +761,29 @@ VkImageView GrayscaleTexture::image_view() const noexcept
 
 //
 
-DepthAttachment::DepthAttachment(const Device& device, VkCommandPool graphics_command_pool, VkQueue graphics_queue,
-                                 const std::vector<uint32_t>& family_indices, const std::vector<VkFormat>& formats,
-                                 VkSampleCountFlagBits samples, uint32_t width, uint32_t height)
+DepthAttachment::DepthAttachment(const VulkanInstance& instance, const std::vector<uint32_t>& family_indices,
+                                 const std::vector<VkFormat>& formats, VkSampleCountFlagBits samples, uint32_t width,
+                                 uint32_t height)
 {
-        ASSERT(family_indices.size() > 0);
+        if (!find_index(family_indices, instance.graphics_family_index()))
+        {
+                error("Graphics family index not found in depth attachment family indices");
+        }
 
         VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
         VkFormatFeatureFlags features = VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT;
         VkImageUsageFlags usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
 
         m_image_layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-        m_format = find_supported_2d_image_format(device.physical_device(), formats, tiling, features, usage, samples);
-        m_image = create_2d_image(device, width, height, m_format, family_indices, samples, tiling, usage);
-        m_device_memory = create_device_memory(device, m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-        m_image_view = create_image_view(device, m_image, m_format, VK_IMAGE_ASPECT_DEPTH_BIT);
+        m_format = find_supported_2d_image_format(instance.physical_device(), formats, tiling, features, usage, samples);
+        m_image = create_2d_image(instance.device(), width, height, m_format, family_indices, samples, tiling, usage);
+        m_device_memory = create_device_memory(instance.device(), m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+        m_image_view = create_image_view(instance.device(), m_image, m_format, VK_IMAGE_ASPECT_DEPTH_BIT);
         m_width = width;
         m_height = height;
 
-        transition_image_layout(device, graphics_command_pool, graphics_queue, m_image, m_format, VK_IMAGE_LAYOUT_UNDEFINED,
-                                m_image_layout);
+        transition_image_layout(instance.device(), instance.graphics_command_pool(), instance.graphics_queue(), m_image, m_format,
+                                VK_IMAGE_LAYOUT_UNDEFINED, m_image_layout);
 }
 
 VkImage DepthAttachment::image() const noexcept
@@ -777,11 +818,13 @@ unsigned DepthAttachment::height() const noexcept
 
 //
 
-ColorAttachment::ColorAttachment(const Device& device, VkCommandPool graphics_command_pool, VkQueue graphics_queue,
-                                 const std::vector<uint32_t>& family_indices, VkFormat format, VkSampleCountFlagBits samples,
-                                 uint32_t width, uint32_t height)
+ColorAttachment::ColorAttachment(const VulkanInstance& instance, const std::vector<uint32_t>& family_indices, VkFormat format,
+                                 VkSampleCountFlagBits samples, uint32_t width, uint32_t height)
 {
-        ASSERT(family_indices.size() > 0);
+        if (!find_index(family_indices, instance.graphics_family_index()))
+        {
+                error("Graphics family index not found in color attachment family indices");
+        }
 
         std::vector<VkFormat> candidates = {format}; // должен быть только этот формат
         VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
@@ -789,16 +832,16 @@ ColorAttachment::ColorAttachment(const Device& device, VkCommandPool graphics_co
         VkImageUsageFlags usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
         m_image_layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-        m_format = find_supported_2d_image_format(device.physical_device(), candidates, tiling, features, usage, samples);
-        m_image = create_2d_image(device, width, height, m_format, family_indices, samples, tiling, usage);
-        m_device_memory = create_device_memory(device, m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-        m_image_view = create_image_view(device, m_image, m_format, VK_IMAGE_ASPECT_COLOR_BIT);
+        m_format = find_supported_2d_image_format(instance.physical_device(), candidates, tiling, features, usage, samples);
+        m_image = create_2d_image(instance.device(), width, height, m_format, family_indices, samples, tiling, usage);
+        m_device_memory = create_device_memory(instance.device(), m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+        m_image_view = create_image_view(instance.device(), m_image, m_format, VK_IMAGE_ASPECT_COLOR_BIT);
         m_sample_count = samples;
 
         ASSERT(m_format == format);
 
-        transition_image_layout(device, graphics_command_pool, graphics_queue, m_image, m_format, VK_IMAGE_LAYOUT_UNDEFINED,
-                                m_image_layout);
+        transition_image_layout(instance.device(), instance.graphics_command_pool(), instance.graphics_queue(), m_image, m_format,
+                                VK_IMAGE_LAYOUT_UNDEFINED, m_image_layout);
 }
 
 VkImage ColorAttachment::image() const noexcept
@@ -828,11 +871,13 @@ VkSampleCountFlagBits ColorAttachment::sample_count() const noexcept
 
 //
 
-ShadowDepthAttachment::ShadowDepthAttachment(const Device& device, VkCommandPool /*graphics_command_pool*/,
-                                             VkQueue /*graphics_queue*/, const std::vector<uint32_t>& family_indices,
+ShadowDepthAttachment::ShadowDepthAttachment(const VulkanInstance& instance, const std::vector<uint32_t>& family_indices,
                                              const std::vector<VkFormat>& formats, uint32_t width, uint32_t height)
 {
-        ASSERT(family_indices.size() > 0);
+        if (!find_index(family_indices, instance.graphics_family_index()))
+        {
+                error("Graphics family index not found in shadow depth attachment family indices");
+        }
 
         if (width <= 0 || height <= 0)
         {
@@ -845,18 +890,20 @@ ShadowDepthAttachment::ShadowDepthAttachment(const Device& device, VkCommandPool
         VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT;
 
         m_image_layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL; // VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-        m_format = find_supported_2d_image_format(device.physical_device(), formats, tiling, features, usage, samples);
+        m_format = find_supported_2d_image_format(instance.physical_device(), formats, tiling, features, usage, samples);
 
-        VkExtent2D max_extent = max_2d_image_extent(device.physical_device(), m_format, tiling, usage);
+        VkExtent2D max_extent = max_2d_image_extent(instance.physical_device(), m_format, tiling, usage);
         m_width = std::min(width, max_extent.width);
         m_height = std::min(height, max_extent.height);
 
-        m_image = create_2d_image(device, m_width, m_height, m_format, family_indices, samples, tiling, usage);
-        m_device_memory = create_device_memory(device, m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-        m_image_view = create_image_view(device, m_image, m_format, VK_IMAGE_ASPECT_DEPTH_BIT);
+        m_image = create_2d_image(instance.device(), m_width, m_height, m_format, family_indices, samples, tiling, usage);
+        m_device_memory = create_device_memory(instance.device(), m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+        m_image_view = create_image_view(instance.device(), m_image, m_format, VK_IMAGE_ASPECT_DEPTH_BIT);
 
-        // transition_image_layout(device, graphics_command_pool, graphics_queue, m_image, m_format, VK_IMAGE_LAYOUT_UNDEFINED,
-        //                        m_image_layout);
+#if 0
+        transition_image_layout(instance.device(), instance.graphics_command_pool(), instance.graphics_queue(), m_image, m_format,
+                                VK_IMAGE_LAYOUT_UNDEFINED, m_image_layout);
+#endif
 }
 
 VkImage ShadowDepthAttachment::image() const noexcept
@@ -891,10 +938,13 @@ unsigned ShadowDepthAttachment::height() const noexcept
 
 //
 
-StorageImage::StorageImage(const Device& device, VkCommandPool graphics_command_pool, VkQueue graphics_queue,
-                           const std::vector<uint32_t>& family_indices, VkFormat format, uint32_t width, uint32_t height)
+StorageImage::StorageImage(const VulkanInstance& instance, const std::vector<uint32_t>& family_indices, VkFormat format,
+                           uint32_t width, uint32_t height)
 {
-        ASSERT(family_indices.size() > 0);
+        if (!find_index(family_indices, instance.graphics_family_index()))
+        {
+                error("Graphics family index not found in storage image family indices");
+        }
 
         std::vector<VkFormat> candidates = {format};
         VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
@@ -904,18 +954,18 @@ StorageImage::StorageImage(const Device& device, VkCommandPool graphics_command_
         VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT;
 
         m_image_layout = VK_IMAGE_LAYOUT_GENERAL;
-        m_format = find_supported_2d_image_format(device.physical_device(), candidates, tiling, features, usage, samples);
-        m_image = create_2d_image(device, width, height, m_format, family_indices, samples, tiling, usage);
-        m_device_memory = create_device_memory(device, m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-        m_image_view = create_image_view(device, m_image, m_format, VK_IMAGE_ASPECT_COLOR_BIT);
+        m_format = find_supported_2d_image_format(instance.physical_device(), candidates, tiling, features, usage, samples);
+        m_image = create_2d_image(instance.device(), width, height, m_format, family_indices, samples, tiling, usage);
+        m_device_memory = create_device_memory(instance.device(), m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+        m_image_view = create_image_view(instance.device(), m_image, m_format, VK_IMAGE_ASPECT_COLOR_BIT);
 
         m_width = width;
         m_height = height;
 
         ASSERT(m_format == format);
 
-        transition_storage_image_layout(device, graphics_command_pool, graphics_queue, m_image, VK_IMAGE_LAYOUT_UNDEFINED,
-                                        m_image_layout);
+        transition_storage_image_layout(instance.device(), instance.graphics_command_pool(), instance.graphics_queue(), m_image,
+                                        VK_IMAGE_LAYOUT_UNDEFINED, m_image_layout);
 }
 
 VkImage StorageImage::image() const noexcept

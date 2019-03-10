@@ -144,8 +144,7 @@ vulkan::RenderPass create_shadow_render_pass(VkDevice device, VkFormat depth_ima
 
 class Impl final : public vulkan::ShadowBuffers
 {
-        const vulkan::Device& m_device;
-        VkCommandPool m_graphics_command_pool;
+        const vulkan::VulkanInstance& m_instance;
 
         //
 
@@ -171,9 +170,8 @@ class Impl final : public vulkan::ShadowBuffers
 
 public:
         Impl(vulkan::ShadowBufferCount buffer_count, const vulkan::Swapchain& swapchain,
-             const std::vector<uint32_t>& attachment_family_indices, const vulkan::Device& device,
-             VkCommandPool graphics_command_pool, VkQueue graphics_queue, const std::vector<VkFormat>& depth_image_formats,
-             double zoom);
+             const std::vector<uint32_t>& attachment_family_indices, const vulkan::VulkanInstance& instance,
+             const std::vector<VkFormat>& depth_image_formats, double zoom);
 
         Impl(const Impl&) = delete;
         Impl& operator=(const Impl&) = delete;
@@ -181,14 +179,10 @@ public:
 };
 
 Impl::Impl(vulkan::ShadowBufferCount buffer_count, const vulkan::Swapchain& swapchain,
-           const std::vector<uint32_t>& attachment_family_indices, const vulkan::Device& device,
-           VkCommandPool graphics_command_pool, VkQueue graphics_queue, const std::vector<VkFormat>& depth_image_formats,
-           double zoom)
-        : m_device(device), m_graphics_command_pool(graphics_command_pool)
+           const std::vector<uint32_t>& attachment_family_indices, const vulkan::VulkanInstance& instance,
+           const std::vector<VkFormat>& depth_image_formats, double zoom)
+        : m_instance(instance)
 {
-        ASSERT(device != VK_NULL_HANDLE);
-        ASSERT(graphics_command_pool != VK_NULL_HANDLE);
-        ASSERT(graphics_queue != VK_NULL_HANDLE);
         ASSERT(attachment_family_indices.size() > 0);
         ASSERT(depth_image_formats.size() > 0);
 
@@ -201,22 +195,22 @@ Impl::Impl(vulkan::ShadowBufferCount buffer_count, const vulkan::Swapchain& swap
 
         for (unsigned i = 0; i < count; ++i)
         {
-                m_depth_attachments.emplace_back(m_device, m_graphics_command_pool, graphics_queue, attachment_family_indices,
-                                                 depth_image_formats, width, height);
+                m_depth_attachments.emplace_back(m_instance, attachment_family_indices, depth_image_formats, width, height);
         }
 
         VkFormat depth_format = m_depth_attachments[0].format();
         unsigned depth_width = m_depth_attachments[0].width();
         unsigned depth_height = m_depth_attachments[0].height();
 
-        m_render_pass = create_shadow_render_pass(m_device, depth_format);
+        m_render_pass = create_shadow_render_pass(m_instance.device(), depth_format);
 
         std::vector<VkImageView> attachments(1);
         for (const vulkan::ShadowDepthAttachment& depth_attachment : m_depth_attachments)
         {
                 attachments[0] = depth_attachment.image_view();
 
-                m_framebuffers.push_back(create_framebuffer(m_device, m_render_pass, depth_width, depth_height, attachments));
+                m_framebuffers.push_back(
+                        create_framebuffer(m_instance.device(), m_render_pass, depth_width, depth_height, attachments));
         }
 
         LOG(buffer_info(m_depth_attachments, zoom, width, height));
@@ -233,12 +227,12 @@ std::vector<VkCommandBuffer> Impl::create_command_buffers(const std::function<vo
         clear_values[0] = vulkan::depth_stencil_clear_value();
 
         vulkan::CommandBufferCreateInfo info;
-        info.device = m_device;
+        info.device = m_instance.device();
         info.width = width;
         info.height = height;
         info.render_pass = m_render_pass;
         info.framebuffers.emplace(m_framebuffers);
-        info.command_pool = m_graphics_command_pool;
+        info.command_pool = m_instance.graphics_command_pool();
         info.clear_values.emplace(clear_values);
         info.before_render_pass_commands = std::nullopt;
         info.render_pass_commands = commands;
@@ -276,7 +270,7 @@ VkPipeline Impl::create_pipeline(VkPrimitiveTopology primitive_topology, const s
 
         vulkan::GraphicsPipelineCreateInfo info;
 
-        info.device = &m_device;
+        info.device = &m_instance.device();
         info.render_pass = m_render_pass;
         info.sub_pass = 0;
         info.sample_count = VK_SAMPLE_COUNT_1_BIT;
@@ -301,11 +295,9 @@ namespace vulkan
 {
 std::unique_ptr<ShadowBuffers> create_shadow_buffers(ShadowBufferCount buffer_count, const vulkan::Swapchain& swapchain,
                                                      const std::vector<uint32_t>& attachment_family_indices,
-                                                     const vulkan::Device& device, VkCommandPool graphics_command_pool,
-                                                     VkQueue graphics_queue, const std::vector<VkFormat>& depth_image_formats,
-                                                     double zoom)
+                                                     const vulkan::VulkanInstance& instance,
+                                                     const std::vector<VkFormat>& depth_image_formats, double zoom)
 {
-        return std::make_unique<Impl>(buffer_count, swapchain, attachment_family_indices, device, graphics_command_pool,
-                                      graphics_queue, depth_image_formats, zoom);
+        return std::make_unique<Impl>(buffer_count, swapchain, attachment_family_indices, instance, depth_image_formats, zoom);
 }
 }

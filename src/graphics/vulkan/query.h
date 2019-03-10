@@ -43,4 +43,7 @@ VkExtent2D max_2d_image_extent(VkPhysicalDevice physical_device, VkFormat format
 VkSampleCountFlagBits supported_framebuffer_sample_count_flag(VkPhysicalDevice physical_device,
                                                               int required_minimum_sample_count);
 int integer_sample_count_flag(VkSampleCountFlagBits sample_count);
+
+uint32_t physical_device_memory_type_index(VkPhysicalDevice physical_device, uint32_t memory_type_bits,
+                                           VkMemoryPropertyFlags memory_property_flags);
 }

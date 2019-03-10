@@ -188,7 +188,8 @@ class Impl final : public VulkanText
 
                         m_render_buffers->delete_command_buffers(&m_command_buffers);
 
-                        m_vertex_buffer.emplace(m_instance.device(), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+                        m_vertex_buffer.emplace(m_instance.device(), m_instance.graphics_family_indices(),
+                                                VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
                                                 std::max(m_vertex_buffer->size() * 2, data_size));
 
                         m_command_buffers = m_render_buffers->create_command_buffers(
@@ -219,24 +220,25 @@ class Impl final : public VulkanText
                   m_instance(instance),
                   m_signal_semaphore(instance.device()),
                   m_sampler(impl::create_text_sampler(instance.device())),
-                  m_glyph_texture(instance.create_grayscale_texture(glyphs.width(), glyphs.height(), std::move(glyphs.pixels()))),
+                  m_glyph_texture(instance, instance.graphics_and_transfer_family_indices(), glyphs.width(), glyphs.height(),
+                                  std::move(glyphs.pixels())),
                   m_glyphs(std::move(glyphs.glyphs())),
-                  m_shader_memory(instance.device(), m_sampler, &m_glyph_texture),
+                  m_shader_memory(instance.device(), m_instance.graphics_family_indices(), m_sampler, &m_glyph_texture),
                   m_text_vert(m_instance.device(), vertex_shader, "main"),
                   m_text_frag(m_instance.device(), fragment_shader, "main"),
                   m_pipeline_layout(vulkan::create_pipeline_layout(m_instance.device(), {m_shader_memory.set_number()},
                                                                    {m_shader_memory.descriptor_set_layout()})),
-                  m_vertex_buffer(std::in_place, m_instance.device(), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-                                  VERTEX_BUFFER_FIRST_SIZE),
-                  m_indirect_buffer(m_instance.device(), VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT, sizeof(VkDrawIndirectCommand))
+                  m_vertex_buffer(std::in_place, m_instance.device(), m_instance.graphics_family_indices(),
+                                  VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VERTEX_BUFFER_FIRST_SIZE),
+                  m_indirect_buffer(m_instance.device(), m_instance.graphics_family_indices(),
+                                    VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT, sizeof(VkDrawIndirectCommand))
         {
                 set_color(color);
         }
 
 public:
         Impl(const vulkan::VulkanInstance& instance, bool sample_shading, int size, const Color& color)
-                : Impl(instance, sample_shading, color,
-                       Glyphs(size, instance.physical_device().properties().limits.maxImageDimension2D))
+                : Impl(instance, sample_shading, color, Glyphs(size, instance.limits().maxImageDimension2D))
         {
         }
 

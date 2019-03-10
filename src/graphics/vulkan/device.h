@@ -36,11 +36,10 @@ enum class PhysicalDeviceFeatures
         vertexPipelineStoresAndAtomics
 };
 
-class PhysicalDevice
+class PhysicalDevice final
 {
         VkPhysicalDevice m_physical_device;
-        // family_indices
-        uint32_t m_graphics, m_compute, m_transfer, m_presentation;
+        uint32_t m_graphics, m_compute, m_transfer, m_presentation; // family indices
         VkPhysicalDeviceFeatures m_features;
         VkPhysicalDeviceProperties m_properties;
 

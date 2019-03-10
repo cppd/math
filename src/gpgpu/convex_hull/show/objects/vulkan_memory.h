@@ -48,7 +48,7 @@ class ShaderMemory final
         size_t m_data_buffer_index;
 
 public:
-        ShaderMemory(const vulkan::Device& device);
+        ShaderMemory(const vulkan::Device& device, const std::vector<uint32_t>& family_indices);
 
         ShaderMemory(const ShaderMemory&) = delete;
         ShaderMemory& operator=(const ShaderMemory&) = delete;

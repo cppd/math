@@ -61,7 +61,8 @@ class TextMemory final
         void copy_to_drawing_buffer(VkDeviceSize offset, const T& data) const;
 
 public:
-        TextMemory(const vulkan::Device& device, VkSampler sampler, const vulkan::GrayscaleTexture* texture);
+        TextMemory(const vulkan::Device& device, const std::vector<uint32_t>& family_indices, VkSampler sampler,
+                   const vulkan::GrayscaleTexture* texture);
 
         TextMemory(const TextMemory&) = delete;
         TextMemory& operator=(const TextMemory&) = delete;

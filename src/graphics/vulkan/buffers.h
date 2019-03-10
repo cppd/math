@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "instance.h"
 #include "objects.h"
 
 #include "com/container.h"
@@ -34,11 +35,13 @@ class BufferWithHostVisibleMemory final
         void copy_from(VkDeviceSize offset, void* data, VkDeviceSize data_size) const;
 
 public:
-        BufferWithHostVisibleMemory(const Device& device, VkBufferUsageFlags usage, VkDeviceSize data_size);
+        BufferWithHostVisibleMemory(const Device& device, const std::vector<uint32_t>& family_indices, VkBufferUsageFlags usage,
+                                    VkDeviceSize data_size);
 
         template <typename T, typename = std::enable_if_t<sizeof(std::declval<T>().size()) && sizeof(std::declval<T>().data())>>
-        explicit BufferWithHostVisibleMemory(const Device& device, VkBufferUsageFlags usage, const T& data)
-                : BufferWithHostVisibleMemory(device, usage, storage_size(data))
+        explicit BufferWithHostVisibleMemory(const Device& device, const std::vector<uint32_t>& family_indices,
+                                             VkBufferUsageFlags usage, const T& data)
+                : BufferWithHostVisibleMemory(device, family_indices, usage, storage_size(data))
         {
                 write(data);
         }
@@ -104,11 +107,19 @@ class BufferWithDeviceLocalMemory final
         Buffer m_buffer;
         DeviceMemory m_device_memory;
 
-public:
-        BufferWithDeviceLocalMemory(const Device& device, VkBufferUsageFlags usage, VkDeviceSize data_size);
+        BufferWithDeviceLocalMemory(const VulkanInstance& instance, const std::vector<uint32_t>& family_indices,
+                                    VkBufferUsageFlags usage, VkDeviceSize data_size, const void* data);
 
-        BufferWithDeviceLocalMemory(const Device& device, VkBufferUsageFlags usage, VkCommandPool command_pool, VkQueue queue,
-                                    const std::vector<uint32_t>& family_indices, VkDeviceSize data_size, const void* data);
+public:
+        BufferWithDeviceLocalMemory(const VulkanInstance& instance, const std::vector<uint32_t>& family_indices,
+                                    VkBufferUsageFlags usage, VkDeviceSize data_size);
+
+        template <typename T, typename = std::enable_if_t<sizeof(std::declval<T>().size()) && sizeof(std::declval<T>().data())>>
+        explicit BufferWithDeviceLocalMemory(const VulkanInstance& instance, const std::vector<uint32_t>& family_indices,
+                                             VkBufferUsageFlags usage, const T& data)
+                : BufferWithDeviceLocalMemory(instance, family_indices, usage, storage_size(data), data.data())
+        {
+        }
 
         BufferWithDeviceLocalMemory(const BufferWithDeviceLocalMemory&) = delete;
         BufferWithDeviceLocalMemory& operator=(const BufferWithDeviceLocalMemory&) = delete;
@@ -133,9 +144,8 @@ class ColorTexture final
         ImageView m_image_view;
 
 public:
-        ColorTexture(const Device& device, VkCommandPool graphics_command_pool, VkQueue graphics_queue,
-                     VkCommandPool transfer_command_pool, VkQueue transfer_queue, const std::vector<uint32_t>& family_indices,
-                     uint32_t width, uint32_t height, const Span<const std::uint_least8_t>& srgb_uint8_rgba_pixels);
+        ColorTexture(const VulkanInstance& instance, const std::vector<uint32_t>& family_indices, uint32_t width, uint32_t height,
+                     const Span<const std::uint_least8_t>& srgb_uint8_rgba_pixels);
 
         ColorTexture(const ColorTexture&) = delete;
         ColorTexture& operator=(const ColorTexture&) = delete;
@@ -161,9 +171,8 @@ class GrayscaleTexture final
         ImageView m_image_view;
 
 public:
-        GrayscaleTexture(const Device& device, VkCommandPool graphics_command_pool, VkQueue graphics_queue,
-                         VkCommandPool transfer_command_pool, VkQueue transfer_queue, const std::vector<uint32_t>& family_indices,
-                         uint32_t width, uint32_t height, const Span<const std::uint_least8_t>& srgb_uint8_grayscale_pixels);
+        GrayscaleTexture(const VulkanInstance& instance, const std::vector<uint32_t>& family_indices, uint32_t width,
+                         uint32_t height, const Span<const std::uint_least8_t>& srgb_uint8_grayscale_pixels);
 
         GrayscaleTexture(const GrayscaleTexture&) = delete;
         GrayscaleTexture& operator=(const GrayscaleTexture&) = delete;
@@ -190,9 +199,8 @@ class DepthAttachment final
         unsigned m_width, m_height;
 
 public:
-        DepthAttachment(const Device& device, VkCommandPool graphics_command_pool, VkQueue graphics_queue,
-                        const std::vector<uint32_t>& family_indices, const std::vector<VkFormat>& formats,
-                        VkSampleCountFlagBits samples, uint32_t width, uint32_t height);
+        DepthAttachment(const VulkanInstance& instance, const std::vector<uint32_t>& family_indices,
+                        const std::vector<VkFormat>& formats, VkSampleCountFlagBits samples, uint32_t width, uint32_t height);
 
         DepthAttachment(const DepthAttachment&) = delete;
         DepthAttachment& operator=(const DepthAttachment&) = delete;
@@ -222,9 +230,8 @@ class ColorAttachment final
         VkSampleCountFlagBits m_sample_count;
 
 public:
-        ColorAttachment(const Device& device, VkCommandPool graphics_command_pool, VkQueue graphics_queue,
-                        const std::vector<uint32_t>& family_indices, VkFormat format, VkSampleCountFlagBits samples,
-                        uint32_t width, uint32_t height);
+        ColorAttachment(const VulkanInstance& instance, const std::vector<uint32_t>& family_indices, VkFormat format,
+                        VkSampleCountFlagBits samples, uint32_t width, uint32_t height);
 
         ColorAttachment(const ColorAttachment&) = delete;
         ColorAttachment& operator=(const ColorAttachment&) = delete;
@@ -252,9 +259,8 @@ class ShadowDepthAttachment final
         unsigned m_width, m_height;
 
 public:
-        ShadowDepthAttachment(const Device& device, VkCommandPool graphics_command_pool, VkQueue graphics_queue,
-                              const std::vector<uint32_t>& family_indices, const std::vector<VkFormat>& formats, uint32_t width,
-                              uint32_t height);
+        ShadowDepthAttachment(const VulkanInstance& instance, const std::vector<uint32_t>& family_indices,
+                              const std::vector<VkFormat>& formats, uint32_t width, uint32_t height);
 
         ShadowDepthAttachment(const ShadowDepthAttachment&) = delete;
         ShadowDepthAttachment& operator=(const ShadowDepthAttachment&) = delete;
@@ -284,8 +290,8 @@ class StorageImage final
         unsigned m_width, m_height;
 
 public:
-        StorageImage(const Device& device, VkCommandPool graphics_command_pool, VkQueue graphics_queue,
-                     const std::vector<uint32_t>& family_indices, VkFormat format, uint32_t width, uint32_t height);
+        StorageImage(const VulkanInstance& instance, const std::vector<uint32_t>& family_indices, VkFormat format, uint32_t width,
+                     uint32_t height);
 
         StorageImage(const StorageImage&) = delete;
         StorageImage& operator=(const StorageImage&) = delete;
@@ -308,5 +314,4 @@ public:
 
         void clear_commands(VkCommandBuffer command_buffer) const;
 };
-
 }
