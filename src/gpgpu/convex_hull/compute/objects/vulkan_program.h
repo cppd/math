@@ -47,7 +47,7 @@ public:
         ProgramPrepare(ProgramPrepare&&) = default;
         ~ProgramPrepare() = default;
 
-        void create_buffers(const vulkan::StorageImage& objects, const vulkan::BufferWithHostVisibleMemory& lines_buffer);
+        void create_buffers(const vulkan::StorageImage& objects, const vulkan::BufferWithMemory& lines_buffer);
         void delete_buffers();
         void commands(VkCommandBuffer command_buffer) const;
 };
@@ -72,7 +72,7 @@ public:
         ProgramMerge(ProgramMerge&&) = default;
         ~ProgramMerge() = default;
 
-        void create_buffers(const vulkan::StorageImage& objects, const vulkan::BufferWithHostVisibleMemory& lines_buffer);
+        void create_buffers(const vulkan::StorageImage& objects, const vulkan::BufferWithMemory& lines_buffer);
         void delete_buffers();
         void commands(VkCommandBuffer command_buffer) const;
 };
@@ -97,9 +97,8 @@ public:
         ProgramFilter(ProgramFilter&&) = default;
         ~ProgramFilter() = default;
 
-        void create_buffers(const vulkan::StorageImage& objects, const vulkan::BufferWithHostVisibleMemory& lines_buffer,
-                            const vulkan::BufferWithHostVisibleMemory& points_buffer,
-                            const vulkan::BufferWithHostVisibleMemory& point_count_buffer);
+        void create_buffers(const vulkan::StorageImage& objects, const vulkan::BufferWithMemory& lines_buffer,
+                            const vulkan::BufferWithMemory& points_buffer, const vulkan::BufferWithMemory& point_count_buffer);
         void delete_buffers();
         void commands(VkCommandBuffer command_buffer) const;
 };

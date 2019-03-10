@@ -96,7 +96,7 @@ void ShaderMemory::set_brightness(float brightness) const
         m_uniform_buffers[m_data_buffer_index].write(offsetof(Data, brightness), b);
 }
 
-void ShaderMemory::set_points(const vulkan::BufferWithHostVisibleMemory& buffer) const
+void ShaderMemory::set_points(const vulkan::BufferWithMemory& buffer) const
 {
         ASSERT(buffer.usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 

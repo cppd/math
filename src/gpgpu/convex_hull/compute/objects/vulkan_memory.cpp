@@ -80,7 +80,7 @@ void PrepareMemory::set_object_image(const vulkan::StorageImage& storage_image) 
         m_descriptors.update_descriptor_set(0, OBJECTS_BINDING, image_info);
 }
 
-void PrepareMemory::set_lines(const vulkan::BufferWithHostVisibleMemory& buffer) const
+void PrepareMemory::set_lines(const vulkan::BufferWithMemory& buffer) const
 {
         ASSERT(buffer.usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 
@@ -188,7 +188,7 @@ const VkDescriptorSet& MergeMemory::descriptor_set() const noexcept
         return m_descriptors.descriptor_set(0);
 }
 
-void MergeMemory::set_lines(const vulkan::BufferWithHostVisibleMemory& buffer) const
+void MergeMemory::set_lines(const vulkan::BufferWithMemory& buffer) const
 {
         ASSERT(buffer.usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 
@@ -318,7 +318,7 @@ const VkDescriptorSet& FilterMemory::descriptor_set() const noexcept
         return m_descriptors.descriptor_set(0);
 }
 
-void FilterMemory::set_lines(const vulkan::BufferWithHostVisibleMemory& buffer) const
+void FilterMemory::set_lines(const vulkan::BufferWithMemory& buffer) const
 {
         ASSERT(buffer.usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 
@@ -330,7 +330,7 @@ void FilterMemory::set_lines(const vulkan::BufferWithHostVisibleMemory& buffer) 
         m_descriptors.update_descriptor_set(0, LINES_BINDING, buffer_info);
 }
 
-void FilterMemory::set_points(const vulkan::BufferWithHostVisibleMemory& buffer) const
+void FilterMemory::set_points(const vulkan::BufferWithMemory& buffer) const
 {
         ASSERT(buffer.usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 
@@ -342,7 +342,7 @@ void FilterMemory::set_points(const vulkan::BufferWithHostVisibleMemory& buffer)
         m_descriptors.update_descriptor_set(0, POINTS_BINDING, buffer_info);
 }
 
-void FilterMemory::set_point_count(const vulkan::BufferWithHostVisibleMemory& buffer) const
+void FilterMemory::set_point_count(const vulkan::BufferWithMemory& buffer) const
 {
         ASSERT(buffer.usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 

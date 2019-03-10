@@ -26,13 +26,33 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace vulkan
 {
-class BufferWithHostVisibleMemory final
+class BufferWithMemory
+{
+protected:
+        BufferWithMemory() = default;
+        ~BufferWithMemory() = default;
+
+public:
+        BufferWithMemory(const BufferWithMemory&) = default;
+        BufferWithMemory& operator=(const BufferWithMemory&) = default;
+        BufferWithMemory(BufferWithMemory&&) = default;
+        BufferWithMemory& operator=(BufferWithMemory&&) = default;
+
+        virtual operator VkBuffer() const noexcept = 0;
+        virtual VkDeviceSize size() const noexcept = 0;
+        virtual bool usage(VkBufferUsageFlagBits flag) const noexcept = 0;
+};
+
+class BufferWithHostVisibleMemory final : public BufferWithMemory
 {
         Buffer m_buffer;
         DeviceMemory m_device_memory;
 
         void copy_to(VkDeviceSize offset, const void* data, VkDeviceSize data_size) const;
         void copy_from(VkDeviceSize offset, void* data, VkDeviceSize data_size) const;
+
+        BufferWithHostVisibleMemory(const Device& device, const std::vector<uint32_t>& family_indices, VkBufferUsageFlags usage,
+                                    VkDeviceSize data_size, const void* data);
 
 public:
         BufferWithHostVisibleMemory(const Device& device, const std::vector<uint32_t>& family_indices, VkBufferUsageFlags usage,
@@ -41,9 +61,8 @@ public:
         template <typename T, typename = std::enable_if_t<sizeof(std::declval<T>().size()) && sizeof(std::declval<T>().data())>>
         explicit BufferWithHostVisibleMemory(const Device& device, const std::vector<uint32_t>& family_indices,
                                              VkBufferUsageFlags usage, const T& data)
-                : BufferWithHostVisibleMemory(device, family_indices, usage, storage_size(data))
+                : BufferWithHostVisibleMemory(device, family_indices, usage, storage_size(data), data.data())
         {
-                write(data);
         }
 
         BufferWithHostVisibleMemory(const BufferWithHostVisibleMemory&) = delete;
@@ -55,9 +74,9 @@ public:
 
         //
 
-        operator VkBuffer() const noexcept;
-        VkDeviceSize size() const noexcept;
-        bool usage(VkBufferUsageFlagBits flag) const noexcept;
+        operator VkBuffer() const noexcept override;
+        VkDeviceSize size() const noexcept override;
+        bool usage(VkBufferUsageFlagBits flag) const noexcept override;
 
         //
 
@@ -102,7 +121,7 @@ public:
         }
 };
 
-class BufferWithDeviceLocalMemory final
+class BufferWithDeviceLocalMemory final : public BufferWithMemory
 {
         Buffer m_buffer;
         DeviceMemory m_device_memory;
@@ -130,9 +149,9 @@ public:
 
         //
 
-        operator VkBuffer() const noexcept;
-        VkDeviceSize size() const noexcept;
-        bool usage(VkBufferUsageFlagBits flag) const noexcept;
+        operator VkBuffer() const noexcept override;
+        VkDeviceSize size() const noexcept override;
+        bool usage(VkBufferUsageFlagBits flag) const noexcept override;
 };
 
 class ColorTexture final

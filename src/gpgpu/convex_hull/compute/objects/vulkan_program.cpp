@@ -65,7 +65,7 @@ ProgramPrepare::ProgramPrepare(const vulkan::VulkanInstance& instance)
 {
 }
 
-void ProgramPrepare::create_buffers(const vulkan::StorageImage& objects, const vulkan::BufferWithHostVisibleMemory& lines_buffer)
+void ProgramPrepare::create_buffers(const vulkan::StorageImage& objects, const vulkan::BufferWithMemory& lines_buffer)
 {
         m_height = objects.height();
 
@@ -110,7 +110,7 @@ ProgramMerge::ProgramMerge(const vulkan::VulkanInstance& instance)
 {
 }
 
-void ProgramMerge::create_buffers(const vulkan::StorageImage& objects, const vulkan::BufferWithHostVisibleMemory& lines_buffer)
+void ProgramMerge::create_buffers(const vulkan::StorageImage& objects, const vulkan::BufferWithMemory& lines_buffer)
 {
         m_memory.set_lines(lines_buffer);
 
@@ -150,9 +150,9 @@ ProgramFilter::ProgramFilter(const vulkan::VulkanInstance& instance)
 {
 }
 
-void ProgramFilter::create_buffers(const vulkan::StorageImage& objects, const vulkan::BufferWithHostVisibleMemory& lines_buffer,
-                                   const vulkan::BufferWithHostVisibleMemory& points_buffer,
-                                   const vulkan::BufferWithHostVisibleMemory& point_count_buffer)
+void ProgramFilter::create_buffers(const vulkan::StorageImage& objects, const vulkan::BufferWithMemory& lines_buffer,
+                                   const vulkan::BufferWithMemory& points_buffer,
+                                   const vulkan::BufferWithMemory& point_count_buffer)
 {
         m_memory.set_lines(lines_buffer);
         m_memory.set_points(points_buffer);

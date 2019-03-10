@@ -57,7 +57,7 @@ public:
         //
 
         void set_object_image(const vulkan::StorageImage& storage_image) const;
-        void set_lines(const vulkan::BufferWithHostVisibleMemory& buffer) const;
+        void set_lines(const vulkan::BufferWithMemory& buffer) const;
 };
 
 class PrepareConstant final : public vulkan::SpecializationConstant
@@ -113,7 +113,7 @@ public:
 
         //
 
-        void set_lines(const vulkan::BufferWithHostVisibleMemory& buffer) const;
+        void set_lines(const vulkan::BufferWithMemory& buffer) const;
 };
 
 class MergeConstant final : public vulkan::SpecializationConstant
@@ -172,9 +172,9 @@ public:
 
         //
 
-        void set_lines(const vulkan::BufferWithHostVisibleMemory& buffer) const;
-        void set_points(const vulkan::BufferWithHostVisibleMemory& buffer) const;
-        void set_point_count(const vulkan::BufferWithHostVisibleMemory& buffer) const;
+        void set_lines(const vulkan::BufferWithMemory& buffer) const;
+        void set_points(const vulkan::BufferWithMemory& buffer) const;
+        void set_point_count(const vulkan::BufferWithMemory& buffer) const;
 };
 
 class FilterConstant final : public vulkan::SpecializationConstant

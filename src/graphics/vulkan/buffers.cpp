@@ -529,6 +529,15 @@ BufferWithHostVisibleMemory::BufferWithHostVisibleMemory(const Device& device, c
 {
 }
 
+BufferWithHostVisibleMemory::BufferWithHostVisibleMemory(const Device& device, const std::vector<uint32_t>& family_indices,
+                                                         VkBufferUsageFlags usage, VkDeviceSize data_size, const void* data)
+        : BufferWithHostVisibleMemory(device, family_indices, usage, data_size)
+{
+        ASSERT(data_size > 0 && data);
+
+        copy_to(0, data, data_size);
+}
+
 BufferWithHostVisibleMemory::operator VkBuffer() const noexcept
 {
         return m_buffer;

@@ -58,7 +58,7 @@ class Impl final : public gpgpu_vulkan::ConvexHullCompute
 
         const vulkan::VulkanInstance& m_instance;
 
-        std::optional<vulkan::BufferWithHostVisibleMemory> m_lines_buffer;
+        std::optional<vulkan::BufferWithDeviceLocalMemory> m_lines_buffer;
         VkBuffer m_points_buffer = VK_NULL_HANDLE;
         VkBuffer m_point_count_buffer = VK_NULL_HANDLE;
 
@@ -87,8 +87,8 @@ class Impl final : public gpgpu_vulkan::ConvexHullCompute
                                VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT);
         }
 
-        void create_buffers(const vulkan::StorageImage& objects, const vulkan::BufferWithHostVisibleMemory& points_buffer,
-                            const vulkan::BufferWithHostVisibleMemory& point_count_buffer) override
+        void create_buffers(const vulkan::StorageImage& objects, const vulkan::BufferWithMemory& points_buffer,
+                            const vulkan::BufferWithMemory& point_count_buffer) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
@@ -97,8 +97,8 @@ class Impl final : public gpgpu_vulkan::ConvexHullCompute
                 ASSERT(points_buffer.size() == (2 * objects.height() + 1) * (2 * sizeof(int32_t)));
                 ASSERT(point_count_buffer.size() >= sizeof(int32_t));
 
-                m_lines_buffer.emplace(m_instance.device(), m_instance.compute_family_indices(),
-                                       VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, 2 * objects.height() * sizeof(int32_t));
+                m_lines_buffer.emplace(m_instance, m_instance.compute_family_indices(), VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+                                       2 * objects.height() * sizeof(int32_t));
                 m_points_buffer = points_buffer;
                 m_point_count_buffer = point_count_buffer;
 
