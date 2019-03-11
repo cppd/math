@@ -39,14 +39,15 @@ enum class PhysicalDeviceFeatures
 class PhysicalDevice final
 {
         VkPhysicalDevice m_physical_device;
-        uint32_t m_graphics, m_compute, m_transfer, m_presentation; // family indices
+        uint32_t m_graphics_family_index, m_compute_family_index, m_transfer_family_index, m_presentation_family_index;
         VkPhysicalDeviceFeatures m_features;
         VkPhysicalDeviceProperties m_properties;
+        std::vector<VkQueueFamilyProperties> m_families;
 
 public:
         PhysicalDevice(VkPhysicalDevice physical_device, uint32_t graphics, uint32_t compute, uint32_t transfer,
                        uint32_t presentation, const VkPhysicalDeviceFeatures& features,
-                       const VkPhysicalDeviceProperties& properties);
+                       const VkPhysicalDeviceProperties& properties, const std::vector<VkQueueFamilyProperties>& families);
 
         operator VkPhysicalDevice() const noexcept;
 
@@ -57,6 +58,7 @@ public:
 
         const VkPhysicalDeviceFeatures& features() const noexcept;
         const VkPhysicalDeviceProperties& properties() const noexcept;
+        const std::vector<VkQueueFamilyProperties>& families() const noexcept;
 };
 
 std::vector<VkPhysicalDevice> physical_devices(VkInstance instance);

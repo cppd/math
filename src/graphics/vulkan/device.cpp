@@ -147,14 +147,15 @@ namespace vulkan
 {
 PhysicalDevice::PhysicalDevice(VkPhysicalDevice physical_device, uint32_t graphics, uint32_t compute, uint32_t transfer,
                                uint32_t presentation, const VkPhysicalDeviceFeatures& features,
-                               const VkPhysicalDeviceProperties& properties)
+                               const VkPhysicalDeviceProperties& properties, const std::vector<VkQueueFamilyProperties>& families)
         : m_physical_device(physical_device),
-          m_graphics(graphics),
-          m_compute(compute),
-          m_transfer(transfer),
-          m_presentation(presentation),
+          m_graphics_family_index(graphics),
+          m_compute_family_index(compute),
+          m_transfer_family_index(transfer),
+          m_presentation_family_index(presentation),
           m_features(features),
-          m_properties(properties)
+          m_properties(properties),
+          m_families(families)
 {
 }
 PhysicalDevice::operator VkPhysicalDevice() const noexcept
@@ -163,19 +164,19 @@ PhysicalDevice::operator VkPhysicalDevice() const noexcept
 }
 uint32_t PhysicalDevice::graphics() const noexcept
 {
-        return m_graphics;
+        return m_graphics_family_index;
 }
 uint32_t PhysicalDevice::compute() const noexcept
 {
-        return m_compute;
+        return m_compute_family_index;
 }
 uint32_t PhysicalDevice::transfer() const noexcept
 {
-        return m_transfer;
+        return m_transfer_family_index;
 }
 uint32_t PhysicalDevice::presentation() const noexcept
 {
-        return m_presentation;
+        return m_presentation_family_index;
 }
 const VkPhysicalDeviceFeatures& PhysicalDevice::features() const noexcept
 {
@@ -184,6 +185,10 @@ const VkPhysicalDeviceFeatures& PhysicalDevice::features() const noexcept
 const VkPhysicalDeviceProperties& PhysicalDevice::properties() const noexcept
 {
         return m_properties;
+}
+const std::vector<VkQueueFamilyProperties>& PhysicalDevice::families() const noexcept
+{
+        return m_families;
 }
 
 std::vector<VkPhysicalDevice> physical_devices(VkInstance instance)
@@ -422,7 +427,7 @@ PhysicalDevice find_physical_device(VkInstance instance, VkSurfaceKHR surface, i
                         continue;
                 }
 
-                return PhysicalDevice(physical_device, graphics, compute, transfer, presentation, features, properties);
+                return PhysicalDevice(physical_device, graphics, compute, transfer, presentation, features, properties, families);
         }
 
         error("Failed to find a suitable Vulkan physical device");
