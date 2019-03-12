@@ -42,33 +42,29 @@ VulkanInstance::VulkanInstance(const std::vector<std::string>& required_instance
                                                  required_features)),
           m_device(create_device(
                   m_physical_device,
-                  {m_physical_device.graphics(), m_physical_device.compute(), m_physical_device.transfer(),
-                   m_physical_device.presentation()},
+                  {m_physical_device.graphics_and_compute(), m_physical_device.transfer(), m_physical_device.presentation()},
                   merge<std::string>(required_device_extensions, VK_KHR_SWAPCHAIN_EXTENSION_NAME), validation_layers(),
                   make_enabled_device_features(required_features, optional_features, m_physical_device.features()))),
           //
-          m_graphics_command_pool(create_command_pool(m_device, m_physical_device.graphics())),
-          m_graphics_queue(device_queue(m_device, m_physical_device.graphics(), 0 /*queue_index*/)),
+          m_graphics_command_pool(create_command_pool(m_device, m_physical_device.graphics_and_compute())),
+          m_graphics_queue(m_device.queue(m_physical_device.graphics_and_compute(), 0 /*queue_index*/)),
           //
           // m_compute_command_pool(create_command_pool(m_device, m_physical_device.compute())),
-          // m_compute_queue(device_queue(m_device, m_physical_device.compute(), 0 /*queue_index*/)),
+          // m_compute_queue(m_device.queue(m_physical_device.compute(), 0 /*queue_index*/)),
           //
           m_transfer_command_pool(create_transient_command_pool(m_device, m_physical_device.transfer())),
-          m_transfer_queue(device_queue(m_device, m_physical_device.transfer(), 0 /*queue_index*/)),
+          m_transfer_queue(m_device.queue(m_physical_device.transfer(), 0 /*queue_index*/)),
           //
-          m_presentation_queue(device_queue(m_device, m_physical_device.presentation(), 0 /*queue_index*/)),
+          m_presentation_queue(m_device.queue(m_physical_device.presentation(), 0 /*queue_index*/)),
           //
           m_graphics_and_presentation_family_indices(
-                  unique_elements(std::vector({m_physical_device.graphics(), m_physical_device.presentation()}))),
+                  unique_elements(std::vector({m_physical_device.graphics_and_compute(), m_physical_device.presentation()}))),
           m_graphics_and_transfer_family_indices(
-                  unique_elements(std::vector({m_physical_device.graphics(), m_physical_device.transfer()}))),
-          m_graphics_and_compute_family_indices(
-                  unique_elements(std::vector({m_physical_device.graphics(), m_physical_device.compute()}))),
-          m_graphics_family_indices(unique_elements(std::vector({m_physical_device.graphics()}))),
-          m_compute_family_indices(unique_elements(std::vector({m_physical_device.compute()}))),
-          m_graphics_family_index(m_physical_device.graphics()),
-          m_transfer_family_index(m_physical_device.transfer()),
-          m_compute_family_index(m_physical_device.compute())
+                  unique_elements(std::vector({m_physical_device.graphics_and_compute(), m_physical_device.transfer()}))),
+          m_graphics_and_compute_family_indices(unique_elements(std::vector({m_physical_device.graphics_and_compute()}))),
+          m_graphics_family_indices(unique_elements(std::vector({m_physical_device.graphics_and_compute()}))),
+          m_graphics_family_index(m_physical_device.graphics_and_compute()),
+          m_transfer_family_index(m_physical_device.transfer())
 {
 }
 

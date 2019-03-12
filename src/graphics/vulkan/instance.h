@@ -53,10 +53,8 @@ class VulkanInstance final
         const std::vector<uint32_t> m_graphics_and_transfer_family_indices;
         const std::vector<uint32_t> m_graphics_and_compute_family_indices;
         const std::vector<uint32_t> m_graphics_family_indices;
-        const std::vector<uint32_t> m_compute_family_indices;
         const uint32_t m_graphics_family_index;
         const uint32_t m_transfer_family_index;
-        const uint32_t m_compute_family_index;
 
 public:
         VulkanInstance(const std::vector<std::string>& required_instance_extensions,
@@ -149,11 +147,6 @@ public:
                 return m_graphics_family_indices;
         }
 
-        const std::vector<uint32_t>& compute_family_indices() const noexcept
-        {
-                return m_compute_family_indices;
-        }
-
         uint32_t graphics_family_index() const noexcept
         {
                 return m_graphics_family_index;
@@ -162,11 +155,6 @@ public:
         uint32_t transfer_family_index() const noexcept
         {
                 return m_transfer_family_index;
-        }
-
-        uint32_t compute_family_index() const noexcept
-        {
-                return m_compute_family_index;
         }
 };
 }

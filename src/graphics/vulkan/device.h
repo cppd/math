@@ -39,19 +39,24 @@ enum class PhysicalDeviceFeatures
 class PhysicalDevice final
 {
         VkPhysicalDevice m_physical_device;
-        uint32_t m_graphics_family_index, m_compute_family_index, m_transfer_family_index, m_presentation_family_index;
+        uint32_t m_graphics_family_index;
+        uint32_t m_graphics_and_compute_family_index;
+        uint32_t m_compute_family_index;
+        uint32_t m_transfer_family_index;
+        uint32_t m_presentation_family_index;
         VkPhysicalDeviceFeatures m_features;
         VkPhysicalDeviceProperties m_properties;
         std::vector<VkQueueFamilyProperties> m_families;
 
 public:
-        PhysicalDevice(VkPhysicalDevice physical_device, uint32_t graphics, uint32_t compute, uint32_t transfer,
-                       uint32_t presentation, const VkPhysicalDeviceFeatures& features,
+        PhysicalDevice(VkPhysicalDevice physical_device, uint32_t graphics, uint32_t graphics_and_compute, uint32_t compute,
+                       uint32_t transfer, uint32_t presentation, const VkPhysicalDeviceFeatures& features,
                        const VkPhysicalDeviceProperties& properties, const std::vector<VkQueueFamilyProperties>& families);
 
         operator VkPhysicalDevice() const noexcept;
 
         uint32_t graphics() const noexcept;
+        uint32_t graphics_and_compute() const noexcept;
         uint32_t compute() const noexcept;
         uint32_t transfer() const noexcept;
         uint32_t presentation() const noexcept;
@@ -77,6 +82,4 @@ Device create_device(VkPhysicalDevice physical_device, const std::vector<uint32_
                      const std::vector<std::string>& required_extensions,
                      const std::vector<std::string>& required_validation_layers,
                      const VkPhysicalDeviceFeatures& enabled_features);
-
-VkQueue device_queue(VkDevice device, uint32_t queue_family_index, uint32_t queue_index);
 }

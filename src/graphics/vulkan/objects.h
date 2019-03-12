@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/span.h"
 
 #include <functional>
+#include <unordered_map>
 #include <vector>
 #include <vulkan/vulkan.h>
 
@@ -68,31 +69,55 @@ public:
         operator VkDebugReportCallbackEXT() const noexcept;
 };
 
-class Device final
+class DeviceHandle final
 {
-        VkPhysicalDevice m_physical_device = VK_NULL_HANDLE;
         VkDevice m_device = VK_NULL_HANDLE;
-        VkPhysicalDeviceFeatures m_features = {};
 
         void destroy() noexcept;
-        void move(Device* from) noexcept;
+        void move(DeviceHandle* from) noexcept;
 
 public:
-        Device();
-        Device(VkPhysicalDevice physical_device, const VkDeviceCreateInfo& create_info);
-        ~Device();
+        DeviceHandle();
+        DeviceHandle(VkPhysicalDevice physical_device, const VkDeviceCreateInfo& create_info);
+        ~DeviceHandle();
 
-        Device(const Device&) = delete;
-        Device& operator=(const Device&) = delete;
+        DeviceHandle(const DeviceHandle&) = delete;
+        DeviceHandle& operator=(const DeviceHandle&) = delete;
 
-        Device(Device&&) noexcept;
-        Device& operator=(Device&&) noexcept;
+        DeviceHandle(DeviceHandle&&) noexcept;
+        DeviceHandle& operator=(DeviceHandle&&) noexcept;
 
         operator VkDevice() const noexcept;
+};
 
-        VkPhysicalDevice physical_device() const noexcept;
+class Device final
+{
+        DeviceHandle m_device;
+        VkPhysicalDevice m_physical_device = VK_NULL_HANDLE;
+        VkPhysicalDeviceFeatures m_features = {};
+        std::unordered_map<uint32_t, std::vector<VkQueue>> m_queues;
 
-        const VkPhysicalDeviceFeatures& features() const noexcept;
+public:
+        Device() = default;
+
+        Device(VkPhysicalDevice physical_device, const VkDeviceCreateInfo& create_info);
+
+        operator VkDevice() const noexcept
+        {
+                return m_device;
+        }
+
+        VkPhysicalDevice physical_device() const noexcept
+        {
+                return m_physical_device;
+        }
+
+        const VkPhysicalDeviceFeatures& features() const noexcept
+        {
+                return m_features;
+        }
+
+        VkQueue queue(uint32_t family_index, uint32_t queue_index) const;
 };
 
 class SurfaceKHR final

@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/alg.h"
 #include "com/error.h"
 #include "com/log.h"
+#include "com/print.h"
 #include "com/string/vector.h"
 
 #include <algorithm>
@@ -145,11 +146,13 @@ bool physical_device_features_are_supported(const std::vector<vulkan::PhysicalDe
 
 namespace vulkan
 {
-PhysicalDevice::PhysicalDevice(VkPhysicalDevice physical_device, uint32_t graphics, uint32_t compute, uint32_t transfer,
-                               uint32_t presentation, const VkPhysicalDeviceFeatures& features,
-                               const VkPhysicalDeviceProperties& properties, const std::vector<VkQueueFamilyProperties>& families)
+PhysicalDevice::PhysicalDevice(VkPhysicalDevice physical_device, uint32_t graphics, uint32_t graphics_and_compute,
+                               uint32_t compute, uint32_t transfer, uint32_t presentation,
+                               const VkPhysicalDeviceFeatures& features, const VkPhysicalDeviceProperties& properties,
+                               const std::vector<VkQueueFamilyProperties>& families)
         : m_physical_device(physical_device),
           m_graphics_family_index(graphics),
+          m_graphics_and_compute_family_index(graphics_and_compute),
           m_compute_family_index(compute),
           m_transfer_family_index(transfer),
           m_presentation_family_index(presentation),
@@ -165,6 +168,10 @@ PhysicalDevice::operator VkPhysicalDevice() const noexcept
 uint32_t PhysicalDevice::graphics() const noexcept
 {
         return m_graphics_family_index;
+}
+uint32_t PhysicalDevice::graphics_and_compute() const noexcept
+{
+        return m_graphics_and_compute_family_index;
 }
 uint32_t PhysicalDevice::compute() const noexcept
 {
@@ -405,15 +412,34 @@ PhysicalDevice find_physical_device(VkInstance instance, VkSurfaceKHR surface, i
                 }
 
                 const std::vector<VkQueueFamilyProperties> families = physical_device_queue_families(physical_device);
-                uint32_t graphics, compute, transfer, presentation;
-                if (!find_family(families, VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT, 0, &graphics))
+
+                uint32_t graphics;
+                uint32_t graphics_and_compute;
+                uint32_t compute;
+                uint32_t transfer;
+                uint32_t presentation;
+
+                if (!find_family(families, VK_QUEUE_GRAPHICS_BIT, VK_QUEUE_COMPUTE_BIT, &graphics))
+                {
+                        if (!find_family(families, VK_QUEUE_GRAPHICS_BIT, 0, &graphics))
+                        {
+                                continue;
+                        }
+                }
+
+                if (!find_family(families, VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT, 0, &graphics_and_compute))
                 {
                         continue;
                 }
-                if (!find_family(families, VK_QUEUE_COMPUTE_BIT, 0, &compute))
+
+                if (!find_family(families, VK_QUEUE_COMPUTE_BIT, VK_QUEUE_GRAPHICS_BIT, &compute))
                 {
-                        continue;
+                        if (!find_family(families, VK_QUEUE_COMPUTE_BIT, 0, &compute))
+                        {
+                                continue;
+                        }
                 }
+
                 if (!find_family(families, VK_QUEUE_TRANSFER_BIT, VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT, &transfer))
                 {
                         // Наличие VK_QUEUE_GRAPHICS_BIT или VK_QUEUE_COMPUTE_BIT означает VK_QUEUE_TRANSFER_BIT
@@ -422,12 +448,27 @@ PhysicalDevice find_physical_device(VkInstance instance, VkSurfaceKHR surface, i
                                 continue;
                         }
                 }
+
                 if (!find_presentation_family(surface, physical_device, families, &presentation))
                 {
                         continue;
                 }
 
-                return PhysicalDevice(physical_device, graphics, compute, transfer, presentation, features, properties, families);
+                std::string s;
+                s += "Graphics: family index = " + to_string(graphics) +
+                     ", queue count = " + to_string(families[graphics].queueCount) + "\n";
+                s += "Graphics and compute: family index = " + to_string(graphics_and_compute) +
+                     ", queue count = " + to_string(families[graphics_and_compute].queueCount) + "\n";
+                s += "Compute: family index = " + to_string(compute) +
+                     ", queue count = " + to_string(families[compute].queueCount) + "\n";
+                s += "Transfer: family index = " + to_string(transfer) +
+                     ", queue count = " + to_string(families[transfer].queueCount) + "\n";
+                s += "Presentation: family index = " + to_string(presentation) +
+                     ", queue count = " + to_string(families[presentation].queueCount);
+                LOG(s);
+
+                return PhysicalDevice(physical_device, graphics, graphics_and_compute, compute, transfer, presentation, features,
+                                      properties, families);
         }
 
         error("Failed to find a suitable Vulkan physical device");
@@ -476,13 +517,5 @@ Device create_device(VkPhysicalDevice physical_device, const std::vector<uint32_
         }
 
         return Device(physical_device, create_info);
-}
-
-VkQueue device_queue(VkDevice device, uint32_t queue_family_index, uint32_t queue_index)
-{
-        VkQueue queue;
-        vkGetDeviceQueue(device, queue_family_index, queue_index, &queue);
-        ASSERT(queue != VK_NULL_HANDLE);
-        return queue;
 }
 }

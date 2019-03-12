@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "error.h"
 
 #include "com/error.h"
+#include "com/print.h"
 #include "com/type/limit.h"
 
 #include <algorithm>
@@ -140,29 +141,23 @@ DebugReportCallback::operator VkDebugReportCallbackEXT() const noexcept
 
 //
 
-void Device::destroy() noexcept
+void DeviceHandle::destroy() noexcept
 {
         if (m_device != VK_NULL_HANDLE)
         {
-                ASSERT(m_physical_device != VK_NULL_HANDLE);
-
                 vkDestroyDevice(m_device, nullptr);
         }
 }
 
-void Device::move(Device* from) noexcept
+void DeviceHandle::move(DeviceHandle* from) noexcept
 {
-        m_physical_device = from->m_physical_device;
         m_device = from->m_device;
-        m_features = from->m_features;
-        from->m_physical_device = VK_NULL_HANDLE;
         from->m_device = VK_NULL_HANDLE;
-        from->m_features = {};
 }
 
-Device::Device() = default;
+DeviceHandle::DeviceHandle() = default;
 
-Device::Device(VkPhysicalDevice physical_device, const VkDeviceCreateInfo& create_info)
+DeviceHandle::DeviceHandle(VkPhysicalDevice physical_device, const VkDeviceCreateInfo& create_info)
 {
         VkResult result = vkCreateDevice(physical_device, &create_info, nullptr, &m_device);
         if (result != VK_SUCCESS)
@@ -171,22 +166,19 @@ Device::Device(VkPhysicalDevice physical_device, const VkDeviceCreateInfo& creat
         }
 
         ASSERT(m_device != VK_NULL_HANDLE);
-
-        m_physical_device = physical_device;
-        m_features = *create_info.pEnabledFeatures;
 }
 
-Device::~Device()
+DeviceHandle::~DeviceHandle()
 {
         destroy();
 }
 
-Device::Device(Device&& from) noexcept
+DeviceHandle::DeviceHandle(DeviceHandle&& from) noexcept
 {
         move(&from);
 }
 
-Device& Device::operator=(Device&& from) noexcept
+DeviceHandle& DeviceHandle::operator=(DeviceHandle&& from) noexcept
 {
         if (this != &from)
         {
@@ -196,19 +188,50 @@ Device& Device::operator=(Device&& from) noexcept
         return *this;
 }
 
-Device::operator VkDevice() const noexcept
+DeviceHandle::operator VkDevice() const noexcept
 {
         return m_device;
 }
 
-VkPhysicalDevice Device::physical_device() const noexcept
+//
+
+Device::Device(VkPhysicalDevice physical_device, const VkDeviceCreateInfo& create_info)
+        : m_device(physical_device, create_info), m_physical_device(physical_device), m_features(*create_info.pEnabledFeatures)
 {
-        return m_physical_device;
+        for (unsigned i = 0; i < create_info.queueCreateInfoCount; ++i)
+        {
+                uint32_t family_index = create_info.pQueueCreateInfos[i].queueFamilyIndex;
+                uint32_t queue_count = create_info.pQueueCreateInfos[i].queueCount;
+                auto [iter, inserted] = m_queues.try_emplace(family_index);
+                if (!inserted)
+                {
+                        error("Non unique device queue family indices");
+                }
+                for (uint32_t queue_index = 0; queue_index < queue_count; ++queue_index)
+                {
+                        VkQueue queue;
+                        vkGetDeviceQueue(m_device, family_index, queue_index, &queue);
+                        if (queue == VK_NULL_HANDLE)
+                        {
+                                error("Null queue handle");
+                        }
+                        iter->second.push_back(queue);
+                }
+        }
 }
 
-const VkPhysicalDeviceFeatures& Device::features() const noexcept
+VkQueue Device::queue(uint32_t family_index, uint32_t queue_index) const
 {
-        return m_features;
+        const auto iter = m_queues.find(family_index);
+        if (iter == m_queues.cend())
+        {
+                error("Queue family index " + to_string(family_index) + " not found");
+        }
+        if (queue_index >= iter->second.size())
+        {
+                error("Queue " + to_string(queue_index) + " not found");
+        }
+        return iter->second[queue_index];
 }
 
 //
