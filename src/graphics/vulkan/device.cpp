@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "error.h"
 #include "overview.h"
 #include "query.h"
-#include "swapchain.h"
+#include "surface.h"
 
 #include "com/alg.h"
 #include "com/error.h"

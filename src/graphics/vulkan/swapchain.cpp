@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "error.h"
 #include "print.h"
+#include "surface.h"
 
 #include "com/error.h"
 #include "com/log.h"
@@ -28,87 +29,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace
 {
-std::vector<VkSurfaceFormatKHR> find_surface_formats(VkPhysicalDevice physical_device, VkSurfaceKHR surface)
-{
-        uint32_t format_count;
-        VkResult result;
-
-        result = vkGetPhysicalDeviceSurfaceFormatsKHR(physical_device, surface, &format_count, nullptr);
-        if (result != VK_SUCCESS)
-        {
-                vulkan::vulkan_function_error("vkGetPhysicalDeviceSurfaceFormatsKHR", result);
-        }
-
-        if (format_count < 1)
-        {
-                return {};
-        }
-
-        std::vector<VkSurfaceFormatKHR> formats(format_count);
-
-        result = vkGetPhysicalDeviceSurfaceFormatsKHR(physical_device, surface, &format_count, formats.data());
-        if (result != VK_SUCCESS)
-        {
-                vulkan::vulkan_function_error("vkGetPhysicalDeviceSurfaceFormatsKHR", result);
-        }
-
-        return formats;
-}
-
-std::vector<VkPresentModeKHR> find_present_modes(VkPhysicalDevice physical_device, VkSurfaceKHR surface)
-{
-        uint32_t mode_count;
-        VkResult result;
-
-        result = vkGetPhysicalDeviceSurfacePresentModesKHR(physical_device, surface, &mode_count, nullptr);
-        if (result != VK_SUCCESS)
-        {
-                vulkan::vulkan_function_error("vkGetPhysicalDeviceSurfacePresentModesKHR", result);
-        }
-
-        if (mode_count < 1)
-        {
-                return {};
-        }
-
-        std::vector<VkPresentModeKHR> modes(mode_count);
-
-        result = vkGetPhysicalDeviceSurfacePresentModesKHR(physical_device, surface, &mode_count, modes.data());
-        if (result != VK_SUCCESS)
-        {
-                vulkan::vulkan_function_error("vkGetPhysicalDeviceSurfacePresentModesKHR", result);
-        }
-
-        return modes;
-}
-
-bool find_surface_details(VkSurfaceKHR surface, VkPhysicalDevice device, VkSurfaceCapabilitiesKHR* surface_capabilities,
-                          std::vector<VkSurfaceFormatKHR>* surface_formats, std::vector<VkPresentModeKHR>* present_modes)
-{
-        ASSERT(surface_capabilities && surface_formats && present_modes);
-
-        VkResult result;
-        result = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, surface_capabilities);
-        if (result != VK_SUCCESS)
-        {
-                vulkan::vulkan_function_error("vkGetPhysicalDeviceSurfaceCapabilitiesKHR", result);
-        }
-
-        *surface_formats = find_surface_formats(device, surface);
-        if (surface_formats->empty())
-        {
-                return false;
-        }
-
-        *present_modes = find_present_modes(device, surface);
-        if (present_modes->empty())
-        {
-                return false;
-        }
-
-        return true;
-}
-
 VkSurfaceFormatKHR choose_surface_format(const VkSurfaceFormatKHR& required_surface_format,
                                          const std::vector<VkSurfaceFormatKHR>& surface_formats)
 {
@@ -310,15 +230,6 @@ std::string swapchain_info_string(const VkSurfaceFormatKHR& surface_format, int 
 
 namespace vulkan
 {
-bool surface_suitable(VkSurfaceKHR surface, VkPhysicalDevice physical_device)
-{
-        VkSurfaceCapabilitiesKHR surface_capabilities;
-        std::vector<VkSurfaceFormatKHR> surface_formats;
-        std::vector<VkPresentModeKHR> present_modes;
-
-        return find_surface_details(surface, physical_device, &surface_capabilities, &surface_formats, &present_modes);
-}
-
 bool acquire_next_image(VkDevice device, VkSwapchainKHR swapchain, VkSemaphore semaphore, uint32_t* image_index)
 {
         constexpr uint64_t timeout = limits<uint64_t>::max();

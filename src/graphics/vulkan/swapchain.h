@@ -60,8 +60,6 @@ public:
         const std::vector<ImageView>& image_views() const noexcept;
 };
 
-bool surface_suitable(VkSurfaceKHR surface, VkPhysicalDevice device);
-
 bool acquire_next_image(VkDevice device, VkSwapchainKHR swapchain, VkSemaphore semaphore, uint32_t* image_index);
 bool queue_present(VkSemaphore wait_semaphore, VkSwapchainKHR swapchain, uint32_t image_index, VkQueue queue);
 }
