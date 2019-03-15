@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <optional>
 #include <string>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
@@ -78,7 +79,7 @@ PhysicalDevice find_physical_device(VkInstance instance, VkSurfaceKHR surface, i
                                     const std::vector<std::string>& required_extensions,
                                     const std::vector<PhysicalDeviceFeatures>& required_features);
 
-Device create_device(VkPhysicalDevice physical_device, const std::vector<uint32_t>& family_indices,
+Device create_device(VkPhysicalDevice physical_device, const std::unordered_map<uint32_t, uint32_t>& queue_families,
                      const std::vector<std::string>& required_extensions,
                      const std::vector<std::string>& required_validation_layers,
                      const VkPhysicalDeviceFeatures& enabled_features);

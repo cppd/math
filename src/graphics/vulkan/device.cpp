@@ -474,23 +474,25 @@ PhysicalDevice find_physical_device(VkInstance instance, VkSurfaceKHR surface, i
         error("Failed to find a suitable Vulkan physical device");
 }
 
-Device create_device(VkPhysicalDevice physical_device, const std::vector<uint32_t>& family_indices,
+Device create_device(VkPhysicalDevice physical_device, const std::unordered_map<uint32_t, uint32_t>& queue_families,
                      const std::vector<std::string>& required_extensions,
                      const std::vector<std::string>& required_validation_layers, const VkPhysicalDeviceFeatures& enabled_features)
 {
-        if (family_indices.empty())
+        ASSERT(std::all_of(queue_families.cbegin(), queue_families.cend(), [](const auto& v) { return v.second > 0; }));
+
+        if (queue_families.empty())
         {
-                error("No family indices for device creation");
+                error("No queue families for device creation");
         }
 
         constexpr float queue_priority = 1;
         std::vector<VkDeviceQueueCreateInfo> queue_create_infos;
-        for (uint32_t unique_queue_family_index : std::unordered_set<uint32_t>(family_indices.cbegin(), family_indices.cend()))
+        for (const auto& [queue_family_index, queue_count] : queue_families)
         {
                 VkDeviceQueueCreateInfo queue_create_info = {};
                 queue_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-                queue_create_info.queueFamilyIndex = unique_queue_family_index;
-                queue_create_info.queueCount = 1;
+                queue_create_info.queueFamilyIndex = queue_family_index;
+                queue_create_info.queueCount = queue_count;
                 queue_create_info.pQueuePriorities = &queue_priority;
 
                 queue_create_infos.push_back(queue_create_info);

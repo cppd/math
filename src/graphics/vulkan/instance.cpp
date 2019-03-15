@@ -26,6 +26,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/log.h"
 #include "com/merge.h"
 
+namespace
+{
+std::unordered_map<uint32_t, uint32_t> queue_families(const std::vector<uint32_t>& family_indices)
+{
+        std::unordered_map<uint32_t, uint32_t> queues;
+        for (uint32_t index : family_indices)
+        {
+                queues[index] = 1;
+        }
+        return queues;
+}
+}
+
 namespace vulkan
 {
 VulkanInstance::VulkanInstance(const std::vector<std::string>& required_instance_extensions,
@@ -42,7 +55,8 @@ VulkanInstance::VulkanInstance(const std::vector<std::string>& required_instance
                                                  required_features)),
           m_device(create_device(
                   m_physical_device,
-                  {m_physical_device.graphics_and_compute(), m_physical_device.transfer(), m_physical_device.presentation()},
+                  queue_families({m_physical_device.graphics_and_compute(), m_physical_device.transfer(),
+                                  m_physical_device.presentation()}),
                   merge<std::string>(required_device_extensions, VK_KHR_SWAPCHAIN_EXTENSION_NAME), validation_layers(),
                   make_enabled_device_features(required_features, optional_features, m_physical_device.features()))),
           //
