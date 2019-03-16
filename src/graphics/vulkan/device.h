@@ -17,13 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "objects.h"
-
-#include <optional>
 #include <string>
-#include <unordered_map>
 #include <unordered_set>
 #include <vector>
+#include <vulkan/vulkan.h>
 
 namespace vulkan
 {
@@ -78,9 +75,4 @@ VkPhysicalDeviceFeatures make_enabled_device_features(const std::vector<Physical
 PhysicalDevice find_physical_device(VkInstance instance, VkSurfaceKHR surface, int api_version_major, int api_version_minor,
                                     const std::vector<std::string>& required_extensions,
                                     const std::vector<PhysicalDeviceFeatures>& required_features);
-
-Device create_device(VkPhysicalDevice physical_device, const std::unordered_map<uint32_t, uint32_t>& queue_families,
-                     const std::vector<std::string>& required_extensions,
-                     const std::vector<std::string>& required_validation_layers,
-                     const VkPhysicalDeviceFeatures& enabled_features);
 }
