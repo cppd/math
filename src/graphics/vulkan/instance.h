@@ -36,13 +36,14 @@ class VulkanInstance final
 
         const PhysicalDevice m_physical_device;
 
+        const uint32_t m_graphics_and_compute_family_index;
+        const uint32_t m_transfer_family_index;
+        const uint32_t m_presentation_family_index;
+
         const Device m_device;
 
         const CommandPool m_graphics_command_pool;
         const VkQueue m_graphics_queue;
-
-        // const CommandPool m_compute_command_pool;
-        // const VkQueue m_compute_queue;
 
         const CommandPool m_transfer_command_pool;
         const VkQueue m_transfer_queue;
@@ -53,8 +54,6 @@ class VulkanInstance final
         const std::vector<uint32_t> m_graphics_and_transfer_family_indices;
         const std::vector<uint32_t> m_graphics_and_compute_family_indices;
         const std::vector<uint32_t> m_graphics_family_indices;
-        const uint32_t m_graphics_family_index;
-        const uint32_t m_transfer_family_index;
 
 public:
         VulkanInstance(const std::vector<std::string>& required_instance_extensions,
@@ -149,7 +148,7 @@ public:
 
         uint32_t graphics_family_index() const noexcept
         {
-                return m_graphics_family_index;
+                return m_graphics_and_compute_family_index;
         }
 
         uint32_t transfer_family_index() const noexcept

@@ -37,31 +37,24 @@ enum class PhysicalDeviceFeatures
 class PhysicalDevice final
 {
         VkPhysicalDevice m_physical_device;
-        uint32_t m_graphics_family_index;
-        uint32_t m_graphics_and_compute_family_index;
-        uint32_t m_compute_family_index;
-        uint32_t m_transfer_family_index;
-        uint32_t m_presentation_family_index;
         VkPhysicalDeviceFeatures m_features;
         VkPhysicalDeviceProperties m_properties;
         std::vector<VkQueueFamilyProperties> m_families;
+        std::vector<uint32_t> m_presentation_family_indices;
 
 public:
-        PhysicalDevice(VkPhysicalDevice physical_device, uint32_t graphics, uint32_t graphics_and_compute, uint32_t compute,
-                       uint32_t transfer, uint32_t presentation, const VkPhysicalDeviceFeatures& features,
-                       const VkPhysicalDeviceProperties& properties, const std::vector<VkQueueFamilyProperties>& families);
+        PhysicalDevice(VkPhysicalDevice physical_device, const VkPhysicalDeviceFeatures& features,
+                       const VkPhysicalDeviceProperties& properties, const std::vector<VkQueueFamilyProperties>& families,
+                       const std::vector<uint32_t>& presentation_family_indices);
 
         operator VkPhysicalDevice() const noexcept;
-
-        uint32_t graphics() const noexcept;
-        uint32_t graphics_and_compute() const noexcept;
-        uint32_t compute() const noexcept;
-        uint32_t transfer() const noexcept;
-        uint32_t presentation() const noexcept;
 
         const VkPhysicalDeviceFeatures& features() const noexcept;
         const VkPhysicalDeviceProperties& properties() const noexcept;
         const std::vector<VkQueueFamilyProperties>& families() const noexcept;
+
+        uint32_t family_index(VkQueueFlags set_flags, VkQueueFlags not_set_flags, VkQueueFlags default_flags) const;
+        uint32_t presentation_family_index() const;
 };
 
 std::vector<VkPhysicalDevice> physical_devices(VkInstance instance);

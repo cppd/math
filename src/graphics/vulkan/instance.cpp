@@ -53,33 +53,43 @@ VulkanInstance::VulkanInstance(const std::vector<std::string>& required_instance
           m_physical_device(find_physical_device(m_instance, m_surface, API_VERSION_MAJOR, API_VERSION_MINOR,
                                                  merge<std::string>(required_device_extensions, VK_KHR_SWAPCHAIN_EXTENSION_NAME),
                                                  required_features)),
+          //
+          m_graphics_and_compute_family_index(m_physical_device.family_index(VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT, 0, 0)),
+          m_transfer_family_index(m_physical_device.family_index(VK_QUEUE_TRANSFER_BIT,
+                                                                 VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT,
+                                                                 // Наличие VK_QUEUE_GRAPHICS_BIT или VK_QUEUE_COMPUTE_BIT
+                                                                 // означает (возможно неявно) наличие VK_QUEUE_TRANSFER_BIT
+                                                                 VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT)),
+          m_presentation_family_index(m_physical_device.presentation_family_index()),
+          //
           m_device(create_device(
                   m_physical_device,
-                  queue_families({m_physical_device.graphics_and_compute(), m_physical_device.transfer(),
-                                  m_physical_device.presentation()}),
+                  queue_families({m_graphics_and_compute_family_index, m_transfer_family_index, m_presentation_family_index}),
                   merge<std::string>(required_device_extensions, VK_KHR_SWAPCHAIN_EXTENSION_NAME), validation_layers(),
                   make_enabled_device_features(required_features, optional_features, m_physical_device.features()))),
           //
-          m_graphics_command_pool(create_command_pool(m_device, m_physical_device.graphics_and_compute())),
-          m_graphics_queue(m_device.queue(m_physical_device.graphics_and_compute(), 0 /*queue_index*/)),
+          m_graphics_command_pool(create_command_pool(m_device, m_graphics_and_compute_family_index)),
+          m_graphics_queue(m_device.queue(m_graphics_and_compute_family_index, 0 /*queue_index*/)),
           //
-          // m_compute_command_pool(create_command_pool(m_device, m_physical_device.compute())),
-          // m_compute_queue(m_device.queue(m_physical_device.compute(), 0 /*queue_index*/)),
+          m_transfer_command_pool(create_transient_command_pool(m_device, m_transfer_family_index)),
+          m_transfer_queue(m_device.queue(m_transfer_family_index, 0 /*queue_index*/)),
           //
-          m_transfer_command_pool(create_transient_command_pool(m_device, m_physical_device.transfer())),
-          m_transfer_queue(m_device.queue(m_physical_device.transfer(), 0 /*queue_index*/)),
-          //
-          m_presentation_queue(m_device.queue(m_physical_device.presentation(), 0 /*queue_index*/)),
+          m_presentation_queue(m_device.queue(m_presentation_family_index, 0 /*queue_index*/)),
           //
           m_graphics_and_presentation_family_indices(
-                  unique_elements(std::vector({m_physical_device.graphics_and_compute(), m_physical_device.presentation()}))),
+                  unique_elements(std::vector({m_graphics_and_compute_family_index, m_presentation_family_index}))),
           m_graphics_and_transfer_family_indices(
-                  unique_elements(std::vector({m_physical_device.graphics_and_compute(), m_physical_device.transfer()}))),
-          m_graphics_and_compute_family_indices(unique_elements(std::vector({m_physical_device.graphics_and_compute()}))),
-          m_graphics_family_indices(unique_elements(std::vector({m_physical_device.graphics_and_compute()}))),
-          m_graphics_family_index(m_physical_device.graphics_and_compute()),
-          m_transfer_family_index(m_physical_device.transfer())
+                  unique_elements(std::vector({m_graphics_and_compute_family_index, m_transfer_family_index}))),
+          m_graphics_and_compute_family_indices(unique_elements(std::vector({m_graphics_and_compute_family_index}))),
+          m_graphics_family_indices(unique_elements(std::vector({m_graphics_and_compute_family_index})))
 {
+        std::string s;
+        s += "Graphics and compute family index = " + to_string(m_graphics_and_compute_family_index);
+        s += "\n";
+        s += "Transfer family index = " + to_string(m_transfer_family_index);
+        s += "\n";
+        s += "Presentation family index = " + to_string(m_presentation_family_index);
+        LOG(s);
 }
 
 VulkanInstance::~VulkanInstance()
