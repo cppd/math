@@ -40,12 +40,10 @@ class PhysicalDevice final
         VkPhysicalDeviceFeatures m_features;
         VkPhysicalDeviceProperties m_properties;
         std::vector<VkQueueFamilyProperties> m_families;
-        std::vector<uint32_t> m_presentation_family_indices;
+        std::vector<bool> m_presentation_supported;
 
 public:
-        PhysicalDevice(VkPhysicalDevice physical_device, const VkPhysicalDeviceFeatures& features,
-                       const VkPhysicalDeviceProperties& properties, const std::vector<VkQueueFamilyProperties>& families,
-                       const std::vector<uint32_t>& presentation_family_indices);
+        PhysicalDevice(VkPhysicalDevice physical_device, VkSurfaceKHR surface);
 
         operator VkPhysicalDevice() const noexcept;
 

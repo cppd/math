@@ -41,7 +41,12 @@ bool find_family(const std::vector<VkQueueFamilyProperties>& families, VkQueueFl
         {
                 const VkQueueFamilyProperties& p = families[i];
 
-                if (p.queueCount >= 1 && ((p.queueFlags & flags) == flags) && !(p.queueFlags & no_flags))
+                if (p.queueCount < 1)
+                {
+                        continue;
+                }
+
+                if (((p.queueFlags & flags) == flags) && !(p.queueFlags & no_flags))
                 {
                         *index = i;
                         return true;
@@ -51,27 +56,27 @@ bool find_family(const std::vector<VkQueueFamilyProperties>& families, VkQueueFl
 }
 
 void find_presentation_families(VkSurfaceKHR surface, VkPhysicalDevice device,
-                                const std::vector<VkQueueFamilyProperties>& queue_families, std::vector<uint32_t>* families)
+                                const std::vector<VkQueueFamilyProperties>& queue_families,
+                                std::vector<bool>* presentation_supported)
 {
-        families->clear();
+        presentation_supported->resize(queue_families.size());
 
         for (uint32_t i = 0; i < queue_families.size(); ++i)
         {
-                if (queue_families[i].queueCount >= 1)
+                if (queue_families[i].queueCount < 1)
                 {
-                        VkBool32 presentation_support;
-
-                        VkResult result = vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &presentation_support);
-                        if (result != VK_SUCCESS)
-                        {
-                                vulkan::vulkan_function_error("vkGetPhysicalDeviceSurfaceSupportKHR", result);
-                        }
-
-                        if (presentation_support == VK_TRUE)
-                        {
-                                families->push_back(i);
-                        }
+                        continue;
                 }
+
+                VkBool32 supported;
+
+                VkResult result = vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &supported);
+                if (result != VK_SUCCESS)
+                {
+                        vulkan::vulkan_function_error("vkGetPhysicalDeviceSurfaceSupportKHR", result);
+                }
+
+                (*presentation_supported)[i] = (supported == VK_TRUE);
         }
 }
 
@@ -147,15 +152,25 @@ bool physical_device_features_are_supported(const std::vector<vulkan::PhysicalDe
 
 namespace vulkan
 {
-PhysicalDevice::PhysicalDevice(VkPhysicalDevice physical_device, const VkPhysicalDeviceFeatures& features,
-                               const VkPhysicalDeviceProperties& properties, const std::vector<VkQueueFamilyProperties>& families,
-                               const std::vector<uint32_t>& presentation_family_indices)
-        : m_physical_device(physical_device),
-          m_features(features),
-          m_properties(properties),
-          m_families(families),
-          m_presentation_family_indices(presentation_family_indices)
+PhysicalDevice::PhysicalDevice(VkPhysicalDevice physical_device, VkSurfaceKHR surface) : m_physical_device(physical_device)
 {
+        ASSERT(physical_device != VK_NULL_HANDLE);
+
+        vkGetPhysicalDeviceProperties(m_physical_device, &m_properties);
+        vkGetPhysicalDeviceFeatures(m_physical_device, &m_features);
+
+        m_families = physical_device_queue_families(physical_device);
+
+        if (surface != VK_NULL_HANDLE)
+        {
+                find_presentation_families(surface, physical_device, m_families, &m_presentation_supported);
+        }
+        else
+        {
+                m_presentation_supported.resize(m_families.size(), false);
+        }
+
+        ASSERT(m_families.size() == m_presentation_supported.size());
 }
 
 PhysicalDevice::operator VkPhysicalDevice() const noexcept
@@ -195,9 +210,12 @@ uint32_t PhysicalDevice::family_index(VkQueueFlags set_flags, VkQueueFlags not_s
 
 uint32_t PhysicalDevice::presentation_family_index() const
 {
-        if (!m_presentation_family_indices.empty())
+        for (size_t i = 0; i < m_presentation_supported.size(); ++i)
         {
-                return m_presentation_family_indices[0];
+                if (m_presentation_supported[i])
+                {
+                        return i;
+                }
         }
         error("Presentation family not found");
 }
@@ -379,30 +397,24 @@ PhysicalDevice find_physical_device(VkInstance instance, VkSurfaceKHR surface, i
 
         const uint32_t required_api_version = VK_MAKE_VERSION(api_version_major, api_version_minor, 0);
 
-        for (const VkPhysicalDevice& physical_device : physical_devices(instance))
+        for (const VkPhysicalDevice& d : physical_devices(instance))
         {
-                ASSERT(physical_device != VK_NULL_HANDLE);
+                PhysicalDevice physical_device(d, surface);
 
-                VkPhysicalDeviceProperties properties;
-                VkPhysicalDeviceFeatures features;
-
-                vkGetPhysicalDeviceProperties(physical_device, &properties);
-                vkGetPhysicalDeviceFeatures(physical_device, &features);
-
-                if (properties.deviceType != VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU &&
-                    properties.deviceType != VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU &&
-                    properties.deviceType != VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU &&
-                    properties.deviceType != VK_PHYSICAL_DEVICE_TYPE_CPU)
+                if (physical_device.properties().deviceType != VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU &&
+                    physical_device.properties().deviceType != VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU &&
+                    physical_device.properties().deviceType != VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU &&
+                    physical_device.properties().deviceType != VK_PHYSICAL_DEVICE_TYPE_CPU)
                 {
                         continue;
                 }
 
-                if (!physical_device_features_are_supported(required_features, features))
+                if (required_api_version > physical_device.properties().apiVersion)
                 {
                         continue;
                 }
 
-                if (required_api_version > properties.apiVersion)
+                if (!physical_device_features_are_supported(required_features, physical_device.features()))
                 {
                         continue;
                 }
@@ -412,32 +424,33 @@ PhysicalDevice find_physical_device(VkInstance instance, VkSurfaceKHR surface, i
                         continue;
                 }
 
-                if (!surface_suitable(surface, physical_device))
+                try
+                {
+                        physical_device.family_index(VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT, 0, 0);
+                }
+                catch (...)
                 {
                         continue;
                 }
 
-                const std::vector<VkQueueFamilyProperties> families = physical_device_queue_families(physical_device);
-
-                uint32_t index;
-                if (!find_family(families, VK_QUEUE_GRAPHICS_BIT, 0, &index))
+                if (surface != VK_NULL_HANDLE)
                 {
-                        continue;
+                        try
+                        {
+                                physical_device.presentation_family_index();
+                        }
+                        catch (...)
+                        {
+                                continue;
+                        }
+
+                        if (!surface_suitable(surface, physical_device))
+                        {
+                                continue;
+                        }
                 }
 
-                if (!find_family(families, VK_QUEUE_COMPUTE_BIT, 0, &index))
-                {
-                        continue;
-                }
-
-                std::vector<uint32_t> presentation_family_indices;
-                find_presentation_families(surface, physical_device, families, &presentation_family_indices);
-                if (presentation_family_indices.empty())
-                {
-                        continue;
-                }
-
-                return PhysicalDevice(physical_device, features, properties, families, presentation_family_indices);
+                return physical_device;
         }
 
         error("Failed to find a suitable Vulkan physical device");
