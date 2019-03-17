@@ -39,8 +39,9 @@ class PhysicalDevice final
         VkPhysicalDevice m_physical_device;
         VkPhysicalDeviceFeatures m_features;
         VkPhysicalDeviceProperties m_properties;
-        std::vector<VkQueueFamilyProperties> m_families;
+        std::vector<VkQueueFamilyProperties> m_queue_families;
         std::vector<bool> m_presentation_supported;
+        std::unordered_set<std::string> m_supported_extensions;
 
 public:
         PhysicalDevice(VkPhysicalDevice physical_device, VkSurfaceKHR surface);
@@ -49,15 +50,16 @@ public:
 
         const VkPhysicalDeviceFeatures& features() const noexcept;
         const VkPhysicalDeviceProperties& properties() const noexcept;
-        const std::vector<VkQueueFamilyProperties>& families() const noexcept;
+        const std::vector<VkQueueFamilyProperties>& queue_families() const noexcept;
+        const std::unordered_set<std::string>& supported_extensions() const noexcept;
 
         uint32_t family_index(VkQueueFlags set_flags, VkQueueFlags not_set_flags, VkQueueFlags default_flags) const;
         uint32_t presentation_family_index() const;
+        bool supports_extensions(const std::vector<std::string>& extensions) const;
+        bool queue_family_supports_presentation(uint32_t index) const;
 };
 
 std::vector<VkPhysicalDevice> physical_devices(VkInstance instance);
-std::vector<VkQueueFamilyProperties> physical_device_queue_families(VkPhysicalDevice device);
-std::unordered_set<std::string> supported_physical_device_extensions(VkPhysicalDevice physical_device);
 
 VkPhysicalDeviceFeatures make_enabled_device_features(const std::vector<PhysicalDeviceFeatures>& required_features,
                                                       const std::vector<PhysicalDeviceFeatures>& optional_features,

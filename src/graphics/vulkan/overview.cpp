@@ -137,22 +137,19 @@ std::string overview_physical_devices(VkInstance instance, VkSurfaceKHR surface)
         nodes.emplace_back("Physical Devices");
         size_t physical_devices_node = nodes.size() - 1;
 
-        for (const VkPhysicalDevice& device : physical_devices(instance))
+        for (const VkPhysicalDevice& d : physical_devices(instance))
         {
-                VkPhysicalDeviceProperties properties;
-                VkPhysicalDeviceFeatures features;
-                vkGetPhysicalDeviceProperties(device, &properties);
-                vkGetPhysicalDeviceFeatures(device, &features);
+                PhysicalDevice device(d, surface);
 
-                nodes.emplace_back(properties.deviceName);
+                nodes.emplace_back(device.properties().deviceName);
                 nodes[physical_devices_node].children.push_back(nodes.size() - 1);
 
                 size_t physical_device_node = nodes.size() - 1;
 
-                nodes.emplace_back(physical_device_type_to_string(properties.deviceType));
+                nodes.emplace_back(physical_device_type_to_string(device.properties().deviceType));
                 nodes[physical_device_node].children.push_back(nodes.size() - 1);
 
-                nodes.emplace_back("API Version " + api_version_to_string(properties.apiVersion));
+                nodes.emplace_back("API Version " + api_version_to_string(device.properties().apiVersion));
                 nodes[physical_device_node].children.push_back(nodes.size() - 1);
 
                 nodes.emplace_back("Extensions");
@@ -161,7 +158,7 @@ std::string overview_physical_devices(VkInstance instance, VkSurfaceKHR surface)
                 size_t extension_node = nodes.size() - 1;
                 try
                 {
-                        for (const std::string& e : sorted(supported_physical_device_extensions(device)))
+                        for (const std::string& e : sorted(device.supported_extensions()))
                         {
                                 nodes.emplace_back(e);
                                 nodes[extension_node].children.push_back(nodes.size() - 1);
@@ -179,7 +176,7 @@ std::string overview_physical_devices(VkInstance instance, VkSurfaceKHR surface)
                 size_t queue_families_node = nodes.size() - 1;
                 try
                 {
-                        std::vector<VkQueueFamilyProperties> families = physical_device_queue_families(device);
+                        std::vector<VkQueueFamilyProperties> families = device.queue_families();
 
                         for (size_t family_index = 0; family_index < families.size(); ++family_index)
                         {
@@ -224,21 +221,10 @@ std::string overview_physical_devices(VkInstance instance, VkSurfaceKHR surface)
                                         nodes[queue_family_node].children.push_back(nodes.size() - 1);
                                 }
 
-                                if (surface != VK_NULL_HANDLE)
+                                if (device.queue_family_supports_presentation(family_index))
                                 {
-                                        VkBool32 presentation_supported;
-                                        VkResult result = vkGetPhysicalDeviceSurfaceSupportKHR(device, family_index, surface,
-                                                                                               &presentation_supported);
-                                        if (result != VK_SUCCESS)
-                                        {
-                                                vulkan_function_error("vkGetPhysicalDeviceSurfaceSupportKHR", result);
-                                        }
-
-                                        if (presentation_supported == VK_TRUE)
-                                        {
-                                                nodes.emplace_back("presentation");
-                                                nodes[queue_family_node].children.push_back(nodes.size() - 1);
-                                        }
+                                        nodes.emplace_back("presentation");
+                                        nodes[queue_family_node].children.push_back(nodes.size() - 1);
                                 }
                         }
                 }

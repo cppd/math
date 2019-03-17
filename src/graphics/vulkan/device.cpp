@@ -55,11 +55,15 @@ bool find_family(const std::vector<VkQueueFamilyProperties>& families, VkQueueFl
         return false;
 }
 
-void find_presentation_families(VkSurfaceKHR surface, VkPhysicalDevice device,
-                                const std::vector<VkQueueFamilyProperties>& queue_families,
-                                std::vector<bool>* presentation_supported)
+std::vector<bool> find_presentation_support(VkSurfaceKHR surface, VkPhysicalDevice device,
+                                            const std::vector<VkQueueFamilyProperties>& queue_families)
 {
-        presentation_supported->resize(queue_families.size());
+        if (surface == VK_NULL_HANDLE)
+        {
+                return std::vector<bool>(queue_families.size(), false);
+        }
+
+        std::vector<bool> presentation_supported(queue_families.size());
 
         for (uint32_t i = 0; i < queue_families.size(); ++i)
         {
@@ -76,32 +80,14 @@ void find_presentation_families(VkSurfaceKHR surface, VkPhysicalDevice device,
                         vulkan::vulkan_function_error("vkGetPhysicalDeviceSurfaceSupportKHR", result);
                 }
 
-                (*presentation_supported)[i] = (supported == VK_TRUE);
+                presentation_supported[i] = (supported == VK_TRUE);
         }
+
+        return presentation_supported;
 }
 
-bool device_supports_extensions(VkPhysicalDevice physical_device, const std::vector<std::string>& extensions)
-{
-        if (extensions.empty())
-        {
-                return true;
-        }
-
-        const std::unordered_set<std::string> extension_set = vulkan::supported_physical_device_extensions(physical_device);
-
-        for (const std::string& e : extensions)
-        {
-                if (extension_set.count(e) < 1)
-                {
-                        return false;
-                }
-        }
-
-        return true;
-}
-
-bool physical_device_features_are_supported(const std::vector<vulkan::PhysicalDeviceFeatures>& required_features,
-                                            VkPhysicalDeviceFeatures device_features)
+bool features_are_supported(const std::vector<vulkan::PhysicalDeviceFeatures>& required_features,
+                            VkPhysicalDeviceFeatures device_features)
 {
         for (vulkan::PhysicalDeviceFeatures f : required_features)
         {
@@ -148,6 +134,58 @@ bool physical_device_features_are_supported(const std::vector<vulkan::PhysicalDe
 
         return true;
 }
+
+std::vector<VkQueueFamilyProperties> find_queue_families(VkPhysicalDevice device)
+{
+        uint32_t queue_family_count;
+
+        vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, nullptr);
+
+        if (queue_family_count < 1)
+        {
+                return {};
+        }
+
+        std::vector<VkQueueFamilyProperties> queue_families(queue_family_count);
+
+        vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, queue_families.data());
+
+        return queue_families;
+}
+
+std::unordered_set<std::string> find_extensions(VkPhysicalDevice device)
+{
+        uint32_t extension_count;
+        VkResult result;
+
+        result = vkEnumerateDeviceExtensionProperties(device, nullptr, &extension_count, nullptr);
+        if (result != VK_SUCCESS)
+        {
+                vulkan::vulkan_function_error("vkEnumerateDeviceExtensionProperties", result);
+        }
+
+        if (extension_count < 1)
+        {
+                return {};
+        }
+
+        std::vector<VkExtensionProperties> extensions(extension_count);
+
+        result = vkEnumerateDeviceExtensionProperties(device, nullptr, &extension_count, extensions.data());
+        if (result != VK_SUCCESS)
+        {
+                vulkan::vulkan_function_error("vkEnumerateDeviceExtensionProperties", result);
+        }
+
+        std::unordered_set<std::string> extension_set;
+
+        for (const VkExtensionProperties& e : extensions)
+        {
+                extension_set.emplace(e.extensionName);
+        }
+
+        return extension_set;
+}
 }
 
 namespace vulkan
@@ -159,18 +197,11 @@ PhysicalDevice::PhysicalDevice(VkPhysicalDevice physical_device, VkSurfaceKHR su
         vkGetPhysicalDeviceProperties(m_physical_device, &m_properties);
         vkGetPhysicalDeviceFeatures(m_physical_device, &m_features);
 
-        m_families = physical_device_queue_families(physical_device);
+        m_queue_families = find_queue_families(physical_device);
+        m_presentation_supported = find_presentation_support(surface, m_physical_device, m_queue_families);
+        m_supported_extensions = find_extensions(m_physical_device);
 
-        if (surface != VK_NULL_HANDLE)
-        {
-                find_presentation_families(surface, physical_device, m_families, &m_presentation_supported);
-        }
-        else
-        {
-                m_presentation_supported.resize(m_families.size(), false);
-        }
-
-        ASSERT(m_families.size() == m_presentation_supported.size());
+        ASSERT(m_queue_families.size() == m_presentation_supported.size());
 }
 
 PhysicalDevice::operator VkPhysicalDevice() const noexcept
@@ -188,19 +219,24 @@ const VkPhysicalDeviceProperties& PhysicalDevice::properties() const noexcept
         return m_properties;
 }
 
-const std::vector<VkQueueFamilyProperties>& PhysicalDevice::families() const noexcept
+const std::vector<VkQueueFamilyProperties>& PhysicalDevice::queue_families() const noexcept
 {
-        return m_families;
+        return m_queue_families;
+}
+
+const std::unordered_set<std::string>& PhysicalDevice::supported_extensions() const noexcept
+{
+        return m_supported_extensions;
 }
 
 uint32_t PhysicalDevice::family_index(VkQueueFlags set_flags, VkQueueFlags not_set_flags, VkQueueFlags default_flags) const
 {
         uint32_t index;
-        if (set_flags && find_family(m_families, set_flags, not_set_flags, &index))
+        if (set_flags && find_family(m_queue_families, set_flags, not_set_flags, &index))
         {
                 return index;
         }
-        if (default_flags && find_family(m_families, default_flags, 0, &index))
+        if (default_flags && find_family(m_queue_families, default_flags, 0, &index))
         {
                 return index;
         }
@@ -218,6 +254,19 @@ uint32_t PhysicalDevice::presentation_family_index() const
                 }
         }
         error("Presentation family not found");
+}
+
+bool PhysicalDevice::supports_extensions(const std::vector<std::string>& extensions) const
+{
+        return std::all_of(extensions.cbegin(), extensions.cend(),
+                           [&](const std::string& e) { return m_supported_extensions.count(e) >= 1; });
+}
+
+bool PhysicalDevice::queue_family_supports_presentation(uint32_t index) const
+{
+        ASSERT(index < m_presentation_supported.size());
+
+        return m_presentation_supported[index];
 }
 
 //
@@ -247,58 +296,6 @@ std::vector<VkPhysicalDevice> physical_devices(VkInstance instance)
         }
 
         return devices;
-}
-
-std::vector<VkQueueFamilyProperties> physical_device_queue_families(VkPhysicalDevice device)
-{
-        uint32_t queue_family_count;
-
-        vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, nullptr);
-
-        if (queue_family_count < 1)
-        {
-                return {};
-        }
-
-        std::vector<VkQueueFamilyProperties> queue_families(queue_family_count);
-
-        vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, queue_families.data());
-
-        return queue_families;
-}
-
-std::unordered_set<std::string> supported_physical_device_extensions(VkPhysicalDevice physical_device)
-{
-        uint32_t extension_count;
-        VkResult result;
-
-        result = vkEnumerateDeviceExtensionProperties(physical_device, nullptr, &extension_count, nullptr);
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkEnumerateDeviceExtensionProperties", result);
-        }
-
-        if (extension_count < 1)
-        {
-                return {};
-        }
-
-        std::vector<VkExtensionProperties> extensions(extension_count);
-
-        result = vkEnumerateDeviceExtensionProperties(physical_device, nullptr, &extension_count, extensions.data());
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkEnumerateDeviceExtensionProperties", result);
-        }
-
-        std::unordered_set<std::string> extension_set;
-
-        for (const VkExtensionProperties& e : extensions)
-        {
-                extension_set.emplace(e.extensionName);
-        }
-
-        return extension_set;
 }
 
 VkPhysicalDeviceFeatures make_enabled_device_features(const std::vector<PhysicalDeviceFeatures>& required_features,
@@ -414,12 +411,12 @@ PhysicalDevice find_physical_device(VkInstance instance, VkSurfaceKHR surface, i
                         continue;
                 }
 
-                if (!physical_device_features_are_supported(required_features, physical_device.features()))
+                if (!features_are_supported(required_features, physical_device.features()))
                 {
                         continue;
                 }
 
-                if (!device_supports_extensions(physical_device, required_extensions))
+                if (!physical_device.supports_extensions(required_extensions))
                 {
                         continue;
                 }
