@@ -223,17 +223,22 @@ std::string overview_physical_devices(VkInstance instance, VkSurfaceKHR surface)
                                         nodes.emplace_back("protected");
                                         nodes[queue_family_node].children.push_back(nodes.size() - 1);
                                 }
-                                VkBool32 presentation_support;
-                                VkResult result = vkGetPhysicalDeviceSurfaceSupportKHR(device, family_index, surface,
-                                                                                       &presentation_support);
-                                if (result != VK_SUCCESS)
+
+                                if (surface != VK_NULL_HANDLE)
                                 {
-                                        vulkan_function_error("vkGetPhysicalDeviceSurfaceSupportKHR", result);
-                                }
-                                if (presentation_support == VK_TRUE)
-                                {
-                                        nodes.emplace_back("presentation");
-                                        nodes[queue_family_node].children.push_back(nodes.size() - 1);
+                                        VkBool32 presentation_supported;
+                                        VkResult result = vkGetPhysicalDeviceSurfaceSupportKHR(device, family_index, surface,
+                                                                                               &presentation_supported);
+                                        if (result != VK_SUCCESS)
+                                        {
+                                                vulkan_function_error("vkGetPhysicalDeviceSurfaceSupportKHR", result);
+                                        }
+
+                                        if (presentation_supported == VK_TRUE)
+                                        {
+                                                nodes.emplace_back("presentation");
+                                                nodes[queue_family_node].children.push_back(nodes.size() - 1);
+                                        }
                                 }
                         }
                 }
