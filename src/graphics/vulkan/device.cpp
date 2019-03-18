@@ -123,7 +123,7 @@ bool features_are_supported(const std::vector<vulkan::PhysicalDeviceFeatures>& r
                                 return false;
                         }
                         break;
-                case vulkan::PhysicalDeviceFeatures::vertexPipelineStoresAndAtomics:
+                case vulkan::PhysicalDeviceFeatures::VertexPipelineStoresAndAtomics:
                         if (!device_features.vertexPipelineStoresAndAtomics)
                         {
                                 return false;
@@ -237,7 +237,7 @@ VkPhysicalDeviceFeatures make_enabled_device_features(const std::vector<vulkan::
                         }
                         device_features.fragmentStoresAndAtomics = true;
                         break;
-                case vulkan::PhysicalDeviceFeatures::vertexPipelineStoresAndAtomics:
+                case vulkan::PhysicalDeviceFeatures::VertexPipelineStoresAndAtomics:
                         if (!supported_device_features.vertexPipelineStoresAndAtomics)
                         {
                                 error("Required physical device feature Vertex Pipeline Stores And Atomics is not supported");
@@ -266,7 +266,7 @@ VkPhysicalDeviceFeatures make_enabled_device_features(const std::vector<vulkan::
                 case vulkan::PhysicalDeviceFeatures::FragmentStoresAndAtomics:
                         device_features.fragmentStoresAndAtomics = supported_device_features.fragmentStoresAndAtomics;
                         break;
-                case vulkan::PhysicalDeviceFeatures::vertexPipelineStoresAndAtomics:
+                case vulkan::PhysicalDeviceFeatures::VertexPipelineStoresAndAtomics:
                         device_features.vertexPipelineStoresAndAtomics = supported_device_features.vertexPipelineStoresAndAtomics;
                         break;
                 }

@@ -33,7 +33,7 @@ enum class PhysicalDeviceFeatures
         SamplerAnisotropy,
         TessellationShader,
         FragmentStoresAndAtomics,
-        vertexPipelineStoresAndAtomics
+        VertexPipelineStoresAndAtomics
 };
 
 class PhysicalDevice final

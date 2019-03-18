@@ -36,7 +36,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // clang-format off
 constexpr std::initializer_list<vulkan::PhysicalDeviceFeatures> REQUIRED_DEVICE_FEATURES =
 {
-        vulkan::PhysicalDeviceFeatures::vertexPipelineStoresAndAtomics
+        vulkan::PhysicalDeviceFeatures::VertexPipelineStoresAndAtomics
 };
 // clang-format on
 
