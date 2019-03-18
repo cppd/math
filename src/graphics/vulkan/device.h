@@ -17,10 +17,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "objects.h"
+
 #include <string>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
-#include <vulkan/vulkan.h>
 
 namespace vulkan
 {
@@ -57,13 +59,15 @@ public:
         uint32_t presentation_family_index() const;
         bool supports_extensions(const std::vector<std::string>& extensions) const;
         bool queue_family_supports_presentation(uint32_t index) const;
+
+        Device create_device(const std::unordered_map<uint32_t, uint32_t>& queue_families,
+                             const std::vector<std::string>& required_extensions,
+                             const std::vector<std::string>& required_validation_layers,
+                             const std::vector<PhysicalDeviceFeatures>& required_features,
+                             const std::vector<PhysicalDeviceFeatures>& optional_features) const;
 };
 
 std::vector<VkPhysicalDevice> physical_devices(VkInstance instance);
-
-VkPhysicalDeviceFeatures make_enabled_device_features(const std::vector<PhysicalDeviceFeatures>& required_features,
-                                                      const std::vector<PhysicalDeviceFeatures>& optional_features,
-                                                      const VkPhysicalDeviceFeatures& supported_device_features);
 
 PhysicalDevice find_physical_device(VkInstance instance, VkSurfaceKHR surface, int api_version_major, int api_version_minor,
                                     const std::vector<std::string>& required_extensions,

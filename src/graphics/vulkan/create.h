@@ -22,7 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/color/color.h"
 
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 namespace vulkan
@@ -47,9 +46,4 @@ VkClearValue color_clear_value(VkFormat format, VkColorSpaceKHR color_space, con
 VkClearValue depth_stencil_clear_value();
 
 VkClearColorValue clear_color_image_value(VkFormat format);
-
-Device create_device(VkPhysicalDevice physical_device, const std::unordered_map<uint32_t, uint32_t>& queue_families,
-                     const std::vector<std::string>& required_extensions,
-                     const std::vector<std::string>& required_validation_layers,
-                     const VkPhysicalDeviceFeatures& enabled_features);
 }

@@ -62,11 +62,10 @@ VulkanInstance::VulkanInstance(const std::vector<std::string>& required_instance
                                                                  VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT)),
           m_presentation_family_index(m_physical_device.presentation_family_index()),
           //
-          m_device(create_device(
-                  m_physical_device,
+          m_device(m_physical_device.create_device(
                   queue_families({m_graphics_and_compute_family_index, m_transfer_family_index, m_presentation_family_index}),
                   merge<std::string>(required_device_extensions, VK_KHR_SWAPCHAIN_EXTENSION_NAME), validation_layers(),
-                  make_enabled_device_features(required_features, optional_features, m_physical_device.features()))),
+                  required_features, optional_features)),
           //
           m_graphics_command_pool(create_command_pool(m_device, m_graphics_and_compute_family_index)),
           m_graphics_queue(m_device.queue(m_graphics_and_compute_family_index, 0 /*queue_index*/)),

@@ -186,6 +186,94 @@ std::unordered_set<std::string> find_extensions(VkPhysicalDevice device)
 
         return extension_set;
 }
+
+VkPhysicalDeviceFeatures make_enabled_device_features(const std::vector<vulkan::PhysicalDeviceFeatures>& required_features,
+                                                      const std::vector<vulkan::PhysicalDeviceFeatures>& optional_features,
+                                                      const VkPhysicalDeviceFeatures& supported_device_features)
+{
+        if (there_is_intersection(required_features, optional_features))
+        {
+                error("Required and optional physical device features intersect");
+        }
+
+        VkPhysicalDeviceFeatures device_features = {};
+
+        for (vulkan::PhysicalDeviceFeatures f : required_features)
+        {
+                switch (f)
+                {
+                case vulkan::PhysicalDeviceFeatures::GeometryShader:
+                        if (!supported_device_features.geometryShader)
+                        {
+                                error("Required physical device feature Geometry Shader is not supported");
+                        }
+                        device_features.geometryShader = true;
+                        break;
+                case vulkan::PhysicalDeviceFeatures::SampleRateShading:
+                        if (!supported_device_features.sampleRateShading)
+                        {
+                                error("Required physical device feature Sample Rate Shading is not supported");
+                        }
+                        device_features.sampleRateShading = true;
+                        break;
+                case vulkan::PhysicalDeviceFeatures::SamplerAnisotropy:
+                        if (!supported_device_features.samplerAnisotropy)
+                        {
+                                error("Required physical device feature Sampler Anisotropy is not supported");
+                        }
+                        device_features.samplerAnisotropy = true;
+                        break;
+                case vulkan::PhysicalDeviceFeatures::TessellationShader:
+                        if (!supported_device_features.tessellationShader)
+                        {
+                                error("Required physical device feature Tessellation Shader is not supported");
+                        }
+                        device_features.tessellationShader = true;
+                        break;
+                case vulkan::PhysicalDeviceFeatures::FragmentStoresAndAtomics:
+                        if (!supported_device_features.fragmentStoresAndAtomics)
+                        {
+                                error("Required physical device feature Fragment Stores And Atomics is not supported");
+                        }
+                        device_features.fragmentStoresAndAtomics = true;
+                        break;
+                case vulkan::PhysicalDeviceFeatures::vertexPipelineStoresAndAtomics:
+                        if (!supported_device_features.vertexPipelineStoresAndAtomics)
+                        {
+                                error("Required physical device feature Vertex Pipeline Stores And Atomics is not supported");
+                        }
+                        device_features.vertexPipelineStoresAndAtomics = true;
+                        break;
+                }
+        }
+
+        for (vulkan::PhysicalDeviceFeatures f : optional_features)
+        {
+                switch (f)
+                {
+                case vulkan::PhysicalDeviceFeatures::GeometryShader:
+                        device_features.geometryShader = supported_device_features.geometryShader;
+                        break;
+                case vulkan::PhysicalDeviceFeatures::SampleRateShading:
+                        device_features.sampleRateShading = supported_device_features.sampleRateShading;
+                        break;
+                case vulkan::PhysicalDeviceFeatures::SamplerAnisotropy:
+                        device_features.samplerAnisotropy = supported_device_features.samplerAnisotropy;
+                        break;
+                case vulkan::PhysicalDeviceFeatures::TessellationShader:
+                        device_features.tessellationShader = supported_device_features.tessellationShader;
+                        break;
+                case vulkan::PhysicalDeviceFeatures::FragmentStoresAndAtomics:
+                        device_features.fragmentStoresAndAtomics = supported_device_features.fragmentStoresAndAtomics;
+                        break;
+                case vulkan::PhysicalDeviceFeatures::vertexPipelineStoresAndAtomics:
+                        device_features.vertexPipelineStoresAndAtomics = supported_device_features.vertexPipelineStoresAndAtomics;
+                        break;
+                }
+        }
+
+        return device_features;
+}
 }
 
 namespace vulkan
@@ -269,6 +357,58 @@ bool PhysicalDevice::queue_family_supports_presentation(uint32_t index) const
         return m_presentation_supported[index];
 }
 
+Device PhysicalDevice::create_device(const std::unordered_map<uint32_t, uint32_t>& queue_families,
+                                     const std::vector<std::string>& required_extensions,
+                                     const std::vector<std::string>& required_validation_layers,
+                                     const std::vector<PhysicalDeviceFeatures>& required_features,
+                                     const std::vector<PhysicalDeviceFeatures>& optional_features) const
+{
+        ASSERT(std::all_of(queue_families.cbegin(), queue_families.cend(), [](const auto& v) { return v.second > 0; }));
+
+        if (queue_families.empty())
+        {
+                error("No queue families for device creation");
+        }
+
+        constexpr float queue_priority = 1;
+        std::vector<VkDeviceQueueCreateInfo> queue_create_infos;
+        for (const auto& [queue_family_index, queue_count] : queue_families)
+        {
+                VkDeviceQueueCreateInfo queue_create_info = {};
+                queue_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+                queue_create_info.queueFamilyIndex = queue_family_index;
+                queue_create_info.queueCount = queue_count;
+                queue_create_info.pQueuePriorities = &queue_priority;
+
+                queue_create_infos.push_back(queue_create_info);
+        }
+
+        const VkPhysicalDeviceFeatures enabled_features =
+                make_enabled_device_features(required_features, optional_features, m_features);
+
+        VkDeviceCreateInfo create_info = {};
+        create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+        create_info.queueCreateInfoCount = queue_create_infos.size();
+        create_info.pQueueCreateInfos = queue_create_infos.data();
+        create_info.pEnabledFeatures = &enabled_features;
+
+        const std::vector<const char*> extensions = const_char_pointer_vector(required_extensions);
+        if (extensions.size() > 0)
+        {
+                create_info.enabledExtensionCount = extensions.size();
+                create_info.ppEnabledExtensionNames = extensions.data();
+        }
+
+        const std::vector<const char*> validation_layers = const_char_pointer_vector(required_validation_layers);
+        if (validation_layers.size() > 0)
+        {
+                create_info.enabledLayerCount = validation_layers.size();
+                create_info.ppEnabledLayerNames = validation_layers.data();
+        }
+
+        return Device(m_physical_device, create_info);
+}
+
 //
 
 std::vector<VkPhysicalDevice> physical_devices(VkInstance instance)
@@ -296,94 +436,6 @@ std::vector<VkPhysicalDevice> physical_devices(VkInstance instance)
         }
 
         return devices;
-}
-
-VkPhysicalDeviceFeatures make_enabled_device_features(const std::vector<PhysicalDeviceFeatures>& required_features,
-                                                      const std::vector<PhysicalDeviceFeatures>& optional_features,
-                                                      const VkPhysicalDeviceFeatures& supported_device_features)
-{
-        if (there_is_intersection(required_features, optional_features))
-        {
-                error("Required and optional physical device features intersect");
-        }
-
-        VkPhysicalDeviceFeatures device_features = {};
-
-        for (PhysicalDeviceFeatures f : required_features)
-        {
-                switch (f)
-                {
-                case PhysicalDeviceFeatures::GeometryShader:
-                        if (!supported_device_features.geometryShader)
-                        {
-                                error("Required physical device feature Geometry Shader is not supported");
-                        }
-                        device_features.geometryShader = true;
-                        break;
-                case PhysicalDeviceFeatures::SampleRateShading:
-                        if (!supported_device_features.sampleRateShading)
-                        {
-                                error("Required physical device feature Sample Rate Shading is not supported");
-                        }
-                        device_features.sampleRateShading = true;
-                        break;
-                case PhysicalDeviceFeatures::SamplerAnisotropy:
-                        if (!supported_device_features.samplerAnisotropy)
-                        {
-                                error("Required physical device feature Sampler Anisotropy is not supported");
-                        }
-                        device_features.samplerAnisotropy = true;
-                        break;
-                case PhysicalDeviceFeatures::TessellationShader:
-                        if (!supported_device_features.tessellationShader)
-                        {
-                                error("Required physical device feature Tessellation Shader is not supported");
-                        }
-                        device_features.tessellationShader = true;
-                        break;
-                case PhysicalDeviceFeatures::FragmentStoresAndAtomics:
-                        if (!supported_device_features.fragmentStoresAndAtomics)
-                        {
-                                error("Required physical device feature Fragment Stores And Atomics is not supported");
-                        }
-                        device_features.fragmentStoresAndAtomics = true;
-                        break;
-                case PhysicalDeviceFeatures::vertexPipelineStoresAndAtomics:
-                        if (!supported_device_features.vertexPipelineStoresAndAtomics)
-                        {
-                                error("Required physical device feature Vertex Pipeline Stores And Atomics is not supported");
-                        }
-                        device_features.vertexPipelineStoresAndAtomics = true;
-                        break;
-                }
-        }
-
-        for (PhysicalDeviceFeatures f : optional_features)
-        {
-                switch (f)
-                {
-                case PhysicalDeviceFeatures::GeometryShader:
-                        device_features.geometryShader = supported_device_features.geometryShader;
-                        break;
-                case PhysicalDeviceFeatures::SampleRateShading:
-                        device_features.sampleRateShading = supported_device_features.sampleRateShading;
-                        break;
-                case PhysicalDeviceFeatures::SamplerAnisotropy:
-                        device_features.samplerAnisotropy = supported_device_features.samplerAnisotropy;
-                        break;
-                case PhysicalDeviceFeatures::TessellationShader:
-                        device_features.tessellationShader = supported_device_features.tessellationShader;
-                        break;
-                case PhysicalDeviceFeatures::FragmentStoresAndAtomics:
-                        device_features.fragmentStoresAndAtomics = supported_device_features.fragmentStoresAndAtomics;
-                        break;
-                case PhysicalDeviceFeatures::vertexPipelineStoresAndAtomics:
-                        device_features.vertexPipelineStoresAndAtomics = supported_device_features.vertexPipelineStoresAndAtomics;
-                        break;
-                }
-        }
-
-        return device_features;
 }
 
 PhysicalDevice find_physical_device(VkInstance instance, VkSurfaceKHR surface, int api_version_major, int api_version_minor,
