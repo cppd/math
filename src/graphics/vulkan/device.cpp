@@ -363,7 +363,11 @@ Device PhysicalDevice::create_device(const std::unordered_map<uint32_t, uint32_t
                                      const std::vector<PhysicalDeviceFeatures>& required_features,
                                      const std::vector<PhysicalDeviceFeatures>& optional_features) const
 {
+        ASSERT(std::all_of(queue_families.cbegin(), queue_families.cend(),
+                           [&](const auto& v) { return v.first < m_queue_families.size(); }));
         ASSERT(std::all_of(queue_families.cbegin(), queue_families.cend(), [](const auto& v) { return v.second > 0; }));
+        ASSERT(std::all_of(queue_families.cbegin(), queue_families.cend(),
+                           [&](const auto& v) { return v.second <= m_queue_families[v.first].queueCount; }));
 
         if (queue_families.empty())
         {
