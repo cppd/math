@@ -203,9 +203,10 @@ public:
                 }
 #endif
 
-                create_gl_window_1x1(opengl::API_VERSION_MAJOR, opengl::API_VERSION_MINOR, opengl::required_extensions(),
-                                     minimum_sample_count, DEPTH_BITS, STENCIL_BITS, RED_BITS, GREEN_BITS, BLUE_BITS, ALPHA_BITS,
-                                     &m_window);
+                create_gl_window_1x1(
+                        opengl::API_VERSION_MAJOR, opengl::API_VERSION_MINOR,
+                        std::vector<std::string>(opengl::REQUIRED_EXTENSIONS.begin(), opengl::REQUIRED_EXTENSIONS.end()),
+                        minimum_sample_count, DEPTH_BITS, STENCIL_BITS, RED_BITS, GREEN_BITS, BLUE_BITS, ALPHA_BITS, &m_window);
         }
 
         ~OpenGLWindowImplementation() override
@@ -234,8 +235,9 @@ class OpenGLContext::Impl
 
 public:
         Impl()
-                : m_context(create_gl_context_1x1(opengl::API_VERSION_MAJOR, opengl::API_VERSION_MINOR,
-                                                  opengl::required_extensions()))
+                : m_context(create_gl_context_1x1(
+                          opengl::API_VERSION_MAJOR, opengl::API_VERSION_MINOR,
+                          std::vector<std::string>(opengl::REQUIRED_EXTENSIONS.begin(), opengl::REQUIRED_EXTENSIONS.end())))
         {
         }
 };

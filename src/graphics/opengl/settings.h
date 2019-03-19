@@ -17,16 +17,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <string>
-#include <vector>
+#include <initializer_list>
 
 namespace opengl
 {
 constexpr int API_VERSION_MAJOR = 4;
 constexpr int API_VERSION_MINOR = 5;
 
-inline std::vector<std::string> required_extensions()
+// clang-format off
+constexpr std::initializer_list<const char*> REQUIRED_EXTENSIONS
 {
-        return {"GL_ARB_bindless_texture"};
-}
+        "GL_ARB_bindless_texture"
+};
+// clang-format on
 }
