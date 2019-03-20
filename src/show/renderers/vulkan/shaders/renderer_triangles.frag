@@ -15,6 +15,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+layout(early_fragment_tests) in;
+
 // Общие данные для всех треугольников всех объектов
 layout(std140, set = 0, binding = 1) uniform Lighting
 {
