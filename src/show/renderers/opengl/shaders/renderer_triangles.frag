@@ -15,6 +15,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+layout(early_fragment_tests) in;
+
 layout(bindless_sampler) uniform sampler2DShadow shadow_tex;
 
 layout(bindless_image, r32ui) writeonly uniform uimage2D object_img;
