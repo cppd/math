@@ -162,6 +162,52 @@ Texture2DHandle::operator GLuint() const noexcept
 
 //
 
+void Texture2DMultisampleHandle::destroy() noexcept
+{
+        if (m_texture != 0)
+        {
+                glDeleteTextures(1, &m_texture);
+        }
+}
+
+void Texture2DMultisampleHandle::move(Texture2DMultisampleHandle* from) noexcept
+{
+        m_texture = from->m_texture;
+        from->m_texture = 0;
+}
+
+Texture2DMultisampleHandle::Texture2DMultisampleHandle()
+{
+        glCreateTextures(GL_TEXTURE_2D_MULTISAMPLE, 1, &m_texture);
+}
+
+Texture2DMultisampleHandle::~Texture2DMultisampleHandle()
+{
+        destroy();
+}
+
+Texture2DMultisampleHandle::Texture2DMultisampleHandle(Texture2DMultisampleHandle&& from) noexcept
+{
+        move(&from);
+}
+
+Texture2DMultisampleHandle& Texture2DMultisampleHandle::operator=(Texture2DMultisampleHandle&& from) noexcept
+{
+        if (this != &from)
+        {
+                destroy();
+                move(&from);
+        }
+        return *this;
+}
+
+Texture2DMultisampleHandle::operator GLuint() const noexcept
+{
+        return m_texture;
+}
+
+//
+
 void FramebufferHandle::destroy() noexcept
 {
         if (m_framebuffer != 0)

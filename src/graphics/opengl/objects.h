@@ -81,6 +81,26 @@ public:
         operator GLuint() const noexcept;
 };
 
+class Texture2DMultisampleHandle final
+{
+        GLuint m_texture = 0;
+
+        void destroy() noexcept;
+        void move(Texture2DMultisampleHandle* from) noexcept;
+
+public:
+        Texture2DMultisampleHandle();
+        ~Texture2DMultisampleHandle();
+
+        Texture2DMultisampleHandle(const Texture2DMultisampleHandle&) = delete;
+        Texture2DMultisampleHandle& operator=(const Texture2DMultisampleHandle&) = delete;
+
+        Texture2DMultisampleHandle(Texture2DMultisampleHandle&& from) noexcept;
+        Texture2DMultisampleHandle& operator=(Texture2DMultisampleHandle&& from) noexcept;
+
+        operator GLuint() const noexcept;
+};
+
 class FramebufferHandle final
 {
         GLuint m_framebuffer = 0;
