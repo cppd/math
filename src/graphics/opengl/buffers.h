@@ -115,6 +115,25 @@ public:
         }
 };
 
+class Texture2DMultisample final
+{
+        Texture2DMultisampleHandle m_texture;
+        int m_width = 0, m_height = 0;
+
+public:
+        Texture2DMultisample(GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height) noexcept
+        {
+                glTextureStorage2DMultisample(m_texture, samples, internalformat, width, height, GL_FALSE);
+                m_width = width;
+                m_height = height;
+        }
+
+        void named_framebuffer_texture(GLuint framebuffer, GLenum attachment) const noexcept
+        {
+                glNamedFramebufferTexture(framebuffer, attachment, m_texture, 0);
+        }
+};
+
 class Framebuffer final
 {
         FramebufferHandle m_framebuffer;
