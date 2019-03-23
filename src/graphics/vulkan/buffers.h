@@ -215,6 +215,7 @@ class DepthAttachment final
         Image m_image;
         DeviceMemory m_device_memory;
         ImageView m_image_view;
+        VkSampleCountFlagBits m_sample_count;
         unsigned m_width, m_height;
 
 public:
@@ -234,6 +235,7 @@ public:
         VkFormat format() const noexcept;
         VkImageLayout image_layout() const noexcept;
         VkImageView image_view() const noexcept;
+        VkSampleCountFlagBits sample_count() const noexcept;
 
         unsigned width() const noexcept;
         unsigned height() const noexcept;

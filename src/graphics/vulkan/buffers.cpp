@@ -788,6 +788,7 @@ DepthAttachment::DepthAttachment(const VulkanInstance& instance, const std::vect
         m_image = create_2d_image(instance.device(), width, height, m_format, family_indices, samples, tiling, usage);
         m_device_memory = create_device_memory(instance.device(), m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
         m_image_view = create_image_view(instance.device(), m_image, m_format, VK_IMAGE_ASPECT_DEPTH_BIT);
+        m_sample_count = samples;
         m_width = width;
         m_height = height;
 
@@ -813,6 +814,11 @@ VkImageLayout DepthAttachment::image_layout() const noexcept
 VkImageView DepthAttachment::image_view() const noexcept
 {
         return m_image_view;
+}
+
+VkSampleCountFlagBits DepthAttachment::sample_count() const noexcept
+{
+        return m_sample_count;
 }
 
 unsigned DepthAttachment::width() const noexcept
