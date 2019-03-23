@@ -32,26 +32,80 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace
 {
+void check_buffers(const std::vector<vulkan::ColorAttachment>& color, const std::vector<vulkan::DepthAttachment>& depth)
+{
+        if (depth.empty())
+        {
+                error("No depth attachment");
+        }
+
+        if (!std::all_of(color.cbegin(), color.cend(),
+                         [&](const vulkan::ColorAttachment& c) { return c.sample_count() == color[0].sample_count(); }))
+        {
+                error("Color attachments must have the same sample count");
+        }
+
+        if (!std::all_of(color.cbegin(), color.cend(),
+                         [&](const vulkan::ColorAttachment& c) { return c.format() == color[0].format(); }))
+        {
+                error("Color attachments must have the same format");
+        }
+
+        if (!std::all_of(depth.cbegin(), depth.cend(),
+                         [&](const vulkan::DepthAttachment& d) { return d.sample_count() == depth[0].sample_count(); }))
+        {
+                error("Depth attachments must have the same sample count");
+        }
+
+        if (!std::all_of(depth.cbegin(), depth.cend(),
+                         [&](const vulkan::DepthAttachment& d) { return d.format() == depth[0].format(); }))
+        {
+                error("Depth attachments must have the same format");
+        }
+
+        if (!std::all_of(color.cbegin(), color.cend(),
+                         [&](const vulkan::ColorAttachment& c) { return c.sample_count() == depth[0].sample_count(); }))
+        {
+                error("Color attachment sample count is not equal to depth attachment sample count");
+        }
+
+        if (color.size() == 0)
+        {
+                if (!std::all_of(depth.cbegin(), depth.cend(),
+                                 [&](const vulkan::DepthAttachment& d) { return d.sample_count() == VK_SAMPLE_COUNT_1_BIT; }))
+                {
+                        error("There are no color attachments, but depth attachment sample count is not equal to 1");
+                }
+        }
+}
+
 std::string buffer_info(const std::vector<vulkan::ColorAttachment>& color, const std::vector<vulkan::DepthAttachment>& depth)
 {
-        ASSERT(depth.size() > 0);
-        ASSERT(std::all_of(color.cbegin(), color.cend(), [&](const vulkan::ColorAttachment& c) {
-                return c.sample_count() == color[0].sample_count() && c.format() == color[0].format();
-        }));
-        ASSERT(std::all_of(depth.cbegin(), depth.cend(),
-                           [&](const vulkan::DepthAttachment& d) { return d.format() == depth[0].format(); }));
+        check_buffers(color, depth);
 
         std::ostringstream oss;
 
         oss << "Render buffers sample count = "
             << vulkan::integer_sample_count_flag(color.size() > 0 ? color[0].sample_count() : VK_SAMPLE_COUNT_1_BIT);
-        oss << '\n';
-        oss << "Render buffers depth attachment format " << vulkan::format_to_string(depth[0].format());
 
+        oss << '\n';
+        if (!depth.empty())
+        {
+                oss << "Render buffers depth attachment format = " << vulkan::format_to_string(depth[0].format());
+        }
+        else
+        {
+                oss << "Render buffers do not have depth attachments";
+        }
+
+        oss << '\n';
         if (color.size() > 0)
         {
-                oss << '\n';
-                oss << "Render buffers color attachment format " << vulkan::format_to_string(color[0].format());
+                oss << "Render buffers color attachment format = " << vulkan::format_to_string(color[0].format());
+        }
+        else
+        {
+                oss << "Render buffers do not have color attachments";
         }
 
         return oss.str();
@@ -541,6 +595,8 @@ Impl::Impl(vulkan::RenderBufferCount buffer_count, const vulkan::Swapchain& swap
         {
                 create_one_sample(count, swapchain, attachment_family_indices, depth_image_formats);
         }
+
+        check_buffers(m_color_attachments, m_depth_attachments);
 
         LOG(buffer_info(m_color_attachments, m_depth_attachments));
 }
