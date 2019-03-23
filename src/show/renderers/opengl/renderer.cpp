@@ -384,6 +384,8 @@ class Renderer final : public OpenGLRenderer
         static constexpr mat4 TRANSLATE = translate<double>(1, 1, 1);
         const mat4 SCALE_BIAS_MATRIX = SCALE * TRANSLATE;
 
+        const unsigned m_sample_count;
+
         opengl::GraphicsProgram m_triangles_program;
         opengl::GraphicsProgram m_shadow_program;
         opengl::GraphicsProgram m_points_0d_program;
@@ -502,6 +504,7 @@ class Renderer final : public OpenGLRenderer
                         if (draw_to_color_buffer)
                         {
                                 m_color_buffer->unbind_buffer();
+                                m_color_buffer->resolve();
                         }
                         return;
                 }
@@ -565,6 +568,7 @@ class Renderer final : public OpenGLRenderer
                 if (draw_to_color_buffer)
                 {
                         m_color_buffer->unbind_buffer();
+                        m_color_buffer->resolve();
                 }
         }
 
@@ -623,7 +627,7 @@ class Renderer final : public OpenGLRenderer
                 m_width = width;
                 m_height = height;
 
-                m_color_buffer = std::make_unique<opengl::ColorBuffer>(width, height);
+                m_color_buffer = opengl::create_color_buffer(m_sample_count, width, height);
                 m_objects = std::make_unique<opengl::TextureImage>(width, height, GL_R32UI);
 
                 m_triangles_program.set_uniform_handle("object_img", m_objects->image_resident_handle_write_only());
@@ -672,8 +676,9 @@ class Renderer final : public OpenGLRenderer
         }
 
 public:
-        Renderer()
-                : m_triangles_program(opengl::VertexShader(triangles_vert), opengl::GeometryShader(triangles_geom),
+        Renderer(unsigned sample_count)
+                : m_sample_count(sample_count),
+                  m_triangles_program(opengl::VertexShader(triangles_vert), opengl::GeometryShader(triangles_geom),
                                       opengl::FragmentShader(triangles_frag)),
                   m_shadow_program(opengl::VertexShader(shadow_vert), opengl::FragmentShader(shadow_frag)),
                   m_points_0d_program(opengl::VertexShader(points_0d_vert), opengl::FragmentShader(points_frag)),
@@ -686,7 +691,7 @@ public:
 
                 m_framebuffer_srgb = opengl::current_buffer_is_srgb();
                 {
-                        opengl::ColorBuffer color_buffer(1, 1);
+                        opengl::ColorBufferSinglesample color_buffer(1, 1);
                         color_buffer.bind_buffer();
                         m_colorbuffer_srgb = opengl::current_buffer_is_srgb();
                         color_buffer.unbind_buffer();
@@ -701,7 +706,7 @@ mat4 OpenGLRenderer::ortho(double left, double right, double bottom, double top,
         return ortho_opengl<double>(left, right, bottom, top, near, far);
 }
 
-std::unique_ptr<OpenGLRenderer> create_opengl_renderer()
+std::unique_ptr<OpenGLRenderer> create_opengl_renderer(unsigned sample_count)
 {
-        return std::make_unique<Renderer>();
+        return std::make_unique<Renderer>(sample_count);
 }

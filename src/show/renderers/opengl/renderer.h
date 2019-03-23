@@ -65,4 +65,4 @@ struct OpenGLRenderer
         static mat4 ortho(double left, double right, double bottom, double top, double near, double far);
 };
 
-std::unique_ptr<OpenGLRenderer> create_opengl_renderer();
+std::unique_ptr<OpenGLRenderer> create_opengl_renderer(unsigned sample_count);

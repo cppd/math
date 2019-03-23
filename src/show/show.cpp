@@ -847,7 +847,7 @@ void ShowObject<GraphicsAndComputeAPI::OpenGL>::loop()
         ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
         std::unique_ptr<OpenGLWindow> window = create_opengl_window(OPENGL_MINIMUM_SAMPLE_COUNT, this);
-        std::unique_ptr<OpenGLRenderer> renderer = create_opengl_renderer();
+        std::unique_ptr<OpenGLRenderer> renderer = create_opengl_renderer(OPENGL_MINIMUM_SAMPLE_COUNT);
         std::unique_ptr<OpenGLCanvas> canvas = create_opengl_canvas(m_fps_text_size, m_parent_window_ppi);
 
         //

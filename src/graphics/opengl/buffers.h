@@ -20,12 +20,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/color/conversion_span.h"
 #include "com/container.h"
 #include "com/error.h"
+#include "com/print.h"
 #include "com/type/detect.h"
 #include "graphics/opengl/functions/opengl_functions.h"
 #include "graphics/opengl/objects.h"
 
 #include <array>
 #include <cstring>
+#include <memory>
 #include <string>
 #include <type_traits>
 #include <vector>
@@ -165,6 +167,15 @@ public:
         void named_framebuffer_texture(GLenum attachment, const Texture2D& texture, GLint level) const noexcept
         {
                 texture.named_framebuffer_texture(m_framebuffer, attachment, level);
+        }
+        void named_framebuffer_texture(GLenum attachment, const Texture2DMultisample& texture) const noexcept
+        {
+                texture.named_framebuffer_texture(m_framebuffer, attachment);
+        }
+
+        GLuint framebuffer() const noexcept
+        {
+                return m_framebuffer;
         }
 };
 
@@ -633,14 +644,24 @@ public:
         }
 };
 
-class ColorBuffer final
+struct ColorBuffer
+{
+        virtual ~ColorBuffer() = default;
+
+        virtual void bind_buffer() const noexcept = 0;
+        virtual void unbind_buffer() const noexcept = 0;
+        virtual void resolve() const noexcept = 0;
+        virtual const TextureRGBA32F& color_texture() const noexcept = 0;
+};
+
+class ColorBufferSinglesample final : public ColorBuffer
 {
         Framebuffer m_framebuffer;
         TextureRGBA32F m_color;
         TextureDepth32 m_depth;
 
 public:
-        ColorBuffer(GLsizei width, GLsizei height) : m_color(width, height), m_depth(width, height)
+        ColorBufferSinglesample(GLsizei width, GLsizei height) : m_color(width, height), m_depth(width, height)
         {
                 m_framebuffer.named_framebuffer_texture(GL_COLOR_ATTACHMENT0, m_color.texture(), 0);
                 m_framebuffer.named_framebuffer_texture(GL_DEPTH_ATTACHMENT, m_depth.texture(), 0);
@@ -651,22 +672,104 @@ public:
                         error("Error create framebuffer: " + std::to_string(check));
                 }
 
-                const GLenum draw_buffers[] = {GL_COLOR_ATTACHMENT0};
+                constexpr GLenum draw_buffers[] = {GL_COLOR_ATTACHMENT0};
                 m_framebuffer.named_framebuffer_draw_buffers(1, draw_buffers);
         }
 
-        void bind_buffer() const noexcept
+        void bind_buffer() const noexcept override
         {
                 m_framebuffer.bind_framebuffer();
         }
-        void unbind_buffer() const noexcept
+
+        void unbind_buffer() const noexcept override
         {
                 m_framebuffer.unbind_framebuffer();
         }
 
-        const TextureRGBA32F& color_texture() const noexcept
+        void resolve() const noexcept override
+        {
+        }
+
+        const TextureRGBA32F& color_texture() const noexcept override
         {
                 return m_color;
         }
 };
+
+class ColorBufferMultisample final : public ColorBuffer
+{
+        Texture2DMultisample m_color_multi;
+        Texture2DMultisample m_depth_multi;
+        TextureRGBA32F m_color_single;
+        Framebuffer m_framebuffer_multi;
+        Framebuffer m_framebuffer_single;
+
+public:
+        ColorBufferMultisample(GLsizei samples, GLsizei width, GLsizei height)
+                : m_color_multi(samples, GL_RGBA32F, width, height),
+                  m_depth_multi(samples, GL_DEPTH_COMPONENT32, width, height),
+                  m_color_single(width, height)
+        {
+                m_framebuffer_multi.named_framebuffer_texture(GL_COLOR_ATTACHMENT0, m_color_multi);
+                m_framebuffer_multi.named_framebuffer_texture(GL_DEPTH_ATTACHMENT, m_depth_multi);
+
+                m_framebuffer_single.named_framebuffer_texture(GL_COLOR_ATTACHMENT0, m_color_single.texture(), 0 /*level*/);
+
+                GLenum check;
+
+                check = m_framebuffer_multi.check_named_framebuffer_status();
+                if (check != GL_FRAMEBUFFER_COMPLETE)
+                {
+                        error("Error create framebuffer multisample: " + std::to_string(check));
+                }
+
+                check = m_framebuffer_single.check_named_framebuffer_status();
+                if (check != GL_FRAMEBUFFER_COMPLETE)
+                {
+                        error("Error create framebuffer singlesample: " + std::to_string(check));
+                }
+
+                constexpr GLenum draw_buffers[] = {GL_COLOR_ATTACHMENT0};
+                m_framebuffer_multi.named_framebuffer_draw_buffers(1, draw_buffers);
+                m_framebuffer_single.named_framebuffer_draw_buffers(1, draw_buffers);
+        }
+
+        void bind_buffer() const noexcept override
+        {
+                m_framebuffer_multi.bind_framebuffer();
+        }
+
+        void unbind_buffer() const noexcept override
+        {
+                m_framebuffer_multi.unbind_framebuffer();
+        }
+
+        void resolve() const noexcept override
+        {
+                int width = m_color_single.texture().width();
+                int height = m_color_single.texture().height();
+                glBlitNamedFramebuffer(m_framebuffer_multi.framebuffer(), m_framebuffer_single.framebuffer(), 0, 0, width, height,
+                                       0, 0, width, height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+        }
+
+        const TextureRGBA32F& color_texture() const noexcept override
+        {
+                return m_color_single;
+        }
+};
+
+inline std::unique_ptr<ColorBuffer> create_color_buffer(GLsizei samples, GLsizei width, GLsizei height)
+{
+        if (samples == 1)
+        {
+                return std::make_unique<ColorBufferSinglesample>(width, height);
+        }
+
+        if (samples > 1)
+        {
+                return std::make_unique<ColorBufferMultisample>(samples, width, height);
+        }
+
+        error("Error sample count " + to_string(samples));
+}
 }
