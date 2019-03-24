@@ -36,24 +36,22 @@ class VulkanInstance final
 
         const PhysicalDevice m_physical_device;
 
-        const uint32_t m_graphics_and_compute_family_index;
+        const uint32_t m_graphics_compute_family_index;
         const uint32_t m_transfer_family_index;
         const uint32_t m_presentation_family_index;
 
+        const std::vector<uint32_t> m_graphics_compute_and_presentation_family_indices;
+        const std::vector<uint32_t> m_graphics_compute_and_transfer_family_indices;
+        const std::vector<uint32_t> m_graphics_compute_family_indices;
+
         const Device m_device;
 
-        const CommandPool m_graphics_command_pool;
-        const VkQueue m_graphics_queue;
-
+        const CommandPool m_graphics_compute_command_pool;
         const CommandPool m_transfer_command_pool;
+
+        const VkQueue m_graphics_compute_queue;
         const VkQueue m_transfer_queue;
-
         const VkQueue m_presentation_queue;
-
-        const std::vector<uint32_t> m_graphics_and_presentation_family_indices;
-        const std::vector<uint32_t> m_graphics_and_transfer_family_indices;
-        const std::vector<uint32_t> m_graphics_and_compute_family_indices;
-        const std::vector<uint32_t> m_graphics_family_indices;
 
 public:
         VulkanInstance(const std::vector<std::string>& required_instance_extensions,
@@ -101,59 +99,68 @@ public:
                 return m_physical_device.properties().limits;
         }
 
-        VkQueue presentation_queue() const noexcept
-        {
-                return m_presentation_queue;
-        }
-
-        VkQueue graphics_queue() const noexcept
-        {
-                return m_graphics_queue;
-        }
-
         VkCommandPool graphics_command_pool() const noexcept
         {
-                return m_graphics_command_pool;
+                return m_graphics_compute_command_pool;
         }
-
-        VkQueue transfer_queue() const noexcept
-        {
-                return m_transfer_queue;
-        }
-
         VkCommandPool transfer_command_pool() const noexcept
         {
                 return m_transfer_command_pool;
         }
 
+        VkQueue graphics_queue() const noexcept
+        {
+                return m_graphics_compute_queue;
+        }
+        VkQueue transfer_queue() const noexcept
+        {
+                return m_transfer_queue;
+        }
+        VkQueue presentation_queue() const noexcept
+        {
+                return m_presentation_queue;
+        }
+
+        const std::vector<uint32_t>& graphics_compute_and_presentation_family_indices() const noexcept
+        {
+                return m_graphics_compute_and_presentation_family_indices;
+        }
         const std::vector<uint32_t>& graphics_and_presentation_family_indices() const noexcept
         {
-                return m_graphics_and_presentation_family_indices;
+                return m_graphics_compute_and_presentation_family_indices;
         }
-
+        const std::vector<uint32_t>& graphics_compute_and_transfer_family_indices() const noexcept
+        {
+                return m_graphics_compute_and_transfer_family_indices;
+        }
         const std::vector<uint32_t>& graphics_and_transfer_family_indices() const noexcept
         {
-                return m_graphics_and_transfer_family_indices;
+                return m_graphics_compute_and_transfer_family_indices;
         }
-
-        const std::vector<uint32_t>& graphics_and_compute_family_indices() const noexcept
+        const std::vector<uint32_t>& graphics_compute_family_indices() const noexcept
         {
-                return m_graphics_and_compute_family_indices;
+                return m_graphics_compute_family_indices;
         }
-
         const std::vector<uint32_t>& graphics_family_indices() const noexcept
         {
-                return m_graphics_family_indices;
+                return m_graphics_compute_family_indices;
         }
 
+        uint32_t graphics_compute_family_index() const noexcept
+        {
+                return m_graphics_compute_family_index;
+        }
         uint32_t graphics_family_index() const noexcept
         {
-                return m_graphics_and_compute_family_index;
+                return m_graphics_compute_family_index;
         }
-
         uint32_t transfer_family_index() const noexcept
         {
                 return m_transfer_family_index;
+        }
+        uint32_t presentation_family_index() const noexcept
+        {
+                return m_presentation_family_index;
         }
 };
 }

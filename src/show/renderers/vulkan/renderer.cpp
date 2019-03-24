@@ -934,7 +934,7 @@ class Renderer final : public VulkanRenderer
                 //
 
                 m_object_image =
-                        std::make_unique<vulkan::StorageImage>(m_instance, m_instance.graphics_and_compute_family_indices(),
+                        std::make_unique<vulkan::StorageImage>(m_instance, m_instance.graphics_compute_family_indices(),
                                                                VK_FORMAT_R32_UINT, m_swapchain->width(), m_swapchain->height());
 
                 m_triangles_shared_shader_memory.set_object_image(m_object_image.get());
