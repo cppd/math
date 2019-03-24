@@ -26,25 +26,46 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace vulkan
 {
-class Instance final
+class InstanceHandle final
 {
         VkInstance m_instance = VK_NULL_HANDLE;
 
         void destroy() noexcept;
-        void move(Instance* from) noexcept;
+        void move(InstanceHandle* from) noexcept;
 
 public:
-        Instance();
-        Instance(const VkInstanceCreateInfo& create_info);
-        ~Instance();
+        InstanceHandle(const VkInstanceCreateInfo& create_info);
+        ~InstanceHandle();
 
-        Instance(const Instance&) = delete;
-        Instance& operator=(const Instance&) = delete;
+        InstanceHandle(const InstanceHandle&) = delete;
+        InstanceHandle& operator=(const InstanceHandle&) = delete;
 
-        Instance(Instance&&) noexcept;
-        Instance& operator=(Instance&&) noexcept;
+        InstanceHandle(InstanceHandle&&) noexcept;
+        InstanceHandle& operator=(InstanceHandle&&) noexcept;
 
         operator VkInstance() const noexcept;
+};
+
+class Instance final
+{
+        InstanceHandle m_instance;
+        bool m_validation_layers_enabled;
+
+public:
+        Instance(const VkInstanceCreateInfo& create_info)
+                : m_instance(create_info), m_validation_layers_enabled(create_info.enabledLayerCount > 0)
+        {
+        }
+
+        operator VkInstance() const noexcept
+        {
+                return m_instance;
+        }
+
+        bool validation_layers_enabled() const noexcept
+        {
+                return m_validation_layers_enabled;
+        }
 };
 
 class DebugReportCallback final

@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace vulkan
 {
-void Instance::destroy() noexcept
+void InstanceHandle::destroy() noexcept
 {
         if (m_instance != VK_NULL_HANDLE)
         {
@@ -35,15 +35,13 @@ void Instance::destroy() noexcept
         }
 }
 
-void Instance::move(Instance* from) noexcept
+void InstanceHandle::move(InstanceHandle* from) noexcept
 {
         m_instance = from->m_instance;
         from->m_instance = VK_NULL_HANDLE;
 }
 
-Instance::Instance() = default;
-
-Instance::Instance(const VkInstanceCreateInfo& create_info)
+InstanceHandle::InstanceHandle(const VkInstanceCreateInfo& create_info)
 {
         VkResult result = vkCreateInstance(&create_info, nullptr, &m_instance);
         if (result != VK_SUCCESS)
@@ -54,17 +52,17 @@ Instance::Instance(const VkInstanceCreateInfo& create_info)
         ASSERT(m_instance != VK_NULL_HANDLE);
 }
 
-Instance::~Instance()
+InstanceHandle::~InstanceHandle()
 {
         destroy();
 }
 
-Instance::Instance(Instance&& from) noexcept
+InstanceHandle::InstanceHandle(InstanceHandle&& from) noexcept
 {
         move(&from);
 }
 
-Instance& Instance::operator=(Instance&& from) noexcept
+InstanceHandle& InstanceHandle::operator=(InstanceHandle&& from) noexcept
 {
         if (this != &from)
         {
@@ -74,7 +72,7 @@ Instance& Instance::operator=(Instance&& from) noexcept
         return *this;
 }
 
-Instance::operator VkInstance() const noexcept
+InstanceHandle::operator VkInstance() const noexcept
 {
         return m_instance;
 }
