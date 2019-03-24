@@ -62,7 +62,6 @@ public:
 
         Device create_device(const std::unordered_map<uint32_t, uint32_t>& queue_families,
                              const std::vector<std::string>& required_extensions,
-                             const std::vector<std::string>& required_validation_layers,
                              const std::vector<PhysicalDeviceFeatures>& required_features,
                              const std::vector<PhysicalDeviceFeatures>& optional_features) const;
 };

@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/alg.h"
 #include "com/log.h"
 #include "com/merge.h"
+#include "com/string/vector.h"
 
 namespace
 {
@@ -46,8 +47,10 @@ VulkanInstance::VulkanInstance(const std::vector<std::string>& required_instance
                                const std::vector<PhysicalDeviceFeatures>& required_features,
                                const std::vector<PhysicalDeviceFeatures>& optional_features,
                                const std::function<VkSurfaceKHR(VkInstance)>& create_surface)
-        : m_instance(create_instance(API_VERSION_MAJOR, API_VERSION_MINOR, required_instance_extensions, validation_layers())),
-          m_callback(!validation_layers().empty() ? std::make_optional(create_debug_report_callback(m_instance)) : std::nullopt),
+        : m_instance(create_instance(API_VERSION_MAJOR, API_VERSION_MINOR, required_instance_extensions,
+                                     string_vector(VALIDATION_LAYERS))),
+          m_callback(m_instance.validation_layers_enabled() ? std::make_optional(create_debug_report_callback(m_instance)) :
+                                                              std::nullopt),
           m_surface(m_instance, create_surface),
           //
           m_physical_device(find_physical_device(m_instance, m_surface, API_VERSION_MAJOR, API_VERSION_MINOR,
@@ -64,8 +67,8 @@ VulkanInstance::VulkanInstance(const std::vector<std::string>& required_instance
           //
           m_device(m_physical_device.create_device(
                   queue_families({m_graphics_and_compute_family_index, m_transfer_family_index, m_presentation_family_index}),
-                  merge<std::string>(required_device_extensions, VK_KHR_SWAPCHAIN_EXTENSION_NAME), validation_layers(),
-                  required_features, optional_features)),
+                  merge<std::string>(required_device_extensions, VK_KHR_SWAPCHAIN_EXTENSION_NAME), required_features,
+                  optional_features)),
           //
           m_graphics_command_pool(create_command_pool(m_device, m_graphics_and_compute_family_index)),
           m_graphics_queue(m_device.queue(m_graphics_and_compute_family_index, 0 /*queue_index*/)),

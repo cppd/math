@@ -25,8 +25,10 @@ namespace vulkan
 constexpr int API_VERSION_MAJOR = 1;
 constexpr int API_VERSION_MINOR = 1;
 
-inline std::vector<std::string> validation_layers()
+// clang-format off
+constexpr std::initializer_list<const char*> VALIDATION_LAYERS
 {
-        return {"VK_LAYER_LUNARG_standard_validation"};
+        "VK_LAYER_LUNARG_standard_validation"
 };
+// clang-format on
 }

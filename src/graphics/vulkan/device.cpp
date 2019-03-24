@@ -359,7 +359,6 @@ bool PhysicalDevice::queue_family_supports_presentation(uint32_t index) const
 
 Device PhysicalDevice::create_device(const std::unordered_map<uint32_t, uint32_t>& queue_families,
                                      const std::vector<std::string>& required_extensions,
-                                     const std::vector<std::string>& required_validation_layers,
                                      const std::vector<PhysicalDeviceFeatures>& required_features,
                                      const std::vector<PhysicalDeviceFeatures>& optional_features) const
 {
@@ -401,13 +400,6 @@ Device PhysicalDevice::create_device(const std::unordered_map<uint32_t, uint32_t
         {
                 create_info.enabledExtensionCount = extensions.size();
                 create_info.ppEnabledExtensionNames = extensions.data();
-        }
-
-        const std::vector<const char*> validation_layers = const_char_pointer_vector(required_validation_layers);
-        if (validation_layers.size() > 0)
-        {
-                create_info.enabledLayerCount = validation_layers.size();
-                create_info.ppEnabledLayerNames = validation_layers.data();
         }
 
         return Device(m_physical_device, create_info);
