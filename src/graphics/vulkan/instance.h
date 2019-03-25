@@ -49,9 +49,9 @@ class VulkanInstance final
         const CommandPool m_graphics_compute_command_pool;
         const CommandPool m_transfer_command_pool;
 
-        const VkQueue m_graphics_compute_queue;
-        const VkQueue m_transfer_queue;
-        const VkQueue m_presentation_queue;
+        VkQueue m_graphics_compute_queue;
+        VkQueue m_transfer_queue;
+        VkQueue m_presentation_queue;
 
 public:
         VulkanInstance(const std::vector<std::string>& required_instance_extensions,

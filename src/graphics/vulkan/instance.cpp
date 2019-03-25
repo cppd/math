@@ -25,16 +25,24 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/alg.h"
 #include "com/log.h"
 #include "com/merge.h"
+#include "com/print.h"
 #include "com/string/vector.h"
 
 namespace
 {
-std::unordered_map<uint32_t, uint32_t> queue_families(const std::vector<uint32_t>& family_indices)
+std::unordered_map<uint32_t, uint32_t> queue_families(const std::vector<uint32_t>& family_indices,
+                                                      const std::vector<VkQueueFamilyProperties>& queue_families)
 {
         std::unordered_map<uint32_t, uint32_t> queues;
         for (uint32_t index : family_indices)
         {
-                queues[index] = 1;
+                uint32_t v = queues[index] + 1;
+                if (v > queue_families[index].queueCount)
+                {
+                        error("Too many queues requested, queue family index = " + to_string(index) +
+                              ", queue count = " + to_string(queue_families[index].queueCount));
+                }
+                queues[index] = v;
         }
         return queues;
 }
@@ -72,23 +80,34 @@ VulkanInstance::VulkanInstance(const std::vector<std::string>& required_instance
           m_graphics_compute_family_indices(unique_elements(std::vector({m_graphics_compute_family_index}))),
           //
           m_device(m_physical_device.create_device(
-                  queue_families({m_graphics_compute_family_index, m_transfer_family_index, m_presentation_family_index}),
+                  queue_families({m_graphics_compute_family_index, m_transfer_family_index, m_presentation_family_index},
+                                 m_physical_device.queue_families()),
                   merge<std::string>(required_device_extensions, VK_KHR_SWAPCHAIN_EXTENSION_NAME), required_features,
                   optional_features)),
           //
           m_graphics_compute_command_pool(create_command_pool(m_device, m_graphics_compute_family_index)),
-          m_transfer_command_pool(create_transient_command_pool(m_device, m_transfer_family_index)),
-          //
-          m_graphics_compute_queue(m_device.queue(m_graphics_compute_family_index, 0 /*queue_index*/)),
-          m_transfer_queue(m_device.queue(m_transfer_family_index, 0 /*queue_index*/)),
-          m_presentation_queue(m_device.queue(m_presentation_family_index, 0 /*queue_index*/))
+          m_transfer_command_pool(create_transient_command_pool(m_device, m_transfer_family_index))
 {
         std::string s;
-        s += "Graphics and compute family index = " + to_string(m_graphics_compute_family_index);
+        std::unordered_map<uint32_t, uint32_t> queue_count;
+        uint32_t index;
+
+        index = m_graphics_compute_family_index;
+        m_graphics_compute_queue = m_device.queue(index, queue_count[index]);
+        s += "Graphics compute family index = " + to_string(index) + ", queue index = " + to_string(queue_count[index]);
         s += "\n";
-        s += "Transfer family index = " + to_string(m_transfer_family_index);
+        ++queue_count[index];
+
+        index = m_transfer_family_index;
+        m_transfer_queue = m_device.queue(index, queue_count[index]);
+        s += "Transfer family index = " + to_string(index) + ", queue index = " + to_string(queue_count[index]);
         s += "\n";
-        s += "Presentation family index = " + to_string(m_presentation_family_index);
+        ++queue_count[index];
+
+        index = m_presentation_family_index;
+        m_presentation_queue = m_device.queue(index, queue_count[index]);
+        s += "Presentation family index = " + to_string(index) + ", queue index = " + to_string(queue_count[index]);
+
         LOG(s);
 }
 
