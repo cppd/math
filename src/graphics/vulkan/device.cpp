@@ -373,17 +373,21 @@ Device PhysicalDevice::create_device(const std::unordered_map<uint32_t, uint32_t
                 error("No queue families for device creation");
         }
 
-        constexpr float queue_priority = 1;
-        std::vector<VkDeviceQueueCreateInfo> queue_create_infos;
+        std::vector<std::vector<float>> queue_priorities(queue_families.size());
+        std::vector<VkDeviceQueueCreateInfo> queue_create_infos(queue_families.size());
+        unsigned i = 0;
         for (const auto& [queue_family_index, queue_count] : queue_families)
         {
+                queue_priorities[i].resize(queue_count, 1);
+
                 VkDeviceQueueCreateInfo queue_create_info = {};
                 queue_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
                 queue_create_info.queueFamilyIndex = queue_family_index;
                 queue_create_info.queueCount = queue_count;
-                queue_create_info.pQueuePriorities = &queue_priority;
+                queue_create_info.pQueuePriorities = queue_priorities[i].data();
+                queue_create_infos[i] = queue_create_info;
 
-                queue_create_infos.push_back(queue_create_info);
+                ++i;
         }
 
         const VkPhysicalDeviceFeatures enabled_features =
