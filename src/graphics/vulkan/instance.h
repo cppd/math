@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "device.h"
 #include "objects.h"
 
+#include <array>
 #include <functional>
 #include <optional>
 #include <string>
@@ -29,6 +30,10 @@ namespace vulkan
 {
 class VulkanInstance final
 {
+        static constexpr unsigned GRAPHICS_COMPUTE_QUEUE_COUNT = 1;
+        static constexpr unsigned TRANSFER_QUEUE_COUNT = 1;
+        static constexpr unsigned PRESENTATION_QUEUE_COUNT = 1;
+
         const Instance m_instance;
         const std::optional<DebugReportCallback> m_callback;
 
@@ -49,9 +54,9 @@ class VulkanInstance final
         const CommandPool m_graphics_compute_command_pool;
         const CommandPool m_transfer_command_pool;
 
-        VkQueue m_graphics_compute_queue;
-        VkQueue m_transfer_queue;
-        VkQueue m_presentation_queue;
+        std::array<VkQueue, GRAPHICS_COMPUTE_QUEUE_COUNT> m_graphics_compute_queues;
+        std::array<VkQueue, TRANSFER_QUEUE_COUNT> m_transfer_queues;
+        std::array<VkQueue, PRESENTATION_QUEUE_COUNT> m_presentation_queues;
 
 public:
         VulkanInstance(const std::vector<std::string>& required_instance_extensions,
@@ -110,15 +115,15 @@ public:
 
         VkQueue graphics_queue() const noexcept
         {
-                return m_graphics_compute_queue;
+                return m_graphics_compute_queues[0];
         }
         VkQueue transfer_queue() const noexcept
         {
-                return m_transfer_queue;
+                return m_transfer_queues[0];
         }
         VkQueue presentation_queue() const noexcept
         {
-                return m_presentation_queue;
+                return m_presentation_queues[0];
         }
 
         const std::vector<uint32_t>& graphics_compute_and_presentation_family_indices() const noexcept

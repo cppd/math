@@ -30,19 +30,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace
 {
-std::unordered_map<uint32_t, uint32_t> queue_families(const std::vector<uint32_t>& family_indices,
-                                                      const std::vector<VkQueueFamilyProperties>& queue_families)
+std::unordered_map<uint32_t, uint32_t> compute_queue_count(
+        const std::vector<std::tuple<uint32_t, uint32_t>>& family_index_and_count,
+        const std::vector<VkQueueFamilyProperties>& queue_family_properties)
 {
         std::unordered_map<uint32_t, uint32_t> queues;
-        for (uint32_t index : family_indices)
+        for (const auto& [index, count] : family_index_and_count)
         {
-                uint32_t v = queues[index] + 1;
-                if (v > queue_families[index].queueCount)
-                {
-                        error("Too many queues requested, queue family index = " + to_string(index) +
-                              ", queue count = " + to_string(queue_families[index].queueCount));
-                }
-                queues[index] = v;
+                queues[index] = std::min(queues[index] + count, queue_family_properties[index].queueCount);
         }
         return queues;
 }
@@ -80,9 +75,15 @@ VulkanInstance::VulkanInstance(const std::vector<std::string>& required_instance
           m_graphics_compute_family_indices(unique_elements(std::vector({m_graphics_compute_family_index}))),
           //
           m_device(m_physical_device.create_device(
-                  queue_families({m_graphics_compute_family_index, m_transfer_family_index, m_presentation_family_index},
-                                 m_physical_device.queue_families()),
-                  merge<std::string>(required_device_extensions, VK_KHR_SWAPCHAIN_EXTENSION_NAME), required_features,
+                  compute_queue_count({{m_graphics_compute_family_index, GRAPHICS_COMPUTE_QUEUE_COUNT},
+                                       {m_transfer_family_index, TRANSFER_QUEUE_COUNT},
+                                       {m_presentation_family_index, PRESENTATION_QUEUE_COUNT}},
+                                      m_physical_device.queue_families()),
+                  //
+                  merge<std::string>(required_device_extensions, VK_KHR_SWAPCHAIN_EXTENSION_NAME),
+                  //
+                  required_features,
+                  //
                   optional_features)),
           //
           m_graphics_compute_command_pool(create_command_pool(m_device, m_graphics_compute_family_index)),
@@ -93,20 +94,45 @@ VulkanInstance::VulkanInstance(const std::vector<std::string>& required_instance
         uint32_t index;
 
         index = m_graphics_compute_family_index;
-        m_graphics_compute_queue = m_device.queue(index, queue_count[index]);
-        s += "Graphics compute family index = " + to_string(index) + ", queue index = " + to_string(queue_count[index]);
-        s += "\n";
-        ++queue_count[index];
+        s += "Graphics compute queues, family index = " + to_string(index);
+        for (size_t i = 0; i < m_graphics_compute_queues.size(); ++i)
+        {
+                m_graphics_compute_queues[i] = m_device.queue(index, queue_count[index]);
+                s += "\n  queue = " + to_string(i) + ", device queue = " + to_string(queue_count[index]);
+                ++queue_count[index];
+                if (queue_count[index] >= m_physical_device.queue_families()[index].queueCount)
+                {
+                        queue_count[index] = 0;
+                }
+        }
 
+        s += '\n';
         index = m_transfer_family_index;
-        m_transfer_queue = m_device.queue(index, queue_count[index]);
-        s += "Transfer family index = " + to_string(index) + ", queue index = " + to_string(queue_count[index]);
-        s += "\n";
-        ++queue_count[index];
+        s += "Transfer queues, family index = " + to_string(index);
+        for (size_t i = 0; i < m_transfer_queues.size(); ++i)
+        {
+                m_transfer_queues[i] = m_device.queue(index, queue_count[index]);
+                s += "\n  queue = " + to_string(i) + ", device queue = " + to_string(queue_count[index]);
+                ++queue_count[index];
+                if (queue_count[index] >= m_physical_device.queue_families()[index].queueCount)
+                {
+                        queue_count[index] = 0;
+                }
+        }
 
+        s += '\n';
         index = m_presentation_family_index;
-        m_presentation_queue = m_device.queue(index, queue_count[index]);
-        s += "Presentation family index = " + to_string(index) + ", queue index = " + to_string(queue_count[index]);
+        s += "Presentation queues, family index = " + to_string(index);
+        for (size_t i = 0; i < m_presentation_queues.size(); ++i)
+        {
+                m_presentation_queues[i] = m_device.queue(index, queue_count[index]);
+                s += "\n  queue = " + to_string(i) + ", device queue = " + to_string(queue_count[index]);
+                ++queue_count[index];
+                if (queue_count[index] >= m_physical_device.queue_families()[index].queueCount)
+                {
+                        queue_count[index] = 0;
+                }
+        }
 
         LOG(s);
 }
