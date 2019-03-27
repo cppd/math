@@ -30,7 +30,7 @@ namespace vulkan
 {
 class VulkanInstance final
 {
-        static constexpr unsigned GRAPHICS_COMPUTE_QUEUE_COUNT = 1;
+        static constexpr unsigned GRAPHICS_COMPUTE_QUEUE_COUNT = 2;
         static constexpr unsigned TRANSFER_QUEUE_COUNT = 1;
         static constexpr unsigned PRESENTATION_QUEUE_COUNT = 1;
 
@@ -113,9 +113,9 @@ public:
                 return m_transfer_command_pool;
         }
 
-        VkQueue graphics_queue() const noexcept
+        const std::array<VkQueue, GRAPHICS_COMPUTE_QUEUE_COUNT>& graphics_queues() const noexcept
         {
-                return m_graphics_compute_queues[0];
+                return m_graphics_compute_queues;
         }
         VkQueue transfer_queue() const noexcept
         {

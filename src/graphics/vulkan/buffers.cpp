@@ -645,20 +645,20 @@ ColorTexture::ColorTexture(const VulkanInstance& instance, const std::vector<uin
         {
                 std::vector<uint16_t> buffer =
                         color_conversion::rgba_pixels_from_srgb_uint8_to_rgb_uint16(srgb_uint8_rgba_pixels);
-                staging_image_copy(instance.device(), instance.graphics_command_pool(), instance.graphics_queue(),
+                staging_image_copy(instance.device(), instance.graphics_command_pool(), instance.graphics_queues().front(),
                                    instance.transfer_command_pool(), instance.transfer_queue(), m_image, m_format, m_image_layout,
                                    width, height, buffer);
         }
         else if (m_format == VK_FORMAT_R32G32B32A32_SFLOAT)
         {
                 std::vector<float> buffer = color_conversion::rgba_pixels_from_srgb_uint8_to_rgb_float(srgb_uint8_rgba_pixels);
-                staging_image_copy(instance.device(), instance.graphics_command_pool(), instance.graphics_queue(),
+                staging_image_copy(instance.device(), instance.graphics_command_pool(), instance.graphics_queues().front(),
                                    instance.transfer_command_pool(), instance.transfer_queue(), m_image, m_format, m_image_layout,
                                    width, height, buffer);
         }
         else if (m_format == VK_FORMAT_R8G8B8A8_SRGB)
         {
-                staging_image_copy(instance.device(), instance.graphics_command_pool(), instance.graphics_queue(),
+                staging_image_copy(instance.device(), instance.graphics_command_pool(), instance.graphics_queues().front(),
                                    instance.transfer_command_pool(), instance.transfer_queue(), m_image, m_format, m_image_layout,
                                    width, height, srgb_uint8_rgba_pixels);
         }
@@ -724,7 +724,7 @@ GrayscaleTexture::GrayscaleTexture(const VulkanInstance& instance, const std::ve
         {
                 std::vector<uint16_t> buffer =
                         color_conversion::grayscale_pixels_from_srgb_uint8_to_rgb_uint16(srgb_uint8_grayscale_pixels);
-                staging_image_copy(instance.device(), instance.graphics_command_pool(), instance.graphics_queue(),
+                staging_image_copy(instance.device(), instance.graphics_command_pool(), instance.graphics_queues().front(),
                                    instance.transfer_command_pool(), instance.transfer_queue(), m_image, m_format, m_image_layout,
                                    width, height, buffer);
         }
@@ -732,13 +732,13 @@ GrayscaleTexture::GrayscaleTexture(const VulkanInstance& instance, const std::ve
         {
                 std::vector<float> buffer =
                         color_conversion::grayscale_pixels_from_srgb_uint8_to_rgb_float(srgb_uint8_grayscale_pixels);
-                staging_image_copy(instance.device(), instance.graphics_command_pool(), instance.graphics_queue(),
+                staging_image_copy(instance.device(), instance.graphics_command_pool(), instance.graphics_queues().front(),
                                    instance.transfer_command_pool(), instance.transfer_queue(), m_image, m_format, m_image_layout,
                                    width, height, buffer);
         }
         else if (m_format == VK_FORMAT_R8_SRGB)
         {
-                staging_image_copy(instance.device(), instance.graphics_command_pool(), instance.graphics_queue(),
+                staging_image_copy(instance.device(), instance.graphics_command_pool(), instance.graphics_queues().front(),
                                    instance.transfer_command_pool(), instance.transfer_queue(), m_image, m_format, m_image_layout,
                                    width, height, srgb_uint8_grayscale_pixels);
         }
@@ -792,8 +792,8 @@ DepthAttachment::DepthAttachment(const VulkanInstance& instance, const std::vect
         m_width = width;
         m_height = height;
 
-        transition_image_layout(instance.device(), instance.graphics_command_pool(), instance.graphics_queue(), m_image, m_format,
-                                VK_IMAGE_LAYOUT_UNDEFINED, m_image_layout);
+        transition_image_layout(instance.device(), instance.graphics_command_pool(), instance.graphics_queues().front(), m_image,
+                                m_format, VK_IMAGE_LAYOUT_UNDEFINED, m_image_layout);
 }
 
 VkImage DepthAttachment::image() const noexcept
@@ -855,8 +855,8 @@ ColorAttachment::ColorAttachment(const VulkanInstance& instance, const std::vect
 
         ASSERT(m_format == format);
 
-        transition_image_layout(instance.device(), instance.graphics_command_pool(), instance.graphics_queue(), m_image, m_format,
-                                VK_IMAGE_LAYOUT_UNDEFINED, m_image_layout);
+        transition_image_layout(instance.device(), instance.graphics_command_pool(), instance.graphics_queues().front(), m_image,
+                                m_format, VK_IMAGE_LAYOUT_UNDEFINED, m_image_layout);
 }
 
 VkImage ColorAttachment::image() const noexcept
@@ -979,8 +979,8 @@ StorageImage::StorageImage(const VulkanInstance& instance, const std::vector<uin
 
         ASSERT(m_format == format);
 
-        transition_storage_image_layout(instance.device(), instance.graphics_command_pool(), instance.graphics_queue(), m_image,
-                                        VK_IMAGE_LAYOUT_UNDEFINED, m_image_layout);
+        transition_storage_image_layout(instance.device(), instance.graphics_command_pool(), instance.graphics_queues().front(),
+                                        m_image, VK_IMAGE_LAYOUT_UNDEFINED, m_image_layout);
 }
 
 VkImage StorageImage::image() const noexcept
