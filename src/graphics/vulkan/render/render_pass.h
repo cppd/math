@@ -21,15 +21,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace vulkan_render_implementation
 {
-vulkan::RenderPass render_pass_swapchain(VkDevice device, VkFormat swapchain_image_format, VkFormat depth_image_format);
+vulkan::RenderPass render_pass_swapchain_depth(VkDevice device, VkFormat color_format, VkFormat depth_format);
 
-vulkan::RenderPass render_pass_swapchain_2d(VkDevice device, VkFormat swapchain_image_format);
+vulkan::RenderPass render_pass_swapchain(VkDevice device, VkFormat color_format);
 
-vulkan::RenderPass render_pass_swapchain_multisample(VkDevice device, VkFormat swapchain_image_format,
-                                                     VkFormat depth_image_format, VkSampleCountFlagBits sample_count);
+vulkan::RenderPass render_pass_swapchain_color_depth(VkDevice device, VkFormat color_format, VkFormat depth_format,
+                                                     VkSampleCountFlagBits sample_count);
 
-vulkan::RenderPass render_pass_swapchain_multisample_2d(VkDevice device, VkFormat swapchain_image_format,
-                                                        VkSampleCountFlagBits sample_count);
+vulkan::RenderPass render_pass_swapchain_color(VkDevice device, VkFormat color_format, VkSampleCountFlagBits sample_count);
 
-vulkan::RenderPass render_pass_depth(VkDevice device, VkFormat depth_image_format);
+vulkan::RenderPass render_pass_depth(VkDevice device, VkFormat depth_format);
 }
