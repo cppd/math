@@ -36,11 +36,11 @@ struct CommandBufferCreateInfo
         std::optional<VkRenderPass> render_pass;
         std::optional<Span<Framebuffer>> framebuffers;
         std::optional<VkCommandPool> command_pool;
-        std::optional<std::function<void(VkCommandBuffer command_buffer)>> render_pass_commands;
 
         // Эти значения могут быть не заданы
         std::optional<Span<VkClearValue>> clear_values;
         std::optional<std::function<void(VkCommandBuffer command_buffer)>> before_render_pass_commands;
+        std::optional<std::function<void(VkCommandBuffer command_buffer)>> render_pass_commands;
 };
 
 CommandBuffers create_command_buffers(const CommandBufferCreateInfo& info);

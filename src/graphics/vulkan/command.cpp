@@ -68,7 +68,10 @@ CommandBuffers create_command_buffers(const CommandBufferCreateInfo& info)
 
                 //
 
-                info.render_pass_commands.value()(command_buffers[i]);
+                if (info.render_pass_commands)
+                {
+                        (*info.render_pass_commands)(command_buffers[i]);
+                }
 
                 //
 
