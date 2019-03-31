@@ -899,7 +899,8 @@ void create_swapchain(const vulkan::VulkanInstance& instance, VulkanRenderer* re
 
         constexpr vulkan::RenderBufferCount buffer_count = vulkan::RenderBufferCount::One;
         *render_buffers = vulkan::create_render_buffers(buffer_count, *(swapchain->get()), instance.graphics_family_indices(),
-                                                        instance, VULKAN_MINIMUM_SAMPLE_COUNT, VULKAN_DEPTH_IMAGE_FORMATS);
+                                                        instance.graphics_command_pool(), instance, VULKAN_MINIMUM_SAMPLE_COUNT,
+                                                        VULKAN_DEPTH_IMAGE_FORMATS);
 
         renderer->create_buffers(swapchain->get(), &(*render_buffers)->buffers_3d());
 

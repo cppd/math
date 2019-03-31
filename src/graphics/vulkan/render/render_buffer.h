@@ -86,6 +86,7 @@ struct RenderBuffers
 
 std::unique_ptr<RenderBuffers> create_render_buffers(RenderBufferCount buffer_count, const vulkan::Swapchain& swapchain,
                                                      const std::vector<uint32_t>& attachment_family_indices,
-                                                     const vulkan::VulkanInstance& instance, int required_minimum_sample_count,
+                                                     VkCommandPool command_pool, const vulkan::VulkanInstance& instance,
+                                                     int required_minimum_sample_count,
                                                      const std::vector<VkFormat>& depth_image_formats);
 }
