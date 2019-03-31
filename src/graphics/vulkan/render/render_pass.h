@@ -25,8 +25,10 @@ vulkan::RenderPass render_pass_swapchain_depth(VkDevice device, VkFormat color_f
 
 vulkan::RenderPass render_pass_swapchain(VkDevice device, VkFormat color_format);
 
+#if 0
 vulkan::RenderPass render_pass_swapchain_color_depth(VkDevice device, VkFormat color_format, VkFormat depth_format,
                                                      VkSampleCountFlagBits sample_count);
+#endif
 
 vulkan::RenderPass render_pass_swapchain_color(VkDevice device, VkFormat color_format, VkSampleCountFlagBits sample_count);
 

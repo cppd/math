@@ -909,8 +909,8 @@ void create_swapchain(const vulkan::VulkanInstance& instance, VulkanRenderer* re
 
 template <size_t N>
 bool render_vulkan(VkSwapchainKHR swapchain, VkQueue presentation_queue, const std::array<VkQueue, N>& graphics_queues,
-                   VkDevice device, VkSemaphore image_semaphore, VulkanRenderer& renderer, VulkanCanvas& canvas,
-                   const TextData& text_data)
+                   VkDevice device, VkSemaphore image_semaphore, const vulkan::RenderBuffers& render_buffers,
+                   VulkanRenderer& renderer, VulkanCanvas& canvas, const TextData& text_data)
 {
         static_assert(N >= 1);
 
@@ -923,8 +923,8 @@ bool render_vulkan(VkSwapchainKHR swapchain, VkQueue presentation_queue, const s
         VkSemaphore wait_semaphore = image_semaphore;
 
         wait_semaphore = renderer.draw(graphics_queues[0], wait_semaphore, image_index);
-
         wait_semaphore = canvas.draw(graphics_queues[0], wait_semaphore, image_index, text_data);
+        wait_semaphore = render_buffers.resolve_to_swapchain(graphics_queues[0], wait_semaphore, image_index);
 
         if (!vulkan::queue_present(wait_semaphore, swapchain, image_index, presentation_queue))
         {
@@ -1032,7 +1032,7 @@ void ShowObject<GraphicsAndComputeAPI::Vulkan>::loop()
                 m_fps_text_data.text[1] = to_string(std::lround(m_fps.calculate()));
 
                 if (!render_vulkan(swapchain->swapchain(), instance.presentation_queue(), instance.graphics_queues(),
-                                   instance.device(), image_semaphore, *renderer, *canvas, m_fps_text_data))
+                                   instance.device(), image_semaphore, *render_buffers, *renderer, *canvas, m_fps_text_data))
                 {
                         create_swapchain(instance, renderer.get(), canvas.get(), &swapchain, &render_buffers, present_mode);
                         continue;
