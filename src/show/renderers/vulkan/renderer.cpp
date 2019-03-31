@@ -614,6 +614,9 @@ class Renderer final : public VulkanRenderer
         bool m_show_shadow = false;
 
         const vulkan::VulkanInstance& m_instance;
+        const vulkan::Device& m_device;
+        const std::vector<uint32_t> m_graphics_family_indices;
+        const VkCommandPool m_graphics_command_pool;
         const vulkan::Swapchain* m_swapchain = nullptr;
 
         vulkan::Semaphore m_shadow_signal_semaphore;
@@ -973,10 +976,12 @@ class Renderer final : public VulkanRenderer
                 //
 
                 constexpr vulkan::ShadowBufferCount buffer_count = vulkan::ShadowBufferCount::One;
-                m_shadow_buffers = vulkan::create_shadow_buffers(buffer_count, *m_swapchain, m_instance.graphics_family_indices(),
-                                                                 m_instance, SHADOW_DEPTH_IMAGE_FORMATS, m_shadow_zoom);
+                m_shadow_buffers = vulkan::create_shadow_buffers(buffer_count, *m_swapchain, m_graphics_family_indices,
+                                                                 m_graphics_command_pool, m_device, SHADOW_DEPTH_IMAGE_FORMATS,
+                                                                 m_shadow_zoom);
 
-                m_triangles_shared_shader_memory.set_shadow_texture(m_shadow_sampler, m_shadow_buffers->texture(0));
+                m_triangles_shared_shader_memory.set_shadow_texture(m_shadow_sampler, m_shadow_buffers->texture(0),
+                                                                    m_shadow_buffers->texture_image_layout());
 
                 m_shadow_pipeline = m_shadow_buffers->create_pipeline(
                         VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, {&m_shadow_vert, &m_shadow_frag}, m_shadow_pipeline_layout,
@@ -1114,38 +1119,41 @@ class Renderer final : public VulkanRenderer
         }
 
 public:
-        Renderer(const vulkan::VulkanInstance& instance, bool sample_shading, bool sampler_anisotropy)
+        Renderer(const vulkan::VulkanInstance& instance, const std::vector<uint32_t>& graphics_family_indices,
+                 VkCommandPool graphics_command_pool, bool sample_shading, bool sampler_anisotropy)
                 : m_sample_shading(sample_shading),
                   m_instance(instance),
-                  m_shadow_signal_semaphore(m_instance.device()),
-                  m_render_signal_semaphore(m_instance.device()),
-                  m_texture_sampler(impl::create_texture_sampler(m_instance.device(), sampler_anisotropy)),
-                  m_shadow_sampler(impl::create_shadow_sampler(m_instance.device())),
+                  m_device(instance.device()),
+                  m_graphics_family_indices(graphics_family_indices),
+                  m_graphics_command_pool(graphics_command_pool),
+                  m_shadow_signal_semaphore(m_device),
+                  m_render_signal_semaphore(m_device),
+                  m_texture_sampler(impl::create_texture_sampler(m_device, sampler_anisotropy)),
+                  m_shadow_sampler(impl::create_shadow_sampler(m_device)),
                   //
                   m_triangles_material_descriptor_set_layout(vulkan::create_descriptor_set_layout(
-                          m_instance.device(), impl::TrianglesMaterialMemory::descriptor_set_layout_bindings())),
+                          m_device, impl::TrianglesMaterialMemory::descriptor_set_layout_bindings())),
                   //
-                  m_triangles_shared_shader_memory(m_instance.device(), m_instance.graphics_family_indices()),
-                  m_shadow_shader_memory(m_instance.device(), m_instance.graphics_family_indices()),
-                  m_points_shader_memory(m_instance.device(), m_instance.graphics_family_indices()),
+                  m_triangles_shared_shader_memory(m_device, m_graphics_family_indices),
+                  m_shadow_shader_memory(m_device, m_graphics_family_indices),
+                  m_points_shader_memory(m_device, m_graphics_family_indices),
                   //
-                  m_triangles_vert(m_instance.device(), triangles_vert, "main"),
-                  m_triangles_geom(m_instance.device(), triangles_geom, "main"),
-                  m_triangles_frag(m_instance.device(), triangles_frag, "main"),
-                  m_shadow_vert(m_instance.device(), shadow_vert, "main"),
-                  m_shadow_frag(m_instance.device(), shadow_frag, "main"),
-                  m_points_0d_vert(m_instance.device(), points_0d_vert, "main"),
-                  m_points_1d_vert(m_instance.device(), points_1d_vert, "main"),
-                  m_points_frag(m_instance.device(), points_frag, "main"),
+                  m_triangles_vert(m_device, triangles_vert, "main"),
+                  m_triangles_geom(m_device, triangles_geom, "main"),
+                  m_triangles_frag(m_device, triangles_frag, "main"),
+                  m_shadow_vert(m_device, shadow_vert, "main"),
+                  m_shadow_frag(m_device, shadow_frag, "main"),
+                  m_points_0d_vert(m_device, points_0d_vert, "main"),
+                  m_points_1d_vert(m_device, points_1d_vert, "main"),
+                  m_points_frag(m_device, points_frag, "main"),
                   //
                   m_triangles_pipeline_layout(create_pipeline_layout(
-                          m_instance.device(),
-                          {impl::TrianglesSharedMemory::set_number(), impl::TrianglesMaterialMemory::set_number()},
+                          m_device, {impl::TrianglesSharedMemory::set_number(), impl::TrianglesMaterialMemory::set_number()},
                           {m_triangles_shared_shader_memory.descriptor_set_layout(),
                            m_triangles_material_descriptor_set_layout})),
-                  m_shadow_pipeline_layout(create_pipeline_layout(m_instance.device(), {m_shadow_shader_memory.set_number()},
+                  m_shadow_pipeline_layout(create_pipeline_layout(m_device, {m_shadow_shader_memory.set_number()},
                                                                   {m_shadow_shader_memory.descriptor_set_layout()})),
-                  m_points_pipeline_layout(create_pipeline_layout(m_instance.device(), {m_points_shader_memory.set_number()},
+                  m_points_pipeline_layout(create_pipeline_layout(m_device, {m_points_shader_memory.set_number()},
                                                                   {m_points_shader_memory.descriptor_set_layout()}))
         {
         }
@@ -1179,8 +1187,11 @@ std::vector<vulkan::PhysicalDeviceFeatures> VulkanRenderer::required_device_feat
         return REQUIRED_DEVICE_FEATURES;
 }
 
-std::unique_ptr<VulkanRenderer> create_vulkan_renderer(const vulkan::VulkanInstance& instance, bool sample_shading,
+std::unique_ptr<VulkanRenderer> create_vulkan_renderer(const vulkan::VulkanInstance& instance,
+                                                       const std::vector<uint32_t>& graphics_family_indices,
+                                                       VkCommandPool graphics_command_pool, bool sample_shading,
                                                        bool sampler_anisotropy)
 {
-        return std::make_unique<Renderer>(instance, sample_shading, sampler_anisotropy);
+        return std::make_unique<Renderer>(instance, graphics_family_indices, graphics_command_pool, sample_shading,
+                                          sampler_anisotropy);
 }

@@ -40,6 +40,7 @@ struct ShadowBuffers
         virtual ~ShadowBuffers() = default;
 
         virtual const vulkan::ShadowDepthAttachment* texture(unsigned index) const noexcept = 0;
+        virtual VkImageLayout texture_image_layout() const noexcept = 0;
 
         virtual std::vector<VkCommandBuffer> create_command_buffers(
                 const std::function<void(VkCommandBuffer buffer)>& commands) = 0;
@@ -55,6 +56,6 @@ struct ShadowBuffers
 
 std::unique_ptr<ShadowBuffers> create_shadow_buffers(ShadowBufferCount buffer_count, const vulkan::Swapchain& swapchain,
                                                      const std::vector<uint32_t>& attachment_family_indices,
-                                                     const vulkan::VulkanInstance& instance,
+                                                     VkCommandPool command_pool, const vulkan::Device& device,
                                                      const std::vector<VkFormat>& depth_image_formats, double zoom);
 }

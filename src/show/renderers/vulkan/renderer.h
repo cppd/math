@@ -75,5 +75,7 @@ struct VulkanRenderer
         virtual const vulkan::StorageImage& objects() const = 0;
 };
 
-std::unique_ptr<VulkanRenderer> create_vulkan_renderer(const vulkan::VulkanInstance& instance, bool sample_shading,
+std::unique_ptr<VulkanRenderer> create_vulkan_renderer(const vulkan::VulkanInstance& instance,
+                                                       const std::vector<uint32_t>& graphics_family_indices,
+                                                       VkCommandPool graphics_command_pool, bool sample_shading,
                                                        bool sampler_anisotropy);

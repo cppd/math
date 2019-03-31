@@ -210,7 +210,7 @@ public:
 
 class DepthAttachment final
 {
-        VkImageLayout m_image_layout;
+        // VkImageLayout m_image_layout;
         VkFormat m_format;
         Image m_image;
         DeviceMemory m_device_memory;
@@ -219,8 +219,8 @@ class DepthAttachment final
         unsigned m_width, m_height;
 
 public:
-        DepthAttachment(const VulkanInstance& instance, const std::vector<uint32_t>& family_indices,
-                        const std::vector<VkFormat>& formats, VkSampleCountFlagBits samples, uint32_t width, uint32_t height);
+        DepthAttachment(const Device& device, const std::vector<uint32_t>& family_indices, const std::vector<VkFormat>& formats,
+                        VkSampleCountFlagBits samples, uint32_t width, uint32_t height);
 
         DepthAttachment(const DepthAttachment&) = delete;
         DepthAttachment& operator=(const DepthAttachment&) = delete;
@@ -233,7 +233,7 @@ public:
 
         VkImage image() const noexcept;
         VkFormat format() const noexcept;
-        VkImageLayout image_layout() const noexcept;
+        // VkImageLayout image_layout() const noexcept;
         VkImageView image_view() const noexcept;
         VkSampleCountFlagBits sample_count() const noexcept;
 
@@ -243,7 +243,7 @@ public:
 
 class ColorAttachment final
 {
-        VkImageLayout m_image_layout;
+        // VkImageLayout m_image_layout;
         VkFormat m_format;
         Image m_image;
         DeviceMemory m_device_memory;
@@ -251,7 +251,7 @@ class ColorAttachment final
         VkSampleCountFlagBits m_sample_count;
 
 public:
-        ColorAttachment(const VulkanInstance& instance, const std::vector<uint32_t>& family_indices, VkFormat format,
+        ColorAttachment(const Device& device, const std::vector<uint32_t>& family_indices, VkFormat format,
                         VkSampleCountFlagBits samples, uint32_t width, uint32_t height);
 
         ColorAttachment(const ColorAttachment&) = delete;
@@ -265,14 +265,14 @@ public:
 
         VkImage image() const noexcept;
         VkFormat format() const noexcept;
-        VkImageLayout image_layout() const noexcept;
+        // VkImageLayout image_layout() const noexcept;
         VkImageView image_view() const noexcept;
         VkSampleCountFlagBits sample_count() const noexcept;
 };
 
 class ShadowDepthAttachment final
 {
-        VkImageLayout m_image_layout;
+        // VkImageLayout m_image_layout;
         VkFormat m_format;
         Image m_image;
         DeviceMemory m_device_memory;
@@ -280,7 +280,7 @@ class ShadowDepthAttachment final
         unsigned m_width, m_height;
 
 public:
-        ShadowDepthAttachment(const VulkanInstance& instance, const std::vector<uint32_t>& family_indices,
+        ShadowDepthAttachment(const Device& device, const std::vector<uint32_t>& family_indices,
                               const std::vector<VkFormat>& formats, uint32_t width, uint32_t height);
 
         ShadowDepthAttachment(const ShadowDepthAttachment&) = delete;
@@ -294,7 +294,7 @@ public:
 
         VkImage image() const noexcept;
         VkFormat format() const noexcept;
-        VkImageLayout image_layout() const noexcept;
+        // VkImageLayout image_layout() const noexcept;
         VkImageView image_view() const noexcept;
 
         unsigned width() const noexcept;

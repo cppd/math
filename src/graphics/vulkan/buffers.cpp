@@ -770,30 +770,34 @@ VkImageView GrayscaleTexture::image_view() const noexcept
 
 //
 
-DepthAttachment::DepthAttachment(const VulkanInstance& instance, const std::vector<uint32_t>& family_indices,
+DepthAttachment::DepthAttachment(const Device& device, const std::vector<uint32_t>& family_indices,
                                  const std::vector<VkFormat>& formats, VkSampleCountFlagBits samples, uint32_t width,
                                  uint32_t height)
 {
+#if 0
         if (!find_index(family_indices, instance.graphics_family_index()))
         {
                 error("Graphics family index not found in depth attachment family indices");
         }
+#endif
 
         VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
         VkFormatFeatureFlags features = VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT;
         VkImageUsageFlags usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
 
-        m_image_layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-        m_format = find_supported_2d_image_format(instance.physical_device(), formats, tiling, features, usage, samples);
-        m_image = create_2d_image(instance.device(), width, height, m_format, family_indices, samples, tiling, usage);
-        m_device_memory = create_device_memory(instance.device(), m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-        m_image_view = create_image_view(instance.device(), m_image, m_format, VK_IMAGE_ASPECT_DEPTH_BIT);
+        // m_image_layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+        m_format = find_supported_2d_image_format(device.physical_device(), formats, tiling, features, usage, samples);
+        m_image = create_2d_image(device, width, height, m_format, family_indices, samples, tiling, usage);
+        m_device_memory = create_device_memory(device, m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+        m_image_view = create_image_view(device, m_image, m_format, VK_IMAGE_ASPECT_DEPTH_BIT);
         m_sample_count = samples;
         m_width = width;
         m_height = height;
 
+#if 0
         transition_image_layout(instance.device(), instance.graphics_command_pool(), instance.graphics_queues().front(), m_image,
                                 m_format, VK_IMAGE_LAYOUT_UNDEFINED, m_image_layout);
+#endif
 }
 
 VkImage DepthAttachment::image() const noexcept
@@ -806,10 +810,10 @@ VkFormat DepthAttachment::format() const noexcept
         return m_format;
 }
 
-VkImageLayout DepthAttachment::image_layout() const noexcept
-{
-        return m_image_layout;
-}
+// VkImageLayout DepthAttachment::image_layout() const noexcept
+//{
+//        return m_image_layout;
+//}
 
 VkImageView DepthAttachment::image_view() const noexcept
 {
@@ -833,30 +837,34 @@ unsigned DepthAttachment::height() const noexcept
 
 //
 
-ColorAttachment::ColorAttachment(const VulkanInstance& instance, const std::vector<uint32_t>& family_indices, VkFormat format,
+ColorAttachment::ColorAttachment(const Device& device, const std::vector<uint32_t>& family_indices, VkFormat format,
                                  VkSampleCountFlagBits samples, uint32_t width, uint32_t height)
 {
+#if 0
         if (!find_index(family_indices, instance.graphics_family_index()))
         {
                 error("Graphics family index not found in color attachment family indices");
         }
+#endif
 
         std::vector<VkFormat> candidates = {format}; // должен быть только этот формат
         VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
         VkFormatFeatureFlags features = VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT;
         VkImageUsageFlags usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-        m_image_layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-        m_format = find_supported_2d_image_format(instance.physical_device(), candidates, tiling, features, usage, samples);
-        m_image = create_2d_image(instance.device(), width, height, m_format, family_indices, samples, tiling, usage);
-        m_device_memory = create_device_memory(instance.device(), m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-        m_image_view = create_image_view(instance.device(), m_image, m_format, VK_IMAGE_ASPECT_COLOR_BIT);
+        // m_image_layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        m_format = find_supported_2d_image_format(device.physical_device(), candidates, tiling, features, usage, samples);
+        m_image = create_2d_image(device, width, height, m_format, family_indices, samples, tiling, usage);
+        m_device_memory = create_device_memory(device, m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+        m_image_view = create_image_view(device, m_image, m_format, VK_IMAGE_ASPECT_COLOR_BIT);
         m_sample_count = samples;
 
         ASSERT(m_format == format);
 
+#if 0
         transition_image_layout(instance.device(), instance.graphics_command_pool(), instance.graphics_queues().front(), m_image,
                                 m_format, VK_IMAGE_LAYOUT_UNDEFINED, m_image_layout);
+#endif
 }
 
 VkImage ColorAttachment::image() const noexcept
@@ -869,10 +877,10 @@ VkFormat ColorAttachment::format() const noexcept
         return m_format;
 }
 
-VkImageLayout ColorAttachment::image_layout() const noexcept
-{
-        return m_image_layout;
-}
+// VkImageLayout ColorAttachment::image_layout() const noexcept
+//{
+//        return m_image_layout;
+//}
 
 VkImageView ColorAttachment::image_view() const noexcept
 {
@@ -886,13 +894,15 @@ VkSampleCountFlagBits ColorAttachment::sample_count() const noexcept
 
 //
 
-ShadowDepthAttachment::ShadowDepthAttachment(const VulkanInstance& instance, const std::vector<uint32_t>& family_indices,
+ShadowDepthAttachment::ShadowDepthAttachment(const Device& device, const std::vector<uint32_t>& family_indices,
                                              const std::vector<VkFormat>& formats, uint32_t width, uint32_t height)
 {
+#if 0
         if (!find_index(family_indices, instance.graphics_family_index()))
         {
                 error("Graphics family index not found in shadow depth attachment family indices");
         }
+#endif
 
         if (width <= 0 || height <= 0)
         {
@@ -904,16 +914,16 @@ ShadowDepthAttachment::ShadowDepthAttachment(const VulkanInstance& instance, con
         VkImageUsageFlags usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
         VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT;
 
-        m_image_layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL; // VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-        m_format = find_supported_2d_image_format(instance.physical_device(), formats, tiling, features, usage, samples);
+        // m_image_layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL; // VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+        m_format = find_supported_2d_image_format(device.physical_device(), formats, tiling, features, usage, samples);
 
-        VkExtent2D max_extent = max_2d_image_extent(instance.physical_device(), m_format, tiling, usage);
+        VkExtent2D max_extent = max_2d_image_extent(device.physical_device(), m_format, tiling, usage);
         m_width = std::min(width, max_extent.width);
         m_height = std::min(height, max_extent.height);
 
-        m_image = create_2d_image(instance.device(), m_width, m_height, m_format, family_indices, samples, tiling, usage);
-        m_device_memory = create_device_memory(instance.device(), m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-        m_image_view = create_image_view(instance.device(), m_image, m_format, VK_IMAGE_ASPECT_DEPTH_BIT);
+        m_image = create_2d_image(device, m_width, m_height, m_format, family_indices, samples, tiling, usage);
+        m_device_memory = create_device_memory(device, m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+        m_image_view = create_image_view(device, m_image, m_format, VK_IMAGE_ASPECT_DEPTH_BIT);
 
 #if 0
         transition_image_layout(instance.device(), instance.graphics_command_pool(), instance.graphics_queue(), m_image, m_format,
@@ -931,10 +941,10 @@ VkFormat ShadowDepthAttachment::format() const noexcept
         return m_format;
 }
 
-VkImageLayout ShadowDepthAttachment::image_layout() const noexcept
-{
-        return m_image_layout;
-}
+// VkImageLayout ShadowDepthAttachment::image_layout() const noexcept
+//{
+//        return m_image_layout;
+//}
 
 VkImageView ShadowDepthAttachment::image_view() const noexcept
 {
