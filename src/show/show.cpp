@@ -92,6 +92,8 @@ constexpr std::chrono::milliseconds IDLE_MODE_FRAME_DURATION(100);
 // Это только для начального значения, а далее оно устанавливается командой set_vertical_sync
 constexpr vulkan::PresentMode VULKAN_INIT_PRESENT_MODE = vulkan::PresentMode::PreferFast;
 
+constexpr VkFormat OBJECT_IMAGE_FORMAT = VK_FORMAT_R32_UINT;
+
 namespace
 {
 #if 0
@@ -884,12 +886,15 @@ void ShowObject<GraphicsAndComputeAPI::OpenGL>::loop()
 
 void create_swapchain(const vulkan::VulkanInstance& instance, VulkanRenderer* renderer, VulkanCanvas* canvas,
                       std::unique_ptr<vulkan::Swapchain>* swapchain, std::unique_ptr<vulkan::RenderBuffers>* render_buffers,
-                      vulkan::PresentMode preferred_present_mode, const std::vector<uint32_t>& swapchain_family_indices)
+                      std::unique_ptr<vulkan::StorageImage>* object_image, vulkan::PresentMode preferred_present_mode,
+                      const std::vector<uint32_t>& swapchain_family_indices)
 {
         instance.device_wait_idle();
 
         canvas->delete_buffers();
         renderer->delete_buffers();
+
+        object_image->reset();
         render_buffers->reset();
         swapchain->reset();
 
@@ -902,10 +907,15 @@ void create_swapchain(const vulkan::VulkanInstance& instance, VulkanRenderer* re
                 vulkan::create_render_buffers(buffer_count, *(swapchain->get()), instance.graphics_command_pool(),
                                               instance.device(), VULKAN_MINIMUM_SAMPLE_COUNT, VULKAN_DEPTH_IMAGE_FORMATS);
 
-        renderer->create_buffers(swapchain->get(), &(*render_buffers)->buffers_3d());
+        *object_image = std::make_unique<vulkan::StorageImage>(
+                instance.device(), instance.graphics_command_pool(), instance.graphics_queues()[0],
+                merge<uint32_t>(instance.graphics_queues()[0].family_index()), OBJECT_IMAGE_FORMAT, (*swapchain)->width(),
+                (*swapchain)->height());
+
+        renderer->create_buffers(swapchain->get(), &(*render_buffers)->buffers_3d(), object_image->get());
 
         mat4 m = ortho_matrix_for_2d_rendering<VulkanRenderer>((*swapchain)->width(), (*swapchain)->height());
-        canvas->create_buffers(swapchain->get(), &(*render_buffers)->buffers_2d(), m, renderer->objects());
+        canvas->create_buffers(swapchain->get(), &(*render_buffers)->buffers_2d(), m, object_image->get());
 }
 
 template <size_t N>
@@ -987,11 +997,11 @@ void ShowObject<GraphicsAndComputeAPI::Vulkan>::loop()
 
         std::unique_ptr<vulkan::Swapchain> swapchain;
         std::unique_ptr<vulkan::RenderBuffers> render_buffers;
+        std::unique_ptr<vulkan::StorageImage> object_image;
 
         std::unique_ptr<VulkanRenderer> renderer = create_vulkan_renderer(
                 instance, instance.graphics_command_pool(), instance.graphics_queues()[0], instance.transfer_command_pool(),
-                instance.transfer_queue(), VULKAN_RENDERER_SAMPLE_SHADING, VULKAN_SAMPLER_ANISOTROPY,
-                merge<uint32_t>(instance.graphics_queues()[0].family_index()));
+                instance.transfer_queue(), VULKAN_RENDERER_SAMPLE_SHADING, VULKAN_SAMPLER_ANISOTROPY);
 
         std::unique_ptr<VulkanCanvas> canvas = create_vulkan_canvas(
                 instance, instance.graphics_command_pool(), instance.graphics_queues()[0], instance.transfer_command_pool(),
@@ -1004,7 +1014,7 @@ void ShowObject<GraphicsAndComputeAPI::Vulkan>::loop()
         const std::vector<uint32_t> swapchain_family_indices =
                 merge<uint32_t>(instance.graphics_queues()[0].family_index(), instance.presentation_queue().family_index());
 
-        create_swapchain(instance, renderer.get(), canvas.get(), &swapchain, &render_buffers, present_mode,
+        create_swapchain(instance, renderer.get(), canvas.get(), &swapchain, &render_buffers, &object_image, present_mode,
                          swapchain_family_indices);
 
         //
@@ -1017,15 +1027,15 @@ void ShowObject<GraphicsAndComputeAPI::Vulkan>::loop()
                 if (v && present_mode != vulkan::PresentMode::PreferSync)
                 {
                         present_mode = vulkan::PresentMode::PreferSync;
-                        create_swapchain(instance, renderer.get(), canvas.get(), &swapchain, &render_buffers, present_mode,
-                                         swapchain_family_indices);
+                        create_swapchain(instance, renderer.get(), canvas.get(), &swapchain, &render_buffers, &object_image,
+                                         present_mode, swapchain_family_indices);
                         return;
                 }
                 if (!v && present_mode != vulkan::PresentMode::PreferFast)
                 {
                         present_mode = vulkan::PresentMode::PreferFast;
-                        create_swapchain(instance, renderer.get(), canvas.get(), &swapchain, &render_buffers, present_mode,
-                                         swapchain_family_indices);
+                        create_swapchain(instance, renderer.get(), canvas.get(), &swapchain, &render_buffers, &object_image,
+                                         present_mode, swapchain_family_indices);
                         return;
                 }
         };
@@ -1046,8 +1056,8 @@ void ShowObject<GraphicsAndComputeAPI::Vulkan>::loop()
                 if (!render_vulkan(swapchain->swapchain(), instance.presentation_queue(), instance.graphics_queues(),
                                    instance.device(), image_semaphore, *render_buffers, *renderer, *canvas, m_fps_text_data))
                 {
-                        create_swapchain(instance, renderer.get(), canvas.get(), &swapchain, &render_buffers, present_mode,
-                                         swapchain_family_indices);
+                        create_swapchain(instance, renderer.get(), canvas.get(), &swapchain, &render_buffers, &object_image,
+                                         present_mode, swapchain_family_indices);
                         continue;
                 }
 

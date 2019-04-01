@@ -90,7 +90,7 @@ class Canvas final : public VulkanCanvas
         }
 
         void create_buffers(const vulkan::Swapchain* swapchain, vulkan::RenderBuffers2D* render_buffers, const mat4& matrix,
-                            const vulkan::StorageImage& objects) override;
+                            const vulkan::StorageImage* objects) override;
         void delete_buffers() override;
 
         VkSemaphore draw(const vulkan::Queue& graphics_queue, const vulkan::Queue& graphics_compute_queue,
@@ -123,10 +123,10 @@ public:
 };
 
 void Canvas::create_buffers(const vulkan::Swapchain* /*swapchain*/, vulkan::RenderBuffers2D* render_buffers, const mat4& matrix,
-                            const vulkan::StorageImage& objects)
+                            const vulkan::StorageImage* objects)
 {
         m_text->create_buffers(render_buffers, matrix);
-        m_convex_hull->create_buffers(render_buffers, matrix, objects);
+        m_convex_hull->create_buffers(render_buffers, matrix, *objects);
 }
 
 void Canvas::delete_buffers()

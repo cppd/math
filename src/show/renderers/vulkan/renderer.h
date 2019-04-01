@@ -69,10 +69,9 @@ struct VulkanRenderer
         static std::vector<std::string> device_extensions();
         static std::vector<vulkan::PhysicalDeviceFeatures> required_device_features();
 
-        virtual void create_buffers(const vulkan::Swapchain* swapchain, vulkan::RenderBuffers3D* render_buffers) = 0;
+        virtual void create_buffers(const vulkan::Swapchain* swapchain, vulkan::RenderBuffers3D* render_buffers,
+                                    const vulkan::StorageImage* objects) = 0;
         virtual void delete_buffers() = 0;
-
-        virtual const vulkan::StorageImage& objects() const = 0;
 };
 
 std::unique_ptr<VulkanRenderer> create_vulkan_renderer(const vulkan::VulkanInstance& instance,
@@ -80,5 +79,4 @@ std::unique_ptr<VulkanRenderer> create_vulkan_renderer(const vulkan::VulkanInsta
                                                        const vulkan::Queue& graphics_queue,
                                                        const vulkan::CommandPool& transfer_command_pool,
                                                        const vulkan::Queue& transfer_queue, bool sample_shading,
-                                                       bool sampler_anisotropy,
-                                                       const std::vector<uint32_t>& object_image_family_indices);
+                                                       bool sampler_anisotropy);

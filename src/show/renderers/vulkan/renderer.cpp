@@ -660,7 +660,6 @@ class Renderer final : public VulkanRenderer
         const vulkan::Queue& m_graphics_queue;
         const vulkan::CommandPool& m_transfer_command_pool;
         const vulkan::Queue& m_transfer_queue;
-        const std::vector<uint32_t> m_object_image_family_indices;
 
         const vulkan::Swapchain* m_swapchain = nullptr;
 
@@ -696,7 +695,7 @@ class Renderer final : public VulkanRenderer
         std::unique_ptr<vulkan::ShadowBuffers> m_shadow_buffers;
         std::vector<VkCommandBuffer> m_shadow_command_buffers;
 
-        std::unique_ptr<vulkan::StorageImage> m_object_image;
+        const vulkan::StorageImage* m_object_image = nullptr;
 
         RendererObjectStorage<DrawObject> m_storage;
 
@@ -930,7 +929,8 @@ class Renderer final : public VulkanRenderer
                 return !m_storage.object();
         }
 
-        void create_buffers(const vulkan::Swapchain* swapchain, vulkan::RenderBuffers3D* render_buffers) override
+        void create_buffers(const vulkan::Swapchain* swapchain, vulkan::RenderBuffers3D* render_buffers,
+                            const vulkan::StorageImage* objects) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
@@ -938,21 +938,12 @@ class Renderer final : public VulkanRenderer
 
                 m_swapchain = swapchain;
                 m_render_buffers = render_buffers;
+                m_object_image = objects;
 
                 create_render_buffers();
                 create_shadow_buffers();
 
                 create_all_command_buffers();
-        }
-
-        const vulkan::StorageImage& objects() const override
-        {
-                ASSERT(m_thread_id == std::this_thread::get_id());
-
-                //
-
-                ASSERT(m_object_image);
-                return *m_object_image;
         }
 
         void delete_buffers() override
@@ -968,7 +959,6 @@ class Renderer final : public VulkanRenderer
         void delete_render_buffers()
         {
                 m_render_command_buffers.clear();
-                m_object_image.reset();
         }
 
         void create_render_buffers()
@@ -979,18 +969,14 @@ class Renderer final : public VulkanRenderer
 
                 ASSERT(m_swapchain);
                 ASSERT(m_render_buffers);
+                ASSERT(m_object_image);
 
                 delete_render_buffers();
 
                 //
 
-                m_object_image = std::make_unique<vulkan::StorageImage>(
-                        m_device, m_graphics_command_pool, m_graphics_queue,
-                        merge<uint32_t>(m_object_image_family_indices, m_graphics_queue.family_index()), VK_FORMAT_R32_UINT,
-                        m_swapchain->width(), m_swapchain->height());
-
-                m_triangles_shared_shader_memory.set_object_image(m_object_image.get());
-                m_points_shader_memory.set_object_image(m_object_image.get());
+                m_triangles_shared_shader_memory.set_object_image(m_object_image);
+                m_points_shader_memory.set_object_image(m_object_image);
 
                 m_triangles_pipeline = m_render_buffers->create_pipeline(
                         VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, m_sample_shading,
@@ -1170,8 +1156,7 @@ class Renderer final : public VulkanRenderer
 public:
         Renderer(const vulkan::VulkanInstance& instance, const vulkan::CommandPool& graphics_command_pool,
                  const vulkan::Queue& graphics_queue, const vulkan::CommandPool& transfer_command_pool,
-                 const vulkan::Queue& transfer_queue, bool sample_shading, bool sampler_anisotropy,
-                 const std::vector<uint32_t>& object_image_family_indices)
+                 const vulkan::Queue& transfer_queue, bool sample_shading, bool sampler_anisotropy)
                 : m_sample_shading(sample_shading),
                   m_instance(instance),
                   m_device(instance.device()),
@@ -1179,7 +1164,6 @@ public:
                   m_graphics_queue(graphics_queue),
                   m_transfer_command_pool(transfer_command_pool),
                   m_transfer_queue(transfer_queue),
-                  m_object_image_family_indices(object_image_family_indices),
                   m_shadow_signal_semaphore(m_device),
                   m_render_signal_semaphore(m_device),
                   m_texture_sampler(impl::create_texture_sampler(m_device, sampler_anisotropy)),
@@ -1246,9 +1230,8 @@ std::unique_ptr<VulkanRenderer> create_vulkan_renderer(const vulkan::VulkanInsta
                                                        const vulkan::Queue& graphics_queue,
                                                        const vulkan::CommandPool& transfer_command_pool,
                                                        const vulkan::Queue& transfer_queue, bool sample_shading,
-                                                       bool sampler_anisotropy,
-                                                       const std::vector<uint32_t>& object_image_family_indices)
+                                                       bool sampler_anisotropy)
 {
         return std::make_unique<Renderer>(instance, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue,
-                                          sample_shading, sampler_anisotropy, object_image_family_indices);
+                                          sample_shading, sampler_anisotropy);
 }

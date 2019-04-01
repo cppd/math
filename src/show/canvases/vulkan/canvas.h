@@ -55,7 +55,7 @@ struct VulkanCanvas
         static std::vector<vulkan::PhysicalDeviceFeatures> required_device_features();
 
         virtual void create_buffers(const vulkan::Swapchain* swapchain, vulkan::RenderBuffers2D* render_buffers,
-                                    const mat4& matrix, const vulkan::StorageImage& objects) = 0;
+                                    const mat4& matrix, const vulkan::StorageImage* objects) = 0;
         virtual void delete_buffers() = 0;
 
         virtual VkSemaphore draw(const vulkan::Queue& graphics_queue, const vulkan::Queue& graphics_compute_queue,
