@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/error.h"
 #include "com/log.h"
+#include "com/merge.h"
 #include "graphics/vulkan/buffers.h"
 #include "graphics/vulkan/command.h"
 #include "graphics/vulkan/create.h"
@@ -237,7 +238,7 @@ class Impl final : public vulkan::RenderBuffers, public Impl3D, public Impl2D
         const vulkan::Device& m_device;
         VkFormat m_swapchain_format;
         VkColorSpaceKHR m_swapchain_color_space;
-        VkCommandPool m_command_pool;
+        const vulkan::CommandPool& m_command_pool;
 
         //
 
@@ -305,25 +306,22 @@ class Impl final : public vulkan::RenderBuffers, public Impl3D, public Impl2D
                                       const std::vector<VkVertexInputAttributeDescription>& vertex_attribute) override;
 
 public:
-        Impl(vulkan::RenderBufferCount buffer_count, const vulkan::Swapchain& swapchain,
-             const std::vector<uint32_t>& attachment_family_indices, VkCommandPool command_pool, const vulkan::Device& device,
-             int required_minimum_sample_count, const std::vector<VkFormat>& depth_image_formats);
+        Impl(vulkan::RenderBufferCount buffer_count, const vulkan::Swapchain& swapchain, const vulkan::CommandPool& command_pool,
+             const vulkan::Device& device, int required_minimum_sample_count, const std::vector<VkFormat>& depth_image_formats);
 
         Impl(const Impl&) = delete;
         Impl& operator=(const Impl&) = delete;
         Impl& operator=(Impl&&) = delete;
 };
 
-Impl::Impl(vulkan::RenderBufferCount buffer_count, const vulkan::Swapchain& swapchain,
-           const std::vector<uint32_t>& attachment_family_indices, VkCommandPool command_pool, const vulkan::Device& device,
-           int required_minimum_sample_count, const std::vector<VkFormat>& depth_image_formats)
+Impl::Impl(vulkan::RenderBufferCount buffer_count, const vulkan::Swapchain& swapchain, const vulkan::CommandPool& command_pool,
+           const vulkan::Device& device, int required_minimum_sample_count, const std::vector<VkFormat>& depth_image_formats)
         : m_device(device),
           m_swapchain_format(swapchain.format()),
           m_swapchain_color_space(swapchain.color_space()),
           m_command_pool(command_pool),
           m_resolve_signal_semaphore(m_device)
 {
-        ASSERT(attachment_family_indices.size() > 0);
         ASSERT(depth_image_formats.size() > 0);
 
         VkSampleCountFlagBits sample_count =
@@ -333,12 +331,13 @@ Impl::Impl(vulkan::RenderBufferCount buffer_count, const vulkan::Swapchain& swap
 
         if (sample_count != VK_SAMPLE_COUNT_1_BIT)
         {
-                create_color_buffer_rendering(count, swapchain, sample_count, attachment_family_indices, depth_image_formats);
+                create_color_buffer_rendering(count, swapchain, sample_count, merge<uint32_t>(command_pool.family_index()),
+                                              depth_image_formats);
                 create_resolve_command_buffers();
         }
         else
         {
-                create_swapchain_rendering(count, swapchain, attachment_family_indices, depth_image_formats);
+                create_swapchain_rendering(count, swapchain, merge<uint32_t>(command_pool.family_index()), depth_image_formats);
         }
 
         check_buffers(m_color_attachments, m_depth_attachments);
@@ -624,12 +623,11 @@ VkPipeline Impl::create_pipeline_2d(VkPrimitiveTopology primitive_topology, bool
 namespace vulkan
 {
 std::unique_ptr<RenderBuffers> create_render_buffers(RenderBufferCount buffer_count, const vulkan::Swapchain& swapchain,
-                                                     const std::vector<uint32_t>& attachment_family_indices,
-                                                     VkCommandPool command_pool, const vulkan::Device& device,
+                                                     const vulkan::CommandPool& command_pool, const vulkan::Device& device,
                                                      int required_minimum_sample_count,
                                                      const std::vector<VkFormat>& depth_image_formats)
 {
-        return std::make_unique<Impl>(buffer_count, swapchain, attachment_family_indices, command_pool, device,
-                                      required_minimum_sample_count, depth_image_formats);
+        return std::make_unique<Impl>(buffer_count, swapchain, command_pool, device, required_minimum_sample_count,
+                                      depth_image_formats);
 }
 }

@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/font/glyphs.h"
 #include "com/font/vertices.h"
 #include "com/log.h"
+#include "com/merge.h"
 #include "graphics/vulkan/buffers.h"
 #include "graphics/vulkan/create.h"
 #include "graphics/vulkan/error.h"
@@ -93,6 +94,7 @@ class Impl final : public VulkanText
         const bool m_sample_shading;
 
         const vulkan::VulkanInstance& m_instance;
+        const vulkan::Device& m_device;
 
         vulkan::Semaphore m_signal_semaphore;
 
@@ -113,6 +115,8 @@ class Impl final : public VulkanText
         vulkan::RenderBuffers2D* m_render_buffers = nullptr;
         std::vector<VkCommandBuffer> m_command_buffers;
         VkPipeline m_pipeline = VK_NULL_HANDLE;
+
+        uint32_t m_graphics_family_index;
 
         void set_color(const Color& color) const override
         {
@@ -167,7 +171,7 @@ class Impl final : public VulkanText
                 m_command_buffers.clear();
         }
 
-        VkSemaphore draw(VkQueue graphics_queue, VkSemaphore wait_semaphore, unsigned image_index,
+        VkSemaphore draw(const vulkan::Queue& queue, VkSemaphore wait_semaphore, unsigned image_index,
                          const TextData& text_data) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
@@ -175,6 +179,7 @@ class Impl final : public VulkanText
                 //
 
                 ASSERT(m_render_buffers);
+                ASSERT(queue.family_index() == m_graphics_family_index);
 
                 thread_local std::vector<TextVertex> vertices;
 
@@ -184,11 +189,11 @@ class Impl final : public VulkanText
 
                 if (m_vertex_buffer->size() < data_size)
                 {
-                        vulkan::queue_wait_idle(graphics_queue);
+                        vulkan::queue_wait_idle(queue);
 
                         m_render_buffers->delete_command_buffers(&m_command_buffers);
 
-                        m_vertex_buffer.emplace(m_instance.device(), m_instance.graphics_family_indices(),
+                        m_vertex_buffer.emplace(m_device, std::vector<uint32_t>({m_graphics_family_index}),
                                                 VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
                                                 std::max(m_vertex_buffer->size() * 2, data_size));
 
@@ -210,35 +215,43 @@ class Impl final : public VulkanText
                 ASSERT(image_index < m_command_buffers.size());
 
                 vulkan::queue_submit(wait_semaphore, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-                                     m_command_buffers[image_index], m_signal_semaphore, graphics_queue, VK_NULL_HANDLE);
+                                     m_command_buffers[image_index], m_signal_semaphore, queue, VK_NULL_HANDLE);
 
                 return m_signal_semaphore;
         }
 
-        Impl(const vulkan::VulkanInstance& instance, bool sample_shading, const Color& color, Glyphs&& glyphs)
+        Impl(const vulkan::VulkanInstance& instance, const vulkan::CommandPool& graphics_command_pool,
+             const vulkan::Queue& graphics_queue, const vulkan::CommandPool& transfer_command_pool,
+             const vulkan::Queue& transfer_queue, bool sample_shading, const Color& color, Glyphs&& glyphs)
                 : m_sample_shading(sample_shading),
                   m_instance(instance),
-                  m_signal_semaphore(instance.device()),
-                  m_sampler(impl::create_text_sampler(instance.device())),
-                  m_glyph_texture(instance, instance.graphics_and_transfer_family_indices(), glyphs.width(), glyphs.height(),
-                                  std::move(glyphs.pixels())),
+                  m_device(m_instance.device()),
+                  m_signal_semaphore(m_device),
+                  m_sampler(impl::create_text_sampler(m_device)),
+                  m_glyph_texture(m_device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue,
+                                  merge<uint32_t>(graphics_queue.family_index(), transfer_queue.family_index()), glyphs.width(),
+                                  glyphs.height(), std::move(glyphs.pixels())),
                   m_glyphs(std::move(glyphs.glyphs())),
-                  m_shader_memory(instance.device(), m_instance.graphics_family_indices(), m_sampler, &m_glyph_texture),
-                  m_text_vert(m_instance.device(), vertex_shader, "main"),
-                  m_text_frag(m_instance.device(), fragment_shader, "main"),
-                  m_pipeline_layout(vulkan::create_pipeline_layout(m_instance.device(), {m_shader_memory.set_number()},
+                  m_shader_memory(m_device, merge<uint32_t>(graphics_queue.family_index()), m_sampler, &m_glyph_texture),
+                  m_text_vert(m_device, vertex_shader, "main"),
+                  m_text_frag(m_device, fragment_shader, "main"),
+                  m_pipeline_layout(vulkan::create_pipeline_layout(m_device, {m_shader_memory.set_number()},
                                                                    {m_shader_memory.descriptor_set_layout()})),
-                  m_vertex_buffer(std::in_place, m_instance.device(), m_instance.graphics_family_indices(),
+                  m_vertex_buffer(std::in_place, m_device, merge<uint32_t>(graphics_queue.family_index()),
                                   VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VERTEX_BUFFER_FIRST_SIZE),
-                  m_indirect_buffer(m_instance.device(), m_instance.graphics_family_indices(),
-                                    VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT, sizeof(VkDrawIndirectCommand))
+                  m_indirect_buffer(m_device, merge<uint32_t>(graphics_queue.family_index()), VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT,
+                                    sizeof(VkDrawIndirectCommand)),
+                  m_graphics_family_index(graphics_queue.family_index())
         {
                 set_color(color);
         }
 
 public:
-        Impl(const vulkan::VulkanInstance& instance, bool sample_shading, int size, const Color& color)
-                : Impl(instance, sample_shading, color, Glyphs(size, instance.limits().maxImageDimension2D))
+        Impl(const vulkan::VulkanInstance& instance, const vulkan::CommandPool& graphics_command_pool,
+             const vulkan::Queue& graphics_queue, const vulkan::CommandPool& transfer_command_pool,
+             const vulkan::Queue& transfer_queue, bool sample_shading, int size, const Color& color)
+                : Impl(instance, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, sample_shading,
+                       color, Glyphs(size, instance.limits().maxImageDimension2D))
         {
         }
 
@@ -253,8 +266,13 @@ public:
 };
 }
 
-std::unique_ptr<VulkanText> create_vulkan_text(const vulkan::VulkanInstance& instance, bool sample_shading, int size,
+std::unique_ptr<VulkanText> create_vulkan_text(const vulkan::VulkanInstance& instance,
+                                               const vulkan::CommandPool& graphics_command_pool,
+                                               const vulkan::Queue& graphics_queue,
+                                               const vulkan::CommandPool& transfer_command_pool,
+                                               const vulkan::Queue& transfer_queue, bool sample_shading, int size,
                                                const Color& color)
 {
-        return std::make_unique<Impl>(instance, sample_shading, size, color);
+        return std::make_unique<Impl>(instance, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue,
+                                      sample_shading, size, color);
 }

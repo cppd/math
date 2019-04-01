@@ -59,7 +59,7 @@ struct VulkanRenderer
         virtual void object_show(int id) = 0;
         virtual void object_delete_all() = 0;
 
-        virtual VkSemaphore draw(VkQueue graphics_queue, VkSemaphore wait_semaphore, unsigned image_index) const = 0;
+        virtual VkSemaphore draw(const vulkan::Queue& graphics_queue, VkSemaphore wait_semaphore, unsigned image_index) const = 0;
 
         virtual bool empty() const = 0;
 
@@ -76,6 +76,9 @@ struct VulkanRenderer
 };
 
 std::unique_ptr<VulkanRenderer> create_vulkan_renderer(const vulkan::VulkanInstance& instance,
-                                                       const std::vector<uint32_t>& graphics_family_indices,
-                                                       VkCommandPool graphics_command_pool, bool sample_shading,
-                                                       bool sampler_anisotropy);
+                                                       const vulkan::CommandPool& graphics_command_pool,
+                                                       const vulkan::Queue& graphics_queue,
+                                                       const vulkan::CommandPool& transfer_command_pool,
+                                                       const vulkan::Queue& transfer_queue, bool sample_shading,
+                                                       bool sampler_anisotropy,
+                                                       const std::vector<uint32_t>& object_image_family_indices);

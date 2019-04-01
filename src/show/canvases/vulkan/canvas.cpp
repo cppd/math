@@ -93,12 +93,12 @@ class Canvas final : public VulkanCanvas
                             const vulkan::StorageImage& objects) override;
         void delete_buffers() override;
 
-        VkSemaphore draw(VkQueue graphics_queue, VkSemaphore wait_semaphore, unsigned image_index,
-                         const TextData& text_data) override
+        VkSemaphore draw(const vulkan::Queue& graphics_queue, const vulkan::Queue& graphics_compute_queue,
+                         VkSemaphore wait_semaphore, unsigned image_index, const TextData& text_data) override
         {
                 if (m_convex_hull_active)
                 {
-                        wait_semaphore = m_convex_hull->draw(graphics_queue, wait_semaphore, image_index);
+                        wait_semaphore = m_convex_hull->draw(graphics_compute_queue, wait_semaphore, image_index);
                 }
 
                 if (m_text_active)
@@ -110,9 +110,14 @@ class Canvas final : public VulkanCanvas
         }
 
 public:
-        Canvas(const vulkan::VulkanInstance& instance, bool sample_shading, int text_size)
-                : m_text(create_vulkan_text(instance, sample_shading, text_size, TEXT_COLOR)),
-                  m_convex_hull(gpgpu_vulkan::create_convex_hull_show(instance, sample_shading))
+        Canvas(const vulkan::VulkanInstance& instance, const vulkan::CommandPool& graphics_command_pool,
+               const vulkan::Queue& graphics_queue, const vulkan::CommandPool& transfer_command_pool,
+               const vulkan::Queue& transfer_queue, const vulkan::Queue& graphics_compute_queue, bool sample_shading,
+               int text_size)
+                : m_text(create_vulkan_text(instance, graphics_command_pool, graphics_queue, transfer_command_pool,
+                                            transfer_queue, sample_shading, text_size, TEXT_COLOR)),
+                  m_convex_hull(
+                          gpgpu_vulkan::create_convex_hull_show(instance, graphics_compute_queue.family_index(), sample_shading))
         {
         }
 };
@@ -136,7 +141,11 @@ std::vector<vulkan::PhysicalDeviceFeatures> VulkanCanvas::required_device_featur
         return gpgpu_vulkan::ConvexHullShow::required_device_features();
 }
 
-std::unique_ptr<VulkanCanvas> create_vulkan_canvas(const vulkan::VulkanInstance& instance, bool sample_shading, int text_size)
+std::unique_ptr<VulkanCanvas> create_vulkan_canvas(
+        const vulkan::VulkanInstance& instance, const vulkan::CommandPool& graphics_command_pool,
+        const vulkan::Queue& graphics_queue, const vulkan::CommandPool& transfer_command_pool,
+        const vulkan::Queue& transfer_queue, const vulkan::Queue& graphics_compute_queue, bool sample_shading, int text_size)
 {
-        return std::make_unique<Canvas>(instance, sample_shading, text_size);
+        return std::make_unique<Canvas>(instance, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue,
+                                        graphics_compute_queue, sample_shading, text_size);
 }

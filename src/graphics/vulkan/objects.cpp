@@ -218,7 +218,7 @@ Device::Device(VkPhysicalDevice physical_device, const VkDeviceCreateInfo& creat
         }
 }
 
-VkQueue Device::queue(uint32_t family_index, uint32_t queue_index) const
+Queue Device::queue(uint32_t family_index, uint32_t queue_index) const
 {
         const auto iter = m_queues.find(family_index);
         if (iter == m_queues.cend())
@@ -229,7 +229,7 @@ VkQueue Device::queue(uint32_t family_index, uint32_t queue_index) const
         {
                 error("Queue " + to_string(queue_index) + " not found");
         }
-        return iter->second[queue_index];
+        return {family_index, iter->second[queue_index]};
 }
 
 //
@@ -760,8 +760,10 @@ void CommandPool::move(CommandPool* from) noexcept
 {
         m_device = from->m_device;
         m_command_pool = from->m_command_pool;
+        m_family_index = from->m_family_index;
         from->m_device = VK_NULL_HANDLE;
         from->m_command_pool = VK_NULL_HANDLE;
+        from->m_family_index = NULL_FAMILY_INDEX;
 }
 
 CommandPool::CommandPool() = default;
@@ -777,6 +779,7 @@ CommandPool::CommandPool(VkDevice device, const VkCommandPoolCreateInfo& create_
         ASSERT(m_command_pool != VK_NULL_HANDLE);
 
         m_device = device;
+        m_family_index = create_info.queueFamilyIndex;
 }
 
 CommandPool::~CommandPool()
@@ -802,6 +805,11 @@ CommandPool& CommandPool::operator=(CommandPool&& from) noexcept
 CommandPool::operator VkCommandPool() const noexcept
 {
         return m_command_pool;
+}
+
+uint32_t CommandPool::family_index() const noexcept
+{
+        return m_family_index;
 }
 
 //

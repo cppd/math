@@ -88,7 +88,7 @@ class Impl final : public gpgpu_vulkan::ConvexHullCompute
         }
 
         void create_buffers(const vulkan::StorageImage& objects, const vulkan::BufferWithMemory& points_buffer,
-                            const vulkan::BufferWithMemory& point_count_buffer) override
+                            const vulkan::BufferWithMemory& point_count_buffer, uint32_t family_index) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
@@ -97,7 +97,7 @@ class Impl final : public gpgpu_vulkan::ConvexHullCompute
                 ASSERT(points_buffer.size() == (2 * objects.height() + 1) * (2 * sizeof(int32_t)));
                 ASSERT(point_count_buffer.size() >= sizeof(int32_t));
 
-                m_lines_buffer.emplace(m_instance, m_instance.graphics_compute_family_indices(),
+                m_lines_buffer.emplace(m_instance.device(), std::vector<uint32_t>({family_index}),
                                        VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, 2 * objects.height() * sizeof(int32_t));
                 m_points_buffer = points_buffer;
                 m_point_count_buffer = point_count_buffer;

@@ -66,6 +66,8 @@ class Impl final : public gpgpu_vulkan::ConvexHullShow
         const bool m_sample_shading;
         double m_start_time;
 
+        const uint32_t m_family_index;
+
         const vulkan::VulkanInstance& m_instance;
 
         vulkan::Semaphore m_signal_semaphore;
@@ -112,7 +114,7 @@ class Impl final : public gpgpu_vulkan::ConvexHullShow
 
                 //
 
-                m_points.emplace(m_instance, m_instance.graphics_compute_family_indices(), VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+                m_points.emplace(m_instance.device(), std::vector<uint32_t>({m_family_index}), VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
                                  impl::points_buffer_size(objects.height()));
 
                 m_shader_memory.set_points(*m_points);
@@ -124,7 +126,7 @@ class Impl final : public gpgpu_vulkan::ConvexHullShow
                                                                false /*color_blend*/, {&m_vertex_shader, &m_fragment_shader},
                                                                m_pipeline_layout, {}, {});
 
-                m_compute->create_buffers(objects, *m_points, m_indirect_buffer);
+                m_compute->create_buffers(objects, *m_points, m_indirect_buffer, m_family_index);
 
                 m_command_buffers = m_render_buffers->create_command_buffers(
                         [&](VkCommandBuffer command_buffer) { m_compute->compute_commands(command_buffer); },
@@ -143,13 +145,14 @@ class Impl final : public gpgpu_vulkan::ConvexHullShow
                 m_points.reset();
         }
 
-        VkSemaphore draw(VkQueue graphics_queue, VkSemaphore wait_semaphore, unsigned image_index) override
+        VkSemaphore draw(const vulkan::Queue& queue, VkSemaphore wait_semaphore, unsigned image_index) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 //
 
                 ASSERT(m_render_buffers);
+                ASSERT(queue.family_index() == m_family_index);
 
                 float brightness = 0.5 + 0.5 * std::sin(impl::ANGULAR_FREQUENCY * (time_in_seconds() - m_start_time));
                 m_shader_memory.set_brightness(brightness);
@@ -159,22 +162,23 @@ class Impl final : public gpgpu_vulkan::ConvexHullShow
                 ASSERT(image_index < m_command_buffers.size());
 
                 vulkan::queue_submit(wait_semaphore, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-                                     m_command_buffers[image_index], m_signal_semaphore, graphics_queue, VK_NULL_HANDLE);
+                                     m_command_buffers[image_index], m_signal_semaphore, queue, VK_NULL_HANDLE);
 
                 return m_signal_semaphore;
         }
 
 public:
-        Impl(const vulkan::VulkanInstance& instance, bool sample_shading)
+        Impl(const vulkan::VulkanInstance& instance, uint32_t family_index, bool sample_shading)
                 : m_sample_shading(sample_shading),
+                  m_family_index(family_index),
                   m_instance(instance),
                   m_signal_semaphore(instance.device()),
-                  m_shader_memory(instance.device(), m_instance.graphics_family_indices()),
+                  m_shader_memory(instance.device(), merge<uint32_t>(m_family_index)),
                   m_vertex_shader(m_instance.device(), vertex_shader, "main"),
                   m_fragment_shader(m_instance.device(), fragment_shader, "main"),
                   m_pipeline_layout(vulkan::create_pipeline_layout(m_instance.device(), {m_shader_memory.set_number()},
                                                                    {m_shader_memory.descriptor_set_layout()})),
-                  m_indirect_buffer(m_instance.device(), m_instance.graphics_compute_family_indices(),
+                  m_indirect_buffer(m_instance.device(), merge<uint32_t>(m_family_index),
                                     VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT,
                                     sizeof(VkDrawIndirectCommand)),
                   m_compute(gpgpu_vulkan::create_convex_hull_compute(instance))
@@ -206,8 +210,9 @@ std::vector<vulkan::PhysicalDeviceFeatures> ConvexHullShow::required_device_feat
                                                      ConvexHullCompute::required_device_features());
 }
 
-std::unique_ptr<ConvexHullShow> create_convex_hull_show(const vulkan::VulkanInstance& instance, bool sample_shading)
+std::unique_ptr<ConvexHullShow> create_convex_hull_show(const vulkan::VulkanInstance& instance, uint32_t family_index,
+                                                        bool sample_shading)
 {
-        return std::make_unique<Impl>(instance, sample_shading);
+        return std::make_unique<Impl>(instance, family_index, sample_shading);
 }
 }

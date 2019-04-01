@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/log.h"
 #include "com/math.h"
+#include "com/merge.h"
 #include "com/string/vector.h"
 #include "com/time.h"
 #include "com/vec.h"
@@ -106,7 +107,10 @@ namespace impl = vulkan_renderer_implementation;
 
 namespace
 {
-std::unique_ptr<vulkan::BufferWithDeviceLocalMemory> load_vertices(const vulkan::VulkanInstance& instance, const Obj<3>& obj,
+std::unique_ptr<vulkan::BufferWithDeviceLocalMemory> load_vertices(const vulkan::Device& device,
+                                                                   const vulkan::CommandPool& transfer_command_pool,
+                                                                   const vulkan::Queue& transfer_queue,
+                                                                   const std::vector<uint32_t>& family_indices, const Obj<3>& obj,
                                                                    const std::vector<int>& sorted_face_indices)
 {
         if (obj.facets().size() == 0)
@@ -178,11 +182,15 @@ std::unique_ptr<vulkan::BufferWithDeviceLocalMemory> load_vertices(const vulkan:
 
         ASSERT((shader_vertices.size() >= 3) && (shader_vertices.size() % 3 == 0));
 
-        return std::make_unique<vulkan::BufferWithDeviceLocalMemory>(instance, instance.graphics_and_transfer_family_indices(),
-                                                                     VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, shader_vertices);
+        return std::make_unique<vulkan::BufferWithDeviceLocalMemory>(device, transfer_command_pool, transfer_queue,
+                                                                     family_indices, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+                                                                     shader_vertices);
 }
 
-std::unique_ptr<vulkan::BufferWithDeviceLocalMemory> load_point_vertices(const vulkan::VulkanInstance& instance,
+std::unique_ptr<vulkan::BufferWithDeviceLocalMemory> load_point_vertices(const vulkan::Device& device,
+                                                                         const vulkan::CommandPool& transfer_command_pool,
+                                                                         const vulkan::Queue& transfer_queue,
+                                                                         const std::vector<uint32_t>& family_indices,
                                                                          const Obj<3>& obj)
 {
         if (obj.points().size() == 0)
@@ -201,11 +209,16 @@ std::unique_ptr<vulkan::BufferWithDeviceLocalMemory> load_point_vertices(const v
                 shader_vertices.push_back(obj_vertices[p.vertex]);
         }
 
-        return std::make_unique<vulkan::BufferWithDeviceLocalMemory>(instance, instance.graphics_and_transfer_family_indices(),
-                                                                     VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, shader_vertices);
+        return std::make_unique<vulkan::BufferWithDeviceLocalMemory>(device, transfer_command_pool, transfer_queue,
+                                                                     family_indices, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+                                                                     shader_vertices);
 }
 
-std::unique_ptr<vulkan::BufferWithDeviceLocalMemory> load_line_vertices(const vulkan::VulkanInstance& instance, const Obj<3>& obj)
+std::unique_ptr<vulkan::BufferWithDeviceLocalMemory> load_line_vertices(const vulkan::Device& device,
+                                                                        const vulkan::CommandPool& transfer_command_pool,
+                                                                        const vulkan::Queue& transfer_queue,
+                                                                        const std::vector<uint32_t>& family_indices,
+                                                                        const Obj<3>& obj)
 {
         if (obj.lines().size() == 0)
         {
@@ -226,24 +239,30 @@ std::unique_ptr<vulkan::BufferWithDeviceLocalMemory> load_line_vertices(const vu
                 }
         }
 
-        return std::make_unique<vulkan::BufferWithDeviceLocalMemory>(instance, instance.graphics_and_transfer_family_indices(),
-                                                                     VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, shader_vertices);
+        return std::make_unique<vulkan::BufferWithDeviceLocalMemory>(device, transfer_command_pool, transfer_queue,
+                                                                     family_indices, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+                                                                     shader_vertices);
 }
 
-std::vector<vulkan::ColorTexture> load_textures(const vulkan::VulkanInstance& instance, const Obj<3>& obj)
+std::vector<vulkan::ColorTexture> load_textures(const vulkan::Device& device, const vulkan::CommandPool& graphics_command_pool,
+                                                const vulkan::Queue& graphics_queue,
+                                                const vulkan::CommandPool& transfer_command_pool,
+                                                const vulkan::Queue& transfer_queue, const std::vector<uint32_t>& family_indices,
+                                                const Obj<3>& obj)
 {
         std::vector<vulkan::ColorTexture> textures;
 
         for (const typename Obj<3>::Image& image : obj.images())
         {
-                textures.emplace_back(instance, instance.graphics_and_transfer_family_indices(), image.size[0], image.size[1],
-                                      image.srgba_pixels);
+                textures.emplace_back(device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue,
+                                      family_indices, image.size[0], image.size[1], image.srgba_pixels);
         }
 
         // На одну текстуру больше для её указания, но не использования в тех материалах, где нет текстуры
         std::vector<std::uint_least8_t> pixels = {/*0*/ 0, 0, 0, 0, /*1*/ 0, 0, 0, 0,
                                                   /*2*/ 0, 0, 0, 0, /*3*/ 0, 0, 0, 0};
-        textures.emplace_back(instance, instance.graphics_and_transfer_family_indices(), 2, 2, pixels);
+        textures.emplace_back(device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue,
+                              family_indices, 2, 2, pixels);
 
         return textures;
 }
@@ -370,7 +389,9 @@ class DrawObjectTriangles final : public DrawObjectInterface
         std::vector<Material> m_materials;
 
 public:
-        DrawObjectTriangles(const vulkan::VulkanInstance& instance, VkSampler sampler,
+        DrawObjectTriangles(const vulkan::Device& device, const vulkan::CommandPool& graphics_command_pool,
+                            const vulkan::Queue& graphics_queue, const vulkan::CommandPool& transfer_command_pool,
+                            const vulkan::Queue& transfer_queue, VkSampler sampler,
                             VkDescriptorSetLayout triangles_material_descriptor_set_layout, const Obj<3>& obj)
         {
                 ASSERT(obj.facets().size() > 0);
@@ -381,10 +402,16 @@ public:
 
                 sort_facets_by_material(obj, sorted_face_indices, material_face_offset, material_face_count);
 
-                m_vertex_buffer = load_vertices(instance, obj, sorted_face_indices);
-                m_textures = load_textures(instance, obj);
-                m_shader_memory = load_materials(instance.device(), instance.graphics_family_indices(), sampler,
+                m_vertex_buffer = load_vertices(device, transfer_command_pool, transfer_queue,
+                                                merge<uint32_t>(graphics_queue.family_index(), transfer_queue.family_index()),
+                                                obj, sorted_face_indices);
+
+                m_textures = load_textures(device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue,
+                                           merge<uint32_t>(graphics_queue.family_index(), transfer_queue.family_index()), obj);
+
+                m_shader_memory = load_materials(device, merge<uint32_t>(graphics_queue.family_index()), sampler,
                                                  triangles_material_descriptor_set_layout, obj, m_textures);
+
                 m_vertex_count = 3 * obj.facets().size();
 
                 ASSERT(material_face_offset.size() == material_face_count.size());
@@ -456,11 +483,15 @@ class DrawObjectPoints final : public DrawObjectInterface
         std::array<VkDeviceSize, 1> m_offsets;
 
 public:
-        DrawObjectPoints(const vulkan::VulkanInstance& instance, const Obj<3>& obj)
+        DrawObjectPoints(const vulkan::Device& device, const vulkan::CommandPool& /*graphics_command_pool*/,
+                         const vulkan::Queue& graphics_queue, const vulkan::CommandPool& transfer_command_pool,
+                         const vulkan::Queue& transfer_queue, const Obj<3>& obj)
         {
                 ASSERT(obj.points().size() > 0);
 
-                m_vertex_buffer = load_point_vertices(instance, obj);
+                m_vertex_buffer =
+                        load_point_vertices(device, transfer_command_pool, transfer_queue,
+                                            merge<uint32_t>(graphics_queue.family_index(), transfer_queue.family_index()), obj);
                 m_vertex_count = obj.points().size();
 
                 m_buffers = {*m_vertex_buffer};
@@ -500,11 +531,15 @@ class DrawObjectLines final : public DrawObjectInterface
         std::array<VkDeviceSize, 1> m_offsets;
 
 public:
-        DrawObjectLines(const vulkan::VulkanInstance& instance, const Obj<3>& obj)
+        DrawObjectLines(const vulkan::Device& device, const vulkan::CommandPool& /*graphics_command_pool*/,
+                        const vulkan::Queue& graphics_queue, const vulkan::CommandPool& transfer_command_pool,
+                        const vulkan::Queue& transfer_queue, const Obj<3>& obj)
         {
                 ASSERT(obj.lines().size() > 0);
 
-                m_vertex_buffer = load_line_vertices(instance, obj);
+                m_vertex_buffer =
+                        load_line_vertices(device, transfer_command_pool, transfer_queue,
+                                           merge<uint32_t>(graphics_queue.family_index(), transfer_queue.family_index()), obj);
                 m_vertex_count = 2 * obj.lines().size();
 
                 m_buffers = {*m_vertex_buffer};
@@ -541,21 +576,27 @@ class DrawObject final
         bool m_has_shadow;
 
 public:
-        DrawObject(const vulkan::VulkanInstance& instance, VkSampler sampler, VkDescriptorSetLayout descriptor_set_layout,
+        DrawObject(const vulkan::Device& device, const vulkan::CommandPool& graphics_command_pool,
+                   const vulkan::Queue& graphics_queue, const vulkan::CommandPool& transfer_command_pool,
+                   const vulkan::Queue& transfer_queue, VkSampler sampler, VkDescriptorSetLayout descriptor_set_layout,
                    const Obj<3>& obj, double size, const vec3& position)
                 : m_model_matrix(model_vertex_matrix(obj, size, position))
         {
                 if (obj.facets().size() > 0)
                 {
-                        m_objects.push_back(std::make_unique<DrawObjectTriangles>(instance, sampler, descriptor_set_layout, obj));
+                        m_objects.push_back(std::make_unique<DrawObjectTriangles>(device, graphics_command_pool, graphics_queue,
+                                                                                  transfer_command_pool, transfer_queue, sampler,
+                                                                                  descriptor_set_layout, obj));
                 }
                 if (obj.points().size() > 0)
                 {
-                        m_objects.push_back(std::make_unique<DrawObjectPoints>(instance, obj));
+                        m_objects.push_back(std::make_unique<DrawObjectPoints>(device, graphics_command_pool, graphics_queue,
+                                                                               transfer_command_pool, transfer_queue, obj));
                 }
                 if (obj.lines().size() > 0)
                 {
-                        m_objects.push_back(std::make_unique<DrawObjectLines>(instance, obj));
+                        m_objects.push_back(std::make_unique<DrawObjectLines>(device, graphics_command_pool, graphics_queue,
+                                                                              transfer_command_pool, transfer_queue, obj));
                 }
 
                 m_has_shadow = false;
@@ -615,8 +656,12 @@ class Renderer final : public VulkanRenderer
 
         const vulkan::VulkanInstance& m_instance;
         const vulkan::Device& m_device;
-        const std::vector<uint32_t> m_graphics_family_indices;
-        const VkCommandPool m_graphics_command_pool;
+        const vulkan::CommandPool& m_graphics_command_pool;
+        const vulkan::Queue& m_graphics_queue;
+        const vulkan::CommandPool& m_transfer_command_pool;
+        const vulkan::Queue& m_transfer_queue;
+        const std::vector<uint32_t> m_object_image_family_indices;
+
         const vulkan::Swapchain* m_swapchain = nullptr;
 
         vulkan::Semaphore m_shadow_signal_semaphore;
@@ -779,7 +824,8 @@ class Renderer final : public VulkanRenderer
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
                 std::unique_ptr draw_object = std::make_unique<DrawObject>(
-                        m_instance, m_texture_sampler, m_triangles_material_descriptor_set_layout, *obj, size, position);
+                        m_device, m_graphics_command_pool, m_graphics_queue, m_transfer_command_pool, m_transfer_queue,
+                        m_texture_sampler, m_triangles_material_descriptor_set_layout, *obj, size, position);
 
                 m_storage.add_object(std::move(draw_object), id, scale_id);
 
@@ -834,11 +880,13 @@ class Renderer final : public VulkanRenderer
                 set_matrices();
         }
 
-        VkSemaphore draw(VkQueue graphics_queue, VkSemaphore wait_semaphore, unsigned image_index) const override
+        VkSemaphore draw(const vulkan::Queue& graphics_queue, VkSemaphore wait_semaphore, unsigned image_index) const override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
                 //
+
+                ASSERT(graphics_queue.family_index() == m_graphics_queue.family_index());
 
                 ASSERT(image_index < m_swapchain->image_views().size());
                 ASSERT(m_render_command_buffers.size() == m_swapchain->image_views().size());
@@ -936,9 +984,10 @@ class Renderer final : public VulkanRenderer
 
                 //
 
-                m_object_image =
-                        std::make_unique<vulkan::StorageImage>(m_instance, m_instance.graphics_compute_family_indices(),
-                                                               VK_FORMAT_R32_UINT, m_swapchain->width(), m_swapchain->height());
+                m_object_image = std::make_unique<vulkan::StorageImage>(
+                        m_device, m_graphics_command_pool, m_graphics_queue,
+                        merge<uint32_t>(m_object_image_family_indices, m_graphics_queue.family_index()), VK_FORMAT_R32_UINT,
+                        m_swapchain->width(), m_swapchain->height());
 
                 m_triangles_shared_shader_memory.set_object_image(m_object_image.get());
                 m_points_shader_memory.set_object_image(m_object_image.get());
@@ -976,9 +1025,9 @@ class Renderer final : public VulkanRenderer
                 //
 
                 constexpr vulkan::ShadowBufferCount buffer_count = vulkan::ShadowBufferCount::One;
-                m_shadow_buffers = vulkan::create_shadow_buffers(buffer_count, *m_swapchain, m_graphics_family_indices,
-                                                                 m_graphics_command_pool, m_device, SHADOW_DEPTH_IMAGE_FORMATS,
-                                                                 m_shadow_zoom);
+                m_shadow_buffers = vulkan::create_shadow_buffers(
+                        buffer_count, *m_swapchain, merge<uint32_t>(m_graphics_queue.family_index()), m_graphics_command_pool,
+                        m_device, SHADOW_DEPTH_IMAGE_FORMATS, m_shadow_zoom);
 
                 m_triangles_shared_shader_memory.set_shadow_texture(m_shadow_sampler, m_shadow_buffers->texture(0),
                                                                     m_shadow_buffers->texture_image_layout());
@@ -1119,13 +1168,18 @@ class Renderer final : public VulkanRenderer
         }
 
 public:
-        Renderer(const vulkan::VulkanInstance& instance, const std::vector<uint32_t>& graphics_family_indices,
-                 VkCommandPool graphics_command_pool, bool sample_shading, bool sampler_anisotropy)
+        Renderer(const vulkan::VulkanInstance& instance, const vulkan::CommandPool& graphics_command_pool,
+                 const vulkan::Queue& graphics_queue, const vulkan::CommandPool& transfer_command_pool,
+                 const vulkan::Queue& transfer_queue, bool sample_shading, bool sampler_anisotropy,
+                 const std::vector<uint32_t>& object_image_family_indices)
                 : m_sample_shading(sample_shading),
                   m_instance(instance),
                   m_device(instance.device()),
-                  m_graphics_family_indices(graphics_family_indices),
                   m_graphics_command_pool(graphics_command_pool),
+                  m_graphics_queue(graphics_queue),
+                  m_transfer_command_pool(transfer_command_pool),
+                  m_transfer_queue(transfer_queue),
+                  m_object_image_family_indices(object_image_family_indices),
                   m_shadow_signal_semaphore(m_device),
                   m_render_signal_semaphore(m_device),
                   m_texture_sampler(impl::create_texture_sampler(m_device, sampler_anisotropy)),
@@ -1134,9 +1188,9 @@ public:
                   m_triangles_material_descriptor_set_layout(vulkan::create_descriptor_set_layout(
                           m_device, impl::TrianglesMaterialMemory::descriptor_set_layout_bindings())),
                   //
-                  m_triangles_shared_shader_memory(m_device, m_graphics_family_indices),
-                  m_shadow_shader_memory(m_device, m_graphics_family_indices),
-                  m_points_shader_memory(m_device, m_graphics_family_indices),
+                  m_triangles_shared_shader_memory(m_device, merge<uint32_t>(m_graphics_queue.family_index())),
+                  m_shadow_shader_memory(m_device, merge<uint32_t>(m_graphics_queue.family_index())),
+                  m_points_shader_memory(m_device, merge<uint32_t>(m_graphics_queue.family_index())),
                   //
                   m_triangles_vert(m_device, triangles_vert, "main"),
                   m_triangles_geom(m_device, triangles_geom, "main"),
@@ -1188,10 +1242,13 @@ std::vector<vulkan::PhysicalDeviceFeatures> VulkanRenderer::required_device_feat
 }
 
 std::unique_ptr<VulkanRenderer> create_vulkan_renderer(const vulkan::VulkanInstance& instance,
-                                                       const std::vector<uint32_t>& graphics_family_indices,
-                                                       VkCommandPool graphics_command_pool, bool sample_shading,
-                                                       bool sampler_anisotropy)
+                                                       const vulkan::CommandPool& graphics_command_pool,
+                                                       const vulkan::Queue& graphics_queue,
+                                                       const vulkan::CommandPool& transfer_command_pool,
+                                                       const vulkan::Queue& transfer_queue, bool sample_shading,
+                                                       bool sampler_anisotropy,
+                                                       const std::vector<uint32_t>& object_image_family_indices)
 {
-        return std::make_unique<Renderer>(instance, graphics_family_indices, graphics_command_pool, sample_shading,
-                                          sampler_anisotropy);
+        return std::make_unique<Renderer>(instance, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue,
+                                          sample_shading, sampler_anisotropy, object_image_family_indices);
 }

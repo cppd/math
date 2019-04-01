@@ -58,8 +58,11 @@ struct VulkanCanvas
                                     const mat4& matrix, const vulkan::StorageImage& objects) = 0;
         virtual void delete_buffers() = 0;
 
-        virtual VkSemaphore draw(VkQueue graphics_queue, VkSemaphore wait_semaphore, unsigned image_index,
-                                 const TextData& text_data) = 0;
+        virtual VkSemaphore draw(const vulkan::Queue& graphics_queue, const vulkan::Queue& graphics_compute_queue,
+                                 VkSemaphore wait_semaphore, unsigned image_index, const TextData& text_data) = 0;
 };
 
-std::unique_ptr<VulkanCanvas> create_vulkan_canvas(const vulkan::VulkanInstance& instance, bool sample_shading, int text_size);
+std::unique_ptr<VulkanCanvas> create_vulkan_canvas(
+        const vulkan::VulkanInstance& instance, const vulkan::CommandPool& graphics_command_pool,
+        const vulkan::Queue& graphics_queue, const vulkan::CommandPool& transfer_command_pool,
+        const vulkan::Queue& transfer_queue, const vulkan::Queue& graphics_compute_queue, bool sample_shading, int text_size);

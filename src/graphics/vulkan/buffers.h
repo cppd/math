@@ -126,17 +126,20 @@ class BufferWithDeviceLocalMemory final : public BufferWithMemory
         Buffer m_buffer;
         DeviceMemory m_device_memory;
 
-        BufferWithDeviceLocalMemory(const VulkanInstance& instance, const std::vector<uint32_t>& family_indices,
-                                    VkBufferUsageFlags usage, VkDeviceSize data_size, const void* data);
+        BufferWithDeviceLocalMemory(const Device& device, const CommandPool& transfer_command_pool, const Queue& transfer_queue,
+                                    const std::vector<uint32_t>& family_indices, VkBufferUsageFlags usage, VkDeviceSize data_size,
+                                    const void* data);
 
 public:
-        BufferWithDeviceLocalMemory(const VulkanInstance& instance, const std::vector<uint32_t>& family_indices,
-                                    VkBufferUsageFlags usage, VkDeviceSize data_size);
+        BufferWithDeviceLocalMemory(const Device& device, const std::vector<uint32_t>& family_indices, VkBufferUsageFlags usage,
+                                    VkDeviceSize data_size);
 
         template <typename T, typename = std::enable_if_t<sizeof(std::declval<T>().size()) && sizeof(std::declval<T>().data())>>
-        explicit BufferWithDeviceLocalMemory(const VulkanInstance& instance, const std::vector<uint32_t>& family_indices,
+        explicit BufferWithDeviceLocalMemory(const Device& device, const CommandPool& transfer_command_pool,
+                                             const Queue& transfer_queue, const std::vector<uint32_t>& family_indices,
                                              VkBufferUsageFlags usage, const T& data)
-                : BufferWithDeviceLocalMemory(instance, family_indices, usage, storage_size(data), data.data())
+                : BufferWithDeviceLocalMemory(device, transfer_command_pool, transfer_queue, family_indices, usage,
+                                              storage_size(data), data.data())
         {
         }
 
@@ -163,7 +166,9 @@ class ColorTexture final
         ImageView m_image_view;
 
 public:
-        ColorTexture(const VulkanInstance& instance, const std::vector<uint32_t>& family_indices, uint32_t width, uint32_t height,
+        ColorTexture(const Device& device, const CommandPool& graphics_command_pool, const Queue& graphics_queue,
+                     const CommandPool& transfer_command_pool, const Queue& transfer_queue,
+                     const std::vector<uint32_t>& family_indices, uint32_t width, uint32_t height,
                      const Span<const std::uint_least8_t>& srgb_uint8_rgba_pixels);
 
         ColorTexture(const ColorTexture&) = delete;
@@ -190,8 +195,10 @@ class GrayscaleTexture final
         ImageView m_image_view;
 
 public:
-        GrayscaleTexture(const VulkanInstance& instance, const std::vector<uint32_t>& family_indices, uint32_t width,
-                         uint32_t height, const Span<const std::uint_least8_t>& srgb_uint8_grayscale_pixels);
+        GrayscaleTexture(const Device& device, const CommandPool& graphics_command_pool, const Queue& graphics_queue,
+                         const CommandPool& transfer_command_pool, const Queue& transfer_queue,
+                         const std::vector<uint32_t>& family_indices, uint32_t width, uint32_t height,
+                         const Span<const std::uint_least8_t>& srgb_uint8_grayscale_pixels);
 
         GrayscaleTexture(const GrayscaleTexture&) = delete;
         GrayscaleTexture& operator=(const GrayscaleTexture&) = delete;
@@ -311,8 +318,8 @@ class StorageImage final
         unsigned m_width, m_height;
 
 public:
-        StorageImage(const VulkanInstance& instance, const std::vector<uint32_t>& family_indices, VkFormat format, uint32_t width,
-                     uint32_t height);
+        StorageImage(const Device& device, const CommandPool& graphics_command_pool, const Queue& graphics_queue,
+                     const std::vector<uint32_t>& family_indices, VkFormat format, uint32_t width, uint32_t height);
 
         StorageImage(const StorageImage&) = delete;
         StorageImage& operator=(const StorageImage&) = delete;

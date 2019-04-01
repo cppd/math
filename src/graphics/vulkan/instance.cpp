@@ -68,12 +68,6 @@ VulkanInstance::VulkanInstance(const std::vector<std::string>& required_instance
                                                                  VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT)),
           m_presentation_family_index(m_physical_device.presentation_family_index()),
           //
-          m_graphics_compute_and_presentation_family_indices(
-                  unique_elements(std::vector({m_graphics_compute_family_index, m_presentation_family_index}))),
-          m_graphics_compute_and_transfer_family_indices(
-                  unique_elements(std::vector({m_graphics_compute_family_index, m_transfer_family_index}))),
-          m_graphics_compute_family_indices(unique_elements(std::vector({m_graphics_compute_family_index}))),
-          //
           m_device(m_physical_device.create_device(
                   compute_queue_count({{m_graphics_compute_family_index, GRAPHICS_COMPUTE_QUEUE_COUNT},
                                        {m_transfer_family_index, TRANSFER_QUEUE_COUNT},

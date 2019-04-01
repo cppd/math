@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "com/span.h"
+#include "com/type/limit.h"
 
 #include <functional>
 #include <unordered_map>
@@ -111,6 +112,26 @@ public:
         operator VkDevice() const noexcept;
 };
 
+class Queue final
+{
+        VkQueue m_queue = VK_NULL_HANDLE;
+        uint32_t m_family_index = limits<uint32_t>::max();
+
+public:
+        Queue() = default;
+        Queue(uint32_t family_index, VkQueue queue) : m_queue(queue), m_family_index(family_index)
+        {
+        }
+        operator VkQueue() const noexcept
+        {
+                return m_queue;
+        }
+        uint32_t family_index() const noexcept
+        {
+                return m_family_index;
+        }
+};
+
 class Device final
 {
         DeviceHandle m_device;
@@ -138,7 +159,7 @@ public:
                 return m_features;
         }
 
-        VkQueue queue(uint32_t family_index, uint32_t queue_index) const;
+        Queue queue(uint32_t family_index, uint32_t queue_index) const;
 };
 
 class SurfaceKHR final
@@ -320,8 +341,11 @@ public:
 
 class CommandPool final
 {
+        static constexpr uint32_t NULL_FAMILY_INDEX = limits<uint32_t>::max();
+
         VkDevice m_device = VK_NULL_HANDLE;
         VkCommandPool m_command_pool = VK_NULL_HANDLE;
+        uint32_t m_family_index = NULL_FAMILY_INDEX;
 
         void destroy() noexcept;
         void move(CommandPool* from) noexcept;
@@ -338,6 +362,8 @@ public:
         CommandPool& operator=(CommandPool&&) noexcept;
 
         operator VkCommandPool() const noexcept;
+
+        uint32_t family_index() const noexcept;
 };
 
 class Semaphore final
