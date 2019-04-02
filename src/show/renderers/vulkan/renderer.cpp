@@ -888,12 +888,15 @@ class Renderer final : public VulkanRenderer
                 ASSERT(graphics_queue.family_index() == m_graphics_queue.family_index());
 
                 ASSERT(image_index < m_swapchain->image_views().size());
-                ASSERT(m_render_command_buffers.size() == m_swapchain->image_views().size());
+                ASSERT(m_render_command_buffers.size() == m_swapchain->image_views().size() ||
+                       m_render_command_buffers.size() == 1);
+
+                const unsigned render_index = m_render_command_buffers.size() == 1 ? 0 : image_index;
 
                 if (!m_show_shadow || !m_storage.object() || !m_storage.object()->has_shadow())
                 {
                         vulkan::queue_submit(wait_semaphore, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-                                             m_render_command_buffers[image_index], m_render_signal_semaphore, graphics_queue,
+                                             m_render_command_buffers[render_index], m_render_signal_semaphore, graphics_queue,
                                              VK_NULL_HANDLE);
                 }
                 else
@@ -901,8 +904,10 @@ class Renderer final : public VulkanRenderer
                         ASSERT(m_shadow_command_buffers.size() == m_swapchain->image_views().size() ||
                                m_shadow_command_buffers.size() == 1);
 
-                        vulkan::queue_submit(m_shadow_command_buffers[m_shadow_command_buffers.size() == 1 ? 0 : image_index],
-                                             m_shadow_signal_semaphore, graphics_queue, VK_NULL_HANDLE);
+                        const unsigned shadow_index = m_shadow_command_buffers.size() == 1 ? 0 : image_index;
+
+                        vulkan::queue_submit(m_shadow_command_buffers[shadow_index], m_shadow_signal_semaphore, graphics_queue,
+                                             VK_NULL_HANDLE);
 
                         //
 
@@ -915,7 +920,7 @@ class Renderer final : public VulkanRenderer
                         wait_semaphores[1] = wait_semaphore;
                         wait_stages[1] = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 
-                        vulkan::queue_submit(wait_semaphores, wait_stages, m_render_command_buffers[image_index],
+                        vulkan::queue_submit(wait_semaphores, wait_stages, m_render_command_buffers[render_index],
                                              m_render_signal_semaphore, graphics_queue, VK_NULL_HANDLE);
                 }
 

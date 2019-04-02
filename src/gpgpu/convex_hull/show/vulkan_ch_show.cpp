@@ -159,10 +159,11 @@ class Impl final : public gpgpu_vulkan::ConvexHullShow
 
                 //
 
-                ASSERT(image_index < m_command_buffers.size());
+                ASSERT(m_command_buffers.size() == 1 || image_index < m_command_buffers.size());
 
                 vulkan::queue_submit(wait_semaphore, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-                                     m_command_buffers[image_index], m_signal_semaphore, queue, VK_NULL_HANDLE);
+                                     m_command_buffers[m_command_buffers.size() == 1 ? 0 : image_index], m_signal_semaphore,
+                                     queue, VK_NULL_HANDLE);
 
                 return m_signal_semaphore;
         }
