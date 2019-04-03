@@ -383,10 +383,10 @@ void Impl::create_color_buffer_rendering(unsigned buffer_count, const vulkan::Sw
                 impl::render_pass_color_depth(m_device, swapchain.format(), m_depth_attachments[0].format(), sample_count);
 
         attachments.resize(2);
-        for (unsigned i = 0; i < swapchain.image_views().size(); ++i)
+        for (unsigned i = 0; i < buffer_count; ++i)
         {
-                attachments[0] = (buffer_count == 1) ? m_color_attachments[0].image_view() : m_color_attachments[i].image_view();
-                attachments[1] = (buffer_count == 1) ? m_depth_attachments[0].image_view() : m_depth_attachments[i].image_view();
+                attachments[0] = m_color_attachments[i].image_view();
+                attachments[1] = m_depth_attachments[i].image_view();
 
                 m_framebuffers_depth.push_back(vulkan::create_framebuffer(m_device, m_render_pass_depth, swapchain.width(),
                                                                           swapchain.height(), attachments));
@@ -397,9 +397,9 @@ void Impl::create_color_buffer_rendering(unsigned buffer_count, const vulkan::Sw
         m_render_pass = impl::render_pass_color(m_device, swapchain.format(), sample_count);
 
         attachments.resize(1);
-        for (unsigned i = 0; i < swapchain.image_views().size(); ++i)
+        for (unsigned i = 0; i < buffer_count; ++i)
         {
-                attachments[0] = (buffer_count == 1) ? m_color_attachments[0].image_view() : m_color_attachments[i].image_view();
+                attachments[0] = m_color_attachments[i].image_view();
 
                 m_framebuffers.push_back(
                         vulkan::create_framebuffer(m_device, m_render_pass, swapchain.width(), swapchain.height(), attachments));
