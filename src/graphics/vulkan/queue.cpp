@@ -23,7 +23,7 @@ namespace vulkan
 {
 template <size_t N>
 void queue_submit(const std::array<VkSemaphore, N>& wait_semaphores, const std::array<VkPipelineStageFlags, N>& wait_stages,
-                  VkCommandBuffer command_buffer, VkSemaphore signal_semaphore, VkQueue queue, VkFence fence)
+                  VkCommandBuffer command_buffer, VkSemaphore signal_semaphore, VkQueue queue)
 {
         VkSubmitInfo info = {};
 
@@ -36,7 +36,7 @@ void queue_submit(const std::array<VkSemaphore, N>& wait_semaphores, const std::
         info.signalSemaphoreCount = 1;
         info.pSignalSemaphores = &signal_semaphore;
 
-        VkResult result = vkQueueSubmit(queue, 1, &info, fence);
+        VkResult result = vkQueueSubmit(queue, 1, &info, VK_NULL_HANDLE);
         if (result != VK_SUCCESS)
         {
                 vulkan_function_error("vkQueueSubmit", result);
@@ -44,7 +44,7 @@ void queue_submit(const std::array<VkSemaphore, N>& wait_semaphores, const std::
 }
 
 void queue_submit(VkSemaphore wait_semaphore, VkPipelineStageFlags wait_stage, VkCommandBuffer command_buffer,
-                  VkSemaphore signal_semaphore, VkQueue queue, VkFence fence)
+                  VkSemaphore signal_semaphore, VkQueue queue)
 {
         VkSubmitInfo info = {};
 
@@ -57,14 +57,14 @@ void queue_submit(VkSemaphore wait_semaphore, VkPipelineStageFlags wait_stage, V
         info.signalSemaphoreCount = 1;
         info.pSignalSemaphores = &signal_semaphore;
 
-        VkResult result = vkQueueSubmit(queue, 1, &info, fence);
+        VkResult result = vkQueueSubmit(queue, 1, &info, VK_NULL_HANDLE);
         if (result != VK_SUCCESS)
         {
                 vulkan_function_error("vkQueueSubmit", result);
         }
 }
 
-void queue_submit(VkCommandBuffer command_buffer, VkSemaphore signal_semaphore, VkQueue queue, VkFence fence)
+void queue_submit(VkCommandBuffer command_buffer, VkSemaphore signal_semaphore, VkQueue queue)
 {
         VkSubmitInfo info = {};
 
@@ -74,7 +74,7 @@ void queue_submit(VkCommandBuffer command_buffer, VkSemaphore signal_semaphore, 
         info.signalSemaphoreCount = 1;
         info.pSignalSemaphores = &signal_semaphore;
 
-        VkResult result = vkQueueSubmit(queue, 1, &info, fence);
+        VkResult result = vkQueueSubmit(queue, 1, &info, VK_NULL_HANDLE);
         if (result != VK_SUCCESS)
         {
                 vulkan_function_error("vkQueueSubmit", result);
@@ -83,5 +83,5 @@ void queue_submit(VkCommandBuffer command_buffer, VkSemaphore signal_semaphore, 
 
 template void queue_submit(const std::array<VkSemaphore, 2>& wait_semaphores,
                            const std::array<VkPipelineStageFlags, 2>& wait_stages, VkCommandBuffer command_buffer,
-                           VkSemaphore signal_semaphore, VkQueue queue, VkFence fence);
+                           VkSemaphore signal_semaphore, VkQueue queue);
 }

@@ -561,7 +561,7 @@ VkSemaphore Impl::resolve_to_swapchain(const vulkan::Queue& graphics_queue, VkSe
         wait_stages[1] = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 
         vulkan::queue_submit(wait_semaphores, wait_stages, m_resolve_command_buffers[image_index], m_resolve_signal_semaphore,
-                             graphics_queue, VK_NULL_HANDLE);
+                             graphics_queue);
 
         return m_resolve_signal_semaphore;
 }

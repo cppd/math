@@ -24,10 +24,10 @@ namespace vulkan
 {
 template <size_t N>
 void queue_submit(const std::array<VkSemaphore, N>& wait_semaphores, const std::array<VkPipelineStageFlags, N>& wait_stages,
-                  VkCommandBuffer command_buffer, VkSemaphore signal_semaphore, VkQueue queue, VkFence fence);
+                  VkCommandBuffer command_buffer, VkSemaphore signal_semaphore, VkQueue queue);
 
 void queue_submit(VkSemaphore wait_semaphore, VkPipelineStageFlags wait_stage, VkCommandBuffer command_buffer,
-                  VkSemaphore signal_semaphore, VkQueue queue, VkFence fence);
+                  VkSemaphore signal_semaphore, VkQueue queue);
 
-void queue_submit(VkCommandBuffer command_buffer, VkSemaphore signal_semaphore, VkQueue queue, VkFence fence);
+void queue_submit(VkCommandBuffer command_buffer, VkSemaphore signal_semaphore, VkQueue queue);
 }

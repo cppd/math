@@ -895,8 +895,7 @@ class Renderer final : public VulkanRenderer
 
                 if (!m_show_shadow || !m_storage.object() || !m_storage.object()->has_shadow())
                 {
-                        vulkan::queue_submit(m_render_command_buffers[render_index], m_render_signal_semaphore, graphics_queue,
-                                             VK_NULL_HANDLE);
+                        vulkan::queue_submit(m_render_command_buffers[render_index], m_render_signal_semaphore, graphics_queue);
                 }
                 else
                 {
@@ -905,14 +904,12 @@ class Renderer final : public VulkanRenderer
 
                         const unsigned shadow_index = m_shadow_command_buffers.size() == 1 ? 0 : image_index;
 
-                        vulkan::queue_submit(m_shadow_command_buffers[shadow_index], m_shadow_signal_semaphore, graphics_queue,
-                                             VK_NULL_HANDLE);
+                        vulkan::queue_submit(m_shadow_command_buffers[shadow_index], m_shadow_signal_semaphore, graphics_queue);
 
                         //
 
                         vulkan::queue_submit(m_shadow_signal_semaphore, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-                                             m_render_command_buffers[render_index], m_render_signal_semaphore, graphics_queue,
-                                             VK_NULL_HANDLE);
+                                             m_render_command_buffers[render_index], m_render_signal_semaphore, graphics_queue);
                 }
 
                 return m_render_signal_semaphore;

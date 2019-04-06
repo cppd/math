@@ -214,9 +214,10 @@ class Impl final : public VulkanText
 
                 ASSERT(m_command_buffers.size() == 1 || image_index < m_command_buffers.size());
 
+                const unsigned buffer_index = m_command_buffers.size() == 1 ? 0 : image_index;
+
                 vulkan::queue_submit(wait_semaphore, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-                                     m_command_buffers[m_command_buffers.size() == 1 ? 0 : image_index], m_signal_semaphore,
-                                     queue, VK_NULL_HANDLE);
+                                     m_command_buffers[buffer_index], m_signal_semaphore, queue);
 
                 return m_signal_semaphore;
         }
