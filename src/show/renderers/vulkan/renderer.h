@@ -59,7 +59,7 @@ struct VulkanRenderer
         virtual void object_show(int id) = 0;
         virtual void object_delete_all() = 0;
 
-        virtual VkSemaphore draw(const vulkan::Queue& graphics_queue, VkSemaphore wait_semaphore, unsigned image_index) const = 0;
+        virtual VkSemaphore draw(const vulkan::Queue& graphics_queue, unsigned image_index) const = 0;
 
         virtual bool empty() const = 0;
 

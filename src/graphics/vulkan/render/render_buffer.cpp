@@ -276,7 +276,8 @@ class Impl final : public vulkan::RenderBuffers, public Impl3D, public Impl2D
         RenderBuffers3D& buffers_3d() override;
         RenderBuffers2D& buffers_2d() override;
 
-        VkSemaphore resolve_to_swapchain(VkQueue graphics_queue, VkSemaphore wait_semaphore, unsigned image_index) const override;
+        VkSemaphore resolve_to_swapchain(VkQueue graphics_queue, VkSemaphore swapchain_image_semaphore,
+                                         VkSemaphore wait_semaphore, unsigned image_index) const override;
 
         //
 
@@ -544,17 +545,28 @@ void Impl::create_resolve_command_buffers()
         m_resolve_command_buffers = m_command_buffers.back().buffers();
 }
 
-VkSemaphore Impl::resolve_to_swapchain(VkQueue graphics_queue, VkSemaphore wait_semaphore, unsigned image_index) const
+VkSemaphore Impl::resolve_to_swapchain(VkQueue graphics_queue, VkSemaphore swapchain_image_semaphore, VkSemaphore wait_semaphore,
+                                       unsigned image_index) const
 {
+#if 0
         if (m_resolve_command_buffers.empty())
         {
                 return wait_semaphore;
         }
-
+#endif
         ASSERT(image_index < m_resolve_command_buffers.size());
 
-        vulkan::queue_submit(wait_semaphore, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-                             m_resolve_command_buffers[image_index], m_resolve_signal_semaphore, graphics_queue, VK_NULL_HANDLE);
+        std::array<VkSemaphore, 2> wait_semaphores;
+        std::array<VkPipelineStageFlags, 2> wait_stages;
+
+        wait_semaphores[0] = swapchain_image_semaphore;
+        wait_stages[0] = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+
+        wait_semaphores[1] = wait_semaphore;
+        wait_stages[1] = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+
+        vulkan::queue_submit(wait_semaphores, wait_stages, m_resolve_command_buffers[image_index], m_resolve_signal_semaphore,
+                             graphics_queue, VK_NULL_HANDLE);
 
         return m_resolve_signal_semaphore;
 }

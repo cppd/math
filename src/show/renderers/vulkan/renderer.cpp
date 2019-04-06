@@ -879,7 +879,7 @@ class Renderer final : public VulkanRenderer
                 set_matrices();
         }
 
-        VkSemaphore draw(const vulkan::Queue& graphics_queue, VkSemaphore wait_semaphore, unsigned image_index) const override
+        VkSemaphore draw(const vulkan::Queue& graphics_queue, unsigned image_index) const override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
@@ -895,8 +895,7 @@ class Renderer final : public VulkanRenderer
 
                 if (!m_show_shadow || !m_storage.object() || !m_storage.object()->has_shadow())
                 {
-                        vulkan::queue_submit(wait_semaphore, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-                                             m_render_command_buffers[render_index], m_render_signal_semaphore, graphics_queue,
+                        vulkan::queue_submit(m_render_command_buffers[render_index], m_render_signal_semaphore, graphics_queue,
                                              VK_NULL_HANDLE);
                 }
                 else
@@ -911,17 +910,9 @@ class Renderer final : public VulkanRenderer
 
                         //
 
-                        std::array<VkSemaphore, 2> wait_semaphores;
-                        std::array<VkPipelineStageFlags, 2> wait_stages;
-
-                        wait_semaphores[0] = m_shadow_signal_semaphore;
-                        wait_stages[0] = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-
-                        wait_semaphores[1] = wait_semaphore;
-                        wait_stages[1] = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-
-                        vulkan::queue_submit(wait_semaphores, wait_stages, m_render_command_buffers[render_index],
-                                             m_render_signal_semaphore, graphics_queue, VK_NULL_HANDLE);
+                        vulkan::queue_submit(m_shadow_signal_semaphore, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+                                             m_render_command_buffers[render_index], m_render_signal_semaphore, graphics_queue,
+                                             VK_NULL_HANDLE);
                 }
 
                 return m_render_signal_semaphore;

@@ -80,8 +80,8 @@ struct RenderBuffers
         virtual RenderBuffers3D& buffers_3d() = 0;
         virtual RenderBuffers2D& buffers_2d() = 0;
 
-        virtual VkSemaphore resolve_to_swapchain(VkQueue graphics_queue, VkSemaphore wait_semaphore,
-                                                 unsigned image_index) const = 0;
+        virtual VkSemaphore resolve_to_swapchain(VkQueue graphics_queue, VkSemaphore swapchain_image_semaphore,
+                                                 VkSemaphore wait_semaphore, unsigned image_index) const = 0;
 };
 
 std::unique_ptr<RenderBuffers> create_render_buffers(RenderBufferCount buffer_count, const vulkan::Swapchain& swapchain,

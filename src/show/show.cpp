@@ -932,11 +932,11 @@ bool render_vulkan(VkSwapchainKHR swapchain, const vulkan::Queue& presentation_q
                 return false;
         }
 
-        VkSemaphore wait_semaphore = image_semaphore;
+        VkSemaphore wait_semaphore;
 
-        wait_semaphore = renderer.draw(graphics_queues[0], wait_semaphore, image_index);
+        wait_semaphore = renderer.draw(graphics_queues[0], image_index);
         wait_semaphore = canvas.draw(graphics_queues[0], graphics_queues[0], wait_semaphore, image_index, text_data);
-        wait_semaphore = render_buffers.resolve_to_swapchain(graphics_queues[0], wait_semaphore, image_index);
+        wait_semaphore = render_buffers.resolve_to_swapchain(graphics_queues[0], image_semaphore, wait_semaphore, image_index);
 
         if (!vulkan::queue_present(wait_semaphore, swapchain, image_index, presentation_queue))
         {
