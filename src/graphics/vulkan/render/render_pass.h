@@ -21,11 +21,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace vulkan_render_implementation
 {
+#if 0
 vulkan::RenderPass render_pass_swapchain_depth(VkDevice device, VkFormat color_format, VkFormat depth_format);
 
 vulkan::RenderPass render_pass_swapchain(VkDevice device, VkFormat color_format);
 
-#if 0
 vulkan::RenderPass render_pass_swapchain_color_depth(VkDevice device, VkFormat color_format, VkFormat depth_format,
                                                      VkSampleCountFlagBits sample_count);
 #endif

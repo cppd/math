@@ -263,9 +263,11 @@ class Impl final : public vulkan::RenderBuffers, public Impl3D, public Impl2D
                                            VkSampleCountFlagBits sample_count,
                                            const std::vector<uint32_t>& attachment_family_indices,
                                            const std::vector<VkFormat>& depth_image_formats);
+#if 0
         void create_swapchain_rendering(unsigned buffer_count, const vulkan::Swapchain& swapchain,
                                         const std::vector<uint32_t>& attachment_family_indices,
                                         const std::vector<VkFormat>& depth_image_formats);
+#endif
 
         void create_resolve_command_buffers();
 
@@ -329,6 +331,11 @@ Impl::Impl(vulkan::RenderBufferCount buffer_count, const vulkan::Swapchain& swap
 
         unsigned count = compute_buffer_count(buffer_count, swapchain);
 
+#if 1
+        create_color_buffer_rendering(count, swapchain, sample_count, merge<uint32_t>(command_pool.family_index()),
+                                      depth_image_formats);
+        create_resolve_command_buffers();
+#else
         if (sample_count != VK_SAMPLE_COUNT_1_BIT)
         {
                 create_color_buffer_rendering(count, swapchain, sample_count, merge<uint32_t>(command_pool.family_index()),
@@ -339,6 +346,7 @@ Impl::Impl(vulkan::RenderBufferCount buffer_count, const vulkan::Swapchain& swap
         {
                 create_swapchain_rendering(count, swapchain, merge<uint32_t>(command_pool.family_index()), depth_image_formats);
         }
+#endif
 
         check_buffers(m_color_attachments, m_depth_attachments);
 
@@ -420,6 +428,7 @@ void Impl::create_color_buffer_rendering(unsigned buffer_count, const vulkan::Sw
         }
 }
 
+#if 0
 void Impl::create_swapchain_rendering(unsigned buffer_count, const vulkan::Swapchain& swapchain,
                                       const std::vector<uint32_t>& attachment_family_indices,
                                       const std::vector<VkFormat>& depth_image_formats)
@@ -461,6 +470,7 @@ void Impl::create_swapchain_rendering(unsigned buffer_count, const vulkan::Swapc
                         create_framebuffer(m_device, m_render_pass, swapchain.width(), swapchain.height(), attachments));
         }
 }
+#endif
 
 std::vector<VkCommandBuffer> Impl::create_command_buffers_3d(
         const Color& clear_color,
