@@ -276,7 +276,7 @@ class Impl final : public vulkan::RenderBuffers, public Impl3D, public Impl2D
         RenderBuffers3D& buffers_3d() override;
         RenderBuffers2D& buffers_2d() override;
 
-        VkSemaphore resolve_to_swapchain(VkQueue graphics_queue, VkSemaphore swapchain_image_semaphore,
+        VkSemaphore resolve_to_swapchain(const vulkan::Queue& graphics_queue, VkSemaphore swapchain_image_semaphore,
                                          VkSemaphore wait_semaphore, unsigned image_index) const override;
 
         //
@@ -545,15 +545,10 @@ void Impl::create_resolve_command_buffers()
         m_resolve_command_buffers = m_command_buffers.back().buffers();
 }
 
-VkSemaphore Impl::resolve_to_swapchain(VkQueue graphics_queue, VkSemaphore swapchain_image_semaphore, VkSemaphore wait_semaphore,
-                                       unsigned image_index) const
+VkSemaphore Impl::resolve_to_swapchain(const vulkan::Queue& graphics_queue, VkSemaphore swapchain_image_semaphore,
+                                       VkSemaphore wait_semaphore, unsigned image_index) const
 {
-#if 0
-        if (m_resolve_command_buffers.empty())
-        {
-                return wait_semaphore;
-        }
-#endif
+        ASSERT(graphics_queue.family_index() == m_command_pool.family_index());
         ASSERT(image_index < m_resolve_command_buffers.size());
 
         std::array<VkSemaphore, 2> wait_semaphores;

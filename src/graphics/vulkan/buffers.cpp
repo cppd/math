@@ -50,6 +50,7 @@ vulkan::Buffer create_buffer(VkDevice device, VkDeviceSize size, VkBufferUsageFl
         create_info.size = size;
         create_info.usage = usage;
 
+        ASSERT(family_indices.size() > 0);
         std::vector<uint32_t> unique_indices = unique_elements(family_indices);
 
         if (unique_indices.size() > 1)
@@ -95,6 +96,7 @@ vulkan::Image create_2d_image(VkDevice device, uint32_t width, uint32_t height, 
         create_info.samples = samples;
         // create_info.flags = 0;
 
+        ASSERT(family_indices.size() > 0);
         std::vector<uint32_t> unique_indices = unique_elements(family_indices);
 
         if (unique_indices.size() > 1)
@@ -451,10 +453,13 @@ void transition_storage_image_layout(VkDevice device, VkCommandPool command_pool
         end_commands(queue, command_buffer);
 }
 
-void staging_buffer_copy(const vulkan::Device& device, VkCommandPool command_pool, VkQueue queue, VkBuffer dst_buffer,
-                         VkDeviceSize src_data_size, const void* src_data)
+void staging_buffer_copy(const vulkan::Device& device, const vulkan::CommandPool& command_pool, const vulkan::Queue& queue,
+                         VkBuffer dst_buffer, VkDeviceSize src_data_size, const void* src_data)
 {
-        vulkan::Buffer staging_buffer(create_buffer(device, src_data_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, {}));
+        ASSERT(command_pool.family_index() == queue.family_index());
+
+        vulkan::Buffer staging_buffer(
+                create_buffer(device, src_data_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, {queue.family_index()}));
 
         vulkan::DeviceMemory staging_device_memory(create_device_memory(
                 device, staging_buffer, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT));
@@ -467,17 +472,22 @@ void staging_buffer_copy(const vulkan::Device& device, VkCommandPool command_poo
 }
 
 template <typename T>
-void staging_image_copy(const vulkan::Device& device, VkCommandPool graphics_command_pool, VkQueue graphics_queue,
-                        VkCommandPool transfer_command_pool, VkQueue transfer_queue, VkImage image, VkFormat format,
-                        VkImageLayout image_layout, uint32_t width, uint32_t height, const T& pixels)
+void staging_image_copy(const vulkan::Device& device, const vulkan::CommandPool& graphics_command_pool,
+                        const vulkan::Queue& graphics_queue, const vulkan::CommandPool& transfer_command_pool,
+                        const vulkan::Queue& transfer_queue, VkImage image, VkFormat format, VkImageLayout image_layout,
+                        uint32_t width, uint32_t height, const T& pixels)
 {
         static_assert(std::is_same_v<typename T::value_type, uint8_t> || std::is_same_v<typename T::value_type, uint16_t> ||
                       std::is_same_v<typename T::value_type, float>);
         static_assert(std::is_same_v<typename T::value_type, std::remove_cv_t<std::remove_reference_t<decltype(pixels[0])>>>);
 
+        ASSERT(graphics_command_pool.family_index() == graphics_queue.family_index());
+        ASSERT(transfer_command_pool.family_index() == transfer_queue.family_index());
+
         VkDeviceSize data_size = storage_size(pixels);
 
-        vulkan::Buffer staging_buffer(create_buffer(device, data_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, {}));
+        vulkan::Buffer staging_buffer(
+                create_buffer(device, data_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, {transfer_queue.family_index()}));
 
         vulkan::DeviceMemory staging_device_memory(create_device_memory(
                 device, staging_buffer, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT));

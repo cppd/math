@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "print.h"
 #include "surface.h"
 
+#include "com/alg.h"
 #include "com/error.h"
 #include "com/log.h"
 #include "com/print.h"
@@ -166,13 +167,13 @@ vulkan::SwapchainKHR create_swapchain_khr(VkDevice device, VkSurfaceKHR surface,
         create_info.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
         ASSERT(family_indices.size() > 0);
-        ASSERT(family_indices.size() == std::unordered_set<uint32_t>(family_indices.cbegin(), family_indices.cend()).size());
+        std::vector<uint32_t> unique_indices = unique_elements(family_indices);
 
-        if (family_indices.size() > 1)
+        if (unique_indices.size() > 1)
         {
                 create_info.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
-                create_info.queueFamilyIndexCount = family_indices.size();
-                create_info.pQueueFamilyIndices = family_indices.data();
+                create_info.queueFamilyIndexCount = unique_indices.size();
+                create_info.pQueueFamilyIndices = unique_indices.data();
         }
         else
         {
