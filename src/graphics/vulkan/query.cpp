@@ -301,13 +301,18 @@ VkExtent2D max_2d_image_extent(VkPhysicalDevice physical_device, VkFormat format
 
 VkSampleCountFlagBits supported_framebuffer_sample_count_flag(VkPhysicalDevice physical_device, int required_minimum_sample_count)
 {
-        if (required_minimum_sample_count < 1)
+        constexpr int MIN_SAMPLE_COUNT = 1;
+        constexpr int MAX_SAMPLE_COUNT = 64;
+
+        if (required_minimum_sample_count < MIN_SAMPLE_COUNT)
         {
-                error("Minimum sample count < 1");
+                error("The required minimum sample count " + to_string(required_minimum_sample_count) + " is less than " +
+                      to_string(MIN_SAMPLE_COUNT));
         }
-        if (required_minimum_sample_count > 64)
+        if (required_minimum_sample_count > MAX_SAMPLE_COUNT)
         {
-                error("Minimum sample count > 64");
+                error("The required minimum sample count " + to_string(required_minimum_sample_count) + " is greater than " +
+                      to_string(MAX_SAMPLE_COUNT));
         }
 
         VkPhysicalDeviceProperties properties;
@@ -345,7 +350,7 @@ VkSampleCountFlagBits supported_framebuffer_sample_count_flag(VkPhysicalDevice p
                 return VK_SAMPLE_COUNT_64_BIT;
         }
 
-        error("Failed to find framebuffer sample count");
+        error("The required minimum sample count " + to_string(required_minimum_sample_count) + " is not available");
 }
 
 int integer_sample_count_flag(VkSampleCountFlagBits sample_count)
