@@ -181,7 +181,7 @@ PainterWindow<N, T>::PainterWindow(const std::string& title, unsigned thread_cou
 
         m_stop = false;
         m_thread_working = true;
-        m_thread = std::thread([=]() noexcept {
+        m_thread = std::thread([ =, this ]() noexcept {
                 paint(this, samples_per_pixel, *m_paint_objects, &m_paintbrush, thread_count, &m_stop, smooth_normal);
                 m_thread_working = false;
         });

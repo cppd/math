@@ -496,7 +496,7 @@ void MainWindow::thread_load_from_file(std::string file_name, bool use_object_se
                 }
 
                 m_threads->start_thread(MainThreads::Action::Load,
-                                        [=, rho = m_bound_cocone_rho,
+                                        [=, this, rho = m_bound_cocone_rho,
                                          alpha = m_bound_cocone_alpha](ProgressRatioList* progress_list, std::string* message) {
                                                 *message = "Load " + file_name;
 
@@ -554,7 +554,7 @@ void MainWindow::thread_load_from_repository(int dimension, const std::string& o
                 }
 
                 m_threads->start_thread(MainThreads::Action::Load,
-                                        [=, rho = m_bound_cocone_rho,
+                                        [=, this, rho = m_bound_cocone_rho,
                                          alpha = m_bound_cocone_alpha](ProgressRatioList* progress_list, std::string* message) {
                                                 *message = "Load " + space_name(dimension) + " " + object_name;
 
@@ -587,7 +587,7 @@ void MainWindow::thread_self_test(SelfTestType test_type, bool with_confirmation
                 }
         }
 
-        m_threads->start_thread(MainThreads::Action::SelfTest, [=](ProgressRatioList* progress_list, std::string* message) {
+        m_threads->start_thread(MainThreads::Action::SelfTest, [=, this](ProgressRatioList* progress_list, std::string* message) {
                 *message = "Self-Test";
 
                 self_test(test_type, progress_list, [&](const std::exception_ptr& ptr, const std::string& msg) noexcept {
@@ -650,7 +650,7 @@ void MainWindow::thread_export(const std::string& name, ObjectId id)
                         return;
                 }
 
-                m_threads->start_thread(MainThreads::Action::Export, [=](ProgressRatioList*, std::string* message) {
+                m_threads->start_thread(MainThreads::Action::Export, [=, this](ProgressRatioList*, std::string* message) {
                         *message = "Export " + name + " to " + file_name;
 
                         m_objects->save_to_file(id, file_name, name);
@@ -700,7 +700,7 @@ void MainWindow::thread_reload_bound_cocone()
 
                 m_threads->start_thread(
                         MainThreads::Action::ReloadBoundCocone,
-                        [=, objects_to_load = m_objects_to_load](ProgressRatioList* progress_list, std::string* message) {
+                        [=, this, objects_to_load = m_objects_to_load](ProgressRatioList* progress_list, std::string* message) {
                                 *message = "BoundCocone reconstruction";
 
                                 m_objects->compute_bound_cocone(objects_to_load, progress_list, rho, alpha);
