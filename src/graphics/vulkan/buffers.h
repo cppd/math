@@ -217,7 +217,6 @@ public:
 
 class DepthAttachment final
 {
-        // VkImageLayout m_image_layout;
         VkFormat m_format;
         Image m_image;
         DeviceMemory m_device_memory;
@@ -240,7 +239,6 @@ public:
 
         VkImage image() const noexcept;
         VkFormat format() const noexcept;
-        // VkImageLayout image_layout() const noexcept;
         VkImageView image_view() const noexcept;
         VkSampleCountFlagBits sample_count() const noexcept;
 
@@ -250,7 +248,6 @@ public:
 
 class ColorAttachment final
 {
-        // VkImageLayout m_image_layout;
         VkFormat m_format;
         Image m_image;
         DeviceMemory m_device_memory;
@@ -272,14 +269,12 @@ public:
 
         VkImage image() const noexcept;
         VkFormat format() const noexcept;
-        // VkImageLayout image_layout() const noexcept;
         VkImageView image_view() const noexcept;
         VkSampleCountFlagBits sample_count() const noexcept;
 };
 
 class ShadowDepthAttachment final
 {
-        // VkImageLayout m_image_layout;
         VkFormat m_format;
         Image m_image;
         DeviceMemory m_device_memory;
@@ -301,7 +296,6 @@ public:
 
         VkImage image() const noexcept;
         VkFormat format() const noexcept;
-        // VkImageLayout image_layout() const noexcept;
         VkImageView image_view() const noexcept;
 
         unsigned width() const noexcept;

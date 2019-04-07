@@ -284,18 +284,13 @@ void copy_buffer_to_image(VkDevice device, VkCommandPool command_pool, VkQueue q
         end_commands(queue, command_buffer);
 }
 
-void transition_image_layout(VkDevice device, VkCommandPool command_pool, VkQueue queue, VkImage image, VkFormat format,
-                             VkImageLayout old_layout, VkImageLayout new_layout)
+void cmd_transition_texture_layout(VkCommandBuffer command_buffer, VkImage image, VkImageLayout old_layout,
+                                   VkImageLayout new_layout)
 {
-        vulkan::CommandBuffer command_buffer(device, command_pool);
-
-        begin_commands(command_buffer);
-
-        //
-
         VkImageMemoryBarrier barrier = {};
 
         barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+
         barrier.oldLayout = old_layout;
         barrier.newLayout = new_layout;
 
@@ -304,31 +299,7 @@ void transition_image_layout(VkDevice device, VkCommandPool command_pool, VkQueu
 
         barrier.image = image;
 
-        if (new_layout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
-        {
-                if (format == VK_FORMAT_D32_SFLOAT)
-                {
-                        barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
-                }
-                else if (format == VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT)
-                {
-                        barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
-                }
-                else
-                {
-                        error("Unsupported image format for layout transition");
-                }
-        }
-        else if (new_layout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL || new_layout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL ||
-                 new_layout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
-        {
-                barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        }
-        else
-        {
-                error("Unsupported new layout for image layout transition");
-        }
-
+        barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
         barrier.subresourceRange.baseMipLevel = 0;
         barrier.subresourceRange.levelCount = 1;
         barrier.subresourceRange.baseArrayLayer = 0;
@@ -353,36 +324,28 @@ void transition_image_layout(VkDevice device, VkCommandPool command_pool, VkQueu
                 source_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
                 destination_stage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
         }
-        else if (old_layout == VK_IMAGE_LAYOUT_UNDEFINED && new_layout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
-        {
-                barrier.srcAccessMask = 0;
-                barrier.dstAccessMask =
-                        VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-
-                source_stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-                destination_stage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-        }
-        else if (old_layout == VK_IMAGE_LAYOUT_UNDEFINED && new_layout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
-        {
-                barrier.srcAccessMask = 0;
-                barrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-
-                source_stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-                destination_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        }
         else
         {
-                error("Unsupported image layout transition");
+                error("Unsupported texture layout transition");
         }
 
         vkCmdPipelineBarrier(command_buffer, source_stage, destination_stage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+}
 
-        //
+void transition_texture_layout(VkDevice device, VkCommandPool command_pool, VkQueue queue, VkImage image,
+                               VkImageLayout old_layout, VkImageLayout new_layout)
+{
+        vulkan::CommandBuffer command_buffer(device, command_pool);
+
+        begin_commands(command_buffer);
+
+        cmd_transition_texture_layout(command_buffer, image, old_layout, new_layout);
 
         end_commands(queue, command_buffer);
 }
 
-void cmd_image_pipeline_barrier(VkCommandBuffer command_buffer, VkImage image, VkImageLayout old_layout, VkImageLayout new_layout)
+void cmd_transition_storage_image_layout(VkCommandBuffer command_buffer, VkImage image, VkImageLayout old_layout,
+                                         VkImageLayout new_layout)
 {
         VkImageMemoryBarrier barrier = {};
 
@@ -408,10 +371,10 @@ void cmd_image_pipeline_barrier(VkCommandBuffer command_buffer, VkImage image, V
         if (old_layout == VK_IMAGE_LAYOUT_UNDEFINED && new_layout == VK_IMAGE_LAYOUT_GENERAL)
         {
                 barrier.srcAccessMask = 0;
-                barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT;
+                barrier.dstAccessMask = 0;
 
                 source_stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-                destination_stage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+                destination_stage = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
         }
         else if (old_layout == VK_IMAGE_LAYOUT_GENERAL && new_layout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
         {
@@ -444,11 +407,7 @@ void transition_storage_image_layout(VkDevice device, VkCommandPool command_pool
 
         begin_commands(command_buffer);
 
-        //
-
-        cmd_image_pipeline_barrier(command_buffer, image, old_layout, new_layout);
-
-        //
+        cmd_transition_storage_image_layout(command_buffer, image, old_layout, new_layout);
 
         end_commands(queue, command_buffer);
 }
@@ -474,8 +433,8 @@ void staging_buffer_copy(const vulkan::Device& device, const vulkan::CommandPool
 template <typename T>
 void staging_image_copy(const vulkan::Device& device, const vulkan::CommandPool& graphics_command_pool,
                         const vulkan::Queue& graphics_queue, const vulkan::CommandPool& transfer_command_pool,
-                        const vulkan::Queue& transfer_queue, VkImage image, VkFormat format, VkImageLayout image_layout,
-                        uint32_t width, uint32_t height, const T& pixels)
+                        const vulkan::Queue& transfer_queue, VkImage image, VkImageLayout image_layout, uint32_t width,
+                        uint32_t height, const T& pixels)
 {
         static_assert(std::is_same_v<typename T::value_type, uint8_t> || std::is_same_v<typename T::value_type, uint16_t> ||
                       std::is_same_v<typename T::value_type, float>);
@@ -496,13 +455,13 @@ void staging_image_copy(const vulkan::Device& device, const vulkan::CommandPool&
 
         copy_host_to_device(staging_device_memory, 0, pixels.data(), data_size);
 
-        transition_image_layout(device, graphics_command_pool, graphics_queue, image, format, VK_IMAGE_LAYOUT_UNDEFINED,
-                                VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+        transition_texture_layout(device, graphics_command_pool, graphics_queue, image, VK_IMAGE_LAYOUT_UNDEFINED,
+                                  VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 
         copy_buffer_to_image(device, transfer_command_pool, transfer_queue, image, staging_buffer, width, height);
 
-        transition_image_layout(device, graphics_command_pool, graphics_queue, image, format,
-                                VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, image_layout);
+        transition_texture_layout(device, graphics_command_pool, graphics_queue, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                                  image_layout);
 }
 
 vulkan::ImageView create_image_view(VkDevice device, VkImage image, VkFormat format, VkImageAspectFlags aspect_flags)
@@ -657,21 +616,24 @@ ColorTexture::ColorTexture(const Device& device, const CommandPool& graphics_com
 
         if (m_format == VK_FORMAT_R16G16B16A16_UNORM)
         {
-                std::vector<uint16_t> buffer =
+                const std::vector<uint16_t> buffer =
                         color_conversion::rgba_pixels_from_srgb_uint8_to_rgb_uint16(srgb_uint8_rgba_pixels);
+
                 staging_image_copy(device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, m_image,
-                                   m_format, m_image_layout, width, height, buffer);
+                                   m_image_layout, width, height, buffer);
         }
         else if (m_format == VK_FORMAT_R32G32B32A32_SFLOAT)
         {
-                std::vector<float> buffer = color_conversion::rgba_pixels_from_srgb_uint8_to_rgb_float(srgb_uint8_rgba_pixels);
+                const std::vector<float> buffer =
+                        color_conversion::rgba_pixels_from_srgb_uint8_to_rgb_float(srgb_uint8_rgba_pixels);
+
                 staging_image_copy(device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, m_image,
-                                   m_format, m_image_layout, width, height, buffer);
+                                   m_image_layout, width, height, buffer);
         }
         else if (m_format == VK_FORMAT_R8G8B8A8_SRGB)
         {
                 staging_image_copy(device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, m_image,
-                                   m_format, m_image_layout, width, height, srgb_uint8_rgba_pixels);
+                                   m_image_layout, width, height, srgb_uint8_rgba_pixels);
         }
         else
         {
@@ -738,22 +700,24 @@ GrayscaleTexture::GrayscaleTexture(const Device& device, const CommandPool& grap
 
         if (m_format == VK_FORMAT_R16_UNORM)
         {
-                std::vector<uint16_t> buffer =
+                const std::vector<uint16_t> buffer =
                         color_conversion::grayscale_pixels_from_srgb_uint8_to_rgb_uint16(srgb_uint8_grayscale_pixels);
+
                 staging_image_copy(device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, m_image,
-                                   m_format, m_image_layout, width, height, buffer);
+                                   m_image_layout, width, height, buffer);
         }
         else if (m_format == VK_FORMAT_R32_SFLOAT)
         {
-                std::vector<float> buffer =
+                const std::vector<float> buffer =
                         color_conversion::grayscale_pixels_from_srgb_uint8_to_rgb_float(srgb_uint8_grayscale_pixels);
+
                 staging_image_copy(device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, m_image,
-                                   m_format, m_image_layout, width, height, buffer);
+                                   m_image_layout, width, height, buffer);
         }
         else if (m_format == VK_FORMAT_R8_SRGB)
         {
                 staging_image_copy(device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, m_image,
-                                   m_format, m_image_layout, width, height, srgb_uint8_grayscale_pixels);
+                                   m_image_layout, width, height, srgb_uint8_grayscale_pixels);
         }
         else
         {
@@ -787,18 +751,10 @@ DepthAttachment::DepthAttachment(const Device& device, const std::vector<uint32_
                                  const std::vector<VkFormat>& formats, VkSampleCountFlagBits samples, uint32_t width,
                                  uint32_t height)
 {
-#if 0
-        if (!find_index(family_indices, instance.graphics_family_index()))
-        {
-                error("Graphics family index not found in depth attachment family indices");
-        }
-#endif
-
         VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
         VkFormatFeatureFlags features = VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT;
         VkImageUsageFlags usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
 
-        // m_image_layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
         m_format = find_supported_2d_image_format(device.physical_device(), formats, tiling, features, usage, samples);
         m_image = create_2d_image(device, width, height, m_format, family_indices, samples, tiling, usage);
         m_device_memory = create_device_memory(device, m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
@@ -806,11 +762,6 @@ DepthAttachment::DepthAttachment(const Device& device, const std::vector<uint32_
         m_sample_count = samples;
         m_width = width;
         m_height = height;
-
-#if 0
-        transition_image_layout(instance.device(), instance.graphics_command_pool(), instance.graphics_queues().front(), m_image,
-                                m_format, VK_IMAGE_LAYOUT_UNDEFINED, m_image_layout);
-#endif
 }
 
 VkImage DepthAttachment::image() const noexcept
@@ -822,11 +773,6 @@ VkFormat DepthAttachment::format() const noexcept
 {
         return m_format;
 }
-
-// VkImageLayout DepthAttachment::image_layout() const noexcept
-//{
-//        return m_image_layout;
-//}
 
 VkImageView DepthAttachment::image_view() const noexcept
 {
@@ -853,19 +799,11 @@ unsigned DepthAttachment::height() const noexcept
 ColorAttachment::ColorAttachment(const Device& device, const std::vector<uint32_t>& family_indices, VkFormat format,
                                  VkSampleCountFlagBits samples, uint32_t width, uint32_t height)
 {
-#if 0
-        if (!find_index(family_indices, instance.graphics_family_index()))
-        {
-                error("Graphics family index not found in color attachment family indices");
-        }
-#endif
-
         std::vector<VkFormat> candidates = {format}; // должен быть только этот формат
         VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
         VkFormatFeatureFlags features = VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT;
         VkImageUsageFlags usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-        // m_image_layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
         m_format = find_supported_2d_image_format(device.physical_device(), candidates, tiling, features, usage, samples);
         m_image = create_2d_image(device, width, height, m_format, family_indices, samples, tiling, usage);
         m_device_memory = create_device_memory(device, m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
@@ -873,11 +811,6 @@ ColorAttachment::ColorAttachment(const Device& device, const std::vector<uint32_
         m_sample_count = samples;
 
         ASSERT(m_format == format);
-
-#if 0
-        transition_image_layout(instance.device(), instance.graphics_command_pool(), instance.graphics_queues().front(), m_image,
-                                m_format, VK_IMAGE_LAYOUT_UNDEFINED, m_image_layout);
-#endif
 }
 
 VkImage ColorAttachment::image() const noexcept
@@ -889,11 +822,6 @@ VkFormat ColorAttachment::format() const noexcept
 {
         return m_format;
 }
-
-// VkImageLayout ColorAttachment::image_layout() const noexcept
-//{
-//        return m_image_layout;
-//}
 
 VkImageView ColorAttachment::image_view() const noexcept
 {
@@ -910,13 +838,6 @@ VkSampleCountFlagBits ColorAttachment::sample_count() const noexcept
 ShadowDepthAttachment::ShadowDepthAttachment(const Device& device, const std::vector<uint32_t>& family_indices,
                                              const std::vector<VkFormat>& formats, uint32_t width, uint32_t height)
 {
-#if 0
-        if (!find_index(family_indices, instance.graphics_family_index()))
-        {
-                error("Graphics family index not found in shadow depth attachment family indices");
-        }
-#endif
-
         if (width <= 0 || height <= 0)
         {
                 error("Shadow depth attachment size error");
@@ -927,7 +848,6 @@ ShadowDepthAttachment::ShadowDepthAttachment(const Device& device, const std::ve
         VkImageUsageFlags usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
         VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT;
 
-        // m_image_layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL; // VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
         m_format = find_supported_2d_image_format(device.physical_device(), formats, tiling, features, usage, samples);
 
         VkExtent2D max_extent = max_2d_image_extent(device.physical_device(), m_format, tiling, usage);
@@ -937,11 +857,6 @@ ShadowDepthAttachment::ShadowDepthAttachment(const Device& device, const std::ve
         m_image = create_2d_image(device, m_width, m_height, m_format, family_indices, samples, tiling, usage);
         m_device_memory = create_device_memory(device, m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
         m_image_view = create_image_view(device, m_image, m_format, VK_IMAGE_ASPECT_DEPTH_BIT);
-
-#if 0
-        transition_image_layout(instance.device(), instance.graphics_command_pool(), instance.graphics_queue(), m_image, m_format,
-                                VK_IMAGE_LAYOUT_UNDEFINED, m_image_layout);
-#endif
 }
 
 VkImage ShadowDepthAttachment::image() const noexcept
@@ -953,11 +868,6 @@ VkFormat ShadowDepthAttachment::format() const noexcept
 {
         return m_format;
 }
-
-// VkImageLayout ShadowDepthAttachment::image_layout() const noexcept
-//{
-//        return m_image_layout;
-//}
 
 VkImageView ShadowDepthAttachment::image_view() const noexcept
 {
@@ -1040,7 +950,7 @@ unsigned StorageImage::height() const noexcept
 
 void StorageImage::clear_commands(VkCommandBuffer command_buffer) const
 {
-        cmd_image_pipeline_barrier(command_buffer, m_image, m_image_layout, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+        cmd_transition_storage_image_layout(command_buffer, m_image, m_image_layout, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 
         //
 
@@ -1057,6 +967,6 @@ void StorageImage::clear_commands(VkCommandBuffer command_buffer) const
 
         //
 
-        cmd_image_pipeline_barrier(command_buffer, m_image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, m_image_layout);
+        cmd_transition_storage_image_layout(command_buffer, m_image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, m_image_layout);
 }
 }
