@@ -257,7 +257,7 @@ class Impl final : public vulkan::RenderBuffers, public Impl3D, public Impl2D
         vulkan::RenderPass m_resolve_render_pass;
         std::vector<vulkan::Framebuffer> m_resolve_framebuffers;
         std::vector<VkCommandBuffer> m_resolve_command_buffers;
-        vulkan::Semaphore m_resolve_signal_semaphore;
+        std::vector<vulkan::Semaphore> m_resolve_signal_semaphores;
 
         void create_color_buffer_rendering(unsigned buffer_count, const vulkan::Swapchain& swapchain,
                                            VkSampleCountFlagBits sample_count,
@@ -322,8 +322,7 @@ Impl::Impl(vulkan::RenderBufferCount buffer_count, const vulkan::Swapchain& swap
         : m_device(device),
           m_swapchain_format(swapchain.format()),
           m_swapchain_color_space(swapchain.color_space()),
-          m_command_pool(command_pool),
-          m_resolve_signal_semaphore(m_device)
+          m_command_pool(command_pool)
 {
         ASSERT(depth_image_formats.size() > 0);
 
@@ -426,6 +425,11 @@ void Impl::create_color_buffer_rendering(unsigned buffer_count, const vulkan::Sw
 
                 m_resolve_framebuffers.push_back(vulkan::create_framebuffer(m_device, m_resolve_render_pass, swapchain.width(),
                                                                             swapchain.height(), attachments));
+        }
+
+        for (unsigned i = 0; i < buffer_count; ++i)
+        {
+                m_resolve_signal_semaphores.emplace_back(m_device);
         }
 }
 
@@ -550,6 +554,9 @@ VkSemaphore Impl::resolve_to_swapchain(const vulkan::Queue& graphics_queue, VkSe
 {
         ASSERT(graphics_queue.family_index() == m_command_pool.family_index());
         ASSERT(image_index < m_resolve_command_buffers.size());
+        ASSERT(m_resolve_signal_semaphores.size() == 1 || image_index < m_resolve_signal_semaphores.size());
+
+        const unsigned semaphore_index = m_resolve_signal_semaphores.size() == 1 ? 0 : image_index;
 
         std::array<VkSemaphore, 2> wait_semaphores;
         std::array<VkPipelineStageFlags, 2> wait_stages;
@@ -560,10 +567,10 @@ VkSemaphore Impl::resolve_to_swapchain(const vulkan::Queue& graphics_queue, VkSe
         wait_semaphores[1] = wait_semaphore;
         wait_stages[1] = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 
-        vulkan::queue_submit(wait_semaphores, wait_stages, m_resolve_command_buffers[image_index], m_resolve_signal_semaphore,
-                             graphics_queue);
+        vulkan::queue_submit(wait_semaphores, wait_stages, m_resolve_command_buffers[image_index],
+                             m_resolve_signal_semaphores[semaphore_index], graphics_queue);
 
-        return m_resolve_signal_semaphore;
+        return m_resolve_signal_semaphores[semaphore_index];
 }
 
 void Impl::delete_command_buffers_3d(std::vector<VkCommandBuffer>* buffers)
