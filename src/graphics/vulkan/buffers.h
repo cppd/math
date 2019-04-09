@@ -273,6 +273,33 @@ public:
         VkSampleCountFlagBits sample_count() const noexcept;
 };
 
+class ColorAttachmentTexture final
+{
+        VkImageLayout m_image_layout;
+        VkFormat m_format;
+        Image m_image;
+        DeviceMemory m_device_memory;
+        ImageView m_image_view;
+
+public:
+        ColorAttachmentTexture(const Device& device, const CommandPool& graphics_command_pool, const Queue& graphics_queue,
+                               const std::vector<uint32_t>& family_indices, VkFormat format, uint32_t width, uint32_t height);
+
+        ColorAttachmentTexture(const ColorAttachmentTexture&) = delete;
+        ColorAttachmentTexture& operator=(const ColorAttachmentTexture&) = delete;
+        ColorAttachmentTexture& operator=(ColorAttachmentTexture&&) = delete;
+
+        ColorAttachmentTexture(ColorAttachmentTexture&&) = default;
+        ~ColorAttachmentTexture() = default;
+
+        //
+
+        VkImage image() const noexcept;
+        VkFormat format() const noexcept;
+        VkImageLayout image_layout() const noexcept;
+        VkImageView image_view() const noexcept;
+};
+
 class ShadowDepthAttachment final
 {
         VkFormat m_format;
