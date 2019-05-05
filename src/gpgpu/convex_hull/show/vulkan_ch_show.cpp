@@ -114,7 +114,7 @@ class Impl final : public gpgpu_vulkan::ConvexHullShow
 
                 //
 
-                m_points.emplace(m_instance.device(), std::vector<uint32_t>({m_family_index}), VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+                m_points.emplace(m_instance.device(), std::unordered_set({m_family_index}), VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
                                  impl::points_buffer_size(objects.height()));
 
                 m_shader_memory.set_points(*m_points);
@@ -175,12 +175,12 @@ public:
                   m_family_index(family_index),
                   m_instance(instance),
                   m_signal_semaphore(instance.device()),
-                  m_shader_memory(instance.device(), merge<uint32_t>(m_family_index)),
+                  m_shader_memory(instance.device(), {m_family_index}),
                   m_vertex_shader(m_instance.device(), vertex_shader, "main"),
                   m_fragment_shader(m_instance.device(), fragment_shader, "main"),
                   m_pipeline_layout(vulkan::create_pipeline_layout(m_instance.device(), {m_shader_memory.set_number()},
                                                                    {m_shader_memory.descriptor_set_layout()})),
-                  m_indirect_buffer(m_instance.device(), merge<uint32_t>(m_family_index),
+                  m_indirect_buffer(m_instance.device(), {m_family_index},
                                     VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT,
                                     sizeof(VkDrawIndirectCommand)),
                   m_compute(gpgpu_vulkan::create_convex_hull_compute(instance))

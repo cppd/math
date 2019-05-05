@@ -76,7 +76,7 @@ std::vector<VkDescriptorSetLayoutBinding> TrianglesSharedMemory::descriptor_set_
         return bindings;
 }
 
-TrianglesSharedMemory::TrianglesSharedMemory(const vulkan::Device& device, const std::vector<uint32_t>& family_indices)
+TrianglesSharedMemory::TrianglesSharedMemory(const vulkan::Device& device, const std::unordered_set<uint32_t>& family_indices)
         : m_descriptor_set_layout(vulkan::create_descriptor_set_layout(device, descriptor_set_layout_bindings())),
           m_descriptors(device, 1, m_descriptor_set_layout, descriptor_set_layout_bindings())
 {
@@ -296,7 +296,7 @@ std::vector<VkDescriptorSetLayoutBinding> TrianglesMaterialMemory::descriptor_se
         return bindings;
 }
 
-TrianglesMaterialMemory::TrianglesMaterialMemory(const vulkan::Device& device, const std::vector<uint32_t>& family_indices,
+TrianglesMaterialMemory::TrianglesMaterialMemory(const vulkan::Device& device, const std::unordered_set<uint32_t>& family_indices,
                                                  VkSampler sampler, VkDescriptorSetLayout descriptor_set_layout,
                                                  const std::vector<MaterialAndTexture>& materials)
         : m_descriptors(vulkan::Descriptors(device, materials.size(), descriptor_set_layout, descriptor_set_layout_bindings()))
@@ -400,7 +400,7 @@ std::vector<VkDescriptorSetLayoutBinding> ShadowMemory::descriptor_set_layout_bi
         return bindings;
 }
 
-ShadowMemory::ShadowMemory(const vulkan::Device& device, const std::vector<uint32_t>& family_indices)
+ShadowMemory::ShadowMemory(const vulkan::Device& device, const std::unordered_set<uint32_t>& family_indices)
         : m_descriptor_set_layout(vulkan::create_descriptor_set_layout(device, descriptor_set_layout_bindings())),
           m_descriptors(device, 1, m_descriptor_set_layout, descriptor_set_layout_bindings())
 {
@@ -482,7 +482,7 @@ std::vector<VkDescriptorSetLayoutBinding> PointsMemory::descriptor_set_layout_bi
         return bindings;
 }
 
-PointsMemory::PointsMemory(const vulkan::Device& device, const std::vector<uint32_t>& family_indices)
+PointsMemory::PointsMemory(const vulkan::Device& device, const std::unordered_set<uint32_t>& family_indices)
         : m_descriptor_set_layout(vulkan::create_descriptor_set_layout(device, descriptor_set_layout_bindings())),
           m_descriptors(device, 1, m_descriptor_set_layout, descriptor_set_layout_bindings())
 {

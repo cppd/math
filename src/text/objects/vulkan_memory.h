@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/vulkan/descriptor.h"
 #include "graphics/vulkan/objects.h"
 
+#include <unordered_set>
 #include <vector>
 
 namespace vulkan_text_implementation
@@ -61,7 +62,7 @@ class TextMemory final
         void copy_to_drawing_buffer(VkDeviceSize offset, const T& data) const;
 
 public:
-        TextMemory(const vulkan::Device& device, const std::vector<uint32_t>& family_indices, VkSampler sampler,
+        TextMemory(const vulkan::Device& device, const std::unordered_set<uint32_t>& family_indices, VkSampler sampler,
                    const vulkan::GrayscaleTexture* texture);
 
         TextMemory(const TextMemory&) = delete;

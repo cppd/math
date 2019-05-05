@@ -24,6 +24,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/error.h"
 #include "com/type/detect.h"
 
+#include <unordered_set>
+
 namespace vulkan
 {
 class BufferWithMemory
@@ -51,15 +53,15 @@ class BufferWithHostVisibleMemory final : public BufferWithMemory
         void copy_to(VkDeviceSize offset, const void* data, VkDeviceSize data_size) const;
         void copy_from(VkDeviceSize offset, void* data, VkDeviceSize data_size) const;
 
-        BufferWithHostVisibleMemory(const Device& device, const std::vector<uint32_t>& family_indices, VkBufferUsageFlags usage,
-                                    VkDeviceSize data_size, const void* data);
+        BufferWithHostVisibleMemory(const Device& device, const std::unordered_set<uint32_t>& family_indices,
+                                    VkBufferUsageFlags usage, VkDeviceSize data_size, const void* data);
 
 public:
-        BufferWithHostVisibleMemory(const Device& device, const std::vector<uint32_t>& family_indices, VkBufferUsageFlags usage,
-                                    VkDeviceSize data_size);
+        BufferWithHostVisibleMemory(const Device& device, const std::unordered_set<uint32_t>& family_indices,
+                                    VkBufferUsageFlags usage, VkDeviceSize data_size);
 
         template <typename T, typename = std::enable_if_t<sizeof(std::declval<T>().size()) && sizeof(std::declval<T>().data())>>
-        explicit BufferWithHostVisibleMemory(const Device& device, const std::vector<uint32_t>& family_indices,
+        explicit BufferWithHostVisibleMemory(const Device& device, const std::unordered_set<uint32_t>& family_indices,
                                              VkBufferUsageFlags usage, const T& data)
                 : BufferWithHostVisibleMemory(device, family_indices, usage, storage_size(data), data.data())
         {
@@ -127,16 +129,16 @@ class BufferWithDeviceLocalMemory final : public BufferWithMemory
         DeviceMemory m_device_memory;
 
         BufferWithDeviceLocalMemory(const Device& device, const CommandPool& transfer_command_pool, const Queue& transfer_queue,
-                                    const std::vector<uint32_t>& family_indices, VkBufferUsageFlags usage, VkDeviceSize data_size,
-                                    const void* data);
+                                    const std::unordered_set<uint32_t>& family_indices, VkBufferUsageFlags usage,
+                                    VkDeviceSize data_size, const void* data);
 
 public:
-        BufferWithDeviceLocalMemory(const Device& device, const std::vector<uint32_t>& family_indices, VkBufferUsageFlags usage,
-                                    VkDeviceSize data_size);
+        BufferWithDeviceLocalMemory(const Device& device, const std::unordered_set<uint32_t>& family_indices,
+                                    VkBufferUsageFlags usage, VkDeviceSize data_size);
 
         template <typename T, typename = std::enable_if_t<sizeof(std::declval<T>().size()) && sizeof(std::declval<T>().data())>>
         explicit BufferWithDeviceLocalMemory(const Device& device, const CommandPool& transfer_command_pool,
-                                             const Queue& transfer_queue, const std::vector<uint32_t>& family_indices,
+                                             const Queue& transfer_queue, const std::unordered_set<uint32_t>& family_indices,
                                              VkBufferUsageFlags usage, const T& data)
                 : BufferWithDeviceLocalMemory(device, transfer_command_pool, transfer_queue, family_indices, usage,
                                               storage_size(data), data.data())
@@ -168,7 +170,7 @@ class ColorTexture final
 public:
         ColorTexture(const Device& device, const CommandPool& graphics_command_pool, const Queue& graphics_queue,
                      const CommandPool& transfer_command_pool, const Queue& transfer_queue,
-                     const std::vector<uint32_t>& family_indices, uint32_t width, uint32_t height,
+                     const std::unordered_set<uint32_t>& family_indices, uint32_t width, uint32_t height,
                      const Span<const std::uint_least8_t>& srgb_uint8_rgba_pixels);
 
         ColorTexture(const ColorTexture&) = delete;
@@ -197,7 +199,7 @@ class GrayscaleTexture final
 public:
         GrayscaleTexture(const Device& device, const CommandPool& graphics_command_pool, const Queue& graphics_queue,
                          const CommandPool& transfer_command_pool, const Queue& transfer_queue,
-                         const std::vector<uint32_t>& family_indices, uint32_t width, uint32_t height,
+                         const std::unordered_set<uint32_t>& family_indices, uint32_t width, uint32_t height,
                          const Span<const std::uint_least8_t>& srgb_uint8_grayscale_pixels);
 
         GrayscaleTexture(const GrayscaleTexture&) = delete;
@@ -225,8 +227,8 @@ class DepthAttachment final
         unsigned m_width, m_height;
 
 public:
-        DepthAttachment(const Device& device, const std::vector<uint32_t>& family_indices, const std::vector<VkFormat>& formats,
-                        VkSampleCountFlagBits samples, uint32_t width, uint32_t height);
+        DepthAttachment(const Device& device, const std::unordered_set<uint32_t>& family_indices,
+                        const std::vector<VkFormat>& formats, VkSampleCountFlagBits samples, uint32_t width, uint32_t height);
 
         DepthAttachment(const DepthAttachment&) = delete;
         DepthAttachment& operator=(const DepthAttachment&) = delete;
@@ -255,7 +257,7 @@ class ColorAttachment final
         VkSampleCountFlagBits m_sample_count;
 
 public:
-        ColorAttachment(const Device& device, const std::vector<uint32_t>& family_indices, VkFormat format,
+        ColorAttachment(const Device& device, const std::unordered_set<uint32_t>& family_indices, VkFormat format,
                         VkSampleCountFlagBits samples, uint32_t width, uint32_t height);
 
         ColorAttachment(const ColorAttachment&) = delete;
@@ -283,7 +285,8 @@ class ColorAttachmentTexture final
 
 public:
         ColorAttachmentTexture(const Device& device, const CommandPool& graphics_command_pool, const Queue& graphics_queue,
-                               const std::vector<uint32_t>& family_indices, VkFormat format, uint32_t width, uint32_t height);
+                               const std::unordered_set<uint32_t>& family_indices, VkFormat format, uint32_t width,
+                               uint32_t height);
 
         ColorAttachmentTexture(const ColorAttachmentTexture&) = delete;
         ColorAttachmentTexture& operator=(const ColorAttachmentTexture&) = delete;
@@ -309,7 +312,7 @@ class ShadowDepthAttachment final
         unsigned m_width, m_height;
 
 public:
-        ShadowDepthAttachment(const Device& device, const std::vector<uint32_t>& family_indices,
+        ShadowDepthAttachment(const Device& device, const std::unordered_set<uint32_t>& family_indices,
                               const std::vector<VkFormat>& formats, uint32_t width, uint32_t height);
 
         ShadowDepthAttachment(const ShadowDepthAttachment&) = delete;
@@ -340,7 +343,7 @@ class StorageImage final
 
 public:
         StorageImage(const Device& device, const CommandPool& graphics_command_pool, const Queue& graphics_queue,
-                     const std::vector<uint32_t>& family_indices, VkFormat format, uint32_t width, uint32_t height);
+                     const std::unordered_set<uint32_t>& family_indices, VkFormat format, uint32_t width, uint32_t height);
 
         StorageImage(const StorageImage&) = delete;
         StorageImage& operator=(const StorageImage&) = delete;

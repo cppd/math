@@ -22,7 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "print.h"
 #include "query.h"
 
-#include "com/alg.h"
 #include "com/color/conversion_span.h"
 #include "com/error.h"
 #include "com/print.h"
@@ -31,18 +30,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace
 {
-bool find_index(const std::vector<uint32_t>& indices, uint32_t index)
-{
-        return std::find(indices.cbegin(), indices.cend(), index) != indices.cend();
-}
-
 vulkan::Buffer create_buffer(VkDevice device, VkDeviceSize size, VkBufferUsageFlags usage,
-                             const std::vector<uint32_t>& family_indices)
+                             const std::unordered_set<uint32_t>& family_indices)
 {
         if (!(size > 0))
         {
                 error("Buffer zero size");
         }
+        if (family_indices.empty())
+        {
+                error("Buffer family index set is empty");
+        }
+
+        const std::vector<uint32_t> indices(family_indices.cbegin(), family_indices.cend());
 
         VkBufferCreateInfo create_info = {};
 
@@ -50,14 +50,11 @@ vulkan::Buffer create_buffer(VkDevice device, VkDeviceSize size, VkBufferUsageFl
         create_info.size = size;
         create_info.usage = usage;
 
-        ASSERT(family_indices.size() > 0);
-        std::vector<uint32_t> unique_indices = unique_elements(family_indices);
-
-        if (unique_indices.size() > 1)
+        if (indices.size() > 1)
         {
                 create_info.sharingMode = VK_SHARING_MODE_CONCURRENT;
-                create_info.queueFamilyIndexCount = unique_indices.size();
-                create_info.pQueueFamilyIndices = unique_indices.data();
+                create_info.queueFamilyIndexCount = indices.size();
+                create_info.pQueueFamilyIndices = indices.data();
         }
         else
         {
@@ -68,8 +65,8 @@ vulkan::Buffer create_buffer(VkDevice device, VkDeviceSize size, VkBufferUsageFl
 }
 
 vulkan::Image create_2d_image(VkDevice device, uint32_t width, uint32_t height, VkFormat format,
-                              const std::vector<uint32_t>& family_indices, VkSampleCountFlagBits samples, VkImageTiling tiling,
-                              VkImageUsageFlags usage)
+                              const std::unordered_set<uint32_t>& family_indices, VkSampleCountFlagBits samples,
+                              VkImageTiling tiling, VkImageUsageFlags usage)
 {
         if (!(width > 0))
         {
@@ -79,6 +76,12 @@ vulkan::Image create_2d_image(VkDevice device, uint32_t width, uint32_t height, 
         {
                 error("Image zero height");
         }
+        if (family_indices.empty())
+        {
+                error("2D image family index set is empty");
+        }
+
+        const std::vector<uint32_t> indices(family_indices.cbegin(), family_indices.cend());
 
         VkImageCreateInfo create_info = {};
 
@@ -96,14 +99,11 @@ vulkan::Image create_2d_image(VkDevice device, uint32_t width, uint32_t height, 
         create_info.samples = samples;
         // create_info.flags = 0;
 
-        ASSERT(family_indices.size() > 0);
-        std::vector<uint32_t> unique_indices = unique_elements(family_indices);
-
-        if (unique_indices.size() > 1)
+        if (indices.size() > 1)
         {
                 create_info.sharingMode = VK_SHARING_MODE_CONCURRENT;
-                create_info.queueFamilyIndexCount = unique_indices.size();
-                create_info.pQueueFamilyIndices = unique_indices.data();
+                create_info.queueFamilyIndexCount = indices.size();
+                create_info.pQueueFamilyIndices = indices.data();
         }
         else
         {
@@ -422,7 +422,7 @@ vulkan::ImageView create_image_view(VkDevice device, VkImage image, VkFormat for
 
 namespace vulkan
 {
-BufferWithHostVisibleMemory::BufferWithHostVisibleMemory(const Device& device, const std::vector<uint32_t>& family_indices,
+BufferWithHostVisibleMemory::BufferWithHostVisibleMemory(const Device& device, const std::unordered_set<uint32_t>& family_indices,
                                                          VkBufferUsageFlags usage, VkDeviceSize data_size)
         : m_buffer(create_buffer(device, data_size, usage, family_indices)),
           m_device_memory(create_device_memory(device, m_buffer,
@@ -430,7 +430,7 @@ BufferWithHostVisibleMemory::BufferWithHostVisibleMemory(const Device& device, c
 {
 }
 
-BufferWithHostVisibleMemory::BufferWithHostVisibleMemory(const Device& device, const std::vector<uint32_t>& family_indices,
+BufferWithHostVisibleMemory::BufferWithHostVisibleMemory(const Device& device, const std::unordered_set<uint32_t>& family_indices,
                                                          VkBufferUsageFlags usage, VkDeviceSize data_size, const void* data)
         : BufferWithHostVisibleMemory(device, family_indices, usage, data_size)
 {
@@ -470,7 +470,7 @@ void BufferWithHostVisibleMemory::copy_from(VkDeviceSize offset, void* data, VkD
 
 //
 
-BufferWithDeviceLocalMemory::BufferWithDeviceLocalMemory(const Device& device, const std::vector<uint32_t>& family_indices,
+BufferWithDeviceLocalMemory::BufferWithDeviceLocalMemory(const Device& device, const std::unordered_set<uint32_t>& family_indices,
                                                          VkBufferUsageFlags usage, VkDeviceSize data_size)
         : m_buffer(create_buffer(device, data_size, usage, family_indices)),
           m_device_memory(create_device_memory(device, m_buffer, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
@@ -478,7 +478,8 @@ BufferWithDeviceLocalMemory::BufferWithDeviceLocalMemory(const Device& device, c
 }
 
 BufferWithDeviceLocalMemory::BufferWithDeviceLocalMemory(const Device& device, const CommandPool& transfer_command_pool,
-                                                         const Queue& transfer_queue, const std::vector<uint32_t>& family_indices,
+                                                         const Queue& transfer_queue,
+                                                         const std::unordered_set<uint32_t>& family_indices,
                                                          VkBufferUsageFlags usage, VkDeviceSize data_size, const void* data)
         : m_buffer(create_buffer(device, data_size, usage | VK_BUFFER_USAGE_TRANSFER_DST_BIT, family_indices)),
           m_device_memory(create_device_memory(device, m_buffer, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
@@ -486,7 +487,7 @@ BufferWithDeviceLocalMemory::BufferWithDeviceLocalMemory(const Device& device, c
         ASSERT(data_size > 0 && data);
         ASSERT(transfer_command_pool.family_index() == transfer_queue.family_index());
 
-        if (!find_index(family_indices, transfer_queue.family_index()))
+        if (family_indices.count(transfer_queue.family_index()) == 0)
         {
                 error("Transfer family index not found in buffer family indices");
         }
@@ -513,17 +514,17 @@ bool BufferWithDeviceLocalMemory::usage(VkBufferUsageFlagBits flag) const noexce
 
 ColorTexture::ColorTexture(const Device& device, const CommandPool& graphics_command_pool, const Queue& graphics_queue,
                            const CommandPool& transfer_command_pool, const Queue& transfer_queue,
-                           const std::vector<uint32_t>& family_indices, uint32_t width, uint32_t height,
+                           const std::unordered_set<uint32_t>& family_indices, uint32_t width, uint32_t height,
                            const Span<const std::uint_least8_t>& srgb_uint8_rgba_pixels)
 {
         ASSERT(graphics_command_pool.family_index() == graphics_queue.family_index());
         ASSERT(transfer_command_pool.family_index() == transfer_queue.family_index());
 
-        if (!find_index(family_indices, graphics_queue.family_index()))
+        if (family_indices.count(graphics_queue.family_index()) == 0)
         {
                 error("Graphics family index not found in color texture family indices");
         }
-        if (!find_index(family_indices, transfer_queue.family_index()))
+        if (family_indices.count(transfer_queue.family_index()) == 0)
         {
                 error("Transfer family index not found in color texture family indices");
         }
@@ -597,17 +598,17 @@ VkImageView ColorTexture::image_view() const noexcept
 
 GrayscaleTexture::GrayscaleTexture(const Device& device, const CommandPool& graphics_command_pool, const Queue& graphics_queue,
                                    const CommandPool& transfer_command_pool, const Queue& transfer_queue,
-                                   const std::vector<uint32_t>& family_indices, uint32_t width, uint32_t height,
+                                   const std::unordered_set<uint32_t>& family_indices, uint32_t width, uint32_t height,
                                    const Span<const std::uint_least8_t>& srgb_uint8_grayscale_pixels)
 {
         ASSERT(graphics_command_pool.family_index() == graphics_queue.family_index());
         ASSERT(transfer_command_pool.family_index() == transfer_queue.family_index());
 
-        if (!find_index(family_indices, graphics_queue.family_index()))
+        if (family_indices.count(graphics_queue.family_index()) == 0)
         {
                 error("Graphics family index not found in grayscale texture family indices");
         }
-        if (!find_index(family_indices, transfer_queue.family_index()))
+        if (family_indices.count(transfer_queue.family_index()) == 0)
         {
                 error("Transfer family index not found in grayscale texture family indices");
         }
@@ -679,7 +680,7 @@ VkImageView GrayscaleTexture::image_view() const noexcept
 
 //
 
-DepthAttachment::DepthAttachment(const Device& device, const std::vector<uint32_t>& family_indices,
+DepthAttachment::DepthAttachment(const Device& device, const std::unordered_set<uint32_t>& family_indices,
                                  const std::vector<VkFormat>& formats, VkSampleCountFlagBits samples, uint32_t width,
                                  uint32_t height)
 {
@@ -728,7 +729,7 @@ unsigned DepthAttachment::height() const noexcept
 
 //
 
-ColorAttachment::ColorAttachment(const Device& device, const std::vector<uint32_t>& family_indices, VkFormat format,
+ColorAttachment::ColorAttachment(const Device& device, const std::unordered_set<uint32_t>& family_indices, VkFormat format,
                                  VkSampleCountFlagBits samples, uint32_t width, uint32_t height)
 {
         std::vector<VkFormat> candidates = {format}; // должен быть только этот формат
@@ -768,12 +769,12 @@ VkSampleCountFlagBits ColorAttachment::sample_count() const noexcept
 //
 
 ColorAttachmentTexture::ColorAttachmentTexture(const Device& device, const CommandPool& graphics_command_pool,
-                                               const Queue& graphics_queue, const std::vector<uint32_t>& family_indices,
+                                               const Queue& graphics_queue, const std::unordered_set<uint32_t>& family_indices,
                                                VkFormat format, uint32_t width, uint32_t height)
 {
         ASSERT(graphics_command_pool.family_index() == graphics_queue.family_index());
 
-        if (!find_index(family_indices, graphics_queue.family_index()))
+        if (family_indices.count(graphics_queue.family_index()) == 0)
         {
                 error("Graphics family index not found in color aattachment texture family indices");
         }
@@ -840,7 +841,7 @@ VkImageView ColorAttachmentTexture::image_view() const noexcept
 
 //
 
-ShadowDepthAttachment::ShadowDepthAttachment(const Device& device, const std::vector<uint32_t>& family_indices,
+ShadowDepthAttachment::ShadowDepthAttachment(const Device& device, const std::unordered_set<uint32_t>& family_indices,
                                              const std::vector<VkFormat>& formats, uint32_t width, uint32_t height)
 {
         if (width <= 0 || height <= 0)
@@ -892,11 +893,11 @@ unsigned ShadowDepthAttachment::height() const noexcept
 //
 
 StorageImage::StorageImage(const Device& device, const CommandPool& graphics_command_pool, const Queue& graphics_queue,
-                           const std::vector<uint32_t>& family_indices, VkFormat format, uint32_t width, uint32_t height)
+                           const std::unordered_set<uint32_t>& family_indices, VkFormat format, uint32_t width, uint32_t height)
 {
         ASSERT(graphics_command_pool.family_index() == graphics_queue.family_index());
 
-        if (!find_index(family_indices, graphics_queue.family_index()))
+        if (family_indices.count(graphics_queue.family_index()) == 0)
         {
                 error("Graphics family index not found in storage image family indices");
         }

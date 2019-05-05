@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <functional>
 #include <memory>
+#include <unordered_set>
 #include <vector>
 
 namespace vulkan
@@ -55,7 +56,7 @@ struct ShadowBuffers
 };
 
 std::unique_ptr<ShadowBuffers> create_shadow_buffers(ShadowBufferCount buffer_count, const vulkan::Swapchain& swapchain,
-                                                     const std::vector<uint32_t>& attachment_family_indices,
+                                                     const std::unordered_set<uint32_t>& attachment_family_indices,
                                                      VkCommandPool command_pool, const vulkan::Device& device,
                                                      const std::vector<VkFormat>& depth_image_formats, double zoom);
 }

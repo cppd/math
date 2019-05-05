@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "objects.h"
 
+#include <unordered_set>
 #include <vector>
 
 namespace vulkan
@@ -38,7 +39,7 @@ class Swapchain
         std::vector<ImageView> m_image_views;
 
 public:
-        Swapchain(VkSurfaceKHR surface, const Device& device, const std::vector<uint32_t>& family_indices,
+        Swapchain(VkSurfaceKHR surface, const Device& device, const std::unordered_set<uint32_t>& family_indices,
                   const VkSurfaceFormatKHR& required_surface_format, int preferred_image_count,
                   PresentMode preferred_present_mode);
 

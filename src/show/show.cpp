@@ -887,7 +887,7 @@ void ShowObject<GraphicsAndComputeAPI::OpenGL>::loop()
 void create_swapchain(const vulkan::VulkanInstance& instance, VulkanRenderer* renderer, VulkanCanvas* canvas,
                       std::unique_ptr<vulkan::Swapchain>* swapchain, std::unique_ptr<vulkan::RenderBuffers>* render_buffers,
                       std::unique_ptr<vulkan::StorageImage>* object_image, vulkan::PresentMode preferred_present_mode,
-                      const std::vector<uint32_t>& swapchain_family_indices)
+                      const std::unordered_set<uint32_t>& swapchain_family_indices)
 {
         instance.device_wait_idle();
 
@@ -909,7 +909,7 @@ void create_swapchain(const vulkan::VulkanInstance& instance, VulkanRenderer* re
 
         *object_image = std::make_unique<vulkan::StorageImage>(
                 instance.device(), instance.graphics_command_pool(), instance.graphics_queues()[0],
-                merge<uint32_t>(instance.graphics_queues()[0].family_index()), OBJECT_IMAGE_FORMAT, (*swapchain)->width(),
+                std::unordered_set({instance.graphics_queues()[0].family_index()}), OBJECT_IMAGE_FORMAT, (*swapchain)->width(),
                 (*swapchain)->height());
 
         renderer->create_buffers(swapchain->get(), &(*render_buffers)->buffers_3d(), object_image->get());
@@ -1011,8 +1011,8 @@ void ShowObject<GraphicsAndComputeAPI::Vulkan>::loop()
 
         vulkan::PresentMode present_mode = VULKAN_INIT_PRESENT_MODE;
 
-        const std::vector<uint32_t> swapchain_family_indices =
-                merge<uint32_t>(instance.graphics_queues()[0].family_index(), instance.presentation_queue().family_index());
+        const std::unordered_set<uint32_t> swapchain_family_indices = {instance.graphics_queues()[0].family_index(),
+                                                                       instance.presentation_queue().family_index()};
 
         create_swapchain(instance, renderer.get(), canvas.get(), &swapchain, &render_buffers, &object_image, present_mode,
                          swapchain_family_indices);

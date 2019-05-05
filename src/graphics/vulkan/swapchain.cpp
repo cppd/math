@@ -153,9 +153,18 @@ std::vector<VkImage> swapchain_images(VkDevice device, VkSwapchainKHR swapchain)
 
 vulkan::SwapchainKHR create_swapchain_khr(VkDevice device, VkSurfaceKHR surface, VkSurfaceFormatKHR surface_format,
                                           VkPresentModeKHR present_mode, VkExtent2D extent, uint32_t image_count,
-                                          VkSurfaceTransformFlagBitsKHR transform, const std::vector<uint32_t>& family_indices)
+                                          VkSurfaceTransformFlagBitsKHR transform,
+                                          const std::unordered_set<uint32_t>& family_indices)
 {
+        if (family_indices.empty())
+        {
+                error("Swapchain family index set is empty");
+        }
+
+        const std::vector<uint32_t> indices(family_indices.cbegin(), family_indices.cend());
+
         VkSwapchainCreateInfoKHR create_info = {};
+
         create_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
         create_info.surface = surface;
 
@@ -166,14 +175,11 @@ vulkan::SwapchainKHR create_swapchain_khr(VkDevice device, VkSurfaceKHR surface,
         create_info.imageArrayLayers = 1;
         create_info.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-        ASSERT(family_indices.size() > 0);
-        std::vector<uint32_t> unique_indices = unique_elements(family_indices);
-
-        if (unique_indices.size() > 1)
+        if (indices.size() > 1)
         {
                 create_info.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
-                create_info.queueFamilyIndexCount = unique_indices.size();
-                create_info.pQueueFamilyIndices = unique_indices.data();
+                create_info.queueFamilyIndexCount = indices.size();
+                create_info.pQueueFamilyIndices = indices.data();
         }
         else
         {
@@ -282,7 +288,7 @@ bool queue_present(VkSemaphore wait_semaphore, VkSwapchainKHR swapchain, uint32_
         vulkan::vulkan_function_error("vkQueuePresentKHR", result);
 }
 
-Swapchain::Swapchain(VkSurfaceKHR surface, const Device& device, const std::vector<uint32_t>& family_indices,
+Swapchain::Swapchain(VkSurfaceKHR surface, const Device& device, const std::unordered_set<uint32_t>& family_indices,
                      const VkSurfaceFormatKHR& required_surface_format, int preferred_image_count,
                      PresentMode preferred_present_mode)
 {

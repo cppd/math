@@ -22,7 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/font/glyphs.h"
 #include "com/font/vertices.h"
 #include "com/log.h"
-#include "com/merge.h"
 #include "graphics/vulkan/buffers.h"
 #include "graphics/vulkan/create.h"
 #include "graphics/vulkan/error.h"
@@ -193,7 +192,7 @@ class Impl final : public VulkanText
 
                         m_render_buffers->delete_command_buffers(&m_command_buffers);
 
-                        m_vertex_buffer.emplace(m_device, std::vector<uint32_t>({m_graphics_family_index}),
+                        m_vertex_buffer.emplace(m_device, std::unordered_set({m_graphics_family_index}),
                                                 VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
                                                 std::max(m_vertex_buffer->size() * 2, data_size));
 
@@ -231,18 +230,18 @@ class Impl final : public VulkanText
                   m_signal_semaphore(m_device),
                   m_sampler(impl::create_text_sampler(m_device)),
                   m_glyph_texture(m_device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue,
-                                  merge<uint32_t>(graphics_queue.family_index(), transfer_queue.family_index()), glyphs.width(),
-                                  glyphs.height(), std::move(glyphs.pixels())),
+                                  std::unordered_set({graphics_queue.family_index(), transfer_queue.family_index()}),
+                                  glyphs.width(), glyphs.height(), std::move(glyphs.pixels())),
                   m_glyphs(std::move(glyphs.glyphs())),
-                  m_shader_memory(m_device, merge<uint32_t>(graphics_queue.family_index()), m_sampler, &m_glyph_texture),
+                  m_shader_memory(m_device, std::unordered_set({graphics_queue.family_index()}), m_sampler, &m_glyph_texture),
                   m_text_vert(m_device, vertex_shader, "main"),
                   m_text_frag(m_device, fragment_shader, "main"),
                   m_pipeline_layout(vulkan::create_pipeline_layout(m_device, {m_shader_memory.set_number()},
                                                                    {m_shader_memory.descriptor_set_layout()})),
-                  m_vertex_buffer(std::in_place, m_device, merge<uint32_t>(graphics_queue.family_index()),
+                  m_vertex_buffer(std::in_place, m_device, std::unordered_set({graphics_queue.family_index()}),
                                   VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VERTEX_BUFFER_FIRST_SIZE),
-                  m_indirect_buffer(m_device, merge<uint32_t>(graphics_queue.family_index()), VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT,
-                                    sizeof(VkDrawIndirectCommand)),
+                  m_indirect_buffer(m_device, std::unordered_set({graphics_queue.family_index()}),
+                                    VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT, sizeof(VkDrawIndirectCommand)),
                   m_graphics_family_index(graphics_queue.family_index())
         {
                 set_color(color);

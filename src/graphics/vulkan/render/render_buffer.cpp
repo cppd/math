@@ -22,7 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/error.h"
 #include "com/log.h"
-#include "com/merge.h"
 #include "graphics/vulkan/buffers.h"
 #include "graphics/vulkan/create.h"
 #include "graphics/vulkan/pipeline.h"
@@ -261,11 +260,11 @@ class Impl final : public vulkan::RenderBuffers, public Impl3D, public Impl2D
 
         void create_color_buffer_rendering(unsigned buffer_count, const vulkan::Swapchain& swapchain,
                                            VkSampleCountFlagBits sample_count,
-                                           const std::vector<uint32_t>& attachment_family_indices,
+                                           const std::unordered_set<uint32_t>& attachment_family_indices,
                                            const std::vector<VkFormat>& depth_image_formats);
 #if 0
         void create_swapchain_rendering(unsigned buffer_count, const vulkan::Swapchain& swapchain,
-                                        const std::vector<uint32_t>& attachment_family_indices,
+                                        const std::unordered_set<uint32_t>& attachment_family_indices,
                                         const std::vector<VkFormat>& depth_image_formats);
 #endif
 
@@ -332,19 +331,17 @@ Impl::Impl(vulkan::RenderBufferCount buffer_count, const vulkan::Swapchain& swap
         unsigned count = compute_buffer_count(buffer_count, swapchain);
 
 #if 1
-        create_color_buffer_rendering(count, swapchain, sample_count, merge<uint32_t>(command_pool.family_index()),
-                                      depth_image_formats);
+        create_color_buffer_rendering(count, swapchain, sample_count, {command_pool.family_index()}, depth_image_formats);
         create_resolve_command_buffers();
 #else
         if (sample_count != VK_SAMPLE_COUNT_1_BIT)
         {
-                create_color_buffer_rendering(count, swapchain, sample_count, merge<uint32_t>(command_pool.family_index()),
-                                              depth_image_formats);
+                create_color_buffer_rendering(count, swapchain, sample_count, {command_pool.family_index()}, depth_image_formats);
                 create_resolve_command_buffers();
         }
         else
         {
-                create_swapchain_rendering(count, swapchain, merge<uint32_t>(command_pool.family_index()), depth_image_formats);
+                create_swapchain_rendering(count, swapchain, {command_pool.family_index()}, depth_image_formats);
         }
 #endif
 
@@ -365,7 +362,7 @@ vulkan::RenderBuffers2D& Impl::buffers_2d()
 
 void Impl::create_color_buffer_rendering(unsigned buffer_count, const vulkan::Swapchain& swapchain,
                                          VkSampleCountFlagBits sample_count,
-                                         const std::vector<uint32_t>& attachment_family_indices,
+                                         const std::unordered_set<uint32_t>& attachment_family_indices,
                                          const std::vector<VkFormat>& depth_image_formats)
 {
         namespace impl = vulkan_render_implementation;
@@ -435,7 +432,7 @@ void Impl::create_color_buffer_rendering(unsigned buffer_count, const vulkan::Sw
 
 #if 0
 void Impl::create_swapchain_rendering(unsigned buffer_count, const vulkan::Swapchain& swapchain,
-                                      const std::vector<uint32_t>& attachment_family_indices,
+                                      const std::unordered_set<uint32_t>& attachment_family_indices,
                                       const std::vector<VkFormat>& depth_image_formats)
 {
         for (unsigned i = 0; i < buffer_count; ++i)

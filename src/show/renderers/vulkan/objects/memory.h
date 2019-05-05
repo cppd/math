@@ -26,6 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/vulkan/descriptor.h"
 #include "graphics/vulkan/objects.h"
 
+#include <unordered_set>
 #include <vector>
 
 namespace vulkan_renderer_implementation
@@ -87,7 +88,7 @@ class TrianglesSharedMemory final
         void copy_to_drawing_buffer(VkDeviceSize offset, const T& data) const;
 
 public:
-        TrianglesSharedMemory(const vulkan::Device& device, const std::vector<uint32_t>& family_indices);
+        TrianglesSharedMemory(const vulkan::Device& device, const std::unordered_set<uint32_t>& family_indices);
 
         TrianglesSharedMemory(const TrianglesSharedMemory&) = delete;
         TrianglesSharedMemory& operator=(const TrianglesSharedMemory&) = delete;
@@ -160,8 +161,9 @@ public:
 
         //
 
-        TrianglesMaterialMemory(const vulkan::Device& device, const std::vector<uint32_t>& family_indices, VkSampler sampler,
-                                VkDescriptorSetLayout descriptor_set_layout, const std::vector<MaterialAndTexture>& materials);
+        TrianglesMaterialMemory(const vulkan::Device& device, const std::unordered_set<uint32_t>& family_indices,
+                                VkSampler sampler, VkDescriptorSetLayout descriptor_set_layout,
+                                const std::vector<MaterialAndTexture>& materials);
 
         TrianglesMaterialMemory(const TrianglesMaterialMemory&) = delete;
         TrianglesMaterialMemory& operator=(const TrianglesMaterialMemory&) = delete;
@@ -195,7 +197,7 @@ class ShadowMemory final
         };
 
 public:
-        ShadowMemory(const vulkan::Device& device, const std::vector<uint32_t>& family_indices);
+        ShadowMemory(const vulkan::Device& device, const std::unordered_set<uint32_t>& family_indices);
 
         ShadowMemory(const ShadowMemory&) = delete;
         ShadowMemory& operator=(const ShadowMemory&) = delete;
@@ -251,7 +253,7 @@ class PointsMemory final
         void copy_to_drawing_buffer(VkDeviceSize offset, const T& data) const;
 
 public:
-        PointsMemory(const vulkan::Device& device, const std::vector<uint32_t>& family_indices);
+        PointsMemory(const vulkan::Device& device, const std::unordered_set<uint32_t>& family_indices);
 
         PointsMemory(const PointsMemory&) = delete;
         PointsMemory& operator=(const PointsMemory&) = delete;

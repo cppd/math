@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/vulkan/descriptor.h"
 #include "graphics/vulkan/objects.h"
 
+#include <unordered_set>
 #include <vector>
 
 namespace gpgpu_convex_hull_show_vulkan_implementation
@@ -48,7 +49,7 @@ class ShaderMemory final
         size_t m_data_buffer_index;
 
 public:
-        ShaderMemory(const vulkan::Device& device, const std::vector<uint32_t>& family_indices);
+        ShaderMemory(const vulkan::Device& device, const std::unordered_set<uint32_t>& family_indices);
 
         ShaderMemory(const ShaderMemory&) = delete;
         ShaderMemory& operator=(const ShaderMemory&) = delete;

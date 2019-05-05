@@ -119,8 +119,8 @@ class Impl final : public vulkan::ShadowBuffers
 
 public:
         Impl(vulkan::ShadowBufferCount buffer_count, const vulkan::Swapchain& swapchain,
-             const std::vector<uint32_t>& attachment_family_indices, VkCommandPool command_pool, const vulkan::Device& device,
-             const std::vector<VkFormat>& depth_image_formats, double zoom);
+             const std::unordered_set<uint32_t>& attachment_family_indices, VkCommandPool command_pool,
+             const vulkan::Device& device, const std::vector<VkFormat>& depth_image_formats, double zoom);
 
         Impl(const Impl&) = delete;
         Impl& operator=(const Impl&) = delete;
@@ -128,8 +128,8 @@ public:
 };
 
 Impl::Impl(vulkan::ShadowBufferCount buffer_count, const vulkan::Swapchain& swapchain,
-           const std::vector<uint32_t>& attachment_family_indices, VkCommandPool command_pool, const vulkan::Device& device,
-           const std::vector<VkFormat>& depth_image_formats, double zoom)
+           const std::unordered_set<uint32_t>& attachment_family_indices, VkCommandPool command_pool,
+           const vulkan::Device& device, const std::vector<VkFormat>& depth_image_formats, double zoom)
         : m_device(device), m_command_pool(command_pool)
 {
         ASSERT(attachment_family_indices.size() > 0);
@@ -247,7 +247,7 @@ VkPipeline Impl::create_pipeline(VkPrimitiveTopology primitive_topology, const s
 namespace vulkan
 {
 std::unique_ptr<ShadowBuffers> create_shadow_buffers(ShadowBufferCount buffer_count, const vulkan::Swapchain& swapchain,
-                                                     const std::vector<uint32_t>& attachment_family_indices,
+                                                     const std::unordered_set<uint32_t>& attachment_family_indices,
                                                      VkCommandPool command_pool, const vulkan::Device& device,
                                                      const std::vector<VkFormat>& depth_image_formats, double zoom)
 {

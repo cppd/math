@@ -54,7 +54,7 @@ std::vector<VkDescriptorSetLayoutBinding> TextMemory::descriptor_set_layout_bind
         return bindings;
 }
 
-TextMemory::TextMemory(const vulkan::Device& device, const std::vector<uint32_t>& family_indices, VkSampler sampler,
+TextMemory::TextMemory(const vulkan::Device& device, const std::unordered_set<uint32_t>& family_indices, VkSampler sampler,
                        const vulkan::GrayscaleTexture* texture)
         : m_descriptor_set_layout(vulkan::create_descriptor_set_layout(device, descriptor_set_layout_bindings())),
           m_descriptors(device, 1, m_descriptor_set_layout, descriptor_set_layout_bindings())
