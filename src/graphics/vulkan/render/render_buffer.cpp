@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/log.h"
 #include "graphics/vulkan/buffers.h"
 #include "graphics/vulkan/create.h"
+#include "graphics/vulkan/error.h"
 #include "graphics/vulkan/pipeline.h"
 #include "graphics/vulkan/print.h"
 #include "graphics/vulkan/query.h"
@@ -258,6 +259,10 @@ class Impl final : public vulkan::RenderBuffers, public Impl3D, public Impl2D
         std::vector<VkCommandBuffer> m_resolve_command_buffers;
         std::vector<vulkan::Semaphore> m_resolve_signal_semaphores;
 
+        std::vector<vulkan::ColorAttachmentTexture> m_textures;
+        vulkan::CommandBuffers m_textures_command_buffers;
+        std::vector<vulkan::Semaphore> m_textures_signal_semaphores;
+
         void create_color_buffer_rendering(unsigned buffer_count, const vulkan::Swapchain& swapchain,
                                            VkSampleCountFlagBits sample_count,
                                            const std::unordered_set<uint32_t>& attachment_family_indices,
@@ -269,6 +274,9 @@ class Impl final : public vulkan::RenderBuffers, public Impl3D, public Impl2D
 #endif
 
         void create_resolve_command_buffers();
+
+        void create_textures(unsigned buffer_count, const vulkan::Swapchain& swapchain,
+                             const std::unordered_set<uint32_t>& family_indices, const vulkan::Queue& queue);
 
         //
 
@@ -309,7 +317,8 @@ class Impl final : public vulkan::RenderBuffers, public Impl3D, public Impl2D
 
 public:
         Impl(vulkan::RenderBufferCount buffer_count, const vulkan::Swapchain& swapchain, const vulkan::CommandPool& command_pool,
-             const vulkan::Device& device, int required_minimum_sample_count, const std::vector<VkFormat>& depth_image_formats);
+             const vulkan::Queue& queue, const vulkan::Device& device, int required_minimum_sample_count,
+             const std::vector<VkFormat>& depth_image_formats);
 
         Impl(const Impl&) = delete;
         Impl& operator=(const Impl&) = delete;
@@ -317,7 +326,8 @@ public:
 };
 
 Impl::Impl(vulkan::RenderBufferCount buffer_count, const vulkan::Swapchain& swapchain, const vulkan::CommandPool& command_pool,
-           const vulkan::Device& device, int required_minimum_sample_count, const std::vector<VkFormat>& depth_image_formats)
+           const vulkan::Queue& queue, const vulkan::Device& device, int required_minimum_sample_count,
+           const std::vector<VkFormat>& depth_image_formats)
         : m_device(device),
           m_swapchain_format(swapchain.format()),
           m_swapchain_color_space(swapchain.color_space()),
@@ -333,6 +343,7 @@ Impl::Impl(vulkan::RenderBufferCount buffer_count, const vulkan::Swapchain& swap
 #if 1
         create_color_buffer_rendering(count, swapchain, sample_count, {command_pool.family_index()}, depth_image_formats);
         create_resolve_command_buffers();
+        create_textures(count, swapchain, {command_pool.family_index()}, queue);
 #else
         if (sample_count != VK_SAMPLE_COUNT_1_BIT)
         {
@@ -427,6 +438,120 @@ void Impl::create_color_buffer_rendering(unsigned buffer_count, const vulkan::Sw
         for (unsigned i = 0; i < buffer_count; ++i)
         {
                 m_resolve_signal_semaphores.emplace_back(m_device);
+        }
+}
+
+void Impl::create_textures(unsigned buffer_count, const vulkan::Swapchain& swapchain,
+                           const std::unordered_set<uint32_t>& family_indices, const vulkan::Queue& queue)
+{
+        ASSERT(m_color_attachments.size() == buffer_count);
+
+        for (unsigned i = 0; i < buffer_count; ++i)
+        {
+                m_textures.emplace_back(m_device, m_command_pool, queue, family_indices, swapchain.format(), swapchain.width(),
+                                        swapchain.height());
+
+                m_textures_signal_semaphores.emplace_back(m_device);
+        }
+
+        m_textures_command_buffers = vulkan::CommandBuffers(m_device, m_command_pool, buffer_count);
+
+        VkCommandBufferBeginInfo command_buffer_info = {};
+        command_buffer_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+
+        VkImageMemoryBarrier barrier = {};
+        barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        barrier.subresourceRange.baseMipLevel = 0;
+        barrier.subresourceRange.levelCount = 1;
+        barrier.subresourceRange.baseArrayLayer = 0;
+        barrier.subresourceRange.layerCount = 1;
+
+        VkImageResolve image_resolve = {};
+        image_resolve.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        image_resolve.srcSubresource.mipLevel = 0;
+        image_resolve.srcSubresource.baseArrayLayer = 0;
+        image_resolve.srcSubresource.layerCount = 1;
+        image_resolve.srcOffset.x = 0;
+        image_resolve.srcOffset.y = 0;
+        image_resolve.srcOffset.z = 0;
+        image_resolve.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        image_resolve.dstSubresource.mipLevel = 0;
+        image_resolve.dstSubresource.baseArrayLayer = 0;
+        image_resolve.dstSubresource.layerCount = 1;
+        image_resolve.dstOffset.x = 0;
+        image_resolve.dstOffset.y = 0;
+        image_resolve.dstOffset.z = 0;
+        image_resolve.extent.width = swapchain.width();
+        image_resolve.extent.height = swapchain.height();
+        image_resolve.extent.depth = 1;
+
+        VkResult result;
+
+        for (unsigned i = 0; i < buffer_count; ++i)
+        {
+                const VkCommandBuffer command_buffer = m_textures_command_buffers[i];
+
+                result = vkBeginCommandBuffer(command_buffer, &command_buffer_info);
+                if (result != VK_SUCCESS)
+                {
+                        vulkan::vulkan_function_error("vkBeginCommandBuffer", result);
+                }
+
+                //
+
+                barrier.image = m_color_attachments[i].image();
+                barrier.oldLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+                barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+                barrier.srcAccessMask = 0;
+                barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+
+                vkCmdPipelineBarrier(command_buffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0,
+                                     nullptr, 0, nullptr, 1, &barrier);
+
+                barrier.image = m_textures[i].image();
+                barrier.oldLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+                barrier.srcAccessMask = 0;
+                barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+
+                vkCmdPipelineBarrier(command_buffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0,
+                                     nullptr, 0, nullptr, 1, &barrier);
+
+                //
+
+                vkCmdResolveImage(command_buffer, m_color_attachments[i].image(), VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+                                  m_textures[i].image(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &image_resolve);
+
+                //
+
+                barrier.image = m_color_attachments[i].image();
+                barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+                barrier.newLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+                barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+                barrier.dstAccessMask = 0;
+
+                vkCmdPipelineBarrier(command_buffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, 0, 0,
+                                     nullptr, 0, nullptr, 1, &barrier);
+
+                barrier.image = m_textures[i].image();
+                barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+                barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+                barrier.dstAccessMask = 0;
+
+                vkCmdPipelineBarrier(command_buffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, 0, 0,
+                                     nullptr, 0, nullptr, 1, &barrier);
+
+                //
+
+                result = vkEndCommandBuffer(command_buffer);
+                if (result != VK_SUCCESS)
+                {
+                        vulkan::vulkan_function_error("vkEndCommandBuffer", result);
+                }
         }
 }
 
@@ -644,11 +769,11 @@ VkPipeline Impl::create_pipeline_2d(VkPrimitiveTopology primitive_topology, bool
 namespace vulkan
 {
 std::unique_ptr<RenderBuffers> create_render_buffers(RenderBufferCount buffer_count, const vulkan::Swapchain& swapchain,
-                                                     const vulkan::CommandPool& command_pool, const vulkan::Device& device,
-                                                     int required_minimum_sample_count,
+                                                     const vulkan::CommandPool& command_pool, const vulkan::Queue& queue,
+                                                     const vulkan::Device& device, int required_minimum_sample_count,
                                                      const std::vector<VkFormat>& depth_image_formats)
 {
-        return std::make_unique<Impl>(buffer_count, swapchain, command_pool, device, required_minimum_sample_count,
+        return std::make_unique<Impl>(buffer_count, swapchain, command_pool, queue, device, required_minimum_sample_count,
                                       depth_image_formats);
 }
 }
