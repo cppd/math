@@ -285,6 +285,8 @@ class Impl final : public vulkan::RenderBuffers, public Impl3D, public Impl2D
 
         VkSemaphore resolve_to_swapchain(const vulkan::Queue& graphics_queue, VkSemaphore swapchain_image_semaphore,
                                          VkSemaphore wait_semaphore, unsigned image_index) const override;
+        VkSemaphore resolve_to_texture(const vulkan::Queue& graphics_queue, VkSemaphore wait_semaphore,
+                                       unsigned image_index) const override;
 
         //
 
@@ -693,6 +695,21 @@ VkSemaphore Impl::resolve_to_swapchain(const vulkan::Queue& graphics_queue, VkSe
                              m_resolve_signal_semaphores[semaphore_index], graphics_queue);
 
         return m_resolve_signal_semaphores[semaphore_index];
+}
+
+VkSemaphore Impl::resolve_to_texture(const vulkan::Queue& graphics_queue, VkSemaphore wait_semaphore, unsigned image_index) const
+{
+        ASSERT(graphics_queue.family_index() == m_command_pool.family_index());
+        ASSERT(m_textures.size() == 1 || image_index < m_textures.size());
+        ASSERT(m_textures.size() == m_textures_command_buffers.count());
+        ASSERT(m_textures.size() == m_textures_signal_semaphores.size());
+
+        const unsigned index = m_textures.size() == 1 ? 0 : image_index;
+
+        vulkan::queue_submit(wait_semaphore, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, m_textures_command_buffers[index],
+                             m_textures_signal_semaphores[index], graphics_queue);
+
+        return m_textures_signal_semaphores[index];
 }
 
 void Impl::delete_command_buffers_3d(std::vector<VkCommandBuffer>* buffers)

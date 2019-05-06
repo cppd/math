@@ -82,6 +82,8 @@ struct RenderBuffers
 
         virtual VkSemaphore resolve_to_swapchain(const vulkan::Queue& graphics_queue, VkSemaphore swapchain_image_semaphore,
                                                  VkSemaphore wait_semaphore, unsigned image_index) const = 0;
+        virtual VkSemaphore resolve_to_texture(const vulkan::Queue& graphics_queue, VkSemaphore wait_semaphore,
+                                               unsigned image_index) const = 0;
 };
 
 std::unique_ptr<RenderBuffers> create_render_buffers(RenderBufferCount buffer_count, const vulkan::Swapchain& swapchain,
