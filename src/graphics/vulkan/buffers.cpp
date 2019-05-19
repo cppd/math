@@ -574,6 +574,56 @@ ColorTexture::ColorTexture(const Device& device, const CommandPool& graphics_com
         }
 }
 
+ColorTexture::ColorTexture(const Device& device, const CommandPool& graphics_command_pool, const Queue& graphics_queue,
+                           const std::unordered_set<uint32_t>& family_indices, VkFormat format, uint32_t width, uint32_t height)
+{
+        ASSERT(graphics_command_pool.family_index() == graphics_queue.family_index());
+
+        if (family_indices.count(graphics_queue.family_index()) == 0)
+        {
+                error("Graphics family index not found in color texture family indices");
+        }
+
+        std::vector<VkFormat> candidates = {format};
+        VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
+        VkFormatFeatureFlags features = VK_FORMAT_FEATURE_TRANSFER_DST_BIT | VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT;
+        VkImageUsageFlags usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+        VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT;
+
+        m_image_layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        m_format = find_supported_2d_image_format(device.physical_device(), candidates, tiling, features, usage, samples);
+        m_image = create_2d_image(device, width, height, m_format, family_indices, samples, tiling, usage);
+        m_device_memory = create_device_memory(device, m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+        m_image_view = create_image_view(device, m_image, m_format, VK_IMAGE_ASPECT_COLOR_BIT);
+
+        //
+
+        vulkan::CommandBuffer command_buffer(device, graphics_command_pool);
+        begin_commands(command_buffer);
+
+        VkImageMemoryBarrier barrier = {};
+
+        barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.image = m_image;
+        barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        barrier.subresourceRange.baseMipLevel = 0;
+        barrier.subresourceRange.levelCount = 1;
+        barrier.subresourceRange.baseArrayLayer = 0;
+        barrier.subresourceRange.layerCount = 1;
+
+        barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        barrier.newLayout = m_image_layout;
+        barrier.srcAccessMask = 0;
+        barrier.dstAccessMask = 0;
+
+        vkCmdPipelineBarrier(command_buffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, 0, 0,
+                             nullptr, 0, nullptr, 1, &barrier);
+
+        end_commands(graphics_queue, command_buffer);
+}
+
 VkImage ColorTexture::image() const noexcept
 {
         return m_image;
@@ -815,79 +865,6 @@ VkImageView ColorAttachment::image_view() const noexcept
 VkSampleCountFlagBits ColorAttachment::sample_count() const noexcept
 {
         return m_sample_count;
-}
-
-//
-
-ColorAttachmentTexture::ColorAttachmentTexture(const Device& device, const CommandPool& graphics_command_pool,
-                                               const Queue& graphics_queue, const std::unordered_set<uint32_t>& family_indices,
-                                               VkFormat format, uint32_t width, uint32_t height)
-{
-        ASSERT(graphics_command_pool.family_index() == graphics_queue.family_index());
-
-        if (family_indices.count(graphics_queue.family_index()) == 0)
-        {
-                error("Graphics family index not found in color aattachment texture family indices");
-        }
-
-        std::vector<VkFormat> candidates = {format};
-        VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
-        VkFormatFeatureFlags features = VK_FORMAT_FEATURE_TRANSFER_DST_BIT | VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT;
-        VkImageUsageFlags usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-        VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT;
-
-        m_image_layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        m_format = find_supported_2d_image_format(device.physical_device(), candidates, tiling, features, usage, samples);
-        m_image = create_2d_image(device, width, height, m_format, family_indices, samples, tiling, usage);
-        m_device_memory = create_device_memory(device, m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-        m_image_view = create_image_view(device, m_image, m_format, VK_IMAGE_ASPECT_COLOR_BIT);
-
-        //
-
-        vulkan::CommandBuffer command_buffer(device, graphics_command_pool);
-        begin_commands(command_buffer);
-
-        VkImageMemoryBarrier barrier = {};
-
-        barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        barrier.image = m_image;
-        barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        barrier.subresourceRange.baseMipLevel = 0;
-        barrier.subresourceRange.levelCount = 1;
-        barrier.subresourceRange.baseArrayLayer = 0;
-        barrier.subresourceRange.layerCount = 1;
-
-        barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        barrier.newLayout = m_image_layout;
-        barrier.srcAccessMask = 0;
-        barrier.dstAccessMask = 0;
-
-        vkCmdPipelineBarrier(command_buffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, 0, 0,
-                             nullptr, 0, nullptr, 1, &barrier);
-
-        end_commands(graphics_queue, command_buffer);
-}
-
-VkImage ColorAttachmentTexture::image() const noexcept
-{
-        return m_image;
-}
-
-VkFormat ColorAttachmentTexture::format() const noexcept
-{
-        return m_format;
-}
-
-VkImageLayout ColorAttachmentTexture::image_layout() const noexcept
-{
-        return m_image_layout;
-}
-
-VkImageView ColorAttachmentTexture::image_view() const noexcept
-{
-        return m_image_view;
 }
 
 //

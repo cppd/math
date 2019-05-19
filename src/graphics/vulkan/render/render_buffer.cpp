@@ -268,7 +268,7 @@ class Impl final : public vulkan::RenderBuffers, public Impl3D, public Impl2D
         std::vector<VkCommandBuffer> m_resolve_command_buffers;
         std::vector<vulkan::Semaphore> m_resolve_signal_semaphores;
 
-        std::vector<vulkan::ColorAttachmentTexture> m_textures;
+        std::vector<vulkan::ColorTexture> m_textures;
         vulkan::CommandBuffers m_textures_command_buffers;
         std::vector<vulkan::Semaphore> m_textures_signal_semaphores;
 
