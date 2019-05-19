@@ -684,7 +684,7 @@ class Renderer final : public VulkanRenderer
 
         vulkan::RenderBuffers3D* m_render_buffers = nullptr;
         std::vector<VkCommandBuffer> m_render_command_buffers;
-        std::unique_ptr<vulkan::ShadowBuffers> m_shadow_buffers;
+        std::unique_ptr<vulkan::DepthBuffers> m_shadow_buffers;
         std::vector<VkCommandBuffer> m_shadow_command_buffers;
 
         const vulkan::StorageImage* m_object_image = nullptr;
@@ -995,9 +995,9 @@ class Renderer final : public VulkanRenderer
 
                 //
 
-                constexpr vulkan::ShadowBufferCount buffer_count = vulkan::ShadowBufferCount::One;
-                m_shadow_buffers = vulkan::create_shadow_buffers(buffer_count, *m_swapchain, {m_graphics_queue.family_index()},
-                                                                 m_graphics_command_pool, m_device, m_shadow_zoom);
+                constexpr vulkan::DepthBufferCount buffer_count = vulkan::DepthBufferCount::One;
+                m_shadow_buffers = vulkan::create_depth_buffers(buffer_count, *m_swapchain, {m_graphics_queue.family_index()},
+                                                                m_graphics_command_pool, m_device, m_shadow_zoom);
 
                 m_triangles_shared_shader_memory.set_shadow_texture(m_shadow_sampler, m_shadow_buffers->texture(0),
                                                                     m_shadow_buffers->texture_image_layout());

@@ -226,7 +226,7 @@ void TrianglesSharedMemory::set_show_smooth(bool show) const
         decltype(Lighting().show_smooth) s = show ? 1 : 0;
         copy_to_lighting_buffer(offsetof(Lighting, show_smooth), s);
 }
-void TrianglesSharedMemory::set_shadow_texture(VkSampler sampler, const vulkan::ShadowDepthAttachment* shadow_texture,
+void TrianglesSharedMemory::set_shadow_texture(VkSampler sampler, const vulkan::DepthAttachmentTexture* shadow_texture,
                                                VkImageLayout image_layout) const
 {
         VkDescriptorImageInfo image_info = {};

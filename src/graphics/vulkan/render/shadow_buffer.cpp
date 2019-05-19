@@ -42,7 +42,7 @@ constexpr std::initializer_list<VkFormat> DEPTH_IMAGE_FORMATS =
 
 namespace
 {
-void check_buffers(const std::vector<vulkan::ShadowDepthAttachment>& depth)
+void check_buffers(const std::vector<vulkan::DepthAttachmentTexture>& depth)
 {
         if (depth.empty())
         {
@@ -50,12 +50,12 @@ void check_buffers(const std::vector<vulkan::ShadowDepthAttachment>& depth)
         }
 
         if (!std::all_of(depth.cbegin(), depth.cend(),
-                         [&](const vulkan::ShadowDepthAttachment& d) { return d.format() == depth[0].format(); }))
+                         [&](const vulkan::DepthAttachmentTexture& d) { return d.format() == depth[0].format(); }))
         {
                 error("Depth attachments must have the same format");
         }
 
-        if (!std::all_of(depth.cbegin(), depth.cend(), [&](const vulkan::ShadowDepthAttachment& d) {
+        if (!std::all_of(depth.cbegin(), depth.cend(), [&](const vulkan::DepthAttachmentTexture& d) {
                     return d.width() == depth[0].width() && d.height() == depth[0].height();
             }))
         {
@@ -63,19 +63,19 @@ void check_buffers(const std::vector<vulkan::ShadowDepthAttachment>& depth)
         }
 }
 
-std::string buffer_info(const std::vector<vulkan::ShadowDepthAttachment>& depth, double zoom, unsigned width, unsigned height)
+std::string buffer_info(const std::vector<vulkan::DepthAttachmentTexture>& depth, double zoom, unsigned width, unsigned height)
 {
         check_buffers(depth);
 
         std::ostringstream oss;
 
-        oss << "Shadow buffers depth attachment format " << vulkan::format_to_string(depth[0].format());
+        oss << "Depth buffers format " << vulkan::format_to_string(depth[0].format());
         oss << '\n';
-        oss << "Shadow buffers zoom = " << to_string_fixed(zoom, 5);
+        oss << "Depth buffers zoom = " << to_string_fixed(zoom, 5);
         oss << '\n';
-        oss << "Shadow buffers requested size = (" << width << ", " << height << ")";
+        oss << "Depth buffers requested size = (" << width << ", " << height << ")";
         oss << '\n';
-        oss << "Shadow buffers chosen size = (" << depth[0].width() << ", " << depth[0].height() << ")";
+        oss << "Depth buffers chosen size = (" << depth[0].width() << ", " << depth[0].height() << ")";
 
         return oss.str();
 }
@@ -100,30 +100,30 @@ void delete_buffers(std::list<vulkan::CommandBuffers>* command_buffers, std::vec
                 }
         }
 
-        error_fatal("Shadow command buffers not found");
+        error_fatal("Depth command buffers not found");
 }
 
-unsigned compute_buffer_count(vulkan::ShadowBufferCount buffer_count, const vulkan::Swapchain& swapchain)
+unsigned compute_buffer_count(vulkan::DepthBufferCount buffer_count, const vulkan::Swapchain& swapchain)
 {
         switch (buffer_count)
         {
-        case vulkan::ShadowBufferCount::One:
+        case vulkan::DepthBufferCount::One:
                 return 1;
-        case vulkan::ShadowBufferCount::Swapchain:
+        case vulkan::DepthBufferCount::Swapchain:
                 ASSERT(swapchain.image_views().size() > 0);
                 return swapchain.image_views().size();
         }
-        error_fatal("Error shadow buffer count");
+        error_fatal("Error depth buffer count");
 }
 
-class Impl final : public vulkan::ShadowBuffers
+class Impl final : public vulkan::DepthBuffers
 {
         const vulkan::Device& m_device;
         VkCommandPool m_command_pool;
 
         //
 
-        std::vector<vulkan::ShadowDepthAttachment> m_depth_attachments;
+        std::vector<vulkan::DepthAttachmentTexture> m_depth_attachments;
         vulkan::RenderPass m_render_pass;
         std::vector<vulkan::Framebuffer> m_framebuffers;
 
@@ -132,7 +132,7 @@ class Impl final : public vulkan::ShadowBuffers
 
         //
 
-        const vulkan::ShadowDepthAttachment* texture(unsigned index) const noexcept override;
+        const vulkan::DepthAttachmentTexture* texture(unsigned index) const noexcept override;
         VkImageLayout texture_image_layout() const noexcept override;
 
         std::vector<VkCommandBuffer> create_command_buffers(const std::function<void(VkCommandBuffer buffer)>& commands) override;
@@ -145,7 +145,7 @@ class Impl final : public vulkan::ShadowBuffers
                                    const std::vector<VkVertexInputAttributeDescription>& vertex_attribute) override;
 
 public:
-        Impl(vulkan::ShadowBufferCount buffer_count, const vulkan::Swapchain& swapchain,
+        Impl(vulkan::DepthBufferCount buffer_count, const vulkan::Swapchain& swapchain,
              const std::unordered_set<uint32_t>& attachment_family_indices, VkCommandPool command_pool,
              const vulkan::Device& device, double zoom);
 
@@ -154,7 +154,7 @@ public:
         Impl& operator=(Impl&&) = delete;
 };
 
-Impl::Impl(vulkan::ShadowBufferCount buffer_count, const vulkan::Swapchain& swapchain,
+Impl::Impl(vulkan::DepthBufferCount buffer_count, const vulkan::Swapchain& swapchain,
            const std::unordered_set<uint32_t>& attachment_family_indices, VkCommandPool command_pool,
            const vulkan::Device& device, double zoom)
         : m_device(device), m_command_pool(command_pool)
@@ -189,7 +189,7 @@ Impl::Impl(vulkan::ShadowBufferCount buffer_count, const vulkan::Swapchain& swap
         m_render_pass = vulkan_render_implementation::render_pass_depth(m_device, depth_format);
 
         std::vector<VkImageView> attachments(1);
-        for (const vulkan::ShadowDepthAttachment& depth_attachment : m_depth_attachments)
+        for (const vulkan::DepthAttachmentTexture& depth_attachment : m_depth_attachments)
         {
                 attachments[0] = depth_attachment.image_view();
 
@@ -232,7 +232,7 @@ void Impl::delete_command_buffers(std::vector<VkCommandBuffer>* buffers)
         delete_buffers(&m_command_buffers, buffers);
 }
 
-const vulkan::ShadowDepthAttachment* Impl::texture(unsigned index) const noexcept
+const vulkan::DepthAttachmentTexture* Impl::texture(unsigned index) const noexcept
 {
         ASSERT(index < m_depth_attachments.size());
 
@@ -283,9 +283,9 @@ VkPipeline Impl::create_pipeline(VkPrimitiveTopology primitive_topology, const s
 
 namespace vulkan
 {
-std::unique_ptr<ShadowBuffers> create_shadow_buffers(ShadowBufferCount buffer_count, const vulkan::Swapchain& swapchain,
-                                                     const std::unordered_set<uint32_t>& attachment_family_indices,
-                                                     VkCommandPool command_pool, const vulkan::Device& device, double zoom)
+std::unique_ptr<DepthBuffers> create_depth_buffers(DepthBufferCount buffer_count, const vulkan::Swapchain& swapchain,
+                                                   const std::unordered_set<uint32_t>& attachment_family_indices,
+                                                   VkCommandPool command_pool, const vulkan::Device& device, double zoom)
 {
         return std::make_unique<Impl>(buffer_count, swapchain, attachment_family_indices, command_pool, device, zoom);
 }

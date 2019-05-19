@@ -119,7 +119,7 @@ public:
         void set_show_smooth(bool show) const;
         void set_show_wireframe(bool show) const;
         void set_show_shadow(bool show) const;
-        void set_shadow_texture(VkSampler sampler, const vulkan::ShadowDepthAttachment* shadow_texture,
+        void set_shadow_texture(VkSampler sampler, const vulkan::DepthAttachmentTexture* shadow_texture,
                                 VkImageLayout image_layout) const;
         void set_object_image(const vulkan::StorageImage* storage_image) const;
 };

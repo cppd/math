@@ -248,6 +248,35 @@ public:
         unsigned height() const noexcept;
 };
 
+class DepthAttachmentTexture final
+{
+        VkFormat m_format;
+        Image m_image;
+        DeviceMemory m_device_memory;
+        ImageView m_image_view;
+        unsigned m_width, m_height;
+
+public:
+        DepthAttachmentTexture(const Device& device, const std::unordered_set<uint32_t>& family_indices,
+                               const std::vector<VkFormat>& formats, uint32_t width, uint32_t height);
+
+        DepthAttachmentTexture(const DepthAttachmentTexture&) = delete;
+        DepthAttachmentTexture& operator=(const DepthAttachmentTexture&) = delete;
+        DepthAttachmentTexture& operator=(DepthAttachmentTexture&&) = delete;
+
+        DepthAttachmentTexture(DepthAttachmentTexture&&) = default;
+        ~DepthAttachmentTexture() = default;
+
+        //
+
+        VkImage image() const noexcept;
+        VkFormat format() const noexcept;
+        VkImageView image_view() const noexcept;
+
+        unsigned width() const noexcept;
+        unsigned height() const noexcept;
+};
+
 class ColorAttachment final
 {
         VkFormat m_format;
@@ -301,35 +330,6 @@ public:
         VkFormat format() const noexcept;
         VkImageLayout image_layout() const noexcept;
         VkImageView image_view() const noexcept;
-};
-
-class ShadowDepthAttachment final
-{
-        VkFormat m_format;
-        Image m_image;
-        DeviceMemory m_device_memory;
-        ImageView m_image_view;
-        unsigned m_width, m_height;
-
-public:
-        ShadowDepthAttachment(const Device& device, const std::unordered_set<uint32_t>& family_indices,
-                              const std::vector<VkFormat>& formats, uint32_t width, uint32_t height);
-
-        ShadowDepthAttachment(const ShadowDepthAttachment&) = delete;
-        ShadowDepthAttachment& operator=(const ShadowDepthAttachment&) = delete;
-        ShadowDepthAttachment& operator=(ShadowDepthAttachment&&) = delete;
-
-        ShadowDepthAttachment(ShadowDepthAttachment&&) = default;
-        ~ShadowDepthAttachment() = default;
-
-        //
-
-        VkImage image() const noexcept;
-        VkFormat format() const noexcept;
-        VkImageView image_view() const noexcept;
-
-        unsigned width() const noexcept;
-        unsigned height() const noexcept;
 };
 
 class StorageImage final

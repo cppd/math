@@ -729,6 +729,57 @@ unsigned DepthAttachment::height() const noexcept
 
 //
 
+DepthAttachmentTexture::DepthAttachmentTexture(const Device& device, const std::unordered_set<uint32_t>& family_indices,
+                                               const std::vector<VkFormat>& formats, uint32_t width, uint32_t height)
+{
+        if (width <= 0 || height <= 0)
+        {
+                error("Depth attachment texture size error");
+        }
+
+        VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
+        VkFormatFeatureFlags features = VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT;
+        VkImageUsageFlags usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+        VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT;
+
+        m_format = find_supported_2d_image_format(device.physical_device(), formats, tiling, features, usage, samples);
+
+        VkExtent2D max_extent = max_2d_image_extent(device.physical_device(), m_format, tiling, usage);
+        m_width = std::min(width, max_extent.width);
+        m_height = std::min(height, max_extent.height);
+
+        m_image = create_2d_image(device, m_width, m_height, m_format, family_indices, samples, tiling, usage);
+        m_device_memory = create_device_memory(device, m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+        m_image_view = create_image_view(device, m_image, m_format, VK_IMAGE_ASPECT_DEPTH_BIT);
+}
+
+VkImage DepthAttachmentTexture::image() const noexcept
+{
+        return m_image;
+}
+
+VkFormat DepthAttachmentTexture::format() const noexcept
+{
+        return m_format;
+}
+
+VkImageView DepthAttachmentTexture::image_view() const noexcept
+{
+        return m_image_view;
+}
+
+unsigned DepthAttachmentTexture::width() const noexcept
+{
+        return m_width;
+}
+
+unsigned DepthAttachmentTexture::height() const noexcept
+{
+        return m_height;
+}
+
+//
+
 ColorAttachment::ColorAttachment(const Device& device, const std::unordered_set<uint32_t>& family_indices, VkFormat format,
                                  VkSampleCountFlagBits samples, uint32_t width, uint32_t height)
 {
@@ -837,57 +888,6 @@ VkImageLayout ColorAttachmentTexture::image_layout() const noexcept
 VkImageView ColorAttachmentTexture::image_view() const noexcept
 {
         return m_image_view;
-}
-
-//
-
-ShadowDepthAttachment::ShadowDepthAttachment(const Device& device, const std::unordered_set<uint32_t>& family_indices,
-                                             const std::vector<VkFormat>& formats, uint32_t width, uint32_t height)
-{
-        if (width <= 0 || height <= 0)
-        {
-                error("Shadow depth attachment size error");
-        }
-
-        VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
-        VkFormatFeatureFlags features = VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT;
-        VkImageUsageFlags usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-        VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT;
-
-        m_format = find_supported_2d_image_format(device.physical_device(), formats, tiling, features, usage, samples);
-
-        VkExtent2D max_extent = max_2d_image_extent(device.physical_device(), m_format, tiling, usage);
-        m_width = std::min(width, max_extent.width);
-        m_height = std::min(height, max_extent.height);
-
-        m_image = create_2d_image(device, m_width, m_height, m_format, family_indices, samples, tiling, usage);
-        m_device_memory = create_device_memory(device, m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-        m_image_view = create_image_view(device, m_image, m_format, VK_IMAGE_ASPECT_DEPTH_BIT);
-}
-
-VkImage ShadowDepthAttachment::image() const noexcept
-{
-        return m_image;
-}
-
-VkFormat ShadowDepthAttachment::format() const noexcept
-{
-        return m_format;
-}
-
-VkImageView ShadowDepthAttachment::image_view() const noexcept
-{
-        return m_image_view;
-}
-
-unsigned ShadowDepthAttachment::width() const noexcept
-{
-        return m_width;
-}
-
-unsigned ShadowDepthAttachment::height() const noexcept
-{
-        return m_height;
 }
 
 //
