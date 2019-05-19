@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/vulkan/error.h"
 #include "graphics/vulkan/query.h"
 #include "graphics/vulkan/queue.h"
-#include "graphics/vulkan/render/shadow_buffer.h"
+#include "graphics/vulkan/render/depth_buffer.h"
 #include "obj/alg/alg.h"
 #include "show/renderers/com/storage.h"
 #include "show/renderers/vulkan/objects/memory.h"
