@@ -57,6 +57,5 @@ struct ShadowBuffers
 
 std::unique_ptr<ShadowBuffers> create_shadow_buffers(ShadowBufferCount buffer_count, const vulkan::Swapchain& swapchain,
                                                      const std::unordered_set<uint32_t>& attachment_family_indices,
-                                                     VkCommandPool command_pool, const vulkan::Device& device,
-                                                     const std::vector<VkFormat>& depth_image_formats, double zoom);
+                                                     VkCommandPool command_pool, const vulkan::Device& device, double zoom);
 }

@@ -31,14 +31,41 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <list>
 #include <sstream>
 
+// clang-format off
+constexpr std::initializer_list<VkFormat> DEPTH_IMAGE_FORMATS =
+{
+        VK_FORMAT_D32_SFLOAT,
+        VK_FORMAT_D32_SFLOAT_S8_UINT,
+        VK_FORMAT_D24_UNORM_S8_UINT
+};
+// clang-format on
+
 namespace
 {
+void check_buffers(const std::vector<vulkan::ShadowDepthAttachment>& depth)
+{
+        if (depth.empty())
+        {
+                error("No depth attachment");
+        }
+
+        if (!std::all_of(depth.cbegin(), depth.cend(),
+                         [&](const vulkan::ShadowDepthAttachment& d) { return d.format() == depth[0].format(); }))
+        {
+                error("Depth attachments must have the same format");
+        }
+
+        if (!std::all_of(depth.cbegin(), depth.cend(), [&](const vulkan::ShadowDepthAttachment& d) {
+                    return d.width() == depth[0].width() && d.height() == depth[0].height();
+            }))
+        {
+                error("Depth attachments must have the same size");
+        }
+}
+
 std::string buffer_info(const std::vector<vulkan::ShadowDepthAttachment>& depth, double zoom, unsigned width, unsigned height)
 {
-        ASSERT(depth.size() > 0);
-        ASSERT(std::all_of(depth.cbegin(), depth.cend(), [&](const vulkan::ShadowDepthAttachment& d) {
-                return d.format() == depth[0].format() && d.width() == depth[0].width() && d.height() == depth[0].height();
-        }));
+        check_buffers(depth);
 
         std::ostringstream oss;
 
@@ -120,7 +147,7 @@ class Impl final : public vulkan::ShadowBuffers
 public:
         Impl(vulkan::ShadowBufferCount buffer_count, const vulkan::Swapchain& swapchain,
              const std::unordered_set<uint32_t>& attachment_family_indices, VkCommandPool command_pool,
-             const vulkan::Device& device, const std::vector<VkFormat>& depth_image_formats, double zoom);
+             const vulkan::Device& device, double zoom);
 
         Impl(const Impl&) = delete;
         Impl& operator=(const Impl&) = delete;
@@ -129,11 +156,10 @@ public:
 
 Impl::Impl(vulkan::ShadowBufferCount buffer_count, const vulkan::Swapchain& swapchain,
            const std::unordered_set<uint32_t>& attachment_family_indices, VkCommandPool command_pool,
-           const vulkan::Device& device, const std::vector<VkFormat>& depth_image_formats, double zoom)
+           const vulkan::Device& device, double zoom)
         : m_device(device), m_command_pool(command_pool)
 {
         ASSERT(attachment_family_indices.size() > 0);
-        ASSERT(depth_image_formats.size() > 0);
 
         zoom = std::max(zoom, 1.0);
 
@@ -144,7 +170,16 @@ Impl::Impl(vulkan::ShadowBufferCount buffer_count, const vulkan::Swapchain& swap
 
         for (unsigned i = 0; i < count; ++i)
         {
-                m_depth_attachments.emplace_back(m_device, attachment_family_indices, depth_image_formats, width, height);
+                std::vector<VkFormat> depth_formats;
+                if (!m_depth_attachments.empty())
+                {
+                        depth_formats = {m_depth_attachments[0].format()};
+                }
+                else
+                {
+                        depth_formats = DEPTH_IMAGE_FORMATS;
+                }
+                m_depth_attachments.emplace_back(m_device, attachment_family_indices, depth_formats, width, height);
         }
 
         VkFormat depth_format = m_depth_attachments[0].format();
@@ -160,6 +195,8 @@ Impl::Impl(vulkan::ShadowBufferCount buffer_count, const vulkan::Swapchain& swap
 
                 m_framebuffers.push_back(create_framebuffer(m_device, m_render_pass, depth_width, depth_height, attachments));
         }
+
+        check_buffers(m_depth_attachments);
 
         LOG(buffer_info(m_depth_attachments, zoom, width, height));
 }
@@ -248,10 +285,8 @@ namespace vulkan
 {
 std::unique_ptr<ShadowBuffers> create_shadow_buffers(ShadowBufferCount buffer_count, const vulkan::Swapchain& swapchain,
                                                      const std::unordered_set<uint32_t>& attachment_family_indices,
-                                                     VkCommandPool command_pool, const vulkan::Device& device,
-                                                     const std::vector<VkFormat>& depth_image_formats, double zoom)
+                                                     VkCommandPool command_pool, const vulkan::Device& device, double zoom)
 {
-        return std::make_unique<Impl>(buffer_count, swapchain, attachment_family_indices, command_pool, device,
-                                      depth_image_formats, zoom);
+        return std::make_unique<Impl>(buffer_count, swapchain, attachment_family_indices, command_pool, device, zoom);
 }
 }

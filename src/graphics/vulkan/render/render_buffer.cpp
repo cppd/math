@@ -34,6 +34,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <list>
 #include <sstream>
 
+// clang-format off
+constexpr std::initializer_list<VkFormat> DEPTH_IMAGE_FORMATS =
+{
+        VK_FORMAT_D32_SFLOAT,
+        VK_FORMAT_D32_SFLOAT_S8_UINT,
+        VK_FORMAT_D24_UNORM_S8_UINT
+};
+// clang-format on
+
 namespace
 {
 void check_buffers(const std::vector<vulkan::ColorAttachment>& color, const std::vector<vulkan::DepthAttachment>& depth)
@@ -265,8 +274,7 @@ class Impl final : public vulkan::RenderBuffers, public Impl3D, public Impl2D
 
         void create_color_buffer_rendering(unsigned buffer_count, const vulkan::Swapchain& swapchain,
                                            VkSampleCountFlagBits sample_count,
-                                           const std::unordered_set<uint32_t>& attachment_family_indices,
-                                           const std::vector<VkFormat>& depth_image_formats);
+                                           const std::unordered_set<uint32_t>& attachment_family_indices);
 #if 0
         void create_swapchain_rendering(unsigned buffer_count, const vulkan::Swapchain& swapchain,
                                         const std::unordered_set<uint32_t>& attachment_family_indices,
@@ -319,8 +327,7 @@ class Impl final : public vulkan::RenderBuffers, public Impl3D, public Impl2D
 
 public:
         Impl(vulkan::RenderBufferCount buffer_count, const vulkan::Swapchain& swapchain, const vulkan::CommandPool& command_pool,
-             const vulkan::Queue& queue, const vulkan::Device& device, int required_minimum_sample_count,
-             const std::vector<VkFormat>& depth_image_formats);
+             const vulkan::Queue& queue, const vulkan::Device& device, int required_minimum_sample_count);
 
         Impl(const Impl&) = delete;
         Impl& operator=(const Impl&) = delete;
@@ -328,33 +335,30 @@ public:
 };
 
 Impl::Impl(vulkan::RenderBufferCount buffer_count, const vulkan::Swapchain& swapchain, const vulkan::CommandPool& command_pool,
-           const vulkan::Queue& queue, const vulkan::Device& device, int required_minimum_sample_count,
-           const std::vector<VkFormat>& depth_image_formats)
+           const vulkan::Queue& queue, const vulkan::Device& device, int required_minimum_sample_count)
         : m_device(device),
           m_swapchain_format(swapchain.format()),
           m_swapchain_color_space(swapchain.color_space()),
           m_command_pool(command_pool)
 {
-        ASSERT(depth_image_formats.size() > 0);
-
         VkSampleCountFlagBits sample_count =
                 vulkan::supported_framebuffer_sample_count_flag(m_device.physical_device(), required_minimum_sample_count);
 
         unsigned count = compute_buffer_count(buffer_count, swapchain);
 
 #if 1
-        create_color_buffer_rendering(count, swapchain, sample_count, {command_pool.family_index()}, depth_image_formats);
+        create_color_buffer_rendering(count, swapchain, sample_count, {command_pool.family_index()});
         create_resolve_command_buffers();
         create_textures(count, swapchain, {command_pool.family_index()}, queue);
 #else
         if (sample_count != VK_SAMPLE_COUNT_1_BIT)
         {
-                create_color_buffer_rendering(count, swapchain, sample_count, {command_pool.family_index()}, depth_image_formats);
+                create_color_buffer_rendering(count, swapchain, sample_count, {command_pool.family_index()});
                 create_resolve_command_buffers();
         }
         else
         {
-                create_swapchain_rendering(count, swapchain, {command_pool.family_index()}, depth_image_formats);
+                create_swapchain_rendering(count, swapchain, {command_pool.family_index()}, DEPTH_IMAGE_FORMATS);
         }
 #endif
 
@@ -375,8 +379,7 @@ vulkan::RenderBuffers2D& Impl::buffers_2d()
 
 void Impl::create_color_buffer_rendering(unsigned buffer_count, const vulkan::Swapchain& swapchain,
                                          VkSampleCountFlagBits sample_count,
-                                         const std::unordered_set<uint32_t>& attachment_family_indices,
-                                         const std::vector<VkFormat>& depth_image_formats)
+                                         const std::unordered_set<uint32_t>& attachment_family_indices)
 {
         namespace impl = vulkan_render_implementation;
 
@@ -387,9 +390,25 @@ void Impl::create_color_buffer_rendering(unsigned buffer_count, const vulkan::Sw
                 m_color_attachments.emplace_back(m_device, attachment_family_indices, swapchain.format(), sample_count,
                                                  swapchain.width(), swapchain.height());
 
-                m_depth_attachments.emplace_back(m_device, attachment_family_indices, depth_image_formats, sample_count,
+                std::vector<VkFormat> depth_formats;
+                if (!m_depth_attachments.empty())
+                {
+                        depth_formats = {m_depth_attachments[0].format()};
+                }
+                else
+                {
+                        depth_formats = DEPTH_IMAGE_FORMATS;
+                }
+
+                m_depth_attachments.emplace_back(m_device, attachment_family_indices, depth_formats, sample_count,
                                                  swapchain.width(), swapchain.height());
         }
+
+        const VkFormat depth_format = m_depth_attachments[0].format();
+
+        ASSERT(m_depth_attachments.size() == 1 ||
+               std::all_of(m_depth_attachments.cbegin(), m_depth_attachments.cend(),
+                           [&](const vulkan::DepthAttachment& d) { return d.format() == depth_format; }));
 
         //
 
@@ -397,8 +416,7 @@ void Impl::create_color_buffer_rendering(unsigned buffer_count, const vulkan::Sw
 
         //
 
-        m_render_pass_depth =
-                impl::render_pass_color_depth(m_device, swapchain.format(), m_depth_attachments[0].format(), sample_count);
+        m_render_pass_depth = impl::render_pass_color_depth(m_device, swapchain.format(), depth_format, sample_count);
 
         attachments.resize(2);
         for (unsigned i = 0; i < buffer_count; ++i)
@@ -787,10 +805,8 @@ namespace vulkan
 {
 std::unique_ptr<RenderBuffers> create_render_buffers(RenderBufferCount buffer_count, const vulkan::Swapchain& swapchain,
                                                      const vulkan::CommandPool& command_pool, const vulkan::Queue& queue,
-                                                     const vulkan::Device& device, int required_minimum_sample_count,
-                                                     const std::vector<VkFormat>& depth_image_formats)
+                                                     const vulkan::Device& device, int required_minimum_sample_count)
 {
-        return std::make_unique<Impl>(buffer_count, swapchain, command_pool, queue, device, required_minimum_sample_count,
-                                      depth_image_formats);
+        return std::make_unique<Impl>(buffer_count, swapchain, command_pool, queue, device, required_minimum_sample_count);
 }
 }

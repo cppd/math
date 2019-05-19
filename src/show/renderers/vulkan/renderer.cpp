@@ -51,12 +51,6 @@ constexpr std::initializer_list<vulkan::PhysicalDeviceFeatures> REQUIRED_DEVICE_
         vulkan::PhysicalDeviceFeatures::GeometryShader,
         vulkan::PhysicalDeviceFeatures::FragmentStoresAndAtomics
 };
-constexpr std::initializer_list<VkFormat> SHADOW_DEPTH_IMAGE_FORMATS =
-{
-        VK_FORMAT_D32_SFLOAT,
-        VK_FORMAT_D32_SFLOAT_S8_UINT,
-        VK_FORMAT_D24_UNORM_S8_UINT
-};
 // clang-format on
 
 // Число используется в шейдере для определения наличия текстурных координат
@@ -1003,8 +997,7 @@ class Renderer final : public VulkanRenderer
 
                 constexpr vulkan::ShadowBufferCount buffer_count = vulkan::ShadowBufferCount::One;
                 m_shadow_buffers = vulkan::create_shadow_buffers(buffer_count, *m_swapchain, {m_graphics_queue.family_index()},
-                                                                 m_graphics_command_pool, m_device, SHADOW_DEPTH_IMAGE_FORMATS,
-                                                                 m_shadow_zoom);
+                                                                 m_graphics_command_pool, m_device, m_shadow_zoom);
 
                 m_triangles_shared_shader_memory.set_shadow_texture(m_shadow_sampler, m_shadow_buffers->texture(0),
                                                                     m_shadow_buffers->texture_image_layout());
