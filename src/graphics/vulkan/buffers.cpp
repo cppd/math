@@ -541,11 +541,12 @@ ColorTexture::ColorTexture(const Device& device, const CommandPool& graphics_com
         VkImageUsageFlags usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
         VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT;
 
-        m_image_layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
         m_format = find_supported_2d_image_format(device.physical_device(), candidates, tiling, features, usage, samples);
         m_image = create_2d_image(device, width, height, m_format, family_indices, samples, tiling, usage);
         m_device_memory = create_device_memory(device, m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
         m_image_view = create_image_view(device, m_image, m_format, VK_IMAGE_ASPECT_COLOR_BIT);
+
+        constexpr VkImageLayout image_layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
         if (m_format == VK_FORMAT_R16G16B16A16_UNORM)
         {
@@ -553,7 +554,7 @@ ColorTexture::ColorTexture(const Device& device, const CommandPool& graphics_com
                         color_conversion::rgba_pixels_from_srgb_uint8_to_rgb_uint16(srgb_uint8_rgba_pixels);
 
                 staging_image_copy(device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, m_image,
-                                   m_image_layout, width, height, buffer);
+                                   image_layout, width, height, buffer);
         }
         else if (m_format == VK_FORMAT_R32G32B32A32_SFLOAT)
         {
@@ -561,12 +562,12 @@ ColorTexture::ColorTexture(const Device& device, const CommandPool& graphics_com
                         color_conversion::rgba_pixels_from_srgb_uint8_to_rgb_float(srgb_uint8_rgba_pixels);
 
                 staging_image_copy(device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, m_image,
-                                   m_image_layout, width, height, buffer);
+                                   image_layout, width, height, buffer);
         }
         else if (m_format == VK_FORMAT_R8G8B8A8_SRGB)
         {
                 staging_image_copy(device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, m_image,
-                                   m_image_layout, width, height, srgb_uint8_rgba_pixels);
+                                   image_layout, width, height, srgb_uint8_rgba_pixels);
         }
         else
         {
@@ -590,7 +591,6 @@ ColorTexture::ColorTexture(const Device& device, const CommandPool& graphics_com
         VkImageUsageFlags usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
         VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT;
 
-        m_image_layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
         m_format = find_supported_2d_image_format(device.physical_device(), candidates, tiling, features, usage, samples);
         m_image = create_2d_image(device, width, height, m_format, family_indices, samples, tiling, usage);
         m_device_memory = create_device_memory(device, m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
@@ -614,7 +614,7 @@ ColorTexture::ColorTexture(const Device& device, const CommandPool& graphics_com
         barrier.subresourceRange.layerCount = 1;
 
         barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        barrier.newLayout = m_image_layout;
+        barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
         barrier.srcAccessMask = 0;
         barrier.dstAccessMask = 0;
 
@@ -632,11 +632,6 @@ VkImage ColorTexture::image() const noexcept
 VkFormat ColorTexture::format() const noexcept
 {
         return m_format;
-}
-
-VkImageLayout ColorTexture::image_layout() const noexcept
-{
-        return m_image_layout;
 }
 
 VkImageView ColorTexture::image_view() const noexcept
@@ -675,11 +670,12 @@ GrayscaleTexture::GrayscaleTexture(const Device& device, const CommandPool& grap
         VkImageUsageFlags usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
         VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT;
 
-        m_image_layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
         m_format = find_supported_2d_image_format(device.physical_device(), candidates, tiling, features, usage, samples);
         m_image = create_2d_image(device, width, height, m_format, family_indices, samples, tiling, usage);
         m_device_memory = create_device_memory(device, m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
         m_image_view = create_image_view(device, m_image, m_format, VK_IMAGE_ASPECT_COLOR_BIT);
+
+        constexpr VkImageLayout image_layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
         if (m_format == VK_FORMAT_R16_UNORM)
         {
@@ -687,7 +683,7 @@ GrayscaleTexture::GrayscaleTexture(const Device& device, const CommandPool& grap
                         color_conversion::grayscale_pixels_from_srgb_uint8_to_rgb_uint16(srgb_uint8_grayscale_pixels);
 
                 staging_image_copy(device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, m_image,
-                                   m_image_layout, width, height, buffer);
+                                   image_layout, width, height, buffer);
         }
         else if (m_format == VK_FORMAT_R32_SFLOAT)
         {
@@ -695,12 +691,12 @@ GrayscaleTexture::GrayscaleTexture(const Device& device, const CommandPool& grap
                         color_conversion::grayscale_pixels_from_srgb_uint8_to_rgb_float(srgb_uint8_grayscale_pixels);
 
                 staging_image_copy(device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, m_image,
-                                   m_image_layout, width, height, buffer);
+                                   image_layout, width, height, buffer);
         }
         else if (m_format == VK_FORMAT_R8_SRGB)
         {
                 staging_image_copy(device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, m_image,
-                                   m_image_layout, width, height, srgb_uint8_grayscale_pixels);
+                                   image_layout, width, height, srgb_uint8_grayscale_pixels);
         }
         else
         {
@@ -716,11 +712,6 @@ VkImage GrayscaleTexture::image() const noexcept
 VkFormat GrayscaleTexture::format() const noexcept
 {
         return m_format;
-}
-
-VkImageLayout GrayscaleTexture::image_layout() const noexcept
-{
-        return m_image_layout;
 }
 
 VkImageView GrayscaleTexture::image_view() const noexcept
@@ -886,7 +877,6 @@ StorageImage::StorageImage(const Device& device, const CommandPool& graphics_com
         VkImageUsageFlags usage = VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
         VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT;
 
-        m_image_layout = VK_IMAGE_LAYOUT_GENERAL;
         m_format = find_supported_2d_image_format(device.physical_device(), candidates, tiling, features, usage, samples);
         m_image = create_2d_image(device, width, height, m_format, family_indices, samples, tiling, usage);
         m_device_memory = create_device_memory(device, m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
@@ -913,7 +903,7 @@ StorageImage::StorageImage(const Device& device, const CommandPool& graphics_com
         barrier.subresourceRange.layerCount = 1;
 
         barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        barrier.newLayout = m_image_layout;
+        barrier.newLayout = VK_IMAGE_LAYOUT_GENERAL;
         barrier.srcAccessMask = 0;
         barrier.dstAccessMask = 0;
 
@@ -931,11 +921,6 @@ VkImage StorageImage::image() const noexcept
 VkFormat StorageImage::format() const noexcept
 {
         return m_format;
-}
-
-VkImageLayout StorageImage::image_layout() const noexcept
-{
-        return m_image_layout;
 }
 
 VkImageView StorageImage::image_view() const noexcept
@@ -969,7 +954,7 @@ void StorageImage::clear_commands(VkCommandBuffer command_buffer) const
 
         //
 
-        barrier.oldLayout = m_image_layout;
+        barrier.oldLayout = VK_IMAGE_LAYOUT_GENERAL;
         barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
         barrier.srcAccessMask = 0;
         barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
@@ -987,7 +972,7 @@ void StorageImage::clear_commands(VkCommandBuffer command_buffer) const
         //
 
         barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-        barrier.newLayout = m_image_layout;
+        barrier.newLayout = VK_IMAGE_LAYOUT_GENERAL;
         barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
         barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT;
 

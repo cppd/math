@@ -41,7 +41,6 @@ struct DepthBuffers
         virtual ~DepthBuffers() = default;
 
         virtual const vulkan::DepthAttachmentTexture* texture(unsigned index) const noexcept = 0;
-        virtual VkImageLayout texture_image_layout() const noexcept = 0;
 
         virtual std::vector<VkCommandBuffer> create_command_buffers(
                 const std::function<void(VkCommandBuffer buffer)>& commands) = 0;

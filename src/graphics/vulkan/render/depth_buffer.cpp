@@ -133,7 +133,6 @@ class Impl final : public vulkan::DepthBuffers
         //
 
         const vulkan::DepthAttachmentTexture* texture(unsigned index) const noexcept override;
-        VkImageLayout texture_image_layout() const noexcept override;
 
         std::vector<VkCommandBuffer> create_command_buffers(const std::function<void(VkCommandBuffer buffer)>& commands) override;
 
@@ -240,11 +239,6 @@ const vulkan::DepthAttachmentTexture* Impl::texture(unsigned index) const noexce
         // не меняется, а при работе Impl(Impl&&) сохранятся указатели,
         // так как std::vector(std::vector&&) сохраняет указатели.
         return &m_depth_attachments[index];
-}
-
-VkImageLayout Impl::texture_image_layout() const noexcept
-{
-        return VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
 }
 
 VkPipeline Impl::create_pipeline(VkPrimitiveTopology primitive_topology, const std::vector<const vulkan::Shader*>& shaders,

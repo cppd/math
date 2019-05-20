@@ -999,8 +999,7 @@ class Renderer final : public VulkanRenderer
                 m_shadow_buffers = vulkan::create_depth_buffers(buffer_count, *m_swapchain, {m_graphics_queue.family_index()},
                                                                 m_graphics_command_pool, m_device, m_shadow_zoom);
 
-                m_triangles_shared_shader_memory.set_shadow_texture(m_shadow_sampler, m_shadow_buffers->texture(0),
-                                                                    m_shadow_buffers->texture_image_layout());
+                m_triangles_shared_shader_memory.set_shadow_texture(m_shadow_sampler, m_shadow_buffers->texture(0));
 
                 m_shadow_pipeline = m_shadow_buffers->create_pipeline(
                         VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, {&m_shadow_vert, &m_shadow_frag}, m_shadow_pipeline_layout,

@@ -74,7 +74,7 @@ void PrepareMemory::set_object_image(const vulkan::StorageImage& storage_image) 
         ASSERT(storage_image.format() == VK_FORMAT_R32_UINT);
 
         VkDescriptorImageInfo image_info = {};
-        image_info.imageLayout = storage_image.image_layout();
+        image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
         image_info.imageView = storage_image.image_view();
 
         m_descriptors.update_descriptor_set(0, OBJECTS_BINDING, image_info);

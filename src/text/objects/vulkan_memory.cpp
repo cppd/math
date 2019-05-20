@@ -77,7 +77,7 @@ TextMemory::TextMemory(const vulkan::Device& device, const std::unordered_set<ui
         }
         {
                 VkDescriptorImageInfo image_info = {};
-                image_info.imageLayout = texture->image_layout();
+                image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
                 image_info.imageView = texture->image_view();
                 image_info.sampler = sampler;
 

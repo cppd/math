@@ -226,11 +226,10 @@ void TrianglesSharedMemory::set_show_smooth(bool show) const
         decltype(Lighting().show_smooth) s = show ? 1 : 0;
         copy_to_lighting_buffer(offsetof(Lighting, show_smooth), s);
 }
-void TrianglesSharedMemory::set_shadow_texture(VkSampler sampler, const vulkan::DepthAttachmentTexture* shadow_texture,
-                                               VkImageLayout image_layout) const
+void TrianglesSharedMemory::set_shadow_texture(VkSampler sampler, const vulkan::DepthAttachmentTexture* shadow_texture) const
 {
         VkDescriptorImageInfo image_info = {};
-        image_info.imageLayout = image_layout;
+        image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
         image_info.imageView = shadow_texture->image_view();
         image_info.sampler = sampler;
 
@@ -241,7 +240,7 @@ void TrianglesSharedMemory::set_object_image(const vulkan::StorageImage* storage
         ASSERT(storage_image && storage_image->format() == VK_FORMAT_R32_UINT);
 
         VkDescriptorImageInfo image_info = {};
-        image_info.imageLayout = storage_image->image_layout();
+        image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
         image_info.imageView = storage_image->image_view();
 
         m_descriptors.update_descriptor_set(0, OBJECTS_BINDING, image_info);
@@ -329,7 +328,7 @@ TrianglesMaterialMemory::TrianglesMaterialMemory(const vulkan::Device& device, c
                 }
                 {
                         VkDescriptorImageInfo image_info = {};
-                        image_info.imageLayout = material.texture_Ka->image_layout();
+                        image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
                         image_info.imageView = material.texture_Ka->image_view();
                         image_info.sampler = sampler;
 
@@ -339,7 +338,7 @@ TrianglesMaterialMemory::TrianglesMaterialMemory(const vulkan::Device& device, c
                 }
                 {
                         VkDescriptorImageInfo image_info = {};
-                        image_info.imageLayout = material.texture_Kd->image_layout();
+                        image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
                         image_info.imageView = material.texture_Kd->image_view();
                         image_info.sampler = sampler;
 
@@ -349,7 +348,7 @@ TrianglesMaterialMemory::TrianglesMaterialMemory(const vulkan::Device& device, c
                 }
                 {
                         VkDescriptorImageInfo image_info = {};
-                        image_info.imageLayout = material.texture_Ks->image_layout();
+                        image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
                         image_info.imageView = material.texture_Ks->image_view();
                         image_info.sampler = sampler;
 
@@ -576,7 +575,7 @@ void PointsMemory::set_object_image(const vulkan::StorageImage* storage_image) c
         ASSERT(storage_image && storage_image->format() == VK_FORMAT_R32_UINT);
 
         VkDescriptorImageInfo image_info = {};
-        image_info.imageLayout = storage_image->image_layout();
+        image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
         image_info.imageView = storage_image->image_view();
 
         m_descriptors.update_descriptor_set(0, OBJECTS_BINDING, image_info);
