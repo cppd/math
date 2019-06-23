@@ -33,7 +33,6 @@ constexpr unsigned DISCRETIZATION = 100000;
 
 constexpr double COS_FOR_BOUND = -0.3;
 constexpr double MOBIUS_STRIP_WIDTH = 1;
-constexpr double TORUS_RADIUS_OF_TUBE = 0.5;
 
 template <typename T, size_t... I, typename V>
 constexpr Vector<sizeof...(I) + 1, T> make_last_axis(V&& value, std::integer_sequence<size_t, I...>&&)
@@ -272,12 +271,46 @@ std::vector<Vector<3, float>> generate_points_mobius_strip(unsigned point_count)
         return points.release();
 }
 
+/*
+ Sasho Kalajdzievski.
+ An Illustrated Introduction to Topology and Homotopy.
+ CRC Press, 2015.
+
+ 5.1 Finite Products of Spaces.
+ 14.4 Regarding Classification of CW-Complexes and Higher Dimensional Manifolds.
+*/
+template <size_t N, typename T, typename Engine>
+Vector<N, T> torus_point(Engine& engine)
+{
+        static_assert(N >= 3);
+
+        Vector<N, T> v(0);
+        T v_length;
+        Vector<N, T> sum(0);
+
+        v[0] = 2;
+        v_length = 2;
+
+        for (size_t n = 1; n < N; ++n)
+        {
+                Vector<N, T> ortho(0);
+                ortho[n] = v_length;
+
+                Vector<2, T> s = random_sphere<2, T>(engine);
+                Vector<N, T> vn = T(0.5) * (s[0] * v + s[1] * ortho);
+                sum += vn;
+
+                v = vn;
+                v_length *= 0.5;
+        }
+        return sum;
+}
+
 // Точки на торе без равномерного распределения по его поверхности
 template <size_t N>
 std::vector<Vector<N, float>> generate_points_torus(unsigned point_count, bool bound)
 {
         static_assert(N >= 3);
-        static_assert(TORUS_RADIUS_OF_TUBE > 0 && TORUS_RADIUS_OF_TUBE < 1);
 
         DiscretePoints<N> points(point_count);
 
@@ -285,10 +318,7 @@ std::vector<Vector<N, float>> generate_points_torus(unsigned point_count, bool b
 
         while (points.size() < point_count)
         {
-                Vector<N - 1, double> p_n1 = random_sphere<N - 1, double>(engine);
-
-                Vector<2, double> s = TORUS_RADIUS_OF_TUBE * random_sphere<2, double>(engine);
-                Vector<N, double> v = add_dimension_with_zero(p_n1 * (1 + s[0])) + vector_with_last_dimension<N, double>(s[1]);
+                Vector<N, double> v = torus_point<N, double>(engine);
 
                 if (bound && dot(v, LAST_AXIS<N, double>) < COS_FOR_BOUND)
                 {
