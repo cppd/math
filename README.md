@@ -109,7 +109,7 @@ Build systems             | CMake
 
 ### 3-manifold reconstruction and path tracing in 4-space
 
-2D slices of a 3D image of the 3-manifold reconstructed from the points on the 3-torus.
+2D slices of a 3D image of the 3-manifold reconstructed from the points on the 3-torus T<sup>3</sup> (S<sup>1</sup>×S<sup>1</sup>×S<sup>1</sup>).
 
 * 5-space
   * The convex hull.
@@ -121,15 +121,19 @@ Build systems             | CMake
   * Point light source.
   * Parallel projection onto 3D screen.
 
-![manifold](https://i.imgur.com/uSEFijB.png)
-![manifold](https://i.imgur.com/Qj2oO5h.png)
-![manifold](https://i.imgur.com/eK5l7Qa.png)
-![manifold](https://i.imgur.com/DWhJwPm.png)
-![manifold](https://i.imgur.com/LkIAodR.png)
-![manifold](https://i.imgur.com/YDXMNPr.png)
-![manifold](https://i.imgur.com/SLLgASK.png)
-![manifold](https://i.imgur.com/GE9iwbu.png)
-![manifold](https://i.imgur.com/NllTlT4.png)
+![manifold](https://i.imgur.com/OujXP6E.png)
+![manifold](https://i.imgur.com/wYGS7Ny.png)
+![manifold](https://i.imgur.com/YBrlxnL.png)
+![manifold](https://i.imgur.com/p4uN0Rp.png)
+![manifold](https://i.imgur.com/v6m4qnj.png)
+![manifold](https://i.imgur.com/fet4mhg.png)
+![manifold](https://i.imgur.com/mudGwKv.png)
+![manifold](https://i.imgur.com/n5reerR.png)
+![manifold](https://i.imgur.com/OGVUbxe.png)
+![manifold](https://i.imgur.com/aDG9Qjv.png)
+![manifold](https://i.imgur.com/xC8iW26.png)
+![manifold](https://i.imgur.com/T1pdgZt.png)
+![manifold](https://i.imgur.com/XQ1UEz3.png)
 
 ### 2-manifold reconstruction and path tracing in 3-space
 
