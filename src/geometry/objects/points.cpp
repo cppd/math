@@ -408,7 +408,7 @@ public:
 
                 if constexpr (N == 3)
                 {
-                        m_map.emplace(u8"Möbius strip", &ObjectRepositoryImpl<N>::mobius_strip);
+                        m_map.emplace(reinterpret_cast<const char*>(u8"Möbius strip"), &ObjectRepositoryImpl<N>::mobius_strip);
                 }
 
                 if constexpr (N >= 3)

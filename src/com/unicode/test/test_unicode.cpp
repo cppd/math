@@ -52,7 +52,7 @@ void test_utf32_replacement_character()
 {
         LOG("UTF-32 replacement character");
 
-        if (u8"\U0000FFFD" != unicode::utf32_to_utf8(char32_t(0xFFFFFF)))
+        if (reinterpret_cast<const char*>(u8"\U0000FFFD") != unicode::utf32_to_utf8(char32_t(0xFFFFFF)))
         {
                 error("Error UTF-8 replacement character");
         }
@@ -63,7 +63,7 @@ void test_utf8_replacement_character_and_self_synchronizing()
         LOG("UTF-8 replacement character and self-synchronizing");
 
         {
-                std::string s = u8"\U0000222B\U00002211";
+                std::string s = reinterpret_cast<const char*>(u8"\U0000222B\U00002211");
                 s.erase(0, 1);
 
                 ASSERT(s.size() == 5);
@@ -99,7 +99,7 @@ void test_utf8_replacement_character_and_self_synchronizing()
         }
 
         {
-                std::string s = u8"\U0000222B\U00002211";
+                std::string s = reinterpret_cast<const char*>(u8"\U0000222B\U00002211");
                 s.erase(2, 1);
 
                 ASSERT(s.size() == 5);
@@ -139,7 +139,7 @@ void test_utf32_to_utf8()
 {
         LOG("UTF-32 to UTF-8");
 
-        if (u8"\U0000222B" != unicode::utf32_to_utf8(char32_t(0x222B)))
+        if (reinterpret_cast<const char*>(u8"\U0000222B") != unicode::utf32_to_utf8(char32_t(0x222B)))
         {
                 error("Error UTF-32 to UTF-8");
         }
@@ -149,7 +149,7 @@ void test_utf8_to_utf32()
 {
         LOG("UTF-8 to UTF-32");
 
-        if (0x222B != unicode::utf8_to_utf32(u8"\U0000222B"))
+        if (0x222B != unicode::utf8_to_utf32(reinterpret_cast<const char*>(u8"\U0000222B")))
         {
                 error("Error UTF-8 to UTF-32");
         }

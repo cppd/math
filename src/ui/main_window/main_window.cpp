@@ -803,9 +803,9 @@ void MainWindow::set_bound_cocone_parameters(double rho, double alpha)
         m_bound_cocone_alpha = alpha;
 
         std::string label;
-        label += u8"ρ " + to_string_fixed(rho, -BOUND_COCONE_MINIMUM_RHO_EXPONENT);
+        label += reinterpret_cast<const char*>(u8"ρ ") + to_string_fixed(rho, -BOUND_COCONE_MINIMUM_RHO_EXPONENT);
         label += "; ";
-        label += u8"α " + to_string_fixed(alpha, -BOUND_COCONE_MINIMUM_ALPHA_EXPONENT);
+        label += reinterpret_cast<const char*>(u8"α ") + to_string_fixed(alpha, -BOUND_COCONE_MINIMUM_ALPHA_EXPONENT);
         ui.label_bound_cocone_info->setText(label.c_str());
 }
 
