@@ -41,7 +41,6 @@ function(SetCompilerWarnings source_files)
                         -Wconditionally-supported
                         -Wctor-dtor-privacy
                         -Wextra-semi
-                        -Wnoexcept
                         -Wnon-virtual-dtor
                         -Wold-style-cast
                         -Woverloaded-virtual
@@ -83,6 +82,7 @@ function(SetCompilerWarnings source_files)
                         # с последующим включением для файлов проекта
                         -Wno-undefined-reinterpret-cast
                         -Wno-redundant-parens
+                        -Wno-extra-semi-stmt
                         >
                 >
         )
@@ -101,6 +101,7 @@ function(SetCompilerWarnings source_files)
                                 string(CONCAT flags
                                         "-Wundefined-reinterpret-cast"
                                         " -Wredundant-parens"
+                                        " -Wextra-semi-stmt"
                                 )
                                 set_source_files_properties(${f} PROPERTIES COMPILE_FLAGS ${flags})
                         endif()
