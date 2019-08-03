@@ -24,8 +24,8 @@ include("${CMAKE_SOURCE_DIR}/cmake/cmake_compiler_warnings.cmake")
 ##################################################
 
 set(compilers "GNU;Clang")
-set(gcc_minimal_version "8")
-set(clang_minimal_version "7")
+set(gcc_minimal_version "9")
+set(clang_minimal_version "8")
 
 set(extensions_shaders "comp;frag;geom;vert;tesc;tese;glsl")
 set(extensions_all "h;c;cpp;ui" ${extensions_shaders})
