@@ -66,7 +66,7 @@ class ThreadData
                                 error_fatal("Error terminating thread quietly error");
                         case TerminateType::WithMessage:
                                 error_fatal("Error terminating thread with message error");
-                        };
+                        }
                 }
         }
 

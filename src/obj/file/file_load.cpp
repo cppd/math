@@ -237,7 +237,7 @@ void load_image(const std::string& dir_name, const std::string& image_name, std:
         {
                 *index = iter->second;
                 return;
-        };
+        }
 
         images->push_back(read_image_from_file<N>(file_name));
         *index = images->size() - 1;

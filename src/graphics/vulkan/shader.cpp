@@ -31,8 +31,6 @@ Shader::Shader(VkDevice device, const Span<const uint32_t>& code, VkShaderStageF
         ASSERT(entry_point_name.size() > 0);
 }
 
-Shader::~Shader() = default;
-
 VkShaderModule Shader::module() const noexcept
 {
         return m_module;

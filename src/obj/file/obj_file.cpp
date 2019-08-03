@@ -217,7 +217,7 @@ std::vector<std::string> obj_file_supported_extensions(const std::set<unsigned>&
                 else
                 {
                         result.push_back("obj" + to_string(d));
-                };
+                }
         }
         return result;
 }

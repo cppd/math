@@ -246,7 +246,7 @@ ObjectId MainObjectsImpl<N>::object_identifier(ObjectType object_type)
                 return ObjectId::Cocone;
         case ObjectType::BoundCocone:
                 return ObjectId::BoundCocone;
-        };
+        }
         error_fatal("Unknown object type");
 }
 
@@ -261,7 +261,7 @@ ObjectId MainObjectsImpl<N>::convex_hull_identifier(ObjectType object_type)
                 return ObjectId::CoconeConvexHull;
         case ObjectType::BoundCocone:
                 return ObjectId::BoundCoconeConvexHull;
-        };
+        }
         error_fatal("Unknown object type");
 }
 

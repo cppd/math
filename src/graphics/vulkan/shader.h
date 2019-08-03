@@ -33,7 +33,6 @@ class Shader
 protected:
         Shader(VkDevice device, const Span<const uint32_t>& code, VkShaderStageFlagBits stage,
                const std::string_view& entry_point_name);
-        ~Shader();
 
 public:
         VkShaderModule module() const noexcept;

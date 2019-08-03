@@ -27,7 +27,7 @@ std::string to_string(GraphicsAndComputeAPI api)
                 return "Vulkan";
         case GraphicsAndComputeAPI::OpenGL:
                 return "OpenGL";
-        };
+        }
         error_fatal("Unknown graphics and compute API");
 }
 
@@ -39,6 +39,6 @@ std::string graphics_and_compute_api_comment(GraphicsAndComputeAPI api)
                 return "in development";
         case GraphicsAndComputeAPI::OpenGL:
                 return "";
-        };
+        }
         error_fatal("Unknown graphics and compute API");
 }
