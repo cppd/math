@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "memory.h"
 
-namespace vulkan_text_implementation
+namespace gpu_vulkan
 {
 std::vector<VkDescriptorSetLayoutBinding> TextMemory::descriptor_set_layout_bindings()
 {

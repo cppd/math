@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "gpgpu/dft/opengl/show.h"
 #include "gpgpu/optical_flow/opengl/show.h"
 #include "gpgpu/pencil_sketch/opengl/show.h"
-#include "text/opengl/text.h"
+#include "text/opengl/show.h"
 
 namespace
 {
@@ -30,7 +30,7 @@ class Canvas final : public OpenGLCanvas
         int m_text_size;
         double m_window_ppi;
 
-        std::unique_ptr<OpenGLText> m_text;
+        std::unique_ptr<gpu_opengl::Text> m_text;
         std::unique_ptr<gpgpu_opengl::DFTShow> m_dft_show;
         std::unique_ptr<gpgpu_opengl::ConvexHullShow> m_convex_hull;
         std::unique_ptr<gpgpu_opengl::OpticalFlowShow> m_optical_flow;
@@ -164,7 +164,7 @@ void Canvas::create_objects(int window_width, int window_height, const mat4& mat
         }
         else
         {
-                m_text = create_opengl_text(m_text_size, m_text_color, matrix);
+                m_text = gpu_opengl::create_text(m_text_size, m_text_color, matrix);
         }
 }
 

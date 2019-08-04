@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/log.h"
 #include "gpgpu/convex_hull/vulkan/show.h"
 #include "graphics/vulkan/objects.h"
-#include "text/vulkan/text.h"
+#include "text/vulkan/show.h"
 
 #include <thread>
 
@@ -33,7 +33,7 @@ class Canvas final : public VulkanCanvas
         bool m_text_active = true;
         bool m_convex_hull_active = true;
 
-        std::unique_ptr<VulkanText> m_text;
+        std::unique_ptr<gpu_vulkan::TextShow> m_text;
         std::unique_ptr<gpgpu_vulkan::ConvexHullShow> m_convex_hull;
 
         void set_text_color(const Color& c) override
@@ -114,8 +114,8 @@ public:
                const vulkan::Queue& graphics_queue, const vulkan::CommandPool& transfer_command_pool,
                const vulkan::Queue& transfer_queue, const vulkan::Queue& graphics_compute_queue, bool sample_shading,
                int text_size)
-                : m_text(create_vulkan_text(instance, graphics_command_pool, graphics_queue, transfer_command_pool,
-                                            transfer_queue, sample_shading, text_size, TEXT_COLOR)),
+                : m_text(gpu_vulkan::create_text_show(instance, graphics_command_pool, graphics_queue, transfer_command_pool,
+                                                      transfer_queue, sample_shading, text_size, TEXT_COLOR)),
                   m_convex_hull(
                           gpgpu_vulkan::create_convex_hull_show(instance, graphics_compute_queue.family_index(), sample_shading))
         {

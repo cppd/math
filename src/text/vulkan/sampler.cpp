@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "sampler.h"
 
-namespace vulkan_text_implementation
+namespace gpu_vulkan
 {
 vulkan::Sampler create_text_sampler(VkDevice device)
 {

@@ -23,9 +23,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <memory>
 
-struct OpenGLText
+namespace gpu_opengl
 {
-        virtual ~OpenGLText() = default;
+struct Text
+{
+        virtual ~Text() = default;
 
         virtual void set_color(const Color& color) const = 0;
         virtual void set_matrix(const mat4& matrix) const = 0;
@@ -33,4 +35,5 @@ struct OpenGLText
         virtual void draw(const TextData& text_data) = 0;
 };
 
-std::unique_ptr<OpenGLText> create_opengl_text(int size, const Color& color, const mat4& matrix);
+std::unique_ptr<Text> create_text(int size, const Color& color, const mat4& matrix);
+}

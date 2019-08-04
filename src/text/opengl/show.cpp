@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "text.h"
+#include "show.h"
 
 #include "memory.h"
 
@@ -50,11 +50,11 @@ static_assert(sizeof(TextVertex) == sizeof(Vector<2, GLint>) + sizeof(Vector<2, 
 static_assert(std::is_same_v<decltype(TextVertex::v), Vector<2, GLint>>);
 static_assert(std::is_same_v<decltype(TextVertex::t), Vector<2, GLfloat>>);
 
-namespace impl = opengl_text_implementation;
-
+namespace gpu_opengl
+{
 namespace
 {
-class Impl final : public OpenGLText
+class Impl final : public Text
 {
         const std::thread::id m_thread_id = std::this_thread::get_id();
 
@@ -63,7 +63,7 @@ class Impl final : public OpenGLText
         opengl::GraphicsProgram m_program;
         std::unordered_map<char32_t, FontGlyph> m_glyphs;
         std::unique_ptr<opengl::TextureR32F> m_texture;
-        impl::ShaderMemory m_shader_memory;
+        TextShaderMemory m_shader_memory;
 
         void set_color(const Color& color) const override
         {
@@ -128,7 +128,8 @@ public:
 };
 }
 
-std::unique_ptr<OpenGLText> create_opengl_text(int size, const Color& color, const mat4& matrix)
+std::unique_ptr<Text> create_text(int size, const Color& color, const mat4& matrix)
 {
         return std::make_unique<Impl>(size, color, matrix);
+}
 }

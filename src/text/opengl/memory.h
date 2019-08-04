@@ -22,9 +22,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/vec.h"
 #include "graphics/opengl/buffers.h"
 
-namespace opengl_text_implementation
+namespace gpu_opengl
 {
-class ShaderMemory final
+class TextShaderMemory final
 {
         static constexpr int MATRICES_BINDING = 0;
         static constexpr int DRAWING_BINDING = 2;
@@ -43,7 +43,7 @@ class ShaderMemory final
         opengl::UniformBuffer m_drawing;
 
 public:
-        ShaderMemory() : m_matrices(sizeof(Matrices)), m_drawing(sizeof(Drawing))
+        TextShaderMemory() : m_matrices(sizeof(Matrices)), m_drawing(sizeof(Drawing))
         {
         }
 

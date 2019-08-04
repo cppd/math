@@ -17,20 +17,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "vertex.h"
 
-namespace vulkan_text_implementation
+namespace gpu_vulkan
 {
-static_assert(sizeof(Vertex) == sizeof(Vector<2, int32_t>) + sizeof(Vector<2, float>));
-static_assert(std::is_same_v<decltype(Vertex::v), Vector<2, int32_t>>);
-static_assert(std::is_same_v<decltype(Vertex::t), Vector<2, float>>);
+static_assert(sizeof(TextVertex) == sizeof(Vector<2, int32_t>) + sizeof(Vector<2, float>));
+static_assert(std::is_same_v<decltype(TextVertex::v), Vector<2, int32_t>>);
+static_assert(std::is_same_v<decltype(TextVertex::t), Vector<2, float>>);
 
-std::vector<VkVertexInputBindingDescription> vertex_binding_descriptions()
+std::vector<VkVertexInputBindingDescription> text_show_vertex_binding_descriptions()
 {
         std::vector<VkVertexInputBindingDescription> descriptions;
 
         {
                 VkVertexInputBindingDescription d = {};
                 d.binding = 0;
-                d.stride = sizeof(Vertex);
+                d.stride = sizeof(TextVertex);
                 d.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
                 descriptions.push_back(d);
@@ -39,7 +39,7 @@ std::vector<VkVertexInputBindingDescription> vertex_binding_descriptions()
         return descriptions;
 }
 
-std::vector<VkVertexInputAttributeDescription> vertex_attribute_descriptions()
+std::vector<VkVertexInputAttributeDescription> text_show_vertex_attribute_descriptions()
 {
         std::vector<VkVertexInputAttributeDescription> descriptions;
 
@@ -48,7 +48,7 @@ std::vector<VkVertexInputAttributeDescription> vertex_attribute_descriptions()
                 d.binding = 0;
                 d.location = 0;
                 d.format = VK_FORMAT_R32G32_SINT;
-                d.offset = offsetof(Vertex, v);
+                d.offset = offsetof(TextVertex, v);
 
                 descriptions.push_back(d);
         }
@@ -57,7 +57,7 @@ std::vector<VkVertexInputAttributeDescription> vertex_attribute_descriptions()
                 d.binding = 0;
                 d.location = 1;
                 d.format = VK_FORMAT_R32G32_SFLOAT;
-                d.offset = offsetof(Vertex, t);
+                d.offset = offsetof(TextVertex, t);
 
                 descriptions.push_back(d);
         }

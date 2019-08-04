@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <unordered_set>
 #include <vector>
 
-namespace vulkan_text_implementation
+namespace gpu_vulkan
 {
 class TextMemory final
 {

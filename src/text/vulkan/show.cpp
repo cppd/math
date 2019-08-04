@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "text.h"
+#include "show.h"
 
 #include "memory.h"
 #include "sampler.h"
@@ -52,8 +52,8 @@ constexpr uint32_t fragment_shader[]
 };
 // clang-format on
 
-namespace impl = vulkan_text_implementation;
-
+namespace gpu_vulkan
+{
 namespace
 {
 class Glyphs
@@ -87,7 +87,7 @@ public:
         }
 };
 
-class Impl final : public VulkanText
+class Impl final : public TextShow
 {
         const std::thread::id m_thread_id = std::this_thread::get_id();
 
@@ -102,7 +102,7 @@ class Impl final : public VulkanText
         vulkan::GrayscaleTexture m_glyph_texture;
         std::unordered_map<char32_t, FontGlyph> m_glyphs;
 
-        impl::TextMemory m_shader_memory;
+        TextMemory m_shader_memory;
 
         vulkan::VertexShader m_text_vert;
         vulkan::FragmentShader m_text_frag;
@@ -154,7 +154,7 @@ class Impl final : public VulkanText
 
                 m_pipeline = m_render_buffers->create_pipeline(
                         VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, m_sample_shading, true /*color_blend*/, {&m_text_vert, &m_text_frag},
-                        m_pipeline_layout, impl::vertex_binding_descriptions(), impl::vertex_attribute_descriptions());
+                        m_pipeline_layout, text_show_vertex_binding_descriptions(), text_show_vertex_attribute_descriptions());
 
                 m_command_buffers = m_render_buffers->create_command_buffers(
                         std::nullopt, std::bind(&Impl::draw_commands, this, std::placeholders::_1));
@@ -229,7 +229,7 @@ class Impl final : public VulkanText
                   m_instance(instance),
                   m_device(m_instance.device()),
                   m_signal_semaphore(m_device),
-                  m_sampler(impl::create_text_sampler(m_device)),
+                  m_sampler(create_text_sampler(m_device)),
                   m_glyph_texture(m_device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue,
                                   std::unordered_set({graphics_queue.family_index(), transfer_queue.family_index()}),
                                   glyphs.width(), glyphs.height(), std::move(glyphs.pixels())),
@@ -268,13 +268,12 @@ public:
 };
 }
 
-std::unique_ptr<VulkanText> create_vulkan_text(const vulkan::VulkanInstance& instance,
-                                               const vulkan::CommandPool& graphics_command_pool,
-                                               const vulkan::Queue& graphics_queue,
-                                               const vulkan::CommandPool& transfer_command_pool,
-                                               const vulkan::Queue& transfer_queue, bool sample_shading, int size,
-                                               const Color& color)
+std::unique_ptr<TextShow> create_text_show(const vulkan::VulkanInstance& instance,
+                                           const vulkan::CommandPool& graphics_command_pool, const vulkan::Queue& graphics_queue,
+                                           const vulkan::CommandPool& transfer_command_pool, const vulkan::Queue& transfer_queue,
+                                           bool sample_shading, int size, const Color& color)
 {
         return std::make_unique<Impl>(instance, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue,
                                       sample_shading, size, color);
+}
 }
