@@ -19,14 +19,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "compute_program.h"
 
-namespace impl = gpgpu_pencil_sketch_compute_opengl_implementation;
-
+namespace gpgpu_opengl
+{
 namespace
 {
-class Impl final : public gpgpu_opengl::PencilSketchCompute
+class Impl final : public PencilSketchCompute
 {
-        impl::ProgramCompute m_program_compute;
-        impl::ProgramLuminance m_program_luminance;
+        PencilSketchProgramCompute m_program_compute;
+        PencilSketchProgramLuminance m_program_luminance;
 
         void exec() override
         {
@@ -47,8 +47,6 @@ public:
 };
 }
 
-namespace gpgpu_opengl
-{
 std::unique_ptr<PencilSketchCompute> create_pencil_sketch_compute(const opengl::TextureRGBA32F& input, bool input_is_srgb,
                                                                   const opengl::TextureImage& objects,
                                                                   const opengl::TextureRGBA32F& output)

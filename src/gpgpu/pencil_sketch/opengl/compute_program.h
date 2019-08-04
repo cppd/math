@@ -20,29 +20,29 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/opengl/buffers.h"
 #include "graphics/opengl/shader.h"
 
-namespace gpgpu_pencil_sketch_compute_opengl_implementation
+namespace gpgpu_opengl
 {
-class ProgramCompute final
+class PencilSketchProgramCompute final
 {
         int m_groups_x;
         int m_groups_y;
         opengl::ComputeProgram m_program;
 
 public:
-        ProgramCompute(const opengl::TextureRGBA32F& input, bool input_is_srgb, const opengl::TextureImage& objects,
-                       const opengl::TextureRGBA32F& output);
+        PencilSketchProgramCompute(const opengl::TextureRGBA32F& input, bool input_is_srgb, const opengl::TextureImage& objects,
+                                   const opengl::TextureRGBA32F& output);
 
         void exec() const;
 };
 
-class ProgramLuminance final
+class PencilSketchProgramLuminance final
 {
         int m_groups_x;
         int m_groups_y;
         opengl::ComputeProgram m_program;
 
 public:
-        ProgramLuminance(const opengl::TextureRGBA32F& output);
+        PencilSketchProgramLuminance(const opengl::TextureRGBA32F& output);
 
         void exec() const;
 };

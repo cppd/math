@@ -34,6 +34,8 @@ constexpr const char fragment_shader[]
 
 constexpr int VERTEX_COUNT = 4;
 
+namespace gpgpu_opengl
+{
 namespace
 {
 struct Vertex
@@ -45,7 +47,7 @@ struct Vertex
         Vector<2, GLfloat> t; // Координаты вершины в текстуре (0 или 1)
 };
 
-class Impl final : public gpgpu_opengl::PencilSketchShow
+class Impl final : public PencilSketchShow
 {
         opengl::GraphicsProgram m_draw_prog;
         opengl::TextureRGBA32F m_texture;
@@ -103,8 +105,6 @@ public:
 };
 }
 
-namespace gpgpu_opengl
-{
 std::unique_ptr<PencilSketchShow> create_pencil_sketch_show(const opengl::TextureRGBA32F& source, bool source_is_srgb,
                                                             const opengl::TextureImage& objects, const mat4& matrix)
 {
