@@ -104,7 +104,7 @@ std::string overview()
         s += "Required Window Extensions";
         try
         {
-                for (const std::string& extension : sorted(VulkanWindow::instance_extensions()))
+                for (const std::string& extension : sorted(Window::instance_extensions()))
                 {
                         s += "\n";
                         s += INDENT;

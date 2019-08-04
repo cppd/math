@@ -56,14 +56,14 @@ Initialization::Initialization()
 
 #endif
 
-        vulkan_window_init();
+        vulkan::window_init();
 
-        opengl_window_init();
+        opengl::window_init();
 }
 
 Initialization::~Initialization()
 {
-        vulkan_window_terminate();
+        vulkan::window_terminate();
 
         log_exit();
 }

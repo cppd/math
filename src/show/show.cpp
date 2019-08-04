@@ -161,7 +161,7 @@ class ShowObject final : public EventQueue, public WindowEvent
 {
         static_assert(API == GraphicsAndComputeAPI::Vulkan || API == GraphicsAndComputeAPI::OpenGL);
         using Renderer = std::conditional_t<API == GraphicsAndComputeAPI::Vulkan, gpu_vulkan::Renderer, gpu_opengl::Renderer>;
-        using Window = std::conditional_t<API == GraphicsAndComputeAPI::Vulkan, VulkanWindow, OpenGLWindow>;
+        using Window = std::conditional_t<API == GraphicsAndComputeAPI::Vulkan, vulkan::Window, opengl::Window>;
         using Canvas = std::conditional_t<API == GraphicsAndComputeAPI::Vulkan, gpu_vulkan::Canvas, gpu_opengl::Canvas>;
 
         // Камера и тени рассчитаны на размер объекта 2 и на положение в точке (0, 0, 0).
@@ -824,7 +824,7 @@ void ShowObject<API>::init_window_and_view()
 
 //
 
-void render_opengl(OpenGLWindow& window, gpu_opengl::Renderer& renderer, gpu_opengl::Canvas& canvas, const TextData& text_data)
+void render_opengl(opengl::Window& window, gpu_opengl::Renderer& renderer, gpu_opengl::Canvas& canvas, const TextData& text_data)
 {
         // Параметр true означает рисование в цветной буфер,
         // параметр false означает рисование в буфер экрана.
@@ -840,7 +840,7 @@ void ShowObject<GraphicsAndComputeAPI::OpenGL>::loop()
 {
         ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
-        std::unique_ptr<OpenGLWindow> window = create_opengl_window(OPENGL_MINIMUM_SAMPLE_COUNT, this);
+        std::unique_ptr<opengl::Window> window = opengl::create_window(OPENGL_MINIMUM_SAMPLE_COUNT, this);
         std::unique_ptr<gpu_opengl::Renderer> renderer = gpu_opengl::create_renderer(OPENGL_MINIMUM_SAMPLE_COUNT);
         std::unique_ptr<gpu_opengl::Canvas> canvas = gpu_opengl::create_canvas(m_fps_text_size, m_parent_window_ppi);
 
@@ -968,10 +968,10 @@ void ShowObject<GraphicsAndComputeAPI::Vulkan>::loop()
 {
         ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
-        std::unique_ptr<VulkanWindow> window = create_vulkan_window(this);
+        std::unique_ptr<vulkan::Window> window = vulkan::create_window(this);
 
         vulkan::VulkanInstance instance(
-                merge<std::string>(gpu_vulkan::Renderer::instance_extensions(), VulkanWindow::instance_extensions()),
+                merge<std::string>(gpu_vulkan::Renderer::instance_extensions(), vulkan::Window::instance_extensions()),
                 gpu_vulkan::Renderer::device_extensions(),
                 merge<vulkan::PhysicalDeviceFeatures>(
                         gpu_vulkan::Renderer::required_device_features(), gpu_vulkan::Canvas::required_device_features(),

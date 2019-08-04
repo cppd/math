@@ -41,6 +41,8 @@ constexpr int GREEN_BITS = 8;
 constexpr int BLUE_BITS = 8;
 constexpr int ALPHA_BITS = 8;
 
+namespace opengl
+{
 namespace
 {
 #if defined(_WIN32)
@@ -53,9 +55,9 @@ void init_opengl_functions()
 }
 #endif
 
-void create_gl_window_1x1(int major_gl_version, int minor_gl_version, const std::vector<std::string>& extensions,
-                          int minimum_sample_count, int depth_bits, int stencil_bits, int red_bits, int green_bits, int blue_bits,
-                          int alpha_bits, sf::Window* window)
+void create_window_1x1(int major_gl_version, int minor_gl_version, const std::vector<std::string>& extensions,
+                       int minimum_sample_count, int depth_bits, int stencil_bits, int red_bits, int green_bits, int blue_bits,
+                       int alpha_bits, sf::Window* window)
 {
         sf::ContextSettings cs;
         cs.majorVersion = major_gl_version;
@@ -77,8 +79,8 @@ void create_gl_window_1x1(int major_gl_version, int minor_gl_version, const std:
         LOG("\n-----OpenGL Window-----\n" + opengl::overview());
 }
 
-std::unique_ptr<sf::Context> create_gl_context_1x1(int major_gl_version, int minor_gl_version,
-                                                   const std::vector<std::string>& extensions)
+std::unique_ptr<sf::Context> create_context_1x1(int major_gl_version, int minor_gl_version,
+                                                const std::vector<std::string>& extensions)
 {
         sf::ContextSettings cs;
         cs.majorVersion = major_gl_version;
@@ -101,7 +103,7 @@ std::unique_ptr<sf::Context> create_gl_context_1x1(int major_gl_version, int min
 
 //
 
-class OpenGLWindowImplementation final : public OpenGLWindow
+class Impl final : public Window
 {
         sf::Window m_window;
         WindowEvent* m_event_interface;
@@ -190,7 +192,7 @@ class OpenGLWindowImplementation final : public OpenGLWindow
 #pragma GCC diagnostic pop
 
 public:
-        OpenGLWindowImplementation(int minimum_sample_count, WindowEvent* event_interface) : m_event_interface(event_interface)
+        Impl(int minimum_sample_count, WindowEvent* event_interface) : m_event_interface(event_interface)
         {
                 ASSERT(event_interface);
 
@@ -200,16 +202,16 @@ public:
                         // sf::ContextSettings::antialiasingLevel в ненулевое значение
                         // далее при создании окна.
                         // В версии SFML 2.4.2 эта проблема исчезла.
-                        OpenGLContext opengl_context;
+                        Context opengl_context;
                 }
 #endif
 
-                create_gl_window_1x1(opengl::API_VERSION_MAJOR, opengl::API_VERSION_MINOR,
-                                     string_vector(opengl::REQUIRED_EXTENSIONS), minimum_sample_count, DEPTH_BITS, STENCIL_BITS,
-                                     RED_BITS, GREEN_BITS, BLUE_BITS, ALPHA_BITS, &m_window);
+                create_window_1x1(opengl::API_VERSION_MAJOR, opengl::API_VERSION_MINOR,
+                                  string_vector(opengl::REQUIRED_EXTENSIONS), minimum_sample_count, DEPTH_BITS, STENCIL_BITS,
+                                  RED_BITS, GREEN_BITS, BLUE_BITS, ALPHA_BITS, &m_window);
         }
 
-        ~OpenGLWindowImplementation() override
+        ~Impl() override
         {
 #if defined(_WIN32)
                 // Без этого вызова почему-то зависает деструктор окна SFML на Винде,
@@ -217,38 +219,46 @@ public:
                 change_window_style_not_child(system_handle());
 #endif
         }
+
+        Impl(const Impl&) = delete;
+        Impl& operator=(const Impl&) = delete;
+        Impl(Impl&&) = delete;
+        Impl& operator=(Impl&&) = delete;
 };
 }
 
 //
 
-void opengl_window_init()
+void window_init()
 {
         sf::err().rdbuf(nullptr);
 }
 
 //
 
-class OpenGLContext::Impl
+class Context::Impl
 {
         std::unique_ptr<sf::Context> m_context;
 
 public:
         Impl()
-                : m_context(create_gl_context_1x1(opengl::API_VERSION_MAJOR, opengl::API_VERSION_MINOR,
-                                                  string_vector(opengl::REQUIRED_EXTENSIONS)))
+                : m_context(create_context_1x1(opengl::API_VERSION_MAJOR, opengl::API_VERSION_MINOR,
+                                               string_vector(opengl::REQUIRED_EXTENSIONS)))
         {
         }
 };
-OpenGLContext::OpenGLContext()
+
+Context::Context()
 {
-        m_impl = std::make_unique<OpenGLContext::Impl>();
+        m_impl = std::make_unique<Context::Impl>();
 }
-OpenGLContext::~OpenGLContext() = default;
+
+Context::~Context() = default;
 
 //
 
-std::unique_ptr<OpenGLWindow> create_opengl_window(int minimum_sample_count, WindowEvent* event_interface)
+std::unique_ptr<Window> create_window(int minimum_sample_count, WindowEvent* event_interface)
 {
-        return std::make_unique<OpenGLWindowImplementation>(minimum_sample_count, event_interface);
+        return std::make_unique<Impl>(minimum_sample_count, event_interface);
+}
 }

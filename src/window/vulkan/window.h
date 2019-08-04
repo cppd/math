@@ -26,17 +26,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <vector>
 #include <vulkan/vulkan.h>
 
-void vulkan_window_init();
-void vulkan_window_terminate();
+namespace vulkan
+{
+void window_init();
+void window_terminate();
 
-class VulkanWindow
+class Window
 {
 public:
         static std::vector<std::string> instance_extensions();
 
         //
 
-        virtual ~VulkanWindow() = default;
+        virtual ~Window() = default;
 
         virtual WindowID system_handle() = 0;
         virtual int width() const = 0;
@@ -46,4 +48,5 @@ public:
         virtual VkSurfaceKHR create_surface(VkInstance instance) = 0;
 };
 
-std::unique_ptr<VulkanWindow> create_vulkan_window(WindowEvent* event_interface);
+std::unique_ptr<Window> create_window(WindowEvent* event_interface);
+}

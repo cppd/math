@@ -22,22 +22,24 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <memory>
 
-void opengl_window_init();
+namespace opengl
+{
+void window_init();
 
-class OpenGLContext
+class Context
 {
         class Impl;
         std::unique_ptr<Impl> m_impl;
 
 public:
-        OpenGLContext();
-        ~OpenGLContext();
+        Context();
+        ~Context();
 };
 
-class OpenGLWindow
+class Window
 {
 public:
-        virtual ~OpenGLWindow() = default;
+        virtual ~Window() = default;
 
         virtual WindowID system_handle() const = 0;
         virtual int width() const = 0;
@@ -48,4 +50,5 @@ public:
         virtual void display() = 0;
 };
 
-std::unique_ptr<OpenGLWindow> create_opengl_window(int minimum_sample_count, WindowEvent* event_interface);
+std::unique_ptr<Window> create_window(int minimum_sample_count, WindowEvent* event_interface);
+}

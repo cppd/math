@@ -36,6 +36,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <atomic>
 
+namespace vulkan
+{
 namespace
 {
 std::atomic_int global_glfw_window_count = 0;
@@ -104,7 +106,7 @@ void callback_mouse_button(GLFWwindow* /*window*/, int button, int action, int /
         }
 }
 
-class VulkanWindowImplementation final : public VulkanWindow
+class Impl final : public Window
 {
         GLFWwindow* m_window;
 
@@ -175,7 +177,7 @@ class VulkanWindowImplementation final : public VulkanWindow
         }
 
 public:
-        VulkanWindowImplementation(WindowEvent* event_interface)
+        Impl(WindowEvent* event_interface)
         {
                 set_global_variables(event_interface);
 
@@ -205,22 +207,22 @@ public:
                 }
         }
 
-        ~VulkanWindowImplementation() override
+        ~Impl() override
         {
                 glfwDestroyWindow(m_window);
                 clear_global_variables();
         }
 
-        VulkanWindowImplementation(const VulkanWindowImplementation&) = delete;
-        VulkanWindowImplementation& operator=(const VulkanWindowImplementation&) = delete;
-        VulkanWindowImplementation(VulkanWindowImplementation&&) = delete;
-        VulkanWindowImplementation& operator=(VulkanWindowImplementation&&) = delete;
+        Impl(const Impl&) = delete;
+        Impl& operator=(const Impl&) = delete;
+        Impl(Impl&&) = delete;
+        Impl& operator=(Impl&&) = delete;
 };
 }
 
 //
 
-void vulkan_window_init()
+void window_init()
 {
         glfwSetErrorCallback(callback_error);
 
@@ -230,14 +232,14 @@ void vulkan_window_init()
         }
 }
 
-void vulkan_window_terminate()
+void window_terminate()
 {
         glfwTerminate();
 }
 
 //
 
-std::vector<std::string> VulkanWindow::instance_extensions()
+std::vector<std::string> Window::instance_extensions()
 {
         uint32_t count;
         const char** extensions;
@@ -256,7 +258,8 @@ std::vector<std::string> VulkanWindow::instance_extensions()
         return std::vector<std::string>(extensions, extensions + count);
 }
 
-std::unique_ptr<VulkanWindow> create_vulkan_window(WindowEvent* event_interface)
+std::unique_ptr<Window> create_window(WindowEvent* event_interface)
 {
-        return std::make_unique<VulkanWindowImplementation>(event_interface);
+        return std::make_unique<Impl>(event_interface);
+}
 }
