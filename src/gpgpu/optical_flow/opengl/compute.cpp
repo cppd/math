@@ -78,8 +78,8 @@ constexpr float STOP_MOVE_SQUARE = square(1e-3f);
 // Если определитель матрицы G меньше этого значения, то считается, что нет потока
 constexpr float MIN_DETERMINANT = 1;
 
-namespace impl = gpgpu_optical_flow_compute_opengl_implementation;
-
+namespace gpgpu_opengl
+{
 namespace
 {
 std::string grayscale_source()
@@ -181,10 +181,10 @@ std::vector<opengl::StorageBuffer> create_flow_buffers(const std::vector<vec2i>&
         return buffers;
 }
 
-std::array<impl::GrayscaleMemory, 2> create_grayscale_memory(const opengl::TextureRGBA32F& source_image,
-                                                             const std::array<std::vector<opengl::TextureR32F>, 2>& images)
+std::array<OpticalFlowGrayscaleMemory, 2> create_grayscale_memory(const opengl::TextureRGBA32F& source_image,
+                                                                  const std::array<std::vector<opengl::TextureR32F>, 2>& images)
 {
-        return {impl::GrayscaleMemory(source_image, images[0][0]), impl::GrayscaleMemory(source_image, images[1][0])};
+        return {OpticalFlowGrayscaleMemory(source_image, images[0][0]), OpticalFlowGrayscaleMemory(source_image, images[1][0])};
 }
 
 vec2i create_grayscale_groups(const std::vector<vec2i>& sizes)
@@ -195,12 +195,12 @@ vec2i create_grayscale_groups(const std::vector<vec2i>& sizes)
         return {x, y};
 }
 
-std::array<std::vector<impl::DownsampleMemory>, 2> create_downsample_memory(
+std::array<std::vector<OpticalFlowDownsampleMemory>, 2> create_downsample_memory(
         const std::array<std::vector<opengl::TextureR32F>, 2>& images)
 {
         ASSERT(images[0].size() == images[1].size());
 
-        std::array<std::vector<impl::DownsampleMemory>, 2> downsample_images;
+        std::array<std::vector<OpticalFlowDownsampleMemory>, 2> downsample_images;
 
         for (unsigned i = 1; i < images[0].size(); ++i)
         {
@@ -225,15 +225,15 @@ std::vector<vec2i> create_downsample_groups(const std::vector<vec2i>& sizes)
         return groups;
 }
 
-std::array<std::vector<impl::SobelMemory>, 2> create_sobel_memory(const std::array<std::vector<opengl::TextureR32F>, 2>& images,
-                                                                  const std::vector<opengl::TextureR32F>& dx,
-                                                                  const std::vector<opengl::TextureR32F>& dy)
+std::array<std::vector<OpticalFlowSobelMemory>, 2> create_sobel_memory(
+        const std::array<std::vector<opengl::TextureR32F>, 2>& images, const std::vector<opengl::TextureR32F>& dx,
+        const std::vector<opengl::TextureR32F>& dy)
 {
         ASSERT(images[0].size() == images[1].size());
         ASSERT(images[0].size() == dx.size());
         ASSERT(images[0].size() == dy.size());
 
-        std::array<std::vector<impl::SobelMemory>, 2> sobel_images;
+        std::array<std::vector<OpticalFlowSobelMemory>, 2> sobel_images;
 
         for (size_t i = 0; i < images[0].size(); ++i)
         {
@@ -258,10 +258,10 @@ std::vector<vec2i> create_sobel_groups(const std::vector<vec2i>& sizes)
         return groups;
 }
 
-std::vector<impl::FlowDataMemory> create_flow_data_memory(const std::vector<vec2i>& sizes,
-                                                          const std::vector<opengl::StorageBuffer>& flow_buffers, int top_x,
-                                                          int top_y, const opengl::StorageBuffer& top_points,
-                                                          const opengl::StorageBuffer& top_flow)
+std::vector<OpticalFlowDataMemory> create_flow_data_memory(const std::vector<vec2i>& sizes,
+                                                           const std::vector<opengl::StorageBuffer>& flow_buffers, int top_x,
+                                                           int top_y, const opengl::StorageBuffer& top_points,
+                                                           const opengl::StorageBuffer& top_flow)
 {
         ASSERT(flow_buffers.size() + 1 == sizes.size());
         auto flow_index = [&](size_t i) {
@@ -269,11 +269,11 @@ std::vector<impl::FlowDataMemory> create_flow_data_memory(const std::vector<vec2
                 return i - 1; // буферы начинаются с уровня 1
         };
 
-        std::vector<impl::FlowDataMemory> flow_data(sizes.size());
+        std::vector<OpticalFlowDataMemory> flow_data(sizes.size());
 
         for (size_t i = 0; i < flow_data.size(); ++i)
         {
-                impl::FlowDataMemory::Data data;
+                OpticalFlowDataMemory::Data data;
 
                 const bool top = (i == 0);
                 const bool bottom = (i + 1 == flow_data.size());
@@ -322,7 +322,7 @@ std::vector<impl::FlowDataMemory> create_flow_data_memory(const std::vector<vec2
         return flow_data;
 }
 
-std::array<std::vector<impl::FlowImagesMemory>, 2> create_flow_images_memory(
+std::array<std::vector<OpticalFlowImagesMemory>, 2> create_flow_images_memory(
         const std::array<std::vector<opengl::TextureR32F>, 2>& images, const std::vector<opengl::TextureR32F>& dx,
         const std::vector<opengl::TextureR32F>& dy)
 {
@@ -330,7 +330,7 @@ std::array<std::vector<impl::FlowImagesMemory>, 2> create_flow_images_memory(
         ASSERT(images[0].size() == dx.size());
         ASSERT(images[0].size() == dy.size());
 
-        std::array<std::vector<impl::FlowImagesMemory>, 2> flow_images;
+        std::array<std::vector<OpticalFlowImagesMemory>, 2> flow_images;
 
         for (size_t i = 0; i < images[0].size(); ++i)
         {
@@ -357,27 +357,27 @@ std::vector<vec2i> create_flow_groups(const std::vector<vec2i>& sizes, int top_x
         return groups;
 }
 
-class Impl final : public gpgpu_opengl::OpticalFlowCompute
+class Impl final : public OpticalFlowCompute
 {
         std::array<std::vector<opengl::TextureR32F>, 2> m_images;
         std::vector<opengl::TextureR32F> m_dx;
         std::vector<opengl::TextureR32F> m_dy;
         std::vector<opengl::StorageBuffer> m_flow_buffers;
 
-        std::array<impl::GrayscaleMemory, 2> m_grayscale_memory;
+        std::array<OpticalFlowGrayscaleMemory, 2> m_grayscale_memory;
         vec2i m_grayscale_groups;
         opengl::ComputeProgram m_grayscale_compute;
 
-        std::array<std::vector<impl::DownsampleMemory>, 2> m_downsample_memory;
+        std::array<std::vector<OpticalFlowDownsampleMemory>, 2> m_downsample_memory;
         std::vector<vec2i> m_downsample_groups;
         opengl::ComputeProgram m_downsample_compute;
 
-        std::array<std::vector<impl::SobelMemory>, 2> m_sobel_memory;
+        std::array<std::vector<OpticalFlowSobelMemory>, 2> m_sobel_memory;
         std::vector<vec2i> m_sobel_groups;
         opengl::ComputeProgram m_sobel_compute;
 
-        std::vector<impl::FlowDataMemory> m_flow_data_memory;
-        std::array<std::vector<impl::FlowImagesMemory>, 2> m_flow_images_memory;
+        std::vector<OpticalFlowDataMemory> m_flow_data_memory;
+        std::array<std::vector<OpticalFlowImagesMemory>, 2> m_flow_images_memory;
         std::vector<vec2i> m_flow_groups;
         opengl::ComputeProgram m_flow_compute;
 
@@ -502,8 +502,6 @@ public:
 };
 }
 
-namespace gpgpu_opengl
-{
 std::unique_ptr<OpticalFlowCompute> create_optical_flow_compute(int width, int height, const opengl::TextureRGBA32F& source_image,
                                                                 int top_x, int top_y, const opengl::StorageBuffer& top_points,
                                                                 const opengl::StorageBuffer& top_flow)

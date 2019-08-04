@@ -54,6 +54,8 @@ constexpr double DISTANCE_BETWEEN_POINTS = 2;
 // Интервал ожидания для расчёта потока не для каждого кадра
 // constexpr double COMPUTE_INTERVAL_SECONDS = 1.0 / 10;
 
+namespace gpgpu_opengl
+{
 namespace
 {
 class ShaderMemory final
@@ -126,7 +128,7 @@ void create_points_for_top_level(int width, int height, int distance, int* point
         ASSERT(index == point_count);
 }
 
-class Impl final : public gpgpu_opengl::OpticalFlowShow
+class Impl final : public OpticalFlowShow
 {
         const int m_width, m_height;
         opengl::GraphicsProgram m_draw_prog;
@@ -221,8 +223,6 @@ public:
 };
 }
 
-namespace gpgpu_opengl
-{
 std::unique_ptr<OpticalFlowShow> create_optical_flow_show(int width, int height, double window_ppi, const mat4& matrix)
 {
         return std::make_unique<Impl>(width, height, window_ppi, matrix);

@@ -17,9 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "compute_memory.h"
 
-namespace gpgpu_optical_flow_compute_opengl_implementation
+namespace gpgpu_opengl
 {
-GrayscaleMemory::GrayscaleMemory(const opengl::TextureRGBA32F& image_src, const opengl::TextureR32F& image_dst)
+OpticalFlowGrayscaleMemory::OpticalFlowGrayscaleMemory(const opengl::TextureRGBA32F& image_src,
+                                                       const opengl::TextureR32F& image_dst)
         : m_buffer(sizeof(Images))
 {
         Images images;
@@ -30,14 +31,15 @@ GrayscaleMemory::GrayscaleMemory(const opengl::TextureRGBA32F& image_src, const 
         m_buffer.copy(images);
 }
 
-void GrayscaleMemory::bind() const
+void OpticalFlowGrayscaleMemory::bind() const
 {
         m_buffer.bind(IMAGES_BINDING);
 }
 
 //
 
-DownsampleMemory::DownsampleMemory(const opengl::TextureR32F& image_big, const opengl::TextureR32F& image_small)
+OpticalFlowDownsampleMemory::OpticalFlowDownsampleMemory(const opengl::TextureR32F& image_big,
+                                                         const opengl::TextureR32F& image_small)
         : m_buffer(sizeof(Images))
 {
         Images images;
@@ -48,15 +50,15 @@ DownsampleMemory::DownsampleMemory(const opengl::TextureR32F& image_big, const o
         m_buffer.copy(images);
 }
 
-void DownsampleMemory::bind() const
+void OpticalFlowDownsampleMemory::bind() const
 {
         m_buffer.bind(IMAGES_BINDING);
 }
 
 //
 
-SobelMemory::SobelMemory(const opengl::TextureR32F& image_i, const opengl::TextureR32F& image_dx,
-                         const opengl::TextureR32F& image_dy)
+OpticalFlowSobelMemory::OpticalFlowSobelMemory(const opengl::TextureR32F& image_i, const opengl::TextureR32F& image_dx,
+                                               const opengl::TextureR32F& image_dy)
         : m_buffer(sizeof(Images))
 {
         Images images;
@@ -68,38 +70,38 @@ SobelMemory::SobelMemory(const opengl::TextureR32F& image_i, const opengl::Textu
         m_buffer.copy(images);
 }
 
-void SobelMemory::bind() const
+void OpticalFlowSobelMemory::bind() const
 {
         m_buffer.bind(IMAGES_BINDING);
 }
 
 //
 
-FlowDataMemory::FlowDataMemory() : m_buffer(sizeof(Data))
+OpticalFlowDataMemory::OpticalFlowDataMemory() : m_buffer(sizeof(Data))
 {
 }
 
-void FlowDataMemory::set_top_points(const opengl::StorageBuffer* top_points)
+void OpticalFlowDataMemory::set_top_points(const opengl::StorageBuffer* top_points)
 {
         m_top_points = top_points;
 }
 
-void FlowDataMemory::set_flow_guess(const opengl::StorageBuffer* flow_guess)
+void OpticalFlowDataMemory::set_flow_guess(const opengl::StorageBuffer* flow_guess)
 {
         m_flow_guess = flow_guess;
 }
 
-void FlowDataMemory::set_flow(const opengl::StorageBuffer* flow)
+void OpticalFlowDataMemory::set_flow(const opengl::StorageBuffer* flow)
 {
         m_flow = flow;
 }
 
-void FlowDataMemory::set_data(const Data& data)
+void OpticalFlowDataMemory::set_data(const Data& data)
 {
         m_buffer.copy(data);
 }
 
-void FlowDataMemory::bind() const
+void OpticalFlowDataMemory::bind() const
 {
         ASSERT(m_flow);
 
@@ -120,8 +122,8 @@ void FlowDataMemory::bind() const
 
 //
 
-FlowImagesMemory::FlowImagesMemory(const opengl::TextureR32F& image_dx, const opengl::TextureR32F& image_dy,
-                                   const opengl::TextureR32F& image_i, const opengl::TextureR32F& texture_j)
+OpticalFlowImagesMemory::OpticalFlowImagesMemory(const opengl::TextureR32F& image_dx, const opengl::TextureR32F& image_dy,
+                                                 const opengl::TextureR32F& image_i, const opengl::TextureR32F& texture_j)
         : m_buffer(sizeof(Images))
 {
         Images images;
@@ -134,7 +136,7 @@ FlowImagesMemory::FlowImagesMemory(const opengl::TextureR32F& image_dx, const op
         m_buffer.copy(images);
 }
 
-void FlowImagesMemory::bind() const
+void OpticalFlowImagesMemory::bind() const
 {
         m_buffer.bind(IMAGES_BINDING);
 }

@@ -19,9 +19,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "graphics/opengl/buffers.h"
 
-namespace gpgpu_optical_flow_compute_opengl_implementation
+namespace gpgpu_opengl
 {
-class GrayscaleMemory final
+class OpticalFlowGrayscaleMemory final
 {
         static constexpr int IMAGES_BINDING = 0;
 
@@ -34,12 +34,12 @@ class GrayscaleMemory final
         };
 
 public:
-        GrayscaleMemory(const opengl::TextureRGBA32F& image_src, const opengl::TextureR32F& image_dst);
+        OpticalFlowGrayscaleMemory(const opengl::TextureRGBA32F& image_src, const opengl::TextureR32F& image_dst);
 
         void bind() const;
 };
 
-class DownsampleMemory final
+class OpticalFlowDownsampleMemory final
 {
         static constexpr int IMAGES_BINDING = 0;
 
@@ -52,12 +52,12 @@ class DownsampleMemory final
         };
 
 public:
-        DownsampleMemory(const opengl::TextureR32F& image_big, const opengl::TextureR32F& image_small);
+        OpticalFlowDownsampleMemory(const opengl::TextureR32F& image_big, const opengl::TextureR32F& image_small);
 
         void bind() const;
 };
 
-class SobelMemory final
+class OpticalFlowSobelMemory final
 {
         static constexpr int IMAGES_BINDING = 0;
 
@@ -71,12 +71,13 @@ class SobelMemory final
         };
 
 public:
-        SobelMemory(const opengl::TextureR32F& image_i, const opengl::TextureR32F& image_dx, const opengl::TextureR32F& image_dy);
+        OpticalFlowSobelMemory(const opengl::TextureR32F& image_i, const opengl::TextureR32F& image_dx,
+                               const opengl::TextureR32F& image_dy);
 
         void bind() const;
 };
 
-class FlowDataMemory final
+class OpticalFlowDataMemory final
 {
         static constexpr int POINTS_BINDING = 0;
         static constexpr int POINTS_FLOW_BINDING = 1;
@@ -101,7 +102,7 @@ public:
                 GLint guess_width;
         };
 
-        FlowDataMemory();
+        OpticalFlowDataMemory();
 
         void set_top_points(const opengl::StorageBuffer* top_points);
         void set_flow_guess(const opengl::StorageBuffer* flow_guess);
@@ -111,7 +112,7 @@ public:
         void bind() const;
 };
 
-class FlowImagesMemory final
+class OpticalFlowImagesMemory final
 {
         static constexpr int IMAGES_BINDING = 4;
 
@@ -126,8 +127,8 @@ class FlowImagesMemory final
         };
 
 public:
-        FlowImagesMemory(const opengl::TextureR32F& image_dx, const opengl::TextureR32F& image_dy,
-                         const opengl::TextureR32F& image_i, const opengl::TextureR32F& texture_j);
+        OpticalFlowImagesMemory(const opengl::TextureR32F& image_dx, const opengl::TextureR32F& image_dy,
+                                const opengl::TextureR32F& image_i, const opengl::TextureR32F& texture_j);
 
         void bind() const;
 };
