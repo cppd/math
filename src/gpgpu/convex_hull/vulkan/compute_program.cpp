@@ -15,10 +15,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "vulkan_program.h"
+#include "compute_program.h"
 
-#include "com.h"
-
+#include "gpgpu/convex_hull/com/com.h"
 #include "graphics/vulkan/create.h"
 #include "graphics/vulkan/pipeline.h"
 

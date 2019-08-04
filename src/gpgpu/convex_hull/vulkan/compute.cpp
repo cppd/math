@@ -15,10 +15,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "vulkan_ch_compute.h"
+#include "compute.h"
+
+#include "compute_program.h"
 
 #include "com/error.h"
-#include "gpgpu/convex_hull/compute/objects/vulkan_program.h"
 
 #include <optional>
 #include <thread>

@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "vulkan_memory.h"
+#include "compute_memory.h"
 
 #include "graphics/vulkan/instance.h"
 #include "graphics/vulkan/objects.h"

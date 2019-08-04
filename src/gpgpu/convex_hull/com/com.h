@@ -16,6 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
+
 #include "com/math.h"
 
 namespace gpgpu_convex_hull_show_implementation
@@ -28,4 +29,11 @@ inline int points_buffer_size(int height)
         // 2 линии точек + 1 точка, тип ivec2
         return (2 * height + 1) * (2 * sizeof(int32_t));
 }
+}
+
+namespace gpgpu_convex_hull_compute_implementation
+{
+int group_size_prepare(int width, unsigned max_group_size_x, unsigned max_group_invocations, unsigned max_shared_memory_size);
+int group_size_merge(int height, unsigned max_group_size_x, unsigned max_group_invocations, unsigned max_shared_memory_size);
+int iteration_count_merge(int size);
 }

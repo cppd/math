@@ -15,11 +15,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "opengl_program.h"
-
-#include "com.h"
+#include "compute_program.h"
 
 #include "com/print.h"
+#include "gpgpu/convex_hull/com/com.h"
 #include "graphics/opengl/query.h"
 
 #include <string>

@@ -15,13 +15,14 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "opengl_ch_show.h"
+#include "show.h"
+
+#include "compute.h"
+#include "show_memory.h"
 
 #include "com/math.h"
 #include "com/time.h"
-#include "gpgpu/convex_hull/compute/opengl_ch_compute.h"
-#include "gpgpu/convex_hull/show/objects/com.h"
-#include "gpgpu/convex_hull/show/objects/opengl_memory.h"
+#include "gpgpu/convex_hull/com/com.h"
 #include "graphics/opengl/shader.h"
 
 // clang-format off
