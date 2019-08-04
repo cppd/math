@@ -76,7 +76,7 @@ Realistic visualization                         | Path tracing                  
 Property                  | Value
 --------------------------|--------------------------------------------
 Programming languages     | C++20, GLSL 4.50
-C++ compilers             | GCC 8, Clang 7
+C++ compilers             | GCC 9, Clang 8
 Platforms                 | Linux, Windows
 Graphics and compute APIs | Vulkan 1.1, OpenGL 4.5
 Frameworks                | Qt 5
