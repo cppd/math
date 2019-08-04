@@ -15,10 +15,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "opengl_dft_show.h"
+#include "show.h"
+
+#include "compute.h"
 
 #include "com/math.h"
-#include "gpgpu/dft/compute/opengl_dft_compute.h"
 #include "graphics/opengl/buffers.h"
 #include "graphics/opengl/shader.h"
 

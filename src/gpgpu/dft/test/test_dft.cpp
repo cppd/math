@@ -31,7 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/print.h"
 #include "com/random/engine.h"
 #include "com/time.h"
-#include "gpgpu/dft/compute/opengl_dft_compute.h"
+#include "gpgpu/dft/opengl/compute.h"
 #include "window/opengl/window.h"
 
 #include <array>
