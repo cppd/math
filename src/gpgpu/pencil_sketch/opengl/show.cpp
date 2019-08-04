@@ -15,9 +15,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "opengl_ps_show.h"
+#include "show.h"
 
-#include "gpgpu/pencil_sketch/compute/opengl_ps_compute.h"
+#include "compute.h"
+
 #include "graphics/opengl/shader.h"
 
 // clang-format off

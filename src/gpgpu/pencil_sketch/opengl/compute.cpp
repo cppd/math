@@ -15,9 +15,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "opengl_ps_compute.h"
+#include "compute.h"
 
-#include "gpgpu/pencil_sketch/compute/objects/opengl_program.h"
+#include "compute_program.h"
 
 namespace impl = gpgpu_pencil_sketch_compute_opengl_implementation;
 
