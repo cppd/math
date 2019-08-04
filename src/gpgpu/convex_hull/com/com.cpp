@@ -19,8 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/bits.h"
 #include "com/error.h"
+#include "com/groups.h"
 #include "com/print.h"
-#include "gpgpu/com/groups.h"
 
 #include <algorithm>
 

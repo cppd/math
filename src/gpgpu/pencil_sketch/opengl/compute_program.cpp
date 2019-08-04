@@ -17,8 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "compute_program.h"
 
+#include "com/groups.h"
 #include "com/print.h"
-#include "gpgpu/com/groups.h"
 
 #include <string>
 

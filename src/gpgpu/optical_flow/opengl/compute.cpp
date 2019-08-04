@@ -36,10 +36,10 @@ Chapter 5. Tracking Objects in Videos.
 #include "compute_memory.h"
 
 #include "com/error.h"
+#include "com/groups.h"
 #include "com/log.h"
 #include "com/math.h"
 #include "com/print.h"
-#include "gpgpu/com/groups.h"
 #include "graphics/opengl/shader.h"
 
 #include <array>
