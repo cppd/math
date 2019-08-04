@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <unordered_set>
 #include <vector>
 
-namespace gpgpu_vulkan
+namespace gpu_vulkan
 {
 class ConvexHullShaderMemory final
 {

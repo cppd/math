@@ -52,7 +52,7 @@ constexpr uint32_t fragment_shader[]
 };
 // clang-format on
 
-namespace gpgpu_vulkan
+namespace gpu_vulkan
 {
 namespace
 {
@@ -83,7 +83,7 @@ class Impl final : public ConvexHullShow
         std::vector<VkCommandBuffer> m_command_buffers;
         VkPipeline m_pipeline = VK_NULL_HANDLE;
 
-        std::unique_ptr<gpgpu_vulkan::ConvexHullCompute> m_compute;
+        std::unique_ptr<gpu_vulkan::ConvexHullCompute> m_compute;
 
         void reset_timer() override
         {
@@ -180,7 +180,7 @@ public:
                   m_indirect_buffer(m_instance.device(), {m_family_index},
                                     VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT,
                                     sizeof(VkDrawIndirectCommand)),
-                  m_compute(gpgpu_vulkan::create_convex_hull_compute(instance))
+                  m_compute(gpu_vulkan::create_convex_hull_compute(instance))
         {
                 VkDrawIndirectCommand command = {};
                 command.vertexCount = 0;

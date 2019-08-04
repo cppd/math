@@ -31,10 +31,10 @@ class Canvas final : public OpenGLCanvas
         double m_window_ppi;
 
         std::unique_ptr<gpu_opengl::Text> m_text;
-        std::unique_ptr<gpgpu_opengl::DFTShow> m_dft_show;
-        std::unique_ptr<gpgpu_opengl::ConvexHullShow> m_convex_hull;
-        std::unique_ptr<gpgpu_opengl::OpticalFlowShow> m_optical_flow;
-        std::unique_ptr<gpgpu_opengl::PencilSketchShow> m_pencil_sketch;
+        std::unique_ptr<gpu_opengl::DFTShow> m_dft_show;
+        std::unique_ptr<gpu_opengl::ConvexHullShow> m_convex_hull;
+        std::unique_ptr<gpu_opengl::OpticalFlowShow> m_optical_flow;
+        std::unique_ptr<gpu_opengl::PencilSketchShow> m_pencil_sketch;
 
         int m_window_width;
         int m_window_height;
@@ -149,14 +149,14 @@ void Canvas::create_objects(int window_width, int window_height, const mat4& mat
         m_window_width = window_width;
         m_window_height = window_height;
 
-        m_pencil_sketch = gpgpu_opengl::create_pencil_sketch_show(color_texture, color_texture_is_srgb, objects, matrix);
+        m_pencil_sketch = gpu_opengl::create_pencil_sketch_show(color_texture, color_texture_is_srgb, objects, matrix);
 
-        m_dft_show = gpgpu_opengl::create_dft_show(draw_width, draw_height, dft_dst_x, dft_dst_y, matrix, frame_buffer_is_srgb,
-                                                   m_dft_show_brightness, m_dft_show_background_color, m_dft_show_color);
+        m_dft_show = gpu_opengl::create_dft_show(draw_width, draw_height, dft_dst_x, dft_dst_y, matrix, frame_buffer_is_srgb,
+                                                 m_dft_show_brightness, m_dft_show_background_color, m_dft_show_color);
 
-        m_optical_flow = gpgpu_opengl::create_optical_flow_show(draw_width, draw_height, m_window_ppi, matrix);
+        m_optical_flow = gpu_opengl::create_optical_flow_show(draw_width, draw_height, m_window_ppi, matrix);
 
-        m_convex_hull = gpgpu_opengl::create_convex_hull_show(objects, matrix);
+        m_convex_hull = gpu_opengl::create_convex_hull_show(objects, matrix);
 
         if (m_text)
         {

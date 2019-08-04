@@ -36,7 +36,7 @@ constexpr uint32_t filter_shader[]
 };
 // clang-format on
 
-namespace gpgpu_vulkan
+namespace gpu_vulkan
 {
 namespace
 {

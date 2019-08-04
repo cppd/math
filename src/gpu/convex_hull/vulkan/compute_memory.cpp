@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <type_traits>
 
-namespace gpgpu_vulkan
+namespace gpu_vulkan
 {
 std::vector<VkDescriptorSetLayoutBinding> ConvexHullPrepareMemory::descriptor_set_layout_bindings()
 {

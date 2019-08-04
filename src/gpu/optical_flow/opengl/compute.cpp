@@ -78,7 +78,7 @@ constexpr float STOP_MOVE_SQUARE = square(1e-3f);
 // Если определитель матрицы G меньше этого значения, то считается, что нет потока
 constexpr float MIN_DETERMINANT = 1;
 
-namespace gpgpu_opengl
+namespace gpu_opengl
 {
 namespace
 {

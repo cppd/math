@@ -37,7 +37,7 @@ constexpr const char fragment_shader[]
 };
 // clang-format on
 
-namespace gpgpu_opengl
+namespace gpu_opengl
 {
 namespace
 {
@@ -103,7 +103,7 @@ class Impl final : public DFTShow
 
         const bool m_source_srgb;
         opengl::TextureRGBA32F m_image_texture;
-        std::unique_ptr<gpgpu_opengl::DFTComputeTexture> m_dft;
+        std::unique_ptr<gpu_opengl::DFTComputeTexture> m_dft;
         opengl::VertexArray m_vertex_array;
         opengl::ArrayBuffer m_vertex_buffer;
         opengl::GraphicsProgram m_draw_prog;
@@ -143,7 +143,7 @@ public:
              const Color& background_color, const Color& color)
                 : m_source_srgb(source_srgb),
                   m_image_texture(width, height),
-                  m_dft(gpgpu_opengl::create_dft_compute_texture(width, height, m_image_texture)),
+                  m_dft(gpu_opengl::create_dft_compute_texture(width, height, m_image_texture)),
                   m_vertex_buffer(sizeof(Vertex) * VERTEX_COUNT),
                   m_draw_prog(opengl::VertexShader(vertex_shader), opengl::FragmentShader(fragment_shader))
         {

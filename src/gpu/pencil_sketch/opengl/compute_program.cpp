@@ -35,7 +35,7 @@ constexpr const char luminance_shader[]
 };
 // clang-format on
 
-namespace gpgpu_opengl
+namespace gpu_opengl
 {
 namespace
 {

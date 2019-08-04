@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/vulkan/objects.h"
 #include "graphics/vulkan/shader.h"
 
-namespace gpgpu_vulkan
+namespace gpu_vulkan
 {
 class ConvexHullProgramPrepare final
 {

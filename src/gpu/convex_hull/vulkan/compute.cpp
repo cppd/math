@@ -30,7 +30,7 @@ constexpr std::initializer_list<vulkan::PhysicalDeviceFeatures> REQUIRED_DEVICE_
 };
 // clang-format on
 
-namespace gpgpu_vulkan
+namespace gpu_vulkan
 {
 namespace
 {

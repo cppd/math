@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "compute_program.h"
 
-namespace gpgpu_opengl
+namespace gpu_opengl
 {
 namespace
 {

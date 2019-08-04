@@ -65,7 +65,7 @@ Chapter 13: FFTs for Arbitrary N.
 constexpr const int GROUP_SIZE_1D = 256;
 constexpr const vec2i GROUP_SIZE_2D = vec2i(16, 16);
 
-namespace gpgpu_opengl
+namespace gpu_opengl
 {
 namespace
 {

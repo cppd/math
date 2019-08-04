@@ -36,7 +36,7 @@ constexpr const char fragment_shader[]
 };
 // clang-format on
 
-namespace gpgpu_opengl
+namespace gpu_opengl
 {
 namespace
 {
@@ -45,7 +45,7 @@ class Impl final : public ConvexHullShow
         opengl::GraphicsProgram m_draw_prog;
         opengl::StorageBuffer m_points;
         double m_start_time;
-        std::unique_ptr<gpgpu_opengl::ConvexHullCompute> m_convex_hull;
+        std::unique_ptr<gpu_opengl::ConvexHullCompute> m_convex_hull;
         ConvexHullShaderMemory m_shader_memory;
 
         void reset_timer() override
@@ -70,7 +70,7 @@ public:
                   m_points(convex_hull_points_buffer_size(objects.height())),
                   m_start_time(time_in_seconds())
         {
-                m_convex_hull = gpgpu_opengl::create_convex_hull_compute(objects, m_points);
+                m_convex_hull = gpu_opengl::create_convex_hull_compute(objects, m_points);
 
                 m_shader_memory.set_matrix(matrix);
                 m_shader_memory.set_points(m_points);

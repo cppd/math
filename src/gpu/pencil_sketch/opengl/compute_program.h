@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/opengl/buffers.h"
 #include "graphics/opengl/shader.h"
 
-namespace gpgpu_opengl
+namespace gpu_opengl
 {
 class PencilSketchProgramCompute final
 {

@@ -34,7 +34,7 @@ class Canvas final : public VulkanCanvas
         bool m_convex_hull_active = true;
 
         std::unique_ptr<gpu_vulkan::TextShow> m_text;
-        std::unique_ptr<gpgpu_vulkan::ConvexHullShow> m_convex_hull;
+        std::unique_ptr<gpu_vulkan::ConvexHullShow> m_convex_hull;
 
         void set_text_color(const Color& c) override
         {
@@ -117,7 +117,7 @@ public:
                 : m_text(gpu_vulkan::create_text_show(instance, graphics_command_pool, graphics_queue, transfer_command_pool,
                                                       transfer_queue, sample_shading, text_size, TEXT_COLOR)),
                   m_convex_hull(
-                          gpgpu_vulkan::create_convex_hull_show(instance, graphics_compute_queue.family_index(), sample_shading))
+                          gpu_vulkan::create_convex_hull_show(instance, graphics_compute_queue.family_index(), sample_shading))
         {
         }
 };
@@ -138,7 +138,7 @@ void Canvas::delete_buffers()
 
 std::vector<vulkan::PhysicalDeviceFeatures> VulkanCanvas::required_device_features()
 {
-        return gpgpu_vulkan::ConvexHullShow::required_device_features();
+        return gpu_vulkan::ConvexHullShow::required_device_features();
 }
 
 std::unique_ptr<VulkanCanvas> create_vulkan_canvas(

@@ -54,7 +54,7 @@ constexpr double DISTANCE_BETWEEN_POINTS = 2;
 // Интервал ожидания для расчёта потока не для каждого кадра
 // constexpr double COMPUTE_INTERVAL_SECONDS = 1.0 / 10;
 
-namespace gpgpu_opengl
+namespace gpu_opengl
 {
 namespace
 {
@@ -143,7 +143,7 @@ class Impl final : public OpticalFlowShow
         bool m_flow_computed = false;
         double m_last_time = limits<double>::lowest();
 
-        std::unique_ptr<gpgpu_opengl::OpticalFlowCompute> m_optical_flow;
+        std::unique_ptr<gpu_opengl::OpticalFlowCompute> m_optical_flow;
 
         ShaderMemory m_shader_memory;
 
@@ -217,8 +217,8 @@ public:
                 m_shader_memory.set_points(*m_top_points);
                 m_shader_memory.set_points_flow(*m_top_points_flow);
 
-                m_optical_flow = gpgpu_opengl::create_optical_flow_compute(width, height, m_source_image, point_count_x,
-                                                                           point_count_y, *m_top_points, *m_top_points_flow);
+                m_optical_flow = gpu_opengl::create_optical_flow_compute(width, height, m_source_image, point_count_x,
+                                                                         point_count_y, *m_top_points, *m_top_points_flow);
         }
 };
 }

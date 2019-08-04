@@ -34,7 +34,7 @@ constexpr const char fragment_shader[]
 
 constexpr int VERTEX_COUNT = 4;
 
-namespace gpgpu_opengl
+namespace gpu_opengl
 {
 namespace
 {
@@ -55,7 +55,7 @@ class Impl final : public PencilSketchShow
         opengl::VertexArray m_vertex_array;
         opengl::ArrayBuffer m_vertex_buffer;
 
-        std::unique_ptr<gpgpu_opengl::PencilSketchCompute> m_pencil_sketch;
+        std::unique_ptr<gpu_opengl::PencilSketchCompute> m_pencil_sketch;
 
         void draw() override
         {
@@ -71,7 +71,7 @@ public:
                 : m_draw_prog(opengl::VertexShader(vertex_shader), opengl::FragmentShader(fragment_shader)),
                   m_texture(source.texture().width(), source.texture().height()),
                   m_vertex_buffer(sizeof(Vertex) * VERTEX_COUNT),
-                  m_pencil_sketch(gpgpu_opengl::create_pencil_sketch_compute(source, source_is_srgb, objects, m_texture))
+                  m_pencil_sketch(gpu_opengl::create_pencil_sketch_compute(source, source_is_srgb, objects, m_texture))
         {
                 ASSERT(source.texture().width() == objects.width());
                 ASSERT(source.texture().height() == objects.height());
