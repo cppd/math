@@ -37,6 +37,8 @@ constexpr const char fragment_shader[]
 };
 // clang-format on
 
+namespace gpgpu_opengl
+{
 namespace
 {
 vec4f color_to_vec4f(const Color& c)
@@ -95,7 +97,7 @@ public:
         }
 };
 
-class Impl final : public gpgpu_opengl::DFTShow
+class Impl final : public DFTShow
 {
         static constexpr int VERTEX_COUNT = 4;
 
@@ -173,8 +175,6 @@ public:
 };
 }
 
-namespace gpgpu_opengl
-{
 std::unique_ptr<DFTShow> create_dft_show(int width, int height, int dst_x, int dst_y, const mat4& matrix, bool source_srgb,
                                          double brightness, const Color& background_color, const Color& color)
 {

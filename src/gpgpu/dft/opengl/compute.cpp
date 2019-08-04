@@ -65,6 +65,8 @@ Chapter 13: FFTs for Arbitrary N.
 constexpr const int GROUP_SIZE_1D = 256;
 constexpr const vec2i GROUP_SIZE_2D = vec2i(16, 16);
 
+namespace gpgpu_opengl
+{
 namespace
 {
 template <typename T>
@@ -215,12 +217,9 @@ int group_size(int dft_size)
         return std::min(max_threads_required, max_threads_supported);
 }
 
-namespace impl = gpgpu_dft_compute_opengl_implementation;
-
 template <typename FP>
-void fft1d(bool inverse, int fft_count, const impl::ProgramFFTShared<FP>& fft,
-           const impl::ProgramBitReverse<FP>& program_bit_reverse, const impl::ProgramFFTGlobal<FP>& program_fft_global,
-           DeviceMemory<std::complex<FP>>* data)
+void fft1d(bool inverse, int fft_count, const DftProgramFftShared<FP>& fft, const DftProgramBitReverse<FP>& program_bit_reverse,
+           const DftProgramFftGlobal<FP>& program_fft_global, DeviceMemory<std::complex<FP>>* data)
 {
         const int n = fft.n();
 
@@ -268,20 +267,20 @@ void fft1d(bool inverse, int fft_count, const impl::ProgramFFTShared<FP>& fft,
 }
 
 template <typename FP>
-class Impl final : public gpgpu_opengl::DFTCompute, public gpgpu_opengl::DFTComputeTexture
+class Impl final : public DFTCompute, public DFTComputeTexture
 {
         const int m_n1, m_n2, m_m1, m_m2, m_m1_bin, m_m2_bin;
         DeviceMemory<std::complex<FP>> m_d1_fwd, m_d1_inv, m_d2_fwd, m_d2_inv;
         DeviceMemory<std::complex<FP>> m_x_d, m_buffer;
         GLuint64 m_texture_handle;
-        impl::ProgramBitReverse<FP> m_program_bit_reverse;
-        impl::ProgramFFTGlobal<FP> m_program_fft_global;
-        impl::ProgramCopyInput<FP> m_program_copy_input;
-        impl::ProgramCopyOutput<FP> m_program_copy_output;
-        impl::ProgramMul<FP> m_program_mul;
-        impl::ProgramMulD<FP> m_program_mul_d;
-        impl::ProgramFFTShared<FP> m_program_fft_1;
-        impl::ProgramFFTShared<FP> m_program_fft_2;
+        DftProgramBitReverse<FP> m_program_bit_reverse;
+        DftProgramFftGlobal<FP> m_program_fft_global;
+        DftProgramCopyInput<FP> m_program_copy_input;
+        DftProgramCopyOutput<FP> m_program_copy_output;
+        DftProgramMul<FP> m_program_mul;
+        DftProgramMulD<FP> m_program_mul_d;
+        DftProgramFftShared<FP> m_program_fft_1;
+        DftProgramFftShared<FP> m_program_fft_2;
 
         void dft2d(bool inverse)
         {
@@ -401,8 +400,6 @@ public:
 };
 }
 
-namespace gpgpu_opengl
-{
 std::unique_ptr<DFTCompute> create_dft_compute(int x, int y)
 {
         return std::make_unique<Impl<float>>(x, y, nullptr);

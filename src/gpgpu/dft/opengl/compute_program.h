@@ -21,10 +21,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/opengl/buffers.h"
 #include "graphics/opengl/shader.h"
 
-namespace gpgpu_dft_compute_opengl_implementation
+namespace gpgpu_opengl
 {
 template <typename T>
-class ProgramBitReverse final
+class DftProgramBitReverse final
 {
         static constexpr int DATA_BINDING = 0;
         static constexpr int BUFFER_BINDING = 1;
@@ -41,13 +41,13 @@ class ProgramBitReverse final
         opengl::UniformBuffer m_shader_memory;
 
 public:
-        ProgramBitReverse(int group_size);
+        DftProgramBitReverse(int group_size);
 
         void exec(int max_threads, int n_mask, int n_bits, const opengl::StorageBuffer& data) const;
 };
 
 template <typename T>
-class ProgramFFTGlobal final
+class DftProgramFftGlobal final
 {
         static constexpr int DATA_BINDING = 0;
         static constexpr int BUFFER_BINDING = 1;
@@ -66,14 +66,14 @@ class ProgramFFTGlobal final
         opengl::UniformBuffer m_shader_memory;
 
 public:
-        ProgramFFTGlobal(int group_size);
+        DftProgramFftGlobal(int group_size);
 
         void exec(int max_threads, bool inverse, T two_pi_div_m, int n_div_2_mask, int m_div_2,
                   const opengl::StorageBuffer& data) const;
 };
 
 template <typename T>
-class ProgramCopyInput final
+class DftProgramCopyInput final
 {
         static constexpr int DATA_BINDING = 0;
         static constexpr int BUFFER_BINDING = 1;
@@ -90,13 +90,13 @@ class ProgramCopyInput final
         opengl::UniformBuffer m_shader_memory;
 
 public:
-        ProgramCopyInput(vec2i group_size, int n1, int n2);
+        DftProgramCopyInput(vec2i group_size, int n1, int n2);
 
         void copy(bool source_srgb, const GLuint64 tex, const opengl::StorageBuffer& data);
 };
 
 template <typename T>
-class ProgramCopyOutput final
+class DftProgramCopyOutput final
 {
         static constexpr int DATA_BINDING = 0;
         static constexpr int BUFFER_BINDING = 1;
@@ -113,13 +113,13 @@ class ProgramCopyOutput final
         opengl::UniformBuffer m_shader_memory;
 
 public:
-        ProgramCopyOutput(vec2i group_size, int n1, int n2);
+        DftProgramCopyOutput(vec2i group_size, int n1, int n2);
 
         void copy(T to_mul, const GLuint64 tex, const opengl::StorageBuffer& data);
 };
 
 template <typename T>
-class ProgramMul final
+class DftProgramMul final
 {
         static constexpr int DATA_BINDING = 0;
         static constexpr int BUFFER_0_BINDING = 1;
@@ -143,7 +143,7 @@ class ProgramMul final
         void set_and_bind(bool inverse, const opengl::StorageBuffer& data, const opengl::StorageBuffer& buffer) const;
 
 public:
-        ProgramMul(vec2i group_size, int n1, int n2, int m1, int m2);
+        DftProgramMul(vec2i group_size, int n1, int n2, int m1, int m2);
 
         // Функции подстановки переменных, формулы 13.4, 13.27, 13.28, 13.32.
         void rows_to_buffer(bool inverse, const opengl::StorageBuffer& data, const opengl::StorageBuffer& buffer) const;
@@ -153,7 +153,7 @@ public:
 };
 
 template <typename T>
-class ProgramMulD final
+class DftProgramMulD final
 {
         static constexpr int DATA_BINDING = 0;
         static constexpr int BUFFER_DIAGONAL_BINDING = 1;
@@ -171,7 +171,7 @@ class ProgramMulD final
         opengl::UniformBuffer m_memory_columns;
 
 public:
-        ProgramMulD(vec2i group_size, int n1, int n2, int m1, int m2);
+        DftProgramMulD(vec2i group_size, int n1, int n2, int m1, int m2);
 
         // Умножение на диагональ, формулы 13.20, 13.30.
         void rows_mul_d(const opengl::StorageBuffer& d, const opengl::StorageBuffer& data) const;
@@ -179,7 +179,7 @@ public:
 };
 
 template <typename T>
-class ProgramFFTShared final
+class DftProgramFftShared final
 {
         static constexpr int DATA_BINDING = 0;
         static constexpr int BUFFER_BINDING = 1;
@@ -195,7 +195,7 @@ class ProgramFFTShared final
         opengl::UniformBuffer m_shader_memory;
 
 public:
-        ProgramFFTShared(int n, int shared_size, int group_size, bool reverse_input);
+        DftProgramFftShared(int n, int shared_size, int group_size, bool reverse_input);
 
         int n() const
         {
