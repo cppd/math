@@ -31,40 +31,30 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <algorithm>
 #include <vector>
 
-// clang-format off
-constexpr const char triangles_vert[]
-{
+constexpr const char triangles_vert[]{
 #include "renderer_triangles.vert.str"
 };
-constexpr const char triangles_geom[]
-{
+constexpr const char triangles_geom[]{
 #include "renderer_triangles.geom.str"
 };
-constexpr const char triangles_frag[]
-{
+constexpr const char triangles_frag[]{
 #include "renderer_triangles.frag.str"
 };
-constexpr const char shadow_vert[]
-{
+constexpr const char shadow_vert[]{
 #include "renderer_shadow.vert.str"
 };
-constexpr const char shadow_frag[]
-{
+constexpr const char shadow_frag[]{
 #include "renderer_shadow.frag.str"
 };
-constexpr const char points_0d_vert[]
-{
+constexpr const char points_0d_vert[]{
 #include "renderer_points_0d.vert.str"
 };
-constexpr const char points_1d_vert[]
-{
+constexpr const char points_1d_vert[]{
 #include "renderer_points_1d.vert.str"
 };
-constexpr const char points_frag[]
-{
+constexpr const char points_frag[]{
 #include "renderer_points.frag.str"
 };
-// clang-format on
 
 namespace
 {

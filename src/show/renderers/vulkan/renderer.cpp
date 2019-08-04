@@ -61,40 +61,30 @@ constexpr vec2f NO_TEXTURE_COORDINATES = vec2f(-1e10);
 //        std::conditional_t<VULKAN_VERTEX_INDEX_TYPE == VK_INDEX_TYPE_UINT32, uint32_t,
 //                           std::conditional_t<VULKAN_VERTEX_INDEX_TYPE == VK_INDEX_TYPE_UINT16, uint16_t, void>>;
 
-// clang-format off
-constexpr uint32_t triangles_vert[]
-{
+constexpr uint32_t triangles_vert[]{
 #include "renderer_triangles.vert.spr"
 };
-constexpr uint32_t triangles_geom[]
-{
+constexpr uint32_t triangles_geom[]{
 #include "renderer_triangles.geom.spr"
 };
-constexpr uint32_t triangles_frag[]
-{
+constexpr uint32_t triangles_frag[]{
 #include "renderer_triangles.frag.spr"
 };
-constexpr uint32_t shadow_vert[]
-{
+constexpr uint32_t shadow_vert[]{
 #include "renderer_shadow.vert.spr"
 };
-constexpr uint32_t shadow_frag[]
-{
+constexpr uint32_t shadow_frag[]{
 #include "renderer_shadow.frag.spr"
 };
-constexpr uint32_t points_0d_vert[]
-{
+constexpr uint32_t points_0d_vert[]{
 #include "renderer_points_0d.vert.spr"
 };
-constexpr uint32_t points_1d_vert[]
-{
+constexpr uint32_t points_1d_vert[]{
 #include "renderer_points_1d.vert.spr"
 };
-constexpr uint32_t points_frag[]
-{
+constexpr uint32_t points_frag[]{
 #include "renderer_points.frag.spr"
 };
-// clang-format on
 
 namespace impl = vulkan_renderer_implementation;
 

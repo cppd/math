@@ -403,26 +403,19 @@ void vertex_and_facet_data(bool find_all_vertex_data, const std::vector<vec<N>>&
         ASSERT(vertex_data->size() == points.size());
 }
 
-// clang-format off
-template
-void vertex_and_facet_data(bool find_all_vertex_data, const std::vector<vec<2>>& points,
-                           const std::vector<DelaunayObject<2>>& delaunay_objects,
-                           const std::vector<DelaunayFacet<2>>& delaunay_facets, std::vector<ManifoldVertex<2>>* vertex_data,
-                           std::vector<ManifoldFacet<2>>* facet_data);
-template
-void vertex_and_facet_data(bool find_all_vertex_data, const std::vector<vec<3>>& points,
-                           const std::vector<DelaunayObject<3>>& delaunay_objects,
-                           const std::vector<DelaunayFacet<3>>& delaunay_facets, std::vector<ManifoldVertex<3>>* vertex_data,
-                           std::vector<ManifoldFacet<3>>* facet_data);
-template
-void vertex_and_facet_data(bool find_all_vertex_data, const std::vector<vec<4>>& points,
-                           const std::vector<DelaunayObject<4>>& delaunay_objects,
-                           const std::vector<DelaunayFacet<4>>& delaunay_facets, std::vector<ManifoldVertex<4>>* vertex_data,
-                           std::vector<ManifoldFacet<4>>* facet_data);
-template
-void vertex_and_facet_data(bool find_all_vertex_data, const std::vector<vec<5>>& points,
-                           const std::vector<DelaunayObject<5>>& delaunay_objects,
-                           const std::vector<DelaunayFacet<5>>& delaunay_facets, std::vector<ManifoldVertex<5>>* vertex_data,
-                           std::vector<ManifoldFacet<5>>* facet_data);
-
-// clang-format on
+template void vertex_and_facet_data(bool find_all_vertex_data, const std::vector<vec<2>>& points,
+                                    const std::vector<DelaunayObject<2>>& delaunay_objects,
+                                    const std::vector<DelaunayFacet<2>>& delaunay_facets,
+                                    std::vector<ManifoldVertex<2>>* vertex_data, std::vector<ManifoldFacet<2>>* facet_data);
+template void vertex_and_facet_data(bool find_all_vertex_data, const std::vector<vec<3>>& points,
+                                    const std::vector<DelaunayObject<3>>& delaunay_objects,
+                                    const std::vector<DelaunayFacet<3>>& delaunay_facets,
+                                    std::vector<ManifoldVertex<3>>* vertex_data, std::vector<ManifoldFacet<3>>* facet_data);
+template void vertex_and_facet_data(bool find_all_vertex_data, const std::vector<vec<4>>& points,
+                                    const std::vector<DelaunayObject<4>>& delaunay_objects,
+                                    const std::vector<DelaunayFacet<4>>& delaunay_facets,
+                                    std::vector<ManifoldVertex<4>>* vertex_data, std::vector<ManifoldFacet<4>>* facet_data);
+template void vertex_and_facet_data(bool find_all_vertex_data, const std::vector<vec<5>>& points,
+                                    const std::vector<DelaunayObject<5>>& delaunay_objects,
+                                    const std::vector<DelaunayFacet<5>>& delaunay_facets,
+                                    std::vector<ManifoldVertex<5>>* vertex_data, std::vector<ManifoldFacet<5>>* facet_data);

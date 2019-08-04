@@ -23,20 +23,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <string>
 
-// clang-format off
-constexpr const char prepare_shader[]
-{
+constexpr const char prepare_shader[]{
 #include "ch_prepare.comp.str"
 };
-constexpr const char merge_shader[]
-{
+constexpr const char merge_shader[]{
 #include "ch_merge.comp.str"
 };
-constexpr const char filter_shader[]
-{
+constexpr const char filter_shader[]{
 #include "ch_filter.comp.str"
 };
-// clang-format on
 
 namespace gpu_opengl
 {

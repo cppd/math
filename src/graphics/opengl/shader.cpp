@@ -23,12 +23,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <algorithm>
 #include <array>
 
-// clang-format off
-constexpr std::string_view GLSL_HEADER =
-{
+constexpr std::string_view GLSL_HEADER = {
 #include "header.glsl.str"
 };
-// clang-format on
 
 constexpr std::string_view EMPTY_LINE = "\n";
 

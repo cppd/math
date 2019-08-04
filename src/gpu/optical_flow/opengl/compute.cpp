@@ -44,24 +44,18 @@ Chapter 5. Tracking Objects in Videos.
 
 #include <array>
 
-// clang-format off
-constexpr const char sobel_shader[]
-{
+constexpr const char sobel_shader[]{
 #include "of_sobel.comp.str"
 };
-constexpr const char flow_shader[]
-{
+constexpr const char flow_shader[]{
 #include "of_flow.comp.str"
 };
-constexpr const char downsample_shader[]
-{
+constexpr const char downsample_shader[]{
 #include "of_downsample.comp.str"
 };
-constexpr const char grayscale_shader[]
-{
+constexpr const char grayscale_shader[]{
 #include "of_grayscale.comp.str"
 };
-// clang-format on
 
 // Размер по X и по Y группы потоков вычислительных шейдеров
 constexpr int GROUP_SIZE = 16;

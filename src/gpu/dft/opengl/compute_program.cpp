@@ -21,36 +21,27 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/groups.h"
 #include "com/print.h"
 
-// clang-format off
-constexpr const char fft_global_shader[]
-{
+constexpr const char fft_global_shader[]{
 #include "dft_fft_global.comp.str"
 };
-constexpr const char fft_shared_shader[]
-{
+constexpr const char fft_shared_shader[]{
 #include "dft_fft_shared.comp.str"
 };
-constexpr const char bit_reverse_shader[]
-{
+constexpr const char bit_reverse_shader[]{
 #include "dft_bit_reverse.comp.str"
 };
-constexpr const char copy_input_shader[]
-{
+constexpr const char copy_input_shader[]{
 #include "dft_copy_input.comp.str"
 };
-constexpr const char copy_output_shader[]
-{
+constexpr const char copy_output_shader[]{
 #include "dft_copy_output.comp.str"
 };
-constexpr const char mul_shader[]
-{
+constexpr const char mul_shader[]{
 #include "dft_mul.comp.str"
 };
-constexpr const char mul_d_shader[]
-{
+constexpr const char mul_d_shader[]{
 #include "dft_mul_d.comp.str"
 };
-// clang-format on
 
 namespace gpu_opengl
 {

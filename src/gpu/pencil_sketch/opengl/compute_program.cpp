@@ -24,16 +24,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 constexpr int GROUP_SIZE = 16;
 
-// clang-format off
-constexpr const char compute_shader[]
-{
+constexpr const char compute_shader[]{
 #include "ps_compute.comp.str"
 };
-constexpr const char luminance_shader[]
-{
+constexpr const char luminance_shader[]{
 #include "ps_luminance.comp.str"
 };
-// clang-format on
 
 namespace gpu_opengl
 {

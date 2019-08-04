@@ -31,12 +31,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include FT_FREETYPE_H
 
-// clang-format off
-constexpr const FT_Byte font_bytes[]
-{
+constexpr const FT_Byte font_bytes[]{
 #include "DejaVuSans.ttf.bin"
 };
-// clang-format on
 
 namespace
 {

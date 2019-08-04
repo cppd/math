@@ -41,16 +41,12 @@ constexpr std::initializer_list<vulkan::PhysicalDeviceFeatures> REQUIRED_DEVICE_
 };
 // clang-format on
 
-// clang-format off
-constexpr uint32_t vertex_shader[]
-{
+constexpr uint32_t vertex_shader[]{
 #include "ch_show.vert.spr"
 };
-constexpr uint32_t fragment_shader[]
-{
+constexpr uint32_t fragment_shader[]{
 #include "ch_show.frag.spr"
 };
-// clang-format on
 
 namespace gpu_vulkan
 {

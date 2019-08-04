@@ -26,16 +26,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <array>
 #include <vector>
 
-// clang-format off
-constexpr const char vertex_shader[]
-{
+constexpr const char vertex_shader[]{
 #include "dft_show.vert.str"
 };
-constexpr const char fragment_shader[]
-{
+constexpr const char fragment_shader[]{
 #include "dft_show.frag.str"
 };
-// clang-format on
 
 namespace gpu_opengl
 {

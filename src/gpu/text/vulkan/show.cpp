@@ -41,16 +41,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 constexpr int VERTEX_BUFFER_FIRST_SIZE = 10;
 
-// clang-format off
-constexpr uint32_t vertex_shader[]
-{
+constexpr uint32_t vertex_shader[]{
 #include "text.vert.spr"
 };
-constexpr uint32_t fragment_shader[]
-{
+constexpr uint32_t fragment_shader[]{
 #include "text.frag.spr"
 };
-// clang-format on
 
 namespace gpu_vulkan
 {

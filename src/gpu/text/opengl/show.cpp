@@ -35,16 +35,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <unordered_map>
 #include <vector>
 
-// clang-format off
-constexpr const char vertex_shader[]
-{
+constexpr const char vertex_shader[]{
 #include "text.vert.str"
 };
-constexpr const char fragment_shader[]
-{
+constexpr const char fragment_shader[]{
 #include "text.frag.str"
 };
-// clang-format on
 
 static_assert(sizeof(TextVertex) == sizeof(Vector<2, GLint>) + sizeof(Vector<2, GLfloat>));
 static_assert(std::is_same_v<decltype(TextVertex::v), Vector<2, GLint>>);

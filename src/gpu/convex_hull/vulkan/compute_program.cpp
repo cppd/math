@@ -21,20 +21,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/vulkan/create.h"
 #include "graphics/vulkan/pipeline.h"
 
-// clang-format off
-constexpr uint32_t prepare_shader[]
-{
+constexpr uint32_t prepare_shader[]{
 #include "ch_prepare.comp.spr"
 };
-constexpr uint32_t merge_shader[]
-{
+constexpr uint32_t merge_shader[]{
 #include "ch_merge.comp.spr"
 };
-constexpr uint32_t filter_shader[]
-{
+constexpr uint32_t filter_shader[]{
 #include "ch_filter.comp.spr"
 };
-// clang-format on
 
 namespace gpu_vulkan
 {
