@@ -76,13 +76,16 @@ class ThreadPool
         {
                 try
                 {
-                        std::unique_lock<std::mutex> lock(m_mutex_run);
-                        m_cv_run.wait(lock, [this] { return m_enable || m_exit; });
-                        return !m_exit;
-                }
-                catch (std::exception& e)
-                {
-                        error_fatal(std::string("exception in thread pool start code: ") + e.what());
+                        try
+                        {
+                                std::unique_lock<std::mutex> lock(m_mutex_run);
+                                m_cv_run.wait(lock, [this] { return m_enable || m_exit; });
+                                return !m_exit;
+                        }
+                        catch (std::exception& e)
+                        {
+                                error_fatal(std::string("exception in thread pool start code: ") + e.what());
+                        }
                 }
                 catch (...)
                 {
@@ -94,26 +97,29 @@ class ThreadPool
         {
                 try
                 {
-                        std::unique_lock<std::mutex> lock(m_mutex_finish);
+                        try
+                        {
+                                std::unique_lock<std::mutex> lock(m_mutex_finish);
 
-                        long long g = m_generation;
-                        --m_count;
-                        if (m_count == 0)
-                        {
-                                m_enable = false;
-                                m_count = THREAD_COUNT;
-                                ++m_generation;
-                                // Извещение идёт также и вызывающему потоку, что тут закончилась работа
-                                m_cv_finish.notify_all();
+                                long long g = m_generation;
+                                --m_count;
+                                if (m_count == 0)
+                                {
+                                        m_enable = false;
+                                        m_count = THREAD_COUNT;
+                                        ++m_generation;
+                                        // Извещение идёт также и вызывающему потоку, что тут закончилась работа
+                                        m_cv_finish.notify_all();
+                                }
+                                else
+                                {
+                                        m_cv_finish.wait(lock, [this, g] { return g != m_generation; });
+                                }
                         }
-                        else
+                        catch (std::exception& e)
                         {
-                                m_cv_finish.wait(lock, [this, g] { return g != m_generation; });
+                                error_fatal(std::string("exception in thread pool finish code: ") + e.what());
                         }
-                }
-                catch (std::exception& e)
-                {
-                        error_fatal(std::string("exception in thread pool finish code: ") + e.what());
                 }
                 catch (...)
                 {
@@ -127,23 +133,26 @@ class ThreadPool
                 {
                         try
                         {
-                                m_bound_function(thread_num, THREAD_COUNT);
-                        }
-                        catch (TerminateRequestException&)
-                        {
+                                try
+                                {
+                                        m_bound_function(thread_num, THREAD_COUNT);
+                                }
+                                catch (TerminateRequestException&)
+                                {
+                                }
+                                catch (std::exception& e)
+                                {
+                                        m_thread_errors[thread_num].set(e.what());
+                                }
+                                catch (...)
+                                {
+                                        m_thread_errors[thread_num].set("Unknown error in thread of thread pool");
+                                }
                         }
                         catch (std::exception& e)
                         {
-                                m_thread_errors[thread_num].set(e.what());
+                                error_fatal(std::string("exception in thread pool while working with exception: ") + e.what());
                         }
-                        catch (...)
-                        {
-                                m_thread_errors[thread_num].set("Unknown error in thread of thread pool");
-                        }
-                }
-                catch (std::exception& e)
-                {
-                        error_fatal(std::string("exception in thread pool while working with exception: ") + e.what());
                 }
                 catch (...)
                 {
@@ -153,16 +162,23 @@ class ThreadPool
 
         void thread(unsigned thread_num) noexcept
         {
-                while (true)
+                try
                 {
-                        if (!start_in_thread())
+                        while (true)
                         {
-                                return;
+                                if (!start_in_thread())
+                                {
+                                        return;
+                                }
+
+                                process(thread_num);
+
+                                finish_in_thread();
                         }
-
-                        process(thread_num);
-
-                        finish_in_thread();
+                }
+                catch (...)
+                {
+                        error_fatal("exception in thread pool while proccessing thread");
                 }
         }
 
@@ -170,25 +186,28 @@ class ThreadPool
         {
                 try
                 {
-                        long long g = m_generation;
-
-                        // Запуск потоков
+                        try
                         {
-                                std::unique_lock<std::mutex> lock(m_mutex_run);
-                                m_enable = true;
+                                long long g = m_generation;
+
+                                // Запуск потоков
+                                {
+                                        std::unique_lock<std::mutex> lock(m_mutex_run);
+                                        m_enable = true;
+                                }
+
+                                m_cv_run.notify_all();
+
+                                // Ожидание завершения потоков
+                                {
+                                        std::unique_lock<std::mutex> lock(m_mutex_finish);
+                                        m_cv_finish.wait(lock, [this, g] { return g != m_generation; });
+                                }
                         }
-
-                        m_cv_run.notify_all();
-
-                        // Ожидание завершения потоков
+                        catch (std::exception& e)
                         {
-                                std::unique_lock<std::mutex> lock(m_mutex_finish);
-                                m_cv_finish.wait(lock, [this, g] { return g != m_generation; });
+                                error_fatal(std::string("Error start and wait threads: ") + e.what());
                         }
-                }
-                catch (std::exception& e)
-                {
-                        error_fatal(std::string("Error start and wait threads: ") + e.what());
                 }
                 catch (...)
                 {

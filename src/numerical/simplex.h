@@ -46,7 +46,7 @@ enum class ConstraintSolution
         Cycling
 };
 
-inline const char* constraint_solution_to_string(const ConstraintSolution& cs) noexcept
+inline const char* constraint_solution_to_string(const ConstraintSolution& cs)
 {
         switch (cs)
         {
@@ -142,7 +142,7 @@ void print_simplex_algorithm_data(const std::array<T, M>& b, const std::array<Ve
 // 29.3 The simplex algorithm.
 // Pivoting.
 template <size_t N, size_t M, typename T>
-void pivot(std::array<T, M>& b, std::array<Vector<N, T>, M>& a, T& v, Vector<N, T>& c, unsigned l, unsigned e) noexcept
+void pivot(std::array<T, M>& b, std::array<Vector<N, T>, M>& a, T& v, Vector<N, T>& c, unsigned l, unsigned e)
 {
         static_assert(is_native_floating_point<T>);
 
@@ -198,7 +198,7 @@ void pivot(std::array<T, M>& b, std::array<Vector<N, T>, M>& a, T& v, Vector<N, 
 template <size_t N_Source, size_t M, typename T>
 void make_aux_and_maps(const std::array<Vector<N_Source, T>, M>& a_input, std::array<T, M>* b,
                        std::array<Vector<N_Source + 1, T>, M>* a, T* v, Vector<N_Source + 1, T>* c,
-                       std::array<unsigned, N_Source + 1>* map_n, std::array<unsigned, M>* map_m) noexcept
+                       std::array<unsigned, N_Source + 1>* map_n, std::array<unsigned, M>* map_m)
 {
         for (unsigned m = 0; m < M; ++m)
         {
@@ -247,8 +247,7 @@ void make_aux_and_maps(const std::array<Vector<N_Source, T>, M>& a_input, std::a
 }
 
 template <size_t N, size_t M, typename T>
-bool variable_x0_is_zero(const std::array<T, M>& b, const std::array<unsigned, N>& map_n,
-                         const std::array<unsigned, M>& map_m) noexcept
+bool variable_x0_is_zero(const std::array<T, M>& b, const std::array<unsigned, N>& map_n, const std::array<unsigned, M>& map_m)
 {
         for (unsigned n = 0; n < N; ++n)
         {
@@ -271,7 +270,7 @@ bool variable_x0_is_zero(const std::array<T, M>& b, const std::array<unsigned, N
 }
 
 template <size_t N, typename T>
-bool find_positive_index(const Vector<N, T>& c, unsigned* e) noexcept
+bool find_positive_index(const Vector<N, T>& c, unsigned* e)
 {
         T max_abs_c = std::abs(c[0]);
         for (unsigned i = 1; i < N; ++i)
@@ -297,7 +296,7 @@ bool find_positive_index(const Vector<N, T>& c, unsigned* e) noexcept
 // Упрощённый вариант INITIALIZE-SIMPLEX для определения
 // наличия решения системы неравенств.
 template <bool with_print, size_t N_Source, size_t M, typename T>
-ConstraintSolution solve_constraints(std::array<T, M> b, const std::array<Vector<N_Source, T>, M>& a_input) noexcept
+ConstraintSolution solve_constraints(std::array<T, M> b, const std::array<Vector<N_Source, T>, M>& a_input)
 {
         static_assert(std::is_floating_point_v<T> || (!with_print && is_native_floating_point<T>));
         static_assert(N_Source > 0 && M > 0);
@@ -428,13 +427,13 @@ ConstraintSolution solve_constraints(std::array<T, M> b, const std::array<Vector
 }
 
 template <size_t N, size_t M, typename T>
-ConstraintSolution solve_constraints(const std::array<Vector<N, T>, M>& a, const std::array<T, M>& b) noexcept
+ConstraintSolution solve_constraints(const std::array<Vector<N, T>, M>& a, const std::array<T, M>& b)
 {
         return simplex_algorithm_implementation::solve_constraints<false>(b, a);
 }
 
 template <size_t N, size_t M, typename T>
-ConstraintSolution solve_constraints_with_print(const std::array<Vector<N, T>, M>& a, const std::array<T, M>& b) noexcept
+ConstraintSolution solve_constraints_with_print(const std::array<Vector<N, T>, M>& a, const std::array<T, M>& b)
 {
         return simplex_algorithm_implementation::solve_constraints<true>(b, a);
 }

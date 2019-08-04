@@ -47,13 +47,13 @@ void log_init()
         global_lock = new SpinLock;
 }
 
-void log_exit() noexcept
+void log_exit()
 {
         delete global_lock;
         global_lock = nullptr;
 }
 
-void set_log_callback(LogCallback* callback) noexcept
+void set_log_callback(LogCallback* callback)
 {
         std::lock_guard lg(*global_lock);
 
@@ -64,45 +64,48 @@ std::vector<std::string> format_log_message(const std::string& msg) noexcept
 {
         try
         {
-                constexpr int BUF_SIZE = 100;
-                char buffer[BUF_SIZE];
-                int char_count = std::snprintf(buffer, BUF_SIZE, "[%011.6f]: ", time_in_seconds());
-                if (char_count < 0 || char_count >= BUF_SIZE)
+                try
                 {
-                        error("message begin length out of range");
-                }
+                        constexpr int BUF_SIZE = 100;
+                        char buffer[BUF_SIZE];
+                        int char_count = std::snprintf(buffer, BUF_SIZE, "[%011.6f]: ", time_in_seconds());
+                        if (char_count < 0 || char_count >= BUF_SIZE)
+                        {
+                                error("message begin length out of range");
+                        }
 
-                std::string msg_begin = buffer;
-                std::vector<std::string> res;
+                        std::string msg_begin = buffer;
+                        std::vector<std::string> res;
 
-                if (std::count(msg.begin(), msg.end(), '\n') == 0)
-                {
-                        res.push_back(msg_begin + msg);
+                        if (std::count(msg.begin(), msg.end(), '\n') == 0)
+                        {
+                                res.push_back(msg_begin + msg);
+                                return res;
+                        }
+
+                        std::string message = msg_begin;
+
+                        for (char c : msg)
+                        {
+                                if (c != '\n')
+                                {
+                                        message += c;
+                                }
+                                else
+                                {
+                                        res.push_back(message);
+                                        message = msg_begin;
+                                }
+                        }
+
+                        res.push_back(message);
+
                         return res;
                 }
-
-                std::string message = msg_begin;
-
-                for (char c : msg)
+                catch (std::exception& e)
                 {
-                        if (c != '\n')
-                        {
-                                message += c;
-                        }
-                        else
-                        {
-                                res.push_back(message);
-                                message = msg_begin;
-                        }
+                        error_fatal(std::string("error format log message: ") + e.what());
                 }
-
-                res.push_back(message);
-
-                return res;
-        }
-        catch (std::exception& e)
-        {
-                error_fatal(std::string("error format log message: ") + e.what());
         }
         catch (...)
         {
@@ -110,43 +113,60 @@ std::vector<std::string> format_log_message(const std::string& msg) noexcept
         }
 }
 
-void write_formatted_log_messages_to_stderr(const std::vector<std::string>& lines)
+void write_formatted_log_messages_to_stderr(const std::vector<std::string>& lines) noexcept
 {
-        // Вывод всех строк одним вызовом функции std::fprintf для работы при многопоточности
-        std::string m;
-        for (const std::string& s : lines)
+        try
         {
-                m += s + "\n";
+                try
+                {
+                        // Вывод всех строк одним вызовом функции std::fprintf для работы при многопоточности
+                        std::string m;
+                        for (const std::string& s : lines)
+                        {
+                                m += s + "\n";
+                        }
+                        std::fprintf(stderr, "%s", m.c_str());
+                        std::fflush(stderr);
+                }
+                catch (std::exception& e)
+                {
+                        error_fatal(std::string("error log write message: ") + e.what());
+                }
         }
-        std::fprintf(stderr, "%s", m.c_str());
-        std::fflush(stderr);
+        catch (...)
+        {
+                error_fatal("error log write message to stderr");
+        }
 }
 
 void LOG(const std::string& msg) noexcept
 {
         try
         {
+                try
                 {
-                        std::lock_guard lg(*global_lock);
-
-                        if (global_log_callback)
                         {
-                                global_log_callback->log(msg);
-                                return;
+                                std::lock_guard lg(*global_lock);
+
+                                if (global_log_callback)
+                                {
+                                        global_log_callback->log(msg);
+                                        return;
+                                }
                         }
+
+                        // Здесь переменная global_log_callback теоретически уже может быть
+                        // установлена в не nullptr, но по имеющейся логике программы установка
+                        // этой переменной в не nullptr происходит только в начале программы
+                        // и только один раз. Зато так будет больше параллельности в сообщениях
+                        // с установленной в nullptr переменной global_log_callback.
+
+                        write_formatted_log_messages_to_stderr(format_log_message(msg));
                 }
-
-                // Здесь переменная global_log_callback теоретически уже может быть
-                // установлена в не nullptr, но по имеющейся логике программы установка
-                // этой переменной в не nullptr происходит только в начале программы
-                // и только один раз. Зато так будет больше параллельности в сообщениях
-                // с установленной в nullptr переменной global_log_callback.
-
-                write_formatted_log_messages_to_stderr(format_log_message(msg));
-        }
-        catch (std::exception& e)
-        {
-                error_fatal(std::string("error log write message: ") + e.what());
+                catch (std::exception& e)
+                {
+                        error_fatal(std::string("error log write message: ") + e.what());
+                }
         }
         catch (...)
         {

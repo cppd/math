@@ -45,8 +45,8 @@ struct MainThreads
 
         virtual ~MainThreads() = default;
 
-        virtual void terminate_thread_with_message(Action action) noexcept = 0;
-        virtual void terminate_all_threads() noexcept = 0;
+        virtual void terminate_thread_with_message(Action action) = 0;
+        virtual void terminate_all_threads() = 0;
 
         virtual bool action_allowed(Action action) const = 0;
 

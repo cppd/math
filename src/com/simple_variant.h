@@ -125,7 +125,7 @@ class SimpleVariant
                 }
         }
 
-        void destructor() noexcept
+        void destructor()
         {
                 if (m_id == EMPTY)
                 {

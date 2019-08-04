@@ -32,29 +32,29 @@ public:
         {
         }
 
-        const std::array<int, N>& screen_size() const noexcept override
+        const std::array<int, N>& screen_size() const override
         {
                 return m_paintbrush.screen_size();
         }
 
-        void first_pass() noexcept override
+        void first_pass() override
         {
                 m_paintbrush.first_pass();
         }
 
         bool next_pixel(int previous_pixel_ray_count, int previous_pixel_sample_count,
-                        std::array<int_least16_t, N>* pixel) noexcept override
+                        std::array<int_least16_t, N>* pixel) override
         {
                 return m_paintbrush.next_pixel(previous_pixel_ray_count, previous_pixel_sample_count, pixel);
         }
 
-        bool next_pass() noexcept override
+        bool next_pass() override
         {
                 return m_paintbrush.next_pass();
         }
 
         void statistics(long long* pass_count, long long* pixel_count, long long* ray_count, long long* sample_count,
-                        double* previous_pass_duration) const noexcept override
+                        double* previous_pass_duration) const override
         {
                 m_paintbrush.statistics(pass_count, pixel_count, ray_count, sample_count, previous_pass_duration);
         }

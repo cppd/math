@@ -52,21 +52,21 @@ class PainterWindow final : public PainterWindow2d, public PainterNotifier<N - 1
 
         static std::vector<int> initial_slider_positions();
 
-        long long pixel_index(const std::array<int_least16_t, N_IMAGE>& pixel) const noexcept;
+        long long pixel_index(const std::array<int_least16_t, N_IMAGE>& pixel) const;
         long long offset_for_slider_positions(const std::vector<int>& slider_positions) const;
-        void set_pixel(long long index, const Color& color) noexcept;
-        void mark_pixel_busy(long long index) noexcept;
+        void set_pixel(long long index, const Color& color);
+        void mark_pixel_busy(long long index);
 
         // PainterWindow2d
         void painter_statistics(long long* pass_count, long long* pixel_count, long long* ray_count, long long* sample_count,
-                                double* previous_pass_duration) const noexcept override;
+                                double* previous_pass_duration) const override;
         void slider_positions_change_event(const std::vector<int>& slider_positions) override;
-        const quint32* pixel_pointer(bool show_threads) const noexcept override;
+        const quint32* pixel_pointer(bool show_threads) const override;
 
         // IPainterNotifier
-        void painter_pixel_before(const std::array<int_least16_t, N_IMAGE>& pixel) noexcept override;
-        void painter_pixel_after(const std::array<int_least16_t, N_IMAGE>& pixel, const Color& color) noexcept override;
-        void painter_error_message(const std::string& msg) noexcept override;
+        void painter_pixel_before(const std::array<int_least16_t, N_IMAGE>& pixel) override;
+        void painter_pixel_after(const std::array<int_least16_t, N_IMAGE>& pixel, const Color& color) override;
+        void painter_error_message(const std::string& msg) override;
 
 public:
         PainterWindow(const std::string& title, unsigned thread_count, int samples_per_pixel, bool smooth_normal,

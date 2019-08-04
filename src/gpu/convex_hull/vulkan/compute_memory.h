@@ -50,9 +50,9 @@ public:
 
         //
 
-        static unsigned set_number() noexcept;
-        VkDescriptorSetLayout descriptor_set_layout() const noexcept;
-        const VkDescriptorSet& descriptor_set() const noexcept;
+        static unsigned set_number();
+        VkDescriptorSetLayout descriptor_set_layout() const;
+        const VkDescriptorSet& descriptor_set() const;
 
         //
 
@@ -71,9 +71,9 @@ class ConvexHullPrepareConstant final : public vulkan::SpecializationConstant
 
         std::vector<VkSpecializationMapEntry> m_entries;
 
-        const std::vector<VkSpecializationMapEntry>& entries() const noexcept override;
-        const void* data() const noexcept override;
-        size_t size() const noexcept override;
+        const std::vector<VkSpecializationMapEntry>& entries() const override;
+        const void* data() const override;
+        size_t size() const override;
 
 public:
         ConvexHullPrepareConstant();
@@ -107,9 +107,9 @@ public:
 
         //
 
-        static unsigned set_number() noexcept;
-        VkDescriptorSetLayout descriptor_set_layout() const noexcept;
-        const VkDescriptorSet& descriptor_set() const noexcept;
+        static unsigned set_number();
+        VkDescriptorSetLayout descriptor_set_layout() const;
+        const VkDescriptorSet& descriptor_set() const;
 
         //
 
@@ -127,9 +127,9 @@ class ConvexHullMergeConstant final : public vulkan::SpecializationConstant
 
         std::vector<VkSpecializationMapEntry> m_entries;
 
-        const std::vector<VkSpecializationMapEntry>& entries() const noexcept override;
-        const void* data() const noexcept override;
-        size_t size() const noexcept override;
+        const std::vector<VkSpecializationMapEntry>& entries() const override;
+        const void* data() const override;
+        size_t size() const override;
 
 public:
         ConvexHullMergeConstant();
@@ -166,9 +166,9 @@ public:
 
         //
 
-        static unsigned set_number() noexcept;
-        VkDescriptorSetLayout descriptor_set_layout() const noexcept;
-        const VkDescriptorSet& descriptor_set() const noexcept;
+        static unsigned set_number();
+        VkDescriptorSetLayout descriptor_set_layout() const;
+        const VkDescriptorSet& descriptor_set() const;
 
         //
 
@@ -186,9 +186,9 @@ class ConvexHullFilterConstant final : public vulkan::SpecializationConstant
 
         std::vector<VkSpecializationMapEntry> m_entries;
 
-        const std::vector<VkSpecializationMapEntry>& entries() const noexcept override;
-        const void* data() const noexcept override;
-        size_t size() const noexcept override;
+        const std::vector<VkSpecializationMapEntry>& entries() const override;
+        const void* data() const override;
+        size_t size() const override;
 
 public:
         ConvexHullFilterConstant();

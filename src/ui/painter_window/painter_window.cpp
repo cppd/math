@@ -67,7 +67,7 @@ std::vector<T> array_to_vector(const std::array<T, N>& array)
 }
 
 template <size_t N, typename T>
-long long PainterWindow<N, T>::pixel_index(const std::array<int_least16_t, N_IMAGE>& pixel) const noexcept
+long long PainterWindow<N, T>::pixel_index(const std::array<int_least16_t, N_IMAGE>& pixel) const
 {
         return m_global_index.compute(pixel);
 }
@@ -95,7 +95,7 @@ long long PainterWindow<N, T>::offset_for_slider_positions(const std::vector<int
 
 template <size_t N, typename T>
 void PainterWindow<N, T>::painter_statistics(long long* pass_count, long long* pixel_count, long long* ray_count,
-                                             long long* sample_count, double* previous_pass_duration) const noexcept
+                                             long long* sample_count, double* previous_pass_duration) const
 {
         m_paintbrush.statistics(pass_count, pixel_count, ray_count, sample_count, previous_pass_duration);
 }
@@ -107,13 +107,13 @@ void PainterWindow<N, T>::slider_positions_change_event(const std::vector<int>& 
 }
 
 template <size_t N, typename T>
-const quint32* PainterWindow<N, T>::pixel_pointer(bool show_threads) const noexcept
+const quint32* PainterWindow<N, T>::pixel_pointer(bool show_threads) const
 {
         return (show_threads ? m_data.data() : m_data_clean.data()) + m_slice_offset;
 }
 
 template <size_t N, typename T>
-void PainterWindow<N, T>::painter_pixel_before(const std::array<int_least16_t, N_IMAGE>& pixel) noexcept
+void PainterWindow<N, T>::painter_pixel_before(const std::array<int_least16_t, N_IMAGE>& pixel)
 {
         std::array<int_least16_t, N_IMAGE> p = pixel;
         p[1] = m_height - 1 - pixel[1];
@@ -122,7 +122,7 @@ void PainterWindow<N, T>::painter_pixel_before(const std::array<int_least16_t, N
 }
 
 template <size_t N, typename T>
-void PainterWindow<N, T>::painter_pixel_after(const std::array<int_least16_t, N_IMAGE>& pixel, const Color& color) noexcept
+void PainterWindow<N, T>::painter_pixel_after(const std::array<int_least16_t, N_IMAGE>& pixel, const Color& color)
 {
         std::array<int_least16_t, N_IMAGE> p = pixel;
         p[1] = m_height - 1 - pixel[1];
@@ -131,19 +131,19 @@ void PainterWindow<N, T>::painter_pixel_after(const std::array<int_least16_t, N_
 }
 
 template <size_t N, typename T>
-void PainterWindow<N, T>::painter_error_message(const std::string& msg) noexcept
+void PainterWindow<N, T>::painter_error_message(const std::string& msg)
 {
         PainterWindow2d::error_message(msg);
 }
 
 template <size_t N, typename T>
-void PainterWindow<N, T>::mark_pixel_busy(long long index) noexcept
+void PainterWindow<N, T>::mark_pixel_busy(long long index)
 {
         m_data[index] ^= 0x00ff'ffffu;
 }
 
 template <size_t N, typename T>
-void PainterWindow<N, T>::set_pixel(long long index, const Color& color) noexcept
+void PainterWindow<N, T>::set_pixel(long long index, const Color& color)
 {
         unsigned char r = color_conversion::rgb_float_to_srgb_uint8(color.red());
         unsigned char g = color_conversion::rgb_float_to_srgb_uint8(color.green());
@@ -181,7 +181,7 @@ PainterWindow<N, T>::PainterWindow(const std::string& title, unsigned thread_cou
 
         m_stop = false;
         m_thread_working = true;
-        m_thread = std::thread([ =, this ]() noexcept {
+        m_thread = std::thread([=, this]() {
                 paint(this, samples_per_pixel, *m_paint_objects, &m_paintbrush, thread_count, &m_stop, smooth_normal);
                 m_thread_working = false;
         });

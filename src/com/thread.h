@@ -30,7 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <vector>
 
 // Нужно целое число со знаком, больше или равное 1
-inline int hardware_concurrency() noexcept
+inline int hardware_concurrency()
 {
         return std::max(1u, std::thread::hardware_concurrency());
 }
@@ -112,28 +112,31 @@ public:
         {
                 try
                 {
-                        if (m_thread_count == 1)
+                        try
                         {
-                                return;
-                        }
+                                if (m_thread_count == 1)
+                                {
+                                        return;
+                                }
 
-                        std::unique_lock<std::mutex> lock(m_mutex);
-                        long long g = m_generation;
-                        --m_count;
-                        if (m_count == 0)
-                        {
-                                ++m_generation;
-                                m_count = m_thread_count;
-                                m_cv.notify_all();
+                                std::unique_lock<std::mutex> lock(m_mutex);
+                                long long g = m_generation;
+                                --m_count;
+                                if (m_count == 0)
+                                {
+                                        ++m_generation;
+                                        m_count = m_thread_count;
+                                        m_cv.notify_all();
+                                }
+                                else
+                                {
+                                        m_cv.wait(lock, [this, g] { return g != m_generation; });
+                                }
                         }
-                        else
+                        catch (std::exception& e)
                         {
-                                m_cv.wait(lock, [this, g] { return g != m_generation; });
+                                error_fatal(std::string("Error thread barrier wait: ") + e.what());
                         }
-                }
-                catch (std::exception& e)
-                {
-                        error_fatal(std::string("Error thread barrier wait: ") + e.what());
                 }
                 catch (...)
                 {
@@ -219,28 +222,31 @@ class ThreadsWithCatch
         {
                 try
                 {
-                        there_is_error = false;
-
-                        for (ThreadData& thread_data : m_threads)
+                        try
                         {
-                                thread_data.join();
+                                there_is_error = false;
 
-                                if (thread_data.has_error())
+                                for (ThreadData& thread_data : m_threads)
                                 {
-                                        there_is_error = true;
-                                        if (error_message.size() > 0)
-                                        {
-                                                error_message += '\n';
-                                        }
-                                        error_message += thread_data.error_message();
-                                }
-                        }
+                                        thread_data.join();
 
-                        m_threads.clear();
-                }
-                catch (std::exception& e)
-                {
-                        error_fatal(std::string("Error while joining threads-with-catch: ") + e.what());
+                                        if (thread_data.has_error())
+                                        {
+                                                there_is_error = true;
+                                                if (error_message.size() > 0)
+                                                {
+                                                        error_message += '\n';
+                                                }
+                                                error_message += thread_data.error_message();
+                                        }
+                                }
+
+                                m_threads.clear();
+                        }
+                        catch (std::exception& e)
+                        {
+                                error_fatal(std::string("Error while joining threads-with-catch: ") + e.what());
+                        }
                 }
                 catch (...)
                 {
@@ -267,34 +273,43 @@ public:
         template <typename F>
         void add(F&& function) noexcept
         {
-                ASSERT(m_thread_id == std::this_thread::get_id());
-
                 try
                 {
-                        auto lambda = [&, thread_num = m_threads.size(), f = std::forward<F>(function) ]() noexcept
+                        ASSERT(m_thread_id == std::this_thread::get_id());
+                        try
                         {
-                                try
+                                auto lambda = [&, thread_num = m_threads.size(), f = std::forward<F>(function) ]() noexcept
                                 {
-                                        f();
-                                }
-                                catch (TerminateRequestException&)
-                                {
-                                }
-                                catch (std::exception& e)
-                                {
-                                        m_threads[thread_num].set_error(e.what());
-                                }
-                                catch (...)
-                                {
-                                        m_threads[thread_num].set_error("Unknown error in thread");
-                                }
-                        };
+                                        try
+                                        {
+                                                try
+                                                {
+                                                        f();
+                                                }
+                                                catch (TerminateRequestException&)
+                                                {
+                                                }
+                                                catch (std::exception& e)
+                                                {
+                                                        m_threads[thread_num].set_error(e.what());
+                                                }
+                                                catch (...)
+                                                {
+                                                        m_threads[thread_num].set_error("Unknown error in thread");
+                                                }
+                                        }
+                                        catch (...)
+                                        {
+                                                error_fatal("Unknown error while calling a thread function");
+                                        }
+                                };
 
-                        m_threads.emplace_back(std::thread(lambda));
-                }
-                catch (std::exception& e)
-                {
-                        error_fatal(std::string("Error while adding a thread-with-catch: ") + e.what());
+                                m_threads.emplace_back(std::thread(lambda));
+                        }
+                        catch (std::exception& e)
+                        {
+                                error_fatal(std::string("Error while adding a thread-with-catch: ") + e.what());
+                        }
                 }
                 catch (...)
                 {

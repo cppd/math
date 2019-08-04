@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace types_implementation
 {
 template <typename T>
-constexpr T binary_epsilon() noexcept
+constexpr T binary_epsilon()
 {
         T prev_e = 1, e = 1, s = 1;
         do
@@ -36,7 +36,7 @@ constexpr T binary_epsilon() noexcept
 }
 
 template <typename T>
-constexpr T max_binary_fraction() noexcept
+constexpr T max_binary_fraction()
 {
         // max_binary_fraction = 2 - binary_epsilon
         T prev_r = 1, r = 1, a = 1;
@@ -50,7 +50,7 @@ constexpr T max_binary_fraction() noexcept
 }
 
 template <typename T>
-constexpr T binary_exponent(int e) noexcept
+constexpr T binary_exponent(int e)
 {
         if (e == 0)
         {
@@ -85,11 +85,11 @@ class limits<T, std::enable_if_t<std::is_integral_v<T>>>
         static_assert(std::is_integral_v<T>);
 
 public:
-        static constexpr T max() noexcept
+        static constexpr T max()
         {
                 return std::numeric_limits<T>::max();
         }
-        static constexpr T lowest() noexcept
+        static constexpr T lowest()
         {
                 return std::numeric_limits<T>::lowest();
         }
@@ -105,15 +105,15 @@ class limits<T, std::enable_if_t<std::is_floating_point_v<T>>>
         static_assert(std::is_floating_point_v<T>);
 
 public:
-        static constexpr T epsilon() noexcept
+        static constexpr T epsilon()
         {
                 return std::numeric_limits<T>::epsilon();
         }
-        static constexpr T max() noexcept
+        static constexpr T max()
         {
                 return std::numeric_limits<T>::max();
         }
-        static constexpr T lowest() noexcept
+        static constexpr T lowest()
         {
                 return std::numeric_limits<T>::lowest();
         }
@@ -131,11 +131,11 @@ class limits<unsigned __int128, std::enable_if_t<!std::numeric_limits<unsigned _
         using T = unsigned __int128;
 
 public:
-        static constexpr T max() noexcept
+        static constexpr T max()
         {
                 return -1;
         }
-        static constexpr T lowest() noexcept
+        static constexpr T lowest()
         {
                 return 0;
         }
@@ -152,11 +152,11 @@ class limits<signed __int128, std::enable_if_t<!std::numeric_limits<signed __int
         using T = signed __int128;
 
 public:
-        static constexpr T max() noexcept
+        static constexpr T max()
         {
                 return static_cast<unsigned __int128>(-1) >> 1;
         }
-        static constexpr T lowest() noexcept
+        static constexpr T lowest()
         {
                 return -max() - 1;
         }
@@ -176,15 +176,15 @@ class limits<__float128, std::enable_if_t<!std::numeric_limits<__float128>::is_s
         // max = strtoflt128("1.18973149535723176508575932662800702e4932", nullptr)
 
 public:
-        static constexpr T epsilon() noexcept
+        static constexpr T epsilon()
         {
                 return binary_epsilon<T>();
         }
-        static constexpr T max() noexcept
+        static constexpr T max()
         {
                 return max_binary_fraction<T>() * binary_exponent<T>(16383);
         }
-        static constexpr T lowest() noexcept
+        static constexpr T lowest()
         {
                 return -max();
         }

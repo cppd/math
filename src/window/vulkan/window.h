@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <vulkan/vulkan.h>
 
 void vulkan_window_init();
-void vulkan_window_terminate() noexcept;
+void vulkan_window_terminate();
 
 class VulkanWindow
 {

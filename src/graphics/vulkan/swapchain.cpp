@@ -323,32 +323,32 @@ Swapchain::Swapchain(VkSurfaceKHR surface, const Device& device, const std::unor
         }
 }
 
-VkSwapchainKHR Swapchain::swapchain() const noexcept
+VkSwapchainKHR Swapchain::swapchain() const
 {
         return m_swapchain;
 }
 
-uint32_t Swapchain::width() const noexcept
+uint32_t Swapchain::width() const
 {
         return m_extent.width;
 }
 
-uint32_t Swapchain::height() const noexcept
+uint32_t Swapchain::height() const
 {
         return m_extent.height;
 }
 
-VkFormat Swapchain::format() const noexcept
+VkFormat Swapchain::format() const
 {
         return m_surface_format.format;
 }
 
-VkColorSpaceKHR Swapchain::color_space() const noexcept
+VkColorSpaceKHR Swapchain::color_space() const
 {
         return m_surface_format.colorSpace;
 }
 
-const std::vector<ImageView>& Swapchain::image_views() const noexcept
+const std::vector<ImageView>& Swapchain::image_views() const
 {
         return m_image_views;
 }

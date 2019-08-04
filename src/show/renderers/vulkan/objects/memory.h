@@ -99,9 +99,9 @@ public:
 
         //
 
-        static unsigned set_number() noexcept;
-        VkDescriptorSetLayout descriptor_set_layout() const noexcept;
-        const VkDescriptorSet& descriptor_set() const noexcept;
+        static unsigned set_number();
+        VkDescriptorSetLayout descriptor_set_layout() const;
+        const VkDescriptorSet& descriptor_set() const;
 
         //
 
@@ -173,9 +173,9 @@ public:
 
         //
 
-        static unsigned set_number() noexcept;
-        uint32_t descriptor_set_count() const noexcept;
-        const VkDescriptorSet& descriptor_set(uint32_t index) const noexcept;
+        static unsigned set_number();
+        uint32_t descriptor_set_count() const;
+        const VkDescriptorSet& descriptor_set(uint32_t index) const;
 };
 
 class ShadowMemory final
@@ -207,9 +207,9 @@ public:
 
         //
 
-        static unsigned set_number() noexcept;
-        VkDescriptorSetLayout descriptor_set_layout() const noexcept;
-        const VkDescriptorSet& descriptor_set() const noexcept;
+        static unsigned set_number();
+        VkDescriptorSetLayout descriptor_set_layout() const;
+        const VkDescriptorSet& descriptor_set() const;
 
         //
 
@@ -263,9 +263,9 @@ public:
 
         //
 
-        static unsigned set_number() noexcept;
-        VkDescriptorSetLayout descriptor_set_layout() const noexcept;
-        const VkDescriptorSet& descriptor_set() const noexcept;
+        static unsigned set_number();
+        VkDescriptorSetLayout descriptor_set_layout() const;
+        const VkDescriptorSet& descriptor_set() const;
 
         //
 

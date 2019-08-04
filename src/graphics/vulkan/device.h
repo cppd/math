@@ -48,12 +48,12 @@ class PhysicalDevice final
 public:
         PhysicalDevice(VkPhysicalDevice physical_device, VkSurfaceKHR surface);
 
-        operator VkPhysicalDevice() const noexcept;
+        operator VkPhysicalDevice() const;
 
-        const VkPhysicalDeviceFeatures& features() const noexcept;
-        const VkPhysicalDeviceProperties& properties() const noexcept;
-        const std::vector<VkQueueFamilyProperties>& queue_families() const noexcept;
-        const std::unordered_set<std::string>& supported_extensions() const noexcept;
+        const VkPhysicalDeviceFeatures& features() const;
+        const VkPhysicalDeviceProperties& properties() const;
+        const std::vector<VkQueueFamilyProperties>& queue_families() const;
+        const std::unordered_set<std::string>& supported_extensions() const;
 
         uint32_t family_index(VkQueueFlags set_flags, VkQueueFlags not_set_flags, VkQueueFlags default_flags) const;
         uint32_t presentation_family_index() const;

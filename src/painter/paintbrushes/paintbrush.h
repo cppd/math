@@ -53,7 +53,7 @@ class BarPaintbrush
         // }
         template <int level>
         static void generate_pixels(Pixel& pixel, std::array<int, N + N - 1>& min, std::array<int, N + N - 1>& max,
-                                    const std::array<int, N - 1>& inc, std::vector<Pixel>* pixels) noexcept
+                                    const std::array<int, N - 1>& inc, std::vector<Pixel>* pixels)
         {
                 static_assert(level < N + N - 1);
 
@@ -84,7 +84,7 @@ class BarPaintbrush
                         }
                 }
         }
-        static void generate_pixels(const std::array<int, N>& sizes, int paint_height, std::vector<Pixel>* pixels) noexcept
+        static void generate_pixels(const std::array<int, N>& sizes, int paint_height, std::vector<Pixel>* pixels)
         {
                 std::array<int, N + N - 1> min;
                 std::array<int, N + N - 1> max;
@@ -164,19 +164,19 @@ public:
                 }
         }
 
-        const std::array<int, N>& screen_size() const noexcept
+        const std::array<int, N>& screen_size() const
         {
                 return m_screen_size;
         }
 
-        void first_pass() noexcept
+        void first_pass()
         {
                 std::lock_guard lg(m_lock);
 
                 m_pass_start_time = time_in_seconds();
         }
 
-        bool next_pixel(int previous_pixel_ray_count, int previous_pixel_sample_count, Pixel* pixel) noexcept
+        bool next_pixel(int previous_pixel_ray_count, int previous_pixel_sample_count, Pixel* pixel)
         {
                 std::lock_guard lg(m_lock);
 
@@ -196,7 +196,7 @@ public:
                 return false;
         }
 
-        bool next_pass() noexcept
+        bool next_pass()
         {
                 std::lock_guard lg(m_lock);
 
@@ -220,7 +220,7 @@ public:
         }
 
         void statistics(long long* pass_count, long long* pixel_count, long long* ray_count, long long* sample_count,
-                        double* previous_pass_duration) const noexcept
+                        double* previous_pass_duration) const
         {
                 std::lock_guard lg(m_lock);
 

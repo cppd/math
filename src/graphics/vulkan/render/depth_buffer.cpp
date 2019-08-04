@@ -132,7 +132,7 @@ class Impl final : public vulkan::DepthBuffers
 
         //
 
-        const vulkan::DepthAttachmentTexture* texture(unsigned index) const noexcept override;
+        const vulkan::DepthAttachmentTexture* texture(unsigned index) const override;
 
         std::vector<VkCommandBuffer> create_command_buffers(const std::function<void(VkCommandBuffer buffer)>& commands) override;
 
@@ -231,7 +231,7 @@ void Impl::delete_command_buffers(std::vector<VkCommandBuffer>* buffers)
         delete_buffers(&m_command_buffers, buffers);
 }
 
-const vulkan::DepthAttachmentTexture* Impl::texture(unsigned index) const noexcept
+const vulkan::DepthAttachmentTexture* Impl::texture(unsigned index) const
 {
         ASSERT(index < m_depth_attachments.size());
 

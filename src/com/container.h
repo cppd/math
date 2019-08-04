@@ -20,14 +20,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <iterator>
 #include <utility>
 
-template <typename T, typename = std::enable_if_t<noexcept(std::size(std::declval<T>())), decltype(std::data(std::declval<T>()))>>
-constexpr auto storage_size(const T& c) noexcept -> decltype(std::size(c))
+template <typename T>
+constexpr auto storage_size(const T& c) -> decltype(std::size(c))
 {
         return std::size(c) * sizeof(typename T::value_type); // sizeof(c[0])
 }
 
 template <class T, size_t N>
-constexpr size_t storage_size(const T (&)[N]) noexcept
+constexpr size_t storage_size(const T (&)[N])
 {
         return N * sizeof(T);
 }

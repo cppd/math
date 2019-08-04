@@ -52,13 +52,13 @@ public:
 
         //
 
-        VkSwapchainKHR swapchain() const noexcept;
+        VkSwapchainKHR swapchain() const;
 
-        uint32_t width() const noexcept;
-        uint32_t height() const noexcept;
-        VkFormat format() const noexcept;
-        VkColorSpaceKHR color_space() const noexcept;
-        const std::vector<ImageView>& image_views() const noexcept;
+        uint32_t width() const;
+        uint32_t height() const;
+        VkFormat format() const;
+        VkColorSpaceKHR color_space() const;
+        const std::vector<ImageView>& image_views() const;
 };
 
 bool acquire_next_image(VkDevice device, VkSwapchainKHR swapchain, VkSemaphore semaphore, uint32_t* image_index);

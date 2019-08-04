@@ -85,47 +85,54 @@ public:
 
                 m_working = true;
                 m_thread = std::thread([ this, func = std::forward<F>(function) ]() noexcept {
-                        std::string message;
                         try
                         {
-                                static_assert(!noexcept(func(&m_progress_list, &message)));
+                                std::string message;
+                                try
+                                {
+                                        static_assert(!noexcept(func(&m_progress_list, &message)));
 
-                                func(&m_progress_list, &message);
+                                        func(&m_progress_list, &message);
+                                }
+                                catch (...)
+                                {
+                                        m_exception_handler(std::current_exception(), message);
+                                }
+                                m_working = false;
                         }
                         catch (...)
                         {
-                                m_exception_handler(std::current_exception(), message);
+                                error_fatal("Exception in thread");
                         }
-                        m_working = false;
                 });
         }
 
-        void terminate_quietly() noexcept
+        void terminate_quietly()
         {
                 terminate(TerminateType::Quietly);
         }
 
-        void terminate_with_message() noexcept
+        void terminate_with_message()
         {
                 terminate(TerminateType::WithMessage);
         }
 
-        bool working() const noexcept
+        bool working() const
         {
                 return m_working;
         }
 
-        bool joinable() const noexcept
+        bool joinable() const
         {
                 return m_thread.joinable();
         }
 
-        const ProgressRatioList* progress_list() const noexcept
+        const ProgressRatioList* progress_list() const
         {
                 return &m_progress_list;
         }
 
-        std::list<QProgressBar>* progress_bars() noexcept
+        std::list<QProgressBar>* progress_bars()
         {
                 return &m_progress_bars;
         }
@@ -185,14 +192,14 @@ public:
                                    [](const auto& t) { return !t.second.working() && !t.second.joinable(); }));
         }
 
-        void terminate_thread_with_message(Action action) noexcept override
+        void terminate_thread_with_message(Action action) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 thread(action).terminate_with_message();
         }
 
-        void terminate_all_threads() noexcept override
+        void terminate_all_threads() override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 

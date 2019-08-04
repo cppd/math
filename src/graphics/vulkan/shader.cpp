@@ -31,17 +31,17 @@ Shader::Shader(VkDevice device, const Span<const uint32_t>& code, VkShaderStageF
         ASSERT(entry_point_name.size() > 0);
 }
 
-VkShaderModule Shader::module() const noexcept
+VkShaderModule Shader::module() const
 {
         return m_module;
 }
 
-VkShaderStageFlagBits Shader::stage() const noexcept
+VkShaderStageFlagBits Shader::stage() const
 {
         return m_stage;
 }
 
-const char* Shader::entry_point_name() const noexcept
+const char* Shader::entry_point_name() const
 {
         return m_entry_point_name.c_str();
 }

@@ -585,7 +585,7 @@ void paint_threads(PainterNotifier<N - 1>* painter_notifier, int samples_per_pix
 
         for (unsigned i = 0; i < threads.size(); ++i)
         {
-                threads[i] = std::thread([&, i ]() noexcept {
+                threads[i] = std::thread([&, i]() {
                         work_thread(i, barrier, *stop, error_caught, stop_painting, paint_objects.projector(), paint_data,
                                     painter_notifier, paintbrush, sampler, &pixels);
                 });

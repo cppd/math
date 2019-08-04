@@ -60,6 +60,13 @@ namespace error_implementation
 {
 void error_assert(const char* expr, const char* file, int line) noexcept
 {
-        error_fatal(std::string("Assert \"") + expr + "\" failed: " + file + ":" + std::to_string(line));
+        try
+        {
+                error_fatal(std::string("Assert \"") + expr + "\" failed: " + file + ":" + std::to_string(line));
+        }
+        catch (...)
+        {
+                error_fatal("Exception when creating assert message");
+        }
 }
 }

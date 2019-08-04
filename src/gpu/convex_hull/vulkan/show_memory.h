@@ -60,9 +60,9 @@ public:
 
         //
 
-        static unsigned set_number() noexcept;
-        VkDescriptorSetLayout descriptor_set_layout() const noexcept;
-        const VkDescriptorSet& descriptor_set() const noexcept;
+        static unsigned set_number();
+        VkDescriptorSetLayout descriptor_set_layout() const;
+        const VkDescriptorSet& descriptor_set() const;
 
         //
 

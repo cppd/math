@@ -341,7 +341,7 @@ struct DrawObjectInterface
 {
         virtual ~DrawObjectInterface() = default;
 
-        virtual bool has_shadow() const noexcept = 0;
+        virtual bool has_shadow() const = 0;
 
         virtual void draw_commands(VkCommandBuffer command_buffer, const DrawInfo& info) const = 0;
         virtual void draw_shadow_commands(VkCommandBuffer command_buffer, const DrawShadowInfo& info) const = 0;
@@ -414,7 +414,7 @@ public:
                 m_offsets = {0};
         }
 
-        bool has_shadow() const noexcept override
+        bool has_shadow() const override
         {
                 return true;
         }
@@ -481,7 +481,7 @@ public:
                 m_offsets = {0};
         }
 
-        bool has_shadow() const noexcept override
+        bool has_shadow() const override
         {
                 return false;
         }
@@ -528,7 +528,7 @@ public:
                 m_offsets = {0};
         }
 
-        bool has_shadow() const noexcept override
+        bool has_shadow() const override
         {
                 return false;
         }
@@ -588,12 +588,12 @@ public:
                 }
         }
 
-        bool has_shadow() const noexcept
+        bool has_shadow() const
         {
                 return m_has_shadow;
         }
 
-        const mat4& model_matrix() const noexcept
+        const mat4& model_matrix() const
         {
                 return m_model_matrix;
         }

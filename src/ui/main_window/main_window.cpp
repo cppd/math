@@ -124,10 +124,7 @@ MainWindow::MainWindow(QWidget* parent)
 
 void MainWindow::constructor_threads()
 {
-        auto handler = [this](const std::exception_ptr& ptr, const std::string& msg) noexcept
-        {
-                exception_handler(ptr, msg, true);
-        };
+        auto handler = [this](const std::exception_ptr& ptr, const std::string& msg) { exception_handler(ptr, msg, true); };
 
         m_threads = create_main_threads(handler);
 }
@@ -194,10 +191,9 @@ void MainWindow::constructor_buttons()
 
 void MainWindow::constructor_objects_and_repository()
 {
-        m_objects = create_main_objects(std::max(1, hardware_concurrency() - MESH_OBJECT_NOT_USED_THREAD_COUNT),
-                                        m_event_emitter, [this](const std::exception_ptr& ptr, const std::string& msg) noexcept {
-                                                exception_handler(ptr, msg, true);
-                                        });
+        m_objects = create_main_objects(
+                std::max(1, hardware_concurrency() - MESH_OBJECT_NOT_USED_THREAD_COUNT), m_event_emitter,
+                [this](const std::exception_ptr& ptr, const std::string& msg) { exception_handler(ptr, msg, true); });
 
         // QMenu* menuCreate = new QMenu("Create", this);
         // ui.menuBar->insertMenu(ui.menuHelp->menuAction(), menuCreate);

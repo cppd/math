@@ -108,7 +108,7 @@ class MainObjectsImpl
         Show* m_show;
 
         template <typename F>
-        void catch_all(const F& function) const noexcept;
+        void catch_all(const F& function) const;
 
         static std::string object_name(ObjectType object_type);
         static ObjectId object_identifier(ObjectType object_type);
@@ -137,7 +137,7 @@ public:
         MainObjectsImpl(int mesh_threads, const ObjectsCallback& event_emitter,
                         std::function<void(const std::exception_ptr& ptr, const std::string& msg)> exception_handler);
 
-        void clear_all_data() noexcept;
+        void clear_all_data();
 
         std::vector<std::string> repository_point_object_names() const;
 
@@ -177,7 +177,7 @@ MainObjectsImpl<N>::MainObjectsImpl(int mesh_threads, const ObjectsCallback& eve
 
 template <size_t N>
 template <typename F>
-void MainObjectsImpl<N>::catch_all(const F& function) const noexcept
+void MainObjectsImpl<N>::catch_all(const F& function) const
 {
         std::string message;
         try
@@ -361,7 +361,7 @@ void MainObjectsImpl<N>::object_and_mesh(const std::unordered_set<ObjectId>& obj
 {
         ASSERT(std::this_thread::get_id() != m_thread_id);
 
-        std::thread thread_obj([&]() noexcept {
+        std::thread thread_obj([&]() {
                 catch_all([&](std::string* message) {
                         *message = object_name(object_type) + " object and mesh";
 
@@ -369,7 +369,7 @@ void MainObjectsImpl<N>::object_and_mesh(const std::unordered_set<ObjectId>& obj
                 });
         });
 
-        std::thread thread_ch([&]() noexcept {
+        std::thread thread_ch([&]() {
                 catch_all([&](std::string* message) {
                         *message = object_name(object_type) + " object convex hull and mesh";
 
@@ -529,7 +529,7 @@ void MainObjectsImpl<N>::manifold_constructor(const std::unordered_set<ObjectId>
                 LOG("Manifold reconstruction first phase, " + to_string_fixed(time_in_seconds() - start_time, 5) + " s");
         }
 
-        std::thread thread_cocone([&]() noexcept {
+        std::thread thread_cocone([&]() {
                 catch_all([&](std::string* message) {
                         *message = "Cocone reconstruction in " + space_name(N);
 
@@ -537,7 +537,7 @@ void MainObjectsImpl<N>::manifold_constructor(const std::unordered_set<ObjectId>
                 });
         });
 
-        std::thread thread_bound_cocone([&]() noexcept {
+        std::thread thread_bound_cocone([&]() {
                 catch_all([&](std::string* message) {
                         *message = "BoundCocone reconstruction in " + space_name(N);
 
@@ -545,7 +545,7 @@ void MainObjectsImpl<N>::manifold_constructor(const std::unordered_set<ObjectId>
                 });
         });
 
-        std::thread thread_mst([&]() noexcept {
+        std::thread thread_mst([&]() {
                 catch_all([&](std::string* message) {
                         *message = "Minimum spanning tree in " + space_name(N);
 
@@ -559,7 +559,7 @@ void MainObjectsImpl<N>::manifold_constructor(const std::unordered_set<ObjectId>
 }
 
 template <size_t N>
-void MainObjectsImpl<N>::clear_all_data() noexcept
+void MainObjectsImpl<N>::clear_all_data()
 {
         ASSERT(std::this_thread::get_id() != m_thread_id);
 
@@ -609,7 +609,7 @@ void MainObjectsImpl<N>::load_object(const std::unordered_set<ObjectId>& objects
                 m_model_vertex_matrix = Matrix<N + 1, N + 1, double>(1);
         }
 
-        std::thread thread_model([&]() noexcept {
+        std::thread thread_model([&]() {
                 catch_all([&](std::string* message) {
                         *message = "Object and mesh";
 
@@ -617,7 +617,7 @@ void MainObjectsImpl<N>::load_object(const std::unordered_set<ObjectId>& objects
                 });
         });
 
-        std::thread thread_manifold([&]() noexcept {
+        std::thread thread_manifold([&]() {
                 catch_all([&](std::string* message) {
                         *message = "Manifold constructor";
 
@@ -744,11 +744,11 @@ class MainObjectStorage final : public MainObjects
 
         Map<MainObjectsImpl> m_objects;
 
-        void clear_all_data() noexcept
+        void clear_all_data()
         {
                 for (auto& p : m_objects)
                 {
-                        visit([&](auto& v) noexcept { v.clear_all_data(); }, p.second);
+                        visit([&](auto& v) { v.clear_all_data(); }, p.second);
                 }
         }
 
@@ -861,10 +861,7 @@ class MainObjectStorage final : public MainObjects
 
                 auto& repository = m_objects.at(dimension);
 
-                auto clear_function = [&]() noexcept
-                {
-                        clear_all_data();
-                };
+                auto clear_function = [&]() { clear_all_data(); };
                 visit([&](auto& v) { v.load_from_file(objects, progress_list, file_name, rho, alpha, clear_function); },
                       repository);
         }
@@ -876,10 +873,7 @@ class MainObjectStorage final : public MainObjects
 
                 auto& repository = m_objects.at(dimension);
 
-                auto clear_function = [&]() noexcept
-                {
-                        clear_all_data();
-                };
+                auto clear_function = [&]() { clear_all_data(); };
                 visit(
                         [&](auto& v) {
                                 v.load_from_repository(objects, progress_list, object_name, rho, alpha, point_count,

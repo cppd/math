@@ -292,27 +292,27 @@ PhysicalDevice::PhysicalDevice(VkPhysicalDevice physical_device, VkSurfaceKHR su
         ASSERT(m_queue_families.size() == m_presentation_supported.size());
 }
 
-PhysicalDevice::operator VkPhysicalDevice() const noexcept
+PhysicalDevice::operator VkPhysicalDevice() const
 {
         return m_physical_device;
 }
 
-const VkPhysicalDeviceFeatures& PhysicalDevice::features() const noexcept
+const VkPhysicalDeviceFeatures& PhysicalDevice::features() const
 {
         return m_features;
 }
 
-const VkPhysicalDeviceProperties& PhysicalDevice::properties() const noexcept
+const VkPhysicalDeviceProperties& PhysicalDevice::properties() const
 {
         return m_properties;
 }
 
-const std::vector<VkQueueFamilyProperties>& PhysicalDevice::queue_families() const noexcept
+const std::vector<VkQueueFamilyProperties>& PhysicalDevice::queue_families() const
 {
         return m_queue_families;
 }
 
-const std::unordered_set<std::string>& PhysicalDevice::supported_extensions() const noexcept
+const std::unordered_set<std::string>& PhysicalDevice::supported_extensions() const
 {
         return m_supported_extensions;
 }

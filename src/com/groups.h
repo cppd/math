@@ -19,17 +19,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/vec.h"
 
-constexpr int group_count(int size, int group_size) noexcept
+constexpr int group_count(int size, int group_size)
 {
         return (size + group_size - 1) / group_size;
 }
 
-constexpr vec2i group_count(int x, int y, vec2i group_size) noexcept
+constexpr vec2i group_count(int x, int y, vec2i group_size)
 {
         return vec2i(group_count(x, group_size[0]), group_count(y, group_size[1]));
 }
 
-constexpr vec3i group_count(int x, int y, int z, vec3i group_size) noexcept
+constexpr vec3i group_count(int x, int y, int z, vec3i group_size)
 {
         return vec3i(group_count(x, group_size[0]), group_count(y, group_size[1]), group_count(z, group_size[2]));
 }

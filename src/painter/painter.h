@@ -30,9 +30,9 @@ protected:
         virtual ~PainterNotifier() = default;
 
 public:
-        virtual void painter_pixel_before(const std::array<int_least16_t, N>& pixel) noexcept = 0;
-        virtual void painter_pixel_after(const std::array<int_least16_t, N>& pixel, const Color& c) noexcept = 0;
-        virtual void painter_error_message(const std::string& msg) noexcept = 0;
+        virtual void painter_pixel_before(const std::array<int_least16_t, N>& pixel) = 0;
+        virtual void painter_pixel_after(const std::array<int_least16_t, N>& pixel, const Color& c) = 0;
+        virtual void painter_error_message(const std::string& msg) = 0;
 };
 
 template <size_t N, typename T>

@@ -69,17 +69,17 @@ ConvexHullShaderMemory::ConvexHullShaderMemory(const vulkan::Device& device, con
         m_descriptors.update_descriptor_set(0, bindings, infos);
 }
 
-unsigned ConvexHullShaderMemory::set_number() noexcept
+unsigned ConvexHullShaderMemory::set_number()
 {
         return SET_NUMBER;
 }
 
-VkDescriptorSetLayout ConvexHullShaderMemory::descriptor_set_layout() const noexcept
+VkDescriptorSetLayout ConvexHullShaderMemory::descriptor_set_layout() const
 {
         return m_descriptor_set_layout;
 }
 
-const VkDescriptorSet& ConvexHullShaderMemory::descriptor_set() const noexcept
+const VkDescriptorSet& ConvexHullShaderMemory::descriptor_set() const
 {
         return m_descriptors.descriptor_set(0);
 }

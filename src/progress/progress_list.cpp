@@ -42,10 +42,10 @@ void ProgressRatioList::add_progress_ratio(ProgressRatioControl* ratio)
 // Для работы в потоках расчётов
 void ProgressRatioList::delete_progress_ratio(const ProgressRatioControl* ratio) noexcept
 {
-        ASSERT(std::this_thread::get_id() != m_thread_id);
-
         try
         {
+                ASSERT(std::this_thread::get_id() != m_thread_id);
+
                 std::lock_guard lg(m_mutex);
 
                 for (auto i = m_ratios.begin(); i != m_ratios.end(); ++i)

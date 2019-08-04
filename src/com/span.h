@@ -29,38 +29,36 @@ class Span
 public:
         using value_type = std::remove_cv_t<T>;
 
-        constexpr Span(T* pointer, size_t size) noexcept : m_pointer(pointer), m_size(size)
+        constexpr Span(T* pointer, size_t size) : m_pointer(pointer), m_size(size)
         {
         }
 
         template <class Container>
-        constexpr Span(Container& c) noexcept(noexcept(std::data(c)) && noexcept(std::size(c)))
-                : m_pointer(std::data(c)), m_size(std::size(c))
+        constexpr Span(Container& c) : m_pointer(std::data(c)), m_size(std::size(c))
         {
         }
 
         template <class Container>
-        constexpr Span(const Container& c) noexcept(noexcept(std::data(c)) && noexcept(std::size(c)))
-                : m_pointer(std::data(c)), m_size(std::size(c))
+        constexpr Span(const Container& c) : m_pointer(std::data(c)), m_size(std::size(c))
         {
         }
 
-        constexpr T& operator[](size_t i) const noexcept
+        constexpr T& operator[](size_t i) const
         {
                 return m_pointer[i];
         }
 
-        constexpr T* data() const noexcept
+        constexpr T* data() const
         {
                 return m_pointer;
         }
 
-        constexpr size_t size() const noexcept
+        constexpr size_t size() const
         {
                 return m_size;
         }
 
-        constexpr bool empty() const noexcept
+        constexpr bool empty() const
         {
                 return m_size == 0;
         }

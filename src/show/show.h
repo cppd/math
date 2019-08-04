@@ -33,9 +33,9 @@ protected:
         virtual ~ShowCallback() = default;
 
 public:
-        virtual void message_error_fatal(const std::string&) const noexcept = 0;
-        virtual void message_error_source(const std::string&, const std::string&) const noexcept = 0;
-        virtual void object_loaded(int) const noexcept = 0;
+        virtual void message_error_fatal(const std::string&) const = 0;
+        virtual void message_error_source(const std::string&, const std::string&) const = 0;
+        virtual void object_loaded(int) const = 0;
 };
 
 class Show

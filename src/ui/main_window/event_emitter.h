@@ -147,15 +147,22 @@ private:
         {
                 try
                 {
-                        emit window_event(WindowEvent(std::in_place_type<T>, std::forward<Args>(args)...));
-                }
-                catch (std::exception& e)
-                {
-                        error_fatal(std::string(error_message) + ": " + e.what() + ".");
+                        try
+                        {
+                                emit window_event(WindowEvent(std::in_place_type<T>, std::forward<Args>(args)...));
+                        }
+                        catch (std::exception& e)
+                        {
+                                error_fatal(std::string(error_message) + ": " + e.what() + ".");
+                        }
+                        catch (...)
+                        {
+                                error_fatal(std::string(error_message) + ".");
+                        }
                 }
                 catch (...)
                 {
-                        error_fatal(std::string(error_message) + ".");
+                        error_fatal("Error emit message");
                 }
         }
 
@@ -170,7 +177,7 @@ private:
                 {
                 }
 
-                void operator()(const std::monostate&) noexcept
+                void operator()(const std::monostate&)
                 {
                 }
                 void operator()(const WindowEvent::message_error& d)
@@ -232,53 +239,53 @@ public:
                         Qt::ConnectionType(Qt::QueuedConnection | Qt::UniqueConnection));
         }
 
-        void message_error(const std::string& msg) const noexcept
+        void message_error(const std::string& msg) const
         {
                 emit_message<WindowEvent::message_error>("Exception in emit message error", msg);
         }
 
-        void message_error_fatal(const std::string& msg) const noexcept override
+        void message_error_fatal(const std::string& msg) const override
         {
                 emit_message<WindowEvent::message_error_fatal>("Exception in emit message error fatal", msg);
         }
 
-        void message_error_source(const std::string& msg, const std::string& src) const noexcept override
+        void message_error_source(const std::string& msg, const std::string& src) const override
         {
                 emit_message<WindowEvent::message_error_source>("Exception in emit message error source", msg, src);
         }
 
-        void message_information(const std::string& msg) const noexcept
+        void message_information(const std::string& msg) const
         {
                 emit_message<WindowEvent::message_information>("Exception in emit message information", msg);
         }
 
-        void message_warning(const std::string& msg) const noexcept override
+        void message_warning(const std::string& msg) const override
         {
                 emit_message<WindowEvent::message_warning>("Exception in emit message warning", msg);
         }
 
-        void object_loaded(int id) const noexcept override
+        void object_loaded(int id) const override
         {
                 emit_message<WindowEvent::object_loaded>("Exception in emit object loaded", id);
         }
 
-        void mesh_loaded(ObjectId id) const noexcept override
+        void mesh_loaded(ObjectId id) const override
         {
                 emit_message<WindowEvent::mesh_loaded>("Exception in emit mesh loaded", id);
         }
 
-        void file_loaded(const std::string& file_name, unsigned dimension, const std::unordered_set<ObjectId>& objects) const
-                noexcept override
+        void file_loaded(const std::string& file_name, unsigned dimension,
+                         const std::unordered_set<ObjectId>& objects) const override
         {
                 emit_message<WindowEvent::file_loaded>("Exception in emit file loaded", file_name, dimension, objects);
         }
 
-        void bound_cocone_loaded(double rho, double alpha) const noexcept override
+        void bound_cocone_loaded(double rho, double alpha) const override
         {
                 emit_message<WindowEvent::bound_cocone_loaded>("Exception in emit BoundCocone loaded", rho, alpha);
         }
 
-        void log(const std::string& msg) const noexcept override
+        void log(const std::string& msg) const override
         {
                 emit_message<WindowEvent::log>("Exception in emit log", msg);
         }

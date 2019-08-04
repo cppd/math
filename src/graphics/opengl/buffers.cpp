@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace
 {
-void copy_to_buffer(const opengl::BufferHandle& buffer, GLintptr offset, const void* data, GLsizeiptr data_size) noexcept
+void copy_to_buffer(const opengl::BufferHandle& buffer, GLintptr offset, const void* data, GLsizeiptr data_size)
 {
         void* map_memory_data = glMapNamedBufferRange(buffer, offset, data_size, GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_RANGE_BIT);
 
@@ -28,7 +28,7 @@ void copy_to_buffer(const opengl::BufferHandle& buffer, GLintptr offset, const v
         glUnmapNamedBuffer(buffer);
 }
 
-void copy_from_buffer(const opengl::BufferHandle& buffer, GLintptr offset, void* data, GLsizeiptr data_size) noexcept
+void copy_from_buffer(const opengl::BufferHandle& buffer, GLintptr offset, void* data, GLsizeiptr data_size)
 {
         void* map_memory_data = glMapNamedBufferRange(buffer, offset, data_size, GL_MAP_READ_BIT);
 
@@ -40,28 +40,28 @@ void copy_from_buffer(const opengl::BufferHandle& buffer, GLintptr offset, void*
 
 namespace opengl
 {
-void UniformBuffer::copy_to(GLintptr offset, const void* data, GLsizeiptr data_size) const noexcept
+void UniformBuffer::copy_to(GLintptr offset, const void* data, GLsizeiptr data_size) const
 {
         ASSERT(offset + data_size <= m_data_size);
 
         copy_to_buffer(m_buffer, offset, data, data_size);
 }
 
-void StorageBuffer::copy_to(GLintptr offset, const void* data, GLsizeiptr data_size) const noexcept
+void StorageBuffer::copy_to(GLintptr offset, const void* data, GLsizeiptr data_size) const
 {
         ASSERT(offset + data_size <= m_data_size);
 
         copy_to_buffer(m_buffer, offset, data, data_size);
 }
 
-void StorageBuffer::copy_from(GLintptr offset, void* data, GLsizeiptr data_size) const noexcept
+void StorageBuffer::copy_from(GLintptr offset, void* data, GLsizeiptr data_size) const
 {
         ASSERT(offset + data_size <= m_data_size);
 
         copy_from_buffer(m_buffer, offset, data, data_size);
 }
 
-void ArrayBuffer::copy_to(GLintptr offset, const void* data, GLsizeiptr data_size) const noexcept
+void ArrayBuffer::copy_to(GLintptr offset, const void* data, GLsizeiptr data_size) const
 {
         ASSERT(offset + data_size <= m_data_size);
 

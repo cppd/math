@@ -40,9 +40,9 @@ public:
         BufferWithMemory(BufferWithMemory&&) = default;
         BufferWithMemory& operator=(BufferWithMemory&&) = default;
 
-        virtual operator VkBuffer() const noexcept = 0;
-        virtual VkDeviceSize size() const noexcept = 0;
-        virtual bool usage(VkBufferUsageFlagBits flag) const noexcept = 0;
+        virtual operator VkBuffer() const = 0;
+        virtual VkDeviceSize size() const = 0;
+        virtual bool usage(VkBufferUsageFlagBits flag) const = 0;
 };
 
 class BufferWithHostVisibleMemory final : public BufferWithMemory
@@ -76,9 +76,9 @@ public:
 
         //
 
-        operator VkBuffer() const noexcept override;
-        VkDeviceSize size() const noexcept override;
-        bool usage(VkBufferUsageFlagBits flag) const noexcept override;
+        operator VkBuffer() const override;
+        VkDeviceSize size() const override;
+        bool usage(VkBufferUsageFlagBits flag) const override;
 
         //
 
@@ -154,9 +154,9 @@ public:
 
         //
 
-        operator VkBuffer() const noexcept override;
-        VkDeviceSize size() const noexcept override;
-        bool usage(VkBufferUsageFlagBits flag) const noexcept override;
+        operator VkBuffer() const override;
+        VkDeviceSize size() const override;
+        bool usage(VkBufferUsageFlagBits flag) const override;
 };
 
 class ColorTexture final
@@ -184,9 +184,9 @@ public:
 
         //
 
-        VkImage image() const noexcept;
-        VkFormat format() const noexcept;
-        VkImageView image_view() const noexcept;
+        VkImage image() const;
+        VkFormat format() const;
+        VkImageView image_view() const;
 };
 
 class GrayscaleTexture final
@@ -211,9 +211,9 @@ public:
 
         //
 
-        VkImage image() const noexcept;
-        VkFormat format() const noexcept;
-        VkImageView image_view() const noexcept;
+        VkImage image() const;
+        VkFormat format() const;
+        VkImageView image_view() const;
 };
 
 class DepthAttachment final
@@ -238,13 +238,13 @@ public:
 
         //
 
-        VkImage image() const noexcept;
-        VkFormat format() const noexcept;
-        VkImageView image_view() const noexcept;
-        VkSampleCountFlagBits sample_count() const noexcept;
+        VkImage image() const;
+        VkFormat format() const;
+        VkImageView image_view() const;
+        VkSampleCountFlagBits sample_count() const;
 
-        unsigned width() const noexcept;
-        unsigned height() const noexcept;
+        unsigned width() const;
+        unsigned height() const;
 };
 
 class DepthAttachmentTexture final
@@ -268,12 +268,12 @@ public:
 
         //
 
-        VkImage image() const noexcept;
-        VkFormat format() const noexcept;
-        VkImageView image_view() const noexcept;
+        VkImage image() const;
+        VkFormat format() const;
+        VkImageView image_view() const;
 
-        unsigned width() const noexcept;
-        unsigned height() const noexcept;
+        unsigned width() const;
+        unsigned height() const;
 };
 
 class ColorAttachment final
@@ -297,10 +297,10 @@ public:
 
         //
 
-        VkImage image() const noexcept;
-        VkFormat format() const noexcept;
-        VkImageView image_view() const noexcept;
-        VkSampleCountFlagBits sample_count() const noexcept;
+        VkImage image() const;
+        VkFormat format() const;
+        VkImageView image_view() const;
+        VkSampleCountFlagBits sample_count() const;
 };
 
 class StorageImage final
@@ -324,12 +324,12 @@ public:
 
         //
 
-        VkImage image() const noexcept;
-        VkFormat format() const noexcept;
-        VkImageView image_view() const noexcept;
+        VkImage image() const;
+        VkFormat format() const;
+        VkImageView image_view() const;
 
-        unsigned width() const noexcept;
-        unsigned height() const noexcept;
+        unsigned width() const;
+        unsigned height() const;
 
         //
 

@@ -35,8 +35,8 @@ protected:
         ~Shader();
 
 public:
-        void attach_to_program(GLuint program) const noexcept;
-        void detach_from_program(GLuint program) const noexcept;
+        void attach_to_program(GLuint program) const;
+        void detach_from_program(GLuint program) const;
 };
 
 struct VertexShader final : Shader
@@ -78,7 +78,7 @@ protected:
         Program(Program&&) = default;
         ~Program();
 
-        void use() const noexcept;
+        void use() const;
 
 public:
         void set_uniform_handle(GLint loc, GLuint64 var) const;
@@ -102,7 +102,7 @@ public:
         {
         }
 
-        void draw_arrays(GLenum mode, GLint first, GLsizei count) const noexcept
+        void draw_arrays(GLenum mode, GLint first, GLsizei count) const
         {
                 Program::use();
                 glDrawArrays(mode, first, count);
@@ -122,14 +122,14 @@ public:
         {
         }
 
-        void dispatch_compute(unsigned num_groups_x, unsigned num_groups_y, unsigned num_groups_z) const noexcept
+        void dispatch_compute(unsigned num_groups_x, unsigned num_groups_y, unsigned num_groups_z) const
         {
                 Program::use();
                 glDispatchCompute(num_groups_x, num_groups_y, num_groups_z);
         }
 
         void dispatch_compute(unsigned num_groups_x, unsigned num_groups_y, unsigned num_groups_z, unsigned group_size_x,
-                              unsigned group_size_y, unsigned group_size_z) const noexcept
+                              unsigned group_size_y, unsigned group_size_z) const
         {
                 Program::use();
                 glDispatchComputeGroupSizeARB(num_groups_x, num_groups_y, num_groups_z, group_size_x, group_size_y, group_size_z);

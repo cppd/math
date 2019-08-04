@@ -75,42 +75,42 @@ public:
 
         //
 
-        VkSurfaceKHR surface() const noexcept
+        VkSurfaceKHR surface() const
         {
                 return m_surface;
         }
 
-        const Device& device() const noexcept
+        const Device& device() const
         {
                 return m_device;
         }
 
-        const VkPhysicalDeviceLimits& limits() const noexcept
+        const VkPhysicalDeviceLimits& limits() const
         {
                 return m_physical_device.properties().limits;
         }
 
-        const vulkan::CommandPool& graphics_command_pool() const noexcept
+        const vulkan::CommandPool& graphics_command_pool() const
         {
                 return m_graphics_compute_command_pool;
         }
 
-        const vulkan::CommandPool& transfer_command_pool() const noexcept
+        const vulkan::CommandPool& transfer_command_pool() const
         {
                 return m_transfer_command_pool;
         }
 
-        const std::array<Queue, GRAPHICS_COMPUTE_QUEUE_COUNT>& graphics_queues() const noexcept
+        const std::array<Queue, GRAPHICS_COMPUTE_QUEUE_COUNT>& graphics_queues() const
         {
                 return m_graphics_compute_queues;
         }
 
-        const Queue& transfer_queue() const noexcept
+        const Queue& transfer_queue() const
         {
                 return m_transfer_queues[0];
         }
 
-        const Queue& presentation_queue() const noexcept
+        const Queue& presentation_queue() const
         {
                 return m_presentation_queues[0];
         }

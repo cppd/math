@@ -35,9 +35,9 @@ protected:
                const std::string_view& entry_point_name);
 
 public:
-        VkShaderModule module() const noexcept;
-        VkShaderStageFlagBits stage() const noexcept;
-        const char* entry_point_name() const noexcept;
+        VkShaderModule module() const;
+        VkShaderStageFlagBits stage() const;
+        const char* entry_point_name() const;
 };
 
 class VertexShader final : public Shader

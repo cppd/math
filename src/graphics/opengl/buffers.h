@@ -40,7 +40,7 @@ class Texture2D final
         int m_width = 0, m_height = 0;
 
 public:
-        Texture2D(GLsizei levels, GLenum internalformat, GLsizei width, GLsizei height) noexcept
+        Texture2D(GLsizei levels, GLenum internalformat, GLsizei width, GLsizei height)
         {
                 glTextureStorage2D(m_texture, levels, internalformat, width, height);
                 m_width = width;
@@ -48,70 +48,69 @@ public:
         }
 
         void texture_sub_image_2d(GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format,
-                                  GLenum type, const void* pixels) const noexcept
+                                  GLenum type, const void* pixels) const
         {
                 glTextureSubImage2D(m_texture, level, xoffset, yoffset, width, height, format, type, pixels);
         }
 
         void copy_texture_sub_image_2d(GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width,
-                                       GLsizei height) const noexcept
+                                       GLsizei height) const
         {
                 glCopyTextureSubImage2D(m_texture, level, xoffset, yoffset, x, y, width, height);
         }
 
-        void texture_parameter(GLenum pname, GLint param) const noexcept
+        void texture_parameter(GLenum pname, GLint param) const
         {
                 glTextureParameteri(m_texture, pname, param);
         }
-        void texture_parameter(GLenum pname, GLfloat param) const noexcept
+        void texture_parameter(GLenum pname, GLfloat param) const
         {
                 glTextureParameterf(m_texture, pname, param);
         }
 
         void bind_image_texture(GLuint unit, GLint level, GLboolean layered, GLint layer, GLenum access, GLenum format) const
-                noexcept
         {
                 glBindImageTexture(unit, m_texture, level, layered, layer, access, format);
         }
 
-        GLuint64 texture_resident_handle() const noexcept
+        GLuint64 texture_resident_handle() const
         {
                 GLuint64 texture_handle = glGetTextureHandleARB(m_texture);
                 glMakeTextureHandleResidentARB(texture_handle);
                 return texture_handle;
         }
-        GLuint64 image_resident_handle(GLint level, GLboolean layered, GLint layer, GLenum format, GLenum access) const noexcept
+        GLuint64 image_resident_handle(GLint level, GLboolean layered, GLint layer, GLenum format, GLenum access) const
         {
                 GLuint64 image_handle = glGetImageHandleARB(m_texture, level, layered, layer, format);
                 glMakeImageHandleResidentARB(image_handle, access);
                 return image_handle;
         }
 
-        void clear_tex_image(GLint level, GLenum format, GLenum type, const void* data) const noexcept
+        void clear_tex_image(GLint level, GLenum format, GLenum type, const void* data) const
         {
                 glClearTexImage(m_texture, level, format, type, data);
         }
-        void get_texture_image(GLint level, GLenum format, GLenum type, GLsizei bufSize, void* pixels) const noexcept
+        void get_texture_image(GLint level, GLenum format, GLenum type, GLsizei bufSize, void* pixels) const
         {
                 glGetTextureImage(m_texture, level, format, type, bufSize, pixels);
         }
         void get_texture_sub_image(GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height,
-                                   GLsizei depth, GLenum format, GLenum type, GLsizei bufSize, void* pixels) const noexcept
+                                   GLsizei depth, GLenum format, GLenum type, GLsizei bufSize, void* pixels) const
         {
                 glGetTextureSubImage(m_texture, level, xoffset, yoffset, zoffset, width, height, depth, format, type, bufSize,
                                      pixels);
         }
 
-        void named_framebuffer_texture(GLuint framebuffer, GLenum attachment, GLint level) const noexcept
+        void named_framebuffer_texture(GLuint framebuffer, GLenum attachment, GLint level) const
         {
                 glNamedFramebufferTexture(framebuffer, attachment, m_texture, level);
         }
 
-        int width() const noexcept
+        int width() const
         {
                 return m_width;
         }
-        int height() const noexcept
+        int height() const
         {
                 return m_height;
         }
@@ -123,14 +122,14 @@ class Texture2DMultisample final
         int m_width = 0, m_height = 0;
 
 public:
-        Texture2DMultisample(GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height) noexcept
+        Texture2DMultisample(GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height)
         {
                 glTextureStorage2DMultisample(m_texture, samples, internalformat, width, height, GL_FALSE);
                 m_width = width;
                 m_height = height;
         }
 
-        void named_framebuffer_texture(GLuint framebuffer, GLenum attachment) const noexcept
+        void named_framebuffer_texture(GLuint framebuffer, GLenum attachment) const
         {
                 glNamedFramebufferTexture(framebuffer, attachment, m_texture, 0);
         }
@@ -141,39 +140,39 @@ class Framebuffer final
         FramebufferHandle m_framebuffer;
 
 public:
-        GLenum check_named_framebuffer_status() const noexcept
+        GLenum check_named_framebuffer_status() const
         {
                 return glCheckNamedFramebufferStatus(m_framebuffer, GL_FRAMEBUFFER);
         }
 
-        void bind_framebuffer() const noexcept
+        void bind_framebuffer() const
         {
                 glBindFramebuffer(GL_FRAMEBUFFER, m_framebuffer);
         }
-        void unbind_framebuffer() const noexcept
+        void unbind_framebuffer() const
         {
                 glBindFramebuffer(GL_FRAMEBUFFER, 0);
         }
 
-        void named_framebuffer_draw_buffer(GLenum buf) const noexcept
+        void named_framebuffer_draw_buffer(GLenum buf) const
         {
                 glNamedFramebufferDrawBuffer(m_framebuffer, buf);
         }
-        void named_framebuffer_draw_buffers(GLsizei n, const GLenum* bufs) const noexcept
+        void named_framebuffer_draw_buffers(GLsizei n, const GLenum* bufs) const
         {
                 glNamedFramebufferDrawBuffers(m_framebuffer, n, bufs);
         }
 
-        void named_framebuffer_texture(GLenum attachment, const Texture2D& texture, GLint level) const noexcept
+        void named_framebuffer_texture(GLenum attachment, const Texture2D& texture, GLint level) const
         {
                 texture.named_framebuffer_texture(m_framebuffer, attachment, level);
         }
-        void named_framebuffer_texture(GLenum attachment, const Texture2DMultisample& texture) const noexcept
+        void named_framebuffer_texture(GLenum attachment, const Texture2DMultisample& texture) const
         {
                 texture.named_framebuffer_texture(m_framebuffer, attachment);
         }
 
-        GLuint framebuffer() const noexcept
+        GLuint framebuffer() const
         {
                 return m_framebuffer;
         }
@@ -184,32 +183,32 @@ class UniformBuffer final
         BufferHandle m_buffer;
         GLsizeiptr m_data_size;
 
-        void copy_to(GLintptr offset, const void* data, GLsizeiptr data_size) const noexcept;
+        void copy_to(GLintptr offset, const void* data, GLsizeiptr data_size) const;
 
 public:
-        explicit UniformBuffer(GLsizeiptr data_size) noexcept : m_buffer(GL_UNIFORM_BUFFER), m_data_size(data_size)
+        explicit UniformBuffer(GLsizeiptr data_size) : m_buffer(GL_UNIFORM_BUFFER), m_data_size(data_size)
         {
                 glNamedBufferStorage(m_buffer, data_size, nullptr, GL_MAP_WRITE_BIT);
         }
 
-        void bind(GLuint point) const noexcept
+        void bind(GLuint point) const
         {
                 glBindBufferBase(GL_UNIFORM_BUFFER, point, m_buffer);
         }
 
-        GLsizeiptr size() const noexcept
+        GLsizeiptr size() const
         {
                 return m_data_size;
         }
 
         template <typename T>
-        void copy(GLintptr offset, const T& data) const noexcept
+        void copy(GLintptr offset, const T& data) const
         {
                 copy_to(offset, &data, sizeof(data));
         }
 
         template <typename T>
-        void copy(const T& data) const noexcept
+        void copy(const T& data) const
         {
                 ASSERT(size() == sizeof(data));
 
@@ -222,52 +221,52 @@ class StorageBuffer final
         BufferHandle m_buffer;
         GLsizeiptr m_data_size;
 
-        void copy_to(GLintptr offset, const void* data, GLsizeiptr data_size) const noexcept;
-        void copy_from(GLintptr offset, void* data, GLsizeiptr data_size) const noexcept;
+        void copy_to(GLintptr offset, const void* data, GLsizeiptr data_size) const;
+        void copy_from(GLintptr offset, void* data, GLsizeiptr data_size) const;
 
 public:
-        explicit StorageBuffer(GLsizeiptr data_size) noexcept : m_buffer(GL_SHADER_STORAGE_BUFFER), m_data_size(data_size)
+        explicit StorageBuffer(GLsizeiptr data_size) : m_buffer(GL_SHADER_STORAGE_BUFFER), m_data_size(data_size)
         {
                 glNamedBufferStorage(m_buffer, data_size, nullptr, GL_MAP_WRITE_BIT | GL_MAP_READ_BIT);
         }
 
         template <typename T, typename = std::enable_if_t<sizeof(std::declval<T>().size()) && sizeof(std::declval<T>().data())>>
-        explicit StorageBuffer(const T& data) noexcept : StorageBuffer(storage_size(data))
+        explicit StorageBuffer(const T& data) : StorageBuffer(storage_size(data))
         {
                 write(data);
         }
 
-        void bind(GLuint point) const noexcept
+        void bind(GLuint point) const
         {
                 glBindBufferBase(GL_SHADER_STORAGE_BUFFER, point, m_buffer);
         }
 
-        GLsizeiptr size() const noexcept
+        GLsizeiptr size() const
         {
                 return m_data_size;
         }
 
         template <typename T>
-        std::enable_if_t<is_vector<T> || is_array<T>> write(const T& data) const noexcept
+        std::enable_if_t<is_vector<T> || is_array<T>> write(const T& data) const
         {
                 copy_to(0, data.data(), storage_size(data));
         }
 
         template <typename T>
-        std::enable_if_t<!is_vector<T> && !is_array<T>> write(const T& data) const noexcept
+        std::enable_if_t<!is_vector<T> && !is_array<T>> write(const T& data) const
         {
                 ASSERT(size() == sizeof(data));
                 copy_to(0, &data, sizeof(data));
         }
 
         template <typename T>
-        std::enable_if_t<is_vector<T> || is_array<T>> read(T* data) const noexcept
+        std::enable_if_t<is_vector<T> || is_array<T>> read(T* data) const
         {
                 copy_from(0, data->data(), storage_size(*data));
         }
 
         template <typename T>
-        std::enable_if_t<!is_vector<T> && !is_array<T>> read(T* data) const noexcept
+        std::enable_if_t<!is_vector<T> && !is_array<T>> read(T* data) const
         {
                 copy_from(0, data, sizeof(T));
         }
@@ -278,32 +277,32 @@ class ArrayBuffer final
         BufferHandle m_buffer = 0;
         GLsizeiptr m_data_size;
 
-        void copy_to(GLintptr offset, const void* data, GLsizeiptr data_size) const noexcept;
+        void copy_to(GLintptr offset, const void* data, GLsizeiptr data_size) const;
 
 public:
-        explicit ArrayBuffer(GLsizeiptr data_size) noexcept : m_buffer(GL_ARRAY_BUFFER), m_data_size(data_size)
+        explicit ArrayBuffer(GLsizeiptr data_size) : m_buffer(GL_ARRAY_BUFFER), m_data_size(data_size)
         {
                 glNamedBufferStorage(m_buffer, data_size, nullptr, GL_MAP_WRITE_BIT);
         }
 
         template <typename T, typename = std::enable_if_t<sizeof(std::declval<T>().size()) && sizeof(std::declval<T>().data())>>
-        explicit ArrayBuffer(const T& data) noexcept : ArrayBuffer(storage_size(data))
+        explicit ArrayBuffer(const T& data) : ArrayBuffer(storage_size(data))
         {
                 write(data);
         }
 
-        void vertex_array_vertex_buffer(GLuint vertex_array, GLuint binding_index, GLintptr offset, GLsizei stride) const noexcept
+        void vertex_array_vertex_buffer(GLuint vertex_array, GLuint binding_index, GLintptr offset, GLsizei stride) const
         {
                 glVertexArrayVertexBuffer(vertex_array, binding_index, m_buffer, offset, stride);
         }
 
-        size_t size() const noexcept
+        size_t size() const
         {
                 return m_data_size;
         }
 
         template <typename T>
-        void write(const T& data) const noexcept
+        void write(const T& data) const
         {
                 static_assert(is_vector<T> || is_array<T>);
                 copy_to(0, data.data(), storage_size(data));
@@ -315,13 +314,13 @@ class VertexArray final
         VertexArrayHandle m_vertex_array;
 
 public:
-        void bind() const noexcept
+        void bind() const
         {
                 glBindVertexArray(m_vertex_array);
         }
 
         void attrib(GLuint attrib_index, GLint size, GLenum type, const ArrayBuffer& array_buffer, GLintptr offset,
-                    GLsizei stride) const noexcept
+                    GLsizei stride) const
         {
                 GLuint binding_index = attrib_index;
                 glVertexArrayAttribFormat(m_vertex_array, attrib_index, size, type, GL_FALSE, 0);
@@ -332,7 +331,7 @@ public:
         }
 
         void attrib_i(GLuint attrib_index, GLint size, GLenum type, const ArrayBuffer& array_buffer, GLintptr offset,
-                      GLsizei stride) const noexcept
+                      GLsizei stride) const
         {
                 GLuint binding_index = attrib_index;
                 glVertexArrayAttribIFormat(m_vertex_array, attrib_index, size, type, 0);
@@ -343,7 +342,7 @@ public:
         }
 
 #if 0
-        void enable_attrib(GLuint index) const noexcept
+        void enable_attrib(GLuint index) const
         {
                 glEnableVertexArrayAttrib(m_vertex_array, index);
         }
@@ -366,7 +365,7 @@ class TextureRGBA32F final
         }
 
 public:
-        TextureRGBA32F(GLsizei width, GLsizei height, const Span<const std::uint_least8_t>& srgb_uint8_rgba_pixels) noexcept
+        TextureRGBA32F(GLsizei width, GLsizei height, const Span<const std::uint_least8_t>& srgb_uint8_rgba_pixels)
                 : m_texture(1, GL_RGBA32F, width, height)
         {
                 ASSERT(width >= 0 && height >= 0 && (4ull * width * height == srgb_uint8_rgba_pixels.size()));
@@ -377,51 +376,51 @@ public:
                 set_parameters();
         }
 
-        TextureRGBA32F(GLsizei width, GLsizei height) noexcept : m_texture(1, GL_RGBA32F, width, height)
+        TextureRGBA32F(GLsizei width, GLsizei height) : m_texture(1, GL_RGBA32F, width, height)
         {
                 ASSERT(width >= 0 && height >= 0);
 
                 set_parameters();
         }
 
-        GLuint64 image_resident_handle_write_only() const noexcept
+        GLuint64 image_resident_handle_write_only() const
         {
                 return m_texture.image_resident_handle(0, GL_FALSE, 0, GL_RGBA32F, GL_WRITE_ONLY);
         }
-        GLuint64 image_resident_handle_read_only() const noexcept
+        GLuint64 image_resident_handle_read_only() const
         {
                 return m_texture.image_resident_handle(0, GL_FALSE, 0, GL_RGBA32F, GL_READ_ONLY);
         }
-        GLuint64 image_resident_handle_read_write() const noexcept
+        GLuint64 image_resident_handle_read_write() const
         {
                 return m_texture.image_resident_handle(0, GL_FALSE, 0, GL_RGBA32F, GL_READ_WRITE);
         }
 
-        void bind_image_texture_read_only(GLuint unit) const noexcept
+        void bind_image_texture_read_only(GLuint unit) const
         {
                 m_texture.bind_image_texture(unit, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
         }
-        void bind_image_texture_write_only(GLuint unit) const noexcept
+        void bind_image_texture_write_only(GLuint unit) const
         {
                 m_texture.bind_image_texture(unit, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
         }
-        void bind_image_texture_read_write(GLuint unit) const noexcept
+        void bind_image_texture_read_write(GLuint unit) const
         {
                 m_texture.bind_image_texture(unit, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
         }
 
-        void copy_texture_sub_image() const noexcept
+        void copy_texture_sub_image() const
         {
                 m_texture.copy_texture_sub_image_2d(0, 0, 0, 0, 0, m_texture.width(), m_texture.height());
         }
 
-        void clear_tex_image(GLfloat r, GLfloat g, GLfloat b, GLfloat a) const noexcept
+        void clear_tex_image(GLfloat r, GLfloat g, GLfloat b, GLfloat a) const
         {
                 std::array<GLfloat, 4> v = {r, g, b, a};
                 m_texture.clear_tex_image(0, GL_RGBA, GL_FLOAT, v.data());
         }
         template <typename T>
-        void get_texture_image(T* pixels) const noexcept
+        void get_texture_image(T* pixels) const
         {
                 static_assert(is_float_buffer<T>);
                 unsigned long long size = 4ull * m_texture.width() * m_texture.height();
@@ -429,7 +428,7 @@ public:
                 m_texture.get_texture_image(0, GL_RGBA, GL_FLOAT, size * sizeof(GLfloat), pixels->data());
         }
         template <typename T>
-        void get_texture_sub_image(GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, T* pixels) const noexcept
+        void get_texture_sub_image(GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, T* pixels) const
         {
                 static_assert(is_float_buffer<T>);
                 unsigned long long size = 4ull * width * height;
@@ -440,7 +439,7 @@ public:
                                                 size * sizeof(GLfloat), pixels->data());
         }
 
-        const Texture2D& texture() const noexcept
+        const Texture2D& texture() const
         {
                 return m_texture;
         }
@@ -462,7 +461,7 @@ class TextureR32F final
         }
 
 public:
-        TextureR32F(GLsizei width, GLsizei height, const Span<const std::uint_least8_t>& srgb_uint8_grayscale_pixels) noexcept
+        TextureR32F(GLsizei width, GLsizei height, const Span<const std::uint_least8_t>& srgb_uint8_grayscale_pixels)
                 : m_texture(1, GL_R32F, width, height)
         {
                 ASSERT(width >= 0 && height >= 0 && 1ull * width * height == srgb_uint8_grayscale_pixels.size());
@@ -474,32 +473,32 @@ public:
                 set_parameters();
         }
 
-        TextureR32F(GLsizei width, GLsizei height) noexcept : m_texture(1, GL_R32F, width, height)
+        TextureR32F(GLsizei width, GLsizei height) : m_texture(1, GL_R32F, width, height)
         {
                 ASSERT(width >= 0 && height >= 0);
 
                 set_parameters();
         }
 
-        GLuint64 image_resident_handle_write_only() const noexcept
+        GLuint64 image_resident_handle_write_only() const
         {
                 return m_texture.image_resident_handle(0, GL_FALSE, 0, GL_R32F, GL_WRITE_ONLY);
         }
-        GLuint64 image_resident_handle_read_only() const noexcept
+        GLuint64 image_resident_handle_read_only() const
         {
                 return m_texture.image_resident_handle(0, GL_FALSE, 0, GL_R32F, GL_READ_ONLY);
         }
-        GLuint64 image_resident_handle_read_write() const noexcept
+        GLuint64 image_resident_handle_read_write() const
         {
                 return m_texture.image_resident_handle(0, GL_FALSE, 0, GL_R32F, GL_READ_WRITE);
         }
 
-        void clear_tex_image(GLfloat v) const noexcept
+        void clear_tex_image(GLfloat v) const
         {
                 m_texture.clear_tex_image(0, GL_RED, GL_FLOAT, &v);
         }
         template <typename T>
-        void get_texture_image(T* pixels) const noexcept
+        void get_texture_image(T* pixels) const
         {
                 static_assert(is_float_buffer<T>);
                 unsigned long long size = static_cast<unsigned long long>(m_texture.width()) * m_texture.height();
@@ -507,7 +506,7 @@ public:
                 m_texture.get_texture_image(0, GL_RED, GL_FLOAT, size * sizeof(GLfloat), pixels->data());
         }
         template <typename T>
-        void get_texture_sub_image(GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, T* pixels) const noexcept
+        void get_texture_sub_image(GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, T* pixels) const
         {
                 static_assert(is_float_buffer<T>);
                 unsigned long long size = static_cast<unsigned long long>(width) * height;
@@ -518,7 +517,7 @@ public:
                                                 size * sizeof(GLfloat), pixels->data());
         }
 
-        const Texture2D& texture() const noexcept
+        const Texture2D& texture() const
         {
                 return m_texture;
         }
@@ -530,8 +529,7 @@ class TextureImage final
         GLenum m_format;
 
 public:
-        TextureImage(GLsizei width, GLsizei height, GLenum format) noexcept
-                : m_texture(1, format, width, height), m_format(format)
+        TextureImage(GLsizei width, GLsizei height, GLenum format) : m_texture(1, format, width, height), m_format(format)
         {
                 m_texture.texture_parameter(GL_TEXTURE_WRAP_S, GL_REPEAT);
                 m_texture.texture_parameter(GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -539,20 +537,20 @@ public:
                 m_texture.texture_parameter(GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         }
 
-        GLuint64 image_resident_handle_write_only() const noexcept
+        GLuint64 image_resident_handle_write_only() const
         {
                 return m_texture.image_resident_handle(0, GL_FALSE, 0, m_format, GL_WRITE_ONLY);
         }
-        GLuint64 image_resident_handle_read_only() const noexcept
+        GLuint64 image_resident_handle_read_only() const
         {
                 return m_texture.image_resident_handle(0, GL_FALSE, 0, m_format, GL_READ_ONLY);
         }
-        GLuint64 image_resident_handle_read_write() const noexcept
+        GLuint64 image_resident_handle_read_write() const
         {
                 return m_texture.image_resident_handle(0, GL_FALSE, 0, m_format, GL_READ_WRITE);
         }
 
-        void clear() const noexcept
+        void clear() const
         {
                 if (m_format == GL_R32I)
                 {
@@ -575,17 +573,17 @@ public:
                 error("Unsupported TextureImage format " + std::to_string(static_cast<long long>(m_format)));
         }
 
-        int width() const noexcept
+        int width() const
         {
                 return m_texture.width();
         }
 
-        int height() const noexcept
+        int height() const
         {
                 return m_texture.height();
         }
 
-        GLenum format() const noexcept
+        GLenum format() const
         {
                 return m_format;
         }
@@ -596,7 +594,7 @@ class TextureDepth32 final
         Texture2D m_texture;
 
 public:
-        TextureDepth32(GLsizei width, GLsizei height) noexcept : m_texture(1, GL_DEPTH_COMPONENT32, width, height)
+        TextureDepth32(GLsizei width, GLsizei height) : m_texture(1, GL_DEPTH_COMPONENT32, width, height)
         {
                 m_texture.texture_parameter(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
                 m_texture.texture_parameter(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -606,7 +604,7 @@ public:
                 m_texture.texture_parameter(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         }
 
-        const Texture2D& texture() const noexcept
+        const Texture2D& texture() const
         {
                 return m_texture;
         }
@@ -629,16 +627,16 @@ public:
                 }
         }
 
-        void bind_buffer() const noexcept
+        void bind_buffer() const
         {
                 m_framebuffer.bind_framebuffer();
         }
-        void unbind_buffer() const noexcept
+        void unbind_buffer() const
         {
                 m_framebuffer.unbind_framebuffer();
         }
 
-        const TextureDepth32& depth_texture() const noexcept
+        const TextureDepth32& depth_texture() const
         {
                 return m_depth;
         }
@@ -648,10 +646,10 @@ struct ColorBuffer
 {
         virtual ~ColorBuffer() = default;
 
-        virtual void bind_buffer() const noexcept = 0;
-        virtual void unbind_buffer() const noexcept = 0;
-        virtual void resolve() const noexcept = 0;
-        virtual const TextureRGBA32F& color_texture() const noexcept = 0;
+        virtual void bind_buffer() const = 0;
+        virtual void unbind_buffer() const = 0;
+        virtual void resolve() const = 0;
+        virtual const TextureRGBA32F& color_texture() const = 0;
 };
 
 class ColorBufferSinglesample final : public ColorBuffer
@@ -676,21 +674,21 @@ public:
                 m_framebuffer.named_framebuffer_draw_buffers(1, draw_buffers);
         }
 
-        void bind_buffer() const noexcept override
+        void bind_buffer() const override
         {
                 m_framebuffer.bind_framebuffer();
         }
 
-        void unbind_buffer() const noexcept override
+        void unbind_buffer() const override
         {
                 m_framebuffer.unbind_framebuffer();
         }
 
-        void resolve() const noexcept override
+        void resolve() const override
         {
         }
 
-        const TextureRGBA32F& color_texture() const noexcept override
+        const TextureRGBA32F& color_texture() const override
         {
                 return m_color;
         }
@@ -734,17 +732,17 @@ public:
                 m_framebuffer_single.named_framebuffer_draw_buffers(1, draw_buffers);
         }
 
-        void bind_buffer() const noexcept override
+        void bind_buffer() const override
         {
                 m_framebuffer_multi.bind_framebuffer();
         }
 
-        void unbind_buffer() const noexcept override
+        void unbind_buffer() const override
         {
                 m_framebuffer_multi.unbind_framebuffer();
         }
 
-        void resolve() const noexcept override
+        void resolve() const override
         {
                 int width = m_color_single.texture().width();
                 int height = m_color_single.texture().height();
@@ -752,7 +750,7 @@ public:
                                        0, 0, width, height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
         }
 
-        const TextureRGBA32F& color_texture() const noexcept override
+        const TextureRGBA32F& color_texture() const override
         {
                 return m_color_single;
         }

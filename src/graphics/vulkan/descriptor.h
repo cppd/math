@@ -55,7 +55,7 @@ public:
 
         //
 
-        uint32_t descriptor_set_count() const noexcept;
+        uint32_t descriptor_set_count() const;
         const VkDescriptorSet& descriptor_set(uint32_t index) const;
 
         void update_descriptor_set(

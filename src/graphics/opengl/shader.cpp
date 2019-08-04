@@ -76,7 +76,7 @@ class AttachShader final
         GLuint m_program = 0;
         const opengl::Shader* m_shader = nullptr;
 
-        void destroy() noexcept
+        void destroy()
         {
                 if (m_program && m_shader)
                 {
@@ -84,7 +84,7 @@ class AttachShader final
                 }
         }
 
-        void move(AttachShader* from) noexcept
+        void move(AttachShader* from)
         {
                 m_program = from->m_program;
                 m_shader = from->m_shader;
@@ -106,12 +106,12 @@ public:
         AttachShader(const AttachShader&) = delete;
         AttachShader& operator=(const AttachShader&) = delete;
 
-        AttachShader(AttachShader&& from) noexcept
+        AttachShader(AttachShader&& from)
         {
                 move(&from);
         }
 #if 0
-        AttachShader& operator=(AttachShader&& from) noexcept
+        AttachShader& operator=(AttachShader&& from)
         {
                 if (this != &from)
                 {
@@ -162,12 +162,12 @@ Shader::Shader(GLenum type, const std::string_view& shader_text) : m_shader(type
 
 Shader::~Shader() = default;
 
-void Shader::attach_to_program(GLuint program) const noexcept
+void Shader::attach_to_program(GLuint program) const
 {
         glAttachShader(program, m_shader);
 }
 
-void Shader::detach_from_program(GLuint program) const noexcept
+void Shader::detach_from_program(GLuint program) const
 {
         glDetachShader(program, m_shader);
 }
@@ -234,7 +234,7 @@ Program::Program(const std::vector<const Shader*>& shaders)
 
 Program::~Program() = default;
 
-void Program::use() const noexcept
+void Program::use() const
 {
         glUseProgram(m_program);
 }

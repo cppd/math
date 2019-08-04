@@ -258,21 +258,21 @@ public:
         {
         }
 
-        void stop_all() noexcept
+        void stop_all()
         {
                 std::lock_guard lg(m_lock);
 
                 m_stop_all = true;
         }
 
-        void push(Box* box, int depth) noexcept
+        void push(Box* box, int depth)
         {
                 std::lock_guard lg(m_lock);
 
                 m_jobs.emplace(box, depth);
         }
 
-        bool pop(Box** box, int* depth) noexcept
+        bool pop(Box** box, int* depth)
         {
                 std::lock_guard lg(m_lock);
 

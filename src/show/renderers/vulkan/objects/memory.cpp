@@ -126,17 +126,17 @@ TrianglesSharedMemory::TrianglesSharedMemory(const vulkan::Device& device, const
         m_descriptors.update_descriptor_set(0, bindings, infos);
 }
 
-unsigned TrianglesSharedMemory::set_number() noexcept
+unsigned TrianglesSharedMemory::set_number()
 {
         return SET_NUMBER;
 }
 
-VkDescriptorSetLayout TrianglesSharedMemory::descriptor_set_layout() const noexcept
+VkDescriptorSetLayout TrianglesSharedMemory::descriptor_set_layout() const
 {
         return m_descriptor_set_layout;
 }
 
-const VkDescriptorSet& TrianglesSharedMemory::descriptor_set() const noexcept
+const VkDescriptorSet& TrianglesSharedMemory::descriptor_set() const
 {
         return m_descriptors.descriptor_set(0);
 }
@@ -365,17 +365,17 @@ TrianglesMaterialMemory::TrianglesMaterialMemory(const vulkan::Device& device, c
         }
 }
 
-unsigned TrianglesMaterialMemory::set_number() noexcept
+unsigned TrianglesMaterialMemory::set_number()
 {
         return SET_NUMBER;
 }
 
-uint32_t TrianglesMaterialMemory::descriptor_set_count() const noexcept
+uint32_t TrianglesMaterialMemory::descriptor_set_count() const
 {
         return m_descriptors.descriptor_set_count();
 }
 
-const VkDescriptorSet& TrianglesMaterialMemory::descriptor_set(uint32_t index) const noexcept
+const VkDescriptorSet& TrianglesMaterialMemory::descriptor_set(uint32_t index) const
 {
         return m_descriptors.descriptor_set(index);
 }
@@ -422,17 +422,17 @@ ShadowMemory::ShadowMemory(const vulkan::Device& device, const std::unordered_se
         m_descriptors.update_descriptor_set(0, bindings, infos);
 }
 
-unsigned ShadowMemory::set_number() noexcept
+unsigned ShadowMemory::set_number()
 {
         return SET_NUMBER;
 }
 
-VkDescriptorSetLayout ShadowMemory::descriptor_set_layout() const noexcept
+VkDescriptorSetLayout ShadowMemory::descriptor_set_layout() const
 {
         return m_descriptor_set_layout;
 }
 
-const VkDescriptorSet& ShadowMemory::descriptor_set() const noexcept
+const VkDescriptorSet& ShadowMemory::descriptor_set() const
 {
         return m_descriptors.descriptor_set(0);
 }
@@ -518,17 +518,17 @@ PointsMemory::PointsMemory(const vulkan::Device& device, const std::unordered_se
         m_descriptors.update_descriptor_set(0, bindings, infos);
 }
 
-unsigned PointsMemory::set_number() noexcept
+unsigned PointsMemory::set_number()
 {
         return SET_NUMBER;
 }
 
-VkDescriptorSetLayout PointsMemory::descriptor_set_layout() const noexcept
+VkDescriptorSetLayout PointsMemory::descriptor_set_layout() const
 {
         return m_descriptor_set_layout;
 }
 
-const VkDescriptorSet& PointsMemory::descriptor_set() const noexcept
+const VkDescriptorSet& PointsMemory::descriptor_set() const
 {
         return m_descriptors.descriptor_set(0);
 }

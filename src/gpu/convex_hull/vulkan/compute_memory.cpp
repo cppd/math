@@ -54,17 +54,17 @@ ConvexHullPrepareMemory::ConvexHullPrepareMemory(const vulkan::Device& device)
 {
 }
 
-unsigned ConvexHullPrepareMemory::set_number() noexcept
+unsigned ConvexHullPrepareMemory::set_number()
 {
         return SET_NUMBER;
 }
 
-VkDescriptorSetLayout ConvexHullPrepareMemory::descriptor_set_layout() const noexcept
+VkDescriptorSetLayout ConvexHullPrepareMemory::descriptor_set_layout() const
 {
         return m_descriptor_set_layout;
 }
 
-const VkDescriptorSet& ConvexHullPrepareMemory::descriptor_set() const noexcept
+const VkDescriptorSet& ConvexHullPrepareMemory::descriptor_set() const
 {
         return m_descriptors.descriptor_set(0);
 }
@@ -133,17 +133,17 @@ void ConvexHullPrepareConstant::set_buffer_and_group_size(uint32_t v)
         m_data.local_size_x = v;
 }
 
-const std::vector<VkSpecializationMapEntry>& ConvexHullPrepareConstant::entries() const noexcept
+const std::vector<VkSpecializationMapEntry>& ConvexHullPrepareConstant::entries() const
 {
         return m_entries;
 }
 
-const void* ConvexHullPrepareConstant::data() const noexcept
+const void* ConvexHullPrepareConstant::data() const
 {
         return &m_data;
 }
 
-size_t ConvexHullPrepareConstant::size() const noexcept
+size_t ConvexHullPrepareConstant::size() const
 {
         return sizeof(m_data);
 }
@@ -173,17 +173,17 @@ ConvexHullMergeMemory::ConvexHullMergeMemory(const vulkan::Device& device)
 {
 }
 
-unsigned ConvexHullMergeMemory::set_number() noexcept
+unsigned ConvexHullMergeMemory::set_number()
 {
         return SET_NUMBER;
 }
 
-VkDescriptorSetLayout ConvexHullMergeMemory::descriptor_set_layout() const noexcept
+VkDescriptorSetLayout ConvexHullMergeMemory::descriptor_set_layout() const
 {
         return m_descriptor_set_layout;
 }
 
-const VkDescriptorSet& ConvexHullMergeMemory::descriptor_set() const noexcept
+const VkDescriptorSet& ConvexHullMergeMemory::descriptor_set() const
 {
         return m_descriptors.descriptor_set(0);
 }
@@ -245,17 +245,17 @@ void ConvexHullMergeConstant::set_local_size_x(uint32_t v)
         m_data.local_size_x = v;
 }
 
-const std::vector<VkSpecializationMapEntry>& ConvexHullMergeConstant::entries() const noexcept
+const std::vector<VkSpecializationMapEntry>& ConvexHullMergeConstant::entries() const
 {
         return m_entries;
 }
 
-const void* ConvexHullMergeConstant::data() const noexcept
+const void* ConvexHullMergeConstant::data() const
 {
         return &m_data;
 }
 
-size_t ConvexHullMergeConstant::size() const noexcept
+size_t ConvexHullMergeConstant::size() const
 {
         return sizeof(m_data);
 }
@@ -303,17 +303,17 @@ ConvexHullFilterMemory::ConvexHullFilterMemory(const vulkan::Device& device)
 {
 }
 
-unsigned ConvexHullFilterMemory::set_number() noexcept
+unsigned ConvexHullFilterMemory::set_number()
 {
         return SET_NUMBER;
 }
 
-VkDescriptorSetLayout ConvexHullFilterMemory::descriptor_set_layout() const noexcept
+VkDescriptorSetLayout ConvexHullFilterMemory::descriptor_set_layout() const
 {
         return m_descriptor_set_layout;
 }
 
-const VkDescriptorSet& ConvexHullFilterMemory::descriptor_set() const noexcept
+const VkDescriptorSet& ConvexHullFilterMemory::descriptor_set() const
 {
         return m_descriptors.descriptor_set(0);
 }
@@ -373,17 +373,17 @@ void ConvexHullFilterConstant::set_line_size(int32_t v)
         m_data.line_size = v;
 }
 
-const std::vector<VkSpecializationMapEntry>& ConvexHullFilterConstant::entries() const noexcept
+const std::vector<VkSpecializationMapEntry>& ConvexHullFilterConstant::entries() const
 {
         return m_entries;
 }
 
-const void* ConvexHullFilterConstant::data() const noexcept
+const void* ConvexHullFilterConstant::data() const
 {
         return &m_data;
 }
 
-size_t ConvexHullFilterConstant::size() const noexcept
+size_t ConvexHullFilterConstant::size() const
 {
         return sizeof(m_data);
 }

@@ -28,8 +28,8 @@ protected:
         virtual ~SpecializationConstant() = default;
 
 public:
-        virtual const std::vector<VkSpecializationMapEntry>& entries() const noexcept = 0;
-        virtual const void* data() const noexcept = 0;
-        virtual size_t size() const noexcept = 0;
+        virtual const std::vector<VkSpecializationMapEntry>& entries() const = 0;
+        virtual const void* data() const = 0;
+        virtual size_t size() const = 0;
 };
 }

@@ -53,7 +53,7 @@ public:
         {
                 XCloseDisplay(m_display);
         }
-        Display* display_ptr() noexcept
+        Display* display_ptr()
         {
                 return m_display;
         }

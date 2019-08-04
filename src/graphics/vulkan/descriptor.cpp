@@ -61,14 +61,12 @@ VkWriteDescriptorSet create_write_descriptor_set(VkDescriptorSet descriptor_set,
         write.descriptorType = descriptor_set_layout_binding.descriptorType;
         write.descriptorCount = descriptor_set_layout_binding.descriptorCount;
 
-        auto buffer = [&](const VkDescriptorBufferInfo& info) noexcept
-        {
+        auto buffer = [&](const VkDescriptorBufferInfo& info) {
                 ASSERT(descriptor_set_layout_binding.descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER ||
                        descriptor_set_layout_binding.descriptorType == VK_DESCRIPTOR_TYPE_STORAGE_BUFFER);
                 write.pBufferInfo = &info;
         };
-        auto image = [&](const VkDescriptorImageInfo& info) noexcept
-        {
+        auto image = [&](const VkDescriptorImageInfo& info) {
                 ASSERT(descriptor_set_layout_binding.descriptorType == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER ||
                        descriptor_set_layout_binding.descriptorType == VK_DESCRIPTOR_TYPE_STORAGE_IMAGE);
                 write.pImageInfo = &info;
@@ -131,7 +129,7 @@ const VkDescriptorSetLayoutBinding& Descriptors::layout_binding(uint32_t binding
         return m_descriptor_set_layout_bindings[i->second];
 }
 
-uint32_t Descriptors::descriptor_set_count() const noexcept
+uint32_t Descriptors::descriptor_set_count() const
 {
         return m_descriptor_sets.count();
 }

@@ -36,12 +36,12 @@ class AtomicTerminate
 public:
         static constexpr bool is_always_lock_free = std::atomic<DataType>::is_always_lock_free;
 
-        void set_terminate_quietly() noexcept
+        void set_terminate_quietly()
         {
                 m_terminate |= TERMINATE_QUIETLY;
         }
 
-        void set_terminate_with_message() noexcept
+        void set_terminate_with_message()
         {
                 m_terminate |= TERMINATE_WITH_MESSAGE;
         }
@@ -129,12 +129,12 @@ public:
                 m_text = text;
         }
 
-        void terminate_quietly() noexcept override
+        void terminate_quietly() override
         {
                 m_terminate.set_terminate_quietly();
         }
 
-        void terminate_with_message() noexcept override
+        void terminate_with_message() override
         {
                 m_terminate.set_terminate_with_message();
         }

@@ -65,19 +65,19 @@ public:
                 Font font(size);
                 create_font_glyphs(font, max_image_dimension, max_image_dimension, &m_glyphs, &m_width, &m_height, &m_pixels);
         }
-        int width() const noexcept
+        int width() const
         {
                 return m_width;
         }
-        int height() const noexcept
+        int height() const
         {
                 return m_height;
         }
-        std::unordered_map<char32_t, FontGlyph>& glyphs() noexcept
+        std::unordered_map<char32_t, FontGlyph>& glyphs()
         {
                 return m_glyphs;
         }
-        std::vector<std::uint_least8_t>& pixels() noexcept
+        std::vector<std::uint_least8_t>& pixels()
         {
                 return m_pixels;
         }

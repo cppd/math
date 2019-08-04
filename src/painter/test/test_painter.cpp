@@ -59,11 +59,11 @@ public:
                 }
         }
 
-        void painter_pixel_before(const std::array<int_least16_t, 3>&) noexcept override
+        void painter_pixel_before(const std::array<int_least16_t, 3>&) override
         {
         }
 
-        void painter_pixel_after(const std::array<int_least16_t, 3>& pixel, const Color& color) noexcept override
+        void painter_pixel_after(const std::array<int_least16_t, 3>& pixel, const Color& color) override
         {
                 try
                 {
@@ -75,7 +75,7 @@ public:
                 }
         }
 
-        void painter_error_message(const std::string& msg) noexcept override
+        void painter_error_message(const std::string& msg) override
         {
                 LOG("Painter error message");
                 LOG(msg);

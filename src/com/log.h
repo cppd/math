@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <vector>
 
 void log_init();
-void log_exit() noexcept;
+void log_exit();
 
 class LogCallback
 {
@@ -29,12 +29,12 @@ protected:
         ~LogCallback() = default;
 
 public:
-        virtual void log(const std::string& msg) const noexcept = 0;
+        virtual void log(const std::string& msg) const = 0;
 };
 
-void set_log_callback(LogCallback* callback) noexcept;
+void set_log_callback(LogCallback* callback);
 
 std::vector<std::string> format_log_message(const std::string& msg) noexcept;
-void write_formatted_log_messages_to_stderr(const std::vector<std::string>& message);
+void write_formatted_log_messages_to_stderr(const std::vector<std::string>& message) noexcept;
 
 void LOG(const std::string& msg) noexcept;

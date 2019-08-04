@@ -439,17 +439,17 @@ BufferWithHostVisibleMemory::BufferWithHostVisibleMemory(const Device& device, c
         copy_to(0, data, data_size);
 }
 
-BufferWithHostVisibleMemory::operator VkBuffer() const noexcept
+BufferWithHostVisibleMemory::operator VkBuffer() const
 {
         return m_buffer;
 }
 
-VkDeviceSize BufferWithHostVisibleMemory::size() const noexcept
+VkDeviceSize BufferWithHostVisibleMemory::size() const
 {
         return m_buffer.size();
 }
 
-bool BufferWithHostVisibleMemory::usage(VkBufferUsageFlagBits flag) const noexcept
+bool BufferWithHostVisibleMemory::usage(VkBufferUsageFlagBits flag) const
 {
         return m_buffer.usage(flag);
 }
@@ -495,17 +495,17 @@ BufferWithDeviceLocalMemory::BufferWithDeviceLocalMemory(const Device& device, c
         staging_buffer_copy(device, transfer_command_pool, transfer_queue, m_buffer, data_size, data);
 }
 
-BufferWithDeviceLocalMemory::operator VkBuffer() const noexcept
+BufferWithDeviceLocalMemory::operator VkBuffer() const
 {
         return m_buffer;
 }
 
-VkDeviceSize BufferWithDeviceLocalMemory::size() const noexcept
+VkDeviceSize BufferWithDeviceLocalMemory::size() const
 {
         return m_buffer.size();
 }
 
-bool BufferWithDeviceLocalMemory::usage(VkBufferUsageFlagBits flag) const noexcept
+bool BufferWithDeviceLocalMemory::usage(VkBufferUsageFlagBits flag) const
 {
         return m_buffer.usage(flag);
 }
@@ -624,17 +624,17 @@ ColorTexture::ColorTexture(const Device& device, const CommandPool& graphics_com
         end_commands(graphics_queue, command_buffer);
 }
 
-VkImage ColorTexture::image() const noexcept
+VkImage ColorTexture::image() const
 {
         return m_image;
 }
 
-VkFormat ColorTexture::format() const noexcept
+VkFormat ColorTexture::format() const
 {
         return m_format;
 }
 
-VkImageView ColorTexture::image_view() const noexcept
+VkImageView ColorTexture::image_view() const
 {
         return m_image_view;
 }
@@ -704,17 +704,17 @@ GrayscaleTexture::GrayscaleTexture(const Device& device, const CommandPool& grap
         }
 }
 
-VkImage GrayscaleTexture::image() const noexcept
+VkImage GrayscaleTexture::image() const
 {
         return m_image;
 }
 
-VkFormat GrayscaleTexture::format() const noexcept
+VkFormat GrayscaleTexture::format() const
 {
         return m_format;
 }
 
-VkImageView GrayscaleTexture::image_view() const noexcept
+VkImageView GrayscaleTexture::image_view() const
 {
         return m_image_view;
 }
@@ -738,32 +738,32 @@ DepthAttachment::DepthAttachment(const Device& device, const std::unordered_set<
         m_height = height;
 }
 
-VkImage DepthAttachment::image() const noexcept
+VkImage DepthAttachment::image() const
 {
         return m_image;
 }
 
-VkFormat DepthAttachment::format() const noexcept
+VkFormat DepthAttachment::format() const
 {
         return m_format;
 }
 
-VkImageView DepthAttachment::image_view() const noexcept
+VkImageView DepthAttachment::image_view() const
 {
         return m_image_view;
 }
 
-VkSampleCountFlagBits DepthAttachment::sample_count() const noexcept
+VkSampleCountFlagBits DepthAttachment::sample_count() const
 {
         return m_sample_count;
 }
 
-unsigned DepthAttachment::width() const noexcept
+unsigned DepthAttachment::width() const
 {
         return m_width;
 }
 
-unsigned DepthAttachment::height() const noexcept
+unsigned DepthAttachment::height() const
 {
         return m_height;
 }
@@ -794,27 +794,27 @@ DepthAttachmentTexture::DepthAttachmentTexture(const Device& device, const std::
         m_image_view = create_image_view(device, m_image, m_format, VK_IMAGE_ASPECT_DEPTH_BIT);
 }
 
-VkImage DepthAttachmentTexture::image() const noexcept
+VkImage DepthAttachmentTexture::image() const
 {
         return m_image;
 }
 
-VkFormat DepthAttachmentTexture::format() const noexcept
+VkFormat DepthAttachmentTexture::format() const
 {
         return m_format;
 }
 
-VkImageView DepthAttachmentTexture::image_view() const noexcept
+VkImageView DepthAttachmentTexture::image_view() const
 {
         return m_image_view;
 }
 
-unsigned DepthAttachmentTexture::width() const noexcept
+unsigned DepthAttachmentTexture::width() const
 {
         return m_width;
 }
 
-unsigned DepthAttachmentTexture::height() const noexcept
+unsigned DepthAttachmentTexture::height() const
 {
         return m_height;
 }
@@ -838,22 +838,22 @@ ColorAttachment::ColorAttachment(const Device& device, const std::unordered_set<
         ASSERT(m_format == format);
 }
 
-VkImage ColorAttachment::image() const noexcept
+VkImage ColorAttachment::image() const
 {
         return m_image;
 }
 
-VkFormat ColorAttachment::format() const noexcept
+VkFormat ColorAttachment::format() const
 {
         return m_format;
 }
 
-VkImageView ColorAttachment::image_view() const noexcept
+VkImageView ColorAttachment::image_view() const
 {
         return m_image_view;
 }
 
-VkSampleCountFlagBits ColorAttachment::sample_count() const noexcept
+VkSampleCountFlagBits ColorAttachment::sample_count() const
 {
         return m_sample_count;
 }
@@ -913,27 +913,27 @@ StorageImage::StorageImage(const Device& device, const CommandPool& graphics_com
         end_commands(graphics_queue, command_buffer);
 }
 
-VkImage StorageImage::image() const noexcept
+VkImage StorageImage::image() const
 {
         return m_image;
 }
 
-VkFormat StorageImage::format() const noexcept
+VkFormat StorageImage::format() const
 {
         return m_format;
 }
 
-VkImageView StorageImage::image_view() const noexcept
+VkImageView StorageImage::image_view() const
 {
         return m_image_view;
 }
 
-unsigned StorageImage::width() const noexcept
+unsigned StorageImage::width() const
 {
         return m_width;
 }
 
-unsigned StorageImage::height() const noexcept
+unsigned StorageImage::height() const
 {
         return m_height;
 }

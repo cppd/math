@@ -102,17 +102,17 @@ TextMemory::TextMemory(const vulkan::Device& device, const std::unordered_set<ui
         m_descriptors.update_descriptor_set(0, bindings, infos);
 }
 
-unsigned TextMemory::set_number() noexcept
+unsigned TextMemory::set_number()
 {
         return SET_NUMBER;
 }
 
-VkDescriptorSetLayout TextMemory::descriptor_set_layout() const noexcept
+VkDescriptorSetLayout TextMemory::descriptor_set_layout() const
 {
         return m_descriptor_set_layout;
 }
 
-const VkDescriptorSet& TextMemory::descriptor_set() const noexcept
+const VkDescriptorSet& TextMemory::descriptor_set() const
 {
         return m_descriptors.descriptor_set(0);
 }

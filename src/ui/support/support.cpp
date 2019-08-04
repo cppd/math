@@ -128,30 +128,33 @@ void set_slider_to_middle(QSlider* slider)
 void add_to_text_edit_and_to_stderr(QTextEdit* text_edit, const std::vector<std::string>& lines,
                                     TextEditMessageType type) noexcept
 {
-        ASSERT(text_edit);
-
         try
         {
-                write_formatted_log_messages_to_stderr(lines);
+                ASSERT(text_edit);
 
-                bool bottom = text_edit->verticalScrollBar()->value() == text_edit->verticalScrollBar()->maximum() ||
-                              text_edit->verticalScrollBar()->maximum() == 0;
+                try
+                {
+                        write_formatted_log_messages_to_stderr(lines);
 
-                if (bottom)
-                {
-                        write_to_text_edit(text_edit, lines, type);
-                        text_edit->verticalScrollBar()->setValue(text_edit->verticalScrollBar()->maximum());
+                        bool bottom = text_edit->verticalScrollBar()->value() == text_edit->verticalScrollBar()->maximum() ||
+                                      text_edit->verticalScrollBar()->maximum() == 0;
+
+                        if (bottom)
+                        {
+                                write_to_text_edit(text_edit, lines, type);
+                                text_edit->verticalScrollBar()->setValue(text_edit->verticalScrollBar()->maximum());
+                        }
+                        else
+                        {
+                                int v = text_edit->verticalScrollBar()->value();
+                                write_to_text_edit(text_edit, lines, type);
+                                text_edit->verticalScrollBar()->setValue(v);
+                        }
                 }
-                else
+                catch (std::exception& e)
                 {
-                        int v = text_edit->verticalScrollBar()->value();
-                        write_to_text_edit(text_edit, lines, type);
-                        text_edit->verticalScrollBar()->setValue(v);
+                        error_fatal(std::string("error add message: ") + e.what());
                 }
-        }
-        catch (std::exception& e)
-        {
-                error_fatal(std::string("error add message: ") + e.what());
         }
         catch (...)
         {

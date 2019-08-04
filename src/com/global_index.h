@@ -49,7 +49,7 @@ class GlobalIndex
         static_assert(is_native_integral<IndexType>);
 
         template <typename T>
-        static constexpr void static_check_input_type() noexcept
+        static constexpr void static_check_input_type()
         {
                 // Все размеры должны быть положительными, все координаты неотрицательными,
                 // поэтому не требуется, чтобы типы были или оба знаковые, или оба беззнаковые.
@@ -115,19 +115,19 @@ public:
         {
         }
 
-        constexpr IndexType count() const noexcept
+        constexpr IndexType count() const
         {
                 return m_count;
         }
 
-        constexpr IndexType stride(unsigned n) const noexcept
+        constexpr IndexType stride(unsigned n) const
         {
                 ASSERT(n < N);
                 return m_strides[n];
         }
 
         template <typename T>
-        constexpr IndexType compute(const T& p) const noexcept
+        constexpr IndexType compute(const T& p) const
         {
                 static_check_input_type<T>();
 

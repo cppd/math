@@ -138,7 +138,7 @@ std::enable_if_t<std::is_same_v<std::remove_cv_t<T>, mpz_class>, std::string> ty
 // В одних случаях параллельность ускоряет (точки внутри сферы), в других замедляет (точки на поверхности сферы).
 // При использовании mpz_class параллельность ускоряет.
 template <typename S, typename C>
-int thread_count() noexcept
+int thread_count()
 {
         static_assert(is_integral<S> && is_integral<C>);
 

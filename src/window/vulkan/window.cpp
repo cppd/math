@@ -168,7 +168,7 @@ class VulkanWindowImplementation final : public VulkanWindow
                 global_event_interface = event_interface;
         }
 
-        void clear_global_variables() const noexcept
+        void clear_global_variables() const
         {
                 global_event_interface = nullptr;
                 --global_glfw_window_count;
@@ -230,7 +230,7 @@ void vulkan_window_init()
         }
 }
 
-void vulkan_window_terminate() noexcept
+void vulkan_window_terminate()
 {
         glfwTerminate();
 }
