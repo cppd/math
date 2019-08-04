@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "opengl_memory.h"
+#include "compute_memory.h"
 
 namespace gpgpu_optical_flow_compute_opengl_implementation
 {

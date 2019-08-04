@@ -15,13 +15,14 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "opengl_of_show.h"
+#include "show.h"
+
+#include "compute.h"
 
 #include "com/conversion.h"
 #include "com/error.h"
 #include "com/time.h"
 #include "com/type/limit.h"
-#include "gpgpu/optical_flow/compute/opengl_of_compute.h"
 #include "graphics/opengl/buffers.h"
 #include "graphics/opengl/capabilities.h"
 #include "graphics/opengl/shader.h"
@@ -39,11 +40,11 @@ constexpr const char fragment_shader[]
 };
 constexpr const char debug_vertex_shader[]
 {
-#include "of_debug.vert.str"
+#include "of_show_debug.vert.str"
 };
 constexpr const char debug_fragment_shader[]
 {
-#include "of_debug.frag.str"
+#include "of_show_debug.frag.str"
 };
 // clang-format on
 

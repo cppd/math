@@ -31,14 +31,15 @@ Packt Publishing, 2015.
 Chapter 5. Tracking Objects in Videos.
 */
 
-#include "opengl_of_compute.h"
+#include "compute.h"
+
+#include "compute_memory.h"
 
 #include "com/error.h"
 #include "com/log.h"
 #include "com/math.h"
 #include "com/print.h"
 #include "gpgpu/com/groups.h"
-#include "gpgpu/optical_flow/compute/objects/opengl_memory.h"
 #include "graphics/opengl/shader.h"
 
 #include <array>
