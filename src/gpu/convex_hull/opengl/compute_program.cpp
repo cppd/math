@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "compute_program.h"
 
 #include "com/print.h"
-#include "gpgpu/convex_hull/com/com.h"
+#include "gpu/convex_hull/com/com.h"
 #include "graphics/opengl/query.h"
 
 #include <string>

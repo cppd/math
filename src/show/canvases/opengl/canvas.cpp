@@ -17,11 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "canvas.h"
 
-#include "gpgpu/convex_hull/opengl/show.h"
-#include "gpgpu/dft/opengl/show.h"
-#include "gpgpu/optical_flow/opengl/show.h"
-#include "gpgpu/pencil_sketch/opengl/show.h"
-#include "text/opengl/show.h"
+#include "gpu/convex_hull/opengl/show.h"
+#include "gpu/dft/opengl/show.h"
+#include "gpu/optical_flow/opengl/show.h"
+#include "gpu/pencil_sketch/opengl/show.h"
+#include "gpu/text/opengl/show.h"
 
 namespace
 {

@@ -380,7 +380,7 @@ AddIncludeFiles(VULKAN_SHADERS
 AddIncludeFiles(VULKAN_SHADERS
                         HEADER_FILE "src/graphics/header.glsl"
                         OUTPUT_EXTENSION "spr"
-                        DIRECTORIES "src/gpgpu" "src/text"
+                        DIRECTORIES "src/gpu"
                         EXTENSIONS ${extensions_shaders})
 
 AddIncludeFiles(OPENGL_SHADERS
@@ -390,7 +390,7 @@ AddIncludeFiles(OPENGL_SHADERS
                         EXTENSIONS ${extensions_shaders})
 AddIncludeFiles(OPENGL_SHADERS
                         OUTPUT_EXTENSION "str"
-                        DIRECTORIES "src/graphics" "src/gpgpu" "src/text"
+                        DIRECTORIES "src/graphics" "src/gpu"
                         EXTENSIONS ${extensions_shaders})
 
 AddIncludeFiles(BINARY_FILES

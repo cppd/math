@@ -18,9 +18,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "canvas.h"
 
 #include "com/log.h"
-#include "gpgpu/convex_hull/vulkan/show.h"
+#include "gpu/convex_hull/vulkan/show.h"
+#include "gpu/text/vulkan/show.h"
 #include "graphics/vulkan/objects.h"
-#include "text/vulkan/show.h"
 
 #include <thread>
 

@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/log.h"
 #include "com/merge.h"
 #include "com/time.h"
-#include "gpgpu/convex_hull/com/com.h"
+#include "gpu/convex_hull/com/com.h"
 #include "graphics/vulkan/create.h"
 #include "graphics/vulkan/error.h"
 #include "graphics/vulkan/queue.h"
