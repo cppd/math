@@ -15,7 +15,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "opengl_text.h"
+#include "text.h"
+
+#include "memory.h"
 
 #include "com/container.h"
 #include "com/error.h"
@@ -26,7 +28,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/opengl/capabilities.h"
 #include "graphics/opengl/query.h"
 #include "graphics/opengl/shader.h"
-#include "text/objects/opengl_memory.h"
 
 #include <array>
 #include <optional>

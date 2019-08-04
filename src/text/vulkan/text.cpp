@@ -15,7 +15,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "vulkan_text.h"
+#include "text.h"
+
+#include "memory.h"
+#include "sampler.h"
+#include "vertex.h"
 
 #include "com/container.h"
 #include "com/font/font.h"
@@ -28,9 +32,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/vulkan/queue.h"
 #include "graphics/vulkan/shader.h"
 #include "graphics/vulkan/sync.h"
-#include "text/objects/vulkan_memory.h"
-#include "text/objects/vulkan_sampler.h"
-#include "text/objects/vulkan_vertex.h"
 
 #include <array>
 #include <optional>

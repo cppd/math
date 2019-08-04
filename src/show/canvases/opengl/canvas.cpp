@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "gpgpu/dft/opengl/show.h"
 #include "gpgpu/optical_flow/opengl/show.h"
 #include "gpgpu/pencil_sketch/opengl/show.h"
-#include "text/opengl_text.h"
+#include "text/opengl/text.h"
 
 namespace
 {
