@@ -30,8 +30,8 @@ constexpr std::initializer_list<vulkan::PhysicalDeviceFeatures> REQUIRED_DEVICE_
 };
 // clang-format on
 
-namespace impl = gpgpu_convex_hull_compute_vulkan_implementation;
-
+namespace gpgpu_vulkan
+{
 namespace
 {
 void buffer_barrier(VkCommandBuffer command_buffer, VkBuffer buffer, VkAccessFlags dst_access_mask,
@@ -53,7 +53,7 @@ void buffer_barrier(VkCommandBuffer command_buffer, VkBuffer buffer, VkAccessFla
                              nullptr, 1, &barrier, 0, nullptr);
 }
 
-class Impl final : public gpgpu_vulkan::ConvexHullCompute
+class Impl final : public ConvexHullCompute
 {
         const std::thread::id m_thread_id = std::this_thread::get_id();
 
@@ -63,9 +63,9 @@ class Impl final : public gpgpu_vulkan::ConvexHullCompute
         VkBuffer m_points_buffer = VK_NULL_HANDLE;
         VkBuffer m_point_count_buffer = VK_NULL_HANDLE;
 
-        impl::ProgramPrepare m_program_prepare;
-        impl::ProgramMerge m_program_merge;
-        impl::ProgramFilter m_program_filter;
+        ConvexHullProgramPrepare m_program_prepare;
+        ConvexHullProgramMerge m_program_merge;
+        ConvexHullProgramFilter m_program_filter;
 
         void compute_commands(VkCommandBuffer command_buffer) const override
         {
@@ -140,8 +140,6 @@ public:
 };
 }
 
-namespace gpgpu_vulkan
-{
 std::vector<vulkan::PhysicalDeviceFeatures> ConvexHullCompute::required_device_features()
 {
         return REQUIRED_DEVICE_FEATURES;

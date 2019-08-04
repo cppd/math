@@ -25,9 +25,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <unordered_set>
 #include <vector>
 
-namespace gpgpu_convex_hull_show_vulkan_implementation
+namespace gpgpu_vulkan
 {
-class ShaderMemory final
+class ConvexHullShaderMemory final
 {
         static constexpr int SET_NUMBER = 0;
 
@@ -49,14 +49,14 @@ class ShaderMemory final
         size_t m_data_buffer_index;
 
 public:
-        ShaderMemory(const vulkan::Device& device, const std::unordered_set<uint32_t>& family_indices);
+        ConvexHullShaderMemory(const vulkan::Device& device, const std::unordered_set<uint32_t>& family_indices);
 
-        ShaderMemory(const ShaderMemory&) = delete;
-        ShaderMemory& operator=(const ShaderMemory&) = delete;
-        ShaderMemory& operator=(ShaderMemory&&) = delete;
+        ConvexHullShaderMemory(const ConvexHullShaderMemory&) = delete;
+        ConvexHullShaderMemory& operator=(const ConvexHullShaderMemory&) = delete;
+        ConvexHullShaderMemory& operator=(ConvexHullShaderMemory&&) = delete;
 
-        ShaderMemory(ShaderMemory&&) = default;
-        ~ShaderMemory() = default;
+        ConvexHullShaderMemory(ConvexHullShaderMemory&&) = default;
+        ~ConvexHullShaderMemory() = default;
 
         //
 

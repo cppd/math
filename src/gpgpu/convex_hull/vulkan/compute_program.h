@@ -23,14 +23,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/vulkan/objects.h"
 #include "graphics/vulkan/shader.h"
 
-namespace gpgpu_convex_hull_compute_vulkan_implementation
+namespace gpgpu_vulkan
 {
-class ProgramPrepare final
+class ConvexHullProgramPrepare final
 {
         const vulkan::VulkanInstance& m_instance;
 
-        PrepareMemory m_memory;
-        PrepareConstant m_constant;
+        ConvexHullPrepareMemory m_memory;
+        ConvexHullPrepareConstant m_constant;
         vulkan::ComputeShader m_shader;
         vulkan::PipelineLayout m_pipeline_layout;
         vulkan::Pipeline m_pipeline;
@@ -38,64 +38,64 @@ class ProgramPrepare final
         unsigned m_height = 0;
 
 public:
-        ProgramPrepare(const vulkan::VulkanInstance& instance);
+        ConvexHullProgramPrepare(const vulkan::VulkanInstance& instance);
 
-        ProgramPrepare(const ProgramPrepare&) = delete;
-        ProgramPrepare& operator=(const ProgramPrepare&) = delete;
-        ProgramPrepare& operator=(ProgramPrepare&&) = delete;
+        ConvexHullProgramPrepare(const ConvexHullProgramPrepare&) = delete;
+        ConvexHullProgramPrepare& operator=(const ConvexHullProgramPrepare&) = delete;
+        ConvexHullProgramPrepare& operator=(ConvexHullProgramPrepare&&) = delete;
 
-        ProgramPrepare(ProgramPrepare&&) = default;
-        ~ProgramPrepare() = default;
-
-        void create_buffers(const vulkan::StorageImage& objects, const vulkan::BufferWithMemory& lines_buffer);
-        void delete_buffers();
-        void commands(VkCommandBuffer command_buffer) const;
-};
-
-class ProgramMerge final
-{
-        const vulkan::VulkanInstance& m_instance;
-
-        MergeMemory m_memory;
-        MergeConstant m_constant;
-        vulkan::ComputeShader m_shader;
-        vulkan::PipelineLayout m_pipeline_layout;
-        vulkan::Pipeline m_pipeline;
-
-public:
-        ProgramMerge(const vulkan::VulkanInstance& instance);
-
-        ProgramMerge(const ProgramMerge&) = delete;
-        ProgramMerge& operator=(const ProgramMerge&) = delete;
-        ProgramMerge& operator=(ProgramMerge&&) = delete;
-
-        ProgramMerge(ProgramMerge&&) = default;
-        ~ProgramMerge() = default;
+        ConvexHullProgramPrepare(ConvexHullProgramPrepare&&) = default;
+        ~ConvexHullProgramPrepare() = default;
 
         void create_buffers(const vulkan::StorageImage& objects, const vulkan::BufferWithMemory& lines_buffer);
         void delete_buffers();
         void commands(VkCommandBuffer command_buffer) const;
 };
 
-class ProgramFilter final
+class ConvexHullProgramMerge final
 {
         const vulkan::VulkanInstance& m_instance;
 
-        FilterMemory m_memory;
-        FilterConstant m_constant;
+        ConvexHullMergeMemory m_memory;
+        ConvexHullMergeConstant m_constant;
         vulkan::ComputeShader m_shader;
         vulkan::PipelineLayout m_pipeline_layout;
         vulkan::Pipeline m_pipeline;
 
 public:
-        ProgramFilter(const vulkan::VulkanInstance& instance);
+        ConvexHullProgramMerge(const vulkan::VulkanInstance& instance);
 
-        ProgramFilter(const ProgramFilter&) = delete;
-        ProgramFilter& operator=(const ProgramFilter&) = delete;
-        ProgramFilter& operator=(ProgramFilter&&) = delete;
+        ConvexHullProgramMerge(const ConvexHullProgramMerge&) = delete;
+        ConvexHullProgramMerge& operator=(const ConvexHullProgramMerge&) = delete;
+        ConvexHullProgramMerge& operator=(ConvexHullProgramMerge&&) = delete;
 
-        ProgramFilter(ProgramFilter&&) = default;
-        ~ProgramFilter() = default;
+        ConvexHullProgramMerge(ConvexHullProgramMerge&&) = default;
+        ~ConvexHullProgramMerge() = default;
+
+        void create_buffers(const vulkan::StorageImage& objects, const vulkan::BufferWithMemory& lines_buffer);
+        void delete_buffers();
+        void commands(VkCommandBuffer command_buffer) const;
+};
+
+class ConvexHullProgramFilter final
+{
+        const vulkan::VulkanInstance& m_instance;
+
+        ConvexHullFilterMemory m_memory;
+        ConvexHullFilterConstant m_constant;
+        vulkan::ComputeShader m_shader;
+        vulkan::PipelineLayout m_pipeline_layout;
+        vulkan::Pipeline m_pipeline;
+
+public:
+        ConvexHullProgramFilter(const vulkan::VulkanInstance& instance);
+
+        ConvexHullProgramFilter(const ConvexHullProgramFilter&) = delete;
+        ConvexHullProgramFilter& operator=(const ConvexHullProgramFilter&) = delete;
+        ConvexHullProgramFilter& operator=(ConvexHullProgramFilter&&) = delete;
+
+        ConvexHullProgramFilter(ConvexHullProgramFilter&&) = default;
+        ~ConvexHullProgramFilter() = default;
 
         void create_buffers(const vulkan::StorageImage& objects, const vulkan::BufferWithMemory& lines_buffer,
                             const vulkan::BufferWithMemory& points_buffer, const vulkan::BufferWithMemory& point_count_buffer);

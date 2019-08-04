@@ -36,26 +36,24 @@ constexpr uint32_t filter_shader[]
 };
 // clang-format on
 
-namespace impl = gpgpu_convex_hull_compute_implementation;
-
+namespace gpgpu_vulkan
+{
 namespace
 {
 int group_size_prepare(int width, const VkPhysicalDeviceLimits& limits)
 {
-        return impl::group_size_prepare(width, limits.maxComputeWorkGroupSize[0], limits.maxComputeWorkGroupInvocations,
-                                        limits.maxComputeSharedMemorySize);
+        return convex_hull_group_size_prepare(width, limits.maxComputeWorkGroupSize[0], limits.maxComputeWorkGroupInvocations,
+                                              limits.maxComputeSharedMemorySize);
 }
 
 int group_size_merge(int height, const VkPhysicalDeviceLimits& limits)
 {
-        return impl::group_size_merge(height, limits.maxComputeWorkGroupSize[0], limits.maxComputeWorkGroupInvocations,
-                                      limits.maxComputeSharedMemorySize);
+        return convex_hull_group_size_merge(height, limits.maxComputeWorkGroupSize[0], limits.maxComputeWorkGroupInvocations,
+                                            limits.maxComputeSharedMemorySize);
 }
 }
 
-namespace gpgpu_convex_hull_compute_vulkan_implementation
-{
-ProgramPrepare::ProgramPrepare(const vulkan::VulkanInstance& instance)
+ConvexHullProgramPrepare::ConvexHullProgramPrepare(const vulkan::VulkanInstance& instance)
         : m_instance(instance),
           m_memory(instance.device()),
           m_shader(instance.device(), prepare_shader, "main"),
@@ -64,7 +62,7 @@ ProgramPrepare::ProgramPrepare(const vulkan::VulkanInstance& instance)
 {
 }
 
-void ProgramPrepare::create_buffers(const vulkan::StorageImage& objects, const vulkan::BufferWithMemory& lines_buffer)
+void ConvexHullProgramPrepare::create_buffers(const vulkan::StorageImage& objects, const vulkan::BufferWithMemory& lines_buffer)
 {
         m_height = objects.height();
 
@@ -82,13 +80,13 @@ void ProgramPrepare::create_buffers(const vulkan::StorageImage& objects, const v
         m_pipeline = create_compute_pipeline(info);
 }
 
-void ProgramPrepare::delete_buffers()
+void ConvexHullProgramPrepare::delete_buffers()
 {
         m_pipeline = vulkan::Pipeline();
         m_height = 0;
 }
 
-void ProgramPrepare::commands(VkCommandBuffer command_buffer) const
+void ConvexHullProgramPrepare::commands(VkCommandBuffer command_buffer) const
 {
         ASSERT(m_height > 0);
 
@@ -100,7 +98,7 @@ void ProgramPrepare::commands(VkCommandBuffer command_buffer) const
 
 //
 
-ProgramMerge::ProgramMerge(const vulkan::VulkanInstance& instance)
+ConvexHullProgramMerge::ConvexHullProgramMerge(const vulkan::VulkanInstance& instance)
         : m_instance(instance),
           m_memory(instance.device()),
           m_shader(instance.device(), merge_shader, "main"),
@@ -109,13 +107,13 @@ ProgramMerge::ProgramMerge(const vulkan::VulkanInstance& instance)
 {
 }
 
-void ProgramMerge::create_buffers(const vulkan::StorageImage& objects, const vulkan::BufferWithMemory& lines_buffer)
+void ConvexHullProgramMerge::create_buffers(const vulkan::StorageImage& objects, const vulkan::BufferWithMemory& lines_buffer)
 {
         m_memory.set_lines(lines_buffer);
 
         m_constant.set_line_size(objects.height());
         m_constant.set_local_size_x(group_size_merge(objects.height(), m_instance.limits()));
-        m_constant.set_iteration_count(impl::iteration_count_merge(objects.height()));
+        m_constant.set_iteration_count(convex_hull_iteration_count_merge(objects.height()));
 
         vulkan::ComputePipelineCreateInfo info;
         info.device = &m_instance.device();
@@ -125,12 +123,12 @@ void ProgramMerge::create_buffers(const vulkan::StorageImage& objects, const vul
         m_pipeline = create_compute_pipeline(info);
 }
 
-void ProgramMerge::delete_buffers()
+void ConvexHullProgramMerge::delete_buffers()
 {
         m_pipeline = vulkan::Pipeline();
 }
 
-void ProgramMerge::commands(VkCommandBuffer command_buffer) const
+void ConvexHullProgramMerge::commands(VkCommandBuffer command_buffer) const
 {
         vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_pipeline);
         vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_pipeline_layout, m_memory.set_number(),
@@ -140,7 +138,7 @@ void ProgramMerge::commands(VkCommandBuffer command_buffer) const
 
 //
 
-ProgramFilter::ProgramFilter(const vulkan::VulkanInstance& instance)
+ConvexHullProgramFilter::ConvexHullProgramFilter(const vulkan::VulkanInstance& instance)
         : m_instance(instance),
           m_memory(instance.device()),
           m_shader(instance.device(), filter_shader, "main"),
@@ -149,9 +147,9 @@ ProgramFilter::ProgramFilter(const vulkan::VulkanInstance& instance)
 {
 }
 
-void ProgramFilter::create_buffers(const vulkan::StorageImage& objects, const vulkan::BufferWithMemory& lines_buffer,
-                                   const vulkan::BufferWithMemory& points_buffer,
-                                   const vulkan::BufferWithMemory& point_count_buffer)
+void ConvexHullProgramFilter::create_buffers(const vulkan::StorageImage& objects, const vulkan::BufferWithMemory& lines_buffer,
+                                             const vulkan::BufferWithMemory& points_buffer,
+                                             const vulkan::BufferWithMemory& point_count_buffer)
 {
         m_memory.set_lines(lines_buffer);
         m_memory.set_points(points_buffer);
@@ -167,12 +165,12 @@ void ProgramFilter::create_buffers(const vulkan::StorageImage& objects, const vu
         m_pipeline = create_compute_pipeline(info);
 }
 
-void ProgramFilter::delete_buffers()
+void ConvexHullProgramFilter::delete_buffers()
 {
         m_pipeline = vulkan::Pipeline();
 }
 
-void ProgramFilter::commands(VkCommandBuffer command_buffer) const
+void ConvexHullProgramFilter::commands(VkCommandBuffer command_buffer) const
 {
         vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_pipeline);
         vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_pipeline_layout, m_memory.set_number(),

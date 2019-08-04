@@ -20,9 +20,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/matrix.h"
 #include "graphics/opengl/buffers.h"
 
-namespace gpgpu_convex_hull_show_opengl_implementation
+namespace gpgpu_opengl
 {
-class ShaderMemory final
+class ConvexHullShaderMemory final
 {
         static constexpr int DATA_BINDING = 0;
         static constexpr int POINTS_BINDING = 1;
@@ -37,7 +37,7 @@ class ShaderMemory final
         };
 
 public:
-        ShaderMemory();
+        ConvexHullShaderMemory();
 
         void set_matrix(const mat4& matrix) const;
         void set_brightness(float brightness) const;

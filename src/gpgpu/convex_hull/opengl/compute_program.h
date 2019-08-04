@@ -20,9 +20,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/opengl/buffers.h"
 #include "graphics/opengl/shader.h"
 
-namespace gpgpu_convex_hull_compute_opengl_implementation
+namespace gpgpu_opengl
 {
-class ProgramPrepare final
+class ConvexHullProgramPrepare final
 {
         static constexpr int LINES_BINDING = 0;
 
@@ -31,14 +31,14 @@ class ProgramPrepare final
         unsigned m_height;
 
 public:
-        ProgramPrepare(const opengl::TextureImage& objects, const opengl::StorageBuffer& lines);
+        ConvexHullProgramPrepare(const opengl::TextureImage& objects, const opengl::StorageBuffer& lines);
 
         void exec() const;
 };
 
 //
 
-class ProgramMerge final
+class ConvexHullProgramMerge final
 {
         static constexpr int LINES_BINDING = 0;
 
@@ -46,14 +46,14 @@ class ProgramMerge final
         const opengl::StorageBuffer* m_lines = nullptr;
 
 public:
-        ProgramMerge(unsigned height, const opengl::StorageBuffer& lines);
+        ConvexHullProgramMerge(unsigned height, const opengl::StorageBuffer& lines);
 
         void exec() const;
 };
 
 //
 
-class ProgramFilter final
+class ConvexHullProgramFilter final
 {
         static constexpr int LINES_BINDING = 0;
         static constexpr int POINTS_BINDING = 1;
@@ -65,8 +65,8 @@ class ProgramFilter final
         const opengl::StorageBuffer* m_point_count = nullptr;
 
 public:
-        ProgramFilter(unsigned height, const opengl::StorageBuffer& lines, const opengl::StorageBuffer& points,
-                      const opengl::StorageBuffer& point_count);
+        ConvexHullProgramFilter(unsigned height, const opengl::StorageBuffer& lines, const opengl::StorageBuffer& points,
+                                const opengl::StorageBuffer& point_count);
 
         void exec() const;
 };

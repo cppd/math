@@ -19,30 +19,30 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/error.h"
 
-namespace gpgpu_convex_hull_show_opengl_implementation
+namespace gpgpu_opengl
 {
-ShaderMemory::ShaderMemory() : m_buffer(sizeof(Data))
+ConvexHullShaderMemory::ConvexHullShaderMemory() : m_buffer(sizeof(Data))
 {
 }
 
-void ShaderMemory::set_matrix(const mat4& matrix) const
+void ConvexHullShaderMemory::set_matrix(const mat4& matrix) const
 {
         decltype(Data().matrix) m = transpose(to_matrix<float>(matrix));
         m_buffer.copy(offsetof(Data, matrix), m);
 }
 
-void ShaderMemory::set_brightness(float brightness) const
+void ConvexHullShaderMemory::set_brightness(float brightness) const
 {
         decltype(Data().brightness) b = brightness;
         m_buffer.copy(offsetof(Data, brightness), b);
 }
 
-void ShaderMemory::set_points(const opengl::StorageBuffer& points)
+void ConvexHullShaderMemory::set_points(const opengl::StorageBuffer& points)
 {
         m_points = &points;
 }
 
-void ShaderMemory::bind() const
+void ConvexHullShaderMemory::bind() const
 {
         ASSERT(m_points);
 

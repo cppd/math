@@ -24,9 +24,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <vector>
 
-namespace gpgpu_convex_hull_compute_vulkan_implementation
+namespace gpgpu_vulkan
 {
-class PrepareMemory final
+class ConvexHullPrepareMemory final
 {
         static constexpr int SET_NUMBER = 0;
 
@@ -39,14 +39,14 @@ class PrepareMemory final
         vulkan::Descriptors m_descriptors;
 
 public:
-        PrepareMemory(const vulkan::Device& device);
+        ConvexHullPrepareMemory(const vulkan::Device& device);
 
-        PrepareMemory(const PrepareMemory&) = delete;
-        PrepareMemory& operator=(const PrepareMemory&) = delete;
-        PrepareMemory& operator=(PrepareMemory&&) = delete;
+        ConvexHullPrepareMemory(const ConvexHullPrepareMemory&) = delete;
+        ConvexHullPrepareMemory& operator=(const ConvexHullPrepareMemory&) = delete;
+        ConvexHullPrepareMemory& operator=(ConvexHullPrepareMemory&&) = delete;
 
-        PrepareMemory(PrepareMemory&&) = default;
-        ~PrepareMemory() = default;
+        ConvexHullPrepareMemory(ConvexHullPrepareMemory&&) = default;
+        ~ConvexHullPrepareMemory() = default;
 
         //
 
@@ -60,7 +60,7 @@ public:
         void set_lines(const vulkan::BufferWithMemory& buffer) const;
 };
 
-class PrepareConstant final : public vulkan::SpecializationConstant
+class ConvexHullPrepareConstant final : public vulkan::SpecializationConstant
 {
         struct Data
         {
@@ -76,7 +76,7 @@ class PrepareConstant final : public vulkan::SpecializationConstant
         size_t size() const noexcept override;
 
 public:
-        PrepareConstant();
+        ConvexHullPrepareConstant();
 
         void set_line_size(uint32_t v);
         void set_buffer_and_group_size(uint32_t v);
@@ -84,7 +84,7 @@ public:
 
 //
 
-class MergeMemory final
+class ConvexHullMergeMemory final
 {
         static constexpr int SET_NUMBER = 0;
 
@@ -96,14 +96,14 @@ class MergeMemory final
         vulkan::Descriptors m_descriptors;
 
 public:
-        MergeMemory(const vulkan::Device& device);
+        ConvexHullMergeMemory(const vulkan::Device& device);
 
-        MergeMemory(const MergeMemory&) = delete;
-        MergeMemory& operator=(const MergeMemory&) = delete;
-        MergeMemory& operator=(MergeMemory&&) = delete;
+        ConvexHullMergeMemory(const ConvexHullMergeMemory&) = delete;
+        ConvexHullMergeMemory& operator=(const ConvexHullMergeMemory&) = delete;
+        ConvexHullMergeMemory& operator=(ConvexHullMergeMemory&&) = delete;
 
-        MergeMemory(MergeMemory&&) = default;
-        ~MergeMemory() = default;
+        ConvexHullMergeMemory(ConvexHullMergeMemory&&) = default;
+        ~ConvexHullMergeMemory() = default;
 
         //
 
@@ -116,7 +116,7 @@ public:
         void set_lines(const vulkan::BufferWithMemory& buffer) const;
 };
 
-class MergeConstant final : public vulkan::SpecializationConstant
+class ConvexHullMergeConstant final : public vulkan::SpecializationConstant
 {
         struct Data
         {
@@ -132,7 +132,7 @@ class MergeConstant final : public vulkan::SpecializationConstant
         size_t size() const noexcept override;
 
 public:
-        MergeConstant();
+        ConvexHullMergeConstant();
 
         void set_line_size(int32_t v);
         void set_iteration_count(int32_t v);
@@ -141,7 +141,7 @@ public:
 
 //
 
-class FilterMemory final
+class ConvexHullFilterMemory final
 {
         static constexpr int SET_NUMBER = 0;
 
@@ -155,14 +155,14 @@ class FilterMemory final
         vulkan::Descriptors m_descriptors;
 
 public:
-        FilterMemory(const vulkan::Device& device);
+        ConvexHullFilterMemory(const vulkan::Device& device);
 
-        FilterMemory(const FilterMemory&) = delete;
-        FilterMemory& operator=(const FilterMemory&) = delete;
-        FilterMemory& operator=(FilterMemory&&) = delete;
+        ConvexHullFilterMemory(const ConvexHullFilterMemory&) = delete;
+        ConvexHullFilterMemory& operator=(const ConvexHullFilterMemory&) = delete;
+        ConvexHullFilterMemory& operator=(ConvexHullFilterMemory&&) = delete;
 
-        FilterMemory(FilterMemory&&) = default;
-        ~FilterMemory() = default;
+        ConvexHullFilterMemory(ConvexHullFilterMemory&&) = default;
+        ~ConvexHullFilterMemory() = default;
 
         //
 
@@ -177,7 +177,7 @@ public:
         void set_point_count(const vulkan::BufferWithMemory& buffer) const;
 };
 
-class FilterConstant final : public vulkan::SpecializationConstant
+class ConvexHullFilterConstant final : public vulkan::SpecializationConstant
 {
         struct Data
         {
@@ -191,7 +191,7 @@ class FilterConstant final : public vulkan::SpecializationConstant
         size_t size() const noexcept override;
 
 public:
-        FilterConstant();
+        ConvexHullFilterConstant();
 
         void set_line_size(int32_t v);
 };

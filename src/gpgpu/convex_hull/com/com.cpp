@@ -24,9 +24,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <algorithm>
 
-namespace gpgpu_convex_hull_compute_implementation
+int convex_hull_points_buffer_size(int height)
 {
-int group_size_prepare(int width, unsigned max_group_size_x, unsigned max_group_invocations, unsigned max_shared_memory_size)
+        // 2 линии точек + 1 точка, тип ivec2
+        return (2 * height + 1) * (2 * sizeof(int32_t));
+}
+
+int convex_hull_group_size_prepare(int width, unsigned max_group_size_x, unsigned max_group_invocations,
+                                   unsigned max_shared_memory_size)
 {
         unsigned shared_size_per_thread = 2 * sizeof(int32_t); // GLSL ivec2
 
@@ -42,7 +47,8 @@ int group_size_prepare(int width, unsigned max_group_size_x, unsigned max_group_
         return (pref_thread_count <= max_group_size) ? pref_thread_count : max_group_size;
 }
 
-int group_size_merge(int height, unsigned max_group_size_x, unsigned max_group_invocations, unsigned max_shared_memory_size)
+int convex_hull_group_size_merge(int height, unsigned max_group_size_x, unsigned max_group_invocations,
+                                 unsigned max_shared_memory_size)
 {
         static_assert(sizeof(float) == 4);
 
@@ -62,12 +68,11 @@ int group_size_merge(int height, unsigned max_group_size_x, unsigned max_group_i
         return (pref_thread_count <= max_group_size) ? pref_thread_count : max_group_size;
 }
 
-int iteration_count_merge(int size)
+int convex_hull_iteration_count_merge(int size)
 {
         // Расчёт начинается с 4 элементов, правый средний индекс (начало второй половины) равен 2.
         // На каждой итерации индекс увеличивается в 2 раза.
         // Этот индекс должен быть строго меньше заданного числа size.
         // Поэтому число итераций равно максимальной степени 2, в которой число 2 строго меньше заданного числа size.
         return (size > 2) ? log_2(size - 1) : 0;
-}
 }

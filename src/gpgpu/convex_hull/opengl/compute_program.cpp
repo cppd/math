@@ -38,20 +38,20 @@ constexpr const char filter_shader[]
 };
 // clang-format on
 
-namespace impl = gpgpu_convex_hull_compute_implementation;
-
+namespace gpgpu_opengl
+{
 namespace
 {
 int group_size_prepare(int width)
 {
-        return impl::group_size_prepare(width, opengl::max_fixed_group_size_x(), opengl::max_fixed_group_invocations(),
-                                        opengl::max_compute_shared_memory());
+        return convex_hull_group_size_prepare(width, opengl::max_fixed_group_size_x(), opengl::max_fixed_group_invocations(),
+                                              opengl::max_compute_shared_memory());
 }
 
 int group_size_merge(int height)
 {
-        return impl::group_size_merge(height, opengl::max_fixed_group_size_x(), opengl::max_fixed_group_invocations(),
-                                      opengl::max_compute_shared_memory());
+        return convex_hull_group_size_merge(height, opengl::max_fixed_group_size_x(), opengl::max_fixed_group_invocations(),
+                                            opengl::max_compute_shared_memory());
 }
 
 std::string prepare_source(int width, int height)
@@ -71,7 +71,7 @@ std::string merge_source(unsigned height)
 {
         int line_size = height;
         int group_size = group_size_merge(height);
-        int iteration_count = impl::iteration_count_merge(height);
+        int iteration_count = convex_hull_iteration_count_merge(height);
 
         std::string s;
         s += "const uint GROUP_SIZE = " + to_string(group_size) + ";\n";
@@ -92,9 +92,7 @@ std::string filter_source(int height)
 }
 }
 
-namespace gpgpu_convex_hull_compute_opengl_implementation
-{
-ProgramPrepare::ProgramPrepare(const opengl::TextureImage& objects, const opengl::StorageBuffer& lines)
+ConvexHullProgramPrepare::ConvexHullProgramPrepare(const opengl::TextureImage& objects, const opengl::StorageBuffer& lines)
         : m_program(opengl::ComputeShader(prepare_source(objects.width(), objects.height()))),
           m_lines(&lines),
           m_height(objects.height())
@@ -104,7 +102,7 @@ ProgramPrepare::ProgramPrepare(const opengl::TextureImage& objects, const opengl
         m_program.set_uniform_handle("objects", objects.image_resident_handle_read_only());
 }
 
-void ProgramPrepare::exec() const
+void ConvexHullProgramPrepare::exec() const
 {
         m_lines->bind(LINES_BINDING);
         m_program.dispatch_compute(m_height, 1, 1);
@@ -112,12 +110,12 @@ void ProgramPrepare::exec() const
 
 //
 
-ProgramMerge::ProgramMerge(unsigned height, const opengl::StorageBuffer& lines)
+ConvexHullProgramMerge::ConvexHullProgramMerge(unsigned height, const opengl::StorageBuffer& lines)
         : m_program(opengl::ComputeShader(merge_source(height))), m_lines(&lines)
 {
 }
 
-void ProgramMerge::exec() const
+void ConvexHullProgramMerge::exec() const
 {
         m_lines->bind(LINES_BINDING);
         m_program.dispatch_compute(2, 1, 1);
@@ -125,13 +123,13 @@ void ProgramMerge::exec() const
 
 //
 
-ProgramFilter::ProgramFilter(unsigned height, const opengl::StorageBuffer& lines, const opengl::StorageBuffer& points,
-                             const opengl::StorageBuffer& point_count)
+ConvexHullProgramFilter::ConvexHullProgramFilter(unsigned height, const opengl::StorageBuffer& lines,
+                                                 const opengl::StorageBuffer& points, const opengl::StorageBuffer& point_count)
         : m_program(opengl::ComputeShader(filter_source(height))), m_lines(&lines), m_points(&points), m_point_count(&point_count)
 {
 }
 
-void ProgramFilter::exec() const
+void ConvexHullProgramFilter::exec() const
 {
         m_lines->bind(LINES_BINDING);
         m_points->bind(POINTS_BINDING);

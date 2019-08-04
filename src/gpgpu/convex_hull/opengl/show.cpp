@@ -36,21 +36,17 @@ constexpr const char fragment_shader[]
 };
 // clang-format on
 
+namespace gpgpu_opengl
+{
 namespace
 {
-namespace impl
-{
-using namespace gpgpu_convex_hull_show_implementation;
-using namespace gpgpu_convex_hull_show_opengl_implementation;
-}
-
-class Impl final : public gpgpu_opengl::ConvexHullShow
+class Impl final : public ConvexHullShow
 {
         opengl::GraphicsProgram m_draw_prog;
         opengl::StorageBuffer m_points;
         double m_start_time;
         std::unique_ptr<gpgpu_opengl::ConvexHullCompute> m_convex_hull;
-        impl::ShaderMemory m_shader_memory;
+        ConvexHullShaderMemory m_shader_memory;
 
         void reset_timer() override
         {
@@ -61,7 +57,7 @@ class Impl final : public gpgpu_opengl::ConvexHullShow
         {
                 int point_count = m_convex_hull->exec();
 
-                float brightness = 0.5 + 0.5 * std::sin(impl::ANGULAR_FREQUENCY * (time_in_seconds() - m_start_time));
+                float brightness = 0.5 + 0.5 * std::sin(CONVEX_HULL_ANGULAR_FREQUENCY * (time_in_seconds() - m_start_time));
                 m_shader_memory.set_brightness(brightness);
 
                 m_shader_memory.bind();
@@ -71,7 +67,7 @@ class Impl final : public gpgpu_opengl::ConvexHullShow
 public:
         Impl(const opengl::TextureImage& objects, const mat4& matrix)
                 : m_draw_prog(opengl::VertexShader(vertex_shader), opengl::FragmentShader(fragment_shader)),
-                  m_points(impl::points_buffer_size(objects.height())),
+                  m_points(convex_hull_points_buffer_size(objects.height())),
                   m_start_time(time_in_seconds())
         {
                 m_convex_hull = gpgpu_opengl::create_convex_hull_compute(objects, m_points);
@@ -87,8 +83,6 @@ public:
 };
 }
 
-namespace gpgpu_opengl
-{
 std::unique_ptr<ConvexHullShow> create_convex_hull_show(const opengl::TextureImage& objects, const mat4& matrix)
 {
         return std::make_unique<Impl>(objects, matrix);

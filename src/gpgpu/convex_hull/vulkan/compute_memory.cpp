@@ -19,9 +19,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <type_traits>
 
-namespace gpgpu_convex_hull_compute_vulkan_implementation
+namespace gpgpu_vulkan
 {
-std::vector<VkDescriptorSetLayoutBinding> PrepareMemory::descriptor_set_layout_bindings()
+std::vector<VkDescriptorSetLayoutBinding> ConvexHullPrepareMemory::descriptor_set_layout_bindings()
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
 
@@ -48,28 +48,28 @@ std::vector<VkDescriptorSetLayoutBinding> PrepareMemory::descriptor_set_layout_b
         return bindings;
 }
 
-PrepareMemory::PrepareMemory(const vulkan::Device& device)
+ConvexHullPrepareMemory::ConvexHullPrepareMemory(const vulkan::Device& device)
         : m_descriptor_set_layout(vulkan::create_descriptor_set_layout(device, descriptor_set_layout_bindings())),
           m_descriptors(device, 1, m_descriptor_set_layout, descriptor_set_layout_bindings())
 {
 }
 
-unsigned PrepareMemory::set_number() noexcept
+unsigned ConvexHullPrepareMemory::set_number() noexcept
 {
         return SET_NUMBER;
 }
 
-VkDescriptorSetLayout PrepareMemory::descriptor_set_layout() const noexcept
+VkDescriptorSetLayout ConvexHullPrepareMemory::descriptor_set_layout() const noexcept
 {
         return m_descriptor_set_layout;
 }
 
-const VkDescriptorSet& PrepareMemory::descriptor_set() const noexcept
+const VkDescriptorSet& ConvexHullPrepareMemory::descriptor_set() const noexcept
 {
         return m_descriptors.descriptor_set(0);
 }
 
-void PrepareMemory::set_object_image(const vulkan::StorageImage& storage_image) const
+void ConvexHullPrepareMemory::set_object_image(const vulkan::StorageImage& storage_image) const
 {
         ASSERT(storage_image.format() == VK_FORMAT_R32_UINT);
 
@@ -80,7 +80,7 @@ void PrepareMemory::set_object_image(const vulkan::StorageImage& storage_image) 
         m_descriptors.update_descriptor_set(0, OBJECTS_BINDING, image_info);
 }
 
-void PrepareMemory::set_lines(const vulkan::BufferWithMemory& buffer) const
+void ConvexHullPrepareMemory::set_lines(const vulkan::BufferWithMemory& buffer) const
 {
         ASSERT(buffer.usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 
@@ -94,7 +94,7 @@ void PrepareMemory::set_lines(const vulkan::BufferWithMemory& buffer) const
 
 //
 
-PrepareConstant::PrepareConstant()
+ConvexHullPrepareConstant::ConvexHullPrepareConstant()
 {
         {
                 VkSpecializationMapEntry entry = {};
@@ -119,13 +119,13 @@ PrepareConstant::PrepareConstant()
         }
 }
 
-void PrepareConstant::set_line_size(uint32_t v)
+void ConvexHullPrepareConstant::set_line_size(uint32_t v)
 {
         static_assert(std::is_same_v<decltype(m_data.line_size), decltype(v)>);
         m_data.line_size = v;
 }
 
-void PrepareConstant::set_buffer_and_group_size(uint32_t v)
+void ConvexHullPrepareConstant::set_buffer_and_group_size(uint32_t v)
 {
         static_assert(std::is_same_v<decltype(m_data.buffer_size), decltype(v)>);
         m_data.buffer_size = v;
@@ -133,24 +133,24 @@ void PrepareConstant::set_buffer_and_group_size(uint32_t v)
         m_data.local_size_x = v;
 }
 
-const std::vector<VkSpecializationMapEntry>& PrepareConstant::entries() const noexcept
+const std::vector<VkSpecializationMapEntry>& ConvexHullPrepareConstant::entries() const noexcept
 {
         return m_entries;
 }
 
-const void* PrepareConstant::data() const noexcept
+const void* ConvexHullPrepareConstant::data() const noexcept
 {
         return &m_data;
 }
 
-size_t PrepareConstant::size() const noexcept
+size_t ConvexHullPrepareConstant::size() const noexcept
 {
         return sizeof(m_data);
 }
 
 //
 
-std::vector<VkDescriptorSetLayoutBinding> MergeMemory::descriptor_set_layout_bindings()
+std::vector<VkDescriptorSetLayoutBinding> ConvexHullMergeMemory::descriptor_set_layout_bindings()
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
 
@@ -167,28 +167,28 @@ std::vector<VkDescriptorSetLayoutBinding> MergeMemory::descriptor_set_layout_bin
         return bindings;
 }
 
-MergeMemory::MergeMemory(const vulkan::Device& device)
+ConvexHullMergeMemory::ConvexHullMergeMemory(const vulkan::Device& device)
         : m_descriptor_set_layout(vulkan::create_descriptor_set_layout(device, descriptor_set_layout_bindings())),
           m_descriptors(device, 1, m_descriptor_set_layout, descriptor_set_layout_bindings())
 {
 }
 
-unsigned MergeMemory::set_number() noexcept
+unsigned ConvexHullMergeMemory::set_number() noexcept
 {
         return SET_NUMBER;
 }
 
-VkDescriptorSetLayout MergeMemory::descriptor_set_layout() const noexcept
+VkDescriptorSetLayout ConvexHullMergeMemory::descriptor_set_layout() const noexcept
 {
         return m_descriptor_set_layout;
 }
 
-const VkDescriptorSet& MergeMemory::descriptor_set() const noexcept
+const VkDescriptorSet& ConvexHullMergeMemory::descriptor_set() const noexcept
 {
         return m_descriptors.descriptor_set(0);
 }
 
-void MergeMemory::set_lines(const vulkan::BufferWithMemory& buffer) const
+void ConvexHullMergeMemory::set_lines(const vulkan::BufferWithMemory& buffer) const
 {
         ASSERT(buffer.usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 
@@ -202,7 +202,7 @@ void MergeMemory::set_lines(const vulkan::BufferWithMemory& buffer) const
 
 //
 
-MergeConstant::MergeConstant()
+ConvexHullMergeConstant::ConvexHullMergeConstant()
 {
         {
                 VkSpecializationMapEntry entry = {};
@@ -227,42 +227,42 @@ MergeConstant::MergeConstant()
         }
 }
 
-void MergeConstant::set_line_size(int32_t v)
+void ConvexHullMergeConstant::set_line_size(int32_t v)
 {
         static_assert(std::is_same_v<decltype(m_data.line_size), decltype(v)>);
         m_data.line_size = v;
 }
 
-void MergeConstant::set_iteration_count(int32_t v)
+void ConvexHullMergeConstant::set_iteration_count(int32_t v)
 {
         static_assert(std::is_same_v<decltype(m_data.iteration_count), decltype(v)>);
         m_data.iteration_count = v;
 }
 
-void MergeConstant::set_local_size_x(uint32_t v)
+void ConvexHullMergeConstant::set_local_size_x(uint32_t v)
 {
         static_assert(std::is_same_v<decltype(m_data.local_size_x), decltype(v)>);
         m_data.local_size_x = v;
 }
 
-const std::vector<VkSpecializationMapEntry>& MergeConstant::entries() const noexcept
+const std::vector<VkSpecializationMapEntry>& ConvexHullMergeConstant::entries() const noexcept
 {
         return m_entries;
 }
 
-const void* MergeConstant::data() const noexcept
+const void* ConvexHullMergeConstant::data() const noexcept
 {
         return &m_data;
 }
 
-size_t MergeConstant::size() const noexcept
+size_t ConvexHullMergeConstant::size() const noexcept
 {
         return sizeof(m_data);
 }
 
 //
 
-std::vector<VkDescriptorSetLayoutBinding> FilterMemory::descriptor_set_layout_bindings()
+std::vector<VkDescriptorSetLayoutBinding> ConvexHullFilterMemory::descriptor_set_layout_bindings()
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
 
@@ -297,28 +297,28 @@ std::vector<VkDescriptorSetLayoutBinding> FilterMemory::descriptor_set_layout_bi
         return bindings;
 }
 
-FilterMemory::FilterMemory(const vulkan::Device& device)
+ConvexHullFilterMemory::ConvexHullFilterMemory(const vulkan::Device& device)
         : m_descriptor_set_layout(vulkan::create_descriptor_set_layout(device, descriptor_set_layout_bindings())),
           m_descriptors(device, 1, m_descriptor_set_layout, descriptor_set_layout_bindings())
 {
 }
 
-unsigned FilterMemory::set_number() noexcept
+unsigned ConvexHullFilterMemory::set_number() noexcept
 {
         return SET_NUMBER;
 }
 
-VkDescriptorSetLayout FilterMemory::descriptor_set_layout() const noexcept
+VkDescriptorSetLayout ConvexHullFilterMemory::descriptor_set_layout() const noexcept
 {
         return m_descriptor_set_layout;
 }
 
-const VkDescriptorSet& FilterMemory::descriptor_set() const noexcept
+const VkDescriptorSet& ConvexHullFilterMemory::descriptor_set() const noexcept
 {
         return m_descriptors.descriptor_set(0);
 }
 
-void FilterMemory::set_lines(const vulkan::BufferWithMemory& buffer) const
+void ConvexHullFilterMemory::set_lines(const vulkan::BufferWithMemory& buffer) const
 {
         ASSERT(buffer.usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 
@@ -330,7 +330,7 @@ void FilterMemory::set_lines(const vulkan::BufferWithMemory& buffer) const
         m_descriptors.update_descriptor_set(0, LINES_BINDING, buffer_info);
 }
 
-void FilterMemory::set_points(const vulkan::BufferWithMemory& buffer) const
+void ConvexHullFilterMemory::set_points(const vulkan::BufferWithMemory& buffer) const
 {
         ASSERT(buffer.usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 
@@ -342,7 +342,7 @@ void FilterMemory::set_points(const vulkan::BufferWithMemory& buffer) const
         m_descriptors.update_descriptor_set(0, POINTS_BINDING, buffer_info);
 }
 
-void FilterMemory::set_point_count(const vulkan::BufferWithMemory& buffer) const
+void ConvexHullFilterMemory::set_point_count(const vulkan::BufferWithMemory& buffer) const
 {
         ASSERT(buffer.usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 
@@ -356,7 +356,7 @@ void FilterMemory::set_point_count(const vulkan::BufferWithMemory& buffer) const
 
 //
 
-FilterConstant::FilterConstant()
+ConvexHullFilterConstant::ConvexHullFilterConstant()
 {
         {
                 VkSpecializationMapEntry entry = {};
@@ -367,23 +367,23 @@ FilterConstant::FilterConstant()
         }
 }
 
-void FilterConstant::set_line_size(int32_t v)
+void ConvexHullFilterConstant::set_line_size(int32_t v)
 {
         static_assert(std::is_same_v<decltype(m_data.line_size), decltype(v)>);
         m_data.line_size = v;
 }
 
-const std::vector<VkSpecializationMapEntry>& FilterConstant::entries() const noexcept
+const std::vector<VkSpecializationMapEntry>& ConvexHullFilterConstant::entries() const noexcept
 {
         return m_entries;
 }
 
-const void* FilterConstant::data() const noexcept
+const void* ConvexHullFilterConstant::data() const noexcept
 {
         return &m_data;
 }
 
-size_t FilterConstant::size() const noexcept
+size_t ConvexHullFilterConstant::size() const noexcept
 {
         return sizeof(m_data);
 }

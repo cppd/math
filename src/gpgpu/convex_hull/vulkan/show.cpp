@@ -52,15 +52,11 @@ constexpr uint32_t fragment_shader[]
 };
 // clang-format on
 
+namespace gpgpu_vulkan
+{
 namespace
 {
-namespace impl
-{
-using namespace gpgpu_convex_hull_show_implementation;
-using namespace gpgpu_convex_hull_show_vulkan_implementation;
-}
-
-class Impl final : public gpgpu_vulkan::ConvexHullShow
+class Impl final : public ConvexHullShow
 {
         const std::thread::id m_thread_id = std::this_thread::get_id();
 
@@ -73,7 +69,7 @@ class Impl final : public gpgpu_vulkan::ConvexHullShow
 
         vulkan::Semaphore m_signal_semaphore;
 
-        impl::ShaderMemory m_shader_memory;
+        ConvexHullShaderMemory m_shader_memory;
 
         vulkan::VertexShader m_vertex_shader;
         vulkan::FragmentShader m_fragment_shader;
@@ -116,7 +112,7 @@ class Impl final : public gpgpu_vulkan::ConvexHullShow
                 //
 
                 m_points.emplace(m_instance.device(), std::unordered_set({m_family_index}), VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-                                 impl::points_buffer_size(objects.height()));
+                                 convex_hull_points_buffer_size(objects.height()));
 
                 m_shader_memory.set_points(*m_points);
                 m_shader_memory.set_matrix(matrix);
@@ -155,7 +151,7 @@ class Impl final : public gpgpu_vulkan::ConvexHullShow
                 ASSERT(m_render_buffers);
                 ASSERT(queue.family_index() == m_family_index);
 
-                float brightness = 0.5 + 0.5 * std::sin(impl::ANGULAR_FREQUENCY * (time_in_seconds() - m_start_time));
+                float brightness = 0.5 + 0.5 * std::sin(CONVEX_HULL_ANGULAR_FREQUENCY * (time_in_seconds() - m_start_time));
                 m_shader_memory.set_brightness(brightness);
 
                 //
@@ -205,8 +201,6 @@ public:
 };
 }
 
-namespace gpgpu_vulkan
-{
 std::vector<vulkan::PhysicalDeviceFeatures> ConvexHullShow::required_device_features()
 {
         return merge<vulkan::PhysicalDeviceFeatures>(std::vector<vulkan::PhysicalDeviceFeatures>(REQUIRED_DEVICE_FEATURES),

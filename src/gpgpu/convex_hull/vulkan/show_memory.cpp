@@ -17,9 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "show_memory.h"
 
-namespace gpgpu_convex_hull_show_vulkan_implementation
+namespace gpgpu_vulkan
 {
-std::vector<VkDescriptorSetLayoutBinding> ShaderMemory::descriptor_set_layout_bindings()
+std::vector<VkDescriptorSetLayoutBinding> ConvexHullShaderMemory::descriptor_set_layout_bindings()
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
 
@@ -45,7 +45,7 @@ std::vector<VkDescriptorSetLayoutBinding> ShaderMemory::descriptor_set_layout_bi
         return bindings;
 }
 
-ShaderMemory::ShaderMemory(const vulkan::Device& device, const std::unordered_set<uint32_t>& family_indices)
+ConvexHullShaderMemory::ConvexHullShaderMemory(const vulkan::Device& device, const std::unordered_set<uint32_t>& family_indices)
         : m_descriptor_set_layout(vulkan::create_descriptor_set_layout(device, descriptor_set_layout_bindings())),
           m_descriptors(device, 1, m_descriptor_set_layout, descriptor_set_layout_bindings())
 {
@@ -69,34 +69,34 @@ ShaderMemory::ShaderMemory(const vulkan::Device& device, const std::unordered_se
         m_descriptors.update_descriptor_set(0, bindings, infos);
 }
 
-unsigned ShaderMemory::set_number() noexcept
+unsigned ConvexHullShaderMemory::set_number() noexcept
 {
         return SET_NUMBER;
 }
 
-VkDescriptorSetLayout ShaderMemory::descriptor_set_layout() const noexcept
+VkDescriptorSetLayout ConvexHullShaderMemory::descriptor_set_layout() const noexcept
 {
         return m_descriptor_set_layout;
 }
 
-const VkDescriptorSet& ShaderMemory::descriptor_set() const noexcept
+const VkDescriptorSet& ConvexHullShaderMemory::descriptor_set() const noexcept
 {
         return m_descriptors.descriptor_set(0);
 }
 
-void ShaderMemory::set_matrix(const mat4& matrix) const
+void ConvexHullShaderMemory::set_matrix(const mat4& matrix) const
 {
         decltype(Data().matrix) m = transpose(to_matrix<float>(matrix));
         m_uniform_buffers[m_data_buffer_index].write(offsetof(Data, matrix), m);
 }
 
-void ShaderMemory::set_brightness(float brightness) const
+void ConvexHullShaderMemory::set_brightness(float brightness) const
 {
         decltype(Data().brightness) b = brightness;
         m_uniform_buffers[m_data_buffer_index].write(offsetof(Data, brightness), b);
 }
 
-void ShaderMemory::set_points(const vulkan::BufferWithMemory& buffer) const
+void ConvexHullShaderMemory::set_points(const vulkan::BufferWithMemory& buffer) const
 {
         ASSERT(buffer.usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 

@@ -31,18 +31,18 @@ Chapter 2: CONVEX HULLS, 2.6 Divide-and-Conquer.
 
 #include "com/error.h"
 
-namespace impl = gpgpu_convex_hull_compute_opengl_implementation;
-
+namespace gpgpu_opengl
+{
 namespace
 {
-class Impl final : public gpgpu_opengl::ConvexHullCompute
+class Impl final : public ConvexHullCompute
 {
         opengl::StorageBuffer m_lines;
         opengl::StorageBuffer m_point_count;
 
-        impl::ProgramPrepare m_program_prepare;
-        impl::ProgramMerge m_program_merge;
-        impl::ProgramFilter m_program_filter;
+        ConvexHullProgramPrepare m_program_prepare;
+        ConvexHullProgramMerge m_program_merge;
+        ConvexHullProgramFilter m_program_filter;
 
         int exec() override
         {
@@ -83,8 +83,6 @@ public:
 };
 }
 
-namespace gpgpu_opengl
-{
 std::unique_ptr<ConvexHullCompute> create_convex_hull_compute(const opengl::TextureImage& object_image,
                                                               const opengl::StorageBuffer& points)
 {
