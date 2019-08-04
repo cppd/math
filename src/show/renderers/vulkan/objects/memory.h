@@ -29,9 +29,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <unordered_set>
 #include <vector>
 
-namespace vulkan_renderer_implementation
+namespace gpu_vulkan
 {
-class TrianglesSharedMemory final
+class RendererTrianglesSharedMemory final
 {
         static constexpr int SET_NUMBER = 0;
 
@@ -88,14 +88,14 @@ class TrianglesSharedMemory final
         void copy_to_drawing_buffer(VkDeviceSize offset, const T& data) const;
 
 public:
-        TrianglesSharedMemory(const vulkan::Device& device, const std::unordered_set<uint32_t>& family_indices);
+        RendererTrianglesSharedMemory(const vulkan::Device& device, const std::unordered_set<uint32_t>& family_indices);
 
-        TrianglesSharedMemory(const TrianglesSharedMemory&) = delete;
-        TrianglesSharedMemory& operator=(const TrianglesSharedMemory&) = delete;
-        TrianglesSharedMemory& operator=(TrianglesSharedMemory&&) = delete;
+        RendererTrianglesSharedMemory(const RendererTrianglesSharedMemory&) = delete;
+        RendererTrianglesSharedMemory& operator=(const RendererTrianglesSharedMemory&) = delete;
+        RendererTrianglesSharedMemory& operator=(RendererTrianglesSharedMemory&&) = delete;
 
-        TrianglesSharedMemory(TrianglesSharedMemory&&) = default;
-        ~TrianglesSharedMemory() = default;
+        RendererTrianglesSharedMemory(RendererTrianglesSharedMemory&&) = default;
+        ~RendererTrianglesSharedMemory() = default;
 
         //
 
@@ -123,7 +123,7 @@ public:
         void set_object_image(const vulkan::StorageImage* storage_image) const;
 };
 
-class TrianglesMaterialMemory final
+class RendererTrianglesMaterialMemory final
 {
         static constexpr int SET_NUMBER = 1;
 
@@ -160,16 +160,16 @@ public:
 
         //
 
-        TrianglesMaterialMemory(const vulkan::Device& device, const std::unordered_set<uint32_t>& family_indices,
-                                VkSampler sampler, VkDescriptorSetLayout descriptor_set_layout,
-                                const std::vector<MaterialAndTexture>& materials);
+        RendererTrianglesMaterialMemory(const vulkan::Device& device, const std::unordered_set<uint32_t>& family_indices,
+                                        VkSampler sampler, VkDescriptorSetLayout descriptor_set_layout,
+                                        const std::vector<MaterialAndTexture>& materials);
 
-        TrianglesMaterialMemory(const TrianglesMaterialMemory&) = delete;
-        TrianglesMaterialMemory& operator=(const TrianglesMaterialMemory&) = delete;
-        TrianglesMaterialMemory& operator=(TrianglesMaterialMemory&&) = delete;
+        RendererTrianglesMaterialMemory(const RendererTrianglesMaterialMemory&) = delete;
+        RendererTrianglesMaterialMemory& operator=(const RendererTrianglesMaterialMemory&) = delete;
+        RendererTrianglesMaterialMemory& operator=(RendererTrianglesMaterialMemory&&) = delete;
 
-        TrianglesMaterialMemory(TrianglesMaterialMemory&&) = default;
-        ~TrianglesMaterialMemory() = default;
+        RendererTrianglesMaterialMemory(RendererTrianglesMaterialMemory&&) = default;
+        ~RendererTrianglesMaterialMemory() = default;
 
         //
 
@@ -178,7 +178,7 @@ public:
         const VkDescriptorSet& descriptor_set(uint32_t index) const;
 };
 
-class ShadowMemory final
+class RendererShadowMemory final
 {
         static constexpr int SET_NUMBER = 0;
 
@@ -196,14 +196,14 @@ class ShadowMemory final
         };
 
 public:
-        ShadowMemory(const vulkan::Device& device, const std::unordered_set<uint32_t>& family_indices);
+        RendererShadowMemory(const vulkan::Device& device, const std::unordered_set<uint32_t>& family_indices);
 
-        ShadowMemory(const ShadowMemory&) = delete;
-        ShadowMemory& operator=(const ShadowMemory&) = delete;
-        ShadowMemory& operator=(ShadowMemory&&) = delete;
+        RendererShadowMemory(const RendererShadowMemory&) = delete;
+        RendererShadowMemory& operator=(const RendererShadowMemory&) = delete;
+        RendererShadowMemory& operator=(RendererShadowMemory&&) = delete;
 
-        ShadowMemory(ShadowMemory&&) = default;
-        ~ShadowMemory() = default;
+        RendererShadowMemory(RendererShadowMemory&&) = default;
+        ~RendererShadowMemory() = default;
 
         //
 
@@ -216,7 +216,7 @@ public:
         void set_matrix(const mat4& matrix) const;
 };
 
-class PointsMemory final
+class RendererPointsMemory final
 {
         static constexpr int SET_NUMBER = 0;
 
@@ -252,14 +252,14 @@ class PointsMemory final
         void copy_to_drawing_buffer(VkDeviceSize offset, const T& data) const;
 
 public:
-        PointsMemory(const vulkan::Device& device, const std::unordered_set<uint32_t>& family_indices);
+        RendererPointsMemory(const vulkan::Device& device, const std::unordered_set<uint32_t>& family_indices);
 
-        PointsMemory(const PointsMemory&) = delete;
-        PointsMemory& operator=(const PointsMemory&) = delete;
-        PointsMemory& operator=(PointsMemory&&) = delete;
+        RendererPointsMemory(const RendererPointsMemory&) = delete;
+        RendererPointsMemory& operator=(const RendererPointsMemory&) = delete;
+        RendererPointsMemory& operator=(RendererPointsMemory&&) = delete;
 
-        PointsMemory(PointsMemory&&) = default;
-        ~PointsMemory() = default;
+        RendererPointsMemory(RendererPointsMemory&&) = default;
+        ~RendererPointsMemory() = default;
 
         //
 

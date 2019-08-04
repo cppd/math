@@ -26,9 +26,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <vector>
 
-struct OpenGLCanvas
+namespace gpu_opengl
 {
-        virtual ~OpenGLCanvas() = default;
+struct Canvas
+{
+        virtual ~Canvas() = default;
 
         virtual void set_text_color(const Color& c) = 0;
         virtual void set_text_active(bool v) = 0;
@@ -56,4 +58,5 @@ struct OpenGLCanvas
         virtual void draw(const TextData& text_data) = 0;
 };
 
-std::unique_ptr<OpenGLCanvas> create_opengl_canvas(int text_size, double window_ppi);
+std::unique_ptr<Canvas> create_canvas(int text_size, double window_ppi);
+}

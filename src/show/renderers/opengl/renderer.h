@@ -25,9 +25,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <memory>
 
-struct OpenGLRenderer
+namespace gpu_opengl
 {
-        virtual ~OpenGLRenderer() = default;
+struct Renderer
+{
+        virtual ~Renderer() = default;
 
         virtual void set_light_a(const Color& light) = 0;
         virtual void set_light_d(const Color& light) = 0;
@@ -65,4 +67,5 @@ struct OpenGLRenderer
         static mat4 ortho(double left, double right, double bottom, double top, double near, double far);
 };
 
-std::unique_ptr<OpenGLRenderer> create_opengl_renderer(unsigned sample_count);
+std::unique_ptr<Renderer> create_renderer(unsigned sample_count);
+}

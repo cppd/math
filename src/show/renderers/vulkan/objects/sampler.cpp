@@ -20,9 +20,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/error.h"
 #include "com/log.h"
 
-namespace vulkan_renderer_implementation
+namespace gpu_vulkan
 {
-vulkan::Sampler create_texture_sampler(const vulkan::Device& device, bool anisotropy)
+vulkan::Sampler create_renderer_texture_sampler(const vulkan::Device& device, bool anisotropy)
 {
         VkSamplerCreateInfo create_info = {};
         create_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
@@ -64,7 +64,7 @@ vulkan::Sampler create_texture_sampler(const vulkan::Device& device, bool anisot
         return vulkan::Sampler(device, create_info);
 }
 
-vulkan::Sampler create_shadow_sampler(VkDevice device)
+vulkan::Sampler create_renderer_shadow_sampler(VkDevice device)
 {
         VkSamplerCreateInfo create_info = {};
         create_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;

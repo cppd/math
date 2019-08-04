@@ -23,9 +23,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/glsl.h"
 #include "graphics/opengl/buffers.h"
 
-namespace opengl_renderer_implementation
+namespace gpu_opengl
 {
-class TrianglesMemory final
+class RendererTrianglesMemory final
 {
         static constexpr int MATRICES_BINDING = 0;
         static constexpr int LIGHTING_BINDING = 1;
@@ -65,7 +65,7 @@ class TrianglesMemory final
         };
 
 public:
-        TrianglesMemory() : m_matrices(sizeof(Matrices)), m_lighting(sizeof(Lighting)), m_drawing(sizeof(Drawing))
+        RendererTrianglesMemory() : m_matrices(sizeof(Matrices)), m_lighting(sizeof(Lighting)), m_drawing(sizeof(Drawing))
         {
         }
 
@@ -168,7 +168,7 @@ public:
         }
 };
 
-class PointsMemory final
+class RendererPointsMemory final
 {
         static constexpr int MATRICES_BINDING = 0;
         static constexpr int DRAWING_BINDING = 1;
@@ -190,7 +190,7 @@ class PointsMemory final
         };
 
 public:
-        PointsMemory() : m_matrices(sizeof(Matrices)), m_drawing(sizeof(Drawing))
+        RendererPointsMemory() : m_matrices(sizeof(Matrices)), m_drawing(sizeof(Drawing))
         {
         }
 
@@ -231,7 +231,7 @@ public:
         }
 };
 
-class ShadowMemory final
+class RendererShadowMemory final
 {
         static constexpr int MATRICES_BINDING = 0;
 
@@ -243,7 +243,7 @@ class ShadowMemory final
         };
 
 public:
-        ShadowMemory() : m_matrices(sizeof(Matrices))
+        RendererShadowMemory() : m_matrices(sizeof(Matrices))
         {
         }
 

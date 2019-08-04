@@ -145,7 +145,7 @@ public:
 template <typename Renderer>
 mat4 ortho_matrix_for_2d_rendering(int width, int height)
 {
-        static_assert(std::is_same_v<Renderer, OpenGLRenderer> || std::is_same_v<Renderer, VulkanRenderer>);
+        static_assert(std::is_same_v<Renderer, gpu_opengl::Renderer> || std::is_same_v<Renderer, gpu_vulkan::Renderer>);
 
         double left = 0;
         double right = width;
@@ -160,9 +160,9 @@ template <GraphicsAndComputeAPI API>
 class ShowObject final : public EventQueue, public WindowEvent
 {
         static_assert(API == GraphicsAndComputeAPI::Vulkan || API == GraphicsAndComputeAPI::OpenGL);
-        using Renderer = std::conditional_t<API == GraphicsAndComputeAPI::Vulkan, VulkanRenderer, OpenGLRenderer>;
+        using Renderer = std::conditional_t<API == GraphicsAndComputeAPI::Vulkan, gpu_vulkan::Renderer, gpu_opengl::Renderer>;
         using Window = std::conditional_t<API == GraphicsAndComputeAPI::Vulkan, VulkanWindow, OpenGLWindow>;
-        using Canvas = std::conditional_t<API == GraphicsAndComputeAPI::Vulkan, VulkanCanvas, OpenGLCanvas>;
+        using Canvas = std::conditional_t<API == GraphicsAndComputeAPI::Vulkan, gpu_vulkan::Canvas, gpu_opengl::Canvas>;
 
         // Камера и тени рассчитаны на размер объекта 2 и на положение в точке (0, 0, 0).
         static constexpr double OBJECT_SIZE = 2;
@@ -749,7 +749,7 @@ void ShowObject<API>::window_resize_handler()
                 int dft_dst_y = 0;
 
                 m_canvas->create_objects(m_window_width, m_window_height,
-                                         ortho_matrix_for_2d_rendering<OpenGLRenderer>(m_window_width, m_window_height),
+                                         ortho_matrix_for_2d_rendering<gpu_opengl::Renderer>(m_window_width, m_window_height),
                                          m_renderer->color_buffer(), m_renderer->color_buffer_is_srgb(), m_renderer->objects(),
                                          m_draw_width, m_draw_height, dft_dst_x, dft_dst_y, m_renderer->frame_buffer_is_srgb());
         }
@@ -824,7 +824,7 @@ void ShowObject<API>::init_window_and_view()
 
 //
 
-void render_opengl(OpenGLWindow& window, OpenGLRenderer& renderer, OpenGLCanvas& canvas, const TextData& text_data)
+void render_opengl(OpenGLWindow& window, gpu_opengl::Renderer& renderer, gpu_opengl::Canvas& canvas, const TextData& text_data)
 {
         // Параметр true означает рисование в цветной буфер,
         // параметр false означает рисование в буфер экрана.
@@ -841,8 +841,8 @@ void ShowObject<GraphicsAndComputeAPI::OpenGL>::loop()
         ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
         std::unique_ptr<OpenGLWindow> window = create_opengl_window(OPENGL_MINIMUM_SAMPLE_COUNT, this);
-        std::unique_ptr<OpenGLRenderer> renderer = create_opengl_renderer(OPENGL_MINIMUM_SAMPLE_COUNT);
-        std::unique_ptr<OpenGLCanvas> canvas = create_opengl_canvas(m_fps_text_size, m_parent_window_ppi);
+        std::unique_ptr<gpu_opengl::Renderer> renderer = gpu_opengl::create_renderer(OPENGL_MINIMUM_SAMPLE_COUNT);
+        std::unique_ptr<gpu_opengl::Canvas> canvas = gpu_opengl::create_canvas(m_fps_text_size, m_parent_window_ppi);
 
         //
 
@@ -876,7 +876,7 @@ void ShowObject<GraphicsAndComputeAPI::OpenGL>::loop()
 
 //
 
-void create_swapchain(const vulkan::VulkanInstance& instance, VulkanRenderer* renderer, VulkanCanvas* canvas,
+void create_swapchain(const vulkan::VulkanInstance& instance, gpu_vulkan::Renderer* renderer, gpu_vulkan::Canvas* canvas,
                       std::unique_ptr<vulkan::Swapchain>* swapchain, std::unique_ptr<vulkan::RenderBuffers>* render_buffers,
                       std::unique_ptr<vulkan::StorageImage>* object_image, vulkan::PresentMode preferred_present_mode,
                       const std::unordered_set<uint32_t>& swapchain_family_indices)
@@ -906,14 +906,14 @@ void create_swapchain(const vulkan::VulkanInstance& instance, VulkanRenderer* re
 
         renderer->create_buffers(swapchain->get(), &(*render_buffers)->buffers_3d(), object_image->get());
 
-        mat4 m = ortho_matrix_for_2d_rendering<VulkanRenderer>((*swapchain)->width(), (*swapchain)->height());
+        mat4 m = ortho_matrix_for_2d_rendering<gpu_vulkan::Renderer>((*swapchain)->width(), (*swapchain)->height());
         canvas->create_buffers(swapchain->get(), &(*render_buffers)->buffers_2d(), m, object_image->get());
 }
 
 template <size_t N>
 bool render_vulkan(VkSwapchainKHR swapchain, const vulkan::Queue& presentation_queue,
                    const std::array<vulkan::Queue, N>& graphics_queues, VkDevice device, VkSemaphore image_semaphore,
-                   const vulkan::RenderBuffers& render_buffers, VulkanRenderer& renderer, VulkanCanvas& canvas,
+                   const vulkan::RenderBuffers& render_buffers, gpu_vulkan::Renderer& renderer, gpu_vulkan::Canvas& canvas,
                    const TextData& text_data)
 {
         static_assert(N >= 1);
@@ -971,10 +971,10 @@ void ShowObject<GraphicsAndComputeAPI::Vulkan>::loop()
         std::unique_ptr<VulkanWindow> window = create_vulkan_window(this);
 
         vulkan::VulkanInstance instance(
-                merge<std::string>(VulkanRenderer::instance_extensions(), VulkanWindow::instance_extensions()),
-                VulkanRenderer::device_extensions(),
+                merge<std::string>(gpu_vulkan::Renderer::instance_extensions(), VulkanWindow::instance_extensions()),
+                gpu_vulkan::Renderer::device_extensions(),
                 merge<vulkan::PhysicalDeviceFeatures>(
-                        VulkanRenderer::required_device_features(), VulkanCanvas::required_device_features(),
+                        gpu_vulkan::Renderer::required_device_features(), gpu_vulkan::Canvas::required_device_features(),
                         device_features_sample_shading(VULKAN_MINIMUM_SAMPLE_COUNT,
                                                        VULKAN_RENDERER_SAMPLE_SHADING || VULKAN_CANVAS_SAMPLE_SHADING),
                         device_features_sampler_anisotropy(VULKAN_SAMPLER_ANISOTROPY)),
@@ -991,11 +991,11 @@ void ShowObject<GraphicsAndComputeAPI::Vulkan>::loop()
         std::unique_ptr<vulkan::RenderBuffers> render_buffers;
         std::unique_ptr<vulkan::StorageImage> object_image;
 
-        std::unique_ptr<VulkanRenderer> renderer = create_vulkan_renderer(
+        std::unique_ptr<gpu_vulkan::Renderer> renderer = gpu_vulkan::create_renderer(
                 instance, instance.graphics_command_pool(), instance.graphics_queues()[0], instance.transfer_command_pool(),
                 instance.transfer_queue(), VULKAN_RENDERER_SAMPLE_SHADING, VULKAN_SAMPLER_ANISOTROPY);
 
-        std::unique_ptr<VulkanCanvas> canvas = create_vulkan_canvas(
+        std::unique_ptr<gpu_vulkan::Canvas> canvas = gpu_vulkan::create_canvas(
                 instance, instance.graphics_command_pool(), instance.graphics_queues()[0], instance.transfer_command_pool(),
                 instance.transfer_queue(), instance.graphics_queues()[0], VULKAN_CANVAS_SAMPLE_SHADING, m_fps_text_size);
 

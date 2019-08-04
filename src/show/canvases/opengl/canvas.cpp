@@ -23,9 +23,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "gpu/pencil_sketch/opengl/show.h"
 #include "gpu/text/opengl/show.h"
 
+namespace gpu_opengl
+{
 namespace
 {
-class Canvas final : public OpenGLCanvas
+class Impl final : public Canvas
 {
         int m_text_size;
         double m_window_ppi;
@@ -137,14 +139,14 @@ class Canvas final : public OpenGLCanvas
         void draw(const TextData& text_data) override;
 
 public:
-        Canvas(int text_size, double window_ppi) : m_text_size(text_size), m_window_ppi(window_ppi)
+        Impl(int text_size, double window_ppi) : m_text_size(text_size), m_window_ppi(window_ppi)
         {
         }
 };
 
-void Canvas::create_objects(int window_width, int window_height, const mat4& matrix, const opengl::TextureRGBA32F& color_texture,
-                            bool color_texture_is_srgb, const opengl::TextureImage& objects, int draw_width, int draw_height,
-                            int dft_dst_x, int dft_dst_y, bool frame_buffer_is_srgb)
+void Impl::create_objects(int window_width, int window_height, const mat4& matrix, const opengl::TextureRGBA32F& color_texture,
+                          bool color_texture_is_srgb, const opengl::TextureImage& objects, int draw_width, int draw_height,
+                          int dft_dst_x, int dft_dst_y, bool frame_buffer_is_srgb)
 {
         m_window_width = window_width;
         m_window_height = window_height;
@@ -168,7 +170,7 @@ void Canvas::create_objects(int window_width, int window_height, const mat4& mat
         }
 }
 
-void Canvas::draw(const TextData& text_data)
+void Impl::draw(const TextData& text_data)
 {
         ASSERT(m_pencil_sketch);
         ASSERT(m_dft_show);
@@ -212,7 +214,8 @@ void Canvas::draw(const TextData& text_data)
 }
 }
 
-std::unique_ptr<OpenGLCanvas> create_opengl_canvas(int text_size, double window_ppi)
+std::unique_ptr<Canvas> create_canvas(int text_size, double window_ppi)
 {
-        return std::make_unique<Canvas>(text_size, window_ppi);
+        return std::make_unique<Impl>(text_size, window_ppi);
+}
 }

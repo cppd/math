@@ -32,9 +32,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <vector>
 #include <vulkan/vulkan.h>
 
-struct VulkanRenderer
+namespace gpu_vulkan
 {
-        virtual ~VulkanRenderer() = default;
+struct Renderer
+{
+        virtual ~Renderer() = default;
 
         virtual void set_light_a(const Color& light) = 0;
         virtual void set_light_d(const Color& light) = 0;
@@ -74,9 +76,8 @@ struct VulkanRenderer
         virtual void delete_buffers() = 0;
 };
 
-std::unique_ptr<VulkanRenderer> create_vulkan_renderer(const vulkan::VulkanInstance& instance,
-                                                       const vulkan::CommandPool& graphics_command_pool,
-                                                       const vulkan::Queue& graphics_queue,
-                                                       const vulkan::CommandPool& transfer_command_pool,
-                                                       const vulkan::Queue& transfer_queue, bool sample_shading,
-                                                       bool sampler_anisotropy);
+std::unique_ptr<Renderer> create_renderer(const vulkan::VulkanInstance& instance,
+                                          const vulkan::CommandPool& graphics_command_pool, const vulkan::Queue& graphics_queue,
+                                          const vulkan::CommandPool& transfer_command_pool, const vulkan::Queue& transfer_queue,
+                                          bool sample_shading, bool sampler_anisotropy);
+}

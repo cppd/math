@@ -30,9 +30,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <vector>
 #include <vulkan/vulkan.h>
 
-struct VulkanCanvas
+namespace gpu_vulkan
 {
-        virtual ~VulkanCanvas() = default;
+struct Canvas
+{
+        virtual ~Canvas() = default;
 
         virtual void set_text_color(const Color& c) = 0;
         virtual void set_text_active(bool v) = 0;
@@ -62,7 +64,8 @@ struct VulkanCanvas
                                  VkSemaphore wait_semaphore, unsigned image_index, const TextData& text_data) = 0;
 };
 
-std::unique_ptr<VulkanCanvas> create_vulkan_canvas(
-        const vulkan::VulkanInstance& instance, const vulkan::CommandPool& graphics_command_pool,
-        const vulkan::Queue& graphics_queue, const vulkan::CommandPool& transfer_command_pool,
-        const vulkan::Queue& transfer_queue, const vulkan::Queue& graphics_compute_queue, bool sample_shading, int text_size);
+std::unique_ptr<Canvas> create_canvas(const vulkan::VulkanInstance& instance, const vulkan::CommandPool& graphics_command_pool,
+                                      const vulkan::Queue& graphics_queue, const vulkan::CommandPool& transfer_command_pool,
+                                      const vulkan::Queue& transfer_queue, const vulkan::Queue& graphics_compute_queue,
+                                      bool sample_shading, int text_size);
+}

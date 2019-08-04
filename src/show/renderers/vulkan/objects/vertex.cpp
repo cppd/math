@@ -17,16 +17,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "vertex.h"
 
-namespace vulkan_renderer_implementation
+namespace gpu_vulkan
 {
-std::vector<VkVertexInputBindingDescription> Vertex::binding_descriptions()
+std::vector<VkVertexInputBindingDescription> RendererVertex::binding_descriptions()
 {
         std::vector<VkVertexInputBindingDescription> descriptions;
 
         {
                 VkVertexInputBindingDescription d = {};
                 d.binding = 0;
-                d.stride = sizeof(Vertex);
+                d.stride = sizeof(RendererVertex);
                 d.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
                 descriptions.push_back(d);
@@ -35,7 +35,7 @@ std::vector<VkVertexInputBindingDescription> Vertex::binding_descriptions()
         return descriptions;
 }
 
-std::vector<VkVertexInputAttributeDescription> Vertex::triangles_attribute_descriptions()
+std::vector<VkVertexInputAttributeDescription> RendererVertex::triangles_attribute_descriptions()
 {
         std::vector<VkVertexInputAttributeDescription> descriptions;
 
@@ -44,7 +44,7 @@ std::vector<VkVertexInputAttributeDescription> Vertex::triangles_attribute_descr
                 d.binding = 0;
                 d.location = 0;
                 d.format = VK_FORMAT_R32G32B32_SFLOAT;
-                d.offset = offsetof(Vertex, position);
+                d.offset = offsetof(RendererVertex, position);
 
                 descriptions.push_back(d);
         }
@@ -53,7 +53,7 @@ std::vector<VkVertexInputAttributeDescription> Vertex::triangles_attribute_descr
                 d.binding = 0;
                 d.location = 1;
                 d.format = VK_FORMAT_R32G32B32_SFLOAT;
-                d.offset = offsetof(Vertex, normal);
+                d.offset = offsetof(RendererVertex, normal);
 
                 descriptions.push_back(d);
         }
@@ -62,7 +62,7 @@ std::vector<VkVertexInputAttributeDescription> Vertex::triangles_attribute_descr
                 d.binding = 0;
                 d.location = 2;
                 d.format = VK_FORMAT_R32G32B32_SFLOAT;
-                d.offset = offsetof(Vertex, geometric_normal);
+                d.offset = offsetof(RendererVertex, geometric_normal);
 
                 descriptions.push_back(d);
         }
@@ -71,7 +71,7 @@ std::vector<VkVertexInputAttributeDescription> Vertex::triangles_attribute_descr
                 d.binding = 0;
                 d.location = 3;
                 d.format = VK_FORMAT_R32G32_SFLOAT;
-                d.offset = offsetof(Vertex, texture_coordinates);
+                d.offset = offsetof(RendererVertex, texture_coordinates);
 
                 descriptions.push_back(d);
         }
@@ -79,7 +79,7 @@ std::vector<VkVertexInputAttributeDescription> Vertex::triangles_attribute_descr
         return descriptions;
 }
 
-std::vector<VkVertexInputAttributeDescription> Vertex::shadow_attribute_descriptions()
+std::vector<VkVertexInputAttributeDescription> RendererVertex::shadow_attribute_descriptions()
 {
         std::vector<VkVertexInputAttributeDescription> descriptions;
 
@@ -88,7 +88,7 @@ std::vector<VkVertexInputAttributeDescription> Vertex::shadow_attribute_descript
                 d.binding = 0;
                 d.location = 0;
                 d.format = VK_FORMAT_R32G32B32_SFLOAT;
-                d.offset = offsetof(Vertex, position);
+                d.offset = offsetof(RendererVertex, position);
 
                 descriptions.push_back(d);
         }
@@ -98,14 +98,14 @@ std::vector<VkVertexInputAttributeDescription> Vertex::shadow_attribute_descript
 
 //
 
-std::vector<VkVertexInputBindingDescription> PointVertex::binding_descriptions()
+std::vector<VkVertexInputBindingDescription> RendererPointVertex::binding_descriptions()
 {
         std::vector<VkVertexInputBindingDescription> descriptions;
 
         {
                 VkVertexInputBindingDescription d = {};
                 d.binding = 0;
-                d.stride = sizeof(PointVertex);
+                d.stride = sizeof(RendererPointVertex);
                 d.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
                 descriptions.push_back(d);
@@ -114,7 +114,7 @@ std::vector<VkVertexInputBindingDescription> PointVertex::binding_descriptions()
         return descriptions;
 }
 
-std::vector<VkVertexInputAttributeDescription> PointVertex::attribute_descriptions()
+std::vector<VkVertexInputAttributeDescription> RendererPointVertex::attribute_descriptions()
 {
         std::vector<VkVertexInputAttributeDescription> descriptions;
 
@@ -123,7 +123,7 @@ std::vector<VkVertexInputAttributeDescription> PointVertex::attribute_descriptio
                 d.binding = 0;
                 d.location = 0;
                 d.format = VK_FORMAT_R32G32B32_SFLOAT;
-                d.offset = offsetof(PointVertex, position);
+                d.offset = offsetof(RendererPointVertex, position);
 
                 descriptions.push_back(d);
         }

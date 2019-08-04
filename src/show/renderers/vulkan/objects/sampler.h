@@ -19,8 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "graphics/vulkan/objects.h"
 
-namespace vulkan_renderer_implementation
+namespace gpu_vulkan
 {
-vulkan::Sampler create_texture_sampler(const vulkan::Device& device, bool anisotropy);
-vulkan::Sampler create_shadow_sampler(VkDevice device);
+vulkan::Sampler create_renderer_texture_sampler(const vulkan::Device& device, bool anisotropy);
+vulkan::Sampler create_renderer_shadow_sampler(VkDevice device);
 }

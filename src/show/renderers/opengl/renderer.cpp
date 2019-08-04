@@ -56,6 +56,8 @@ constexpr const char points_frag[]{
 #include "renderer_points.frag.str"
 };
 
+namespace gpu_opengl
+{
 namespace
 {
 enum class DrawType
@@ -366,9 +368,7 @@ std::string color_space_message(bool framebuffer_is_srgb, bool colorbuffer_is_sr
         return msg;
 }
 
-namespace impl = opengl_renderer_implementation;
-
-class Renderer final : public OpenGLRenderer
+class Impl final : public Renderer
 {
         static constexpr mat4 SCALE = scale<double>(0.5, 0.5, 0.5);
         static constexpr mat4 TRANSLATE = translate<double>(1, 1, 1);
@@ -405,9 +405,9 @@ class Renderer final : public OpenGLRenderer
         bool m_framebuffer_srgb;
         bool m_colorbuffer_srgb;
 
-        impl::PointsMemory m_points_memory;
-        impl::ShadowMemory m_shadow_memory;
-        impl::TrianglesMemory m_triangles_memory;
+        RendererPointsMemory m_points_memory;
+        RendererShadowMemory m_shadow_memory;
+        RendererTrianglesMemory m_triangles_memory;
 
         void set_light_a(const Color& light) override
         {
@@ -666,7 +666,7 @@ class Renderer final : public OpenGLRenderer
         }
 
 public:
-        Renderer(unsigned sample_count)
+        Impl(unsigned sample_count)
                 : m_sample_count(sample_count),
                   m_triangles_program(opengl::VertexShader(triangles_vert), opengl::GeometryShader(triangles_geom),
                                       opengl::FragmentShader(triangles_frag)),
@@ -691,12 +691,13 @@ public:
 };
 }
 
-mat4 OpenGLRenderer::ortho(double left, double right, double bottom, double top, double near, double far)
+mat4 Renderer::ortho(double left, double right, double bottom, double top, double near, double far)
 {
         return ortho_opengl<double>(left, right, bottom, top, near, far);
 }
 
-std::unique_ptr<OpenGLRenderer> create_opengl_renderer(unsigned sample_count)
+std::unique_ptr<Renderer> create_renderer(unsigned sample_count)
 {
-        return std::make_unique<Renderer>(sample_count);
+        return std::make_unique<Impl>(sample_count);
+}
 }

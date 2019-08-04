@@ -86,8 +86,8 @@ constexpr uint32_t points_frag[]{
 #include "renderer_points.frag.spr"
 };
 
-namespace impl = vulkan_renderer_implementation;
-
+namespace gpu_vulkan
+{
 namespace
 {
 std::unique_ptr<vulkan::BufferWithDeviceLocalMemory> load_vertices(const vulkan::Device& device,
@@ -108,7 +108,7 @@ std::unique_ptr<vulkan::BufferWithDeviceLocalMemory> load_vertices(const vulkan:
         const std::vector<vec3f>& obj_normals = obj.normals();
         const std::vector<vec2f>& obj_texcoords = obj.texcoords();
 
-        std::vector<impl::Vertex> shader_vertices;
+        std::vector<RendererVertex> shader_vertices;
         shader_vertices.reserve(3 * obj_faces.size());
 
         vec3f v0, v1, v2;
@@ -184,7 +184,7 @@ std::unique_ptr<vulkan::BufferWithDeviceLocalMemory> load_point_vertices(const v
         const std::vector<Obj<3>::Point>& obj_points = obj.points();
         const std::vector<vec3f>& obj_vertices = obj.vertices();
 
-        std::vector<impl::PointVertex> shader_vertices;
+        std::vector<RendererPointVertex> shader_vertices;
         shader_vertices.reserve(obj_points.size());
 
         for (const Obj<3>::Point& p : obj_points)
@@ -211,7 +211,7 @@ std::unique_ptr<vulkan::BufferWithDeviceLocalMemory> load_line_vertices(const vu
         const std::vector<Obj<3>::Line>& obj_lines = obj.lines();
         const std::vector<vec3f>& obj_vertices = obj.vertices();
 
-        std::vector<impl::PointVertex> shader_vertices;
+        std::vector<RendererPointVertex> shader_vertices;
         shader_vertices.reserve(2 * obj_lines.size());
 
         for (const Obj<3>::Line& line : obj_lines)
@@ -250,11 +250,11 @@ std::vector<vulkan::ColorTexture> load_textures(const vulkan::Device& device, co
         return textures;
 }
 
-std::unique_ptr<impl::TrianglesMaterialMemory> load_materials(const vulkan::Device& device,
-                                                              const std::unordered_set<uint32_t>& family_indices,
-                                                              VkSampler sampler, VkDescriptorSetLayout descriptor_set_layout,
-                                                              const Obj<3>& obj,
-                                                              const std::vector<vulkan::ColorTexture>& textures)
+std::unique_ptr<RendererTrianglesMaterialMemory> load_materials(const vulkan::Device& device,
+                                                                const std::unordered_set<uint32_t>& family_indices,
+                                                                VkSampler sampler, VkDescriptorSetLayout descriptor_set_layout,
+                                                                const Obj<3>& obj,
+                                                                const std::vector<vulkan::ColorTexture>& textures)
 {
         // Текстур имеется больше на одну для её использования в тех материалах, где нет текстуры
 
@@ -262,7 +262,7 @@ std::unique_ptr<impl::TrianglesMaterialMemory> load_materials(const vulkan::Devi
 
         const vulkan::ColorTexture* const no_texture = &textures.back();
 
-        std::vector<impl::TrianglesMaterialMemory::MaterialAndTexture> materials;
+        std::vector<RendererTrianglesMaterialMemory::MaterialAndTexture> materials;
         materials.reserve(obj.materials().size() + 1);
 
         for (const typename Obj<3>::Material& material : obj.materials())
@@ -271,7 +271,7 @@ std::unique_ptr<impl::TrianglesMaterialMemory> load_materials(const vulkan::Devi
                 ASSERT(material.map_Kd < static_cast<int>(textures.size()) - 1);
                 ASSERT(material.map_Ks < static_cast<int>(textures.size()) - 1);
 
-                impl::TrianglesMaterialMemory::MaterialAndTexture m;
+                RendererTrianglesMaterialMemory::MaterialAndTexture m;
 
                 m.material.Ka = material.Ka.to_rgb_vector<float>();
                 m.material.Kd = material.Kd.to_rgb_vector<float>();
@@ -294,7 +294,7 @@ std::unique_ptr<impl::TrianglesMaterialMemory> load_materials(const vulkan::Devi
         }
 
         // На один материал больше для его указания, но не использования в вершинах, не имеющих материала
-        impl::TrianglesMaterialMemory::MaterialAndTexture m;
+        RendererTrianglesMaterialMemory::MaterialAndTexture m;
         m.material.Ka = vec3f(0);
         m.material.Kd = vec3f(0);
         m.material.Ks = vec3f(0);
@@ -308,7 +308,8 @@ std::unique_ptr<impl::TrianglesMaterialMemory> load_materials(const vulkan::Devi
         m.material.use_material = 0;
         materials.push_back(m);
 
-        return std::make_unique<impl::TrianglesMaterialMemory>(device, family_indices, sampler, descriptor_set_layout, materials);
+        return std::make_unique<RendererTrianglesMaterialMemory>(device, family_indices, sampler, descriptor_set_layout,
+                                                                 materials);
 }
 
 struct DrawInfo
@@ -351,7 +352,7 @@ class DrawObjectTriangles final : public DrawObjectInterface
 {
         std::unique_ptr<vulkan::BufferWithDeviceLocalMemory> m_vertex_buffer;
         std::vector<vulkan::ColorTexture> m_textures;
-        std::unique_ptr<impl::TrianglesMaterialMemory> m_shader_memory;
+        std::unique_ptr<RendererTrianglesMaterialMemory> m_shader_memory;
         unsigned m_vertex_count;
 
         //
@@ -434,7 +435,7 @@ public:
                         ASSERT(material.vertex_count > 0);
 
                         vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, info.triangles_pipeline_layout,
-                                                impl::TrianglesMaterialMemory::set_number(), 1 /*set count*/,
+                                                RendererTrianglesMaterialMemory::set_number(), 1 /*set count*/,
                                                 &material.descriptor_set, 0, nullptr);
 
                         vkCmdDraw(command_buffer, material.vertex_count, 1, material.vertex_offset, 0);
@@ -615,7 +616,7 @@ public:
         }
 };
 
-class Renderer final : public VulkanRenderer
+class Impl final : public Renderer
 {
         // Для получения текстуры для тени результат рисования находится в интервалах x(-1, 1) y(-1, 1) z(0, 1).
         // Для работы с этой текстурой надо преобразовать в интервалы x(0, 1) y(0, 1) z(0, 1).
@@ -653,9 +654,9 @@ class Renderer final : public VulkanRenderer
 
         vulkan::DescriptorSetLayout m_triangles_material_descriptor_set_layout;
 
-        impl::TrianglesSharedMemory m_triangles_shared_shader_memory;
-        impl::ShadowMemory m_shadow_shader_memory;
-        impl::PointsMemory m_points_shader_memory;
+        RendererTrianglesSharedMemory m_triangles_shared_shader_memory;
+        RendererShadowMemory m_shadow_shader_memory;
+        RendererPointsMemory m_points_shader_memory;
 
         vulkan::VertexShader m_triangles_vert;
         vulkan::GeometryShader m_triangles_geom;
@@ -956,15 +957,15 @@ class Renderer final : public VulkanRenderer
                 m_triangles_pipeline = m_render_buffers->create_pipeline(
                         VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, m_sample_shading,
                         {&m_triangles_vert, &m_triangles_geom, &m_triangles_frag}, m_triangles_pipeline_layout,
-                        impl::Vertex::binding_descriptions(), impl::Vertex::triangles_attribute_descriptions());
+                        RendererVertex::binding_descriptions(), RendererVertex::triangles_attribute_descriptions());
 
                 m_points_0d_pipeline = m_render_buffers->create_pipeline(
                         VK_PRIMITIVE_TOPOLOGY_POINT_LIST, false, {&m_points_0d_vert, &m_points_frag}, m_points_pipeline_layout,
-                        impl::PointVertex::binding_descriptions(), impl::PointVertex::attribute_descriptions());
+                        RendererPointVertex::binding_descriptions(), RendererPointVertex::attribute_descriptions());
 
                 m_points_1d_pipeline = m_render_buffers->create_pipeline(
                         VK_PRIMITIVE_TOPOLOGY_LINE_LIST, false, {&m_points_1d_vert, &m_points_frag}, m_points_pipeline_layout,
-                        impl::PointVertex::binding_descriptions(), impl::PointVertex::attribute_descriptions());
+                        RendererPointVertex::binding_descriptions(), RendererPointVertex::attribute_descriptions());
         }
 
         void delete_shadow_buffers()
@@ -993,7 +994,7 @@ class Renderer final : public VulkanRenderer
 
                 m_shadow_pipeline = m_shadow_buffers->create_pipeline(
                         VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, {&m_shadow_vert, &m_shadow_frag}, m_shadow_pipeline_layout,
-                        impl::Vertex::binding_descriptions(), impl::Vertex::shadow_attribute_descriptions());
+                        RendererVertex::binding_descriptions(), RendererVertex::shadow_attribute_descriptions());
         }
 
         void set_matrices()
@@ -1087,8 +1088,8 @@ class Renderer final : public VulkanRenderer
 
                 m_render_buffers->delete_command_buffers(&m_render_command_buffers);
                 m_render_command_buffers = m_render_buffers->create_command_buffers(
-                        m_clear_color, std::bind(&Renderer::before_render_pass_commands, this, std::placeholders::_1),
-                        std::bind(&Renderer::draw_commands, this, std::placeholders::_1));
+                        m_clear_color, std::bind(&Impl::before_render_pass_commands, this, std::placeholders::_1),
+                        std::bind(&Impl::draw_commands, this, std::placeholders::_1));
         }
 
         void create_shadow_command_buffers()
@@ -1101,7 +1102,7 @@ class Renderer final : public VulkanRenderer
 
                 m_shadow_buffers->delete_command_buffers(&m_shadow_command_buffers);
                 m_shadow_command_buffers = m_shadow_buffers->create_command_buffers(
-                        std::bind(&Renderer::draw_shadow_commands, this, std::placeholders::_1));
+                        std::bind(&Impl::draw_shadow_commands, this, std::placeholders::_1));
         }
 
         void create_all_command_buffers()
@@ -1127,9 +1128,9 @@ class Renderer final : public VulkanRenderer
         }
 
 public:
-        Renderer(const vulkan::VulkanInstance& instance, const vulkan::CommandPool& graphics_command_pool,
-                 const vulkan::Queue& graphics_queue, const vulkan::CommandPool& transfer_command_pool,
-                 const vulkan::Queue& transfer_queue, bool sample_shading, bool sampler_anisotropy)
+        Impl(const vulkan::VulkanInstance& instance, const vulkan::CommandPool& graphics_command_pool,
+             const vulkan::Queue& graphics_queue, const vulkan::CommandPool& transfer_command_pool,
+             const vulkan::Queue& transfer_queue, bool sample_shading, bool sampler_anisotropy)
                 : m_sample_shading(sample_shading),
                   m_instance(instance),
                   m_device(instance.device()),
@@ -1139,11 +1140,11 @@ public:
                   m_transfer_queue(transfer_queue),
                   m_shadow_signal_semaphore(m_device),
                   m_render_signal_semaphore(m_device),
-                  m_texture_sampler(impl::create_texture_sampler(m_device, sampler_anisotropy)),
-                  m_shadow_sampler(impl::create_shadow_sampler(m_device)),
+                  m_texture_sampler(create_renderer_texture_sampler(m_device, sampler_anisotropy)),
+                  m_shadow_sampler(create_renderer_shadow_sampler(m_device)),
                   //
                   m_triangles_material_descriptor_set_layout(vulkan::create_descriptor_set_layout(
-                          m_device, impl::TrianglesMaterialMemory::descriptor_set_layout_bindings())),
+                          m_device, RendererTrianglesMaterialMemory::descriptor_set_layout_bindings())),
                   //
                   m_triangles_shared_shader_memory(m_device, {m_graphics_queue.family_index()}),
                   m_shadow_shader_memory(m_device, {m_graphics_queue.family_index()}),
@@ -1159,7 +1160,7 @@ public:
                   m_points_frag(m_device, points_frag, "main"),
                   //
                   m_triangles_pipeline_layout(create_pipeline_layout(
-                          m_device, {impl::TrianglesSharedMemory::set_number(), impl::TrianglesMaterialMemory::set_number()},
+                          m_device, {RendererTrianglesSharedMemory::set_number(), RendererTrianglesMaterialMemory::set_number()},
                           {m_triangles_shared_shader_memory.descriptor_set_layout(),
                            m_triangles_material_descriptor_set_layout})),
                   m_shadow_pipeline_layout(create_pipeline_layout(m_device, {m_shadow_shader_memory.set_number()},
@@ -1169,7 +1170,7 @@ public:
         {
         }
 
-        ~Renderer() override
+        ~Impl() override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
@@ -1180,31 +1181,30 @@ public:
 };
 }
 
-mat4 VulkanRenderer::ortho(double left, double right, double bottom, double top, double near, double far)
+mat4 Renderer::ortho(double left, double right, double bottom, double top, double near, double far)
 {
         return ortho_vulkan<double>(left, right, bottom, top, near, far);
 }
 
-std::vector<std::string> VulkanRenderer::instance_extensions()
+std::vector<std::string> Renderer::instance_extensions()
 {
         return string_vector(INSTANCE_EXTENSIONS);
 }
-std::vector<std::string> VulkanRenderer::device_extensions()
+std::vector<std::string> Renderer::device_extensions()
 {
         return string_vector(DEVICE_EXTENSIONS);
 }
-std::vector<vulkan::PhysicalDeviceFeatures> VulkanRenderer::required_device_features()
+std::vector<vulkan::PhysicalDeviceFeatures> Renderer::required_device_features()
 {
         return REQUIRED_DEVICE_FEATURES;
 }
 
-std::unique_ptr<VulkanRenderer> create_vulkan_renderer(const vulkan::VulkanInstance& instance,
-                                                       const vulkan::CommandPool& graphics_command_pool,
-                                                       const vulkan::Queue& graphics_queue,
-                                                       const vulkan::CommandPool& transfer_command_pool,
-                                                       const vulkan::Queue& transfer_queue, bool sample_shading,
-                                                       bool sampler_anisotropy)
+std::unique_ptr<Renderer> create_renderer(const vulkan::VulkanInstance& instance,
+                                          const vulkan::CommandPool& graphics_command_pool, const vulkan::Queue& graphics_queue,
+                                          const vulkan::CommandPool& transfer_command_pool, const vulkan::Queue& transfer_queue,
+                                          bool sample_shading, bool sampler_anisotropy)
 {
-        return std::make_unique<Renderer>(instance, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue,
-                                          sample_shading, sampler_anisotropy);
+        return std::make_unique<Impl>(instance, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue,
+                                      sample_shading, sampler_anisotropy);
+}
 }

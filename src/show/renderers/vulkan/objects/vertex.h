@@ -22,17 +22,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <vector>
 #include <vulkan/vulkan.h>
 
-namespace vulkan_renderer_implementation
+namespace gpu_vulkan
 {
-struct Vertex
+struct RendererVertex
 {
         vec3f position;
         vec3f normal;
         vec3f geometric_normal;
         vec2f texture_coordinates;
 
-        constexpr Vertex(const vec3f& position_, const vec3f& normal_, const vec3f& geometric_normal_,
-                         const vec2f& texture_coordinates_)
+        constexpr RendererVertex(const vec3f& position_, const vec3f& normal_, const vec3f& geometric_normal_,
+                                 const vec2f& texture_coordinates_)
                 : position(position_),
                   normal(normal_),
                   geometric_normal(geometric_normal_),
@@ -47,11 +47,11 @@ struct Vertex
         static std::vector<VkVertexInputAttributeDescription> shadow_attribute_descriptions();
 };
 
-struct PointVertex
+struct RendererPointVertex
 {
         vec3f position;
 
-        constexpr PointVertex(const vec3f& position_) : position(position_)
+        constexpr RendererPointVertex(const vec3f& position_) : position(position_)
         {
         }
 
