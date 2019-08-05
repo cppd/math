@@ -111,9 +111,6 @@ constexpr T determinant(const std::array<Vector<N_H, T>, N_V>& vectors, const st
         return determinant_by_cofactor_expansion(vectors, v_map, h_map);
 }
 
-// GCC 7.2 для функций del_elem выдаёт ошибку
-// "sorry, unimplemented: unexpected AST of kind switch_expr".
-#if defined(__clang__)
 // clang-format off
 static_assert
 (
@@ -135,7 +132,6 @@ static_assert
         )
 );
 // clang-format on
-#endif
 }
 
 // Тип данных передаваемых векторов и диапазон значений рассчитаны только на определители
