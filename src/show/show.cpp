@@ -593,9 +593,10 @@ class ShowObject final : public EventQueue, public WindowEvent
         void loop_thread();
 
 public:
-        ShowObject(const ShowCreateInfo& info) try : m_callback(info.callback.value()),
-                                                     m_parent_window(info.parent_window.value()),
-                                                     m_parent_window_ppi(info.parent_window_ppi.value())
+        ShowObject(const ShowCreateInfo& info)
+        try : m_callback(info.callback.value()),
+              m_parent_window(info.parent_window.value()),
+              m_parent_window_ppi(info.parent_window_ppi.value())
         {
                 ASSERT(m_callback);
                 ASSERT(m_parent_window_ppi > 0);

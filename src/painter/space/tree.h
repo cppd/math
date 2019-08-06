@@ -328,7 +328,8 @@ template <template <typename...> typename Container, typename Parallelotope, typ
 void extend(const int MAX_DEPTH, const int MIN_OBJECTS, const int MAX_BOXES,
             const typename Parallelotope::DataType& DISTANCE_FROM_FLAT_SHAPES_IN_EPSILONS, SpinLock* boxes_lock,
             Container<Box<Parallelotope>>* boxes, BoxJobs<Box<Parallelotope>>* box_jobs,
-            const FunctorObjectPointer& functor_object_pointer, ProgressRatio* progress) try
+            const FunctorObjectPointer& functor_object_pointer, ProgressRatio* progress)
+try
 {
         // Адреса имеющихся элементов не должны меняться при вставке
         // новых элементов, поэтому требуется std::deque или std::list.
