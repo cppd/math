@@ -40,9 +40,9 @@ void sort_and_unique(T* v, Less less, Equal equal)
 }
 
 template <typename T>
-std::remove_cv_t<std::remove_reference_t<T>> unique_elements(T&& v)
+std::remove_cvref_t<T> unique_elements(T&& v)
 {
-        std::remove_cv_t<std::remove_reference_t<T>> res(std::forward<T>(v));
+        std::remove_cvref_t<T> res(std::forward<T>(v));
         sort_and_unique(&res);
         return res;
 }

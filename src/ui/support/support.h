@@ -103,8 +103,7 @@ std::string file_filter(const std::string& name, const T&... extensions)
         auto add = [&](const auto& ext) {
                 if constexpr (has_begin_end<decltype(ext)>)
                 {
-                        if constexpr (!std::is_same_v<char,
-                                                      std::remove_cv_t<std::remove_reference_t<decltype(*std::cbegin(ext))>>>)
+                        if constexpr (!std::is_same_v<char, std::remove_cvref_t<decltype(*std::cbegin(ext))>>)
                         {
                                 for (const std::string& e : ext)
                                 {

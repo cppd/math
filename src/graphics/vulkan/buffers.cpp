@@ -370,7 +370,7 @@ void staging_image_copy(const vulkan::Device& device, const vulkan::CommandPool&
 {
         static_assert(std::is_same_v<typename T::value_type, uint8_t> || std::is_same_v<typename T::value_type, uint16_t> ||
                       std::is_same_v<typename T::value_type, float>);
-        static_assert(std::is_same_v<typename T::value_type, std::remove_cv_t<std::remove_reference_t<decltype(pixels[0])>>>);
+        static_assert(std::is_same_v<typename T::value_type, std::remove_cvref_t<decltype(pixels[0])>>);
 
         ASSERT(graphics_command_pool.family_index() == graphics_queue.family_index());
         ASSERT(transfer_command_pool.family_index() == transfer_queue.family_index());
