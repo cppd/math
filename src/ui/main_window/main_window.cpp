@@ -586,10 +586,8 @@ void MainWindow::thread_self_test(SelfTestType test_type, bool with_confirmation
         m_threads->start_thread(MainThreads::Action::SelfTest, [=, this](ProgressRatioList* progress_list, std::string* message) {
                 *message = "Self-Test";
 
-                self_test(
-                        test_type, progress_list, [&](const std::exception_ptr& ptr, const std::string& msg) noexcept {
-                                exception_handler(ptr, msg, true);
-                        });
+                self_test(test_type, progress_list,
+                          [&](const std::exception_ptr& ptr, const std::string& msg) { exception_handler(ptr, msg, true); });
         });
 }
 
