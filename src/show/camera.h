@@ -37,13 +37,16 @@ class Camera final
         int m_paint_width = -1;
         int m_paint_height = -1;
 
+        double m_scale_exponent;
+
         void set_vectors(const vec3& right, const vec3& up);
 
 public:
         Camera();
 
-        void set(const vec3& right, const vec3& up);
-        void get(vec3* camera_up, vec3* camera_direction, vec3* light_up, vec3* light_direction) const;
+        void set(const vec3& right, const vec3& up, double scale);
+        double change_scale(int delta);
+        void get(vec3* camera_up, vec3* camera_direction, vec3* light_up, vec3* light_direction, double* scale) const;
         void camera_information(vec3* camera_up, vec3* camera_direction, vec3* view_center, double* view_width, int* paint_width,
                                 int* paint_height) const;
         vec3 light_direction() const;

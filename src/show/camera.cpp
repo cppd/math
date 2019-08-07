@@ -22,6 +22,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <mutex>
 
+constexpr double SCALE_BASE = 1.1;
+constexpr double SCALE_EXP_MIN = -50;
+constexpr double SCALE_EXP_MAX = 100;
+
 constexpr double PI_DIV_180 = PI<double> / 180;
 
 constexpr double to_radians(double angle)
@@ -58,18 +62,35 @@ Camera::Camera()
           m_light_up(0),
           m_light_direction(0),
           m_paint_width(-1),
-          m_paint_height(-1)
+          m_paint_height(-1),
+          m_scale_exponent(0)
 {
 }
 
-void Camera::set(const vec3& right, const vec3& up)
+void Camera::set(const vec3& right, const vec3& up, double scale)
 {
         std::lock_guard lg(m_lock);
 
         set_vectors(right, up);
+
+        m_scale_exponent = std::log(scale) / log(SCALE_BASE);
 }
 
-void Camera::get(vec3* camera_up, vec3* camera_direction, vec3* light_up, vec3* light_direction) const
+double Camera::change_scale(int delta)
+{
+        std::lock_guard lg(m_lock);
+
+        if ((delta < 0 && m_scale_exponent <= SCALE_EXP_MIN) || (delta > 0 && m_scale_exponent >= SCALE_EXP_MAX) || delta == 0)
+        {
+                return 1;
+        }
+
+        m_scale_exponent += delta;
+
+        return std::pow(SCALE_BASE, delta);
+}
+
+void Camera::get(vec3* camera_up, vec3* camera_direction, vec3* light_up, vec3* light_direction, double* scale) const
 {
         std::lock_guard lg(m_lock);
 
@@ -77,6 +98,7 @@ void Camera::get(vec3* camera_up, vec3* camera_direction, vec3* light_up, vec3* 
         *camera_direction = m_camera_direction;
         *light_up = m_light_up;
         *light_direction = m_light_direction;
+        *scale = std::pow(SCALE_BASE, m_scale_exponent);
 }
 
 void Camera::camera_information(vec3* camera_up, vec3* camera_direction, vec3* view_center, double* view_width, int* paint_width,

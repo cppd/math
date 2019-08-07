@@ -66,10 +66,6 @@ constexpr bool VULKAN_CANVAS_SAMPLE_SHADING = true;
 // anisotropic filtering
 constexpr bool VULKAN_SAMPLER_ANISOTROPY = true;
 
-constexpr double ZOOM_BASE = 1.1;
-constexpr double ZOOM_EXP_MIN = -50;
-constexpr double ZOOM_EXP_MAX = 100;
-
 constexpr double FPS_TEXT_SIZE_IN_POINTS = 9.0;
 constexpr double FPS_TEXT_STEP_Y_IN_POINTS = 1.3 * FPS_TEXT_SIZE_IN_POINTS;
 constexpr double FPS_TEXT_X_IN_POINTS = 5;
@@ -214,7 +210,6 @@ class ShowObject final : public EventQueue, public WindowEvent
         MouseButton m_mouse_pressed_button;
 
         vec2 m_window_center = vec2(0, 0);
-        double m_zoom_exponent = 0;
         double m_default_ortho_scale = 1;
 
         bool m_fullscreen_active = false;
@@ -653,20 +648,16 @@ void ShowObject<API>::mouse_wheel_handler(int delta)
         {
                 return;
         }
-        if ((delta < 0 && m_zoom_exponent <= ZOOM_EXP_MIN) || (delta > 0 && m_zoom_exponent >= ZOOM_EXP_MAX) || delta == 0)
-        {
-                return;
-        }
 
-        m_zoom_exponent += delta;
+        double scale_delta = m_camera.change_scale(delta);
 
         vec2 mouse_local(m_mouse_x - m_draw_width * 0.5, m_draw_height * 0.5 - m_mouse_y);
         vec2 mouse_global(mouse_local + m_window_center);
         // Формула
-        //   new_center = old_center + (mouse_global * zoom_r - mouse_global)
-        //   -> center = center + mouse_global * zoom_r - mouse_global
-        //   -> center += mouse_global * (zoom_r - 1)
-        m_window_center += mouse_global * (std::pow(ZOOM_BASE, delta) - 1);
+        //   new_center = old_center + (mouse_global * scale_delta - mouse_global)
+        //   -> center = center + mouse_global * scale_delta - mouse_global
+        //   -> center += mouse_global * (scale_delta - 1)
+        m_window_center += mouse_global * (scale_delta - 1);
 
         //
 
@@ -710,9 +701,8 @@ void ShowObject<API>::mouse_move_handler()
 template <GraphicsAndComputeAPI API>
 void ShowObject<API>::reset_view_handler()
 {
-        m_zoom_exponent = 0;
         m_window_center = vec2(0, 0);
-        m_camera.set(vec3(1, 0, 0), vec3(0, 1, 0));
+        m_camera.set(vec3(1, 0, 0), vec3(0, 1, 0), 1);
 
         if (m_draw_width > 0 && m_draw_height > 0)
         {
@@ -764,13 +754,14 @@ template <GraphicsAndComputeAPI API>
 void ShowObject<API>::compute_matrices()
 {
         vec3 camera_up, camera_direction, light_up, light_direction;
+        double camera_scale;
 
-        m_camera.get(&camera_up, &camera_direction, &light_up, &light_direction);
+        m_camera.get(&camera_up, &camera_direction, &light_up, &light_direction, &camera_scale);
 
         mat4 shadow_projection_matrix = Renderer::ortho(-1, 1, -1, 1, 1, -1);
         mat4 shadow_view_matrix = look_at(vec3(0, 0, 0), light_direction, light_up);
 
-        double ortho_scale = std::pow(ZOOM_BASE, -m_zoom_exponent) * m_default_ortho_scale;
+        double ortho_scale = m_default_ortho_scale / camera_scale;
         double left = ortho_scale * (m_window_center[0] - 0.5 * m_draw_width);
         double right = ortho_scale * (m_window_center[0] + 0.5 * m_draw_width);
         double bottom = ortho_scale * (m_window_center[1] - 0.5 * m_draw_height);
