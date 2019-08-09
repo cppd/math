@@ -39,16 +39,18 @@ class Camera final
         int m_paint_height = -1;
 
         double m_scale_exponent;
+        double m_default_ortho_scale;
 
         void set_vectors(const vec3& right, const vec3& up);
 
 public:
         Camera();
 
-        void set(const vec3& right, const vec3& up, double scale, const vec2& window_center);
+        void reset(const vec3& right, const vec3& up, double scale, const vec2& window_center);
         void scale(double x, double y, double delta);
         void change_window_center(const vec2& delta);
         vec2 window_center() const;
+        double ortho_scale() const;
         void get(vec3* camera_up, vec3* camera_direction, vec3* light_up, vec3* light_direction, double* scale) const;
         void camera_information(vec3* camera_up, vec3* camera_direction, vec3* view_center, double* view_width, int* paint_width,
                                 int* paint_height) const;

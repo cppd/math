@@ -64,11 +64,12 @@ Camera::Camera()
           m_window_center(0, 0),
           m_paint_width(-1),
           m_paint_height(-1),
-          m_scale_exponent(0)
+          m_scale_exponent(0),
+          m_default_ortho_scale(1)
 {
 }
 
-void Camera::set(const vec3& right, const vec3& up, double scale, const vec2& window_center)
+void Camera::reset(const vec3& right, const vec3& up, double scale, const vec2& window_center)
 {
         std::lock_guard lg(m_lock);
 
@@ -76,6 +77,15 @@ void Camera::set(const vec3& right, const vec3& up, double scale, const vec2& wi
 
         m_scale_exponent = std::log(scale) / log(SCALE_BASE);
         m_window_center = window_center;
+
+        if (m_paint_width > 0 && m_paint_height > 0)
+        {
+                m_default_ortho_scale = 2.0 / std::min(m_paint_width, m_paint_height);
+        }
+        else
+        {
+                m_default_ortho_scale = 1;
+        }
 }
 
 void Camera::scale(double x, double y, double delta)
@@ -119,6 +129,13 @@ vec2 Camera::window_center() const
         std::lock_guard lg(m_lock);
 
         return m_window_center;
+}
+
+double Camera::ortho_scale() const
+{
+        std::lock_guard lg(m_lock);
+
+        return m_default_ortho_scale;
 }
 
 void Camera::get(vec3* camera_up, vec3* camera_direction, vec3* light_up, vec3* light_direction, double* scale) const

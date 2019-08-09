@@ -209,8 +209,6 @@ class ShowObject final : public EventQueue, public WindowEvent
         bool m_mouse_pressed = false;
         MouseButton m_mouse_pressed_button;
 
-        double m_default_ortho_scale = 1;
-
         bool m_fullscreen_active = false;
 
         //
@@ -687,16 +685,7 @@ void ShowObject<API>::mouse_move_handler()
 template <GraphicsAndComputeAPI API>
 void ShowObject<API>::reset_view_handler()
 {
-        m_camera.set(vec3(1, 0, 0), vec3(0, 1, 0), 1, vec2(0, 0));
-
-        if (m_draw_width > 0 && m_draw_height > 0)
-        {
-                m_default_ortho_scale = 2.0 / std::min(m_draw_width, m_draw_height);
-        }
-        else
-        {
-                m_default_ortho_scale = 1;
-        }
+        m_camera.reset(vec3(1, 0, 0), vec3(0, 1, 0), 1, vec2(0, 0));
 
         //
 
@@ -748,7 +737,7 @@ void ShowObject<API>::compute_matrices()
         mat4 shadow_projection_matrix = Renderer::ortho(-1, 1, -1, 1, 1, -1);
         mat4 shadow_view_matrix = look_at(vec3(0, 0, 0), light_direction, light_up);
 
-        double ortho_scale = m_default_ortho_scale / camera_scale;
+        double ortho_scale = m_camera.ortho_scale() / camera_scale;
         double left = ortho_scale * (window_center[0] - 0.5 * m_draw_width);
         double right = ortho_scale * (window_center[0] + 0.5 * m_draw_width);
         double bottom = ortho_scale * (window_center[1] - 0.5 * m_draw_height);
