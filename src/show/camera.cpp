@@ -78,18 +78,33 @@ void Camera::set(const vec3& right, const vec3& up, double scale, const vec2& wi
         m_window_center = window_center;
 }
 
-double Camera::change_scale(int delta)
+void Camera::scale(double x, double y, double delta)
 {
         std::lock_guard lg(m_lock);
 
-        if ((delta < 0 && m_scale_exponent <= SCALE_EXP_MIN) || (delta > 0 && m_scale_exponent >= SCALE_EXP_MAX) || delta == 0)
+        if (!(x < m_paint_width && y < m_paint_height))
         {
-                return 1;
+                return;
+        }
+        if (!(m_scale_exponent + delta >= SCALE_EXP_MIN && m_scale_exponent + delta <= SCALE_EXP_MAX))
+        {
+                return;
+        }
+        if (delta == 0)
+        {
+                return;
         }
 
         m_scale_exponent += delta;
+        double scale_delta = std::pow(SCALE_BASE, delta);
 
-        return std::pow(SCALE_BASE, delta);
+        vec2 mouse_local(x - m_paint_width * 0.5, m_paint_height * 0.5 - y);
+        vec2 mouse_global(mouse_local + m_window_center);
+        // Формула
+        //   new_center = old_center + (mouse_global * scale_delta - mouse_global)
+        //   -> center = center + mouse_global * scale_delta - mouse_global
+        //   -> center += mouse_global * (scale_delta - 1)
+        m_window_center += mouse_global * (scale_delta - 1);
 }
 
 void Camera::change_window_center(const vec2& delta)

@@ -643,20 +643,7 @@ public:
 template <GraphicsAndComputeAPI API>
 void ShowObject<API>::mouse_wheel_handler(int delta)
 {
-        if (!(m_mouse_x < m_draw_width && m_mouse_y < m_draw_height))
-        {
-                return;
-        }
-
-        double scale_delta = m_camera.change_scale(delta);
-
-        vec2 mouse_local(m_mouse_x - m_draw_width * 0.5, m_draw_height * 0.5 - m_mouse_y);
-        vec2 mouse_global(mouse_local + m_camera.window_center());
-        // Формула
-        //   new_center = old_center + (mouse_global * scale_delta - mouse_global)
-        //   -> center = center + mouse_global * scale_delta - mouse_global
-        //   -> center += mouse_global * (scale_delta - 1)
-        m_camera.change_window_center(mouse_global * (scale_delta - 1));
+        m_camera.scale(m_mouse_x, m_mouse_y, delta);
 
         //
 
