@@ -209,7 +209,6 @@ class ShowObject final : public EventQueue, public WindowEvent
         bool m_mouse_pressed = false;
         MouseButton m_mouse_pressed_button;
 
-        vec2 m_window_center = vec2(0, 0);
         double m_default_ortho_scale = 1;
 
         bool m_fullscreen_active = false;
@@ -652,12 +651,12 @@ void ShowObject<API>::mouse_wheel_handler(int delta)
         double scale_delta = m_camera.change_scale(delta);
 
         vec2 mouse_local(m_mouse_x - m_draw_width * 0.5, m_draw_height * 0.5 - m_mouse_y);
-        vec2 mouse_global(mouse_local + m_window_center);
+        vec2 mouse_global(mouse_local + m_camera.window_center());
         // Формула
         //   new_center = old_center + (mouse_global * scale_delta - mouse_global)
         //   -> center = center + mouse_global * scale_delta - mouse_global
         //   -> center += mouse_global * (scale_delta - 1)
-        m_window_center += mouse_global * (scale_delta - 1);
+        m_camera.change_window_center(mouse_global * (scale_delta - 1));
 
         //
 
@@ -689,7 +688,7 @@ void ShowObject<API>::mouse_move_handler()
                 m_camera.rotate(-delta_x, -delta_y);
                 break;
         case MouseButton::Left:
-                m_window_center -= vec2(delta_x, -delta_y);
+                m_camera.change_window_center(vec2(-delta_x, delta_y));
                 break;
         }
 
@@ -701,8 +700,7 @@ void ShowObject<API>::mouse_move_handler()
 template <GraphicsAndComputeAPI API>
 void ShowObject<API>::reset_view_handler()
 {
-        m_window_center = vec2(0, 0);
-        m_camera.set(vec3(1, 0, 0), vec3(0, 1, 0), 1);
+        m_camera.set(vec3(1, 0, 0), vec3(0, 1, 0), 1, vec2(0, 0));
 
         if (m_draw_width > 0 && m_draw_height > 0)
         {
@@ -732,6 +730,7 @@ void ShowObject<API>::window_resize_handler()
         m_draw_width = m_canvas->dft_active() ? m_window_width / 2 : m_window_width;
         m_draw_height = m_window_height;
 
+        m_camera.set_size(m_draw_width, m_draw_height);
         m_renderer->set_size(m_draw_width, m_draw_height);
 
         if constexpr (API == GraphicsAndComputeAPI::OpenGL)
@@ -757,15 +756,16 @@ void ShowObject<API>::compute_matrices()
         double camera_scale;
 
         m_camera.get(&camera_up, &camera_direction, &light_up, &light_direction, &camera_scale);
+        vec2 window_center = m_camera.window_center();
 
         mat4 shadow_projection_matrix = Renderer::ortho(-1, 1, -1, 1, 1, -1);
         mat4 shadow_view_matrix = look_at(vec3(0, 0, 0), light_direction, light_up);
 
         double ortho_scale = m_default_ortho_scale / camera_scale;
-        double left = ortho_scale * (m_window_center[0] - 0.5 * m_draw_width);
-        double right = ortho_scale * (m_window_center[0] + 0.5 * m_draw_width);
-        double bottom = ortho_scale * (m_window_center[1] - 0.5 * m_draw_height);
-        double top = ortho_scale * (m_window_center[1] + 0.5 * m_draw_height);
+        double left = ortho_scale * (window_center[0] - 0.5 * m_draw_width);
+        double right = ortho_scale * (window_center[0] + 0.5 * m_draw_width);
+        double bottom = ortho_scale * (window_center[1] - 0.5 * m_draw_height);
+        double top = ortho_scale * (window_center[1] + 0.5 * m_draw_height);
         double near = 1;
         double far = -1;
         mat4 projection_matrix = Renderer::ortho(left, right, bottom, top, near, far);
@@ -778,8 +778,7 @@ void ShowObject<API>::compute_matrices()
 
         vec4 screen_center((right + left) * 0.5, (top + bottom) * 0.5, (far + near) * 0.5, 1.0);
         vec4 view_center = numerical::inverse(view_matrix) * screen_center;
-        m_camera.set_view_center_and_width(vec3(view_center[0], view_center[1], view_center[2]), right - left, m_draw_width,
-                                           m_draw_height);
+        m_camera.set_view_center_and_width(vec3(view_center[0], view_center[1], view_center[2]), right - left);
 }
 
 template <GraphicsAndComputeAPI API>

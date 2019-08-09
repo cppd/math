@@ -61,19 +61,21 @@ Camera::Camera()
           m_camera_direction(0),
           m_light_up(0),
           m_light_direction(0),
+          m_window_center(0, 0),
           m_paint_width(-1),
           m_paint_height(-1),
           m_scale_exponent(0)
 {
 }
 
-void Camera::set(const vec3& right, const vec3& up, double scale)
+void Camera::set(const vec3& right, const vec3& up, double scale, const vec2& window_center)
 {
         std::lock_guard lg(m_lock);
 
         set_vectors(right, up);
 
         m_scale_exponent = std::log(scale) / log(SCALE_BASE);
+        m_window_center = window_center;
 }
 
 double Camera::change_scale(int delta)
@@ -88,6 +90,20 @@ double Camera::change_scale(int delta)
         m_scale_exponent += delta;
 
         return std::pow(SCALE_BASE, delta);
+}
+
+void Camera::change_window_center(const vec2& delta)
+{
+        std::lock_guard lg(m_lock);
+
+        m_window_center += delta;
+}
+
+vec2 Camera::window_center() const
+{
+        std::lock_guard lg(m_lock);
+
+        return m_window_center;
 }
 
 void Camera::get(vec3* camera_up, vec3* camera_direction, vec3* light_up, vec3* light_direction, double* scale) const
@@ -130,13 +146,18 @@ void Camera::rotate(double around_up_axis, double around_right_axis)
         set_vectors(right, up);
 }
 
-void Camera::set_view_center_and_width(const vec3& vec, double view_width, int paint_width, int paint_height)
+void Camera::set_view_center_and_width(const vec3& vec, double view_width)
 {
         std::lock_guard lg(m_lock);
 
         m_view_center = vec;
         m_view_width = view_width;
+}
 
-        m_paint_width = paint_width;
-        m_paint_height = paint_height;
+void Camera::set_size(int width, int height)
+{
+        std::lock_guard lg(m_lock);
+
+        m_paint_width = width;
+        m_paint_height = height;
 }

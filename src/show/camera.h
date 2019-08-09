@@ -32,6 +32,7 @@ class Camera final
         vec3 m_light_direction; // от источника света на объект
 
         vec3 m_view_center;
+        vec2 m_window_center;
         double m_view_width;
 
         int m_paint_width = -1;
@@ -44,12 +45,15 @@ class Camera final
 public:
         Camera();
 
-        void set(const vec3& right, const vec3& up, double scale);
+        void set(const vec3& right, const vec3& up, double scale, const vec2& window_center);
         double change_scale(int delta);
+        void change_window_center(const vec2& delta);
+        vec2 window_center() const;
         void get(vec3* camera_up, vec3* camera_direction, vec3* light_up, vec3* light_direction, double* scale) const;
         void camera_information(vec3* camera_up, vec3* camera_direction, vec3* view_center, double* view_width, int* paint_width,
                                 int* paint_height) const;
         vec3 light_direction() const;
         void rotate(double around_up_axis, double around_right_axis);
-        void set_view_center_and_width(const vec3& vec, double view_width, int paint_width, int paint_height);
+        void set_view_center_and_width(const vec3& vec, double view_width);
+        void set_size(int width, int height);
 };
