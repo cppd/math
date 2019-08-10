@@ -59,12 +59,12 @@ void Camera::set_vectors(const vec3& right, const vec3& up)
 
 void Camera::view_volume(double* left, double* right, double* bottom, double* top, double* near, double* far) const
 {
-        double scale = m_default_ortho_scale / std::pow(SCALE_BASE, m_scale_exponent);
+        double scale = m_default_scale / std::pow(SCALE_BASE, m_scale_exponent);
 
-        *left = scale * (m_window_center[0] - 0.5 * m_paint_width);
-        *right = scale * (m_window_center[0] + 0.5 * m_paint_width);
-        *bottom = scale * (m_window_center[1] - 0.5 * m_paint_height);
-        *top = scale * (m_window_center[1] + 0.5 * m_paint_height);
+        *left = scale * (m_window_center[0] - 0.5 * m_width);
+        *right = scale * (m_window_center[0] + 0.5 * m_width);
+        *bottom = scale * (m_window_center[1] - 0.5 * m_height);
+        *top = scale * (m_window_center[1] + 0.5 * m_height);
         *near = 1;
         *far = -1;
 }
@@ -96,10 +96,10 @@ Camera::Camera()
           m_light_up(0),
           m_light_direction(0),
           m_window_center(0, 0),
-          m_paint_width(-1),
-          m_paint_height(-1),
+          m_width(-1),
+          m_height(-1),
           m_scale_exponent(0),
-          m_default_ortho_scale(1)
+          m_default_scale(1)
 {
 }
 
@@ -112,13 +112,13 @@ void Camera::reset(const vec3& right, const vec3& up, double scale, const vec2& 
         m_scale_exponent = std::log(scale) / log(SCALE_BASE);
         m_window_center = window_center;
 
-        if (m_paint_width > 0 && m_paint_height > 0)
+        if (m_width > 0 && m_height > 0)
         {
-                m_default_ortho_scale = 2.0 / std::min(m_paint_width, m_paint_height);
+                m_default_scale = 2.0 / std::min(m_width, m_height);
         }
         else
         {
-                m_default_ortho_scale = 1;
+                m_default_scale = 1;
         }
 }
 
@@ -126,7 +126,7 @@ void Camera::scale(double x, double y, double delta)
 {
         std::lock_guard lg(m_lock);
 
-        if (!(x < m_paint_width && y < m_paint_height))
+        if (!(x < m_width && y < m_height))
         {
                 return;
         }
@@ -142,46 +142,13 @@ void Camera::scale(double x, double y, double delta)
         m_scale_exponent += delta;
         double scale_delta = std::pow(SCALE_BASE, delta);
 
-        vec2 mouse_local(x - m_paint_width * 0.5, m_paint_height * 0.5 - y);
+        vec2 mouse_local(x - m_width * 0.5, m_height * 0.5 - y);
         vec2 mouse_global(mouse_local + m_window_center);
         // Формула
         //   new_center = old_center + (mouse_global * scale_delta - mouse_global)
         //   -> center = center + mouse_global * scale_delta - mouse_global
         //   -> center += mouse_global * (scale_delta - 1)
         m_window_center += mouse_global * (scale_delta - 1);
-}
-
-void Camera::change_window_center(const vec2& delta)
-{
-        std::lock_guard lg(m_lock);
-
-        m_window_center += delta;
-}
-
-void Camera::camera_information(vec3* camera_up, vec3* camera_direction, vec3* view_center, double* view_width, int* paint_width,
-                                int* paint_height) const
-{
-        std::lock_guard lg(m_lock);
-
-        *camera_up = m_camera_up;
-        *camera_direction = m_camera_direction;
-        *paint_width = m_paint_width;
-        *paint_height = m_paint_height;
-
-        double left, right, bottom, top, near, far;
-        view_volume(&left, &right, &bottom, &top, &near, &far);
-        vec4 volume_center_4((right + left) * 0.5, (top + bottom) * 0.5, (far + near) * 0.5, 1.0);
-        vec4 view_center_4 = numerical::inverse(view_matrix()) * volume_center_4;
-
-        *view_center = vec3(view_center_4[0], view_center_4[1], view_center_4[2]);
-        *view_width = right - left;
-}
-
-vec3 Camera::light_direction() const
-{
-        std::lock_guard lg(m_lock);
-
-        return m_light_direction;
 }
 
 void Camera::rotate(double around_up_axis, double around_right_axis)
@@ -193,12 +160,38 @@ void Camera::rotate(double around_up_axis, double around_right_axis)
         set_vectors(right, up);
 }
 
-void Camera::set_size(int width, int height)
+void Camera::move(const vec2& delta)
 {
         std::lock_guard lg(m_lock);
 
-        m_paint_width = width;
-        m_paint_height = height;
+        m_window_center += delta;
+}
+
+void Camera::resize(int width, int height)
+{
+        std::lock_guard lg(m_lock);
+
+        m_width = width;
+        m_height = height;
+}
+
+void Camera::information(vec3* camera_up, vec3* camera_direction, vec3* view_center, double* view_width, int* paint_width,
+                         int* paint_height) const
+{
+        std::lock_guard lg(m_lock);
+
+        *camera_up = m_camera_up;
+        *camera_direction = m_camera_direction;
+        *paint_width = m_width;
+        *paint_height = m_height;
+
+        double left, right, bottom, top, near, far;
+        view_volume(&left, &right, &bottom, &top, &near, &far);
+        vec4 volume_center_4((right + left) * 0.5, (top + bottom) * 0.5, (far + near) * 0.5, 1.0);
+        vec4 view_center_4 = numerical::inverse(view_matrix()) * volume_center_4;
+
+        *view_center = vec3(view_center_4[0], view_center_4[1], view_center_4[2]);
+        *view_width = right - left;
 }
 
 Camera::Information Camera::information() const
@@ -216,4 +209,11 @@ Camera::Information Camera::information() const
         v.light_direction = m_light_direction;
         v.camera_direction = m_camera_direction;
         return v;
+}
+
+vec3 Camera::light_direction() const
+{
+        std::lock_guard lg(m_lock);
+
+        return m_light_direction;
 }

@@ -461,7 +461,7 @@ class ShowObject final : public EventQueue, public WindowEvent
         {
                 ASSERT(std::this_thread::get_id() != m_thread.get_id());
 
-                m_camera.camera_information(camera_up, camera_direction, view_center, view_width, paint_width, paint_height);
+                m_camera.information(camera_up, camera_direction, view_center, view_width, paint_width, paint_height);
         }
 
         vec3 light_direction() const override
@@ -673,7 +673,7 @@ void ShowObject<API>::mouse_move_handler()
                 m_camera.rotate(-delta_x, -delta_y);
                 break;
         case MouseButton::Left:
-                m_camera.change_window_center(vec2(-delta_x, delta_y));
+                m_camera.move(vec2(-delta_x, delta_y));
                 break;
         }
 
@@ -706,7 +706,7 @@ void ShowObject<API>::window_resize_handler()
         m_draw_width = m_canvas->dft_active() ? m_window_width / 2 : m_window_width;
         m_draw_height = m_window_height;
 
-        m_camera.set_size(m_draw_width, m_draw_height);
+        m_camera.resize(m_draw_width, m_draw_height);
         m_renderer->set_size(m_draw_width, m_draw_height);
 
         if constexpr (API == GraphicsAndComputeAPI::OpenGL)

@@ -34,11 +34,11 @@ class Camera final
 
         vec2 m_window_center;
 
-        int m_paint_width = -1;
-        int m_paint_height = -1;
+        int m_width;
+        int m_height;
 
         double m_scale_exponent;
-        double m_default_ortho_scale;
+        double m_default_scale;
 
         void set_vectors(const vec3& right, const vec3& up);
 
@@ -67,11 +67,12 @@ public:
 
         void reset(const vec3& right, const vec3& up, double scale, const vec2& window_center);
         void scale(double x, double y, double delta);
-        void change_window_center(const vec2& delta);
-        void camera_information(vec3* camera_up, vec3* camera_direction, vec3* view_center, double* view_width, int* paint_width,
-                                int* paint_height) const;
-        vec3 light_direction() const;
         void rotate(double around_up_axis, double around_right_axis);
-        void set_size(int width, int height);
+        void move(const vec2& delta);
+        void resize(int width, int height);
+
+        void information(vec3* camera_up, vec3* camera_direction, vec3* view_center, double* view_width, int* paint_width,
+                         int* paint_height) const;
         Information information() const;
+        vec3 light_direction() const;
 };
