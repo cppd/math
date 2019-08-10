@@ -456,19 +456,20 @@ class ShowObject final : public EventQueue, public WindowEvent
 
         //
 
-        void camera_information(vec3* camera_up, vec3* camera_direction, vec3* view_center, double* view_width, int* paint_width,
-                                int* paint_height) const override
+        void camera_information(vec3* camera_up, vec3* camera_direction, vec3* light_direction, vec3* view_center,
+                                double* view_width, int* paint_width, int* paint_height) const override
         {
                 ASSERT(std::this_thread::get_id() != m_thread.get_id());
 
-                m_camera.information(camera_up, camera_direction, view_center, view_width, paint_width, paint_height);
-        }
+                Camera::RayInfo info = m_camera.ray_info();
 
-        vec3 light_direction() const override
-        {
-                ASSERT(std::this_thread::get_id() != m_thread.get_id());
-
-                return m_camera.light_direction();
+                *camera_up = info.camera_up;
+                *camera_direction = info.camera_direction;
+                *light_direction = info.light_direction;
+                *view_center = info.view_center;
+                *view_width = info.view_width;
+                *paint_width = info.width;
+                *paint_height = info.height;
         }
 
         double object_size() const override
@@ -728,7 +729,7 @@ void ShowObject<API>::window_resize_handler()
 template <GraphicsAndComputeAPI API>
 void ShowObject<API>::compute_matrices()
 {
-        Camera::Information info = m_camera.information();
+        Camera::RasterizationInfo info = m_camera.rasterization_info();
 
         mat4 shadow_projection_matrix =
                 Renderer::ortho(info.shadow_volume.left, info.shadow_volume.right, info.shadow_volume.bottom,

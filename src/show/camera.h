@@ -25,20 +25,20 @@ class Camera final
 {
         mutable SpinLock m_lock;
 
-        vec3 m_camera_right;
-        vec3 m_camera_up;
-        vec3 m_camera_direction; // от камеры на объект
+        vec3 m_camera_right{0};
+        vec3 m_camera_up{0};
+        vec3 m_camera_direction{0}; // от камеры на объект
 
-        vec3 m_light_up;
-        vec3 m_light_direction; // от источника света на объект
+        vec3 m_light_up{0};
+        vec3 m_light_direction{0}; // от источника света на объект
 
-        vec2 m_window_center;
+        vec2 m_window_center{0};
 
-        int m_width;
-        int m_height;
+        int m_width = -1;
+        int m_height = -1;
 
-        double m_scale_exponent;
-        double m_default_scale;
+        double m_scale_exponent{0};
+        double m_default_scale{1};
 
         void set_vectors(const vec3& right, const vec3& up);
 
@@ -48,9 +48,7 @@ class Camera final
         mat4 shadow_matrix() const;
 
 public:
-        Camera();
-
-        struct Information
+        struct RasterizationInfo
         {
                 struct Volume
                 {
@@ -65,14 +63,23 @@ public:
                 vec3 camera_direction;
         };
 
+        struct RayInfo
+        {
+                vec3 camera_up;
+                vec3 camera_direction;
+                vec3 light_direction;
+                vec3 view_center;
+                double view_width;
+                int width;
+                int height;
+        };
+
         void reset(const vec3& right, const vec3& up, double scale, const vec2& window_center);
         void scale(double x, double y, double delta);
         void rotate(double around_up_axis, double around_right_axis);
         void move(const vec2& delta);
         void resize(int width, int height);
 
-        void information(vec3* camera_up, vec3* camera_direction, vec3* view_center, double* view_width, int* paint_width,
-                         int* paint_height) const;
-        Information information() const;
-        vec3 light_direction() const;
+        RayInfo ray_info() const;
+        RasterizationInfo rasterization_info() const;
 };

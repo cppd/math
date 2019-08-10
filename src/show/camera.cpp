@@ -89,20 +89,6 @@ mat4 Camera::shadow_matrix() const
         return look_at(vec3(0, 0, 0), m_light_direction, m_light_up);
 }
 
-Camera::Camera()
-        : m_camera_right(0),
-          m_camera_up(0),
-          m_camera_direction(0),
-          m_light_up(0),
-          m_light_direction(0),
-          m_window_center(0, 0),
-          m_width(-1),
-          m_height(-1),
-          m_scale_exponent(0),
-          m_default_scale(1)
-{
-}
-
 void Camera::reset(const vec3& right, const vec3& up, double scale, const vec2& window_center)
 {
         std::lock_guard lg(m_lock);
@@ -175,30 +161,34 @@ void Camera::resize(int width, int height)
         m_height = height;
 }
 
-void Camera::information(vec3* camera_up, vec3* camera_direction, vec3* view_center, double* view_width, int* paint_width,
-                         int* paint_height) const
+Camera::RayInfo Camera::ray_info() const
 {
         std::lock_guard lg(m_lock);
 
-        *camera_up = m_camera_up;
-        *camera_direction = m_camera_direction;
-        *paint_width = m_width;
-        *paint_height = m_height;
+        Camera::RayInfo v;
+
+        v.camera_up = m_camera_up;
+        v.camera_direction = m_camera_direction;
+        v.light_direction = m_light_direction;
+        v.width = m_width;
+        v.height = m_height;
 
         double left, right, bottom, top, near, far;
         view_volume(&left, &right, &bottom, &top, &near, &far);
         vec4 volume_center_4((right + left) * 0.5, (top + bottom) * 0.5, (far + near) * 0.5, 1.0);
         vec4 view_center_4 = numerical::inverse(view_matrix()) * volume_center_4;
 
-        *view_center = vec3(view_center_4[0], view_center_4[1], view_center_4[2]);
-        *view_width = right - left;
+        v.view_center = vec3(view_center_4[0], view_center_4[1], view_center_4[2]);
+        v.view_width = right - left;
+
+        return v;
 }
 
-Camera::Information Camera::information() const
+Camera::RasterizationInfo Camera::rasterization_info() const
 {
         std::lock_guard lg(m_lock);
 
-        Information v;
+        RasterizationInfo v;
 
         view_volume(&v.view_volume.left, &v.view_volume.right, &v.view_volume.bottom, &v.view_volume.top, &v.view_volume.near,
                     &v.view_volume.far);
@@ -208,12 +198,6 @@ Camera::Information Camera::information() const
         v.shadow_matrix = shadow_matrix();
         v.light_direction = m_light_direction;
         v.camera_direction = m_camera_direction;
+
         return v;
-}
-
-vec3 Camera::light_direction() const
-{
-        std::lock_guard lg(m_lock);
-
-        return m_light_direction;
 }
