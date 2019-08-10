@@ -18,18 +18,3 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 inline constexpr const char APPLICATION_NAME[] = "Math Viewer";
-
-inline constexpr const char* APPLICATION_LANGUAGES[] = {"C++17", "GLSL 4.50"};
-
-inline constexpr const char* APPLICATION_LIBRARIES[] = {"FreeType",
-                                                        "GLFW",
-                                                        "GMP",
-                                                        "OpenGL",
-                                                        "Qt",
-                                                        "SFML",
-                                                        "Vulkan"
-#if defined(__linux__)
-                                                        ,
-                                                        "Xlib"
-#endif
-};

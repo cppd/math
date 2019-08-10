@@ -18,36 +18,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "application_about.h"
 
 #include "application/name.h"
+#include "graphics/opengl/settings.h"
+#include "graphics/vulkan/settings.h"
 #include "ui/support/support.h"
 
 #include <QMessageBox>
-#include <algorithm>
-#include <iterator>
 #include <sstream>
 #include <string>
-#include <vector>
 
 namespace
 {
-template <typename Iterator>
-void sorted_comma_separated_list(std::ostringstream& oss, Iterator first, Iterator last)
-{
-        std::vector<std::string> v(first, last);
-
-        if (v.size() == 0)
-        {
-                return;
-        }
-
-        std::sort(v.begin(), v.end());
-
-        oss << v[0];
-        for (unsigned i = 1; i < v.size(); ++i)
-        {
-                oss << ", " << v[i];
-        }
-}
-
 std::string message()
 {
         std::ostringstream oss;
@@ -63,13 +43,19 @@ std::string message()
 #error Unknown Compiler
 #endif
 
-        oss << "\n\n";
-        sorted_comma_separated_list(oss, std::cbegin(APPLICATION_LANGUAGES), std::cend(APPLICATION_LANGUAGES));
-        oss << ".";
+#if !defined(__cplusplus)
+#error Unknown C++ Version
+#endif
+        oss << "\n";
+        oss << "__cplusplus " << __cplusplus;
 
-        oss << "\n\n";
-        sorted_comma_separated_list(oss, std::cbegin(APPLICATION_LIBRARIES), std::cend(APPLICATION_LIBRARIES));
-        oss << ".";
+        oss << "\n";
+
+        oss << "\n";
+        oss << "OpenGL " << opengl::API_VERSION_MAJOR << "." << opengl::API_VERSION_MINOR;
+
+        oss << "\n";
+        oss << "Vulkan " << vulkan::API_VERSION_MAJOR << "." << vulkan::API_VERSION_MINOR;
 
         return oss.str();
 }
