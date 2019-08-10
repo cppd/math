@@ -38,14 +38,3 @@ inline constexpr bool is_signed =
 
 template <typename T>
 inline constexpr bool is_unsigned = std::is_same_v<std::remove_cv_t<T>, unsigned __int128> || std::is_unsigned_v<T>;
-
-// C++20
-// std::type_identity и std::type_identity_t
-// Может использоваться для запрета class template argument deduction.
-template <typename T>
-struct TypeIdentity
-{
-        using type = T;
-};
-template <class T>
-using type_identity_t = typename TypeIdentity<T>::type;

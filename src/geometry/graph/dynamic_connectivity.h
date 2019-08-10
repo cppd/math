@@ -27,10 +27,9 @@ Pearson Education, 2011.
 
 #pragma once
 
-#include "com/type/trait.h"
-
 #include <algorithm>
 #include <numeric>
+#include <type_traits>
 #include <vector>
 
 template <typename T>
@@ -43,7 +42,8 @@ class WeightedQuickUnion
         T m_component_count;
 
 public:
-        WeightedQuickUnion(type_identity_t<T> N) : m_parent(N), m_component_size(N), m_component_count(N)
+        // std::type_identity_t для запрета template argument deduction
+        WeightedQuickUnion(std::type_identity_t<T> N) : m_parent(N), m_component_size(N), m_component_count(N)
         {
                 std::iota(m_parent.begin(), m_parent.end(), 0);
                 std::fill(m_component_size.begin(), m_component_size.end(), 1);
