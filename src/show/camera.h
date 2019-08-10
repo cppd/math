@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "com/matrix.h"
 #include "com/thread.h"
 #include "com/vec.h"
 
@@ -31,9 +32,7 @@ class Camera final
         vec3 m_light_up;
         vec3 m_light_direction; // от источника света на объект
 
-        vec3 m_view_center;
         vec2 m_window_center;
-        double m_view_width;
 
         int m_paint_width = -1;
         int m_paint_height = -1;
@@ -43,19 +42,36 @@ class Camera final
 
         void set_vectors(const vec3& right, const vec3& up);
 
+        void view_volume(double* left, double* right, double* bottom, double* top, double* near, double* far) const;
+        void shadow_volume(double* left, double* right, double* bottom, double* top, double* near, double* far) const;
+        mat4 view_matrix() const;
+        mat4 shadow_matrix() const;
+
 public:
         Camera();
+
+        struct Information
+        {
+                struct Volume
+                {
+                        double left, right, bottom, top, near, far;
+                };
+
+                Volume view_volume;
+                Volume shadow_volume;
+                mat4 view_matrix;
+                mat4 shadow_matrix;
+                vec3 light_direction;
+                vec3 camera_direction;
+        };
 
         void reset(const vec3& right, const vec3& up, double scale, const vec2& window_center);
         void scale(double x, double y, double delta);
         void change_window_center(const vec2& delta);
-        vec2 window_center() const;
-        double ortho_scale() const;
-        void get(vec3* camera_up, vec3* camera_direction, vec3* light_up, vec3* light_direction, double* scale) const;
         void camera_information(vec3* camera_up, vec3* camera_direction, vec3* view_center, double* view_width, int* paint_width,
                                 int* paint_height) const;
         vec3 light_direction() const;
         void rotate(double around_up_axis, double around_right_axis);
-        void set_view_center_and_width(const vec3& vec, double view_width);
         void set_size(int width, int height);
+        Information information() const;
 };

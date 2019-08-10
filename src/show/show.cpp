@@ -728,33 +728,18 @@ void ShowObject<API>::window_resize_handler()
 template <GraphicsAndComputeAPI API>
 void ShowObject<API>::compute_matrices()
 {
-        vec3 camera_up, camera_direction, light_up, light_direction;
-        double camera_scale;
+        Camera::Information info = m_camera.information();
 
-        m_camera.get(&camera_up, &camera_direction, &light_up, &light_direction, &camera_scale);
-        vec2 window_center = m_camera.window_center();
+        mat4 shadow_projection_matrix =
+                Renderer::ortho(info.shadow_volume.left, info.shadow_volume.right, info.shadow_volume.bottom,
+                                info.shadow_volume.top, info.shadow_volume.near, info.shadow_volume.far);
 
-        mat4 shadow_projection_matrix = Renderer::ortho(-1, 1, -1, 1, 1, -1);
-        mat4 shadow_view_matrix = look_at(vec3(0, 0, 0), light_direction, light_up);
+        mat4 projection_matrix = Renderer::ortho(info.view_volume.left, info.view_volume.right, info.view_volume.bottom,
+                                                 info.view_volume.top, info.view_volume.near, info.view_volume.far);
 
-        double ortho_scale = m_camera.ortho_scale() / camera_scale;
-        double left = ortho_scale * (window_center[0] - 0.5 * m_draw_width);
-        double right = ortho_scale * (window_center[0] + 0.5 * m_draw_width);
-        double bottom = ortho_scale * (window_center[1] - 0.5 * m_draw_height);
-        double top = ortho_scale * (window_center[1] + 0.5 * m_draw_height);
-        double near = 1;
-        double far = -1;
-        mat4 projection_matrix = Renderer::ortho(left, right, bottom, top, near, far);
-        mat4 view_matrix = look_at<double>(vec3(0, 0, 0), camera_direction, camera_up);
-
-        m_renderer->set_matrices(shadow_projection_matrix * shadow_view_matrix, projection_matrix * view_matrix);
-
-        m_renderer->set_light_direction(light_direction);
-        m_renderer->set_camera_direction(camera_direction);
-
-        vec4 screen_center((right + left) * 0.5, (top + bottom) * 0.5, (far + near) * 0.5, 1.0);
-        vec4 view_center = numerical::inverse(view_matrix) * screen_center;
-        m_camera.set_view_center_and_width(vec3(view_center[0], view_center[1], view_center[2]), right - left);
+        m_renderer->set_matrices(shadow_projection_matrix * info.shadow_matrix, projection_matrix * info.view_matrix);
+        m_renderer->set_light_direction(info.light_direction);
+        m_renderer->set_camera_direction(info.camera_direction);
 }
 
 template <GraphicsAndComputeAPI API>

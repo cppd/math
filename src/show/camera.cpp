@@ -18,7 +18,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "camera.h"
 
 #include "com/math.h"
+#include "com/matrix_alg.h"
 #include "com/quaternion.h"
+#include "numerical/linear.h"
 
 #include <mutex>
 
@@ -53,6 +55,38 @@ void Camera::set_vectors(const vec3& right, const vec3& up)
         m_light_up = rotate_vector_degree(light_right, -45, m_camera_up);
 
         m_light_direction = cross(m_light_up, light_right);
+}
+
+void Camera::view_volume(double* left, double* right, double* bottom, double* top, double* near, double* far) const
+{
+        double scale = m_default_ortho_scale / std::pow(SCALE_BASE, m_scale_exponent);
+
+        *left = scale * (m_window_center[0] - 0.5 * m_paint_width);
+        *right = scale * (m_window_center[0] + 0.5 * m_paint_width);
+        *bottom = scale * (m_window_center[1] - 0.5 * m_paint_height);
+        *top = scale * (m_window_center[1] + 0.5 * m_paint_height);
+        *near = 1;
+        *far = -1;
+}
+
+void Camera::shadow_volume(double* left, double* right, double* bottom, double* top, double* near, double* far) const
+{
+        *left = -1;
+        *right = 1;
+        *bottom = -1;
+        *top = 1;
+        *near = 1;
+        *far = -1;
+}
+
+mat4 Camera::view_matrix() const
+{
+        return look_at<double>(vec3(0, 0, 0), m_camera_direction, m_camera_up);
+}
+
+mat4 Camera::shadow_matrix() const
+{
+        return look_at(vec3(0, 0, 0), m_light_direction, m_light_up);
 }
 
 Camera::Camera()
@@ -124,31 +158,6 @@ void Camera::change_window_center(const vec2& delta)
         m_window_center += delta;
 }
 
-vec2 Camera::window_center() const
-{
-        std::lock_guard lg(m_lock);
-
-        return m_window_center;
-}
-
-double Camera::ortho_scale() const
-{
-        std::lock_guard lg(m_lock);
-
-        return m_default_ortho_scale;
-}
-
-void Camera::get(vec3* camera_up, vec3* camera_direction, vec3* light_up, vec3* light_direction, double* scale) const
-{
-        std::lock_guard lg(m_lock);
-
-        *camera_up = m_camera_up;
-        *camera_direction = m_camera_direction;
-        *light_up = m_light_up;
-        *light_direction = m_light_direction;
-        *scale = std::pow(SCALE_BASE, m_scale_exponent);
-}
-
 void Camera::camera_information(vec3* camera_up, vec3* camera_direction, vec3* view_center, double* view_width, int* paint_width,
                                 int* paint_height) const
 {
@@ -156,10 +165,16 @@ void Camera::camera_information(vec3* camera_up, vec3* camera_direction, vec3* v
 
         *camera_up = m_camera_up;
         *camera_direction = m_camera_direction;
-        *view_center = m_view_center;
-        *view_width = m_view_width;
         *paint_width = m_paint_width;
         *paint_height = m_paint_height;
+
+        double left, right, bottom, top, near, far;
+        view_volume(&left, &right, &bottom, &top, &near, &far);
+        vec4 volume_center_4((right + left) * 0.5, (top + bottom) * 0.5, (far + near) * 0.5, 1.0);
+        vec4 view_center_4 = numerical::inverse(view_matrix()) * volume_center_4;
+
+        *view_center = vec3(view_center_4[0], view_center_4[1], view_center_4[2]);
+        *view_width = right - left;
 }
 
 vec3 Camera::light_direction() const
@@ -178,18 +193,27 @@ void Camera::rotate(double around_up_axis, double around_right_axis)
         set_vectors(right, up);
 }
 
-void Camera::set_view_center_and_width(const vec3& vec, double view_width)
-{
-        std::lock_guard lg(m_lock);
-
-        m_view_center = vec;
-        m_view_width = view_width;
-}
-
 void Camera::set_size(int width, int height)
 {
         std::lock_guard lg(m_lock);
 
         m_paint_width = width;
         m_paint_height = height;
+}
+
+Camera::Information Camera::information() const
+{
+        std::lock_guard lg(m_lock);
+
+        Information v;
+
+        view_volume(&v.view_volume.left, &v.view_volume.right, &v.view_volume.bottom, &v.view_volume.top, &v.view_volume.near,
+                    &v.view_volume.far);
+        shadow_volume(&v.shadow_volume.left, &v.shadow_volume.right, &v.shadow_volume.bottom, &v.shadow_volume.top,
+                      &v.shadow_volume.near, &v.shadow_volume.far);
+        v.view_matrix = view_matrix();
+        v.shadow_matrix = shadow_matrix();
+        v.light_direction = m_light_direction;
+        v.camera_direction = m_camera_direction;
+        return v;
 }
