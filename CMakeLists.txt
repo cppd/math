@@ -189,9 +189,6 @@ function(AddIncludeFiles FILE_TYPE)
                 set(custom_target_prefix "custom_target_binary_files")
                 set(output_directory "${PROJECT_BINARY_DIR}/include_binary_files")
         elseif ("${FILE_TYPE}" STREQUAL "OPENGL_SHADERS")
-                if (ARG_HEADER_FILE)
-                        message(FATAL_ERROR "OpenGL shader header is not supported")
-                endif()
                 set(OPENGL_SHADERS TRUE)
                 set(custom_target_prefix "custom_target_opengl_shaders")
                 set(output_directory "${PROJECT_BINARY_DIR}/include_opengl_shaders")
@@ -252,44 +249,54 @@ function(AddIncludeFiles FILE_TYPE)
                         add_dependencies(${PROJECT_NAME} ${target_name})
 
                         if (BINARY_FILES)
+
                                 add_custom_command(
                                         OUTPUT  "${output_file}"
-                                        COMMAND "${PROJECT_BINARY_DIR}/create_str" "bin" "${long_file_name}" "${output_file}"
+                                        COMMAND "${PROJECT_BINARY_DIR}/create_str" "bin"
+                                                        "${long_file_name}" "${output_file}"
                                         DEPENDS "${long_file_name}" "${PROJECT_BINARY_DIR}/create_str"
                                         WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
                                         VERBATIM
                                 )
-                        endif()
 
-                        if (OPENGL_SHADERS)
-                                add_custom_command(
-                                        OUTPUT  "${output_file}"
-                                        COMMAND "${PROJECT_BINARY_DIR}/create_str" "str" "${long_file_name}" "${output_file}"
-                                        DEPENDS "${long_file_name}" "${PROJECT_BINARY_DIR}/create_str"
-                                        WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
-                                        VERBATIM
-                                )
-                        endif()
+                        elseif(OPENGL_SHADERS OR VULKAN_SHADERS)
 
-                        if (VULKAN_SHADERS)
-                                string(RANDOM LENGTH 10 random_string)
-                                set(output_sprv "${output_directory}/${file_name}_${random_string}.sprv")
-                                set(output_glsl "${output_directory}/${file_name}_${random_string}${file_ext}")
+                                string(RANDOM LENGTH 10 random_string_glsl)
+                                set(output_glsl "${output_directory}/${file_name}_${random_string_glsl}${file_ext}")
+
                                 if (ARG_HEADER_FILE)
                                         set(header "${PROJECT_SOURCE_DIR}/${ARG_HEADER_FILE}")
                                 else()
                                         unset(header)
                                 endif()
-                                add_custom_command(
-                                        OUTPUT  "${output_file}"
-                                        COMMAND "${PROJECT_BINARY_DIR}/create_str" "cat"
-                                                        ${header} "${long_file_name}" "${output_glsl}"
-                                        COMMAND "glslangValidator" "-V" "${output_glsl}" "-o" "${output_sprv}"
-                                        COMMAND "${PROJECT_BINARY_DIR}/create_str" "spr" "${output_sprv}" "${output_file}"
-                                        DEPENDS "${header}" "${long_file_name}" "${PROJECT_BINARY_DIR}/create_str"
-                                        WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
-                                        VERBATIM
-                                )
+
+                                if (OPENGL_SHADERS)
+                                        add_custom_command(
+                                                OUTPUT  "${output_file}"
+                                                COMMAND "${PROJECT_BINARY_DIR}/create_str" "cat"
+                                                                ${header} "${long_file_name}" "${output_glsl}"
+                                                COMMAND "${PROJECT_BINARY_DIR}/create_str" "str"
+                                                                "${output_glsl}" "${output_file}"
+                                                DEPENDS "${header}" "${long_file_name}" "${PROJECT_BINARY_DIR}/create_str"
+                                                WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
+                                                VERBATIM
+                                        )
+                                elseif(VULKAN_SHADERS)
+                                        string(RANDOM LENGTH 10 random_string_sprv)
+                                        set(output_sprv "${output_directory}/${file_name}_${random_string_sprv}.sprv")
+                                        add_custom_command(
+                                                OUTPUT  "${output_file}"
+                                                COMMAND "${PROJECT_BINARY_DIR}/create_str" "cat"
+                                                                ${header} "${long_file_name}" "${output_glsl}"
+                                                COMMAND "glslangValidator" "-V" "${output_glsl}" "-o" "${output_sprv}"
+                                                COMMAND "${PROJECT_BINARY_DIR}/create_str" "spr"
+                                                                "${output_sprv}" "${output_file}"
+                                                DEPENDS "${header}" "${long_file_name}" "${PROJECT_BINARY_DIR}/create_str"
+                                                WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
+                                                VERBATIM
+                                        )
+                                endif()
+
                         endif()
 
                 endforeach()
