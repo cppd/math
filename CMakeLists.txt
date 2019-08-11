@@ -372,25 +372,27 @@ AddSourceFiles(EXECUTABLE
                         EXTENSIONS ${extensions_all})
 
 AddIncludeFiles(VULKAN_SHADERS
-                        HEADER_FILE "src/graphics/header.glsl"
+                        HEADER_FILE "src/gpu/com/header.glsl"
                         OUTPUT_EXTENSION "spr"
-                        DIRECTORIES "src"
-                        PATH_CONTAINS_DIRECTORY "vulkan"
-                        EXTENSIONS ${extensions_shaders})
-AddIncludeFiles(VULKAN_SHADERS
-                        HEADER_FILE "src/graphics/header.glsl"
-                        OUTPUT_EXTENSION "spr"
-                        DIRECTORIES "src/gpu"
+                        DIRECTORIES
+                                "src/gpu/convex_hull/shaders"
+                                "src/gpu/dft/shaders"
+                                "src/gpu/optical_flow/shaders"
+                                "src/gpu/pencil_sketch/shaders"
+                                "src/gpu/renderer/vulkan/shaders"
+                                "src/gpu/text/shaders"
                         EXTENSIONS ${extensions_shaders})
 
 AddIncludeFiles(OPENGL_SHADERS
                         OUTPUT_EXTENSION "str"
-                        DIRECTORIES "src"
-                        PATH_CONTAINS_DIRECTORY "opengl"
-                        EXTENSIONS ${extensions_shaders})
-AddIncludeFiles(OPENGL_SHADERS
-                        OUTPUT_EXTENSION "str"
-                        DIRECTORIES "src/graphics" "src/gpu"
+                        DIRECTORIES
+                                "src/gpu/com"
+                                "src/gpu/convex_hull/shaders"
+                                "src/gpu/dft/shaders"
+                                "src/gpu/optical_flow/shaders"
+                                "src/gpu/pencil_sketch/shaders"
+                                "src/gpu/renderer/opengl/shaders"
+                                "src/gpu/text/shaders"
                         EXTENSIONS ${extensions_shaders})
 
 AddIncludeFiles(BINARY_FILES

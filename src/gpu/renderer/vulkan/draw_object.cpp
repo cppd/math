@@ -18,10 +18,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "draw_object.h"
 
 #include "com/error.h"
+#include "gpu/renderer/vulkan/objects/memory.h"
+#include "gpu/renderer/vulkan/objects/vertex.h"
 #include "graphics/vulkan/buffers.h"
 #include "obj/alg/alg.h"
-#include "show/renderers/vulkan/objects/memory.h"
-#include "show/renderers/vulkan/objects/vertex.h"
 
 #include <array>
 #include <unordered_set>

@@ -22,11 +22,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/log.h"
 #include "com/matrix_alg.h"
 #include "com/print.h"
+#include "gpu/renderer/com/storage.h"
+#include "gpu/renderer/opengl/objects/memory.h"
 #include "graphics/opengl/capabilities.h"
 #include "graphics/opengl/query.h"
 #include "graphics/opengl/shader.h"
-#include "show/renderers/com/storage.h"
-#include "show/renderers/opengl/objects/memory.h"
 
 #include <cmath>
 #include <string>

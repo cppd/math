@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "draw_object.h"
 
 #include "com/error.h"
-#include "graphics/glsl.h"
+#include "gpu/com/glsl.h"
 #include "obj/alg/alg.h"
 
 namespace gpu_opengl
