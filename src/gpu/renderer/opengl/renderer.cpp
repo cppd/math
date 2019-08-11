@@ -324,8 +324,8 @@ class Impl final : public Renderer
                 m_objects = std::make_unique<opengl::TextureImage>(width, height, GL_R32UI);
 
                 m_triangles_program.set_uniform_handle("object_img", m_objects->image_resident_handle_write_only());
-                m_points_0d_program.set_uniform_handle("object_img", m_objects->image_resident_handle_write_only());
-                m_points_1d_program.set_uniform_handle("object_img", m_objects->image_resident_handle_write_only());
+                m_points_0d_program.set_uniform_handle("object_image", m_objects->image_resident_handle_write_only());
+                m_points_1d_program.set_uniform_handle("object_image", m_objects->image_resident_handle_write_only());
 
                 set_shadow_size();
         }

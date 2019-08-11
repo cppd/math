@@ -17,15 +17,24 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 layout(early_fragment_tests) in;
 
-layout(bindless_image, r32ui) writeonly uniform uimage2D object_img;
-
+#if !defined(VULKAN)
 layout(std140, binding = 1) uniform Drawing
+#else
+layout(std140, set = 0, binding = 1) uniform Drawing
+#endif
 {
         vec3 default_color;
         vec3 background_color;
         vec3 light_a;
         bool show_fog;
-};
+}
+drawing;
+
+#if !defined(VULKAN)
+layout(bindless_image, r32ui) writeonly uniform uimage2D object_image;
+#else
+layout(set = 0, binding = 2, r32ui) writeonly uniform uimage2D object_image;
+#endif
 
 layout(location = 0) out vec4 color;
 
@@ -46,16 +55,16 @@ void main(void)
 {
         vec3 color3;
 
-        if (show_fog)
+        if (drawing.show_fog)
         {
-                color3 = fog(background_color, default_color * light_a);
+                color3 = fog(drawing.background_color, drawing.default_color * drawing.light_a);
         }
         else
         {
-                color3 = default_color * light_a;
+                color3 = drawing.default_color * drawing.light_a;
         }
 
         color = vec4(color3, 1);
 
-        imageStore(object_img, ivec2(gl_FragCoord.xy), uvec4(1));
+        imageStore(object_image, ivec2(gl_FragCoord.xy), uvec4(1));
 }
