@@ -161,11 +161,11 @@ void Camera::resize(int width, int height)
         m_height = height;
 }
 
-Camera::RayInfo Camera::ray_info() const
+RayCameraInfo Camera::ray_info() const
 {
         std::lock_guard lg(m_lock);
 
-        Camera::RayInfo v;
+        RayCameraInfo v;
 
         v.camera_up = m_camera_up;
         v.camera_direction = m_camera_direction;
@@ -184,11 +184,11 @@ Camera::RayInfo Camera::ray_info() const
         return v;
 }
 
-Camera::RasterizationInfo Camera::rasterization_info() const
+RasterizationCameraInfo Camera::rasterization_info() const
 {
         std::lock_guard lg(m_lock);
 
-        RasterizationInfo v;
+        RasterizationCameraInfo v;
 
         view_volume(&v.view_volume.left, &v.view_volume.right, &v.view_volume.bottom, &v.view_volume.top, &v.view_volume.near,
                     &v.view_volume.far);

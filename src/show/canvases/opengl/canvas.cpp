@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "canvas.h"
 
+#include "com/matrix_alg.h"
 #include "gpu/convex_hull/opengl/show.h"
 #include "gpu/dft/opengl/show.h"
 #include "gpu/optical_flow/opengl/show.h"
@@ -27,6 +28,18 @@ namespace gpu_opengl
 {
 namespace
 {
+// Матрица для рисования на плоскости окна, точка (0, 0) слева вверху
+mat4 ortho_matrix_for_2d_rendering(int width, int height)
+{
+        double left = 0;
+        double right = width;
+        double bottom = height;
+        double top = 0;
+        double near = 1;
+        double far = -1;
+        return ortho_opengl<double>(left, right, bottom, top, near, far) * scale<double>(1, 1, 0);
+}
+
 class Impl final : public Canvas
 {
         int m_text_size;
@@ -132,7 +145,7 @@ class Impl final : public Canvas
                 }
         }
 
-        void create_objects(int window_width, int window_height, const mat4& matrix, const opengl::TextureRGBA32F& color_texture,
+        void create_objects(int window_width, int window_height, const opengl::TextureRGBA32F& color_texture,
                             bool color_texture_is_srgb, const opengl::TextureImage& objects, int draw_width, int draw_height,
                             int dft_dst_x, int dft_dst_y, bool frame_buffer_is_srgb) override;
 
@@ -144,10 +157,12 @@ public:
         }
 };
 
-void Impl::create_objects(int window_width, int window_height, const mat4& matrix, const opengl::TextureRGBA32F& color_texture,
+void Impl::create_objects(int window_width, int window_height, const opengl::TextureRGBA32F& color_texture,
                           bool color_texture_is_srgb, const opengl::TextureImage& objects, int draw_width, int draw_height,
                           int dft_dst_x, int dft_dst_y, bool frame_buffer_is_srgb)
 {
+        const mat4& matrix = ortho_matrix_for_2d_rendering(window_width, window_height);
+
         m_window_width = window_width;
         m_window_height = window_height;
 

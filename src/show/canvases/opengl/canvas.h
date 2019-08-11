@@ -50,10 +50,9 @@ struct Canvas
 
         //
 
-        virtual void create_objects(int window_width, int window_height, const mat4& matrix,
-                                    const opengl::TextureRGBA32F& color_texture, bool color_texture_is_srgb,
-                                    const opengl::TextureImage& objects, int draw_width, int draw_height, int dft_dst_x,
-                                    int dft_dst_y, bool frame_buffer_is_srgb) = 0;
+        virtual void create_objects(int window_width, int window_height, const opengl::TextureRGBA32F& color_texture,
+                                    bool color_texture_is_srgb, const opengl::TextureImage& objects, int draw_width,
+                                    int draw_height, int dft_dst_x, int dft_dst_y, bool frame_buffer_is_srgb) = 0;
 
         virtual void draw(const TextData& text_data) = 0;
 };

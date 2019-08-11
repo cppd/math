@@ -239,27 +239,25 @@ class Impl final : public Renderer
                 create_shadow_buffers();
                 create_all_command_buffers();
         }
-        void set_matrices(const mat4& shadow_matrix, const mat4& main_matrix) override
+        void set_camera(const RasterizationCameraInfo& c) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                m_main_matrix = main_matrix;
-                m_shadow_matrix = shadow_matrix;
-                m_scale_bias_shadow_matrix = SCALE_BIAS_MATRIX * shadow_matrix;
+                const mat4& shadow_projection_matrix =
+                        ortho_vulkan<double>(c.shadow_volume.left, c.shadow_volume.right, c.shadow_volume.bottom,
+                                             c.shadow_volume.top, c.shadow_volume.near, c.shadow_volume.far);
+                const mat4& view_projection_matrix =
+                        ortho_vulkan<double>(c.view_volume.left, c.view_volume.right, c.view_volume.bottom, c.view_volume.top,
+                                             c.view_volume.near, c.view_volume.far);
+
+                m_shadow_matrix = shadow_projection_matrix * c.shadow_matrix;
+                m_scale_bias_shadow_matrix = SCALE_BIAS_MATRIX * m_shadow_matrix;
+                m_main_matrix = view_projection_matrix * c.view_matrix;
+
+                m_triangles_shared_shader_memory.set_direction_to_light(-to_vector<float>(c.light_direction));
+                m_triangles_shared_shader_memory.set_direction_to_camera(-to_vector<float>(c.camera_direction));
 
                 set_matrices();
-        }
-        void set_light_direction(vec3 dir) override
-        {
-                ASSERT(m_thread_id == std::this_thread::get_id());
-
-                m_triangles_shared_shader_memory.set_direction_to_light(-to_vector<float>(dir));
-        }
-        void set_camera_direction(vec3 dir) override
-        {
-                ASSERT(m_thread_id == std::this_thread::get_id());
-
-                m_triangles_shared_shader_memory.set_direction_to_camera(-to_vector<float>(dir));
         }
         void set_size(int /*width*/, int /*height*/) override
         {
@@ -644,11 +642,6 @@ public:
                 m_instance.device_wait_idle_noexcept("the Vulkan renderer destructor");
         }
 };
-}
-
-mat4 Renderer::ortho(double left, double right, double bottom, double top, double near, double far)
-{
-        return ortho_vulkan<double>(left, right, bottom, top, near, far);
 }
 
 std::vector<std::string> Renderer::instance_extensions()

@@ -1470,9 +1470,15 @@ void MainWindow::on_actionPainter_triggered()
                 *message = "Painter";
 
                 PaintingInformation3d info_3d;
-                m_show->camera_information(&info_3d.camera_up, &info_3d.camera_direction, &info_3d.light_direction,
-                                           &info_3d.view_center, &info_3d.view_width, &info_3d.paint_width,
-                                           &info_3d.paint_height);
+
+                RayCameraInfo c = m_show->camera_information();
+                info_3d.camera_up = c.camera_up;
+                info_3d.camera_direction = c.camera_direction;
+                info_3d.light_direction = c.light_direction;
+                info_3d.view_center = c.view_center;
+                info_3d.view_width = c.view_width;
+                info_3d.paint_width = c.width;
+                info_3d.paint_height = c.height;
                 info_3d.object_position = m_show->object_position();
                 info_3d.object_size = m_show->object_size();
                 info_3d.max_screen_size = PAINTER_3D_MAX_SCREEN_SIZE;

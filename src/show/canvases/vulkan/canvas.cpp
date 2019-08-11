@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "canvas.h"
 
 #include "com/log.h"
+#include "com/matrix_alg.h"
 #include "gpu/convex_hull/vulkan/show.h"
 #include "gpu/text/vulkan/show.h"
 #include "graphics/vulkan/objects.h"
@@ -30,6 +31,18 @@ namespace gpu_vulkan
 {
 namespace
 {
+// Матрица для рисования на плоскости окна, точка (0, 0) слева вверху
+mat4 ortho_matrix_for_2d_rendering(int width, int height)
+{
+        double left = 0;
+        double right = width;
+        double bottom = height;
+        double top = 0;
+        double near = 1;
+        double far = -1;
+        return ortho_vulkan<double>(left, right, bottom, top, near, far) * scale<double>(1, 1, 0);
+}
+
 class Impl final : public Canvas
 {
         bool m_text_active = true;
@@ -91,7 +104,7 @@ class Impl final : public Canvas
         {
         }
 
-        void create_buffers(const vulkan::Swapchain* swapchain, vulkan::RenderBuffers2D* render_buffers, const mat4& matrix,
+        void create_buffers(const vulkan::Swapchain* swapchain, vulkan::RenderBuffers2D* render_buffers,
                             const vulkan::StorageImage* objects) override;
         void delete_buffers() override;
 
@@ -123,9 +136,11 @@ public:
         }
 };
 
-void Impl::create_buffers(const vulkan::Swapchain* /*swapchain*/, vulkan::RenderBuffers2D* render_buffers, const mat4& matrix,
+void Impl::create_buffers(const vulkan::Swapchain* swapchain, vulkan::RenderBuffers2D* render_buffers,
                           const vulkan::StorageImage* objects)
 {
+        const mat4& matrix = ortho_matrix_for_2d_rendering(swapchain->width(), swapchain->height());
+
         m_text->create_buffers(render_buffers, matrix);
         m_convex_hull->create_buffers(render_buffers, matrix, *objects);
 }

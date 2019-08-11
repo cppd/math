@@ -137,21 +137,6 @@ public:
         }
 };
 
-// Матрица для рисования на плоскости окна, точка (0, 0) слева вверху
-template <typename Renderer>
-mat4 ortho_matrix_for_2d_rendering(int width, int height)
-{
-        static_assert(std::is_same_v<Renderer, gpu_opengl::Renderer> || std::is_same_v<Renderer, gpu_vulkan::Renderer>);
-
-        double left = 0;
-        double right = width;
-        double bottom = height;
-        double top = 0;
-        double near = 1;
-        double far = -1;
-        return Renderer::ortho(left, right, bottom, top, near, far) * scale<double>(1, 1, 0);
-}
-
 template <GraphicsAndComputeAPI API>
 class ShowObject final : public EventQueue, public WindowEvent
 {
@@ -456,20 +441,11 @@ class ShowObject final : public EventQueue, public WindowEvent
 
         //
 
-        void camera_information(vec3* camera_up, vec3* camera_direction, vec3* light_direction, vec3* view_center,
-                                double* view_width, int* paint_width, int* paint_height) const override
+        RayCameraInfo camera_information() const override
         {
                 ASSERT(std::this_thread::get_id() != m_thread.get_id());
 
-                Camera::RayInfo info = m_camera.ray_info();
-
-                *camera_up = info.camera_up;
-                *camera_direction = info.camera_direction;
-                *light_direction = info.light_direction;
-                *view_center = info.view_center;
-                *view_width = info.view_width;
-                *paint_width = info.width;
-                *paint_height = info.height;
+                return m_camera.ray_info();
         }
 
         double object_size() const override
@@ -578,7 +554,6 @@ class ShowObject final : public EventQueue, public WindowEvent
 
         void pull_and_dispatch_all_events();
         void init_window_and_view();
-        void compute_matrices();
 
         //
 
@@ -644,9 +619,7 @@ void ShowObject<API>::mouse_wheel_handler(int delta)
 {
         m_camera.scale(m_mouse_x, m_mouse_y, delta);
 
-        //
-
-        compute_matrices();
+        m_renderer->set_camera(m_camera.rasterization_info());
 }
 
 template <GraphicsAndComputeAPI API>
@@ -678,9 +651,7 @@ void ShowObject<API>::mouse_move_handler()
                 break;
         }
 
-        //
-
-        compute_matrices();
+        m_renderer->set_camera(m_camera.rasterization_info());
 }
 
 template <GraphicsAndComputeAPI API>
@@ -688,9 +659,7 @@ void ShowObject<API>::reset_view_handler()
 {
         m_camera.reset(vec3(1, 0, 0), vec3(0, 1, 0), 1, vec2(0, 0));
 
-        //
-
-        compute_matrices();
+        m_renderer->set_camera(m_camera.rasterization_info());
 }
 
 template <GraphicsAndComputeAPI API>
@@ -715,32 +684,12 @@ void ShowObject<API>::window_resize_handler()
                 int dft_dst_x = (m_window_width & 1) ? (m_draw_width + 1) : m_draw_width;
                 int dft_dst_y = 0;
 
-                m_canvas->create_objects(m_window_width, m_window_height,
-                                         ortho_matrix_for_2d_rendering<gpu_opengl::Renderer>(m_window_width, m_window_height),
-                                         m_renderer->color_buffer(), m_renderer->color_buffer_is_srgb(), m_renderer->objects(),
-                                         m_draw_width, m_draw_height, dft_dst_x, dft_dst_y, m_renderer->frame_buffer_is_srgb());
+                m_canvas->create_objects(m_window_width, m_window_height, m_renderer->color_buffer(),
+                                         m_renderer->color_buffer_is_srgb(), m_renderer->objects(), m_draw_width, m_draw_height,
+                                         dft_dst_x, dft_dst_y, m_renderer->frame_buffer_is_srgb());
         }
 
-        //
-
-        compute_matrices();
-}
-
-template <GraphicsAndComputeAPI API>
-void ShowObject<API>::compute_matrices()
-{
-        Camera::RasterizationInfo info = m_camera.rasterization_info();
-
-        mat4 shadow_projection_matrix =
-                Renderer::ortho(info.shadow_volume.left, info.shadow_volume.right, info.shadow_volume.bottom,
-                                info.shadow_volume.top, info.shadow_volume.near, info.shadow_volume.far);
-
-        mat4 projection_matrix = Renderer::ortho(info.view_volume.left, info.view_volume.right, info.view_volume.bottom,
-                                                 info.view_volume.top, info.view_volume.near, info.view_volume.far);
-
-        m_renderer->set_matrices(shadow_projection_matrix * info.shadow_matrix, projection_matrix * info.view_matrix);
-        m_renderer->set_light_direction(info.light_direction);
-        m_renderer->set_camera_direction(info.camera_direction);
+        m_renderer->set_camera(m_camera.rasterization_info());
 }
 
 template <GraphicsAndComputeAPI API>
@@ -859,8 +808,7 @@ void create_swapchain(const vulkan::VulkanInstance& instance, gpu_vulkan::Render
 
         renderer->create_buffers(swapchain->get(), &(*render_buffers)->buffers_3d(), object_image->get());
 
-        mat4 m = ortho_matrix_for_2d_rendering<gpu_vulkan::Renderer>((*swapchain)->width(), (*swapchain)->height());
-        canvas->create_buffers(swapchain->get(), &(*render_buffers)->buffers_2d(), m, object_image->get());
+        canvas->create_buffers(swapchain->get(), &(*render_buffers)->buffers_2d(), object_image->get());
 }
 
 template <size_t N>

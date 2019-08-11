@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/vec.h"
 #include "graphics/opengl/buffers.h"
 #include "obj/obj.h"
+#include "show/camera_info.h"
 
 #include <memory>
 
@@ -44,9 +45,7 @@ struct Renderer
         virtual void set_show_fog(bool show) = 0;
         virtual void set_show_materials(bool show) = 0;
         virtual void set_shadow_zoom(double zoom) = 0;
-        virtual void set_matrices(const mat4& shadow_matrix, const mat4& main_matrix) = 0;
-        virtual void set_light_direction(vec3 dir) = 0;
-        virtual void set_camera_direction(vec3 dir) = 0;
+        virtual void set_camera(const RasterizationCameraInfo& c) = 0;
         virtual void set_size(int width, int height) = 0;
 
         virtual void object_add(const Obj<3>* obj, double size, const vec3& position, int id, int scale_id) = 0;
@@ -63,8 +62,6 @@ struct Renderer
 
         virtual bool frame_buffer_is_srgb() = 0;
         virtual bool color_buffer_is_srgb() = 0;
-
-        static mat4 ortho(double left, double right, double bottom, double top, double near, double far);
 };
 
 std::unique_ptr<Renderer> create_renderer(unsigned sample_count);

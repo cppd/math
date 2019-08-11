@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/vulkan/render/render_buffer.h"
 #include "graphics/vulkan/swapchain.h"
 #include "obj/obj.h"
+#include "show/camera_info.h"
 
 #include <functional>
 #include <memory>
@@ -51,9 +52,7 @@ struct Renderer
         virtual void set_show_fog(bool show) = 0;
         virtual void set_show_materials(bool show) = 0;
         virtual void set_shadow_zoom(double zoom) = 0;
-        virtual void set_matrices(const mat4& shadow_matrix, const mat4& main_matrix) = 0;
-        virtual void set_light_direction(vec3 dir) = 0;
-        virtual void set_camera_direction(vec3 dir) = 0;
+        virtual void set_camera(const RasterizationCameraInfo& c) = 0;
         virtual void set_size(int width, int height) = 0;
 
         virtual void object_add(const Obj<3>* obj, double size, const vec3& position, int id, int scale_id) = 0;
@@ -64,8 +63,6 @@ struct Renderer
         virtual VkSemaphore draw(const vulkan::Queue& graphics_queue, unsigned image_index) const = 0;
 
         virtual bool empty() const = 0;
-
-        static mat4 ortho(double left, double right, double bottom, double top, double near, double far);
 
         static std::vector<std::string> instance_extensions();
         static std::vector<std::string> device_extensions();

@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "camera_info.h"
+
 #include "com/color/color.h"
 #include "com/vec.h"
 #include "graphics/api.h"
@@ -74,8 +76,7 @@ public:
         virtual void set_vertical_sync(bool v) = 0;
         virtual void set_shadow_zoom(double v) = 0;
 
-        virtual void camera_information(vec3* camera_up, vec3* camera_direction, vec3* light_direction, vec3* view_center,
-                                        double* view_width, int* paint_width, int* paint_height) const = 0;
+        virtual RayCameraInfo camera_information() const = 0;
         virtual double object_size() const = 0;
         virtual vec3 object_position() const = 0;
 };

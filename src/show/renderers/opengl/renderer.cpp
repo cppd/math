@@ -164,21 +164,21 @@ class Impl final : public Renderer
         {
                 m_triangles_memory.set_show_materials(show);
         }
+        void set_camera(const RasterizationCameraInfo& c) override
+        {
+                const mat4& shadow_projection_matrix =
+                        ortho_opengl<double>(c.shadow_volume.left, c.shadow_volume.right, c.shadow_volume.bottom,
+                                             c.shadow_volume.top, c.shadow_volume.near, c.shadow_volume.far);
+                const mat4& view_projection_matrix =
+                        ortho_opengl<double>(c.view_volume.left, c.view_volume.right, c.view_volume.bottom, c.view_volume.top,
+                                             c.view_volume.near, c.view_volume.far);
 
-        void set_matrices(const mat4& shadow_matrix, const mat4& main_matrix) override
-        {
-                m_shadow_matrix = shadow_matrix;
-                m_scale_bias_shadow_matrix = SCALE_BIAS_MATRIX * shadow_matrix;
-                m_main_matrix = main_matrix;
-        }
+                m_shadow_matrix = shadow_projection_matrix * c.shadow_matrix;
+                m_scale_bias_shadow_matrix = SCALE_BIAS_MATRIX * m_shadow_matrix;
+                m_main_matrix = view_projection_matrix * c.view_matrix;
 
-        void set_light_direction(vec3 dir) override
-        {
-                m_triangles_memory.set_direction_to_light(-dir);
-        }
-        void set_camera_direction(vec3 dir) override
-        {
-                m_triangles_memory.set_direction_to_camera(-dir);
+                m_triangles_memory.set_direction_to_light(-c.light_direction);
+                m_triangles_memory.set_direction_to_camera(-c.camera_direction);
         }
 
         void draw(bool draw_to_color_buffer) override
@@ -392,11 +392,6 @@ public:
                 LOG(color_space_message(m_framebuffer_srgb, m_colorbuffer_srgb));
         }
 };
-}
-
-mat4 Renderer::ortho(double left, double right, double bottom, double top, double near, double far)
-{
-        return ortho_opengl<double>(left, right, bottom, top, near, far);
 }
 
 std::unique_ptr<Renderer> create_renderer(unsigned sample_count)

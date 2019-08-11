@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "camera_info.h"
+
 #include "com/matrix.h"
 #include "com/thread.h"
 #include "com/vec.h"
@@ -48,38 +50,12 @@ class Camera final
         mat4 shadow_matrix() const;
 
 public:
-        struct RasterizationInfo
-        {
-                struct Volume
-                {
-                        double left, right, bottom, top, near, far;
-                };
-
-                Volume view_volume;
-                Volume shadow_volume;
-                mat4 view_matrix;
-                mat4 shadow_matrix;
-                vec3 light_direction;
-                vec3 camera_direction;
-        };
-
-        struct RayInfo
-        {
-                vec3 camera_up;
-                vec3 camera_direction;
-                vec3 light_direction;
-                vec3 view_center;
-                double view_width;
-                int width;
-                int height;
-        };
-
         void reset(const vec3& right, const vec3& up, double scale, const vec2& window_center);
         void scale(double x, double y, double delta);
         void rotate(double around_up_axis, double around_right_axis);
         void move(const vec2& delta);
         void resize(int width, int height);
 
-        RayInfo ray_info() const;
-        RasterizationInfo rasterization_info() const;
+        RayCameraInfo ray_info() const;
+        RasterizationCameraInfo rasterization_info() const;
 };
