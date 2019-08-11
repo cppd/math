@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "draw_object.h"
 #include "sampler.h"
+#include "shader_memory.h"
+#include "shader_vertex.h"
 
 #include "com/log.h"
 #include "com/math.h"
@@ -26,8 +28,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/time.h"
 #include "com/vec.h"
 #include "gpu/renderer/com/storage.h"
-#include "gpu/renderer/vulkan/objects/memory.h"
-#include "gpu/renderer/vulkan/objects/vertex.h"
 #include "graphics/vulkan/create.h"
 #include "graphics/vulkan/device.h"
 #include "graphics/vulkan/error.h"

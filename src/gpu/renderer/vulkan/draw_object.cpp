@@ -17,9 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "draw_object.h"
 
+#include "shader_memory.h"
+#include "shader_vertex.h"
+
 #include "com/error.h"
-#include "gpu/renderer/vulkan/objects/memory.h"
-#include "gpu/renderer/vulkan/objects/vertex.h"
 #include "graphics/vulkan/buffers.h"
 #include "obj/alg/alg.h"
 

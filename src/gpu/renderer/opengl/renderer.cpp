@@ -18,12 +18,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "renderer.h"
 
 #include "draw_object.h"
+#include "shader_memory.h"
 
 #include "com/log.h"
 #include "com/matrix_alg.h"
 #include "com/print.h"
 #include "gpu/renderer/com/storage.h"
-#include "gpu/renderer/opengl/objects/memory.h"
 #include "graphics/opengl/capabilities.h"
 #include "graphics/opengl/query.h"
 #include "graphics/opengl/shader.h"
