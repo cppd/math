@@ -23,6 +23,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpu_opengl
 {
+// Число используется в шейдере для определения наличия текстурных координат
+constexpr vec2f NO_TEXTURE_COORDINATES = vec2f(-1e10);
+
 namespace
 {
 DrawType draw_type_of_obj(const Obj<3>& obj)
@@ -64,16 +67,9 @@ struct FaceVertex final
         vec3f n; // Нормаль вершины.
         vec2f t; // Координаты вершины в текстуре.
         GLint index; // номер материала.
-        // Бит 0: Заданы ли текстурные координаты. Если не заданы текстурные координаты, то использовать цвет материала.
-        // Бит 1: Задана ли нормаль. Если не задана нормаль, то использовать одинаковую нормаль для всего треугольника.
-        GLubyte property;
 
-        FaceVertex(vec3f v_, vec3f n_, vec2f t_, GLint index_, bool has_tex_coord_, bool has_normal_)
-                : v(v_), n(n_), t(t_), index(index_)
+        FaceVertex(vec3f v_, vec3f n_, vec2f t_, GLint index_) : v(v_), n(n_), t(t_), index(index_)
         {
-                property = 0;
-                property |= (has_tex_coord_ ? 0b1 : 0);
-                property |= (has_normal_ ? 0b10 : 0);
         }
 };
 
@@ -97,17 +93,16 @@ struct Material final
 
         GLfloat Ns;
 
-        // если нет текстуры, то -1
-        GLint map_Ka, map_Kd, map_Ks;
+        GLuint use_map_Ka, use_map_Kd, use_map_Ks;
 
         explicit Material(const Obj<3>::Material& m)
                 : Ka(m.Ka.to_rgb_vector<float>()),
                   Kd(m.Kd.to_rgb_vector<float>()),
                   Ks(m.Ks.to_rgb_vector<float>()),
                   Ns(m.Ns),
-                  map_Ka(m.map_Ka),
-                  map_Kd(m.map_Kd),
-                  map_Ks(m.map_Ks)
+                  use_map_Ka(m.map_Ka >= 0 ? 1 : 0),
+                  use_map_Kd(m.map_Kd >= 0 ? 1 : 0),
+                  use_map_Ks(m.map_Ks >= 0 ? 1 : 0)
         {
         }
 };
@@ -139,9 +134,14 @@ void load_face_vertices(const Obj<3>& obj, std::vector<FaceVertex>* vertices)
                 }
                 else
                 {
-                        n0 = n1 = n2 = vec3f(0);
-                        // можно один раз вычислять здесь, вместо геометрического шейдера
-                        // n0 = n1 = n2 = normalize(cross(v1 - v0, v2 - v0));
+                        vec3f geometric_normal = normalize(cross(v1 - v0, v2 - v0));
+                        if (!is_finite(geometric_normal))
+                        {
+                                error("Face unit orthogonal vector is not finite for the face with vertices (" + to_string(v0) +
+                                      ", " + to_string(v1) + ", " + to_string(v2) + ")");
+                        }
+
+                        n0 = n1 = n2 = geometric_normal;
                 }
 
                 if (f.has_texcoord)
@@ -152,12 +152,12 @@ void load_face_vertices(const Obj<3>& obj, std::vector<FaceVertex>* vertices)
                 }
                 else
                 {
-                        t0 = t1 = t2 = vec2f(0);
+                        t0 = t1 = t2 = NO_TEXTURE_COORDINATES;
                 }
 
-                vertices->emplace_back(v0, n0, t0, f.material, f.has_texcoord, f.has_normal);
-                vertices->emplace_back(v1, n1, t1, f.material, f.has_texcoord, f.has_normal);
-                vertices->emplace_back(v2, n2, t2, f.material, f.has_texcoord, f.has_normal);
+                vertices->emplace_back(v0, n0, t0, f.material);
+                vertices->emplace_back(v1, n1, t1, f.material);
+                vertices->emplace_back(v2, n2, t2, f.material);
         }
 }
 
@@ -194,7 +194,7 @@ void load_line_vertices(const Obj<3>& obj, std::vector<PointVertex>* vertices)
         }
 }
 
-void load_materials(const Obj<3>& obj, std::vector<Material>* materials)
+void load_materials(const Obj<3>& obj, const std::vector<opengl::TextureRGBA32F>& textures, std::vector<Material>* materials)
 {
         const std::vector<Obj<3>::Material>& obj_materials = obj.materials();
 
@@ -204,6 +204,18 @@ void load_materials(const Obj<3>& obj, std::vector<Material>* materials)
         for (const Obj<3>::Material& m : obj_materials)
         {
                 materials->emplace_back(m);
+                if (m.map_Ka >= 0)
+                {
+                        materials->back().map_Ka_handle = textures[m.map_Ka].texture().texture_resident_handle();
+                }
+                if (m.map_Kd >= 0)
+                {
+                        materials->back().map_Kd_handle = textures[m.map_Kd].texture().texture_resident_handle();
+                }
+                if (m.map_Ks >= 0)
+                {
+                        materials->back().map_Ks_handle = textures[m.map_Ks].texture().texture_resident_handle();
+                }
         }
 }
 }
@@ -222,7 +234,6 @@ void DrawObject::load_triangles(const Obj<3>& obj)
         m_vertex_array.attrib(1, 3, GL_FLOAT, *m_vertex_buffer, offsetof(FaceVertex, n), sizeof(FaceVertex));
         m_vertex_array.attrib(2, 2, GL_FLOAT, *m_vertex_buffer, offsetof(FaceVertex, t), sizeof(FaceVertex));
         m_vertex_array.attrib_i(3, 1, GL_INT, *m_vertex_buffer, offsetof(FaceVertex, index), sizeof(FaceVertex));
-        m_vertex_array.attrib_i(4, 1, GL_UNSIGNED_BYTE, *m_vertex_buffer, offsetof(FaceVertex, property), sizeof(FaceVertex));
 
         //
 
@@ -234,22 +245,7 @@ void DrawObject::load_triangles(const Obj<3>& obj)
         //
 
         std::vector<Material> materials;
-        load_materials(obj, &materials);
-        for (Material& m : materials)
-        {
-                if (m.map_Ka >= 0)
-                {
-                        m.map_Ka_handle = m_textures[m.map_Ka].texture().texture_resident_handle();
-                }
-                if (m.map_Kd >= 0)
-                {
-                        m.map_Kd_handle = m_textures[m.map_Kd].texture().texture_resident_handle();
-                }
-                if (m.map_Ks >= 0)
-                {
-                        m.map_Ks_handle = m_textures[m.map_Ks].texture().texture_resident_handle();
-                }
-        }
+        load_materials(obj, m_textures, &materials);
 
         m_storage_buffer = std::make_unique<opengl::StorageBuffer>(materials);
 }

@@ -57,8 +57,8 @@ std::unique_ptr<vulkan::BufferWithDeviceLocalMemory> load_vertices(const vulkan:
         const std::vector<vec3f>& obj_normals = obj.normals();
         const std::vector<vec2f>& obj_texcoords = obj.texcoords();
 
-        std::vector<RendererVertex> shader_vertices;
-        shader_vertices.reserve(3 * obj_faces.size());
+        std::vector<RendererVertex> vertices;
+        vertices.reserve(3 * obj_faces.size());
 
         vec3f v0, v1, v2;
         vec3f n0, n1, n2;
@@ -72,27 +72,21 @@ std::unique_ptr<vulkan::BufferWithDeviceLocalMemory> load_vertices(const vulkan:
                 v1 = obj_vertices[f.vertices[1]];
                 v2 = obj_vertices[f.vertices[2]];
 
-                vec3f geometric_normal = normalize(cross(v1 - v0, v2 - v0));
-                if (!is_finite(geometric_normal))
-                {
-                        error("Face unit orthogonal vector is not finite for the face with vertices (" + to_string(v0) + ", " +
-                              to_string(v1) + ", " + to_string(v2) + ")");
-                }
-
                 if (f.has_normal)
                 {
                         n0 = obj_normals[f.normals[0]];
                         n1 = obj_normals[f.normals[1]];
                         n2 = obj_normals[f.normals[2]];
-
-                        // Векторы вершин грани могут быть направлены в разные стороны от грани,
-                        // поэтому надо им задать одинаковое направление
-                        n0 = dot(n0, geometric_normal) >= 0 ? n0 : -n0;
-                        n1 = dot(n1, geometric_normal) >= 0 ? n1 : -n1;
-                        n2 = dot(n2, geometric_normal) >= 0 ? n2 : -n2;
                 }
                 else
                 {
+                        vec3f geometric_normal = normalize(cross(v1 - v0, v2 - v0));
+                        if (!is_finite(geometric_normal))
+                        {
+                                error("Face unit orthogonal vector is not finite for the face with vertices (" + to_string(v0) +
+                                      ", " + to_string(v1) + ", " + to_string(v2) + ")");
+                        }
+
                         n0 = n1 = n2 = geometric_normal;
                 }
 
@@ -107,16 +101,15 @@ std::unique_ptr<vulkan::BufferWithDeviceLocalMemory> load_vertices(const vulkan:
                         t0 = t1 = t2 = NO_TEXTURE_COORDINATES;
                 }
 
-                shader_vertices.emplace_back(v0, n0, geometric_normal, t0);
-                shader_vertices.emplace_back(v1, n1, geometric_normal, t1);
-                shader_vertices.emplace_back(v2, n2, geometric_normal, t2);
+                vertices.emplace_back(v0, n0, t0);
+                vertices.emplace_back(v1, n1, t1);
+                vertices.emplace_back(v2, n2, t2);
         }
 
-        ASSERT((shader_vertices.size() >= 3) && (shader_vertices.size() % 3 == 0));
+        ASSERT((vertices.size() >= 3) && (vertices.size() % 3 == 0));
 
         return std::make_unique<vulkan::BufferWithDeviceLocalMemory>(device, transfer_command_pool, transfer_queue,
-                                                                     family_indices, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-                                                                     shader_vertices);
+                                                                     family_indices, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, vertices);
 }
 
 std::unique_ptr<vulkan::BufferWithDeviceLocalMemory> load_point_vertices(const vulkan::Device& device,
@@ -133,17 +126,16 @@ std::unique_ptr<vulkan::BufferWithDeviceLocalMemory> load_point_vertices(const v
         const std::vector<Obj<3>::Point>& obj_points = obj.points();
         const std::vector<vec3f>& obj_vertices = obj.vertices();
 
-        std::vector<RendererPointVertex> shader_vertices;
-        shader_vertices.reserve(obj_points.size());
+        std::vector<RendererPointVertex> vertices;
+        vertices.reserve(obj_points.size());
 
         for (const Obj<3>::Point& p : obj_points)
         {
-                shader_vertices.push_back(obj_vertices[p.vertex]);
+                vertices.push_back(obj_vertices[p.vertex]);
         }
 
         return std::make_unique<vulkan::BufferWithDeviceLocalMemory>(device, transfer_command_pool, transfer_queue,
-                                                                     family_indices, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-                                                                     shader_vertices);
+                                                                     family_indices, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, vertices);
 }
 
 std::unique_ptr<vulkan::BufferWithDeviceLocalMemory> load_line_vertices(const vulkan::Device& device,
@@ -160,20 +152,19 @@ std::unique_ptr<vulkan::BufferWithDeviceLocalMemory> load_line_vertices(const vu
         const std::vector<Obj<3>::Line>& obj_lines = obj.lines();
         const std::vector<vec3f>& obj_vertices = obj.vertices();
 
-        std::vector<RendererPointVertex> shader_vertices;
-        shader_vertices.reserve(2 * obj_lines.size());
+        std::vector<RendererPointVertex> vertices;
+        vertices.reserve(2 * obj_lines.size());
 
         for (const Obj<3>::Line& line : obj_lines)
         {
                 for (int index : line.vertices)
                 {
-                        shader_vertices.push_back(obj_vertices[index]);
+                        vertices.push_back(obj_vertices[index]);
                 }
         }
 
         return std::make_unique<vulkan::BufferWithDeviceLocalMemory>(device, transfer_command_pool, transfer_queue,
-                                                                     family_indices, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-                                                                     shader_vertices);
+                                                                     family_indices, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, vertices);
 }
 
 std::vector<vulkan::ColorTexture> load_textures(const vulkan::Device& device, const vulkan::CommandPool& graphics_command_pool,

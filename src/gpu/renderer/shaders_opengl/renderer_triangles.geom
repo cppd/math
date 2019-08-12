@@ -23,72 +23,70 @@ layout(std140, binding = 1) uniform Lighting
         vec3 direction_to_light;
         vec3 direction_to_camera;
         bool show_smooth;
-};
+}
+lighting;
+
+//
 
 in VS
 {
-        vec2 texture_coordinates;
         vec3 normal;
         vec4 shadow_position;
+        vec3 orig_position;
+        vec2 texture_coordinates;
         flat int material_index;
-        flat int property;
-        flat vec3 orig_position;
 }
 vs[3];
 
 out GS
 {
-        vec2 texture_coordinates;
         vec3 normal;
         vec4 shadow_position;
-        flat int material_index;
-        flat int property;
+        vec2 texture_coordinates;
         vec3 baricentric;
+        flat int material_index;
 }
 gs;
+
+//
 
 const vec3 baricentric[3] = {vec3(1, 0, 0), vec3(0, 1, 0), vec3(0, 0, 1)};
 
 vec3[3] compute_normals()
 {
-        vec3 flat_normal = cross(vs[1].orig_position - vs[0].orig_position, vs[2].orig_position - vs[0].orig_position);
+        vec3 geometric_normal = cross(vs[1].orig_position - vs[0].orig_position, vs[2].orig_position - vs[0].orig_position);
 
         vec3 normals[3];
 
-        bool face_has_normal = (vs[0].property & 2) > 0;
+        // Нужно направить векторы вершин грани по направлению перпендикуляра
+        // к той стороне грани, которая обращена к камере.
 
-        if (face_has_normal && show_smooth)
+        if (lighting.show_smooth)
         {
-                // Направить векторы вершин грани по направлению перпендикуляра
-                // к той стороне грани, которая обращена к камере.
-
                 // direction_to_camera - это направление на камеру.
-                // Вектор flat_normal направить от камеры.
-                flat_normal = faceforward(flat_normal, direction_to_camera, flat_normal);
+                // normal - это вектор от камеры.
+                vec3 normal = faceforward(geometric_normal, lighting.direction_to_camera, geometric_normal);
 
-                // Повернуть векторы вершин в противоположном вектору flat_normal направлении
-                normals[0] = faceforward(vs[0].normal, flat_normal, vs[0].normal);
-                normals[1] = faceforward(vs[1].normal, flat_normal, vs[1].normal);
-                normals[2] = faceforward(vs[2].normal, flat_normal, vs[2].normal);
+                // Повернуть векторы вершин в противоположном вектору normal направлении
+                normals[0] = faceforward(vs[0].normal, normal, vs[0].normal);
+                normals[1] = faceforward(vs[1].normal, normal, vs[1].normal);
+                normals[2] = faceforward(vs[2].normal, normal, vs[2].normal);
         }
         else
         {
-                // Направить перпендикуляр к грани на камеру.
-
                 // direction_to_camera - это направление на камеру.
-                // Вектор flat_normal направить на камеру.
-                flat_normal = faceforward(flat_normal, -direction_to_camera, flat_normal);
+                // normal - это вектор на камеру.
+                vec3 normal = faceforward(geometric_normal, -lighting.direction_to_camera, geometric_normal);
 
-                // Задать векторы вершин вектором flat_normal
-                normals[0] = flat_normal;
-                normals[1] = flat_normal;
-                normals[2] = flat_normal;
+                normals[0] = normal;
+                normals[1] = normal;
+                normals[2] = normal;
         }
 
         return normals;
 }
 
-void main(void)
+void main()
 {
         vec3 normals[3] = compute_normals();
 
@@ -99,10 +97,10 @@ void main(void)
                 gs.normal = normals[i];
                 gs.baricentric = baricentric[i];
 
-                gs.texture_coordinates = vs[i].texture_coordinates;
                 gs.shadow_position = vs[i].shadow_position;
+                gs.texture_coordinates = vs[i].texture_coordinates;
+
                 gs.material_index = vs[i].material_index;
-                gs.property = vs[i].property;
 
                 EmitVertex();
         }

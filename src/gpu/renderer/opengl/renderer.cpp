@@ -304,7 +304,7 @@ class Impl final : public Renderer
                 }
 
                 m_shadow_buffer = std::make_unique<opengl::ShadowBuffer>(m_shadow_width, m_shadow_height);
-                m_triangles_program.set_uniform_handle("shadow_tex",
+                m_triangles_program.set_uniform_handle("shadow_texture",
                                                        m_shadow_buffer->depth_texture().texture().texture_resident_handle());
         }
 
@@ -323,7 +323,7 @@ class Impl final : public Renderer
                 m_color_buffer = opengl::create_color_buffer(m_sample_count, width, height);
                 m_objects = std::make_unique<opengl::TextureImage>(width, height, GL_R32UI);
 
-                m_triangles_program.set_uniform_handle("object_img", m_objects->image_resident_handle_write_only());
+                m_triangles_program.set_uniform_handle("object_image", m_objects->image_resident_handle_write_only());
                 m_points_0d_program.set_uniform_handle("object_image", m_objects->image_resident_handle_write_only());
                 m_points_1d_program.set_uniform_handle("object_image", m_objects->image_resident_handle_write_only());
 

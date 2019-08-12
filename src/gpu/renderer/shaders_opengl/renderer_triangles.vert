@@ -15,39 +15,41 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-layout(location = 0) in vec4 position;
+layout(location = 0) in vec3 position;
 layout(location = 1) in vec3 normal;
 layout(location = 2) in vec2 texture_coordinates;
 layout(location = 3) in int material_index;
-layout(location = 4) in int property;
 
 layout(std140, binding = 0) uniform Matrices
 {
         mat4 matrix;
         mat4 shadow_matrix;
-};
+}
+matrices;
+
+//
 
 out VS
 {
-        vec2 texture_coordinates;
         vec3 normal;
         vec4 shadow_position;
+        vec3 orig_position;
+        vec2 texture_coordinates;
         flat int material_index;
-        flat int property;
-        flat vec3 orig_position;
 }
 vs;
 
-void main(void)
+out gl_PerVertex
 {
-        gl_Position = matrix * position;
+        vec4 gl_Position;
+};
 
-        vs.shadow_position = shadow_matrix * position;
-
-        vs.orig_position = position.xyz;
-
+void main()
+{
+        gl_Position = matrices.matrix * vec4(position, 1.0);
+        vs.shadow_position = matrices.shadow_matrix * vec4(position, 1.0);
+        vs.orig_position = position;
         vs.normal = normal;
         vs.texture_coordinates = texture_coordinates;
         vs.material_index = material_index;
-        vs.property = property;
 }

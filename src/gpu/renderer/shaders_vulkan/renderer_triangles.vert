@@ -17,8 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 layout(location = 0) in vec3 position;
 layout(location = 1) in vec3 normal;
-layout(location = 2) in vec3 geometric_normal;
-layout(location = 3) in vec2 texture_coordinates;
+layout(location = 2) in vec2 texture_coordinates;
 
 layout(std140, set = 0, binding = 0) uniform Matrices
 {
@@ -33,7 +32,7 @@ layout(location = 0) out VS
 {
         vec3 normal;
         vec4 shadow_position;
-        flat vec3 geometric_normal;
+        vec3 orig_position;
         vec2 texture_coordinates;
 }
 vs;
@@ -47,7 +46,7 @@ void main()
 {
         gl_Position = matrices.matrix * vec4(position, 1.0);
         vs.shadow_position = matrices.shadow_matrix * vec4(position, 1.0);
+        vs.orig_position = position;
         vs.normal = normal;
-        vs.geometric_normal = geometric_normal;
         vs.texture_coordinates = texture_coordinates;
 }

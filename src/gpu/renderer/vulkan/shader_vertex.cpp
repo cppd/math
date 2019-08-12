@@ -61,15 +61,6 @@ std::vector<VkVertexInputAttributeDescription> RendererVertex::triangles_attribu
                 VkVertexInputAttributeDescription d = {};
                 d.binding = 0;
                 d.location = 2;
-                d.format = VK_FORMAT_R32G32B32_SFLOAT;
-                d.offset = offsetof(RendererVertex, geometric_normal);
-
-                descriptions.push_back(d);
-        }
-        {
-                VkVertexInputAttributeDescription d = {};
-                d.binding = 0;
-                d.location = 3;
                 d.format = VK_FORMAT_R32G32_SFLOAT;
                 d.offset = offsetof(RendererVertex, texture_coordinates);
 

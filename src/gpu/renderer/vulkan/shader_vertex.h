@@ -28,15 +28,10 @@ struct RendererVertex
 {
         vec3f position;
         vec3f normal;
-        vec3f geometric_normal;
         vec2f texture_coordinates;
 
-        constexpr RendererVertex(const vec3f& position_, const vec3f& normal_, const vec3f& geometric_normal_,
-                                 const vec2f& texture_coordinates_)
-                : position(position_),
-                  normal(normal_),
-                  geometric_normal(geometric_normal_),
-                  texture_coordinates(texture_coordinates_)
+        constexpr RendererVertex(const vec3f& position_, const vec3f& normal_, const vec2f& texture_coordinates_)
+                : position(position_), normal(normal_), texture_coordinates(texture_coordinates_)
         {
         }
 
