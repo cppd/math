@@ -79,15 +79,12 @@ public:
                 m_materials->bind(MATERIALS_BINDING);
         }
 
-        void set_matrix(const mat4& matrix) const
+        void set_matrices(const mat4& matrix, const mat4& shadow_matrix) const
         {
-                decltype(Matrices().matrix) m = transpose(to_matrix<float>(matrix));
-                m_matrices.copy(offsetof(Matrices, matrix), m);
-        }
-        void set_shadow_matrix(const mat4& matrix) const
-        {
-                decltype(Matrices().shadow_matrix) m = transpose(to_matrix<float>(matrix));
-                m_matrices.copy(offsetof(Matrices, shadow_matrix), m);
+                Matrices matrices;
+                matrices.matrix = transpose(to_matrix<float>(matrix));
+                matrices.shadow_matrix = transpose(to_matrix<float>(shadow_matrix));
+                m_matrices.copy(matrices);
         }
 
         void set_direction_to_light(const vec3& direction) const

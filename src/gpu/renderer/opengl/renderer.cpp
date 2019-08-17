@@ -179,6 +179,8 @@ class Impl final : public Renderer
 
                 m_triangles_memory.set_direction_to_light(-c.light_direction);
                 m_triangles_memory.set_direction_to_camera(-c.camera_direction);
+
+                set_matrices();
         }
 
         void draw(bool draw_to_color_buffer) override
@@ -206,13 +208,8 @@ class Impl final : public Renderer
 
                 draw_object->bind_vertices();
 
-                const DrawObject* scale_object = m_storage.scale_object();
-
                 if (m_show_shadow && draw_object->draw_type() == DrawType::Triangles)
                 {
-                        m_triangles_memory.set_shadow_matrix(m_scale_bias_shadow_matrix * scale_object->model_matrix());
-                        m_shadow_memory.set_matrix(m_shadow_matrix * scale_object->model_matrix());
-
                         m_shadow_buffer->bind_buffer();
                         glViewport(0, 0, m_shadow_width, m_shadow_height);
                         glClearDepthf(1.0f);
@@ -241,18 +238,15 @@ class Impl final : public Renderer
                 switch (draw_object->draw_type())
                 {
                 case DrawType::Triangles:
-                        m_triangles_memory.set_matrix(m_main_matrix * scale_object->model_matrix());
                         m_triangles_memory.set_materials(draw_object->materials());
                         m_triangles_memory.bind();
                         m_triangles_program.draw_arrays(GL_TRIANGLES, 0, draw_object->vertices_count());
                         break;
                 case DrawType::Points:
-                        m_points_memory.set_matrix(m_main_matrix * scale_object->model_matrix());
                         m_points_memory.bind();
                         m_points_0d_program.draw_arrays(GL_POINTS, 0, draw_object->vertices_count());
                         break;
                 case DrawType::Lines:
-                        m_points_memory.set_matrix(m_main_matrix * scale_object->model_matrix());
                         m_points_memory.bind();
                         m_points_1d_program.draw_arrays(GL_LINES, 0, draw_object->vertices_count());
                         break;
@@ -308,6 +302,22 @@ class Impl final : public Renderer
                                                        m_shadow_buffer->depth_texture().texture().texture_resident_handle());
         }
 
+        void set_matrices()
+        {
+                ASSERT(m_storage.scale_object() || !m_storage.object());
+
+                if (m_storage.scale_object())
+                {
+                        mat4 matrix = m_main_matrix * m_storage.scale_object()->model_matrix();
+                        mat4 scale_bias_shadow_matrix = m_scale_bias_shadow_matrix * m_storage.scale_object()->model_matrix();
+                        mat4 shadow_matrix = m_shadow_matrix * m_storage.scale_object()->model_matrix();
+
+                        m_triangles_memory.set_matrices(matrix, scale_bias_shadow_matrix);
+                        m_shadow_memory.set_matrix(shadow_matrix);
+                        m_points_memory.set_matrix(matrix);
+                }
+        }
+
         void set_shadow_zoom(double zoom) override
         {
                 m_shadow_zoom = zoom;
@@ -354,18 +364,22 @@ class Impl final : public Renderer
         void object_add(const Obj<3>* obj, double size, const vec3& position, int id, int scale_id) override
         {
                 m_storage.add_object(std::make_unique<DrawObject>(*obj, size, position), id, scale_id);
+                set_matrices();
         }
         void object_delete(int id) override
         {
                 m_storage.delete_object(id);
+                set_matrices();
         }
         void object_show(int id) override
         {
                 m_storage.show_object(id);
+                set_matrices();
         }
         void object_delete_all() override
         {
                 m_storage.delete_all();
+                set_matrices();
         }
 
 public:
