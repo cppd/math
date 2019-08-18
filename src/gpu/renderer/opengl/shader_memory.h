@@ -36,8 +36,6 @@ class RendererTrianglesMemory final
         opengl::UniformBuffer m_lighting;
         opengl::UniformBuffer m_drawing;
 
-        const opengl::StorageBuffer* m_materials = nullptr;
-
         struct Matrices
         {
                 Matrix<4, 4, float> matrix;
@@ -71,12 +69,14 @@ public:
 
         void bind() const
         {
-                ASSERT(m_materials);
-
                 m_matrices.bind(MATRICES_BINDING);
                 m_lighting.bind(LIGHTING_BINDING);
                 m_drawing.bind(DRAWING_BINDING);
-                m_materials->bind(MATERIALS_BINDING);
+        }
+
+        static int materials_binding()
+        {
+                return MATERIALS_BINDING;
         }
 
         void set_matrices(const mat4& matrix, const mat4& shadow_matrix) const
@@ -157,11 +157,6 @@ public:
         {
                 decltype(Drawing().show_shadow) s = show ? 1 : 0;
                 m_drawing.copy(offsetof(Drawing, show_shadow), s);
-        }
-
-        void set_materials(const opengl::StorageBuffer* buffer)
-        {
-                m_materials = buffer;
         }
 };
 

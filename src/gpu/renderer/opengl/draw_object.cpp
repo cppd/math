@@ -283,14 +283,9 @@ DrawObject::DrawObject(const Obj<3>& obj, double size, const vec3& position)
         }
 }
 
-void DrawObject::bind_vertices() const
+bool DrawObject::has_shadow() const
 {
-        m_vertex_array.bind();
-}
-
-const opengl::StorageBuffer* DrawObject::materials() const
-{
-        return m_storage_buffer.get();
+        return m_draw_type == DrawType::Triangles;
 }
 
 const mat4& DrawObject::model_matrix() const
@@ -298,13 +293,39 @@ const mat4& DrawObject::model_matrix() const
         return m_model_matrix;
 }
 
-unsigned DrawObject::vertices_count() const
+void DrawObject::draw(const DrawInfo& info) const
 {
-        return m_vertices_count;
+        ASSERT(info.triangles_program && info.triangles_memory);
+        ASSERT(info.points_program && info.points_memory);
+        ASSERT(info.lines_program && info.lines_memory);
+
+        m_vertex_array.bind();
+
+        switch (m_draw_type)
+        {
+        case DrawType::Triangles:
+                m_storage_buffer->bind(info.triangles_memory->materials_binding());
+                info.triangles_memory->bind();
+                info.triangles_program->draw_arrays(GL_TRIANGLES, 0, m_vertices_count);
+                break;
+        case DrawType::Points:
+                info.points_memory->bind();
+                info.points_program->draw_arrays(GL_POINTS, 0, m_vertices_count);
+                break;
+        case DrawType::Lines:
+                info.lines_memory->bind();
+                info.lines_program->draw_arrays(GL_LINES, 0, m_vertices_count);
+                break;
+        }
 }
 
-DrawType DrawObject::draw_type() const
+void DrawObject::shadow(const ShadowInfo& info) const
 {
-        return m_draw_type;
+        ASSERT(info.triangles_memory && info.triangles_program);
+
+        m_vertex_array.bind();
+
+        info.triangles_memory->bind();
+        info.triangles_program->draw_arrays(GL_TRIANGLES, 0, m_vertices_count);
 }
 }

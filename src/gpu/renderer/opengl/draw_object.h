@@ -17,8 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "shader_memory.h"
+
 #include "com/matrix.h"
 #include "graphics/opengl/buffers.h"
+#include "graphics/opengl/shader.h"
 #include "obj/obj.h"
 
 #include <memory>
@@ -31,6 +34,24 @@ enum class DrawType
         Points,
         Lines,
         Triangles
+};
+
+struct DrawInfo
+{
+        const opengl::GraphicsProgram* triangles_program;
+        const RendererTrianglesMemory* triangles_memory;
+
+        const opengl::GraphicsProgram* points_program;
+        const RendererPointsMemory* points_memory;
+
+        const opengl::GraphicsProgram* lines_program;
+        const RendererPointsMemory* lines_memory;
+};
+
+struct ShadowInfo
+{
+        const opengl::GraphicsProgram* triangles_program;
+        const RendererShadowMemory* triangles_memory;
 };
 
 class DrawObject final
@@ -50,11 +71,9 @@ class DrawObject final
 public:
         DrawObject(const Obj<3>& obj, double size, const vec3& position);
 
-        void bind_vertices() const;
-        const opengl::StorageBuffer* materials() const;
-
+        bool has_shadow() const;
         const mat4& model_matrix() const;
-        unsigned vertices_count() const;
-        DrawType draw_type() const;
+        void draw(const DrawInfo& info) const;
+        void shadow(const ShadowInfo& info) const;
 };
 }

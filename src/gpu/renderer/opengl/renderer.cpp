@@ -206,9 +206,7 @@ class Impl final : public Renderer
 
                 opengl::GLEnableAndRestore<GL_DEPTH_TEST> enable_depth_test;
 
-                draw_object->bind_vertices();
-
-                if (m_show_shadow && draw_object->draw_type() == DrawType::Triangles)
+                if (m_show_shadow && draw_object->has_shadow())
                 {
                         m_shadow_buffer->bind_buffer();
                         glViewport(0, 0, m_shadow_width, m_shadow_height);
@@ -219,9 +217,10 @@ class Impl final : public Renderer
                         opengl::GLEnableAndRestore<GL_POLYGON_OFFSET_FILL> enable_polygon_offset_fill;
                         glPolygonOffset(2.0f, 2.0f); // glPolygonOffset(4.0f, 4.0f);
 
-                        m_shadow_memory.bind();
-
-                        m_shadow_program.draw_arrays(GL_TRIANGLES, 0, draw_object->vertices_count());
+                        ShadowInfo info;
+                        info.triangles_program = &m_shadow_program;
+                        info.triangles_memory = &m_shadow_memory;
+                        draw_object->shadow(info);
 
                         m_shadow_buffer->unbind_buffer();
                 }
@@ -235,22 +234,14 @@ class Impl final : public Renderer
 
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-                switch (draw_object->draw_type())
-                {
-                case DrawType::Triangles:
-                        m_triangles_memory.set_materials(draw_object->materials());
-                        m_triangles_memory.bind();
-                        m_triangles_program.draw_arrays(GL_TRIANGLES, 0, draw_object->vertices_count());
-                        break;
-                case DrawType::Points:
-                        m_points_memory.bind();
-                        m_points_0d_program.draw_arrays(GL_POINTS, 0, draw_object->vertices_count());
-                        break;
-                case DrawType::Lines:
-                        m_points_memory.bind();
-                        m_points_1d_program.draw_arrays(GL_LINES, 0, draw_object->vertices_count());
-                        break;
-                }
+                DrawInfo info;
+                info.triangles_program = &m_triangles_program;
+                info.triangles_memory = &m_triangles_memory;
+                info.points_program = &m_points_0d_program;
+                info.points_memory = &m_points_memory;
+                info.lines_program = &m_points_1d_program;
+                info.lines_memory = &m_points_memory;
+                draw_object->draw(info);
 
                 if (draw_to_color_buffer)
                 {
