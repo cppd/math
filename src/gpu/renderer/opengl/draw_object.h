@@ -29,13 +29,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpu_opengl
 {
-enum class DrawType
-{
-        Points,
-        Lines,
-        Triangles
-};
-
 struct DrawInfo
 {
         const opengl::GraphicsProgram* triangles_program;
@@ -56,34 +49,19 @@ struct ShadowInfo
 
 class DrawObject final
 {
-        opengl::VertexArray m_vertex_array;
-        std::unique_ptr<opengl::ArrayBuffer> m_vertex_buffer;
-        std::vector<opengl::TextureRGBA32F> m_textures;
-        std::unique_ptr<RendererMaterialMemory> m_shader_memory;
+        class Triangles;
+        class Lines;
+        class Points;
 
-        unsigned m_vertex_count;
+        mat4 m_model_matrix;
 
-        const mat4 m_model_matrix;
-        const DrawType m_draw_type;
-
-        struct Material
-        {
-                unsigned material_index;
-                unsigned vertex_offset;
-                unsigned vertex_count;
-
-                Material(unsigned material_index_, unsigned vertex_offset_, unsigned vertex_count_)
-                        : material_index(material_index_), vertex_offset(vertex_offset_), vertex_count(vertex_count_)
-                {
-                }
-        };
-        std::vector<Material> m_materials;
-
-        void load_triangles(const Obj<3>& obj);
-        void load_points_lines(const Obj<3>& obj);
+        std::unique_ptr<Triangles> m_triangles;
+        std::unique_ptr<Lines> m_lines;
+        std::unique_ptr<Points> m_points;
 
 public:
         DrawObject(const Obj<3>& obj, double size, const vec3& position);
+        ~DrawObject();
 
         bool has_shadow() const;
         const mat4& model_matrix() const;
