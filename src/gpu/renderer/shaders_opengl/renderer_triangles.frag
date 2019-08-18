@@ -41,7 +41,7 @@ drawing;
 layout(bindless_sampler) uniform sampler2DShadow shadow_texture;
 layout(bindless_image, r32ui) writeonly uniform uimage2D object_image;
 
-struct Material
+layout(std140, binding = 3) uniform Material
 {
         vec3 Ka;
         vec3 Kd;
@@ -53,11 +53,9 @@ struct Material
         bool use_map_Ka;
         bool use_map_Kd;
         bool use_map_Ks;
-};
-layout(std430, binding = 3) buffer BufferObject
-{
-        Material mtl[];
-};
+        bool use_material;
+}
+mtl;
 
 //
 
@@ -67,7 +65,6 @@ in GS
         vec4 shadow_position;
         vec2 texture_coordinates;
         vec3 baricentric;
-        flat int material_index;
 }
 gs;
 
@@ -92,47 +89,40 @@ void main()
 {
         vec3 color_a, color_d, color_s;
 
-        if (gs.material_index >= 0 && drawing.show_materials)
+        if (mtl.use_material && drawing.show_materials)
         {
-                // материал есть
-
-                vec3 mtl_Ka = mtl[gs.material_index].Ka;
-                vec3 mtl_Kd = mtl[gs.material_index].Kd;
-                vec3 mtl_Ks = mtl[gs.material_index].Ks;
-
-                if (has_texture_coordinates() && mtl[gs.material_index].use_map_Ka)
+                if (has_texture_coordinates() && mtl.use_map_Ka)
                 {
-                        vec4 tex_color = texture(mtl[gs.material_index].map_Ka_handle, gs.texture_coordinates);
-                        color_a = mix(mtl_Ka, tex_color.rgb, tex_color.a);
+                        vec4 tex_color = texture(mtl.map_Ka_handle, gs.texture_coordinates);
+                        color_a = mix(mtl.Ka, tex_color.rgb, tex_color.a);
                 }
                 else
                 {
-                        color_a = mtl_Ka;
+                        color_a = mtl.Ka;
                 }
 
-                if (has_texture_coordinates() && mtl[gs.material_index].use_map_Kd)
+                if (has_texture_coordinates() && mtl.use_map_Kd)
                 {
-                        vec4 tex_color = texture(mtl[gs.material_index].map_Kd_handle, gs.texture_coordinates);
-                        color_d = mix(mtl_Kd, tex_color.rgb, tex_color.a);
+                        vec4 tex_color = texture(mtl.map_Kd_handle, gs.texture_coordinates);
+                        color_d = mix(mtl.Kd, tex_color.rgb, tex_color.a);
                 }
                 else
                 {
-                        color_d = mtl_Kd;
+                        color_d = mtl.Kd;
                 }
 
-                if (has_texture_coordinates() && mtl[gs.material_index].use_map_Ks)
+                if (has_texture_coordinates() && mtl.use_map_Ks)
                 {
-                        vec4 tex_color = texture(mtl[gs.material_index].map_Ks_handle, gs.texture_coordinates);
-                        color_s = mix(mtl_Ks, tex_color.rgb, tex_color.a);
+                        vec4 tex_color = texture(mtl.map_Ks_handle, gs.texture_coordinates);
+                        color_s = mix(mtl.Ks, tex_color.rgb, tex_color.a);
                 }
                 else
                 {
-                        color_s = mtl_Ks;
+                        color_s = mtl.Ks;
                 }
         }
         else
         {
-                // нет материала, цвет по умолчанию
                 color_a = color_d = color_s = drawing.default_color;
         }
 
@@ -147,8 +137,7 @@ void main()
 
                 float light_reflection = max(0.0, dot(V, reflect(-L, N)));
 
-                color_s *= pow(light_reflection,
-                               drawing.show_materials && gs.material_index >= 0 ? mtl[gs.material_index].Ns : drawing.default_ns);
+                color_s *= pow(light_reflection, mtl.use_material && drawing.show_materials ? mtl.Ns : drawing.default_ns);
         }
         else
         {

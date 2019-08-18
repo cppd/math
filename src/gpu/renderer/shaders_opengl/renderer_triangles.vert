@@ -18,7 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 layout(location = 0) in vec3 position;
 layout(location = 1) in vec3 normal;
 layout(location = 2) in vec2 texture_coordinates;
-layout(location = 3) in int material_index;
 
 layout(std140, binding = 0) uniform Matrices
 {
@@ -35,7 +34,6 @@ out VS
         vec4 shadow_position;
         vec3 orig_position;
         vec2 texture_coordinates;
-        flat int material_index;
 }
 vs;
 
@@ -51,5 +49,4 @@ void main()
         vs.orig_position = position;
         vs.normal = normal;
         vs.texture_coordinates = texture_coordinates;
-        vs.material_index = material_index;
 }

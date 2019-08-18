@@ -66,9 +66,8 @@ struct FaceVertex final
         vec3f v; // Координаты вершины в пространстве.
         vec3f n; // Нормаль вершины.
         vec2f t; // Координаты вершины в текстуре.
-        GLint index; // номер материала.
 
-        FaceVertex(vec3f v_, vec3f n_, vec2f t_, GLint index_) : v(v_), n(n_), t(t_), index(index_)
+        FaceVertex(vec3f v_, vec3f n_, vec2f t_) : v(v_), n(n_), t(t_)
         {
         }
 };
@@ -78,31 +77,6 @@ struct PointVertex final
         vec3f v; // Координаты вершины в пространстве.
 
         PointVertex(const vec3f& v_) : v(v_)
-        {
-        }
-};
-
-// shader storage
-struct Material final
-{
-        alignas(GLSL_VEC3_ALIGN) vec3f Ka;
-        alignas(GLSL_VEC3_ALIGN) vec3f Kd;
-        alignas(GLSL_VEC3_ALIGN) vec3f Ks;
-
-        GLuint64 map_Ka_handle, map_Kd_handle, map_Ks_handle;
-
-        GLfloat Ns;
-
-        GLuint use_map_Ka, use_map_Kd, use_map_Ks;
-
-        explicit Material(const Obj<3>::Material& m)
-                : Ka(m.Ka.to_rgb_vector<float>()),
-                  Kd(m.Kd.to_rgb_vector<float>()),
-                  Ks(m.Ks.to_rgb_vector<float>()),
-                  Ns(m.Ns),
-                  use_map_Ka(m.map_Ka >= 0 ? 1 : 0),
-                  use_map_Kd(m.map_Kd >= 0 ? 1 : 0),
-                  use_map_Ks(m.map_Ks >= 0 ? 1 : 0)
         {
         }
 };
@@ -160,9 +134,9 @@ std::unique_ptr<opengl::ArrayBuffer> load_face_vertices(const Obj<3>& obj, const
                         t0 = t1 = t2 = NO_TEXTURE_COORDINATES;
                 }
 
-                vertices.emplace_back(v0, n0, t0, f.material);
-                vertices.emplace_back(v1, n1, t1, f.material);
-                vertices.emplace_back(v2, n2, t2, f.material);
+                vertices.emplace_back(v0, n0, t0);
+                vertices.emplace_back(v1, n1, t1);
+                vertices.emplace_back(v2, n2, t2);
         }
 
         return std::make_unique<opengl::ArrayBuffer>(vertices);
@@ -201,29 +175,57 @@ void load_line_vertices(const Obj<3>& obj, std::vector<PointVertex>* vertices)
         }
 }
 
-void load_materials(const Obj<3>& obj, const std::vector<opengl::TextureRGBA32F>& textures, std::vector<Material>* materials)
+std::vector<opengl::TextureRGBA32F> load_textures(const Obj<3>& obj)
 {
-        const std::vector<Obj<3>::Material>& obj_materials = obj.materials();
+        std::vector<opengl::TextureRGBA32F> textures;
 
-        materials->clear();
-        materials->shrink_to_fit();
-        materials->reserve(obj_materials.size());
-        for (const Obj<3>::Material& m : obj_materials)
+        for (const Obj<3>::Image& image : obj.images())
         {
-                materials->emplace_back(m);
-                if (m.map_Ka >= 0)
-                {
-                        materials->back().map_Ka_handle = textures[m.map_Ka].texture().texture_resident_handle();
-                }
-                if (m.map_Kd >= 0)
-                {
-                        materials->back().map_Kd_handle = textures[m.map_Kd].texture().texture_resident_handle();
-                }
-                if (m.map_Ks >= 0)
-                {
-                        materials->back().map_Ks_handle = textures[m.map_Ks].texture().texture_resident_handle();
-                }
+                textures.emplace_back(image.size[0], image.size[1], image.srgba_pixels);
         }
+
+        return textures;
+}
+
+std::unique_ptr<RendererMaterialMemory> load_materials(const Obj<3>& obj, const std::vector<opengl::TextureRGBA32F>& textures)
+{
+        std::vector<RendererMaterialMemory::Material> materials;
+        materials.reserve(obj.materials().size() + 1);
+
+        for (const Obj<3>::Material& material : obj.materials())
+        {
+                RendererMaterialMemory::Material m;
+
+                m.Ka = material.Ka.to_rgb_vector<float>();
+                m.Kd = material.Kd.to_rgb_vector<float>();
+                m.Ks = material.Ks.to_rgb_vector<float>();
+                m.Ns = material.Ns;
+                m.use_map_Ka = material.map_Ka >= 0 ? 1 : 0;
+                m.use_map_Kd = material.map_Kd >= 0 ? 1 : 0;
+                m.use_map_Ks = material.map_Ks >= 0 ? 1 : 0;
+                m.use_material = 1;
+
+                if (material.map_Ka >= 0)
+                {
+                        m.map_Ka_handle = textures[material.map_Ka].texture().texture_resident_handle();
+                }
+                if (material.map_Kd >= 0)
+                {
+                        m.map_Kd_handle = textures[material.map_Kd].texture().texture_resident_handle();
+                }
+                if (material.map_Ks >= 0)
+                {
+                        m.map_Ks_handle = textures[material.map_Ks].texture().texture_resident_handle();
+                }
+
+                materials.push_back(m);
+        }
+
+        RendererMaterialMemory::Material m;
+        m.use_material = 0;
+        materials.push_back(m);
+
+        return std::make_unique<RendererMaterialMemory>(materials);
 }
 }
 
@@ -241,23 +243,23 @@ void DrawObject::load_triangles(const Obj<3>& obj)
         m_vertex_array.attrib(0, 3, GL_FLOAT, *m_vertex_buffer, offsetof(FaceVertex, v), sizeof(FaceVertex));
         m_vertex_array.attrib(1, 3, GL_FLOAT, *m_vertex_buffer, offsetof(FaceVertex, n), sizeof(FaceVertex));
         m_vertex_array.attrib(2, 2, GL_FLOAT, *m_vertex_buffer, offsetof(FaceVertex, t), sizeof(FaceVertex));
-        m_vertex_array.attrib_i(3, 1, GL_INT, *m_vertex_buffer, offsetof(FaceVertex, index), sizeof(FaceVertex));
 
-        m_vertices_count = 3 * obj.facets().size();
+        m_textures = load_textures(obj);
 
-        //
+        m_shader_memory = load_materials(obj, m_textures);
 
-        for (const Obj<3>::Image& image : obj.images())
+        m_vertex_count = 3 * obj.facets().size();
+
+        ASSERT(material_face_offset.size() == material_face_count.size());
+        ASSERT(material_face_offset.size() == m_shader_memory->material_count());
+
+        for (unsigned i = 0; i < m_shader_memory->material_count(); ++i)
         {
-                m_textures.emplace_back(image.size[0], image.size[1], image.srgba_pixels);
+                if (material_face_count[i] > 0)
+                {
+                        m_materials.emplace_back(i, 3 * material_face_offset[i], 3 * material_face_count[i]);
+                }
         }
-
-        //
-
-        std::vector<Material> materials;
-        load_materials(obj, m_textures, &materials);
-
-        m_storage_buffer = std::make_unique<opengl::StorageBuffer>(materials);
 }
 
 void DrawObject::load_points_lines(const Obj<3>& obj)
@@ -275,7 +277,7 @@ void DrawObject::load_points_lines(const Obj<3>& obj)
                 load_line_vertices(obj, &vertices);
         }
 
-        m_vertices_count = vertices.size();
+        m_vertex_count = vertices.size();
         m_vertex_buffer = std::make_unique<opengl::ArrayBuffer>(vertices);
         m_vertex_array.attrib(0, 3, GL_FLOAT, *m_vertex_buffer, offsetof(PointVertex, v), sizeof(PointVertex));
 }
@@ -314,17 +316,21 @@ void DrawObject::draw(const DrawInfo& info) const
         switch (m_draw_type)
         {
         case DrawType::Triangles:
-                m_storage_buffer->bind(info.triangles_memory->materials_binding());
                 info.triangles_memory->bind();
-                info.triangles_program->draw_arrays(GL_TRIANGLES, 0, m_vertices_count);
+                for (const Material& material : m_materials)
+                {
+                        ASSERT(material.vertex_count > 0);
+                        m_shader_memory->bind(material.material_index);
+                        info.triangles_program->draw_arrays(GL_TRIANGLES, material.vertex_offset, material.vertex_count);
+                }
                 break;
         case DrawType::Points:
                 info.points_memory->bind();
-                info.points_program->draw_arrays(GL_POINTS, 0, m_vertices_count);
+                info.points_program->draw_arrays(GL_POINTS, 0, m_vertex_count);
                 break;
         case DrawType::Lines:
                 info.lines_memory->bind();
-                info.lines_program->draw_arrays(GL_LINES, 0, m_vertices_count);
+                info.lines_program->draw_arrays(GL_LINES, 0, m_vertex_count);
                 break;
         }
 }
@@ -336,6 +342,6 @@ void DrawObject::shadow(const ShadowInfo& info) const
         m_vertex_array.bind();
 
         info.triangles_memory->bind();
-        info.triangles_program->draw_arrays(GL_TRIANGLES, 0, m_vertices_count);
+        info.triangles_program->draw_arrays(GL_TRIANGLES, 0, m_vertex_count);
 }
 }

@@ -34,7 +34,6 @@ in VS
         vec4 shadow_position;
         vec3 orig_position;
         vec2 texture_coordinates;
-        flat int material_index;
 }
 vs[3];
 
@@ -44,7 +43,6 @@ out GS
         vec4 shadow_position;
         vec2 texture_coordinates;
         vec3 baricentric;
-        flat int material_index;
 }
 gs;
 
@@ -99,8 +97,6 @@ void main()
 
                 gs.shadow_position = vs[i].shadow_position;
                 gs.texture_coordinates = vs[i].texture_coordinates;
-
-                gs.material_index = vs[i].material_index;
 
                 EmitVertex();
         }

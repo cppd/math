@@ -30,7 +30,6 @@ class RendererTrianglesMemory final
         static constexpr int MATRICES_BINDING = 0;
         static constexpr int LIGHTING_BINDING = 1;
         static constexpr int DRAWING_BINDING = 2;
-        static constexpr int MATERIALS_BINDING = 3;
 
         opengl::UniformBuffer m_matrices;
         opengl::UniformBuffer m_lighting;
@@ -72,11 +71,6 @@ public:
                 m_matrices.bind(MATRICES_BINDING);
                 m_lighting.bind(LIGHTING_BINDING);
                 m_drawing.bind(DRAWING_BINDING);
-        }
-
-        static int materials_binding()
-        {
-                return MATERIALS_BINDING;
         }
 
         void set_matrices(const mat4& matrix, const mat4& shadow_matrix) const
@@ -157,6 +151,50 @@ public:
         {
                 decltype(Drawing().show_shadow) s = show ? 1 : 0;
                 m_drawing.copy(offsetof(Drawing, show_shadow), s);
+        }
+};
+
+class RendererMaterialMemory final
+{
+        static constexpr int MATERIALS_BINDING = 3;
+
+        std::vector<opengl::UniformBuffer> m_materials;
+
+public:
+        struct Material
+        {
+                alignas(GLSL_VEC3_ALIGN) vec3f Ka;
+                alignas(GLSL_VEC3_ALIGN) vec3f Kd;
+                alignas(GLSL_VEC3_ALIGN) vec3f Ks;
+                GLuint64 map_Ka_handle;
+                GLuint64 map_Kd_handle;
+                GLuint64 map_Ks_handle;
+                GLfloat Ns;
+                GLuint use_map_Ka;
+                GLuint use_map_Kd;
+                GLuint use_map_Ks;
+                GLuint use_material;
+        };
+
+        RendererMaterialMemory(const std::vector<Material>& materials)
+        {
+                m_materials.reserve(materials.size());
+                for (const Material& m : materials)
+                {
+                        m_materials.emplace_back(sizeof(Material));
+                        m_materials.back().copy(m);
+                }
+        }
+
+        unsigned material_count() const
+        {
+                return m_materials.size();
+        }
+
+        void bind(unsigned index) const
+        {
+                ASSERT(index < m_materials.size());
+                m_materials[index].bind(MATERIALS_BINDING);
         }
 };
 
