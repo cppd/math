@@ -28,7 +28,7 @@ matrices;
 
 //
 
-out VS
+layout(location = 0) out VS
 {
         vec3 normal;
         vec4 shadow_position;

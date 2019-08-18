@@ -18,14 +18,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 layout(early_fragment_tests) in;
 
 // Общие данные для всех треугольников всех объектов
-layout(std140, set = 0, binding = 1) uniform Lighting
+layout(std140, binding = 1) uniform Lighting
 {
         vec3 direction_to_light;
         vec3 direction_to_camera;
         bool show_smooth;
 }
 lighting;
-layout(std140, set = 0, binding = 2) uniform Drawing
+layout(std140, binding = 2) uniform Drawing
 {
         vec3 default_color;
         vec3 wireframe_color;
@@ -39,10 +39,16 @@ layout(std140, set = 0, binding = 2) uniform Drawing
 }
 drawing;
 
-layout(set = 0, binding = 3) uniform sampler2D shadow_texture;
-layout(set = 0, binding = 4, r32ui) writeonly uniform uimage2D object_image;
+#if defined(VULKAN)
+layout(binding = 3) uniform sampler2D shadow_texture;
+layout(binding = 4, r32ui) writeonly uniform uimage2D object_image;
+#else
+layout(bindless_sampler) uniform sampler2DShadow shadow_texture;
+layout(bindless_image, r32ui) writeonly uniform uimage2D object_image;
+#endif
 
 // Для каждой группы треугольников с одним материалом отдельно задаётся этот материал и его текстуры
+#if defined(VULKAN)
 layout(std140, set = 1, binding = 0) uniform Material
 {
         vec3 Ka;
@@ -58,6 +64,23 @@ mtl;
 layout(set = 1, binding = 1) uniform sampler2D texture_Ka;
 layout(set = 1, binding = 2) uniform sampler2D texture_Kd;
 layout(set = 1, binding = 3) uniform sampler2D texture_Ks;
+#else
+layout(std140, binding = 3) uniform Material
+{
+        vec3 Ka;
+        vec3 Kd;
+        vec3 Ks;
+        layout(bindless_sampler) sampler2D texture_Ka;
+        layout(bindless_sampler) sampler2D texture_Kd;
+        layout(bindless_sampler) sampler2D texture_Ks;
+        float Ns;
+        bool use_texture_Ka;
+        bool use_texture_Kd;
+        bool use_texture_Ks;
+        bool use_material;
+}
+mtl;
+#endif
 
 //
 
@@ -73,6 +96,43 @@ gs;
 layout(location = 0) out vec4 color;
 
 //
+
+#if defined(VULKAN)
+vec4 texture_Ka_color(vec2 c)
+{
+        return texture(texture_Ka, c);
+}
+vec4 texture_Kd_color(vec2 c)
+{
+        return texture(texture_Kd, c);
+}
+vec4 texture_Ks_color(vec2 c)
+{
+        return texture(texture_Ks, c);
+}
+float shadow(vec4 shadow_position)
+{
+        float dist = texture(shadow_texture, shadow_position.xy).r;
+        return dist > gs.shadow_position.z ? 1 : 0;
+}
+#else
+vec4 texture_Ka_color(vec2 c)
+{
+        return texture(mtl.texture_Ka, c);
+}
+vec4 texture_Kd_color(vec2 c)
+{
+        return texture(mtl.texture_Kd, c);
+}
+vec4 texture_Ks_color(vec2 c)
+{
+        return texture(mtl.texture_Ks, c);
+}
+float shadow(vec4 shadow_position)
+{
+        return textureProj(shadow_texture, shadow_position);
+}
+#endif
 
 bool has_texture_coordinates()
 {
@@ -97,7 +157,7 @@ void main()
         {
                 if (has_texture_coordinates() && mtl.use_texture_Ka)
                 {
-                        vec4 tex_color = texture(texture_Ka, gs.texture_coordinates);
+                        vec4 tex_color = texture_Ka_color(gs.texture_coordinates);
                         color_a = mix(mtl.Ka, tex_color.rgb, tex_color.a);
                 }
                 else
@@ -107,7 +167,7 @@ void main()
 
                 if (has_texture_coordinates() && mtl.use_texture_Kd)
                 {
-                        vec4 tex_color = texture(texture_Kd, gs.texture_coordinates);
+                        vec4 tex_color = texture_Kd_color(gs.texture_coordinates);
                         color_d = mix(mtl.Kd, tex_color.rgb, tex_color.a);
                 }
                 else
@@ -117,7 +177,7 @@ void main()
 
                 if (has_texture_coordinates() && mtl.use_texture_Ks)
                 {
-                        vec4 tex_color = texture(texture_Ks, gs.texture_coordinates);
+                        vec4 tex_color = texture_Ks_color(gs.texture_coordinates);
                         color_s = mix(mtl.Ks, tex_color.rgb, tex_color.a);
                 }
                 else
@@ -155,10 +215,8 @@ void main()
 
         if (drawing.show_shadow)
         {
-                float dist = texture(shadow_texture, gs.shadow_position.xy).r;
-                float shadow = dist > gs.shadow_position.z ? 1 : 0;
-
-                color3 = color_a * drawing.light_a + shadow * (color_d * drawing.light_d + color_s * drawing.light_s);
+                const float s = shadow(gs.shadow_position);
+                color3 = color_a * drawing.light_a + s * (color_d * drawing.light_d + color_s * drawing.light_s);
         }
         else
         {

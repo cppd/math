@@ -166,13 +166,13 @@ public:
                 alignas(GLSL_VEC3_ALIGN) vec3f Ka;
                 alignas(GLSL_VEC3_ALIGN) vec3f Kd;
                 alignas(GLSL_VEC3_ALIGN) vec3f Ks;
-                GLuint64 map_Ka_handle;
-                GLuint64 map_Kd_handle;
-                GLuint64 map_Ks_handle;
+                GLuint64 texture_Ka;
+                GLuint64 texture_Kd;
+                GLuint64 texture_Ks;
                 GLfloat Ns;
-                GLuint use_map_Ka;
-                GLuint use_map_Kd;
-                GLuint use_map_Ks;
+                GLuint use_texture_Ka;
+                GLuint use_texture_Kd;
+                GLuint use_texture_Ks;
                 GLuint use_material;
         };
 

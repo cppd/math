@@ -200,22 +200,22 @@ std::unique_ptr<RendererMaterialMemory> load_materials(const Obj<3>& obj, const 
                 m.Kd = material.Kd.to_rgb_vector<float>();
                 m.Ks = material.Ks.to_rgb_vector<float>();
                 m.Ns = material.Ns;
-                m.use_map_Ka = material.map_Ka >= 0 ? 1 : 0;
-                m.use_map_Kd = material.map_Kd >= 0 ? 1 : 0;
-                m.use_map_Ks = material.map_Ks >= 0 ? 1 : 0;
+                m.use_texture_Ka = material.map_Ka >= 0 ? 1 : 0;
+                m.use_texture_Kd = material.map_Kd >= 0 ? 1 : 0;
+                m.use_texture_Ks = material.map_Ks >= 0 ? 1 : 0;
                 m.use_material = 1;
 
                 if (material.map_Ka >= 0)
                 {
-                        m.map_Ka_handle = textures[material.map_Ka].texture().texture_resident_handle();
+                        m.texture_Ka = textures[material.map_Ka].texture().texture_resident_handle();
                 }
                 if (material.map_Kd >= 0)
                 {
-                        m.map_Kd_handle = textures[material.map_Kd].texture().texture_resident_handle();
+                        m.texture_Kd = textures[material.map_Kd].texture().texture_resident_handle();
                 }
                 if (material.map_Ks >= 0)
                 {
-                        m.map_Ks_handle = textures[material.map_Ks].texture().texture_resident_handle();
+                        m.texture_Ks = textures[material.map_Ks].texture().texture_resident_handle();
                 }
 
                 materials.push_back(m);

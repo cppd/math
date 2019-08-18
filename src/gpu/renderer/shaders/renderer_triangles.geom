@@ -28,7 +28,7 @@ lighting;
 
 //
 
-in VS
+layout(location = 0) in VS
 {
         vec3 normal;
         vec4 shadow_position;
@@ -37,7 +37,7 @@ in VS
 }
 vs[3];
 
-out GS
+layout(location = 0) out GS
 {
         vec3 normal;
         vec4 shadow_position;
