@@ -107,21 +107,26 @@ struct Material final
         }
 };
 
-void load_face_vertices(const Obj<3>& obj, std::vector<FaceVertex>* vertices)
+std::unique_ptr<opengl::ArrayBuffer> load_face_vertices(const Obj<3>& obj, const std::vector<int>& sorted_face_indices)
 {
+        ASSERT(sorted_face_indices.size() == obj.facets().size());
+
+        const std::vector<Obj<3>::Facet>& obj_faces = obj.facets();
         const std::vector<vec3f>& obj_vertices = obj.vertices();
         const std::vector<vec3f>& obj_normals = obj.normals();
         const std::vector<vec2f>& obj_texcoords = obj.texcoords();
 
-        vertices->clear();
-        vertices->shrink_to_fit();
-        vertices->reserve(obj.facets().size() * 3);
+        std::vector<FaceVertex> vertices;
+        vertices.reserve(3 * obj.facets().size());
 
-        vec3f v0, v1, v2, n0, n1, n2;
+        vec3f v0, v1, v2;
+        vec3f n0, n1, n2;
         vec2f t0, t1, t2;
 
-        for (const Obj<3>::Facet& f : obj.facets())
+        for (int face_index : sorted_face_indices)
         {
+                const Obj<3>::Facet& f = obj_faces[face_index];
+
                 v0 = obj_vertices[f.vertices[0]];
                 v1 = obj_vertices[f.vertices[1]];
                 v2 = obj_vertices[f.vertices[2]];
@@ -155,10 +160,12 @@ void load_face_vertices(const Obj<3>& obj, std::vector<FaceVertex>* vertices)
                         t0 = t1 = t2 = NO_TEXTURE_COORDINATES;
                 }
 
-                vertices->emplace_back(v0, n0, t0, f.material);
-                vertices->emplace_back(v1, n1, t1, f.material);
-                vertices->emplace_back(v2, n2, t2, f.material);
+                vertices.emplace_back(v0, n0, t0, f.material);
+                vertices.emplace_back(v1, n1, t1, f.material);
+                vertices.emplace_back(v2, n2, t2, f.material);
         }
+
+        return std::make_unique<opengl::ArrayBuffer>(vertices);
 }
 
 void load_point_vertices(const Obj<3>& obj, std::vector<PointVertex>* vertices)
@@ -224,16 +231,19 @@ void DrawObject::load_triangles(const Obj<3>& obj)
 {
         ASSERT(m_draw_type == DrawType::Triangles);
 
-        std::vector<FaceVertex> vertices;
-        load_face_vertices(obj, &vertices);
-        m_vertices_count = vertices.size();
+        std::vector<int> sorted_face_indices;
+        std::vector<int> material_face_offset;
+        std::vector<int> material_face_count;
+        sort_facets_by_material(obj, sorted_face_indices, material_face_offset, material_face_count);
 
-        m_vertex_buffer = std::make_unique<opengl::ArrayBuffer>(vertices);
+        m_vertex_buffer = load_face_vertices(obj, sorted_face_indices);
 
         m_vertex_array.attrib(0, 3, GL_FLOAT, *m_vertex_buffer, offsetof(FaceVertex, v), sizeof(FaceVertex));
         m_vertex_array.attrib(1, 3, GL_FLOAT, *m_vertex_buffer, offsetof(FaceVertex, n), sizeof(FaceVertex));
         m_vertex_array.attrib(2, 2, GL_FLOAT, *m_vertex_buffer, offsetof(FaceVertex, t), sizeof(FaceVertex));
         m_vertex_array.attrib_i(3, 1, GL_INT, *m_vertex_buffer, offsetof(FaceVertex, index), sizeof(FaceVertex));
+
+        m_vertices_count = 3 * obj.facets().size();
 
         //
 
