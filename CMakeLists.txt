@@ -387,7 +387,6 @@ AddIncludeFiles(VULKAN_SHADERS
                                 "src/gpu/optical_flow/shaders"
                                 "src/gpu/pencil_sketch/shaders"
                                 "src/gpu/renderer/shaders"
-                                "src/gpu/renderer/shaders_vulkan"
                                 "src/gpu/text/shaders"
                         EXTENSIONS ${extensions_shaders})
 
@@ -400,7 +399,6 @@ AddIncludeFiles(OPENGL_SHADERS
                                 "src/gpu/optical_flow/shaders"
                                 "src/gpu/pencil_sketch/shaders"
                                 "src/gpu/renderer/shaders"
-                                "src/gpu/renderer/shaders_opengl"
                                 "src/gpu/text/shaders"
                         EXTENSIONS ${extensions_shaders})
 
