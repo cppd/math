@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "draw_object.h"
 #include "sampler.h"
 #include "shader_memory.h"
+#include "shader_source.h"
 #include "shader_vertex.h"
 
 #include "com/log.h"
@@ -51,31 +52,6 @@ constexpr std::initializer_list<vulkan::PhysicalDeviceFeatures> REQUIRED_DEVICE_
         vulkan::PhysicalDeviceFeatures::FragmentStoresAndAtomics
 };
 // clang-format on
-
-constexpr uint32_t triangles_vert[]{
-#include "renderer_triangles.vert.spr"
-};
-constexpr uint32_t triangles_geom[]{
-#include "renderer_triangles.geom.spr"
-};
-constexpr uint32_t triangles_frag[]{
-#include "renderer_triangles.frag.spr"
-};
-constexpr uint32_t shadow_vert[]{
-#include "renderer_shadow.vert.spr"
-};
-constexpr uint32_t shadow_frag[]{
-#include "renderer_shadow.frag.spr"
-};
-constexpr uint32_t points_0d_vert[]{
-#include "renderer_points_0d.vert.spr"
-};
-constexpr uint32_t points_1d_vert[]{
-#include "renderer_points_1d.vert.spr"
-};
-constexpr uint32_t points_frag[]{
-#include "renderer_points.frag.spr"
-};
 
 namespace gpu_vulkan
 {
@@ -613,14 +589,14 @@ public:
                   m_shadow_shader_memory(m_device, {m_graphics_queue.family_index()}),
                   m_points_shader_memory(m_device, {m_graphics_queue.family_index()}),
                   //
-                  m_triangles_vert(m_device, triangles_vert, "main"),
-                  m_triangles_geom(m_device, triangles_geom, "main"),
-                  m_triangles_frag(m_device, triangles_frag, "main"),
-                  m_shadow_vert(m_device, shadow_vert, "main"),
-                  m_shadow_frag(m_device, shadow_frag, "main"),
-                  m_points_0d_vert(m_device, points_0d_vert, "main"),
-                  m_points_1d_vert(m_device, points_1d_vert, "main"),
-                  m_points_frag(m_device, points_frag, "main"),
+                  m_triangles_vert(m_device, renderer_triangles_vert(), "main"),
+                  m_triangles_geom(m_device, renderer_triangles_geom(), "main"),
+                  m_triangles_frag(m_device, renderer_triangles_frag(), "main"),
+                  m_shadow_vert(m_device, renderer_shadow_vert(), "main"),
+                  m_shadow_frag(m_device, renderer_shadow_frag(), "main"),
+                  m_points_0d_vert(m_device, renderer_points_0d_vert(), "main"),
+                  m_points_1d_vert(m_device, renderer_points_1d_vert(), "main"),
+                  m_points_frag(m_device, renderer_points_frag(), "main"),
                   //
                   m_triangles_pipeline_layout(create_pipeline_layout(
                           m_device, {RendererTrianglesSharedMemory::set_number(), RendererTrianglesMaterialMemory::set_number()},

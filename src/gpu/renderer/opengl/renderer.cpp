@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "draw_object.h"
 #include "shader_memory.h"
+#include "shader_source.h"
 
 #include "com/log.h"
 #include "com/matrix_alg.h"
@@ -30,31 +31,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <cmath>
 #include <string>
-
-constexpr const char triangles_vert[]{
-#include "renderer_triangles.vert.str"
-};
-constexpr const char triangles_geom[]{
-#include "renderer_triangles.geom.str"
-};
-constexpr const char triangles_frag[]{
-#include "renderer_triangles.frag.str"
-};
-constexpr const char shadow_vert[]{
-#include "renderer_shadow.vert.str"
-};
-constexpr const char shadow_frag[]{
-#include "renderer_shadow.frag.str"
-};
-constexpr const char points_0d_vert[]{
-#include "renderer_points_0d.vert.str"
-};
-constexpr const char points_1d_vert[]{
-#include "renderer_points_1d.vert.str"
-};
-constexpr const char points_frag[]{
-#include "renderer_points.frag.str"
-};
 
 namespace gpu_opengl
 {
@@ -376,11 +352,14 @@ class Impl final : public Renderer
 public:
         Impl(unsigned sample_count)
                 : m_sample_count(sample_count),
-                  m_triangles_program(opengl::VertexShader(triangles_vert), opengl::GeometryShader(triangles_geom),
-                                      opengl::FragmentShader(triangles_frag)),
-                  m_shadow_program(opengl::VertexShader(shadow_vert), opengl::FragmentShader(shadow_frag)),
-                  m_points_0d_program(opengl::VertexShader(points_0d_vert), opengl::FragmentShader(points_frag)),
-                  m_points_1d_program(opengl::VertexShader(points_1d_vert), opengl::FragmentShader(points_frag))
+                  m_triangles_program(opengl::VertexShader(renderer_triangles_vert()),
+                                      opengl::GeometryShader(renderer_triangles_geom()),
+                                      opengl::FragmentShader(renderer_triangles_frag())),
+                  m_shadow_program(opengl::VertexShader(renderer_shadow_vert()), opengl::FragmentShader(renderer_shadow_frag())),
+                  m_points_0d_program(opengl::VertexShader(renderer_points_0d_vert()),
+                                      opengl::FragmentShader(renderer_points_frag())),
+                  m_points_1d_program(opengl::VertexShader(renderer_points_1d_vert()),
+                                      opengl::FragmentShader(renderer_points_frag()))
         {
                 glDisable(GL_CULL_FACE);
                 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
