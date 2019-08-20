@@ -45,16 +45,16 @@ Chapter 5. Tracking Objects in Videos.
 #include <array>
 
 constexpr const char sobel_shader[]{
-#include "of_sobel.comp.str"
+#include "optical_flow_sobel.comp.str"
 };
 constexpr const char flow_shader[]{
-#include "of_flow.comp.str"
+#include "optical_flow_flow.comp.str"
 };
 constexpr const char downsample_shader[]{
-#include "of_downsample.comp.str"
+#include "optical_flow_downsample.comp.str"
 };
 constexpr const char grayscale_shader[]{
-#include "of_grayscale.comp.str"
+#include "optical_flow_grayscale.comp.str"
 };
 
 // Размер по X и по Y группы потоков вычислительных шейдеров

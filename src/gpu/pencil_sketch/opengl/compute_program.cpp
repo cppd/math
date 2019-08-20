@@ -25,10 +25,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 constexpr int GROUP_SIZE = 16;
 
 constexpr const char compute_shader[]{
-#include "ps_compute.comp.str"
+#include "pencil_sketch_compute.comp.str"
 };
 constexpr const char luminance_shader[]{
-#include "ps_luminance.comp.str"
+#include "pencil_sketch_luminance.comp.str"
 };
 
 namespace gpu_opengl

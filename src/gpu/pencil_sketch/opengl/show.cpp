@@ -22,10 +22,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/opengl/shader.h"
 
 constexpr const char vertex_shader[]{
-#include "ps_show.vert.str"
+#include "pencil_sketch_show.vert.str"
 };
 constexpr const char fragment_shader[]{
-#include "ps_show.frag.str"
+#include "pencil_sketch_show.frag.str"
 };
 
 constexpr int VERTEX_COUNT = 4;

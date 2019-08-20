@@ -30,16 +30,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <vector>
 
 constexpr const char vertex_shader[]{
-#include "of_show.vert.str"
+#include "optical_flow_show.vert.str"
 };
 constexpr const char fragment_shader[]{
-#include "of_show.frag.str"
+#include "optical_flow_show.frag.str"
 };
 constexpr const char debug_vertex_shader[]{
-#include "of_show_debug.vert.str"
+#include "optical_flow_show_debug.vert.str"
 };
 constexpr const char debug_fragment_shader[]{
-#include "of_show_debug.frag.str"
+#include "optical_flow_show_debug.frag.str"
 };
 
 // Расстояние между точками потока на экране в миллиметрах

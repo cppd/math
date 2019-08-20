@@ -18,19 +18,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "shader_source.h"
 
 constexpr uint32_t prepare_comp[]{
-#include "ch_prepare.comp.spr"
+#include "convex_hull_prepare.comp.spr"
 };
 constexpr uint32_t merge_comp[]{
-#include "ch_merge.comp.spr"
+#include "convex_hull_merge.comp.spr"
 };
 constexpr uint32_t filter_comp[]{
-#include "ch_filter.comp.spr"
+#include "convex_hull_filter.comp.spr"
 };
 constexpr uint32_t show_vert[]{
-#include "ch_show.vert.spr"
+#include "convex_hull_show.vert.spr"
 };
 constexpr uint32_t show_frag[]{
-#include "ch_show.frag.spr"
+#include "convex_hull_show.frag.spr"
 };
 
 namespace gpu_vulkan

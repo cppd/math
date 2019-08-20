@@ -18,19 +18,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "shader_source.h"
 
 constexpr const char prepare_comp[]{
-#include "ch_prepare.comp.str"
+#include "convex_hull_prepare.comp.str"
 };
 constexpr const char merge_comp[]{
-#include "ch_merge.comp.str"
+#include "convex_hull_merge.comp.str"
 };
 constexpr const char filter_comp[]{
-#include "ch_filter.comp.str"
+#include "convex_hull_filter.comp.str"
 };
 constexpr const char show_vert[]{
-#include "ch_show.vert.str"
+#include "convex_hull_show.vert.str"
 };
 constexpr const char show_frag[]{
-#include "ch_show.frag.str"
+#include "convex_hull_show.frag.str"
 };
 
 namespace gpu_opengl
