@@ -18,19 +18,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "show.h"
 
 #include "compute.h"
+#include "shader_source.h"
 #include "show_memory.h"
 
 #include "com/math.h"
 #include "com/time.h"
 #include "gpu/convex_hull/com/com.h"
 #include "graphics/opengl/shader.h"
-
-constexpr const char vertex_shader[]{
-#include "ch_show.vert.str"
-};
-constexpr const char fragment_shader[]{
-#include "ch_show.frag.str"
-};
 
 namespace gpu_opengl
 {
@@ -62,7 +56,7 @@ class Impl final : public ConvexHullShow
 
 public:
         Impl(const opengl::TextureImage& objects, const mat4& matrix)
-                : m_draw_prog(opengl::VertexShader(vertex_shader), opengl::FragmentShader(fragment_shader)),
+                : m_draw_prog(opengl::VertexShader(convex_hull_show_vert()), opengl::FragmentShader(convex_hull_show_frag())),
                   m_points(convex_hull_points_buffer_size(objects.height())),
                   m_start_time(time_in_seconds())
         {

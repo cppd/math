@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "show.h"
 
 #include "compute.h"
+#include "shader_source.h"
 #include "show_memory.h"
 
 #include "com/container.h"
@@ -40,13 +41,6 @@ constexpr std::initializer_list<vulkan::PhysicalDeviceFeatures> REQUIRED_DEVICE_
         vulkan::PhysicalDeviceFeatures::VertexPipelineStoresAndAtomics
 };
 // clang-format on
-
-constexpr uint32_t vertex_shader[]{
-#include "ch_show.vert.spr"
-};
-constexpr uint32_t fragment_shader[]{
-#include "ch_show.frag.spr"
-};
 
 namespace gpu_vulkan
 {
@@ -169,8 +163,8 @@ public:
                   m_instance(instance),
                   m_signal_semaphore(instance.device()),
                   m_shader_memory(instance.device(), {m_family_index}),
-                  m_vertex_shader(m_instance.device(), vertex_shader, "main"),
-                  m_fragment_shader(m_instance.device(), fragment_shader, "main"),
+                  m_vertex_shader(m_instance.device(), convex_hull_show_vert(), "main"),
+                  m_fragment_shader(m_instance.device(), convex_hull_show_frag(), "main"),
                   m_pipeline_layout(vulkan::create_pipeline_layout(m_instance.device(), {m_shader_memory.set_number()},
                                                                    {m_shader_memory.descriptor_set_layout()})),
                   m_indirect_buffer(m_instance.device(), {m_family_index},

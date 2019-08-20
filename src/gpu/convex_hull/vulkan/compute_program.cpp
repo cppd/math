@@ -17,19 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "compute_program.h"
 
+#include "shader_source.h"
+
 #include "gpu/convex_hull/com/com.h"
 #include "graphics/vulkan/create.h"
 #include "graphics/vulkan/pipeline.h"
-
-constexpr uint32_t prepare_shader[]{
-#include "ch_prepare.comp.spr"
-};
-constexpr uint32_t merge_shader[]{
-#include "ch_merge.comp.spr"
-};
-constexpr uint32_t filter_shader[]{
-#include "ch_filter.comp.spr"
-};
 
 namespace gpu_vulkan
 {
@@ -51,7 +43,7 @@ int group_size_merge(int height, const VkPhysicalDeviceLimits& limits)
 ConvexHullProgramPrepare::ConvexHullProgramPrepare(const vulkan::VulkanInstance& instance)
         : m_instance(instance),
           m_memory(instance.device()),
-          m_shader(instance.device(), prepare_shader, "main"),
+          m_shader(instance.device(), convex_hull_prepare_comp(), "main"),
           m_pipeline_layout(
                   vulkan::create_pipeline_layout(instance.device(), {m_memory.set_number()}, {m_memory.descriptor_set_layout()}))
 {
@@ -96,7 +88,7 @@ void ConvexHullProgramPrepare::commands(VkCommandBuffer command_buffer) const
 ConvexHullProgramMerge::ConvexHullProgramMerge(const vulkan::VulkanInstance& instance)
         : m_instance(instance),
           m_memory(instance.device()),
-          m_shader(instance.device(), merge_shader, "main"),
+          m_shader(instance.device(), convex_hull_merge_comp(), "main"),
           m_pipeline_layout(
                   vulkan::create_pipeline_layout(instance.device(), {m_memory.set_number()}, {m_memory.descriptor_set_layout()}))
 {
@@ -136,7 +128,7 @@ void ConvexHullProgramMerge::commands(VkCommandBuffer command_buffer) const
 ConvexHullProgramFilter::ConvexHullProgramFilter(const vulkan::VulkanInstance& instance)
         : m_instance(instance),
           m_memory(instance.device()),
-          m_shader(instance.device(), filter_shader, "main"),
+          m_shader(instance.device(), convex_hull_filter_comp(), "main"),
           m_pipeline_layout(
                   vulkan::create_pipeline_layout(instance.device(), {m_memory.set_number()}, {m_memory.descriptor_set_layout()}))
 {

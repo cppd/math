@@ -17,21 +17,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "compute_program.h"
 
+#include "shader_source.h"
+
 #include "com/print.h"
 #include "gpu/convex_hull/com/com.h"
 #include "graphics/opengl/query.h"
 
 #include <string>
-
-constexpr const char prepare_shader[]{
-#include "ch_prepare.comp.str"
-};
-constexpr const char merge_shader[]{
-#include "ch_merge.comp.str"
-};
-constexpr const char filter_shader[]{
-#include "ch_filter.comp.str"
-};
 
 namespace gpu_opengl
 {
@@ -58,8 +50,8 @@ std::string prepare_source(int width, int height)
         s += "const uint GROUP_SIZE = " + to_string(buffer_and_group_size) + ";\n";
         s += "const uint LINE_SIZE = " + to_string(line_size) + ";\n";
         s += "const uint BUFFER_SIZE = " + to_string(buffer_and_group_size) + ";\n";
-        s += '\n';
-        return s + prepare_shader;
+
+        return convex_hull_prepare_comp(s);
 }
 
 std::string merge_source(unsigned height)
@@ -72,8 +64,8 @@ std::string merge_source(unsigned height)
         s += "const uint GROUP_SIZE = " + to_string(group_size) + ";\n";
         s += "const int LINE_SIZE = " + to_string(line_size) + ";\n";
         s += "const int ITERATION_COUNT = " + to_string(iteration_count) + ";\n";
-        s += '\n';
-        return s + merge_shader;
+
+        return convex_hull_merge_comp(s);
 }
 
 std::string filter_source(int height)
@@ -82,8 +74,8 @@ std::string filter_source(int height)
 
         std::string s;
         s += "const int LINE_SIZE = " + to_string(line_size) + ";\n";
-        s += '\n';
-        return s + filter_shader;
+
+        return convex_hull_filter_comp(s);
 }
 }
 
