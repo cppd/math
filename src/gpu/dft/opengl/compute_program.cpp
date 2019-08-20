@@ -17,31 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "compute_program.h"
 
+#include "shader_source.h"
+
 #include "com/bits.h"
 #include "com/groups.h"
 #include "com/print.h"
-
-constexpr const char fft_global_shader[]{
-#include "dft_fft_global.comp.str"
-};
-constexpr const char fft_shared_shader[]{
-#include "dft_fft_shared.comp.str"
-};
-constexpr const char bit_reverse_shader[]{
-#include "dft_bit_reverse.comp.str"
-};
-constexpr const char copy_input_shader[]{
-#include "dft_copy_input.comp.str"
-};
-constexpr const char copy_output_shader[]{
-#include "dft_copy_output.comp.str"
-};
-constexpr const char mul_shader[]{
-#include "dft_mul.comp.str"
-};
-constexpr const char mul_d_shader[]{
-#include "dft_mul_d.comp.str"
-};
 
 namespace gpu_opengl
 {
@@ -77,7 +57,7 @@ std::string bit_reverse_source(int group_size)
 {
         std::string s;
         s += group_size_string(group_size);
-        return s + bit_reverse_shader;
+        return dft_bit_reverse_comp(s);
 }
 
 template <typename T>
@@ -85,7 +65,7 @@ std::string fft_global_source(int group_size)
 {
         std::string s;
         s += group_size_string(group_size);
-        return s + fft_global_shader;
+        return dft_fft_global_comp(s);
 }
 
 template <typename T>
@@ -95,7 +75,7 @@ std::string rows_mul_to_buffer_source(vec2i group_size, int n1, int n2, int m1, 
         s += group_size_string(group_size);
         s += function_index_string(0);
         s += n_m_string(n1, n2, m1, m2);
-        return s + mul_shader;
+        return dft_mul_comp(s);
 }
 
 template <typename T>
@@ -105,7 +85,7 @@ std::string rows_mul_fr_buffer_source(vec2i group_size, int n1, int n2, int m1, 
         s += group_size_string(group_size);
         s += function_index_string(1);
         s += n_m_string(n1, n2, m1, m2);
-        return s + mul_shader;
+        return dft_mul_comp(s);
 }
 
 template <typename T>
@@ -115,7 +95,7 @@ std::string cols_mul_to_buffer_source(vec2i group_size, int n1, int n2, int m1, 
         s += group_size_string(group_size);
         s += function_index_string(2);
         s += n_m_string(n1, n2, m1, m2);
-        return s + mul_shader;
+        return dft_mul_comp(s);
 }
 
 template <typename T>
@@ -125,7 +105,7 @@ std::string cols_mul_fr_buffer_source(vec2i group_size, int n1, int n2, int m1, 
         s += group_size_string(group_size);
         s += function_index_string(3);
         s += n_m_string(n1, n2, m1, m2);
-        return s + mul_shader;
+        return dft_mul_comp(s);
 }
 
 template <typename T>
@@ -133,7 +113,7 @@ std::string rows_mul_d_source(vec2i group_size)
 {
         std::string s;
         s += group_size_string(group_size);
-        return s + mul_d_shader;
+        return dft_mul_d_comp(s);
 }
 
 template <typename T>
@@ -141,7 +121,7 @@ std::string copy_input_source(vec2i group_size)
 {
         std::string s;
         s += group_size_string(group_size);
-        return s + copy_input_shader;
+        return dft_copy_input_comp(s);
 }
 
 template <typename T>
@@ -149,7 +129,7 @@ std::string copy_output_source(vec2i group_size)
 {
         std::string s;
         s += group_size_string(group_size);
-        return s + copy_output_shader;
+        return dft_copy_output_comp(s);
 }
 
 template <typename T>
@@ -162,7 +142,7 @@ std::string fft_shared_source(int n, int n_bits, int shared_size, int group_size
         s += "const uint SHARED_SIZE = " + to_string(shared_size) + ";\n";
         s += "const uint GROUP_SIZE = " + to_string(group_size) + ";\n";
         s += "const bool REVERSE_INPUT = " + (reverse_input ? std::string("true") : std::string("false")) + ";\n";
-        return s + fft_shared_shader;
+        return dft_fft_shared_comp(s);
 }
 }
 

@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "show.h"
 
 #include "compute.h"
+#include "shader_source.h"
 
 #include "com/math.h"
 #include "graphics/opengl/buffers.h"
@@ -25,13 +26,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <array>
 #include <vector>
-
-constexpr const char vertex_shader[]{
-#include "dft_show.vert.str"
-};
-constexpr const char fragment_shader[]{
-#include "dft_show.frag.str"
-};
 
 namespace gpu_opengl
 {
@@ -141,7 +135,7 @@ public:
                   m_image_texture(width, height),
                   m_dft(gpu_opengl::create_dft_compute_texture(width, height, m_image_texture)),
                   m_vertex_buffer(sizeof(Vertex) * VERTEX_COUNT),
-                  m_draw_prog(opengl::VertexShader(vertex_shader), opengl::FragmentShader(fragment_shader))
+                  m_draw_prog(opengl::VertexShader(dft_show_vert()), opengl::FragmentShader(dft_show_frag()))
         {
                 m_vertex_array.attrib(0, 4, GL_FLOAT, m_vertex_buffer, offsetof(Vertex, v), sizeof(Vertex));
                 m_vertex_array.attrib(1, 2, GL_FLOAT, m_vertex_buffer, offsetof(Vertex, t), sizeof(Vertex));
