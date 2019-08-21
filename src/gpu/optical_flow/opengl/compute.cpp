@@ -34,6 +34,7 @@ Chapter 5. Tracking Objects in Videos.
 #include "compute.h"
 
 #include "compute_memory.h"
+#include "shader_source.h"
 
 #include "com/error.h"
 #include "com/groups.h"
@@ -43,19 +44,6 @@ Chapter 5. Tracking Objects in Videos.
 #include "graphics/opengl/shader.h"
 
 #include <array>
-
-constexpr const char sobel_shader[]{
-#include "optical_flow_sobel.comp.str"
-};
-constexpr const char flow_shader[]{
-#include "optical_flow_flow.comp.str"
-};
-constexpr const char downsample_shader[]{
-#include "optical_flow_downsample.comp.str"
-};
-constexpr const char grayscale_shader[]{
-#include "optical_flow_grayscale.comp.str"
-};
 
 // Размер по X и по Y группы потоков вычислительных шейдеров
 constexpr int GROUP_SIZE = 16;
@@ -80,21 +68,21 @@ std::string grayscale_source()
 {
         std::string s;
         s += "const uint GROUP_SIZE = " + to_string(GROUP_SIZE) + ";\n";
-        return s + grayscale_shader;
+        return optical_flow_grayscale_comp(s);
 }
 
 std::string downsample_source()
 {
         std::string s;
         s += "const uint GROUP_SIZE = " + to_string(GROUP_SIZE) + ";\n";
-        return s + downsample_shader;
+        return optical_flow_downsample_comp(s);
 }
 
 std::string sobel_source()
 {
         std::string s;
         s += "const uint GROUP_SIZE = " + to_string(GROUP_SIZE) + ";\n";
-        return s + sobel_shader;
+        return optical_flow_sobel_comp(s);
 }
 
 std::string flow_source()
@@ -105,7 +93,7 @@ std::string flow_source()
         s += "const int ITERATION_COUNT = " + to_string(ITERATION_COUNT) + ";\n";
         s += "const float STOP_MOVE_SQUARE = " + to_string(STOP_MOVE_SQUARE) + ";\n";
         s += "const float MIN_DETERMINANT = " + to_string(MIN_DETERMINANT) + ";\n";
-        return s + flow_shader;
+        return optical_flow_flow_comp(s);
 }
 
 std::vector<vec2i> pyramid_sizes(int width, int height, int min_size)

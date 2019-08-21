@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "show.h"
 
 #include "compute.h"
+#include "shader_source.h"
 
 #include "com/conversion.h"
 #include "com/error.h"
@@ -28,19 +29,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/opengl/shader.h"
 
 #include <vector>
-
-constexpr const char vertex_shader[]{
-#include "optical_flow_show.vert.str"
-};
-constexpr const char fragment_shader[]{
-#include "optical_flow_show.frag.str"
-};
-constexpr const char debug_vertex_shader[]{
-#include "optical_flow_show_debug.vert.str"
-};
-constexpr const char debug_fragment_shader[]{
-#include "optical_flow_show_debug.frag.str"
-};
 
 // Расстояние между точками потока на экране в миллиметрах
 constexpr double DISTANCE_BETWEEN_POINTS = 2;
@@ -194,8 +182,9 @@ public:
         Impl(int width, int height, double window_ppi, const mat4& matrix)
                 : m_width(width),
                   m_height(height),
-                  m_draw_prog(opengl::VertexShader(vertex_shader), opengl::FragmentShader(fragment_shader)),
-                  m_draw_prog_debug(opengl::VertexShader(debug_vertex_shader), opengl::FragmentShader(debug_fragment_shader)),
+                  m_draw_prog(opengl::VertexShader(optical_flow_show_vert()), opengl::FragmentShader(optical_flow_show_frag())),
+                  m_draw_prog_debug(opengl::VertexShader(optical_flow_show_debug_vert()),
+                                    opengl::FragmentShader(optical_flow_show_debug_frag())),
                   m_source_image(m_width, m_height)
         {
                 std::vector<vec2i> points;
