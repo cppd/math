@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "memory.h"
 #include "sampler.h"
+#include "shader_source.h"
 #include "vertex.h"
 
 #include "com/container.h"
@@ -40,13 +41,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <vector>
 
 constexpr int VERTEX_BUFFER_FIRST_SIZE = 10;
-
-constexpr uint32_t vertex_shader[]{
-#include "text.vert.spr"
-};
-constexpr uint32_t fragment_shader[]{
-#include "text.frag.spr"
-};
 
 namespace gpu_vulkan
 {
@@ -231,8 +225,8 @@ class Impl final : public TextShow
                                   glyphs.width(), glyphs.height(), std::move(glyphs.pixels())),
                   m_glyphs(std::move(glyphs.glyphs())),
                   m_shader_memory(m_device, std::unordered_set({graphics_queue.family_index()}), m_sampler, &m_glyph_texture),
-                  m_text_vert(m_device, vertex_shader, "main"),
-                  m_text_frag(m_device, fragment_shader, "main"),
+                  m_text_vert(m_device, text_vert(), "main"),
+                  m_text_frag(m_device, text_frag(), "main"),
                   m_pipeline_layout(vulkan::create_pipeline_layout(m_device, {m_shader_memory.set_number()},
                                                                    {m_shader_memory.descriptor_set_layout()})),
                   m_vertex_buffer(std::in_place, m_device, std::unordered_set({graphics_queue.family_index()}),

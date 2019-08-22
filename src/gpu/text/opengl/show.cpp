@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "show.h"
 
 #include "memory.h"
+#include "shader_source.h"
 
 #include "com/container.h"
 #include "com/error.h"
@@ -34,13 +35,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <thread>
 #include <unordered_map>
 #include <vector>
-
-constexpr const char vertex_shader[]{
-#include "text.vert.str"
-};
-constexpr const char fragment_shader[]{
-#include "text.frag.str"
-};
 
 static_assert(sizeof(TextVertex) == sizeof(Vector<2, GLint>) + sizeof(Vector<2, GLfloat>));
 static_assert(std::is_same_v<decltype(TextVertex::v), Vector<2, GLint>>);
@@ -99,7 +93,7 @@ class Impl final : public Text
 
 public:
         Impl(int size, const Color& color, const mat4& matrix)
-                : m_program(opengl::VertexShader(vertex_shader), opengl::FragmentShader(fragment_shader))
+                : m_program(opengl::VertexShader(text_vert()), opengl::FragmentShader(text_frag()))
         {
                 set_color(color);
                 set_matrix(matrix);
