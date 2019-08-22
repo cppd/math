@@ -17,19 +17,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "compute_program.h"
 
+#include "shader_source.h"
+
 #include "com/groups.h"
 #include "com/print.h"
 
 #include <string>
 
 constexpr int GROUP_SIZE = 16;
-
-constexpr const char compute_shader[]{
-#include "pencil_sketch_compute.comp.str"
-};
-constexpr const char luminance_shader[]{
-#include "pencil_sketch_luminance.comp.str"
-};
 
 namespace gpu_opengl
 {
@@ -40,14 +35,14 @@ std::string compute_source(bool input_is_srgb, int group_size)
         std::string s;
         s += "const uint GROUP_SIZE = " + to_string(group_size) + ";\n";
         s += "const bool SOURCE_SRGB = " + std::string(input_is_srgb ? "true" : "false") + ";\n";
-        return s + compute_shader;
+        return pencil_sketch_compute_comp(s);
 }
 
 std::string luminance_source(int group_size)
 {
         std::string s;
         s += "const uint GROUP_SIZE = " + to_string(group_size) + ";\n";
-        return s + luminance_shader;
+        return pencil_sketch_luminance_comp(s);
 }
 }
 

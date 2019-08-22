@@ -18,15 +18,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "show.h"
 
 #include "compute.h"
+#include "shader_source.h"
 
 #include "graphics/opengl/shader.h"
-
-constexpr const char vertex_shader[]{
-#include "pencil_sketch_show.vert.str"
-};
-constexpr const char fragment_shader[]{
-#include "pencil_sketch_show.frag.str"
-};
 
 constexpr int VERTEX_COUNT = 4;
 
@@ -64,7 +58,7 @@ class Impl final : public PencilSketchShow
 
 public:
         Impl(const opengl::TextureRGBA32F& source, bool source_is_srgb, const opengl::TextureImage& objects, const mat4& matrix)
-                : m_draw_prog(opengl::VertexShader(vertex_shader), opengl::FragmentShader(fragment_shader)),
+                : m_draw_prog(opengl::VertexShader(pencil_sketch_show_vert()), opengl::FragmentShader(pencil_sketch_show_frag())),
                   m_texture(source.texture().width(), source.texture().height()),
                   m_vertex_buffer(sizeof(Vertex) * VERTEX_COUNT),
                   m_pencil_sketch(gpu_opengl::create_pencil_sketch_compute(source, source_is_srgb, objects, m_texture))
