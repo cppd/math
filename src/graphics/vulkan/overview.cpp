@@ -46,7 +46,7 @@ namespace vulkan
 {
 std::string overview()
 {
-        constexpr const char INDENT[] = "  ";
+        constexpr const char* INDENT = "  ";
 
         std::string s;
 
