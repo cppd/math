@@ -235,10 +235,6 @@ class Impl final : public Renderer
 
                 set_matrices();
         }
-        void set_size(int /*width*/, int /*height*/) override
-        {
-                ASSERT(m_thread_id == std::this_thread::get_id());
-        }
 
         void object_add(const Obj<3>* obj, double size, const vec3& position, int id, int scale_id) override
         {

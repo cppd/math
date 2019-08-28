@@ -53,7 +53,6 @@ struct Renderer
         virtual void set_show_materials(bool show) = 0;
         virtual void set_shadow_zoom(double zoom) = 0;
         virtual void set_camera(const RasterizationCameraInfo& c) = 0;
-        virtual void set_size(int width, int height) = 0;
 
         virtual void object_add(const Obj<3>* obj, double size, const vec3& position, int id, int scale_id) = 0;
         virtual void object_delete(int id) = 0;

@@ -42,9 +42,10 @@ public:
 
 class Show
 {
-public:
+protected:
         virtual ~Show() = default;
 
+public:
         virtual void add_object(const std::shared_ptr<const Obj<3>>&, int id, int scale_id) = 0;
         virtual void delete_object(int id) = 0;
         virtual void delete_all_objects() = 0;
@@ -111,4 +112,10 @@ struct ShowCreateInfo
         std::optional<double> shadow_zoom;
 };
 
-std::unique_ptr<Show> create_show(GraphicsAndComputeAPI api, const ShowCreateInfo& info);
+struct ShowObject
+{
+        virtual ~ShowObject() = default;
+        virtual Show& show() = 0;
+};
+
+std::unique_ptr<ShowObject> create_show_object(GraphicsAndComputeAPI api, const ShowCreateInfo& info);

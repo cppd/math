@@ -84,34 +84,10 @@ constexpr VkFormat OBJECT_IMAGE_FORMAT = VK_FORMAT_R32_UINT;
 
 namespace
 {
-#if 0
-int object_under_mouse(int mouse_x, int mouse_y, int window_height, const TextureR32I& tex)
+void sleep(std::chrono::steady_clock::time_point& last_time, const std::chrono::milliseconds& milliseconds)
 {
-        int x = mouse_x;
-        int y = window_height - mouse_y - 1;
-        std::array<GLint, 1> v;
-        tex.get_texture_sub_image(x, y, 1, 1, &v);
-        return v[0];
-}
-#endif
-
-void sleep(std::chrono::steady_clock::time_point& last_frame_time)
-{
-        std::this_thread::sleep_until(last_frame_time + IDLE_MODE_FRAME_DURATION);
-        last_frame_time = std::chrono::steady_clock::now();
-}
-
-void make_fullscreen(bool fullscreen, WindowID window, WindowID parent)
-{
-        if (fullscreen)
-        {
-                make_window_fullscreen(window);
-        }
-        else
-        {
-                move_window_to_parent(window, parent);
-        }
-        set_focus(window);
+        std::this_thread::sleep_until(last_time + milliseconds);
+        last_time = std::chrono::steady_clock::now();
 }
 
 // Объекты для std::unique_ptr создаются и удаляются в отдельном потоке. Поток этого
@@ -138,7 +114,7 @@ public:
 };
 
 template <GraphicsAndComputeAPI API>
-class ShowObject final : public EventQueue, public WindowEvent
+class Impl final : public ShowObject, public Show, public WindowEvent
 {
         static_assert(API == GraphicsAndComputeAPI::Vulkan || API == GraphicsAndComputeAPI::OpenGL);
         using Renderer = std::conditional_t<API == GraphicsAndComputeAPI::Vulkan, gpu_vulkan::Renderer, gpu_opengl::Renderer>;
@@ -150,6 +126,8 @@ class ShowObject final : public EventQueue, public WindowEvent
         static constexpr vec3 OBJECT_POSITION = vec3(0);
 
         //
+
+        EventQueue m_event_queue;
 
         ShowCallback* const m_callback;
         const WindowID m_parent_window;
@@ -202,7 +180,7 @@ class ShowObject final : public EventQueue, public WindowEvent
 
         //
 
-        void direct_add_object(const std::shared_ptr<const Obj<3>>& obj_ptr, int id, int scale_id) override
+        void add_object(const std::shared_ptr<const Obj<3>>& obj_ptr, int id, int scale_id) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
@@ -214,21 +192,21 @@ class ShowObject final : public EventQueue, public WindowEvent
                 m_callback->object_loaded(id);
         }
 
-        void direct_delete_object(int id) override
+        void delete_object(int id) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
                 m_renderer->object_delete(id);
         }
 
-        void direct_show_object(int id) override
+        void show_object(int id) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
                 m_renderer->object_show(id);
         }
 
-        void direct_delete_all_objects() override
+        void delete_all_objects() override
         {
                 ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
@@ -237,14 +215,14 @@ class ShowObject final : public EventQueue, public WindowEvent
                 reset_view_handler();
         }
 
-        void direct_reset_view() override
+        void reset_view() override
         {
                 ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
                 reset_view_handler();
         }
 
-        void direct_set_ambient(double v) override
+        void set_ambient(double v) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
@@ -252,7 +230,7 @@ class ShowObject final : public EventQueue, public WindowEvent
                 m_renderer->set_light_a(light);
         }
 
-        void direct_set_diffuse(double v) override
+        void set_diffuse(double v) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
@@ -260,7 +238,7 @@ class ShowObject final : public EventQueue, public WindowEvent
                 m_renderer->set_light_d(light);
         }
 
-        void direct_set_specular(double v) override
+        void set_specular(double v) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
@@ -268,7 +246,7 @@ class ShowObject final : public EventQueue, public WindowEvent
                 m_renderer->set_light_s(light);
         }
 
-        void direct_set_background_color(const Color& c) override
+        void set_background_color(const Color& c) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
@@ -278,77 +256,77 @@ class ShowObject final : public EventQueue, public WindowEvent
                 m_canvas->set_text_color(background_is_dark ? Color(1) : Color(0));
         }
 
-        void direct_set_default_color(const Color& c) override
+        void set_default_color(const Color& c) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
                 m_renderer->set_default_color(c);
         }
 
-        void direct_set_wireframe_color(const Color& c) override
+        void set_wireframe_color(const Color& c) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
                 m_renderer->set_wireframe_color(c);
         }
 
-        void direct_set_default_ns(double ns) override
+        void set_default_ns(double ns) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
                 m_renderer->set_default_ns(ns);
         }
 
-        void direct_show_smooth(bool v) override
+        void show_smooth(bool v) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
                 m_renderer->set_show_smooth(v);
         }
 
-        void direct_show_wireframe(bool v) override
+        void show_wireframe(bool v) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
                 m_renderer->set_show_wireframe(v);
         }
 
-        void direct_show_shadow(bool v) override
+        void show_shadow(bool v) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
                 m_renderer->set_show_shadow(v);
         }
 
-        void direct_show_fog(bool v) override
+        void show_fog(bool v) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
                 m_renderer->set_show_fog(v);
         }
 
-        void direct_show_materials(bool v) override
+        void show_materials(bool v) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
                 m_renderer->set_show_materials(v);
         }
 
-        void direct_show_fps(bool v) override
+        void show_fps(bool v) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
                 m_canvas->set_text_active(v);
         }
 
-        void direct_show_pencil_sketch(bool v) override
+        void show_pencil_sketch(bool v) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
                 m_canvas->set_pencil_sketch_active(v);
         }
 
-        void direct_show_dft(bool v) override
+        void show_dft(bool v) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
@@ -359,42 +337,42 @@ class ShowObject final : public EventQueue, public WindowEvent
                 }
         }
 
-        void direct_set_dft_brightness(double v) override
+        void set_dft_brightness(double v) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
                 m_canvas->set_dft_brightness(v);
         }
 
-        void direct_set_dft_background_color(const Color& c) override
+        void set_dft_background_color(const Color& c) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
                 m_canvas->set_dft_background_color(c);
         }
 
-        void direct_set_dft_color(const Color& c) override
+        void set_dft_color(const Color& c) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
                 m_canvas->set_dft_color(c);
         }
 
-        void direct_show_convex_hull_2d(bool v) override
+        void show_convex_hull_2d(bool v) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
                 m_canvas->set_convex_hull_active(v);
         }
 
-        void direct_show_optical_flow(bool v) override
+        void show_optical_flow(bool v) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
                 m_canvas->set_optical_flow_active(v);
         }
 
-        void direct_parent_resized() override
+        void parent_resized() override
         {
                 ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
@@ -404,7 +382,7 @@ class ShowObject final : public EventQueue, public WindowEvent
                 }
         }
 
-        void direct_mouse_wheel(double delta) override
+        void mouse_wheel(double delta) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
@@ -415,15 +393,24 @@ class ShowObject final : public EventQueue, public WindowEvent
                 }
         }
 
-        void direct_toggle_fullscreen() override
+        void toggle_fullscreen() override
         {
                 ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
-                m_fullscreen_active = !m_fullscreen_active;
-                make_fullscreen(m_fullscreen_active, m_window->system_handle(), m_parent_window);
+                if (!m_fullscreen_active)
+                {
+                        make_window_fullscreen(m_window->system_handle());
+                        m_fullscreen_active = true;
+                }
+                else
+                {
+                        move_window_to_parent(m_window->system_handle(), m_parent_window);
+                        m_fullscreen_active = false;
+                }
+                set_focus(m_window->system_handle());
         }
 
-        void direct_set_vertical_sync(bool v) override
+        void set_vertical_sync(bool v) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
@@ -432,14 +419,12 @@ class ShowObject final : public EventQueue, public WindowEvent
                 m_function_set_vertical_sync(v);
         }
 
-        void direct_set_shadow_zoom(double v) override
+        void set_shadow_zoom(double v) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
                 m_renderer->set_shadow_zoom(v);
         }
-
-        //
 
         RayCameraInfo camera_information() const override
         {
@@ -520,7 +505,7 @@ class ShowObject final : public EventQueue, public WindowEvent
                 ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
                 // Для режима встроенного окна обработка колеса мыши происходит
-                // в функции direct_mouse_wheel, так как на Винде не приходит
+                // в функции mouse_wheel, так как на Винде не приходит
                 // это сообщение для дочернего окна.
                 if (m_fullscreen_active)
                 {
@@ -545,61 +530,205 @@ class ShowObject final : public EventQueue, public WindowEvent
 
         //
 
-        void mouse_wheel_handler(int delta);
-        void mouse_move_handler();
-        void reset_view_handler();
-        void window_resize_handler();
+        Show& show() override
+        {
+                ASSERT(std::this_thread::get_id() != m_thread.get_id());
+
+                return m_event_queue;
+        }
 
         //
 
-        void pull_and_dispatch_all_events();
-        void init_window_and_view();
+        void mouse_wheel_handler(int delta)
+        {
+                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+
+                m_camera.scale(m_mouse_x, m_mouse_y, delta);
+
+                m_renderer->set_camera(m_camera.rasterization_info());
+        }
+
+        void mouse_move_handler()
+        {
+                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+
+                if (!m_mouse_pressed)
+                {
+                        return;
+                }
+
+                int delta_x = m_mouse_x - m_mouse_pressed_x;
+                int delta_y = m_mouse_y - m_mouse_pressed_y;
+
+                if (delta_x == 0 && delta_y == 0)
+                {
+                        return;
+                }
+
+                m_mouse_pressed_x = m_mouse_x;
+                m_mouse_pressed_y = m_mouse_y;
+
+                switch (m_mouse_pressed_button)
+                {
+                case MouseButton::Right:
+                        m_camera.rotate(-delta_x, -delta_y);
+                        break;
+                case MouseButton::Left:
+                        m_camera.move(vec2(-delta_x, delta_y));
+                        break;
+                }
+
+                m_renderer->set_camera(m_camera.rasterization_info());
+        }
+
+        void reset_view_handler()
+        {
+                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+
+                m_camera.reset(vec3(1, 0, 0), vec3(0, 1, 0), 1, vec2(0, 0));
+
+                m_renderer->set_camera(m_camera.rasterization_info());
+        }
+
+        void window_resize_handler()
+        {
+                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+
+                if (m_window_width <= 0 || m_window_height <= 0)
+                {
+                        // Вызов не из обработчика измерения окна (там есть проверка),
+                        // а вызов из обработчика включения-выключения ДПФ в то время,
+                        // когда окно ещё не готово.
+                        return;
+                }
+
+                m_draw_width = m_canvas->dft_active() ? m_window_width / 2 : m_window_width;
+                m_draw_height = m_window_height;
+
+                resize();
+
+                m_camera.resize(m_draw_width, m_draw_height);
+                m_renderer->set_camera(m_camera.rasterization_info());
+        }
 
         //
 
+        void pull_and_dispatch_all_events()
+        {
+                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+
+                // Вначале команды, потом сообщения окна, потому что в командах
+                // могут быть действия с окном, а в событиях окна нет комманд
+                m_event_queue.pull_and_dispatch_events();
+                m_window->pull_and_dispath_events();
+        }
+
+        void init_window_and_view()
+        {
+                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+
+                move_window_to_parent(m_window->system_handle(), m_parent_window);
+
+                for (int i = 1; m_window_width != m_window->width() && m_window_height != m_window->height(); ++i)
+                {
+                        if (i > 10)
+                        {
+                                error("Failed to receive the resize window event for the window size (" +
+                                      to_string(m_window->width()) + ", " + to_string(m_window->height()) + ")");
+                        }
+                        pull_and_dispatch_all_events();
+                }
+
+                if (m_draw_width <= 0 || m_draw_height <= 0)
+                {
+                        error("Draw size error (" + to_string(m_draw_width) + ", " + to_string(m_draw_height) + ")");
+                }
+
+                reset_view_handler();
+        }
+
+        void loop_thread()
+        {
+                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+
+                try
+                {
+                        try
+                        {
+                                loop();
+
+                                if (!m_stop)
+                                {
+                                        m_callback->message_error_fatal("Thread ended.");
+                                }
+                        }
+                        catch (ErrorSourceException& e)
+                        {
+                                m_callback->message_error_source(e.msg(), e.src());
+                        }
+                        catch (std::exception& e)
+                        {
+                                m_callback->message_error_fatal(e.what());
+                        }
+                        catch (...)
+                        {
+                                m_callback->message_error_fatal("Unknown Error. Thread ended.");
+                        }
+                }
+                catch (...)
+                {
+                        error_fatal("Exception in the show thread exception handlers");
+                }
+        }
+
+        //
+
+        void resize();
         void loop();
-        void loop_thread();
 
 public:
-        ShowObject(const ShowCreateInfo& info)
-        try : m_callback(info.callback.value()),
+        Impl(const ShowCreateInfo& info)
+        try : m_event_queue(*this),
+              m_callback(info.callback.value()),
               m_parent_window(info.parent_window.value()),
               m_parent_window_ppi(info.parent_window_ppi.value())
         {
                 ASSERT(m_callback);
                 ASSERT(m_parent_window_ppi > 0);
 
-                set_ambient(info.ambient.value());
-                set_diffuse(info.diffuse.value());
-                set_specular(info.specular.value());
-                set_background_color(info.background_color.value());
-                set_default_color(info.default_color.value());
-                set_wireframe_color(info.wireframe_color.value());
-                set_default_ns(info.default_ns.value());
-                show_smooth(info.with_smooth.value());
-                show_wireframe(info.with_wireframe.value());
-                show_shadow(info.with_shadow.value());
-                show_fog(info.with_fog.value());
-                show_fps(info.with_fps.value());
-                show_pencil_sketch(info.with_pencil_sketch.value());
-                show_dft(info.with_dft.value());
-                set_dft_brightness(info.dft_brightness.value());
-                set_dft_background_color(info.dft_background_color.value());
-                set_dft_color(info.dft_color.value());
-                show_materials(info.with_materials.value());
-                show_convex_hull_2d(info.with_convex_hull.value());
-                show_optical_flow(info.with_optical_flow.value());
-                set_vertical_sync(info.vertical_sync.value());
-                set_shadow_zoom(info.shadow_zoom.value());
+                Show& queue = m_event_queue;
 
-                m_thread = std::thread(&ShowObject::loop_thread, this);
+                queue.set_ambient(info.ambient.value());
+                queue.set_diffuse(info.diffuse.value());
+                queue.set_specular(info.specular.value());
+                queue.set_background_color(info.background_color.value());
+                queue.set_default_color(info.default_color.value());
+                queue.set_wireframe_color(info.wireframe_color.value());
+                queue.set_default_ns(info.default_ns.value());
+                queue.show_smooth(info.with_smooth.value());
+                queue.show_wireframe(info.with_wireframe.value());
+                queue.show_shadow(info.with_shadow.value());
+                queue.show_fog(info.with_fog.value());
+                queue.show_fps(info.with_fps.value());
+                queue.show_pencil_sketch(info.with_pencil_sketch.value());
+                queue.show_dft(info.with_dft.value());
+                queue.set_dft_brightness(info.dft_brightness.value());
+                queue.set_dft_background_color(info.dft_background_color.value());
+                queue.set_dft_color(info.dft_color.value());
+                queue.show_materials(info.with_materials.value());
+                queue.show_convex_hull_2d(info.with_convex_hull.value());
+                queue.show_optical_flow(info.with_optical_flow.value());
+                queue.set_vertical_sync(info.vertical_sync.value());
+                queue.set_shadow_zoom(info.shadow_zoom.value());
+
+                m_thread = std::thread(&Impl::loop_thread, this);
         }
         catch (std::bad_optional_access&)
         {
                 error("Show create information is not complete");
         }
 
-        ~ShowObject() override
+        ~Impl() override
         {
                 if (m_thread.joinable())
                 {
@@ -608,121 +737,11 @@ public:
                 }
         }
 
-        ShowObject(const ShowObject&) = delete;
-        ShowObject(ShowObject&&) = delete;
-        ShowObject& operator=(const ShowObject&) = delete;
-        ShowObject& operator=(ShowObject&&) = delete;
+        Impl(const Impl&) = delete;
+        Impl(Impl&&) = delete;
+        Impl& operator=(const Impl&) = delete;
+        Impl& operator=(Impl&&) = delete;
 };
-
-template <GraphicsAndComputeAPI API>
-void ShowObject<API>::mouse_wheel_handler(int delta)
-{
-        m_camera.scale(m_mouse_x, m_mouse_y, delta);
-
-        m_renderer->set_camera(m_camera.rasterization_info());
-}
-
-template <GraphicsAndComputeAPI API>
-void ShowObject<API>::mouse_move_handler()
-{
-        if (!m_mouse_pressed)
-        {
-                return;
-        }
-
-        int delta_x = m_mouse_x - m_mouse_pressed_x;
-        int delta_y = m_mouse_y - m_mouse_pressed_y;
-
-        if (delta_x == 0 && delta_y == 0)
-        {
-                return;
-        }
-
-        m_mouse_pressed_x = m_mouse_x;
-        m_mouse_pressed_y = m_mouse_y;
-
-        switch (m_mouse_pressed_button)
-        {
-        case MouseButton::Right:
-                m_camera.rotate(-delta_x, -delta_y);
-                break;
-        case MouseButton::Left:
-                m_camera.move(vec2(-delta_x, delta_y));
-                break;
-        }
-
-        m_renderer->set_camera(m_camera.rasterization_info());
-}
-
-template <GraphicsAndComputeAPI API>
-void ShowObject<API>::reset_view_handler()
-{
-        m_camera.reset(vec3(1, 0, 0), vec3(0, 1, 0), 1, vec2(0, 0));
-
-        m_renderer->set_camera(m_camera.rasterization_info());
-}
-
-template <GraphicsAndComputeAPI API>
-void ShowObject<API>::window_resize_handler()
-{
-        if (m_window_width <= 0 || m_window_height <= 0)
-        {
-                // Вызов не из обработчика измерения окна (там есть проверка),
-                // а вызов из обработчика включения-выключения ДПФ в то время,
-                // когда окно ещё не готово.
-                return;
-        }
-
-        m_draw_width = m_canvas->dft_active() ? m_window_width / 2 : m_window_width;
-        m_draw_height = m_window_height;
-
-        m_camera.resize(m_draw_width, m_draw_height);
-        m_renderer->set_size(m_draw_width, m_draw_height);
-
-        if constexpr (API == GraphicsAndComputeAPI::OpenGL)
-        {
-                int dft_dst_x = (m_window_width & 1) ? (m_draw_width + 1) : m_draw_width;
-                int dft_dst_y = 0;
-
-                m_canvas->create_objects(m_window_width, m_window_height, m_renderer->color_buffer(),
-                                         m_renderer->color_buffer_is_srgb(), m_renderer->objects(), m_draw_width, m_draw_height,
-                                         dft_dst_x, dft_dst_y, m_renderer->frame_buffer_is_srgb());
-        }
-
-        m_renderer->set_camera(m_camera.rasterization_info());
-}
-
-template <GraphicsAndComputeAPI API>
-void ShowObject<API>::pull_and_dispatch_all_events()
-{
-        // Вначале команды, потом сообщения окна, потому что в командах
-        // могут быть действия с окном, а в событиях окна нет комманд
-        this->pull_and_dispatch_events();
-        m_window->pull_and_dispath_events();
-}
-
-template <GraphicsAndComputeAPI API>
-void ShowObject<API>::init_window_and_view()
-{
-        move_window_to_parent(m_window->system_handle(), m_parent_window);
-
-        for (int i = 1; m_window_width != m_window->width() && m_window_height != m_window->height(); ++i)
-        {
-                if (i > 10)
-                {
-                        error("Failed to receive the resize window event for the window size (" + to_string(m_window->width()) +
-                              ", " + to_string(m_window->height()) + ")");
-                }
-                pull_and_dispatch_all_events();
-        }
-
-        if (m_draw_width <= 0 || m_draw_height <= 0)
-        {
-                error("Draw size error (" + to_string(m_draw_width) + ", " + to_string(m_draw_height) + ")");
-        }
-
-        reset_view_handler();
-}
 
 //
 
@@ -738,7 +757,7 @@ void render_opengl(opengl::Window& window, gpu_opengl::Renderer& renderer, gpu_o
 }
 
 template <>
-void ShowObject<GraphicsAndComputeAPI::OpenGL>::loop()
+void Impl<GraphicsAndComputeAPI::OpenGL>::loop()
 {
         ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
@@ -771,9 +790,22 @@ void ShowObject<GraphicsAndComputeAPI::OpenGL>::loop()
 
                 if (renderer->empty())
                 {
-                        sleep(last_frame_time);
+                        sleep(last_frame_time, IDLE_MODE_FRAME_DURATION);
                 }
         }
+}
+
+template <>
+void Impl<GraphicsAndComputeAPI::OpenGL>::resize()
+{
+        m_renderer->set_size(m_draw_width, m_draw_height);
+
+        int dft_dst_x = (m_window_width & 1) ? (m_draw_width + 1) : m_draw_width;
+        int dft_dst_y = 0;
+
+        m_canvas->create_objects(m_window_width, m_window_height, m_renderer->color_buffer(), m_renderer->color_buffer_is_srgb(),
+                                 m_renderer->objects(), m_draw_width, m_draw_height, dft_dst_x, dft_dst_y,
+                                 m_renderer->frame_buffer_is_srgb());
 }
 
 //
@@ -865,7 +897,7 @@ std::vector<vulkan::PhysicalDeviceFeatures> device_features_sampler_anisotropy(b
 }
 
 template <>
-void ShowObject<GraphicsAndComputeAPI::Vulkan>::loop()
+void Impl<GraphicsAndComputeAPI::Vulkan>::loop()
 {
         ASSERT(std::this_thread::get_id() == m_thread.get_id());
 
@@ -956,48 +988,25 @@ void ShowObject<GraphicsAndComputeAPI::Vulkan>::loop()
 
                 if (renderer->empty())
                 {
-                        sleep(last_frame_time);
+                        sleep(last_frame_time, IDLE_MODE_FRAME_DURATION);
                 }
         }
 }
 
-template <GraphicsAndComputeAPI API>
-void ShowObject<API>::loop_thread()
+template <>
+void Impl<GraphicsAndComputeAPI::Vulkan>::resize()
 {
-        ASSERT(std::this_thread::get_id() == m_thread.get_id());
-
-        try
-        {
-                loop();
-
-                if (!m_stop)
-                {
-                        m_callback->message_error_fatal("Thread ended.");
-                }
-        }
-        catch (ErrorSourceException& e)
-        {
-                m_callback->message_error_source(e.msg(), e.src());
-        }
-        catch (std::exception& e)
-        {
-                m_callback->message_error_fatal(e.what());
-        }
-        catch (...)
-        {
-                m_callback->message_error_fatal("Unknown Error. Thread ended.");
-        }
 }
 }
 
-std::unique_ptr<Show> create_show(GraphicsAndComputeAPI api, const ShowCreateInfo& info)
+std::unique_ptr<ShowObject> create_show_object(GraphicsAndComputeAPI api, const ShowCreateInfo& info)
 {
         switch (api)
         {
         case GraphicsAndComputeAPI::Vulkan:
-                return std::make_unique<ShowObject<GraphicsAndComputeAPI::Vulkan>>(info);
+                return std::make_unique<Impl<GraphicsAndComputeAPI::Vulkan>>(info);
         case GraphicsAndComputeAPI::OpenGL:
-                return std::make_unique<ShowObject<GraphicsAndComputeAPI::OpenGL>>(info);
+                return std::make_unique<Impl<GraphicsAndComputeAPI::OpenGL>>(info);
         }
         error_fatal("Unknown graphics and compute API for show creation");
 }

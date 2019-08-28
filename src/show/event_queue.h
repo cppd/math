@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // Класс для вызова функций не напрямую, а через очередь.
 // Это нужно для работы функций в другом потоке.
 
-class EventQueue : public Show
+class EventQueue final : public Show
 {
         struct Event final
         {
@@ -238,320 +238,308 @@ class EventQueue : public Show
                         }
                 };
 
-                const Variant<add_object, delete_all_objects, delete_object, mouse_wheel, parent_resized, reset_view, set_ambient,
-                              set_background_color, set_default_color, set_default_ns, set_dft_background_color,
-                              set_dft_brightness, set_dft_color, set_diffuse, set_shadow_zoom, set_specular, set_vertical_sync,
-                              set_wireframe_color, show_convex_hull_2d, show_dft, show_fps, show_pencil_sketch, show_fog,
-                              show_materials, show_object, show_optical_flow, show_shadow, show_smooth, show_wireframe,
-                              toggle_fullscreen>
-                        event;
+                using EventType =
+                        Variant<add_object, delete_all_objects, delete_object, mouse_wheel, parent_resized, reset_view,
+                                set_ambient, set_background_color, set_default_color, set_default_ns, set_dft_background_color,
+                                set_dft_brightness, set_dft_color, set_diffuse, set_shadow_zoom, set_specular, set_vertical_sync,
+                                set_wireframe_color, show_convex_hull_2d, show_dft, show_fps, show_pencil_sketch, show_fog,
+                                show_materials, show_object, show_optical_flow, show_shadow, show_smooth, show_wireframe,
+                                toggle_fullscreen>;
 
                 template <typename... Args>
-                Event(Args&&... args) : event(std::forward<Args>(args)...)
+                Event(Args&&... args) : m_event(std::forward<Args>(args)...)
                 {
                 }
+
+                const EventType& event() const
+                {
+                        return m_event;
+                }
+
+        private:
+                EventType m_event;
         };
 
-        ThreadQueue<Event> m_event_queue;
-
-protected:
-        void add_object(const std::shared_ptr<const Obj<3>>& obj_ptr, int id, int scale_id) override final
+        class Visitor final
         {
-                m_event_queue.emplace(std::in_place_type<Event::add_object>, obj_ptr, id, scale_id);
-        }
-        void delete_object(int id) override final
-        {
-                m_event_queue.emplace(std::in_place_type<Event::delete_object>, id);
-        }
-        void show_object(int id) override final
-        {
-                m_event_queue.emplace(std::in_place_type<Event::show_object>, id);
-        }
-        void delete_all_objects() override final
-        {
-                m_event_queue.emplace(std::in_place_type<Event::delete_all_objects>);
-        }
-        void reset_view() override final
-        {
-                m_event_queue.emplace(std::in_place_type<Event::reset_view>);
-        }
-        void set_ambient(double v) override final
-        {
-                m_event_queue.emplace(std::in_place_type<Event::set_ambient>, v);
-        }
-        void set_diffuse(double v) override final
-        {
-                m_event_queue.emplace(std::in_place_type<Event::set_diffuse>, v);
-        }
-        void set_specular(double v) override final
-        {
-                m_event_queue.emplace(std::in_place_type<Event::set_specular>, v);
-        }
-        void set_background_color(const Color& c) override final
-        {
-                m_event_queue.emplace(std::in_place_type<Event::set_background_color>, c);
-        }
-        void set_default_color(const Color& c) override final
-        {
-                m_event_queue.emplace(std::in_place_type<Event::set_default_color>, c);
-        }
-        void set_wireframe_color(const Color& c) override final
-        {
-                m_event_queue.emplace(std::in_place_type<Event::set_wireframe_color>, c);
-        }
-        void set_default_ns(double ns) override final
-        {
-                m_event_queue.emplace(std::in_place_type<Event::set_default_ns>, ns);
-        }
-        void show_smooth(bool v) override final
-        {
-                m_event_queue.emplace(std::in_place_type<Event::show_smooth>, v);
-        }
-        void show_wireframe(bool v) override final
-        {
-                m_event_queue.emplace(std::in_place_type<Event::show_wireframe>, v);
-        }
-        void show_shadow(bool v) override final
-        {
-                m_event_queue.emplace(std::in_place_type<Event::show_shadow>, v);
-        }
-        void show_fog(bool v) override final
-        {
-                m_event_queue.emplace(std::in_place_type<Event::show_fog>, v);
-        }
-        void show_materials(bool v) override final
-        {
-                m_event_queue.emplace(std::in_place_type<Event::show_materials>, v);
-        }
-        void show_fps(bool v) override final
-        {
-                m_event_queue.emplace(std::in_place_type<Event::show_fps>, v);
-        }
-        void show_pencil_sketch(bool v) override final
-        {
-                m_event_queue.emplace(std::in_place_type<Event::show_pencil_sketch>, v);
-        }
-        void show_dft(bool v) override final
-        {
-                m_event_queue.emplace(std::in_place_type<Event::show_dft>, v);
-        }
-        void set_dft_brightness(double v) override final
-        {
-                m_event_queue.emplace(std::in_place_type<Event::set_dft_brightness>, v);
-        }
-        void set_dft_background_color(const Color& c) override final
-        {
-                m_event_queue.emplace(std::in_place_type<Event::set_dft_background_color>, c);
-        }
-        void set_dft_color(const Color& c) override final
-        {
-                m_event_queue.emplace(std::in_place_type<Event::set_dft_color>, c);
-        }
-        void show_convex_hull_2d(bool v) override final
-        {
-                m_event_queue.emplace(std::in_place_type<Event::show_convex_hull_2d>, v);
-        }
-        void show_optical_flow(bool v) override final
-        {
-                m_event_queue.emplace(std::in_place_type<Event::show_optical_flow>, v);
-        }
-        void parent_resized() override final
-        {
-                m_event_queue.emplace(std::in_place_type<Event::parent_resized>);
-        }
-        void mouse_wheel(double delta) override final
-        {
-                m_event_queue.emplace(std::in_place_type<Event::mouse_wheel>, delta);
-        }
-        void toggle_fullscreen() override final
-        {
-                m_event_queue.emplace(std::in_place_type<Event::toggle_fullscreen>);
-        }
-        void set_vertical_sync(bool v) override final
-        {
-                m_event_queue.emplace(std::in_place_type<Event::set_vertical_sync>, v);
-        }
-        void set_shadow_zoom(double v) override final
-        {
-                m_event_queue.emplace(std::in_place_type<Event::set_shadow_zoom>, v);
-        }
-
-        virtual void direct_add_object(const std::shared_ptr<const Obj<3>>&, int id, int scale_id) = 0;
-        virtual void direct_delete_object(int id) = 0;
-        virtual void direct_delete_all_objects() = 0;
-        virtual void direct_show_object(int id) = 0;
-        virtual void direct_parent_resized() = 0;
-        virtual void direct_mouse_wheel(double) = 0;
-        virtual void direct_toggle_fullscreen() = 0;
-        virtual void direct_reset_view() = 0;
-        virtual void direct_set_ambient(double) = 0;
-        virtual void direct_set_diffuse(double) = 0;
-        virtual void direct_set_specular(double) = 0;
-        virtual void direct_set_background_color(const Color&) = 0;
-        virtual void direct_set_default_color(const Color&) = 0;
-        virtual void direct_set_wireframe_color(const Color&) = 0;
-        virtual void direct_set_default_ns(double) = 0;
-        virtual void direct_show_smooth(bool) = 0;
-        virtual void direct_show_wireframe(bool) = 0;
-        virtual void direct_show_shadow(bool) = 0;
-        virtual void direct_show_fog(bool) = 0;
-        virtual void direct_show_materials(bool) = 0;
-        virtual void direct_show_fps(bool) = 0;
-        virtual void direct_show_pencil_sketch(bool) = 0;
-        virtual void direct_show_dft(bool) = 0;
-        virtual void direct_set_dft_brightness(double) = 0;
-        virtual void direct_set_dft_background_color(const Color&) = 0;
-        virtual void direct_set_dft_color(const Color&) = 0;
-        virtual void direct_show_convex_hull_2d(bool) = 0;
-        virtual void direct_show_optical_flow(bool) = 0;
-        virtual void direct_set_vertical_sync(bool v) = 0;
-        virtual void direct_set_shadow_zoom(double v) = 0;
-
-private:
-        class Visitor
-        {
-                EventQueue& m_f;
+                Show& m_show;
 
         public:
-                Visitor(EventQueue& event_queue) : m_f(event_queue)
+                Visitor(Show& show) : m_show(show)
                 {
                 }
 
                 void operator()(const Event::add_object& d)
                 {
-                        m_f.direct_add_object(d.obj, d.id, d.scale_id);
+                        m_show.add_object(d.obj, d.id, d.scale_id);
                 }
                 void operator()(const Event::delete_object& d)
                 {
-                        m_f.direct_delete_object(d.id);
+                        m_show.delete_object(d.id);
                 }
                 void operator()(const Event::show_object& d)
                 {
-                        m_f.direct_show_object(d.id);
+                        m_show.show_object(d.id);
                 }
                 void operator()(const Event::delete_all_objects&)
                 {
-                        m_f.direct_delete_all_objects();
+                        m_show.delete_all_objects();
                 }
                 void operator()(const Event::parent_resized&)
                 {
-                        m_f.direct_parent_resized();
+                        m_show.parent_resized();
                 }
                 void operator()(const Event::toggle_fullscreen&)
                 {
-                        m_f.direct_toggle_fullscreen();
+                        m_show.toggle_fullscreen();
                 }
                 void operator()(const Event::reset_view)
                 {
-                        m_f.direct_reset_view();
+                        m_show.reset_view();
                 }
                 void operator()(const Event::mouse_wheel& d)
                 {
-                        m_f.direct_mouse_wheel(d.delta);
+                        m_show.mouse_wheel(d.delta);
                 }
                 void operator()(const Event::set_ambient& d)
                 {
-                        m_f.direct_set_ambient(d.ambient);
+                        m_show.set_ambient(d.ambient);
                 }
                 void operator()(const Event::set_diffuse& d)
                 {
-                        m_f.direct_set_diffuse(d.diffuse);
+                        m_show.set_diffuse(d.diffuse);
                 }
                 void operator()(const Event::set_specular& d)
                 {
-                        m_f.direct_set_specular(d.specular);
+                        m_show.set_specular(d.specular);
                 }
                 void operator()(const Event::set_background_color& d)
                 {
-                        m_f.direct_set_background_color(d.background_color);
+                        m_show.set_background_color(d.background_color);
                 }
                 void operator()(const Event::set_default_color& d)
                 {
-                        m_f.direct_set_default_color(d.default_color);
+                        m_show.set_default_color(d.default_color);
                 }
                 void operator()(const Event::set_wireframe_color& d)
                 {
-                        m_f.direct_set_wireframe_color(d.wireframe_color);
+                        m_show.set_wireframe_color(d.wireframe_color);
                 }
                 void operator()(const Event::set_default_ns& d)
                 {
-                        m_f.direct_set_default_ns(d.default_ns);
+                        m_show.set_default_ns(d.default_ns);
                 }
                 void operator()(const Event::show_smooth& d)
                 {
-                        m_f.direct_show_smooth(d.show);
+                        m_show.show_smooth(d.show);
                 }
                 void operator()(const Event::show_wireframe& d)
                 {
-                        m_f.direct_show_wireframe(d.show);
+                        m_show.show_wireframe(d.show);
                 }
                 void operator()(const Event::show_shadow& d)
                 {
-                        m_f.direct_show_shadow(d.show);
+                        m_show.show_shadow(d.show);
                 }
                 void operator()(const Event::show_fog& d)
                 {
-                        m_f.direct_show_fog(d.show);
+                        m_show.show_fog(d.show);
                 }
                 void operator()(const Event::show_materials& d)
                 {
-                        m_f.direct_show_materials(d.show);
+                        m_show.show_materials(d.show);
                 }
                 void operator()(const Event::show_fps& d)
                 {
-                        m_f.direct_show_fps(d.show);
+                        m_show.show_fps(d.show);
                 }
                 void operator()(const Event::show_pencil_sketch& d)
                 {
-                        m_f.direct_show_pencil_sketch(d.show);
+                        m_show.show_pencil_sketch(d.show);
                 }
                 void operator()(const Event::show_dft& d)
                 {
-                        m_f.direct_show_dft(d.show);
+                        m_show.show_dft(d.show);
                 }
                 void operator()(const Event::set_dft_brightness& d)
                 {
-                        m_f.direct_set_dft_brightness(d.dft_brightness);
+                        m_show.set_dft_brightness(d.dft_brightness);
                 }
                 void operator()(const Event::set_dft_background_color& d)
                 {
-                        m_f.direct_set_dft_background_color(d.color);
+                        m_show.set_dft_background_color(d.color);
                 }
                 void operator()(const Event::set_dft_color& d)
                 {
-                        m_f.direct_set_dft_color(d.color);
+                        m_show.set_dft_color(d.color);
                 }
                 void operator()(const Event::show_convex_hull_2d& d)
                 {
-                        m_f.direct_show_convex_hull_2d(d.show);
+                        m_show.show_convex_hull_2d(d.show);
                 }
                 void operator()(const Event::show_optical_flow& d)
                 {
-                        m_f.direct_show_optical_flow(d.show);
+                        m_show.show_optical_flow(d.show);
                 }
                 void operator()(const Event::set_vertical_sync& d)
                 {
-                        m_f.direct_set_vertical_sync(d.enable);
+                        m_show.set_vertical_sync(d.enable);
                 }
                 void operator()(const Event::set_shadow_zoom& d)
                 {
-                        m_f.direct_set_shadow_zoom(d.zoom);
+                        m_show.set_shadow_zoom(d.zoom);
                 }
         };
 
-protected:
+        ThreadQueue<Event> m_event_queue;
+        Visitor m_visitor;
+        Show& m_show;
+
+        void add_object(const std::shared_ptr<const Obj<3>>& obj_ptr, int id, int scale_id) override
+        {
+                m_event_queue.emplace(std::in_place_type<Event::add_object>, obj_ptr, id, scale_id);
+        }
+        void delete_object(int id) override
+        {
+                m_event_queue.emplace(std::in_place_type<Event::delete_object>, id);
+        }
+        void show_object(int id) override
+        {
+                m_event_queue.emplace(std::in_place_type<Event::show_object>, id);
+        }
+        void delete_all_objects() override
+        {
+                m_event_queue.emplace(std::in_place_type<Event::delete_all_objects>);
+        }
+        void reset_view() override
+        {
+                m_event_queue.emplace(std::in_place_type<Event::reset_view>);
+        }
+        void set_ambient(double v) override
+        {
+                m_event_queue.emplace(std::in_place_type<Event::set_ambient>, v);
+        }
+        void set_diffuse(double v) override
+        {
+                m_event_queue.emplace(std::in_place_type<Event::set_diffuse>, v);
+        }
+        void set_specular(double v) override
+        {
+                m_event_queue.emplace(std::in_place_type<Event::set_specular>, v);
+        }
+        void set_background_color(const Color& c) override
+        {
+                m_event_queue.emplace(std::in_place_type<Event::set_background_color>, c);
+        }
+        void set_default_color(const Color& c) override
+        {
+                m_event_queue.emplace(std::in_place_type<Event::set_default_color>, c);
+        }
+        void set_wireframe_color(const Color& c) override
+        {
+                m_event_queue.emplace(std::in_place_type<Event::set_wireframe_color>, c);
+        }
+        void set_default_ns(double ns) override
+        {
+                m_event_queue.emplace(std::in_place_type<Event::set_default_ns>, ns);
+        }
+        void show_smooth(bool v) override
+        {
+                m_event_queue.emplace(std::in_place_type<Event::show_smooth>, v);
+        }
+        void show_wireframe(bool v) override
+        {
+                m_event_queue.emplace(std::in_place_type<Event::show_wireframe>, v);
+        }
+        void show_shadow(bool v) override
+        {
+                m_event_queue.emplace(std::in_place_type<Event::show_shadow>, v);
+        }
+        void show_fog(bool v) override
+        {
+                m_event_queue.emplace(std::in_place_type<Event::show_fog>, v);
+        }
+        void show_materials(bool v) override
+        {
+                m_event_queue.emplace(std::in_place_type<Event::show_materials>, v);
+        }
+        void show_fps(bool v) override
+        {
+                m_event_queue.emplace(std::in_place_type<Event::show_fps>, v);
+        }
+        void show_pencil_sketch(bool v) override
+        {
+                m_event_queue.emplace(std::in_place_type<Event::show_pencil_sketch>, v);
+        }
+        void show_dft(bool v) override
+        {
+                m_event_queue.emplace(std::in_place_type<Event::show_dft>, v);
+        }
+        void set_dft_brightness(double v) override
+        {
+                m_event_queue.emplace(std::in_place_type<Event::set_dft_brightness>, v);
+        }
+        void set_dft_background_color(const Color& c) override
+        {
+                m_event_queue.emplace(std::in_place_type<Event::set_dft_background_color>, c);
+        }
+        void set_dft_color(const Color& c) override
+        {
+                m_event_queue.emplace(std::in_place_type<Event::set_dft_color>, c);
+        }
+        void show_convex_hull_2d(bool v) override
+        {
+                m_event_queue.emplace(std::in_place_type<Event::show_convex_hull_2d>, v);
+        }
+        void show_optical_flow(bool v) override
+        {
+                m_event_queue.emplace(std::in_place_type<Event::show_optical_flow>, v);
+        }
+        void parent_resized() override
+        {
+                m_event_queue.emplace(std::in_place_type<Event::parent_resized>);
+        }
+        void mouse_wheel(double delta) override
+        {
+                m_event_queue.emplace(std::in_place_type<Event::mouse_wheel>, delta);
+        }
+        void toggle_fullscreen() override
+        {
+                m_event_queue.emplace(std::in_place_type<Event::toggle_fullscreen>);
+        }
+        void set_vertical_sync(bool v) override
+        {
+                m_event_queue.emplace(std::in_place_type<Event::set_vertical_sync>, v);
+        }
+        void set_shadow_zoom(double v) override
+        {
+                m_event_queue.emplace(std::in_place_type<Event::set_shadow_zoom>, v);
+        }
+
+        RayCameraInfo camera_information() const override
+        {
+                return m_show.camera_information();
+        }
+        double object_size() const override
+        {
+                return m_show.object_size();
+        }
+        vec3 object_position() const override
+        {
+                return m_show.object_position();
+        }
+
+public:
+        EventQueue(Show& show) : m_visitor(show), m_show(show)
+        {
+        }
+
         void pull_and_dispatch_events()
         {
-                while (true)
+                std::optional<Event> event;
+                while ((event = m_event_queue.pop()))
                 {
-                        std::optional<Event> event(m_event_queue.pop());
-
-                        if (!event)
-                        {
-                                return;
-                        }
-
-                        visit(Visitor(*this), event->event);
+                        visit(m_visitor, event->event());
                 }
         }
 };

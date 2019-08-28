@@ -182,7 +182,8 @@ private:
 
         std::unordered_map<QObject*, std::tuple<int, std::string>> m_action_to_dimension_and_object_name;
 
-        std::unique_ptr<Show> m_show;
+        std::unique_ptr<ShowObject> m_show_object;
+        Show* m_show = nullptr;
 
         std::unique_ptr<MainObjects> m_objects;
 

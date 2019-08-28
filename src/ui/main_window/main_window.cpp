@@ -297,7 +297,8 @@ void MainWindow::terminate_all_threads()
 
         m_threads->terminate_all_threads();
 
-        m_show.reset();
+        m_show = nullptr;
+        m_show_object.reset();
 
         set_log_callback(nullptr);
 }
@@ -1131,9 +1132,10 @@ void MainWindow::slot_window_first_shown()
                 info.vertical_sync = ui.checkBox_vertical_sync->isChecked();
                 info.shadow_zoom = shadow_zoom();
 
-                m_show = create_show(api, info);
+                m_show_object = create_show_object(api, info);
+                m_show = &m_show_object->show();
 
-                m_objects->set_show(m_show.get());
+                m_objects->set_show(m_show);
 
                 //
 
