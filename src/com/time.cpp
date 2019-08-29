@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "error.h"
 
 #include <chrono>
+#include <thread>
 
 using CLOCK = std::chrono::steady_clock;
 // using CLOCK = std::chrono::high_resolution_clock;
@@ -45,5 +46,17 @@ double time_in_seconds() noexcept
         catch (...)
         {
                 error_fatal("Exception in time function");
+        }
+}
+
+void sleep_this_thread_until(double time) noexcept
+{
+        try
+        {
+                std::this_thread::sleep_until(global_start_time + std::chrono::duration<double>(time));
+        }
+        catch (...)
+        {
+                error_fatal("Exception in sleep function");
         }
 }

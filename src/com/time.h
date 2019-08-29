@@ -20,3 +20,5 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 void reset_time();
 
 double time_in_seconds() noexcept;
+
+void sleep_this_thread_until(double time) noexcept;

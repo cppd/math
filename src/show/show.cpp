@@ -29,6 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/print.h"
 #include "com/string/vector.h"
 #include "com/thread.h"
+#include "com/time.h"
 #include "com/type/limit.h"
 #include "gpu/renderer/opengl/renderer.h"
 #include "gpu/renderer/vulkan/renderer.h"
@@ -45,7 +46,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "window/vulkan/window.h"
 
 #include <algorithm>
-#include <chrono>
 #include <cmath>
 #include <functional>
 #include <type_traits>
@@ -75,7 +75,7 @@ constexpr const char FPS_TEXT[] = "FPS: ";
 constexpr double FPS_INTERVAL_LENGTH = 1;
 constexpr int FPS_SAMPLE_COUNT = 10;
 
-constexpr std::chrono::milliseconds IDLE_MODE_FRAME_DURATION(100);
+constexpr double IDLE_MODE_FRAME_DURATION_IN_SECONDS = 0.1;
 
 // Это только для начального значения, а далее оно устанавливается командой set_vertical_sync
 constexpr vulkan::PresentMode VULKAN_INIT_PRESENT_MODE = vulkan::PresentMode::PreferFast;
@@ -84,12 +84,6 @@ constexpr VkFormat OBJECT_IMAGE_FORMAT = VK_FORMAT_R32_UINT;
 
 namespace
 {
-void sleep(std::chrono::steady_clock::time_point& last_time, const std::chrono::milliseconds& milliseconds)
-{
-        std::this_thread::sleep_until(last_time + milliseconds);
-        last_time = std::chrono::steady_clock::now();
-}
-
 // Объекты для std::unique_ptr создаются и удаляются в отдельном потоке. Поток этого
 // класса не должен владеть такими объектами. Этот класс нужен, чтобы в явном виде
 // не работать с std::unique_ptr.
@@ -779,7 +773,7 @@ void Impl<GraphicsAndComputeAPI::OpenGL>::loop()
 
         //
 
-        std::chrono::steady_clock::time_point last_frame_time = std::chrono::steady_clock::now();
+        double last_frame_time = time_in_seconds();
         while (!m_stop)
         {
                 pull_and_dispatch_all_events();
@@ -790,7 +784,8 @@ void Impl<GraphicsAndComputeAPI::OpenGL>::loop()
 
                 if (renderer->empty())
                 {
-                        sleep(last_frame_time, IDLE_MODE_FRAME_DURATION);
+                        sleep_this_thread_until(last_frame_time + IDLE_MODE_FRAME_DURATION_IN_SECONDS);
+                        last_frame_time = time_in_seconds();
                 }
         }
 }
@@ -971,7 +966,7 @@ void Impl<GraphicsAndComputeAPI::Vulkan>::loop()
 
         //
 
-        std::chrono::steady_clock::time_point last_frame_time = std::chrono::steady_clock::now();
+        double last_frame_time = time_in_seconds();
         while (!m_stop)
         {
                 pull_and_dispatch_all_events();
@@ -988,7 +983,8 @@ void Impl<GraphicsAndComputeAPI::Vulkan>::loop()
 
                 if (renderer->empty())
                 {
-                        sleep(last_frame_time, IDLE_MODE_FRAME_DURATION);
+                        sleep_this_thread_until(last_frame_time + IDLE_MODE_FRAME_DURATION_IN_SECONDS);
+                        last_frame_time = time_in_seconds();
                 }
         }
 }
