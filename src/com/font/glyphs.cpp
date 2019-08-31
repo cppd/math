@@ -18,9 +18,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "glyphs.h"
 
 #include "code_points.h"
-#include "file.h"
 
 #include "com/error.h"
+#include "com/image_file.h"
 
 #include <array>
 #include <numeric>

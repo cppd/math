@@ -38,7 +38,7 @@ class Image
 
         long long pixel_index(const std::array<int, N>& p) const;
 
-        void read_from_srgba_pixels(const std::array<int, N>& size, const unsigned char* srgba_pixels);
+        void load_from_srgba_pixels(const std::array<int, N>& size, const std::vector<unsigned char>& srgba_pixels);
 
         void resize(const std::array<int, N>& size);
 

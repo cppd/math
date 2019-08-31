@@ -17,9 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "font.h"
 
-#include "file.h"
-
 #include "com/error.h"
+#include "com/image_file.h"
 #include "com/unicode/unicode.h"
 
 #include <cmath>

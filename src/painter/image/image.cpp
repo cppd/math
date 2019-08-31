@@ -19,33 +19,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/color/conversion.h"
 #include "com/error.h"
-#include "com/file/file.h"
-#include "com/file/file_sys.h"
+#include "com/image_file.h"
 #include "com/interpolation.h"
 #include "com/string/str.h"
 
-#include <SFML/Graphics/Image.hpp>
 #include <algorithm>
 
 namespace
 {
-std::string file_name_with_extension(const std::string& file_name, const char* extension)
-{
-        std::string ext = file_extension(file_name);
-
-        if (ext.size() > 0)
-        {
-                if (ext != extension)
-                {
-                        error("Unsupported image file format " + ext);
-                }
-                return file_name;
-        }
-
-        // Если имя заканчивается на точку, то пусть будет 2 точки подряд
-        return file_name + "." + extension;
-}
-
 template <size_t N>
 long long mul(const std::array<int, N>& size)
 {
@@ -93,12 +74,7 @@ Image<N>::Image(const std::array<int, N>& size)
 template <size_t N>
 Image<N>::Image(const std::array<int, N>& size, const std::vector<unsigned char>& srgba_pixels)
 {
-        if (4ull * mul(size) != srgba_pixels.size())
-        {
-                error("Image size error for sRGBA pixels");
-        }
-
-        read_from_srgba_pixels(size, srgba_pixels.data());
+        load_from_srgba_pixels(size, srgba_pixels);
 }
 
 template <size_t N>
@@ -207,8 +183,13 @@ Color Image<N>::texture(const Vector<N, T>& p) const
 }
 
 template <size_t N>
-void Image<N>::read_from_srgba_pixels(const std::array<int, N>& size, const unsigned char* srgba_pixels)
+void Image<N>::load_from_srgba_pixels(const std::array<int, N>& size, const std::vector<unsigned char>& srgba_pixels)
 {
+        if (4ull * mul(size) != srgba_pixels.size())
+        {
+                error("Image size error for sRGBA pixels");
+        }
+
         resize(size);
 
         for (size_t i = 0, p = 0; i < m_data.size(); p += 4, ++i)
@@ -229,22 +210,13 @@ std::enable_if_t<X == 2> Image<N>::read_from_file(const std::string& file_name)
 {
         static_assert(N == X);
 
-        sf::Image image;
-
-        if (!image.loadFromFile(file_name))
-        {
-                error("Error read image from file " + file_name);
-        }
-
         std::array<int, N> size;
+        std::vector<unsigned char> srgba_pixels;
 
-        size[0] = image.getSize().x;
-        size[1] = image.getSize().y;
-
-        read_from_srgba_pixels(size, image.getPixelsPtr());
+        load_srgba_image_from_file(file_name, &size[0], &size[1], &srgba_pixels);
+        load_from_srgba_pixels(size, srgba_pixels);
 }
 
-// Запись в формат PPM с цветом sRGB
 template <size_t N>
 template <size_t X>
 std::enable_if_t<X == 2> Image<N>::write_to_file(const std::string& file_name) const
@@ -256,15 +228,6 @@ std::enable_if_t<X == 2> Image<N>::write_to_file(const std::string& file_name) c
                 error("No data to write the image to the file " + file_name);
         }
 
-        CFile fp(file_name_with_extension(file_name, "ppm"), "wb");
-
-        long long width = m_size[0];
-        long long height = m_size[1];
-        if (fprintf(fp, "P6\n%lld %lld\n255\n", width, height) <= 0)
-        {
-                error("Error writing image header");
-        }
-
         std::vector<unsigned char> buffer(m_data.size() * 3);
 
         for (size_t i = 0, buf = 0; i < m_data.size(); ++i)
@@ -274,10 +237,7 @@ std::enable_if_t<X == 2> Image<N>::write_to_file(const std::string& file_name) c
                 buffer[buf++] = color_conversion::rgb_float_to_srgb_uint8(m_data[i].blue());
         }
 
-        if (fwrite(buffer.data(), sizeof(buffer[0]), buffer.size(), fp) != buffer.size())
-        {
-                error("Error writing image data");
-        }
+        save_srgb_image_to_file(file_name, m_size[0], m_size[1], buffer);
 }
 
 // Текстурные координаты могут отсчитываться снизу, поэтому нужна эта функция

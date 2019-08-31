@@ -17,9 +17,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "com/span.h"
+#include "span.h"
 
 #include <string>
 #include <vector>
 
 void save_grayscale_image_to_file(const std::string& file_name, int width, int height, Span<const std::uint_least8_t> pixels);
+void save_srgb_image_to_file(const std::string& file_name, int width, int height, const std::vector<std::uint_least8_t>& pixels);
+void save_srgba_image_to_file(const std::string& file_name, int width, int height, const std::vector<std::uint_least8_t>& pixels);
+
+void load_srgba_image_from_file(const std::string& file_name, int* width, int* height, std::vector<std::uint_least8_t>* pixels);
+void flip_srgba_image_vertically(int width, int height, std::vector<std::uint_least8_t>* pixels);

@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/error.h"
 #include "com/file/file_read.h"
 #include "com/file/file_sys.h"
+#include "com/image_file.h"
 #include "com/log.h"
 #include "com/math.h"
 #include "com/print.h"
@@ -34,7 +35,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/type/trait.h"
 #include "obj/alg/alg.h"
 
-#include <SFML/Graphics/Image.hpp>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -190,27 +190,9 @@ typename Obj<N>::Image read_image_from_file(const std::string& file_name)
         }
         else
         {
-                sf::Image image;
-
-                if (!image.loadFromFile(file_name))
-                {
-                        error("Error load image from file " + file_name);
-                }
-
-                image.flipVertically();
-
-                unsigned long long buffer_size = 4ull * image.getSize().x * image.getSize().y;
-
                 Obj<3>::Image obj_image;
-
-                obj_image.size[0] = image.getSize().x;
-                obj_image.size[1] = image.getSize().y;
-                obj_image.srgba_pixels.resize(buffer_size);
-
-                static_assert(sizeof(decltype(*obj_image.srgba_pixels.data())) == sizeof(decltype(*image.getPixelsPtr())));
-
-                std::memcpy(obj_image.srgba_pixels.data(), image.getPixelsPtr(), buffer_size);
-
+                load_srgba_image_from_file(file_name, &obj_image.size[0], &obj_image.size[1], &obj_image.srgba_pixels);
+                flip_srgba_image_vertically(obj_image.size[0], obj_image.size[1], &obj_image.srgba_pixels);
                 return obj_image;
         }
 }
