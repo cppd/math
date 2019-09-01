@@ -18,10 +18,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "show.h"
 
 #include "camera.h"
+#include "frame_rate.h"
 
-#include "com/conversion.h"
 #include "com/error.h"
-#include "com/frequency.h"
 #include "com/log.h"
 #include "com/matrix.h"
 #include "com/matrix_alg.h"
@@ -65,15 +64,6 @@ constexpr bool VULKAN_RENDERER_SAMPLE_SHADING = true;
 constexpr bool VULKAN_CANVAS_SAMPLE_SHADING = true;
 // anisotropic filtering
 constexpr bool VULKAN_SAMPLER_ANISOTROPY = true;
-
-constexpr double FPS_TEXT_SIZE_IN_POINTS = 9.0;
-constexpr double FPS_TEXT_STEP_Y_IN_POINTS = 1.3 * FPS_TEXT_SIZE_IN_POINTS;
-constexpr double FPS_TEXT_X_IN_POINTS = 5;
-constexpr double FPS_TEXT_Y_IN_POINTS = FPS_TEXT_STEP_Y_IN_POINTS;
-
-constexpr const char FPS_TEXT[] = "FPS: ";
-constexpr double FPS_INTERVAL_LENGTH = 1;
-constexpr int FPS_SAMPLE_COUNT = 10;
 
 constexpr double IDLE_MODE_FRAME_DURATION_IN_SECONDS = 0.1;
 
@@ -131,16 +121,7 @@ class Impl final : public ShowObject, public Show, public WindowEvent
 
         //
 
-        Frequency m_fps{FPS_INTERVAL_LENGTH, FPS_SAMPLE_COUNT};
-
-        const int m_fps_text_size = points_to_pixels(FPS_TEXT_SIZE_IN_POINTS, m_parent_window_ppi);
-
-        TextData m_fps_text_data{points_to_pixels(FPS_TEXT_STEP_Y_IN_POINTS, m_parent_window_ppi),
-                                 points_to_pixels(FPS_TEXT_X_IN_POINTS, m_parent_window_ppi),
-                                 points_to_pixels(FPS_TEXT_Y_IN_POINTS, m_parent_window_ppi),
-                                 {FPS_TEXT, ""}};
-
-        //
+        FrameRate m_frame_rate{m_parent_window_ppi};
 
         Camera m_camera;
 
@@ -757,7 +738,7 @@ void Impl<GraphicsAndComputeAPI::OpenGL>::loop()
 
         std::unique_ptr<opengl::Window> window = opengl::create_window(OPENGL_MINIMUM_SAMPLE_COUNT, this);
         std::unique_ptr<gpu_opengl::Renderer> renderer = gpu_opengl::create_renderer(OPENGL_MINIMUM_SAMPLE_COUNT);
-        std::unique_ptr<gpu_opengl::Canvas> canvas = gpu_opengl::create_canvas(m_fps_text_size, m_parent_window_ppi);
+        std::unique_ptr<gpu_opengl::Canvas> canvas = gpu_opengl::create_canvas(m_frame_rate.text_size(), m_parent_window_ppi);
 
         //
 
@@ -778,9 +759,9 @@ void Impl<GraphicsAndComputeAPI::OpenGL>::loop()
         {
                 pull_and_dispatch_all_events();
 
-                m_fps_text_data.text[1] = to_string(std::lround(m_fps.calculate()));
+                m_frame_rate.calculate();
 
-                render_opengl(*window, *renderer, *canvas, m_fps_text_data);
+                render_opengl(*window, *renderer, *canvas, m_frame_rate.text_data());
 
                 if (renderer->empty())
                 {
@@ -925,7 +906,7 @@ void Impl<GraphicsAndComputeAPI::Vulkan>::loop()
 
         std::unique_ptr<gpu_vulkan::Canvas> canvas = gpu_vulkan::create_canvas(
                 instance, instance.graphics_command_pool(), instance.graphics_queues()[0], instance.transfer_command_pool(),
-                instance.transfer_queue(), instance.graphics_queues()[0], VULKAN_CANVAS_SAMPLE_SHADING, m_fps_text_size);
+                instance.transfer_queue(), instance.graphics_queues()[0], VULKAN_CANVAS_SAMPLE_SHADING, m_frame_rate.text_size());
 
         //
 
@@ -971,10 +952,11 @@ void Impl<GraphicsAndComputeAPI::Vulkan>::loop()
         {
                 pull_and_dispatch_all_events();
 
-                m_fps_text_data.text[1] = to_string(std::lround(m_fps.calculate()));
+                m_frame_rate.calculate();
 
                 if (!render_vulkan(swapchain->swapchain(), instance.presentation_queue(), instance.graphics_queues(),
-                                   instance.device(), image_semaphore, *render_buffers, *renderer, *canvas, m_fps_text_data))
+                                   instance.device(), image_semaphore, *render_buffers, *renderer, *canvas,
+                                   m_frame_rate.text_data()))
                 {
                         create_swapchain(instance, renderer.get(), canvas.get(), &swapchain, &render_buffers, &object_image,
                                          present_mode, swapchain_family_indices);
