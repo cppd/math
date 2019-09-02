@@ -98,7 +98,7 @@ public:
 };
 
 template <GraphicsAndComputeAPI API>
-class Impl final : public ShowObject, public Show, public WindowEvent
+class Impl final : public Show, public WindowEvent
 {
         static_assert(API == GraphicsAndComputeAPI::Vulkan || API == GraphicsAndComputeAPI::OpenGL);
         using Renderer = std::conditional_t<API == GraphicsAndComputeAPI::Vulkan, gpu_vulkan::Renderer, gpu_opengl::Renderer>;
@@ -111,13 +111,11 @@ class Impl final : public ShowObject, public Show, public WindowEvent
 
         //
 
-        EventQueue m_event_queue;
-
+        EventQueue& m_event_queue;
         ShowCallback* const m_callback;
         const WindowID m_parent_window;
         const double m_parent_window_ppi;
-        std::thread m_thread;
-        std::atomic_bool m_stop{false};
+        const std::thread::id m_thread_id = std::this_thread::get_id();
 
         //
 
@@ -157,7 +155,7 @@ class Impl final : public ShowObject, public Show, public WindowEvent
 
         void add_object(const std::shared_ptr<const Obj<3>>& obj_ptr, int id, int scale_id) override
         {
-                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+                ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 if (!obj_ptr)
                 {
@@ -169,21 +167,21 @@ class Impl final : public ShowObject, public Show, public WindowEvent
 
         void delete_object(int id) override
         {
-                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+                ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 m_renderer->object_delete(id);
         }
 
         void show_object(int id) override
         {
-                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+                ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 m_renderer->object_show(id);
         }
 
         void delete_all_objects() override
         {
-                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+                ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 m_renderer->object_delete_all();
 
@@ -192,14 +190,14 @@ class Impl final : public ShowObject, public Show, public WindowEvent
 
         void reset_view() override
         {
-                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+                ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 reset_view_handler();
         }
 
         void set_ambient(double v) override
         {
-                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+                ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 Color light = Color(v);
                 m_renderer->set_light_a(light);
@@ -207,7 +205,7 @@ class Impl final : public ShowObject, public Show, public WindowEvent
 
         void set_diffuse(double v) override
         {
-                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+                ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 Color light = Color(v);
                 m_renderer->set_light_d(light);
@@ -215,7 +213,7 @@ class Impl final : public ShowObject, public Show, public WindowEvent
 
         void set_specular(double v) override
         {
-                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+                ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 Color light = Color(v);
                 m_renderer->set_light_s(light);
@@ -223,7 +221,7 @@ class Impl final : public ShowObject, public Show, public WindowEvent
 
         void set_background_color(const Color& c) override
         {
-                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+                ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 m_renderer->set_background_color(c);
 
@@ -233,77 +231,77 @@ class Impl final : public ShowObject, public Show, public WindowEvent
 
         void set_default_color(const Color& c) override
         {
-                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+                ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 m_renderer->set_default_color(c);
         }
 
         void set_wireframe_color(const Color& c) override
         {
-                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+                ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 m_renderer->set_wireframe_color(c);
         }
 
         void set_default_ns(double ns) override
         {
-                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+                ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 m_renderer->set_default_ns(ns);
         }
 
         void show_smooth(bool v) override
         {
-                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+                ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 m_renderer->set_show_smooth(v);
         }
 
         void show_wireframe(bool v) override
         {
-                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+                ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 m_renderer->set_show_wireframe(v);
         }
 
         void show_shadow(bool v) override
         {
-                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+                ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 m_renderer->set_show_shadow(v);
         }
 
         void show_fog(bool v) override
         {
-                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+                ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 m_renderer->set_show_fog(v);
         }
 
         void show_materials(bool v) override
         {
-                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+                ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 m_renderer->set_show_materials(v);
         }
 
         void show_fps(bool v) override
         {
-                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+                ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 m_canvas->set_text_active(v);
         }
 
         void show_pencil_sketch(bool v) override
         {
-                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+                ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 m_canvas->set_pencil_sketch_active(v);
         }
 
         void show_dft(bool v) override
         {
-                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+                ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 if (m_canvas->dft_active() != v)
                 {
@@ -314,42 +312,42 @@ class Impl final : public ShowObject, public Show, public WindowEvent
 
         void set_dft_brightness(double v) override
         {
-                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+                ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 m_canvas->set_dft_brightness(v);
         }
 
         void set_dft_background_color(const Color& c) override
         {
-                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+                ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 m_canvas->set_dft_background_color(c);
         }
 
         void set_dft_color(const Color& c) override
         {
-                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+                ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 m_canvas->set_dft_color(c);
         }
 
         void show_convex_hull_2d(bool v) override
         {
-                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+                ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 m_canvas->set_convex_hull_active(v);
         }
 
         void show_optical_flow(bool v) override
         {
-                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+                ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 m_canvas->set_optical_flow_active(v);
         }
 
         void parent_resized() override
         {
-                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+                ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 if (!m_fullscreen_active)
                 {
@@ -359,7 +357,7 @@ class Impl final : public ShowObject, public Show, public WindowEvent
 
         void mouse_wheel(double delta) override
         {
-                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+                ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 // Для полноэкранного режима обрабатывается в функции window_mouse_wheel
                 if (!m_fullscreen_active)
@@ -370,7 +368,7 @@ class Impl final : public ShowObject, public Show, public WindowEvent
 
         void toggle_fullscreen() override
         {
-                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+                ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 if (!m_fullscreen_active)
                 {
@@ -381,13 +379,13 @@ class Impl final : public ShowObject, public Show, public WindowEvent
                 {
                         move_window_to_parent(m_window->system_handle(), m_parent_window);
                         m_fullscreen_active = false;
+                        set_focus(m_window->system_handle());
                 }
-                set_focus(m_window->system_handle());
         }
 
         void set_vertical_sync(bool v) override
         {
-                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+                ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 ASSERT(m_function_set_vertical_sync);
 
@@ -396,28 +394,28 @@ class Impl final : public ShowObject, public Show, public WindowEvent
 
         void set_shadow_zoom(double v) override
         {
-                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+                ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 m_renderer->set_shadow_zoom(v);
         }
 
         RayCameraInfo camera_information() const override
         {
-                ASSERT(std::this_thread::get_id() != m_thread.get_id());
+                ASSERT(std::this_thread::get_id() != m_thread_id);
 
                 return m_camera.ray_info();
         }
 
         double object_size() const override
         {
-                ASSERT(std::this_thread::get_id() != m_thread.get_id());
+                ASSERT(std::this_thread::get_id() != m_thread_id);
 
                 return OBJECT_SIZE;
         }
 
         vec3 object_position() const override
         {
-                ASSERT(std::this_thread::get_id() != m_thread.get_id());
+                ASSERT(std::this_thread::get_id() != m_thread_id);
 
                 return OBJECT_POSITION;
         }
@@ -426,7 +424,7 @@ class Impl final : public ShowObject, public Show, public WindowEvent
 
         void window_keyboard_pressed(KeyboardButton button) override
         {
-                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+                ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 switch (button)
                 {
@@ -444,7 +442,7 @@ class Impl final : public ShowObject, public Show, public WindowEvent
 
         void window_mouse_pressed(MouseButton button) override
         {
-                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+                ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 if (!m_mouse_pressed && m_mouse_x < m_draw_width && m_mouse_y < m_draw_height)
                 {
@@ -457,7 +455,7 @@ class Impl final : public ShowObject, public Show, public WindowEvent
 
         void window_mouse_released(MouseButton button) override
         {
-                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+                ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 if (m_mouse_pressed && button == m_mouse_pressed_button)
                 {
@@ -467,7 +465,7 @@ class Impl final : public ShowObject, public Show, public WindowEvent
 
         void window_mouse_moved(int x, int y) override
         {
-                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+                ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 m_mouse_x = x;
                 m_mouse_y = y;
@@ -477,7 +475,7 @@ class Impl final : public ShowObject, public Show, public WindowEvent
 
         void window_mouse_wheel(int delta) override
         {
-                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+                ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 // Для режима встроенного окна обработка колеса мыши происходит
                 // в функции mouse_wheel, так как на Винде не приходит
@@ -490,7 +488,7 @@ class Impl final : public ShowObject, public Show, public WindowEvent
 
         void window_resized(int width, int height) override
         {
-                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+                ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 if (width <= 0 || height <= 0)
                 {
@@ -505,18 +503,9 @@ class Impl final : public ShowObject, public Show, public WindowEvent
 
         //
 
-        Show& show() override
-        {
-                ASSERT(std::this_thread::get_id() != m_thread.get_id());
-
-                return m_event_queue;
-        }
-
-        //
-
         void mouse_wheel_handler(int delta)
         {
-                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+                ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 m_camera.scale(m_mouse_x, m_mouse_y, delta);
 
@@ -525,7 +514,7 @@ class Impl final : public ShowObject, public Show, public WindowEvent
 
         void mouse_move_handler()
         {
-                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+                ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 if (!m_mouse_pressed)
                 {
@@ -558,7 +547,7 @@ class Impl final : public ShowObject, public Show, public WindowEvent
 
         void reset_view_handler()
         {
-                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+                ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 m_camera.reset(vec3(1, 0, 0), vec3(0, 1, 0), 1, vec2(0, 0));
 
@@ -567,7 +556,7 @@ class Impl final : public ShowObject, public Show, public WindowEvent
 
         void window_resize_handler()
         {
-                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+                ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 if (m_window_width <= 0 || m_window_height <= 0)
                 {
@@ -590,17 +579,17 @@ class Impl final : public ShowObject, public Show, public WindowEvent
 
         void pull_and_dispatch_all_events()
         {
-                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+                ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 // Вначале команды, потом сообщения окна, потому что в командах
                 // могут быть действия с окном, а в событиях окна нет комманд
-                m_event_queue.pull_and_dispatch_events();
+                m_event_queue.pull_and_dispatch_events(*this);
                 m_window->pull_and_dispath_events();
         }
 
         void init_window_and_view()
         {
-                ASSERT(std::this_thread::get_id() == m_thread.get_id());
+                ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 move_window_to_parent(m_window->system_handle(), m_parent_window);
 
@@ -622,95 +611,20 @@ class Impl final : public ShowObject, public Show, public WindowEvent
                 reset_view_handler();
         }
 
-        void loop_thread()
-        {
-                ASSERT(std::this_thread::get_id() == m_thread.get_id());
-
-                try
-                {
-                        try
-                        {
-                                loop();
-
-                                if (!m_stop)
-                                {
-                                        m_callback->message_error_fatal("Thread ended.");
-                                }
-                        }
-                        catch (ErrorSourceException& e)
-                        {
-                                m_callback->message_error_source(e.msg(), e.src());
-                        }
-                        catch (std::exception& e)
-                        {
-                                m_callback->message_error_fatal(e.what());
-                        }
-                        catch (...)
-                        {
-                                m_callback->message_error_fatal("Unknown Error. Thread ended.");
-                        }
-                }
-                catch (...)
-                {
-                        error_fatal("Exception in the show thread exception handlers");
-                }
-        }
-
         //
 
         void resize();
-        void loop();
 
 public:
-        Impl(const ShowCreateInfo& info)
-        try : m_event_queue(*this),
-              m_callback(info.callback.value()),
-              m_parent_window(info.parent_window.value()),
-              m_parent_window_ppi(info.parent_window_ppi.value())
+        Impl(EventQueue& event_queue, ShowCallback* callback, const WindowID& parent_window, double parent_window_ppi)
+                : m_event_queue(event_queue),
+                  m_callback(callback),
+                  m_parent_window(parent_window),
+                  m_parent_window_ppi(parent_window_ppi)
         {
-                ASSERT(m_callback);
-                ASSERT(m_parent_window_ppi > 0);
-
-                Show& queue = m_event_queue;
-
-                queue.set_ambient(info.ambient.value());
-                queue.set_diffuse(info.diffuse.value());
-                queue.set_specular(info.specular.value());
-                queue.set_background_color(info.background_color.value());
-                queue.set_default_color(info.default_color.value());
-                queue.set_wireframe_color(info.wireframe_color.value());
-                queue.set_default_ns(info.default_ns.value());
-                queue.show_smooth(info.with_smooth.value());
-                queue.show_wireframe(info.with_wireframe.value());
-                queue.show_shadow(info.with_shadow.value());
-                queue.show_fog(info.with_fog.value());
-                queue.show_fps(info.with_fps.value());
-                queue.show_pencil_sketch(info.with_pencil_sketch.value());
-                queue.show_dft(info.with_dft.value());
-                queue.set_dft_brightness(info.dft_brightness.value());
-                queue.set_dft_background_color(info.dft_background_color.value());
-                queue.set_dft_color(info.dft_color.value());
-                queue.show_materials(info.with_materials.value());
-                queue.show_convex_hull_2d(info.with_convex_hull.value());
-                queue.show_optical_flow(info.with_optical_flow.value());
-                queue.set_vertical_sync(info.vertical_sync.value());
-                queue.set_shadow_zoom(info.shadow_zoom.value());
-
-                m_thread = std::thread(&Impl::loop_thread, this);
-        }
-        catch (std::bad_optional_access&)
-        {
-                error("Show create information is not complete");
         }
 
-        ~Impl() override
-        {
-                if (m_thread.joinable())
-                {
-                        m_stop = true;
-                        m_thread.join();
-                }
-        }
+        void loop(std::atomic_bool& stop);
 
         Impl(const Impl&) = delete;
         Impl(Impl&&) = delete;
@@ -732,9 +646,9 @@ void render_opengl(opengl::Window& window, gpu_opengl::Renderer& renderer, gpu_o
 }
 
 template <>
-void Impl<GraphicsAndComputeAPI::OpenGL>::loop()
+void Impl<GraphicsAndComputeAPI::OpenGL>::loop(std::atomic_bool& stop)
 {
-        ASSERT(std::this_thread::get_id() == m_thread.get_id());
+        ASSERT(std::this_thread::get_id() == m_thread_id);
 
         std::unique_ptr<opengl::Window> window = opengl::create_window(OPENGL_MINIMUM_SAMPLE_COUNT, this);
         std::unique_ptr<gpu_opengl::Renderer> renderer = gpu_opengl::create_renderer(OPENGL_MINIMUM_SAMPLE_COUNT);
@@ -755,7 +669,7 @@ void Impl<GraphicsAndComputeAPI::OpenGL>::loop()
         //
 
         double last_frame_time = time_in_seconds();
-        while (!m_stop)
+        while (!stop)
         {
                 pull_and_dispatch_all_events();
 
@@ -873,9 +787,9 @@ std::vector<vulkan::PhysicalDeviceFeatures> device_features_sampler_anisotropy(b
 }
 
 template <>
-void Impl<GraphicsAndComputeAPI::Vulkan>::loop()
+void Impl<GraphicsAndComputeAPI::Vulkan>::loop(std::atomic_bool& stop)
 {
-        ASSERT(std::this_thread::get_id() == m_thread.get_id());
+        ASSERT(std::this_thread::get_id() == m_thread_id);
 
         std::unique_ptr<vulkan::Window> window = vulkan::create_window(this);
 
@@ -948,7 +862,7 @@ void Impl<GraphicsAndComputeAPI::Vulkan>::loop()
         //
 
         double last_frame_time = time_in_seconds();
-        while (!m_stop)
+        while (!stop)
         {
                 pull_and_dispatch_all_events();
 
@@ -975,6 +889,171 @@ template <>
 void Impl<GraphicsAndComputeAPI::Vulkan>::resize()
 {
 }
+
+template <typename T>
+class ShowThread final : public ShowObject
+{
+        std::thread::id m_thread_id = std::this_thread::get_id();
+        EventQueue m_event_queue;
+        std::thread m_thread;
+        std::atomic_bool m_stop{false};
+        std::atomic_bool m_started{false};
+
+        class EventQueueSetShow final
+        {
+                EventQueue& m_event_queue;
+
+        public:
+                EventQueueSetShow(EventQueue& event_queue, Show& show) : m_event_queue(event_queue)
+                {
+                        m_event_queue.set_show(&show);
+                }
+                ~EventQueueSetShow()
+                {
+                        m_event_queue.set_show(nullptr);
+                }
+                EventQueueSetShow(const EventQueueSetShow&) = delete;
+                EventQueueSetShow(EventQueueSetShow&&) = delete;
+                EventQueueSetShow& operator=(const EventQueueSetShow&) = delete;
+                EventQueueSetShow& operator=(EventQueueSetShow&&) = delete;
+        };
+
+        static void add_to_event_queue(EventQueue& queue, const ShowCreateInfo& info)
+        {
+                Show& q = queue;
+
+                q.set_ambient(info.ambient.value());
+                q.set_diffuse(info.diffuse.value());
+                q.set_specular(info.specular.value());
+                q.set_background_color(info.background_color.value());
+                q.set_default_color(info.default_color.value());
+                q.set_wireframe_color(info.wireframe_color.value());
+                q.set_default_ns(info.default_ns.value());
+                q.show_smooth(info.with_smooth.value());
+                q.show_wireframe(info.with_wireframe.value());
+                q.show_shadow(info.with_shadow.value());
+                q.show_fog(info.with_fog.value());
+                q.show_fps(info.with_fps.value());
+                q.show_pencil_sketch(info.with_pencil_sketch.value());
+                q.show_dft(info.with_dft.value());
+                q.set_dft_brightness(info.dft_brightness.value());
+                q.set_dft_background_color(info.dft_background_color.value());
+                q.set_dft_color(info.dft_color.value());
+                q.show_materials(info.with_materials.value());
+                q.show_convex_hull_2d(info.with_convex_hull.value());
+                q.show_optical_flow(info.with_optical_flow.value());
+                q.set_vertical_sync(info.vertical_sync.value());
+                q.set_shadow_zoom(info.shadow_zoom.value());
+        }
+
+        void thread_function(ShowCallback* callback, WindowID parent_window, double parent_window_ppi)
+        {
+                try
+                {
+                        try
+                        {
+                                try
+                                {
+                                        T show(m_event_queue, callback, parent_window, parent_window_ppi);
+
+                                        EventQueueSetShow e(m_event_queue, show);
+
+                                        m_started = true;
+
+                                        show.loop(m_stop);
+
+                                        if (!m_stop)
+                                        {
+                                                error("Thread ended without stop.");
+                                        }
+                                }
+                                catch (...)
+                                {
+                                        m_started = true;
+                                        throw;
+                                }
+                        }
+                        catch (ErrorSourceException& e)
+                        {
+                                callback->message_error_source(e.msg(), e.src());
+                        }
+                        catch (std::exception& e)
+                        {
+                                callback->message_error_fatal(e.what());
+                        }
+                        catch (...)
+                        {
+                                callback->message_error_fatal("Unknown Error. Thread ended.");
+                        }
+                }
+                catch (...)
+                {
+                        error_fatal("Exception in the show thread exception handlers");
+                }
+        }
+
+        Show& show() override
+        {
+                return m_event_queue;
+        }
+
+        void join_thread()
+        {
+                ASSERT(std::this_thread::get_id() == m_thread_id);
+
+                if (m_thread.joinable())
+                {
+                        m_stop = true;
+                        m_thread.join();
+                }
+        }
+
+public:
+        ShowThread(const ShowCreateInfo& info)
+        {
+                try
+                {
+                        try
+                        {
+                                add_to_event_queue(m_event_queue, info);
+
+                                if (!info.callback.value() || !(info.parent_window_ppi.value() > 0))
+                                {
+                                        error("Show create information is not complete");
+                                }
+
+                                m_thread = std::thread(&ShowThread::thread_function, this, info.callback.value(),
+                                                       info.parent_window.value(), info.parent_window_ppi.value());
+                        }
+                        catch (std::bad_optional_access&)
+                        {
+                                error("Show create information is not complete");
+                        }
+
+                        do
+                        {
+                                std::this_thread::yield();
+                        } while (!m_started);
+                }
+                catch (...)
+                {
+                        join_thread();
+                        throw;
+                }
+        }
+
+        ~ShowThread() override
+        {
+                ASSERT(std::this_thread::get_id() == m_thread_id);
+
+                join_thread();
+        }
+
+        ShowThread(const ShowThread&);
+        ShowThread(ShowThread&&);
+        ShowThread& operator=(const ShowThread&);
+        ShowThread& operator=(ShowThread&&);
+};
 }
 
 std::unique_ptr<ShowObject> create_show_object(GraphicsAndComputeAPI api, const ShowCreateInfo& info)
@@ -982,9 +1061,9 @@ std::unique_ptr<ShowObject> create_show_object(GraphicsAndComputeAPI api, const 
         switch (api)
         {
         case GraphicsAndComputeAPI::Vulkan:
-                return std::make_unique<Impl<GraphicsAndComputeAPI::Vulkan>>(info);
+                return std::make_unique<ShowThread<Impl<GraphicsAndComputeAPI::Vulkan>>>(info);
         case GraphicsAndComputeAPI::OpenGL:
-                return std::make_unique<Impl<GraphicsAndComputeAPI::OpenGL>>(info);
+                return std::make_unique<ShowThread<Impl<GraphicsAndComputeAPI::OpenGL>>>(info);
         }
         error_fatal("Unknown graphics and compute API for show creation");
 }

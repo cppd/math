@@ -392,8 +392,8 @@ class EventQueue final : public Show
         };
 
         ThreadQueue<Event> m_event_queue;
-        Visitor m_visitor;
-        Show& m_show;
+        Show* m_show = nullptr;
+        mutable SpinLock m_lock;
 
         void add_object(const std::shared_ptr<const Obj<3>>& obj_ptr, int id, int scale_id) override
         {
@@ -518,28 +518,45 @@ class EventQueue final : public Show
 
         RayCameraInfo camera_information() const override
         {
-                return m_show.camera_information();
+                std::lock_guard lg(m_lock);
+                if (!m_show)
+                {
+                        error("No show");
+                }
+                return m_show->camera_information();
         }
         double object_size() const override
         {
-                return m_show.object_size();
+                std::lock_guard lg(m_lock);
+                if (!m_show)
+                {
+                        error("No show");
+                }
+                return m_show->object_size();
         }
         vec3 object_position() const override
         {
-                return m_show.object_position();
+                std::lock_guard lg(m_lock);
+                if (!m_show)
+                {
+                        error("No show");
+                }
+                return m_show->object_position();
         }
 
 public:
-        EventQueue(Show& show) : m_visitor(show), m_show(show)
+        void set_show(Show* show)
         {
+                std::lock_guard lg(m_lock);
+                m_show = show;
         }
 
-        void pull_and_dispatch_events()
+        void pull_and_dispatch_events(Show& show)
         {
                 std::optional<Event> event;
                 while ((event = m_event_queue.pop()))
                 {
-                        visit(m_visitor, event->event());
+                        visit(Visitor(show), event->event());
                 }
         }
 };
