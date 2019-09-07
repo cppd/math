@@ -43,10 +43,10 @@ public:
         virtual WindowID system_handle() = 0;
         virtual int width() const = 0;
         virtual int height() const = 0;
-        virtual void pull_and_dispath_events() = 0;
+        virtual void pull_and_dispath_events(WindowEvent& window_event) = 0;
 
         virtual VkSurfaceKHR create_surface(VkInstance instance) = 0;
 };
 
-std::unique_ptr<Window> create_window(WindowEvent* event_interface);
+std::unique_ptr<Window> create_window();
 }

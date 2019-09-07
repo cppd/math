@@ -585,7 +585,7 @@ class Impl final : public Show, public WindowEvent
                 // Вначале команды, потом сообщения окна, потому что в командах
                 // могут быть действия с окном, а в событиях окна нет комманд
                 m_event_queue.pull_and_dispatch_events(*this);
-                m_window->pull_and_dispath_events();
+                m_window->pull_and_dispath_events(*this);
         }
 
         void init_window_and_view()
@@ -651,7 +651,7 @@ void Impl<GraphicsAndComputeAPI::OpenGL>::loop(std::atomic_bool& stop)
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
-        std::unique_ptr<opengl::Window> window = opengl::create_window(OPENGL_MINIMUM_SAMPLE_COUNT, this);
+        std::unique_ptr<opengl::Window> window = opengl::create_window(OPENGL_MINIMUM_SAMPLE_COUNT);
         std::unique_ptr<gpu_opengl::Renderer> renderer = gpu_opengl::create_renderer(OPENGL_MINIMUM_SAMPLE_COUNT);
         std::unique_ptr<gpu_opengl::Canvas> canvas = gpu_opengl::create_canvas(m_frame_rate.text_size(), m_parent_window_ppi);
 
@@ -792,7 +792,7 @@ void Impl<GraphicsAndComputeAPI::Vulkan>::loop(std::atomic_bool& stop)
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
-        std::unique_ptr<vulkan::Window> window = vulkan::create_window(this);
+        std::unique_ptr<vulkan::Window> window = vulkan::create_window();
 
         vulkan::VulkanInstance instance(
                 merge<std::string>(gpu_vulkan::Renderer::instance_extensions(), vulkan::Window::instance_extensions()),

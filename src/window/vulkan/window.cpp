@@ -148,38 +148,36 @@ class Impl final : public Window
                 return surface;
         }
 
-        void pull_and_dispath_events() override
+        void pull_and_dispath_events(WindowEvent& window_event) override
         {
                 // if (glfwWindowShouldClose(window))
                 // {
                 //        return;
                 //}
 
+                global_event_interface = &window_event;
+
                 glfwPollEvents();
         }
 
-        void set_global_variables(WindowEvent* event_interface) const
+        void set_global_variables() const
         {
-                ASSERT(event_interface);
-
                 if (++global_glfw_window_count != 1)
                 {
                         --global_glfw_window_count;
                         error("Too many GLFW windows");
                 }
-                global_event_interface = event_interface;
         }
 
         void clear_global_variables() const
         {
-                global_event_interface = nullptr;
                 --global_glfw_window_count;
         }
 
 public:
-        Impl(WindowEvent* event_interface)
+        Impl()
         {
-                set_global_variables(event_interface);
+                set_global_variables();
 
                 try
                 {
@@ -258,8 +256,8 @@ std::vector<std::string> Window::instance_extensions()
         return std::vector<std::string>(extensions, extensions + count);
 }
 
-std::unique_ptr<Window> create_window(WindowEvent* event_interface)
+std::unique_ptr<Window> create_window()
 {
-        return std::make_unique<Impl>(event_interface);
+        return std::make_unique<Impl>();
 }
 }

@@ -44,11 +44,11 @@ public:
         virtual WindowID system_handle() const = 0;
         virtual int width() const = 0;
         virtual int height() const = 0;
-        virtual void pull_and_dispath_events() = 0;
+        virtual void pull_and_dispath_events(WindowEvent& window_event) = 0;
 
         virtual void set_vertical_sync_enabled(bool v) = 0;
         virtual void display() = 0;
 };
 
-std::unique_ptr<Window> create_window(int minimum_sample_count, WindowEvent* event_interface);
+std::unique_ptr<Window> create_window(int minimum_sample_count);
 }

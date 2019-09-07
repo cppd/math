@@ -106,7 +106,6 @@ std::unique_ptr<sf::Context> create_context_1x1(int major_gl_version, int minor_
 class Impl final : public Window
 {
         sf::Window m_window;
-        WindowEvent* m_event_interface;
 
         WindowID system_handle() const override
         {
@@ -134,7 +133,7 @@ class Impl final : public Window
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wswitch"
-        void pull_and_dispath_events() override
+        void pull_and_dispath_events(WindowEvent& window_event) override
         {
                 sf::Event event;
 
@@ -148,10 +147,10 @@ class Impl final : public Window
                                 switch (event.key.code)
                                 {
                                 case sf::Keyboard::F11:
-                                        m_event_interface->window_keyboard_pressed(WindowEvent::KeyboardButton::F11);
+                                        window_event.window_keyboard_pressed(WindowEvent::KeyboardButton::F11);
                                         break;
                                 case sf::Keyboard::Escape:
-                                        m_event_interface->window_keyboard_pressed(WindowEvent::KeyboardButton::Escape);
+                                        window_event.window_keyboard_pressed(WindowEvent::KeyboardButton::Escape);
                                         break;
                                 }
                                 break;
@@ -159,10 +158,10 @@ class Impl final : public Window
                                 switch (event.mouseButton.button)
                                 {
                                 case sf::Mouse::Left:
-                                        m_event_interface->window_mouse_pressed(WindowEvent::MouseButton::Left);
+                                        window_event.window_mouse_pressed(WindowEvent::MouseButton::Left);
                                         break;
                                 case sf::Mouse::Right:
-                                        m_event_interface->window_mouse_pressed(WindowEvent::MouseButton::Right);
+                                        window_event.window_mouse_pressed(WindowEvent::MouseButton::Right);
                                         break;
                                 }
                                 break;
@@ -170,21 +169,21 @@ class Impl final : public Window
                                 switch (event.mouseButton.button)
                                 {
                                 case sf::Mouse::Left:
-                                        m_event_interface->window_mouse_released(WindowEvent::MouseButton::Left);
+                                        window_event.window_mouse_released(WindowEvent::MouseButton::Left);
                                         break;
                                 case sf::Mouse::Right:
-                                        m_event_interface->window_mouse_released(WindowEvent::MouseButton::Right);
+                                        window_event.window_mouse_released(WindowEvent::MouseButton::Right);
                                         break;
                                 }
                                 break;
                         case sf::Event::MouseMoved:
-                                m_event_interface->window_mouse_moved(event.mouseMove.x, event.mouseMove.y);
+                                window_event.window_mouse_moved(event.mouseMove.x, event.mouseMove.y);
                                 break;
                         case sf::Event::MouseWheelScrolled:
-                                m_event_interface->window_mouse_wheel(event.mouseWheelScroll.delta);
+                                window_event.window_mouse_wheel(event.mouseWheelScroll.delta);
                                 break;
                         case sf::Event::Resized:
-                                m_event_interface->window_resized(event.size.width, event.size.height);
+                                window_event.window_resized(event.size.width, event.size.height);
                                 break;
                         }
                 }
@@ -192,10 +191,8 @@ class Impl final : public Window
 #pragma GCC diagnostic pop
 
 public:
-        Impl(int minimum_sample_count, WindowEvent* event_interface) : m_event_interface(event_interface)
+        Impl(int minimum_sample_count)
         {
-                ASSERT(event_interface);
-
 #if 0
                 {
                         // Без этого создания контекста почему-то не сможет установиться
@@ -257,8 +254,8 @@ Context::~Context() = default;
 
 //
 
-std::unique_ptr<Window> create_window(int minimum_sample_count, WindowEvent* event_interface)
+std::unique_ptr<Window> create_window(int minimum_sample_count)
 {
-        return std::make_unique<Impl>(minimum_sample_count, event_interface);
+        return std::make_unique<Impl>(minimum_sample_count);
 }
 }
