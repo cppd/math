@@ -40,7 +40,6 @@ namespace vulkan
 {
 namespace
 {
-std::atomic_int global_glfw_window_count = 0;
 // В один момент времени допускается существование только одного окна,
 // поэтому можно использовать глобальную переменную
 WindowEvent* global_event_interface = nullptr;
@@ -106,8 +105,34 @@ void callback_mouse_button(GLFWwindow* /*window*/, int button, int action, int /
         }
 }
 
+class WindowCounter
+{
+        static std::atomic_int m_counter;
+
+public:
+        WindowCounter()
+        {
+                if (++m_counter != 1)
+                {
+                        --m_counter;
+                        error("Too many GLFW windows");
+                }
+        }
+        ~WindowCounter()
+        {
+                --m_counter;
+        }
+        WindowCounter(const WindowCounter&) = delete;
+        WindowCounter& operator=(const WindowCounter&) = delete;
+        WindowCounter(WindowCounter&&) = delete;
+        WindowCounter& operator=(WindowCounter&&) = delete;
+};
+std::atomic_int WindowCounter::m_counter = 0;
+
 class Impl final : public Window
 {
+        WindowCounter m_window_counter;
+
         GLFWwindow* m_window;
 
         WindowID system_handle() override
@@ -156,59 +181,33 @@ class Impl final : public Window
                 //}
 
                 global_event_interface = &window_event;
-
                 glfwPollEvents();
-        }
-
-        void set_global_variables() const
-        {
-                if (++global_glfw_window_count != 1)
-                {
-                        --global_glfw_window_count;
-                        error("Too many GLFW windows");
-                }
-        }
-
-        void clear_global_variables() const
-        {
-                --global_glfw_window_count;
         }
 
 public:
         Impl()
         {
-                set_global_variables();
+                glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+                // glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+                glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
 
-                try
+                m_window = glfwCreateWindow(1, 1, "", nullptr, nullptr);
+
+                if (!m_window)
                 {
-                        glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-                        // glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-                        glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
-
-                        m_window = glfwCreateWindow(1, 1, "", nullptr, nullptr);
-
-                        if (!m_window)
-                        {
-                                error("Failed to create GLFW window");
-                        }
-
-                        glfwSetFramebufferSizeCallback(m_window, callback_framebuffer_size);
-                        glfwSetKeyCallback(m_window, callback_key);
-                        glfwSetCursorPosCallback(m_window, callback_cursor_pos);
-                        glfwSetScrollCallback(m_window, callback_scroll);
-                        glfwSetMouseButtonCallback(m_window, callback_mouse_button);
+                        error("Failed to create GLFW window");
                 }
-                catch (...)
-                {
-                        clear_global_variables();
-                        throw;
-                }
+
+                glfwSetFramebufferSizeCallback(m_window, callback_framebuffer_size);
+                glfwSetKeyCallback(m_window, callback_key);
+                glfwSetCursorPosCallback(m_window, callback_cursor_pos);
+                glfwSetScrollCallback(m_window, callback_scroll);
+                glfwSetMouseButtonCallback(m_window, callback_mouse_button);
         }
 
         ~Impl() override
         {
                 glfwDestroyWindow(m_window);
-                clear_global_variables();
         }
 
         Impl(const Impl&) = delete;
