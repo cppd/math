@@ -17,14 +17,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "show.h"
 
-#include "canvas.h"
-
 #include "com/error.h"
 #include "com/log.h"
+#include "com/matrix_alg.h"
 #include "com/print.h"
 #include "com/time.h"
 #include "com/type/limit.h"
+#include "gpu/convex_hull/opengl/show.h"
+#include "gpu/dft/opengl/show.h"
+#include "gpu/optical_flow/opengl/show.h"
+#include "gpu/pencil_sketch/opengl/show.h"
 #include "gpu/renderer/opengl/renderer.h"
+#include "gpu/text/opengl/show.h"
 #include "show/com/camera.h"
 #include "show/com/event_queue.h"
 #include "show/com/event_window.h"
@@ -65,9 +69,25 @@ class Impl final : public Show, public WindowEvent
 
         //
 
+        Color m_text_color = Color(1);
+
+        double m_dft_brightness = 1;
+        Color m_dft_background_color = Color(0);
+        Color m_dft_color = Color(1);
+
+        bool m_text_active = true;
+        bool m_pencil_sketch_active = false;
+        bool m_dft_active = false;
+        bool m_convex_hull_active = false;
+        bool m_optical_flow_active = false;
+
         std::unique_ptr<opengl::Window> m_window;
         std::unique_ptr<gpu_opengl::Renderer> m_renderer;
-        std::unique_ptr<gpu_opengl::Canvas> m_canvas;
+        std::unique_ptr<gpu_opengl::Text> m_text;
+        std::unique_ptr<gpu_opengl::DFTShow> m_dft;
+        std::unique_ptr<gpu_opengl::ConvexHullShow> m_convex_hull;
+        std::unique_ptr<gpu_opengl::OpticalFlowShow> m_optical_flow;
+        std::unique_ptr<gpu_opengl::PencilSketchShow> m_pencil_sketch;
 
         //
 
@@ -144,7 +164,11 @@ class Impl final : public Show, public WindowEvent
                 m_renderer->set_background_color(c);
 
                 bool background_is_dark = c.luminance() <= 0.5;
-                m_canvas->set_text_color(background_is_dark ? Color(1) : Color(0));
+                m_text_color = background_is_dark ? Color(1) : Color(0);
+                if (m_text)
+                {
+                        m_text->set_color(m_text_color);
+                }
         }
 
         void set_default_color(const Color& c) override
@@ -207,23 +231,23 @@ class Impl final : public Show, public WindowEvent
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
-                m_canvas->set_text_active(v);
+                m_text_active = v;
         }
 
         void show_pencil_sketch(bool v) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
-                m_canvas->set_pencil_sketch_active(v);
+                m_pencil_sketch_active = v;
         }
 
         void show_dft(bool v) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
-                if (m_canvas->dft_active() != v)
+                if (m_dft_active != v)
                 {
-                        m_canvas->set_dft_active(v);
+                        m_dft_active = v;
                         window_resize_handler();
                 }
         }
@@ -232,35 +256,55 @@ class Impl final : public Show, public WindowEvent
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
-                m_canvas->set_dft_brightness(v);
+                m_dft_brightness = v;
+                if (m_dft)
+                {
+                        m_dft->set_brightness(v);
+                }
         }
 
         void set_dft_background_color(const Color& c) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
-                m_canvas->set_dft_background_color(c);
+                m_dft_background_color = c;
+                if (m_dft)
+                {
+                        m_dft->set_background_color(c);
+                }
         }
 
         void set_dft_color(const Color& c) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
-                m_canvas->set_dft_color(c);
+                m_dft_color = c;
+                if (m_dft)
+                {
+                        m_dft->set_color(c);
+                }
         }
 
         void show_convex_hull_2d(bool v) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
-                m_canvas->set_convex_hull_active(v);
+                m_convex_hull_active = v;
+                if (m_convex_hull)
+                {
+                        m_convex_hull->reset_timer();
+                }
         }
 
         void show_optical_flow(bool v) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
-                m_canvas->set_optical_flow_active(v);
+                m_optical_flow_active = v;
+                if (m_optical_flow)
+                {
+                        m_optical_flow->reset();
+                }
         }
 
         void parent_resized() override
@@ -446,7 +490,7 @@ class Impl final : public Show, public WindowEvent
                         return;
                 }
 
-                m_draw_width = m_canvas->dft_active() ? m_window->width() / 2 : m_window->width();
+                m_draw_width = m_dft_active ? m_window->width() / 2 : m_window->width();
                 m_draw_height = m_window->height();
 
                 resize();
@@ -500,18 +544,81 @@ class Impl final : public Show, public WindowEvent
                 int dft_dst_x = (m_window->width() & 1) ? (m_draw_width + 1) : m_draw_width;
                 int dft_dst_y = 0;
 
-                m_canvas->create_objects(m_window->width(), m_window->height(), m_renderer->color_buffer(),
-                                         m_renderer->color_buffer_is_srgb(), m_renderer->objects(), m_draw_width, m_draw_height,
-                                         dft_dst_x, dft_dst_y, m_renderer->frame_buffer_is_srgb());
+                // Матрица для рисования на плоскости окна, точка (0, 0) слева вверху
+                double left = 0;
+                double right = m_window->width();
+                double bottom = m_window->height();
+                double top = 0;
+                double near = 1;
+                double far = -1;
+                const mat4& matrix = ortho_opengl<double>(left, right, bottom, top, near, far);
+
+                m_pencil_sketch = gpu_opengl::create_pencil_sketch_show(
+                        m_renderer->color_buffer(), m_renderer->color_buffer_is_srgb(), m_renderer->objects(), matrix);
+
+                m_dft = gpu_opengl::create_dft_show(m_draw_width, m_draw_height, dft_dst_x, dft_dst_y, matrix,
+                                                    m_renderer->frame_buffer_is_srgb(), m_dft_brightness, m_dft_background_color,
+                                                    m_dft_color);
+
+                m_optical_flow = gpu_opengl::create_optical_flow_show(m_draw_width, m_draw_height, m_parent_window_ppi, matrix);
+
+                m_convex_hull = gpu_opengl::create_convex_hull_show(m_renderer->objects(), matrix);
+
+                if (m_text)
+                {
+                        m_text->set_matrix(matrix);
+                }
+                else
+                {
+                        m_text = gpu_opengl::create_text(m_frame_rate.text_size(), m_text_color, matrix);
+                }
         }
 
         void render(const TextData& text_data)
         {
                 // Параметр true означает рисование в цветной буфер,
                 // параметр false означает рисование в буфер экрана.
-                m_renderer->draw(m_canvas->pencil_sketch_active());
+                m_renderer->draw(m_pencil_sketch_active);
 
-                m_canvas->draw(text_data);
+                ASSERT(m_pencil_sketch);
+                ASSERT(m_dft);
+                ASSERT(m_optical_flow);
+                ASSERT(m_convex_hull);
+                ASSERT(m_text);
+
+                glViewport(0, 0, m_event_window.window_width(), m_event_window.window_height());
+
+                if (m_pencil_sketch_active)
+                {
+                        // Рисование из цветного буфера в буфер экрана
+                        m_pencil_sketch->draw();
+                }
+
+                if (m_dft_active)
+                {
+                        m_dft->take_image_from_framebuffer();
+                }
+                if (m_optical_flow_active)
+                {
+                        m_optical_flow->take_image_from_framebuffer();
+                }
+
+                if (m_dft_active)
+                {
+                        m_dft->draw();
+                }
+                if (m_optical_flow_active)
+                {
+                        m_optical_flow->draw();
+                }
+                if (m_convex_hull_active)
+                {
+                        m_convex_hull->draw();
+                }
+                if (m_text_active)
+                {
+                        m_text->draw(text_data);
+                }
 
                 m_window->display();
         }
@@ -525,7 +632,6 @@ public:
         {
                 m_window = opengl::create_window(OPENGL_MINIMUM_SAMPLE_COUNT);
                 m_renderer = gpu_opengl::create_renderer(OPENGL_MINIMUM_SAMPLE_COUNT);
-                m_canvas = gpu_opengl::create_canvas(m_frame_rate.text_size(), m_parent_window_ppi);
 
                 m_event_window.set_window(*m_window);
 
@@ -536,7 +642,6 @@ public:
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
-                // m_canvas.reset();
                 // m_renderer.reset();
                 // m_window.reset();
         }
