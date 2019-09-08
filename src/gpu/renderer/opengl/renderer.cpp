@@ -32,6 +32,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cmath>
 #include <string>
 
+constexpr GLenum OBJECT_IMAGE_FORMAT = GL_R32UI;
+
 namespace gpu_opengl
 {
 namespace
@@ -62,7 +64,6 @@ class Impl final : public Renderer
 
         std::unique_ptr<opengl::ShadowBuffer> m_shadow_buffer;
         std::unique_ptr<opengl::ColorBuffer> m_color_buffer;
-        std::unique_ptr<opengl::TextureImage> m_objects;
 
         mat4 m_shadow_matrix;
         mat4 m_scale_bias_shadow_matrix;
@@ -87,6 +88,8 @@ class Impl final : public Renderer
         RendererPointsMemory m_points_memory;
         RendererShadowMemory m_shadow_memory;
         RendererTrianglesMemory m_triangles_memory;
+
+        const opengl::TextureImage* m_object_image = nullptr;
 
         void set_light_a(const Color& light) override
         {
@@ -163,7 +166,9 @@ class Impl final : public Renderer
         {
                 const DrawObject* draw_object = m_storage.object();
 
-                m_objects->clear();
+                ASSERT(m_object_image);
+
+                m_object_image->clear();
 
                 if (!draw_object)
                 {
@@ -292,17 +297,20 @@ class Impl final : public Renderer
                 set_shadow_size();
         }
 
-        void set_size(int width, int height) override
+        void set_size(int width, int height, const opengl::TextureImage& object_image) override
         {
+                ASSERT(object_image.format() == OBJECT_IMAGE_FORMAT);
+
                 m_width = width;
                 m_height = height;
 
-                m_color_buffer = opengl::create_color_buffer(m_sample_count, width, height);
-                m_objects = std::make_unique<opengl::TextureImage>(width, height, GL_R32UI);
+                m_object_image = &object_image;
 
-                m_triangles_program.set_uniform_handle("object_image", m_objects->image_resident_handle_write_only());
-                m_points_0d_program.set_uniform_handle("object_image", m_objects->image_resident_handle_write_only());
-                m_points_1d_program.set_uniform_handle("object_image", m_objects->image_resident_handle_write_only());
+                m_color_buffer = opengl::create_color_buffer(m_sample_count, width, height);
+
+                m_triangles_program.set_uniform_handle("object_image", m_object_image->image_resident_handle_write_only());
+                m_points_0d_program.set_uniform_handle("object_image", m_object_image->image_resident_handle_write_only());
+                m_points_1d_program.set_uniform_handle("object_image", m_object_image->image_resident_handle_write_only());
 
                 set_shadow_size();
         }
@@ -311,11 +319,6 @@ class Impl final : public Renderer
         {
                 ASSERT(m_color_buffer);
                 return m_color_buffer->color_texture();
-        }
-        const opengl::TextureImage& objects() const override
-        {
-                ASSERT(m_objects);
-                return *m_objects;
         }
 
         bool frame_buffer_is_srgb() override

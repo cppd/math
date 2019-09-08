@@ -46,7 +46,7 @@ struct Renderer
         virtual void set_show_materials(bool show) = 0;
         virtual void set_shadow_zoom(double zoom) = 0;
         virtual void set_camera(const RendererCameraInfo& c) = 0;
-        virtual void set_size(int width, int height) = 0;
+        virtual void set_size(int width, int height, const opengl::TextureImage& object_image) = 0;
 
         virtual void object_add(const Obj<3>* obj, double size, const vec3& position, int id, int scale_id) = 0;
         virtual void object_delete(int id) = 0;
@@ -58,7 +58,6 @@ struct Renderer
         virtual bool empty() const = 0;
 
         virtual const opengl::TextureRGBA32F& color_buffer() const = 0;
-        virtual const opengl::TextureImage& objects() const = 0;
 
         virtual bool frame_buffer_is_srgb() = 0;
         virtual bool color_buffer_is_srgb() = 0;

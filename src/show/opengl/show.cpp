@@ -46,6 +46,7 @@ constexpr vec3 OBJECT_POSITION = vec3(0);
 //
 
 constexpr int OPENGL_MINIMUM_SAMPLE_COUNT = 4;
+constexpr GLenum OPENGL_OBJECT_IMAGE_FORMAT = GL_R32UI;
 
 //
 
@@ -82,6 +83,7 @@ class Impl final : public Show, public WindowEvent
         bool m_optical_flow_active = false;
 
         std::unique_ptr<opengl::Window> m_window;
+        std::unique_ptr<opengl::TextureImage> m_object_image;
         std::unique_ptr<gpu_opengl::Renderer> m_renderer;
         std::unique_ptr<gpu_opengl::Text> m_text;
         std::unique_ptr<gpu_opengl::DFTShow> m_dft;
@@ -539,7 +541,15 @@ class Impl final : public Show, public WindowEvent
 
         void resize()
         {
-                m_renderer->set_size(m_draw_width, m_draw_height);
+                m_convex_hull.reset();
+                m_optical_flow.reset();
+                m_dft.reset();
+                m_pencil_sketch.reset();
+                m_object_image.reset();
+
+                m_object_image = std::make_unique<opengl::TextureImage>(m_draw_width, m_draw_height, OPENGL_OBJECT_IMAGE_FORMAT);
+
+                m_renderer->set_size(m_draw_width, m_draw_height, *m_object_image);
 
                 int dft_dst_x = (m_window->width() & 1) ? (m_draw_width + 1) : m_draw_width;
                 int dft_dst_y = 0;
@@ -554,7 +564,7 @@ class Impl final : public Show, public WindowEvent
                 const mat4& matrix = ortho_opengl<double>(left, right, bottom, top, near, far);
 
                 m_pencil_sketch = gpu_opengl::create_pencil_sketch_show(
-                        m_renderer->color_buffer(), m_renderer->color_buffer_is_srgb(), m_renderer->objects(), matrix);
+                        m_renderer->color_buffer(), m_renderer->color_buffer_is_srgb(), *m_object_image, matrix);
 
                 m_dft = gpu_opengl::create_dft_show(m_draw_width, m_draw_height, dft_dst_x, dft_dst_y, matrix,
                                                     m_renderer->frame_buffer_is_srgb(), m_dft_brightness, m_dft_background_color,
@@ -562,7 +572,7 @@ class Impl final : public Show, public WindowEvent
 
                 m_optical_flow = gpu_opengl::create_optical_flow_show(m_draw_width, m_draw_height, m_parent_window_ppi, matrix);
 
-                m_convex_hull = gpu_opengl::create_convex_hull_show(m_renderer->objects(), matrix);
+                m_convex_hull = gpu_opengl::create_convex_hull_show(*m_object_image, matrix);
 
                 if (m_text)
                 {
@@ -641,9 +651,6 @@ public:
         ~Impl() override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
-
-                // m_renderer.reset();
-                // m_window.reset();
         }
 
         void loop(std::atomic_bool& stop)
