@@ -55,15 +55,12 @@ class Impl final : public Renderer
         static constexpr mat4 TRANSLATE = translate<double>(1, 1, 1);
         const mat4 SCALE_BIAS_MATRIX = SCALE * TRANSLATE;
 
-        const unsigned m_sample_count;
-
         opengl::GraphicsProgram m_triangles_program;
         opengl::GraphicsProgram m_shadow_program;
         opengl::GraphicsProgram m_points_0d_program;
         opengl::GraphicsProgram m_points_1d_program;
 
         std::unique_ptr<opengl::ShadowBuffer> m_shadow_buffer;
-        std::unique_ptr<opengl::ColorBuffer> m_color_buffer;
 
         mat4 m_shadow_matrix;
         mat4 m_scale_bias_shadow_matrix;
@@ -162,7 +159,7 @@ class Impl final : public Renderer
                 set_matrices();
         }
 
-        void draw(bool draw_to_color_buffer) override
+        void draw(const opengl::ColorBuffer* render_buffer) override
         {
                 const DrawObject* draw_object = m_storage.object();
 
@@ -172,15 +169,14 @@ class Impl final : public Renderer
 
                 if (!draw_object)
                 {
-                        if (draw_to_color_buffer)
+                        if (render_buffer)
                         {
-                                m_color_buffer->bind_buffer();
+                                render_buffer->bind_buffer();
                         }
                         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-                        if (draw_to_color_buffer)
+                        if (render_buffer)
                         {
-                                m_color_buffer->unbind_buffer();
-                                m_color_buffer->resolve();
+                                render_buffer->unbind_buffer();
                         }
                         return;
                 }
@@ -208,9 +204,9 @@ class Impl final : public Renderer
 
                 glViewport(0, 0, m_width, m_height);
 
-                if (draw_to_color_buffer)
+                if (render_buffer)
                 {
-                        m_color_buffer->bind_buffer();
+                        render_buffer->bind_buffer();
                 }
 
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -224,10 +220,9 @@ class Impl final : public Renderer
                 info.lines_memory = &m_points_memory;
                 draw_object->draw(info);
 
-                if (draw_to_color_buffer)
+                if (render_buffer)
                 {
-                        m_color_buffer->unbind_buffer();
-                        m_color_buffer->resolve();
+                        render_buffer->unbind_buffer();
                 }
         }
 
@@ -306,19 +301,11 @@ class Impl final : public Renderer
 
                 m_object_image = &object_image;
 
-                m_color_buffer = opengl::create_color_buffer(m_sample_count, width, height);
-
                 m_triangles_program.set_uniform_handle("object_image", m_object_image->image_resident_handle_write_only());
                 m_points_0d_program.set_uniform_handle("object_image", m_object_image->image_resident_handle_write_only());
                 m_points_1d_program.set_uniform_handle("object_image", m_object_image->image_resident_handle_write_only());
 
                 set_shadow_size();
-        }
-
-        const opengl::TextureRGBA32F& color_buffer() const override
-        {
-                ASSERT(m_color_buffer);
-                return m_color_buffer->color_texture();
         }
 
         bool frame_buffer_is_srgb() override
@@ -353,9 +340,8 @@ class Impl final : public Renderer
         }
 
 public:
-        Impl(unsigned sample_count)
-                : m_sample_count(sample_count),
-                  m_triangles_program(opengl::VertexShader(renderer_triangles_vert()),
+        Impl()
+                : m_triangles_program(opengl::VertexShader(renderer_triangles_vert()),
                                       opengl::GeometryShader(renderer_triangles_geom()),
                                       opengl::FragmentShader(renderer_triangles_frag())),
                   m_shadow_program(opengl::VertexShader(renderer_shadow_vert()), opengl::FragmentShader(renderer_shadow_frag())),
@@ -381,8 +367,8 @@ public:
 };
 }
 
-std::unique_ptr<Renderer> create_renderer(unsigned sample_count)
+std::unique_ptr<Renderer> create_renderer()
 {
-        return std::make_unique<Impl>(sample_count);
+        return std::make_unique<Impl>();
 }
 }

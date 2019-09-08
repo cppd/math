@@ -83,6 +83,7 @@ class Impl final : public Show, public WindowEvent
         bool m_optical_flow_active = false;
 
         std::unique_ptr<opengl::Window> m_window;
+        std::unique_ptr<opengl::ColorBuffer> m_render_buffer;
         std::unique_ptr<opengl::TextureImage> m_object_image;
         std::unique_ptr<gpu_opengl::Renderer> m_renderer;
         std::unique_ptr<gpu_opengl::Text> m_text;
@@ -546,7 +547,9 @@ class Impl final : public Show, public WindowEvent
                 m_dft.reset();
                 m_pencil_sketch.reset();
                 m_object_image.reset();
+                m_render_buffer.reset();
 
+                m_render_buffer = opengl::create_color_buffer(OPENGL_MINIMUM_SAMPLE_COUNT, m_draw_width, m_draw_height);
                 m_object_image = std::make_unique<opengl::TextureImage>(m_draw_width, m_draw_height, OPENGL_OBJECT_IMAGE_FORMAT);
 
                 m_renderer->set_size(m_draw_width, m_draw_height, *m_object_image);
@@ -564,7 +567,7 @@ class Impl final : public Show, public WindowEvent
                 const mat4& matrix = ortho_opengl<double>(left, right, bottom, top, near, far);
 
                 m_pencil_sketch = gpu_opengl::create_pencil_sketch_show(
-                        m_renderer->color_buffer(), m_renderer->color_buffer_is_srgb(), *m_object_image, matrix);
+                        m_render_buffer->color_texture(), m_renderer->color_buffer_is_srgb(), *m_object_image, matrix);
 
                 m_dft = gpu_opengl::create_dft_show(m_draw_width, m_draw_height, dft_dst_x, dft_dst_y, matrix,
                                                     m_renderer->frame_buffer_is_srgb(), m_dft_brightness, m_dft_background_color,
@@ -586,9 +589,17 @@ class Impl final : public Show, public WindowEvent
 
         void render(const TextData& text_data)
         {
-                // Параметр true означает рисование в цветной буфер,
-                // параметр false означает рисование в буфер экрана.
-                m_renderer->draw(m_pencil_sketch_active);
+                if (m_pencil_sketch_active)
+                {
+                        ASSERT(m_render_buffer);
+
+                        m_renderer->draw(m_render_buffer.get());
+                        m_render_buffer->resolve();
+                }
+                else
+                {
+                        m_renderer->draw(nullptr);
+                }
 
                 ASSERT(m_pencil_sketch);
                 ASSERT(m_dft);
@@ -641,7 +652,7 @@ public:
                   m_parent_window_ppi(parent_window_ppi)
         {
                 m_window = opengl::create_window(OPENGL_MINIMUM_SAMPLE_COUNT);
-                m_renderer = gpu_opengl::create_renderer(OPENGL_MINIMUM_SAMPLE_COUNT);
+                m_renderer = gpu_opengl::create_renderer();
 
                 m_event_window.set_window(*m_window);
 

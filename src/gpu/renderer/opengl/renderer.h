@@ -53,15 +53,13 @@ struct Renderer
         virtual void object_show(int id) = 0;
         virtual void object_delete_all() = 0;
 
-        virtual void draw(bool draw_to_color_buffer) = 0;
+        virtual void draw(const opengl::ColorBuffer* render_buffer) = 0;
 
         virtual bool empty() const = 0;
-
-        virtual const opengl::TextureRGBA32F& color_buffer() const = 0;
 
         virtual bool frame_buffer_is_srgb() = 0;
         virtual bool color_buffer_is_srgb() = 0;
 };
 
-std::unique_ptr<Renderer> create_renderer(unsigned sample_count);
+std::unique_ptr<Renderer> create_renderer();
 }
