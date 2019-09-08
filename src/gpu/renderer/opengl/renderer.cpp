@@ -140,7 +140,7 @@ class Impl final : public Renderer
         {
                 m_triangles_memory.set_show_materials(show);
         }
-        void set_camera(const RasterizationCameraInfo& c) override
+        void set_camera(const RendererCameraInfo& c) override
         {
                 const mat4& shadow_projection_matrix =
                         ortho_opengl<double>(c.shadow_volume.left, c.shadow_volume.right, c.shadow_volume.bottom,

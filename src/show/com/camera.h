@@ -20,7 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/matrix.h"
 #include "com/thread.h"
 #include "com/vec.h"
-#include "show/camera_info.h"
+#include "gpu/renderer/camera_info.h"
+#include "show/show.h"
 
 class Camera final
 {
@@ -55,6 +56,6 @@ public:
         void move(const vec2& delta);
         void resize(int width, int height);
 
-        RayCameraInfo ray_info() const;
-        RasterizationCameraInfo rasterization_info() const;
+        ShowCameraInfo show_info() const;
+        RendererCameraInfo renderer_info() const;
 };

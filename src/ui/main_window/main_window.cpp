@@ -1473,7 +1473,7 @@ void MainWindow::on_actionPainter_triggered()
 
                 PaintingInformation3d info_3d;
 
-                RayCameraInfo c = m_show->camera_information();
+                ShowCameraInfo c = m_show->camera_information();
                 info_3d.camera_up = c.camera_up;
                 info_3d.camera_direction = c.camera_direction;
                 info_3d.light_direction = c.light_direction;

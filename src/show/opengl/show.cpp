@@ -315,11 +315,11 @@ class Impl final : public Show, public WindowEvent
                 m_renderer->set_shadow_zoom(v);
         }
 
-        RayCameraInfo camera_information() const override
+        ShowCameraInfo camera_information() const override
         {
                 ASSERT(std::this_thread::get_id() != m_thread_id);
 
-                return m_camera.ray_info();
+                return m_camera.show_info();
         }
 
         double object_size() const override
@@ -390,7 +390,7 @@ class Impl final : public Show, public WindowEvent
 
                 if (changed)
                 {
-                        m_renderer->set_camera(m_camera.rasterization_info());
+                        m_renderer->set_camera(m_camera.renderer_info());
                 }
         }
 
@@ -422,7 +422,7 @@ class Impl final : public Show, public WindowEvent
 
                 m_camera.scale(m_event_window.mouse_x(), m_event_window.mouse_y(), delta);
 
-                m_renderer->set_camera(m_camera.rasterization_info());
+                m_renderer->set_camera(m_camera.renderer_info());
         }
 
         void reset_view_handler()
@@ -431,7 +431,7 @@ class Impl final : public Show, public WindowEvent
 
                 m_camera.reset(vec3(1, 0, 0), vec3(0, 1, 0), 1, vec2(0, 0));
 
-                m_renderer->set_camera(m_camera.rasterization_info());
+                m_renderer->set_camera(m_camera.renderer_info());
         }
 
         void window_resize_handler()
@@ -452,7 +452,7 @@ class Impl final : public Show, public WindowEvent
                 resize();
 
                 m_camera.resize(m_draw_width, m_draw_height);
-                m_renderer->set_camera(m_camera.rasterization_info());
+                m_renderer->set_camera(m_camera.renderer_info());
         }
 
         //

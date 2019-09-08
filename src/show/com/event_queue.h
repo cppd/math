@@ -516,7 +516,7 @@ class EventQueue final : public Show
                 m_event_queue.emplace(std::in_place_type<Event::set_shadow_zoom>, v);
         }
 
-        RayCameraInfo camera_information() const override
+        ShowCameraInfo camera_information() const override
         {
                 std::lock_guard lg(m_lock);
                 if (!m_show)

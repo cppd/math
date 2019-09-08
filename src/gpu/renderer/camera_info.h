@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/matrix.h"
 #include "com/vec.h"
 
-struct RasterizationCameraInfo
+struct RendererCameraInfo final
 {
         struct Volume
         {
@@ -33,15 +33,4 @@ struct RasterizationCameraInfo
         mat4 shadow_matrix;
         vec3 light_direction;
         vec3 camera_direction;
-};
-
-struct RayCameraInfo
-{
-        vec3 camera_up;
-        vec3 camera_direction;
-        vec3 light_direction;
-        vec3 view_center;
-        double view_width;
-        int width;
-        int height;
 };

@@ -215,7 +215,7 @@ class Impl final : public Renderer
                 create_shadow_buffers();
                 create_all_command_buffers();
         }
-        void set_camera(const RasterizationCameraInfo& c) override
+        void set_camera(const RendererCameraInfo& c) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
