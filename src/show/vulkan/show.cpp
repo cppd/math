@@ -17,15 +17,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "show.h"
 
-#include "canvas.h"
-
 #include "com/error.h"
 #include "com/log.h"
+#include "com/matrix_alg.h"
 #include "com/merge.h"
 #include "com/print.h"
 #include "com/time.h"
 #include "com/type/limit.h"
+#include "gpu/convex_hull/vulkan/show.h"
 #include "gpu/renderer/vulkan/renderer.h"
+#include "gpu/text/vulkan/show.h"
 #include "graphics/vulkan/instance.h"
 #include "graphics/vulkan/objects.h"
 #include "graphics/vulkan/render/render_buffer.h"
@@ -54,8 +55,7 @@ constexpr VkSurfaceFormatKHR VULKAN_SURFACE_FORMAT = {VK_FORMAT_B8G8R8A8_SRGB, V
 constexpr int VULKAN_MINIMUM_SAMPLE_COUNT = 4;
 
 // Supersampling
-constexpr bool VULKAN_RENDERER_SAMPLE_SHADING = true;
-constexpr bool VULKAN_CANVAS_SAMPLE_SHADING = true;
+constexpr bool VULKAN_SAMPLE_SHADING = true;
 // Anisotropic filtering
 constexpr bool VULKAN_SAMPLER_ANISOTROPY = true;
 
@@ -112,8 +112,11 @@ class Impl final : public Show, public WindowEvent
 
         vulkan::PresentMode m_present_mode = VULKAN_DEFAULT_PRESENT_MODE;
 
-        // В последовательности swapchain, а затем renderer и canvas,
-        // так как буферы renderer и canvas могут зависеть от swapchain
+        bool m_text_active = true;
+        bool m_convex_hull_active = true;
+
+        // В последовательности swapchain, а затем renderer,
+        // так как буферы renderer могут зависеть от swapchain
         std::unique_ptr<vulkan::Window> m_window;
         std::unique_ptr<vulkan::VulkanInstance> m_instance;
         std::unique_ptr<vulkan::Semaphore> m_image_semaphore;
@@ -121,7 +124,8 @@ class Impl final : public Show, public WindowEvent
         std::unique_ptr<vulkan::RenderBuffers> m_render_buffers;
         std::unique_ptr<vulkan::StorageImage> m_object_image;
         std::unique_ptr<gpu_vulkan::Renderer> m_renderer;
-        std::unique_ptr<gpu_vulkan::Canvas> m_canvas;
+        std::unique_ptr<gpu_vulkan::TextShow> m_text;
+        std::unique_ptr<gpu_vulkan::ConvexHullShow> m_convex_hull;
 
         //
 
@@ -198,7 +202,7 @@ class Impl final : public Show, public WindowEvent
                 m_renderer->set_background_color(c);
 
                 bool background_is_dark = c.luminance() <= 0.5;
-                m_canvas->set_text_color(background_is_dark ? Color(1) : Color(0));
+                m_text->set_color(background_is_dark ? Color(1) : Color(0));
         }
 
         void set_default_color(const Color& c) override
@@ -261,60 +265,48 @@ class Impl final : public Show, public WindowEvent
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
-                m_canvas->set_text_active(v);
+                m_text_active = v;
         }
 
-        void show_pencil_sketch(bool v) override
+        void show_pencil_sketch(bool /*v*/) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
-
-                m_canvas->set_pencil_sketch_active(v);
         }
 
-        void show_dft(bool v) override
+        void show_dft(bool /*v*/) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
-
-                if (m_canvas->dft_active() != v)
-                {
-                        m_canvas->set_dft_active(v);
-                        window_resize_handler();
-                }
         }
 
-        void set_dft_brightness(double v) override
+        void set_dft_brightness(double /*v*/) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
-
-                m_canvas->set_dft_brightness(v);
         }
 
-        void set_dft_background_color(const Color& c) override
+        void set_dft_background_color(const Color& /*c*/) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
-
-                m_canvas->set_dft_background_color(c);
         }
 
-        void set_dft_color(const Color& c) override
+        void set_dft_color(const Color& /*c*/) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
-
-                m_canvas->set_dft_color(c);
         }
 
         void show_convex_hull_2d(bool v) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
-                m_canvas->set_convex_hull_active(v);
+                m_convex_hull_active = v;
+                if (m_convex_hull_active)
+                {
+                        m_convex_hull->reset_timer();
+                }
         }
 
-        void show_optical_flow(bool v) override
+        void show_optical_flow(bool /*v*/) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
-
-                m_canvas->set_optical_flow_active(v);
         }
 
         void parent_resized() override
@@ -500,7 +492,7 @@ class Impl final : public Show, public WindowEvent
                         return;
                 }
 
-                m_draw_width = m_canvas->dft_active() ? m_window->width() / 2 : m_window->width();
+                m_draw_width = m_window->width();
                 m_draw_height = m_window->height();
 
                 m_camera.resize(m_draw_width, m_draw_height);
@@ -565,7 +557,8 @@ class Impl final : public Show, public WindowEvent
         {
                 m_instance->device_wait_idle();
 
-                m_canvas->delete_buffers();
+                m_text->delete_buffers();
+                m_convex_hull->delete_buffers();
                 m_renderer->delete_buffers();
 
                 m_object_image.reset();
@@ -592,7 +585,17 @@ class Impl final : public Show, public WindowEvent
 
                 m_renderer->create_buffers(m_swapchain.get(), &m_render_buffers->buffers_3d(), m_object_image.get());
 
-                m_canvas->create_buffers(m_swapchain.get(), &m_render_buffers->buffers_2d(), m_object_image.get());
+                // Матрица для рисования на плоскости окна, точка (0, 0) слева вверху
+                double left = 0;
+                double right = m_swapchain->width();
+                double bottom = m_swapchain->height();
+                double top = 0;
+                double near = 1;
+                double far = -1;
+                const mat4& matrix = ortho_vulkan<double>(left, right, bottom, top, near, far);
+
+                m_text->create_buffers(&m_render_buffers->buffers_2d(), matrix);
+                m_convex_hull->create_buffers(&m_render_buffers->buffers_2d(), matrix, *m_object_image);
         }
 
         bool render(const TextData& text_data)
@@ -610,7 +613,17 @@ class Impl final : public Show, public WindowEvent
                 const vulkan::Queue& graphics_queue = m_instance->graphics_queues()[0];
 
                 wait_semaphore = m_renderer->draw(graphics_queue, image_index);
-                wait_semaphore = m_canvas->draw(graphics_queue, graphics_queue, wait_semaphore, image_index, text_data);
+
+                if (m_convex_hull_active)
+                {
+                        wait_semaphore = m_convex_hull->draw(graphics_queue, wait_semaphore, image_index);
+                }
+
+                if (m_text_active)
+                {
+                        wait_semaphore = m_text->draw(graphics_queue, wait_semaphore, image_index, text_data);
+                }
+
                 wait_semaphore =
                         m_render_buffers->resolve_to_swapchain(graphics_queue, *m_image_semaphore, wait_semaphore, image_index);
 
@@ -632,6 +645,9 @@ public:
                   m_parent_window(parent_window),
                   m_parent_window_ppi(parent_window_ppi)
         {
+                // Этот цвет меняется в set_background_color
+                constexpr Srgb8 text_color(255, 255, 255);
+
                 m_present_mode = VULKAN_DEFAULT_PRESENT_MODE;
 
                 m_window = vulkan::create_window();
@@ -644,15 +660,14 @@ public:
                                 merge<std::string>(gpu_vulkan::Renderer::device_extensions());
 
                         const std::vector<vulkan::PhysicalDeviceFeatures> features_sample_shading =
-                                device_features_sample_shading(VULKAN_MINIMUM_SAMPLE_COUNT,
-                                                               VULKAN_RENDERER_SAMPLE_SHADING || VULKAN_CANVAS_SAMPLE_SHADING);
+                                device_features_sample_shading(VULKAN_MINIMUM_SAMPLE_COUNT, VULKAN_SAMPLE_SHADING);
 
                         const std::vector<vulkan::PhysicalDeviceFeatures> features_sampler_anisotropy =
                                 device_features_sampler_anisotropy(VULKAN_SAMPLER_ANISOTROPY);
 
                         const std::vector<vulkan::PhysicalDeviceFeatures> required_features =
                                 merge<vulkan::PhysicalDeviceFeatures>(gpu_vulkan::Renderer::required_device_features(),
-                                                                      gpu_vulkan::Canvas::required_device_features(),
+                                                                      gpu_vulkan::ConvexHullShow::required_device_features(),
                                                                       features_sample_shading, features_sampler_anisotropy);
 
                         const std::vector<vulkan::PhysicalDeviceFeatures> optional_features = {};
@@ -668,15 +683,20 @@ public:
 
                 m_image_semaphore = std::make_unique<vulkan::Semaphore>(m_instance->device());
 
-                m_renderer = gpu_vulkan::create_renderer(*m_instance, m_instance->graphics_command_pool(),
-                                                         m_instance->graphics_queues()[0], m_instance->transfer_command_pool(),
-                                                         m_instance->transfer_queue(), VULKAN_RENDERER_SAMPLE_SHADING,
-                                                         VULKAN_SAMPLER_ANISOTROPY);
+                const vulkan::Queue& graphics_queue = m_instance->graphics_queues()[0];
 
-                m_canvas = gpu_vulkan::create_canvas(*m_instance, m_instance->graphics_command_pool(),
-                                                     m_instance->graphics_queues()[0], m_instance->transfer_command_pool(),
-                                                     m_instance->transfer_queue(), m_instance->graphics_queues()[0],
-                                                     VULKAN_CANVAS_SAMPLE_SHADING, m_frame_rate.text_size());
+                m_renderer = gpu_vulkan::create_renderer(*m_instance, m_instance->graphics_command_pool(), graphics_queue,
+                                                         m_instance->transfer_command_pool(), m_instance->transfer_queue(),
+                                                         VULKAN_SAMPLE_SHADING, VULKAN_SAMPLER_ANISOTROPY);
+
+                m_text = gpu_vulkan::create_text_show(*m_instance, m_instance->graphics_command_pool(), graphics_queue,
+                                                      m_instance->transfer_command_pool(), m_instance->transfer_queue(),
+                                                      VULKAN_SAMPLE_SHADING, m_frame_rate.text_size(), text_color);
+
+                m_convex_hull =
+                        gpu_vulkan::create_convex_hull_show(*m_instance, graphics_queue.family_index(), VULKAN_SAMPLE_SHADING);
+
+                //
 
                 create_swapchain();
 
@@ -691,9 +711,10 @@ public:
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
-                // В последовательности canvas, renderer, а затем swapchain,
-                // так как буферы renderer и canvas могут зависеть от swapchain
-                // m_canvas.reset();
+                // В последовательности renderer, а затем swapchain,
+                // так как буферы renderer могут зависеть от swapchain
+                // m_convex_hull.reset();
+                // m_text.reset();
                 // m_renderer.reset();
                 // m_object_image.reset();
                 // m_render_buffers.reset();
