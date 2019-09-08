@@ -667,6 +667,7 @@ public:
 
                         const std::vector<vulkan::PhysicalDeviceFeatures> required_features =
                                 merge<vulkan::PhysicalDeviceFeatures>(gpu_vulkan::Renderer::required_device_features(),
+                                                                      gpu_vulkan::TextShow::required_device_features(),
                                                                       gpu_vulkan::ConvexHullShow::required_device_features(),
                                                                       features_sample_shading, features_sampler_anisotropy);
 

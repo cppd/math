@@ -30,6 +30,8 @@ namespace gpu_vulkan
 {
 struct TextShow
 {
+        static std::vector<vulkan::PhysicalDeviceFeatures> required_device_features();
+
         virtual ~TextShow() = default;
 
         virtual void set_color(const Color& color) const = 0;

@@ -27,6 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/font/glyphs.h"
 #include "com/font/vertices.h"
 #include "com/log.h"
+#include "com/merge.h"
 #include "graphics/vulkan/buffers.h"
 #include "graphics/vulkan/create.h"
 #include "graphics/vulkan/error.h"
@@ -41,6 +42,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <vector>
 
 constexpr int VERTEX_BUFFER_FIRST_SIZE = 10;
+
+// clang-format off
+constexpr std::initializer_list<vulkan::PhysicalDeviceFeatures> REQUIRED_DEVICE_FEATURES =
+{
+};
+// clang-format on
 
 namespace gpu_vulkan
 {
@@ -256,6 +263,11 @@ public:
                 m_instance.device_wait_idle_noexcept("the Vulkan text destructor");
         }
 };
+}
+
+std::vector<vulkan::PhysicalDeviceFeatures> TextShow::required_device_features()
+{
+        return merge<vulkan::PhysicalDeviceFeatures>(std::vector<vulkan::PhysicalDeviceFeatures>(REQUIRED_DEVICE_FEATURES));
 }
 
 std::unique_ptr<TextShow> create_text_show(const vulkan::VulkanInstance& instance,
