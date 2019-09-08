@@ -56,9 +56,6 @@ struct Renderer
         virtual void draw(const opengl::ColorBuffer* render_buffer) = 0;
 
         virtual bool empty() const = 0;
-
-        virtual bool frame_buffer_is_srgb() = 0;
-        virtual bool color_buffer_is_srgb() = 0;
 };
 
 std::unique_ptr<Renderer> create_renderer();

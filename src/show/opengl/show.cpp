@@ -29,6 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "gpu/pencil_sketch/opengl/show.h"
 #include "gpu/renderer/opengl/renderer.h"
 #include "gpu/text/opengl/show.h"
+#include "graphics/opengl/query.h"
 #include "show/com/camera.h"
 #include "show/com/event_queue.h"
 #include "show/com/event_window.h"
@@ -554,6 +555,9 @@ class Impl final : public Show, public WindowEvent
 
                 m_renderer->set_size(m_draw_width, m_draw_height, *m_object_image);
 
+                constexpr bool framebuffer_srgb = true;
+                constexpr bool colorbuffer_srgb = false;
+
                 int dft_dst_x = (m_window->width() & 1) ? (m_draw_width + 1) : m_draw_width;
                 int dft_dst_y = 0;
 
@@ -566,12 +570,11 @@ class Impl final : public Show, public WindowEvent
                 double far = -1;
                 const mat4& matrix = ortho_opengl<double>(left, right, bottom, top, near, far);
 
-                m_pencil_sketch = gpu_opengl::create_pencil_sketch_show(
-                        m_render_buffer->color_texture(), m_renderer->color_buffer_is_srgb(), *m_object_image, matrix);
+                m_pencil_sketch = gpu_opengl::create_pencil_sketch_show(m_render_buffer->color_texture(), colorbuffer_srgb,
+                                                                        *m_object_image, matrix);
 
-                m_dft = gpu_opengl::create_dft_show(m_draw_width, m_draw_height, dft_dst_x, dft_dst_y, matrix,
-                                                    m_renderer->frame_buffer_is_srgb(), m_dft_brightness, m_dft_background_color,
-                                                    m_dft_color);
+                m_dft = gpu_opengl::create_dft_show(m_draw_width, m_draw_height, dft_dst_x, dft_dst_y, matrix, framebuffer_srgb,
+                                                    m_dft_brightness, m_dft_background_color, m_dft_color);
 
                 m_optical_flow = gpu_opengl::create_optical_flow_show(m_draw_width, m_draw_height, m_parent_window_ppi, matrix);
 
@@ -652,6 +655,17 @@ public:
                   m_parent_window_ppi(parent_window_ppi)
         {
                 m_window = opengl::create_window(OPENGL_MINIMUM_SAMPLE_COUNT);
+
+                glDisable(GL_CULL_FACE);
+                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+                glEnable(GL_FRAMEBUFFER_SRGB);
+                glEnable(GL_PROGRAM_POINT_SIZE);
+
+                if (!opengl::current_buffer_is_srgb())
+                {
+                        error("Default renderbuffer is not sRGB");
+                }
+
                 m_renderer = gpu_opengl::create_renderer();
 
                 m_event_window.set_window(*m_window);

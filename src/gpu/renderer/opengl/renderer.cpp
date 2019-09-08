@@ -38,17 +38,6 @@ namespace gpu_opengl
 {
 namespace
 {
-std::string color_space_message(bool framebuffer_is_srgb, bool colorbuffer_is_srgb)
-{
-        std::string msg;
-        msg += "OpenGL renderer framebuffer color space is ";
-        msg += framebuffer_is_srgb ? "sRGB" : "linear";
-        msg += '\n';
-        msg += "OpenGL renderer colorbuffer color space is ";
-        msg += colorbuffer_is_srgb ? "sRGB" : "linear";
-        return msg;
-}
-
 class Impl final : public Renderer
 {
         static constexpr mat4 SCALE = scale<double>(0.5, 0.5, 0.5);
@@ -78,9 +67,6 @@ class Impl final : public Renderer
         double m_shadow_zoom = 1;
 
         RendererObjectStorage<DrawObject> m_storage;
-
-        bool m_framebuffer_srgb;
-        bool m_colorbuffer_srgb;
 
         RendererPointsMemory m_points_memory;
         RendererShadowMemory m_shadow_memory;
@@ -308,16 +294,6 @@ class Impl final : public Renderer
                 set_shadow_size();
         }
 
-        bool frame_buffer_is_srgb() override
-        {
-                return m_framebuffer_srgb;
-        }
-
-        bool color_buffer_is_srgb() override
-        {
-                return m_colorbuffer_srgb;
-        }
-
         void object_add(const Obj<3>* obj, double size, const vec3& position, int id, int scale_id) override
         {
                 m_storage.add_object(std::make_unique<DrawObject>(*obj, size, position), id, scale_id);
@@ -350,19 +326,6 @@ public:
                   m_points_1d_program(opengl::VertexShader(renderer_points_1d_vert()),
                                       opengl::FragmentShader(renderer_points_frag()))
         {
-                glDisable(GL_CULL_FACE);
-                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-                glEnable(GL_FRAMEBUFFER_SRGB);
-                glEnable(GL_PROGRAM_POINT_SIZE);
-
-                m_framebuffer_srgb = opengl::current_buffer_is_srgb();
-                {
-                        opengl::ColorBufferSinglesample color_buffer(1, 1);
-                        color_buffer.bind_buffer();
-                        m_colorbuffer_srgb = opengl::current_buffer_is_srgb();
-                        color_buffer.unbind_buffer();
-                }
-                LOG(color_space_message(m_framebuffer_srgb, m_colorbuffer_srgb));
         }
 };
 }
