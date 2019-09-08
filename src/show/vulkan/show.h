@@ -17,8 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "show.h"
+#include "show/show.h"
 
 #include <memory>
 
-std::unique_ptr<ShowObject> create_show_object_opengl(const ShowCreateInfo& info);
+std::unique_ptr<ShowObject> create_show_object_vulkan(const ShowCreateInfo& info);

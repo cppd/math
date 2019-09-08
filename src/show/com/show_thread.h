@@ -18,9 +18,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "event_queue.h"
-#include "show.h"
 
 #include "com/error.h"
+#include "show/show.h"
 
 #include <atomic>
 #include <thread>

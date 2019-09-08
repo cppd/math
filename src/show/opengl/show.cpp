@@ -15,14 +15,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "show_opengl.h"
-
-#include "camera.h"
-#include "event_queue.h"
-#include "event_window.h"
-#include "frame_rate.h"
 #include "show.h"
-#include "show_thread.h"
+
+#include "canvas.h"
 
 #include "com/error.h"
 #include "com/log.h"
@@ -30,7 +25,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/time.h"
 #include "com/type/limit.h"
 #include "gpu/renderer/opengl/renderer.h"
-#include "show/canvases/opengl/canvas.h"
+#include "show/com/camera.h"
+#include "show/com/event_queue.h"
+#include "show/com/event_window.h"
+#include "show/com/frame_rate.h"
+#include "show/com/show_thread.h"
 #include "window/manage.h"
 #include "window/opengl/window.h"
 

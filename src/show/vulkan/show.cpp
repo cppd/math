@@ -15,14 +15,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "show_vulkan.h"
-
-#include "camera.h"
-#include "event_queue.h"
-#include "event_window.h"
-#include "frame_rate.h"
 #include "show.h"
-#include "show_thread.h"
+
+#include "canvas.h"
 
 #include "com/error.h"
 #include "com/log.h"
@@ -35,7 +30,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/vulkan/objects.h"
 #include "graphics/vulkan/render/render_buffer.h"
 #include "graphics/vulkan/sync.h"
-#include "show/canvases/vulkan/canvas.h"
+#include "show/com/camera.h"
+#include "show/com/event_queue.h"
+#include "show/com/event_window.h"
+#include "show/com/frame_rate.h"
+#include "show/com/show_thread.h"
 #include "window/manage.h"
 #include "window/vulkan/window.h"
 

@@ -17,10 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "show.h"
 
-#include "show_opengl.h"
-#include "show_vulkan.h"
-
 #include "com/error.h"
+#include "show/opengl/show.h"
+#include "show/vulkan/show.h"
 
 std::unique_ptr<ShowObject> create_show_object(GraphicsAndComputeAPI api, const ShowCreateInfo& info)
 {
