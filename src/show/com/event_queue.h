@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/thread.h"
 #include "com/variant.h"
-#include "show/show.h"
+#include "show/interface.h"
 
 // Класс для вызова функций не напрямую, а через очередь.
 // Это нужно для работы функций в другом потоке.

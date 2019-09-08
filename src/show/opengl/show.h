@@ -17,8 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "show/show.h"
+#include "show/interface.h"
 
 #include <memory>
 
-std::unique_ptr<ShowObject> create_show_object_opengl(const ShowCreateInfo& info);
+namespace show_opengl
+{
+std::unique_ptr<ShowObject> create_show_object(const ShowCreateInfo& info);
+}

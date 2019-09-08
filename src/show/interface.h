@@ -19,7 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/color/color.h"
 #include "com/vec.h"
-#include "graphics/api.h"
 #include "obj/obj.h"
 #include "window/handle.h"
 
@@ -126,5 +125,3 @@ struct ShowObject
         virtual ~ShowObject() = default;
         virtual Show& show() = 0;
 };
-
-std::unique_ptr<ShowObject> create_show_object(GraphicsAndComputeAPI api, const ShowCreateInfo& info);

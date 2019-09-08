@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/error.h"
 #include "com/log.h"
 #include "com/variant.h"
-#include "show/show.h"
+#include "show/interface.h"
 #include "ui/main_window/objects.h"
 
 #include <QObject>

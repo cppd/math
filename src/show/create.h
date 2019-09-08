@@ -15,20 +15,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "show.h"
+#pragma once
 
-#include "com/error.h"
-#include "show/opengl/show.h"
-#include "show/vulkan/show.h"
+#include "interface.h"
 
-std::unique_ptr<ShowObject> create_show_object(GraphicsAndComputeAPI api, const ShowCreateInfo& info)
-{
-        switch (api)
-        {
-        case GraphicsAndComputeAPI::Vulkan:
-                return create_show_object_vulkan(info);
-        case GraphicsAndComputeAPI::OpenGL:
-                return create_show_object_opengl(info);
-        }
-        error_fatal("Unknown graphics and compute API for show creation");
-}
+#include "graphics/api.h"
+
+std::unique_ptr<ShowObject> create_show_object(GraphicsAndComputeAPI api, const ShowCreateInfo& info);

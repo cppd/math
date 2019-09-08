@@ -735,7 +735,10 @@ public:
 };
 }
 
-std::unique_ptr<ShowObject> create_show_object_vulkan(const ShowCreateInfo& info)
+namespace show_vulkan
+{
+std::unique_ptr<ShowObject> create_show_object(const ShowCreateInfo& info)
 {
         return std::make_unique<ShowThread<Impl>>(info);
+}
 }
