@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/color/color.h"
 #include "com/matrix.h"
+#include "graphics/opengl/buffers.h"
 
 #include <memory>
 
@@ -31,10 +32,9 @@ struct DFTShow
         virtual void set_brightness(double brightness) = 0;
         virtual void set_background_color(const Color& color) = 0;
         virtual void set_color(const Color& color) = 0;
-        virtual void take_image_from_framebuffer() = 0;
         virtual void draw() = 0;
 };
 
-std::unique_ptr<DFTShow> create_dft_show(int width, int height, int dst_x, int dst_y, const mat4& matrix, bool source_srgb,
+std::unique_ptr<DFTShow> create_dft_show(const opengl::TextureRGBA32F& source, int dst_x, int dst_y, const mat4& matrix,
                                          double brightness, const Color& background_color, const Color& color);
 }

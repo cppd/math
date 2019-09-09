@@ -30,7 +30,7 @@ struct PencilSketchCompute
         virtual void exec() = 0;
 };
 
-std::unique_ptr<PencilSketchCompute> create_pencil_sketch_compute(const opengl::TextureRGBA32F& input, bool input_is_srgb,
+std::unique_ptr<PencilSketchCompute> create_pencil_sketch_compute(const opengl::TextureRGBA32F& input,
                                                                   const opengl::TextureImage& objects,
                                                                   const opengl::TextureRGBA32F& output);
 }

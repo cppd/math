@@ -39,18 +39,17 @@ class Impl final : public PencilSketchCompute
         }
 
 public:
-        Impl(const opengl::TextureRGBA32F& input, bool input_is_srgb, const opengl::TextureImage& objects,
-             const opengl::TextureRGBA32F& output)
-                : m_program_compute(input, input_is_srgb, objects, output), m_program_luminance(output)
+        Impl(const opengl::TextureRGBA32F& input, const opengl::TextureImage& objects, const opengl::TextureRGBA32F& output)
+                : m_program_compute(input, objects, output), m_program_luminance(output)
         {
         }
 };
 }
 
-std::unique_ptr<PencilSketchCompute> create_pencil_sketch_compute(const opengl::TextureRGBA32F& input, bool input_is_srgb,
+std::unique_ptr<PencilSketchCompute> create_pencil_sketch_compute(const opengl::TextureRGBA32F& input,
                                                                   const opengl::TextureImage& objects,
                                                                   const opengl::TextureRGBA32F& output)
 {
-        return std::make_unique<Impl>(input, input_is_srgb, objects, output);
+        return std::make_unique<Impl>(input, objects, output);
 }
 }

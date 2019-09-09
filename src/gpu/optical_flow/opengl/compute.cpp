@@ -476,18 +476,19 @@ class Impl final : public OpticalFlowCompute
         }
 
 public:
-        Impl(int width, int height, const opengl::TextureRGBA32F& source_image, int top_x, int top_y,
-             const opengl::StorageBuffer& top_points, const opengl::StorageBuffer& top_flow)
-                : Impl(pyramid_sizes(width, height, BOTTOM_IMAGE_SIZE), source_image, top_x, top_y, top_points, top_flow)
+        Impl(const opengl::TextureRGBA32F& source, int top_x, int top_y, const opengl::StorageBuffer& top_points,
+             const opengl::StorageBuffer& top_flow)
+                : Impl(pyramid_sizes(source.texture().width(), source.texture().height(), BOTTOM_IMAGE_SIZE), source, top_x,
+                       top_y, top_points, top_flow)
         {
         }
 };
 }
 
-std::unique_ptr<OpticalFlowCompute> create_optical_flow_compute(int width, int height, const opengl::TextureRGBA32F& source_image,
-                                                                int top_x, int top_y, const opengl::StorageBuffer& top_points,
+std::unique_ptr<OpticalFlowCompute> create_optical_flow_compute(const opengl::TextureRGBA32F& source, int top_x, int top_y,
+                                                                const opengl::StorageBuffer& top_points,
                                                                 const opengl::StorageBuffer& top_flow)
 {
-        return std::make_unique<Impl>(width, height, source_image, top_x, top_y, top_points, top_flow);
+        return std::make_unique<Impl>(source, top_x, top_y, top_points, top_flow);
 }
 }

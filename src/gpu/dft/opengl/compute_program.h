@@ -75,24 +75,17 @@ public:
 template <typename T>
 class DftProgramCopyInput final
 {
-        static constexpr int DATA_BINDING = 0;
-        static constexpr int BUFFER_BINDING = 1;
+        static constexpr int BUFFER_BINDING = 0;
 
         static constexpr int SRC_IMAGE_LOCATION = 0;
 
-        struct ShaderMemory
-        {
-                GLuint source_srgb;
-        };
-
         const vec2i m_group_count;
         opengl::ComputeProgram m_copy_input;
-        opengl::UniformBuffer m_shader_memory;
 
 public:
         DftProgramCopyInput(vec2i group_size, int n1, int n2);
 
-        void copy(bool source_srgb, const GLuint64 tex, const opengl::StorageBuffer& data);
+        void copy(const GLuint64 tex, const opengl::StorageBuffer& data);
 };
 
 template <typename T>

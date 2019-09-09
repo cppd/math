@@ -272,7 +272,8 @@ class Impl final : public DFTCompute, public DFTComputeTexture
         const int m_n1, m_n2, m_m1, m_m2, m_m1_bin, m_m2_bin;
         DeviceMemory<std::complex<FP>> m_d1_fwd, m_d1_inv, m_d2_fwd, m_d2_inv;
         DeviceMemory<std::complex<FP>> m_x_d, m_buffer;
-        GLuint64 m_texture_handle;
+        GLuint64 m_source_handle;
+        GLuint64 m_result_handle;
         DftProgramBitReverse<FP> m_program_bit_reverse;
         DftProgramFftGlobal<FP> m_program_fft_global;
         DftProgramCopyInput<FP> m_program_copy_input;
@@ -334,15 +335,15 @@ class Impl final : public DFTCompute, public DFTComputeTexture
                 *src = conv<float>(std::move(data));
         }
 
-        void exec(bool inverse, bool srgb) override
+        void exec(bool inverse) override
         {
-                m_program_copy_input.copy(srgb, m_texture_handle, m_x_d);
+                m_program_copy_input.copy(m_source_handle, m_x_d);
                 dft2d(inverse);
-                m_program_copy_output.copy(static_cast<FP>(1.0 / (m_n1 * m_n2)), m_texture_handle, m_x_d);
+                m_program_copy_output.copy(static_cast<FP>(1.0 / (m_n1 * m_n2)), m_result_handle, m_x_d);
         }
 
 public:
-        Impl(int n1, int n2, const opengl::TextureRGBA32F* texture)
+        Impl(int n1, int n2, const opengl::TextureRGBA32F* source, const opengl::TextureRGBA32F* result)
                 : m_n1(n1),
                   m_n2(n2),
                   m_m1(compute_m(m_n1)),
@@ -370,11 +371,14 @@ public:
                         error("FFT size error: " + to_string(m_n1) + "x" + to_string(m_n2));
                 }
 
-                if (texture)
+                ASSERT((source && result) || (!source && !result));
+                if (source && result)
                 {
-                        ASSERT(texture->texture().width() == n1 && texture->texture().height() == n2);
+                        ASSERT(source->texture().width() == n1 && source->texture().height() == n2);
+                        ASSERT(result->texture().width() == n1 && result->texture().height() == n2);
 
-                        m_texture_handle = texture->image_resident_handle_read_write();
+                        m_source_handle = source->image_resident_handle_read_write();
+                        m_result_handle = result->image_resident_handle_read_write();
                 }
 
                 // Для обратного преобразования нужна корректировка данных с умножением на коэффициент,
@@ -402,11 +406,12 @@ public:
 
 std::unique_ptr<DFTCompute> create_dft_compute(int x, int y)
 {
-        return std::make_unique<Impl<float>>(x, y, nullptr);
+        return std::make_unique<Impl<float>>(x, y, nullptr, nullptr);
 }
 
-std::unique_ptr<DFTComputeTexture> create_dft_compute_texture(int x, int y, const opengl::TextureRGBA32F& texture)
+std::unique_ptr<DFTComputeTexture> create_dft_compute_texture(const opengl::TextureRGBA32F& source,
+                                                              const opengl::TextureRGBA32F& result)
 {
-        return std::make_unique<Impl<float>>(x, y, &texture);
+        return std::make_unique<Impl<float>>(source.texture().width(), source.texture().height(), &source, &result);
 }
 }

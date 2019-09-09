@@ -53,7 +53,7 @@ struct Renderer
         virtual void object_show(int id) = 0;
         virtual void object_delete_all() = 0;
 
-        virtual void draw(const opengl::ColorBuffer* render_buffer) = 0;
+        virtual void draw() = 0;
 
         virtual bool empty() const = 0;
 };

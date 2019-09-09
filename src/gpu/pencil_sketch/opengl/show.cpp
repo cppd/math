@@ -57,11 +57,11 @@ class Impl final : public PencilSketchShow
         }
 
 public:
-        Impl(const opengl::TextureRGBA32F& source, bool source_is_srgb, const opengl::TextureImage& objects, const mat4& matrix)
+        Impl(const opengl::TextureRGBA32F& source, const opengl::TextureImage& objects, const mat4& matrix)
                 : m_draw_prog(opengl::VertexShader(pencil_sketch_show_vert()), opengl::FragmentShader(pencil_sketch_show_frag())),
                   m_texture(source.texture().width(), source.texture().height()),
                   m_vertex_buffer(sizeof(Vertex) * VERTEX_COUNT),
-                  m_pencil_sketch(gpu_opengl::create_pencil_sketch_compute(source, source_is_srgb, objects, m_texture))
+                  m_pencil_sketch(gpu_opengl::create_pencil_sketch_compute(source, objects, m_texture))
         {
                 ASSERT(source.texture().width() == objects.width());
                 ASSERT(source.texture().height() == objects.height());
@@ -95,9 +95,9 @@ public:
 };
 }
 
-std::unique_ptr<PencilSketchShow> create_pencil_sketch_show(const opengl::TextureRGBA32F& source, bool source_is_srgb,
+std::unique_ptr<PencilSketchShow> create_pencil_sketch_show(const opengl::TextureRGBA32F& source,
                                                             const opengl::TextureImage& objects, const mat4& matrix)
 {
-        return std::make_unique<Impl>(source, source_is_srgb, objects, matrix);
+        return std::make_unique<Impl>(source, objects, matrix);
 }
 }

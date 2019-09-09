@@ -205,21 +205,14 @@ void DftProgramFftGlobal<T>::exec(int max_threads, bool inverse, T two_pi_div_m,
 
 template <typename T>
 DftProgramCopyInput<T>::DftProgramCopyInput(vec2i group_size, int n1, int n2)
-        : m_group_count(group_count(n1, n2, group_size)),
-          m_copy_input(opengl::ComputeShader(copy_input_source<T>(group_size))),
-          m_shader_memory(sizeof(ShaderMemory))
+        : m_group_count(group_count(n1, n2, group_size)), m_copy_input(opengl::ComputeShader(copy_input_source<T>(group_size)))
 {
 }
 
 template <typename T>
-void DftProgramCopyInput<T>::copy(bool source_srgb, const GLuint64 tex, const opengl::StorageBuffer& data)
+void DftProgramCopyInput<T>::copy(const GLuint64 tex, const opengl::StorageBuffer& data)
 {
-        ShaderMemory m;
-        m.source_srgb = source_srgb;
-        m_shader_memory.copy(m);
-
         m_copy_input.set_uniform_handle(SRC_IMAGE_LOCATION, tex);
-        m_shader_memory.bind(DATA_BINDING);
         data.bind(BUFFER_BINDING);
 
         m_copy_input.dispatch_compute(m_group_count[0], m_group_count[1], 1);

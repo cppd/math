@@ -116,66 +116,33 @@ public:
         }
 };
 
-class Texture2DMultisample final
+class FramebufferBinder final
 {
-        Texture2DMultisampleHandle m_texture;
-        int m_width = 0, m_height = 0;
+        GLuint m_draw_framebuffer;
+        GLuint m_read_framebuffer;
+        static GLuint readValue(GLenum parameter)
+        {
+                GLint v;
+                glGetIntegerv(parameter, &v);
+                return v;
+        }
 
 public:
-        Texture2DMultisample(GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height)
+        FramebufferBinder(GLuint framebuffer)
+                : m_draw_framebuffer(readValue(GL_DRAW_FRAMEBUFFER_BINDING)),
+                  m_read_framebuffer(readValue(GL_READ_FRAMEBUFFER_BINDING))
         {
-                glTextureStorage2DMultisample(m_texture, samples, internalformat, width, height, GL_FALSE);
-                m_width = width;
-                m_height = height;
+                glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
         }
-
-        void named_framebuffer_texture(GLuint framebuffer, GLenum attachment) const
+        ~FramebufferBinder()
         {
-                glNamedFramebufferTexture(framebuffer, attachment, m_texture, 0);
+                glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_draw_framebuffer);
+                glBindFramebuffer(GL_READ_FRAMEBUFFER, m_read_framebuffer);
         }
-};
-
-class Framebuffer final
-{
-        FramebufferHandle m_framebuffer;
-
-public:
-        GLenum check_named_framebuffer_status() const
-        {
-                return glCheckNamedFramebufferStatus(m_framebuffer, GL_FRAMEBUFFER);
-        }
-
-        void bind_framebuffer() const
-        {
-                glBindFramebuffer(GL_FRAMEBUFFER, m_framebuffer);
-        }
-        void unbind_framebuffer() const
-        {
-                glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        }
-
-        void named_framebuffer_draw_buffer(GLenum buf) const
-        {
-                glNamedFramebufferDrawBuffer(m_framebuffer, buf);
-        }
-        void named_framebuffer_draw_buffers(GLsizei n, const GLenum* bufs) const
-        {
-                glNamedFramebufferDrawBuffers(m_framebuffer, n, bufs);
-        }
-
-        void named_framebuffer_texture(GLenum attachment, const Texture2D& texture, GLint level) const
-        {
-                texture.named_framebuffer_texture(m_framebuffer, attachment, level);
-        }
-        void named_framebuffer_texture(GLenum attachment, const Texture2DMultisample& texture) const
-        {
-                texture.named_framebuffer_texture(m_framebuffer, attachment);
-        }
-
-        GLuint framebuffer() const
-        {
-                return m_framebuffer;
-        }
+        FramebufferBinder(const FramebufferBinder&) = delete;
+        FramebufferBinder(FramebufferBinder&&) = delete;
+        FramebufferBinder& operator=(const FramebufferBinder&) = delete;
+        FramebufferBinder& operator=(FramebufferBinder&&) = delete;
 };
 
 class UniformBuffer final
@@ -610,164 +577,96 @@ public:
         }
 };
 
-class ShadowBuffer final
+class DepthBuffer32 final
 {
-        Framebuffer m_framebuffer;
+        FramebufferHandle m_framebuffer;
         TextureDepth32 m_depth;
 
 public:
-        ShadowBuffer(GLsizei width, GLsizei height) : m_depth(width, height)
+        DepthBuffer32(GLsizei width, GLsizei height) : m_depth(width, height)
         {
-                m_framebuffer.named_framebuffer_texture(GL_DEPTH_ATTACHMENT, m_depth.texture(), 0);
+                m_depth.texture().named_framebuffer_texture(m_framebuffer, GL_DEPTH_ATTACHMENT, 0);
 
-                GLenum check = m_framebuffer.check_named_framebuffer_status();
+                GLenum check = glCheckNamedFramebufferStatus(m_framebuffer, GL_FRAMEBUFFER);
                 if (check != GL_FRAMEBUFFER_COMPLETE)
                 {
                         error("Error create shadow framebuffer: " + std::to_string(check));
                 }
         }
 
-        void bind_buffer() const
+        operator GLuint() const
         {
-                m_framebuffer.bind_framebuffer();
-        }
-        void unbind_buffer() const
-        {
-                m_framebuffer.unbind_framebuffer();
+                return m_framebuffer;
         }
 
-        const TextureDepth32& depth_texture() const
+        const TextureDepth32& texture() const
         {
                 return m_depth;
         }
 };
 
-struct ColorBuffer
+class ColorBufferRGBA32F final
 {
-        virtual ~ColorBuffer() = default;
-
-        virtual void bind_buffer() const = 0;
-        virtual void unbind_buffer() const = 0;
-        virtual void resolve() const = 0;
-        virtual const TextureRGBA32F& color_texture() const = 0;
-};
-
-class ColorBufferSinglesample final : public ColorBuffer
-{
-        Framebuffer m_framebuffer;
+        FramebufferHandle m_framebuffer;
         TextureRGBA32F m_color;
-        TextureDepth32 m_depth;
 
 public:
-        ColorBufferSinglesample(GLsizei width, GLsizei height) : m_color(width, height), m_depth(width, height)
+        ColorBufferRGBA32F(GLsizei width, GLsizei height) : m_color(width, height)
         {
-                m_framebuffer.named_framebuffer_texture(GL_COLOR_ATTACHMENT0, m_color.texture(), 0);
-                m_framebuffer.named_framebuffer_texture(GL_DEPTH_ATTACHMENT, m_depth.texture(), 0);
+                constexpr GLenum draw_buffer = GL_COLOR_ATTACHMENT0;
 
-                GLenum check = m_framebuffer.check_named_framebuffer_status();
+                m_color.texture().named_framebuffer_texture(m_framebuffer, draw_buffer, 0);
+
+                GLenum check = glCheckNamedFramebufferStatus(m_framebuffer, GL_FRAMEBUFFER);
                 if (check != GL_FRAMEBUFFER_COMPLETE)
                 {
                         error("Error create framebuffer: " + std::to_string(check));
                 }
 
-                constexpr GLenum draw_buffers[] = {GL_COLOR_ATTACHMENT0};
-                m_framebuffer.named_framebuffer_draw_buffers(1, draw_buffers);
+                glNamedFramebufferDrawBuffers(m_framebuffer, 1, &draw_buffer);
         }
 
-        void bind_buffer() const override
+        operator GLuint() const
         {
-                m_framebuffer.bind_framebuffer();
+                return m_framebuffer;
         }
 
-        void unbind_buffer() const override
-        {
-                m_framebuffer.unbind_framebuffer();
-        }
-
-        void resolve() const override
-        {
-        }
-
-        const TextureRGBA32F& color_texture() const override
+        const TextureRGBA32F& texture() const
         {
                 return m_color;
         }
 };
 
-class ColorBufferMultisample final : public ColorBuffer
+class ColorDepthBufferMultisample final
 {
-        Texture2DMultisample m_color_multi;
-        Texture2DMultisample m_depth_multi;
-        TextureRGBA32F m_color_single;
-        Framebuffer m_framebuffer_multi;
-        Framebuffer m_framebuffer_single;
+        Texture2DMultisampleHandle m_color;
+        Texture2DMultisampleHandle m_depth;
+        FramebufferHandle m_framebuffer;
 
 public:
-        ColorBufferMultisample(GLsizei samples, GLsizei width, GLsizei height)
-                : m_color_multi(samples, GL_RGBA32F, width, height),
-                  m_depth_multi(samples, GL_DEPTH_COMPONENT32, width, height),
-                  m_color_single(width, height)
+        ColorDepthBufferMultisample(GLenum color_format, GLenum depth_format, GLsizei samples, GLsizei width, GLsizei height)
         {
-                m_framebuffer_multi.named_framebuffer_texture(GL_COLOR_ATTACHMENT0, m_color_multi);
-                m_framebuffer_multi.named_framebuffer_texture(GL_DEPTH_ATTACHMENT, m_depth_multi);
+                constexpr GLenum draw_buffer = GL_COLOR_ATTACHMENT0;
 
-                m_framebuffer_single.named_framebuffer_texture(GL_COLOR_ATTACHMENT0, m_color_single.texture(), 0 /*level*/);
+                glTextureStorage2DMultisample(m_color, samples, color_format, width, height, GL_FALSE);
+                glTextureStorage2DMultisample(m_depth, samples, depth_format, width, height, GL_FALSE);
+
+                glNamedFramebufferTexture(m_framebuffer, draw_buffer, m_color, 0);
+                glNamedFramebufferTexture(m_framebuffer, GL_DEPTH_ATTACHMENT, m_depth, 0);
 
                 GLenum check;
-
-                check = m_framebuffer_multi.check_named_framebuffer_status();
+                check = glCheckNamedFramebufferStatus(m_framebuffer, GL_FRAMEBUFFER);
                 if (check != GL_FRAMEBUFFER_COMPLETE)
                 {
                         error("Error create framebuffer multisample: " + std::to_string(check));
                 }
 
-                check = m_framebuffer_single.check_named_framebuffer_status();
-                if (check != GL_FRAMEBUFFER_COMPLETE)
-                {
-                        error("Error create framebuffer singlesample: " + std::to_string(check));
-                }
-
-                constexpr GLenum draw_buffers[] = {GL_COLOR_ATTACHMENT0};
-                m_framebuffer_multi.named_framebuffer_draw_buffers(1, draw_buffers);
-                m_framebuffer_single.named_framebuffer_draw_buffers(1, draw_buffers);
+                glNamedFramebufferDrawBuffers(m_framebuffer, 1, &draw_buffer);
         }
 
-        void bind_buffer() const override
+        operator GLuint() const
         {
-                m_framebuffer_multi.bind_framebuffer();
-        }
-
-        void unbind_buffer() const override
-        {
-                m_framebuffer_multi.unbind_framebuffer();
-        }
-
-        void resolve() const override
-        {
-                int width = m_color_single.texture().width();
-                int height = m_color_single.texture().height();
-                glBlitNamedFramebuffer(m_framebuffer_multi.framebuffer(), m_framebuffer_single.framebuffer(), 0, 0, width, height,
-                                       0, 0, width, height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-        }
-
-        const TextureRGBA32F& color_texture() const override
-        {
-                return m_color_single;
+                return m_framebuffer;
         }
 };
-
-inline std::unique_ptr<ColorBuffer> create_color_buffer(GLsizei samples, GLsizei width, GLsizei height)
-{
-        if (samples == 1)
-        {
-                return std::make_unique<ColorBufferSinglesample>(width, height);
-        }
-
-        if (samples > 1)
-        {
-                return std::make_unique<ColorBufferMultisample>(samples, width, height);
-        }
-
-        error("Error sample count " + to_string(samples));
-}
 }

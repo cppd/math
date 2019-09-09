@@ -34,9 +34,10 @@ struct DFTCompute
 struct DFTComputeTexture
 {
         virtual ~DFTComputeTexture() = default;
-        virtual void exec(bool inverse, bool srgb) = 0;
+        virtual void exec(bool inverse) = 0;
 };
 
 std::unique_ptr<DFTCompute> create_dft_compute(int x, int y);
-std::unique_ptr<DFTComputeTexture> create_dft_compute_texture(int x, int y, const opengl::TextureRGBA32F& texture);
+std::unique_ptr<DFTComputeTexture> create_dft_compute_texture(const opengl::TextureRGBA32F& source,
+                                                              const opengl::TextureRGBA32F& result);
 }

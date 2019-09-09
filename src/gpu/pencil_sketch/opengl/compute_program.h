@@ -29,7 +29,7 @@ class PencilSketchProgramCompute final
         opengl::ComputeProgram m_program;
 
 public:
-        PencilSketchProgramCompute(const opengl::TextureRGBA32F& input, bool input_is_srgb, const opengl::TextureImage& objects,
+        PencilSketchProgramCompute(const opengl::TextureRGBA32F& input, const opengl::TextureImage& objects,
                                    const opengl::TextureRGBA32F& output);
 
         void exec() const;

@@ -49,7 +49,7 @@ class Impl final : public Renderer
         opengl::GraphicsProgram m_points_0d_program;
         opengl::GraphicsProgram m_points_1d_program;
 
-        std::unique_ptr<opengl::ShadowBuffer> m_shadow_buffer;
+        std::unique_ptr<opengl::DepthBuffer32> m_shadow_buffer;
 
         mat4 m_shadow_matrix;
         mat4 m_scale_bias_shadow_matrix;
@@ -145,7 +145,7 @@ class Impl final : public Renderer
                 set_matrices();
         }
 
-        void draw(const opengl::ColorBuffer* render_buffer) override
+        void draw() override
         {
                 const DrawObject* draw_object = m_storage.object();
 
@@ -155,15 +155,7 @@ class Impl final : public Renderer
 
                 if (!draw_object)
                 {
-                        if (render_buffer)
-                        {
-                                render_buffer->bind_buffer();
-                        }
                         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-                        if (render_buffer)
-                        {
-                                render_buffer->unbind_buffer();
-                        }
                         return;
                 }
 
@@ -171,7 +163,8 @@ class Impl final : public Renderer
 
                 if (m_show_shadow && draw_object->has_shadow())
                 {
-                        m_shadow_buffer->bind_buffer();
+                        opengl::FramebufferBinder binder(*m_shadow_buffer);
+
                         glViewport(0, 0, m_shadow_width, m_shadow_height);
                         glClearDepthf(1.0f);
                         glClear(GL_DEPTH_BUFFER_BIT);
@@ -184,16 +177,9 @@ class Impl final : public Renderer
                         info.triangles_program = &m_shadow_program;
                         info.triangles_memory = &m_shadow_memory;
                         draw_object->shadow(info);
-
-                        m_shadow_buffer->unbind_buffer();
                 }
 
                 glViewport(0, 0, m_width, m_height);
-
-                if (render_buffer)
-                {
-                        render_buffer->bind_buffer();
-                }
 
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -205,11 +191,6 @@ class Impl final : public Renderer
                 info.lines_program = &m_points_1d_program;
                 info.lines_memory = &m_points_memory;
                 draw_object->draw(info);
-
-                if (render_buffer)
-                {
-                        render_buffer->unbind_buffer();
-                }
         }
 
         virtual bool empty() const override
@@ -250,9 +231,9 @@ class Impl final : public Renderer
                         m_shadow_height = 1;
                 }
 
-                m_shadow_buffer = std::make_unique<opengl::ShadowBuffer>(m_shadow_width, m_shadow_height);
+                m_shadow_buffer = std::make_unique<opengl::DepthBuffer32>(m_shadow_width, m_shadow_height);
                 m_triangles_program.set_uniform_handle("shadow_texture",
-                                                       m_shadow_buffer->depth_texture().texture().texture_resident_handle());
+                                                       m_shadow_buffer->texture().texture().texture_resident_handle());
         }
 
         void set_matrices()

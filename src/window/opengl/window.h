@@ -50,5 +50,5 @@ public:
         virtual void display() = 0;
 };
 
-std::unique_ptr<Window> create_window(int minimum_sample_count);
+std::unique_ptr<Window> create_window();
 }

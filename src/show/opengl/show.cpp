@@ -47,6 +47,8 @@ constexpr vec3 OBJECT_POSITION = vec3(0);
 //
 
 constexpr int OPENGL_MINIMUM_SAMPLE_COUNT = 4;
+constexpr GLenum OPENGL_FRAMEBUFFER_COLOR_FORMAT = GL_SRGB8_ALPHA8;
+constexpr GLenum OPENGL_FRAMEBUFFER_DEPTH_FORMAT = GL_DEPTH_COMPONENT32;
 constexpr GLenum OPENGL_OBJECT_IMAGE_FORMAT = GL_R32UI;
 
 //
@@ -55,6 +57,8 @@ namespace
 {
 class Impl final : public Show, public WindowEvent
 {
+        static constexpr GLuint DEFAULT_FRAMEBUFFER = 0;
+
         EventQueue& m_event_queue;
         EventWindow<opengl::Window> m_event_window;
         ShowCallback* const m_callback;
@@ -84,7 +88,8 @@ class Impl final : public Show, public WindowEvent
         bool m_optical_flow_active = false;
 
         std::unique_ptr<opengl::Window> m_window;
-        std::unique_ptr<opengl::ColorBuffer> m_render_buffer;
+        std::unique_ptr<opengl::ColorDepthBufferMultisample> m_render_framebuffer;
+        std::unique_ptr<opengl::ColorBufferRGBA32F> m_resolve_framebuffer;
         std::unique_ptr<opengl::TextureImage> m_object_image;
         std::unique_ptr<gpu_opengl::Renderer> m_renderer;
         std::unique_ptr<gpu_opengl::Text> m_text;
@@ -548,15 +553,18 @@ class Impl final : public Show, public WindowEvent
                 m_dft.reset();
                 m_pencil_sketch.reset();
                 m_object_image.reset();
-                m_render_buffer.reset();
+                m_resolve_framebuffer.reset();
+                m_render_framebuffer.reset();
 
-                m_render_buffer = opengl::create_color_buffer(OPENGL_MINIMUM_SAMPLE_COUNT, m_draw_width, m_draw_height);
+                m_render_framebuffer = std::make_unique<opengl::ColorDepthBufferMultisample>(
+                        OPENGL_FRAMEBUFFER_COLOR_FORMAT, OPENGL_FRAMEBUFFER_DEPTH_FORMAT, OPENGL_MINIMUM_SAMPLE_COUNT,
+                        m_window->width(), m_window->height());
+
+                m_resolve_framebuffer = std::make_unique<opengl::ColorBufferRGBA32F>(m_draw_width, m_draw_height);
+
                 m_object_image = std::make_unique<opengl::TextureImage>(m_draw_width, m_draw_height, OPENGL_OBJECT_IMAGE_FORMAT);
 
                 m_renderer->set_size(m_draw_width, m_draw_height, *m_object_image);
-
-                constexpr bool framebuffer_srgb = true;
-                constexpr bool colorbuffer_srgb = false;
 
                 int dft_dst_x = (m_window->width() & 1) ? (m_draw_width + 1) : m_draw_width;
                 int dft_dst_y = 0;
@@ -570,13 +578,14 @@ class Impl final : public Show, public WindowEvent
                 double far = -1;
                 const mat4& matrix = ortho_opengl<double>(left, right, bottom, top, near, far);
 
-                m_pencil_sketch = gpu_opengl::create_pencil_sketch_show(m_render_buffer->color_texture(), colorbuffer_srgb,
-                                                                        *m_object_image, matrix);
+                m_pencil_sketch =
+                        gpu_opengl::create_pencil_sketch_show(m_resolve_framebuffer->texture(), *m_object_image, matrix);
 
-                m_dft = gpu_opengl::create_dft_show(m_draw_width, m_draw_height, dft_dst_x, dft_dst_y, matrix, framebuffer_srgb,
+                m_dft = gpu_opengl::create_dft_show(m_resolve_framebuffer->texture(), dft_dst_x, dft_dst_y, matrix,
                                                     m_dft_brightness, m_dft_background_color, m_dft_color);
 
-                m_optical_flow = gpu_opengl::create_optical_flow_show(m_draw_width, m_draw_height, m_parent_window_ppi, matrix);
+                m_optical_flow =
+                        gpu_opengl::create_optical_flow_show(m_resolve_framebuffer->texture(), m_parent_window_ppi, matrix);
 
                 m_convex_hull = gpu_opengl::create_convex_hull_show(*m_object_image, matrix);
 
@@ -592,39 +601,29 @@ class Impl final : public Show, public WindowEvent
 
         void render(const TextData& text_data)
         {
-                if (m_pencil_sketch_active)
-                {
-                        ASSERT(m_render_buffer);
+                ASSERT(m_render_framebuffer && m_resolve_framebuffer && m_object_image);
+                ASSERT(m_pencil_sketch && m_dft && m_optical_flow && m_convex_hull && m_text);
 
-                        m_renderer->draw(m_render_buffer.get());
-                        m_render_buffer->resolve();
-                }
-                else
-                {
-                        m_renderer->draw(nullptr);
-                }
+                glBindFramebuffer(GL_FRAMEBUFFER, *m_render_framebuffer);
 
-                ASSERT(m_pencil_sketch);
-                ASSERT(m_dft);
-                ASSERT(m_optical_flow);
-                ASSERT(m_convex_hull);
-                ASSERT(m_text);
+                m_renderer->draw();
 
-                glViewport(0, 0, m_event_window.window_width(), m_event_window.window_height());
+                int width = m_event_window.window_width();
+                int height = m_event_window.window_height();
+
+                glViewport(0, 0, width, height);
 
                 if (m_pencil_sketch_active)
                 {
-                        // Рисование из цветного буфера в буфер экрана
+                        glBlitNamedFramebuffer(*m_render_framebuffer, *m_resolve_framebuffer, 0, 0, m_draw_width, m_draw_height,
+                                               0, 0, m_draw_width, m_draw_height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
                         m_pencil_sketch->draw();
                 }
 
-                if (m_dft_active)
+                if (m_dft_active || m_optical_flow_active)
                 {
-                        m_dft->take_image_from_framebuffer();
-                }
-                if (m_optical_flow_active)
-                {
-                        m_optical_flow->take_image_from_framebuffer();
+                        glBlitNamedFramebuffer(*m_render_framebuffer, *m_resolve_framebuffer, 0, 0, m_draw_width, m_draw_height,
+                                               0, 0, m_draw_width, m_draw_height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
                 }
 
                 if (m_dft_active)
@@ -644,6 +643,9 @@ class Impl final : public Show, public WindowEvent
                         m_text->draw(text_data);
                 }
 
+                glBlitNamedFramebuffer(*m_render_framebuffer, DEFAULT_FRAMEBUFFER, 0, 0, width, height, 0, 0, width, height,
+                                       GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
                 m_window->display();
         }
 
@@ -654,17 +656,12 @@ public:
                   m_parent_window(parent_window),
                   m_parent_window_ppi(parent_window_ppi)
         {
-                m_window = opengl::create_window(OPENGL_MINIMUM_SAMPLE_COUNT);
+                m_window = opengl::create_window();
 
                 glDisable(GL_CULL_FACE);
                 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
                 glEnable(GL_FRAMEBUFFER_SRGB);
                 glEnable(GL_PROGRAM_POINT_SIZE);
-
-                if (!opengl::current_buffer_is_srgb())
-                {
-                        error("Default renderbuffer is not sRGB");
-                }
 
                 m_renderer = gpu_opengl::create_renderer();
 

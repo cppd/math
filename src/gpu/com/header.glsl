@@ -21,59 +21,59 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #extension GL_ARB_bindless_texture : require
 #endif
 
-float rgb_to_srgb(float c)
-{
-        if (c >= 1.0)
-        {
-                return 1.0;
-        }
-        if (c >= 0.0031308)
-        {
-                return 1.055 * pow(c, 1.0 / 2.4) - 0.055;
-        }
-        if (c > 0.0)
-        {
-                return c * 12.92;
-        }
-        return 0.0;
-}
+// float rgb_to_srgb(float c)
+//{
+//        if (c >= 1.0)
+//        {
+//                return 1.0;
+//        }
+//        if (c >= 0.0031308)
+//        {
+//                return 1.055 * pow(c, 1.0 / 2.4) - 0.055;
+//        }
+//        if (c > 0.0)
+//        {
+//                return c * 12.92;
+//        }
+//        return 0.0;
+//}
 
-float srgb_to_rgb(float c)
-{
-        if (c >= 1.0)
-        {
-                return 1.0;
-        }
-        if (c >= 0.04045)
-        {
-                return pow((c + 0.055) / 1.055, 2.4);
-        }
-        if (c > 0.0)
-        {
-                return c / 12.92;
-        }
-        return 0.0;
-}
+// float srgb_to_rgb(float c)
+//{
+//        if (c >= 1.0)
+//        {
+//                return 1.0;
+//        }
+//        if (c >= 0.04045)
+//        {
+//                return pow((c + 0.055) / 1.055, 2.4);
+//        }
+//        if (c > 0.0)
+//        {
+//                return c / 12.92;
+//        }
+//        return 0.0;
+//}
 
-vec4 rgb_to_srgb(vec4 c)
-{
-        return vec4(rgb_to_srgb(c.r), rgb_to_srgb(c.g), rgb_to_srgb(c.b), c.a);
-}
+// vec4 rgb_to_srgb(vec4 c)
+//{
+//        return vec4(rgb_to_srgb(c.r), rgb_to_srgb(c.g), rgb_to_srgb(c.b), c.a);
+//}
 
-vec4 srgb_to_rgb(vec4 c)
-{
-        return vec4(srgb_to_rgb(c.r), srgb_to_rgb(c.g), srgb_to_rgb(c.b), c.a);
-}
+// vec4 srgb_to_rgb(vec4 c)
+//{
+//        return vec4(srgb_to_rgb(c.r), srgb_to_rgb(c.g), srgb_to_rgb(c.b), c.a);
+//}
 
-vec3 rgb_to_srgb(vec3 c)
-{
-        return vec3(rgb_to_srgb(c.r), rgb_to_srgb(c.g), rgb_to_srgb(c.b));
-}
+// vec3 rgb_to_srgb(vec3 c)
+//{
+//        return vec3(rgb_to_srgb(c.r), rgb_to_srgb(c.g), rgb_to_srgb(c.b));
+//}
 
-vec3 srgb_to_rgb(vec3 c)
-{
-        return vec3(srgb_to_rgb(c.r), srgb_to_rgb(c.g), srgb_to_rgb(c.b));
-}
+// vec3 srgb_to_rgb(vec3 c)
+//{
+//        return vec3(srgb_to_rgb(c.r), srgb_to_rgb(c.g), srgb_to_rgb(c.b));
+//}
 
 float luminance_of_rgb(vec3 c)
 {

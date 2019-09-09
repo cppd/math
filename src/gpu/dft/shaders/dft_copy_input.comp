@@ -30,12 +30,7 @@ layout(local_size_x_id = 0, local_size_y_id = 1) in;
 layout(binding = 2, rgba32f) uniform readonly restrict image2D src_image;
 #endif
 
-layout(std140, binding = 0) uniform Data
-{
-        bool source_srgb;
-};
-
-layout(std430, binding = 1) writeonly restrict buffer Buffer
+layout(std430, binding = 0) writeonly restrict buffer Buffer
 {
         complex dst_data[];
 };
@@ -52,6 +47,6 @@ void main()
         const int width = imageSize(src_image).x;
 
         vec4 pixel = imageLoad(src_image, p);
-        float_point l = source_srgb ? luminance_of_rgb(srgb_to_rgb(pixel)) : luminance_of_rgb(pixel);
+        float_point l = luminance_of_rgb(pixel);
         dst_data[p.y * width + p.x] = complex(l, 0);
 }

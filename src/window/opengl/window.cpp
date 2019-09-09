@@ -34,8 +34,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "window/manage.h"
 #endif
 
-constexpr int DEPTH_BITS = 24;
-constexpr int STENCIL_BITS = 8;
+constexpr int ANTIALIASING_LEVEL = 0;
+constexpr int DEPTH_BITS = 0;
+constexpr int STENCIL_BITS = 0;
 constexpr int RED_BITS = 8;
 constexpr int GREEN_BITS = 8;
 constexpr int BLUE_BITS = 8;
@@ -55,14 +56,14 @@ void init_opengl_functions()
 }
 #endif
 
-void create_window_1x1(int major_gl_version, int minor_gl_version, const std::vector<std::string>& extensions,
-                       int minimum_sample_count, int depth_bits, int stencil_bits, int red_bits, int green_bits, int blue_bits,
-                       int alpha_bits, sf::Window* window)
+void create_window_1x1(int major_gl_version, int minor_gl_version, const std::vector<std::string>& extensions, int depth_bits,
+                       int antialiasing_level, int stencil_bits, int red_bits, int green_bits, int blue_bits, int alpha_bits,
+                       sf::Window* window)
 {
         sf::ContextSettings cs;
         cs.majorVersion = major_gl_version;
         cs.minorVersion = minor_gl_version;
-        cs.antialiasingLevel = minimum_sample_count;
+        cs.antialiasingLevel = antialiasing_level;
         cs.depthBits = depth_bits;
         cs.stencilBits = stencil_bits;
         cs.attributeFlags = sf::ContextSettings::Attribute::Core;
@@ -74,7 +75,7 @@ void create_window_1x1(int major_gl_version, int minor_gl_version, const std::ve
 #endif
 
         opengl::check_context(major_gl_version, minor_gl_version, extensions);
-        opengl::check_sizes(minimum_sample_count, depth_bits, stencil_bits, red_bits, green_bits, blue_bits, alpha_bits);
+        opengl::check_sizes(antialiasing_level, depth_bits, stencil_bits, red_bits, green_bits, blue_bits, alpha_bits);
 
         LOG("\n-----OpenGL Window-----\n" + opengl::overview());
 }
@@ -191,7 +192,7 @@ class Impl final : public Window
 #pragma GCC diagnostic pop
 
 public:
-        Impl(int minimum_sample_count)
+        Impl()
         {
 #if 0
                 {
@@ -204,7 +205,7 @@ public:
 #endif
 
                 create_window_1x1(opengl::API_VERSION_MAJOR, opengl::API_VERSION_MINOR,
-                                  string_vector(opengl::REQUIRED_EXTENSIONS), minimum_sample_count, DEPTH_BITS, STENCIL_BITS,
+                                  string_vector(opengl::REQUIRED_EXTENSIONS), ANTIALIASING_LEVEL, DEPTH_BITS, STENCIL_BITS,
                                   RED_BITS, GREEN_BITS, BLUE_BITS, ALPHA_BITS, &m_window);
         }
 
@@ -254,8 +255,8 @@ Context::~Context() = default;
 
 //
 
-std::unique_ptr<Window> create_window(int minimum_sample_count)
+std::unique_ptr<Window> create_window()
 {
-        return std::make_unique<Impl>(minimum_sample_count);
+        return std::make_unique<Impl>();
 }
 }

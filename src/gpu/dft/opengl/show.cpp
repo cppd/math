@@ -91,8 +91,7 @@ class Impl final : public DFTShow
 {
         static constexpr int VERTEX_COUNT = 4;
 
-        const bool m_source_srgb;
-        opengl::TextureRGBA32F m_image_texture;
+        opengl::TextureRGBA32F m_result;
         std::unique_ptr<gpu_opengl::DFTComputeTexture> m_dft;
         opengl::VertexArray m_vertex_array;
         opengl::ArrayBuffer m_vertex_buffer;
@@ -114,14 +113,9 @@ class Impl final : public DFTShow
                 m_shader_memory.set_foreground_color(color);
         }
 
-        void take_image_from_framebuffer() override
-        {
-                m_image_texture.copy_texture_sub_image();
-        }
-
         void draw() override
         {
-                m_dft->exec(false, m_source_srgb);
+                m_dft->exec(false);
 
                 m_shader_memory.bind();
                 m_vertex_array.bind();
@@ -129,18 +123,17 @@ class Impl final : public DFTShow
         }
 
 public:
-        Impl(int width, int height, int dst_x, int dst_y, const mat4& matrix, bool source_srgb, double brightness,
+        Impl(const opengl::TextureRGBA32F& source, int dst_x, int dst_y, const mat4& matrix, double brightness,
              const Color& background_color, const Color& color)
-                : m_source_srgb(source_srgb),
-                  m_image_texture(width, height),
-                  m_dft(gpu_opengl::create_dft_compute_texture(width, height, m_image_texture)),
+                : m_result(source.texture().width(), source.texture().height()),
+                  m_dft(gpu_opengl::create_dft_compute_texture(source, m_result)),
                   m_vertex_buffer(sizeof(Vertex) * VERTEX_COUNT),
                   m_draw_prog(opengl::VertexShader(dft_show_vert()), opengl::FragmentShader(dft_show_frag()))
         {
                 m_vertex_array.attrib(0, 4, GL_FLOAT, m_vertex_buffer, offsetof(Vertex, v), sizeof(Vertex));
                 m_vertex_array.attrib(1, 2, GL_FLOAT, m_vertex_buffer, offsetof(Vertex, t), sizeof(Vertex));
 
-                m_draw_prog.set_uniform_handle("tex", m_image_texture.texture().texture_resident_handle());
+                m_draw_prog.set_uniform_handle("tex", m_result.texture().texture_resident_handle());
 
                 set_brightness(brightness);
                 set_background_color(background_color);
@@ -148,8 +141,8 @@ public:
 
                 int x0 = dst_x;
                 int y0 = dst_y;
-                int x1 = x0 + width;
-                int y1 = y0 + height;
+                int x1 = x0 + source.texture().width();
+                int y1 = y0 + source.texture().height();
 
                 std::array<Vertex, VERTEX_COUNT> vertices;
 
@@ -165,9 +158,9 @@ public:
 };
 }
 
-std::unique_ptr<DFTShow> create_dft_show(int width, int height, int dst_x, int dst_y, const mat4& matrix, bool source_srgb,
+std::unique_ptr<DFTShow> create_dft_show(const opengl::TextureRGBA32F& source, int dst_x, int dst_y, const mat4& matrix,
                                          double brightness, const Color& background_color, const Color& color)
 {
-        return std::make_unique<Impl>(width, height, dst_x, dst_y, matrix, source_srgb, brightness, background_color, color);
+        return std::make_unique<Impl>(source, dst_x, dst_y, matrix, brightness, background_color, color);
 }
 }

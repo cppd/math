@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "com/matrix.h"
+#include "graphics/opengl/buffers.h"
 
 #include <memory>
 
@@ -28,9 +29,9 @@ struct OpticalFlowShow
         virtual ~OpticalFlowShow() = default;
 
         virtual void reset() = 0;
-        virtual void take_image_from_framebuffer() = 0;
         virtual void draw() = 0;
 };
 
-std::unique_ptr<OpticalFlowShow> create_optical_flow_show(int width, int height, double window_ppi, const mat4& matrix);
+std::unique_ptr<OpticalFlowShow> create_optical_flow_show(const opengl::TextureRGBA32F& source, double window_ppi,
+                                                          const mat4& matrix);
 }

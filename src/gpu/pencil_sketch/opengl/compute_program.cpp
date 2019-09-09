@@ -30,11 +30,10 @@ namespace gpu_opengl
 {
 namespace
 {
-std::string compute_source(bool input_is_srgb, int group_size)
+std::string compute_source(int group_size)
 {
         std::string s;
         s += "const uint GROUP_SIZE = " + to_string(group_size) + ";\n";
-        s += "const bool SOURCE_SRGB = " + std::string(input_is_srgb ? "true" : "false") + ";\n";
         return pencil_sketch_compute_comp(s);
 }
 
@@ -46,11 +45,11 @@ std::string luminance_source(int group_size)
 }
 }
 
-PencilSketchProgramCompute::PencilSketchProgramCompute(const opengl::TextureRGBA32F& input, bool input_is_srgb,
-                                                       const opengl::TextureImage& objects, const opengl::TextureRGBA32F& output)
+PencilSketchProgramCompute::PencilSketchProgramCompute(const opengl::TextureRGBA32F& input, const opengl::TextureImage& objects,
+                                                       const opengl::TextureRGBA32F& output)
         : m_groups_x(group_count(input.texture().width(), GROUP_SIZE)),
           m_groups_y(group_count(input.texture().height(), GROUP_SIZE)),
-          m_program(opengl::ComputeShader(compute_source(input_is_srgb, GROUP_SIZE)))
+          m_program(opengl::ComputeShader(compute_source(GROUP_SIZE)))
 {
         ASSERT(objects.format() == GL_R32UI);
 
