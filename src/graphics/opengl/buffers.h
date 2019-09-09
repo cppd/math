@@ -153,7 +153,7 @@ class UniformBuffer final
         void copy_to(GLintptr offset, const void* data, GLsizeiptr data_size) const;
 
 public:
-        explicit UniformBuffer(GLsizeiptr data_size) : m_buffer(GL_UNIFORM_BUFFER), m_data_size(data_size)
+        explicit UniformBuffer(GLsizeiptr data_size) : m_data_size(data_size)
         {
                 glNamedBufferStorage(m_buffer, data_size, nullptr, GL_MAP_WRITE_BIT);
         }
@@ -192,7 +192,7 @@ class StorageBuffer final
         void copy_from(GLintptr offset, void* data, GLsizeiptr data_size) const;
 
 public:
-        explicit StorageBuffer(GLsizeiptr data_size) : m_buffer(GL_SHADER_STORAGE_BUFFER), m_data_size(data_size)
+        explicit StorageBuffer(GLsizeiptr data_size) : m_data_size(data_size)
         {
                 glNamedBufferStorage(m_buffer, data_size, nullptr, GL_MAP_WRITE_BIT | GL_MAP_READ_BIT);
         }
@@ -241,13 +241,13 @@ public:
 
 class ArrayBuffer final
 {
-        BufferHandle m_buffer = 0;
+        BufferHandle m_buffer;
         GLsizeiptr m_data_size;
 
         void copy_to(GLintptr offset, const void* data, GLsizeiptr data_size) const;
 
 public:
-        explicit ArrayBuffer(GLsizeiptr data_size) : m_buffer(GL_ARRAY_BUFFER), m_data_size(data_size)
+        explicit ArrayBuffer(GLsizeiptr data_size) : m_data_size(data_size)
         {
                 glNamedBufferStorage(m_buffer, data_size, nullptr, GL_MAP_WRITE_BIT);
         }

@@ -129,7 +129,7 @@ class BufferHandle final
         void move(BufferHandle* from) noexcept;
 
 public:
-        BufferHandle(GLenum target);
+        BufferHandle();
         ~BufferHandle();
 
         BufferHandle(const BufferHandle&) = delete;

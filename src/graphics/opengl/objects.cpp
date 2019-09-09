@@ -225,8 +225,6 @@ void FramebufferHandle::move(FramebufferHandle* from) noexcept
 FramebufferHandle::FramebufferHandle()
 {
         glCreateFramebuffers(1, &m_framebuffer);
-        glBindFramebuffer(GL_FRAMEBUFFER, m_framebuffer);
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 FramebufferHandle::~FramebufferHandle()
@@ -270,11 +268,9 @@ void BufferHandle::move(BufferHandle* from) noexcept
         from->m_buffer = 0;
 }
 
-BufferHandle::BufferHandle(GLenum target)
+BufferHandle::BufferHandle()
 {
         glCreateBuffers(1, &m_buffer);
-        glBindBuffer(target, m_buffer);
-        glBindBuffer(target, 0);
 }
 
 BufferHandle::~BufferHandle()
