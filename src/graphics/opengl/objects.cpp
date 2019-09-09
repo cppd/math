@@ -254,6 +254,52 @@ FramebufferHandle::operator GLuint() const noexcept
 
 //
 
+void RenderbufferHandle::destroy() noexcept
+{
+        if (m_renderbuffer != 0)
+        {
+                glDeleteRenderbuffers(1, &m_renderbuffer);
+        }
+}
+
+void RenderbufferHandle::move(RenderbufferHandle* from) noexcept
+{
+        m_renderbuffer = from->m_renderbuffer;
+        from->m_renderbuffer = 0;
+}
+
+RenderbufferHandle::RenderbufferHandle()
+{
+        glCreateRenderbuffers(1, &m_renderbuffer);
+}
+
+RenderbufferHandle::~RenderbufferHandle()
+{
+        destroy();
+}
+
+RenderbufferHandle::RenderbufferHandle(RenderbufferHandle&& from) noexcept
+{
+        move(&from);
+}
+
+RenderbufferHandle& RenderbufferHandle::operator=(RenderbufferHandle&& from) noexcept
+{
+        if (this != &from)
+        {
+                destroy();
+                move(&from);
+        }
+        return *this;
+}
+
+RenderbufferHandle::operator GLuint() const noexcept
+{
+        return m_renderbuffer;
+}
+
+//
+
 void BufferHandle::destroy() noexcept
 {
         if (m_buffer != 0)

@@ -121,6 +121,26 @@ public:
         operator GLuint() const noexcept;
 };
 
+class RenderbufferHandle final
+{
+        GLuint m_renderbuffer = 0;
+
+        void destroy() noexcept;
+        void move(RenderbufferHandle* from) noexcept;
+
+public:
+        RenderbufferHandle();
+        ~RenderbufferHandle();
+
+        RenderbufferHandle(const RenderbufferHandle&) = delete;
+        RenderbufferHandle& operator=(const RenderbufferHandle&) = delete;
+
+        RenderbufferHandle(RenderbufferHandle&& from) noexcept;
+        RenderbufferHandle& operator=(RenderbufferHandle&& from) noexcept;
+
+        operator GLuint() const noexcept;
+};
+
 class BufferHandle final
 {
         GLuint m_buffer = 0;
