@@ -639,29 +639,29 @@ public:
 
 class ColorDepthBufferMultisample final
 {
-        Texture2DMultisampleHandle m_color;
-        Texture2DMultisampleHandle m_depth;
+        static constexpr GLenum COLOR_ATTACHMENT = GL_COLOR_ATTACHMENT0;
+        static constexpr GLenum DEPTH_ATTACHMENT = GL_DEPTH_ATTACHMENT;
+
+        RenderbufferHandle m_color;
+        RenderbufferHandle m_depth;
         FramebufferHandle m_framebuffer;
 
 public:
         ColorDepthBufferMultisample(GLenum color_format, GLenum depth_format, GLsizei samples, GLsizei width, GLsizei height)
         {
-                constexpr GLenum draw_buffer = GL_COLOR_ATTACHMENT0;
+                glNamedRenderbufferStorageMultisample(m_color, samples, color_format, width, height);
+                glNamedRenderbufferStorageMultisample(m_depth, samples, depth_format, width, height);
 
-                glTextureStorage2DMultisample(m_color, samples, color_format, width, height, GL_FALSE);
-                glTextureStorage2DMultisample(m_depth, samples, depth_format, width, height, GL_FALSE);
+                glNamedFramebufferRenderbuffer(m_framebuffer, COLOR_ATTACHMENT, GL_RENDERBUFFER, m_color);
+                glNamedFramebufferRenderbuffer(m_framebuffer, DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_depth);
 
-                glNamedFramebufferTexture(m_framebuffer, draw_buffer, m_color, 0);
-                glNamedFramebufferTexture(m_framebuffer, GL_DEPTH_ATTACHMENT, m_depth, 0);
-
-                GLenum check;
-                check = glCheckNamedFramebufferStatus(m_framebuffer, GL_FRAMEBUFFER);
+                GLenum check = glCheckNamedFramebufferStatus(m_framebuffer, GL_FRAMEBUFFER);
                 if (check != GL_FRAMEBUFFER_COMPLETE)
                 {
                         error("Error create framebuffer multisample: " + std::to_string(check));
                 }
 
-                glNamedFramebufferDrawBuffers(m_framebuffer, 1, &draw_buffer);
+                glNamedFramebufferDrawBuffers(m_framebuffer, 1, &COLOR_ATTACHMENT);
         }
 
         operator GLuint() const
