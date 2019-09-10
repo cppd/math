@@ -19,9 +19,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 // clang-format off
 
-#include "opengl_functions.h"
+#include "functions.h"
 
-#include "opengl_functions_proc.h"
+#include "functions_proc.h"
 
 namespace
 {

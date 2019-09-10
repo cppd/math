@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/color/conversion_span.h"
 #include "com/print.h"
-#include "graphics/opengl/functions/opengl_functions.h"
+#include "graphics/opengl/functions.h"
 
 #include <array>
 #include <cstring>

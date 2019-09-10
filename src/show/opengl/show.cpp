@@ -29,7 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "gpu/pencil_sketch/opengl/show.h"
 #include "gpu/renderer/opengl/renderer.h"
 #include "gpu/text/opengl/show.h"
-#include "graphics/opengl/functions/opengl_functions.h"
+#include "graphics/opengl/functions.h"
 #include "graphics/opengl/query.h"
 #include "show/com/camera.h"
 #include "show/com/event_queue.h"

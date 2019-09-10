@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <atomic>
 
 #if defined(__linux__)
-#include "graphics/opengl/functions/opengl_functions.h"
+#include "graphics/opengl/functions.h"
 #include "window/manage.h"
 #endif
 

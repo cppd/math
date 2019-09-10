@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "com/error.h"
-#include "graphics/opengl/functions/opengl_functions.h"
+#include "graphics/opengl/functions.h"
 
 #include <array>
 

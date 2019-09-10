@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "graphics/opengl/functions/opengl_functions.h"
+#include "graphics/opengl/functions.h"
 #include "graphics/opengl/objects.h"
 
 #include <string_view>
