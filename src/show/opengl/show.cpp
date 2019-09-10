@@ -29,6 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "gpu/pencil_sketch/opengl/show.h"
 #include "gpu/renderer/opengl/renderer.h"
 #include "gpu/text/opengl/show.h"
+#include "graphics/opengl/functions/opengl_functions.h"
 #include "graphics/opengl/query.h"
 #include "show/com/camera.h"
 #include "show/com/event_queue.h"
@@ -49,6 +50,7 @@ constexpr vec3 OBJECT_POSITION = vec3(0);
 constexpr int OPENGL_MINIMUM_SAMPLE_COUNT = 4;
 constexpr GLenum OPENGL_FRAMEBUFFER_COLOR_FORMAT = GL_SRGB8_ALPHA8;
 constexpr GLenum OPENGL_FRAMEBUFFER_DEPTH_FORMAT = GL_DEPTH_COMPONENT32;
+constexpr GLenum OPENGL_FRAMEBUFFER_RESOLVE_FORMAT = GL_RGBA32F;
 constexpr GLenum OPENGL_OBJECT_IMAGE_FORMAT = GL_R32UI;
 
 //
@@ -88,9 +90,9 @@ class Impl final : public Show, public WindowEvent
         bool m_optical_flow_active = false;
 
         std::unique_ptr<opengl::Window> m_window;
-        std::unique_ptr<opengl::ColorDepthBufferMultisample> m_render_framebuffer;
-        std::unique_ptr<opengl::ColorBufferRGBA32F> m_resolve_framebuffer;
-        std::unique_ptr<opengl::TextureImage> m_object_image;
+        std::unique_ptr<opengl::ColorDepthFramebufferMultisample> m_render_framebuffer;
+        std::unique_ptr<opengl::ColorFramebuffer> m_resolve_framebuffer;
+        std::unique_ptr<opengl::Texture> m_object_image;
         std::unique_ptr<gpu_opengl::Renderer> m_renderer;
         std::unique_ptr<gpu_opengl::Text> m_text;
         std::unique_ptr<gpu_opengl::DFTShow> m_dft;
@@ -556,13 +558,14 @@ class Impl final : public Show, public WindowEvent
                 m_resolve_framebuffer.reset();
                 m_render_framebuffer.reset();
 
-                m_render_framebuffer = std::make_unique<opengl::ColorDepthBufferMultisample>(
+                m_render_framebuffer = std::make_unique<opengl::ColorDepthFramebufferMultisample>(
                         OPENGL_FRAMEBUFFER_COLOR_FORMAT, OPENGL_FRAMEBUFFER_DEPTH_FORMAT, OPENGL_MINIMUM_SAMPLE_COUNT,
                         m_window->width(), m_window->height());
 
-                m_resolve_framebuffer = std::make_unique<opengl::ColorBufferRGBA32F>(m_draw_width, m_draw_height);
+                m_resolve_framebuffer = std::make_unique<opengl::ColorFramebuffer>(OPENGL_FRAMEBUFFER_RESOLVE_FORMAT,
+                                                                                   m_draw_width, m_draw_height);
 
-                m_object_image = std::make_unique<opengl::TextureImage>(m_draw_width, m_draw_height, OPENGL_OBJECT_IMAGE_FORMAT);
+                m_object_image = std::make_unique<opengl::Texture>(OPENGL_OBJECT_IMAGE_FORMAT, m_draw_width, m_draw_height);
 
                 m_renderer->set_size(m_draw_width, m_draw_height, *m_object_image);
 

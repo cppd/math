@@ -35,6 +35,6 @@ struct DFTShow
         virtual void draw() = 0;
 };
 
-std::unique_ptr<DFTShow> create_dft_show(const opengl::TextureRGBA32F& source, int dst_x, int dst_y, const mat4& matrix,
+std::unique_ptr<DFTShow> create_dft_show(const opengl::Texture& source, int dst_x, int dst_y, const mat4& matrix,
                                          double brightness, const Color& background_color, const Color& color);
 }

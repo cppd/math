@@ -79,14 +79,14 @@ std::string filter_source(int height)
 }
 }
 
-ConvexHullProgramPrepare::ConvexHullProgramPrepare(const opengl::TextureImage& objects, const opengl::StorageBuffer& lines)
+ConvexHullProgramPrepare::ConvexHullProgramPrepare(const opengl::Texture& objects, const opengl::StorageBuffer& lines)
         : m_program(opengl::ComputeShader(prepare_source(objects.width(), objects.height()))),
           m_lines(&lines),
           m_height(objects.height())
 {
         ASSERT(objects.format() == GL_R32UI);
 
-        m_program.set_uniform_handle("objects", objects.image_resident_handle_read_only());
+        m_program.set_uniform_handle("objects", objects.image_handle_read_only());
 }
 
 void ConvexHullProgramPrepare::exec() const

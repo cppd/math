@@ -55,7 +55,7 @@ class Impl final : public ConvexHullShow
         }
 
 public:
-        Impl(const opengl::TextureImage& objects, const mat4& matrix)
+        Impl(const opengl::Texture& objects, const mat4& matrix)
                 : m_draw_prog(opengl::VertexShader(convex_hull_show_vert()), opengl::FragmentShader(convex_hull_show_frag())),
                   m_points(convex_hull_points_buffer_size(objects.height())),
                   m_start_time(time_in_seconds())
@@ -73,7 +73,7 @@ public:
 };
 }
 
-std::unique_ptr<ConvexHullShow> create_convex_hull_show(const opengl::TextureImage& objects, const mat4& matrix)
+std::unique_ptr<ConvexHullShow> create_convex_hull_show(const opengl::Texture& objects, const mat4& matrix)
 {
         return std::make_unique<Impl>(objects, matrix);
 }

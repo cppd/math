@@ -32,6 +32,5 @@ struct OpticalFlowShow
         virtual void draw() = 0;
 };
 
-std::unique_ptr<OpticalFlowShow> create_optical_flow_show(const opengl::TextureRGBA32F& source, double window_ppi,
-                                                          const mat4& matrix);
+std::unique_ptr<OpticalFlowShow> create_optical_flow_show(const opengl::Texture& source, double window_ppi, const mat4& matrix);
 }

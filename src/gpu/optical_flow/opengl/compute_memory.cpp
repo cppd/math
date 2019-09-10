@@ -19,14 +19,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpu_opengl
 {
-OpticalFlowGrayscaleMemory::OpticalFlowGrayscaleMemory(const opengl::TextureRGBA32F& image_src,
-                                                       const opengl::TextureR32F& image_dst)
+OpticalFlowGrayscaleMemory::OpticalFlowGrayscaleMemory(const opengl::Texture& image_src, const opengl::Texture& image_dst)
         : m_buffer(sizeof(Images))
 {
+        ASSERT(image_src.format() == GL_RGBA32F);
+        ASSERT(image_dst.format() == GL_R32F);
+
         Images images;
 
-        images.image_src = image_src.image_resident_handle_read_only();
-        images.image_dst = image_dst.image_resident_handle_write_only();
+        images.image_src = image_src.image_handle_read_only();
+        images.image_dst = image_dst.image_handle_write_only();
 
         m_buffer.copy(images);
 }
@@ -38,14 +40,16 @@ void OpticalFlowGrayscaleMemory::bind() const
 
 //
 
-OpticalFlowDownsampleMemory::OpticalFlowDownsampleMemory(const opengl::TextureR32F& image_big,
-                                                         const opengl::TextureR32F& image_small)
+OpticalFlowDownsampleMemory::OpticalFlowDownsampleMemory(const opengl::Texture& image_big, const opengl::Texture& image_small)
         : m_buffer(sizeof(Images))
 {
+        ASSERT(image_big.format() == GL_R32F);
+        ASSERT(image_small.format() == GL_R32F);
+
         Images images;
 
-        images.image_big = image_big.image_resident_handle_read_only();
-        images.image_small = image_small.image_resident_handle_write_only();
+        images.image_big = image_big.image_handle_read_only();
+        images.image_small = image_small.image_handle_write_only();
 
         m_buffer.copy(images);
 }
@@ -57,15 +61,19 @@ void OpticalFlowDownsampleMemory::bind() const
 
 //
 
-OpticalFlowSobelMemory::OpticalFlowSobelMemory(const opengl::TextureR32F& image_i, const opengl::TextureR32F& image_dx,
-                                               const opengl::TextureR32F& image_dy)
+OpticalFlowSobelMemory::OpticalFlowSobelMemory(const opengl::Texture& image_i, const opengl::Texture& image_dx,
+                                               const opengl::Texture& image_dy)
         : m_buffer(sizeof(Images))
 {
+        ASSERT(image_i.format() == GL_R32F);
+        ASSERT(image_dx.format() == GL_R32F);
+        ASSERT(image_dy.format() == GL_R32F);
+
         Images images;
 
-        images.image_i = image_i.image_resident_handle_read_only();
-        images.image_dx = image_dx.image_resident_handle_write_only();
-        images.image_dy = image_dy.image_resident_handle_write_only();
+        images.image_i = image_i.image_handle_read_only();
+        images.image_dx = image_dx.image_handle_write_only();
+        images.image_dy = image_dy.image_handle_write_only();
 
         m_buffer.copy(images);
 }
@@ -122,16 +130,21 @@ void OpticalFlowDataMemory::bind() const
 
 //
 
-OpticalFlowImagesMemory::OpticalFlowImagesMemory(const opengl::TextureR32F& image_dx, const opengl::TextureR32F& image_dy,
-                                                 const opengl::TextureR32F& image_i, const opengl::TextureR32F& texture_j)
+OpticalFlowImagesMemory::OpticalFlowImagesMemory(const opengl::Texture& image_dx, const opengl::Texture& image_dy,
+                                                 const opengl::Texture& image_i, const opengl::Texture& texture_j)
         : m_buffer(sizeof(Images))
 {
+        ASSERT(image_dx.format() == GL_R32F);
+        ASSERT(image_dy.format() == GL_R32F);
+        ASSERT(image_i.format() == GL_R32F);
+        ASSERT(texture_j.format() == GL_R32F);
+
         Images images;
 
-        images.image_dx = image_dx.image_resident_handle_read_only();
-        images.image_dy = image_dy.image_resident_handle_read_only();
-        images.image_i = image_i.image_resident_handle_read_only();
-        images.texture_j = texture_j.texture().texture_resident_handle();
+        images.image_dx = image_dx.image_handle_read_only();
+        images.image_dy = image_dy.image_handle_read_only();
+        images.image_i = image_i.image_handle_read_only();
+        images.texture_j = texture_j.texture_handle();
 
         m_buffer.copy(images);
 }

@@ -34,7 +34,7 @@ class OpticalFlowGrayscaleMemory final
         };
 
 public:
-        OpticalFlowGrayscaleMemory(const opengl::TextureRGBA32F& image_src, const opengl::TextureR32F& image_dst);
+        OpticalFlowGrayscaleMemory(const opengl::Texture& image_src, const opengl::Texture& image_dst);
 
         void bind() const;
 };
@@ -52,7 +52,7 @@ class OpticalFlowDownsampleMemory final
         };
 
 public:
-        OpticalFlowDownsampleMemory(const opengl::TextureR32F& image_big, const opengl::TextureR32F& image_small);
+        OpticalFlowDownsampleMemory(const opengl::Texture& image_big, const opengl::Texture& image_small);
 
         void bind() const;
 };
@@ -71,8 +71,7 @@ class OpticalFlowSobelMemory final
         };
 
 public:
-        OpticalFlowSobelMemory(const opengl::TextureR32F& image_i, const opengl::TextureR32F& image_dx,
-                               const opengl::TextureR32F& image_dy);
+        OpticalFlowSobelMemory(const opengl::Texture& image_i, const opengl::Texture& image_dx, const opengl::Texture& image_dy);
 
         void bind() const;
 };
@@ -127,8 +126,8 @@ class OpticalFlowImagesMemory final
         };
 
 public:
-        OpticalFlowImagesMemory(const opengl::TextureR32F& image_dx, const opengl::TextureR32F& image_dy,
-                                const opengl::TextureR32F& image_i, const opengl::TextureR32F& texture_j);
+        OpticalFlowImagesMemory(const opengl::Texture& image_dx, const opengl::Texture& image_dy, const opengl::Texture& image_i,
+                                const opengl::Texture& texture_j);
 
         void bind() const;
 };

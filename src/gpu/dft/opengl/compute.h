@@ -38,6 +38,5 @@ struct DFTComputeTexture
 };
 
 std::unique_ptr<DFTCompute> create_dft_compute(int x, int y);
-std::unique_ptr<DFTComputeTexture> create_dft_compute_texture(const opengl::TextureRGBA32F& source,
-                                                              const opengl::TextureRGBA32F& result);
+std::unique_ptr<DFTComputeTexture> create_dft_compute_texture(const opengl::Texture& source, const opengl::Texture& result);
 }

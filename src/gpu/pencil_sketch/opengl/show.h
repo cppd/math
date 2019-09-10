@@ -31,6 +31,6 @@ struct PencilSketchShow
         virtual void draw() = 0;
 };
 
-std::unique_ptr<PencilSketchShow> create_pencil_sketch_show(const opengl::TextureRGBA32F& source,
-                                                            const opengl::TextureImage& objects, const mat4& matrix);
+std::unique_ptr<PencilSketchShow> create_pencil_sketch_show(const opengl::Texture& source, const opengl::Texture& objects,
+                                                            const mat4& matrix);
 }

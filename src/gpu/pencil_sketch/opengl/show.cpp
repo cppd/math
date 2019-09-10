@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/opengl/shader.h"
 
 constexpr int VERTEX_COUNT = 4;
+constexpr GLenum IMAGE_FORMAT = GL_RGBA32F;
 
 namespace gpu_opengl
 {
@@ -40,7 +41,7 @@ struct Vertex
 class Impl final : public PencilSketchShow
 {
         opengl::GraphicsProgram m_draw_prog;
-        opengl::TextureRGBA32F m_texture;
+        opengl::Texture m_texture;
 
         opengl::VertexArray m_vertex_array;
         opengl::ArrayBuffer m_vertex_buffer;
@@ -57,24 +58,25 @@ class Impl final : public PencilSketchShow
         }
 
 public:
-        Impl(const opengl::TextureRGBA32F& source, const opengl::TextureImage& objects, const mat4& matrix)
+        Impl(const opengl::Texture& source, const opengl::Texture& objects, const mat4& matrix)
                 : m_draw_prog(opengl::VertexShader(pencil_sketch_show_vert()), opengl::FragmentShader(pencil_sketch_show_frag())),
-                  m_texture(source.texture().width(), source.texture().height()),
+                  m_texture(IMAGE_FORMAT, source.width(), source.height()),
                   m_vertex_buffer(sizeof(Vertex) * VERTEX_COUNT),
                   m_pencil_sketch(gpu_opengl::create_pencil_sketch_compute(source, objects, m_texture))
         {
-                ASSERT(source.texture().width() == objects.width());
-                ASSERT(source.texture().height() == objects.height());
+                ASSERT(source.format() == IMAGE_FORMAT);
+                ASSERT(source.width() == objects.width());
+                ASSERT(source.height() == objects.height());
 
-                m_draw_prog.set_uniform_handle("tex", m_texture.texture().texture_resident_handle());
+                m_draw_prog.set_uniform_handle("tex", m_texture.texture_handle());
 
                 m_vertex_array.attrib(0, 4, GL_FLOAT, m_vertex_buffer, offsetof(Vertex, v), sizeof(Vertex));
                 m_vertex_array.attrib(1, 2, GL_FLOAT, m_vertex_buffer, offsetof(Vertex, t), sizeof(Vertex));
 
                 int x0 = 0;
                 int y0 = 0;
-                int x1 = source.texture().width();
-                int y1 = source.texture().height();
+                int x1 = source.width();
+                int y1 = source.height();
 
                 std::array<Vertex, VERTEX_COUNT> vertices;
 
@@ -95,8 +97,8 @@ public:
 };
 }
 
-std::unique_ptr<PencilSketchShow> create_pencil_sketch_show(const opengl::TextureRGBA32F& source,
-                                                            const opengl::TextureImage& objects, const mat4& matrix)
+std::unique_ptr<PencilSketchShow> create_pencil_sketch_show(const opengl::Texture& source, const opengl::Texture& objects,
+                                                            const mat4& matrix)
 {
         return std::make_unique<Impl>(source, objects, matrix);
 }

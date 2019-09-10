@@ -21,6 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "gpu/com/glsl.h"
 #include "obj/alg/alg.h"
 
+constexpr GLenum TEXTURE_FORMAT = GL_SRGB8_ALPHA8;
+
 namespace gpu_opengl
 {
 // Число используется в шейдере для определения наличия текстурных координат
@@ -147,19 +149,19 @@ std::unique_ptr<opengl::ArrayBuffer> load_point_vertices(const Obj<3>& obj)
         return std::make_unique<opengl::ArrayBuffer>(vertices);
 }
 
-std::vector<opengl::TextureRGBA32F> load_textures(const Obj<3>& obj)
+std::vector<opengl::Texture> load_textures(const Obj<3>& obj)
 {
-        std::vector<opengl::TextureRGBA32F> textures;
+        std::vector<opengl::Texture> textures;
 
         for (const Obj<3>::Image& image : obj.images())
         {
-                textures.emplace_back(image.size[0], image.size[1], image.srgba_pixels);
+                textures.emplace_back(TEXTURE_FORMAT, image.size[0], image.size[1], image.srgba_pixels);
         }
 
         return textures;
 }
 
-std::unique_ptr<RendererMaterialMemory> load_materials(const Obj<3>& obj, const std::vector<opengl::TextureRGBA32F>& textures)
+std::unique_ptr<RendererMaterialMemory> load_materials(const Obj<3>& obj, const std::vector<opengl::Texture>& textures)
 {
         std::vector<RendererMaterialMemory::Material> materials;
         materials.reserve(obj.materials().size() + 1);
@@ -179,15 +181,15 @@ std::unique_ptr<RendererMaterialMemory> load_materials(const Obj<3>& obj, const 
 
                 if (material.map_Ka >= 0)
                 {
-                        m.texture_Ka = textures[material.map_Ka].texture().texture_resident_handle();
+                        m.texture_Ka = textures[material.map_Ka].texture_handle();
                 }
                 if (material.map_Kd >= 0)
                 {
-                        m.texture_Kd = textures[material.map_Kd].texture().texture_resident_handle();
+                        m.texture_Kd = textures[material.map_Kd].texture_handle();
                 }
                 if (material.map_Ks >= 0)
                 {
-                        m.texture_Ks = textures[material.map_Ks].texture().texture_resident_handle();
+                        m.texture_Ks = textures[material.map_Ks].texture_handle();
                 }
 
                 materials.push_back(m);
@@ -205,7 +207,7 @@ class DrawObject::Triangles final
 {
         opengl::VertexArray m_vertex_array;
         std::unique_ptr<opengl::ArrayBuffer> m_vertex_buffer;
-        std::vector<opengl::TextureRGBA32F> m_textures;
+        std::vector<opengl::Texture> m_textures;
         std::unique_ptr<RendererMaterialMemory> m_shader_memory;
 
         unsigned m_vertex_count;

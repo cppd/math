@@ -34,7 +34,7 @@ struct OpticalFlowCompute
         virtual GLuint64 image_pyramid_texture() const = 0;
 };
 
-std::unique_ptr<OpticalFlowCompute> create_optical_flow_compute(const opengl::TextureRGBA32F& source, int top_x, int top_y,
+std::unique_ptr<OpticalFlowCompute> create_optical_flow_compute(const opengl::Texture& source, int top_x, int top_y,
                                                                 const opengl::StorageBuffer& top_points,
                                                                 const opengl::StorageBuffer& top_flow);
 }

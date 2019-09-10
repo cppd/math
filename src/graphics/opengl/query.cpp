@@ -273,41 +273,6 @@ bool framebuffer_srgb()
         }
 }
 
-// framebuffer_srgb() возвращает неправильные значения.
-// Поэтому нужно записать цвет в буфер и прочитать обратно.
-bool current_buffer_is_srgb()
-{
-        constexpr float EPSILON = 0.01;
-
-#if 1
-        constexpr float RGB_COLOR = 0.5;
-        constexpr float SRGB_COLOR = 0.73725;
-#else
-        constexpr float RGB_COLOR = 0.1;
-        constexpr float SRGB_COLOR = 0.34902;
-#endif
-
-        float source_color[4] = {RGB_COLOR, RGB_COLOR, RGB_COLOR, 1};
-        glClearBufferfv(GL_COLOR, 0, source_color);
-
-        TextureRGBA32F pixel_texture(1, 1);
-        pixel_texture.copy_texture_sub_image();
-
-        std::array<GLfloat, 4> pixel{-1, -1, -1, -1};
-        pixel_texture.get_texture_sub_image(0, 0, 1, 1, &pixel);
-
-        const float buffer_color = pixel[0];
-
-        if (!(std::abs(buffer_color - RGB_COLOR) < EPSILON || std::abs(buffer_color - SRGB_COLOR) < EPSILON))
-        {
-                error("Buffer color space detection failed. RGB color " + to_string(RGB_COLOR) + " from buffer is " +
-                      to_string(buffer_color) + ". Expected either RGB color " + to_string(RGB_COLOR) + " or sRGB color " +
-                      to_string(SRGB_COLOR) + ".");
-        }
-
-        return std::abs(buffer_color - SRGB_COLOR) < EPSILON;
-}
-
 int framebuffer_samples()
 {
         return get_named_framebuffer_parameter(0, GL_SAMPLES);

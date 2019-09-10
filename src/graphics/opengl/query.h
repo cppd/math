@@ -23,8 +23,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace opengl
 {
 bool framebuffer_srgb();
-bool current_buffer_is_srgb();
-
 int framebuffer_samples();
 long long max_texture_size();
 long long max_texture_buffer_size();

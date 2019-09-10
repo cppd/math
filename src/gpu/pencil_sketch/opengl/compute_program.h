@@ -29,8 +29,7 @@ class PencilSketchProgramCompute final
         opengl::ComputeProgram m_program;
 
 public:
-        PencilSketchProgramCompute(const opengl::TextureRGBA32F& input, const opengl::TextureImage& objects,
-                                   const opengl::TextureRGBA32F& output);
+        PencilSketchProgramCompute(const opengl::Texture& input, const opengl::Texture& objects, const opengl::Texture& output);
 
         void exec() const;
 };
@@ -42,7 +41,7 @@ class PencilSketchProgramLuminance final
         opengl::ComputeProgram m_program;
 
 public:
-        PencilSketchProgramLuminance(const opengl::TextureRGBA32F& output);
+        PencilSketchProgramLuminance(const opengl::Texture& output);
 
         void exec() const;
 };

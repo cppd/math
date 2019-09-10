@@ -172,9 +172,9 @@ class Impl final : public OpticalFlowShow
         }
 
 public:
-        Impl(const opengl::TextureRGBA32F& source, double window_ppi, const mat4& matrix)
-                : m_width(source.texture().width()),
-                  m_height(source.texture().height()),
+        Impl(const opengl::Texture& source, double window_ppi, const mat4& matrix)
+                : m_width(source.width()),
+                  m_height(source.height()),
                   m_draw_prog(opengl::VertexShader(optical_flow_show_vert()), opengl::FragmentShader(optical_flow_show_frag())),
                   m_draw_prog_debug(opengl::VertexShader(optical_flow_show_debug_vert()),
                                     opengl::FragmentShader(optical_flow_show_debug_frag()))
@@ -198,8 +198,7 @@ public:
 };
 }
 
-std::unique_ptr<OpticalFlowShow> create_optical_flow_show(const opengl::TextureRGBA32F& source, double window_ppi,
-                                                          const mat4& matrix)
+std::unique_ptr<OpticalFlowShow> create_optical_flow_show(const opengl::Texture& source, double window_ppi, const mat4& matrix)
 {
         return std::make_unique<Impl>(source, window_ppi, matrix);
 }

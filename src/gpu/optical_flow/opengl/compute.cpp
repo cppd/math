@@ -45,6 +45,8 @@ Chapter 5. Tracking Objects in Videos.
 
 #include <array>
 
+constexpr GLenum IMAGE_FORMAT = GL_R32F;
+
 // Размер по X и по Y группы потоков вычислительных шейдеров
 constexpr int GROUP_SIZE = 16;
 // Минимальный размер изображения для пирамиды изображений
@@ -137,13 +139,13 @@ std::vector<vec2i> pyramid_sizes(int width, int height, int min_size)
         return sizes;
 }
 
-std::vector<opengl::TextureR32F> create_images(const std::vector<vec2i>& sizes)
+std::vector<opengl::Texture> create_images(const std::vector<vec2i>& sizes)
 {
-        std::vector<opengl::TextureR32F> images;
+        std::vector<opengl::Texture> images;
         images.reserve(sizes.size());
         for (const vec2i& s : sizes)
         {
-                images.emplace_back(s[0], s[1]);
+                images.emplace_back(IMAGE_FORMAT, s[0], s[1]);
         }
         return images;
 }
@@ -163,8 +165,8 @@ std::vector<opengl::StorageBuffer> create_flow_buffers(const std::vector<vec2i>&
         return buffers;
 }
 
-std::array<OpticalFlowGrayscaleMemory, 2> create_grayscale_memory(const opengl::TextureRGBA32F& source_image,
-                                                                  const std::array<std::vector<opengl::TextureR32F>, 2>& images)
+std::array<OpticalFlowGrayscaleMemory, 2> create_grayscale_memory(const opengl::Texture& source_image,
+                                                                  const std::array<std::vector<opengl::Texture>, 2>& images)
 {
         return {OpticalFlowGrayscaleMemory(source_image, images[0][0]), OpticalFlowGrayscaleMemory(source_image, images[1][0])};
 }
@@ -178,7 +180,7 @@ vec2i create_grayscale_groups(const std::vector<vec2i>& sizes)
 }
 
 std::array<std::vector<OpticalFlowDownsampleMemory>, 2> create_downsample_memory(
-        const std::array<std::vector<opengl::TextureR32F>, 2>& images)
+        const std::array<std::vector<opengl::Texture>, 2>& images)
 {
         ASSERT(images[0].size() == images[1].size());
 
@@ -207,9 +209,9 @@ std::vector<vec2i> create_downsample_groups(const std::vector<vec2i>& sizes)
         return groups;
 }
 
-std::array<std::vector<OpticalFlowSobelMemory>, 2> create_sobel_memory(
-        const std::array<std::vector<opengl::TextureR32F>, 2>& images, const std::vector<opengl::TextureR32F>& dx,
-        const std::vector<opengl::TextureR32F>& dy)
+std::array<std::vector<OpticalFlowSobelMemory>, 2> create_sobel_memory(const std::array<std::vector<opengl::Texture>, 2>& images,
+                                                                       const std::vector<opengl::Texture>& dx,
+                                                                       const std::vector<opengl::Texture>& dy)
 {
         ASSERT(images[0].size() == images[1].size());
         ASSERT(images[0].size() == dx.size());
@@ -305,8 +307,8 @@ std::vector<OpticalFlowDataMemory> create_flow_data_memory(const std::vector<vec
 }
 
 std::array<std::vector<OpticalFlowImagesMemory>, 2> create_flow_images_memory(
-        const std::array<std::vector<opengl::TextureR32F>, 2>& images, const std::vector<opengl::TextureR32F>& dx,
-        const std::vector<opengl::TextureR32F>& dy)
+        const std::array<std::vector<opengl::Texture>, 2>& images, const std::vector<opengl::Texture>& dx,
+        const std::vector<opengl::Texture>& dy)
 {
         ASSERT(images[0].size() == images[1].size());
         ASSERT(images[0].size() == dx.size());
@@ -341,9 +343,9 @@ std::vector<vec2i> create_flow_groups(const std::vector<vec2i>& sizes, int top_x
 
 class Impl final : public OpticalFlowCompute
 {
-        std::array<std::vector<opengl::TextureR32F>, 2> m_images;
-        std::vector<opengl::TextureR32F> m_dx;
-        std::vector<opengl::TextureR32F> m_dy;
+        std::array<std::vector<opengl::Texture>, 2> m_images;
+        std::vector<opengl::Texture> m_dx;
+        std::vector<opengl::Texture> m_dy;
         std::vector<opengl::StorageBuffer> m_flow_buffers;
 
         std::array<OpticalFlowGrayscaleMemory, 2> m_grayscale_memory;
@@ -442,14 +444,14 @@ class Impl final : public OpticalFlowCompute
 
         GLuint64 image_pyramid_dx_texture() const override
         {
-                return m_dx[0].texture().texture_resident_handle();
+                return m_dx[0].texture_handle();
         }
         GLuint64 image_pyramid_texture() const override
         {
-                return m_images[m_i_index][0].texture().texture_resident_handle();
+                return m_images[m_i_index][0].texture_handle();
         }
 
-        Impl(const std::vector<vec2i>& sizes, const opengl::TextureRGBA32F& source_image, int top_x, int top_y,
+        Impl(const std::vector<vec2i>& sizes, const opengl::Texture& source_image, int top_x, int top_y,
              const opengl::StorageBuffer& top_points, const opengl::StorageBuffer& top_flow)
                 : m_images({create_images(sizes), create_images(sizes)}),
                   m_dx(create_images(sizes)),
@@ -476,16 +478,16 @@ class Impl final : public OpticalFlowCompute
         }
 
 public:
-        Impl(const opengl::TextureRGBA32F& source, int top_x, int top_y, const opengl::StorageBuffer& top_points,
+        Impl(const opengl::Texture& source, int top_x, int top_y, const opengl::StorageBuffer& top_points,
              const opengl::StorageBuffer& top_flow)
-                : Impl(pyramid_sizes(source.texture().width(), source.texture().height(), BOTTOM_IMAGE_SIZE), source, top_x,
-                       top_y, top_points, top_flow)
+                : Impl(pyramid_sizes(source.width(), source.height(), BOTTOM_IMAGE_SIZE), source, top_x, top_y, top_points,
+                       top_flow)
         {
         }
 };
 }
 
-std::unique_ptr<OpticalFlowCompute> create_optical_flow_compute(const opengl::TextureRGBA32F& source, int top_x, int top_y,
+std::unique_ptr<OpticalFlowCompute> create_optical_flow_compute(const opengl::Texture& source, int top_x, int top_y,
                                                                 const opengl::StorageBuffer& top_points,
                                                                 const opengl::StorageBuffer& top_flow)
 {

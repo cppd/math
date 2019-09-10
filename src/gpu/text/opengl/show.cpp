@@ -40,6 +40,8 @@ static_assert(sizeof(TextVertex) == sizeof(Vector<2, GLint>) + sizeof(Vector<2, 
 static_assert(std::is_same_v<decltype(TextVertex::v), Vector<2, GLint>>);
 static_assert(std::is_same_v<decltype(TextVertex::t), Vector<2, GLfloat>>);
 
+constexpr GLenum TEXTURE_FORMAT = GL_R32F;
+
 namespace gpu_opengl
 {
 namespace
@@ -52,7 +54,7 @@ class Impl final : public Text
         std::optional<opengl::ArrayBuffer> m_vertex_buffer;
         opengl::GraphicsProgram m_program;
         std::unordered_map<char32_t, FontGlyph> m_glyphs;
-        std::unique_ptr<opengl::TextureR32F> m_texture;
+        std::unique_ptr<opengl::Texture> m_texture;
         TextShaderMemory m_shader_memory;
 
         void set_color(const Color& color) const override
@@ -107,8 +109,8 @@ public:
                 std::vector<std::uint_least8_t> pixels;
                 create_font_glyphs(font, max_size, max_size, &m_glyphs, &width, &height, &pixels);
 
-                m_texture = std::make_unique<opengl::TextureR32F>(width, height, pixels);
-                m_program.set_uniform_handle("tex", m_texture->texture().texture_resident_handle());
+                m_texture = std::make_unique<opengl::Texture>(TEXTURE_FORMAT, width, height, pixels);
+                m_program.set_uniform_handle("tex", m_texture->texture_handle());
         }
 
         ~Impl() override

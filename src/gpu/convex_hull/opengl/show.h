@@ -32,5 +32,5 @@ struct ConvexHullShow
         virtual void draw() = 0;
 };
 
-std::unique_ptr<ConvexHullShow> create_convex_hull_show(const opengl::TextureImage& objects, const mat4& matrix);
+std::unique_ptr<ConvexHullShow> create_convex_hull_show(const opengl::Texture& objects, const mat4& matrix);
 }

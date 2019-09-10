@@ -32,7 +32,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cmath>
 #include <string>
 
-constexpr GLenum OBJECT_IMAGE_FORMAT = GL_R32UI;
+constexpr GLenum DEPTH_FORMAT = GL_DEPTH_COMPONENT32;
 
 namespace gpu_opengl
 {
@@ -49,7 +49,7 @@ class Impl final : public Renderer
         opengl::GraphicsProgram m_points_0d_program;
         opengl::GraphicsProgram m_points_1d_program;
 
-        std::unique_ptr<opengl::DepthBuffer32> m_shadow_buffer;
+        std::unique_ptr<opengl::DepthFramebuffer> m_shadow_buffer;
 
         mat4 m_shadow_matrix;
         mat4 m_scale_bias_shadow_matrix;
@@ -72,7 +72,7 @@ class Impl final : public Renderer
         RendererShadowMemory m_shadow_memory;
         RendererTrianglesMemory m_triangles_memory;
 
-        const opengl::TextureImage* m_object_image = nullptr;
+        const opengl::Texture* m_object_image = nullptr;
 
         void set_light_a(const Color& light) override
         {
@@ -231,9 +231,8 @@ class Impl final : public Renderer
                         m_shadow_height = 1;
                 }
 
-                m_shadow_buffer = std::make_unique<opengl::DepthBuffer32>(m_shadow_width, m_shadow_height);
-                m_triangles_program.set_uniform_handle("shadow_texture",
-                                                       m_shadow_buffer->texture().texture().texture_resident_handle());
+                m_shadow_buffer = std::make_unique<opengl::DepthFramebuffer>(DEPTH_FORMAT, m_shadow_width, m_shadow_height);
+                m_triangles_program.set_uniform_handle("shadow_texture", m_shadow_buffer->texture().texture_handle());
         }
 
         void set_matrices()
@@ -259,18 +258,18 @@ class Impl final : public Renderer
                 set_shadow_size();
         }
 
-        void set_size(int width, int height, const opengl::TextureImage& object_image) override
+        void set_size(int width, int height, const opengl::Texture& object_image) override
         {
-                ASSERT(object_image.format() == OBJECT_IMAGE_FORMAT);
+                ASSERT(object_image.format() == GL_R32UI);
 
                 m_width = width;
                 m_height = height;
 
                 m_object_image = &object_image;
 
-                m_triangles_program.set_uniform_handle("object_image", m_object_image->image_resident_handle_write_only());
-                m_points_0d_program.set_uniform_handle("object_image", m_object_image->image_resident_handle_write_only());
-                m_points_1d_program.set_uniform_handle("object_image", m_object_image->image_resident_handle_write_only());
+                m_triangles_program.set_uniform_handle("object_image", m_object_image->image_handle_write_only());
+                m_points_0d_program.set_uniform_handle("object_image", m_object_image->image_handle_write_only());
+                m_points_1d_program.set_uniform_handle("object_image", m_object_image->image_handle_write_only());
 
                 set_shadow_size();
         }

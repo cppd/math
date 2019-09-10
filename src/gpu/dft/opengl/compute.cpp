@@ -343,7 +343,7 @@ class Impl final : public DFTCompute, public DFTComputeTexture
         }
 
 public:
-        Impl(int n1, int n2, const opengl::TextureRGBA32F* source, const opengl::TextureRGBA32F* result)
+        Impl(int n1, int n2, const opengl::Texture* source, const opengl::Texture* result)
                 : m_n1(n1),
                   m_n2(n2),
                   m_m1(compute_m(m_n1)),
@@ -374,11 +374,12 @@ public:
                 ASSERT((source && result) || (!source && !result));
                 if (source && result)
                 {
-                        ASSERT(source->texture().width() == n1 && source->texture().height() == n2);
-                        ASSERT(result->texture().width() == n1 && result->texture().height() == n2);
+                        ASSERT(source->format() == GL_RGBA32F && source->format() == result->format());
+                        ASSERT(source->width() == n1 && source->height() == n2);
+                        ASSERT(result->width() == n1 && result->height() == n2);
 
-                        m_source_handle = source->image_resident_handle_read_write();
-                        m_result_handle = result->image_resident_handle_read_write();
+                        m_source_handle = source->image_handle_read_write();
+                        m_result_handle = result->image_handle_read_write();
                 }
 
                 // Для обратного преобразования нужна корректировка данных с умножением на коэффициент,
@@ -409,9 +410,8 @@ std::unique_ptr<DFTCompute> create_dft_compute(int x, int y)
         return std::make_unique<Impl<float>>(x, y, nullptr, nullptr);
 }
 
-std::unique_ptr<DFTComputeTexture> create_dft_compute_texture(const opengl::TextureRGBA32F& source,
-                                                              const opengl::TextureRGBA32F& result)
+std::unique_ptr<DFTComputeTexture> create_dft_compute_texture(const opengl::Texture& source, const opengl::Texture& result)
 {
-        return std::make_unique<Impl<float>>(source.texture().width(), source.texture().height(), &source, &result);
+        return std::make_unique<Impl<float>>(source.width(), source.height(), &source, &result);
 }
 }

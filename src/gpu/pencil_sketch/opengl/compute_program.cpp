@@ -45,17 +45,19 @@ std::string luminance_source(int group_size)
 }
 }
 
-PencilSketchProgramCompute::PencilSketchProgramCompute(const opengl::TextureRGBA32F& input, const opengl::TextureImage& objects,
-                                                       const opengl::TextureRGBA32F& output)
-        : m_groups_x(group_count(input.texture().width(), GROUP_SIZE)),
-          m_groups_y(group_count(input.texture().height(), GROUP_SIZE)),
+PencilSketchProgramCompute::PencilSketchProgramCompute(const opengl::Texture& input, const opengl::Texture& objects,
+                                                       const opengl::Texture& output)
+        : m_groups_x(group_count(input.width(), GROUP_SIZE)),
+          m_groups_y(group_count(input.height(), GROUP_SIZE)),
           m_program(opengl::ComputeShader(compute_source(GROUP_SIZE)))
 {
+        ASSERT(input.format() == GL_RGBA32F);
         ASSERT(objects.format() == GL_R32UI);
+        ASSERT(output.format() == GL_RGBA32F);
 
-        m_program.set_uniform_handle("img_input", input.image_resident_handle_read_only());
-        m_program.set_uniform_handle("img_output", output.image_resident_handle_write_only());
-        m_program.set_uniform_handle("img_objects", objects.image_resident_handle_read_only());
+        m_program.set_uniform_handle("img_input", input.image_handle_read_only());
+        m_program.set_uniform_handle("img_output", output.image_handle_write_only());
+        m_program.set_uniform_handle("img_objects", objects.image_handle_read_only());
 }
 
 void PencilSketchProgramCompute::exec() const
@@ -65,12 +67,13 @@ void PencilSketchProgramCompute::exec() const
 
 //
 
-PencilSketchProgramLuminance::PencilSketchProgramLuminance(const opengl::TextureRGBA32F& output)
-        : m_groups_x(group_count(output.texture().width(), GROUP_SIZE)),
-          m_groups_y(group_count(output.texture().height(), GROUP_SIZE)),
+PencilSketchProgramLuminance::PencilSketchProgramLuminance(const opengl::Texture& output)
+        : m_groups_x(group_count(output.width(), GROUP_SIZE)),
+          m_groups_y(group_count(output.height(), GROUP_SIZE)),
           m_program(opengl::ComputeShader(luminance_source(GROUP_SIZE)))
 {
-        m_program.set_uniform_handle("img", output.image_resident_handle_read_write());
+        ASSERT(output.format() == GL_RGBA32F);
+        m_program.set_uniform_handle("img", output.image_handle_read_write());
 }
 
 void PencilSketchProgramLuminance::exec() const
