@@ -34,6 +34,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "window/manage.h"
 #endif
 
+constexpr bool WINDOW_DEBUG_CONTEXT = true;
 constexpr int ANTIALIASING_LEVEL = 0;
 constexpr int DEPTH_BITS = 0;
 constexpr int STENCIL_BITS = 0;
@@ -67,6 +68,10 @@ void create_window_1x1(int major_gl_version, int minor_gl_version, const std::ve
         cs.depthBits = depth_bits;
         cs.stencilBits = stencil_bits;
         cs.attributeFlags = sf::ContextSettings::Attribute::Core;
+        if (WINDOW_DEBUG_CONTEXT)
+        {
+                cs.attributeFlags |= sf::ContextSettings::Attribute::Debug;
+        }
 
         window->create(sf::VideoMode(1, 1), "", sf::Style::None, cs);
 

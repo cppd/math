@@ -29,6 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "gpu/pencil_sketch/opengl/show.h"
 #include "gpu/renderer/opengl/renderer.h"
 #include "gpu/text/opengl/show.h"
+#include "graphics/opengl/debug.h"
 #include "graphics/opengl/functions.h"
 #include "graphics/opengl/query.h"
 #include "show/com/camera.h"
@@ -90,6 +91,7 @@ class Impl final : public Show, public WindowEvent
         bool m_optical_flow_active = false;
 
         std::unique_ptr<opengl::Window> m_window;
+        std::unique_ptr<opengl::DebugMessage> m_debug;
         std::unique_ptr<opengl::ColorDepthFramebufferMultisample> m_render_framebuffer;
         std::unique_ptr<opengl::ColorFramebuffer> m_resolve_framebuffer;
         std::unique_ptr<opengl::Texture> m_object_image;
@@ -660,6 +662,7 @@ public:
                   m_parent_window_ppi(parent_window_ppi)
         {
                 m_window = opengl::create_window();
+                m_debug = opengl::create_debug_message();
 
                 glDisable(GL_CULL_FACE);
                 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
