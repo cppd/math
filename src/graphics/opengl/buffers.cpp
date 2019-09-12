@@ -239,28 +239,56 @@ Texture::Texture(GLenum format, GLsizei width, GLsizei height) : m_format(format
 GLuint64 Texture::image_handle_write_only() const
 {
         GLuint64 image_handle = glGetImageHandleARB(m_texture, 0, GL_FALSE, 0, m_format);
-        glMakeImageHandleResidentARB(image_handle, GL_WRITE_ONLY);
+        if (!image_handle)
+        {
+                error("Failed to get image handle");
+        }
+        if (!glIsImageHandleResidentARB(image_handle))
+        {
+                glMakeImageHandleResidentARB(image_handle, GL_WRITE_ONLY);
+        }
         return image_handle;
 }
 
 GLuint64 Texture::image_handle_read_only() const
 {
         GLuint64 image_handle = glGetImageHandleARB(m_texture, 0, GL_FALSE, 0, m_format);
-        glMakeImageHandleResidentARB(image_handle, GL_READ_ONLY);
+        if (!image_handle)
+        {
+                error("Failed to get image handle");
+        }
+        if (!glIsImageHandleResidentARB(image_handle))
+        {
+                glMakeImageHandleResidentARB(image_handle, GL_READ_ONLY);
+        }
         return image_handle;
 }
 
 GLuint64 Texture::image_handle_read_write() const
 {
         GLuint64 image_handle = glGetImageHandleARB(m_texture, 0, GL_FALSE, 0, m_format);
-        glMakeImageHandleResidentARB(image_handle, GL_READ_WRITE);
+        if (!image_handle)
+        {
+                error("Failed to get image handle");
+        }
+        if (!glIsImageHandleResidentARB(image_handle))
+        {
+                glMakeImageHandleResidentARB(image_handle, GL_READ_WRITE);
+        }
         return image_handle;
 }
 
 GLuint64 Texture::texture_handle() const
 {
         GLuint64 texture_handle = glGetTextureHandleARB(m_texture);
-        glMakeTextureHandleResidentARB(texture_handle);
+        if (!texture_handle)
+        {
+                error("Failed to get texture handle");
+        }
+        if (!glIsTextureHandleResidentARB(texture_handle))
+        {
+                glMakeTextureHandleResidentARB(texture_handle);
+        }
         return texture_handle;
 }
 
