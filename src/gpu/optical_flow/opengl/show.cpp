@@ -28,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/opengl/capabilities.h"
 #include "graphics/opengl/shader.h"
 
+#include <optional>
 #include <vector>
 
 // Расстояние между точками потока на экране в миллиметрах
@@ -89,9 +90,28 @@ public:
 void create_points_for_top_level(int width, int height, int distance, int* point_count_x, int* point_count_y,
                                  std::vector<vec2i>* points)
 {
+        points->clear();
+
+        if (width <= 0 || height <= 0 || distance < 0)
+        {
+                *point_count_x = 0;
+                *point_count_y = 0;
+                return;
+        }
+
+        int lw = width - 2 * distance;
+        int lh = height - 2 * distance;
+
+        if (lw <= 0 || lh <= 0)
+        {
+                *point_count_x = 0;
+                *point_count_y = 0;
+                return;
+        }
+
         int size = distance + 1;
-        *point_count_x = (width - 2 * distance + size - 1) / size;
-        *point_count_y = (height - 2 * distance + size - 1) / size;
+        *point_count_x = (lw + size - 1) / size;
+        *point_count_y = (lh + size - 1) / size;
 
         int point_count = *point_count_x * *point_count_y;
 
@@ -113,30 +133,37 @@ void create_points_for_top_level(int width, int height, int distance, int* point
 class Impl final : public OpticalFlowShow
 {
         const int m_width, m_height;
-        opengl::GraphicsProgram m_draw_prog;
-        opengl::GraphicsProgram m_draw_prog_debug;
 
-        std::unique_ptr<opengl::StorageBuffer> m_top_points;
-        std::unique_ptr<opengl::StorageBuffer> m_top_points_flow;
+        std::optional<opengl::GraphicsProgram> m_draw_prog;
+        std::optional<opengl::GraphicsProgram> m_draw_prog_debug;
+
+        std::optional<opengl::StorageBuffer> m_top_points;
+        std::optional<opengl::StorageBuffer> m_top_points_flow;
+
+        std::optional<ShaderMemory> m_shader_memory;
+
+        std::unique_ptr<gpu_opengl::OpticalFlowCompute> m_optical_flow;
+
         int m_top_point_count;
 
         bool m_flow_computed = false;
         double m_last_time = limits<double>::lowest();
 
-        std::unique_ptr<gpu_opengl::OpticalFlowCompute> m_optical_flow;
-
-        ShaderMemory m_shader_memory;
-
         void draw_flow_lines()
         {
-                m_shader_memory.bind();
+                m_shader_memory->bind();
 
-                m_draw_prog.draw_arrays(GL_POINTS, 0, m_top_point_count * 2);
-                m_draw_prog.draw_arrays(GL_LINES, 0, m_top_point_count * 2);
+                m_draw_prog->draw_arrays(GL_POINTS, 0, m_top_point_count * 2);
+                m_draw_prog->draw_arrays(GL_LINES, 0, m_top_point_count * 2);
         }
 
         void reset() override
         {
+                if (m_top_point_count == 0)
+                {
+                        return;
+                }
+
                 m_last_time = limits<double>::lowest();
                 m_flow_computed = false;
                 m_optical_flow->reset();
@@ -144,6 +171,11 @@ class Impl final : public OpticalFlowShow
 
         void draw() override
         {
+                if (m_top_point_count == 0)
+                {
+                        return;
+                }
+
                 opengl::GLEnableAndRestore<GL_SCISSOR_TEST> e;
                 glScissor(0, 0, m_width, m_height);
 
@@ -173,24 +205,34 @@ class Impl final : public OpticalFlowShow
 
 public:
         Impl(const opengl::Texture& source, double window_ppi, const mat4& matrix)
-                : m_width(source.width()),
-                  m_height(source.height()),
-                  m_draw_prog(opengl::VertexShader(optical_flow_show_vert()), opengl::FragmentShader(optical_flow_show_frag())),
-                  m_draw_prog_debug(opengl::VertexShader(optical_flow_show_debug_vert()),
-                                    opengl::FragmentShader(optical_flow_show_debug_frag()))
+                : m_width(source.width()), m_height(source.height())
         {
                 std::vector<vec2i> points;
                 int point_count_x, point_count_y;
                 create_points_for_top_level(m_width, m_height, millimeters_to_pixels(DISTANCE_BETWEEN_POINTS, window_ppi),
                                             &point_count_x, &point_count_y, &points);
 
-                m_top_point_count = point_count_x * point_count_y;
-                m_top_points = std::make_unique<opengl::StorageBuffer>(points);
-                m_top_points_flow = std::make_unique<opengl::StorageBuffer>(points.size() * sizeof(vec2f));
+                ASSERT(static_cast<size_t>(point_count_x) * point_count_y == points.size());
 
-                m_shader_memory.set_matrix(matrix);
-                m_shader_memory.set_points(*m_top_points);
-                m_shader_memory.set_points_flow(*m_top_points_flow);
+                m_top_point_count = points.size();
+
+                if (m_top_point_count == 0)
+                {
+                        return;
+                }
+
+                m_draw_prog.emplace(opengl::VertexShader(optical_flow_show_vert()),
+                                    opengl::FragmentShader(optical_flow_show_frag()));
+                // m_draw_prog_debug.emplace(opengl::VertexShader(optical_flow_show_debug_vert()),
+                //                          opengl::FragmentShader(optical_flow_show_debug_frag()));
+
+                m_top_points.emplace(points);
+                m_top_points_flow.emplace(points.size() * sizeof(vec2f));
+
+                m_shader_memory.emplace();
+                m_shader_memory->set_matrix(matrix);
+                m_shader_memory->set_points(*m_top_points);
+                m_shader_memory->set_points_flow(*m_top_points_flow);
 
                 m_optical_flow = gpu_opengl::create_optical_flow_compute(source, point_count_x, point_count_y, *m_top_points,
                                                                          *m_top_points_flow);
