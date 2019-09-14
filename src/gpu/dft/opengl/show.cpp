@@ -96,7 +96,7 @@ class Impl final : public DFTShow
         opengl::Texture m_result;
         std::unique_ptr<gpu_opengl::DFTComputeTexture> m_dft;
         opengl::VertexArray m_vertex_array;
-        opengl::ArrayBuffer m_vertex_buffer;
+        std::unique_ptr<opengl::Buffer> m_vertex_buffer;
         opengl::GraphicsProgram m_draw_prog;
         ShaderMemory m_shader_memory;
 
@@ -129,13 +129,9 @@ public:
              const Color& background_color, const Color& color)
                 : m_result(IMAGE_FORMAT, source.width(), source.height()),
                   m_dft(gpu_opengl::create_dft_compute_texture(source, m_result)),
-                  m_vertex_buffer(sizeof(Vertex) * VERTEX_COUNT),
                   m_draw_prog(opengl::VertexShader(dft_show_vert()), opengl::FragmentShader(dft_show_frag()))
         {
                 ASSERT(source.format() == IMAGE_FORMAT);
-
-                m_vertex_array.attrib(0, 4, GL_FLOAT, m_vertex_buffer, offsetof(Vertex, v), sizeof(Vertex));
-                m_vertex_array.attrib(1, 2, GL_FLOAT, m_vertex_buffer, offsetof(Vertex, t), sizeof(Vertex));
 
                 m_draw_prog.set_uniform_handle("tex", m_result.texture_handle());
 
@@ -157,7 +153,10 @@ public:
                 vertices[2] = {to_vector<float>(matrix * vec4(x0, y1, 0, 1)), {0, 0}};
                 vertices[3] = {to_vector<float>(matrix * vec4(x1, y1, 0, 1)), {1, 0}};
 
-                m_vertex_buffer.write(vertices);
+                m_vertex_buffer = std::make_unique<opengl::Buffer>(vertices, 0);
+
+                m_vertex_array.attrib(0, 4, GL_FLOAT, *m_vertex_buffer, offsetof(Vertex, v), sizeof(Vertex));
+                m_vertex_array.attrib(1, 2, GL_FLOAT, *m_vertex_buffer, offsetof(Vertex, t), sizeof(Vertex));
         }
 };
 }

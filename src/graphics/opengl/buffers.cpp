@@ -111,61 +111,32 @@ GLsizeiptr StorageBuffer::size() const
 
 //
 
-void ArrayBuffer::copy_to(GLintptr offset, const void* data, GLsizeiptr data_size) const
-{
-        ASSERT(offset + data_size <= m_data_size);
-
-        copy_to_buffer(m_buffer, offset, data, data_size);
-}
-
-ArrayBuffer::ArrayBuffer(GLsizeiptr data_size) : m_data_size(data_size)
-{
-        glNamedBufferStorage(m_buffer, data_size, nullptr, GL_MAP_WRITE_BIT);
-}
-
-size_t ArrayBuffer::size() const
-{
-        return m_data_size;
-}
-
-ArrayBuffer::operator GLuint() const
-{
-        return m_buffer;
-}
-
-//
-
 void VertexArray::bind() const
 {
         glBindVertexArray(m_vertex_array);
 }
 
-void VertexArray::attrib(GLuint attrib_index, GLint size, GLenum type, const ArrayBuffer& array_buffer, GLintptr offset,
+void VertexArray::attrib(GLuint attrib_index, GLint size, GLenum type, const Buffer& buffer, GLintptr offset,
                          GLsizei stride) const
 {
         GLuint binding_index = attrib_index;
         glVertexArrayAttribFormat(m_vertex_array, attrib_index, size, type, GL_FALSE, 0);
         glVertexArrayAttribBinding(m_vertex_array, attrib_index, binding_index);
-        glVertexArrayVertexBuffer(m_vertex_array, binding_index, array_buffer, offset, stride);
+        glVertexArrayVertexBuffer(m_vertex_array, binding_index, buffer, offset, stride);
 
         glEnableVertexArrayAttrib(m_vertex_array, attrib_index);
 }
 
-void VertexArray::attrib_i(GLuint attrib_index, GLint size, GLenum type, const ArrayBuffer& array_buffer, GLintptr offset,
+void VertexArray::attrib_i(GLuint attrib_index, GLint size, GLenum type, const Buffer& buffer, GLintptr offset,
                            GLsizei stride) const
 {
         GLuint binding_index = attrib_index;
         glVertexArrayAttribIFormat(m_vertex_array, attrib_index, size, type, 0);
         glVertexArrayAttribBinding(m_vertex_array, attrib_index, binding_index);
-        glVertexArrayVertexBuffer(m_vertex_array, binding_index, array_buffer, offset, stride);
+        glVertexArrayVertexBuffer(m_vertex_array, binding_index, buffer, offset, stride);
 
         glEnableVertexArrayAttrib(m_vertex_array, attrib_index);
 }
-
-// void VertexArray::enable_attrib(GLuint index) const
-//{
-//        glEnableVertexArrayAttrib(m_vertex_array, index);
-//}
 
 //
 

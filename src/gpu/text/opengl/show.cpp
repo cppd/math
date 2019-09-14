@@ -51,7 +51,7 @@ class Impl final : public Text
         const std::thread::id m_thread_id = std::this_thread::get_id();
 
         opengl::VertexArray m_vertex_array;
-        std::optional<opengl::ArrayBuffer> m_vertex_buffer;
+        std::optional<opengl::Buffer> m_vertex_buffer;
         opengl::GraphicsProgram m_program;
         std::unordered_map<char32_t, FontGlyph> m_glyphs;
         std::unique_ptr<opengl::Texture> m_texture;
@@ -79,12 +79,13 @@ class Impl final : public Text
 
                 if (!m_vertex_buffer || m_vertex_buffer->size() < data_size)
                 {
-                        m_vertex_buffer.emplace(data_size);
+                        m_vertex_buffer.emplace(data_size, GL_MAP_WRITE_BIT);
                         m_vertex_array.attrib_i(0, 2, GL_INT, *m_vertex_buffer, offsetof(TextVertex, v), sizeof(TextVertex));
                         m_vertex_array.attrib(1, 2, GL_FLOAT, *m_vertex_buffer, offsetof(TextVertex, t), sizeof(TextVertex));
                 }
 
-                m_vertex_buffer->write(vertices);
+                opengl::BufferMapper(*m_vertex_buffer, 0, data_size, GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT)
+                        .write(vertices);
 
                 opengl::GLEnableAndRestore<GL_BLEND> e;
 

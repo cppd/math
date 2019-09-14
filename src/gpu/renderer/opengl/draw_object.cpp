@@ -51,7 +51,7 @@ struct PointVertex final
         }
 };
 
-std::unique_ptr<opengl::ArrayBuffer> load_face_vertices(const Obj<3>& obj, const std::vector<int>& sorted_face_indices)
+std::unique_ptr<opengl::Buffer> load_face_vertices(const Obj<3>& obj, const std::vector<int>& sorted_face_indices)
 {
         ASSERT(sorted_face_indices.size() == obj.facets().size());
 
@@ -109,10 +109,10 @@ std::unique_ptr<opengl::ArrayBuffer> load_face_vertices(const Obj<3>& obj, const
                 vertices.emplace_back(v2, n2, t2);
         }
 
-        return std::make_unique<opengl::ArrayBuffer>(vertices);
+        return std::make_unique<opengl::Buffer>(vertices, 0);
 }
 
-std::unique_ptr<opengl::ArrayBuffer> load_line_vertices(const Obj<3>& obj)
+std::unique_ptr<opengl::Buffer> load_line_vertices(const Obj<3>& obj)
 {
         const std::vector<Obj<3>::Line>& obj_lines = obj.lines();
         const std::vector<vec3f>& obj_vertices = obj.vertices();
@@ -129,10 +129,10 @@ std::unique_ptr<opengl::ArrayBuffer> load_line_vertices(const Obj<3>& obj)
                 }
         }
 
-        return std::make_unique<opengl::ArrayBuffer>(vertices);
+        return std::make_unique<opengl::Buffer>(vertices, 0);
 }
 
-std::unique_ptr<opengl::ArrayBuffer> load_point_vertices(const Obj<3>& obj)
+std::unique_ptr<opengl::Buffer> load_point_vertices(const Obj<3>& obj)
 {
         const std::vector<Obj<3>::Point>& obj_points = obj.points();
         const std::vector<vec3f>& obj_vertices = obj.vertices();
@@ -146,7 +146,7 @@ std::unique_ptr<opengl::ArrayBuffer> load_point_vertices(const Obj<3>& obj)
                 vertices.emplace_back(obj_vertices[point.vertex]);
         }
 
-        return std::make_unique<opengl::ArrayBuffer>(vertices);
+        return std::make_unique<opengl::Buffer>(vertices, 0);
 }
 
 std::vector<opengl::Texture> load_textures(const Obj<3>& obj)
@@ -206,7 +206,7 @@ std::unique_ptr<RendererMaterialMemory> load_materials(const Obj<3>& obj, const 
 class DrawObject::Triangles final
 {
         opengl::VertexArray m_vertex_array;
-        std::unique_ptr<opengl::ArrayBuffer> m_vertex_buffer;
+        std::unique_ptr<opengl::Buffer> m_vertex_buffer;
         std::vector<opengl::Texture> m_textures;
         std::unique_ptr<RendererMaterialMemory> m_shader_memory;
 
@@ -288,7 +288,7 @@ public:
 class DrawObject::Lines final
 {
         opengl::VertexArray m_vertex_array;
-        std::unique_ptr<opengl::ArrayBuffer> m_vertex_buffer;
+        std::unique_ptr<opengl::Buffer> m_vertex_buffer;
 
         unsigned m_vertex_count;
 
@@ -315,7 +315,7 @@ public:
 class DrawObject::Points final
 {
         opengl::VertexArray m_vertex_array;
-        std::unique_ptr<opengl::ArrayBuffer> m_vertex_buffer;
+        std::unique_ptr<opengl::Buffer> m_vertex_buffer;
 
         unsigned m_vertex_count;
 
