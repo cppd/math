@@ -189,35 +189,35 @@ template <typename T>
 std::enable_if_t<!is_vector<T> && !is_array<T>> map_and_write_to_buffer(const Buffer& buffer, unsigned long long offset,
                                                                         const T& data)
 {
-        opengl::BufferMapper map(buffer, offset, sizeof(T), GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_RANGE_BIT);
+        BufferMapper map(buffer, offset, sizeof(T), GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_RANGE_BIT);
         map.write(data);
 }
 
 template <typename T>
 std::enable_if_t<!is_vector<T> && !is_array<T>> map_and_write_to_buffer(const Buffer& buffer, const T& data)
 {
-        opengl::BufferMapper map(buffer, 0, sizeof(T), GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
+        BufferMapper map(buffer, 0, sizeof(T), GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
         map.write(data);
 }
 
 template <typename T>
 std::enable_if_t<is_vector<T> || is_array<T>> map_and_write_to_buffer(const Buffer& buffer, const T& data)
 {
-        opengl::BufferMapper map(buffer, 0, storage_size(data), GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
+        BufferMapper map(buffer, 0, storage_size(data), GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
         map.write(data);
 }
 
 template <typename T>
 std::enable_if_t<!is_vector<T> && !is_array<T>> map_and_read_from_buffer(const Buffer& buffer, T* data)
 {
-        opengl::BufferMapper map(buffer, 0, sizeof(T), GL_MAP_READ_BIT);
+        BufferMapper map(buffer, 0, sizeof(T), GL_MAP_READ_BIT);
         map.read(data);
 }
 
 template <typename T>
 std::enable_if_t<is_vector<T> || is_array<T>> map_and_read_from_buffer(const Buffer& buffer, T* data)
 {
-        opengl::BufferMapper map(buffer, 0, storage_size(*data), GL_MAP_READ_BIT);
+        BufferMapper map(buffer, 0, storage_size(*data), GL_MAP_READ_BIT);
         map.read(data);
 }
 
