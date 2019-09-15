@@ -35,31 +35,35 @@ constexpr size_t storage_size(const T (&)[N])
 }
 
 template <typename T>
-std::enable_if_t<has_data_and_size<T> && has_begin_end<T>, size_t> data_size(const T& data)
+std::enable_if_t<has_data_and_size<T>, size_t> data_size(const T& data)
 {
         static_assert(!std::is_pointer_v<T>);
+        static_assert(std::is_standard_layout_v<typename T::value_type>);
         return storage_size(data);
 }
 
 template <typename T>
-std::enable_if_t<!has_data_and_size<T> && !has_begin_end<T>, size_t> data_size(const T&)
+std::enable_if_t<!has_data_and_size<T>, size_t> data_size(const T&)
 {
         static_assert(!std::is_pointer_v<T>);
+        static_assert(std::is_standard_layout_v<T>);
         return sizeof(T);
 }
 
 template <typename T>
-std::enable_if_t<has_data_and_size<T> && has_begin_end<T>, std::conditional_t<std::is_const_v<T>, const void*, void*>>
+std::enable_if_t<has_data_and_size<T>,
+                 std::conditional_t<std::is_const_v<T>, const typename T::value_type*, typename T::value_type*>>
 data_pointer(T& data)
 {
         static_assert(!std::is_pointer_v<T>);
+        static_assert(std::is_standard_layout_v<typename T::value_type>);
         return data.data();
 }
 
 template <typename T>
-std::enable_if_t<!has_data_and_size<T> && !has_begin_end<T>, std::conditional_t<std::is_const_v<T>, const void*, void*>>
-data_pointer(T& data)
+std::enable_if_t<!has_data_and_size<T>, std::conditional_t<std::is_const_v<T>, const T*, T*>> data_pointer(T& data)
 {
         static_assert(!std::is_pointer_v<T>);
+        static_assert(std::is_standard_layout_v<T>);
         return &data;
 }
