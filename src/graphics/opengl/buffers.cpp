@@ -36,6 +36,68 @@ GLuint getIntegerValue(GLenum parameter)
 
 namespace opengl
 {
+Buffer::Buffer(unsigned long long size, const void* data, GLbitfield flags) : m_size(size), m_flags(flags)
+{
+        ASSERT(size > 0);
+
+        glNamedBufferStorage(m_buffer, m_size, data, m_flags);
+}
+
+unsigned long long Buffer::size() const
+{
+        return m_size;
+}
+
+GLbitfield Buffer::flags() const
+{
+        return m_flags;
+}
+
+Buffer::operator GLuint() const
+{
+        return m_buffer;
+}
+
+//
+
+BufferMapper::BufferMapper(const Buffer& buffer, unsigned long long offset, unsigned long long length, GLbitfield access)
+        : m_buffer(buffer), m_access(access), m_length(length)
+{
+        ASSERT((access & GL_MAP_WRITE_BIT) || (access & GL_MAP_READ_BIT));
+        ASSERT(!(access & GL_MAP_WRITE_BIT) || (buffer.flags() & GL_MAP_WRITE_BIT));
+        ASSERT(!(access & GL_MAP_READ_BIT) || (buffer.flags() & GL_MAP_READ_BIT));
+
+        ASSERT(length > 0 && offset + length <= buffer.size());
+
+        m_pointer = glMapNamedBufferRange(m_buffer, offset, length, access);
+
+        if (!m_pointer)
+        {
+                error("Failed to map buffer");
+        }
+}
+
+BufferMapper::BufferMapper(const Buffer& buffer, GLbitfield access) : m_buffer(buffer), m_access(access), m_length(buffer.size())
+{
+        ASSERT((access & GL_MAP_WRITE_BIT) || (access & GL_MAP_READ_BIT));
+        ASSERT(!(access & GL_MAP_WRITE_BIT) || (buffer.flags() & GL_MAP_WRITE_BIT));
+        ASSERT(!(access & GL_MAP_READ_BIT) || (buffer.flags() & GL_MAP_READ_BIT));
+
+        m_pointer = glMapNamedBufferRange(m_buffer, 0, buffer.size(), access);
+
+        if (!m_pointer)
+        {
+                error("Failed to map buffer");
+        }
+}
+
+BufferMapper::~BufferMapper()
+{
+        glUnmapNamedBuffer(m_buffer);
+}
+
+//
+
 void VertexArray::bind() const
 {
         glBindVertexArray(m_vertex_array);

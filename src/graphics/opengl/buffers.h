@@ -35,37 +35,21 @@ class Buffer final
         unsigned long long m_size;
         GLbitfield m_flags;
 
+        Buffer(unsigned long long size, const void* data, GLbitfield flags);
+
 public:
-        Buffer(unsigned long long size, GLbitfield flags) : m_size(size), m_flags(flags)
+        Buffer(unsigned long long size, GLbitfield flags) : Buffer(size, nullptr, flags)
         {
-                glNamedBufferStorage(m_buffer, m_size, nullptr, m_flags);
         }
 
-        Buffer(unsigned long long size, const void* data, GLbitfield flags) : m_size(size), m_flags(flags)
+        template <typename T, typename = std::enable_if_t<std::is_class_v<T>>>
+        Buffer(const T& data, GLbitfield flags) : Buffer(data_size(data), data_pointer(data), flags)
         {
-                glNamedBufferStorage(m_buffer, m_size, data, m_flags);
         }
 
-        template <typename T, typename = std::enable_if_t<sizeof(std::declval<T>().size()) && sizeof(std::declval<T>().data())>>
-        Buffer(const T& data, GLbitfield flags) : m_size(storage_size(data)), m_flags(flags)
-        {
-                glNamedBufferStorage(m_buffer, m_size, data.data(), m_flags);
-        }
-
-        unsigned long long size() const
-        {
-                return m_size;
-        }
-
-        GLbitfield flags() const
-        {
-                return m_flags;
-        }
-
-        operator GLuint() const
-        {
-                return m_buffer;
-        }
+        unsigned long long size() const;
+        GLbitfield flags() const;
+        operator GLuint() const;
 };
 
 class BufferMapper final
@@ -76,41 +60,14 @@ class BufferMapper final
         void* m_pointer;
 
 public:
-        BufferMapper(const Buffer& buffer, unsigned long long offset, unsigned long long length, GLbitfield access)
-                : m_buffer(buffer), m_access(access), m_length(length)
-        {
-                ASSERT((access & GL_MAP_WRITE_BIT) || (access & GL_MAP_READ_BIT));
-                ASSERT(!(access & GL_MAP_WRITE_BIT) || (buffer.flags() & GL_MAP_WRITE_BIT));
-                ASSERT(!(access & GL_MAP_READ_BIT) || (buffer.flags() & GL_MAP_READ_BIT));
+        BufferMapper(const Buffer& buffer, unsigned long long offset, unsigned long long length, GLbitfield access);
+        BufferMapper(const Buffer& buffer, GLbitfield access);
+        ~BufferMapper();
 
-                ASSERT(length > 0 && offset + length <= buffer.size());
-
-                m_pointer = glMapNamedBufferRange(m_buffer, offset, length, access);
-
-                if (!m_pointer)
-                {
-                        error("Failed to map buffer");
-                }
-        }
-
-        BufferMapper(const Buffer& buffer, GLbitfield access) : m_buffer(buffer), m_access(access), m_length(buffer.size())
-        {
-                ASSERT((access & GL_MAP_WRITE_BIT) || (access & GL_MAP_READ_BIT));
-                ASSERT(!(access & GL_MAP_WRITE_BIT) || (buffer.flags() & GL_MAP_WRITE_BIT));
-                ASSERT(!(access & GL_MAP_READ_BIT) || (buffer.flags() & GL_MAP_READ_BIT));
-
-                m_pointer = glMapNamedBufferRange(m_buffer, 0, buffer.size(), access);
-
-                if (!m_pointer)
-                {
-                        error("Failed to map buffer");
-                }
-        }
-
-        ~BufferMapper()
-        {
-                glUnmapNamedBuffer(m_buffer);
-        }
+        BufferMapper(const BufferMapper&) = delete;
+        BufferMapper(BufferMapper&&) = delete;
+        BufferMapper& operator=(const BufferMapper&) = delete;
+        BufferMapper& operator=(BufferMapper&&) = delete;
 
         template <typename T>
         void write(const T& data) const
