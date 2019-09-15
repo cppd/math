@@ -67,6 +67,21 @@ public:
         static constexpr bool value = std::is_same_v<decltype(f<Container>(0)), std::true_type>;
 };
 #pragma GCC diagnostic pop
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wctor-dtor-privacy"
+template <typename Container>
+class HasDataAndSize
+{
+        template <typename T>
+        static decltype(std::data(std::declval<T>()), std::size(std::declval<T>()), std::true_type()) f(int);
+        template <typename>
+        static std::false_type f(...);
+
+public:
+        static constexpr bool value = std::is_same_v<decltype(f<Container>(0)), std::true_type>;
+};
+#pragma GCC diagnostic pop
 }
 
 template <typename T>
@@ -76,14 +91,5 @@ inline constexpr bool is_vector = type_detect_implementation::IsVector::S<std::r
 
 template <typename T>
 inline constexpr bool has_begin_end = type_detect_implementation::HasBeginEnd<T>::value;
-
-static_assert(is_array<const std::array<int, 1>>);
-static_assert(is_vector<const std::vector<int>>);
-
-static_assert(!is_array<const std::vector<int>>);
-static_assert(!is_vector<const std::array<int, 1>>);
-
-static_assert(has_begin_end<const std::array<int, 1>>);
-static_assert(has_begin_end<std::vector<double>&>);
-static_assert(!has_begin_end<int>);
-static_assert(!has_begin_end<double*>);
+template <typename T>
+inline constexpr bool has_data_and_size = type_detect_implementation::HasDataAndSize<T>::value;
