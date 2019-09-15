@@ -113,111 +113,63 @@ public:
         }
 
         template <typename T>
-        std::enable_if_t<is_vector<T> || is_array<T>> write(const T& data) const
+        void write(const T& data) const
         {
                 ASSERT(m_access & GL_MAP_WRITE_BIT);
-                size_t size = storage_size(data);
-                ASSERT(size <= m_length);
-                std::memcpy(m_pointer, data.data(), size);
+                ASSERT(data_size(data) <= m_length);
+                std::memcpy(m_pointer, data_pointer(data), data_size(data));
         }
 
         template <typename T>
-        std::enable_if_t<!is_vector<T> && !is_array<T>> write(const T& data) const
+        void write(unsigned long long offset, const T& data) const
         {
                 ASSERT(m_access & GL_MAP_WRITE_BIT);
-                size_t size = sizeof(T);
-                ASSERT(size <= m_length);
-                std::memcpy(m_pointer, &data, size);
+                ASSERT(offset + data_size(data) <= m_length);
+                std::memcpy(static_cast<char*>(m_pointer) + offset, data_pointer(data), data_size(data));
         }
 
         template <typename T>
-        std::enable_if_t<is_vector<T> || is_array<T>> write(GLintptr offset, const T& data) const
-        {
-                ASSERT(m_access & GL_MAP_WRITE_BIT);
-                size_t size = storage_size(data);
-                ASSERT(offset >= 0 && offset + size <= m_length);
-                std::memcpy(static_cast<char*>(m_pointer) + offset, data.data(), size);
-        }
-
-        template <typename T>
-        std::enable_if_t<!is_vector<T> && !is_array<T>> write(GLintptr offset, const T& data) const
-        {
-                ASSERT(m_access & GL_MAP_WRITE_BIT);
-                size_t size = sizeof(T);
-                ASSERT(offset >= 0 && offset + size <= m_length);
-                std::memcpy(static_cast<char*>(m_pointer) + offset, &data, size);
-        }
-
-        template <typename T>
-        std::enable_if_t<is_vector<T> || is_array<T>> read(T* data) const
+        void read(T* data) const
         {
                 ASSERT(m_access & GL_MAP_READ_BIT);
-                size_t size = storage_size(*data);
-                ASSERT(size <= m_length);
-                std::memcpy(data->data(), m_pointer, size);
+                ASSERT(data_size(*data) <= m_length);
+                std::memcpy(data_pointer(*data), m_pointer, data_size(*data));
         }
 
         template <typename T>
-        std::enable_if_t<!is_vector<T> && !is_array<T>> read(T* data) const
+        void read(unsigned long long offset, T* data) const
         {
                 ASSERT(m_access & GL_MAP_READ_BIT);
-                size_t size = sizeof(T);
-                ASSERT(size <= m_length);
-                std::memcpy(data, m_pointer, size);
-        }
-
-        template <typename T>
-        std::enable_if_t<is_vector<T> || is_array<T>> read(GLintptr offset, T* data) const
-        {
-                ASSERT(m_access & GL_MAP_READ_BIT);
-                size_t size = storage_size(*data);
-                ASSERT(offset >= 0 && offset + size <= m_length);
-                std::memcpy(data->data(), static_cast<const char*>(m_pointer) + offset, size);
-        }
-
-        template <typename T>
-        std::enable_if_t<!is_vector<T> && !is_array<T>> read(GLintptr offset, T* data) const
-        {
-                ASSERT(m_access & GL_MAP_READ_BIT);
-                size_t size = sizeof(T);
-                ASSERT(offset >= 0 && offset + size <= m_length);
-                std::memcpy(data, static_cast<const char*>(m_pointer) + offset, size);
+                ASSERT(offset + data_size(data) <= m_length);
+                std::memcpy(data_pointer(*data), static_cast<const char*>(m_pointer) + offset, data_size(data));
         }
 };
 
 template <typename T>
-std::enable_if_t<!is_vector<T> && !is_array<T>> map_and_write_to_buffer(const Buffer& buffer, unsigned long long offset,
-                                                                        const T& data)
+void map_and_write_to_buffer(const Buffer& buffer, unsigned long long offset, const T& data)
 {
-        BufferMapper map(buffer, offset, sizeof(T), GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_RANGE_BIT);
+        BufferMapper map(buffer, offset, data_size(data), GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_RANGE_BIT);
         map.write(data);
 }
 
 template <typename T>
-std::enable_if_t<!is_vector<T> && !is_array<T>> map_and_write_to_buffer(const Buffer& buffer, const T& data)
+void map_and_write_to_buffer(const Buffer& buffer, const T& data)
 {
-        BufferMapper map(buffer, 0, sizeof(T), GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
+        BufferMapper map(buffer, 0, data_size(data), GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
         map.write(data);
 }
 
 template <typename T>
-std::enable_if_t<is_vector<T> || is_array<T>> map_and_write_to_buffer(const Buffer& buffer, const T& data)
+void map_and_read_from_buffer(const Buffer& buffer, unsigned long long offset, T* data)
 {
-        BufferMapper map(buffer, 0, storage_size(data), GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
-        map.write(data);
-}
-
-template <typename T>
-std::enable_if_t<!is_vector<T> && !is_array<T>> map_and_read_from_buffer(const Buffer& buffer, T* data)
-{
-        BufferMapper map(buffer, 0, sizeof(T), GL_MAP_READ_BIT);
+        BufferMapper map(buffer, offset, data_size(*data), GL_MAP_READ_BIT);
         map.read(data);
 }
 
 template <typename T>
-std::enable_if_t<is_vector<T> || is_array<T>> map_and_read_from_buffer(const Buffer& buffer, T* data)
+void map_and_read_from_buffer(const Buffer& buffer, T* data)
 {
-        BufferMapper map(buffer, 0, storage_size(*data), GL_MAP_READ_BIT);
+        BufferMapper map(buffer, 0, data_size(*data), GL_MAP_READ_BIT);
         map.read(data);
 }
 

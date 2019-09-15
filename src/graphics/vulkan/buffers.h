@@ -29,34 +29,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace vulkan
 {
-template <typename T>
-std::enable_if_t<is_vector<T> || is_array<T>, size_t> data_size(const T& data)
-{
-        static_assert(!std::is_pointer_v<T>);
-        return storage_size(data);
-}
-
-template <typename T>
-std::enable_if_t<!is_vector<T> && !is_array<T>, size_t> data_size(const T&)
-{
-        static_assert(!std::is_pointer_v<T>);
-        return sizeof(T);
-}
-
-template <typename T>
-std::enable_if_t<is_vector<T> || is_array<T>, std::conditional_t<std::is_const_v<T>, const void*, void*>> data_pointer(T& data)
-{
-        static_assert(!std::is_pointer_v<T>);
-        return data.data();
-}
-
-template <typename T>
-std::enable_if_t<!is_vector<T> && !is_array<T>, std::conditional_t<std::is_const_v<T>, const void*, void*>> data_pointer(T& data)
-{
-        static_assert(!std::is_pointer_v<T>);
-        return &data;
-}
-
 enum class BufferMemoryType
 {
         HostVisible,
