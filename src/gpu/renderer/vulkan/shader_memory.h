@@ -45,7 +45,7 @@ class RendererTrianglesSharedMemory final
 
         vulkan::DescriptorSetLayout m_descriptor_set_layout;
         vulkan::Descriptors m_descriptors;
-        std::vector<vulkan::BufferWithHostVisibleMemory> m_uniform_buffers;
+        std::vector<vulkan::BufferWithMemory> m_uniform_buffers;
 
         // Если размещать структуры в одном буфере, то требуется выравнивание каждой структуры
         // на VkPhysicalDeviceLimits::minUniformBufferOffsetAlignment для VkDescriptorBufferInfo::offset
@@ -133,7 +133,7 @@ class RendererTrianglesMaterialMemory final
         static constexpr int TEXTURE_KS_BINDING = 3;
 
         vulkan::Descriptors m_descriptors;
-        std::vector<vulkan::BufferWithHostVisibleMemory> m_uniform_buffers;
+        std::vector<vulkan::BufferWithMemory> m_uniform_buffers;
 
 public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
@@ -188,7 +188,7 @@ class RendererShadowMemory final
 
         vulkan::DescriptorSetLayout m_descriptor_set_layout;
         vulkan::Descriptors m_descriptors;
-        std::vector<vulkan::BufferWithHostVisibleMemory> m_uniform_buffers;
+        std::vector<vulkan::BufferWithMemory> m_uniform_buffers;
 
         struct Matrices
         {
@@ -228,7 +228,7 @@ class RendererPointsMemory final
 
         vulkan::DescriptorSetLayout m_descriptor_set_layout;
         vulkan::Descriptors m_descriptors;
-        std::vector<vulkan::BufferWithHostVisibleMemory> m_uniform_buffers;
+        std::vector<vulkan::BufferWithMemory> m_uniform_buffers;
 
         struct Matrices
         {

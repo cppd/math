@@ -59,7 +59,7 @@ class Impl final : public ConvexHullCompute
 
         const vulkan::VulkanInstance& m_instance;
 
-        std::optional<vulkan::BufferWithDeviceLocalMemory> m_lines_buffer;
+        std::optional<vulkan::BufferWithMemory> m_lines_buffer;
         VkBuffer m_points_buffer = VK_NULL_HANDLE;
         VkBuffer m_point_count_buffer = VK_NULL_HANDLE;
 
@@ -98,8 +98,9 @@ class Impl final : public ConvexHullCompute
                 ASSERT(points_buffer.size() == (2 * objects.height() + 1) * (2 * sizeof(int32_t)));
                 ASSERT(point_count_buffer.size() >= sizeof(int32_t));
 
-                m_lines_buffer.emplace(m_instance.device(), std::unordered_set({family_index}),
-                                       VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, 2 * objects.height() * sizeof(int32_t));
+                m_lines_buffer.emplace(vulkan::BufferMemoryType::DeviceLocal, m_instance.device(),
+                                       std::unordered_set({family_index}), VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+                                       2 * objects.height() * sizeof(int32_t));
                 m_points_buffer = points_buffer;
                 m_point_count_buffer = point_count_buffer;
 

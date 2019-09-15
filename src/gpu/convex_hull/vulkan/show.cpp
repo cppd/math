@@ -66,8 +66,8 @@ class Impl final : public ConvexHullShow
 
         vulkan::PipelineLayout m_pipeline_layout;
 
-        std::optional<vulkan::BufferWithDeviceLocalMemory> m_points;
-        vulkan::BufferWithHostVisibleMemory m_indirect_buffer;
+        std::optional<vulkan::BufferWithMemory> m_points;
+        vulkan::BufferWithMemory m_indirect_buffer;
 
         vulkan::RenderBuffers2D* m_render_buffers = nullptr;
         std::vector<VkCommandBuffer> m_command_buffers;
@@ -101,8 +101,8 @@ class Impl final : public ConvexHullShow
 
                 //
 
-                m_points.emplace(m_instance.device(), std::unordered_set({m_family_index}), VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-                                 convex_hull_points_buffer_size(objects.height()));
+                m_points.emplace(vulkan::BufferMemoryType::DeviceLocal, m_instance.device(), std::unordered_set({m_family_index}),
+                                 VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, convex_hull_points_buffer_size(objects.height()));
 
                 m_shader_memory.set_points(*m_points);
                 m_shader_memory.set_matrix(matrix);
@@ -156,6 +156,16 @@ class Impl final : public ConvexHullShow
                 return m_signal_semaphore;
         }
 
+        static VkDrawIndirectCommand draw_indirect_command_data()
+        {
+                VkDrawIndirectCommand command = {};
+                command.vertexCount = 0;
+                command.instanceCount = 1;
+                command.firstVertex = 0;
+                command.firstInstance = 0;
+                return command;
+        }
+
 public:
         Impl(const vulkan::VulkanInstance& instance, uint32_t family_index, bool sample_shading)
                 : m_sample_shading(sample_shading),
@@ -169,15 +179,9 @@ public:
                                                                    {m_shader_memory.descriptor_set_layout()})),
                   m_indirect_buffer(m_instance.device(), {m_family_index},
                                     VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT,
-                                    sizeof(VkDrawIndirectCommand)),
+                                    draw_indirect_command_data()),
                   m_compute(gpu_vulkan::create_convex_hull_compute(instance))
         {
-                VkDrawIndirectCommand command = {};
-                command.vertexCount = 0;
-                command.instanceCount = 1;
-                command.firstVertex = 0;
-                command.firstInstance = 0;
-                m_indirect_buffer.write(0, command);
         }
 
         ~Impl() override

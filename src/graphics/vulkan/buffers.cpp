@@ -174,22 +174,22 @@ void copy_host_to_device(const vulkan::DeviceMemory& device_memory, VkDeviceSize
         // vkFlushMappedMemoryRanges, vkInvalidateMappedMemoryRanges
 }
 
-void copy_device_to_host(const vulkan::DeviceMemory& device_memory, VkDeviceSize offset, void* data, VkDeviceSize data_size)
-{
-        void* map_memory_data;
+// void copy_device_to_host(const vulkan::DeviceMemory& device_memory, VkDeviceSize offset, void* data, VkDeviceSize data_size)
+//{
+//        void* map_memory_data;
 
-        VkResult result = vkMapMemory(device_memory.device(), device_memory, offset, data_size, 0, &map_memory_data);
-        if (result != VK_SUCCESS)
-        {
-                vulkan::vulkan_function_error("vkMapMemory", result);
-        }
+//        VkResult result = vkMapMemory(device_memory.device(), device_memory, offset, data_size, 0, &map_memory_data);
+//        if (result != VK_SUCCESS)
+//        {
+//                vulkan::vulkan_function_error("vkMapMemory", result);
+//        }
 
-        std::memcpy(data, map_memory_data, data_size);
+//        std::memcpy(data, map_memory_data, data_size);
 
-        vkUnmapMemory(device_memory.device(), device_memory);
+//        vkUnmapMemory(device_memory.device(), device_memory);
 
-        // vkFlushMappedMemoryRanges, vkInvalidateMappedMemoryRanges
-}
+//        // vkFlushMappedMemoryRanges, vkInvalidateMappedMemoryRanges
+//}
 
 void begin_commands(VkCommandBuffer command_buffer)
 {
@@ -422,71 +422,23 @@ vulkan::ImageView create_image_view(VkDevice device, VkImage image, VkFormat for
 
 namespace vulkan
 {
-BufferWithHostVisibleMemory::BufferWithHostVisibleMemory(const Device& device, const std::unordered_set<uint32_t>& family_indices,
-                                                         VkBufferUsageFlags usage, VkDeviceSize data_size)
-        : m_buffer(create_buffer(device, data_size, usage, family_indices)),
-          m_device_memory(create_device_memory(device, m_buffer,
-                                               VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT))
+void BufferWithMemory::write(VkDeviceSize data_size, const void* data) const
 {
+        ASSERT(data && host_visible());
+
+        BufferMapper map(*this);
+        map.write(0, data, data_size);
 }
 
-BufferWithHostVisibleMemory::BufferWithHostVisibleMemory(const Device& device, const std::unordered_set<uint32_t>& family_indices,
-                                                         VkBufferUsageFlags usage, VkDeviceSize data_size, const void* data)
-        : BufferWithHostVisibleMemory(device, family_indices, usage, data_size)
+void BufferWithMemory::write(const Device& device, const CommandPool& transfer_command_pool, const Queue& transfer_queue,
+                             const std::unordered_set<uint32_t>& family_indices, VkDeviceSize data_size, const void* data) const
 {
-        ASSERT(data_size > 0 && data);
+        ASSERT(data && !host_visible() && usage(VK_BUFFER_USAGE_TRANSFER_DST_BIT));
 
-        copy_to(0, data, data_size);
-}
-
-BufferWithHostVisibleMemory::operator VkBuffer() const
-{
-        return m_buffer;
-}
-
-VkDeviceSize BufferWithHostVisibleMemory::size() const
-{
-        return m_buffer.size();
-}
-
-bool BufferWithHostVisibleMemory::usage(VkBufferUsageFlagBits flag) const
-{
-        return m_buffer.usage(flag);
-}
-
-void BufferWithHostVisibleMemory::copy_to(VkDeviceSize offset, const void* data, VkDeviceSize data_size) const
-{
-        ASSERT(offset + data_size <= m_buffer.size());
-
-        copy_host_to_device(m_device_memory, offset, data, data_size);
-}
-
-void BufferWithHostVisibleMemory::copy_from(VkDeviceSize offset, void* data, VkDeviceSize data_size) const
-{
-        ASSERT(offset + data_size <= m_buffer.size());
-
-        copy_device_to_host(m_device_memory, offset, data, data_size);
-}
-
-//
-
-BufferWithDeviceLocalMemory::BufferWithDeviceLocalMemory(const Device& device, const std::unordered_set<uint32_t>& family_indices,
-                                                         VkBufferUsageFlags usage, VkDeviceSize data_size)
-        : m_buffer(create_buffer(device, data_size, usage, family_indices)),
-          m_device_memory(create_device_memory(device, m_buffer, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
-{
-}
-
-BufferWithDeviceLocalMemory::BufferWithDeviceLocalMemory(const Device& device, const CommandPool& transfer_command_pool,
-                                                         const Queue& transfer_queue,
-                                                         const std::unordered_set<uint32_t>& family_indices,
-                                                         VkBufferUsageFlags usage, VkDeviceSize data_size, const void* data)
-        : m_buffer(create_buffer(device, data_size, usage | VK_BUFFER_USAGE_TRANSFER_DST_BIT, family_indices)),
-          m_device_memory(create_device_memory(device, m_buffer, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
-{
-        ASSERT(data_size > 0 && data);
-        ASSERT(transfer_command_pool.family_index() == transfer_queue.family_index());
-
+        if (transfer_command_pool.family_index() != transfer_queue.family_index())
+        {
+                error("Buffer transfer command pool family index is not equal to transfer queue familty index");
+        }
         if (family_indices.count(transfer_queue.family_index()) == 0)
         {
                 error("Transfer family index not found in buffer family indices");
@@ -495,19 +447,74 @@ BufferWithDeviceLocalMemory::BufferWithDeviceLocalMemory(const Device& device, c
         staging_buffer_copy(device, transfer_command_pool, transfer_queue, m_buffer, data_size, data);
 }
 
-BufferWithDeviceLocalMemory::operator VkBuffer() const
+BufferWithMemory::BufferWithMemory(BufferMemoryType memory_type, const Device& device,
+                                   const std::unordered_set<uint32_t>& family_indices, VkBufferUsageFlags usage,
+                                   VkDeviceSize data_size)
+        : m_buffer(create_buffer(device, data_size, usage, family_indices)),
+          m_memory_properties(memory_type == BufferMemoryType::HostVisible ?
+                                      (VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT) :
+                                      (VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)),
+          m_device_memory(create_device_memory(device, m_buffer, m_memory_properties))
+{
+        ASSERT(data_size > 0);
+}
+
+BufferWithMemory::operator VkBuffer() const
 {
         return m_buffer;
 }
 
-VkDeviceSize BufferWithDeviceLocalMemory::size() const
+VkDeviceSize BufferWithMemory::size() const
 {
         return m_buffer.size();
 }
 
-bool BufferWithDeviceLocalMemory::usage(VkBufferUsageFlagBits flag) const
+bool BufferWithMemory::usage(VkBufferUsageFlagBits flag) const
 {
         return m_buffer.usage(flag);
+}
+
+VkMemoryPropertyFlags BufferWithMemory::memory_properties() const
+{
+        return m_memory_properties;
+}
+
+bool BufferWithMemory::host_visible() const
+{
+        return m_memory_properties & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
+}
+
+//
+
+BufferMapper::BufferMapper(const BufferWithMemory& buffer, unsigned long long offset, unsigned long long length)
+        : m_device(buffer.m_device_memory.device()), m_device_memory(buffer.m_device_memory), m_length(length)
+{
+        ASSERT(buffer.memory_properties() & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+        ASSERT(length > 0 && offset + length <= buffer.size());
+
+        VkResult result = vkMapMemory(m_device, m_device_memory, offset, m_length, 0, &m_pointer);
+        if (result != VK_SUCCESS)
+        {
+                vulkan::vulkan_function_error("vkMapMemory", result);
+        }
+}
+
+BufferMapper::BufferMapper(const BufferWithMemory& buffer)
+        : m_device(buffer.m_device_memory.device()), m_device_memory(buffer.m_device_memory), m_length(buffer.size())
+{
+        ASSERT(buffer.memory_properties() & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+
+        VkResult result = vkMapMemory(m_device, m_device_memory, 0, VK_WHOLE_SIZE, 0, &m_pointer);
+        if (result != VK_SUCCESS)
+        {
+                vulkan::vulkan_function_error("vkMapMemory", result);
+        }
+}
+
+BufferMapper::~BufferMapper()
+{
+        vkUnmapMemory(m_device, m_device_memory);
+        // vkFlushMappedMemoryRanges, vkInvalidateMappedMemoryRanges
 }
 
 //

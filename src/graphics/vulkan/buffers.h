@@ -24,140 +24,175 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/error.h"
 #include "com/type/detect.h"
 
+#include <cstring>
 #include <unordered_set>
 
 namespace vulkan
 {
-class BufferWithMemory
+template <typename T>
+std::enable_if_t<is_vector<T> || is_array<T>, size_t> data_size(const T& data)
 {
-protected:
-        BufferWithMemory() = default;
+        static_assert(!std::is_pointer_v<T>);
+        return storage_size(data);
+}
+
+template <typename T>
+std::enable_if_t<!is_vector<T> && !is_array<T>, size_t> data_size(const T&)
+{
+        static_assert(!std::is_pointer_v<T>);
+        return sizeof(T);
+}
+
+template <typename T>
+std::enable_if_t<is_vector<T> || is_array<T>, std::conditional_t<std::is_const_v<T>, const void*, void*>> data_pointer(T& data)
+{
+        static_assert(!std::is_pointer_v<T>);
+        return data.data();
+}
+
+template <typename T>
+std::enable_if_t<!is_vector<T> && !is_array<T>, std::conditional_t<std::is_const_v<T>, const void*, void*>> data_pointer(T& data)
+{
+        static_assert(!std::is_pointer_v<T>);
+        return &data;
+}
+
+enum class BufferMemoryType
+{
+        HostVisible,
+        DeviceLocal
+};
+
+class BufferMapper;
+
+class BufferWithMemory final
+{
+        friend BufferMapper;
+
+        Buffer m_buffer;
+        VkMemoryPropertyFlags m_memory_properties;
+        DeviceMemory m_device_memory;
+
+        void write(VkDeviceSize data_size, const void* data) const;
+        void write(const Device& device, const CommandPool& transfer_command_pool, const Queue& transfer_queue,
+                   const std::unordered_set<uint32_t>& family_indices, VkDeviceSize data_size, const void* data) const;
+
+public:
+        BufferWithMemory(BufferMemoryType memory_type, const Device& device, const std::unordered_set<uint32_t>& family_indices,
+                         VkBufferUsageFlags usage, VkDeviceSize data_size);
+
+        template <typename T>
+        BufferWithMemory(const Device& device, const std::unordered_set<uint32_t>& family_indices, VkBufferUsageFlags usage,
+                         const T& data)
+                : BufferWithMemory(BufferMemoryType::HostVisible, device, family_indices, usage, data_size(data))
+        {
+                write(data_size(data), data_pointer(data));
+        }
+
+        template <typename T>
+        BufferWithMemory(const Device& device, const CommandPool& transfer_command_pool, const Queue& transfer_queue,
+                         const std::unordered_set<uint32_t>& family_indices, VkBufferUsageFlags usage, const T& data)
+                : BufferWithMemory(BufferMemoryType::DeviceLocal, device, family_indices,
+                                   usage | VK_BUFFER_USAGE_TRANSFER_DST_BIT, data_size(data))
+        {
+                write(device, transfer_command_pool, transfer_queue, family_indices, data_size(data), data_pointer(data));
+        }
+
+        BufferWithMemory(const BufferWithMemory&) = delete;
+        BufferWithMemory& operator=(const BufferWithMemory&) = delete;
+        BufferWithMemory& operator=(BufferWithMemory&&) = delete;
+
+        BufferWithMemory(BufferWithMemory&&) = default;
         ~BufferWithMemory() = default;
 
-public:
-        BufferWithMemory(const BufferWithMemory&) = default;
-        BufferWithMemory& operator=(const BufferWithMemory&) = default;
-        BufferWithMemory(BufferWithMemory&&) = default;
-        BufferWithMemory& operator=(BufferWithMemory&&) = default;
+        //
 
-        virtual operator VkBuffer() const = 0;
-        virtual VkDeviceSize size() const = 0;
-        virtual bool usage(VkBufferUsageFlagBits flag) const = 0;
+        operator VkBuffer() const;
+        VkDeviceSize size() const;
+        bool usage(VkBufferUsageFlagBits flag) const;
+        VkMemoryPropertyFlags memory_properties() const;
+        bool host_visible() const;
 };
 
-class BufferWithHostVisibleMemory final : public BufferWithMemory
+class BufferMapper final
 {
-        Buffer m_buffer;
-        DeviceMemory m_device_memory;
-
-        void copy_to(VkDeviceSize offset, const void* data, VkDeviceSize data_size) const;
-        void copy_from(VkDeviceSize offset, void* data, VkDeviceSize data_size) const;
-
-        BufferWithHostVisibleMemory(const Device& device, const std::unordered_set<uint32_t>& family_indices,
-                                    VkBufferUsageFlags usage, VkDeviceSize data_size, const void* data);
+        VkDevice m_device;
+        VkDeviceMemory m_device_memory;
+        unsigned long long m_length;
+        void* m_pointer;
 
 public:
-        BufferWithHostVisibleMemory(const Device& device, const std::unordered_set<uint32_t>& family_indices,
-                                    VkBufferUsageFlags usage, VkDeviceSize data_size);
+        BufferMapper(const BufferWithMemory& buffer, unsigned long long offset, unsigned long long length);
+        BufferMapper(const BufferWithMemory& buffer);
+        ~BufferMapper();
 
-        template <typename T, typename = std::enable_if_t<sizeof(std::declval<T>().size()) && sizeof(std::declval<T>().data())>>
-        explicit BufferWithHostVisibleMemory(const Device& device, const std::unordered_set<uint32_t>& family_indices,
-                                             VkBufferUsageFlags usage, const T& data)
-                : BufferWithHostVisibleMemory(device, family_indices, usage, storage_size(data), data.data())
-        {
-        }
-
-        BufferWithHostVisibleMemory(const BufferWithHostVisibleMemory&) = delete;
-        BufferWithHostVisibleMemory& operator=(const BufferWithHostVisibleMemory&) = delete;
-        BufferWithHostVisibleMemory& operator=(BufferWithHostVisibleMemory&&) = delete;
-
-        BufferWithHostVisibleMemory(BufferWithHostVisibleMemory&&) = default;
-        ~BufferWithHostVisibleMemory() = default;
-
-        //
-
-        operator VkBuffer() const override;
-        VkDeviceSize size() const override;
-        bool usage(VkBufferUsageFlagBits flag) const override;
-
-        //
+        BufferMapper(const BufferMapper&) = delete;
+        BufferMapper(BufferMapper&&) = delete;
+        BufferMapper& operator=(const BufferMapper&) = delete;
+        BufferMapper& operator=(BufferMapper&&) = delete;
 
         template <typename T>
-        std::enable_if_t<is_vector<T> || is_array<T>> write(const T& data) const
+        void write(const T& data) const
         {
-                copy_to(0, data.data(), storage_size(data));
+                ASSERT(data_size(data) <= m_length);
+                std::memcpy(m_pointer, data_pointer(data), data_size(data));
         }
 
         template <typename T>
-        std::enable_if_t<!is_vector<T> && !is_array<T>> write(const T& data) const
+        void write(unsigned long long offset, const T& data) const
         {
-                ASSERT(size() == sizeof(data));
-                copy_to(0, &data, sizeof(data));
+                ASSERT(offset + data_size(data) <= m_length);
+                std::memcpy(static_cast<char*>(m_pointer) + offset, data_pointer(data), data_size(data));
+        }
+
+        void write(unsigned long long offset, const void* data, unsigned long long length) const
+        {
+                ASSERT(offset + length <= m_length);
+                std::memcpy(static_cast<char*>(m_pointer) + offset, data, length);
         }
 
         template <typename T>
-        std::enable_if_t<is_vector<T> || is_array<T>> write(VkDeviceSize offset, const T& data) const
+        void read(T* data) const
         {
-                copy_to(offset, data.data(), storage_size(data));
+                ASSERT(data_size(*data) <= m_length);
+                std::memcpy(data_pointer(*data), m_pointer, data_size(*data));
         }
 
         template <typename T>
-        std::enable_if_t<!is_vector<T> && !is_array<T>> write(VkDeviceSize offset, const T& data) const
+        void read(unsigned long long offset, T* data) const
         {
-                copy_to(offset, &data, sizeof(data));
-        }
-
-        //
-
-        template <typename T>
-        std::enable_if_t<is_vector<T> || is_array<T>> read(T* data) const
-        {
-                copy_from(0, data->data(), storage_size(*data));
-        }
-
-        template <typename T>
-        std::enable_if_t<!is_vector<T> && !is_array<T>> read(T* data) const
-        {
-                ASSERT(size() == sizeof(*data));
-                copy_from(0, data, sizeof(*data));
+                ASSERT(offset + data_size(*data) <= m_length);
+                std::memcpy(data_pointer(*data), static_cast<const char*>(m_pointer) + offset, data_size(*data));
         }
 };
 
-class BufferWithDeviceLocalMemory final : public BufferWithMemory
+template <typename T>
+void map_and_write_to_buffer(const BufferWithMemory& buffer, unsigned long long offset, const T& data)
 {
-        Buffer m_buffer;
-        DeviceMemory m_device_memory;
+        BufferMapper map(buffer, offset, data_size(data));
+        map.write(data);
+}
 
-        BufferWithDeviceLocalMemory(const Device& device, const CommandPool& transfer_command_pool, const Queue& transfer_queue,
-                                    const std::unordered_set<uint32_t>& family_indices, VkBufferUsageFlags usage,
-                                    VkDeviceSize data_size, const void* data);
+template <typename T>
+void map_and_write_to_buffer(const BufferWithMemory& buffer, const T& data)
+{
+        BufferMapper map(buffer, 0, data_size(data));
+        map.write(data);
+}
 
-public:
-        BufferWithDeviceLocalMemory(const Device& device, const std::unordered_set<uint32_t>& family_indices,
-                                    VkBufferUsageFlags usage, VkDeviceSize data_size);
+template <typename T>
+void map_and_read_from_buffer(const BufferWithMemory& buffer, unsigned long long offset, T* data)
+{
+        BufferMapper map(buffer, offset, data_size(*data));
+        map.read(data);
+}
 
-        template <typename T, typename = std::enable_if_t<sizeof(std::declval<T>().size()) && sizeof(std::declval<T>().data())>>
-        explicit BufferWithDeviceLocalMemory(const Device& device, const CommandPool& transfer_command_pool,
-                                             const Queue& transfer_queue, const std::unordered_set<uint32_t>& family_indices,
-                                             VkBufferUsageFlags usage, const T& data)
-                : BufferWithDeviceLocalMemory(device, transfer_command_pool, transfer_queue, family_indices, usage,
-                                              storage_size(data), data.data())
-        {
-        }
-
-        BufferWithDeviceLocalMemory(const BufferWithDeviceLocalMemory&) = delete;
-        BufferWithDeviceLocalMemory& operator=(const BufferWithDeviceLocalMemory&) = delete;
-        BufferWithDeviceLocalMemory& operator=(BufferWithDeviceLocalMemory&&) = delete;
-
-        BufferWithDeviceLocalMemory(BufferWithDeviceLocalMemory&&) = default;
-        ~BufferWithDeviceLocalMemory() = default;
-
-        //
-
-        operator VkBuffer() const override;
-        VkDeviceSize size() const override;
-        bool usage(VkBufferUsageFlagBits flag) const override;
-};
+template <typename T>
+void map_and_read_from_buffer(const BufferWithMemory& buffer, T* data)
+{
+        BufferMapper map(buffer, 0, data_size(*data));
+        map.read(data);
+}
 
 class ColorTexture final
 {

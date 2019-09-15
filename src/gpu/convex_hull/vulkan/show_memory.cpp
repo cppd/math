@@ -53,7 +53,8 @@ ConvexHullShaderMemory::ConvexHullShaderMemory(const vulkan::Device& device, con
         std::vector<uint32_t> bindings;
 
         {
-                m_uniform_buffers.emplace_back(device, family_indices, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Data));
+                m_uniform_buffers.emplace_back(vulkan::BufferMemoryType::HostVisible, device, family_indices,
+                                               VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Data));
                 m_data_buffer_index = m_uniform_buffers.size() - 1;
 
                 VkDescriptorBufferInfo buffer_info = {};
@@ -87,13 +88,13 @@ const VkDescriptorSet& ConvexHullShaderMemory::descriptor_set() const
 void ConvexHullShaderMemory::set_matrix(const mat4& matrix) const
 {
         decltype(Data().matrix) m = transpose(to_matrix<float>(matrix));
-        m_uniform_buffers[m_data_buffer_index].write(offsetof(Data, matrix), m);
+        vulkan::map_and_write_to_buffer(m_uniform_buffers[m_data_buffer_index], offsetof(Data, matrix), m);
 }
 
 void ConvexHullShaderMemory::set_brightness(float brightness) const
 {
         decltype(Data().brightness) b = brightness;
-        m_uniform_buffers[m_data_buffer_index].write(offsetof(Data, brightness), b);
+        vulkan::map_and_write_to_buffer(m_uniform_buffers[m_data_buffer_index], offsetof(Data, brightness), b);
 }
 
 void ConvexHullShaderMemory::set_points(const vulkan::BufferWithMemory& buffer) const

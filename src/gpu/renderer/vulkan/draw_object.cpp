@@ -39,11 +39,11 @@ constexpr vec2f NO_TEXTURE_COORDINATES = vec2f(-1e10);
 
 namespace
 {
-std::unique_ptr<vulkan::BufferWithDeviceLocalMemory> load_vertices(const vulkan::Device& device,
-                                                                   const vulkan::CommandPool& transfer_command_pool,
-                                                                   const vulkan::Queue& transfer_queue,
-                                                                   const std::unordered_set<uint32_t>& family_indices,
-                                                                   const Obj<3>& obj, const std::vector<int>& sorted_face_indices)
+std::unique_ptr<vulkan::BufferWithMemory> load_vertices(const vulkan::Device& device,
+                                                        const vulkan::CommandPool& transfer_command_pool,
+                                                        const vulkan::Queue& transfer_queue,
+                                                        const std::unordered_set<uint32_t>& family_indices, const Obj<3>& obj,
+                                                        const std::vector<int>& sorted_face_indices)
 {
         if (obj.facets().size() == 0)
         {
@@ -108,15 +108,15 @@ std::unique_ptr<vulkan::BufferWithDeviceLocalMemory> load_vertices(const vulkan:
 
         ASSERT((vertices.size() >= 3) && (vertices.size() % 3 == 0));
 
-        return std::make_unique<vulkan::BufferWithDeviceLocalMemory>(device, transfer_command_pool, transfer_queue,
-                                                                     family_indices, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, vertices);
+        return std::make_unique<vulkan::BufferWithMemory>(device, transfer_command_pool, transfer_queue, family_indices,
+                                                          VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, vertices);
 }
 
-std::unique_ptr<vulkan::BufferWithDeviceLocalMemory> load_point_vertices(const vulkan::Device& device,
-                                                                         const vulkan::CommandPool& transfer_command_pool,
-                                                                         const vulkan::Queue& transfer_queue,
-                                                                         const std::unordered_set<uint32_t>& family_indices,
-                                                                         const Obj<3>& obj)
+std::unique_ptr<vulkan::BufferWithMemory> load_point_vertices(const vulkan::Device& device,
+                                                              const vulkan::CommandPool& transfer_command_pool,
+                                                              const vulkan::Queue& transfer_queue,
+                                                              const std::unordered_set<uint32_t>& family_indices,
+                                                              const Obj<3>& obj)
 {
         if (obj.points().size() == 0)
         {
@@ -134,15 +134,15 @@ std::unique_ptr<vulkan::BufferWithDeviceLocalMemory> load_point_vertices(const v
                 vertices.push_back(obj_vertices[p.vertex]);
         }
 
-        return std::make_unique<vulkan::BufferWithDeviceLocalMemory>(device, transfer_command_pool, transfer_queue,
-                                                                     family_indices, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, vertices);
+        return std::make_unique<vulkan::BufferWithMemory>(device, transfer_command_pool, transfer_queue, family_indices,
+                                                          VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, vertices);
 }
 
-std::unique_ptr<vulkan::BufferWithDeviceLocalMemory> load_line_vertices(const vulkan::Device& device,
-                                                                        const vulkan::CommandPool& transfer_command_pool,
-                                                                        const vulkan::Queue& transfer_queue,
-                                                                        const std::unordered_set<uint32_t>& family_indices,
-                                                                        const Obj<3>& obj)
+std::unique_ptr<vulkan::BufferWithMemory> load_line_vertices(const vulkan::Device& device,
+                                                             const vulkan::CommandPool& transfer_command_pool,
+                                                             const vulkan::Queue& transfer_queue,
+                                                             const std::unordered_set<uint32_t>& family_indices,
+                                                             const Obj<3>& obj)
 {
         if (obj.lines().size() == 0)
         {
@@ -163,8 +163,8 @@ std::unique_ptr<vulkan::BufferWithDeviceLocalMemory> load_line_vertices(const vu
                 }
         }
 
-        return std::make_unique<vulkan::BufferWithDeviceLocalMemory>(device, transfer_command_pool, transfer_queue,
-                                                                     family_indices, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, vertices);
+        return std::make_unique<vulkan::BufferWithMemory>(device, transfer_command_pool, transfer_queue, family_indices,
+                                                          VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, vertices);
 }
 
 std::vector<vulkan::ColorTexture> load_textures(const vulkan::Device& device, const vulkan::CommandPool& graphics_command_pool,
@@ -255,7 +255,7 @@ std::unique_ptr<RendererTrianglesMaterialMemory> load_materials(const vulkan::De
 
 class DrawObject::Triangles final
 {
-        std::unique_ptr<vulkan::BufferWithDeviceLocalMemory> m_vertex_buffer;
+        std::unique_ptr<vulkan::BufferWithMemory> m_vertex_buffer;
         std::vector<vulkan::ColorTexture> m_textures;
         std::unique_ptr<RendererTrianglesMaterialMemory> m_shader_memory;
         unsigned m_vertex_count;
@@ -359,7 +359,7 @@ public:
 
 class DrawObject::Lines final
 {
-        std::unique_ptr<vulkan::BufferWithDeviceLocalMemory> m_vertex_buffer;
+        std::unique_ptr<vulkan::BufferWithMemory> m_vertex_buffer;
         unsigned m_vertex_count;
 
         //
@@ -397,7 +397,7 @@ public:
 
 class DrawObject::Points final
 {
-        std::unique_ptr<vulkan::BufferWithDeviceLocalMemory> m_vertex_buffer;
+        std::unique_ptr<vulkan::BufferWithMemory> m_vertex_buffer;
         unsigned m_vertex_count;
 
         //

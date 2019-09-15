@@ -106,8 +106,8 @@ class Impl final : public TextShow
 
         vulkan::PipelineLayout m_pipeline_layout;
 
-        std::optional<vulkan::BufferWithHostVisibleMemory> m_vertex_buffer;
-        vulkan::BufferWithHostVisibleMemory m_indirect_buffer;
+        std::optional<vulkan::BufferWithMemory> m_vertex_buffer;
+        vulkan::BufferWithMemory m_indirect_buffer;
 
         vulkan::RenderBuffers2D* m_render_buffers = nullptr;
         std::vector<VkCommandBuffer> m_command_buffers;
@@ -190,22 +190,22 @@ class Impl final : public TextShow
 
                         m_render_buffers->delete_command_buffers(&m_command_buffers);
 
-                        m_vertex_buffer.emplace(m_device, std::unordered_set({m_graphics_family_index}),
-                                                VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+                        m_vertex_buffer.emplace(vulkan::BufferMemoryType::HostVisible, m_device,
+                                                std::unordered_set({m_graphics_family_index}), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
                                                 std::max(m_vertex_buffer->size() * 2, data_size));
 
                         m_command_buffers = m_render_buffers->create_command_buffers(
                                 std::nullopt, std::bind(&Impl::draw_commands, this, std::placeholders::_1));
                 }
 
-                m_vertex_buffer->write(vertices);
+                vulkan::map_and_write_to_buffer(*m_vertex_buffer, vertices);
 
                 VkDrawIndirectCommand command = {};
                 command.vertexCount = vertices.size();
                 command.instanceCount = 1;
                 command.firstVertex = 0;
                 command.firstInstance = 0;
-                m_indirect_buffer.write(0, command);
+                vulkan::map_and_write_to_buffer(m_indirect_buffer, command);
 
                 //
 
@@ -236,10 +236,12 @@ class Impl final : public TextShow
                   m_text_frag(m_device, text_frag(), "main"),
                   m_pipeline_layout(vulkan::create_pipeline_layout(m_device, {m_shader_memory.set_number()},
                                                                    {m_shader_memory.descriptor_set_layout()})),
-                  m_vertex_buffer(std::in_place, m_device, std::unordered_set({graphics_queue.family_index()}),
-                                  VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VERTEX_BUFFER_FIRST_SIZE),
-                  m_indirect_buffer(m_device, std::unordered_set({graphics_queue.family_index()}),
-                                    VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT, sizeof(VkDrawIndirectCommand)),
+                  m_vertex_buffer(std::in_place, vulkan::BufferMemoryType::HostVisible, m_device,
+                                  std::unordered_set({graphics_queue.family_index()}), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+                                  VERTEX_BUFFER_FIRST_SIZE),
+                  m_indirect_buffer(vulkan::BufferMemoryType::HostVisible, m_device,
+                                    std::unordered_set({graphics_queue.family_index()}), VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT,
+                                    sizeof(VkDrawIndirectCommand)),
                   m_graphics_family_index(graphics_queue.family_index())
         {
                 set_color(color);
