@@ -152,21 +152,21 @@ template <typename T>
 DftProgramBitReverse<T>::DftProgramBitReverse(int group_size)
         : m_group_size(group_size),
           m_bit_reverse(opengl::ComputeShader(bit_reverse_source<T>(group_size))),
-          m_shader_memory(sizeof(ShaderMemory))
+          m_shader_memory(sizeof(ShaderMemory), GL_MAP_WRITE_BIT)
 {
 }
 
 template <typename T>
-void DftProgramBitReverse<T>::exec(int max_threads, int n_mask, int n_bits, const opengl::StorageBuffer& data) const
+void DftProgramBitReverse<T>::exec(int max_threads, int n_mask, int n_bits, const opengl::Buffer& data) const
 {
         ShaderMemory m;
         m.max_threads = max_threads;
         m.n_mask = n_mask;
         m.n_bits = n_bits;
-        m_shader_memory.copy(m);
+        opengl::map_and_write_to_buffer(m_shader_memory, m);
 
-        m_shader_memory.bind(DATA_BINDING);
-        data.bind(BUFFER_BINDING);
+        glBindBufferBase(GL_UNIFORM_BUFFER, DATA_BINDING, m_shader_memory);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, BUFFER_BINDING, data);
 
         m_bit_reverse.dispatch_compute(group_count(max_threads, m_group_size), 1, 1);
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
@@ -178,13 +178,13 @@ template <typename T>
 DftProgramFftGlobal<T>::DftProgramFftGlobal(int group_size)
         : m_group_size(group_size),
           m_fft(opengl::ComputeShader(fft_global_source<T>(group_size))),
-          m_shader_memory(sizeof(ShaderMemory))
+          m_shader_memory(sizeof(ShaderMemory), GL_MAP_WRITE_BIT)
 {
 }
 
 template <typename T>
 void DftProgramFftGlobal<T>::exec(int max_threads, bool inverse, T two_pi_div_m, int n_div_2_mask, int m_div_2,
-                                  const opengl::StorageBuffer& data) const
+                                  const opengl::Buffer& data) const
 {
         ShaderMemory m;
         m.inverse_dft = inverse;
@@ -192,10 +192,10 @@ void DftProgramFftGlobal<T>::exec(int max_threads, bool inverse, T two_pi_div_m,
         m.n_div_2_mask = n_div_2_mask;
         m.m_div_2 = m_div_2;
         m.two_pi_div_m = two_pi_div_m;
-        m_shader_memory.copy(m);
+        opengl::map_and_write_to_buffer(m_shader_memory, m);
 
-        m_shader_memory.bind(DATA_BINDING);
-        data.bind(BUFFER_BINDING);
+        glBindBufferBase(GL_UNIFORM_BUFFER, DATA_BINDING, m_shader_memory);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, BUFFER_BINDING, data);
 
         m_fft.dispatch_compute(group_count(max_threads, m_group_size), 1, 1);
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
@@ -210,10 +210,10 @@ DftProgramCopyInput<T>::DftProgramCopyInput(vec2i group_size, int n1, int n2)
 }
 
 template <typename T>
-void DftProgramCopyInput<T>::copy(const GLuint64 tex, const opengl::StorageBuffer& data)
+void DftProgramCopyInput<T>::copy(const GLuint64 tex, const opengl::Buffer& data)
 {
         m_copy_input.set_uniform_handle(SRC_IMAGE_LOCATION, tex);
-        data.bind(BUFFER_BINDING);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, BUFFER_BINDING, data);
 
         m_copy_input.dispatch_compute(m_group_count[0], m_group_count[1], 1);
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
@@ -225,20 +225,20 @@ template <typename T>
 DftProgramCopyOutput<T>::DftProgramCopyOutput(vec2i group_size, int n1, int n2)
         : m_group_count(group_count(n1, n2, group_size)),
           m_copy_output(opengl::ComputeShader(copy_output_source<T>(group_size))),
-          m_shader_memory(sizeof(ShaderMemory))
+          m_shader_memory(sizeof(ShaderMemory), GL_MAP_WRITE_BIT)
 {
 }
 
 template <typename T>
-void DftProgramCopyOutput<T>::copy(T to_mul, const GLuint64 tex, const opengl::StorageBuffer& data)
+void DftProgramCopyOutput<T>::copy(T to_mul, const GLuint64 tex, const opengl::Buffer& data)
 {
         ShaderMemory m;
         m.to_mul = to_mul;
-        m_shader_memory.copy(m);
+        opengl::map_and_write_to_buffer(m_shader_memory, m);
 
         m_copy_output.set_uniform_handle(DST_IMAGE_LOCATION, tex);
-        m_shader_memory.bind(DATA_BINDING);
-        data.bind(BUFFER_BINDING);
+        glBindBufferBase(GL_UNIFORM_BUFFER, DATA_BINDING, m_shader_memory);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, BUFFER_BINDING, data);
 
         m_copy_output.dispatch_compute(m_group_count[0], m_group_count[1], 1);
         glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
@@ -256,24 +256,24 @@ DftProgramMul<T>::DftProgramMul(vec2i group_size, int n1, int n2, int m1, int m2
           m_rows_from_buffer(opengl::ComputeShader(rows_mul_fr_buffer_source<T>(group_size, n1, n2, m1, m2))),
           m_columns_to_buffer(opengl::ComputeShader(cols_mul_to_buffer_source<T>(group_size, n1, n2, m1, m2))),
           m_columns_from_buffer(opengl::ComputeShader(cols_mul_fr_buffer_source<T>(group_size, n1, n2, m1, m2))),
-          m_shader_memory(sizeof(ShaderMemory))
+          m_shader_memory(sizeof(ShaderMemory), GL_MAP_WRITE_BIT)
 {
 }
 
 template <typename T>
-void DftProgramMul<T>::set_and_bind(bool inverse, const opengl::StorageBuffer& data, const opengl::StorageBuffer& buffer) const
+void DftProgramMul<T>::set_and_bind(bool inverse, const opengl::Buffer& data, const opengl::Buffer& buffer) const
 {
         ShaderMemory m;
         m.inverse_dft = inverse;
-        m_shader_memory.copy(m);
+        opengl::map_and_write_to_buffer(m_shader_memory, m);
 
-        m_shader_memory.bind(DATA_BINDING);
-        data.bind(BUFFER_0_BINDING);
-        buffer.bind(BUFFER_1_BINDING);
+        glBindBufferBase(GL_UNIFORM_BUFFER, DATA_BINDING, m_shader_memory);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, BUFFER_0_BINDING, data);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, BUFFER_1_BINDING, buffer);
 }
 
 template <typename T>
-void DftProgramMul<T>::rows_to_buffer(bool inverse, const opengl::StorageBuffer& data, const opengl::StorageBuffer& buffer) const
+void DftProgramMul<T>::rows_to_buffer(bool inverse, const opengl::Buffer& data, const opengl::Buffer& buffer) const
 {
         set_and_bind(inverse, data, buffer);
 
@@ -282,8 +282,7 @@ void DftProgramMul<T>::rows_to_buffer(bool inverse, const opengl::StorageBuffer&
 }
 
 template <typename T>
-void DftProgramMul<T>::rows_from_buffer(bool inverse, const opengl::StorageBuffer& data,
-                                        const opengl::StorageBuffer& buffer) const
+void DftProgramMul<T>::rows_from_buffer(bool inverse, const opengl::Buffer& data, const opengl::Buffer& buffer) const
 {
         set_and_bind(inverse, data, buffer);
 
@@ -292,8 +291,7 @@ void DftProgramMul<T>::rows_from_buffer(bool inverse, const opengl::StorageBuffe
 }
 
 template <typename T>
-void DftProgramMul<T>::columns_to_buffer(bool inverse, const opengl::StorageBuffer& data,
-                                         const opengl::StorageBuffer& buffer) const
+void DftProgramMul<T>::columns_to_buffer(bool inverse, const opengl::Buffer& data, const opengl::Buffer& buffer) const
 {
         set_and_bind(inverse, data, buffer);
 
@@ -302,8 +300,7 @@ void DftProgramMul<T>::columns_to_buffer(bool inverse, const opengl::StorageBuff
 }
 
 template <typename T>
-void DftProgramMul<T>::columns_from_buffer(bool inverse, const opengl::StorageBuffer& data,
-                                           const opengl::StorageBuffer& buffer) const
+void DftProgramMul<T>::columns_from_buffer(bool inverse, const opengl::Buffer& data, const opengl::Buffer& buffer) const
 {
         set_and_bind(inverse, data, buffer);
 
@@ -318,40 +315,40 @@ DftProgramMulD<T>::DftProgramMulD(vec2i group_size, int n1, int n2, int m1, int 
         : m_row_groups(group_count(m1, n2, group_size)),
           m_column_groups(group_count(m2, n1, group_size)),
           m_mul_d(opengl::ComputeShader(rows_mul_d_source<T>(group_size))),
-          m_memory_rows(sizeof(ShaderMemory)),
-          m_memory_columns(sizeof(ShaderMemory))
+          m_memory_rows(sizeof(ShaderMemory), GL_MAP_WRITE_BIT),
+          m_memory_columns(sizeof(ShaderMemory), GL_MAP_WRITE_BIT)
 {
         {
                 ShaderMemory m;
                 m.columns = m1;
                 m.rows = n2;
-                m_memory_rows.copy(m);
+                opengl::map_and_write_to_buffer(m_memory_rows, m);
         }
         {
                 ShaderMemory m;
                 m.columns = m2;
                 m.rows = n1;
-                m_memory_columns.copy(m);
+                opengl::map_and_write_to_buffer(m_memory_columns, m);
         }
 }
 
 template <typename T>
-void DftProgramMulD<T>::rows_mul_d(const opengl::StorageBuffer& d, const opengl::StorageBuffer& data) const
+void DftProgramMulD<T>::rows_mul_d(const opengl::Buffer& d, const opengl::Buffer& data) const
 {
-        m_memory_rows.bind(DATA_BINDING);
-        d.bind(BUFFER_DIAGONAL_BINDING);
-        data.bind(BUFFER_DATA_BINDING);
+        glBindBufferBase(GL_UNIFORM_BUFFER, DATA_BINDING, m_memory_rows);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, BUFFER_DIAGONAL_BINDING, d);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, BUFFER_DATA_BINDING, data);
 
         m_mul_d.dispatch_compute(m_row_groups[0], m_row_groups[1], 1);
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 }
 
 template <typename T>
-void DftProgramMulD<T>::columns_mul_d(const opengl::StorageBuffer& d, const opengl::StorageBuffer& data) const
+void DftProgramMulD<T>::columns_mul_d(const opengl::Buffer& d, const opengl::Buffer& data) const
 {
-        m_memory_columns.bind(DATA_BINDING);
-        d.bind(BUFFER_DIAGONAL_BINDING);
-        data.bind(BUFFER_DATA_BINDING);
+        glBindBufferBase(GL_UNIFORM_BUFFER, DATA_BINDING, m_memory_columns);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, BUFFER_DIAGONAL_BINDING, d);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, BUFFER_DATA_BINDING, data);
 
         m_mul_d.dispatch_compute(m_column_groups[0], m_column_groups[1], 1);
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
@@ -365,21 +362,21 @@ DftProgramFftShared<T>::DftProgramFftShared(int n, int shared_size, int group_si
           m_n_bits(binary_size(n)),
           m_shared_size(shared_size),
           m_fft(opengl::ComputeShader(fft_shared_source<T>(m_n, m_n_bits, m_shared_size, group_size, reverse_input))),
-          m_shader_memory(sizeof(ShaderMemory))
+          m_shader_memory(sizeof(ShaderMemory), GL_MAP_WRITE_BIT)
 {
         ASSERT((1 << m_n_bits) == m_n);
 }
 
 template <typename T>
-void DftProgramFftShared<T>::exec(bool inverse, int data_size, const opengl::StorageBuffer& data) const
+void DftProgramFftShared<T>::exec(bool inverse, int data_size, const opengl::Buffer& data) const
 {
         ShaderMemory m;
         m.inverse_dft = inverse;
         m.data_size = data_size;
-        m_shader_memory.copy(m);
+        opengl::map_and_write_to_buffer(m_shader_memory, m);
 
-        m_shader_memory.bind(DATA_BINDING);
-        data.bind(BUFFER_BINDING);
+        glBindBufferBase(GL_UNIFORM_BUFFER, DATA_BINDING, m_shader_memory);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, BUFFER_BINDING, data);
 
         m_fft.dispatch_compute(group_count(data_size, m_shared_size), 1, 1);
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);

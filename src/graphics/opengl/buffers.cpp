@@ -19,33 +19,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/color/conversion_span.h"
 #include "com/print.h"
-#include "graphics/opengl/functions.h"
 
 #include <array>
-#include <cstring>
 #include <string>
 #include <vector>
 
 namespace
 {
-void copy_to_buffer(const opengl::BufferHandle& buffer, GLintptr offset, const void* data, GLsizeiptr data_size)
-{
-        void* map_memory_data = glMapNamedBufferRange(buffer, offset, data_size, GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_RANGE_BIT);
-
-        std::memcpy(map_memory_data, data, data_size);
-
-        glUnmapNamedBuffer(buffer);
-}
-
-void copy_from_buffer(const opengl::BufferHandle& buffer, GLintptr offset, void* data, GLsizeiptr data_size)
-{
-        void* map_memory_data = glMapNamedBufferRange(buffer, offset, data_size, GL_MAP_READ_BIT);
-
-        std::memcpy(data, map_memory_data, data_size);
-
-        glUnmapNamedBuffer(buffer);
-}
-
 GLuint getIntegerValue(GLenum parameter)
 {
         GLint v;
@@ -56,61 +36,6 @@ GLuint getIntegerValue(GLenum parameter)
 
 namespace opengl
 {
-void UniformBuffer::copy_to(GLintptr offset, const void* data, GLsizeiptr data_size) const
-{
-        ASSERT(offset + data_size <= m_data_size);
-
-        copy_to_buffer(m_buffer, offset, data, data_size);
-}
-
-UniformBuffer::UniformBuffer(GLsizeiptr data_size) : m_data_size(data_size)
-{
-        glNamedBufferStorage(m_buffer, data_size, nullptr, GL_MAP_WRITE_BIT);
-}
-
-void UniformBuffer::bind(GLuint point) const
-{
-        glBindBufferBase(GL_UNIFORM_BUFFER, point, m_buffer);
-}
-
-GLsizeiptr UniformBuffer::size() const
-{
-        return m_data_size;
-}
-
-//
-
-void StorageBuffer::copy_to(GLintptr offset, const void* data, GLsizeiptr data_size) const
-{
-        ASSERT(offset + data_size <= m_data_size);
-
-        copy_to_buffer(m_buffer, offset, data, data_size);
-}
-
-void StorageBuffer::copy_from(GLintptr offset, void* data, GLsizeiptr data_size) const
-{
-        ASSERT(offset + data_size <= m_data_size);
-
-        copy_from_buffer(m_buffer, offset, data, data_size);
-}
-
-StorageBuffer::StorageBuffer(GLsizeiptr data_size) : m_data_size(data_size)
-{
-        glNamedBufferStorage(m_buffer, data_size, nullptr, GL_MAP_WRITE_BIT | GL_MAP_READ_BIT);
-}
-
-void StorageBuffer::bind(GLuint point) const
-{
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, point, m_buffer);
-}
-
-GLsizeiptr StorageBuffer::size() const
-{
-        return m_data_size;
-}
-
-//
-
 void VertexArray::bind() const
 {
         glBindVertexArray(m_vertex_array);

@@ -21,23 +21,23 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpu_opengl
 {
-ConvexHullShaderMemory::ConvexHullShaderMemory() : m_buffer(sizeof(Data))
+ConvexHullShaderMemory::ConvexHullShaderMemory() : m_data_buffer(sizeof(Data), GL_MAP_WRITE_BIT)
 {
 }
 
 void ConvexHullShaderMemory::set_matrix(const mat4& matrix) const
 {
         decltype(Data().matrix) m = transpose(to_matrix<float>(matrix));
-        m_buffer.copy(offsetof(Data, matrix), m);
+        opengl::map_and_write_to_buffer(m_data_buffer, offsetof(Data, matrix), m);
 }
 
 void ConvexHullShaderMemory::set_brightness(float brightness) const
 {
         decltype(Data().brightness) b = brightness;
-        m_buffer.copy(offsetof(Data, brightness), b);
+        opengl::map_and_write_to_buffer(m_data_buffer, offsetof(Data, brightness), b);
 }
 
-void ConvexHullShaderMemory::set_points(const opengl::StorageBuffer& points)
+void ConvexHullShaderMemory::set_points(const opengl::Buffer& points)
 {
         m_points = &points;
 }
@@ -46,7 +46,7 @@ void ConvexHullShaderMemory::bind() const
 {
         ASSERT(m_points);
 
-        m_buffer.bind(DATA_BINDING);
-        m_points->bind(POINTS_BINDING);
+        glBindBufferBase(GL_UNIFORM_BUFFER, DATA_BINDING, m_data_buffer);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, POINTS_BINDING, *m_points);
 }
 }

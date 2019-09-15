@@ -51,7 +51,7 @@ class ShaderMemory final
 {
         static constexpr int DATA_BINDING = 0;
 
-        opengl::UniformBuffer m_buffer;
+        opengl::Buffer m_buffer;
 
         struct Data
         {
@@ -61,31 +61,31 @@ class ShaderMemory final
         };
 
 public:
-        ShaderMemory() : m_buffer(sizeof(Data))
+        ShaderMemory() : m_buffer(sizeof(Data), GL_MAP_WRITE_BIT)
         {
         }
 
         void set_brightness(double brightness) const
         {
                 decltype(Data().brightness) b = brightness;
-                m_buffer.copy(offsetof(Data, brightness), b);
+                opengl::map_and_write_to_buffer(m_buffer, offsetof(Data, brightness), b);
         }
 
         void set_background_color(const Color& color) const
         {
                 decltype(Data().background_color) c = color_to_vec4f(color);
-                m_buffer.copy(offsetof(Data, background_color), c);
+                opengl::map_and_write_to_buffer(m_buffer, offsetof(Data, background_color), c);
         }
 
         void set_foreground_color(const Color& color) const
         {
                 decltype(Data().foreground_color) c = color_to_vec4f(color);
-                m_buffer.copy(offsetof(Data, foreground_color), c);
+                opengl::map_and_write_to_buffer(m_buffer, offsetof(Data, foreground_color), c);
         }
 
         void bind() const
         {
-                m_buffer.bind(DATA_BINDING);
+                glBindBufferBase(GL_UNIFORM_BUFFER, DATA_BINDING, m_buffer);
         }
 };
 

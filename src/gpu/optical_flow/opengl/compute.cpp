@@ -150,9 +150,9 @@ std::vector<opengl::Texture> create_images(const std::vector<vec2i>& sizes)
         return images;
 }
 
-std::vector<opengl::StorageBuffer> create_flow_buffers(const std::vector<vec2i>& sizes)
+std::vector<opengl::Buffer> create_flow_buffers(const std::vector<vec2i>& sizes)
 {
-        std::vector<opengl::StorageBuffer> buffers;
+        std::vector<opengl::Buffer> buffers;
         if (sizes.size() <= 1)
         {
                 return {};
@@ -160,7 +160,7 @@ std::vector<opengl::StorageBuffer> create_flow_buffers(const std::vector<vec2i>&
         buffers.reserve(sizes.size() - 1);
         for (size_t i = 1; i < sizes.size(); ++i)
         {
-                buffers.emplace_back(sizes[i][0] * sizes[i][1] * sizeof(vec2f));
+                buffers.emplace_back(sizes[i][0] * sizes[i][1] * sizeof(vec2f), 0);
         }
         return buffers;
 }
@@ -243,9 +243,8 @@ std::vector<vec2i> create_sobel_groups(const std::vector<vec2i>& sizes)
 }
 
 std::vector<OpticalFlowDataMemory> create_flow_data_memory(const std::vector<vec2i>& sizes,
-                                                           const std::vector<opengl::StorageBuffer>& flow_buffers, int top_x,
-                                                           int top_y, const opengl::StorageBuffer& top_points,
-                                                           const opengl::StorageBuffer& top_flow)
+                                                           const std::vector<opengl::Buffer>& flow_buffers, int top_x, int top_y,
+                                                           const opengl::Buffer& top_points, const opengl::Buffer& top_flow)
 {
         ASSERT(flow_buffers.size() + 1 == sizes.size());
         auto flow_index = [&](size_t i) {
@@ -346,7 +345,7 @@ class Impl final : public OpticalFlowCompute
         std::array<std::vector<opengl::Texture>, 2> m_images;
         std::vector<opengl::Texture> m_dx;
         std::vector<opengl::Texture> m_dy;
-        std::vector<opengl::StorageBuffer> m_flow_buffers;
+        std::vector<opengl::Buffer> m_flow_buffers;
 
         std::array<OpticalFlowGrayscaleMemory, 2> m_grayscale_memory;
         vec2i m_grayscale_groups;
@@ -452,7 +451,7 @@ class Impl final : public OpticalFlowCompute
         }
 
         Impl(const std::vector<vec2i>& sizes, const opengl::Texture& source_image, int top_x, int top_y,
-             const opengl::StorageBuffer& top_points, const opengl::StorageBuffer& top_flow)
+             const opengl::Buffer& top_points, const opengl::Buffer& top_flow)
                 : m_images({create_images(sizes), create_images(sizes)}),
                   m_dx(create_images(sizes)),
                   m_dy(create_images(sizes)),
@@ -478,8 +477,8 @@ class Impl final : public OpticalFlowCompute
         }
 
 public:
-        Impl(const opengl::Texture& source, int top_x, int top_y, const opengl::StorageBuffer& top_points,
-             const opengl::StorageBuffer& top_flow)
+        Impl(const opengl::Texture& source, int top_x, int top_y, const opengl::Buffer& top_points,
+             const opengl::Buffer& top_flow)
                 : Impl(pyramid_sizes(source.width(), source.height(), BOTTOM_IMAGE_SIZE), source, top_x, top_y, top_points,
                        top_flow)
         {
@@ -488,8 +487,7 @@ public:
 }
 
 std::unique_ptr<OpticalFlowCompute> create_optical_flow_compute(const opengl::Texture& source, int top_x, int top_y,
-                                                                const opengl::StorageBuffer& top_points,
-                                                                const opengl::StorageBuffer& top_flow)
+                                                                const opengl::Buffer& top_points, const opengl::Buffer& top_flow)
 {
         return std::make_unique<Impl>(source, top_x, top_y, top_points, top_flow);
 }

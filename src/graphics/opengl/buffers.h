@@ -29,7 +29,46 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace opengl
 {
-class BufferMapper
+class Buffer final
+{
+        BufferHandle m_buffer;
+        unsigned long long m_size;
+        GLbitfield m_flags;
+
+public:
+        Buffer(unsigned long long size, GLbitfield flags) : m_size(size), m_flags(flags)
+        {
+                glNamedBufferStorage(m_buffer, m_size, nullptr, m_flags);
+        }
+
+        Buffer(unsigned long long size, const void* data, GLbitfield flags) : m_size(size), m_flags(flags)
+        {
+                glNamedBufferStorage(m_buffer, m_size, data, m_flags);
+        }
+
+        template <typename T, typename = std::enable_if_t<sizeof(std::declval<T>().size()) && sizeof(std::declval<T>().data())>>
+        Buffer(const T& data, GLbitfield flags) : m_size(storage_size(data)), m_flags(flags)
+        {
+                glNamedBufferStorage(m_buffer, m_size, data.data(), m_flags);
+        }
+
+        unsigned long long size() const
+        {
+                return m_size;
+        }
+
+        GLbitfield flags() const
+        {
+                return m_flags;
+        }
+
+        operator GLuint() const
+        {
+                return m_buffer;
+        }
+};
+
+class BufferMapper final
 {
         GLuint m_buffer;
         GLbitfield m_access;
@@ -37,12 +76,13 @@ class BufferMapper
         void* m_pointer;
 
 public:
-        template <typename Buffer>
         BufferMapper(const Buffer& buffer, unsigned long long offset, unsigned long long length, GLbitfield access)
                 : m_buffer(buffer), m_access(access), m_length(length)
         {
-                ASSERT(((access & GL_MAP_WRITE_BIT) && (buffer.flags() & GL_MAP_WRITE_BIT)) ||
-                       ((access & GL_MAP_READ_BIT) && (buffer.flags() & GL_MAP_READ_BIT)));
+                ASSERT((access & GL_MAP_WRITE_BIT) || (access & GL_MAP_READ_BIT));
+                ASSERT(!(access & GL_MAP_WRITE_BIT) || (buffer.flags() & GL_MAP_WRITE_BIT));
+                ASSERT(!(access & GL_MAP_READ_BIT) || (buffer.flags() & GL_MAP_READ_BIT));
+
                 ASSERT(length > 0 && offset + length <= buffer.size());
 
                 m_pointer = glMapNamedBufferRange(m_buffer, offset, length, access);
@@ -53,11 +93,11 @@ public:
                 }
         }
 
-        template <typename Buffer>
         BufferMapper(const Buffer& buffer, GLbitfield access) : m_buffer(buffer), m_access(access), m_length(buffer.size())
         {
-                ASSERT(((access & GL_MAP_WRITE_BIT) && (buffer.flags() & GL_MAP_WRITE_BIT)) ||
-                       ((access & GL_MAP_READ_BIT) && (buffer.flags() & GL_MAP_READ_BIT)));
+                ASSERT((access & GL_MAP_WRITE_BIT) || (access & GL_MAP_READ_BIT));
+                ASSERT(!(access & GL_MAP_WRITE_BIT) || (buffer.flags() & GL_MAP_WRITE_BIT));
+                ASSERT(!(access & GL_MAP_READ_BIT) || (buffer.flags() & GL_MAP_READ_BIT));
 
                 m_pointer = glMapNamedBufferRange(m_buffer, 0, buffer.size(), access);
 
@@ -85,7 +125,7 @@ public:
         std::enable_if_t<!is_vector<T> && !is_array<T>> write(const T& data) const
         {
                 ASSERT(m_access & GL_MAP_WRITE_BIT);
-                size_t size = sizeof(data);
+                size_t size = sizeof(T);
                 ASSERT(size <= m_length);
                 std::memcpy(m_pointer, &data, size);
         }
@@ -103,7 +143,7 @@ public:
         std::enable_if_t<!is_vector<T> && !is_array<T>> write(GLintptr offset, const T& data) const
         {
                 ASSERT(m_access & GL_MAP_WRITE_BIT);
-                size_t size = sizeof(data);
+                size_t size = sizeof(T);
                 ASSERT(offset >= 0 && offset + size <= m_length);
                 std::memcpy(static_cast<char*>(m_pointer) + offset, &data, size);
         }
@@ -121,9 +161,9 @@ public:
         std::enable_if_t<!is_vector<T> && !is_array<T>> read(T* data) const
         {
                 ASSERT(m_access & GL_MAP_READ_BIT);
-                size_t size = sizeof(data);
+                size_t size = sizeof(T);
                 ASSERT(size <= m_length);
-                std::memcpy(&data, m_pointer, size);
+                std::memcpy(data, m_pointer, size);
         }
 
         template <typename T>
@@ -139,121 +179,47 @@ public:
         std::enable_if_t<!is_vector<T> && !is_array<T>> read(GLintptr offset, T* data) const
         {
                 ASSERT(m_access & GL_MAP_READ_BIT);
-                size_t size = sizeof(data);
+                size_t size = sizeof(T);
                 ASSERT(offset >= 0 && offset + size <= m_length);
-                std::memcpy(&data, static_cast<const char*>(m_pointer) + offset, size);
+                std::memcpy(data, static_cast<const char*>(m_pointer) + offset, size);
         }
 };
 
-class Buffer final
+template <typename T>
+std::enable_if_t<!is_vector<T> && !is_array<T>> map_and_write_to_buffer(const Buffer& buffer, unsigned long long offset,
+                                                                        const T& data)
 {
-        BufferHandle m_buffer;
-        unsigned long long m_size;
-        GLbitfield m_flags;
+        opengl::BufferMapper map(buffer, offset, sizeof(T), GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_RANGE_BIT);
+        map.write(data);
+}
 
-public:
-        Buffer(unsigned long long size, GLbitfield flags) : m_size(size), m_flags(flags)
-        {
-                glNamedBufferStorage(m_buffer, m_size, nullptr, m_flags);
-        }
-
-        template <typename T, typename = std::enable_if_t<sizeof(std::declval<T>().size()) && sizeof(std::declval<T>().data())>>
-        explicit Buffer(const T& data, GLbitfield flags) : m_size(storage_size(data)), m_flags(flags)
-        {
-                glNamedBufferStorage(m_buffer, m_size, data.data(), m_flags);
-        }
-
-        unsigned long long size() const
-        {
-                return m_size;
-        }
-
-        GLbitfield flags() const
-        {
-                return m_flags;
-        }
-
-        operator GLuint() const
-        {
-                return m_buffer;
-        }
-};
-
-class UniformBuffer final
+template <typename T>
+std::enable_if_t<!is_vector<T> && !is_array<T>> map_and_write_to_buffer(const Buffer& buffer, const T& data)
 {
-        BufferHandle m_buffer;
-        GLsizeiptr m_data_size;
+        opengl::BufferMapper map(buffer, 0, sizeof(T), GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
+        map.write(data);
+}
 
-        void copy_to(GLintptr offset, const void* data, GLsizeiptr data_size) const;
-
-public:
-        explicit UniformBuffer(GLsizeiptr data_size);
-
-        void bind(GLuint point) const;
-
-        GLsizeiptr size() const;
-
-        template <typename T>
-        void copy(GLintptr offset, const T& data) const
-        {
-                copy_to(offset, &data, sizeof(data));
-        }
-
-        template <typename T>
-        void copy(const T& data) const
-        {
-                ASSERT(size() == sizeof(data));
-
-                copy_to(0, &data, sizeof(data));
-        }
-};
-
-class StorageBuffer final
+template <typename T>
+std::enable_if_t<is_vector<T> || is_array<T>> map_and_write_to_buffer(const Buffer& buffer, const T& data)
 {
-        BufferHandle m_buffer;
-        GLsizeiptr m_data_size;
+        opengl::BufferMapper map(buffer, 0, storage_size(data), GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
+        map.write(data);
+}
 
-        void copy_to(GLintptr offset, const void* data, GLsizeiptr data_size) const;
-        void copy_from(GLintptr offset, void* data, GLsizeiptr data_size) const;
+template <typename T>
+std::enable_if_t<!is_vector<T> && !is_array<T>> map_and_read_from_buffer(const Buffer& buffer, T* data)
+{
+        opengl::BufferMapper map(buffer, 0, sizeof(T), GL_MAP_READ_BIT);
+        map.read(data);
+}
 
-public:
-        explicit StorageBuffer(GLsizeiptr data_size);
-
-        template <typename T, typename = std::enable_if_t<sizeof(std::declval<T>().size()) && sizeof(std::declval<T>().data())>>
-        explicit StorageBuffer(const T& data) : StorageBuffer(storage_size(data))
-        {
-                write(data);
-        }
-
-        void bind(GLuint point) const;
-
-        GLsizeiptr size() const;
-
-        template <typename T>
-        std::enable_if_t<is_vector<T> || is_array<T>> write(const T& data) const
-        {
-                copy_to(0, data.data(), storage_size(data));
-        }
-
-        template <typename T>
-        std::enable_if_t<!is_vector<T> && !is_array<T>> write(const T& data) const
-        {
-                ASSERT(size() == sizeof(data));
-                copy_to(0, &data, sizeof(data));
-        }
-
-        template <typename T>
-        std::enable_if_t<is_vector<T> || is_array<T>> read(T* data) const
-        {
-                copy_from(0, data->data(), storage_size(*data));
-        }
-
-        template <typename T>
-        std::enable_if_t<!is_vector<T> && !is_array<T>> read(T* data) const
-        {
-                copy_from(0, data, sizeof(T));
-        }
-};
+template <typename T>
+std::enable_if_t<is_vector<T> || is_array<T>> map_and_read_from_buffer(const Buffer& buffer, T* data)
+{
+        opengl::BufferMapper map(buffer, 0, storage_size(*data), GL_MAP_READ_BIT);
+        map.read(data);
+}
 
 class VertexArray final
 {

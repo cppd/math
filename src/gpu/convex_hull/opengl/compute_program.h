@@ -27,11 +27,11 @@ class ConvexHullProgramPrepare final
         static constexpr int LINES_BINDING = 0;
 
         opengl::ComputeProgram m_program;
-        const opengl::StorageBuffer* m_lines = nullptr;
+        const opengl::Buffer* m_lines = nullptr;
         unsigned m_height;
 
 public:
-        ConvexHullProgramPrepare(const opengl::Texture& objects, const opengl::StorageBuffer& lines);
+        ConvexHullProgramPrepare(const opengl::Texture& objects, const opengl::Buffer& lines);
 
         void exec() const;
 };
@@ -43,10 +43,10 @@ class ConvexHullProgramMerge final
         static constexpr int LINES_BINDING = 0;
 
         opengl::ComputeProgram m_program;
-        const opengl::StorageBuffer* m_lines = nullptr;
+        const opengl::Buffer* m_lines = nullptr;
 
 public:
-        ConvexHullProgramMerge(unsigned height, const opengl::StorageBuffer& lines);
+        ConvexHullProgramMerge(unsigned height, const opengl::Buffer& lines);
 
         void exec() const;
 };
@@ -60,13 +60,13 @@ class ConvexHullProgramFilter final
         static constexpr int POINT_COUNT_BINDING = 2;
 
         opengl::ComputeProgram m_program;
-        const opengl::StorageBuffer* m_lines = nullptr;
-        const opengl::StorageBuffer* m_points = nullptr;
-        const opengl::StorageBuffer* m_point_count = nullptr;
+        const opengl::Buffer* m_lines = nullptr;
+        const opengl::Buffer* m_points = nullptr;
+        const opengl::Buffer* m_point_count = nullptr;
 
 public:
-        ConvexHullProgramFilter(unsigned height, const opengl::StorageBuffer& lines, const opengl::StorageBuffer& points,
-                                const opengl::StorageBuffer& point_count);
+        ConvexHullProgramFilter(unsigned height, const opengl::Buffer& lines, const opengl::Buffer& points,
+                                const opengl::Buffer& point_count);
 
         void exec() const;
 };

@@ -47,9 +47,9 @@ class ShaderMemory final
         static constexpr int POINTS_FLOW_BINDING = 1;
         static constexpr int DATA_BINDING = 2;
 
-        const opengl::StorageBuffer* m_points = nullptr;
-        const opengl::StorageBuffer* m_points_flow = nullptr;
-        opengl::UniformBuffer m_buffer;
+        const opengl::Buffer* m_points = nullptr;
+        const opengl::Buffer* m_points_flow = nullptr;
+        opengl::Buffer m_buffer;
 
         struct Data
         {
@@ -57,22 +57,22 @@ class ShaderMemory final
         };
 
 public:
-        ShaderMemory() : m_buffer(sizeof(Data))
+        ShaderMemory() : m_buffer(sizeof(Data), GL_MAP_WRITE_BIT)
         {
         }
 
         void set_matrix(const mat4& matrix) const
         {
                 decltype(Data().matrix) m = transpose(to_matrix<float>(matrix));
-                m_buffer.copy(offsetof(Data, matrix), m);
+                opengl::map_and_write_to_buffer(m_buffer, offsetof(Data, matrix), m);
         }
 
-        void set_points(const opengl::StorageBuffer& buffer)
+        void set_points(const opengl::Buffer& buffer)
         {
                 m_points = &buffer;
         }
 
-        void set_points_flow(const opengl::StorageBuffer& buffer)
+        void set_points_flow(const opengl::Buffer& buffer)
         {
                 m_points_flow = &buffer;
         }
@@ -81,9 +81,9 @@ public:
         {
                 ASSERT(m_points && m_points_flow);
 
-                m_points->bind(POINTS_BINDING);
-                m_points_flow->bind(POINTS_FLOW_BINDING);
-                m_buffer.bind(DATA_BINDING);
+                glBindBufferBase(GL_SHADER_STORAGE_BUFFER, POINTS_BINDING, *m_points);
+                glBindBufferBase(GL_SHADER_STORAGE_BUFFER, POINTS_FLOW_BINDING, *m_points_flow);
+                glBindBufferBase(GL_UNIFORM_BUFFER, DATA_BINDING, m_buffer);
         }
 };
 
@@ -137,8 +137,8 @@ class Impl final : public OpticalFlowShow
         std::optional<opengl::GraphicsProgram> m_draw_prog;
         std::optional<opengl::GraphicsProgram> m_draw_prog_debug;
 
-        std::optional<opengl::StorageBuffer> m_top_points;
-        std::optional<opengl::StorageBuffer> m_top_points_flow;
+        std::optional<opengl::Buffer> m_top_points;
+        std::optional<opengl::Buffer> m_top_points_flow;
 
         std::optional<ShaderMemory> m_shader_memory;
 
@@ -226,8 +226,8 @@ public:
                 // m_draw_prog_debug.emplace(opengl::VertexShader(optical_flow_show_debug_vert()),
                 //                          opengl::FragmentShader(optical_flow_show_debug_frag()));
 
-                m_top_points.emplace(points);
-                m_top_points_flow.emplace(points.size() * sizeof(vec2f));
+                m_top_points.emplace(points, 0);
+                m_top_points_flow.emplace(points.size() * sizeof(vec2f), 0);
 
                 m_shader_memory.emplace();
                 m_shader_memory->set_matrix(matrix);

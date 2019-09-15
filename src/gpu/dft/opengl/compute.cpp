@@ -73,10 +73,10 @@ template <typename T>
 class DeviceMemory final
 {
         size_t m_size;
-        opengl::StorageBuffer m_buffer;
+        opengl::Buffer m_buffer;
 
 public:
-        DeviceMemory(int size) : m_size(size), m_buffer(size * sizeof(T))
+        DeviceMemory(int size) : m_size(size), m_buffer(size * sizeof(T), GL_MAP_WRITE_BIT | GL_MAP_READ_BIT)
         {
         }
 
@@ -86,7 +86,7 @@ public:
                 {
                         error("Storage size error");
                 }
-                m_buffer.write(data);
+                opengl::map_and_write_to_buffer(m_buffer, data);
         }
 
         void read(std::vector<T>* data) const
@@ -95,10 +95,10 @@ public:
                 {
                         error("Storage size error");
                 }
-                m_buffer.read(data);
+                opengl::map_and_read_from_buffer(m_buffer, data);
         }
 
-        operator const opengl::StorageBuffer&() const
+        operator const opengl::Buffer&() const
         {
                 return m_buffer;
         }

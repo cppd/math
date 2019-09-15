@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/print.h"
 #include "gpu/convex_hull/com/com.h"
+#include "graphics/opengl/functions.h"
 #include "graphics/opengl/query.h"
 
 #include <string>
@@ -79,7 +80,7 @@ std::string filter_source(int height)
 }
 }
 
-ConvexHullProgramPrepare::ConvexHullProgramPrepare(const opengl::Texture& objects, const opengl::StorageBuffer& lines)
+ConvexHullProgramPrepare::ConvexHullProgramPrepare(const opengl::Texture& objects, const opengl::Buffer& lines)
         : m_program(opengl::ComputeShader(prepare_source(objects.width(), objects.height()))),
           m_lines(&lines),
           m_height(objects.height())
@@ -91,36 +92,36 @@ ConvexHullProgramPrepare::ConvexHullProgramPrepare(const opengl::Texture& object
 
 void ConvexHullProgramPrepare::exec() const
 {
-        m_lines->bind(LINES_BINDING);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, LINES_BINDING, *m_lines);
         m_program.dispatch_compute(m_height, 1, 1);
 }
 
 //
 
-ConvexHullProgramMerge::ConvexHullProgramMerge(unsigned height, const opengl::StorageBuffer& lines)
+ConvexHullProgramMerge::ConvexHullProgramMerge(unsigned height, const opengl::Buffer& lines)
         : m_program(opengl::ComputeShader(merge_source(height))), m_lines(&lines)
 {
 }
 
 void ConvexHullProgramMerge::exec() const
 {
-        m_lines->bind(LINES_BINDING);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, LINES_BINDING, *m_lines);
         m_program.dispatch_compute(2, 1, 1);
 }
 
 //
 
-ConvexHullProgramFilter::ConvexHullProgramFilter(unsigned height, const opengl::StorageBuffer& lines,
-                                                 const opengl::StorageBuffer& points, const opengl::StorageBuffer& point_count)
+ConvexHullProgramFilter::ConvexHullProgramFilter(unsigned height, const opengl::Buffer& lines, const opengl::Buffer& points,
+                                                 const opengl::Buffer& point_count)
         : m_program(opengl::ComputeShader(filter_source(height))), m_lines(&lines), m_points(&points), m_point_count(&point_count)
 {
 }
 
 void ConvexHullProgramFilter::exec() const
 {
-        m_lines->bind(LINES_BINDING);
-        m_points->bind(POINTS_BINDING);
-        m_point_count->bind(POINT_COUNT_BINDING);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, LINES_BINDING, *m_lines);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, POINTS_BINDING, *m_points);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, POINT_COUNT_BINDING, *m_point_count);
         m_program.dispatch_compute(1, 1, 1);
 }
 }

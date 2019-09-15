@@ -38,12 +38,12 @@ class DftProgramBitReverse final
 
         const int m_group_size;
         opengl::ComputeProgram m_bit_reverse;
-        opengl::UniformBuffer m_shader_memory;
+        opengl::Buffer m_shader_memory;
 
 public:
         DftProgramBitReverse(int group_size);
 
-        void exec(int max_threads, int n_mask, int n_bits, const opengl::StorageBuffer& data) const;
+        void exec(int max_threads, int n_mask, int n_bits, const opengl::Buffer& data) const;
 };
 
 template <typename T>
@@ -63,13 +63,12 @@ class DftProgramFftGlobal final
 
         const int m_group_size;
         opengl::ComputeProgram m_fft;
-        opengl::UniformBuffer m_shader_memory;
+        opengl::Buffer m_shader_memory;
 
 public:
         DftProgramFftGlobal(int group_size);
 
-        void exec(int max_threads, bool inverse, T two_pi_div_m, int n_div_2_mask, int m_div_2,
-                  const opengl::StorageBuffer& data) const;
+        void exec(int max_threads, bool inverse, T two_pi_div_m, int n_div_2_mask, int m_div_2, const opengl::Buffer& data) const;
 };
 
 template <typename T>
@@ -85,7 +84,7 @@ class DftProgramCopyInput final
 public:
         DftProgramCopyInput(vec2i group_size, int n1, int n2);
 
-        void copy(const GLuint64 tex, const opengl::StorageBuffer& data);
+        void copy(const GLuint64 tex, const opengl::Buffer& data);
 };
 
 template <typename T>
@@ -103,12 +102,12 @@ class DftProgramCopyOutput final
 
         const vec2i m_group_count;
         opengl::ComputeProgram m_copy_output;
-        opengl::UniformBuffer m_shader_memory;
+        opengl::Buffer m_shader_memory;
 
 public:
         DftProgramCopyOutput(vec2i group_size, int n1, int n2);
 
-        void copy(T to_mul, const GLuint64 tex, const opengl::StorageBuffer& data);
+        void copy(T to_mul, const GLuint64 tex, const opengl::Buffer& data);
 };
 
 template <typename T>
@@ -131,18 +130,18 @@ class DftProgramMul final
         opengl::ComputeProgram m_rows_from_buffer;
         opengl::ComputeProgram m_columns_to_buffer;
         opengl::ComputeProgram m_columns_from_buffer;
-        opengl::UniformBuffer m_shader_memory;
+        opengl::Buffer m_shader_memory;
 
-        void set_and_bind(bool inverse, const opengl::StorageBuffer& data, const opengl::StorageBuffer& buffer) const;
+        void set_and_bind(bool inverse, const opengl::Buffer& data, const opengl::Buffer& buffer) const;
 
 public:
         DftProgramMul(vec2i group_size, int n1, int n2, int m1, int m2);
 
         // Функции подстановки переменных, формулы 13.4, 13.27, 13.28, 13.32.
-        void rows_to_buffer(bool inverse, const opengl::StorageBuffer& data, const opengl::StorageBuffer& buffer) const;
-        void rows_from_buffer(bool inverse, const opengl::StorageBuffer& data, const opengl::StorageBuffer& buffer) const;
-        void columns_to_buffer(bool inverse, const opengl::StorageBuffer& data, const opengl::StorageBuffer& buffer) const;
-        void columns_from_buffer(bool inverse, const opengl::StorageBuffer& data, const opengl::StorageBuffer& buffer) const;
+        void rows_to_buffer(bool inverse, const opengl::Buffer& data, const opengl::Buffer& buffer) const;
+        void rows_from_buffer(bool inverse, const opengl::Buffer& data, const opengl::Buffer& buffer) const;
+        void columns_to_buffer(bool inverse, const opengl::Buffer& data, const opengl::Buffer& buffer) const;
+        void columns_from_buffer(bool inverse, const opengl::Buffer& data, const opengl::Buffer& buffer) const;
 };
 
 template <typename T>
@@ -160,15 +159,15 @@ class DftProgramMulD final
 
         const vec2i m_row_groups, m_column_groups;
         opengl::ComputeProgram m_mul_d;
-        opengl::UniformBuffer m_memory_rows;
-        opengl::UniformBuffer m_memory_columns;
+        opengl::Buffer m_memory_rows;
+        opengl::Buffer m_memory_columns;
 
 public:
         DftProgramMulD(vec2i group_size, int n1, int n2, int m1, int m2);
 
         // Умножение на диагональ, формулы 13.20, 13.30.
-        void rows_mul_d(const opengl::StorageBuffer& d, const opengl::StorageBuffer& data) const;
-        void columns_mul_d(const opengl::StorageBuffer& d, const opengl::StorageBuffer& data) const;
+        void rows_mul_d(const opengl::Buffer& d, const opengl::Buffer& data) const;
+        void columns_mul_d(const opengl::Buffer& d, const opengl::Buffer& data) const;
 };
 
 template <typename T>
@@ -185,7 +184,7 @@ class DftProgramFftShared final
 
         const int m_n, m_n_bits, m_shared_size;
         opengl::ComputeProgram m_fft;
-        opengl::UniformBuffer m_shader_memory;
+        opengl::Buffer m_shader_memory;
 
 public:
         DftProgramFftShared(int n, int shared_size, int group_size, bool reverse_input);
@@ -205,6 +204,6 @@ public:
                 return m_shared_size;
         }
 
-        void exec(bool inverse, int data_size, const opengl::StorageBuffer& data) const;
+        void exec(bool inverse, int data_size, const opengl::Buffer& data) const;
 };
 }

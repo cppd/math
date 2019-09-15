@@ -39,30 +39,30 @@ class TextShaderMemory final
                 vec3f text_color;
         };
 
-        opengl::UniformBuffer m_matrices;
-        opengl::UniformBuffer m_drawing;
+        opengl::Buffer m_matrices;
+        opengl::Buffer m_drawing;
 
 public:
-        TextShaderMemory() : m_matrices(sizeof(Matrices)), m_drawing(sizeof(Drawing))
+        TextShaderMemory() : m_matrices(sizeof(Matrices), GL_MAP_WRITE_BIT), m_drawing(sizeof(Drawing), GL_MAP_WRITE_BIT)
         {
         }
 
         void set_matrix(const mat4& matrix) const
         {
                 decltype(Matrices().matrix) m = transpose(to_matrix<float>(matrix));
-                m_matrices.copy(offsetof(Matrices, matrix), m);
+                opengl::map_and_write_to_buffer(m_matrices, offsetof(Matrices, matrix), m);
         }
 
         void set_color(const Color& color) const
         {
                 decltype(Drawing().text_color) c = color.to_rgb_vector<float>();
-                m_drawing.copy(offsetof(Drawing, text_color), c);
+                opengl::map_and_write_to_buffer(m_drawing, offsetof(Drawing, text_color), c);
         }
 
         void bind() const
         {
-                m_matrices.bind(MATRICES_BINDING);
-                m_drawing.bind(DRAWING_BINDING);
+                glBindBufferBase(GL_UNIFORM_BUFFER, MATRICES_BINDING, m_matrices);
+                glBindBufferBase(GL_UNIFORM_BUFFER, DRAWING_BINDING, m_drawing);
         }
 };
 }

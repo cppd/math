@@ -31,9 +31,9 @@ class RendererTrianglesMemory final
         static constexpr int LIGHTING_BINDING = 1;
         static constexpr int DRAWING_BINDING = 2;
 
-        opengl::UniformBuffer m_matrices;
-        opengl::UniformBuffer m_lighting;
-        opengl::UniformBuffer m_drawing;
+        opengl::Buffer m_matrices;
+        opengl::Buffer m_lighting;
+        opengl::Buffer m_drawing;
 
         struct Matrices
         {
@@ -62,15 +62,18 @@ class RendererTrianglesMemory final
         };
 
 public:
-        RendererTrianglesMemory() : m_matrices(sizeof(Matrices)), m_lighting(sizeof(Lighting)), m_drawing(sizeof(Drawing))
+        RendererTrianglesMemory()
+                : m_matrices(sizeof(Matrices), GL_MAP_WRITE_BIT),
+                  m_lighting(sizeof(Lighting), GL_MAP_WRITE_BIT),
+                  m_drawing(sizeof(Drawing), GL_MAP_WRITE_BIT)
         {
         }
 
         void bind() const
         {
-                m_matrices.bind(MATRICES_BINDING);
-                m_lighting.bind(LIGHTING_BINDING);
-                m_drawing.bind(DRAWING_BINDING);
+                glBindBufferBase(GL_UNIFORM_BUFFER, MATRICES_BINDING, m_matrices);
+                glBindBufferBase(GL_UNIFORM_BUFFER, LIGHTING_BINDING, m_lighting);
+                glBindBufferBase(GL_UNIFORM_BUFFER, DRAWING_BINDING, m_drawing);
         }
 
         void set_matrices(const mat4& matrix, const mat4& shadow_matrix) const
@@ -78,79 +81,79 @@ public:
                 Matrices matrices;
                 matrices.matrix = transpose(to_matrix<float>(matrix));
                 matrices.shadow_matrix = transpose(to_matrix<float>(shadow_matrix));
-                m_matrices.copy(matrices);
+                opengl::map_and_write_to_buffer(m_matrices, matrices);
         }
 
         void set_direction_to_light(const vec3& direction) const
         {
                 decltype(Lighting().direction_to_light) d = to_vector<float>(direction);
-                m_lighting.copy(offsetof(Lighting, direction_to_light), d);
+                opengl::map_and_write_to_buffer(m_lighting, offsetof(Lighting, direction_to_light), d);
         }
 
         void set_direction_to_camera(const vec3& direction) const
         {
                 decltype(Lighting().direction_to_camera) d = to_vector<float>(direction);
-                m_lighting.copy(offsetof(Lighting, direction_to_camera), d);
+                opengl::map_and_write_to_buffer(m_lighting, offsetof(Lighting, direction_to_camera), d);
         }
 
         void set_show_smooth(bool show) const
         {
                 decltype(Lighting().show_smooth) s = show ? 1 : 0;
-                m_lighting.copy(offsetof(Lighting, show_smooth), s);
+                opengl::map_and_write_to_buffer(m_lighting, offsetof(Lighting, show_smooth), s);
         }
 
         void set_default_color(const Color& color) const
         {
                 decltype(Drawing().default_color) c = color.to_rgb_vector<float>();
-                m_drawing.copy(offsetof(Drawing, default_color), c);
+                opengl::map_and_write_to_buffer(m_drawing, offsetof(Drawing, default_color), c);
         }
 
         void set_wireframe_color(const Color& color) const
         {
                 decltype(Drawing().wireframe_color) c = color.to_rgb_vector<float>();
-                m_drawing.copy(offsetof(Drawing, wireframe_color), c);
+                opengl::map_and_write_to_buffer(m_drawing, offsetof(Drawing, wireframe_color), c);
         }
 
         void set_default_ns(float default_ns) const
         {
                 decltype(Drawing().default_ns) d = default_ns;
-                m_drawing.copy(offsetof(Drawing, default_ns), d);
+                opengl::map_and_write_to_buffer(m_drawing, offsetof(Drawing, default_ns), d);
         }
 
         void set_light_a(const Color& color) const
         {
                 decltype(Drawing().light_a) c = color.to_rgb_vector<float>();
-                m_drawing.copy(offsetof(Drawing, light_a), c);
+                opengl::map_and_write_to_buffer(m_drawing, offsetof(Drawing, light_a), c);
         }
 
         void set_light_d(const Color& color) const
         {
                 decltype(Drawing().light_d) c = color.to_rgb_vector<float>();
-                m_drawing.copy(offsetof(Drawing, light_d), c);
+                opengl::map_and_write_to_buffer(m_drawing, offsetof(Drawing, light_d), c);
         }
 
         void set_light_s(const Color& color) const
         {
                 decltype(Drawing().light_s) c = color.to_rgb_vector<float>();
-                m_drawing.copy(offsetof(Drawing, light_s), c);
+                opengl::map_and_write_to_buffer(m_drawing, offsetof(Drawing, light_s), c);
         }
 
         void set_show_materials(bool show) const
         {
                 decltype(Drawing().show_materials) s = show ? 1 : 0;
-                m_drawing.copy(offsetof(Drawing, show_materials), s);
+                opengl::map_and_write_to_buffer(m_drawing, offsetof(Drawing, show_materials), s);
         }
 
         void set_show_wireframe(bool show) const
         {
                 decltype(Drawing().show_wireframe) s = show ? 1 : 0;
-                m_drawing.copy(offsetof(Drawing, show_wireframe), s);
+                opengl::map_and_write_to_buffer(m_drawing, offsetof(Drawing, show_wireframe), s);
         }
 
         void set_show_shadow(bool show) const
         {
                 decltype(Drawing().show_shadow) s = show ? 1 : 0;
-                m_drawing.copy(offsetof(Drawing, show_shadow), s);
+                opengl::map_and_write_to_buffer(m_drawing, offsetof(Drawing, show_shadow), s);
         }
 };
 
@@ -158,7 +161,7 @@ class RendererMaterialMemory final
 {
         static constexpr int MATERIALS_BINDING = 3;
 
-        std::vector<opengl::UniformBuffer> m_materials;
+        std::vector<opengl::Buffer> m_materials;
 
 public:
         struct Material
@@ -181,8 +184,7 @@ public:
                 m_materials.reserve(materials.size());
                 for (const Material& m : materials)
                 {
-                        m_materials.emplace_back(sizeof(Material));
-                        m_materials.back().copy(m);
+                        m_materials.emplace_back(sizeof(Material), &m, 0);
                 }
         }
 
@@ -194,7 +196,7 @@ public:
         void bind(unsigned index) const
         {
                 ASSERT(index < m_materials.size());
-                m_materials[index].bind(MATERIALS_BINDING);
+                glBindBufferBase(GL_UNIFORM_BUFFER, MATERIALS_BINDING, m_materials[index]);
         }
 };
 
@@ -203,8 +205,8 @@ class RendererPointsMemory final
         static constexpr int MATRICES_BINDING = 0;
         static constexpr int DRAWING_BINDING = 1;
 
-        opengl::UniformBuffer m_matrices;
-        opengl::UniformBuffer m_drawing;
+        opengl::Buffer m_matrices;
+        opengl::Buffer m_drawing;
 
         struct Matrices
         {
@@ -220,44 +222,44 @@ class RendererPointsMemory final
         };
 
 public:
-        RendererPointsMemory() : m_matrices(sizeof(Matrices)), m_drawing(sizeof(Drawing))
+        RendererPointsMemory() : m_matrices(sizeof(Matrices), GL_MAP_WRITE_BIT), m_drawing(sizeof(Drawing), GL_MAP_WRITE_BIT)
         {
         }
 
         void bind() const
         {
-                m_matrices.bind(MATRICES_BINDING);
-                m_drawing.bind(DRAWING_BINDING);
+                glBindBufferBase(GL_UNIFORM_BUFFER, MATRICES_BINDING, m_matrices);
+                glBindBufferBase(GL_UNIFORM_BUFFER, DRAWING_BINDING, m_drawing);
         }
 
         void set_matrix(const mat4& matrix) const
         {
                 decltype(Matrices().matrix) m = transpose(to_matrix<float>(matrix));
-                m_matrices.copy(offsetof(Matrices, matrix), m);
+                opengl::map_and_write_to_buffer(m_matrices, offsetof(Matrices, matrix), m);
         }
 
         void set_default_color(const Color& color) const
         {
                 decltype(Drawing().default_color) c = color.to_rgb_vector<float>();
-                m_drawing.copy(offsetof(Drawing, default_color), c);
+                opengl::map_and_write_to_buffer(m_drawing, offsetof(Drawing, default_color), c);
         }
 
         void set_background_color(const Color& color) const
         {
                 decltype(Drawing().background_color) c = color.to_rgb_vector<float>();
-                m_drawing.copy(offsetof(Drawing, background_color), c);
+                opengl::map_and_write_to_buffer(m_drawing, offsetof(Drawing, background_color), c);
         }
 
         void set_light_a(const Color& color) const
         {
                 decltype(Drawing().light_a) c = color.to_rgb_vector<float>();
-                m_drawing.copy(offsetof(Drawing, light_a), c);
+                opengl::map_and_write_to_buffer(m_drawing, offsetof(Drawing, light_a), c);
         }
 
         void set_show_fog(bool show) const
         {
                 decltype(Drawing().show_fog) s = show ? 1 : 0;
-                m_drawing.copy(offsetof(Drawing, show_fog), s);
+                opengl::map_and_write_to_buffer(m_drawing, offsetof(Drawing, show_fog), s);
         }
 };
 
@@ -265,7 +267,7 @@ class RendererShadowMemory final
 {
         static constexpr int MATRICES_BINDING = 0;
 
-        opengl::UniformBuffer m_matrices;
+        opengl::Buffer m_matrices;
 
         struct Matrices
         {
@@ -273,19 +275,19 @@ class RendererShadowMemory final
         };
 
 public:
-        RendererShadowMemory() : m_matrices(sizeof(Matrices))
+        RendererShadowMemory() : m_matrices(sizeof(Matrices), GL_MAP_WRITE_BIT)
         {
         }
 
         void bind() const
         {
-                m_matrices.bind(MATRICES_BINDING);
+                glBindBufferBase(GL_UNIFORM_BUFFER, MATRICES_BINDING, m_matrices);
         }
 
         void set_matrix(const mat4& matrix) const
         {
                 decltype(Matrices().matrix) m = transpose(to_matrix<float>(matrix));
-                m_matrices.copy(offsetof(Matrices, matrix), m);
+                opengl::map_and_write_to_buffer(m_matrices, offsetof(Matrices, matrix), m);
         }
 };
 }

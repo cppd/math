@@ -27,8 +27,8 @@ class ConvexHullShaderMemory final
         static constexpr int DATA_BINDING = 0;
         static constexpr int POINTS_BINDING = 1;
 
-        opengl::UniformBuffer m_buffer;
-        const opengl::StorageBuffer* m_points = nullptr;
+        opengl::Buffer m_data_buffer;
+        const opengl::Buffer* m_points = nullptr;
 
         struct Data
         {
@@ -41,7 +41,7 @@ public:
 
         void set_matrix(const mat4& matrix) const;
         void set_brightness(float brightness) const;
-        void set_points(const opengl::StorageBuffer& points);
+        void set_points(const opengl::Buffer& points);
 
         void bind() const;
 };

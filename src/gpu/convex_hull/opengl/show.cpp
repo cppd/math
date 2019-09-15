@@ -33,7 +33,7 @@ namespace
 class Impl final : public ConvexHullShow
 {
         opengl::GraphicsProgram m_draw_prog;
-        opengl::StorageBuffer m_points;
+        opengl::Buffer m_points;
         double m_start_time;
         std::unique_ptr<gpu_opengl::ConvexHullCompute> m_convex_hull;
         ConvexHullShaderMemory m_shader_memory;
@@ -57,7 +57,7 @@ class Impl final : public ConvexHullShow
 public:
         Impl(const opengl::Texture& objects, const mat4& matrix)
                 : m_draw_prog(opengl::VertexShader(convex_hull_show_vert()), opengl::FragmentShader(convex_hull_show_frag())),
-                  m_points(convex_hull_points_buffer_size(objects.height())),
+                  m_points(convex_hull_points_buffer_size(objects.height()), 0),
                   m_start_time(time_in_seconds())
         {
                 m_convex_hull = gpu_opengl::create_convex_hull_compute(objects, m_points);

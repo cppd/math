@@ -25,7 +25,7 @@ class OpticalFlowGrayscaleMemory final
 {
         static constexpr int IMAGES_BINDING = 0;
 
-        opengl::UniformBuffer m_buffer;
+        opengl::Buffer m_buffer;
 
         struct Images
         {
@@ -43,7 +43,7 @@ class OpticalFlowDownsampleMemory final
 {
         static constexpr int IMAGES_BINDING = 0;
 
-        opengl::UniformBuffer m_buffer;
+        opengl::Buffer m_buffer;
 
         struct Images
         {
@@ -61,7 +61,7 @@ class OpticalFlowSobelMemory final
 {
         static constexpr int IMAGES_BINDING = 0;
 
-        opengl::UniformBuffer m_buffer;
+        opengl::Buffer m_buffer;
 
         struct Images
         {
@@ -83,11 +83,11 @@ class OpticalFlowDataMemory final
         static constexpr int POINTS_FLOW_GUESS_BINDING = 2;
         static constexpr int DATA_BINDING = 3;
 
-        const opengl::StorageBuffer* m_top_points = nullptr;
-        const opengl::StorageBuffer* m_flow = nullptr;
-        const opengl::StorageBuffer* m_flow_guess = nullptr;
+        const opengl::Buffer* m_top_points = nullptr;
+        const opengl::Buffer* m_flow = nullptr;
+        const opengl::Buffer* m_flow_guess = nullptr;
 
-        opengl::UniformBuffer m_buffer;
+        opengl::Buffer m_buffer;
 
 public:
         struct Data
@@ -103,9 +103,9 @@ public:
 
         OpticalFlowDataMemory();
 
-        void set_top_points(const opengl::StorageBuffer* top_points);
-        void set_flow_guess(const opengl::StorageBuffer* flow_guess);
-        void set_flow(const opengl::StorageBuffer* flow);
+        void set_top_points(const opengl::Buffer* top_points);
+        void set_flow_guess(const opengl::Buffer* flow_guess);
+        void set_flow(const opengl::Buffer* flow);
         void set_data(const Data& data);
 
         void bind() const;
@@ -115,7 +115,7 @@ class OpticalFlowImagesMemory final
 {
         static constexpr int IMAGES_BINDING = 4;
 
-        opengl::UniformBuffer m_buffer;
+        opengl::Buffer m_buffer;
 
         struct Images
         {
