@@ -15,9 +15,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "command_buffer.h"
+#include "commands.h"
 
-#include "graphics/vulkan/error.h"
+#include "error.h"
 
 namespace vulkan
 {

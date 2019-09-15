@@ -17,8 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "objects.h"
+
 #include "com/span.h"
-#include "graphics/vulkan/objects.h"
 
 #include <array>
 #include <functional>

@@ -17,12 +17,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "render_buffer.h"
 
-#include "command_buffer.h"
 #include "render_pass.h"
 
 #include "com/error.h"
 #include "com/log.h"
 #include "graphics/vulkan/buffers.h"
+#include "graphics/vulkan/commands.h"
 #include "graphics/vulkan/create.h"
 #include "graphics/vulkan/error.h"
 #include "graphics/vulkan/pipeline.h"
