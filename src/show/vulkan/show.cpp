@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "show.h"
 
+#include "render_buffer.h"
+
 #include "com/error.h"
 #include "com/log.h"
 #include "com/matrix_alg.h"
@@ -29,7 +31,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "gpu/text/vulkan/show.h"
 #include "graphics/vulkan/instance.h"
 #include "graphics/vulkan/objects.h"
-#include "graphics/vulkan/render/render_buffer.h"
 #include "graphics/vulkan/sync.h"
 #include "show/com/camera.h"
 #include "show/com/event_queue.h"
@@ -66,6 +67,8 @@ constexpr VkFormat VULKAN_OBJECT_IMAGE_FORMAT = VK_FORMAT_R32_UINT;
 
 //
 
+namespace show_vulkan
+{
 namespace
 {
 std::vector<vulkan::PhysicalDeviceFeatures> device_features_sample_shading(int sample_count, bool sample_shading)
@@ -121,7 +124,7 @@ class Impl final : public Show, public WindowEvent
         std::unique_ptr<vulkan::VulkanInstance> m_instance;
         std::unique_ptr<vulkan::Semaphore> m_image_semaphore;
         std::unique_ptr<vulkan::Swapchain> m_swapchain;
-        std::unique_ptr<vulkan::RenderBuffers> m_render_buffers;
+        std::unique_ptr<RenderBuffers> m_render_buffers;
         std::unique_ptr<vulkan::StorageImage> m_object_image;
         std::unique_ptr<gpu_vulkan::Renderer> m_renderer;
         std::unique_ptr<gpu_vulkan::TextShow> m_text;
@@ -572,11 +575,11 @@ class Impl final : public Show, public WindowEvent
                         std::make_unique<vulkan::Swapchain>(m_instance->surface(), m_instance->device(), swapchain_family_indices,
                                                             VULKAN_SURFACE_FORMAT, VULKAN_PREFERRED_IMAGE_COUNT, m_present_mode);
 
-                constexpr vulkan::RenderBufferCount buffer_count = vulkan::RenderBufferCount::One;
+                constexpr RenderBufferCount buffer_count = RenderBufferCount::One;
 
-                m_render_buffers = vulkan::create_render_buffers(buffer_count, *m_swapchain, m_instance->graphics_command_pool(),
-                                                                 m_instance->graphics_queues()[0], m_instance->device(),
-                                                                 VULKAN_MINIMUM_SAMPLE_COUNT);
+                m_render_buffers = create_render_buffers(buffer_count, *m_swapchain, m_instance->graphics_command_pool(),
+                                                         m_instance->graphics_queues()[0], m_instance->device(),
+                                                         VULKAN_MINIMUM_SAMPLE_COUNT);
 
                 m_object_image = std::make_unique<vulkan::StorageImage>(
                         m_instance->device(), m_instance->graphics_command_pool(), m_instance->graphics_queues()[0],
@@ -757,8 +760,6 @@ public:
 };
 }
 
-namespace show_vulkan
-{
 std::unique_ptr<ShowObject> create_show_object(const ShowCreateInfo& info)
 {
         return std::make_unique<ShowThread<Impl>>(info);

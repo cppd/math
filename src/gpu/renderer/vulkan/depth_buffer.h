@@ -28,17 +28,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <unordered_set>
 #include <vector>
 
-namespace vulkan
+namespace gpu_vulkan
 {
-enum class DepthBufferCount
+struct RendererDepthBuffers
 {
-        One,
-        Swapchain
-};
-
-struct DepthBuffers
-{
-        virtual ~DepthBuffers() = default;
+        virtual ~RendererDepthBuffers() = default;
 
         virtual const vulkan::DepthAttachmentTexture* texture(unsigned index) const = 0;
 
@@ -54,7 +48,15 @@ struct DepthBuffers
                                            const std::vector<VkVertexInputAttributeDescription>& vertex_attribute) = 0;
 };
 
-std::unique_ptr<DepthBuffers> create_depth_buffers(DepthBufferCount buffer_count, const vulkan::Swapchain& swapchain,
-                                                   const std::unordered_set<uint32_t>& attachment_family_indices,
-                                                   VkCommandPool command_pool, const vulkan::Device& device, double zoom);
+enum class RendererDepthBufferCount
+{
+        One,
+        Swapchain
+};
+
+std::unique_ptr<RendererDepthBuffers> create_renderer_depth_buffers(RendererDepthBufferCount buffer_count,
+                                                                    const vulkan::Swapchain& swapchain,
+                                                                    const std::unordered_set<uint32_t>& attachment_family_indices,
+                                                                    VkCommandPool command_pool, const vulkan::Device& device,
+                                                                    double zoom);
 }

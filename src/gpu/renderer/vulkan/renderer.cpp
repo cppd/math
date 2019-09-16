@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "renderer.h"
 
+#include "depth_buffer.h"
 #include "draw_object.h"
 #include "sampler.h"
 #include "shader_memory.h"
@@ -34,7 +35,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/vulkan/error.h"
 #include "graphics/vulkan/query.h"
 #include "graphics/vulkan/queue.h"
-#include "graphics/vulkan/render/depth_buffer.h"
 
 #include <algorithm>
 #include <thread>
@@ -114,9 +114,9 @@ class Impl final : public Renderer
         vulkan::PipelineLayout m_shadow_pipeline_layout;
         vulkan::PipelineLayout m_points_pipeline_layout;
 
-        vulkan::RenderBuffers3D* m_render_buffers = nullptr;
+        RenderBuffers3D* m_render_buffers = nullptr;
         std::vector<VkCommandBuffer> m_render_command_buffers;
-        std::unique_ptr<vulkan::DepthBuffers> m_shadow_buffers;
+        std::unique_ptr<RendererDepthBuffers> m_shadow_buffers;
         std::vector<VkCommandBuffer> m_shadow_command_buffers;
 
         const vulkan::StorageImage* m_object_image = nullptr;
@@ -340,7 +340,7 @@ class Impl final : public Renderer
                 return !m_storage.object();
         }
 
-        void create_buffers(const vulkan::Swapchain* swapchain, vulkan::RenderBuffers3D* render_buffers,
+        void create_buffers(const vulkan::Swapchain* swapchain, RenderBuffers3D* render_buffers,
                             const vulkan::StorageImage* objects) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
@@ -421,9 +421,9 @@ class Impl final : public Renderer
 
                 //
 
-                constexpr vulkan::DepthBufferCount buffer_count = vulkan::DepthBufferCount::One;
-                m_shadow_buffers = vulkan::create_depth_buffers(buffer_count, *m_swapchain, {m_graphics_queue.family_index()},
-                                                                m_graphics_command_pool, m_device, m_shadow_zoom);
+                constexpr RendererDepthBufferCount buffer_count = RendererDepthBufferCount::One;
+                m_shadow_buffers = create_renderer_depth_buffers(buffer_count, *m_swapchain, {m_graphics_queue.family_index()},
+                                                                 m_graphics_command_pool, m_device, m_shadow_zoom);
 
                 m_triangles_shared_shader_memory.set_shadow_texture(m_shadow_sampler, m_shadow_buffers->texture(0));
 

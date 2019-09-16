@@ -18,24 +18,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "com/color/color.h"
-#include "graphics/vulkan/instance.h"
-#include "graphics/vulkan/objects.h"
 #include "graphics/vulkan/shader.h"
-#include "graphics/vulkan/swapchain.h"
 
 #include <functional>
-#include <memory>
 #include <optional>
 #include <vector>
 
-namespace vulkan
+namespace gpu_vulkan
 {
-enum class RenderBufferCount
-{
-        One,
-        Swapchain
-};
-
 class RenderBuffers3D
 {
 protected:
@@ -72,21 +62,4 @@ public:
                                            const std::vector<VkVertexInputBindingDescription>& vertex_binding,
                                            const std::vector<VkVertexInputAttributeDescription>& vertex_attribute) = 0;
 };
-
-struct RenderBuffers
-{
-        virtual ~RenderBuffers() = default;
-
-        virtual RenderBuffers3D& buffers_3d() = 0;
-        virtual RenderBuffers2D& buffers_2d() = 0;
-
-        virtual VkSemaphore resolve_to_swapchain(const vulkan::Queue& graphics_queue, VkSemaphore swapchain_image_semaphore,
-                                                 VkSemaphore wait_semaphore, unsigned image_index) const = 0;
-        virtual VkSemaphore resolve_to_texture(const vulkan::Queue& graphics_queue, VkSemaphore wait_semaphore,
-                                               unsigned image_index) const = 0;
-};
-
-std::unique_ptr<RenderBuffers> create_render_buffers(RenderBufferCount buffer_count, const vulkan::Swapchain& swapchain,
-                                                     const vulkan::CommandPool& command_pool, const vulkan::Queue& queue,
-                                                     const vulkan::Device& device, int required_minimum_sample_count);
 }

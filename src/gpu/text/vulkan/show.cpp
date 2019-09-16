@@ -109,7 +109,7 @@ class Impl final : public TextShow
         std::optional<vulkan::BufferWithMemory> m_vertex_buffer;
         vulkan::BufferWithMemory m_indirect_buffer;
 
-        vulkan::RenderBuffers2D* m_render_buffers = nullptr;
+        RenderBuffers2D* m_render_buffers = nullptr;
         std::vector<VkCommandBuffer> m_command_buffers;
         VkPipeline m_pipeline = VK_NULL_HANDLE;
 
@@ -141,7 +141,7 @@ class Impl final : public TextShow
                 vkCmdDrawIndirect(command_buffer, m_indirect_buffer, 0, 1, sizeof(VkDrawIndirectCommand));
         }
 
-        void create_buffers(vulkan::RenderBuffers2D* render_buffers, const mat4& matrix) override
+        void create_buffers(RenderBuffers2D* render_buffers, const mat4& matrix) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 

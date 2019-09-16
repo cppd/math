@@ -69,11 +69,11 @@ class Impl final : public ConvexHullShow
         std::optional<vulkan::BufferWithMemory> m_points;
         vulkan::BufferWithMemory m_indirect_buffer;
 
-        vulkan::RenderBuffers2D* m_render_buffers = nullptr;
+        RenderBuffers2D* m_render_buffers = nullptr;
         std::vector<VkCommandBuffer> m_command_buffers;
         VkPipeline m_pipeline = VK_NULL_HANDLE;
 
-        std::unique_ptr<gpu_vulkan::ConvexHullCompute> m_compute;
+        std::unique_ptr<ConvexHullCompute> m_compute;
 
         void reset_timer() override
         {
@@ -94,8 +94,7 @@ class Impl final : public ConvexHullShow
                 vkCmdDrawIndirect(command_buffer, m_indirect_buffer, 0, 1, sizeof(VkDrawIndirectCommand));
         }
 
-        void create_buffers(vulkan::RenderBuffers2D* render_buffers, const mat4& matrix,
-                            const vulkan::StorageImage& objects) override
+        void create_buffers(RenderBuffers2D* render_buffers, const mat4& matrix, const vulkan::StorageImage& objects) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
@@ -180,7 +179,7 @@ public:
                   m_indirect_buffer(m_instance.device(), {m_family_index},
                                     VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT,
                                     draw_indirect_command_data()),
-                  m_compute(gpu_vulkan::create_convex_hull_compute(instance))
+                  m_compute(create_convex_hull_compute(instance))
         {
         }
 

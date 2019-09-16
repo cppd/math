@@ -20,8 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/color/color.h"
 #include "com/font/text_data.h"
 #include "com/matrix.h"
+#include "gpu/vulkan_interfaces.h"
 #include "graphics/vulkan/instance.h"
-#include "graphics/vulkan/render/render_buffer.h"
 
 #include <memory>
 #include <vulkan/vulkan.h>
@@ -36,7 +36,7 @@ struct TextShow
 
         virtual void set_color(const Color& color) const = 0;
 
-        virtual void create_buffers(vulkan::RenderBuffers2D* render_buffers, const mat4& matrix) = 0;
+        virtual void create_buffers(RenderBuffers2D* render_buffers, const mat4& matrix) = 0;
         virtual void delete_buffers() = 0;
 
         virtual VkSemaphore draw(const vulkan::Queue& queue, VkSemaphore wait_semaphore, unsigned image_index,

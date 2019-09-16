@@ -147,20 +147,20 @@ void delete_buffers(std::list<vulkan::CommandBuffers>* command_buffers, std::vec
         error_fatal("Command buffers not found");
 }
 
-unsigned compute_buffer_count(vulkan::RenderBufferCount buffer_count, const vulkan::Swapchain& swapchain)
+unsigned compute_buffer_count(show_vulkan::RenderBufferCount buffer_count, const vulkan::Swapchain& swapchain)
 {
         switch (buffer_count)
         {
-        case vulkan::RenderBufferCount::One:
+        case show_vulkan::RenderBufferCount::One:
                 return 1;
-        case vulkan::RenderBufferCount::Swapchain:
+        case show_vulkan::RenderBufferCount::Swapchain:
                 ASSERT(swapchain.image_views().size() > 0);
                 return swapchain.image_views().size();
         }
         error_fatal("Error render buffer count");
 }
 
-class Impl3D : public vulkan::RenderBuffers3D
+class Impl3D : public gpu_vulkan::RenderBuffers3D
 {
         virtual std::vector<VkCommandBuffer> create_command_buffers_3d(
                 const Color& clear_color,
@@ -202,7 +202,7 @@ protected:
         ~Impl3D() override = default;
 };
 
-class Impl2D : public vulkan::RenderBuffers2D
+class Impl2D : public gpu_vulkan::RenderBuffers2D
 {
         virtual std::vector<VkCommandBuffer> create_command_buffers_2d(
                 const std::optional<std::function<void(VkCommandBuffer buffer)>>& before_render_pass_commands,
@@ -242,7 +242,7 @@ protected:
         ~Impl2D() override = default;
 };
 
-class Impl final : public vulkan::RenderBuffers, public Impl3D, public Impl2D
+class Impl final : public show_vulkan::RenderBuffers, public Impl3D, public Impl2D
 {
         const vulkan::Device& m_device;
         VkFormat m_swapchain_format;
@@ -326,16 +326,18 @@ class Impl final : public vulkan::RenderBuffers, public Impl3D, public Impl2D
                                       const std::vector<VkVertexInputAttributeDescription>& vertex_attribute) override;
 
 public:
-        Impl(vulkan::RenderBufferCount buffer_count, const vulkan::Swapchain& swapchain, const vulkan::CommandPool& command_pool,
-             const vulkan::Queue& queue, const vulkan::Device& device, int required_minimum_sample_count);
+        Impl(show_vulkan::RenderBufferCount buffer_count, const vulkan::Swapchain& swapchain,
+             const vulkan::CommandPool& command_pool, const vulkan::Queue& queue, const vulkan::Device& device,
+             int required_minimum_sample_count);
 
         Impl(const Impl&) = delete;
         Impl& operator=(const Impl&) = delete;
         Impl& operator=(Impl&&) = delete;
 };
 
-Impl::Impl(vulkan::RenderBufferCount buffer_count, const vulkan::Swapchain& swapchain, const vulkan::CommandPool& command_pool,
-           const vulkan::Queue& queue, const vulkan::Device& device, int required_minimum_sample_count)
+Impl::Impl(show_vulkan::RenderBufferCount buffer_count, const vulkan::Swapchain& swapchain,
+           const vulkan::CommandPool& command_pool, const vulkan::Queue& queue, const vulkan::Device& device,
+           int required_minimum_sample_count)
         : m_device(device),
           m_swapchain_format(swapchain.format()),
           m_swapchain_color_space(swapchain.color_space()),
@@ -367,12 +369,12 @@ Impl::Impl(vulkan::RenderBufferCount buffer_count, const vulkan::Swapchain& swap
         LOG(buffer_info(m_color_attachments, m_depth_attachments));
 }
 
-vulkan::RenderBuffers3D& Impl::buffers_3d()
+gpu_vulkan::RenderBuffers3D& Impl::buffers_3d()
 {
         return *this;
 }
 
-vulkan::RenderBuffers2D& Impl::buffers_2d()
+gpu_vulkan::RenderBuffers2D& Impl::buffers_2d()
 {
         return *this;
 }
@@ -381,10 +383,6 @@ void Impl::create_color_buffer_rendering(unsigned buffer_count, const vulkan::Sw
                                          VkSampleCountFlagBits sample_count,
                                          const std::unordered_set<uint32_t>& attachment_family_indices)
 {
-        namespace impl = vulkan_render_implementation;
-
-        //
-
         for (unsigned i = 0; i < buffer_count; ++i)
         {
                 m_color_attachments.emplace_back(m_device, attachment_family_indices, swapchain.format(), sample_count,
@@ -416,7 +414,7 @@ void Impl::create_color_buffer_rendering(unsigned buffer_count, const vulkan::Sw
 
         //
 
-        m_render_pass_depth = impl::render_pass_color_depth(m_device, swapchain.format(), depth_format, sample_count);
+        m_render_pass_depth = show_vulkan::render_pass_color_depth(m_device, swapchain.format(), depth_format, sample_count);
 
         attachments.resize(2);
         for (unsigned i = 0; i < buffer_count; ++i)
@@ -430,7 +428,7 @@ void Impl::create_color_buffer_rendering(unsigned buffer_count, const vulkan::Sw
 
         //
 
-        m_render_pass = impl::render_pass_color(m_device, swapchain.format(), sample_count);
+        m_render_pass = show_vulkan::render_pass_color(m_device, swapchain.format(), sample_count);
 
         attachments.resize(1);
         for (unsigned i = 0; i < buffer_count; ++i)
@@ -443,7 +441,7 @@ void Impl::create_color_buffer_rendering(unsigned buffer_count, const vulkan::Sw
 
         //
 
-        m_resolve_render_pass = impl::render_pass_swapchain_color(m_device, swapchain.format(), sample_count);
+        m_resolve_render_pass = show_vulkan::render_pass_swapchain_color(m_device, swapchain.format(), sample_count);
 
         attachments.resize(2);
         for (unsigned i = 0; i < swapchain.image_views().size(); ++i)
@@ -801,7 +799,7 @@ VkPipeline Impl::create_pipeline_2d(VkPrimitiveTopology primitive_topology, bool
 }
 }
 
-namespace vulkan
+namespace show_vulkan
 {
 std::unique_ptr<RenderBuffers> create_render_buffers(RenderBufferCount buffer_count, const vulkan::Swapchain& swapchain,
                                                      const vulkan::CommandPool& command_pool, const vulkan::Queue& queue,
