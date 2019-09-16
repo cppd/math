@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "draw_object.h"
 
+#include "com/container.h"
 #include "com/error.h"
 #include "gpu/com/glsl.h"
 #include "obj/alg/alg.h"
@@ -109,7 +110,7 @@ std::unique_ptr<opengl::Buffer> load_face_vertices(const Obj<3>& obj, const std:
                 vertices.emplace_back(v2, n2, t2);
         }
 
-        return std::make_unique<opengl::Buffer>(vertices, 0);
+        return std::make_unique<opengl::Buffer>(data_size(vertices), 0, vertices);
 }
 
 std::unique_ptr<opengl::Buffer> load_line_vertices(const Obj<3>& obj)
@@ -129,7 +130,7 @@ std::unique_ptr<opengl::Buffer> load_line_vertices(const Obj<3>& obj)
                 }
         }
 
-        return std::make_unique<opengl::Buffer>(vertices, 0);
+        return std::make_unique<opengl::Buffer>(data_size(vertices), 0, vertices);
 }
 
 std::unique_ptr<opengl::Buffer> load_point_vertices(const Obj<3>& obj)
@@ -146,7 +147,7 @@ std::unique_ptr<opengl::Buffer> load_point_vertices(const Obj<3>& obj)
                 vertices.emplace_back(obj_vertices[point.vertex]);
         }
 
-        return std::make_unique<opengl::Buffer>(vertices, 0);
+        return std::make_unique<opengl::Buffer>(data_size(vertices), 0, vertices);
 }
 
 std::vector<opengl::Texture> load_textures(const Obj<3>& obj)

@@ -184,7 +184,7 @@ public:
                 m_materials.reserve(materials.size());
                 for (const Material& m : materials)
                 {
-                        m_materials.emplace_back(m, 0);
+                        m_materials.emplace_back(sizeof(m), 0, m);
                 }
         }
 

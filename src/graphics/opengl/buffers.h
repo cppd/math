@@ -42,9 +42,13 @@ public:
         {
         }
 
-        template <typename T, typename = std::enable_if_t<std::is_class_v<T>>>
-        Buffer(const T& data, GLbitfield flags) : Buffer(data_size(data), data_pointer(data), flags)
+        template <typename T>
+        Buffer(unsigned long long size, GLbitfield flags, const T& data) : Buffer(size, data_pointer(data), flags)
         {
+                if (size != data_size(data))
+                {
+                        error("Buffer size and data size are not equal");
+                }
         }
 
         unsigned long long size() const;

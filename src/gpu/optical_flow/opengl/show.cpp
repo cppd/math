@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "compute.h"
 #include "shader_source.h"
 
+#include "com/container.h"
 #include "com/conversion.h"
 #include "com/error.h"
 #include "com/time.h"
@@ -226,7 +227,7 @@ public:
                 // m_draw_prog_debug.emplace(opengl::VertexShader(optical_flow_show_debug_vert()),
                 //                          opengl::FragmentShader(optical_flow_show_debug_frag()));
 
-                m_top_points.emplace(points, 0);
+                m_top_points.emplace(data_size(points), 0, points);
                 m_top_points_flow.emplace(points.size() * sizeof(vec2f), 0);
 
                 m_shader_memory.emplace();

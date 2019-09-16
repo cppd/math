@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "compute.h"
 #include "shader_source.h"
 
+#include "com/container.h"
 #include "com/math.h"
 #include "graphics/opengl/buffers.h"
 #include "graphics/opengl/shader.h"
@@ -153,7 +154,7 @@ public:
                 vertices[2] = {to_vector<float>(matrix * vec4(x0, y1, 0, 1)), {0, 0}};
                 vertices[3] = {to_vector<float>(matrix * vec4(x1, y1, 0, 1)), {1, 0}};
 
-                m_vertex_buffer = std::make_unique<opengl::Buffer>(vertices, 0);
+                m_vertex_buffer = std::make_unique<opengl::Buffer>(data_size(vertices), 0, vertices);
 
                 m_vertex_array.attrib(0, 4, GL_FLOAT, *m_vertex_buffer, offsetof(Vertex, v), sizeof(Vertex));
                 m_vertex_array.attrib(1, 2, GL_FLOAT, *m_vertex_buffer, offsetof(Vertex, t), sizeof(Vertex));
