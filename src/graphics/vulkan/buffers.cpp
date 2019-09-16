@@ -422,16 +422,16 @@ vulkan::ImageView create_image_view(VkDevice device, VkImage image, VkFormat for
 
 namespace vulkan
 {
-void BufferWithMemory::write(VkDeviceSize data_size, const void* data) const
+void BufferWithMemory::write(VkDeviceSize size, const void* data) const
 {
         ASSERT(data && host_visible());
 
         BufferMapper map(*this);
-        map.write(0, data, data_size);
+        map.write(0, data, size);
 }
 
 void BufferWithMemory::write(const Device& device, const CommandPool& transfer_command_pool, const Queue& transfer_queue,
-                             const std::unordered_set<uint32_t>& family_indices, VkDeviceSize data_size, const void* data) const
+                             const std::unordered_set<uint32_t>& family_indices, VkDeviceSize size, const void* data) const
 {
         ASSERT(data && !host_visible() && usage(VK_BUFFER_USAGE_TRANSFER_DST_BIT));
 
@@ -444,19 +444,19 @@ void BufferWithMemory::write(const Device& device, const CommandPool& transfer_c
                 error("Transfer family index not found in buffer family indices");
         }
 
-        staging_buffer_copy(device, transfer_command_pool, transfer_queue, m_buffer, data_size, data);
+        staging_buffer_copy(device, transfer_command_pool, transfer_queue, m_buffer, size, data);
 }
 
 BufferWithMemory::BufferWithMemory(BufferMemoryType memory_type, const Device& device,
                                    const std::unordered_set<uint32_t>& family_indices, VkBufferUsageFlags usage,
-                                   VkDeviceSize data_size)
-        : m_buffer(create_buffer(device, data_size, usage, family_indices)),
+                                   VkDeviceSize size)
+        : m_buffer(create_buffer(device, size, usage, family_indices)),
           m_memory_properties(memory_type == BufferMemoryType::HostVisible ?
                                       (VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT) :
                                       (VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)),
           m_device_memory(create_device_memory(device, m_buffer, m_memory_properties))
 {
-        ASSERT(data_size > 0);
+        ASSERT(size > 0);
 }
 
 BufferWithMemory::operator VkBuffer() const

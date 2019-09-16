@@ -178,7 +178,7 @@ public:
                                                                    {m_shader_memory.descriptor_set_layout()})),
                   m_indirect_buffer(m_instance.device(), {m_family_index},
                                     VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT,
-                                    draw_indirect_command_data()),
+                                    sizeof(VkDrawIndirectCommand), draw_indirect_command_data()),
                   m_compute(create_convex_hull_compute(instance))
         {
         }

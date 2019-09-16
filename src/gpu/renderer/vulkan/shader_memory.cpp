@@ -321,7 +321,7 @@ RendererTrianglesMaterialMemory::RendererTrianglesMaterialMemory(const vulkan::D
                 bindings.clear();
                 {
                         m_uniform_buffers.emplace_back(device, family_indices, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-                                                       materials[i].material);
+                                                       sizeof(Material), materials[i].material);
 
                         VkDescriptorBufferInfo buffer_info = {};
                         buffer_info.buffer = m_uniform_buffers.back();

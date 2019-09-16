@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "shader_memory.h"
 #include "shader_vertex.h"
 
+#include "com/container.h"
 #include "com/error.h"
 #include "graphics/vulkan/buffers.h"
 #include "obj/alg/alg.h"
@@ -109,7 +110,7 @@ std::unique_ptr<vulkan::BufferWithMemory> load_vertices(const vulkan::Device& de
         ASSERT((vertices.size() >= 3) && (vertices.size() % 3 == 0));
 
         return std::make_unique<vulkan::BufferWithMemory>(device, transfer_command_pool, transfer_queue, family_indices,
-                                                          VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, vertices);
+                                                          VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, data_size(vertices), vertices);
 }
 
 std::unique_ptr<vulkan::BufferWithMemory> load_point_vertices(const vulkan::Device& device,
@@ -135,7 +136,7 @@ std::unique_ptr<vulkan::BufferWithMemory> load_point_vertices(const vulkan::Devi
         }
 
         return std::make_unique<vulkan::BufferWithMemory>(device, transfer_command_pool, transfer_queue, family_indices,
-                                                          VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, vertices);
+                                                          VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, data_size(vertices), vertices);
 }
 
 std::unique_ptr<vulkan::BufferWithMemory> load_line_vertices(const vulkan::Device& device,
@@ -164,7 +165,7 @@ std::unique_ptr<vulkan::BufferWithMemory> load_line_vertices(const vulkan::Devic
         }
 
         return std::make_unique<vulkan::BufferWithMemory>(device, transfer_command_pool, transfer_queue, family_indices,
-                                                          VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, vertices);
+                                                          VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, data_size(vertices), vertices);
 }
 
 std::vector<vulkan::ColorTexture> load_textures(const vulkan::Device& device, const vulkan::CommandPool& graphics_command_pool,

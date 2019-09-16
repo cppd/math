@@ -45,29 +45,38 @@ class BufferWithMemory final
         VkMemoryPropertyFlags m_memory_properties;
         DeviceMemory m_device_memory;
 
-        void write(VkDeviceSize data_size, const void* data) const;
+        void write(VkDeviceSize size, const void* data) const;
         void write(const Device& device, const CommandPool& transfer_command_pool, const Queue& transfer_queue,
-                   const std::unordered_set<uint32_t>& family_indices, VkDeviceSize data_size, const void* data) const;
+                   const std::unordered_set<uint32_t>& family_indices, VkDeviceSize size, const void* data) const;
 
 public:
         BufferWithMemory(BufferMemoryType memory_type, const Device& device, const std::unordered_set<uint32_t>& family_indices,
-                         VkBufferUsageFlags usage, VkDeviceSize data_size);
+                         VkBufferUsageFlags usage, VkDeviceSize size);
 
         template <typename T>
         BufferWithMemory(const Device& device, const std::unordered_set<uint32_t>& family_indices, VkBufferUsageFlags usage,
-                         const T& data)
-                : BufferWithMemory(BufferMemoryType::HostVisible, device, family_indices, usage, data_size(data))
+                         VkDeviceSize size, const T& data)
+                : BufferWithMemory(BufferMemoryType::HostVisible, device, family_indices, usage, size)
         {
-                write(data_size(data), data_pointer(data));
+                if (size != data_size(data))
+                {
+                        error("Buffer size and data size are not equal");
+                }
+                write(size, data_pointer(data));
         }
 
         template <typename T>
         BufferWithMemory(const Device& device, const CommandPool& transfer_command_pool, const Queue& transfer_queue,
-                         const std::unordered_set<uint32_t>& family_indices, VkBufferUsageFlags usage, const T& data)
+                         const std::unordered_set<uint32_t>& family_indices, VkBufferUsageFlags usage, VkDeviceSize size,
+                         const T& data)
                 : BufferWithMemory(BufferMemoryType::DeviceLocal, device, family_indices,
-                                   usage | VK_BUFFER_USAGE_TRANSFER_DST_BIT, data_size(data))
+                                   usage | VK_BUFFER_USAGE_TRANSFER_DST_BIT, size)
         {
-                write(device, transfer_command_pool, transfer_queue, family_indices, data_size(data), data_pointer(data));
+                if (size != data_size(data))
+                {
+                        error("Buffer size and data size are not equal");
+                }
+                write(device, transfer_command_pool, transfer_queue, family_indices, size, data_pointer(data));
         }
 
         BufferWithMemory(const BufferWithMemory&) = delete;
