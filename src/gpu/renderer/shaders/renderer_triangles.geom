@@ -37,6 +37,12 @@ layout(location = 0) in VS
 }
 vs[3];
 
+in gl_PerVertex
+{
+        vec4 gl_Position;
+}
+gl_in[3];
+
 layout(location = 0) out GS
 {
         vec3 normal;
