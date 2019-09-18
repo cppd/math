@@ -175,61 +175,41 @@ void map_and_read_from_buffer(const BufferWithMemory& buffer, T* data)
         map.read(data);
 }
 
-class ColorTexture final
+class ImageWithMemory final
 {
         VkFormat m_format;
         Image m_image;
         DeviceMemory m_device_memory;
         ImageView m_image_view;
+        unsigned m_width, m_height;
+        VkImageUsageFlags m_usage;
 
 public:
-        ColorTexture(const Device& device, const CommandPool& graphics_command_pool, const Queue& graphics_queue,
-                     const CommandPool& transfer_command_pool, const Queue& transfer_queue,
-                     const std::unordered_set<uint32_t>& family_indices, uint32_t width, uint32_t height,
-                     const Span<const std::uint_least8_t>& srgb_uint8_rgba_pixels);
+        ImageWithMemory(const Device& device, const CommandPool& graphics_command_pool, const Queue& graphics_queue,
+                        const CommandPool& transfer_command_pool, const Queue& transfer_queue,
+                        const std::unordered_set<uint32_t>& family_indices, const std::vector<VkFormat>& format_candidates,
+                        uint32_t width, uint32_t height, const Span<const std::uint_least8_t>& srgb_pixels);
 
-        ColorTexture(const Device& device, const CommandPool& graphics_command_pool, const Queue& graphics_queue,
-                     const std::unordered_set<uint32_t>& family_indices, VkFormat format, uint32_t width, uint32_t height);
+        ImageWithMemory(const Device& device, const CommandPool& graphics_command_pool, const Queue& graphics_queue,
+                        const std::unordered_set<uint32_t>& family_indices, const std::vector<VkFormat>& format_candidates,
+                        uint32_t width, uint32_t height);
 
-        ColorTexture(const ColorTexture&) = delete;
-        ColorTexture& operator=(const ColorTexture&) = delete;
-        ColorTexture& operator=(ColorTexture&&) = delete;
+        ImageWithMemory(const ImageWithMemory&) = delete;
+        ImageWithMemory& operator=(const ImageWithMemory&) = delete;
+        ImageWithMemory& operator=(ImageWithMemory&&) = delete;
 
-        ColorTexture(ColorTexture&&) = default;
-        ~ColorTexture() = default;
+        ImageWithMemory(ImageWithMemory&&) = default;
+        ~ImageWithMemory() = default;
 
         //
 
         VkImage image() const;
         VkFormat format() const;
         VkImageView image_view() const;
-};
+        VkImageUsageFlags usage() const;
 
-class GrayscaleTexture final
-{
-        VkFormat m_format;
-        Image m_image;
-        DeviceMemory m_device_memory;
-        ImageView m_image_view;
-
-public:
-        GrayscaleTexture(const Device& device, const CommandPool& graphics_command_pool, const Queue& graphics_queue,
-                         const CommandPool& transfer_command_pool, const Queue& transfer_queue,
-                         const std::unordered_set<uint32_t>& family_indices, uint32_t width, uint32_t height,
-                         const Span<const std::uint_least8_t>& srgb_uint8_grayscale_pixels);
-
-        GrayscaleTexture(const GrayscaleTexture&) = delete;
-        GrayscaleTexture& operator=(const GrayscaleTexture&) = delete;
-        GrayscaleTexture& operator=(GrayscaleTexture&&) = delete;
-
-        GrayscaleTexture(GrayscaleTexture&&) = default;
-        ~GrayscaleTexture() = default;
-
-        //
-
-        VkImage image() const;
-        VkFormat format() const;
-        VkImageView image_view() const;
+        unsigned width() const;
+        unsigned height() const;
 };
 
 class DepthAttachment final

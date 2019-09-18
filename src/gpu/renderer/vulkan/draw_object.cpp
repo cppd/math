@@ -28,6 +28,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <array>
 #include <unordered_set>
 
+// clang-format off
+constexpr std::initializer_list<VkFormat> COLOR_IMAGE_FORMATS =
+{
+        VK_FORMAT_R8G8B8A8_SRGB,
+        VK_FORMAT_R16G16B16A16_UNORM,
+        VK_FORMAT_R32G32B32A32_SFLOAT
+};
+// clang-format on
+
 namespace gpu_vulkan
 {
 // Число используется в шейдере для определения наличия текстурных координат
@@ -168,25 +177,25 @@ std::unique_ptr<vulkan::BufferWithMemory> load_line_vertices(const vulkan::Devic
                                                           VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, data_size(vertices), vertices);
 }
 
-std::vector<vulkan::ColorTexture> load_textures(const vulkan::Device& device, const vulkan::CommandPool& graphics_command_pool,
-                                                const vulkan::Queue& graphics_queue,
-                                                const vulkan::CommandPool& transfer_command_pool,
-                                                const vulkan::Queue& transfer_queue,
-                                                const std::unordered_set<uint32_t>& family_indices, const Obj<3>& obj)
+std::vector<vulkan::ImageWithMemory> load_textures(const vulkan::Device& device, const vulkan::CommandPool& graphics_command_pool,
+                                                   const vulkan::Queue& graphics_queue,
+                                                   const vulkan::CommandPool& transfer_command_pool,
+                                                   const vulkan::Queue& transfer_queue,
+                                                   const std::unordered_set<uint32_t>& family_indices, const Obj<3>& obj)
 {
-        std::vector<vulkan::ColorTexture> textures;
+        std::vector<vulkan::ImageWithMemory> textures;
 
         for (const typename Obj<3>::Image& image : obj.images())
         {
                 textures.emplace_back(device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue,
-                                      family_indices, image.size[0], image.size[1], image.srgba_pixels);
+                                      family_indices, COLOR_IMAGE_FORMATS, image.size[0], image.size[1], image.srgba_pixels);
         }
 
         // На одну текстуру больше для её указания, но не использования в тех материалах, где нет текстуры
         std::vector<std::uint_least8_t> pixels = {/*0*/ 0, 0, 0, 0, /*1*/ 0, 0, 0, 0,
                                                   /*2*/ 0, 0, 0, 0, /*3*/ 0, 0, 0, 0};
         textures.emplace_back(device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue,
-                              family_indices, 2, 2, pixels);
+                              family_indices, COLOR_IMAGE_FORMATS, 2, 2, pixels);
 
         return textures;
 }
@@ -195,13 +204,13 @@ std::unique_ptr<RendererTrianglesMaterialMemory> load_materials(const vulkan::De
                                                                 const std::unordered_set<uint32_t>& family_indices,
                                                                 VkSampler sampler, VkDescriptorSetLayout descriptor_set_layout,
                                                                 const Obj<3>& obj,
-                                                                const std::vector<vulkan::ColorTexture>& textures)
+                                                                const std::vector<vulkan::ImageWithMemory>& textures)
 {
         // Текстур имеется больше на одну для её использования в тех материалах, где нет текстуры
 
         ASSERT(textures.size() == obj.images().size() + 1);
 
-        const vulkan::ColorTexture* const no_texture = &textures.back();
+        const vulkan::ImageWithMemory* const no_texture = &textures.back();
 
         std::vector<RendererTrianglesMaterialMemory::MaterialAndTexture> materials;
         materials.reserve(obj.materials().size() + 1);
@@ -257,7 +266,7 @@ std::unique_ptr<RendererTrianglesMaterialMemory> load_materials(const vulkan::De
 class DrawObject::Triangles final
 {
         std::unique_ptr<vulkan::BufferWithMemory> m_vertex_buffer;
-        std::vector<vulkan::ColorTexture> m_textures;
+        std::vector<vulkan::ImageWithMemory> m_textures;
         std::unique_ptr<RendererTrianglesMaterialMemory> m_shader_memory;
         unsigned m_vertex_count;
 

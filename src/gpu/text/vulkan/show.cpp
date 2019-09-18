@@ -47,6 +47,12 @@ constexpr int VERTEX_BUFFER_FIRST_SIZE = 10;
 constexpr std::initializer_list<vulkan::PhysicalDeviceFeatures> REQUIRED_DEVICE_FEATURES =
 {
 };
+constexpr std::initializer_list<VkFormat> GRAYSCALE_IMAGE_FORMATS =
+{
+        VK_FORMAT_R8_SRGB,
+        VK_FORMAT_R16_UNORM,
+        VK_FORMAT_R32_SFLOAT
+};
 // clang-format on
 
 namespace gpu_vulkan
@@ -96,7 +102,7 @@ class Impl final : public TextShow
         vulkan::Semaphore m_signal_semaphore;
 
         vulkan::Sampler m_sampler;
-        vulkan::GrayscaleTexture m_glyph_texture;
+        vulkan::ImageWithMemory m_glyph_texture;
         std::unordered_map<char32_t, FontGlyph> m_glyphs;
 
         TextMemory m_shader_memory;
@@ -229,7 +235,7 @@ class Impl final : public TextShow
                   m_sampler(create_text_sampler(m_device)),
                   m_glyph_texture(m_device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue,
                                   std::unordered_set({graphics_queue.family_index(), transfer_queue.family_index()}),
-                                  glyphs.width(), glyphs.height(), std::move(glyphs.pixels())),
+                                  GRAYSCALE_IMAGE_FORMATS, glyphs.width(), glyphs.height(), std::move(glyphs.pixels())),
                   m_glyphs(std::move(glyphs.glyphs())),
                   m_shader_memory(m_device, std::unordered_set({graphics_queue.family_index()}), m_sampler, &m_glyph_texture),
                   m_text_vert(m_device, text_vert(), "main"),

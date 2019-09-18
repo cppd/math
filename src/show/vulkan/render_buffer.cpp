@@ -268,7 +268,7 @@ class Impl final : public show_vulkan::RenderBuffers, public Impl3D, public Impl
         std::vector<VkCommandBuffer> m_resolve_command_buffers;
         std::vector<vulkan::Semaphore> m_resolve_signal_semaphores;
 
-        std::vector<vulkan::ColorTexture> m_textures;
+        std::vector<vulkan::ImageWithMemory> m_textures;
         vulkan::CommandBuffers m_textures_command_buffers;
         std::vector<vulkan::Semaphore> m_textures_signal_semaphores;
 
@@ -466,8 +466,8 @@ void Impl::create_textures(unsigned buffer_count, const vulkan::Swapchain& swapc
 
         for (unsigned i = 0; i < buffer_count; ++i)
         {
-                m_textures.emplace_back(m_device, m_command_pool, queue, family_indices, swapchain.format(), swapchain.width(),
-                                        swapchain.height());
+                m_textures.emplace_back(m_device, m_command_pool, queue, family_indices,
+                                        std::vector<VkFormat>({swapchain.format()}), swapchain.width(), swapchain.height());
 
                 m_textures_signal_semaphores.emplace_back(m_device);
         }

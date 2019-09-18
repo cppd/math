@@ -63,7 +63,7 @@ class TextMemory final
 
 public:
         TextMemory(const vulkan::Device& device, const std::unordered_set<uint32_t>& family_indices, VkSampler sampler,
-                   const vulkan::GrayscaleTexture* texture);
+                   const vulkan::ImageWithMemory* texture);
 
         TextMemory(const TextMemory&) = delete;
         TextMemory& operator=(const TextMemory&) = delete;

@@ -324,6 +324,15 @@ void cmd_transition_texture_layout(VkCommandBuffer command_buffer, VkImage image
                 source_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
                 destination_stage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
         }
+        else if (old_layout == VK_IMAGE_LAYOUT_UNDEFINED &&
+                 (new_layout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL || new_layout == VK_IMAGE_LAYOUT_GENERAL))
+        {
+                barrier.srcAccessMask = 0;
+                barrier.dstAccessMask = 0;
+
+                source_stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+                destination_stage = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+        }
         else
         {
                 error("Unsupported texture layout transition");
@@ -417,6 +426,25 @@ vulkan::ImageView create_image_view(VkDevice device, VkImage image, VkFormat for
         create_info.subresourceRange.layerCount = 1;
 
         return vulkan::ImageView(device, create_info);
+}
+
+template <typename T>
+void check_color_buffer_size(const T& pixels, unsigned width, unsigned height)
+{
+        if (pixels.size() != 4ull * width * height)
+        {
+                error("Wrong RGBA pixel component count " + to_string(pixels.size()) + " for image dimensions width " +
+                      to_string(width) + " and height " + to_string(height));
+        }
+}
+template <typename T>
+void check_grayscale_buffer_size(const T& pixels, unsigned width, unsigned height)
+{
+        if (pixels.size() != 1ull * width * height)
+        {
+                error("Wrong grayscale pixel component count " + to_string(pixels.size()) + " for image dimensions width " +
+                      to_string(width) + " and height " + to_string(height));
+        }
 }
 }
 
@@ -519,211 +547,157 @@ BufferMapper::~BufferMapper()
 
 //
 
-ColorTexture::ColorTexture(const Device& device, const CommandPool& graphics_command_pool, const Queue& graphics_queue,
-                           const CommandPool& transfer_command_pool, const Queue& transfer_queue,
-                           const std::unordered_set<uint32_t>& family_indices, uint32_t width, uint32_t height,
-                           const Span<const std::uint_least8_t>& srgb_uint8_rgba_pixels)
+// VkFormat
+// {VK_FORMAT_R8G8B8A8_SRGB, VK_FORMAT_R16G16B16A16_UNORM, VK_FORMAT_R32G32B32A32_SFLOAT}
+// {VK_FORMAT_R8_SRGB, VK_FORMAT_R16_UNORM, VK_FORMAT_R32_SFLOAT}
+ImageWithMemory::ImageWithMemory(const Device& device, const CommandPool& graphics_command_pool, const Queue& graphics_queue,
+                                 const CommandPool& transfer_command_pool, const Queue& transfer_queue,
+                                 const std::unordered_set<uint32_t>& family_indices,
+                                 const std::vector<VkFormat>& format_candidates, uint32_t width, uint32_t height,
+                                 const Span<const std::uint_least8_t>& srgb_pixels)
 {
         ASSERT(graphics_command_pool.family_index() == graphics_queue.family_index());
         ASSERT(transfer_command_pool.family_index() == transfer_queue.family_index());
 
         if (family_indices.count(graphics_queue.family_index()) == 0)
         {
-                error("Graphics family index not found in color texture family indices");
+                error("Graphics family index not found in the texture family indices");
         }
         if (family_indices.count(transfer_queue.family_index()) == 0)
         {
-                error("Transfer family index not found in color texture family indices");
+                error("Transfer family index not found in the texture family indices");
         }
 
-        if (srgb_uint8_rgba_pixels.size() != 4ull * width * height)
-        {
-                error("Wrong RGBA pixel component count " + to_string(srgb_uint8_rgba_pixels.size()) +
-                      " for image dimensions width " + to_string(width) + " and height " + to_string(height));
-        }
-
-        std::vector<VkFormat> candidates = {VK_FORMAT_R8G8B8A8_SRGB, VK_FORMAT_R16G16B16A16_UNORM, VK_FORMAT_R32G32B32A32_SFLOAT};
         VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
         VkFormatFeatureFlags features = VK_FORMAT_FEATURE_TRANSFER_DST_BIT | VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT;
-        VkImageUsageFlags usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+        m_usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
         VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT;
 
-        m_format = find_supported_2d_image_format(device.physical_device(), candidates, tiling, features, usage, samples);
-        m_image = create_2d_image(device, width, height, m_format, family_indices, samples, tiling, usage);
+        m_format =
+                find_supported_2d_image_format(device.physical_device(), format_candidates, tiling, features, m_usage, samples);
+        m_image = create_2d_image(device, width, height, m_format, family_indices, samples, tiling, m_usage);
         m_device_memory = create_device_memory(device, m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
         m_image_view = create_image_view(device, m_image, m_format, VK_IMAGE_ASPECT_COLOR_BIT);
 
-        constexpr VkImageLayout image_layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        m_width = width;
+        m_height = height;
 
-        if (m_format == VK_FORMAT_R16G16B16A16_UNORM)
+        const VkImageLayout image_layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wswitch-enum"
+        switch (m_format)
         {
+        case VK_FORMAT_R16G16B16A16_UNORM:
+        {
+                check_color_buffer_size(srgb_pixels, width, height);
+                const std::vector<uint16_t> buffer = color_conversion::rgba_pixels_from_srgb_uint8_to_rgb_uint16(srgb_pixels);
+                staging_image_copy(device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, m_image,
+                                   image_layout, width, height, buffer);
+                break;
+        }
+        case VK_FORMAT_R32G32B32A32_SFLOAT:
+        {
+                check_color_buffer_size(srgb_pixels, width, height);
+                const std::vector<float> buffer = color_conversion::rgba_pixels_from_srgb_uint8_to_rgb_float(srgb_pixels);
+                staging_image_copy(device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, m_image,
+                                   image_layout, width, height, buffer);
+                break;
+        }
+        case VK_FORMAT_R8G8B8A8_SRGB:
+        {
+                check_color_buffer_size(srgb_pixels, width, height);
+                staging_image_copy(device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, m_image,
+                                   image_layout, width, height, srgb_pixels);
+                break;
+        }
+        case VK_FORMAT_R16_UNORM:
+        {
+                check_grayscale_buffer_size(srgb_pixels, width, height);
                 const std::vector<uint16_t> buffer =
-                        color_conversion::rgba_pixels_from_srgb_uint8_to_rgb_uint16(srgb_uint8_rgba_pixels);
-
+                        color_conversion::grayscale_pixels_from_srgb_uint8_to_rgb_uint16(srgb_pixels);
                 staging_image_copy(device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, m_image,
                                    image_layout, width, height, buffer);
+                break;
         }
-        else if (m_format == VK_FORMAT_R32G32B32A32_SFLOAT)
+        case VK_FORMAT_R32_SFLOAT:
         {
-                const std::vector<float> buffer =
-                        color_conversion::rgba_pixels_from_srgb_uint8_to_rgb_float(srgb_uint8_rgba_pixels);
-
+                check_grayscale_buffer_size(srgb_pixels, width, height);
+                const std::vector<float> buffer = color_conversion::grayscale_pixels_from_srgb_uint8_to_rgb_float(srgb_pixels);
                 staging_image_copy(device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, m_image,
                                    image_layout, width, height, buffer);
+                break;
         }
-        else if (m_format == VK_FORMAT_R8G8B8A8_SRGB)
+        case VK_FORMAT_R8_SRGB:
         {
+                check_grayscale_buffer_size(srgb_pixels, width, height);
                 staging_image_copy(device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, m_image,
-                                   image_layout, width, height, srgb_uint8_rgba_pixels);
+                                   image_layout, width, height, srgb_pixels);
+                break;
         }
-        else
-        {
+        default:
                 error("Unsupported texture image format " + format_to_string(m_format));
         }
+#pragma GCC diagnostic pop
 }
 
-ColorTexture::ColorTexture(const Device& device, const CommandPool& graphics_command_pool, const Queue& graphics_queue,
-                           const std::unordered_set<uint32_t>& family_indices, VkFormat format, uint32_t width, uint32_t height)
+ImageWithMemory::ImageWithMemory(const Device& device, const CommandPool& graphics_command_pool, const Queue& graphics_queue,
+                                 const std::unordered_set<uint32_t>& family_indices,
+                                 const std::vector<VkFormat>& format_candidates, uint32_t width, uint32_t height)
 {
         ASSERT(graphics_command_pool.family_index() == graphics_queue.family_index());
 
         if (family_indices.count(graphics_queue.family_index()) == 0)
         {
-                error("Graphics family index not found in color texture family indices");
+                error("Graphics family index not found in the texture family indices");
         }
 
-        std::vector<VkFormat> candidates = {format};
         VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
         VkFormatFeatureFlags features = VK_FORMAT_FEATURE_TRANSFER_DST_BIT | VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT;
-        VkImageUsageFlags usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+        m_usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
         VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT;
 
-        m_format = find_supported_2d_image_format(device.physical_device(), candidates, tiling, features, usage, samples);
-        m_image = create_2d_image(device, width, height, m_format, family_indices, samples, tiling, usage);
+        m_format =
+                find_supported_2d_image_format(device.physical_device(), format_candidates, tiling, features, m_usage, samples);
+        m_image = create_2d_image(device, width, height, m_format, family_indices, samples, tiling, m_usage);
         m_device_memory = create_device_memory(device, m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
         m_image_view = create_image_view(device, m_image, m_format, VK_IMAGE_ASPECT_COLOR_BIT);
 
-        //
+        m_width = width;
+        m_height = height;
 
-        vulkan::CommandBuffer command_buffer(device, graphics_command_pool);
-        begin_commands(command_buffer);
-
-        VkImageMemoryBarrier barrier = {};
-
-        barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        barrier.image = m_image;
-        barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        barrier.subresourceRange.baseMipLevel = 0;
-        barrier.subresourceRange.levelCount = 1;
-        barrier.subresourceRange.baseArrayLayer = 0;
-        barrier.subresourceRange.layerCount = 1;
-
-        barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        barrier.srcAccessMask = 0;
-        barrier.dstAccessMask = 0;
-
-        vkCmdPipelineBarrier(command_buffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, 0, 0,
-                             nullptr, 0, nullptr, 1, &barrier);
-
-        end_commands(graphics_queue, command_buffer);
+        transition_texture_layout(device, graphics_command_pool, graphics_queue, m_image, VK_IMAGE_LAYOUT_UNDEFINED,
+                                  VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 }
 
-VkImage ColorTexture::image() const
+VkImage ImageWithMemory::image() const
 {
         return m_image;
 }
 
-VkFormat ColorTexture::format() const
+VkFormat ImageWithMemory::format() const
 {
         return m_format;
 }
 
-VkImageView ColorTexture::image_view() const
+VkImageView ImageWithMemory::image_view() const
 {
         return m_image_view;
 }
 
-//
-
-GrayscaleTexture::GrayscaleTexture(const Device& device, const CommandPool& graphics_command_pool, const Queue& graphics_queue,
-                                   const CommandPool& transfer_command_pool, const Queue& transfer_queue,
-                                   const std::unordered_set<uint32_t>& family_indices, uint32_t width, uint32_t height,
-                                   const Span<const std::uint_least8_t>& srgb_uint8_grayscale_pixels)
+VkImageUsageFlags ImageWithMemory::usage() const
 {
-        ASSERT(graphics_command_pool.family_index() == graphics_queue.family_index());
-        ASSERT(transfer_command_pool.family_index() == transfer_queue.family_index());
-
-        if (family_indices.count(graphics_queue.family_index()) == 0)
-        {
-                error("Graphics family index not found in grayscale texture family indices");
-        }
-        if (family_indices.count(transfer_queue.family_index()) == 0)
-        {
-                error("Transfer family index not found in grayscale texture family indices");
-        }
-
-        if (srgb_uint8_grayscale_pixels.size() != 1ull * width * height)
-        {
-                error("Wrong grayscale pixel component count " + to_string(srgb_uint8_grayscale_pixels.size()) +
-                      " for image dimensions width " + to_string(width) + " and height " + to_string(height));
-        }
-
-        std::vector<VkFormat> candidates = {VK_FORMAT_R8_SRGB, VK_FORMAT_R16_UNORM, VK_FORMAT_R32_SFLOAT};
-        VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
-        VkFormatFeatureFlags features = VK_FORMAT_FEATURE_TRANSFER_DST_BIT | VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT;
-        VkImageUsageFlags usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-        VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT;
-
-        m_format = find_supported_2d_image_format(device.physical_device(), candidates, tiling, features, usage, samples);
-        m_image = create_2d_image(device, width, height, m_format, family_indices, samples, tiling, usage);
-        m_device_memory = create_device_memory(device, m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-        m_image_view = create_image_view(device, m_image, m_format, VK_IMAGE_ASPECT_COLOR_BIT);
-
-        constexpr VkImageLayout image_layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-
-        if (m_format == VK_FORMAT_R16_UNORM)
-        {
-                const std::vector<uint16_t> buffer =
-                        color_conversion::grayscale_pixels_from_srgb_uint8_to_rgb_uint16(srgb_uint8_grayscale_pixels);
-
-                staging_image_copy(device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, m_image,
-                                   image_layout, width, height, buffer);
-        }
-        else if (m_format == VK_FORMAT_R32_SFLOAT)
-        {
-                const std::vector<float> buffer =
-                        color_conversion::grayscale_pixels_from_srgb_uint8_to_rgb_float(srgb_uint8_grayscale_pixels);
-
-                staging_image_copy(device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, m_image,
-                                   image_layout, width, height, buffer);
-        }
-        else if (m_format == VK_FORMAT_R8_SRGB)
-        {
-                staging_image_copy(device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, m_image,
-                                   image_layout, width, height, srgb_uint8_grayscale_pixels);
-        }
-        else
-        {
-                error("Unsupported texture image format " + format_to_string(m_format));
-        }
+        return m_usage;
 }
 
-VkImage GrayscaleTexture::image() const
+unsigned ImageWithMemory::width() const
 {
-        return m_image;
+        return m_width;
 }
 
-VkFormat GrayscaleTexture::format() const
+unsigned ImageWithMemory::height() const
 {
-        return m_format;
-}
-
-VkImageView GrayscaleTexture::image_view() const
-{
-        return m_image_view;
+        return m_height;
 }
 
 //
@@ -892,32 +866,8 @@ StorageImage::StorageImage(const Device& device, const CommandPool& graphics_com
         m_width = width;
         m_height = height;
 
-        //
-
-        vulkan::CommandBuffer command_buffer(device, graphics_command_pool);
-        begin_commands(command_buffer);
-
-        VkImageMemoryBarrier barrier = {};
-
-        barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        barrier.image = m_image;
-        barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        barrier.subresourceRange.baseMipLevel = 0;
-        barrier.subresourceRange.levelCount = 1;
-        barrier.subresourceRange.baseArrayLayer = 0;
-        barrier.subresourceRange.layerCount = 1;
-
-        barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        barrier.newLayout = VK_IMAGE_LAYOUT_GENERAL;
-        barrier.srcAccessMask = 0;
-        barrier.dstAccessMask = 0;
-
-        vkCmdPipelineBarrier(command_buffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, 0, 0,
-                             nullptr, 0, nullptr, 1, &barrier);
-
-        end_commands(graphics_queue, command_buffer);
+        transition_texture_layout(device, graphics_command_pool, graphics_queue, m_image, VK_IMAGE_LAYOUT_UNDEFINED,
+                                  VK_IMAGE_LAYOUT_GENERAL);
 }
 
 VkImage StorageImage::image() const
