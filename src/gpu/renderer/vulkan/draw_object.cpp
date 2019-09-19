@@ -183,19 +183,27 @@ std::vector<vulkan::ImageWithMemory> load_textures(const vulkan::Device& device,
                                                    const vulkan::Queue& transfer_queue,
                                                    const std::unordered_set<uint32_t>& family_indices, const Obj<3>& obj)
 {
+        constexpr bool storage = false;
+
         std::vector<vulkan::ImageWithMemory> textures;
 
         for (const typename Obj<3>::Image& image : obj.images())
         {
                 textures.emplace_back(device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue,
-                                      family_indices, COLOR_IMAGE_FORMATS, image.size[0], image.size[1], image.srgba_pixels);
+                                      family_indices, COLOR_IMAGE_FORMATS, image.size[0], image.size[1],
+                                      VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, image.srgba_pixels, storage);
+                ASSERT(textures.back().usage() & VK_IMAGE_USAGE_SAMPLED_BIT);
+                ASSERT(!(textures.back().usage() & VK_IMAGE_USAGE_STORAGE_BIT));
         }
 
         // На одну текстуру больше для её указания, но не использования в тех материалах, где нет текстуры
         std::vector<std::uint_least8_t> pixels = {/*0*/ 0, 0, 0, 0, /*1*/ 0, 0, 0, 0,
                                                   /*2*/ 0, 0, 0, 0, /*3*/ 0, 0, 0, 0};
         textures.emplace_back(device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue,
-                              family_indices, COLOR_IMAGE_FORMATS, 2, 2, pixels);
+                              family_indices, COLOR_IMAGE_FORMATS, 2, 2, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, pixels,
+                              storage);
+        ASSERT(textures.back().usage() & VK_IMAGE_USAGE_SAMPLED_BIT);
+        ASSERT(!(textures.back().usage() & VK_IMAGE_USAGE_STORAGE_BIT));
 
         return textures;
 }

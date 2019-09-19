@@ -184,15 +184,19 @@ class ImageWithMemory final
         unsigned m_width, m_height;
         VkImageUsageFlags m_usage;
 
+        void init(const Device& device, const std::unordered_set<uint32_t>& family_indices,
+                  const std::vector<VkFormat>& format_candidates, uint32_t width, uint32_t height, bool storage);
+
 public:
         ImageWithMemory(const Device& device, const CommandPool& graphics_command_pool, const Queue& graphics_queue,
                         const CommandPool& transfer_command_pool, const Queue& transfer_queue,
                         const std::unordered_set<uint32_t>& family_indices, const std::vector<VkFormat>& format_candidates,
-                        uint32_t width, uint32_t height, const Span<const std::uint_least8_t>& srgb_pixels);
+                        uint32_t width, uint32_t height, VkImageLayout image_layout,
+                        const Span<const std::uint_least8_t>& srgb_pixels, bool storage);
 
         ImageWithMemory(const Device& device, const CommandPool& graphics_command_pool, const Queue& graphics_queue,
                         const std::unordered_set<uint32_t>& family_indices, const std::vector<VkFormat>& format_candidates,
-                        uint32_t width, uint32_t height);
+                        uint32_t width, uint32_t height, VkImageLayout image_layout, bool storage);
 
         ImageWithMemory(const ImageWithMemory&) = delete;
         ImageWithMemory& operator=(const ImageWithMemory&) = delete;
@@ -210,6 +214,8 @@ public:
 
         unsigned width() const;
         unsigned height() const;
+
+        void clear_commands(VkCommandBuffer command_buffer, VkImageLayout image_layout) const;
 };
 
 class DepthAttachment final
@@ -220,10 +226,12 @@ class DepthAttachment final
         ImageView m_image_view;
         VkSampleCountFlagBits m_sample_count;
         unsigned m_width, m_height;
+        VkImageUsageFlags m_usage;
 
 public:
         DepthAttachment(const Device& device, const std::unordered_set<uint32_t>& family_indices,
-                        const std::vector<VkFormat>& formats, VkSampleCountFlagBits samples, uint32_t width, uint32_t height);
+                        const std::vector<VkFormat>& formats, VkSampleCountFlagBits samples, uint32_t width, uint32_t height,
+                        bool sampled);
 
         DepthAttachment(const DepthAttachment&) = delete;
         DepthAttachment& operator=(const DepthAttachment&) = delete;
@@ -237,36 +245,8 @@ public:
         VkImage image() const;
         VkFormat format() const;
         VkImageView image_view() const;
+        VkImageUsageFlags usage() const;
         VkSampleCountFlagBits sample_count() const;
-
-        unsigned width() const;
-        unsigned height() const;
-};
-
-class DepthAttachmentTexture final
-{
-        VkFormat m_format;
-        Image m_image;
-        DeviceMemory m_device_memory;
-        ImageView m_image_view;
-        unsigned m_width, m_height;
-
-public:
-        DepthAttachmentTexture(const Device& device, const std::unordered_set<uint32_t>& family_indices,
-                               const std::vector<VkFormat>& formats, uint32_t width, uint32_t height);
-
-        DepthAttachmentTexture(const DepthAttachmentTexture&) = delete;
-        DepthAttachmentTexture& operator=(const DepthAttachmentTexture&) = delete;
-        DepthAttachmentTexture& operator=(DepthAttachmentTexture&&) = delete;
-
-        DepthAttachmentTexture(DepthAttachmentTexture&&) = default;
-        ~DepthAttachmentTexture() = default;
-
-        //
-
-        VkImage image() const;
-        VkFormat format() const;
-        VkImageView image_view() const;
 
         unsigned width() const;
         unsigned height() const;
@@ -297,38 +277,5 @@ public:
         VkFormat format() const;
         VkImageView image_view() const;
         VkSampleCountFlagBits sample_count() const;
-};
-
-class StorageImage final
-{
-        VkFormat m_format;
-        Image m_image;
-        DeviceMemory m_device_memory;
-        ImageView m_image_view;
-        unsigned m_width, m_height;
-
-public:
-        StorageImage(const Device& device, const CommandPool& graphics_command_pool, const Queue& graphics_queue,
-                     const std::unordered_set<uint32_t>& family_indices, VkFormat format, uint32_t width, uint32_t height);
-
-        StorageImage(const StorageImage&) = delete;
-        StorageImage& operator=(const StorageImage&) = delete;
-        StorageImage& operator=(StorageImage&&) = delete;
-
-        StorageImage(StorageImage&&) = default;
-        ~StorageImage() = default;
-
-        //
-
-        VkImage image() const;
-        VkFormat format() const;
-        VkImageView image_view() const;
-
-        unsigned width() const;
-        unsigned height() const;
-
-        //
-
-        void clear_commands(VkCommandBuffer command_buffer) const;
 };
 }

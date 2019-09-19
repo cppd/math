@@ -125,7 +125,7 @@ class Impl final : public Show, public WindowEvent
         std::unique_ptr<vulkan::Semaphore> m_image_semaphore;
         std::unique_ptr<vulkan::Swapchain> m_swapchain;
         std::unique_ptr<RenderBuffers> m_render_buffers;
-        std::unique_ptr<vulkan::StorageImage> m_object_image;
+        std::unique_ptr<vulkan::ImageWithMemory> m_object_image;
         std::unique_ptr<gpu_vulkan::Renderer> m_renderer;
         std::unique_ptr<gpu_vulkan::TextShow> m_text;
         std::unique_ptr<gpu_vulkan::ConvexHullShow> m_convex_hull;
@@ -581,10 +581,12 @@ class Impl final : public Show, public WindowEvent
                                                          m_instance->graphics_queues()[0], m_instance->device(),
                                                          VULKAN_MINIMUM_SAMPLE_COUNT);
 
-                m_object_image = std::make_unique<vulkan::StorageImage>(
+                static constexpr bool storage = true;
+                m_object_image = std::make_unique<vulkan::ImageWithMemory>(
                         m_instance->device(), m_instance->graphics_command_pool(), m_instance->graphics_queues()[0],
-                        std::unordered_set({m_instance->graphics_queues()[0].family_index()}), VULKAN_OBJECT_IMAGE_FORMAT,
-                        m_swapchain->width(), m_swapchain->height());
+                        std::unordered_set({m_instance->graphics_queues()[0].family_index()}),
+                        std::vector<VkFormat>({VULKAN_OBJECT_IMAGE_FORMAT}), m_swapchain->width(), m_swapchain->height(),
+                        VK_IMAGE_LAYOUT_GENERAL, storage);
 
                 m_renderer->create_buffers(m_swapchain.get(), &m_render_buffers->buffers_3d(), m_object_image.get());
 

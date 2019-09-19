@@ -119,7 +119,7 @@ class Impl final : public Renderer
         std::unique_ptr<RendererDepthBuffers> m_shadow_buffers;
         std::vector<VkCommandBuffer> m_shadow_command_buffers;
 
-        const vulkan::StorageImage* m_object_image = nullptr;
+        const vulkan::ImageWithMemory* m_object_image = nullptr;
 
         RendererObjectStorage<DrawObject> m_storage;
 
@@ -341,7 +341,7 @@ class Impl final : public Renderer
         }
 
         void create_buffers(const vulkan::Swapchain* swapchain, RenderBuffers3D* render_buffers,
-                            const vulkan::StorageImage* objects) override
+                            const vulkan::ImageWithMemory* objects) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
@@ -458,7 +458,7 @@ class Impl final : public Renderer
 
                 //
 
-                m_object_image->clear_commands(command_buffer);
+                m_object_image->clear_commands(command_buffer, VK_IMAGE_LAYOUT_GENERAL);
         }
 
         void draw_commands(VkCommandBuffer command_buffer) const

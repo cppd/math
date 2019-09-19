@@ -68,7 +68,7 @@ struct Renderer
         static std::vector<vulkan::PhysicalDeviceFeatures> required_device_features();
 
         virtual void create_buffers(const vulkan::Swapchain* swapchain, RenderBuffers3D* render_buffers,
-                                    const vulkan::StorageImage* objects) = 0;
+                                    const vulkan::ImageWithMemory* objects) = 0;
         virtual void delete_buffers() = 0;
 };
 

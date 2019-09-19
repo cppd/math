@@ -235,7 +235,8 @@ class Impl final : public TextShow
                   m_sampler(create_text_sampler(m_device)),
                   m_glyph_texture(m_device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue,
                                   std::unordered_set({graphics_queue.family_index(), transfer_queue.family_index()}),
-                                  GRAYSCALE_IMAGE_FORMATS, glyphs.width(), glyphs.height(), std::move(glyphs.pixels())),
+                                  GRAYSCALE_IMAGE_FORMATS, glyphs.width(), glyphs.height(),
+                                  VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, std::move(glyphs.pixels()), false /*storage*/),
                   m_glyphs(std::move(glyphs.glyphs())),
                   m_shader_memory(m_device, std::unordered_set({graphics_queue.family_index()}), m_sampler, &m_glyph_texture),
                   m_text_vert(m_device, text_vert(), "main"),
@@ -250,6 +251,9 @@ class Impl final : public TextShow
                                     sizeof(VkDrawIndirectCommand)),
                   m_graphics_family_index(graphics_queue.family_index())
         {
+                ASSERT(m_glyph_texture.usage() & VK_IMAGE_USAGE_SAMPLED_BIT);
+                ASSERT(!(m_glyph_texture.usage() & VK_IMAGE_USAGE_STORAGE_BIT));
+
                 set_color(color);
         }
 

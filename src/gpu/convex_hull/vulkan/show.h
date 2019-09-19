@@ -33,7 +33,8 @@ struct ConvexHullShow
 
         virtual ~ConvexHullShow() = default;
 
-        virtual void create_buffers(RenderBuffers2D* render_buffers, const mat4& matrix, const vulkan::StorageImage& objects) = 0;
+        virtual void create_buffers(RenderBuffers2D* render_buffers, const mat4& matrix,
+                                    const vulkan::ImageWithMemory& objects) = 0;
         virtual void delete_buffers() = 0;
 
         virtual VkSemaphore draw(const vulkan::Queue& queue, VkSemaphore wait_semaphore, unsigned image_index) = 0;

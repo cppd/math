@@ -94,7 +94,7 @@ class Impl final : public ConvexHullShow
                 vkCmdDrawIndirect(command_buffer, m_indirect_buffer, 0, 1, sizeof(VkDrawIndirectCommand));
         }
 
-        void create_buffers(RenderBuffers2D* render_buffers, const mat4& matrix, const vulkan::StorageImage& objects) override
+        void create_buffers(RenderBuffers2D* render_buffers, const mat4& matrix, const vulkan::ImageWithMemory& objects) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 

@@ -397,9 +397,10 @@ void Impl::create_color_buffer_rendering(unsigned buffer_count, const vulkan::Sw
                 {
                         depth_formats = DEPTH_IMAGE_FORMATS;
                 }
-
+                constexpr bool sampled = false;
                 m_depth_attachments.emplace_back(m_device, attachment_family_indices, depth_formats, sample_count,
-                                                 swapchain.width(), swapchain.height());
+                                                 swapchain.width(), swapchain.height(), sampled);
+                ASSERT(!(m_depth_attachments.back().usage() & VK_IMAGE_USAGE_SAMPLED_BIT));
         }
 
         const VkFormat depth_format = m_depth_attachments[0].format();
@@ -462,12 +463,20 @@ void Impl::create_color_buffer_rendering(unsigned buffer_count, const vulkan::Sw
 void Impl::create_textures(unsigned buffer_count, const vulkan::Swapchain& swapchain,
                            const std::unordered_set<uint32_t>& family_indices, const vulkan::Queue& queue)
 {
+        static constexpr VkImageLayout IMAGE_LAYOUT = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
         ASSERT(m_color_attachments.size() == buffer_count);
 
         for (unsigned i = 0; i < buffer_count; ++i)
         {
+                constexpr bool storage = false;
                 m_textures.emplace_back(m_device, m_command_pool, queue, family_indices,
-                                        std::vector<VkFormat>({swapchain.format()}), swapchain.width(), swapchain.height());
+                                        std::vector<VkFormat>({swapchain.format()}), swapchain.width(), swapchain.height(),
+                                        IMAGE_LAYOUT, storage);
+
+                ASSERT(m_textures.back().usage() & VK_IMAGE_USAGE_TRANSFER_DST_BIT);
+                ASSERT(m_textures.back().usage() & VK_IMAGE_USAGE_SAMPLED_BIT);
+                ASSERT(!(m_textures.back().usage() & VK_IMAGE_USAGE_STORAGE_BIT));
 
                 m_textures_signal_semaphores.emplace_back(m_device);
         }
@@ -530,7 +539,7 @@ void Impl::create_textures(unsigned buffer_count, const vulkan::Swapchain& swapc
                                      nullptr, 0, nullptr, 1, &barrier);
 
                 barrier.image = m_textures[i].image();
-                barrier.oldLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                barrier.oldLayout = IMAGE_LAYOUT;
                 barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
                 barrier.srcAccessMask = 0;
                 barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
@@ -556,7 +565,7 @@ void Impl::create_textures(unsigned buffer_count, const vulkan::Swapchain& swapc
 
                 barrier.image = m_textures[i].image();
                 barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-                barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                barrier.newLayout = IMAGE_LAYOUT;
                 barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
                 barrier.dstAccessMask = 0;
 

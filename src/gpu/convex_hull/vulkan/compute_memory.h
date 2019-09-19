@@ -56,7 +56,7 @@ public:
 
         //
 
-        void set_object_image(const vulkan::StorageImage& storage_image) const;
+        void set_object_image(const vulkan::ImageWithMemory& storage_image) const;
         void set_lines(const vulkan::BufferWithMemory& buffer) const;
 };
 

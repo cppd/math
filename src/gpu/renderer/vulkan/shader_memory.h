@@ -119,8 +119,8 @@ public:
         void set_show_smooth(bool show) const;
         void set_show_wireframe(bool show) const;
         void set_show_shadow(bool show) const;
-        void set_shadow_texture(VkSampler sampler, const vulkan::DepthAttachmentTexture* shadow_texture) const;
-        void set_object_image(const vulkan::StorageImage* storage_image) const;
+        void set_shadow_texture(VkSampler sampler, const vulkan::DepthAttachment* shadow_texture) const;
+        void set_object_image(const vulkan::ImageWithMemory* storage_image) const;
 };
 
 class RendererTrianglesMaterialMemory final
@@ -276,6 +276,6 @@ public:
         void set_light_a(const Color& color) const;
         void set_show_fog(bool show) const;
 
-        void set_object_image(const vulkan::StorageImage* storage_image) const;
+        void set_object_image(const vulkan::ImageWithMemory* storage_image) const;
 };
 }

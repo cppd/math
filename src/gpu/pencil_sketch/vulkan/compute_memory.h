@@ -57,9 +57,9 @@ public:
 
         //
 
-        void set_input_image(const vulkan::StorageImage& storage_image) const;
-        void set_output_image(const vulkan::StorageImage& storage_image) const;
-        void set_object_image(const vulkan::StorageImage& storage_image) const;
+        void set_input_image(const vulkan::ImageWithMemory& storage_image) const;
+        void set_output_image(const vulkan::ImageWithMemory& storage_image) const;
+        void set_object_image(const vulkan::ImageWithMemory& storage_image) const;
 };
 
 class PencilSketchComputeConstant final : public vulkan::SpecializationConstant
@@ -110,7 +110,7 @@ public:
 
         //
 
-        void set_image(const vulkan::StorageImage& storage_image) const;
+        void set_image(const vulkan::ImageWithMemory& storage_image) const;
 };
 
 class PencilSketchLuminanceConstant final : public vulkan::SpecializationConstant

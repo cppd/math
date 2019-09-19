@@ -88,7 +88,7 @@ class Impl final : public ConvexHullCompute
                                VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT);
         }
 
-        void create_buffers(const vulkan::StorageImage& objects, const vulkan::BufferWithMemory& points_buffer,
+        void create_buffers(const vulkan::ImageWithMemory& objects, const vulkan::BufferWithMemory& points_buffer,
                             const vulkan::BufferWithMemory& point_count_buffer, uint32_t family_index) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());

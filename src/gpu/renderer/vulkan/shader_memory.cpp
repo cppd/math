@@ -230,9 +230,11 @@ void RendererTrianglesSharedMemory::set_show_smooth(bool show) const
         decltype(Lighting().show_smooth) s = show ? 1 : 0;
         copy_to_lighting_buffer(offsetof(Lighting, show_smooth), s);
 }
-void RendererTrianglesSharedMemory::set_shadow_texture(VkSampler sampler,
-                                                       const vulkan::DepthAttachmentTexture* shadow_texture) const
+void RendererTrianglesSharedMemory::set_shadow_texture(VkSampler sampler, const vulkan::DepthAttachment* shadow_texture) const
 {
+        ASSERT(shadow_texture && (shadow_texture->usage() & VK_IMAGE_USAGE_SAMPLED_BIT));
+        ASSERT(shadow_texture && (shadow_texture->sample_count() == VK_SAMPLE_COUNT_1_BIT));
+
         VkDescriptorImageInfo image_info = {};
         image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
         image_info.imageView = shadow_texture->image_view();
@@ -240,9 +242,10 @@ void RendererTrianglesSharedMemory::set_shadow_texture(VkSampler sampler,
 
         m_descriptors.update_descriptor_set(0, SHADOW_BINDING, image_info);
 }
-void RendererTrianglesSharedMemory::set_object_image(const vulkan::StorageImage* storage_image) const
+void RendererTrianglesSharedMemory::set_object_image(const vulkan::ImageWithMemory* storage_image) const
 {
         ASSERT(storage_image && storage_image->format() == VK_FORMAT_R32_UINT);
+        ASSERT(storage_image && (storage_image->usage() & VK_IMAGE_USAGE_STORAGE_BIT));
 
         VkDescriptorImageInfo image_info = {};
         image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
@@ -574,9 +577,10 @@ void RendererPointsMemory::set_show_fog(bool show) const
         decltype(Drawing().show_fog) s = show ? 1 : 0;
         copy_to_drawing_buffer(offsetof(Drawing, show_fog), s);
 }
-void RendererPointsMemory::set_object_image(const vulkan::StorageImage* storage_image) const
+void RendererPointsMemory::set_object_image(const vulkan::ImageWithMemory* storage_image) const
 {
         ASSERT(storage_image && storage_image->format() == VK_FORMAT_R32_UINT);
+        ASSERT(storage_image && (storage_image->usage() & VK_IMAGE_USAGE_STORAGE_BIT));
 
         VkDescriptorImageInfo image_info = {};
         image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;

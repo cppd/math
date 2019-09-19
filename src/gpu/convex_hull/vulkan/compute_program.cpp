@@ -49,7 +49,8 @@ ConvexHullProgramPrepare::ConvexHullProgramPrepare(const vulkan::VulkanInstance&
 {
 }
 
-void ConvexHullProgramPrepare::create_buffers(const vulkan::StorageImage& objects, const vulkan::BufferWithMemory& lines_buffer)
+void ConvexHullProgramPrepare::create_buffers(const vulkan::ImageWithMemory& objects,
+                                              const vulkan::BufferWithMemory& lines_buffer)
 {
         m_height = objects.height();
 
@@ -94,7 +95,7 @@ ConvexHullProgramMerge::ConvexHullProgramMerge(const vulkan::VulkanInstance& ins
 {
 }
 
-void ConvexHullProgramMerge::create_buffers(const vulkan::StorageImage& objects, const vulkan::BufferWithMemory& lines_buffer)
+void ConvexHullProgramMerge::create_buffers(const vulkan::ImageWithMemory& objects, const vulkan::BufferWithMemory& lines_buffer)
 {
         m_memory.set_lines(lines_buffer);
 
@@ -134,7 +135,7 @@ ConvexHullProgramFilter::ConvexHullProgramFilter(const vulkan::VulkanInstance& i
 {
 }
 
-void ConvexHullProgramFilter::create_buffers(const vulkan::StorageImage& objects, const vulkan::BufferWithMemory& lines_buffer,
+void ConvexHullProgramFilter::create_buffers(const vulkan::ImageWithMemory& objects, const vulkan::BufferWithMemory& lines_buffer,
                                              const vulkan::BufferWithMemory& points_buffer,
                                              const vulkan::BufferWithMemory& point_count_buffer)
 {

@@ -78,9 +78,10 @@ const VkDescriptorSet& PencilSketchComputeMemory::descriptor_set() const
         return m_descriptors.descriptor_set(0);
 }
 
-void PencilSketchComputeMemory::set_input_image(const vulkan::StorageImage& storage_image) const
+void PencilSketchComputeMemory::set_input_image(const vulkan::ImageWithMemory& storage_image) const
 {
         ASSERT(storage_image.format() == VK_FORMAT_R32G32B32A32_SFLOAT);
+        ASSERT(storage_image.usage() & VK_IMAGE_USAGE_STORAGE_BIT);
 
         VkDescriptorImageInfo image_info = {};
         image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
@@ -89,9 +90,10 @@ void PencilSketchComputeMemory::set_input_image(const vulkan::StorageImage& stor
         m_descriptors.update_descriptor_set(0, INPUT_BINDING, image_info);
 }
 
-void PencilSketchComputeMemory::set_output_image(const vulkan::StorageImage& storage_image) const
+void PencilSketchComputeMemory::set_output_image(const vulkan::ImageWithMemory& storage_image) const
 {
         ASSERT(storage_image.format() == VK_FORMAT_R32G32B32A32_SFLOAT);
+        ASSERT(storage_image.usage() & VK_IMAGE_USAGE_STORAGE_BIT);
 
         VkDescriptorImageInfo image_info = {};
         image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
@@ -100,9 +102,10 @@ void PencilSketchComputeMemory::set_output_image(const vulkan::StorageImage& sto
         m_descriptors.update_descriptor_set(0, OUTPUT_BINDING, image_info);
 }
 
-void PencilSketchComputeMemory::set_object_image(const vulkan::StorageImage& storage_image) const
+void PencilSketchComputeMemory::set_object_image(const vulkan::ImageWithMemory& storage_image) const
 {
         ASSERT(storage_image.format() == VK_FORMAT_R32_UINT);
+        ASSERT(storage_image.usage() & VK_IMAGE_USAGE_STORAGE_BIT);
 
         VkDescriptorImageInfo image_info = {};
         image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
@@ -186,9 +189,10 @@ const VkDescriptorSet& PencilSketchLuminanceMemory::descriptor_set() const
         return m_descriptors.descriptor_set(0);
 }
 
-void PencilSketchLuminanceMemory::set_image(const vulkan::StorageImage& storage_image) const
+void PencilSketchLuminanceMemory::set_image(const vulkan::ImageWithMemory& storage_image) const
 {
         ASSERT(storage_image.format() == VK_FORMAT_R32G32B32A32_SFLOAT);
+        ASSERT(storage_image.usage() & VK_IMAGE_USAGE_STORAGE_BIT);
 
         VkDescriptorImageInfo image_info = {};
         image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
