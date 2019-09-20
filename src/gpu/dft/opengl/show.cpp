@@ -132,8 +132,6 @@ public:
                   m_dft(gpu_opengl::create_dft_compute_texture(source, m_result)),
                   m_draw_prog(opengl::VertexShader(dft_show_vert()), opengl::FragmentShader(dft_show_frag()))
         {
-                ASSERT(source.format() == IMAGE_FORMAT);
-
                 m_draw_prog.set_uniform_handle("tex", m_result.texture_handle());
 
                 set_brightness(brightness);

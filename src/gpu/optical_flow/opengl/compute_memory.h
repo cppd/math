@@ -29,12 +29,12 @@ class OpticalFlowGrayscaleMemory final
 
         struct Images
         {
-                GLuint64 image_src;
+                GLuint64 src;
                 alignas(16) GLuint64 image_dst;
         };
 
 public:
-        OpticalFlowGrayscaleMemory(const opengl::Texture& image_src, const opengl::Texture& image_dst);
+        OpticalFlowGrayscaleMemory(const opengl::Texture& src, const opengl::Texture& image_dst);
 
         void bind() const;
 };

@@ -169,7 +169,7 @@ Texture::Texture(GLenum format, GLsizei width, GLsizei height) : m_format(format
 
         glTextureStorage2D(m_texture, 1, m_format, m_width, m_height);
 
-        if (m_format == GL_SRGB8_ALPHA8 || m_format == GL_RGBA32F || m_format == GL_R32F)
+        if (m_format == GL_SRGB8 || m_format == GL_SRGB8_ALPHA8 || m_format == GL_RGBA32F || m_format == GL_R32F)
         {
                 glTextureParameteri(m_texture, GL_TEXTURE_WRAP_S, GL_REPEAT);
                 glTextureParameteri(m_texture, GL_TEXTURE_WRAP_T, GL_REPEAT);

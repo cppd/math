@@ -51,11 +51,10 @@ PencilSketchProgramCompute::PencilSketchProgramCompute(const opengl::Texture& in
           m_groups_y(group_count(input.height(), GROUP_SIZE)),
           m_program(opengl::ComputeShader(compute_source(GROUP_SIZE)))
 {
-        ASSERT(input.format() == GL_RGBA32F);
         ASSERT(objects.format() == GL_R32UI);
         ASSERT(output.format() == GL_RGBA32F);
 
-        m_program.set_uniform_handle("img_input", input.image_handle_read_only());
+        m_program.set_uniform_handle("src", input.texture_handle());
         m_program.set_uniform_handle("img_output", output.image_handle_write_only());
         m_program.set_uniform_handle("img_objects", objects.image_handle_read_only());
 }

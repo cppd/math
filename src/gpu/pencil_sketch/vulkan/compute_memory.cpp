@@ -26,7 +26,7 @@ std::vector<VkDescriptorSetLayoutBinding> PencilSketchComputeMemory::descriptor_
         {
                 VkDescriptorSetLayoutBinding b = {};
                 b.binding = INPUT_BINDING;
-                b.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+                b.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
                 b.descriptorCount = 1;
                 b.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
                 b.pImmutableSamplers = nullptr;
@@ -78,14 +78,14 @@ const VkDescriptorSet& PencilSketchComputeMemory::descriptor_set() const
         return m_descriptors.descriptor_set(0);
 }
 
-void PencilSketchComputeMemory::set_input_image(const vulkan::ImageWithMemory& storage_image) const
+void PencilSketchComputeMemory::set_input(VkSampler sampler, const vulkan::ImageWithMemory& image) const
 {
-        ASSERT(storage_image.format() == VK_FORMAT_R32G32B32A32_SFLOAT);
-        ASSERT(storage_image.usage() & VK_IMAGE_USAGE_STORAGE_BIT);
+        ASSERT(image.usage() & VK_IMAGE_USAGE_SAMPLED_BIT);
 
         VkDescriptorImageInfo image_info = {};
-        image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-        image_info.imageView = storage_image.image_view();
+        image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        image_info.imageView = image.image_view();
+        image_info.sampler = sampler;
 
         m_descriptors.update_descriptor_set(0, INPUT_BINDING, image_info);
 }

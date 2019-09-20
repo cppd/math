@@ -57,7 +57,7 @@ public:
 
         //
 
-        void set_input_image(const vulkan::ImageWithMemory& storage_image) const;
+        void set_input(VkSampler sampler, const vulkan::ImageWithMemory& image) const;
         void set_output_image(const vulkan::ImageWithMemory& storage_image) const;
         void set_object_image(const vulkan::ImageWithMemory& storage_image) const;
 };

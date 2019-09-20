@@ -21,12 +21,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 layout(local_size_x = GROUP_SIZE, local_size_y = GROUP_SIZE) in;
 layout(std140, binding = 0) uniform Images
 {
-        layout(rgba32f) readonly restrict image2D image_src;
+        sampler2D src;
         layout(r32f) writeonly restrict image2D image_dst;
 };
 #else
 layout(local_size_x_id = 0, local_size_y_id = 0) in;
-layout(binding = 0, rgba32f) readonly restrict uniform image2D image_src;
+layout(binding = 0) uniform sampler2D src;
 layout(binding = 1, r32f) writeonly restrict uniform image2D image_dst;
 #endif
 
@@ -40,8 +40,8 @@ void main(void)
 {
         const ivec2 p = ivec2(gl_GlobalInvocationID.xy);
 
-        if (all(lessThan(p, imageSize(image_src))))
+        if (all(lessThan(p, textureSize(src, 0))))
         {
-                imageStore(image_dst, p, grayscale(imageLoad(image_src, p)));
+                imageStore(image_dst, p, grayscale(texelFetch(src, p, 0)));
         }
 }

@@ -21,15 +21,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpu_opengl
 {
-OpticalFlowGrayscaleMemory::OpticalFlowGrayscaleMemory(const opengl::Texture& image_src, const opengl::Texture& image_dst)
+OpticalFlowGrayscaleMemory::OpticalFlowGrayscaleMemory(const opengl::Texture& src, const opengl::Texture& image_dst)
         : m_buffer(sizeof(Images), GL_MAP_WRITE_BIT)
 {
-        ASSERT(image_src.format() == GL_RGBA32F);
         ASSERT(image_dst.format() == GL_R32F);
 
         Images images;
 
-        images.image_src = image_src.image_handle_read_only();
+        images.src = src.texture_handle();
         images.image_dst = image_dst.image_handle_write_only();
 
         opengl::map_and_write_to_buffer(m_buffer, images);

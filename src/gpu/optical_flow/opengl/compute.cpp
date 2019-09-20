@@ -165,10 +165,10 @@ std::vector<opengl::Buffer> create_flow_buffers(const std::vector<vec2i>& sizes)
         return buffers;
 }
 
-std::array<OpticalFlowGrayscaleMemory, 2> create_grayscale_memory(const opengl::Texture& source_image,
+std::array<OpticalFlowGrayscaleMemory, 2> create_grayscale_memory(const opengl::Texture& source,
                                                                   const std::array<std::vector<opengl::Texture>, 2>& images)
 {
-        return {OpticalFlowGrayscaleMemory(source_image, images[0][0]), OpticalFlowGrayscaleMemory(source_image, images[1][0])};
+        return {OpticalFlowGrayscaleMemory(source, images[0][0]), OpticalFlowGrayscaleMemory(source, images[1][0])};
 }
 
 vec2i create_grayscale_groups(const std::vector<vec2i>& sizes)
@@ -450,14 +450,14 @@ class Impl final : public OpticalFlowCompute
                 return m_images[m_i_index][0].texture_handle();
         }
 
-        Impl(const std::vector<vec2i>& sizes, const opengl::Texture& source_image, int top_x, int top_y,
+        Impl(const std::vector<vec2i>& sizes, const opengl::Texture& source, int top_x, int top_y,
              const opengl::Buffer& top_points, const opengl::Buffer& top_flow)
                 : m_images({create_images(sizes), create_images(sizes)}),
                   m_dx(create_images(sizes)),
                   m_dy(create_images(sizes)),
                   m_flow_buffers(create_flow_buffers(sizes)),
                   //
-                  m_grayscale_memory(create_grayscale_memory(source_image, m_images)),
+                  m_grayscale_memory(create_grayscale_memory(source, m_images)),
                   m_grayscale_groups(create_grayscale_groups(sizes)),
                   m_grayscale_compute(opengl::ComputeShader(grayscale_source())),
                   //

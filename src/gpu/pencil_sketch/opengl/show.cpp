@@ -64,7 +64,6 @@ public:
                   m_texture(IMAGE_FORMAT, source.width(), source.height()),
                   m_pencil_sketch(gpu_opengl::create_pencil_sketch_compute(source, objects, m_texture))
         {
-                ASSERT(source.format() == IMAGE_FORMAT);
                 ASSERT(source.width() == objects.width());
                 ASSERT(source.height() == objects.height());
 

@@ -374,11 +374,11 @@ public:
                 ASSERT((source && result) || (!source && !result));
                 if (source && result)
                 {
-                        ASSERT(source->format() == GL_RGBA32F && source->format() == result->format());
+                        ASSERT(result->format() == GL_RGBA32F);
                         ASSERT(source->width() == n1 && source->height() == n2);
                         ASSERT(result->width() == n1 && result->height() == n2);
 
-                        m_source_handle = source->image_handle_read_write();
+                        m_source_handle = source->texture_handle();
                         m_result_handle = result->image_handle_read_write();
                 }
 
