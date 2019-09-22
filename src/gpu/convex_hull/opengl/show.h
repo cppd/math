@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "com/matrix.h"
 #include "graphics/opengl/buffers.h"
 
 #include <memory>
@@ -32,5 +31,5 @@ struct ConvexHullShow
         virtual void draw() = 0;
 };
 
-std::unique_ptr<ConvexHullShow> create_convex_hull_show(const opengl::Texture& objects, const mat4& matrix);
+std::unique_ptr<ConvexHullShow> create_convex_hull_show(const opengl::Texture& objects, int x, int y, int width, int height);
 }

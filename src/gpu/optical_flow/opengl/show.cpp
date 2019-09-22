@@ -23,8 +23,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/container.h"
 #include "com/conversion.h"
 #include "com/error.h"
+#include "com/matrix.h"
+#include "com/matrix_alg.h"
 #include "com/time.h"
 #include "com/type/limit.h"
+#include "com/vec.h"
 #include "graphics/opengl/buffers.h"
 #include "graphics/opengl/capabilities.h"
 #include "graphics/opengl/shader.h"
@@ -133,8 +136,6 @@ void create_points_for_top_level(int width, int height, int distance, int* point
 
 class Impl final : public OpticalFlowShow
 {
-        const int m_width, m_height;
-
         std::optional<opengl::GraphicsProgram> m_draw_prog;
         std::optional<opengl::GraphicsProgram> m_draw_prog_debug;
 
@@ -149,6 +150,8 @@ class Impl final : public OpticalFlowShow
 
         bool m_flow_computed = false;
         double m_last_time = limits<double>::lowest();
+
+        int m_x, m_y, m_width, m_height;
 
         void draw_flow_lines()
         {
@@ -177,8 +180,10 @@ class Impl final : public OpticalFlowShow
                         return;
                 }
 
-                opengl::GLEnableAndRestore<GL_SCISSOR_TEST> e;
-                glScissor(0, 0, m_width, m_height);
+                glViewport(m_x, m_y, m_width, m_height);
+
+                // opengl::GLEnableAndRestore<GL_SCISSOR_TEST> e;
+                // glScissor(0, 0, m_width, m_height);
 
 #if 0
                 double current_time = time_in_seconds();
@@ -205,9 +210,11 @@ class Impl final : public OpticalFlowShow
         }
 
 public:
-        Impl(const opengl::Texture& source, double window_ppi, const mat4& matrix)
-                : m_width(source.width()), m_height(source.height())
+        Impl(const opengl::Texture& source, double window_ppi, int x, int y, int width, int height)
+                : m_x(x), m_y(y), m_width(width), m_height(height)
         {
+                ASSERT(source.width() == width && source.height() == height);
+
                 std::vector<vec2i> points;
                 int point_count_x, point_count_y;
                 create_points_for_top_level(m_width, m_height, millimeters_to_pixels(DISTANCE_BETWEEN_POINTS, window_ppi),
@@ -230,8 +237,15 @@ public:
                 m_top_points.emplace(data_size(points), 0, points);
                 m_top_points_flow.emplace(points.size() * sizeof(vec2f), 0);
 
+                // Матрица для рисования на плоскости окна, точка (0, 0) слева вверху
+                double left = 0;
+                double right = m_width;
+                double bottom = m_height;
+                double top = 0;
+                double near = 1;
+                double far = -1;
                 m_shader_memory.emplace();
-                m_shader_memory->set_matrix(matrix);
+                m_shader_memory->set_matrix(ortho_opengl<double>(left, right, bottom, top, near, far));
                 m_shader_memory->set_points(*m_top_points);
                 m_shader_memory->set_points_flow(*m_top_points_flow);
 
@@ -241,8 +255,9 @@ public:
 };
 }
 
-std::unique_ptr<OpticalFlowShow> create_optical_flow_show(const opengl::Texture& source, double window_ppi, const mat4& matrix)
+std::unique_ptr<OpticalFlowShow> create_optical_flow_show(const opengl::Texture& source, double window_ppi, int x, int y,
+                                                          int width, int height)
 {
-        return std::make_unique<Impl>(source, window_ppi, matrix);
+        return std::make_unique<Impl>(source, window_ppi, x, y, width, height);
 }
 }

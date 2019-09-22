@@ -19,7 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/color/color.h"
 #include "com/font/text_data.h"
-#include "com/matrix.h"
 
 #include <memory>
 
@@ -30,10 +29,10 @@ struct Text
         virtual ~Text() = default;
 
         virtual void set_color(const Color& color) const = 0;
-        virtual void set_matrix(const mat4& matrix) const = 0;
+        virtual void set_window(int x, int y, int width, int height) = 0;
 
         virtual void draw(const TextData& text_data) = 0;
 };
 
-std::unique_ptr<Text> create_text(int size, const Color& color, const mat4& matrix);
+std::unique_ptr<Text> create_text(int size, const Color& color);
 }

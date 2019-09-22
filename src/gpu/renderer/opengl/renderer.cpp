@@ -57,6 +57,8 @@ class Impl final : public Renderer
 
         bool m_show_shadow = false;
 
+        int m_x = -1;
+        int m_y = -1;
         int m_width = -1;
         int m_height = -1;
         int m_shadow_width = -1;
@@ -179,7 +181,7 @@ class Impl final : public Renderer
                         draw_object->shadow(info);
                 }
 
-                glViewport(0, 0, m_width, m_height);
+                glViewport(m_x, m_y, m_width, m_height);
 
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -258,10 +260,12 @@ class Impl final : public Renderer
                 set_shadow_size();
         }
 
-        void set_size(int width, int height, const opengl::Texture& object_image) override
+        void set_size(int x, int y, int width, int height, const opengl::Texture& object_image) override
         {
                 ASSERT(object_image.format() == GL_R32UI);
 
+                m_x = x;
+                m_y = y;
                 m_width = width;
                 m_height = height;
 

@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/font/font.h"
 #include "com/font/glyphs.h"
 #include "com/font/vertices.h"
+#include "com/matrix_alg.h"
 #include "graphics/opengl/buffers.h"
 #include "graphics/opengl/capabilities.h"
 #include "graphics/opengl/query.h"
@@ -57,19 +58,35 @@ class Impl final : public Text
         std::unique_ptr<opengl::Texture> m_texture;
         TextShaderMemory m_shader_memory;
 
+        int m_x = -1, m_y = -1, m_width = -1, m_height = -1;
+
         void set_color(const Color& color) const override
         {
                 m_shader_memory.set_color(color);
         }
 
-        void set_matrix(const mat4& matrix) const override
+        void set_window(int x, int y, int width, int height) override
         {
-                m_shader_memory.set_matrix(matrix);
+                m_x = x;
+                m_y = y;
+                m_width = width;
+                m_height = height;
+
+                // Матрица для рисования на плоскости окна, точка (0, 0) слева вверху
+                double left = 0;
+                double right = m_width;
+                double bottom = m_height;
+                double top = 0;
+                double near = 1;
+                double far = -1;
+                m_shader_memory.set_matrix(ortho_opengl<double>(left, right, bottom, top, near, far));
         }
 
         void draw(const TextData& text_data) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
+
+                ASSERT(m_x >= 0 && m_y >= 0 && m_width > 0 && m_height > 0);
 
                 thread_local std::vector<TextVertex> vertices;
 
@@ -89,17 +106,16 @@ class Impl final : public Text
 
                 opengl::GLEnableAndRestore<GL_BLEND> e;
 
+                glViewport(m_x, m_y, m_width, m_height);
                 m_shader_memory.bind();
                 m_vertex_array.bind();
                 m_program.draw_arrays(GL_TRIANGLES, 0, vertices.size());
         }
 
 public:
-        Impl(int size, const Color& color, const mat4& matrix)
-                : m_program(opengl::VertexShader(text_vert()), opengl::FragmentShader(text_frag()))
+        Impl(int size, const Color& color) : m_program(opengl::VertexShader(text_vert()), opengl::FragmentShader(text_frag()))
         {
                 set_color(color);
-                set_matrix(matrix);
 
                 //
 
@@ -121,8 +137,8 @@ public:
 };
 }
 
-std::unique_ptr<Text> create_text(int size, const Color& color, const mat4& matrix)
+std::unique_ptr<Text> create_text(int size, const Color& color)
 {
-        return std::make_unique<Impl>(size, color, matrix);
+        return std::make_unique<Impl>(size, color);
 }
 }

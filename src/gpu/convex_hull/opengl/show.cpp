@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "show_memory.h"
 
 #include "com/math.h"
+#include "com/matrix_alg.h"
 #include "com/time.h"
 #include "gpu/convex_hull/com/com.h"
 #include "graphics/opengl/shader.h"
@@ -38,6 +39,8 @@ class Impl final : public ConvexHullShow
         std::unique_ptr<gpu_opengl::ConvexHullCompute> m_convex_hull;
         ConvexHullShaderMemory m_shader_memory;
 
+        int m_x, m_y, m_width, m_height;
+
         void reset_timer() override
         {
                 m_start_time = time_in_seconds();
@@ -50,19 +53,31 @@ class Impl final : public ConvexHullShow
                 float brightness = 0.5 + 0.5 * std::sin(CONVEX_HULL_ANGULAR_FREQUENCY * (time_in_seconds() - m_start_time));
                 m_shader_memory.set_brightness(brightness);
 
+                glViewport(m_x, m_y, m_width, m_height);
                 m_shader_memory.bind();
                 m_draw_prog.draw_arrays(GL_LINE_STRIP, 0, point_count);
         }
 
 public:
-        Impl(const opengl::Texture& objects, const mat4& matrix)
+        Impl(const opengl::Texture& objects, int x, int y, int width, int height)
                 : m_draw_prog(opengl::VertexShader(convex_hull_show_vert()), opengl::FragmentShader(convex_hull_show_frag())),
                   m_points(convex_hull_points_buffer_size(objects.height()), 0),
-                  m_start_time(time_in_seconds())
+                  m_start_time(time_in_seconds()),
+                  m_x(x),
+                  m_y(y),
+                  m_width(width),
+                  m_height(height)
         {
                 m_convex_hull = gpu_opengl::create_convex_hull_compute(objects, m_points);
 
-                m_shader_memory.set_matrix(matrix);
+                // Матрица для рисования на плоскости окна, точка (0, 0) слева вверху
+                double left = 0;
+                double right = m_width;
+                double bottom = m_height;
+                double top = 0;
+                double near = 1;
+                double far = -1;
+                m_shader_memory.set_matrix(ortho_opengl<double>(left, right, bottom, top, near, far));
                 m_shader_memory.set_points(m_points);
         }
 
@@ -73,8 +88,8 @@ public:
 };
 }
 
-std::unique_ptr<ConvexHullShow> create_convex_hull_show(const opengl::Texture& objects, const mat4& matrix)
+std::unique_ptr<ConvexHullShow> create_convex_hull_show(const opengl::Texture& objects, int x, int y, int width, int height)
 {
-        return std::make_unique<Impl>(objects, matrix);
+        return std::make_unique<Impl>(objects, x, y, width, height);
 }
 }

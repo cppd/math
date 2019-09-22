@@ -18,7 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "com/color/color.h"
-#include "com/matrix.h"
 #include "graphics/opengl/buffers.h"
 
 #include <memory>
@@ -35,6 +34,6 @@ struct DFTShow
         virtual void draw() = 0;
 };
 
-std::unique_ptr<DFTShow> create_dft_show(const opengl::Texture& source, int dst_x, int dst_y, const mat4& matrix,
-                                         double brightness, const Color& background_color, const Color& color);
+std::unique_ptr<DFTShow> create_dft_show(const opengl::Texture& source, int x, int y, int width, int height, double brightness,
+                                         const Color& background_color, const Color& color);
 }

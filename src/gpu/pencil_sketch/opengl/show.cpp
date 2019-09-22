@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "shader_source.h"
 
 #include "com/container.h"
+#include "com/vec.h"
 #include "graphics/opengl/shader.h"
 
 constexpr int VERTEX_COUNT = 4;
@@ -49,39 +50,40 @@ class Impl final : public PencilSketchShow
 
         std::unique_ptr<gpu_opengl::PencilSketchCompute> m_pencil_sketch;
 
+        int m_x, m_y, m_width, m_height;
+
         void draw() override
         {
                 m_pencil_sketch->exec();
 
                 // Два треугольника на всё окно с текстурой
+                glViewport(m_x, m_y, m_width, m_height);
                 m_vertex_array.bind();
                 m_draw_prog.draw_arrays(GL_TRIANGLE_STRIP, 0, VERTEX_COUNT);
         }
 
 public:
-        Impl(const opengl::Texture& source, const opengl::Texture& objects, const mat4& matrix)
+        Impl(const opengl::Texture& source, const opengl::Texture& objects, int x, int y, int width, int height)
                 : m_draw_prog(opengl::VertexShader(pencil_sketch_show_vert()), opengl::FragmentShader(pencil_sketch_show_frag())),
                   m_texture(IMAGE_FORMAT, source.width(), source.height()),
-                  m_pencil_sketch(gpu_opengl::create_pencil_sketch_compute(source, objects, m_texture))
+                  m_pencil_sketch(gpu_opengl::create_pencil_sketch_compute(source, objects, m_texture)),
+                  m_x(x),
+                  m_y(y),
+                  m_width(width),
+                  m_height(height)
         {
                 ASSERT(source.width() == objects.width());
                 ASSERT(source.height() == objects.height());
 
                 m_draw_prog.set_uniform_handle("tex", m_texture.texture_handle());
 
-                int x0 = 0;
-                int y0 = 0;
-                int x1 = source.width();
-                int y1 = source.height();
-
                 std::array<Vertex, VERTEX_COUNT> vertices;
 
-                // Текстурный 0 находится внизу, поэтому текстурная
-                // координата по Y для y0 равна 1, а для y1 равна 0
-                vertices[0] = {to_vector<float>(matrix * vec4(x0, y0, 0, 1)), {0, 1}};
-                vertices[1] = {to_vector<float>(matrix * vec4(x1, y0, 0, 1)), {1, 1}};
-                vertices[2] = {to_vector<float>(matrix * vec4(x0, y1, 0, 1)), {0, 0}};
-                vertices[3] = {to_vector<float>(matrix * vec4(x1, y1, 0, 1)), {1, 0}};
+                // Текстурный 0 находится внизу
+                vertices[0] = {{-1, +1, 0, 1}, {0, 1}};
+                vertices[1] = {{+1, +1, 0, 1}, {1, 1}};
+                vertices[2] = {{-1, -1, 0, 1}, {0, 0}};
+                vertices[3] = {{+1, -1, 0, 1}, {1, 0}};
 
                 m_vertex_buffer = std::make_unique<opengl::Buffer>(data_size(vertices), 0, vertices);
 
@@ -96,9 +98,9 @@ public:
 };
 }
 
-std::unique_ptr<PencilSketchShow> create_pencil_sketch_show(const opengl::Texture& source, const opengl::Texture& objects,
-                                                            const mat4& matrix)
+std::unique_ptr<PencilSketchShow> create_pencil_sketch_show(const opengl::Texture& source, const opengl::Texture& objects, int x,
+                                                            int y, int width, int height)
 {
-        return std::make_unique<Impl>(source, objects, matrix);
+        return std::make_unique<Impl>(source, objects, x, y, width, height);
 }
 }

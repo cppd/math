@@ -19,7 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/error.h"
 #include "com/log.h"
-#include "com/matrix_alg.h"
 #include "com/print.h"
 #include "com/time.h"
 #include "com/type/limit.h"
@@ -72,8 +71,11 @@ class Impl final : public Show, public WindowEvent
         FrameRate m_frame_rate{m_parent_window_ppi};
         Camera m_camera;
 
+        int m_draw_x = limits<int>::lowest();
+        int m_draw_y = limits<int>::lowest();
         int m_draw_width = limits<int>::lowest();
         int m_draw_height = limits<int>::lowest();
+
         bool m_fullscreen_active = false;
 
         //
@@ -430,16 +432,16 @@ class Impl final : public Show, public WindowEvent
                 bool changed = false;
 
                 const PressedMouseButton& right = m_event_window.pressed_mouse_button(MouseButton::Right);
-                if (right.pressed && right.pressed_x < m_draw_width && right.pressed_y < m_draw_height &&
-                    (right.delta_x != 0 || right.delta_y != 0))
+                if (right.pressed && right.pressed_x >= m_draw_x && right.pressed_x < m_draw_width &&
+                    right.pressed_y >= m_draw_y && right.pressed_y < m_draw_height && (right.delta_x != 0 || right.delta_y != 0))
                 {
                         m_camera.rotate(-right.delta_x, -right.delta_y);
                         changed = true;
                 }
 
                 const PressedMouseButton& left = m_event_window.pressed_mouse_button(MouseButton::Left);
-                if (left.pressed && left.pressed_x < m_draw_width && left.pressed_y < m_draw_height &&
-                    (left.delta_x != 0 || left.delta_y != 0))
+                if (left.pressed && left.pressed_x >= m_draw_x && left.pressed_x < m_draw_width && left.pressed_y >= m_draw_y &&
+                    left.pressed_y < m_draw_height && (left.delta_x != 0 || left.delta_y != 0))
                 {
                         m_camera.move(vec2(-left.delta_x, left.delta_y));
                         changed = true;
@@ -477,7 +479,7 @@ class Impl final : public Show, public WindowEvent
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
-                m_camera.scale(m_event_window.mouse_x(), m_event_window.mouse_y(), delta);
+                m_camera.scale(m_event_window.mouse_x() - m_draw_x, m_event_window.mouse_y() - m_draw_y, delta);
 
                 m_renderer->set_camera(m_camera.renderer_info());
         }
@@ -502,9 +504,6 @@ class Impl final : public Show, public WindowEvent
                         // когда окно ещё не готово.
                         return;
                 }
-
-                m_draw_width = m_dft_active ? m_window->width() / 2 : m_window->width();
-                m_draw_height = m_window->height();
 
                 resize();
 
@@ -542,7 +541,7 @@ class Impl final : public Show, public WindowEvent
                         pull_and_dispatch_all_events();
                 }
 
-                if (m_draw_width <= 0 || m_draw_height <= 0)
+                if (m_draw_x < 0 || m_draw_y < 0 || m_draw_width <= 0 || m_draw_height <= 0)
                 {
                         error("Draw size error (" + to_string(m_draw_width) + ", " + to_string(m_draw_height) + ")");
                 }
@@ -552,6 +551,13 @@ class Impl final : public Show, public WindowEvent
 
         void resize()
         {
+                m_draw_x = 0;
+                m_draw_y = 0;
+                m_draw_width = m_dft_active ? m_window->width() / 2 : m_window->width();
+                m_draw_height = m_window->height();
+                int draw_x_dft = m_window->width() - m_draw_width;
+                int draw_y_dft = m_draw_y;
+
                 m_convex_hull.reset();
                 m_optical_flow.reset();
                 m_dft.reset();
@@ -569,39 +575,44 @@ class Impl final : public Show, public WindowEvent
 
                 m_object_image = std::make_unique<opengl::Texture>(OPENGL_OBJECT_IMAGE_FORMAT, m_draw_width, m_draw_height);
 
-                m_renderer->set_size(m_draw_width, m_draw_height, *m_object_image);
+                //
 
-                int dft_dst_x = (m_window->width() & 1) ? (m_draw_width + 1) : m_draw_width;
-                int dft_dst_y = 0;
+                m_renderer->set_size(m_draw_x, m_draw_y, m_draw_width, m_draw_height, *m_object_image);
 
-                // Матрица для рисования на плоскости окна, точка (0, 0) слева вверху
-                double left = 0;
-                double right = m_window->width();
-                double bottom = m_window->height();
-                double top = 0;
-                double near = 1;
-                double far = -1;
-                const mat4& matrix = ortho_opengl<double>(left, right, bottom, top, near, far);
+                //
 
-                m_pencil_sketch =
-                        gpu_opengl::create_pencil_sketch_show(m_resolve_framebuffer->texture(), *m_object_image, matrix);
+                m_pencil_sketch = gpu_opengl::create_pencil_sketch_show(m_resolve_framebuffer->texture(), *m_object_image,
+                                                                        m_draw_x, m_draw_y, m_draw_width, m_draw_height);
 
-                m_dft = gpu_opengl::create_dft_show(m_resolve_framebuffer->texture(), dft_dst_x, dft_dst_y, matrix,
-                                                    m_dft_brightness, m_dft_background_color, m_dft_color);
+                m_dft = gpu_opengl::create_dft_show(m_resolve_framebuffer->texture(), draw_x_dft, draw_y_dft, m_draw_width,
+                                                    m_draw_height, m_dft_brightness, m_dft_background_color, m_dft_color);
 
-                m_optical_flow =
-                        gpu_opengl::create_optical_flow_show(m_resolve_framebuffer->texture(), m_parent_window_ppi, matrix);
+                m_optical_flow = gpu_opengl::create_optical_flow_show(m_resolve_framebuffer->texture(), m_parent_window_ppi,
+                                                                      m_draw_x, m_draw_y, m_draw_width, m_draw_height);
 
-                m_convex_hull = gpu_opengl::create_convex_hull_show(*m_object_image, matrix);
+                m_convex_hull =
+                        gpu_opengl::create_convex_hull_show(*m_object_image, m_draw_x, m_draw_y, m_draw_width, m_draw_height);
 
-                if (m_text)
+                if (!m_text)
                 {
-                        m_text->set_matrix(matrix);
+                        m_text = gpu_opengl::create_text(m_frame_rate.text_size(), m_text_color);
                 }
-                else
-                {
-                        m_text = gpu_opengl::create_text(m_frame_rate.text_size(), m_text_color, matrix);
-                }
+                m_text->set_window(m_draw_x, m_draw_y, m_draw_width, m_draw_height);
+        }
+
+        void resolve_to_texture()
+        {
+                glBlitNamedFramebuffer(*m_render_framebuffer, *m_resolve_framebuffer, m_draw_x, m_draw_y, m_draw_x + m_draw_width,
+                                       m_draw_y + m_draw_height, 0, 0, m_draw_width, m_draw_height, GL_COLOR_BUFFER_BIT,
+                                       GL_NEAREST);
+        }
+
+        void resolve_to_default()
+        {
+                int width = m_event_window.window_width();
+                int height = m_event_window.window_height();
+                glBlitNamedFramebuffer(*m_render_framebuffer, DEFAULT_FRAMEBUFFER, 0, 0, width, height, 0, 0, width, height,
+                                       GL_COLOR_BUFFER_BIT, GL_NEAREST);
         }
 
         void render(const TextData& text_data)
@@ -613,22 +624,15 @@ class Impl final : public Show, public WindowEvent
 
                 m_renderer->draw();
 
-                int width = m_event_window.window_width();
-                int height = m_event_window.window_height();
-
-                glViewport(0, 0, width, height);
-
                 if (m_pencil_sketch_active)
                 {
-                        glBlitNamedFramebuffer(*m_render_framebuffer, *m_resolve_framebuffer, 0, 0, m_draw_width, m_draw_height,
-                                               0, 0, m_draw_width, m_draw_height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+                        resolve_to_texture();
                         m_pencil_sketch->draw();
                 }
 
                 if (m_dft_active || m_optical_flow_active)
                 {
-                        glBlitNamedFramebuffer(*m_render_framebuffer, *m_resolve_framebuffer, 0, 0, m_draw_width, m_draw_height,
-                                               0, 0, m_draw_width, m_draw_height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+                        resolve_to_texture();
                 }
 
                 if (m_dft_active)
@@ -648,8 +652,7 @@ class Impl final : public Show, public WindowEvent
                         m_text->draw(text_data);
                 }
 
-                glBlitNamedFramebuffer(*m_render_framebuffer, DEFAULT_FRAMEBUFFER, 0, 0, width, height, 0, 0, width, height,
-                                       GL_COLOR_BUFFER_BIT, GL_NEAREST);
+                resolve_to_default();
 
                 m_window->display();
         }
