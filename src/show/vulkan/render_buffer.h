@@ -46,5 +46,7 @@ enum class RenderBufferCount
 
 std::unique_ptr<RenderBuffers> create_render_buffers(RenderBufferCount buffer_count, const vulkan::Swapchain& swapchain,
                                                      const vulkan::CommandPool& command_pool, const vulkan::Queue& queue,
-                                                     const vulkan::Device& device, int required_minimum_sample_count);
+                                                     const vulkan::Device& device, int required_minimum_sample_count,
+                                                     unsigned resolve_x, unsigned resolve_y, unsigned resolve_width,
+                                                     unsigned resolve_height);
 }

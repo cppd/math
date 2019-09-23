@@ -27,6 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/font/glyphs.h"
 #include "com/font/vertices.h"
 #include "com/log.h"
+#include "com/matrix_alg.h"
 #include "com/merge.h"
 #include "graphics/vulkan/buffers.h"
 #include "graphics/vulkan/create.h"
@@ -147,7 +148,7 @@ class Impl final : public TextShow
                 vkCmdDrawIndirect(command_buffer, m_indirect_buffer, 0, 1, sizeof(VkDrawIndirectCommand));
         }
 
-        void create_buffers(RenderBuffers2D* render_buffers, const mat4& matrix) override
+        void create_buffers(RenderBuffers2D* render_buffers, unsigned x, unsigned y, unsigned width, unsigned height) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
@@ -155,14 +156,22 @@ class Impl final : public TextShow
 
                 m_render_buffers = render_buffers;
 
-                m_pipeline = m_render_buffers->create_pipeline(
-                        VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, m_sample_shading, true /*color_blend*/, {&m_text_vert, &m_text_frag},
-                        m_pipeline_layout, text_show_vertex_binding_descriptions(), text_show_vertex_attribute_descriptions());
+                m_pipeline = m_render_buffers->create_pipeline(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, m_sample_shading,
+                                                               true /*color_blend*/, {&m_text_vert, &m_text_frag},
+                                                               m_pipeline_layout, text_show_vertex_binding_descriptions(),
+                                                               text_show_vertex_attribute_descriptions(), x, y, width, height);
 
                 m_command_buffers = m_render_buffers->create_command_buffers(
                         std::nullopt, std::bind(&Impl::draw_commands, this, std::placeholders::_1));
 
-                m_shader_memory.set_matrix(matrix);
+                // Матрица для рисования на плоскости окна, точка (0, 0) слева вверху
+                double left = 0;
+                double right = width;
+                double bottom = height;
+                double top = 0;
+                double near = 1;
+                double far = -1;
+                m_shader_memory.set_matrix(ortho_vulkan<double>(left, right, bottom, top, near, far));
         }
 
         void delete_buffers() override

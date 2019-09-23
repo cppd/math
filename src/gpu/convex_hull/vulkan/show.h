@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "com/matrix.h"
 #include "gpu/vulkan_interfaces.h"
 #include "graphics/vulkan/buffers.h"
 #include "graphics/vulkan/instance.h"
@@ -33,8 +32,8 @@ struct ConvexHullShow
 
         virtual ~ConvexHullShow() = default;
 
-        virtual void create_buffers(RenderBuffers2D* render_buffers, const mat4& matrix,
-                                    const vulkan::ImageWithMemory& objects) = 0;
+        virtual void create_buffers(RenderBuffers2D* render_buffers, const vulkan::ImageWithMemory& objects, unsigned x,
+                                    unsigned y, unsigned width, unsigned height) = 0;
         virtual void delete_buffers() = 0;
 
         virtual VkSemaphore draw(const vulkan::Queue& queue, VkSemaphore wait_semaphore, unsigned image_index) = 0;

@@ -21,7 +21,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/error.h"
 #include "com/log.h"
-#include "com/matrix_alg.h"
 #include "com/merge.h"
 #include "com/print.h"
 #include "com/time.h"
@@ -107,6 +106,8 @@ class Impl final : public Show, public WindowEvent
         FrameRate m_frame_rate{m_parent_window_ppi};
         Camera m_camera;
 
+        int m_draw_x = limits<int>::lowest();
+        int m_draw_y = limits<int>::lowest();
         int m_draw_width = limits<int>::lowest();
         int m_draw_height = limits<int>::lowest();
         bool m_fullscreen_active = false;
@@ -422,7 +423,8 @@ class Impl final : public Show, public WindowEvent
                 bool changed = false;
 
                 const PressedMouseButton& right = m_event_window.pressed_mouse_button(MouseButton::Right);
-                if (right.pressed && right.pressed_x < m_draw_width && right.pressed_y < m_draw_height &&
+                if (right.pressed && right.pressed_x >= m_draw_x && right.pressed_x < m_draw_x + m_draw_width &&
+                    right.pressed_y >= m_draw_y && right.pressed_y < m_draw_y + m_draw_height &&
                     (right.delta_x != 0 || right.delta_y != 0))
                 {
                         m_camera.rotate(-right.delta_x, -right.delta_y);
@@ -430,7 +432,8 @@ class Impl final : public Show, public WindowEvent
                 }
 
                 const PressedMouseButton& left = m_event_window.pressed_mouse_button(MouseButton::Left);
-                if (left.pressed && left.pressed_x < m_draw_width && left.pressed_y < m_draw_height &&
+                if (left.pressed && left.pressed_x >= m_draw_x && left.pressed_x < m_draw_x + m_draw_width &&
+                    left.pressed_y >= m_draw_y && left.pressed_y < m_draw_y + m_draw_height &&
                     (left.delta_x != 0 || left.delta_y != 0))
                 {
                         m_camera.move(vec2(-left.delta_x, left.delta_y));
@@ -469,7 +472,7 @@ class Impl final : public Show, public WindowEvent
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
-                m_camera.scale(m_event_window.mouse_x(), m_event_window.mouse_y(), delta);
+                m_camera.scale(m_event_window.mouse_x() - m_draw_x, m_event_window.mouse_y() - m_draw_y, delta);
 
                 m_renderer->set_camera(m_camera.renderer_info());
         }
@@ -494,12 +497,6 @@ class Impl final : public Show, public WindowEvent
                         // когда окно ещё не готово.
                         return;
                 }
-
-                m_draw_width = m_window->width();
-                m_draw_height = m_window->height();
-
-                m_camera.resize(m_draw_width, m_draw_height);
-                m_renderer->set_camera(m_camera.renderer_info());
         }
 
         //
@@ -575,32 +572,41 @@ class Impl final : public Show, public WindowEvent
                         std::make_unique<vulkan::Swapchain>(m_instance->surface(), m_instance->device(), swapchain_family_indices,
                                                             VULKAN_SURFACE_FORMAT, VULKAN_PREFERRED_IMAGE_COUNT, m_present_mode);
 
+                m_draw_x = 0;
+                m_draw_y = 0;
+                m_draw_width = m_swapchain->width();
+                m_draw_height = m_swapchain->height();
+
+                m_draw_width = std::max(1, m_draw_width);
+                m_draw_height = std::max(1, m_draw_height);
+
                 constexpr RenderBufferCount buffer_count = RenderBufferCount::One;
 
-                m_render_buffers = create_render_buffers(buffer_count, *m_swapchain, m_instance->graphics_command_pool(),
-                                                         m_instance->graphics_queues()[0], m_instance->device(),
-                                                         VULKAN_MINIMUM_SAMPLE_COUNT);
+                m_render_buffers = create_render_buffers(
+                        buffer_count, *m_swapchain, m_instance->graphics_command_pool(), m_instance->graphics_queues()[0],
+                        m_instance->device(), VULKAN_MINIMUM_SAMPLE_COUNT, m_draw_x, m_draw_y, m_draw_width, m_draw_height);
+
+                //
 
                 static constexpr bool storage = true;
                 m_object_image = std::make_unique<vulkan::ImageWithMemory>(
                         m_instance->device(), m_instance->graphics_command_pool(), m_instance->graphics_queues()[0],
                         std::unordered_set({m_instance->graphics_queues()[0].family_index()}),
-                        std::vector<VkFormat>({VULKAN_OBJECT_IMAGE_FORMAT}), m_swapchain->width(), m_swapchain->height(),
-                        VK_IMAGE_LAYOUT_GENERAL, storage);
+                        std::vector<VkFormat>({VULKAN_OBJECT_IMAGE_FORMAT}), m_draw_width, m_draw_height, VK_IMAGE_LAYOUT_GENERAL,
+                        storage);
 
-                m_renderer->create_buffers(m_swapchain.get(), &m_render_buffers->buffers_3d(), m_object_image.get());
+                m_renderer->create_buffers(m_swapchain.get(), &m_render_buffers->buffers_3d(), m_object_image.get(), m_draw_x,
+                                           m_draw_y, m_draw_width, m_draw_height);
 
-                // Матрица для рисования на плоскости окна, точка (0, 0) слева вверху
-                double left = 0;
-                double right = m_swapchain->width();
-                double bottom = m_swapchain->height();
-                double top = 0;
-                double near = 1;
-                double far = -1;
-                const mat4& matrix = ortho_vulkan<double>(left, right, bottom, top, near, far);
+                m_text->create_buffers(&m_render_buffers->buffers_2d(), m_draw_x, m_draw_y, m_draw_width, m_draw_height);
 
-                m_text->create_buffers(&m_render_buffers->buffers_2d(), matrix);
-                m_convex_hull->create_buffers(&m_render_buffers->buffers_2d(), matrix, *m_object_image);
+                m_convex_hull->create_buffers(&m_render_buffers->buffers_2d(), *m_object_image, m_draw_x, m_draw_y, m_draw_width,
+                                              m_draw_height);
+
+                //
+
+                m_camera.resize(m_draw_width, m_draw_height);
+                m_renderer->set_camera(m_camera.renderer_info());
         }
 
         bool render(const TextData& text_data)

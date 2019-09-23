@@ -58,5 +58,5 @@ std::unique_ptr<RendererDepthBuffers> create_renderer_depth_buffers(RendererDept
                                                                     const vulkan::Swapchain& swapchain,
                                                                     const std::unordered_set<uint32_t>& attachment_family_indices,
                                                                     VkCommandPool command_pool, const vulkan::Device& device,
-                                                                    double zoom);
+                                                                    unsigned width, unsigned height, double zoom);
 }

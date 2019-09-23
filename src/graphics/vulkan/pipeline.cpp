@@ -61,17 +61,18 @@ Pipeline create_graphics_pipeline(const GraphicsPipelineCreateInfo& info)
         input_assembly_state_info.primitiveRestartEnable = VK_FALSE;
 
         VkViewport viewport = {};
-        viewport.x = 0.0f;
-        viewport.y = 0.0f;
-        viewport.width = info.width.value();
-        viewport.height = info.height.value();
+        viewport.x = info.viewport_x.value();
+        viewport.y = info.viewport_y.value();
+        viewport.width = info.viewport_width.value();
+        viewport.height = info.viewport_height.value();
         viewport.minDepth = 0.0f;
         viewport.maxDepth = 1.0f;
 
         VkRect2D scissor = {};
-        scissor.offset = {0, 0};
-        scissor.extent.width = info.width.value();
-        scissor.extent.height = info.height.value();
+        scissor.offset.x = info.viewport_x.value();
+        scissor.offset.y = info.viewport_y.value();
+        scissor.extent.width = info.viewport_width.value();
+        scissor.extent.height = info.viewport_height.value();
 
         VkPipelineViewportStateCreateInfo viewport_state_info = {};
         viewport_state_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;

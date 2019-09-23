@@ -172,7 +172,8 @@ class Impl3D : public gpu_vulkan::RenderBuffers3D
         virtual VkPipeline create_pipeline_3d(VkPrimitiveTopology primitive_topology, bool sample_shading,
                                               const std::vector<const vulkan::Shader*>& shaders, VkPipelineLayout pipeline_layout,
                                               const std::vector<VkVertexInputBindingDescription>& vertex_binding,
-                                              const std::vector<VkVertexInputAttributeDescription>& vertex_attribute) = 0;
+                                              const std::vector<VkVertexInputAttributeDescription>& vertex_attribute, unsigned x,
+                                              unsigned y, unsigned width, unsigned height) = 0;
 
         //
 
@@ -192,10 +193,11 @@ class Impl3D : public gpu_vulkan::RenderBuffers3D
         VkPipeline create_pipeline(VkPrimitiveTopology primitive_topology, bool sample_shading,
                                    const std::vector<const vulkan::Shader*>& shaders, VkPipelineLayout pipeline_layout,
                                    const std::vector<VkVertexInputBindingDescription>& vertex_binding,
-                                   const std::vector<VkVertexInputAttributeDescription>& vertex_attribute) override final
+                                   const std::vector<VkVertexInputAttributeDescription>& vertex_attribute, unsigned x, unsigned y,
+                                   unsigned width, unsigned height) override final
         {
                 return create_pipeline_3d(primitive_topology, sample_shading, shaders, pipeline_layout, vertex_binding,
-                                          vertex_attribute);
+                                          vertex_attribute, x, y, width, height);
         }
 
 protected:
@@ -213,7 +215,8 @@ class Impl2D : public gpu_vulkan::RenderBuffers2D
         virtual VkPipeline create_pipeline_2d(VkPrimitiveTopology primitive_topology, bool sample_shading, bool color_blend,
                                               const std::vector<const vulkan::Shader*>& shaders, VkPipelineLayout pipeline_layout,
                                               const std::vector<VkVertexInputBindingDescription>& vertex_binding,
-                                              const std::vector<VkVertexInputAttributeDescription>& vertex_attribute) = 0;
+                                              const std::vector<VkVertexInputAttributeDescription>& vertex_attribute, unsigned x,
+                                              unsigned y, unsigned width, unsigned height) = 0;
 
         //
 
@@ -232,10 +235,11 @@ class Impl2D : public gpu_vulkan::RenderBuffers2D
         VkPipeline create_pipeline(VkPrimitiveTopology primitive_topology, bool sample_shading, bool color_blend,
                                    const std::vector<const vulkan::Shader*>& shaders, VkPipelineLayout pipeline_layout,
                                    const std::vector<VkVertexInputBindingDescription>& vertex_binding,
-                                   const std::vector<VkVertexInputAttributeDescription>& vertex_attribute) override final
+                                   const std::vector<VkVertexInputAttributeDescription>& vertex_attribute, unsigned x, unsigned y,
+                                   unsigned width, unsigned height) override final
         {
                 return create_pipeline_2d(primitive_topology, sample_shading, color_blend, shaders, pipeline_layout,
-                                          vertex_binding, vertex_attribute);
+                                          vertex_binding, vertex_attribute, x, y, width, height);
         }
 
 protected:
@@ -284,7 +288,8 @@ class Impl final : public show_vulkan::RenderBuffers, public Impl3D, public Impl
         void create_resolve_command_buffers();
 
         void create_textures(unsigned buffer_count, const vulkan::Swapchain& swapchain,
-                             const std::unordered_set<uint32_t>& family_indices, const vulkan::Queue& queue);
+                             const std::unordered_set<uint32_t>& family_indices, const vulkan::Queue& queue, unsigned resolve_x,
+                             unsigned resolve_y, unsigned resolve_width, unsigned resolve_height);
 
         //
 
@@ -318,17 +323,20 @@ class Impl final : public show_vulkan::RenderBuffers, public Impl3D, public Impl
         VkPipeline create_pipeline_3d(VkPrimitiveTopology primitive_topology, bool sample_shading,
                                       const std::vector<const vulkan::Shader*>& shaders, VkPipelineLayout pipeline_layout,
                                       const std::vector<VkVertexInputBindingDescription>& vertex_binding,
-                                      const std::vector<VkVertexInputAttributeDescription>& vertex_attribute) override;
+                                      const std::vector<VkVertexInputAttributeDescription>& vertex_attribute, unsigned x,
+                                      unsigned y, unsigned width, unsigned height) override;
 
         VkPipeline create_pipeline_2d(VkPrimitiveTopology primitive_topology, bool sample_shading, bool color_blend,
                                       const std::vector<const vulkan::Shader*>& shaders, VkPipelineLayout pipeline_layout,
                                       const std::vector<VkVertexInputBindingDescription>& vertex_binding,
-                                      const std::vector<VkVertexInputAttributeDescription>& vertex_attribute) override;
+                                      const std::vector<VkVertexInputAttributeDescription>& vertex_attribute, unsigned x,
+                                      unsigned y, unsigned width, unsigned height) override;
 
 public:
         Impl(show_vulkan::RenderBufferCount buffer_count, const vulkan::Swapchain& swapchain,
              const vulkan::CommandPool& command_pool, const vulkan::Queue& queue, const vulkan::Device& device,
-             int required_minimum_sample_count);
+             int required_minimum_sample_count, unsigned resolve_x, unsigned resolve_y, unsigned resolve_width,
+             unsigned resolve_height);
 
         Impl(const Impl&) = delete;
         Impl& operator=(const Impl&) = delete;
@@ -337,7 +345,8 @@ public:
 
 Impl::Impl(show_vulkan::RenderBufferCount buffer_count, const vulkan::Swapchain& swapchain,
            const vulkan::CommandPool& command_pool, const vulkan::Queue& queue, const vulkan::Device& device,
-           int required_minimum_sample_count)
+           int required_minimum_sample_count, unsigned resolve_x, unsigned resolve_y, unsigned resolve_width,
+           unsigned resolve_height)
         : m_device(device),
           m_swapchain_format(swapchain.format()),
           m_swapchain_color_space(swapchain.color_space()),
@@ -351,7 +360,8 @@ Impl::Impl(show_vulkan::RenderBufferCount buffer_count, const vulkan::Swapchain&
 #if 1
         create_color_buffer_rendering(count, swapchain, sample_count, {command_pool.family_index()});
         create_resolve_command_buffers();
-        create_textures(count, swapchain, {command_pool.family_index()}, queue);
+        create_textures(count, swapchain, {command_pool.family_index()}, queue, resolve_x, resolve_y, resolve_width,
+                        resolve_height);
 #else
         if (sample_count != VK_SAMPLE_COUNT_1_BIT)
         {
@@ -461,18 +471,22 @@ void Impl::create_color_buffer_rendering(unsigned buffer_count, const vulkan::Sw
 }
 
 void Impl::create_textures(unsigned buffer_count, const vulkan::Swapchain& swapchain,
-                           const std::unordered_set<uint32_t>& family_indices, const vulkan::Queue& queue)
+                           const std::unordered_set<uint32_t>& family_indices, const vulkan::Queue& queue, unsigned resolve_x,
+                           unsigned resolve_y, unsigned resolve_width, unsigned resolve_height)
 {
         static constexpr VkImageLayout IMAGE_LAYOUT = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
         ASSERT(m_color_attachments.size() == buffer_count);
 
+        ASSERT(resolve_width > 0 && resolve_height > 0);
+        ASSERT(resolve_x + resolve_width <= swapchain.width() && resolve_y + resolve_height <= swapchain.height());
+
         for (unsigned i = 0; i < buffer_count; ++i)
         {
                 constexpr bool storage = false;
                 m_textures.emplace_back(m_device, m_command_pool, queue, family_indices,
-                                        std::vector<VkFormat>({swapchain.format()}), swapchain.width(), swapchain.height(),
-                                        IMAGE_LAYOUT, storage);
+                                        std::vector<VkFormat>({swapchain.format()}), resolve_width, resolve_height, IMAGE_LAYOUT,
+                                        storage);
 
                 ASSERT(m_textures.back().usage() & VK_IMAGE_USAGE_TRANSFER_DST_BIT);
                 ASSERT(m_textures.back().usage() & VK_IMAGE_USAGE_SAMPLED_BIT);
@@ -501,8 +515,8 @@ void Impl::create_textures(unsigned buffer_count, const vulkan::Swapchain& swapc
         image_resolve.srcSubresource.mipLevel = 0;
         image_resolve.srcSubresource.baseArrayLayer = 0;
         image_resolve.srcSubresource.layerCount = 1;
-        image_resolve.srcOffset.x = 0;
-        image_resolve.srcOffset.y = 0;
+        image_resolve.srcOffset.x = resolve_x;
+        image_resolve.srcOffset.y = resolve_y;
         image_resolve.srcOffset.z = 0;
         image_resolve.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
         image_resolve.dstSubresource.mipLevel = 0;
@@ -511,8 +525,8 @@ void Impl::create_textures(unsigned buffer_count, const vulkan::Swapchain& swapc
         image_resolve.dstOffset.x = 0;
         image_resolve.dstOffset.y = 0;
         image_resolve.dstOffset.z = 0;
-        image_resolve.extent.width = swapchain.width();
-        image_resolve.extent.height = swapchain.height();
+        image_resolve.extent.width = resolve_width;
+        image_resolve.extent.height = resolve_height;
         image_resolve.extent.depth = 1;
 
         VkResult result;
@@ -750,7 +764,8 @@ void Impl::delete_command_buffers_2d(std::vector<VkCommandBuffer>* buffers)
 VkPipeline Impl::create_pipeline_3d(VkPrimitiveTopology primitive_topology, bool sample_shading,
                                     const std::vector<const vulkan::Shader*>& shaders, VkPipelineLayout pipeline_layout,
                                     const std::vector<VkVertexInputBindingDescription>& vertex_binding,
-                                    const std::vector<VkVertexInputAttributeDescription>& vertex_attribute)
+                                    const std::vector<VkVertexInputAttributeDescription>& vertex_attribute, unsigned x,
+                                    unsigned y, unsigned width, unsigned height)
 {
         ASSERT(pipeline_layout != VK_NULL_HANDLE);
         ASSERT(m_depth_attachments.size() > 0);
@@ -763,8 +778,10 @@ VkPipeline Impl::create_pipeline_3d(VkPrimitiveTopology primitive_topology, bool
         info.sample_count = m_color_attachments.size() > 0 ? m_color_attachments[0].sample_count() : VK_SAMPLE_COUNT_1_BIT;
         info.sample_shading = sample_shading;
         info.pipeline_layout = pipeline_layout;
-        info.width = m_depth_attachments[0].width();
-        info.height = m_depth_attachments[0].height();
+        info.viewport_x = x;
+        info.viewport_y = y;
+        info.viewport_width = width;
+        info.viewport_height = height;
         info.primitive_topology = primitive_topology;
         info.shaders = &shaders;
         info.binding_descriptions = &vertex_binding;
@@ -780,7 +797,8 @@ VkPipeline Impl::create_pipeline_3d(VkPrimitiveTopology primitive_topology, bool
 VkPipeline Impl::create_pipeline_2d(VkPrimitiveTopology primitive_topology, bool sample_shading, bool color_blend,
                                     const std::vector<const vulkan::Shader*>& shaders, VkPipelineLayout pipeline_layout,
                                     const std::vector<VkVertexInputBindingDescription>& vertex_binding,
-                                    const std::vector<VkVertexInputAttributeDescription>& vertex_attribute)
+                                    const std::vector<VkVertexInputAttributeDescription>& vertex_attribute, unsigned x,
+                                    unsigned y, unsigned width, unsigned height)
 {
         ASSERT(pipeline_layout != VK_NULL_HANDLE);
         ASSERT(m_depth_attachments.size() > 0);
@@ -793,8 +811,10 @@ VkPipeline Impl::create_pipeline_2d(VkPrimitiveTopology primitive_topology, bool
         info.sample_count = m_color_attachments.size() > 0 ? m_color_attachments[0].sample_count() : VK_SAMPLE_COUNT_1_BIT;
         info.sample_shading = sample_shading;
         info.pipeline_layout = pipeline_layout;
-        info.width = m_depth_attachments[0].width();
-        info.height = m_depth_attachments[0].height();
+        info.viewport_x = x;
+        info.viewport_y = y;
+        info.viewport_width = width;
+        info.viewport_height = height;
         info.primitive_topology = primitive_topology;
         info.shaders = &shaders;
         info.binding_descriptions = &vertex_binding;
@@ -812,8 +832,11 @@ namespace show_vulkan
 {
 std::unique_ptr<RenderBuffers> create_render_buffers(RenderBufferCount buffer_count, const vulkan::Swapchain& swapchain,
                                                      const vulkan::CommandPool& command_pool, const vulkan::Queue& queue,
-                                                     const vulkan::Device& device, int required_minimum_sample_count)
+                                                     const vulkan::Device& device, int required_minimum_sample_count,
+                                                     unsigned resolve_x, unsigned resolve_y, unsigned resolve_width,
+                                                     unsigned resolve_height)
 {
-        return std::make_unique<Impl>(buffer_count, swapchain, command_pool, queue, device, required_minimum_sample_count);
+        return std::make_unique<Impl>(buffer_count, swapchain, command_pool, queue, device, required_minimum_sample_count,
+                                      resolve_x, resolve_y, resolve_width, resolve_height);
 }
 }

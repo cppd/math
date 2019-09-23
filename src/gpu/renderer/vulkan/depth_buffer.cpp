@@ -206,7 +206,7 @@ class Impl final : public RendererDepthBuffers
 public:
         Impl(RendererDepthBufferCount buffer_count, const vulkan::Swapchain& swapchain,
              const std::unordered_set<uint32_t>& attachment_family_indices, VkCommandPool command_pool,
-             const vulkan::Device& device, double zoom);
+             const vulkan::Device& device, unsigned width, unsigned height, double zoom);
 
         Impl(const Impl&) = delete;
         Impl& operator=(const Impl&) = delete;
@@ -215,15 +215,14 @@ public:
 
 Impl::Impl(RendererDepthBufferCount buffer_count, const vulkan::Swapchain& swapchain,
            const std::unordered_set<uint32_t>& attachment_family_indices, VkCommandPool command_pool,
-           const vulkan::Device& device, double zoom)
+           const vulkan::Device& device, unsigned width, unsigned height, double zoom)
         : m_device(device), m_command_pool(command_pool)
 {
         ASSERT(attachment_family_indices.size() > 0);
 
         zoom = std::max(zoom, 1.0);
-
-        unsigned width = std::lround(swapchain.width() * zoom);
-        unsigned height = std::lround(swapchain.height() * zoom);
+        width = std::lround(width * zoom);
+        height = std::lround(height * zoom);
 
         unsigned count = compute_buffer_count(buffer_count, swapchain);
 
@@ -322,8 +321,10 @@ VkPipeline Impl::create_pipeline(VkPrimitiveTopology primitive_topology, const s
         info.sample_count = VK_SAMPLE_COUNT_1_BIT;
         info.sample_shading = false;
         info.pipeline_layout = pipeline_layout;
-        info.width = width;
-        info.height = height;
+        info.viewport_x = 0;
+        info.viewport_y = 0;
+        info.viewport_width = width;
+        info.viewport_height = height;
         info.primitive_topology = primitive_topology;
         info.shaders = &shaders;
         info.binding_descriptions = &vertex_binding;
@@ -341,8 +342,9 @@ std::unique_ptr<RendererDepthBuffers> create_renderer_depth_buffers(RendererDept
                                                                     const vulkan::Swapchain& swapchain,
                                                                     const std::unordered_set<uint32_t>& attachment_family_indices,
                                                                     VkCommandPool command_pool, const vulkan::Device& device,
-                                                                    double zoom)
+                                                                    unsigned width, unsigned height, double zoom)
 {
-        return std::make_unique<Impl>(buffer_count, swapchain, attachment_family_indices, command_pool, device, zoom);
+        return std::make_unique<Impl>(buffer_count, swapchain, attachment_family_indices, command_pool, device, width, height,
+                                      zoom);
 }
 }

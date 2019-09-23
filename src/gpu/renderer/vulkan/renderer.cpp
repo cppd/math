@@ -128,6 +128,8 @@ class Impl final : public Renderer
         VkPipeline m_points_0d_pipeline = VK_NULL_HANDLE;
         VkPipeline m_points_1d_pipeline = VK_NULL_HANDLE;
 
+        unsigned m_x, m_y, m_width, m_height;
+
         void set_light_a(const Color& light) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
@@ -341,15 +343,22 @@ class Impl final : public Renderer
         }
 
         void create_buffers(const vulkan::Swapchain* swapchain, RenderBuffers3D* render_buffers,
-                            const vulkan::ImageWithMemory* objects) override
+                            const vulkan::ImageWithMemory* objects, unsigned x, unsigned y, unsigned width,
+                            unsigned height) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
                 //
 
+                ASSERT(objects->width() == width && objects->height() == height);
+
                 m_swapchain = swapchain;
                 m_render_buffers = render_buffers;
                 m_object_image = objects;
+                m_x = x;
+                m_y = y;
+                m_width = width;
+                m_height = height;
 
                 create_render_buffers();
                 create_shadow_buffers();
@@ -392,15 +401,18 @@ class Impl final : public Renderer
                 m_triangles_pipeline = m_render_buffers->create_pipeline(
                         VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, m_sample_shading,
                         {&m_triangles_vert, &m_triangles_geom, &m_triangles_frag}, m_triangles_pipeline_layout,
-                        RendererVertex::binding_descriptions(), RendererVertex::triangles_attribute_descriptions());
+                        RendererVertex::binding_descriptions(), RendererVertex::triangles_attribute_descriptions(), m_x, m_y,
+                        m_width, m_height);
 
                 m_points_0d_pipeline = m_render_buffers->create_pipeline(
                         VK_PRIMITIVE_TOPOLOGY_POINT_LIST, false, {&m_points_0d_vert, &m_points_frag}, m_points_pipeline_layout,
-                        RendererPointVertex::binding_descriptions(), RendererPointVertex::attribute_descriptions());
+                        RendererPointVertex::binding_descriptions(), RendererPointVertex::attribute_descriptions(), m_x, m_y,
+                        m_width, m_height);
 
                 m_points_1d_pipeline = m_render_buffers->create_pipeline(
                         VK_PRIMITIVE_TOPOLOGY_LINE_LIST, false, {&m_points_1d_vert, &m_points_frag}, m_points_pipeline_layout,
-                        RendererPointVertex::binding_descriptions(), RendererPointVertex::attribute_descriptions());
+                        RendererPointVertex::binding_descriptions(), RendererPointVertex::attribute_descriptions(), m_x, m_y,
+                        m_width, m_height);
         }
 
         void delete_shadow_buffers()
@@ -422,8 +434,9 @@ class Impl final : public Renderer
                 //
 
                 constexpr RendererDepthBufferCount buffer_count = RendererDepthBufferCount::One;
-                m_shadow_buffers = create_renderer_depth_buffers(buffer_count, *m_swapchain, {m_graphics_queue.family_index()},
-                                                                 m_graphics_command_pool, m_device, m_shadow_zoom);
+                m_shadow_buffers =
+                        create_renderer_depth_buffers(buffer_count, *m_swapchain, {m_graphics_queue.family_index()},
+                                                      m_graphics_command_pool, m_device, m_width, m_height, m_shadow_zoom);
 
                 m_triangles_shared_shader_memory.set_shadow_texture(m_shadow_sampler, m_shadow_buffers->texture(0));
 

@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/container.h"
 #include "com/error.h"
 #include "com/log.h"
+#include "com/matrix_alg.h"
 #include "com/merge.h"
 #include "com/time.h"
 #include "gpu/convex_hull/com/com.h"
@@ -94,23 +95,34 @@ class Impl final : public ConvexHullShow
                 vkCmdDrawIndirect(command_buffer, m_indirect_buffer, 0, 1, sizeof(VkDrawIndirectCommand));
         }
 
-        void create_buffers(RenderBuffers2D* render_buffers, const mat4& matrix, const vulkan::ImageWithMemory& objects) override
+        void create_buffers(RenderBuffers2D* render_buffers, const vulkan::ImageWithMemory& objects, unsigned x, unsigned y,
+                            unsigned width, unsigned height) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
                 //
 
+                ASSERT(objects.width() == width && objects.height() == height);
+
                 m_points.emplace(vulkan::BufferMemoryType::DeviceLocal, m_instance.device(), std::unordered_set({m_family_index}),
                                  VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, convex_hull_points_buffer_size(objects.height()));
 
                 m_shader_memory.set_points(*m_points);
-                m_shader_memory.set_matrix(matrix);
+
+                // Матрица для рисования на плоскости окна, точка (0, 0) слева вверху
+                double left = 0;
+                double right = width;
+                double bottom = height;
+                double top = 0;
+                double near = 1;
+                double far = -1;
+                m_shader_memory.set_matrix(ortho_vulkan<double>(left, right, bottom, top, near, far));
 
                 m_render_buffers = render_buffers;
 
                 m_pipeline = m_render_buffers->create_pipeline(VK_PRIMITIVE_TOPOLOGY_LINE_STRIP, m_sample_shading,
                                                                false /*color_blend*/, {&m_vertex_shader, &m_fragment_shader},
-                                                               m_pipeline_layout, {}, {});
+                                                               m_pipeline_layout, {}, {}, x, y, width, height);
 
                 m_compute->create_buffers(objects, *m_points, m_indirect_buffer, m_family_index);
 

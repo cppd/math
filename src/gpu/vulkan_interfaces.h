@@ -42,7 +42,8 @@ public:
         virtual VkPipeline create_pipeline(VkPrimitiveTopology primitive_topology, bool sample_shading,
                                            const std::vector<const vulkan::Shader*>& shaders, VkPipelineLayout pipeline_layout,
                                            const std::vector<VkVertexInputBindingDescription>& vertex_binding,
-                                           const std::vector<VkVertexInputAttributeDescription>& vertex_attribute) = 0;
+                                           const std::vector<VkVertexInputAttributeDescription>& vertex_attribute, unsigned x,
+                                           unsigned y, unsigned width, unsigned height) = 0;
 };
 
 class RenderBuffers2D
@@ -60,6 +61,7 @@ public:
         virtual VkPipeline create_pipeline(VkPrimitiveTopology primitive_topology, bool sample_shading, bool color_blend,
                                            const std::vector<const vulkan::Shader*>& shaders, VkPipelineLayout pipeline_layout,
                                            const std::vector<VkVertexInputBindingDescription>& vertex_binding,
-                                           const std::vector<VkVertexInputAttributeDescription>& vertex_attribute) = 0;
+                                           const std::vector<VkVertexInputAttributeDescription>& vertex_attribute, unsigned x,
+                                           unsigned y, unsigned width, unsigned height) = 0;
 };
 }
