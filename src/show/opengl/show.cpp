@@ -432,16 +432,18 @@ class Impl final : public Show, public WindowEvent
                 bool changed = false;
 
                 const PressedMouseButton& right = m_event_window.pressed_mouse_button(MouseButton::Right);
-                if (right.pressed && right.pressed_x >= m_draw_x && right.pressed_x < m_draw_width &&
-                    right.pressed_y >= m_draw_y && right.pressed_y < m_draw_height && (right.delta_x != 0 || right.delta_y != 0))
+                if (right.pressed && right.pressed_x >= m_draw_x && right.pressed_x < m_draw_x + m_draw_width &&
+                    right.pressed_y >= m_draw_y && right.pressed_y < m_draw_y + m_draw_height &&
+                    (right.delta_x != 0 || right.delta_y != 0))
                 {
                         m_camera.rotate(-right.delta_x, -right.delta_y);
                         changed = true;
                 }
 
                 const PressedMouseButton& left = m_event_window.pressed_mouse_button(MouseButton::Left);
-                if (left.pressed && left.pressed_x >= m_draw_x && left.pressed_x < m_draw_width && left.pressed_y >= m_draw_y &&
-                    left.pressed_y < m_draw_height && (left.delta_x != 0 || left.delta_y != 0))
+                if (left.pressed && left.pressed_x >= m_draw_x && left.pressed_x < m_draw_x + m_draw_width &&
+                    left.pressed_y >= m_draw_y && left.pressed_y < m_draw_y + m_draw_height &&
+                    (left.delta_x != 0 || left.delta_y != 0))
                 {
                         m_camera.move(vec2(-left.delta_x, left.delta_y));
                         changed = true;
