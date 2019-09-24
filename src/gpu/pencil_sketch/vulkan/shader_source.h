@@ -22,7 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace gpu_vulkan
 {
 Span<const uint32_t> pencil_sketch_compute_comp();
-Span<const uint32_t> pencil_sketch_luminance_comp();
 Span<const uint32_t> pencil_sketch_show_vert();
 Span<const uint32_t> pencil_sketch_show_frag();
 }

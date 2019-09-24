@@ -90,26 +90,26 @@ void PencilSketchComputeMemory::set_input(VkSampler sampler, const vulkan::Image
         m_descriptors.update_descriptor_set(0, INPUT_BINDING, image_info);
 }
 
-void PencilSketchComputeMemory::set_output_image(const vulkan::ImageWithMemory& storage_image) const
+void PencilSketchComputeMemory::set_output_image(const vulkan::ImageWithMemory& image) const
 {
-        ASSERT(storage_image.format() == VK_FORMAT_R32G32B32A32_SFLOAT);
-        ASSERT(storage_image.usage() & VK_IMAGE_USAGE_STORAGE_BIT);
+        ASSERT(image.format() == VK_FORMAT_R32_SFLOAT);
+        ASSERT(image.usage() & VK_IMAGE_USAGE_STORAGE_BIT);
 
         VkDescriptorImageInfo image_info = {};
         image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-        image_info.imageView = storage_image.image_view();
+        image_info.imageView = image.image_view();
 
         m_descriptors.update_descriptor_set(0, OUTPUT_BINDING, image_info);
 }
 
-void PencilSketchComputeMemory::set_object_image(const vulkan::ImageWithMemory& storage_image) const
+void PencilSketchComputeMemory::set_object_image(const vulkan::ImageWithMemory& image) const
 {
-        ASSERT(storage_image.format() == VK_FORMAT_R32_UINT);
-        ASSERT(storage_image.usage() & VK_IMAGE_USAGE_STORAGE_BIT);
+        ASSERT(image.format() == VK_FORMAT_R32_UINT);
+        ASSERT(image.usage() & VK_IMAGE_USAGE_STORAGE_BIT);
 
         VkDescriptorImageInfo image_info = {};
         image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-        image_info.imageView = storage_image.image_view();
+        image_info.imageView = image.image_view();
 
         m_descriptors.update_descriptor_set(0, OBJECTS_BINDING, image_info);
 }
@@ -144,93 +144,6 @@ const void* PencilSketchComputeConstant::data() const
 }
 
 size_t PencilSketchComputeConstant::size() const
-{
-        return sizeof(m_data);
-}
-
-//
-
-std::vector<VkDescriptorSetLayoutBinding> PencilSketchLuminanceMemory::descriptor_set_layout_bindings()
-{
-        std::vector<VkDescriptorSetLayoutBinding> bindings;
-
-        {
-                VkDescriptorSetLayoutBinding b = {};
-                b.binding = IMAGE_BINDING;
-                b.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
-                b.descriptorCount = 1;
-                b.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
-                b.pImmutableSamplers = nullptr;
-
-                bindings.push_back(b);
-        }
-
-        return bindings;
-}
-
-PencilSketchLuminanceMemory::PencilSketchLuminanceMemory(const vulkan::Device& device)
-        : m_descriptor_set_layout(vulkan::create_descriptor_set_layout(device, descriptor_set_layout_bindings())),
-          m_descriptors(device, 1, m_descriptor_set_layout, descriptor_set_layout_bindings())
-{
-}
-
-unsigned PencilSketchLuminanceMemory::set_number()
-{
-        return SET_NUMBER;
-}
-
-VkDescriptorSetLayout PencilSketchLuminanceMemory::descriptor_set_layout() const
-{
-        return m_descriptor_set_layout;
-}
-
-const VkDescriptorSet& PencilSketchLuminanceMemory::descriptor_set() const
-{
-        return m_descriptors.descriptor_set(0);
-}
-
-void PencilSketchLuminanceMemory::set_image(const vulkan::ImageWithMemory& storage_image) const
-{
-        ASSERT(storage_image.format() == VK_FORMAT_R32G32B32A32_SFLOAT);
-        ASSERT(storage_image.usage() & VK_IMAGE_USAGE_STORAGE_BIT);
-
-        VkDescriptorImageInfo image_info = {};
-        image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-        image_info.imageView = storage_image.image_view();
-
-        m_descriptors.update_descriptor_set(0, IMAGE_BINDING, image_info);
-}
-
-//
-
-PencilSketchLuminanceConstant::PencilSketchLuminanceConstant()
-{
-        {
-                VkSpecializationMapEntry entry = {};
-                entry.constantID = 0;
-                entry.offset = offsetof(Data, local_size);
-                entry.size = sizeof(Data::local_size);
-                m_entries.push_back(entry);
-        }
-}
-
-void PencilSketchLuminanceConstant::set_group_size(uint32_t v)
-{
-        static_assert(std::is_same_v<decltype(m_data.local_size), decltype(v)>);
-        m_data.local_size = v;
-}
-
-const std::vector<VkSpecializationMapEntry>& PencilSketchLuminanceConstant::entries() const
-{
-        return m_entries;
-}
-
-const void* PencilSketchLuminanceConstant::data() const
-{
-        return &m_data;
-}
-
-size_t PencilSketchLuminanceConstant::size() const
 {
         return sizeof(m_data);
 }

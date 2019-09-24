@@ -21,11 +21,16 @@ layout(bindless_sampler) uniform sampler2D tex;
 layout(binding = 0) uniform sampler2D tex;
 #endif
 
-layout(location = 0) in vec2 vs_texture_coordinates;
+layout(location = 0) in VS
+{
+        vec2 texture_coordinates;
+}
+vs;
 
 layout(location = 0) out vec4 color;
 
 void main(void)
 {
-        color = texture(tex, vs_texture_coordinates);
+        const float s = texture(tex, vs.texture_coordinates).r;
+        color = vec4(vec3(s), 1);
 }

@@ -15,13 +15,17 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-layout(location = 0) in vec4 vertex_position;
+layout(location = 0) in vec4 position;
 layout(location = 1) in vec2 texture_coordinates;
 
-layout(location = 0) out vec2 vs_texture_coordinates;
+layout(location = 0) out VS
+{
+        vec2 texture_coordinates;
+}
+vs;
 
 void main(void)
 {
-        gl_Position = vertex_position;
-        vs_texture_coordinates = texture_coordinates;
+        gl_Position = position;
+        vs.texture_coordinates = texture_coordinates;
 }

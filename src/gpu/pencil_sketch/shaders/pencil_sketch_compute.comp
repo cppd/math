@@ -20,12 +20,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // const uint GROUP_SIZE =
 layout(local_size_x = GROUP_SIZE, local_size_y = GROUP_SIZE) in;
 layout(bindless_sampler) uniform sampler2D src;
-layout(bindless_image, rgba32f) writeonly uniform image2D img_output;
+layout(bindless_image, r32f) writeonly uniform image2D img_output;
 layout(bindless_image, r32ui) readonly uniform uimage2D img_objects;
 #else
 layout(local_size_x_id = 0, local_size_y_id = 0) in;
 layout(binding = 0) uniform sampler2D src;
-layout(binding = 1, rgba32f) writeonly uniform image2D img_output;
+layout(binding = 1, r32f) writeonly uniform image2D img_output;
 layout(binding = 2, r32ui) readonly uniform uimage2D img_objects;
 #endif
 
@@ -49,15 +49,20 @@ const float Gauss[delta * 2 + 1][delta * 2 + 1] =
 // фоновые пиксели считать 0
 const float background_value = 0;
 
-bool background(ivec2 p)
+bool is_background(ivec2 p)
 {
         uvec4 s = imageLoad(img_objects, p);
         return s.r == 0;
 }
 
-float grayscale(vec4 color)
+float read_pixel(ivec2 p)
 {
-        return luminance_of_rgb(color);
+        return luminance_of_rgb(texelFetch(src, p, 0));
+}
+
+void save_pixel(ivec2 p, float v)
+{
+        imageStore(img_output, p, vec4(v, v, v, 1));
 }
 
 bool point_inside_input(ivec2 p)
@@ -74,11 +79,11 @@ void main(void)
                 return;
         }
 
-        vec4 s = texelFetch(src, p, 0);
+        const float s = read_pixel(p);
 
-        if (background(p))
+        if (is_background(p))
         {
-                imageStore(img_output, p, s);
+                save_pixel(p, s);
                 return;
         }
 
@@ -88,24 +93,15 @@ void main(void)
                 for (int j = -delta; j <= delta; ++j)
                 {
                         const ivec2 p2 = ivec2(p.x + i, p.y + j);
-                        float gr;
-                        if (point_inside_input(p2) && !background(p2))
-                        {
-                                gr = grayscale(texelFetch(src, p2, 0));
-                        }
-                        else
-                        {
-                                gr = background_value;
-                        }
-
-                        sum += gr * Gauss[i + delta][j + delta];
+                        const float s2 = (point_inside_input(p2) && !is_background(p2)) ? read_pixel(p2) : background_value;
+                        sum += s2 * Gauss[i + delta][j + delta];
                 }
         }
 
         float res;
-        res = (sum != 0) ? (grayscale(s) / sum) : 1;
+        res = (sum != 0) ? (s / sum) : 1;
         // res = clamp ((res - 0.5f) / (1.0f - 0.5f), 0.0f, 1.0f);
         // res *= res;
 
-        imageStore(img_output, p, vec4(vec3(res), 1));
+        save_pixel(p, res);
 }

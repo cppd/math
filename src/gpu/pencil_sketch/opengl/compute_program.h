@@ -33,16 +33,4 @@ public:
 
         void exec() const;
 };
-
-class PencilSketchProgramLuminance final
-{
-        int m_groups_x;
-        int m_groups_y;
-        opengl::ComputeProgram m_program;
-
-public:
-        PencilSketchProgramLuminance(const opengl::Texture& output);
-
-        void exec() const;
-};
 }

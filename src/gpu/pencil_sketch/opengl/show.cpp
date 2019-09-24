@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/opengl/shader.h"
 
 constexpr int VERTEX_COUNT = 4;
-constexpr GLenum IMAGE_FORMAT = GL_RGBA32F;
+constexpr GLenum IMAGE_FORMAT = GL_R32F;
 
 namespace gpu_opengl
 {

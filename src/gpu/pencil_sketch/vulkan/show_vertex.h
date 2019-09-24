@@ -15,28 +15,26 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#if !defined(VULKAN)
-// Вставляется в текст программы
-// const uint GROUP_SIZE =
-layout(local_size_x = GROUP_SIZE, local_size_y = GROUP_SIZE) in;
-layout(bindless_image, rgba32f) uniform image2D img;
-#else
-layout(local_size_x_id = 0, local_size_y_id = 0) in;
-layout(binding = 0, rgba32f) uniform image2D img;
-#endif
+#pragma once
 
-vec4 luminance(vec4 c)
+#include "com/vec.h"
+
+#include <vector>
+#include <vulkan/vulkan.h>
+
+namespace gpu_vulkan
 {
-        float l = luminance_of_rgb(c);
-        return vec4(vec3(l), c.a);
-}
-
-void main(void)
+struct PencilSketchShaderVertex
 {
-        const ivec2 p = ivec2(gl_GlobalInvocationID.xy);
+        vec4f position;
+        vec2f texture_coordinates;
 
-        if (all(lessThan(p, imageSize(img))))
+        constexpr PencilSketchShaderVertex(const vec4f& position_, const vec2f& texture_coordinates_)
+                : position(position_), texture_coordinates(texture_coordinates_)
         {
-                imageStore(img, p, luminance(imageLoad(img, p)));
         }
+
+        static std::vector<VkVertexInputBindingDescription> binding_descriptions();
+        static std::vector<VkVertexInputAttributeDescription> attribute_descriptions();
+};
 }

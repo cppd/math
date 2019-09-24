@@ -36,13 +36,6 @@ std::string compute_source(int group_size)
         s += "const uint GROUP_SIZE = " + to_string(group_size) + ";\n";
         return pencil_sketch_compute_comp(s);
 }
-
-std::string luminance_source(int group_size)
-{
-        std::string s;
-        s += "const uint GROUP_SIZE = " + to_string(group_size) + ";\n";
-        return pencil_sketch_luminance_comp(s);
-}
 }
 
 PencilSketchProgramCompute::PencilSketchProgramCompute(const opengl::Texture& input, const opengl::Texture& objects,
@@ -52,7 +45,7 @@ PencilSketchProgramCompute::PencilSketchProgramCompute(const opengl::Texture& in
           m_program(opengl::ComputeShader(compute_source(GROUP_SIZE)))
 {
         ASSERT(objects.format() == GL_R32UI);
-        ASSERT(output.format() == GL_RGBA32F);
+        ASSERT(output.format() == GL_R32F);
 
         m_program.set_uniform_handle("src", input.texture_handle());
         m_program.set_uniform_handle("img_output", output.image_handle_write_only());
@@ -60,22 +53,6 @@ PencilSketchProgramCompute::PencilSketchProgramCompute(const opengl::Texture& in
 }
 
 void PencilSketchProgramCompute::exec() const
-{
-        m_program.dispatch_compute(m_groups_x, m_groups_y, 1);
-}
-
-//
-
-PencilSketchProgramLuminance::PencilSketchProgramLuminance(const opengl::Texture& output)
-        : m_groups_x(group_count(output.width(), GROUP_SIZE)),
-          m_groups_y(group_count(output.height(), GROUP_SIZE)),
-          m_program(opengl::ComputeShader(luminance_source(GROUP_SIZE)))
-{
-        ASSERT(output.format() == GL_RGBA32F);
-        m_program.set_uniform_handle("img", output.image_handle_read_write());
-}
-
-void PencilSketchProgramLuminance::exec() const
 {
         m_program.dispatch_compute(m_groups_x, m_groups_y, 1);
 }

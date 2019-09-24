@@ -26,21 +26,16 @@ namespace
 class Impl final : public PencilSketchCompute
 {
         PencilSketchProgramCompute m_program_compute;
-        PencilSketchProgramLuminance m_program_luminance;
 
         void exec() override
         {
                 m_program_compute.exec();
                 glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-
-                // Теперь в текстуре находится цвет RGB
-                m_program_luminance.exec();
-                glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
         }
 
 public:
         Impl(const opengl::Texture& input, const opengl::Texture& objects, const opengl::Texture& output)
-                : m_program_compute(input, objects, output), m_program_luminance(output)
+                : m_program_compute(input, objects, output)
         {
         }
 };

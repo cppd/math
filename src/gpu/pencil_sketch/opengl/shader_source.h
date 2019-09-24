@@ -22,7 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace gpu_opengl
 {
 std::string pencil_sketch_compute_comp(const std::string& insert);
-std::string pencil_sketch_luminance_comp(const std::string& insert);
 std::string pencil_sketch_show_vert();
 std::string pencil_sketch_show_frag();
 }

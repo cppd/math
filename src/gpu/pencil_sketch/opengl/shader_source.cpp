@@ -20,9 +20,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 constexpr const char compute_comp[]{
 #include "pencil_sketch_compute.comp.str"
 };
-constexpr const char luminance_comp[]{
-#include "pencil_sketch_luminance.comp.str"
-};
 constexpr const char show_vert[]{
 #include "pencil_sketch_show.vert.str"
 };
@@ -38,15 +35,6 @@ std::string pencil_sketch_compute_comp(const std::string& insert)
         s += insert;
         s += '\n';
         s += compute_comp;
-        return s;
-}
-
-std::string pencil_sketch_luminance_comp(const std::string& insert)
-{
-        std::string s;
-        s += insert;
-        s += '\n';
-        s += luminance_comp;
         return s;
 }
 
