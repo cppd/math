@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpu_vulkan
 {
-std::vector<VkDescriptorSetLayoutBinding> PencilSketchShaderMemory::descriptor_set_layout_bindings()
+std::vector<VkDescriptorSetLayoutBinding> PencilSketchShowMemory::descriptor_set_layout_bindings()
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
 
@@ -36,28 +36,28 @@ std::vector<VkDescriptorSetLayoutBinding> PencilSketchShaderMemory::descriptor_s
         return bindings;
 }
 
-PencilSketchShaderMemory::PencilSketchShaderMemory(const vulkan::Device& device)
+PencilSketchShowMemory::PencilSketchShowMemory(const vulkan::Device& device)
         : m_descriptor_set_layout(vulkan::create_descriptor_set_layout(device, descriptor_set_layout_bindings())),
           m_descriptors(device, 1, m_descriptor_set_layout, descriptor_set_layout_bindings())
 {
 }
 
-unsigned PencilSketchShaderMemory::set_number()
+unsigned PencilSketchShowMemory::set_number()
 {
         return SET_NUMBER;
 }
 
-VkDescriptorSetLayout PencilSketchShaderMemory::descriptor_set_layout() const
+VkDescriptorSetLayout PencilSketchShowMemory::descriptor_set_layout() const
 {
         return m_descriptor_set_layout;
 }
 
-const VkDescriptorSet& PencilSketchShaderMemory::descriptor_set() const
+const VkDescriptorSet& PencilSketchShowMemory::descriptor_set() const
 {
         return m_descriptors.descriptor_set(0);
 }
 
-void PencilSketchShaderMemory::set_image(VkSampler sampler, const vulkan::ImageWithMemory& image) const
+void PencilSketchShowMemory::set_image(VkSampler sampler, const vulkan::ImageWithMemory& image) const
 {
         ASSERT(image.usage() & VK_IMAGE_USAGE_SAMPLED_BIT);
 

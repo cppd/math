@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpu_vulkan
 {
-class PencilSketchShaderMemory final
+class PencilSketchShowMemory final
 {
         static constexpr int SET_NUMBER = 0;
 
@@ -39,14 +39,14 @@ class PencilSketchShaderMemory final
         vulkan::Descriptors m_descriptors;
 
 public:
-        PencilSketchShaderMemory(const vulkan::Device& device);
+        PencilSketchShowMemory(const vulkan::Device& device);
 
-        PencilSketchShaderMemory(const PencilSketchShaderMemory&) = delete;
-        PencilSketchShaderMemory& operator=(const PencilSketchShaderMemory&) = delete;
-        PencilSketchShaderMemory& operator=(PencilSketchShaderMemory&&) = delete;
+        PencilSketchShowMemory(const PencilSketchShowMemory&) = delete;
+        PencilSketchShowMemory& operator=(const PencilSketchShowMemory&) = delete;
+        PencilSketchShowMemory& operator=(PencilSketchShowMemory&&) = delete;
 
-        PencilSketchShaderMemory(PencilSketchShaderMemory&&) = default;
-        ~PencilSketchShaderMemory() = default;
+        PencilSketchShowMemory(PencilSketchShowMemory&&) = default;
+        ~PencilSketchShowMemory() = default;
 
         //
 

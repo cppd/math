@@ -19,14 +19,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpu_vulkan
 {
-std::vector<VkVertexInputBindingDescription> PencilSketchShaderVertex::binding_descriptions()
+std::vector<VkVertexInputBindingDescription> PencilSketchShowVertex::binding_descriptions()
 {
         std::vector<VkVertexInputBindingDescription> descriptions;
 
         {
                 VkVertexInputBindingDescription d = {};
                 d.binding = 0;
-                d.stride = sizeof(PencilSketchShaderVertex);
+                d.stride = sizeof(PencilSketchShowVertex);
                 d.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
                 descriptions.push_back(d);
@@ -35,7 +35,7 @@ std::vector<VkVertexInputBindingDescription> PencilSketchShaderVertex::binding_d
         return descriptions;
 }
 
-std::vector<VkVertexInputAttributeDescription> PencilSketchShaderVertex::attribute_descriptions()
+std::vector<VkVertexInputAttributeDescription> PencilSketchShowVertex::attribute_descriptions()
 {
         std::vector<VkVertexInputAttributeDescription> descriptions;
 
@@ -44,7 +44,7 @@ std::vector<VkVertexInputAttributeDescription> PencilSketchShaderVertex::attribu
                 d.binding = 0;
                 d.location = 0;
                 d.format = VK_FORMAT_R32G32B32A32_SFLOAT;
-                d.offset = offsetof(PencilSketchShaderVertex, position);
+                d.offset = offsetof(PencilSketchShowVertex, position);
 
                 descriptions.push_back(d);
         }
@@ -53,7 +53,7 @@ std::vector<VkVertexInputAttributeDescription> PencilSketchShaderVertex::attribu
                 d.binding = 0;
                 d.location = 1;
                 d.format = VK_FORMAT_R32G32_SFLOAT;
-                d.offset = offsetof(PencilSketchShaderVertex, texture_coordinates);
+                d.offset = offsetof(PencilSketchShowVertex, texture_coordinates);
 
                 descriptions.push_back(d);
         }

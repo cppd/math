@@ -24,15 +24,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpu_vulkan
 {
-struct PencilSketchShaderVertex
+struct PencilSketchShowVertex
 {
         vec4f position;
         vec2f texture_coordinates;
-
-        constexpr PencilSketchShaderVertex(const vec4f& position_, const vec2f& texture_coordinates_)
-                : position(position_), texture_coordinates(texture_coordinates_)
-        {
-        }
 
         static std::vector<VkVertexInputBindingDescription> binding_descriptions();
         static std::vector<VkVertexInputAttributeDescription> attribute_descriptions();
