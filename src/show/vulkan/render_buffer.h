@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "gpu/vulkan_interfaces.h"
+#include "graphics/vulkan/buffers.h"
 #include "graphics/vulkan/objects.h"
 #include "graphics/vulkan/swapchain.h"
 
@@ -36,6 +37,7 @@ struct RenderBuffers
                                                  VkSemaphore wait_semaphore, unsigned image_index) const = 0;
         virtual VkSemaphore resolve_to_texture(const vulkan::Queue& graphics_queue, VkSemaphore wait_semaphore,
                                                unsigned image_index) const = 0;
+        virtual const vulkan::ImageWithMemory& texture(unsigned image_index) const = 0;
 };
 
 enum class RenderBufferCount

@@ -300,6 +300,7 @@ class Impl final : public show_vulkan::RenderBuffers, public Impl3D, public Impl
                                          VkSemaphore wait_semaphore, unsigned image_index) const override;
         VkSemaphore resolve_to_texture(const vulkan::Queue& graphics_queue, VkSemaphore wait_semaphore,
                                        unsigned image_index) const override;
+        const vulkan::ImageWithMemory& texture(unsigned image_index) const override;
 
         //
 
@@ -749,6 +750,15 @@ VkSemaphore Impl::resolve_to_texture(const vulkan::Queue& graphics_queue, VkSema
                              m_textures_signal_semaphores[index], graphics_queue);
 
         return m_textures_signal_semaphores[index];
+}
+
+const vulkan::ImageWithMemory& Impl::texture(unsigned image_index) const
+{
+        ASSERT(m_textures.size() == 1 || image_index < m_textures.size());
+
+        const unsigned index = m_textures.size() == 1 ? 0 : image_index;
+
+        return m_textures[index];
 }
 
 void Impl::delete_command_buffers_3d(std::vector<VkCommandBuffer>* buffers)
