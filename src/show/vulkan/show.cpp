@@ -26,6 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/time.h"
 #include "com/type/limit.h"
 #include "gpu/convex_hull/vulkan/show.h"
+#include "gpu/pencil_sketch/vulkan/show.h"
 #include "gpu/renderer/vulkan/renderer.h"
 #include "gpu/text/vulkan/show.h"
 #include "graphics/vulkan/instance.h"
@@ -118,6 +119,7 @@ class Impl final : public Show, public WindowEvent
 
         bool m_text_active = true;
         bool m_convex_hull_active = true;
+        bool m_pencil_sketch_active = true;
 
         // В последовательности swapchain, а затем renderer,
         // так как буферы renderer могут зависеть от swapchain
@@ -130,6 +132,7 @@ class Impl final : public Show, public WindowEvent
         std::unique_ptr<gpu_vulkan::Renderer> m_renderer;
         std::unique_ptr<gpu_vulkan::TextShow> m_text;
         std::unique_ptr<gpu_vulkan::ConvexHullShow> m_convex_hull;
+        std::unique_ptr<gpu_vulkan::PencilSketchShow> m_pencil_sketch;
 
         //
 
@@ -272,9 +275,11 @@ class Impl final : public Show, public WindowEvent
                 m_text_active = v;
         }
 
-        void show_pencil_sketch(bool /*v*/) override
+        void show_pencil_sketch(bool v) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
+
+                m_pencil_sketch_active = v;
         }
 
         void show_dft(bool /*v*/) override
@@ -559,6 +564,7 @@ class Impl final : public Show, public WindowEvent
 
                 m_text->delete_buffers();
                 m_convex_hull->delete_buffers();
+                m_pencil_sketch->delete_buffers();
                 m_renderer->delete_buffers();
 
                 m_object_image.reset();
@@ -603,6 +609,10 @@ class Impl final : public Show, public WindowEvent
                 m_convex_hull->create_buffers(&m_render_buffers->buffers_2d(), *m_object_image, m_draw_x, m_draw_y, m_draw_width,
                                               m_draw_height);
 
+                const int image_index = 0;
+                m_pencil_sketch->create_buffers(&m_render_buffers->buffers_2d(), m_render_buffers->texture(image_index),
+                                                *m_object_image, m_draw_x, m_draw_y, m_draw_width, m_draw_height);
+
                 //
 
                 m_camera.resize(m_draw_width, m_draw_height);
@@ -624,6 +634,12 @@ class Impl final : public Show, public WindowEvent
                 const vulkan::Queue& graphics_queue = m_instance->graphics_queues()[0];
 
                 wait_semaphore = m_renderer->draw(graphics_queue, image_index);
+
+                if (m_pencil_sketch_active)
+                {
+                        wait_semaphore = m_render_buffers->resolve_to_texture(graphics_queue, wait_semaphore, image_index);
+                        wait_semaphore = m_pencil_sketch->draw(graphics_queue, wait_semaphore, image_index);
+                }
 
                 if (m_convex_hull_active)
                 {
@@ -707,6 +723,10 @@ public:
 
                 m_convex_hull =
                         gpu_vulkan::create_convex_hull_show(*m_instance, graphics_queue.family_index(), VULKAN_SAMPLE_SHADING);
+
+                m_pencil_sketch = gpu_vulkan::create_convex_hull_show(*m_instance, m_instance->graphics_command_pool(),
+                                                                      graphics_queue, m_instance->transfer_command_pool(),
+                                                                      m_instance->transfer_queue(), VULKAN_SAMPLE_SHADING);
 
                 //
 

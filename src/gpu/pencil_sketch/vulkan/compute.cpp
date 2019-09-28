@@ -56,7 +56,7 @@ void image_barrier_before(VkCommandBuffer command_buffer, VkImage image)
         barrier.subresourceRange.baseArrayLayer = 0;
         barrier.subresourceRange.layerCount = 1;
 
-        barrier.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
+        barrier.srcAccessMask = 0;
         barrier.dstAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
 
         vkCmdPipelineBarrier(command_buffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,

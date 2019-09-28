@@ -118,9 +118,11 @@ class Impl final : public PencilSketchShow
                 m_shader_memory.set_image(m_sampler, *m_image);
 
                 m_pipeline = render_buffers->create_pipeline(
-                        VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP, m_sample_shading, false /*color_blend*/,
-                        {&m_vertex_shader, &m_fragment_shader}, m_pipeline_layout, PencilSketchShowVertex::binding_descriptions(),
-                        PencilSketchShowVertex::attribute_descriptions(), x, y, width, height);
+                        VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP,
+                        m_sample_shading && (input_image.width() != width || input_image.height() != height),
+                        false /*color_blend*/, {&m_vertex_shader, &m_fragment_shader}, m_pipeline_layout,
+                        PencilSketchShowVertex::binding_descriptions(), PencilSketchShowVertex::attribute_descriptions(), x, y,
+                        width, height);
 
                 m_compute->create_buffers(m_sampler, input_image, object_image, *m_image);
 
@@ -163,10 +165,10 @@ class Impl final : public PencilSketchShow
                 std::array<PencilSketchShowVertex, VERTEX_COUNT> vertices;
 
                 // Текстурный 0 находится внизу
-                vertices[0] = {{-1, -1, 0, 1}, {0, 1}};
-                vertices[1] = {{+1, -1, 0, 1}, {1, 1}};
-                vertices[2] = {{-1, +1, 0, 1}, {0, 0}};
-                vertices[3] = {{+1, +1, 0, 1}, {1, 0}};
+                vertices[0] = {{-1, +1, 0, 1}, {0, 1}};
+                vertices[1] = {{+1, +1, 0, 1}, {1, 1}};
+                vertices[2] = {{-1, -1, 0, 1}, {0, 0}};
+                vertices[3] = {{+1, -1, 0, 1}, {1, 0}};
 
                 m_vertex_buffer.reset();
                 m_vertex_buffer = std::make_unique<vulkan::BufferWithMemory>(
