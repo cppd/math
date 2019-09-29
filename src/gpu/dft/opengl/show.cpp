@@ -121,7 +121,7 @@ class Impl final : public DFTShow
 
         void draw() override
         {
-                m_dft->exec(false);
+                m_dft->exec();
 
                 glViewport(m_x, m_y, m_width, m_height);
                 m_shader_memory.bind();

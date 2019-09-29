@@ -90,24 +90,17 @@ public:
 template <typename T>
 class DftProgramCopyOutput final
 {
-        static constexpr int DATA_BINDING = 0;
-        static constexpr int BUFFER_BINDING = 1;
+        static constexpr int BUFFER_BINDING = 0;
 
         static constexpr int DST_IMAGE_LOCATION = 0;
 
-        struct ShaderMemory
-        {
-                T to_mul;
-        };
-
         const vec2i m_group_count;
         opengl::ComputeProgram m_copy_output;
-        opengl::Buffer m_shader_memory;
 
 public:
-        DftProgramCopyOutput(vec2i group_size, int n1, int n2);
+        DftProgramCopyOutput(vec2i group_size, int n1, int n2, T to_mul);
 
-        void copy(T to_mul, const GLuint64 tex, const opengl::Buffer& data);
+        void copy(const GLuint64 tex, const opengl::Buffer& data);
 };
 
 template <typename T>

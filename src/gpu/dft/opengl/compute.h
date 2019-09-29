@@ -34,7 +34,7 @@ struct DFTCompute
 struct DFTComputeTexture
 {
         virtual ~DFTComputeTexture() = default;
-        virtual void exec(bool inverse) = 0;
+        virtual void exec() = 0;
 };
 
 std::unique_ptr<DFTCompute> create_dft_compute(int x, int y);

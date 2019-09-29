@@ -125,10 +125,11 @@ std::string copy_input_source(vec2i group_size)
 }
 
 template <typename T>
-std::string copy_output_source(vec2i group_size)
+std::string copy_output_source(vec2i group_size, T to_mul)
 {
         std::string s;
         s += group_size_string(group_size);
+        s += "const float TO_MUL = " + to_string(to_mul) + ";\n";
         return dft_copy_output_comp(s);
 }
 
@@ -222,22 +223,16 @@ void DftProgramCopyInput<T>::copy(const GLuint64 tex, const opengl::Buffer& data
 //
 
 template <typename T>
-DftProgramCopyOutput<T>::DftProgramCopyOutput(vec2i group_size, int n1, int n2)
+DftProgramCopyOutput<T>::DftProgramCopyOutput(vec2i group_size, int n1, int n2, T to_mul)
         : m_group_count(group_count(n1, n2, group_size)),
-          m_copy_output(opengl::ComputeShader(copy_output_source<T>(group_size))),
-          m_shader_memory(sizeof(ShaderMemory), GL_MAP_WRITE_BIT)
+          m_copy_output(opengl::ComputeShader(copy_output_source<T>(group_size, to_mul)))
 {
 }
 
 template <typename T>
-void DftProgramCopyOutput<T>::copy(T to_mul, const GLuint64 tex, const opengl::Buffer& data)
+void DftProgramCopyOutput<T>::copy(const GLuint64 tex, const opengl::Buffer& data)
 {
-        ShaderMemory m;
-        m.to_mul = to_mul;
-        opengl::map_and_write_to_buffer(m_shader_memory, m);
-
         m_copy_output.set_uniform_handle(DST_IMAGE_LOCATION, tex);
-        glBindBufferBase(GL_UNIFORM_BUFFER, DATA_BINDING, m_shader_memory);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, BUFFER_BINDING, data);
 
         m_copy_output.dispatch_compute(m_group_count[0], m_group_count[1], 1);

@@ -335,11 +335,11 @@ class Impl final : public DFTCompute, public DFTComputeTexture
                 *src = conv<float>(std::move(data));
         }
 
-        void exec(bool inverse) override
+        void exec() override
         {
                 m_program_copy_input.copy(m_source_handle, m_x_d);
-                dft2d(inverse);
-                m_program_copy_output.copy(static_cast<FP>(1.0 / (m_n1 * m_n2)), m_result_handle, m_x_d);
+                dft2d(false /*inverse*/);
+                m_program_copy_output.copy(m_result_handle, m_x_d);
         }
 
 public:
@@ -359,7 +359,7 @@ public:
                   m_program_bit_reverse(GROUP_SIZE_1D),
                   m_program_fft_global(GROUP_SIZE_1D),
                   m_program_copy_input(GROUP_SIZE_2D, m_n1, m_n2),
-                  m_program_copy_output(GROUP_SIZE_2D, m_n1, m_n2),
+                  m_program_copy_output(GROUP_SIZE_2D, m_n1, m_n2, static_cast<FP>(1.0 / (1ull * m_n1 * m_n2))),
                   m_program_mul(GROUP_SIZE_2D, m_n1, m_n2, m_m1, m_m2),
                   m_program_mul_d(GROUP_SIZE_2D, m_n1, m_n2, m_m1, m_m2),
                   m_program_fft_1(m_m1, shared_size<FP>(m_m1), group_size<FP>(m_m1), m_m1 <= shared_size<FP>(m_m1)),
