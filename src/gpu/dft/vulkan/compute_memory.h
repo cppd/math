@@ -30,8 +30,8 @@ class DftCopyInputMemory final
 {
         static constexpr int SET_NUMBER = 0;
 
-        static constexpr int INPUT_BINDING = 2;
-        static constexpr int OUTPUT_BINDING = 0;
+        static constexpr int SRC_BINDING = 1;
+        static constexpr int DST_BINDING = 0;
 
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
 

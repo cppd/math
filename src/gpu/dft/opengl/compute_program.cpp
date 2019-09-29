@@ -213,8 +213,8 @@ DftProgramCopyInput<T>::DftProgramCopyInput(vec2i group_size, int n1, int n2)
 template <typename T>
 void DftProgramCopyInput<T>::copy(const GLuint64 tex, const opengl::Buffer& data)
 {
-        m_copy_input.set_uniform_handle(SRC_IMAGE_LOCATION, tex);
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, BUFFER_BINDING, data);
+        m_copy_input.set_uniform_handle(SRC_LOCATION, tex);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DST_BINDING, data);
 
         m_copy_input.dispatch_compute(m_group_count[0], m_group_count[1], 1);
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
@@ -232,8 +232,8 @@ DftProgramCopyOutput<T>::DftProgramCopyOutput(vec2i group_size, int n1, int n2, 
 template <typename T>
 void DftProgramCopyOutput<T>::copy(const GLuint64 tex, const opengl::Buffer& data)
 {
-        m_copy_output.set_uniform_handle(DST_IMAGE_LOCATION, tex);
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, BUFFER_BINDING, data);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SRC_BINDING, data);
+        m_copy_output.set_uniform_handle(DST_LOCATION, tex);
 
         m_copy_output.dispatch_compute(m_group_count[0], m_group_count[1], 1);
         glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);

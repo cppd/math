@@ -74,9 +74,8 @@ public:
 template <typename T>
 class DftProgramCopyInput final
 {
-        static constexpr int BUFFER_BINDING = 0;
-
-        static constexpr int SRC_IMAGE_LOCATION = 0;
+        static constexpr int SRC_LOCATION = 0;
+        static constexpr int DST_BINDING = 0;
 
         const vec2i m_group_count;
         opengl::ComputeProgram m_copy_input;
@@ -90,9 +89,8 @@ public:
 template <typename T>
 class DftProgramCopyOutput final
 {
-        static constexpr int BUFFER_BINDING = 0;
-
-        static constexpr int DST_IMAGE_LOCATION = 0;
+        static constexpr int SRC_BINDING = 0;
+        static constexpr int DST_LOCATION = 0;
 
         const vec2i m_group_count;
         opengl::ComputeProgram m_copy_output;

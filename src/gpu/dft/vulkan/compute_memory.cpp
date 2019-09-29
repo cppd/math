@@ -25,7 +25,7 @@ std::vector<VkDescriptorSetLayoutBinding> DftCopyInputMemory::descriptor_set_lay
 
         {
                 VkDescriptorSetLayoutBinding b = {};
-                b.binding = INPUT_BINDING;
+                b.binding = SRC_BINDING;
                 b.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
                 b.descriptorCount = 1;
                 b.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
@@ -35,7 +35,7 @@ std::vector<VkDescriptorSetLayoutBinding> DftCopyInputMemory::descriptor_set_lay
         }
         {
                 VkDescriptorSetLayoutBinding b = {};
-                b.binding = OUTPUT_BINDING;
+                b.binding = DST_BINDING;
                 b.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
                 b.descriptorCount = 1;
                 b.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
@@ -77,7 +77,7 @@ void DftCopyInputMemory::set_input(VkSampler sampler, const vulkan::ImageWithMem
         image_info.imageView = image.image_view();
         image_info.sampler = sampler;
 
-        m_descriptors.update_descriptor_set(0, INPUT_BINDING, image_info);
+        m_descriptors.update_descriptor_set(0, SRC_BINDING, image_info);
 }
 
 void DftCopyInputMemory::set_output(const vulkan::BufferWithMemory& buffer) const
@@ -89,7 +89,7 @@ void DftCopyInputMemory::set_output(const vulkan::BufferWithMemory& buffer) cons
         buffer_info.offset = 0;
         buffer_info.range = buffer.size();
 
-        m_descriptors.update_descriptor_set(0, OUTPUT_BINDING, buffer_info);
+        m_descriptors.update_descriptor_set(0, DST_BINDING, buffer_info);
 }
 
 //
