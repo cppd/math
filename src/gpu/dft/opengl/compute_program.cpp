@@ -53,10 +53,13 @@ std::string n_m_string(int n1, int n2, int m1, int m2)
 }
 
 template <typename T>
-std::string bit_reverse_source(int group_size)
+std::string bit_reverse_source(int group_size, unsigned count, unsigned n)
 {
         std::string s;
         s += group_size_string(group_size);
+        s += "const uint DATA_SIZE = " + to_string(count * n) + ";\n";
+        s += "const uint N_MASK = " + to_string(n - 1) + ";\n";
+        s += "const uint N_BITS = " + to_string(binary_size(n)) + ";\n";
         return dft_bit_reverse_comp(s);
 }
 
@@ -150,27 +153,31 @@ std::string fft_shared_source(int n, int n_bits, int shared_size, int group_size
 //
 
 template <typename T>
-DftProgramBitReverse<T>::DftProgramBitReverse(int group_size)
-        : m_group_size(group_size),
-          m_bit_reverse(opengl::ComputeShader(bit_reverse_source<T>(group_size))),
-          m_shader_memory(sizeof(ShaderMemory), GL_MAP_WRITE_BIT)
+DftProgramBitReverse<T>::DftProgramBitReverse(int group_size, int count, int n)
+        : m_count(count), m_n(n), m_bit_reverse(opengl::ComputeShader(bit_reverse_source<T>(group_size, count, n)))
 {
+        m_group_count = group_count(count * n, group_size);
 }
 
 template <typename T>
-void DftProgramBitReverse<T>::exec(int max_threads, int n_mask, int n_bits, const opengl::Buffer& data) const
+void DftProgramBitReverse<T>::exec(const opengl::Buffer& data) const
 {
-        ShaderMemory m;
-        m.max_threads = max_threads;
-        m.n_mask = n_mask;
-        m.n_bits = n_bits;
-        opengl::map_and_write_to_buffer(m_shader_memory, m);
-
-        glBindBufferBase(GL_UNIFORM_BUFFER, DATA_BINDING, m_shader_memory);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, BUFFER_BINDING, data);
 
-        m_bit_reverse.dispatch_compute(group_count(max_threads, m_group_size), 1, 1);
+        m_bit_reverse.dispatch_compute(m_group_count, 1, 1);
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+}
+
+template <typename T>
+int DftProgramBitReverse<T>::count() const
+{
+        return m_count;
+}
+
+template <typename T>
+int DftProgramBitReverse<T>::n() const
+{
+        return m_n;
 }
 
 //
@@ -184,12 +191,12 @@ DftProgramFftGlobal<T>::DftProgramFftGlobal(int group_size)
 }
 
 template <typename T>
-void DftProgramFftGlobal<T>::exec(int max_threads, bool inverse, T two_pi_div_m, int n_div_2_mask, int m_div_2,
+void DftProgramFftGlobal<T>::exec(int data_size, bool inverse, T two_pi_div_m, int n_div_2_mask, int m_div_2,
                                   const opengl::Buffer& data) const
 {
         ShaderMemory m;
         m.inverse_dft = inverse;
-        m.max_threads = max_threads;
+        m.data_size = data_size;
         m.n_div_2_mask = n_div_2_mask;
         m.m_div_2 = m_div_2;
         m.two_pi_div_m = two_pi_div_m;
@@ -198,7 +205,7 @@ void DftProgramFftGlobal<T>::exec(int max_threads, bool inverse, T two_pi_div_m,
         glBindBufferBase(GL_UNIFORM_BUFFER, DATA_BINDING, m_shader_memory);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, BUFFER_BINDING, data);
 
-        m_fft.dispatch_compute(group_count(max_threads, m_group_size), 1, 1);
+        m_fft.dispatch_compute(group_count(data_size, m_group_size), 1, 1);
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 }
 

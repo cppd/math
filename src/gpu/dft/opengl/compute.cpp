@@ -245,7 +245,8 @@ void fft1d(bool inverse, int fft_count, const DftProgramFftShared<FP>& fft, cons
         // с отключенной перестановкой, иначе одни запуски будут вносить изменения
         // в данные других запусков, так как результат пишется в исходные данные.
 
-        program_bit_reverse.exec(data_size, n - 1, n_bits, *data);
+        ASSERT(program_bit_reverse.n() == n && program_bit_reverse.count() == fft_count);
+        program_bit_reverse.exec(*data);
 
         fft.exec(inverse, data_size, *data);
 
@@ -274,7 +275,8 @@ class Impl final : public DFTCompute, public DFTComputeTexture
         DeviceMemory<std::complex<FP>> m_x_d, m_buffer;
         GLuint64 m_source_handle;
         GLuint64 m_result_handle;
-        DftProgramBitReverse<FP> m_program_bit_reverse;
+        DftProgramBitReverse<FP> m_program_bit_reverse_n2_fft_1;
+        DftProgramBitReverse<FP> m_program_bit_reverse_n1_fft_2;
         DftProgramFftGlobal<FP> m_program_fft_global;
         DftProgramCopyInput<FP> m_program_copy_input;
         DftProgramCopyOutput<FP> m_program_copy_output;
@@ -290,9 +292,9 @@ class Impl final : public DFTCompute, public DFTComputeTexture
                         // По строкам
 
                         m_program_mul.rows_to_buffer(inverse, m_x_d, m_buffer);
-                        fft1d(inverse, m_n2, m_program_fft_1, m_program_bit_reverse, m_program_fft_global, &m_buffer);
+                        fft1d(inverse, m_n2, m_program_fft_1, m_program_bit_reverse_n2_fft_1, m_program_fft_global, &m_buffer);
                         m_program_mul_d.rows_mul_d(inverse ? m_d1_inv : m_d1_fwd, m_buffer);
-                        fft1d(!inverse, m_n2, m_program_fft_1, m_program_bit_reverse, m_program_fft_global, &m_buffer);
+                        fft1d(!inverse, m_n2, m_program_fft_1, m_program_bit_reverse_n2_fft_1, m_program_fft_global, &m_buffer);
                         m_program_mul.rows_from_buffer(inverse, m_x_d, m_buffer);
                 }
 
@@ -301,9 +303,9 @@ class Impl final : public DFTCompute, public DFTComputeTexture
                         // По столбцам
 
                         m_program_mul.columns_to_buffer(inverse, m_x_d, m_buffer);
-                        fft1d(inverse, m_n1, m_program_fft_2, m_program_bit_reverse, m_program_fft_global, &m_buffer);
+                        fft1d(inverse, m_n1, m_program_fft_2, m_program_bit_reverse_n1_fft_2, m_program_fft_global, &m_buffer);
                         m_program_mul_d.columns_mul_d(inverse ? m_d2_inv : m_d2_fwd, m_buffer);
-                        fft1d(!inverse, m_n1, m_program_fft_2, m_program_bit_reverse, m_program_fft_global, &m_buffer);
+                        fft1d(!inverse, m_n1, m_program_fft_2, m_program_bit_reverse_n1_fft_2, m_program_fft_global, &m_buffer);
                         m_program_mul.columns_from_buffer(inverse, m_x_d, m_buffer);
                 }
         }
@@ -356,7 +358,8 @@ public:
                   m_d2_inv(m_m2),
                   m_x_d(m_n1 * m_n2),
                   m_buffer(std::max(m_m1 * m_n2, m_m2 * m_n1)),
-                  m_program_bit_reverse(GROUP_SIZE_1D),
+                  m_program_bit_reverse_n2_fft_1(GROUP_SIZE_1D, m_n2, m_m1),
+                  m_program_bit_reverse_n1_fft_2(GROUP_SIZE_1D, m_n1, m_m2),
                   m_program_fft_global(GROUP_SIZE_1D),
                   m_program_copy_input(GROUP_SIZE_2D, m_n1, m_n2),
                   m_program_copy_output(GROUP_SIZE_2D, m_n1, m_n2, static_cast<FP>(1.0 / (1ull * m_n1 * m_n2))),
@@ -387,20 +390,23 @@ public:
                 double m1_div_n1 = static_cast<double>(m_m1) / m_n1;
                 double m2_div_n2 = static_cast<double>(m_m2) / m_n2;
 
+                DftProgramBitReverse<FP> bit_reverse_1_fft_1(GROUP_SIZE_1D, 1, m_m1);
+                DftProgramBitReverse<FP> bit_reverse_1_fft_2(GROUP_SIZE_1D, 1, m_m2);
+
                 // Compute the diagonal D in Lemma 13.2: use the radix-2 FFT
                 // Формулы 13.13, 13.26.
 
                 m_d1_fwd.write(conv<FP>(compute_h2(m_n1, m_m1, compute_h(m_n1, false, 1.0))));
-                fft1d(false, 1, m_program_fft_1, m_program_bit_reverse, m_program_fft_global, &m_d1_fwd);
+                fft1d(false, 1, m_program_fft_1, bit_reverse_1_fft_1, m_program_fft_global, &m_d1_fwd);
 
                 m_d1_inv.write(conv<FP>(compute_h2(m_n1, m_m1, compute_h(m_n1, true, m1_div_n1))));
-                fft1d(true, 1, m_program_fft_1, m_program_bit_reverse, m_program_fft_global, &m_d1_inv);
+                fft1d(true, 1, m_program_fft_1, bit_reverse_1_fft_1, m_program_fft_global, &m_d1_inv);
 
                 m_d2_fwd.write(conv<FP>(compute_h2(m_n2, m_m2, compute_h(m_n2, false, 1.0))));
-                fft1d(false, 1, m_program_fft_2, m_program_bit_reverse, m_program_fft_global, &m_d2_fwd);
+                fft1d(false, 1, m_program_fft_2, bit_reverse_1_fft_2, m_program_fft_global, &m_d2_fwd);
 
                 m_d2_inv.write(conv<FP>(compute_h2(m_n2, m_m2, compute_h(m_n2, true, m2_div_n2))));
-                fft1d(true, 1, m_program_fft_2, m_program_bit_reverse, m_program_fft_global, &m_d2_inv);
+                fft1d(true, 1, m_program_fft_2, bit_reverse_1_fft_2, m_program_fft_global, &m_d2_inv);
         }
 };
 }

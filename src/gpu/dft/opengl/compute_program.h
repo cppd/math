@@ -29,21 +29,19 @@ class DftProgramBitReverse final
         static constexpr int DATA_BINDING = 0;
         static constexpr int BUFFER_BINDING = 1;
 
-        struct ShaderMemory
-        {
-                GLuint max_threads;
-                GLuint n_mask;
-                GLuint n_bits;
-        };
+        int m_count;
+        int m_n;
+        int m_group_count;
 
-        const int m_group_size;
         opengl::ComputeProgram m_bit_reverse;
-        opengl::Buffer m_shader_memory;
 
 public:
-        DftProgramBitReverse(int group_size);
+        DftProgramBitReverse(int group_size, int count, int n);
 
-        void exec(int max_threads, int n_mask, int n_bits, const opengl::Buffer& data) const;
+        void exec(const opengl::Buffer& data) const;
+
+        int count() const;
+        int n() const;
 };
 
 template <typename T>
@@ -55,7 +53,7 @@ class DftProgramFftGlobal final
         struct ShaderMemory
         {
                 GLuint inverse_dft;
-                GLuint max_threads;
+                GLuint data_size;
                 GLuint n_div_2_mask;
                 GLuint m_div_2;
                 T two_pi_div_m;
@@ -68,7 +66,7 @@ class DftProgramFftGlobal final
 public:
         DftProgramFftGlobal(int group_size);
 
-        void exec(int max_threads, bool inverse, T two_pi_div_m, int n_div_2_mask, int m_div_2, const opengl::Buffer& data) const;
+        void exec(int data_size, bool inverse, T two_pi_div_m, int n_div_2_mask, int m_div_2, const opengl::Buffer& data) const;
 };
 
 template <typename T>
