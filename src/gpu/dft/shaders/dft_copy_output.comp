@@ -24,11 +24,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // const uvec2 GROUP_SIZE =
 // const float TO_MUL =
 layout(local_size_x = GROUP_SIZE.x, local_size_y = GROUP_SIZE.y) in;
-layout(bindless_image, rgba32f, location = 0) uniform writeonly restrict image2D dst;
+layout(bindless_image, r32f, location = 0) uniform writeonly restrict image2D dst;
 #else
 layout(local_size_x_id = 0, local_size_y_id = 1) in;
 layout(constant_id = 2) const float TO_MUL = 1;
-layout(binding = 1, rgba32f) uniform writeonly restrict image2D dst;
+layout(binding = 1, r32f) uniform writeonly restrict image2D dst;
 #endif
 
 layout(std430, binding = 0) readonly restrict buffer Buffer
@@ -46,8 +46,8 @@ void main()
         }
 
         const int width = imageSize(dst).x;
-
-        complex d = src[p.y * width + p.x];
-        vec4 pixel = vec4(vec3(TO_MUL * length(d)), 1);
+        const complex d = src[p.y * width + p.x];
+        const float v = TO_MUL * length(d);
+        const vec4 pixel = vec4(vec3(v), 1);
         imageStore(dst, p, pixel);
 }

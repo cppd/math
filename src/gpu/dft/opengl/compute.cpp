@@ -377,7 +377,7 @@ public:
                 ASSERT((source && result) || (!source && !result));
                 if (source && result)
                 {
-                        ASSERT(result->format() == GL_RGBA32F);
+                        ASSERT(result->format() == GL_R32F);
                         ASSERT(source->width() == n1 && source->height() == n2);
                         ASSERT(result->width() == n1 && result->height() == n2);
 

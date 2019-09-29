@@ -29,7 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <array>
 #include <vector>
 
-constexpr GLenum IMAGE_FORMAT = GL_RGBA32F;
+constexpr GLenum IMAGE_FORMAT = GL_R32F;
 
 namespace gpu_opengl
 {
