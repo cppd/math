@@ -79,4 +79,114 @@ public:
 
         void set_group_size(uint32_t x, uint32_t y);
 };
+
+class DftCopyOutputMemory final
+{
+        static constexpr int SET_NUMBER = 0;
+
+        static constexpr int SRC_BINDING = 0;
+        static constexpr int DST_BINDING = 1;
+
+        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
+
+        vulkan::DescriptorSetLayout m_descriptor_set_layout;
+        vulkan::Descriptors m_descriptors;
+
+public:
+        DftCopyOutputMemory(const vulkan::Device& device);
+
+        DftCopyOutputMemory(const DftCopyOutputMemory&) = delete;
+        DftCopyOutputMemory& operator=(const DftCopyOutputMemory&) = delete;
+        DftCopyOutputMemory& operator=(DftCopyOutputMemory&&) = delete;
+
+        DftCopyOutputMemory(DftCopyOutputMemory&&) = default;
+        ~DftCopyOutputMemory() = default;
+
+        //
+
+        static unsigned set_number();
+        VkDescriptorSetLayout descriptor_set_layout() const;
+        const VkDescriptorSet& descriptor_set() const;
+
+        //
+
+        void set_input(const vulkan::BufferWithMemory& buffer) const;
+        void set_output(const vulkan::ImageWithMemory& image) const;
+};
+
+class DftCopyOutputConstant final : public vulkan::SpecializationConstant
+{
+        struct Data
+        {
+                uint32_t local_size_x;
+                uint32_t local_size_y;
+                float to_mul;
+        } m_data;
+
+        std::vector<VkSpecializationMapEntry> m_entries;
+
+        const std::vector<VkSpecializationMapEntry>& entries() const override;
+        const void* data() const override;
+        size_t size() const override;
+
+public:
+        DftCopyOutputConstant();
+
+        void set_group_size(uint32_t x, uint32_t y);
+        void set_to_mul(float v);
+};
+
+class DftBitReverseMemory final
+{
+        static constexpr int SET_NUMBER = 0;
+
+        static constexpr int BUFFER_BINDING = 0;
+
+        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
+
+        vulkan::DescriptorSetLayout m_descriptor_set_layout;
+        vulkan::Descriptors m_descriptors;
+
+public:
+        DftBitReverseMemory(const vulkan::Device& device);
+
+        DftBitReverseMemory(const DftBitReverseMemory&) = delete;
+        DftBitReverseMemory& operator=(const DftBitReverseMemory&) = delete;
+        DftBitReverseMemory& operator=(DftBitReverseMemory&&) = delete;
+
+        DftBitReverseMemory(DftBitReverseMemory&&) = default;
+        ~DftBitReverseMemory() = default;
+
+        //
+
+        static unsigned set_number();
+        VkDescriptorSetLayout descriptor_set_layout() const;
+        const VkDescriptorSet& descriptor_set() const;
+
+        //
+
+        void set_buffer(const vulkan::BufferWithMemory& buffer) const;
+};
+
+class DftBitReverseConstant final : public vulkan::SpecializationConstant
+{
+        struct Data
+        {
+                uint32_t group_size;
+                uint32_t data_size;
+                uint32_t n_mask;
+                uint32_t n_bits;
+        } m_data;
+
+        std::vector<VkSpecializationMapEntry> m_entries;
+
+        const std::vector<VkSpecializationMapEntry>& entries() const override;
+        const void* data() const override;
+        size_t size() const override;
+
+public:
+        DftBitReverseConstant();
+
+        void set(uint32_t group_size, uint32_t data_size, uint32_t n_mask, uint32_t n_bits);
+};
 }
