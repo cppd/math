@@ -26,8 +26,7 @@ namespace gpu_opengl
 template <typename T>
 class DftProgramBitReverse final
 {
-        static constexpr int DATA_BINDING = 0;
-        static constexpr int BUFFER_BINDING = 1;
+        static constexpr int BUFFER_BINDING = 0;
 
         int m_count;
         int m_n;
@@ -102,29 +101,26 @@ public:
 template <typename T>
 class DftProgramMul final
 {
-        static constexpr int DATA_BINDING = 0;
-        static constexpr int BUFFER_0_BINDING = 1;
-        static constexpr int BUFFER_1_BINDING = 2;
-
-        struct ShaderMemory
-        {
-                GLuint inverse_dft;
-        };
+        static constexpr int BUFFER_0_BINDING = 0;
+        static constexpr int BUFFER_1_BINDING = 1;
 
         const vec2i m_rows_to_buffer_groups;
         const vec2i m_rows_from_buffer_groups;
         const vec2i m_columns_to_buffer_groups;
         const vec2i m_columns_from_buffer_groups;
         opengl::ComputeProgram m_rows_to_buffer;
+        opengl::ComputeProgram m_rows_to_buffer_inverse;
         opengl::ComputeProgram m_rows_from_buffer;
+        opengl::ComputeProgram m_rows_from_buffer_inverse;
         opengl::ComputeProgram m_columns_to_buffer;
+        opengl::ComputeProgram m_columns_to_buffer_inverse;
         opengl::ComputeProgram m_columns_from_buffer;
-        opengl::Buffer m_shader_memory;
+        opengl::ComputeProgram m_columns_from_buffer_inverse;
 
-        void set_and_bind(bool inverse, const opengl::Buffer& data, const opengl::Buffer& buffer) const;
+        void bind(const opengl::Buffer& data, const opengl::Buffer& buffer) const;
 
 public:
-        DftProgramMul(vec2i group_size, int n1, int n2, int m1, int m2);
+        DftProgramMul(vec2i group_size, int n1, int n2, int m1, int m2z);
 
         // Функции подстановки переменных, формулы 13.4, 13.27, 13.28, 13.32.
         void rows_to_buffer(bool inverse, const opengl::Buffer& data, const opengl::Buffer& buffer) const;
