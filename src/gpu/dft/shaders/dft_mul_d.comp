@@ -20,25 +20,23 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #if !defined(VULKAN)
 // Вставляется в текст программы
 // const uvec2 GROUP_SIZE =
+// const int ROWS =
+// const int COLUMNS =
 layout(local_size_x = GROUP_SIZE.x, local_size_y = GROUP_SIZE.y) in;
 #else
 layout(local_size_x_id = 0, local_size_y_id = 1) in;
+layout(constant_id = 2) const int ROWS = 1;
+layout(constant_id = 3) const int COLUMNS = 1;
 #endif
 
 // Умножение на диагональ, формулы 13.20, 13.30.
 
-layout(std140, binding = 0) uniform Data
-{
-        int columns;
-        int rows;
-};
-
-layout(std430, binding = 1) restrict readonly buffer BufferDiagonal
+layout(std430, binding = 0) restrict readonly buffer BufferDiagonal
 {
         complex diagonal[];
 };
 
-layout(std430, binding = 2) restrict buffer BufferData
+layout(std430, binding = 1) restrict buffer BufferData
 {
         complex data[];
 };
@@ -48,12 +46,12 @@ void main()
         int i = int(gl_GlobalInvocationID.x);
         int j = int(gl_GlobalInvocationID.y);
 
-        if (i >= columns || j >= rows)
+        if (i >= COLUMNS || j >= ROWS)
         {
                 return;
         }
 
         complex d = diagonal[i];
-        complex y = data[j * columns + i];
-        data[j * columns + i] = complex_mul(d, y);
+        complex y = data[j * COLUMNS + i];
+        data[j * COLUMNS + i] = complex_mul(d, y);
 }

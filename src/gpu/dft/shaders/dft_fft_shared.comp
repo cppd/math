@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #if !defined(VULKAN)
 // Вставляется в текст программы
+// const bool INVERSE =
+// const uint DATA_SIZE =
 // const uint N =
 // const uint N_MASK =
 // const uint N_BITS =
@@ -27,21 +29,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // const bool REVERSE_INPUT =
 layout(local_size_x = GROUP_SIZE) in;
 #else
-layout(constant_id = 0) const uint N = 1;
-layout(constant_id = 1) const uint N_MASK = 1;
-layout(constant_id = 2) const uint N_BITS = 1;
-layout(constant_id = 3) const uint SHARED_SIZE = 1;
-layout(constant_id = 4) const bool REVERSE_INPUT = true;
-layout(local_size_x_id = 5) in;
+layout(constant_id = 0) const bool INVERSE = true;
+layout(constant_id = 1) const uint DATA_SIZE = 1;
+layout(constant_id = 2) const uint N = 1;
+layout(constant_id = 3) const uint N_MASK = 1;
+layout(constant_id = 4) const uint N_BITS = 1;
+layout(constant_id = 5) const uint SHARED_SIZE = 1;
+layout(constant_id = 6) const bool REVERSE_INPUT = true;
+layout(local_size_x_id = 7) in;
 #endif
 
-layout(std140, binding = 0) uniform Data
-{
-        bool inverse_dft;
-        uint data_size;
-};
-
-layout(std430, binding = 1) buffer Buffer
+layout(std430, binding = 0) buffer Buffer
 {
         complex global_data[];
 };
@@ -54,7 +52,7 @@ shared complex shared_data[SHARED_SIZE];
 void copy_global_to_shared()
 {
         for (uint local = gl_LocalInvocationID.x, global = gl_WorkGroupID.x * SHARED_SIZE + gl_LocalInvocationID.x;
-             local < SHARED_SIZE && global < data_size; local += gl_WorkGroupSize.x, global += gl_WorkGroupSize.x)
+             local < SHARED_SIZE && global < DATA_SIZE; local += gl_WorkGroupSize.x, global += gl_WorkGroupSize.x)
         {
                 if (REVERSE_INPUT)
                 {
@@ -71,9 +69,9 @@ void copy_global_to_shared()
 void copy_shared_to_global()
 {
         for (uint local = gl_LocalInvocationID.x, global = gl_WorkGroupID.x * SHARED_SIZE + gl_LocalInvocationID.x;
-             local < SHARED_SIZE && global < data_size; local += gl_WorkGroupSize.x, global += gl_WorkGroupSize.x)
+             local < SHARED_SIZE && global < DATA_SIZE; local += gl_WorkGroupSize.x, global += gl_WorkGroupSize.x)
         {
-                global_data[global] = !inverse_dft ? shared_data[local] : (shared_data[local] / N_MAX);
+                global_data[global] = !INVERSE ? shared_data[local] : (shared_data[local] / N_MAX);
         }
 }
 
@@ -82,7 +80,7 @@ void main()
         // Каждая группа потоков обрабатывает количество данных максимум SHARED_SIZE.
         //  Может быть три случая размера ДПФ = N:
         // 1)   Размер каждого ДПФ кратно меньше SHARED_SIZE.
-        //    Тогда глобально обработать не больше data_size.
+        //    Тогда глобально обработать не больше DATA_SIZE.
         //    Например, может потребоваться выполнить 10 преобразований размером
         //    по 16 элементов с размером SHARED_SIZE = 128, то есть 8 преобразований
         //    на первую группу и на вторую группу только 2 преобразования, а не 8.
@@ -96,7 +94,7 @@ void main()
                 return;
         }
         // Проверка ошибки на лишнее число групп потоков
-        if (data_size <= gl_WorkGroupID.x * SHARED_SIZE)
+        if (DATA_SIZE <= gl_WorkGroupID.x * SHARED_SIZE)
         {
                 return;
         }
@@ -104,10 +102,10 @@ void main()
         copy_global_to_shared();
 
         // Один поток обрабатывает 2 элемента, поэтому >> 1
-        uint max_local = min(SHARED_SIZE, data_size - gl_WorkGroupID.x * SHARED_SIZE) >> 1;
+        uint max_local = min(SHARED_SIZE, DATA_SIZE - gl_WorkGroupID.x * SHARED_SIZE) >> 1;
 
         // Первоначально M = 2, поэтому просто PI
-        float_point two_pi_div_m = inverse_dft ? PI : -PI;
+        float_point two_pi_div_m = INVERSE ? PI : -PI;
 
         for (uint m_div_2 = 1; m_div_2 < N_MAX; m_div_2 <<= 1, two_pi_div_m *= 0.5)
         {

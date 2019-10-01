@@ -101,20 +101,20 @@ public:
 template <typename T>
 class DftProgramMul final
 {
-        static constexpr int BUFFER_0_BINDING = 0;
-        static constexpr int BUFFER_1_BINDING = 1;
+        static constexpr int DATA_BINDING = 0;
+        static constexpr int BUFFER_BINDING = 1;
 
         const vec2i m_rows_to_buffer_groups;
         const vec2i m_rows_from_buffer_groups;
         const vec2i m_columns_to_buffer_groups;
         const vec2i m_columns_from_buffer_groups;
-        opengl::ComputeProgram m_rows_to_buffer;
+        opengl::ComputeProgram m_rows_to_buffer_forward;
         opengl::ComputeProgram m_rows_to_buffer_inverse;
-        opengl::ComputeProgram m_rows_from_buffer;
+        opengl::ComputeProgram m_rows_from_buffer_forward;
         opengl::ComputeProgram m_rows_from_buffer_inverse;
-        opengl::ComputeProgram m_columns_to_buffer;
+        opengl::ComputeProgram m_columns_to_buffer_forward;
         opengl::ComputeProgram m_columns_to_buffer_inverse;
-        opengl::ComputeProgram m_columns_from_buffer;
+        opengl::ComputeProgram m_columns_from_buffer_forward;
         opengl::ComputeProgram m_columns_from_buffer_inverse;
 
         void bind(const opengl::Buffer& data, const opengl::Buffer& buffer) const;
@@ -132,20 +132,12 @@ public:
 template <typename T>
 class DftProgramMulD final
 {
-        static constexpr int DATA_BINDING = 0;
-        static constexpr int BUFFER_DIAGONAL_BINDING = 1;
-        static constexpr int BUFFER_DATA_BINDING = 2;
-
-        struct ShaderMemory
-        {
-                GLint columns;
-                GLint rows;
-        };
+        static constexpr int DIAGONAL_BINDING = 0;
+        static constexpr int DATA_BINDING = 1;
 
         const vec2i m_row_groups, m_column_groups;
-        opengl::ComputeProgram m_mul_d;
-        opengl::Buffer m_memory_rows;
-        opengl::Buffer m_memory_columns;
+        opengl::ComputeProgram m_mul_d_rows;
+        opengl::ComputeProgram m_mul_d_columns;
 
 public:
         DftProgramMulD(vec2i group_size, int n1, int n2, int m1, int m2);
@@ -158,21 +150,20 @@ public:
 template <typename T>
 class DftProgramFftShared final
 {
-        static constexpr int DATA_BINDING = 0;
-        static constexpr int BUFFER_BINDING = 1;
+        static constexpr int BUFFER_BINDING = 0;
 
-        struct ShaderMemory
-        {
-                GLuint inverse_dft;
-                GLuint data_size;
-        };
-
-        const int m_n, m_n_bits, m_shared_size;
-        opengl::ComputeProgram m_fft;
-        opengl::Buffer m_shader_memory;
+        const int m_count, m_n, m_n_bits, m_shared_size, m_reverse_input;
+        const int m_group_count;
+        opengl::ComputeProgram m_fft_forward;
+        opengl::ComputeProgram m_fft_inverse;
 
 public:
-        DftProgramFftShared(int n, int shared_size, int group_size, bool reverse_input);
+        DftProgramFftShared(int count, int n, int shared_size, int group_size, bool reverse_input);
+
+        int count() const
+        {
+                return m_count;
+        }
 
         int n() const
         {
@@ -189,6 +180,11 @@ public:
                 return m_shared_size;
         }
 
-        void exec(bool inverse, int data_size, const opengl::Buffer& data) const;
+        bool reverse_input() const
+        {
+                return m_reverse_input;
+        }
+
+        void exec(bool inverse, const opengl::Buffer& data) const;
 };
 }
