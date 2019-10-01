@@ -74,7 +74,7 @@ void check_discrepancy(const std::string& name, const std::vector<complex>& d1, 
         double d = discrepancy(d1, d2);
         LOG("Discrepancy: " + to_string(d));
 
-        if (d > DISCREPANCY_LIMIT)
+        if (!(d <= DISCREPANCY_LIMIT))
         {
                 error("Huge discrepancy (" + name + ")");
         }
