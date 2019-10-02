@@ -264,7 +264,7 @@ void fft1d(bool inverse, const DftProgramFftShared<FP>& fft, const DftProgramBit
         for (; m_div_2 < n; m_div_2 <<= 1, two_pi_div_m /= 2)
         {
                 // m_div_2 - половина размера текущих отдельных БПФ
-                fft_global.exec(thread_count, inverse, two_pi_div_m, n_div_2_mask, m_div_2, *data);
+                fft_global.exec(inverse, thread_count, two_pi_div_m, n_div_2_mask, m_div_2, *data);
         }
 }
 

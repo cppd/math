@@ -52,6 +52,11 @@ std::string n_m_string(int n1, int n2, int m1, int m2)
         return s;
 }
 
+std::string bool_string(bool v)
+{
+        return v ? "true" : "false";
+}
+
 template <typename T>
 std::string bit_reverse_source(int group_size, unsigned count, unsigned n)
 {
@@ -64,10 +69,11 @@ std::string bit_reverse_source(int group_size, unsigned count, unsigned n)
 }
 
 template <typename T>
-std::string fft_global_source(int group_size)
+std::string fft_global_source(int group_size, bool inverse)
 {
         std::string s;
         s += group_size_string(group_size);
+        s += "const bool INVERSE = " + bool_string(inverse) + ";\n";
         return dft_fft_global_comp(s);
 }
 
@@ -78,7 +84,7 @@ std::string rows_mul_to_buffer_source(vec2i group_size, int n1, int n2, int m1, 
         s += group_size_string(group_size);
         s += function_index_string(0);
         s += n_m_string(n1, n2, m1, m2);
-        s += std::string("const bool INVERSE = ") + (inverse ? "true" : "false") + ";\n";
+        s += "const bool INVERSE = " + bool_string(inverse) + ";\n";
         return dft_mul_comp(s);
 }
 
@@ -89,7 +95,7 @@ std::string rows_mul_fr_buffer_source(vec2i group_size, int n1, int n2, int m1, 
         s += group_size_string(group_size);
         s += function_index_string(1);
         s += n_m_string(n1, n2, m1, m2);
-        s += std::string("const bool INVERSE = ") + (inverse ? "true" : "false") + ";\n";
+        s += "const bool INVERSE = " + bool_string(inverse) + ";\n";
         return dft_mul_comp(s);
 }
 
@@ -100,7 +106,7 @@ std::string cols_mul_to_buffer_source(vec2i group_size, int n1, int n2, int m1, 
         s += group_size_string(group_size);
         s += function_index_string(2);
         s += n_m_string(n1, n2, m1, m2);
-        s += std::string("const bool INVERSE = ") + (inverse ? "true" : "false") + ";\n";
+        s += "const bool INVERSE = " + bool_string(inverse) + ";\n";
         return dft_mul_comp(s);
 }
 
@@ -111,7 +117,7 @@ std::string cols_mul_fr_buffer_source(vec2i group_size, int n1, int n2, int m1, 
         s += group_size_string(group_size);
         s += function_index_string(3);
         s += n_m_string(n1, n2, m1, m2);
-        s += std::string("const bool INVERSE = ") + (inverse ? "true" : "false") + ";\n";
+        s += "const bool INVERSE = " + bool_string(inverse) + ";\n";
         return dft_mul_comp(s);
 }
 
@@ -146,14 +152,14 @@ template <typename T>
 std::string fft_shared_source(bool inverse, int data_size, int n, int n_bits, int shared_size, int group_size, bool reverse_input)
 {
         std::string s;
-        s += std::string("const bool INVERSE = ") + (inverse ? "true" : "false") + ";\n";
+        s += "const bool INVERSE = " + bool_string(inverse) + ";\n";
         s += "const uint DATA_SIZE = " + to_string(data_size) + ";\n";
         s += "const uint N = " + to_string(n) + ";\n";
         s += "const uint N_MASK = " + to_string(n - 1) + ";\n";
         s += "const uint N_BITS = " + to_string(n_bits) + ";\n";
         s += "const uint SHARED_SIZE = " + to_string(shared_size) + ";\n";
+        s += "const bool REVERSE_INPUT = " + bool_string(reverse_input) + ";\n";
         s += "const uint GROUP_SIZE = " + to_string(group_size) + ";\n";
-        s += "const bool REVERSE_INPUT = " + (reverse_input ? std::string("true") : std::string("false")) + ";\n";
         return dft_fft_shared_comp(s);
 }
 }
@@ -193,17 +199,17 @@ int DftProgramBitReverse<T>::n() const
 template <typename T>
 DftProgramFftGlobal<T>::DftProgramFftGlobal(int group_size)
         : m_group_size(group_size),
-          m_fft(opengl::ComputeShader(fft_global_source<T>(group_size))),
+          m_fft_forward(opengl::ComputeShader(fft_global_source<T>(group_size, false))),
+          m_fft_inverse(opengl::ComputeShader(fft_global_source<T>(group_size, true))),
           m_shader_memory(sizeof(ShaderMemory), GL_MAP_WRITE_BIT)
 {
 }
 
 template <typename T>
-void DftProgramFftGlobal<T>::exec(int data_size, bool inverse, T two_pi_div_m, int n_div_2_mask, int m_div_2,
+void DftProgramFftGlobal<T>::exec(bool inverse, int data_size, T two_pi_div_m, int n_div_2_mask, int m_div_2,
                                   const opengl::Buffer& data) const
 {
         ShaderMemory m;
-        m.inverse_dft = inverse;
         m.data_size = data_size;
         m.n_div_2_mask = n_div_2_mask;
         m.m_div_2 = m_div_2;
@@ -213,7 +219,15 @@ void DftProgramFftGlobal<T>::exec(int data_size, bool inverse, T two_pi_div_m, i
         glBindBufferBase(GL_UNIFORM_BUFFER, DATA_BINDING, m_shader_memory);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, BUFFER_BINDING, data);
 
-        m_fft.dispatch_compute(group_count(data_size, m_group_size), 1, 1);
+        if (inverse)
+        {
+                m_fft_inverse.dispatch_compute(group_count(data_size, m_group_size), 1, 1);
+        }
+        else
+        {
+                m_fft_forward.dispatch_compute(group_count(data_size, m_group_size), 1, 1);
+        }
+
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 }
 

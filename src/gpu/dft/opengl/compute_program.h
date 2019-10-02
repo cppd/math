@@ -51,7 +51,6 @@ class DftProgramFftGlobal final
 
         struct ShaderMemory
         {
-                GLuint inverse_dft;
                 GLuint data_size;
                 GLuint n_div_2_mask;
                 GLuint m_div_2;
@@ -59,13 +58,14 @@ class DftProgramFftGlobal final
         };
 
         const int m_group_size;
-        opengl::ComputeProgram m_fft;
+        opengl::ComputeProgram m_fft_forward;
+        opengl::ComputeProgram m_fft_inverse;
         opengl::Buffer m_shader_memory;
 
 public:
         DftProgramFftGlobal(int group_size);
 
-        void exec(int data_size, bool inverse, T two_pi_div_m, int n_div_2_mask, int m_div_2, const opengl::Buffer& data) const;
+        void exec(bool inverse, int data_size, T two_pi_div_m, int n_div_2_mask, int m_div_2, const opengl::Buffer& data) const;
 };
 
 template <typename T>

@@ -25,8 +25,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // const uint N_MASK =
 // const uint N_BITS =
 // const uint SHARED_SIZE =
-// const uint GROUP_SIZE =
 // const bool REVERSE_INPUT =
+// const uint GROUP_SIZE =
 layout(local_size_x = GROUP_SIZE) in;
 #else
 layout(constant_id = 0) const bool INVERSE = true;

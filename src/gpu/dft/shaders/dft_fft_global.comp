@@ -20,14 +20,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #if !defined(VULKAN)
 // Вставляется в текст программы
 // const uint GROUP_SIZE =
+// const bool INVERSE =
 layout(local_size_x = GROUP_SIZE) in;
 #else
 layout(local_size_x_id = 0) in;
+layout(constant_id = 1) const bool INVERSE = true;
 #endif
 
 layout(std140, binding = 0) uniform Data
 {
-        bool inverse_dft;
         uint data_size;
         uint n_div_2_mask;
         uint m_div_2;
@@ -65,7 +66,7 @@ void main()
 
         complex k = complex_mul(twiddle_factor, v_u);
 
-        if (!inverse_dft)
+        if (!INVERSE)
         {
                 data[index_t] = v_t + k;
                 data[index_u] = v_t - k;
