@@ -189,4 +189,130 @@ public:
 
         void set(uint32_t group_size, uint32_t data_size, uint32_t n_mask, uint32_t n_bits);
 };
+
+//
+
+class DftFftGlobalMemory final
+{
+        static constexpr int SET_NUMBER = 0;
+
+        static constexpr int DATA_BINDING = 0;
+        static constexpr int BUFFER_BINDING = 1;
+
+        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
+
+        vulkan::DescriptorSetLayout m_descriptor_set_layout;
+        vulkan::Descriptors m_descriptors;
+        std::vector<vulkan::BufferWithMemory> m_uniform_buffers;
+
+        struct Data
+        {
+                uint32_t data_size;
+                uint32_t n_div_2_mask;
+                uint32_t m_div_2;
+                float two_pi_div_m;
+        };
+
+public:
+        DftFftGlobalMemory(const vulkan::Device& device, const std::unordered_set<uint32_t>& family_indices);
+
+        DftFftGlobalMemory(const DftFftGlobalMemory&) = delete;
+        DftFftGlobalMemory& operator=(const DftFftGlobalMemory&) = delete;
+        DftFftGlobalMemory& operator=(DftFftGlobalMemory&&) = delete;
+
+        DftFftGlobalMemory(DftFftGlobalMemory&&) = default;
+        ~DftFftGlobalMemory() = default;
+
+        //
+
+        static unsigned set_number();
+        VkDescriptorSetLayout descriptor_set_layout() const;
+        const VkDescriptorSet& descriptor_set() const;
+
+        //
+
+        void set_data(int data_size, float two_pi_div_m, int n_div_2_mask, int m_div_2) const;
+        void set_buffer(const vulkan::BufferWithMemory& buffer) const;
+};
+
+class DftFftGlobalConstant final : public vulkan::SpecializationConstant
+{
+        struct Data
+        {
+                uint32_t group_size;
+                uint32_t inverse;
+        } m_data;
+
+        std::vector<VkSpecializationMapEntry> m_entries;
+
+        const std::vector<VkSpecializationMapEntry>& entries() const override;
+        const void* data() const override;
+        size_t size() const override;
+
+public:
+        DftFftGlobalConstant();
+
+        void set(uint32_t group_size, bool inverse);
+};
+
+//
+
+class DftFftSharedMemory final
+{
+        static constexpr int SET_NUMBER = 0;
+
+        static constexpr int BUFFER_BINDING = 0;
+
+        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
+
+        vulkan::DescriptorSetLayout m_descriptor_set_layout;
+        vulkan::Descriptors m_descriptors;
+
+public:
+        DftFftSharedMemory(const vulkan::Device& device);
+
+        DftFftSharedMemory(const DftFftSharedMemory&) = delete;
+        DftFftSharedMemory& operator=(const DftFftSharedMemory&) = delete;
+        DftFftSharedMemory& operator=(DftFftSharedMemory&&) = delete;
+
+        DftFftSharedMemory(DftFftSharedMemory&&) = default;
+        ~DftFftSharedMemory() = default;
+
+        //
+
+        static unsigned set_number();
+        VkDescriptorSetLayout descriptor_set_layout() const;
+        const VkDescriptorSet& descriptor_set() const;
+
+        //
+
+        void set_buffer(const vulkan::BufferWithMemory& buffer) const;
+};
+
+class DftFftSharedConstant final : public vulkan::SpecializationConstant
+{
+        struct Data
+        {
+                uint32_t inverse;
+                uint32_t data_size;
+                uint32_t n;
+                uint32_t n_mask;
+                uint32_t n_bits;
+                uint32_t shared_size;
+                uint32_t reverse_input;
+                uint32_t group_size;
+        } m_data;
+
+        std::vector<VkSpecializationMapEntry> m_entries;
+
+        const std::vector<VkSpecializationMapEntry>& entries() const override;
+        const void* data() const override;
+        size_t size() const override;
+
+public:
+        DftFftSharedConstant();
+
+        void set(bool inverse, uint32_t data_size, uint32_t n, uint32_t n_mask, uint32_t n_bits, uint32_t shared_size,
+                 bool reverse_input, uint32_t group_size);
+};
 }
