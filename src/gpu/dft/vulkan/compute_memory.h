@@ -315,4 +315,67 @@ public:
         void set(bool inverse, uint32_t data_size, uint32_t n, uint32_t n_mask, uint32_t n_bits, uint32_t shared_size,
                  bool reverse_input, uint32_t group_size);
 };
+
+//
+
+class DftMulMemory final
+{
+        static constexpr int SET_NUMBER = 0;
+
+        static constexpr int DATA_BINDING = 0;
+        static constexpr int BUFFER_BINDING = 1;
+
+        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
+
+        vulkan::DescriptorSetLayout m_descriptor_set_layout;
+        vulkan::Descriptors m_descriptors;
+
+public:
+        DftMulMemory(const vulkan::Device& device);
+
+        DftMulMemory(const DftMulMemory&) = delete;
+        DftMulMemory& operator=(const DftMulMemory&) = delete;
+        DftMulMemory& operator=(DftMulMemory&&) = delete;
+
+        DftMulMemory(DftMulMemory&&) = default;
+        ~DftMulMemory() = default;
+
+        //
+
+        static unsigned set_number();
+        VkDescriptorSetLayout descriptor_set_layout() const;
+        const VkDescriptorSet& descriptor_set() const;
+
+        //
+
+        void set_data(const vulkan::BufferWithMemory& data) const;
+        void set_buffer(const vulkan::BufferWithMemory& buffer) const;
+};
+
+class DftMulConstant final : public vulkan::SpecializationConstant
+{
+        struct Data
+        {
+                int32_t function_index;
+                int32_t n1;
+                int32_t n2;
+                int32_t m1;
+                int32_t m2;
+                uint32_t inverse;
+                uint32_t group_size_x;
+                uint32_t group_size_y;
+        } m_data;
+
+        std::vector<VkSpecializationMapEntry> m_entries;
+
+        const std::vector<VkSpecializationMapEntry>& entries() const override;
+        const void* data() const override;
+        size_t size() const override;
+
+public:
+        DftMulConstant();
+
+        void set(int32_t function_index, int32_t n1, int32_t n2, int32_t m1, int32_t m2, bool inverse, uint32_t group_size_x,
+                 uint32_t group_size_y);
+};
 }
