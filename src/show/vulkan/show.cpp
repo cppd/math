@@ -118,8 +118,9 @@ class Impl final : public Show, public WindowEvent
         vulkan::PresentMode m_present_mode = VULKAN_DEFAULT_PRESENT_MODE;
 
         bool m_text_active = true;
-        bool m_convex_hull_active = true;
-        bool m_pencil_sketch_active = true;
+        bool m_convex_hull_active = false;
+        bool m_pencil_sketch_active = false;
+        bool m_dft_active = false;
 
         // В последовательности swapchain, а затем renderer,
         // так как буферы renderer могут зависеть от swapchain
@@ -282,9 +283,16 @@ class Impl final : public Show, public WindowEvent
                 m_pencil_sketch_active = v;
         }
 
-        void show_dft(bool /*v*/) override
+        void show_dft(bool v) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
+
+                if (m_dft_active != v)
+                {
+                        m_dft_active = v;
+
+                        create_swapchain();
+                }
         }
 
         void set_dft_brightness(double /*v*/) override
@@ -467,8 +475,6 @@ class Impl final : public Show, public WindowEvent
         void window_resized(int /*width*/, int /*height*/) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
-
-                window_resize_handler();
         }
 
         //
@@ -491,19 +497,6 @@ class Impl final : public Show, public WindowEvent
                 m_renderer->set_camera(m_camera.renderer_info());
         }
 
-        void window_resize_handler()
-        {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
-
-                if (m_event_window.window_width() != m_window->width() || m_event_window.window_height() != m_window->height())
-                {
-                        // Вызов не из обработчика измерения окна (там есть проверка),
-                        // а вызов из обработчика включения-выключения ДПФ в то время,
-                        // когда окно ещё не готово.
-                        return;
-                }
-        }
-
         //
 
         void pull_and_dispatch_all_events()
@@ -514,32 +507,6 @@ class Impl final : public Show, public WindowEvent
                 // могут быть действия с окном, а в событиях окна нет комманд
                 m_event_queue.pull_and_dispatch_events(*this);
                 m_event_window.pull_and_dispath_events(*this);
-        }
-
-        void init_window_and_view()
-        {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
-
-                move_window_to_parent(m_window->system_handle(), m_parent_window);
-
-                for (int i = 1;
-                     m_event_window.window_width() != m_window->width() && m_event_window.window_height() != m_window->height();
-                     ++i)
-                {
-                        if (i > 10)
-                        {
-                                error("Failed to receive the resize window event for the window size (" +
-                                      to_string(m_window->width()) + ", " + to_string(m_window->height()) + ")");
-                        }
-                        pull_and_dispatch_all_events();
-                }
-
-                if (m_draw_width <= 0 || m_draw_height <= 0)
-                {
-                        error("Draw size error (" + to_string(m_draw_width) + ", " + to_string(m_draw_height) + ")");
-                }
-
-                reset_view_handler();
         }
 
         void set_vertical_sync_swapchain(bool v)
@@ -580,7 +547,8 @@ class Impl final : public Show, public WindowEvent
 
                 m_draw_x = 0;
                 m_draw_y = 0;
-                m_draw_width = m_swapchain->width();
+                m_draw_width = m_dft_active ? m_swapchain->width() / 2 : m_swapchain->width();
+
                 m_draw_height = m_swapchain->height();
 
                 m_draw_width = std::max(1, m_draw_width);
@@ -678,6 +646,7 @@ public:
                 m_present_mode = VULKAN_DEFAULT_PRESENT_MODE;
 
                 m_window = vulkan::create_window();
+                move_window_to_parent(m_window->system_handle(), m_parent_window);
 
                 {
                         const std::vector<std::string> required_instance_extensions = merge<std::string>(
@@ -736,24 +705,12 @@ public:
 
                 m_event_window.set_window(*m_window);
 
-                init_window_and_view();
+                reset_view_handler();
         }
 
         ~Impl() override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
-
-                // В последовательности renderer, а затем swapchain,
-                // так как буферы renderer могут зависеть от swapchain
-                // m_convex_hull.reset();
-                // m_text.reset();
-                // m_renderer.reset();
-                // m_object_image.reset();
-                // m_render_buffers.reset();
-                // m_swapchain.reset();
-                // m_image_semaphore.reset();
-                // m_instance.reset();
-                // m_window.reset();
         }
 
         void loop(std::atomic_bool& stop)
