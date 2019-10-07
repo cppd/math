@@ -400,19 +400,19 @@ class Impl final : public Renderer
 
                 m_triangles_pipeline = m_render_buffers->create_pipeline(
                         VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, m_sample_shading,
-                        {&m_triangles_vert, &m_triangles_geom, &m_triangles_frag}, m_triangles_pipeline_layout,
-                        RendererVertex::binding_descriptions(), RendererVertex::triangles_attribute_descriptions(), m_x, m_y,
-                        m_width, m_height);
+                        {&m_triangles_vert, &m_triangles_geom, &m_triangles_frag}, {nullptr, nullptr, nullptr},
+                        m_triangles_pipeline_layout, RendererVertex::binding_descriptions(),
+                        RendererVertex::triangles_attribute_descriptions(), m_x, m_y, m_width, m_height);
 
                 m_points_0d_pipeline = m_render_buffers->create_pipeline(
-                        VK_PRIMITIVE_TOPOLOGY_POINT_LIST, false, {&m_points_0d_vert, &m_points_frag}, m_points_pipeline_layout,
-                        RendererPointVertex::binding_descriptions(), RendererPointVertex::attribute_descriptions(), m_x, m_y,
-                        m_width, m_height);
+                        VK_PRIMITIVE_TOPOLOGY_POINT_LIST, false, {&m_points_0d_vert, &m_points_frag}, {nullptr, nullptr},
+                        m_points_pipeline_layout, RendererPointVertex::binding_descriptions(),
+                        RendererPointVertex::attribute_descriptions(), m_x, m_y, m_width, m_height);
 
                 m_points_1d_pipeline = m_render_buffers->create_pipeline(
-                        VK_PRIMITIVE_TOPOLOGY_LINE_LIST, false, {&m_points_1d_vert, &m_points_frag}, m_points_pipeline_layout,
-                        RendererPointVertex::binding_descriptions(), RendererPointVertex::attribute_descriptions(), m_x, m_y,
-                        m_width, m_height);
+                        VK_PRIMITIVE_TOPOLOGY_LINE_LIST, false, {&m_points_1d_vert, &m_points_frag}, {nullptr, nullptr},
+                        m_points_pipeline_layout, RendererPointVertex::binding_descriptions(),
+                        RendererPointVertex::attribute_descriptions(), m_x, m_y, m_width, m_height);
         }
 
         void delete_shadow_buffers()
@@ -441,8 +441,9 @@ class Impl final : public Renderer
                 m_triangles_shared_shader_memory.set_shadow_texture(m_shadow_sampler, m_shadow_buffers->texture(0));
 
                 m_shadow_pipeline = m_shadow_buffers->create_pipeline(
-                        VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, {&m_shadow_vert, &m_shadow_frag}, m_shadow_pipeline_layout,
-                        RendererVertex::binding_descriptions(), RendererVertex::shadow_attribute_descriptions());
+                        VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, {&m_shadow_vert, &m_shadow_frag}, {nullptr, nullptr},
+                        m_shadow_pipeline_layout, RendererVertex::binding_descriptions(),
+                        RendererVertex::shadow_attribute_descriptions());
         }
 
         void set_matrices()

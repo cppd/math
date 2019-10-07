@@ -120,7 +120,7 @@ class Impl final : public PencilSketchShow
                 m_pipeline = render_buffers->create_pipeline(
                         VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP,
                         m_sample_shading && (input_image.width() != width || input_image.height() != height),
-                        false /*color_blend*/, {&m_vertex_shader, &m_fragment_shader}, m_pipeline_layout,
+                        false /*color_blend*/, {&m_vertex_shader, &m_fragment_shader}, {nullptr, nullptr}, m_pipeline_layout,
                         PencilSketchShowVertex::binding_descriptions(), PencilSketchShowVertex::attribute_descriptions(), x, y,
                         width, height);
 

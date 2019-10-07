@@ -20,33 +20,56 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/error.h"
 #include "com/log.h"
 
-namespace
-{
-std::vector<VkPipelineShaderStageCreateInfo> pipeline_shader_stage_create_info(const std::vector<const vulkan::Shader*>& shaders)
-{
-        std::vector<VkPipelineShaderStageCreateInfo> res;
-
-        for (const vulkan::Shader* s : shaders)
-        {
-                VkPipelineShaderStageCreateInfo stage_info = {};
-                stage_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-                stage_info.stage = s->stage();
-                stage_info.module = s->module();
-                stage_info.pName = s->entry_point_name();
-
-                res.push_back(stage_info);
-        }
-
-        return res;
-}
-}
+#include <memory>
 
 namespace vulkan
 {
+namespace
+{
+void pipeline_shader_stage_create_info(const std::vector<const Shader*>& shaders,
+                                       const std::vector<const SpecializationConstant*>& constants,
+                                       std::vector<VkPipelineShaderStageCreateInfo>* create_info,
+                                       std::vector<std::unique_ptr<VkSpecializationInfo>>* specialization_info)
+{
+        ASSERT(shaders.size() == constants.size());
+
+        create_info->resize(shaders.size());
+        specialization_info->clear();
+
+        for (size_t i = 0; i < shaders.size(); ++i)
+        {
+                const Shader* shader = shaders[i];
+                ASSERT(shader);
+
+                (*create_info)[i] = {};
+                (*create_info)[i].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+                (*create_info)[i].stage = shader->stage();
+                (*create_info)[i].module = shader->module();
+                (*create_info)[i].pName = shader->entry_point_name();
+
+                const SpecializationConstant* constant = constants[i];
+                if (constant)
+                {
+                        specialization_info->push_back(std::make_unique<VkSpecializationInfo>());
+
+                        *specialization_info->back() = {};
+                        specialization_info->back()->mapEntryCount = constant->entries().size();
+                        specialization_info->back()->pMapEntries = constant->entries().data();
+                        specialization_info->back()->dataSize = constant->size();
+                        specialization_info->back()->pData = constant->data();
+
+                        (*create_info)[i].pSpecializationInfo = specialization_info->back().get();
+                }
+        }
+}
+}
+
 Pipeline create_graphics_pipeline(const GraphicsPipelineCreateInfo& info)
 {
-        std::vector<VkPipelineShaderStageCreateInfo> pipeline_shader_stages =
-                pipeline_shader_stage_create_info(*info.shaders.value());
+        std::vector<VkPipelineShaderStageCreateInfo> pipeline_shader_stage_info;
+        std::vector<std::unique_ptr<VkSpecializationInfo>> specialization_info;
+        pipeline_shader_stage_create_info(*info.shaders.value(), *info.constants.value(), &pipeline_shader_stage_info,
+                                          &specialization_info);
 
         VkPipelineVertexInputStateCreateInfo vertex_input_state_info = {};
         vertex_input_state_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
@@ -185,8 +208,8 @@ Pipeline create_graphics_pipeline(const GraphicsPipelineCreateInfo& info)
 
         VkGraphicsPipelineCreateInfo create_info = {};
         create_info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-        create_info.stageCount = pipeline_shader_stages.size();
-        create_info.pStages = pipeline_shader_stages.data();
+        create_info.stageCount = pipeline_shader_stage_info.size();
+        create_info.pStages = pipeline_shader_stage_info.data();
 
         create_info.pVertexInputState = &vertex_input_state_info;
         create_info.pInputAssemblyState = &input_assembly_state_info;
@@ -224,15 +247,6 @@ Pipeline create_compute_pipeline(const ComputePipelineCreateInfo& info)
                            }));
 
         VkSpecializationInfo specialization_info;
-        if (info.constants.has_value())
-        {
-                specialization_info = {};
-                specialization_info.mapEntryCount = info.constants.value()->entries().size();
-                specialization_info.pMapEntries = info.constants.value()->entries().data();
-                specialization_info.dataSize = info.constants.value()->size();
-                specialization_info.pData = info.constants.value()->data();
-        }
-
         VkPipelineShaderStageCreateInfo stage_info = {};
         stage_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         stage_info.stage = info.shader.value()->stage();
@@ -240,6 +254,11 @@ Pipeline create_compute_pipeline(const ComputePipelineCreateInfo& info)
         stage_info.pName = info.shader.value()->entry_point_name();
         if (info.constants.has_value())
         {
+                specialization_info = {};
+                specialization_info.mapEntryCount = info.constants.value()->entries().size();
+                specialization_info.pMapEntries = info.constants.value()->entries().data();
+                specialization_info.dataSize = info.constants.value()->size();
+                specialization_info.pData = info.constants.value()->data();
                 stage_info.pSpecializationInfo = &specialization_info;
         }
 

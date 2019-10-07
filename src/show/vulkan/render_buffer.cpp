@@ -170,7 +170,9 @@ class Impl3D : public gpu_vulkan::RenderBuffers3D
         virtual void delete_command_buffers_3d(std::vector<VkCommandBuffer>* buffers) = 0;
 
         virtual VkPipeline create_pipeline_3d(VkPrimitiveTopology primitive_topology, bool sample_shading,
-                                              const std::vector<const vulkan::Shader*>& shaders, VkPipelineLayout pipeline_layout,
+                                              const std::vector<const vulkan::Shader*>& shaders,
+                                              const std::vector<const vulkan::SpecializationConstant*>& constants,
+                                              VkPipelineLayout pipeline_layout,
                                               const std::vector<VkVertexInputBindingDescription>& vertex_binding,
                                               const std::vector<VkVertexInputAttributeDescription>& vertex_attribute, unsigned x,
                                               unsigned y, unsigned width, unsigned height) = 0;
@@ -191,12 +193,14 @@ class Impl3D : public gpu_vulkan::RenderBuffers3D
         }
 
         VkPipeline create_pipeline(VkPrimitiveTopology primitive_topology, bool sample_shading,
-                                   const std::vector<const vulkan::Shader*>& shaders, VkPipelineLayout pipeline_layout,
+                                   const std::vector<const vulkan::Shader*>& shaders,
+                                   const std::vector<const vulkan::SpecializationConstant*>& constants,
+                                   VkPipelineLayout pipeline_layout,
                                    const std::vector<VkVertexInputBindingDescription>& vertex_binding,
                                    const std::vector<VkVertexInputAttributeDescription>& vertex_attribute, unsigned x, unsigned y,
                                    unsigned width, unsigned height) override final
         {
-                return create_pipeline_3d(primitive_topology, sample_shading, shaders, pipeline_layout, vertex_binding,
+                return create_pipeline_3d(primitive_topology, sample_shading, shaders, constants, pipeline_layout, vertex_binding,
                                           vertex_attribute, x, y, width, height);
         }
 
@@ -213,7 +217,9 @@ class Impl2D : public gpu_vulkan::RenderBuffers2D
         virtual void delete_command_buffers_2d(std::vector<VkCommandBuffer>* buffers) = 0;
 
         virtual VkPipeline create_pipeline_2d(VkPrimitiveTopology primitive_topology, bool sample_shading, bool color_blend,
-                                              const std::vector<const vulkan::Shader*>& shaders, VkPipelineLayout pipeline_layout,
+                                              const std::vector<const vulkan::Shader*>& shaders,
+                                              const std::vector<const vulkan::SpecializationConstant*>& constants,
+                                              VkPipelineLayout pipeline_layout,
                                               const std::vector<VkVertexInputBindingDescription>& vertex_binding,
                                               const std::vector<VkVertexInputAttributeDescription>& vertex_attribute, unsigned x,
                                               unsigned y, unsigned width, unsigned height) = 0;
@@ -233,12 +239,14 @@ class Impl2D : public gpu_vulkan::RenderBuffers2D
         }
 
         VkPipeline create_pipeline(VkPrimitiveTopology primitive_topology, bool sample_shading, bool color_blend,
-                                   const std::vector<const vulkan::Shader*>& shaders, VkPipelineLayout pipeline_layout,
+                                   const std::vector<const vulkan::Shader*>& shaders,
+                                   const std::vector<const vulkan::SpecializationConstant*>& constants,
+                                   VkPipelineLayout pipeline_layout,
                                    const std::vector<VkVertexInputBindingDescription>& vertex_binding,
                                    const std::vector<VkVertexInputAttributeDescription>& vertex_attribute, unsigned x, unsigned y,
                                    unsigned width, unsigned height) override final
         {
-                return create_pipeline_2d(primitive_topology, sample_shading, color_blend, shaders, pipeline_layout,
+                return create_pipeline_2d(primitive_topology, sample_shading, color_blend, shaders, constants, pipeline_layout,
                                           vertex_binding, vertex_attribute, x, y, width, height);
         }
 
@@ -322,13 +330,17 @@ class Impl final : public show_vulkan::RenderBuffers, public Impl3D, public Impl
         //
 
         VkPipeline create_pipeline_3d(VkPrimitiveTopology primitive_topology, bool sample_shading,
-                                      const std::vector<const vulkan::Shader*>& shaders, VkPipelineLayout pipeline_layout,
+                                      const std::vector<const vulkan::Shader*>& shaders,
+                                      const std::vector<const vulkan::SpecializationConstant*>& constants,
+                                      VkPipelineLayout pipeline_layout,
                                       const std::vector<VkVertexInputBindingDescription>& vertex_binding,
                                       const std::vector<VkVertexInputAttributeDescription>& vertex_attribute, unsigned x,
                                       unsigned y, unsigned width, unsigned height) override;
 
         VkPipeline create_pipeline_2d(VkPrimitiveTopology primitive_topology, bool sample_shading, bool color_blend,
-                                      const std::vector<const vulkan::Shader*>& shaders, VkPipelineLayout pipeline_layout,
+                                      const std::vector<const vulkan::Shader*>& shaders,
+                                      const std::vector<const vulkan::SpecializationConstant*>& constants,
+                                      VkPipelineLayout pipeline_layout,
                                       const std::vector<VkVertexInputBindingDescription>& vertex_binding,
                                       const std::vector<VkVertexInputAttributeDescription>& vertex_attribute, unsigned x,
                                       unsigned y, unsigned width, unsigned height) override;
@@ -772,7 +784,9 @@ void Impl::delete_command_buffers_2d(std::vector<VkCommandBuffer>* buffers)
 }
 
 VkPipeline Impl::create_pipeline_3d(VkPrimitiveTopology primitive_topology, bool sample_shading,
-                                    const std::vector<const vulkan::Shader*>& shaders, VkPipelineLayout pipeline_layout,
+                                    const std::vector<const vulkan::Shader*>& shaders,
+                                    const std::vector<const vulkan::SpecializationConstant*>& constants,
+                                    VkPipelineLayout pipeline_layout,
                                     const std::vector<VkVertexInputBindingDescription>& vertex_binding,
                                     const std::vector<VkVertexInputAttributeDescription>& vertex_attribute, unsigned x,
                                     unsigned y, unsigned width, unsigned height)
@@ -794,6 +808,7 @@ VkPipeline Impl::create_pipeline_3d(VkPrimitiveTopology primitive_topology, bool
         info.viewport_height = height;
         info.primitive_topology = primitive_topology;
         info.shaders = &shaders;
+        info.constants = &constants;
         info.binding_descriptions = &vertex_binding;
         info.attribute_descriptions = &vertex_attribute;
         info.depth_bias = false;
@@ -805,7 +820,9 @@ VkPipeline Impl::create_pipeline_3d(VkPrimitiveTopology primitive_topology, bool
 }
 
 VkPipeline Impl::create_pipeline_2d(VkPrimitiveTopology primitive_topology, bool sample_shading, bool color_blend,
-                                    const std::vector<const vulkan::Shader*>& shaders, VkPipelineLayout pipeline_layout,
+                                    const std::vector<const vulkan::Shader*>& shaders,
+                                    const std::vector<const vulkan::SpecializationConstant*>& constants,
+                                    VkPipelineLayout pipeline_layout,
                                     const std::vector<VkVertexInputBindingDescription>& vertex_binding,
                                     const std::vector<VkVertexInputAttributeDescription>& vertex_attribute, unsigned x,
                                     unsigned y, unsigned width, unsigned height)
@@ -827,6 +844,7 @@ VkPipeline Impl::create_pipeline_2d(VkPrimitiveTopology primitive_topology, bool
         info.viewport_height = height;
         info.primitive_topology = primitive_topology;
         info.shaders = &shaders;
+        info.constants = &constants;
         info.binding_descriptions = &vertex_binding;
         info.attribute_descriptions = &vertex_attribute;
         info.depth_bias = false;

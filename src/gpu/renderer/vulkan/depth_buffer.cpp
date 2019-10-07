@@ -199,6 +199,7 @@ class Impl final : public RendererDepthBuffers
         void delete_command_buffers(std::vector<VkCommandBuffer>* buffers) override;
 
         VkPipeline create_pipeline(VkPrimitiveTopology primitive_topology, const std::vector<const vulkan::Shader*>& shaders,
+                                   const std::vector<const vulkan::SpecializationConstant*>& constants,
                                    const vulkan::PipelineLayout& pipeline_layout,
                                    const std::vector<VkVertexInputBindingDescription>& vertex_binding,
                                    const std::vector<VkVertexInputAttributeDescription>& vertex_attribute) override;
@@ -303,12 +304,14 @@ const vulkan::DepthAttachment* Impl::texture(unsigned index) const
 }
 
 VkPipeline Impl::create_pipeline(VkPrimitiveTopology primitive_topology, const std::vector<const vulkan::Shader*>& shaders,
+                                 const std::vector<const vulkan::SpecializationConstant*>& constants,
                                  const vulkan::PipelineLayout& pipeline_layout,
                                  const std::vector<VkVertexInputBindingDescription>& vertex_binding,
                                  const std::vector<VkVertexInputAttributeDescription>& vertex_attribute)
 {
         ASSERT(pipeline_layout != VK_NULL_HANDLE);
         ASSERT(m_depth_attachments.size() > 0 && m_depth_attachments.size() == m_framebuffers.size());
+        ASSERT(shaders.size() == constants.size());
 
         unsigned width = m_depth_attachments[0].width();
         unsigned height = m_depth_attachments[0].height();
@@ -327,6 +330,7 @@ VkPipeline Impl::create_pipeline(VkPrimitiveTopology primitive_topology, const s
         info.viewport_height = height;
         info.primitive_topology = primitive_topology;
         info.shaders = &shaders;
+        info.constants = &constants;
         info.binding_descriptions = &vertex_binding;
         info.attribute_descriptions = &vertex_attribute;
         info.depth_bias = true;

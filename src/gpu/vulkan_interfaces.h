@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "com/color/color.h"
+#include "graphics/vulkan/constant.h"
 #include "graphics/vulkan/shader.h"
 
 #include <functional>
@@ -40,7 +41,9 @@ public:
         virtual void delete_command_buffers(std::vector<VkCommandBuffer>* buffers) = 0;
 
         virtual VkPipeline create_pipeline(VkPrimitiveTopology primitive_topology, bool sample_shading,
-                                           const std::vector<const vulkan::Shader*>& shaders, VkPipelineLayout pipeline_layout,
+                                           const std::vector<const vulkan::Shader*>& shaders,
+                                           const std::vector<const vulkan::SpecializationConstant*>& constants,
+                                           VkPipelineLayout pipeline_layout,
                                            const std::vector<VkVertexInputBindingDescription>& vertex_binding,
                                            const std::vector<VkVertexInputAttributeDescription>& vertex_attribute, unsigned x,
                                            unsigned y, unsigned width, unsigned height) = 0;
@@ -59,7 +62,9 @@ public:
         virtual void delete_command_buffers(std::vector<VkCommandBuffer>* buffers) = 0;
 
         virtual VkPipeline create_pipeline(VkPrimitiveTopology primitive_topology, bool sample_shading, bool color_blend,
-                                           const std::vector<const vulkan::Shader*>& shaders, VkPipelineLayout pipeline_layout,
+                                           const std::vector<const vulkan::Shader*>& shaders,
+                                           const std::vector<const vulkan::SpecializationConstant*>& constants,
+                                           VkPipelineLayout pipeline_layout,
                                            const std::vector<VkVertexInputBindingDescription>& vertex_binding,
                                            const std::vector<VkVertexInputAttributeDescription>& vertex_attribute, unsigned x,
                                            unsigned y, unsigned width, unsigned height) = 0;

@@ -156,10 +156,10 @@ class Impl final : public TextShow
 
                 m_render_buffers = render_buffers;
 
-                m_pipeline = m_render_buffers->create_pipeline(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, m_sample_shading,
-                                                               true /*color_blend*/, {&m_text_vert, &m_text_frag},
-                                                               m_pipeline_layout, text_show_vertex_binding_descriptions(),
-                                                               text_show_vertex_attribute_descriptions(), x, y, width, height);
+                m_pipeline = m_render_buffers->create_pipeline(
+                        VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, m_sample_shading, true /*color_blend*/, {&m_text_vert, &m_text_frag},
+                        {nullptr, nullptr}, m_pipeline_layout, text_show_vertex_binding_descriptions(),
+                        text_show_vertex_attribute_descriptions(), x, y, width, height);
 
                 m_command_buffers = m_render_buffers->create_command_buffers(
                         std::nullopt, std::bind(&Impl::draw_commands, this, std::placeholders::_1));

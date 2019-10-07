@@ -40,6 +40,7 @@ struct GraphicsPipelineCreateInfo
         std::optional<uint32_t> viewport_height;
         std::optional<VkPrimitiveTopology> primitive_topology;
         std::optional<const std::vector<const Shader*>*> shaders;
+        std::optional<const std::vector<const SpecializationConstant*>*> constants;
         std::optional<const std::vector<VkVertexInputBindingDescription>*> binding_descriptions;
         std::optional<const std::vector<VkVertexInputAttributeDescription>*> attribute_descriptions;
         std::optional<bool> depth_bias;
@@ -53,7 +54,6 @@ struct ComputePipelineCreateInfo
         std::optional<const Device*> device;
         std::optional<VkPipelineLayout> pipeline_layout;
         std::optional<const ComputeShader*> shader;
-
         std::optional<const SpecializationConstant*> constants;
 };
 

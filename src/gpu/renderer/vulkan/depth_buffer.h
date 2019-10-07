@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "graphics/vulkan/buffers.h"
+#include "graphics/vulkan/constant.h"
 #include "graphics/vulkan/instance.h"
 #include "graphics/vulkan/objects.h"
 #include "graphics/vulkan/shader.h"
@@ -43,6 +44,7 @@ struct RendererDepthBuffers
 
         virtual VkPipeline create_pipeline(VkPrimitiveTopology primitive_topology,
                                            const std::vector<const vulkan::Shader*>& shaders,
+                                           const std::vector<const vulkan::SpecializationConstant*>& constants,
                                            const vulkan::PipelineLayout& pipeline_layout,
                                            const std::vector<VkVertexInputBindingDescription>& vertex_binding,
                                            const std::vector<VkVertexInputAttributeDescription>& vertex_attribute) = 0;

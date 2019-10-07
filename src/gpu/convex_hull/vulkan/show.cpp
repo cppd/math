@@ -120,9 +120,10 @@ class Impl final : public ConvexHullShow
 
                 m_render_buffers = render_buffers;
 
-                m_pipeline = m_render_buffers->create_pipeline(VK_PRIMITIVE_TOPOLOGY_LINE_STRIP, m_sample_shading,
-                                                               false /*color_blend*/, {&m_vertex_shader, &m_fragment_shader},
-                                                               m_pipeline_layout, {}, {}, x, y, width, height);
+                m_pipeline =
+                        m_render_buffers->create_pipeline(VK_PRIMITIVE_TOPOLOGY_LINE_STRIP, m_sample_shading,
+                                                          false /*color_blend*/, {&m_vertex_shader, &m_fragment_shader},
+                                                          {nullptr, nullptr}, m_pipeline_layout, {}, {}, x, y, width, height);
 
                 m_compute->create_buffers(objects, *m_points, m_indirect_buffer, m_family_index);
 
