@@ -127,6 +127,41 @@ void VertexArray::attrib_i(GLuint attrib_index, GLint size, GLenum type, const B
 
 //
 
+Texture::ClearColorValue Texture::clear_color_value(GLenum format)
+{
+        ClearColorValue v;
+        switch (format)
+        {
+        case GL_RGBA32F:
+        case GL_SRGB8_ALPHA8:
+                v.format = GL_RGBA;
+                v.type = GL_FLOAT;
+                v.data.gl_float[0] = 0;
+                v.data.gl_float[1] = 0;
+                v.data.gl_float[2] = 0;
+                v.data.gl_float[3] = 0;
+                break;
+        case GL_R32I:
+                v.format = GL_RED_INTEGER;
+                v.type = GL_INT;
+                v.data.gl_int[0] = 0;
+                break;
+        case GL_R32UI:
+                v.format = GL_RED_INTEGER;
+                v.type = GL_UNSIGNED_INT;
+                v.data.gl_uint[0] = 0;
+                break;
+        case GL_R32F:
+                v.format = GL_RED;
+                v.type = GL_FLOAT;
+                v.data.gl_float[0] = 0;
+                break;
+        default:
+                error("Unsupported format for clear value");
+        }
+        return v;
+}
+
 Texture::Texture(GLenum format, GLsizei width, GLsizei height, const Span<const std::uint_least8_t>& srgb_pixels)
         : Texture(format, width, height)
 {
@@ -250,6 +285,18 @@ GLuint64 Texture::texture_handle() const
         return texture_handle;
 }
 
+void Texture::clear() const
+{
+        ClearColorValue v = clear_color_value(m_format);
+        glClearTexImage(m_texture, 0, v.format, v.type, &v.data);
+}
+
+void Texture::clear(int offset_x, int offset_y, int width, int height) const
+{
+        ClearColorValue v = clear_color_value(m_format);
+        glClearTexSubImage(m_texture, 0, offset_x, offset_y, 0, width, height, 1, v.format, v.type, &v.data);
+}
+
 // void Texture::bind_image_read_only(GLuint unit) const
 //{
 //        glBindImageTexture(unit, m_texture, 0, GL_FALSE, 0, GL_READ_ONLY, m_format);
@@ -264,35 +311,6 @@ GLuint64 Texture::texture_handle() const
 //{
 //        glBindImageTexture(unit, m_texture, 0, GL_FALSE, 0, GL_READ_WRITE, m_format);
 //}
-
-void Texture::clear() const
-{
-        if (m_format == GL_RGBA32F || m_format == GL_SRGB8_ALPHA8)
-        {
-                const std::array<GLfloat, 4> v = {0, 0, 0, 1};
-                glClearTexImage(m_texture, 0, GL_RGBA, GL_FLOAT, v.data());
-                return;
-        }
-        if (m_format == GL_R32I)
-        {
-                GLint v = 0;
-                glClearTexImage(m_texture, 0, GL_RED_INTEGER, GL_INT, &v);
-                return;
-        }
-        if (m_format == GL_R32UI)
-        {
-                GLuint v = 0;
-                glClearTexImage(m_texture, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, &v);
-                return;
-        }
-        if (m_format == GL_R32F)
-        {
-                GLfloat v = 0;
-                glClearTexImage(m_texture, 0, GL_RED, GL_FLOAT, &v);
-                return;
-        }
-        error("Unsupported clear texture format " + std::to_string(static_cast<long long>(m_format)));
-}
 
 // template <typename T>
 // void Texture::image(T* pixels) const

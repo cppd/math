@@ -150,6 +150,20 @@ class Texture final
         // template <typename T>
         // static constexpr bool is_float_buffer = (is_vector<T> || is_array<T>)&&std::is_same_v<typename T::value_type, GLfloat>;
 
+        struct ClearColorValue
+        {
+                GLenum format;
+                GLenum type;
+                union
+                {
+                        GLfloat gl_float[4];
+                        GLint gl_int[4];
+                        GLuint gl_uint[4];
+                } data;
+        };
+
+        static ClearColorValue clear_color_value(GLenum format);
+
         Texture2DHandle m_texture;
         GLenum m_format;
         int m_width;
@@ -171,6 +185,7 @@ public:
         // void bind_image_read_write(GLuint unit) const;
 
         void clear() const;
+        void clear(int offset_x, int offset_y, int width, int height) const;
 
         int width() const;
         int height() const;
