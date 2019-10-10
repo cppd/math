@@ -39,7 +39,7 @@ class Impl final : public ConvexHullShow
         std::unique_ptr<gpu_opengl::ConvexHullCompute> m_convex_hull;
         ConvexHullShaderMemory m_shader_memory;
 
-        int m_x, m_y, m_width, m_height;
+        unsigned m_x, m_y, m_width, m_height;
 
         void reset_timer() override
         {
@@ -59,16 +59,16 @@ class Impl final : public ConvexHullShow
         }
 
 public:
-        Impl(const opengl::Texture& objects, int x, int y, int width, int height)
+        Impl(const opengl::Texture& objects, unsigned x, unsigned y, unsigned width, unsigned height)
                 : m_draw_prog(opengl::VertexShader(convex_hull_show_vert()), opengl::FragmentShader(convex_hull_show_frag())),
-                  m_points(convex_hull_points_buffer_size(objects.height()), 0),
+                  m_points(convex_hull_points_buffer_size(height), 0),
                   m_start_time(time_in_seconds()),
                   m_x(x),
                   m_y(y),
                   m_width(width),
                   m_height(height)
         {
-                m_convex_hull = gpu_opengl::create_convex_hull_compute(objects, m_points);
+                m_convex_hull = gpu_opengl::create_convex_hull_compute(objects, x, y, width, height, m_points);
 
                 // Матрица для рисования на плоскости окна, точка (0, 0) слева вверху
                 double left = 0;
@@ -88,7 +88,8 @@ public:
 };
 }
 
-std::unique_ptr<ConvexHullShow> create_convex_hull_show(const opengl::Texture& objects, int x, int y, int width, int height)
+std::unique_ptr<ConvexHullShow> create_convex_hull_show(const opengl::Texture& objects, unsigned x, unsigned y, unsigned width,
+                                                        unsigned height)
 {
         return std::make_unique<Impl>(objects, x, y, width, height);
 }

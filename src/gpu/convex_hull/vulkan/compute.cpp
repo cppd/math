@@ -88,25 +88,26 @@ class Impl final : public ConvexHullCompute
                                VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT);
         }
 
-        void create_buffers(const vulkan::ImageWithMemory& objects, const vulkan::BufferWithMemory& points_buffer,
-                            const vulkan::BufferWithMemory& point_count_buffer, uint32_t family_index) override
+        void create_buffers(const vulkan::ImageWithMemory& objects, unsigned x, unsigned y, unsigned width, unsigned height,
+                            const vulkan::BufferWithMemory& points_buffer, const vulkan::BufferWithMemory& point_count_buffer,
+                            uint32_t family_index) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
                 //
 
-                ASSERT(points_buffer.size() == (2 * objects.height() + 1) * (2 * sizeof(int32_t)));
+                ASSERT(points_buffer.size() == (2 * height + 1) * (2 * sizeof(int32_t)));
                 ASSERT(point_count_buffer.size() >= sizeof(int32_t));
 
                 m_lines_buffer.emplace(vulkan::BufferMemoryType::DeviceLocal, m_instance.device(),
                                        std::unordered_set({family_index}), VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-                                       2 * objects.height() * sizeof(int32_t));
+                                       2 * height * sizeof(int32_t));
                 m_points_buffer = points_buffer;
                 m_point_count_buffer = point_count_buffer;
 
-                m_program_prepare.create_buffers(objects, *m_lines_buffer);
-                m_program_merge.create_buffers(objects, *m_lines_buffer);
-                m_program_filter.create_buffers(objects, *m_lines_buffer, points_buffer, point_count_buffer);
+                m_program_prepare.create_buffers(objects, x, y, width, height, *m_lines_buffer);
+                m_program_merge.create_buffers(height, *m_lines_buffer);
+                m_program_filter.create_buffers(height, *m_lines_buffer, points_buffer, point_count_buffer);
         }
 
         void delete_buffers() override

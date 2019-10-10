@@ -100,8 +100,8 @@ ConvexHullPrepareConstant::ConvexHullPrepareConstant()
         {
                 VkSpecializationMapEntry entry = {};
                 entry.constantID = 0;
-                entry.offset = offsetof(Data, line_size);
-                entry.size = sizeof(Data::line_size);
+                entry.offset = offsetof(Data, local_size_x);
+                entry.size = sizeof(Data::local_size_x);
                 m_entries.push_back(entry);
         }
         {
@@ -114,24 +114,48 @@ ConvexHullPrepareConstant::ConvexHullPrepareConstant()
         {
                 VkSpecializationMapEntry entry = {};
                 entry.constantID = 2;
-                entry.offset = offsetof(Data, local_size_x);
-                entry.size = sizeof(Data::local_size_x);
+                entry.offset = offsetof(Data, x);
+                entry.size = sizeof(Data::x);
+                m_entries.push_back(entry);
+        }
+        {
+                VkSpecializationMapEntry entry = {};
+                entry.constantID = 3;
+                entry.offset = offsetof(Data, y);
+                entry.size = sizeof(Data::y);
+                m_entries.push_back(entry);
+        }
+        {
+                VkSpecializationMapEntry entry = {};
+                entry.constantID = 4;
+                entry.offset = offsetof(Data, width);
+                entry.size = sizeof(Data::width);
+                m_entries.push_back(entry);
+        }
+        {
+                VkSpecializationMapEntry entry = {};
+                entry.constantID = 5;
+                entry.offset = offsetof(Data, height);
+                entry.size = sizeof(Data::height);
                 m_entries.push_back(entry);
         }
 }
 
-void ConvexHullPrepareConstant::set_line_size(uint32_t v)
+void ConvexHullPrepareConstant::set(int32_t local_size_x, int32_t buffer_size, int32_t x, int32_t y, int32_t width,
+                                    int32_t height)
 {
-        static_assert(std::is_same_v<decltype(m_data.line_size), decltype(v)>);
-        m_data.line_size = v;
-}
-
-void ConvexHullPrepareConstant::set_buffer_and_group_size(uint32_t v)
-{
-        static_assert(std::is_same_v<decltype(m_data.buffer_size), decltype(v)>);
-        m_data.buffer_size = v;
-        static_assert(std::is_same_v<decltype(m_data.local_size_x), decltype(v)>);
-        m_data.local_size_x = v;
+        static_assert(std::is_same_v<decltype(m_data.local_size_x), decltype(local_size_x)>);
+        m_data.local_size_x = local_size_x;
+        static_assert(std::is_same_v<decltype(m_data.buffer_size), decltype(buffer_size)>);
+        m_data.buffer_size = buffer_size;
+        static_assert(std::is_same_v<decltype(m_data.x), decltype(x)>);
+        m_data.x = x;
+        static_assert(std::is_same_v<decltype(m_data.y), decltype(y)>);
+        m_data.y = y;
+        static_assert(std::is_same_v<decltype(m_data.width), decltype(width)>);
+        m_data.width = width;
+        static_assert(std::is_same_v<decltype(m_data.height), decltype(height)>);
+        m_data.height = height;
 }
 
 const std::vector<VkSpecializationMapEntry>& ConvexHullPrepareConstant::entries() const
@@ -240,7 +264,7 @@ void ConvexHullMergeConstant::set_iteration_count(int32_t v)
         m_data.iteration_count = v;
 }
 
-void ConvexHullMergeConstant::set_local_size_x(uint32_t v)
+void ConvexHullMergeConstant::set_local_size_x(int32_t v)
 {
         static_assert(std::is_same_v<decltype(m_data.local_size_x), decltype(v)>);
         m_data.local_size_x = v;

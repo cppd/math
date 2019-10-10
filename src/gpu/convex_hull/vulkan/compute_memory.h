@@ -64,9 +64,12 @@ class ConvexHullPrepareConstant final : public vulkan::SpecializationConstant
 {
         struct Data
         {
-                uint32_t line_size;
-                uint32_t buffer_size;
-                uint32_t local_size_x;
+                int32_t local_size_x;
+                int32_t buffer_size;
+                int32_t x;
+                int32_t y;
+                int32_t width;
+                int32_t height;
         } m_data;
 
         std::vector<VkSpecializationMapEntry> m_entries;
@@ -78,8 +81,7 @@ class ConvexHullPrepareConstant final : public vulkan::SpecializationConstant
 public:
         ConvexHullPrepareConstant();
 
-        void set_line_size(uint32_t v);
-        void set_buffer_and_group_size(uint32_t v);
+        void set(int32_t local_size_x, int32_t buffer_size, int32_t x, int32_t y, int32_t width, int32_t height);
 };
 
 //
@@ -122,7 +124,7 @@ class ConvexHullMergeConstant final : public vulkan::SpecializationConstant
         {
                 int32_t line_size;
                 int32_t iteration_count;
-                uint32_t local_size_x;
+                int32_t local_size_x;
         } m_data;
 
         std::vector<VkSpecializationMapEntry> m_entries;
@@ -136,7 +138,7 @@ public:
 
         void set_line_size(int32_t v);
         void set_iteration_count(int32_t v);
-        void set_local_size_x(uint32_t v);
+        void set_local_size_x(int32_t v);
 };
 
 //

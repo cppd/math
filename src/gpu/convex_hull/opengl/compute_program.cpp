@@ -42,15 +42,17 @@ int group_size_merge(int height)
                                             opengl::max_compute_shared_memory());
 }
 
-std::string prepare_source(int width, int height)
+std::string prepare_source(unsigned x, unsigned y, unsigned width, unsigned height)
 {
-        int line_size = height;
         int buffer_and_group_size = group_size_prepare(width);
 
         std::string s;
-        s += "const uint GROUP_SIZE = " + to_string(buffer_and_group_size) + ";\n";
-        s += "const uint LINE_SIZE = " + to_string(line_size) + ";\n";
-        s += "const uint BUFFER_SIZE = " + to_string(buffer_and_group_size) + ";\n";
+        s += "const int GROUP_SIZE = " + to_string(buffer_and_group_size) + ";\n";
+        s += "const int BUFFER_SIZE = " + to_string(buffer_and_group_size) + ";\n";
+        s += "const int X = " + to_string(x) + ";\n";
+        s += "const int Y = " + to_string(y) + ";\n";
+        s += "const int WIDTH = " + to_string(width) + ";\n";
+        s += "const int HEIGHT = " + to_string(height) + ";\n";
 
         return convex_hull_prepare_comp(s);
 }
@@ -62,7 +64,7 @@ std::string merge_source(unsigned height)
         int iteration_count = convex_hull_iteration_count_merge(height);
 
         std::string s;
-        s += "const uint GROUP_SIZE = " + to_string(group_size) + ";\n";
+        s += "const int GROUP_SIZE = " + to_string(group_size) + ";\n";
         s += "const int LINE_SIZE = " + to_string(line_size) + ";\n";
         s += "const int ITERATION_COUNT = " + to_string(iteration_count) + ";\n";
 
@@ -80,12 +82,15 @@ std::string filter_source(int height)
 }
 }
 
-ConvexHullProgramPrepare::ConvexHullProgramPrepare(const opengl::Texture& objects, const opengl::Buffer& lines)
-        : m_program(opengl::ComputeShader(prepare_source(objects.width(), objects.height()))),
-          m_lines(&lines),
-          m_height(objects.height())
+ConvexHullProgramPrepare::ConvexHullProgramPrepare(const opengl::Texture& objects, unsigned x, unsigned y, unsigned width,
+                                                   unsigned height, const opengl::Buffer& lines)
+        : m_program(opengl::ComputeShader(prepare_source(x, y, width, height))), m_lines(&lines), m_height(height)
 {
         ASSERT(objects.format() == GL_R32UI);
+
+        ASSERT(width > 0 && height > 0);
+        ASSERT(x + width <= static_cast<unsigned>(objects.width()));
+        ASSERT(y + height <= static_cast<unsigned>(objects.height()));
 
         m_program.set_uniform_handle("objects", objects.image_handle_read_only());
 }

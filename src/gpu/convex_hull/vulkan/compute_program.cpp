@@ -49,16 +49,20 @@ ConvexHullProgramPrepare::ConvexHullProgramPrepare(const vulkan::VulkanInstance&
 {
 }
 
-void ConvexHullProgramPrepare::create_buffers(const vulkan::ImageWithMemory& objects,
-                                              const vulkan::BufferWithMemory& lines_buffer)
+void ConvexHullProgramPrepare::create_buffers(const vulkan::ImageWithMemory& objects, unsigned x, unsigned y, unsigned width,
+                                              unsigned height, const vulkan::BufferWithMemory& lines_buffer)
 {
-        m_height = objects.height();
+        ASSERT(width > 0 && height > 0);
+        ASSERT(x + width <= objects.width());
+        ASSERT(y + height <= objects.height());
+
+        m_height = height;
 
         m_memory.set_object_image(objects);
         m_memory.set_lines(lines_buffer);
 
-        m_constant.set_line_size(objects.height());
-        m_constant.set_buffer_and_group_size(group_size_prepare(objects.width(), m_instance.limits()));
+        int buffer_and_group_size = group_size_prepare(objects.width(), m_instance.limits());
+        m_constant.set(buffer_and_group_size, buffer_and_group_size, x, y, width, height);
 
         vulkan::ComputePipelineCreateInfo info;
         info.device = &m_instance.device();
@@ -95,13 +99,13 @@ ConvexHullProgramMerge::ConvexHullProgramMerge(const vulkan::VulkanInstance& ins
 {
 }
 
-void ConvexHullProgramMerge::create_buffers(const vulkan::ImageWithMemory& objects, const vulkan::BufferWithMemory& lines_buffer)
+void ConvexHullProgramMerge::create_buffers(unsigned height, const vulkan::BufferWithMemory& lines_buffer)
 {
         m_memory.set_lines(lines_buffer);
 
-        m_constant.set_line_size(objects.height());
-        m_constant.set_local_size_x(group_size_merge(objects.height(), m_instance.limits()));
-        m_constant.set_iteration_count(convex_hull_iteration_count_merge(objects.height()));
+        m_constant.set_line_size(height);
+        m_constant.set_local_size_x(group_size_merge(height, m_instance.limits()));
+        m_constant.set_iteration_count(convex_hull_iteration_count_merge(height));
 
         vulkan::ComputePipelineCreateInfo info;
         info.device = &m_instance.device();
@@ -135,7 +139,7 @@ ConvexHullProgramFilter::ConvexHullProgramFilter(const vulkan::VulkanInstance& i
 {
 }
 
-void ConvexHullProgramFilter::create_buffers(const vulkan::ImageWithMemory& objects, const vulkan::BufferWithMemory& lines_buffer,
+void ConvexHullProgramFilter::create_buffers(unsigned height, const vulkan::BufferWithMemory& lines_buffer,
                                              const vulkan::BufferWithMemory& points_buffer,
                                              const vulkan::BufferWithMemory& point_count_buffer)
 {
@@ -143,7 +147,7 @@ void ConvexHullProgramFilter::create_buffers(const vulkan::ImageWithMemory& obje
         m_memory.set_points(points_buffer);
         m_memory.set_point_count(point_count_buffer);
 
-        m_constant.set_line_size(objects.height());
+        m_constant.set_line_size(height);
 
         vulkan::ComputePipelineCreateInfo info;
         info.device = &m_instance.device();

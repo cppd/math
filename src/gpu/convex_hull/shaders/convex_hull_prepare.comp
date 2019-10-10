@@ -19,28 +19,34 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #if !defined(VULKAN)
 // Вставляется в текст программы
-// const uint GROUP_SIZE =
-// const uint LINE_SIZE =
-// const uint BUFFER_SIZE =
+// const int GROUP_SIZE =
+// const int BUFFER_SIZE =
+// const int X =
+// const int Y =
+// const int WIDTH =
+// const int HEIGHT =
 layout(local_size_x = GROUP_SIZE) in;
 layout(bindless_image, r32ui) readonly restrict uniform uimage2D objects;
 #else
-layout(constant_id = 0) const uint LINE_SIZE = 1;
-layout(constant_id = 1) const uint BUFFER_SIZE = 1;
-layout(local_size_x_id = 2) in;
+layout(local_size_x_id = 0) in;
+layout(constant_id = 1) const int BUFFER_SIZE = 1;
+layout(constant_id = 2) const int X = 1;
+layout(constant_id = 3) const int Y = 1;
+layout(constant_id = 4) const int WIDTH = 1;
+layout(constant_id = 5) const int HEIGHT = 1;
 layout(binding = 1, r32ui) readonly restrict uniform uimage2D objects;
 #endif
 
 layout(std430, binding = 0) writeonly restrict buffer Lines
 {
-        // Индексы для минимумов [0, LINE_SIZE - 1].
-        // Индексы для максимумов [LINE_SIZE, 2 * LINE_SIZE - 1].
-        int lines[2 * LINE_SIZE];
+        // Индексы для минимумов [0, HEIGHT - 1].
+        // Индексы для максимумов [HEIGHT, 2 * HEIGHT - 1].
+        int lines[2 * HEIGHT];
 };
 
-bool not_background(ivec2 p)
+bool not_background(int x, int y)
 {
-        uvec4 s = imageLoad(objects, p);
+        uvec4 s = imageLoad(objects, ivec2(X + x, Y + y));
         return s.r != 0;
 }
 
@@ -53,8 +59,6 @@ void main(void)
         // gl_LocalInvocationID.x координата X по горизонтали
         // gl_WorkGroupID.x координата Y по вертикали
 
-        const ivec2 image_size = imageSize(objects);
-
         const int local_id = int(gl_LocalInvocationID.x);
         const int y = int(gl_WorkGroupID.x);
         const int group_size = int(gl_WorkGroupSize.x);
@@ -62,9 +66,9 @@ void main(void)
         int min_x = 1000000;
         int max_x = -1000000;
 
-        for (int x = local_id; x < image_size.x; x += group_size)
+        for (int x = local_id; x < WIDTH; x += group_size)
         {
-                if (not_background(ivec2(x, y)))
+                if (not_background(x, y))
                 {
                         min_x = min(min_x, x);
                         max_x = max(max_x, x);
@@ -96,17 +100,17 @@ void main(void)
                 int write_y = y;
 #else
                 // objects имеет 0 по вертикали внизу.
-                int write_y = image_size.y - y - 1;
+                int write_y = HEIGHT - y - 1;
 #endif
                 if (result.y >= 0)
                 {
                         lines[write_y] = result.x;
-                        lines[write_y + LINE_SIZE] = result.y;
+                        lines[write_y + HEIGHT] = result.y;
                 }
                 else
                 {
                         lines[write_y] = -1;
-                        lines[write_y + LINE_SIZE] = -1;
+                        lines[write_y + HEIGHT] = -1;
                 }
         }
 }

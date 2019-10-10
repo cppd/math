@@ -31,5 +31,6 @@ struct ConvexHullShow
         virtual void draw() = 0;
 };
 
-std::unique_ptr<ConvexHullShow> create_convex_hull_show(const opengl::Texture& objects, int x, int y, int width, int height);
+std::unique_ptr<ConvexHullShow> create_convex_hull_show(const opengl::Texture& objects, unsigned x, unsigned y, unsigned width,
+                                                        unsigned height);
 }

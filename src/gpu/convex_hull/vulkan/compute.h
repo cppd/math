@@ -32,7 +32,8 @@ struct ConvexHullCompute
         virtual ~ConvexHullCompute() = default;
 
         virtual void compute_commands(VkCommandBuffer command_buffer) const = 0;
-        virtual void create_buffers(const vulkan::ImageWithMemory& objects, const vulkan::BufferWithMemory& points_buffer,
+        virtual void create_buffers(const vulkan::ImageWithMemory& objects, unsigned x, unsigned y, unsigned width,
+                                    unsigned height, const vulkan::BufferWithMemory& points_buffer,
                                     const vulkan::BufferWithMemory& point_count_buffer, uint32_t family_index) = 0;
         virtual void delete_buffers() = 0;
 };

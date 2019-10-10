@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #if !defined(VULKAN)
 // Вставляется в текст программы
-// const uint GROUP_SIZE =
+// const int GROUP_SIZE =
 // const int LINE_SIZE =
 // const int ITERATION_COUNT =
 layout(local_size_x = GROUP_SIZE) in;

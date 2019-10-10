@@ -31,7 +31,8 @@ class ConvexHullProgramPrepare final
         unsigned m_height;
 
 public:
-        ConvexHullProgramPrepare(const opengl::Texture& objects, const opengl::Buffer& lines);
+        ConvexHullProgramPrepare(const opengl::Texture& objects, unsigned x, unsigned y, unsigned width, unsigned height,
+                                 const opengl::Buffer& lines);
 
         void exec() const;
 };

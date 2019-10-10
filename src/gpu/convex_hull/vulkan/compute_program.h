@@ -47,7 +47,8 @@ public:
         ConvexHullProgramPrepare(ConvexHullProgramPrepare&&) = default;
         ~ConvexHullProgramPrepare() = default;
 
-        void create_buffers(const vulkan::ImageWithMemory& objects, const vulkan::BufferWithMemory& lines_buffer);
+        void create_buffers(const vulkan::ImageWithMemory& objects, unsigned x, unsigned y, unsigned width, unsigned height,
+                            const vulkan::BufferWithMemory& lines_buffer);
         void delete_buffers();
         void commands(VkCommandBuffer command_buffer) const;
 };
@@ -72,7 +73,7 @@ public:
         ConvexHullProgramMerge(ConvexHullProgramMerge&&) = default;
         ~ConvexHullProgramMerge() = default;
 
-        void create_buffers(const vulkan::ImageWithMemory& objects, const vulkan::BufferWithMemory& lines_buffer);
+        void create_buffers(unsigned height, const vulkan::BufferWithMemory& lines_buffer);
         void delete_buffers();
         void commands(VkCommandBuffer command_buffer) const;
 };
@@ -97,7 +98,7 @@ public:
         ConvexHullProgramFilter(ConvexHullProgramFilter&&) = default;
         ~ConvexHullProgramFilter() = default;
 
-        void create_buffers(const vulkan::ImageWithMemory& objects, const vulkan::BufferWithMemory& lines_buffer,
+        void create_buffers(unsigned height, const vulkan::BufferWithMemory& lines_buffer,
                             const vulkan::BufferWithMemory& points_buffer, const vulkan::BufferWithMemory& point_count_buffer);
         void delete_buffers();
         void commands(VkCommandBuffer command_buffer) const;

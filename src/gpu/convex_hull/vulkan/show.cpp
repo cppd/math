@@ -102,10 +102,8 @@ class Impl final : public ConvexHullShow
 
                 //
 
-                ASSERT(objects.width() == width && objects.height() == height);
-
                 m_points.emplace(vulkan::BufferMemoryType::DeviceLocal, m_instance.device(), std::unordered_set({m_family_index}),
-                                 VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, convex_hull_points_buffer_size(objects.height()));
+                                 VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, convex_hull_points_buffer_size(height));
 
                 m_shader_memory.set_points(*m_points);
 
@@ -125,7 +123,7 @@ class Impl final : public ConvexHullShow
                                                           false /*color_blend*/, {&m_vertex_shader, &m_fragment_shader},
                                                           {nullptr, nullptr}, m_pipeline_layout, {}, {}, x, y, width, height);
 
-                m_compute->create_buffers(objects, *m_points, m_indirect_buffer, m_family_index);
+                m_compute->create_buffers(objects, x, y, width, height, *m_points, m_indirect_buffer, m_family_index);
 
                 m_command_buffers = m_render_buffers->create_command_buffers(
                         [&](VkCommandBuffer command_buffer) { m_compute->compute_commands(command_buffer); },

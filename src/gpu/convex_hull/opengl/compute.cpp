@@ -66,14 +66,15 @@ class Impl final : public ConvexHullCompute
         }
 
 public:
-        Impl(const opengl::Texture& objects, const opengl::Buffer& points)
-                : m_lines(2 * objects.height() * sizeof(GLint), 0),
+        Impl(const opengl::Texture& objects, unsigned x, unsigned y, unsigned width, unsigned height,
+             const opengl::Buffer& points)
+                : m_lines(2 * height * sizeof(GLint), 0),
                   m_point_count(sizeof(GLint), GL_MAP_READ_BIT),
-                  m_program_prepare(objects, m_lines),
-                  m_program_merge(objects.height(), m_lines),
-                  m_program_filter(objects.height(), m_lines, points, m_point_count)
+                  m_program_prepare(objects, x, y, width, height, m_lines),
+                  m_program_merge(height, m_lines),
+                  m_program_filter(height, m_lines, points, m_point_count)
         {
-                ASSERT(static_cast<unsigned>(points.size()) == (2 * objects.height() + 1) * (2 * sizeof(GLint)));
+                ASSERT(static_cast<unsigned>(points.size()) == (2 * height + 1) * (2 * sizeof(GLint)));
         }
 
         Impl(const Impl&) = delete;
@@ -83,8 +84,9 @@ public:
 };
 }
 
-std::unique_ptr<ConvexHullCompute> create_convex_hull_compute(const opengl::Texture& object_image, const opengl::Buffer& points)
+std::unique_ptr<ConvexHullCompute> create_convex_hull_compute(const opengl::Texture& objects, unsigned x, unsigned y,
+                                                              unsigned width, unsigned height, const opengl::Buffer& points)
 {
-        return std::make_unique<Impl>(object_image, points);
+        return std::make_unique<Impl>(objects, x, y, width, height, points);
 }
 }
