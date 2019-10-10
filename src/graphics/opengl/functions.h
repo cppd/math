@@ -302,6 +302,7 @@ namespace opengl_functions
         extern PFNGLFRAMEBUFFERDRAWBUFFERSEXTPROC                      glFramebufferDrawBuffersEXT;
         extern PFNGLFRAMEBUFFERFETCHBARRIEREXTPROC                     glFramebufferFetchBarrierEXT;
         extern PFNGLFRAMEBUFFERPARAMETERIPROC                          glFramebufferParameteri;
+        extern PFNGLFRAMEBUFFERPARAMETERIMESAPROC                      glFramebufferParameteriMESA;
         extern PFNGLFRAMEBUFFERREADBUFFEREXTPROC                       glFramebufferReadBufferEXT;
         extern PFNGLFRAMEBUFFERRENDERBUFFERPROC                        glFramebufferRenderbuffer;
         extern PFNGLFRAMEBUFFERSAMPLELOCATIONSFVARBPROC                glFramebufferSampleLocationsfvARB;
@@ -375,6 +376,7 @@ namespace opengl_functions
         extern PFNGLGETFRAMEBUFFERATTACHMENTPARAMETERIVPROC            glGetFramebufferAttachmentParameteriv;
         extern PFNGLGETFRAMEBUFFERPARAMETERIVPROC                      glGetFramebufferParameteriv;
         extern PFNGLGETFRAMEBUFFERPARAMETERIVEXTPROC                   glGetFramebufferParameterivEXT;
+        extern PFNGLGETFRAMEBUFFERPARAMETERIVMESAPROC                  glGetFramebufferParameterivMESA;
         extern PFNGLGETGRAPHICSRESETSTATUSPROC                         glGetGraphicsResetStatus;
         extern PFNGLGETGRAPHICSRESETSTATUSARBPROC                      glGetGraphicsResetStatusARB;
         extern PFNGLGETIMAGEHANDLEARBPROC                              glGetImageHandleARB;
@@ -2378,6 +2380,10 @@ inline void glFramebufferParameteri(GLenum target, GLenum pname, GLint param) no
 {
         opengl_functions::glFramebufferParameteri(target, pname, param);
 }
+inline void glFramebufferParameteriMESA(GLenum target, GLenum pname, GLint param) noexcept
+{
+        opengl_functions::glFramebufferParameteriMESA(target, pname, param);
+}
 inline void glFramebufferReadBufferEXT(GLuint framebuffer, GLenum mode) noexcept
 {
         opengl_functions::glFramebufferReadBufferEXT(framebuffer, mode);
@@ -2669,6 +2675,10 @@ inline void glGetFramebufferParameteriv(GLenum target, GLenum pname, GLint *para
 inline void glGetFramebufferParameterivEXT(GLuint framebuffer, GLenum pname, GLint *params) noexcept
 {
         opengl_functions::glGetFramebufferParameterivEXT(framebuffer, pname, params);
+}
+inline void glGetFramebufferParameterivMESA(GLenum target, GLenum pname, GLint *params) noexcept
+{
+        opengl_functions::glGetFramebufferParameterivMESA(target, pname, params);
 }
 inline GLenum glGetGraphicsResetStatus() noexcept
 {

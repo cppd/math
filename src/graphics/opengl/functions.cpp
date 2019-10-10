@@ -302,6 +302,7 @@ PFNGLFRAMEBUFFERDRAWBUFFEREXTPROC                       opengl_functions::glFram
 PFNGLFRAMEBUFFERDRAWBUFFERSEXTPROC                      opengl_functions::glFramebufferDrawBuffersEXT;
 PFNGLFRAMEBUFFERFETCHBARRIEREXTPROC                     opengl_functions::glFramebufferFetchBarrierEXT;
 PFNGLFRAMEBUFFERPARAMETERIPROC                          opengl_functions::glFramebufferParameteri;
+PFNGLFRAMEBUFFERPARAMETERIMESAPROC                      opengl_functions::glFramebufferParameteriMESA;
 PFNGLFRAMEBUFFERREADBUFFEREXTPROC                       opengl_functions::glFramebufferReadBufferEXT;
 PFNGLFRAMEBUFFERRENDERBUFFERPROC                        opengl_functions::glFramebufferRenderbuffer;
 PFNGLFRAMEBUFFERSAMPLELOCATIONSFVARBPROC                opengl_functions::glFramebufferSampleLocationsfvARB;
@@ -375,6 +376,7 @@ PFNGLGETFRAGDATALOCATIONPROC                            opengl_functions::glGetF
 PFNGLGETFRAMEBUFFERATTACHMENTPARAMETERIVPROC            opengl_functions::glGetFramebufferAttachmentParameteriv;
 PFNGLGETFRAMEBUFFERPARAMETERIVPROC                      opengl_functions::glGetFramebufferParameteriv;
 PFNGLGETFRAMEBUFFERPARAMETERIVEXTPROC                   opengl_functions::glGetFramebufferParameterivEXT;
+PFNGLGETFRAMEBUFFERPARAMETERIVMESAPROC                  opengl_functions::glGetFramebufferParameterivMESA;
 PFNGLGETGRAPHICSRESETSTATUSPROC                         opengl_functions::glGetGraphicsResetStatus;
 PFNGLGETGRAPHICSRESETSTATUSARBPROC                      opengl_functions::glGetGraphicsResetStatusARB;
 PFNGLGETIMAGEHANDLEARBPROC                              opengl_functions::glGetImageHandleARB;
@@ -1569,6 +1571,7 @@ void opengl_functions::init()
         set(&opengl_functions::glFramebufferDrawBuffersEXT,                      "glFramebufferDrawBuffersEXT");
         set(&opengl_functions::glFramebufferFetchBarrierEXT,                     "glFramebufferFetchBarrierEXT");
         set(&opengl_functions::glFramebufferParameteri,                          "glFramebufferParameteri");
+        set(&opengl_functions::glFramebufferParameteriMESA,                      "glFramebufferParameteriMESA");
         set(&opengl_functions::glFramebufferReadBufferEXT,                       "glFramebufferReadBufferEXT");
         set(&opengl_functions::glFramebufferRenderbuffer,                        "glFramebufferRenderbuffer");
         set(&opengl_functions::glFramebufferSampleLocationsfvARB,                "glFramebufferSampleLocationsfvARB");
@@ -1642,6 +1645,7 @@ void opengl_functions::init()
         set(&opengl_functions::glGetFramebufferAttachmentParameteriv,            "glGetFramebufferAttachmentParameteriv");
         set(&opengl_functions::glGetFramebufferParameteriv,                      "glGetFramebufferParameteriv");
         set(&opengl_functions::glGetFramebufferParameterivEXT,                   "glGetFramebufferParameterivEXT");
+        set(&opengl_functions::glGetFramebufferParameterivMESA,                  "glGetFramebufferParameterivMESA");
         set(&opengl_functions::glGetGraphicsResetStatus,                         "glGetGraphicsResetStatus");
         set(&opengl_functions::glGetGraphicsResetStatusARB,                      "glGetGraphicsResetStatusARB");
         set(&opengl_functions::glGetImageHandleARB,                              "glGetImageHandleARB");
