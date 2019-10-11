@@ -66,7 +66,12 @@ class PencilSketchComputeConstant final : public vulkan::SpecializationConstant
 {
         struct Data
         {
-                uint32_t local_size;
+                int32_t local_size;
+                int32_t x;
+                int32_t y;
+                int32_t width;
+                int32_t height;
+
         } m_data;
 
         std::vector<VkSpecializationMapEntry> m_entries;
@@ -78,6 +83,6 @@ class PencilSketchComputeConstant final : public vulkan::SpecializationConstant
 public:
         PencilSketchComputeConstant();
 
-        void set_group_size(uint32_t v);
+        void set(int32_t local_size, int32_t x, int32_t y, int32_t width, int32_t height);
 };
 }

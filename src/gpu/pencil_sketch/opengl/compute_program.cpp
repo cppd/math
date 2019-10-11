@@ -30,22 +30,32 @@ namespace gpu_opengl
 {
 namespace
 {
-std::string compute_source(int group_size)
+std::string compute_source(unsigned group_size, unsigned x, unsigned y, unsigned width, unsigned height)
 {
         std::string s;
-        s += "const uint GROUP_SIZE = " + to_string(group_size) + ";\n";
+        s += "const int GROUP_SIZE = " + to_string(group_size) + ";\n";
+        s += "const int X = " + to_string(x) + ";\n";
+        s += "const int Y = " + to_string(y) + ";\n";
+        s += "const int WIDTH = " + to_string(width) + ";\n";
+        s += "const int HEIGHT = " + to_string(height) + ";\n";
         return pencil_sketch_compute_comp(s);
 }
 }
 
-PencilSketchProgramCompute::PencilSketchProgramCompute(const opengl::Texture& input, const opengl::Texture& objects,
-                                                       const opengl::Texture& output)
+PencilSketchProgramCompute::PencilSketchProgramCompute(const opengl::Texture& input, const opengl::Texture& objects, unsigned x,
+                                                       unsigned y, unsigned width, unsigned height, const opengl::Texture& output)
         : m_groups_x(group_count(input.width(), GROUP_SIZE)),
           m_groups_y(group_count(input.height(), GROUP_SIZE)),
-          m_program(opengl::ComputeShader(compute_source(GROUP_SIZE)))
+          m_program(opengl::ComputeShader(compute_source(GROUP_SIZE, x, y, width, height)))
 {
         ASSERT(objects.format() == GL_R32UI);
         ASSERT(output.format() == GL_R32F);
+
+        ASSERT(input.width() == objects.width() && input.height() == objects.height());
+        ASSERT(static_cast<unsigned>(output.width()) == width && static_cast<unsigned>(output.height()) == height);
+        ASSERT(width > 0 && height > 0);
+        ASSERT(x + width <= static_cast<unsigned>(objects.width()));
+        ASSERT(y + height <= static_cast<unsigned>(objects.height()));
 
         m_program.set_uniform_handle("src", input.texture_handle());
         m_program.set_uniform_handle("img_output", output.image_handle_write_only());

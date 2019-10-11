@@ -32,8 +32,8 @@ struct PencilSketchShow
 
         virtual ~PencilSketchShow() = default;
 
-        virtual void create_buffers(RenderBuffers2D* render_buffers, const vulkan::ImageWithMemory& input_image,
-                                    const vulkan::ImageWithMemory& object_image, unsigned x, unsigned y, unsigned width,
+        virtual void create_buffers(RenderBuffers2D* render_buffers, const vulkan::ImageWithMemory& input,
+                                    const vulkan::ImageWithMemory& objects, unsigned x, unsigned y, unsigned width,
                                     unsigned height) = 0;
         virtual void delete_buffers() = 0;
 

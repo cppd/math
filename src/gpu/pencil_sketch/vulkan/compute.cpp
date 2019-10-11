@@ -115,16 +115,17 @@ class Impl final : public PencilSketchCompute
                 image_barrier_after(command_buffer, m_image);
         }
 
-        void create_buffers(VkSampler sampler, const vulkan::ImageWithMemory& input_image,
-                            const vulkan::ImageWithMemory& object_image, const vulkan::ImageWithMemory& output_image) override
+        void create_buffers(VkSampler sampler, const vulkan::ImageWithMemory& input, const vulkan::ImageWithMemory& objects,
+                            unsigned x, unsigned y, unsigned width, unsigned height,
+                            const vulkan::ImageWithMemory& output) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
                 //
 
-                m_image = output_image.image();
+                m_image = output.image();
 
-                m_program.create_buffers(sampler, input_image, object_image, output_image);
+                m_program.create_buffers(sampler, input, objects, x, y, width, height, output);
         }
 
         void delete_buffers() override

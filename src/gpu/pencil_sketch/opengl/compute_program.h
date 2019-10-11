@@ -29,7 +29,8 @@ class PencilSketchProgramCompute final
         opengl::ComputeProgram m_program;
 
 public:
-        PencilSketchProgramCompute(const opengl::Texture& input, const opengl::Texture& objects, const opengl::Texture& output);
+        PencilSketchProgramCompute(const opengl::Texture& input, const opengl::Texture& objects, unsigned x, unsigned y,
+                                   unsigned width, unsigned height, const opengl::Texture& output);
 
         void exec() const;
 };

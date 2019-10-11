@@ -50,7 +50,7 @@ class Impl final : public PencilSketchShow
 
         std::unique_ptr<gpu_opengl::PencilSketchCompute> m_pencil_sketch;
 
-        int m_x, m_y, m_width, m_height;
+        unsigned m_x, m_y, m_width, m_height;
 
         void draw() override
         {
@@ -63,18 +63,16 @@ class Impl final : public PencilSketchShow
         }
 
 public:
-        Impl(const opengl::Texture& source, const opengl::Texture& objects, int x, int y, int width, int height)
+        Impl(const opengl::Texture& source, const opengl::Texture& objects, unsigned x, unsigned y, unsigned width,
+             unsigned height)
                 : m_draw_prog(opengl::VertexShader(pencil_sketch_show_vert()), opengl::FragmentShader(pencil_sketch_show_frag())),
-                  m_texture(IMAGE_FORMAT, source.width(), source.height()),
-                  m_pencil_sketch(gpu_opengl::create_pencil_sketch_compute(source, objects, m_texture)),
+                  m_texture(IMAGE_FORMAT, width, height),
+                  m_pencil_sketch(gpu_opengl::create_pencil_sketch_compute(source, objects, x, y, width, height, m_texture)),
                   m_x(x),
                   m_y(y),
                   m_width(width),
                   m_height(height)
         {
-                ASSERT(source.width() == objects.width());
-                ASSERT(source.height() == objects.height());
-
                 m_draw_prog.set_uniform_handle("tex", m_texture.texture_handle());
 
                 std::array<Vertex, VERTEX_COUNT> vertices;
@@ -98,8 +96,8 @@ public:
 };
 }
 
-std::unique_ptr<PencilSketchShow> create_pencil_sketch_show(const opengl::Texture& source, const opengl::Texture& objects, int x,
-                                                            int y, int width, int height)
+std::unique_ptr<PencilSketchShow> create_pencil_sketch_show(const opengl::Texture& source, const opengl::Texture& objects,
+                                                            unsigned x, unsigned y, unsigned width, unsigned height)
 {
         return std::make_unique<Impl>(source, objects, x, y, width, height);
 }

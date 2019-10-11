@@ -17,17 +17,28 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #if !defined(VULKAN)
 // Вставляется в текст программы
-// const uint GROUP_SIZE =
+// const int GROUP_SIZE =
+// const int X =
+// const int Y =
+// const int WIDTH =
+// const int HEIGHT =
 layout(local_size_x = GROUP_SIZE, local_size_y = GROUP_SIZE) in;
 layout(bindless_sampler) uniform sampler2D src;
 layout(bindless_image, r32f) writeonly uniform image2D img_output;
 layout(bindless_image, r32ui) readonly uniform uimage2D img_objects;
 #else
 layout(local_size_x_id = 0, local_size_y_id = 0) in;
+layout(constant_id = 1) const int X = 1;
+layout(constant_id = 2) const int Y = 1;
+layout(constant_id = 3) const int WIDTH = 1;
+layout(constant_id = 4) const int HEIGHT = 1;
 layout(binding = 0) uniform sampler2D src;
 layout(binding = 1, r32f) writeonly uniform image2D img_output;
 layout(binding = 2, r32ui) readonly uniform uimage2D img_objects;
 #endif
+
+const ivec2 X0 = ivec2(X, Y);
+const ivec2 X1 = ivec2(X + WIDTH, Y + HEIGHT);
 
 // clang-format off
 //GaussianMatrix[{4, 3}]
@@ -62,19 +73,19 @@ float read_pixel(ivec2 p)
 
 void save_pixel(ivec2 p, float v)
 {
-        imageStore(img_output, p, vec4(v, v, v, 1));
+        imageStore(img_output, p - X0, vec4(v, v, v, 1));
 }
 
-bool point_inside_input(ivec2 p)
+bool point_inside(ivec2 p)
 {
-        return all(lessThanEqual(ivec2(0), p)) && all(lessThan(p, textureSize(src, 0)));
+        return all(lessThanEqual(X0, p)) && all(lessThan(p, X1));
 }
 
 void main(void)
 {
-        const ivec2 p = ivec2(gl_GlobalInvocationID.xy);
+        const ivec2 p = X0 + ivec2(gl_GlobalInvocationID.xy);
 
-        if (any(greaterThanEqual(p, textureSize(src, 0))))
+        if (any(greaterThanEqual(p, X1)))
         {
                 return;
         }
@@ -93,7 +104,7 @@ void main(void)
                 for (int j = -delta; j <= delta; ++j)
                 {
                         const ivec2 p2 = ivec2(p.x + i, p.y + j);
-                        const float s2 = (point_inside_input(p2) && !is_background(p2)) ? read_pixel(p2) : background_value;
+                        const float s2 = (point_inside(p2) && !is_background(p2)) ? read_pixel(p2) : background_value;
                         sum += s2 * Gauss[i + delta][j + delta];
                 }
         }

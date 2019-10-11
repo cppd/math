@@ -125,12 +125,48 @@ PencilSketchComputeConstant::PencilSketchComputeConstant()
                 entry.size = sizeof(Data::local_size);
                 m_entries.push_back(entry);
         }
+        {
+                VkSpecializationMapEntry entry = {};
+                entry.constantID = 1;
+                entry.offset = offsetof(Data, x);
+                entry.size = sizeof(Data::x);
+                m_entries.push_back(entry);
+        }
+        {
+                VkSpecializationMapEntry entry = {};
+                entry.constantID = 2;
+                entry.offset = offsetof(Data, y);
+                entry.size = sizeof(Data::y);
+                m_entries.push_back(entry);
+        }
+        {
+                VkSpecializationMapEntry entry = {};
+                entry.constantID = 3;
+                entry.offset = offsetof(Data, width);
+                entry.size = sizeof(Data::width);
+                m_entries.push_back(entry);
+        }
+        {
+                VkSpecializationMapEntry entry = {};
+                entry.constantID = 4;
+                entry.offset = offsetof(Data, height);
+                entry.size = sizeof(Data::height);
+                m_entries.push_back(entry);
+        }
 }
 
-void PencilSketchComputeConstant::set_group_size(uint32_t v)
+void PencilSketchComputeConstant::set(int32_t local_size, int32_t x, int32_t y, int32_t width, int32_t height)
 {
-        static_assert(std::is_same_v<decltype(m_data.local_size), decltype(v)>);
-        m_data.local_size = v;
+        static_assert(std::is_same_v<decltype(m_data.local_size), decltype(local_size)>);
+        m_data.local_size = local_size;
+        static_assert(std::is_same_v<decltype(m_data.x), decltype(x)>);
+        m_data.x = x;
+        static_assert(std::is_same_v<decltype(m_data.y), decltype(y)>);
+        m_data.y = y;
+        static_assert(std::is_same_v<decltype(m_data.width), decltype(width)>);
+        m_data.width = width;
+        static_assert(std::is_same_v<decltype(m_data.height), decltype(height)>);
+        m_data.height = height;
 }
 
 const std::vector<VkSpecializationMapEntry>& PencilSketchComputeConstant::entries() const

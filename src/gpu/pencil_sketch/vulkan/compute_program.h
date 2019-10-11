@@ -48,8 +48,8 @@ public:
         PencilSketchComputeProgram(PencilSketchComputeProgram&&) = default;
         ~PencilSketchComputeProgram() = default;
 
-        void create_buffers(VkSampler sampler, const vulkan::ImageWithMemory& input_image,
-                            const vulkan::ImageWithMemory& object_image, const vulkan::ImageWithMemory& output_image);
+        void create_buffers(VkSampler sampler, const vulkan::ImageWithMemory& input, const vulkan::ImageWithMemory& objects,
+                            unsigned x, unsigned y, unsigned width, unsigned height, const vulkan::ImageWithMemory& output);
         void delete_buffers();
         void commands(VkCommandBuffer command_buffer) const;
 };

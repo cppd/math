@@ -36,22 +36,26 @@ PencilSketchComputeProgram::PencilSketchComputeProgram(const vulkan::VulkanInsta
 {
 }
 
-void PencilSketchComputeProgram::create_buffers(VkSampler sampler, const vulkan::ImageWithMemory& input_image,
-                                                const vulkan::ImageWithMemory& object_image,
-                                                const vulkan::ImageWithMemory& output_image)
+void PencilSketchComputeProgram::create_buffers(VkSampler sampler, const vulkan::ImageWithMemory& input,
+                                                const vulkan::ImageWithMemory& objects, unsigned x, unsigned y, unsigned width,
+                                                unsigned height, const vulkan::ImageWithMemory& output)
 {
         ASSERT(sampler != VK_NULL_HANDLE);
-        ASSERT(input_image.width() == object_image.width() && input_image.height() == object_image.height());
-        ASSERT(input_image.width() == output_image.width() && input_image.height() == output_image.height());
 
-        m_groups_x = group_count(input_image.width(), GROUP_SIZE);
-        m_groups_y = group_count(input_image.height(), GROUP_SIZE);
+        ASSERT(input.width() == objects.width() && input.height() == objects.height());
+        ASSERT(output.width() == width && output.height() == height);
+        ASSERT(width > 0 && height > 0);
+        ASSERT(x + width <= objects.width());
+        ASSERT(y + height <= objects.height());
 
-        m_memory.set_input(sampler, input_image);
-        m_memory.set_object_image(object_image);
-        m_memory.set_output_image(output_image);
+        m_groups_x = group_count(width, GROUP_SIZE);
+        m_groups_y = group_count(height, GROUP_SIZE);
 
-        m_constant.set_group_size(GROUP_SIZE);
+        m_memory.set_input(sampler, input);
+        m_memory.set_object_image(objects);
+        m_memory.set_output_image(output);
+
+        m_constant.set(GROUP_SIZE, x, y, width, height);
 
         vulkan::ComputePipelineCreateInfo info;
         info.device = &m_instance.device();

@@ -31,5 +31,6 @@ struct PencilSketchCompute
 };
 
 std::unique_ptr<PencilSketchCompute> create_pencil_sketch_compute(const opengl::Texture& input, const opengl::Texture& objects,
+                                                                  unsigned x, unsigned y, unsigned width, unsigned height,
                                                                   const opengl::Texture& output);
 }

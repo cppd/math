@@ -98,33 +98,30 @@ class Impl final : public PencilSketchShow
                 vkCmdDraw(command_buffer, VERTEX_COUNT, 1, 0, 0);
         }
 
-        void create_buffers(RenderBuffers2D* render_buffers, const vulkan::ImageWithMemory& input_image,
-                            const vulkan::ImageWithMemory& object_image, unsigned x, unsigned y, unsigned width,
+        void create_buffers(RenderBuffers2D* render_buffers, const vulkan::ImageWithMemory& input,
+                            const vulkan::ImageWithMemory& objects, unsigned x, unsigned y, unsigned width,
                             unsigned height) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
                 //
 
-                ASSERT(input_image.width() == width && input_image.height() == height);
-                ASSERT(object_image.width() == width && object_image.height() == height);
-
                 const bool storage = true;
-                m_image = std::make_unique<vulkan::ImageWithMemory>(
-                        m_device, m_graphics_command_pool, m_graphics_queue,
-                        std::unordered_set<uint32_t>({m_graphics_family_index}), std::vector<VkFormat>({IMAGE_FORMAT}),
-                        input_image.width(), input_image.height(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, storage);
+                m_image = std::make_unique<vulkan::ImageWithMemory>(m_device, m_graphics_command_pool, m_graphics_queue,
+                                                                    std::unordered_set<uint32_t>({m_graphics_family_index}),
+                                                                    std::vector<VkFormat>({IMAGE_FORMAT}), width, height,
+                                                                    VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, storage);
 
                 m_shader_memory.set_image(m_sampler, *m_image);
 
                 m_pipeline = render_buffers->create_pipeline(
                         VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP,
-                        m_sample_shading && (input_image.width() != width || input_image.height() != height),
-                        false /*color_blend*/, {&m_vertex_shader, &m_fragment_shader}, {nullptr, nullptr}, m_pipeline_layout,
+                        m_sample_shading && (input.width() != width || input.height() != height), false /*color_blend*/,
+                        {&m_vertex_shader, &m_fragment_shader}, {nullptr, nullptr}, m_pipeline_layout,
                         PencilSketchShowVertex::binding_descriptions(), PencilSketchShowVertex::attribute_descriptions(), x, y,
                         width, height);
 
-                m_compute->create_buffers(m_sampler, input_image, object_image, *m_image);
+                m_compute->create_buffers(m_sampler, input, objects, x, y, width, height, *m_image);
 
                 m_command_buffers = render_buffers->create_command_buffers(
                         [&](VkCommandBuffer command_buffer) { m_compute->compute_commands(command_buffer); },
