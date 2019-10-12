@@ -64,8 +64,12 @@ class DftCopyInputConstant final : public vulkan::SpecializationConstant
 {
         struct Data
         {
-                uint32_t local_size_x;
-                uint32_t local_size_y;
+                int32_t local_size_x;
+                int32_t local_size_y;
+                int32_t x;
+                int32_t y;
+                int32_t width;
+                int32_t height;
         } m_data;
 
         std::vector<VkSpecializationMapEntry> m_entries;
@@ -77,7 +81,7 @@ class DftCopyInputConstant final : public vulkan::SpecializationConstant
 public:
         DftCopyInputConstant();
 
-        void set_group_size(uint32_t x, uint32_t y);
+        void set(int32_t local_size_x, int32_t local_size_y, int32_t x, int32_t y, int32_t width, int32_t height);
 };
 
 class DftCopyOutputMemory final

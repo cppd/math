@@ -75,12 +75,13 @@ class DftProgramCopyInput final
         static constexpr int DST_BINDING = 0;
 
         const vec2i m_group_count;
-        opengl::ComputeProgram m_copy_input;
+        opengl::ComputeProgram m_program;
 
 public:
-        DftProgramCopyInput(vec2i group_size, int n1, int n2);
+        DftProgramCopyInput(vec2i group_size, const opengl::Texture& texture, unsigned x, unsigned y, unsigned width,
+                            unsigned height);
 
-        void copy(const GLuint64 tex, const opengl::Buffer& data);
+        void copy(const opengl::Buffer& data);
 };
 
 template <typename T>
@@ -90,12 +91,12 @@ class DftProgramCopyOutput final
         static constexpr int DST_LOCATION = 0;
 
         const vec2i m_group_count;
-        opengl::ComputeProgram m_copy_output;
+        opengl::ComputeProgram m_program;
 
 public:
-        DftProgramCopyOutput(vec2i group_size, int n1, int n2, T to_mul);
+        DftProgramCopyOutput(vec2i group_size, const opengl::Texture& texture, int n1, int n2, T to_mul);
 
-        void copy(const GLuint64 tex, const opengl::Buffer& data);
+        void copy(const opengl::Buffer& data);
 };
 
 template <typename T>

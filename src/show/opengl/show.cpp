@@ -557,8 +557,8 @@ class Impl final : public Show, public WindowEvent
                 m_draw_y = 0;
                 m_draw_width = m_dft_active ? m_window->width() / 2 : m_window->width();
                 m_draw_height = m_window->height();
-                int draw_x_dft = m_window->width() - m_draw_width;
-                int draw_y_dft = m_draw_y;
+                int dft_dst_x = m_window->width() - m_draw_width;
+                int dft_dst_y = m_draw_y;
 
                 m_convex_hull.reset();
                 m_optical_flow.reset();
@@ -586,8 +586,9 @@ class Impl final : public Show, public WindowEvent
                 m_pencil_sketch = gpu_opengl::create_pencil_sketch_show(m_resolve_framebuffer->texture(), *m_object_image,
                                                                         m_draw_x, m_draw_y, m_draw_width, m_draw_height);
 
-                m_dft = gpu_opengl::create_dft_show(m_resolve_framebuffer->texture(), draw_x_dft, draw_y_dft, m_draw_width,
-                                                    m_draw_height, m_dft_brightness, m_dft_background_color, m_dft_color);
+                m_dft = gpu_opengl::create_dft_show(m_resolve_framebuffer->texture(), m_draw_x, m_draw_y, dft_dst_x, dft_dst_y,
+                                                    m_draw_width, m_draw_height, m_dft_brightness, m_dft_background_color,
+                                                    m_dft_color);
 
                 m_optical_flow = gpu_opengl::create_optical_flow_show(m_resolve_framebuffer->texture(), m_parent_window_ppi,
                                                                       m_draw_x, m_draw_y, m_draw_width, m_draw_height);

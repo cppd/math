@@ -37,6 +37,7 @@ struct DFTComputeTexture
         virtual void exec() = 0;
 };
 
-std::unique_ptr<DFTCompute> create_dft_compute(int x, int y);
-std::unique_ptr<DFTComputeTexture> create_dft_compute_texture(const opengl::Texture& source, const opengl::Texture& result);
+std::unique_ptr<DFTCompute> create_dft_compute(unsigned width, unsigned height);
+std::unique_ptr<DFTComputeTexture> create_dft_compute_texture(const opengl::Texture& source, unsigned x, unsigned y,
+                                                              unsigned width, unsigned height, const opengl::Texture& result);
 }

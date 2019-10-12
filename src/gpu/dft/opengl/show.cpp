@@ -130,13 +130,13 @@ class Impl final : public DFTShow
         }
 
 public:
-        Impl(const opengl::Texture& source, int x, int y, int width, int height, double brightness, const Color& background_color,
-             const Color& color)
+        Impl(const opengl::Texture& source, unsigned src_x, unsigned src_y, unsigned dst_x, unsigned dst_y, unsigned width,
+             unsigned height, double brightness, const Color& background_color, const Color& color)
                 : m_result(IMAGE_FORMAT, source.width(), source.height()),
-                  m_dft(gpu_opengl::create_dft_compute_texture(source, m_result)),
+                  m_dft(gpu_opengl::create_dft_compute_texture(source, src_x, src_y, width, height, m_result)),
                   m_draw_prog(opengl::VertexShader(dft_show_vert()), opengl::FragmentShader(dft_show_frag())),
-                  m_x(x),
-                  m_y(y),
+                  m_x(dst_x),
+                  m_y(dst_y),
                   m_width(width),
                   m_height(height)
         {
@@ -162,9 +162,10 @@ public:
 };
 }
 
-std::unique_ptr<DFTShow> create_dft_show(const opengl::Texture& source, int x, int y, int width, int height, double brightness,
+std::unique_ptr<DFTShow> create_dft_show(const opengl::Texture& source, unsigned src_x, unsigned src_y, unsigned dst_x,
+                                         unsigned dst_y, unsigned width, unsigned height, double brightness,
                                          const Color& background_color, const Color& color)
 {
-        return std::make_unique<Impl>(source, x, y, width, height, brightness, background_color, color);
+        return std::make_unique<Impl>(source, src_x, src_y, dst_x, dst_y, width, height, brightness, background_color, color);
 }
 }

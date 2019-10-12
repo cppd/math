@@ -132,10 +132,14 @@ std::string rows_mul_d_source(vec2i group_size, int rows, int columns)
 }
 
 template <typename T>
-std::string copy_input_source(vec2i group_size)
+std::string copy_input_source(vec2i group_size, unsigned x, unsigned y, unsigned width, unsigned height)
 {
         std::string s;
         s += group_size_string(group_size);
+        s += "const int X = " + to_string(x) + ";\n";
+        s += "const int Y = " + to_string(y) + ";\n";
+        s += "const int WIDTH = " + to_string(width) + ";\n";
+        s += "const int HEIGHT = " + to_string(height) + ";\n";
         return dft_copy_input_comp(s);
 }
 
@@ -234,37 +238,43 @@ void DftProgramFftGlobal<T>::exec(bool inverse, int data_size, T two_pi_div_m, i
 //
 
 template <typename T>
-DftProgramCopyInput<T>::DftProgramCopyInput(vec2i group_size, int n1, int n2)
-        : m_group_count(group_count(n1, n2, group_size)), m_copy_input(opengl::ComputeShader(copy_input_source<T>(group_size)))
+DftProgramCopyInput<T>::DftProgramCopyInput(vec2i group_size, const opengl::Texture& texture, unsigned x, unsigned y,
+                                            unsigned width, unsigned height)
+        : m_group_count(group_count(width, height, group_size)),
+          m_program(opengl::ComputeShader(copy_input_source<T>(group_size, x, y, width, height)))
 {
+        ASSERT(width > 0 && height > 0);
+        ASSERT(x + width <= static_cast<unsigned>(texture.width()));
+        ASSERT(y + height <= static_cast<unsigned>(texture.height()));
+
+        m_program.set_uniform_handle(SRC_LOCATION, texture.texture_handle());
 }
 
 template <typename T>
-void DftProgramCopyInput<T>::copy(const GLuint64 tex, const opengl::Buffer& data)
+void DftProgramCopyInput<T>::copy(const opengl::Buffer& data)
 {
-        m_copy_input.set_uniform_handle(SRC_LOCATION, tex);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DST_BINDING, data);
 
-        m_copy_input.dispatch_compute(m_group_count[0], m_group_count[1], 1);
+        m_program.dispatch_compute(m_group_count[0], m_group_count[1], 1);
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 }
 
 //
 
 template <typename T>
-DftProgramCopyOutput<T>::DftProgramCopyOutput(vec2i group_size, int n1, int n2, T to_mul)
+DftProgramCopyOutput<T>::DftProgramCopyOutput(vec2i group_size, const opengl::Texture& texture, int n1, int n2, T to_mul)
         : m_group_count(group_count(n1, n2, group_size)),
-          m_copy_output(opengl::ComputeShader(copy_output_source<T>(group_size, to_mul)))
+          m_program(opengl::ComputeShader(copy_output_source<T>(group_size, to_mul)))
 {
+        m_program.set_uniform_handle(DST_LOCATION, texture.image_handle_write_only());
 }
 
 template <typename T>
-void DftProgramCopyOutput<T>::copy(const GLuint64 tex, const opengl::Buffer& data)
+void DftProgramCopyOutput<T>::copy(const opengl::Buffer& data)
 {
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SRC_BINDING, data);
-        m_copy_output.set_uniform_handle(DST_LOCATION, tex);
 
-        m_copy_output.dispatch_compute(m_group_count[0], m_group_count[1], 1);
+        m_program.dispatch_compute(m_group_count[0], m_group_count[1], 1);
         glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 }
 

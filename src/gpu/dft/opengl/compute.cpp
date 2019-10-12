@@ -274,13 +274,11 @@ class Impl final : public DFTCompute, public DFTComputeTexture
         const int m_n1, m_n2, m_m1, m_m2, m_m1_bin, m_m2_bin;
         DeviceMemory<std::complex<FP>> m_d1_fwd, m_d1_inv, m_d2_fwd, m_d2_inv;
         DeviceMemory<std::complex<FP>> m_x_d, m_buffer;
-        GLuint64 m_source_handle;
-        GLuint64 m_result_handle;
         DftProgramBitReverse<FP> m_program_bit_reverse_n2_m1;
         DftProgramBitReverse<FP> m_program_bit_reverse_n1_m2;
         DftProgramFftGlobal<FP> m_program_fft_global;
-        DftProgramCopyInput<FP> m_program_copy_input;
-        DftProgramCopyOutput<FP> m_program_copy_output;
+        std::optional<DftProgramCopyInput<FP>> m_program_copy_input;
+        std::optional<DftProgramCopyOutput<FP>> m_program_copy_output;
         DftProgramMul<FP> m_program_mul;
         DftProgramMulD<FP> m_program_mul_d;
         DftProgramFftShared<FP> m_program_fft_n2_m1;
@@ -338,13 +336,13 @@ class Impl final : public DFTCompute, public DFTComputeTexture
 
         void exec() override
         {
-                m_program_copy_input.copy(m_source_handle, m_x_d);
+                m_program_copy_input->copy(m_x_d);
                 dft2d(false /*inverse*/);
-                m_program_copy_output.copy(m_result_handle, m_x_d);
+                m_program_copy_output->copy(m_x_d);
         }
 
 public:
-        Impl(int n1, int n2, const opengl::Texture* source, const opengl::Texture* result)
+        Impl(unsigned x, unsigned y, unsigned n1, unsigned n2, const opengl::Texture* source, const opengl::Texture* result)
                 : m_n1(n1),
                   m_n2(n2),
                   m_m1(compute_m(m_n1)),
@@ -360,8 +358,6 @@ public:
                   m_program_bit_reverse_n2_m1(GROUP_SIZE_1D, m_n2, m_m1),
                   m_program_bit_reverse_n1_m2(GROUP_SIZE_1D, m_n1, m_m2),
                   m_program_fft_global(GROUP_SIZE_1D),
-                  m_program_copy_input(GROUP_SIZE_2D, m_n1, m_n2),
-                  m_program_copy_output(GROUP_SIZE_2D, m_n1, m_n2, static_cast<FP>(1.0 / (1ull * m_n1 * m_n2))),
                   m_program_mul(GROUP_SIZE_2D, m_n1, m_n2, m_m1, m_m2),
                   m_program_mul_d(GROUP_SIZE_2D, m_n1, m_n2, m_m1, m_m2),
                   m_program_fft_n2_m1(m_n2, m_m1, shared_size<FP>(m_m1), group_size<FP>(m_m1), m_m1 <= shared_size<FP>(m_m1)),
@@ -372,15 +368,15 @@ public:
                         error("FFT size error: " + to_string(m_n1) + "x" + to_string(m_n2));
                 }
 
-                ASSERT((source && result) || (!source && !result));
+                ASSERT(static_cast<bool>(source) == static_cast<bool>(result));
                 if (source && result)
                 {
-                        ASSERT(result->format() == GL_R32F);
-                        ASSERT(source->width() == n1 && source->height() == n2);
-                        ASSERT(result->width() == n1 && result->height() == n2);
+                        m_program_copy_input.emplace(GROUP_SIZE_2D, *source, x, y, m_n1, m_n2);
+                        m_program_copy_output.emplace(GROUP_SIZE_2D, *result, m_n1, m_n2,
+                                                      static_cast<FP>(1.0 / (1ull * m_n1 * m_n2)));
 
-                        m_source_handle = source->texture_handle();
-                        m_result_handle = result->image_handle_read_write();
+                        ASSERT(result->format() == GL_R32F);
+                        ASSERT(result->width() == m_n1 && result->height() == m_n2);
                 }
 
                 // Для обратного преобразования нужна корректировка данных с умножением на коэффициент,
@@ -414,13 +410,14 @@ public:
 };
 }
 
-std::unique_ptr<DFTCompute> create_dft_compute(int x, int y)
+std::unique_ptr<DFTCompute> create_dft_compute(unsigned width, unsigned height)
 {
-        return std::make_unique<Impl<float>>(x, y, nullptr, nullptr);
+        return std::make_unique<Impl<float>>(0, 0, width, height, nullptr, nullptr);
 }
 
-std::unique_ptr<DFTComputeTexture> create_dft_compute_texture(const opengl::Texture& source, const opengl::Texture& result)
+std::unique_ptr<DFTComputeTexture> create_dft_compute_texture(const opengl::Texture& source, unsigned x, unsigned y,
+                                                              unsigned width, unsigned height, const opengl::Texture& result)
 {
-        return std::make_unique<Impl<float>>(source.width(), source.height(), &source, &result);
+        return std::make_unique<Impl<float>>(x, y, width, height, &source, &result);
 }
 }

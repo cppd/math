@@ -110,14 +110,50 @@ DftCopyInputConstant::DftCopyInputConstant()
                 entry.size = sizeof(Data::local_size_y);
                 m_entries.push_back(entry);
         }
+        {
+                VkSpecializationMapEntry entry = {};
+                entry.constantID = 2;
+                entry.offset = offsetof(Data, x);
+                entry.size = sizeof(Data::x);
+                m_entries.push_back(entry);
+        }
+        {
+                VkSpecializationMapEntry entry = {};
+                entry.constantID = 3;
+                entry.offset = offsetof(Data, y);
+                entry.size = sizeof(Data::y);
+                m_entries.push_back(entry);
+        }
+        {
+                VkSpecializationMapEntry entry = {};
+                entry.constantID = 4;
+                entry.offset = offsetof(Data, width);
+                entry.size = sizeof(Data::width);
+                m_entries.push_back(entry);
+        }
+        {
+                VkSpecializationMapEntry entry = {};
+                entry.constantID = 5;
+                entry.offset = offsetof(Data, height);
+                entry.size = sizeof(Data::height);
+                m_entries.push_back(entry);
+        }
 }
 
-void DftCopyInputConstant::set_group_size(uint32_t x, uint32_t y)
+void DftCopyInputConstant::set(int32_t local_size_x, int32_t local_size_y, int32_t x, int32_t y, int32_t width, int32_t height)
 {
-        static_assert(std::is_same_v<decltype(m_data.local_size_x), decltype(x)>);
-        m_data.local_size_x = x;
-        static_assert(std::is_same_v<decltype(m_data.local_size_y), decltype(y)>);
-        m_data.local_size_y = y;
+        static_assert(std::is_same_v<decltype(m_data.local_size_x), decltype(local_size_x)>);
+        m_data.local_size_x = local_size_x;
+        static_assert(std::is_same_v<decltype(m_data.local_size_y), decltype(local_size_y)>);
+        m_data.local_size_y = local_size_y;
+        static_assert(std::is_same_v<decltype(m_data.x), decltype(x)>);
+        m_data.x = x;
+        static_assert(std::is_same_v<decltype(m_data.y), decltype(y)>);
+        m_data.y = y;
+        static_assert(std::is_same_v<decltype(m_data.width), decltype(width)>);
+        m_data.width = width;
+        static_assert(std::is_same_v<decltype(m_data.height), decltype(height)>);
+        m_data.height = height;
 }
 
 const std::vector<VkSpecializationMapEntry>& DftCopyInputConstant::entries() const
