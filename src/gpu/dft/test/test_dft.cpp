@@ -39,7 +39,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <complex>
 #include <cstdio>
 #include <random>
+#include <sstream>
 #include <string>
+#include <string_view>
 #include <vector>
 
 using complex = std::complex<float>;
@@ -51,11 +53,11 @@ constexpr double DISCREPANCY_LIMIT = 1e-4;
 namespace
 {
 #if defined(CUDA_FOUND) || defined(FFTW_FOUND)
-double discrepancy(const std::vector<complex>& x1, const std::vector<complex>& x2)
+void compare(const std::string_view& name, const std::vector<complex>& x1, const std::vector<complex>& x2)
 {
         if (x1.size() != x2.size())
         {
-                error("discrepancy size error: input " + to_string(x1.size()) + ", " + to_string(x2.size()));
+                error("DFT compare data size error: " + to_string(x1.size()) + ", " + to_string(x2.size()));
         }
 
         double sum = 0;
@@ -66,18 +68,20 @@ double discrepancy(const std::vector<complex>& x1, const std::vector<complex>& x
                 sum2 += std::abs(x1[i]);
         }
 
-        return sum / sum2;
-}
+        double d = (sum == 0) ? 0 : (sum / sum2);
 
-void check_discrepancy(const std::string& name, const std::vector<complex>& d1, const std::vector<complex>& d2)
-{
-        double d = discrepancy(d1, d2);
         LOG("Discrepancy: " + to_string(d));
 
-        if (!(d <= DISCREPANCY_LIMIT))
+        // Для NaN не работает if (!(d <= DISCREPANCY_LIMIT))
+        // Для NaN работает if (d <= DISCREPANCY_LIMIT); else
+        if (d <= DISCREPANCY_LIMIT)
         {
-                error("Huge discrepancy (" + name + ")");
+                return;
         }
+
+        std::ostringstream oss;
+        oss << "DFT failed (comparison with " << name << ")";
+        error(oss.str());
 }
 #endif
 
@@ -245,13 +249,13 @@ void dft_test(const int n1, const int n2, const std::vector<complex>& source_dat
 
                 compute_cuda(false, n1, n2, &data);
                 save_data(output_cuda_file_name, data);
-                check_discrepancy("cuFFT", data_opengl, data);
+                compare("cuFFT", data_opengl, data);
 
                 progress->set(++computation, computation_count);
 
                 compute_cuda(true, n1, n2, &data);
                 save_data(output_inverse_cuda_file_name, data);
-                check_discrepancy("Inverse cuFFT", data_opengl_inverse, data);
+                compare("Inverse cuFFT", data_opengl_inverse, data);
 
                 progress->set(++computation, computation_count);
         }
@@ -263,13 +267,13 @@ void dft_test(const int n1, const int n2, const std::vector<complex>& source_dat
 
                 compute_fftw(false, n1, n2, &data);
                 save_data(output_fftw_file_name, data);
-                check_discrepancy("FFTW", data_opengl, data);
+                compare("FFTW", data_opengl, data);
 
                 progress->set(++computation, computation_count);
 
                 compute_fftw(true, n1, n2, &data);
                 save_data(output_inverse_fftw_file_name, data);
-                check_discrepancy("Inverse FFTW", data_opengl_inverse, data);
+                compare("Inverse FFTW", data_opengl_inverse, data);
 
                 progress->set(++computation, computation_count);
         }
