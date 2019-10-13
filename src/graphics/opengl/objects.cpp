@@ -389,4 +389,50 @@ VertexArrayHandle::operator GLuint() const noexcept
 {
         return m_vertex_array;
 }
+
+//
+
+void TimeElapsedQueryHandle::destroy() noexcept
+{
+        if (m_query != 0)
+        {
+                glDeleteQueries(1, &m_query);
+        }
+}
+
+void TimeElapsedQueryHandle::move(TimeElapsedQueryHandle* from) noexcept
+{
+        m_query = from->m_query;
+        from->m_query = 0;
+}
+
+TimeElapsedQueryHandle::TimeElapsedQueryHandle()
+{
+        glCreateQueries(GL_TIME_ELAPSED, 1, &m_query);
+}
+
+TimeElapsedQueryHandle::~TimeElapsedQueryHandle()
+{
+        destroy();
+}
+
+TimeElapsedQueryHandle::TimeElapsedQueryHandle(TimeElapsedQueryHandle&& from) noexcept
+{
+        move(&from);
+}
+
+TimeElapsedQueryHandle& TimeElapsedQueryHandle::operator=(TimeElapsedQueryHandle&& from) noexcept
+{
+        if (this != &from)
+        {
+                destroy();
+                move(&from);
+        }
+        return *this;
+}
+
+TimeElapsedQueryHandle::operator GLuint() const noexcept
+{
+        return m_query;
+}
 }

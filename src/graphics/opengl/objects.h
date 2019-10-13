@@ -180,4 +180,24 @@ public:
 
         operator GLuint() const noexcept;
 };
+
+class TimeElapsedQueryHandle final
+{
+        GLuint m_query = 0;
+
+        void destroy() noexcept;
+        void move(TimeElapsedQueryHandle* from) noexcept;
+
+public:
+        TimeElapsedQueryHandle();
+        ~TimeElapsedQueryHandle();
+
+        TimeElapsedQueryHandle(const TimeElapsedQueryHandle&) = delete;
+        TimeElapsedQueryHandle& operator=(const TimeElapsedQueryHandle&) = delete;
+
+        TimeElapsedQueryHandle(TimeElapsedQueryHandle&& from) noexcept;
+        TimeElapsedQueryHandle& operator=(TimeElapsedQueryHandle&& from) noexcept;
+
+        operator GLuint() const noexcept;
+};
 }
