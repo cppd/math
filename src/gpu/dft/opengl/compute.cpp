@@ -56,6 +56,7 @@ Chapter 13: FFTs for Arbitrary N.
 #include "com/time.h"
 #include "graphics/opengl/buffers.h"
 #include "graphics/opengl/query.h"
+#include "graphics/opengl/time.h"
 
 #include <complex>
 #include <sstream>
@@ -69,6 +70,78 @@ namespace gpu_opengl
 {
 namespace
 {
+class Command
+{
+        std::string m_description;
+        std::function<void()> m_command;
+
+public:
+        Command(std::string&& description, std::function<void()>&& command)
+                : m_description(std::move(description)), m_command(std::move(command))
+        {
+        }
+        void run() const
+        {
+                m_command();
+        }
+        const std::string& description() const
+        {
+                return m_description;
+        }
+};
+
+class Commands
+{
+        std::vector<Command> m_commands;
+        std::string m_before_text;
+        std::string m_sum_text;
+
+public:
+        void clear()
+        {
+                m_commands.clear();
+        }
+
+        void add(const char* description, std::function<void()>&& command)
+        {
+                m_commands.emplace_back(description, std::move(command));
+        }
+
+        void set_before_text(const std::string& s)
+        {
+                m_before_text = s;
+        }
+
+        void set_sum_text(const std::string& s)
+        {
+                m_sum_text = s;
+        }
+
+        void run_with_time(opengl::TimeElapsed& time_elapsed) const
+        {
+                double time = 0;
+                for (const Command& command : m_commands)
+                {
+                        {
+                                opengl::TimeElapsedRun r(time_elapsed);
+                                command.run();
+                        }
+                        double elapsed = time_elapsed.milliseconds();
+                        time += elapsed;
+                        LOG(m_before_text + command.description() + to_string_fixed(elapsed, 5) + " ms");
+                }
+                LOG(m_sum_text + to_string_fixed(time, 5) + " ms");
+        }
+
+        void run() const
+        {
+                for (const Command& command : m_commands)
+                {
+                        command.run();
+                }
+        }
+};
+
 template <typename T>
 class DeviceMemory final
 {
@@ -219,7 +292,7 @@ int group_size(int dft_size)
 
 template <typename FP>
 void fft1d(bool inverse, const DftProgramFftShared<FP>& fft, const DftProgramBitReverse<FP>& bit_reverse,
-           const DftProgramFftGlobal<FP>& fft_global, DeviceMemory<std::complex<FP>>* data)
+           const DftProgramFftGlobal<FP>& fft_global, const DeviceMemory<std::complex<FP>>* data)
 {
         const int n = fft.n();
 
@@ -274,36 +347,33 @@ class Impl final : public DFTCompute, public DFTComputeTexture
         const int m_n1, m_n2, m_m1, m_m2, m_m1_bin, m_m2_bin;
         DeviceMemory<std::complex<FP>> m_d1_fwd, m_d1_inv, m_d2_fwd, m_d2_inv;
         DeviceMemory<std::complex<FP>> m_x_d, m_buffer;
-        DftProgramBitReverse<FP> m_program_bit_reverse_n2_m1;
-        DftProgramBitReverse<FP> m_program_bit_reverse_n1_m2;
-        DftProgramFftGlobal<FP> m_program_fft_global;
-        std::optional<DftProgramCopyInput<FP>> m_program_copy_input;
-        std::optional<DftProgramCopyOutput<FP>> m_program_copy_output;
-        DftProgramMul<FP> m_program_mul;
-        DftProgramMulD<FP> m_program_mul_d;
-        DftProgramFftShared<FP> m_program_fft_n2_m1;
-        DftProgramFftShared<FP> m_program_fft_n1_m2;
+        DftProgramBitReverse<FP> m_bit_reverse_n2_m1;
+        DftProgramBitReverse<FP> m_bit_reverse_n1_m2;
+        DftProgramFftGlobal<FP> m_fft_global;
+        std::optional<DftProgramCopyInput<FP>> m_copy_input;
+        std::optional<DftProgramCopyOutput<FP>> m_copy_output;
+        DftProgramMul<FP> m_mul;
+        DftProgramMulD<FP> m_mul_d;
+        DftProgramFftShared<FP> m_fft_n2_m1;
+        DftProgramFftShared<FP> m_fft_n1_m2;
 
+        std::optional<opengl::TimeElapsed> m_time_elapsed;
+
+        Commands m_commands_forward;
+        Commands m_commands_inverse;
+
+        template <bool WithTime>
         void dft2d(bool inverse)
         {
-                if (m_n1 > 1)
-                {
-                        // По строкам
-                        m_program_mul.rows_to_buffer(inverse, m_x_d, m_buffer);
-                        fft1d(inverse, m_program_fft_n2_m1, m_program_bit_reverse_n2_m1, m_program_fft_global, &m_buffer);
-                        m_program_mul_d.rows_mul_d(inverse ? m_d1_inv : m_d1_fwd, m_buffer);
-                        fft1d(!inverse, m_program_fft_n2_m1, m_program_bit_reverse_n2_m1, m_program_fft_global, &m_buffer);
-                        m_program_mul.rows_from_buffer(inverse, m_x_d, m_buffer);
-                }
+                const Commands* commands = inverse ? &m_commands_inverse : &m_commands_forward;
 
-                if (m_n2 > 1)
+                if constexpr (WithTime)
                 {
-                        // По столбцам
-                        m_program_mul.columns_to_buffer(inverse, m_x_d, m_buffer);
-                        fft1d(inverse, m_program_fft_n1_m2, m_program_bit_reverse_n1_m2, m_program_fft_global, &m_buffer);
-                        m_program_mul_d.columns_mul_d(inverse ? m_d2_inv : m_d2_fwd, m_buffer);
-                        fft1d(!inverse, m_program_fft_n1_m2, m_program_bit_reverse_n1_m2, m_program_fft_global, &m_buffer);
-                        m_program_mul.columns_from_buffer(inverse, m_x_d, m_buffer);
+                        commands->run_with_time(*m_time_elapsed);
+                }
+                else
+                {
+                        commands->run();
                 }
         }
 
@@ -323,7 +393,7 @@ class Impl final : public DFTCompute, public DFTComputeTexture
 
                 double start_time = time_in_seconds();
 
-                dft2d(inverse);
+                dft2d<true>(inverse);
 
                 glFinish();
 
@@ -336,49 +406,13 @@ class Impl final : public DFTCompute, public DFTComputeTexture
 
         void exec() override
         {
-                m_program_copy_input->copy(m_x_d);
-                dft2d(false /*inverse*/);
-                m_program_copy_output->copy(m_x_d);
+                m_copy_input->copy(m_x_d);
+                dft2d<false>(false /*inverse*/);
+                m_copy_output->copy(m_x_d);
         }
 
-public:
-        Impl(unsigned x, unsigned y, unsigned n1, unsigned n2, const opengl::Texture* source, const opengl::Texture* result)
-                : m_n1(n1),
-                  m_n2(n2),
-                  m_m1(compute_m(m_n1)),
-                  m_m2(compute_m(m_n2)),
-                  m_m1_bin(binary_size(m_m1)),
-                  m_m2_bin(binary_size(m_m2)),
-                  m_d1_fwd(m_m1),
-                  m_d1_inv(m_m1),
-                  m_d2_fwd(m_m2),
-                  m_d2_inv(m_m2),
-                  m_x_d(m_n1 * m_n2),
-                  m_buffer(std::max(m_m1 * m_n2, m_m2 * m_n1)),
-                  m_program_bit_reverse_n2_m1(GROUP_SIZE_1D, m_n2, m_m1),
-                  m_program_bit_reverse_n1_m2(GROUP_SIZE_1D, m_n1, m_m2),
-                  m_program_fft_global(GROUP_SIZE_1D),
-                  m_program_mul(GROUP_SIZE_2D, m_n1, m_n2, m_m1, m_m2),
-                  m_program_mul_d(GROUP_SIZE_2D, m_n1, m_n2, m_m1, m_m2),
-                  m_program_fft_n2_m1(m_n2, m_m1, shared_size<FP>(m_m1), group_size<FP>(m_m1), m_m1 <= shared_size<FP>(m_m1)),
-                  m_program_fft_n1_m2(m_n1, m_m2, shared_size<FP>(m_m2), group_size<FP>(m_m2), m_m2 <= shared_size<FP>(m_m2))
+        void compute_diagonals()
         {
-                if (m_n1 < 1 || m_n2 < 1)
-                {
-                        error("FFT size error: " + to_string(m_n1) + "x" + to_string(m_n2));
-                }
-
-                ASSERT(static_cast<bool>(source) == static_cast<bool>(result));
-                if (source && result)
-                {
-                        m_program_copy_input.emplace(GROUP_SIZE_2D, *source, x, y, m_n1, m_n2);
-                        m_program_copy_output.emplace(GROUP_SIZE_2D, *result, m_n1, m_n2,
-                                                      static_cast<FP>(1.0 / (1ull * m_n1 * m_n2)));
-
-                        ASSERT(result->format() == GL_R32F);
-                        ASSERT(result->width() == m_n1 && result->height() == m_n2);
-                }
-
                 // Для обратного преобразования нужна корректировка данных с умножением на коэффициент,
                 // так как разный размер у исходного вектора N и его расширенного M.
                 double m1_div_n1 = static_cast<double>(m_m1) / m_n1;
@@ -396,20 +430,135 @@ public:
                 // Формулы 13.13, 13.26.
 
                 m_d1_fwd.write(conv<FP>(compute_h2(m_n1, m_m1, compute_h(m_n1, false, 1.0))));
-                fft1d(false, fft_1_m1, bit_reverse_1_m1, m_program_fft_global, &m_d1_fwd);
+                fft1d(false, fft_1_m1, bit_reverse_1_m1, m_fft_global, &m_d1_fwd);
 
                 m_d1_inv.write(conv<FP>(compute_h2(m_n1, m_m1, compute_h(m_n1, true, m1_div_n1))));
-                fft1d(true, fft_1_m1, bit_reverse_1_m1, m_program_fft_global, &m_d1_inv);
+                fft1d(true, fft_1_m1, bit_reverse_1_m1, m_fft_global, &m_d1_inv);
 
                 m_d2_fwd.write(conv<FP>(compute_h2(m_n2, m_m2, compute_h(m_n2, false, 1.0))));
-                fft1d(false, fft_1_m2, bit_reverse_1_m2, m_program_fft_global, &m_d2_fwd);
+                fft1d(false, fft_1_m2, bit_reverse_1_m2, m_fft_global, &m_d2_fwd);
 
                 m_d2_inv.write(conv<FP>(compute_h2(m_n2, m_m2, compute_h(m_n2, true, m2_div_n2))));
-                fft1d(true, fft_1_m2, bit_reverse_1_m2, m_program_fft_global, &m_d2_inv);
+                fft1d(true, fft_1_m2, bit_reverse_1_m2, m_fft_global, &m_d2_inv);
         }
+
+        void record_commands(bool inverse, Commands* commands) const
+        {
+                commands->clear();
+
+                commands->set_before_text(" ");
+                commands->set_sum_text(" all       : ");
+
+                if (m_n1 > 1)
+                {
+                        // clang-format off
+                        commands->add("row mul to: ", [=, this]()
+                        {
+                                m_mul.rows_to_buffer(inverse, m_x_d, m_buffer);
+                        });
+                        commands->add("row fft1d : ", [=, this]()
+                        {
+                                fft1d(inverse, m_fft_n2_m1, m_bit_reverse_n2_m1, m_fft_global, &m_buffer);
+                        });
+                        commands->add("row mul d : ", [=, this]()
+                        {
+                                m_mul_d.rows_mul_d(inverse ? m_d1_inv : m_d1_fwd, m_buffer);
+                        });
+                        commands->add("row fft1d : ", [=, this]()
+                        {
+                                fft1d(!inverse, m_fft_n2_m1, m_bit_reverse_n2_m1, m_fft_global, &m_buffer);
+                        });
+                        commands->add("row mul fr: ", [=, this]()
+                        {
+                                m_mul.rows_from_buffer(inverse, m_x_d, m_buffer);
+                        });
+                        // clang-format on
+                }
+                if (m_n2 > 1)
+                {
+                        // clang-format off
+                        commands->add("col mul to: ", [=, this]()
+                        {
+                                m_mul.columns_to_buffer(inverse, m_x_d, m_buffer);
+                        });
+                        commands->add("col fft1d : ", [=, this]()
+                        {
+                                fft1d(inverse, m_fft_n1_m2, m_bit_reverse_n1_m2, m_fft_global, &m_buffer);
+                        });
+                        commands->add("col mul d : ", [=, this]()
+                        {
+                                m_mul_d.columns_mul_d(inverse ? m_d2_inv : m_d2_fwd, m_buffer);
+                        });
+                        commands->add("col fft1d : ", [=, this]()
+                        {
+                                fft1d(!inverse, m_fft_n1_m2, m_bit_reverse_n1_m2, m_fft_global, &m_buffer);
+                        });
+                        commands->add("col mul fr: ", [=, this]()
+                        {
+                                m_mul.columns_from_buffer(inverse, m_x_d, m_buffer);
+                        });
+                        // clang-format on
+                }
+        }
+
+        void record_commands()
+        {
+                record_commands(false, &m_commands_forward);
+                record_commands(true, &m_commands_inverse);
+        }
+
+public:
+        Impl(unsigned x, unsigned y, unsigned n1, unsigned n2, const opengl::Texture* source, const opengl::Texture* result)
+                : m_n1(n1),
+                  m_n2(n2),
+                  m_m1(compute_m(m_n1)),
+                  m_m2(compute_m(m_n2)),
+                  m_m1_bin(binary_size(m_m1)),
+                  m_m2_bin(binary_size(m_m2)),
+                  m_d1_fwd(m_m1),
+                  m_d1_inv(m_m1),
+                  m_d2_fwd(m_m2),
+                  m_d2_inv(m_m2),
+                  m_x_d(m_n1 * m_n2),
+                  m_buffer(std::max(m_m1 * m_n2, m_m2 * m_n1)),
+                  m_bit_reverse_n2_m1(GROUP_SIZE_1D, m_n2, m_m1),
+                  m_bit_reverse_n1_m2(GROUP_SIZE_1D, m_n1, m_m2),
+                  m_fft_global(GROUP_SIZE_1D),
+                  m_mul(GROUP_SIZE_2D, m_n1, m_n2, m_m1, m_m2),
+                  m_mul_d(GROUP_SIZE_2D, m_n1, m_n2, m_m1, m_m2),
+                  m_fft_n2_m1(m_n2, m_m1, shared_size<FP>(m_m1), group_size<FP>(m_m1), m_m1 <= shared_size<FP>(m_m1)),
+                  m_fft_n1_m2(m_n1, m_m2, shared_size<FP>(m_m2), group_size<FP>(m_m2), m_m2 <= shared_size<FP>(m_m2))
+        {
+                if (m_n1 < 1 || m_n2 < 1)
+                {
+                        error("FFT size error: " + to_string(m_n1) + "x" + to_string(m_n2));
+                }
+
+                ASSERT(static_cast<bool>(source) == static_cast<bool>(result));
+                if (source && result)
+                {
+                        m_copy_input.emplace(GROUP_SIZE_2D, *source, x, y, m_n1, m_n2);
+                        m_copy_output.emplace(GROUP_SIZE_2D, *result, m_n1, m_n2, static_cast<FP>(1.0 / (1ull * m_n1 * m_n2)));
+
+                        ASSERT(result->format() == GL_R32F);
+                        ASSERT(result->width() == m_n1 && result->height() == m_n2);
+                }
+                else
+                {
+                        m_time_elapsed.emplace();
+                }
+
+                compute_diagonals();
+
+                record_commands();
+        }
+
+        Impl(const Impl&) = delete;
+        Impl& operator=(const Impl&) = delete;
+        Impl(Impl&&) = delete;
+        Impl& operator=(Impl&&) = delete;
 };
 }
-
 std::unique_ptr<DFTCompute> create_dft_compute(unsigned width, unsigned height)
 {
         return std::make_unique<Impl<float>>(0, 0, width, height, nullptr, nullptr);
