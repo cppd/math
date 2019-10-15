@@ -132,7 +132,7 @@ class Impl final : public DFTShow
 public:
         Impl(const opengl::Texture& source, unsigned src_x, unsigned src_y, unsigned dst_x, unsigned dst_y, unsigned width,
              unsigned height, double brightness, const Color& background_color, const Color& color)
-                : m_result(IMAGE_FORMAT, source.width(), source.height()),
+                : m_result(IMAGE_FORMAT, width, height),
                   m_dft(gpu_opengl::create_dft_compute_texture(source, src_x, src_y, width, height, m_result)),
                   m_draw_prog(opengl::VertexShader(dft_show_vert()), opengl::FragmentShader(dft_show_frag())),
                   m_x(dst_x),
