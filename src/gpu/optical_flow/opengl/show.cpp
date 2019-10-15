@@ -213,8 +213,6 @@ public:
         Impl(const opengl::Texture& source, double window_ppi, int x, int y, int width, int height)
                 : m_x(x), m_y(y), m_width(width), m_height(height)
         {
-                ASSERT(source.width() == width && source.height() == height);
-
                 std::vector<vec2i> points;
                 int point_count_x, point_count_y;
                 create_points_for_top_level(m_width, m_height, millimeters_to_pixels(DISTANCE_BETWEEN_POINTS, window_ppi),
@@ -249,8 +247,8 @@ public:
                 m_shader_memory->set_points(*m_top_points);
                 m_shader_memory->set_points_flow(*m_top_points_flow);
 
-                m_optical_flow = gpu_opengl::create_optical_flow_compute(source, point_count_x, point_count_y, *m_top_points,
-                                                                         *m_top_points_flow);
+                m_optical_flow = gpu_opengl::create_optical_flow_compute(source, x, y, width, height, point_count_x,
+                                                                         point_count_y, *m_top_points, *m_top_points_flow);
         }
 };
 }

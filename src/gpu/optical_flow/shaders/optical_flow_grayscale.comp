@@ -18,16 +18,24 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #if !defined(VULKAN)
 // Вставляется в текст программы
 // const uint GROUP_SIZE =
+// const int X =
+// const int Y =
+// const int WIDTH =
+// const int HEIGHT =
 layout(local_size_x = GROUP_SIZE, local_size_y = GROUP_SIZE) in;
 layout(std140, binding = 0) uniform Images
 {
         sampler2D src;
-        layout(r32f) writeonly restrict image2D image_dst;
+        layout(r32f) writeonly restrict image2D dst;
 };
 #else
 layout(local_size_x_id = 0, local_size_y_id = 0) in;
+layout(constant_id = 1) const int X = 1;
+layout(constant_id = 2) const int Y = 1;
+layout(constant_id = 3) const int WIDTH = 1;
+layout(constant_id = 4) const int HEIGHT = 1;
 layout(binding = 0) uniform sampler2D src;
-layout(binding = 1, r32f) writeonly restrict uniform image2D image_dst;
+layout(binding = 1, r32f) writeonly restrict uniform image2D dst;
 #endif
 
 vec4 grayscale(vec4 c)
@@ -36,12 +44,15 @@ vec4 grayscale(vec4 c)
         return vec4(vec3(g), c.a);
 }
 
+const ivec2 X0 = ivec2(X, Y);
+const ivec2 X1 = ivec2(X + WIDTH, Y + HEIGHT);
+
 void main(void)
 {
-        const ivec2 p = ivec2(gl_GlobalInvocationID.xy);
+        const ivec2 p = X0 + ivec2(gl_GlobalInvocationID.xy);
 
-        if (all(lessThan(p, textureSize(src, 0))))
+        if (all(lessThan(p, X1)))
         {
-                imageStore(image_dst, p, grayscale(texelFetch(src, p, 0)));
+                imageStore(dst, p - X0, grayscale(texelFetch(src, p, 0)));
         }
 }
