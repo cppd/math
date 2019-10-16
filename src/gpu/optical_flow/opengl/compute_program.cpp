@@ -116,6 +116,6 @@ void OpticalFlowFlowProgram::exec(const vec2i& groups, const OpticalFlowDataMemo
         data.bind();
         images.bind();
         m_program.dispatch_compute(groups[0], groups[1], 1);
-        glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 }
 }

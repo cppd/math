@@ -34,14 +34,13 @@ Chapter 5. Tracking Objects in Videos.
 #include "compute.h"
 
 #include "compute_memory.h"
-#include "shader_source.h"
+#include "compute_program.h"
 
 #include "com/error.h"
 #include "com/groups.h"
 #include "com/log.h"
 #include "com/math.h"
 #include "com/print.h"
-#include "graphics/opengl/shader.h"
 
 #include <array>
 
@@ -66,42 +65,6 @@ namespace gpu_opengl
 {
 namespace
 {
-std::string grayscale_source(unsigned x, unsigned y, unsigned width, unsigned height)
-{
-        std::string s;
-        s += "const uint GROUP_SIZE = " + to_string(GROUP_SIZE) + ";\n";
-        s += "const int X = " + to_string(x) + ";\n";
-        s += "const int Y = " + to_string(y) + ";\n";
-        s += "const int WIDTH = " + to_string(width) + ";\n";
-        s += "const int HEIGHT = " + to_string(height) + ";\n";
-        return optical_flow_grayscale_comp(s);
-}
-
-std::string downsample_source()
-{
-        std::string s;
-        s += "const uint GROUP_SIZE = " + to_string(GROUP_SIZE) + ";\n";
-        return optical_flow_downsample_comp(s);
-}
-
-std::string sobel_source()
-{
-        std::string s;
-        s += "const uint GROUP_SIZE = " + to_string(GROUP_SIZE) + ";\n";
-        return optical_flow_sobel_comp(s);
-}
-
-std::string flow_source()
-{
-        std::string s;
-        s += "const uint GROUP_SIZE = " + to_string(GROUP_SIZE) + ";\n";
-        s += "const int RADIUS = " + to_string(RADIUS) + ";\n";
-        s += "const int ITERATION_COUNT = " + to_string(ITERATION_COUNT) + ";\n";
-        s += "const float STOP_MOVE_SQUARE = " + to_string(STOP_MOVE_SQUARE) + ";\n";
-        s += "const float MIN_DETERMINANT = " + to_string(MIN_DETERMINANT) + ";\n";
-        return optical_flow_flow_comp(s);
-}
-
 std::vector<vec2i> pyramid_sizes(int width, int height, int min_size)
 {
         std::vector<vec2i> sizes;
@@ -354,20 +317,20 @@ class Impl final : public OpticalFlowCompute
 
         std::array<OpticalFlowGrayscaleMemory, 2> m_grayscale_memory;
         vec2i m_grayscale_groups;
-        opengl::ComputeProgram m_grayscale_compute;
+        OpticalFlowGrayscaleProgram m_grayscale_compute;
 
         std::array<std::vector<OpticalFlowDownsampleMemory>, 2> m_downsample_memory;
         std::vector<vec2i> m_downsample_groups;
-        opengl::ComputeProgram m_downsample_compute;
+        OpticalFlowDownsampleProgram m_downsample_compute;
 
         std::array<std::vector<OpticalFlowSobelMemory>, 2> m_sobel_memory;
         std::vector<vec2i> m_sobel_groups;
-        opengl::ComputeProgram m_sobel_compute;
+        OpticalFlowSobelProgram m_sobel_compute;
 
         std::vector<OpticalFlowDataMemory> m_flow_data_memory;
         std::array<std::vector<OpticalFlowImagesMemory>, 2> m_flow_images_memory;
         std::vector<vec2i> m_flow_groups;
-        opengl::ComputeProgram m_flow_compute;
+        OpticalFlowFlowProgram m_flow_compute;
 
         int m_i_index = -1;
 
@@ -377,16 +340,12 @@ class Impl final : public OpticalFlowCompute
                 ASSERT(m_downsample_memory[index].size() == m_downsample_groups.size());
 
                 // Уровень 0 заполняется по исходному изображению
-                m_grayscale_memory[index].bind();
-                m_grayscale_compute.dispatch_compute(m_grayscale_groups[0], m_grayscale_groups[1], 1);
-                glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+                m_grayscale_compute.exec(m_grayscale_groups, m_grayscale_memory[index]);
 
                 // Каждый следующий уровень меньше предыдущего
                 for (unsigned i = 0; i < m_downsample_groups.size(); ++i)
                 {
-                        m_downsample_memory[index][i].bind();
-                        m_downsample_compute.dispatch_compute(m_downsample_groups[i][0], m_downsample_groups[i][1], 1);
-                        glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+                        m_downsample_compute.exec(m_downsample_groups[i], m_downsample_memory[index][i]);
                 }
         }
 
@@ -397,9 +356,7 @@ class Impl final : public OpticalFlowCompute
 
                 for (unsigned i = 0; i < m_sobel_groups.size(); ++i)
                 {
-                        m_sobel_memory[index][i].bind();
-                        m_sobel_compute.dispatch_compute(m_sobel_groups[i][0], m_sobel_groups[i][1], 1);
-                        glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+                        m_sobel_compute.exec(m_sobel_groups[i], m_sobel_memory[index][i]);
                 }
         }
 
@@ -411,10 +368,7 @@ class Impl final : public OpticalFlowCompute
 
                 for (int i = static_cast<int>(m_flow_groups.size()) - 1; i >= 0; --i)
                 {
-                        m_flow_data_memory[i].bind();
-                        m_flow_images_memory[index][i].bind();
-                        m_flow_compute.dispatch_compute(m_flow_groups[i][0], m_flow_groups[i][1], 1);
-                        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+                        m_flow_compute.exec(m_flow_groups[i], m_flow_data_memory[i], m_flow_images_memory[index][i]);
                 }
         }
 
@@ -465,22 +419,25 @@ class Impl final : public OpticalFlowCompute
                   //
                   m_grayscale_memory(create_grayscale_memory(source, m_images)),
                   m_grayscale_groups(create_grayscale_groups(sizes)),
-                  m_grayscale_compute(opengl::ComputeShader(grayscale_source(x, y, width, height))),
+                  m_grayscale_compute(GROUP_SIZE, x, y, width, height),
                   //
                   m_downsample_memory(create_downsample_memory(m_images)),
                   m_downsample_groups(create_downsample_groups(sizes)),
-                  m_downsample_compute(opengl::ComputeShader(downsample_source())),
+                  m_downsample_compute(GROUP_SIZE),
                   //
                   m_sobel_memory(create_sobel_memory(m_images, m_dx, m_dy)),
                   m_sobel_groups(create_sobel_groups(sizes)),
-                  m_sobel_compute(opengl::ComputeShader(sobel_source())),
+                  m_sobel_compute(GROUP_SIZE),
                   //
                   m_flow_data_memory(create_flow_data_memory(sizes, m_flow_buffers, top_point_count_x, top_point_count_y,
                                                              top_points, top_flow)),
                   m_flow_images_memory(create_flow_images_memory(m_images, m_dx, m_dy)),
                   m_flow_groups(create_flow_groups(sizes, top_point_count_x, top_point_count_y)),
-                  m_flow_compute(opengl::ComputeShader(flow_source()))
+                  m_flow_compute(GROUP_SIZE, RADIUS, ITERATION_COUNT, STOP_MOVE_SQUARE, MIN_DETERMINANT)
         {
+                ASSERT(width > 0 && height > 0);
+                ASSERT(x + width <= static_cast<unsigned>(source.width()));
+                ASSERT(y + height <= static_cast<unsigned>(source.height()));
         }
 
 public:
