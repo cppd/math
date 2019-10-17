@@ -93,24 +93,15 @@ void main(void)
         if (local_id == 0)
         {
                 ivec2 result = shared_buffer[0];
-
-                // Надо записать с 0 вверху.
-#if defined(VULKAN)
-                // objects имеет 0 по вертикали вверху.
-                int write_y = y;
-#else
-                // objects имеет 0 по вертикали внизу.
-                int write_y = HEIGHT - y - 1;
-#endif
                 if (result.y >= 0)
                 {
-                        lines[write_y] = result.x;
-                        lines[write_y + HEIGHT] = result.y;
+                        lines[y] = result.x;
+                        lines[y + HEIGHT] = result.y;
                 }
                 else
                 {
-                        lines[write_y] = -1;
-                        lines[write_y + HEIGHT] = -1;
+                        lines[y] = -1;
+                        lines[y + HEIGHT] = -1;
                 }
         }
 }

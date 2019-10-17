@@ -70,11 +70,11 @@ public:
         {
                 m_convex_hull = gpu_opengl::create_convex_hull_compute(objects, x, y, width, height, m_points);
 
-                // Матрица для рисования на плоскости окна, точка (0, 0) слева вверху
+                // Матрица для рисования на плоскости окна, точка (0, 0) слева внизу
                 double left = 0;
                 double right = m_width;
-                double bottom = m_height;
-                double top = 0;
+                double bottom = 0;
+                double top = m_height;
                 double near = 1;
                 double far = -1;
                 m_shader_memory.set_matrix(ortho_opengl<double>(left, right, bottom, top, near, far));
