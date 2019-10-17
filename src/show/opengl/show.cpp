@@ -57,6 +57,11 @@ constexpr GLenum OPENGL_OBJECT_IMAGE_FORMAT = GL_R32UI;
 
 namespace
 {
+bool pointIsInsideRectangle(int x, int y, int x0, int y0, int x1, int y1)
+{
+        return x >= x0 && x < x1 && y >= y0 && y < y1;
+}
+
 class Impl final : public Show, public WindowEvent
 {
         static constexpr GLuint DEFAULT_FRAMEBUFFER = 0;
@@ -71,10 +76,15 @@ class Impl final : public Show, public WindowEvent
         FrameRate m_frame_rate{m_parent_window_ppi};
         Camera m_camera;
 
-        int m_draw_x = limits<int>::lowest();
-        int m_draw_y = limits<int>::lowest();
-        int m_draw_width = limits<int>::lowest();
-        int m_draw_height = limits<int>::lowest();
+        int m_draw_x0 = limits<int>::lowest();
+        int m_draw_y0 = limits<int>::lowest();
+        int m_draw_x1 = limits<int>::lowest();
+        int m_draw_y1 = limits<int>::lowest();
+
+        int m_draw_gl_x0 = limits<int>::lowest();
+        int m_draw_gl_y0 = limits<int>::lowest();
+        int m_draw_gl_x1 = limits<int>::lowest();
+        int m_draw_gl_y1 = limits<int>::lowest();
 
         bool m_fullscreen_active = false;
 
@@ -432,8 +442,8 @@ class Impl final : public Show, public WindowEvent
                 bool changed = false;
 
                 const PressedMouseButton& right = m_event_window.pressed_mouse_button(MouseButton::Right);
-                if (right.pressed && right.pressed_x >= m_draw_x && right.pressed_x < m_draw_x + m_draw_width &&
-                    right.pressed_y >= m_draw_y && right.pressed_y < m_draw_y + m_draw_height &&
+                if (right.pressed &&
+                    pointIsInsideRectangle(right.pressed_x, right.pressed_y, m_draw_x0, m_draw_y0, m_draw_x1, m_draw_y1) &&
                     (right.delta_x != 0 || right.delta_y != 0))
                 {
                         m_camera.rotate(-right.delta_x, -right.delta_y);
@@ -441,8 +451,8 @@ class Impl final : public Show, public WindowEvent
                 }
 
                 const PressedMouseButton& left = m_event_window.pressed_mouse_button(MouseButton::Left);
-                if (left.pressed && left.pressed_x >= m_draw_x && left.pressed_x < m_draw_x + m_draw_width &&
-                    left.pressed_y >= m_draw_y && left.pressed_y < m_draw_y + m_draw_height &&
+                if (left.pressed &&
+                    pointIsInsideRectangle(left.pressed_x, left.pressed_y, m_draw_x0, m_draw_y0, m_draw_x1, m_draw_y1) &&
                     (left.delta_x != 0 || left.delta_y != 0))
                 {
                         m_camera.move(vec2(-left.delta_x, left.delta_y));
@@ -481,7 +491,7 @@ class Impl final : public Show, public WindowEvent
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
-                m_camera.scale(m_event_window.mouse_x() - m_draw_x, m_event_window.mouse_y() - m_draw_y, delta);
+                m_camera.scale(m_event_window.mouse_x() - m_draw_x0, m_event_window.mouse_y() - m_draw_y0, delta);
 
                 m_renderer->set_camera(m_camera.renderer_info());
         }
@@ -509,7 +519,7 @@ class Impl final : public Show, public WindowEvent
 
                 resize();
 
-                m_camera.resize(m_draw_width, m_draw_height);
+                m_camera.resize(m_draw_x1 - m_draw_x0, m_draw_y1 - m_draw_y0);
                 m_renderer->set_camera(m_camera.renderer_info());
         }
 
@@ -543,9 +553,10 @@ class Impl final : public Show, public WindowEvent
                         pull_and_dispatch_all_events();
                 }
 
-                if (m_draw_x < 0 || m_draw_y < 0 || m_draw_width <= 0 || m_draw_height <= 0)
+                if (m_draw_x0 < 0 || m_draw_y0 < 0 || m_draw_x0 >= m_draw_x1 || m_draw_y0 >= m_draw_y1)
                 {
-                        error("Draw size error (" + to_string(m_draw_width) + ", " + to_string(m_draw_height) + ")");
+                        error("Draw size error, x0 = " + to_string(m_draw_x0) + ", y0 = " + to_string(m_draw_y0) +
+                              ", x1 = " + to_string(m_draw_x1) + ", y1 = " + to_string(m_draw_y1));
                 }
 
                 reset_view_handler();
@@ -553,13 +564,6 @@ class Impl final : public Show, public WindowEvent
 
         void resize()
         {
-                m_draw_x = 0;
-                m_draw_y = 0;
-                m_draw_width = m_dft_active ? m_window->width() / 2 : m_window->width();
-                m_draw_height = m_window->height();
-                int dft_dst_x = m_window->width() - m_draw_width;
-                int dft_dst_y = m_draw_y;
-
                 m_convex_hull.reset();
                 m_optical_flow.reset();
                 m_dft.reset();
@@ -568,46 +572,74 @@ class Impl final : public Show, public WindowEvent
                 m_resolve_framebuffer.reset();
                 m_render_framebuffer.reset();
 
+                const int draw_width = m_dft_active ? m_window->width() / 2 : m_window->width();
+                const int draw_height = m_window->height();
+
+                m_draw_x0 = 0;
+                m_draw_y0 = 0;
+                m_draw_x1 = m_draw_x0 + draw_width;
+                m_draw_y1 = m_draw_y0 + draw_height;
+
+                m_draw_gl_x0 = m_draw_x0;
+                m_draw_gl_y0 = m_window->height() - m_draw_y1;
+                m_draw_gl_x1 = m_draw_x1;
+                m_draw_gl_y1 = m_window->height() - m_draw_y0;
+
                 m_render_framebuffer = std::make_unique<opengl::ColorDepthFramebufferMultisample>(
                         OPENGL_FRAMEBUFFER_COLOR_FORMAT, OPENGL_FRAMEBUFFER_DEPTH_FORMAT, OPENGL_MINIMUM_SAMPLE_COUNT,
                         m_window->width(), m_window->height());
 
                 m_resolve_framebuffer = std::make_unique<opengl::ColorFramebuffer>(OPENGL_FRAMEBUFFER_RESOLVE_FORMAT,
-                                                                                   m_draw_width, m_draw_height);
+                                                                                   m_window->width(), m_window->height());
 
-                m_object_image = std::make_unique<opengl::Texture>(OPENGL_OBJECT_IMAGE_FORMAT, m_draw_width, m_draw_height);
-
-                //
-
-                m_renderer->set_size(m_draw_x, m_draw_y, m_draw_width, m_draw_height, *m_object_image);
+                m_object_image =
+                        std::make_unique<opengl::Texture>(OPENGL_OBJECT_IMAGE_FORMAT, m_window->width(), m_window->height());
 
                 //
 
-                m_pencil_sketch = gpu_opengl::create_pencil_sketch_show(m_resolve_framebuffer->texture(), *m_object_image,
-                                                                        m_draw_x, m_draw_y, m_draw_width, m_draw_height);
+                ASSERT(m_draw_x0 >= 0 && m_draw_y0 >= 0 && m_draw_x0 < m_draw_x1 && m_draw_y0 < m_draw_y1);
+                ASSERT(m_draw_x1 <= m_event_window.window_width() && m_draw_y1 <= m_event_window.window_height());
+                ASSERT(m_draw_gl_x0 >= 0 && m_draw_gl_y0 >= 0 && m_draw_gl_x0 < m_draw_gl_x1 && m_draw_gl_y0 < m_draw_gl_y1);
+                ASSERT(m_draw_gl_x1 <= m_event_window.window_width() && m_draw_gl_y1 <= m_event_window.window_height());
 
-                m_dft = gpu_opengl::create_dft_show(m_resolve_framebuffer->texture(), m_draw_x, m_draw_y, dft_dst_x, dft_dst_y,
-                                                    m_draw_width, m_draw_height, m_dft_brightness, m_dft_background_color,
-                                                    m_dft_color);
+                const int x = m_draw_gl_x0;
+                const int y = m_draw_gl_y0;
+                const int dft_x = m_window->width() - draw_width;
+                const int dft_y = m_draw_y0;
+                ASSERT(!m_dft_active || dft_x >= m_draw_x1);
 
-                m_optical_flow = gpu_opengl::create_optical_flow_show(m_resolve_framebuffer->texture(), m_parent_window_ppi,
-                                                                      m_draw_x, m_draw_y, m_draw_width, m_draw_height);
+                //
 
-                m_convex_hull =
-                        gpu_opengl::create_convex_hull_show(*m_object_image, m_draw_x, m_draw_y, m_draw_width, m_draw_height);
+                m_renderer->set_size(x, y, draw_width, draw_height, *m_object_image);
+
+                //
+
+                m_pencil_sketch = gpu_opengl::create_pencil_sketch_show(m_resolve_framebuffer->texture(), *m_object_image, x, y,
+                                                                        draw_width, draw_height);
+
+                m_dft = gpu_opengl::create_dft_show(m_resolve_framebuffer->texture(), x, y, dft_x, dft_y, draw_width, draw_height,
+                                                    m_dft_brightness, m_dft_background_color, m_dft_color);
+
+                m_optical_flow = gpu_opengl::create_optical_flow_show(m_resolve_framebuffer->texture(), m_parent_window_ppi, x, y,
+                                                                      draw_width, draw_height);
+
+                m_convex_hull = gpu_opengl::create_convex_hull_show(*m_object_image, x, y, draw_width, draw_height);
 
                 if (!m_text)
                 {
                         m_text = gpu_opengl::create_text(m_frame_rate.text_size(), m_text_color);
                 }
-                m_text->set_window(m_draw_x, m_draw_y, m_draw_width, m_draw_height);
+                m_text->set_window(0, 0, m_window->width(), m_window->height());
         }
 
         void resolve_to_texture()
         {
-                glBlitNamedFramebuffer(*m_render_framebuffer, *m_resolve_framebuffer, m_draw_x, m_draw_y, m_draw_x + m_draw_width,
-                                       m_draw_y + m_draw_height, 0, 0, m_draw_width, m_draw_height, GL_COLOR_BUFFER_BIT,
-                                       GL_NEAREST);
+                int x0 = m_draw_gl_x0;
+                int y0 = m_draw_gl_y0;
+                int x1 = m_draw_gl_x1;
+                int y1 = m_draw_gl_y1;
+                glBlitNamedFramebuffer(*m_render_framebuffer, *m_resolve_framebuffer, x0, y0, x1, y1, x0, y0, x1, y1,
+                                       GL_COLOR_BUFFER_BIT, GL_NEAREST);
         }
 
         void resolve_to_default()
