@@ -35,6 +35,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "show/com/event_queue.h"
 #include "show/com/event_window.h"
 #include "show/com/frame_rate.h"
+#include "show/com/rectangle.h"
 #include "show/com/show_thread.h"
 #include "window/manage.h"
 #include "window/opengl/window.h"
@@ -57,11 +58,6 @@ constexpr GLenum OPENGL_OBJECT_IMAGE_FORMAT = GL_R32UI;
 
 namespace
 {
-bool pointIsInsideRectangle(int x, int y, int x0, int y0, int x1, int y1)
-{
-        return x >= x0 && x < x1 && y >= y0 && y < y1;
-}
-
 class Impl final : public Show, public WindowEvent
 {
         static constexpr GLuint DEFAULT_FRAMEBUFFER = 0;
