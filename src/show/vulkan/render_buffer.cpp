@@ -498,8 +498,8 @@ void Impl::create_textures(unsigned buffer_count, const vulkan::Swapchain& swapc
         {
                 constexpr bool storage = false;
                 m_textures.emplace_back(m_device, m_command_pool, queue, family_indices,
-                                        std::vector<VkFormat>({swapchain.format()}), resolve_width, resolve_height, IMAGE_LAYOUT,
-                                        storage);
+                                        std::vector<VkFormat>({swapchain.format()}), swapchain.width(), swapchain.height(),
+                                        IMAGE_LAYOUT, storage);
 
                 ASSERT(m_textures.back().usage() & VK_IMAGE_USAGE_TRANSFER_DST_BIT);
                 ASSERT(m_textures.back().usage() & VK_IMAGE_USAGE_SAMPLED_BIT);

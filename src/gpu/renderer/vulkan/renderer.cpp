@@ -350,7 +350,7 @@ class Impl final : public Renderer
 
                 //
 
-                ASSERT(objects->width() == width && objects->height() == height);
+                ASSERT(x + width <= objects->width() && y + height <= objects->height());
 
                 m_swapchain = swapchain;
                 m_render_buffers = render_buffers;
