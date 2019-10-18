@@ -77,7 +77,9 @@ public:
                 double top = m_height;
                 double near = 1;
                 double far = -1;
-                m_shader_memory.set_matrix(ortho_opengl<double>(left, right, bottom, top, near, far));
+                mat4 p = ortho_opengl<double>(left, right, bottom, top, near, far);
+                mat4 t = translate(vec3(0.5, 0.5, 0));
+                m_shader_memory.set_matrix(p * t);
                 m_shader_memory.set_points(m_points);
         }
 

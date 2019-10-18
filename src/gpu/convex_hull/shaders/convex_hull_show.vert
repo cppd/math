@@ -35,5 +35,5 @@ void main(void)
 #endif
 
         ivec2 s = points[vertex_index];
-        gl_Position = matrix * vec4(s.x + 0.5, s.y + 0.5, 0, 1);
+        gl_Position = matrix * vec4(s.x, s.y, 0, 1);
 }
