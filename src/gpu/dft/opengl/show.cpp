@@ -102,7 +102,7 @@ class Impl final : public DFTShow
         opengl::GraphicsProgram m_draw_prog;
         ShaderMemory m_shader_memory;
 
-        int m_x, m_y, m_width, m_height;
+        int m_dst_x, m_dst_y, m_dst_width, m_dst_height;
 
         void set_brightness(double brightness) override
         {
@@ -123,23 +123,26 @@ class Impl final : public DFTShow
         {
                 m_dft->exec();
 
-                glViewport(m_x, m_y, m_width, m_height);
+                glViewport(m_dst_x, m_dst_y, m_dst_width, m_dst_height);
                 m_shader_memory.bind();
                 m_vertex_array.bind();
                 m_draw_prog.draw_arrays(GL_TRIANGLE_STRIP, 0, VERTEX_COUNT);
         }
 
 public:
-        Impl(const opengl::Texture& source, unsigned src_x, unsigned src_y, unsigned dst_x, unsigned dst_y, unsigned width,
-             unsigned height, double brightness, const Color& background_color, const Color& color)
-                : m_result(IMAGE_FORMAT, width, height),
-                  m_dft(gpu_opengl::create_dft_compute_texture(source, src_x, src_y, width, height, m_result)),
+        Impl(const opengl::Texture& source, unsigned src_x, unsigned src_y, unsigned src_width, unsigned src_height,
+             unsigned dst_x, unsigned dst_y, unsigned dst_width, unsigned dst_height, double brightness,
+             const Color& background_color, const Color& color)
+                : m_result(IMAGE_FORMAT, src_width, src_height),
+                  m_dft(gpu_opengl::create_dft_compute_texture(source, src_x, src_y, src_width, src_height, m_result)),
                   m_draw_prog(opengl::VertexShader(dft_show_vert()), opengl::FragmentShader(dft_show_frag())),
-                  m_x(dst_x),
-                  m_y(dst_y),
-                  m_width(width),
-                  m_height(height)
+                  m_dst_x(dst_x),
+                  m_dst_y(dst_y),
+                  m_dst_width(dst_width),
+                  m_dst_height(dst_height)
         {
+                ASSERT(src_width == dst_width && src_height == dst_height);
+
                 m_draw_prog.set_uniform_handle("tex", m_result.texture_handle());
 
                 set_brightness(brightness);
@@ -162,10 +165,12 @@ public:
 };
 }
 
-std::unique_ptr<DFTShow> create_dft_show(const opengl::Texture& source, unsigned src_x, unsigned src_y, unsigned dst_x,
-                                         unsigned dst_y, unsigned width, unsigned height, double brightness,
-                                         const Color& background_color, const Color& color)
+std::unique_ptr<DFTShow> create_dft_show(const opengl::Texture& source, unsigned src_x, unsigned src_y, unsigned src_width,
+                                         unsigned src_height, unsigned dst_x, unsigned dst_y, unsigned dst_width,
+                                         unsigned dst_height, double brightness, const Color& background_color,
+                                         const Color& color)
 {
-        return std::make_unique<Impl>(source, src_x, src_y, dst_x, dst_y, width, height, brightness, background_color, color);
+        return std::make_unique<Impl>(source, src_x, src_y, src_width, src_height, dst_x, dst_y, dst_width, dst_height,
+                                      brightness, background_color, color);
 }
 }

@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "show.h"
 
+#include "com/conversion.h"
 #include "com/error.h"
 #include "com/log.h"
 #include "com/print.h"
@@ -56,6 +57,10 @@ constexpr GLenum OPENGL_OBJECT_IMAGE_FORMAT = GL_R32UI;
 
 //
 
+constexpr double FRAME_SIZE_IN_MILLIMETERS = 0.5;
+
+//
+
 namespace
 {
 class Impl final : public Show, public WindowEvent
@@ -68,6 +73,8 @@ class Impl final : public Show, public WindowEvent
         const WindowID m_parent_window;
         const double m_parent_window_ppi;
         const std::thread::id m_thread_id = std::this_thread::get_id();
+
+        const int m_frame_size_in_pixels = std::max(1, millimeters_to_pixels(FRAME_SIZE_IN_MILLIMETERS, m_parent_window_ppi));
 
         FrameRate m_frame_rate{m_parent_window_ppi};
         Camera m_camera;
@@ -568,18 +575,7 @@ class Impl final : public Show, public WindowEvent
                 m_resolve_framebuffer.reset();
                 m_render_framebuffer.reset();
 
-                const int draw_width = m_dft_active ? m_window->width() / 2 : m_window->width();
-                const int draw_height = m_window->height();
-
-                m_draw_x0 = 0;
-                m_draw_y0 = 0;
-                m_draw_x1 = m_draw_x0 + draw_width;
-                m_draw_y1 = m_draw_y0 + draw_height;
-
-                m_draw_gl_x0 = m_draw_x0;
-                m_draw_gl_y0 = m_window->height() - m_draw_y1;
-                m_draw_gl_x1 = m_draw_x1;
-                m_draw_gl_y1 = m_window->height() - m_draw_y0;
+                //
 
                 m_render_framebuffer = std::make_unique<opengl::ColorDepthFramebufferMultisample>(
                         OPENGL_FRAMEBUFFER_COLOR_FORMAT, OPENGL_FRAMEBUFFER_DEPTH_FORMAT, OPENGL_MINIMUM_SAMPLE_COUNT,
@@ -591,41 +587,70 @@ class Impl final : public Show, public WindowEvent
                 m_object_image =
                         std::make_unique<opengl::Texture>(OPENGL_OBJECT_IMAGE_FORMAT, m_window->width(), m_window->height());
 
-                //
-
-                ASSERT(m_draw_x0 >= 0 && m_draw_y0 >= 0 && m_draw_x0 < m_draw_x1 && m_draw_y0 < m_draw_y1);
-                ASSERT(m_draw_x1 <= m_event_window.window_width() && m_draw_y1 <= m_event_window.window_height());
-                ASSERT(m_draw_gl_x0 >= 0 && m_draw_gl_y0 >= 0 && m_draw_gl_x0 < m_draw_gl_x1 && m_draw_gl_y0 < m_draw_gl_y1);
-                ASSERT(m_draw_gl_x1 <= m_event_window.window_width() && m_draw_gl_y1 <= m_event_window.window_height());
-
-                const int x = m_draw_gl_x0;
-                const int y = m_draw_gl_y0;
-                const int dft_x = m_window->width() - draw_width;
-                const int dft_y = m_draw_y0;
-                ASSERT(!m_dft_active || dft_x >= m_draw_x1);
-
-                //
-
-                m_renderer->set_size(x, y, draw_width, draw_height, *m_object_image);
-
-                //
-
-                m_pencil_sketch = gpu_opengl::create_pencil_sketch_show(m_resolve_framebuffer->texture(), *m_object_image, x, y,
-                                                                        draw_width, draw_height);
-
-                m_dft = gpu_opengl::create_dft_show(m_resolve_framebuffer->texture(), x, y, dft_x, dft_y, draw_width, draw_height,
-                                                    m_dft_brightness, m_dft_background_color, m_dft_color);
-
-                m_optical_flow = gpu_opengl::create_optical_flow_show(m_resolve_framebuffer->texture(), m_parent_window_ppi, x, y,
-                                                                      draw_width, draw_height);
-
-                m_convex_hull = gpu_opengl::create_convex_hull_show(*m_object_image, x, y, draw_width, draw_height);
-
                 if (!m_text)
                 {
                         m_text = gpu_opengl::create_text(m_frame_rate.text_size(), m_text_color);
                 }
                 m_text->set_window(0, 0, m_window->width(), m_window->height());
+
+                //
+
+                int w1_x, w1_y, w1_w, w1_h;
+                int w2_x, w2_y, w2_w, w2_h;
+                const bool two_windows =
+                        windowPositionAndSize(m_dft_active, m_window->width(), m_window->height(), m_frame_size_in_pixels, &w1_x,
+                                              &w1_y, &w1_w, &w1_h, &w2_x, &w2_y, &w2_w, &w2_h);
+
+                m_draw_x0 = w1_x;
+                m_draw_y0 = w1_y;
+                m_draw_x1 = w1_x + w1_w;
+                m_draw_y1 = w1_y + w1_h;
+
+                ASSERT(m_draw_x0 >= 0 && m_draw_y0 >= 0 && m_draw_x0 < m_draw_x1 && m_draw_y0 < m_draw_y1);
+                ASSERT(m_draw_x1 <= m_window->width() && m_draw_y1 <= m_window->height());
+
+                m_draw_gl_x0 = m_draw_x0;
+                m_draw_gl_y0 = m_window->height() - m_draw_y1;
+                m_draw_gl_x1 = m_draw_x1;
+                m_draw_gl_y1 = m_window->height() - m_draw_y0;
+
+                ASSERT(m_draw_gl_x0 >= 0 && m_draw_gl_y0 >= 0 && m_draw_gl_x0 < m_draw_gl_x1 && m_draw_gl_y0 < m_draw_gl_y1);
+                ASSERT(m_draw_gl_x1 <= m_window->width() && m_draw_gl_y1 <= m_window->height());
+
+                //
+
+                const int x = m_draw_gl_x0;
+                const int y = m_draw_gl_y0;
+                const int w = m_draw_gl_x1 - m_draw_gl_x0;
+                const int h = m_draw_gl_y1 - m_draw_gl_y0;
+
+                //
+
+                m_renderer->set_size(x, y, w, h, *m_object_image);
+
+                //
+
+                m_pencil_sketch =
+                        gpu_opengl::create_pencil_sketch_show(m_resolve_framebuffer->texture(), *m_object_image, x, y, w, h);
+
+                m_optical_flow =
+                        gpu_opengl::create_optical_flow_show(m_resolve_framebuffer->texture(), m_parent_window_ppi, x, y, w, h);
+
+                m_convex_hull = gpu_opengl::create_convex_hull_show(*m_object_image, x, y, w, h);
+
+                if (two_windows)
+                {
+                        const int x2 = w2_x;
+                        const int y2 = m_window->height() - w2_y - w2_h;
+                        const int w2 = w2_w;
+                        const int h2 = w2_h;
+
+                        ASSERT(x2 >= 0 && y2 >= 0 && w2 > 0 && h2 > 0);
+                        ASSERT(x2 + w2 <= m_window->width() && y2 + h2 <= m_window->height());
+
+                        m_dft = gpu_opengl::create_dft_show(m_resolve_framebuffer->texture(), x, y, w, h, x2, y2, w2, h2,
+                                                            m_dft_brightness, m_dft_background_color, m_dft_color);
+                }
         }
 
         void resolve_to_texture()
@@ -649,7 +674,7 @@ class Impl final : public Show, public WindowEvent
         void render(const TextData& text_data)
         {
                 ASSERT(m_render_framebuffer && m_resolve_framebuffer && m_object_image);
-                ASSERT(m_pencil_sketch && m_dft && m_optical_flow && m_convex_hull && m_text);
+                ASSERT(m_pencil_sketch && m_optical_flow && m_convex_hull && m_text);
 
                 glBindFramebuffer(GL_FRAMEBUFFER, *m_render_framebuffer);
 
@@ -661,12 +686,14 @@ class Impl final : public Show, public WindowEvent
                         m_pencil_sketch->draw();
                 }
 
-                if (m_dft_active || m_optical_flow_active)
+                const bool draw_dft = m_dft_active && m_dft;
+
+                if (draw_dft || m_optical_flow_active)
                 {
                         resolve_to_texture();
                 }
 
-                if (m_dft_active)
+                if (draw_dft)
                 {
                         m_dft->draw();
                 }
