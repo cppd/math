@@ -535,8 +535,8 @@ void Impl::create_textures(unsigned buffer_count, const vulkan::Swapchain& swapc
         image_resolve.dstSubresource.mipLevel = 0;
         image_resolve.dstSubresource.baseArrayLayer = 0;
         image_resolve.dstSubresource.layerCount = 1;
-        image_resolve.dstOffset.x = 0;
-        image_resolve.dstOffset.y = 0;
+        image_resolve.dstOffset.x = resolve_x;
+        image_resolve.dstOffset.y = resolve_y;
         image_resolve.dstOffset.z = 0;
         image_resolve.extent.width = resolve_width;
         image_resolve.extent.height = resolve_height;
