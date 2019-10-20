@@ -50,7 +50,7 @@ class Impl final : public PencilSketchShow
 {
         const std::thread::id m_thread_id = std::this_thread::get_id();
 
-        const bool m_sample_shading;
+        // const bool m_sample_shading;
 
         const vulkan::VulkanInstance& m_instance;
         const vulkan::Device& m_device;
@@ -115,8 +115,7 @@ class Impl final : public PencilSketchShow
                 m_shader_memory.set_image(m_sampler, *m_image);
 
                 m_pipeline = render_buffers->create_pipeline(
-                        VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP,
-                        m_sample_shading && (input.width() != width || input.height() != height), false /*color_blend*/,
+                        VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP, false /*sample_shading*/, false /*color_blend*/,
                         {&m_vertex_shader, &m_fragment_shader}, {nullptr, nullptr}, m_pipeline_layout,
                         PencilSketchShowVertex::binding_descriptions(), PencilSketchShowVertex::attribute_descriptions(), x, y,
                         width, height);
@@ -161,7 +160,7 @@ class Impl final : public PencilSketchShow
         {
                 std::array<PencilSketchShowVertex, VERTEX_COUNT> vertices;
 
-                // Текстурный 0 находится внизу
+                // Текстурный 0 находится вверху
                 vertices[0] = {{-1, +1, 0, 1}, {0, 1}};
                 vertices[1] = {{+1, +1, 0, 1}, {1, 1}};
                 vertices[2] = {{-1, -1, 0, 1}, {0, 0}};
@@ -182,8 +181,8 @@ class Impl final : public PencilSketchShow
 public:
         Impl(const vulkan::VulkanInstance& instance, const vulkan::CommandPool& graphics_command_pool,
              const vulkan::Queue& graphics_queue, const vulkan::CommandPool& transfer_command_pool,
-             const vulkan::Queue& transfer_queue, bool sample_shading)
-                : m_sample_shading(sample_shading),
+             const vulkan::Queue& transfer_queue, bool /*sample_shading*/)
+                : // m_sample_shading(sample_shading),
                   m_instance(instance),
                   m_device(instance.device()),
                   m_graphics_command_pool(graphics_command_pool),
