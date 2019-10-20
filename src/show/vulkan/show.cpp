@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "render_buffer.h"
 
+#include "com/conversion.h"
 #include "com/error.h"
 #include "com/log.h"
 #include "com/merge.h"
@@ -68,6 +69,10 @@ constexpr VkFormat VULKAN_OBJECT_IMAGE_FORMAT = VK_FORMAT_R32_UINT;
 
 //
 
+constexpr double FRAME_SIZE_IN_MILLIMETERS = 0.5;
+
+//
+
 namespace show_vulkan
 {
 namespace
@@ -104,6 +109,8 @@ class Impl final : public Show, public WindowEvent
         const WindowID m_parent_window;
         const double m_parent_window_ppi;
         const std::thread::id m_thread_id = std::this_thread::get_id();
+
+        const int m_frame_size_in_pixels = std::max(1, millimeters_to_pixels(FRAME_SIZE_IN_MILLIMETERS, m_parent_window_ppi));
 
         FrameRate m_frame_rate{m_parent_window_ppi};
         Camera m_camera;
@@ -547,20 +554,6 @@ class Impl final : public Show, public WindowEvent
                         std::make_unique<vulkan::Swapchain>(m_instance->surface(), m_instance->device(), swapchain_family_indices,
                                                             VULKAN_SURFACE_FORMAT, VULKAN_PREFERRED_IMAGE_COUNT, m_present_mode);
 
-                const unsigned draw_width = m_dft_active ? m_swapchain->width() / 2 : m_swapchain->width();
-                const unsigned draw_height = m_swapchain->height();
-
-                m_draw_x0 = 0;
-                m_draw_y0 = 0;
-                m_draw_x1 = m_draw_x0 + std::max(1u, draw_width);
-                m_draw_y1 = m_draw_y0 + std::max(1u, draw_height);
-
-                constexpr RenderBufferCount buffer_count = RenderBufferCount::One;
-
-                m_render_buffers = create_render_buffers(
-                        buffer_count, *m_swapchain, m_instance->graphics_command_pool(), m_instance->graphics_queues()[0],
-                        m_instance->device(), VULKAN_MINIMUM_SAMPLE_COUNT, m_draw_x0, m_draw_y0, draw_width, draw_height);
-
                 static constexpr bool storage = true;
                 m_object_image = std::make_unique<vulkan::ImageWithMemory>(
                         m_instance->device(), m_instance->graphics_command_pool(), m_instance->graphics_queues()[0],
@@ -570,29 +563,53 @@ class Impl final : public Show, public WindowEvent
 
                 //
 
+                int w1_x, w1_y, w1_w, w1_h;
+                int w2_x, w2_y, w2_w, w2_h;
+                const bool two_windows =
+                        windowPositionAndSize(m_dft_active, m_swapchain->width(), m_swapchain->height(), m_frame_size_in_pixels,
+                                              &w1_x, &w1_y, &w1_w, &w1_h, &w2_x, &w2_y, &w2_w, &w2_h);
+
+                m_draw_x0 = w1_x;
+                m_draw_y0 = w1_y;
+                m_draw_x1 = w1_x + w1_w;
+                m_draw_y1 = w1_y + w1_h;
+
                 ASSERT(m_draw_x0 >= 0 && m_draw_y0 >= 0 && m_draw_x0 < m_draw_x1 && m_draw_y0 < m_draw_y1);
                 ASSERT(m_draw_x1 <= static_cast<int>(m_swapchain->width()));
                 ASSERT(m_draw_y1 <= static_cast<int>(m_swapchain->height()));
 
-                const int x = m_draw_x0;
-                const int y = m_draw_y0;
+                //
+
+                constexpr RenderBufferCount buffer_count = RenderBufferCount::One;
+                m_render_buffers = create_render_buffers(buffer_count, *m_swapchain, m_instance->graphics_command_pool(),
+                                                         m_instance->graphics_queues()[0], m_instance->device(),
+                                                         VULKAN_MINIMUM_SAMPLE_COUNT, w1_x, w1_y, w1_w, w1_h);
 
                 //
 
-                m_renderer->create_buffers(m_swapchain.get(), &m_render_buffers->buffers_3d(), m_object_image.get(), x, y,
-                                           draw_width, draw_height);
+                m_renderer->create_buffers(m_swapchain.get(), &m_render_buffers->buffers_3d(), m_object_image.get(), w1_x, w1_y,
+                                           w1_w, w1_h);
 
-                m_convex_hull->create_buffers(&m_render_buffers->buffers_2d(), *m_object_image, x, y, draw_width, draw_height);
+                //
+
+                m_convex_hull->create_buffers(&m_render_buffers->buffers_2d(), *m_object_image, w1_x, w1_y, w1_w, w1_h);
 
                 const int image_index = 0;
                 m_pencil_sketch->create_buffers(&m_render_buffers->buffers_2d(), m_render_buffers->texture(image_index),
-                                                *m_object_image, x, y, draw_width, draw_height);
+                                                *m_object_image, w1_x, w1_y, w1_w, w1_h);
+
+                if (two_windows)
+                {
+                        ASSERT(w2_x >= 0 && w2_y >= 0 && w2_w > 0 && w2_h > 0);
+                        ASSERT(w2_x + w2_w <= static_cast<int>(m_swapchain->width()));
+                        ASSERT(w2_y + w2_h <= static_cast<int>(m_swapchain->height()));
+                }
 
                 m_text->create_buffers(&m_render_buffers->buffers_2d(), 0, 0, m_swapchain->width(), m_swapchain->height());
 
                 //
 
-                m_camera.resize(draw_width, draw_height);
+                m_camera.resize(w1_w, w1_h);
                 m_renderer->set_camera(m_camera.renderer_info());
         }
 
