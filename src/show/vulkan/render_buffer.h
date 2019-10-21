@@ -35,9 +35,9 @@ struct RenderBuffers
 
         virtual VkSemaphore resolve_to_swapchain(const vulkan::Queue& graphics_queue, VkSemaphore swapchain_image_semaphore,
                                                  VkSemaphore wait_semaphore, unsigned image_index) const = 0;
-        virtual VkSemaphore resolve_to_texture(const vulkan::Queue& graphics_queue, VkSemaphore wait_semaphore,
-                                               unsigned image_index) const = 0;
-        virtual const vulkan::ImageWithMemory& texture(unsigned image_index) const = 0;
+
+        virtual std::vector<VkImage> images() const = 0;
+        virtual VkImageLayout image_layout() const = 0;
 };
 
 enum class RenderBufferCount
@@ -47,8 +47,6 @@ enum class RenderBufferCount
 };
 
 std::unique_ptr<RenderBuffers> create_render_buffers(RenderBufferCount buffer_count, const vulkan::Swapchain& swapchain,
-                                                     const vulkan::CommandPool& command_pool, const vulkan::Queue& queue,
-                                                     const vulkan::Device& device, int required_minimum_sample_count,
-                                                     unsigned resolve_x, unsigned resolve_y, unsigned resolve_width,
-                                                     unsigned resolve_height);
+                                                     const vulkan::CommandPool& command_pool, const vulkan::Device& device,
+                                                     int required_minimum_sample_count);
 }

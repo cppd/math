@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "show.h"
 
 #include "render_buffer.h"
+#include "resolve.h"
 
 #include "com/conversion.h"
 #include "com/error.h"
@@ -32,6 +33,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "gpu/text/vulkan/show.h"
 #include "graphics/vulkan/instance.h"
 #include "graphics/vulkan/objects.h"
+#include "graphics/vulkan/queue.h"
 #include "graphics/vulkan/sync.h"
 #include "show/com/camera.h"
 #include "show/com/event_queue.h"
@@ -138,6 +140,9 @@ class Impl final : public Show, public WindowEvent
         std::unique_ptr<vulkan::Semaphore> m_image_semaphore;
         std::unique_ptr<vulkan::Swapchain> m_swapchain;
         std::unique_ptr<RenderBuffers> m_render_buffers;
+        std::unique_ptr<vulkan::ImageWithMemory> m_resolve_texture;
+        std::unique_ptr<vulkan::CommandBuffers> m_resolve_command_buffers;
+        std::unique_ptr<vulkan::Semaphore> m_resolve_semaphore;
         std::unique_ptr<vulkan::ImageWithMemory> m_object_image;
         std::unique_ptr<gpu_vulkan::Renderer> m_renderer;
         std::unique_ptr<gpu_vulkan::TextShow> m_text;
@@ -544,6 +549,8 @@ class Impl final : public Show, public WindowEvent
                 m_renderer->delete_buffers();
 
                 m_object_image.reset();
+                m_resolve_command_buffers.reset();
+                m_resolve_texture.reset();
                 m_render_buffers.reset();
                 m_swapchain.reset();
 
@@ -554,12 +561,37 @@ class Impl final : public Show, public WindowEvent
                         std::make_unique<vulkan::Swapchain>(m_instance->surface(), m_instance->device(), swapchain_family_indices,
                                                             VULKAN_SURFACE_FORMAT, VULKAN_PREFERRED_IMAGE_COUNT, m_present_mode);
 
-                static constexpr bool storage = true;
+                constexpr RenderBufferCount buffer_count = RenderBufferCount::One;
+                m_render_buffers = create_render_buffers(buffer_count, *m_swapchain, m_instance->graphics_command_pool(),
+                                                         m_instance->device(), VULKAN_MINIMUM_SAMPLE_COUNT);
+
+                //
+
+                constexpr VkImageLayout RESOLVE_TEXTURE_IMAGE_LAYOUT = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+                m_resolve_texture = std::make_unique<vulkan::ImageWithMemory>(
+                        m_instance->device(), m_instance->graphics_command_pool(), m_instance->graphics_queues()[0],
+                        std::unordered_set({m_instance->graphics_command_pool().family_index()}),
+                        std::vector<VkFormat>({m_swapchain->format()}), m_swapchain->width(), m_swapchain->height(),
+                        RESOLVE_TEXTURE_IMAGE_LAYOUT, false /*storage*/);
+
+                ASSERT(m_resolve_texture->usage() & VK_IMAGE_USAGE_TRANSFER_DST_BIT);
+                ASSERT(m_resolve_texture->usage() & VK_IMAGE_USAGE_SAMPLED_BIT);
+                ASSERT(!(m_resolve_texture->usage() & VK_IMAGE_USAGE_STORAGE_BIT));
+
+                //
+
                 m_object_image = std::make_unique<vulkan::ImageWithMemory>(
                         m_instance->device(), m_instance->graphics_command_pool(), m_instance->graphics_queues()[0],
                         std::unordered_set({m_instance->graphics_queues()[0].family_index()}),
                         std::vector<VkFormat>({VULKAN_OBJECT_IMAGE_FORMAT}), m_swapchain->width(), m_swapchain->height(),
-                        VK_IMAGE_LAYOUT_GENERAL, storage);
+                        VK_IMAGE_LAYOUT_GENERAL, true /*storage*/);
+
+                ASSERT(m_object_image->usage() & VK_IMAGE_USAGE_STORAGE_BIT);
+
+                //
+
+                m_text->create_buffers(&m_render_buffers->buffers_2d(), 0, 0, m_swapchain->width(), m_swapchain->height());
 
                 //
 
@@ -580,10 +612,10 @@ class Impl final : public Show, public WindowEvent
 
                 //
 
-                constexpr RenderBufferCount buffer_count = RenderBufferCount::One;
-                m_render_buffers = create_render_buffers(buffer_count, *m_swapchain, m_instance->graphics_command_pool(),
-                                                         m_instance->graphics_queues()[0], m_instance->device(),
-                                                         VULKAN_MINIMUM_SAMPLE_COUNT, w1_x, w1_y, w1_w, w1_h);
+                m_resolve_command_buffers = std::make_unique<vulkan::CommandBuffers>(create_command_buffers_resolve(
+                        m_instance->device(), m_instance->graphics_command_pool(), m_render_buffers->images(),
+                        m_render_buffers->image_layout(), std::vector<VkImage>({m_resolve_texture->image()}),
+                        RESOLVE_TEXTURE_IMAGE_LAYOUT, w1_x, w1_y, w1_w, w1_h));
 
                 //
 
@@ -594,9 +626,8 @@ class Impl final : public Show, public WindowEvent
 
                 m_convex_hull->create_buffers(&m_render_buffers->buffers_2d(), *m_object_image, w1_x, w1_y, w1_w, w1_h);
 
-                const int image_index = 0;
-                m_pencil_sketch->create_buffers(&m_render_buffers->buffers_2d(), m_render_buffers->texture(image_index),
-                                                *m_object_image, w1_x, w1_y, w1_w, w1_h);
+                m_pencil_sketch->create_buffers(&m_render_buffers->buffers_2d(), *m_resolve_texture, *m_object_image, w1_x, w1_y,
+                                                w1_w, w1_h);
 
                 if (two_windows)
                 {
@@ -605,12 +636,23 @@ class Impl final : public Show, public WindowEvent
                         ASSERT(w2_y + w2_h <= static_cast<int>(m_swapchain->height()));
                 }
 
-                m_text->create_buffers(&m_render_buffers->buffers_2d(), 0, 0, m_swapchain->width(), m_swapchain->height());
-
                 //
 
                 m_camera.resize(w1_w, w1_h);
                 m_renderer->set_camera(m_camera.renderer_info());
+        }
+
+        VkSemaphore resolve_to_texture(const vulkan::Queue& graphics_queue, VkSemaphore wait_semaphore,
+                                       unsigned image_index) const
+        {
+                ASSERT(m_resolve_command_buffers->count() == 1 || image_index < m_resolve_command_buffers->count());
+
+                const unsigned index = m_resolve_command_buffers->count() == 1 ? 0 : image_index;
+
+                vulkan::queue_submit(wait_semaphore, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, (*m_resolve_command_buffers)[index],
+                                     *m_resolve_semaphore, graphics_queue);
+
+                return *m_resolve_semaphore;
         }
 
         bool render(const TextData& text_data)
@@ -631,7 +673,7 @@ class Impl final : public Show, public WindowEvent
 
                 if (m_pencil_sketch_active)
                 {
-                        wait_semaphore = m_render_buffers->resolve_to_texture(graphics_queue, wait_semaphore, image_index);
+                        wait_semaphore = resolve_to_texture(graphics_queue, wait_semaphore, image_index);
                         wait_semaphore = m_pencil_sketch->draw(graphics_queue, wait_semaphore, image_index);
                 }
 
@@ -704,7 +746,10 @@ public:
                                                                          required_features, optional_features, create_surface);
                 }
 
+                ASSERT(m_instance->graphics_command_pool().family_index() == m_instance->graphics_queues()[0].family_index());
+
                 m_image_semaphore = std::make_unique<vulkan::Semaphore>(m_instance->device());
+                m_resolve_semaphore = std::make_unique<vulkan::Semaphore>(m_instance->device());
 
                 const vulkan::Queue& graphics_queue = m_instance->graphics_queues()[0];
 
