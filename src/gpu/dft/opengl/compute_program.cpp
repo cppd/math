@@ -201,27 +201,51 @@ int DftProgramBitReverse<T>::n() const
 //
 
 template <typename T>
+DftFftGlobalMemory<T>::DftFftGlobalMemory() : m_data(sizeof(Data), GL_MAP_WRITE_BIT)
+{
+}
+
+template <typename T>
+void DftFftGlobalMemory<T>::set_data(int data_size, T two_pi_div_m, int n_div_2_mask, int m_div_2) const
+{
+        Data d;
+        d.data_size = data_size;
+        d.n_div_2_mask = n_div_2_mask;
+        d.m_div_2 = m_div_2;
+        d.two_pi_div_m = two_pi_div_m;
+        opengl::map_and_write_to_buffer(m_data, d);
+}
+
+template <typename T>
+void DftFftGlobalMemory<T>::set_buffer(const opengl::Buffer& buffer)
+{
+        m_buffer = buffer;
+}
+
+template <typename T>
+void DftFftGlobalMemory<T>::bind()
+{
+        glBindBufferBase(GL_UNIFORM_BUFFER, DATA_BINDING, m_data);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, BUFFER_BINDING, m_buffer);
+}
+
+//
+
+template <typename T>
 DftProgramFftGlobal<T>::DftProgramFftGlobal(int group_size)
         : m_group_size(group_size),
           m_fft_forward(opengl::ComputeShader(fft_global_source<T>(group_size, false))),
-          m_fft_inverse(opengl::ComputeShader(fft_global_source<T>(group_size, true))),
-          m_shader_memory(sizeof(ShaderMemory), GL_MAP_WRITE_BIT)
+          m_fft_inverse(opengl::ComputeShader(fft_global_source<T>(group_size, true)))
 {
 }
 
 template <typename T>
 void DftProgramFftGlobal<T>::exec(bool inverse, int data_size, T two_pi_div_m, int n_div_2_mask, int m_div_2,
-                                  const opengl::Buffer& data) const
+                                  const opengl::Buffer& buffer)
 {
-        ShaderMemory m;
-        m.data_size = data_size;
-        m.n_div_2_mask = n_div_2_mask;
-        m.m_div_2 = m_div_2;
-        m.two_pi_div_m = two_pi_div_m;
-        opengl::map_and_write_to_buffer(m_shader_memory, m);
-
-        glBindBufferBase(GL_UNIFORM_BUFFER, DATA_BINDING, m_shader_memory);
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, BUFFER_BINDING, data);
+        m_memory.set_data(data_size, two_pi_div_m, n_div_2_mask, m_div_2);
+        m_memory.set_buffer(buffer);
+        m_memory.bind();
 
         if (inverse)
         {

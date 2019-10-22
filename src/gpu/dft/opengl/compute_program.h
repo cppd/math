@@ -44,12 +44,12 @@ public:
 };
 
 template <typename T>
-class DftProgramFftGlobal final
+class DftFftGlobalMemory final
 {
         static constexpr int DATA_BINDING = 0;
         static constexpr int BUFFER_BINDING = 1;
 
-        struct ShaderMemory
+        struct Data
         {
                 GLuint data_size;
                 GLuint n_div_2_mask;
@@ -57,15 +57,28 @@ class DftProgramFftGlobal final
                 T two_pi_div_m;
         };
 
+        opengl::Buffer m_data;
+        GLuint m_buffer;
+
+public:
+        DftFftGlobalMemory();
+        void set_data(int data_size, T two_pi_div_m, int n_div_2_mask, int m_div_2) const;
+        void set_buffer(const opengl::Buffer& buffer);
+        void bind();
+};
+
+template <typename T>
+class DftProgramFftGlobal final
+{
         const int m_group_size;
         opengl::ComputeProgram m_fft_forward;
         opengl::ComputeProgram m_fft_inverse;
-        opengl::Buffer m_shader_memory;
+        DftFftGlobalMemory<T> m_memory;
 
 public:
         DftProgramFftGlobal(int group_size);
 
-        void exec(bool inverse, int data_size, T two_pi_div_m, int n_div_2_mask, int m_div_2, const opengl::Buffer& data) const;
+        void exec(bool inverse, int data_size, T two_pi_div_m, int n_div_2_mask, int m_div_2, const opengl::Buffer& buffer);
 };
 
 template <typename T>

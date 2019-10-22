@@ -292,7 +292,7 @@ int group_size(int dft_size)
 
 template <typename FP>
 void fft1d(bool inverse, const DftProgramFftShared<FP>& fft, const DftProgramBitReverse<FP>& bit_reverse,
-           const DftProgramFftGlobal<FP>& fft_global, const DeviceMemory<std::complex<FP>>* data)
+           DftProgramFftGlobal<FP>& fft_global, const DeviceMemory<std::complex<FP>>* data)
 {
         const int n = fft.n();
 
@@ -442,7 +442,7 @@ class Impl final : public DFTCompute, public DFTComputeTexture
                 fft1d(true, fft_1_m2, bit_reverse_1_m2, m_fft_global, &m_d2_inv);
         }
 
-        void record_commands(bool inverse, Commands* commands) const
+        void record_commands(bool inverse, Commands* commands)
         {
                 commands->clear();
 
