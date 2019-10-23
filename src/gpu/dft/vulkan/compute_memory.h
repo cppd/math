@@ -211,8 +211,6 @@ class DftFftGlobalMemory final
 
         struct Data
         {
-                uint32_t data_size;
-                uint32_t n_div_2_mask;
                 uint32_t m_div_2;
                 float two_pi_div_m;
         };
@@ -235,7 +233,7 @@ public:
 
         //
 
-        void set_data(int data_size, float two_pi_div_m, int n_div_2_mask, int m_div_2) const;
+        void set_data(float two_pi_div_m, int m_div_2) const;
         void set_buffer(const vulkan::BufferWithMemory& buffer) const;
 };
 
@@ -245,6 +243,8 @@ class DftFftGlobalConstant final : public vulkan::SpecializationConstant
         {
                 uint32_t group_size;
                 uint32_t inverse;
+                uint32_t data_size;
+                uint32_t n;
         } m_data;
 
         std::vector<VkSpecializationMapEntry> m_entries;
@@ -256,7 +256,7 @@ class DftFftGlobalConstant final : public vulkan::SpecializationConstant
 public:
         DftFftGlobalConstant();
 
-        void set(uint32_t group_size, bool inverse);
+        void set(uint32_t group_size, bool inverse, uint32_t data_size, uint32_t n);
 };
 
 //

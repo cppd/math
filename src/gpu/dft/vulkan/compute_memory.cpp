@@ -484,12 +484,10 @@ const VkDescriptorSet& DftFftGlobalMemory::descriptor_set() const
         return m_descriptors.descriptor_set(0);
 }
 
-void DftFftGlobalMemory::set_data(int data_size, float two_pi_div_m, int n_div_2_mask, int m_div_2) const
+void DftFftGlobalMemory::set_data(float two_pi_div_m, int m_div_2) const
 {
         Data d;
-        d.data_size = data_size;
         d.two_pi_div_m = two_pi_div_m;
-        d.n_div_2_mask = n_div_2_mask;
         d.m_div_2 = m_div_2;
         vulkan::map_and_write_to_buffer(m_uniform_buffers[0], d);
 }
@@ -524,14 +522,32 @@ DftFftGlobalConstant::DftFftGlobalConstant()
                 entry.size = sizeof(Data::inverse);
                 m_entries.push_back(entry);
         }
+        {
+                VkSpecializationMapEntry entry = {};
+                entry.constantID = 2;
+                entry.offset = offsetof(Data, data_size);
+                entry.size = sizeof(Data::data_size);
+                m_entries.push_back(entry);
+        }
+        {
+                VkSpecializationMapEntry entry = {};
+                entry.constantID = 3;
+                entry.offset = offsetof(Data, n);
+                entry.size = sizeof(Data::n);
+                m_entries.push_back(entry);
+        }
 }
 
-void DftFftGlobalConstant::set(uint32_t group_size, bool inverse)
+void DftFftGlobalConstant::set(uint32_t group_size, bool inverse, uint32_t data_size, uint32_t n)
 {
         static_assert(std::is_same_v<decltype(m_data.group_size), decltype(group_size)>);
         m_data.group_size = group_size;
         static_assert(std::is_same_v<decltype(m_data.inverse), uint32_t>);
         m_data.inverse = inverse ? 1 : 0;
+        static_assert(std::is_same_v<decltype(m_data.data_size), decltype(data_size)>);
+        m_data.data_size = data_size;
+        static_assert(std::is_same_v<decltype(m_data.n), decltype(n)>);
+        m_data.n = n;
 }
 
 const std::vector<VkSpecializationMapEntry>& DftFftGlobalConstant::entries() const

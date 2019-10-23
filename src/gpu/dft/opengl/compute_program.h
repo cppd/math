@@ -44,15 +44,13 @@ public:
 };
 
 template <typename T>
-class DftFftGlobalMemory final
+class DftMemoryFftGlobal final
 {
         static constexpr int DATA_BINDING = 0;
         static constexpr int BUFFER_BINDING = 1;
 
         struct Data
         {
-                GLuint data_size;
-                GLuint n_div_2_mask;
                 GLuint m_div_2;
                 T two_pi_div_m;
         };
@@ -61,24 +59,34 @@ class DftFftGlobalMemory final
         GLuint m_buffer;
 
 public:
-        DftFftGlobalMemory();
-        void set_data(int data_size, T two_pi_div_m, int n_div_2_mask, int m_div_2) const;
+        DftMemoryFftGlobal();
+        void set_data(T two_pi_div_m, int m_div_2) const;
         void set_buffer(const opengl::Buffer& buffer);
-        void bind();
+        void bind() const;
 };
 
 template <typename T>
 class DftProgramFftGlobal final
 {
-        const int m_group_size;
+        const int m_count, m_n;
+        const int m_group_count;
         opengl::ComputeProgram m_fft_forward;
         opengl::ComputeProgram m_fft_inverse;
-        DftFftGlobalMemory<T> m_memory;
 
 public:
-        DftProgramFftGlobal(int group_size);
+        DftProgramFftGlobal(int count, int n, int group_size);
 
-        void exec(bool inverse, int data_size, T two_pi_div_m, int n_div_2_mask, int m_div_2, const opengl::Buffer& buffer);
+        int count() const
+        {
+                return m_count;
+        }
+
+        int n() const
+        {
+                return m_n;
+        }
+
+        void exec(bool inverse, const DftMemoryFftGlobal<T>& memory) const;
 };
 
 template <typename T>

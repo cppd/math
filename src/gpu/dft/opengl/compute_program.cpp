@@ -69,11 +69,13 @@ std::string bit_reverse_source(int group_size, unsigned count, unsigned n)
 }
 
 template <typename T>
-std::string fft_global_source(int group_size, bool inverse)
+std::string fft_global_source(int data_size, int n, int group_size, bool inverse)
 {
         std::string s;
         s += group_size_string(group_size);
         s += "const bool INVERSE = " + bool_string(inverse) + ";\n";
+        s += "const uint DATA_SIZE = " + to_string(data_size) + ";\n";
+        s += "const uint N = " + to_string(n) + ";\n";
         return dft_fft_global_comp(s);
 }
 
@@ -201,29 +203,27 @@ int DftProgramBitReverse<T>::n() const
 //
 
 template <typename T>
-DftFftGlobalMemory<T>::DftFftGlobalMemory() : m_data(sizeof(Data), GL_MAP_WRITE_BIT)
+DftMemoryFftGlobal<T>::DftMemoryFftGlobal() : m_data(sizeof(Data), GL_MAP_WRITE_BIT)
 {
 }
 
 template <typename T>
-void DftFftGlobalMemory<T>::set_data(int data_size, T two_pi_div_m, int n_div_2_mask, int m_div_2) const
+void DftMemoryFftGlobal<T>::set_data(T two_pi_div_m, int m_div_2) const
 {
         Data d;
-        d.data_size = data_size;
-        d.n_div_2_mask = n_div_2_mask;
         d.m_div_2 = m_div_2;
         d.two_pi_div_m = two_pi_div_m;
         opengl::map_and_write_to_buffer(m_data, d);
 }
 
 template <typename T>
-void DftFftGlobalMemory<T>::set_buffer(const opengl::Buffer& buffer)
+void DftMemoryFftGlobal<T>::set_buffer(const opengl::Buffer& buffer)
 {
         m_buffer = buffer;
 }
 
 template <typename T>
-void DftFftGlobalMemory<T>::bind()
+void DftMemoryFftGlobal<T>::bind() const
 {
         glBindBufferBase(GL_UNIFORM_BUFFER, DATA_BINDING, m_data);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, BUFFER_BINDING, m_buffer);
@@ -232,28 +232,27 @@ void DftFftGlobalMemory<T>::bind()
 //
 
 template <typename T>
-DftProgramFftGlobal<T>::DftProgramFftGlobal(int group_size)
-        : m_group_size(group_size),
-          m_fft_forward(opengl::ComputeShader(fft_global_source<T>(group_size, false))),
-          m_fft_inverse(opengl::ComputeShader(fft_global_source<T>(group_size, true)))
+DftProgramFftGlobal<T>::DftProgramFftGlobal(int count, int n, int group_size)
+        : m_count(count),
+          m_n(n),
+          m_group_count(group_count((count * n) / 2, group_size)),
+          m_fft_forward(opengl::ComputeShader(fft_global_source<T>(m_count * m_n, m_n, group_size, false))),
+          m_fft_inverse(opengl::ComputeShader(fft_global_source<T>(m_count * m_n, m_n, group_size, true)))
 {
 }
 
 template <typename T>
-void DftProgramFftGlobal<T>::exec(bool inverse, int data_size, T two_pi_div_m, int n_div_2_mask, int m_div_2,
-                                  const opengl::Buffer& buffer)
+void DftProgramFftGlobal<T>::exec(bool inverse, const DftMemoryFftGlobal<T>& memory) const
 {
-        m_memory.set_data(data_size, two_pi_div_m, n_div_2_mask, m_div_2);
-        m_memory.set_buffer(buffer);
-        m_memory.bind();
+        memory.bind();
 
         if (inverse)
         {
-                m_fft_inverse.dispatch_compute(group_count(data_size, m_group_size), 1, 1);
+                m_fft_inverse.dispatch_compute(m_group_count, 1, 1);
         }
         else
         {
-                m_fft_forward.dispatch_compute(group_count(data_size, m_group_size), 1, 1);
+                m_fft_forward.dispatch_compute(m_group_count, 1, 1);
         }
 
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
@@ -435,6 +434,7 @@ void DftProgramFftShared<T>::exec(bool inverse, const opengl::Buffer& data) cons
 //
 
 template class DftProgramBitReverse<float>;
+template class DftMemoryFftGlobal<float>;
 template class DftProgramFftGlobal<float>;
 template class DftProgramCopyInput<float>;
 template class DftProgramCopyOutput<float>;
