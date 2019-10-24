@@ -291,55 +291,70 @@ int group_size(int dft_size)
 }
 
 template <typename FP>
-void fft1d(bool inverse, const DftProgramFftShared<FP>& fft, const DftProgramBitReverse<FP>& bit_reverse,
-           DftMemoryFftGlobal<FP>& fft_g_memory, const DftProgramFftGlobal<FP>& fft_g, const DeviceMemory<std::complex<FP>>* data)
+class Fft1d
 {
-        const int n = fft.n();
+        DftProgramBitReverse<FP> m_bit_reverse;
+        DftMemoryFftGlobal<FP> m_fft_g_memory;
+        DftProgramFftGlobal<FP> m_fft_g;
+        DftProgramFftShared<FP> m_fft;
 
-        if (n == 1)
+public:
+        Fft1d(int count, int n)
+                : m_bit_reverse(GROUP_SIZE_1D, count, n),
+                  m_fft_g(count, n, GROUP_SIZE_1D),
+                  m_fft(count, n, shared_size<FP>(n), group_size<FP>(n), n <= shared_size<FP>(n))
         {
-                return;
         }
 
-        const int shared_size = fft.shared_size();
-
-        if (n <= shared_size)
+        void exec(bool inverse, const DeviceMemory<std::complex<FP>>* data)
         {
-                ASSERT(fft.reverse_input());
-                fft.exec(inverse, *data);
-                return;
+                const int n = m_fft.n();
+
+                if (n == 1)
+                {
+                        return;
+                }
+
+                const int shared_size = m_fft.shared_size();
+
+                if (n <= shared_size)
+                {
+                        ASSERT(m_fft.reverse_input());
+                        m_fft.exec(inverse, *data);
+                        return;
+                }
+
+                const int n_bits = m_fft.n_bits();
+                ASSERT((1 << n_bits) == n);
+
+                // Если n превышает максимум обрабатываемых данных shared_size, то вначале
+                // надо отдельно выполнить перестановку данных, а потом запускать функции
+                // с отключенной перестановкой, иначе одни запуски будут вносить изменения
+                // в данные других запусков, так как результат пишется в исходные данные.
+
+                ASSERT(m_bit_reverse.n() == n && m_bit_reverse.count() == m_fft.count());
+                m_bit_reverse.exec(*data);
+
+                ASSERT(!m_fft.reverse_input());
+                m_fft.exec(inverse, *data);
+
+                // Досчитать до нужного размера уже в глобальной памяти без разделяемой
+
+                ASSERT(m_fft.n() == m_fft_g.n());
+                ASSERT(m_fft.count() == m_fft_g.count());
+
+                m_fft_g_memory.set_buffer(*data);
+
+                int m_div_2 = shared_size;
+                FP two_pi_div_m = inverse ? (PI<FP> / m_div_2) : -(PI<FP> / m_div_2);
+                for (; m_div_2 < n; m_div_2 <<= 1, two_pi_div_m /= 2)
+                {
+                        // m_div_2 - половина размера текущих отдельных БПФ
+                        m_fft_g_memory.set_data(two_pi_div_m, m_div_2);
+                        m_fft_g.exec(inverse, m_fft_g_memory);
+                }
         }
-
-        const int n_bits = fft.n_bits();
-        ASSERT((1 << n_bits) == n);
-
-        // Если n превышает максимум обрабатываемых данных shared_size, то вначале
-        // надо отдельно выполнить перестановку данных, а потом запускать функции
-        // с отключенной перестановкой, иначе одни запуски будут вносить изменения
-        // в данные других запусков, так как результат пишется в исходные данные.
-
-        ASSERT(bit_reverse.n() == n && bit_reverse.count() == fft.count());
-        bit_reverse.exec(*data);
-
-        ASSERT(!fft.reverse_input());
-        fft.exec(inverse, *data);
-
-        // Досчитать до нужного размера уже в глобальной памяти без разделяемой
-
-        ASSERT(fft.n() == fft_g.n());
-        ASSERT(fft.count() == fft_g.count());
-
-        fft_g_memory.set_buffer(*data);
-
-        int m_div_2 = shared_size;
-        FP two_pi_div_m = inverse ? (PI<FP> / m_div_2) : -(PI<FP> / m_div_2);
-        for (; m_div_2 < n; m_div_2 <<= 1, two_pi_div_m /= 2)
-        {
-                // m_div_2 - половина размера текущих отдельных БПФ
-                fft_g_memory.set_data(two_pi_div_m, m_div_2);
-                fft_g.exec(inverse, fft_g_memory);
-        }
-}
+};
 
 template <typename FP>
 class Impl final : public DFTCompute, public DFTComputeTexture
@@ -347,17 +362,12 @@ class Impl final : public DFTCompute, public DFTComputeTexture
         const int m_n1, m_n2, m_m1, m_m2, m_m1_bin, m_m2_bin;
         DeviceMemory<std::complex<FP>> m_d1_fwd, m_d1_inv, m_d2_fwd, m_d2_inv;
         DeviceMemory<std::complex<FP>> m_x_d, m_buffer;
-        DftProgramBitReverse<FP> m_bit_reverse_n2_m1;
-        DftProgramBitReverse<FP> m_bit_reverse_n1_m2;
         std::optional<DftProgramCopyInput<FP>> m_copy_input;
         std::optional<DftProgramCopyOutput<FP>> m_copy_output;
         DftProgramMul<FP> m_mul;
         DftProgramMulD<FP> m_mul_d;
-        DftMemoryFftGlobal<FP> m_fft_g_memory;
-        DftProgramFftGlobal<FP> m_fft_g_n2_m1;
-        DftProgramFftGlobal<FP> m_fft_g_n1_m2;
-        DftProgramFftShared<FP> m_fft_n2_m1;
-        DftProgramFftShared<FP> m_fft_n1_m2;
+        Fft1d<FP> m_fft_n2_m1;
+        Fft1d<FP> m_fft_n1_m2;
 
         std::optional<opengl::TimeElapsed> m_time_elapsed;
 
@@ -420,31 +430,23 @@ class Impl final : public DFTCompute, public DFTComputeTexture
                 double m1_div_n1 = static_cast<double>(m_m1) / m_n1;
                 double m2_div_n2 = static_cast<double>(m_m2) / m_n2;
 
-                DftProgramBitReverse<FP> bit_reverse_1_m1(GROUP_SIZE_1D, 1, m_m1);
-                DftProgramBitReverse<FP> bit_reverse_1_m2(GROUP_SIZE_1D, 1, m_m2);
-
-                DftProgramFftGlobal<FP> fft_g_1_m1(1, m_m1, GROUP_SIZE_1D);
-                DftProgramFftGlobal<FP> fft_g_1_m2(1, m_m2, GROUP_SIZE_1D);
-
-                DftProgramFftShared<FP> fft_1_m1(1, m_m1, shared_size<FP>(m_m1), group_size<FP>(m_m1),
-                                                 m_m1 <= shared_size<FP>(m_m1));
-                DftProgramFftShared<FP> fft_1_m2(1, m_m2, shared_size<FP>(m_m2), group_size<FP>(m_m2),
-                                                 m_m2 <= shared_size<FP>(m_m2));
+                Fft1d<FP> fft_1_m1(1, m_m1);
+                Fft1d<FP> fft_1_m2(1, m_m2);
 
                 // Compute the diagonal D in Lemma 13.2: use the radix-2 FFT
                 // Формулы 13.13, 13.26.
 
                 m_d1_fwd.write(conv<FP>(compute_h2(m_n1, m_m1, compute_h(m_n1, false, 1.0))));
-                fft1d(false, fft_1_m1, bit_reverse_1_m1, m_fft_g_memory, fft_g_1_m1, &m_d1_fwd);
+                fft_1_m1.exec(false, &m_d1_fwd);
 
                 m_d1_inv.write(conv<FP>(compute_h2(m_n1, m_m1, compute_h(m_n1, true, m1_div_n1))));
-                fft1d(true, fft_1_m1, bit_reverse_1_m1, m_fft_g_memory, fft_g_1_m1, &m_d1_inv);
+                fft_1_m1.exec(true, &m_d1_inv);
 
                 m_d2_fwd.write(conv<FP>(compute_h2(m_n2, m_m2, compute_h(m_n2, false, 1.0))));
-                fft1d(false, fft_1_m2, bit_reverse_1_m2, m_fft_g_memory, fft_g_1_m2, &m_d2_fwd);
+                fft_1_m2.exec(false, &m_d2_fwd);
 
                 m_d2_inv.write(conv<FP>(compute_h2(m_n2, m_m2, compute_h(m_n2, true, m2_div_n2))));
-                fft1d(true, fft_1_m2, bit_reverse_1_m2, m_fft_g_memory, fft_g_1_m2, &m_d2_inv);
+                fft_1_m2.exec(true, &m_d2_inv);
         }
 
         void record_commands(bool inverse, Commands* commands)
@@ -463,7 +465,7 @@ class Impl final : public DFTCompute, public DFTComputeTexture
                         });
                         commands->add("row fft1d : ", [=, this]()
                         {
-                                fft1d(inverse, m_fft_n2_m1, m_bit_reverse_n2_m1, m_fft_g_memory, m_fft_g_n2_m1, &m_buffer);
+                                m_fft_n2_m1.exec(inverse, &m_buffer);
                         });
                         commands->add("row mul d : ", [=, this]()
                         {
@@ -471,7 +473,7 @@ class Impl final : public DFTCompute, public DFTComputeTexture
                         });
                         commands->add("row fft1d : ", [=, this]()
                         {
-                                fft1d(!inverse, m_fft_n2_m1, m_bit_reverse_n2_m1, m_fft_g_memory, m_fft_g_n2_m1, &m_buffer);
+                                m_fft_n2_m1.exec(!inverse, &m_buffer);
                         });
                         commands->add("row mul fr: ", [=, this]()
                         {
@@ -488,7 +490,7 @@ class Impl final : public DFTCompute, public DFTComputeTexture
                         });
                         commands->add("col fft1d : ", [=, this]()
                         {
-                                fft1d(inverse, m_fft_n1_m2, m_bit_reverse_n1_m2, m_fft_g_memory, m_fft_g_n1_m2, &m_buffer);
+                                m_fft_n1_m2.exec(inverse, &m_buffer);
                         });
                         commands->add("col mul d : ", [=, this]()
                         {
@@ -496,7 +498,7 @@ class Impl final : public DFTCompute, public DFTComputeTexture
                         });
                         commands->add("col fft1d : ", [=, this]()
                         {
-                                fft1d(!inverse, m_fft_n1_m2, m_bit_reverse_n1_m2, m_fft_g_memory, m_fft_g_n1_m2, &m_buffer);
+                                m_fft_n1_m2.exec(!inverse, &m_buffer);
                         });
                         commands->add("col mul fr: ", [=, this]()
                         {
@@ -526,14 +528,10 @@ public:
                   m_d2_inv(m_m2),
                   m_x_d(m_n1 * m_n2),
                   m_buffer(std::max(m_m1 * m_n2, m_m2 * m_n1)),
-                  m_bit_reverse_n2_m1(GROUP_SIZE_1D, m_n2, m_m1),
-                  m_bit_reverse_n1_m2(GROUP_SIZE_1D, m_n1, m_m2),
                   m_mul(GROUP_SIZE_2D, m_n1, m_n2, m_m1, m_m2),
                   m_mul_d(GROUP_SIZE_2D, m_n1, m_n2, m_m1, m_m2),
-                  m_fft_g_n2_m1(m_n2, m_m1, GROUP_SIZE_1D),
-                  m_fft_g_n1_m2(m_n1, m_m2, GROUP_SIZE_1D),
-                  m_fft_n2_m1(m_n2, m_m1, shared_size<FP>(m_m1), group_size<FP>(m_m1), m_m1 <= shared_size<FP>(m_m1)),
-                  m_fft_n1_m2(m_n1, m_m2, shared_size<FP>(m_m2), group_size<FP>(m_m2), m_m2 <= shared_size<FP>(m_m2))
+                  m_fft_n2_m1(m_n2, m_m1),
+                  m_fft_n1_m2(m_n1, m_m2)
         {
                 if (m_n1 < 1 || m_n2 < 1)
                 {
