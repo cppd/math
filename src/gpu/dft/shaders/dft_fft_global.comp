@@ -67,17 +67,17 @@ void main()
         complex v_t = data[index_t];
         complex v_u = data[index_u];
 
-        complex twiddle_factor = complex(cos(two_pi_div_m * idx), sin(two_pi_div_m * idx));
-
-        complex k = complex_mul(twiddle_factor, v_u);
-
         if (!INVERSE)
         {
+                complex twiddle_factor = complex(cos(two_pi_div_m * idx), -sin(two_pi_div_m * idx));
+                complex k = complex_mul(twiddle_factor, v_u);
                 data[index_t] = v_t + k;
                 data[index_u] = v_t - k;
         }
         else
         {
+                complex twiddle_factor = complex(cos(two_pi_div_m * idx), sin(two_pi_div_m * idx));
+                complex k = complex_mul(twiddle_factor, v_u);
                 data[index_t] = (v_t + k) * 0.5;
                 data[index_u] = (v_t - k) * 0.5;
         }

@@ -59,6 +59,7 @@ Chapter 13: FFTs for Arbitrary N.
 #include "graphics/opengl/time.h"
 
 #include <complex>
+#include <optional>
 #include <sstream>
 #include <type_traits>
 #include <vector>
@@ -293,65 +294,69 @@ int group_size(int dft_size)
 template <typename FP>
 class Fft1d
 {
-        DftProgramBitReverse<FP> m_bit_reverse;
-        DftMemoryFftGlobal<FP> m_fft_g_memory;
-        DftProgramFftGlobal<FP> m_fft_g;
+        int m_n;
+        int m_n_shared;
+        bool m_only_shared;
         DftProgramFftShared<FP> m_fft;
+        std::optional<DftProgramBitReverse<FP>> m_bit_reverse;
+        std::optional<DftProgramFftGlobal<FP>> m_fft_g;
+        std::optional<DftMemoryFftGlobal<FP>> m_fft_g_memory;
 
 public:
         Fft1d(int count, int n)
-                : m_bit_reverse(GROUP_SIZE_1D, count, n),
-                  m_fft_g(count, n, GROUP_SIZE_1D),
-                  m_fft(count, n, shared_size<FP>(n), group_size<FP>(n), n <= shared_size<FP>(n))
+                : m_n(n),
+                  m_n_shared(shared_size<FP>(n)),
+                  m_only_shared(n <= m_n_shared),
+                  m_fft(count, n, shared_size<FP>(n), group_size<FP>(n), m_only_shared)
         {
+                ASSERT((1 << m_fft.n_bits()) == m_fft.n());
+                ASSERT(m_n_shared == m_fft.shared_size());
+                ASSERT(m_only_shared == m_fft.reverse_input());
+
+                m_bit_reverse.emplace(GROUP_SIZE_1D, count, n);
+                m_fft_g.emplace(count, n, GROUP_SIZE_1D);
+                m_fft_g_memory.emplace();
+                ASSERT(m_bit_reverse->n() == n);
+                ASSERT(m_bit_reverse->n() == m_fft_g->n());
+                ASSERT(m_bit_reverse->count() == m_fft_g->count());
+                ASSERT(m_fft.n() == m_fft_g->n());
+                ASSERT(m_fft.count() == m_fft_g->count());
+                if (m_only_shared)
+                {
+                        m_fft_g_memory.reset();
+                        m_fft_g.reset();
+                        m_bit_reverse.reset();
+                }
         }
 
         void exec(bool inverse, const DeviceMemory<std::complex<FP>>* data)
         {
-                const int n = m_fft.n();
-
-                if (n == 1)
+                if (m_n == 1)
                 {
                         return;
                 }
 
-                const int shared_size = m_fft.shared_size();
-
-                if (n <= shared_size)
+                if (m_only_shared)
                 {
-                        ASSERT(m_fft.reverse_input());
                         m_fft.exec(inverse, *data);
                         return;
                 }
-
-                const int n_bits = m_fft.n_bits();
-                ASSERT((1 << n_bits) == n);
 
                 // Если n превышает максимум обрабатываемых данных shared_size, то вначале
                 // надо отдельно выполнить перестановку данных, а потом запускать функции
                 // с отключенной перестановкой, иначе одни запуски будут вносить изменения
                 // в данные других запусков, так как результат пишется в исходные данные.
-
-                ASSERT(m_bit_reverse.n() == n && m_bit_reverse.count() == m_fft.count());
-                m_bit_reverse.exec(*data);
-
-                ASSERT(!m_fft.reverse_input());
+                m_bit_reverse->exec(*data);
                 m_fft.exec(inverse, *data);
 
                 // Досчитать до нужного размера уже в глобальной памяти без разделяемой
-
-                ASSERT(m_fft.n() == m_fft_g.n());
-                ASSERT(m_fft.count() == m_fft_g.count());
-
-                m_fft_g_memory.set_buffer(*data);
-
-                int m_div_2 = shared_size;
-                FP two_pi_div_m = inverse ? (PI<FP> / m_div_2) : -(PI<FP> / m_div_2);
-                for (; m_div_2 < n; m_div_2 <<= 1, two_pi_div_m /= 2)
+                m_fft_g_memory->set_buffer(*data);
+                int m_div_2 = m_n_shared; // половина размера текущих отдельных БПФ
+                FP two_pi_div_m = PI<FP> / m_div_2;
+                for (; m_div_2 < m_n; m_div_2 <<= 1, two_pi_div_m /= 2)
                 {
-                        // m_div_2 - половина размера текущих отдельных БПФ
-                        m_fft_g_memory.set_data(two_pi_div_m, m_div_2);
-                        m_fft_g.exec(inverse, m_fft_g_memory);
+                        m_fft_g_memory->set_data(two_pi_div_m, m_div_2);
+                        m_fft_g->exec(inverse, *m_fft_g_memory);
                 }
         }
 };
