@@ -352,7 +352,7 @@ enum class TestSize
 TestSize find_test_size()
 {
         RandomEngineWithSeed<std::mt19937_64> engine;
-        std::uniform_int_distribution<int> uid(1, 20);
+        std::uniform_int_distribution<int> uid(1, 10);
         return (uid(engine) != 1) ? TestSize::Small : TestSize::Big;
 }
 
