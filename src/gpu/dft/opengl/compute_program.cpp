@@ -191,38 +191,6 @@ void DftProgramBitReverse<T>::exec(const opengl::Buffer& data) const
 //
 
 template <typename T>
-DftMemoryFftGlobalData<T>::DftMemoryFftGlobalData(T two_pi_div_m, int m_div_2) : m_data(sizeof(Data), GL_MAP_WRITE_BIT)
-{
-        Data d;
-        d.m_div_2 = m_div_2;
-        d.two_pi_div_m = two_pi_div_m;
-        opengl::map_and_write_to_buffer(m_data, d);
-}
-
-template <typename T>
-void DftMemoryFftGlobalData<T>::bind() const
-{
-        glBindBufferBase(GL_UNIFORM_BUFFER, DATA_BINDING, m_data);
-}
-
-//
-
-template <typename T>
-void DftMemoryFftGlobalBuffer<T>::set(const opengl::Buffer& buffer)
-{
-        m_buffer = buffer;
-}
-
-template <typename T>
-void DftMemoryFftGlobalBuffer<T>::bind() const
-{
-        ASSERT(m_buffer > 0);
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, BUFFER_BINDING, m_buffer);
-}
-
-//
-
-template <typename T>
 DftProgramFftGlobal<T>::DftProgramFftGlobal(int count, int n, int group_size)
         : m_count(count),
           m_n(n),
@@ -423,8 +391,6 @@ void DftProgramFftShared<T>::exec(bool inverse, const opengl::Buffer& data) cons
 //
 
 template class DftProgramBitReverse<float>;
-template class DftMemoryFftGlobalData<float>;
-template class DftMemoryFftGlobalBuffer<float>;
 template class DftProgramFftGlobal<float>;
 template class DftProgramCopyInput<float>;
 template class DftProgramCopyOutput<float>;

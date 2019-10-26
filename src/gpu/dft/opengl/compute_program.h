@@ -41,36 +41,6 @@ public:
 };
 
 template <typename T>
-class DftMemoryFftGlobalData final
-{
-        static constexpr int DATA_BINDING = 0;
-
-        struct Data
-        {
-                GLuint m_div_2;
-                T two_pi_div_m;
-        };
-
-        opengl::Buffer m_data;
-
-public:
-        DftMemoryFftGlobalData(T two_pi_div_m, int m_div_2);
-        void bind() const;
-};
-
-template <typename T>
-class DftMemoryFftGlobalBuffer final
-{
-        static constexpr int BUFFER_BINDING = 1;
-
-        GLuint m_buffer = 0;
-
-public:
-        void set(const opengl::Buffer& buffer);
-        void bind() const;
-};
-
-template <typename T>
 class DftProgramFftGlobal final
 {
         const int m_count, m_n;

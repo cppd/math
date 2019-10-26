@@ -45,6 +45,7 @@ Chapter 13: FFTs for Arbitrary N.
 
 #include "compute.h"
 
+#include "compute_memory.h"
 #include "compute_program.h"
 
 #include "com/bits.h"
