@@ -188,27 +188,10 @@ void DftProgramBitReverse<T>::exec(const opengl::Buffer& data) const
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 }
 
-template <typename T>
-int DftProgramBitReverse<T>::count() const
-{
-        return m_count;
-}
-
-template <typename T>
-int DftProgramBitReverse<T>::n() const
-{
-        return m_n;
-}
-
 //
 
 template <typename T>
-DftMemoryFftGlobal<T>::DftMemoryFftGlobal() : m_data(sizeof(Data), GL_MAP_WRITE_BIT)
-{
-}
-
-template <typename T>
-void DftMemoryFftGlobal<T>::set_data(T two_pi_div_m, int m_div_2) const
+DftMemoryFftGlobalData<T>::DftMemoryFftGlobalData(T two_pi_div_m, int m_div_2) : m_data(sizeof(Data), GL_MAP_WRITE_BIT)
 {
         Data d;
         d.m_div_2 = m_div_2;
@@ -217,15 +200,23 @@ void DftMemoryFftGlobal<T>::set_data(T two_pi_div_m, int m_div_2) const
 }
 
 template <typename T>
-void DftMemoryFftGlobal<T>::set_buffer(const opengl::Buffer& buffer)
+void DftMemoryFftGlobalData<T>::bind() const
+{
+        glBindBufferBase(GL_UNIFORM_BUFFER, DATA_BINDING, m_data);
+}
+
+//
+
+template <typename T>
+void DftMemoryFftGlobalBuffer<T>::set(const opengl::Buffer& buffer)
 {
         m_buffer = buffer;
 }
 
 template <typename T>
-void DftMemoryFftGlobal<T>::bind() const
+void DftMemoryFftGlobalBuffer<T>::bind() const
 {
-        glBindBufferBase(GL_UNIFORM_BUFFER, DATA_BINDING, m_data);
+        ASSERT(m_buffer > 0);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, BUFFER_BINDING, m_buffer);
 }
 
@@ -242,10 +233,8 @@ DftProgramFftGlobal<T>::DftProgramFftGlobal(int count, int n, int group_size)
 }
 
 template <typename T>
-void DftProgramFftGlobal<T>::exec(bool inverse, const DftMemoryFftGlobal<T>& memory) const
+void DftProgramFftGlobal<T>::exec(bool inverse) const
 {
-        memory.bind();
-
         if (inverse)
         {
                 m_fft_inverse.dispatch_compute(m_group_count, 1, 1);
@@ -434,7 +423,8 @@ void DftProgramFftShared<T>::exec(bool inverse, const opengl::Buffer& data) cons
 //
 
 template class DftProgramBitReverse<float>;
-template class DftMemoryFftGlobal<float>;
+template class DftMemoryFftGlobalData<float>;
+template class DftMemoryFftGlobalBuffer<float>;
 template class DftProgramFftGlobal<float>;
 template class DftProgramCopyInput<float>;
 template class DftProgramCopyOutput<float>;

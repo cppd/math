@@ -300,7 +300,8 @@ class Fft1d
         DftProgramFftShared<FP> m_fft;
         std::optional<DftProgramBitReverse<FP>> m_bit_reverse;
         std::optional<DftProgramFftGlobal<FP>> m_fft_g;
-        std::optional<DftMemoryFftGlobal<FP>> m_fft_g_memory;
+        std::optional<DftMemoryFftGlobalBuffer<FP>> m_fft_g_memory_buffer;
+        std::vector<DftMemoryFftGlobalData<FP>> m_fft_g_memory_data;
 
 public:
         Fft1d(int count, int n)
@@ -309,24 +310,24 @@ public:
                   m_only_shared(n <= m_n_shared),
                   m_fft(count, n, shared_size<FP>(n), group_size<FP>(n), m_only_shared)
         {
-                ASSERT((1 << m_fft.n_bits()) == m_fft.n());
-                ASSERT(m_n_shared == m_fft.shared_size());
-                ASSERT(m_only_shared == m_fft.reverse_input());
+                if (m_only_shared)
+                {
+                        return;
+                }
 
                 m_bit_reverse.emplace(GROUP_SIZE_1D, count, n);
                 m_fft_g.emplace(count, n, GROUP_SIZE_1D);
-                m_fft_g_memory.emplace();
-                ASSERT(m_bit_reverse->n() == n);
-                ASSERT(m_bit_reverse->n() == m_fft_g->n());
-                ASSERT(m_bit_reverse->count() == m_fft_g->count());
-                ASSERT(m_fft.n() == m_fft_g->n());
-                ASSERT(m_fft.count() == m_fft_g->count());
-                if (m_only_shared)
+                m_fft_g_memory_buffer.emplace();
+
+                // Половина размера текущих отдельных ДПФ
+                int m_div_2 = m_n_shared;
+                FP two_pi_div_m = PI<FP> / m_div_2;
+                for (; m_div_2 < m_n; m_div_2 <<= 1, two_pi_div_m /= 2)
                 {
-                        m_fft_g_memory.reset();
-                        m_fft_g.reset();
-                        m_bit_reverse.reset();
+                        m_fft_g_memory_data.emplace_back(two_pi_div_m, m_div_2);
                 }
+                ASSERT(m_fft_g_memory_data.size() > 0);
+                ASSERT(m_n == (m_n_shared << m_fft_g_memory_data.size()));
         }
 
         void exec(bool inverse, const DeviceMemory<std::complex<FP>>* data)
@@ -349,14 +350,13 @@ public:
                 m_bit_reverse->exec(*data);
                 m_fft.exec(inverse, *data);
 
+                m_fft_g_memory_buffer->set(*data);
+                m_fft_g_memory_buffer->bind();
                 // Досчитать до нужного размера уже в глобальной памяти без разделяемой
-                m_fft_g_memory->set_buffer(*data);
-                int m_div_2 = m_n_shared; // половина размера текущих отдельных БПФ
-                FP two_pi_div_m = PI<FP> / m_div_2;
-                for (; m_div_2 < m_n; m_div_2 <<= 1, two_pi_div_m /= 2)
+                for (const DftMemoryFftGlobalData<FP>& memory_data : m_fft_g_memory_data)
                 {
-                        m_fft_g_memory->set_data(two_pi_div_m, m_div_2);
-                        m_fft_g->exec(inverse, *m_fft_g_memory);
+                        memory_data.bind();
+                        m_fft_g->exec(inverse);
                 }
         }
 };

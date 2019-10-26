@@ -38,16 +38,12 @@ public:
         DftProgramBitReverse(int group_size, int count, int n);
 
         void exec(const opengl::Buffer& data) const;
-
-        int count() const;
-        int n() const;
 };
 
 template <typename T>
-class DftMemoryFftGlobal final
+class DftMemoryFftGlobalData final
 {
         static constexpr int DATA_BINDING = 0;
-        static constexpr int BUFFER_BINDING = 1;
 
         struct Data
         {
@@ -56,12 +52,21 @@ class DftMemoryFftGlobal final
         };
 
         opengl::Buffer m_data;
-        GLuint m_buffer;
 
 public:
-        DftMemoryFftGlobal();
-        void set_data(T two_pi_div_m, int m_div_2) const;
-        void set_buffer(const opengl::Buffer& buffer);
+        DftMemoryFftGlobalData(T two_pi_div_m, int m_div_2);
+        void bind() const;
+};
+
+template <typename T>
+class DftMemoryFftGlobalBuffer final
+{
+        static constexpr int BUFFER_BINDING = 1;
+
+        GLuint m_buffer = 0;
+
+public:
+        void set(const opengl::Buffer& buffer);
         void bind() const;
 };
 
@@ -75,18 +80,7 @@ class DftProgramFftGlobal final
 
 public:
         DftProgramFftGlobal(int count, int n, int group_size);
-
-        int count() const
-        {
-                return m_count;
-        }
-
-        int n() const
-        {
-                return m_n;
-        }
-
-        void exec(bool inverse, const DftMemoryFftGlobal<T>& memory) const;
+        void exec(bool inverse) const;
 };
 
 template <typename T>
@@ -181,32 +175,6 @@ class DftProgramFftShared final
 
 public:
         DftProgramFftShared(int count, int n, int shared_size, int group_size, bool reverse_input);
-
-        int count() const
-        {
-                return m_count;
-        }
-
-        int n() const
-        {
-                return m_n;
-        }
-
-        int n_bits() const
-        {
-                return m_n_bits;
-        }
-
-        int shared_size() const
-        {
-                return m_shared_size;
-        }
-
-        bool reverse_input() const
-        {
-                return m_reverse_input;
-        }
-
         void exec(bool inverse, const opengl::Buffer& data) const;
 };
 }
