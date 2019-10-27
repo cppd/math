@@ -17,7 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "compute.h"
 
-#include "compute_program.h"
+#include "compute_filter.h"
+#include "compute_merge.h"
+#include "compute_prepare.h"
 
 #include "com/error.h"
 
