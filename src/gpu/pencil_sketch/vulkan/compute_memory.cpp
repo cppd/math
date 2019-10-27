@@ -57,20 +57,14 @@ std::vector<VkDescriptorSetLayoutBinding> PencilSketchComputeMemory::descriptor_
         return bindings;
 }
 
-PencilSketchComputeMemory::PencilSketchComputeMemory(const vulkan::Device& device)
-        : m_descriptor_set_layout(vulkan::create_descriptor_set_layout(device, descriptor_set_layout_bindings())),
-          m_descriptors(device, 1, m_descriptor_set_layout, descriptor_set_layout_bindings())
-{
-}
-
 unsigned PencilSketchComputeMemory::set_number()
 {
         return SET_NUMBER;
 }
 
-VkDescriptorSetLayout PencilSketchComputeMemory::descriptor_set_layout() const
+PencilSketchComputeMemory::PencilSketchComputeMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout)
+        : m_descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
-        return m_descriptor_set_layout;
 }
 
 const VkDescriptorSet& PencilSketchComputeMemory::descriptor_set() const

@@ -29,14 +29,11 @@ class PencilSketchComputeProgram final
 {
         const vulkan::VulkanInstance& m_instance;
 
-        PencilSketchComputeMemory m_memory;
+        vulkan::DescriptorSetLayout m_descriptor_set_layout;
+        vulkan::PipelineLayout m_pipeline_layout;
         PencilSketchComputeConstant m_constant;
         vulkan::ComputeShader m_shader;
-        vulkan::PipelineLayout m_pipeline_layout;
         vulkan::Pipeline m_pipeline;
-
-        unsigned m_groups_x = 0;
-        unsigned m_groups_y = 0;
 
 public:
         PencilSketchComputeProgram(const vulkan::VulkanInstance& instance);
@@ -48,9 +45,11 @@ public:
         PencilSketchComputeProgram(PencilSketchComputeProgram&&) = default;
         ~PencilSketchComputeProgram() = default;
 
-        void create_buffers(VkSampler sampler, const vulkan::ImageWithMemory& input, const vulkan::ImageWithMemory& objects,
-                            unsigned x, unsigned y, unsigned width, unsigned height, const vulkan::ImageWithMemory& output);
-        void delete_buffers();
-        void commands(VkCommandBuffer command_buffer) const;
+        void create_pipeline(unsigned group_size, unsigned x, unsigned y, unsigned width, unsigned height);
+        void delete_pipeline();
+
+        VkDescriptorSetLayout descriptor_set_layout() const;
+        VkPipelineLayout pipeline_layout() const;
+        VkPipeline pipeline() const;
 };
 }

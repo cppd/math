@@ -34,13 +34,15 @@ class PencilSketchComputeMemory final
         static constexpr int OUTPUT_BINDING = 1;
         static constexpr int OBJECTS_BINDING = 2;
 
-        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
-
-        vulkan::DescriptorSetLayout m_descriptor_set_layout;
         vulkan::Descriptors m_descriptors;
 
 public:
-        PencilSketchComputeMemory(const vulkan::Device& device);
+        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
+        static unsigned set_number();
+
+        //
+
+        PencilSketchComputeMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout);
 
         PencilSketchComputeMemory(const PencilSketchComputeMemory&) = delete;
         PencilSketchComputeMemory& operator=(const PencilSketchComputeMemory&) = delete;
@@ -51,8 +53,6 @@ public:
 
         //
 
-        static unsigned set_number();
-        VkDescriptorSetLayout descriptor_set_layout() const;
         const VkDescriptorSet& descriptor_set() const;
 
         //

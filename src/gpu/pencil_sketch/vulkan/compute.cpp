@@ -17,9 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "compute.h"
 
+#include "compute_memory.h"
 #include "compute_program.h"
 
 #include "com/error.h"
+#include "com/groups.h"
 
 #include <optional>
 #include <thread>
@@ -29,6 +31,8 @@ constexpr std::initializer_list<vulkan::PhysicalDeviceFeatures> REQUIRED_DEVICE_
 {
 };
 // clang-format on
+
+constexpr unsigned GROUP_SIZE = 16;
 
 namespace gpu_vulkan
 {
@@ -99,6 +103,10 @@ class Impl final : public PencilSketchCompute
         const vulkan::VulkanInstance& m_instance;
 
         PencilSketchComputeProgram m_program;
+        PencilSketchComputeMemory m_memory;
+
+        unsigned m_groups_x = 0;
+        unsigned m_groups_y = 0;
 
         VkImage m_image = VK_NULL_HANDLE;
 
@@ -108,9 +116,14 @@ class Impl final : public PencilSketchCompute
 
                 //
 
+                ASSERT(m_groups_x > 0 && m_groups_y > 0);
+
                 image_barrier_before(command_buffer, m_image);
 
-                m_program.commands(command_buffer);
+                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_program.pipeline());
+                vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_program.pipeline_layout(),
+                                        PencilSketchComputeMemory::set_number(), 1, &m_memory.descriptor_set(), 0, nullptr);
+                vkCmdDispatch(command_buffer, m_groups_x, m_groups_y, 1);
 
                 image_barrier_after(command_buffer, m_image);
         }
@@ -125,7 +138,25 @@ class Impl final : public PencilSketchCompute
 
                 m_image = output.image();
 
-                m_program.create_buffers(sampler, input, objects, x, y, width, height, output);
+                //
+
+                ASSERT(sampler != VK_NULL_HANDLE);
+                ASSERT(input.width() == objects.width() && input.height() == objects.height());
+                ASSERT(output.width() == width && output.height() == height);
+                ASSERT(width > 0 && height > 0);
+                ASSERT(x + width <= objects.width());
+                ASSERT(y + height <= objects.height());
+
+                m_memory.set_input(sampler, input);
+                m_memory.set_object_image(objects);
+                m_memory.set_output_image(output);
+
+                //
+
+                m_program.create_pipeline(GROUP_SIZE, x, y, width, height);
+
+                m_groups_x = group_count(width, GROUP_SIZE);
+                m_groups_y = group_count(height, GROUP_SIZE);
         }
 
         void delete_buffers() override
@@ -134,13 +165,17 @@ class Impl final : public PencilSketchCompute
 
                 //
 
-                m_program.delete_buffers();
+                m_groups_x = 0;
+                m_groups_y = 0;
+
+                m_program.delete_pipeline();
 
                 m_image = VK_NULL_HANDLE;
         }
 
 public:
-        Impl(const vulkan::VulkanInstance& instance) : m_instance(instance), m_program(instance)
+        Impl(const vulkan::VulkanInstance& instance)
+                : m_instance(instance), m_program(instance), m_memory(instance.device(), m_program.descriptor_set_layout())
         {
         }
 
