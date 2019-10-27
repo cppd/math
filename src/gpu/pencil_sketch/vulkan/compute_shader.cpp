@@ -15,7 +15,12 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "compute_memory.h"
+#include "compute_shader.h"
+
+#include "shader_source.h"
+
+#include "graphics/vulkan/create.h"
+#include "graphics/vulkan/pipeline.h"
 
 namespace gpu_vulkan
 {
@@ -176,5 +181,50 @@ const void* PencilSketchComputeConstant::data() const
 size_t PencilSketchComputeConstant::size() const
 {
         return sizeof(m_data);
+}
+
+//
+
+PencilSketchComputeProgram::PencilSketchComputeProgram(const vulkan::Device& device)
+        : m_device(device),
+          m_descriptor_set_layout(
+                  vulkan::create_descriptor_set_layout(device, PencilSketchComputeMemory::descriptor_set_layout_bindings())),
+          m_pipeline_layout(
+                  vulkan::create_pipeline_layout(device, {PencilSketchComputeMemory::set_number()}, {m_descriptor_set_layout})),
+          m_shader(device, pencil_sketch_compute_comp(), "main")
+{
+}
+
+VkDescriptorSetLayout PencilSketchComputeProgram::descriptor_set_layout() const
+{
+        return m_descriptor_set_layout;
+}
+
+VkPipelineLayout PencilSketchComputeProgram::pipeline_layout() const
+{
+        return m_pipeline_layout;
+}
+
+VkPipeline PencilSketchComputeProgram::pipeline() const
+{
+        ASSERT(m_pipeline != VK_NULL_HANDLE);
+        return m_pipeline;
+}
+
+void PencilSketchComputeProgram::create_pipeline(unsigned group_size, unsigned x, unsigned y, unsigned width, unsigned height)
+{
+        m_constant.set(group_size, x, y, width, height);
+
+        vulkan::ComputePipelineCreateInfo info;
+        info.device = &m_device;
+        info.pipeline_layout = m_pipeline_layout;
+        info.shader = &m_shader;
+        info.constants = &m_constant;
+        m_pipeline = create_compute_pipeline(info);
+}
+
+void PencilSketchComputeProgram::delete_pipeline()
+{
+        m_pipeline = vulkan::Pipeline();
 }
 }

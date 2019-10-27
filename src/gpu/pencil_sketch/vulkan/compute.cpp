@@ -17,8 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "compute.h"
 
-#include "compute_memory.h"
-#include "compute_program.h"
+#include "compute_shader.h"
 
 #include "com/error.h"
 #include "com/groups.h"
@@ -175,7 +174,9 @@ class Impl final : public PencilSketchCompute
 
 public:
         Impl(const vulkan::VulkanInstance& instance)
-                : m_instance(instance), m_program(instance), m_memory(instance.device(), m_program.descriptor_set_layout())
+                : m_instance(instance),
+                  m_program(instance.device()),
+                  m_memory(instance.device(), m_program.descriptor_set_layout())
         {
         }
 

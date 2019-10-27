@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/vulkan/constant.h"
 #include "graphics/vulkan/descriptor.h"
 #include "graphics/vulkan/objects.h"
+#include "graphics/vulkan/shader.h"
 
 #include <vector>
 
@@ -84,5 +85,33 @@ public:
         PencilSketchComputeConstant();
 
         void set(int32_t local_size, int32_t x, int32_t y, int32_t width, int32_t height);
+};
+
+class PencilSketchComputeProgram final
+{
+        const vulkan::Device& m_device;
+
+        vulkan::DescriptorSetLayout m_descriptor_set_layout;
+        vulkan::PipelineLayout m_pipeline_layout;
+        PencilSketchComputeConstant m_constant;
+        vulkan::ComputeShader m_shader;
+        vulkan::Pipeline m_pipeline;
+
+public:
+        PencilSketchComputeProgram(const vulkan::Device& device);
+
+        PencilSketchComputeProgram(const PencilSketchComputeProgram&) = delete;
+        PencilSketchComputeProgram& operator=(const PencilSketchComputeProgram&) = delete;
+        PencilSketchComputeProgram& operator=(PencilSketchComputeProgram&&) = delete;
+
+        PencilSketchComputeProgram(PencilSketchComputeProgram&&) = default;
+        ~PencilSketchComputeProgram() = default;
+
+        void create_pipeline(unsigned group_size, unsigned x, unsigned y, unsigned width, unsigned height);
+        void delete_pipeline();
+
+        VkDescriptorSetLayout descriptor_set_layout() const;
+        VkPipelineLayout pipeline_layout() const;
+        VkPipeline pipeline() const;
 };
 }
