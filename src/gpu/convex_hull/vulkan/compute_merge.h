@@ -20,7 +20,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/vulkan/buffers.h"
 #include "graphics/vulkan/constant.h"
 #include "graphics/vulkan/descriptor.h"
-#include "graphics/vulkan/instance.h"
 #include "graphics/vulkan/objects.h"
 #include "graphics/vulkan/shader.h"
 
@@ -85,7 +84,7 @@ public:
 
 class ConvexHullProgramMerge final
 {
-        const vulkan::VulkanInstance& m_instance;
+        const vulkan::Device& m_device;
 
         ConvexHullMergeMemory m_memory;
         ConvexHullMergeConstant m_constant;
@@ -94,7 +93,7 @@ class ConvexHullProgramMerge final
         vulkan::Pipeline m_pipeline;
 
 public:
-        ConvexHullProgramMerge(const vulkan::VulkanInstance& instance);
+        ConvexHullProgramMerge(const vulkan::Device& device);
 
         ConvexHullProgramMerge(const ConvexHullProgramMerge&) = delete;
         ConvexHullProgramMerge& operator=(const ConvexHullProgramMerge&) = delete;
@@ -103,7 +102,8 @@ public:
         ConvexHullProgramMerge(ConvexHullProgramMerge&&) = default;
         ~ConvexHullProgramMerge() = default;
 
-        void create_buffers(unsigned height, const vulkan::BufferWithMemory& lines_buffer);
+        void create_buffers(unsigned height, unsigned local_size_x, unsigned iteration_count,
+                            const vulkan::BufferWithMemory& lines_buffer);
         void delete_buffers();
         void commands(VkCommandBuffer command_buffer) const;
 };

@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "compute_prepare.h"
 
 #include "com/error.h"
+#include "gpu/convex_hull/com/com.h"
 
 #include <optional>
 #include <thread>
@@ -36,6 +37,18 @@ namespace gpu_vulkan
 {
 namespace
 {
+int group_size_merge(int height, const VkPhysicalDeviceLimits& limits)
+{
+        return convex_hull_group_size_merge(height, limits.maxComputeWorkGroupSize[0], limits.maxComputeWorkGroupInvocations,
+                                            limits.maxComputeSharedMemorySize);
+}
+
+int group_size_prepare(int width, const VkPhysicalDeviceLimits& limits)
+{
+        return convex_hull_group_size_prepare(width, limits.maxComputeWorkGroupSize[0], limits.maxComputeWorkGroupInvocations,
+                                              limits.maxComputeSharedMemorySize);
+}
+
 void buffer_barrier(VkCommandBuffer command_buffer, VkBuffer buffer, VkAccessFlags dst_access_mask,
                     VkPipelineStageFlags dst_stage_mask)
 {
@@ -107,8 +120,10 @@ class Impl final : public ConvexHullCompute
                 m_points_buffer = points_buffer;
                 m_point_count_buffer = point_count_buffer;
 
-                m_program_prepare.create_buffers(objects, x, y, width, height, *m_lines_buffer);
-                m_program_merge.create_buffers(height, *m_lines_buffer);
+                m_program_prepare.create_buffers(objects, group_size_prepare(width, m_instance.limits()), x, y, width, height,
+                                                 *m_lines_buffer);
+                m_program_merge.create_buffers(height, group_size_merge(height, m_instance.limits()),
+                                               convex_hull_iteration_count_merge(height), *m_lines_buffer);
                 m_program_filter.create_buffers(height, *m_lines_buffer, points_buffer, point_count_buffer);
         }
 
@@ -129,7 +144,10 @@ class Impl final : public ConvexHullCompute
 
 public:
         Impl(const vulkan::VulkanInstance& instance)
-                : m_instance(instance), m_program_prepare(instance), m_program_merge(instance), m_program_filter(instance)
+                : m_instance(instance),
+                  m_program_prepare(instance.device()),
+                  m_program_merge(instance.device()),
+                  m_program_filter(instance.device())
         {
         }
 

@@ -19,7 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "shader_source.h"
 
-#include "gpu/convex_hull/com/com.h"
 #include "graphics/vulkan/create.h"
 #include "graphics/vulkan/pipeline.h"
 
@@ -27,15 +26,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpu_vulkan
 {
-namespace
-{
-int group_size_merge(int height, const VkPhysicalDeviceLimits& limits)
-{
-        return convex_hull_group_size_merge(height, limits.maxComputeWorkGroupSize[0], limits.maxComputeWorkGroupInvocations,
-                                            limits.maxComputeSharedMemorySize);
-}
-}
-
 std::vector<VkDescriptorSetLayoutBinding> ConvexHullMergeMemory::descriptor_set_layout_bindings()
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
@@ -148,25 +138,25 @@ size_t ConvexHullMergeConstant::size() const
 
 //
 
-ConvexHullProgramMerge::ConvexHullProgramMerge(const vulkan::VulkanInstance& instance)
-        : m_instance(instance),
-          m_memory(instance.device()),
-          m_shader(instance.device(), convex_hull_merge_comp(), "main"),
-          m_pipeline_layout(
-                  vulkan::create_pipeline_layout(instance.device(), {m_memory.set_number()}, {m_memory.descriptor_set_layout()}))
+ConvexHullProgramMerge::ConvexHullProgramMerge(const vulkan::Device& device)
+        : m_device(device),
+          m_memory(device),
+          m_shader(device, convex_hull_merge_comp(), "main"),
+          m_pipeline_layout(vulkan::create_pipeline_layout(device, {m_memory.set_number()}, {m_memory.descriptor_set_layout()}))
 {
 }
 
-void ConvexHullProgramMerge::create_buffers(unsigned height, const vulkan::BufferWithMemory& lines_buffer)
+void ConvexHullProgramMerge::create_buffers(unsigned height, unsigned local_size_x, unsigned iteration_count,
+                                            const vulkan::BufferWithMemory& lines_buffer)
 {
         m_memory.set_lines(lines_buffer);
 
         m_constant.set_line_size(height);
-        m_constant.set_local_size_x(group_size_merge(height, m_instance.limits()));
-        m_constant.set_iteration_count(convex_hull_iteration_count_merge(height));
+        m_constant.set_local_size_x(local_size_x);
+        m_constant.set_iteration_count(iteration_count);
 
         vulkan::ComputePipelineCreateInfo info;
-        info.device = &m_instance.device();
+        info.device = &m_device;
         info.pipeline_layout = m_pipeline_layout;
         info.shader = &m_shader;
         info.constants = &m_constant;

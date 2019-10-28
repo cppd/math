@@ -155,12 +155,11 @@ size_t ConvexHullFilterConstant::size() const
 
 //
 
-ConvexHullProgramFilter::ConvexHullProgramFilter(const vulkan::VulkanInstance& instance)
-        : m_instance(instance),
-          m_memory(instance.device()),
-          m_shader(instance.device(), convex_hull_filter_comp(), "main"),
-          m_pipeline_layout(
-                  vulkan::create_pipeline_layout(instance.device(), {m_memory.set_number()}, {m_memory.descriptor_set_layout()}))
+ConvexHullProgramFilter::ConvexHullProgramFilter(const vulkan::Device& device)
+        : m_device(device),
+          m_memory(device),
+          m_shader(device, convex_hull_filter_comp(), "main"),
+          m_pipeline_layout(vulkan::create_pipeline_layout(device, {m_memory.set_number()}, {m_memory.descriptor_set_layout()}))
 {
 }
 
@@ -175,7 +174,7 @@ void ConvexHullProgramFilter::create_buffers(unsigned height, const vulkan::Buff
         m_constant.set_line_size(height);
 
         vulkan::ComputePipelineCreateInfo info;
-        info.device = &m_instance.device();
+        info.device = &m_device;
         info.pipeline_layout = m_pipeline_layout;
         info.shader = &m_shader;
         info.constants = &m_constant;

@@ -20,7 +20,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/vulkan/buffers.h"
 #include "graphics/vulkan/constant.h"
 #include "graphics/vulkan/descriptor.h"
-#include "graphics/vulkan/instance.h"
 #include "graphics/vulkan/objects.h"
 #include "graphics/vulkan/shader.h"
 
@@ -85,7 +84,7 @@ public:
 
 class ConvexHullProgramFilter final
 {
-        const vulkan::VulkanInstance& m_instance;
+        const vulkan::Device& m_device;
 
         ConvexHullFilterMemory m_memory;
         ConvexHullFilterConstant m_constant;
@@ -94,7 +93,7 @@ class ConvexHullProgramFilter final
         vulkan::Pipeline m_pipeline;
 
 public:
-        ConvexHullProgramFilter(const vulkan::VulkanInstance& instance);
+        ConvexHullProgramFilter(const vulkan::Device& device);
 
         ConvexHullProgramFilter(const ConvexHullProgramFilter&) = delete;
         ConvexHullProgramFilter& operator=(const ConvexHullProgramFilter&) = delete;

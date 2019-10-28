@@ -19,7 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "shader_source.h"
 
-#include "gpu/convex_hull/com/com.h"
 #include "graphics/vulkan/create.h"
 #include "graphics/vulkan/pipeline.h"
 
@@ -27,15 +26,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace gpu_vulkan
 {
-namespace
-{
-int group_size_prepare(int width, const VkPhysicalDeviceLimits& limits)
-{
-        return convex_hull_group_size_prepare(width, limits.maxComputeWorkGroupSize[0], limits.maxComputeWorkGroupInvocations,
-                                              limits.maxComputeSharedMemorySize);
-}
-}
-
 std::vector<VkDescriptorSetLayoutBinding> ConvexHullPrepareMemory::descriptor_set_layout_bindings()
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
@@ -190,17 +180,17 @@ size_t ConvexHullPrepareConstant::size() const
 
 //
 
-ConvexHullProgramPrepare::ConvexHullProgramPrepare(const vulkan::VulkanInstance& instance)
-        : m_instance(instance),
-          m_memory(instance.device()),
-          m_shader(instance.device(), convex_hull_prepare_comp(), "main"),
-          m_pipeline_layout(
-                  vulkan::create_pipeline_layout(instance.device(), {m_memory.set_number()}, {m_memory.descriptor_set_layout()}))
+ConvexHullProgramPrepare::ConvexHullProgramPrepare(const vulkan::Device& device)
+        : m_device(device),
+          m_memory(device),
+          m_shader(device, convex_hull_prepare_comp(), "main"),
+          m_pipeline_layout(vulkan::create_pipeline_layout(device, {m_memory.set_number()}, {m_memory.descriptor_set_layout()}))
 {
 }
 
-void ConvexHullProgramPrepare::create_buffers(const vulkan::ImageWithMemory& objects, unsigned x, unsigned y, unsigned width,
-                                              unsigned height, const vulkan::BufferWithMemory& lines_buffer)
+void ConvexHullProgramPrepare::create_buffers(const vulkan::ImageWithMemory& objects, unsigned buffer_and_group_size, unsigned x,
+                                              unsigned y, unsigned width, unsigned height,
+                                              const vulkan::BufferWithMemory& lines_buffer)
 {
         ASSERT(width > 0 && height > 0);
         ASSERT(x + width <= objects.width());
@@ -211,11 +201,10 @@ void ConvexHullProgramPrepare::create_buffers(const vulkan::ImageWithMemory& obj
         m_memory.set_object_image(objects);
         m_memory.set_lines(lines_buffer);
 
-        int buffer_and_group_size = group_size_prepare(objects.width(), m_instance.limits());
         m_constant.set(buffer_and_group_size, buffer_and_group_size, x, y, width, height);
 
         vulkan::ComputePipelineCreateInfo info;
-        info.device = &m_instance.device();
+        info.device = &m_device;
         info.pipeline_layout = m_pipeline_layout;
         info.shader = &m_shader;
         info.constants = &m_constant;

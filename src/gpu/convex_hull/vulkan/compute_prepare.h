@@ -20,7 +20,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/vulkan/buffers.h"
 #include "graphics/vulkan/constant.h"
 #include "graphics/vulkan/descriptor.h"
-#include "graphics/vulkan/instance.h"
 #include "graphics/vulkan/objects.h"
 #include "graphics/vulkan/shader.h"
 
@@ -88,7 +87,7 @@ public:
 
 class ConvexHullProgramPrepare final
 {
-        const vulkan::VulkanInstance& m_instance;
+        const vulkan::Device& m_device;
 
         ConvexHullPrepareMemory m_memory;
         ConvexHullPrepareConstant m_constant;
@@ -99,7 +98,7 @@ class ConvexHullProgramPrepare final
         unsigned m_height = 0;
 
 public:
-        ConvexHullProgramPrepare(const vulkan::VulkanInstance& instance);
+        ConvexHullProgramPrepare(const vulkan::Device& device);
 
         ConvexHullProgramPrepare(const ConvexHullProgramPrepare&) = delete;
         ConvexHullProgramPrepare& operator=(const ConvexHullProgramPrepare&) = delete;
@@ -108,8 +107,8 @@ public:
         ConvexHullProgramPrepare(ConvexHullProgramPrepare&&) = default;
         ~ConvexHullProgramPrepare() = default;
 
-        void create_buffers(const vulkan::ImageWithMemory& objects, unsigned x, unsigned y, unsigned width, unsigned height,
-                            const vulkan::BufferWithMemory& lines_buffer);
+        void create_buffers(const vulkan::ImageWithMemory& objects, unsigned buffer_and_group_size, unsigned x, unsigned y,
+                            unsigned width, unsigned height, const vulkan::BufferWithMemory& lines_buffer);
         void delete_buffers();
         void commands(VkCommandBuffer command_buffer) const;
 };
