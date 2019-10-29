@@ -34,13 +34,13 @@ class ConvexHullPrepareMemory final
         static constexpr int LINES_BINDING = 0;
         static constexpr int OBJECTS_BINDING = 1;
 
-        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
-
-        vulkan::DescriptorSetLayout m_descriptor_set_layout;
         vulkan::Descriptors m_descriptors;
 
 public:
-        ConvexHullPrepareMemory(const vulkan::Device& device);
+        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
+        static unsigned set_number();
+
+        ConvexHullPrepareMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout);
 
         ConvexHullPrepareMemory(const ConvexHullPrepareMemory&) = delete;
         ConvexHullPrepareMemory& operator=(const ConvexHullPrepareMemory&) = delete;
@@ -51,8 +51,6 @@ public:
 
         //
 
-        static unsigned set_number();
-        VkDescriptorSetLayout descriptor_set_layout() const;
         const VkDescriptorSet& descriptor_set() const;
 
         //
@@ -85,31 +83,31 @@ public:
         void set(int32_t local_size_x, int32_t buffer_size, int32_t x, int32_t y, int32_t width, int32_t height);
 };
 
-class ConvexHullProgramPrepare final
+class ConvexHullPrepareProgram final
 {
         const vulkan::Device& m_device;
 
-        ConvexHullPrepareMemory m_memory;
+        vulkan::DescriptorSetLayout m_descriptor_set_layout;
+        vulkan::PipelineLayout m_pipeline_layout;
         ConvexHullPrepareConstant m_constant;
         vulkan::ComputeShader m_shader;
-        vulkan::PipelineLayout m_pipeline_layout;
         vulkan::Pipeline m_pipeline;
 
-        unsigned m_height = 0;
-
 public:
-        ConvexHullProgramPrepare(const vulkan::Device& device);
+        ConvexHullPrepareProgram(const vulkan::Device& device);
 
-        ConvexHullProgramPrepare(const ConvexHullProgramPrepare&) = delete;
-        ConvexHullProgramPrepare& operator=(const ConvexHullProgramPrepare&) = delete;
-        ConvexHullProgramPrepare& operator=(ConvexHullProgramPrepare&&) = delete;
+        ConvexHullPrepareProgram(const ConvexHullPrepareProgram&) = delete;
+        ConvexHullPrepareProgram& operator=(const ConvexHullPrepareProgram&) = delete;
+        ConvexHullPrepareProgram& operator=(ConvexHullPrepareProgram&&) = delete;
 
-        ConvexHullProgramPrepare(ConvexHullProgramPrepare&&) = default;
-        ~ConvexHullProgramPrepare() = default;
+        ConvexHullPrepareProgram(ConvexHullPrepareProgram&&) = default;
+        ~ConvexHullPrepareProgram() = default;
 
-        void create_buffers(const vulkan::ImageWithMemory& objects, unsigned buffer_and_group_size, unsigned x, unsigned y,
-                            unsigned width, unsigned height, const vulkan::BufferWithMemory& lines_buffer);
-        void delete_buffers();
-        void commands(VkCommandBuffer command_buffer) const;
+        void create_pipeline(unsigned buffer_and_group_size, unsigned x, unsigned y, unsigned width, unsigned height);
+        void delete_pipeline();
+
+        VkDescriptorSetLayout descriptor_set_layout() const;
+        VkPipelineLayout pipeline_layout() const;
+        VkPipeline pipeline() const;
 };
 }

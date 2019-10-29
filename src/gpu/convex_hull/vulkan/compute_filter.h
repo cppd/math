@@ -35,13 +35,13 @@ class ConvexHullFilterMemory final
         static constexpr int POINTS_BINDING = 1;
         static constexpr int POINT_COUNT_BINDING = 2;
 
-        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
-
-        vulkan::DescriptorSetLayout m_descriptor_set_layout;
         vulkan::Descriptors m_descriptors;
 
 public:
-        ConvexHullFilterMemory(const vulkan::Device& device);
+        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
+        static unsigned set_number();
+
+        ConvexHullFilterMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout);
 
         ConvexHullFilterMemory(const ConvexHullFilterMemory&) = delete;
         ConvexHullFilterMemory& operator=(const ConvexHullFilterMemory&) = delete;
@@ -52,8 +52,6 @@ public:
 
         //
 
-        static unsigned set_number();
-        VkDescriptorSetLayout descriptor_set_layout() const;
         const VkDescriptorSet& descriptor_set() const;
 
         //
@@ -82,29 +80,31 @@ public:
         void set_line_size(int32_t v);
 };
 
-class ConvexHullProgramFilter final
+class ConvexHullFilterProgram final
 {
         const vulkan::Device& m_device;
 
-        ConvexHullFilterMemory m_memory;
+        vulkan::DescriptorSetLayout m_descriptor_set_layout;
+        vulkan::PipelineLayout m_pipeline_layout;
         ConvexHullFilterConstant m_constant;
         vulkan::ComputeShader m_shader;
-        vulkan::PipelineLayout m_pipeline_layout;
         vulkan::Pipeline m_pipeline;
 
 public:
-        ConvexHullProgramFilter(const vulkan::Device& device);
+        ConvexHullFilterProgram(const vulkan::Device& device);
 
-        ConvexHullProgramFilter(const ConvexHullProgramFilter&) = delete;
-        ConvexHullProgramFilter& operator=(const ConvexHullProgramFilter&) = delete;
-        ConvexHullProgramFilter& operator=(ConvexHullProgramFilter&&) = delete;
+        ConvexHullFilterProgram(const ConvexHullFilterProgram&) = delete;
+        ConvexHullFilterProgram& operator=(const ConvexHullFilterProgram&) = delete;
+        ConvexHullFilterProgram& operator=(ConvexHullFilterProgram&&) = delete;
 
-        ConvexHullProgramFilter(ConvexHullProgramFilter&&) = default;
-        ~ConvexHullProgramFilter() = default;
+        ConvexHullFilterProgram(ConvexHullFilterProgram&&) = default;
+        ~ConvexHullFilterProgram() = default;
 
-        void create_buffers(unsigned height, const vulkan::BufferWithMemory& lines_buffer,
-                            const vulkan::BufferWithMemory& points_buffer, const vulkan::BufferWithMemory& point_count_buffer);
-        void delete_buffers();
-        void commands(VkCommandBuffer command_buffer) const;
+        void create_pipeline(unsigned height);
+        void delete_pipeline();
+
+        VkDescriptorSetLayout descriptor_set_layout() const;
+        VkPipelineLayout pipeline_layout() const;
+        VkPipeline pipeline() const;
 };
 }

@@ -43,20 +43,14 @@ std::vector<VkDescriptorSetLayoutBinding> ConvexHullMergeMemory::descriptor_set_
         return bindings;
 }
 
-ConvexHullMergeMemory::ConvexHullMergeMemory(const vulkan::Device& device)
-        : m_descriptor_set_layout(vulkan::create_descriptor_set_layout(device, descriptor_set_layout_bindings())),
-          m_descriptors(device, 1, m_descriptor_set_layout, descriptor_set_layout_bindings())
+ConvexHullMergeMemory::ConvexHullMergeMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout)
+        : m_descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
 }
 
 unsigned ConvexHullMergeMemory::set_number()
 {
         return SET_NUMBER;
-}
-
-VkDescriptorSetLayout ConvexHullMergeMemory::descriptor_set_layout() const
-{
-        return m_descriptor_set_layout;
 }
 
 const VkDescriptorSet& ConvexHullMergeMemory::descriptor_set() const
@@ -138,19 +132,18 @@ size_t ConvexHullMergeConstant::size() const
 
 //
 
-ConvexHullProgramMerge::ConvexHullProgramMerge(const vulkan::Device& device)
+ConvexHullMergeProgram::ConvexHullMergeProgram(const vulkan::Device& device)
         : m_device(device),
-          m_memory(device),
-          m_shader(device, convex_hull_merge_comp(), "main"),
-          m_pipeline_layout(vulkan::create_pipeline_layout(device, {m_memory.set_number()}, {m_memory.descriptor_set_layout()}))
+          m_descriptor_set_layout(
+                  vulkan::create_descriptor_set_layout(device, ConvexHullMergeMemory::descriptor_set_layout_bindings())),
+          m_pipeline_layout(
+                  vulkan::create_pipeline_layout(device, {ConvexHullMergeMemory::set_number()}, {m_descriptor_set_layout})),
+          m_shader(device, convex_hull_merge_comp(), "main")
 {
 }
 
-void ConvexHullProgramMerge::create_buffers(unsigned height, unsigned local_size_x, unsigned iteration_count,
-                                            const vulkan::BufferWithMemory& lines_buffer)
+void ConvexHullMergeProgram::create_pipeline(unsigned height, unsigned local_size_x, unsigned iteration_count)
 {
-        m_memory.set_lines(lines_buffer);
-
         m_constant.set_line_size(height);
         m_constant.set_local_size_x(local_size_x);
         m_constant.set_iteration_count(iteration_count);
@@ -163,16 +156,23 @@ void ConvexHullProgramMerge::create_buffers(unsigned height, unsigned local_size
         m_pipeline = create_compute_pipeline(info);
 }
 
-void ConvexHullProgramMerge::delete_buffers()
+void ConvexHullMergeProgram::delete_pipeline()
 {
         m_pipeline = vulkan::Pipeline();
 }
 
-void ConvexHullProgramMerge::commands(VkCommandBuffer command_buffer) const
+VkDescriptorSetLayout ConvexHullMergeProgram::descriptor_set_layout() const
 {
-        vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_pipeline);
-        vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_pipeline_layout, m_memory.set_number(),
-                                1 /*set count*/, &m_memory.descriptor_set(), 0, nullptr);
-        vkCmdDispatch(command_buffer, 2, 1, 1);
+        return m_descriptor_set_layout;
+}
+
+VkPipelineLayout ConvexHullMergeProgram::pipeline_layout() const
+{
+        return m_pipeline_layout;
+}
+
+VkPipeline ConvexHullMergeProgram::pipeline() const
+{
+        return m_pipeline;
 }
 }

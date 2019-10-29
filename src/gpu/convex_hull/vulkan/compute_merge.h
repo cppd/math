@@ -33,13 +33,13 @@ class ConvexHullMergeMemory final
 
         static constexpr int LINES_BINDING = 0;
 
-        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
-
-        vulkan::DescriptorSetLayout m_descriptor_set_layout;
         vulkan::Descriptors m_descriptors;
 
 public:
-        ConvexHullMergeMemory(const vulkan::Device& device);
+        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
+        static unsigned set_number();
+
+        ConvexHullMergeMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout);
 
         ConvexHullMergeMemory(const ConvexHullMergeMemory&) = delete;
         ConvexHullMergeMemory& operator=(const ConvexHullMergeMemory&) = delete;
@@ -50,8 +50,6 @@ public:
 
         //
 
-        static unsigned set_number();
-        VkDescriptorSetLayout descriptor_set_layout() const;
         const VkDescriptorSet& descriptor_set() const;
 
         //
@@ -82,29 +80,31 @@ public:
         void set_local_size_x(int32_t v);
 };
 
-class ConvexHullProgramMerge final
+class ConvexHullMergeProgram final
 {
         const vulkan::Device& m_device;
 
-        ConvexHullMergeMemory m_memory;
+        vulkan::DescriptorSetLayout m_descriptor_set_layout;
+        vulkan::PipelineLayout m_pipeline_layout;
         ConvexHullMergeConstant m_constant;
         vulkan::ComputeShader m_shader;
-        vulkan::PipelineLayout m_pipeline_layout;
         vulkan::Pipeline m_pipeline;
 
 public:
-        ConvexHullProgramMerge(const vulkan::Device& device);
+        ConvexHullMergeProgram(const vulkan::Device& device);
 
-        ConvexHullProgramMerge(const ConvexHullProgramMerge&) = delete;
-        ConvexHullProgramMerge& operator=(const ConvexHullProgramMerge&) = delete;
-        ConvexHullProgramMerge& operator=(ConvexHullProgramMerge&&) = delete;
+        ConvexHullMergeProgram(const ConvexHullMergeProgram&) = delete;
+        ConvexHullMergeProgram& operator=(const ConvexHullMergeProgram&) = delete;
+        ConvexHullMergeProgram& operator=(ConvexHullMergeProgram&&) = delete;
 
-        ConvexHullProgramMerge(ConvexHullProgramMerge&&) = default;
-        ~ConvexHullProgramMerge() = default;
+        ConvexHullMergeProgram(ConvexHullMergeProgram&&) = default;
+        ~ConvexHullMergeProgram() = default;
 
-        void create_buffers(unsigned height, unsigned local_size_x, unsigned iteration_count,
-                            const vulkan::BufferWithMemory& lines_buffer);
-        void delete_buffers();
-        void commands(VkCommandBuffer command_buffer) const;
+        void create_pipeline(unsigned height, unsigned local_size_x, unsigned iteration_count);
+        void delete_pipeline();
+
+        VkDescriptorSetLayout descriptor_set_layout() const;
+        VkPipelineLayout pipeline_layout() const;
+        VkPipeline pipeline() const;
 };
 }

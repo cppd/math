@@ -62,20 +62,14 @@ std::vector<VkDescriptorSetLayoutBinding> ConvexHullFilterMemory::descriptor_set
         return bindings;
 }
 
-ConvexHullFilterMemory::ConvexHullFilterMemory(const vulkan::Device& device)
-        : m_descriptor_set_layout(vulkan::create_descriptor_set_layout(device, descriptor_set_layout_bindings())),
-          m_descriptors(device, 1, m_descriptor_set_layout, descriptor_set_layout_bindings())
+ConvexHullFilterMemory::ConvexHullFilterMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout)
+        : m_descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
 }
 
 unsigned ConvexHullFilterMemory::set_number()
 {
         return SET_NUMBER;
-}
-
-VkDescriptorSetLayout ConvexHullFilterMemory::descriptor_set_layout() const
-{
-        return m_descriptor_set_layout;
 }
 
 const VkDescriptorSet& ConvexHullFilterMemory::descriptor_set() const
@@ -155,22 +149,18 @@ size_t ConvexHullFilterConstant::size() const
 
 //
 
-ConvexHullProgramFilter::ConvexHullProgramFilter(const vulkan::Device& device)
+ConvexHullFilterProgram::ConvexHullFilterProgram(const vulkan::Device& device)
         : m_device(device),
-          m_memory(device),
-          m_shader(device, convex_hull_filter_comp(), "main"),
-          m_pipeline_layout(vulkan::create_pipeline_layout(device, {m_memory.set_number()}, {m_memory.descriptor_set_layout()}))
+          m_descriptor_set_layout(
+                  vulkan::create_descriptor_set_layout(device, ConvexHullFilterMemory::descriptor_set_layout_bindings())),
+          m_pipeline_layout(
+                  vulkan::create_pipeline_layout(device, {ConvexHullFilterMemory::set_number()}, {m_descriptor_set_layout})),
+          m_shader(device, convex_hull_filter_comp(), "main")
 {
 }
 
-void ConvexHullProgramFilter::create_buffers(unsigned height, const vulkan::BufferWithMemory& lines_buffer,
-                                             const vulkan::BufferWithMemory& points_buffer,
-                                             const vulkan::BufferWithMemory& point_count_buffer)
+void ConvexHullFilterProgram::create_pipeline(unsigned height)
 {
-        m_memory.set_lines(lines_buffer);
-        m_memory.set_points(points_buffer);
-        m_memory.set_point_count(point_count_buffer);
-
         m_constant.set_line_size(height);
 
         vulkan::ComputePipelineCreateInfo info;
@@ -181,16 +171,23 @@ void ConvexHullProgramFilter::create_buffers(unsigned height, const vulkan::Buff
         m_pipeline = create_compute_pipeline(info);
 }
 
-void ConvexHullProgramFilter::delete_buffers()
+void ConvexHullFilterProgram::delete_pipeline()
 {
         m_pipeline = vulkan::Pipeline();
 }
 
-void ConvexHullProgramFilter::commands(VkCommandBuffer command_buffer) const
+VkDescriptorSetLayout ConvexHullFilterProgram::descriptor_set_layout() const
 {
-        vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_pipeline);
-        vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_pipeline_layout, m_memory.set_number(),
-                                1 /*set count*/, &m_memory.descriptor_set(), 0, nullptr);
-        vkCmdDispatch(command_buffer, 1, 1, 1);
+        return m_descriptor_set_layout;
+}
+
+VkPipelineLayout ConvexHullFilterProgram::pipeline_layout() const
+{
+        return m_pipeline_layout;
+}
+
+VkPipeline ConvexHullFilterProgram::pipeline() const
+{
+        return m_pipeline;
 }
 }
