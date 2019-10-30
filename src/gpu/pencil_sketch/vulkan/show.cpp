@@ -19,16 +19,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "compute.h"
 #include "sampler.h"
-#include "shader_source.h"
-#include "show_memory.h"
-#include "show_vertex.h"
+#include "show_shader.h"
 
 #include "com/container.h"
 #include "com/error.h"
 #include "com/merge.h"
 #include "graphics/vulkan/create.h"
 #include "graphics/vulkan/queue.h"
-#include "graphics/vulkan/shader.h"
 
 #include <thread>
 
@@ -61,23 +58,12 @@ class Impl final : public PencilSketchShow
         uint32_t m_graphics_family_index;
 
         vulkan::Semaphore m_signal_semaphore;
-
-        PencilSketchShowMemory m_shader_memory;
-
-        vulkan::VertexShader m_vertex_shader;
-        vulkan::FragmentShader m_fragment_shader;
-
-        vulkan::PipelineLayout m_pipeline_layout;
+        PencilSketchShowProgram m_program;
+        PencilSketchShowMemory m_memory;
+        std::unique_ptr<vulkan::BufferWithMemory> m_vertices;
         vulkan::Sampler m_sampler;
-
-        std::unique_ptr<vulkan::BufferWithMemory> m_vertex_buffer;
-        std::array<VkBuffer, 1> m_buffers;
-        std::array<VkDeviceSize, 1> m_offsets;
-
         std::unique_ptr<vulkan::ImageWithMemory> m_image;
-
         std::vector<VkCommandBuffer> m_command_buffers;
-        VkPipeline m_pipeline = VK_NULL_HANDLE;
 
         std::unique_ptr<PencilSketchCompute> m_compute;
 
@@ -87,13 +73,14 @@ class Impl final : public PencilSketchShow
 
                 //
 
-                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline);
+                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_program.pipeline());
 
-                vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline_layout,
-                                        m_shader_memory.set_number(), 1 /*set count*/, &m_shader_memory.descriptor_set(), 0,
-                                        nullptr);
+                vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_program.pipeline_layout(),
+                                        PencilSketchShowMemory::set_number(), 1, &m_memory.descriptor_set(), 0, nullptr);
 
-                vkCmdBindVertexBuffers(command_buffer, 0, m_buffers.size(), m_buffers.data(), m_offsets.data());
+                const std::array<VkBuffer, 1> buffers{*m_vertices};
+                const std::array<VkDeviceSize, 1> offsets{0};
+                vkCmdBindVertexBuffers(command_buffer, 0, buffers.size(), buffers.data(), offsets.data());
 
                 vkCmdDraw(command_buffer, VERTEX_COUNT, 1, 0, 0);
         }
@@ -112,13 +99,9 @@ class Impl final : public PencilSketchShow
                                                                     std::vector<VkFormat>({IMAGE_FORMAT}), width, height,
                                                                     VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, storage);
 
-                m_shader_memory.set_image(m_sampler, *m_image);
+                m_memory.set_image(m_sampler, *m_image);
 
-                m_pipeline = render_buffers->create_pipeline(
-                        VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP, false /*sample_shading*/, false /*color_blend*/,
-                        {&m_vertex_shader, &m_fragment_shader}, {nullptr, nullptr}, m_pipeline_layout,
-                        PencilSketchShowVertex::binding_descriptions(), PencilSketchShowVertex::attribute_descriptions(), x, y,
-                        width, height);
+                m_program.create_pipeline(render_buffers, x, y, width, height);
 
                 m_compute->create_buffers(m_sampler, input, objects, x, y, width, height, *m_image);
 
@@ -134,7 +117,7 @@ class Impl final : public PencilSketchShow
                 //
 
                 m_command_buffers.clear();
-                m_pipeline = VK_NULL_HANDLE;
+                m_program.delete_pipeline();
                 m_compute->delete_buffers();
                 m_image.reset();
         }
@@ -166,16 +149,13 @@ class Impl final : public PencilSketchShow
                 vertices[2] = {{-1, -1, 0, 1}, {0, 0}};
                 vertices[3] = {{+1, -1, 0, 1}, {1, 0}};
 
-                m_vertex_buffer.reset();
-                m_vertex_buffer = std::make_unique<vulkan::BufferWithMemory>(
+                m_vertices.reset();
+                m_vertices = std::make_unique<vulkan::BufferWithMemory>(
                         m_device, m_transfer_command_pool, m_transfer_queue,
                         std::unordered_set<uint32_t>({m_graphics_queue.family_index(), m_transfer_queue.family_index()}),
                         VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, data_size(vertices), vertices);
 
-                m_buffers = {*m_vertex_buffer};
-                m_offsets = {0};
-
-                ASSERT(m_vertex_buffer->usage(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT));
+                ASSERT(m_vertices->usage(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT));
         }
 
 public:
@@ -191,11 +171,8 @@ public:
                   m_transfer_queue(transfer_queue),
                   m_graphics_family_index(graphics_queue.family_index()),
                   m_signal_semaphore(instance.device()),
-                  m_shader_memory(instance.device()),
-                  m_vertex_shader(m_device, pencil_sketch_show_vert(), "main"),
-                  m_fragment_shader(m_device, pencil_sketch_show_frag(), "main"),
-                  m_pipeline_layout(vulkan::create_pipeline_layout(m_device, {m_shader_memory.set_number()},
-                                                                   {m_shader_memory.descriptor_set_layout()})),
+                  m_program(instance.device()),
+                  m_memory(instance.device(), m_program.descriptor_set_layout()),
                   m_sampler(create_pencil_sketch_sampler(instance.device())),
                   m_compute(create_pencil_sketch_compute(instance))
         {
