@@ -18,8 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "show.h"
 
 #include "compute.h"
-#include "shader_source.h"
-#include "show_memory.h"
+#include "show_shader.h"
 
 #include "com/container.h"
 #include "com/error.h"
@@ -31,7 +30,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "graphics/vulkan/create.h"
 #include "graphics/vulkan/error.h"
 #include "graphics/vulkan/queue.h"
-#include "graphics/vulkan/shader.h"
 
 #include <optional>
 #include <thread>
@@ -58,21 +56,12 @@ class Impl final : public ConvexHullShow
 
         const vulkan::VulkanInstance& m_instance;
 
-        vulkan::Semaphore m_signal_semaphore;
-
-        ConvexHullShaderMemory m_shader_memory;
-
-        vulkan::VertexShader m_vertex_shader;
-        vulkan::FragmentShader m_fragment_shader;
-
-        vulkan::PipelineLayout m_pipeline_layout;
-
+        vulkan::Semaphore m_semaphore;
+        ConvexHullShowProgram m_program;
+        ConvexHullShowMemory m_memory;
         std::optional<vulkan::BufferWithMemory> m_points;
         vulkan::BufferWithMemory m_indirect_buffer;
-
-        RenderBuffers2D* m_render_buffers = nullptr;
         std::vector<VkCommandBuffer> m_command_buffers;
-        VkPipeline m_pipeline = VK_NULL_HANDLE;
 
         std::unique_ptr<ConvexHullCompute> m_compute;
 
@@ -85,11 +74,10 @@ class Impl final : public ConvexHullShow
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
-                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline);
+                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_program.pipeline());
 
-                vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline_layout,
-                                        m_shader_memory.set_number(), 1 /*set count*/, &m_shader_memory.descriptor_set(), 0,
-                                        nullptr);
+                vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_program.pipeline_layout(),
+                                        ConvexHullShowMemory::set_number(), 1, &m_memory.descriptor_set(), 0, nullptr);
 
                 ASSERT(m_indirect_buffer.usage(VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT));
                 vkCmdDrawIndirect(command_buffer, m_indirect_buffer, 0, 1, sizeof(VkDrawIndirectCommand));
@@ -105,7 +93,7 @@ class Impl final : public ConvexHullShow
                 m_points.emplace(vulkan::BufferMemoryType::DeviceLocal, m_instance.device(), std::unordered_set({m_family_index}),
                                  VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, convex_hull_points_buffer_size(height));
 
-                m_shader_memory.set_points(*m_points);
+                m_memory.set_points(*m_points);
 
                 // Матрица для рисования на плоскости окна, точка (0, 0) слева вверху
                 double left = 0;
@@ -116,18 +104,13 @@ class Impl final : public ConvexHullShow
                 double far = -1;
                 mat4 p = ortho_vulkan<double>(left, right, bottom, top, near, far);
                 mat4 t = translate(vec3(0.5, 0.5, 0));
-                m_shader_memory.set_matrix(p * t);
+                m_memory.set_matrix(p * t);
 
-                m_render_buffers = render_buffers;
-
-                m_pipeline =
-                        m_render_buffers->create_pipeline(VK_PRIMITIVE_TOPOLOGY_LINE_STRIP, m_sample_shading,
-                                                          false /*color_blend*/, {&m_vertex_shader, &m_fragment_shader},
-                                                          {nullptr, nullptr}, m_pipeline_layout, {}, {}, x, y, width, height);
+                m_program.create_pipeline(render_buffers, m_sample_shading, x, y, width, height);
 
                 m_compute->create_buffers(objects, x, y, width, height, *m_points, m_indirect_buffer, m_family_index);
 
-                m_command_buffers = m_render_buffers->create_command_buffers(
+                m_command_buffers = render_buffers->create_command_buffers(
                         [&](VkCommandBuffer command_buffer) { m_compute->compute_commands(command_buffer); },
                         std::bind(&Impl::draw_commands, this, std::placeholders::_1));
         }
@@ -150,11 +133,10 @@ class Impl final : public ConvexHullShow
 
                 //
 
-                ASSERT(m_render_buffers);
                 ASSERT(queue.family_index() == m_family_index);
 
                 float brightness = 0.5 + 0.5 * std::sin(CONVEX_HULL_ANGULAR_FREQUENCY * (time_in_seconds() - m_start_time));
-                m_shader_memory.set_brightness(brightness);
+                m_memory.set_brightness(brightness);
 
                 //
 
@@ -163,9 +145,9 @@ class Impl final : public ConvexHullShow
                 const unsigned buffer_index = m_command_buffers.size() == 1 ? 0 : image_index;
 
                 vulkan::queue_submit(wait_semaphore, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, m_command_buffers[buffer_index],
-                                     m_signal_semaphore, queue);
+                                     m_semaphore, queue);
 
-                return m_signal_semaphore;
+                return m_semaphore;
         }
 
         static VkDrawIndirectCommand draw_indirect_command_data()
@@ -183,12 +165,9 @@ public:
                 : m_sample_shading(sample_shading),
                   m_family_index(family_index),
                   m_instance(instance),
-                  m_signal_semaphore(instance.device()),
-                  m_shader_memory(instance.device(), {m_family_index}),
-                  m_vertex_shader(m_instance.device(), convex_hull_show_vert(), "main"),
-                  m_fragment_shader(m_instance.device(), convex_hull_show_frag(), "main"),
-                  m_pipeline_layout(vulkan::create_pipeline_layout(m_instance.device(), {m_shader_memory.set_number()},
-                                                                   {m_shader_memory.descriptor_set_layout()})),
+                  m_semaphore(instance.device()),
+                  m_program(instance.device()),
+                  m_memory(instance.device(), m_program.descriptor_set_layout(), {m_family_index}),
                   m_indirect_buffer(m_instance.device(), {m_family_index},
                                     VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT,
                                     sizeof(VkDrawIndirectCommand), draw_indirect_command_data()),

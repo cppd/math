@@ -15,11 +15,15 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "show_memory.h"
+#include "show_shader.h"
+
+#include "shader_source.h"
+
+#include "graphics/vulkan/create.h"
 
 namespace gpu_vulkan
 {
-std::vector<VkDescriptorSetLayoutBinding> ConvexHullShaderMemory::descriptor_set_layout_bindings()
+std::vector<VkDescriptorSetLayoutBinding> ConvexHullShowMemory::descriptor_set_layout_bindings()
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
 
@@ -45,9 +49,9 @@ std::vector<VkDescriptorSetLayoutBinding> ConvexHullShaderMemory::descriptor_set
         return bindings;
 }
 
-ConvexHullShaderMemory::ConvexHullShaderMemory(const vulkan::Device& device, const std::unordered_set<uint32_t>& family_indices)
-        : m_descriptor_set_layout(vulkan::create_descriptor_set_layout(device, descriptor_set_layout_bindings())),
-          m_descriptors(device, 1, m_descriptor_set_layout, descriptor_set_layout_bindings())
+ConvexHullShowMemory::ConvexHullShowMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout,
+                                           const std::unordered_set<uint32_t>& family_indices)
+        : m_descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
         std::vector<Variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
         std::vector<uint32_t> bindings;
@@ -70,34 +74,29 @@ ConvexHullShaderMemory::ConvexHullShaderMemory(const vulkan::Device& device, con
         m_descriptors.update_descriptor_set(0, bindings, infos);
 }
 
-unsigned ConvexHullShaderMemory::set_number()
+unsigned ConvexHullShowMemory::set_number()
 {
         return SET_NUMBER;
 }
 
-VkDescriptorSetLayout ConvexHullShaderMemory::descriptor_set_layout() const
-{
-        return m_descriptor_set_layout;
-}
-
-const VkDescriptorSet& ConvexHullShaderMemory::descriptor_set() const
+const VkDescriptorSet& ConvexHullShowMemory::descriptor_set() const
 {
         return m_descriptors.descriptor_set(0);
 }
 
-void ConvexHullShaderMemory::set_matrix(const mat4& matrix) const
+void ConvexHullShowMemory::set_matrix(const mat4& matrix) const
 {
         decltype(Data().matrix) m = transpose(to_matrix<float>(matrix));
         vulkan::map_and_write_to_buffer(m_uniform_buffers[m_data_buffer_index], offsetof(Data, matrix), m);
 }
 
-void ConvexHullShaderMemory::set_brightness(float brightness) const
+void ConvexHullShowMemory::set_brightness(float brightness) const
 {
         decltype(Data().brightness) b = brightness;
         vulkan::map_and_write_to_buffer(m_uniform_buffers[m_data_buffer_index], offsetof(Data, brightness), b);
 }
 
-void ConvexHullShaderMemory::set_points(const vulkan::BufferWithMemory& buffer) const
+void ConvexHullShowMemory::set_points(const vulkan::BufferWithMemory& buffer) const
 {
         ASSERT(buffer.usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 
@@ -107,5 +106,47 @@ void ConvexHullShaderMemory::set_points(const vulkan::BufferWithMemory& buffer) 
         buffer_info.range = buffer.size();
 
         m_descriptors.update_descriptor_set(0, POINTS_BINDING, buffer_info);
+}
+
+//
+
+ConvexHullShowProgram::ConvexHullShowProgram(const vulkan::Device& device)
+        : m_device(device),
+          m_descriptor_set_layout(
+                  vulkan::create_descriptor_set_layout(device, ConvexHullShowMemory::descriptor_set_layout_bindings())),
+          m_pipeline_layout(
+                  vulkan::create_pipeline_layout(device, {ConvexHullShowMemory::set_number()}, {m_descriptor_set_layout})),
+          m_vertex_shader(m_device, convex_hull_show_vert(), "main"),
+          m_fragment_shader(m_device, convex_hull_show_frag(), "main")
+{
+}
+
+VkDescriptorSetLayout ConvexHullShowProgram::descriptor_set_layout() const
+{
+        return m_descriptor_set_layout;
+}
+
+VkPipelineLayout ConvexHullShowProgram::pipeline_layout() const
+{
+        return m_pipeline_layout;
+}
+
+VkPipeline ConvexHullShowProgram::pipeline() const
+{
+        ASSERT(m_pipeline != VK_NULL_HANDLE);
+        return m_pipeline;
+}
+
+void ConvexHullShowProgram::create_pipeline(RenderBuffers2D* render_buffers, bool sample_shading, unsigned x, unsigned y,
+                                            unsigned width, unsigned height)
+{
+        m_pipeline = render_buffers->create_pipeline(VK_PRIMITIVE_TOPOLOGY_LINE_STRIP, sample_shading, false /*color_blend*/,
+                                                     {&m_vertex_shader, &m_fragment_shader}, {nullptr, nullptr},
+                                                     m_pipeline_layout, {}, {}, x, y, width, height);
+}
+
+void ConvexHullShowProgram::delete_pipeline()
+{
+        m_pipeline = VK_NULL_HANDLE;
 }
 }
