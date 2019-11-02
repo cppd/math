@@ -15,11 +15,16 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "memory.h"
+#include "show_shader.h"
+
+#include "shader_source.h"
+
+#include "com/font/vertices.h"
+#include "graphics/vulkan/create.h"
 
 namespace gpu_vulkan
 {
-std::vector<VkDescriptorSetLayoutBinding> TextMemory::descriptor_set_layout_bindings()
+std::vector<VkDescriptorSetLayoutBinding> TextShowMemory::descriptor_set_layout_bindings()
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
 
@@ -54,10 +59,10 @@ std::vector<VkDescriptorSetLayoutBinding> TextMemory::descriptor_set_layout_bind
         return bindings;
 }
 
-TextMemory::TextMemory(const vulkan::Device& device, const std::unordered_set<uint32_t>& family_indices, VkSampler sampler,
-                       const vulkan::ImageWithMemory* texture)
-        : m_descriptor_set_layout(vulkan::create_descriptor_set_layout(device, descriptor_set_layout_bindings())),
-          m_descriptors(device, 1, m_descriptor_set_layout, descriptor_set_layout_bindings())
+TextShowMemory::TextShowMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout,
+                               const std::unordered_set<uint32_t>& family_indices, VkSampler sampler,
+                               const vulkan::ImageWithMemory* texture)
+        : m_descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
         std::vector<Variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
         std::vector<uint32_t> bindings;
@@ -104,41 +109,125 @@ TextMemory::TextMemory(const vulkan::Device& device, const std::unordered_set<ui
         m_descriptors.update_descriptor_set(0, bindings, infos);
 }
 
-unsigned TextMemory::set_number()
+unsigned TextShowMemory::set_number()
 {
         return SET_NUMBER;
 }
 
-VkDescriptorSetLayout TextMemory::descriptor_set_layout() const
-{
-        return m_descriptor_set_layout;
-}
-
-const VkDescriptorSet& TextMemory::descriptor_set() const
+const VkDescriptorSet& TextShowMemory::descriptor_set() const
 {
         return m_descriptors.descriptor_set(0);
 }
 
 template <typename T>
-void TextMemory::copy_to_matrices_buffer(VkDeviceSize offset, const T& data) const
+void TextShowMemory::copy_to_matrices_buffer(VkDeviceSize offset, const T& data) const
 {
         vulkan::map_and_write_to_buffer(m_uniform_buffers[m_matrices_buffer_index], offset, data);
 }
 template <typename T>
-void TextMemory::copy_to_drawing_buffer(VkDeviceSize offset, const T& data) const
+void TextShowMemory::copy_to_drawing_buffer(VkDeviceSize offset, const T& data) const
 {
         vulkan::map_and_write_to_buffer(m_uniform_buffers[m_drawing_buffer_index], offset, data);
 }
 
-void TextMemory::set_matrix(const mat4& matrix) const
+void TextShowMemory::set_matrix(const mat4& matrix) const
 {
         decltype(Matrices().matrix) m = transpose(to_matrix<float>(matrix));
         copy_to_matrices_buffer(offsetof(Matrices, matrix), m);
 }
 
-void TextMemory::set_color(const Color& color) const
+void TextShowMemory::set_color(const Color& color) const
 {
         decltype(Drawing().color) c = color.to_rgb_vector<float>();
         copy_to_drawing_buffer(offsetof(Drawing, color), c);
+}
+
+//
+
+static_assert(sizeof(TextVertex) == sizeof(Vector<2, int32_t>) + sizeof(Vector<2, float>));
+static_assert(std::is_same_v<decltype(TextVertex::v), Vector<2, int32_t>>);
+static_assert(std::is_same_v<decltype(TextVertex::t), Vector<2, float>>);
+
+std::vector<VkVertexInputBindingDescription> TextShowVertex::binding_descriptions()
+{
+        std::vector<VkVertexInputBindingDescription> descriptions;
+
+        {
+                VkVertexInputBindingDescription d = {};
+                d.binding = 0;
+                d.stride = sizeof(TextVertex);
+                d.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+                descriptions.push_back(d);
+        }
+
+        return descriptions;
+}
+
+std::vector<VkVertexInputAttributeDescription> TextShowVertex::attribute_descriptions()
+{
+        std::vector<VkVertexInputAttributeDescription> descriptions;
+
+        {
+                VkVertexInputAttributeDescription d = {};
+                d.binding = 0;
+                d.location = 0;
+                d.format = VK_FORMAT_R32G32_SINT;
+                d.offset = offsetof(TextVertex, v);
+
+                descriptions.push_back(d);
+        }
+        {
+                VkVertexInputAttributeDescription d = {};
+                d.binding = 0;
+                d.location = 1;
+                d.format = VK_FORMAT_R32G32_SFLOAT;
+                d.offset = offsetof(TextVertex, t);
+
+                descriptions.push_back(d);
+        }
+
+        return descriptions;
+}
+
+//
+
+TextShowProgram::TextShowProgram(const vulkan::Device& device)
+        : m_device(device),
+          m_descriptor_set_layout(vulkan::create_descriptor_set_layout(device, TextShowMemory::descriptor_set_layout_bindings())),
+          m_pipeline_layout(vulkan::create_pipeline_layout(device, {TextShowMemory::set_number()}, {m_descriptor_set_layout})),
+          m_vertex_shader(m_device, text_vert(), "main"),
+          m_fragment_shader(m_device, text_frag(), "main")
+{
+}
+
+VkDescriptorSetLayout TextShowProgram::descriptor_set_layout() const
+{
+        return m_descriptor_set_layout;
+}
+
+VkPipelineLayout TextShowProgram::pipeline_layout() const
+{
+        return m_pipeline_layout;
+}
+
+VkPipeline TextShowProgram::pipeline() const
+{
+        ASSERT(m_pipeline != VK_NULL_HANDLE);
+        return m_pipeline;
+}
+
+void TextShowProgram::create_pipeline(RenderBuffers2D* render_buffers, bool sample_shading, unsigned x, unsigned y,
+                                      unsigned width, unsigned height)
+{
+        m_pipeline = render_buffers->create_pipeline(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, sample_shading, true /*color_blend*/,
+                                                     {&m_vertex_shader, &m_fragment_shader}, {nullptr, nullptr},
+                                                     m_pipeline_layout, TextShowVertex::binding_descriptions(),
+                                                     TextShowVertex::attribute_descriptions(), x, y, width, height);
+}
+
+void TextShowProgram::delete_pipeline()
+{
+        m_pipeline = VK_NULL_HANDLE;
 }
 }

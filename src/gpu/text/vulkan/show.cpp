@@ -17,23 +17,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "show.h"
 
-#include "memory.h"
 #include "sampler.h"
 #include "shader_source.h"
-#include "vertex.h"
+#include "show_shader.h"
 
 #include "com/container.h"
 #include "com/font/font.h"
 #include "com/font/glyphs.h"
 #include "com/font/vertices.h"
-#include "com/log.h"
 #include "com/matrix_alg.h"
 #include "com/merge.h"
 #include "graphics/vulkan/buffers.h"
-#include "graphics/vulkan/create.h"
 #include "graphics/vulkan/error.h"
 #include "graphics/vulkan/queue.h"
-#include "graphics/vulkan/shader.h"
 #include "graphics/vulkan/sync.h"
 
 #include <array>
@@ -100,31 +96,23 @@ class Impl final : public TextShow
         const vulkan::VulkanInstance& m_instance;
         const vulkan::Device& m_device;
 
-        vulkan::Semaphore m_signal_semaphore;
-
-        vulkan::Sampler m_sampler;
         vulkan::ImageWithMemory m_glyph_texture;
         std::unordered_map<char32_t, FontGlyph> m_glyphs;
 
-        TextMemory m_shader_memory;
-
-        vulkan::VertexShader m_text_vert;
-        vulkan::FragmentShader m_text_frag;
-
-        vulkan::PipelineLayout m_pipeline_layout;
-
+        vulkan::Semaphore m_semaphore;
+        vulkan::Sampler m_sampler;
+        TextShowProgram m_program;
+        TextShowMemory m_memory;
         std::optional<vulkan::BufferWithMemory> m_vertex_buffer;
         vulkan::BufferWithMemory m_indirect_buffer;
-
         RenderBuffers2D* m_render_buffers = nullptr;
         std::vector<VkCommandBuffer> m_command_buffers;
-        VkPipeline m_pipeline = VK_NULL_HANDLE;
 
         uint32_t m_graphics_family_index;
 
         void set_color(const Color& color) const override
         {
-                m_shader_memory.set_color(color);
+                m_memory.set_color(color);
         }
 
         void draw_commands(VkCommandBuffer command_buffer) const
@@ -133,11 +121,10 @@ class Impl final : public TextShow
 
                 ASSERT(m_vertex_buffer && m_vertex_buffer->size() > 0);
 
-                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline);
+                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_program.pipeline());
 
-                vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline_layout,
-                                        m_shader_memory.set_number(), 1 /*set count*/, &m_shader_memory.descriptor_set(), 0,
-                                        nullptr);
+                vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_program.pipeline_layout(),
+                                        TextShowMemory::set_number(), 1, &m_memory.descriptor_set(), 0, nullptr);
 
                 std::array<VkBuffer, 1> buffers = {*m_vertex_buffer};
                 std::array<VkDeviceSize, 1> offsets = {0};
@@ -156,10 +143,7 @@ class Impl final : public TextShow
 
                 m_render_buffers = render_buffers;
 
-                m_pipeline = m_render_buffers->create_pipeline(
-                        VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, m_sample_shading, true /*color_blend*/, {&m_text_vert, &m_text_frag},
-                        {nullptr, nullptr}, m_pipeline_layout, text_show_vertex_binding_descriptions(),
-                        text_show_vertex_attribute_descriptions(), x, y, width, height);
+                m_program.create_pipeline(m_render_buffers, m_sample_shading, x, y, width, height);
 
                 m_command_buffers = m_render_buffers->create_command_buffers(
                         std::nullopt, std::bind(&Impl::draw_commands, this, std::placeholders::_1));
@@ -171,7 +155,7 @@ class Impl final : public TextShow
                 double top = 0;
                 double near = 1;
                 double far = -1;
-                m_shader_memory.set_matrix(ortho_vulkan<double>(left, right, bottom, top, near, far));
+                m_memory.set_matrix(ortho_vulkan<double>(left, right, bottom, top, near, far));
         }
 
         void delete_buffers() override
@@ -181,6 +165,7 @@ class Impl final : public TextShow
                 //
 
                 m_command_buffers.clear();
+                m_program.delete_pipeline();
         }
 
         VkSemaphore draw(const vulkan::Queue& queue, VkSemaphore wait_semaphore, unsigned image_index,
@@ -229,9 +214,9 @@ class Impl final : public TextShow
                 const unsigned buffer_index = m_command_buffers.size() == 1 ? 0 : image_index;
 
                 vulkan::queue_submit(wait_semaphore, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-                                     m_command_buffers[buffer_index], m_signal_semaphore, queue);
+                                     m_command_buffers[buffer_index], m_semaphore, queue);
 
-                return m_signal_semaphore;
+                return m_semaphore;
         }
 
         Impl(const vulkan::VulkanInstance& instance, const vulkan::CommandPool& graphics_command_pool,
@@ -240,18 +225,16 @@ class Impl final : public TextShow
                 : m_sample_shading(sample_shading),
                   m_instance(instance),
                   m_device(m_instance.device()),
-                  m_signal_semaphore(m_device),
-                  m_sampler(create_text_sampler(m_device)),
                   m_glyph_texture(m_device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue,
                                   std::unordered_set({graphics_queue.family_index(), transfer_queue.family_index()}),
                                   GRAYSCALE_IMAGE_FORMATS, glyphs.width(), glyphs.height(),
                                   VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, std::move(glyphs.pixels()), false /*storage*/),
                   m_glyphs(std::move(glyphs.glyphs())),
-                  m_shader_memory(m_device, std::unordered_set({graphics_queue.family_index()}), m_sampler, &m_glyph_texture),
-                  m_text_vert(m_device, text_vert(), "main"),
-                  m_text_frag(m_device, text_frag(), "main"),
-                  m_pipeline_layout(vulkan::create_pipeline_layout(m_device, {m_shader_memory.set_number()},
-                                                                   {m_shader_memory.descriptor_set_layout()})),
+                  m_semaphore(m_device),
+                  m_sampler(create_text_sampler(m_device)),
+                  m_program(m_device),
+                  m_memory(m_device, m_program.descriptor_set_layout(), std::unordered_set({graphics_queue.family_index()}),
+                           m_sampler, &m_glyph_texture),
                   m_vertex_buffer(std::in_place, vulkan::BufferMemoryType::HostVisible, m_device,
                                   std::unordered_set({graphics_queue.family_index()}), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
                                   VERTEX_BUFFER_FIRST_SIZE),
