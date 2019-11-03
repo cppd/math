@@ -17,9 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "draw_object.h"
 
-#include "shader_memory.h"
 #include "shader_points.h"
-#include "shader_vertex.h"
+#include "shader_triangles.h"
 
 #include "com/container.h"
 #include "com/error.h"
@@ -68,7 +67,7 @@ std::unique_ptr<vulkan::BufferWithMemory> load_vertices(const vulkan::Device& de
         const std::vector<vec3f>& obj_normals = obj.normals();
         const std::vector<vec2f>& obj_texcoords = obj.texcoords();
 
-        std::vector<RendererVertex> vertices;
+        std::vector<RendererTrianglesVertex> vertices;
         vertices.reserve(3 * obj_faces.size());
 
         vec3f v0, v1, v2;

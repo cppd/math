@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "shader_memory.h"
+#include "shader_triangles.h"
 
 #include "com/error.h"
 
@@ -446,5 +446,75 @@ void RendererShadowMemory::set_matrix(const mat4& matrix) const
 {
         decltype(Matrices().matrix) m = transpose(to_matrix<float>(matrix));
         vulkan::map_and_write_to_buffer(m_uniform_buffers[0], offsetof(Matrices, matrix), m);
+}
+
+//
+
+std::vector<VkVertexInputBindingDescription> RendererTrianglesVertex::binding_descriptions()
+{
+        std::vector<VkVertexInputBindingDescription> descriptions;
+
+        {
+                VkVertexInputBindingDescription d = {};
+                d.binding = 0;
+                d.stride = sizeof(RendererTrianglesVertex);
+                d.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+                descriptions.push_back(d);
+        }
+
+        return descriptions;
+}
+
+std::vector<VkVertexInputAttributeDescription> RendererTrianglesVertex::triangles_attribute_descriptions()
+{
+        std::vector<VkVertexInputAttributeDescription> descriptions;
+
+        {
+                VkVertexInputAttributeDescription d = {};
+                d.binding = 0;
+                d.location = 0;
+                d.format = VK_FORMAT_R32G32B32_SFLOAT;
+                d.offset = offsetof(RendererTrianglesVertex, position);
+
+                descriptions.push_back(d);
+        }
+        {
+                VkVertexInputAttributeDescription d = {};
+                d.binding = 0;
+                d.location = 1;
+                d.format = VK_FORMAT_R32G32B32_SFLOAT;
+                d.offset = offsetof(RendererTrianglesVertex, normal);
+
+                descriptions.push_back(d);
+        }
+        {
+                VkVertexInputAttributeDescription d = {};
+                d.binding = 0;
+                d.location = 2;
+                d.format = VK_FORMAT_R32G32_SFLOAT;
+                d.offset = offsetof(RendererTrianglesVertex, texture_coordinates);
+
+                descriptions.push_back(d);
+        }
+
+        return descriptions;
+}
+
+std::vector<VkVertexInputAttributeDescription> RendererTrianglesVertex::shadow_attribute_descriptions()
+{
+        std::vector<VkVertexInputAttributeDescription> descriptions;
+
+        {
+                VkVertexInputAttributeDescription d = {};
+                d.binding = 0;
+                d.location = 0;
+                d.format = VK_FORMAT_R32G32B32_SFLOAT;
+                d.offset = offsetof(RendererTrianglesVertex, position);
+
+                descriptions.push_back(d);
+        }
+
+        return descriptions;
 }
 }

@@ -20,10 +20,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "depth_buffer.h"
 #include "draw_object.h"
 #include "sampler.h"
-#include "shader_memory.h"
 #include "shader_points.h"
 #include "shader_source.h"
-#include "shader_vertex.h"
+#include "shader_triangles.h"
 
 #include "com/log.h"
 #include "com/math.h"
@@ -402,8 +401,8 @@ class Impl final : public Renderer
                 m_triangles_pipeline = m_render_buffers->create_pipeline(
                         VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, m_sample_shading,
                         {&m_triangles_vert, &m_triangles_geom, &m_triangles_frag}, {nullptr, nullptr, nullptr},
-                        m_triangles_pipeline_layout, RendererVertex::binding_descriptions(),
-                        RendererVertex::triangles_attribute_descriptions(), m_x, m_y, m_width, m_height);
+                        m_triangles_pipeline_layout, RendererTrianglesVertex::binding_descriptions(),
+                        RendererTrianglesVertex::triangles_attribute_descriptions(), m_x, m_y, m_width, m_height);
 
                 m_points_0d_pipeline = m_render_buffers->create_pipeline(
                         VK_PRIMITIVE_TOPOLOGY_POINT_LIST, false, {&m_points_0d_vert, &m_points_frag}, {nullptr, nullptr},
@@ -443,8 +442,8 @@ class Impl final : public Renderer
 
                 m_shadow_pipeline = m_shadow_buffers->create_pipeline(
                         VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, {&m_shadow_vert, &m_shadow_frag}, {nullptr, nullptr},
-                        m_shadow_pipeline_layout, RendererVertex::binding_descriptions(),
-                        RendererVertex::shadow_attribute_descriptions());
+                        m_shadow_pipeline_layout, RendererTrianglesVertex::binding_descriptions(),
+                        RendererTrianglesVertex::shadow_attribute_descriptions());
         }
 
         void set_matrices()

@@ -215,4 +215,24 @@ public:
 
         void set_matrix(const mat4& matrix) const;
 };
+
+//
+
+struct RendererTrianglesVertex
+{
+        vec3f position;
+        vec3f normal;
+        vec2f texture_coordinates;
+
+        constexpr RendererTrianglesVertex(const vec3f& position_, const vec3f& normal_, const vec2f& texture_coordinates_)
+                : position(position_), normal(normal_), texture_coordinates(texture_coordinates_)
+        {
+        }
+
+        static std::vector<VkVertexInputBindingDescription> binding_descriptions();
+
+        static std::vector<VkVertexInputAttributeDescription> triangles_attribute_descriptions();
+
+        static std::vector<VkVertexInputAttributeDescription> shadow_attribute_descriptions();
+};
 }
