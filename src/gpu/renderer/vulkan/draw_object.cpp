@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "draw_object.h"
 
 #include "shader_memory.h"
+#include "shader_points.h"
 #include "shader_vertex.h"
 
 #include "com/container.h"

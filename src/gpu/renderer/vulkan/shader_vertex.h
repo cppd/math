@@ -41,17 +41,4 @@ struct RendererVertex
 
         static std::vector<VkVertexInputAttributeDescription> shadow_attribute_descriptions();
 };
-
-struct RendererPointVertex
-{
-        vec3f position;
-
-        constexpr RendererPointVertex(const vec3f& position_) : position(position_)
-        {
-        }
-
-        static std::vector<VkVertexInputBindingDescription> binding_descriptions();
-
-        static std::vector<VkVertexInputAttributeDescription> attribute_descriptions();
-};
 }

@@ -86,39 +86,4 @@ std::vector<VkVertexInputAttributeDescription> RendererVertex::shadow_attribute_
 
         return descriptions;
 }
-
-//
-
-std::vector<VkVertexInputBindingDescription> RendererPointVertex::binding_descriptions()
-{
-        std::vector<VkVertexInputBindingDescription> descriptions;
-
-        {
-                VkVertexInputBindingDescription d = {};
-                d.binding = 0;
-                d.stride = sizeof(RendererPointVertex);
-                d.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-
-                descriptions.push_back(d);
-        }
-
-        return descriptions;
-}
-
-std::vector<VkVertexInputAttributeDescription> RendererPointVertex::attribute_descriptions()
-{
-        std::vector<VkVertexInputAttributeDescription> descriptions;
-
-        {
-                VkVertexInputAttributeDescription d = {};
-                d.binding = 0;
-                d.location = 0;
-                d.format = VK_FORMAT_R32G32B32_SFLOAT;
-                d.offset = offsetof(RendererPointVertex, position);
-
-                descriptions.push_back(d);
-        }
-
-        return descriptions;
-}
 }
