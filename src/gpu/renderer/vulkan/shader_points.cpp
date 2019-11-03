@@ -17,7 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "shader_points.h"
 
+#include "shader_source.h"
+
 #include "com/error.h"
+#include "graphics/vulkan/create.h"
 
 namespace gpu_vulkan
 {
@@ -57,9 +60,9 @@ std::vector<VkDescriptorSetLayoutBinding> RendererPointsMemory::descriptor_set_l
         return bindings;
 }
 
-RendererPointsMemory::RendererPointsMemory(const vulkan::Device& device, const std::unordered_set<uint32_t>& family_indices)
-        : m_descriptor_set_layout(vulkan::create_descriptor_set_layout(device, descriptor_set_layout_bindings())),
-          m_descriptors(device, 1, m_descriptor_set_layout, descriptor_set_layout_bindings())
+RendererPointsMemory::RendererPointsMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout,
+                                           const std::unordered_set<uint32_t>& family_indices)
+        : m_descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
         std::vector<Variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
         std::vector<uint32_t> bindings;
@@ -99,11 +102,6 @@ RendererPointsMemory::RendererPointsMemory(const vulkan::Device& device, const s
 unsigned RendererPointsMemory::set_number()
 {
         return SET_NUMBER;
-}
-
-VkDescriptorSetLayout RendererPointsMemory::descriptor_set_layout() const
-{
-        return m_descriptor_set_layout;
 }
 
 const VkDescriptorSet& RendererPointsMemory::descriptor_set() const
@@ -162,14 +160,14 @@ void RendererPointsMemory::set_object_image(const vulkan::ImageWithMemory* stora
 
 //
 
-std::vector<VkVertexInputBindingDescription> RendererPointVertex::binding_descriptions()
+std::vector<VkVertexInputBindingDescription> RendererPointsVertex::binding_descriptions()
 {
         std::vector<VkVertexInputBindingDescription> descriptions;
 
         {
                 VkVertexInputBindingDescription d = {};
                 d.binding = 0;
-                d.stride = sizeof(RendererPointVertex);
+                d.stride = sizeof(RendererPointsVertex);
                 d.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
                 descriptions.push_back(d);
@@ -178,7 +176,7 @@ std::vector<VkVertexInputBindingDescription> RendererPointVertex::binding_descri
         return descriptions;
 }
 
-std::vector<VkVertexInputAttributeDescription> RendererPointVertex::attribute_descriptions()
+std::vector<VkVertexInputAttributeDescription> RendererPointsVertex::attribute_descriptions()
 {
         std::vector<VkVertexInputAttributeDescription> descriptions;
 
@@ -187,11 +185,67 @@ std::vector<VkVertexInputAttributeDescription> RendererPointVertex::attribute_de
                 d.binding = 0;
                 d.location = 0;
                 d.format = VK_FORMAT_R32G32B32_SFLOAT;
-                d.offset = offsetof(RendererPointVertex, position);
+                d.offset = offsetof(RendererPointsVertex, position);
 
                 descriptions.push_back(d);
         }
 
         return descriptions;
+}
+
+//
+
+RendererPointsProgram::RendererPointsProgram(const vulkan::Device& device)
+        : m_device(device),
+          m_descriptor_set_layout(
+                  vulkan::create_descriptor_set_layout(device, RendererPointsMemory::descriptor_set_layout_bindings())),
+          m_pipeline_layout(
+                  vulkan::create_pipeline_layout(device, {RendererPointsMemory::set_number()}, {m_descriptor_set_layout})),
+          m_vertex_shader_0d(m_device, renderer_points_0d_vert(), "main"),
+          m_vertex_shader_1d(m_device, renderer_points_1d_vert(), "main"),
+          m_fragment_shader(m_device, renderer_points_frag(), "main")
+{
+}
+
+VkDescriptorSetLayout RendererPointsProgram::descriptor_set_layout() const
+{
+        return m_descriptor_set_layout;
+}
+
+VkPipelineLayout RendererPointsProgram::pipeline_layout() const
+{
+        return m_pipeline_layout;
+}
+
+VkPipeline RendererPointsProgram::pipeline_0d() const
+{
+        ASSERT(m_pipeline_0d != VK_NULL_HANDLE);
+        return m_pipeline_0d;
+}
+
+VkPipeline RendererPointsProgram::pipeline_1d() const
+{
+        ASSERT(m_pipeline_1d != VK_NULL_HANDLE);
+        return m_pipeline_1d;
+}
+
+void RendererPointsProgram::create_pipelines(RenderBuffers3D* render_buffers, unsigned x, unsigned y, unsigned width,
+                                             unsigned height)
+{
+        m_pipeline_0d = render_buffers->create_pipeline(VK_PRIMITIVE_TOPOLOGY_POINT_LIST, false,
+                                                        {&m_vertex_shader_0d, &m_fragment_shader}, {nullptr, nullptr},
+                                                        m_pipeline_layout, RendererPointsVertex::binding_descriptions(),
+                                                        RendererPointsVertex::attribute_descriptions(), x, y, width, height);
+
+        m_pipeline_1d = render_buffers->create_pipeline(VK_PRIMITIVE_TOPOLOGY_LINE_LIST, false,
+                                                        {&m_vertex_shader_1d, &m_fragment_shader}, {nullptr, nullptr},
+                                                        m_pipeline_layout, RendererPointsVertex::binding_descriptions(),
+                                                        RendererPointsVertex::attribute_descriptions(), x, y, width, height);
+}
+
+void RendererPointsProgram::delete_pipelines()
+{
+        m_pipeline_0d = VK_NULL_HANDLE;
+        m_pipeline_1d = VK_NULL_HANDLE;
 }
 }

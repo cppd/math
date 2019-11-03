@@ -136,7 +136,7 @@ std::unique_ptr<vulkan::BufferWithMemory> load_point_vertices(const vulkan::Devi
         const std::vector<Obj<3>::Point>& obj_points = obj.points();
         const std::vector<vec3f>& obj_vertices = obj.vertices();
 
-        std::vector<RendererPointVertex> vertices;
+        std::vector<RendererPointsVertex> vertices;
         vertices.reserve(obj_points.size());
 
         for (const Obj<3>::Point& p : obj_points)
@@ -162,7 +162,7 @@ std::unique_ptr<vulkan::BufferWithMemory> load_line_vertices(const vulkan::Devic
         const std::vector<Obj<3>::Line>& obj_lines = obj.lines();
         const std::vector<vec3f>& obj_vertices = obj.vertices();
 
-        std::vector<RendererPointVertex> vertices;
+        std::vector<RendererPointsVertex> vertices;
         vertices.reserve(2 * obj_lines.size());
 
         for (const Obj<3>::Line& line : obj_lines)

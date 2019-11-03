@@ -21,9 +21,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/matrix.h"
 #include "com/vec.h"
 #include "gpu/com/glsl.h"
+#include "gpu/vulkan_interfaces.h"
 #include "graphics/vulkan/buffers.h"
 #include "graphics/vulkan/descriptor.h"
 #include "graphics/vulkan/objects.h"
+#include "graphics/vulkan/shader.h"
 
 #include <vector>
 
@@ -37,9 +39,6 @@ class RendererPointsMemory final
         static constexpr int DRAWING_BINDING = 1;
         static constexpr int OBJECTS_BINDING = 2;
 
-        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
-
-        vulkan::DescriptorSetLayout m_descriptor_set_layout;
         vulkan::Descriptors m_descriptors;
         std::vector<vulkan::BufferWithMemory> m_uniform_buffers;
 
@@ -65,7 +64,11 @@ class RendererPointsMemory final
         void copy_to_drawing_buffer(VkDeviceSize offset, const T& data) const;
 
 public:
-        RendererPointsMemory(const vulkan::Device& device, const std::unordered_set<uint32_t>& family_indices);
+        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
+        static unsigned set_number();
+
+        RendererPointsMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout,
+                             const std::unordered_set<uint32_t>& family_indices);
 
         RendererPointsMemory(const RendererPointsMemory&) = delete;
         RendererPointsMemory& operator=(const RendererPointsMemory&) = delete;
@@ -76,8 +79,6 @@ public:
 
         //
 
-        static unsigned set_number();
-        VkDescriptorSetLayout descriptor_set_layout() const;
         const VkDescriptorSet& descriptor_set() const;
 
         //
@@ -92,16 +93,47 @@ public:
         void set_object_image(const vulkan::ImageWithMemory* storage_image) const;
 };
 
-struct RendererPointVertex
+struct RendererPointsVertex
 {
         vec3f position;
 
-        constexpr RendererPointVertex(const vec3f& position_) : position(position_)
+        constexpr RendererPointsVertex(const vec3f& position_) : position(position_)
         {
         }
 
         static std::vector<VkVertexInputBindingDescription> binding_descriptions();
 
         static std::vector<VkVertexInputAttributeDescription> attribute_descriptions();
+};
+
+class RendererPointsProgram final
+{
+        const vulkan::Device& m_device;
+
+        vulkan::DescriptorSetLayout m_descriptor_set_layout;
+        vulkan::PipelineLayout m_pipeline_layout;
+        vulkan::VertexShader m_vertex_shader_0d;
+        vulkan::VertexShader m_vertex_shader_1d;
+        vulkan::FragmentShader m_fragment_shader;
+        VkPipeline m_pipeline_0d;
+        VkPipeline m_pipeline_1d;
+
+public:
+        RendererPointsProgram(const vulkan::Device& device);
+
+        RendererPointsProgram(const RendererPointsProgram&) = delete;
+        RendererPointsProgram& operator=(const RendererPointsProgram&) = delete;
+        RendererPointsProgram& operator=(RendererPointsProgram&&) = delete;
+
+        RendererPointsProgram(RendererPointsProgram&&) = default;
+        ~RendererPointsProgram() = default;
+
+        void create_pipelines(RenderBuffers3D* render_buffers, unsigned x, unsigned y, unsigned width, unsigned height);
+        void delete_pipelines();
+
+        VkDescriptorSetLayout descriptor_set_layout() const;
+        VkPipelineLayout pipeline_layout() const;
+        VkPipeline pipeline_0d() const;
+        VkPipeline pipeline_1d() const;
 };
 }
