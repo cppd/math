@@ -17,14 +17,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "depth_buffer.h"
+
 #include "com/color/color.h"
 #include "com/matrix.h"
 #include "com/matrix_alg.h"
 #include "com/vec.h"
 #include "gpu/com/glsl.h"
+#include "gpu/vulkan_interfaces.h"
 #include "graphics/vulkan/buffers.h"
 #include "graphics/vulkan/descriptor.h"
 #include "graphics/vulkan/objects.h"
+#include "graphics/vulkan/shader.h"
 
 #include <unordered_set>
 #include <vector>
@@ -41,9 +45,6 @@ class RendererTrianglesSharedMemory final
         static constexpr int SHADOW_BINDING = 3;
         static constexpr int OBJECTS_BINDING = 4;
 
-        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
-
-        vulkan::DescriptorSetLayout m_descriptor_set_layout;
         vulkan::Descriptors m_descriptors;
         std::vector<vulkan::BufferWithMemory> m_uniform_buffers;
 
@@ -88,7 +89,11 @@ class RendererTrianglesSharedMemory final
         void copy_to_drawing_buffer(VkDeviceSize offset, const T& data) const;
 
 public:
-        RendererTrianglesSharedMemory(const vulkan::Device& device, const std::unordered_set<uint32_t>& family_indices);
+        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
+        static unsigned set_number();
+
+        RendererTrianglesSharedMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout,
+                                      const std::unordered_set<uint32_t>& family_indices);
 
         RendererTrianglesSharedMemory(const RendererTrianglesSharedMemory&) = delete;
         RendererTrianglesSharedMemory& operator=(const RendererTrianglesSharedMemory&) = delete;
@@ -99,8 +104,6 @@ public:
 
         //
 
-        static unsigned set_number();
-        VkDescriptorSetLayout descriptor_set_layout() const;
         const VkDescriptorSet& descriptor_set() const;
 
         //
@@ -137,6 +140,7 @@ class RendererTrianglesMaterialMemory final
 
 public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
+        static unsigned set_number();
 
         struct Material
         {
@@ -173,7 +177,6 @@ public:
 
         //
 
-        static unsigned set_number();
         uint32_t descriptor_set_count() const;
         const VkDescriptorSet& descriptor_set(uint32_t index) const;
 };
@@ -183,8 +186,6 @@ class RendererShadowMemory final
         static constexpr int SET_NUMBER = 0;
 
         static constexpr int MATRICES_BINDING = 0;
-
-        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
 
         vulkan::DescriptorSetLayout m_descriptor_set_layout;
         vulkan::Descriptors m_descriptors;
@@ -196,7 +197,11 @@ class RendererShadowMemory final
         };
 
 public:
-        RendererShadowMemory(const vulkan::Device& device, const std::unordered_set<uint32_t>& family_indices);
+        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
+        static unsigned set_number();
+
+        RendererShadowMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout,
+                             const std::unordered_set<uint32_t>& family_indices);
 
         RendererShadowMemory(const RendererShadowMemory&) = delete;
         RendererShadowMemory& operator=(const RendererShadowMemory&) = delete;
@@ -207,8 +212,6 @@ public:
 
         //
 
-        static unsigned set_number();
-        VkDescriptorSetLayout descriptor_set_layout() const;
         const VkDescriptorSet& descriptor_set() const;
 
         //
@@ -234,5 +237,67 @@ struct RendererTrianglesVertex
         static std::vector<VkVertexInputAttributeDescription> triangles_attribute_descriptions();
 
         static std::vector<VkVertexInputAttributeDescription> shadow_attribute_descriptions();
+};
+
+//
+
+class RendererTrianglesProgram final
+{
+        const vulkan::Device& m_device;
+
+        vulkan::DescriptorSetLayout m_descriptor_set_layout_shared;
+        vulkan::DescriptorSetLayout m_descriptor_set_layout_material;
+        vulkan::PipelineLayout m_pipeline_layout;
+        vulkan::VertexShader m_vertex_shader;
+        vulkan::GeometryShader m_geometry_shader;
+        vulkan::FragmentShader m_fragment_shader;
+        VkPipeline m_pipeline;
+
+public:
+        RendererTrianglesProgram(const vulkan::Device& device);
+
+        RendererTrianglesProgram(const RendererTrianglesProgram&) = delete;
+        RendererTrianglesProgram& operator=(const RendererTrianglesProgram&) = delete;
+        RendererTrianglesProgram& operator=(RendererTrianglesProgram&&) = delete;
+
+        RendererTrianglesProgram(RendererTrianglesProgram&&) = default;
+        ~RendererTrianglesProgram() = default;
+
+        void create_pipeline(RenderBuffers3D* render_buffers, bool sample_shading, unsigned x, unsigned y, unsigned width,
+                             unsigned height);
+        void delete_pipeline();
+
+        VkDescriptorSetLayout descriptor_set_layout_shared() const;
+        VkDescriptorSetLayout descriptor_set_layout_material() const;
+        VkPipelineLayout pipeline_layout() const;
+        VkPipeline pipeline() const;
+};
+
+class RendererShadowProgram final
+{
+        const vulkan::Device& m_device;
+
+        vulkan::DescriptorSetLayout m_descriptor_set_layout;
+        vulkan::PipelineLayout m_pipeline_layout;
+        vulkan::VertexShader m_vertex_shader;
+        vulkan::FragmentShader m_fragment_shader;
+        VkPipeline m_pipeline;
+
+public:
+        RendererShadowProgram(const vulkan::Device& device);
+
+        RendererShadowProgram(const RendererShadowProgram&) = delete;
+        RendererShadowProgram& operator=(const RendererShadowProgram&) = delete;
+        RendererShadowProgram& operator=(RendererShadowProgram&&) = delete;
+
+        RendererShadowProgram(RendererShadowProgram&&) = default;
+        ~RendererShadowProgram() = default;
+
+        void create_pipeline(RendererDepthBuffers* render_buffers);
+        void delete_pipeline();
+
+        VkDescriptorSetLayout descriptor_set_layout() const;
+        VkPipelineLayout pipeline_layout() const;
+        VkPipeline pipeline() const;
 };
 }

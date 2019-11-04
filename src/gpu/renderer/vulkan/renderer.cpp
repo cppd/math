@@ -93,23 +93,14 @@ class Impl final : public Renderer
         vulkan::Sampler m_texture_sampler;
         vulkan::Sampler m_shadow_sampler;
 
-        vulkan::DescriptorSetLayout m_triangles_material_descriptor_set_layout;
+        RendererTrianglesProgram m_triangles_program;
+        RendererTrianglesSharedMemory m_triangles_shared_memory;
 
-        RendererTrianglesSharedMemory m_triangles_shared_shader_memory;
-        RendererShadowMemory m_shadow_shader_memory;
+        RendererShadowProgram m_shadow_program;
+        RendererShadowMemory m_shadow_memory;
 
         RendererPointsProgram m_points_program;
         RendererPointsMemory m_points_memory;
-
-        vulkan::VertexShader m_triangles_vert;
-        vulkan::GeometryShader m_triangles_geom;
-        vulkan::FragmentShader m_triangles_frag;
-
-        vulkan::VertexShader m_shadow_vert;
-        vulkan::FragmentShader m_shadow_frag;
-
-        vulkan::PipelineLayout m_triangles_pipeline_layout;
-        vulkan::PipelineLayout m_shadow_pipeline_layout;
 
         RenderBuffers3D* m_render_buffers = nullptr;
         std::vector<VkCommandBuffer> m_render_command_buffers;
@@ -120,29 +111,26 @@ class Impl final : public Renderer
 
         RendererObjectStorage<DrawObject> m_storage;
 
-        VkPipeline m_triangles_pipeline = VK_NULL_HANDLE;
-        VkPipeline m_shadow_pipeline = VK_NULL_HANDLE;
-
         unsigned m_x, m_y, m_width, m_height;
 
         void set_light_a(const Color& light) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                m_triangles_shared_shader_memory.set_light_a(light);
+                m_triangles_shared_memory.set_light_a(light);
                 m_points_memory.set_light_a(light);
         }
         void set_light_d(const Color& light) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                m_triangles_shared_shader_memory.set_light_d(light);
+                m_triangles_shared_memory.set_light_d(light);
         }
         void set_light_s(const Color& light) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                m_triangles_shared_shader_memory.set_light_s(light);
+                m_triangles_shared_memory.set_light_s(light);
         }
         void set_background_color(const Color& color) override
         {
@@ -157,38 +145,38 @@ class Impl final : public Renderer
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                m_triangles_shared_shader_memory.set_default_color(color);
+                m_triangles_shared_memory.set_default_color(color);
                 m_points_memory.set_default_color(color);
         }
         void set_wireframe_color(const Color& color) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                m_triangles_shared_shader_memory.set_wireframe_color(color);
+                m_triangles_shared_memory.set_wireframe_color(color);
         }
         void set_default_ns(double default_ns) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                m_triangles_shared_shader_memory.set_default_ns(default_ns);
+                m_triangles_shared_memory.set_default_ns(default_ns);
         }
         void set_show_smooth(bool show) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                m_triangles_shared_shader_memory.set_show_smooth(show);
+                m_triangles_shared_memory.set_show_smooth(show);
         }
         void set_show_wireframe(bool show) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                m_triangles_shared_shader_memory.set_show_wireframe(show);
+                m_triangles_shared_memory.set_show_wireframe(show);
         }
         void set_show_shadow(bool show) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                m_triangles_shared_shader_memory.set_show_shadow(show);
+                m_triangles_shared_memory.set_show_shadow(show);
                 m_show_shadow = show;
         }
         void set_show_fog(bool show) override
@@ -201,7 +189,7 @@ class Impl final : public Renderer
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                m_triangles_shared_shader_memory.set_show_materials(show);
+                m_triangles_shared_memory.set_show_materials(show);
         }
         void set_shadow_zoom(double zoom) override
         {
@@ -227,8 +215,8 @@ class Impl final : public Renderer
                 m_scale_bias_shadow_matrix = SCALE_BIAS_MATRIX * m_shadow_matrix;
                 m_main_matrix = view_projection_matrix * c.view_matrix;
 
-                m_triangles_shared_shader_memory.set_direction_to_light(-to_vector<float>(c.light_direction));
-                m_triangles_shared_shader_memory.set_direction_to_camera(-to_vector<float>(c.camera_direction));
+                m_triangles_shared_memory.set_direction_to_light(-to_vector<float>(c.light_direction));
+                m_triangles_shared_memory.set_direction_to_camera(-to_vector<float>(c.camera_direction));
 
                 set_matrices();
         }
@@ -239,7 +227,7 @@ class Impl final : public Renderer
 
                 std::unique_ptr draw_object = std::make_unique<DrawObject>(
                         m_device, m_graphics_command_pool, m_graphics_queue, m_transfer_command_pool, m_transfer_queue,
-                        m_texture_sampler, m_triangles_material_descriptor_set_layout, *obj, size, position);
+                        m_texture_sampler, m_triangles_program.descriptor_set_layout_material(), *obj, size, position);
 
                 m_storage.add_object(std::move(draw_object), id, scale_id);
 
@@ -374,6 +362,8 @@ class Impl final : public Renderer
         void delete_render_buffers()
         {
                 m_render_command_buffers.clear();
+                m_points_program.delete_pipelines();
+                m_triangles_program.delete_pipeline();
         }
 
         void create_render_buffers()
@@ -390,15 +380,10 @@ class Impl final : public Renderer
 
                 //
 
-                m_triangles_shared_shader_memory.set_object_image(m_object_image);
+                m_triangles_shared_memory.set_object_image(m_object_image);
                 m_points_memory.set_object_image(m_object_image);
 
-                m_triangles_pipeline = m_render_buffers->create_pipeline(
-                        VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, m_sample_shading,
-                        {&m_triangles_vert, &m_triangles_geom, &m_triangles_frag}, {nullptr, nullptr, nullptr},
-                        m_triangles_pipeline_layout, RendererTrianglesVertex::binding_descriptions(),
-                        RendererTrianglesVertex::triangles_attribute_descriptions(), m_x, m_y, m_width, m_height);
-
+                m_triangles_program.create_pipeline(m_render_buffers, m_sample_shading, m_x, m_y, m_width, m_height);
                 m_points_program.create_pipelines(m_render_buffers, m_x, m_y, m_width, m_height);
         }
 
@@ -406,6 +391,7 @@ class Impl final : public Renderer
         {
                 m_shadow_command_buffers.clear();
                 m_shadow_buffers.reset();
+                m_shadow_program.delete_pipeline();
         }
 
         void create_shadow_buffers()
@@ -425,12 +411,9 @@ class Impl final : public Renderer
                         create_renderer_depth_buffers(buffer_count, *m_swapchain, {m_graphics_queue.family_index()},
                                                       m_graphics_command_pool, m_device, m_width, m_height, m_shadow_zoom);
 
-                m_triangles_shared_shader_memory.set_shadow_texture(m_shadow_sampler, m_shadow_buffers->texture(0));
+                m_triangles_shared_memory.set_shadow_texture(m_shadow_sampler, m_shadow_buffers->texture(0));
 
-                m_shadow_pipeline = m_shadow_buffers->create_pipeline(
-                        VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, {&m_shadow_vert, &m_shadow_frag}, {nullptr, nullptr},
-                        m_shadow_pipeline_layout, RendererTrianglesVertex::binding_descriptions(),
-                        RendererTrianglesVertex::shadow_attribute_descriptions());
+                m_shadow_program.create_pipeline(m_shadow_buffers.get());
         }
 
         void set_matrices()
@@ -447,8 +430,8 @@ class Impl final : public Renderer
                         mat4 scale_bias_shadow_matrix = m_scale_bias_shadow_matrix * m_storage.scale_object()->model_matrix();
                         mat4 shadow_matrix = m_shadow_matrix * m_storage.scale_object()->model_matrix();
 
-                        m_triangles_shared_shader_memory.set_matrices(matrix, scale_bias_shadow_matrix);
-                        m_shadow_shader_memory.set_matrix(shadow_matrix);
+                        m_triangles_shared_memory.set_matrices(matrix, scale_bias_shadow_matrix);
+                        m_shadow_memory.set_matrix(shadow_matrix);
                         m_points_memory.set_matrix(matrix);
                 }
         }
@@ -475,10 +458,10 @@ class Impl final : public Renderer
 
                 DrawInfo info;
 
-                info.triangles_pipeline_layout = m_triangles_pipeline_layout;
-                info.triangles_pipeline = m_triangles_pipeline;
-                info.triangles_shared_set = m_triangles_shared_shader_memory.descriptor_set();
-                info.triangles_shared_set_number = m_triangles_shared_shader_memory.set_number();
+                info.triangles_pipeline_layout = m_triangles_program.pipeline_layout();
+                info.triangles_pipeline = m_triangles_program.pipeline();
+                info.triangles_shared_set = m_triangles_shared_memory.descriptor_set();
+                info.triangles_shared_set_number = m_triangles_shared_memory.set_number();
 
                 info.points_pipeline_layout = m_points_program.pipeline_layout();
                 info.points_pipeline = m_points_program.pipeline_0d();
@@ -506,10 +489,10 @@ class Impl final : public Renderer
 
                 ShadowInfo info;
 
-                info.triangles_pipeline_layout = m_shadow_pipeline_layout;
-                info.triangles_pipeline = m_shadow_pipeline;
-                info.triangles_set = m_shadow_shader_memory.descriptor_set();
-                info.triangles_set_number = m_shadow_shader_memory.set_number();
+                info.triangles_pipeline_layout = m_shadow_program.pipeline_layout();
+                info.triangles_pipeline = m_shadow_program.pipeline();
+                info.triangles_set = m_shadow_memory.descriptor_set();
+                info.triangles_set_number = m_shadow_memory.set_number();
 
                 m_storage.object()->shadow_commands(command_buffer, info);
         }
@@ -579,27 +562,15 @@ public:
                   m_texture_sampler(create_renderer_texture_sampler(m_device, sampler_anisotropy)),
                   m_shadow_sampler(create_renderer_shadow_sampler(m_device)),
                   //
-                  m_triangles_material_descriptor_set_layout(vulkan::create_descriptor_set_layout(
-                          m_device, RendererTrianglesMaterialMemory::descriptor_set_layout_bindings())),
+                  m_triangles_program(m_device),
+                  m_triangles_shared_memory(m_device, m_triangles_program.descriptor_set_layout_shared(),
+                                            {m_graphics_queue.family_index()}),
                   //
-                  m_triangles_shared_shader_memory(m_device, {m_graphics_queue.family_index()}),
-                  m_shadow_shader_memory(m_device, {m_graphics_queue.family_index()}),
+                  m_shadow_program(m_device),
+                  m_shadow_memory(m_device, m_shadow_program.descriptor_set_layout(), {m_graphics_queue.family_index()}),
                   //
                   m_points_program(m_device),
-                  m_points_memory(m_device, m_points_program.descriptor_set_layout(), {m_graphics_queue.family_index()}),
-                  //
-                  m_triangles_vert(m_device, renderer_triangles_vert(), "main"),
-                  m_triangles_geom(m_device, renderer_triangles_geom(), "main"),
-                  m_triangles_frag(m_device, renderer_triangles_frag(), "main"),
-                  m_shadow_vert(m_device, renderer_shadow_vert(), "main"),
-                  m_shadow_frag(m_device, renderer_shadow_frag(), "main"),
-                  //
-                  m_triangles_pipeline_layout(create_pipeline_layout(
-                          m_device, {RendererTrianglesSharedMemory::set_number(), RendererTrianglesMaterialMemory::set_number()},
-                          {m_triangles_shared_shader_memory.descriptor_set_layout(),
-                           m_triangles_material_descriptor_set_layout})),
-                  m_shadow_pipeline_layout(create_pipeline_layout(m_device, {m_shadow_shader_memory.set_number()},
-                                                                  {m_shadow_shader_memory.descriptor_set_layout()}))
+                  m_points_memory(m_device, m_points_program.descriptor_set_layout(), {m_graphics_queue.family_index()})
         {
         }
 

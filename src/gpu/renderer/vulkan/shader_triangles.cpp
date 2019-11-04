@@ -17,7 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "shader_triangles.h"
 
+#include "shader_source.h"
+
 #include "com/error.h"
+#include "graphics/vulkan/create.h"
 
 namespace gpu_vulkan
 {
@@ -77,9 +80,9 @@ std::vector<VkDescriptorSetLayoutBinding> RendererTrianglesSharedMemory::descrip
 }
 
 RendererTrianglesSharedMemory::RendererTrianglesSharedMemory(const vulkan::Device& device,
+                                                             VkDescriptorSetLayout descriptor_set_layout,
                                                              const std::unordered_set<uint32_t>& family_indices)
-        : m_descriptor_set_layout(vulkan::create_descriptor_set_layout(device, descriptor_set_layout_bindings())),
-          m_descriptors(device, 1, m_descriptor_set_layout, descriptor_set_layout_bindings())
+        : m_descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
         std::vector<Variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
         std::vector<uint32_t> bindings;
@@ -133,11 +136,6 @@ RendererTrianglesSharedMemory::RendererTrianglesSharedMemory(const vulkan::Devic
 unsigned RendererTrianglesSharedMemory::set_number()
 {
         return SET_NUMBER;
-}
-
-VkDescriptorSetLayout RendererTrianglesSharedMemory::descriptor_set_layout() const
-{
-        return m_descriptor_set_layout;
 }
 
 const VkDescriptorSet& RendererTrianglesSharedMemory::descriptor_set() const
@@ -403,9 +401,9 @@ std::vector<VkDescriptorSetLayoutBinding> RendererShadowMemory::descriptor_set_l
         return bindings;
 }
 
-RendererShadowMemory::RendererShadowMemory(const vulkan::Device& device, const std::unordered_set<uint32_t>& family_indices)
-        : m_descriptor_set_layout(vulkan::create_descriptor_set_layout(device, descriptor_set_layout_bindings())),
-          m_descriptors(device, 1, m_descriptor_set_layout, descriptor_set_layout_bindings())
+RendererShadowMemory::RendererShadowMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout,
+                                           const std::unordered_set<uint32_t>& family_indices)
+        : m_descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
         std::vector<Variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
         std::vector<uint32_t> bindings;
@@ -430,11 +428,6 @@ RendererShadowMemory::RendererShadowMemory(const vulkan::Device& device, const s
 unsigned RendererShadowMemory::set_number()
 {
         return SET_NUMBER;
-}
-
-VkDescriptorSetLayout RendererShadowMemory::descriptor_set_layout() const
-{
-        return m_descriptor_set_layout;
 }
 
 const VkDescriptorSet& RendererShadowMemory::descriptor_set() const
@@ -516,5 +509,99 @@ std::vector<VkVertexInputAttributeDescription> RendererTrianglesVertex::shadow_a
         }
 
         return descriptions;
+}
+
+//
+
+RendererTrianglesProgram::RendererTrianglesProgram(const vulkan::Device& device)
+        : m_device(device),
+          m_descriptor_set_layout_shared(
+                  vulkan::create_descriptor_set_layout(device, RendererTrianglesSharedMemory::descriptor_set_layout_bindings())),
+          m_descriptor_set_layout_material(vulkan::create_descriptor_set_layout(
+                  device, RendererTrianglesMaterialMemory::descriptor_set_layout_bindings())),
+          m_pipeline_layout(vulkan::create_pipeline_layout(
+                  device, {RendererTrianglesSharedMemory::set_number(), RendererTrianglesMaterialMemory::set_number()},
+                  {m_descriptor_set_layout_shared, m_descriptor_set_layout_material})),
+          m_vertex_shader(m_device, renderer_triangles_vert(), "main"),
+          m_geometry_shader(m_device, renderer_triangles_geom(), "main"),
+          m_fragment_shader(m_device, renderer_triangles_frag(), "main")
+{
+}
+
+VkDescriptorSetLayout RendererTrianglesProgram::descriptor_set_layout_shared() const
+{
+        return m_descriptor_set_layout_shared;
+}
+
+VkDescriptorSetLayout RendererTrianglesProgram::descriptor_set_layout_material() const
+{
+        return m_descriptor_set_layout_material;
+}
+
+VkPipelineLayout RendererTrianglesProgram::pipeline_layout() const
+{
+        return m_pipeline_layout;
+}
+
+VkPipeline RendererTrianglesProgram::pipeline() const
+{
+        ASSERT(m_pipeline != VK_NULL_HANDLE);
+        return m_pipeline;
+}
+
+void RendererTrianglesProgram::create_pipeline(RenderBuffers3D* render_buffers, bool sample_shading, unsigned x, unsigned y,
+                                               unsigned width, unsigned height)
+{
+        m_pipeline = render_buffers->create_pipeline(
+                VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, sample_shading, {&m_vertex_shader, &m_geometry_shader, &m_fragment_shader},
+                {nullptr, nullptr, nullptr}, m_pipeline_layout, RendererTrianglesVertex::binding_descriptions(),
+                RendererTrianglesVertex::triangles_attribute_descriptions(), x, y, width, height);
+}
+
+void RendererTrianglesProgram::delete_pipeline()
+{
+        m_pipeline = VK_NULL_HANDLE;
+}
+
+//
+
+RendererShadowProgram::RendererShadowProgram(const vulkan::Device& device)
+        : m_device(device),
+          m_descriptor_set_layout(
+                  vulkan::create_descriptor_set_layout(device, RendererShadowMemory::descriptor_set_layout_bindings())),
+          m_pipeline_layout(
+                  vulkan::create_pipeline_layout(device, {RendererShadowMemory::set_number()}, {m_descriptor_set_layout})),
+          m_vertex_shader(m_device, renderer_shadow_vert(), "main"),
+          m_fragment_shader(m_device, renderer_shadow_frag(), "main")
+{
+}
+
+VkDescriptorSetLayout RendererShadowProgram::descriptor_set_layout() const
+{
+        return m_descriptor_set_layout;
+}
+
+VkPipelineLayout RendererShadowProgram::pipeline_layout() const
+{
+        return m_pipeline_layout;
+}
+
+VkPipeline RendererShadowProgram::pipeline() const
+{
+        ASSERT(m_pipeline != VK_NULL_HANDLE);
+        return m_pipeline;
+}
+
+void RendererShadowProgram::create_pipeline(RendererDepthBuffers* render_buffers)
+{
+        m_pipeline = render_buffers->create_pipeline(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, {&m_vertex_shader, &m_fragment_shader},
+                                                     {nullptr, nullptr}, m_pipeline_layout,
+                                                     RendererTrianglesVertex::binding_descriptions(),
+                                                     RendererTrianglesVertex::shadow_attribute_descriptions());
+}
+
+void RendererShadowProgram::delete_pipeline()
+{
+        m_pipeline = VK_NULL_HANDLE;
 }
 }
